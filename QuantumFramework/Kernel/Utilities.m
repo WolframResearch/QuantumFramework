@@ -158,8 +158,11 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         ],
         Eigensystem[matrix] &
     ];
-    If[ TrueQ[OptionValue["Sort"]] && AllTrue[values, NumericQ],
-        With[{ordering = OrderingBy[values, If[Length[values] > 2 && ContainsOnly[Arg[values], {0, Pi}], Identity, {Mod[Arg[#], 2 Pi], Abs[#]} &]]},
+    If[ ! MatchQ[OptionValue["Sort"], False | None] && AllTrue[values, NumericQ],
+        With[{ordering = OrderingBy[values, Replace[OptionValue["Sort"],
+                True | Automatic :> If[Length[values] > 2 && ContainsOnly[Arg[values], {0, Pi}], Identity, {Mod[Arg[#], 2 Pi], Abs[#]} &]
+            ]]
+        },
             values = values[[ordering]];
             vectors = vectors[[ordering]]
         ]
