@@ -8,9 +8,9 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 
-operatorApply[op_, states : {_ ? QuantumStateQ ...}, basisQ_ : False] := Enclose @ With[{
-	outputOrder = Replace[op["FullOutputOrder"], op["OutputOrderQuditMapping"], 1],
-	inputOrder = Replace[op["FullInputOrder"], op["InputOrderQuditMapping"], 1],
+operatorApply[op_, states : {_ ? QuantumStateQ ...}, min_, basisQ_ : False] := Enclose @ With[{
+	outputOrder = op["FullOutputOrder"] - min + 1,
+	inputOrder = op["FullInputOrder"] - min + 1,
 	decompose = If[TrueQ[basisQ], {"BasisDecompose"}, {"DecomposeWithAmplitudes", op["OutputDimensions"]}]
 },
 	Map[
@@ -29,10 +29,10 @@ operatorApply[op_, states : {_ ? QuantumStateQ ...}, basisQ_ : False] := Enclose
 
 Options[QuantumCircuitMultiwayGraph] = Join[{"Normalize" -> False, "BasisDecompose" -> False}, Options[Graph]];
 QuantumCircuitMultiwayGraph[PatternSequence[circuit_, initStates_ : Automatic], opts : OptionsPattern[]] := Enclose @ Block[{
-	index = 0
+	index = 0, min = circuit["Min"]
 },
 	ResourceFunction["FoldGraph"][
-		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states, TrueQ[OptionValue["BasisDecompose"]]], norm},
+		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states, min, TrueQ[OptionValue["BasisDecompose"]]], norm},
 			norm = Total[weightedStates[[All, 1]]];
 			index++;
 			MapIndexed[
