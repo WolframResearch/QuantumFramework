@@ -882,11 +882,13 @@ QuantumOperator[{"WignerD", j_ : 1 / 2, {a_, b_, c_}}, opts___] := QuantumOperat
 
 QuantumOperator[{"WignerD", j_ : 1 / 2, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j_ : 1 / 2}, opts___] := Simplify @ QuantumOperator[QuantumOperator[QuantumOperator[jX[j], 2 j + 1], "JX"[j]], opts, "Label" -> "JX"]
+jMatrix[j_] := DiagonalMatrix[Range[- j, j], TargetStructure -> "Sparse"]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j_ : 1 / 2}, opts___] := Simplify @ QuantumOperator[QuantumOperator[QuantumOperator[jY[j], 2 j + 1], "JY"[j]], opts, "Label" -> "JY"]
+QuantumOperator[{"JX" | "AngularMomentumX", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JX"[j]], opts, "Label" -> "JX"]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j_ : 1 / 2}, opts___] := Simplify @ QuantumOperator[QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], "JZ"[j]], opts, "Label" -> "JZ"]
+QuantumOperator[{"JY" | "AngularMomentumY", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JY"[j]], opts, "Label" -> "JY"]
+
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JZ"[j]], opts, "Label" -> "JZ"]
 
 QuantumOperator[{name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jUp[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
