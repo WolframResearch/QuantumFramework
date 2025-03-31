@@ -27,20 +27,51 @@ PackageExport["GenerateParameters"]
 (*Quantum Optimization Functionalities*)
 
 
+{1,2,3}[[Flatten[Position[{1,2,3},1]]]]
+
+
+ParametrizedLayer::dimensions = "Number of qubits and parameters of unequal lenght"
+
 Options[ParametrizedLayer]={"Symbol"->"\[Theta]"};
 ParametrizedLayer[op_,range_List,OptionsPattern[]]:=Sequence@@Table[op[Symbol[OptionValue["Symbol"]<>ToString[i]]]->Flatten[Position[range,i]],{i,range}]
 
-EntanglementLayer[cop_,range_List]:=Sequence@@Thread[cop->Subsets[range,{2}]]
+ParametrizedLayer[op_,qubits_List,index_List,OptionsPattern[]]:=Module[{range},
+	
+	If[!MatchQ[Length[qubits],Length[index]],
+		Message[ParametrizedLayer::dimensions];
+		Return[$Failed]
+	];
+	
+	
+	Sequence@@Table[op[Symbol[OptionValue["Symbol"]<>ToString[i]]]->qubits[[Flatten[Position[index,i]]]],{i,index}]
+	
+	]
+
+
+Options[EntanglementLayer] = {"Entanglement" -> Automatic};
+EntanglementLayer[cop_, range_List, OptionsPattern[]] := Module[{opt, pairs},
+  opt = OptionValue["Entanglement"];
+  pairs = 
+  Which[
+	    MatchQ[opt, "Linear"], Partition[range, 2, 1],
+	    MatchQ[opt, "ReverseLinear"], Reverse /@ Partition[range, 2, 1],
+	    MatchQ[opt, "Pairwise"], Join @@ Reverse[Values[GroupBy[Drop[Sort@range,-1], EvenQ]]] /. x_Integer :> {x, x + 1},
+	    MatchQ[opt, "Circular"], Append[#, {#[[-1, -1]], #[[1, 1]]}] &@Partition[range, 2, 1],
+	    True, Subsets[range, {2}]
+    ];
+  
+	Sequence @@ Thread[cop -> pairs]
+   ]
 
 Options[GenerateParameters]={"Symbol"->"\[Theta]"};
 GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue["Symbol"]<>ToString[i] ],{i,1,NLayers *NQubits}]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Example specific functions *)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Quantum Natural Gradient Descent*)
 
 
