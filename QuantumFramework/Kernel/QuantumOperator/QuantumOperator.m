@@ -486,6 +486,21 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
     ] &
 ]
 
+QuantumOperator /: MatrixExp[op_QuantumOperator] :=
+    QuantumOperator[
+        MatrixExp[op["Matrix"]],
+        op["Order"],
+        op["Basis"],
+        "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
+    ]
+
+QuantumOperator /: MatrixExp[op_QuantumOperator, qs_QuantumState] :=
+    QuantumState[
+        MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
+        op["Output"],
+        "Label" -> If[op["Label"] === None || qs["Label"] === None, None, Exp[op["Label"]][qs["Label"]]]
+    ]
+
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
     orderInput, orderOutput,
