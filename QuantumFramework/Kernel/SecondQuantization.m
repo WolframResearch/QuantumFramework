@@ -62,7 +62,7 @@ QuantumState[SparseArray[{n+1 -> 1}, size], size]]
 FockState::len="Argument `1` cannot be larger that the size of the space, `2`";
 
 
-FockState[vals_List,size_]:= 
+FockState[vals_List, size_:$FockSize]:= 
 
 If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size)&], Message[FockVals::len,vals,size],
 
