@@ -53,10 +53,24 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 G2Coherence[\[Psi]_QuantumState,aOp_QuantumOperator]:= (SuperDagger[\[Psi]]@(SuperDagger[aOp]@SuperDagger[aOp]@aOp@aOp)@\[Psi])["Scalar"]/(SuperDagger[\[Psi]]@(SuperDagger[aOp]@aOp)@\[Psi])["Scalar"]^2
 
 
-FockState[n_,size_ :$FockSize]:= 
+FockState[n_Integer,size_ :$FockSize]:= 
+
 If[n>size, Message[FockState::len,n,size],
+
 QuantumState[SparseArray[{n+1 -> 1}, size], size]]
+
 FockState::len="Argument `1` cannot be larger that the size of the space, `2`";
+
+
+FockState[vals_List,size_]:= 
+
+If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size)&], Message[FockVals::len,vals,size],
+
+QuantumState[SparseArray[{FromDigits[vals,size]+1->1},size^Length[vals]],
+			ConstantArray[size,Length[vals]]]
+  ]
+
+FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
 
 
 AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
