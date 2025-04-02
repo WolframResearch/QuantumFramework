@@ -790,7 +790,7 @@ QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
     ]
 ]
 
-QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1] :=
+QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1] /; qs["NumericQ"] :=
 	Block[{d, u, p},
 		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
         p = PositionLargest[Abs[d], n];

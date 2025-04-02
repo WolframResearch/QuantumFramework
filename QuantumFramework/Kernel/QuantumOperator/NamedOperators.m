@@ -936,17 +936,17 @@ LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
     ]
 ]
 
-QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, Ls : _ : {}, Gammas : _ : {}}, opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas]},
-	ConfirmAssert[SameQ @@ Join[If[H === None, {}, {H["OutputDimension"], H["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]]];
+QuantumOperator[{"Liouvillian", H_, Ls : _ : {}, Gammas : _ : {}}, opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]]},
+	ConfirmAssert[SameQ @@ Join[If[h === None, {}, {h["OutputDimension"], h["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]], "Hamiltonian and Lindblad operators must have the same dimensions"];
     QuantumOperator[
-        If[H === None, 0, HamiltonianMixedOperator[H] / I] + PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
+        If[H === None, 0, HamiltonianMixedOperator[h] / I] + PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
         opts, "Label" -> "Liouvillian"
     ]
 ]
 
-QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, ls_ -> gammas_}, opts___] := QuantumOperator[{"Liouvillian", H, ls, gammas}, opts]
+QuantumOperator[{"Liouvillian", H_, ls_ -> gammas_}, opts___] := Enclose @ QuantumOperator[{"Liouvillian", H, ls, gammas}, opts]
 
-QuantumOperator[{"Hamiltonian", args___}, opts___] := QuantumOperator[I QuantumOperator["Liouvillian"[args]], opts, "Label" -> "Hamiltonian"]
+QuantumOperator[{"Hamiltonian", args___}, opts___] := Enclose @ QuantumOperator[I ConfirmBy[QuantumOperator["Liouvillian"[args]], QuantumOperatorQ], opts, "Label" -> "Hamiltonian"]
 
 
 QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},

@@ -575,7 +575,8 @@ With[{state = qo["State"]["PrimeBasis"]},
     ]
 ]
 
-QuantumOperatorProp[qo_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] := QuantumOperator[qo["State"][prop, args], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand" | "EigenPrune", args___] :=
+    Enclose @ QuantumOperator[ConfirmBy[qo["State"][prop, args], QuantumStateQ], qo["Order"]]
 
 
 (* evolution *)
