@@ -790,12 +790,13 @@ QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
     ]
 ]
 
-QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1] /; qs["NumericQ"] :=
+QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1, opts : OptionsPattern["Normalize" -> True]] /; qs["NumericQ"] :=
 	Block[{d, u, p},
 		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
-        p = PositionLargest[Abs[d], n];
-		d = Normalize[Extract[d, p], Total];
-        u = Extract[u, p];
+        p = Catenate[PositionLargest[Abs[d], n]];
+        d = d[[p]];
+		If[TrueQ[OptionValue["Normalize"]], d = Normalize[d[[p]], Total]];
+        u = u[[p]];
 		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
     ]
 
