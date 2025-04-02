@@ -398,7 +398,14 @@ QuantumStateProp[qs_, "Operator", args___] := QuantumOperator[qs["Projector"], a
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
 
-QuantumStateProp[qs_, "Table"] := TableForm[qs["StateMatrix"], TableHeadings -> {qs["Output"]["Names"], qs["Input"]["Names"]}, TableAlignments -> Center]
+QuantumStateProp[qs_, "Table"] := TableForm[
+    qs["StateMatrix"],
+    TableHeadings -> If[qs["MatrixQ"],
+        {QuantumTensorProduct[qs["Output"], qs["Output"]["Dual"]]["Names"], QuantumTensorProduct[qs["Input"]["Dual"], qs["Input"]]["Names"]},
+        {qs["Output"]["Names"], qs["Input"]["Names"]}
+    ],
+    TableAlignments -> Center
+]
 
 
 (* density matrix *)
