@@ -9,8 +9,8 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 operatorApply[op_, states : {_ ? QuantumStateQ ...}, min_, basisQ_ : False] := Enclose @ With[{
-	outputOrder = op["FullOutputOrder"] - min + 1,
-	inputOrder = op["FullInputOrder"] - min + 1,
+	outputOrder = op["OutputOrder"] - min + 1,
+	inputOrder = op["InputOrder"] - min + 1,
 	decompose = If[TrueQ[basisQ], {"BasisDecompose"}, {"DecomposeWithAmplitudes", op["OutputDimensions"]}]
 },
 	Map[
