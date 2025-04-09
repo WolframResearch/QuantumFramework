@@ -585,7 +585,7 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
 
 (* parameterization *)
 
-(qo_QuantumOperator ? QuantumOperatorQ)[opts___] := qo[QuantumState[{"Register", qo["InputDimensions"]}], opts]
+(qo_QuantumOperator ? QuantumOperatorQ)[opts___] := QuantumCircuitOperator[qo][opts]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumOperator["Properties"], p] && Length[{ps}] <= qo["ParameterArity"] :=
     qo[AssociationThread[Take[qo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
