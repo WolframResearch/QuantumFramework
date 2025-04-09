@@ -9,8 +9,8 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 operatorApply[op_, states : {_ ? QuantumStateQ ...}, min_, basisQ_ : False] := Enclose @ With[{
-	outputOrder = op["OutputOrder"] - min + 1,
-	inputOrder = op["InputOrder"] - min + 1,
+	outputOrder = op["OutputOrder"],
+	inputOrder = op["InputOrder"],
 	decompose = If[TrueQ[basisQ], {"BasisDecompose"}, {"DecomposeWithAmplitudes", op["OutputDimensions"]}]
 },
 	Map[
@@ -21,7 +21,7 @@ operatorApply[op_, states : {_ ? QuantumStateQ ...}, min_, basisQ_ : False] := E
 			inputOrder === {},
 			op["State"]["Simplify"] @@ decompose,
 			True,
-			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Simplify"] @@ decompose
+			op["State"][QuantumTensorProduct @@ states[[inputOrder - min + 1]]]["Simplify"] @@ decompose
 		]
 	]
 ]
