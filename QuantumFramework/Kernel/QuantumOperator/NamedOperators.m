@@ -47,16 +47,17 @@ controlledZGate = ReplacePart[
 $ShorthandOperatorPattern =
     _Rule |
     _String |
+    _Symbol |
     _SuperDagger |
     ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]) |
     (c : g_Symbol[___] /; ! NumericQ[c] && MemberQ[Attributes[g], NumericFunction])
 
 FromOperatorShorthand[f_Symbol[
-    left___,
+    left : Except[_QuantumOperator] ...,
     op : $ShorthandOperatorPattern,
-    right___]
+    right : Except[_QuantumOperator] ...]
 ] /; MemberQ[Attributes[f], NumericFunction] :=
-    With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
+    Enclose @ With[{qo = ConfirmBy[QuantumOperator[Unevaluated[op]], QuantumOperatorQ]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 
 FromOperatorShorthand[{}] := QuantumOperator["I"]
 
