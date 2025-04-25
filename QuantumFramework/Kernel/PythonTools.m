@@ -7,7 +7,7 @@ PackageScope["PythonEvaluate"]
 
 
 $BasePythonPackages = {
-    "wolframclient", "matplotlib", "pylatexenc", "qiskit>=1.0"
+    "wolframclient", "matplotlib", "pylatexenc", "qiskit>=1,<2"
 }
 
 $PythonEnvironmentPackages = <|
