@@ -7,12 +7,14 @@ PackageScope["PythonEvaluate"]
 
 
 $BasePythonPackages = {
-    "wolframclient", "matplotlib", "pylatexenc", "qiskit>=1,<2"
+    "wolframclient", "matplotlib", "pylatexenc", "qiskit>=2,<3", "qiskit-aer"
 }
 
 $PythonEnvironmentPackages = <|
-    "default" -> {"qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider"},
-    "qctrl" -> {"qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal"},
+    "default" -> {"qiskit-ibm-runtime"},
+    "ibm" -> {"qiskit-ibm-runtime"},
+    "braket" -> {"qiskit-braket-provider"},
+    "qctrl" -> {"qiskit-braket-provider", "fire-opal"},
     "classiq" -> {"classiq>=0.40.0"},
     "pyzx" -> {"git+https://github.com/Quantomatic/pyzx.git"}
 |>
@@ -49,6 +51,8 @@ Enclose @ With[{session = Confirm @ $PythonSession[Replace[env, Automatic -> "de
         $ContextPath = DeleteCases[$ContextPath, ctx]
     ]
 ]
+PythonEvaluate[env_ -> code_String] := PythonEvaluate[code, env]
+PythonEvaluate[ctx_String, env_ -> code_String] := PythonEvaluate[ctx, code, env]
 
 PythonEvaluate[code_String, env : _String | Automatic : Automatic] := PythonEvaluate["Wolfram`QuantumFramework`", code, env]
 

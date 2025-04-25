@@ -304,7 +304,10 @@ Operator(qc).data
 "]
 ]
 
-Options[qiskitInitBackend] = {"Provider" -> None, "Backend" -> Automatic, "FireOpal" -> False}
+$IBMProvider = "IBM" | "IBMQ" | "IBMProvider" | "IBMRuntime"
+$AWSProvider = "AWS" | "AWSBraket" | "Braket"
+
+Options[qiskitInitBackend] = {"Provider" -> None, "Backend" -> Automatic, "FireOpal" -> False, "DensityMatrix" -> False}
 
 qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     $pythonBytes = qc["Bytes"],
@@ -312,48 +315,46 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     $backendName = Replace[OptionValue["Backend"], Automatic -> Null],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $token = Null,
+    $matrixQ = TrueQ[OptionValue["DensityMatrix"]],
     env
 },
-    env = If[$fireOpal, "qctrl", Automatic];
     {provider, params} = Replace[OptionValue["Provider"], {
         {name_, params : OptionsPattern[]} | name_ :> {name, Flatten[{params}]}
     }];
-    If[provider === None && $fireOpal, provider = "IBMProvider"];
+    If[provider === None && $fireOpal, provider = "IBMRuntime"];
 
-    If[ MatchQ[provider, "IBMQ" | "IBMProvider"],
+    Switch[
+        provider
+        ,
+        $IBMProvider,
         $token = Lookup[
             params,
             "Token",
             Enclose[Confirm @ Lookup[Last[ConfirmMatch[ServiceConnections`Private`serviceAuthentication[ServiceConnect["IBMQ"]["ID"]], _KeyClient`KeyToken]], "Token"], Null &]
         ];
+        env = "ibm"
+        ,
+        $AWSProvider,
+        env = "braket",
+        _,
+        env = "default"
     ];
 
+    If[$fireOpal, env = "qctrl"];
+
     Confirm @ PythonEvaluate[Context[$pythonBytes], Switch[provider,
-    "IBMQ",
+    $IBMProvider,
 "
-from qiskit.providers.ibmq.accountprovider import AccountProvider
+from qiskit_ibm_runtime import QiskitRuntimeService
 try:
-    assert(isinstance(provider, AccountProvider))
+    assert(isinstance(provider, QiskitRuntimeService))
 except:
-    from qiskit import IBMQ
     token = <* $token *>
     if token is not None:
-        from qiskit_ibm_runtime import QiskitRuntimeService
         QiskitRuntimeService.save_account(channel='ibm_quantum', token=token, overwrite=True)
-    provider = IBMQ.load_account()
+    provider = QiskitRuntimeService()
 ",
-    "IBMProvider",
-"
-from qiskit_ibm_provider import IBMProvider
-try:
-    assert(isinstance(provider, IBMProvider))
-except:
-    token = <* $token *>
-    if token is not None:
-        IBMProvider.save_account(token=token, overwrite=True)
-    provider = IBMProvider()
-",
-    "AWSBraket",
+    $AWSProvider,
 "
 from qiskit_braket_provider import AWSBraketProvider
 try:
@@ -363,39 +364,58 @@ except:
 ",
     _,
 "
-provider = None
-"], env];
-    PythonEvaluate[Context[$pythonBytes], "
-import pickle
 from qiskit.providers.basic_provider import BasicProvider
-from qiskit_aer import AerSimulator
-from qiskit_braket_provider import AWSBraketProvider
-from qiskit_ibm_provider import IBMProvider
+provider = BasicProvider()
+"], env];
+    Confirm @ PythonEvaluate[Context[$pythonBytes],
+"
+import pickle
 
 qc = pickle.loads(<* $pythonBytes *>)
 backend_name = <* $backendName *>
-if provider is None:
-    provider = BasicProvider()
-    backend = AerSimulator()
+", env];
+    Confirm @ PythonEvaluate[Context[$pythonBytes], Switch[provider,
+    $IBMProvider,
+"
+if backend_name is None:
+    backend = provider.backends()[0]
 else:
-    if backend_name is None:
-        if isinstance(provider, AWSBraketProvider):
-            backend = provider.get_backend('SV1')
-        else:
-            backend = provider.get_backend('ibmq_qasm_simulator')
-    else:
-        backend = provider.get_backend(backend_name)
+    backend = provider.backend(backend_name)
 if <* $fireOpal *>:
     import fireopal
     from fireopal.credentials import make_credentials_for_ibmq, make_credentials_for_braket
-    if isinstance(provider, IBMProvider):
+    if isinstance(provider, QiskitRuntimeService):
         fireopal_credentials = make_credentials_for_ibmq(provider._account.token, 'open', 'ibm-q', 'main')
     else:
         raise ValueError(f'Unsupported FireOpal provider: {provider}')
-", env]
+",
+    $AWSProvider,
+"
+if backend_name is None:
+    backend = provider.get_backend('SV1')
+else:
+    backend = provider.get_backend('basic_simulator')
+",
+    _,
+"
+from qiskit_aer import AerSimulator
+if qc.num_clbits == 0:
+    if <* $matrixQ *>:
+        method = 'density_matrix'
+        qc.save_density_matrix()
+    else:
+        method = 'statevector'
+        qc.save_statevector()
+else:
+    method = None
+
+backend = AerSimulator(method=method)
+" 
+], env];
+    env
 ]
 
-Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False, "DensityMatrix" -> False}, Options[qiskitInitBackend]]
+Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
     $state = Replace[qs, {Automatic -> Null, _ :> If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]]}],
@@ -405,65 +425,67 @@ qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsP
     $matrixQ = TrueQ[OptionValue["DensityMatrix"]],
     env, result
 },
-    env = If[$fireOpal, "qctrl", Automatic];
     If[ QuantumStateQ[qs],
         ConfirmAssert[qs["InputDimensions"] == {}];
         ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]]
     ];
 
-    Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
+    env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
 
     result = PythonEvaluate[Context[$state], "
-import pickle
 from qiskit import QuantumCircuit
-from qiskit import transpile
-from qiskit_braket_provider import AWSBraketProvider
+from qiskit_aer import AerSimulator
 
-# Run the quantum circuit on a statevector simulator backend
+if isinstance(backend, AerSimulator):
+    clbits = qc.num_clbits
+else:
+    clbits = qc.num_clbits if qc.num_clbits > 0 else qc.num_qubits
 
-circuit = QuantumCircuit(qc.num_qubits, qc.num_clbits)
+circuit = QuantumCircuit(qc.num_qubits, clbits)
 
 state = <* $state *>
-if state is not None and not isinstance(provider, AWSBraketProvider):
+if state is not None:
     circuit.initialize(state)
 circuit = circuit.compose(qc)
 
-try:
-    circuit = transpile(circuit, backend)
-except:
-    pass
+if not isinstance(backend, AerSimulator) and clbits == 0:
+    circuit.measure(range(qc.num_qubits), range(qc.num_qubits))
 
-if <* $fireOpal *>:
-    from qiskit import qasm2
-    import fireopal
-    qasm = qasm2.dumps(circuit)
-    if <* $validate *>:
-        validate_results = fireopal.validate(
-            circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
-        )
-        assert validate_results['results'] == [], validate_results['results'][0]['error_message']
-    result = fireopal.execute(
-        circuits=[qasm],
-        shot_count=<* $shots *>,
-        credentials=fireopal_credentials,
-        backend_name=backend.name,
-    )['results'][0]
-    result = {k: v for k, v in result.items()}
-else:
-
-    if isinstance(provider, AWSBraketProvider):
-        result = backend.run(circuit, shots = <* $shots *>).result()
-        result = result.get_counts()
-    else:
-        if qc.num_clbits > 0:
-            result = backend.run(circuit, shots = <* $shots *>).result()
-            result = result.get_counts(circuit)
+from qiskit_ibm_runtime import Session
+with Session(backend=backend) as session:
+    try:
+        from qiskit.transpiler import generate_preset_pass_manager
+        pm = generate_preset_pass_manager(optimization_level=1)
+        circuit = pm.run(circuit, backend=backend)
+    except:
+        pass
+    if <* $fireOpal *>:
+        from qiskit import qasm2
+        qasm = qasm2.dumps(circuit)
+        if <* $validate *>:
+            validate_results = fireopal.validate(
+                circuits=[qasm], credentials=fireopal_credentials
+            )
+            assert validate_results['results'] == [], validate_results['results'][0]['error_message']
+        result = fireopal.execute(
+            circuits=[qasm],
+            shot_count=<* $shots *>,
+            credentials=fireopal_credentials
+        )['results'][0]
+        result = {k: v for k, v in result.items()}
+    elif isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
+        import numpy as np
+        result = backend.run(circuit).result()
+        if <* $matrixQ *>:
+            result = result.data()['density_matrix']
         else:
-            from qiskit.quantum_info import Statevector, DensityMatrix
-            if <* $matrixQ *>:
-                result = DensityMatrix(circuit).data
-            else:
-                result = Statevector(circuit).data
+            result = result.get_statevector()
+        result = np.array(result)
+    else:
+        from qiskit.primitives import StatevectorSampler
+        sampler = StatevectorSampler()
+        result = sampler.run([circuit], shots = <* $shots *>).result()
+        result = result[0].join_data().get_counts()
 result
 ", env];
     Which[
@@ -644,7 +666,7 @@ QiskitCircuit /: MakeBoxes[qc_QiskitCircuit, format_] :=
     BoxForm`ArrangeSummaryBox[
         "QiskitCircuit",
         qc,
-        qc["Diagram", "Scale" -> 1],
+        If[qc["Depth"] <= 32, qc["Diagram", "Scale" -> 1], QuantumCircuitOperator[{{"Fourier", 3}}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]],
         {
             {BoxForm`SummaryItem[{"Qubits: ", qc["Qubits"]}]},
             {BoxForm`SummaryItem[{"Depth: ", qc["Depth"]}]}
