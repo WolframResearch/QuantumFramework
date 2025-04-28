@@ -53,11 +53,13 @@ $ShorthandOperatorPattern =
     (c : g_Symbol[___] /; ! NumericQ[c] && MemberQ[Attributes[g], NumericFunction])
 
 FromOperatorShorthand[f_Symbol[
-    left : Except[_QuantumOperator] ...,
+    left___,
     op : $ShorthandOperatorPattern,
-    right : Except[_QuantumOperator] ...]
-] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ With[{qo = ConfirmBy[QuantumOperator[Unevaluated[op]], QuantumOperatorQ]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
+    right___]
+] /; MemberQ[Attributes[f], NumericFunction] := 
+    Enclose @ With[{qo = ConfirmBy[QuantumOperator[Unevaluated[op]], QuantumOperatorQ]},
+        If[MatchQ[f, Times], f[left, qo, right], FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
+]
 
 FromOperatorShorthand[{}] := QuantumOperator["I"]
 
