@@ -137,15 +137,12 @@ QuditBasis /: HoldPattern[Times[qb__QuditBasis ? QuditBasisQ]] /; Length[{qb}] >
 
 (* numeric function *)
 
-QuditBasis /: f_Symbol[left : Except[_QuditBasis] ..., qb_QuditBasis, right : Except[_QuditBasis] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+QuditBasis /: f_Symbol[left : Except[_QuditBasis] ..., qb_QuditBasis, right : Except[_QuditBasis | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuditBasis[
         qb["Names"],
         ArrayReshape[
             Transpose @ ConfirmBy[
-                If[ MemberQ[{Plus, Minus, Times, Conjugate}, f],
-                    f[left, qb["Matrix"], right],
-                    Check[MatrixFunction[f[left, #, right] &, qb["Matrix"], Method -> "Jordan"], MatrixFunction[f[left, #, right] &, qb["Matrix"]]]
-                ],
+                matrixFunction[f, qb["Matrix"], {left}, {right}, opts],
                 MatrixQ
             ],
             Prepend[qb["Dimension"]] @ qb["ElementDimensions"]

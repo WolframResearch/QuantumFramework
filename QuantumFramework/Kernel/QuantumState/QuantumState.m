@@ -205,12 +205,9 @@ QuantumState /: Unequal[qs__QuantumState] := ! Equal[qs]
 
 (* numeric function *)
 
-QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuantumState[
-        If[ MemberQ[{Minus, Times}, f],
-            ConfirmBy[f[left, qs["State"], right], stateQ],
-            ConfirmBy[Check[MatrixFunction[f[left, #, right] &, qs["DensityMatrix"], Method -> "Jordan"], MatrixFunction[f[left, #, right] &, qs["DensityMatrix"]]], MatrixQ]
-        ],
+        ConfirmBy[matrixFunction[f, qs["DensityMatrix"], {left}, {right}, opts], stateQ],
         qs["Basis"]
     ]
 

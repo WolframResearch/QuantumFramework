@@ -43,6 +43,7 @@ PackageScope["alignDimensions"]
 
 PackageScope["SparseArrayFlatten"]
 PackageScope["MatrixInverse"]
+PackageScope["matrixFunction"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
@@ -291,6 +292,13 @@ SparseArrayFlatten[array_] := Flatten[array]
 
 
 MatrixInverse[matrix_] := If[SquareMatrixQ[matrix], Quiet @ Check[Inverse[matrix], PseudoInverse[matrix]], PseudoInverse[matrix]]
+
+
+matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := Switch[f,
+    Plus | Minus | Times | Conjugate, f[left, mat, right],
+    Power, MatrixPower[mat, left, right, opts],
+    _, ResourceFunction["ComputeMatrixFunction"][f[left, #, right] &, mat, opts]
+]
 
 
 SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]
