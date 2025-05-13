@@ -117,11 +117,13 @@ QuantumStateProp[qs_, "Amplitudes"] := Block[{s = qs["Pure"], result},
     result /; ! FailureQ[result]
 ]
 
-QuantumStateProp[qs_, "Amplitude"] := Block[{s = qs["Pure"], v},
+QuantumStateProp[qs_, "Amplitude"] := Block[{s = qs["Pure"], v, pos, order},
     v = Enclose @ ConfirmBy[Chop @ s["StateVector"], VectorQ];
+    pos = Catenate @ v["ExplicitPositions"];
+    order = Ordering[pos];
     AssociationThread[
-        s["Names", QuotientRemainder[Catenate @ v["ExplicitPositions"] - 1, s["InputDimension"]] + 1],
-        v["ExplicitValues"]
+        s["Names", QuotientRemainder[pos[[order]] - 1, s["InputDimension"]] + 1],
+        v["ExplicitValues"][[order]]
     ] /; ! FailureQ[v]
 ]
 
