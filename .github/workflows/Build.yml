@@ -39,5 +39,5 @@ jobs:
         CloudConnect[\"wolframquantumframework@wolfram.com\", \"${{ secrets.WQF_PASSWORD }}\"];
         CopyFile[\"${{env.PACLET_PATH}}\", CloudObject[\"QuantumFramework.paclet\", Permissions -> \"Public\"], OverwriteTarget -> True];
         DeleteDirectory[CloudObject[\"Courses\"], DeleteContents -> True];
-        CopyDirectory[\"./Notebooks/Courses\", CloudObject[\"Courses\"]]
+        CopyDirectory[\"./Notebooks/Courses\", CloudObject[\"Courses\", Permissions -> \"Public\"]]
         "
