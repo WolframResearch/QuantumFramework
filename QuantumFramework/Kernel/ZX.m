@@ -8,7 +8,7 @@ PackageExport[ZXExpression]
 
 Options[toZX] = {"Simplify" -> False, "Fuse" -> False}
 
-toZX[op_, OptionsPattern[]] := Block[{qasm = QuantumCircuitOperator[op]["Qiskit"]["QASM"]},
+toZX[op_, OptionsPattern[]] := Block[{qasm = StringDelete[QuantumCircuitOperator[op]["Qiskit"]["QASM"], RegularExpression[".*save_statevector.*"]]},
 PythonEvaluate[Context[qasm], StringTemplate["
 import pyzx
 from pyzx import draw, Circuit

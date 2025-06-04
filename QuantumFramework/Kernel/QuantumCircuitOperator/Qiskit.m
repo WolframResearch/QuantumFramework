@@ -531,14 +531,14 @@ qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitB
     Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
     PythonEvaluate[Context[$version], "
 from qiskit import transpile
-from qiskit_braket_provider import AWSBraketProvider
-
 circuit = transpile(qc, backend)
-if isinstance(provider, AWSBraketProvider):
-    from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit
-    from braket.circuits.serialization import IRType
-    result = convert_qiskit_to_braket_circuit(circuit).to_ir(IRType.OPENQASM).source
-else:
+try:
+    from qiskit_braket_provider import AWSBraketProvider
+    if isinstance(provider, AWSBraketProvider):
+        from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit
+        from braket.circuits.serialization import IRType
+        result = convert_qiskit_to_braket_circuit(circuit).to_ir(IRType.OPENQASM).source
+except:
     if <* $version *> == 3:
         from qiskit import qasm3
         result = qasm3.dumps(circuit)
