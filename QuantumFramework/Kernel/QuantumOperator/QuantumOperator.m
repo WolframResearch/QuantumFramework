@@ -160,7 +160,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
 
 QuantumOperator[matrix_ ? MatrixQ, opts : OptionsPattern[]] := QuantumOperator[matrix, QuantumBasis[primeFactors[#1], primeFactors[#2]] & @@ Dimensions[matrix], opts]
 
-QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Module[{
+QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
     outMultiplicity, inMultiplicity, result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
@@ -464,41 +464,56 @@ QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOper
     ]
 ]
 
+matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
+    QuantumState[
+        If[ op["VectorQ"],
+            Flatten[mat],
+            ArrayReshape[
+                Transpose[ArrayReshape[mat, Join[#, #] & @ op["MatrixNameDimensions"]], 2 <-> 3],
+                {#, #} & @ op["Dimension"]
+            ]
+        ],
+        op["Basis"]
+    ],
+    op["Order"],
+    opts
+]
+
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
     op = qo["Sort"]
 },
-    ConfirmBy[
-        matrixFunction[f, op["Matrix"], {left}, {right}, opts],
-        MatrixQ
-    ] // QuantumOperator[
-        QuantumState[
-            If[ op["VectorQ"],
-                Flatten[#],
-                ArrayReshape[
-                    Transpose[ArrayReshape[#, Join[#, #] & @ op["MatrixNameDimensions"]], 2 <-> 3],
-                    {#, #} &[op["Dimension"]]
-                ]
-            ],
-            op["Basis"], "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
-        ],
-        op["Order"]
-    ] &
+    matrixOperator[
+        op,
+        ConfirmBy[matrixFunction[f, op["Matrix"], {left}, {right}, opts], MatrixQ],
+        "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
+    ]
 ]
 
-QuantumOperator /: MatrixExp[op_QuantumOperator] :=
-    QuantumOperator[
-        MatrixExp[op["Matrix"]],
-        op["Order"],
-        op["Basis"],
+QuantumOperator /: MatrixExp[qo_QuantumOperator] := Enclose @ With[{
+    op = qo["Sort"]
+},
+    matrixOperator[
+        op,
+        ConfirmBy[MatrixExp[op["Matrix"]], MatrixQ],
         "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
     ]
+]
 
-QuantumOperator /: MatrixExp[op_QuantumOperator, qs_QuantumState] :=
+QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ With[{op = qo["Sort"]},
     QuantumState[
-        MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
-        op["Output"],
-        "Label" -> If[op["Label"] === None || qs["Label"] === None, None, Exp[op["Label"]][qs["Label"]]]
+        If[ op["VectorQ"] && qs["VectorQ"],
+            MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
+            ArrayReshape[
+                MatrixExp[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
+                {#, #} & @ op["OutputDimension"]
+            ]
+        ],
+        QuantumBasis[
+            op["Output"],
+            "Label" -> If[op["Label"] === None || qs["Label"] === None, None, Exp[op["Label"]][qs["Label"]]]
+        ]
     ]
+]
 
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
