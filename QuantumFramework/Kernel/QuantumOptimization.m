@@ -22,12 +22,11 @@ PackageExport["EntanglementLayer"]
 
 PackageExport["GenerateParameters"]
 
+PackageExport["ClassiqSetup"]
 
-(* ::Section:: *)
+
+(* ::Section::Closed:: *)
 (*Quantum Optimization Functionalities*)
-
-
-{1,2,3}[[Flatten[Position[{1,2,3},1]]]]
 
 
 ParametrizedLayer::dimensions = "Number of qubits and parameters of unequal lenght"
@@ -67,7 +66,99 @@ Options[GenerateParameters]={"Symbol"->"\[Theta]"};
 GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue["Symbol"]<>ToString[i] ],{i,1,NLayers *NQubits}]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
+(*Classiq Integration*)
+
+
+ClassiqSetup::PythonEvaluators="Non Python evaluator found";
+
+ClassiqSetup::"ClassiqInstallation"="Classiq Installation failed";
+
+ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
+
+Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.83.0"};
+
+ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
+	
+	{evaluators,cachedResults,reporter,output,classiq,ver,dependencies,dep,allpackages,packages,pak,evaluator,session,list},
+		
+		cachedResults=<||>;
+		
+		dependencies=OptionValue["CheckDependencies"];
+		
+		packages=OptionValue["InstallPackages"];
+		
+		output = Replace[prop, 
+							All -> {"Evaluators","Session","ClassiqVersion","CheckDependencies","InstallPackages"}
+						];
+		
+		If[!MatchQ[prop,All],
+								
+			If[!MatchQ[dependencies,{}],
+				output=Append[output,"CheckDependencies"]
+			];
+			
+			If[!MatchQ[packages,{}],
+				output=Append[output,"InstallPackages"]
+			];
+		];				
+	
+		reporter[data_Association] := (
+				PrependTo[cachedResults, data];  
+				If[ContainsAll[Keys[cachedResults], Flatten[{output}]],
+					Return[Dataset[cachedResults[[output]]],Module]
+				];
+			);		
+	
+		evaluators=FindExternalEvaluators["Python"];
+		
+		If[Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
+			
+			session=ExternalEvaluate`GetDefaultExternalSession["Python"];
+		
+			reporter[<|"Evaluators"->evaluators|>];
+			
+			reporter[<|"Session"->session|>];
+			
+			evaluator=session["Evaluator"];
+		
+			classiq=RunProcess[{evaluator,"-m","pip","--quiet","install","classiq"}];
+			
+					
+			If[!installedQ["classiq",evaluator],
+				Print[ClassiqSetup::ClassiqInstallation],
+				ver=ExternalEvaluate[session,"import pkg_resources\npkg_resources.get_distribution('classiq').version"];
+				If[!MatchQ[ver,OptionValue["LatestClassiqVersion"]],Print[ClassiqSetup::UpdatingClassiq];RunProcess[{evaluator,"-m","pip","--quiet","install","classiq","--upgrade"}]]
+			];
+			
+			ver=ExternalEvaluate[session,"import pkg_resources\npkg_resources.get_distribution('classiq').version"];
+			
+			reporter[<|"ClassiqVersion"->ver|>];
+			
+			dep=If[Length@dependencies>=1,
+					<|(#->installedQ[#,evaluator])&/@dependencies|>,
+					None
+				];
+			
+			reporter[<|"CheckDependencies"->dep|>];
+			
+			
+			pak=If[Length@packages>=1,
+					RunProcess[{evaluator,"-m","pip","--quiet","install",#}]&/@packages;
+					<|(#->installedQ[#,evaluator])&/@packages|>,
+					None
+			];
+			
+			reporter[<|"InstallPackages"->pak|>]
+	
+		];
+]
+
+
+installedQ[name_String,eval_]:=!MatchQ[If[StringQ[#],If[!MatchQ[#,""],#,$Failed],$Failed]&@RunProcess[{eval,"-m","pip","show",name},"StandardOutput"],$Failed]
+
+
+(* ::Section::Closed:: *)
 (*Example specific functions *)
 
 
