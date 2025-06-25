@@ -11,10 +11,10 @@ Instead of relying on Mathematica's built-in stochastic solvers (e.g., `NDSolve`
 ## References
 
 * Macieszczak *et al.*, "Efficient numerical simulation of the stochastic master equation," arXiv:1410.5345.
-* Prof. Gabriel T. Landi's melt notebook examples.
+* Prof. Gabriel T. Landi's [Melt notebook examples](https://melt1.notion.site/).
 
 ---
 
 ## License
 
-This work is released under the MIT License.")}
+This work is released under the MIT License.
