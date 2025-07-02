@@ -15,6 +15,8 @@ This folder contains Mathematica notebooks that provide implementations of two f
 2. **Baker–Campbell–Hausdorff (BCH) Expansion**  
    Computes the logarithm $\log(e^{X_1}e^{X_2}...e^{X_n})$ as a formal series in nested commutators (i.e the degree-n term of BCH Expansion)
 
+See this cloud-notebook for some details: [Zassenhaus-BCH](https://www.wolframcloud.com/obj/mohammadb/Published/Zassenhaus-BCH-Git.nb)
+
 In addition to the core algorithms, the notebooks include:
 
 - Symbolic tests verifying known identities from the literature.  
