@@ -10,20 +10,12 @@
 This folder contains Mathematica notebooks that provide implementations of two fundamental tools in non-commutative algebra:
 
 1. **Zassenhaus Formula**  
-   Decomposes
-
-   $$
-   e^{X_1 + X_2 + \cdots + X_n}
-   $$
+   Decomposes $e^{X_1 + X_2 + \cdots + X_n}$
 
    into an (infinite) product of exponentials of nested commutators.
 
 2. **Baker–Campbell–Hausdorff (BCH) Expansion**  
-   Computes the logarithm
-
-   $$
-   \log\bigl(e^{X_1} \, e^{X_2} \cdots e^{X_n}\bigr)
-   $$
+   Computes the logarithm $ \log\left(e^{X_1} \, e^{X_2} \cdots e^{X_n}\right)$
 
    as a formal series in nested commutators.
 
