@@ -15,7 +15,7 @@ This folder contains Mathematica notebooks that provide implementations of two f
    into an (infinite) product of exponentials of nested commutators.
 
 2. **Baker–Campbell–Hausdorff (BCH) Expansion**  
-   Computes the logarithm $ \log\left(e^{X_1} \, e^{X_2} \cdots e^{X_n}\right)$
+   Computes the logarithm $ \text{Log}\left(e^{X_1} \, e^{X_2} \cdots e^{X_n}\right)$
 
    as a formal series in nested commutators.
 
