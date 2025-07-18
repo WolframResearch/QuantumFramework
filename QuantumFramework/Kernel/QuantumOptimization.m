@@ -66,7 +66,7 @@ Options[GenerateParameters]={"Symbol"->"\[Theta]"};
 GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue["Symbol"]<>ToString[i] ],{i,1,NLayers *NQubits}]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Classiq Integration*)
 
 
@@ -76,7 +76,9 @@ ClassiqSetup::"ClassiqInstallation"="Classiq Installation failed";
 
 ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
 
-Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.83.0"};
+Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.86.0"};
+
+ClassiqSetup[]:=ClassiqSetup[{"ClassiqVersion","Session"}];
 
 ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 	
@@ -89,7 +91,7 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 		packages=OptionValue["InstallPackages"];
 		
 		output = Replace[prop, 
-							All -> {"Evaluators","Session","ClassiqVersion","CheckDependencies","InstallPackages"}
+							All -> {"ClassiqVersion","Session","Evaluators","CheckDependencies","InstallPackages"}
 						];
 		
 		If[!MatchQ[prop,All],
