@@ -269,7 +269,7 @@ def qc_to_QuantumCircuitOperator(qc, label=None):
         for q in qubits:
             size = 0
             for r in qc.qubits:
-                if r._register._name == q._register._name:
+                if r._register.name == q._register.name:
                     order.append(size + q._index + 1)
                     break
                 else:
