@@ -330,7 +330,7 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
         $token = Lookup[
             params,
             "Token",
-            Enclose[Confirm @ Lookup[Last[ConfirmMatch[ServiceConnections`Private`serviceAuthentication[ServiceConnect["IBMQ"]["ID"]], _KeyClient`KeyToken]], "Token"], Null &]
+            Enclose[ConfirmBy[SystemCredential["IBMQuantumPlatform_APIKEY"], StringQ], Null &]
         ];
         env = "ibm"
         ,
@@ -351,7 +351,7 @@ try:
 except:
     token = <* $token *>
     if token is not None:
-        QiskitRuntimeService.save_account(channel='ibm_quantum', token=token, overwrite=True)
+        QiskitRuntimeService.save_account(channel='ibm_quantum_platform', token=token, overwrite=True)
     provider = QiskitRuntimeService()
 ",
     $AWSProvider,
@@ -527,8 +527,8 @@ qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, Automati
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
 
-qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"]},
-    Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
+qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"], env},
+    env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
     PythonEvaluate[Context[$version], "
 from qiskit import transpile
 circuit = transpile(qc, backend)
@@ -546,7 +546,7 @@ except:
         from qiskit import qasm2
         result = qasm2.dumps(circuit)
 result
-"]
+", env]
 ]
 
 qc_QiskitCircuit["QASM" | "QASM2", opts___] := qiskitQASM[qc, "Version" -> 2, opts]
@@ -586,9 +586,9 @@ Options[qiskitTranspile] = Join[{"InitialLayout" -> None, "OptimizationLevel" ->
 qiskitTranspile[qc_QiskitCircuit, basisGates : {_String...} | None : None, opts : OptionsPattern[]] := Enclose @ Block[{
     $basisGates = Replace[basisGates, None -> Null],
     $initialLayout = Replace[OptionValue["InitialLayout"], None -> Null],
-    $optimizationLevel = OptionValue["OptimizationLevel"]
+    $optimizationLevel = OptionValue["OptimizationLevel"],
+    env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]]
 },
-    Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
     PythonEvaluate[Context[$basisGates], "
 import pickle
 from qiskit import transpile
@@ -604,13 +604,13 @@ wl.Wolfram.QuantumFramework.QiskitCircuit(
         )
     )
 )
-"]
+", env]
 ]
 
 qc_QiskitCircuit["Transpile", args___] := qiskitTranspile[qc, args]
 
-qc_QiskitCircuit["Layout", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{image},
-    Confirm @ qiskitInitBackend[qc, opts];
+qc_QiskitCircuit["Layout", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{image, env},
+    env = Confirm @ qiskitInitBackend[qc, opts];
     image = PythonEvaluate[Context[image], "
 from qiskit.visualization import plot_circuit_layout
 import PIL
@@ -621,7 +621,7 @@ fig.canvas.draw()
 image = PIL.Image.frombytes('RGBA', fig.canvas.get_width_height(), fig.canvas.buffer_rgba())
 matplotlib.pyplot.close()
 image
-"];
+", env];
     image
 ]
 

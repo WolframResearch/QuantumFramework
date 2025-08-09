@@ -1,8 +1,8 @@
 
 pacletInstalledQ[paclet_, version_] := AnyTrue[Through[PacletFind[paclet]["Version"]], ResourceFunction["VersionOrder"][#, version] <= 0 &]
 
-If[ ! pacletInstalledQ["ServiceConnection_IBMQ", "0.0.4"],
-    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQ.paclet"]]
+If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.1"],
+    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
 ]
 
 If[ ! pacletInstalledQ["Cotengra", "0.1"],
