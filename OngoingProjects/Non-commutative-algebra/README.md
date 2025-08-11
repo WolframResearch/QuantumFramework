@@ -9,10 +9,10 @@
 
 This folder contains Mathematica notebooks that provide implementations of two fundamental tools in non-commutative algebra:
 
-1. **Zassenhaus Formula**  
+1. **[Zassenhaus Formula](https://resources.wolframcloud.com/FunctionRepository/resources/ZassenhausTerms/)**  
    Decomposes $e^{X_1 + X_2 + \cdots + X_n}$ into an (infinite) product of exponentials of nested commutators (i.e. the degree-n term of Zassenhaus Formula)
 
-2. **Baker–Campbell–Hausdorff (BCH) Expansion**  
+2. **[Baker–Campbell–Hausdorff (BCH) Expansion](https://resources.wolframcloud.com/FunctionRepository/resources/BakerCampbellHausdorffTerms/)**  
    Computes the logarithm $\log(e^{X_1}e^{X_2}...e^{X_n})$ as a formal series in nested commutators (i.e the degree-n term of BCH Expansion)
 
 See this cloud-notebook for some details: [Zassenhaus-BCH](https://www.wolframcloud.com/obj/mohammadb/Published/Zassenhaus-BCH-Git.nb)
