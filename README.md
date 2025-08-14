@@ -37,27 +37,21 @@ Calculate the quantum correlation $P_{00}-P_{10}-P_{01}+P_{11}$
 ```wl
 Sum[(-1)^(i + j) PDF[\[ScriptCapitalD], {i, j}], {i, 0, 1}, {j, 0, 1}] // FullSimplify
 ```
-which gives returns:
-
-$$-\cos(\theta - \phi)$$
+which gives returns $$-\cos(\theta - \phi)$$.
 
 Calculate the state before measurements and show it in the Dirac notation:
 
 ```wl
 qc[[;; -3]][] // FullSimplify // TraditionalForm
 ```
-which gives returns:
-
-$$\frac{i \sin \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|00\rangle -\frac{\cos \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|01\rangle +\frac{\cos \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|10\rangle -\frac{i \sin \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|11\rangle$$
+which gives returns $$\frac{i \sin \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|00\rangle -\frac{\cos \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|01\rangle +\frac{\cos \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|10\rangle -\frac{i \sin \left(\frac{\theta -\phi }{2}\right)}{\sqrt{2}}|11\rangle$$.
 
 Calculate the entanglement monotone of that state:
 
 ```wl
 QuantumEntanglementMonotone[qc[[;; -3]][]] // FullSimplify
 ```
-which gives returns:
-
-$$1$$
+which gives returns 1.
 
 Add a bit-flip channel with a probability $p$ only on the qubit-2:
 
