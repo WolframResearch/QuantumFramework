@@ -88,6 +88,10 @@ measurement = N[qc][]
 
 Calculate the corresponding probabilities:
 
+```wl
+measurement["ProbabilityPlot", AspectRatio -> 1/6, PlotRange -> {Automatic, 1}, GridLines -> Automatic]
+```
+
 <img width="631" height="128" alt="image5" src="https://github.com/user-attachments/assets/88f694e6-5b20-4272-890d-f35a33788d8b" />
 
 Set time and other variables of a Hamiltonian (Rabi drive and detuning):
