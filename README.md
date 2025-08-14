@@ -17,6 +17,7 @@ To contact [Wolfram quantum team](https://www.wolfram.com/quantum-computation-fr
 ### Some examples
 The Wolfram quantum framework handles many different quantum objects, including states, operators, channels, measurements, circuits, and more. It offers specialized functions for various computations like quantum evolution, entanglement monotones, partial tracing, Wigner or Weyl transformations, stabilizer formalism, and additional capabilities. Each functionality incorporates common named operations, such as Schwinger basis, GHZ state, Fourier operator, Grover circuit, and others. Perform computations seamlessly with the Wolfram quantum framework using the standard Wolfram kernel, such as the usual evaluation of codes in Mathematica. Alternatively, leverage the framework to send jobs to quantum processing units via service connections. Here are some examples.
 
+#### Example 1
 Create a quantum circuit composed of Pauli-X on qubits 1 and 2, Hadamard on qubit 1, CNOT with qubit 1 as the controlled and qubit 2 as the target, rotation around the z-axis by a symbolic angle ϕ on qubit 1, rotation around the z-axis by a symbolic angle θ on qubit 2, Hadamard on qubits 1 and 2, and finally, measurement in the computational basis on qubits 1 and 2.
 
 ```wl
@@ -71,6 +72,8 @@ which returns:
 
 <img width="820" height="93" alt="image3" src="https://github.com/user-attachments/assets/6fff3aee-f5ca-4336-b808-283ef30f3b4b" />
 
+
+#### Example 2
 Create the quantum phase estimation circuit for a phase operator with a given angle and a given number of qubits:
 
 ```wl
@@ -94,6 +97,8 @@ measurement["ProbabilityPlot", AspectRatio -> 1/6, PlotRange -> {Automatic, 1}, 
 
 <img width="631" height="128" alt="image5" src="https://github.com/user-attachments/assets/88f694e6-5b20-4272-890d-f35a33788d8b" />
 
+
+#### Example 3
 Set time and other variables of a Hamiltonian (Rabi drive and detuning):
 
 ```wl
