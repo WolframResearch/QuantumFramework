@@ -8,6 +8,8 @@ PackageScope[expandLevel]
 
 $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 
+$Black = If[$VersionNumber >= 14.3, LightDarkSwitched[Black, White], Black];
+
 $GateDefaultBoundaryStyle = {
 	None | Subscript["\[Psi]", _] | _Ket | _Bra -> Hue[0.62, 0.45, 0.87],
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
@@ -32,7 +34,7 @@ $GateDefaultBackgroundStyle = Join[
 	}
 ]
 
-$DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
+$DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> $Black};
 
 $DefaultWireLabelStyle = {FontSlant -> Italic, FontSize -> 10, FontColor -> $DefaultGray};
 
@@ -248,7 +250,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			Map[With[{p = {center[[1]] - size / 2, - # vGapSize}}, {wireThickness[Replace[#, inDims]], Line[{center, p}]}] &, vposIn],
 			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center, p}]}] &, vposOut],
-			FaceForm[Directive[Opacity[1], Black]],
+			FaceForm[Directive[Opacity[1], $Black]],
 			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], wireStyle]],
 			If[	Length[vposIn] < Length[vposOut],
 				Triangle[{center + size / 4 {1/2, 1}, center + size / 4 {1/2, -1}, center + size / 4 {-1, 0}}],
