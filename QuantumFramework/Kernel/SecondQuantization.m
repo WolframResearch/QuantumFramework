@@ -111,13 +111,13 @@ DisplacementOperator[\[Alpha]_, size_, OptionsPattern[]] :=
         
         Switch[ordering,
             "Normal",
-                Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  Exp[\[Alpha] (a["Dagger"])] @ Exp[-Conjugate[\[Alpha]] a],
+                Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[\[Alpha] (a["Dagger"])] @ MatrixExp[-Conjugate[\[Alpha]] a],
 
             "Weak",
-               Exp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
+               MatrixExp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
 
             "Antinormal",
-                Exp[\[Alpha] Conjugate[\[Alpha]]/2]  Exp[-Conjugate[\[Alpha]] a] @ Exp[\[Alpha] (a["Dagger"])] ,
+                Exp[\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[-Conjugate[\[Alpha]] a] @ MatrixExp[\[Alpha] (a["Dagger"])] ,
 
             _, 
                 Message[DisplacementOperator::invalidorder, ordering];
@@ -133,7 +133,7 @@ SqueezeOperator::invalidorder = "The value for the 'Ordering' option, `1`, is in
 SqueezeOperator[xi_, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize, opts];
 
 SqueezeOperator[xi_, size_, OptionsPattern[]] :=
-    Module[{tau, nu, a = AnnihilationOperator[size], identityOp, ordering},
+    Module[{tau, nu, a = AnnihilationOperator[size], ordering},
     
         ordering = OptionValue["Ordering"];
         
@@ -141,20 +141,19 @@ SqueezeOperator[xi_, size_, OptionsPattern[]] :=
         
         nu = Log[Cosh[Abs[xi]]];
         
-        identityOp = QuantumOperator["I"[size]];
         
         Switch[ordering,
             "Normal",
-                Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ Exp[-
-                    nu ((a["Dagger"]) @ a + 1/2 identityOp)] @ Exp[Conjugate[tau] / 2 (a 
+                MatrixExp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ MatrixExp[-
+                    nu ((a["Dagger"]) @ a + 1/2 )] @ MatrixExp[Conjugate[tau] / 2 (a 
                     @ a)]
             ,
             "Weak",
-                Exp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
+                MatrixExp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
             ,
             "Antinormal",
-                Exp[1/2 Conjugate[tau] (a @ a)] @ Exp[-nu ((a["Dagger"
-                    ]) @ a + 1/2 identityOp)] @ Exp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
+                MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[-nu ((a["Dagger"
+                    ]) @ a + 1/2 )] @ MatrixExp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
                     ]))]
             ,
             _,
