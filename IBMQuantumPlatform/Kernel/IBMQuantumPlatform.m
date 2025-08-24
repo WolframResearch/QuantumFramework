@@ -129,44 +129,18 @@ params["RawRequests", "RawJobs"] = {
     "Headers"			-> $commonHeaders
 }
 
-params["RawRequests", "RawExperiments"] = {
-    "URL"                -> path["experiments"],
+params["RawRequests", "RawWorkloads"] = {
+    "URL"                -> path["workloads"],
     "HTTPSMethod"        -> "GET",
     "Headers"            -> $commonHeaders
 }
 
-params["RawRequests", "RawExperimentResults"] = {
-    "URL"                -> path["experiments", "results"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
-params["RawRequests", "RawReservations"] = {
-    "URL"                -> path["reservations"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
-params["RawRequests", "RawReservationDetails"] = {
-    "URL"                -> Function[URLBuild[{path["reservations"], #ReservationID}]],
+params["RawRequests", "RawAccountDetails"] = {
+    "URL"                -> Function[URLBuild[{path["accounts"], #AccountID}]],
     "HTTPSMethod"        -> "GET",
     "Headers"            -> $commonHeaders,
-    "PathParameters"     -> {"ReservationID"},
-    "RequiredParameters" -> {"ReservationID"}
-}
-
-params["RawRequests", "RawUsers"] = {
-    "URL"                -> path["users"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
-params["RawRequests", "RawUserDetails"] = {
-    "URL"                -> Function[URLBuild[{path["users"], #UserID}]],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders,
-    "PathParameters"     -> {"UserID"},
-    "RequiredParameters" -> {"UserID"}
+    "PathParameters"     -> {"AccountID"},
+    "RequiredParameters" -> {"AccountID"}
 }
 
 params["RawRequests", "RawJobRun"] = {
@@ -196,7 +170,7 @@ params["RawRequests", "RawJobResults"] = {
     "PathParameters"     -> {"JobID"},
     "RequiredParameters" -> {"JobID"},
     "HiddenParameters"  -> {},
-    "HTTPResponseProcessing" -> Function[ImportString[SF`ImportResponse[#], "RawJSON"]]
+    "HTTPResponseProcessing" -> Function[Enclose[ImportString[SF`ImportResponse[Confirm[#]], "RawJSON"]]]
 }
 
 params["RawRequests", "RawJobInterimResults"] = {
@@ -349,24 +323,35 @@ params["ParameterMap"] = <|
 
 params["ProcessedRequests"] = <||>;
 
+params["ProcessedRequests", "Backends"] := <|
+    "ExecuteFunction" -> SF`RequestExecute["RawBackends"],
+    "SubmitFunction" -> SF`RequestExecute["RawBackends"],
+    "Parameters" -> {},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Function[Enclose[Lookup[ConfirmBy[#, AssociationQ], "devices"]]]
+|>
 params["ProcessedRequests", "JobRun"] := <|
 		"ExecuteFunction" -> SF`RequestExecute["RawJobRun"],
 		"SubmitFunction" -> SF`RequestSubmit["RawJobRun"],
 		"Parameters" -> {
-			"QASM" -> Automatic, "Backend" -> Automatic, "ProgramID" -> Automatic
+			"QASM" -> None, "Observable" -> "Z",
+            "Backend" -> Automatic, "ProgramID" -> Automatic
 		},
-        "RequiredParameters" -> {"QASM", "Backend"},
+        "RequiredParameters" -> {"QASM"},
         "HiddenParameters" -> {},
-        "PreprocessingFunction" -> Function[Enclose[<|
-            "program_id" -> Replace[Lookup[#, "ProgramID"], Automatic -> "sampler"],
-            "backend" -> Replace[Lookup[#, "Backend"], Automatic -> "ibmq_qasm_simulator"],
-            "params" -> <|
-                "pubs" -> {{Confirm @ Lookup[#, "QASM"], "Z"}},
-                "options" -> <|"dynamical_decoupling" -> <|"enable" -> True|>|>,
-                "version" -> 2,
-                "resilience_level" -> 1
-            |>
-        |>]],
+        "PreprocessingFunction" -> Function[Enclose @ With[{program = Lookup[#, "ProgramID"]},
+            <|
+                "program_id" -> Replace[program, Automatic -> "sampler"],
+                "backend" -> Replace[Lookup[#, "Backend"], _Missing | Automatic :> First[SF`GetDefaultServiceObject["IBMQuantumPlatform"]["Backends"]]],
+                "params" -> <|
+                    "pubs" -> {{ConfirmBy[Lookup[#, "QASM"], StringQ], Switch[program, "estimator", Lookup[#, "Observable"], "sampler" | _, Nothing]}},
+                    "options" -> <|"dynamical_decoupling" -> <|"enable" -> True|>|>,
+                    "version" -> 2
+                |>
+            |>]
+        ],
         "ExecuteResultProcessing" -> Identity
 	|>
 
