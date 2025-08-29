@@ -43,9 +43,6 @@ PackageExport["HusimiQRepresentation"]
 SetFockSpaceSize[size:_Integer?Positive:16]:=$FockSize = size;
 
 
-Commutator[a_QuantumOperator,b_QuantumOperator]:= a@b - b@a 
-
-
 OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
@@ -77,7 +74,7 @@ QuantumState[SparseArray[{FromDigits[vals,size]+1->1},size^Length[vals]],
 FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
 
 
-AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
+AnnihilationOperator[size_:$FockSize]:= AnnihilationOperator[size] = 
 	QuantumOperator[
 	SparseArray[Band[{1,2}]->Sqrt[Range[size-1]],{size,size}],
 	size]
