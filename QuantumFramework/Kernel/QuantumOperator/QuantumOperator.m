@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 Package["Wolfram`QuantumFramework`"]
 
 PackageImport["Wolfram`QuantumFramework`Gates`"]
@@ -568,6 +570,11 @@ Inverse[qo_QuantumOperator] ^:= qo ^ -1
 (* Trace *)
 
 QuantumOperator /: Tr[qo_QuantumOperator] := Tr @ qo["Matrix"]
+
+
+(* commutator *)
+
+QuantumOperator /: Commutator[a_QuantumOperator, b_QuantumOperator] := a@b - b@a
 
 
 (* simplify *)
