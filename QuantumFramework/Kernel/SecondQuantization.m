@@ -74,9 +74,9 @@ QuantumState[SparseArray[{FromDigits[vals,size]+1->1},size^Length[vals]],
 FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
 
 
-AnnihilationOperator[order_?orderQ]:= AnnihilationOperator[$FockSize, order]
+AnnihilationOperator[order : { _Integer }]:= AnnihilationOperator[$FockSize, order]
 
-AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= AnnihilationOperator[size, order] = 
+AnnihilationOperator[size_:$FockSize, Optional[order : { _Integer }, {1}]]:= AnnihilationOperator[size, order] = 
 	QuantumOperator[
 	SparseArray[Band[{1,2}]->Sqrt[Range[size-1]],{size,size}],
 	order, size]
@@ -105,9 +105,9 @@ DisplacementOperator[\[Alpha]_, opts : OptionsPattern[]] := DisplacementOperator
 
 DisplacementOperator[\[Alpha]_, size_, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha], size,{1}, opts];
 
-DisplacementOperator[\[Alpha]_, order_?orderQ, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha],$FockSize,order, opts];
+DisplacementOperator[\[Alpha]_, order : { _Integer }, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha],$FockSize,order, opts];
 
-DisplacementOperator[\[Alpha]_, size_, order_?orderQ OptionsPattern[]] :=
+DisplacementOperator[\[Alpha]_, size_, order : { _Integer }, OptionsPattern[]] :=
     Block[{a = AnnihilationOperator[size,order], ordering},
         
         ordering = OptionValue["Ordering"];
@@ -137,9 +137,9 @@ SqueezeOperator[xi_, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize,{
 
 SqueezeOperator[xi_, size_, opts : OptionsPattern[]] := SqueezeOperator[xi, size,{1}, opts];
 
-SqueezeOperator[xi_, order_?orderQ, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize,order, opts];
+SqueezeOperator[xi_, order : { _Integer }, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize,order, opts];
 
-SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
+SqueezeOperator[xi_, size_, order : { _Integer }, OptionsPattern[]] :=
     Module[{tau, nu, a = AnnihilationOperator[size,order], ordering},
     
         ordering = OptionValue["Ordering"];
@@ -170,9 +170,9 @@ SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
     ]
 
 
-QuadratureOperators[order_?orderQ] := QuadratureOperators[$FockSize,order]
+QuadratureOperators[order : { _Integer }] := QuadratureOperators[$FockSize,order]
 
-QuadratureOperators[size_:$FockSize, Optional[order_?orderQ, {1}]]:= Block[{a=AnnihilationOperator[size,order]},
+QuadratureOperators[size_:$FockSize, Optional[order : { _Integer }, {1}]]:= Block[{a=AnnihilationOperator[size,order]},
 							{1/2(a+a["Dagger"]),
 							1/(2I)(a-a["Dagger"])}
 						]
