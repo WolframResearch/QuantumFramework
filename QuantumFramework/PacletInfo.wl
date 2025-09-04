@@ -15,11 +15,11 @@ PacletObject[
         "Kernel",
         "Root" -> "Kernel",
         "Context" -> {
-          "Wolfram`QuantumFrameworkLoader`",
           {
             "Wolfram`QuantumFramework`",
             "QuantumFrameworkMain.m"
           },
+          "Wolfram`QuantumFramework`Init`",
           "Wolfram`QuantumFramework`Gates`",
           "Wolfram`QuantumFramework`Experimental`",
           "Wolfram`QuantumFramework`ExampleRepository`",

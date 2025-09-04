@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
-AppendTo[$ContextPath,"Wolfram`QuantumFramework`PackageScope`"]
-
 Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
 PackageImport["Wolfram`QuantumFramework`"]
+
+PackageImport["Wolfram`QuantumFramework`PackageScope`"]
 
 PackageExport["$FockSize"]
 
