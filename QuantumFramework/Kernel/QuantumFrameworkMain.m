@@ -1,5 +1,5 @@
 
-BeginPackage["Wolfram`QuantumFrameworkLoader`"]
+Begin["Wolfram`QuantumFramework`Loader`"]
 
 pacletInstalledQ[paclet_, version_] := AnyTrue[Through[PacletFind[paclet]["Version"]], ResourceFunction["VersionOrder"][#, version] <= 0 &]
 
@@ -12,8 +12,6 @@ If[ ! pacletInstalledQ["Cotengra", "0.1"],
 ]
 
 $ContextAliases["H`"] = "WolframInstitute`Hypergraph`"
-
-EndPackage[]
 
 ClearAll["Wolfram`QuantumFramework`*", "Wolfram`QuantumFramework`**`*"]
 
@@ -28,11 +26,13 @@ PacletManager`Package`loadWolframLanguageCode[
     "SymbolsToProtect" -> {}
 ]
 
+End[]
+
 (* this turns PackageScope into a valid package usable with PackageImport *)
 Block[{$ContextPath},
     BeginPackage["Wolfram`QuantumFramework`PackageScope`"];
-    EndPackage[]
-]
+    EndPackage[];
 
-Get["Wolfram`QuantumFramework`Init`"]
+    Get["Wolfram`QuantumFramework`Init`"]
+]
 
