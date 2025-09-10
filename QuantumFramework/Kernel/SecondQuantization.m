@@ -362,43 +362,45 @@ Options[HusimiQRepresentation]={
 
 
 (* ::Input::Initialization::Plain:: *)
-HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPattern[]] :=
-    Module[{X, Y, amat, qmat, d, v, qmatList, k, nonZeroEigenpairs, g,
-         xvec, pvec},
+HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
+     OptionsPattern[]] :=
+    Module[{X, Y, amat, qmat, vals, vecs, g, xvec, pvec, outerList},
         g = OptionValue["GaussianScaling"];
 
         xvec = Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
 
         pvec = Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
 
-        {X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
+        outerList = Outer[List, xvec, pvec];
+
+        {X, Y} = Transpose[outerList, {3, 2, 1}];
 
         amat = 0.5 g (X + I Y);
 
         qmat = ConstantArray[0, Dimensions[amat]];
 
         If[\[Psi]["PureStateQ"],
-            qmat = HusimiPure[\[Psi], amat]
-            ,
-            nonZeroEigenpairs = Select[Transpose[Eigensystem[\[Psi]["DensityMatrix"
-                ]]], First[#] != 0&];
-            qmatList = Map[(#[[1]] HusimiPure[QuantumState[#[[2]], Length[
-                #[[2]]]], amat])&, nonZeroEigenpairs];
-            qmat = 0.25 Total[Re /@ qmatList] g^2
+            qmat = HusimiPure[\[Psi], amat],
+            {vals, vecs} = \[Psi]["Eigensystem"];
+            {vals, vecs} =
+                With[{mask = Unitize[vals]},
+                    {Pick[vals, mask, 1], Pick[vecs, mask, 1]}
+                ];
+            qmat = Re[0.25 g^2 Dot[vals, Map[HusimiPure[QuantumState[
+                #, Length @ #], amat]&, vecs]]]
         ];
-
-        Interpolation[MapThread[List, {Flatten[Outer[List, xvec, pvec
-            ], 1], Flatten[Transpose@qmat]}]]
-    ];
+        Interpolation[MapThread[List, {Flatten[outerList, 1], Flatten[
+            Transpose @ qmat]}]]
+    ]
 
 
 HusimiPure[psi_QuantumState, alphaMat_] :=
-    Module[{n, psiVec, qmat,z},
+    Module[{n,psiVecScal,qmat},
         n = Times @@ psi["Dimensions"];
-        psiVec = psi["StateVector"];
-        qmat = Function[{q, x},
-                    q . z ^ Range[Length[q] - 1, 0, -1] /. z -> x
-                ][Reverse[psiVec / Sqrt[Factorial /@ Range[0, n - 1]]
-                    ], Conjugate[alphaMat]] // Abs[#] ^ 2&;
-        Re[qmat] Exp[-Abs[alphaMat] ^ 2] / Pi
+        
+        psiVecScal=psi["StateVector"]/Sqrt[Factorial @Range[0,n-1]];
+        
+		qmat=Abs[FromDigits[Reverse[psiVecScal], Conjugate[alphaMat]]]^2;
+		
+		Re[qmat] Exp[-Abs[alphaMat]^2]/Pi
     ]
