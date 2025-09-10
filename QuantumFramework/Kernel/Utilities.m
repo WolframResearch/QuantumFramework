@@ -337,13 +337,16 @@ alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
 ]
 
 
-TranscendentalRecognize[num_ ? NumericQ, basis : _ ? VectorQ : {Pi}] := Module[{lr, ans},
-  lr = FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]];
-  ans = Rest[lr] . basis / First[lr];
-  If[Numerator[ans] > 1*^3 || Denominator[ans] > 1*^3,
-    num,
-    Sign[N[ans]] Sign[num] ans
-  ]
+TranscendentalRecognize[num_ ? NumericQ, basis : _ ? VectorQ : {Pi}] := Enclose[
+    Block[{lr, ans},
+        lr = ConfirmBy[Quiet @ FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]], ListQ];
+        ans = Rest[lr] . basis / First[lr];
+        If[Numerator[ans] > 1*^3 || Denominator[ans] > 1*^3,
+            num,
+            Sign[N[ans]] Sign[num] ans
+        ]
+    ],
+    num &
 ]
 
 

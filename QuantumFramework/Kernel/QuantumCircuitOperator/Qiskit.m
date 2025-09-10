@@ -239,9 +239,9 @@ def gate_to_QuantumOperator(gate, order):
                 xs.append(x)
     if gate.name == 'x':
         return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
-    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
+    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap', 'sx']:
         return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
-    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz', 'sx']:
+    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
         return wl.Wolfram.QuantumFramework.QuantumOperator([gate.name.upper(), *xs], order)
     elif gate.name == 'tdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
@@ -255,6 +255,8 @@ def gate_to_QuantumOperator(gate, order):
         return wl.Wolfram.QuantumFramework.QuantumOperator('Reset', order)
     elif gate.name == 'barrier':
         return 'Barrier'
+    elif gate.name == 'save_statevector':
+        return wl.Nothing
     elif hasattr(gate, 'num_ctrl_qubits'):
         arg = ['C', gate_to_QuantumOperator(gate.base_gate, order[gate.num_ctrl_qubits:]), reverse_binary(gate.ctrl_state, gate.num_ctrl_qubits), order[:gate.num_ctrl_qubits]]
         return wl.Wolfram.QuantumFramework.QuantumOperator(arg)
@@ -449,43 +451,41 @@ if state is not None:
 circuit = circuit.compose(qc)
 
 if not isinstance(backend, AerSimulator) and clbits == 0:
-    circuit.measure(range(qc.num_qubits), range(qc.num_qubits))
+    circuit.measure_all()
 
-from qiskit_ibm_runtime import Session
-with Session(backend=backend) as session:
-    try:
-        from qiskit.transpiler import generate_preset_pass_manager
-        pm = generate_preset_pass_manager(optimization_level=1)
-        circuit = pm.run(circuit, backend=backend)
-    except:
-        pass
-    if <* $fireOpal *>:
-        from qiskit import qasm2
-        qasm = qasm2.dumps(circuit)
-        if <* $validate *>:
-            validate_results = fireopal.validate(
-                circuits=[qasm], credentials=fireopal_credentials
-            )
-            assert validate_results['results'] == [], validate_results['results'][0]['error_message']
-        result = fireopal.execute(
-            circuits=[qasm],
-            shot_count=<* $shots *>,
-            credentials=fireopal_credentials
-        )['results'][0]
-        result = {k: v for k, v in result.items()}
-    elif isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
-        import numpy as np
-        result = backend.run(circuit).result()
-        if <* $matrixQ *>:
-            result = result.data()['density_matrix']
-        else:
-            result = result.get_statevector()
-        result = np.array(result)
+try:
+    from qiskit.transpiler import generate_preset_pass_manager
+    pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+    circuit = pm.run(circuit)
+except:
+    pass
+if <* $fireOpal *>:
+    from qiskit import qasm2
+    qasm = qasm2.dumps(circuit)
+    if <* $validate *>:
+        validate_results = fireopal.validate(
+            circuits=[qasm], credentials=fireopal_credentials
+        )
+        assert validate_results['results'] == [], validate_results['results'][0]['error_message']
+    result = fireopal.execute(
+        circuits=[qasm],
+        shot_count=<* $shots *>,
+        credentials=fireopal_credentials
+    )['results'][0]
+    result = {k: v for k, v in result.items()}
+elif isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
+    import numpy as np
+    result = backend.run(circuit).result()
+    if <* $matrixQ *>:
+        result = result.data()['density_matrix']
     else:
-        from qiskit.primitives import StatevectorSampler
-        sampler = StatevectorSampler()
-        result = sampler.run([circuit], shots = <* $shots *>).result()
-        result = result[0].join_data().get_counts()
+        result = result.get_statevector()
+    result = np.array(result)
+else:
+    from qiskit_ibm_runtime import SamplerV2 as Sampler
+    sampler = Sampler(mode=backend)
+    result = sampler.run([circuit], shots = <* $shots *>).result()
+    result = result[0].join_data().get_counts()
 result
 ", env];
     Which[
@@ -554,8 +554,8 @@ qc_QiskitCircuit["QASM" | "QASM2", opts___] := qiskitQASM[qc, "Version" -> 2, op
 qc_QiskitCircuit["QASM3", opts___] := qiskitQASM[qc, "Version" -> 3, opts]
 
 
-qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
-    Confirm @ qiskitInitBackend[qc, opts];
+qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{env},
+    env = Confirm @ qiskitInitBackend[qc, opts];
     PythonEvaluate["
 from qiskit import qpy
 from io import BytesIO
@@ -566,7 +566,7 @@ qc = transpile(qc, backend)
 bytes = BytesIO()
 qpy.dump(qc, bytes)
 zlib.compress(bytes.getvalue())
-"]
+", env]
 ]
 
 ImportQPY[qpy_ByteArray] := Block[{$qpy = qpy}, PythonEvaluate[Context[$qpy], "
