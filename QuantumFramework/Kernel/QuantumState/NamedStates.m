@@ -72,6 +72,9 @@ QuantumState[{"BasisState", basisElement_List : {1}}, args___] := Enclose @ Bloc
     QuantumState[SparseArray[{elementPosition} -> 1, dimension], basis]
 ]
 
+QuantumState[{"Register" | "RandomPure" | "GHZ" | "UniformSuperposition" | "W", 0, ___}, args___] := QuantumState[1, 1, args]
+
+QuantumState[{"RandomMixed" | "UniformMixture", 0, ___}, args___] := QuantumState[{{1}}, 1, args]
 
 QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, args___] := Enclose @ Block[{basis, dimension},
     basis = ConfirmBy[QuantumBasis[args, "Label" -> state], QuantumBasisQ];
@@ -81,9 +84,7 @@ QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Inte
     QuantumState[SparseArray[{{state + 1} -> 1}, dimension], basis]
 ]
 
-QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
-
-QuantumState[{"Register", basisArg_, state : _Integer ? NonNegative : 0}, args___] := With[{basis = QuantumBasis[basisArg, args]},
+QuantumState[{"Register", basisArg_, state : _Integer ? NonNegative : 0}, args___] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[basisArg, args], QuantumBasisQ]},
     QuantumState[{"Register", basis["Qudits"], state}, basis]
 ]
 
