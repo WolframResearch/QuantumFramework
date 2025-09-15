@@ -8,6 +8,8 @@ PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
 PackageExport["TensorNetworkIndices"]
 PackageExport["TensorNetworkTensors"]
+PackageExport["TensorNetworkData"]
+PackageExport["TensorNetworkIndexDimensions"]
 PackageExport["TensorNetworkFreeIndices"]
 PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
@@ -16,7 +18,6 @@ PackageExport["TensorNetworkContractPath"]
 PackageExport["TensorNetworkNetGraph"]
 PackageExport["TensorNetworkIndexReplace"]
 
-PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
@@ -146,12 +147,36 @@ TensorNetworkIndices[net_Graph ? TensorNetworkQ] := AnnotationValue[{net, Develo
 TensorNetworkTensors[net_Graph ? TensorNetworkQ] := AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"]
 
 
+TensorNetworkData[net_Graph ? TensorNetworkQ] := With[{vs = Developer`FromPackedArray[VertexList[net]]}, {
+    tensors = AnnotationValue[{net, vs}, "Tensor"],
+    indices = AnnotationValue[{net, vs}, "Index"],
+    edges = EdgeList[net]
+}, {
+    dimensions = TensorNetworkIndexDimensions[indices, tensors],
+    tags = edges[[All, 3]]
+},
+    <|
+        "Tensors" -> tensors,
+        "Dimensions" -> Dimensions /@ tensors,
+        "Indices" -> indices,
+        "Vertices" -> vs,
+        "FreeIndices" -> TensorNetworkFreeIndices[indices, tags],
+        "Bonds" -> (#1 -> {##2} & @@@ MapAt[Lookup[dimensions, #[[1]]] &, edges, {All, 3}]),
+        "Contractions" -> Replace[indices, Catenate[Thread[# -> #, List, 1] & /@ tags], {2}]
+    |>
+]
+
+
 TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
-    SortBy[Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]] @ DeleteCases[Join @@ TensorNetworkIndices[net], Alternatives @@ Union @@ EdgeTags[net]]
+    TensorNetworkFreeIndices[TensorNetworkIndices[net], EdgeTags[net]]
+
+TensorNetworkFreeIndices[indices_List, tags_List] :=
+    SortBy[Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]] @ DeleteElements[Catenate[indices], Catenate[tags]]
 
 
-TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
-    Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, {TensorNetworkTensors[net], TensorNetworkIndices[net]}]
+TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] := TensorNetworkIndexDimensions @@ Lookup[TensorNetworkData[net], {"Indices", "Tensors"}]
+
+TensorNetworkIndexDimensions[indices_List, tensors_List] := Catenate @ MapThread[Thread[#1 -> Dimensions[#2]] &, {indices, tensors}]
 
 
 TensorNetworkIndexReplace[net_ ? TensorNetworkQ, rules_] :=
@@ -294,7 +319,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}, Options[QuantumTensorNetwork]]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -322,7 +347,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
     net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> computationalQ], TensorNetworkQ];
-    res = Confirm @ ContractTensorNetwork[net];
+    res = Confirm @ ContractTensorNetwork[net, FilterRules[{opts}, Options[ContractTensorNetwork]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],
@@ -424,7 +449,7 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPatt
                     $Failed :> With[{qubits = Total[Length /@ order]}, Switch[
                         OptionValue[Method],
                         "Zero", QuantumState[{"Register", qubits}],
-                        _,  QuantumState[{"RandomPure", qubits}]
+                        _, QuantumState[{"RandomPure", qubits}]
                     ]],
                     t_ :> ConfirmBy[QuantumState[Flatten[{t}]], QuantumStateQ]}
                 ]["SplitDual", Length[order[[1]]]];

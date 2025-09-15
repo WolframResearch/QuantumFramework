@@ -98,7 +98,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsP
                 <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
             ]
         ],
-        Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs, FilterRules[{opts}, Options[TensorNetworkApply]]],
+        Automatic | "TensorNetwork" | {"TensorNetwork", args___} :> TensorNetworkApply[qco["Flatten"], qs, args, FilterRules[{opts}, Options[TensorNetworkApply]]],
         "QuEST" :> QuESTApply[qco, qs],
         "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
         "Stabilizer" :> PauliStabilizerApply[qco, qs],
