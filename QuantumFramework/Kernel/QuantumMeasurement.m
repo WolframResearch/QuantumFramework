@@ -283,14 +283,15 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; Quant
         InterpretationBox[proba, qm]
     ]
 
-QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Unevaluated[qm]], format_] := Module[{icon},
+QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Unevaluated[qm]], format_] := Module[{icon, label = qm["Label"]},
     icon = With[{proba = TimeConstrained[qm["Probability"], 1]},
         If[
             ! FailureQ[proba] && AllTrue[proba, NumericQ],
             Show[
                 BarChart[
                     Chop /@ N @ proba, Frame -> {{True, False}, {True, False}}, FrameTicks -> None,
-                    ChartLabels -> Placed[KeyValueMap[Column[{##}] &, proba], Tooltip]
+                    ChartLabels -> Placed[KeyValueMap[Column[{##}] &, proba], Tooltip],
+                    PlotInteractivity -> False
                 ],
                 ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
             ],
@@ -302,7 +303,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Une
         ]
     ];
     BoxForm`ArrangeSummaryBox["QuantumMeasurement", qm,
-        Tooltip[icon, qm["Label"]],
+        If[label === None, icon, Tooltip[icon, label]],
         {
             {
                 BoxForm`SummaryItem[{"Target: ", qm["Target"]}]
