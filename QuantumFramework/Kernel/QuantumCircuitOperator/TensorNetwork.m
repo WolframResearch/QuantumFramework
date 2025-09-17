@@ -255,7 +255,7 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     arity = circuit["Arity"];
     MapThread[
         PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
-        {circuit["InputOrder"], PadLeft[circuit["InputDimensions"], arity, 2]}
+        Reverse /@ {circuit["InputOrder"], PadLeft[circuit["InputDimensions"], arity, 2]}
     ];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - arity;
