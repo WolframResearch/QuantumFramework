@@ -25,6 +25,7 @@ PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["MatrixPartialTrace"]
 PackageExport["EinsteinSummation"]
+PackageExport["ActivateTensor"]
 PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvalues"]
 PackageScope["eigenvectors"]
@@ -425,7 +426,7 @@ hadamardProduct[indices_, arrays_] := Block[{
 
 isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 	nonFreePos, freePos, nonFreeIn, nonFreeArray,
-    newArrays, newIn, indices, dimensions, contracted, contractions, multiplicity, tensor, transpose
+    newArrays, newIn, indices, dimensions, contracted, contractions, multiplicity, tensor
 },
 	If[ Length[in] != Length[arrays],
         Message[EinsteinSummation::length, Length[in], Length[arrays]];
@@ -455,17 +456,16 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
     If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
 	indices = DeleteElements[indices, 1 -> contracted];
 	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
-    tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ newArrays, contractions];
+    tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ newArrays, contractions];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
 		indices = Catenate @ ConstantArray[indices, multiplicity];
 		contracted = DeleteElements[indices, 1 -> out];
 		contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
 		indices = DeleteElements[indices, 1 -> contracted];
-		tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
+		tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
 	];
-	transpose = FindPermutation[indices, out];
-	If[ArrayQ[tensor], Transpose[tensor, transpose], tensor]
+    If[indices === out, tensor, Transpose[tensor, FindPermutation[indices, out]]]
 ]
 
 EinsteinSummation::length = "Number of index specifications (`1`) does not match the number of tensors (`2`)";
@@ -473,6 +473,9 @@ EinsteinSummation::shape = "Index specification `1` does not match the tensor ra
 EinsteinSummation::dim = "Dimensions of contracted indices don't match";
 (*EinsteinSummation::repeat = "Index specifications `1` are repeated more than twice";*)
 EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
+
+
+ActivateTensor[expr_] := Activate[Activate[expr, TensorContract]]
 
 
 QuditAdjacencyMatrix[x_, d_ : Automatic] := {{Abs[Normalize[x]] Mod[Arg[x], 2 Pi] / (Pi / (2 Replace[d, Automatic -> 2]))}}

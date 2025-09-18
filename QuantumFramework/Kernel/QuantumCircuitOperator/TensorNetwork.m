@@ -126,7 +126,7 @@ FastContractTensorNetwork[net_Graph] := Enclose[
         scalars = Extract[tensors, scalarPositions];
         indices = Delete[indices, scalarPositions];
         tensors = Delete[tensors, scalarPositions];
-        Times @@ scalars * Confirm[EinsteinSummation[indices -> outIndices, tensors]]
+        Times @@ scalars * ActivateTensor @ Confirm[EinsteinSummation[indices -> outIndices, tensors]]
     ],
     (ReleaseHold[#["HeldMessageCall"]]; #) &
 ]
@@ -154,6 +154,8 @@ TensorNetworkData[net_Graph ? TensorNetworkQ] := With[{vs = Developer`FromPacked
 }, {
     dimensions = TensorNetworkIndexDimensions[indices, tensors],
     tags = edges[[All, 3]]
+}, {
+    contractions = Replace[indices, Catenate[Thread[# -> #, List, 1] & /@ tags], {2}]
 },
     <|
         "Tensors" -> tensors,
@@ -162,7 +164,8 @@ TensorNetworkData[net_Graph ? TensorNetworkQ] := With[{vs = Developer`FromPacked
         "Vertices" -> vs,
         "FreeIndices" -> TensorNetworkFreeIndices[indices, tags],
         "Bonds" -> (#1 -> {##2} & @@@ MapAt[Lookup[dimensions, #[[1]]] &, edges, {All, 3}]),
-        "Contractions" -> Replace[indices, Catenate[Thread[# -> #, List, 1] & /@ tags], {2}]
+        "Contractions" -> contractions,
+        "ContractionIndices" -> Replace[contractions, {i_, _} :> i, {2}]
     |>
 ]
 
@@ -582,7 +585,7 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 			),
 			{i_, j_} :> Block[{out, tensor},
 				out = SymmetricDifference @@ Extract[indices, {{i}, {j}}];
-                tensor = EinsteinSummation[indices[[{i, j}]] -> out, {tensors[[i]], tensors[[j]]}];
+                tensor = ActivateTensor @ EinsteinSummation[indices[[{i, j}]] -> out, {tensors[[i]], tensors[[j]]}];
 				(* tensor = einsum[indices[[{i, j}]] -> out, tensors[[i]], tensors[[j]]]; *)
 				tensors = Append[Delete[tensors, {{i}, {j}}], tensor];
 				indices = Append[Delete[indices, {{i}, {j}}], out]
