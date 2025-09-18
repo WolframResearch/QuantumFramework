@@ -3,7 +3,7 @@ Begin["Wolfram`QuantumFramework`Loader`"]
 
 pacletInstalledQ[paclet_, version_] := AnyTrue[Through[PacletFind[paclet]["Version"]], ResourceFunction["VersionOrder"][#, version] <= 0 &]
 
-If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.1"],
+If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.2"],
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
 ]
 
