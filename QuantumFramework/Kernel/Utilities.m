@@ -109,6 +109,9 @@ toTensor[t_ ? TensorQ] := t
 toTensor[t_] := {t}
 
 
+tensorDimensions[t_] := Replace[TensorDimensions[t], Except[_List] :> {}]
+
+
 identityMatrix[0 | {_, 0} | {0, _}] := {{}}
 
 identityMatrix[n_] := IdentityMatrix[n, SparseArray]
@@ -131,7 +134,7 @@ MatrixPartialTrace[matrix_, trace_, dimensions_] := ArrayReshape[
 ]
 
 
-emptyTensorQ[t_ ? TensorQ] := Last[Dimensions[t]] === 0
+emptyTensorQ[t_] := Last[tensorDimensions[t]] === 0
 
 matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 
@@ -371,8 +374,8 @@ Memoize[f_ ? Developer`SymbolQ] := With[{g = Unique[f]},
 MyBlockDiagonalMatrix[{m1_ ? matrixQ, m2_ ? matrixQ}] := Block[{
     r1, r2, c1, c2
 },
-  	{r1, c1} = Dimensions @ m1;
-  	{r2, c2} = Dimensions @ m2;
+  	{r1, c1} = tensorDimensions @ m1;
+  	{r2, c2} = tensorDimensions @ m2;
     Join[
         Join[m1, ConstantArray[0, {r1, c2}, SparseArray], 2],
         Join[ConstantArray[0, {r2, c1}, SparseArray], m2, 2]
@@ -403,30 +406,38 @@ EinsteinSummation[s_String, arrays_] := EinsteinSummation[
 ]
 
 hadamardProduct[indices_, arrays_] := Block[{
-    dims = DeleteDuplicatesBy[Catenate @ MapThread[Thread[#1 -> Dimensions[#2]] &, {indices, arrays}], First],
-    newIndices, posIndex
+    oldIndices, newIndices, dims, posIndex
 },
-    newIndices = (is |-> Select[Keys[dims], MemberQ[is, #] &]) /@ indices;
+    oldIndices = Block[{i = 0},
+        FoldPairList[With[{new = Replace[#2, Append[#1, _ :> i++], 1]}, {new, Thread[#2 -> new]}] &, {}, indices]
+    ];
+    dims = DeleteDuplicatesBy[Catenate @ MapThread[Thread[#1 -> tensorDimensions[#2]] &, {oldIndices, arrays}], First];
+    newIndices = (is |-> Select[Keys[dims], MemberQ[is, #] &]) /@ oldIndices;
     posIndex = First /@ PositionIndex[Keys[dims]];
     {
-        Keys[dims],
+        Lookup[AssociationThread[Catenate[oldIndices], Catenate[indices]], Keys[dims]],
         Times @@ MapThread[
-            ArrayPad[
-                #,
-                {0, #} & /@ (Values[dims] - Dimensions[#]),
-                "Fixed"
-            ] & @ ArrayReshape[
-                Transpose[#3, FindPermutation[#1, #2]],
-                ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Dimensions[#3]]]
+            If[ TensorQ[#3],
+                ArrayPad[
+                    #,
+                    {0, #} & /@ (Values[dims] - tensorDimensions[#]),
+                    "Fixed"
+                ] & @ ArrayReshape[
+                    Transpose[#3, FindPermutation[#1, #2]],
+                    ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> tensorDimensions[#3]]]
+                ],
+                ArraySymbol[#3, Values[dims]]
             ] &,
-            {indices, newIndices, arrays}
+            {oldIndices, newIndices, arrays}
         ]
     }
 ]
 
 isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 	nonFreePos, freePos, nonFreeIn, nonFreeArray,
-    newArrays, newIn, indices, dimensions, contracted, contractions, multiplicity, tensor
+    newArrays, newIn, indices, dimensions, contracted, contractions,
+    scalarPositions, scalars,
+    multiplicity, tensor
 },
 	If[ Length[in] != Length[arrays],
         Message[EinsteinSummation::length, Length[in], Length[arrays]];
@@ -439,18 +450,21 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 		] &,
 		{in, arrays}
 	];
+
+    scalarPositions = Position[in, {}, {1}, Heads -> False];
+    scalars = Extract[arrays, scalarPositions];
+    newArrays = Delete[arrays, scalarPositions];
+    newIn = Delete[in, scalarPositions];
+
     If[ AnyTrue[out, Count[in, {___, #, ___}] > 1 &],
-        nonFreePos = Catenate @ Position[in, _ ? (ContainsAny[out]), {1}, Heads -> False];
-        freePos = Complement[Range[Length[in]], nonFreePos];
-        {nonFreeIn, nonFreeArray} = hadamardProduct[in[[nonFreePos]], arrays[[nonFreePos]]];
-        newArrays = Prepend[arrays[[freePos]], nonFreeArray];
-        newIn = Prepend[in[[freePos]], nonFreeIn]
-        ,
-        newArrays = arrays;
-        newIn = in
+        nonFreePos = Catenate @ Position[newIn, _ ? (ContainsAny[out]), {1}, Heads -> False];
+        freePos = Complement[Range[Length[newIn]], nonFreePos];
+        {nonFreeIn, nonFreeArray} = hadamardProduct[newIn[[nonFreePos]], newArrays[[nonFreePos]]];
+        newArrays = Prepend[newArrays[[freePos]], nonFreeArray];
+        newIn = Prepend[newIn[[freePos]], nonFreeIn]
     ];
 	indices = Catenate[newIn];
-    dimensions = Catenate[Dimensions /@ newArrays];
+    dimensions = Catenate[tensorDimensions /@ newArrays];
 	contracted = DeleteElements[indices, 1 -> out];
 	contractions = Flatten[Take[Position[indices, #[[1]], {1}, Heads -> False], UpTo[#[[2]]]]] & /@ Tally[contracted];
     If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
@@ -465,7 +479,7 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 		indices = DeleteElements[indices, 1 -> contracted];
 		tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
 	];
-    If[indices === out, tensor, Transpose[tensor, FindPermutation[indices, out]]]
+    Times @@ scalars * If[indices === out, tensor, Transpose[tensor, FindPermutation[indices, out]]]
 ]
 
 EinsteinSummation::length = "Number of index specifications (`1`) does not match the number of tensors (`2`)";
