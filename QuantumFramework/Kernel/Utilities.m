@@ -134,7 +134,7 @@ MatrixPartialTrace[matrix_, trace_, dimensions_] := ArrayReshape[
 ]
 
 
-emptyTensorQ[t_] := Last[tensorDimensions[t]] === 0
+emptyTensorQ[t_] := MatchQ[tensorDimensions[t], {___, 0}]
 
 matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 
@@ -466,17 +466,17 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 	indices = Catenate[newIn];
     dimensions = Catenate[tensorDimensions /@ newArrays];
 	contracted = DeleteElements[indices, 1 -> out];
-	contractions = Flatten[Take[Position[indices, #[[1]], {1}, Heads -> False], UpTo[#[[2]]]]] & /@ Tally[contracted];
+	contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
     If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
-	indices = DeleteElements[indices, 1 -> contracted];
+	indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
 	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
     tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ newArrays, contractions];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
 		indices = Catenate @ ConstantArray[indices, multiplicity];
 		contracted = DeleteElements[indices, 1 -> out];
-		contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
-		indices = DeleteElements[indices, 1 -> contracted];
+		contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
+		indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
 		tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
 	];
     Times @@ scalars * If[indices === out, tensor, Transpose[tensor, FindPermutation[indices, out]]]
