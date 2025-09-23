@@ -1,3 +1,199 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6b91420251ff372d8c280a05d29689c6d97fada5216f7ff7b6f39fb9848150ac
-size 7261
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      6903,        191]
+NotebookOptionsPosition[      5414,        155]
+NotebookOutlinePosition[      6073,        177]
+CellTagsIndexPosition[      6030,        174]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Definitions", "Section",
+ CellChangeTimes->{{3.8511719345804834`*^9, 
+  3.851171935603548*^9}},ExpressionUUID->"5049ed07-5513-4bb1-8d95-\
+7897975deda2"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"redirectCloudDeployedPaclet", " ", "//", " ", "ClearAll"}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"redirectCloudDeployedPaclet", " ", "//", " ", "Attributes"}], " ",
+    "=", " ", 
+   RowBox[{"{", " ", "HoldRest", " ", "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"redirectCloudDeployedPaclet", "[", " ", 
+    RowBox[{"obj_CloudObject", ",", " ", "target_ResourceObject"}], " ", 
+    "]"}], " ", ":=", " ", "\n", "    ", 
+   RowBox[{"Block", "[", " ", 
+    RowBox[{
+     RowBox[{"{", " ", "ResourceObject", " ", "}"}], ",", "\n", "        ", 
+     RowBox[{
+      RowBox[{"SetAttributes", "[", " ", 
+       RowBox[{"ResourceObject", ",", " ", "HoldAllComplete"}], " ", "]"}], 
+      ";", "\n", "        ", 
+      RowBox[{"CloudPut", "[", "\n", "            ", 
+       RowBox[{"target", ",", "\n", "            ", 
+        RowBox[{"FileNameJoin", " ", "@", " ", 
+         RowBox[{"{", " ", 
+          RowBox[{"obj", ",", " ", "\"\<Resource.wl\>\""}], " ", "}"}]}], ",",
+         "\n", "            ", 
+        RowBox[{"Permissions", " ", "->", " ", "\"\<Public\>\""}]}], "\n", 
+       "        ", "]"}], ";", "\n", "        ", "obj"}]}], "\n", "    ", 
+    "]"}]}], ";"}]}], "Code",
+ CellChangeTimes->{{3.851171000012992*^9, 3.8511710907501297`*^9}, 
+   3.851171745611168*^9, {3.851171871037905*^9, 3.851171872887538*^9}},
+ CellLabel->"In[8]:=",ExpressionUUID->"8d3aa5bc-2841-4a19-9b4b-e6fac363b893"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Usage", "Section",
+ CellChangeTimes->{{3.851171943260132*^9, 
+  3.851171943830174*^9}},ExpressionUUID->"cef0f006-0c10-4717-b569-\
+f0501e7288d1"],
+
+Cell["After deploying the paclet to the cloud, run the following:", "Text",
+ CellChangeTimes->{{3.851171763363662*^9, 
+  3.8511717786321864`*^9}},ExpressionUUID->"2c54abdc-573b-4d38-9c4d-\
+bdde3c24cddc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"redirectCloudDeployedPaclet", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+   "CloudObject", "[", 
+    "\"\<DeployedResources/Paclet/Wolfram/QuantumFramework\>\"", "]"}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{"ResourceObject", "[", "\"\<Wolfram/QuantumFramework\>\"", "]"}]}],
+   "\[IndentingNewLine]", "]"}]], "Input",
+ CellChangeTimes->{{3.8511716015739083`*^9, 3.851171627938239*^9}, 
+   3.851171758979701*^9},
+ CellLabel->"In[11]:=",ExpressionUUID->"1953898c-69b5-4eba-9f62-ad91bbccc186"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"CloudObject", "[", 
+   TemplateBox[{
+    "\"https://www.wolframcloud.com/obj/wolframquantumframework/\
+DeployedResources/Paclet/Wolfram/QuantumFramework\"", 
+     "https://www.wolframcloud.com/obj/wolframquantumframework/\
+DeployedResources/Paclet/Wolfram/QuantumFramework"},
+    "HyperlinkURL"], "]"}],
+  CloudObject[
+  "https://www.wolframcloud.com/obj/wolframquantumframework/DeployedResources/\
+Paclet/Wolfram/QuantumFramework"],
+  SelectWithContents->True]], "Output",
+ CellChangeTimes->{3.8511716514323874`*^9, 3.8511718277893796`*^9, 
+  3.851171882612855*^9, 3.851175213315385*^9, 3.85117529332976*^9, 
+  3.8529623382919407`*^9},
+ CellLabel->"Out[11]=",ExpressionUUID->"834214a7-a387-46c7-9e85-8c4b7e464b86"]
+}, Open  ]],
+
+Cell["All the click-to-copy inputs should now work:", "Text",
+ CellChangeTimes->{{3.851171792160655*^9, 3.851171802329455*^9}, {
+  3.851171893386143*^9, 
+  3.8511718942620635`*^9}},ExpressionUUID->"6c32598e-7c8a-4ae3-8162-\
+2452fddf56bd"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"PacletSymbol", "[", 
+    RowBox[{
+    "\"\<https://wolfr.am/11ftY6W2s\>\"", ",", "\"\<QuantumState\>\""}], 
+    "]"}], "[", 
+   RowBox[{
+    RowBox[{"1", "/", "2"}], " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"IdentityMatrix", "[", "2", "]"}], "+", 
+      RowBox[{"PauliMatrix", "[", "2", "]"}]}], ")"}]}], "]"}], "[", 
+  "\"\<Formula\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.8511718901597433`*^9, 3.8511718901607437`*^9}, 
+   3.851175277334812*^9, {3.8529623460155087`*^9, 3.8529623488409*^9}},
+ CellLabel->"In[12]:=",ExpressionUUID->"effa6cac-d0ad-478a-af84-9c78086e72ec"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"-", "\[ImaginaryI]"}], " ", 
+   InterpretationBox[
+    TemplateBox[{
+      RowBox[{"0"}]},
+     "Ket"],
+    Wolfram`QuantumFramework`QuditName[0, "Dual" -> False]]}], "+", 
+  InterpretationBox[
+   TemplateBox[{
+     RowBox[{"1"}]},
+    "Ket"],
+   Wolfram`QuantumFramework`QuditName[1, "Dual" -> False]]}]], "Output",
+ CellChangeTimes->{
+  3.8511718987909784`*^9, {3.851175278756109*^9, 3.8511752955053043`*^9}, 
+   3.8529623522633877`*^9},
+ CellLabel->"Out[12]=",ExpressionUUID->"04efb0bb-6ad8-42db-9564-48aa5bf8706b"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{923, 524},
+WindowMargins->{{Automatic, 80}, {65, Automatic}},
+WindowStatusArea->Automatic,
+TaggingRules-><|
+ "NotebookIndexQ" -> True, "NotebookLastIndexed" -> 
+  DateObject[{2022, 1, 14, 12, 34, 18.5146406`9.020090226152726}, "Instant", 
+    "Gregorian", -5.], "NotebookUUID" -> 
+  "e36b4c0b-c114-4384-b89d-726c156d0612"|>,
+FrontEndVersion->"13.0 for Mac OS X ARM (64-bit) (December 6, 2021)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"4ba6423c-b743-4d3f-b1a9-50ef12f1f986"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 158, 3, 67, "Section",ExpressionUUID->"5049ed07-5513-4bb1-8d95-7897975deda2"],
+Cell[741, 27, 1455, 32, 262, "Code",ExpressionUUID->"8d3aa5bc-2841-4a19-9b4b-e6fac363b893"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2233, 64, 150, 3, 67, "Section",ExpressionUUID->"cef0f006-0c10-4717-b569-f0501e7288d1"],
+Cell[2386, 69, 203, 3, 35, "Text",ExpressionUUID->"2c54abdc-573b-4d38-9c4d-bdde3c24cddc"],
+Cell[CellGroupData[{
+Cell[2614, 76, 529, 11, 94, "Input",ExpressionUUID->"1953898c-69b5-4eba-9f62-ad91bbccc186"],
+Cell[3146, 89, 760, 16, 89, "Output",ExpressionUUID->"834214a7-a387-46c7-9e85-8c4b7e464b86"]
+}, Open  ]],
+Cell[3921, 108, 238, 4, 35, "Text",ExpressionUUID->"6c32598e-7c8a-4ae3-8162-2452fddf56bd"],
+Cell[CellGroupData[{
+Cell[4184, 116, 634, 16, 52, "Input",ExpressionUUID->"effa6cac-d0ad-478a-af84-9c78086e72ec"],
+Cell[4821, 134, 565, 17, 38, "Output",ExpressionUUID->"04efb0bb-6ad8-42db-9564-48aa5bf8706b"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

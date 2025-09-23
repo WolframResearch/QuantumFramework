@@ -1,3 +1,1755 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7687ccee6f26fb7b1577a3e1278617d67ca7d460243780d0cc69bdce360cf48b
-size 82396
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     82197,       1746]
+NotebookOptionsPosition[     77213,       1622]
+NotebookOutlinePosition[     80491,       1708]
+CellTagsIndexPosition[     80413,       1703]
+WindowTitle->Quantum Fourier Transform | Example Notebook
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+The quantum Fourier transform (QFT) is a quantum analog of the classical \
+discrete Fourier transform (DFT) and is a key component in many quantum \
+algorithms, including Shor's algorithm. QFT circuits transform a quantum \
+state from the computational basis to the Fourier basis.\
+\>", "Text",
+ TaggingRules->{},
+ CellChangeTimes->{
+  3.889206071659245*^9, {3.890955123778997*^9, 3.8909551521381683`*^9}, {
+   3.890990616183145*^9, 3.890990616707171*^9}, {3.890990699268935*^9, 
+   3.89099070634371*^9}, 3.890991604297308*^9},
+ CellTags->"DefaultContent",
+ CellID->589310939,ExpressionUUID->"1c9a2d3a-c9b4-444a-bc58-9f50a991bf9c"],
+
+Cell["Install and load the QuantumFramework paclet:", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301375389147`*^9, 3.889630152807868*^9}, {
+  3.890230125254396*^9, 3.890230129164053*^9}},
+ CellID->962431612,ExpressionUUID->"5a77a004-b7c4-4761-b4b1-7145efa01c4c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"PacletInstall", "[", "\"\<Wolfram/QuantumFramework\>\"", 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]}], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301316068687`*^9, 3.889630135374712*^9}},
+ CellLabel->"In[70]:=",
+ CellID->243484515,ExpressionUUID->"e57b1042-4140-4d43-83cc-b6da090d97c5"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["PacletObject",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              Thickness[0.0416667], {
+               FaceForm[{
+                 RGBColor[0.961, 0.961, 0.961], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.5454, 
+                22.5972}, {7.5464, 20.5002}, {2.5454, 18.4022}, {2.5454, 
+                12.5982}, {2.5454, 12.5972}, {2.5454, 6.7952}, {7.5454, 
+                4.6962}, {7.546, 4.6972}, {12.5454, 2.5992}, {17.5454, 
+                4.6972}, {17.5454, 4.6962}, {22.5454, 6.7952}, {22.5454, 
+                12.5972}, {22.5454, 12.5982}, {22.5454, 18.4022}}}]}, {
+               FaceForm[{
+                 RGBColor[0.898, 0.898, 0.898], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 8.3359}, {17.125, 
+                14.0569}, {16.875, 14.0569}, {16.875, 8.3359}, {17., 
+                8.1169}, {21.952, 6.0399}, {22.049, 6.2709}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 8.3359}, {7.125, 14.0569}, {
+                6.875, 14.0569}, {6.875, 8.3359}, {1.952, 6.2709}, {2.048, 
+                6.0399}, {7., 8.1169}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8745, 6.2383}, {6.9515, 4.1733}, {7.0475, 
+                3.9423}, {11.9995, 6.0193}, {16.9515, 3.9423}, {17.0475, 
+                4.1733}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 14.1392}, {17.125, 
+                19.8602}, {16.875, 19.8602}, {16.875, 14.1392}, {17., 
+                13.9202}, {21.952, 11.8432}, {22.049, 12.0742}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 14.1392}, {7.125, 19.8602}, {
+                6.875, 19.8602}, {6.875, 14.1392}, {1.952, 12.0742}, {2.048, 
+                11.8432}, {7., 13.9202}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8746, 21.3633}, {11.8746, 18.3563}, {
+                11.9996, 18.3033}, {12.1246, 18.3563}, {12.1246, 21.3633}, {
+                11.9996, 21.4153}}}]}, {
+               FaceForm[{
+                 RGBColor[0.749, 0.749, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+                 3}}}, {{{8.292, 19.8594}, {12., 21.4154}, {15.707, 
+                 19.8594}, {12., 18.3034}}, {{17.5, 19.5274}, {17.5, 
+                 20.1924}, {12., 22.5004}, {6.5, 20.1924}, {6.5, 19.5284}, {
+                 12., 17.2194}, {12., 17.2194}, {15.7, 18.7724}, {17.5, 
+                 19.5274}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.5, 8.5156}, {11.5, 6.4876}, {11.5, 
+                5.4026}, {12.5, 5.8226}, {12.5, 8.5156}, {12., 8.3056}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{21.5, 6.4873}, {17.5, 4.8083}, {17.5, 
+                 9.5283}, {21.5, 11.2073}}, {{21.5, 12.7113}, {21.5, 
+                 12.2913}, {17., 10.4033}, {16.5, 10.6133}, {16.5, 10.1943}, {
+                 15.707, 9.8613}, {16.5, 9.5283}, {16.5, 4.8083}, {16.5, 
+                 4.8093}, {16.5, 4.3903}, {15.707, 4.0573}, {17., 3.5143}, {
+                 22.5, 5.8223}, {22.5, 12.2913}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{6.5, 4.8086}, {2.5, 6.4876}, {2.5, 
+                 11.2066}, {6.5, 9.5286}}, {{7.5, 9.1096}, {7.5, 9.1096}, {
+                 7.5, 9.5286}, {8.292, 9.8616}, {7.5, 10.1936}, {7.5, 
+                 10.6136}, {7., 10.4036}, {2.5, 12.2906}, {2.5, 12.7106}, {
+                 1.5, 12.2916}, {1.5, 5.8226}, {7., 3.5146}, {8.293, 
+                 4.0576}, {7.5, 4.3906}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{3.2925, 17.7622}, {7.0005, 
+                 19.3182}, {10.7075, 17.7622}, {7.0005, 16.2062}}, {{6.5005, 
+                 10.6122}, {2.5005, 12.2912}, {2.5005, 17.0102}, {6.5005, 
+                 15.3322}}, {{7.5005, 10.1932}, {7.5005, 10.6122}, {7.5005, 
+                 15.3322}, {12.0005, 17.2202}, {12.5005, 17.0102}, {12.5005, 
+                 18.0952}, {7.0005, 20.4032}, {1.5005, 18.0952}, {1.5005, 
+                 11.6262}, {7.0005, 9.3182}, {8.2935, 9.8612}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{21.5, 12.291}, {17.5, 10.612}, {
+                 17.5, 15.332}, {21.5, 17.01}}, {{13.293, 17.762}, {17., 
+                 19.318}, {20.708, 17.762}, {17., 16.207}}, {{17., 20.403}, {
+                 11.5, 18.095}, {11.5, 17.01}, {12., 17.22}, {16.5, 15.332}, {
+                 16.5, 10.612}, {16.5, 10.194}, {15.706, 9.861}, {17., 
+                 9.318}, {22.5, 11.626}, {22.5, 18.095}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{16.4995, 4.3906}, {12.4995, 
+                 2.7116}, {12.4995, 7.4316}, {16.4995, 9.1096}}, {{11.4995, 
+                 2.7116}, {7.4995, 4.3906}, {7.4995, 9.1096}, {11.4995, 
+                 7.4316}}, {{16.4995, 10.6136}, {16.4995, 10.1946}, {11.9995, 
+                 8.3056}, {8.2915, 9.8616}, {7.4995, 10.1936}, {7.4995, 
+                 10.6146}, {6.4995, 10.1946}, {6.4995, 3.7256}, {11.9995, 
+                 1.4176}, {17.4995, 3.7256}, {17.4995, 10.1946}}}]}, {
+               FaceForm[{
+                 RGBColor[0.965, 0.765, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{12., 17.6616}, {16.945, 15.5856}, {16.945, 
+                9.9376}, {12., 7.8636}, {7.055, 9.9376}, {7.055, 
+                15.5856}}}]}, {
+               FaceForm[{
+                 RGBColor[0.91, 0.655, 0.635], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.125, 
+                17.7627}, {11.875, 17.7627}, {11.875, 12.0407}, {6.952, 
+                9.9757}, {7.048, 9.7447}, {12., 11.8227}, {16.952, 9.7447}, {
+                17.048, 9.9757}, {12.125, 12.0407}}}]}, {
+               FaceForm[{
+                 RGBColor[0.867, 0.067, 0.], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}}}, {{{12.5, 8.5146}, {12.5, 13.2336}, {16.5, 14.9116}, {
+                 16.5, 10.1926}}, {{7.5, 14.9116}, {11.5, 13.2336}, {11.5, 
+                 8.5146}, {7.5, 10.1926}}, {{15.708, 15.6636}, {12., 
+                 14.1086}, {8.292, 15.6636}, {12., 17.2206}}, {{12., 
+                 18.3046}, {6.5, 15.9956}, {6.5, 9.5286}, {12., 7.2206}, {
+                 17.5, 9.5286}, {17.5, 15.9956}}}]}}, AspectRatio -> 
+             Automatic, ImageSize -> {24., 24.}, 
+             PlotRange -> {{0., 24.}, {0., 24.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Name: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Wolfram/QuantumFramework\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Version: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"1.0.35\"", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              Thickness[0.0416667], {
+               FaceForm[{
+                 RGBColor[0.961, 0.961, 0.961], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.5454, 
+                22.5972}, {7.5464, 20.5002}, {2.5454, 18.4022}, {2.5454, 
+                12.5982}, {2.5454, 12.5972}, {2.5454, 6.7952}, {7.5454, 
+                4.6962}, {7.546, 4.6972}, {12.5454, 2.5992}, {17.5454, 
+                4.6972}, {17.5454, 4.6962}, {22.5454, 6.7952}, {22.5454, 
+                12.5972}, {22.5454, 12.5982}, {22.5454, 18.4022}}}]}, {
+               FaceForm[{
+                 RGBColor[0.898, 0.898, 0.898], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 8.3359}, {17.125, 
+                14.0569}, {16.875, 14.0569}, {16.875, 8.3359}, {17., 
+                8.1169}, {21.952, 6.0399}, {22.049, 6.2709}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 8.3359}, {7.125, 14.0569}, {
+                6.875, 14.0569}, {6.875, 8.3359}, {1.952, 6.2709}, {2.048, 
+                6.0399}, {7., 8.1169}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8745, 6.2383}, {6.9515, 4.1733}, {7.0475, 
+                3.9423}, {11.9995, 6.0193}, {16.9515, 3.9423}, {17.0475, 
+                4.1733}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 14.1392}, {17.125, 
+                19.8602}, {16.875, 19.8602}, {16.875, 14.1392}, {17., 
+                13.9202}, {21.952, 11.8432}, {22.049, 12.0742}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 14.1392}, {7.125, 19.8602}, {
+                6.875, 19.8602}, {6.875, 14.1392}, {1.952, 12.0742}, {2.048, 
+                11.8432}, {7., 13.9202}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8746, 21.3633}, {11.8746, 18.3563}, {
+                11.9996, 18.3033}, {12.1246, 18.3563}, {12.1246, 21.3633}, {
+                11.9996, 21.4153}}}]}, {
+               FaceForm[{
+                 RGBColor[0.749, 0.749, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+                 3}}}, {{{8.292, 19.8594}, {12., 21.4154}, {15.707, 
+                 19.8594}, {12., 18.3034}}, {{17.5, 19.5274}, {17.5, 
+                 20.1924}, {12., 22.5004}, {6.5, 20.1924}, {6.5, 19.5284}, {
+                 12., 17.2194}, {12., 17.2194}, {15.7, 18.7724}, {17.5, 
+                 19.5274}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.5, 8.5156}, {11.5, 6.4876}, {11.5, 
+                5.4026}, {12.5, 5.8226}, {12.5, 8.5156}, {12., 8.3056}}}], 
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{21.5, 6.4873}, {17.5, 4.8083}, {17.5, 
+                 9.5283}, {21.5, 11.2073}}, {{21.5, 12.7113}, {21.5, 
+                 12.2913}, {17., 10.4033}, {16.5, 10.6133}, {16.5, 10.1943}, {
+                 15.707, 9.8613}, {16.5, 9.5283}, {16.5, 4.8083}, {16.5, 
+                 4.8093}, {16.5, 4.3903}, {15.707, 4.0573}, {17., 3.5143}, {
+                 22.5, 5.8223}, {22.5, 12.2913}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{6.5, 4.8086}, {2.5, 6.4876}, {2.5, 
+                 11.2066}, {6.5, 9.5286}}, {{7.5, 9.1096}, {7.5, 9.1096}, {
+                 7.5, 9.5286}, {8.292, 9.8616}, {7.5, 10.1936}, {7.5, 
+                 10.6136}, {7., 10.4036}, {2.5, 12.2906}, {2.5, 12.7106}, {
+                 1.5, 12.2916}, {1.5, 5.8226}, {7., 3.5146}, {8.293, 
+                 4.0576}, {7.5, 4.3906}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{3.2925, 17.7622}, {7.0005, 
+                 19.3182}, {10.7075, 17.7622}, {7.0005, 16.2062}}, {{6.5005, 
+                 10.6122}, {2.5005, 12.2912}, {2.5005, 17.0102}, {6.5005, 
+                 15.3322}}, {{7.5005, 10.1932}, {7.5005, 10.6122}, {7.5005, 
+                 15.3322}, {12.0005, 17.2202}, {12.5005, 17.0102}, {12.5005, 
+                 18.0952}, {7.0005, 20.4032}, {1.5005, 18.0952}, {1.5005, 
+                 11.6262}, {7.0005, 9.3182}, {8.2935, 9.8612}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{21.5, 12.291}, {17.5, 10.612}, {
+                 17.5, 15.332}, {21.5, 17.01}}, {{13.293, 17.762}, {17., 
+                 19.318}, {20.708, 17.762}, {17., 16.207}}, {{17., 20.403}, {
+                 11.5, 18.095}, {11.5, 17.01}, {12., 17.22}, {16.5, 15.332}, {
+                 16.5, 10.612}, {16.5, 10.194}, {15.706, 9.861}, {17., 
+                 9.318}, {22.5, 11.626}, {22.5, 18.095}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{16.4995, 4.3906}, {12.4995, 
+                 2.7116}, {12.4995, 7.4316}, {16.4995, 9.1096}}, {{11.4995, 
+                 2.7116}, {7.4995, 4.3906}, {7.4995, 9.1096}, {11.4995, 
+                 7.4316}}, {{16.4995, 10.6136}, {16.4995, 10.1946}, {11.9995, 
+                 8.3056}, {8.2915, 9.8616}, {7.4995, 10.1936}, {7.4995, 
+                 10.6146}, {6.4995, 10.1946}, {6.4995, 3.7256}, {11.9995, 
+                 1.4176}, {17.4995, 3.7256}, {17.4995, 10.1946}}}]}, {
+               FaceForm[{
+                 RGBColor[0.965, 0.765, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{12., 17.6616}, {16.945, 15.5856}, {16.945, 
+                9.9376}, {12., 7.8636}, {7.055, 9.9376}, {7.055, 
+                15.5856}}}]}, {
+               FaceForm[{
+                 RGBColor[0.91, 0.655, 0.635], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.125, 
+                17.7627}, {11.875, 17.7627}, {11.875, 12.0407}, {6.952, 
+                9.9757}, {7.048, 9.7447}, {12., 11.8227}, {16.952, 9.7447}, {
+                17.048, 9.9757}, {12.125, 12.0407}}}]}, {
+               FaceForm[{
+                 RGBColor[0.867, 0.067, 0.], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}}}, {{{12.5, 8.5146}, {12.5, 13.2336}, {16.5, 14.9116}, {
+                 16.5, 10.1926}}, {{7.5, 14.9116}, {11.5, 13.2336}, {11.5, 
+                 8.5146}, {7.5, 10.1926}}, {{15.708, 15.6636}, {12., 
+                 14.1086}, {8.292, 15.6636}, {12., 17.2206}}, {{12., 
+                 18.3046}, {6.5, 15.9956}, {6.5, 9.5286}, {12., 7.2206}, {
+                 17.5, 9.5286}, {17.5, 15.9956}}}]}}, AspectRatio -> 
+             Automatic, ImageSize -> {24., 24.}, 
+             PlotRange -> {{0., 24.}, {0., 24.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Name: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Wolfram/QuantumFramework\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Version: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"1.0.35\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Location: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                 "\"/Users/elizabeths/Library/Mathematica/Paclets/Repository/\
+Wolfram__QuantumFramework-1.0.35\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Description: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"Perform analytic and numeric quantum computations\"", 
+                   Short], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  PacletObject[<|
+   "Name" -> "Wolfram/QuantumFramework", "Description" -> 
+    "Perform analytic and numeric quantum computations", "Creator" -> 
+    "Wolfram Research, Quantum Computation Framework team", "License" -> 
+    "MIT", "PublisherID" -> "Wolfram", "Version" -> "1.0.35", 
+    "WolframVersion" -> "13.1+", "PrimaryContext" -> 
+    "Wolfram`QuantumFramework`", 
+    "Extensions" -> {{
+      "Kernel", "Root" -> "Kernel", 
+       "Context" -> {
+        "Wolfram`QuantumFrameworkLoader`", {
+         "Wolfram`QuantumFramework`", "QuantumFrameworkMain.m"}}, 
+       "Symbols" -> {
+        "Wolfram`QuantumFramework`QuditName", 
+         "Wolfram`QuantumFramework`QuditBasis", 
+         "Wolfram`QuantumFramework`QuantumBasis", 
+         "Wolfram`QuantumFramework`QuantumState", 
+         "Wolfram`QuantumFramework`QuantumOperator", 
+         "Wolfram`QuantumFramework`QuantumMeasurementOperator", 
+         "Wolfram`QuantumFramework`QuantumCircuitOperator", 
+         "Wolfram`QuantumFramework`QuantumMeasurement", 
+         "Wolfram`QuantumFramework`QuantumTensorProduct", 
+         "Wolfram`QuantumFramework`QuantumPartialTrace", 
+         "Wolfram`QuantumFramework`QuantumDistance", 
+         "Wolfram`QuantumFramework`QuantumEntanglementMonotone", 
+         "Wolfram`QuantumFramework`QuantumEntangledQ", 
+         "Wolfram`QuantumFramework`QuantumWignerTransform", 
+         "Wolfram`QuantumFramework`QuantumChannel", 
+         "Wolfram`QuantumFramework`QuantumStateEstimate", 
+         "Wolfram`QuantumFramework`QuantumMeasurementSimulation", 
+         "Wolfram`QuantumFramework`QuantumEvolve"}}, {
+      "Documentation", "Language" -> "English"}, {
+      "AutoCompletionData", "Root" -> "AutoCompletionData"}, {"FrontEnd"}, {
+      "Asset", "Root" -> "Assets", 
+       "Assets" -> {{"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.1.paclet"}}}},
+     "Location" -> 
+    "/Users/elizabeths/Library/Mathematica/Paclets/Repository/Wolfram__\
+QuantumFramework-1.0.35"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.890955375790225*^9, 3.892122671879327*^9},
+ CellLabel->"Out[70]=",
+ CellID->529815263,ExpressionUUID->"c5be58a3-c571-48f6-b572-4bc68a57ae1f"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData[
+  FormBox["QuantumCircuitOperator", TraditionalForm]],ExpressionUUID->
+  "a66c7728-e259-4385-9fa1-200a6a8b7c50"],
+ " to create the corresponding quantum Fourier transform circuit of \
+3-qubits:"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.889206075560701*^9, 3.88920608140062*^9}, {
+  3.8909906378418417`*^9, 3.89099067861166*^9}},
+ CellTags->"DefaultContent",
+ CellID->296543021,ExpressionUUID->"6b44ed68-f175-438a-af04-8226815e37d7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qft", "=", 
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Fourier\>\"", ",", "3"}], "}"}], "]"}]}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8892059933506927`*^9, 3.889205998005645*^9}, {
+  3.889206084366177*^9, 3.889206085022913*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[72]:=",
+ CellID->705258528,ExpressionUUID->"3dff8911-c3bd-4966-a1db-96ddbab6a569"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QuantumCircuitOperator",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"], 
+               ImageSizeCache -> {11., {0., 11.}}], Appearance -> None, 
+              BaseStyle -> {}, ButtonFunction :> (Typeset`open$$ = True), 
+              Evaluator -> Automatic, Method -> "Preemptive"], 
+             Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 RGBColor[0.537254, 0.537254, 0.537254], 
+                 Opacity[0.3], 
+                 LineBox[{{0.375, -1}, {0.625, -1}}], 
+                 LineBox[{{0.375, -2}, {1.625, -2}}], 
+                 LineBox[{{1.375, -1}, {1.625, -1}}], 
+                 LineBox[{{0.375, -3}, {2.625, -3}}], 
+                 LineBox[{{2.375, -1}, {2.625, -1}}], 
+                 LineBox[{{2.375, -2}, {3.625, -2}}], 
+                 LineBox[{{3.375, -3}, {4.625, -3}}], 
+                 LineBox[{{4.375, -2}, {4.625, -2}}], 
+                 LineBox[{{5.375, -3}, {5.625, -3}}], 
+                 LineBox[{{3.375, -1}, {6.625, -1}}], 
+                 LineBox[{{6.375, -3}, {6.625, -3}}], 
+                 LineBox[{{7.375, -1}, {7.625, -1}}], 
+                 LineBox[{{5.375, -2}, {7.625, -2}}], 
+                 LineBox[{{7.375, -3}, {7.625, -3}}]}, {{
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{0.625, -1.375}, {1.375, -0.625}, 
+                   RoundingRadius -> 0.1]}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{2., -1.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{2., -1.375}, {2., -1.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{1.625, -2.}, {1.90625, -2.}}], 
+                   LineBox[{{2.09375, -2.}, {2.375, -2.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{2., -2.}, 0.09375]}}, {}}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{3., -1.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{3., -1.375}, {3., -2.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{2.625, -3.}, {2.90625, -3.}}], 
+                   LineBox[{{3.09375, -3.}, {3.375, -3.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{3., -3.}, 0.09375]}}, {}}, {
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{3.625, -2.375}, {4.375, -1.625}, 
+                   RoundingRadius -> 0.1]}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{5., -2.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{5., -2.375}, {5., -2.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{4.625, -3.}, {4.90625, -3.}}], 
+                   LineBox[{{5.09375, -3.}, {5.375, -3.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{5., -3.}, 0.09375]}}, {}}, {
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{5.625, -3.375}, {6.375, -2.625}, 
+                   RoundingRadius -> 0.1]}, {{
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{7., -1}, {7., -3}}]}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Thickness[Medium], 
+                   Opacity[0.8], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{6.625, -1.}, {7.375, -1.}}]}, {
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Thickness[Medium], 
+                    Opacity[0.8], 
+                    
+                    LineBox[{{6.893933982822018, -1.1060660171779821`}, {
+                    7.106066017177982, -0.8939339828220179}}], 
+                    
+                    LineBox[{{7.106066017177982, -1.1060660171779821`}, {
+                    6.893933982822018, -0.8939339828220179}}]}}, {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{6.625, -3.}, {7.375, -3.}}]}, {
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Thickness[Medium], 
+                    Opacity[0.8], 
+                    
+                    LineBox[{{6.893933982822018, -3.106066017177982}, {
+                    7.106066017177982, -2.893933982822018}}], 
+                    
+                    LineBox[{{7.106066017177982, -3.106066017177982}, {
+                    6.893933982822018, -2.893933982822018}}]}}}}}, {}}, 
+               ImageSize -> Tiny], "\"QFT\"", TooltipStyle -> "TextStyling"], 
+             Annotation[#, "QFT", "Tooltip"]& ], 
+            InterpretationBox[
+             TagBox[
+              
+              GridBox[{{""}}, AutoDelete -> False, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, 
+               GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}], "Grid"], 
+             
+             Grid[{{}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+              Alignment -> {Left, Automatic}, Spacings -> {2, Automatic}]]}}, 
+          AutoDelete -> False, BaselinePosition -> {1, 1}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], True -> 
+        GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"], 
+               ImageSizeCache -> {11., {0., 11.}}], Appearance -> None, 
+              BaseStyle -> {}, ButtonFunction :> (Typeset`open$$ = False), 
+              Evaluator -> Automatic, Method -> "Preemptive"], 
+             Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 RGBColor[0.537254, 0.537254, 0.537254], 
+                 Opacity[0.3], 
+                 LineBox[{{0.375, -1}, {0.625, -1}}], 
+                 LineBox[{{0.375, -2}, {1.625, -2}}], 
+                 LineBox[{{1.375, -1}, {1.625, -1}}], 
+                 LineBox[{{0.375, -3}, {2.625, -3}}], 
+                 LineBox[{{2.375, -1}, {2.625, -1}}], 
+                 LineBox[{{2.375, -2}, {3.625, -2}}], 
+                 LineBox[{{3.375, -3}, {4.625, -3}}], 
+                 LineBox[{{4.375, -2}, {4.625, -2}}], 
+                 LineBox[{{5.375, -3}, {5.625, -3}}], 
+                 LineBox[{{3.375, -1}, {6.625, -1}}], 
+                 LineBox[{{6.375, -3}, {6.625, -3}}], 
+                 LineBox[{{7.375, -1}, {7.625, -1}}], 
+                 LineBox[{{5.375, -2}, {7.625, -2}}], 
+                 LineBox[{{7.375, -3}, {7.625, -3}}]}, {{
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{0.625, -1.375}, {1.375, -0.625}, 
+                   RoundingRadius -> 0.1]}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{2., -1.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{2., -1.375}, {2., -1.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{1.625, -2.}, {1.90625, -2.}}], 
+                   LineBox[{{2.09375, -2.}, {2.375, -2.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{2., -2.}, 0.09375]}}, {}}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{3., -1.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{3., -1.375}, {3., -2.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{2.625, -3.}, {2.90625, -3.}}], 
+                   LineBox[{{3.09375, -3.}, {3.375, -3.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{3., -3.}, 0.09375]}}, {}}, {
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{3.625, -2.375}, {4.375, -1.625}, 
+                   RoundingRadius -> 0.1]}, {{{
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.15]}], 
+                    DiskBox[{5., -2.}, 0.375]}, {
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    LineBox[{{5., -2.375}, {5., -2.90625}}]}}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{4.625, -3.}, {4.90625, -3.}}], 
+                   LineBox[{{5.09375, -3.}, {5.375, -3.}}], {
+                    EdgeForm[
+                    RGBColor[0.560181, 0.691569, 0.194885]], 
+                    FaceForm[{
+                    RGBColor[0.560181, 0.691569, 0.194885], 
+                    Opacity[0.8]}], 
+                    DiskBox[{5., -3.}, 0.09375]}}, {}}, {
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[{
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]}], 
+                  
+                  RectangleBox[{5.625, -3.375}, {6.375, -2.625}, 
+                   RoundingRadius -> 0.1]}, {{
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3], 
+                   LineBox[{{7., -1}, {7., -3}}]}, {
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Thickness[Medium], 
+                   Opacity[0.8], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{6.625, -1.}, {7.375, -1.}}]}, {
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Thickness[Medium], 
+                    Opacity[0.8], 
+                    
+                    LineBox[{{6.893933982822018, -1.1060660171779821`}, {
+                    7.106066017177982, -0.8939339828220179}}], 
+                    
+                    LineBox[{{7.106066017177982, -1.1060660171779821`}, {
+                    6.893933982822018, -0.8939339828220179}}]}}, {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{6.625, -3.}, {7.375, -3.}}]}, {
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Thickness[Medium], 
+                    Opacity[0.8], 
+                    
+                    LineBox[{{6.893933982822018, -3.106066017177982}, {
+                    7.106066017177982, -2.893933982822018}}], 
+                    
+                    LineBox[{{7.106066017177982, -3.106066017177982}, {
+                    6.893933982822018, -2.893933982822018}}]}}}}}, {}}, 
+               ImageSize -> Tiny], "\"QFT\"", TooltipStyle -> "TextStyling"], 
+             Annotation[#, "QFT", "Tooltip"]& ], 
+            GridBox[{{""}, {
+               RowBox[{
+                 TagBox["\"Gates: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["7", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Dimension: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["8", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"1", ",", "2", ",", "3"}], "}"}], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", "}"}], "SummaryItem"]}]}}, AutoDelete -> False,
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, 
+             GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {
+              "Columns" -> {{2}}, "Rows" -> {{Automatic}}}]}}, AutoDelete -> 
+          False, BaselinePosition -> {1, 1}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QuantumCircuitOperator[<|"Elements" -> {
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{1}, {1}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {1, {{0, 4}, {{1}, {6}, {11}, {16}}}, {1, 1, 1, 
+           Complex[0, 1]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            "PhaseShift"[2]][{2}, {}], "ParameterSpec" -> {}|>]], {{2, 1}, {2,
+        1}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 4}, {{1}, {6}, {11}, {16}}}, {1, 1, 1, E^(Complex[0, 
+              Rational[1, 4]] Pi)}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            "PhaseShift"[3]][{3}, {}], "ParameterSpec" -> {}|>]], {{3, 1}, {3,
+        1}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{2}, {2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {1, {{0, 4}, {{1}, {6}, {11}, {16}}}, {1, 1, 1, 
+           Complex[0, 1]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            "PhaseShift"[2]][{3}, {}], "ParameterSpec" -> {}|>]], {{3, 2}, {3,
+        2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{3}, {3}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 4}, {{1}, {7}, {10}, {16}}}, {1, 1, 1, 1}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "SWAP", 
+          "ParameterSpec" -> {}|>]], {{1, 3}, {1, 3}}]}, "Label" -> "QFT"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.889205998556653*^9, 3.889206085789628*^9, 
+  3.890955382143137*^9, 3.892122678333427*^9},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[72]=",
+ CellID->579835574,ExpressionUUID->"dd73161e-41aa-4ad0-b321-f467190430e7"]
+}, Open  ]],
+
+Cell["Circuit diagram:", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.889206089264394*^9, 3.889206091196041*^9}},
+ CellTags->"DefaultContent",
+ CellID->528807051,ExpressionUUID->"818823b9-ebdb-43de-b6c4-9ab5ab3c7ab4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qft", "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.889206093684231*^9, 3.889206096710474*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[8]:=",
+ CellID->691565869,ExpressionUUID->"bdf93bd6-30c2-4004-98b7-fc6b4578374f"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {1.625, -2}}], 
+    LineBox[{{1.375, -1}, {1.625, -1}}], LineBox[{{0.375, -3}, {2.625, -3}}], 
+    LineBox[{{2.375, -1}, {2.625, -1}}], LineBox[{{2.375, -2}, {3.625, -2}}], 
+    LineBox[{{3.375, -3}, {4.625, -3}}], LineBox[{{4.375, -2}, {4.625, -2}}], 
+    LineBox[{{5.375, -3}, {5.625, -3}}], LineBox[{{3.375, -1}, {6.625, -1}}], 
+    LineBox[{{6.375, -3}, {6.625, -3}}], LineBox[{{7.375, -1}, {7.625, -1}}], 
+    LineBox[{{5.375, -2}, {7.625, -2}}], 
+    LineBox[{{7.375, -3}, {7.625, -3}}]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       DiskBox[{2., -1.}, 0.375], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          TemplateBox[{"\[Pi]", 
+            InterpretationBox[
+             StyleBox[
+             "1/2", ShowStringCharacters -> True, NumberMarks -> True], 
+             InputForm[
+              Rational[1, 2]], Editable -> True, AutoDelete -> True]},
+           "Superscript"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{2., -1.375}, {2., -1.90625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{1.625, -2.}, {1.90625, -2.}}], 
+      LineBox[{{2.09375, -2.}, {2.375, -2.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{2., -2.}, 0.09375]}}, {}}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       DiskBox[{3., -1.}, 0.375], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          TemplateBox[{"\[Pi]", 
+            InterpretationBox[
+             StyleBox[
+             "1/4", ShowStringCharacters -> True, NumberMarks -> True], 
+             InputForm[
+              Rational[1, 4]], Editable -> True, AutoDelete -> True]},
+           "Superscript"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{3., -1.375}, {3., -2.90625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{2.625, -3.}, {2.90625, -3.}}], 
+      LineBox[{{3.09375, -3.}, {3.375, -3.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{3., -3.}, 0.09375]}}, {}}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       DiskBox[{5., -2.}, 0.375], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          TemplateBox[{"\[Pi]", 
+            InterpretationBox[
+             StyleBox[
+             "1/2", ShowStringCharacters -> True, NumberMarks -> True], 
+             InputForm[
+              Rational[1, 2]], Editable -> True, AutoDelete -> True]},
+           "Superscript"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {5., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{5., -2.375}, {5., -2.90625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{4.625, -3.}, {4.90625, -3.}}], 
+      LineBox[{{5.09375, -3.}, {5.375, -3.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{5., -3.}, 0.09375]}}, {}}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{5.625, -3.375}, {6.375, -2.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {6., -3.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, {
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{7., -1}, {7., -3}}]}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+      0.8], {
+       {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+        LineBox[{{6.625, -1.}, {7.375, -1.}}]}, 
+       {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+        0.8], LineBox[{{6.893933982822018, -1.1060660171779821`}, {
+         7.106066017177982, -0.8939339828220179}}], 
+        LineBox[{{7.106066017177982, -1.1060660171779821`}, {
+         6.893933982822018, -0.8939339828220179}}]}}, {
+       {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+        LineBox[{{6.625, -3.}, {7.375, -3.}}]}, 
+       {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+        0.8], LineBox[{{6.893933982822018, -3.106066017177982}, {
+         7.106066017177982, -2.893933982822018}}], 
+        LineBox[{{7.106066017177982, -3.106066017177982}, {
+         6.893933982822018, -2.893933982822018}}]}}}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.889206097237034*^9, 3.890955384274544*^9},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[8]=",
+ CellID->240924260,ExpressionUUID->"799931b7-a76a-4500-b70c-b6a6923a19e1"]
+}, Open  ]],
+
+Cell["\<\
+The matrix representation of the Fourier transform on three qubits:\
+\>", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.89095566864003*^9, 3.890955678383919*^9}},
+ CellID->199386370,ExpressionUUID->"dbf8b098-f49a-47f6-8668-e6070dbd36af"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"qft", "[", "\"\<Matrix\>\"", "]"}], "//", "MatrixForm"}]], "Input",\
+
+ TaggingRules->{},
+ CellChangeTimes->{{3.890955465212687*^9, 3.890955483834363*^9}, {
+  3.890955633010118*^9, 3.890955650649446*^9}},
+ CellLabel->"In[12]:=",
+ CellID->496870794,ExpressionUUID->"ca245271-5dd3-4f7b-b1ae-1ea4164a4da3"],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", GridBox[{
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox[
+       SuperscriptBox["\[ExponentialE]", 
+        FractionBox[
+         RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox[
+       RowBox[{"\[ImaginaryI]", " ", 
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox[
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox[
+        RowBox[{"\[ImaginaryI]", " ", 
+         SuperscriptBox["\[ExponentialE]", 
+          FractionBox[
+           RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox[
+       RowBox[{"\[ImaginaryI]", " ", 
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox[
+       SuperscriptBox["\[ExponentialE]", 
+        FractionBox[
+         RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox[
+        RowBox[{"\[ImaginaryI]", " ", 
+         SuperscriptBox["\[ExponentialE]", 
+          FractionBox[
+           RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox[
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox[
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox[
+        RowBox[{"\[ImaginaryI]", " ", 
+         SuperscriptBox["\[ExponentialE]", 
+          FractionBox[
+           RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox[
+       SuperscriptBox["\[ExponentialE]", 
+        FractionBox[
+         RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox[
+       RowBox[{"\[ImaginaryI]", " ", 
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]]},
+     {
+      FractionBox["1", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      RowBox[{"-", 
+       FractionBox[
+        RowBox[{"\[ImaginaryI]", " ", 
+         SuperscriptBox["\[ExponentialE]", 
+          FractionBox[
+           RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["\[ImaginaryI]", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox[
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      RowBox[{"-", 
+       FractionBox["1", 
+        RowBox[{"2", " ", 
+         SqrtBox["2"]}]]}], 
+      FractionBox[
+       RowBox[{"\[ImaginaryI]", " ", 
+        SuperscriptBox["\[ExponentialE]", 
+         FractionBox[
+          RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]]}], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox["\[ImaginaryI]", 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]], 
+      FractionBox[
+       SuperscriptBox["\[ExponentialE]", 
+        FractionBox[
+         RowBox[{"\[ImaginaryI]", " ", "\[Pi]"}], "4"]], 
+       RowBox[{"2", " ", 
+        SqrtBox["2"]}]]}
+    },
+    GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[0.7]}, 
+        Offset[0.27999999999999997`]}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}}], "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[
+   SparseArray[
+    Automatic, {8, 8}, 0, {
+     1, {{0, 8, 16, 24, 32, 40, 48, 56, 64}, {{1}, {2}, {3}, {4}, {5}, {6}, {
+       7}, {8}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {1}, {2}, {3}, {4}, {
+       5}, {6}, {7}, {8}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {1}, {2}, {
+       3}, {4}, {5}, {6}, {7}, {8}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {
+       1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {1}, {2}, {3}, {4}, {5}, {6}, {
+       7}, {8}}}, {
+      Rational[1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], (Rational[1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[1, 2]] 
+       2^Rational[-1, 2], (Complex[0, Rational[1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[-1, 2] 
+       2^Rational[-1, 2], (Rational[-1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[-1, 2]] 
+       2^Rational[-1, 2], (Complex[0, Rational[-1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[1, 2] 2^Rational[-1, 2], 
+       Complex[0, Rational[1, 2]] 2^Rational[-1, 2], Rational[-1, 2] 
+       2^Rational[-1, 2], Complex[0, Rational[-1, 2]] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], Complex[0, Rational[1, 2]] 
+       2^Rational[-1, 2], Rational[-1, 2] 2^Rational[-1, 2], 
+       Complex[0, Rational[-1, 2]] 2^Rational[-1, 2], Rational[1, 2] 
+       2^Rational[-1, 2], (Complex[0, Rational[1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[-1, 2]] 
+       2^Rational[-1, 2], (Rational[1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[-1, 2] 
+       2^Rational[-1, 2], (Complex[0, Rational[-1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[1, 2]] 
+       2^Rational[-1, 2], (Rational[-1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[-1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[-1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[-1, 2] 2^Rational[-1, 2], Rational[1, 2] 2^Rational[-1, 2], 
+       Rational[-1, 2] 2^Rational[-1, 2], Rational[1, 2] 
+       2^Rational[-1, 2], (Rational[-1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[1, 2]] 
+       2^Rational[-1, 2], (Complex[0, Rational[-1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[-1, 2] 
+       2^Rational[-1, 2], (Rational[1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[-1, 2]] 
+       2^Rational[-1, 2], (Complex[0, Rational[1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[1, 2] 2^Rational[-1, 2], 
+       Complex[0, Rational[-1, 2]] 2^Rational[-1, 2], Rational[-1, 2] 
+       2^Rational[-1, 2], Complex[0, Rational[1, 2]] 2^Rational[-1, 2], 
+       Rational[1, 2] 2^Rational[-1, 2], Complex[0, Rational[-1, 2]] 
+       2^Rational[-1, 2], Rational[-1, 2] 2^Rational[-1, 2], 
+       Complex[0, Rational[1, 2]] 2^Rational[-1, 2], Rational[1, 2] 
+       2^Rational[-1, 2], (Complex[0, Rational[-1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[-1, 2]] 
+       2^Rational[-1, 2], (Rational[-1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Rational[-1, 2] 
+       2^Rational[-1, 2], (Complex[0, Rational[1, 2]] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi), Complex[0, Rational[1, 2]] 
+       2^Rational[-1, 2], (Rational[1, 2] 2^Rational[-1, 2]) 
+       E^(Complex[0, Rational[1, 4]] Pi)}}]]]]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.8909554842652473`*^9, 3.890955638983873*^9},
+ CellLabel->"Out[12]//MatrixForm=",
+ CellID->485363928,ExpressionUUID->"038236bf-b1b8-477d-898a-0e6429be7587"]
+}, Open  ]]
+},
+WindowSize->Automatic,
+WindowMargins->Automatic,
+WindowTitle->"Quantum Fourier Transform | Example Notebook",
+Visible->False,
+TaggingRules->{
+ "Metadata" -> {
+   "ResourceType" -> "Example", "Name" -> "Quantum Fourier Transform", 
+    "Property" -> "ExampleNotebook"}},
+FrontEndVersion->"13.3 for Mac OS X x86 (64-bit) (March 27, 2023)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[
+    StyleDefinitions -> 
+     FrontEnd`FileName[{"Wolfram"}, "Reference.nb", CharacterEncoding -> 
+       "UTF-8"]]], 
+   Cell[
+    StyleData[All, "Working"], Editable -> True, DockedCells -> {}], 
+   Cell[
+    StyleData["Notebook"], Editable -> True, DockedCells -> {}, 
+    ScrollingOptions -> {"VerticalScrollRange" -> Automatic}], 
+   Cell[
+    StyleData[
+    "Section", StyleDefinitions -> StyleData["PrimaryExamplesSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData["Subsection", StyleDefinitions -> StyleData["ExampleSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsection", StyleDefinitions -> StyleData["ExampleSubsection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsubsection", StyleDefinitions -> 
+     StyleData["ExampleSubsubsection"]], Editable -> True, ShowGroupOpener -> 
+    "Inline", WholeCellGroupOpener -> True], 
+   Cell[
+    StyleData["Text", StyleDefinitions -> StyleData["ExampleText"]], Editable -> 
+    True], 
+   Cell[
+    StyleData["CodeText", StyleDefinitions -> StyleData["ExampleText"]], 
+    Editable -> True, CellMargins -> {{48, 40}, {3, 15}}, FontColor -> 
+    GrayLevel[0.45]]}, Visible -> False, FrontEndVersion -> 
+  "13.3 for Mac OS X x86 (64-bit) (March 27, 2023)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"],
+$CellContext`ClosingSaveDialog -> False,
+ExpressionUUID->"1ff35dbe-3613-4c7f-8f27-00441fd75bf9"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "DefaultContent"->{
+  Cell[616, 21, 641, 12, 70, "Text",ExpressionUUID->"1c9a2d3a-c9b4-444a-bc58-9f50a991bf9c",
+   CellTags->"DefaultContent",
+   CellID->589310939],
+  Cell[26011, 481, 488, 12, 70, "CodeText",ExpressionUUID->"6b44ed68-f175-438a-af04-8226815e37d7",
+   CellTags->"DefaultContent",
+   CellID->296543021],
+  Cell[26524, 497, 427, 10, 70, "Input",ExpressionUUID->"3dff8911-c3bd-4966-a1db-96ddbab6a569",
+   CellTags->"DefaultContent",
+   CellID->705258528],
+  Cell[26954, 509, 28793, 547, 70, "Output",ExpressionUUID->"dd73161e-41aa-4ad0-b321-f467190430e7",
+   CellTags->"DefaultContent",
+   CellID->579835574],
+  Cell[55762, 1059, 225, 4, 70, "CodeText",ExpressionUUID->"818823b9-ebdb-43de-b6c4-9ab5ab3c7ab4",
+   CellTags->"DefaultContent",
+   CellID->528807051],
+  Cell[56012, 1067, 282, 6, 70, "Input",ExpressionUUID->"bdf93bd6-30c2-4004-98b7-fc6b4578374f",
+   CellTags->"DefaultContent",
+   CellID->691565869],
+  Cell[56297, 1075, 7670, 163, 70, "Output",ExpressionUUID->"799931b7-a76a-4500-b70c-b6a6923a19e1",
+   CellTags->"DefaultContent",
+   CellID->240924260]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"DefaultContent", 79329, 1678}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[616, 21, 641, 12, 70, "Text",ExpressionUUID->"1c9a2d3a-c9b4-444a-bc58-9f50a991bf9c",
+ CellTags->"DefaultContent",
+ CellID->589310939],
+Cell[1260, 35, 276, 4, 70, "CodeText",ExpressionUUID->"5a77a004-b7c4-4761-b4b1-7145efa01c4c",
+ CellID->962431612],
+Cell[CellGroupData[{
+Cell[1561, 43, 379, 7, 70, "Input",ExpressionUUID->"e57b1042-4140-4d43-83cc-b6da090d97c5",
+ CellID->243484515],
+Cell[1943, 52, 24053, 426, 70, "Output",ExpressionUUID->"c5be58a3-c571-48f6-b572-4bc68a57ae1f",
+ CellID->529815263]
+}, Open  ]],
+Cell[26011, 481, 488, 12, 70, "CodeText",ExpressionUUID->"6b44ed68-f175-438a-af04-8226815e37d7",
+ CellTags->"DefaultContent",
+ CellID->296543021],
+Cell[CellGroupData[{
+Cell[26524, 497, 427, 10, 70, "Input",ExpressionUUID->"3dff8911-c3bd-4966-a1db-96ddbab6a569",
+ CellTags->"DefaultContent",
+ CellID->705258528],
+Cell[26954, 509, 28793, 547, 70, "Output",ExpressionUUID->"dd73161e-41aa-4ad0-b321-f467190430e7",
+ CellTags->"DefaultContent",
+ CellID->579835574]
+}, Open  ]],
+Cell[55762, 1059, 225, 4, 70, "CodeText",ExpressionUUID->"818823b9-ebdb-43de-b6c4-9ab5ab3c7ab4",
+ CellTags->"DefaultContent",
+ CellID->528807051],
+Cell[CellGroupData[{
+Cell[56012, 1067, 282, 6, 70, "Input",ExpressionUUID->"bdf93bd6-30c2-4004-98b7-fc6b4578374f",
+ CellTags->"DefaultContent",
+ CellID->691565869],
+Cell[56297, 1075, 7670, 163, 70, "Output",ExpressionUUID->"799931b7-a76a-4500-b70c-b6a6923a19e1",
+ CellTags->"DefaultContent",
+ CellID->240924260]
+}, Open  ]],
+Cell[63982, 1241, 254, 5, 70, "CodeText",ExpressionUUID->"dbf8b098-f49a-47f6-8668-e6070dbd36af",
+ CellID->199386370],
+Cell[CellGroupData[{
+Cell[64261, 1250, 337, 8, 70, "Input",ExpressionUUID->"ca245271-5dd3-4f7b-b1ae-1ea4164a4da3",
+ CellID->496870794],
+Cell[64601, 1260, 12596, 359, 70, "Output",ExpressionUUID->"038236bf-b1b8-477d-898a-0e6429be7587",
+ CellID->485363928]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

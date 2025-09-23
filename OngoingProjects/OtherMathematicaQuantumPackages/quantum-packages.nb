@@ -1,3 +1,324 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bb04fcd1df2fafa52e56376873c5aadb1ff075620e9403fbf9b6665c1fdeab2e
-size 12084
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     11929,        316]
+NotebookOptionsPosition[      8599,        256]
+NotebookOutlinePosition[      9030,        273]
+CellTagsIndexPosition[      8987,        270]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Quantum Computation Packages In Wolfram Language", "Title",
+ CellChangeTimes->{
+  3.9584753932021427`*^9, {3.960035888247547*^9, 
+   3.960035896336989*^9}},ExpressionUUID->"e90d20fb-1f9d-6741-8c58-\
+25fd1ab80935"],
+
+Cell[CellGroupData[{
+
+Cell["DiraqQ", "Section",
+ CellChangeTimes->{{3.958322948798152*^9, 3.958322950013085*^9}, 
+   3.958475424134617*^9},ExpressionUUID->"d2343720-64bc-4b07-ad26-\
+984e2e1e7f84"],
+
+Cell["\<\
+Good for symbolic manipulations and commutator calculations in problems \
+arising in quantum many body physics
+https://physics.ucsc.edu/~sriram/DiracQ/DiracQ_Home.html
+https://chatgpt.com/share/6844ba71-957c-8006-8225-e9b9d730cd7c\
+\>", "Text",
+ CellChangeTimes->{
+  3.9584751540342026`*^9, {3.9584757275123444`*^9, 
+   3.9584757320419273`*^9}},ExpressionUUID->"8e682251-6ae2-734c-9540-\
+e50893067d89"],
+
+Cell["\<\
+\:2705Tested \
+\[LineSeparator]https://www.wolframcloud.com/obj/brunot/Published/testsDirac.\
+nb\
+\>", "Text",
+ CellChangeTimes->{{3.958322951746397*^9, 3.9583229523528833`*^9}, {
+   3.9583229910327597`*^9, 3.958322991564721*^9}, 3.958323447779973*^9, {
+   3.9584751430800705`*^9, 3.95847515041078*^9}, 3.958475725761368*^9, {
+   3.9584757610829525`*^9, 3.958475780533777*^9}, {3.9584758207444344`*^9, 
+   3.958475821948208*^9}},ExpressionUUID->"f214ca0c-5a54-4a94-9da0-\
+1f7bbb975bc0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["SNEG", "Section",
+ CellChangeTimes->{{3.958229224809799*^9, 
+  3.9582292260889225`*^9}},ExpressionUUID->"89acb8d7-7309-334f-bdd2-\
+571d1a326520"],
+
+Cell["https://github.com/rokzitko/sneg", "Text",
+ CellChangeTimes->{
+  3.9582292347205143`*^9},ExpressionUUID->"c26a81b8-f936-6743-aaad-\
+436baf498197"],
+
+Cell["\<\
+Mathematica package for calculations with non-commuting operators of the \
+second quantization algebra\
+\>", "Text",
+ CellChangeTimes->{
+  3.9584736786429768`*^9},ExpressionUUID->"c56a69cd-3fd2-5546-9097-\
+b1ab1577d3fe"],
+
+Cell["\<\
+\:2705 Tested\[LineSeparator]https://www.wolframcloud.com/obj/brunot/\
+Published/sneg-test.nb\
+\>", "Text",
+ CellChangeTimes->{{3.9586456191891365`*^9, 
+  3.9586456309364777`*^9}},ExpressionUUID->"c653e3a8-473b-ff4b-8560-\
+543b8ea0c555"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Quantum Algebra", "Section",
+ CellChangeTimes->{
+  3.958229519080778*^9},ExpressionUUID->"bc04b716-4e6c-1c45-b4be-\
+46c7ff3b74d3"],
+
+Cell["\<\
+https://library.wolfram.com/infocenter/MathSource/4898/#downloads\
+\>", "Text",
+ CellChangeTimes->{
+  3.9582299352779465`*^9},ExpressionUUID->"e4cb888e-0e33-234d-9ee9-\
+9db8cbb76125"],
+
+Cell["\<\
+Developed by Cesar some quite time ago, but still has some interesting points\
+\
+\>", "Text",
+ CellChangeTimes->{{3.9584751995870304`*^9, 
+  3.958475234705965*^9}},ExpressionUUID->"9db11947-7630-4749-9dcb-\
+360a289d5b55"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["SecondQuant", "Section",
+ CellChangeTimes->{{3.9584752955325623`*^9, 
+  3.95847529749*^9}},ExpressionUUID->"6f7f7cd3-6bb6-b344-88e7-5cbafdb9e44a"],
+
+Cell["\<\
+Is a Mathematica package  that allows one to use second quantization in \
+Mathematica. Has been used to do calculations in research\
+\>", "Text",
+ CellChangeTimes->{{3.9584754887542915`*^9, 3.9584754916974297`*^9}, {
+  3.9584756296891575`*^9, 
+  3.9584756917085075`*^9}},ExpressionUUID->"9fc7c750-be36-354e-850f-\
+5712792ec9c3"],
+
+Cell["https://github.com/aalopes/secondQuant", "Text",
+ CellChangeTimes->{
+  3.9584753010700665`*^9},ExpressionUUID->"4ff23a8d-9191-0e4f-bd55-\
+ab4b6c6341e9"],
+
+Cell["\<\
+\:274c Tested: It is only for fermionic second quantization, still maybe some \
+things can be checked
+https://www.wolframcloud.com/obj/brunot/Published/secondQuant-Test.nb\
+\>", "Text",
+ CellChangeTimes->{{3.958585078920105*^9, 
+  3.95858518133671*^9}},ExpressionUUID->"54157559-e7ac-3841-8956-\
+3cabefd01a1d"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["MMA-Quantum-Computing", "Section",
+ CellChangeTimes->{{3.9584754680647182`*^9, 
+  3.9584754719247074`*^9}},ExpressionUUID->"f1bb6961-1535-5e48-ba32-\
+8bb057ce724b"],
+
+Cell["\<\
+A quantum computing package for Mathematica.
+The package has Functions include Dirac Bra-Ket Notation, Quantum Algebra, \
+Quantum Computing and the QHD approximation to the Heisenberg Equations of \
+Motion.\
+\>", "Text",
+ CellChangeTimes->{{3.9584756037283993`*^9, 
+  3.9584756057637253`*^9}},ExpressionUUID->"20843a7b-dd00-d040-a5d2-\
+133c58e76947"],
+
+Cell["https://github.com/yqchen-lab/MMA-Quantum-Computing", "Text",
+ CellChangeTimes->{
+  3.958475477504915*^9},ExpressionUUID->"95cfaf16-8b40-1643-9798-\
+2aff6784ec4b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Quantum", "Section",
+ CellChangeTimes->{{3.96402267377717*^9, 
+  3.9640226813269215`*^9}},ExpressionUUID->"ce4d9852-22ff-0141-8b1f-\
+8e9583b7f6fd"],
+
+Cell["\<\
+Quantum computing package with support also for non commutative algebra\
+\>", "Text",
+ CellChangeTimes->{{3.9640227786988163`*^9, 
+  3.9640228061901703`*^9}},ExpressionUUID->"a1f29ac0-ef9f-2648-af44-\
+7557f090be09"],
+
+Cell["\:2705Tested", "Text",
+ CellChangeTimes->{{3.9640228275072803`*^9, 
+  3.9640228306619987`*^9}},ExpressionUUID->"dddc0fdd-10fe-cc49-8f44-\
+99aa1d45d2c7"],
+
+Cell["\<\
+https://www.wolframcloud.com/env/brunot/Published/testQuantumPackage.nb\
+\>", "Text",
+ CellChangeTimes->{
+  3.9640227630593147`*^9},ExpressionUUID->"5b1321a3-4b06-e74d-afdf-\
+4c2cf8bb4543"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Other languages", "Section",
+ CellChangeTimes->{{3.9582357984257145`*^9, 
+  3.9582358020493164`*^9}},ExpressionUUID->"c4e44a4d-c42b-7841-8d21-\
+0c4624a8b725"],
+
+Cell["Just for reference, or comparing implementations", "Text",
+ CellChangeTimes->{{3.958475534746443*^9, 
+  3.958475560397051*^9}},ExpressionUUID->"8470cba1-befd-194b-ba8d-\
+27360874d967"],
+
+Cell["QuantumOptics.jl\[LineSeparator]  https://qojulia.org/", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358394645004`*^9}, 
+   3.95823604747221*^9},ExpressionUUID->"cf21e848-71b5-3545-b3c3-\
+d42ce4c73bc6"],
+
+Cell["\<\
+QuTiP\[LineSeparator] https://qutip.org/\[LineSeparator]\:2705 Was used as \
+reference for numerical implementations of Wigner and Husimi\
+\>", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358533154087`*^9}, 
+   3.9582360448646946`*^9, {3.958645641594858*^9, 
+   3.958645684149534*^9}},ExpressionUUID->"f88898d8-3b0e-6b4e-9532-\
+1252a090f6db"],
+
+Cell["Strawberry Fields \[LineSeparator] https://strawberryfields.ai/", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358733433857`*^9}, {
+  3.958236014857031*^9, 
+  3.958236042506481*^9}},ExpressionUUID->"da94080f-c472-6c43-9fd2-\
+5a1b668b06cd"],
+
+Cell["\<\
+Bosonic Qiskit\[LineSeparator] https://arxiv.org/pdf/2209.11153\
+\[LineSeparator] https://github.com/C2QA/bosonic-qiskit\
+\>", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358733433857`*^9}, {
+  3.9582360155771275`*^9, 3.9582360394872513`*^9}, {3.958473499228384*^9, 
+  3.9584734992295322`*^9}},ExpressionUUID->"740379f9-11ba-1e43-9b65-\
+ba8e27cafa6d"],
+
+Cell["Perceval\[LineSeparator]https://perceval.quandela.net/docs/v0.13/index.\
+html", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358733433857`*^9}, {
+  3.9582360155771275`*^9, 3.9582360394872513`*^9}, {3.9584735003066673`*^9, 
+  3.9584735127503033`*^9}, {3.9640225091777687`*^9, 
+  3.9640225091801815`*^9}},ExpressionUUID->"5bac36b4-1fa1-d347-84b4-\
+2708a857c37c"],
+
+Cell["\<\
+CUDA-Q\[LineSeparator]GPU accelerated simulations\[LineSeparator]Possibles \
+examples to add:\[LineSeparator]Tavis-Cummings, Landau Zener, Heisenberg \
+model, GHZ evolution(trapped ion), Spin qubit and superconducting qubits \
+simulations\
+\>", "Item",
+ CellChangeTimes->{{3.958235819468088*^9, 3.9582358733433857`*^9}, {
+  3.9582360155771275`*^9, 3.9582360394872513`*^9}, {3.9584735003066673`*^9, 
+  3.9584735127503033`*^9}, {3.9640225116304836`*^9, 3.9640225442098484`*^9}, {
+  3.964022837139044*^9, 3.9640228909175625`*^9}, {3.9640230175024605`*^9, 
+  3.9640230305654907`*^9}, {3.96402314699827*^9, 
+  3.964023167168373*^9}},ExpressionUUID->"75770ad6-84d1-fd45-bcfe-\
+af1c0dcc432d"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1141.2, 568.8},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+Magnification:>1.1 Inherited,
+FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 22, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"622c5db5-abe7-4cf4-b42f-01b6b44aebbb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 219, 4, 172, "Title",ExpressionUUID->"e90d20fb-1f9d-6741-8c58-25fd1ab80935"],
+Cell[CellGroupData[{
+Cell[820, 30, 174, 3, 72, "Section",ExpressionUUID->"d2343720-64bc-4b07-ad26-984e2e1e7f84"],
+Cell[997, 35, 412, 9, 85, "Text",ExpressionUUID->"8e682251-6ae2-734c-9540-e50893067d89"],
+Cell[1412, 46, 496, 10, 61, "Text",ExpressionUUID->"f214ca0c-5a54-4a94-9da0-1f7bbb975bc0"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1945, 61, 151, 3, 72, "Section",ExpressionUUID->"89acb8d7-7309-334f-bdd2-571d1a326520"],
+Cell[2099, 66, 152, 3, 37, "Text",ExpressionUUID->"c26a81b8-f936-6743-aaad-436baf498197"],
+Cell[2254, 71, 230, 6, 37, "Text",ExpressionUUID->"c56a69cd-3fd2-5546-9097-b1ab1577d3fe"],
+Cell[2487, 79, 247, 6, 61, "Text",ExpressionUUID->"c653e3a8-473b-ff4b-8560-543b8ea0c555"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2771, 90, 136, 3, 72, "Section",ExpressionUUID->"bc04b716-4e6c-1c45-b4be-46c7ff3b74d3"],
+Cell[2910, 95, 193, 5, 37, "Text",ExpressionUUID->"e4cb888e-0e33-234d-9ee9-9db8cbb76125"],
+Cell[3106, 102, 231, 6, 37, "Text",ExpressionUUID->"9db11947-7630-4749-9dcb-360a289d5b55"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3374, 113, 152, 2, 72, "Section",ExpressionUUID->"6f7f7cd3-6bb6-b344-88e7-5cbafdb9e44a"],
+Cell[3529, 117, 338, 7, 37, "Text",ExpressionUUID->"9fc7c750-be36-354e-850f-5712792ec9c3"],
+Cell[3870, 126, 158, 3, 37, "Text",ExpressionUUID->"4ff23a8d-9191-0e4f-bd55-ab4b6c6341e9"],
+Cell[4031, 131, 320, 7, 61, "Text",ExpressionUUID->"54157559-e7ac-3841-8956-3cabefd01a1d"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4388, 143, 170, 3, 72, "Section",ExpressionUUID->"f1bb6961-1535-5e48-ba32-8bb057ce724b"],
+Cell[4561, 148, 360, 8, 85, "Text",ExpressionUUID->"20843a7b-dd00-d040-a5d2-133c58e76947"],
+Cell[4924, 158, 169, 3, 37, "Text",ExpressionUUID->"95cfaf16-8b40-1643-9798-2aff6784ec4b"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5130, 166, 153, 3, 72, "Section",ExpressionUUID->"ce4d9852-22ff-0141-8b1f-8e9583b7f6fd"],
+Cell[5286, 171, 225, 5, 37, "Text",ExpressionUUID->"a1f29ac0-ef9f-2648-af44-7557f090be09"],
+Cell[5514, 178, 158, 3, 37, "Text",ExpressionUUID->"dddc0fdd-10fe-cc49-8f44-99aa1d45d2c7"],
+Cell[5675, 183, 199, 5, 37, "Text",ExpressionUUID->"5b1321a3-4b06-e74d-afdf-4c2cf8bb4543"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5911, 193, 164, 3, 72, "Section",ExpressionUUID->"c4e44a4d-c42b-7841-8d21-0c4624a8b725"],
+Cell[6078, 198, 190, 3, 37, "Text",ExpressionUUID->"8470cba1-befd-194b-ba8d-27360874d967"],
+Cell[6271, 203, 220, 3, 55, "Item",ExpressionUUID->"cf21e848-71b5-3545-b3c3-d42ce4c73bc6"],
+Cell[6494, 208, 364, 7, 77, "Item",ExpressionUUID->"f88898d8-3b0e-6b4e-9532-1252a090f6db"],
+Cell[6861, 217, 256, 4, 55, "Item",ExpressionUUID->"da94080f-c472-6c43-9fd2-5a1b668b06cd"],
+Cell[7120, 223, 373, 7, 77, "Item",ExpressionUUID->"740379f9-11ba-1e43-9b65-ba8e27cafa6d"],
+Cell[7496, 232, 377, 6, 55, "Item",ExpressionUUID->"5bac36b4-1fa1-d347-84b4-2708a857c37c"],
+Cell[7876, 240, 695, 12, 99, "Item",ExpressionUUID->"75770ad6-84d1-fd45-bcfe-af1c0dcc432d"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

@@ -1,3 +1,3798 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4cf6a4ddcd2ac000a800480b8cb640fdbb9f5eec7cb11aca25272e7666cffd61
-size 194891
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[         0,          0]
+NotebookDataLength[    194890,       3797]
+NotebookOptionsPosition[    192986,       3750]
+NotebookOutlinePosition[    193508,       3769]
+CellTagsIndexPosition[    193465,       3766]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"qc", "=", 
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\[Psi]", "=", 
+       RowBox[{
+        RowBox[{"QuantumState", "[", 
+         RowBox[{"\"\<RandomPure\>\"", "[", "2", "]"}], "]"}], "->", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "2"}], "}"}]}]}], ",", 
+      RowBox[{"\[Phi]", "=", 
+       RowBox[{
+        RowBox[{"QuantumState", "[", 
+         RowBox[{"\"\<RandomPure\>\"", "[", "3", "]"}], "]"}], "->", 
+        RowBox[{"{", 
+         RowBox[{"3", ",", "4", ",", "5"}], "}"}]}]}], ",", 
+      RowBox[{"QuantumOperator", "[", 
+       RowBox[{"\"\<RandomUnitary\>\"", ",", 
+        RowBox[{"Range", "[", "5", "]"}]}], "]"}]}], "}"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"qc2", "=", 
+  RowBox[{"qc", "/*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", "\[Psi]", "]"}], "[", 
+     RowBox[{"[", 
+      RowBox[{"3", ";;"}], "]"}], "]"}], "[", "\"\<Dagger\>\"", "]"}], "/*", 
+   RowBox[{"QuantumMeasurementOperator", "[", 
+    RowBox[{
+     RowBox[{"\"\<Z\>\"", "->", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", "0", ",", "0", ",", "0"}], "}"}]}], ",", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", "2"}], "}"}]}], "]"}]}]}]}], "Input",
+ CellChangeTimes->{{3.922573673823235*^9, 3.9225738140228662`*^9}, {
+  3.922573862135291*^9, 3.9225738643607273`*^9}, {3.92257592841822*^9, 
+  3.922575976592841*^9}},
+ CellLabel->
+  "In[180]:=",ExpressionUUID->"c81234db-2a5d-410c-ba3a-834678d8a965"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QuantumCircuitOperator",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{{
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -2}, {1.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -3}, {1.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -4}, {1.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -5}, {1.625, -5}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{3.375, -1}, {3.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{3.375, -2}, {3.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{4.375, -1}, {4.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{4.375, -2}, {4.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{5.375, -1}, {5.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{5.375, -2}, {5.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{6.375, -1}, {6.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{6.375, -2}, {6.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{7.375, -1}, {7.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{7.375, -2}, {7.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{8.375, -1}, {8.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{8.375, -2}, {8.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{9.375, -1}, {9.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{9.375, -2}, {9.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -3}, {9.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -4}, {9.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -5}, {9.625, -5}}]}}}, {
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVVAtM00ccLjd1iAwEhkwsELJGCigzg2FcZacRi9NK5jRMmEEBBYcbrYpp
+I6A0Kw9HHQMsVBkPgeKYEamODRW9wxUdBjfKs0SnCNe6YmVR2/7rRnV16XXZ
+L7lcvuRyv9f3faHpwo/3ABaLJXCcV/epk6+CgdH/xkP0fwzwh6yAaV8lA1f+
+4ae9Gw9wWNy4RlrFwF9kW67uTgJYeHbFxEwZA8uqy4vbsgDev3Wkfa+UgT8n
+y3hfSQBO9vsk/rVcBgpFA22GUoB5EdooXQYDj2Zm1zYoAT4fE8Gft4WBYTqu
+b80ZgEtOxe1X8xjYrXpe2NEJsOJsahrgMDDfOxlorwPs6dsVv9SDgRcGG8vu
+/wrw6o4losQZK+Rm3Wb3jgMcu+0hq2PACm/xUk2fTwFsvqEWf6m2QhG0f615
+BPBGqVQwp8IKYxY2BXY/BVjXklIgElrhQN/jeL4N4PGm2QD3zVboc6wof/ss
+wLnhauQZYYWTfJ59+gXAgyL/FT3zrFCjuHfP9hLgUU3/1b1TFlj5Qhlc6MAq
+jvcoH1tgcKimSWoH+Ind/Uh9nQWyE95d5fYXwOIMtyF1ngWePm8qn2sB+FDz
++/KeFAv023eIq5wB2Gus4KgnzwIPL1Kt7zU4+jetDv+NbYFveSUM1/4OcPvo
+O6vWsSzwRmdj4vIhR377Bk6D3gzFYYG1x28CXPdgsNv/thmGTCYYBi8DvGxR
+gXbkRzNcSeok/ucAtpT7DM9vNsODU+xSYT3AT7nyO2z3aVi4a6hNMmpDIV2x
+E5sMRijE9oqlXTYkcFNUd/cZYU1gilaqtKETBTtkzReMkMuXnNSIbWhNDnk7
+8rQRWneqQyKTbKi06vXqgwojTA7KiXoWbUPZ6V5ZleVGmBItu/ipz3+4tT9P
+0DLDuN6fmazQevYzrv88GhMnhtsYVz7dpZJMXinjqidbr4o6ksW46q2AIGc8
+gUGufhqWJZWEM4j2G3NAfn9tsR5FOufBEZYGfb9Jj+i8isUTmT+8qUd0npz0
+mqq+BwSdc87bwC3o3XiRoBPOfTTdnGr/5hhBdF+LW/cZp3cTRPfZuTUitWE9
+QXTfh9duxsZIgigfyqdil/wdQFCLky/FeX/mPp9P0IiTT11zvy166UYQ5duT
+74pkbBZBlI8S4rtg2xyCdE6+Xr5jfKPey4GdfL6m22AyBBNE+b4ciRXe7xFE
+9bAGLNA8/oggqpexhSWJggMEUT3tyrglf6QkiOottjNfK9UQRPXofb3WesVM
+ENWr12eLZ+PC9ajdqeeMhh0/NafpEdU7yEyqlNbpEfWDdR9c277nrh5Rv3im
+nPEZCzIg6idaVY8+Oc2AqN9MmC55fNFqQNSPQnd2XJGbDOgf9u+AQQ==
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "1"]], Annotation[#, 
+                   Subscript["\[Psi]", 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxFVAtMU1cYLuhBhp1U2HFUHirPZssGGAgOmEeoGyIgwiowYZjyUCZRELBu
+jAKylGARDENXXiELYyrdhhMZEDrnP5g6CUUHFmE4IMEFy2M6uO2NZK67mLO7
+P7k5+XLP4/+///v+bWk58ZnWAoEgivtW14b61WCJfnA1EPyHX6xiDKPiOIuw
+jiVxURePl7hj8LhW6ne0liU5ojpb2esYXJMLfHorWVKwqyPGJgCDmyTp9vrT
+LGl36TysCsUw9yD9Rn4+S0K7Tk7Bbgz3jg2mCdNZkr3w863L0Rj2Ft45aYpl
+yZt3d+vfkGEIvSl6+l4wSzKbHNPDkjG4F5Hv49xZ8uPi8xGDHMPFcp3U1ZYl
+y4W2aZNHMDiKtQeN82ZiK3RNjT2GoXu6TbOgN5PqYe1OtzwM28X2L8vbzUSf
+tKEzTIEhLOX4r59WmUlZWX3v1Y8x7F+OPXM+20y8Op20R4q4/X1P5+/vMZNy
+h+7w1GIMDxQWaYWXmcCMpLumBINDbvTikpWZjMltOy0cPtGVde/9SRNxvJ6Q
+cYnDlWkBv1vpTGTLBaf8M9z5xxOpKt86E4kZsLO7zN2/5dREkLfCRPwleXqb
+QgzqrVGTPgdMZL/NBoOWy6/enPhBQaCJWMpDWhq4/A3WK06Rr5pIR1WK4yRX
+3/i355XTKwwJGW6QFWdhWPAZqT4xzRBJreeQKg3Dnik3pe8vDImLQSJBCgY/
+WXF4ZAdDfij5SfeM47c/vCnC2MyQT8ams0tjMGzed2ljYDVDhiWf17e8gyEg
+qO1ZdClDvvPsKc15G0PuKZ33l31GsqnSbdbgIYLiRn20yzdG0jCv2rvNWQSt
+Ycq5mUYjqfL7OzjQQQS9N8q9nT8zkkfSHsbjJREYDIGC0WojEbyI///v+Ojc
+pp5Fe/784+Z16gsT9qCk9+slzNHrd+z59w3GPn9Zjz2fX0vXuX+2qhCIaf6p
+7SODvQUI+mh9wtidEksG4utXC5QVwgQEEZSfQ5mmKUsEgnnKX8d4VzoTjGCM
+8ns2eSBhjS+C+5T/5kfvjks9EdTR/qxdqtANbEZQQfsnX545oHVA4Eb7+8UV
+58yl9Qhmaf+zsufmr9ggUFN99BuGxIvWCHKpfh6q4oOuChBspPqKD32iEXB4
+lOrv9I72mocc9qf6ZH6rKZSuQRBL9dutGfrabx2CXVTfz1cG1U1Cbj/Vf9a+
+GU2RI+L98cdBbVm/M+L989fsTancC8FX1F8udk9CpH6I95/Kc22SLBTx/gy6
+PfaWMhJBJPVvq1yR2ZqIeH+/5qPIaz+MwEj9r659JaxYgfj50HpLs91Ujvj5
+IS5pzFjWIH6+eE7d/TOxDfHz59CH19ytdAj+BX4/Sxc=
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "2"]], Annotation[#, 
+                   Subscript["\[Psi]", 2], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{1.625, -5.375}, {2.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, 
+                   SubscriptBox["\"U\"", "3"]], Annotation[#, 
+                   Subscript["U", 3], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    
+                    RectangleBox[{-0.875, -1.375}, {-0.125, -0.625}, 
+                    RoundingRadius -> 0.1], {{{
+                    0.7071067811865475, -0.7071067811865475}, {
+                    0.7071067811865475, 
+                    0.7071067811865475}}, {-0.8535533905932737, 
+                    0.06066017177982119}}]}, 
+                   SuperscriptBox[
+                    RowBox[{"\"GlobalPhase\"", "[", 
+                    RowBox[{
+                    RowBox[{"1.977147795024041`", "\[VeryThinSpace]"}], "+", 
+                    
+                    RowBox[{
+                    "2.2204460492503136`*^-16", " ", "\[ImaginaryI]"}]}], 
+                    "]"}], "\[Dagger]"]], Annotation[#, 
+                   SuperDagger[
+                    "GlobalPhase"[
+                    Complex[1.977147795024041, 2.2204460492503136`*^-16]]], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{2.625, -2.375}, {3.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    "0.7575255564069518`", "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.1866063670141327`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][0.7575255564069518], 
+                    Subscript["R", "Z"][-0.1866063670141327]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{3., -1.09375}, {3., -1.625}}]}}}}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{2.625, -1.}, {2.90625, -1.}}], 
+                    LineBox[{{3.09375, -1.}, {3.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    DiskBox[{3., -1.}, 0.09375]}, "\"1\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "1", "Tooltip"]& ]}, {}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    "0.7575255564069518`", "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.1866063670141327`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "1", "}"}], ",", 
+                    RowBox[{"{", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][0.7575255564069518], 
+                    Subscript["R", "Z"][-0.1866063670141327]]][{1}, {}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{3.625, -2.375}, {4.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.20537023955539857`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.8420111075597504`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.20537023955539857`], 
+                    Subscript["R", "Z"][-0.8420111075597504]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{4., -1.09375}, {4., -1.625}}]}}}}, {}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{3.625, -1.}, {3.90625, -1.}}], 
+                    LineBox[{{4.09375, -1.}, {4.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    GrayLevel[0, 0]], 
+                    DiskBox[{4., -1.}, 0.09375]}, "\"0\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "0", "Tooltip"]& ]}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.20537023955539857`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.8420111075597504`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "}"}], ",", 
+                    RowBox[{"{", "1", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.20537023955539857`], 
+                    Subscript["R", "Z"][-0.8420111075597504]]][{}, {1}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], {{
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{4.625, -1}, {5.375, -2}}]}, {
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{4.625, -2}, {5.375, -1}}]}}}, 
+                   RowBox[{"\"\[Pi]\"", "[", 
+                    RowBox[{"2", ",", "1"}], "]"}]], Annotation[#, 
+                   "\[Pi]"[2, 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{5.625, -2.375}, {6.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258776`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983432`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258776`], 
+                    Subscript["R", "Z"][-1.7693556454983432`]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{6., -1.09375}, {6., -1.625}}]}}}}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{5.625, -1.}, {5.90625, -1.}}], 
+                    LineBox[{{6.09375, -1.}, {6.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    DiskBox[{6., -1.}, 0.09375]}, "\"1\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "1", "Tooltip"]& ]}, {}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258776`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983432`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "1", "}"}], ",", 
+                    RowBox[{"{", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258776`], 
+                    Subscript["R", "Z"][-1.7693556454983432`]]][{1}, {}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{6.625, -2.375}, {7.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258832`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983435`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258832`], 
+                    Subscript["R", "Z"][-1.7693556454983435`]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{7., -1.09375}, {7., -1.625}}]}}}}, {}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{6.625, -1.}, {6.90625, -1.}}], 
+                    LineBox[{{7.09375, -1.}, {7.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    GrayLevel[0, 0]], 
+                    DiskBox[{7., -1.}, 0.09375]}, "\"0\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "0", "Tooltip"]& ]}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258832`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983435`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "}"}], ",", 
+                    RowBox[{"{", "1", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258832`], 
+                    Subscript["R", "Z"][-1.7693556454983435`]]][{}, {1}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.368417, 0.506779, 0.709798]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{7.625, -1.375}, {8.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, "\"H\"", TooltipStyle -> 
+                   "TextStyling"], Annotation[#, "H", "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.368417, 0.506779, 0.709798]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{7.625, -2.375}, {8.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, "\"H\"", TooltipStyle -> 
+                   "TextStyling"], Annotation[#, "H", "Tooltip"]& ], {
+                  TagBox[
+                   TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.7367, 0.358, 0.503]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.7367, 0.358, 0.503], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{8.625, -1.375}, {9.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, "\"Measurement\"", TooltipStyle -> 
+                    "TextStyling"], 
+                    Annotation[#, "Measurement", "Tooltip"]& ]}, {{
+                    Thickness[Small], {
+                    
+                    LineBox[{{9.151690686445303, -1.0772902651951612`}, {
+                    9.212366961023424, -1.0332063712732258`}}], 
+                    
+                    LineBox[{{9.116904337848512, -1.0409065970372444`}, {
+                    9.163666072987917, -0.9822692358521422}}], 
+                    
+                    LineBox[{{9.073692193435111, -1.015088542646603}, {
+                    9.103169070809155, -0.9461239597052442}}], 
+                    
+                    LineBox[{{9.02516873734081, -1.0016969196685124`}, {
+                    9.035236232277134, -0.9273756875359171}}], 
+                    
+                    LineBox[{{8.97483126265919, -1.0016969196685122`}, {
+                    8.964763767722866, -0.9273756875359171}}], 
+                    
+                    LineBox[{{8.926307806564889, -1.015088542646603}, {
+                    8.896830929190845, -0.9461239597052442}}], 
+                    
+                    LineBox[{{8.883095662151488, -1.0409065970372444`}, {
+                    8.836333927012083, -0.9822692358521422}}], 
+                    
+                    LineBox[{{8.848309313554697, -1.0772902651951612`}, {
+                    8.787633038976576, -1.0332063712732258`}}]}, 
+                    Thickness[Medium], 
+                    
+                    LineBox[{{9, -1.1875}, {
+                    9.17024643740233, -0.853372553429362}}]}}, 
+                    Dashing[{Small, Small}], {}}, 
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}]], 
+                    Annotation[#, 
+                    "Measurement"["Z"], "Tooltip"]& ], 
+                    TagBox[
+                    TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.7367, 0.358, 0.503]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.7367, 0.358, 0.503], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{8.625, -2.375}, {9.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, "\"Measurement\"", TooltipStyle -> 
+                    "TextStyling"], 
+                    Annotation[#, "Measurement", "Tooltip"]& ]}, {{
+                    Thickness[Small], {
+                    
+                    LineBox[{{9.151690686445303, -2.0772902651951615`}, {
+                    9.212366961023424, -2.033206371273226}}], 
+                    
+                    LineBox[{{9.116904337848512, -2.040906597037244}, {
+                    9.163666072987917, -1.9822692358521423`}}], 
+                    
+                    LineBox[{{9.073692193435111, -2.0150885426466028`}, {
+                    9.103169070809155, -1.9461239597052442`}}], 
+                    
+                    LineBox[{{9.02516873734081, -2.001696919668512}, {
+                    9.035236232277134, -1.9273756875359171`}}], 
+                    
+                    LineBox[{{8.97483126265919, -2.001696919668512}, {
+                    8.964763767722866, -1.9273756875359171`}}], 
+                    
+                    LineBox[{{8.926307806564889, -2.0150885426466028`}, {
+                    8.896830929190845, -1.9461239597052442`}}], 
+                    
+                    LineBox[{{8.883095662151488, -2.040906597037244}, {
+                    8.836333927012083, -1.982269235852142}}], 
+                    
+                    LineBox[{{8.848309313554697, -2.0772902651951615`}, {
+                    8.787633038976576, -2.033206371273226}}]}, 
+                    Thickness[Medium], 
+                    
+                    LineBox[{{9, -2.1875}, {
+                    9.17024643740233, -1.8533725534293621`}}]}}, 
+                    Dashing[{Small, Small}], {}}, 
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}]], 
+                    Annotation[#, 
+                    "Measurement"["Z"], "Tooltip"]& ]}, 
+                    Dashing[{Small, Small}], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{9., -1.375}, {9., -1.625}}]}}}, 
+                    TemplateBox[{
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}], 
+                    RowBox[{"\[CircleTimes]", "2"}]}, "Superscript", 
+                    SyntaxForm -> SuperscriptBox]], Annotation[#, 
+                    Superscript[
+                    "Measurement"["Z"], 
+                    CircleTimes[2]], "Tooltip"]& ]}}, {}}, {
+               ImageSize -> Tiny}], 
+              RowBox[{"\"Z\"", "@*", "None", "@*", "None", "@*", "None"}]], 
+             Annotation[#, 
+              Composition["Z", None, None, None], "Tooltip"]& ], 
+            InterpretationBox[
+             TagBox[
+              
+              GridBox[{{""}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}], "Grid"], 
+             
+             Grid[{{}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+              Alignment -> {Left, Automatic}, Spacings -> {2, Automatic}]]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{{
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -2}, {1.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -3}, {1.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -4}, {1.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -5}, {1.625, -5}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{3.375, -1}, {3.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{3.375, -2}, {3.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{4.375, -1}, {4.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{4.375, -2}, {4.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{5.375, -1}, {5.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{5.375, -2}, {5.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{6.375, -1}, {6.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{6.375, -2}, {6.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{7.375, -1}, {7.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{7.375, -2}, {7.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{8.375, -1}, {8.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{8.375, -2}, {8.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{9.375, -1}, {9.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{9.375, -2}, {9.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -3}, {9.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -4}, {9.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -5}, {9.625, -5}}]}}}, {
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVVAtM00ccLjd1iAwEhkwsELJGCigzg2FcZacRi9NK5jRMmEEBBYcbrYpp
+I6A0Kw9HHQMsVBkPgeKYEamODRW9wxUdBjfKs0SnCNe6YmVR2/7rRnV16XXZ
+L7lcvuRyv9f3faHpwo/3ABaLJXCcV/epk6+CgdH/xkP0fwzwh6yAaV8lA1f+
+4ae9Gw9wWNy4RlrFwF9kW67uTgJYeHbFxEwZA8uqy4vbsgDev3Wkfa+UgT8n
+y3hfSQBO9vsk/rVcBgpFA22GUoB5EdooXQYDj2Zm1zYoAT4fE8Gft4WBYTqu
+b80ZgEtOxe1X8xjYrXpe2NEJsOJsahrgMDDfOxlorwPs6dsVv9SDgRcGG8vu
+/wrw6o4losQZK+Rm3Wb3jgMcu+0hq2PACm/xUk2fTwFsvqEWf6m2QhG0f615
+BPBGqVQwp8IKYxY2BXY/BVjXklIgElrhQN/jeL4N4PGm2QD3zVboc6wof/ss
+wLnhauQZYYWTfJ59+gXAgyL/FT3zrFCjuHfP9hLgUU3/1b1TFlj5Qhlc6MAq
+jvcoH1tgcKimSWoH+Ind/Uh9nQWyE95d5fYXwOIMtyF1ngWePm8qn2sB+FDz
++/KeFAv023eIq5wB2Gus4KgnzwIPL1Kt7zU4+jetDv+NbYFveSUM1/4OcPvo
+O6vWsSzwRmdj4vIhR377Bk6D3gzFYYG1x28CXPdgsNv/thmGTCYYBi8DvGxR
+gXbkRzNcSeok/ucAtpT7DM9vNsODU+xSYT3AT7nyO2z3aVi4a6hNMmpDIV2x
+E5sMRijE9oqlXTYkcFNUd/cZYU1gilaqtKETBTtkzReMkMuXnNSIbWhNDnk7
+8rQRWneqQyKTbKi06vXqgwojTA7KiXoWbUPZ6V5ZleVGmBItu/ipz3+4tT9P
+0DLDuN6fmazQevYzrv88GhMnhtsYVz7dpZJMXinjqidbr4o6ksW46q2AIGc8
+gUGufhqWJZWEM4j2G3NAfn9tsR5FOufBEZYGfb9Jj+i8isUTmT+8qUd0npz0
+mqq+BwSdc87bwC3o3XiRoBPOfTTdnGr/5hhBdF+LW/cZp3cTRPfZuTUitWE9
+QXTfh9duxsZIgigfyqdil/wdQFCLky/FeX/mPp9P0IiTT11zvy166UYQ5duT
+74pkbBZBlI8S4rtg2xyCdE6+Xr5jfKPey4GdfL6m22AyBBNE+b4ciRXe7xFE
+9bAGLNA8/oggqpexhSWJggMEUT3tyrglf6QkiOottjNfK9UQRPXofb3WesVM
+ENWr12eLZ+PC9ajdqeeMhh0/NafpEdU7yEyqlNbpEfWDdR9c277nrh5Rv3im
+nPEZCzIg6idaVY8+Oc2AqN9MmC55fNFqQNSPQnd2XJGbDOgf9u+AQQ==
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "1"]], Annotation[#, 
+                   Subscript["\[Psi]", 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxFVAtMU1cYLuhBhp1U2HFUHirPZssGGAgOmEeoGyIgwiowYZjyUCZRELBu
+jAKylGARDENXXiELYyrdhhMZEDrnP5g6CUUHFmE4IMEFy2M6uO2NZK67mLO7
+P7k5+XLP4/+///v+bWk58ZnWAoEgivtW14b61WCJfnA1EPyHX6xiDKPiOIuw
+jiVxURePl7hj8LhW6ne0liU5ojpb2esYXJMLfHorWVKwqyPGJgCDmyTp9vrT
+LGl36TysCsUw9yD9Rn4+S0K7Tk7Bbgz3jg2mCdNZkr3w863L0Rj2Ft45aYpl
+yZt3d+vfkGEIvSl6+l4wSzKbHNPDkjG4F5Hv49xZ8uPi8xGDHMPFcp3U1ZYl
+y4W2aZNHMDiKtQeN82ZiK3RNjT2GoXu6TbOgN5PqYe1OtzwM28X2L8vbzUSf
+tKEzTIEhLOX4r59WmUlZWX3v1Y8x7F+OPXM+20y8Op20R4q4/X1P5+/vMZNy
+h+7w1GIMDxQWaYWXmcCMpLumBINDbvTikpWZjMltOy0cPtGVde/9SRNxvJ6Q
+cYnDlWkBv1vpTGTLBaf8M9z5xxOpKt86E4kZsLO7zN2/5dREkLfCRPwleXqb
+QgzqrVGTPgdMZL/NBoOWy6/enPhBQaCJWMpDWhq4/A3WK06Rr5pIR1WK4yRX
+3/i355XTKwwJGW6QFWdhWPAZqT4xzRBJreeQKg3Dnik3pe8vDImLQSJBCgY/
+WXF4ZAdDfij5SfeM47c/vCnC2MyQT8ams0tjMGzed2ljYDVDhiWf17e8gyEg
+qO1ZdClDvvPsKc15G0PuKZ33l31GsqnSbdbgIYLiRn20yzdG0jCv2rvNWQSt
+Ycq5mUYjqfL7OzjQQQS9N8q9nT8zkkfSHsbjJREYDIGC0WojEbyI///v+Ojc
+pp5Fe/784+Z16gsT9qCk9+slzNHrd+z59w3GPn9Zjz2fX0vXuX+2qhCIaf6p
+7SODvQUI+mh9wtidEksG4utXC5QVwgQEEZSfQ5mmKUsEgnnKX8d4VzoTjGCM
+8ns2eSBhjS+C+5T/5kfvjks9EdTR/qxdqtANbEZQQfsnX545oHVA4Eb7+8UV
+58yl9Qhmaf+zsufmr9ggUFN99BuGxIvWCHKpfh6q4oOuChBspPqKD32iEXB4
+lOrv9I72mocc9qf6ZH6rKZSuQRBL9dutGfrabx2CXVTfz1cG1U1Cbj/Vf9a+
+GU2RI+L98cdBbVm/M+L989fsTancC8FX1F8udk9CpH6I95/Kc22SLBTx/gy6
+PfaWMhJBJPVvq1yR2ZqIeH+/5qPIaz+MwEj9r659JaxYgfj50HpLs91Ujvj5
+IS5pzFjWIH6+eE7d/TOxDfHz59CH19ytdAj+BX4/Sxc=
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "2"]], Annotation[#, 
+                   Subscript["\[Psi]", 2], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{1.625, -5.375}, {2.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, 
+                   SubscriptBox["\"U\"", "3"]], Annotation[#, 
+                   Subscript["U", 3], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    
+                    RectangleBox[{-0.875, -1.375}, {-0.125, -0.625}, 
+                    RoundingRadius -> 0.1], {{{
+                    0.7071067811865475, -0.7071067811865475}, {
+                    0.7071067811865475, 
+                    0.7071067811865475}}, {-0.8535533905932737, 
+                    0.06066017177982119}}]}, 
+                   SuperscriptBox[
+                    RowBox[{"\"GlobalPhase\"", "[", 
+                    RowBox[{
+                    RowBox[{"1.977147795024041`", "\[VeryThinSpace]"}], "+", 
+                    
+                    RowBox[{
+                    "2.2204460492503136`*^-16", " ", "\[ImaginaryI]"}]}], 
+                    "]"}], "\[Dagger]"]], Annotation[#, 
+                   SuperDagger[
+                    "GlobalPhase"[
+                    Complex[1.977147795024041, 2.2204460492503136`*^-16]]], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    RectangleBox[{2.625, -2.375}, {3.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    "0.7575255564069518`", "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.1866063670141327`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][0.7575255564069518], 
+                    Subscript["R", "Z"][-0.1866063670141327]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{3., -1.09375}, {3., -1.625}}]}}}}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{2.625, -1.}, {2.90625, -1.}}], 
+                    LineBox[{{3.09375, -1.}, {3.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    DiskBox[{3., -1.}, 0.09375]}, "\"1\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "1", "Tooltip"]& ]}, {}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    "0.7575255564069518`", "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.1866063670141327`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "1", "}"}], ",", 
+                    RowBox[{"{", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][0.7575255564069518], 
+                    Subscript["R", "Z"][-0.1866063670141327]]][{1}, {}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{3.625, -2.375}, {4.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.20537023955539857`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.8420111075597504`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.20537023955539857`], 
+                    Subscript["R", "Z"][-0.8420111075597504]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{4., -1.09375}, {4., -1.625}}]}}}}, {}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{3.625, -1.}, {3.90625, -1.}}], 
+                    LineBox[{{4.09375, -1.}, {4.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    GrayLevel[0, 0]], 
+                    DiskBox[{4., -1.}, 0.09375]}, "\"0\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "0", "Tooltip"]& ]}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.20537023955539857`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "0.8420111075597504`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "}"}], ",", 
+                    RowBox[{"{", "1", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.20537023955539857`], 
+                    Subscript["R", "Z"][-0.8420111075597504]]][{}, {1}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], {{
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{4.625, -1}, {5.375, -2}}]}, {
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{4.625, -2}, {5.375, -1}}]}}}, 
+                   RowBox[{"\"\[Pi]\"", "[", 
+                    RowBox[{"2", ",", "1"}], "]"}]], Annotation[#, 
+                   "\[Pi]"[2, 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{5.625, -2.375}, {6.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258776`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983432`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258776`], 
+                    Subscript["R", "Z"][-1.7693556454983432`]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{6., -1.09375}, {6., -1.625}}]}}}}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{5.625, -1.}, {5.90625, -1.}}], 
+                    LineBox[{{6.09375, -1.}, {6.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    DiskBox[{6., -1.}, 0.09375]}, "\"1\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "1", "Tooltip"]& ]}, {}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258776`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983432`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "1", "}"}], ",", 
+                    RowBox[{"{", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258776`], 
+                    Subscript["R", "Z"][-1.7693556454983432`]]][{1}, {}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{6.625, -2.375}, {7.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258832`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983435`"}], "]"}]}]], 
+                    Annotation[#, 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258832`], 
+                    Subscript["R", "Z"][-1.7693556454983435`]], 
+                    "Tooltip"]& ], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{7., -1.09375}, {7., -1.625}}]}}}}, {}, {
+                    TagBox[
+                    TooltipBox[{
+                    Directive[
+                    CapForm[None], 
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3]], 
+                    Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                    LineBox[{{6.625, -1.}, {6.90625, -1.}}], 
+                    LineBox[{{7.09375, -1.}, {7.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    GrayLevel[0, 0]], 
+                    DiskBox[{7., -1.}, 0.09375]}, "\"0\"", TooltipStyle -> 
+                    "TextStyling"], Annotation[#, "0", "Tooltip"]& ]}}, 
+                   RowBox[{
+                    SubscriptBox["\"C\"", 
+                    RowBox[{
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Y\""], "[", 
+                    RowBox[{"-", "0.10645712346258832`"}], "]"}], "@*", 
+                    RowBox[{
+                    SubscriptBox["\"R\"", "\"Z\""], "[", 
+                    RowBox[{"-", "1.7693556454983435`"}], "]"}]}]], "[", 
+                    RowBox[{
+                    RowBox[{"{", "}"}], ",", 
+                    RowBox[{"{", "1", "}"}]}], "]"}]], Annotation[#, 
+                   Subscript["C", 
+                    Composition[
+                    Subscript["R", "Y"][-0.10645712346258832`], 
+                    Subscript["R", "Z"][-1.7693556454983435`]]][{}, {1}], 
+                   "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.368417, 0.506779, 0.709798]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{7.625, -1.375}, {8.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, "\"H\"", TooltipStyle -> 
+                   "TextStyling"], Annotation[#, "H", "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.368417, 0.506779, 0.709798]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{7.625, -2.375}, {8.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, "\"H\"", TooltipStyle -> 
+                   "TextStyling"], Annotation[#, "H", "Tooltip"]& ], {
+                  TagBox[
+                   TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.7367, 0.358, 0.503]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.7367, 0.358, 0.503], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{8.625, -1.375}, {9.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, "\"Measurement\"", TooltipStyle -> 
+                    "TextStyling"], 
+                    Annotation[#, "Measurement", "Tooltip"]& ]}, {{
+                    Thickness[Small], {
+                    
+                    LineBox[{{9.151690686445303, -1.0772902651951612`}, {
+                    9.212366961023424, -1.0332063712732258`}}], 
+                    
+                    LineBox[{{9.116904337848512, -1.0409065970372444`}, {
+                    9.163666072987917, -0.9822692358521422}}], 
+                    
+                    LineBox[{{9.073692193435111, -1.015088542646603}, {
+                    9.103169070809155, -0.9461239597052442}}], 
+                    
+                    LineBox[{{9.02516873734081, -1.0016969196685124`}, {
+                    9.035236232277134, -0.9273756875359171}}], 
+                    
+                    LineBox[{{8.97483126265919, -1.0016969196685122`}, {
+                    8.964763767722866, -0.9273756875359171}}], 
+                    
+                    LineBox[{{8.926307806564889, -1.015088542646603}, {
+                    8.896830929190845, -0.9461239597052442}}], 
+                    
+                    LineBox[{{8.883095662151488, -1.0409065970372444`}, {
+                    8.836333927012083, -0.9822692358521422}}], 
+                    
+                    LineBox[{{8.848309313554697, -1.0772902651951612`}, {
+                    8.787633038976576, -1.0332063712732258`}}]}, 
+                    Thickness[Medium], 
+                    
+                    LineBox[{{9, -1.1875}, {
+                    9.17024643740233, -0.853372553429362}}]}}, 
+                    Dashing[{Small, Small}], {}}, 
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}]], 
+                    Annotation[#, 
+                    "Measurement"["Z"], "Tooltip"]& ], 
+                    TagBox[
+                    TooltipBox[{{
+                    TagBox[
+                    TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.7367, 0.358, 0.503]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.7367, 0.358, 0.503], 
+                    Opacity[0.3]]], 
+                    
+                    RectangleBox[{8.625, -2.375}, {9.375, -1.625}, 
+                    RoundingRadius -> 0.1]}, "\"Measurement\"", TooltipStyle -> 
+                    "TextStyling"], 
+                    Annotation[#, "Measurement", "Tooltip"]& ]}, {{
+                    Thickness[Small], {
+                    
+                    LineBox[{{9.151690686445303, -2.0772902651951615`}, {
+                    9.212366961023424, -2.033206371273226}}], 
+                    
+                    LineBox[{{9.116904337848512, -2.040906597037244}, {
+                    9.163666072987917, -1.9822692358521423`}}], 
+                    
+                    LineBox[{{9.073692193435111, -2.0150885426466028`}, {
+                    9.103169070809155, -1.9461239597052442`}}], 
+                    
+                    LineBox[{{9.02516873734081, -2.001696919668512}, {
+                    9.035236232277134, -1.9273756875359171`}}], 
+                    
+                    LineBox[{{8.97483126265919, -2.001696919668512}, {
+                    8.964763767722866, -1.9273756875359171`}}], 
+                    
+                    LineBox[{{8.926307806564889, -2.0150885426466028`}, {
+                    8.896830929190845, -1.9461239597052442`}}], 
+                    
+                    LineBox[{{8.883095662151488, -2.040906597037244}, {
+                    8.836333927012083, -1.982269235852142}}], 
+                    
+                    LineBox[{{8.848309313554697, -2.0772902651951615`}, {
+                    8.787633038976576, -2.033206371273226}}]}, 
+                    Thickness[Medium], 
+                    
+                    LineBox[{{9, -2.1875}, {
+                    9.17024643740233, -1.8533725534293621`}}]}}, 
+                    Dashing[{Small, Small}], {}}, 
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}]], 
+                    Annotation[#, 
+                    "Measurement"["Z"], "Tooltip"]& ]}, 
+                    Dashing[{Small, Small}], {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    LineBox[{{9., -1.375}, {9., -1.625}}]}}}, 
+                    TemplateBox[{
+                    RowBox[{"\"Measurement\"", "[", "\"Z\"", "]"}], 
+                    RowBox[{"\[CircleTimes]", "2"}]}, "Superscript", 
+                    SyntaxForm -> SuperscriptBox]], Annotation[#, 
+                    Superscript[
+                    "Measurement"["Z"], 
+                    CircleTimes[2]], "Tooltip"]& ]}}, {}}, {
+               ImageSize -> Tiny}], 
+              RowBox[{"\"Z\"", "@*", "None", "@*", "None", "@*", "None"}]], 
+             Annotation[#, 
+              Composition["Z", None, None, None], "Tooltip"]& ], 
+            GridBox[{{"", ""}, {
+               RowBox[{
+                 TagBox["\"Gates: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["12", "SummaryItem"]}], 
+               RowBox[{
+                 TagBox["\"Depth: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["9", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Dimensions: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"1", "\[Rule]", "128"}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{
+                    RowBox[{"{", "}"}], "\[Rule]", 
+                    RowBox[{"{", 
+                    
+                    RowBox[{
+                    "0", ",", "1", ",", "2", ",", "3", ",", "4", ",", "5"}], 
+                    "}"}]}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Measurement Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"1", ",", "2"}], "}"}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Parameters: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", "}"}], "SummaryItem"]}], ""}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QuantumCircuitOperator[<|"Elements" -> {
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {4}, 
+         Complex[0., 0.], {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {Complex[0.3301907521619514, 
+          0.2623829543816004], Complex[0.029713340911507846`, 
+          0.5178014021409447], Complex[-0.6360928022843, 
+          0.24896639227918652`], Complex[-0.2890604320843349, 
+          0.054532804349913436`]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1|>], "Output" -> 
+          Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {8}, 
+         Complex[0., 0.], {
+         1, {{0, 8}, {{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}}}, {Complex[
+          0.4815338055732137, -0.20390582584077935`], Complex[
+          0.11572575614450621`, 0.06487876978682786], 
+          Complex[-0.19990871397717414`, -0.18339093291933614`], Complex[
+          0.2214618083731156, 0.0533790429528874], 
+          Complex[-0.010322258270842847`, -0.018650644254846895`], Complex[
+          0.4562308638763173, 0.3494240736909754], 
+          Complex[-0.3286722752565945, 0.2792167945621798], 
+          Complex[-0.07491242167891962, -0.24730140738343162`]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 3} -> 1|>], "Output" -> 
+          Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{3, 4, 5}, {}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {1024}, 
+         Complex[0., 0.], {1, {{0, 1024}, CompressedData["
+1:eJwl11MQGIgOBdB2a9u2bdu2bdvGbm3btm3btm37nc7LzPlI/jO5SdCwXcW2
+/wRQgQMECBjg//72gf4/ChCEoAQjOCEISShCE4awhCM8EYhIJCIThahEIzox
+iEksYhOHuMQjPglISCISk4SkJCM5KUhJKlKThrSkIz0ZyEgmMpOFrGQjOznI
+SS5yk4e85CM/BShIIQpThKIUozglKEkpSlOGspSjPBWoSCUqU4WqVKM6NahJ
+LWpTh7rUoz4NaEgjGtOEpjSjOS1oSSta04a2tKM9HehIJzrTha50ozs96Ekv
+etOHvvSjPwMYyCAG8y//MYShDGM4IxjJKEYzhrGMYzwTmMgkJjOFqUxjOjOY
+ySxmM4e5zGM+C1jIIhazhKUsYzkrWMkqVrOGtaxjPRvYyCY2s4WtbGM7O9jJ
+Lnazh73sYz8HOMghDnOEoxzjOCc4ySlOc4aznOM8F7jIJS5zhatc4zo3uMkt
+bnOHu9zjPg94yCMe84SnPOM5L3jJK17zhre84z0f+MgnPvOFr3zjOz/4yS9+
+84e/yx+QfwhEYIIQlGAEJwQhCUVowhCWcIQnAhGJRGSiEJVoRCcGMYlFbOIQ
+l3jEJwEJSURikpCUZCQnBSlJRWrSkJZ0pCcDGclEZrKQlWxkJwc5yUVu8pCX
+fOSnAAUpRGGKUJRiFKcEJSlFacpQlnKUpwIVqURlqlCValSnBjWpRW3qUJd6
+1KcBDWlEY5rQlGY0pwUtaUVr2tCWdrSnAx3pRGe60JVudKcHPelFb/rQl370
+ZwADGcRg/uU/hjCUYQxnBCMZxWjGMJZxjGcCE5nEZKYwlWlMZwYzmcVs5jCX
+ecxnAQtZxGKWsJRlLGcFK1nFatawlnWsZwMb2cRmtrCVbWxnBzvZxW72sJd9
+7OcABznEYY5wlGMc5wQnOcVpznCWc5znAhe5xGWucJVrXOcGN7nFbe5wl3vc
+5wEPecRjnvCUZzznBS95xWve8JZ3vOcDH/nEZ77wlW985wc/+cVv/vD38Afk
+HwIRmCAEJRjBCUFIQhGaMIQlHOGJQEQiEZkoRCUa0YlBTGIRmzjEJR7xSUBC
+EpGYJCQlGclJQUpSkZo0pCUd6clARjKRmSxkJRvZyUFOcpGbPOQlH/kpQEEK
+UZgiFKUYxSlBSUpRmjKUpRzlqUBFKlGZKlSlGtWpQU1qUZs61KUe9WlAQxrR
+mCY0pRnNaUFLWtGaNvwNcO1oTwc60onOdKEr3ehOD3rSi970oS/96M8ABjKI
+wfzLfwxhKMMYzghGMorRjGEs4xjPBCYyiclMYSrTmM4MZjKL2cxhLvOYzwIW
+sojFLGEpy1jOClayitWsYS3rWM8GNrKJzWxhK9vYzg52sovd7GEv+9jPAQ5y
+iMMc4SjHOM4JTnKK05zhLOc4zwUuconLXOEq17jODW5yi9vc4S73uM8DHvKI
+xzzhKc94zgte8orXvOEt73jPBz7yic984Svf+M4PfvKL3/zhb+gPyD8EIjBB
+CEowghOCkIQiNGEISzjCE4GIRCIyUYhKNKITg5jEIjZxiEs84pOAhCQiMUlI
+SjKSk4KUpCI1aUhLOtKTgYxkIjNZyEo2spODnOQiN3nISz7yU4CCFKIwRShK
+MYpTgpKUojRlKEs5ylOBilSiMlWoSjWqU4Oa1KI2dahLPerTgIY0ojFNaEoz
+mtOClrSiNW1oSzva04GOdKIzXehKN7rTg570ojd96Es/+jOAgQxiMP/yH0MY
+yjCGM4KRjGI0YxjLOMYzgYlMYjJTmMo0pjODmcxiNnOYyzzms4CFLGIxS1jK
+MpazgpWsYjVrWMs61rOBjWxiM1vYyja2s4Od7GI3e9jLPvZzgIMc4jBHOMox
+jnOCk5ziNGc4yznOc4GLXOIyV7jKNa5zg5vc4jZ3uMs97vOAhzziMU94yjOe
+84KXvOI1b3jLO97zgY984jNf+Mo3vvODn/ziN3/4+/D/D1ZKBdw=
+           "]}, CompressedData["
+1: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
+PvukVf8y99whTNr2LUwnjaeEkv8HDNb5WA==
+          "]}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {1}, 0, {
+         1, {{0, 1}, {{1}}}, {
+          Complex[-0.39526053785080634`, -0.9185690541368629]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1|>], "Output" -> 
+          Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1|>], "Picture" -> "Schr\[ODoubleDot]dinger", 
+          "Label" -> SuperDagger[
+            "GlobalPhase"[
+             Complex[1.977147795024041, 2.2204460492503136`*^-16]]], 
+          "ParameterSpec" -> {}|>]], {{}, {}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 6}, {{1}, {6}, {11}, {12}, {15}, {16}}}, {1, 1, 
+           Complex[0.9250815366384947, 0.08656439325956226], 
+           Complex[-0.368162870251176, 0.034450796196623404`], 
+           Complex[0.368162870251176, 0.034450796196623515`], 
+           Complex[0.9250815366384946, -0.08656439325956211]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            Composition[
+             Subscript["R", "Y"][0.7575255564069518], 
+             Subscript["R", "Z"][-0.1866063670141327]]][{1}, {}], 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {16}, 
+         Complex[0., 0.], {1, {{0, 6}, {{1}, {2}, {5}, {6}, {11}, {16}}}, {
+           Complex[0.9078709327062942, 0.40652569900125957`], 
+           Complex[0.09355388485460829, -0.0418914815583228], 
+           Complex[-0.09355388485460835, -0.04189148155832276], 
+           Complex[0.9078709327062943, -0.40652569900125957`], 1, 1}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            Composition[
+             Subscript["R", "Y"][-0.20537023955539857`], 
+             Subscript["R", "Z"][-0.8420111075597504]]][{}, {1}], 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 4}, {{1}, {7}, {10}, {16}}}, {1, 1, 1, 1}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "\[Pi]"[2, 1], 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 6}, {{1}, {6}, {11}, {12}, {15}, {16}}}, {1, 1, 
+           Complex[0.6326415219584253, 0.7726151045147123], 
+           Complex[0.03370643757585932, -0.04116407457713875], 
+           Complex[-0.033706437575859324`, -0.04116407457713875], 
+           Complex[0.6326415219584253, -0.7726151045147123]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            Composition[
+             Subscript["R", "Y"][-0.10645712346258776`], 
+             Subscript["R", "Z"][-1.7693556454983432`]]][{1}, {}], 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {16}, 
+         Complex[0., 0.], {1, {{0, 6}, {{1}, {2}, {5}, {6}, {11}, {16}}}, {
+           Complex[0.6326415219584253, 0.7726151045147126], 
+           Complex[0.03370643757585949, -0.041164074577138964`], 
+           Complex[-0.033706437575859456`, -0.041164074577139005`], 
+           Complex[0.6326415219584252, -0.7726151045147125], 1, 1}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> Subscript["C", 
+            Composition[
+             Subscript["R", "Y"][-0.10645712346258832`], 
+             Subscript["R", "Z"][-1.7693556454983435`]]][{}, {1}], 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{1}, {1}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{2}, {2}}], 
+      Wolfram`QuantumFramework`QuantumMeasurementOperator[
+       Wolfram`QuantumFramework`QuantumOperator[
+        Wolfram`QuantumFramework`QuantumState[
+         SparseArray[
+         Automatic, {64}, 0, {
+          1, {{0, 4}, {{1}, {22}, {43}, {64}}}, {1, 1, 1, 1}}], 
+         Wolfram`QuantumFramework`QuantumBasis[<|
+          "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["+", 1]], "Dual" -> True], 1} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["\[Minus]", -1]], "Dual" -> True], 1} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["+", 1]], "Dual" -> True], 2} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["\[Minus]", -1]], "Dual" -> True], 2} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+           "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+                Wolfram`QuantumFramework`QuditName[
+                 Interpretation[
+                  Tooltip[
+                   Style[
+                    Subscript["\[ScriptCapitalE]", 1], Bold], 
+                   "Eigenvalue 1"], {1, {1}}], "Dual" -> False], 1} -> 
+              SparseArray[
+               Automatic, {2, 2}, 0, {1, {{0, 1, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Interpretation[
+                  Tooltip[
+                   Style[
+                    Subscript["\[ScriptCapitalE]", 0], Bold], 
+                   "Eigenvalue 2"], {0, {2}}], "Dual" -> False], 1} -> 
+              SparseArray[
+               Automatic, {2, 2}, 0, {1, {{0, 1, 1}, {{2}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Interpretation[
+                  Tooltip[
+                   Style[
+                    Subscript["\[ScriptCapitalE]", 0], Bold], 
+                   "Eigenvalue 3"], {0, {3}}], "Dual" -> False], 1} -> 
+              SparseArray[
+               Automatic, {2, 2}, 0, {1, {{0, 0, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Interpretation[
+                  Tooltip[
+                   Style[
+                    Subscript["\[ScriptCapitalE]", 0], Bold], 
+                   "Eigenvalue 4"], {0, {4}}], "Dual" -> False], 1} -> 
+              SparseArray[
+               Automatic, {2, 2}, 0, {1, {{0, 0, 1}, {{2}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["+", 1]], "Dual" -> False], 2} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["\[Minus]", -1]], "Dual" -> False], 2} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["+", 1]], "Dual" -> False], 3} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+                Wolfram`QuantumFramework`QuditName[
+                 Subscript["\[ScriptZ]", 
+                  Interpretation["\[Minus]", -1]], "Dual" -> False], 3} -> 
+              SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+           "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "Z", 
+           "ParameterSpec" -> {}|>]], {{0, 1, 2}, {1, 2}}], {{1, 2}}]}, 
+    "Label" -> Composition["Z", None, None, None]|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{{3.922573702857112*^9, 3.9225738151033077`*^9}, 
+   3.922573864911954*^9, 3.922575394778679*^9, 3.922575444802662*^9, {
+   3.922575947330371*^9, 3.9225759811174173`*^9}, 3.922576059308086*^9, 
+   3.9226218314593163`*^9, 3.922622012376968*^9},
+ CellLabel->
+  "Out[181]=",ExpressionUUID->"9b0f533e-60f8-4bcb-b9a1-46865c08bc36"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"qc2", "[", "]"}], "[", "\"\<Mean\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.922573786474365*^9, 3.92257378933014*^9}, {
+   3.9225738230166407`*^9, 3.922573827258889*^9}, 3.92257386739622*^9},
+ CellLabel->
+  "In[182]:=",ExpressionUUID->"51716ca0-c250-41ff-87a9-480b4e0069ba"],
+
+Cell[BoxData["0.1920558304234057`"], "Output",
+ CellChangeTimes->{{3.922573789796156*^9, 3.922573829982603*^9}, 
+   3.9225738676527987`*^9, 3.9225754039788713`*^9, 3.922575951579152*^9, 
+   3.9225759863427877`*^9, 3.922576061506918*^9, 3.9226218337947493`*^9, 
+   3.9226220148359213`*^9},
+ CellLabel->
+  "Out[182]=",ExpressionUUID->"0f7a0fcd-7a92-4a90-ad0c-d7e82a54748f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"qc", "/*", 
+      RowBox[{"{", 
+       SuperscriptBox["\[Psi]", "\[Dagger]"], "}"}]}], ")"}], "[", "]"}], 
+   "[", "\"\<Norm\>\"", "]"}], "^", "2"}]], "Input",
+ CellChangeTimes->{{3.922576007242875*^9, 3.922576032634556*^9}},
+ CellLabel->
+  "In[183]:=",ExpressionUUID->"af02bb24-0865-4866-99c8-23f28888a95d"],
+
+Cell[BoxData["0.19205583042340554`"], "Output",
+ CellChangeTimes->{{3.92257601223392*^9, 3.9225760328812943`*^9}, 
+   3.922576064902287*^9, 3.92262183646692*^9, 3.922622016610319*^9},
+ CellLabel->
+  "Out[183]=",ExpressionUUID->"35f12d19-01b1-402d-b907-cd682758dcce"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumPartialTrace", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"qc", "/*", 
+       RowBox[{"{", 
+        SuperscriptBox["\[Psi]", "\[Dagger]"], "}"}]}], ")"}], "[", "]"}], 
+    ",", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "2", ",", "3"}], "}"}]}], "]"}], "[", "\"\<Scalar\>\"",
+   "]"}]], "Input",
+ CellChangeTimes->{{3.922621976094915*^9, 3.922622004128626*^9}, {
+  3.922622036897758*^9, 3.922622040862393*^9}},
+ CellLabel->
+  "In[188]:=",ExpressionUUID->"d7574284-717f-46e2-a953-1b14a098d928"],
+
+Cell[BoxData[
+ RowBox[{"0.19205583042340552`", "\[VeryThinSpace]", "+", 
+  RowBox[{"0.`", " ", "\[ImaginaryI]"}]}]], "Output",
+ CellChangeTimes->{{3.922621977115889*^9, 3.9226220068496227`*^9}, {
+  3.922622037282715*^9, 3.9226220410960073`*^9}},
+ CellLabel->
+  "Out[188]=",ExpressionUUID->"084ddc5c-3fba-4f80-9a28-3a07d3161a0f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qc3", "=", 
+  RowBox[{"qc", "/*", 
+   RowBox[{"{", 
+    RowBox[{
+     SuperscriptBox["\[Psi]", "\[Dagger]"], ",", 
+     RowBox[{"QuantumOperator", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"QuantumState", "[", 
+         RowBox[{"\"\<UniformMixture\>\"", "[", "3", "]"}], "]"}], "[", 
+        "\"\<Dagger\>\"", "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"3", ",", "4", ",", "5"}], "}"}]}], "]"}]}], 
+    "}"}]}]}]], "Input",
+ CellChangeTimes->{{3.922621725569525*^9, 3.922621725571582*^9}, {
+  3.9226218912077436`*^9, 3.9226219026296797`*^9}, {3.92262206384895*^9, 
+  3.922622101056654*^9}},
+ CellLabel->
+  "In[189]:=",ExpressionUUID->"3cf0bf49-d2fe-4ba0-9e70-82125dece9df"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QuantumCircuitOperator",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{{
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -2}, {1.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -3}, {1.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -4}, {1.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -5}, {1.625, -5}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -3}, {2.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -4}, {2.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -5}, {2.625, -5}}]}}}, {
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVVAtM00ccLjd1iAwEhkwsELJGCigzg2FcZacRi9NK5jRMmEEBBYcbrYpp
+I6A0Kw9HHQMsVBkPgeKYEamODRW9wxUdBjfKs0SnCNe6YmVR2/7rRnV16XXZ
+L7lcvuRyv9f3faHpwo/3ABaLJXCcV/epk6+CgdH/xkP0fwzwh6yAaV8lA1f+
+4ae9Gw9wWNy4RlrFwF9kW67uTgJYeHbFxEwZA8uqy4vbsgDev3Wkfa+UgT8n
+y3hfSQBO9vsk/rVcBgpFA22GUoB5EdooXQYDj2Zm1zYoAT4fE8Gft4WBYTqu
+b80ZgEtOxe1X8xjYrXpe2NEJsOJsahrgMDDfOxlorwPs6dsVv9SDgRcGG8vu
+/wrw6o4losQZK+Rm3Wb3jgMcu+0hq2PACm/xUk2fTwFsvqEWf6m2QhG0f615
+BPBGqVQwp8IKYxY2BXY/BVjXklIgElrhQN/jeL4N4PGm2QD3zVboc6wof/ss
+wLnhauQZYYWTfJ59+gXAgyL/FT3zrFCjuHfP9hLgUU3/1b1TFlj5Qhlc6MAq
+jvcoH1tgcKimSWoH+Ind/Uh9nQWyE95d5fYXwOIMtyF1ngWePm8qn2sB+FDz
++/KeFAv023eIq5wB2Gus4KgnzwIPL1Kt7zU4+jetDv+NbYFveSUM1/4OcPvo
+O6vWsSzwRmdj4vIhR377Bk6D3gzFYYG1x28CXPdgsNv/thmGTCYYBi8DvGxR
+gXbkRzNcSeok/ucAtpT7DM9vNsODU+xSYT3AT7nyO2z3aVi4a6hNMmpDIV2x
+E5sMRijE9oqlXTYkcFNUd/cZYU1gilaqtKETBTtkzReMkMuXnNSIbWhNDnk7
+8rQRWneqQyKTbKi06vXqgwojTA7KiXoWbUPZ6V5ZleVGmBItu/ipz3+4tT9P
+0DLDuN6fmazQevYzrv88GhMnhtsYVz7dpZJMXinjqidbr4o6ksW46q2AIGc8
+gUGufhqWJZWEM4j2G3NAfn9tsR5FOufBEZYGfb9Jj+i8isUTmT+8qUd0npz0
+mqq+BwSdc87bwC3o3XiRoBPOfTTdnGr/5hhBdF+LW/cZp3cTRPfZuTUitWE9
+QXTfh9duxsZIgigfyqdil/wdQFCLky/FeX/mPp9P0IiTT11zvy166UYQ5duT
+74pkbBZBlI8S4rtg2xyCdE6+Xr5jfKPey4GdfL6m22AyBBNE+b4ciRXe7xFE
+9bAGLNA8/oggqpexhSWJggMEUT3tyrglf6QkiOottjNfK9UQRPXofb3WesVM
+ENWr12eLZ+PC9ajdqeeMhh0/NafpEdU7yEyqlNbpEfWDdR9c277nrh5Rv3im
+nPEZCzIg6idaVY8+Oc2AqN9MmC55fNFqQNSPQnd2XJGbDOgf9u+AQQ==
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "1"]], Annotation[#, 
+                   Subscript["\[Psi]", 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxFVAtMU1cYLuhBhp1U2HFUHirPZssGGAgOmEeoGyIgwiowYZjyUCZRELBu
+jAKylGARDENXXiELYyrdhhMZEDrnP5g6CUUHFmE4IMEFy2M6uO2NZK67mLO7
+P7k5+XLP4/+///v+bWk58ZnWAoEgivtW14b61WCJfnA1EPyHX6xiDKPiOIuw
+jiVxURePl7hj8LhW6ne0liU5ojpb2esYXJMLfHorWVKwqyPGJgCDmyTp9vrT
+LGl36TysCsUw9yD9Rn4+S0K7Tk7Bbgz3jg2mCdNZkr3w863L0Rj2Ft45aYpl
+yZt3d+vfkGEIvSl6+l4wSzKbHNPDkjG4F5Hv49xZ8uPi8xGDHMPFcp3U1ZYl
+y4W2aZNHMDiKtQeN82ZiK3RNjT2GoXu6TbOgN5PqYe1OtzwM28X2L8vbzUSf
+tKEzTIEhLOX4r59WmUlZWX3v1Y8x7F+OPXM+20y8Op20R4q4/X1P5+/vMZNy
+h+7w1GIMDxQWaYWXmcCMpLumBINDbvTikpWZjMltOy0cPtGVde/9SRNxvJ6Q
+cYnDlWkBv1vpTGTLBaf8M9z5xxOpKt86E4kZsLO7zN2/5dREkLfCRPwleXqb
+QgzqrVGTPgdMZL/NBoOWy6/enPhBQaCJWMpDWhq4/A3WK06Rr5pIR1WK4yRX
+3/i355XTKwwJGW6QFWdhWPAZqT4xzRBJreeQKg3Dnik3pe8vDImLQSJBCgY/
+WXF4ZAdDfij5SfeM47c/vCnC2MyQT8ams0tjMGzed2ljYDVDhiWf17e8gyEg
+qO1ZdClDvvPsKc15G0PuKZ33l31GsqnSbdbgIYLiRn20yzdG0jCv2rvNWQSt
+Ycq5mUYjqfL7OzjQQQS9N8q9nT8zkkfSHsbjJREYDIGC0WojEbyI///v+Ojc
+pp5Fe/784+Z16gsT9qCk9+slzNHrd+z59w3GPn9Zjz2fX0vXuX+2qhCIaf6p
+7SODvQUI+mh9wtidEksG4utXC5QVwgQEEZSfQ5mmKUsEgnnKX8d4VzoTjGCM
+8ns2eSBhjS+C+5T/5kfvjks9EdTR/qxdqtANbEZQQfsnX545oHVA4Eb7+8UV
+58yl9Qhmaf+zsufmr9ggUFN99BuGxIvWCHKpfh6q4oOuChBspPqKD32iEXB4
+lOrv9I72mocc9qf6ZH6rKZSuQRBL9dutGfrabx2CXVTfz1cG1U1Cbj/Vf9a+
+GU2RI+L98cdBbVm/M+L989fsTancC8FX1F8udk9CpH6I95/Kc22SLBTx/gy6
+PfaWMhJBJPVvq1yR2ZqIeH+/5qPIaz+MwEj9r659JaxYgfj50HpLs91Ujvj5
+IS5pzFjWIH6+eE7d/TOxDfHz59CH19ytdAj+BX4/Sxc=
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "2"]], Annotation[#, 
+                   Subscript["\[Psi]", 2], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{1.625, -5.375}, {2.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, 
+                   SubscriptBox["\"U\"", "3"]], Annotation[#, 
+                   Subscript["U", 3], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVlAtMU1ccxuHk3rnqBiLgAwqEZVlxbkRFYY5NDhtQM1ijuFXBTVfEMmUV
+5nSAgNCER1EQEbF1iEUQsCR0btr59hylBDFus0omDERGz62AlWUI9KI81m2c
+mt3k5uSXe3PvOd//+z7/hJTYbcDJySnGfv+zBv17MfC/FeD/8yPUlTOyf8zO
+r205c7nYakEKWblPWDADe60XZyvqLWhN46PSl99loKnuOhcns7O04nR0GAOf
+aobc7vtY0Ppv2z+fimTgh6uvbdzWzSHzDnW/u4SBQC49rKzikI4b7M7awMBE
+7Wfna2UcurpcJhYlMNBl+6KJ9xdzaGXj2l+nFAx0vVE5dnmEoGdjtQ+sexkY
+bMgyKY0E9YmGWztUDJRtvVX8WEMQ92nxdIOagffnFkpidhFUIBRFrG5gIARz
+jE/WErQpDHVmn2dgIEqrcF1J0JGm2Ovimwy81rHGavG1s955JLOTgZe6Bl49
+4UJQVLKoenyQgelk3pxPGILU4tEk7QQD/zqdnyd0IqiiatHJaBcWXmCP5087
+E6RX8Ee6/VhYkPnn7nEBQbOUz/HSZSwsNQd7P19AUIQkZ77oAxZmhH+MB5YQ
+FKnvW6WNZeG59W9u1kYSlOERjjMSWLiwPnlgMJGgn4pkyZqvWXiy1aw/VESQ
+zuPLrT05LOQCsls+OkuQp7JLsbSEha8nqMvb/iBoWelR/z3HWJif1is/58Gh
+wd3hCypO2Z+nqHwaoznEvmPzzNSzcMWu4ofhBRxqHhW28dkCmKt9S1q42Ib4
+dcOzFAUCWBYGdnaKbagJxf9+qEQAt3N1gfuSbKiyt993Q7kAdlwslIeqbCiV
+vBRiUAvg7GpJb7vOhny993nVfieA9X1lpldu25A86T2593E7386MOTX0guOD
+8s5ucuMd78f77Ax8GsQ7vje25Qe/JVLe8b+AqPRjxjTesR+1V7xJqeEd+03B
+k2VvXOBfnOeLe7r033jHeb8xC1UpJwCmeoSQqnTPJoCpXn59YsvdSwBTPdNE
+XpUlrQBTvVsN1ZK37wFsmJnHQhdxe+UDgOm89s6vi2yxAEzn6Z68J0AzBDCd
+d8331lJ2FGDqB6F4+SrnZwA3zfjF199Yo5wEmPrp8JTGN3caYOq35oqeHt7O
+1I99UaGTg1MAU7+6FeVnbZyw84yf77Q9iYjiAaZ+XzG3xuvKMMA0D6lhkweN
+jwGmebkVutn6lRlgmqeApJ+FLZ0A07z9eLf6wMNfAKZ5zHKNA6YbANO8Xqkb
+zz1jsOs1k2dRR8A8dQPANO858h2VWg3AtA9SUu/oLCqAaV80x+WF7k+380yf
+HDhaWqBLApj2zc28dVcTpQDTPgrpdzd1RwD8N4tbR8A=
+                    "]], {0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "4"]], Annotation[#, 
+                   Subscript["\[Psi]", 4], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    Directive[
+                    AbsoluteThickness[3], 
+                    RGBColor[0.537254, 0.537254, 0.537254]]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJw9VA1QVFUU3vSdhQVGtoWrEGSwLtNO9AMZSIB0kZ8MA4FW2IJWQRYoDAoI
+BZUlmmV0yZAUtgWyhiHCbQLFHSBW85glSSyMMFsgDjgDDhQQA4ujNik9mbfv
+zNx58819995zvvN9xzezIFm9TiAQ7GLX4+/WtWBog4ENT4J2bBl4HICkKLXi
+AYv3vndB+oQZML/18kxcMENlk0P/pJ4FLByOmZeGMtRT05hl0wMuzb3lXfYa
+Q1uu6V++WwXo7J7gExvLUN0p98jyEkCP64bB0gSGPvdsSWF7NuD4Dq8YULL/
+Z5SoW1IBM7+65/BHJkO39Y2+evQNwMXIfX5/5jNUK2OUinDAH8KlqqXDDPV2
+WgyLCgA8aDMmO+sYujTza1SGH+C3rv4mkYGhd94xVl71AswpOlQ61MbQ3IQp
+/RE3wNs3dm6K+JGhD/8d0DW5ACqFSnNQP0O79YPfBzgAzpxx0NWNM3TlZm1Z
+1HrAumjBRNgCQz8Jaa+9JQC83/f2ceEqQ5PDF/UCFv/W8vumETHQW9rkbedZ
+bB5UP6mRAr1qHfRcWAfo8kXi9tmtQHPz/p7rEAJ+FC2Zno8G+k2Hl3rZGfBi
+wU3xgT1AM2xTe4wSQBOjuBGjBsosHzP3PwVY/6iyKK0Y6Jnp2LEoGaD72aAr
+NZVAP0vrT1n/EqDTgfqQvhqgnWNd+1dCAd89+WHkbCPQveq7k6uvA85aUTXe
+ClQnOHrMJQXw64nA9OpzQF12R8hXswBtyucP3ukBqmofGegtBszO8v907DLQ
+5q6aRz5aQJk0KTi1RkStf/0cqOhxRV/DwPz90yJqka+8f+m6K+o79oGDQURn
+13hzRUmiKri0UURDDtVs7FlwxWrdsiauSUQFayHm96ejela2iMT8+RMB/4UG
+ScTow93fMKeN8/US8+9vrN48Y90i5vM7J+upKNhO+PyH5fWG5hjC13d49HZe
+RTzh67+ouWJ+oCCYzvGTFA9iQTrh+ZOfkg1qMwnPb9hwg6I8l2Adx3/niXS3
+iQ8IXuD6s1oV1txQSNDM9S9RuMFqLCF8fwPlhRZhGeH7H9/v5NR2hGAvp49n
+6jyKjpcT7OP043YpJes7DcF7nL5GMxxNqyw+zekPp+TdtSy267NK0r1DxZ63
+69fP5GHMYe+f5PRdWWnoPV9KeP1blBtMkWx+LZw/Ph82Rmxm8y/h/OPo8rRq
+N1uf3V+2MsfMiRzC+++nhYcj1gzC+1Pd5LY/Mo3w/n1xKNryAsuv3d95879c
+a3uT8P4P7/p4EqMJPx/avU3Z2nDCz49i2hkvfIXw86VA/KWjwp/w8ydpV2u+
+Rkrwf7r//KE=
+                    "]], {0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "5"]], Annotation[#, 
+                   Subscript["\[Psi]", 5], "Tooltip"]& ]}, {}}, {
+               ImageSize -> Tiny}], 
+              
+              RowBox[{"None", "@*", "None", "@*", "None", "@*", "None", "@*", 
+                "None"}]], Annotation[#, 
+              Composition[None, None, None, None, None], "Tooltip"]& ], 
+            InterpretationBox[
+             TagBox[
+              
+              GridBox[{{""}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}], "Grid"], 
+             
+             Grid[{{}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+              Alignment -> {Left, Automatic}, Spacings -> {2, Automatic}]]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{{
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -2}, {1.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -3}, {1.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -4}, {1.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{1.375, -5}, {1.625, -5}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -3}, {2.625, -3}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -4}, {2.625, -4}}]}}, {
+                  Directive[
+                   CapForm[None], 
+                   RGBColor[0.537254, 0.537254, 0.537254], 
+                   Opacity[0.3]], {
+                   Directive[
+                    AbsoluteThickness[1], 
+                    Opacity[0.3]], 
+                   LineBox[{{2.375, -5}, {2.625, -5}}]}}}, {
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVVAtM00ccLjd1iAwEhkwsELJGCigzg2FcZacRi9NK5jRMmEEBBYcbrYpp
+I6A0Kw9HHQMsVBkPgeKYEamODRW9wxUdBjfKs0SnCNe6YmVR2/7rRnV16XXZ
+L7lcvuRyv9f3faHpwo/3ABaLJXCcV/epk6+CgdH/xkP0fwzwh6yAaV8lA1f+
+4ae9Gw9wWNy4RlrFwF9kW67uTgJYeHbFxEwZA8uqy4vbsgDev3Wkfa+UgT8n
+y3hfSQBO9vsk/rVcBgpFA22GUoB5EdooXQYDj2Zm1zYoAT4fE8Gft4WBYTqu
+b80ZgEtOxe1X8xjYrXpe2NEJsOJsahrgMDDfOxlorwPs6dsVv9SDgRcGG8vu
+/wrw6o4losQZK+Rm3Wb3jgMcu+0hq2PACm/xUk2fTwFsvqEWf6m2QhG0f615
+BPBGqVQwp8IKYxY2BXY/BVjXklIgElrhQN/jeL4N4PGm2QD3zVboc6wof/ss
+wLnhauQZYYWTfJ59+gXAgyL/FT3zrFCjuHfP9hLgUU3/1b1TFlj5Qhlc6MAq
+jvcoH1tgcKimSWoH+Ind/Uh9nQWyE95d5fYXwOIMtyF1ngWePm8qn2sB+FDz
++/KeFAv023eIq5wB2Gus4KgnzwIPL1Kt7zU4+jetDv+NbYFveSUM1/4OcPvo
+O6vWsSzwRmdj4vIhR377Bk6D3gzFYYG1x28CXPdgsNv/thmGTCYYBi8DvGxR
+gXbkRzNcSeok/ucAtpT7DM9vNsODU+xSYT3AT7nyO2z3aVi4a6hNMmpDIV2x
+E5sMRijE9oqlXTYkcFNUd/cZYU1gilaqtKETBTtkzReMkMuXnNSIbWhNDnk7
+8rQRWneqQyKTbKi06vXqgwojTA7KiXoWbUPZ6V5ZleVGmBItu/ipz3+4tT9P
+0DLDuN6fmazQevYzrv88GhMnhtsYVz7dpZJMXinjqidbr4o6ksW46q2AIGc8
+gUGufhqWJZWEM4j2G3NAfn9tsR5FOufBEZYGfb9Jj+i8isUTmT+8qUd0npz0
+mqq+BwSdc87bwC3o3XiRoBPOfTTdnGr/5hhBdF+LW/cZp3cTRPfZuTUitWE9
+QXTfh9duxsZIgigfyqdil/wdQFCLky/FeX/mPp9P0IiTT11zvy166UYQ5duT
+74pkbBZBlI8S4rtg2xyCdE6+Xr5jfKPey4GdfL6m22AyBBNE+b4ciRXe7xFE
+9bAGLNA8/oggqpexhSWJggMEUT3tyrglf6QkiOottjNfK9UQRPXofb3WesVM
+ENWr12eLZ+PC9ajdqeeMhh0/NafpEdU7yEyqlNbpEfWDdR9c277nrh5Rv3im
+nPEZCzIg6idaVY8+Oc2AqN9MmC55fNFqQNSPQnd2XJGbDOgf9u+AQQ==
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "1"]], Annotation[#, 
+                   Subscript["\[Psi]", 1], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxFVAtMU1cYLuhBhp1U2HFUHirPZssGGAgOmEeoGyIgwiowYZjyUCZRELBu
+jAKylGARDENXXiELYyrdhhMZEDrnP5g6CUUHFmE4IMEFy2M6uO2NZK67mLO7
+P7k5+XLP4/+///v+bWk58ZnWAoEgivtW14b61WCJfnA1EPyHX6xiDKPiOIuw
+jiVxURePl7hj8LhW6ne0liU5ojpb2esYXJMLfHorWVKwqyPGJgCDmyTp9vrT
+LGl36TysCsUw9yD9Rn4+S0K7Tk7Bbgz3jg2mCdNZkr3w863L0Rj2Ft45aYpl
+yZt3d+vfkGEIvSl6+l4wSzKbHNPDkjG4F5Hv49xZ8uPi8xGDHMPFcp3U1ZYl
+y4W2aZNHMDiKtQeN82ZiK3RNjT2GoXu6TbOgN5PqYe1OtzwM28X2L8vbzUSf
+tKEzTIEhLOX4r59WmUlZWX3v1Y8x7F+OPXM+20y8Op20R4q4/X1P5+/vMZNy
+h+7w1GIMDxQWaYWXmcCMpLumBINDbvTikpWZjMltOy0cPtGVde/9SRNxvJ6Q
+cYnDlWkBv1vpTGTLBaf8M9z5xxOpKt86E4kZsLO7zN2/5dREkLfCRPwleXqb
+QgzqrVGTPgdMZL/NBoOWy6/enPhBQaCJWMpDWhq4/A3WK06Rr5pIR1WK4yRX
+3/i355XTKwwJGW6QFWdhWPAZqT4xzRBJreeQKg3Dnik3pe8vDImLQSJBCgY/
+WXF4ZAdDfij5SfeM47c/vCnC2MyQT8ams0tjMGzed2ljYDVDhiWf17e8gyEg
+qO1ZdClDvvPsKc15G0PuKZ33l31GsqnSbdbgIYLiRn20yzdG0jCv2rvNWQSt
+Ycq5mUYjqfL7OzjQQQS9N8q9nT8zkkfSHsbjJREYDIGC0WojEbyI///v+Ojc
+pp5Fe/784+Z16gsT9qCk9+slzNHrd+z59w3GPn9Zjz2fX0vXuX+2qhCIaf6p
+7SODvQUI+mh9wtidEksG4utXC5QVwgQEEZSfQ5mmKUsEgnnKX8d4VzoTjGCM
+8ns2eSBhjS+C+5T/5kfvjks9EdTR/qxdqtANbEZQQfsnX545oHVA4Eb7+8UV
+58yl9Qhmaf+zsufmr9ggUFN99BuGxIvWCHKpfh6q4oOuChBspPqKD32iEXB4
+lOrv9I72mocc9qf6ZH6rKZSuQRBL9dutGfrabx2CXVTfz1cG1U1Cbj/Vf9a+
+GU2RI+L98cdBbVm/M+L989fsTancC8FX1F8udk9CpH6I95/Kc22SLBTx/gy6
+PfaWMhJBJPVvq1yR2ZqIeH+/5qPIaz+MwEj9r659JaxYgfj50HpLs91Ujvj5
+IS5pzFjWIH6+eE7d/TOxDfHz59CH19ytdAj+BX4/Sxc=
+                    "]], {-0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "2"]], Annotation[#, 
+                   Subscript["\[Psi]", 2], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    
+                    RectangleBox[{1.625, -5.375}, {2.375, -0.625}, 
+                    RoundingRadius -> 0.1]}, 
+                   SubscriptBox["\"U\"", "3"]], Annotation[#, 
+                   Subscript["U", 3], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    RGBColor[0.537254, 0.537254, 0.537254]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJxVlAtMU1ccxuHk3rnqBiLgAwqEZVlxbkRFYY5NDhtQM1ijuFXBTVfEMmUV
+5nSAgNCER1EQEbF1iEUQsCR0btr59hylBDFus0omDERGz62AlWUI9KI81m2c
+mt3k5uSXe3PvOd//+z7/hJTYbcDJySnGfv+zBv17MfC/FeD/8yPUlTOyf8zO
+r205c7nYakEKWblPWDADe60XZyvqLWhN46PSl99loKnuOhcns7O04nR0GAOf
+aobc7vtY0Ppv2z+fimTgh6uvbdzWzSHzDnW/u4SBQC49rKzikI4b7M7awMBE
+7Wfna2UcurpcJhYlMNBl+6KJ9xdzaGXj2l+nFAx0vVE5dnmEoGdjtQ+sexkY
+bMgyKY0E9YmGWztUDJRtvVX8WEMQ92nxdIOagffnFkpidhFUIBRFrG5gIARz
+jE/WErQpDHVmn2dgIEqrcF1J0JGm2Ovimwy81rHGavG1s955JLOTgZe6Bl49
+4UJQVLKoenyQgelk3pxPGILU4tEk7QQD/zqdnyd0IqiiatHJaBcWXmCP5087
+E6RX8Ee6/VhYkPnn7nEBQbOUz/HSZSwsNQd7P19AUIQkZ77oAxZmhH+MB5YQ
+FKnvW6WNZeG59W9u1kYSlOERjjMSWLiwPnlgMJGgn4pkyZqvWXiy1aw/VESQ
+zuPLrT05LOQCsls+OkuQp7JLsbSEha8nqMvb/iBoWelR/z3HWJif1is/58Gh
+wd3hCypO2Z+nqHwaoznEvmPzzNSzcMWu4ofhBRxqHhW28dkCmKt9S1q42Ib4
+dcOzFAUCWBYGdnaKbagJxf9+qEQAt3N1gfuSbKiyt993Q7kAdlwslIeqbCiV
+vBRiUAvg7GpJb7vOhny993nVfieA9X1lpldu25A86T2593E7386MOTX0guOD
+8s5ucuMd78f77Ax8GsQ7vje25Qe/JVLe8b+AqPRjxjTesR+1V7xJqeEd+03B
+k2VvXOBfnOeLe7r033jHeb8xC1UpJwCmeoSQqnTPJoCpXn59YsvdSwBTPdNE
+XpUlrQBTvVsN1ZK37wFsmJnHQhdxe+UDgOm89s6vi2yxAEzn6Z68J0AzBDCd
+d8331lJ2FGDqB6F4+SrnZwA3zfjF199Yo5wEmPrp8JTGN3caYOq35oqeHt7O
+1I99UaGTg1MAU7+6FeVnbZyw84yf77Q9iYjiAaZ+XzG3xuvKMMA0D6lhkweN
+jwGmebkVutn6lRlgmqeApJ+FLZ0A07z9eLf6wMNfAKZ5zHKNA6YbANO8Xqkb
+zz1jsOs1k2dRR8A8dQPANO858h2VWg3AtA9SUu/oLCqAaV80x+WF7k+380yf
+HDhaWqBLApj2zc28dVcTpQDTPgrpdzd1RwD8N4tbR8A=
+                    "]], {0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "4"]], Annotation[#, 
+                   Subscript["\[Psi]", 4], "Tooltip"]& ], 
+                 TagBox[
+                  TooltipBox[{
+                    EdgeForm[
+                    Directive[
+                    AbsoluteThickness[3], 
+                    RGBColor[0.537254, 0.537254, 0.537254]]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.0313725, 0.027451, 0.027451], 
+                    Opacity[0.25]]], 
+                    GeometricTransformationBox[
+                    PolygonBox[CompressedData["
+1:eJw9VA1QVFUU3vSdhQVGtoWrEGSwLtNO9AMZSIB0kZ8MA4FW2IJWQRYoDAoI
+BZUlmmV0yZAUtgWyhiHCbQLFHSBW85glSSyMMFsgDjgDDhQQA4ujNik9mbfv
+zNx58819995zvvN9xzezIFm9TiAQ7GLX4+/WtWBog4ENT4J2bBl4HICkKLXi
+AYv3vndB+oQZML/18kxcMENlk0P/pJ4FLByOmZeGMtRT05hl0wMuzb3lXfYa
+Q1uu6V++WwXo7J7gExvLUN0p98jyEkCP64bB0gSGPvdsSWF7NuD4Dq8YULL/
+Z5SoW1IBM7+65/BHJkO39Y2+evQNwMXIfX5/5jNUK2OUinDAH8KlqqXDDPV2
+WgyLCgA8aDMmO+sYujTza1SGH+C3rv4mkYGhd94xVl71AswpOlQ61MbQ3IQp
+/RE3wNs3dm6K+JGhD/8d0DW5ACqFSnNQP0O79YPfBzgAzpxx0NWNM3TlZm1Z
+1HrAumjBRNgCQz8Jaa+9JQC83/f2ceEqQ5PDF/UCFv/W8vumETHQW9rkbedZ
+bB5UP6mRAr1qHfRcWAfo8kXi9tmtQHPz/p7rEAJ+FC2Zno8G+k2Hl3rZGfBi
+wU3xgT1AM2xTe4wSQBOjuBGjBsosHzP3PwVY/6iyKK0Y6Jnp2LEoGaD72aAr
+NZVAP0vrT1n/EqDTgfqQvhqgnWNd+1dCAd89+WHkbCPQveq7k6uvA85aUTXe
+ClQnOHrMJQXw64nA9OpzQF12R8hXswBtyucP3ukBqmofGegtBszO8v907DLQ
+5q6aRz5aQJk0KTi1RkStf/0cqOhxRV/DwPz90yJqka+8f+m6K+o79oGDQURn
+13hzRUmiKri0UURDDtVs7FlwxWrdsiauSUQFayHm96ejela2iMT8+RMB/4UG
+ScTow93fMKeN8/US8+9vrN48Y90i5vM7J+upKNhO+PyH5fWG5hjC13d49HZe
+RTzh67+ouWJ+oCCYzvGTFA9iQTrh+ZOfkg1qMwnPb9hwg6I8l2Adx3/niXS3
+iQ8IXuD6s1oV1txQSNDM9S9RuMFqLCF8fwPlhRZhGeH7H9/v5NR2hGAvp49n
+6jyKjpcT7OP043YpJes7DcF7nL5GMxxNqyw+zekPp+TdtSy267NK0r1DxZ63
+69fP5GHMYe+f5PRdWWnoPV9KeP1blBtMkWx+LZw/Ph82Rmxm8y/h/OPo8rRq
+N1uf3V+2MsfMiRzC+++nhYcj1gzC+1Pd5LY/Mo3w/n1xKNryAsuv3d95879c
+a3uT8P4P7/p4EqMJPx/avU3Z2nDCz49i2hkvfIXw86VA/KWjwp/w8ydpV2u+
+Rkrwf7r//KE=
+                    "]], {0.1, 0}]}, 
+                   SubscriptBox["\"\[Psi]\"", "5"]], Annotation[#, 
+                   Subscript["\[Psi]", 5], "Tooltip"]& ]}, {}}, {
+               ImageSize -> Tiny}], 
+              
+              RowBox[{"None", "@*", "None", "@*", "None", "@*", "None", "@*", 
+                "None"}]], Annotation[#, 
+              Composition[None, None, None, None, None], "Tooltip"]& ], 
+            GridBox[{{"", ""}, {
+               RowBox[{
+                 TagBox["\"Gates: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["5", "SummaryItem"]}], 
+               RowBox[{
+                 TagBox["\"Depth: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["3", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Dimensions: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"1", "\[Rule]", "1"}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{
+                    RowBox[{"{", "}"}], "\[Rule]", 
+                    RowBox[{"{", "}"}]}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Measurement Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", "}"}], "SummaryItem"]}], ""}, {
+               RowBox[{
+                 TagBox["\"Parameters: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", "}"}], "SummaryItem"]}], ""}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QuantumCircuitOperator[<|"Elements" -> {
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {4}, 
+         Complex[0., 0.], {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {Complex[0.3301907521619514, 
+          0.2623829543816004], Complex[0.029713340911507846`, 
+          0.5178014021409447], Complex[-0.6360928022843, 
+          0.24896639227918652`], Complex[-0.2890604320843349, 
+          0.054532804349913436`]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1|>], "Output" -> 
+          Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{1, 2}, {}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {8}, 
+         Complex[0., 0.], {
+         1, {{0, 8}, {{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}}}, {Complex[
+          0.4815338055732137, -0.20390582584077935`], Complex[
+          0.11572575614450621`, 0.06487876978682786], 
+          Complex[-0.19990871397717414`, -0.18339093291933614`], Complex[
+          0.2214618083731156, 0.0533790429528874], 
+          Complex[-0.010322258270842847`, -0.018650644254846895`], Complex[
+          0.4562308638763173, 0.3494240736909754], 
+          Complex[-0.3286722752565945, 0.2792167945621798], 
+          Complex[-0.07491242167891962, -0.24730140738343162`]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 3} -> 1|>], "Output" -> 
+          Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{3, 4, 5}, {}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {1024}, 
+         Complex[0., 0.], {1, {{0, 1024}, CompressedData["
+1:eJwl11MQGIgOBdB2a9u2bdu2bdvGbm3btm3btm37nc7LzPlI/jO5SdCwXcW2
+/wRQgQMECBjg//72gf4/ChCEoAQjOCEISShCE4awhCM8EYhIJCIThahEIzox
+iEksYhOHuMQjPglISCISk4SkJCM5KUhJKlKThrSkIz0ZyEgmMpOFrGQjOznI
+SS5yk4e85CM/BShIIQpThKIUozglKEkpSlOGspSjPBWoSCUqU4WqVKM6NahJ
+LWpTh7rUoz4NaEgjGtOEpjSjOS1oSSta04a2tKM9HehIJzrTha50ozs96Ekv
+etOHvvSjPwMYyCAG8y//MYShDGM4IxjJKEYzhrGMYzwTmMgkJjOFqUxjOjOY
+ySxmM4e5zGM+C1jIIhazhKUsYzkrWMkqVrOGtaxjPRvYyCY2s4WtbGM7O9jJ
+Lnazh73sYz8HOMghDnOEoxzjOCc4ySlOc4aznOM8F7jIJS5zhatc4zo3uMkt
+bnOHu9zjPg94yCMe84SnPOM5L3jJK17zhre84z0f+MgnPvOFr3zjOz/4yS9+
+84e/yx+QfwhEYIIQlGAEJwQhCUVowhCWcIQnAhGJRGSiEJVoRCcGMYlFbOIQ
+l3jEJwEJSURikpCUZCQnBSlJRWrSkJZ0pCcDGclEZrKQlWxkJwc5yUVu8pCX
+fOSnAAUpRGGKUJRiFKcEJSlFacpQlnKUpwIVqURlqlCValSnBjWpRW3qUJd6
+1KcBDWlEY5rQlGY0pwUtaUVr2tCWdrSnAx3pRGe60JVudKcHPelFb/rQl370
+ZwADGcRg/uU/hjCUYQxnBCMZxWjGMJZxjGcCE5nEZKYwlWlMZwYzmcVs5jCX
+ecxnAQtZxGKWsJRlLGcFK1nFatawlnWsZwMb2cRmtrCVbWxnBzvZxW72sJd9
+7OcABznEYY5wlGMc5wQnOcVpznCWc5znAhe5xGWucJVrXOcGN7nFbe5wl3vc
+5wEPecRjnvCUZzznBS95xWve8JZ3vOcDH/nEZ77wlW985wc/+cVv/vD38Afk
+HwIRmCAEJRjBCUFIQhGaMIQlHOGJQEQiEZkoRCUa0YlBTGIRmzjEJR7xSUBC
+EpGYJCQlGclJQUpSkZo0pCUd6clARjKRmSxkJRvZyUFOcpGbPOQlH/kpQEEK
+UZgiFKUYxSlBSUpRmjKUpRzlqUBFKlGZKlSlGtWpQU1qUZs61KUe9WlAQxrR
+mCY0pRnNaUFLWtGaNvwNcO1oTwc60onOdKEr3ehOD3rSi970oS/96M8ABjKI
+wfzLfwxhKMMYzghGMorRjGEs4xjPBCYyiclMYSrTmM4MZjKL2cxhLvOYzwIW
+sojFLGEpy1jOClayitWsYS3rWM8GNrKJzWxhK9vYzg52sovd7GEv+9jPAQ5y
+iMMc4SjHOM4JTnKK05zhLOc4zwUuconLXOEq17jODW5yi9vc4S73uM8DHvKI
+xzzhKc94zgte8orXvOEt73jPBz7yic984Svf+M4PfvKL3/zhb+gPyD8EIjBB
+CEowghOCkIQiNGEISzjCE4GIRCIyUYhKNKITg5jEIjZxiEs84pOAhCQiMUlI
+SjKSk4KUpCI1aUhLOtKTgYxkIjNZyEo2spODnOQiN3nISz7yU4CCFKIwRShK
+MYpTgpKUojRlKEs5ylOBilSiMlWoSjWqU4Oa1KI2dahLPerTgIY0ojFNaEoz
+mtOClrSiNW1oSzva04GOdKIzXehKN7rTg570ojd96Es/+jOAgQxiMP/yH0MY
+yjCGM4KRjGI0YxjLOMYzgYlMYjJTmMo0pjODmcxiNnOYyzzms4CFLGIxS1jK
+MpazgpWsYjVrWMs61rOBjWxiM1vYyja2s4Od7GI3e9jLPvZzgIMc4jBHOMox
+jnOCk5ziNGc4yznOc4GLXOIyV7jKNa5zg5vc4jZ3uMs97vOAhzziMU94yjOe
+84KXvOI1b3jLO97zgY984jNf+Mo3vvODn/ziN3/4+/D/D1ZKBdw=
+           "]}, CompressedData["
+1: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
+PvukVf8y99whTNr2LUwnjaeEkv8HDNb5WA==
+          "]}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 4} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 5} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> None, 
+          "ParameterSpec" -> {}|>]], {{1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[Automatic, {4}, 
+         Complex[0., 0.], {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {Complex[
+          0.3301907521619514, -0.2623829543816004], Complex[
+          0.029713340911507846`, -0.5178014021409447], 
+          Complex[-0.6360928022843, -0.24896639227918652`], 
+          Complex[-0.2890604320843349, -0.054532804349913436`]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1|>], "Picture" -> "Schr\[ODoubleDot]dinger", 
+          "Label" -> None, "ParameterSpec" -> {}|>]], {{}, {1, 2}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+       SparseArray[
+        Automatic, {8, 8}, 0, {
+         1, {{0, 1, 2, 3, 4, 5, 6, 7, 8}, {{1}, {2}, {3}, {4}, {5}, {6}, {
+           7}, {8}}}, {
+          Rational[1, 8], Rational[1, 8], Rational[1, 8], Rational[1, 8], 
+           Rational[1, 8], Rational[1, 8], Rational[1, 8], Rational[1, 8]}}], 
+        
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 1} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 2} -> 1, {
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 3} -> 1|>], "Picture" -> "Schr\[ODoubleDot]dinger", 
+          "Label" -> None, "ParameterSpec" -> {}|>]], {{}, {3, 4, 5}}]}, 
+    "Label" -> Composition[None, None, None, None, None]|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.922621726410203*^9, 3.922621903119954*^9, 
+  3.922622102077772*^9},
+ CellLabel->
+  "Out[189]=",ExpressionUUID->"0b4a143b-b8e8-4d58-9796-9f068367aac0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"8", 
+  RowBox[{
+   RowBox[{"qc3", "[", "]"}], "[", "\"\<Scalar\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.9226221043259*^9, 3.922622109990819*^9}, 
+   3.922622163002605*^9},
+ CellLabel->
+  "In[192]:=",ExpressionUUID->"dc29347e-9d30-4021-8a07-3692e71e0460"],
+
+Cell[BoxData[
+ RowBox[{"0.19205583042340554`", "\[VeryThinSpace]", "+", 
+  RowBox[{"3.469446951953614`*^-18", " ", "\[ImaginaryI]"}]}]], "Output",
+ CellChangeTimes->{{3.922622107113771*^9, 3.922622110260233*^9}, 
+   3.9226221637572927`*^9},
+ CellLabel->
+  "Out[192]=",ExpressionUUID->"23a9c90c-e011-4e13-8b6c-5305c9816ac4"]
+}, Open  ]]
+},
+WindowSize->{808, 863},
+WindowMargins->{{36, Automatic}, {16, Automatic}},
+PrivateNotebookOptions->{"CloudPublishPath"->"/Published/qmo-replace-state.\
+nb"},
+TaggingRules-><|"TryRealOnly" -> False|>,
+FrontEndVersion->"14.0 for Mac OS X ARM (64-bit) (December 12, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"572ea10a-5fe7-47ca-b619-346690f89015"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[422, 15, 1518, 40, 115, "Input",ExpressionUUID->"c81234db-2a5d-410c-ba3a-834678d8a965"],
+Cell[1943, 57, 121063, 2367, 84, "Output",ExpressionUUID->"9b0f533e-60f8-4bcb-b9a1-46865c08bc36"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[123043, 2429, 311, 6, 30, "Input",ExpressionUUID->"51716ca0-c250-41ff-87a9-480b4e0069ba"],
+Cell[123357, 2437, 371, 6, 34, "Output",ExpressionUUID->"0f7a0fcd-7a92-4a90-ad0c-d7e82a54748f"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[123765, 2448, 387, 11, 33, "Input",ExpressionUUID->"af02bb24-0865-4866-99c8-23f28888a95d"],
+Cell[124155, 2461, 266, 4, 34, "Output",ExpressionUUID->"35f12d19-01b1-402d-b907-cd682758dcce"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[124458, 2470, 555, 16, 33, "Input",ExpressionUUID->"d7574284-717f-46e2-a953-1b14a098d928"],
+Cell[125016, 2488, 328, 6, 34, "Output",ExpressionUUID->"084ddc5c-3fba-4f80-9a28-3a07d3161a0f"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[125381, 2499, 715, 19, 33, "Input",ExpressionUUID->"3cf0bf49-d2fe-4ba0-9e70-82125dece9df"],
+Cell[126099, 2520, 66224, 1207, 135, "Output",ExpressionUUID->"0b4a143b-b8e8-4d58-9796-9f068367aac0"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[192360, 3732, 284, 7, 30, "Input",ExpressionUUID->"dc29347e-9d30-4021-8a07-3692e71e0460"],
+Cell[192647, 3741, 323, 6, 57, "Output",ExpressionUUID->"23a9c90c-e011-4e13-8b6c-5305c9816ac4"]
+}, Open  ]]
+}
+]
+*)
+

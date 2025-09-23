@@ -1,3 +1,570 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5f5d8667089ffbf59454555c35cc386b01546370de71b3579fa2d8b4834116b4
-size 28395
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='WolframDesktop 13.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       161,          7]
+NotebookDataLength[     28233,        562]
+NotebookOptionsPosition[     26105,        516]
+NotebookOutlinePosition[     26629,        535]
+CellTagsIndexPosition[     26586,        532]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"<<", "Wolfram`QuantumFramework`"}]], "Input",
+ CellChangeTimes->{{3.886938863807846*^9, 
+  3.886938868571611*^9}},ExpressionUUID->"84b6e0d8-44d1-4b9f-a69e-\
+e1fc82453ba0"],
+
+Cell["QuantumFramework now comes with the IBMQ Service:", "Text",
+ CellChangeTimes->{{3.886938874727858*^9, 3.8869388841682987`*^9}, {
+  3.886938951022423*^9, 
+  3.886938965336097*^9}},ExpressionUUID->"2e72941b-c699-40c7-b476-\
+59f8d894e3b2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "=", 
+  RowBox[{"ServiceConnect", "[", "\"\<IBMQ\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.8869256280651617`*^9, 3.886925631893981*^9}, {
+   3.886925778528892*^9, 3.8869257788779583`*^9}, 3.8869258598294277`*^9, {
+   3.886926146106246*^9, 3.886926146615341*^9}, {3.886927118798633*^9, 
+   3.886927120357769*^9}, {3.8869286734479847`*^9, 3.8869287010301943`*^9}, 
+   3.8869288792678127`*^9, {3.8869290271081038`*^9, 3.886929029153307*^9}, {
+   3.8869290647442007`*^9, 3.886929085981586*^9}, {3.886929250302288*^9, 
+   3.886929250451038*^9}, 3.886930115527564*^9, {3.886930435542008*^9, 
+   3.8869304367864943`*^9}, {3.8869315921948357`*^9, 3.886931592707793*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"dc9fe6ba-570c-44a0-ac02-3dbb351a9732"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["ServiceObject",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            GraphicsBox[
+             TagBox[
+              RasterBox[CompressedData["
+1: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
+dvY=
+               "], {{0, 60.}, {150., 0}}, {0, 255}, ColorFunction -> 
+               RGBColor], 
+              BoxForm`ImageTag[
+              "Byte", ColorSpace -> "RGB", Interleaving -> True, 
+               MetaInformation -> <|
+                "Source" -> "http://www.brandsoftheworld.com/logo/ibm", "URL" -> 
+                 "http://www.wolframcdn.com/waimage/hset037/9f1/\
+9f195f0071a2851ac504899f597e9db9_v001s.gif"|>], Selectable -> False], 
+             DefaultBaseStyle -> "ImageGraphics", ImageSizeRaw -> {150., 60.},
+              PlotRange -> {{0, 150.}, {0, 60.}}], 
+            GridBox[{{
+               TagBox["\"IBMQ\"", "SummaryItem"]}, {
+               TagBox[
+                DynamicBox[
+                 ToBoxes[
+                  If[
+                   TrueQ[
+                    ServiceConnections`Private`authenticatedServiceQ[
+                    "connection-3e46724d4b8ca3d484da5f002df86bd9"]], 
+                   "Connected", "Not Connected"], StandardForm]], 
+                "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            GraphicsBox[
+             TagBox[
+              RasterBox[CompressedData["
+1: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
+dvY=
+               "], {{0, 60.}, {150., 0}}, {0, 255}, ColorFunction -> 
+               RGBColor], 
+              BoxForm`ImageTag[
+              "Byte", ColorSpace -> "RGB", Interleaving -> True, 
+               MetaInformation -> <|
+                "Source" -> "http://www.brandsoftheworld.com/logo/ibm", "URL" -> 
+                 "http://www.wolframcdn.com/waimage/hset037/9f1/\
+9f195f0071a2851ac504899f597e9db9_v001s.gif"|>], Selectable -> False], 
+             DefaultBaseStyle -> "ImageGraphics", ImageSizeRaw -> {150., 60.},
+              PlotRange -> {{0, 150.}, {0, 60.}}], 
+            GridBox[{{
+               TagBox["\"IBMQ\"", "SummaryItem"]}, {
+               TagBox[
+                DynamicBox[
+                 ToBoxes[
+                  If[
+                   TrueQ[
+                    ServiceConnections`Private`authenticatedServiceQ[
+                    "connection-3e46724d4b8ca3d484da5f002df86bd9"]], 
+                   "Connected", "Not Connected"], StandardForm]], 
+                "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  ServiceObject["IBMQ", "ID" -> "connection-3e46724d4b8ca3d484da5f002df86bd9"],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{
+  3.886925645415392*^9, {3.886925772765242*^9, 3.886925801187006*^9}, {
+   3.8869260390463133`*^9, 3.886926088247937*^9}, 3.886926146870908*^9, 
+   3.8869261843378153`*^9, {3.88692665004391*^9, 3.8869266657101717`*^9}, 
+   3.886926796858198*^9, 3.886926882481752*^9, {3.886926933717136*^9, 
+   3.8869269623173656`*^9}, {3.886927028676602*^9, 3.886927058560074*^9}, {
+   3.8869271004760637`*^9, 3.8869271428046513`*^9}, 3.886927180731422*^9, 
+   3.8869274574100513`*^9, 3.886927525487855*^9, {3.886927588233548*^9, 
+   3.886927594917664*^9}, 3.886927730138953*^9, 3.8869281276654377`*^9, {
+   3.886928236347303*^9, 3.8869282506429567`*^9}, 3.886928282555079*^9, {
+   3.886928373375572*^9, 3.886928377810318*^9}, 3.886928438136858*^9, {
+   3.886928589613666*^9, 3.88692861785085*^9}, {3.886928676142828*^9, 
+   3.8869287121845903`*^9}, 3.886928879568694*^9, {3.886928928540306*^9, 
+   3.886928933681385*^9}, {3.8869290577875023`*^9, 3.88692908858349*^9}, 
+   3.8869292520252323`*^9, 3.886929348023696*^9, 3.886929913991683*^9, 
+   3.8869316179588013`*^9, 3.886932160684184*^9, 3.886932206554739*^9, 
+   3.8869323299762583`*^9, {3.886932376782033*^9, 3.886932383841323*^9}, 
+   3.886932433865142*^9, 3.886932476288187*^9, {3.886932904578908*^9, 
+   3.886932926908811*^9}, {3.886932994978155*^9, 3.8869330128736687`*^9}, {
+   3.886934999888947*^9, 3.8869350052748947`*^9}, 3.886935137320127*^9, {
+   3.8869351949111013`*^9, 3.886935200310061*^9}, 3.886935278565884*^9, {
+   3.886935382828381*^9, 3.8869353869575977`*^9}, 3.886935511155939*^9, {
+   3.886935663747467*^9, 3.886935667805475*^9}, 3.886935834295789*^9, 
+   3.886935961641519*^9, 3.886936107581423*^9, 3.8869362347498627`*^9, {
+   3.886936309623951*^9, 3.886936315200778*^9}, {3.886936470005295*^9, 
+   3.886936473964797*^9}, 3.8869365354527407`*^9, 3.886936776550329*^9, {
+   3.886936986582719*^9, 3.8869369915853157`*^9}, 3.886937241723068*^9, 
+   3.886937661314753*^9, 3.886937918482483*^9, 3.886938053932922*^9, 
+   3.886938390145988*^9, 3.886938527412874*^9, 3.8869385948443403`*^9, 
+   3.886939384456086*^9, 3.886939467526832*^9},
+ CellLabel->"Out[1]=",ExpressionUUID->"89941d03-0c5c-497a-85df-fea85c46edc6"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "[", "\"\<Requests\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.886929257059437*^9, 3.886929259989522*^9}, {
+  3.886935622659548*^9, 3.8869356243687057`*^9}, {3.886935676158285*^9, 
+  3.88693569234301*^9}},
+ CellLabel->"In[4]:=",ExpressionUUID->"3081d177-e951-4100-a5cd-6d8a0155a0d1"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Authentication\"\>", ",", "\<\"ID\"\>", 
+   ",", "\<\"Information\"\>", ",", "\<\"JobResults\"\>", 
+   ",", "\<\"JobStatus\"\>", ",", "\<\"Name\"\>", ",", "\<\"RawRequests\"\>", 
+   ",", "\<\"RunCircuit\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{
+  3.8869292605367126`*^9, 3.886929362017562*^9, 3.886929920819758*^9, 
+   3.886931624122658*^9, 3.8869321636329613`*^9, 3.886935007593299*^9, 
+   3.8869356246849546`*^9, {3.886935669370064*^9, 3.886935695462406*^9}, 
+   3.886938828655532*^9},
+ CellLabel->"Out[4]=",ExpressionUUID->"fa2f5dd8-d28f-407c-9a30-c6ceac0bf4ff"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "[", "\"\<Information\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.8869356963162823`*^9, 3.886935698630498*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"7f67a365-3df5-48af-b01a-d3b94baaf3ef"],
+
+Cell[BoxData["\<\"IBMQ connection for WolframLanguage\"\>"], "Output",
+ CellChangeTimes->{3.8869356991356707`*^9},
+ CellLabel->"Out[6]=",ExpressionUUID->"e890c381-74dc-4314-be91-c100136b5b7e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qpy", "=", 
+  RowBox[{"BaseEncode", "@", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{"{", 
+       RowBox[{"\"\<BernsteinVazirani\>\"", ",", "\"\<101\>\""}], "}"}], 
+      "]"}], "[", "\"\<Qiskit\>\"", "]"}], "[", 
+    RowBox[{"\"\<QPY\>\"", ",", 
+     RowBox[{"\"\<Provider\>\"", "->", "\"\<IBMProvider\>\""}], ",", 
+     RowBox[{"\"\<Backend\>\"", "->", "\"\<ibmq_lima\>\""}]}], 
+    "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.886341785845851*^9, 3.8863417974192266`*^9}, {
+   3.8863480700848217`*^9, 3.88634807256905*^9}, {3.886349756718676*^9, 
+   3.8863497833484898`*^9}, 3.886349953313259*^9, 3.886350168274988*^9, {
+   3.886766444286495*^9, 3.8867664458806953`*^9}, {3.886935554441293*^9, 
+   3.886935576514182*^9}},
+ CellLabel->"In[5]:=",ExpressionUUID->"47c062fc-9b9f-42d7-a625-9e73d185641c"],
+
+Cell[BoxData["\<\"\
+eJwL9Az29gxhYxBnZIAAxkIGrjQGDiCLFYiZoaIsQMwEZYsmZxYll2aW6FqYO4j+3f1y9/\
+LSvNKcnEJGsB5GoAGoAGYyTD/czGRGMI+\
+RMZmADgYGNqgoIwN2EBTlnliSCrY5FSpkiaZE0y0nP7FEQ91Qz9TcwNzSzNjIzNzSxNLAwFBdR6GgK\
+DU5szgzP8/\
+W1FgTbBuyO9BBcATctgFwGXG2MdI1HBgHwGUk2maOpkQdapuxnqGJoamlkZmpsamFpbklzlBgYsAAY\
+Cc4I1IDqUExmlghtjHRNRyYBshlhBMQE6kJaHgHHDtyKGGxzTc1sbi0CGIdpA4hQQdzMlgNCToYksF\
+hwAAAwVbLaA==\"\>"], "Output",
+ CellChangeTimes->{
+  3.8863418200703993`*^9, 3.886347453016624*^9, {3.886348065346583*^9, 
+   3.886348073082196*^9}, {3.8863497535429773`*^9, 3.8863497837726717`*^9}, 
+   3.886349960276352*^9, 3.886418299380847*^9, 3.886712567451124*^9, 
+   3.886766491533618*^9, 3.886772187880402*^9, 3.886935597483913*^9, 
+   3.8869357164773903`*^9, 3.886938549446333*^9, 3.886939429804096*^9},
+ CellLabel->"Out[5]=",ExpressionUUID->"33c957b4-a97c-4578-9772-1316e4489b24"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "[", 
+  RowBox[{"\"\<RunCircuit\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<QPY\>\"", "->", "qpy"}], ",", 
+     RowBox[{"\"\<Backend\>\"", "->", "\"\<ibmq_qasm_simulator\>\""}]}], 
+    "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.886935532935054*^9, 3.886935549739933*^9}, {
+  3.886935602113657*^9, 3.886935602641164*^9}, {3.8869357096937923`*^9, 
+  3.8869357232140913`*^9}, {3.886935849478796*^9, 3.886935850886158*^9}, {
+  3.886935902713277*^9, 3.886935911910976*^9}, {3.88693892094357*^9, 
+  3.886938922394752*^9}, {3.8869394349813757`*^9, 
+  3.886939508610808*^9}},ExpressionUUID->"324d67d7-629e-4bf5-856d-\
+279f349f84b2"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cg1ntpc091pmevdnning\"\>"}], ",", 
+   RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_qasm_simulator\"\>"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{
+  3.886935648073793*^9, 3.8869357258832912`*^9, {3.886935839030418*^9, 
+   3.886935852699044*^9}, 3.8869359080804653`*^9, 3.88693596337713*^9, 
+   3.886936107852496*^9, 3.886936238276186*^9, 3.886936317990653*^9, 
+   3.88693705039069*^9, 3.886937254896673*^9, 3.886937664312117*^9, 
+   3.886937923635532*^9, 3.886938066654806*^9, 3.886939440875016*^9, {
+   3.886939471943676*^9, 3.886939493512938*^9}},
+ CellLabel->"Out[3]=",ExpressionUUID->"3e6124da-1dbf-4e7b-95df-bf5f57b53d18"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "[", 
+  RowBox[{"\"\<JobStatus\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"\"\<JobID\>\"", "->", "\"\<cg1ntpc091pmevdnning\>\""}], "}"}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.8869389101565104`*^9, 3.886938910443673*^9}, 
+   3.886939519051755*^9},
+ CellLabel->"In[4]:=",ExpressionUUID->"d45492ab-ddc2-480e-adf7-2e39e63fc386"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cg1ntpc091pmevdnning\"\>"}], ",", 
+   RowBox[{"\<\"hub\"\>", "\[Rule]", "\<\"ibm-q\"\>"}], ",", 
+   RowBox[{"\<\"group\"\>", "\[Rule]", "\<\"open\"\>"}], ",", 
+   RowBox[{"\<\"project\"\>", "\[Rule]", "\<\"main\"\>"}], ",", 
+   RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_qasm_simulator\"\>"}], ",", 
+   RowBox[{"\<\"state\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\<\"status\"\>", "\[Rule]", "\<\"Completed\"\>"}], "}"}]}], ",", 
+   RowBox[{"\<\"params\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\<\"circuits\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\<\"__value__\"\>", 
+         "\[Rule]", \
+"\<\"eJwL9Az29gxhYxBnZIAAxkIGrjQGDiCLFYiZoaIsQMwEZYsmZxYll2aW6FqYO4j+3f1y9/\
+LSvNKcnEJGsB5GoAGoAGYyTD/czGRGMI+\
+RMZmADgYGNqgoIwN2EBTlnliSCrY5FSpkiaZE0y0nP7FEQ91Qz9TcwNzSzNjIzNzSxNLAwFBdR6GgK\
+DU5szgzP8/\
+W1FgTbBuyO9BBcATctgFwGXG2MdI1HBgHwGUk2maOpkQdapuxnqGJoamlkZmpsamFpbklzlBgYsAAY\
+Cc4I1IDqUExmlghtjHRNRyYBshlhBMQE6kJaHgHHDtyKGGxzTc1sbi0CGIdpA4hQQdzMlgNCToYksF\
+hwAAAwVbLaA==\"\>"}], ",", 
+        RowBox[{"\<\"__type__\"\>", "\[Rule]", "\<\"QuantumCircuit\"\>"}]}], 
+       "}"}]}], "}"}]}], ",", 
+   RowBox[{"\<\"program\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"circuit-runner\"\>"}], "}"}]}], 
+   ",", 
+   RowBox[{"\<\"created\"\>", 
+    "\[Rule]", "\<\"2023-03-04T17:24:53.445477Z\"\>"}], ",", 
+   RowBox[{"\<\"cost\"\>", "\[Rule]", "3600"}], ",", 
+   RowBox[{"\<\"status\"\>", "\[Rule]", "\<\"Completed\"\>"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.886938912110743*^9, 3.8869395209979753`*^9},
+ CellLabel->"Out[4]=",ExpressionUUID->"4e981ee8-9f92-4abf-919c-a542f284fdd3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ibm", "[", 
+  RowBox[{"\"\<JobResults\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"\"\<JobID\>\"", "->", "\"\<cg1ntpc091pmevdnning\>\""}], "}"}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.8869384131630383`*^9, 3.886938424293664*^9}, {
+   3.8869389160823*^9, 3.886938917410047*^9}, 3.886939525788363*^9},
+ CellLabel->"In[5]:=",ExpressionUUID->"0c578bf2-04aa-49e8-b1e2-60618ed6bb59"],
+
+Cell[BoxData["\<\"{\\\"backend_name\\\": \\\"qasm_simulator\\\", \
+\\\"backend_version\\\": \\\"0.11.2\\\", \\\"date\\\": \
+\\\"2023-03-04T17:24:54.277928\\\", \\\"header\\\": {\\\"backend_name\\\": \\\
+\"qasm_simulator\\\", \\\"backend_version\\\": \\\"0.11.2\\\"}, \\\"qobj_id\\\
+\": \\\"a1972c54-3104-4a1d-8cf2-837b66a07806\\\", \\\"job_id\\\": \
+\\\"d71f5cfd-7bde-4140-844f-5bef8a6dc700\\\", \\\"status\\\": \\\"COMPLETED\\\
+\", \\\"success\\\": true, \\\"results\\\": [{\\\"shots\\\": 1024, \
+\\\"success\\\": true, \\\"data\\\": {\\\"counts\\\": {\\\"0x5\\\": 1024}}, \
+\\\"meas_level\\\": 2, \\\"header\\\": {\\\"clbit_labels\\\": [[\\\"c\\\", \
+0], [\\\"c\\\", 1], [\\\"c\\\", 2]], \\\"creg_sizes\\\": [[\\\"c\\\", 3]], \\\
+\"global_phase\\\": 6.283185307179571, \\\"memory_slots\\\": 3, \
+\\\"metadata\\\": {}, \\\"n_qubits\\\": 5, \\\"name\\\": \\\"circuit-87\\\", \
+\\\"qreg_sizes\\\": [[\\\"q\\\", 5]], \\\"qubit_labels\\\": [[\\\"q\\\", 0], \
+[\\\"q\\\", 1], [\\\"q\\\", 2], [\\\"q\\\", 3], [\\\"q\\\", 4]]}, \
+\\\"status\\\": \\\"DONE\\\", \\\"seed_simulator\\\": 3424781419, \
+\\\"metadata\\\": {\\\"parallel_state_update\\\": 16, \\\"sample_measure_time\
+\\\": 0.000702361, \\\"noise\\\": \\\"ideal\\\", \
+\\\"batched_shots_optimization\\\": false, \\\"measure_sampling\\\": true, \\\
+\"device\\\": \\\"CPU\\\", \\\"num_qubits\\\": 4, \\\"parallel_shots\\\": 1, \
+\\\"remapped_qubits\\\": false, \\\"method\\\": \\\"statevector\\\", \
+\\\"active_input_qubits\\\": [0, 1, 2, 3], \\\"num_clbits\\\": 3, \
+\\\"input_qubit_map\\\": [[3, 3], [2, 2], [0, 0], [1, 1]], \\\"fusion\\\": \
+{\\\"applied\\\": false, \\\"max_fused_qubits\\\": 5, \\\"enabled\\\": true, \
+\\\"threshold\\\": 14}}, \\\"time_taken\\\": 0.005112858}], \\\"metadata\\\": \
+{\\\"time_taken\\\": 0.005718313, \\\"time_taken_execute\\\": 0.005248298, \\\
+\"mpi_rank\\\": 0, \\\"parallel_experiments\\\": 1, \\\"omp_enabled\\\": \
+true, \\\"max_gpu_memory_mb\\\": 0, \\\"num_processes_per_experiments\\\": 1, \
+\\\"num_mpi_processes\\\": 1, \\\"time_taken_load_qobj\\\": 0.000444987, \
+\\\"max_memory_mb\\\": 64216}, \\\"time_taken\\\": \
+0.006402730941772461}\"\>"], "Output",
+ CellChangeTimes->{3.88693843406357*^9, 3.886938557311034*^9, 
+  3.886938598267614*^9, 3.886938918321912*^9, 3.886939401575468*^9, 
+  3.886939526861992*^9},
+ CellLabel->"Out[5]=",ExpressionUUID->"20cb74cb-bd2f-42de-abf3-23b706e78f93"]
+}, Open  ]]
+},
+WindowSize->{808, 747},
+WindowMargins->{{44, Automatic}, {0, Automatic}},
+PrivateNotebookOptions->{"CloudPublishPath"->"/Published/\
+IBMQServiceConnection.nb"},
+TaggingRules-><|"TryRealOnly" -> False|>,
+FrontEndVersion->"13.2 for Mac OS X ARM (64-bit) (January 21, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"13b4b812-8772-41a6-a1d1-7d6d2cd32feb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[561, 20, 195, 4, 30, "Input",ExpressionUUID->"84b6e0d8-44d1-4b9f-a69e-e1fc82453ba0"],
+Cell[759, 26, 242, 4, 35, "Text",ExpressionUUID->"2e72941b-c699-40c7-b476-59f8d894e3b2"],
+Cell[CellGroupData[{
+Cell[1026, 34, 775, 11, 30, "Input",ExpressionUUID->"dc9fe6ba-570c-44a0-ac02-3dbb351a9732"],
+Cell[1804, 47, 14686, 258, 61, "Output",ExpressionUUID->"89941d03-0c5c-497a-85df-fea85c46edc6"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16527, 310, 314, 5, 30, "Input",ExpressionUUID->"3081d177-e951-4100-a5cd-6d8a0155a0d1"],
+Cell[16844, 317, 613, 11, 34, "Output",ExpressionUUID->"fa2f5dd8-d28f-407c-9a30-c6ceac0bf4ff"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17494, 333, 220, 3, 30, "Input",ExpressionUUID->"7f67a365-3df5-48af-b01a-d3b94baaf3ef"],
+Cell[17717, 338, 192, 2, 34, "Output",ExpressionUUID->"e890c381-74dc-4314-be91-c100136b5b7e"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17946, 345, 865, 18, 52, "Input",ExpressionUUID->"47c062fc-9b9f-42d7-a625-9e73d185641c"],
+Cell[18814, 365, 868, 14, 119, "Output",ExpressionUUID->"33c957b4-a97c-4578-9772-1316e4489b24"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[19719, 384, 675, 14, 30, "Input",ExpressionUUID->"324d67d7-629e-4bf5-856d-279f349f84b2"],
+Cell[20397, 400, 713, 13, 34, "Output",ExpressionUUID->"3e6124da-1dbf-4e7b-95df-bf5f57b53d18"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[21147, 418, 359, 8, 30, "Input",ExpressionUUID->"d45492ab-ddc2-480e-adf7-2e39e63fc386"],
+Cell[21509, 428, 1746, 37, 224, "Output",ExpressionUUID->"4e981ee8-9f92-4abf-919c-a542f284fdd3"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23292, 470, 404, 8, 30, "Input",ExpressionUUID->"0c578bf2-04aa-49e8-b1e2-60618ed6bb59"],
+Cell[23699, 480, 2390, 33, 434, "Output",ExpressionUUID->"20cb74cb-bd2f-42de-abf3-23b706e78f93"]
+}, Open  ]]
+}
+]
+*)
+

@@ -1,3 +1,1992 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6dcaa15d38b3f455341513baf241fc32722e50366777f574a2a59d2837aee095
-size 85196
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     84997,       1983]
+NotebookOptionsPosition[     80529,       1873]
+NotebookOutlinePosition[     82903,       1941]
+CellTagsIndexPosition[     82825,       1936]
+WindowTitle->Trotterization quantum circuit | Example Notebook
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+The Suzuki-Trotter decomposition can be used to approximate the time \
+evolution of a quantum system with a Hamiltonian that can be expressed as the \
+sum of multiple non-commuting terms.\
+\>", "Text",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544386897911*^9, 3.8915444361480207`*^9}, {
+   3.8915444876643677`*^9, 3.891544584472786*^9}, {3.891599186478136*^9, 
+   3.891599188439734*^9}, {3.892028036470398*^9, 3.892028036949592*^9}, {
+   3.8920280933159857`*^9, 3.892028093641037*^9}, 3.892119332040213*^9},
+ CellTags->"DefaultContent",
+ CellID->813389520,ExpressionUUID->"edf5f842-1e7f-4476-91c3-b00f63ac68b8"],
+
+Cell["Install and load the QuantumFramework paclet:", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301375389147`*^9, 3.889630152807868*^9}, {
+  3.890230125254396*^9, 3.890230129164053*^9}},
+ CellID->962431612,ExpressionUUID->"815d44ba-0ff1-4051-b1d8-dfc11f695ea7"],
+
+Cell[BoxData[{
+ RowBox[{"PacletInstall", "[", "\"\<Wolfram/QuantumFramework\>\"", 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]}], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301316068687`*^9, 3.889630135374712*^9}},
+ CellID->79948181,ExpressionUUID->"9035786d-10b8-40dc-9d85-e33d044c51fd"],
+
+Cell[TextData[{
+ StyleBox["Create a list of operators using a Hamiltonian as 3-qubits \
+interacting based on Ising model ", "CodeText"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"H", "=", 
+    RowBox[{
+     RowBox[{
+      SubscriptBox["X", "1"], 
+      SubscriptBox["X", "2"]}], "+", 
+     RowBox[{
+      SubscriptBox["X", "2"], 
+      SubscriptBox["X", "3"]}]}]}], TraditionalForm]],ExpressionUUID->
+  "cc2334e9-4d52-4233-8d6f-f5ca89653c74"],
+ StyleBox[":", "CodeText"]
+}], "Text",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8915447060573683`*^9, 3.8915447636198273`*^9}, {
+  3.892028510446086*^9, 3.892028520431326*^9}},
+ CellID->986214442,ExpressionUUID->"f6e6b66a-2793-4d61-816a-69ba8ff9f45d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ops", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"QuantumOperator", "[", 
+      RowBox[{"\"\<X\>\"", ",", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", "2"}], "}"}]}], "]"}], ",", 
+     RowBox[{"QuantumOperator", "[", 
+      RowBox[{"\"\<X\>\"", ",", 
+       RowBox[{"{", 
+        RowBox[{"2", ",", "3"}], "}"}]}], "]"}]}], "}"}]}], ";"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544347569168*^9, 3.891544354844894*^9}, {
+  3.891544448355459*^9, 3.891544453411727*^9}},
+ CellLabel->"In[43]:=",
+ CellID->684583331,ExpressionUUID->"a826c340-0155-44a6-b9d6-3c01156895e2"],
+
+Cell[TextData[{
+ "Using ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+     "\"\<Trotterization\>\"", ",", "ops", ",", "order", ",", "steps", ",", 
+      "time"}], "}"}], "]"}], TraditionalForm]],ExpressionUUID->
+  "a8bb1fc3-ea8d-4509-bc13-284bfab0aa46"],
+ ", one can create the corresponding quantum circuit for a list of operators \
+(ops), a given order (1,2,4,6,...), number of steps, and time (which is based \
+on Suzuki's recursion relation)."
+}], "Text",
+ TaggingRules->{},
+ CellChangeTimes->{3.892028046233334*^9},
+ CellID->679841482,ExpressionUUID->"037ec98d-301f-42c4-85fe-f114710bba87"],
+
+Cell[TextData[{
+ "Suzuki-Trotter decomposition of 1st order, one step and time ",
+ Cell[BoxData[
+  FormBox["t", TraditionalForm]],ExpressionUUID->
+  "cee2e990-dcf8-48fe-9de9-5bdd1e0a3043"],
+ ":"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544603890387*^9, 3.89154464580882*^9}, 
+   3.892119343120249*^9},
+ CellID->395245434,ExpressionUUID->"1a632f8c-d7ef-47da-b54f-67e7ddc196ed"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<Trotterization\>\"", ",", "ops", ",", "1", ",", "1", ",", "t"}], 
+    "}"}], "]"}], "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8915444438304787`*^9, 3.8915444618733473`*^9}, {
+  3.89154464942807*^9, 3.891544654962446*^9}},
+ CellLabel->"In[44]:=",
+ CellID->962763193,ExpressionUUID->"af51121f-6972-4e72-993f-b24d68e75f21"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {0.625, -2}}], 
+    LineBox[{{1.375, -2}, {1.625, -2}}], LineBox[{{0.375, -3}, {1.625, -3}}], 
+    LineBox[{{1.375, -1}, {2.625, -1}}], LineBox[{{2.375, -2}, {2.625, -2}}], 
+    LineBox[{{2.375, -3}, {2.625, -3}}]}, {{{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{"2", " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{"2", " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{"2", " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{"2", " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{2., -2.375}, {2., -2.625}}]}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{165.19717407226562`, Automatic}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.8915446555727663`*^9},
+ CellLabel->"Out[44]=",
+ CellID->386178328,ExpressionUUID->"909bac39-92e7-4970-857b-50b2850ec11f"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Suzuki-Trotter decomposition of 2nd order, one step and time ",
+ Cell[BoxData[
+  FormBox["t", TraditionalForm]],ExpressionUUID->
+  "680966df-494e-42c9-92fa-d87f325ffcc7"],
+ ":"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8915447733995237`*^9, 3.891544778001285*^9}, 
+   3.892119355500945*^9},
+ CellID->777824993,ExpressionUUID->"d051adc4-1024-420e-8c43-0b073b146730"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<Trotterization\>\"", ",", "ops", ",", "2", ",", "1", ",", "t"}], 
+    "}"}], "]"}], "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544784044607*^9, 3.891544785869565*^9}},
+ CellLabel->"In[45]:=",
+ CellID->387018032,ExpressionUUID->"48a552f1-0f93-4efe-ba4e-9018b8b85da1"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {0.625, -2}}], 
+    LineBox[{{1.375, -2}, {1.625, -2}}], LineBox[{{0.375, -3}, {1.625, -3}}], 
+    LineBox[{{2.375, -2}, {2.625, -2}}], LineBox[{{2.375, -3}, {2.625, -3}}], 
+    LineBox[{{1.375, -1}, {3.625, -1}}], LineBox[{{3.375, -2}, {3.625, -2}}], 
+    LineBox[{{4.375, -1}, {4.625, -1}}], LineBox[{{4.375, -2}, {4.625, -2}}], 
+    LineBox[{{3.375, -3}, {4.625, -3}}]}, {{{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", "t", ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{4., -1.375}, {4., -1.625}}]}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{208.53738403320312`, Automatic}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.89154478636694*^9},
+ CellLabel->"Out[45]=",
+ CellID->762080528,ExpressionUUID->"3b3ae38b-530a-4407-b4ba-73607dcaab31"]
+}, Open  ]],
+
+Cell["2nd order, with 4 steps:", "CodeText",
+ TaggingRules->{},
+ CellID->905848267,ExpressionUUID->"2d58f897-d49d-4ca0-a2c4-90826dd57c86"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<Trotterization\>\"", ",", "ops", ",", "2", ",", "4", ",", "t"}], 
+    "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"FontSize", "\[Rule]", "8"}]}], "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544799123721*^9, 3.891544812457633*^9}},
+ CellLabel->"In[47]:=",
+ CellID->296021763,ExpressionUUID->"ca5f100c-539c-425b-b352-383fb52ebf51"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {0.625, -2}}], 
+    LineBox[{{0.375, -3}, {0.625, -3}}], LineBox[{{4.375, -1}, {4.625, -1}}], 
+    LineBox[{{4.375, -2}, {4.625, -2}}], LineBox[{{4.375, -3}, {4.625, -3}}], 
+    LineBox[{{8.375, -1}, {8.625, -1}}], LineBox[{{8.375, -2}, {8.625, -2}}], 
+    LineBox[{{8.375, -3}, {8.625, -3}}], 
+    LineBox[{{12.375, -1}, {12.625, -1}}], 
+    LineBox[{{12.375, -2}, {12.625, -2}}], 
+    LineBox[{{12.375, -3}, {12.625, -3}}], 
+    LineBox[{{16.375, -1}, {16.625, -1}}], 
+    LineBox[{{16.375, -2}, {16.625, -2}}], 
+    LineBox[{{16.375, -3}, {16.625, -3}}]}, {GeometricTransformationBox[{
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+       Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+       0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+       RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+        NCache[{4.46875, Rational[-7, 2]}, {4.46875, -3.5}],
+        RoundingRadius->0.1]}, 
+      {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       LineBox[{{0.625, -1}, {0.625, -1}}], 
+       LineBox[{{0.625, -2}, {0.625, -2}}], 
+       LineBox[{{1.375, -2}, {1.625, -2}}], 
+       LineBox[{{0.625, -3}, {1.625, -3}}], 
+       LineBox[{{2.375, -2}, {2.625, -2}}], 
+       LineBox[{{2.375, -3}, {2.625, -3}}], 
+       LineBox[{{1.375, -1}, {3.625, -1}}], 
+       LineBox[{{3.375, -2}, {3.625, -2}}], 
+       LineBox[{{4.375, -1}, {4.375, -1}}], 
+       LineBox[{{4.375, -2}, {4.375, -2}}], 
+       LineBox[{{3.375, -3}, {4.375, -3}}]}, {{{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{4., -1.375}, {4., -1.625}}]}}}, {}, InsetBox[
+       StyleBox["1",
+        StripOnInput->False,
+        FontFamily->"Times",
+        FontSize->8,
+        Background->GrayLevel[0, 0]], 
+       NCache[{Rational[5, 2], Rational[-1, 2]}, {2.5, -0.5}]]}, {0, 0}], 
+    GeometricTransformationBox[{
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+       Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+       0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+       RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+        NCache[{4.46875, Rational[-7, 2]}, {4.46875, -3.5}],
+        RoundingRadius->0.1]}, 
+      {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       LineBox[{{0.625, -1}, {0.625, -1}}], 
+       LineBox[{{0.625, -2}, {0.625, -2}}], 
+       LineBox[{{1.375, -2}, {1.625, -2}}], 
+       LineBox[{{0.625, -3}, {1.625, -3}}], 
+       LineBox[{{2.375, -2}, {2.625, -2}}], 
+       LineBox[{{2.375, -3}, {2.625, -3}}], 
+       LineBox[{{1.375, -1}, {3.625, -1}}], 
+       LineBox[{{3.375, -2}, {3.625, -2}}], 
+       LineBox[{{4.375, -1}, {4.375, -1}}], 
+       LineBox[{{4.375, -2}, {4.375, -2}}], 
+       LineBox[{{3.375, -3}, {4.375, -3}}]}, {{{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{4., -1.375}, {4., -1.625}}]}}}, {}, InsetBox[
+       StyleBox["2",
+        StripOnInput->False,
+        FontFamily->"Times",
+        FontSize->8,
+        Background->GrayLevel[0, 0]], 
+       NCache[{Rational[5, 2], Rational[-1, 2]}, {2.5, -0.5}]]}, {4, 0}], 
+    GeometricTransformationBox[{
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+       Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+       0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+       RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+        NCache[{4.46875, Rational[-7, 2]}, {4.46875, -3.5}],
+        RoundingRadius->0.1]}, 
+      {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       LineBox[{{0.625, -1}, {0.625, -1}}], 
+       LineBox[{{0.625, -2}, {0.625, -2}}], 
+       LineBox[{{1.375, -2}, {1.625, -2}}], 
+       LineBox[{{0.625, -3}, {1.625, -3}}], 
+       LineBox[{{2.375, -2}, {2.625, -2}}], 
+       LineBox[{{2.375, -3}, {2.625, -3}}], 
+       LineBox[{{1.375, -1}, {3.625, -1}}], 
+       LineBox[{{3.375, -2}, {3.625, -2}}], 
+       LineBox[{{4.375, -1}, {4.375, -1}}], 
+       LineBox[{{4.375, -2}, {4.375, -2}}], 
+       LineBox[{{3.375, -3}, {4.375, -3}}]}, {{{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{4., -1.375}, {4., -1.625}}]}}}, {}, InsetBox[
+       StyleBox["3",
+        StripOnInput->False,
+        FontFamily->"Times",
+        FontSize->8,
+        Background->GrayLevel[0, 0]], 
+       NCache[{Rational[5, 2], Rational[-1, 2]}, {2.5, -0.5}]]}, {8, 0}], 
+    GeometricTransformationBox[{
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+       Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+       0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+       RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+        NCache[{4.46875, Rational[-7, 2]}, {4.46875, -3.5}],
+        RoundingRadius->0.1]}, 
+      {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       LineBox[{{0.625, -1}, {0.625, -1}}], 
+       LineBox[{{0.625, -2}, {0.625, -2}}], 
+       LineBox[{{1.375, -2}, {1.625, -2}}], 
+       LineBox[{{0.625, -3}, {1.625, -3}}], 
+       LineBox[{{2.375, -2}, {2.625, -2}}], 
+       LineBox[{{2.375, -3}, {2.625, -3}}], 
+       LineBox[{{1.375, -1}, {3.625, -1}}], 
+       LineBox[{{3.375, -2}, {3.625, -2}}], 
+       LineBox[{{4.375, -1}, {4.375, -1}}], 
+       LineBox[{{4.375, -2}, {4.375, -2}}], 
+       LineBox[{{3.375, -3}, {4.375, -3}}]}, {{{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{
+          RGBColor[0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+          RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+           RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             RowBox[{
+              SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+              FractionBox["t", "4"], ")"}],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->8,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}}, 
+        {RGBColor[0.528488, 0.470624, 0.701351], 
+         LineBox[{{4., -1.375}, {4., -1.625}}]}}}, {}, InsetBox[
+       StyleBox["4",
+        StripOnInput->False,
+        FontFamily->"Times",
+        FontSize->8,
+        Background->GrayLevel[0, 0]], 
+       NCache[{Rational[5, 2], Rational[-1, 2]}, {2.5, -0.5}]]}, {12, 0}]}, {
+    InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->8,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->8,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->8,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{739.3862915039062, Automatic}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544807100692*^9, 3.89154481365902*^9}},
+ CellLabel->"Out[47]=",
+ CellID->664350251,ExpressionUUID->"1e021828-4057-4995-8f87-59722689f22c"]
+}, Open  ]],
+
+Cell["4th order, only 1 step:", "CodeText",
+ TaggingRules->{},
+ CellID->775700945,ExpressionUUID->"b52d8ffc-f362-4df6-a903-88bdb4d6dd64"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+    "\"\<Trotterization\>\"", ",", "ops", ",", "4", ",", "1", ",", "t"}], 
+    "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"FontSize", "\[Rule]", "7"}]}], "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891544828350274*^9, 3.891544834506916*^9}},
+ CellLabel->"In[48]:=",
+ CellID->384855553,ExpressionUUID->"ff202e53-0c4e-4535-9453-f393bee6623e"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {0.625, -2}}], 
+    LineBox[{{1.375, -2}, {1.625, -2}}], LineBox[{{0.375, -3}, {1.625, -3}}], 
+    LineBox[{{2.375, -2}, {2.625, -2}}], LineBox[{{2.375, -3}, {2.625, -3}}], 
+    LineBox[{{1.375, -1}, {3.625, -1}}], LineBox[{{3.375, -2}, {3.625, -2}}], 
+    LineBox[{{4.375, -1}, {4.625, -1}}], LineBox[{{4.375, -2}, {4.625, -2}}], 
+    LineBox[{{5.375, -2}, {5.625, -2}}], LineBox[{{3.375, -3}, {5.625, -3}}], 
+    LineBox[{{6.375, -2}, {6.625, -2}}], LineBox[{{6.375, -3}, {6.625, -3}}], 
+    LineBox[{{5.375, -1}, {7.625, -1}}], LineBox[{{7.375, -2}, {7.625, -2}}], 
+    LineBox[{{8.375, -1}, {8.625, -1}}], LineBox[{{8.375, -2}, {8.625, -2}}], 
+    LineBox[{{9.375, -2}, {9.625, -2}}], LineBox[{{7.375, -3}, {9.625, -3}}], 
+    LineBox[{{10.375, -2}, {10.625, -2}}], 
+    LineBox[{{10.375, -3}, {10.625, -3}}], 
+    LineBox[{{9.375, -1}, {11.625, -1}}], 
+    LineBox[{{11.375, -2}, {11.625, -2}}], 
+    LineBox[{{12.375, -1}, {12.625, -1}}], 
+    LineBox[{{12.375, -2}, {12.625, -2}}], 
+    LineBox[{{13.375, -2}, {13.625, -2}}], 
+    LineBox[{{11.375, -3}, {13.625, -3}}], 
+    LineBox[{{14.375, -2}, {14.625, -2}}], 
+    LineBox[{{14.375, -3}, {14.625, -3}}], 
+    LineBox[{{13.375, -1}, {15.625, -1}}], 
+    LineBox[{{15.375, -2}, {15.625, -2}}], 
+    LineBox[{{16.375, -1}, {16.625, -1}}], 
+    LineBox[{{16.375, -2}, {16.625, -2}}], 
+    LineBox[{{17.375, -2}, {17.625, -2}}], 
+    LineBox[{{15.375, -3}, {17.625, -3}}], 
+    LineBox[{{18.375, -2}, {18.625, -2}}], 
+    LineBox[{{18.375, -3}, {18.625, -3}}], 
+    LineBox[{{17.375, -1}, {19.625, -1}}], 
+    LineBox[{{19.375, -2}, {19.625, -2}}], 
+    LineBox[{{20.375, -1}, {20.625, -1}}], 
+    LineBox[{{20.375, -2}, {20.625, -2}}], 
+    LineBox[{{19.375, -3}, {20.625, -3}}]}, {{{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{1., -1.375}, {1., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{2., -2.375}, {2., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{3., -2.375}, {3., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{3.625, -1.375}, {4.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {4., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {4., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{4., -1.375}, {4., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{4.625, -1.375}, {5.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {5., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{4.625, -2.375}, {5.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {5., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{5., -1.375}, {5., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{5.625, -2.375}, {6.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {6., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{5.625, -3.375}, {6.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {6., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{6., -2.375}, {6., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{6.625, -2.375}, {7.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {7., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{6.625, -3.375}, {7.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {7., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{7., -2.375}, {7., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{7.625, -1.375}, {8.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {8., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{7.625, -2.375}, {8.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {8., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{8., -1.375}, {8., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{8.625, -1.375}, {9.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {9., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{8.625, -2.375}, {9.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {9., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{9., -1.375}, {9., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{9.625, -2.375}, {10.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {10., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{9.625, -3.375}, {10.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {10., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{10., -2.375}, {10., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{10.625, -2.375}, {11.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {11., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{10.625, -3.375}, {11.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {11., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{11., -2.375}, {11., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{11.625, -1.375}, {12.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {12., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{11.625, -2.375}, {12.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"1", "-", 
+              FractionBox["4", 
+               RowBox[{"4", "-", 
+                SuperscriptBox["2", 
+                 RowBox[{"2", "/", "3"}]]}]]}], ")"}], " ", "t"}], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {12., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{12., -1.375}, {12., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{12.625, -1.375}, {13.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {13., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{12.625, -2.375}, {13.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {13., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{13., -1.375}, {13., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{13.625, -2.375}, {14.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {14., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{13.625, -3.375}, {14.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {14., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{14., -2.375}, {14., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{14.625, -2.375}, {15.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {15., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{14.625, -3.375}, {15.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {15., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{15., -2.375}, {15., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{15.625, -1.375}, {16.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {16., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{15.625, -2.375}, {16.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {16., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{16., -1.375}, {16., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{16.625, -1.375}, {17.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {17., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{16.625, -2.375}, {17.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {17., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{17., -1.375}, {17., -1.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{17.625, -2.375}, {18.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {18., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{17.625, -3.375}, {18.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {18., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{18., -2.375}, {18., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{18.625, -2.375}, {19.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {19., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{18.625, -3.375}, {19.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {19., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{19., -2.375}, {19., -2.625}}]}}, {{
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{19.625, -1.375}, {20.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {20., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {EdgeForm[RGBColor[0.528488, 0.470624, 0.701351]], FaceForm[{RGBColor[
+       0.528488, 0.470624, 0.701351], Opacity[0.15]}], 
+       RectangleBox[{19.625, -2.375}, {20.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{
+           SubscriptBox["\<\"R\"\>", "\<\"X\"\>"], "(", 
+           FractionBox["t", 
+            RowBox[{"4", "-", 
+             SuperscriptBox["2", 
+              RowBox[{"2", "/", "3"}]]}]], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->7,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {20., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]}}, 
+     {RGBColor[0.528488, 0.470624, 0.701351], 
+      LineBox[{{20., -1.375}, {20., -1.625}}]}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->7,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->7,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->7,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{1403.6514067072821`, Automatic}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.891544836866313*^9},
+ CellLabel->"Out[48]=",
+ CellID->208844324,ExpressionUUID->"1601c8b2-7134-4d5d-ae63-b00ecee4451e"]
+}, Open  ]]
+},
+WindowSize->Automatic,
+WindowMargins->Automatic,
+WindowTitle->"Trotterization quantum circuit | Example Notebook",
+Visible->False,
+TaggingRules->{
+ "Metadata" -> {
+   "ResourceType" -> "Example", "Name" -> "Trotterization quantum circuit", 
+    "Property" -> "ExampleNotebook"}},
+FrontEndVersion->"13.3 for Mac OS X x86 (64-bit) (March 27, 2023)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[
+    StyleDefinitions -> 
+     FrontEnd`FileName[{"Wolfram"}, "Reference.nb", CharacterEncoding -> 
+       "UTF-8"]]], 
+   Cell[
+    StyleData[All, "Working"], Editable -> True, DockedCells -> {}], 
+   Cell[
+    StyleData["Notebook"], Editable -> True, DockedCells -> {}, 
+    ScrollingOptions -> {"VerticalScrollRange" -> Automatic}], 
+   Cell[
+    StyleData[
+    "Section", StyleDefinitions -> StyleData["PrimaryExamplesSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData["Subsection", StyleDefinitions -> StyleData["ExampleSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsection", StyleDefinitions -> StyleData["ExampleSubsection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsubsection", StyleDefinitions -> 
+     StyleData["ExampleSubsubsection"]], Editable -> True, ShowGroupOpener -> 
+    "Inline", WholeCellGroupOpener -> True], 
+   Cell[
+    StyleData["Text", StyleDefinitions -> StyleData["ExampleText"]], Editable -> 
+    True], 
+   Cell[
+    StyleData["CodeText", StyleDefinitions -> StyleData["ExampleText"]], 
+    Editable -> True, CellMargins -> {{48, 40}, {3, 15}}, FontColor -> 
+    GrayLevel[0.45]]}, Visible -> False, FrontEndVersion -> 
+  "13.3 for Mac OS X x86 (64-bit) (March 27, 2023)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"],
+$CellContext`ClosingSaveDialog -> False,
+ExpressionUUID->"1ff35dbe-3613-4c7f-8f27-00441fd75bf9"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "DefaultContent"->{
+  Cell[621, 21, 624, 11, 70, "Text",ExpressionUUID->"edf5f842-1e7f-4476-91c3-b00f63ac68b8",
+   CellTags->"DefaultContent",
+   CellID->813389520]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"DefaultContent", 82655, 1929}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[621, 21, 624, 11, 70, "Text",ExpressionUUID->"edf5f842-1e7f-4476-91c3-b00f63ac68b8",
+ CellTags->"DefaultContent",
+ CellID->813389520],
+Cell[1248, 34, 276, 4, 70, "CodeText",ExpressionUUID->"815d44ba-0ff1-4051-b1d8-dfc11f695ea7",
+ CellID->962431612],
+Cell[1527, 40, 354, 6, 70, "Input",ExpressionUUID->"9035786d-10b8-40dc-9d85-e33d044c51fd",
+ CellID->79948181],
+Cell[1884, 48, 691, 19, 70, "Text",ExpressionUUID->"f6e6b66a-2793-4d61-816a-69ba8ff9f45d",
+ CellID->986214442],
+Cell[2578, 69, 625, 17, 70, "Input",ExpressionUUID->"a826c340-0155-44a6-b9d6-3c01156895e2",
+ CellID->684583331],
+Cell[3206, 88, 653, 16, 70, "Text",ExpressionUUID->"037ec98d-301f-42c4-85fe-f114710bba87",
+ CellID->679841482],
+Cell[3862, 106, 395, 10, 70, "CodeText",ExpressionUUID->"1a632f8c-d7ef-47da-b54f-67e7ddc196ed",
+ CellID->395245434],
+Cell[CellGroupData[{
+Cell[4282, 120, 465, 11, 70, "Input",ExpressionUUID->"af51121f-6972-4e72-993f-b24d68e75f21",
+ CellID->962763193],
+Cell[4750, 133, 4059, 92, 70, "Output",ExpressionUUID->"909bac39-92e7-4970-857b-50b2850ec11f",
+ CellID->386178328]
+}, Open  ]],
+Cell[8824, 228, 398, 10, 70, "CodeText",ExpressionUUID->"d051adc4-1024-420e-8c43-0b073b146730",
+ CellID->777824993],
+Cell[CellGroupData[{
+Cell[9247, 242, 413, 10, 70, "Input",ExpressionUUID->"48a552f1-0f93-4efe-ba4e-9018b8b85da1",
+ CellID->387018032],
+Cell[9663, 254, 6582, 146, 70, "Output",ExpressionUUID->"3b3ae38b-530a-4407-b4ba-73607dcaab31",
+ CellID->762080528]
+}, Open  ]],
+Cell[16260, 403, 138, 2, 70, "CodeText",ExpressionUUID->"2d58f897-d49d-4ca0-a2c4-90826dd57c86",
+ CellID->905848267],
+Cell[CellGroupData[{
+Cell[16423, 409, 473, 12, 70, "Input",ExpressionUUID->"ca5f100c-539c-425b-b352-383fb52ebf51",
+ CellID->296021763],
+Cell[16899, 423, 28795, 619, 70, "Output",ExpressionUUID->"1e021828-4057-4995-8f87-59722689f22c",
+ CellID->664350251]
+}, Open  ]],
+Cell[45709, 1045, 137, 2, 70, "CodeText",ExpressionUUID->"b52d8ffc-f362-4df6-a903-88bdb4d6dd64",
+ CellID->775700945],
+Cell[CellGroupData[{
+Cell[45871, 1051, 473, 12, 70, "Input",ExpressionUUID->"ff202e53-0c4e-4535-9453-f393bee6623e",
+ CellID->384855553],
+Cell[46347, 1065, 34166, 805, 70, "Output",ExpressionUUID->"1601c8b2-7134-4d5d-ae63-b00ecee4451e",
+ CellID->208844324]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

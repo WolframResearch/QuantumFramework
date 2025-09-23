@@ -1,3 +1,666 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:1bbf6bf7a47943507c825c9f367439ac3c87f285860f78dab94ff84d6cf46130
-size 27227
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     26402,        658]
+NotebookOptionsPosition[     19813,        526]
+NotebookOutlinePosition[     20675,        551]
+CellTagsIndexPosition[     20632,        548]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ "New in: ",
+ Cell["", "HistoryData",
+  CellTags->"New",ExpressionUUID->"a2be33bf-c871-4636-b764-8bfb0bc91ae4"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"438d559c-c7f6-45a1-840c-da97c1bb9c34"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->"e59daff3-28b3-408d-8aee-bab014fc5871"],
+ " | Excised in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Excised",ExpressionUUID->"ed42e69c-0ced-4156-8a1d-973336f87ea8"]
+}], "History",
+ CellChangeTimes->{{3.8589611718165846`*^9, 3.8589611790948334`*^9}},
+ CellID->421588458,ExpressionUUID->"6d680297-6ae0-4871-9111-7cc4b291bf37"],
+
+Cell["Guide", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->391618637,ExpressionUUID->"2894eef3-4f10-46f3-bda1-866c50bbd516"],
+
+Cell["Wolfram/QuantumFramework", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->253196307,ExpressionUUID->"7c6dd4ab-e7ca-4062-80cd-6ab13a599d96"],
+
+Cell["Wolfram`QuantumFramework`", "Categorization",
+ CellLabel->"Context",
+ CellID->262610419,ExpressionUUID->"f3256d36-6c18-414e-9a05-f84351284b2c"],
+
+Cell["\<\
+Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework\
+\>", "Categorization",
+ CellLabel->"URI",
+ CellID->217261350,ExpressionUUID->"0a27df2b-2572-44d6-8e47-1a0739c2d490"],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->359480772,ExpressionUUID->"6f082a4d-d6e2-4969-bfce-38dfa642b2f3"],
+
+Cell["XXXX", "Keywords",
+ CellID->324877441,ExpressionUUID->"8b7224ea-9d33-4291-a2cd-bef4f767d642"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Wolfram Quantum Computation Framework", "GuideTitle",
+ CellID->1446645,ExpressionUUID->"05b9fe27-0241-4176-bfe2-4f975acfe008"],
+
+Cell["\<\
+The Wolfram Quantum Framework offers a novel and convenient approach to \
+quantum computing research with Wolfram Notebooks. It provides a \
+comprehensive set of modeling capabilities for simulating quantum \
+computation, with full integration into Mathematica and Wolfram Language, and \
+also interoperability with many external quantum platforms. Within Wolfram \
+quantum framework, there exists a diverse collection of quantum objects, that \
+fully describe quantum entities, such as quantum basis, state, operations, \
+and processes. These objects can undergo transformations through some \
+operations (for example, quantum state into a quantum measurement, by a \
+measurement operator). Furthermore, their properties can be calculated using \
+other functions (for example, quantum entanglement monotones for a quantum \
+state). Computations can be done either symbolically, or numerically. \
+\>", "GuideAbstract",
+ CellChangeTimes->{
+  3.8589611905198994`*^9, {3.893640288492572*^9, 3.893640565740427*^9}, {
+   3.893842292585655*^9, 3.893842323412549*^9}, {3.893842378945794*^9, 
+   3.893842425343781*^9}, {3.8938435922759447`*^9, 3.893843718596527*^9}},
+ CellID->1014477484,ExpressionUUID->"35df4f24-9688-42a4-9f2c-6821d32cd038"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "GuideFunctionsSection",
+ CellID->56556495,ExpressionUUID->"9b5b9f4e-6ef4-4250-a8ed-d796852875b3"],
+
+Cell[CellGroupData[{
+
+Cell["Basic Objects", "GuideFunctionsSubsection",
+ CellChangeTimes->{{3.8589612691207747`*^9, 3.8589612710843983`*^9}},
+ CellID->557637454,ExpressionUUID->"3e662149-3889-47d6-8590-6bb90e0cccd4"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuditName",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuditName"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "fee5734c-fb79-497c-8d2c-75cb5160518b"],
+ " \[LongDash] ",
+ "representation of a qudit name with formatting"
+}], "GuideText",
+ CellChangeTimes->{{3.8589615156082735`*^9, 3.858961518156784*^9}, 
+   3.8589615732796497`*^9},
+ CellID->193237307,ExpressionUUID->"0ac0f3ae-4836-4bdc-b98f-16267d8ea530"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuditBasis",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuditBasis"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "06dfac42-4035-4a25-86f9-d42a73ae2310"],
+ " \[LongDash] ",
+ "representation of a qudit basis"
+}], "GuideText",
+ CellChangeTimes->{{3.858961521088091*^9, 3.858961523902915*^9}, 
+   3.858961577670257*^9},
+ CellID->266680649,ExpressionUUID->"b2efa8ab-dbd0-42fc-a3a8-faaec2a0f83c"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumBasis",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumBasis"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "f648b4ed-0865-47bd-906d-83147af72bfe"],
+ " \[LongDash] representation of a  quantum basis"
+}], "GuideText",
+ CellChangeTimes->{{3.858961527984227*^9, 3.8589615303233795`*^9}, 
+   3.858961581865305*^9, {3.908640458388403*^9, 3.908640461504648*^9}},
+ CellID->220261029,ExpressionUUID->"bd4c5dd4-2d92-4094-ab1e-63bb5abc1c9a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumState",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumState"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "fc45ca5a-2bc1-4633-bc8b-3fc9cfc57cde"],
+ " \[LongDash] representation of a quantum state"
+}], "GuideText",
+ CellChangeTimes->{{3.8589613140617046`*^9, 3.8589613168967557`*^9}, 
+   3.8589613479096017`*^9, {3.9086404706591387`*^9, 3.9086404719010067`*^9}},
+ CellID->110913264,ExpressionUUID->"20669265-7ea3-4ea4-8a65-a8dc27b815e1"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumOperator",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumOperator"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "7e5c8c70-bc6c-49f2-97f6-3bc5949844f7"],
+ " \[LongDash] ",
+ "representation of a quantum operator"
+}], "GuideText",
+ CellChangeTimes->{{3.858961327693714*^9, 3.858961353321765*^9}},
+ CellID->97189741,ExpressionUUID->"183bb860-577f-452d-8899-ddfeb58d5f12"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumMeasurementOperator",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumMeasurementOperator"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "728b8bde-dcf1-4ff7-9c23-134bdb1334cf"],
+ " \[LongDash] ",
+ "representation of a quantum measurement operator"
+}], "GuideText",
+ CellChangeTimes->{{3.8589613328875246`*^9, 3.8589613582434072`*^9}},
+ CellID->288174294,ExpressionUUID->"c7d1744d-6a67-4ead-8fcb-25e5277c929a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumMeasurement",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "edb37c90-ef0f-4c17-9f32-4447d207f491"],
+ " \[LongDash] representation of quantum measurement "
+}], "GuideText",
+ CellChangeTimes->{{3.858961340065798*^9, 3.8589613628534627`*^9}, {
+  3.893635805901029*^9, 3.893635809564538*^9}},
+ CellID->158537782,ExpressionUUID->"f49828ed-90c2-45c1-903a-096d05bc5de3"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumSchmidtDecomposition",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumSchmidtDecomposition"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "5adf51d8-d1f4-4293-a40d-6bec7a6e0894"],
+ " \[LongDash] ",
+ "Schmidt decomposition of a composite discrete quantum state"
+}], "GuideText", "FutureExample",
+ CellDingbat->Cell[
+   BoxData[
+    TooltipBox[
+     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
+   "TentativeWrapper"],
+ CellChangeTimes->{{3.858961534230812*^9, 3.858961547015252*^9}, 
+   3.858961587144236*^9},
+ CellID->662372074,ExpressionUUID->"48533e03-7f21-4bf2-a471-3248e4f617cb"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumSpectralDecomposition",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumSpectralDecomposition"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "a56d5397-084e-4d77-a124-18e610672074"],
+ " \[LongDash] ",
+ "Spectral decomposition of a mixed discrete quantum state or a discrete \
+quantum operator"
+}], "GuideText", "FutureExample",
+ CellDingbat->Cell[
+   BoxData[
+    TooltipBox[
+     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
+   "TentativeWrapper"],
+ CellChangeTimes->{{3.8589615521346607`*^9, 3.8589615580322037`*^9}, 
+   3.8589615916866493`*^9},
+ CellID->2503200,ExpressionUUID->"dd88eedb-aee7-4d00-b123-84d8fc9935ba"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Quantum Circuits", "GuideFunctionsSubsection",
+ CellChangeTimes->{{3.858961302236679*^9, 3.8589613050796328`*^9}},
+ CellID->491113476,ExpressionUUID->"6a53d018-9874-4410-aea4-0b061a747385"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumChannel",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumChannel"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "da60e253-9331-4808-b2f1-e7fe5188d3e3"],
+ " \[LongDash] representation of a quantum channel to describe noise"
+}], "GuideText",
+ CellChangeTimes->{{3.8589616673537726`*^9, 3.8589616959963675`*^9}, {
+  3.893636140514394*^9, 3.893636156509679*^9}},
+ CellID->303776635,ExpressionUUID->"8be9c209-dd44-48b2-9fe6-5ef40425df7e"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumCircuitOperator",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator"]],
+   "InlineGuideFunction",ExpressionUUID->
+  "5b3d3e98-5309-4443-b105-a7b75fad9b02"],
+ " \[LongDash] ",
+ "representation of a quantum circuit"
+}], "GuideText",
+ CellChangeTimes->{{3.8589616590678167`*^9, 3.8589616906700907`*^9}},
+ CellID->59025078,ExpressionUUID->"b8d3a02b-c6fa-4193-b145-7735fe468f81"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumCircuitMultiwayGraph",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumCircuitMultiwayGraph"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "9a05dadf-01c6-4e6c-9dfa-5e3071f1e042"],
+ " \[LongDash] multiway graph of a quantum circuit"
+}], "GuideText",
+ CellChangeTimes->{{3.893636071506638*^9, 3.8936361016477957`*^9}},
+ CellID->1764066240,ExpressionUUID->"1b4b2efb-7579-453b-816a-9c75f721f8e8"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumCompile",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCompile"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "984079d2-d0ce-48d3-805d-50a42d340d37"],
+ " \[LongDash] ",
+ "decomposition of a discrete matrix operator into a sequence of operators"
+}], "GuideText", "FutureExample",
+ CellDingbat->Cell[
+   BoxData[
+    TooltipBox[
+     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
+   "TentativeWrapper"],
+ CellChangeTimes->{{3.8589616759047155`*^9, 3.8589617007994194`*^9}},
+ CellID->312586213,ExpressionUUID->"fb42bc77-6239-4a21-ad57-e46a883036a3"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumShortcut",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumShortcut"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "cb21dc4a-f954-4822-ae8c-b432d35889cd"],
+ " \[LongDash] shorthand representation of operators or circuits"
+}], "GuideText",
+ CellChangeTimes->{{3.89363587003955*^9, 3.89363590444387*^9}},
+ CellID->1816073347,ExpressionUUID->"e4da5fb0-4bcf-40a6-9184-5effdea7fb71"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Quantum Functions", "GuideFunctionsSubsection",
+ CellChangeTimes->{{3.858961280204323*^9, 3.8589612826159163`*^9}},
+ CellID->3099306,ExpressionUUID->"de6a4fcf-b619-4a3e-8d46-64c649f6965a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumDistance",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumDistance"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "705f9995-d7ed-40d4-a1c5-2f5425bc5d8e"],
+ " \[LongDash] distance between quantum states"
+}], "GuideText",
+ CellChangeTimes->{{3.858961466255618*^9, 3.8589614957739797`*^9}, {
+  3.893635634157652*^9, 3.893635642666996*^9}},
+ CellID->1043834576,ExpressionUUID->"e1eacf0f-5072-4495-b789-b94d6c7fc25e"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumEvolve",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "b2f66eb3-2072-43ec-b070-def46680fa07"],
+ " \[LongDash] time evolution"
+}], "GuideText",
+ CellChangeTimes->{{3.893635591320827*^9, 3.89363563169971*^9}},
+ CellID->1066426620,ExpressionUUID->"99426b23-66bc-4ad9-8e0e-99d13e73a31e"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumMeasurementSimulation",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumMeasurementSimulation"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "d52931b1-0a66-448d-a4d8-473380564ff5"],
+ " \[LongDash] simulating one or many measurement results, given a quantum \
+state"
+}], "GuideText",
+ CellChangeTimes->{{3.8936359921311693`*^9, 3.8936360201326427`*^9}},
+ CellID->1323100012,ExpressionUUID->"04ac1b22-09db-428c-8340-a11fc02ea15c"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumMPS",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumMPS"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "c70307eb-37eb-40c8-b07b-91511783349f"],
+ " \[LongDash] returns the MPS or MPO of a state or operator/circuit"
+}], "GuideText",
+ CellChangeTimes->{{3.89363592230761*^9, 3.893635922307652*^9}, {
+  3.893635955979781*^9, 3.893635970821776*^9}, {3.8992120436495132`*^9, 
+  3.899212081444998*^9}},
+ CellID->433941171,ExpressionUUID->"6ab3045c-fd06-40e0-a935-56203a204fae"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumPartialTrace",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumPartialTrace"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "e8c02c94-0618-4758-a6b8-1a4625263a64"],
+ " \[LongDash] partial trace of a quantum state, operator or circuit with \
+respect to subsystems"
+}], "GuideText",
+ CellChangeTimes->{{3.858961444087537*^9, 3.8589614480246177`*^9}, 
+   3.8589614851853733`*^9, {3.908640504463768*^9, 3.908640518025567*^9}},
+ CellID->208807988,ExpressionUUID->"22d8aa76-40a8-4957-a719-5779815169e8"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["QuantumPartialTranspose",
+    BaseStyle->"Link",
+    ButtonData->
+     "paclet:Wolfram/QuantumFramework/ref/QuantumPartialTranspose"], " "}]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "62e6d18c-d514-4fcd-938d-4adce1fdcb0e"],
+ " \[LongDash] partial transpose of a quantum state or quantum operator with \
+respect to subsystems"
+}], "GuideText",
+ CellChangeTimes->{{3.89363584705553*^9, 3.893635851733585*^9}},
+ CellID->42255921,ExpressionUUID->"7eb05009-cc33-497d-b56c-17dbd586f325"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumStateEstimate",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumStateEstimate"]], 
+  "InlineGuideFunction",
+  TaggingRules->{"PageType" -> "Function"},
+  CellTags->"b04404fd-f5b6-47f4-b48d-423b1b9b81c3",ExpressionUUID->
+  "2b37d9da-b657-4dfc-8a40-62bdf5ffda9a"],
+ " \[LongDash] estimating quantum state based on measurement results"
+}], "GuideText",
+ CellChangeTimes->{{3.89363592230761*^9, 3.893635922307652*^9}, {
+  3.893635955979781*^9, 3.893635970821776*^9}},
+ CellID->2091602483,ExpressionUUID->"47b7130d-b342-45f6-835c-72d472b4af1d"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumTensorProduct",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumTensorProduct"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "9a772411-a7a6-4e9d-8dea-eec5718d8efe"],
+ " \[LongDash] tensor product of  quantum states, quantum bases, quantum \
+operators, or quantum measurements"
+}], "GuideText",
+ CellChangeTimes->{{3.8589614316022444`*^9, 3.8589614359645996`*^9}, 
+   3.8589614765201993`*^9, 3.893635689178625*^9},
+ CellID->131451809,ExpressionUUID->"9e17f14a-f6e0-467d-a232-4792b755e6aa"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumWignerTransform",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumWignerTransform"]],
+   "InlineGuideFunction",ExpressionUUID->
+  "ea2aac65-d218-4428-8e1f-44dbc40950fd"],
+ " \[LongDash] discrete Wigner transform of a quantum state, operator or \
+circuit"
+}], "GuideText",
+ CellChangeTimes->{{3.8589615621290607`*^9, 3.8589615668828573`*^9}, 
+   3.8589615969434223`*^9, {3.9086403685534687`*^9, 3.9086403775081253`*^9}, 
+   3.9086404872114067`*^9},
+ CellID->185941540,ExpressionUUID->"5ffbf410-553b-4718-b405-b46673c9ff37"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Entanglement", "GuideFunctionsSubsection",
+ CellChangeTimes->{{3.858961295950637*^9, 3.8589612984910145`*^9}},
+ CellID->680217343,ExpressionUUID->"7e32909e-622d-43ef-b93f-a4c888075383"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumEntangledQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumEntangledQ"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "68b2eca6-1d01-42f5-a9d7-580408d4a223"],
+ " \[LongDash] determination of whether a part of quantum state  is entangled \
+with another part"
+}], "GuideText",
+ CellChangeTimes->{{3.85896162017835*^9, 3.858961644475646*^9}, {
+  3.893635645172905*^9, 3.8936356735163*^9}},
+ CellID->354024275,ExpressionUUID->"4763368c-cc7a-4f8c-a062-ae5ad969e472"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QuantumEntanglementMonotone",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/QuantumFramework/ref/QuantumEntanglementMonotone"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "e67a84fa-9f50-4228-a539-67eacef6fcbe"],
+ " \[LongDash] measure entanglement of a quantum state"
+}], "GuideText",
+ CellChangeTimes->{{3.858961630230005*^9, 3.858961648672902*^9}, {
+  3.893635679469141*^9, 3.893635680642207*^9}},
+ CellID->23951385,ExpressionUUID->"914acbe3-f211-4dde-9d1d-2f6fe907cd1d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Tech Notes", "GuideTutorialsSection",
+ CellID->397690893,ExpressionUUID->"ffb546b1-31e7-4cd8-83f3-33cc21de89f6"],
+
+Cell[TextData[ButtonBox["Tutorial",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:Wolfram/QuantumFramework/tutorial/Tutorial"]], "GuideTutorial",
+ CellChangeTimes->{{3.8589617539608374`*^9, 3.8589617705973663`*^9}},
+ CellID->80816905,ExpressionUUID->"f754d86f-4a00-4d26-9d0b-fd500dfaff22"],
+
+Cell["XXXX", "GuideTutorial",
+ CellID->383183680,ExpressionUUID->"f7161703-21fc-4424-9300-3c86965ce5ec"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "GuideMoreAboutSection",
+ CellChangeTimes->{{3.8430423939366693`*^9, 3.843042395176153*^9}},
+ CellID->367765561,ExpressionUUID->"eed1bd79-5547-4277-99ff-88324b2d95ff"],
+
+Cell["XXXX", "GuideMoreAbout",
+ CellID->745361118,ExpressionUUID->"5b8458fb-5a01-4ef4-9a65-014a82bea580"],
+
+Cell["XXXX", "GuideMoreAbout",
+ CellID->65106871,ExpressionUUID->"87132b22-50b1-4af6-be62-0ce076a4e783"]
+}, Open  ]],
+
+Cell["Related Links", "GuideRelatedLinksSection",
+ CellID->46781658,ExpressionUUID->"bebce0ea-8474-4543-9aec-6eee2be34a9e"]
+},
+WindowSize->{769, 698},
+WindowMargins->{{275, Automatic}, {Automatic, 0}},
+WindowStatusArea->Automatic,
+TaggingRules->{
+ "InformationPopupMenuItemAdded" -> True, "Author" -> "rhennigan", 
+  "CreationDate" -> "04-14-2022 17:39:27", "NotebookIndexQ" -> True, 
+  "NotebookLastIndexed" -> 
+  DateObject[{2022, 4, 14, 17, 48, 4.9322938`8.445623916392199}, "Instant", 
+    "Gregorian", -4.], "NotebookUUID" -> 
+  "662eab9c-9333-4f16-a0ae-79f21932ba87", "Paclet" -> "None"},
+FrontEndVersion->"13.3 for Mac OS X x86 (64-bit) (July 27, 2023)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "GuidePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"662eab9c-9333-4f16-a0ae-79f21932ba87"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 666, 15, 26, "History",ExpressionUUID->"6d680297-6ae0-4871-9111-7cc4b291bf37",
+ CellID->421588458],
+Cell[1227, 37, 133, 2, 35, "Categorization",ExpressionUUID->"2894eef3-4f10-46f3-bda1-866c50bbd516",
+ CellID->391618637],
+Cell[1363, 41, 152, 2, 35, "Categorization",ExpressionUUID->"7c6dd4ab-e7ca-4062-80cd-6ab13a599d96",
+ CellID->253196307],
+Cell[1518, 45, 149, 2, 35, "Categorization",ExpressionUUID->"f3256d36-6c18-414e-9a05-f84351284b2c",
+ CellID->262610419],
+Cell[1670, 49, 193, 4, 35, "Categorization",ExpressionUUID->"0a27df2b-2572-44d6-8e47-1a0739c2d490",
+ CellID->217261350],
+Cell[CellGroupData[{
+Cell[1888, 57, 110, 1, 31, "KeywordsSection",ExpressionUUID->"6f082a4d-d6e2-4969-bfce-38dfa642b2f3",
+ CellID->359480772],
+Cell[2001, 60, 99, 1, 21, "Keywords",ExpressionUUID->"8b7224ea-9d33-4291-a2cd-bef4f767d642",
+ CellID->324877441]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2137, 66, 132, 1, 88, "GuideTitle",ExpressionUUID->"05b9fe27-0241-4176-bfe2-4f975acfe008",
+ CellID->1446645],
+Cell[2272, 69, 1245, 18, 191, "GuideAbstract",ExpressionUUID->"35df4f24-9688-42a4-9f2c-6821d32cd038",
+ CellID->1014477484]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3554, 92, 107, 1, 72, "GuideFunctionsSection",ExpressionUUID->"9b5b9f4e-6ef4-4250-a8ed-d796852875b3",
+ CellID->56556495],
+Cell[CellGroupData[{
+Cell[3686, 97, 194, 2, 37, "GuideFunctionsSubsection",ExpressionUUID->"3e662149-3889-47d6-8590-6bb90e0cccd4",
+ CellID->557637454],
+Cell[3883, 101, 484, 12, 27, "GuideText",ExpressionUUID->"0ac0f3ae-4836-4bdc-b98f-16267d8ea530",
+ CellID->193237307],
+Cell[4370, 115, 467, 12, 27, "GuideText",ExpressionUUID->"b2efa8ab-dbd0-42fc-a3a8-faaec2a0f83c",
+ CellID->266680649],
+Cell[4840, 129, 517, 11, 27, "GuideText",ExpressionUUID->"bd4c5dd4-2d92-4094-ab1e-63bb5abc1c9a",
+ CellID->220261029],
+Cell[5360, 142, 524, 11, 27, "GuideText",ExpressionUUID->"20669265-7ea3-4ea4-8a65-a8dc27b815e1",
+ CellID->110913264],
+Cell[5887, 155, 455, 11, 27, "GuideText",ExpressionUUID->"183bb860-577f-452d-8899-ddfeb58d5f12",
+ CellID->97189741],
+Cell[6345, 168, 499, 12, 27, "GuideText",ExpressionUUID->"c7d1744d-6a67-4ead-8fcb-25e5277c929a",
+ CellID->288174294],
+Cell[6847, 182, 510, 11, 27, "GuideText",ExpressionUUID->"f49828ed-90c2-45c1-903a-096d05bc5de3",
+ CellID->158537782],
+Cell[7360, 195, 685, 18, 52, "GuideText",ExpressionUUID->"48533e03-7f21-4bf2-a471-3248e4f617cb",
+ CellID->662372074],
+Cell[8048, 215, 721, 19, 52, "GuideText",ExpressionUUID->"dd88eedb-aee7-4d00-b123-84d8fc9935ba",
+ CellID->2503200]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[8806, 239, 195, 2, 37, "GuideFunctionsSubsection",ExpressionUUID->"6a53d018-9874-4410-aea4-0b061a747385",
+ CellID->491113476],
+Cell[9004, 243, 519, 11, 27, "GuideText",ExpressionUUID->"8be9c209-dd44-48b2-9fe6-5ef40425df7e",
+ CellID->303776635],
+Cell[9526, 256, 472, 11, 27, "GuideText",ExpressionUUID->"b8d3a02b-c6fa-4193-b145-7735fe468f81",
+ CellID->59025078],
+Cell[10001, 269, 578, 13, 27, "GuideText",ExpressionUUID->"1b4b2efb-7579-453b-816a-9c75f721f8e8",
+ CellID->1764066240],
+Cell[10582, 284, 645, 16, 52, "GuideText",ExpressionUUID->"fb42bc77-6239-4a21-ad57-e46a883036a3",
+ CellID->312586213],
+Cell[11230, 302, 559, 12, 27, "GuideText",ExpressionUUID->"e4da5fb0-4bcf-40a6-9184-5effdea7fb71",
+ CellID->1816073347]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[11826, 319, 194, 2, 37, "GuideFunctionsSubsection",ExpressionUUID->"de6a4fcf-b619-4a3e-8d46-64c649f6965a",
+ CellID->3099306],
+Cell[12023, 323, 498, 11, 27, "GuideText",ExpressionUUID->"e1eacf0f-5072-4495-b789-b94d6c7fc25e",
+ CellID->1043834576],
+Cell[12524, 336, 521, 12, 27, "GuideText",ExpressionUUID->"99426b23-66bc-4ad9-8e0e-99d13e73a31e",
+ CellID->1066426620],
+Cell[13048, 350, 614, 14, 44, "GuideText",ExpressionUUID->"04ac1b22-09db-428c-8340-a11fc02ea15c",
+ CellID->1323100012],
+Cell[13665, 366, 653, 14, 27, "GuideText",ExpressionUUID->"6ab3045c-fd06-40e0-a935-56203a204fae",
+ CellID->433941171],
+Cell[14321, 382, 581, 12, 44, "GuideText",ExpressionUUID->"22d8aa76-40a8-4957-a719-5779815169e8",
+ CellID->208807988],
+Cell[14905, 396, 637, 15, 44, "GuideText",ExpressionUUID->"7eb05009-cc33-497d-b56c-17dbd586f325",
+ CellID->42255921],
+Cell[15545, 413, 623, 13, 27, "GuideText",ExpressionUUID->"47b7130d-b342-45f6-835c-72d472b4af1d",
+ CellID->2091602483],
+Cell[16171, 428, 573, 12, 44, "GuideText",ExpressionUUID->"9e17f14a-f6e0-467d-a232-4792b755e6aa",
+ CellID->131451809],
+Cell[16747, 442, 606, 13, 44, "GuideText",ExpressionUUID->"5ffbf410-553b-4718-b405-b46673c9ff37",
+ CellID->185941540]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17390, 460, 191, 2, 37, "GuideFunctionsSubsection",ExpressionUUID->"7e32909e-622d-43ef-b93f-a4c888075383",
+ CellID->680217343],
+Cell[17584, 464, 547, 12, 44, "GuideText",ExpressionUUID->"4763368c-cc7a-4f8c-a062-ae5ad969e472",
+ CellID->354024275],
+Cell[18134, 478, 531, 12, 27, "GuideText",ExpressionUUID->"914acbe3-f211-4dde-9d1d-2f6fe907cd1d",
+ CellID->23951385]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[18714, 496, 118, 1, 74, "GuideTutorialsSection",ExpressionUUID->"ffb546b1-31e7-4cd8-83f3-33cc21de89f6",
+ CellID->397690893],
+Cell[18835, 499, 287, 5, 24, "GuideTutorial",ExpressionUUID->"f754d86f-4a00-4d26-9d0b-fd500dfaff22",
+ CellID->80816905],
+Cell[19125, 506, 104, 1, 24, "GuideTutorial",ExpressionUUID->"f7161703-21fc-4424-9300-3c86965ce5ec",
+ CellID->383183680]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[19266, 512, 190, 2, 74, "GuideMoreAboutSection",ExpressionUUID->"eed1bd79-5547-4277-99ff-88324b2d95ff",
+ CellID->367765561],
+Cell[19459, 516, 105, 1, 24, "GuideMoreAbout",ExpressionUUID->"5b8458fb-5a01-4ef4-9a65-014a82bea580",
+ CellID->745361118],
+Cell[19567, 519, 104, 1, 24, "GuideMoreAbout",ExpressionUUID->"87132b22-50b1-4af6-be62-0ce076a4e783",
+ CellID->65106871]
+}, Open  ]],
+Cell[19686, 523, 123, 1, 74, "GuideRelatedLinksSection",ExpressionUUID->"bebce0ea-8474-4543-9aec-6eee2be34a9e",
+ CellID->46781658]
+}
+]
+*)
+

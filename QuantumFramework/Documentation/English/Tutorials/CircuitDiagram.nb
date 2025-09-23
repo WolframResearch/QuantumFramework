@@ -1,3 +1,3760 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ecb391e831121d66846393da6c0810a4d656a624c168c0ad7131b86e2f9274a9
-size 158280
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='WolframDesktop 13.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       161,          7]
+NotebookDataLength[    158118,       3752]
+NotebookOptionsPosition[    146269,       3484]
+NotebookOutlinePosition[    146859,       3505]
+CellTagsIndexPosition[    146816,       3502]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Circuit Diagram", "Title",
+ CellChangeTimes->{{3.873517134989419*^9, 3.873517147217022*^9}, {
+  3.8744179088551073`*^9, 3.8744179093029203`*^9}, {3.874427311367579*^9, 
+  3.874427311827838*^9}, {3.901622748661522*^9, 3.901622752708572*^9}},
+ CellID->228312131,ExpressionUUID->"8d5fd3fa-cd0f-44f6-8ab0-271a54b7cc46"],
+
+Cell[TextData[{
+ "\"Diagram\" is a property of ",
+ StyleBox["QuantumCircuitOperator", "InlineCode"],
+ ", with some options for customizing that. Here we shall briefly review \
+those options."
+}], "MathCaption",
+ CellChangeTimes->{{3.901622692514854*^9, 3.9016227464197493`*^9}},
+ CellID->1390956192,ExpressionUUID->"c763f9a9-0266-470e-914e-75d1c6950bdb"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<ShowWires\>\"", "True", Cell[
+    "whether to show horizontal wires", "TableText",ExpressionUUID->
+     "da584867-f413-4fa4-bd66-523a5e332f3a"]},
+   {"\"\<WireLabels\>\"", "Automatic", Cell[
+    "wire labeling", "TableText",ExpressionUUID->
+     "ec302b41-b88b-41c3-85a5-8dd894ac4277"]},
+   {"\"\<MeasurementWireLabel\>\"", "\"\<c\>\"", 
+    RowBox[{"measurement", " ", "wire", " ", "label"}]},
+   {"\"\<MeasurementWirePosition\>\"", "Top", 
+    RowBox[{"measurement", " ", "wire", " ", "position"}]},
+   {"\"\<ShowMeasurementWire\>\"", "True", 
+    RowBox[{
+    "whether", " ", "to", " ", "show", " ", "a", " ", "measurement", " ", 
+     "wire"}]},
+   {"\"\<ShowEmptyWires\>\"", "True", 
+    RowBox[{"whether", " ", "to", " ", "render", " ", "empty", " ", "wires"}]},
+   {"\"\<ShowExtraQudits\>\"", "False", 
+    RowBox[{
+     RowBox[{"whether", " ", "to", " ", "show", " ", "non"}], "-", 
+     RowBox[{"positive", " ", "ancillas"}]}]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.87351721219814*^9, 3.873517260770994*^9}, {
+   3.873517300449688*^9, 3.87351733242635*^9}, {3.8735173733475323`*^9, 
+   3.873517450210153*^9}, 3.8735175426063766`*^9, {3.87351762262614*^9, 
+   3.873517623301622*^9}, {3.873519293019416*^9, 3.873519293661265*^9}, 
+   3.873519934836838*^9, {3.873522519331468*^9, 3.8735225394731617`*^9}, {
+   3.897643636680999*^9, 3.897643670479097*^9}},
+ CellID->839369792,ExpressionUUID->"cd97ccbf-8d86-4eeb-910c-1e5801acf3a9"],
+
+Cell["Wires.", "Caption",
+ CellChangeTimes->{{3.8735181112610283`*^9, 3.8735181253126097`*^9}, {
+  3.873519602391788*^9, 3.873519602702078*^9}},
+ CellID->1893564438,ExpressionUUID->"61318bd3-0917-4ec6-9cfa-2e33b3d5dae2"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<ShowLabel\>\"", "False", Cell[
+    "whether to include a circuit label", "TableText",ExpressionUUID->
+     "603c56f4-6133-48c9-9968-4eedf0b10df2"]},
+   {"\"\<ShowGateLabels\>\"", "True", Cell[
+    "whether to show labels on gates", "TableText",ExpressionUUID->
+     "6413c6f6-f090-44fd-8b5b-8c7cb8e9d9f7"]},
+   {"\"\<RotateGateLabel\>\"", "Automatic", Cell[
+    "rotation angle of gate labels", "TableText",ExpressionUUID->
+     "927529a1-7655-477b-8649-9ddce543c457"]},
+   {"\"\<IdentityGate\>\"", "False", Cell[
+    "where to show Identity gate", "TableText",ExpressionUUID->
+     "aad1fbc3-4eef-4cfb-b739-4f0a88235253"]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.873517589392647*^9, 3.873517684277006*^9}, {
+  3.8735177144148197`*^9, 3.873517714856646*^9}, {3.8735178165448914`*^9, 
+  3.873517827679014*^9}, {3.873518026350769*^9, 3.873518047716593*^9}, {
+  3.873518668908182*^9, 3.873518692358345*^9}, {3.873518729919898*^9, 
+  3.873518730357335*^9}, {3.873518836234357*^9, 3.873518838940078*^9}, {
+  3.930225911223744*^9, 3.93022595054952*^9}},
+ CellID->889710703,ExpressionUUID->"9d151eb6-e6a5-46d7-ba0a-c2a72f923577"],
+
+Cell["Labels.", "Caption",
+ CellChangeTimes->{
+  3.8735181112610283`*^9, {3.873519605858386*^9, 3.873519606196211*^9}},
+ CellID->1630242752,ExpressionUUID->"21b99b96-5dce-4723-b47a-3fc6fd261845"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<Size\>\"", ".75", Cell[
+    "operator size", "TableText",ExpressionUUID->
+     "0881ac5c-4a47-444f-a93a-732e39779f05"]},
+   {"\"\<HorizontalGapSize\>\"", "1", Cell[
+    "distance between operators", "TableText",ExpressionUUID->
+     "aba405be-45e7-4b62-a202-d15027655768"]},
+   {"\"\<VerticalGapSize\>\"", "1", Cell[
+    "distance between wires", "TableText",ExpressionUUID->
+     "a219f199-cd70-4161-8372-2a4a4cd8fc8a"]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.873518133660276*^9, 3.873518186860888*^9}},
+ CellID->1508953063,ExpressionUUID->"a2d20ee0-49f4-4287-8b29-479edd06c0ae"],
+
+Cell["Sizes.", "Caption",
+ CellChangeTimes->{
+  3.8735181112610283`*^9, {3.873518192788117*^9, 3.873518193734336*^9}},
+ CellID->1339742418,ExpressionUUID->"d87dfce7-a878-4588-9576-f3421305c571"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<GateBackgroundStyle\>\"", "Automatic", Cell[
+    "gate background style rules", "TableText",ExpressionUUID->
+     "f0617064-fdf9-46da-97d3-9f32867ee862"]},
+   {"\"\<GateBoundaryStyle\>\"", "Automatic", Cell[
+    "gate boundary style rules", "TableText",ExpressionUUID->
+     "f5b14e37-2646-423a-b547-1a862046d3ca"]},
+   {"\"\<GateShapeFunction\>\"", "Automatic", Cell[
+    "custom function to render gates", "TableText",ExpressionUUID->
+     "99aa4f75-65b9-47f5-a2db-bfea8ec1396b"]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.873518208713069*^9, 3.87351825109254*^9}, {
+  3.8735185783100367`*^9, 3.87351865402251*^9}, {3.87351886918034*^9, 
+  3.87351889653784*^9}},
+ CellID->1750553094,ExpressionUUID->"4583b3b3-583c-4245-920d-926fd4587d24"],
+
+Cell["Styling.", "Caption",
+ CellChangeTimes->{{3.873518900748784*^9, 3.873518901878793*^9}},
+ CellID->1019886958,ExpressionUUID->"4fb12b96-e29b-43bd-86cb-d808507249bc"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<ShowOutline\>\"", "False", Cell[
+    "outline a circuit with a frame", "TableText",ExpressionUUID->
+     "bca893ca-3ff2-4d1f-b377-e4d9c8f2ab50"]},
+   {"\"\<ShowConnectors\>\"", "False", Cell[
+    "show points of wire-gate connections", "TableText",ExpressionUUID->
+     "35feb7ec-e028-43c4-8982-aa9bb47ad8a3"]},
+   {"\"\<ShowWireEndpoints\>\"", "False", Cell[
+    "show wire end-points", "TableText",ExpressionUUID->
+     "ceee7276-ae1a-45d1-ba68-4a4f5113a146"]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.8735189345086193`*^9, 3.873518969430393*^9}, {
+  3.873519014601851*^9, 3.873519107058138*^9}},
+ CellID->466169390,ExpressionUUID->"5fa788a3-0d6d-455c-af6a-03a9918c61e3"],
+
+Cell["Various graphics elements.", "Caption",
+ CellChangeTimes->{{3.8735189260435247`*^9, 3.8735189295602217`*^9}},
+ CellID->888593474,ExpressionUUID->"d34c8be1-4c0c-4aad-ac9e-4811b0d58849"],
+
+Cell[BoxData[GridBox[{
+   {"\"\<Expand\>\"", "1", Cell[
+    "level of subcircuits to expand up-to", "TableText",ExpressionUUID->
+     "2ef400ae-63c6-4258-bd09-5c6b9e3bca97"]},
+   {"\"\<SubcircuitOptions\>\"", 
+    RowBox[{"{", "}"}], Cell[
+    "pass additional diagram options to subcircuits", "TableText",
+     ExpressionUUID->"889bc822-b8a4-4ac3-a22e-530393e8bc0d"]}
+  }]], "DefinitionBox3Col",
+ CellChangeTimes->{{3.8735192099891453`*^9, 3.873519281611627*^9}, 
+   3.873519321042536*^9, {3.923669164033228*^9, 3.9236691648888407`*^9}},
+ CellID->2094078251,ExpressionUUID->"ab5350df-6fc2-426f-95d1-ec0c31742cf4"],
+
+Cell["Sub-circuits.", "Caption",
+ CellChangeTimes->{{3.873519204862976*^9, 3.87351920875032*^9}, 
+   3.873519325719843*^9},
+ CellID->63673874,ExpressionUUID->"b46ecbd4-e27b-488c-b45a-94dd5e67e11c"],
+
+Cell[CellGroupData[{
+
+Cell["Barriers can be added to shift gate positions:", "MathCaption",
+ CellChangeTimes->{{3.874340936677115*^9, 3.874340944031618*^9}, {
+  3.874341032602316*^9, 3.87434106776895*^9}},
+ CellID->553125513,ExpressionUUID->"b2287255-70c9-4500-acee-f14fd62e8964"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<X\>\"", "->", "2"}], ",", 
+     RowBox[{"\"\<Barrier\>\"", "[", 
+      RowBox[{";;", "3"}], "]"}], ",", 
+     RowBox[{"\"\<Y\>\"", "->", "1"}], ",", 
+     RowBox[{"\"\<Z\>\"", "->", "3"}]}], "}"}], "]"}], "[", "\"\<Diagram\>\"",
+   "]"}]], "Input",
+ CellLabel->"In[52]:=",
+ CellID->2071272775,ExpressionUUID->"a7d46a11-bc59-4901-858b-f9b6b3459f6d"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {2.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -3}, {3.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"X\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"X\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "X", "Tooltip"]& ], 
+    {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Large], Opacity[0.8], 
+     Dashing[{Small, Small}], 
+     LineBox[NCache[{{{2, Rational[-7, 2]}, {2, Rational[-1, 2]}}}, {{{
+         2, -3.5}, {2, -0.5}}}]], InsetBox["\<\"\"\>", {2, -0.25}]}, 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{2.625, -1.375}, {3.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"Y\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"Y\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "Y", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"Z\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"Z\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "Z", "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{221.52734375, 212.}]], "Output",
+ CellChangeTimes->{3.9270540692814302`*^9},
+ CellLabel->"Out[52]=",
+ CellID->1556092732,ExpressionUUID->"0d04c3dc-404f-466b-a1cd-bf98b9d6c7c2"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<X\>\"", "->", "2"}], ",", 
+     RowBox[{"\"\<Barrier\>\"", "[", 
+      RowBox[{"2", ";;"}], "]"}], ",", 
+     RowBox[{"\"\<Y\>\"", "->", "1"}], ",", 
+     RowBox[{"\"\<Z\>\"", "->", "3"}]}], "}"}], "]"}], "[", "\"\<Diagram\>\"",
+   "]"}]], "Input",
+ CellID->1331362843,ExpressionUUID->"3d546bec-ee13-486f-a490-25ced7801f47"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {2.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -3}, {3.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"X\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"X\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "X", "Tooltip"]& ], 
+    {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Large], Opacity[0.8], 
+     Dashing[{Small, Small}], 
+     LineBox[NCache[{{{2, Rational[-7, 2]}, {2, Rational[-3, 2]}}}, {{{
+         2, -3.5}, {2, -1.5}}}]], InsetBox["\<\"\"\>", {2, -1.25}]}, 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"Y\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"Y\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "Y", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"Z\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"Z\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "Z", "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{178.21484375, 153.}]], "Output",
+ CellID->986369955,ExpressionUUID->"693f969c-151b-4774-9d07-46a498832ad6"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+\"GateBackgroundStyle\" and \"GateBoundaryStyle\" can include rules for \
+changing gate appearance:\
+\>", "MathCaption",
+ CellChangeTimes->{{3.873519343984639*^9, 3.873519344634158*^9}, {
+  3.873519528376465*^9, 3.873519542823757*^9}, {3.873519615904217*^9, 
+  3.8735196324639053`*^9}},
+ CellID->6171515,ExpressionUUID->"da802d7b-e81d-49ac-b054-f1a2d623b87e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<CX\>\"", "->", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", "3"}], "}"}]}], ",", 
+     RowBox[{"\"\<CY\>\"", "->", 
+      RowBox[{"{", 
+       RowBox[{"3", ",", "2"}], "}"}]}], ",", "\"\<Z\>\""}], "}"}], "]"}], 
+  "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<GateBackgroundStyle\>\"", "->", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<X\>\"", "->", "Yellow"}], ",", 
+      RowBox[{"\"\<Z\>\"", "->", "Green"}]}], "}"}]}], ",", 
+   RowBox[{"\"\<GateBoundaryStyle\>\"", "->", 
+    RowBox[{"{", 
+     RowBox[{"\"\<Y\>\"", "->", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"Thickness", "[", "0.02", "]"}], ",", "Red"}], "]"}]}], 
+     "}"}]}]}], "]"}]], "Input",
+ CellID->645437549,ExpressionUUID->"86fec0e1-cf32-45d5-baa8-20f07b890004"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -3}, {1.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {0.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {2.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -3}, {2.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[
+           RGBColor[1, 1, 0]], RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"X\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -3.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"X\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "X", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{1., -1.09375}, {1., -2.625}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{0.625, -1.}, {0.90625, -1.}}], 
+          LineBox[{{1.09375, -1.}, {1.375, -1.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[
+           RGBColor[1, 1, 0]], DiskBox[{1., -1.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"X\""], "[", 
+        RowBox[{
+          RowBox[{"{", "1", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "X"][{1}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {EdgeForm[{RGBColor[1, 0, 0], Thickness[0.02]}], FaceForm[{RGBColor[
+           0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"Y\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"Y\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "Y", "Tooltip"]& ], 
+        {RGBColor[1, 0, 0], Thickness[0.02], 
+         LineBox[{{2., -2.375}, {2., -2.90625}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{1.625, -3.}, {1.90625, -3.}}], 
+          LineBox[{{2.09375, -3.}, {2.375, -3.}}], 
+          {EdgeForm[{RGBColor[1, 0, 0], Thickness[0.02]}], FaceForm[{RGBColor[
+           0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{2., -3.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"Y\""], "[", 
+        RowBox[{
+          RowBox[{"{", "3", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "Y"][{3}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[RGBColor[
+       0, 1, 0]], RectangleBox[{1.625, -1.375}, {2.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"Z\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"Z\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "Z", "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{224.29296875, 260.}]], "Output",
+ CellID->191252915,ExpressionUUID->"f34cf67d-e0d6-4dc7-9e5a-6bb0b366104b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<ZSpider\>\"", "->", 
+      RowBox[{"1", "->", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", "2"}], "}"}]}]}], ",", 
+     RowBox[{"\"\<XSpider\>\"", "->", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"2", ",", "3"}], "}"}], "->", "2"}]}], ",", "\"\<X\>\"", ",", 
+     "\"\<ZSpider\>\""}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<GateBackgroundStyle\>\"", "->", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<ZSpider\>\"", "->", "Green"}], ",", 
+      RowBox[{"\"\<XSpider\>\"", "->", "Red"}], ",", 
+      RowBox[{"\"\<X\>\"", "->", "Orange"}]}], "}"}]}]}], "]"}]], "Input",
+ CellID->1733860362,ExpressionUUID->"35d9a824-7d7d-41b4-acf3-78489e2a0684"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {1.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {3.625, -2}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       AbsoluteThickness[1], CapForm[None]}], FaceForm[RGBColor[0, 1, 0]], 
+       DiskBox[{1., -1.5}, 0.15000000000000002], 
+       {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+        {AbsoluteThickness[1], Opacity[0.3], 
+         LineBox[{{0.9099999999999999, -1.38}, {0.625, -1}}]}, {
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.09, -1.38}, {1.375, -1}}]}, 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.09, -1.62}, {1.375, -2}}]}}}},
+      RowBox[{"\"ZSpider\"", "[", "0", "]"}]],
+     Annotation[#, 
+      "ZSpider"[0], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       AbsoluteThickness[1], CapForm[None]}], FaceForm[RGBColor[1, 0, 0]], 
+       DiskBox[{2., -2.5}, 0.15000000000000002], 
+       {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+        None], {
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.91, -2.38}, {1.625, -2}}]}, 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.91, -2.62}, {1.625, -3}}]}}, 
+        {AbsoluteThickness[1], Opacity[0.3], 
+         LineBox[{{2.09, -2.38}, {2.375, -2}}]}}},
+      RowBox[{"\"XSpider\"", "[", "0", "]"}]],
+     Annotation[#, 
+      "XSpider"[0], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[RGBColor[
+       1, 0.5, 0]], RectangleBox[{1.625, -1.375}, {2.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"X\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"X\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "X", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       AbsoluteThickness[1], CapForm[None]}], FaceForm[RGBColor[0, 1, 0]], 
+       DiskBox[{3., -1.}, 0.15000000000000002], 
+       {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+        {AbsoluteThickness[1], Opacity[0.3], 
+         LineBox[{{2.85, -1.}, {2.625, -1}}]}, 
+        {AbsoluteThickness[1], Opacity[0.3], 
+         LineBox[{{3.15, -1.}, {3.375, -1}}]}}},
+      RowBox[{"\"ZSpider\"", "[", "0", "]"}]],
+     Annotation[#, 
+      "ZSpider"[0], "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{235.71875, 168.}]], "Output",
+ CellID->2055786793,ExpressionUUID->"74b32a35-6d63-4b05-a4f9-9ea52c203a97"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+\"GateShapeFunction\" can be specified to render gates with a custom function \
+that takes {center, label, horizontalPositions, verticalPositions} arguments:\
+\
+\>", "MathCaption",
+ CellChangeTimes->{{3.873520853783168*^9, 3.8735209423545637`*^9}, {
+  3.873521269625189*^9, 3.873521285117683*^9}, {3.873521610642982*^9, 
+  3.873521616756213*^9}},
+ CellID->832769402,ExpressionUUID->"f97b082d-6b8e-47df-a43a-6b89d74be411"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<X\>\"", ",", "\"\<SWAP\>\"", ",", 
+     RowBox[{"\"\<SWAP\>\"", "->", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", "3"}], "}"}]}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<GateShapeFunction\>\"", "->", 
+    RowBox[{"\"\<SWAP\>\"", "->", 
+     RowBox[{"Function", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"center", ",", "label", ",", "hPos", ",", "vPos"}], "}"}], 
+       ",", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"EdgeForm", "[", "Red", "]"}], ",", 
+         RowBox[{"FaceForm", "[", 
+          RowBox[{"Directive", "[", 
+           RowBox[{"Red", ",", 
+            RowBox[{"Opacity", "[", "0.25", "]"}]}], "]"}], "]"}], ",", 
+         RowBox[{"Rectangle", "[", 
+          RowBox[{
+           RowBox[{"center", "-", 
+            RowBox[{"{", 
+             RowBox[{".375", ",", 
+              RowBox[{".75", 
+               RowBox[{"(", 
+                RowBox[{
+                 RowBox[{"Max", "[", "vPos", "]"}], "-", 
+                 RowBox[{"Min", "[", "vPos", "]"}]}], ")"}]}]}], "}"}]}], ",", 
+           RowBox[{"center", "+", 
+            RowBox[{"{", 
+             RowBox[{".375", ",", 
+              RowBox[{".75", 
+               RowBox[{"(", 
+                RowBox[{
+                 RowBox[{"Max", "[", "vPos", "]"}], "-", 
+                 RowBox[{"Min", "[", "vPos", "]"}]}], ")"}]}]}], "}"}]}], ",", 
+           RowBox[{"RoundingRadius", "->", "0.1"}]}], "]"}], ",", 
+         RowBox[{"Text", "[", 
+          RowBox[{
+           RowBox[{"Style", "[", 
+            RowBox[{
+             RowBox[{"Rotate", "[", 
+              RowBox[{"label", ",", 
+               RowBox[{
+                RowBox[{"-", "Pi"}], "/", "2"}]}], "]"}], ",", "20", ",", 
+             "Blue"}], "]"}], ",", "center"}], "]"}]}], "}"}]}], "]"}]}]}]}], 
+  "\[IndentingNewLine]", "]"}]], "Input",
+ CellID->1204411915,ExpressionUUID->"44ecf533-2580-4fa7-bbbf-05752e9971a9"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {2.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -3}, {3.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+       0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"X\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"X\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "X", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[1, 0, 0]], FaceForm[{RGBColor[1, 0, 0], Opacity[
+       0.25]}], RectangleBox[{1.625, -2.25}, {2.375, -0.75},
+        RoundingRadius->0.1], InsetBox[
+        StyleBox[
+         RotationBox["\<\"SWAP\"\>",
+          BoxRotation->-1.5707963267948966`],
+         StripOnInput->False,
+         LineColor->RGBColor[0, 0, 1],
+         FrontFaceColor->RGBColor[0, 0, 1],
+         BackFaceColor->RGBColor[0, 0, 1],
+         GraphicsColor->RGBColor[0, 0, 1],
+         FontSize->20,
+         FontColor->RGBColor[0, 0, 1]], {2., -1.5}]},
+      "\"SWAP\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "SWAP", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[1, 0, 0]], FaceForm[{RGBColor[1, 0, 0], Opacity[
+       0.25]}], RectangleBox[{2.625, -3.5}, {3.375, -0.5},
+        RoundingRadius->0.1], InsetBox[
+        StyleBox[
+         RotationBox["\<\"SWAP\"\>",
+          BoxRotation->-1.5707963267948966`],
+         StripOnInput->False,
+         LineColor->RGBColor[0, 0, 1],
+         FrontFaceColor->RGBColor[0, 0, 1],
+         BackFaceColor->RGBColor[0, 0, 1],
+         GraphicsColor->RGBColor[0, 0, 1],
+         FontSize->20,
+         FontColor->RGBColor[0, 0, 1]], {3., -2.}]},
+      "\"SWAP\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "SWAP", "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{225.203125, 206.}]], "Output",
+ CellID->724688531,ExpressionUUID->"2f3b9358-887d-43ba-b9c9-6a59c82bb8d4"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+\"Size\", \"HorizontalGapSize\" and \"VerticalGapSize\" correspondingly \
+control gate size, distance between gates and a distance between wires:\
+\>", "MathCaption",
+ CellChangeTimes->{{3.8735216541574*^9, 3.873521720509192*^9}, {
+  3.8735218343696957`*^9, 3.873521843576541*^9}},
+ CellID->1289516611,ExpressionUUID->"3c854fc7-bfbc-43d1-9753-5b6ebe1ad9b0"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", "\"\<X\>\"", ",", 
+     RowBox[{"\"\<T\>\"", "->", 
+      RowBox[{"{", "3", "}"}]}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<Size\>\"", "->", ".5"}], ",", 
+   RowBox[{"\"\<VerticalGapSize\>\"", "->", ".275"}], ",", 
+   RowBox[{"\"\<HorizontalGapSize\>\"", "->", ".525"}]}], "]"}]], "Input",
+ CellID->1073304956,ExpressionUUID->"d64abb96-8a09-4251-ac69-98f2e7b2e051"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.25, -0.275}, {0.275, -0.275}}], 
+    LineBox[{{0.775, -0.275}, {0.8, -0.275}}], 
+    LineBox[{{0.25, -0.8250000000000001}, {0.275, -0.8250000000000001}}], 
+    LineBox[{{1.3, -0.275}, {1.3250000000000002`, -0.275}}], 
+    LineBox[{{0.25, -0.55}, {1.3250000000000002`, -0.55}}], 
+    LineBox[{{0.775, -0.8250000000000001}, {
+     1.3250000000000002`, -0.8250000000000001}}]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+     RectangleBox[{0.275, -0.525}, {0.775, -0.025000000000000022},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {0.525, -0.275}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+     0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+     RectangleBox[{0.8, -0.525}, {1.3, -0.025000000000000022},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"X\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1.05, -0.275}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{RGBColor[
+     0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+     RectangleBox[{0.275, -1.0750000000000002}, {0.775, -0.5750000000000001},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"T\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {0.525, -0.8250000000000002}], {{{1, 
+       0}, {0, 1}}, Center}]}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.1875, -0.275}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.1875, -0.55}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.1875, -0.8250000000000001}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{173.8203125, 162.}]], "Output",
+ CellID->1573805310,ExpressionUUID->"ba0a65a6-b25e-46e6-8e7b-4fc54c537178"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\"ShowConnectors\" \[Rule] ",
+ Cell[BoxData[
+  ButtonBox["True",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "36e1704f-f9c9-425b-8d7c-0cd1e63a8d83"],
+ " shows connection points of wires with gates:"
+}], "MathCaption",
+ CellChangeTimes->{{3.873521871542575*^9, 3.873521899996757*^9}},
+ CellID->268442329,ExpressionUUID->"e3b7adf4-8c1c-49d2-b3a5-e81c19d44e94"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<CX\>\"", ",", "\"\<T\>\""}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<ShowConnectors\>\"", "->", "True"}]}], "]"}]], "Input",
+ CellID->1978972380,ExpressionUUID->"7184b8bf-86ac-4dc3-ae55-3dd9c859a120"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {2.625, -2}}]}}}, {
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+            RoundingRadius->0.1], 
+           {FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[1]}], 
+            DiskBox[{1.375, -2}, 0.0234375], DiskBox[{0.625, -2}, 0.0234375]},
+            GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"X\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"X\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "X", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{1., -1.09375}, {1., -1.625}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{0.625, -1.}, {0.90625, -1.}}], 
+          LineBox[{{1.09375, -1.}, {1.375, -1.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{1., -1.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"X\""], "[", 
+        RowBox[{
+          RowBox[{"{", "1", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "X"][{1}, {}], "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{RGBColor[
+       0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+       RectangleBox[{1.625, -1.375}, {2.375, -0.625},
+        RoundingRadius->0.1], 
+       {FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[1]}], 
+        DiskBox[{2.375, -1}, 0.0234375], DiskBox[{1.625, -1}, 0.0234375]}, 
+       GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"T\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"T\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "T", "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{182.96875, 140.}]], "Output",
+ CellID->1699066681,ExpressionUUID->"7094603c-0a78-43e4-8ace-2c4bdffa6caf"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\"ShowEmptyWires\" \[Rule] ",
+ Cell[BoxData[
+  ButtonBox["False",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "c72c0d93-5f47-4fde-9026-611eac94aee9"],
+ " removes wires without any gates from a diagram:"
+}], "MathCaption",
+ CellChangeTimes->{{3.873519888721426*^9, 3.873519930343145*^9}, {
+  3.8735200507961607`*^9, 3.873520065916951*^9}},
+ CellID->1525461731,ExpressionUUID->"7dd3f60c-d690-4658-8bfb-d97415c85f01"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<CX\>\"", "->", 
+     RowBox[{"{", 
+      RowBox[{"5", ",", "7"}], "}"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<ShowEmptyWires\>\"", "->", "False"}]}], "]"}]], "Input",
+ CellID->1775535031,ExpressionUUID->"7bf3acd0-143a-4f52-830b-bf9b079c7aac"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -5}, {0.625, -5}}], LineBox[{{0.375, -7}, {0.625, -7}}], 
+    LineBox[{{1.375, -5}, {1.625, -5}}], 
+    LineBox[{{1.375, -7}, {1.625, -7}}]}, {{
+     {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+      0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+      RectangleBox[{0.625, -7.375}, {1.375, -6.625},
+       RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+        StyleBox["\<\"X\"\>",
+         StripOnInput->False,
+         FontFamily->"Roboto",
+         FontSize->11,
+         FontColor->GrayLevel[0],
+         Background->GrayLevel[0, 0]], {1., -7.}], {{{1, 0}, {0, 1}}, 
+        Center}]}, 
+     {RGBColor[0.880722, 0.611041, 0.142051], 
+      LineBox[{{1., -5.09375}, {1., -6.625}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+     LineBox[{{0.625, -5.}, {0.90625, -5.}}], 
+     LineBox[{{1.09375, -5.}, {1.375, -5.}}], 
+     {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+      0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+      DiskBox[{1., -5.}, 0.09375]}}, {}}, {InsetBox[
+     StyleBox["5",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -5}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["6",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -6}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["7",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -7}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{131.85595009497848`, 235.}]], "Output",
+ CellID->865329317,ExpressionUUID->"c0e0ee11-32a2-4449-8782-5f59698596dd"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\"ShowOutline\" \[Rule] ",
+ Cell[BoxData[
+  ButtonBox["True",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "a8b57a01-0a26-423b-94bc-16eeea4e7238"],
+ " shows a frame outlining a circuit:"
+}], "MathCaption",
+ CellChangeTimes->{{3.873520139165842*^9, 3.873520172196199*^9}},
+ CellID->554446972,ExpressionUUID->"6febfcdd-71d9-4ca6-af9e-23e636028a8a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<T\>\"", ",", "\"\<CY\>\""}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<ShowOutline\>\"", "->", "True"}]}], "]"}]], "Input",
+ CellID->658714071,ExpressionUUID->"e5fd9a21-b6a7-48df-8154-89f8be5e57e1"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+    Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[0.898039, 0.898039, 0.898039],
+     Opacity[0.3]}], 
+    RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+     NCache[{2.46875, Rational[-5, 2]}, {2.46875, -2.5}],
+     RoundingRadius->0.1]}, {
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {2.625, -2}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{RGBColor[
+       0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"T\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"T\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "T", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[{{
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"Y\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"Y\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "Y", "Tooltip"]& ], 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{2., -1.09375}, {2., -1.625}}]}}, 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+          LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{2., -1.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], {}},
+      RowBox[{
+        SubscriptBox["\"C\"", "\"Y\""], "[", 
+        RowBox[{
+          RowBox[{"{", "1", "}"}], ",", 
+          RowBox[{"{", "}"}]}], "]"}]],
+     Annotation[#, 
+      Subscript["C", "Y"][{1}, {}], "Tooltip"]& ]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{213.70703125, 183.}]], "Output",
+ CellID->490681770,ExpressionUUID->"7b2fa6fb-100d-46c3-bf04-e9851995a491"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\"Expand\" specifies a level depth of sub-circuits to expand:", \
+"MathCaption",
+ CellChangeTimes->{{3.8735221227481403`*^9, 3.8735221446712503`*^9}, {
+  3.92366917900359*^9, 3.9236691797682257`*^9}},
+ CellID->819111530,ExpressionUUID->"bad19cb5-7990-40ed-bad4-eef00457148c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"\"\<CX\>\"", ",", "\"\<H\>\""}], "}"}], ",", 
+           "\"\<Level2\>\""}], "]"}], ",", "\"\<H\>\""}], "}"}], ",", 
+       "\"\<Level1\>\""}], "]"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<Expand\>\"", "->", "0"}]}], "]"}]], "Input",
+ CellID->1437307440,ExpressionUUID->"e67e396a-2895-4621-9b96-2b79edb32c3d"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {2.625, -2}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+       0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"H\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"H\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "H", "Tooltip"]& ], 
+    TagBox[
+     TagBox[
+      TooltipBox[
+       {EdgeForm[RGBColor[0.537254, 0.537254, 0.537254]], FaceForm[{RGBColor[
+        0.0313725, 0.027451, 0.027451], Opacity[0.25]}], 
+        RectangleBox[{1.625, -2.375}, {2.375, -0.625},
+         RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+          StyleBox["\<\"Level1\"\>",
+           StripOnInput->False,
+           FontFamily->"Roboto",
+           FontSize->11,
+           FontColor->GrayLevel[0],
+           Background->GrayLevel[0, 0]], {2., -1.5}], {{{0, 1}, {-1, 0}}, 
+          Center}]},
+       "\"Level1\"",
+       TooltipStyle->"TextStyling"],
+      Annotation[#, "Level1", "Tooltip"]& ],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31169 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31169[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{234.94140625, 178.}]], "Output",
+ CellID->493445951,ExpressionUUID->"fd14e342-1418-41f4-9ab5-47460453a760"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\"\<CX\>\"", "->", 
+              RowBox[{"{", 
+               RowBox[{"2", ",", "3"}], "}"}]}], ",", 
+             RowBox[{"\"\<H\>\"", "->", "2"}]}], "}"}], ",", 
+           "\"\<Level2\>\""}], "]"}], ",", 
+         RowBox[{"\"\<H\>\"", "->", "3"}]}], "}"}], ",", "\"\<Level1\>\""}], 
+      "]"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<Expand\>\"", "->", "1"}]}], "]"}]], "Input",
+ CellID->2119393434,ExpressionUUID->"f7bd6e58-9560-46da-b5b2-511593adf09b"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {1.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -3}, {3.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+       0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"H\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"H\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "H", "Tooltip"]& ], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-7, 2]}, {2.46875, -3.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -3}, {1.625, -3}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {2.375, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {2.375, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"T\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TagBox[
+          TooltipBox[
+           {EdgeForm[RGBColor[0.537254, 0.537254, 0.537254]], FaceForm[{
+            RGBColor[0.0313725, 0.027451, 0.027451], Opacity[0.25]}], 
+            RectangleBox[{0.625, -3.375}, {1.375, -1.625},
+             RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+              StyleBox["\<\"Level2\"\>",
+               StripOnInput->False,
+               FontFamily->"Roboto",
+               FontSize->11,
+               FontColor->GrayLevel[0],
+               Background->GrayLevel[0, 0]], {1., -2.5}], {{{0, 1}, {-1, 0}}, 
+              Center}]},
+           "\"Level2\"",
+           TooltipStyle->"TextStyling"],
+          Annotation[#, "Level2", "Tooltip"]& ],
+         EventHandlerTag[{
+          "MouseClicked" :> (
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31137 = 
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31137[
+             "ToggleExpand", 
+              Append[{2}, 2]]), PassEventsDown -> True, PassEventsUp -> False,
+            Method -> "Preemptive"}]], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"H\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox["\<\"Level1\"\>",
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {1, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31137 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31137[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{246.32421875, 231.}]], "Output",
+ CellID->1493232046,ExpressionUUID->"a1edde21-b977-4da3-880d-eb545671521e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\"\<CX\>\"", "->", 
+              RowBox[{"{", 
+               RowBox[{"2", ",", "3"}], "}"}]}], ",", 
+             RowBox[{"\"\<H\>\"", "->", "2"}]}], "}"}], ",", 
+           "\"\<Level2\>\""}], "]"}], ",", 
+         RowBox[{"\"\<H\>\"", "->", "3"}]}], "}"}], ",", "\"\<Level1\>\""}], 
+      "]"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<Expand\>\"", "->", "2"}]}], "]"}]], "Input",
+ CellID->489845373,ExpressionUUID->"3ae05d9d-15eb-4649-865b-e27dd6ed0ce8"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {1.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -1}, {4.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -2}, {4.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -3}, {4.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+       0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"H\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"H\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "H", "Tooltip"]& ], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{3.46875, Rational[-7, 2]}, {3.46875, -3.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{2.375, -3}, {2.625, -3}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {3.375, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{2.375, -2}, {3.375, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"T\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[GeometricTransformationBox[{
+           {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+            Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+            0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+            RectangleBox[NCache[{0.53125, Rational[-3, 2]}, {0.53125, -1.5}], 
+             NCache[{2.46875, Rational[-7, 2]}, {2.46875, -3.5}],
+             RoundingRadius->0.1]}, {
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None], 
+             {AbsoluteThickness[1], Opacity[0.3], 
+              LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None], 
+             {AbsoluteThickness[1], Opacity[0.3], 
+              LineBox[{{1.375, -3}, {2.375, -3}}]}}}, {
+            TagBox[
+             TooltipBox[{{
+                TagBox[
+                 TooltipBox[
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.3]}], RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+                    RoundingRadius->0.1], 
+                   GeometricTransformationBox[InsetBox[
+                    StyleBox["\<\"X\"\>",
+                    StripOnInput->False,
+                    FontFamily->"Roboto",
+                    FontSize->11,
+                    FontColor->GrayLevel[0],
+                    Background->GrayLevel[0, 0]], {1., -3.}], {{{1, 0}, {0, 
+                    1}}, Center}]},
+                  "\"X\"",
+                  TooltipStyle->"TextStyling"],
+                 Annotation[#, "X", "Tooltip"]& ], 
+                {RGBColor[0.880722, 0.611041, 0.142051], 
+                 LineBox[{{1., -2.09375}, {1., -2.625}}]}}, 
+               TagBox[
+                TooltipBox[
+                 {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+                  1], Opacity[0.3], CapForm[None], 
+                  LineBox[{{0.625, -2.}, {0.90625, -2.}}], 
+                  LineBox[{{1.09375, -2.}, {1.375, -2.}}], 
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.3]}], DiskBox[{1., -2.}, 0.09375]}},
+                 "\"1\"",
+                 TooltipStyle->"TextStyling"],
+                Annotation[#, "1", "Tooltip"]& ], {}},
+              RowBox[{
+                SubscriptBox["\"C\"", "\"X\""], "[", 
+                RowBox[{
+                  RowBox[{"{", "2", "}"}], ",", 
+                  RowBox[{"{", "}"}]}], "]"}]],
+             Annotation[#, 
+              Subscript["C", "X"][{2}, {}], "Tooltip"]& ], 
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+               RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+                 StyleBox["\<\"H\"\>",
+                  StripOnInput->False,
+                  FontFamily->"Roboto",
+                  FontSize->11,
+                  FontColor->GrayLevel[0],
+                  Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}},
+                  Center}]},
+              "\"H\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+            StyleBox["\<\"Level2\"\>",
+             StripOnInput->False,
+             FontFamily->"Times",
+             Background->GrayLevel[0, 0]], 
+            NCache[{Rational[3, 2], Rational[-7, 5]}, {1.5, -1.4}]]}, {0, 0}],
+         
+         EventHandlerTag[{
+          "MouseClicked" :> (
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31086 = 
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31086[
+             "ToggleExpand", 
+              Append[{2}, 2]]), PassEventsDown -> True, PassEventsUp -> False,
+            Method -> "Preemptive"}]], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"H\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox["\<\"Level1\"\>",
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{2, Rational[-2, 5]}, {2, -0.4}]]}, {1, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31086 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$31086[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ CellID->399143460,ExpressionUUID->"caa1a224-001e-4d8e-96c4-5daba450609b"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+\"Expand\" can be specified explicitly as an option to any sub-circuit:\
+\>", "MathCaption",
+ CellChangeTimes->{{3.923434932673812*^9, 3.9234349509541397`*^9}, {
+  3.923669211809945*^9, 3.923669239945221*^9}, {3.923669297324527*^9, 
+  3.923669318486128*^9}},
+ CellID->1906067434,ExpressionUUID->"e54c6da6-4072-48f0-88e6-4c6730086d98"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\"\<CX\>\"", "->", 
+              RowBox[{"{", 
+               RowBox[{"2", ",", "3"}], "}"}]}], ",", 
+             RowBox[{"\"\<H\>\"", "->", "2"}]}], "}"}], ",", "\"\<Level2\>\"",
+            ",", 
+           RowBox[{"\"\<Expand\>\"", "->", "False"}]}], "]"}], ",", 
+         RowBox[{"\"\<H\>\"", "->", "3"}]}], "}"}], ",", "\"\<Level1\>\""}], 
+      "]"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"QuantumCircuitOperator", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\"\<CX\>\"", "->", 
+              RowBox[{"{", 
+               RowBox[{"2", ",", "3"}], "}"}]}], ",", 
+             RowBox[{"\"\<H\>\"", "->", "2"}]}], "}"}], ",", 
+           "\"\<Level2\>\""}], "]"}], ",", 
+         RowBox[{"\"\<H\>\"", "->", "3"}]}], "}"}], ",", "\"\<Level1\>\""}], 
+      "]"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<Expand\>\"", "->", "2"}]}], "]"}]], "Input",
+ CellID->2126585245,ExpressionUUID->"7347568e-3304-4a70-9c93-7f781afe9c7c"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -1}, {3.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -2}, {3.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{3.375, -3}, {3.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {1.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{6.375, -1}, {6.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{6.375, -2}, {6.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{6.375, -3}, {6.625, -3}}]}}}, {
+    TagBox[
+     TooltipBox[
+      {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+       0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox["\<\"H\"\>",
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+         Center}]},
+      "\"H\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "H", "Tooltip"]& ], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-7, 2]}, {2.46875, -3.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -3}, {1.625, -3}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {2.375, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {2.375, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"T\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TagBox[
+          TooltipBox[
+           {EdgeForm[RGBColor[0.537254, 0.537254, 0.537254]], FaceForm[{
+            RGBColor[0.0313725, 0.027451, 0.027451], Opacity[0.25]}], 
+            RectangleBox[{0.625, -3.375}, {1.375, -1.625},
+             RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+              StyleBox["\<\"Level2\"\>",
+               StripOnInput->False,
+               FontFamily->"Roboto",
+               FontSize->11,
+               FontColor->GrayLevel[0],
+               Background->GrayLevel[0, 0]], {1., -2.5}], {{{0, 1}, {-1, 0}}, 
+              Center}]},
+           "\"Level2\"",
+           TooltipStyle->"TextStyling"],
+          Annotation[#, "Level2", "Tooltip"]& ],
+         EventHandlerTag[{
+          "MouseClicked" :> (
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489 = 
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489[
+             "ToggleExpand", 
+              Append[{2}, 2]]), PassEventsDown -> True, PassEventsUp -> False,
+            Method -> "Preemptive"}]], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{1.625, -3.375}, {2.375, -2.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"H\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {2., -3.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox["\<\"Level1\"\>",
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {1, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{3.46875, Rational[-7, 2]}, {3.46875, -3.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{2.375, -3}, {2.625, -3}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {3.375, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{2.375, -2}, {3.375, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"T\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[GeometricTransformationBox[{
+           {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+            Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+            0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+            RectangleBox[NCache[{0.53125, Rational[-3, 2]}, {0.53125, -1.5}], 
+             NCache[{2.46875, Rational[-7, 2]}, {2.46875, -3.5}],
+             RoundingRadius->0.1]}, {
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None], 
+             {AbsoluteThickness[1], Opacity[0.3], 
+              LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None]}, 
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+             None], 
+             {AbsoluteThickness[1], Opacity[0.3], 
+              LineBox[{{1.375, -3}, {2.375, -3}}]}}}, {
+            TagBox[
+             TooltipBox[{{
+                TagBox[
+                 TooltipBox[
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.3]}], RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+                    RoundingRadius->0.1], 
+                   GeometricTransformationBox[InsetBox[
+                    StyleBox["\<\"X\"\>",
+                    StripOnInput->False,
+                    FontFamily->"Roboto",
+                    FontSize->11,
+                    FontColor->GrayLevel[0],
+                    Background->GrayLevel[0, 0]], {1., -3.}], {{{1, 0}, {0, 
+                    1}}, Center}]},
+                  "\"X\"",
+                  TooltipStyle->"TextStyling"],
+                 Annotation[#, "X", "Tooltip"]& ], 
+                {RGBColor[0.880722, 0.611041, 0.142051], 
+                 LineBox[{{1., -2.09375}, {1., -2.625}}]}}, 
+               TagBox[
+                TooltipBox[
+                 {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[
+                  1], Opacity[0.3], CapForm[None], 
+                  LineBox[{{0.625, -2.}, {0.90625, -2.}}], 
+                  LineBox[{{1.09375, -2.}, {1.375, -2.}}], 
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.3]}], DiskBox[{1., -2.}, 0.09375]}},
+                 "\"1\"",
+                 TooltipStyle->"TextStyling"],
+                Annotation[#, "1", "Tooltip"]& ], {}},
+              RowBox[{
+                SubscriptBox["\"C\"", "\"X\""], "[", 
+                RowBox[{
+                  RowBox[{"{", "2", "}"}], ",", 
+                  RowBox[{"{", "}"}]}], "]"}]],
+             Annotation[#, 
+              Subscript["C", "X"][{2}, {}], "Tooltip"]& ], 
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+               RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+                 StyleBox["\<\"H\"\>",
+                  StripOnInput->False,
+                  FontFamily->"Roboto",
+                  FontSize->11,
+                  FontColor->GrayLevel[0],
+                  Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}},
+                  Center}]},
+              "\"H\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+            StyleBox["\<\"Level2\"\>",
+             StripOnInput->False,
+             FontFamily->"Times",
+             Background->GrayLevel[0, 0]], 
+            NCache[{Rational[3, 2], Rational[-7, 5]}, {1.5, -1.4}]]}, {0, 0}],
+         
+         EventHandlerTag[{
+          "MouseClicked" :> (
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489 = 
+            Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489[
+             "ToggleExpand", 
+              Append[{3}, 2]]), PassEventsDown -> True, PassEventsUp -> False,
+            Method -> "Preemptive"}]], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"H\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {3., -3.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox["\<\"Level1\"\>",
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{2, Rational[-2, 5]}, {2, -0.4}]]}, {3, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32489[
+         "ToggleExpand", 
+          Append[{}, 3]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ CellID->1101841682,ExpressionUUID->"69c19bfc-3488-41bf-ba4a-a3794e833243"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+\"SubcircuitOptions\" can be used to pass options to all sub-circuit diagrams:\
+\>", "MathCaption",
+ CellChangeTimes->{{3.873522334489843*^9, 3.8735223652773743`*^9}, 
+   3.8735224788263903`*^9, {3.92367163038244*^9, 3.92367163086441*^9}},
+ CellID->1624260942,ExpressionUUID->"bdf4db61-037b-448f-9b57-a387975bb240"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"\"\<H\>\"", "->", 
+          RowBox[{"{", "2", "}"}]}], ",", "\"\<CX\>\""}], "}"}], ",", 
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<sub-circuit\>\"", ",", 
+         RowBox[{"Background", "->", "White"}]}], "]"}]}], "]"}], ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"\"\<H\>\"", "->", 
+          RowBox[{"{", "2", "}"}]}], ",", "\"\<CX\>\""}], "}"}], ",", 
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<sub-circuit\>\"", ",", 
+         RowBox[{"Background", "->", "White"}]}], "]"}]}], "]"}]}], "}"}], 
+   "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<SubcircuitOptions\>\"", "->", 
+    RowBox[{"{", 
+     RowBox[{"\"\<ShowGateLabels\>\"", "->", "False"}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellID->672035274,ExpressionUUID->"7c417698-ed82-4b3d-b510-9748716b5174"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {2.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -1}, {4.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -2}, {4.625, -2}}]}}}, {
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-5, 2]}, {2.46875, -2.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+            RoundingRadius->0.1]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[{{
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1]},
+              "\"X\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "X", "Tooltip"]& ], 
+            {RGBColor[0.880722, 0.611041, 0.142051], 
+             LineBox[{{2., -1.09375}, {2., -1.625}}]}}, 
+           TagBox[
+            TooltipBox[
+             {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+              Opacity[0.3], CapForm[None], 
+              LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+              LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               DiskBox[{2., -1.}, 0.09375]}},
+             "\"1\"",
+             TooltipStyle->"TextStyling"],
+            Annotation[#, "1", "Tooltip"]& ], {}},
+          RowBox[{
+            SubscriptBox["\"C\"", "\"X\""], "[", 
+            RowBox[{
+              RowBox[{"{", "1", "}"}], ",", 
+              RowBox[{"{", "}"}]}], "]"}]],
+         Annotation[#, 
+          Subscript["C", "X"][{1}, {}], "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox[
+         StyleBox["\<\"sub-circuit\"\>",
+          StripOnInput->False,
+          Background->GrayLevel[1]],
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {0, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32210 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32210[
+         "ToggleExpand", 
+          Append[{}, 1]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-5, 2]}, {2.46875, -2.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+            RoundingRadius->0.1]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[{{
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1]},
+              "\"X\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "X", "Tooltip"]& ], 
+            {RGBColor[0.880722, 0.611041, 0.142051], 
+             LineBox[{{2., -1.09375}, {2., -1.625}}]}}, 
+           TagBox[
+            TooltipBox[
+             {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+              Opacity[0.3], CapForm[None], 
+              LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+              LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               DiskBox[{2., -1.}, 0.09375]}},
+             "\"1\"",
+             TooltipStyle->"TextStyling"],
+            Annotation[#, "1", "Tooltip"]& ], {}},
+          RowBox[{
+            SubscriptBox["\"C\"", "\"X\""], "[", 
+            RowBox[{
+              RowBox[{"{", "1", "}"}], ",", 
+              RowBox[{"{", "}"}]}], "]"}]],
+         Annotation[#, 
+          Subscript["C", "X"][{1}, {}], "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox[
+         StyleBox["\<\"sub-circuit\"\>",
+          StripOnInput->False,
+          Background->GrayLevel[1]],
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {2, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32210 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32210[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ CellID->1579141463,ExpressionUUID->"6c579a6e-eca5-49ad-9733-73027c451698"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Or pass options directly to individual sub-circuits:", "MathCaption",
+ CellChangeTimes->{{3.923671688047789*^9, 3.923671699984518*^9}},
+ CellID->652925712,ExpressionUUID->"01bbd060-aa59-4095-a76d-c663c421c3f4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"\"\<H\>\"", "->", 
+          RowBox[{"{", "2", "}"}]}], ",", "\"\<CX\>\""}], "}"}], ",", 
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<sub-circuit\>\"", ",", 
+         RowBox[{"Background", "->", "White"}]}], "]"}], ",", 
+       RowBox[{"\"\<ShowGateLabels\>\"", "->", "True"}]}], "]"}], ",", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<T\>\"", ",", 
+         RowBox[{"\"\<H\>\"", "->", 
+          RowBox[{"{", "2", "}"}]}], ",", "\"\<CX\>\""}], "}"}], ",", 
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<sub-circuit\>\"", ",", 
+         RowBox[{"Background", "->", "White"}]}], "]"}], ",", 
+       RowBox[{"\"\<ShowGateLabels\>\"", "->", "False"}]}], "]"}]}], "}"}], 
+   "]"}], "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellID->389556534,ExpressionUUID->"1dda0720-e5c5-43dc-9042-cac7ef72fd77"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -1}, {2.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{2.375, -2}, {2.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -1}, {4.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{4.375, -2}, {4.625, -2}}]}}}, {
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-5, 2]}, {2.46875, -2.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"T\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+            RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+             StyleBox["\<\"H\"\>",
+              StripOnInput->False,
+              FontFamily->"Roboto",
+              FontSize->11,
+              FontColor->GrayLevel[0],
+              Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+             Center}]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[{{
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+                 StyleBox["\<\"X\"\>",
+                  StripOnInput->False,
+                  FontFamily->"Roboto",
+                  FontSize->11,
+                  FontColor->GrayLevel[0],
+                  Background->GrayLevel[0, 0]], {2., -2.}], {{{1, 0}, {0, 1}},
+                  Center}]},
+              "\"X\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "X", "Tooltip"]& ], 
+            {RGBColor[0.880722, 0.611041, 0.142051], 
+             LineBox[{{2., -1.09375}, {2., -1.625}}]}}, 
+           TagBox[
+            TooltipBox[
+             {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+              Opacity[0.3], CapForm[None], 
+              LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+              LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               DiskBox[{2., -1.}, 0.09375]}},
+             "\"1\"",
+             TooltipStyle->"TextStyling"],
+            Annotation[#, "1", "Tooltip"]& ], {}},
+          RowBox[{
+            SubscriptBox["\"C\"", "\"X\""], "[", 
+            RowBox[{
+              RowBox[{"{", "1", "}"}], ",", 
+              RowBox[{"{", "}"}]}], "]"}]],
+         Annotation[#, 
+          Subscript["C", "X"][{1}, {}], "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox[
+         StyleBox["\<\"sub-circuit\"\>",
+          StripOnInput->False,
+          Background->GrayLevel[1]],
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {0, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32163 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32163[
+         "ToggleExpand", 
+          Append[{}, 1]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]], 
+    TagBox[GeometricTransformationBox[{
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+        Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+        0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+        RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+         NCache[{2.46875, Rational[-5, 2]}, {2.46875, -2.5}],
+         RoundingRadius->0.1]}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None], 
+         {AbsoluteThickness[1], Opacity[0.3], 
+          LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[
+         None]}}, {
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+           RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.3]}], 
+           RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+            RoundingRadius->0.1]},
+          "\"T\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "T", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[
+          {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+           RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+           RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+            RoundingRadius->0.1]},
+          "\"H\"",
+          TooltipStyle->"TextStyling"],
+         Annotation[#, "H", "Tooltip"]& ], 
+        TagBox[
+         TooltipBox[{{
+            TagBox[
+             TooltipBox[
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+                RoundingRadius->0.1]},
+              "\"X\"",
+              TooltipStyle->"TextStyling"],
+             Annotation[#, "X", "Tooltip"]& ], 
+            {RGBColor[0.880722, 0.611041, 0.142051], 
+             LineBox[{{2., -1.09375}, {2., -1.625}}]}}, 
+           TagBox[
+            TooltipBox[
+             {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+              Opacity[0.3], CapForm[None], 
+              LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+              LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+              {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+               RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+               DiskBox[{2., -1.}, 0.09375]}},
+             "\"1\"",
+             TooltipStyle->"TextStyling"],
+            Annotation[#, "1", "Tooltip"]& ], {}},
+          RowBox[{
+            SubscriptBox["\"C\"", "\"X\""], "[", 
+            RowBox[{
+              RowBox[{"{", "1", "}"}], ",", 
+              RowBox[{"{", "}"}]}], "]"}]],
+         Annotation[#, 
+          Subscript["C", "X"][{1}, {}], "Tooltip"]& ]}, {}, InsetBox[
+        StyleBox[
+         StyleBox["\<\"sub-circuit\"\>",
+          StripOnInput->False,
+          Background->GrayLevel[1]],
+         StripOnInput->False,
+         FontFamily->"Times",
+         Background->GrayLevel[0, 0]], 
+        NCache[{Rational[3, 2], Rational[-2, 5]}, {1.5, -0.4}]]}, {2, 0}],
+     EventHandlerTag[{
+      "MouseClicked" :> (
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32163 = 
+        Wolfram`QuantumFramework`Draw`PackagePrivate`qc$32163[
+         "ToggleExpand", 
+          Append[{}, 2]]), PassEventsDown -> True, PassEventsUp -> False, 
+       Method -> "Preemptive"}]]}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->Medium]], "Output",
+ CellID->2089641250,ExpressionUUID->"16fe0137-3619-435e-bab2-63666f42f96f"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\"ShowMeasurementWire\" \[Rule] ",
+ Cell[BoxData[
+  ButtonBox["False",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "d1b2620d-b0f0-416d-966c-2d1a069ad6a2"],
+ " hides a measurement wire:"
+}], "MathCaption",
+ CellChangeTimes->{{3.87352256879292*^9, 3.873522610475793*^9}},
+ CellID->76092931,ExpressionUUID->"03488a79-9495-4f19-86ba-f6d47a5ff439"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"{", "2", "}"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<ShowMeasurementWire\>\"", "->", "False"}]}], "]"}]], "Input",
+ CellID->1141121352,ExpressionUUID->"72ec50c8-2c57-49ef-be6c-23f57f57ad7b"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {1.625, -2}}], 
+    LineBox[{{1.375, -1}, {2.625, -1}}], 
+    LineBox[{{2.375, -2}, {2.625, -2}}]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.3]}], 
+     RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{2.1516906864453027`, -2.0772902651951615`}, {
+       2.212366961023424, -2.033206371273226}}], 
+      LineBox[{{2.1169043378485126`, -2.040906597037244}, {
+       2.1636660729879176`, -1.9822692358521423`}}], 
+      LineBox[{{2.073692193435111, -2.015088542646603}, {
+       2.103169070809155, -1.9461239597052442`}}], 
+      LineBox[{{2.0251687373408105`, -2.0016969196685124`}, {
+       2.0352362322771347`, -1.9273756875359171`}}], 
+      LineBox[{{1.9748312626591897`, -2.0016969196685124`}, {
+       1.9647637677228655`, -1.9273756875359171`}}], 
+      LineBox[{{1.9263078065648893`, -2.015088542646603}, {
+       1.8968309291908452`, -1.9461239597052442`}}], 
+      LineBox[{{1.8830956621514874`, -2.040906597037244}, {
+       1.8363339270120824`, -1.982269235852142}}], 
+      LineBox[{{1.8483093135546973`, -2.0772902651951615`}, {
+       1.7876330389765764`, -2.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{2., -2.1875}, {2.17024643740233, -1.8533725534293621`}}]}}}, {
+    InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{204.95703125, 156.}]], "Output",
+ CellID->1835877303,ExpressionUUID->"c54345d8-2f6c-4062-b641-a7035ebfaf93"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "\"MeasurementWirePosition\" can be ",
+ Cell[BoxData[
+  ButtonBox["Top",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "596a82be-847e-4e6c-b514-c41a4f1036b3"],
+ " or ",
+ Cell[BoxData[
+  ButtonBox["Bottom",
+   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
+  "11692b71-9778-4368-b1a2-6008f24ed362"],
+ ":"
+}], "MathCaption",
+ CellChangeTimes->{{3.873519689178586*^9, 3.8735197251204967`*^9}},
+ CellID->1326917223,ExpressionUUID->"ba9a9815-81ed-420c-9184-b46cba58178a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"{", "2", "}"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<MeasurementWirePosition\>\"", "->", "Bottom"}]}], 
+  "]"}]], "Input",
+ CellID->1207943395,ExpressionUUID->"949be2d1-5359-4be8-ab35-cc9f93f95b16"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, -2}, {1.625, -2}}], 
+    LineBox[{{1.375, -1}, {2.625, -1}}], 
+    LineBox[{{2.375, -2}, {2.625, -2}}]}, {
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+     LineBox[{{0.375, -3.0234375}, {2.625, -3.0234375}}], 
+     LineBox[{{0.375, -2.9765625}, {2.625, -2.9765625}}]}, InsetBox[
+     StyleBox["\<\"c\"\>",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.3]}], 
+     RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{2.1516906864453027`, -2.0772902651951615`}, {
+       2.212366961023424, -2.033206371273226}}], 
+      LineBox[{{2.1169043378485126`, -2.040906597037244}, {
+       2.1636660729879176`, -1.9822692358521423`}}], 
+      LineBox[{{2.073692193435111, -2.015088542646603}, {
+       2.103169070809155, -1.9461239597052442`}}], 
+      LineBox[{{2.0251687373408105`, -2.0016969196685124`}, {
+       2.0352362322771347`, -1.9273756875359171`}}], 
+      LineBox[{{1.9748312626591897`, -2.0016969196685124`}, {
+       1.9647637677228655`, -1.9273756875359171`}}], 
+      LineBox[{{1.9263078065648893`, -2.015088542646603}, {
+       1.8968309291908452`, -1.9461239597052442`}}], 
+      LineBox[{{1.8830956621514874`, -2.040906597037244}, {
+       1.8363339270120824`, -1.982269235852142}}], 
+      LineBox[{{1.8483093135546973`, -2.0772902651951615`}, {
+       1.7876330389765764`, -2.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{2., -2.1875}, {2.17024643740233, -1.8533725534293621`}}], 
+      {RGBColor[0.537254, 0.537254, 0.537254], 
+       LineBox[{{2., -2.375}, {2., -2.7890625}}], 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{1.90625, -2.7890625}, {2.09375, -2.7890625}, {
+         2., -2.9765625}}]}}}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{170.18359375, 175.}]], "Output",
+ CellID->1086772759,ExpressionUUID->"b9a76e66-b551-4c28-9073-926d7bb20071"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Show extra qudits used by channels and measurements:", "MathCaption",
+ CellChangeTimes->{{3.897643788811894*^9, 3.897643802253552*^9}},
+ CellID->1327122877,ExpressionUUID->"847bc04a-4de0-48f9-b5d6-7f50b7908ba4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", "\"\<BitFlip\>\"", ",", 
+     RowBox[{"{", "2", "}"}]}], "}"}], "]"}], "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"\"\<ShowExtraQudits\>\"", "->", "True"}]}], "]"}]], "Input",
+ CellID->1189035997,ExpressionUUID->"62282112-1d1f-4603-8e99-c5f266fb9877"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{1.375, -1}, {1.625, -1}}], 
+    LineBox[{{0.375, -2}, {2.625, -2}}], LineBox[{{3.375, 1}, {3.625, 1}}], 
+    LineBox[{{2.375, 0}, {3.625, 0}}], LineBox[{{2.375, -1}, {3.625, -1}}], 
+    LineBox[{{3.375, -2}, {3.625, -2}}]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Dashing[{0, Small}]}], 
+     FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+     RectangleBox[{1.625, -1.375}, {2.375, 0.375},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox[
+        RowBox[{"\<\"BitFlip\"\>", "(", "0.5`", ")"}],
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {2., -0.5}], {{{0, -1}, {1, 0}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.3]}], 
+     RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{3.1516906864453027`, -2.0772902651951615`}, {
+       3.212366961023424, -2.033206371273226}}], 
+      LineBox[{{3.1169043378485126`, -2.040906597037244}, {
+       3.1636660729879176`, -1.9822692358521423`}}], 
+      LineBox[{{3.073692193435111, -2.015088542646603}, {
+       3.103169070809155, -1.9461239597052442`}}], 
+      LineBox[{{3.0251687373408105`, -2.0016969196685124`}, {
+       3.0352362322771347`, -1.9273756875359171`}}], 
+      LineBox[{{2.9748312626591895`, -2.0016969196685124`}, {
+       2.9647637677228653`, -1.9273756875359171`}}], 
+      LineBox[{{2.9263078065648895`, -2.015088542646603}, {
+       2.896830929190845, -1.9461239597052442`}}], 
+      LineBox[{{2.8830956621514874`, -2.040906597037244}, {
+       2.8363339270120824`, -1.982269235852142}}], 
+      LineBox[{{2.8483093135546973`, -2.0772902651951615`}, {
+       2.787633038976576, -2.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{3., -2.1875}, {3.17024643740233, -1.8533725534293621`}}], 
+      {RGBColor[
+       0.537254, 0.537254, 0.537254], {
+        LineBox[{{3., -1.625}, {3., 0.7890625}}], 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{3., 1}, {3.375, 1}}]}}, 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{2.90625, 0.7890625}, {3.09375, 0.7890625}, {3., 
+         0.9765625}}]}}}}}, {InsetBox[
+     StyleBox[
+      RowBox[{"-", "1"}],
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["0",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 0}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{189.70703125, 186.}]], "Output",
+ CellID->1416233033,ExpressionUUID->"761c62e6-f96d-4fb1-bd70-39459230697f"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Extra qudits are always shown when there is an explicit gate there:\
+\>", "MathCaption",
+ CellChangeTimes->{{3.897643762080398*^9, 3.8976437869055758`*^9}},
+ CellID->630491687,ExpressionUUID->"841cf347-e977-4379-8566-53b7bc2bd2be"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<H\>\"", ",", 
+     RowBox[{"\"\<X\>\"", "->", "0"}], ",", "\"\<BitFlip\>\"", ",", 
+     RowBox[{"{", "2", "}"}]}], "}"}], "]"}], "[", "\"\<Diagram\>\"", 
+  "]"}]], "Input",
+ CellID->901506565,ExpressionUUID->"a8d72a09-b084-43bd-9163-f56db87da181"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -1}, {0.625, -1}}], LineBox[{{0.375, 0}, {0.625, 0}}], 
+    LineBox[{{1.375, -1}, {1.625, -1}}], LineBox[{{0.375, -2}, {2.625, -2}}], 
+    LineBox[{{3.375, 2}, {3.625, 2}}], LineBox[{{2.375, 1}, {3.625, 1}}], 
+    LineBox[{{1.375, 0}, {3.625, 0}}], LineBox[{{2.375, -1}, {3.625, -1}}], 
+    LineBox[{{3.375, -2}, {3.625, -2}}]}, {
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.3]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+     0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+     RectangleBox[{0.625, -0.375}, {1.375, 0.375},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"X\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., 0.}], {{{1, 0}, {0, 1}}, Center}]}, 
+    {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Dashing[{0, Small}]}], 
+     FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+     RectangleBox[{1.625, -1.375}, {2.375, 1.375},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox[
+        RowBox[{"\<\"BitFlip\"\>", "(", "0.5`", ")"}],
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {2., 0.}], {{{0, -1}, {1, 0}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.3]}], 
+     RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{3.1516906864453027`, -2.0772902651951615`}, {
+       3.212366961023424, -2.033206371273226}}], 
+      LineBox[{{3.1169043378485126`, -2.040906597037244}, {
+       3.1636660729879176`, -1.9822692358521423`}}], 
+      LineBox[{{3.073692193435111, -2.015088542646603}, {
+       3.103169070809155, -1.9461239597052442`}}], 
+      LineBox[{{3.0251687373408105`, -2.0016969196685124`}, {
+       3.0352362322771347`, -1.9273756875359171`}}], 
+      LineBox[{{2.9748312626591895`, -2.0016969196685124`}, {
+       2.9647637677228653`, -1.9273756875359171`}}], 
+      LineBox[{{2.9263078065648895`, -2.015088542646603}, {
+       2.896830929190845, -1.9461239597052442`}}], 
+      LineBox[{{2.8830956621514874`, -2.040906597037244}, {
+       2.8363339270120824`, -1.982269235852142}}], 
+      LineBox[{{2.8483093135546973`, -2.0772902651951615`}, {
+       2.787633038976576, -2.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{3., -2.1875}, {3.17024643740233, -1.8533725534293621`}}], 
+      {RGBColor[
+       0.537254, 0.537254, 0.537254], {
+        LineBox[{{3., -1.625}, {3., 1.7890625}}], 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{3., 2}, {3.375, 2}}]}}, 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{2.90625, 1.7890625}, {3.09375, 1.7890625}, {3., 
+         1.9765625}}]}}}}}, {InsetBox[
+     StyleBox[
+      RowBox[{"-", "2"}],
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox[
+      RowBox[{"-", "1"}],
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["0",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 0}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{227.87611575735195`, 291.}]], "Output",
+ CellID->478500301,ExpressionUUID->"4627dd33-070b-4ae7-9c39-af4ae280d33d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\"WireLabels\" can be a list of labels or a list of rules:", \
+"MathCaption",
+ CellChangeTimes->{{3.873520248431609*^9, 3.873520268448557*^9}},
+ CellID->1400078268,ExpressionUUID->"6edb2f48-61b9-4274-8fd2-fa84675fe061"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Row", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{"{", 
+       RowBox[{"\"\<X\>\"", ",", 
+        RowBox[{"\"\<H\>\"", "->", 
+         RowBox[{"{", "2", "}"}]}], ",", 
+        RowBox[{"\"\<T\>\"", "->", 
+         RowBox[{"{", "3", "}"}]}]}], "}"}], "]"}], "[", 
+     RowBox[{"\"\<Diagram\>\"", ",", 
+      RowBox[{"\"\<WireLabels\>\"", "->", 
+       RowBox[{"{", 
+        RowBox[{"a", ",", "b"}], "}"}]}]}], "]"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{"{", 
+       RowBox[{"\"\<X\>\"", ",", 
+        RowBox[{"\"\<H\>\"", "->", 
+         RowBox[{"{", "2", "}"}]}], ",", 
+        RowBox[{"\"\<T\>\"", "->", 
+         RowBox[{"{", "3", "}"}]}]}], "}"}], "]"}], "[", 
+     RowBox[{"\"\<Diagram\>\"", ",", 
+      RowBox[{"\"\<WireLabels\>\"", "->", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"2", "->", 
+          RowBox[{"Placed", "[", 
+           RowBox[{"\"\<two\>\"", ",", "Right"}], "]"}]}], ",", 
+         RowBox[{"1", "->", 
+          RowBox[{"Placed", "[", 
+           RowBox[{"\"\<one\>\"", ",", 
+            RowBox[{"{", 
+             RowBox[{"0", ",", ".1"}], "}"}]}], "]"}]}]}], "}"}]}]}], "]"}]}],
+    "\[IndentingNewLine]", "}"}], "]"}]], "Input",
+ CellID->1137130097,ExpressionUUID->"3c1bf33d-76e6-4863-9b2a-20cc677591f6"],
+
+Cell[BoxData[
+ TemplateBox[{
+   GraphicsBox[{{
+      Directive[
+       RGBColor[0.537254, 0.537254, 0.537254], 
+       Opacity[0.3]], {{
+        LineBox[{{0.375, -1}, {0.625, -1}}]}, {
+        LineBox[{{0.375, -2}, {0.625, -2}}]}, {
+        LineBox[{{0.375, -3}, {0.625, -3}}]}, {
+        LineBox[{{1.375, -1}, {1.625, -1}}]}, {
+        LineBox[{{1.375, -2}, {1.625, -2}}]}, {
+        LineBox[{{1.375, -3}, {1.625, -3}}]}}}, {{
+       EdgeForm[
+        RGBColor[0.880722, 0.611041, 0.142051]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.880722, 0.611041, 0.142051], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"X\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -1.}], {{{1, 0}, {0, 1}}, Center}]}, {
+       EdgeForm[
+        RGBColor[0.368417, 0.506779, 0.709798]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.368417, 0.506779, 0.709798], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"H\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -2.}], {{{1, 0}, {0, 1}}, Center}]}, {
+       EdgeForm[
+        RGBColor[0.922526, 0.385626, 0.209179]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.922526, 0.385626, 0.209179], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -3.375}, {1.375, -2.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"T\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -3.}], {{{1, 0}, {0, 1}}, Center}]}}, {{
+       InsetBox[
+        FormBox[
+         StyleBox[
+         "a", Background -> GrayLevel[0, 0], {}, {
+          FontSlant -> Italic, FontSize -> 10, FontColor -> 
+           RGBColor[0.537254, 0.537254, 0.537254]}, StripOnInput -> False], 
+         TraditionalForm], {0.28125, -1}, 
+        NCache[
+         ImageScaled[{1, 
+           Rational[1, 2]}], 
+         ImageScaled[{1, 0.5}]]]}, {
+       InsetBox[
+        FormBox[
+         StyleBox[
+         "b", Background -> GrayLevel[0, 0], {}, {
+          FontSlant -> Italic, FontSize -> 10, FontColor -> 
+           RGBColor[0.537254, 0.537254, 0.537254]}, StripOnInput -> False], 
+         TraditionalForm], {0.28125, -2}, 
+        NCache[
+         ImageScaled[{1, 
+           Rational[1, 2]}], 
+         ImageScaled[{1, 0.5}]]]}}}, {ImageSize -> Medium}], 
+   GraphicsBox[{{
+      Directive[
+       RGBColor[0.537254, 0.537254, 0.537254], 
+       Opacity[0.3]], {{
+        LineBox[{{0.375, -1}, {0.625, -1}}]}, {
+        LineBox[{{0.375, -2}, {0.625, -2}}]}, {
+        LineBox[{{0.375, -3}, {0.625, -3}}]}, {
+        LineBox[{{1.375, -1}, {1.625, -1}}]}, {
+        LineBox[{{1.375, -2}, {1.625, -2}}]}, {
+        LineBox[{{1.375, -3}, {1.625, -3}}]}}}, {{
+       EdgeForm[
+        RGBColor[0.880722, 0.611041, 0.142051]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.880722, 0.611041, 0.142051], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -1.375}, {1.375, -0.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"X\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -1.}], {{{1, 0}, {0, 1}}, Center}]}, {
+       EdgeForm[
+        RGBColor[0.368417, 0.506779, 0.709798]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.368417, 0.506779, 0.709798], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -2.375}, {1.375, -1.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"H\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -2.}], {{{1, 0}, {0, 1}}, Center}]}, {
+       EdgeForm[
+        RGBColor[0.922526, 0.385626, 0.209179]], 
+       FaceForm[
+        Directive[
+         RGBColor[0.922526, 0.385626, 0.209179], 
+         Opacity[0.3]]], 
+       RectangleBox[{0.625, -3.375}, {1.375, -2.625}, RoundingRadius -> 0.1], 
+       
+       GeometricTransformationBox[
+        InsetBox[
+         FormBox[
+          StyleBox[
+          "\"T\"", {
+           Background -> GrayLevel[0, 0], {}, {
+            FontFamily -> "Roboto", FontSize -> 11, FontColor -> 
+             GrayLevel[0]}}, StripOnInput -> False], TraditionalForm], {
+         1., -3.}], {{{1, 0}, {0, 1}}, Center}]}}, {{
+       InsetBox[
+        FormBox[
+         StyleBox[
+         "\"one\"", Background -> GrayLevel[0, 0], {}, {
+          FontSlant -> Italic, FontSize -> 10, FontColor -> 
+           RGBColor[0.537254, 0.537254, 0.537254]}, StripOnInput -> False], 
+         TraditionalForm], {0.38125, -0.9}, 
+        NCache[
+         ImageScaled[{1, 
+           Rational[1, 2]}], 
+         ImageScaled[{1, 0.5}]]]}, {
+       InsetBox[
+        FormBox[
+         StyleBox[
+         "\"two\"", Background -> GrayLevel[0, 0], {}, {
+          FontSlant -> Italic, FontSize -> 10, FontColor -> 
+           RGBColor[0.537254, 0.537254, 0.537254]}, StripOnInput -> False], 
+         TraditionalForm], {1.71875, -2}, 
+        NCache[
+         ImageScaled[{0, 
+           Rational[1, 2]}], 
+         ImageScaled[{0, 0.5}]]]}, {
+       InsetBox[
+        FormBox[
+         StyleBox[
+         "3", Background -> GrayLevel[0, 0], {}, {
+          FontSlant -> Italic, FontSize -> 10, FontColor -> 
+           RGBColor[0.537254, 0.537254, 0.537254]}, StripOnInput -> False], 
+         TraditionalForm], {0.28125, -3}, 
+        NCache[
+         ImageScaled[{1, 
+           Rational[1, 2]}], 
+         ImageScaled[{1, 0.5}]]]}}}, {ImageSize -> Medium}]},
+  "RowDefault"]], "Output",
+ CellID->1216632897,ExpressionUUID->"c9466952-9d08-43a0-811d-25a1578adc8d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "TutorialMoreAboutSection",
+ CellChangeTimes->{{3.843042384656711*^9, 3.843042386024461*^9}},
+ CellID->1245554432,ExpressionUUID->"8b03ebe8-86a3-4adb-8972-22cf350ee37f"],
+
+Cell["XXXX", "TutorialMoreAbout",
+ CellID->362747668,ExpressionUUID->"905b732c-ef3d-4886-9b40-8604b99440ac"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Tech Notes", "RelatedTutorialsSection",
+ CellID->2141465890,ExpressionUUID->"609ed8a2-1ee5-4d92-81ac-c9ae79b91c87"],
+
+Cell["XXXX", "RelatedTutorials",
+ CellID->1938773157,ExpressionUUID->"636fdb9b-ab5d-4b3e-8506-2cb13de89363"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->1191073768,ExpressionUUID->"69180a18-6692-4657-9db4-fa1655875664"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["??", "HistoryData",
+  CellTags->"New",ExpressionUUID->"abbd5eaa-fb96-4d00-b766-b018a92b97b9"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"b95b7d1f-1a66-470a-a780-930c71ba0c08"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "1d338430-c3fc-4bc4-9c44-356933aaa7c2"]
+}], "History",
+ CellID->1681745089,ExpressionUUID->"888f5a13-b296-4559-931b-b7cfa0c7791d"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",
+ CellID->2057432656,ExpressionUUID->"b92bded8-c4b4-4d15-9ef2-1f0f0a9cc601"],
+
+Cell["Tech Note", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->488965398,ExpressionUUID->"c38f3cfb-5716-4436-af3e-77f2a0c422fa"],
+
+Cell["Wolfram/QuantumFramework", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->1769010764,ExpressionUUID->"881c6a50-41bb-4106-8858-2793e9c6124e"],
+
+Cell["Wolfram`QuantumFramework`", "Categorization",
+ CellLabel->"Context",
+ CellID->2000301480,ExpressionUUID->"be25b82b-b1c1-4b93-a9ac-bbb43713fe45"],
+
+Cell["Wolfram/QuantumFramework/tutorial/CircuitDiagram", "Categorization",
+ CellChangeTimes->{{3.899462596896133*^9, 3.899462599817608*^9}},
+ CellLabel->"URI",
+ CellID->210480575,ExpressionUUID->"6001b317-9b6c-425d-b606-551e31b42a35"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->641457416,ExpressionUUID->"d8ba002c-4326-422e-add8-c9905155988c"],
+
+Cell["Quantum circuit", "Keywords",
+ CellChangeTimes->{{3.899462667451241*^9, 3.899462672464015*^9}},
+ CellID->606882772,ExpressionUUID->"c92bbdd1-3fc8-46f8-b2c3-17999e1670bc"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{700, 756},
+WindowMargins->{{252, Automatic}, {Automatic, 0}},
+Visible->True,
+TaggingRules-><|
+ "SaveDialogDataSavesBlog" -> False, "Paclet" -> 
+  "Wolfram/QuantumFramework"|>,
+FrontEndVersion->"14.0 for Mac OS X ARM (64-bit) (December 12, 2023)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TechNotePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"f0e19a45-70ef-4139-bae5-f78c19a4e95e"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[583, 22, 321, 4, 114, "Title",ExpressionUUID->"8d5fd3fa-cd0f-44f6-8ab0-271a54b7cc46",
+ CellID->228312131],
+Cell[907, 28, 354, 7, 59, "MathCaption",ExpressionUUID->"c763f9a9-0266-470e-914e-75d1c6950bdb",
+ CellID->1390956192],
+Cell[1264, 37, 1480, 28, 206, "DefinitionBox3Col",ExpressionUUID->"cd97ccbf-8d86-4eeb-910c-1e5801acf3a9",
+ CellID->839369792],
+Cell[2747, 67, 220, 3, 30, "Caption",ExpressionUUID->"61318bd3-0917-4ec6-9cfa-2e33b3d5dae2",
+ CellID->1893564438],
+Cell[2970, 72, 1164, 20, 124, "DefinitionBox3Col",ExpressionUUID->"9d151eb6-e6a5-46d7-ba0a-c2a72f923577",
+ CellID->889710703],
+Cell[4137, 94, 195, 3, 30, "Caption",ExpressionUUID->"21b99b96-5dce-4723-b47a-3fc6fd261845",
+ CellID->1630242752],
+Cell[4335, 99, 623, 12, 98, "DefinitionBox3Col",ExpressionUUID->"a2d20ee0-49f4-4287-8b29-479edd06c0ae",
+ CellID->1508953063],
+Cell[4961, 113, 194, 3, 30, "Caption",ExpressionUUID->"d87dfce7-a878-4588-9576-f3421305c571",
+ CellID->1339742418],
+Cell[5158, 118, 780, 14, 98, "DefinitionBox3Col",ExpressionUUID->"4583b3b3-583c-4245-920d-926fd4587d24",
+ CellID->1750553094],
+Cell[5941, 134, 169, 2, 30, "Caption",ExpressionUUID->"4fb12b96-e29b-43bd-86cb-d808507249bc",
+ CellID->1019886958],
+Cell[6113, 138, 714, 13, 98, "DefinitionBox3Col",ExpressionUUID->"5fa788a3-0d6d-455c-af6a-03a9918c61e3",
+ CellID->466169390],
+Cell[6830, 153, 190, 2, 30, "Caption",ExpressionUUID->"d34c8be1-4c0c-4aad-ac9e-4811b0d58849",
+ CellID->888593474],
+Cell[7023, 157, 614, 11, 72, "DefinitionBox3Col",ExpressionUUID->"ab5350df-6fc2-426f-95d1-ec0c31742cf4",
+ CellID->2094078251],
+Cell[7640, 170, 197, 3, 30, "Caption",ExpressionUUID->"b46ecbd4-e27b-488c-b45a-94dd5e67e11c",
+ CellID->63673874],
+Cell[CellGroupData[{
+Cell[7862, 177, 258, 3, 41, "MathCaption",ExpressionUUID->"b2287255-70c9-4500-acee-f14fd62e8964",
+ CellID->553125513],
+Cell[CellGroupData[{
+Cell[8145, 184, 462, 12, 27, "Input",ExpressionUUID->"a7d46a11-bc59-4901-858b-f9b6b3459f6d",
+ CellID->2071272775],
+Cell[8610, 198, 4157, 96, 222, "Output",ExpressionUUID->"0d04c3dc-404f-466b-a1cd-bf98b9d6c7c2",
+ CellID->1556092732]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12804, 299, 438, 11, 27, "Input",ExpressionUUID->"3d546bec-ee13-486f-a490-25ced7801f47",
+ CellID->1331362843],
+Cell[13245, 312, 4088, 94, 163, "Output",ExpressionUUID->"693f969c-151b-4774-9d07-46a498832ad6",
+ CellID->986369955]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[17382, 412, 369, 7, 58, "MathCaption",ExpressionUUID->"da802d7b-e81d-49ac-b054-f1a2d623b87e",
+ CellID->6171515],
+Cell[CellGroupData[{
+Cell[17776, 423, 890, 25, 66, "Input",ExpressionUUID->"86fec0e1-cf32-45d5-baa8-20f07b890004",
+ CellID->645437549],
+Cell[18669, 450, 5948, 139, 270, "Output",ExpressionUUID->"f34cf67d-e0d6-4dc7-9e5a-6bb0b366104b",
+ CellID->191252915]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[24654, 594, 808, 21, 66, "Input",ExpressionUUID->"35d9a824-7d7d-41b4-acf3-78489e2a0684",
+ CellID->1733860362],
+Cell[25465, 617, 4745, 104, 178, "Output",ExpressionUUID->"74b32a35-6d63-4b05-a4f9-9ea52c203a97",
+ CellID->2055786793]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[30259, 727, 431, 8, 58, "MathCaption",ExpressionUUID->"f97b082d-6b8e-47df-a43a-6b89d74be411",
+ CellID->832769402],
+Cell[CellGroupData[{
+Cell[30715, 739, 2028, 52, 161, "Input",ExpressionUUID->"44ecf533-2580-4fa7-bbbf-05752e9971a9",
+ CellID->1204411915],
+Cell[32746, 793, 4280, 100, 216, "Output",ExpressionUUID->"2f3b9358-887d-43ba-b9c9-6a59c82bb8d4",
+ CellID->724688531]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37075, 899, 367, 6, 58, "MathCaption",ExpressionUUID->"3c854fc7-bfbc-43d1-9753-5b6ebe1ad9b0",
+ CellID->1289516611],
+Cell[CellGroupData[{
+Cell[37467, 909, 512, 11, 47, "Input",ExpressionUUID->"d64abb96-8a09-4251-ac69-98f2e7b2e051",
+ CellID->1073304956],
+Cell[37982, 922, 2982, 65, 172, "Output",ExpressionUUID->"ba0a65a6-b25e-46e6-8e7b-4fc54c537178",
+ CellID->1573805310]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[41013, 993, 391, 9, 45, "MathCaption",ExpressionUUID->"e3b7adf4-8c1c-49d2-b3a5-e81c19d44e94",
+ CellID->268442329],
+Cell[CellGroupData[{
+Cell[41429, 1006, 331, 7, 27, "Input",ExpressionUUID->"7184b8bf-86ac-4dc3-ae55-3dd9c859a120",
+ CellID->1978972380],
+Cell[41763, 1015, 4065, 93, 150, "Output",ExpressionUUID->"7094603c-0a78-43e4-8ace-2c4bdffa6caf",
+ CellID->1699066681]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[45877, 1114, 447, 10, 45, "MathCaption",ExpressionUUID->"7dd3f60c-d690-4658-8bfb-d97415c85f01",
+ CellID->1525461731],
+Cell[CellGroupData[{
+Cell[46349, 1128, 378, 9, 27, "Input",ExpressionUUID->"7bf3acd0-143a-4f52-830b-bf9b079c7aac",
+ CellID->1775535031],
+Cell[46730, 1139, 2139, 47, 245, "Output",ExpressionUUID->"c0e0ee11-32a2-4449-8782-5f59698596dd",
+ CellID->865329317]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[48918, 1192, 378, 9, 45, "MathCaption",ExpressionUUID->"6febfcdd-71d9-4ca6-af9e-23e636028a8a",
+ CellID->554446972],
+Cell[CellGroupData[{
+Cell[49321, 1205, 327, 7, 27, "Input",ExpressionUUID->"e5fd9a21-b6a7-48df-8154-89f8be5e57e1",
+ CellID->658714071],
+Cell[49651, 1214, 4069, 93, 193, "Output",ExpressionUUID->"7b2fa6fb-100d-46c3-bf04-e9851995a491",
+ CellID->490681770]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[53769, 1313, 281, 4, 41, "MathCaption",ExpressionUUID->"bad19cb5-7990-40ed-bad4-eef00457148c",
+ CellID->819111530],
+Cell[CellGroupData[{
+Cell[54075, 1321, 688, 17, 85, "Input",ExpressionUUID->"e67e396a-2895-4621-9b96-2b79edb32c3d",
+ CellID->1437307440],
+Cell[54766, 1340, 3133, 72, 188, "Output",ExpressionUUID->"fd14e342-1418-41f4-9ab5-47460453a760",
+ CellID->493445951]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[57936, 1417, 859, 22, 85, "Input",ExpressionUUID->"f7bd6e58-9560-46da-b5b2-511593adf09b",
+ CellID->2119393434],
+Cell[58798, 1441, 7024, 153, 241, "Output",ExpressionUUID->"a1edde21-b977-4da3-880d-eb545671521e",
+ CellID->1493232046]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[65859, 1599, 858, 22, 85, "Input",ExpressionUUID->"3ae05d9d-15eb-4649-865b-e27dd6ed0ce8",
+ CellID->489845373],
+Cell[66720, 1623, 10288, 219, 271, "Output",ExpressionUUID->"caa1a224-001e-4d8e-96c4-5daba450609b",
+ CellID->399143460]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[77057, 1848, 344, 6, 41, "MathCaption",ExpressionUUID->"e54c6da6-4072-48f0-88e6-4c6730086d98",
+ CellID->1906067434],
+Cell[CellGroupData[{
+Cell[77426, 1858, 1500, 38, 142, "Input",ExpressionUUID->"7347568e-3304-4a70-9c93-7f781afe9c7c",
+ CellID->2126585245],
+Cell[78929, 1898, 15039, 320, 193, "Output",ExpressionUUID->"69c19bfc-3488-41bf-ba4a-a3794e833243",
+ CellID->1101841682]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[94017, 2224, 325, 5, 41, "MathCaption",ExpressionUUID->"bdf4db61-037b-448f-9b57-a387975bb240",
+ CellID->1624260942],
+Cell[CellGroupData[{
+Cell[94367, 2233, 1119, 29, 123, "Input",ExpressionUUID->"7c417698-ed82-4b3d-b510-9748716b5174",
+ CellID->672035274],
+Cell[95489, 2264, 9441, 205, 191, "Output",ExpressionUUID->"6c579a6e-eca5-49ad-9733-73027c451698",
+ CellID->1579141463]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[104979, 2475, 216, 2, 41, "MathCaption",ExpressionUUID->"01bbd060-aa59-4095-a76d-c663c421c3f4",
+ CellID->652925712],
+Cell[CellGroupData[{
+Cell[105220, 2481, 1094, 26, 123, "Input",ExpressionUUID->"1dda0720-e5c5-43dc-9042-cac7ef72fd77",
+ CellID->389556534],
+Cell[106317, 2509, 10396, 226, 191, "Output",ExpressionUUID->"16fe0137-3619-435e-bab2-63666f42f96f",
+ CellID->2089641250]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[116762, 2741, 376, 9, 45, "MathCaption",ExpressionUUID->"03488a79-9495-4f19-86ba-f6d47a5ff439",
+ CellID->76092931],
+Cell[CellGroupData[{
+Cell[117163, 2754, 354, 8, 27, "Input",ExpressionUUID->"72ec50c8-2c57-49ef-be6c-23f57f57ad7b",
+ CellID->1141121352],
+Cell[117520, 2764, 2652, 56, 166, "Output",ExpressionUUID->"c54345d8-2f6c-4062-b641-a7035ebfaf93",
+ CellID->1835877303]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[120221, 2826, 503, 14, 45, "MathCaption",ExpressionUUID->"ba9a9815-81ed-420c-9184-b46cba58178a",
+ CellID->1326917223],
+Cell[CellGroupData[{
+Cell[120749, 2844, 362, 9, 47, "Input",ExpressionUUID->"949be2d1-5359-4be8-ab35-cc9f93f95b16",
+ CellID->1207943395],
+Cell[121114, 2855, 3465, 71, 185, "Output",ExpressionUUID->"b9a76e66-b551-4c28-9073-926d7bb20071",
+ CellID->1086772759]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[124628, 2932, 217, 2, 41, "MathCaption",ExpressionUUID->"847bc04a-4de0-48f9-b5d6-7f50b7908ba4",
+ CellID->1327122877],
+Cell[CellGroupData[{
+Cell[124870, 2938, 373, 8, 47, "Input",ExpressionUUID->"62282112-1d1f-4603-8e99-c5f266fb9877",
+ CellID->1189035997],
+Cell[125246, 2948, 4343, 92, 196, "Output",ExpressionUUID->"761c62e6-f96d-4fb1-bd70-39459230697f",
+ CellID->1416233033]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[129638, 3046, 241, 4, 41, "MathCaption",ExpressionUUID->"841cf347-e977-4379-8566-53b7bc2bd2be",
+ CellID->630491687],
+Cell[CellGroupData[{
+Cell[129904, 3054, 347, 8, 27, "Input",ExpressionUUID->"a8d72a09-b084-43bd-9163-f56db87da181",
+ CellID->901506565],
+Cell[130254, 3064, 5191, 111, 301, "Output",ExpressionUUID->"4627dd33-070b-4ae7-9c39-af4ae280d33d",
+ CellID->478500301]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[135494, 3181, 225, 3, 41, "MathCaption",ExpressionUUID->"6edb2f48-61b9-4274-8fd2-fa84675fe061",
+ CellID->1400078268],
+Cell[CellGroupData[{
+Cell[135744, 3188, 1395, 37, 104, "Input",ExpressionUUID->"3c1bf33d-76e6-4863-9b2a-20cc677591f6",
+ CellID->1137130097],
+Cell[137142, 3227, 6670, 180, 444, "Output",ExpressionUUID->"c9466952-9d08-43a0-811d-25a1578adc8d",
+ CellID->1216632897]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[143861, 3413, 192, 2, 74, "TutorialMoreAboutSection",ExpressionUUID->"8b03ebe8-86a3-4adb-8972-22cf350ee37f",
+ CellID->1245554432],
+Cell[144056, 3417, 108, 1, 24, "TutorialMoreAbout",ExpressionUUID->"905b732c-ef3d-4886-9b40-8604b99440ac",
+ CellID->362747668]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[144201, 3423, 129, 1, 74, "RelatedTutorialsSection",ExpressionUUID->"609ed8a2-1ee5-4d92-81ac-c9ae79b91c87",
+ CellID->2141465890],
+Cell[144333, 3426, 108, 1, 24, "RelatedTutorials",ExpressionUUID->"636fdb9b-ab5d-4b3e-8506-2cb13de89363",
+ CellID->1938773157]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[144490, 3433, 111, 1, 72, "MetadataSection",ExpressionUUID->"69180a18-6692-4657-9db4-fa1655875664",
+ CellID->1191073768],
+Cell[144604, 3436, 477, 12, 26, "History",ExpressionUUID->"888f5a13-b296-4559-931b-b7cfa0c7791d",
+ CellID->1681745089],
+Cell[CellGroupData[{
+Cell[145106, 3452, 123, 1, 21, "CategorizationSection",ExpressionUUID->"b92bded8-c4b4-4d15-9ef2-1f0f0a9cc601",
+ CellID->2057432656],
+Cell[145232, 3455, 137, 2, 34, "Categorization",ExpressionUUID->"c38f3cfb-5716-4436-af3e-77f2a0c422fa",
+ CellID->488965398],
+Cell[145372, 3459, 153, 2, 34, "Categorization",ExpressionUUID->"881c6a50-41bb-4106-8858-2793e9c6124e",
+ CellID->1769010764],
+Cell[145528, 3463, 150, 2, 34, "Categorization",ExpressionUUID->"be25b82b-b1c1-4b93-a9ac-bbb43713fe45",
+ CellID->2000301480],
+Cell[145681, 3467, 234, 3, 34, "Categorization",ExpressionUUID->"6001b317-9b6c-425d-b606-551e31b42a35",
+ CellID->210480575]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[145952, 3475, 110, 1, 31, "KeywordsSection",ExpressionUUID->"d8ba002c-4326-422e-add8-c9905155988c",
+ CellID->641457416],
+Cell[146065, 3478, 176, 2, 20, "Keywords",ExpressionUUID->"c92bbdd1-3fc8-46f8-b2c3-17999e1670bc",
+ CellID->606882772]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

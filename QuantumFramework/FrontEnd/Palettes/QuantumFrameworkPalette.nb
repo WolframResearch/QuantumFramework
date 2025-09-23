@@ -1,3 +1,630 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:a286a6a1ba43b5bc6ae48991c66fcfc56048570f4726f8b8b7868d95a722da2a
-size 32096
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='WolframDesktop 13.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       161,          7]
+NotebookDataLength[     31894,        621]
+NotebookOptionsPosition[     31568,        606]
+NotebookOutlinePosition[     31932,        623]
+CellTagsIndexPosition[     31889,        620]
+WindowFrame->Palette*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ TagBox[GridBox[{
+    {
+     ButtonBox["\<\"Reinstall Paclet\"\>",
+      Appearance->Automatic,
+      ButtonFunction:>(PacletInstall[
+         CloudObject["https://wolfr.am/DevWQCF"], ForceVersionInstall -> 
+         True]; Get["Wolfram`QuantumFramework`"]),
+      Evaluator->Automatic,
+      Method->"Preemptive"]},
+    {"\<\"QuanumState\"\>"},
+    {
+     TagBox[GridBox[{
+        {
+         TemplateBox[{
+           ButtonBox[
+            InterpretationBox[
+             TemplateBox[{
+               RowBox[{"0"}]}, "Ket"], 
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False]], 
+            BaseStyle -> "Paste", ButtonData :> 
+            RowBox[{"QuantumState", "[", "\"0\"", "]"}]], 
+           ButtonBox[
+            InterpretationBox[
+             TemplateBox[{
+               RowBox[{"1"}]}, "Ket"], 
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False]], 
+            BaseStyle -> "Paste", ButtonData :> 
+            RowBox[{"QuantumState", "[", "\"1\"", "]"}]], 
+           ButtonBox[
+            InterpretationBox[
+             TemplateBox[{
+               RowBox[{
+                 SubscriptBox["\"\[Psi]\"", 
+                  SubscriptBox["\"x\"", "\"+\""]]}]}, "Ket"], 
+             Wolfram`QuantumFramework`QuditName[
+              Subscript["\[Psi]", 
+               Subscript["x", "+"]], "Dual" -> False]], BaseStyle -> "Paste", 
+            ButtonData :> RowBox[{"QuantumState", "[", "\"+\"", "]"}]], 
+           ButtonBox[
+            InterpretationBox[
+             TemplateBox[{
+               RowBox[{
+                 SubscriptBox["\"\[Psi]\"", 
+                  SubscriptBox["\"x\"", "\"-\""]]}]}, "Ket"], 
+             Wolfram`QuantumFramework`QuditName[
+              Subscript["\[Psi]", 
+               Subscript["x", "-"]], "Dual" -> False]], BaseStyle -> "Paste", 
+            ButtonData :> RowBox[{"QuantumState", "[", "\"-\"", "]"}]]},
+          "RowDefault"]},
+        {
+         TemplateBox[{
+           ButtonBox[
+            FractionBox[
+             RowBox[{
+               InterpretationBox[
+                TemplateBox[{
+                  RowBox[{"0"}]}, "Ket"], 
+                Wolfram`QuantumFramework`QuditName[0, "Dual" -> False]], "+", 
+               
+               InterpretationBox[
+                TemplateBox[{
+                  RowBox[{"1"}]}, "Ket"], 
+                Wolfram`QuantumFramework`QuditName[1, "Dual" -> False]]}], 
+             SqrtBox["2"]], BaseStyle -> "Paste", ButtonData :> 
+            RowBox[{"QuantumState", "[", "\"UniformSuperposition\"", "]"}]], 
+           ButtonBox[
+            RowBox[{
+              FractionBox["1", "2"], " ", 
+              RowBox[{"(", 
+                RowBox[{
+                  InterpretationBox[
+                   TemplateBox[{
+                    RowBox[{"0", "\[InvisibleSpace]", "0"}]}, "Ket"], 
+                   
+                   Wolfram`QuantumFramework`QuditName[{0, 0}, "Dual" -> 
+                    False]], "+", 
+                  InterpretationBox[
+                   TemplateBox[{
+                    RowBox[{"1", "\[InvisibleSpace]", "1"}]}, "Ket"], 
+                   
+                   Wolfram`QuantumFramework`QuditName[{1, 1}, "Dual" -> 
+                    False]]}], ")"}]}], BaseStyle -> "Paste", ButtonData :> 
+            RowBox[{"QuantumState", "[", "\"UniformMixture\"", "]"}]]},
+          "RowDefault"]}
+       },
+       DefaultBaseStyle->"Column",
+       GridBoxAlignment->{"Columns" -> {{Left}}},
+       GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+      "Column"]},
+    {"\<\"QuantumOperator\"\>"},
+    {
+     TemplateBox[{
+       ButtonBox[
+       "\"QFT\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumOperator", "[", "\"Fourier\"", "]"}]], 
+       ButtonBox[
+        SuperscriptBox["\"QFT\"", "\[Dagger]"], BaseStyle -> "Paste", 
+        ButtonData :> 
+        RowBox[{"QuantumOperator", "[", "\"InverseFourier\"", "]"}]], 
+       ButtonBox[
+       "\"X\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumOperator", "[", "\"X\"", "]"}]], 
+       ButtonBox[
+       "\"Y\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumOperator", "[", "\"Y\"", "]"}]], 
+       ButtonBox[
+       "\"Z\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumOperator", "[", "\"Z\"", "]"}]]},
+      "RowDefault"]},
+    {"\<\"QuantumMeasurementOperator\"\>"},
+    {
+     TemplateBox[{
+       ButtonBox[
+       "\"I\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumMeasurementOperator", "[", "]"}]], 
+       ButtonBox[
+       "\"X\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumMeasurementOperator", "[", "\"X\"", "]"}]], 
+       ButtonBox[
+       "\"Y\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumMeasurementOperator", "[", "\"Y\"", "]"}]], 
+       ButtonBox[
+       "\"Z\"", BaseStyle -> "Paste", ButtonData :> 
+        RowBox[{"QuantumMeasurementOperator", "[", "\"Z\"", "]"}]]},
+      "RowDefault"]},
+    {"\<\"QuantumCircuitOperator\"\>"},
+    {
+     TagBox[GridBox[{
+        {
+         ButtonBox[
+          GraphicsBox[{
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+             LineBox[{{0.375, -3}, {0.625, -3}}], 
+             LineBox[{{0.375, -2}, {1.625, -2}}], 
+             LineBox[{{1.375, -3}, {1.625, -3}}], 
+             LineBox[{{2.375, -3}, {2.625, -3}}], 
+             LineBox[{{0.375, -1}, {3.625, -1}}], 
+             LineBox[{{3.375, -3}, {3.625, -3}}], 
+             LineBox[{{4.375, -3}, {4.625, -3}}], 
+             LineBox[{{2.375, -2}, {5.625, -2}}], 
+             LineBox[{{5.375, -3}, {5.625, -3}}], 
+             LineBox[{{6.375, -3}, {6.625, -3}}], 
+             LineBox[{{4.375, -1}, {7.625, -1}}], 
+             LineBox[{{7.375, -3}, {7.625, -3}}], 
+             LineBox[{{6.375, -2}, {6.625, -2}}], 
+             LineBox[{{8.375, -3}, {8.625, -3}}], 
+             LineBox[{{9.375, -3}, {9.625, -3}}], 
+             LineBox[{{8.375, -1}, {8.625, -1}}], 
+             LineBox[{{7.375, -2}, {8.625, -2}}], 
+             LineBox[{{9.375, -2}, {9.625, -2}}], 
+             LineBox[{{9.375, -1}, {10.625, -1}}], 
+             LineBox[{{10.375, -2}, {10.625, -2}}], 
+             LineBox[{{11.375, -1}, {11.625, -1}}], 
+             LineBox[{{11.375, -2}, {11.625, -2}}], 
+             LineBox[{{12.375, -1}, {12.625, -1}}], 
+             LineBox[{{12.375, -2}, {12.625, -2}}], 
+             LineBox[{{10.375, -3}, {12.625, -3}}]}, {
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{1.625, -3.}, {1.85, -3.}}], 
+                LineBox[{{2.15, -3.}, {2.375, -3.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{2., -3.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{1.85, -3.}, {2.15, -3.}}], 
+                  LineBox[{{2., -3.15}, {2., -2.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{2., -2.09375}, {2., -2.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{1.625, -2.}, {1.90625, -2.}}], 
+               LineBox[{{2.09375, -2.}, {2.375, -2.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{2., -2.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{2.625, -3.375}, {3.375, -2.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{3.625, -3.}, {3.85, -3.}}], 
+                LineBox[{{4.15, -3.}, {4.375, -3.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{4., -3.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{3.85, -3.}, {4.15, -3.}}], 
+                  LineBox[{{4., -3.15}, {4., -2.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{4., -1.09375}, {4., -2.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{3.625, -1.}, {3.90625, -1.}}], 
+               LineBox[{{4.09375, -1.}, {4.375, -1.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{4., -1.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{4.625, -3.375}, {5.375, -2.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{5.625, -3.}, {5.85, -3.}}], 
+                LineBox[{{6.15, -3.}, {6.375, -3.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{6., -3.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{5.85, -3.}, {6.15, -3.}}], 
+                  LineBox[{{6., -3.15}, {6., -2.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{6., -2.09375}, {6., -2.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{5.625, -2.}, {5.90625, -2.}}], 
+               LineBox[{{6.09375, -2.}, {6.375, -2.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{6., -2.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{6.625, -3.375}, {7.375, -2.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{7.625, -3.}, {7.85, -3.}}], 
+                LineBox[{{8.15, -3.}, {8.375, -3.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{8., -3.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{7.85, -3.}, {8.15, -3.}}], 
+                  LineBox[{{8., -3.15}, {8., -2.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{8., -1.09375}, {8., -2.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{7.625, -1.}, {7.90625, -1.}}], 
+               LineBox[{{8.09375, -1.}, {8.375, -1.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{8., -1.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{6.625, -2.375}, {7.375, -1.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{8.625, -3.375}, {9.375, -2.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{9.625, -3.375}, {10.375, -2.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{8.625, -2.}, {8.85, -2.}}], 
+                LineBox[{{9.15, -2.}, {9.375, -2.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{9., -2.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{8.85, -2.}, {9.15, -2.}}], 
+                  LineBox[{{9., -2.15}, {9., -1.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{9., -1.09375}, {9., -1.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{8.625, -1.}, {8.90625, -1.}}], 
+               LineBox[{{9.09375, -1.}, {9.375, -1.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{9., -1.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{9.625, -2.375}, {10.375, -1.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{10.625, -2.}, {10.85, -2.}}], 
+                LineBox[{{11.15, -2.}, {11.375, -2.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{11., -2.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{10.85, -2.}, {11.15, -2.}}], 
+                  LineBox[{{11., -2.15}, {11., -1.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{11., -1.09375}, {11., -1.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{10.625, -1.}, {10.90625, -1.}}], 
+               LineBox[{{11.09375, -1.}, {11.375, -1.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{11., -1.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{11.625, -1.375}, {12.375, -0.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.922526, 0.385626, 0.209179]], FaceForm[{
+              RGBColor[0.922526, 0.385626, 0.209179], Opacity[0.15]}], 
+              RectangleBox[{11.625, -2.375}, {12.375, -1.625},
+               RoundingRadius->0.1]}}, {}},
+           ImageSize->Tiny],
+          BaseStyle->"Paste",
+          
+          ButtonData:>
+           RowBox[{"QuantumCircuitOperator", "[", "\"Toffoli\"", "]"}]], 
+         ButtonBox[
+          GraphicsBox[{
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+             LineBox[{{0.375, -1}, {0.625, -1}}], 
+             LineBox[{{1.375, -1}, {1.625, -1}}], 
+             LineBox[{{0.375, -2}, {1.625, -2}}], 
+             LineBox[{{2.375, -1}, {2.625, -1}}], 
+             LineBox[{{2.375, -2}, {2.625, -2}}]}, {
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{1.625, -2.}, {1.85, -2.}}], 
+                LineBox[{{2.15, -2.}, {2.375, -2.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{2., -2.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{1.85, -2.}, {2.15, -2.}}], 
+                  LineBox[{{2., -2.15}, {2., -1.85}}]}}}, 
+               {RGBColor[0.880722, 0.611041, 0.142051], 
+                LineBox[{{2., -1.09375}, {2., -1.85}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+               LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+               {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                DiskBox[{2., -1.}, 0.09375]}}, {}}}, {}},
+           ImageSize->Tiny],
+          BaseStyle->"Paste",
+          
+          ButtonData:>
+           RowBox[{"QuantumCircuitOperator", "[", "\"Bell\"", "]"}]]},
+        {
+         ButtonBox[
+          GraphicsBox[{
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+             LineBox[{{0.375, -1}, {0.625, -1}}], 
+             LineBox[{{0.375, -2}, {1.625, -2}}], 
+             LineBox[{{1.375, -1}, {1.625, -1}}], 
+             LineBox[{{0.375, -3}, {2.625, -3}}], 
+             LineBox[{{2.375, -1}, {2.625, -1}}], 
+             LineBox[{{2.375, -2}, {3.625, -2}}], 
+             LineBox[{{3.375, -3}, {4.625, -3}}], 
+             LineBox[{{4.375, -2}, {4.625, -2}}], 
+             LineBox[{{5.375, -3}, {5.625, -3}}], 
+             LineBox[{{3.375, -1}, {6.625, -1}}], 
+             LineBox[{{6.375, -3}, {6.625, -3}}], 
+             LineBox[{{7.375, -1}, {7.625, -1}}], 
+             LineBox[{{5.375, -2}, {7.625, -2}}], 
+             LineBox[{{7.375, -3}, {7.625, -3}}]}, {
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+               RoundingRadius->0.1]}, {{
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+                DiskBox[{2., -1.}, 0.375]}, 
+               {RGBColor[0.560181, 0.691569, 0.194885], 
+                LineBox[{{2., -1.375}, {2., -1.90625}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{1.625, -2.}, {1.90625, -2.}}], 
+               LineBox[{{2.09375, -2.}, {2.375, -2.}}], 
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+                DiskBox[{2., -2.}, 0.09375]}}, {}}, {{
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+                DiskBox[{3., -1.}, 0.375]}, 
+               {RGBColor[0.560181, 0.691569, 0.194885], 
+                LineBox[{{3., -1.375}, {3., -2.90625}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{2.625, -3.}, {2.90625, -3.}}], 
+               LineBox[{{3.09375, -3.}, {3.375, -3.}}], 
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+                DiskBox[{3., -3.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{3.625, -2.375}, {4.375, -1.625},
+               RoundingRadius->0.1]}, {{
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+                DiskBox[{5., -2.}, 0.375]}, 
+               {RGBColor[0.560181, 0.691569, 0.194885], 
+                LineBox[{{5., -2.375}, {5., -2.90625}}]}}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{4.625, -3.}, {4.90625, -3.}}], 
+               LineBox[{{5.09375, -3.}, {5.375, -3.}}], 
+               {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+                RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+                DiskBox[{5., -3.}, 0.09375]}}, {}}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{5.625, -3.375}, {6.375, -2.625},
+               RoundingRadius->0.1]}, {
+              {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+               LineBox[{{6.625, -1}, {7.375, -1}}], 
+               LineBox[{{6.625, -3}, {7.375, -3}}], 
+               LineBox[{{7., -1}, {7., -3}}]}, 
+              {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], 
+               Opacity[0.8], 
+               LineBox[{{6.893933982822018, -1.1060660171779821`}, {
+                7.106066017177982, -0.8939339828220179}}], 
+               LineBox[{{7.106066017177982, -1.1060660171779821`}, {
+                6.893933982822018, -0.8939339828220179}}], 
+               LineBox[{{6.893933982822018, -3.106066017177982}, {
+                7.106066017177982, -2.893933982822018}}], 
+               LineBox[{{7.106066017177982, -3.106066017177982}, {
+                6.893933982822018, -2.893933982822018}}]}}}, {}},
+           ImageSize->Tiny],
+          BaseStyle->"Paste",
+          ButtonData:>RowBox[{"QuantumCircuitOperator", "[", 
+             RowBox[{"{", 
+               RowBox[{"\"Fourier\"", ",", "3"}], "}"}], "]"}]], 
+         ButtonBox[
+          GraphicsBox[{
+            {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+             LineBox[{{0.375, -1}, {0.625, -1}}], 
+             LineBox[{{0.375, -2}, {0.625, -2}}], 
+             LineBox[{{0.375, -3}, {0.625, -3}}], 
+             LineBox[{{1.375, -1}, {1.625, -1}}], 
+             LineBox[{{1.375, -2}, {1.625, -2}}], 
+             LineBox[{{2.375, -1}, {2.625, -1}}], 
+             LineBox[{{2.375, -2}, {2.625, -2}}], 
+             LineBox[{{3.375, -1}, {3.625, -1}}], 
+             LineBox[{{3.375, -2}, {3.625, -2}}], 
+             LineBox[{{1.375, -3}, {3.625, -3}}], 
+             LineBox[{{4.375, -1}, {4.625, -1}}], 
+             LineBox[{{4.375, -2}, {4.625, -2}}], 
+             LineBox[{{5.375, -1}, {5.625, -1}}], 
+             LineBox[{{5.375, -2}, {5.625, -2}}], 
+             LineBox[{{6.375, -1}, {6.625, -1}}], 
+             LineBox[{{6.375, -2}, {6.625, -2}}], 
+             LineBox[{{4.375, -3}, {6.625, -3}}]}, {
+             GeometricTransformationBox[{
+               {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[
+                0.8], Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+                0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+                RectangleBox[
+                 NCache[{0.4375, Rational[-1, 2]}, {0.4375, -0.5}], 
+                 NCache[{1.5625, Rational[-7, 2]}, {1.5625, -3.5}],
+                 RoundingRadius->0.1]}, 
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{0.625, -1}, {0.625, -1}}], 
+                LineBox[{{0.625, -2}, {0.625, -2}}], 
+                LineBox[{{0.625, -3}, {0.625, -3}}], 
+                LineBox[{{1.375, -1}, {1.375, -1}}], 
+                LineBox[{{1.375, -2}, {1.375, -2}}], 
+                LineBox[{{1.375, -3}, {1.375, -3}}]}, {{
+                 {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                  LineBox[{{0.625, -3.}, {0.85, -3.}}], 
+                  LineBox[{{1.15, -3.}, {1.375, -3.}}], 
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.15]}], DiskBox[{1., -3.}, 0.15000000000000002], 
+                   {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                    LineBox[{{0.85, -3.}, {1.15, -3.}}], 
+                    LineBox[{{1., -3.15}, {1., -2.85}}]}}}, {
+                  {RGBColor[0.880722, 0.611041, 0.142051], 
+                   LineBox[{{1., -1.09375}, {1., -1.90625}}]}, 
+                  {RGBColor[0.880722, 0.611041, 0.142051], 
+                   LineBox[{{1., -2.09375}, {1., -2.85}}]}}}, {
+                 {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                  LineBox[{{0.625, -1.}, {0.90625, -1.}}], 
+                  LineBox[{{1.09375, -1.}, {1.375, -1.}}], 
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.8]}], DiskBox[{1., -1.}, 0.09375]}}, 
+                 {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                  LineBox[{{0.625, -2.}, {0.90625, -2.}}], 
+                  LineBox[{{1.09375, -2.}, {1.375, -2.}}], 
+                  {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], 
+                   FaceForm[{RGBColor[0.880722, 0.611041, 0.142051], Opacity[
+                   0.8]}], DiskBox[{1., -2.}, 0.09375]}}}, {}}, {}}, {0, 
+              0}], 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{1.625, -1.375}, {2.375, -0.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{1.625, -2.375}, {2.375, -1.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+              RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+              RectangleBox[{2.625, -1.375}, {3.375, -0.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+              RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+              RectangleBox[{2.625, -2.375}, {3.375, -1.625},
+               RoundingRadius->0.1]}, {{
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{3.625, -3.}, {3.85, -3.}}], 
+                LineBox[{{4.15, -3.}, {4.375, -3.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+                 DiskBox[{4., -3.}, 0.15000000000000002], 
+                 {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+                  LineBox[{{3.85, -3.}, {4.15, -3.}}], 
+                  LineBox[{{4., -3.15}, {4., -2.85}}]}}}, {
+                {RGBColor[0.880722, 0.611041, 0.142051], 
+                 LineBox[{{4., -1.09375}, {4., -1.90625}}]}, 
+                {RGBColor[0.880722, 0.611041, 0.142051], 
+                 LineBox[{{4., -2.09375}, {4., -2.85}}]}}}, {
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{3.625, -1.}, {3.90625, -1.}}], 
+                LineBox[{{4.09375, -1.}, {4.375, -1.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                 DiskBox[{4., -1.}, 0.09375]}}, 
+               {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+                LineBox[{{3.625, -2.}, {3.90625, -2.}}], 
+                LineBox[{{4.09375, -2.}, {4.375, -2.}}], 
+                {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+                 RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.8]}], 
+                 DiskBox[{4., -2.}, 0.09375]}}}, {}}, 
+             {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+              RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+              RectangleBox[{4.625, -1.375}, {5.375, -0.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+              RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+              RectangleBox[{4.625, -2.375}, {5.375, -1.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{5.625, -1.375}, {6.375, -0.625},
+               RoundingRadius->0.1]}, 
+             {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{
+              RGBColor[0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+              RectangleBox[{5.625, -2.375}, {6.375, -1.625},
+               RoundingRadius->0.1]}}, {}},
+           ImageSize->Tiny],
+          BaseStyle->"Paste",
+          ButtonData:>RowBox[{"QuantumCircuitOperator", "[", 
+             RowBox[{"{", 
+               RowBox[{"\"Grover\"", ",", 
+                 RowBox[{"a", "&&", "b"}]}], "}"}], "]"}]]}
+       },
+       AutoDelete->False,
+       GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+      "Grid"]},
+    {"\<\"Functions\"\>"},
+    {
+     TagBox[GridBox[{
+        {
+         ButtonBox["QuantumTensorProduct",
+          BaseStyle->"Paste",
+          ButtonData:>RowBox[{"QuantumTensorProduct", "[", 
+             RowBox[{"\[Placeholder]", ",", "\[Placeholder]"}], "]"}]]},
+        {
+         ButtonBox["QuantumEntanglementMonotone",
+          BaseStyle->"Paste",
+          
+          ButtonData:>
+           RowBox[{"QuantumEntanglementMonotone", "[", "\[Placeholder]", 
+             "]"}]]},
+        {
+         ButtonBox["QuantumEntangledQ",
+          BaseStyle->"Paste",
+          
+          ButtonData:>
+           RowBox[{"QuantumEntangledQ", "[", "\[Placeholder]", "]"}]]},
+        {
+         ButtonBox["QuantumDistance",
+          BaseStyle->"Paste",
+          ButtonData:>RowBox[{"QuantumDistance", "[", 
+             RowBox[{"\[Placeholder]", ",", "\[Placeholder]"}], "]"}]]}
+       },
+       DefaultBaseStyle->"Column",
+       GridBoxAlignment->{"Columns" -> {{Left}}},
+       GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+      "Column"]}
+   },
+   DefaultBaseStyle->"Column",
+   GridBoxAlignment->{"Columns" -> {{Left}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Column"]]]
+},
+WindowSize->All,
+WindowMargins->{{Automatic, 0}, {Automatic, 0}},
+WindowElements->{},
+Visible->False,
+FrontEndVersion->"13.1 for Mac OS X ARM (64-bit) (June 21, 2022)",
+StyleDefinitions->"Palette.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[562, 20, 31002, 584, 506, InheritFromParent,ExpressionUUID->"233b69b0-0fb8-4bc5-b447-43f3e284967e"]
+}
+]
+*)
+
+(* End of internal cache information *)

@@ -1,3 +1,1872 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c7199ac1694d9b14e9eb032831de1c32ca58a7c91c32936eb6b79fe2f4b5e98f
-size 86147
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='WolframDesktop 13.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       161,          7]
+NotebookDataLength[     85985,       1864]
+NotebookOptionsPosition[     79210,       1747]
+NotebookOutlinePosition[     79625,       1764]
+CellTagsIndexPosition[     79582,       1761]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["IBMQ Runtime exploration:", "Subsubsection",
+ CellChangeTimes->{{3.864575325876876*^9, 
+  3.864575343572567*^9}},ExpressionUUID->"a0b5c8fc-b7ff-45ae-b278-\
+269b597b7513"],
+
+Cell[TextData[{
+ "Import the IBMQ token from the default location Qiskit saves it in (",
+ ButtonBox["https://qiskit.org/documentation/partners/qiskit_ibm_runtime/\
+getting_started.html",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_\
+started.html"], None},
+  ButtonNote->
+   "https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_\
+started.html"],
+ ")"
+}], "Text",
+ CellChangeTimes->{{3.864574777303557*^9, 3.864574805820677*^9}, {
+  3.864575126350356*^9, 3.864575130315508*^9}, {3.885558283147232*^9, 
+  3.885558289238893*^9}},ExpressionUUID->"4447bee3-33a5-4de2-8ddd-\
+a9f599e86241"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"token", "=", 
+   RowBox[{
+    RowBox[{"Import", "[", 
+     RowBox[{"\"\<~/.qiskit/qiskit-ibm.json\>\"", ",", "\"\<RawJSON\>\""}], 
+     "]"}], "[", 
+    RowBox[{"\"\<default-ibm-quantum\>\"", ",", "\"\<token\>\""}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.864531691208528*^9, 3.8645317190820847`*^9}},
+ CellLabel->
+  "In[350]:=",ExpressionUUID->"882f7f1b-75da-4877-8368-d9c0fcef31d8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"token", "=", 
+   InterpretationBox[
+    DynamicModuleBox[{Typeset`open = False}, 
+     TemplateBox[{"String", 
+       StyleBox[
+       "\"ibm_quantum_token\"", "IconizedCustomName", StripOnInput -> False], 
+       
+       GridBox[{{
+          RowBox[{
+            TagBox["\"Head: \"", "IconizedLabel"], "\[InvisibleSpace]", 
+            TagBox["String", "IconizedItem"]}]}, {
+          RowBox[{
+            TagBox["\"String length: \"", "IconizedLabel"], 
+            "\[InvisibleSpace]", 
+            TagBox["128", "IconizedItem"]}]}, {
+          RowBox[{
+            TagBox["\"Byte count: \"", "IconizedLabel"], "\[InvisibleSpace]", 
+            
+            TagBox["160", "IconizedItem"]}]}}, 
+        GridBoxAlignment -> {"Columns" -> {{Left}}}, DefaultBaseStyle -> 
+        "Column", 
+        GridBoxItemSize -> {
+         "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+       Dynamic[Typeset`open]},
+      "IconizedObject"]],
+    "be70cae5f041aa82fd39cd0085e15ebd1e451d313f67e82198d0624f5f8b9a01b790df50a\
+10fdfc36790760f23bf41aafcb7d63a042b5670a91a0290d4d0d818",
+    SelectWithContents->True,
+    Selectable->False]}], ";"}]], "Input",
+ CellChangeTimes->{{3.8855581602872543`*^9, 3.88555816400033*^9}, {
+  3.885558301150899*^9, 3.885558318283185*^9}},
+ CellLabel->
+  "In[155]:=",ExpressionUUID->"4cf4bfa2-20e1-45a4-a138-dc86f7a56da1"],
+
+Cell["Login with this token and extract access id:", "Text",
+ CellChangeTimes->{{3.864574813696026*^9, 
+  3.864574851272025*^9}},ExpressionUUID->"6925d70d-6dd7-4c7d-997b-\
+8c987e5065bf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"id", "=", 
+   RowBox[{
+    RowBox[{"URLExecute", "[", 
+     RowBox[{
+      RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+       RowBox[{
+       "\"\<https://auth.quantum-computing.ibm.com/api/users/loginWithToken\>\
+\"", ",", 
+        RowBox[{"<|", 
+         RowBox[{
+          RowBox[{"Method", "->", "\"\<POST\>\""}], ",", 
+          RowBox[{"\"\<Body\>\"", "->", 
+           RowBox[{"<|", 
+            RowBox[{"\"\<apiToken\>\"", "->", "token"}], "|>"}]}]}], "|>"}]}],
+        "]"}], ",", "\"\<RawJSON\>\""}], "]"}], "[", "\"\<id\>\"", "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.864531642241848*^9, 3.864531685920363*^9}, {
+  3.864531721824657*^9, 3.8645317693485518`*^9}, {3.8645318735591173`*^9, 
+  3.8645318894268293`*^9}, {3.8645320655783367`*^9, 3.8645320659850883`*^9}, {
+  3.86453241674067*^9, 3.864532416935109*^9}, {3.864574916218048*^9, 
+  3.864574919529664*^9}, {3.864575154940014*^9, 3.864575195548053*^9}, {
+  3.864575228973216*^9, 3.864575231525428*^9}, {3.8830500210388393`*^9, 
+  3.88305002246344*^9}},
+ CellLabel->
+  "In[156]:=",ExpressionUUID->"494bee32-86ba-4e37-8404-569bfb215462"],
+
+Cell["Query information about user account:", "Text",
+ CellChangeTimes->{{3.864574857987886*^9, 
+  3.864574877563534*^9}},ExpressionUUID->"0255c096-6af9-4b17-b324-\
+c6ce3c0f2141"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"me", "=", 
+   RowBox[{"URLExecute", "[", 
+    RowBox[{
+     RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+      RowBox[{
+      "\"\<https://auth.quantum-computing.ibm.com/api/users/me\>\"", ",", 
+       RowBox[{"<|", 
+        RowBox[{
+         RowBox[{"Method", "->", "\"\<GET\>\""}], ",", 
+         RowBox[{"\"\<Headers\>\"", "->", 
+          RowBox[{"<|", 
+           RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], "|>"}]}]}], 
+        "|>"}]}], "]"}], ",", "\"\<RawJSON\>\""}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.864531784816574*^9, 3.86453178917494*^9}, {
+  3.864531903609221*^9, 3.864531903737656*^9}, {3.864531949542536*^9, 
+  3.864531990383237*^9}, {3.864532025050168*^9, 3.864532026577198*^9}, {
+  3.864532072614997*^9, 3.864532073063192*^9}, {3.864532420026937*^9, 
+  3.8645324201373053`*^9}, {3.864575246534548*^9, 3.864575253534996*^9}, {
+  3.883050028661606*^9, 3.883050030611661*^9}},
+ CellLabel->
+  "In[182]:=",ExpressionUUID->"76e5be55-d4d7-4bcf-998d-ad62266786d6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Keys", "@", "me"}]], "Input",
+ CellChangeTimes->{{3.864574881922497*^9, 3.864574883369014*^9}},
+ CellLabel->
+  "In[183]:=",ExpressionUUID->"43bde95f-91c0-4a7f-86d7-bea324f46b97"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"email\"\>", ",", "\<\"username\"\>", ",", "\<\"userType\"\>", 
+   ",", "\<\"firstName\"\>", ",", "\<\"lastName\"\>", 
+   ",", "\<\"institution\"\>", ",", "\<\"roles\"\>", 
+   ",", "\<\"ibmQNetwork\"\>", ",", "\<\"qNetworkRoles\"\>", 
+   ",", "\<\"canScheduleBackends\"\>", ",", "\<\"applications\"\>", 
+   ",", "\<\"urls\"\>", ",", "\<\"subscriptions\"\>", 
+   ",", "\<\"needsRefill\"\>", ",", "\<\"emailVerified\"\>", 
+   ",", "\<\"terms\"\>", ",", "\<\"loginAccounts\"\>", 
+   ",", "\<\"readOnly\"\>", ",", "\<\"id\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{3.8645748838121357`*^9, 3.864575258251252*^9, 
+  3.865685110012562*^9, 3.865691630878414*^9, 3.86662098518228*^9, 
+  3.867161870743878*^9, 3.883050032853426*^9, 3.885558522650606*^9},
+ CellLabel->
+  "Out[183]=",ExpressionUUID->"a0f649b2-c4a0-4995-aecd-c84b293c72ba"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"runtimeURL", "=", 
+  RowBox[{
+   RowBox[{"Query", "[", 
+    RowBox[{"\"\<urls\>\"", ",", "\"\<services\>\"", ",", "\"\<runtime\>\""}],
+     "]"}], "@", "me"}]}]], "Input",
+ CellChangeTimes->{{3.8645338032371283`*^9, 3.864533832785741*^9}, {
+  3.864575461685131*^9, 3.864575463541779*^9}},
+ CellLabel->
+  "In[184]:=",ExpressionUUID->"542c60e0-fb56-481a-9f71-a3fd0c34a0a6"],
+
+Cell[BoxData["\<\"https://runtime-us-east.quantum-computing.ibm.com\"\>"], \
+"Output",
+ CellChangeTimes->{{3.864533804157144*^9, 3.8645338334783783`*^9}, 
+   3.864575259209305*^9, 3.864575463963771*^9, 3.864644544519277*^9, 
+   3.865685110057053*^9, 3.865691630931016*^9, 3.866620985487615*^9, 
+   3.8666218245758247`*^9, 3.867161870818087*^9, 3.883050355956607*^9, 
+   3.885558523288115*^9},
+ CellLabel->
+  "Out[184]=",ExpressionUUID->"b61393e7-f27d-4a1f-a287-4e90142980bb"]
+}, Open  ]],
+
+Cell["Query the network information:", "Text",
+ CellChangeTimes->{{3.8645749047653913`*^9, 3.864574908057126*^9}, {
+  3.864575265625708*^9, 
+  3.864575274560247*^9}},ExpressionUUID->"8cbb28fb-de16-447c-b7a9-\
+dd07c1218db4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"network", "=", 
+   RowBox[{"First", "@", 
+    RowBox[{"URLExecute", "[", 
+     RowBox[{
+      RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+       RowBox[{
+       "\"\<https://api.quantum-computing.ibm.com/api/Network\>\"", ",", 
+        RowBox[{"<|", 
+         RowBox[{
+          RowBox[{"Method", "->", "\"\<GET\>\""}], ",", 
+          RowBox[{"\"\<Headers\>\"", "->", 
+           RowBox[{"<|", 
+            RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], "|>"}]}]}], 
+         "|>"}]}], "]"}], ",", "\"\<RawJSON\>\""}], "]"}]}]}], ";"}]], "Input",\
+
+ CellChangeTimes->{{3.864532162125288*^9, 3.86453220155126*^9}, {
+   3.864532238339916*^9, 3.864532243319256*^9}, {3.864532426360091*^9, 
+   3.864532426494205*^9}, {3.864575277441259*^9, 3.864575284898933*^9}, 
+   3.883050362632621*^9},
+ CellLabel->
+  "In[185]:=",ExpressionUUID->"fcf2cb4d-9c7b-4bba-836b-c342b7c585b4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"network", "[", "\"\<device\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.864532269246231*^9, 3.864532271219573*^9}},
+ CellLabel->
+  "In[186]:=",ExpressionUUID->"25873738-837e-440b-9d26-6b1ec6a03709"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"ibmqx4\"\>", ",", "\<\"ibmqx2\"\>", 
+   ",", "\<\"ibmq_qasm_simulator\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{3.864532325429887*^9, 3.8645332261926947`*^9, 
+  3.864575291347245*^9, 3.864644547170555*^9, 3.865685118693369*^9, 
+  3.86569163412199*^9, 3.8666209886765833`*^9, 3.8671618730782633`*^9, 
+  3.88305036607163*^9, 3.885558527176351*^9},
+ CellLabel->
+  "Out[186]=",ExpressionUUID->"cd6129de-cff1-499f-be49-d67b2ca47532"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"network", "[", "\"\<name\>\"", "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{
+   "\"\<groups\>\"", ",", "\"\<open\>\"", ",", "\"\<projects\>\"", ",", 
+    "\"\<main\>\"", ",", "\"\<devices\>\"", ",", "All", ",", "\"\<name\>\""}],
+    "]"}], "@", "network"}]}], "Input",
+ CellChangeTimes->{{3.8645322666268044`*^9, 3.864532315806534*^9}, {
+  3.864532988501349*^9, 3.864532995408296*^9}, {3.864575441845188*^9, 
+  3.864575454586814*^9}},
+ CellLabel->
+  "In[187]:=",ExpressionUUID->"6d63e37b-080b-44e9-a77c-4ddb142cbd6f"],
+
+Cell[BoxData["\<\"ibm-q\"\>"], "Output",
+ CellChangeTimes->{{3.864532253170784*^9, 3.864532316279045*^9}, {
+   3.864532991612097*^9, 3.864532997169283*^9}, 3.8645752935700827`*^9, 
+   3.8645754561695538`*^9, 3.864644547218246*^9, 3.865685118758443*^9, 
+   3.86569163413704*^9, 3.866620988734703*^9, 3.867161873135253*^9, 
+   3.883050367175727*^9, 3.885558527240056*^9},
+ CellLabel->
+  "Out[187]=",ExpressionUUID->"82642ff0-05b6-4fe9-ba70-91df692012e9"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"5ae875670f020500393162ad\"\>", 
+    "\[Rule]", "\<\"ibmq_qasm_simulator\"\>"}], ",", 
+   RowBox[{"\<\"60103afaca625b70a5b1694c\"\>", 
+    "\[Rule]", "\<\"ibmq_quito\"\>"}], ",", 
+   RowBox[{"\<\"60103abcca625b70a5b16943\"\>", 
+    "\[Rule]", "\<\"ibmq_lima\"\>"}], ",", 
+   RowBox[{"\<\"60103adeca625b70a5b16948\"\>", 
+    "\[Rule]", "\<\"ibmq_belem\"\>"}], ",", 
+   RowBox[{"\<\"60427bc8fd7d013b65e51e2c\"\>", 
+    "\[Rule]", "\<\"simulator_extended_stabilizer\"\>"}], ",", 
+   RowBox[{"\<\"60427b82fd7d013b65e51e2b\"\>", 
+    "\[Rule]", "\<\"simulator_mps\"\>"}], ",", 
+   RowBox[{"\<\"60427b19fd7d013b65e51e2a\"\>", 
+    "\[Rule]", "\<\"simulator_statevector\"\>"}], ",", 
+   RowBox[{"\<\"60427c0cfd7d013b65e51e2d\"\>", 
+    "\[Rule]", "\<\"simulator_stabilizer\"\>"}], ",", 
+   RowBox[{"\<\"607865bb1c360deed3e70bbf\"\>", 
+    "\[Rule]", "\<\"ibmq_manila\"\>"}], ",", 
+   RowBox[{"\<\"62752cc029e3b710fc620be7\"\>", 
+    "\[Rule]", "\<\"ibm_oslo\"\>"}], ",", 
+   RowBox[{"\<\"60b743db34872ea2b9879dd7\"\>", 
+    "\[Rule]", "\<\"ibm_nairobi\"\>"}]}], "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{{3.864532253170784*^9, 3.864532316279045*^9}, {
+   3.864532991612097*^9, 3.864532997169283*^9}, 3.8645752935700827`*^9, 
+   3.8645754561695538`*^9, 3.864644547218246*^9, 3.865685118758443*^9, 
+   3.86569163413704*^9, 3.866620988734703*^9, 3.867161873135253*^9, 
+   3.883050367175727*^9, 3.8855585272426357`*^9},
+ CellLabel->
+  "Out[188]=",ExpressionUUID->"db8c8d76-a40e-49ad-a5e3-4ae98550b865"]
+}, Open  ]],
+
+Cell["Query devices:", "Text",
+ CellChangeTimes->{{3.8645753190139427`*^9, 
+  3.8645753216074142`*^9}},ExpressionUUID->"978af4bd-b83a-4aee-8bd4-\
+713f52f68ad5"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"devices", "=", 
+   RowBox[{"URLExecute", "[", 
+    RowBox[{
+     RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+      RowBox[{
+      "\"\<https://api.quantum-computing.ibm.com/api/Network/ibm-q/Groups/\
+open/Projects/main/devices/v/1\>\"", ",", 
+       RowBox[{"<|", 
+        RowBox[{
+         RowBox[{"Method", "->", "\"\<GET\>\""}], ",", 
+         RowBox[{"\"\<Headers\>\"", "->", 
+          RowBox[{"<|", 
+           RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], "|>"}]}]}], 
+        "|>"}]}], "]"}], ",", "\"\<RawJSON\>\""}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.864532351999425*^9, 3.864532370609723*^9}, {
+   3.864532429964254*^9, 3.864532430091769*^9}, {3.864575300131217*^9, 
+   3.86457530734298*^9}, 3.883050369404149*^9},
+ CellLabel->
+  "In[189]:=",ExpressionUUID->"fd74058f-d94e-4591-ad60-414901dc92cc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"devices", "[", 
+  RowBox[{"[", 
+   RowBox[{"All", ",", "\"\<backend_name\>\""}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.885558535722224*^9, 3.885558542343705*^9}},
+ CellLabel->
+  "In[192]:=",ExpressionUUID->"ce1e8b46-25b3-49b7-89df-caa7b236e662"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"ibmq_qasm_simulator\"\>", ",", "\<\"ibmq_lima\"\>", 
+   ",", "\<\"ibmq_belem\"\>", ",", "\<\"ibmq_quito\"\>", 
+   ",", "\<\"simulator_statevector\"\>", ",", "\<\"simulator_mps\"\>", 
+   ",", "\<\"simulator_extended_stabilizer\"\>", 
+   ",", "\<\"simulator_stabilizer\"\>", ",", "\<\"ibmq_manila\"\>", 
+   ",", "\<\"ibm_nairobi\"\>", ",", "\<\"ibm_oslo\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{{3.8855585337684603`*^9, 3.885558542560809*^9}},
+ CellLabel->
+  "Out[192]=",ExpressionUUID->"51aa7fb5-1380-4665-bafa-d243f90d2552"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Intersection", "@@", 
+  RowBox[{"Keys", "/@", "devices"}]}]], "Input",
+ CellChangeTimes->{{3.864532447240101*^9, 3.86453247614965*^9}},
+ CellLabel->
+  "In[190]:=",ExpressionUUID->"9fed81e2-89f7-46a9-a336-3e7cf516db39"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"allow_object_storage\"\>", ",", "\<\"allow_q_object\"\>", 
+   ",", "\<\"backend_name\"\>", ",", "\<\"backend_version\"\>", 
+   ",", "\<\"basis_gates\"\>", ",", "\<\"conditional\"\>", 
+   ",", "\<\"coupling_map\"\>", ",", "\<\"gates\"\>", 
+   ",", "\<\"input_allowed\"\>", ",", "\<\"live_data\"\>", 
+   ",", "\<\"local\"\>", ",", "\<\"max_experiments\"\>", 
+   ",", "\<\"max_shots\"\>", ",", "\<\"memory\"\>", ",", "\<\"n_qubits\"\>", 
+   ",", "\<\"online_date\"\>", ",", "\<\"open_pulse\"\>", 
+   ",", "\<\"pulse_num_channels\"\>", ",", "\<\"pulse_num_qubits\"\>", 
+   ",", "\<\"simulator\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{{3.864532449792656*^9, 3.864532476412936*^9}, 
+   3.864575310611219*^9, 3.864644550841164*^9, 3.866620990750391*^9, 
+   3.8671618742310867`*^9, 3.883050371744858*^9, 3.8855585306620092`*^9},
+ CellLabel->
+  "Out[190]=",ExpressionUUID->"802b0bc9-af92-4e17-a14d-1e0780933111"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{"All", ",", 
+    RowBox[{"{", 
+     RowBox[{
+     "\"\<backend_name\>\"", ",", "\"\<n_qubits\>\"", ",", 
+      "\"\<basis_gates\>\""}], "}"}]}], "]"}], "@", "devices"}]], "Input",
+ CellChangeTimes->{{3.8645323782533693`*^9, 3.864532378501178*^9}, {
+  3.864532435531561*^9, 3.864532442398079*^9}, {3.864532483579475*^9, 
+  3.864532488953141*^9}, {3.864575431848061*^9, 3.864575436592371*^9}, {
+  3.865685130030643*^9, 3.865685131109435*^9}},
+ CellLabel->
+  "In[368]:=",ExpressionUUID->"7c3cfb4a-b7b0-4932-bbb6-9f2fda696640"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", 
+      "\[Rule]", "\<\"ibmq_qasm_simulator\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "32"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"u1\"\>", ",", "\<\"u2\"\>", ",", "\<\"u3\"\>", 
+        ",", "\<\"u\"\>", ",", "\<\"p\"\>", ",", "\<\"r\"\>", 
+        ",", "\<\"rx\"\>", ",", "\<\"ry\"\>", ",", "\<\"rz\"\>", 
+        ",", "\<\"cx\"\>", ",", "\<\"cy\"\>", ",", "\<\"cz\"\>", 
+        ",", "\<\"csx\"\>", ",", "\<\"cp\"\>", ",", "\<\"id\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"y\"\>", ",", "\<\"z\"\>", 
+        ",", "\<\"h\"\>", ",", "\<\"s\"\>", ",", "\<\"sdg\"\>", 
+        ",", "\<\"sx\"\>", ",", "\<\"t\"\>", ",", "\<\"tdg\"\>", 
+        ",", "\<\"swap\"\>", ",", "\<\"ccx\"\>", ",", "\<\"cswap\"\>", 
+        ",", "\<\"unitary\"\>", ",", "\<\"diagonal\"\>", 
+        ",", "\<\"initialize\"\>", ",", "\<\"cu1\"\>", ",", "\<\"cu2\"\>", 
+        ",", "\<\"cu3\"\>", ",", "\<\"rxx\"\>", ",", "\<\"ryy\"\>", 
+        ",", "\<\"rzz\"\>", ",", "\<\"rzx\"\>", ",", "\<\"mcx\"\>", 
+        ",", "\<\"mcy\"\>", ",", "\<\"mcz\"\>", ",", "\<\"mcsx\"\>", 
+        ",", "\<\"mcp\"\>", ",", "\<\"mcu1\"\>", ",", "\<\"mcu2\"\>", 
+        ",", "\<\"mcu3\"\>", ",", "\<\"mcrx\"\>", ",", "\<\"mcry\"\>", 
+        ",", "\<\"mcrz\"\>", ",", "\<\"mcr\"\>", ",", "\<\"mcswap\"\>", 
+        ",", "\<\"multiplexer\"\>", ",", "\<\"kraus\"\>", 
+        ",", "\<\"delay\"\>", ",", "\<\"roerror\"\>"}], "}"}]}]}], 
+    "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibmq_lima\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "5"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibmq_belem\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "5"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibmq_quito\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "5"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", 
+      "\[Rule]", "\<\"simulator_statevector\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "32"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"u1\"\>", ",", "\<\"u2\"\>", ",", "\<\"u3\"\>", 
+        ",", "\<\"u\"\>", ",", "\<\"p\"\>", ",", "\<\"r\"\>", 
+        ",", "\<\"rx\"\>", ",", "\<\"ry\"\>", ",", "\<\"rz\"\>", 
+        ",", "\<\"id\"\>", ",", "\<\"x\"\>", ",", "\<\"y\"\>", 
+        ",", "\<\"z\"\>", ",", "\<\"h\"\>", ",", "\<\"s\"\>", 
+        ",", "\<\"sdg\"\>", ",", "\<\"sx\"\>", ",", "\<\"t\"\>", 
+        ",", "\<\"tdg\"\>", ",", "\<\"swap\"\>", ",", "\<\"cx\"\>", 
+        ",", "\<\"cy\"\>", ",", "\<\"cz\"\>", ",", "\<\"csx\"\>", 
+        ",", "\<\"cp\"\>", ",", "\<\"cu1\"\>", ",", "\<\"cu2\"\>", 
+        ",", "\<\"cu3\"\>", ",", "\<\"rxx\"\>", ",", "\<\"ryy\"\>", 
+        ",", "\<\"rzz\"\>", ",", "\<\"rzx\"\>", ",", "\<\"ccx\"\>", 
+        ",", "\<\"cswap\"\>", ",", "\<\"mcx\"\>", ",", "\<\"mcy\"\>", 
+        ",", "\<\"mcz\"\>", ",", "\<\"mcsx\"\>", ",", "\<\"mcp\"\>", 
+        ",", "\<\"mcu1\"\>", ",", "\<\"mcu2\"\>", ",", "\<\"mcu3\"\>", 
+        ",", "\<\"mcrx\"\>", ",", "\<\"mcry\"\>", ",", "\<\"mcrz\"\>", 
+        ",", "\<\"mcr\"\>", ",", "\<\"mcswap\"\>", ",", "\<\"unitary\"\>", 
+        ",", "\<\"diagonal\"\>", ",", "\<\"multiplexer\"\>", 
+        ",", "\<\"initialize\"\>", ",", "\<\"kraus\"\>", 
+        ",", "\<\"roerror\"\>", ",", "\<\"delay\"\>"}], "}"}]}]}], 
+    "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"simulator_mps\"\>"}], 
+     ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "100"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"unitary\"\>", ",", "\<\"t\"\>", ",", "\<\"tdg\"\>", 
+        ",", "\<\"id\"\>", ",", "\<\"cp\"\>", ",", "\<\"u1\"\>", 
+        ",", "\<\"u2\"\>", ",", "\<\"u3\"\>", ",", "\<\"u\"\>", 
+        ",", "\<\"cx\"\>", ",", "\<\"cz\"\>", ",", "\<\"x\"\>", 
+        ",", "\<\"y\"\>", ",", "\<\"z\"\>", ",", "\<\"h\"\>", 
+        ",", "\<\"s\"\>", ",", "\<\"sdg\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"swap\"\>", ",", "\<\"p\"\>", ",", "\<\"ccx\"\>", 
+        ",", "\<\"delay\"\>", ",", "\<\"roerror\"\>"}], "}"}]}]}], 
+    "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", 
+      "\[Rule]", "\<\"simulator_extended_stabilizer\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "63"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"u0\"\>", ",", "\<\"u1\"\>", ",", "\<\"cx\"\>", 
+        ",", "\<\"cz\"\>", ",", "\<\"id\"\>", ",", "\<\"x\"\>", 
+        ",", "\<\"y\"\>", ",", "\<\"z\"\>", ",", "\<\"h\"\>", 
+        ",", "\<\"s\"\>", ",", "\<\"sdg\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"t\"\>", ",", "\<\"tdg\"\>", ",", "\<\"swap\"\>", 
+        ",", "\<\"p\"\>", ",", "\<\"ccx\"\>", ",", "\<\"ccz\"\>", 
+        ",", "\<\"delay\"\>", ",", "\<\"roerror\"\>"}], "}"}]}]}], 
+    "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", 
+      "\[Rule]", "\<\"simulator_stabilizer\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "5000"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"cx\"\>", ",", "\<\"cy\"\>", ",", "\<\"cz\"\>", 
+        ",", "\<\"id\"\>", ",", "\<\"x\"\>", ",", "\<\"y\"\>", 
+        ",", "\<\"z\"\>", ",", "\<\"h\"\>", ",", "\<\"s\"\>", 
+        ",", "\<\"sdg\"\>", ",", "\<\"sx\"\>", ",", "\<\"swap\"\>", 
+        ",", "\<\"delay\"\>", ",", "\<\"roerror\"\>"}], "}"}]}]}], 
+    "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibmq_manila\"\>"}], ",", 
+     
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "5"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibm_nairobi\"\>"}], ",", 
+     
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "7"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}], ",", 
+   RowBox[{"\[LeftAssociation]", 
+    RowBox[{
+     RowBox[{"\<\"backend_name\"\>", "\[Rule]", "\<\"ibm_oslo\"\>"}], ",", 
+     RowBox[{"\<\"n_qubits\"\>", "\[Rule]", "7"}], ",", 
+     RowBox[{"\<\"basis_gates\"\>", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\<\"id\"\>", ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", 
+        ",", "\<\"x\"\>", ",", "\<\"cx\"\>", ",", "\<\"reset\"\>"}], 
+       "}"}]}]}], "\[RightAssociation]"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.864532374541298*^9, 3.8645323787760363`*^9}, 
+   3.8645324429026814`*^9, 3.864532498620906*^9, 3.8645753121006413`*^9, 
+   3.864575436988875*^9, 3.864644551722499*^9, 3.865685132285667*^9, 
+   3.866620991297962*^9, 3.866621833231398*^9, 3.8671618742858353`*^9, 
+   3.867165291817848*^9, 3.883050374020328*^9},
+ CellLabel->
+  "Out[368]=",ExpressionUUID->"53439ed0-1c33-405e-8e13-3eb362ed5a15"]
+}, Open  ]],
+
+Cell["Get some QASMs:", "Text",
+ CellChangeTimes->{{3.864575684289597*^9, 
+  3.864575688513945*^9}},ExpressionUUID->"a7aa23eb-fed2-4995-9843-\
+dfbacc90d1f0"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"simpleQASM", "=", 
+  RowBox[{
+  "Import", "[", 
+   "\"\<https://raw.githubusercontent.com/Qiskit/qiskit-terra/main/examples/\
+qasm/simple.qasm\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.8645365007393513`*^9, 3.8645365162547197`*^9}, {
+  3.864575482753316*^9, 3.8645754875443974`*^9}},
+ CellLabel->
+  "In[784]:=",ExpressionUUID->"bfa17c79-7c47-41dc-850a-34038410e80f"],
+
+Cell[BoxData["\<\"include \\\"qelib1.inc\\\";\\nqreg q[2];\\n\\nh q[0];\\ncx \
+q[0],q[1];\"\>"], "Output",
+ CellChangeTimes->{3.8645364816485863`*^9, 3.864536516758547*^9, 
+  3.864575489007704*^9, 3.866621858656547*^9, 3.8671618771909943`*^9},
+ CellLabel->
+  "Out[784]=",ExpressionUUID->"cb734a3e-754d-499b-ae99-9483fb253f0c"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+  "qasm", "=", 
+   "\"\<include \\\"qelib1.inc\\\";\\nqreg q[2];\\n\\nx q[0];\\ncx q[0],q[1];\
+\>\""}], ";"}]], "Input",
+ CellChangeTimes->{{3.866621893466095*^9, 3.866621902313779*^9}},
+ CellLabel->"In[34]:=",ExpressionUUID->"8ea35e9c-9470-4355-91aa-a6536c4e08b7"],
+
+Cell[BoxData[
+ RowBox[{"<<", "Wolfram`QuantumFramework`"}]], "Input",
+ CellChangeTimes->{{3.865691634459345*^9, 3.865691639972107*^9}},
+ CellLabel->"In[71]:=",ExpressionUUID->"9b8a20a3-3b26-4817-acdb-6c46d694d5cc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"circuit", "=", 
+  RowBox[{"QuantumCircuitOperator", "[", "\"\<Bell\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.8656851847608347`*^9, 3.8656851862885237`*^9}, {
+  3.865685943695099*^9, 3.865685946732542*^9}, {3.865686757439324*^9, 
+  3.865686757880713*^9}, {3.86716523281571*^9, 3.8671652345696*^9}},
+ CellLabel->"In[84]:=",ExpressionUUID->"5fcbfa2c-194c-4ecf-997a-b0f112ccec35"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QuantumCircuitOperator",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 RGBColor[0.537254, 0.537254, 0.537254], 
+                 Opacity[0.3], {{
+                   LineBox[{{0.375, -1}, {0.625, -1}}]}, {
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}, {
+                   LineBox[{{0.375, -2}, {1.625, -2}}]}, {
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}, {
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}}, {{
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[
+                   Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]]], 
+                  
+                  RectangleBox[{0.625, -1.375}, {1.375, -0.625}, {
+                   RoundingRadius -> 0.1}]}, {{{{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{1.625, -2.}, {1.85, -2.}}], 
+                    LineBox[{{2.15, -2.}, {2.375, -2.}}], 
+                    EdgeForm[
+                    RGBColor[0.880722, 0.611041, 0.142051]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]]], 
+                    DiskBox[{2., -2.}, 0.15000000000000002`], 
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]], 
+                    Opacity[1], 
+                    LineBox[{{1.85, -2.}, {2.15, -2.}}], 
+                    LineBox[{{2., -2.15}, {2., -1.85}}]}, {{
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    LineBox[{{2., -1.09375}, {2., -1.85}}]}}}}, {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+                    LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.880722, 0.611041, 0.142051]], 
+                    FaceForm[
+                    Directive[
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]], 
+                    Opacity[0.8]]], 
+                    DiskBox[{2., -1.}, 0.09375]}}, {}}}, {}}, {
+               ImageSize -> Tiny}], "\"Bell\"", LabelStyle -> "TextStyling"], 
+             Annotation[#, "Bell", "Tooltip"]& ], 
+            InterpretationBox[
+             TagBox[
+              
+              GridBox[{{""}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}], "Grid"], 
+             
+             Grid[{{}}, 
+              BaseStyle -> {
+               ShowStringCharacters -> False, NumberMarks -> False, 
+                PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+              Alignment -> {Left, Automatic}, Spacings -> {2, Automatic}]]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 RGBColor[0.537254, 0.537254, 0.537254], 
+                 Opacity[0.3], {{
+                   LineBox[{{0.375, -1}, {0.625, -1}}]}, {
+                   LineBox[{{1.375, -1}, {1.625, -1}}]}, {
+                   LineBox[{{0.375, -2}, {1.625, -2}}]}, {
+                   LineBox[{{2.375, -1}, {2.625, -1}}]}, {
+                   LineBox[{{2.375, -2}, {2.625, -2}}]}}}, {{
+                  EdgeForm[
+                   RGBColor[0.368417, 0.506779, 0.709798]], 
+                  FaceForm[
+                   Directive[
+                    RGBColor[0.368417, 0.506779, 0.709798], 
+                    Opacity[0.15]]], 
+                  
+                  RectangleBox[{0.625, -1.375}, {1.375, -0.625}, {
+                   RoundingRadius -> 0.1}]}, {{{{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{1.625, -2.}, {1.85, -2.}}], 
+                    LineBox[{{2.15, -2.}, {2.375, -2.}}], 
+                    EdgeForm[
+                    RGBColor[0.880722, 0.611041, 0.142051]], 
+                    FaceForm[
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]]], 
+                    DiskBox[{2., -2.}, 0.15000000000000002`], 
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]], 
+                    Opacity[1], 
+                    LineBox[{{1.85, -2.}, {2.15, -2.}}], 
+                    LineBox[{{2., -2.15}, {2., -1.85}}]}, {{
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    LineBox[{{2., -1.09375}, {2., -1.85}}]}}}}, {{
+                    RGBColor[0.537254, 0.537254, 0.537254], 
+                    Opacity[0.3], 
+                    LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+                    LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+                    EdgeForm[
+                    RGBColor[0.880722, 0.611041, 0.142051]], 
+                    FaceForm[
+                    Directive[
+                    Directive[
+                    RGBColor[0.880722, 0.611041, 0.142051], 
+                    Opacity[0.15]], 
+                    Opacity[0.8]]], 
+                    DiskBox[{2., -1.}, 0.09375]}}, {}}}, {}}, {
+               ImageSize -> Tiny}], "\"Bell\"", LabelStyle -> "TextStyling"], 
+             Annotation[#, "Bell", "Tooltip"]& ], 
+            GridBox[{{""}, {
+               RowBox[{
+                 TagBox["\"Gates: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["2", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Dimension: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["4", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Order: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"1", ",", "2"}], "}"}], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", "}"}], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, 
+             GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QuantumCircuitOperator[<|"Elements" -> {
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {4}, 0, {
+         1, {{0, 4}, {{1}, {2}, {3}, {4}}}, {
+          2^Rational[-1, 2], 2^Rational[-1, 2], 2^
+           Rational[-1, 2], -2^Rational[-1, 2]}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> "H", 
+          "ParameterSpec" -> {}|>]], {{1}, {1}}], 
+      Wolfram`QuantumFramework`QuantumOperator[
+       Wolfram`QuantumFramework`QuantumState[
+        SparseArray[
+        Automatic, {16}, 0, {
+         1, {{0, 4}, {{1}, {6}, {12}, {15}}}, {1, 1, 1, 1}}], 
+        Wolfram`QuantumFramework`QuantumBasis[<|
+         "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+               
+               Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+                False], 1} -> 1, {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 2} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[0, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {
+               Wolfram`QuantumFramework`QuditName[1, "Dual" -> True], 3} -> 
+             SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], 
+          "Picture" -> "Schr\[ODoubleDot]dinger", "Label" -> 
+          Subscript["C", "NOT"][{1}, {}], "ParameterSpec" -> {}|>]], {{1, 
+       2}, {1, 2}}]}, "Label" -> "Bell"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.8656851876576443`*^9, 3.86568594815372*^9, 
+  3.865686759226166*^9, 3.865691635223316*^9, 3.865691680285035*^9, 
+  3.866621930230804*^9, 3.867165235777519*^9, 3.875179385219411*^9},
+ CellLabel->"Out[84]=",ExpressionUUID->"3f054da6-ae5a-47c4-9e20-a9edaa1bcd9c"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"QuantumMeasurementOperator", "[", 
+    RowBox[{"Range", "[", "3", "]"}], "]"}], "[", 
+   RowBox[{"QuantumCircuitOperator", "[", "\"\<Toffoli\>\"", "]"}], "]"}], 
+  "[", "\"\<QASM\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.866622503669981*^9, 3.866622505178382*^9}},
+ CellLabel->"In[85]:=",ExpressionUUID->"c809e187-dba5-47df-8348-bce6aba1fd65"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\nqubit[3] q;\\nbit[3] c;\\nU(pi/2, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[1] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[0] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[1] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[0] q[2];\\nU(0, 0, pi) \
+q[1];\\nU(0, 0, pi) q[2];\\nU(pi/2, 0, pi) q[2];\\nctrl(1) @ negctrl(0) @ \
+U(pi, 0, pi) q[0] q[1];\\nU(0, 0, pi) q[1];\\nctrl(1) @ negctrl(0) @ U(pi, 0, \
+pi) q[0] q[1];\\nU(0, 0, pi) q[0];\\nU(0, 0, pi) q[1];\\nc[0] = measure q[0];\
+\\nc[1] = measure q[1];\\nc[2] = measure q[2];\"\>"], "Output",
+ CellChangeTimes->{3.8666225056320066`*^9, 3.875179389666698*^9},
+ CellLabel->"Out[85]=",ExpressionUUID->"b55c36ba-2d98-4e7c-ab6f-ccfc440b800a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", "\"\<Toffoli\>\"", "]"}], "[", 
+  "\"\<QASM\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.866622360816271*^9, 3.866622382860901*^9}},
+ CellLabel->"In[86]:=",ExpressionUUID->"7eea883e-b669-4343-bac1-e53689ad12a2"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\nqubit[3] q;\\nbit[0] c;\\nU(pi/2, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[1] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[0] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[1] q[2];\\nU(0, 0, pi) \
+q[2];\\nctrl(1) @ negctrl(0) @ U(pi, 0, pi) q[0] q[2];\\nU(0, 0, pi) \
+q[1];\\nU(0, 0, pi) q[2];\\nU(pi/2, 0, pi) q[2];\\nctrl(1) @ negctrl(0) @ \
+U(pi, 0, pi) q[0] q[1];\\nU(0, 0, pi) q[1];\\nctrl(1) @ negctrl(0) @ U(pi, 0, \
+pi) q[0] q[1];\\nU(0, 0, pi) q[0];\\nU(0, 0, pi) q[1];\"\>"], "Output",
+ CellChangeTimes->{{3.8666223642886868`*^9, 3.8666223843380404`*^9}, 
+   3.875179393994893*^9},
+ CellLabel->"Out[86]=",ExpressionUUID->"cf39b3ac-0dc3-4cf5-80f0-c1b86c6266c6"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qiskitCircuit", "=", 
+  RowBox[{"circuit", "[", "\"\<Qiskit\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.8656851879823923`*^9, 3.865685202858671*^9}, 
+   3.865685954932858*^9},
+ CellLabel->
+  "In[821]:=",ExpressionUUID->"4e9fd979-ba9b-4f4c-9211-44bfb4019138"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QiskitCircuit",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[
+             TagBox[
+              RasterBox[CompressedData["
+1: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
+FvjlKDx1YZNLwvOX4c83wSnyx5n/DQ96Zck=
+               "], {{0, 102.}, {173., 0}}, {0, 255}, ColorFunction -> 
+               RGBColor], 
+              BoxForm`ImageTag[
+              "Byte", ColorSpace -> "RGB", Interleaving -> True], Selectable -> 
+              False], DefaultBaseStyle -> "ImageGraphics", 
+             ImageSizeRaw -> {173., 102.}, 
+             PlotRange -> {{0, 173.}, {0, 102.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Qubits: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["2", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Depth: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["2", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[
+             TagBox[
+              RasterBox[CompressedData["
+1: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
+FvjlKDx1YZNLwvOX4c83wSnyx5n/DQ96Zck=
+               "], {{0, 102.}, {173., 0}}, {0, 255}, ColorFunction -> 
+               RGBColor], 
+              BoxForm`ImageTag[
+              "Byte", ColorSpace -> "RGB", Interleaving -> True], Selectable -> 
+              False], DefaultBaseStyle -> "ImageGraphics", 
+             ImageSizeRaw -> {173., 102.}, 
+             PlotRange -> {{0, 173.}, {0, 102.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Qubits: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["2", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Depth: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["2", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Ops: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"\[LeftAssociation]", 
+                    RowBox[{
+                    RowBox[{"\"h\"", "\[Rule]", "1"}], ",", 
+                    RowBox[{"\"cx\"", "\[Rule]", "1"}]}], 
+                    "\[RightAssociation]"}], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QiskitCircuit[
+   ByteArray[CompressedData["
+1:eJyNVN1OFDEUntnswq7IihGDP0FBjbtrYIMaotdyIXHMRIgm3pCm0ym0oTuz
+O9NGuCCRC9GQJl5Qn8IH8AV8BBMvTbz0KTztzK5AMDo3bc/Pd870fF/no3Q9
+8j3P+1X1vLfVTz9gsZ+eHfB8m8su4RlRsA4UTqTqlUejm2uFYaU0HJnOvtkz
+bX0ORTinKME9avT4KL5aGBqlYXHJ6BqKscRmA5Jap6oJHmU42+3mEicxzmK0
+hSXNuwySVp/C9k+5CRTTTZ5wydPEhIBZ1PEhdAIlqocGKuIyN4Ffnokozp4e
+R32c4V4OHegxJHBEBSA0SJrEQ7gGilWGR9gqsb9SiaVRESTdOPuOMrrFc0kz
+aHbNFi+aDW23Y4gnMd2x1WuI4ZyZw3rQzL89Wr5HwJLRPmTNu6x2ecHrJVr7
+wcJca9DqLMwtdeAe0agKm9UXTsUWFdvaH5igclh/Vn349UOqVvXMXzDtDNgc
+u1m2yW4FPrt9WJ/9/P3LEX/8k935Z0/3O4bdZR11YCIqTWRXvGHem/+d7A6M
+YOX1ydE2HJGs37BlXTvpZVMhu6j9HcMuQbPTgccubxg2E7IrIbsasmvsuoqK
+mApxQZUzg/RUQQqZiRNMcQboESoGvh22vZ9Fan+J6mkEHJFZKtCmSN+gnKR9
+6lhUG8BU7I51sK6R8gBEK6GHMGApaQjeZuG1zOAEcPZckKfPP+HyeUoc+3L4
+78CzuIF3YPCB2Tdskb0KfGfyS5MCLId7DAuYghPChcCu2CQi2I2gQNUTJBWC
+kuEJtISVkJBsWavrkeJCcuuqlrZ3Zt3ApTnlUKAAkjgSILjT78UooPQ3XwwN
+L53huCaKkD37ImzT3dx8tHq0OrZbSyUYyAgvByWOg1p3UyVhO4m2RBphgfog
+J2qFVT8m2apTLIy5gSAZu/cmVFH3N1606E4=
+    "]]],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{{3.865685206829438*^9, 3.8656852192657213`*^9}, 
+   3.8656859650351667`*^9, 3.865686769851869*^9, {3.865691674179571*^9, 
+   3.865691691589045*^9}, 3.8666219732638683`*^9, 3.8671652561013727`*^9},
+ CellLabel->
+  "Out[821]=",ExpressionUUID->"175055d3-572e-4fe5-b7b0-3b5f84c64a7f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"qasm", "=", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], "}"}], "]"}], "[", 
+   "\"\<QASM\>\"", "]"}]}]], "Input",
+ CellChangeTimes->{{3.865705630060811*^9, 3.865705670594076*^9}},
+ CellLabel->
+  "In[307]:=",ExpressionUUID->"42753790-97da-4be6-9f51-948aed360719"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\nqubit[1] q;\\nbit[0] c;\\nU(pi, 0, pi) \
+q[0];\"\>"], "Output",
+ CellChangeTimes->{
+  3.8656931780739393`*^9, 3.86569425727041*^9, {3.865705635520458*^9, 
+   3.865705671355104*^9}},
+ CellLabel->
+  "Out[307]=",ExpressionUUID->"01bc8be3-827f-4546-9a21-f8009faf7dae"]
+}, Open  ]],
+
+Cell["Create qasm3-runner job:", "Text",
+ CellChangeTimes->{{3.864575533109075*^9, 
+  3.864575539203425*^9}},ExpressionUUID->"5ab075ae-87a0-40e7-a454-\
+bce2e13f668d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"URLExecute", "@", 
+    RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"URLBuild", "[", 
+       RowBox[{"{", 
+        RowBox[{"runtimeURL", ",", "\"\<jobs\>\""}], "}"}], "]"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"<|", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Method", "->", "\"\<POST\>\""}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{"\"\<Headers\>\"", "->", 
+         RowBox[{"<|", "\[IndentingNewLine]", 
+          RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], 
+          "\[IndentingNewLine]", "|>"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<Body\>\"", "->", 
+         RowBox[{"Developer`WriteRawJSONString", "@", 
+          RowBox[{"<|", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"\"\<program_id\>\"", "->", "\"\<qasm3-runner\>\""}], ",",
+             "\[IndentingNewLine]", 
+            RowBox[{"\"\<params\>\"", "->", 
+             RowBox[{"<|", "\[IndentingNewLine]", 
+              RowBox[{"\"\<circuits\>\"", "->", "qasm"}], 
+              RowBox[{"(*", 
+               RowBox[{"<|", "\[IndentingNewLine]", 
+                RowBox[{
+                 RowBox[{"\"\<__type__\>\"", "->", "\"\<QuantumCircuit\>\""}],
+                  ",", 
+                 RowBox[{
+                 "\"\<__value__\>\"", "->", 
+                  "\"\<eJwL9Az29gxhYRBhZIAARgbOTAYOIIMJikGABYnNmpxZlFyaWaJrABV\
+gyCvNySlkBCthZCxkQAWMyRAZFsbc1MRidEk4ixVDBAI83BNLUiFmskGFmNCUOEfA1RSCTWDHodAps\
+agoM7UIi0pGNJt9gU4tLYKYmQwWIUIlI0glIwD3phrY\>\""}]}], "\[IndentingNewLine]", 
+                "|>"}], "*)"}], "\[IndentingNewLine]", "|>"}]}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<backend\>\"", "->", "#"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<hub\>\"", "->", "\"\<ibm-q\>\""}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<group\>\"", "->", "\"\<open\>\""}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<project\>\"", "->", "\"\<main\>\""}]}], 
+           "\[IndentingNewLine]", "|>"}]}]}]}], "\[IndentingNewLine]", 
+       "|>"}]}], "\[IndentingNewLine]", "]"}]}], "&"}], "/@", 
+  RowBox[{
+   RowBox[{"Query", "[", 
+    RowBox[{"All", 
+     RowBox[{"(*", 
+      RowBox[{"Select", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", "[", "\"\<backend_name\>\"", "]"}], "==", 
+         "\"\<ibm_nairobi\>\""}], "&"}], "]"}], "*)"}], ",", 
+     "\"\<backend_name\>\""}], "]"}], "@", "devices"}]}]], "Input",
+ CellChangeTimes->{{3.864490726491437*^9, 3.864490876192251*^9}, {
+   3.864490961458755*^9, 3.8644909633046627`*^9}, {3.864491081980472*^9, 
+   3.864491148248941*^9}, {3.8644914143793592`*^9, 3.8644914509160013`*^9}, {
+   3.864491513262814*^9, 3.864491549312273*^9}, {3.8644915831495037`*^9, 
+   3.8644916779507933`*^9}, {3.864491715393147*^9, 3.864491722994566*^9}, {
+   3.864491759753208*^9, 3.864491801642812*^9}, {3.864491850166057*^9, 
+   3.864491863160089*^9}, {3.864530021309538*^9, 3.864530043856394*^9}, {
+   3.864530655426362*^9, 3.8645306931524143`*^9}, {3.8645307325400887`*^9, 
+   3.864530766960194*^9}, 3.864530800094095*^9, {3.864530874317946*^9, 
+   3.8645309162099752`*^9}, {3.86453095850084*^9, 3.864531007168366*^9}, {
+   3.864531054575588*^9, 3.864531164676023*^9}, {3.864531301088853*^9, 
+   3.864531321557385*^9}, {3.864531375170353*^9, 3.864531458001246*^9}, {
+   3.864532080487343*^9, 3.8645321086179733`*^9}, {3.864532937140259*^9, 
+   3.864532947450137*^9}, {3.864533115175363*^9, 3.8645331659112597`*^9}, {
+   3.8645332850243597`*^9, 3.8645332886859837`*^9}, 3.864533331531692*^9, {
+   3.864533361716675*^9, 3.8645333792296343`*^9}, {3.864533608305202*^9, 
+   3.864533661095833*^9}, {3.864533696738559*^9, 3.864533708982687*^9}, {
+   3.864533892695917*^9, 3.864533906438932*^9}, {3.864533946414229*^9, 
+   3.8645339932743597`*^9}, {3.8645340382368727`*^9, 3.8645340542453747`*^9}, 
+   3.864534405791031*^9, {3.8645344429328203`*^9, 3.864534466573588*^9}, {
+   3.864534917512363*^9, 3.8645349356043177`*^9}, {3.864534980949065*^9, 
+   3.864534981831571*^9}, {3.864535019722459*^9, 3.864535047019079*^9}, {
+   3.8645350884119787`*^9, 3.864535150602375*^9}, {3.864535477057432*^9, 
+   3.864535480402285*^9}, {3.8645355230490932`*^9, 3.864535526677403*^9}, {
+   3.864535558411667*^9, 3.864535559572508*^9}, {3.864535635163957*^9, 
+   3.864535660434659*^9}, {3.8645356946361303`*^9, 3.86453569478776*^9}, {
+   3.864535964568245*^9, 3.864535966647656*^9}, 3.864536042166684*^9, {
+   3.864536273492207*^9, 3.864536275975148*^9}, 3.8645365216415462`*^9, 
+   3.864536631076724*^9, {3.864574673659204*^9, 3.864574689946095*^9}, 
+   3.864574728081646*^9, {3.864575526491232*^9, 3.864575531914482*^9}, {
+   3.864575605074836*^9, 3.864575631181254*^9}, {3.864575711290235*^9, 
+   3.864575771097271*^9}, {3.864644586095438*^9, 3.864644586687838*^9}, 
+   3.864644774929131*^9, {3.865686016630731*^9, 3.865686038572541*^9}, {
+   3.8656921826100492`*^9, 3.865692183596621*^9}, 3.865694483378982*^9, {
+   3.865694524349675*^9, 3.86569454634348*^9}, {3.865694915706729*^9, 
+   3.8656949174629793`*^9}, {3.865705692304022*^9, 3.865705696963192*^9}, {
+   3.865705770047701*^9, 3.865705780089643*^9}, 3.8657064706489067`*^9, {
+   3.86570672036078*^9, 3.8657067351733427`*^9}, {3.8657070055036097`*^9, 
+   3.865707011873797*^9}, {3.865707075389896*^9, 3.8657070913163137`*^9}, {
+   3.865707182136125*^9, 3.865707183296751*^9}, {3.865707225397147*^9, 
+   3.8657072515827503`*^9}, {3.866622017752767*^9, 3.8666220210433598`*^9}, {
+   3.866622053936658*^9, 3.8666220545862207`*^9}, {3.8666227922731*^9, 
+   3.8666228441549473`*^9}, {3.866622901627451*^9, 3.8666229087322197`*^9}},
+ CellLabel->"In[65]:=",ExpressionUUID->"df496a33-0e88-40a8-9aa2-1d8679d3b544"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqfmt8dnt32r9gj1g\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_qasm_simulator\"\>"}]}], 
+    "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqfglsmdphf93kosg\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_lima\"\>"}]}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqg3shjg0cvolhn9g\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_belem\"\>"}]}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqg6t8dnt32r9gj30\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_quito\"\>"}]}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqgglsmdphf93kou0\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", 
+      "\[Rule]", "\<\"simulator_statevector\"\>"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqgjshjg0cvolhnbg\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"simulator_mps\"\>"}]}], "}"}],
+    ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqgmt8dnt32r9gj4g\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", 
+      "\[Rule]", "\<\"simulator_extended_stabilizer\"\>"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqgolsmdphf93kov0\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"simulator_stabilizer\"\>"}]}],
+     "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqgrshjg0cvolhncg\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibmq_manila\"\>"}]}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqh6t8dnt32r9gj60\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibm_nairobi\"\>"}]}], "}"}], 
+   ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\<\"id\"\>", "\[Rule]", "\<\"cb6nqh8lsmdphf93kp00\"\>"}], ",", 
+     RowBox[{"\<\"backend\"\>", "\[Rule]", "\<\"ibm_oslo\"\>"}]}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{{3.865694527976376*^9, 3.865694556954035*^9}, 
+   3.865694947378901*^9, 3.865705718333288*^9, 3.86570580724331*^9, 
+   3.865706236026231*^9, 3.865706674756218*^9, 3.865706740459868*^9, 
+   3.86570701488892*^9, {3.865707083245409*^9, 3.865707092919529*^9}, 
+   3.8657072555549803`*^9, {3.8666228297280693`*^9, 3.866622845544724*^9}, 
+   3.866622917800393*^9},
+ CellLabel->"Out[65]=",ExpressionUUID->"b87a0d57-1e52-4a91-933b-e91709ea5766"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"Query", "[", 
+    RowBox[{"All", 
+     RowBox[{"(*", 
+      RowBox[{"Select", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", "[", "\"\<backend_name\>\"", "]"}], "==", 
+         "\"\<ibmq_armonk\>\""}], "&"}], "]"}], "*)"}], ",", 
+     "\"\<backend_name\>\""}], "]"}], "@", "devices"}], "//", 
+  "Column"}]], "Input",
+ CellChangeTimes->{{3.866622071377557*^9, 3.866622072666657*^9}},
+ CellLabel->"In[44]:=",ExpressionUUID->"156be48f-2d9e-4463-97b9-8543806cd42f"],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"\<\"ibmq_qasm_simulator\"\>"},
+    {"\<\"ibmq_lima\"\>"},
+    {"\<\"ibmq_belem\"\>"},
+    {"\<\"ibmq_quito\"\>"},
+    {"\<\"simulator_statevector\"\>"},
+    {"\<\"simulator_mps\"\>"},
+    {"\<\"simulator_extended_stabilizer\"\>"},
+    {"\<\"simulator_stabilizer\"\>"},
+    {"\<\"ibmq_manila\"\>"},
+    {"\<\"ibm_nairobi\"\>"},
+    {"\<\"ibm_oslo\"\>"}
+   },
+   DefaultBaseStyle->"Column",
+   GridBoxAlignment->{"Columns" -> {{Left}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Column"]], "Output",
+ CellChangeTimes->{{3.866622062117981*^9, 3.8666220730755463`*^9}},
+ CellLabel->"Out[44]=",ExpressionUUID->"5a9c16b3-5bda-4e0e-bf55-14f838a77321"]
+}, Open  ]],
+
+Cell["List jobs:", "Text",
+ CellChangeTimes->{{3.864575651185378*^9, 
+  3.864575652370337*^9}},ExpressionUUID->"606aba35-a837-4626-b2d3-\
+b7675498770e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"jobs", "=", 
+   RowBox[{"URLExecute", "[", 
+    RowBox[{
+     RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"URLBuild", "[", 
+        RowBox[{"{", 
+         RowBox[{"runtimeURL", ",", "\"\<jobs\>\""}], "}"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"<|", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"Method", "->", "\"\<GET\>\""}], ",", "\[IndentingNewLine]", 
+         
+         RowBox[{"\"\<Headers\>\"", "->", 
+          RowBox[{"<|", "\[IndentingNewLine]", 
+           RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], 
+           "\[IndentingNewLine]", "|>"}]}]}], "\[IndentingNewLine]", "|>"}]}],
+       "]"}], ",", "\"\<RawJSON\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{"\"\<jobs\>\"", ",", "All", ",", 
+    RowBox[{"{", 
+     RowBox[{"\"\<id\>\"", ",", "\"\<state\>\""}], "}"}]}], "]"}], "@", 
+  "jobs"}]}], "Input",
+ CellChangeTimes->{{3.864533496384797*^9, 3.864533503012597*^9}, {
+  3.864533681173304*^9, 3.8645336835322523`*^9}, {3.864533853016686*^9, 
+  3.864533878921947*^9}, {3.864535868765758*^9, 3.8645359140703583`*^9}, {
+  3.864536566175343*^9, 3.864536566649685*^9}, {3.86457535142502*^9, 
+  3.864575418427847*^9}, {3.864575796828472*^9, 3.864575797181613*^9}},
+ CellLabel->
+  "In[864]:=",ExpressionUUID->"ec1ad96d-72e2-4910-b78d-264ba2ebe275"],
+
+Cell[BoxData[
+ RowBox[{"{", "}"}]], "Output",
+ CellChangeTimes->{
+  3.864535871613394*^9, 3.8645359146063004`*^9, {3.864535957716248*^9, 
+   3.864535976684331*^9}, {3.864536048016119*^9, 3.864536051449733*^9}, {
+   3.864536287612143*^9, 3.864536290266488*^9}, {3.8645365285741587`*^9, 
+   3.864536530415012*^9}, {3.864536567271164*^9, 3.864536588374187*^9}, 
+   3.864536650566503*^9, {3.86457470091226*^9, 3.8645747368603888`*^9}, 
+   3.8645753873518543`*^9, 3.864575419455639*^9, {3.864575638377935*^9, 
+   3.864575656308507*^9}, 3.864575788608086*^9, {3.8646445933047*^9, 
+   3.864644598997295*^9}, {3.8646448898382673`*^9, 3.864644896104085*^9}, 
+   3.865686124418891*^9, 3.865686167528749*^9, 3.865686707931361*^9, {
+   3.865687538509096*^9, 3.865687547651251*^9}, 3.865687595195388*^9, {
+   3.8656945633196497`*^9, 3.8656945728706627`*^9}, 3.865694632072626*^9, 
+   3.8656947160214453`*^9, 3.865694774553248*^9, 3.865694846578534*^9, 
+   3.865694911035407*^9, 3.865694969390257*^9, 3.8656950098077173`*^9, 
+   3.865695044358519*^9, 3.8656963096089563`*^9, {3.865705580657127*^9, 
+   3.8657056103439007`*^9}, {3.865705722415411*^9, 3.865705735023314*^9}, {
+   3.865705807663621*^9, 3.865705819493928*^9}, 3.865706064895678*^9, {
+   3.865706142288097*^9, 3.86570615906227*^9}, 3.865706476761281*^9, {
+   3.86570667693878*^9, 3.8657067042379723`*^9}, {3.865706742530312*^9, 
+   3.8657067466885977`*^9}, {3.865707016924678*^9, 3.8657070221744423`*^9}, 
+   3.8657071021798363`*^9, {3.865707257598214*^9, 3.865707262738937*^9}, {
+   3.866620980583246*^9, 3.8666210024102087`*^9}, {3.866622027537581*^9, 
+   3.866622044073065*^9}, 3.8666228500653343`*^9, 3.8666230192827168`*^9, {
+   3.867165725941465*^9, 3.867165760137292*^9}, 3.867165839224044*^9, 
+   3.86716606313531*^9},
+ CellLabel->
+  "Out[865]=",ExpressionUUID->"95803044-4b86-4966-bca2-3bafba36ca19"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{"\"\<jobs\>\"", ",", 
+    RowBox[{"Select", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"\"\<state\>\"", ",", "\"\<status\>\""}], "]"}], "==", 
+       "\"\<Completed\>\""}], "&"}], "]"}], ",", "\"\<id\>\""}], "]"}], "@", 
+  "jobs"}]], "Input",
+ CellChangeTimes->{{3.865694589635726*^9, 3.865694614269671*^9}, {
+  3.865694991011677*^9, 3.865695059451304*^9}, {3.8656963177812777`*^9, 
+  3.8656963391226*^9}, {3.86569640219611*^9, 3.865696402351184*^9}, {
+  3.8656964679879723`*^9, 3.8656964695298033`*^9}},
+ CellLabel->
+  "In[151]:=",ExpressionUUID->"92acc2df-57fb-4f07-a086-976985a3ac38"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"cavl8on91ee0vfddd6bg\"\>", ",", "\<\"cavl8o38lg9ob0gu9oc0\"\>",
+    ",", "\<\"cavl8o791ee0vfddd6a0\"\>", ",", "\<\"cavl8o6a4p74378cbatg\"\>", 
+   ",", "\<\"cavl8o38lg9ob0gu9oag\"\>", ",", "\<\"cavl8nv91ee0vfddd690\"\>", 
+   ",", "\<\"cavl8nma4p74378cbas0\"\>", ",", "\<\"cavl8n38lg9ob0gu9o80\"\>"}],
+   "}"}]], "Output",
+ CellChangeTimes->{3.865696469932907*^9},
+ CellLabel->
+  "Out[151]=",ExpressionUUID->"7b448bf7-10ab-4c4e-aae7-f122fc8bfb40"]
+}, Open  ]],
+
+Cell["Get results:", "Text",
+ CellChangeTimes->{{3.865696668583066*^9, 
+  3.865696670082616*^9}},ExpressionUUID->"06c28f69-3dc6-4104-9d3e-\
+bce17a5834b7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{"\"\<jobs\>\"", ",", 
+    RowBox[{"Select", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"\"\<state\>\"", ",", "\"\<status\>\""}], "]"}], "==", 
+       "\"\<Failed\>\""}], "&"}], "]"}], ",", "\"\<id\>\""}], "]"}], "@", 
+  "jobs"}]], "Input",
+ CellLabel->
+  "In[341]:=",ExpressionUUID->"dfe070c5-9b55-43c4-9284-8a744af8bc7b"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"cavntjf91ee0vfddgj30\"\>", ",", "\<\"cavntj6a4p74378cei60\"\>",
+    ",", "\<\"cavntj791ee0vfddgj1g\"\>", ",", "\<\"cavntj6a4p74378cei50\"\>", 
+   ",", "\<\"cavntfr8lg9ob0gud16g\"\>", ",", "\<\"cavnst6a4p74378cehc0\"\>", 
+   ",", "\<\"cavnssr8lg9ob0gud0jg\"\>", ",", "\<\"cavnssv91ee0vfddgibg\"\>", 
+   ",", "\<\"cavnssua4p74378cehb0\"\>", ",", "\<\"cavnsrr8lg9ob0gud0h0\"\>", 
+   ",", "\<\"cavnsrv91ee0vfddgi7g\"\>"}], "}"}]], "Output",
+ CellChangeTimes->{3.865706008668603*^9},
+ CellLabel->
+  "Out[341]=",ExpressionUUID->"cd02d161-4779-4edf-b3d3-c77ec540e441"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Query", "[", 
+   RowBox[{"\"\<jobs\>\"", ",", 
+    RowBox[{"Select", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"\"\<state\>\"", ",", "\"\<status\>\""}], "]"}], "==", 
+       "\"\<Failed\>\""}], "&"}], "]"}], ",", "\"\<id\>\""}], "]"}], "[", 
+  "jobs", "]"}]], "Input",
+ CellLabel->
+  "In[363]:=",ExpressionUUID->"dfe55003-b8fc-41aa-9376-c8c504efa310"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"cavo0ub8lg9ob0gud5pg\"\>", ",", "\<\"cavo0uf91ee0vfddgnbg\"\>",
+    ",", "\<\"cavo0u6a4p74378cemhg\"\>", ",", "\<\"cavo0u38lg9ob0gud5o0\"\>", 
+   ",", "\<\"cavo0tf91ee0vfddgn90\"\>", ",", "\<\"cavo0t6a4p74378cemeg\"\>"}],
+   "}"}]], "Output",
+ CellChangeTimes->{3.865706505402547*^9},
+ CellLabel->
+  "Out[363]=",ExpressionUUID->"4ad8c47a-0df5-4f2b-895d-abd64d8ae4e6"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Map", "[", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"Query", "[", 
+     RowBox[{"\"\<results\>\"", ",", "All", ",", "\"\<data\>\""}], "]"}], 
+    "@"}], "*)"}], 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"#", "[", 
+       RowBox[{"[", 
+        RowBox[{
+         RowBox[{"-", "2"}], ";;"}], "]"}], "]"}], "&"}], "@", 
+     RowBox[{"StringSplit", "[", 
+      RowBox[{
+       RowBox[{"URLExecute", "[", 
+        RowBox[{
+         RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"URLBuild", "[", 
+            RowBox[{"{", 
+             RowBox[{
+             "runtimeURL", ",", "\"\<jobs\>\"", ",", "#", ",", 
+              "\"\<logs\>\""}], "}"}], "]"}], ",", "\[IndentingNewLine]", 
+           RowBox[{"<|", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"Method", "->", "\"\<GET\>\""}], ",", 
+             "\[IndentingNewLine]", 
+             RowBox[{"\"\<Headers\>\"", "->", 
+              RowBox[{"<|", "\[IndentingNewLine]", 
+               RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], 
+               "\[IndentingNewLine]", "|>"}]}]}], "\[IndentingNewLine]", 
+            "|>"}]}], "]"}], ",", "\"\<String\>\""}], "]"}], ",", 
+       "\"\<\\n\>\""}], "]"}]}], "&"}], ",", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Query", "[", 
+     RowBox[{"\"\<jobs\>\"", ",", 
+      RowBox[{"Select", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", "[", 
+          RowBox[{"\"\<state\>\"", ",", "\"\<status\>\""}], "]"}], "==", 
+         "\"\<Failed\>\""}], "&"}], "]"}], ",", "\"\<id\>\""}], "]"}], "[", 
+    "jobs", "]"}]}], "\[IndentingNewLine]", "]"}]], "Input",
+ CellChangeTimes->{{3.86569647499975*^9, 3.865696485970085*^9}, {
+  3.865696566416872*^9, 3.8656966031253138`*^9}, {3.865696639768693*^9, 
+  3.865696654627084*^9}, {3.8657058237588053`*^9, 3.865705943038601*^9}, {
+  3.865706013967083*^9, 3.865706036748487*^9}, {3.8657060695534983`*^9, 
+  3.865706112349498*^9}, {3.8657070430576153`*^9, 3.865707043515492*^9}, {
+  3.865707120316662*^9, 3.865707120556346*^9}, {3.865707277554776*^9, 
+  3.865707279480545*^9}},
+ CellLabel->
+  "In[412]:=",ExpressionUUID->"1cbde15d-3d61-4047-a8fb-435eb3f6f291"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:34:20.657494204Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:34:20.657494204Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo8tr8lg9ob0gudes0_af7a_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:31:38.059014546Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:31:38.059014546Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo7l6a4p74378cetsg_f24c_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:31:28.346090014Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:31:28.346090014Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo7ij8lg9ob0guddc0_09ca_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:30:19.964582313Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:30:19.964582313Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo71ma4p74378cet6g_3816_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:25:45.552686084Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:25:45.552686084Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo4t791ee0vfddgrp0_bfe4_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"2022-07-01T23:24:39.361118437Z     raise JobError(f'Unable \
+to retrieve result for job {self.job_id()}. '\"\>", 
+     ",", "\<\"2022-07-01T23:24:39.361118437Z \
+qiskit.providers.exceptions.JobError: 'Unable to retrieve result for job \
+qasm3-runner_cavo4cj8lg9ob0gud9rg_708e_0. Job has failed: Internal Error. \
+Error code: 9999.'\"\>"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{
+  3.865696493106205*^9, {3.865696578774239*^9, 3.865696597326768*^9}, {
+   3.865696632627871*^9, 3.865696656730277*^9}, {3.865705589331257*^9, 
+   3.8657056071992826`*^9}, {3.865705827312324*^9, 3.865705834020135*^9}, {
+   3.8657058729412746`*^9, 3.86570588886589*^9}, {3.8657059347932*^9, 
+   3.8657059460582447`*^9}, {3.8657060189255247`*^9, 
+   3.8657060382502413`*^9}, {3.865706088315343*^9, 3.865706116069147*^9}, 
+   3.865706490152603*^9, {3.8657070354906483`*^9, 3.865707044689212*^9}, {
+   3.865707106379979*^9, 3.8657071219203787`*^9}, {3.865707267051464*^9, 
+   3.8657072810332527`*^9}},
+ CellLabel->
+  "Out[412]=",ExpressionUUID->"acc645e4-a916-4b63-a515-554f80617308"]
+}, Open  ]],
+
+Cell["Delete jobs:", "Text",
+ CellChangeTimes->{{3.864575542664507*^9, 3.8645755442018757`*^9}, 
+   3.864575597831029*^9},ExpressionUUID->"3b9828f2-a695-4b7b-972a-\
+b6056f0d312e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Scan", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"URLExecute", "@", 
+      RowBox[{"HTTPRequest", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"URLBuild", "[", 
+         RowBox[{"{", 
+          RowBox[{"runtimeURL", ",", "\"\<jobs\>\"", ",", "#"}], "}"}], "]"}],
+         ",", "\[IndentingNewLine]", 
+        RowBox[{"<|", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Method", "->", "\"\<DELETE\>\""}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"\"\<Headers\>\"", "->", 
+           RowBox[{"<|", "\[IndentingNewLine]", 
+            RowBox[{"\"\<X-Access-Token\>\"", "->", "id"}], 
+            "\[IndentingNewLine]", "|>"}]}]}], "\[IndentingNewLine]", 
+         "|>"}]}], "]"}]}], "&"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"Query", "[", 
+      RowBox[{"\"\<jobs\>\"", ",", "All", ",", "\"\<id\>\""}], "]"}], "[", 
+     "jobs", "]"}]}], "\[IndentingNewLine]", "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.864533456589987*^9, 3.864533477551075*^9}, {
+  3.864535177382098*^9, 3.864535177980041*^9}, {3.8645359491112833`*^9, 
+  3.864535950007576*^9}, {3.8645755534060307`*^9, 3.864575592912538*^9}, {
+  3.864644611944633*^9, 3.864644630456687*^9}},
+ CellLabel->
+  "In[856]:=",ExpressionUUID->"98de84f4-9679-47c3-bf8e-d795b03d9d0f"]
+}, Open  ]]
+},
+WindowToolbars->{},
+WindowSize->{1440, 847},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"13.2 for Mac OS X ARM (64-bit) (January 21, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"1504e0ef-e287-4241-8f35-60f97504fe36"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[583, 22, 176, 3, 45, "Subsubsection",ExpressionUUID->"a0b5c8fc-b7ff-45ae-b278-269b597b7513"],
+Cell[762, 27, 675, 16, 35, "Text",ExpressionUUID->"4447bee3-33a5-4de2-8ddd-a9f599e86241"],
+Cell[1440, 45, 430, 11, 30, "Input",ExpressionUUID->"882f7f1b-75da-4877-8368-d9c0fcef31d8"],
+Cell[1873, 58, 1385, 34, 35, "Input",ExpressionUUID->"4cf4bfa2-20e1-45a4-a138-dc86f7a56da1"],
+Cell[3261, 94, 186, 3, 35, "Text",ExpressionUUID->"6925d70d-6dd7-4c7d-997b-8c987e5065bf"],
+Cell[3450, 99, 1153, 26, 52, "Input",ExpressionUUID->"494bee32-86ba-4e37-8404-569bfb215462"],
+Cell[4606, 127, 179, 3, 35, "Text",ExpressionUUID->"0255c096-6af9-4b17-b324-c6ce3c0f2141"],
+Cell[4788, 132, 1035, 22, 52, "Input",ExpressionUUID->"76e5be55-d4d7-4bcf-998d-ad62266786d6"],
+Cell[CellGroupData[{
+Cell[5848, 158, 202, 4, 30, "Input",ExpressionUUID->"43bde95f-91c0-4a7f-86d7-bea324f46b97"],
+Cell[6053, 164, 872, 15, 56, "Output",ExpressionUUID->"a0f649b2-c4a0-4995-aecd-c84b293c72ba"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[6962, 184, 395, 9, 30, "Input",ExpressionUUID->"542c60e0-fb56-481a-9f71-a3fd0c34a0a6"],
+Cell[7360, 195, 475, 8, 34, "Output",ExpressionUUID->"b61393e7-f27d-4a1f-a287-4e90142980bb"]
+}, Open  ]],
+Cell[7850, 206, 223, 4, 35, "Text",ExpressionUUID->"8cbb28fb-de16-447c-b7a9-dd07c1218db4"],
+Cell[8076, 212, 913, 22, 52, "Input",ExpressionUUID->"fcf2cb4d-9c7b-4bba-836b-c342b7c585b4"],
+Cell[CellGroupData[{
+Cell[9014, 238, 222, 4, 30, "Input",ExpressionUUID->"25873738-837e-440b-9d26-6b1ec6a03709"],
+Cell[9239, 244, 475, 9, 34, "Output",ExpressionUUID->"cd6129de-cff1-499f-be49-d67b2ca47532"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[9751, 258, 574, 12, 52, "Input",ExpressionUUID->"6d63e37b-080b-44e9-a77c-4ddb142cbd6f"],
+Cell[10328, 272, 452, 7, 34, "Output",ExpressionUUID->"82642ff0-05b6-4fe9-ba70-91df692012e9"],
+Cell[10783, 281, 1576, 31, 80, "Output",ExpressionUUID->"db8c8d76-a40e-49ad-a5e3-4ae98550b865"]
+}, Open  ]],
+Cell[12374, 315, 160, 3, 35, "Text",ExpressionUUID->"978af4bd-b83a-4aee-8bd4-713f52f68ad5"],
+Cell[12537, 320, 867, 20, 52, "Input",ExpressionUUID->"fd74058f-d94e-4591-ad60-414901dc92cc"],
+Cell[CellGroupData[{
+Cell[13429, 344, 277, 6, 30, "Input",ExpressionUUID->"ce1e8b46-25b3-49b7-89df-caa7b236e662"],
+Cell[13709, 352, 572, 10, 56, "Output",ExpressionUUID->"51aa7fb5-1380-4665-bafa-d243f90d2552"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[14318, 367, 242, 5, 30, "Input",ExpressionUUID->"9fed81e2-89f7-46a9-a336-3e7cf516db39"],
+Cell[14563, 374, 951, 16, 56, "Output",ExpressionUUID->"802b0bc9-af92-4e17-a14d-1e0780933111"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15551, 395, 583, 13, 30, "Input",ExpressionUUID->"7c3cfb4a-b7b0-4932-bbb6-9f2fda696640"],
+Cell[16137, 410, 8513, 163, 308, "Output",ExpressionUUID->"53439ed0-1c33-405e-8e13-3eb362ed5a15"]
+}, Open  ]],
+Cell[24665, 576, 157, 3, 35, "Text",ExpressionUUID->"a7aa23eb-fed2-4995-9843-dfbacc90d1f0"],
+Cell[CellGroupData[{
+Cell[24847, 583, 395, 9, 30, "Input",ExpressionUUID->"bfa17c79-7c47-41dc-850a-34038410e80f"],
+Cell[25245, 594, 326, 5, 119, "Output",ExpressionUUID->"cb734a3e-754d-499b-ae99-9483fb253f0c"]
+}, Open  ]],
+Cell[25586, 602, 300, 7, 30, "Input",ExpressionUUID->"8ea35e9c-9470-4355-91aa-a6536c4e08b7"],
+Cell[25889, 611, 214, 3, 30, "Input",ExpressionUUID->"9b8a20a3-3b26-4817-acdb-6c46d694d5cc"],
+Cell[CellGroupData[{
+Cell[26128, 618, 405, 6, 30, "Input",ExpressionUUID->"5fcbfa2c-194c-4ecf-997a-b0f112ccec35"],
+Cell[26536, 626, 13120, 264, 104, "Output",ExpressionUUID->"3f054da6-ae5a-47c4-9e20-a9edaa1bcd9c"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[39693, 895, 393, 8, 30, "Input",ExpressionUUID->"c809e187-dba5-47df-8348-bce6aba1fd65"],
+Cell[40089, 905, 804, 10, 476, "Output",ExpressionUUID->"b55c36ba-2d98-4e7c-ab6f-ccfc440b800a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[40930, 920, 276, 5, 30, "Input",ExpressionUUID->"7eea883e-b669-4343-bac1-e53689ad12a2"],
+Cell[41209, 927, 763, 10, 413, "Output",ExpressionUUID->"cf39b3ac-0dc3-4cf5-80f0-c1b86c6266c6"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[42009, 942, 285, 6, 30, "Input",ExpressionUUID->"4e9fd979-ba9b-4f4c-9211-44bfb4019138"],
+Cell[42297, 950, 12538, 235, 61, "Output",ExpressionUUID->"175055d3-572e-4fe5-b7b0-3b5f84c64a7f"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[54872, 1190, 372, 9, 30, "Input",ExpressionUUID->"42753790-97da-4be6-9f51-948aed360719"],
+Cell[55247, 1201, 298, 6, 98, "Output",ExpressionUUID->"01bc8be3-827f-4546-9a21-f8009faf7dae"]
+}, Open  ]],
+Cell[55560, 1210, 166, 3, 35, "Text",ExpressionUUID->"5ab075ae-87a0-40e7-a454-bce2e13f668d"],
+Cell[CellGroupData[{
+Cell[55751, 1217, 5814, 101, 514, "Input",ExpressionUUID->"df496a33-0e88-40a8-9aa2-1d8679d3b544"],
+Cell[61568, 1320, 2702, 64, 98, "Output",ExpressionUUID->"b87a0d57-1e52-4a91-933b-e91709ea5766"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[64307, 1389, 522, 14, 30, "Input",ExpressionUUID->"156be48f-2d9e-4463-97b9-8543806cd42f"],
+Cell[64832, 1405, 719, 19, 213, "Output",ExpressionUUID->"5a9c16b3-5bda-4e0e-bf55-14f838a77321"]
+}, Open  ]],
+Cell[65566, 1427, 152, 3, 35, "Text",ExpressionUUID->"606aba35-a837-4626-b2d3-b7675498770e"],
+Cell[CellGroupData[{
+Cell[65743, 1434, 1419, 32, 199, "Input",ExpressionUUID->"ec1ad96d-72e2-4910-b78d-264ba2ebe275"],
+Cell[67165, 1468, 1857, 28, 34, "Output",ExpressionUUID->"95803044-4b86-4966-bca2-3bafba36ca19"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[69059, 1501, 681, 16, 30, "Input",ExpressionUUID->"92acc2df-57fb-4f07-a086-976985a3ac38"],
+Cell[69743, 1519, 489, 9, 56, "Output",ExpressionUUID->"7b448bf7-10ab-4c4e-aae7-f122fc8bfb40"]
+}, Open  ]],
+Cell[70247, 1531, 154, 3, 35, "Text",ExpressionUUID->"06c28f69-3dc6-4104-9d3e-bce17a5834b7"],
+Cell[CellGroupData[{
+Cell[70426, 1538, 416, 12, 30, "Input",ExpressionUUID->"dfe070c5-9b55-43c4-9284-8a744af8bc7b"],
+Cell[70845, 1552, 605, 10, 56, "Output",ExpressionUUID->"cd02d161-4779-4edf-b3d3-c77ec540e441"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[71487, 1567, 421, 12, 30, "Input",ExpressionUUID->"dfe55003-b8fc-41aa-9376-c8c504efa310"],
+Cell[71911, 1581, 411, 8, 34, "Output",ExpressionUUID->"4ad8c47a-0df5-4f2b-895d-abd64d8ae4e6"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[72359, 1594, 2227, 54, 220, "Input",ExpressionUUID->"1cbde15d-3d61-4047-a8fb-435eb3f6f291"],
+Cell[74589, 1650, 3076, 56, 392, "Output",ExpressionUUID->"acc645e4-a916-4b63-a515-554f80617308"]
+}, Open  ]],
+Cell[77680, 1709, 179, 3, 35, "Text",ExpressionUUID->"3b9828f2-a695-4b7b-972a-b6056f0d312e"],
+Cell[77862, 1714, 1332, 30, 220, "Input",ExpressionUUID->"98de84f4-9679-47c3-bf8e-d795b03d9d0f"]
+}, Open  ]]
+}
+]
+*)
+

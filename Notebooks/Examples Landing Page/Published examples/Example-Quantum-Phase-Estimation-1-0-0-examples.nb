@@ -1,3 +1,3870 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:0c012abe1acaf29b1654c413a897c84f70d6107c8056e4ce38f48e84b59b62c3
-size 184771
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[    184572,       3861]
+NotebookOptionsPosition[    177290,       3689]
+NotebookOutlinePosition[    181329,       3790]
+CellTagsIndexPosition[    181250,       3785]
+WindowTitle->Quantum Phase Estimation | Example Notebook
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ "The quantum phase estimation algorithm solves the problem of finding in the \
+eigenvalue equation ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"U\[Psi]", "=", 
+    RowBox[{
+     SuperscriptBox["\[ExponentialE]", "\[ImaginaryI]2\[Pi]\[Theta]"], 
+     "\[Psi]"}]}], TraditionalForm]],ExpressionUUID->
+  "2f26fce4-d76f-4e8b-8692-046769ff3aa3"],
+ ", where is ",
+ Cell[BoxData["U"], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "4081762f-20fe-4b91-b86d-d2f866fbad9e"],
+ " a unitary operator. The inputs of the algorithm are qubits at the initial \
+state ",
+ Cell[BoxData[
+  SuperscriptBox[
+   TemplateBox[{"0"},
+    "Ket"], 
+   RowBox[{"\[CircleTimes]", "n"}]]],ExpressionUUID->
+  "b57501a8-8310-4f30-949c-b7cd32c1f274"],
+ ", and the post-measurement state with largest probability is ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      SuperscriptBox["2", "n"], "\[Theta]"}]},
+   "Ket"]],ExpressionUUID->"38813dcc-71be-409b-9065-ffa430f8f0b5"],
+ "."
+}], "Text",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8914469528872433`*^9, 3.891447097647333*^9}, {
+   3.8914471461234922`*^9, 3.891447175336132*^9}, 3.892027734079999*^9, {
+   3.8920322565985947`*^9, 3.892032277571628*^9}, 3.8920481772213984`*^9, {
+   3.892048808609614*^9, 3.892048825302746*^9}},
+ CellTags->"DefaultContent",
+ CellID->704549353,ExpressionUUID->"86c4c07b-0188-4536-a31b-04441812ab06"],
+
+Cell["Install and load the QuantumFramework paclet:", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301375389147`*^9, 3.889630152807868*^9}, {
+  3.890230125254396*^9, 3.890230129164053*^9}},
+ CellID->962431612,ExpressionUUID->"4e77447e-74b4-45cb-8634-ded9163af023"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"PacletInstall", "[", "\"\<Wolfram/QuantumFramework\>\"", 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]}], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8896301316068687`*^9, 3.889630135374712*^9}},
+ CellLabel->"In[1]:=",
+ CellID->79008923,ExpressionUUID->"4b0b3491-62fc-4683-900c-1ce8f71d1b52"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["PacletObject",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              Thickness[0.0416667], {
+               FaceForm[{
+                 RGBColor[0.961, 0.961, 0.961], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.5454, 
+                22.5972}, {7.5464, 20.5002}, {2.5454, 18.4022}, {2.5454, 
+                12.5982}, {2.5454, 12.5972}, {2.5454, 6.7952}, {7.5454, 
+                4.6962}, {7.546, 4.6972}, {12.5454, 2.5992}, {17.5454, 
+                4.6972}, {17.5454, 4.6962}, {22.5454, 6.7952}, {22.5454, 
+                12.5972}, {22.5454, 12.5982}, {22.5454, 18.4022}}}]}, {
+               FaceForm[{
+                 RGBColor[0.898, 0.898, 0.898], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 8.3359}, {17.125, 
+                14.0569}, {16.875, 14.0569}, {16.875, 8.3359}, {17., 
+                8.1169}, {21.952, 6.0399}, {22.049, 6.2709}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 8.3359}, {7.125, 14.0569}, {
+                6.875, 14.0569}, {6.875, 8.3359}, {1.952, 6.2709}, {2.048, 
+                6.0399}, {7., 8.1169}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8745, 6.2383}, {6.9515, 4.1733}, {7.0475, 
+                3.9423}, {11.9995, 6.0193}, {16.9515, 3.9423}, {17.0475, 
+                4.1733}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 14.1392}, {17.125, 
+                19.8602}, {16.875, 19.8602}, {16.875, 14.1392}, {17., 
+                13.9202}, {21.952, 11.8432}, {22.049, 12.0742}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 14.1392}, {7.125, 19.8602}, {
+                6.875, 19.8602}, {6.875, 14.1392}, {1.952, 12.0742}, {2.048, 
+                11.8432}, {7., 13.9202}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8746, 21.3633}, {11.8746, 18.3563}, {
+                11.9996, 18.3033}, {12.1246, 18.3563}, {12.1246, 21.3633}, {
+                11.9996, 21.4153}}}]}, {
+               FaceForm[{
+                 RGBColor[0.749, 0.749, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+                 3}}}, {{{8.292, 19.8594}, {12., 21.4154}, {15.707, 
+                 19.8594}, {12., 18.3034}}, {{17.5, 19.5274}, {17.5, 
+                 20.1924}, {12., 22.5004}, {6.5, 20.1924}, {6.5, 19.5284}, {
+                 12., 17.2194}, {12., 17.2194}, {15.7, 18.7724}, {17.5, 
+                 19.5274}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.5, 8.5156}, {11.5, 6.4876}, {11.5, 
+                5.4026}, {12.5, 5.8226}, {12.5, 8.5156}, {12., 8.3056}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{21.5, 6.4873}, {17.5, 4.8083}, {17.5, 
+                 9.5283}, {21.5, 11.2073}}, {{21.5, 12.7113}, {21.5, 
+                 12.2913}, {17., 10.4033}, {16.5, 10.6133}, {16.5, 10.1943}, {
+                 15.707, 9.8613}, {16.5, 9.5283}, {16.5, 4.8083}, {16.5, 
+                 4.8093}, {16.5, 4.3903}, {15.707, 4.0573}, {17., 3.5143}, {
+                 22.5, 5.8223}, {22.5, 12.2913}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{6.5, 4.8086}, {2.5, 6.4876}, {2.5, 
+                 11.2066}, {6.5, 9.5286}}, {{7.5, 9.1096}, {7.5, 9.1096}, {
+                 7.5, 9.5286}, {8.292, 9.8616}, {7.5, 10.1936}, {7.5, 
+                 10.6136}, {7., 10.4036}, {2.5, 12.2906}, {2.5, 12.7106}, {
+                 1.5, 12.2916}, {1.5, 5.8226}, {7., 3.5146}, {8.293, 
+                 4.0576}, {7.5, 4.3906}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{3.2925, 17.7622}, {7.0005, 
+                 19.3182}, {10.7075, 17.7622}, {7.0005, 16.2062}}, {{6.5005, 
+                 10.6122}, {2.5005, 12.2912}, {2.5005, 17.0102}, {6.5005, 
+                 15.3322}}, {{7.5005, 10.1932}, {7.5005, 10.6122}, {7.5005, 
+                 15.3322}, {12.0005, 17.2202}, {12.5005, 17.0102}, {12.5005, 
+                 18.0952}, {7.0005, 20.4032}, {1.5005, 18.0952}, {1.5005, 
+                 11.6262}, {7.0005, 9.3182}, {8.2935, 9.8612}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{21.5, 12.291}, {17.5, 10.612}, {
+                 17.5, 15.332}, {21.5, 17.01}}, {{13.293, 17.762}, {17., 
+                 19.318}, {20.708, 17.762}, {17., 16.207}}, {{17., 20.403}, {
+                 11.5, 18.095}, {11.5, 17.01}, {12., 17.22}, {16.5, 15.332}, {
+                 16.5, 10.612}, {16.5, 10.194}, {15.706, 9.861}, {17., 
+                 9.318}, {22.5, 11.626}, {22.5, 18.095}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{16.4995, 4.3906}, {12.4995, 
+                 2.7116}, {12.4995, 7.4316}, {16.4995, 9.1096}}, {{11.4995, 
+                 2.7116}, {7.4995, 4.3906}, {7.4995, 9.1096}, {11.4995, 
+                 7.4316}}, {{16.4995, 10.6136}, {16.4995, 10.1946}, {11.9995, 
+                 8.3056}, {8.2915, 9.8616}, {7.4995, 10.1936}, {7.4995, 
+                 10.6146}, {6.4995, 10.1946}, {6.4995, 3.7256}, {11.9995, 
+                 1.4176}, {17.4995, 3.7256}, {17.4995, 10.1946}}}]}, {
+               FaceForm[{
+                 RGBColor[0.965, 0.765, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{12., 17.6616}, {16.945, 15.5856}, {16.945, 
+                9.9376}, {12., 7.8636}, {7.055, 9.9376}, {7.055, 
+                15.5856}}}]}, {
+               FaceForm[{
+                 RGBColor[0.91, 0.655, 0.635], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.125, 
+                17.7627}, {11.875, 17.7627}, {11.875, 12.0407}, {6.952, 
+                9.9757}, {7.048, 9.7447}, {12., 11.8227}, {16.952, 9.7447}, {
+                17.048, 9.9757}, {12.125, 12.0407}}}]}, {
+               FaceForm[{
+                 RGBColor[0.867, 0.067, 0.], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}}}, {{{12.5, 8.5146}, {12.5, 13.2336}, {16.5, 14.9116}, {
+                 16.5, 10.1926}}, {{7.5, 14.9116}, {11.5, 13.2336}, {11.5, 
+                 8.5146}, {7.5, 10.1926}}, {{15.708, 15.6636}, {12., 
+                 14.1086}, {8.292, 15.6636}, {12., 17.2206}}, {{12., 
+                 18.3046}, {6.5, 15.9956}, {6.5, 9.5286}, {12., 7.2206}, {
+                 17.5, 9.5286}, {17.5, 15.9956}}}]}}, AspectRatio -> 
+             Automatic, ImageSize -> {24., 24.}, 
+             PlotRange -> {{0., 24.}, {0., 24.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Name: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Wolfram/QuantumFramework\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Version: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"1.0.32\"", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              Thickness[0.0416667], {
+               FaceForm[{
+                 RGBColor[0.961, 0.961, 0.961], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.5454, 
+                22.5972}, {7.5464, 20.5002}, {2.5454, 18.4022}, {2.5454, 
+                12.5982}, {2.5454, 12.5972}, {2.5454, 6.7952}, {7.5454, 
+                4.6962}, {7.546, 4.6972}, {12.5454, 2.5992}, {17.5454, 
+                4.6972}, {17.5454, 4.6962}, {22.5454, 6.7952}, {22.5454, 
+                12.5972}, {22.5454, 12.5982}, {22.5454, 18.4022}}}]}, {
+               FaceForm[{
+                 RGBColor[0.898, 0.898, 0.898], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 8.3359}, {17.125, 
+                14.0569}, {16.875, 14.0569}, {16.875, 8.3359}, {17., 
+                8.1169}, {21.952, 6.0399}, {22.049, 6.2709}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 8.3359}, {7.125, 14.0569}, {
+                6.875, 14.0569}, {6.875, 8.3359}, {1.952, 6.2709}, {2.048, 
+                6.0399}, {7., 8.1169}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8745, 6.2383}, {6.9515, 4.1733}, {7.0475, 
+                3.9423}, {11.9995, 6.0193}, {16.9515, 3.9423}, {17.0475, 
+                4.1733}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{17.125, 14.1392}, {17.125, 
+                19.8602}, {16.875, 19.8602}, {16.875, 14.1392}, {17., 
+                13.9202}, {21.952, 11.8432}, {22.049, 12.0742}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}}}, {{{7.125, 14.1392}, {7.125, 19.8602}, {
+                6.875, 19.8602}, {6.875, 14.1392}, {1.952, 12.0742}, {2.048, 
+                11.8432}, {7., 13.9202}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.8746, 21.3633}, {11.8746, 18.3563}, {
+                11.9996, 18.3033}, {12.1246, 18.3563}, {12.1246, 21.3633}, {
+                11.9996, 21.4153}}}]}, {
+               FaceForm[{
+                 RGBColor[0.749, 0.749, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+                 3}}}, {{{8.292, 19.8594}, {12., 21.4154}, {15.707, 
+                 19.8594}, {12., 18.3034}}, {{17.5, 19.5274}, {17.5, 
+                 20.1924}, {12., 22.5004}, {6.5, 20.1924}, {6.5, 19.5284}, {
+                 12., 17.2194}, {12., 17.2194}, {15.7, 18.7724}, {17.5, 
+                 19.5274}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{11.5, 8.5156}, {11.5, 6.4876}, {11.5, 
+                5.4026}, {12.5, 5.8226}, {12.5, 8.5156}, {12., 8.3056}}}], 
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{21.5, 6.4873}, {17.5, 4.8083}, {17.5, 
+                 9.5283}, {21.5, 11.2073}}, {{21.5, 12.7113}, {21.5, 
+                 12.2913}, {17., 10.4033}, {16.5, 10.6133}, {16.5, 10.1943}, {
+                 15.707, 9.8613}, {16.5, 9.5283}, {16.5, 4.8083}, {16.5, 
+                 4.8093}, {16.5, 4.3903}, {15.707, 4.0573}, {17., 3.5143}, {
+                 22.5, 5.8223}, {22.5, 12.2913}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}}}, {{{6.5, 4.8086}, {2.5, 6.4876}, {2.5, 
+                 11.2066}, {6.5, 9.5286}}, {{7.5, 9.1096}, {7.5, 9.1096}, {
+                 7.5, 9.5286}, {8.292, 9.8616}, {7.5, 10.1936}, {7.5, 
+                 10.6136}, {7., 10.4036}, {2.5, 12.2906}, {2.5, 12.7106}, {
+                 1.5, 12.2916}, {1.5, 5.8226}, {7., 3.5146}, {8.293, 
+                 4.0576}, {7.5, 4.3906}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{3.2925, 17.7622}, {7.0005, 
+                 19.3182}, {10.7075, 17.7622}, {7.0005, 16.2062}}, {{6.5005, 
+                 10.6122}, {2.5005, 12.2912}, {2.5005, 17.0102}, {6.5005, 
+                 15.3322}}, {{7.5005, 10.1932}, {7.5005, 10.6122}, {7.5005, 
+                 15.3322}, {12.0005, 17.2202}, {12.5005, 17.0102}, {12.5005, 
+                 18.0952}, {7.0005, 20.4032}, {1.5005, 18.0952}, {1.5005, 
+                 11.6262}, {7.0005, 9.3182}, {8.2935, 9.8612}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{21.5, 12.291}, {17.5, 10.612}, {
+                 17.5, 15.332}, {21.5, 17.01}}, {{13.293, 17.762}, {17., 
+                 19.318}, {20.708, 17.762}, {17., 16.207}}, {{17., 20.403}, {
+                 11.5, 18.095}, {11.5, 17.01}, {12., 17.22}, {16.5, 15.332}, {
+                 16.5, 10.612}, {16.5, 10.194}, {15.706, 9.861}, {17., 
+                 9.318}, {22.5, 11.626}, {22.5, 18.095}}}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                 0, 1, 0}, {0, 1, 0}}}, {{{16.4995, 4.3906}, {12.4995, 
+                 2.7116}, {12.4995, 7.4316}, {16.4995, 9.1096}}, {{11.4995, 
+                 2.7116}, {7.4995, 4.3906}, {7.4995, 9.1096}, {11.4995, 
+                 7.4316}}, {{16.4995, 10.6136}, {16.4995, 10.1946}, {11.9995, 
+                 8.3056}, {8.2915, 9.8616}, {7.4995, 10.1936}, {7.4995, 
+                 10.6146}, {6.4995, 10.1946}, {6.4995, 3.7256}, {11.9995, 
+                 1.4176}, {17.4995, 3.7256}, {17.4995, 10.1946}}}]}, {
+               FaceForm[{
+                 RGBColor[0.965, 0.765, 0.749], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}}}, {{{12., 17.6616}, {16.945, 15.5856}, {16.945, 
+                9.9376}, {12., 7.8636}, {7.055, 9.9376}, {7.055, 
+                15.5856}}}]}, {
+               FaceForm[{
+                 RGBColor[0.91, 0.655, 0.635], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+                0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{12.125, 
+                17.7627}, {11.875, 17.7627}, {11.875, 12.0407}, {6.952, 
+                9.9757}, {7.048, 9.7447}, {12., 11.8227}, {16.952, 9.7447}, {
+                17.048, 9.9757}, {12.125, 12.0407}}}]}, {
+               FaceForm[{
+                 RGBColor[0.867, 0.067, 0.], 
+                 Opacity[1.]}], 
+               
+               FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 
+                 0}, {0, 1, 0}, {0, 1, 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+                 0}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+                 0}}}, {{{12.5, 8.5146}, {12.5, 13.2336}, {16.5, 14.9116}, {
+                 16.5, 10.1926}}, {{7.5, 14.9116}, {11.5, 13.2336}, {11.5, 
+                 8.5146}, {7.5, 10.1926}}, {{15.708, 15.6636}, {12., 
+                 14.1086}, {8.292, 15.6636}, {12., 17.2206}}, {{12., 
+                 18.3046}, {6.5, 15.9956}, {6.5, 9.5286}, {12., 7.2206}, {
+                 17.5, 9.5286}, {17.5, 15.9956}}}]}}, AspectRatio -> 
+             Automatic, ImageSize -> {24., 24.}, 
+             PlotRange -> {{0., 24.}, {0., 24.}}], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Name: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Wolfram/QuantumFramework\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Version: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"1.0.32\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Location: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                 "\"/Users/mohammadb/Library/WolframDesktop/Paclets/\
+Repository/Wolfram__QuantumFramework-1.0.32\"", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Description: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"Perform analytic and numeric quantum computations\"", 
+                   Short], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  PacletObject[<|
+   "Name" -> "Wolfram/QuantumFramework", "Description" -> 
+    "Perform analytic and numeric quantum computations", "Creator" -> 
+    "Wolfram Research, Quantum Computation Framework team", "License" -> 
+    "MIT", "PublisherID" -> "Wolfram", "Version" -> "1.0.32", 
+    "WolframVersion" -> "13.1+", "PrimaryContext" -> 
+    "Wolfram`QuantumFramework`", 
+    "Extensions" -> {{
+      "Kernel", "Root" -> "Kernel", 
+       "Context" -> {
+        "Wolfram`QuantumFrameworkLoader`", {
+         "Wolfram`QuantumFramework`", "QuantumFrameworkMain.m"}}, 
+       "Symbols" -> {
+        "Wolfram`QuantumFramework`QuditName", 
+         "Wolfram`QuantumFramework`QuditBasis", 
+         "Wolfram`QuantumFramework`QuantumBasis", 
+         "Wolfram`QuantumFramework`QuantumState", 
+         "Wolfram`QuantumFramework`QuantumOperator", 
+         "Wolfram`QuantumFramework`QuantumMeasurementOperator", 
+         "Wolfram`QuantumFramework`QuantumCircuitOperator", 
+         "Wolfram`QuantumFramework`QuantumMeasurement", 
+         "Wolfram`QuantumFramework`QuantumTensorProduct", 
+         "Wolfram`QuantumFramework`QuantumPartialTrace", 
+         "Wolfram`QuantumFramework`QuantumDistance", 
+         "Wolfram`QuantumFramework`QuantumEntanglementMonotone", 
+         "Wolfram`QuantumFramework`QuantumEntangledQ", 
+         "Wolfram`QuantumFramework`QuantumWignerTransform", 
+         "Wolfram`QuantumFramework`QuantumChannel", 
+         "Wolfram`QuantumFramework`QuantumStateEstimate", 
+         "Wolfram`QuantumFramework`QuantumMeasurementSimulation"}}, {
+      "IBMQ"}, {"Documentation", "Language" -> "English"}, {
+      "AutoCompletionData", "Root" -> "AutoCompletionData"}, {"FrontEnd"}}, 
+    "Location" -> 
+    "/Users/mohammadb/Library/WolframDesktop/Paclets/Repository/Wolfram__\
+QuantumFramework-1.0.32"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.89144599393795*^9},
+ CellLabel->"Out[1]=",
+ CellID->270844365,ExpressionUUID->"da79f15e-58f7-4dcf-afba-601a1faf6db7"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The built-in circuit \"PhaseEstimation\" takes two input arguments: a \
+unitary operator ",
+ Cell[BoxData["U"], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "2220f711-e58c-4090-bd7e-f84a4777caf2"],
+ " and an integer ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "10cbd8b7-ce67-4200-b54f-fedaff37328a"],
+ ". For ",
+ Cell[BoxData["U"], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "06bf2678-066a-46c4-9202-260c73d9ddb2"],
+ ", let's consider a phase operator."
+}], "Text",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446123079412*^9, 3.8914461972399797`*^9}, {
+   3.89193954955693*^9, 3.891939551736006*^9}, 3.892032017801764*^9, {
+   3.8920322923262978`*^9, 3.892032308799309*^9}, {3.8920396530247517`*^9, 
+   3.892039653415566*^9}, {3.892048836374441*^9, 3.8920488449992*^9}},
+ CellTags->"DefaultContent",
+ CellID->997659474,ExpressionUUID->"48fa8cc2-03b7-4ca3-9d5c-c39b5eebac87"],
+
+Cell[TextData[{
+ "For a phase operator with phase ",
+ Cell[BoxData[
+  StyleBox["\[Theta]", "TR"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "8d11a879-bff3-4680-98fa-bb01544a7e08"],
+ ", find eigenvalues:"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8914462518921537`*^9, 3.8914462884241657`*^9}, 
+   3.8920277447594337`*^9, {3.89203231489456*^9, 3.892032319621703*^9}, 
+   3.892048864654269*^9},
+ CellID->683353971,ExpressionUUID->"3c2c71c7-8e9e-43ff-873d-1459caa7ac62"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<Phase\>\"", ",", 
+     RowBox[{"2", " ", "\[Pi]", " ", "\[Theta]"}]}], "}"}], "]"}], "[", 
+  "\"\<Eigenvalues\>\"", "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891445984526785*^9, 3.8914460056689377`*^9}, {
+  3.891446206941474*^9, 3.891446285152775*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[9]:=",
+ CellID->762853280,ExpressionUUID->"1a9748cd-a20f-4a44-8efa-906a563a25d7"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1", ",", 
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{"2", " ", "\[ImaginaryI]", " ", "\[Pi]", " ", "\[Theta]"}]]}], 
+  "}"}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8914462378090563`*^9, 3.8914462467213907`*^9}, {
+  3.891446282290037*^9, 3.8914462897804823`*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[9]=",
+ CellID->58647279,ExpressionUUID->"4ae221e8-c7d5-479c-a221-96e457fbba06"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The integer ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "d50153a4-4fc9-4563-b158-75c0b48b9d35"],
+ " specifies the number of qubits and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"controlled", "-", 
+    SubscriptBox["U", "j"]}], TraditionalForm]],ExpressionUUID->
+  "d42c0c93-a9ea-4526-a157-b39bcc2046e9"],
+ " operators in the circuit, with ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"j", "=", "0"}], ",", "1", ",", "\[Ellipsis]", ",", 
+    RowBox[{"n", "-", "1"}]}], TraditionalForm]],ExpressionUUID->
+  "6de88487-72e7-4e68-b927-d6b21fa0fa2c"],
+ ". The accuracy of phase estimation and the success probability depends on \
+",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "f0250997-aec5-42f2-a9c3-04b39d864c57"],
+ " (number of qubits):"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{
+  3.89203202149893*^9, {3.892048158104685*^9, 3.8920481591066236`*^9}, {
+   3.892048870668795*^9, 3.892048880132921*^9}, 3.8920489949944477`*^9},
+ CellID->367863191,ExpressionUUID->"61d7080c-e613-46c4-8c73-2582a2deb860"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"n", "=", "4"}], ";", 
+  RowBox[{"\[Theta]", "=", 
+   RowBox[{"1", "/", "5"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"qc", "=", 
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{"\"\<PhaseEstimation\>\"", ",", 
+      RowBox[{"QuantumOperator", "[", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Phase\>\"", ",", 
+         RowBox[{"2", " ", "\[Pi]", " ", "\[Theta]"}]}], "}"}], "]"}], ",", 
+      "n"}], "}"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"qc", "[", 
+  RowBox[{"\"\<Diagram\>\"", ",", 
+   RowBox[{"FontSize", "->", "11"}]}], "]"}]}], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891445984526785*^9, 3.8914460056689377`*^9}, {
+  3.891446206941474*^9, 3.891446230048794*^9}, {3.8914462955621777`*^9, 
+  3.891446299985676*^9}, {3.891446627592963*^9, 3.891446645657084*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[15]:=",
+ CellID->539383774,ExpressionUUID->"797b835e-77e9-4a3f-866a-568e6f79eb8a"],
+
+Cell[BoxData[
+ GraphicsBox[{
+   {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+    LineBox[{{0.375, -5}, {0.625, -5}}], LineBox[{{0.375, -1}, {0.625, -1}}], 
+    LineBox[{{0.375, -2}, {0.625, -2}}], LineBox[{{0.375, -3}, {0.625, -3}}], 
+    LineBox[{{0.375, -4}, {0.625, -4}}], LineBox[{{1.375, -1}, {1.625, -1}}], 
+    LineBox[{{1.375, -5}, {1.625, -5}}], LineBox[{{1.375, -2}, {2.625, -2}}], 
+    LineBox[{{2.375, -5}, {2.625, -5}}], LineBox[{{1.375, -3}, {3.625, -3}}], 
+    LineBox[{{3.375, -5}, {3.625, -5}}], LineBox[{{1.375, -4}, {4.625, -4}}], 
+    LineBox[{{4.375, -5}, {4.625, -5}}], LineBox[{{2.375, -1}, {5.625, -1}}], 
+    LineBox[{{3.375, -2}, {5.625, -2}}], LineBox[{{4.375, -3}, {5.625, -3}}], 
+    LineBox[{{5.375, -4}, {5.625, -4}}], 
+    LineBox[{{17.375, -1}, {17.625, -1}}], 
+    LineBox[{{17.375, -2}, {18.625, -2}}], 
+    LineBox[{{17.375, -3}, {19.625, -3}}], 
+    LineBox[{{17.375, -4}, {20.625, -4}}], 
+    LineBox[{{18.375, -1}, {21.625, -1}}], 
+    LineBox[{{19.375, -2}, {21.625, -2}}], 
+    LineBox[{{20.375, -3}, {21.625, -3}}], 
+    LineBox[{{21.375, -4}, {21.625, -4}}], 
+    LineBox[{{5.375, -5}, {21.625, -5}}]}, {
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+     LineBox[{{0.375, -0.0234375}, {21.625, -0.0234375}}], 
+     LineBox[{{0.375, 0.0234375}, {21.625, 0.0234375}}]}, InsetBox[
+     StyleBox["\<\"c\"\>",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, 0}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}, {
+    {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{RGBColor[
+     0.880722, 0.611041, 0.142051], Opacity[0.15]}], 
+     RectangleBox[{0.625, -5.375}, {1.375, -4.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"X\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -5.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{0.625, -1.375}, {1.375, -0.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -1.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{0.625, -2.375}, {1.375, -1.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -2.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{0.625, -3.375}, {1.375, -2.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -3.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, 
+    {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+     0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+     RectangleBox[{0.625, -4.375}, {1.375, -3.625},
+      RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+       StyleBox["\<\"H\"\>",
+        StripOnInput->False,
+        FontFamily->"Roboto",
+        FontSize->11,
+        FontColor->GrayLevel[0],
+        Background->GrayLevel[0, 0]], {1., -4.}], {{{1, 0}, {0, 1}}, 
+       Center}]}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       RectangleBox[{1.625, -5.375}, {2.375, -4.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          SuperscriptBox[
+           RowBox[{"\<\"P\"\>", "(", 
+            FractionBox[
+             RowBox[{"2", " ", "\[Pi]"}], "5"], ")"}], "8"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {2., -5.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{2., -1.09375}, {2., -4.625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{1.625, -1.}, {1.90625, -1.}}], 
+      LineBox[{{2.09375, -1.}, {2.375, -1.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{2., -1.}, 0.09375]}}, {}}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       RectangleBox[{2.625, -5.375}, {3.375, -4.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          SuperscriptBox[
+           RowBox[{"\<\"P\"\>", "(", 
+            FractionBox[
+             RowBox[{"2", " ", "\[Pi]"}], "5"], ")"}], "4"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {3., -5.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{3., -2.09375}, {3., -4.625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{2.625, -2.}, {2.90625, -2.}}], 
+      LineBox[{{3.09375, -2.}, {3.375, -2.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{3., -2.}, 0.09375]}}, {}}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       RectangleBox[{3.625, -5.375}, {4.375, -4.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          SuperscriptBox[
+           RowBox[{"\<\"P\"\>", "(", 
+            FractionBox[
+             RowBox[{"2", " ", "\[Pi]"}], "5"], ")"}], "2"],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {4., -5.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{4., -3.09375}, {4., -4.625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{3.625, -3.}, {3.90625, -3.}}], 
+      LineBox[{{4.09375, -3.}, {4.375, -3.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{4., -3.}, 0.09375]}}, {}}, {{
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+       RectangleBox[{4.625, -5.375}, {5.375, -4.625},
+        RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+         StyleBox[
+          RowBox[{"\<\"P\"\>", "(", 
+           FractionBox[
+            RowBox[{"2", " ", "\[Pi]"}], "5"], ")"}],
+          StripOnInput->False,
+          FontFamily->"Roboto",
+          FontSize->11,
+          FontColor->GrayLevel[0],
+          Background->GrayLevel[0, 0]], {5., -5.}], {{{1, 0}, {0, 1}}, 
+         Center}]}, 
+      {RGBColor[0.560181, 0.691569, 0.194885], 
+       LineBox[{{5., -4.09375}, {5., -4.625}}]}}, 
+     {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+      LineBox[{{4.625, -4.}, {4.90625, -4.}}], 
+      LineBox[{{5.09375, -4.}, {5.375, -4.}}], 
+      {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{RGBColor[
+       0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+       DiskBox[{5., -4.}, 0.09375]}}, {}}, GeometricTransformationBox[{
+      {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8], 
+       Dashing[{Tiny, Tiny}]}], FaceForm[{RGBColor[
+       0.898039, 0.898039, 0.898039], Opacity[0.3]}], 
+       RectangleBox[NCache[{0.53125, Rational[-1, 2]}, {0.53125, -0.5}], 
+        NCache[{12.46875, Rational[-9, 2]}, {12.46875, -4.5}],
+        RoundingRadius->0.1]}, 
+      {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+       LineBox[{{0.625, -2}, {0.625, -2}}], 
+       LineBox[{{0.625, -3}, {0.625, -3}}], 
+       LineBox[{{0.625, -1}, {1.625, -1}}], 
+       LineBox[{{0.625, -4}, {1.625, -4}}], 
+       LineBox[{{2.375, -4}, {2.625, -4}}], 
+       LineBox[{{3.375, -4}, {3.625, -4}}], 
+       LineBox[{{1.375, -3}, {3.625, -3}}], 
+       LineBox[{{4.375, -3}, {4.625, -3}}], 
+       LineBox[{{4.375, -4}, {5.625, -4}}], 
+       LineBox[{{1.375, -2}, {5.625, -2}}], 
+       LineBox[{{5.375, -3}, {6.625, -3}}], 
+       LineBox[{{6.375, -2}, {6.625, -2}}], 
+       LineBox[{{7.375, -2}, {7.625, -2}}], 
+       LineBox[{{6.375, -4}, {8.625, -4}}], 
+       LineBox[{{2.375, -1}, {8.625, -1}}], 
+       LineBox[{{7.375, -3}, {9.625, -3}}], 
+       LineBox[{{9.375, -1}, {9.625, -1}}], 
+       LineBox[{{8.375, -2}, {10.625, -2}}], 
+       LineBox[{{10.375, -1}, {10.625, -1}}], 
+       LineBox[{{11.375, -1}, {11.625, -1}}], 
+       LineBox[{{12.375, -1}, {12.375, -1}}], 
+       LineBox[{{11.375, -2}, {12.375, -2}}], 
+       LineBox[{{10.375, -3}, {12.375, -3}}], 
+       LineBox[{{9.375, -4}, {12.375, -4}}]}, {{
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{1., -2}, {1., -3}}]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+         0.8], {
+          {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+           LineBox[{{0.625, -2.}, {1.375, -2.}}]}, 
+          {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+           0.8], LineBox[{{0.8939339828220179, -2.106066017177982}, {
+            1.1060660171779821`, -1.8939339828220179`}}], 
+           LineBox[{{1.1060660171779821`, -2.106066017177982}, {
+            0.8939339828220179, -1.8939339828220179`}}]}}, {
+          {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+           LineBox[{{0.625, -3.}, {1.375, -3.}}]}, 
+          {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+           0.8], LineBox[{{0.8939339828220179, -3.106066017177982}, {
+            1.1060660171779821`, -2.893933982822018}}], 
+           LineBox[{{1.1060660171779821`, -3.106066017177982}, {
+            0.8939339828220179, -2.893933982822018}}]}}}}, {
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{2., -1}, {2., -4}}]}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+         0.8], {
+          {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+           LineBox[{{1.625, -1.}, {2.375, -1.}}]}, 
+          {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+           0.8], LineBox[{{1.8939339828220179`, -1.1060660171779821`}, {
+            2.106066017177982, -0.8939339828220179}}], 
+           LineBox[{{2.106066017177982, -1.1060660171779821`}, {
+            1.8939339828220179`, -0.8939339828220179}}]}}, {
+          {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+           LineBox[{{1.625, -4.}, {2.375, -4.}}]}, 
+          {RGBColor[0.537254, 0.537254, 0.537254], Thickness[Medium], Opacity[
+           0.8], LineBox[{{1.8939339828220179`, -4.106066017177982}, {
+            2.106066017177982, -3.893933982822018}}], 
+           LineBox[{{2.106066017177982, -4.106066017177982}, {
+            1.8939339828220179`, -3.893933982822018}}]}}}}, 
+       {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+        0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+        RectangleBox[{2.625, -4.375}, {3.375, -3.625},
+         RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+          StyleBox["\<\"H\"\>",
+           StripOnInput->False,
+           FontFamily->"Roboto",
+           FontSize->11,
+           FontColor->GrayLevel[0],
+           Background->GrayLevel[0, 0]], {3., -4.}], {{{1, 0}, {0, 1}}, 
+          Center}]}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{4., -3.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/2", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 2]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {4., -3.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{4., -3.375}, {4., -3.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{3.625, -4.}, {3.90625, -4.}}], 
+         LineBox[{{4.09375, -4.}, {4.375, -4.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{4., -4.}, 0.09375]}}, {}}, 
+       {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+        0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+        RectangleBox[{4.625, -3.375}, {5.375, -2.625},
+         RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+          StyleBox["\<\"H\"\>",
+           StripOnInput->False,
+           FontFamily->"Roboto",
+           FontSize->11,
+           FontColor->GrayLevel[0],
+           Background->GrayLevel[0, 0]], {5., -3.}], {{{1, 0}, {0, 1}}, 
+          Center}]}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{6., -2.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/4", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 4]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {6., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{6., -2.375}, {6., -3.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{5.625, -4.}, {5.90625, -4.}}], 
+         LineBox[{{6.09375, -4.}, {6.375, -4.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{6., -4.}, 0.09375]}}, {}}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{7., -2.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/2", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 2]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {7., -2.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{7., -2.375}, {7., -2.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{6.625, -3.}, {6.90625, -3.}}], 
+         LineBox[{{7.09375, -3.}, {7.375, -3.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{7., -3.}, 0.09375]}}, {}}, 
+       {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+        0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+        RectangleBox[{7.625, -2.375}, {8.375, -1.625},
+         RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+          StyleBox["\<\"H\"\>",
+           StripOnInput->False,
+           FontFamily->"Roboto",
+           FontSize->11,
+           FontColor->GrayLevel[0],
+           Background->GrayLevel[0, 0]], {8., -2.}], {{{1, 0}, {0, 1}}, 
+          Center}]}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{9., -1.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/8", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 8]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {9., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{9., -1.375}, {9., -3.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{8.625, -4.}, {8.90625, -4.}}], 
+         LineBox[{{9.09375, -4.}, {9.375, -4.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{9., -4.}, 0.09375]}}, {}}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{10., -1.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/4", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 4]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {10., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{10., -1.375}, {10., -2.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{9.625, -3.}, {9.90625, -3.}}], 
+         LineBox[{{10.09375, -3.}, {10.375, -3.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{10., -3.}, 0.09375]}}, {}}, {{
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.15]}], 
+          DiskBox[{11., -1.}, 0.375], GeometricTransformationBox[InsetBox[
+            StyleBox[
+             TemplateBox[{
+               RowBox[{"-", "\[Pi]"}], 
+               InterpretationBox[
+                StyleBox[
+                "1/2", ShowStringCharacters -> True, NumberMarks -> True], 
+                InputForm[
+                 Rational[1, 2]], Editable -> True, AutoDelete -> True]},
+              "Superscript"],
+             StripOnInput->False,
+             FontFamily->"Roboto",
+             FontSize->11,
+             FontColor->GrayLevel[0],
+             Background->GrayLevel[0, 0]], {11., -1.}], {{{1, 0}, {0, 1}}, 
+            Center}]}, 
+         {RGBColor[0.560181, 0.691569, 0.194885], 
+          LineBox[{{11., -1.375}, {11., -1.90625}}]}}, 
+        {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], 
+         LineBox[{{10.625, -2.}, {10.90625, -2.}}], 
+         LineBox[{{11.09375, -2.}, {11.375, -2.}}], 
+         {EdgeForm[RGBColor[0.560181, 0.691569, 0.194885]], FaceForm[{
+          RGBColor[0.560181, 0.691569, 0.194885], Opacity[0.8]}], 
+          DiskBox[{11., -2.}, 0.09375]}}, {}}, 
+       {EdgeForm[RGBColor[0.368417, 0.506779, 0.709798]], FaceForm[{RGBColor[
+        0.368417, 0.506779, 0.709798], Opacity[0.15]}], 
+        RectangleBox[{11.625, -1.375}, {12.375, -0.625},
+         RoundingRadius->0.1], GeometricTransformationBox[InsetBox[
+          StyleBox["\<\"H\"\>",
+           StripOnInput->False,
+           FontFamily->"Roboto",
+           FontSize->11,
+           FontColor->GrayLevel[0],
+           Background->GrayLevel[0, 0]], {12., -1.}], {{{1, 0}, {0, 1}}, 
+          Center}]}}, {}, InsetBox[
+       StyleBox[
+        SuperscriptBox["\<\"QFT\"\>", "\[Dagger]"],
+        StripOnInput->False,
+        FontFamily->"Times",
+        FontSize->11,
+        Background->GrayLevel[0, 0]], 
+       NCache[{Rational[13, 2], Rational[-1, 2]}, {6.5, -0.5}]]}, {5, 0}], 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.15]}], 
+     RectangleBox[{17.625, -1.375}, {18.375, -0.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{18.151690686445303`, -1.0772902651951612`}, {
+       18.212366961023424`, -1.0332063712732258`}}], 
+      LineBox[{{18.116904337848514`, -1.0409065970372444`}, {
+       18.16366607298792, -0.9822692358521422}}], 
+      LineBox[{{18.07369219343511, -1.015088542646603}, {
+       18.103169070809155`, -0.9461239597052442}}], 
+      LineBox[{{18.02516873734081, -1.0016969196685122`}, {
+       18.035236232277136`, -0.9273756875359171}}], 
+      LineBox[{{17.97483126265919, -1.0016969196685122`}, {
+       17.964763767722864`, -0.9273756875359171}}], 
+      LineBox[{{17.92630780656489, -1.015088542646603}, {
+       17.896830929190845`, -0.9461239597052442}}], 
+      LineBox[{{17.883095662151486`, -1.0409065970372444`}, {
+       17.83633392701208, -0.9822692358521422}}], 
+      LineBox[{{17.848309313554697`, -1.0772902651951612`}, {
+       17.787633038976576`, -1.0332063712732258`}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{18., -1.1875}, {18.17024643740233, -0.8533725534293621}}], 
+      {RGBColor[0.537254, 0.537254, 0.537254], 
+       LineBox[{{18., -0.625}, {18., -0.2109375}}], 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{17.90625, -0.2109375}, {18.09375, -0.2109375}, {
+         18., -0.0234375}}]}}}}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.15]}], 
+     RectangleBox[{18.625, -2.375}, {19.375, -1.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{19.151690686445303`, -2.0772902651951615`}, {
+       19.212366961023424`, -2.033206371273226}}], 
+      LineBox[{{19.116904337848514`, -2.040906597037244}, {
+       19.16366607298792, -1.9822692358521423`}}], 
+      LineBox[{{19.07369219343511, -2.015088542646603}, {
+       19.103169070809155`, -1.9461239597052442`}}], 
+      LineBox[{{19.02516873734081, -2.0016969196685124`}, {
+       19.035236232277136`, -1.9273756875359171`}}], 
+      LineBox[{{18.97483126265919, -2.0016969196685124`}, {
+       18.964763767722864`, -1.9273756875359171`}}], 
+      LineBox[{{18.92630780656489, -2.015088542646603}, {
+       18.896830929190845`, -1.9461239597052442`}}], 
+      LineBox[{{18.883095662151486`, -2.040906597037244}, {
+       18.83633392701208, -1.982269235852142}}], 
+      LineBox[{{18.848309313554697`, -2.0772902651951615`}, {
+       18.787633038976576`, -2.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{19., -2.1875}, {19.17024643740233, -1.8533725534293621`}}], 
+      {RGBColor[0.537254, 0.537254, 0.537254], 
+       LineBox[{{19., -1.625}, {19., -0.2109375}}], 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{18.90625, -0.2109375}, {19.09375, -0.2109375}, {
+         19., -0.0234375}}]}}}}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.15]}], 
+     RectangleBox[{19.625, -3.375}, {20.375, -2.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{20.151690686445303`, -3.0772902651951615`}, {
+       20.212366961023424`, -3.033206371273226}}], 
+      LineBox[{{20.116904337848514`, -3.040906597037244}, {
+       20.16366607298792, -2.9822692358521423`}}], 
+      LineBox[{{20.07369219343511, -3.015088542646603}, {
+       20.103169070809155`, -2.946123959705244}}], 
+      LineBox[{{20.02516873734081, -3.0016969196685124`}, {
+       20.035236232277136`, -2.927375687535917}}], 
+      LineBox[{{19.97483126265919, -3.0016969196685124`}, {
+       19.964763767722864`, -2.927375687535917}}], 
+      LineBox[{{19.92630780656489, -3.015088542646603}, {
+       19.896830929190845`, -2.946123959705244}}], 
+      LineBox[{{19.883095662151486`, -3.040906597037244}, {
+       19.83633392701208, -2.9822692358521423`}}], 
+      LineBox[{{19.848309313554697`, -3.0772902651951615`}, {
+       19.787633038976576`, -3.033206371273226}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{20., -3.1875}, {20.17024643740233, -2.853372553429362}}], 
+      {RGBColor[0.537254, 0.537254, 0.537254], 
+       LineBox[{{20., -2.625}, {20., -0.2109375}}], 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{19.90625, -0.2109375}, {20.09375, -0.2109375}, {
+         20., -0.0234375}}]}}}}, 
+    {EdgeForm[RGBColor[0.7367, 0.358, 0.503]], FaceForm[{RGBColor[
+     0.7367, 0.358, 0.503], Opacity[0.15]}], 
+     RectangleBox[{20.625, -4.375}, {21.375, -3.625},
+      RoundingRadius->0.1], 
+     {Thickness[Small], 
+      LineBox[{{21.151690686445303`, -4.0772902651951615`}, {
+       21.212366961023424`, -4.033206371273226}}], 
+      LineBox[{{21.116904337848514`, -4.040906597037244}, {
+       21.16366607298792, -3.9822692358521423`}}], 
+      LineBox[{{21.07369219343511, -4.015088542646603}, {
+       21.103169070809155`, -3.946123959705244}}], 
+      LineBox[{{21.02516873734081, -4.001696919668512}, {
+       21.035236232277136`, -3.927375687535917}}], 
+      LineBox[{{20.97483126265919, -4.001696919668512}, {
+       20.964763767722864`, -3.927375687535917}}], 
+      LineBox[{{20.92630780656489, -4.015088542646603}, {
+       20.896830929190845`, -3.946123959705244}}], 
+      LineBox[{{20.883095662151486`, -4.040906597037244}, {
+       20.83633392701208, -3.9822692358521423`}}], 
+      LineBox[{{20.848309313554697`, -4.0772902651951615`}, {
+       20.787633038976576`, -4.033206371273225}}]}, 
+     {Thickness[Medium], 
+      LineBox[{{21., -4.1875}, {21.17024643740233, -3.853372553429362}}], 
+      {RGBColor[0.537254, 0.537254, 0.537254], 
+       LineBox[{{21., -3.625}, {21., -0.2109375}}], 
+       {EdgeForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3]}], 
+        FaceForm[{RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.8]}], 
+        PolygonBox[{{20.90625, -0.2109375}, {21.09375, -0.2109375}, {
+         21., -0.0234375}}]}}}}}, {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["4",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -4}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["5",
+      StripOnInput->False,
+      FontSize->11,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -5}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{930.3788757324219, Automatic}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.891446301508359*^9, 3.891446646727953*^9},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[17]=",
+ CellID->749287896,ExpressionUUID->"08ae3f68-16bb-4fec-b36d-fd29dc231d90"]
+}, Open  ]],
+
+Cell["\<\
+Return the corresponding measurement, with all qubits prepared in state:\
+\>", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446319569868*^9, 3.891446321451851*^9}},
+ CellTags->"DefaultContent",
+ CellID->275240035,ExpressionUUID->"44fd2d8f-15f6-498c-8803-0ec85845d3ae"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"mea", "=", 
+  RowBox[{"N", "@", 
+   RowBox[{"qc", "[", "]"}]}]}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446323860703*^9, 3.8914463361320677`*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[13]:=",
+ CellID->177626331,ExpressionUUID->"6798497e-01d5-444b-b370-b7e0ba1ce0c7"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["QuantumMeasurement",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"], 
+               ImageSizeCache -> {11., {0., 11.}}], Appearance -> None, 
+              BaseStyle -> {}, ButtonFunction :> (Typeset`open$$ = True), 
+              Evaluator -> Automatic, Method -> "Preemptive"], 
+             Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 Opacity[0], 
+                 
+                 PointBox[{{0.2567084078711986, 0.}, {16.426241915508463`, 
+                  0.}}]}, {{}, {
+                  RGBColor[0.982864, 0.7431472, 0.3262672], 
+                  EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{0.5737580844915371, 0.}, {1.426241915508463,
+                     0.0039062500000000035`}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{1.9397643202114576`, 
+                    4.294404061405025}, {6.801087211365647, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0039062500000000035`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 0}, "Dual" -> 
+                    False], 0.0039062500000000035`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0039062500000000035`]& , TagBoxNote -> 
+                    "0.0039062500000000035"], 
+                    StyleBox[
+                    "0.0039062500000000035`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0039062500000000035`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{1.573758084491537, 0.}, {2.426241915508463, 
+                    0.007699721404675514}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{4.115336071503412, 
+                    6.46997581269698}, {6.7078752690974195`, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 1}, "Dual" -> 
+                    False]]}, {"0.007699721404675514`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 1}, "Dual" -> 
+                    False], 0.007699721404675514}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.007699721404675514]& , TagBoxNote -> 
+                    "0.007699721404675514"], 
+                    StyleBox[
+                    "0.007699721404675514`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.007699721404675514, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{2.573758084491537, 0.}, {3.426241915508463, 
+                    0.024764348009120005`}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{6.290907822795367, 
+                    8.645547563988934}, {6.288568829111644, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 0}, "Dual" -> 
+                    False]]}, {"0.024764348009120005`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 0}, "Dual" -> 
+                    False], 0.024764348009120005`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.024764348009120005`]& , TagBoxNote -> 
+                    "0.024764348009120005"], 
+                    StyleBox[
+                    "0.024764348009120005`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.024764348009120005`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{3.573758084491537, 0.}, {4.426241915508463, 
+                    0.8755901975927114}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{8.466479574087321, 
+                    10.82111931528089}, {-14.617646484375003`, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 1}, "Dual" -> 
+                    False]]}, {"0.8755901975927114`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 1}, "Dual" -> 
+                    False], 0.8755901975927114}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.8755901975927114]& , TagBoxNote -> 
+                    "0.8755901975927114"], 
+                    StyleBox[
+                    "0.8755901975927114`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.8755901975927114, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{4.573758084491537, 0.}, {5.426241915508463, 
+                    0.05514834992131118}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{10.642051325379276`, 
+                    12.996691066572845`}, {5.541983042640131, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 0}, "Dual" -> 
+                    False]]}, {"0.05514834992131118`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 0}, "Dual" -> 
+                    False], 0.05514834992131118}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.05514834992131118]& , TagBoxNote -> 
+                    "0.05514834992131118"], 
+                    StyleBox[
+                    "0.05514834992131118`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.05514834992131118, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{5.573758084491537, 0.}, {6.426241915508463, 
+                    0.011265524087369385`}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{12.81762307667123, 
+                    15.1722628178648}, {6.620257528420769, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 1}, "Dual" -> 
+                    False]]}, {"0.011265524087369385`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 1}, "Dual" -> 
+                    False], 0.011265524087369385`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.011265524087369385`]& , TagBoxNote -> 
+                    "0.011265524087369385"], 
+                    StyleBox[
+                    "0.011265524087369385`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.011265524087369385`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{6.573758084491537, 0.}, {7.426241915508463, 
+                    0.004943416487140488}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{14.993194827963185`, 
+                    17.347834569156753`}, {6.775602294673583, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 0}, "Dual" -> 
+                    False]]}, {"0.004943416487140488`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 0}, "Dual" -> 
+                    False], 0.004943416487140488}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.004943416487140488]& , TagBoxNote -> 
+                    "0.004943416487140488"], 
+                    StyleBox[
+                    "0.004943416487140488`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.004943416487140488, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{7.573758084491537, 0.}, {8.426241915508463, 
+                    0.002928955571271896}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{17.16876657925514, 
+                    19.523406320448707`}, {6.825100971363254, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 1}, "Dual" -> 
+                    False]]}, {"0.002928955571271896`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 1}, "Dual" -> 
+                    False], 0.002928955571271896}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.002928955571271896]& , TagBoxNote -> 
+                    "0.002928955571271896"], 
+                    StyleBox[
+                    "0.002928955571271896`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.002928955571271896, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{8.573758084491537, 0.}, {9.426241915508463, 
+                    0.0020619689257828917`}, "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{19.344338330547096`, 
+                    21.69897807174066}, {6.846404284483538, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0020619689257828917`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 0}, "Dual" -> 
+                    False], 0.0020619689257828917`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0020619689257828917`]& , TagBoxNote -> 
+                    "0.0020619689257828917"], 
+                    StyleBox[
+                    "0.0020619689257828917`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0020619689257828917`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{9.573758084491537, 0.}, {
+                    10.426241915508463`, 0.0016363973199733952`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{21.51991008183905, 
+                    23.874549823032616`}, {6.8568612911985, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 1}, "Dual" -> 
+                    False]]}, {"0.0016363973199733952`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 1}, "Dual" -> 
+                    False], 0.0016363973199733952`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0016363973199733952`]& , TagBoxNote -> 
+                    "0.0016363973199733952"], 
+                    StyleBox[
+                    "0.0016363973199733952`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0016363973199733952`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{10.573758084491537`, 0.}, {
+                    11.426241915508463`, 0.0014273627992274426`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{23.695481833131005`, 
+                    26.05012157432457}, {6.8619976192741055`, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 0}, "Dual" -> 
+                    False]]}, {"0.0014273627992274426`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 0}, "Dual" -> 
+                    False], 0.0014273627992274426`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0014273627992274426`]& , TagBoxNote -> 
+                    "0.0014273627992274426"], 
+                    StyleBox[
+                    "0.0014273627992274426`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0014273627992274426`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{11.573758084491537`, 0.}, {
+                    12.426241915508463`, 0.0013516595404963277`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{25.87105358442296, 
+                    28.225693325616525`}, {6.863857775060087, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 1}, "Dual" -> 
+                    False]]}, {"0.0013516595404963277`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 1}, "Dual" -> 
+                    False], 0.0013516595404963277`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0013516595404963277`]& , TagBoxNote -> 
+                    "0.0013516595404963277"], 
+                    StyleBox[
+                    "0.0013516595404963277`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0013516595404963277`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{12.573758084491537`, 0.}, {
+                    13.426241915508463`, 0.0013834311529059475`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{28.046625335714914`, 
+                    30.40126507690848}, {6.863077093360985, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0013834311529059475`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 0}, "Dual" -> 
+                    False], 0.0013834311529059475`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0013834311529059475`]& , TagBoxNote -> 
+                    "0.0013834311529059475"], 
+                    StyleBox[
+                    "0.0013834311529059475`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0013834311529059475`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{13.573758084491537`, 0.}, {
+                    14.426241915508463`, 0.0015332556344768208`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{30.22219708700687, 
+                    32.576836828200435`}, {6.8593956550590285`, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 1}, "Dual" -> 
+                    False]]}, {"0.0015332556344768208`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 1}, "Dual" -> 
+                    False], 0.0015332556344768208`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0015332556344768208`]& , TagBoxNote -> 
+                    "0.0015332556344768208"], 
+                    StyleBox[
+                    "0.0015332556344768208`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0015332556344768208`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{14.573758084491537`, 0.}, {
+                    15.426241915508463`, 0.0018563755170383578`}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{32.39776883829882, 
+                    34.75240857949239}, {6.851456058677223, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 0}, "Dual" -> 
+                    False]]}, {"0.0018563755170383578`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 0}, "Dual" -> 
+                    False], 0.0018563755170383578`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0018563755170383578`]& , TagBoxNote -> 
+                    "0.0018563755170383578"], 
+                    StyleBox[
+                    "0.0018563755170383578`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0018563755170383578`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{15.573758084491537`, 0.}, {
+                    16.426241915508463`, 0.002502786036498885}, 
+                    "RoundingRadius" -> 0]}, 
+                    ImageSizeCache -> {{34.57334058959078, 
+                    36.927980330784344`}, {6.835572670193718, 
+                    7.397070312500004}}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 1}, "Dual" -> 
+                    False]]}, {"0.002502786036498885`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 1}, "Dual" -> 
+                    False], 0.002502786036498885}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.002502786036498885]& , TagBoxNote -> 
+                    "0.002502786036498885"], 
+                    StyleBox[
+                    "0.002502786036498885`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.002502786036498885, {}], 
+                    "Tooltip"]& ]}}, {}, {}}, {}, {}, {}, {}, {}}, 
+               AspectRatio -> NCache[GoldenRatio^(-1), 0.6180339887498948], 
+               Axes -> {False, False}, AxesLabel -> {None, None}, 
+               AxesOrigin -> {0.2567084078711986, 0.}, 
+               CoordinatesToolOptions :> {"DisplayFunction" -> ({
+                   Identity[
+                    Part[#, 1]], 
+                   Identity[
+                    Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+                   Identity[
+                    Part[#, 1]], 
+                   Identity[
+                    Part[#, 2]]}& )}, DisplayFunction -> Identity, 
+               Frame -> {{True, False}, {True, False}}, 
+               FrameLabel -> {{None, None}, {None, None}}, 
+               FrameTicks -> {{None, None}, {None, None}}, 
+               GridLines -> {None, None}, GridLinesStyle -> Directive[
+                 GrayLevel[0.5, 0.4]], ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}], PlotRange -> {{All, All}, {All, All}}, 
+               PlotRangePadding -> {{
+                  Scaled[0.02], 
+                  Scaled[0.02]}, {None, 
+                  Scaled[0.05]}}, Ticks -> {None, Automatic}], 
+              
+              RowBox[{"None", "\[CircleTimes]", "None", "\[CircleTimes]", 
+                "None", "\[CircleTimes]", "None", "\[CircleTimes]", 
+                "\"I\""}]], Annotation[#, 
+              CircleTimes[None, None, None, None, "I"], "Tooltip"]& ], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"1", ",", "2", ",", "3", ",", "4"}], "}"}], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                 "\"Measurement Outcomes: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["16", "SummaryItem"]}]}}, AutoDelete -> False, 
+             BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, 
+             GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {
+              "Columns" -> {{2}}, "Rows" -> {{Automatic}}}]}}, AutoDelete -> 
+          False, BaselinePosition -> {1, 1}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], True -> 
+        GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              Appearance -> None, BaseStyle -> {}, 
+              ButtonFunction :> (Typeset`open$$ = False), Evaluator -> 
+              Automatic, Method -> "Preemptive"], 
+             Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            TagBox[
+             TooltipBox[
+              GraphicsBox[{{
+                 Opacity[0], 
+                 
+                 PointBox[{{0.2567084078711986, 0.}, {16.426241915508463`, 
+                  0.}}]}, {{}, {
+                  RGBColor[0.982864, 0.7431472, 0.3262672], 
+                  EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{0.5737580844915371, 0.}, {1.426241915508463,
+                     0.0039062500000000035`}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0039062500000000035`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 0}, "Dual" -> 
+                    False], 0.0039062500000000035`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0039062500000000035`]& , TagBoxNote -> 
+                    "0.0039062500000000035"], 
+                    StyleBox[
+                    "0.0039062500000000035`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0039062500000000035`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{1.573758084491537, 0.}, {2.426241915508463, 
+                    0.007699721404675514}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 1}, "Dual" -> 
+                    False]]}, {"0.007699721404675514`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 0, 1}, "Dual" -> 
+                    False], 0.007699721404675514}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.007699721404675514]& , TagBoxNote -> 
+                    "0.007699721404675514"], 
+                    StyleBox[
+                    "0.007699721404675514`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.007699721404675514, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{2.573758084491537, 0.}, {3.426241915508463, 
+                    0.024764348009120005`}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 0}, "Dual" -> 
+                    False]]}, {"0.024764348009120005`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 0}, "Dual" -> 
+                    False], 0.024764348009120005`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.024764348009120005`]& , TagBoxNote -> 
+                    "0.024764348009120005"], 
+                    StyleBox[
+                    "0.024764348009120005`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.024764348009120005`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{3.573758084491537, 0.}, {4.426241915508463, 
+                    0.8755901975927114}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 1}, "Dual" -> 
+                    False]]}, {"0.8755901975927114`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 0, 1, 1}, "Dual" -> 
+                    False], 0.8755901975927114}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.8755901975927114]& , TagBoxNote -> 
+                    "0.8755901975927114"], 
+                    StyleBox[
+                    "0.8755901975927114`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.8755901975927114, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{4.573758084491537, 0.}, {5.426241915508463, 
+                    0.05514834992131118}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 0}, "Dual" -> 
+                    False]]}, {"0.05514834992131118`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 0}, "Dual" -> 
+                    False], 0.05514834992131118}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.05514834992131118]& , TagBoxNote -> 
+                    "0.05514834992131118"], 
+                    StyleBox[
+                    "0.05514834992131118`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.05514834992131118, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{5.573758084491537, 0.}, {6.426241915508463, 
+                    0.011265524087369385`}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 1}, "Dual" -> 
+                    False]]}, {"0.011265524087369385`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 0, 1}, "Dual" -> 
+                    False], 0.011265524087369385`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.011265524087369385`]& , TagBoxNote -> 
+                    "0.011265524087369385"], 
+                    StyleBox[
+                    "0.011265524087369385`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.011265524087369385`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{6.573758084491537, 0.}, {7.426241915508463, 
+                    0.004943416487140488}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 0}, "Dual" -> 
+                    False]]}, {"0.004943416487140488`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 0}, "Dual" -> 
+                    False], 0.004943416487140488}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.004943416487140488]& , TagBoxNote -> 
+                    "0.004943416487140488"], 
+                    StyleBox[
+                    "0.004943416487140488`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.004943416487140488, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{7.573758084491537, 0.}, {8.426241915508463, 
+                    0.002928955571271896}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"0", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 1}, "Dual" -> 
+                    False]]}, {"0.002928955571271896`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{0, 1, 1, 1}, "Dual" -> 
+                    False], 0.002928955571271896}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.002928955571271896]& , TagBoxNote -> 
+                    "0.002928955571271896"], 
+                    StyleBox[
+                    "0.002928955571271896`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.002928955571271896, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{8.573758084491537, 0.}, {9.426241915508463, 
+                    0.0020619689257828917`}, "RoundingRadius" -> 0]}], 
+                    "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0020619689257828917`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 0}, "Dual" -> 
+                    False], 0.0020619689257828917`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0020619689257828917`]& , TagBoxNote -> 
+                    "0.0020619689257828917"], 
+                    StyleBox[
+                    "0.0020619689257828917`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0020619689257828917`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{9.573758084491537, 0.}, {
+                    10.426241915508463`, 0.0016363973199733952`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 1}, "Dual" -> 
+                    False]]}, {"0.0016363973199733952`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 0, 1}, "Dual" -> 
+                    False], 0.0016363973199733952`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0016363973199733952`]& , TagBoxNote -> 
+                    "0.0016363973199733952"], 
+                    StyleBox[
+                    "0.0016363973199733952`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0016363973199733952`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{10.573758084491537`, 0.}, {
+                    11.426241915508463`, 0.0014273627992274426`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 0}, "Dual" -> 
+                    False]]}, {"0.0014273627992274426`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 0}, "Dual" -> 
+                    False], 0.0014273627992274426`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0014273627992274426`]& , TagBoxNote -> 
+                    "0.0014273627992274426"], 
+                    StyleBox[
+                    "0.0014273627992274426`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0014273627992274426`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{11.573758084491537`, 0.}, {
+                    12.426241915508463`, 0.0013516595404963277`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "0", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 1}, "Dual" -> 
+                    False]]}, {"0.0013516595404963277`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 0, 1, 1}, "Dual" -> 
+                    False], 0.0013516595404963277`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0013516595404963277`]& , TagBoxNote -> 
+                    "0.0013516595404963277"], 
+                    StyleBox[
+                    "0.0013516595404963277`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0013516595404963277`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{12.573758084491537`, 0.}, {
+                    13.426241915508463`, 0.0013834311529059475`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 0}, "Dual" -> 
+                    False]]}, {"0.0013834311529059475`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 0}, "Dual" -> 
+                    False], 0.0013834311529059475`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0013834311529059475`]& , TagBoxNote -> 
+                    "0.0013834311529059475"], 
+                    StyleBox[
+                    "0.0013834311529059475`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0013834311529059475`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{13.573758084491537`, 0.}, {
+                    14.426241915508463`, 0.0015332556344768208`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "0", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 1}, "Dual" -> 
+                    False]]}, {"0.0015332556344768208`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 0, 1}, "Dual" -> 
+                    False], 0.0015332556344768208`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0015332556344768208`]& , TagBoxNote -> 
+                    "0.0015332556344768208"], 
+                    StyleBox[
+                    "0.0015332556344768208`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0015332556344768208`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{14.573758084491537`, 0.}, {
+                    15.426241915508463`, 0.0018563755170383578`}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "0"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 0}, "Dual" -> 
+                    False]]}, {"0.0018563755170383578`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 0}, "Dual" -> 
+                    False], 0.0018563755170383578`}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.0018563755170383578`]& , TagBoxNote -> 
+                    "0.0018563755170383578"], 
+                    StyleBox[
+                    "0.0018563755170383578`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.0018563755170383578`, {}], "Tooltip"]& ]}, {
+                   RGBColor[0.982864, 0.7431472, 0.3262672], 
+                   EdgeForm[{
+                    Opacity[0.588], 
+                    Thickness[Small]}], 
+                   TagBox[
+                    TooltipBox[
+                    TagBox[
+                    TagBox[
+                    TooltipBox[
+                    TagBox[
+                    DynamicBox[{
+                    FEPrivate`If[
+                    CurrentValue["MouseOver"], 
+                    EdgeForm[{
+                    GrayLevel[0.5], 
+                    AbsoluteThickness[1.5], 
+                    Opacity[0.66]}], {}, {}], 
+                    
+                    RectangleBox[{15.573758084491537`, 0.}, {
+                    16.426241915508463`, 0.002502786036498885}, 
+                    "RoundingRadius" -> 0]}], "DelayedMouseEffectStyle"], 
+                    StyleBox[
+                    TagBox[
+                    GridBox[{{
+                    InterpretationBox[
+                    StyleBox[
+                    TemplateBox[{
+                    
+                    RowBox[{"1", "\[InvisibleSpace]", "1", 
+                    "\[InvisibleSpace]", "1", "\[InvisibleSpace]", "1"}]}, 
+                    "Ket"], FontWeight -> "Plain"], 
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 1}, "Dual" -> 
+                    False]]}, {"0.002502786036498885`"}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], {}, StripOnInput -> False]], Annotation[#, 
+                    Style[
+                    Column[{
+                    
+                    Wolfram`QuantumFramework`QuditName[{1, 1, 1, 1}, "Dual" -> 
+                    False], 0.002502786036498885}], {}], "Tooltip"]& ], 
+                    StatusArea[#, 0.002502786036498885]& , TagBoxNote -> 
+                    "0.002502786036498885"], 
+                    StyleBox[
+                    "0.002502786036498885`", {}, StripOnInput -> False]], 
+                    Annotation[#, 
+                    Style[0.002502786036498885, {}], 
+                    "Tooltip"]& ]}}, {}, {}}, {}, {}, {}, {}, {}}, 
+               AspectRatio -> NCache[GoldenRatio^(-1), 0.6180339887498948], 
+               Axes -> {False, False}, AxesLabel -> {None, None}, 
+               AxesOrigin -> {0.2567084078711986, 0.}, 
+               CoordinatesToolOptions :> {"DisplayFunction" -> ({
+                   Identity[
+                    Part[#, 1]], 
+                   Identity[
+                    Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+                   Identity[
+                    Part[#, 1]], 
+                   Identity[
+                    Part[#, 2]]}& )}, DisplayFunction -> Identity, 
+               Frame -> {{True, False}, {True, False}}, 
+               FrameLabel -> {{None, None}, {None, None}}, 
+               FrameTicks -> {{None, None}, {None, None}}, 
+               GridLines -> {None, None}, GridLinesStyle -> Directive[
+                 GrayLevel[0.5, 0.4]], ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}], PlotRange -> {{All, All}, {All, All}}, 
+               PlotRangePadding -> {{
+                  Scaled[0.02], 
+                  Scaled[0.02]}, {None, 
+                  Scaled[0.05]}}, Ticks -> {None, Automatic}], 
+              
+              RowBox[{"None", "\[CircleTimes]", "None", "\[CircleTimes]", 
+                "None", "\[CircleTimes]", "None", "\[CircleTimes]", 
+                "\"I\""}]], Annotation[#, 
+              CircleTimes[None, None, None, None, "I"], "Tooltip"]& ], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Target: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"1", ",", "2", ",", "3", ",", "4"}], "}"}], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                 "\"Measurement Outcomes: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["16", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Entropy: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  
+                  TemplateBox[{
+                   "0.8771077641214009`", "\"b\"", "bits", "\"Bits\""}, 
+                   "Quantity"], "SummaryItem"]}]}}, AutoDelete -> False, 
+             BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, 
+             GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {
+              "Columns" -> {{2}}, "Rows" -> {{Automatic}}}]}}, AutoDelete -> 
+          False, BaselinePosition -> {1, 1}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Wolfram`QuantumFramework`QuantumMeasurement[
+   Wolfram`QuantumFramework`QuantumMeasurementOperator[
+    Wolfram`QuantumFramework`QuantumOperator[
+     Wolfram`QuantumFramework`QuantumState[
+      SparseArray[
+      Automatic, {512}, 0., {
+       1, {{0, 16}, {{2}, {36}, {70}, {104}, {138}, {172}, {206}, {240}, {
+         274}, {308}, {342}, {376}, {410}, {444}, {478}, {512}}}, {
+         Complex[0.0625, 1.734723475976807*^-17], 
+         Complex[0.08606200211619022, 0.017118796582364565`], 
+         Complex[0.14538807794663272`, 0.060221713692851966`], 
+         Complex[0.7780308669174753, 0.5198636049160901], 
+         Complex[-0.16605473483359506`, -0.16605473483359504`], 
+         Complex[-0.05896776518668173, -0.08825149718989328], 
+         Complex[-0.026906255470188233`, -0.06495744686880366], 
+         Complex[-0.010558254290811711`, -0.05307992876410489], 
+         Complex[1.3877787807814457`*^-17, -0.04540890800033502], 
+         Complex[0.007891873319866821, -0.03967512640782091], 
+         Complex[0.014457954293057934`, -0.03490458933847079], 
+         Complex[0.02042549666654614, -0.030568916016457615`], 
+         Complex[0.026300486239858242`, -0.026300486239858256`], 
+         Complex[0.032557696197454786`, -0.021754357099005653`], 
+         Complex[0.03980597463676063, -0.01648817455802569], 
+         Complex[0.04906658144743348, -0.009759949874935808]}}], 
+      Wolfram`QuantumFramework`QuantumBasis[<|
+       "Output" -> Wolfram`QuantumFramework`QuditBasis[<|{
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[0, Bold], "Eigenvalue 1"], {0, {1}}], "Dual" -> False], 
+             1} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[1, Bold], "Eigenvalue 2"], {1, {2}}], "Dual" -> False], 
+             1} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[0, Bold], "Eigenvalue 1"], {0, {1}}], "Dual" -> False], 
+             2} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[1, Bold], "Eigenvalue 2"], {1, {2}}], "Dual" -> False], 
+             2} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[0, Bold], "Eigenvalue 1"], {0, {1}}], "Dual" -> False], 
+             3} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[1, Bold], "Eigenvalue 2"], {1, {2}}], "Dual" -> False], 
+             3} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[0, Bold], "Eigenvalue 1"], {0, {1}}], "Dual" -> False], 
+             4} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[
+              Interpretation[
+               Tooltip[
+                Style[1, Bold], "Eigenvalue 2"], {1, {2}}], "Dual" -> False], 
+             4} -> SparseArray[
+            Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 5} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 5} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 6} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 6} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 7} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 7} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 8} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 8} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[0, "Dual" -> False], 9} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{1}}}, {1.}}], {
+             Wolfram`QuantumFramework`QuditName[1, "Dual" -> False], 9} -> 
+           SparseArray[Automatic, {2}, 0., {1, {{0, 1}, {{2}}}, {1.}}]|>], 
+        "Input" -> Wolfram`QuantumFramework`QuditBasis[<|{
+             
+             Wolfram`QuantumFramework`QuditName[\[FormalCapitalI], "Dual" -> 
+              False], 1} -> 1.|>], "Picture" -> "Schr\[ODoubleDot]dinger", 
+        "Label" -> CircleTimes[None, None, None, None, "I"], 
+        "ParameterSpec" -> {}|>]], {{-3, -2, -1, 0, 1, 2, 3, 4, 5}, {1, 2, 3, 
+      4, 5}}], {1, 2, 3, 4}]],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{{3.89144633025432*^9, 3.891446337127349*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[13]=",
+ CellID->765624359,ExpressionUUID->"6ff6adff-2ec5-449b-aacd-b18254d03186"]
+}, Open  ]],
+
+Cell["Plot corresponding probabilities:", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446354018093*^9, 3.891446364878137*^9}},
+ CellTags->"DefaultContent",
+ CellID->214945160,ExpressionUUID->"11d7d72b-f9b4-42f8-9581-e138658d1a8f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"mea", "[", "\"\<ProbabilityPlot\>\"", "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446343564802*^9, 3.891446345422875*^9}},
+ CellTags->"DefaultContent",
+ CellLabel->"In[14]:=",
+ CellID->191372635,ExpressionUUID->"96386789-b93c-4bda-852e-ca6ba50b61b9"],
+
+Cell[BoxData[
+ GraphicsBox[
+  TagBox[RasterBox[CompressedData["
+1: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
+hjC6BgCATHQNYXQNAACZ6BrC6BoAADLRNYTRNQAA09b27duXLVt20UUX3Xjj
+jTt37mzykI0bN1533XXpIddee+1Pf/rT/hvrGsLoGgCA6WnVqlUzZ8485nnH
+H3/87bff3mf7p59++vzzzz+mwwknnPD5z3++z0N0DWF0DQDANLR79+45c+ak
+llm5cuXWrVuXL1+eGmfGjBkPPvhg3UMuueSS1DLz5s277bbb7r///re+9a3p
+5u/93u+Njo7WPUTXEEbXAABMQ4sWLUpVctlll7VXli5dmlYWL15cuf3evXtP
+Oumk4447btOmTe3FV73qVekhH//4x+v2omsIo2sAAKabsbGx2bNnpyTZsWNH
+e/GRRx5JK7NmzTp06FDvQ1asWJHuvfDCCzsXH3roobVr1z766KN1O9I1hNE1
+AADTzcMPP5wi5eSTT+5anzt3blqvfAOBVDTprjvvvHPv3r133XXXVVdd9aUv
+femJJ57ovyNdQxhdAwAw3TzwwAMpUubPn9+1fsYZZ6T1jRs39j7kr/7qr9Jd
+n/rUp174whe23zfgJS95ydq1a/vsSNcQRtcAAEw369evT1Vy9tlnd60vWLAg
+rVemStq41TKnnXbapz/96VWrVr3uda9r/aXP7t2763akawijawAApptNmzal
+JDnrrLO61s8888y0vmHDht6HvPzlL093nXLKKe3vPRsbGzv99NPT4qWXXlq3
+o5EaE/ehwP9P1wAATDejo6OpR0499dSu9Xnz5qX1yrd6fv3rX5/uWrJkSedi
+upkWFy5cWLcjCUMYXQMAMN3s378/9ciJJ544NjbWXjx06NCsWbPS+p49e3of
+8ra3vS3ddeWVV3Yu3nPPPWnx1a9+dd2OdA1hdA0AwDQ0f/78lCTr169vr6xb
+t671z2cqt7/mmmvSvX/5l3/Zubhy5cq0ePHFF9ftRdcQRtcAAExDrZ9Hs3Dh
+woMHD6ab6b/nnXdeWrn++utbG+zbt2/jxo2bN29u3XziiSdOOumkY4899qtf
+/Wp75WUve1nrzZ/r9qJrCKNrAACmoSeffPKUU05JVbJgwYIlS5a03gntnHPO
+aX9n2urVq9PKnDlz2g/56Ec/mlZOOOGEN7/5zR/4wAda/xhn0aJFzz77bN1e
+dA1hdA0AwPQ0Ojp67rnntn8YTYqazp/IuWbNmrQ4d+7czod87nOfe/GLX9za
+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
+6RrCFJ0GRQ8PADDljXQY9ixMcUWnQdHDAwBMeXKGMEWnQdHDAwBMebqGMEWn
+QdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqG
+MEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBM
+ebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHD
+AwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWnQdHDAwBMebqGMEWn
+QdHDAwBMebqmLOnadfL/6jP80C/+dQ0AwJSka8pS9NW14Yc1PADAlKdrylL0
+1bXhhzU8AMCUp2vKUvTVteGHNTwAwJSna8pS9NW14Yc1PADAlKdrylL01bXh
+hzU8AMCUp2vKUvTVteGHNTwAwJSna8pS9NW14Yc1PADA0G3fvn3ZsmUXXXTR
+jTfeuHPnziNuf/DgwVWrVl1yySWXX3753Xff/fTTT/ffXteUpeira8MPa3gA
+gOFKhTJz5sxjnnf88cfffvvtfbZPFfPKV77ymA5/9md/9qtf/arPQ3RNWYq+
+ujb8EIef/L/G+2cDAJisdu/ePWfOnNQyK1eu3Lp16/Lly1PjzJgx48EHH6x7
+yJIlS1ot8+1vf/v+++//kz/5k3TzjW98Y5+96JqylH51PfTxDD85f+kaAJjC
+Fi1alKrksssua68sXbo0rSxevLhy+23btqXwecELXvDrX/+6tfKrX/3qpJNO
+Sik0OjpatxddU5aiL1ANb/gBhgcAijY2NjZ79uxUMTt27GgvPvLII2ll1qxZ
+hw4d6n3Itddem+7967/+687Fv/3bv02LV199dd2OpmHXDP37bcbzPTlFX6Aa
+3vADDA8AFO3hhx9OPXLyySd3rc+dOzetV76BwFvf+tZ014oVKzoXP/nJT/bG
+Tqfp2TVDv4qbnheohjf8AMMDAEV74IEHUo/Mnz+/a/2MM85I6xs3bux9yMKF
+C9Ndt956a+fibbfdlhZf//rX1+1osK4Z+l9n+CuPSfvL8Iaf8OEn/6+64QGA
+9evXpx45++yzu9YXLFiQ1teuXdv7kNe+9rXprq9//eudi3fffXdafPWrX123
+o4G7ZugXQtP2Gm/o4xl+cv4y/OQcfpL/qpscgCMa+jm8lPP8pk2bUo+cddZZ
+XetnnnlmWt+wYUPvQ/7iL/4i3fW1r32tc/HOO+9Mi6973evqdjQCAADwuyYg
+aZ4zOjqaeuTUU0/tWp83b15ar3yr57e97W3prs9+9rOdi7fccktafMMb3lC3
+o8FmTo8aen72/9Xn42rdO/QJB5u/3MkdeUfekZ9sv/qf/yfz5I78pJ2/3CM/
+ySfvP3+5kzvyQzzykfbv35965MQTTxwbG2svHjp0aNasWWl9z549vQ/50Ic+
+lO665pprOhc/9rGPpcULL7ywbkcDd80Aj4p0xM8aYZMMps+foOBJjpYjPyyO
+/LCUe+TLnbyl3PnLnbyl3PnLnbzFeXJYpuqRjzR//vyUJOvXr2+vrFu3Lq2c
+dtppldvfeuut6d7Xvva1nYuvec1r0uLnPve5ur3omslpqv4JKnf+cidvcu9k
+4MjHK3fylnLnL3fylnLnL3fyFufJYZmqRz7SihUrUpIsXLjw4MGD6Wb673nn
+nZdWrr/++tYG+/bt27hx4+bNm1s39+/f/5KXvOTYY4+9//77WysbNmxIN1/6
+0pe2f1JnL10zOU3VP0Hlzl/u5E3unQwc+XjlTt5S7vzlTt5S7vzlTt7iPDks
+U/XIR3ryySdPOeWUFDILFixYsmRJ653QzjnnnPZ3pq1evTqtzJkzp/2Q5cuX
+t35w5wXPecELXpBups367EXXTE5T9U9QufOXO3mTeycDRz5euZO3lDt/uZO3
+lDt/uZO3OE8Oy1Q98sFGR0fPPffcY56XoqbzJ3KuWbMmLc6dO7fzIdddd92J
+J57Y2j4FzrJly/rvQtdMTlP1T1C585c7eZN7JwNHPl65k7eUO3+5k7eUO3+5
+k7c4Tw7LVD3yQ7F3794tW7bs2rWr4fZjY2MPPfTQj370o9/+9rdH3HgKd83m
+zZt/8pOf1N0bPM9Reeqpp9KElcNP8skPO/LD0zryTz/9dN29wfMclUceeSRN
+WDn8JJ/8cMlHPs2Wjnzd8JN58hZHfij6nCdbJvP8PkMNiyM/LP2P/NQzwO/I
+k08+mR713//93znmmSgjz7nyyiu71vft2/f9739/kr8OU8lWDp+OeVr/zW9+
+M5SpGqo78o899li5R37Xrl1p/dChQ0OZqqHWkU8HuWv9Zz/72Q9+8INJfuRX
+rVpVOfzOnTsn+eSH64/89u3bH3roock8f5qt7sj/6Ec/msyTt9Qd+bQyOjo6
+meevO/LPPPNMuefJ1Ghp+Mcff3wyz1/3GSpd2JR75Fvrv/rVr4YyVUN1R/6/
+/uu/yj3yu3fvTusHDhwYylQN1R35qWqA11LrK6sbN27MMc8Euvzyy9OcXe+Z
+8OCDD6bFH/7wh8OaqqHK4e+///60mC5ThzVVQ5XDr1mzJi2mM9iwpmqocvjb
+b7+97m8TJo/vfOc7acgvfOELXev/8i//ctFFFw1lpObqhr/++us/+MEPDmWk
+5uqGT59HjvidwENXN/wll1zyiU98YigjNVc3fFrs+lFuk1Dl8K0vG375y18e
+1lQNVZ4nW9d4//qv/zqsqRqqHL71JZRvf/vbw5qqocrhv/e976XF//iP/xjW
+VA1VDr9hw4a0ODo6OqShmqoc/utf/3pafOKJJ4Y1VRNpwsrhp6op3DWf+9zn
+Wn/71rlYStdUDl9K11QOX0rXVA5fRNf8z//8Txpy6dKlXetFdE3d8EV0Td3w
+RXRN3fBFdE3d8EV0TeXwpXRN5XmylK6pHL6UrqkcvpSuqRy+lK6pHL6Urqkc
+fqqawl2TTlCt383OxVK6pnL4UrqmcvhSuqZy+CK65vBzP5w3zZmulzoXi+ia
+wzXDF9E1h2uGL6JrDtcMX0TXHK4ZvoiuOVw1fCldU3meLKVrKocvpWsqhy+l
+ayqHL6VrKocvpWsqh5+qpnDXpFdamrProqiUrqkcvpSuqRy+lK6pHL6Urml9
+Tabrz2YpXVM5fCldUzl8KV1TOXwpXVM5fCld0zt8KV1TeZ4spWsqhy+layqH
+L6VrKocvpWsqhy+layqHn6qmcNccfv6rYY8//nh7pZSuOVw1fCldc7hq+FK6
+5nDV8KV0TetrMjfffHPnYildUzl8KV1TOXwpXVM5fCldUzl8KV3TO3wpXXO4
+6jxZStccrhq+lK45XDV8KV1zuGr4UrrmcNXwRXRNS+/wU9XU7pr0qS2N+s1v
+frO9UlDX9A5fUNf0Dl9Q1/QOX0rXtN4x7/3vf3/nYildUzl8KV1TOXwpXVM5
+fCldUzl8KV3TO3xBXdN7niyoa3qHL6hreocvqGt6hy+oa3qHL6hreoenrX/X
+/OY3v7n77rvTpVQ6huk6PJ2lh7hNGjKNesMNN7RX+ndN5PBta9euXblyZe+7
+N/cO379rwgZr8jy9w/fvmsjhj7hN7/D9u2b79u1f+MIX/vmf//nOO+/csWNH
+nz3u3bv3U5/61H333Tfw8xxxm1QBadRHH320vdK/ayKHP+Lz9A7fv2smavgm
+2wxw5Pt3TeTwR9ymd/gmXRPwem6yTe/wTbomZvgj7qtr+IZdM56T80Q9T+95
+smHXBAx/xG16h2/YNePZ6eFsFzYNuyZg+CM+T+/wDbtmnMM32WaAI9+wawKG
+P+I2vcPT1qdr0ssgfTYc6XD55Zd3/aSbyG3SVXRa/8d//MexsbHWSp+uiRys
+bcuWLa1tuv7da+XwfbomcrDBjnyfrokcvsk2vcP36ZrWx9UpnRgr93jgwIGP
+fvSjIzX/dq/J8zTZ5pZbbknr//Zv/9Ze6dM1kcM3eZ7e4ft0zUTtdKI+wN7h
++3RN5PBNtukd/ohdE/N6HuzIjxypa2KGb7KvruGbdM04T84T9Ty958kmXRMw
+fJNteodv0jXj3Gm+C5smXRMwfJPn6R2+SdeMc/iJ+gB7h2/SNQHDN9mmd3ja
++nTNTTfdlO5Kn8rTNg899FD6tJ5uXn311cPaJrn00kvT+s9//vPWzT5dEzzY
+s88++81vfjNdcPZ5oXYN36drIgcb7Mj36ZrgozrAka/rmkcfffTCCy+84IIL
+7r333l27dq1evbr1nFu3bu3aMp0er7vuuta9vZc3TZ6n4b7+/d//PS2uXLmy
+vVLXNZHDN3meyuHrumYCdzpRH2Dv8HVdEzl8w216h+/fNTGv54GP/Ejfrgn7
+w3jEffUO379rJurknOkk379rwoZvuE3X8P27ZkJ2mu/Cpn/XhA3fcF9dw/fv
+mon67c70mu/fNWHDN9yma3ja6rpmx44daf0d73hH+0f/pP9JJ//OV2zkNi03
+33xzWvzGN77RulnXNcGDpcv7a6+9dqRD5Yuwa/i6rokcbOAjX9c1wUd1sCNf
+1zWtp0r3tle+9KUvpZVPfvKTnZutX7/+Xe96V3uPvZc3TZ6n4b727NmTFt/9
+7ncfOnSotVLXNZHDN3meyuHrumYCdzpRH2Dv8HVdEzl8w216h+/TNWGv54GP
+/Eh910T+YRzgyPfpmok6Oec7yffpmrDhG27TO3yfrpmQnWa9sOnTNWHDN9xX
+7/B9umaifrvzveb7dE3Y8A236R2etrquueOOO0Z+94tmyac//emRjrN05DYt
+3/rWt9LiihUrWjfruiZ4sNZF/jvf+c777ruv9Wen8kXYNXxd10QONvCRr+ua
+4KM62JGv7JoDBw5ccMEFI7/71Y9du3allbT+1FNPtRdbm11zzTW33nrrSM/l
+TZPnab6vw89/TeYnP/lJ62Zl10QO3+R56oav7JqJ3elEfYC9w1d2TeTwzbfp
+Hb5P18S8nsdz5EfquybyD+MAR75P10zUyTnfSb5P14QN33Cb3uH7dM2E7DTr
+hU2frgkbvuG+eofv0zUT9dud7zXfp2vChm+4Te/wtNV1zSc/+cm0ng5v5+Ld
+d9+dFtufHyO3aXn88cfTYrquO3jw4OH6rgkeLP1BTp/pWt+6mV6KdS/CruHr
+uiZysIGPfF3XBB/VwY58Zdek83DrSubZZ5/tXG+dVTp/m9KFzebNm8fGxr7x
+jW/0Xt40eZ7m+zr8/NdkVq9e3bpZ2TWRwzd5nrrhK7tmYnc6UR9g7/CVXRM5
+fPNteofv0zUxr+fxHPmR+q6J/MM4wJHv0zUTdXLOd5Lv0zVhwzfcpnf4Pl0z
+ITvNemHTp2vChm+4r97h+3TNRP1253vN9+masOEbbtM7PG11XZPO4SM9byKX
+bo50fI9i5DZtH/jAB9J66/1q6rpmKIO19InrruHruiZysIGPfF3XDOWoNtmm
+c/jKrtm+fXtaTJd/XQ9s/dvD3u+0T+65557ey5smz3NU+2q9Tq699trWzcqu
+iRy+yfPUDV/ZNRO+0z7bjOfIV3ZN5PBHtU3X8E3eDy3r63k8R75P18QM32Rf
+lcM3fD+08Z+cJ+p5Os+TDd8PLevwR7VN5/AN3w9t4J1mvbBp+H5oWYc/qn11
+Dt/w/dDG/9vdZ5uBj3zD90PLOvxRbdM5PG11XdN6y5eu08J3v/vdtJg+v8dv
+05au69L6nXfeebi+a4YyWEv/F2Hn8HVdEznYwEe+rmuGclSbbNM5fGXX/OhH
+P0qLH/rQh7oeeMUVV6T173//+73PWXl50+R5jmpfjz32WFpMH93+/fsP13RN
+5PBNnqdu+MqumfCdTtQH2DV8ZddEDn9U23QNP3DXTNTreTxHfuCumfDB+uyr
+cvjxdM3QT/Lj6Zqhn+Rzd03WC5vcXZP1wmYydM3AR764rukcnra6rvnYxz6W
+1r/zne90LrZ+nnJ6zcRv09aK7vSQw/VdM5TBWvq/CDuHr+uayMEGPvJ1XTOU
+o9pkm87hK7tm27ZtafGyyy7remDrp/qmi5/e56y8vGnyPEe7r84vHVd2TeTw
+TZ6nbvjKrsmx07ptxnPkK7smcvij3aZz+IG7ZqJez+M58iODdk2Ower2VTn8
+eLpm6Cf58XTN0E/yubsm64VN7q7JemEzGbpm4CNfXNd0Dk9bXdfccMMNI7/7
+QwSSdevWpcV0cRK/TVv7X3QePHiwrmuGMlhL/xdh5/B1XRM52MBHvq5rhnJU
+m2zTOXxl1zz66KNp8b3vfW/XA9NKWk+fJXufs/LypsnzHO2+Wv/gsfU1mcqu
+iRy+yfPUDV/ZNTl2WrfNeI58ZddEDn+023QOP3DXTNTreTxHfmTQrskxWN2+
+KocfT9cM/SQ/nq4Z+kk+d9dkvbDJ3TVZL2wmQ9cMfOSL65rO4fvPPK3Udc0X
+v/jFtP6Vr3ylczHdTIu33HJL/DZtqWLS+qWXXnq4/u9rhjJYS/8XYefwdV0T
+OdjAR76ua4ZyVJts0zl8Zde0rkCSAwcOtBf379/fWqz8ST2VlzdNnudo99X6
+W/Vvfetbh2u6JnL4Js9TN3xl1+TY6UR9gJ3DV3ZN5PBHu03n8AN3zUS9nsdz
+5EcG7Zocg9Xtq3L48XTN0E/y4+maoZ/kc3dN1gub3F2T9cJmMnTNwEe+uK7p
+HJ62uq5p/fXWhz/84c7FpUuXpsX77rsvfpu29DkirX/mM585XN81Qxmspf+L
+sHP4uq6JHGzgI1/XNUM5qk226Ry+7ufXtL575Lvf/W57ZfPmzWnlfe97X+Vz
+1l3eNHme5vt66qmnWm8w23p3lLqfXxM5fJPnqRy+7ufXTOxOJ+oD7Bq+7ufX
+RA7ffJuu4QfumsMT93oe+MiPDNo1Ez5Y/331Dj+erhn6SX48XTP0k3zursl6
+YZO7a7Je2EyGrhn4yBfXNZ3D01bXNemqr/UX8e0zw6ZNm9LNiy++OJ2r47dp
+6/wXYXVdM5TBWvq/CDuHr+uayMEGPvJ1XTOUo9pkm87h67qm9UFdddVVv/3t
+b9PN9N+PfOQjIx3vN9ul7vKmyfM031fr3zW3v/+/rmsih2/yPJXD13XNxO50
+oj7AruHruiZy+ObbdA0/nq6ZqNfzwEd+PF0zsYP131fv8OPpmqGf5MfTNUM/
+yefumqwXNrm7JuuFzWTomoGPfHFdU/kOCdR1TXLXXXeNPPede594TutrUJs3
+bx7WNoc7vhS2b9++w/VdEz9YW58XYdfwdV0TPNhgR76ua4KHb7hN1/B1XZPO
+eK2TYbr2vummm9J/R557+5T2zz3vUnd50+R5mu+r9QWZVatWtW7WdU3k8E2e
+p3L4uq6Z2J1O1AfYNXxd10QO33ybruHH0zUT9Xoe+MiPp2smdrD+++odfjxd
+c3jYJ/nxdM0EDt9wm67hc3fN4ZwXNrm7pvlgTfbVNfxk6JrDgx75srqma3ja
++nTNs88+my5f00XUyHPe+c539r6bXOQ2SfqTnu694oorWjf7dE3wYG3vete7
+6l5mXcP36ZrIwQY78n26JvioNtmma/i6rjn83A+6uuqqq0ae95GPfOTRRx+t
+22P6jN959XW0z9NwX+laOt27ZcuW1s26rgkevsnz9A5f1zUTu9OJ+gC7hq/r
+muDhG27TNXyTrgl4PQ925EcadE3MH8Yj7qtr+IZdM86T80Q9T9d5smHX5B6+
+4TZdwzfsmvHsNN+FTcOuyT18w311Dd+wa8b5233EbQY78g27JvfwDbfpGp62
+Pl3TMjY2ls5v6SRfeR0YvE3rX36l69LWzT5dEz/8EXUN36drggdr8jxdw/fp
+mvjhj6hr+D5d05KuRn7xi1+kk1vXjyA/Wk2ep/827S/ItP/2vE/XxA/fX+/w
+fbpmonba3NEe+T5d0+QJI/UO36Rrjmj8r+cm2/QO36Rrwobvr2v4hl3T37BO
+8g27Zpw7nShdwzfsmvHLcWHTsGvGL8eFTcOuiXG0R75h10wSXcPTdsSumVSu
+vvrqzpA5YtdMKl3DH7FrJpWu4Y/YNZNK1/BH7JrJY+vWrSPPfed/e+WIXTN5
+9A5/xK6ZPHqHP2LXTB69w09I18ToHX5CuiZG1/AT0jVhus6TE9I1YbqGD+ua
+CdE1fFjXTIiu4SdV1xxR1/BldU3X8LQV1DXpQvQd73jHBRdc8NRTT7VWCuqa
+3uEL6pre4Qvqmt7hC+qa1hdkOq+LCuqa3uEL6pre4Qvqmt7hC+qa3uEL6pqu
+4Qvqmt7zZEFd0zt8QV3TO3xBXdM7fEFd0zt8QV3TOzxtBXVN60thnT9ZtaCu
+6R2+oK7pHb6grukdvqCuaf3c5G3btrVXCuqa3uEL6pre4Qvqmt7hC+qa3uEL
+6pqu4Qvqmt7zZEFd0zt8QV3TO3xBXdM7fEFd0zt8QV3TOzxtBXXNHXfckUa9
+66672isFdU3v8AV1Te/wBXVN7/CldE3rCzIXXnhh508MLKVrKocvpWsqhy+l
+ayqHL6VrKocvpWt6hy+oa3rPkwV1Te/wBXVN7/AFdU3v8AV1Te/wBXVN7/C0
+FdQ1rS+FpfNVe6WgrukdvqCu6R2+oK7pHb6Urtm2bVua87rrrutcLKVrKocv
+pWsqhy+layqHL6VrKocvpWt6hy+oa3rPkwV1Te/wBXVN7/AFdU3v8AV1Te/w
+BXVN7/C0ldI1+/fvf8c73vGud73rmWeeaS+W0jWVw5fSNZXDl9I1lcOX0jWt
+L8jcfffdnYuldE3l8KV0TeXwpXRN5fCldE3l8KV0Te/wpXRN5XmylK6pHL6U
+rqkcvpSuqRy+lK6pHL6UrqkcnrZSumb79u1pzq5PzaV0TeXwpXRN5fCldE3l
+8KV0zTXXXNP7CimlayqHL6VrKocvpWsqhy+layqHL6VreocvpWsqz5OldE3l
+8KV0TeXwpXRN5fCldE3l8KV0TeXwtJXSNXfeeWea89577+1cLKVrKocvpWsq
+hy+layqHL6Jr9u/ff+GFF773ve8dGxvrXC+ia+qGL6Jr6oYvomvqhi+ia+qG
+L6JrKocvpWsqz5OldE3l8KV0TeXwpXRN5fCldE3l8KV0TeXwtJXSNcuXL09z
+7tq1q3OxlK6pHL6UrqkcvpSuqRy+iK758Y9/nIb89Kc/3bVeRNfUDV9E19QN
+X0TX1A1fRNfUDV9E11QOX0rXVJ4nS+mayuFL6ZrK4UvpmsrhS+mayuFL6ZrK
+4WkromsOHDhw4YUXXnzxxV0/BrqIrqkbvoiuqRu+iK6pG76Irml9Qea+++7r
+Wi+ia+qGL6Jr6oYvomvqhi+ia+qGL6JrKocvomvqzpNFdE3d8EV0Td3wRXRN
+3fBFdE3d8EV0Td3wtBXRNelllj4pp5dc13oRXVM3fBFdUzd8EV1TN3wRXXP3
+3Xen4ffs2dO1XkTX1A1fRNfUDV9E19QNX0TX1A1fRNdUDl9E19SdJ4vomrrh
+i+iauuGL6Jq64Yvomrrhi+iauuFpe+yxx2644YaHHnpo2IMMIkVBGv7nP//5
+sAcZxPbt29Pwjz/++LAHGUQ68abhf/3rXw97kEGkik/DHzx4cNiDDGLdunU3
+3XTTsKcYUDoV33bbbcOeYkBf+tKXvvKVrwx7igF9/vOf73qTsYLceOONvX+J
+U4Snn346nWq+853vDHuQQezduzcN/4Mf/GDYgwzil7/8ZRp+x44dwx5kED/9
+6U/T8L/4xS+GPcggtm3bloaf5F/zrNO6sPnf//3fYQ8CAAAAAAAAAAAAAAAA
+AAAAkNH/C3XGuKk=
+    "], {{0, 351.}, {548., 0}}, {0, 255},
+    ColorFunction->RGBColor,
+    ImageResolution->{144., 144.},
+    SmoothingQuality->"High"],
+   BoxForm`ImageTag["Byte", ColorSpace -> "RGB", Interleaving -> True],
+   Selectable->False],
+  DefaultBaseStyle->"ImageGraphics",
+  ImageSize->Automatic,
+  ImageSizeRaw->{548., 351.},
+  PlotRange->{{0, 548.}, {0, 351.}}]], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.891446346106627*^9},
+ CellTags->"DefaultContent",
+ CellLabel->"Out[14]=",
+ CellID->1544639533,ExpressionUUID->"9de5f5e2-f5ea-4084-bc0e-74a689e48883"]
+}, Open  ]],
+
+Cell["\<\
+Given the outcome with the largest probability, estimate the phase:\
+\>", "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8914466125752077`*^9, 3.891446614120308*^9}},
+ CellID->712519153,ExpressionUUID->"60d0d053-da5a-4358-824d-6c26fa3e2620"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"FromDigits", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"Keys", "[", 
+        RowBox[{"TakeLargest", "[", 
+         RowBox[{
+          RowBox[{"mea", "[", "\"\<Probabilities\>\"", "]"}], ",", "1"}], 
+         "]"}], "]"}], "[", 
+       RowBox[{"[", "1", "]"}], "]"}], "[", "\"\<Name\>\"", "]"}], ",", "2"}],
+     "]"}], "/", 
+   RowBox[{"2", "^", "n"}]}], "//", "N"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.8914466176701603`*^9, 3.89144662315107*^9}, 
+   3.8914466752804937`*^9},
+ CellLabel->"In[18]:=",
+ CellID->685137030,ExpressionUUID->"0758b53f-3191-4f2c-b624-d4218962f36a"],
+
+Cell[BoxData["0.1875`"], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.8914466577539387`*^9},
+ CellLabel->"Out[18]=",
+ CellID->973792303,ExpressionUUID->"ad806e06-22b7-4cf6-a2d1-0361d447ad2b"]
+}, Open  ]],
+
+Cell[TextData[{
+ "As expected, it is a rough estimate (the expected value is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Theta]", "=", 
+    RowBox[{
+     RowBox[{"1", "/", "5"}], "=", "0.2"}]}], TraditionalForm]],
+  ExpressionUUID->"a1943864-3040-4844-bc80-bd9c67a7d9d4"],
+ "), since a small value was chosen for ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "0aeea92d-fc1e-412a-b85b-560404e91f6f"],
+ ". If one increases ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "f2c60883-9cf1-4bed-8309-263e739faab9"],
+ ", with a higher probability, one can get a better estimate of the phase."
+}], "Text",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446714601337*^9, 3.891446757805827*^9}, {
+  3.892049006468422*^9, 3.892049010129011*^9}},
+ CellID->91356500,ExpressionUUID->"cb37d627-33f5-4bf8-b25e-2b01fa0dc05b"],
+
+Cell[TextData[{
+ "Estimate the phase (the expected value is 1/5=0.2) for ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontFamily->"Source Sans Pro",ExpressionUUID->
+  "28ea902a-7722-49f4-8b1f-0bd2ae27f1c9"],
+ "=6:"
+}], "CodeText",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446720594096*^9, 3.891446721862589*^9}, 
+   3.89204888892288*^9},
+ CellID->882902731,ExpressionUUID->"a41c9b87-0a0c-462d-a493-1d43c600f0e6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"m", "=", 
+     RowBox[{"N", "@", 
+      RowBox[{
+       RowBox[{"QuantumCircuitOperator", "[", 
+        RowBox[{"{", 
+         RowBox[{"\"\<PhaseEstimation\>\"", ",", 
+          RowBox[{"QuantumOperator", "[", 
+           RowBox[{"{", 
+            RowBox[{"\"\<Phase\>\"", ",", 
+             RowBox[{"2", " ", "Pi", " ", "phase"}]}], "}"}], "]"}], ",", 
+          "6"}], "}"}], "]"}], "[", "]"}]}]}], "}"}], ",", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"FromDigits", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"Keys", "[", 
+          RowBox[{"TakeLargest", "[", 
+           RowBox[{
+            RowBox[{"m", "[", "\"\<Probabilities\>\"", "]"}], ",", "1"}], 
+           "]"}], "]"}], "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "[", "\"\<Name\>\"", "]"}], ",", 
+       "2"}], "]"}], "/", 
+     RowBox[{"2", "^", "6"}]}], "//", "N"}]}], "]"}]], "Input",
+ TaggingRules->{},
+ CellChangeTimes->{{3.891446708385705*^9, 3.8914467318851852`*^9}},
+ CellLabel->"In[20]:=",
+ CellID->886455281,ExpressionUUID->"528a1642-66dc-4db0-9202-c197b8b68ee2"],
+
+Cell[BoxData["0.203125`"], "Output",
+ TaggingRules->{},
+ CellChangeTimes->{3.891446735158985*^9},
+ CellLabel->"Out[20]=",
+ CellID->752140423,ExpressionUUID->"a67b58b6-c11f-464d-84c1-b75ca8085ef4"]
+}, Open  ]]
+},
+WindowSize->Automatic,
+WindowMargins->Automatic,
+WindowTitle->"Quantum Phase Estimation | Example Notebook",
+Visible->False,
+TaggingRules->{
+ "Metadata" -> {
+   "ResourceType" -> "Example", "Name" -> "Quantum Phase Estimation", 
+    "Property" -> "ExampleNotebook"}},
+FrontEndVersion->"13.3 for Mac OS X x86 (64-bit) (March 27, 2023)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[
+    StyleDefinitions -> 
+     FrontEnd`FileName[{"Wolfram"}, "Reference.nb", CharacterEncoding -> 
+       "UTF-8"]]], 
+   Cell[
+    StyleData[All, "Working"], Editable -> True, DockedCells -> {}], 
+   Cell[
+    StyleData["Notebook"], Editable -> True, DockedCells -> {}, 
+    ScrollingOptions -> {"VerticalScrollRange" -> Automatic}], 
+   Cell[
+    StyleData[
+    "Section", StyleDefinitions -> StyleData["PrimaryExamplesSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData["Subsection", StyleDefinitions -> StyleData["ExampleSection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsection", StyleDefinitions -> StyleData["ExampleSubsection"]], 
+    Editable -> True, ShowGroupOpener -> "Inline", WholeCellGroupOpener -> 
+    True], 
+   Cell[
+    StyleData[
+    "Subsubsubsection", StyleDefinitions -> 
+     StyleData["ExampleSubsubsection"]], Editable -> True, ShowGroupOpener -> 
+    "Inline", WholeCellGroupOpener -> True], 
+   Cell[
+    StyleData["Text", StyleDefinitions -> StyleData["ExampleText"]], Editable -> 
+    True], 
+   Cell[
+    StyleData["CodeText", StyleDefinitions -> StyleData["ExampleText"]], 
+    Editable -> True, CellMargins -> {{48, 40}, {3, 15}}, FontColor -> 
+    GrayLevel[0.45]]}, Visible -> False, FrontEndVersion -> 
+  "13.3 for Mac OS X x86 (64-bit) (March 27, 2023)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"],
+$CellContext`ClosingSaveDialog -> False,
+ExpressionUUID->"1ff35dbe-3613-4c7f-8f27-00441fd75bf9"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "DefaultContent"->{
+  Cell[615, 21, 1385, 36, 70, "Text",ExpressionUUID->"86c4c07b-0188-4536-a31b-04441812ab06",
+   CellTags->"DefaultContent",
+   CellID->704549353],
+  Cell[26574, 502, 1007, 23, 70, "Text",ExpressionUUID->"48fa8cc2-03b7-4ca3-9d5c-c39b5eebac87",
+   CellTags->"DefaultContent",
+   CellID->997659474],
+  Cell[28118, 543, 488, 12, 70, "Input",ExpressionUUID->"1a9748cd-a20f-4a44-8efa-906a563a25d7",
+   CellTags->"DefaultContent",
+   CellID->762853280],
+  Cell[28609, 557, 449, 11, 70, "Output",ExpressionUUID->"4ae221e8-c7d5-479c-a221-96e457fbba06",
+   CellTags->"DefaultContent",
+   CellID->58647279],
+  Cell[30262, 606, 978, 24, 70, "Input",ExpressionUUID->"797b835e-77e9-4a3f-866a-568e6f79eb8a",
+   CellTags->"DefaultContent",
+   CellID->539383774],
+  Cell[31243, 632, 29892, 607, 70, "Output",ExpressionUUID->"08ae3f68-16bb-4fec-b36d-fd29dc231d90",
+   CellTags->"DefaultContent",
+   CellID->749287896],
+  Cell[61150, 1242, 289, 6, 70, "CodeText",ExpressionUUID->"44fd2d8f-15f6-498c-8803-0ec85845d3ae",
+   CellTags->"DefaultContent",
+   CellID->275240035],
+  Cell[61464, 1252, 314, 8, 70, "Input",ExpressionUUID->"6798497e-01d5-444b-b370-b7e0ba1ce0c7",
+   CellTags->"DefaultContent",
+   CellID->177626331],
+  Cell[61781, 1262, 89570, 1928, 70, "Output",ExpressionUUID->"6ff6adff-2ec5-449b-aacd-b18254d03186",
+   CellTags->"DefaultContent",
+   CellID->765624359],
+  Cell[151366, 3193, 242, 4, 70, "CodeText",ExpressionUUID->"11d7d72b-f9b4-42f8-9581-e138658d1a8f",
+   CellTags->"DefaultContent",
+   CellID->214945160],
+  Cell[151633, 3201, 291, 6, 70, "Input",ExpressionUUID->"96386789-b93c-4bda-852e-ca6ba50b61b9",
+   CellTags->"DefaultContent",
+   CellID->191372635],
+  Cell[151927, 3209, 21445, 359, 70, "Output",ExpressionUUID->"9de5f5e2-f5ea-4084-bc0e-74a689e48883",
+   CellTags->"DefaultContent",
+   CellID->1544639533]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"DefaultContent", 179404, 3745}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[615, 21, 1385, 36, 70, "Text",ExpressionUUID->"86c4c07b-0188-4536-a31b-04441812ab06",
+ CellTags->"DefaultContent",
+ CellID->704549353],
+Cell[2003, 59, 276, 4, 70, "CodeText",ExpressionUUID->"4e77447e-74b4-45cb-8634-ded9163af023",
+ CellID->962431612],
+Cell[CellGroupData[{
+Cell[2304, 67, 377, 7, 70, "Input",ExpressionUUID->"4b0b3491-62fc-4683-900c-1ce8f71d1b52",
+ CellID->79008923],
+Cell[2684, 76, 23875, 423, 70, "Output",ExpressionUUID->"da79f15e-58f7-4dcf-afba-601a1faf6db7",
+ CellID->270844365]
+}, Open  ]],
+Cell[26574, 502, 1007, 23, 70, "Text",ExpressionUUID->"48fa8cc2-03b7-4ca3-9d5c-c39b5eebac87",
+ CellTags->"DefaultContent",
+ CellID->997659474],
+Cell[27584, 527, 509, 12, 70, "CodeText",ExpressionUUID->"3c2c71c7-8e9e-43ff-873d-1459caa7ac62",
+ CellID->683353971],
+Cell[CellGroupData[{
+Cell[28118, 543, 488, 12, 70, "Input",ExpressionUUID->"1a9748cd-a20f-4a44-8efa-906a563a25d7",
+ CellTags->"DefaultContent",
+ CellID->762853280],
+Cell[28609, 557, 449, 11, 70, "Output",ExpressionUUID->"4ae221e8-c7d5-479c-a221-96e457fbba06",
+ CellTags->"DefaultContent",
+ CellID->58647279]
+}, Open  ]],
+Cell[29073, 571, 1164, 31, 70, "CodeText",ExpressionUUID->"61d7080c-e613-46c4-8c73-2582a2deb860",
+ CellID->367863191],
+Cell[CellGroupData[{
+Cell[30262, 606, 978, 24, 70, "Input",ExpressionUUID->"797b835e-77e9-4a3f-866a-568e6f79eb8a",
+ CellTags->"DefaultContent",
+ CellID->539383774],
+Cell[31243, 632, 29892, 607, 70, "Output",ExpressionUUID->"08ae3f68-16bb-4fec-b36d-fd29dc231d90",
+ CellTags->"DefaultContent",
+ CellID->749287896]
+}, Open  ]],
+Cell[61150, 1242, 289, 6, 70, "CodeText",ExpressionUUID->"44fd2d8f-15f6-498c-8803-0ec85845d3ae",
+ CellTags->"DefaultContent",
+ CellID->275240035],
+Cell[CellGroupData[{
+Cell[61464, 1252, 314, 8, 70, "Input",ExpressionUUID->"6798497e-01d5-444b-b370-b7e0ba1ce0c7",
+ CellTags->"DefaultContent",
+ CellID->177626331],
+Cell[61781, 1262, 89570, 1928, 70, "Output",ExpressionUUID->"6ff6adff-2ec5-449b-aacd-b18254d03186",
+ CellTags->"DefaultContent",
+ CellID->765624359]
+}, Open  ]],
+Cell[151366, 3193, 242, 4, 70, "CodeText",ExpressionUUID->"11d7d72b-f9b4-42f8-9581-e138658d1a8f",
+ CellTags->"DefaultContent",
+ CellID->214945160],
+Cell[CellGroupData[{
+Cell[151633, 3201, 291, 6, 70, "Input",ExpressionUUID->"96386789-b93c-4bda-852e-ca6ba50b61b9",
+ CellTags->"DefaultContent",
+ CellID->191372635],
+Cell[151927, 3209, 21445, 359, 70, "Output",ExpressionUUID->"9de5f5e2-f5ea-4084-bc0e-74a689e48883",
+ CellTags->"DefaultContent",
+ CellID->1544639533]
+}, Open  ]],
+Cell[173387, 3571, 257, 5, 70, "CodeText",ExpressionUUID->"60d0d053-da5a-4358-824d-6c26fa3e2620",
+ CellID->712519153],
+Cell[CellGroupData[{
+Cell[173669, 3580, 658, 19, 70, "Input",ExpressionUUID->"0758b53f-3191-4f2c-b624-d4218962f36a",
+ CellID->685137030],
+Cell[174330, 3601, 196, 4, 70, "Output",ExpressionUUID->"ad806e06-22b7-4cf6-a2d1-0361d447ad2b",
+ CellID->973792303]
+}, Open  ]],
+Cell[174541, 3608, 930, 23, 70, "Text",ExpressionUUID->"cb37d627-33f5-4bf8-b25e-2b01fa0dc05b",
+ CellID->91356500],
+Cell[175474, 3633, 431, 11, 70, "CodeText",ExpressionUUID->"a41c9b87-0a0c-462d-a493-1d43c600f0e6",
+ CellID->882902731],
+Cell[CellGroupData[{
+Cell[175930, 3648, 1145, 32, 70, "Input",ExpressionUUID->"528a1642-66dc-4db0-9202-c197b8b68ee2",
+ CellID->886455281],
+Cell[177078, 3682, 196, 4, 70, "Output",ExpressionUUID->"a67b58b6-c11f-464d-84c1-b75ca8085ef4",
+ CellID->752140423]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
