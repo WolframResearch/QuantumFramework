@@ -3,7 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 PackageImport["Cotengra`"]
 
 PackageExport["TensorNetworkIndexGraph"]
-PackageExport["FromTensorNetwork"]
+PackageExport["GraphTensorNetwork"]
+PackageExport["TensorNetworkQuantumCircuit"]
 PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
 PackageExport["TensorNetworkIndices"]
@@ -159,7 +160,7 @@ TensorNetworkData[net_Graph ? TensorNetworkQ] := With[{vs = Developer`FromPacked
 },
     <|
         "Tensors" -> tensors,
-        "Dimensions" -> Dimensions /@ tensors,
+        "Dimensions" -> TensorDimensions /@ tensors,
         "Indices" -> indices,
         "Vertices" -> vs,
         "FreeIndices" -> TensorNetworkFreeIndices[indices, tags],
@@ -179,7 +180,7 @@ TensorNetworkFreeIndices[indices_List, tags_List] :=
 
 TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] := TensorNetworkIndexDimensions @@ Lookup[TensorNetworkData[net], {"Indices", "Tensors"}]
 
-TensorNetworkIndexDimensions[indices_List, tensors_List] := Catenate @ MapThread[Thread[#1 -> Dimensions[#2]] &, {indices, tensors}]
+TensorNetworkIndexDimensions[indices_List, tensors_List] := Catenate @ MapThread[Thread[#1 -> TensorDimensions[#2]] &, {indices, tensors}]
 
 
 TensorNetworkIndexReplace[net_ ? TensorNetworkQ, rules_] :=
@@ -403,20 +404,20 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPa
     ]
 ]
 
-Options[FromTensorNetwork] = {Method -> "Random"}
+Options[GraphTensorNetwork] = {Method -> "Random"}
 
-FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPattern[]] := Enclose @ Block[{
-	vs = Developer`FromPackedArray[TopologicalSort[net]],
+GraphTensorNetwork[g_ /; DirectedGraphQ[g] && AcyclicGraphQ[g], OptionsPattern[]] := Enclose @ Block[{
+	vs = Developer`FromPackedArray[TopologicalSort[g]], edges = EdgeList[g],
 	labels,
 	inputs, outputs, inputOrder, outputOrder,
     orders, output,
-	index, outOrders, inOrders
+	indices, outOrders, inOrders
 },
 	orders = <||>;
 	output = {};
 	Do[
-		inputs = VertexInComponent[net, gate, {1}];
-		outputs = VertexOutComponent[net, gate, {1}];
+		inputs = VertexInComponent[g, v, {1}];
+		outputs = VertexOutComponent[g, v, {1}];
 		inputOrder = Lookup[First /@ PositionIndex[output], inputs, Nothing];
 		inputOrder = Take[Join[inputOrder, Length[output] + Range[Length[inputs] - Length[inputOrder]]], UpTo[Length[inputs]]];
 		If[ Length[outputs] <= Length[inputs],
@@ -425,52 +426,84 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPatt
 		];
 		output = PadRight[output, Max[Length[output], outputOrder], None];
 		output[[Complement[inputOrder, outputOrder]]] = None;
-		Scan[(output[[#]] = gate) &, outputOrder];
-		orders[gate] = {outputOrder, inputOrder};
+		Scan[(output[[#]] = v) &, outputOrder];
+		orders[v] = {outputOrder, inputOrder};
 		,
-		{gate, vs}
+		{v, vs}
 	];
-	index = AssociationThread[vs, AnnotationValue[{net, vs}, "Index"]];
+	indices = AssociationThread[vs, AnnotationValue[{g, vs}, "Index"]];
 	outOrders = KeyValueMap[{v, i} |->
 		Replace[i, {
 			$Failed :> orders[v][[1]],
-			indices_List :> Cases[indices, Superscript[_, o_] :> o]
+			is_List :> Cases[is, Superscript[_, o_] :> o]
 		}],
-		index
+		indices
 	];
 	inOrders = KeyValueMap[{v, i} |->
 		Replace[i, {
 			$Failed :> orders[v][[2]],
-			indices_List :> Cases[indices, Subscript[_, o_] :> o]
+			is_List :> Cases[is, Subscript[_, o_] :> o]
 		}],
-		index
+		indices
 	];
-	labels = KeyValueMap[Replace[#2, {$Failed | Automatic :> #1, Interpretation[_, label_] :> label}] &, AssociationThread[vs, AnnotationValue[{net, vs}, VertexLabels]]];
-	QuantumCircuitOperator @ MapIndexed[
-		Block[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]], tensor},
-            tensor = Replace[#1, {
-                    $Failed :> With[{qubits = Total[Length /@ order]}, Switch[
-                        OptionValue[Method],
-                        "Zero", QuantumState[{"Register", qubits}],
-                        _, QuantumState[{"RandomPure", qubits}]
-                    ]],
-                    t_ :> ConfirmBy[QuantumState[Flatten[{t}]], QuantumStateQ]}
-                ]["SplitDual", Length[order[[1]]]];
-			Replace[label, {Subscript["Measurement", target___] :> (QuantumMeasurementOperator[#, {target}] &), _ -> Identity}] @  QuantumOperator[
-				tensor,
-				order,
-				"Label" -> label
-			]
-		] &,
-		AnnotationValue[{net, vs}, "Tensor"]
-	]
+    indices = Association @ MapThread[
+        {v, idx, in, out} |-> v -> Replace[idx, $Failed :> Join[Superscript[v, #] & /@ Sort[out], Subscript[v, #] & /@ Sort[in]]],
+        {vs, Values[indices], inOrders, outOrders}
+    ];
+	labels = KeyValueMap[
+        Replace[#2, {$Failed | Automatic :> #1, Interpretation[_, label_] :> label}] &,
+        AssociationThread[vs, AnnotationValue[{g, vs}, VertexLabels]]
+    ];
+    Block[{in = Cases[_Subscript] /@ indices, out = Cases[_Superscript] /@ indices, outIdx, inIdx},
+        edges = Table[
+            {outIdx, inIdx} = FirstCase[#, {_[_, x_], _[_, x_]}, First[#]] & @ Tuples[{Lookup[out, edge[[1]]], Lookup[in, edge[[2]]]}];
+            out[edge[[1]]] //= DeleteCases[outIdx];
+            in[edge[[2]]] //= DeleteCases[inIdx];
+            Append[edge[[;; 2]], {outIdx, inIdx}]
+            ,
+            {edge, Catenate @ Lookup[GroupBy[edges, First], vs, {}]}   
+        ]
+    ];
+	Graph[
+        vs, edges,
+        AnnotationRules -> MapThread[
+            {v, t, i} |-> With[{label = labels[[i]], index = indices[[i]]},
+                v -> {
+                    VertexLabels -> label,
+                    "Tensor" -> Replace[t, {
+                        $Failed :> With[{qubits = Length[index]}, Switch[
+                            OptionValue[Method],
+                            "Zero", QuantumState[{"Register", qubits}]["Tensor"],
+                            "Symbolic", ArraySymbol[label, ConstantArray[2, qubits]],
+                            "Random", QuantumState[{"RandomPure", qubits}]["Tensor"]
+                        ]]
+                    }],
+                    "Index" -> index
+                }
+            ],
+            {vs, AnnotationValue[{g, vs}, "Tensor"], Range[Length[vs]]}
+        ],
+        Options[g]
+    ]
 ]
 
-FromTensorNetwork[net_ ? DirectedGraphQ, opts : OptionsPattern[]] :=
-    Enclose @ FromTensorNetwork[Confirm @ RemoveTensorNetworkCycles[net], opts]
+GraphTensorNetwork[g_ ? DirectedGraphQ, opts : OptionsPattern[]] :=
+    Enclose @ GraphTensorNetwork[ConfirmBy[RemoveTensorNetworkCycles[g], AcyclicGraphQ], opts]
 
-FromTensorNetwork[net_ ? GraphQ, opts : OptionsPattern[]] := FromTensorNetwork[DirectedGraph[net, "Acyclic"], opts]
+GraphTensorNetwork[g_ ? GraphQ, opts : OptionsPattern[]] := GraphTensorNetwork[DirectedGraph[g, "Acyclic"], opts]
 
+TensorNetworkQuantumCircuit[tn_ ? TensorNetworkQ] := QuantumCircuitOperator @ MapThread[{label, tensor, indices} |->
+    With[{
+        order = Lookup[GroupBy[indices, Head -> Last], {Superscript, Subscript}, {}]
+    },
+        QuantumOperator[
+            QuantumState[Flatten[tensor]]["SplitDual", Length[order[[1]]]],
+            order,
+            "Label" -> label
+        ]
+    ] // Replace[label, {Subscript["Measurement", target___] :> (QuantumMeasurementOperator[#, {target}] &), _ -> Identity}],
+    AnnotationValue[{tn, Developer`FromPackedArray[VertexList[tn]]}, #] & /@ {VertexLabels, "Tensor", "Index"}
+]
 
 RemoveTensorNetworkCycles[inputNet_ ? DirectedGraphQ, opts : OptionsPattern[Graph]] := Enclose @ Block[{
     net = IndexGraph[inputNet], cycles, id, q, r, edge, tag, cup, cap, cupIndex, capIndex, dim

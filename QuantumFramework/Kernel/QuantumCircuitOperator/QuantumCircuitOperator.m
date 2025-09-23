@@ -73,7 +73,7 @@ QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOp
 QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNames, ___}, _List]] :=
     Enclose @ QuantumCircuitOperator[ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & @@ Replace[#, param : Except[_List] :> {param}] & /@ params]
 
-QuantumCircuitOperator[tn_ ? GraphQ, opts___] := FromTensorNetwork[tn, opts]
+QuantumCircuitOperator[g_ ? GraphQ, opts___] := TensorNetworkQuantumCircuit[GraphTensorNetwork[g, opts, Method -> "Random"]]
 
 QuantumCircuitOperator[arg : Except[_List | _Association]] := QuantumCircuitOperator[{arg}]
 
