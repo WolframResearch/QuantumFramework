@@ -466,18 +466,24 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 	indices = Catenate[newIn];
     dimensions = Catenate[tensorDimensions /@ newArrays];
 	contracted = DeleteElements[indices, 1 -> out];
-	contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
-    If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
-	indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
-	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
-    tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ newArrays, contractions];
+    tensor = If[Length[newArrays] == 1, First[newArrays], Inactive[TensorProduct] @@ newArrays];
+    If[ contracted =!= {},
+        contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
+        If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
+        indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
+        If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
+        tensor = Inactive[TensorContract][tensor, contractions]
+    ];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
 		indices = Catenate @ ConstantArray[indices, multiplicity];
 		contracted = DeleteElements[indices, 1 -> out];
-		contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
-		indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
-		tensor = Inactive[TensorContract][Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
+        tensor = GeneralizedPower[TensorProduct, tensor, multiplicity];
+        If[ contracted =!= {},
+            contractions = MapThread[Reverse[Take[Reverse[#1], UpTo[#2]]] &, {Lookup[PositionIndex[indices], #1], #2}] & @@ Thread[Tally[contracted]];
+            indices = Reverse[DeleteElements[Reverse[indices], 1 -> contracted]];
+            tensor = Inactive[TensorContract][tensor, contractions]
+        ];
 	];
     Times @@ scalars * If[indices === out, tensor, Transpose[tensor, FindPermutation[indices, out]]]
 ]
@@ -489,7 +495,9 @@ EinsteinSummation::dim = "Dimensions of contracted indices don't match";
 EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
 
 
-ActivateTensor[expr_] := Activate[Activate[expr, TensorContract]]
+ActivateTensor[expr_] := Activate[
+    Activate[expr /. GeneralizedPower[TensorProduct, t_, n_Integer] :> Inactive[TensorProduct] @@ ConstantArray[Activate[t, TensorContract], n], TensorContract]
+]
 
 
 QuditAdjacencyMatrix[x_, d_ : Automatic] := {{Abs[Normalize[x]] Mod[Arg[x], 2 Pi] / (Pi / (2 Replace[d, Automatic -> 2]))}}
