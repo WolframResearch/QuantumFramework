@@ -26,7 +26,7 @@ $QuantumCircuitOperatorNames = {
     "Trotterization",
     "Magic",
     "Multiplexer", "ControlledMultiplexer",
-    "QuantumState",
+    "QuantumState", "StatePreparation",
     "CHSH", "LeggettGarg", "WignerCHSH"
 }
 
@@ -736,13 +736,14 @@ QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     QuantumCircuitOperator[operators, "Label" -> qs["Label"]]["Flatten"]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState, args___}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState" | "StatePreparation", qs_QuantumState, args___}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
     Enclose @ QuantumCircuitOperator[
         ConfirmBy[QuantumStatePreparation[qs, args], QuantumCircuitOperatorQ],
+        "StatePreparation",
         opts
     ]
 
-QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
+QuantumCircuitOperator["QuantumState" | "StatePreparation", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
 
 QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}, opts___] :=
