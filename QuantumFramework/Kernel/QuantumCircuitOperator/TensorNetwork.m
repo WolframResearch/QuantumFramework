@@ -1,6 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageImport["Cotengra`"]
+PackageImport["Wolfram`Cotengra`"]
 
 PackageExport["TensorNetworkIndexGraph"]
 PackageExport["GraphTensorNetwork"]
