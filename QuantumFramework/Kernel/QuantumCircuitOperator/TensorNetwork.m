@@ -255,7 +255,13 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     width = circuit["Width"];
     min = circuit["Min"];
     ops = circuit["NormalOperators"];
-    If[TrueQ[OptionValue["Computational"]], ops = Through[ops["Computational"]]];
+    If[ TrueQ[OptionValue["Computational"]],
+        ops = Splice[{
+            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], #["InputOrder"], "Label" -> "I"[#["Label"]]], Nothing],
+            #,
+            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], #["OutputOrder"], "Label" -> "I"[#["Label"]]], Nothing]
+        }] & /@ ops
+    ];
     arity = circuit["Arity"];
     MapThread[
         PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
