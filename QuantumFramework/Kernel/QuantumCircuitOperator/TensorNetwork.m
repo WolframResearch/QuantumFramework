@@ -329,20 +329,24 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, info, contractionBases, basisCompatibleQ, computationalQ, basis
+    traceOrder, eigenOrder, computationalQ, basis
 },
     width = circuit["Width"];
-    info = Confirm @ circuit["TensorNetworkInfo"];
-    contractionBases = Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2];
-    ConfirmAssert[AllTrue[contractionBases, Equal @@ Through[#["Dimension"]] &]];
-    basisCompatibleQ = TrueQ[And @@ Equal @@@ contractionBases];
     basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
-    computationalQ = ! phaseSpaceQ && ! basisCompatibleQ || TrueQ[OptionValue["Computational"]];
+    computationalQ = TrueQ[OptionValue["Computational"]] || ! phaseSpaceQ &&
+        TrueQ[Or @@ Unequal @@@
+            ConfirmBy[
+                With[{info = Confirm @ circuit["TensorNetworkInfo"]},
+                    Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2]
+                ],
+                AllTrue[Equal @@ Through[#["Dimension"]] &]
+            ]
+        ];
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
     order = Sort /@ circuit["Order"];
@@ -356,7 +360,8 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> computationalQ], TensorNetworkQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
+    If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ ContractTensorNetwork[net, FilterRules[{opts}, Options[ContractTensorNetwork]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
