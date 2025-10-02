@@ -71,7 +71,7 @@ sectorBasis[args___] := With[{basis = QuditBasis[args]},
 	]
 ]
 
-QuantumPositiveTransform[tensor_ ? TensorQ] := Enclose @ With[{dims = TensorDimensions[tensor], rank = TensorRank[tensor]},
+QuantumPositiveTransform[tensor_] := Enclose @ With[{dims = tensorDimensions[tensor], rank = tensorRank[tensor]},
     SparseArray @ Fold[
         If[#2 == 1, Join[Ramp[#1], Ramp[- #1], #2], Join[#1, Reverse[#1, #2 - 2], #2]] &,
         ArrayReshape[Chop @ tensor, Catenate[{1, #} & /@ dims]],
