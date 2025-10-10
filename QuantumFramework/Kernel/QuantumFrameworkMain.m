@@ -7,7 +7,7 @@ If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.2"],
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
 ]
 
-If[ ! pacletInstalledQ["Wolfram/Cotengra", "0.2"],
+If[ ! pacletInstalledQ["Wolfram/Cotengra", "0.3"],
     PacletInstall["https://www.wolframcloud.com/obj/wolframquantumframework/Cotengra.paclet"]
 ]
 
