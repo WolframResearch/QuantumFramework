@@ -23,7 +23,6 @@ from classiq import (
     prepare_state,
     synthesize
 )
-import json
 
 authenticate()
 
@@ -37,8 +36,8 @@ def main(io: Output[QArray[QBit]]):
 
 model = create_model(main)
 
-qprog = json.loads(synthesize(model))
-qprog['outputs']['qasm'], qprog['data']['qubit_mapping']['logical_outputs']['io']
+qprog = synthesize(model)
+qprog.qasm, qprog.data.qubit_mapping.logical_outputs['io']
 ", "classiq"];
     QuantumCircuitOperator[ImportQASMCircuit[qasm]["QuantumCircuit"], Reverse[mapping] + 1]
 ]

@@ -7,7 +7,7 @@ PacletObject[
     "Creator" -> "Wolfram Research, Quantum Computation Framework team",
     "License" -> "MIT",
     "PublisherID" -> "Wolfram",
-    "Version" -> "1.6.2",
+    "Version" -> "1.6.3",
     "WolframVersion" -> "13.1+",
     "PrimaryContext" -> "Wolfram`QuantumFramework`",
     "Extensions" -> {
@@ -54,8 +54,7 @@ PacletObject[
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"},
       {"Asset", "Root" -> "Assets", "Assets" -> {
-        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.2.paclet"},
-        {"Cotengra.paclet", "Cotengra-0.1.paclet"}
+        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.2.paclet"}
       }}
     }
   |>

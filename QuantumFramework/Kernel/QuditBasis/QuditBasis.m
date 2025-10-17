@@ -17,7 +17,7 @@ QuditBasis::dependentElements = "elements should be linearly independent";
 
 quditBasisQ[QuditBasis[representations : HoldPattern[Association[({_QuditName, _Integer ? Positive} -> _) ...]]]] :=
     And @@ ResourceFunction["KeyGroupBy"][
-        Select[representations, TensorRank[#] > 0 &],
+        Select[representations, tensorRank[#] > 0 &],
         Last,
         Apply[Equal] @* Map[Dimensions]
     ]

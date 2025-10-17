@@ -659,7 +659,7 @@ QuantumStateProp[qs_, "SchmidtDecompose"] := #1 Inactive[CircleTimes] @@ ##2 & @
 			If[qs["MatrixQ"], qs["Bend"], qs]["DecomposeWithProbabilities", If[qs["MatrixQ"], qs["Dimensions"], qs["OutputDimensions"]]] // Total // Chop
 
 
-QuantumStateProp[qs_, "BasisDecompose"] := With[{tensor = qs["StateTensor"], basis = qs["QuditBasis"]["Decompose"]},
+QuantumStateProp[qs_, "BasisDecompose"] := With[{tensor = toTensor @ qs["StateTensor"], basis = qs["QuditBasis"]["Decompose"]},
 	Switch[
 		TensorRank[tensor],
 		1, Return[{1 -> {qs}}],

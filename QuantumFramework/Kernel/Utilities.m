@@ -20,6 +20,9 @@ PackageScope["powerPrimeFactors"]
 
 PackageScope["normalizeMatrix"]
 PackageScope["tensorToVector"]
+PackageScope["toTensor"]
+PackageScope["tensorDimensions"]
+PackageScope["tensorRank"]
 PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
@@ -86,7 +89,7 @@ targetQ[target_] := VectorQ[target, IntegerQ] && AllTrue[target, Positive]
 
 targetsQ[targets_] := VectorQ[targets, targetQ]
 
-measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
+measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, tensorRank[state]]
 
 
 (* numbers *)
@@ -110,6 +113,8 @@ toTensor[t_] := {t}
 
 
 tensorDimensions[t_] := Replace[TensorDimensions[t], Except[_List] :> {}]
+
+tensorRank[t_] := Length @ tensorDimensions[t]
 
 
 identityMatrix[0 | {_, 0} | {0, _}] := {{}}
@@ -444,7 +449,7 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 	    Confirm[$Failed]
     ];
 	MapThread[
-		If[ IntegerQ @ TensorRank[#1] && Length[#1] != TensorRank[#2],
+		If[ IntegerQ @ tensorRank[#1] && Length[#1] != tensorRank[#2],
 			Message[EinsteinSummation::shape, #1, #2];
             Confirm[$Failed]
 		] &,

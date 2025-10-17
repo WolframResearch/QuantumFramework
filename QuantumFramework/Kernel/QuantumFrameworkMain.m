@@ -7,8 +7,8 @@ If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.2"],
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
 ]
 
-If[ ! pacletInstalledQ["Cotengra", "0.1"],
-    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "Cotengra.paclet"]]
+If[ ! pacletInstalledQ["Wolfram/Cotengra", "0.4"],
+    PacletInstall["https://www.wolframcloud.com/obj/wolframquantumframework/Cotengra.paclet"]
 ]
 
 $ContextAliases["H`"] = "WolframInstitute`Hypergraph`"

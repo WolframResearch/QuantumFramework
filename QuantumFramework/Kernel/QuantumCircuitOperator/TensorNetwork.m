@@ -1,6 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageImport["Cotengra`"]
+PackageImport["Wolfram`Cotengra`"]
 
 PackageExport["TensorNetworkIndexGraph"]
 PackageExport["GraphTensorNetwork"]
@@ -45,7 +45,7 @@ TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
         AllTrue[indices, MatchQ[#, {(Superscript | Subscript)[_, _] ...}] && DuplicateFreeQ[#] &] ||
         (If[verbose, Message[TensorNetworkQ::msg2]]; False)
      ) &&
-    With[{ranks = TensorRank /@ Values[tensors]},
+    With[{ranks = tensorRank /@ Values[tensors]},
         (And @@ Thread[ranks == Length /@ Values[indices]] && Total[ranks] == CountDistinct[Catenate[Values[indices]]]) ||
         Total[ranks] == 0 ||
         (If[verbose, Message[TensorNetworkQ::msg3]]; False)
@@ -91,10 +91,10 @@ ContractEdge[g_, edge : _[from_, to_, {i_, j_}]] := Enclose @ Module[{
 	indices = Confirm[AnnotationValue[{g, {from, to}}, "Index"]],
 	rank
 },
-	rank = TensorRank[tensors[[1]]];
+	rank = tensorRank[tensors[[1]]];
 	Annotate[
 		{edgeContractWithIndex[g, edge], to},
-		"Tensor" ->TensorContract[
+		"Tensor" -> TensorContract[
 			TensorProduct[tensors[[1]], tensors[[2]]],
 			{Confirm[FirstPosition[indices[[1]], i]][[1]], rank + Confirm[FirstPosition[indices[[2]], j]][[1]]}
 		]
@@ -187,7 +187,7 @@ TensorNetworkIndexReplace[net_ ? TensorNetworkQ, rules_] :=
     Graph[net, AnnotationRules -> MapThread[#1 -> {"Index" -> #2} &, {VertexList[net], Replace[TensorNetworkIndices[net], rules, {2}]}]]
 
 
-InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
+InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_, index_List : Automatic] := Annotate[
     {
         EdgeAdd[
             VertexDelete[net, _ ? NonPositive],
@@ -200,24 +200,22 @@ InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_Lis
     },
     {
         "Tensor" -> tensor,
-        "Index" -> Replace[index, Automatic :> (Superscript[0, #] & /@ Range[TensorRank[tensor]])],
+        "Index" -> Replace[index, Automatic :> (Superscript[0, #] & /@ Range[tensorRank[tensor]])],
         VertexLabels -> "Initial"
     }
 ]
 
-TensorNetworkAdd[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index : _List | Automatic : Automatic] := TensorNetworkAdd[net, Labeled[tensor, None], index]
-
-TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_ ? TensorQ, label_ : None], autoIndex : _List | Automatic : Automatic] := Enclose @ With[{
+TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_, label_ : None], autoIndex : _List | Automatic : Automatic] := Enclose @ With[{
     newVertex = Max[VertexList[net]] + 1,
-    toIndex = Replace[autoIndex, Automatic :> Take[SortBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {1, x}, Subscript[_, x_] :> {0, x}}]], UpTo[TensorRank[tensor]]]]
+    toIndex = Replace[autoIndex, Automatic :> Take[SortBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {1, x}, Subscript[_, x_] :> {0, x}}]], UpTo[tensorRank[tensor]]]]
 },
 {
     index = Join[
         Replace[toIndex, {Superscript[_, q_] :> Subscript[newVertex, q], Subscript[_, q_] :> Superscript[newVertex, q]}, {1}],
-        Subscript[newVertex, #] & /@ Range[TensorRank[tensor] - Length[toIndex]]
+        Subscript[newVertex, #] & /@ Range[tensorRank[tensor] - Length[toIndex]]
     ]
 },
-    ConfirmAssert[TensorRank[tensor] == Length[index]];
+    ConfirmAssert[tensorRank[tensor] == Length[index]];
     Annotate[
         {
             EdgeAdd[
@@ -237,6 +235,8 @@ TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_ ? TensorQ, label_ :
     ]
 ]
 
+TensorNetworkAdd[net_Graph ? TensorNetworkQ, tensor_, index : _List | Automatic : Automatic] := TensorNetworkAdd[net, Labeled[tensor, None], index]
+
 VertexCompleteGraph[vs_List] := With[{n = Length[vs]}, AdjacencyGraph[vs, SparseArray[Band[{1, 1}] -> 0, {n, n}, 1]]]
 
 TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPattern[Graph]] := GraphUnion[
@@ -255,7 +255,13 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     width = circuit["Width"];
     min = circuit["Min"];
     ops = circuit["NormalOperators"];
-    If[TrueQ[OptionValue["Computational"]], ops = Through[ops["Computational"]]];
+    If[ TrueQ[OptionValue["Computational"]],
+        ops = Splice[{
+            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], #["InputOrder"], #["InputDimension"], "Label" -> "I"[#["Label"]]], Nothing],
+            #,
+            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], #["OutputOrder"], #["OutputDimension"], "Label" -> "I"[#["Label"]]], Nothing]
+        }] & /@ ops
+    ];
     arity = circuit["Arity"];
     MapThread[
         PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
@@ -323,20 +329,24 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, info, contractionBases, basisCompatibleQ, computationalQ, basis
+    traceOrder, eigenOrder, computationalQ, basis
 },
     width = circuit["Width"];
-    info = Confirm @ circuit["TensorNetworkInfo"];
-    contractionBases = Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2];
-    ConfirmAssert[AllTrue[contractionBases, Equal @@ Through[#["Dimension"]] &]];
-    basisCompatibleQ = TrueQ[And @@ Equal @@@ contractionBases];
     basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
-    computationalQ = ! phaseSpaceQ && ! basisCompatibleQ || TrueQ[OptionValue["Computational"]];
+    computationalQ = TrueQ[OptionValue["Computational"]] || ! phaseSpaceQ &&
+        TrueQ[Or @@ Unequal @@@
+            ConfirmBy[
+                With[{info = Confirm @ circuit["TensorNetworkInfo"]},
+                    Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2]
+                ],
+                AllTrue[Equal @@ Through[#["Dimension"]] &]
+            ]
+        ];
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
     order = Sort /@ circuit["Order"];
@@ -350,7 +360,8 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> computationalQ], TensorNetworkQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
+    If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ ContractTensorNetwork[net, FilterRules[{opts}, Options[ContractTensorNetwork]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
@@ -578,7 +589,7 @@ TensorNetworkContractionPath[net_ ? TensorNetworkQ, OptionsPattern[]] := Enclose
 	pairs = Rule @@@ pairs;
 	dimensions = KeyMap[Replace[pairs], dimensions];
 	indices = Replace[indices, pairs, {2}];
-	normalIndices = Thread[# -> ToString /@ Range[Length[#]]] & [Union @@ indices];
+	normalIndices = Thread[# -> Range[Length[#]]] & [Union @@ indices];
 	input = Replace[indices, normalIndices, {2}];
 	output = Replace[freeIndices, normalIndices, {1}];
 	dimensions = KeyMap[Replace[normalIndices], dimensions];

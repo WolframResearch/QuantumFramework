@@ -120,7 +120,7 @@ QuditBasis[{"Fourier", qb_ ? QuditBasisQ}, args___] := With[{dimension = qb["Dim
     ]
 ]
 
-QuditBasis[{"Fourier", basisArgs___}, args___] := QuditBasis[{"Fourier", QuditBasis[basisArgs]}, args]
+QuditBasis[{"Fourier", basisArgs___}, args___] := Enclose @ QuditBasis[{"Fourier", ConfirmBy[QuditBasis[basisArgs], QuditBasisQ]}, args]
 
 
 QuditBasis["Schwinger"] := QuditBasis[{"Schwinger", 2}]
