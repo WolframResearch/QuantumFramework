@@ -107,7 +107,7 @@ QuantumState[{"UniformMixture", subsystemCount : _Integer ? Positive : 1}, args_
 QuantumState[{"RandomPure", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis},
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
     basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
-    QuantumState[QuantumOperator[{"RandomUnitary", basis["Dimensions"]}, Range[basis["OutputQudits"]]][], basis]
+    QuantumState[QuantumOperator[{"RandomUnitary", basis["Dimensions"]}, Range[basis["OutputQudits"]]]["Matrix"][[1]], basis]
 ]
 
 
