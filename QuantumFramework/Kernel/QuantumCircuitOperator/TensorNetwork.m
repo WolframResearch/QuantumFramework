@@ -257,9 +257,9 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     ops = circuit["NormalOperators"];
     If[ TrueQ[OptionValue["Computational"]],
         ops = Splice[{
-            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], #["InputOrder"], #["InputDimensions"], "Label" -> "I"[#["Label"]]], Nothing],
+            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], {#, #} & @ #["InputOrder"], QuantumBasis[#, #] & @ #["InputDimensions"], "Label" -> "I"[#["Label"]]], Nothing],
             #,
-            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], #["OutputOrder"], #["OutputDimensions"], "Label" -> "I"[#["Label"]]], Nothing]
+            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], {#, #} & @ #["OutputOrder"], QuantumBasis[#, #] & @ #["OutputDimensions"], "Label" -> "I"[#["Label"]]], Nothing]
         }] & /@ ops
     ];
     arity = circuit["Arity"];
