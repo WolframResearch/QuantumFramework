@@ -1,7 +1,7 @@
 Notebook[{
 
 Cell[CellGroupData[{
-Cell["DysonTerms", "Title",
+Cell["DysonSeriesTerm", "Title",
  Deletable->False,
  CellEventActions->{Inherited, {"KeyDown", "\t"} :> Replace[SelectionMove[
        SelectedNotebook[], After, Cell]; NotebookFind[
@@ -9,13 +9,14 @@ Cell["DysonTerms", "Title",
        WrapAround -> True], Blank[NotebookSelection] :> SelectionMove[
        SelectedNotebook[], All, CellContents, AutoScroll -> True]], 
    PassEventsDown -> False, PassEventsUp -> False},
- CellChangeTimes->{{3.9688608269969177`*^9, 3.9688608306247673`*^9}},
+ CellChangeTimes->{{3.9688608269969177`*^9, 3.9688608306247673`*^9}, {
+   3.970056747552973*^9, 3.970056749703285*^9}, 3.970056817931591*^9, 
+   3.970056858706167*^9, {3.9700571085631123`*^9, 3.97005711450996*^9}},
  CellTags->{"Name", "TemplateCell", "Title", "TabNext"},
  CellID->551670665,ExpressionUUID->"e9bdc940-80ab-f548-95c0-058bfc36e5ca"],
 
 Cell["\<\
-Generates the nth term in the Dyson series expansion of a time dependent \
-operator\
+Generates the nth term in the Dyson series of a time dependent operator\
 \>", "Text",
  Deletable->False,
  CellEventActions->{Inherited, {"KeyDown", "\t"} :> Replace[SelectionMove[
@@ -24,7 +25,8 @@ operator\
        WrapAround -> True], Blank[NotebookSelection] :> SelectionMove[
        SelectedNotebook[], All, CellContents, AutoScroll -> True]], 
    PassEventsDown -> False, PassEventsUp -> False},
- CellChangeTimes->{{3.968860836152443*^9, 3.9688609080238533`*^9}},
+ CellChangeTimes->{{3.968860836152443*^9, 3.9688609080238533`*^9}, {
+  3.9700567593250484`*^9, 3.9700567674161415`*^9}},
  CellTags->{"DefaultContent", "Description", "TabNext", "TemplateCell"},
  CellID->167819325,ExpressionUUID->"fc4303aa-d9d4-b04b-9289-22fe77a4af90"],
 
@@ -63,33 +65,33 @@ evaluated before creating the Examples section below.", "MoreInfoText"],
  CellID->729890853,ExpressionUUID->"5574eadf-96b1-e748-bc40-81a607ba0256"],
 
 Cell[BoxData[{
- RowBox[{"ClearAll", "[", "DysonTerms", "]"}], "\[IndentingNewLine]", 
+ RowBox[{"ClearAll", "[", "DysonSeriesTerm", "]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
    RowBox[{
-    RowBox[{"Options", "[", "DysonTerms", "]"}], "=", 
+    RowBox[{"Options", "[", "DysonSeriesTerm", "]"}], "=", 
     RowBox[{"{", 
      RowBox[{"\"\<NumericIntegration\>\"", "->", "False"}], "}"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\n", 
  RowBox[{
   RowBox[{
-   RowBox[{"DysonTerms", "[", 
+   RowBox[{"DysonSeriesTerm", "[", 
     RowBox[{"n_", ",", "op_", ",", 
      RowBox[{"opts", ":", 
       RowBox[{"OptionsPattern", "[", "]"}]}]}], "]"}], ":=", 
-   RowBox[{"DysonTerms", "[", 
+   RowBox[{"DysonSeriesTerm", "[", 
     RowBox[{
     "n", ",", "op", ",", "NonCommutativeMultiply", ",", "0", ",", "opts"}], 
     "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"DysonTerms", "[", 
+  RowBox[{"DysonSeriesTerm", "[", 
    RowBox[{"n_", ",", "op_", ",", "alg_", ",", 
     RowBox[{"opts", ":", 
      RowBox[{"OptionsPattern", "[", "]"}]}]}], "]"}], ":=", " ", 
-  RowBox[{"DysonTerms", "[", 
+  RowBox[{"DysonSeriesTerm", "[", 
    RowBox[{"n", ",", "op", ",", "alg", ",", "0", ",", "opts"}], "]"}]}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"DysonTerms", "[", 
+  RowBox[{"DysonSeriesTerm", "[", 
    RowBox[{
     RowBox[{"n_Integer", "?", "Positive"}], ",", " ", "op_", ",", " ", "alg_",
      ",", "t0_", ",", 
@@ -216,7 +218,7 @@ Cell[BoxData[{
    3.96887196416296*^9}, {3.9688720299918823`*^9, 3.9688720308116703`*^9}, {
    3.968872452324766*^9, 3.968872466627527*^9}},
  CellTags->"DefaultContent",
- CellLabel->"In[1]:=",
+ CellLabel->"In[229]:=",
  CellID->392362564,ExpressionUUID->"9f1154e1-0c32-0949-9be3-93bc1c4a9cb8"]
 }, Open  ]],
 
@@ -287,7 +289,7 @@ documentation pages for examples."}], "MoreInfoText"], Background ->
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{
    StyleBox["n", "TI"], ",", 
    StyleBox["op", "TI"]}], "]"}]], "UsageInputs",
@@ -322,7 +324,7 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{
    StyleBox["n", "TI"], ",", 
    StyleBox["op", "TI"], 
@@ -396,7 +398,7 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{
    StyleBox["n", "TI"], ",", 
    StyleBox["op", "TI"], 
@@ -461,7 +463,7 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{
    StyleBox["n", "TI"], ",", " ", 
    StyleBox["op", "TI"], ",", "...", " ", 
@@ -599,7 +601,7 @@ Cell[TextData[{
  CellID->896489892,ExpressionUUID->"db8226ad-8a98-5348-b057-c75c7dfc2993"],
 
 Cell[TextData[{
- "DysonTerms returns  the n-th  order term in the series expansion as ",
+ "DysonSeriesTerm returns  the n-th  order term in the series expansion as ",
  Cell[BoxData[
   FormBox[
    StyleBox[
@@ -663,8 +665,9 @@ Cell[TextData[{
   "72948b12-03a2-cc46-b96d-62ee7a3def9b"]
 }], "Notes",
  CellChangeTimes->{{3.968864401391638*^9, 3.9688644054181213`*^9}, {
-  3.9688645606958447`*^9, 3.9688648946274776`*^9}, {3.968864929506607*^9, 
-  3.968864987275261*^9}, {3.9688653340432606`*^9, 3.968865339344801*^9}},
+   3.9688645606958447`*^9, 3.9688648946274776`*^9}, {3.968864929506607*^9, 
+   3.968864987275261*^9}, {3.9688653340432606`*^9, 3.968865339344801*^9}, 
+   3.9700568983375607`*^9, 3.9700571085885944`*^9},
  CellID->340771261,ExpressionUUID->"724ad9d7-aec9-3c46-8428-7206b8bd4e61"],
 
 Cell["\<\
@@ -676,7 +679,7 @@ perturbation theory, and quantum field theory\
    3.968864987275261*^9}, 3.9688651716835136`*^9, 3.9689449998994484`*^9},
  CellID->184844215,ExpressionUUID->"e12f4541-14a3-964e-ac05-74c5e7f32ca5"],
 
-Cell["DysonTerms takes the following option", "Notes",
+Cell["DysonSeriesTerm takes the following option", "Notes",
  TaggingRules->{},
  CellEventActions->{Inherited, {"KeyDown", "\t"} :> Replace[SelectionMove[
        SelectedNotebook[], After, Cell]; NotebookFind[
@@ -687,7 +690,8 @@ Cell["DysonTerms takes the following option", "Notes",
  CellChangeTimes->{{3.968241238298223*^9, 3.968241249570056*^9}, {
    3.968241279699952*^9, 3.9682413092043543`*^9}, {3.968244911769004*^9, 
    3.968244932833828*^9}, {3.968245022205947*^9, 3.9682450313727922`*^9}, 
-   3.968845964763609*^9, {3.968867789629404*^9, 3.9688677974794426`*^9}},
+   3.968845964763609*^9, {3.968867789629404*^9, 3.9688677974794426`*^9}, 
+   3.970056898357897*^9, 3.970057108602627*^9},
  CellTags->{"DefaultContent", "TabNext"},
  CellID->7209665,ExpressionUUID->"f8a4223c-d81f-cb48-bd7f-ace4a2664820"],
 
@@ -932,12 +936,12 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{"1", ",", "\[FormalCapitalA]"}], "]"}]], "Input",
  CellChangeTimes->{{3.968861667685457*^9, 3.96886167957473*^9}, 
    3.968862458603281*^9, {3.9688652424841213`*^9, 3.9688652427424793`*^9}},
  CellTags->"DefaultContent",
- CellLabel->"In[22]:=",
+ CellLabel->"In[234]:=",
  CellID->222508001,ExpressionUUID->"d3c314e8-b3fa-7c4e-93ae-75c23c421aa1"],
 
 Cell[BoxData[
@@ -949,10 +953,11 @@ Cell[BoxData[
    RowBox[{"\[DifferentialD]", 
     SubscriptBox["\[FormalT]", "1"]}]}]}]], "Output",
  CellChangeTimes->{3.968861680739319*^9, 3.968862394634716*^9, 
-  3.968862458892372*^9, 3.968865242965517*^9},
+  3.968862458892372*^9, 3.968865242965517*^9, 3.96998115659128*^9, 
+  3.970057125964983*^9},
  CellTags->"DefaultContent",
- CellLabel->"Out[22]=",
- CellID->532151885,ExpressionUUID->"ef3f2b27-c887-c943-b521-6228eebd346b"]
+ CellLabel->"Out[234]=",
+ CellID->317860705,ExpressionUUID->"a7ba9674-4e1a-7e45-ace1-0e35a6bf62a9"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -978,11 +983,11 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{"2", ",", "\[FormalCapitalA]"}], "]"}]], "Input",
  CellChangeTimes->{{3.9688623987125874`*^9, 3.968862469231266*^9}, {
   3.968865306736307*^9, 3.9688653220863705`*^9}},
- CellLabel->"In[24]:=",
+ CellLabel->"In[235]:=",
  CellID->78051378,ExpressionUUID->"a801827c-39cf-0f4e-b64d-94b9b7959c37"],
 
 Cell[BoxData[
@@ -1002,9 +1007,10 @@ Cell[BoxData[
     RowBox[{"\[DifferentialD]", 
      SubscriptBox["\[FormalT]", "1"]}]}]}]}]], "Output",
  CellChangeTimes->{{3.9688624066437016`*^9, 3.968862469561119*^9}, {
-  3.9688653136272182`*^9, 3.968865322504238*^9}},
- CellLabel->"Out[24]=",
- CellID->182618014,ExpressionUUID->"c443d6be-873a-9f4c-a5db-5a49a5cdc66a"]
+   3.9688653136272182`*^9, 3.968865322504238*^9}, 3.9699811585869827`*^9, 
+   3.9700571282691536`*^9},
+ CellLabel->"Out[235]=",
+ CellID->80304033,ExpressionUUID->"345af33e-2b0b-1440-9ec3-b17031177c44"]
 }, Open  ]]
 }, Open  ]],
 
@@ -1042,13 +1048,13 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{"2", ",", "\[FormalCapitalB]", ",", "Dot"}], "]"}]], "Input",
  CellChangeTimes->{{3.9688654050675945`*^9, 3.9688654158166695`*^9}, {
   3.968867154114479*^9, 3.9688671544668407`*^9}, {3.968867255675043*^9, 
   3.968867256065275*^9}, {3.9688673826585674`*^9, 3.9688673886857758`*^9}, {
   3.968867487771961*^9, 3.9688674880412083`*^9}},
- CellLabel->"In[95]:=",
+ CellLabel->"In[236]:=",
  CellID->616354999,ExpressionUUID->"62e11fbb-bcf8-464b-9771-9b748ccd59bf"],
 
 Cell[BoxData[
@@ -1070,9 +1076,10 @@ Cell[BoxData[
  CellChangeTimes->{
   3.9688654162254696`*^9, 3.9688670393154564`*^9, 3.968867154974245*^9, {
    3.968867249813427*^9, 3.9688672566831703`*^9}, {3.9688673807734756`*^9, 
-   3.968867388988287*^9}, 3.968867488461193*^9},
- CellLabel->"Out[95]=",
- CellID->344597953,ExpressionUUID->"9d42bcd9-90ab-3b43-8a59-eff98c8444a3"]
+   3.968867388988287*^9}, 3.968867488461193*^9, 3.9699811732254047`*^9, 
+   3.9700571309035435`*^9},
+ CellLabel->"Out[236]=",
+ CellID->450788659,ExpressionUUID->"11e48703-5128-e340-9a89-267b609ee39e"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -1090,13 +1097,13 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{
   "3", ",", "\[FormalCapitalB]", ",", "NonCommutativeMultiply", ",", "1"}], 
   "]"}]], "Input",
  CellChangeTimes->{{3.9688685741986732`*^9, 3.9688685857463303`*^9}, {
   3.968868642449951*^9, 3.9688686932285175`*^9}},
- CellLabel->"In[100]:=",
+ CellLabel->"In[237]:=",
  CellID->241167580,ExpressionUUID->"4658776f-d288-744a-80f2-3a043edc4e5f"],
 
 Cell[BoxData[
@@ -1123,9 +1130,10 @@ Cell[BoxData[
      RowBox[{"\[DifferentialD]", 
       SubscriptBox["\[FormalT]", "1"]}]}]}]}]}]], "Output",
  CellChangeTimes->{
-  3.968868586338482*^9, {3.9688686441073704`*^9, 3.968868693940628*^9}},
- CellLabel->"Out[100]=",
- CellID->11642267,ExpressionUUID->"2f19396a-adfc-5b45-8ac9-0241f8edded4"]
+  3.968868586338482*^9, {3.9688686441073704`*^9, 3.968868693940628*^9}, 
+   3.9699811764118023`*^9, 3.97005713402734*^9},
+ CellLabel->"Out[237]=",
+ CellID->4500651,ExpressionUUID->"1507d5ff-8383-7248-9c75-98eddd24a0e3"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1155,14 +1163,14 @@ Cell[BoxData[
      SuperscriptBox[
       RowBox[{"(", 
        RowBox[{"-", "\[ImaginaryI]"}], ")"}], "j"], 
-     RowBox[{"DysonTerms", "[", 
+     RowBox[{"DysonSeriesTerm", "[", 
       RowBox[{"j", ",", "\[FormalCapitalA]", ",", "Dot"}], "]"}]}], ",", 
     RowBox[{"{", 
      RowBox[{"j", ",", "3"}], "}"}]}], "]"}]}]], "Input",
  CellChangeTimes->{{3.9689346836850643`*^9, 3.96893478576457*^9}, {
   3.9689367647304783`*^9, 3.9689367724939137`*^9}},
  CellTags->"DefaultContent",
- CellLabel->"In[111]:=",
+ CellLabel->"In[238]:=",
  CellID->548106369,ExpressionUUID->"cf7a5a11-c239-c44b-aa31-293f70ebe6c9"],
 
 Cell[BoxData[
@@ -1218,10 +1226,11 @@ Cell[BoxData[
     TemplateBox[{"2"}, "ImplicitList"]},
    "SymbolicIdentityArray"]}]], "Output",
  CellChangeTimes->{{3.9689347291272182`*^9, 3.968934738177477*^9}, 
-   3.968934786247814*^9, 3.968936773010458*^9},
+   3.968934786247814*^9, 3.968936773010458*^9, 3.9699811825370216`*^9, 
+   3.9700571472378426`*^9},
  CellTags->"DefaultContent",
- CellLabel->"Out[111]=",
- CellID->174959672,ExpressionUUID->"01ea24bc-3bd3-ea40-8159-1cfbb62bb04b"]
+ CellLabel->"Out[238]=",
+ CellID->105665714,ExpressionUUID->"7586dfb4-cdc3-b742-b561-1e756aa4da91"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -1238,14 +1247,12 @@ Cell[TextData[{
 \[CapitalDelta]/2 ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["\[Sigma]", "z"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["\[Sigma]", "z"], TraditionalForm]],ExpressionUUID->
   "7187a6f9-66b6-354a-b57b-50287042f6d5"],
  " + A Cos(\[Omega] t) ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["\[Sigma]", "x"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["\[Sigma]", "x"], TraditionalForm]],ExpressionUUID->
   "c97b43a0-8a1d-5e48-b6c4-4c8b84211935"],
  ":"
 }], "Text",
@@ -1268,14 +1275,14 @@ Cell[BoxData[{
      RowBox[{"\[Omega]", " ", "t"}], "]"}], " ", 
     RowBox[{"PauliMatrix", "[", "1", "]"}]}]}]}]}], "Input",
  CellChangeTimes->{{3.9682639353563633`*^9, 3.9682639353577766`*^9}},
- CellLabel->"In[101]:=",
+ CellLabel->"In[239]:=",
  CellID->435202467,ExpressionUUID->"d4235957-4053-9148-b0a2-a35a320b1714"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{" ", 
-  RowBox[{"DysonTerms", "[", 
+  RowBox[{"DysonSeriesTerm", "[", 
    RowBox[{"2", ",", "h4", ",", "Dot"}], "]"}]}]], "Input",
  CellChangeTimes->{{3.9682643480716553`*^9, 3.968264362950222*^9}, {
    3.968264415833332*^9, 3.9682644346992073`*^9}, {3.9682645964848785`*^9, 
@@ -1285,7 +1292,7 @@ Cell[BoxData[
    3.9687736399390507`*^9}, {3.968773809773573*^9, 3.968773816683483*^9}, 
    3.9687747889658813`*^9, 3.968935174897585*^9, {3.968936698512335*^9, 
    3.9689367218730354`*^9}},
- CellLabel->"In[110]:=",
+ CellLabel->"In[241]:=",
  CellID->167989930,ExpressionUUID->"3862e082-122a-084b-b064-660ba262bdb5"],
 
 Cell[BoxData[
@@ -1358,9 +1365,10 @@ Cell[BoxData[
    3.968264693449772*^9, {3.9682664625460415`*^9, 3.9682665501950436`*^9}, 
    3.968327168223568*^9, {3.9687736258643627`*^9, 3.9687736433688602`*^9}, {
    3.968773810818617*^9, 3.9687738191666374`*^9}, 3.968774791715111*^9, 
-   3.968935191909939*^9, {3.968936704815262*^9, 3.968936724469059*^9}},
- CellLabel->"Out[110]=",
- CellID->112896745,ExpressionUUID->"95e6c3a2-b5f4-a846-a30c-b0295df4381f"]
+   3.968935191909939*^9, {3.968936704815262*^9, 3.968936724469059*^9}, 
+   3.9699811948646793`*^9, 3.9700571581994057`*^9},
+ CellLabel->"Out[241]=",
+ CellID->320103400,ExpressionUUID->"148d86cb-7814-684c-9392-490215cfd3c2"]
 }, Open  ]]
 }, Open  ]],
 
@@ -1387,8 +1395,7 @@ Cell[TextData[{
       RowBox[{"\[Beta]", "(", "t", ")"}], 
       SuperscriptBox[
        OverscriptBox["c", "^"], "\[Dagger]"], " "}]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "1526bb3a-a2f9-9a49-b14c-118f9f8a9472"],
+  ExpressionUUID->"1526bb3a-a2f9-9a49-b14c-118f9f8a9472"],
  ", where \[Alpha] and \[Beta] are time dependent complex valued functions:"
 }], "Text",
  CellChangeTimes->{{3.9689364039341183`*^9, 3.9689365171559544`*^9}, {
@@ -1409,7 +1416,7 @@ Cell[BoxData[
   3.9689371779009686`*^9}, {3.968937319354767*^9, 3.968937323662279*^9}, {
   3.968937360365593*^9, 3.968937363486246*^9}, {3.968937463178755*^9, 
   3.968937469914772*^9}},
- CellLabel->"In[138]:=",
+ CellLabel->"In[242]:=",
  CellID->257748715,ExpressionUUID->"f3817282-2ae8-5e4b-85ff-dd57937a8698"],
 
 Cell["Define the algebra:", "Text",
@@ -1443,7 +1450,7 @@ Cell[BoxData[
    3.968937297749777*^9, 3.9689373116865654`*^9}, {3.9689373689473553`*^9, 
    3.9689373708500595`*^9}, {3.9689391229968586`*^9, 3.9689391528675137`*^9}, 
    3.9689448890866947`*^9},
- CellLabel->"In[169]:=",
+ CellLabel->"In[243]:=",
  CellID->68955748,ExpressionUUID->"4d178b31-49ce-b141-ae40-1139c0dafa46"],
 
 Cell[TextData[{
@@ -1453,9 +1460,8 @@ Cell[TextData[{
    RowBox[{
     RowBox[{
      RowBox[{"c", ",", 
-      SuperscriptBox["c", "\[Dagger]"]}], "}"}], "=", "1"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "4c90db14-c68a-1c42-9257-cc7c5a95f6a1"],
+      SuperscriptBox["c", "\[Dagger]"]}], "}"}], "=", "1"}], 
+   TraditionalForm]],ExpressionUUID->"4c90db14-c68a-1c42-9257-cc7c5a95f6a1"],
  ", {",
  Cell[BoxData[
   FormBox[
@@ -1463,9 +1469,7 @@ Cell[TextData[{
     RowBox[{
      RowBox[{
       RowBox[{"c", ",", "c"}], "}"}], " ", "=", " ", "0"}], ",", " "}], 
-   TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "873e85a7-2338-5c4c-b5f4-f12d97182681"],
+   TraditionalForm]],ExpressionUUID->"873e85a7-2338-5c4c-b5f4-f12d97182681"],
  "{",
  Cell[BoxData[
   FormBox[
@@ -1474,9 +1478,7 @@ Cell[TextData[{
      RowBox[{
       SuperscriptBox["c", "\[Dagger]"], ",", 
       SuperscriptBox["c", "\[Dagger]"]}], "}"}], " ", "=", " ", "0"}], 
-   TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "fe366ac2-6142-fc4d-ba71-739fbeecaede"],
+   TraditionalForm]],ExpressionUUID->"fe366ac2-6142-fc4d-ba71-739fbeecaede"],
  ":"
 }], "Text",
  CellChangeTimes->{{3.9689396962264614`*^9, 3.968939700857891*^9}, {
@@ -1506,7 +1508,7 @@ Cell[BoxData[
  CellChangeTimes->{{3.9689370027021027`*^9, 3.968937014388876*^9}, {
    3.968937090873623*^9, 3.9689371364813156`*^9}, {3.9689395742552605`*^9, 
    3.9689395971572113`*^9}, 3.968939651047596*^9},
- CellLabel->"In[158]:=",
+ CellLabel->"In[244]:=",
  CellID->723495276,ExpressionUUID->"9ae53b99-c871-e84a-bd32-662eec2f6266"],
 
 Cell[TextData[{
@@ -1516,8 +1518,7 @@ Cell[TextData[{
    RowBox[{"n", "=", " ", 
     RowBox[{
      SuperscriptBox["c", "\[Dagger]"], "c"}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "7a92bf9b-ce89-0948-ad7e-c2829a4c1fee"],
+  ExpressionUUID->"7a92bf9b-ce89-0948-ad7e-c2829a4c1fee"],
  " terms remain, that depend on the integrals of the scalar functions:"
 }], "Text",
  CellChangeTimes->{{3.9689446408223133`*^9, 3.9689446746732216`*^9}, {
@@ -1533,7 +1534,7 @@ Cell[BoxData[
     RowBox[{"-", "\[ImaginaryI]"}], ")"}], "2"], 
   RowBox[{"ReplaceAt", "[", 
    RowBox[{
-    RowBox[{"DysonTerms", "[", 
+    RowBox[{"DysonSeriesTerm", "[", 
      RowBox[{"2", ",", "V", ",", "alg"}], "]"}], ",", 
     RowBox[{"x_", ":>", 
      RowBox[{
@@ -1543,7 +1544,7 @@ Cell[BoxData[
  CellChangeTimes->{{3.9689394601064854`*^9, 3.968939462375498*^9}, {
   3.9689395170964565`*^9, 3.968939539074362*^9}, {3.968944422343294*^9, 
   3.9689444473658276`*^9}},
- CellLabel->"In[164]:=",
+ CellLabel->"In[245]:=",
  CellID->808960620,ExpressionUUID->"8716d1c8-4167-ee45-ae83-5811e553679d"],
 
 Cell[BoxData[
@@ -1582,9 +1583,10 @@ Cell[BoxData[
       SubscriptBox["\[FormalT]", "1"]}]}]}]}]}]], "Output",
  CellChangeTimes->{
   3.9689393092155647`*^9, 3.968939539647127*^9, 3.968939618191414*^9, 
-   3.9689397168761673`*^9, {3.9689444258615417`*^9, 3.968944448025017*^9}},
- CellLabel->"Out[164]=",
- CellID->165266806,ExpressionUUID->"9fcc8ed8-3a48-fa44-8564-2ce4e9be8e95"]
+   3.9689397168761673`*^9, {3.9689444258615417`*^9, 3.968944448025017*^9}, 
+   3.969981223876196*^9, 3.970057177762768*^9},
+ CellLabel->"Out[245]=",
+ CellID->1441359,ExpressionUUID->"b0632fd2-fbae-f745-9e45-bb9d76215b46"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
@@ -1621,7 +1623,7 @@ Cell[BoxData[{
   3.968869240433159*^9, 3.9688692520254383`*^9}, {3.968869325873644*^9, 
   3.968869326510441*^9}, {3.968872666869482*^9, 3.968872671124548*^9}, {
   3.9689450711266747`*^9, 3.968945078877447*^9}},
- CellLabel->"In[271]:=",
+ CellLabel->"In[246]:=",
  CellID->423182225,ExpressionUUID->"6f3df728-dcf8-5944-8958-8f960a2a4e83"],
 
 Cell["\<\
@@ -1638,7 +1640,7 @@ Cell[CellGroupData[{
 Cell[BoxData[
  RowBox[{"TimeConstrained", "[", 
   RowBox[{
-   RowBox[{"DysonTerms", "[", 
+   RowBox[{"DysonSeriesTerm", "[", 
     RowBox[{"2", ",", "h1", ",", "Dot"}], "]"}], ",", "20"}], "]"}]], "Input",
  CellChangeTimes->{{3.9688692583437157`*^9, 3.968869273866379*^9}, {
   3.9688693139916897`*^9, 3.968869333069559*^9}, {3.9688705271896496`*^9, 
@@ -1648,7 +1650,7 @@ Cell[BoxData[
   3.9688718031887455`*^9, 3.968871804164036*^9}, {3.968871888346031*^9, 
   3.968871907073927*^9}, {3.9688726129611607`*^9, 3.9688726147699223`*^9}, {
   3.968872813192589*^9, 3.9688728570591717`*^9}},
- CellLabel->"In[275]:=",
+ CellLabel->"In[22]:=",
  CellID->108570167,ExpressionUUID->"94a24dbe-71d8-de4a-9000-e6c701acc1eb"],
 
 Cell[BoxData["$Aborted"], "Output",
@@ -1659,9 +1661,9 @@ Cell[BoxData["$Aborted"], "Output",
    3.9688716202034073`*^9, 3.968871829931549*^9, 3.96887189235738*^9, 
    3.9688719395325108`*^9, 3.968872000916527*^9, 3.9688720777189026`*^9, 
    3.96887264415819*^9, {3.968872810428606*^9, 3.9688728143919334`*^9}, 
-   3.9688728467516613`*^9, 3.9688728774836845`*^9},
- CellLabel->"Out[275]=",
- CellID->215095984,ExpressionUUID->"509496e0-7d1a-4c49-9cec-7419ec629804"]
+   3.9688728467516613`*^9, 3.9688728774836845`*^9, 3.9699812541490917`*^9},
+ CellLabel->"Out[22]=",
+ CellID->228839476,ExpressionUUID->"6a3405cd-4381-d545-bdc7-0c0cc1c5ef23"]
 }, Open  ]],
 
 Cell["Get a function to do numeric integration:", "Text",
@@ -1672,7 +1674,7 @@ Cell["Get a function to do numeric integration:", "Text",
 Cell[BoxData[
  RowBox[{
   RowBox[{"num", " ", "=", " ", 
-   RowBox[{"DysonTerms", "[", 
+   RowBox[{"DysonSeriesTerm", "[", 
     RowBox[{"2", ",", "h1", ",", "Dot", ",", 
      RowBox[{"\"\<NumericIntegration\>\"", "->", "True"}]}], "]"}]}], 
   ";"}]], "Input",
@@ -1681,7 +1683,7 @@ Cell[BoxData[
   3.9688700345652313`*^9}, {3.968870660513159*^9, 3.9688706609749928`*^9}, {
   3.968870996745159*^9, 3.968870997076109*^9}, {3.9688714013341465`*^9, 
   3.9688714017843666`*^9}, {3.9688729542630653`*^9, 3.9688729547342873`*^9}},
- CellLabel->"In[276]:=",
+ CellLabel->"In[248]:=",
  CellID->486099129,ExpressionUUID->"9bee0236-7f23-3442-9d62-1d141c12c57d"],
 
 Cell["Evaluate at some particular final time:", "Text",
@@ -1698,7 +1700,7 @@ Cell[BoxData[
   3.968869983492262*^9}, {3.9688700381274986`*^9, 3.968870077444233*^9}, {
   3.968870476023634*^9, 3.96887049163888*^9}, {3.9688706539029064`*^9, 
   3.9688706554642296`*^9}},
- CellLabel->"In[277]:=",
+ CellLabel->"In[249]:=",
  CellID->30903638,ExpressionUUID->"8f8661e2-7aed-af4a-8e22-b5561a9fd7f7"],
 
 Cell[BoxData[
@@ -1718,9 +1720,10 @@ Cell[BoxData[
    3.9688699838514786`*^9}, {3.968870039044243*^9, 3.9688700777265625`*^9}, {
    3.9688704707120056`*^9, 3.968870492284029*^9}, {3.9688706510726185`*^9, 
    3.968870656136875*^9}, 3.968870699197687*^9, 3.968871002997801*^9, 
-   3.968871429221264*^9, 3.968872963301279*^9},
- CellLabel->"Out[277]=",
- CellID->368201641,ExpressionUUID->"6e7392a6-3222-3848-af54-b46d308dbf91"]
+   3.968871429221264*^9, 3.968872963301279*^9, 3.9699812676097355`*^9, 
+   3.97005719020278*^9},
+ CellLabel->"Out[249]=",
+ CellID->194596472,ExpressionUUID->"c16e8756-8d76-dc45-b589-5771504aa590"]
 }, Open  ]],
 
 Cell[BoxData[
@@ -1787,7 +1790,7 @@ Cell[BoxData[
       SuperscriptBox["\[FormalA]", "\[Dagger]"]}]}], ")"}]}]}]], "Input",
  CellChangeTimes->{{3.968751500389229*^9, 3.968751541728283*^9}, {
    3.9687620600081635`*^9, 3.9687620731055984`*^9}, 3.9688766793827286`*^9},
- CellLabel->"In[333]:=",
+ CellLabel->"In[250]:=",
  CellID->402014078,ExpressionUUID->"68a9a281-bed0-924e-abc0-ada0cd41bbe7"],
 
 Cell["Define algebra and a reduction function", "Text",
@@ -1824,7 +1827,7 @@ Cell[BoxData[{
  CellChangeTimes->{{3.968760758495476*^9, 3.968760761094099*^9}, {
   3.9687608440413933`*^9, 3.9687608457351933`*^9}, {3.968762076633482*^9, 
   3.9687620946453876`*^9}},
- CellLabel->"In[280]:=",
+ CellLabel->"In[251]:=",
  CellID->78455026,ExpressionUUID->"7ec8a703-58c9-2141-adb7-10e4f9247888"],
 
 Cell["First order term:", "Text",
@@ -1836,7 +1839,7 @@ Cell[CellGroupData[{
 Cell[BoxData[
  RowBox[{
   RowBox[{"-", "\[ImaginaryI]"}], " ", 
-  RowBox[{"DysonTerms", "[", 
+  RowBox[{"DysonSeriesTerm", "[", 
    RowBox[{"1", ",", "Vi", ",", "alg"}], "]"}]}]], "Input",
  CellChangeTimes->CompressedData["
 1:eJxTTMoPSmViYGCQAmIQ7fC96+epiW8dI7ab/AXRczoYGU8DaRkjLlYQbcN9
@@ -1848,7 +1851,7 @@ EkybpF3hAdFT6u6C6ZJpK8RBtEjnXCkQbWO8WxFEH1njpAyi/8TZxYHlj3zO
 BtEpE5aVgWgOCeEqEL1klUcn2yRg+PK6dIHoG0mhghxAegPTLSEQLfJRSgtE
 96Skg2kAIEXi3g==
   "],
- CellLabel->"In[338]:=",
+ CellLabel->"In[253]:=",
  CellID->539084569,ExpressionUUID->"98c1e21b-f6b3-ea40-917d-15800c859acf"],
 
 Cell[BoxData[
@@ -1876,9 +1879,9 @@ Cell[BoxData[
    "\[Omega]"]}]], "Output",
  CellChangeTimes->{{3.968873547578022*^9, 3.968873556326153*^9}, 
    3.9688736056439495`*^9, {3.9688766844907646`*^9, 3.9688766950675697`*^9}, 
-   3.96887688449452*^9},
- CellLabel->"Out[338]=",
- CellID->213493909,ExpressionUUID->"8a0dd212-e718-554d-921d-da2151dd1400"]
+   3.96887688449452*^9, 3.969981279564411*^9, 3.970057200068783*^9},
+ CellLabel->"Out[253]=",
+ CellID->732028116,ExpressionUUID->"ca97aeb1-9f52-164a-be4d-152ca1b2502f"]
 }, Open  ]],
 
 Cell["Second order term, simplified in normal order form:", "Text",
@@ -1894,7 +1897,7 @@ Cell[BoxData[
     SuperscriptBox[
      RowBox[{"(", 
       RowBox[{"-", "\[ImaginaryI]"}], ")"}], "2"], 
-    RowBox[{"DysonTerms", "[", 
+    RowBox[{"DysonSeriesTerm", "[", 
      RowBox[{"2", ",", "Vi", ",", "alg"}], "]"}]}], "]"}], "[", 
   RowBox[{"[", 
    RowBox[{"-", "1"}], "]"}], "]"}]], "Input",
@@ -1903,7 +1906,7 @@ Cell[BoxData[
   3.968873951848665*^9}, {3.9688739849644756`*^9, 3.968873989864189*^9}, {
   3.9688741130902386`*^9, 3.9688741389538994`*^9}, {3.9688767072478466`*^9, 
   3.968876733023424*^9}},
- CellLabel->"In[336]:=",
+ CellLabel->"In[254]:=",
  CellID->45758877,ExpressionUUID->"83f27a54-3f22-8d45-809c-334d0a009242"],
 
 Cell[BoxData[
@@ -1998,9 +2001,10 @@ Cell[BoxData[
  CellChangeTimes->{{3.9688736348167915`*^9, 3.968873741598366*^9}, {
    3.9688738869420376`*^9, 3.968873915484133*^9}, 3.9688739535068645`*^9, 
    3.9688740044628963`*^9, 3.9688740777872486`*^9, {3.9688741159247036`*^9, 
-   3.968874140633114*^9}, 3.968876735936617*^9},
- CellLabel->"Out[336]=",
- CellID->264048560,ExpressionUUID->"5891b25d-e771-cf42-814e-3d3de1a40901"]
+   3.968874140633114*^9}, 3.968876735936617*^9, 3.969981284754919*^9, 
+   3.9700572056732254`*^9},
+ CellLabel->"Out[254]=",
+ CellID->187798094,ExpressionUUID->"9a3ebec2-cd2d-a041-8794-502c19ef3f94"]
 }, Open  ]],
 
 Cell[BoxData[
@@ -2019,7 +2023,8 @@ Cell["Chirped Gaussian Pulse", "Subsubsection",
 
 Cell[BoxData[{
  RowBox[{"ClearAll", "[", 
-  RowBox[{"\[CapitalOmega]0", ",", "\[Tau]", ",", "\[Kappa]"}], "]"}], "\[IndentingNewLine]", 
+  RowBox[{"\[CapitalOmega]0", ",", "\[Tau]", ",", "\[Kappa]"}], "]"}], "\[IndentingNewLine]",
+ 
  RowBox[{
   RowBox[{"Hchirped", "[", "t_", "]"}], ":=", " ", 
   RowBox[{
@@ -2046,7 +2051,7 @@ Cell[BoxData[{
   3.968779626034767*^9}, {3.968779793393799*^9, 3.9687798148707275`*^9}, {
   3.968780918534807*^9, 3.968780932601839*^9}, {3.968781165910898*^9, 
   3.9687811703004284`*^9}, {3.9688771892660675`*^9, 3.9688772108175945`*^9}},
- CellLabel->"In[6]:=",
+ CellLabel->"In[255]:=",
  CellID->134078192,ExpressionUUID->"89a32457-9721-6943-8f3c-f8fbf29bc1a6"],
 
 Cell[TextData[{
@@ -2443,7 +2448,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
         Selectable->False], "[", 
        RowBox[{
         RowBox[{"-", "\[ImaginaryI]"}], " ", 
-        RowBox[{"DysonTerms", "[", 
+        RowBox[{"DysonSeriesTerm", "[", 
          RowBox[{"1", ",", "Hchirped", ",", "Dot", ",", 
           RowBox[{"-", "3"}]}], "]"}]}], "]"}]}], ",", 
      RowBox[{"\"\<Parameters\>\"", "->", 
@@ -2460,7 +2465,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.9687798258187237`*^9}, {3.9687809965206985`*^9, 
    3.9687809968828773`*^9}, {3.968877101305832*^9, 3.9688771408399467`*^9}, {
    3.9688772172617226`*^9, 3.9688772304501705`*^9}, 3.9689335144339542`*^9},
- CellLabel->"In[9]:=",
+ CellLabel->"In[257]:=",
  CellID->562867194,ExpressionUUID->"6530ad0c-cd70-e14b-9608-52a1e6e690bd"],
 
 Cell[CellGroupData[{
@@ -2468,7 +2473,7 @@ Cell[CellGroupData[{
 Cell[BoxData[
  RowBox[{"dyson", "//", "TraditionalForm"}]], "Input",
  CellChangeTimes->{{3.968933519973707*^9, 3.9689335225333023`*^9}},
- CellLabel->"In[10]:=",
+ CellLabel->"In[258]:=",
  CellID->360028401,ExpressionUUID->"79f4b2aa-9312-c84e-a396-d10f274f9d00"],
 
 Cell[BoxData[
@@ -2691,9 +2696,9 @@ Cell[BoxData[
           1}, {$CellContext`\[Tau], 0, 1}, {$CellContext`\[Kappa], 0, 
           1}, {\[FormalCapitalT], 0, 1}}|>]], {{1}, {1}}]], 
   TraditionalForm]], "Output",
- CellChangeTimes->{3.9689335229692554`*^9},
- CellLabel->"Out[10]//TraditionalForm=",
- CellID->546344963,ExpressionUUID->"5364c512-a0db-8646-8d58-d04681781d2c"]
+ CellChangeTimes->{3.9689335229692554`*^9, 3.9700572286192856`*^9},
+ CellLabel->"Out[258]//TraditionalForm=",
+ CellID->142541488,ExpressionUUID->"25b17d70-5847-6445-9e6b-f91d91a7a649"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -3307,7 +3312,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.9687810597858315`*^9, 3.968781072888727*^9}, {3.968781191034527*^9, 
    3.9687811913353977`*^9}, 3.9687818725633774`*^9, {3.968877307354313*^9, 
    3.9688773136184616`*^9}, {3.9689337692019863`*^9, 3.96893378358416*^9}},
- CellLabel->"In[22]:=",
+ CellLabel->"In[259]:=",
  CellID->40766079,ExpressionUUID->"48a1ccb8-2bdb-a842-9335-d29d9189c687"],
 
 Cell["First order approximation is good when this value is << 1:", "Text",
@@ -3331,7 +3336,7 @@ Cell[BoxData[
         SuperscriptBox["\[Tau]", "4"]}]}], ")"}], 
      RowBox[{"1", "/", "4"}]]}]]}]], "Input",
  CellChangeTimes->{{3.968782440010502*^9, 3.968782536763279*^9}},
- CellLabel->"In[12]:=",
+ CellLabel->"In[260]:=",
  CellID->274174499,ExpressionUUID->"ac636664-ac5d-6440-80f9-44aae8939bd9"]
 }, Open  ]]
 }, Open  ]],
@@ -3754,7 +3759,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.968779641712414*^9, 3.9687796420388813`*^9}, {3.968781039736925*^9, 
    3.968781040320503*^9}, 3.9688773997823715`*^9, {3.9688783597376537`*^9, 
    3.9688783603587837`*^9}, {3.9689338011257744`*^9, 3.968933804218113*^9}},
- CellLabel->"In[23]:=",
+ CellLabel->"In[261]:=",
  CellID->325507947,ExpressionUUID->"d27aa82a-b5a6-9446-b427-f2261ed8f2dc"],
 
 Cell["Moderate agreement:", "Text",
@@ -3767,13 +3772,13 @@ Cell[BoxData[
  RowBox[{"dysonCondition", "[", 
   RowBox[{"1.", ",", "1.", ",", "10."}], "]"}]], "Input",
  CellChangeTimes->{{3.9689335555381374`*^9, 3.968933562640192*^9}},
- CellLabel->"In[13]:=",
+ CellLabel->"In[263]:=",
  CellID->418416212,ExpressionUUID->"f77a64b1-4bcb-f243-ab3e-59dd0552d760"],
 
 Cell[BoxData["0.2795532832400798`"], "Output",
- CellChangeTimes->{3.9689335629085617`*^9},
- CellLabel->"Out[13]=",
- CellID->68823852,ExpressionUUID->"a9232c37-1ae5-5b41-bac1-3b99e6c2c70d"]
+ CellChangeTimes->{3.9689335629085617`*^9, 3.970057244024599*^9},
+ CellLabel->"Out[263]=",
+ CellID->529449323,ExpressionUUID->"37c4a317-9c15-0e44-bef1-b43db54b8826"]
 }, Open  ]],
 
 Cell["Plot the result from numerically solving the evolution:", "Text",
@@ -3803,7 +3808,7 @@ Cell[BoxData[
    3.9687795216601753`*^9}, {3.968779651340664*^9, 3.968779651643593*^9}, {
    3.9689335977508125`*^9, 3.9689336239056873`*^9}, {3.9689337906699734`*^9, 
    3.9689337939725285`*^9}},
- CellLabel->"In[25]:=",
+ CellLabel->"In[264]:=",
  CellID->61632215,ExpressionUUID->"b510ccbb-5df4-ca42-8399-fed9574e59fc"],
 
 Cell[BoxData[
@@ -8427,9 +8432,9 @@ S3KCVgOLODy8sJOyed7Pw67NGM/iJg/Kr4y65963scijp/v+Hy+Ni7KGMv0s
   Ticks->{Automatic, Automatic}]], "Output",
  CellChangeTimes->{
   3.968877472452156*^9, {3.968933616154249*^9, 3.9689336242945614`*^9}, 
-   3.968933807776882*^9},
- CellLabel->"Out[25]=",
- CellID->6902533,ExpressionUUID->"7df42a99-b6c4-5d49-8b12-1c417e054627"]
+   3.968933807776882*^9, 3.970057247622896*^9},
+ CellLabel->"Out[264]=",
+ CellID->46860769,ExpressionUUID->"0696fb60-d8c7-b942-a925-76170ece0e9c"]
 }, Open  ]],
 
 Cell["Plot result from Dyson:", "Text",
@@ -8652,7 +8657,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.968781107764591*^9, 3.9687811080666485`*^9}, {3.968781264789665*^9, 
    3.968781265085882*^9}, 3.9688774890233917`*^9, {3.968933639542671*^9, 
    3.968933640007477*^9}, {3.968933733078453*^9, 3.9689337370583305`*^9}},
- CellLabel->"In[21]:=",
+ CellLabel->"In[265]:=",
  CellID->739506115,ExpressionUUID->"f48782ec-a089-4d45-861b-92adc83c59b3"],
 
 Cell[BoxData[
@@ -13268,9 +13273,10 @@ AyU1H3w=
      Scaled[0.05], 
      Scaled[0.05]}},
   Ticks->{Automatic, Automatic}]], "Output",
- CellChangeTimes->{3.9688774925952625`*^9, 3.9689337397420235`*^9},
- CellLabel->"Out[21]=",
- CellID->253926024,ExpressionUUID->"66f538e4-693f-f74d-b876-93e3bd9a3c94"]
+ CellChangeTimes->{3.9688774925952625`*^9, 3.9689337397420235`*^9, 
+  3.9700572555648136`*^9},
+ CellLabel->"Out[265]=",
+ CellID->164706993,ExpressionUUID->"98521c71-7ba2-884a-99d2-43130d22a611"]
 }, Open  ]]
 }, Open  ]],
 
@@ -13689,7 +13695,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.9689341839235897`*^9}, {3.968934226214081*^9, 3.9689342783452377`*^9}, {
    3.9689343372805367`*^9, 3.9689343380210304`*^9}, {3.968934378852289*^9, 
    3.9689344178333607`*^9}, {3.968934461742388*^9, 3.9689344625141563`*^9}},
- CellLabel->"In[91]:=",
+ CellLabel->"In[266]:=",
  CellID->181887255,ExpressionUUID->"f0bc11fb-380a-6941-92af-1af0cd040594"],
 
 Cell["There will not be  be good agreement for this case:", "Text",
@@ -13706,16 +13712,16 @@ Cell[BoxData[
   3.9689342957603416`*^9}, {3.9689343419375095`*^9, 3.9689343425573044`*^9}, {
   3.968934393983919*^9, 3.968934403553953*^9}, {3.9689344573229218`*^9, 
   3.9689344581343746`*^9}},
- CellLabel->"In[90]:=",
+ CellLabel->"In[268]:=",
  CellID->539034951,ExpressionUUID->"3f611775-8413-f947-8144-ed0ea61f858d"],
 
 Cell[BoxData["5.720570197551409`"], "Output",
  CellChangeTimes->{
   3.96887757007436*^9, 3.968933853611204*^9, {3.968934152834406*^9, 
    3.968934187469719*^9}, 3.968934296394102*^9, 3.9689343428271465`*^9, 
-   3.968934403796961*^9, 3.9689344585662766`*^9},
- CellLabel->"Out[90]=",
- CellID->29413982,ExpressionUUID->"fde4ed81-b75d-b243-b5df-f0af6492cd53"]
+   3.968934403796961*^9, 3.9689344585662766`*^9, 3.970057264720459*^9},
+ CellLabel->"Out[268]=",
+ CellID->101778311,ExpressionUUID->"9f59eaf5-e71d-8c4f-add7-ece6d6a6e67b"]
 }, Open  ]],
 
 Cell["Plot the result from numerically solving the evolution:", "Text",
@@ -13748,7 +13754,7 @@ Cell[BoxData[
    3.968934078713724*^9, 3.9689340807571487`*^9}, {3.9689342069165287`*^9, 
    3.968934233516571*^9}, {3.9689344203841496`*^9, 3.9689344218645954`*^9}, {
    3.9689345411581287`*^9, 3.9689345414973335`*^9}},
- CellLabel->"In[95]:=",
+ CellLabel->"In[269]:=",
  CellID->836631696,ExpressionUUID->"fadaccea-8b29-2c47-8c2c-a9a19350ee6e"],
 
 Cell[BoxData[
@@ -19503,9 +19509,9 @@ qka+/l1oTINHXhwjkQjRqGZOU7knDf8DMN6l6g==
    3.9689339112152615`*^9, 3.968933937174864*^9}, 3.9689339959011307`*^9, 
    3.9689340811093464`*^9, {3.968934203617697*^9, 3.968934286995878*^9}, 
    3.9689343490076065`*^9, {3.968934408346287*^9, 3.968934422269392*^9}, 
-   3.9689344667844486`*^9, 3.9689345423164883`*^9},
- CellLabel->"Out[95]=",
- CellID->391410887,ExpressionUUID->"175a1153-a95f-bc41-801e-d281a60b8f15"]
+   3.9689344667844486`*^9, 3.9689345423164883`*^9, 3.97005727082551*^9},
+ CellLabel->"Out[269]=",
+ CellID->116986241,ExpressionUUID->"0bc33c29-dd36-9142-96c9-1c4d42b9cc10"]
 }, Open  ]],
 
 Cell["Plot result from Dyson :", "Text",
@@ -19737,7 +19743,7 @@ true, \\\\\\\"edgeForm\\\\\\\": {\\\\\\\"color\\\\\\\": [245, 129, 50], \
    3.9689343126284485`*^9}, {3.968934353114897*^9, 3.9689343535992565`*^9}, {
    3.968934427885393*^9, 3.9689344330273495`*^9}, {3.968934473656412*^9, 
    3.9689344743109913`*^9}, {3.9689345517654457`*^9, 3.968934567062113*^9}},
- CellLabel->"In[97]:=",
+ CellLabel->"In[270]:=",
  CellID->287343756,ExpressionUUID->"f1b53393-2a34-b341-9504-6a22278cc983"],
 
 Cell[BoxData[
@@ -24889,9 +24895,9 @@ EzQ8iGu1ikIsInF+d+UMDVlXAlTbML5jTsTI/DwN+9XfDzbg+P8Hlx4r/A==
   3.9688775929812794`*^9, 3.968933893371971*^9, {3.968933960439932*^9, 
    3.9689339732550983`*^9}, 3.9689340962406845`*^9, 3.968934313824354*^9, 
    3.968934354812828*^9, 3.9689344356315327`*^9, 3.968934476914053*^9, {
-   3.9689345552116146`*^9, 3.968934569259344*^9}},
- CellLabel->"Out[97]=",
- CellID->94514051,ExpressionUUID->"ff218b62-2bf0-bd41-922f-cf62588a890c"]
+   3.9689345552116146`*^9, 3.968934569259344*^9}, 3.97005727678269*^9},
+ CellLabel->"Out[270]=",
+ CellID->885896536,ExpressionUUID->"82e3f772-6a4a-424b-819d-88dbeb71b051"]
 }, Open  ]]
 }, Open  ]],
 
@@ -24938,60 +24944,64 @@ Cell[TextData[{
 Cell[CellGroupData[{
 
 Cell[BoxData[
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{"3", ",", "\[FormalCapitalB]", ",", "Times"}], "]"}]], "Input",
  CellChangeTimes->{{3.9688687746508827`*^9, 3.9688687753105545`*^9}, {
   3.9688689495355186`*^9, 3.968868949787361*^9}},
- CellLabel->"In[104]:=",
+ CellLabel->"In[271]:=",
  CellID->463828906,ExpressionUUID->"9f251464-2288-ad42-8a0d-fafabd210352"],
 
 Cell[BoxData[
  TemplateBox[{
   "NonCommutativeAlgebra", "ncalg", 
    "\"\\!\\(\\*RowBox[{\\\"Times\\\"}]\\) is not a valid \
-NonCommutativeAlgebra specification.\"", 2, 104, 47, 28392827321211874527, 
+NonCommutativeAlgebra specification.\"", 2, 271, 19, 28400619170766245565, 
    "Local"},
   "MessageTemplate",
   BaseStyle->"MSG"]], "Message",
- CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502821903`*^9},
- CellLabel->"During evaluation of In[104]:=",
- CellID->384771309,ExpressionUUID->"e472ce35-5baf-c54b-9883-f9bfe8505394"],
+ CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502821903`*^9, 
+  3.970057288797886*^9},
+ CellLabel->"During evaluation of In[271]:=",
+ CellID->836929360,ExpressionUUID->"a8004359-5ed8-5149-bd9f-7bc263702fac"],
 
 Cell[BoxData[
  TemplateBox[{
   "NonCommutativeExpand", "ncalg", 
    "\"\\!\\(\\*RowBox[{\\\"NonCommutativeAlgebra\\\", \\\"[\\\", \
 \\\"Times\\\", \\\"]\\\"}]\\) is not a valid NonCommutativeAlgebra \
-specification.\"", 2, 104, 48, 28392827321211874527, "Local"},
+specification.\"", 2, 271, 20, 28400619170766245565, "Local"},
   "MessageTemplate",
   BaseStyle->"MSG"]], "Message",
- CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502867203`*^9},
- CellLabel->"During evaluation of In[104]:=",
- CellID->259478736,ExpressionUUID->"32c114a3-6985-5d44-8723-766bca52558a"],
+ CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502821903`*^9, 
+  3.970057288826172*^9},
+ CellLabel->"During evaluation of In[271]:=",
+ CellID->12291230,ExpressionUUID->"cb81a438-9354-4d42-b767-a8ffd85ae866"],
 
 Cell[BoxData[
  TemplateBox[{
   "NonCommutativeAlgebra", "ncalg", 
    "\"\\!\\(\\*RowBox[{\\\"Times\\\"}]\\) is not a valid \
-NonCommutativeAlgebra specification.\"", 2, 104, 49, 28392827321211874527, 
+NonCommutativeAlgebra specification.\"", 2, 271, 21, 28400619170766245565, 
    "Local"},
   "MessageTemplate",
   BaseStyle->"MSG"]], "Message",
- CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502951736`*^9},
- CellLabel->"During evaluation of In[104]:=",
- CellID->739803632,ExpressionUUID->"fadc0977-4484-b547-839e-35cfb613abba"],
+ CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502821903`*^9, 
+  3.970057288866064*^9},
+ CellLabel->"During evaluation of In[271]:=",
+ CellID->636358125,ExpressionUUID->"250a3455-4b00-9f4a-8b04-9aa26bf9d49b"],
 
 Cell[BoxData[
  TemplateBox[{
   "NonCommutativeExpand", "ncalg", 
    "\"\\!\\(\\*RowBox[{\\\"NonCommutativeAlgebra\\\", \\\"[\\\", \
 \\\"Times\\\", \\\"]\\\"}]\\) is not a valid NonCommutativeAlgebra \
-specification.\"", 2, 104, 50, 28392827321211874527, "Local"},
+specification.\"", 2, 271, 22, 28400619170766245565, "Local"},
   "MessageTemplate",
   BaseStyle->"MSG"]], "Message",
- CellChangeTimes->{3.9688687756279316`*^9, 3.968868950306036*^9},
- CellLabel->"During evaluation of In[104]:=",
- CellID->487284905,ExpressionUUID->"c72d9cbf-74be-a845-8715-d9b5e13927cb"],
+ CellChangeTimes->{3.9688687756279316`*^9, 3.9688689502821903`*^9, 
+  3.970057288871847*^9},
+ CellLabel->"During evaluation of In[271]:=",
+ CellID->193281470,ExpressionUUID->"b8920b08-4ba3-eb45-8ceb-a43d0cb5faa5"],
 
 Cell[BoxData[
  RowBox[{
@@ -25023,9 +25033,10 @@ Cell[BoxData[
       SubscriptBox["\[FormalT]", "2"]}], 
      RowBox[{"\[DifferentialD]", 
       SubscriptBox["\[FormalT]", "1"]}]}]}]}]}]], "Output",
- CellChangeTimes->{3.968868775673321*^9, 3.9688689503274326`*^9},
- CellLabel->"Out[104]=",
- CellID->373882889,ExpressionUUID->"be371033-f169-1642-a3e5-182ec033387b"]
+ CellChangeTimes->{3.968868775673321*^9, 3.9688689503274326`*^9, 
+  3.970057288876337*^9},
+ CellLabel->"Out[271]=",
+ CellID->236858196,ExpressionUUID->"8bf7d71c-5f28-774c-8e2b-75324a0d63e3"]
 }, Open  ]],
 
 Cell["\<\
@@ -25045,10 +25056,10 @@ Cell[BoxData[{
     RowBox[{"<|", 
      RowBox[{"\"\<Multiplication\>\"", "->", "Times"}], "|>"}], "]"}]}], 
   ";"}], "\[IndentingNewLine]", 
- RowBox[{"DysonTerms", "[", 
+ RowBox[{"DysonSeriesTerm", "[", 
   RowBox[{"3", ",", "\[FormalCapitalB]", ",", "alg"}], "]"}]}], "Input",
  CellChangeTimes->{{3.9688689155744534`*^9, 3.9688689622550125`*^9}},
- CellLabel->"In[105]:=",
+ CellLabel->"In[272]:=",
  CellID->7122314,ExpressionUUID->"7efa599c-bf22-d048-9c8e-5b9da73492fd"],
 
 Cell[BoxData[
@@ -25074,9 +25085,9 @@ Cell[BoxData[
       SubscriptBox["\[FormalT]", "2"]}], 
      RowBox[{"\[DifferentialD]", 
       SubscriptBox["\[FormalT]", "1"]}]}]}]}]}]], "Output",
- CellChangeTimes->{3.968868962575918*^9},
- CellLabel->"Out[106]=",
- CellID->375526628,ExpressionUUID->"525676f8-5fd1-5746-ab85-73fe492c89c6"]
+ CellChangeTimes->{3.968868962575918*^9, 3.970057292304241*^9},
+ CellLabel->"Out[273]=",
+ CellID->307129110,ExpressionUUID->"7bc562db-7fb1-de45-80d5-2eea93676b86"]
 }, Open  ]],
 
 Cell[BoxData[
@@ -26356,7 +26367,7 @@ WyabbVsUI30dbWyR5mC4Y6npzAQV7A7CHW8e0ORJGTUV01ufdzMGR2GbTwVmCj3d8A9cd0NNHoiRcl\
   "StatusMessage" -> "", "SubmissionReviewData" -> {"Review" -> False}, 
   "AutoUpdate" -> True},
 CreateCellID->True,
-FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 22, 2025)",
+FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 8, 2025)",
 StyleDefinitions->Notebook[{
    Cell[
     StyleData[StyleDefinitions -> "Default.nb"]], 
@@ -29229,7 +29240,7 @@ later."]]]]],
    Cell[
     StyleData["DockedCell"], CellFrameColor -> GrayLevel[0.75], Background -> 
     GrayLevel[0.9]]}, Visible -> False, FrontEndVersion -> 
-  "14.3 for Microsoft Windows (64-bit) (July 22, 2025)", StyleDefinitions -> 
+  "14.3 for Microsoft Windows (64-bit) (July 8, 2025)", StyleDefinitions -> 
   "PrivateStylesheetFormatting.nb"],
 ExpressionUUID->"55899678-508a-2d4a-a1c4-48b088a8b81f"
 ]
