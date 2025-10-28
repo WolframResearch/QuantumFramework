@@ -28,6 +28,7 @@ PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["MatrixPartialTrace"]
 PackageExport["EinsteinSummation"]
+PackageExport["HadamardProduct"]
 PackageExport["ActivateTensor"]
 PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvalues"]
@@ -410,28 +411,39 @@ EinsteinSummation[s_String, arrays_] := EinsteinSummation[
 	arrays
 ]
 
-hadamardProduct[indices_, arrays_] := Block[{
+HadamardProduct[indices_, arrays_] := Enclose @ Block[{
     oldIndices, newIndices, dims, posIndex
 },
+    ConfirmAssert[Length /@ indices == tensorRank /@ arrays];
     oldIndices = Block[{i = 0},
-        FoldPairList[With[{new = Replace[#2, Append[#1, _ :> i++], 1]}, {new, Thread[#2 -> new]}] &, {}, indices]
+        FoldPairList[
+            With[{is = FoldPairList[With[{j = Lookup[#1, #2, i++]}, {j, KeyDrop[#1, {#2}]}] &, #1, #2]}, {is, <|#1, Thread[#2 -> is]|>}] &,
+            <||>,
+            indices
+        ]
     ];
-    dims = DeleteDuplicatesBy[Catenate @ MapThread[Thread[#1 -> tensorDimensions[#2]] &, {oldIndices, arrays}], First];
-    newIndices = (is |-> Select[Keys[dims], MemberQ[is, #] &]) /@ oldIndices;
+    dims = GroupBy[Catenate[MapThread[Thread[#1 -> tensorDimensions[#2]] &, {oldIndices, arrays}]], First -> Last, Max];
+    newIndices = Map[old |-> With[{new = Select[Keys[dims], MemberQ[old, #] &]}, Join[new, Drop[old, UpTo[Length[new]]]]], oldIndices];
     posIndex = First /@ PositionIndex[Keys[dims]];
     {
         Lookup[AssociationThread[Catenate[oldIndices], Catenate[indices]], Keys[dims]],
         Times @@ MapThread[
             If[ TensorQ[#3],
-                ArrayPad[
+                Fold[
+                    ArrayPad[
+                        #1,
+                        Append[ConstantArray[{0, 0}, #2[[1]]], {0, #2[[2]] - #2[[3]]}],
+                        If[#2[[3]] == 1, "Fixed", 1]
+                    ] &,
                     #,
-                    {0, #} & /@ (Values[dims] - tensorDimensions[#]),
-                    "Fixed"
-                ] & @ ArrayReshape[
-                    Transpose[#3, FindPermutation[#1, #2]],
-                    ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> tensorDimensions[#3]]]
+                    Reverse @ Thread[{Range[0, Length[dims] - 1], Values[dims], tensorDimensions[#]}]
+                ] & @ With[{perm = FindPermutation[#1, #2]},
+                    ArrayReshape[
+                        Transpose[#3, perm],
+                        ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Permute[tensorDimensions[#3], perm]]]
+                    ]
                 ],
-                ArraySymbol[#3, Values[dims]]
+                ArraySymbol[Transpose[#3, FindPermutation[#1, #2]], Values[dims]]
             ] &,
             {oldIndices, newIndices, arrays}
         ]
@@ -464,7 +476,7 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
     If[ AnyTrue[out, Count[in, {___, #, ___}] > 1 &],
         nonFreePos = Catenate @ Position[newIn, _ ? (ContainsAny[out]), {1}, Heads -> False];
         freePos = Complement[Range[Length[newIn]], nonFreePos];
-        {nonFreeIn, nonFreeArray} = hadamardProduct[newIn[[nonFreePos]], newArrays[[nonFreePos]]];
+        {nonFreeIn, nonFreeArray} = Confirm @ HadamardProduct[newIn[[nonFreePos]], newArrays[[nonFreePos]]];
         newArrays = Prepend[newArrays[[freePos]], nonFreeArray];
         newIn = Prepend[newIn[[freePos]], nonFreeIn]
     ];
