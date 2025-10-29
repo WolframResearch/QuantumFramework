@@ -926,9 +926,10 @@ HamiltonianMixedOperator[h_QuantumOperator] := Block[{d = h["Dimension"], H},
     QuantumOperator[QuantumState[ArrayReshape[Transpose[(H - QuantumOperator[Transpose[H], {2}])["Tensor"], 2 <-> 3], {d, d}], h["Dimension"]], h["Order"], h["Basis"]]
 ]
 
-LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
+LindbladMixedOperator[l_QuantumOperator, ldg : _QuantumOperator | None : None] := Block[{d = l["Dimension"], L, Ldg, LL},
     L = QuantumOperator[l, {1}, QuditBasis[Sqrt[d]]];
-    LL = L["Dagger"] @ L;
+    Ldg = If[ldg === None, L, QuantumOperator[ldg, {1}, QuditBasis[Sqrt[d]]]];
+    LL = Ldg["Dagger"] @ L;
     QuantumOperator[
         QuantumState[
             ArrayReshape[Transpose[(L @ QuantumOperator[L["Conjugate"], {2}] - (LL + QuantumOperator[Transpose[LL], {2}]) / 2)["Tensor"], 2 <-> 3], {d, d}],
@@ -942,7 +943,14 @@ LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
 QuantumOperator[{"Liouvillian", H_, Ls : _ : {}, Gammas : _ : {}}, opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]]},
 	ConfirmAssert[SameQ @@ Join[If[h === None, {}, {h["OutputDimension"], h["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]], "Hamiltonian and Lindblad operators must have the same dimensions"];
     QuantumOperator[
-        If[H === None, 0, HamiltonianMixedOperator[h] / I] + PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
+        If[H === None, 0, HamiltonianMixedOperator[h] / I] +
+            Which[
+                VectorQ[gammas],
+                    PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
+                MatrixQ[gammas],
+                    Total[MapThread[If[#1 == 0, 0, LindbladMixedOperator @@ #2] &, {PadRight[gammas, {Length[ls], Length[ls]}, 1], Outer[List, ls, ls, 1]}, 2], 2],
+                True, Confirm[Failure["InvalidGammas", <|"MessageTemplate" -> "Gammas must be a vector or matrix."|>]]
+            ],
         opts, "Label" -> "Liouvillian"
     ]
 ]
