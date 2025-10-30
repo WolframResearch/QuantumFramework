@@ -932,7 +932,7 @@ LindbladMixedOperator[l_QuantumOperator, ldg : _QuantumOperator | None : None] :
     LL = Ldg["Dagger"] @ L;
     QuantumOperator[
         QuantumState[
-            ArrayReshape[Transpose[(L @ QuantumOperator[L["Conjugate"], {2}] - (LL + QuantumOperator[Transpose[LL], {2}]) / 2)["Tensor"], 2 <-> 3], {d, d}],
+            ArrayReshape[Transpose[(L @ QuantumOperator[Ldg["Conjugate"], {2}] - (LL + QuantumOperator[Transpose[LL], {2}]) / 2)["Tensor"], 2 <-> 3], {d, d}],
             l["Dimension"]
         ],
         l["Order"],
