@@ -948,7 +948,7 @@ QuantumOperator[{"Liouvillian", H_, Ls : _ : {}, Gammas : _ : {}}, opts___] := E
                 VectorQ[gammas],
                     PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
                 MatrixQ[gammas],
-                    Total[MapThread[If[#1 == 0, 0, LindbladMixedOperator @@ #2] &, {PadRight[gammas, {Length[ls], Length[ls]}, 1], Outer[List, ls, ls, 1]}, 2], 2],
+                    Total[MapThread[If[#1 == 0, 0, #1 * LindbladMixedOperator @@ #2] &, {PadRight[gammas, {Length[ls], Length[ls]}, 1], Outer[List, ls, ls, 1]}, 2], 2],
                 True, Confirm[Failure["InvalidGammas", <|"MessageTemplate" -> "Gammas must be a vector or matrix."|>]]
             ],
         opts, "Label" -> "Liouvillian"
