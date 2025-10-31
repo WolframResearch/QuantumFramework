@@ -10,10 +10,8 @@ QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuit
 QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated[qco]], format_] := Enclose[
 BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
-    Tooltip[
+    If[qco["Label"] === None, #, Tooltip[#, qco["Label"]]] & @
         If[qco["GateCount"] <= 32, qco["Icon"], QuantumCircuitOperator[{{"Fourier", 3}}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]],
-        qco["Label"]
-    ],
     {{}},
     {
         BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}],

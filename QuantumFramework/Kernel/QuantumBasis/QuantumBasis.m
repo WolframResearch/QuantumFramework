@@ -182,6 +182,7 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
 
 QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Options"]]
 
+QuantumBasis[qs_QuantumState] := qs["Basis"]
 
 (* equality *)
 

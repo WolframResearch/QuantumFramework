@@ -31,7 +31,7 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]], for
         RawBoxes @ $SparseArrayBox
     ]
 },
-    BoxForm`ArrangeSummaryBox["QuantumBasis", qb, Tooltip[icon, qb["Label"]],
+    BoxForm`ArrangeSummaryBox["QuantumBasis", qb, If[qb["Label"] === None, icon, Tooltip[icon, qb["Label"]]],
     {
         {
             BoxForm`SummaryItem[{"Picture: ", qb["Picture"]}],
