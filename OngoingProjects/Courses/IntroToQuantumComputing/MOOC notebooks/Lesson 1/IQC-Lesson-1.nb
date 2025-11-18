@@ -1,0 +1,2472 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    108886,       2464]
+NotebookOptionsPosition[     46909,       1097]
+NotebookOutlinePosition[    100554,       2328]
+CellTagsIndexPosition[    100475,       2323]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["", "SlideShowNavigationBar", "FirstSlide",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"96f94f79-2e50-4780-9feb-98e403d9ee84"],
+
+Cell[BoxData[
+ GraphicsBox[
+  {Thickness[0.0022222222222222222`], 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+      3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+     1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+     3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0,
+      1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+     3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1,
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}}}, CompressedData["
+1:eJxtlTFo20AUhtUGAoVsgUC3dvEcEBQ8xciOQsAgpZ4sbCHrUpEh0EHQ2ZOh
+kM1LtBkKmrIFAtkEgUBBQ8AQ8ObJEMiWKZAhL/p/YZ2wwZy+e/+9+9+7s/w9
+/P3z15ZhGJ/keyrfz0bxCaKboCXjWTQ5+Rhb5nT0MWb5zhH4X8FB1LDB1wXL
+0yHGjPGog3U511+0Mf9Izi3olyPkMQueJU8Fj5OFhfkXbX2Wv5G7Hei/hPR3
+iPx7IeYX5EZIX/R7R33XQfw+pF+NZT8Hef4znjr0XebTOIhWDuYfyNsu9pvT
+z1eNxVct3qzFbZf9Knjf7GksTzWeubqfexd5b0t/1KfUGyeI/y34Id/heSuN
+xddGlifyk9rEpV581Pimxqliv7g+UVV/cg4K868u5sdc/8x6/jC+YP3nqlq/
+1EP9FfvRZ3zCfK6q9nOWHCv022S8pZDnxcG4W/bvAByPdO4FZN6niV+Ni2JY
+ZTkfD/669H/lYf+Y+8/IU9Yz9dg31j/xoMsYj6mfc33A+JL5u161f/K786r9
+lXtKPfovH+63TV72dc40Fn8b+TJJqA+Gm7jUy+9YYznHQS3foOpXzntQq4/6
+8v43qU80Xp83uOz/Wt8sz5/5Guy3PUB/d7X91vejx/wZ3x8J61nZ4Nsh6+T7
+aM77gPdnlj8PMR93WLePMW1D963gcbSyoDN5v1oW/fn0Y2G/PuNZm3l9+uL7
++YL6mO/L1GddNvvIuHkE/qH9P2j/F++mXnJA
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{1, 4, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+      3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+     1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}}, {{1, 4, 3}, {1, 3,
+      3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+     1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}}}, CompressedData["
+1:eJxtVD1IHFEQfkQIBFLYCjYhIARswlWCmKfn3+np7dnZSXj73hUHEWwtrkqV
+QhCE7bYSAnap0r3K6hVWgp1wIAgphICQzrmdb3LzQhaW4dv5n/lm333+clDO
+GGNe0fsRkp4j7weWZcdm+GFrIuvqsMHGjDYn0rbawHaD9R+AzTr7vR6w3e81
+1t+FiYzpLfD3Bo/8wir7HQe2P7GIFxDP8vexB/7E8S+ARyscdznDxtyXuf5b
+mftvCraQYm9Zf+10fXVVOV1/TEOX99dxun/bajk9n5jmnZ6fMbOO8/B8BVP/
+HY3p2dX+tIeujk917en8NOd9XR/F7+n6aa+F7o/sC4430/R/kxb7iAc87HMd
+Z8BXfbYfN3jgr6G3XmPK9w9+BL7sc32LIY9/HHT+mK6Crk/4I/XX1RvhZw/x
+Brp/4ed0PszfmLpdxBF+7mgs/KdK3P8w7X+bv98CJ9zDGPuKGyyf4H8p9wB+
+xTbbvxf+tTE/YLuGvCXb/VhleV6iftxLbPDIP+Be/og98JLXOKbTDJP02p/u
+xev41GfI87eCrs+YQu6zzfbDoPujyEH3T/cnevwvKtkv7qGW/8O2xtP51+K/
+o/3p6er45L+n89fVnNyD6Ht5/bGn+6O5Ffx9Fvm/Fno+dfWz0PO7Sb8KPV/a
+M/i+lOEj/1xqLPsTf9mvxJf9T/P/5QfshT9c/5RfBv09Od2/8FPmI/yV+Qm/
+Zb4Z/18AiE9a0w==
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+      3}, {1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+     0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1,
+      3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+     0}}}, CompressedData["
+1:eJxtkz1LA0EQhlcFQbAQUqVTAqkPFlIJuUvQemMXsDgEF+8DFAKCYJFKEOxS
+bZcqlV0qweJ+wBWBgGAXEALW16ZwvXkXd4IHy96z887szNzcydXtxfWeEGLH
+rq5du6J+Qrm8Cem1G3o81rPwd5+ab8ZFuWEsxFHicyhbCe1zsExIV4D7pDef
+8Fewi4jiXyJeu+ZYa+iHEenuwAb2excP/o+4X/Z8tvkxXpSHyudYnyuq96Hm
+QI6Uf18gJ7An4Lny812UpeL1rJRfbyArxfshBn6/Yr0Pbrj8BtAxdt/Dsfte
+22yVA4r7kf7Hf/ELxkX5ynhqzBY/p36+tv+pX4/tT+rXa/sD/dr1B/alQt9T
+8nuD/tTlC3sHPIZ/AP2QsRDHjMd6jXl9yXyO9Szj9veM+lZhHhdkN82Izr8y
+Og/BFfQjzNsGPI8or4McOugbYJrHqWnmqKeHvHOKU/ZI18qh61O+7Zx2De4g
+3uiM9gnjWD8hPv+fa/4BI1HiVA==
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], 
+    FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+     1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+     0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0,
+      1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 
+     0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1,
+      3, 3}, {1, 3, 3}, {0, 1, 0}}}, CompressedData["
+1:eJxtlL9Lw0AUx68KguAgCEIRhKIIboVMTl7qoiD2qovdgmC2mExCt4Dg5CAI
+4m2BgiA4FJwKHQJOQoaAU8HBP6BDoZObZ9/38F3pwXF88n7ce9/jpXYRn14u
+CiEqZh+YvSCmS3o3V9KcZTFSknGmh0d/ZxCuJ/NYiPSQ+89yGj43OEvPa1D8
+Ldn10Ke4e7D2yf4IbvsU10W+Hfj3cJ+Ycl4MbD5JXMCeg79w/5uk72NbH1jE
+nE1/sWtXc9msfdJlN5rH//7SYemdORyE4QxfR7xeo1fE+zH6ROgT+brwn+C+
+HuXTVZ/q6SNeQs93cAr7h80PfUvkX2lwNv4OZ7qqOJfFsUJdsHcUvy/TGvYB
+uK94vXXvU/F+hPhWvN+6N1Fcj0z/KK6XWS2uZxAutbjelu17WLbvNctPWtv4
+hLMQ55iH9gn8Hc6L7YTOuybFb9n5adJZS6ifNdS/Cfse+t+w+WC389eBXquI
+f1D0fTkh/V/BFcxnDv9xzPU18xBzfc37xBQ/QvyLw87/4Rfi3/f7
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{1, 4, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1,
+       0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {
+      0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+      1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+      1, 3, 3}, {1, 3, 3}, {0, 1, 0}}, {{0, 2, 0}, {1, 3, 3}, {1, 3, 3}, {1, 
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}}}, {CompressedData["
+1:eJxtlD9IHEEUxgeLVEcqm2sEmzSBIEyaEPBmr7p/6l4MQSHIonHhmrh7abTT
+xkaxCsHpNgRsLLUJhLCVEFhFCAREi0BADFxx4Sq7jPe+h2/kBpbhNzPvzfe+
+2ZnJ5bVXq2NKqUX33fWuZbbTNa7ftBdVMxxZB5eHHMXbQ86L3YD6j0M2WgfU
+f+F4Q3xEHB8Yij/xOLM/RrJrFcr/zePMfvbY6B3WV5F6ldaIf0d82sL8AtZb
+xDex/3WF9E2DnxiKfw6OUc9T1HsEvZOsJyAuY/5DQPkegwfgTyn8qlH+1kh2
+O1Yl3/s/i/kcfs/zeuR/AzY4n7cp9SWsX8F+A+jvYL4Ap5wfvJH69W6RHpyX
+899j9z947CJGssL5OU5G8X3+Q4/z4tjjKP7+gE8SqTeKzxJZTxT/SmS9eXGV
+SD+M/pPA74DibhLfz14i/Vaqz/nh7wD5S1XJfJ7M7j8JJZ8XrZDG/2F+I5T7
+ZdZi/i/4ayj1TumfoaxHqd+hrHdKD0LpR2ZvQ+mXa23pZxQ/aku/mfk8mPm8
+HvK+tci3l0o2+tLjvBjH/YnapOtFl/zoQd9SV/rh/s8ujR/MSc7sxYzP5Rla
+957vY4s4Rvx108+/2CQ9rzlfg3TVOL5B/Uu8f6UGxT/j96BOPMHrwXz/dR0+
+83tQI+7z/avRvuL9/Q8PwFRN
+      "], CompressedData["
+1:eJxTTMoPSmViYGCQBWIQDQQJaX6FDmBWgyeIPnCmB4WfkLYMTX4PmL9g5kyo
+/Dmo/AFPCP0AzHcw/gxV/wbKN/aCyP8ohNrjBTGHsQhizjMon7MIQkd6Q8T5
+YPLeEHOEiyB0sQ/EHJEiCM3ji8o/g8bv8YOYKwg1T80fqg9q3mZ/iPs4oPZL
+BkD4DGC+gXFwAET9F6j/KwMg9MtCaDgFQMy5DQsPqPzJQoj+y1DzdkDVP4Oq
+XwzmXzjzBqq+E4V/4IwPVj4ifpDiDwD9RnX7
+      "]}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+       3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {
+      1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 
+      3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+      0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 
+      0}, {0, 1, 0}}, {{1, 4, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+      3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {CompressedData["
+1:eJxtk7FKBDEQhqPdwTU24oIIhyIKIsiCIBYmUbY80EKwWwVTKribQhQ5sbEQ
+wTJd4OB68RDLa4V7AV/AWvAFzO78wWTZwDJ8yT9/JpNN7+zy6HyWMbbnviq6
+wdNhwV20Jsko3tfM03S/irm6q9mNmifTW/BEku6moPknSfnXNQ/MScxqNWI3
+Inb5ItzP7S9I9wj+5aR/8ftzihb+I04+44it+WzlqgsUf67a+F8/08jvNHgO
+9b2hnoWovlwt4XxTTrpl5H9Dv4Z+JYJ0G8jngvy3wAP0Z9v7C/LbhX9XIg/+
+StL8Afy/0O9Oib4dkl+/wfOa8v19JRr5qG8RbFBfT1MdBdZXdFz/ug7Pl6tN
+rDPUn+qwH9bs6LBfTqHjfmY67Lerv8HHEVtz2soM952ri7KN/f3y9CHiXI0i
+ZuyjDM/n2f2vorEuQ3YKSX7v8PP3NS4p0ntydUNP782aV++P/GfouxnND4s2
+rt/3H69t4mk=
+      "], CompressedData["
+1:eJxTTMoPSmViYGAQA2IQDQQHzriUOIBpHx8Q7WBsDeYvmCnpC+Ebg/kJac+g
+fG2o/Ew/CF8Zpt8fQsuA+UAQAKElwHwD4+AAiDliUPPUAiD6hVHUL5gpWAIR
+3+wPUccHVZ/mDxHnhtrH4w/RxwHVf8APIs4C1V/sBzGPEeYfqPyfYqh6Xwj9
+oxhqvi9E/gtUnsEXIv6uGCLe4wOht0DlG9wh/JoSVD5SeAIAy/FP8g==
+      "]}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+      3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+     1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+     0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0,
+      1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 
+     0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1,
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+     0}}}, CompressedData["
+1:eJxtlLFLHEEUxicKVvkHbARBhECKgwUrwdk7ESSHzHlVSLMILgYEr9m9TXdi
+e12aDFhsJYIiiE1CmgUhCG5xIAhiYyFB8TgUKzvHm++5b5ZbWGZ/8968ee+b
+Nzu9trW6Pi6E+GDeNfOOieEjvYO2tJ8LknEn3JNvYxAeOSzE7xJnJT5r2zgn
+4B7iZ4h3OeQsz6X1u4b/M/xvYP/o2/EW66Vvxztwx7frHig+/Pu0vmr3GyC/
+0OGK91O9jamedupP9VPMOctnhtzLu4pzR+uqw+Es4s/GqM+38T6Bu8jvM7iO
+eiqIN+nb9XMx1yPL5yke9KrFXF/pfYm5/tJrUn7gbw4HYehwqr+P5KL+3WgU
+F+e973Cqjx2W3t8Sn0Zu/ueIn4EvIl5vqq8irofpj4jrZfoD6yX0vgd3qB8o
+PvR+RHzbH8TG3+FUTyrOvbyurH4D2H8ovl+qNez/wX8Uz7fiXShej5lXvN6K
+96y4Hql+UVwv8zS4nkE40eB6E9N5ENN5lfmX1g07b/uh4Kk25mvIr83t5isZ
+xUX8rsPS23HY6OawEK2E12f2TXj9Ziax+veh31fYr6BPE/H+Qf8V+B/Cfxnc
+hX0JvIn1NewvHTb5OUz3/Z1x37N8MbEj3fdlMN33Orju83ypf6meor8Digfe
+gJ3+py3sT/cvofxwX7YdpvMgpvMqsyj9/4f8CjTreeM=
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{1, 4, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1,
+      0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {
+     0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+     3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1,
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {1,
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 
+     3}, {1, 3, 3}, {1, 3, 3}}}, CompressedData["
+1:eJxtlT9oE1Ecx19VnEoXFwsOunQsgTd1qXeXxCnDRboEOhxSD8RAlYCYu1Aq
+QqcOgosHRQKF4FCEEigtOqQIXbyhkMUgiFAoCBmEQCGL+Gt+3x+8X8hBePm8
+7+/v+3P34Mnm46c3jTFz9Nuk3w0zeaL4V+LRuB3Hq9ejZ78o7uV7zFk2YfoH
+XnzI+obo4Ar8l7zrsZ2tgDsTjuIl0X2Odzdhv9xnfUHiBTx/K+H5uMj2JuG4
+tZLLnm2Utb4YunyeV0KO86/JejPkcQzOoF+BT+D/d8IF24f9nybP/w457wX0
+Efgn/MfgPuxNlfl7k/PcrrLdqWJjjhX38oOZ/CHLqjz/OZnFYu/Z/UTnyxKd
+753iKN5J3Hp7eStx+4niV1jPIdbnBfQB1ucZ4p2F7L8B+wPYR+Bd6OvgOvxr
+yO8ppvqm9bLLtP8lNx79K7r5PWvBdTmPgdsP6QGPb3H+Br67PjQDbkt+n/Mf
+yn3w2f8b4o08tvsh8TzOP1RMfaVav5e6/lG8zDruSzvzYV9DPSH0jo/+Ux7n
+A+wH4jXAL2F/GbD/65Tz8P2K4i3wZZHt36Tov+Qy3eOyywV7J9T6I+z3NvQG
+7kMKfh+6+Qu2G7r1nec57J+nPD+Q8wR9KOcH/iPwGuzH4Arql/tXVEzvJ8Wy
+3tNM9eI+zLdmsdjT09L+Vyoe7f9UPReqXupT9UPvD9kP9JND7+M+niFeD/6n
+sO/A/it4B/qJ7Df8j5B/RTE9iqnPssu0/zgPh9AreD9/Au8GbPcRnMt9wnm0
+eN9vgbs4/3XRwWs47/x9kf2S748x97le211lfQ7nm79f6vv2H6WjrZs=
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     37.099998474121094`, 33.400001525878906`}, {42., 25.}, {42., 
+     33.900001525878906`}, {36.900001525878906`, 41.400001525878906`}, {
+     37.099998474121094`, 33.400001525878906`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     31.899999618530273`, 56.900001525878906`}, {25.5, 48.599998474121094`}, {
+     35.5, 45.599998474121094`}, {41.5, 53.70000076293945}, {
+     31.899999618530273`, 56.900001525878906`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     26.100000381469727`, 40.400001525878906`}, {24.899999618530273`, 
+     29.300003051757812`}, {35.20000076293945, 33.80000305175781}, {35., 
+     43.29999923706055}, {26.100000381469727`, 40.400001525878906`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     43., 52.599998474121094`}, {37.099998474121094`, 44.5}, {43., 
+     35.900001525878906`}, {48.900001525878906`, 44.5}, {43., 
+     52.599998474121094`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     53.79999923706055, 69.20000076293945}, {43.900001525878906`, 
+     65.70000076293945}, {43.900001525878906`, 55.5}, {53.5, 
+     58.70000076293945}, {53.79999923706055, 69.20000076293945}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     51., 43.29999923706055}, {50.79999923706055, 33.80000305175781}, {61., 
+     29.300003051757812`}, {59.900001525878906`, 40.400001525878906`}, {51., 
+     43.29999923706055}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     54.099998474121094`, 56.900001525878906`}, {44.5, 53.70000076293945}, {
+     50.400001525878906`, 45.599998474121094`}, {60.5, 48.599998474121094`}, {
+     54.099998474121094`, 56.900001525878906`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     42., 55.5}, {42., 65.70000076293945}, {32.20000076293945, 
+     69.20000076293945}, {32.5, 58.70000076293945}, {42., 55.5}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     40.20000076293945, 68.29999923706055}, {35.599998474121094`, 
+     74.29999923706055}, {26.700000762939453`, 78.20000076293945}, {
+     31.799999237060547`, 71.29999923706055}, {40.20000076293945, 
+     68.29999923706055}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     30.5, 61.099998474121094`}, {30.299999237060547`, 70.20000076293945}, {
+     25.100000381469727`, 77.10000038146973}, {26.100000381469727`, 
+     67.4000015258789}, {30.5, 61.099998474121094`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     28.799999237060547`, 56.}, {21.5, 53.29999923706055}, {
+     15.100000381469727`, 46.099998474121094`}, {23.299999237060547`, 
+     48.900001525878906`}, {28.799999237060547`, 56.}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     30.100000381469727`, 58.5}, {24.799999237060547`, 66.}, {
+     13.800000190734863`, 63.599998474121094`}, {21.299999237060547`, 
+     55.20000076293945}, {30.100000381469727`, 58.5}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     32.70000076293945, 44.5}, {23.899999618530273`, 47.099998474121094`}, {
+     15.5, 44.20000076293945}, {25.100000381469727`, 42.099998474121094`}, {
+     32.70000076293945, 44.5}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], 
+    FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     43.900001525878906`, 25.}, {48.900001525878906`, 33.400001525878906`}, {
+     49., 41.400001525878906`}, {43.900001525878906`, 33.900001525878906`}, {
+     43.900001525878906`, 25.}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     48.70000076293945, 75.10000038146973}, {43., 84.79999923706055}, {
+     37.29999923706055, 75.10000038146973}, {43., 67.9000015258789}, {
+     48.70000076293945, 75.10000038146973}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     53.29999923706055, 44.5}, {60.79999923706055, 42.099998474121094`}, {
+     70.5, 44.20000076293945}, {62.099998474121094`, 47.099998474121094`}, {
+     53.29999923706055, 44.5}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     54.20000076293945, 71.29999923706055}, {59.29999923706055, 
+     78.10000038146973}, {50.400001525878906`, 74.29999923706055}, {
+     45.70000076293945, 68.29999923706055}, {54.20000076293945, 
+     71.29999923706055}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     57.20000076293945, 56.}, {62.70000076293945, 48.900001525878906`}, {
+     70.9000015258789, 46.099998474121094`}, {64.5, 53.29999923706055}, {
+     57.20000076293945, 56.}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     64.69999694824219, 55.20000076293945}, {72.19999694824219, 
+     63.599998474121094`}, {61.20000076293945, 66.}, {55.900001525878906`, 
+     58.5}, {64.69999694824219, 55.20000076293945}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, {{{
+     55.5, 61.099998474121094`}, {59.900001525878906`, 67.4000015258789}, {
+     60.900001525878906`, 77.10000038146973}, {55.70000076293945, 
+     70.20000076293945}, {55.5, 61.099998474121094`}}}]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{0, 2, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3,
+       3}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}}, {{0, 2, 0}, {0, 1, 0}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {
+      0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}, {0, 1, 0}}}, CompressedData["
+1:eJxTTMoPSmVmYGBgAmJRKA0BIg5gKiHUAYnfMHOmHYh2MDbWA4sbG+uD6AUz
+Ix2gfCUQfeAMjyuYn5YmBlXvCjVHDKoewp81UxQiXwzhmxiLQuRnoslvRtN/
+E8V8oHovZPuB6gOR3Qe0PwTN/SHI/lsw8ydEPYNCOIQv6QvhO0RA6AZXZP6B
+M2eskflA83SQ9aOHH9A8TxB94QxPMNS9/lBzwe5ISHvmB6INjD8HQMx/EwTh
+G0P5PQFQc7yR5YHucEXWf+CMjwuy+Q1paVbI9oOciuwfYHgYQ/U7IssDw88M
+zD/rA9NvAfWvC0R9mgqEf8AVqt4YYj+PN7L8hTM6Acj6L5x5E4BiPsL/jhD/
+CgejhrdCGEb4AQAnYISO
+     "]]}, 
+   {FaceForm[{RGBColor[
+    0.09019607843137255, 0.1607843137254902, 0.25882352941176473`], Opacity[
+    1.]}], FilledCurveBox[{{{1, 4, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1,
+       0}, {0, 1, 0}, {1, 3, 3}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {0, 1, 0}, {
+      0, 1, 0}, {0, 1, 0}, {1, 3, 3}}, {{0, 2, 0}, {0, 1, 0}, {1, 3, 3}, {1, 
+      3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {0, 1, 0}, {0, 1, 
+      0}, {0, 1, 0}, {0, 1, 0}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {1, 3, 3}, {
+      0, 1, 0}}}, {CompressedData["
+1:eJxTTMoPSmViYGCQBmIQDQQOxsIhDkA6I21ZmAOYPzkQRKeluUU4gFU0+IBo
+Y2PjSCjfFZXPYIvMT0hL0wfRZ874gPUfOHNGDNn8BTNnCkLkc8Kg8hwg2sTY
+OAxqHgOInjHzZyjUvG/2YP5NFD7QHbZQ/X/A/LNnbKD6NZHphLRndmA+1B0O
+xsUuyPbA/MNgYPzZHmxejxuavDeyfqCJQcjmHzjDA3YXg/FmG4h9amB+Q1qa
+LTLfxPhyKFQflP85FBIeO0Mg4aETBvVfCHL4oMQPANLHWh4=
+      "], CompressedData["
+1:eJxTTMoPSmViYGBQA2IQDQYHQhyA5IyZM0MdkPhAYAeiHYw3Q/jGm21B9IKZ
+kkFg/tkz2iA6IU3NG8w/c0YGos/BDcrnIYbvYGyMxv/sCuabGHND7YfwZ8zk
+hPCLXaHqOaD6IfyMNC6ou12hNNS8zS6o5uPnJ6QtQ+EvmDnTHtl/B86c0UL2
+PxBwIIcPjN+Q9gyFb2D8OQSZb2I8ORRFP8OCUIj9aQIOYO/eDIX6TxSiXjgM
+Ki/lAPauWxjEPT4GIDot7Vk4VL0thH8sAmJugysyf8HMSB9kPtC8QGT9C2be
+DHYAe9cHar4ONH1IhkHkK6H+eICSXjLSlqHwwekJADolewo=
+      "]}]}},
+  AspectRatio->Automatic,
+  ImageSize->250,
+  PlotRange->{{0., 450.}, {0., 102.}}]], "WolframULogo",ExpressionUUID->\
+"31e9c09e-2f2f-4c8d-a61d-dc7d6c5971a4"],
+
+Cell[CellGroupData[{
+
+Cell["Introduction to quantum computing", "Title",ExpressionUUID->"6368dd2d-9946-4904-9e95-a81212adccff"],
+
+Cell["Lesson 1: Classical Computation", "Subtitle",
+ CounterAssignments->{{"Subsection", 0}, {"Subsubsection", 0}, {
+   "Exercise", 0}, {
+   "Section", 8}},ExpressionUUID->"d8115056-e951-4a76-887c-b7536a5153cd"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"c8100d59-33a8-428a-908e-a900cd252e5d"],
+
+Cell[CellGroupData[{
+
+Cell["Overview", "Section",ExpressionUUID->"435d2d47-8fdf-4757-a7de-9557fa93ee3f"],
+
+Cell["\<\
+We begin with a brief revisit of classical computation through a series of \
+hands-on examples. From there, the focus transitions to the quantum domain, \
+where you will explore several examples of quantum circuits. Each example is \
+accompanied by corresponding code; it\[CloseCurlyQuote]s perfectly fine if \
+not everything is immediately clear. As you move forward, your grasp of \
+quantum principles and your coding proficiency will develop together, \
+reinforcing one another through practice and exploration.\
+\>", "Text",ExpressionUUID->"96940453-93f5-43de-b24c-d13bcdb975e9"]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"3ae43c7b-0a22-452f-b3af-75e975d5eaf7"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"eb8789c2-7e60-4a42-a015-ee857d7c5f2c"],
+
+Cell[CellGroupData[{
+
+Cell["Addition: example 1", "Section",ExpressionUUID->"1a3173f1-7253-47a9-8660-75e4df22fd8e"],
+
+Cell["\<\
+In order to understand quantum computation, it helps to compare it to \
+classical computation. To compute something, you have to be able to use rules \
+to determine what should be the output from a list of inputs. You can think \
+of computing as starting with the inputs and following the rules to reach an \
+output.\
+\>", "Text",
+ CellChangeTimes->{{3.943973517653755*^9, 3.943973579045574*^9}, {
+   3.943973667454586*^9, 3.9439736996257668`*^9}, 
+   3.969145663366331*^9},ExpressionUUID->"ebb85469-7f5c-4903-b42d-\
+3d9071143d71"],
+
+Cell["\<\
+Consider two binary numbers \[OpenCurlyDoubleQuote]01\[CloseCurlyDoubleQuote] \
+and \[OpenCurlyDoubleQuote]10\[CloseCurlyDoubleQuote] and let\
+\[CloseCurlyQuote]s see how we can add them. First, each bit-string is \
+interpreted as a base-2 number rather than ordinary decimal, so \
+\[OpenCurlyDoubleQuote]01\[CloseCurlyDoubleQuote] becomes one and \
+\[OpenCurlyDoubleQuote]10\[CloseCurlyDoubleQuote] becomes two. \
+\>", "Text",
+ CellChangeTimes->{{3.943973644117935*^9, 3.943973644709938*^9}, {
+  3.943973731445715*^9, 3.943973765023449*^9}, {3.9439748152312126`*^9, 
+  3.9439748186146374`*^9}, {3.9439751128406887`*^9, 3.9439751243759556`*^9}, {
+  3.969144504581246*^9, 3.96914457063491*^9}, {3.9691446244028397`*^9, 
+  3.9691446503791723`*^9}},ExpressionUUID->"189f2534-565e-4d8d-a08d-\
+f4aaee755ef0"],
+
+Cell["Define binary strings:", "Text",
+ CellChangeTimes->{{3.96914465685312*^9, 
+  3.9691446659184217`*^9}},ExpressionUUID->"d2847455-3cc3-42fa-bdd4-\
+419857118299"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"a", "=", "\"\<01\>\""}], ";", 
+  RowBox[{"b", "=", "\"\<10\>\""}], ";"}]], "Input",
+ CellChangeTimes->{{3.9439751389630413`*^9, 3.943975141321228*^9}, 
+   3.968248723352311*^9, {3.969144367383288*^9, 3.969144376324502*^9}, {
+   3.9691445482341747`*^9, 3.969144591976397*^9}},
+ CellLabel->"In[7]:=",ExpressionUUID->"6df4ffcf-c944-442e-ba12-210ec90e5842"],
+
+Cell[TextData[{
+ "Construct the number from the base-2 digits of ",
+ Cell[BoxData[
+  FormBox["a", TraditionalForm]],ExpressionUUID->
+  "fc48423e-f202-4724-bf4c-5a251af2d6bf"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.9691446752398167`*^9, 3.969144719524901*^9}, 
+   3.969382126484251*^9},ExpressionUUID->"0fd1bff7-4958-4864-bf56-\
+2c76532778a4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FromDigits", "[", 
+  RowBox[{"a", ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[8]:=",ExpressionUUID->"ee69dbcc-184d-44a5-9c0f-8fc09e7e87cb"],
+
+Cell[BoxData["1"], "Output",
+ CellChangeTimes->{3.9699248826007137`*^9, 3.9699764385655613`*^9, 
+  3.970334180682419*^9},
+ CellLabel->"Out[8]=",ExpressionUUID->"3d6cef77-47bc-42f1-9ae6-6aae3a4378d9"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Construct the number from the base-2 digits of ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "13212c19-e622-4b1d-ae4e-efef555a6ec7"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.969144689697773*^9, 3.9691446915527763`*^9}, {
+   3.969144721982987*^9, 3.969144723119032*^9}, 
+   3.969382128505361*^9},ExpressionUUID->"76669ebd-b676-48c4-b33f-\
+04fc982e99da"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FromDigits", "[", 
+  RowBox[{"b", ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[9]:=",ExpressionUUID->"424c3596-2ae1-42df-be56-94266fcfb00f"],
+
+Cell[BoxData["2"], "Output",
+ CellChangeTimes->{3.9699248826096363`*^9, 3.9699764385835037`*^9, 
+  3.970334180706893*^9},
+ CellLabel->"Out[9]=",ExpressionUUID->"fccc67e6-d75b-4ea5-b22c-3412742f1410"]
+}, Open  ]],
+
+Cell["Add the numbers using normal addition:", "Text",
+ CellChangeTimes->{{3.969144693276149*^9, 3.9691446941007557`*^9}, {
+  3.969144725648521*^9, 
+  3.969144758615995*^9}},ExpressionUUID->"3325d438-3626-47c7-8189-\
+a0481f310305"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"a", ",", "2"}], "]"}], "+", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"b", ",", "2"}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.969144602655939*^9, 3.969144606045418*^9}},
+ CellLabel->"In[10]:=",ExpressionUUID->"c433e47f-66e3-4282-86cb-c65d829abf69"],
+
+Cell[BoxData["3"], "Output",
+ CellChangeTimes->{3.9699248826167097`*^9, 3.969976438588081*^9, 
+  3.9703341807173033`*^9},
+ CellLabel->"Out[10]=",ExpressionUUID->"26c26f9b-a5be-48aa-a8e2-3e71ae249307"]
+}, Open  ]],
+
+Cell["Convert the total back into bit-string:", "Text",
+ CellChangeTimes->{{3.9691447298090897`*^9, 
+  3.969144765466543*^9}},ExpressionUUID->"c238aa09-7d53-4731-99ff-\
+361b99dbe05b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9439751389630413`*^9, 3.943975141321228*^9}, 
+   3.968248723352311*^9, {3.969144367383288*^9, 3.969144376324502*^9}, {
+   3.9691445482341747`*^9, 3.969144591976397*^9}},
+ CellLabel->"In[11]:=",ExpressionUUID->"6e3a7fb2-2bac-4df1-a826-31c7e1af942d"],
+
+Cell[BoxData["\<\"11\"\>"], "Output",
+ CellChangeTimes->{3.969924882625742*^9, 3.969976438597712*^9, 
+  3.9703341807398643`*^9},
+ CellLabel->"Out[11]=",ExpressionUUID->"68361f69-0bf5-4623-8cb0-975bc2d3376b"]
+}, Open  ]]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"d1f37ff6-1c75-4410-96b7-3c1a1be47558"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"16eec13d-dadd-4606-ae7d-44b1a5e5cce1"],
+
+Cell[CellGroupData[{
+
+Cell["Addition: example 2", "Section",ExpressionUUID->"a373f241-0ddc-4cfe-9c20-698059c8b29c"],
+
+Cell[TextData[{
+ "To get a better sense of constructs of numbers in a base ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "7c8232e2-8535-4330-8d69-c8401df4b4f3"],
+ ", let\[CloseCurlyQuote]s consider symbolic digits and base:"
+}], "Text",
+ CellChangeTimes->{{3.96992154707978*^9, 3.969921585944337*^9}, {
+  3.969921661580719*^9, 3.969921666689562*^9}, {3.9699217115974092`*^9, 
+  3.969921713767457*^9}, {3.969921835237812*^9, 
+  3.96992184461087*^9}},ExpressionUUID->"df4646d7-e855-4f3d-a7da-\
+d3795272509a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Expand", "[", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "\[FormalC]4", ",", "\[FormalC]3", ",", "\[FormalC]2", ",", 
+      "\[FormalC]1", ",", "\[FormalC]0"}], "}"}], ",", "\[FormalB]"}], "]"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.969921591129137*^9, 3.969921657096219*^9}, {
+  3.9699763870913153`*^9, 3.969976411262271*^9}},
+ CellLabel->"In[12]:=",ExpressionUUID->"5acab680-78a3-4675-a46f-aa9e5bbe905e"],
+
+Cell[BoxData[
+ RowBox[{"\[FormalC]0", "+", 
+  RowBox[{"\[FormalB]", " ", "\[FormalC]1"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "2"], " ", "\[FormalC]2"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "3"], " ", "\[FormalC]3"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "4"], " ", "\[FormalC]4"}]}]], "Output",
+ CellChangeTimes->{
+  3.969924882632793*^9, {3.969976380011856*^9, 3.9699764386010733`*^9}, 
+   3.970334180749*^9},
+ CellLabel->"Out[12]=",ExpressionUUID->"43bc4657-051a-4891-92ed-76a9bc23ec46"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Donating the length of digits by ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],ExpressionUUID->
+  "f8e0f24b-87ad-431d-9f18-46c4edc297b7"],
+ ", the maximum power of ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "14deb6cd-cc02-4f71-909b-16c2f2954a84"],
+ " will be ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["b", 
+    RowBox[{"n", "-", "1"}]], TraditionalForm]],ExpressionUUID->
+  "28d68ca7-3ca8-4a29-8e27-8803664595a4"],
+ " (in the above example, ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["b", 
+    RowBox[{"5", "-", "1"}]], TraditionalForm]],ExpressionUUID->
+  "31415e17-5a99-4573-a336-185c6effb504"],
+ ")."
+}], "Text",
+ CellChangeTimes->{{3.96992179811954*^9, 3.969921805435987*^9}, {
+  3.9699218480766973`*^9, 
+  3.969921889049645*^9}},ExpressionUUID->"a58ce95e-aed9-4fef-99c3-\
+7c846705bc0f"],
+
+Cell["\<\
+Let\[CloseCurlyQuote]s consider another example. Add two binary strings 100 \
+and 011:\
+\>", "Text",
+ CellChangeTimes->{{3.957529225695665*^9, 3.957529246814452*^9}, {
+  3.969144777531629*^9, 
+  3.969144792404016*^9}},ExpressionUUID->"25d296c4-bb4d-4164-9990-\
+0798985148b6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"a", "=", "\"\<101\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"b", "=", "\"\<011\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]}], "Input",
+ CellChangeTimes->{{3.943973148153572*^9, 3.943973163344902*^9}, 
+   3.968248724384761*^9, {3.96914439781164*^9, 3.969144402152009*^9}, {
+   3.969144822287341*^9, 3.96914482246059*^9}},
+ CellLabel->"In[13]:=",ExpressionUUID->"ecaa6f72-474a-4486-83e4-29b8a67953c0"],
+
+Cell[BoxData["\<\"1000\"\>"], "Output",
+ CellChangeTimes->{3.969924882641964*^9, 3.9699764386115437`*^9, 
+  3.970334180772483*^9},
+ CellLabel->"Out[15]=",ExpressionUUID->"308818a5-666a-4c25-acab-8b44576f8eb1"]
+}, Open  ]],
+
+Cell["\<\
+Note that something interesting happened in above calculation. Pay attention \
+to the string length of initial numbers and final total. The original \
+bit-strings had the string length of 3 while the final answer is a four-bit \
+string. Let\[CloseCurlyQuote]s dive in a bit more.\
+\>", "Text",
+ CellChangeTimes->{{3.96914483448178*^9, 3.969144954319531*^9}, {
+  3.969382151134162*^9, 
+  3.969382151939642*^9}},ExpressionUUID->"c5dc577d-83d9-4209-b5e9-\
+2f6f17c7a212"],
+
+Cell["\<\
+What are all the states of a sequence of three classical bits?\
+\>", "Text",
+ CellChangeTimes->{{3.969144955635748*^9, 
+  3.96914495689016*^9}},ExpressionUUID->"f6f80a57-1f89-4750-8bc4-\
+453fbf426044"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"threeBits", "=", 
+  RowBox[{"Tuples", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}], ",", "3"}], "]"}]}]], "Input",
+ CellLabel->"In[16]:=",ExpressionUUID->"9f006e81-4283-470a-9174-975bd41d3fe8"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "0", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "1", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "1", ",", "1"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.9699248826496162`*^9, 3.969976438616132*^9, 
+  3.970334180781451*^9},
+ CellLabel->"Out[16]=",ExpressionUUID->"8d9d6115-1453-4312-aa85-dc7c2de80077"]
+}, Open  ]],
+
+Cell["What are the corresponding numbers from above base-2 digits?", "Text",
+ CellChangeTimes->{{3.9691449816663637`*^9, 
+  3.969145011085713*^9}},ExpressionUUID->"df63bbc7-8c1d-4327-b182-\
+2de512a6901f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"FromDigits", "[", 
+    RowBox[{"#", ",", "2"}], "]"}], "&"}], "/@", "threeBits"}]], "Input",
+ CellChangeTimes->{{3.969144968059084*^9, 3.969144979777162*^9}},
+ CellLabel->"In[17]:=",ExpressionUUID->"8250a481-db3b-49c5-8cff-13cad8c1f199"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "0", ",", "1", ",", "2", ",", "3", ",", "4", ",", "5", ",", "6", ",", "7"}],
+   "}"}]], "Output",
+ CellChangeTimes->{3.969924882659266*^9, 3.969976438627553*^9, 
+  3.97033418080435*^9},
+ CellLabel->"Out[17]=",ExpressionUUID->"a266d495-4a55-4927-baa7-0df1020f8cce"]
+}, Open  ]]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"312683a1-f30c-4a1c-a349-b65c14e938ed"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"54441e25-2452-4cd4-8b88-0199763b8b6c"],
+
+Cell[CellGroupData[{
+
+Cell["Addition: example 3", "Section",ExpressionUUID->"97abdcfb-534d-4dc9-a646-7848dda541eb"],
+
+Cell[TextData[{
+ "With a 3-bit string you can represent 0\[Dash]7; in general, n bits \
+represent 0 to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", "n"], "-", "1"}], TraditionalForm]],ExpressionUUID->
+  "677db7e5-43c7-4902-b58e-bf408c72f399"],
+ ". Returning to the example, adding 101 and 011 gives 8, which exceeds the \
+3-bit range. This means in-place addition is modulo ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["2", "n"], TraditionalForm]],ExpressionUUID->
+  "e6523cea-5c71-4cba-bd74-e04897ea8b2c"],
+ ", so the sum wraps to 000 unless you provide an extra bit to capture the \
+carry."
+}], "Text",
+ CellChangeTimes->{{3.969145013956876*^9, 3.969145105641533*^9}, {
+  3.9691452231743402`*^9, 
+  3.969145276269998*^9}},ExpressionUUID->"75b659df-0e16-4f88-99a2-\
+f27508c4d675"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"a", ",", "2"}], "]"}], "+", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"b", ",", "2"}], "]"}]}]], "Input",
+ CellLabel->"In[18]:=",ExpressionUUID->"914dd5cb-2905-40e0-8fcd-8ab55bb6b858"],
+
+Cell[BoxData["8"], "Output",
+ CellChangeTimes->{3.969924882666335*^9, 3.969976438631325*^9, 
+  3.970334180813403*^9},
+ CellLabel->"Out[18]=",ExpressionUUID->"5d809d7d-c60c-4931-ae96-ed14ee0042c4"]
+}, Open  ]],
+
+Cell["\<\
+To encode that result as a bitstring, we need at least 4 bits (since 8 \
+requires 4-bit representation).\
+\>", "Text",
+ CellChangeTimes->{{3.969145107588945*^9, 3.969145116205862*^9}, 
+   3.96914529038514*^9},ExpressionUUID->"fae4a661-d4b5-4db0-b3cc-\
+42a97c92fd2e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[19]:=",ExpressionUUID->"d7e3f90d-ec53-439c-ac2d-00a1ff54f846"],
+
+Cell[BoxData["\<\"1000\"\>"], "Output",
+ CellChangeTimes->{3.969924882675886*^9, 3.969976438642138*^9, 
+  3.970334180836187*^9},
+ CellLabel->"Out[19]=",ExpressionUUID->"d3dfb2cd-34b0-4f90-be77-4950048ecd43"]
+}, Open  ]],
+
+Cell["\<\
+If you insist on staying within 3 bits, perform all operations modulo 8 \
+(wrap-around arithmetic).\
+\>", "Text",
+ CellChangeTimes->{{3.969145123974463*^9, 3.969145155211459*^9}, 
+   3.969145318808189*^9},ExpressionUUID->"ce85fa0b-ef2c-4588-b494-\
+786bbf4eab5e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Mod", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", 
+   SuperscriptBox["2", "3"]}], "]"}]], "Input",
+ CellChangeTimes->{{3.9691451656294537`*^9, 3.969145169717841*^9}},
+ CellLabel->"In[20]:=",ExpressionUUID->"c2bc9d66-9e2a-4530-9551-7ff6623cac34"],
+
+Cell[BoxData["0"], "Output",
+ CellChangeTimes->{3.9699248826828823`*^9, 3.9699764386468983`*^9, 
+  3.9703341808467693`*^9},
+ CellLabel->"Out[20]=",ExpressionUUID->"2c6a68dd-8047-4bd4-9909-87a4d8d8f271"]
+}, Open  ]],
+
+Cell["Then the 3-bit string of the above result is:", "Text",
+ CellChangeTimes->{{3.9691451832817383`*^9, 3.9691451983994637`*^9}, 
+   3.969145345055253*^9},ExpressionUUID->"88d8d64b-6b0c-4770-a049-\
+1aa45944a7c1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{"0", ",", "2", ",", "3"}], "]"}]], "Input",
+ CellChangeTimes->{{3.969145179830686*^9, 3.969145181279402*^9}},
+ CellLabel->"In[21]:=",ExpressionUUID->"febf1b26-9b93-480a-b233-bc7880702e54"],
+
+Cell[BoxData["\<\"000\"\>"], "Output",
+ CellChangeTimes->{3.969924882691288*^9, 3.969976438657566*^9, 
+  3.970334180870161*^9},
+ CellLabel->"Out[21]=",ExpressionUUID->"ccbe93b1-12d6-4c0a-a7e9-746dc1a82c33"]
+}, Open  ]]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"eab6a64a-9e40-4e07-af70-7364ba7f3235"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"150e32c3-e30d-4db4-aab5-ec3d0f3d335b"],
+
+Cell[CellGroupData[{
+
+Cell["Another encoding scheme ", "Section",ExpressionUUID->"b6beb0ad-68ba-4c07-af96-28499495ffa1"],
+
+Cell["Now let\[CloseCurlyQuote]s try another encoding scheme. ", "Text",
+ CellChangeTimes->{{3.943975877791519*^9, 3.943975980361656*^9}, {
+  3.9439796965473022`*^9, 3.943979698933319*^9}, {3.968248972255479*^9, 
+  3.968248972712698*^9}, {3.968320667956229*^9, 3.968320668883841*^9}, {
+  3.969145752063458*^9, 3.9691457588821774`*^9}, {3.969382656049217*^9, 
+  3.969382673376566*^9}},ExpressionUUID->"c7d5599a-c32b-4983-814b-\
+e1e04907cc8e"],
+
+Cell["\<\
+It is also possible to encode information in such sequences of classical bits \
+to represent problems of interest. For example, each of those bit sequences \
+could also encode letter characters with a different encoding scheme:\
+\>", "Text",
+ CellChangeTimes->{{3.943975877791519*^9, 3.943975980361656*^9}, {
+  3.9439796965473022`*^9, 3.943979698933319*^9}, {3.968248972255479*^9, 
+  3.968248972712698*^9}, {3.968320667956229*^9, 3.968320668883841*^9}, {
+  3.969145752063458*^9, 3.9691457588821774`*^9}, {3.969382656049217*^9, 
+  3.969382665021945*^9}},ExpressionUUID->"981aaae1-3851-49cd-af23-\
+b7efcf71c146"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromLetterNumber", "[", 
+     RowBox[{"FromDigits", "[", 
+      RowBox[{"#", ",", "2"}], "]"}], "]"}], "&"}], ",", "threeBits"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.943976090511446*^9, 3.943976099041807*^9}, {
+   3.9439761596109524`*^9, 3.9439761931531334`*^9}, {3.9439765603870125`*^9, 
+   3.9439765731799965`*^9}, {3.96832071531772*^9, 3.968320723391488*^9}, 
+   3.969145375035074*^9, {3.969382684710661*^9, 3.969382690515366*^9}},
+ CellLabel->"In[22]:=",ExpressionUUID->"a431bd35-bf2a-411f-889c-d51e1422cd7a"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0"}], "}"}], "\[Rule]", "\<\" \"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "1"}], "}"}], "\[Rule]", "\<\"a\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "0"}], "}"}], "\[Rule]", "\<\"b\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "1"}], "}"}], "\[Rule]", "\<\"c\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "0"}], "}"}], "\[Rule]", "\<\"d\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "1"}], "}"}], "\[Rule]", "\<\"e\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "0"}], "}"}], "\[Rule]", "\<\"f\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "1"}], "}"}], "\[Rule]", "\<\"g\"\>"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.969924882695384*^9, 3.969976438662417*^9, 
+  3.9703341808796473`*^9},
+ CellLabel->"Out[22]=",ExpressionUUID->"366fa4c4-cfb9-427e-bd0e-e1e42bc9440c"]
+}, Open  ]],
+
+Cell["\<\
+With yet another encoding scheme, those same bit sequences could represent \
+colors with opacity:\
+\>", "Text",
+ CellChangeTimes->{{3.9439764319406433`*^9, 3.943976435914694*^9}, {
+  3.9439765147070065`*^9, 
+  3.943976535529358*^9}},ExpressionUUID->"918ce49a-725f-448b-b17a-\
+2f30c0a038c5"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Apply", "[", 
+     RowBox[{"RGBColor", ",", "#"}], "]"}], "&"}], ",", "threeBits"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.943976267816435*^9, 3.9439763247065144`*^9}, {
+   3.943976364028818*^9, 3.9439764940098667`*^9}, {3.968321013478739*^9, 
+   3.968321018923381*^9}, {3.968350897168367*^9, 3.968350900866498*^9}, 
+   3.9691453765923843`*^9, {3.969382695879224*^9, 3.969382700760293*^9}},
+ CellLabel->"In[23]:=",ExpressionUUID->"4eb22e0e-30fd-40d5-a714-3f1b6d7fc630"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 0, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 0, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 1, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 1, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 0, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 0, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 1, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 1, 1]|>,
+     "RGBColorSwatchTemplate"]}]}], "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.969924882704938*^9, 3.969976438673476*^9, 
+  3.9703341809032516`*^9},
+ CellLabel->"Out[23]=",ExpressionUUID->"08abc638-9f8b-4e79-b245-5d921db8d359"]
+}, Open  ]],
+
+Cell["\<\
+Having seen how a 3-bit register cleanly enumerates eight distinct states and \
+how different encodings map those states to numbers, letters, or colors, we \
+now move to the quantum setting. There the same eight basis strings exist, \
+but a 3-qubit register can also occupy complex superpositions of them, and \
+even entangled combinations that have no classical analogue. The rules for \
+storing and extracting information therefore change: measurement reveals a \
+single basis outcome, while computation exploits interference among \
+amplitudes.\
+\>", "Text",
+ CellChangeTimes->{
+  3.9683563449566803`*^9, {3.9683572557095957`*^9, 
+   3.968357255859674*^9}},ExpressionUUID->"f9b7e0fb-eddd-458c-91c9-\
+bf8a26f38412"]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"d20d56de-3a7a-469d-b827-91e010d2f15a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "SlideShowNavigationBar",
+ CellTags->
+  "SlideShowHeader",ExpressionUUID->"97ecf7cb-fb25-45b2-b3be-73382eb961ca"],
+
+Cell[CellGroupData[{
+
+Cell["Summary", "Section",ExpressionUUID->"1a506e95-85ea-44d8-b559-441689703af8"],
+
+Cell["\<\
+Classical computation can be represented as some rules to determine what \
+should be the output from a list of inputs. \
+\>", "Item",ExpressionUUID->"18b99214-681f-4754-b225-c2bb065675a8"],
+
+Cell[TextData[{
+ "With a 3-bit string you can represent 0\[Dash]7; in general, ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],ExpressionUUID->
+  "ba64dbb3-60c1-4fc7-bb5d-83919f90195b"],
+ " bits represent 0 to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", "n"], "-", "1"}], TraditionalForm]],ExpressionUUID->
+  "6e669172-7c53-4a91-8e3f-e65986bb4efe"],
+ "."
+}], "Item",ExpressionUUID->"8cbba81c-66fc-49bc-a9d3-3462d767e1d7"]
+}, Open  ]],
+
+Cell["", "EndOfSlide",ExpressionUUID->"488b5500-da7f-44b7-ba76-7c790e5b1d72"]
+}, Open  ]]
+},
+Editable->True,
+Saveable->True,
+ScreenStyleEnvironment->"Working",
+WindowToolbars->"MultipurposeBar",
+WindowSize->{1024, 768},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+ShowCellBracket->True,
+TaggingRules-><|"ShowNavigationBar" -> True|>,
+ShowCellTags->True,
+TrackCellChangeTimes->False,
+ButtonBoxOptions->{BaseStyle->None},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 22, 2025)",
+StyleDefinitions->Notebook[{
+   Cell[
+    CellGroupData[{
+      Cell[
+       StyleData[StyleDefinitions -> "Default.nb"]], 
+      Cell[
+       StyleData[All, "Working"], 
+       MenuCommandKey :> $CellContext`MenuKey[
+        "-", $CellContext`Modifiers -> {"Shift"}]], 
+      Cell[
+       StyleData[All, "SlideShow"], 
+       MenuCommandKey :> $CellContext`MenuKey[
+        "=", $CellContext`Modifiers -> {"Shift"}]]}, Open]], 
+   Cell[
+    CellGroupData[{
+      Cell["Styles for Title and Section Cells", "Section"], 
+      Cell[
+       CellGroupData[{
+         Cell["Title", "Subsection"], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Title"], CellMargins -> {{120, 0}, {0, 40}}, 
+             FontFamily -> "Source Sans Pro", FontSize -> 81, FontWeight -> 
+             "SemiBold", FontTracking -> -0.75, FontColor -> 
+             RGBColor[0.09, 0.16, 0.25]], 
+            Cell[
+             StyleData[
+             "Title", "SlideShow", StyleDefinitions -> StyleData["Title"]]], 
+            Cell[
+             StyleData[
+             "Title", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Title", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Title", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Title", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Title", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Title", "Slideshow Working"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subtitle"], CellMargins -> {{120, 0}, {0, 12}}, 
+             FontFamily -> "Source Sans Pro", FontSize -> 40, FontWeight -> 
+             "SemiBold", FontColor -> RGBColor[1., 0.4, 0]], 
+            Cell[
+             StyleData[
+             "Subtitle", "SlideShow", StyleDefinitions -> 
+              StyleData["Subtitle"]]], 
+            Cell[
+             StyleData[
+             "Subtitle", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subtitle", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subtitle", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subtitle", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subtitle", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subtitle", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubtitle"], CellMargins -> {{120, 0}, {0, 12}}, 
+             FontFamily -> "Source Sans Pro", FontSize -> 27, FontWeight -> 
+             "SemiBold", FontColor -> RGBColor[1., 0.6, 0]], 
+            Cell[
+             StyleData[
+             "Subsubtitle", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubtitle"]]], 
+            Cell[
+             StyleData[
+             "Subsubtitle", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubtitle", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubtitle", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsubtitle", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubtitle", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsubtitle", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["WolframULogo"], CellMargins -> {{120, 0}, {0, 25}}, 
+             CellGroupingRules -> "GraphicsGrouping", PageBreakWithin -> 
+             False], 
+            Cell[
+             StyleData[
+             "WolframULogo", "SlideShow", StyleDefinitions -> 
+              StyleData["WolframULogo"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}], 
+            Cell[
+             StyleData[
+             "WolframULogo", "Slideshow Working", StyleDefinitions -> 
+              StyleData["WolframULogo", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "WolframULogo", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["WolframULogo", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "WolframULogo", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["WolframULogo", "Slideshow Working"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData[
+             "TitleGraphic", StyleDefinitions -> StyleData["WolframULogo"]], 
+             StyleKeyMapping -> {"Tab" -> "Subtitle"}, 
+             CellGroupingRules -> {"TitleGrouping", 0}, PageBreakBelow -> 
+             False, LineSpacing -> {1, 4}, CounterIncrements -> "Title", 
+             CounterAssignments -> {{"Section", 0}, {"Equation", 0}, {
+               "Figure", 0}, {"Subtitle", 0}, {"Subsubtitle", 0}, {
+               "Item", 0}, {"Subitem", 0}, {"Subsubitem", 0}, {
+               "ItemNumbered", 0}, {"SubitemNumbered", 0}, {
+               "SubsubitemNumbered", 0}}, FontTracking -> -0.5], 
+            Cell[
+             StyleData[
+             "TitleGraphic", "SlideShow", StyleDefinitions -> 
+              StyleData["TitleGraphic"]]], 
+            Cell[
+             StyleData[
+             "TitleGraphic", "Slideshow Working", StyleDefinitions -> 
+              StyleData["TitleGraphic", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "TitleGraphic", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["TitleGraphic", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "TitleGraphic", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["TitleGraphic", "SlideShow"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["WSSBanner", StyleDefinitions -> StyleData["Text"]], 
+             PageWidth -> 670, CellMargins -> {{0, 0}, {60, 60}}, 
+             CellFrameMargins -> {{20, 20}, {20, 20}}, 
+             CellFrameLabels -> {{None, None}, {None, None}}, TextAlignment -> 
+             Right, FontSize -> 42, FontWeight -> "Regular", FontSlant -> 
+             "Plain", FontVariations -> {"CapsType" -> "AllCaps"}, 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[0.09, 0.16, 0.25], Background -> 
+             RGBColor[1, 0.8, 0.4]], 
+            Cell[
+             StyleData[
+             "WSSBanner", "SlideShow", StyleDefinitions -> 
+              StyleData["WSSBanner"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "WSSBanner", "Slideshow Working", StyleDefinitions -> 
+              StyleData["WSSBanner", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "WSSBanner", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["WSSBanner", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "WSSBanner", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["WSSBanner", "Slideshow Working"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]]}, 
+        Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell["Section", "Subsection"], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Chapter"], PageWidth -> Automatic, 
+             CellFrame -> {{0, 0}, {0, 0}}, ShowGroupOpener -> "Inline", 
+             CellMargins -> {{120, 0}, {0, 50}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 75, FontWeight -> "Regular", 
+             FontSlant -> "Plain", FontTracking -> -0.5, 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[0.09, 0.16, 0.25]], 
+            Cell[
+             StyleData[
+             "Chapter", "SlideShow", StyleDefinitions -> 
+              StyleData["Chapter"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Chapter", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Chapter", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Chapter", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Chapter", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Chapter", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Chapter", "SlideShow"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Section"], PageWidth -> Automatic, 
+             CellFrame -> {{0, 0}, {0, 0}}, ShowGroupOpener -> "Inline", 
+             CellMargins -> {{120, 0}, {0, 50}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 70, FontWeight -> "Regular", 
+             FontSlant -> "Plain", FontTracking -> -0.5, 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[1., 0.4, 0]], 
+            Cell[
+             StyleData[
+             "Section", "SlideShow", StyleDefinitions -> 
+              StyleData["Section"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Section", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Section", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Section", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Section", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Section", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Section", "SlideShow"]], 
+             CellFrameLabels -> {{None, None}, {None, None}}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsection"], ShowGroupOpener -> "Inline", 
+             CellMargins -> {{120, 0}, {0, 40}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 40, FontWeight -> "Regular", 
+             FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[1., 0.5, 0]], 
+            Cell[
+             StyleData[
+             "Subsection", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsection"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Subsection", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsection", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsection", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsection", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsection", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsection", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData[
+          "EmphasisSection", StyleDefinitions -> StyleData["Subsection"]], 
+          CellFrame -> {{0, 0}, {0, 3}}, CellFrameMargins -> {{8, 8}, {4, 6}},
+           CellFrameColor -> RGBColor[1, 0.5, 0], FontSlant -> "Italic"], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubsection"], ShowGroupOpener -> "Inline", 
+             CellMargins -> {{120, 0}, {0, 40}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 30, FontWeight -> "Regular", 
+             FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[1., 0.6, 0.]], 
+            Cell[
+             StyleData[
+             "Subsubsection", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubsection"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Subsubsection", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubsection", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubsection", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsubsection", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubsection", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsubsection", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubsubsection"], ShowGroupOpener -> "Inline", 
+             CellMargins -> {{120, 0}, {0, 30}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 25, FontWeight -> "Regular", 
+             FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[0.9, 0.2, 0.2]], 
+            Cell[
+             StyleData[
+             "Subsubsubsection", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubsubsection"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Subsubsubsection", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubsubsection", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubsection", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsubsubsection", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubsection", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsubsubsection", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubsubsubsection"], ShowGroupOpener -> "Inline", 
+             CellMargins -> {{130, 0}, {0, 20}}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 20, FontWeight -> "Regular", 
+             FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}, 
+             FontColor -> RGBColor[0.7, 0, 0]], 
+            Cell[
+             StyleData[
+             "Subsubsubsubsection", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubsubsubsection"]], LineSpacing -> {1, 2}], 
+            Cell[
+             StyleData[
+             "Subsubsubsubsection", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubsubsubsection", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubsubsection", "Slideshow Presentation", 
+              StyleDefinitions -> 
+              StyleData["Subsubsubsubsection", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubsubsection", "Scrolling Presentation", 
+              StyleDefinitions -> 
+              StyleData["Subsubsubsubsection", "Slideshow Working"]]]}, 
+           Closed]], 
+         Cell[
+          StyleData["Subchapter"], CellDingbat -> 
+          StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+            RGBColor[1., 0.5, 0.]], CellMargins -> {{150, 0}, {0, 50}}]}, 
+        Closed]]}, Open]], 
+   Cell[
+    CellGroupData[{
+      Cell["Styles for Body Content", "Section"], 
+      Cell[
+       CellGroupData[{
+         Cell["Text", "Subsection"], 
+         Cell[
+          StyleData["Author"], CellMargins -> {{120, 0}, {0, 12}}, FontSize -> 
+          24, FontWeight -> "Thin", FontSlant -> "Italic"], 
+         Cell[
+          StyleData["Affiliation"], CellMargins -> {{120, 0}, {0, 12}}, 
+          FontSize -> 24, FontWeight -> "Thin", FontSlant -> "Italic"], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Text"], CellMargins -> {{120, 0}, {0, 15}}, 
+             LineSpacing -> {1, 3}, TabSpacings -> {2.5}, CounterIncrements -> 
+             "Text", MenuSortingValue -> 1400, MenuCommandKey :> "7", 
+             FontFamily -> "Source Sans Pro", FontSize -> 15], 
+            Cell[
+             StyleData[
+             "Text", "SlideShow", StyleDefinitions -> StyleData["Text"]], 
+             FontSize -> 22], 
+            Cell[
+             StyleData[
+             "Text", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Text", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Text", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Text", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Text", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Text", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData["Reference"], CellMargins -> {{120, 0}, {3, 3}}, 
+          FontFamily -> "Source Sans Pro", FontSize -> 15, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["ChatInput"], 
+          CellMargins -> {{120, Inherited}, {Inherited, Inherited}}], 
+         Cell[
+          StyleData["ChatOutput"], 
+          CellMargins -> {{120, Inherited}, {Inherited, Inherited}}], 
+         Cell[
+          StyleData["MathCaption"], CellMargins -> {{120, 12}, {2, 24}}, 
+          FontFamily -> "Source Sans Pro", FontSize -> 15, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData[
+          "OpenCollapsedSection", StyleDefinitions -> StyleData["Text"]], 
+          CellMargins -> {{120, 0}, {0, 50}}, MenuSortingValue -> 10000, 
+          FontSize -> 11], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["CodeText"], CellMargins -> {{120, 0}, {0, 15}}, 
+             LineSpacing -> {1, 3}, TabSpacings -> {2.5}, FontFamily -> 
+             "Source Sans Pro", FontSize -> 15, FontWeight -> "Regular", 
+             FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}], 
+            Cell[
+             StyleData["CodeText", "SlideShow"], 
+             CellMargins -> {{120, 0}, {0, 15}}, LineSpacing -> {1, 3}, 
+             TabSpacings -> {2.5}, FontFamily -> "Source Sans Pro", FontSize -> 
+             22, FontWeight -> "Regular", FontSlant -> "Plain", 
+             PrivateFontOptions -> {"FontPostScriptName" -> "Automatic"}], 
+            Cell[
+             StyleData[
+             "CodeText", "Slideshow Working", StyleDefinitions -> 
+              StyleData["CodeText", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "CodeText", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["CodeText", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "CodeText", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["CodeText", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Note"], 
+             CellMargins -> {{
+               0.15 FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}], 0.03 
+                FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}]}, {10, 10}}, 
+             CellOpen -> True, LineSpacing -> {1, 3}, CounterIncrements -> 
+             "Note", MenuSortingValue -> 1590, FontFamily -> 
+             "Source Sans Pro", FontSize -> 12, FontSlant -> "Italic", 
+             Background -> GrayLevel[0.85]], 
+            Cell[
+             StyleData["Note", "SlideShow"], 
+             CellMargins -> {{
+               0.15 FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}], 0.03 
+                FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}]}, {10, 10}}, 
+             CellOpen -> False, 
+             HyphenationOptions -> {"HyphenationCharacter" -> "-"}, 
+             ParagraphSpacing -> {0, 6}, ParagraphIndent -> -10, 
+             StyleMenuListing -> None, FontSize -> 18], 
+            Cell[
+             StyleData[
+             "Note", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Note"]]], 
+            Cell[
+             StyleData[
+             "Note", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Note", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Note", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Note", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData["Link"], FontColor -> RGBColor[0, 0.6, 1]], 
+         Cell[
+          StyleData["HyperLink"], FontColor -> RGBColor[0, 0.6, 1]], 
+         Cell[
+          StyleData["Hyperlink"], FontColor -> RGBColor[0, 0.6, 1]], 
+         Cell[
+          StyleData["FunctionLink"], FontColor -> RGBColor[0, 0.6, 1]], 
+         Cell[
+          StyleData["HyperlinkActionNew"], FontColor -> RGBColor[0, 0.6, 1]], 
+         
+         Cell[
+          StyleData["HyperlinkActive"], FontColor -> RGBColor[1, 0.4, 0]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["KeyEvent"], CellFrame -> {{1, 1}, {1, 1}}, 
+             CellFrameMargins -> {{2, 2}, {2, 2}}, CellFrameColor -> 
+             GrayLevel[0.8], FontFamily -> "Source Sans Pro", FontColor -> 
+             GrayLevel[0.360784], Background -> GrayLevel[0.964706]], 
+            Cell[
+             StyleData[
+             "KeyEvent", "SlideShow", StyleDefinitions -> 
+              StyleData["KeyEvent"]]], 
+            Cell[
+             StyleData[
+             "KeyEvent", "Slideshow Working", StyleDefinitions -> 
+              StyleData["KeyEvent", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "KeyEvent", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["KeyEvent", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "KeyEvent", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["KeyEvent", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData["AuthorNote", StyleDefinitions -> StyleData["Text"]], 
+          CellDingbat -> 
+          StyleBox[
+           "Author note:", "Text", FontSlant -> "Italic", FontColor -> 
+            RGBColor[0.9, 0.2, 0.2], Alignment -> Baseline], FontSlant -> 
+          "Italic", FontColor -> GrayLevel[0.4]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["HintHeader", StyleDefinitions -> StyleData["Text"]], 
+             ShowGroupOpener -> True, GroupOpenerInsideFrame -> False, 
+             CellGroupingRules -> {"SectionGrouping", 80}, PageBreakBelow -> 
+             False, FontColor -> RGBColor[1., 0.5, 0.]], 
+            Cell[
+             StyleData[
+             "HintHeader", "SlideShow", StyleDefinitions -> 
+              StyleData["HintHeader"]], FontSize -> 22], 
+            Cell[
+             StyleData[
+             "HintHeader", "Slideshow Working", StyleDefinitions -> 
+              StyleData["HintHeader", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "HintHeader", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["HintHeader", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "HintHeader", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["HintHeader", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Hint", StyleDefinitions -> StyleData["Text"]], 
+             CellFrame -> True, Background -> RGBColor[1., 0.6, 0.1]], 
+            Cell[
+             StyleData[
+             "Hint", "SlideShow", StyleDefinitions -> StyleData["Hint"]], 
+             FontSize -> 22], 
+            Cell[
+             StyleData[
+             "Hint", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Hint", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Hint", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Hint", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Hint", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Hint", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData["CYUButton", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[1, 0.6, 0], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[1, 0.6, 0]}], 
+         Cell[
+          StyleData["HintButton", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[1, 0.4, 0], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[1, 0.4, 0]}], 
+         Cell[
+          StyleData["SolutionButton", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[0.09, 0.16, 0.25], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[0.09, 0.16, 0.25]}], 
+         Cell[
+          StyleData["CYUButtonActive", StyleDefinitions -> StyleData["Text"]],
+           FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[0, 0.6, 1], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[0, 0.6, 1]}], 
+         Cell[
+          StyleData[
+          "HintButtonActive", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[0, 0.6, 1], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[0, 0.6, 1]}], 
+         Cell[
+          StyleData[
+          "SolutionButtonActive", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[1], 
+          FrameBoxOptions -> {
+           Background -> RGBColor[0, 0.6, 1], 
+            BaseStyle -> {"Text", FontColor -> GrayLevel[1]}, FrameStyle -> 
+            RGBColor[0, 0.6, 1]}], 
+         Cell[
+          StyleData["Menu"], FontFamily -> "Source Sans Pro"], 
+         Cell[
+          StyleData["WolframLanguageLogo"], FontColor -> 
+          RGBColor[0.09, 0.16, 0.25]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData[
+             "WolframLanguageLogoCell", StyleDefinitions -> 
+              StyleData["Text"]], CellMargins -> {{120, 0}, {0, 12}}, 
+             MenuSortingValue -> 10000, FontSize -> 180, FontColor -> 
+             RGBColor[0.8, 0.1, 0.1]], 
+            Cell[
+             StyleData[
+             "WolframLanguageLogoCell", "SlideShow", StyleDefinitions -> 
+              StyleData["WolframLanguageLogoCell"]]], 
+            Cell[
+             StyleData[
+             "WolframLanguageLogoCell", "SlideShow Working", StyleDefinitions -> 
+              StyleData["WolframLanguageLogoCell"]]], 
+            Cell[
+             StyleData[
+             "WolframLanguageLogoCell", "SlideShow Presentation", 
+              StyleDefinitions -> StyleData["WolframLanguageLogoCell"]]], 
+            Cell[
+             StyleData[
+             "WolframLanguageLogoCell", "Scrolling Presentation", 
+              StyleDefinitions -> StyleData["WolframLanguageLogoCell"]]]}, 
+           Closed]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell["Items", "Subsection"], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Item"], CellDingbat -> 
+             StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+               RGBColor[1., 0.5, 0.]], CellMargins -> {{140, 0}, {0, 15}}], 
+            Cell[
+             StyleData[
+             "Item", "SlideShow", StyleDefinitions -> StyleData["Item"]], 
+             CellFrameLabelMargins -> 10, FontSize -> 22], 
+            Cell[
+             StyleData[
+             "Item", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Item", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Item", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Item", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Item", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Item", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["ItemNumbered"], CellMargins -> {{145, 0}, {0, 15}}], 
+            Cell[
+             StyleData[
+             "ItemNumbered", "SlideShow", StyleDefinitions -> 
+              StyleData["ItemNumbered"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.073741821*^9}, 
+             CellFrameLabelMargins -> 6, FontSize -> 22], 
+            Cell[
+             StyleData[
+             "ItemNumbered", "Slideshow Working", StyleDefinitions -> 
+              StyleData["ItemNumbered", "SlideShow"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}], 
+            Cell[
+             StyleData[
+             "ItemNumbered", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["ItemNumbered", "Slideshow Working"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}], 
+            Cell[
+             StyleData[
+             "ItemNumbered", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["ItemNumbered", "Slideshow Working"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["ItemParagraph"], CellMargins -> {{140, 0}, {0, 15}}], 
+            
+            Cell[
+             StyleData[
+             "ItemParagraph", "SlideShow", StyleDefinitions -> 
+              StyleData["ItemParagraph"]], ShowGroupOpener -> False, FontSize -> 
+             22], 
+            Cell[
+             StyleData[
+             "ItemParagraph", "Slideshow Working", StyleDefinitions -> 
+              StyleData["ItemParagraph", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "ItemParagraph", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["ItemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "ItemParagraph", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["ItemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "ItemParagraph", "Printout", StyleDefinitions -> 
+              StyleData["ItemParagraph", "SlideShow"]], 
+             CellMargins -> {{140, Inherited}, {Inherited, 0.5 Inherited}}]}, 
+           Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subitem"], CellDingbat -> 
+             StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+               RGBColor[1., 0.6, 0]], CellMargins -> {{160, 0}, {0, 15}}, 
+             FontSize -> 13.5], 
+            Cell[
+             StyleData[
+             "Subitem", "SlideShow", StyleDefinitions -> 
+              StyleData["Subitem"]], CellFrameLabelMargins -> 10, FontSize -> 
+             22], 
+            Cell[
+             StyleData[
+             "Subitem", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subitem", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subitem", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subitem", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subitem", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subitem", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubitemNumbered"], CellMargins -> {{180, 0}, {0, 15}},
+              FontSize -> 13.5], 
+            Cell[
+             StyleData[
+             "SubitemNumbered", "SlideShow", StyleDefinitions -> 
+              StyleData["SubitemNumbered"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.073741821*^9}, 
+             CellFrameLabelMargins -> 6, FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubitemNumbered", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubitemNumbered", "SlideShow"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}], 
+            Cell[
+             StyleData[
+             "SubitemNumbered", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["SubitemNumbered", "Slideshow Working"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}], 
+            Cell[
+             StyleData[
+             "SubitemNumbered", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["SubitemNumbered", "Slideshow Working"]], 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}], 
+            Cell[
+             StyleData["SubitemNumbered", "Printout"], 
+             CellMargins -> {{180, Inherited}, {Inherited, Inherited}}, 
+             CellGroupingRules -> {
+              "GroupTogetherNestedGrouping", 1.07374182*^9}]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubitemParagraph"], 
+             CellMargins -> {{160, 0}, {0, 15}}, FontSize -> 13.5], 
+            Cell[
+             StyleData[
+             "SubitemParagraph", "SlideShow", StyleDefinitions -> 
+              StyleData["SubitemParagraph"]], FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubitemParagraph", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubitemParagraph", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "SubitemParagraph", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["SubitemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "SubitemParagraph", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["SubitemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData["SubitemParagraph", "Printout"], 
+             CellMargins -> {{160, Inherited}, {Inherited, 0.1 Inherited}}]}, 
+           Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubitem"], CellDingbat -> 
+             StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+               GrayLevel[0.6]], CellMargins -> {{180, 0}, {0, 15}}, 
+             StyleKeyMapping -> {
+              "Tab" -> "Subsubsubitem", "*" -> "Subsubsubitem", "Backspace" -> 
+               "Subitem", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> "Subitem"}], 
+            Cell[
+             StyleData[
+             "Subsubitem", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubitem"]], CellFrameLabelMargins -> 10, FontSize -> 
+             22], 
+            Cell[
+             StyleData[
+             "Subsubitem", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubitem", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubitem", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsubitem", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubitem", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsubitem", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubsubitemNumbered"], 
+             CellMargins -> {{180, 0}, {0, 15}}, 
+             StyleKeyMapping -> {
+              "Tab" -> "SubsubsubitemNumbered", "Backspace" -> 
+               "SubitemNumbered", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> 
+               "SubitemNumbered"}], 
+            Cell[
+             StyleData[
+             "SubsubitemNumbered", "SlideShow", StyleDefinitions -> 
+              StyleData["SubsubitemNumbered"]], CellFrameLabelMargins -> 10, 
+             FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubsubitemNumbered", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubsubitemNumbered", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "SubsubitemNumbered", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["SubsubitemNumbered", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "SubsubitemNumbered", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["SubsubitemNumbered", "Slideshow Working"]]]}, 
+           Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubsubitemParagraph"], 
+             CellMargins -> {{180, 0}, {0, 15}}, 
+             StyleKeyMapping -> {
+              "Tab" -> "SubsubsubitemParagraph", "Backspace" -> 
+               "SubitemParagraph", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> 
+               "SubitemParagraph"}], 
+            Cell[
+             StyleData[
+             "SubsubitemParagraph", "SlideShow", StyleDefinitions -> 
+              StyleData["SubsubitemParagraph"]], CellFrameLabelMargins -> 10, 
+             FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubsubitemParagraph", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubsubitemParagraph", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "SubsubitemParagraph", "Slideshow Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubitemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "SubsubitemParagraph", "Scrolling Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubitemParagraph", "Slideshow Working"]]]}, 
+           Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["Subsubsubitem"], CellDingbat -> 
+             StyleBox["\[FilledSmallCircle]", Alignment -> Baseline, 
+               GrayLevel[0.75]], CellMargins -> {{200, 0}, {0, 15}}, 
+             ReturnCreatesNewCell -> True, 
+             StyleKeyMapping -> {
+              "Backspace" -> 
+               "Subsubitem", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> "Subsubitem"}, 
+             CellGroupingRules -> {"ItemGrouping", 100}, 
+             CellFrameLabelMargins -> 4, CounterIncrements -> "Subsubsubitem",
+              MenuSortingValue -> 1630, FontFamily -> "Source Sans Pro", 
+             FontSize -> 12.5], 
+            Cell[
+             StyleData[
+             "Subsubsubitem", "SlideShow", StyleDefinitions -> 
+              StyleData["Subsubsubitem"]], CellFrameLabelMargins -> 10, 
+             FontSize -> 22], 
+            Cell[
+             StyleData[
+             "Subsubsubitem", "Slideshow Working", StyleDefinitions -> 
+              StyleData["Subsubsubitem", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubitem", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["Subsubsubitem", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "Subsubsubitem", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["Subsubsubitem", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubsubsubitemNumbered"], CellDingbat -> Cell[
+               TextData[{
+                 CounterBox["ItemNumbered"], ".", 
+                 CounterBox["SubitemNumbered"], ".", 
+                 CounterBox["SubsubitemNumbered"], ".", 
+                 CounterBox["SubsubsubitemNumbered"], "."}], FontWeight -> 
+               "Bold"], CellMargins -> {{200, 0}, {0, 15}}, 
+             ReturnCreatesNewCell -> True, 
+             StyleKeyMapping -> {
+              "Backspace" -> 
+               "SubsubitemNumbered", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> 
+               "SubsubitemNumbered"}, 
+             CellGroupingRules -> {"ItemGrouping", 100}, 
+             CellFrameLabelMargins -> 4, CounterIncrements -> 
+             "SubsubsubitemNumbered", MenuSortingValue -> 1630, FontFamily -> 
+             "Source Sans Pro", FontSize -> 12.5], 
+            Cell[
+             StyleData[
+             "SubsubsubitemNumbered", "SlideShow", StyleDefinitions -> 
+              StyleData["SubsubsubitemNumbered"]], CellFrameLabelMargins -> 
+             10, FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubsubsubitemNumbered", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubsubsubitemNumbered", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "SubsubsubitemNumbered", "Slideshow Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubsubitemNumbered", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "SubsubsubitemNumbered", "Scrolling Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubsubitemNumbered", "Slideshow Working"]]]}, 
+           Closed]], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["SubsubsubitemParagraph"], 
+             CellMargins -> {{200, 0}, {0, 15}}, ReturnCreatesNewCell -> True,
+              StyleKeyMapping -> {
+              "Backspace" -> 
+               "SubsubitemParagraph", $CellContext`KeyEvent[
+                "Tab", $CellContext`Modifiers -> {"Shift"}] -> 
+               "SubsubitemParagraph"}, 
+             CellGroupingRules -> {"ItemGrouping", 100}, 
+             CellFrameLabelMargins -> 4, CounterIncrements -> "Subsubsubitem",
+              MenuSortingValue -> 1630, FontFamily -> "Source Sans Pro", 
+             FontSize -> 12.5, FontColor -> GrayLevel[0.2]], 
+            Cell[
+             StyleData[
+             "SubsubsubitemParagraph", "SlideShow", StyleDefinitions -> 
+              StyleData["SubsubsubitemParagraph"]], CellFrameLabelMargins -> 
+             10, FontSize -> 22], 
+            Cell[
+             StyleData[
+             "SubsubsubitemParagraph", "Slideshow Working", StyleDefinitions -> 
+              StyleData["SubsubsubitemParagraph", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "SubsubsubitemParagraph", "Slideshow Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubsubitemParagraph", "Slideshow Working"]]], 
+            Cell[
+             StyleData[
+             "SubsubsubitemParagraph", "Scrolling Presentation", 
+              StyleDefinitions -> 
+              StyleData["SubsubsubitemParagraph", "Slideshow Working"]]]}, 
+           Closed]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell["Other", "Subsection"], 
+         Cell[
+          StyleData["SlideShowNavigationBar"], PageWidth -> Automatic, 
+          MenuSortingValue -> 10000, Background -> None], 
+         Cell[
+          CellGroupData[{
+            Cell[
+             StyleData["EndOfSlide"], 
+             CellFrame -> {{False, False}, {False, True}}, 
+             CellMargins -> {{120, 0}, {100, 15}}, 
+             CellGroupingRules -> {"SectionGrouping", 30}, CellFrameColor -> 
+             GrayLevel[0.85], MenuSortingValue -> 1400], 
+            Cell[
+             StyleData[
+             "EndOfSlide", "SlideShow", StyleDefinitions -> 
+              StyleData["EndOfSlide"]]], 
+            Cell[
+             StyleData[
+             "EndOfSlide", "Slideshow Working", StyleDefinitions -> 
+              StyleData["EndOfSlide", "SlideShow"]]], 
+            Cell[
+             StyleData[
+             "EndOfSlide", "Slideshow Presentation", StyleDefinitions -> 
+              StyleData["EndOfSlide", "Slideshow Working"]], CellFrame -> 
+             None, ShowCellBracket -> False], 
+            Cell[
+             StyleData[
+             "EndOfSlide", "Scrolling Presentation", StyleDefinitions -> 
+              StyleData["EndOfSlide", "Slideshow Working"]]]}, Closed]], 
+         Cell[
+          StyleData["Graphics"], CellMargins -> {{120, Inherited}, {15, 15}}, 
+          CellGroupingRules -> "GraphicsGrouping", PageBreakWithin -> False]},
+         Closed]]}, Open]], 
+   Cell[
+    CellGroupData[{
+      Cell["Styles for Input and Output Cells", "Section"], 
+      Cell[
+       StyleData["WolframAlphaShort"], CellMargins -> {{120, 0}, {0, 15}}, 
+       MenuSortingValue -> 10000], 
+      Cell[
+       StyleData["WolframAlphaLong"], CellMargins -> {{117, 0}, {0, 15}}, 
+       MenuSortingValue -> 10000], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["Input"], CellMargins -> {{120, 10}, {5, 20}}, FontSize -> 
+          13], 
+         Cell[
+          StyleData[
+          "Input", "SlideShow", StyleDefinitions -> StyleData["Input"]], 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "Input", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Input", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "Input", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["Input", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "Input", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["Input", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["Program"], CellMargins -> {{120, 10}, {5, 20}}, 
+          MenuSortingValue -> 10000, FontSize -> 16], 
+         Cell[
+          StyleData[
+          "Program", "SlideShow", StyleDefinitions -> StyleData["Program"]], 
+          FontSize -> 20], 
+         Cell[
+          StyleData[
+          "Program", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Program", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "Program", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["Program", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "Program", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["Program", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData[
+          "ExperimentalInput", StyleDefinitions -> StyleData["Input"]], 
+          Editable -> True, CellFrame -> True, 
+          StyleKeyMapping -> {"=" -> "WolframAlphaShort", "*" -> "Item"}, 
+          CellFrameColor -> RGBColor[1, 0.43, 0.13], CellFrameLabels -> {{
+             Cell[
+              BoxData[
+               RotationBox["Experimental", BoxRotation -> 1.5708]], "Text", 
+              FontSize -> 10, FontColor -> RGBColor[1, 0.43, 0.13]], None}, {
+            None, None}}], 
+         Cell[
+          StyleData["ExperimentalInput", "SlideShow"], 
+          CellMargins -> {{120, 10}, {5, 20}}, 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "ExperimentalInput", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Input", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "ExperimentalInput", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["Input", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "ExperimentalInput", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["Input", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["InputOnly"], CellMargins -> {{120, 10}, {5, 10}}, 
+          FontSize -> 13], 
+         Cell[
+          StyleData[
+          "InputOnly", "SlideShow", StyleDefinitions -> 
+           StyleData["InputOnly"]], 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}], 
+         Cell[
+          StyleData[
+          "InputOnly", "Slideshow Working", StyleDefinitions -> 
+           StyleData["InputOnly", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "InputOnly", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["InputOnly", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "InputOnly", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["InputOnly", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       StyleData["InputHidden", StyleDefinitions -> StyleData["Input"]], 
+       CellEpilog :> (SelectionMove[
+          EvaluationNotebook[], All, GeneratedCell]; 
+        FrontEndTokenExecute["SelectionCloseUnselectedCells"]), 
+       InitializationCell -> True, MenuSortingValue -> 1510, MenuCommandKey :> 
+       "8"], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["Code"], CellMargins -> {{120, 10}, {5, 10}}], 
+         Cell[
+          StyleData[
+          "Code", "SlideShow", StyleDefinitions -> StyleData["Code"]], 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "Code", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Code", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "Code", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["Code", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "Code", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["Code", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["Output"], CellMargins -> {{120, 10}, {5, 10}}, FontSize -> 
+          13], 
+         Cell[
+          StyleData[
+          "Output", "SlideShow", StyleDefinitions -> StyleData["Output"]], 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "Output", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Output", "SlideShow"]]], 
+         Cell[
+          StyleData[
+          "Output", "Slideshow Presentation", StyleDefinitions -> 
+           StyleData["Output", "Slideshow Working"]]], 
+         Cell[
+          StyleData[
+          "Output", "Scrolling Presentation", StyleDefinitions -> 
+           StyleData["Output", "Slideshow Working"]]]}, Closed]], 
+      Cell[
+       StyleData["Separator"], CellFrame -> {{False, False}, {1.5, False}}, 
+       CellMargins -> {{120, 0}, {0, 0}}, CellFrameColor -> GrayLevel[0.8], 
+       MenuSortingValue -> 10000], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["ExternalLanguage"], CellMargins -> {{85, 10}, {5, 20}}], 
+         
+         Cell[
+          StyleData[
+          "ExternalLanguage", "SlideShow", StyleDefinitions -> 
+           StyleData["ExternalLanguage"]], CellMargins -> {{85, 10}, {5, 20}},
+           LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "ExternalLanguage", "Slideshow Working", StyleDefinitions -> 
+           StyleData["ExternalLanguage", "SlideShow"]]]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell[
+          StyleData["Print"], CellMargins -> {{120, 10}, {5, 10}}, FontSize -> 
+          13], 
+         Cell[
+          StyleData[
+          "Print", "SlideShow", StyleDefinitions -> StyleData["Print"]], 
+          CellMargins -> {{120, 10}, {5, 10}}, 
+          LinebreakAdjustments -> {1, 2., 12., 1., 1.}, FontSize -> 20], 
+         Cell[
+          StyleData[
+          "Print", "Slideshow Working", StyleDefinitions -> 
+           StyleData["Print", "SlideShow"]]]}, Closed]]}, Closed]]}, Visible -> 
+  False, FrontEndVersion -> "14.3 for Mac OS X ARM (64-bit) (July 22, 2025)", 
+  StyleDefinitions -> "PrivateStylesheetFormatting.nb"],
+ExpressionUUID->"f8688af5-d1e1-446b-a79e-93ec77bc9e4a"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "SlideShowHeader"->{
+  Cell[576, 22, 136, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"96f94f79-2e50-4780-9feb-98e403d9ee84",
+   CellTags->"SlideShowHeader"],
+  Cell[22108, 391, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"c8100d59-33a8-428a-908e-a900cd252e5d",
+   CellTags->"SlideShowHeader"],
+  Cell[23062, 415, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"eb8789c2-7e60-4a42-a015-ee857d7c5f2c",
+   CellTags->"SlideShowHeader"],
+  Cell[28635, 568, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"16eec13d-dadd-4606-ae7d-44b1a5e5cce1",
+   CellTags->"SlideShowHeader"],
+  Cell[35223, 764, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"54441e25-2452-4cd4-8b88-0199763b8b6c",
+   CellTags->"SlideShowHeader"],
+  Cell[39361, 889, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"150e32c3-e30d-4db4-aab5-ec3d0f3d335b",
+   CellTags->"SlideShowHeader"],
+  Cell[45924, 1066, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"97ecf7cb-fb25-45b2-b3be-73382eb961ca",
+   CellTags->"SlideShowHeader"]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"SlideShowHeader", 99438, 2305}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 136, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"96f94f79-2e50-4780-9feb-98e403d9ee84",
+ CellTags->"SlideShowHeader"],
+Cell[715, 26, 21000, 350, 81, "WolframULogo",ExpressionUUID->"31e9c09e-2f2f-4c8d-a61d-dc7d6c5971a4"],
+Cell[CellGroupData[{
+Cell[21740, 380, 105, 0, 247, "Title",ExpressionUUID->"6368dd2d-9946-4904-9e95-a81212adccff"],
+Cell[21848, 382, 211, 3, 62, "Subtitle",ExpressionUUID->"d8115056-e951-4a76-887c-b7536a5153cd",
+ CounterAssignments->{{"Subsection", 0}, {"Subsubsection", 0}, {"Exercise", 0}, {"Section", 8}}]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[22108, 391, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"c8100d59-33a8-428a-908e-a900cd252e5d",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[22255, 397, 82, 0, 137, "Section",ExpressionUUID->"435d2d47-8fdf-4757-a7de-9557fa93ee3f"],
+Cell[22340, 399, 593, 8, 99, "Text",ExpressionUUID->"96940453-93f5-43de-b24c-d13bcdb975e9"]
+}, Open  ]],
+Cell[22948, 410, 77, 0, 136, "EndOfSlide",ExpressionUUID->"3ae43c7b-0a22-452f-b3af-75e975d5eaf7"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23062, 415, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"eb8789c2-7e60-4a42-a015-ee857d7c5f2c",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[23209, 421, 93, 0, 137, "Section",ExpressionUUID->"1a3173f1-7253-47a9-8660-75e4df22fd8e"],
+Cell[23305, 423, 541, 10, 77, "Text",ExpressionUUID->"ebb85469-7f5c-4903-b42d-3d9071143d71"],
+Cell[23849, 435, 813, 13, 55, "Text",ExpressionUUID->"189f2534-565e-4d8d-a08d-f4aaee755ef0"],
+Cell[24665, 450, 165, 3, 33, "Text",ExpressionUUID->"d2847455-3cc3-42fa-bdd4-419857118299"],
+Cell[24833, 455, 388, 7, 41, "Input",ExpressionUUID->"6df4ffcf-c944-442e-ba12-210ec90e5842"],
+Cell[25224, 464, 343, 9, 33, "Text",ExpressionUUID->"0fd1bff7-4958-4864-bf56-2c76532778a4"],
+Cell[CellGroupData[{
+Cell[25592, 477, 164, 3, 41, "Input",ExpressionUUID->"ee69dbcc-184d-44a5-9c0f-8fc09e7e87cb"],
+Cell[25759, 482, 199, 3, 31, "Output",ExpressionUUID->"3d6cef77-47bc-42f1-9ae6-6aae3a4378d9"]
+}, Open  ]],
+Cell[25973, 488, 393, 10, 33, "Text",ExpressionUUID->"76669ebd-b676-48c4-b33f-04fc982e99da"],
+Cell[CellGroupData[{
+Cell[26391, 502, 164, 3, 41, "Input",ExpressionUUID->"424c3596-2ae1-42df-be56-94266fcfb00f"],
+Cell[26558, 507, 199, 3, 31, "Output",ExpressionUUID->"fccc67e6-d75b-4ea5-b22c-3412742f1410"]
+}, Open  ]],
+Cell[26772, 513, 231, 4, 33, "Text",ExpressionUUID->"3325d438-3626-47c7-8189-a0481f310305"],
+Cell[CellGroupData[{
+Cell[27028, 521, 316, 7, 41, "Input",ExpressionUUID->"c433e47f-66e3-4282-86cb-c65d829abf69"],
+Cell[27347, 530, 200, 3, 31, "Output",ExpressionUUID->"26c26f9b-a5be-48aa-a8e2-3e71ae249307"]
+}, Open  ]],
+Cell[27562, 536, 183, 3, 33, "Text",ExpressionUUID->"c238aa09-7d53-4731-99ff-361b99dbe05b"],
+Cell[CellGroupData[{
+Cell[27770, 543, 514, 11, 41, "Input",ExpressionUUID->"6e3a7fb2-2bac-4df1-a826-31c7e1af942d"],
+Cell[28287, 556, 207, 3, 31, "Output",ExpressionUUID->"68361f69-0bf5-4623-8cb0-975bc2d3376b"]
+}, Open  ]]
+}, Open  ]],
+Cell[28521, 563, 77, 0, 136, "EndOfSlide",ExpressionUUID->"d1f37ff6-1c75-4410-96b7-3c1a1be47558"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[28635, 568, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"16eec13d-dadd-4606-ae7d-44b1a5e5cce1",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[28782, 574, 93, 0, 137, "Section",ExpressionUUID->"a373f241-0ddc-4cfe-9c20-698059c8b29c"],
+Cell[28878, 576, 530, 11, 33, "Text",ExpressionUUID->"df4646d7-e855-4f3d-a7da-d3795272509a"],
+Cell[CellGroupData[{
+Cell[29433, 591, 472, 11, 43, "Input",ExpressionUUID->"5acab680-78a3-4675-a46f-aa9e5bbe905e"],
+Cell[29908, 604, 528, 12, 32, "Output",ExpressionUUID->"43bc4657-051a-4891-92ed-76a9bc23ec46"]
+}, Open  ]],
+Cell[30451, 619, 850, 26, 33, "Text",ExpressionUUID->"a58ce95e-aed9-4fef-99c3-7c846705bc0f"],
+Cell[31304, 647, 285, 7, 33, "Text",ExpressionUUID->"25d296c4-bb4d-4164-9990-0798985148b6"],
+Cell[CellGroupData[{
+Cell[31614, 658, 666, 15, 82, "Input",ExpressionUUID->"ecaa6f72-474a-4486-83e4-29b8a67953c0"],
+Cell[32283, 675, 209, 3, 31, "Output",ExpressionUUID->"308818a5-666a-4c25-acab-8b44576f8eb1"]
+}, Open  ]],
+Cell[32507, 681, 477, 9, 55, "Text",ExpressionUUID->"c5dc577d-83d9-4209-b5e9-2f6f17c7a212"],
+Cell[32987, 692, 211, 5, 33, "Text",ExpressionUUID->"f6f80a57-1f89-4750-8bc4-453fbf426044"],
+Cell[CellGroupData[{
+Cell[33223, 701, 244, 6, 41, "Input",ExpressionUUID->"9f006e81-4283-470a-9174-975bd41d3fe8"],
+Cell[33470, 709, 775, 21, 31, "Output",ExpressionUUID->"8d9d6115-1453-4312-aa85-dc7c2de80077"]
+}, Open  ]],
+Cell[34260, 733, 204, 3, 33, "Text",ExpressionUUID->"df63bbc7-8c1d-4327-b182-2de512a6901f"],
+Cell[CellGroupData[{
+Cell[34489, 740, 284, 6, 41, "Input",ExpressionUUID->"8250a481-db3b-49c5-8cff-13cad8c1f199"],
+Cell[34776, 748, 306, 7, 31, "Output",ExpressionUUID->"a266d495-4a55-4927-baa7-0df1020f8cce"]
+}, Open  ]]
+}, Open  ]],
+Cell[35109, 759, 77, 0, 136, "EndOfSlide",ExpressionUUID->"312683a1-f30c-4a1c-a349-b65c14e938ed"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[35223, 764, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"54441e25-2452-4cd4-8b88-0199763b8b6c",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[35370, 770, 93, 0, 137, "Section",ExpressionUUID->"97abdcfb-534d-4dc9-a646-7848dda541eb"],
+Cell[35466, 772, 803, 20, 77, "Text",ExpressionUUID->"75b659df-0e16-4f88-99a2-f27508c4d675"],
+Cell[CellGroupData[{
+Cell[36294, 796, 250, 6, 41, "Input",ExpressionUUID->"914dd5cb-2905-40e0-8fcd-8ab55bb6b858"],
+Cell[36547, 804, 196, 3, 31, "Output",ExpressionUUID->"5d809d7d-c60c-4931-ae96-ed14ee0042c4"]
+}, Open  ]],
+Cell[36758, 810, 276, 6, 33, "Text",ExpressionUUID->"fae4a661-d4b5-4db0-b3cc-42a97c92fd2e"],
+Cell[CellGroupData[{
+Cell[37059, 820, 322, 8, 41, "Input",ExpressionUUID->"d7e3f90d-ec53-439c-ac2d-00a1ff54f846"],
+Cell[37384, 830, 207, 3, 31, "Output",ExpressionUUID->"d3dfb2cd-34b0-4f90-be77-4950048ecd43"]
+}, Open  ]],
+Cell[37606, 836, 272, 6, 33, "Text",ExpressionUUID->"ce85fa0b-ef2c-4588-b494-786bbf4eab5e"],
+Cell[CellGroupData[{
+Cell[37903, 846, 405, 10, 43, "Input",ExpressionUUID->"c2bc9d66-9e2a-4530-9551-7ff6623cac34"],
+Cell[38311, 858, 202, 3, 31, "Output",ExpressionUUID->"2c6a68dd-8047-4bd4-9909-87a4d8d8f271"]
+}, Open  ]],
+Cell[38528, 864, 214, 3, 33, "Text",ExpressionUUID->"88d8d64b-6b0c-4770-a049-1aa45944a7c1"],
+Cell[CellGroupData[{
+Cell[38767, 871, 244, 4, 41, "Input",ExpressionUUID->"febf1b26-9b93-480a-b233-bc7880702e54"],
+Cell[39014, 877, 206, 3, 31, "Output",ExpressionUUID->"ccbe93b1-12d6-4c0a-a7e9-746dc1a82c33"]
+}, Open  ]]
+}, Open  ]],
+Cell[39247, 884, 77, 0, 136, "EndOfSlide",ExpressionUUID->"eab6a64a-9e40-4e07-af70-7364ba7f3235"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[39361, 889, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"150e32c3-e30d-4db4-aab5-ec3d0f3d335b",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[39508, 895, 98, 0, 137, "Section",ExpressionUUID->"b6beb0ad-68ba-4c07-af96-28499495ffa1"],
+Cell[39609, 897, 441, 6, 33, "Text",ExpressionUUID->"c7d5599a-c32b-4983-814b-e1e04907cc8e"],
+Cell[40053, 905, 620, 10, 55, "Text",ExpressionUUID->"981aaae1-3851-49cd-af23-b7efcf71c146"],
+Cell[CellGroupData[{
+Cell[40698, 919, 602, 12, 41, "Input",ExpressionUUID->"a431bd35-bf2a-411f-889c-d51e1422cd7a"],
+Cell[41303, 933, 1161, 37, 31, "Output",ExpressionUUID->"366fa4c4-cfb9-427e-bd0e-e1e42bc9440c"]
+}, Open  ]],
+Cell[42479, 973, 300, 7, 33, "Text",ExpressionUUID->"918ce49a-725f-448b-b17a-2f30c0a038c5"],
+Cell[CellGroupData[{
+Cell[42804, 984, 556, 11, 41, "Input",ExpressionUUID->"4eb22e0e-30fd-40d5-a714-3f1b6d7fc630"],
+Cell[43363, 997, 1690, 45, 51, "Output",ExpressionUUID->"08abc638-9f8b-4e79-b245-5d921db8d359"]
+}, Open  ]],
+Cell[45068, 1045, 727, 13, 99, "Text",ExpressionUUID->"f9b7e0fb-eddd-458c-91c9-bf8a26f38412"]
+}, Open  ]],
+Cell[45810, 1061, 77, 0, 136, "EndOfSlide",ExpressionUUID->"d20d56de-3a7a-469d-b827-91e010d2f15a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[45924, 1066, 122, 2, 85, "SlideShowNavigationBar",ExpressionUUID->"97ecf7cb-fb25-45b2-b3be-73382eb961ca",
+ CellTags->"SlideShowHeader"],
+Cell[CellGroupData[{
+Cell[46071, 1072, 81, 0, 137, "Section",ExpressionUUID->"1a506e95-85ea-44d8-b559-441689703af8"],
+Cell[46155, 1074, 198, 3, 33, "Item",ExpressionUUID->"18b99214-681f-4754-b225-c2bb065675a8"],
+Cell[46356, 1079, 445, 12, 33, "Item",ExpressionUUID->"8cbba81c-66fc-49bc-a9d3-3462d767e1d7"]
+}, Open  ]],
+Cell[46816, 1094, 77, 0, 136, "EndOfSlide",ExpressionUUID->"488b5500-da7f-44b7-ba76-7c790e5b1d72"]
+}, Open  ]]
+}
+]
+*)
+

@@ -1,0 +1,1265 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     51604,       1257]
+NotebookOptionsPosition[     24492,        687]
+NotebookOutlinePosition[     45438,       1162]
+CellTagsIndexPosition[     45395,       1159]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["What Is Quantum Computation?", "SectionTitle",ExpressionUUID->"bce0a3fe-e927-4584-9cf9-6a4e64ee6346"],
+
+Cell[CellGroupData[{
+
+Cell["Classical Computation", "NumberedSection",
+ CounterAssignments->{{"Subsection", 0}, {"Subsubsection", 0}, {
+   "Exercise", 0}, {
+   "Section", 0}},ExpressionUUID->"d776fe4b-c44e-4af3-b44d-208c20e437a6"],
+
+Cell[CellGroupData[{
+
+Cell["Overview", "SubsectionFirst",ExpressionUUID->"7e1539d2-c760-43c0-bbeb-b1c1482c1653"],
+
+Cell["\<\
+We begin with a brief revisit of classical computation through a series of \
+hands-on examples. From there, the focus transitions to the quantum domain, \
+where you will explore several examples of quantum circuits. Each example is \
+accompanied by corresponding code; it\[CloseCurlyQuote]s perfectly fine if \
+not everything is immediately clear. As you move forward, your grasp of \
+quantum principles and your coding proficiency will develop together, \
+reinforcing one another through practice and exploration.\
+\>", "Text",ExpressionUUID->"242e48c7-e454-4d4e-a351-f6d52969176a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Examples from classical computation", "SubsectionFirst",ExpressionUUID->"f0e32536-9945-4884-90e6-50079125dc9c"],
+
+Cell["\<\
+In order to understand quantum computation, it helps to compare it to \
+classical computation. To compute something, you have to be able to use rules \
+to determine what should be the output from a list of inputs. You can think \
+of computing as starting with the inputs and following the rules to reach an \
+output.\
+\>", "Text",
+ CellChangeTimes->{{3.943973517653755*^9, 3.943973579045574*^9}, {
+   3.943973667454586*^9, 3.9439736996257668`*^9}, 
+   3.969145663366331*^9},ExpressionUUID->"ea024cc5-eaca-40b7-bdec-\
+fa4f9228f73d"],
+
+Cell["\<\
+Consider two binary numbers \[OpenCurlyDoubleQuote]01\[CloseCurlyDoubleQuote] \
+and \[OpenCurlyDoubleQuote]10\[CloseCurlyDoubleQuote] and let\
+\[CloseCurlyQuote]s see how we can add them. First, each bit-string is \
+interpreted as a base-2 number rather than ordinary decimal, so \
+\[OpenCurlyDoubleQuote]01\[CloseCurlyDoubleQuote] becomes one and \
+\[OpenCurlyDoubleQuote]10\[CloseCurlyDoubleQuote] becomes two. \
+\>", "Text",
+ CellChangeTimes->{{3.943973644117935*^9, 3.943973644709938*^9}, {
+  3.943973731445715*^9, 3.943973765023449*^9}, {3.9439748152312126`*^9, 
+  3.9439748186146374`*^9}, {3.9439751128406887`*^9, 3.9439751243759556`*^9}, {
+  3.969144504581246*^9, 3.96914457063491*^9}, {3.9691446244028397`*^9, 
+  3.9691446503791723`*^9}},ExpressionUUID->"b91bb087-c599-4291-b1e5-\
+94c78b7637e6"],
+
+Cell["Define binary strings:", "Text",
+ CellChangeTimes->{{3.96914465685312*^9, 
+  3.9691446659184217`*^9}},ExpressionUUID->"7d454928-e41d-4534-8d7d-\
+2c9579fed00f"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"a", "=", "\"\<01\>\""}], ";", 
+  RowBox[{"b", "=", "\"\<10\>\""}], ";"}]], "Input",
+ CellChangeTimes->{{3.9439751389630413`*^9, 3.943975141321228*^9}, 
+   3.968248723352311*^9, {3.969144367383288*^9, 3.969144376324502*^9}, {
+   3.9691445482341747`*^9, 3.969144591976397*^9}},
+ CellLabel->"In[7]:=",ExpressionUUID->"891b11db-b287-4b9d-81dc-205b930c572e"],
+
+Cell[TextData[{
+ "Construct the number from the base-2 digits of ",
+ Cell[BoxData[
+  FormBox["a", TraditionalForm]],ExpressionUUID->
+  "0e9b3927-502c-41f6-b643-b128a2ae1048"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.9691446752398167`*^9, 3.969144719524901*^9}, 
+   3.969382126484251*^9},ExpressionUUID->"03097540-aaed-46dc-96ce-\
+d61027fe2bea"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FromDigits", "[", 
+  RowBox[{"a", ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[8]:=",ExpressionUUID->"177119ca-9e89-444c-bb01-ada4385003ec"],
+
+Cell[BoxData["1"], "Output",
+ CellChangeTimes->{3.9699248826007137`*^9, 3.9699764385655613`*^9, 
+  3.970334180682419*^9},
+ CellLabel->"Out[8]=",ExpressionUUID->"d770ecd9-6bbc-4a15-bcf5-f950e3396ba6"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Construct the number from the base-2 digits of ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "27c5a062-e670-4812-bb20-1922209f860a"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.969144689697773*^9, 3.9691446915527763`*^9}, {
+   3.969144721982987*^9, 3.969144723119032*^9}, 
+   3.969382128505361*^9},ExpressionUUID->"ad6d8cc1-99e2-43e9-aa68-\
+201b07b8eba7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FromDigits", "[", 
+  RowBox[{"b", ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[9]:=",ExpressionUUID->"a357afaf-1479-4adc-be01-dcff89dd9a5e"],
+
+Cell[BoxData["2"], "Output",
+ CellChangeTimes->{3.9699248826096363`*^9, 3.9699764385835037`*^9, 
+  3.970334180706893*^9},
+ CellLabel->"Out[9]=",ExpressionUUID->"75bd9fed-e325-4311-af61-6c64c0b78647"]
+}, Open  ]],
+
+Cell["Add the numbers using normal addition:", "Text",
+ CellChangeTimes->{{3.969144693276149*^9, 3.9691446941007557`*^9}, {
+  3.969144725648521*^9, 
+  3.969144758615995*^9}},ExpressionUUID->"096fdaa2-f950-4d8f-bc14-\
+488613138bf1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"a", ",", "2"}], "]"}], "+", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"b", ",", "2"}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.969144602655939*^9, 3.969144606045418*^9}},
+ CellLabel->"In[10]:=",ExpressionUUID->"c2cf3ec4-9663-40d5-aca7-982ed409adb9"],
+
+Cell[BoxData["3"], "Output",
+ CellChangeTimes->{3.9699248826167097`*^9, 3.969976438588081*^9, 
+  3.9703341807173033`*^9},
+ CellLabel->"Out[10]=",ExpressionUUID->"8d1ed550-9381-4b3d-871e-22505d38a14a"]
+}, Open  ]],
+
+Cell["Convert the total back into bit-string:", "Text",
+ CellChangeTimes->{{3.9691447298090897`*^9, 
+  3.969144765466543*^9}},ExpressionUUID->"f6cd8e52-16f4-4a24-9014-\
+f310c7d5c898"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9439751389630413`*^9, 3.943975141321228*^9}, 
+   3.968248723352311*^9, {3.969144367383288*^9, 3.969144376324502*^9}, {
+   3.9691445482341747`*^9, 3.969144591976397*^9}},
+ CellLabel->"In[11]:=",ExpressionUUID->"3405b1ff-6fd4-4513-aff0-917757a69195"],
+
+Cell[BoxData["\<\"11\"\>"], "Output",
+ CellChangeTimes->{3.969924882625742*^9, 3.969976438597712*^9, 
+  3.9703341807398643`*^9},
+ CellLabel->"Out[11]=",ExpressionUUID->"860e907f-61ac-40d0-9340-e5f31ef6f42f"]
+}, Open  ]],
+
+Cell[TextData[{
+ "To get a better sense of constructs of numbers in a base ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "b9c57dbb-027b-4309-95bd-37f856e30374"],
+ ", let\[CloseCurlyQuote]s consider symbolic digits and base:"
+}], "Text",
+ CellChangeTimes->{{3.96992154707978*^9, 3.969921585944337*^9}, {
+  3.969921661580719*^9, 3.969921666689562*^9}, {3.9699217115974092`*^9, 
+  3.969921713767457*^9}, {3.969921835237812*^9, 
+  3.96992184461087*^9}},ExpressionUUID->"16f556f1-0b2c-40c4-a13e-\
+3315db71172a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Expand", "[", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "\[FormalC]4", ",", "\[FormalC]3", ",", "\[FormalC]2", ",", 
+      "\[FormalC]1", ",", "\[FormalC]0"}], "}"}], ",", "\[FormalB]"}], "]"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.969921591129137*^9, 3.969921657096219*^9}, {
+  3.9699763870913153`*^9, 3.969976411262271*^9}},
+ CellLabel->"In[12]:=",ExpressionUUID->"8f5d93ac-2539-4a49-8fb9-5ee4ace50e50"],
+
+Cell[BoxData[
+ RowBox[{"\[FormalC]0", "+", 
+  RowBox[{"\[FormalB]", " ", "\[FormalC]1"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "2"], " ", "\[FormalC]2"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "3"], " ", "\[FormalC]3"}], "+", 
+  RowBox[{
+   SuperscriptBox["\[FormalB]", "4"], " ", "\[FormalC]4"}]}]], "Output",
+ CellChangeTimes->{
+  3.969924882632793*^9, {3.969976380011856*^9, 3.9699764386010733`*^9}, 
+   3.970334180749*^9},
+ CellLabel->"Out[12]=",ExpressionUUID->"99a13143-a0b0-48c3-8e31-98493f537e11"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Donating the length of digits by ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],ExpressionUUID->
+  "09e92752-f43d-4a82-8efe-edc67307fe25"],
+ ", the maximum power of ",
+ Cell[BoxData[
+  FormBox["b", TraditionalForm]],ExpressionUUID->
+  "1ab2fd23-ea7d-4a30-b234-dfe6cc296c6e"],
+ " will be ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["b", 
+    RowBox[{"n", "-", "1"}]], TraditionalForm]],ExpressionUUID->
+  "bc3ad90b-4f09-4f5c-9f49-0e5e3f763cbc"],
+ " (in the above example, ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["b", 
+    RowBox[{"5", "-", "1"}]], TraditionalForm]],ExpressionUUID->
+  "a2f4e5fd-2b52-4f99-b31b-7381b363e755"],
+ ")."
+}], "Text",
+ CellChangeTimes->{{3.96992179811954*^9, 3.969921805435987*^9}, {
+  3.9699218480766973`*^9, 
+  3.969921889049645*^9}},ExpressionUUID->"2343a49f-3ea7-4875-a286-\
+e7c298fac3d1"],
+
+Cell["\<\
+Let\[CloseCurlyQuote]s consider another example. Add two binary strings 100 \
+and 011:\
+\>", "Text",
+ CellChangeTimes->{{3.957529225695665*^9, 3.957529246814452*^9}, {
+  3.969144777531629*^9, 
+  3.969144792404016*^9}},ExpressionUUID->"52c12e86-d39d-4e2b-b4c3-\
+1d275852ae50"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"a", "=", "\"\<101\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"b", "=", "\"\<011\>\""}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]}], "Input",
+ CellChangeTimes->{{3.943973148153572*^9, 3.943973163344902*^9}, 
+   3.968248724384761*^9, {3.96914439781164*^9, 3.969144402152009*^9}, {
+   3.969144822287341*^9, 3.96914482246059*^9}},
+ CellLabel->"In[13]:=",ExpressionUUID->"ed77cd51-951c-4a2e-be0e-44500e17f579"],
+
+Cell[BoxData["\<\"1000\"\>"], "Output",
+ CellChangeTimes->{3.969924882641964*^9, 3.9699764386115437`*^9, 
+  3.970334180772483*^9},
+ CellLabel->"Out[15]=",ExpressionUUID->"4d0e6fd1-c8b5-4d9d-b652-d2545264322a"]
+}, Open  ]],
+
+Cell["\<\
+Note that something interesting happened in above calculation. Pay attention \
+to the string length of initial numbers and final total. The original \
+bit-strings had the string length of 3 while the final answer is a four-bit \
+string. Let\[CloseCurlyQuote]s dive in a bit more.\
+\>", "Text",
+ CellChangeTimes->{{3.96914483448178*^9, 3.969144954319531*^9}, {
+  3.969382151134162*^9, 
+  3.969382151939642*^9}},ExpressionUUID->"70a36455-2b03-434f-94e8-\
+e233c0fa5173"],
+
+Cell["\<\
+What are all the states of a sequence of three classical bits?\
+\>", "Text",
+ CellChangeTimes->{{3.969144955635748*^9, 
+  3.96914495689016*^9}},ExpressionUUID->"1c78ef20-9def-41f7-86d4-\
+06fe94e6d1ab"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"threeBits", "=", 
+  RowBox[{"Tuples", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}], ",", "3"}], "]"}]}]], "Input",
+ CellLabel->"In[16]:=",ExpressionUUID->"445fe033-bcbd-4787-aa04-64079adb4e84"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "0", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "1", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "1", ",", "1"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.9699248826496162`*^9, 3.969976438616132*^9, 
+  3.970334180781451*^9},
+ CellLabel->"Out[16]=",ExpressionUUID->"b678996f-257e-42df-85fb-b96d6fc74ff5"]
+}, Open  ]],
+
+Cell["What are the corresponding numbers from above base-2 digits?", "Text",
+ CellChangeTimes->{{3.9691449816663637`*^9, 
+  3.969145011085713*^9}},ExpressionUUID->"5ee5f58a-bd78-4f79-b31d-\
+0c7b77693fe0"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"FromDigits", "[", 
+    RowBox[{"#", ",", "2"}], "]"}], "&"}], "/@", "threeBits"}]], "Input",
+ CellChangeTimes->{{3.969144968059084*^9, 3.969144979777162*^9}},
+ CellLabel->"In[17]:=",ExpressionUUID->"d8d7c32d-a27d-4a71-b294-fdf19e15d7d4"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "0", ",", "1", ",", "2", ",", "3", ",", "4", ",", "5", ",", "6", ",", "7"}],
+   "}"}]], "Output",
+ CellChangeTimes->{3.969924882659266*^9, 3.969976438627553*^9, 
+  3.97033418080435*^9},
+ CellLabel->"Out[17]=",ExpressionUUID->"198e6b73-0113-411e-9250-8f4d67992303"]
+}, Open  ]],
+
+Cell[TextData[{
+ "With a 3-bit string you can represent 0\[Dash]7; in general, ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "6ddb3eb8-cde6-47b0-9394-64d2af09932f"],
+ " bits represent 0 to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", "n"], "-", "1"}], TraditionalForm]],ExpressionUUID->
+  "c1bc70e6-c1be-4c71-8ed7-3746d477614e"],
+ ". Returning to the example, adding 101 and 011 gives 8, which exceeds the \
+3-bit range. This means in-place addition is modulo ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["2", "n"], TraditionalForm]],ExpressionUUID->
+  "fe088cd0-21eb-4022-98c6-571bcd6b2c4e"],
+ ", so the sum wraps to 000 unless you provide an extra bit to capture the \
+carry."
+}], "Text",ExpressionUUID->"4f02f1e6-6728-4b24-9ab8-7f34f1d59092"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"a", ",", "2"}], "]"}], "+", 
+  RowBox[{"FromDigits", "[", 
+   RowBox[{"b", ",", "2"}], "]"}]}]], "Input",
+ CellLabel->"In[18]:=",ExpressionUUID->"2d9d7310-5e80-4623-8bdf-e4c674648318"],
+
+Cell[BoxData["8"], "Output",
+ CellChangeTimes->{3.969924882666335*^9, 3.969976438631325*^9, 
+  3.970334180813403*^9},
+ CellLabel->"Out[18]=",ExpressionUUID->"a451a90e-cb95-4332-b4af-5cac092579e0"]
+}, Open  ]],
+
+Cell["\<\
+To encode that result as a bitstring, we need at least 4 bits (since 8 \
+requires 4-bit representation).\
+\>", "Text",
+ CellChangeTimes->{{3.969145107588945*^9, 3.969145116205862*^9}, 
+   3.96914529038514*^9},ExpressionUUID->"bca95b6b-b545-447d-a93d-\
+82f8f7aacfae"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", "2"}], "]"}]], "Input",
+ CellLabel->"In[19]:=",ExpressionUUID->"39c2689e-199f-4ebb-89af-1ab8357b7a30"],
+
+Cell[BoxData["\<\"1000\"\>"], "Output",
+ CellChangeTimes->{3.969924882675886*^9, 3.969976438642138*^9, 
+  3.970334180836187*^9},
+ CellLabel->"Out[19]=",ExpressionUUID->"808d35b7-8c36-4c2f-96a7-17b769bdbe7e"]
+}, Open  ]],
+
+Cell["\<\
+If you insist on staying within 3 bits, perform all operations modulo 8 \
+(wrap-around arithmetic).\
+\>", "Text",
+ CellChangeTimes->{{3.969145123974463*^9, 3.969145155211459*^9}, 
+   3.969145318808189*^9},ExpressionUUID->"c15be6ea-67fc-4dfe-8817-\
+fddd4324ab13"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Mod", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"a", ",", "2"}], "]"}], "+", 
+    RowBox[{"FromDigits", "[", 
+     RowBox[{"b", ",", "2"}], "]"}]}], ",", 
+   SuperscriptBox["2", "3"]}], "]"}]], "Input",
+ CellChangeTimes->{{3.9691451656294537`*^9, 3.969145169717841*^9}},
+ CellLabel->"In[20]:=",ExpressionUUID->"eec1d72a-e1b2-4a66-a8b0-010de633c8ea"],
+
+Cell[BoxData["0"], "Output",
+ CellChangeTimes->{3.9699248826828823`*^9, 3.9699764386468983`*^9, 
+  3.9703341808467693`*^9},
+ CellLabel->"Out[20]=",ExpressionUUID->"cff58752-f372-49b8-8017-7b1bd6a51b69"]
+}, Open  ]],
+
+Cell["Then the 3-bit string of the above result is:", "Text",
+ CellChangeTimes->{{3.9691451832817383`*^9, 3.9691451983994637`*^9}, 
+   3.969145345055253*^9},ExpressionUUID->"c2dfa33e-4ebb-4d6b-b8dd-\
+f3049550322d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"IntegerString", "[", 
+  RowBox[{"0", ",", "2", ",", "3"}], "]"}]], "Input",
+ CellChangeTimes->{{3.969145179830686*^9, 3.969145181279402*^9}},
+ CellLabel->"In[21]:=",ExpressionUUID->"6c664303-19b7-4adc-a78c-2fbe88fdcf4e"],
+
+Cell[BoxData["\<\"000\"\>"], "Output",
+ CellChangeTimes->{3.969924882691288*^9, 3.969976438657566*^9, 
+  3.970334180870161*^9},
+ CellLabel->"Out[21]=",ExpressionUUID->"bd1cc5d0-203d-4d85-8702-b00ed556ec33"]
+}, Open  ]],
+
+Cell["Now let\[CloseCurlyQuote]s try another encoding scheme. ", "Text",
+ CellChangeTimes->{{3.943975877791519*^9, 3.943975980361656*^9}, {
+  3.9439796965473022`*^9, 3.943979698933319*^9}, {3.968248972255479*^9, 
+  3.968248972712698*^9}, {3.968320667956229*^9, 3.968320668883841*^9}, {
+  3.969145752063458*^9, 3.9691457588821774`*^9}, {3.969382656049217*^9, 
+  3.969382673376566*^9}},ExpressionUUID->"8d0f8e96-1b34-48b3-8a86-\
+c3da040fbafc"],
+
+Cell["\<\
+It is also possible to encode information in such sequences of classical bits \
+to represent problems of interest. For example, each of those bit sequences \
+could also encode letter characters with a different encoding scheme:\
+\>", "Text",
+ CellChangeTimes->{{3.943975877791519*^9, 3.943975980361656*^9}, {
+  3.9439796965473022`*^9, 3.943979698933319*^9}, {3.968248972255479*^9, 
+  3.968248972712698*^9}, {3.968320667956229*^9, 3.968320668883841*^9}, {
+  3.969145752063458*^9, 3.9691457588821774`*^9}, {3.969382656049217*^9, 
+  3.969382665021945*^9}},ExpressionUUID->"5c3d8d7b-a9fb-4d63-b4bf-\
+aaf7129f932e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"FromLetterNumber", "[", 
+     RowBox[{"FromDigits", "[", 
+      RowBox[{"#", ",", "2"}], "]"}], "]"}], "&"}], ",", "threeBits"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.943976090511446*^9, 3.943976099041807*^9}, {
+   3.9439761596109524`*^9, 3.9439761931531334`*^9}, {3.9439765603870125`*^9, 
+   3.9439765731799965`*^9}, {3.96832071531772*^9, 3.968320723391488*^9}, 
+   3.969145375035074*^9, {3.969382684710661*^9, 3.969382690515366*^9}},
+ CellLabel->"In[22]:=",ExpressionUUID->"cc21e5df-c197-4211-9b01-3735777f3c13"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0"}], "}"}], "\[Rule]", "\<\" \"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "1"}], "}"}], "\[Rule]", "\<\"a\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "0"}], "}"}], "\[Rule]", "\<\"b\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "1"}], "}"}], "\[Rule]", "\<\"c\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "0"}], "}"}], "\[Rule]", "\<\"d\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "1"}], "}"}], "\[Rule]", "\<\"e\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "0"}], "}"}], "\[Rule]", "\<\"f\"\>"}], ",", 
+   
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "1"}], "}"}], "\[Rule]", "\<\"g\"\>"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.969924882695384*^9, 3.969976438662417*^9, 
+  3.9703341808796473`*^9},
+ CellLabel->"Out[22]=",ExpressionUUID->"b7d1029a-0a3d-4308-86b9-6de426155cdf"]
+}, Open  ]],
+
+Cell["\<\
+With yet another encoding scheme, those same bit sequences could represent \
+colors with opacity:\
+\>", "Text",
+ CellChangeTimes->{{3.9439764319406433`*^9, 3.943976435914694*^9}, {
+  3.9439765147070065`*^9, 
+  3.943976535529358*^9}},ExpressionUUID->"85bccd76-da93-4054-9527-\
+e90518e8b429"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Apply", "[", 
+     RowBox[{"RGBColor", ",", "#"}], "]"}], "&"}], ",", "threeBits"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.943976267816435*^9, 3.9439763247065144`*^9}, {
+   3.943976364028818*^9, 3.9439764940098667`*^9}, {3.968321013478739*^9, 
+   3.968321018923381*^9}, {3.968350897168367*^9, 3.968350900866498*^9}, 
+   3.9691453765923843`*^9, {3.969382695879224*^9, 3.969382700760293*^9}},
+ CellLabel->"In[23]:=",ExpressionUUID->"2c08c4ed-e0a9-4eab-8128-b4fa8d120e96"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 0, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "0", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 0, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 1, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[0, 1, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 0, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 0, 1]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "0"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 1, 0]|>,
+     "RGBColorSwatchTemplate"]}], ",", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "1", ",", "1"}], "}"}], "\[Rule]", 
+    TemplateBox[<|"color" -> RGBColor[1, 1, 1]|>,
+     "RGBColorSwatchTemplate"]}]}], "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.969924882704938*^9, 3.969976438673476*^9, 
+  3.9703341809032516`*^9},
+ CellLabel->"Out[23]=",ExpressionUUID->"56e18341-d70d-45f2-8f3b-9ffe69ad2114"]
+}, Open  ]],
+
+Cell["\<\
+Having seen how a 3-bit register cleanly enumerates eight distinct states and \
+how different encodings map those states to numbers, letters, or colors, we \
+now move to the quantum setting. There the same eight basis strings exist, \
+but a 3-qubit register can also occupy complex superpositions of them, and \
+even entangled combinations that have no classical analogue. The rules for \
+storing and extracting information therefore change: measurement reveals a \
+single basis outcome, while computation exploits interference among \
+amplitudes.\
+\>", "Text",
+ CellChangeTimes->{
+  3.9683563449566803`*^9, {3.9683572557095957`*^9, 
+   3.968357255859674*^9}},ExpressionUUID->"bef213b8-dfd6-482d-9041-\
+c9b4d8114e15"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Summary", "Subsection",ExpressionUUID->"3dd60b91-f42e-4fa1-a852-115d0b7061de"],
+
+Cell["\<\
+Classical computation can be represented as some rules to determine what \
+should be the output from a list of inputs. \
+\>", "Item",ExpressionUUID->"ed9d5b6c-60e9-453b-a7e7-d86456f3c26c"],
+
+Cell[TextData[{
+ "With a 3-bit string you can represent 0\[Dash]7; in general, ",
+ Cell[BoxData[
+  FormBox["n", TraditionalForm]],ExpressionUUID->
+  "92ad4d7f-c762-4190-b660-462065e58903"],
+ " bits represent 0 to ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", "n"], "-", "1"}], TraditionalForm]],ExpressionUUID->
+  "39f5c277-998e-4595-9a46-b33b5a034fe2"],
+ "."
+}], "Item",ExpressionUUID->"606d5dac-a239-4ee0-8492-ff13c539714d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[BoxData[
+ ButtonBox[
+  RowBox[{"Download", " ", "Notebook", " ", "\[RightGuillemet]"}],
+  Appearance->"None",
+  BaseStyle->"NotebookDownload",
+  ButtonFunction:>FrontEndExecute[{
+     NotebookLocate[{
+       URL[
+        URLBuild[{$CloudBase, "files", 
+          Information[$EvaluationCloudObject, "UUID"]}, {
+         "contentDisposition" -> "attachment"}]], None}]}],
+  Evaluator->Automatic,
+  Method->"Queued"]], "NotebookDownload",ExpressionUUID->"908949a5-e39c-4781-\
+ab71-a02917e9a637"]
+}, Open  ]]
+},
+Editable->True,
+Saveable->True,
+ScreenStyleEnvironment->"Working",
+WindowToolbars->"MultipurposeBar",
+WindowSize->{1024, 768},
+WindowMargins->{{Automatic, 89}, {Automatic, 6}},
+ShowCellBracket->True,
+TaggingRules-><|
+ "TryRealOnly" -> False, 
+  "PresenterSettings" -> <|"ShowNavigationBar" -> True|>, "ShowNavigationBar" -> 
+  True|>,
+ShowCellTags->True,
+TrackCellChangeTimes->False,
+Magnification:>1.5 Inherited,
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 22, 2025)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[StyleDefinitions -> "Default.nb"]], 
+   Cell[
+    StyleData["Notebook"], PageWidth -> WindowWidth, ShowSyntaxStyles -> True,
+     MenuSortingValue -> None], 
+   Cell[
+    CellGroupData[{
+      Cell["Custom Styles", "Section"], 
+      Cell[
+       CellGroupData[{
+         Cell["General", "Subsection"], 
+         Cell[
+          StyleData["Title"], CellMargins -> {{27, Inherited}, {10, 30}}, 
+          FontColor -> RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData["SectionTitle", StyleDefinitions -> StyleData["Title"]], 
+          CellFrame -> {{False, False}, {1, 0}}, 
+          CellMargins -> {{27, Inherited}, {0, 10}}, CellFrameColor -> 
+          RGBColor[0.85, 0.85, 0.85], CounterIncrements -> "SectionTitle", 
+          FontSize -> 20, FontWeight -> "Light", FontColor -> RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData["Subtitle"], FontWeight -> "Light", FontColor -> 
+          RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData["Subsubtitle"], FontWeight -> "Light", FontColor -> 
+          RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData["Chapter"], CellMargins -> {{27, Inherited}, {10, 30}}, 
+          PageBreakAbove -> True, FontSize -> 40, FontSlant -> "Italic", 
+          FontColor -> GrayLevel[0.5]], 
+         Cell[
+          StyleData["Subchapter"], CellDingbat -> 
+          StyleBox[
+           "\[FilledSmallCircle]", Alignment -> Baseline, FontColor -> 
+            RGBColor[
+              Rational[64, 255], 
+              Rational[25, 51], 
+              Rational[128, 255]]], FontSlant -> "Plain", FontColor -> 
+          GrayLevel[0.5]], 
+         Cell[
+          StyleData["Section"], CellFrame -> False, 
+          CellMargins -> {{70, Inherited}, {0, 14}}, PageBreakAbove -> False, 
+          PageBreakBelow -> False, ShowCellLabel -> False, 
+          CellFrameLabelMargins -> {{2, Inherited}, {Inherited, Inherited}}, 
+          LineSpacing -> {1, -4}, FontSize -> 36, FontColor -> RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData[
+          "SectionNumber", StyleDefinitions -> StyleData["Section"]], 
+          FontSize -> 38, FontWeight -> "Light", FontColor -> RGBColor[
+            Rational[22, 255], 
+            Rational[8, 51], 
+            Rational[21, 85]]], 
+         Cell[
+          StyleData[
+          "NumberedSection", StyleDefinitions -> StyleData["Section"]], 
+          CellDingbat -> Cell[
+            TextData[{
+              CounterBox["Section"], " |\[ThinSpace]"}], "SectionNumber"], 
+          CellMargins -> {{70, Inherited}, {0, 14}}], 
+         Cell[
+          StyleData[
+          "SectionTitleWithSection", StyleDefinitions -> 
+           StyleData["Section"]], CellDingbat -> Cell[
+            TextData[{
+              CounterBox["SectionTitle"], ".", 
+              CounterBox["Section"], " |\[ThinSpace]"}], "SectionNumber"], 
+          CellMargins -> {{94, Inherited}, {34, 14}}], 
+         Cell[
+          StyleData["SectionInline"], FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData["Subsection"], CellMargins -> {{27, Inherited}, {5, 50}}, 
+          CellElementSpacings -> {"ClosedGroupTopMargin" -> 32}, FontSize -> 
+          25, FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData[
+          "SubsectionFirst", StyleDefinitions -> StyleData["Subsection"]], 
+          CellMargins -> {{27, Inherited}, {5, 20}}, 
+          CellElementSpacings -> {"ClosedGroupTopMargin" -> 32}, FontSize -> 
+          25, FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData[
+          "NumberedSubsection", StyleDefinitions -> StyleData["Subsection"]], 
+          CellDingbat -> Cell[
+            TextData[{
+              CounterBox["Subsection"], "."}], FontWeight -> "Bold"], 
+          CellMargins -> {{40, Inherited}, {Inherited, 20}}, 
+          CounterIncrements -> "Subsection"], 
+         Cell[
+          StyleData[
+          "EmphasisSection", StyleDefinitions -> StyleData["Subsection"]], 
+          CellFrame -> {{0, 0}, {0, 3}}, CellFrameMargins -> {{8, 8}, {4, 6}},
+           CellFrameColor -> RGBColor[0.9, 0.4, 0], FontSlant -> "Italic"], 
+         Cell[
+          StyleData["Subsubsection"], 
+          CellMargins -> {{27, Inherited}, {0, 16}}, 
+          CellElementSpacings -> {"ClosedGroupTopMargin" -> 16}, FontSize -> 
+          18, FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData["Subsubsubsection"], 
+          CellMargins -> {{27, Inherited}, {6, 16}}, FontSize -> 16, 
+          FontWeight -> "SemiBold", FontColor -> 
+          RGBColor[
+           0.9568627450980393, 0.5647058823529412, 0.09803921568627451]], 
+         Cell[
+          StyleData["Subsubsubsubsection"], 
+          CellMargins -> {{27, Inherited}, {6, 16}}, FontSize -> 14, 
+          FontWeight -> "SemiBold", 
+          FontVariations -> {"CapsType" -> "AllCaps"}, FontColor -> 
+          GrayLevel[
+            Rational[4, 15]]], 
+         Cell[
+          StyleData["Text"], CellMargins -> {{27, Inherited}, {7, 8}}, 
+          FontSize -> 15, FontColor -> GrayLevel[0]], 
+         Cell[
+          StyleData["Reference"], CellMargins -> {{27, Inherited}, {3, 3}}, 
+          FontFamily -> "Source Sans Pro", FontSize -> 15, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["MathCaption"], CellMargins -> {{27, 12}, {2, 24}}, 
+          FontFamily -> "Source Sans Pro", FontSize -> 15, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["CodeText"], CellMargins -> {{66, 10}, {7, 8}}, FontSize -> 
+          15], 
+         Cell[
+          StyleData["Author"], CellMargins -> {{27, Inherited}, {6, 16}}], 
+         Cell[
+          StyleData["Affiliation"], 
+          CellMargins -> {{27, Inherited}, {6, 16}}], 
+         Cell[
+          StyleData["Link"], FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData["HyperLink"], FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData["Hyperlink"], FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData["FunctionLink"], FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData["HyperlinkActionNew"], FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData["HyperlinkActive"], FontColor -> RGBColor[
+            Rational[91, 255], 
+            Rational[178, 255], 
+            Rational[166, 255]]], 
+         Cell[
+          StyleData["Item"], CellDingbat -> 
+          StyleBox[
+           "\[FilledSmallSquare]", Alignment -> Baseline, FontColor -> 
+            RGBColor[0.9, 0.4, 0.]], CellMargins -> {{40, Inherited}, {3, 3}},
+           FontColor -> GrayLevel[0]], 
+         Cell[
+          StyleData["Subitem"], CellDingbat -> 
+          StyleBox[
+           "\[FilledSmallSquare]", Alignment -> Baseline, FontColor -> 
+            RGBColor[
+             0.9568627450980393, 0.5647058823529412, 0.09803921568627451]], 
+          CellMargins -> {{60, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["Subsubitem"], CellDingbat -> 
+          StyleBox["\[FilledSmallSquare]", Alignment -> Baseline, 
+            RGBColor[0.65, 0.65, 0.65]], 
+          CellMargins -> {{80, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["ItemNumbered"], CellMargins -> {{45, Inherited}, {3, 3}},
+           LineSpacing -> {1, -5}, FontColor -> GrayLevel[0]], 
+         Cell[
+          StyleData["SubitemNumbered"], 
+          CellMargins -> {{77, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["SubsubitemNumbered"], 
+          CellMargins -> {{107, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData[
+          "ItemRomanNumbered", StyleDefinitions -> StyleData["ItemNumbered"]],
+           CellDingbat -> Cell[
+            TextData[{
+              CounterBox[
+              "ItemRomanNumbered", CounterFunction -> RomanNumeral], "."}], 
+            FontWeight -> Bold], CounterIncrements -> "ItemRomanNumbered", 
+          FontColor -> GrayLevel[0]], 
+         Cell[
+          StyleData["ItemParagraph"], 
+          CellMargins -> {{40, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["SubitemParagraph"], 
+          CellMargins -> {{60, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["SubsubitemParagraph"], 
+          CellMargins -> {{80, Inherited}, {3, 3}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["Input"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {Inherited, Inherited}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["Output"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {Inherited, Inherited}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["InputOnly"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {Inherited, Inherited}}, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["InputHidden", StyleDefinitions -> StyleData["Input"]], 
+          CellEpilog :> (SelectionMove[
+             EvaluationNotebook[], All, GeneratedCell]; 
+           FrontEndTokenExecute["SelectionCloseUnselectedCells"]), 
+          InitializationCell -> True, MenuSortingValue -> 1510, 
+          MenuCommandKey :> "8"], 
+         Cell[
+          StyleData["Code"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {Inherited, Inherited}}, 
+          FontWeight -> "Plain"], 
+         Cell[
+          StyleData["Print"], CellMargins -> {{70, Inherited}, {25, 0}}], 
+         Cell[
+          StyleData["Echo"], ShowCellBracket -> True], 
+         Cell[
+          StyleData["EchoTiming"], ShowCellBracket -> True], 
+         Cell[
+          StyleData["InlineCode"], SpanMaxSize -> 0, FontWeight -> "SemiBold",
+           FontColor -> GrayLevel[0]], 
+         Cell[
+          StyleData[
+          "InlineCodeText", StyleDefinitions -> StyleData["InlineCode"]]], 
+         Cell[
+          StyleData[
+          "InlineInput", StyleDefinitions -> StyleData["InlineCode"]]], 
+         Cell[
+          StyleData["InlineFormula"], ShowStringCharacters -> True, 
+          SpanMaxSize -> 0, FontWeight -> "SemiBold", FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["InlineMath"], SpanMaxSize -> 0, FontColor -> 
+          GrayLevel[0]], 
+         Cell[
+          StyleData["WolframAlphaShort"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {25, 0}}, MenuSortingValue -> 
+          10000], 
+         Cell[
+          StyleData["WolframAlphaLong"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {25, 0}}, MenuSortingValue -> 
+          10000], 
+         Cell[
+          StyleData["ExternalLanguage"], ShowCellBracket -> True, 
+          CellMargins -> {{70, Inherited}, {25, 0}}], 
+         Cell[
+          StyleData["Message"], ShowCellBracket -> True], 
+         Cell[
+          StyleData["ChatInput"], 
+          CellEventActions -> {{"KeyDown", "@"} :> 
+            With[{Wolfram`ChatNB`cell = EvaluationCell[]}, Quiet[
+                Needs["Wolfram`Chatbook`" -> None]]; 
+              Symbol["Wolfram`Chatbook`ChatbookAction"][
+               "InsertInlineReference", "PersonaTemplate", 
+                Wolfram`ChatNB`cell]], {"KeyDown", "!"} :> 
+            With[{Wolfram`ChatNB`cell = EvaluationCell[]}, Quiet[
+                Needs["Wolfram`Chatbook`" -> None]]; 
+              Symbol["Wolfram`Chatbook`ChatbookAction"][
+               "InsertInlineReference", "FunctionTemplate", 
+                Wolfram`ChatNB`cell]], {"KeyDown", "#"} :> 
+            With[{Wolfram`ChatNB`cell = EvaluationCell[]}, Quiet[
+                Needs["Wolfram`Chatbook`" -> None]]; 
+              Symbol["Wolfram`Chatbook`ChatbookAction"][
+               "InsertInlineReference", "ModifierTemplate", 
+                Wolfram`ChatNB`cell]], {"KeyDown", "\\"} :> 
+            With[{Wolfram`ChatNB`cell = EvaluationCell[]}, Quiet[
+                Needs["Wolfram`Chatbook`" -> None]]; 
+              Symbol["Wolfram`Chatbook`ChatbookAction"][
+               "InsertInlineReference", "WLTemplate", Wolfram`ChatNB`cell]], 
+            "ReturnKeyDown" :> MathLink`CallFrontEnd[
+              FrontEnd`CellEvaluate[
+               EvaluationCell[]]]}, FontSize -> 14], 
+         Cell[
+          StyleData["SideChat"], FontSize -> 14], 
+         Cell[
+          StyleData["ChatSystemInput"], FontSize -> 14], 
+         Cell[
+          StyleData["ChatOutput"], FontSize -> 14]}, Closed]], 
+      Cell[
+       CellGroupData[{
+         Cell["Inline and Special Formatting", "Subsection"], 
+         Cell[
+          StyleData["TimeCode", StyleDefinitions -> StyleData["Text"]], 
+          MenuSortingValue -> 1401, FontSize -> 14, FontColor -> 
+          GrayLevel[0.5]], 
+         Cell[
+          StyleData["ExerciseMark", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[0.5]], 
+         Cell[
+          StyleData["Separator"], CellFrame -> {{False, False}, {1.5, False}},
+           CellMargins -> {{70, Inherited}, {25, 0}}, CellFrameColor -> 
+          GrayLevel[0.66], MenuSortingValue -> 10000], 
+         Cell[
+          StyleData[
+          "NotebookDownload", StyleDefinitions -> StyleData["Text"]], 
+          CellFrame -> {{0, 0}, {0, 1}}, ShowCellBracket -> False, 
+          CellMargins -> {{27, Inherited}, {100, 20}}, 
+          CellGroupingRules -> {"SectionGrouping", 10}, CloudRenderingMethod -> 
+          "InteractiveBoxes", 
+          CellFrameMargins -> {{Inherited, Inherited}, {Inherited, 20}}, 
+          FontColor -> RGBColor[
+            Rational[64, 255], 
+            Rational[25, 51], 
+            Rational[128, 255]]], 
+         Cell[
+          StyleData[
+          "NotebookDownloadNotLast", StyleDefinitions -> 
+           StyleData["NotebookDownload"]], 
+          CellMargins -> {{27, Inherited}, {20, 20}}], 
+         Cell[
+          StyleData[
+          "ExperimentalInput", StyleDefinitions -> StyleData["Input"]], 
+          Editable -> True, CellFrame -> True, 
+          StyleKeyMapping -> {"=" -> "WolframAlphaShort", "*" -> "Item"}, 
+          CellFrameColor -> RGBColor[1, 0.43, 0.13], CellFrameLabels -> {{
+             Cell[
+              BoxData[
+               RotationBox["Experimental", BoxRotation -> 1.5708]], "Text", 
+              FontSize -> 10, FontColor -> RGBColor[1, 0.43, 0.13]], None}, {
+            None, None}}], 
+         Cell[
+          StyleData["HintHeader", StyleDefinitions -> StyleData["Text"]], 
+          ShowGroupOpener -> True, GroupOpenerInsideFrame -> False, 
+          CellGroupingRules -> {"SectionGrouping", 80}, PageBreakBelow -> 
+          False, FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData["Hint", StyleDefinitions -> StyleData["Text"]], CellFrame -> 
+          True, Background -> 
+          RGBColor[1, 0.9215686274509803, 0.8313725490196079]], 
+         Cell[
+          StyleData["KeyEvent"], CellFrame -> {{1, 1}, {1, 1}}, 
+          CellFrameMargins -> {{2, 2}, {2, 2}}, CellFrameColor -> 
+          GrayLevel[0.8], MenuSortingValue -> 1402, FontColor -> 
+          GrayLevel[0.36], Background -> GrayLevel[0.96]], 
+         Cell[
+          StyleData["Keyword", StyleDefinitions -> StyleData["Text"]], 
+          MenuSortingValue -> 10000, FontColor -> RGBColor[0.9, 0.4, 0.]], 
+         Cell[
+          StyleData["AuthorNote", StyleDefinitions -> StyleData["Text"]], 
+          CellDingbat -> 
+          StyleBox[
+           "Author note:", "Text", Italic, FontColor -> 
+            RGBColor[0.9, 0.4, 0.], Alignment -> Baseline], 
+          CellMargins -> {{110, Inherited}, {7, 8}}, FontSlant -> Italic, 
+          FontColor -> GrayLevel[0.4]], 
+         Cell[
+          StyleData["Note"], 
+          CellMargins -> {{
+            0.15 FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}], 0.03 
+             FrontEnd`AbsoluteCurrentValue[{WindowSize, 1}]}, {10, 10}}, 
+          CellOpen -> True, LineSpacing -> {1, 3}, CounterIncrements -> 
+          "Note", MenuSortingValue -> 1590, FontSize -> 12, FontSlant -> 
+          "Italic", Background -> GrayLevel[0.85]], 
+         Cell[
+          StyleData["WolframLanguageLogo"], FontColor -> 
+          RGBColor[0.09, 0.16, 0.25]], 
+         Cell[
+          StyleData["Question", StyleDefinitions -> StyleData["Text"]], 
+          CellMargins -> {{27, Inherited}, {9, 9}}, PageBreakBelow -> False, 
+          CounterIncrements -> "Question", MenuSortingValue -> 10030, 
+          FontFamily -> "Source Sans Pro", FontWeight -> "Bold", FontColor -> 
+          GrayLevel[0.4]], 
+         Cell[
+          StyleData["Answer", StyleDefinitions -> StyleData["Text"]], 
+          CellMargins -> {{27, 10}, {8, 1}}, LineSpacing -> {1.125, 1, 2}, 
+          MenuSortingValue -> 10032, FontFamily -> "Source Sans Pro", 
+          FontColor -> GrayLevel[0.4]], 
+         Cell[
+          StyleData["VocabularyTable", StyleDefinitions -> StyleData["Text"]],
+           SpanMaxSize -> 1, FontColor -> GrayLevel[0.5], 
+          GridBoxOptions -> {
+           GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+            GridBoxDividers -> {"Columns" -> {{False}}, "Rows" -> {False, {
+                 Directive[
+                  Thickness[0.5], "VocabDivColor"]}, False}}, 
+            GridBoxItemStyle -> {
+             "Columns" -> {"VocabularyCode", Inherited, Inherited}, 
+              "Rows" -> {{Automatic}}}, 
+            GridBoxSpacings -> {
+             "Columns" -> {{0, 1, 2, 1, 2}}, "Rows" -> {{1}}}}], 
+         Cell[
+          StyleData["VocabularyText", StyleDefinitions -> StyleData["Text"]], 
+          FontColor -> GrayLevel[0.25]], 
+         Cell[
+          StyleData[
+          "NumberedTableCaption", StyleDefinitions -> StyleData["Text"]], 
+          CellMargins -> {{27, 21}, {8, 8}}, PageBreakAbove -> False, 
+          LineSpacing -> {1, 1}, CounterIncrements -> "NumberedTable", 
+          MenuSortingValue -> 1712, FontSize -> 10], 
+         Cell[
+          StyleData["Warning", StyleDefinitions -> StyleData["Text"]], 
+          CellFrame -> {{0.25, 0.25}, {0, 0}}, CellDingbat -> 
+          "\[WarningSign]", CellMargins -> {{40, 0}, {13, 4}}, 
+          CellGroupingRules -> "OutputGrouping", PageBreakWithin -> False, 
+          GroupPageBreakWithin -> False, GeneratedCell -> True, 
+          CellAutoOverwrite -> True, ShowCellLabel -> False, 
+          CellLabelMargins -> {{23, Inherited}, {Inherited, Inherited}}, 
+          CellFrameColor -> GrayLevel[0.869993], CellFrameLabelMargins -> 0, 
+          DefaultFormatType -> DefaultOutputFormatType, LineSpacing -> {1, 1},
+           AutoItalicWords -> {}, StyleMenuListing -> None, FontSize -> 10, 
+          FontColor -> RGBColor[0, 0, 1], Background -> GrayLevel[0.949996]], 
+         
+         Cell[
+          StyleData["EndOfSlide"], 
+          CellFrame -> {{False, False}, {False, True}}, 
+          CellMargins -> {{0, 0}, {100, 15}}, 
+          CellGroupingRules -> {"SectionGrouping", 30}, CellFrameColor -> 
+          GrayLevel[0.85]]}, Closed]]}, Open]]}, Visible -> False, 
+  FrontEndVersion -> "14.3 for Mac OS X ARM (64-bit) (July 22, 2025)", 
+  StyleDefinitions -> "PrivateStylesheetFormatting.nb"],
+ExpressionUUID->"7b3f61df-81e9-4993-9fbf-7132ae547a2a"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 107, 0, 66, "SectionTitle",ExpressionUUID->"bce0a3fe-e927-4584-9cf9-6a4e64ee6346"],
+Cell[CellGroupData[{
+Cell[708, 26, 208, 3, 89, "NumberedSection",ExpressionUUID->"d776fe4b-c44e-4af3-b44d-208c20e437a6",
+ CounterAssignments->{{"Subsection", 0}, {"Subsubsection", 0}, {"Exercise", 0}, {"Section", 0}}],
+Cell[CellGroupData[{
+Cell[941, 33, 90, 0, 84, "SubsectionFirst",ExpressionUUID->"7e1539d2-c760-43c0-bbeb-b1c1482c1653"],
+Cell[1034, 35, 593, 8, 214, "Text",ExpressionUUID->"242e48c7-e454-4d4e-a351-f6d52969176a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1664, 48, 117, 0, 84, "SubsectionFirst",ExpressionUUID->"f0e32536-9945-4884-90e6-50079125dc9c"],
+Cell[1784, 50, 541, 10, 149, "Text",ExpressionUUID->"ea024cc5-eaca-40b7-bdec-fa4f9228f73d"],
+Cell[2328, 62, 813, 13, 116, "Text",ExpressionUUID->"b91bb087-c599-4291-b1e5-94c78b7637e6"],
+Cell[3144, 77, 165, 3, 50, "Text",ExpressionUUID->"7d454928-e41d-4534-8d7d-2c9579fed00f"],
+Cell[3312, 82, 388, 7, 44, "Input",ExpressionUUID->"891b11db-b287-4b9d-81dc-205b930c572e"],
+Cell[3703, 91, 343, 9, 50, "Text",ExpressionUUID->"03097540-aaed-46dc-96ce-d61027fe2bea"],
+Cell[CellGroupData[{
+Cell[4071, 104, 164, 3, 44, "Input",ExpressionUUID->"177119ca-9e89-444c-bb01-ada4385003ec"],
+Cell[4238, 109, 199, 3, 50, "Output",ExpressionUUID->"d770ecd9-6bbc-4a15-bcf5-f950e3396ba6"]
+}, Open  ]],
+Cell[4452, 115, 393, 10, 50, "Text",ExpressionUUID->"ad6d8cc1-99e2-43e9-aa68-201b07b8eba7"],
+Cell[CellGroupData[{
+Cell[4870, 129, 164, 3, 44, "Input",ExpressionUUID->"a357afaf-1479-4adc-be01-dcff89dd9a5e"],
+Cell[5037, 134, 199, 3, 50, "Output",ExpressionUUID->"75bd9fed-e325-4311-af61-6c64c0b78647"]
+}, Open  ]],
+Cell[5251, 140, 231, 4, 50, "Text",ExpressionUUID->"096fdaa2-f950-4d8f-bc14-488613138bf1"],
+Cell[CellGroupData[{
+Cell[5507, 148, 316, 7, 44, "Input",ExpressionUUID->"c2cf3ec4-9663-40d5-aca7-982ed409adb9"],
+Cell[5826, 157, 200, 3, 50, "Output",ExpressionUUID->"8d1ed550-9381-4b3d-871e-22505d38a14a"]
+}, Open  ]],
+Cell[6041, 163, 183, 3, 50, "Text",ExpressionUUID->"f6cd8e52-16f4-4a24-9014-f310c7d5c898"],
+Cell[CellGroupData[{
+Cell[6249, 170, 514, 11, 44, "Input",ExpressionUUID->"3405b1ff-6fd4-4513-aff0-917757a69195"],
+Cell[6766, 183, 207, 3, 50, "Output",ExpressionUUID->"860e907f-61ac-40d0-9340-e5f31ef6f42f"]
+}, Open  ]],
+Cell[6988, 189, 530, 11, 50, "Text",ExpressionUUID->"16f556f1-0b2c-40c4-a13e-3315db71172a"],
+Cell[CellGroupData[{
+Cell[7543, 204, 472, 11, 46, "Input",ExpressionUUID->"8f5d93ac-2539-4a49-8fb9-5ee4ace50e50"],
+Cell[8018, 217, 528, 12, 51, "Output",ExpressionUUID->"99a13143-a0b0-48c3-8e31-98493f537e11"]
+}, Open  ]],
+Cell[8561, 232, 850, 26, 83, "Text",ExpressionUUID->"2343a49f-3ea7-4875-a286-e7c298fac3d1"],
+Cell[9414, 260, 285, 7, 50, "Text",ExpressionUUID->"52c12e86-d39d-4e2b-b4c3-1d275852ae50"],
+Cell[CellGroupData[{
+Cell[9724, 271, 666, 15, 105, "Input",ExpressionUUID->"ed77cd51-951c-4a2e-be0e-44500e17f579"],
+Cell[10393, 288, 209, 3, 50, "Output",ExpressionUUID->"4d0e6fd1-c8b5-4d9d-b652-d2545264322a"]
+}, Open  ]],
+Cell[10617, 294, 477, 9, 116, "Text",ExpressionUUID->"70a36455-2b03-434f-94e8-e233c0fa5173"],
+Cell[11097, 305, 211, 5, 50, "Text",ExpressionUUID->"1c78ef20-9def-41f7-86d4-06fe94e6d1ab"],
+Cell[CellGroupData[{
+Cell[11333, 314, 244, 6, 44, "Input",ExpressionUUID->"445fe033-bcbd-4787-aa04-64079adb4e84"],
+Cell[11580, 322, 775, 21, 80, "Output",ExpressionUUID->"b678996f-257e-42df-85fb-b96d6fc74ff5"]
+}, Open  ]],
+Cell[12370, 346, 204, 3, 50, "Text",ExpressionUUID->"5ee5f58a-bd78-4f79-b31d-0c7b77693fe0"],
+Cell[CellGroupData[{
+Cell[12599, 353, 284, 6, 44, "Input",ExpressionUUID->"d8d7c32d-a27d-4a71-b294-fdf19e15d7d4"],
+Cell[12886, 361, 306, 7, 50, "Output",ExpressionUUID->"198e6b73-0113-411e-9250-8f4d67992303"]
+}, Open  ]],
+Cell[13207, 371, 822, 20, 116, "Text",ExpressionUUID->"4f02f1e6-6728-4b24-9ab8-7f34f1d59092"],
+Cell[CellGroupData[{
+Cell[14054, 395, 250, 6, 44, "Input",ExpressionUUID->"2d9d7310-5e80-4623-8bdf-e4c674648318"],
+Cell[14307, 403, 196, 3, 50, "Output",ExpressionUUID->"a451a90e-cb95-4332-b4af-5cac092579e0"]
+}, Open  ]],
+Cell[14518, 409, 276, 6, 50, "Text",ExpressionUUID->"bca95b6b-b545-447d-a93d-82f8f7aacfae"],
+Cell[CellGroupData[{
+Cell[14819, 419, 322, 8, 44, "Input",ExpressionUUID->"39c2689e-199f-4ebb-89af-1ab8357b7a30"],
+Cell[15144, 429, 207, 3, 50, "Output",ExpressionUUID->"808d35b7-8c36-4c2f-96a7-17b769bdbe7e"]
+}, Open  ]],
+Cell[15366, 435, 272, 6, 50, "Text",ExpressionUUID->"c15be6ea-67fc-4dfe-8817-fddd4324ab13"],
+Cell[CellGroupData[{
+Cell[15663, 445, 405, 10, 46, "Input",ExpressionUUID->"eec1d72a-e1b2-4a66-a8b0-010de633c8ea"],
+Cell[16071, 457, 202, 3, 50, "Output",ExpressionUUID->"cff58752-f372-49b8-8017-7b1bd6a51b69"]
+}, Open  ]],
+Cell[16288, 463, 214, 3, 50, "Text",ExpressionUUID->"c2dfa33e-4ebb-4d6b-b8dd-f3049550322d"],
+Cell[CellGroupData[{
+Cell[16527, 470, 244, 4, 44, "Input",ExpressionUUID->"6c664303-19b7-4adc-a78c-2fbe88fdcf4e"],
+Cell[16774, 476, 206, 3, 50, "Output",ExpressionUUID->"bd1cc5d0-203d-4d85-8702-b00ed556ec33"]
+}, Open  ]],
+Cell[16995, 482, 441, 6, 50, "Text",ExpressionUUID->"8d0f8e96-1b34-48b3-8a86-c3da040fbafc"],
+Cell[17439, 490, 620, 10, 116, "Text",ExpressionUUID->"5c3d8d7b-a9fb-4d63-b4bf-aaf7129f932e"],
+Cell[CellGroupData[{
+Cell[18084, 504, 602, 12, 44, "Input",ExpressionUUID->"cc21e5df-c197-4211-9b01-3735777f3c13"],
+Cell[18689, 518, 1161, 37, 80, "Output",ExpressionUUID->"b7d1029a-0a3d-4308-86b9-6de426155cdf"]
+}, Open  ]],
+Cell[19865, 558, 300, 7, 50, "Text",ExpressionUUID->"85bccd76-da93-4054-9527-e90518e8b429"],
+Cell[CellGroupData[{
+Cell[20190, 569, 556, 11, 44, "Input",ExpressionUUID->"2c08c4ed-e0a9-4eab-8128-b4fa8d120e96"],
+Cell[20749, 582, 1690, 45, 80, "Output",ExpressionUUID->"56e18341-d70d-45f2-8f3b-9ffe69ad2114"]
+}, Open  ]],
+Cell[22454, 630, 727, 13, 214, "Text",ExpressionUUID->"bef213b8-dfd6-482d-9041-c9b4d8114e15"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23218, 648, 84, 0, 129, "Subsection",ExpressionUUID->"3dd60b91-f42e-4fa1-a852-115d0b7061de"],
+Cell[23305, 650, 198, 3, 67, "Item",ExpressionUUID->"ed9d5b6c-60e9-453b-a7e7-d86456f3c26c"],
+Cell[23506, 655, 445, 12, 37, "Item",ExpressionUUID->"606d5dac-a239-4ee0-8492-ff13c539714d"]
+}, Open  ]]
+}, Open  ]],
+Cell[23978, 671, 498, 13, 239, "NotebookDownload",ExpressionUUID->"908949a5-e39c-4781-ab71-a02917e9a637"]
+}, Open  ]]
+}
+]
+*)
+
