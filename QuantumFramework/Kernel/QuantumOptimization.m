@@ -133,7 +133,7 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 				If[!MatchQ[ver,OptionValue["LatestClassiqVersion"]],Print[ClassiqSetup::UpdatingClassiq];RunProcess[{evaluator,"-m","pip","--quiet","install","classiq","--upgrade"}]]
 			];
 			
-			ver=ExternalEvaluate[session,"import pkg_resources\npkg_resources.get_distribution('classiq').version"];
+			ver=RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
 			
 			reporter[<|"ClassiqVersion"->ver|>];
 			
