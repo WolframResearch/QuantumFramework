@@ -129,11 +129,11 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 					
 			If[!installedQ["classiq",evaluator],
 				Print[ClassiqSetup::ClassiqInstallation],
-				ver=ExternalEvaluate[session,"import pkg_resources\npkg_resources.get_distribution('classiq').version"];
+				ver=StringTrim@RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
 				If[!MatchQ[ver,OptionValue["LatestClassiqVersion"]],Print[ClassiqSetup::UpdatingClassiq];RunProcess[{evaluator,"-m","pip","--quiet","install","classiq","--upgrade"}]]
 			];
 			
-			ver=RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
+			ver=StringTrim@RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
 			
 			reporter[<|"ClassiqVersion"->ver|>];
 			
