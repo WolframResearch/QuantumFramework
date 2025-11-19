@@ -116,7 +116,7 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 		
 		If[Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
 			
-			session=ExternalEvaluate`GetDefaultExternalSession["Python"];
+			session=StartExternalSession["Python"];
 		
 			reporter[<|"Evaluators"->evaluators|>];
 			
