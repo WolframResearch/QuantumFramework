@@ -1,0 +1,1991 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     71653,       1983]
+NotebookOptionsPosition[     61813,       1827]
+NotebookOutlinePosition[     62235,       1844]
+CellTagsIndexPosition[     62192,       1841]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["", "Title",ExpressionUUID->"39420398-44a8-4648-aa2c-d577291224bc"],
+
+Cell["\<\
+The simplest quantum system we usually consider in quantum mechanics is one \
+whose states are represented in a two-dimensional Hilbert space (a single \
+qubit). A Hilbert space is a complex vector space equipped with an inner \
+product, and it is complete with respect to the norm (distance) defined by \
+that inner product. In a two-dimensional Hilbert space, a quantum state can \
+be described either by a state vector (ket) in that space or, more generally, \
+by a density operator (density matrix) acting on that space.\
+\>", "Text",
+ CellChangeTimes->{{3.9725893447651567`*^9, 3.97258937919901*^9}, {
+  3.972589671906036*^9, 3.9725897376934443`*^9}, {3.9725900425533113`*^9, 
+  3.9725900438849783`*^9}},ExpressionUUID->"74338e50-1f29-4b05-a27b-\
+65a3687dcd18"],
+
+Cell[TextData[{
+ "For a two-level quantum system (qubit), a pure state is represented (up to \
+an overall complex phase) by a two-component complex column vector, usually \
+called the state vector. For example, the vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox["1", "2"], ",", 
+     RowBox[{"\[ImaginaryI]", 
+      FractionBox[
+       SqrtBox["3"], "2"]}]}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "cc510de9-34b6-496a-af03-f98a680f9cbf"],
+ " represents a pure quantum state. We will assume that all state vectors are \
+normalized, meaning that their norm is equal to 1. For a vector ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox["v", "\[RightVector]"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "ce7dcb20-b010-4f3d-89a3-bd8a92c53ef4"],
+ " with components ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["v", "1"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "91bf7ae1-6a53-4b74-b99d-11f0d64800e9"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["v", "2"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "399650c2-1010-4679-b2f8-c10d9f5ed81e"],
+ ", the norm is defined as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"||", 
+     OverscriptBox["v", "\[RightVector]"], "||"}], "=", 
+    RowBox[{
+     SqrtBox[
+      RowBox[{
+       SuperscriptBox[
+        RowBox[{"\[LeftBracketingBar]", 
+         SubscriptBox["v", "1"], "\[RightBracketingBar]"}], "2"], "+", 
+       SuperscriptBox[
+        RowBox[{"\[LeftBracketingBar]", 
+         SubscriptBox["v", "2"], "\[RightBracketingBar]"}], "2"]}]], "=", 
+     SqrtBox[
+      RowBox[{
+       SuperscriptBox[
+        OverscriptBox["v", "\[RightVector]"], "*"], ".", 
+       OverscriptBox["v", "\[RightVector]"]}]]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "766f372b-d683-4214-a68c-d6d0086a7984"],
+ ", where * denotes the complex conjugate and \[OpenCurlyDoubleQuote]\
+\[CenterDot]\[CloseCurlyDoubleQuote] denotes the usual dot product."
+}], "Text",
+ CellChangeTimes->{{3.972590119979841*^9, 3.9725902659994097`*^9}, {
+  3.972647523618019*^9, 
+  3.97264753556364*^9}},ExpressionUUID->"72e1e312-4611-4f3d-8823-\
+746641f39dd9"],
+
+Cell[TextData[{
+ "Calculate norm of ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox["1", "2"], ",", 
+     RowBox[{"\[ImaginaryI]", 
+      FractionBox[
+       SqrtBox["3"], "2"]}]}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "8182ef28-f406-41c0-a196-21127372d7ec"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.972590277293582*^9, 
+  3.972590285186893*^9}},ExpressionUUID->"cf8c8e98-5cac-4946-8bd1-\
+2b8c75daf209"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Norm", "[", 
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     FractionBox["1", "2"], ",", 
+     RowBox[{"\[ImaginaryI]", 
+      FractionBox[
+       SqrtBox["3"], "2"]}]}], "}"}],
+   TraditionalForm], "]"}]], "Input",
+ CellChangeTimes->{{3.972590286280692*^9, 3.9725902873118067`*^9}},
+ CellLabel->"In[15]:=",ExpressionUUID->"6234de12-6da0-4678-9dc5-9d21b7362884"],
+
+Cell[BoxData["1"], "Output",
+ CellChangeTimes->{3.9725902876268873`*^9},
+ CellLabel->"Out[15]=",ExpressionUUID->"bd77ecd8-b5c4-4be7-9999-30f342488c19"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Calculate norm of ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], TraditionalForm]],
+  ExpressionUUID->"82cde530-d9a3-41cb-be04-dc4927d9f076"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.972590346025861*^9, 
+  3.972590364667736*^9}},ExpressionUUID->"d7195267-0152-4fd6-ba8a-\
+6e368d9ff3c2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"$Assumptions", "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"\[Theta]", "|", "\[Phi]"}], ")"}], "\[Element]", "Reals"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Norm", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], "]"}], "//", 
+  "FullSimplify"}]}], "Input",
+ CellChangeTimes->{{3.972590366902176*^9, 3.972590417387753*^9}},
+ CellLabel->
+  "In[111]:=",ExpressionUUID->"5d062c52-cc71-4936-842f-6325db3b8822"],
+
+Cell[BoxData["1"], "Output",
+ CellChangeTimes->{{3.972590398523188*^9, 3.972590417679574*^9}, 
+   3.972647897124332*^9},
+ CellLabel->
+  "Out[112]=",ExpressionUUID->"e4b19484-c55f-42f3-a8d2-6c9b490e1956"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Normalize the state vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "42bc9627-7098-47d9-bce0-d2622fb7461a"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.972590567528808*^9, 
+  3.972590588103518*^9}},ExpressionUUID->"2b0cecfc-5d95-45a7-ae03-\
+bf2080e8a63c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Normalize", "[", 
+  RowBox[{"{", 
+   RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], "]"}]], "Input",
+ CellChangeTimes->{{3.972590588977655*^9, 3.9725905931019087`*^9}},
+ CellLabel->"In[19]:=",ExpressionUUID->"da68943e-fcd1-405d-867f-01b7acb876f8"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   FractionBox["\[Alpha]", 
+    SqrtBox[
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{"Abs", "[", "\[Alpha]", "]"}], "2"], "+", 
+      SuperscriptBox[
+       RowBox[{"Abs", "[", "\[Beta]", "]"}], "2"]}]]], ",", 
+   FractionBox["\[Beta]", 
+    SqrtBox[
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{"Abs", "[", "\[Alpha]", "]"}], "2"], "+", 
+      SuperscriptBox[
+       RowBox[{"Abs", "[", "\[Beta]", "]"}], "2"]}]]]}], "}"}]], "Output",
+ CellChangeTimes->{3.972590593534642*^9},
+ CellLabel->"Out[19]=",ExpressionUUID->"1c62e7a5-841b-417b-9729-68ca8ef436e7"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Multiplying a state vector by an overall complex phase factor ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{"\[ImaginaryI]", " ", "\[CurlyPhi]"}]], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "a44c8862-b8de-413f-9f63-6d8bd8e54907"],
+ " does not change the physical quantum state it represents. Because of this \
+freedom, when we want to write a general pure state of a single qubit, we can \
+choose the global phase so that the first component of the state vector is \
+real, while the second component may be complex. If we also require the state \
+to be normalized, the most general pure qubit state can be written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], TraditionalForm]],
+  ExpressionUUID->"d8eda566-ac0c-4885-b85a-35a950649cb8"],
+ " where ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"0", "<=", "\[Theta]", "<=", "\[Pi]"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "cc11567f-0c1b-47bc-9a35-57867e93ce6e"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"0", "<=", "\[Phi]", "<=", 
+    RowBox[{"2", "\[Pi]"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "cc80daec-e519-47db-9c96-c74206f811a7"],
+ ". We will discuss the motivation to have ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Theta]", "/", "2"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "7386c111-548d-4542-b7ab-dc7995f57122"],
+ " rather than ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Theta]", " "}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "5a662f18-147e-49b2-8e50-ff1c924e9534"],
+ " soon when we introduce Bloch sphere. Let\[CloseCurlyQuote]s rephrase this \
+idea differently."
+}], "Text",
+ CellChangeTimes->{{3.9725904323822937`*^9, 3.972590514784752*^9}, {
+  3.972591211103115*^9, 3.9725912814865713`*^9}, {3.972591314566655*^9, 
+  3.972591405849093*^9}, {3.972595330936246*^9, 
+  3.972595345604784*^9}},ExpressionUUID->"320912b8-ceaf-4230-aaea-\
+37c475ed1cdf"],
+
+Cell[TextData[{
+ "The state vector of a single qubit can be written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "839fcabd-726c-4d22-9990-e70f218b1595"],
+ " with ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Alpha]", ",", 
+    RowBox[{"\[Beta]", "\[Element]", "\[DoubleStruckCapitalC]"}]}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "ee0bb77a-e137-44e5-827c-6c615d54a98f"],
+ ". Naively, this means the state is specified by two complex numbers, i.e., \
+four real parameters. Imposing normalization, ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"|", "\[Alpha]", 
+     SuperscriptBox["|", "2"], 
+     RowBox[{"+", 
+      RowBox[{"|", "\[Beta]", 
+       SuperscriptBox["|", "2"]}]}]}], "=", "1"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "7d326938-f85f-4b92-83d4-5403f15b1622"],
+ ", removes one real degree of freedom, and identifying state vectors that \
+differ only by an overall complex phase removes another real degree of \
+freedom. Therefore, a pure qubit state is fully characterized by only two \
+real parameters."
+}], "Text",
+ CellChangeTimes->{{3.9725955027002172`*^9, 
+  3.9725955314127493`*^9}},ExpressionUUID->"839cdd18-5893-4358-b3bf-\
+08aa487e4dd3"],
+
+Cell[TextData[{
+ "In the quantum mechanics literature, a state vector is usually denoted by a \
+ket. For example, ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{"\[Psi]"},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "61925ec6-0e5a-43d2-8c9b-5586931865f6"],
+ "  can represent a generic pure state such as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"\[Psi]"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+      RowBox[{
+       SuperscriptBox["\[ExponentialE]", 
+        RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+       RowBox[{"Sin", "[", 
+        RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], TraditionalForm]],
+  ExpressionUUID->"0e0b01e7-290a-4634-9887-b7c3989a2698"],
+ ". The Hermitian conjugate (complex conjugate transpose) of a ket is denoted \
+by a bra. For the state above, the corresponding bra is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"\[Psi]"},
+     "Bra"], "=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+      RowBox[{
+       SuperscriptBox["\[ExponentialE]", 
+        RowBox[{
+         RowBox[{"-", "\[ImaginaryI]"}], " ", "\[Phi]"}]], 
+       RowBox[{"Sin", "[", 
+        RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], TraditionalForm]],
+  ExpressionUUID->"80e04b6e-30f0-466d-adab-2f89afabb4ab"],
+ ". The inner product of two states ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "1"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "e9ff6eef-4305-4c5a-8e7c-8a87ed97403e"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "2"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "600f6798-14fd-4017-b854-b7e308f65245"],
+ " is written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[LeftAngleBracket]", 
+    RowBox[{
+     SubscriptBox["\[Psi]", "1"], "|", 
+     SubscriptBox["\[Psi]", "2"]}], "\[RightAngleBracket]"}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "67a94093-314c-4789-8711-bffa9f932a89"],
+ ", which means the dot product of the bra ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "1"]},
+    "Bra"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "e17865ca-7618-4b81-92ba-8d7db8cbc1e2"],
+ " (the conjugate transpose of the state vector ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "1"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "b7e8263a-2263-446f-8adc-e9a08f56e830"],
+ ") with the ket |\[Psi]\:2082\:27e9."
+}], "Text",
+ CellChangeTimes->{{3.9725906502401247`*^9, 
+  3.97259107255718*^9}},ExpressionUUID->"128f2bd0-2f1b-44b3-a8a0-\
+058986ddb57e"],
+
+Cell[TextData[{
+ "Define ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "1"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "9cf544a6-42f3-4519-ae04-901bbadf408d"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["\[Psi]", "2"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "ef3cd673-5ace-449d-9e28-07b341db9644"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.972591152308262*^9, 
+  3.9725911803925123`*^9}},ExpressionUUID->"d875b448-c98c-44a3-af2a-\
+b7ad061bd59e"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Psi]1", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]1", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]1"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]1", "/", "2"}], "]"}]}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"\[Psi]2", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]2", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]2"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]2", "/", "2"}], "]"}]}]}], "}"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.972591181254756*^9, 3.972591202953891*^9}, {
+  3.972591415217403*^9, 3.972591420747847*^9}},
+ CellLabel->"In[20]:=",ExpressionUUID->"badfe6ea-72e3-48d8-bca8-02e4f8329647"],
+
+Cell["Calculate their inner product:", "Text",
+ CellChangeTimes->{{3.9725914223941383`*^9, 
+  3.972591426557049*^9}},ExpressionUUID->"7b539f27-cb49-4a59-af7e-\
+b18ceddfe8c7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"$Assumptions", "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"\[Theta]1", "|", "\[Theta]2", "|", "\[Phi]1", "|", "\[Phi]2"}], 
+     ")"}], "\[Element]", "Reals"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Conjugate", "[", "\[Psi]1", "]"}], ".", "\[Psi]2"}], "//", 
+  "FullSimplify"}]}], "Input",
+ CellChangeTimes->{{3.972591430782735*^9, 3.972591462335615*^9}},
+ CellLabel->"In[23]:=",ExpressionUUID->"97c249b8-b8c9-4be0-a309-1b67cb08eab7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"Cos", "[", 
+    FractionBox["\[Theta]1", "2"], "]"}], " ", 
+   RowBox[{"Cos", "[", 
+    FractionBox["\[Theta]2", "2"], "]"}]}], "+", 
+  RowBox[{
+   SuperscriptBox["\[ExponentialE]", 
+    RowBox[{"\[ImaginaryI]", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"-", "\[Phi]1"}], "+", "\[Phi]2"}], ")"}]}]], " ", 
+   RowBox[{"Sin", "[", 
+    FractionBox["\[Theta]1", "2"], "]"}], " ", 
+   RowBox[{"Sin", "[", 
+    FractionBox["\[Theta]2", "2"], "]"}]}]}]], "Output",
+ CellChangeTimes->{{3.9725914406229353`*^9, 3.972591463133829*^9}},
+ CellLabel->"Out[24]=",ExpressionUUID->"90179dc9-0a61-4be8-95d5-420be6a3c61f"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The state vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "abf3aefb-f8f2-4083-9376-d46672ef0593"],
+ " can be written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[Alpha]", " ", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", "0"}], "}"}]}], "+", 
+    RowBox[{"\[Beta]", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", "1"}], "}"}]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "5af87ffc-3245-48fc-ab1e-985c48e259e1"],
+ ". The purpose of this representation is to express the state in a specific \
+basis. In a two-dimensional Hilbert space, the unit vectors ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"1", ",", "0"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "080ee410-5d9c-498c-998b-00b42ef03c61"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "335a1f52-789d-4617-9f2d-9e1fea08a603"],
+ " form an orthonormal basis, which means any state vector can be written as \
+a linear combination of them. By convention, we usually define ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0"}], "}"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "437c439b-7360-46cd-8a31-6c2113af2245"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"1"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "4c6d4129-c960-4486-a511-c3dcabf9046e"],
+ ". so a general qubit state can be written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"\[Psi]"},
+     "Ket"], "=", 
+    RowBox[{
+     RowBox[{"\[Alpha]", 
+      TemplateBox[{"0"},
+       "Ket"]}], "+", 
+     RowBox[{"\[Beta]", 
+      TemplateBox[{"1"},
+       "Ket"]}]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "35ad2d49-e84e-4083-999f-bd32803a67f7"],
+ ". Note that in some literature the opposite convention is also used, with \
+",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"1"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0"}], "}"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "d7b02c39-8b93-460b-bb37-ada283f313a0"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "42c965e4-6edd-4ce0-b185-ea499f4141bb"],
+ ". In the context of quantum computing, the standard orthonormal basis whose \
+elements are unit vectors is called the computational basis."
+}], "Text",
+ CellChangeTimes->{{3.972591529141527*^9, 3.9725916710509043`*^9}, {
+  3.972591707428339*^9, 3.972591769331098*^9}, {3.9725918084014053`*^9, 
+  3.972591847407921*^9}},ExpressionUUID->"8893cc32-f542-466c-98dc-\
+01f4d879c5c2"],
+
+Cell[TextData[{
+ "One can verify that ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", "0"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "9ca84c63-0dd1-4086-a0ed-7a294d49a971"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"0", ",", " ", "1"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "42608f8a-47f3-4915-b3c9-ad4fd31d1709"],
+ " form an orthonormal set by checking their inner products: each vector has \
+norm 1, and their inner product with each other is 0. Equivalently, if we \
+place these vectors as the columns (or rows) of a matrix, the resulting \
+matrix is the identity matrix, which reflects the fact that they form an \
+orthonormal basis (the computational basis)."
+}], "Text",
+ CellChangeTimes->{{3.972591867556696*^9, 3.972591888593272*^9}, {
+  3.97259195213291*^9, 3.97259202340133*^9}, {3.972592058707686*^9, 
+  3.9725920826695538`*^9}, {3.9725923334537*^9, 3.972592335035123*^9}, {
+  3.972592531138302*^9, 
+  3.972592533325481*^9}},ExpressionUUID->"be686ace-cbd3-4c51-9595-\
+269e6caaadf5"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", "0"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}]}], "}"}], "==", 
+  RowBox[{"IdentityMatrix", "[", "2", "]"}]}]], "Input",
+ CellChangeTimes->{{3.9725920140344543`*^9, 3.972592016509082*^9}, {
+   3.972592339015758*^9, 3.972592341815922*^9}, 3.9725925367447844`*^9, {
+   3.972645701068592*^9, 3.972645739146126*^9}, {3.9726459415457077`*^9, 
+   3.9726459467741747`*^9}, 3.9726459770138397`*^9},
+ CellLabel->"In[41]:=",ExpressionUUID->"52c3d014-6e7d-4f99-8833-6c53da057d9b"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.9725920167203074`*^9, 3.972592342180463*^9, 
+  3.9725925372001123`*^9},
+ CellLabel->"Out[41]=",ExpressionUUID->"624397ed-0b44-44f2-8c59-32b4c4765a30"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Let\[CloseCurlyQuote]s focus on a generic qubit state vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "6f8b068f-2903-4888-82db-5b52d7f523fa"],
+ " with ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\[Alpha]", ",", 
+    RowBox[{"\[Beta]", "\[Element]", "\[DoubleStruckCapitalC]"}]}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "ea426afc-c9e2-41b5-a149-f0070fa49405"],
+ ", assumed to be normalized ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SuperscriptBox[
+      RowBox[{"\[LeftBracketingBar]", "\[Alpha]", "\[RightBracketingBar]"}], 
+      "2"], "+", 
+     SuperscriptBox[
+      RowBox[{"\[LeftBracketingBar]", "\[Beta]", "\[RightBracketingBar]"}], 
+      "2"]}], "=", "1"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "f7ea30a8-1f21-4609-bca0-28f0cd3eb3e9"],
+ ". Define a three-component real vector as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    OverscriptBox["n", "\[RightVector]"], "=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"2", 
+       RowBox[{"Re", "[", 
+        RowBox[{
+         SuperscriptBox["\[Alpha]", "*"], " ", "\[Beta]"}], "]"}]}], ",", 
+      RowBox[{"2", 
+       RowBox[{"Im", "[", 
+        RowBox[{
+         SuperscriptBox["\[Alpha]", "*"], " ", "\[Beta]"}], "]"}]}], ",", 
+      RowBox[{
+       SuperscriptBox[
+        RowBox[{"\[LeftBracketingBar]", "\[Alpha]", "\[RightBracketingBar]"}],
+         "2"], "-", 
+       SuperscriptBox[
+        RowBox[{"\[LeftBracketingBar]", "\[Beta]", "\[RightBracketingBar]"}], 
+        "2"]}]}], "}"}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "a42e7109-1a04-42eb-b8b3-98a86ed0f9d0"],
+ ". This vector ",
+ Cell[BoxData[
+  FormBox[
+   OverscriptBox["n", "\[RightVector]"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "8e5b3dfa-e343-4c22-ac42-33ac5fe46579"],
+ " is called the Bloch vector associated with the state vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "14931a1e-f0e4-476f-bdde-689c779bcc2e"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.972595037413535*^9, 3.972595057569725*^9}, {
+  3.972647354525296*^9, 3.972647495377927*^9}, {3.972647644664785*^9, 
+  3.972647675420936*^9}, {3.972647708077639*^9, 3.972647770159127*^9}, {
+  3.9726480852006474`*^9, 3.972648094046392*^9}, {3.972648432092*^9, 
+  3.9726484363661423`*^9}},ExpressionUUID->"535edcf1-f24a-4132-b1eb-\
+873e2b7b8cb0"],
+
+Cell[TextData[{
+ "Define a function that takes ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "bf9ff365-18de-4dc7-89f6-a70cac4ae300"],
+ " and returns the Bloch vector:"
+}], "Text",
+ CellChangeTimes->{{3.972647652635737*^9, 
+  3.972647683723298*^9}},ExpressionUUID->"cde51278-8d8b-421c-b63c-\
+1d1b9917918b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"BlochVector", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]_", ",", "\[Beta]_"}], "}"}], "]"}], ":=", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"2", 
+     RowBox[{"Re", "[", 
+      RowBox[{"\[Beta]", " ", 
+       RowBox[{"Conjugate", "@", "\[Alpha]"}]}], "]"}]}], ",", 
+    RowBox[{"2", 
+     RowBox[{"Im", "[", 
+      RowBox[{"\[Beta]", " ", 
+       RowBox[{"Conjugate", "@", "\[Alpha]"}]}], "]"}]}], ",", 
+    RowBox[{
+     SuperscriptBox[
+      RowBox[{"Abs", "[", "\[Alpha]", "]"}], "2"], "-", 
+     SuperscriptBox[
+      RowBox[{"Abs", "[", "\[Beta]", "]"}], "2"]}]}], "}"}]}]], "Input",
+ CellChangeTimes->{{3.972647561062148*^9, 3.972647606011798*^9}, {
+  3.972648074943798*^9, 3.972648082081298*^9}},
+ CellLabel->
+  "In[116]:=",ExpressionUUID->"2cdf39f0-f7f7-4701-85a3-657cf0e8a7a2"],
+
+Cell["\<\
+Verify that the norm of the Bloch vector is the same as the norm of the state \
+vector:\
+\>", "Text",
+ CellChangeTimes->{{3.972647798666408*^9, 3.972647807124976*^9}, {
+  3.972647839227325*^9, 3.972647843224189*^9}, {3.972647951273323*^9, 
+  3.972647957965796*^9}},ExpressionUUID->"e605a100-8354-4d46-857f-\
+9e6097c37e42"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{"Norm", "[", 
+   RowBox[{"BlochVector", "[", 
+    RowBox[{"{", 
+     RowBox[{"\[Alpha]", ",", "\[Beta]"}], "}"}], "]"}], "]"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.972647611778129*^9, 3.972647626662456*^9}, {
+   3.972647783593916*^9, 3.972647793299818*^9}, 3.972647948633277*^9},
+ CellLabel->
+  "In[117]:=",ExpressionUUID->"35839a87-5ad0-4c7c-80b9-3db8dc6d4dbe"],
+
+Cell[BoxData[
+ RowBox[{
+  SuperscriptBox[
+   RowBox[{"Abs", "[", "\[Alpha]", "]"}], "2"], "+", 
+  SuperscriptBox[
+   RowBox[{"Abs", "[", "\[Beta]", "]"}], "2"]}]], "Output",
+ CellChangeTimes->{{3.972647614408807*^9, 3.972647626978293*^9}, 
+   3.972647793735581*^9, 3.97264794920144*^9, 3.972648098428225*^9},
+ CellLabel->
+  "Out[117]=",ExpressionUUID->"b824e8c1-f339-4f3f-a159-03714bc8f4e0"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Recall that a pure qubit state, in its most general form, can be written as \
+",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"\[Psi]"},
+     "Ket"], "=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+      RowBox[{
+       SuperscriptBox["\[ExponentialE]", 
+        RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+       RowBox[{"Sin", "[", 
+        RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], TraditionalForm]],
+  ExpressionUUID->"17d6804f-0b76-40ef-9966-a62d425237a4"],
+ ". A key result is that the angles \[Theta] and \[Phi] are exactly the usual \
+spherical coordinates on the Bloch sphere (the unit sphere in three \
+dimensions). In what follows, we will show this explicitly by direct \
+computation."
+}], "Text",
+ CellChangeTimes->{{3.9726484787075453`*^9, 
+  3.972648593372839*^9}},ExpressionUUID->"4d10c408-ec9b-4f8d-a3a2-\
+0a3c716ccc19"],
+
+Cell["Calculate the Bloch vector:", "Text",
+ CellChangeTimes->{{3.972648606099085*^9, 
+  3.9726486131842213`*^9}},ExpressionUUID->"9be5e9e7-97dd-4246-92d4-\
+5870944493f3"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"BlochVector", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], "]"}], "//", 
+  "FullSimplify"}]], "Input",
+ CellChangeTimes->{{3.972647859426104*^9, 3.972647881656787*^9}},
+ CellLabel->
+  "In[118]:=",ExpressionUUID->"dd2e1651-4bd5-4603-8555-b6fca814defb"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Cos", "[", "\[Phi]", "]"}], " ", 
+    RowBox[{"Sin", "[", "\[Theta]", "]"}]}], ",", 
+   RowBox[{
+    RowBox[{"Sin", "[", "\[Theta]", "]"}], " ", 
+    RowBox[{"Sin", "[", "\[Phi]", "]"}]}], ",", 
+   RowBox[{"Cos", "[", "\[Theta]", "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.972647878229411*^9, 3.972647901819813*^9}, 
+   3.972647967199095*^9, 3.972648099644895*^9},
+ CellLabel->
+  "Out[118]=",ExpressionUUID->"0e284306-f4f3-4945-bcfd-7127d3410947"]
+}, Open  ]],
+
+Cell["\<\
+As one can see, angles \[Theta] and \[Phi] are exactly the standard spherical \
+coordinates on the unit sphere.\
+\>", "Text",
+ CellChangeTimes->{{3.9726482107274637`*^9, 3.9726482220117702`*^9}, {
+  3.97264826362792*^9, 3.972648289721092*^9}, {3.972648618680167*^9, 
+  3.972648620564136*^9}},ExpressionUUID->"edf1157a-a9be-4deb-bc37-\
+6ca83d5278e4"],
+
+Cell["\<\
+Now the motivation for having \[Theta]/2 in the state vector is clear: if we \
+used \[Theta] instead of \[Theta]/2, the components of the Bloch vector would \
+involve 2\[Theta], and we would obtain an extra factor of 2 in the spherical \
+angles on the Bloch sphere.\
+\>", "Text",
+ CellChangeTimes->{{3.9726486604304028`*^9, 
+  3.972648735167213*^9}},ExpressionUUID->"8dce2f23-57f3-4448-863a-\
+98f34bba1dec"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"BlochVector", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", "\[Theta]", "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", "\[Theta]", "]"}]}]}], "}"}], "]"}], "//", 
+  "FullSimplify"}]], "Input",
+ CellChangeTimes->{{3.972648687429347*^9, 3.972648689669279*^9}},
+ CellLabel->
+  "In[122]:=",ExpressionUUID->"a5d4c15c-8841-4106-bdf5-7cdcd354c8de"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Cos", "[", "\[Phi]", "]"}], " ", 
+    RowBox[{"Sin", "[", 
+     RowBox[{"2", " ", "\[Theta]"}], "]"}]}], ",", 
+   RowBox[{
+    RowBox[{"Sin", "[", 
+     RowBox[{"2", " ", "\[Theta]"}], "]"}], " ", 
+    RowBox[{"Sin", "[", "\[Phi]", "]"}]}], ",", 
+   RowBox[{"Cos", "[", 
+    RowBox[{"2", " ", "\[Theta]"}], "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.972648690172036*^9},
+ CellLabel->
+  "Out[122]=",ExpressionUUID->"3c27e138-de55-4d6c-b98f-06e1c3ce3931"]
+}, Open  ]],
+
+Cell["\<\
+One can show explicitly that the Bloch vector is the same as the Cartesian \
+coordinates for the standard spherical coordinates on the unit sphere.\
+\>", "Text",
+ CellChangeTimes->{{3.97264829523978*^9, 3.9726483091609993`*^9}, {
+  3.972648628014204*^9, 3.972648631431939*^9}, {3.972648767120943*^9, 
+  3.972648795671617*^9}},ExpressionUUID->"e3609f8d-8b3c-4975-819a-\
+386f3571e2a8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"CoordinateTransform", "[", 
+  RowBox[{
+   RowBox[{"\"\<Spherical\>\"", "->", "\"\<Cartesian\>\""}], ",", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", "\[Theta]", ",", "\[Phi]"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.9726481478815403`*^9, 3.972648152879735*^9}, 
+   3.972648202004633*^9},
+ CellLabel->
+  "In[119]:=",ExpressionUUID->"76c2cc50-87aa-48e7-83a8-4faf99af0370"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Cos", "[", "\[Phi]", "]"}], " ", 
+    RowBox[{"Sin", "[", "\[Theta]", "]"}]}], ",", 
+   RowBox[{
+    RowBox[{"Sin", "[", "\[Theta]", "]"}], " ", 
+    RowBox[{"Sin", "[", "\[Phi]", "]"}]}], ",", 
+   RowBox[{"Cos", "[", "\[Theta]", "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.972648202304112*^9},
+ CellLabel->
+  "Out[119]=",ExpressionUUID->"72a41ca5-73d4-4d2a-8ff2-aba6eb4a7a8c"]
+}, Open  ]],
+
+Cell[TextData[{
+ "So this is a very interesting analogy. The quantum state vector ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", 
+     RowBox[{
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[ImaginaryI]", " ", "\[Phi]"}]], 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], TraditionalForm]],
+  ExpressionUUID->"665f0b28-e11b-404e-9570-94ae74aec657"],
+ " is mapped into a vector in ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckCapitalR]", "3"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "a005aa1a-0cc9-446c-941e-d7727557c663"],
+ " that is fully parametrized by ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"r", ",", "\[Theta]", ",", "\[Phi]"}], "}"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "cf39431d-14bd-49a0-818a-1a5bfef7fe18"],
+ " where ",
+ Cell[BoxData[
+  FormBox["r", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "804fe49c-74ca-40a8-98bf-1bf2ebf0bb1e"],
+ " is the norm which is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"r", "=", "1"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "202716c3-2083-4310-ab7c-2baa71e01a10"],
+ " for the pure state. "
+}], "Text",
+ CellChangeTimes->{{3.972648975537869*^9, 
+  3.972649135423912*^9}},ExpressionUUID->"6a7aed9d-e071-4777-92fb-\
+0a58190ca3a2"],
+
+Cell["\<\
+Given this correspondence, any pure qubit state can be represented by a point \
+on the surface of the Bloch sphere, with the angles \[Theta] and \[Phi] being \
+exactly the spherical coordinates that fully parameterize the state.\
+\>", "Text",
+ CellChangeTimes->{{3.972648951088442*^9, 3.972648956224481*^9}, {
+  3.972649143523641*^9, 
+  3.9726492331538887`*^9}},ExpressionUUID->"7f92d72d-a466-4db3-aecd-\
+9315ae601603"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"CoordinateTransform", "[", 
+  RowBox[{
+   RowBox[{"\"\<Cartesian\>\"", "->", "\"\<Spherical\>\""}], ",", 
+   RowBox[{"{", 
+    RowBox[{"nx", ",", "ny", ",", "nz"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.972648919135952*^9, 3.972648932922286*^9}, {
+  3.9726492128645763`*^9, 3.9726492159726467`*^9}},
+ CellLabel->
+  "In[124]:=",ExpressionUUID->"37b244b2-693d-4c7b-8597-767939cc358a"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   SqrtBox[
+    RowBox[{
+     SuperscriptBox["nx", "2"], "+", 
+     SuperscriptBox["ny", "2"], "+", 
+     SuperscriptBox["nz", "2"]}]], ",", 
+   RowBox[{"ArcTan", "[", 
+    RowBox[{"nz", ",", 
+     SqrtBox[
+      RowBox[{
+       SuperscriptBox["nx", "2"], "+", 
+       SuperscriptBox["ny", "2"]}]]}], "]"}], ",", 
+   RowBox[{"ArcTan", "[", 
+    RowBox[{"nx", ",", "ny"}], "]"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.9726489333496523`*^9, 3.972649216233808*^9},
+ CellLabel->
+  "Out[124]=",ExpressionUUID->"74349454-b9a2-43e2-8af5-68d3cb9af0e9"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Let\[CloseCurlyQuote]s focus on the concept of basis for the Hilbert space. \
+The computational basis is not the only way to define a basis. There are \
+infinitely many possible bases for a two-dimensional Hilbert space. For \
+example, any ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "\[Times]", "2"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "e29d9cc2-1d08-45f1-884d-09b5a3a7c212"],
+ " unitary matrix defines a new orthonormal basis when applied to the \
+computational basis vectors."
+}], "Text",
+ CellChangeTimes->{{3.972591790067918*^9, 3.972591804640544*^9}, {
+   3.972592215672864*^9, 3.972592228885991*^9}, {3.972592595596352*^9, 
+   3.972592612267008*^9}, {3.9725927798720503`*^9, 3.97259280072128*^9}, 
+   3.972645393755026*^9, {3.9726460827235537`*^9, 3.972646098772101*^9}, {
+   3.9726483963503942`*^9, 
+   3.97264840975701*^9}},ExpressionUUID->"34b0bffb-00f3-4f8e-b84f-\
+40588d8fb5b2"],
+
+Cell["Generate a random unitary matrix (using Haar-measure):", "Text",
+ CellChangeTimes->{{3.972592803393178*^9, 
+  3.9725928146071863`*^9}},ExpressionUUID->"f3765e27-85a9-4538-b681-\
+04e8c85eedad"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"u", "=", 
+   RowBox[{"RandomVariate", "@", 
+    RowBox[{"CircularUnitaryMatrixDistribution", "[", "2", "]"}]}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.972592235895121*^9, 3.972592271686263*^9}},
+ CellLabel->"In[31]:=",ExpressionUUID->"a4736296-54af-4c25-9fca-5ceccdc61652"],
+
+Cell[TextData[{
+ "A unitary matrix is a matrix such that ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"u", ".", 
+     SuperscriptBox["u", "\[Dagger]"]}], "=", "\[DoubleStruckCapitalI]"}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "8f5937e5-575d-4462-9e87-4fd4b0e1df80"],
+ " where \[Dagger] means the conjugate transpose."
+}], "Text",
+ CellChangeTimes->{{3.9725926151203203`*^9, 
+  3.9725926576977787`*^9}},ExpressionUUID->"a603c0e4-1a70-43c9-a333-\
+e5c3874e67d8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Chop", "[", 
+   RowBox[{"u", ".", 
+    RowBox[{"ConjugateTranspose", "[", "u", "]"}]}], "]"}], "==", 
+  RowBox[{"IdentityMatrix", "[", "2", "]"}]}]], "Input",
+ CellChangeTimes->{{3.97259266683827*^9, 3.972592690664847*^9}},
+ CellLabel->"In[50]:=",ExpressionUUID->"fb368cef-b7a5-4363-b451-0a22a8c61796"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{{3.972592673488762*^9, 3.972592690952174*^9}},
+ CellLabel->"Out[50]=",ExpressionUUID->"c5540c25-bec5-4261-884c-be4e692d915e"]
+}, Open  ]],
+
+Cell["\<\
+The reason we use Chop in the code above is that the computation may involve \
+small numerical errors due to machine precision. Chop sets these tiny \
+residual values to zero, making the result easier to interpret.\
+\>", "Text",
+ CellChangeTimes->{{3.972592946619697*^9, 
+  3.972593013472062*^9}},ExpressionUUID->"6be8b34a-7c9e-464d-bb85-\
+3f816b35d0c6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"u", ".", 
+  RowBox[{"ConjugateTranspose", "[", "u", "]"}]}]], "Input",
+ CellLabel->"In[56]:=",ExpressionUUID->"795741b6-847d-45ac-8b33-7f64f9d05d55"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"1.0000000000000004`", "\[VeryThinSpace]", "-", 
+      RowBox[{"2.3680462878287123`*^-17", " ", "\[ImaginaryI]"}]}], ",", 
+     RowBox[{
+      RowBox[{"-", "1.6653345369377348`*^-16"}], "+", 
+      RowBox[{"1.1102230246251565`*^-16", " ", "\[ImaginaryI]"}]}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", "1.6653345369377348`*^-16"}], "-", 
+      RowBox[{"1.1102230246251565`*^-16", " ", "\[ImaginaryI]"}]}], ",", 
+     RowBox[{"1.0000000000000002`", "\[VeryThinSpace]", "-", 
+      RowBox[{"5.753845922527089`*^-18", " ", "\[ImaginaryI]"}]}]}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.972592975291543*^9},
+ CellLabel->"Out[56]=",ExpressionUUID->"de415886-6fa5-40ae-91ea-8c6151457394"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Chop", "[", 
+  RowBox[{"u", ".", 
+   RowBox[{"ConjugateTranspose", "[", "u", "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.972593018696931*^9, 3.972593020067234*^9}},
+ CellLabel->"In[57]:=",ExpressionUUID->"ece72d5b-3c94-4c8f-ab3b-fdcfc4d50ad3"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"1.0000000000000004`", ",", "0"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "1.0000000000000002`"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.972593020362998*^9},
+ CellLabel->"Out[57]=",ExpressionUUID->"fd1f86ec-3c6f-41cb-b6d0-470efdc8bfaa"]
+}, Open  ]],
+
+Cell[TextData[{
+ "In a different way, one can say a unitary matrix is a matrix such that ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["u", 
+     RowBox[{"-", "1"}]], "=", 
+    SuperscriptBox["u", "\[Dagger]"]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "8c67df5a-0880-4ba9-8063-e5e46ebc4067"]
+}], "Text",
+ CellChangeTimes->{{3.972592700096839*^9, 3.972592719450798*^9}, {
+  3.972592990097662*^9, 
+  3.9725929945988827`*^9}},ExpressionUUID->"ab5c33f8-7806-4806-adf5-\
+a468f6b1be07"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Inverse", "[", "u", "]"}], "==", 
+  RowBox[{"ConjugateTranspose", "[", "u", "]"}]}]], "Input",
+ CellChangeTimes->{{3.972592833158793*^9, 3.972592838139654*^9}},
+ CellLabel->"In[51]:=",ExpressionUUID->"bd22387c-0c99-4334-ab06-3cc13c68fc97"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.972592838501396*^9},
+ CellLabel->"Out[51]=",ExpressionUUID->"29ba9774-04e0-4168-97e8-b0056b390414"]
+}, Open  ]],
+
+Cell["\<\
+In the Wolfram Language, this kind of check can also be performed directly.\
+\>", "Text",
+ CellChangeTimes->{{3.972592851301035*^9, 3.972592877930764*^9}, {
+  3.972593034183094*^9, 
+  3.972593034520074*^9}},ExpressionUUID->"1ba197ae-a20e-4d7a-9b18-\
+f26109ae76a4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"UnitaryMatrixQ", "[", "u", "]"}]], "Input",
+ CellChangeTimes->{{3.972592660331705*^9, 3.9725926632099113`*^9}},
+ CellLabel->"In[46]:=",ExpressionUUID->"38108310-e5a5-423a-b673-7c120730c4d6"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.9725926633859158`*^9},
+ CellLabel->"Out[46]=",ExpressionUUID->"8353eb36-2a64-4b7e-9db1-9b8c35796a3e"]
+}, Open  ]],
+
+Cell["\<\
+Now apply the unitary matrix above to the computational basis vectors. This \
+produces a new pair of vectors, which define a new basis. If we stack these \
+new vectors as the columns of a matrix, we can then verify that this matrix \
+is unitary, i.e., that the new vectors form an orthonormal set.\
+\>", "Text",
+ CellChangeTimes->{{3.972592883632124*^9, 3.9725929295593357`*^9}, {
+  3.972593059354244*^9, 
+  3.972593060605628*^9}},ExpressionUUID->"99400501-5d31-4443-812e-\
+7274298e6685"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"m", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"u", ".", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", "0"}], "}"}]}], ",", 
+     RowBox[{"u", ".", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", "1"}], "}"}]}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Chop", "[", 
+   RowBox[{"m", ".", 
+    RowBox[{"ConjugateTranspose", "[", "m", "]"}]}], "]"}], "==", 
+  RowBox[{"IdentityMatrix", "[", "2", "]"}]}]}], "Input",
+ CellChangeTimes->{{3.972592570333508*^9, 3.972592581495123*^9}, {
+  3.972592933744156*^9, 3.972592941110407*^9}},
+ CellLabel->"In[54]:=",ExpressionUUID->"3fe4ab25-d329-4b0c-be48-4e74c42b4ca6"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{
+  3.972592389862246*^9, {3.972592579035565*^9, 3.972592582029675*^9}, {
+   3.972592935923995*^9, 3.972592941478075*^9}},
+ CellLabel->"Out[55]=",ExpressionUUID->"6fb162de-7156-427b-8da3-5be6d5b9e62a"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Note the orthonormality condition can be also written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "i"], "|", 
+      SubscriptBox["v", "j"]}], "\[RightAngleBracket]"}], "=", 
+    SubscriptBox["\[Delta]", 
+     RowBox[{"i", ",", "j"}]]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "b9867ceb-bed1-43c6-b225-d1188243e738"],
+ " where ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[Delta]", 
+    RowBox[{"i", ",", "j"}]], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "c2594a8f-718a-42a9-a341-8bd3a5da0146"],
+ " is the Kronecker delta, which is zero if ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "b30394dc-609a-440b-afd5-d33dbdca34d4"],
+ " is different from ",
+ Cell[BoxData[
+  FormBox["j", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "e186b5cf-552e-4d9a-9981-0f665e4ff680"],
+ ", and one if ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "ebb06ded-0727-43cc-8440-5d2245dadc59"],
+ " is the same as: ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["\[Delta]", 
+     RowBox[{"i", ",", "j"}]], "=", 
+    TagBox[GridBox[{
+       {"\[Piecewise]", GridBox[{
+          {"1", 
+           RowBox[{"i", "=", "j"}]},
+          {"0", 
+           RowBox[{"i", "\[NotEqual]", "j"}]}
+         },
+         AllowedDimensions->{2, Automatic},
+         Editable->True,
+         GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+         GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{1.}}},
+         GridBoxSpacings->{"Columns" -> {
+             Offset[0.27999999999999997`], {
+              Offset[0.84]}, 
+             Offset[0.27999999999999997`]}, "Rows" -> {
+             Offset[0.2], {
+              Offset[0.4]}, 
+             Offset[0.2]}},
+         Selectable->True]}
+      },
+      GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+      GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{1.}}},
+      GridBoxSpacings->{"Columns" -> {
+          Offset[0.27999999999999997`], {
+           Offset[0.35]}, 
+          Offset[0.27999999999999997`]}, "Rows" -> {
+          Offset[0.2], {
+           Offset[0.4]}, 
+          Offset[0.2]}}],
+     "Piecewise",
+     DeleteWithContents->True,
+     Editable->False,
+     SelectWithContents->True,
+     Selectable->False,
+     StripWrapperBoxes->True]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "7bde8d7f-985a-45ef-812e-112676536310"],
+ " . In words, the inner product of two basis vectors is 1 when they are the \
+same vector and 0 when they are different."
+}], "Text",
+ CellChangeTimes->{{3.972593890566594*^9, 3.97259393287525*^9}, {
+  3.972594250627528*^9, 
+  3.972594463582403*^9}},ExpressionUUID->"9e73744f-57c6-45dc-b97f-\
+7e4720a5d912"],
+
+Cell["\<\
+You may have noticed how we tested the orthonormality of the new basis. After \
+stacking the new basis vectors as the rows of a matrix, we checked whether \
+the matrix multiplied by its conjugate transpose gives the identity matrix. \
+This is exactly the condition for a matrix to be unitary. In other words, the \
+rows (and similarly the columns) of a unitary matrix form an orthonormal \
+basis and can therefore be used as a new basis for the Hilbert space.\
+\>", "Text",
+ CellChangeTimes->{{3.9725930668823957`*^9, 3.972593207933786*^9}, 
+   3.972594300007492*^9},ExpressionUUID->"b5822bac-43a3-4756-99c1-\
+cb5c15e85449"],
+
+Cell["Define a normal random state vector:", "Text",
+ CellChangeTimes->{{3.972593227606537*^9, 
+  3.972593260178677*^9}},ExpressionUUID->"a7ff381c-1e41-4cc8-b84b-\
+eb5fc6b349ea"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"\[Psi]", "=", 
+  RowBox[{"Normalize", "[", 
+   RowBox[{"RandomComplex", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "1"}], "-", "I"}], ",", 
+       RowBox[{"1", "+", "I"}]}], "}"}], ",", "2"}], "]"}], "]"}]}]], "Input",\
+
+ CellChangeTimes->{{3.972593260936558*^9, 3.972593285999292*^9}},
+ CellLabel->"In[59]:=",ExpressionUUID->"aa4c6937-21f4-4512-b37c-4990d9cc1670"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"0.31233355994235557`", "\[VeryThinSpace]", "+", 
+    RowBox[{"0.6278942635200954`", " ", "\[ImaginaryI]"}]}], ",", 
+   RowBox[{
+    RowBox[{"-", "0.028644119057773112`"}], "-", 
+    RowBox[{"0.7123033452228735`", " ", "\[ImaginaryI]"}]}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{{3.972593280063218*^9, 3.972593286477026*^9}},
+ CellLabel->"Out[59]=",ExpressionUUID->"63d9dfa8-cc47-410a-bd02-99dc62884051"]
+}, Open  ]],
+
+Cell["Verify it is normal:", "Text",
+ CellChangeTimes->{{3.9725932883147573`*^9, 
+  3.972593292204664*^9}},ExpressionUUID->"b44a435e-ab10-4f63-9b33-\
+2cce13e827f3"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Norm", "[", "\[Psi]", "]"}]], "Input",
+ CellChangeTimes->{{3.97259329365394*^9, 3.972593296129229*^9}},
+ CellLabel->"In[60]:=",ExpressionUUID->"5d35ad44-3c33-4dad-9661-97fb5d4c2013"],
+
+Cell[BoxData["0.9999999999999999`"], "Output",
+ CellChangeTimes->{3.9725932963796377`*^9},
+ CellLabel->"Out[60]=",ExpressionUUID->"d940a195-b14a-42cb-9794-e24a991ba839"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Conjugate", "[", "\[Psi]", "]"}], ".", "\[Psi]"}]], "Input",
+ CellChangeTimes->{{3.972593298990437*^9, 3.9725933035375843`*^9}},
+ CellLabel->"In[61]:=",ExpressionUUID->"31dcd367-cf4b-443e-8dca-d19c1a0b39ab"],
+
+Cell[BoxData[
+ RowBox[{"0.9999999999999999`", "\[VeryThinSpace]", "+", 
+  RowBox[{"0.`", " ", "\[ImaginaryI]"}]}]], "Output",
+ CellChangeTimes->{3.97259330378843*^9},
+ CellLabel->"Out[61]=",ExpressionUUID->"26af0a98-0045-4940-ba4c-98c46a8569e0"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Let\[CloseCurlyQuote]s define a new orthonormal basis. To do this, we use \
+the random ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "\[Times]", "2"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "897234b0-108a-49e1-b2aa-9fac3f016b08"],
+ " unitary matrix generated before and take its rows as the basis vectors for \
+the same two-dimensional Hilbert space."
+}], "Text",
+ CellChangeTimes->{{3.9725933152872334`*^9, 3.972593352000699*^9}, {
+  3.972593408152203*^9, 3.972593416664287*^9}, {3.972646272433762*^9, 
+  3.9726462839601088`*^9}},ExpressionUUID->"99a4c1e2-1019-4e81-a686-\
+0bb4090c790c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"v1", ",", "v2"}], "}"}], "=", "u"}]], "Input",
+ CellChangeTimes->{{3.972593354849038*^9, 3.972593358269701*^9}, {
+  3.972593447719657*^9, 3.972593455651032*^9}, {3.972646286713564*^9, 
+  3.972646287296487*^9}},
+ CellLabel->"In[88]:=",ExpressionUUID->"2fdbc8d9-0590-4372-8b16-d635e45b53a2"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"0.6491704134370677`", "\[VeryThinSpace]", "-", 
+      RowBox[{"0.2997856234968826`", " ", "\[ImaginaryI]"}]}], ",", 
+     RowBox[{"0.06412741300836189`", "\[VeryThinSpace]", "-", 
+      RowBox[{"0.6961278827653627`", " ", "\[ImaginaryI]"}]}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"0.17053680586416428`", "\[VeryThinSpace]", "+", 
+      RowBox[{"0.6779554204430995`", " ", "\[ImaginaryI]"}]}], ",", 
+     RowBox[{
+      RowBox[{"-", "0.6875848605362623`"}], "-", 
+      RowBox[{"0.19626692359844267`", " ", "\[ImaginaryI]"}]}]}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.972593359153489*^9, 3.972593455950204*^9, 
+  3.972646288244053*^9},
+ CellLabel->"Out[88]=",ExpressionUUID->"f20a0757-2e73-45ac-bbf8-87c1a7f9c82b"]
+}, Open  ]],
+
+Cell[TextData[{
+ "When we define the basis vector like above, the unitarity condition can be \
+written as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"u", ".", 
+     SuperscriptBox["u", "\[Dagger]"]}], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        SubscriptBox["v", "1"], ",", 
+        SubscriptBox["v", "2"]}], "}"}], ".", 
+      SuperscriptBox[
+       RowBox[{"{", 
+        RowBox[{
+         SubscriptBox["v", "1"], ",", 
+         SubscriptBox["v", "2"]}], "}"}], "\[Dagger]"]}], "=", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          SubscriptBox["v", "1"], ".", 
+          SubsuperscriptBox["v", "1", "*"]}], ",", 
+         RowBox[{
+          SubscriptBox["v", "1"], ".", 
+          SubsuperscriptBox["v", "2", "*"]}]}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          SubscriptBox["v", "2"], ".", 
+          SubsuperscriptBox["v", "1", "*"]}], ",", 
+         RowBox[{
+          SubscriptBox["v", "2"], ".", 
+          SubsuperscriptBox["v", "2", "*"]}]}], "}"}]}], "}"}]}]}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "d9ab5142-b60b-4a77-9ca3-7a7fc82672bb"],
+ ". Keep in mind that ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["v", 
+    RowBox[{"1", ",", "2"}]], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "5ae2c648-a865-4676-b760-9adf6545ef1b"],
+ " are vectors. Therefore, the orthonormality condition, ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "i"], "|", 
+      SubscriptBox["v", "j"]}], "\[RightAngleBracket]"}], "=", 
+    RowBox[{
+     RowBox[{
+      SubsuperscriptBox["v", "i", "*"], ".", 
+      SubscriptBox["v", "j"]}], "=", 
+     SubscriptBox["\[Delta]", 
+      RowBox[{"i", ",", "j"}]]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "5f038fd8-1cce-4757-8090-ea0be659a0b5"],
+ " is the same as unitarity condition of ",
+ Cell[BoxData[
+  FormBox["u", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "c8462766-62d5-4a1f-806f-7f9a81818c99"],
+ " matrix."
+}], "Text",
+ CellChangeTimes->{{3.9726464129194202`*^9, 
+  3.9726466555628653`*^9}},ExpressionUUID->"0eb235df-7556-425a-8bc8-\
+f142507caa3c"],
+
+Cell["Verify the orthogonality of basis elements:", "Text",
+ CellChangeTimes->{{3.972593584417637*^9, 
+  3.972593599172909*^9}},ExpressionUUID->"bd408523-0001-4681-a605-\
+035ac8f220e5"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Chop", "@", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"v1", ".", 
+        RowBox[{"Conjugate", "[", "v1", "]"}]}], ",", 
+       RowBox[{"v1", ".", 
+        RowBox[{"Conjugate", "[", "v2", "]"}]}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"v2", ".", 
+        RowBox[{"Conjugate", "[", "v1", "]"}]}], ",", 
+       RowBox[{"v2", ".", 
+        RowBox[{"Conjugate", "[", "v2", "]"}]}]}], "}"}]}], "}"}]}], "==", 
+  RowBox[{"IdentityMatrix", "[", "2", "]"}]}]], "Input",
+ CellChangeTimes->{{3.972593572128213*^9, 3.972593579629827*^9}, {
+  3.972646295780155*^9, 3.9726463037680387`*^9}, {3.9726466623094273`*^9, 
+  3.972646718719791*^9}, {3.972647014050721*^9, 3.972647016251342*^9}},
+ CellLabel->
+  "In[100]:=",ExpressionUUID->"7ca0ae05-5a93-4c81-af58-7a5ee9da7d5f"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{{3.9725935763434277`*^9, 3.972593581206753*^9}, {
+   3.972646291064049*^9, 3.9726463042839527`*^9}, {3.9726466626843367`*^9, 
+   3.9726466657500668`*^9}, 3.972646718994009*^9, 3.972647016476356*^9},
+ CellLabel->
+  "Out[100]=",ExpressionUUID->"a1282fdb-37f1-4d35-9691-b8088008a64a"]
+}, Open  ]],
+
+Cell[TextData[{
+ "which is the same as checking ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"u", ".", 
+     SuperscriptBox["u", "\[Dagger]"]}], "=", "\[DoubleStruckCapitalI]"}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "48b36ad2-ef33-409a-bf52-005ed5c3f7ad"],
+ ":"
+}], "Text",
+ CellChangeTimes->{{3.972646723880818*^9, 3.9726467297902317`*^9}, {
+  3.972647025371903*^9, 
+  3.972647043135736*^9}},ExpressionUUID->"6f0058d8-748f-4835-814a-\
+ebd4f924ee7b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Chop", "[", 
+   RowBox[{"u", ".", 
+    RowBox[{"ConjugateTranspose", "@", "u"}]}], "]"}], "==", 
+  RowBox[{"IdentityMatrix", "[", "2", "]"}]}]], "Input",
+ CellChangeTimes->{{3.9726470447492933`*^9, 3.972647063812098*^9}},
+ CellLabel->
+  "In[103]:=",ExpressionUUID->"471664bd-abf3-492d-b036-486cb0be1234"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{{3.9726470500069637`*^9, 3.972647064039092*^9}},
+ CellLabel->
+  "Out[103]=",ExpressionUUID->"b1fba2ec-80ed-4230-b01d-d556aec59a22"]
+}, Open  ]],
+
+Cell[TextData[{
+ "A very important question is how to express the state vector we defined \
+above in the new basis. In other words, we want to find the coefficients ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["c", "1"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "aa0e9ab5-83a6-473d-a626-c14c358d0a5d"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["c", "2"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "1d6a46fa-ca48-4cdc-bda5-c1b2cb55af27"],
+ " in the linear combination ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    TemplateBox[{"\[Psi]"},
+     "Ket"], "=", 
+    RowBox[{
+     RowBox[{
+      SubscriptBox["c", "1"], 
+      TemplateBox[{
+        SubscriptBox["v", "1"]},
+       "Ket"]}], "+", 
+     RowBox[{
+      SubscriptBox["c", "2"], 
+      TemplateBox[{
+        SubscriptBox["v", "2"]},
+       "Ket"]}]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "07d40145-ae62-4c5c-80d7-9b49bab9850c"],
+ ". To do this, we use the orthonormality of the basis vectors. If we \
+multiply this equation on the left by the bra ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["v", "1"]},
+    "Bra"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "5c59eeb5-fa42-46ee-a985-efe1a44a26e7"],
+ ", only the coefficient of ",
+ Cell[BoxData[
+  FormBox[
+   TemplateBox[{
+     SubscriptBox["v", "1"]},
+    "Ket"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "da54852e-e56b-4b98-93f5-3ff89debd74a"],
+ " survives: ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "1"], "|", "\[Psi]"}], "\[RightAngleBracket]"}], "=", 
+    
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       SubscriptBox["c", "1"], 
+       RowBox[{"\[LeftAngleBracket]", 
+        RowBox[{
+         SubscriptBox["v", "1"], "|", 
+         SubscriptBox["v", "1"]}], "\[RightAngleBracket]"}]}], "+", 
+      RowBox[{
+       SubscriptBox["c", "2"], 
+       RowBox[{"\[LeftAngleBracket]", 
+        RowBox[{
+         SubscriptBox["v", "1"], "|", 
+         SubscriptBox["v", "2"]}], "\[RightAngleBracket]"}]}]}], "=", 
+     SubscriptBox["c", "1"]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "e70375ec-e5ba-40bb-b828-55be78541b75"],
+ " because ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "i"], "|", 
+      SubscriptBox["v", "j"]}], "\[RightAngleBracket]"}], "=", 
+    SubscriptBox["\[Delta]", 
+     RowBox[{"i", ",", "j"}]]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "b26d74db-0741-4976-a38b-68c9407e1ee1"],
+ ". Similarly, ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "2"], "|", "\[Psi]"}], "\[RightAngleBracket]"}], "=", 
+    
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       SubscriptBox["c", "1"], 
+       RowBox[{"\[LeftAngleBracket]", 
+        RowBox[{
+         SubscriptBox["v", "2"], "|", 
+         SubscriptBox["v", "1"]}], "\[RightAngleBracket]"}]}], "+", 
+      RowBox[{
+       SubscriptBox["c", "2"], 
+       RowBox[{"\[LeftAngleBracket]", 
+        RowBox[{
+         SubscriptBox["v", "2"], "|", 
+         SubscriptBox["v", "2"]}], "\[RightAngleBracket]"}]}]}], "=", 
+     SubscriptBox["c", "2"]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "cc763f85-2546-4169-a4cc-aa47bcb93e58"],
+ ". Thus, in general, the expansion coefficients are given by ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["c", "j"], "=", 
+    RowBox[{"\[LeftAngleBracket]", 
+     RowBox[{
+      SubscriptBox["v", "j"], "|", "\[Psi]"}], "\[RightAngleBracket]"}]}], 
+   TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "84d1139d-cbce-4344-9a52-9d9ed84e2ac4"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.972593370792921*^9, 3.972593403129201*^9}, {
+  3.972593467146035*^9, 3.972593552678543*^9}, {3.9725936186313457`*^9, 
+  3.972593630212044*^9}, {3.972593849086681*^9, 3.972593871687195*^9}, {
+  3.9725944880156517`*^9, 3.972594501418653*^9}, {3.9725945721495247`*^9, 
+  3.972594645187623*^9}, {3.972594764386622*^9, 
+  3.9725948585024147`*^9}},ExpressionUUID->"6f112605-d1e9-465f-bef3-\
+9a4484a5ce14"],
+
+Cell["Compute the state vector in the new basis:", "Text",
+ CellChangeTimes->{{3.972594531267642*^9, 
+  3.972594539572995*^9}},ExpressionUUID->"d1c1ce2d-8c55-410a-9762-\
+b8dcf21e2127"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Conjugate", "[", "v1", "]"}], ".", "\[Psi]"}], ",", 
+   RowBox[{
+    RowBox[{"Conjugate", "[", "v2", "]"}], ".", "\[Psi]"}]}], "}"}]], "Input",\
+
+ CellChangeTimes->{{3.9725945071483173`*^9, 3.9725945274407587`*^9}},
+ CellLabel->"In[68]:=",ExpressionUUID->"86163ff4-b2b1-423d-b4cd-958bbf63726a"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"0.5085413793021681`", "\[VeryThinSpace]", "+", 
+    RowBox[{"0.43562534889071186`", " ", "\[ImaginaryI]"}]}], ",", 
+   RowBox[{"0.6384455359386253`", "\[VeryThinSpace]", "+", 
+    RowBox[{"0.37947795532986517`", " ", "\[ImaginaryI]"}]}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{{3.97259451326022*^9, 3.972594527815866*^9}},
+ CellLabel->"Out[68]=",ExpressionUUID->"dd45d4b0-1e4e-4956-ac99-aeb75e42e950"]
+}, Open  ]],
+
+Cell["\<\
+In simpler Wolfram Language code, this can be done as follows.\
+\>", "Text",
+ CellChangeTimes->{{3.972594937901432*^9, 
+  3.972594962289126*^9}},ExpressionUUID->"4cbe53f7-663c-45aa-bd1d-\
+33a1ad33f3f1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Conjugate", "[", "u", "]"}], ".", "\[Psi]"}]], "Input",
+ CellChangeTimes->{{3.972594916454802*^9, 3.972594920810194*^9}},
+ CellLabel->"In[73]:=",ExpressionUUID->"d9ca3e11-f719-4a77-87f3-a7c53ae04fda"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"0.5085413793021681`", "\[VeryThinSpace]", "+", 
+    RowBox[{"0.43562534889071186`", " ", "\[ImaginaryI]"}]}], ",", 
+   RowBox[{"0.6384455359386253`", "\[VeryThinSpace]", "+", 
+    RowBox[{"0.37947795532986517`", " ", "\[ImaginaryI]"}]}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.972594921102097*^9},
+ CellLabel->"Out[73]=",ExpressionUUID->"c43164fb-f709-4e3d-a60c-10e0993d6f24"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1728, 959},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+Magnification:>1.5 Inherited,
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 22, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"a32580d4-19b7-4d77-b3f1-d9023d96bb68"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 72, 0, 144, "Title",ExpressionUUID->"39420398-44a8-4648-aa2c-d577291224bc"],
+Cell[651, 24, 776, 12, 149, "Text",ExpressionUUID->"74338e50-1f29-4b05-a27b-65a3687dcd18"],
+Cell[1430, 38, 2250, 61, 164, "Text",ExpressionUUID->"72e1e312-4611-4f3d-8823-746641f39dd9"],
+Cell[3683, 101, 468, 16, 61, "Text",ExpressionUUID->"cf8c8e98-5cac-4946-8bd1-2b8c75daf209"],
+Cell[CellGroupData[{
+Cell[4176, 121, 384, 11, 71, "Input",ExpressionUUID->"6234de12-6da0-4678-9dc5-9d21b7362884"],
+Cell[4563, 134, 151, 2, 50, "Output",ExpressionUUID->"bd77ecd8-b5c4-4be7-9999-30f342488c19"]
+}, Open  ]],
+Cell[4729, 139, 582, 18, 52, "Text",ExpressionUUID->"d7195267-0152-4fd6-ba8a-6e368d9ff3c2"],
+Cell[CellGroupData[{
+Cell[5336, 161, 721, 21, 77, "Input",ExpressionUUID->"5d062c52-cc71-4936-842f-6325db3b8822"],
+Cell[6060, 184, 203, 4, 50, "Output",ExpressionUUID->"e4b19484-c55f-42f3-a8d2-6c9b490e1956"]
+}, Open  ]],
+Cell[6278, 191, 391, 12, 50, "Text",ExpressionUUID->"2b0cecfc-5d95-45a7-ae03-bf2080e8a63c"],
+Cell[CellGroupData[{
+Cell[6694, 207, 269, 5, 44, "Input",ExpressionUUID->"da68943e-fcd1-405d-867f-01b7acb876f8"],
+Cell[6966, 214, 609, 18, 74, "Output",ExpressionUUID->"1c62e7a5-841b-417b-9729-68ca8ef436e7"]
+}, Open  ]],
+Cell[7590, 235, 2292, 57, 150, "Text",ExpressionUUID->"320912b8-ceaf-4230-aaea-37c475ed1cdf"],
+Cell[9885, 294, 1345, 35, 117, "Text",ExpressionUUID->"839cdd18-5893-4358-b3bf-08aa487e4dd3"],
+Cell[11233, 331, 2875, 89, 177, "Text",ExpressionUUID->"128f2bd0-2f1b-44b3-a8a0-058986ddb57e"],
+Cell[14111, 422, 580, 21, 57, "Text",ExpressionUUID->"d875b448-c98c-44a3-af2a-b7ad061bd59e"],
+Cell[14694, 445, 935, 25, 80, "Input",ExpressionUUID->"badfe6ea-72e3-48d8-bca8-02e4f8329647"],
+Cell[15632, 472, 174, 3, 50, "Text",ExpressionUUID->"7b539f27-cb49-4a59-af7e-b18ceddfe8c7"],
+Cell[CellGroupData[{
+Cell[15831, 479, 504, 12, 74, "Input",ExpressionUUID->"97c249b8-b8c9-4be0-a309-1b67cb08eab7"],
+Cell[16338, 493, 665, 18, 65, "Output",ExpressionUUID->"90179dc9-0a61-4be8-95d5-420be6a3c61f"]
+}, Open  ]],
+Cell[17018, 514, 3133, 98, 163, "Text",ExpressionUUID->"8893cc32-f542-466c-98dc-01f4d879c5c2"],
+Cell[20154, 614, 1115, 26, 116, "Text",ExpressionUUID->"be686ace-cbd3-4c51-9595-269e6caaadf5"],
+Cell[CellGroupData[{
+Cell[21294, 644, 589, 13, 44, "Input",ExpressionUUID->"52c3d014-6e7d-4f99-8833-6c53da057d9b"],
+Cell[21886, 659, 203, 3, 50, "Output",ExpressionUUID->"624397ed-0b44-44f2-8c59-32b4c4765a30"]
+}, Open  ]],
+Cell[22104, 665, 2631, 73, 85, "Text",ExpressionUUID->"535edcf1-f24a-4132-b1eb-873e2b7b8cb0"],
+Cell[24738, 740, 422, 12, 50, "Text",ExpressionUUID->"cde51278-8d8b-421c-b63c-1d1b9917918b"],
+Cell[25163, 754, 823, 23, 46, "Input",ExpressionUUID->"2cdf39f0-f7f7-4701-85a3-657cf0e8a7a2"],
+Cell[25989, 779, 332, 7, 50, "Text",ExpressionUUID->"e605a100-8354-4d46-857f-9e6097c37e42"],
+Cell[CellGroupData[{
+Cell[26346, 790, 423, 10, 44, "Input",ExpressionUUID->"35839a87-5ad0-4c7c-80b9-3db8dc6d4dbe"],
+Cell[26772, 802, 391, 9, 50, "Output",ExpressionUUID->"b824e8c1-f339-4f3f-a159-03714bc8f4e0"]
+}, Open  ]],
+Cell[27178, 814, 944, 25, 90, "Text",ExpressionUUID->"4d10c408-ec9b-4f8d-a3a2-0a3c716ccc19"],
+Cell[28125, 841, 171, 3, 50, "Text",ExpressionUUID->"9be5e9e7-97dd-4246-92d4-5870944493f3"],
+Cell[CellGroupData[{
+Cell[28321, 848, 544, 15, 46, "Input",ExpressionUUID->"dd2e1651-4bd5-4603-8555-b6fca814defb"],
+Cell[28868, 865, 518, 13, 50, "Output",ExpressionUUID->"0e284306-f4f3-4945-bcfd-7127d3410947"]
+}, Open  ]],
+Cell[29401, 881, 359, 7, 50, "Text",ExpressionUUID->"edf1157a-a9be-4deb-bc37-6ca83d5278e4"],
+Cell[29763, 890, 417, 8, 83, "Text",ExpressionUUID->"8dce2f23-57f3-4448-863a-98f34bba1dec"],
+Cell[CellGroupData[{
+Cell[30205, 902, 489, 13, 46, "Input",ExpressionUUID->"a5d4c15c-8841-4106-bdf5-7cdcd354c8de"],
+Cell[30697, 917, 523, 15, 50, "Output",ExpressionUUID->"3c27e138-de55-4d6c-b98f-06e1c3ce3931"]
+}, Open  ]],
+Cell[31235, 935, 393, 7, 50, "Text",ExpressionUUID->"e3609f8d-8b3c-4975-819a-386f3571e2a8"],
+Cell[CellGroupData[{
+Cell[31653, 946, 400, 9, 44, "Input",ExpressionUUID->"76c2cc50-87aa-48e7-83a8-4faf99af0370"],
+Cell[32056, 957, 446, 12, 50, "Output",ExpressionUUID->"72a41ca5-73d4-4d2a-8ff2-aba6eb4a7a8c"]
+}, Open  ]],
+Cell[32517, 972, 1454, 42, 85, "Text",ExpressionUUID->"6a7aed9d-e071-4777-92fb-0a58190ca3a2"],
+Cell[33974, 1016, 429, 8, 83, "Text",ExpressionUUID->"7f92d72d-a466-4db3-aecd-9315ae601603"],
+Cell[CellGroupData[{
+Cell[34428, 1028, 416, 9, 44, "Input",ExpressionUUID->"37b244b2-693d-4c7b-8597-767939cc358a"],
+Cell[34847, 1039, 587, 18, 59, "Output",ExpressionUUID->"74349454-b9a2-43e2-8af5-68d3cb9af0e9"]
+}, Open  ]],
+Cell[35449, 1060, 943, 19, 83, "Text",ExpressionUUID->"34b0bffb-00f3-4f8e-b84f-40588d8fb5b2"],
+Cell[36395, 1081, 198, 3, 50, "Text",ExpressionUUID->"f3765e27-85a9-4538-b681-04e8c85eedad"],
+Cell[36596, 1086, 313, 7, 44, "Input",ExpressionUUID->"a4736296-54af-4c25-9fca-5ceccdc61652"],
+Cell[36912, 1095, 501, 14, 50, "Text",ExpressionUUID->"a603c0e4-1a70-43c9-a333-e5c3874e67d8"],
+Cell[CellGroupData[{
+Cell[37438, 1113, 337, 7, 44, "Input",ExpressionUUID->"fb368cef-b7a5-4363-b451-0a22a8c61796"],
+Cell[37778, 1122, 176, 2, 50, "Output",ExpressionUUID->"c5540c25-bec5-4261-884c-be4e692d915e"]
+}, Open  ]],
+Cell[37969, 1127, 364, 7, 83, "Text",ExpressionUUID->"6be8b34a-7c9e-464d-bb85-3f816b35d0c6"],
+Cell[CellGroupData[{
+Cell[38358, 1138, 173, 3, 44, "Input",ExpressionUUID->"795741b6-847d-45ac-8b33-7f64f9d05d55"],
+Cell[38534, 1143, 812, 19, 52, "Output",ExpressionUUID->"de415886-6fa5-40ae-91ea-8c6151457394"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[39383, 1167, 271, 5, 44, "Input",ExpressionUUID->"ece72d5b-3c94-4c8f-ab3b-fdcfc4d50ad3"],
+Cell[39657, 1174, 328, 8, 50, "Output",ExpressionUUID->"fd1f86ec-3c6f-41cb-b6d0-470efdc8bfaa"]
+}, Open  ]],
+Cell[40000, 1185, 523, 14, 50, "Text",ExpressionUUID->"ab5c33f8-7806-4806-adf5-a468f6b1be07"],
+Cell[CellGroupData[{
+Cell[40548, 1203, 274, 5, 44, "Input",ExpressionUUID->"bd22387c-0c99-4334-ab06-3cc13c68fc97"],
+Cell[40825, 1210, 152, 2, 50, "Output",ExpressionUUID->"29ba9774-04e0-4168-97e8-b0056b390414"]
+}, Open  ]],
+Cell[40992, 1215, 274, 6, 50, "Text",ExpressionUUID->"1ba197ae-a20e-4d7a-9b18-f26109ae76a4"],
+Cell[CellGroupData[{
+Cell[41291, 1225, 214, 3, 44, "Input",ExpressionUUID->"38108310-e5a5-423a-b673-7c120730c4d6"],
+Cell[41508, 1230, 154, 2, 50, "Output",ExpressionUUID->"8353eb36-2a64-4b7e-9db1-9b8c35796a3e"]
+}, Open  ]],
+Cell[41677, 1235, 498, 9, 83, "Text",ExpressionUUID->"99400501-5d31-4443-812e-7274298e6685"],
+Cell[CellGroupData[{
+Cell[42200, 1248, 668, 18, 74, "Input",ExpressionUUID->"3fe4ab25-d329-4b0c-be48-4e74c42b4ca6"],
+Cell[42871, 1268, 251, 4, 50, "Output",ExpressionUUID->"6fb162de-7156-427b-8da3-5be6d5b9e62a"]
+}, Open  ]],
+Cell[43137, 1275, 2933, 84, 107, "Text",ExpressionUUID->"9e73744f-57c6-45dc-b97f-7e4720a5d912"],
+Cell[46073, 1361, 634, 10, 116, "Text",ExpressionUUID->"b5822bac-43a3-4756-99c1-cb5c15e85449"],
+Cell[46710, 1373, 178, 3, 50, "Text",ExpressionUUID->"a7ff381c-1e41-4cc8-b84b-eb5fc6b349ea"],
+Cell[CellGroupData[{
+Cell[46913, 1380, 436, 12, 44, "Input",ExpressionUUID->"aa4c6937-21f4-4512-b37c-4990d9cc1670"],
+Cell[47352, 1394, 458, 10, 50, "Output",ExpressionUUID->"63d9dfa8-cc47-410a-bd02-99dc62884051"]
+}, Open  ]],
+Cell[47825, 1407, 164, 3, 50, "Text",ExpressionUUID->"b44a435e-ab10-4f63-9b33-2cce13e827f3"],
+Cell[CellGroupData[{
+Cell[48014, 1414, 206, 3, 44, "Input",ExpressionUUID->"5d35ad44-3c33-4dad-9661-97fb5d4c2013"],
+Cell[48223, 1419, 169, 2, 50, "Output",ExpressionUUID->"d940a195-b14a-42cb-9794-e24a991ba839"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[48429, 1426, 242, 4, 44, "Input",ExpressionUUID->"31dcd367-cf4b-443e-8dca-d19c1a0b39ab"],
+Cell[48674, 1432, 245, 4, 50, "Output",ExpressionUUID->"26af0a98-0045-4940-ba4c-98c46a8569e0"]
+}, Open  ]],
+Cell[48934, 1439, 635, 14, 83, "Text",ExpressionUUID->"99a4c1e2-1019-4e81-a686-0bb4090c790c"],
+Cell[CellGroupData[{
+Cell[49594, 1457, 341, 7, 44, "Input",ExpressionUUID->"2fdbc8d9-0590-4372-8b16-d635e45b53a2"],
+Cell[49938, 1466, 831, 19, 50, "Output",ExpressionUUID->"f20a0757-2e73-45ac-bbf8-87c1a7f9c82b"]
+}, Open  ]],
+Cell[50784, 1488, 2299, 72, 85, "Text",ExpressionUUID->"0eb235df-7556-425a-8bc8-f142507caa3c"],
+Cell[53086, 1562, 185, 3, 50, "Text",ExpressionUUID->"bd408523-0001-4681-a605-035ac8f220e5"],
+Cell[CellGroupData[{
+Cell[53296, 1569, 857, 22, 44, "Input",ExpressionUUID->"7ca0ae05-5a93-4c81-af58-7a5ee9da7d5f"],
+Cell[54156, 1593, 332, 5, 50, "Output",ExpressionUUID->"a1282fdb-37f1-4d35-9691-b8088008a64a"]
+}, Open  ]],
+Cell[54503, 1601, 493, 15, 50, "Text",ExpressionUUID->"6f0058d8-748f-4835-814a-ebd4f924ee7b"],
+Cell[CellGroupData[{
+Cell[55021, 1620, 339, 8, 44, "Input",ExpressionUUID->"471664bd-abf3-492d-b036-486cb0be1234"],
+Cell[55363, 1630, 182, 3, 50, "Output",ExpressionUUID->"b1fba2ec-80ed-4230-b01d-d556aec59a22"]
+}, Open  ]],
+Cell[55560, 1636, 4272, 131, 165, "Text",ExpressionUUID->"6f112605-d1e9-465f-bef3-9a4484a5ce14"],
+Cell[59835, 1769, 184, 3, 50, "Text",ExpressionUUID->"d1c1ce2d-8c55-410a-9762-b8dcf21e2127"],
+Cell[CellGroupData[{
+Cell[60044, 1776, 359, 9, 44, "Input",ExpressionUUID->"86163ff4-b2b1-423d-b4cd-958bbf63726a"],
+Cell[60406, 1787, 456, 9, 50, "Output",ExpressionUUID->"dd45d4b0-1e4e-4956-ac99-aeb75e42e950"]
+}, Open  ]],
+Cell[60877, 1799, 212, 5, 50, "Text",ExpressionUUID->"4cbe53f7-663c-45aa-bd1d-33a1ad33f3f1"],
+Cell[CellGroupData[{
+Cell[61114, 1808, 235, 4, 44, "Input",ExpressionUUID->"d9ca3e11-f719-4a77-87f3-a7c53ae04fda"],
+Cell[61352, 1814, 433, 9, 50, "Output",ExpressionUUID->"c43164fb-f709-4e3d-a60c-10e0993d6f24"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
