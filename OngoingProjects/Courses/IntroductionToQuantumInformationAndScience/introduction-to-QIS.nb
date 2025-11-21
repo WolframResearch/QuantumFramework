@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     71653,       1983]
-NotebookOptionsPosition[     61813,       1827]
-NotebookOutlinePosition[     62235,       1844]
-CellTagsIndexPosition[     62192,       1841]
+NotebookDataLength[     75281,       2087]
+NotebookOptionsPosition[     65117,       1926]
+NotebookOutlinePosition[     65539,       1943]
+CellTagsIndexPosition[     65496,       1940]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -1234,14 +1234,113 @@ Cell[BoxData["True"], "Output",
 }, Open  ]],
 
 Cell["\<\
-Now apply the unitary matrix above to the computational basis vectors. This \
-produces a new pair of vectors, which define a new basis. If we stack these \
-new vectors as the columns of a matrix, we can then verify that this matrix \
-is unitary, i.e., that the new vectors form an orthonormal set.\
+A quick comment before we continue. The conjugate transpose (called the \
+Hermitian conjugate in quantum mechanics) of a matrix is obtained by taking \
+the transpose (switching rows and columns) and then taking the complex \
+conjugate of each entry. The order of these two operations does not matter: \
+you can transpose first and then conjugate, or conjugate first and then \
+transpose.\
+\>", "Text",
+ CellChangeTimes->{{3.9726494509195833`*^9, 3.9726494527636433`*^9}, {
+  3.972649560435837*^9, 3.972649663526588*^9}, {3.972649773026372*^9, 
+  3.972649774131168*^9}},ExpressionUUID->"7dec7f66-6f3f-447b-8ef7-\
+e5daeb4870e6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "A", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"a", "=", 
+      RowBox[{"Array", "[", 
+       RowBox[{
+        RowBox[{
+         SubscriptBox["A", "##"], "&"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"2", ",", "2"}], "}"}]}], "]"}]}], "}"}], ",", 
+    RowBox[{"a", "->", 
+     RowBox[{"ConjugateTranspose", "[", "a", "]"}]}]}], "]"}], "//", 
+  "TraditionalForm"}]}], "Input",
+ CellChangeTimes->{{3.972649485909439*^9, 3.972649545755034*^9}, {
+  3.972649692280048*^9, 3.972649765697565*^9}},
+ CellLabel->
+  "In[144]:=",ExpressionUUID->"d084b210-47e8-41e7-a406-5d520a03df16"],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{
+   RowBox[{"(", "\[NoBreak]", GridBox[{
+      {
+       SubscriptBox["A", 
+        RowBox[{"1", ",", "1"}]], 
+       SubscriptBox["A", 
+        RowBox[{"1", ",", "2"}]]},
+      {
+       SubscriptBox["A", 
+        RowBox[{"2", ",", "1"}]], 
+       SubscriptBox["A", 
+        RowBox[{"2", ",", "2"}]]}
+     },
+     GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.7]}, 
+         Offset[0.27999999999999997`]}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}}], "\[NoBreak]", ")"}], "\[Rule]", 
+   RowBox[{"(", "\[NoBreak]", GridBox[{
+      {
+       TemplateBox[{
+         RowBox[{"(", 
+           SubscriptBox["A", 
+            RowBox[{"1", ",", "1"}]], ")"}]},
+        "Conjugate"], 
+       TemplateBox[{
+         RowBox[{"(", 
+           SubscriptBox["A", 
+            RowBox[{"2", ",", "1"}]], ")"}]},
+        "Conjugate"]},
+      {
+       TemplateBox[{
+         RowBox[{"(", 
+           SubscriptBox["A", 
+            RowBox[{"1", ",", "2"}]], ")"}]},
+        "Conjugate"], 
+       TemplateBox[{
+         RowBox[{"(", 
+           SubscriptBox["A", 
+            RowBox[{"2", ",", "2"}]], ")"}]},
+        "Conjugate"]}
+     },
+     GridBoxAlignment->{"Columns" -> {{Center}}, "Rows" -> {{Baseline}}},
+     GridBoxSpacings->{"Columns" -> {
+         Offset[0.27999999999999997`], {
+          Offset[0.7]}, 
+         Offset[0.27999999999999997`]}, "Rows" -> {
+         Offset[0.2], {
+          Offset[0.4]}, 
+         Offset[0.2]}}], "\[NoBreak]", ")"}]}], TraditionalForm]], "Output",
+ CellChangeTimes->{{3.9726497623289537`*^9, 3.972649765989541*^9}},
+ CellLabel->
+  "Out[145]//TraditionalForm=",ExpressionUUID->"f3e8b44e-0616-4756-8b2a-\
+106747aa3174"]
+}, Open  ]],
+
+Cell["\<\
+Let\[CloseCurlyQuote]s continue. Now apply the unitary matrix above to the \
+computational basis vectors. This produces a new pair of vectors that define \
+a new basis. If we stack these new vectors as the rows of a matrix, we can \
+then verify that this matrix is unitary, which means that the new vectors \
+form an orthonormal set.\
 \>", "Text",
  CellChangeTimes->{{3.972592883632124*^9, 3.9725929295593357`*^9}, {
-  3.972593059354244*^9, 
-  3.972593060605628*^9}},ExpressionUUID->"99400501-5d31-4443-812e-\
+  3.972593059354244*^9, 3.972593060605628*^9}, {3.972649797061042*^9, 
+  3.972649838889728*^9}},ExpressionUUID->"99400501-5d31-4443-812e-\
 7274298e6685"],
 
 Cell[CellGroupData[{
@@ -1936,53 +2035,58 @@ Cell[CellGroupData[{
 Cell[41291, 1225, 214, 3, 44, "Input",ExpressionUUID->"38108310-e5a5-423a-b673-7c120730c4d6"],
 Cell[41508, 1230, 154, 2, 50, "Output",ExpressionUUID->"8353eb36-2a64-4b7e-9db1-9b8c35796a3e"]
 }, Open  ]],
-Cell[41677, 1235, 498, 9, 83, "Text",ExpressionUUID->"99400501-5d31-4443-812e-7274298e6685"],
+Cell[41677, 1235, 636, 11, 116, "Text",ExpressionUUID->"7dec7f66-6f3f-447b-8ef7-e5daeb4870e6"],
 Cell[CellGroupData[{
-Cell[42200, 1248, 668, 18, 74, "Input",ExpressionUUID->"3fe4ab25-d329-4b0c-be48-4e74c42b4ca6"],
-Cell[42871, 1268, 251, 4, 50, "Output",ExpressionUUID->"6fb162de-7156-427b-8da3-5be6d5b9e62a"]
+Cell[42338, 1250, 704, 20, 74, "Input",ExpressionUUID->"d084b210-47e8-41e7-a406-5d520a03df16"],
+Cell[43045, 1272, 1839, 58, 90, "Output",ExpressionUUID->"f3e8b44e-0616-4756-8b2a-106747aa3174"]
 }, Open  ]],
-Cell[43137, 1275, 2933, 84, 107, "Text",ExpressionUUID->"9e73744f-57c6-45dc-b97f-7e4720a5d912"],
-Cell[46073, 1361, 634, 10, 116, "Text",ExpressionUUID->"b5822bac-43a3-4756-99c1-cb5c15e85449"],
-Cell[46710, 1373, 178, 3, 50, "Text",ExpressionUUID->"a7ff381c-1e41-4cc8-b84b-eb5fc6b349ea"],
+Cell[44899, 1333, 580, 10, 83, "Text",ExpressionUUID->"99400501-5d31-4443-812e-7274298e6685"],
 Cell[CellGroupData[{
-Cell[46913, 1380, 436, 12, 44, "Input",ExpressionUUID->"aa4c6937-21f4-4512-b37c-4990d9cc1670"],
-Cell[47352, 1394, 458, 10, 50, "Output",ExpressionUUID->"63d9dfa8-cc47-410a-bd02-99dc62884051"]
+Cell[45504, 1347, 668, 18, 74, "Input",ExpressionUUID->"3fe4ab25-d329-4b0c-be48-4e74c42b4ca6"],
+Cell[46175, 1367, 251, 4, 50, "Output",ExpressionUUID->"6fb162de-7156-427b-8da3-5be6d5b9e62a"]
 }, Open  ]],
-Cell[47825, 1407, 164, 3, 50, "Text",ExpressionUUID->"b44a435e-ab10-4f63-9b33-2cce13e827f3"],
+Cell[46441, 1374, 2933, 84, 107, "Text",ExpressionUUID->"9e73744f-57c6-45dc-b97f-7e4720a5d912"],
+Cell[49377, 1460, 634, 10, 116, "Text",ExpressionUUID->"b5822bac-43a3-4756-99c1-cb5c15e85449"],
+Cell[50014, 1472, 178, 3, 50, "Text",ExpressionUUID->"a7ff381c-1e41-4cc8-b84b-eb5fc6b349ea"],
 Cell[CellGroupData[{
-Cell[48014, 1414, 206, 3, 44, "Input",ExpressionUUID->"5d35ad44-3c33-4dad-9661-97fb5d4c2013"],
-Cell[48223, 1419, 169, 2, 50, "Output",ExpressionUUID->"d940a195-b14a-42cb-9794-e24a991ba839"]
+Cell[50217, 1479, 436, 12, 44, "Input",ExpressionUUID->"aa4c6937-21f4-4512-b37c-4990d9cc1670"],
+Cell[50656, 1493, 458, 10, 50, "Output",ExpressionUUID->"63d9dfa8-cc47-410a-bd02-99dc62884051"]
+}, Open  ]],
+Cell[51129, 1506, 164, 3, 50, "Text",ExpressionUUID->"b44a435e-ab10-4f63-9b33-2cce13e827f3"],
+Cell[CellGroupData[{
+Cell[51318, 1513, 206, 3, 44, "Input",ExpressionUUID->"5d35ad44-3c33-4dad-9661-97fb5d4c2013"],
+Cell[51527, 1518, 169, 2, 50, "Output",ExpressionUUID->"d940a195-b14a-42cb-9794-e24a991ba839"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[48429, 1426, 242, 4, 44, "Input",ExpressionUUID->"31dcd367-cf4b-443e-8dca-d19c1a0b39ab"],
-Cell[48674, 1432, 245, 4, 50, "Output",ExpressionUUID->"26af0a98-0045-4940-ba4c-98c46a8569e0"]
+Cell[51733, 1525, 242, 4, 44, "Input",ExpressionUUID->"31dcd367-cf4b-443e-8dca-d19c1a0b39ab"],
+Cell[51978, 1531, 245, 4, 50, "Output",ExpressionUUID->"26af0a98-0045-4940-ba4c-98c46a8569e0"]
 }, Open  ]],
-Cell[48934, 1439, 635, 14, 83, "Text",ExpressionUUID->"99a4c1e2-1019-4e81-a686-0bb4090c790c"],
+Cell[52238, 1538, 635, 14, 83, "Text",ExpressionUUID->"99a4c1e2-1019-4e81-a686-0bb4090c790c"],
 Cell[CellGroupData[{
-Cell[49594, 1457, 341, 7, 44, "Input",ExpressionUUID->"2fdbc8d9-0590-4372-8b16-d635e45b53a2"],
-Cell[49938, 1466, 831, 19, 50, "Output",ExpressionUUID->"f20a0757-2e73-45ac-bbf8-87c1a7f9c82b"]
+Cell[52898, 1556, 341, 7, 44, "Input",ExpressionUUID->"2fdbc8d9-0590-4372-8b16-d635e45b53a2"],
+Cell[53242, 1565, 831, 19, 50, "Output",ExpressionUUID->"f20a0757-2e73-45ac-bbf8-87c1a7f9c82b"]
 }, Open  ]],
-Cell[50784, 1488, 2299, 72, 85, "Text",ExpressionUUID->"0eb235df-7556-425a-8bc8-f142507caa3c"],
-Cell[53086, 1562, 185, 3, 50, "Text",ExpressionUUID->"bd408523-0001-4681-a605-035ac8f220e5"],
+Cell[54088, 1587, 2299, 72, 85, "Text",ExpressionUUID->"0eb235df-7556-425a-8bc8-f142507caa3c"],
+Cell[56390, 1661, 185, 3, 50, "Text",ExpressionUUID->"bd408523-0001-4681-a605-035ac8f220e5"],
 Cell[CellGroupData[{
-Cell[53296, 1569, 857, 22, 44, "Input",ExpressionUUID->"7ca0ae05-5a93-4c81-af58-7a5ee9da7d5f"],
-Cell[54156, 1593, 332, 5, 50, "Output",ExpressionUUID->"a1282fdb-37f1-4d35-9691-b8088008a64a"]
+Cell[56600, 1668, 857, 22, 44, "Input",ExpressionUUID->"7ca0ae05-5a93-4c81-af58-7a5ee9da7d5f"],
+Cell[57460, 1692, 332, 5, 50, "Output",ExpressionUUID->"a1282fdb-37f1-4d35-9691-b8088008a64a"]
 }, Open  ]],
-Cell[54503, 1601, 493, 15, 50, "Text",ExpressionUUID->"6f0058d8-748f-4835-814a-ebd4f924ee7b"],
+Cell[57807, 1700, 493, 15, 50, "Text",ExpressionUUID->"6f0058d8-748f-4835-814a-ebd4f924ee7b"],
 Cell[CellGroupData[{
-Cell[55021, 1620, 339, 8, 44, "Input",ExpressionUUID->"471664bd-abf3-492d-b036-486cb0be1234"],
-Cell[55363, 1630, 182, 3, 50, "Output",ExpressionUUID->"b1fba2ec-80ed-4230-b01d-d556aec59a22"]
+Cell[58325, 1719, 339, 8, 44, "Input",ExpressionUUID->"471664bd-abf3-492d-b036-486cb0be1234"],
+Cell[58667, 1729, 182, 3, 50, "Output",ExpressionUUID->"b1fba2ec-80ed-4230-b01d-d556aec59a22"]
 }, Open  ]],
-Cell[55560, 1636, 4272, 131, 165, "Text",ExpressionUUID->"6f112605-d1e9-465f-bef3-9a4484a5ce14"],
-Cell[59835, 1769, 184, 3, 50, "Text",ExpressionUUID->"d1c1ce2d-8c55-410a-9762-b8dcf21e2127"],
+Cell[58864, 1735, 4272, 131, 165, "Text",ExpressionUUID->"6f112605-d1e9-465f-bef3-9a4484a5ce14"],
+Cell[63139, 1868, 184, 3, 50, "Text",ExpressionUUID->"d1c1ce2d-8c55-410a-9762-b8dcf21e2127"],
 Cell[CellGroupData[{
-Cell[60044, 1776, 359, 9, 44, "Input",ExpressionUUID->"86163ff4-b2b1-423d-b4cd-958bbf63726a"],
-Cell[60406, 1787, 456, 9, 50, "Output",ExpressionUUID->"dd45d4b0-1e4e-4956-ac99-aeb75e42e950"]
+Cell[63348, 1875, 359, 9, 44, "Input",ExpressionUUID->"86163ff4-b2b1-423d-b4cd-958bbf63726a"],
+Cell[63710, 1886, 456, 9, 50, "Output",ExpressionUUID->"dd45d4b0-1e4e-4956-ac99-aeb75e42e950"]
 }, Open  ]],
-Cell[60877, 1799, 212, 5, 50, "Text",ExpressionUUID->"4cbe53f7-663c-45aa-bd1d-33a1ad33f3f1"],
+Cell[64181, 1898, 212, 5, 50, "Text",ExpressionUUID->"4cbe53f7-663c-45aa-bd1d-33a1ad33f3f1"],
 Cell[CellGroupData[{
-Cell[61114, 1808, 235, 4, 44, "Input",ExpressionUUID->"d9ca3e11-f719-4a77-87f3-a7c53ae04fda"],
-Cell[61352, 1814, 433, 9, 50, "Output",ExpressionUUID->"c43164fb-f709-4e3d-a60c-10e0993d6f24"]
+Cell[64418, 1907, 235, 4, 44, "Input",ExpressionUUID->"d9ca3e11-f719-4a77-87f3-a7c53ae04fda"],
+Cell[64656, 1913, 433, 9, 50, "Output",ExpressionUUID->"c43164fb-f709-4e3d-a60c-10e0993d6f24"]
 }, Open  ]]
 }, Open  ]]
 }
