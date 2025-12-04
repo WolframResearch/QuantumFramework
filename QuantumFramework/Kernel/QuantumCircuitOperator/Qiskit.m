@@ -50,7 +50,7 @@ shortcutToGate = Replace[
                     "Reset" -> order[[1]],
                     If[ MatchQ[order[[1]], {_}] && state == QuantumState[1],
                         Nothing,
-                        Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
+                        Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[QuantumCircuitOperator[state], order[[1]]]["Flatten"]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
                     ]
                 }
             ],
