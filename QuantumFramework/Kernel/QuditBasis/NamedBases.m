@@ -15,7 +15,7 @@ $QuditBasisNames = {
     "Schwinger", "Dirac",
     "Ivanovic",
     "Wigner", "WignerMIC",
-    "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
+    "Pauli", "GellMann", "GellMannMIC", "Bloch", "BlochSphere", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron",
     "RandomMIC", "RandomHaarMIC", "RandomBlochMIC",
@@ -203,6 +203,11 @@ QuditBasis[{"GellMannMIC", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
 QuditBasis[{"Bloch", d : _Integer ? Positive : 2}] := QuditBasis[
     Subscript["\[ScriptCapitalB]", #] & /@ Prepend["r"] @ Range[1, d ^ 2 - 1],
     Sqrt[(d - 1) / (2 d)] Prepend[Sqrt[2 d (d + 1)] IdentityMatrix[d]] @ GellMannMatrices[d]
+]
+
+QuditBasis[{"BlochSphere", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalB]", #] & /@ Prepend["\[ScriptCapitalI]"] @ Range[1, d ^ 2 - 1],
+    Sqrt[(d - 1) / (2 d)] Prepend[2 IdentityMatrix[d]] @ GellMannMatrices[d]
 ]
 
 QuditBasis[{"GellMannBloch", d : _Integer ? Positive : 2}] := QuditBasis[
