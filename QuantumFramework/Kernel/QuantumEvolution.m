@@ -13,9 +13,17 @@ Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
-QuantumEvolve[hamiltonian_QuantumOperator, lindblad : _QuantumOperator | {___QuantumOperator}, args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> {}, args]
+QuantumEvolve[
+    hamiltonian_,
+    lindblad_,
+    observable_ ? QuantumOperatorQ,
+    args___
+] := SuperDagger[QuantumEvolve[hamiltonian, lindblad, None, args]][observable["MatrixQuantumState"]]["Operator"]
+
+QuantumEvolve[hamiltonian_QuantumOperator, lindblad : {___QuantumOperator}, args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> {}, args]
 
 QuantumEvolve[hamiltonian_QuantumOperator, (lindblad : Except[_List] -> gamma_) | (lindblad_ -> gamma : Except[_List]), args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
+
 
 QuantumEvolve[
     hamiltonian_ ? QuantumOperatorQ,
