@@ -16,6 +16,7 @@ PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
 PackageExport["TensorNetworkContractionPath"]
 PackageExport["TensorNetworkContractPath"]
+PackageExport["TensorNetworkContraction"]
 PackageExport["TensorNetworkNetGraph"]
 PackageExport["TensorNetworkIndexReplace"]
 
@@ -617,11 +618,15 @@ einsum[{i_, j_} -> k_, a_, b_] := Block[{c = Complement[Join[i, j], k], adim = D
 	]
 ]
 
-TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors, indices, freeIndices},
-    tensors = TensorNetworkTensors[net];
-    indices = TensorNetworkIndices[net];
-    freeIndices = TensorNetworkFreeIndices[net];
-    indices = Replace[indices, Rule @@@ EdgeTags[net], {2}];
+
+TensorNetworkContractPath[
+	KeyValuePattern[{
+		"Tensors" -> initTensors_,
+		"ContractionIndices" -> initIndices_,
+		"FreeIndices" -> freeIndices_
+	}],
+	path_
+] := Enclose @ Block[{tensors = initTensors, indices = initIndices},
     Do[
 		Replace[p, {
 			{i_} :> (
@@ -629,8 +634,9 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 			),
 			{i_, j_} :> Block[{out, tensor},
 				out = SymmetricDifference @@ Extract[indices, {{i}, {j}}];
-                tensor = ActivateTensor @ EinsteinSummation[indices[[{i, j}]] -> out, {tensors[[i]], tensors[[j]]}];
+				tensor = ActivateTensor @ EinsteinSummation[indices[[{i, j}]] -> out, {tensors[[i]], tensors[[j]]}];
 				(* tensor = einsum[indices[[{i, j}]] -> out, tensors[[i]], tensors[[j]]]; *)
+
 				tensors = Append[Delete[tensors, {{i}, {j}}], tensor];
 				indices = Append[Delete[indices, {{i}, {j}}], out]
 			]
@@ -641,6 +647,276 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 	ConfirmAssert[ContainsAll[indices[[1]], freeIndices]];
 	Transpose[tensors[[1]], FindPermutation[indices[[1]], freeIndices]]
 ]
+
+TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := TensorNetworkContractPath[TensorNetworkData[net], path]
+
+
+einsumArrayDot[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Block[{
+	c = DeleteElements[DeleteDuplicates @ Join[i, j], Replace[out, Automatic :> SymmetricDifference[i, j]]],
+	k, perm,
+	al, br, x, y,
+	aIndex = First /@ PositionIndex[i], bIndex = First /@ PositionIndex[j],
+	inactive = If[inactiveQ, Function[f, Inactive[f][##] &], Identity]
+},
+	al = DeleteElements[i, c];
+	br = DeleteElements[j, c];
+	k = Length[c];
+	If[ k == 0
+		,
+		x = inactive[TensorProduct][a, b]
+		,
+		x = inactive[ArrayDot][a, b, Thread[{Lookup[aIndex, c], Lookup[bIndex, c]}]];
+	];
+	If[ out === Automatic,
+		{x, Join[al, br]}
+		,
+		perm = FindPermutation[Join[al, br], out];
+		If[perm === Cycles[{}], x, inactive[Transpose][x, perm]]
+	]
+]
+
+einsumArrayDotTranspose[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Block[{
+	c = DeleteElements[DeleteDuplicates @ Join[i, j], Replace[out, Automatic :> SymmetricDifference[i, j]]],
+	k, perm,
+	al, br, x, y,
+	inactive = If[inactiveQ, Function[f, Inactive[f][##] &], Identity]
+},
+	al = DeleteElements[i, c];
+	br = DeleteElements[j, c];
+	k = Length[c];
+	If[ k == 0
+		,
+		x = inactive[TensorProduct][a, b]
+		,
+		perm = FindPermutation[i, Join[al, c]];
+		x = If[perm === Cycles[{}], a, inactive[Transpose][a, perm]];
+		perm = FindPermutation[j, Join[c, br]];
+		y = If[perm === Cycles[{}], b, inactive[Transpose][b, perm]];
+		x = inactive[ArrayDot][x, y, k];
+	];
+	If[ out === Automatic,
+		{x, Join[al, br]}
+		,
+		perm = FindPermutation[Join[al, br], out];
+		If[perm === Cycles[{}], x, inactive[Transpose][x, perm]]
+	]
+]
+
+einsumTensorContract[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Block[{
+	c = DeleteElements[DeleteDuplicates @ Join[i, j], Replace[out, Automatic :> SymmetricDifference[i, j]]],
+	k, perm,
+	al, br, x,
+	aIndex = First /@ PositionIndex[i], bIndex = First /@ PositionIndex[j],
+	inactive = If[inactiveQ, Function[f, Inactive[f][##] &], Identity]
+},
+	al = DeleteElements[i, c];
+	br = DeleteElements[j, c];
+	k = Length[c];
+	If[ k == 0
+		,
+		x = inactive[TensorProduct][a, b]
+		,
+		x = inactive[TensorContract][
+			inactive[TensorProduct][a, b],
+			MapThread[{#1, #2 + Length[i]} &,
+				{Lookup[aIndex, c], Lookup[bIndex, c]}
+			]
+		]
+	];
+	If[ out === Automatic,
+		{x, Join[al, br]}
+		,
+		perm = FindPermutation[Join[al, br], out];
+		If[perm === Cycles[{}], x, inactive[Transpose][x, perm]]
+	]
+]
+
+einsumDot[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Block[{
+	c = DeleteElements[DeleteDuplicates @ Join[i, j], Replace[out, Automatic :> SymmetricDifference[i, j]]],
+	k, perm,
+	al, br, x, y,
+	inactive = If[inactiveQ, Function[f, Inactive[f][##] &], Identity],
+	aIndex = PositionIndex[i], bIndex = PositionIndex[j],
+	aDim = symbolicTensorDimensions[a], bDim = symbolicTensorDimensions[b],
+	reshape
+},
+	reshape[t_, newShape_] := If[symbolicTensorDimensions[t] === newShape, t, inactive[ArrayReshape][t, newShape]];
+	al = DeleteElements[i, c];
+	br = DeleteElements[j, c];
+	k = Length[c];
+	If[ k == 0,
+		x = inactive[TensorProduct][a, b]
+		,
+		perm = FindPermutation[i, Join[al, c]];
+		x = If[perm === Cycles[{}], a, inactive[Transpose][a, perm]];
+		perm = FindPermutation[j, Join[c, br]];
+		y = If[perm === Cycles[{}], b, inactive[Transpose][b, perm]];
+		If[ k == 1,
+			x = inactive[Dot][x, y]
+			,
+			x = inactive[Dot][
+				reshape[x, Catenate[MapAt[{Times @@ #} &, {2}] @ (Extract[aDim, Lookup[aIndex, #]] & /@ {al, c})]],
+				reshape[y, Catenate[MapAt[{Times @@ #} &, {1}] @ (Extract[bDim, Lookup[bIndex, #]] & /@ {c, br})]]
+			];
+			x = reshape[x, Join[Extract[aDim, Lookup[aIndex, al]], Extract[bDim, Lookup[bIndex, br]]]]
+		];
+	];
+	If[ out === Automatic,
+		{x, Join[al, br]}
+		,
+		perm = FindPermutation[Join[al, br], out];
+		If[perm === Cycles[{}], x, inactive[Transpose][x, perm]]
+	]
+]
+
+einsumTableSum[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Block[{
+	c = DeleteElements[DeleteDuplicates @ Join[i, j], Replace[out, Automatic :> SymmetricDifference[i, j]]],
+	k, perm,
+	al, br, x, y,
+	inactive = If[inactiveQ, Function[f, Inactive[f][##] &], Identity],
+	aIndex = PositionIndex[i], bIndex = PositionIndex[j],
+	aDim = symbolicTensorDimensions[a], bDim = symbolicTensorDimensions[b]
+},
+	
+	al = DeleteElements[i, c];
+	br = DeleteElements[j, c];
+	k = Length[c];
+	
+	If[ k == 0
+		,
+		x = With[{
+			p1 = Symbol["\[FormalI]" <> ToString[#]] & /@ Range[Length[al]],
+			p2 = Symbol["\[FormalJ]" <> ToString[#]] & /@ Range[Length[br]]
+		},
+			inactive[With][{inactive[Set][\[FormalCapitalA], a], inactive[Set][\[FormalCapitalB], b]},
+				inactive[Table][(inactive[Part][\[FormalCapitalA], ##] & @@ p1) * (inactive[Part][\[FormalCapitalB], ##] & @@ p2), ##] & @@ Join[
+					MapIndexed[{Symbol["\[FormalI]" <> ToString[#2[[1]]]], #1} &, aDim],
+					MapIndexed[{Symbol["\[FormalJ]" <> ToString[#2[[1]]]], #1} &, bDim]
+				]
+			]
+		]
+		,
+		x = With[{
+			p1 = ReplacePart[i, Join[
+				Thread[Lookup[aIndex, al] -> (Symbol["\[FormalI]" <> ToString[#]] & /@ Range[Length[al]])],
+				Thread[Lookup[aIndex, c] -> (Symbol["\[FormalC]" <> ToString[#]] & /@ Range[Length[c]])]
+			]],
+			p2 = ReplacePart[j, Join[
+				Thread[Lookup[bIndex, br] -> (Symbol["\[FormalJ]" <> ToString[#]] & /@ Range[Length[br]])],
+				Thread[Lookup[bIndex, c] -> (Symbol["\[FormalC]" <> ToString[#]] & /@ Range[Length[c]])]
+			]],
+			cs = MapIndexed[{Symbol["\[FormalC]" <> ToString[#2[[1]]]], #1} &, Extract[aDim, Lookup[aIndex, c]]]
+		},
+			inactive[With][{inactive[Set][\[FormalCapitalA], a], inactive[Set][\[FormalCapitalB], b]},
+				inactive[Table][
+					inactive[Sum][(inactive[Part][\[FormalCapitalA], ##] & @@ p1) * (inactive[Part][\[FormalCapitalB], ##] & @@ p2), ##] & @@ cs,
+					## 
+				] & @@ Join[
+					MapIndexed[{Symbol["\[FormalI]" <> ToString[#2[[1]]]], #1} &, Extract[aDim, Lookup[aIndex, al]]],
+					MapIndexed[{Symbol["\[FormalJ]" <> ToString[#2[[1]]]], #1} &, Extract[bDim, Lookup[bIndex, br]]]
+				]
+			]	
+		]
+	];
+	If[ out === Automatic,
+		{x, Join[al, br]}
+		,
+		perm = FindPermutation[Join[al, br], out];
+		If[perm === Cycles[{}], x, inactive[Transpose][x, perm]]
+	]
+]
+
+
+Options[contractTensorPair] = {"EinsumFunction" -> "ArrayDot", "Inactivate" -> True}
+
+contractTensorPair[{\[FormalCapitalT][tensor1_, indices1_, flop1_], \[FormalCapitalT][tensor2_, indices2_, flop2_]}, opts : OptionsPattern[]] :=
+	\[FormalCapitalT] @@ Append[0] @ Switch[
+		OptionValue["EinsumFunction"],
+			"ArrayDotTranspose", einsumArrayDotTranspose,
+			"ArrayDot", einsumArrayDot,
+			"Dot", einsumDot,
+			"TensorContract", einsumTensorContract,
+			"TableSum", einsumTableSum
+		][{indices1, indices2} -> Automatic, tensor1, tensor2, TrueQ[OptionValue["Inactivate"]]]
+
+
+Options[TensorNetworkContraction] = Join[Options[contractTensorPair], {"TransposeFunction" -> Transpose}]
+
+TensorNetworkContraction[net_Graph ? TensorNetworkQ, path_, opts : OptionsPattern[]] :=
+    TensorNetworkContraction[TensorNetworkData[net], path, opts]
+
+TensorNetworkContraction[netData : KeyValuePattern["Vertices" -> vertices_], path : {{_Integer, _Integer} ...}, opts : OptionsPattern[]] := 
+    TensorNetworkContraction[netData, PathToTreePath[path, vertices], opts]
+
+TensorNetworkContraction[
+    KeyValuePattern[{
+		"Vertices" -> vertices_,
+		"Tensors" -> tensors_,
+		"Contractions" -> contractions_,
+        "FreeIndices" -> freeIndices_
+	}],
+    treePath_,
+    opts : OptionsPattern[]
+] := With[{
+    contractOpts = FilterRules[{opts}, Options[contractTensorPair]]
+}, {
+    tensorPath = NestWhile[
+        ReplaceAll[tensorPair : {_\[FormalCapitalT], _\[FormalCapitalT]} :> contractTensorPair[tensorPair, contractOpts]],
+        Replace[treePath, MapThread[{#1} -> \[FormalCapitalT][#2, #3, 0] &, {vertices, tensors, contractions}], {-2}],
+        Not @* MatchQ[_\[FormalCapitalT]]
+    ],
+    transposeFunction = OptionValue["TransposeFunction"]
+},
+    With[{perm = FindPermutation[tensorPath[[2]], freeIndices]},
+		If[ perm === Cycles[{}],
+			tensorPath[[1]],
+			If[TrueQ[OptionValue["Inactivate"]], Inactive, Identity][transposeFunction][
+				tensorPath[[1]],
+				FindPermutation[tensorPath[[2]], freeIndices]
+			]
+		]
+    ]
+]
+
+
+Options[ToSymbolicTensor] = {"ArrayDotExpand" -> False}
+
+ToSymbolicTensor[t_, OptionsPattern[]] := Activate[t /. {
+	c_Cycles :> c,
+	IgnoringInactive[Verbatim[With][vars_, body_]] :> ArraySymbol["T", symbolicTensorDimensions[body(* /. Rule @@@ vars*)]],
+	IgnoringInactive[Verbatim[ArrayReshape][a_, d_]] :> ArraySymbol[ToSymbolicTensor[a], d],
+	IgnoringInactive[Verbatim[ArrayDot][a_, b_, k_Integer]] :> If[TrueQ[OptionValue["ArrayDotExpand"]],
+		With[{d1 = symbolicTensorDimensions[a], d2 = symbolicTensorDimensions[b]},
+			Inactive[Dot][
+				ArraySymbol[ToSymbolicTensor[a], Append[d1[[;; - k - 1]], Times @@ d1[[- k ;;]]]],
+				ArraySymbol[ToSymbolicTensor[b], Prepend[d2[[k + 1 ;;]], Times @@ d2[[;; k]]]]
+			]
+		],
+		Inactive[ArrayDot][ToSymbolicTensor[a], ToSymbolicTensor[b], k]
+	],
+	IgnoringInactive[Verbatim[ArrayDot][a_, b_, indices : {{_Integer, _Integer} ...}]] :> If[TrueQ[OptionValue["ArrayDotExpand"]],
+		With[{d1 = symbolicTensorDimensions[a], d2 = symbolicTensorDimensions[b]},
+			Inactive[Dot][
+				ArraySymbol[
+					Inactive[Transpose][ToSymbolicTensor[a], FindPermutation[Range[Length[d1]], Join[Complement[Range[Length[d1]], #], #] & @ indices[[All, 1]]]],
+					Append[Delete[d1, List /@ indices[[All, 1]]], Times @@ d1[[indices[[All, 1]]]]]
+				],
+				ArraySymbol[
+					Inactive[Transpose][ToSymbolicTensor[b], FindPermutation[Range[Length[d2]], Join[#, Complement[Range[Length[d2]], #]] & @ indices[[All, 2]]]],
+					Append[Times @@ d2[[indices[[All, 2]]]], Delete[d2, List /@ indices[[All, 2]]]]
+				]
+			]
+		],
+		Inactive[ArrayDot][ToSymbolicTensor[a], ToSymbolicTensor[b], indices]
+	],
+	IgnoringInactive[Verbatim[Table][_, iter : {_, _Integer} ..]] :> ArraySymbol["T", {iter}[[All, 2]]],
+	IgnoringInactive[(h : TensorContract | Transpose)[body_, args__]] :> Inactive[h][ToSymbolicTensor[body], args],
+	tt_ ? TensorQ :> ArraySymbol["T", TensorDimensions[tt]]
+}, Except[TensorContract | Dot | ArrayDot | TensorProduct]]
+
+symbolicTensorDimensions[t_] := Replace[TensorDimensions[ToSymbolicTensor[t]], Except[_List] -> {}]
+
+symbolicTensorRank[t_] := Length[symbolicTensorDimensions[t]]
 
 
 TensorNetworkNetGraph[net_ ? TensorNetworkQ] := TensorNetworkNetGraph[net, TensorNetworkContractionPath[net]]
