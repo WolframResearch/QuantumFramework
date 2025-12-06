@@ -827,17 +827,17 @@ einsumTableSum[{i_, j_} -> out_, a_, b_, inactiveQ : _ ? BooleanQ : False] := Bl
 ]
 
 
-Options[contractTensorPair] = {"EinsumFunction" -> "ArrayDot", "Inactivate" -> True}
+Options[contractTensorPair] = {Method -> "ArrayDot", "Inactive" -> True}
 
 contractTensorPair[{\[FormalCapitalT][tensor1_, indices1_, flop1_], \[FormalCapitalT][tensor2_, indices2_, flop2_]}, opts : OptionsPattern[]] :=
 	\[FormalCapitalT] @@ Append[0] @ Switch[
-		OptionValue["EinsumFunction"],
+		OptionValue[Method],
 			"ArrayDotTranspose", einsumArrayDotTranspose,
 			"ArrayDot", einsumArrayDot,
 			"Dot", einsumDot,
 			"TensorContract", einsumTensorContract,
 			"TableSum", einsumTableSum
-		][{indices1, indices2} -> Automatic, tensor1, tensor2, TrueQ[OptionValue["Inactivate"]]]
+		][{indices1, indices2} -> Automatic, tensor1, tensor2, TrueQ[OptionValue["Inactive"]]]
 
 
 Options[TensorNetworkContraction] = Join[Options[contractTensorPair], {"TransposeFunction" -> Transpose}]
