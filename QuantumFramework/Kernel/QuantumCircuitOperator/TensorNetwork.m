@@ -870,7 +870,7 @@ TensorNetworkContraction[
     With[{perm = FindPermutation[tensorPath[[2]], freeIndices]},
 		If[ perm === Cycles[{}],
 			tensorPath[[1]],
-			If[TrueQ[OptionValue["Inactivate"]], Inactive, Identity][transposeFunction][
+			If[TrueQ[OptionValue["Inactive"]], Inactive, Identity][transposeFunction][
 				tensorPath[[1]],
 				FindPermutation[tensorPath[[2]], freeIndices]
 			]
