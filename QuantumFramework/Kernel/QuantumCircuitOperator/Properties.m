@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`TensorNetworks`"]
+
 PackageScope[collectOrders]
 
 
