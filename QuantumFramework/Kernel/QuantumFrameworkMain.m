@@ -7,7 +7,7 @@ If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.2"],
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQuantumPlatform.paclet"]]
 ]
 
-If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "0.5"],
+If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "1.0.1"],
     PacletInstall["https://www.wolframcloud.com/obj/wolframquantumframework/TensorNetworks.paclet"]
 ]
 
