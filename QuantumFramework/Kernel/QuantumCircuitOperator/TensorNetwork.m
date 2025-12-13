@@ -6,14 +6,14 @@ PackageExport["TensorNetworkQuantumCircuit"]
 
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
-PackageScope["QuantumTensorNetwork"]
+PackageScope["QuantumTensorNetworkGraph"]
 PackageScope["QuantumCircuitHypergraph"]
 
 
 
-Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True, "Computational" -> True}, Options[Graph]]
+Options[QuantumTensorNetworkGraph] = Join[{"PrependInitial" -> True, "Computational" -> True}, Options[Graph]]
 
-QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
+QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Sort"], width, min, ops, orders, arity, vertices, edges, tensors
 },
 	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
@@ -82,8 +82,9 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     ]
 ]
 
+
 QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Enclose @ Block[{
-    net = QuantumTensorNetwork[qc["Flatten"], FilterRules[{opts}, Except[Options[Graph], Options[QuantumTensorNetwork]]]], vs, indices, labels, edges
+    net = QuantumTensorNetworkGraph[qc["Flatten"], FilterRules[{opts}, Except[Options[Graph], Options[QuantumTensorNetworkGraph]]]], vs, indices, labels, edges
 },
 	Confirm[Needs["WolframInstitute`Hypergraph`" -> "H`"], "Hypergraph paclet is not installed."];
 	vs = Developer`FromPackedArray @ VertexList[net];
@@ -94,7 +95,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True}, Options[QuantumTensorNetwork], Options[ContractTensorNetwork]]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True}, Options[QuantumTensorNetworkGraph], Options[TensorNetworkContract]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -125,9 +126,9 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkGraphQ];
+    net = ConfirmBy[QuantumTensorNetworkGraph[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetworkGraph]], "PrependInitial" -> False], TensorNetworkGraphQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
-    res = Confirm @ ContractTensorNetwork[net, FilterRules[{opts}, Options[ContractTensorNetwork]]];
+    res = Confirm @ TensorNetworkContract[net, FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],

@@ -404,7 +404,7 @@ QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator
 QuantumCircuitOperatorProp[qco_, "Normal", args___] :=
     QuantumCircuitOperator[qco["NormalOperators", args], qco["Options"]]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
+QuantumCircuitOperatorProp[qco_, "TensorNetwork" | "TensorNetworkGraph", opts : OptionsPattern[QuantumTensorNetworkGraph]] := QuantumTensorNetworkGraph[qco["Flatten"], opts]
 
 QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCircuitHypergraph]] := QuantumCircuitHypergraph[qco, opts]
 
