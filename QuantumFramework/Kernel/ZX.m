@@ -120,7 +120,7 @@ ZXTensorNetworkQuantumCircuit[net_ ? TensorNetworkQ] := Block[{vs = VertexList[n
 ]
 
 
-ZXExpression[qc_QuantumCircuitOperator] := Block[{net = qc["TensorNetwork"], vs, tensorProduct},
+ZXExpression[qc_QuantumCircuitOperator] := Block[{net = qc["TensorNetworkGraph"], vs, tensorProduct},
 
 	tensorProduct[] := 1;
 	tensorProduct[x_] := x;

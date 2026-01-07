@@ -57,7 +57,7 @@ QuantumBeamSearch[states_List, ops_List, OptionsPattern[]] := Module[{
 DiagramProcess := DiagramProcess = ResourceFunction["https://www.wolframcloud.com/obj/murzin.nikolay/DeployedResources/Function/DiagramProcess"]
 
 QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
-    ops = qco["Operators"], net = qco["TensorNetwork", "PrependInitial" -> False], n = qco["GateCount"]
+    ops = qco["Operators"], net = qco["TensorNetworkGraph", "PrependInitial" -> False], n = qco["GateCount"]
 },
     With[{
         map = GroupBy[EdgeTags[net], #[[2]] &, #[[1, 1]] &],

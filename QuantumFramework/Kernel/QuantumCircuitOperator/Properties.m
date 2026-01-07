@@ -8,7 +8,7 @@ PackageScope[collectOrders]
 
 $QuantumCircuitOperatorProperties = {
     "Association", "Operators", "Diagram", "OperatorCount", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
-    "Depth", "Arity", "Width", "TensorNetwork", "Topology", "Properties", "Picture", "Parameters", "ParameterArity"
+    "Depth", "Arity", "Width", "TensorNetwork", "TensorNetworkGraph", "Topology", "Properties", "Picture", "Parameters", "ParameterArity"
 };
 
 
@@ -270,10 +270,10 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "Computational" -> False], ops = qco["Flatten"]["Sort"]["NormalOperators"], indices, quditBases},
-    indices = TensorNetworkIndices[net];
+    indices = net["Hyperedges"];
     ConfirmAssert[Length[indices] == Length[ops]];
-    quditBases = Catenate @ MapThread[Join[Thread[Cases[#1, _Superscript] -> #2["Output"]["Decompose"]], Thread[Cases[#1, _Subscript] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
-    <|"ContractionIndices" -> EdgeTags[net], "FreeIndices" -> TensorNetworkFreeIndices[net], "QuditBases" -> quditBases, "Operators" -> ops|>
+    quditBases = Catenate @ MapThread[Join[Thread[Take[#1, #2["OutputQudits"]] -> #2["Output"]["Decompose"]], Thread[Take[#1, - #2["InputQudits"]] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
+    <|"ContractionIndices" -> indices, "FreeIndices" -> TensorNetworkFreeIndices[net], "QuditBases" -> quditBases, "Operators" -> ops|>
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info = Confirm @ qco["TensorNetworkInfo"]},
@@ -404,7 +404,9 @@ QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator
 QuantumCircuitOperatorProp[qco_, "Normal", args___] :=
     QuantumCircuitOperator[qco["NormalOperators", args], qco["Options"]]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetwork" | "TensorNetworkGraph", opts : OptionsPattern[QuantumTensorNetworkGraph]] := QuantumTensorNetworkGraph[qco["Flatten"], opts]
+QuantumCircuitOperatorProp[qco_, "TensorNetworkGraph", opts : OptionsPattern[QuantumTensorNetworkGraph]] := QuantumTensorNetworkGraph[qco["Flatten"], opts]
+
+QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 
 QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCircuitHypergraph]] := QuantumCircuitHypergraph[qco, opts]
 

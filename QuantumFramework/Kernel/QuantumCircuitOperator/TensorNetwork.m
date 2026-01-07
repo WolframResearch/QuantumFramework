@@ -7,11 +7,14 @@ PackageExport["TensorNetworkQuantumCircuit"]
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
 PackageScope["QuantumTensorNetworkGraph"]
+PackageScope["QuantumTensorNetwork"]
 PackageScope["QuantumCircuitHypergraph"]
 
 
 
-Options[QuantumTensorNetworkGraph] = Join[{"PrependInitial" -> True, "Computational" -> True}, Options[Graph]]
+Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True}
+
+Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options[Graph]]
 
 QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Sort"], width, min, ops, orders, arity, vertices, edges, tensors
@@ -82,6 +85,71 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
     ]
 ]
 
+(* TODO: refactor with above *)
+QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
+    circuit = qco["Sort"], width, min, ops, orders, arity, vertices, rules, tensors, indices
+},
+	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
+    width = circuit["Width"];
+    min = circuit["Min"];
+    ops = circuit["NormalOperators"];
+    If[ TrueQ[OptionValue["Computational"]],
+        ops = Splice[{
+            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], {#, #} & @ #["InputOrder"], QuantumBasis[#, #] & @ #["InputDimensions"], "Label" -> "I"[#["Label"]]], Nothing],
+            #,
+            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], {#, #} & @ #["OutputOrder"], QuantumBasis[#, #] & @ #["OutputDimensions"], "Label" -> "I"[#["Label"]]], Nothing]
+        }] & /@ ops
+    ];
+    arity = circuit["Arity"];
+    MapThread[
+        PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
+        Reverse /@ {circuit["InputOrder"], PadLeft[circuit["InputDimensions"], arity, 2]}
+    ];
+	orders = #["Order"] & /@ ops;
+    vertices = Range[Length[ops]] - arity;
+	rules = Catenate @ FoldPairList[
+		{nprev, order} |-> Block[{output, input, n, prev, next, indexRules},
+            {n, prev} = nprev;
+            n += 1;
+            next = prev;
+			{output, input} = order;
+            next[[ output - min + 1 ]] = n;
+			next[[ Complement[input, output] - min + 1 ]] = None[n];
+            indexRules = Superscript[prev[[# - min + 1]], #] -> Subscript[next[[# - min + 1]], #] & /@ input;
+			{
+                Replace[
+                    Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
+                    {
+                        DirectedEdge[None[_], ___] :> Nothing,
+                        DirectedEdge[_, None[_], tag_] :> tag /. None[i_] :> i
+                    },
+                    1
+                ],
+                {n, next}
+            }
+		],
+		{1 - arity, Table[1 - arity, width]},
+		Rest[orders]
+	];
+	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
+    indices = Replace[
+        MapThread[
+            Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]] &,
+            {vertices, orders}
+        ],
+        rules,
+        {2}
+    ];
+    If[ ! TrueQ[OptionValue["PrependInitial"]],
+        tensors = Drop[tensors, arity];
+        indices = Drop[indices, arity];
+    ];
+	ConfirmBy[
+        TensorNetwork[tensors, indices, InversePermutation @ FindPermutation[Keys[Select[Counts[Catenate[indices]], # == 1 &]][[All, 2]]]],
+        TensorNetworkQ
+    ]
+]
+
 
 QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Enclose @ Block[{
     net = QuantumTensorNetworkGraph[qc["Flatten"], FilterRules[{opts}, Except[Options[Graph], Options[QuantumTensorNetworkGraph]]]], vs, indices, labels, edges
@@ -126,7 +194,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetworkGraph[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetworkGraph]], "PrependInitial" -> False], TensorNetworkGraphQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ TensorNetworkContract[net, FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
