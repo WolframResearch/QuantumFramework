@@ -269,11 +269,14 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["FullOperators"]["ParameterSpec"]], First]
 ]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "Computational" -> False], ops = qco["Flatten"]["Sort"]["NormalOperators"], indices, quditBases},
-    indices = net["Hyperedges"];
+QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
+    indices = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "ReturnIndices" -> True, "Computational" -> False],
+    ops = qco["Flatten"]["Sort"]["NormalOperators"],
+    quditBases
+},
     ConfirmAssert[Length[indices] == Length[ops]];
     quditBases = Catenate @ MapThread[Join[Thread[Take[#1, #2["OutputQudits"]] -> #2["Output"]["Decompose"]], Thread[Take[#1, - #2["InputQudits"]] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
-    <|"ContractionIndices" -> indices, "FreeIndices" -> TensorNetworkFreeIndices[net], "QuditBases" -> quditBases, "Operators" -> ops|>
+    <|"ContractionIndices" -> indices, "FreeIndices" -> TensorNetworkFreeIndices[TensorNetwork[indices]], "QuditBases" -> quditBases, "Operators" -> ops|>
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info = Confirm @ qco["TensorNetworkInfo"]},

@@ -12,7 +12,7 @@ PackageScope["QuantumCircuitHypergraph"]
 
 
 
-Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True}
+Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False}
 
 Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options[Graph]]
 
@@ -121,17 +121,23 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
                     Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
                     {
                         DirectedEdge[None[_], ___] :> Nothing,
-                        DirectedEdge[_, None[_], tag_] :> tag /. None[i_] :> i
+                        DirectedEdge[_, None[_], tag_] :> (tag /. None[i_] :> i),
+                        DirectedEdge[_, _, tag_] :> tag
                     },
                     1
                 ],
                 {n, next}
             }
+            
 		],
 		{1 - arity, Table[1 - arity, width]},
 		Rest[orders]
 	];
-	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
+    If[ ! TrueQ[OptionValue["PrependInitial"]],
+        vertices = Drop[vertices, arity];
+        orders = Drop[orders, arity];
+        ops = Drop[ops, arity];
+    ];
     indices = Replace[
         MapThread[
             Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]] &,
@@ -140,10 +146,10 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         rules,
         {2}
     ];
-    If[ ! TrueQ[OptionValue["PrependInitial"]],
-        tensors = Drop[tensors, arity];
-        indices = Drop[indices, arity];
+    If[ TrueQ[OptionValue["ReturnIndices"]],
+        Return[indices];
     ];
+	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
 	ConfirmBy[
         TensorNetwork[tensors, indices, InversePermutation @ FindPermutation[Keys[Select[Counts[Catenate[indices]], # == 1 &]][[All, 2]]]],
         TensorNetworkQ
