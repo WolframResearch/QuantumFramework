@@ -151,7 +151,14 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
 	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
 	ConfirmBy[
-        TensorNetwork[tensors, indices, InversePermutation @ FindPermutation[Keys[Select[Counts[Catenate[indices]], # == 1 &]][[All, 2]]]],
+        TensorNetwork[
+            tensors, indices,
+            With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
+                FindPermutation[
+                    free, SortBy[free, MatchQ[_Subscript]]
+                ]
+            ]
+        ],
         TensorNetworkQ
     ]
 ]
