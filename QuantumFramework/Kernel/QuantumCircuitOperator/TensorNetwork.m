@@ -4,6 +4,8 @@ PackageImport["Wolfram`TensorNetworks`"]
 
 PackageExport["TensorNetworkQuantumCircuit"]
 
+PackageScope[tensorNetworkIndexSort]
+
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
 PackageScope["QuantumTensorNetworkGraph"]
@@ -11,6 +13,7 @@ PackageScope["QuantumTensorNetwork"]
 PackageScope["QuantumCircuitHypergraph"]
 
 
+tensorNetworkIndexSort[indices_List] := Catenate[Lookup[GroupBy[indices, MatchQ[_Superscript], SortBy[Last]], {True, False}]]
 
 Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False}
 
@@ -155,7 +158,7 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
             tensors, indices,
             With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
                 FindPermutation[
-                    free, SortBy[free, Last]
+                    free, tensorNetworkIndexSort[free]
                 ]
             ]
         ],
