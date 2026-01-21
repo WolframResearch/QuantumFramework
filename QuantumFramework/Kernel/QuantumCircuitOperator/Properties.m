@@ -276,7 +276,7 @@ QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
 },
     ConfirmAssert[Length[indices] == Length[ops]];
     quditBases = Catenate @ MapThread[Join[Thread[Take[#1, #2["OutputQudits"]] -> #2["Output"]["Decompose"]], Thread[Take[#1, - #2["InputQudits"]] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
-    <|"ContractionIndices" -> indices, "FreeIndices" -> TensorNetworkFreeIndices[TensorNetwork[indices]], "QuditBases" -> quditBases, "Operators" -> ops|>
+    <|"ContractionIndices" -> indices, "FreeIndices" -> SortBy[Keys[Select[Counts[Catenate[indices]], # == 1 &]], Last], "QuditBases" -> quditBases, "Operators" -> ops|>
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info = Confirm @ qco["TensorNetworkInfo"]},
