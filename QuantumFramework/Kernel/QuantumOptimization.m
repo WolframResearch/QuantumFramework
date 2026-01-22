@@ -70,6 +70,9 @@ GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue
 (*Classiq Integration*)
 
 
+$VersionNumber
+
+
 ClassiqSetup::PythonEvaluators="Non Python evaluator found";
 
 ClassiqSetup::"ClassiqInstallation"="Classiq Installation failed";
@@ -116,7 +119,7 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 		
 		If[Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
 			
-			session=StartExternalSession[<|"System" -> "Python", "ID" -> "default-python-session"|>];
+			session=StartExternalSession[<|"System" -> "Python", "ID" -> "default-python-session"|>],
 		
 			reporter[<|"Evaluators"->evaluators|>];
 			
