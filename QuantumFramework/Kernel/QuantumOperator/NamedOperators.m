@@ -175,13 +175,17 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension : _Integer ? Positive : 2
     opts
 ]
 
-QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
+QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders, sortedLabel},
     op = QuantumCircuitOperator[ops]["QuantumOperator", Method -> "Schrodinger"]["Sort"];
     orders = #["FullInputOrder"] & /@ ops;
+    sortedLabel = If[Length[ops] > 1,
+        collectLabel[CircleTimes @@ Through[ops[[Ordering[First /@ orders]]]["Label"]]],
+        op["Label"]
+    ];
     FullSimplify @ QuantumOperator[
         Exp[- I angle / 2 op],
         opts,
-        "Label" -> Subscript["R", op["Label"]][angle]
+        "Label" -> Subscript["R", sortedLabel][angle]
     ]
 ]
 
