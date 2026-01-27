@@ -70,13 +70,13 @@ GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue
 (*Classiq Integration*)
 
 
-ClassiqSetup::PythonEvaluators="Non Python evaluator found";
+ClassiqSetup::PythonEvaluators="WARNING: Non Python evaluator found";
 
 ClassiqSetup::"ClassiqInstallation"="WARNING: Classiq Installation failed";
 
 ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
 
-ClassiqSetup::"PythonVersion"="Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12).";
+ClassiqSetup::"PythonVersion"="WARNING: Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12). Remember to configure python for ExternalEvaluate";
 
 Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.86.0"};
 
