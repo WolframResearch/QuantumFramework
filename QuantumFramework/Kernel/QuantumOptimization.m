@@ -72,9 +72,11 @@ GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue
 
 ClassiqSetup::PythonEvaluators="Non Python evaluator found";
 
-ClassiqSetup::"ClassiqInstallation"="Classiq Installation failed";
+ClassiqSetup::"ClassiqInstallation"="WARNING: Classiq Installation failed";
 
 ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
+
+ClassiqSetup::"PythonVersion"="Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12).";
 
 Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.86.0"};
 
@@ -82,7 +84,7 @@ ClassiqSetup[]:=ClassiqSetup[{"ClassiqVersion","Session"}];
 
 ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 	
-	{evaluators,cachedResults,reporter,output,classiq,ver,dependencies,dep,allpackages,packages,pak,evaluator,session,list},
+	{evaluators,cachedResults,reporter,output,classiq,ver,dependencies,dep,allpackages,packages,pak,evaluator,session,list,versions,compatible,path},
 		
 		cachedResults=<||>;
 		
@@ -114,10 +116,17 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 	
 		evaluators=FindExternalEvaluators["Python"];
 		
+		
+		
 		If[Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
 			
 			If[$VersionNumber > 14.0,
-			session=StartExternalSession[<|"System" -> "Python", "ID" -> "default-python-session"|>],
+			
+			versions=Quiet[(#->ExternalEvaluate[#,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]])&/@ExternalEvaluators["Python"]];
+			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
+			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
+			path=First[First[compatible]]["Evaluator"];
+			session=StartExternalSession[<|"System" -> "Python", "Evaluator"->path ,"ID" -> "default-python-session"|>],
 			session=ExternalEvaluate`GetDefaultExternalSession["Python"]
 			];
 		
@@ -131,7 +140,7 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			
 					
 			If[!installedQ["classiq",evaluator],
-				Print[ClassiqSetup::ClassiqInstallation],
+				Print[ClassiqSetup::ClassiqInstallation]; Return[$Failed],
 				ver=StringTrim@RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
 				If[!MatchQ[ver,OptionValue["LatestClassiqVersion"]],Print[ClassiqSetup::UpdatingClassiq];RunProcess[{evaluator,"-m","pip","--quiet","install","classiq","--upgrade"}]]
 			];
