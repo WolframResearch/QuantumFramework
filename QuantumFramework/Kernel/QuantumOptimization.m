@@ -76,7 +76,7 @@ ClassiqSetup::"ClassiqInstallation"="WARNING: Classiq Installation failed";
 
 ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
 
-ClassiqSetup::"PythonVersion"="WARNING: Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12). Remember to configure python for ExternalEvaluate";
+ClassiqSetup::"PythonVersion"="WARNING: Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12). Make sure a compatible Python installation is properly \!\(\*TemplateBox[{\"configured\", {URL[\"https://reference.wolfram.com/language/workflow/ConfigurePythonForExternalEvaluate.html\"], None}, \"https://reference.wolfram.com/language/workflow/ConfigurePythonForExternalEvaluate.html\", \"HyperlinkActionRecycled\", {\"HyperlinkActive\"}, BaseStyle -> {\"Hyperlink\"}, HyperlinkAction -> \"Recycled\"},\n\"HyperlinkTemplate\"]\) and \!\(\*TemplateBox[{\"registered\", {URL[\"https://reference.wolfram.com/language/ref/RegisterExternalEvaluator.html\"], None}, \"https://reference.wolfram.com/language/ref/RegisterExternalEvaluator.html\", \"HyperlinkActionRecycled\", {\"HyperlinkActive\"}, BaseStyle -> {\"Hyperlink\"}, HyperlinkAction -> \"Recycled\"},\n\"HyperlinkTemplate\"]\) for ExternalEvaluate";
 
 Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.86.0"};
 
