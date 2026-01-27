@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     11929,        316]
-NotebookOptionsPosition[      8599,        256]
-NotebookOutlinePosition[      9030,        273]
-CellTagsIndexPosition[      8987,        270]
+NotebookDataLength[     14140,        373]
+NotebookOptionsPosition[     10223,        305]
+NotebookOutlinePosition[     10653,        322]
+CellTagsIndexPosition[     10610,        319]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -191,6 +191,55 @@ https://www.wolframcloud.com/env/brunot/Published/testQuantumPackage.nb\
 
 Cell[CellGroupData[{
 
+Cell["MulAtoLEG", "Section",
+ CellChangeTimes->{{3.9785435296585064`*^9, 
+  3.978543534337019*^9}},ExpressionUUID->"0b511259-6472-2f4d-ba8f-\
+de62e16f4477"],
+
+Cell["\<\
+MulAtoLEG (Multi-Atom Liouville Equation Generator) is an open-source \
+Mathematica package for generating Liouville superoperators and Liouville \
+equations, specialized for multilevel atomic systems comprising an arbitrary \
+number of atoms.\
+\>", "Text",
+ CellChangeTimes->{{3.9785436105924816`*^9, 3.978543659808182*^9}, {
+  3.9785437130031376`*^9, 
+  3.978543762191719*^9}},ExpressionUUID->"ad8cda4f-23d5-8c48-b35e-\
+6c80f50a65af"],
+
+Cell["\<\
+Very good for obtaining symbolic equations, their approach does not include \
+directly the field(lasers) in their Hilbert space reducing space. List \
+transition syntax can be a bit verbose for multi-atom systems.\
+\>", "Text",
+ CellChangeTimes->{{3.9785437670905685`*^9, 
+  3.9785438693735657`*^9}},ExpressionUUID->"e8a404f3-4561-2a47-a26e-\
+b08f33d40475"],
+
+Cell["\<\
+https://arxiv.org/pdf/2512.23591
+https://github.com/alexkunold/MultiAtomLiouvilleEquationGenerator\
+\>", "Text",
+ CellChangeTimes->{
+  3.978543541564026*^9, {3.978543619297947*^9, 
+   3.9785436203717995`*^9}},ExpressionUUID->"47bab8e7-b256-7945-bf61-\
+1f723345c7a3"],
+
+Cell["\:2705Tested", "Text",
+ CellChangeTimes->{
+  3.9785439025251083`*^9},ExpressionUUID->"145c56e1-ab8d-2741-9d8e-\
+4ac898b71dad"],
+
+Cell["\<\
+https://www.wolframcloud.com/obj/04870a63-2d20-46b7-b824-954ddd2321cf\
+\>", "Text",
+ CellChangeTimes->{
+  3.978543916841137*^9},ExpressionUUID->"e4fac78b-2bff-4141-8034-\
+cb9e8d2c3671"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
 Cell["Other languages", "Section",
  CellChangeTimes->{{3.9582357984257145`*^9, 
   3.9582358020493164`*^9}},ExpressionUUID->"c4e44a4d-c42b-7841-8d21-\
@@ -257,7 +306,7 @@ af1c0dcc432d"]
 WindowSize->{1141.2, 568.8},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 Magnification:>1.1 Inherited,
-FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 22, 2025)",
+FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
 ExpressionUUID->"622c5db5-abe7-4cf4-b42f-01b6b44aebbb"
 ]
@@ -308,14 +357,22 @@ Cell[5514, 178, 158, 3, 37, "Text",ExpressionUUID->"dddc0fdd-10fe-cc49-8f44-99aa
 Cell[5675, 183, 199, 5, 37, "Text",ExpressionUUID->"5b1321a3-4b06-e74d-afdf-4c2cf8bb4543"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[5911, 193, 164, 3, 72, "Section",ExpressionUUID->"c4e44a4d-c42b-7841-8d21-0c4624a8b725"],
-Cell[6078, 198, 190, 3, 37, "Text",ExpressionUUID->"8470cba1-befd-194b-ba8d-27360874d967"],
-Cell[6271, 203, 220, 3, 55, "Item",ExpressionUUID->"cf21e848-71b5-3545-b3c3-d42ce4c73bc6"],
-Cell[6494, 208, 364, 7, 77, "Item",ExpressionUUID->"f88898d8-3b0e-6b4e-9532-1252a090f6db"],
-Cell[6861, 217, 256, 4, 55, "Item",ExpressionUUID->"da94080f-c472-6c43-9fd2-5a1b668b06cd"],
-Cell[7120, 223, 373, 7, 77, "Item",ExpressionUUID->"740379f9-11ba-1e43-9b65-ba8e27cafa6d"],
-Cell[7496, 232, 377, 6, 55, "Item",ExpressionUUID->"5bac36b4-1fa1-d347-84b4-2708a857c37c"],
-Cell[7876, 240, 695, 12, 99, "Item",ExpressionUUID->"75770ad6-84d1-fd45-bcfe-af1c0dcc432d"]
+Cell[5911, 193, 156, 3, 72, "Section",ExpressionUUID->"0b511259-6472-2f4d-ba8f-de62e16f4477"],
+Cell[6070, 198, 446, 9, 61, "Text",ExpressionUUID->"ad8cda4f-23d5-8c48-b35e-6c80f50a65af"],
+Cell[6519, 209, 367, 7, 61, "Text",ExpressionUUID->"e8a404f3-4561-2a47-a26e-b08f33d40475"],
+Cell[6889, 218, 276, 7, 61, "Text",ExpressionUUID->"47bab8e7-b256-7945-bf61-1f723345c7a3"],
+Cell[7168, 227, 132, 3, 37, "Text",ExpressionUUID->"145c56e1-ab8d-2741-9d8e-4ac898b71dad"],
+Cell[7303, 232, 195, 5, 37, "Text",ExpressionUUID->"e4fac78b-2bff-4141-8034-cb9e8d2c3671"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[7535, 242, 164, 3, 72, "Section",ExpressionUUID->"c4e44a4d-c42b-7841-8d21-0c4624a8b725"],
+Cell[7702, 247, 190, 3, 37, "Text",ExpressionUUID->"8470cba1-befd-194b-ba8d-27360874d967"],
+Cell[7895, 252, 220, 3, 55, "Item",ExpressionUUID->"cf21e848-71b5-3545-b3c3-d42ce4c73bc6"],
+Cell[8118, 257, 364, 7, 77, "Item",ExpressionUUID->"f88898d8-3b0e-6b4e-9532-1252a090f6db"],
+Cell[8485, 266, 256, 4, 55, "Item",ExpressionUUID->"da94080f-c472-6c43-9fd2-5a1b668b06cd"],
+Cell[8744, 272, 373, 7, 77, "Item",ExpressionUUID->"740379f9-11ba-1e43-9b65-ba8e27cafa6d"],
+Cell[9120, 281, 377, 6, 55, "Item",ExpressionUUID->"5bac36b4-1fa1-d347-84b4-2708a857c37c"],
+Cell[9500, 289, 695, 12, 99, "Item",ExpressionUUID->"75770ad6-84d1-fd45-bcfe-af1c0dcc432d"]
 }, Open  ]]
 }, Open  ]]
 }
