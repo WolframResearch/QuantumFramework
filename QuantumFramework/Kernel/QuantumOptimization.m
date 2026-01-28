@@ -127,7 +127,13 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
 			path=First[First[compatible]]["Evaluator"];
 			session=StartExternalSession[<|"System" -> "Python", "Evaluator"->path ,"ID" -> "default-python-session"|>],
-			session=ExternalEvaluate`GetDefaultExternalSession["Python"]
+			
+			versions=FindExternalEvaluators["Python"][All,"Executable"]//Normal//Values;
+			versions=Table[py->Quiet@ExternalEvaluate[<|"System"->"Python","Executable"->py|>,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]],{py,versions}];
+			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
+			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
+			path=First[First[compatible]];
+			session=StartExternalSession[<|"System"->"Python","Evaluator"->path,"ID"->"DefaultPythonSession"|>]
 			];
 		
 			reporter[<|"Evaluators"->evaluators|>];
