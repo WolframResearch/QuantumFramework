@@ -41,64 +41,73 @@ PackageExport["PhaseShiftOperator"]
 
 (* Usage Messages *)
 
-$FockSize::usage = "$FockSize \[LongDash] Global variable holding the current Fock space truncation size (default 16).";
+$FockSize::usage = "Global variable holding the current Fock space truncation size (default 16).";
 
-SetFockSpaceSize::usage = "SetFockSpaceSize[size] \[LongDash] Sets the global Fock space truncation size $FockSize. Default is 16.";
+SetFockSpaceSize::usage = "\!\(SetFockSpaceSize[size]\) Sets the global Fock space truncation size $FockSize. Default is 16.";
 
-FockState::usage = "FockState[n] \[LongDash] Creates a Fock (number) state |n\[RightAngleBracket] in the Fock space.
-FockState[{n1, n2, ...}] \[LongDash] Creates a multi-mode Fock state |n1, n2, ...\[RightAngleBracket].
-FockState[...,size] \[LongDash] Optional second argument specifies the Fock space size (default: $FockSize).";
+FockState::usage = 
+"\!\(FockState[n]\) Creates a Fock (number) state |n\[RightAngleBracket] in the Fock space.
+\!\(FockState[{n1, n2, ...}]\) Creates a multi-mode Fock state |n1, n2, ...\[RightAngleBracket].
+\!\(FockState[\[Ellipsis],size]\) Specifies the Fock space size of all the defined modes (default: $FockSize).";
 
-CoherentState::usage = "CoherentState[] \[LongDash] Returns a parametric coherent state |\[Alpha]\[RightAngleBracket] with formal parameter \[FormalAlpha].
-CoherentState[size] \[LongDash] Specifies the Fock space size.
-Use ReplaceAll to substitute numeric values for \[FormalAlpha].";
+CoherentState::usage = 
+"\!\(CoherentState[]\) Returns a parametric coherent state |\[Alpha]\[RightAngleBracket] with formal parameter \[FormalAlpha].
+\!\(CoherentState[size]\) Specifies the Fock space size of the parametric state (default: $FockSize)";
 
-ThermalState::usage = "ThermalState[nbar] \[LongDash] Creates a thermal (Bose-Einstein) mixed state with mean photon number nbar.
-ThermalState[nbar, size] \[LongDash] Specifies the Fock space size.";
+ThermalState::usage = "
+\!\(ThermalState[nbar]\) Creates a thermal (Bose-Einstein) mixed state with mean photon number nbar.
+\!\(ThermalState[nbar, size]\) Specifies the Fock space size (default: $FockSize).";
 
-CatState::usage = "CatState[] \[LongDash] Returns a parametric Schr\[ODoubleDot]dinger cat state (|\[Alpha]\[RightAngleBracket] + e^{i\[Phi]}|-\[Alpha]\[RightAngleBracket])/N.
-CatState[size] \[LongDash] Specifies the Fock space size.
-Uses formal parameters \[FormalAlpha] and \[FormalPhi]. Use ReplaceAll to substitute numeric values.";
+CatState::usage = 
+"\!\(CatState[]\)Returns a parametric Schr\[ODoubleDot]dinger cat state (|\[Alpha]\[RightAngleBracket] + e^{i\[Phi]}|-\[Alpha]\[RightAngleBracket])/N, with formal parameters \[FormalAlpha] and \[FormalPhi].
+\!\(CatState[size]\) Specifies the Fock space size (default: $FockSize).";
 
-AnnihilationOperator::usage = "AnnihilationOperator[] \[LongDash] Creates the bosonic annihilation operator \[ARing].
-AnnihilationOperator[size] \[LongDash] Specifies the Fock space size.
-AnnihilationOperator[size, order] \[LongDash] Specifies which subsystem (order) for multi-mode systems.";
+AnnihilationOperator::usage = 
+"\!\(AnnihilationOperator[]\) Creates the bosonic annihilation operator \[AHat].
+\!\(AnnihilationOperator[size]\) Specifies the Fock space size (default: $FockSize).
+\!\(AnnihilationOperator[size, order]\) Specifies which subsystem (order) for multi-mode systems.";
 
-QuadratureOperators::usage = "QuadratureOperators[] \[LongDash] Returns {X, P} position and momentum quadrature operators.
-QuadratureOperators[size] \[LongDash] Specifies the Fock space size.
-QuadratureOperators[size, order] \[LongDash] Specifies the Fock space size and subsystem order.";
+QuadratureOperators::usage = 
+"\!\(QuadratureOperators[]\) Returns {X, P} position and momentum quadrature operators.
+\!\(QuadratureOperators[size]\) Specifies the Fock space size (default: $FockSize).
+\!\(QuadratureOperators[size, order]\) Specifies the subsystem order.";
 
-DisplacementOperator::usage = "DisplacementOperator[\[Alpha]] \[LongDash] Creates the displacement operator D(\[Alpha]).
-DisplacementOperator[\[Alpha], size] \[LongDash] Specifies the Fock space size.
-DisplacementOperator[\[Alpha], size, order] \[LongDash] Specifies Fock space size and subsystem order.
-Options: \"Ordering\" -> \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+DisplacementOperator::usage = 
+"\!\(DisplacementOperator[\[Alpha]]\) Creates the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].
+\!\(DisplacementOperator[\[Alpha], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(DisplacementOperator[\[Alpha], size, order]\) Specifies the subsystem order.
+\!\(DisplacementOperator[\[Ellipsis], \"Ordering\"\[Rule] ]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
 
-SqueezeOperator::usage = "SqueezeOperator[\[Xi]] \[LongDash] Creates the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].
-SqueezeOperator[\[Xi], size] \[LongDash] Specifies the Fock space size.
-SqueezeOperator[\[Xi], size, order] \[LongDash] Specifies Fock space size and subsystem order.
-Options: \"Ordering\" -> \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+SqueezeOperator::usage = 
+"\!\(SqueezeOperator[\[Xi]]\) Creates the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].
+\!\(SqueezeOperator[\[Xi], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(SqueezeOperator[\[Xi], size, order]\) Specifies the subsystem order.
+\!\(SqueezeOperator[\[Ellipsis], \"Ordering\" \[Rule]]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
 
-PhaseShiftOperator::usage = "PhaseShiftOperator[\[Theta]] \[LongDash] Creates the phase shift operator e^{i\[Theta]n}.
-PhaseShiftOperator[\[Theta], size] \[LongDash] Specifies the Fock space size.
-PhaseShiftOperator[\[Theta], size, order] \[LongDash] Specifies Fock space size and subsystem order.";
+PhaseShiftOperator::usage = 
+"\!\(PhaseShiftOperator[\[Theta]]\) Creates the phase shift operator e^{i\[Theta]n}.
+\!\(PhaseShiftOperator[\[Theta], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(PhaseShiftOperator[\[Theta], size, order]\) Specifies the subsystem order.";
 
-BeamSplitterOperator::usage = "BeamSplitterOperator[{\[Theta], \[Phi]}] \[LongDash] Creates a two-mode beam splitter operator with mixing angle \[Theta] and phase \[Phi].
-BeamSplitterOperator[{\[Theta], \[Phi]}, size] \[LongDash] Specifies the Fock space size.
-BeamSplitterOperator[{\[Theta], \[Phi]}, size, order] \[LongDash] Specifies Fock space size and mode ordering.
-Options: Method -> \"MatrixExp\" | \"Recurrence\".";
+BeamSplitterOperator::usage = 
+"\!\(BeamSplitterOperator[{\[Theta], \[Phi]}]\) Creates a two-mode beam splitter operator with mixing angle \[Theta] and phase \[Phi].
+\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size]\) Specifies the Fock space size (default: $FockSize).
+\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size, order]\) Specifies the mode ordering.
+\!\(BeamSplitterOperator[\[Ellipsis], Method \[Rule] ]\) Options: Method -> \"MatrixExp\" | \"Recurrence\".";
 
-OperatorVariance::usage = "OperatorVariance[state, op] \[LongDash] Computes the variance \[LeftAngleBracket]O^2\[RightAngleBracket] - \[LeftAngleBracket]O\[RightAngleBracket]^2 of operator op in the given QuantumState.";
+OperatorVariance::usage = 
+"\!\(OperatorVariance[state, op]\) Computes the variance \[LeftAngleBracket]O^2\[RightAngleBracket] - \[LeftAngleBracket]O\[RightAngleBracket]^2 of operator op for the given QuantumState.";
 
-G2Coherence::usage = "G2Coherence[state, aOp] \[LongDash] Computes the second-order coherence function g^(2)(0) for the given QuantumState and annihilation operator.
-Values: g^(2) < 1 indicates antibunching (nonclassical), g^(2) = 1 for coherent states, g^(2) > 1 for thermal/bunched light.";
+G2Coherence::usage = 
+"\!\(G2Coherence[state]\) Computes the second-order coherence function g^(2)(0) for the given single mode QuantumState.";
 
-WignerRepresentation::usage = "WignerRepresentation[state, {xmin, xmax}, {pmin, pmax}] \[LongDash] Computes the Wigner quasi-probability distribution W(x,p).
-Returns an InterpolatingFunction over the specified phase space region.
-Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
+WignerRepresentation::usage = 
+"\!\(WignerRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Wigner quasi-probability distribution W(x,p). Returns an InterpolatingFunction over the specified phase space region.
+\!\(WignerRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
 
-HusimiQRepresentation::usage = "HusimiQRepresentation[state, {xmin, xmax}, {pmin, pmax}] \[LongDash] Computes the Husimi Q quasi-probability distribution Q(x,p).
-Returns an InterpolatingFunction over the specified phase space region.
-Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
+HusimiQRepresentation::usage = 
+"\!\(HusimiQRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified phase space region.
+\!\(HusimiQRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
 
 
 (* ::Section:: *)
@@ -112,7 +121,8 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-G2Coherence[\[Psi]_QuantumState, aOp_QuantumOperator] := Module[{numerator, denominator, a2Op, nOp},
+G2Coherence[\[Psi]_QuantumState] := Module[{numerator, denominator, a2Op, aOp, nOp},
+    aOp = AnnihilationOperator[\[Psi]["Dimension"]];
     nOp = SuperDagger[aOp] @ aOp;
     a2Op = SuperDagger[aOp] @ SuperDagger[aOp] @ aOp @ aOp;
     If[\[Psi]["PureStateQ"],
