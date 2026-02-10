@@ -10,7 +10,9 @@ PackageExport["$FockSize"]
 
 PackageExport["SetFockSpaceSize"]
 
-PackageExport["G2Coherence"]
+PackageExport["g2Coherence"]
+
+PackageExport["G1Correlation"]
 
 PackageExport["OperatorVariance"]
 
@@ -98,16 +100,19 @@ BeamSplitterOperator::usage =
 OperatorVariance::usage = 
 "\!\(OperatorVariance[state, op]\) Computes the variance \[LeftAngleBracket]O^2\[RightAngleBracket] - \[LeftAngleBracket]O\[RightAngleBracket]^2 of operator op for the given QuantumState.";
 
-G2Coherence::usage = 
-"\!\(G2Coherence[state]\) Computes the second-order coherence function g^(2)(0) for the given single mode QuantumState.";
+g2Coherence::usage = 
+"\!\(g2Coherence[state]\) Computes the second-order coherence function \!\(\*SuperscriptBox[\(g\), \(2\)]\)(0) for the given single mode QuantumState.";
+
+G1Correlation::usage = 
+"\!\(G1Correlation[state,{{\!\(\*SubscriptBox[\(r\), \(1\)]\),\!\(\*SubscriptBox[\(t\), \(1\)]\)},{\!\(\*SubscriptBox[\(r\), \(2\)]\),\!\(\*SubscriptBox[\(t\), \(2\)]\)}}]\) Computes the first-order correlation function \!\(\*SubscriptBox[\(G\), \(1\)]\)(\!\(\*SubscriptBox[\(x\), \(1\)]\),\!\(\*SubscriptBox[\(x\), \(2\)]\)) for the given single mode QuantumState for space-time coordinates \!\(\*SubscriptBox[\(r\), \(1\)]\),\!\(\*SubscriptBox[\(t\), \(1\)]\),\!\(\*SubscriptBox[\(r\), \(2\)]\),\!\(\*SubscriptBox[\(t\), \(2\)]\)";
 
 WignerRepresentation::usage = 
 "\!\(WignerRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Wigner quasi-probability distribution W(x,p). Returns an InterpolatingFunction over the specified phase space region.
-\!\(WignerRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
+\!\(WignerRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\)(default), \"GridSize\" \[Rule] 100 (default).";
 
 HusimiQRepresentation::usage = 
 "\!\(HusimiQRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified phase space region.
-\!\(HusimiQRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" -> Sqrt[2] (default), \"GridSize\" -> 100 (default).";
+\!\(HusimiQRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\) (default), \"GridSize\" -> 100 (default).";
 
 
 (* ::Section:: *)
@@ -121,7 +126,7 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-G2Coherence[\[Psi]_QuantumState] := Module[{numerator, denominator, a2Op, aOp, nOp},
+g2Coherence[\[Psi]_QuantumState] := Module[{numerator, denominator, a2Op, aOp, nOp},
     aOp = AnnihilationOperator[\[Psi]["Dimension"]];
     nOp = SuperDagger[aOp] @ aOp;
     a2Op = SuperDagger[aOp] @ SuperDagger[aOp] @ aOp @ aOp;
@@ -135,6 +140,17 @@ G2Coherence[\[Psi]_QuantumState] := Module[{numerator, denominator, a2Op, aOp, n
         denominator = Tr[\[Psi]["DensityMatrix"] . nOp["Matrix"]]
     ];
     numerator / denominator^2
+]
+
+
+G1Correlation[state_QuantumState,{{r1_,t1_},{r2_,t2_}}]:=Module[{aOp,,Eminus1,Eplus2},
+	aOp=AnnihilationOperator[state["Dimension"]];
+	Eminus1=-I SuperDagger[aOp] Exp[-I(\[FormalK] . r1-\[FormalOmega] t1)];
+	Eplus2=I aOp Exp[I(\[FormalK] . r2-\[FormalOmega] t2)];
+	If[state["PureStateQ"],
+		(SuperDagger[state]@Eminus1@Eplus2@state)["Scalar"],
+		Tr[state["DensityMatrix"] . (Eminus1@Eplus2)["Matrix"]];
+	]
 ]
 
 
