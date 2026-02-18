@@ -12,6 +12,8 @@ PackageExport["SetFockSpaceSize"]
 
 PackageExport["G2Coherence"]
 
+PackageExport["G1Correlation"]
+
 PackageExport["OperatorVariance"]
 
 PackageExport["CoherentState"]
@@ -39,6 +41,80 @@ PackageExport["BeamSplitterOperator"]
 PackageExport["PhaseShiftOperator"]
 
 
+(* Usage Messages *)
+
+$FockSize::usage = "Global variable holding the current Fock space truncation size (default 16).";
+
+SetFockSpaceSize::usage = "\!\(SetFockSpaceSize[size]\) Sets the global Fock space truncation size $FockSize. Default is 16.";
+
+FockState::usage = 
+"\!\(FockState[n]\) Creates a Fock (number) state |n\[RightAngleBracket] in the Fock space.
+\!\(FockState[{n1, n2, ...}]\) Creates a multi-mode Fock state |n1, n2, ...\[RightAngleBracket].
+\!\(FockState[\[Ellipsis],size]\) Specifies the Fock space size of all the defined modes (default: $FockSize).";
+
+CoherentState::usage = 
+"\!\(CoherentState[]\) Returns a parametric coherent state |\[Alpha]\[RightAngleBracket] with formal parameter \[FormalAlpha].
+\!\(CoherentState[size]\) Specifies the Fock space size of the parametric state (default: $FockSize)";
+
+ThermalState::usage = "
+\!\(ThermalState[nbar]\) Creates a thermal (Bose-Einstein) mixed state with mean photon number nbar.
+\!\(ThermalState[nbar, size]\) Specifies the Fock space size (default: $FockSize).";
+
+CatState::usage = 
+"\!\(CatState[]\)Returns a parametric Schr\[ODoubleDot]dinger cat state (|\[Alpha]\[RightAngleBracket] + e^{i\[Phi]}|-\[Alpha]\[RightAngleBracket])/N, with formal parameters \[FormalAlpha] and \[FormalPhi].
+\!\(CatState[size]\) Specifies the Fock space size (default: $FockSize).";
+
+AnnihilationOperator::usage = 
+"\!\(AnnihilationOperator[]\) Creates the bosonic annihilation operator \[AHat].
+\!\(AnnihilationOperator[size]\) Specifies the Fock space size (default: $FockSize).
+\!\(AnnihilationOperator[size, order]\) Specifies which subsystem (order) for multi-mode systems.";
+
+QuadratureOperators::usage = 
+"\!\(QuadratureOperators[]\) Returns {X, P} position and momentum quadrature operators.
+\!\(QuadratureOperators[size]\) Specifies the Fock space size (default: $FockSize).
+\!\(QuadratureOperators[size, order]\) Specifies the subsystem order.";
+
+DisplacementOperator::usage = 
+"\!\(DisplacementOperator[\[Alpha]]\) Creates the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].
+\!\(DisplacementOperator[\[Alpha], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(DisplacementOperator[\[Alpha], size, order]\) Specifies the subsystem order.
+\!\(DisplacementOperator[\[Ellipsis], \"Ordering\"\[Rule] ]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+
+SqueezeOperator::usage = 
+"\!\(SqueezeOperator[\[Xi]]\) Creates the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].
+\!\(SqueezeOperator[\[Xi], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(SqueezeOperator[\[Xi], size, order]\) Specifies the subsystem order.
+\!\(SqueezeOperator[\[Ellipsis], \"Ordering\" \[Rule]]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+
+PhaseShiftOperator::usage = 
+"\!\(PhaseShiftOperator[\[Theta]]\) Creates the phase shift operator e^{i\[Theta]n}.
+\!\(PhaseShiftOperator[\[Theta], size]\) Specifies the Fock space size (default: $FockSize).
+\!\(PhaseShiftOperator[\[Theta], size, order]\) Specifies the subsystem order.";
+
+BeamSplitterOperator::usage = 
+"\!\(BeamSplitterOperator[{\[Theta], \[Phi]}]\) Creates a two-mode beam splitter operator with mixing angle \[Theta] and phase \[Phi].
+\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size]\) Specifies the Fock space size (default: $FockSize).
+\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size, order]\) Specifies the mode ordering.
+\!\(BeamSplitterOperator[\[Ellipsis], Method \[Rule] ]\) Options: Method -> \"MatrixExp\" | \"Recurrence\".";
+
+OperatorVariance::usage = 
+"\!\(OperatorVariance[state, op]\) Computes the variance \[LeftAngleBracket]O^2\[RightAngleBracket] - \[LeftAngleBracket]O\[RightAngleBracket]^2 of operator op for the given QuantumState.";
+
+G2Coherence::usage = 
+"\!\(G2Coherence[state]\) Computes the second-order coherence function g^2(0) for the given single mode QuantumState.";
+
+G1Correlation::usage = 
+"\!\(G1Correlation[state,{{r1,t1},{r2,t2}}]\) Computes the first-order correlation function G^1(x1,x2) for the given single mode QuantumState for space-time coordinates r1,t1,r2,t2";
+
+WignerRepresentation::usage = 
+"\!\(WignerRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Wigner quasi-probability distribution W(x,p). Returns an InterpolatingFunction over the specified phase space region.
+\!\(WignerRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\)(default), \"GridSize\" \[Rule] 100 (default).";
+
+HusimiQRepresentation::usage = 
+"\!\(HusimiQRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified phase space region.
+\!\(HusimiQRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\) (default), \"GridSize\" -> 100 (default).";
+
+
 (* ::Section:: *)
 (*General Definitions*)
 
@@ -50,7 +126,32 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-G2Coherence[\[Psi]_QuantumState,aOp_QuantumOperator]:= (SuperDagger[\[Psi]]@(SuperDagger[aOp]@SuperDagger[aOp]@aOp@aOp)@\[Psi])["Scalar"]/(SuperDagger[\[Psi]]@(SuperDagger[aOp]@aOp)@\[Psi])["Scalar"]^2
+G2Coherence[\[Psi]_QuantumState] := Module[{numerator, denominator, a2Op, aOp, nOp},
+    aOp = AnnihilationOperator[\[Psi]["Dimension"]];
+    nOp = SuperDagger[aOp] @ aOp;
+    a2Op = SuperDagger[aOp] @ SuperDagger[aOp] @ aOp @ aOp;
+    If[\[Psi]["PureStateQ"],
+        (* Pure state: use inner product formula *)
+        numerator = (SuperDagger[\[Psi]] @ a2Op @ \[Psi])["Scalar"];
+        denominator = (SuperDagger[\[Psi]] @ nOp @ \[Psi])["Scalar"]
+    ,
+        (* Mixed state: use trace formula Tr(\[Rho]O) *)
+        numerator = Tr[\[Psi]["DensityMatrix"] . a2Op["Matrix"]];
+        denominator = Tr[\[Psi]["DensityMatrix"] . nOp["Matrix"]]
+    ];
+    numerator / denominator^2
+]
+
+
+G1Correlation[state_QuantumState,{{r1_,t1_},{r2_,t2_}}]:=Module[{aOp,Eminus1,Eplus2},
+	aOp=AnnihilationOperator[state["Dimension"]];
+	Eminus1=-I SuperDagger[aOp] Exp[-I(\[FormalK] . r1-\[FormalOmega] t1)];
+	Eplus2=I aOp Exp[I(\[FormalK] . r2-\[FormalOmega] t2)];
+	If[state["PureStateQ"],
+		(SuperDagger[state]@Eminus1@Eplus2@state)["Scalar"],
+		Tr[state["DensityMatrix"] . (Eminus1@Eplus2)["Matrix"]]
+	]
+]
 
 
 FockState::clip = "Index `1` was outside the valid range {0, `2`} and has been clipped.";
@@ -87,18 +188,18 @@ AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= Annihilati
 
 CoherentState[size_:$FockSize] :=
     Block[{n=0},
-       QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, size - 1], size, "Parameters" -> \[FormalAlpha]]
+       QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, size - 1], size, "Parameters" -> \[FormalAlpha]]["Normalize"]
     ]
 
 
 ThermalState[nbar_, size_:$FockSize] :=
     QuantumOperator[
-        DiagonalMatrix[1 / (1 + nbar) 
-            Table[(nbar / (1 + nbar)) ^ n, 
+        DiagonalMatrix[1 / (1 + nbar)
+            Table[(nbar / (1 + nbar)) ^ n,
            {n, 0, size-1}
           ]
-        ], 
-    size]["MatrixQuantumState"]
+        ],
+    size]["MatrixQuantumState"]["Normalize"]
 
 
 PhaseShiftOperator[\[Theta]_,order_?orderQ]:= PhaseShiftOperator[\[Theta], $FockSize, order]
