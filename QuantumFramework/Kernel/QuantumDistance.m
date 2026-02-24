@@ -37,7 +37,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /;
     s = qs1["Computational"]["DensityMatrix"],
     t = qs2["Computational"]["DensityMatrix"]
 },
-    Chop[Tr[s . t]]
+    1 - Chop[Tr[s . t]]
 ]
 
 
@@ -63,7 +63,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dim
 QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] :=
     Block[{d = QuantumDistance[qs1, qs2, distance]},
         Switch[distance,
-            "Fidelity" | "Trace" | "Bloch",
+            "Fidelity" | "Trace" | "Bloch" | "RelativePurity",
                 1 - d,
             "Bures",
                 1 - d / Sqrt[2],
@@ -71,8 +71,6 @@ QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : 
                 1 - d / (Pi / 2),
             "HilbertSchmidt",
                 1 - d / Sqrt[2],
-            "RelativePurity",
-                d, (* already a similarity measure: Tr[ρσ] ∈ [0,1] *)
             "RelativeEntropy",
                 2 ^ (-Replace[d, q_Quantity :> QuantityMagnitude[q]]), (* exponential decay for unbounded metric *)
             _,

@@ -90,8 +90,8 @@ VerificationTest[
 
 (* Bures distance range is [0, Sqrt[2]] *)
 VerificationTest[
-    Chop[QuantumDistance[qs0, qs1, "Bures"] - Sqrt[2]],
-    0,
+    QuantumDistance[qs0, qs1, "Bures"],
+    Sqrt[2],
     TestID -> "Bures-MaxDistance"
 ]
 
@@ -113,8 +113,8 @@ VerificationTest[
 
 (* BuresAngle range is [0, Pi/2] *)
 VerificationTest[
-    Chop[QuantumDistance[qs0, qs1, "BuresAngle"] - Pi / 2],
-    0,
+    QuantumDistance[qs0, qs1, "BuresAngle"],
+    Pi / 2,
     TestID -> "BuresAngle-MaxDistance"
 ]
 
@@ -128,8 +128,8 @@ VerificationTest[
 (* ========== HilbertSchmidt ========== *)
 
 VerificationTest[
-    Chop[QuantumDistance[qs0, qs1, "HilbertSchmidt"] - Sqrt[2]],
-    0,
+    QuantumDistance[qs0, qs1, "HilbertSchmidt"],
+    Sqrt[2],
     TestID -> "HilbertSchmidt-OrthogonalStates"
 ]
 
@@ -144,8 +144,8 @@ VerificationTest[
 
 (* Bloch distance between antipodal states on Bloch sphere *)
 VerificationTest[
-    Chop[QuantumDistance[qs0, qs1, "Bloch"] - 1],
-    0,
+    QuantumDistance[qs0, qs1, "Bloch"],
+    1,
     TestID -> "Bloch-AntipodalStates"
 ]
 
@@ -161,14 +161,14 @@ VerificationTest[
 (* Tr[rho . rho] = 1 for pure state with itself *)
 VerificationTest[
     QuantumDistance[qs0, qs0, "RelativePurity"],
-    1,
+    0,
     TestID -> "RelativePurity-SameState"
 ]
 
 (* Orthogonal pure states -> Tr[rho . sigma] = 0 *)
 VerificationTest[
     QuantumDistance[qs0, qs1, "RelativePurity"],
-    0,
+    1,
     TestID -> "RelativePurity-OrthogonalStates"
 ]
 
