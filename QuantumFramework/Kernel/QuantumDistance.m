@@ -37,7 +37,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /;
     s = qs1["Computational"]["DensityMatrix"],
     t = qs2["Computational"]["DensityMatrix"]
 },
-    Chop[Tr[s . t]]
+    1 - Chop[Tr[s . t]]
 ]
 
 
@@ -48,10 +48,10 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] /; qs1["Dim
 ]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bures"] /; qs1["Dimension"] == qs2["Dimension"]  :=
-    Sqrt[2 (1 - QuantumDistance[qs1, qs2, "Fidelity"])]
+    Sqrt[2 QuantumDistance[qs1, qs2, "Fidelity"]]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "BuresAngle"] /; qs1["Dimension"] == qs2["Dimension"]  :=
-    Re @ ArcCos @ QuantumDistance[qs1, qs2, "Fidelity"]
+    Re @ ArcCos[1 - QuantumDistance[qs1, qs2, "Fidelity"]]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "HilbertSchmidt"] /; qs1["Dimension"] == qs2["Dimension"] :=
     Sqrt @ Re @ Tr @ MatrixPower[qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"], 2]
@@ -60,5 +60,21 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dim
     Re @ EuclideanDistance[qs1["BlochCartesianCoordinates"], qs2["BlochCartesianCoordinates"]] / 2
 
 
-QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] := 1 - QuantumDistance[qs1, qs2, distance]
+QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] :=
+    Block[{d = QuantumDistance[qs1, qs2, distance]},
+        Switch[distance,
+            "Fidelity" | "Trace" | "Bloch" | "RelativePurity",
+                1 - d,
+            "Bures",
+                1 - d / Sqrt[2],
+            "BuresAngle",
+                1 - d / (Pi / 2),
+            "HilbertSchmidt",
+                1 - d / Sqrt[2],
+            "RelativeEntropy",
+                2 ^ (-Replace[d, q_Quantity :> QuantityMagnitude[q]]), (* exponential decay for unbounded metric *)
+            _,
+                1 - d
+        ]
+    ]
 
