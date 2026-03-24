@@ -165,6 +165,14 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 									If[MemberQ[target, #[[2]]], subLabel, "1"]
 								}] & /@ Partition[Sort[vpos], 2, 1]
 							},
+							MatchQ[Differences[Sort[target]], {1 ..}],
+							{
+								drawGate[{target, hpos}, dims, subLabel, "IdentityGate" -> True, opts],
+								drawControlWires[#, {
+									If[MemberQ[target, #[[1]]], subLabel, "1"],
+									If[MemberQ[target, #[[2]]], subLabel, "1"]
+								}] & /@ Select[Partition[Sort[vpos], 2, 1], ! ContainsAll[target, #] &]
+							},
 							True,
 							{
 								Map[drawGate[{{#}, hpos}, dims, Subscript[subLabel, #], "IdentityGate" -> True, opts] &, target],
