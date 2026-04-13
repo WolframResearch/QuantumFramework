@@ -44,7 +44,9 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] :=
     If[ qs["VectorQ"],
-        Re @ Sqrt[2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition], {1}] ^ 2)["Norm"])],
+        With[{val = 2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition], {1}] ^ 2)["Norm"])},
+            Sqrt[If[NumericQ[val], Max[0, Re[val]], val]]
+        ],
         Concurrence[qs, biPartition]
     ]
 
@@ -71,11 +73,12 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Reny
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
     Enclose[
-        Re[(1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
+        With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
             QuantumPartialTrace[
                 ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &],
                 {1}
-            ]["DensityMatrix"], alpha]]
+            ]["DensityMatrix"], alpha]]},
+            If[NumericQ[val], Re[val], val]
         ]
     ]
 
