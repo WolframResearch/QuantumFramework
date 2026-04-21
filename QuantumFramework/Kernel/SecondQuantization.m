@@ -186,10 +186,17 @@ AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= Annihilati
 	order, size]
 
 
-CoherentState[size_:$FockSize] :=
-    Block[{n=0},
-       QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, size - 1], size, "Parameters" -> \[FormalAlpha]]["Normalize"]
-    ]
+Options[CoherentState] = {"Normalized" -> True};
+
+CoherentState[size_Integer: $FockSize, OptionsPattern[]] := 
+ Block[{n = 0},
+  If[OptionValue["Normalized"], #["Normalize"] &, Identity] @
+   QuantumState[
+    NestList[(n++; # \[FormalAlpha] / Sqrt[n]) &, 1, size - 1], 
+    size, 
+    "Parameters" -> \[FormalAlpha]
+   ]
+ ]
 
 
 ThermalState[nbar_, size_:$FockSize] :=
