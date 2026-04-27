@@ -40,12 +40,6 @@ FromCircuitOperatorShorthand[op : Except[_ ? QuantumCircuitOperatorQ, _ ? Quantu
 FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
 
 
-QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
-    QuantumCircuitOperator[<|
-        "Elements" -> ops, 
-        "Label" -> If[# === {} || MemberQ[#, None], None, Composition @@ Reverse @ #] & @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]]
-    |>]
-]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
@@ -53,7 +47,8 @@ QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperat
 
 QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = ToList @ OptionValue["Parameters"], picture = OptionValue["Picture"]},
     QuantumCircuitOperator[With[{
-        ops = (Confirm[If[BarrierQ[#], #, Head[#][#, "Parameters" -> Join[#["ParameterSpec"], parameters], "Picture" -> Replace[picture, Automatic | None :> #["Picture"]]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
+        ops = (Confirm[If[BarrierQ[#] || parameters === {} && MatchQ[picture, Automatic | None], #,
+            Head[#][#, "Parameters" -> Join[#["ParameterSpec"], parameters], "Picture" -> Replace[picture, Automatic | None :> #["Picture"]]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
     },
         <|
             "Elements" -> ops,
