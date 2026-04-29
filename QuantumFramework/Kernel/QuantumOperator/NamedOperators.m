@@ -376,7 +376,7 @@ QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[
     Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control, control0}, opts]
 
 QuantumOperator[{name : "C0" | "Controlled0", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
-    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperartorQ], control0}, opts]
+    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control0}, opts]
 
 
 QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ}, opts___] :=
@@ -852,7 +852,7 @@ QuantumOperator[{"Switch"}, order : _ ? orderQ : {1, 2}, opts___] :=
     QuantumOperator[{"Switch", QuantumOperator["RandomUnitary", "Label" -> "A"], QuantumOperator["RandomUnitary", "Label" -> "B"]}, order, opts]
 
 
-QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperartor[{"HeisenbergWeyl", 2}, opts]
+QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperator[{"HeisenbergWeyl", 2}, opts]
 
 QuantumOperator[{"HeisenbergWeyl", p_Integer ? Positive, i_Integer : 0, a_ : \[FormalA]}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
     QuantumOperator[
