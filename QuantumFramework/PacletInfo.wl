@@ -22,7 +22,6 @@ PacletObject[
           "Wolfram`QuantumFramework`Init`",
           "Wolfram`QuantumFramework`Gates`",
           "Wolfram`QuantumFramework`Experimental`",
-          "Wolfram`QuantumFramework`ExampleRepository`",
           "Wolfram`QuantumFramework`DiagramPlot`",
           "Wolfram`QuantumFramework`SecondQuantization`",
           "Wolfram`QuantumFramework`QuantumOptimization`"
