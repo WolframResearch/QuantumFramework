@@ -69,7 +69,7 @@ UGate::usage = "UGate[theta, phi, lambda] — General single-qubit gate (U3).";
 QuantumGateQ[_XGate | _YGate | _ZGate | _HGate | _SGate | _TGate | _CXGate | _CYGate | _CZGate |
   _SWAPGate | _CCXGate | _CSWAPGate | _PhaseGate | _SXGate | _SXdgGate | _IdentityGate |
   _RXGate | _RYGate | _RZGate | _RXXGate | _RYYGate | _RZZGate | _RZXGate |
-  _U1Gate | __U2Gate | _U3Gate | _UGate
+  _U1Gate | _U2Gate | _U3Gate | _UGate
 ] := True
 QuantumGateQ[_] := False
 
@@ -99,7 +99,7 @@ QuantumOperator[RZGate[theta_ : 0], args___] := QuantumOperator["RZ"[theta], arg
 QuantumOperator[RXXGate[theta_ : 0], args___] := QuantumOperator["R"[theta, "XX"], args]
 QuantumOperator[RYYGate[theta_ : 0], args___] := QuantumOperator["R"[theta, "YY"], args]
 QuantumOperator[RZZGate[theta_ : 0], args___] := QuantumOperator["R"[theta, "ZZ"], args]
-QuantumOperator[RZXGate[theta_ : 0], args___] := QuantumOperator["R"[theta, "YX"], args]
+QuantumOperator[RZXGate[theta_ : 0], args___] := QuantumOperator["R"[theta, "ZX"], args]
 
 QuantumOperator[U1Gate[lambda_ : Pi], args___] := QuantumOperator["U1"[lambda], args]
 QuantumOperator[U2Gate[phi_ : 0, lambda_ : Pi], args___] := QuantumOperator["U2"[phi, lambda], args]
