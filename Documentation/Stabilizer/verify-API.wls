@@ -1,0 +1,481 @@
+#!/usr/bin/env wolframscript
+
+(* Verifier for Documentation/Stabilizer/API.md.
+   Each block-id heading marks a code example referenced in the API doc; the
+   verifier re-runs every block and prints labeled output. The MD's output
+   blocks should match this script's output verbatim. *)
+
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+
+block[id_, expr_] := Module[{result},
+    result = expr;
+    Print["=== ", id, " ==="];
+    Print[ToString[result, InputForm]];
+    Print[]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer constructors                                                 *)
+(* ============================================================================ *)
+
+block["PS-ctor-string-list",
+    PauliStabilizer[{"XX", "ZZ"}]["Stabilizers"]
+];
+
+block["PS-ctor-string-list-signed",
+    PauliStabilizer[{"-XX", "+ZZ"}]["StabilizerSigns"]
+];
+
+block["PS-ctor-stab-destab",
+    With[{ps = PauliStabilizer[{"XX", "ZZ"}, {"IX", "ZI"}]},
+        {ps["Stabilizers"], ps["Destabilizers"]}
+    ]
+];
+
+block["PS-ctor-integer",
+    With[{ps = PauliStabilizer[3]},
+        {ps["Qubits"], ps["Stabilizers"], ps["Destabilizers"]}
+    ]
+];
+
+block["PS-ctor-named-5Q",
+    With[{ps = PauliStabilizer["5QubitCode"]},
+        {ps["Qubits"], ps["GeneratorCount"], ps["Stabilizers"]}
+    ]
+];
+
+block["PS-ctor-named-Steane",
+    With[{ps = PauliStabilizer["SteaneCode"]},
+        {ps["Qubits"], ps["GeneratorCount"], ps["Stabilizers"][[7]]}
+    ]
+];
+
+block["PS-ctor-from-circuit",
+    PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Stabilizers"]
+];
+
+block["PS-ctor-from-operator",
+    PauliStabilizer[QuantumOperator["H", 1]]["Stabilizers"]
+];
+
+block["PS-ctor-random",
+    Block[{},
+        SeedRandom[20260430];
+        With[{ps = PauliStabilizer["Random", 3]},
+            {ps["Qubits"], ps["Stabilizers"]}
+        ]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer properties                                                   *)
+(* ============================================================================ *)
+
+block["PS-prop-shape",
+    With[{ps = PauliStabilizer["5QubitCode"]},
+        <|
+            "Qubits"           -> ps["Qubits"],
+            "GeneratorCount"   -> ps["GeneratorCount"],
+            "Tableau-shape"    -> Dimensions[ps["Tableau"]],
+            "Matrix-shape"     -> Dimensions[ps["Matrix"]],
+            "Signs-length"     -> Length[ps["Signs"]]
+        |>
+    ]
+];
+
+block["PS-prop-stabilizer-vs-destabilizer",
+    With[{ps = PauliStabilizer["5QubitCode"]},
+        <|
+            "Stabilizers"        -> ps["Stabilizers"],
+            "Destabilizers"      -> ps["Destabilizers"],
+            "StabilizerSigns"    -> ps["StabilizerSigns"],
+            "DestabilizerSigns"  -> ps["DestabilizerSigns"]
+        |>
+    ]
+];
+
+block["PS-prop-XZ-bits",
+    With[{ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        <|
+            "X" -> ps["X"],
+            "Z" -> ps["Z"],
+            "Phase" -> ps["Phase"]
+        |>
+    ]
+];
+
+block["PS-prop-pauli-strings",
+    With[{ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        ps["PauliStrings"]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer Clifford gate methods                                        *)
+(* ============================================================================ *)
+
+block["PS-gate-H",
+    PauliStabilizer[1]["H", 1]["Stabilizers"]
+];
+
+block["PS-gate-S",
+    (* H|0> has stab X; apply S -> stab Y *)
+    PauliStabilizer[1]["H", 1]["S", 1]["Stabilizers"]
+];
+
+block["PS-gate-CNOT",
+    Sort @ PauliStabilizer[2]["H", 1]["CNOT", 1, 2]["Stabilizers"]
+];
+
+block["PS-gate-CZ",
+    Sort @ PauliStabilizer[2]["H", 1]["CZ", 1, 2]["Stabilizers"]
+];
+
+block["PS-gate-SWAP",
+    Sort @ PauliStabilizer[2]["H", 1]["SWAP", 1, 2]["Stabilizers"]
+];
+
+block["PS-gate-X",
+    (* X gate flips phase row where X-bit = 1 *)
+    With[{ps5 = PauliStabilizer["5QubitCode"]},
+        ps5["X", 1]["StabilizerSigns"]
+    ]
+];
+
+block["PS-gate-Z",
+    With[{ps5 = PauliStabilizer["5QubitCode"]},
+        ps5["Z", 3]["StabilizerSigns"]
+    ]
+];
+
+block["PS-gate-Sdag-V-Vdag",
+    With[{ps = PauliStabilizer[1]["H", 1]},
+        <|
+            "Sdag-on-X" -> ps[SuperDagger["S"], 1]["Stabilizers"],
+            "V-on-X"    -> ps["V", 1]["Stabilizers"],
+            "Vdag-on-X" -> ps[SuperDagger["V"], 1]["Stabilizers"]
+        |>
+    ]
+];
+
+block["PS-gate-arrow-form",
+    (* op -> order convenience syntax *)
+    With[{ps = PauliStabilizer[2]["H" -> 1]["CNOT" -> {1, 2}]},
+        Sort @ ps["Stabilizers"]
+    ]
+];
+
+block["PS-gate-T-returns-frame",
+    (* T is non-Clifford; result is StabilizerFrame *)
+    Head @ PauliStabilizer[1]["T", 1]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer measurement                                                  *)
+(* ============================================================================ *)
+
+block["PS-measure-Z-deterministic",
+    (* |0> measured in Z is deterministic, outcome 0 *)
+    PauliStabilizer[1]["M", 1]
+];
+
+block["PS-measure-Z-random",
+    (* H|0> = |+> measured in Z is random, both outcomes *)
+    Sort @ Keys @ PauliStabilizer[1]["H", 1]["M", 1]
+];
+
+block["PS-measure-Pauli-string",
+    (* 5Q code state stabilizer measurement gives 0 deterministically *)
+    With[{ps5 = PauliStabilizer["5QubitCode"]},
+        Keys @ ps5["M", "XZZXI"]
+    ]
+];
+
+block["PS-measure-multi-qubit",
+    (* Multi-qubit measurement returns Association keyed by tuples *)
+    With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        Sort @ Keys @ psBell["M", {1, 2}]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer composition + tensor                                         *)
+(* ============================================================================ *)
+
+block["PS-compose",
+    (* Apply ps2 after ps1: ps1[ps2] (note: this is composition of Cliffords) *)
+    Module[{psH = PauliStabilizer[1]["H", 1]["S", 1]["H", 1], expected},
+        (* HSH on |0>: H -> |+>, S -> |+i>, H -> ... *)
+        psH["Stabilizers"]
+    ]
+];
+
+block["PS-tensor-product",
+    With[{a = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]],
+          b = PauliStabilizer[1]},
+        QuantumTensorProduct[a, b]["Stabilizers"]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* PauliStabilizer conversions                                                  *)
+(* ============================================================================ *)
+
+block["PS-conv-State",
+    (* Materialize Bell state *)
+    With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        Normal @ psBell["State"]["StateVector"]
+    ]
+];
+
+block["PS-conv-Circuit-equivalence",
+    (* ps['Circuit'] returns a Clifford circuit whose dagger equals ps.
+       Verification: applying the circuit to |0...0> reproduces the original
+       state vector (up to global phase). String equality of stabilizer
+       generators does NOT hold (different but equivalent generating sets). *)
+    Module[{psBell, circ, fromCircuit, vec1, vec2, ratio},
+        psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
+        circ = psBell["Circuit"];
+        fromCircuit = PauliStabilizer[circ];
+        vec1 = N @ Normal @ psBell["State"]["StateVector"];
+        vec2 = N @ Normal @ fromCircuit["State"]["StateVector"];
+        (* Up to global phase: the inner product magnitude should be 1 *)
+        Chop @ Abs[Conjugate[vec1] . vec2] - 1
+    ]
+];
+
+
+(* ============================================================================ *)
+(* RandomClifford                                                               *)
+(* ============================================================================ *)
+
+block["RandomClifford-basic",
+    Block[{},
+        SeedRandom[42];
+        With[{r = RandomClifford[3]},
+            <|"Qubits" -> r["Qubits"], "Stabilizers" -> r["Stabilizers"]|>
+        ]
+    ]
+];
+
+block["RandomClifford-uniformity-n1",
+    Block[{},
+        SeedRandom[42];
+        Length @ DeleteDuplicates @ Table[
+            With[{r = RandomClifford[1]}, {r["Stabilizers"], r["Signs"]}],
+            {200}
+        ]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* StabilizerMeasure / SubstituteOutcomes / SampleOutcomes                      *)
+(* ============================================================================ *)
+
+block["StabilizerMeasure-deterministic",
+    (* |0> Z-measurement is deterministic, returns post-state directly *)
+    With[{ps = PauliStabilizer[1]},
+        StabilizerMeasure[ps, 1]["Stabilizers"]
+    ]
+];
+
+block["StabilizerMeasure-symbolic",
+    (* H|0> Z-measurement is non-deterministic, allocates a fresh symbol *)
+    Module[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
+        <|
+            "Head"          -> Head[psSym],
+            "Phase"         -> psSym["Phase"],
+            "FreshSymbols"  -> DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity]
+        |>
+    ]
+];
+
+block["SubstituteOutcomes-roundtrip",
+    Module[{psSym, sym, ps0, ps1Reg},
+        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
+        sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
+        ps0 = SubstituteOutcomes[psSym, sym -> 0];
+        ps1Reg = SubstituteOutcomes[psSym, sym -> 1];
+        <|
+            "outcome 0 stabilizers" -> ps0["Stabilizers"],
+            "outcome 1 stabilizers" -> ps1Reg["Stabilizers"]
+        |>
+    ]
+];
+
+block["SampleOutcomes-multiple",
+    Block[{},
+        SeedRandom[42];
+        With[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
+            #["Stabilizers"] & /@ SampleOutcomes[psSym, 10]
+        ]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* StabilizerFrame                                                              *)
+(* ============================================================================ *)
+
+block["StabilizerFrame-from-T",
+    (* T gate produces 2-component frame *)
+    With[{psT = PauliStabilizer[1]["T", 1]},
+        <|
+            "Head"         -> Head[psT],
+            "Length"       -> psT["Length"],
+            "Coefficients" -> psT["Coefficients"]
+        |>
+    ]
+];
+
+block["StabilizerFrame-from-PS",
+    (* Build a frame from a single PauliStabilizer (coefficient = 1) *)
+    With[{f = StabilizerFrame[PauliStabilizer[1]]},
+        <|"Length" -> f["Length"], "Components" -> f["Components"]|>
+    ]
+];
+
+block["StabilizerFrame-Clifford-distributes",
+    (* Apply Clifford to a frame: distributes over components *)
+    With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]},
+        With[{fH = f["H", 1]},
+            <|"Length" -> fH["Length"], "Stabilizers-each" -> #["Stabilizers"] & /@ fH["Stabilizers"]|>
+        ]
+    ]
+];
+
+block["StabilizerFrame-T-on-zero-equals-zero",
+    (* T|0> materialization: should equal |0> after FullSimplify *)
+    Module[{psT = PauliStabilizer[1]["T", 1], vec},
+        vec = Normal @ psT["StateVector"];
+        Chop @ N @ FullSimplify[vec - {1, 0}]
+    ]
+];
+
+block["StabilizerFrame-TT",
+    (* T^2 produces a 4-component frame *)
+    With[{psT2 = PauliStabilizer[1]["H", 1]["T", 1]["T", 1]},
+        {Head[psT2], psT2["Length"]}
+    ]
+];
+
+
+(* ============================================================================ *)
+(* StabilizerInnerProduct                                                       *)
+(* ============================================================================ *)
+
+block["InnerProduct-self",
+    With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        StabilizerInnerProduct[psBell, psBell]
+    ]
+];
+
+block["InnerProduct-orthogonal",
+    Module[{psPhiPlus, psPhiMinus},
+        psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
+        psPhiMinus = psPhiPlus["Z", 1];
+        Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
+    ]
+];
+
+block["InnerProduct-frame",
+    (* Inner product between StabilizerFrame and PauliStabilizer *)
+    With[{psT = PauliStabilizer[1]["T", 1], ps0 = PauliStabilizer[1]},
+        FullSimplify @ StabilizerInnerProduct[psT, ps0]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* StabilizerExpectation                                                        *)
+(* ============================================================================ *)
+
+block["Expectation-stabilizer-element",
+    With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        <|
+            "<XX>" -> StabilizerExpectation[psBell, "XX"],
+            "<ZZ>" -> StabilizerExpectation[psBell, "ZZ"],
+            "<YY>" -> StabilizerExpectation[psBell, "YY"]
+        |>
+    ]
+];
+
+block["Expectation-anticommuting",
+    With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        StabilizerExpectation[psBell, "XI"]
+    ]
+];
+
+block["Expectation-5Q-syndromes",
+    With[{ps5 = PauliStabilizer["5QubitCode"]},
+        StabilizerExpectation[ps5, #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
+    ]
+];
+
+
+(* ============================================================================ *)
+(* GraphState / LocalComplement                                                 *)
+(* ============================================================================ *)
+
+block["GraphState-from-Graph",
+    With[{gs = GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]]},
+        <|
+            "Vertices"    -> gs["VertexCount"],
+            "Edges"       -> gs["EdgeCount"],
+            "Stabilizers" -> gs["Stabilizers"]
+        |>
+    ]
+];
+
+block["GraphState-cluster5",
+    GraphState[Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]]["Stabilizers"]
+];
+
+block["GraphState-to-PauliStabilizer",
+    With[{gs = GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]]},
+        gs["PauliStabilizer"]["Stabilizers"]
+    ]
+];
+
+block["LocalComplement-star",
+    With[{g = Graph[{1, 2, 3, 4}, {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4}]},
+        Sort @ EdgeList @ LocalComplement[g, 1]
+    ]
+];
+
+block["LocalComplement-involutive",
+    With[{g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]},
+        Sort @ EdgeList @ LocalComplement[LocalComplement[g, 3], 3] === Sort @ EdgeList[g]
+    ]
+];
+
+
+(* ============================================================================ *)
+(* Integration: Method -> "Stabilizer"                                          *)
+(* ============================================================================ *)
+
+block["Integration-Method-Stabilizer",
+    QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][Method -> "Stabilizer"]["Stabilizers"]
+];
+
+block["Integration-named-circuits",
+    QuantumCircuitOperator["GHZ"[3]][Method -> "Stabilizer"]["Stabilizers"]
+];
+
+block["Integration-UpValues",
+    (* QuantumOperator['H', 1] @ ps applies via PauliStabilizerApply *)
+    With[{ps = PauliStabilizer[1]},
+        (QuantumOperator["H", 1] @ ps)["Stabilizers"]
+    ]
+];
+
+
+Print["=== ALL BLOCKS COMPLETE ==="];

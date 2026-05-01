@@ -66,9 +66,9 @@ StabilizerFrame[assoc_Association][prop_String] /; KeyExistsQ[assoc, prop] := as
 f_StabilizerFrame["Coefficients"] := f["Components"][[All, 1]]
 f_StabilizerFrame["Stabilizers"] := f["Components"][[All, 2]]
 f_StabilizerFrame["Length"] := Length[f["Components"]]
-f_StabilizerFrame["Qubits"] := f["Components"][[1, 2, "Qubits"]]
-f_StabilizerFrame["Qudits"] := f["Components"][[1, 2, "Qubits"]]
-f_StabilizerFrame["GeneratorCount"] := f["Components"][[1, 2, "GeneratorCount"]]
+f_StabilizerFrame["Qubits"] := f["Components"][[1, 2]]["Qubits"]
+f_StabilizerFrame["Qudits"] := f["Components"][[1, 2]]["Qubits"]
+f_StabilizerFrame["GeneratorCount"] := f["Components"][[1, 2]]["GeneratorCount"]
 
 
 (* ============================================================================ *)
