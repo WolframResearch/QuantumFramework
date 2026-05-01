@@ -1618,4 +1618,100 @@ VerificationTest[
 ]
 
 
+(* ============================================================================ *)
+(* TIER 8 \[Dash] Phase 5: Graph state + Local complement                       *)
+(* ============================================================================ *)
+
+(* GraphState predicate + basic structure *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`GraphStateQ @ GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]],
+    True,
+    TestID -> "Phase5-GraphState-Predicate"
+]
+
+VerificationTest[
+    GraphState[Graph[Range[5], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3, 3 \[UndirectedEdge] 4, 4 \[UndirectedEdge] 5}]]["Qubits"],
+    5,
+    TestID -> "Phase5-GraphState-VertexCount"
+]
+
+(* GraphState stabilizers: K_i = X_i \[CircleTimes] Z_{neighbors of i}
+   Linear chain on 3 vertices: K_1 = XZI, K_2 = ZXZ, K_3 = IZX *)
+VerificationTest[
+    GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]]["Stabilizers"],
+    {"XZI", "ZXZ", "IZX"},
+    TestID -> "Phase5-GraphState-LinearCluster3-Stabilizers"
+]
+
+(* Linear cluster on 5 vertices *)
+VerificationTest[
+    GraphState[Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]]["Stabilizers"],
+    {"XZIII", "ZXZII", "IZXZI", "IIZXZ", "IIIZX"},
+    TestID -> "Phase5-GraphState-LinearCluster5-Stabilizers"
+]
+
+(* GraphState <-> PauliStabilizer round-trip: stabilizers match cluster-state circuit *)
+VerificationTest[
+    Module[{gs, ps, psFromCirc},
+        gs = GraphState[Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]];
+        ps = gs["PauliStabilizer"];
+        psFromCirc = PauliStabilizer[QuantumCircuitOperator[
+            Join[Table["H" -> i, {i, 5}], Table["CZ" -> {i, i + 1}, {i, 4}]]
+        ]];
+        ps["Stabilizers"] === psFromCirc["Stabilizers"]
+    ],
+    True,
+    TestID -> "Phase5-GraphState-MatchesClusterCircuit"
+]
+
+(* LocalComplement at a vertex with no neighbors leaves graph unchanged *)
+VerificationTest[
+    Module[{g = Graph[{1, 2, 3}, {1 \[UndirectedEdge] 2}]},
+        EdgeList[LocalComplement[g, 3]]
+    ],
+    {1 \[UndirectedEdge] 2},
+    TestID -> "Phase5-LocalComplement-IsolatedVertex"
+]
+
+(* LocalComplement at a star center: turns star into complete graph on the leaves *)
+VerificationTest[
+    Module[{g = Graph[{1, 2, 3, 4}, {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4}]},
+        Sort @ EdgeList[LocalComplement[g, 1]]
+    ],
+    Sort @ {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4,
+            2 \[UndirectedEdge] 3, 2 \[UndirectedEdge] 4, 3 \[UndirectedEdge] 4},
+    TestID -> "Phase5-LocalComplement-StarToWheel"
+]
+
+(* LocalComplement is involutive: LC[LC[g, v], v] == g *)
+VerificationTest[
+    Module[{g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]], gLC, gLC2},
+        gLC = LocalComplement[g, 3];
+        gLC2 = LocalComplement[gLC, 3];
+        Sort @ EdgeList[gLC2] === Sort @ EdgeList[g]
+    ],
+    True,
+    TestID -> "Phase5-LocalComplement-Involutive"
+]
+
+(* AndBri05 Thm 1: LC preserves entanglement spectrum (Phase 5 hand-applied;
+   full VOP-tracked LC deferred). For a 4-vertex linear cluster, LC at vertex 2
+   preserves the bipartite entanglement entropy across {1,2}|{3,4}. *)
+VerificationTest[
+    Module[{gOrig, gLC, psOrig, psLC, vec1, vec2, rank1, rank2},
+        gOrig = Graph[Range[4], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3, 3 \[UndirectedEdge] 4}];
+        gLC = LocalComplement[gOrig, 2];
+        psOrig = GraphState[gOrig]["PauliStabilizer"];
+        psLC = GraphState[gLC]["PauliStabilizer"];
+        vec1 = psOrig["State"]["StateVector"];
+        vec2 = psLC["State"]["StateVector"];
+        rank1 = MatrixRank @ ArrayReshape[vec1, {4, 4}];
+        rank2 = MatrixRank @ ArrayReshape[vec2, {4, 4}];
+        rank1 == rank2
+    ],
+    True,
+    TestID -> "Phase5-LocalComplement-PreservesSchmidtRank"
+]
+
+
 EndTestSection[]

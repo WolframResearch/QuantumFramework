@@ -54,7 +54,9 @@ PacletObject[
           "Wolfram`QuantumFramework`SampleOutcomes",
           "Wolfram`QuantumFramework`StabilizerFrame",
           "Wolfram`QuantumFramework`StabilizerInnerProduct",
-          "Wolfram`QuantumFramework`StabilizerExpectation"
+          "Wolfram`QuantumFramework`StabilizerExpectation",
+          "Wolfram`QuantumFramework`GraphState",
+          "Wolfram`QuantumFramework`LocalComplement"
         }
       },
       {"Documentation", "Language" -> "English"},

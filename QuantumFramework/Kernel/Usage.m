@@ -661,3 +661,15 @@ StabilizerInnerProduct::usage =
 StabilizerExpectation::usage =
 "StabilizerExpectation[ps, \"XZZXI\"] returns <psi|P|psi> for an arbitrary Pauli string P.\n" <>
 "Returns +-1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation value computed via direct vector materialization for Paulis in N(S) \\\\ S."
+
+GraphState::usage =
+"GraphState[g] constructs a graph state from a Graph (with all-identity vertex operators).\n" <>
+"GraphState[ps] constructs a graph state from a graph-form PauliStabilizer (stabilizers of the form X_i \\[CenterDot] Product_j Z_j).\n" <>
+"For a graph state, the stabilizer at vertex i is K_i = X_i \\[CircleTimes] Product_{j \\[Element] N(i)} Z_j (AndBri05 Eq 1).\n" <>
+"Reference: Anders & Briegel, arxiv:quant-ph/0504117, Section 2."
+
+LocalComplement::usage =
+"LocalComplement[g, v] returns the graph obtained by complementing all edges among the neighbors of vertex v.\n" <>
+"LocalComplement[gs, v] applies the operation to a GraphState (Phase 5 v1: does not update vertex operators).\n" <>
+"Theorem (AndBri05 Thm 1): the resulting graph state differs from the original by a local unitary; entanglement spectrum is preserved.\n" <>
+"Reference: Anders & Briegel, arxiv:quant-ph/0504117, Definition 1."
