@@ -46,7 +46,15 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumChannel",
           "Wolfram`QuantumFramework`QuantumStateEstimate",
           "Wolfram`QuantumFramework`QuantumMeasurementSimulation",
-          "Wolfram`QuantumFramework`QuantumEvolve"
+          "Wolfram`QuantumFramework`QuantumEvolve",
+          "Wolfram`QuantumFramework`PauliStabilizer",
+          "Wolfram`QuantumFramework`RandomClifford",
+          "Wolfram`QuantumFramework`StabilizerMeasure",
+          "Wolfram`QuantumFramework`SubstituteOutcomes",
+          "Wolfram`QuantumFramework`SampleOutcomes",
+          "Wolfram`QuantumFramework`StabilizerFrame",
+          "Wolfram`QuantumFramework`StabilizerInnerProduct",
+          "Wolfram`QuantumFramework`StabilizerExpectation"
         }
       },
       {"Documentation", "Language" -> "English"},

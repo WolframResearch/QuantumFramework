@@ -615,3 +615,49 @@ Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \"[\", \
 StyleBox[\"names\", \"TI\"], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
 \"Source Sans Pro\"]], \" \\[LineSeparator]a convenient wrapper around qudit \
 names with special formatting\"}]]}}]], \"Usage\", Rule[CellID, 14939724]]\)"
+
+
+PauliStabilizer::usage =
+"PauliStabilizer[stabStrings] constructs a stabilizer state from a list of Pauli strings (e.g. {\"XX\", \"ZZ\"} for the Bell state).\n" <>
+"PauliStabilizer[name] returns a named stabilizer state. Names: \"5QubitCode\", \"5QubitCode1\", \"SteaneCode\", \"7QubitCode\", \"7QubitCode1\", \"SteaneCode1\", \"9QubitCode\", \"9QubitCode1\", \"Random\".\n" <>
+"PauliStabilizer[\"Random\", n] returns a uniformly random n-qubit Clifford state via the Bravyi-Maslov / Koenig-Smolin Mallows sampler.\n" <>
+"PauliStabilizer[n] returns the n-qubit |0...0> register.\n" <>
+"PauliStabilizer[qs] / [op] / [qco] converts a QuantumState / QuantumOperator / QuantumCircuitOperator (Clifford only).\n" <>
+"ps[gate, q] applies a Clifford gate (\"H\", \"S\", \"X\", \"Y\", \"Z\", \"CNOT\"->{c,t}, \"CZ\"->{c,t}, \"SWAP\"->{a,b}, \"V\", SuperDagger[\"S\"], SuperDagger[\"V\"]).\n" <>
+"ps[\"M\", q] performs Z-basis measurement on qubit q, returning <|outcome -> post_state, ...|>.\n" <>
+"ps[prop] retrieves a property; full list via ps[\"Properties\"].\n" <>
+"References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler."
+
+RandomClifford::usage =
+"RandomClifford[n] samples a uniformly random n-qubit Clifford state from |C_n| = 2^(n^2 + 2n) Product[4^j-1, {j,1,n}] elements (Koenig-Smolin Mallows distribution algorithm).\n" <>
+"Returns a PauliStabilizer object."
+
+StabilizerMeasure::usage =
+"StabilizerMeasure[ps, q] performs a symbolic Z-basis measurement on qubit q.\n" <>
+"Unlike ps[\"M\", q] (which returns an Association of conditional outcomes), StabilizerMeasure allocates a fresh F_2 outcome symbol for each non-deterministic measurement and returns a single PauliStabilizer with that symbol embedded in the appropriate phase position.\n" <>
+"Use SubstituteOutcomes[ps, rules] to plug in concrete outcome values, or SampleOutcomes[ps, n] to draw n random samples.\n" <>
+"PHASE 3 LIMITATION: deterministic outcomes following a prior symbolic measurement (e.g. Bell ZZ correlation) are not stamped into the post-state's signs -- only non-deterministic outcomes are recorded explicitly. For workflows requiring correlation extraction across multiple measurements, use ps[\"M\", q] until Phase 4 introduces StabilizerFrame.\n" <>
+"Reference: FangYing23 SymPhase (arxiv:2311.03906) Section 3."
+
+SubstituteOutcomes::usage =
+"SubstituteOutcomes[ps, rules] applies the substitution `rules` to the symbolic phase entries of `ps` and reduces back to {0, 1} mod 2.\n" <>
+"Typical use: ps_after_measurement = StabilizerMeasure[ps, q]; SubstituteOutcomes[ps_after_measurement, \\[FormalS][1] -> 0]."
+
+SampleOutcomes::usage =
+"SampleOutcomes[ps] returns one random PauliStabilizer realization by sampling each outcome symbol with a uniformly random 0 or 1.\n" <>
+"SampleOutcomes[ps, n] returns a list of n independent samples."
+
+StabilizerFrame::usage =
+"StabilizerFrame[{{c_1, ps_1}, {c_2, ps_2}, ...}] represents a superposition Sum_i c_i |s_i> of stabilizer states |s_i> with (possibly symbolic) coefficients c_i.\n" <>
+"Closes under Clifford gates -- frame[gate, q] distributes over components.\n" <>
+"Non-Clifford gates (P[\\[Theta]], T, T\\[Dagger]) double the frame size; the frame stays closed.\n" <>
+"frame[\"StateVector\"] materializes the explicit state vector (cost 2^n).\n" <>
+"Reference: Garcia-Markov 2015 (arxiv:1712.03554) Section 3."
+
+StabilizerInnerProduct::usage =
+"StabilizerInnerProduct[psi, phi] returns <psi|phi> for two PauliStabilizer or StabilizerFrame states.\n" <>
+"Phase 4 implementation: direct vector materialization (cost 2^n). TODO Phase 5+: O(n^3) closed-form algorithm of Garcia-Markov-Cross 2012 (arxiv:1210.6646)."
+
+StabilizerExpectation::usage =
+"StabilizerExpectation[ps, \"XZZXI\"] returns <psi|P|psi> for an arbitrary Pauli string P.\n" <>
+"Returns +-1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation value computed via direct vector materialization for Paulis in N(S) \\\\ S."

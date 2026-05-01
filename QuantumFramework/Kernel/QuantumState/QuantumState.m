@@ -148,6 +148,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         QuantumState[qs["State"], newBasis],
         qs["VectorQ"],
         QuantumState[
+            (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
             SparseArrayFlatten @ ConfirmQuiet[
                 Dot[
                     MatrixInverse[newBasis["Output"]["ReducedMatrix"]],
@@ -160,6 +161,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         ],
         qs["MatrixQ"],
         QuantumState[
+            (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
             ConfirmQuiet[
                 Dot[
                     MatrixInverse[newBasis["ReducedMatrix"]],

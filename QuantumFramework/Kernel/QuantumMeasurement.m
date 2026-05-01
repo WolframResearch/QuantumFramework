@@ -81,6 +81,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
         MemberQ[{"Properties", "QuantumOperator"}, prop] ||
         QuantumMeasurementProp[qm, "Basis"]["ParameterArity"] > 0,
         result,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumMeasurementProp[qm, prop, args] = result, Rule::rhs]
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
@@ -314,7 +315,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Une
         },
         {
             {
-                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qm["Entropy"]], Indeterminate &], 1]}]
+                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[Confirm[N @ qm["Entropy"]], Indeterminate &], 1]}]
             },
             {
                 BoxForm`SummaryItem[{"Parameters: ", qm["Parameters"]}]

@@ -62,7 +62,7 @@ shortcutToGate = Replace[
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     gates = Confirm @* shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
-    arity = {qco["Max"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Max"], Replace[qco["TargetArity"], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl

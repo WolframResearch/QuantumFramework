@@ -28,6 +28,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "Operator", "QuantumOperator"}, prop] &&
         QuantumChannelProp[qc, "Basis"]["ParameterArity"] == 0,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumChannelProp[qc, prop, args] = result, Rule::rhs],
         result
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumChannelProp] || Message[QuantumChannel::undefprop, prop])
