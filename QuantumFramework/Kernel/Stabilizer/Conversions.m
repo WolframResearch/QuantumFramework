@@ -60,7 +60,7 @@ QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQud
 (* ============================================================================ *)
 (* PauliStabilizer -> QuantumState.                                             *)
 (* Phase 1 cleanup: dropped "QuantumSttate" typo alias                          *)
-(* (audit/Stabilizer/paulistabilizer-source-audit.md \[Section]13.7).            *)
+(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]13.7).            *)
 (* Cost: O(4^n) -- materializes 2^n x 2^n matrices. Practical limit n <= 10.   *)
 (* ============================================================================ *)
 

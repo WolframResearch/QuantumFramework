@@ -56,7 +56,7 @@ StabilizerInnerProduct[fA_StabilizerFrame, phi_PauliStabilizer ? PauliStabilizer
 (*   - If P or -P is in S \[Rule] expectation = +1 or -1 respectively           *)
 (*   - Otherwise (P anticommutes with at least one stabilizer) \[Rule] 0        *)
 (*                                                                              *)
-(* Reference: AarGot04 \[Section]3, audit/Stabilizer/paulistabilizer-source-audit.md \[Section]6.5 *)
+(* Reference: AarGot04 \[Section]3, OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]6.5 *)
 (* ============================================================================ *)
 
 (* Pauli string -> binary symplectic vector + sign *)

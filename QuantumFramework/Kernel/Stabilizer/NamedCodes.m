@@ -7,7 +7,7 @@ PackageScope[$PauliStabilizerNames]
 (* ============================================================================ *)
 (* Catalog of named codes.                                                      *)
 (* Phase 1 cleanup: dropped duplicate "SteaneCode" entry                        *)
-(* (audit/Stabilizer/paulistabilizer-source-audit.md \[Section]2.13).           *)
+(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]2.13).           *)
 (* ============================================================================ *)
 
 $PauliStabilizerNames = {
