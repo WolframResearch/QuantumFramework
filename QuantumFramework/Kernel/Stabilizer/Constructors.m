@@ -149,10 +149,24 @@ FromFullTableau[t_] := PauliStabilizer[<|
 |>]
 
 
-PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; Sort[qo["OutputOrder"]] == Sort[qo["InputOrder"]] := With[{max = Max[n, qo["InputOrder"]]},
-    Enclose @ FromFullTableau[
+(* Phase 5c: capture the global phase the AG decomposition drops. The tableau   *)
+(* is invariant under U -> e^{i alpha} U, so for Y = -i X Z the AG-recovered   *)
+(* circuit Z@X equals i*Y; we record -i as "GlobalPhase" so that the inverse   *)
+(* path ps["QuantumOperator"] returns Y exactly.                                *)
+PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; Sort[qo["OutputOrder"]] == Sort[qo["InputOrder"]] :=
+Enclose @ Module[{max, basePS, baseAssoc, m1, m2, anchor, phase},
+    max = Max[n, qo["InputOrder"]];
+    basePS = FromFullTableau[
         Confirm @ QuantumOperatorTableau[qo["Sort"]["Computational"]]
-    ]["PadRight", max]["Permute", Join[Sort[qo["InputOrder"]], Complement[Range[max], qo["InputOrder"]]]]
+    ]["PadRight", max]["Permute", Join[Sort[qo["InputOrder"]], Complement[Range[max], qo["InputOrder"]]]];
+
+    baseAssoc = First[basePS];
+    m1 = Flatten[Normal @ qo["Matrix"]];
+    m2 = Flatten[Normal @ basePS["QuantumOperator"]["Matrix"]];
+    anchor = First @ FirstPosition[m2, x_ /; Chop[x] =!= 0, {1}, Heads -> False];
+    phase = m1[[anchor]] / m2[[anchor]];
+
+    PauliStabilizer[<|baseAssoc, "GlobalPhase" -> phase|>]
 ]
 
 

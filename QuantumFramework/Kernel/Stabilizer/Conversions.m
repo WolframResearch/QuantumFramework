@@ -124,7 +124,12 @@ ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := B
 ]
 
 
-ps_PauliStabilizer["Operator" | "QuantumOperator"] := QuantumOperator["I", Range[ps["Qudits"]]] @ ps["Circuit"]["QuantumOperator"]
+ps_PauliStabilizer["Operator" | "QuantumOperator"] := With[{
+    canonical = QuantumOperator["I", Range[ps["Qudits"]]] @ ps["Circuit"]["QuantumOperator"],
+    phase = Lookup[First[ps], "GlobalPhase", 1]
+},
+    phase canonical
+]
 
 
 (* ============================================================================ *)
