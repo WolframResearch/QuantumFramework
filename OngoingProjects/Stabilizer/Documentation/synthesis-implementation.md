@@ -796,7 +796,7 @@ The synthesis's 7 don'ts (`:451-458`) are honored:
 
 - **Don't try to outrun Stim/Qiskit on raw qubit counts.** ✅ Phase 1–5 explicitly does not bit-pack or SIMD-optimize. The TODO in `Stabilizer/Compose.m` for an opt-in bit-packed path is documented but deferred.
 - **Don't write loops when broadcasting / `BitXor` over `SparseArray`s suffices.** ✅ All Phase 1 gate updates use `MapIndexed` + `BitXor`; the `Sum`-as-loop in `rowsum` was replaced with `Total @ Table` (Phase 1 vectorization).
-- **Don't store global phases of stabilizer states.** ✅ The kernel only tracks `Phase ∈ {0, 1}` per row (relative phases inside `StabilizerFrame` are a different story).
+- **Don't store global phases of stabilizer states.** ⚠️ **Partially relaxed in Phase 5c.** The kernel still tracks `Phase ∈ {0, 1}` per row for the tableau itself. *In addition*, when a `PauliStabilizer` is constructed from a `QuantumState` or `QuantumOperator`, the constructor now records the overall complex phase that the AG decomposition drops under a `"GlobalPhase"` association key, so that `["State"]` / `["QuantumOperator"]` round-trip the input exactly. Tableau-derived `PauliStabilizer`s (no source state/operator) leave `GlobalPhase` unset (default 1). Gate updates do not yet propagate `GlobalPhase` — see [ROADMAP §A.9](ROADMAP.md).
 - **Don't reimplement the qubit-only case for qudits.** ⏸ Phase 1–5 is qubit-only by design; v2 unification deferred.
 - **Don't expose Karnaugh-map-derived gate rules to the end user.** ✅ Internal documentation only.
 - **Don't try to symbolically diagonalize 2ⁿ × 2ⁿ matrices.** ✅ Phase 4's direct-vector inner-product fallback is gated by user choice (TODO Phase 5+ for closed-form replacement).

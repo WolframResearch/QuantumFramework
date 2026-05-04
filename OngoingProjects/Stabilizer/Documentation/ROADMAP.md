@@ -1,15 +1,33 @@
 # Stabilizer subsystem roadmap
 
-> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem (Phases 1–5). Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-04-30 (last content update); moved 2026-05-02 to `OngoingProjects/Stabilizer/Documentation/`. Branch: `stabilizer-phases-1-4`.
+> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem (Phases 1–5). Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-04 (Phase 5c addendum); moved 2026-05-02 to `OngoingProjects/Stabilizer/Documentation/`. Branch: `stabilizer-phases-1-4`.
 
 > **Audit-doc context.** This document complements [`synthesis-implementation.md`](synthesis-implementation.md) (the *what works today* tour) and [`API.md`](API.md) (per-function reference) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md).
 
 ## Overall status
 
-- **Tests:** 185 / 185 PauliStabilizer + 32 / 32 QuantumDistance = 217 / 217 passing.
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD).
-- **Open items:** 16 (8 partial + 7 deferred + 1 latent bug).
+- **Tests:** 227 / 227 PauliStabilizer + 32 / 32 QuantumDistance = 259 / 259 passing.
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip — see "Phase 5c — DONE" below)**.
+- **Open items:** 18 (10 partial + 7 deferred + 1 latent bug).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
+
+---
+
+## Phase 5c — DONE (2026-05-04)
+
+`QuantumOperator` ↔ `PauliStabilizer` and `QuantumState` ↔ `PauliStabilizer` now round-trip exactly. Three commits on `stabilizer-phases-1-4`:
+
+| Commit | Step | What |
+|---|---|---|
+| `93edc400` | (1) Lock the spec | New TIER 1.4a/1.4b/1.4c blocks in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) (42 new tests). 21 red on commit. |
+| `6f8637ee` | (2) State tomography | Rewrite `PauliStabilizer[qs_QuantumState]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)). The old `ResourceFunction["RowSpace"]` path canonicalized away generator signs — `PauliStabilizer[QuantumState[{0,1}]]` returned `\|0⟩`'s tableau, Bell phi+ returned phi-'s tableau. New path: 4ⁿ Pauli expectations → keep `\|⟨P⟩\| ≈ 1` as stabilizer group → greedy F₂ rank growth picks `n` independent generators with their signs → symplectic Gram-Schmidt extends to destabilizers. Adds `"GlobalPhase"` association key (default 1) so `["State"]` replays the overall phase. 21 → 6 red. |
+| `f7ebfd56` | (3) Operator phase capture | `PauliStabilizer[qo_QuantumOperator]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)) computes `phase = qo["Matrix"] / recovered["Matrix"]` at the first nonzero entry and stores under `"GlobalPhase"`. `["QuantumOperator"]` ([`Stabilizer/Conversions.m`](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m)) multiplies the canonical AG-decomposed operator by that phase. Fixes Y, YY, XY, YX, YZ, ZY round-trip. 6 → 0 red. |
+
+Removed: `PauliStabilizerTableau` (the old broken tomography helper, 14 LOC).
+
+The fix surfaces two new partial items for follow-up — **A.9** and **A.10** below.
+
+---
 
 ---
 
@@ -104,6 +122,30 @@ Three items in the §4–§6 menus are explicitly listed as `partial` in [`synth
 - §4 `StabilizerStateQ[ψ]` — needs a top-level public symbol; currently use `MatchQ[..., _PauliStabilizer]`. **Effort:** ~5 LOC + 2 tests.
 - §5 `CliffordTableau[U]` — needs a distinct head from `PauliStabilizer` (which is a state's tableau, not a gate's). **Effort:** ~100 LOC + 5 tests. Tied to item B.4.
 - §6 `StabilizerRankDecomposition[ρ]` — currently relies on user manually constructing a `StabilizerFrame`. Need an automatic decomposition (Bravyi 2016). **Effort:** ~200 LOC + 5 tests.
+
+### A.9 — `"GlobalPhase"` does not propagate through gate updates
+| | |
+|---|---|
+| **Current** | Phase 5c added a `"GlobalPhase"` association key set by `PauliStabilizer[qs_QuantumState]` and `PauliStabilizer[qo_QuantumOperator]`, so the *first* round-trip is exact. Gate updates (`ps["H", 1]`, `ps["CNOT" -> {1, 2}]`, etc.) build a new `PauliStabilizer` association from scratch in [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) and do **not** copy `"GlobalPhase"`. As a result `PauliStabilizer[qs]["H", 1]["State"]` is again only correct *up to* a global phase. |
+| **Source** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) — every gate-update rule constructs a fresh association without forwarding `Lookup[First[ps], "GlobalPhase", 1]`. |
+| **Why deferred** | Phase 5c prioritized the round-trip contract for the most common path (build-from-source → query). Gate-update propagation needs each Clifford rule to know its own intrinsic phase factor (e.g., `H`, `S`, `CNOT` are real-valued unitaries — phase 1; `Y`, `S†` involve `i` factors). |
+| **Reference** | None — kernel implementation detail. |
+| **Next step** | (a) Each gate-update rule in `GateUpdates.m` forwards `"GlobalPhase"` from the input ps unchanged. (b) For non-Clifford gates that escape via `StabilizerFrame`, attach the gate's phase factor to the frame. (c) Add tests under TIER 1.4d: `PauliStabilizer[qs]["H", 1]["State"] === H @ qs`, etc., for a half-dozen 1Q + 2Q cases. |
+| **File** | every gate-update rule in [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) |
+| **Tests to add** | `Roundtrip-QS-AfterGate-H1`, `-CNOT12`, `-S1`, etc. (~15 cases) |
+| **Effort** | ~30 LOC + 15 tests |
+
+### A.10 — Generator order differs between default-register and QS-derived paths
+| | |
+|---|---|
+| **Current** | `QuantumCircuitOperator[circ][Method -> "Stabilizer"]["Stabilizers"]` returns generators in one order; `QuantumCircuitOperator[circ][qs_QuantumState, Method -> "Stabilizer"]["Stabilizers"]` returns the same group in a different order when `qs` has fewer qubits than the circuit and gets auto-padded. The mathematical contract (which group) is honored but the list-equality of the result depends on insertion order during pad. The `Integration-MethodStabilizer-ExplicitState` test (Tier 4) had to be made set-wise with `Sort` to accommodate this. |
+| **Source** | the auto-pad path inside [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) (gates that operate on a qubit beyond the current register size) |
+| **Why deferred** | Cosmetic / API consistency. The group is correct — only the human-readable generator order differs from the Phase 1 convention. |
+| **Reference** | None — internal convention. |
+| **Next step** | Either (a) make the auto-pad insert new-qubit rows in canonical AG order matching the integer-constructor path, or (b) document a single canonical `Sort`-able form for `["Stabilizers"]` and apply it on output. (b) is simpler; (a) is more aesthetic but touches the gate-update code. |
+| **File** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) (option a) or [`Stabilizer/Properties.m`](../../../QuantumFramework/Kernel/Stabilizer/Properties.m) (option b) |
+| **Tests to add** | revert `Integration-MethodStabilizer-ExplicitState` to list-equality once order is canonical |
+| **Effort** | ~50 LOC + 0 new tests |
 
 ---
 

@@ -460,6 +460,8 @@ Numerical zero — the round-trip is correct up to global phase. For optimized s
 
 Returns a `QuantumOperator` whose action on `|0...0⟩` reproduces the state. Practical limit `n ≤ ~10`.
 
+When `ps` was constructed from a `QuantumOperator` (or a `QuantumState`), the round-trip is **exact** — `PauliStabilizer[qo]["QuantumOperator"] === qo` and `PauliStabilizer[qs]["State"] === qs` — because the constructor records the AG-decomposition's dropped global phase under a `"GlobalPhase"` association key (Phase 5c). For tableaux built without a source operator/state (e.g. `PauliStabilizer["Bell"]`, `PauliStabilizer[3]`), `GlobalPhase` defaults to 1 and the recovered operator/state matches the input *up to* a global phase. See [TIER 1.4a/1.4b in `Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) for the full round-trip contract.
+
 ## Integration with QuantumFramework
 
 ```wolfram
