@@ -6,28 +6,36 @@
 
 ## Overall status
 
-- **Tests:** 227 / 227 PauliStabilizer + 32 / 32 QuantumDistance = 259 / 259 passing.
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip — see "Phase 5c — DONE" below)**.
-- **Open items:** 18 (10 partial + 7 deferred + 1 latent bug).
+- **Tests:** 235 / 235 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 287 / 287 passing.
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip + post-mortem + cross-module audit — see "Phase 5c — DONE" below)**.
+- **Open items:** 17 (9 partial + 7 deferred + 1 latent bug). A.9 reclassified as **inherent trade-off** (documented contract, not a fix-pending item) after the 2026-05-04 follow-up.
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
+
+> **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
 
 ---
 
 ## Phase 5c — DONE (2026-05-04)
 
-`QuantumOperator` ↔ `PauliStabilizer` and `QuantumState` ↔ `PauliStabilizer` now round-trip exactly. Three commits on `stabilizer-phases-1-4`:
+`QuantumOperator` ↔ `PauliStabilizer` and `QuantumState` ↔ `PauliStabilizer` now round-trip exactly on the *first hop* (constructor → accessor). Six commits on `stabilizer-phases-1-4`:
 
 | Commit | Step | What |
 |---|---|---|
 | `93edc400` | (1) Lock the spec | New TIER 1.4a/1.4b/1.4c blocks in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) (42 new tests). 21 red on commit. |
 | `6f8637ee` | (2) State tomography | Rewrite `PauliStabilizer[qs_QuantumState]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)). The old `ResourceFunction["RowSpace"]` path canonicalized away generator signs — `PauliStabilizer[QuantumState[{0,1}]]` returned `\|0⟩`'s tableau, Bell phi+ returned phi-'s tableau. New path: 4ⁿ Pauli expectations → keep `\|⟨P⟩\| ≈ 1` as stabilizer group → greedy F₂ rank growth picks `n` independent generators with their signs → symplectic Gram-Schmidt extends to destabilizers. Adds `"GlobalPhase"` association key (default 1) so `["State"]` replays the overall phase. 21 → 6 red. |
 | `f7ebfd56` | (3) Operator phase capture | `PauliStabilizer[qo_QuantumOperator]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)) computes `phase = qo["Matrix"] / recovered["Matrix"]` at the first nonzero entry and stores under `"GlobalPhase"`. `["QuantumOperator"]` ([`Stabilizer/Conversions.m`](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m)) multiplies the canonical AG-decomposed operator by that phase. Fixes Y, YY, XY, YX, YZ, ZY round-trip. 6 → 0 red. |
+| `57d8b53f` | (4) Doc updates | ROADMAP / API.md / synthesis-implementation.md reflect 5c. |
+| `f9e2d711` | (5) Post-mortem + A.9 contract + TIER 1.4d | New [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md) writes down the structural reasons the Y bug was missable, including the explicit phase-aware vs phase-oblivious design rationale. Comment block added to [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) documenting that `"GlobalPhase"` is intentionally dropped on gate updates (A.9 is an inherent trade-off, not a closeable bug — see §A.9 below). New TIER 1.4d block with up-to-phase tests + 2 "escape hatch" exact-equality tests showing the user-facing workaround. |
+| `cbf51576` | (6) Cross-module audit | New [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt) probes the two QF pairs the audit flagged as untested for exact-equality round-trip: `QuantumOperator ↔ QuantumChannel` and `QuantumOperator ↔ QuantumCircuitOperator`. 20/20 PASS — no new bugs surfaced. The original Y bug was unique to the AG-tableau projection. |
 
 Removed: `PauliStabilizerTableau` (the old broken tomography helper, 14 LOC).
 
-The fix surfaces two new partial items for follow-up — **A.9** and **A.10** below.
+The fix surfaces one new partial item — **A.10** (cosmetic, generator-order canonicalization) — and reclassifies **A.9** as an inherent trade-off with a documented contract (see below).
 
----
+Two process artifacts also produced:
+
+- `~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md` — global memory rule: "for any QF constructor-accessor pair `C`/`A`, the FIRST test in the tier must be `A[C[x]] === x`". Will load in future Claude sessions on this repo.
+- This document's **Lesson** callout above and the post-mortem are cross-linked from API.md and synthesis-implementation.md.
 
 ---
 
@@ -123,17 +131,16 @@ Three items in the §4–§6 menus are explicitly listed as `partial` in [`synth
 - §5 `CliffordTableau[U]` — needs a distinct head from `PauliStabilizer` (which is a state's tableau, not a gate's). **Effort:** ~100 LOC + 5 tests. Tied to item B.4.
 - §6 `StabilizerRankDecomposition[ρ]` — currently relies on user manually constructing a `StabilizerFrame`. Need an automatic decomposition (Bravyi 2016). **Effort:** ~200 LOC + 5 tests.
 
-### A.9 — `"GlobalPhase"` does not propagate through gate updates
+### A.9 — `"GlobalPhase"` does not propagate through gate updates **(inherent trade-off; documented as contract)**
 | | |
 |---|---|
-| **Current** | Phase 5c added a `"GlobalPhase"` association key set by `PauliStabilizer[qs_QuantumState]` and `PauliStabilizer[qo_QuantumOperator]`, so the *first* round-trip is exact. Gate updates (`ps["H", 1]`, `ps["CNOT" -> {1, 2}]`, etc.) build a new `PauliStabilizer` association from scratch in [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) and do **not** copy `"GlobalPhase"`. As a result `PauliStabilizer[qs]["H", 1]["State"]` is again only correct *up to* a global phase. |
-| **Source** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) — every gate-update rule constructs a fresh association without forwarding `Lookup[First[ps], "GlobalPhase", 1]`. |
-| **Why deferred** | Phase 5c prioritized the round-trip contract for the most common path (build-from-source → query). Gate-update propagation needs each Clifford rule to know its own intrinsic phase factor (e.g., `H`, `S`, `CNOT` are real-valued unitaries — phase 1; `Y`, `S†` involve `i` factors). |
-| **Reference** | None — kernel implementation detail. |
-| **Next step** | (a) Each gate-update rule in `GateUpdates.m` forwards `"GlobalPhase"` from the input ps unchanged. (b) For non-Clifford gates that escape via `StabilizerFrame`, attach the gate's phase factor to the frame. (c) Add tests under TIER 1.4d: `PauliStabilizer[qs]["H", 1]["State"] === H @ qs`, etc., for a half-dozen 1Q + 2Q cases. |
-| **File** | every gate-update rule in [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) |
-| **Tests to add** | `Roundtrip-QS-AfterGate-H1`, `-CNOT12`, `-S1`, etc. (~15 cases) |
-| **Effort** | ~30 LOC + 15 tests |
+| **Current** | Phase 5c added a `"GlobalPhase"` association key set by `PauliStabilizer[qs_QuantumState]` and `PauliStabilizer[qo_QuantumOperator]`, so the *first* round-trip is exact. Gate updates (`ps["H", 1]`, `ps["CNOT" -> {1, 2}]`, etc.) intentionally do not copy `"GlobalPhase"` — see the comment block at the top of [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m). As a result `PauliStabilizer[qs]["H", 1]["State"]` is correct *up to* a global phase. |
+| **Source** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) — every gate-update rule constructs a fresh association without `"GlobalPhase"`. |
+| **Why this is inherent (not "deferred")** | Investigated 2026-05-04 (commit `f9e2d711`). The phase factor a Clifford gate `U` picks up when applied to a stabilizer state depends not just on `U` but on the input state's tableau. Concrete counterexamples: `Z\|0⟩ = \|0⟩` (no phase) vs `Z\|1⟩ = −\|1⟩` (sign flip) — same `Z` gate, different state, different phase. Same for `S`, `Y`, etc. So no constant per-gate "phase factor" rule exists. Recovering the new `"GlobalPhase"` exactly requires materializing the state vector at every gate update — `O(2ⁿ)` per gate, which defeats the AG `O(n²)` complexity advantage that motivates the tableau representation in the first place. |
+| **Reference** | Post-mortem [`OngoingProjects/Stabilizer/Documentation/post-mortem-phase-5c.md`](post-mortem-phase-5c.md) §2 (phase-aware vs phase-oblivious design). |
+| **Documented contract** | `PauliStabilizer[qs]["gate", q]["State"]` equals `gate @ qs` *up to global phase*. For exact equality, re-run the constructor on the post-gate state: `PauliStabilizer[gate @ qs]["State"] === gate @ qs`. Tests at [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) TIER 1.4d (8 tests including 2 "escape hatch" exact-equality tests). |
+| **Future option** | If exact phase tracking through gate updates is wanted, a separate kernel option (`Method -> "PhaseAware"` or similar) could opt into the `O(2ⁿ)` materialization on every update. Out of scope for the current AG-tableau design. |
+| **Effort to upgrade to opt-in** | ~80 LOC + 15 tests, *if* the design choice is made. |
 
 ### A.10 — Generator order differs between default-register and QS-derived paths
 | | |

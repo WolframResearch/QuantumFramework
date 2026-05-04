@@ -71,18 +71,18 @@ The miss was structural. A single more-careful pass wouldn't have caught it; a d
 | `6f8637ee` | State tomography rewrite (`Stabilizer/Constructors.m`); 4ⁿ Pauli expectations + greedy F₂ rank growth + symplectic Gram-Schmidt; introduced `"GlobalPhase"` association key | 21 → 6 red |
 | `f7ebfd56` | Operator global-phase capture (`Stabilizer/Constructors.m`, `Stabilizer/Conversions.m`) | 6 → 0 red |
 | `57d8b53f` | Doc updates: ROADMAP/API/synthesis-implementation reflect 5c | docs aligned |
-| (next commit) | Phase E — gate-update propagation closes ROADMAP §A.9 | gate-update round-trips also exact |
+| `f9e2d711` | This post-mortem; A.9 contract documented (`Stabilizer/GateUpdates.m` comment block); TIER 1.4d added (up-to-phase + escape-hatch tests) | 227 → 235 |
+| `cbf51576` | Phase C cross-module audit — `Tests/Roundtrips.wlt` probes `QuantumChannel ↔ QuantumOperator` and `QuantumCircuitOperator ↔ QuantumOperator` | 20/20 PASS, no new bugs |
 
-Test count: 185 → 227+ on `PauliStabilizer.wlt`; 217 → 274+ across the suite.
+Test count: 185 → 235 on `PauliStabilizer.wlt`; 217 → 287 across the suite (235 + 32 + 20).
 
 ---
 
-## 5. What's still partial
+## 5. What's still partial after Phase 5c
 
-After Phase 5c + this plan's gate-update commit:
-
+- **§A.9** — `"GlobalPhase"` does not propagate through *gate updates*. Phase 5c implemented exact phase tracking on the *first hop* (constructor → accessor); gate-update propagation was investigated 2026-05-04 and found to require `O(2ⁿ)` materialization at every gate update because the phase factor a Clifford gate picks up depends on the input state's tableau, not just on the gate. (Concrete counterexample: `Z\|0⟩ = \|0⟩` vs `Z\|1⟩ = −\|1⟩`.) That cost defeats the AG `O(n²)` complexity advantage. **Reclassified as an inherent trade-off with a documented contract**, not a closeable bug. The contract: `PauliStabilizer[qs]["gate", q]["State"]` equals `gate @ qs` *up to global phase*; for exact equality, re-run the constructor on the post-gate state. TIER 1.4d in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) documents this with up-to-phase + escape-hatch tests.
 - **§A.10** — generator order differs between default-register and QS-derived paths after auto-pad. The mathematical group is correct; only the list order differs (which forced `Integration-MethodStabilizer-ExplicitState` to use `Sort` on both sides). Cosmetic; not on the v1 critical path.
-- **Cross-module audit findings** (Phase C of the plan) — any new partial items surfaced by [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt) on the QS↔QO and QChannel↔QO pairs are filed in their respective module's status docs.
+- **Cross-module audit (Phase C)** — [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt) probed `QuantumChannel ↔ QuantumOperator` and `QuantumCircuitOperator ↔ QuantumOperator`. **20/20 PASS — no new bugs found.** The Phase 5c Y bug was unique to the AG-tableau projection.
 
 ---
 
