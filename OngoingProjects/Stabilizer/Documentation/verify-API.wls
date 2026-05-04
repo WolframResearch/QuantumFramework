@@ -257,6 +257,26 @@ block["PS-conv-Circuit-equivalence",
 
 
 (* ============================================================================ *)
+(* Integration: Method -> "Stabilizer" (matches API.md doc order)               *)
+(* ============================================================================ *)
+
+block["Integration-Method-Stabilizer",
+    QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][Method -> "Stabilizer"]["Stabilizers"]
+];
+
+block["Integration-named-circuits",
+    QuantumCircuitOperator["GHZ"[3]][Method -> "Stabilizer"]["Stabilizers"]
+];
+
+block["Integration-UpValues",
+    (* QuantumOperator['H', 1] @ ps applies via PauliStabilizerApply *)
+    With[{ps = PauliStabilizer[1]},
+        (QuantumOperator["H", 1] @ ps)["Stabilizers"]
+    ]
+];
+
+
+(* ============================================================================ *)
 (* RandomClifford                                                               *)
 (* ============================================================================ *)
 
@@ -326,8 +346,33 @@ block["SampleOutcomes-multiple",
 
 
 (* ============================================================================ *)
-(* StabilizerFrame                                                              *)
+(* StabilizerFrame -- block order matches API.md doc order:                     *)
+(*   Constructors / FromList   -> Clifford-distributes (line 668 in MD)         *)
+(*   Constructors / FromPS     -> from-PS              (line 681)               *)
+(*   Constructors / FromT      -> from-T               (line 694)               *)
+(*   Methods / Distribute      -> Clifford-distributes (line 725, dup of 668)   *)
+(*   Methods / TT              -> TT                   (line 741)               *)
+(*   Methods / Materialization -> T-on-zero            (line 757)               *)
 (* ============================================================================ *)
+
+block["StabilizerFrame-Constructor-FromList",
+    (* MD section: Constructors / From a list of {coeff, PS} pairs.              *)
+    (* Same code as StabilizerFrame-Method-CliffordDistributes below; in MD this  *)
+    (* example serves both as a constructor demo and as a Clifford-distribution  *)
+    (* demo, so the verifier exercises it twice with different IDs.              *)
+    With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]},
+        With[{fH = f["H", 1]},
+            <|"Length" -> fH["Length"], "Stabilizers-each" -> #["Stabilizers"] & /@ fH["Stabilizers"]|>
+        ]
+    ]
+];
+
+block["StabilizerFrame-from-PS",
+    (* Build a frame from a single PauliStabilizer (coefficient = 1) *)
+    With[{f = StabilizerFrame[PauliStabilizer[1]]},
+        <|"Length" -> f["Length"], "Components" -> f["Components"]|>
+    ]
+];
 
 block["StabilizerFrame-from-T",
     (* T gate produces 2-component frame *)
@@ -340,19 +385,20 @@ block["StabilizerFrame-from-T",
     ]
 ];
 
-block["StabilizerFrame-from-PS",
-    (* Build a frame from a single PauliStabilizer (coefficient = 1) *)
-    With[{f = StabilizerFrame[PauliStabilizer[1]]},
-        <|"Length" -> f["Length"], "Components" -> f["Components"]|>
-    ]
-];
-
-block["StabilizerFrame-Clifford-distributes",
-    (* Apply Clifford to a frame: distributes over components *)
+block["StabilizerFrame-Method-CliffordDistributes",
+    (* MD section: Methods / Clifford gates distribute over components.          *)
+    (* Identical code to StabilizerFrame-Constructor-FromList above.             *)
     With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]},
         With[{fH = f["H", 1]},
             <|"Length" -> fH["Length"], "Stabilizers-each" -> #["Stabilizers"] & /@ fH["Stabilizers"]|>
         ]
+    ]
+];
+
+block["StabilizerFrame-TT",
+    (* T^2 produces a 4-component frame *)
+    With[{psT2 = PauliStabilizer[1]["H", 1]["T", 1]["T", 1]},
+        {Head[psT2], psT2["Length"]}
     ]
 ];
 
@@ -361,13 +407,6 @@ block["StabilizerFrame-T-on-zero-equals-zero",
     Module[{psT = PauliStabilizer[1]["T", 1], vec},
         vec = Normal @ psT["StateVector"];
         Chop @ N @ FullSimplify[vec - {1, 0}]
-    ]
-];
-
-block["StabilizerFrame-TT",
-    (* T^2 produces a 4-component frame *)
-    With[{psT2 = PauliStabilizer[1]["H", 1]["T", 1]["T", 1]},
-        {Head[psT2], psT2["Length"]}
     ]
 ];
 
@@ -461,25 +500,6 @@ block["LocalComplement-involutive",
     ]
 ];
 
-
-(* ============================================================================ *)
-(* Integration: Method -> "Stabilizer"                                          *)
-(* ============================================================================ *)
-
-block["Integration-Method-Stabilizer",
-    QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][Method -> "Stabilizer"]["Stabilizers"]
-];
-
-block["Integration-named-circuits",
-    QuantumCircuitOperator["GHZ"[3]][Method -> "Stabilizer"]["Stabilizers"]
-];
-
-block["Integration-UpValues",
-    (* QuantumOperator['H', 1] @ ps applies via PauliStabilizerApply *)
-    With[{ps = PauliStabilizer[1]},
-        (QuantumOperator["H", 1] @ ps)["Stabilizers"]
-    ]
-];
 
 
 Print["=== ALL BLOCKS COMPLETE ==="];
