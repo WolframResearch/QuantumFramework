@@ -264,6 +264,193 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 1.4a -- QuantumOperator -> PauliStabilizer -> QuantumOperator           *)
+(* ============================================================================ *)
+(* The recovered operator must equal the original *exactly* (matrix equality),   *)
+(* not just up to global phase. Y = -i*X*Z, so the AG decomposition that         *)
+(* produces Z@X drops a -i factor; the constructor must capture and replay it.   *)
+(* These tests will fail until the global-phase fix lands (Step 3).              *)
+
+(* Helper: matrix equality of two QuantumOperators on the same support *)
+matEqQO[a_QuantumOperator, b_QuantumOperator] := (a["Matrix"] // Normal // Simplify) === (b["Matrix"] // Normal // Simplify)
+
+(* 1Q Pauli + Clifford generators *)
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["I"]]["QuantumOperator"], QuantumOperator["I"]], True, TestID -> "Roundtrip-QO-I"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["X"]]["QuantumOperator"], QuantumOperator["X"]], True, TestID -> "Roundtrip-QO-X"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"], QuantumOperator["Y"]], True, TestID -> "Roundtrip-QO-Y"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["Z"]]["QuantumOperator"], QuantumOperator["Z"]], True, TestID -> "Roundtrip-QO-Z"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["H"]]["QuantumOperator"], QuantumOperator["H"]], True, TestID -> "Roundtrip-QO-H"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["S"]]["QuantumOperator"], QuantumOperator["S"]], True, TestID -> "Roundtrip-QO-S"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["S"]["Dagger"]]["QuantumOperator"], QuantumOperator["S"]["Dagger"]], True, TestID -> "Roundtrip-QO-SDagger"]
+
+(* 2Q Cliffords *)
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["CNOT"]]["QuantumOperator"], QuantumOperator["CNOT"]], True, TestID -> "Roundtrip-QO-CNOT"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["CZ"]]["QuantumOperator"], QuantumOperator["CZ"]], True, TestID -> "Roundtrip-QO-CZ"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["SWAP"]]["QuantumOperator"], QuantumOperator["SWAP"]], True, TestID -> "Roundtrip-QO-SWAP"]
+
+(* 2Q Pauli tensor products. XY/YZ pick up factor i from the embedded Y;         *)
+(* YY picks up i^2 = -1. Each must be recovered exactly.                         *)
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["XX"]]["QuantumOperator"], QuantumOperator["XX"]], True, TestID -> "Roundtrip-QO-XX"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["YY"]]["QuantumOperator"], QuantumOperator["YY"]], True, TestID -> "Roundtrip-QO-YY"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["ZZ"]]["QuantumOperator"], QuantumOperator["ZZ"]], True, TestID -> "Roundtrip-QO-ZZ"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["XY"]]["QuantumOperator"], QuantumOperator["XY"]], True, TestID -> "Roundtrip-QO-XY"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["YX"]]["QuantumOperator"], QuantumOperator["YX"]], True, TestID -> "Roundtrip-QO-YX"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["YZ"]]["QuantumOperator"], QuantumOperator["YZ"]], True, TestID -> "Roundtrip-QO-YZ"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["ZY"]]["QuantumOperator"], QuantumOperator["ZY"]], True, TestID -> "Roundtrip-QO-ZY"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["XZ"]]["QuantumOperator"], QuantumOperator["XZ"]], True, TestID -> "Roundtrip-QO-XZ"]
+VerificationTest[matEqQO[PauliStabilizer[QuantumOperator["ZX"]]["QuantumOperator"], QuantumOperator["ZX"]], True, TestID -> "Roundtrip-QO-ZX"]
+
+(* Composite circuit: H @ CNOT (the Bell builder) -- Y-free, expected exact today *)
+VerificationTest[
+    matEqQO[
+        PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]["QuantumOperator"]]["QuantumOperator"],
+        QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]["QuantumOperator"]
+    ],
+    True,
+    TestID -> "Roundtrip-QO-BellBuilder"
+]
+
+(* Random Clifford roundtrip (seeded). Each draw is exercised against itself.    *)
+VerificationTest[
+    BlockRandom[SeedRandom[20260504]; matEqQO[#["QuantumOperator"], #["QuantumOperator"]] & @ PauliStabilizer[RandomClifford[1]["QuantumOperator"]]],
+    True,
+    TestID -> "Roundtrip-QO-RandomClifford-1Q-Stable"
+]
+
+(* The real Random Clifford 1Q test: build from a 1Q Clifford QO, roundtrip, compare *)
+VerificationTest[
+    BlockRandom[SeedRandom[20260504];
+        Module[{rc = RandomClifford[1]["QuantumOperator"]},
+            matEqQO[PauliStabilizer[rc]["QuantumOperator"], rc]
+        ]
+    ],
+    True,
+    TestID -> "Roundtrip-QO-RandomClifford-1Q"
+]
+
+VerificationTest[
+    BlockRandom[SeedRandom[20260504 + 1];
+        Module[{rc = RandomClifford[3]["QuantumOperator"]},
+            matEqQO[PauliStabilizer[rc]["QuantumOperator"], rc]
+        ]
+    ],
+    True,
+    TestID -> "Roundtrip-QO-RandomClifford-3Q"
+]
+
+
+(* ============================================================================ *)
+(* TIER 1.4b -- QuantumState -> PauliStabilizer -> QuantumState                 *)
+(* ============================================================================ *)
+(* PauliStabilizer[qs] currently runs through PauliStabilizerTableau, which     *)
+(* loses generator signs in the RowSpace canonicalization step. As a result    *)
+(* |1>, |->, |-i>, Bell, GHZ-3 all roundtrip to *different* states (not just    *)
+(* off by phase). These tests will fail until the tomography rewrite (Step 2). *)
+
+matEqQS[a_QuantumState, b_QuantumState] := (a["StateVector"] // Normal // Simplify) === (b["StateVector"] // Normal // Simplify)
+
+(* Single-qubit eigenstates of X, Y, Z *)
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{1, 0}]]["State"], QuantumState[{1, 0}]],         True, TestID -> "Roundtrip-QS-Comp-Zero"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{0, 1}]]["State"], QuantumState[{0, 1}]],         True, TestID -> "Roundtrip-QS-Comp-One"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState["Plus"]]["State"], QuantumState["Plus"]],         True, TestID -> "Roundtrip-QS-Plus"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState["Minus"]]["State"], QuantumState["Minus"]],       True, TestID -> "Roundtrip-QS-Minus"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{1, I}/Sqrt[2]]]["State"],  QuantumState[{1, I}/Sqrt[2]]],   True, TestID -> "Roundtrip-QS-PlusI"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{1, -I}/Sqrt[2]]]["State"], QuantumState[{1, -I}/Sqrt[2]]],  True, TestID -> "Roundtrip-QS-MinusI"]
+
+(* Bell states (4 orientations) *)
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{1, 0, 0,  1}/Sqrt[2]]]["State"], QuantumState[{1, 0, 0,  1}/Sqrt[2]]], True, TestID -> "Roundtrip-QS-Bell-PhiPlus"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{1, 0, 0, -1}/Sqrt[2]]]["State"], QuantumState[{1, 0, 0, -1}/Sqrt[2]]], True, TestID -> "Roundtrip-QS-Bell-PhiMinus"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{0, 1,  1, 0}/Sqrt[2]]]["State"], QuantumState[{0, 1,  1, 0}/Sqrt[2]]], True, TestID -> "Roundtrip-QS-Bell-PsiPlus"]
+VerificationTest[matEqQS[PauliStabilizer[QuantumState[{0, 1, -1, 0}/Sqrt[2]]]["State"], QuantumState[{0, 1, -1, 0}/Sqrt[2]]], True, TestID -> "Roundtrip-QS-Bell-PsiMinus"]
+
+(* GHZ-3 *)
+VerificationTest[
+    matEqQS[
+        PauliStabilizer[QuantumState[Normalize @ {1, 0, 0, 0, 0, 0, 0, 1}]]["State"],
+        QuantumState[Normalize @ {1, 0, 0, 0, 0, 0, 0, 1}]
+    ],
+    True,
+    TestID -> "Roundtrip-QS-GHZ-3"
+]
+
+(* Random-Clifford-on-zero roundtrip (seeded). Build a random stabilizer state, *)
+(* take its tableau, reproject back; the resulting state must match exactly.    *)
+VerificationTest[
+    BlockRandom[SeedRandom[20260504];
+        Module[{n = 2, rc, qs0, qs},
+            rc = RandomClifford[n]["QuantumOperator"];
+            qs0 = QuantumState[ConstantArray[0, n], n];
+            qs = rc[qs0];
+            matEqQS[PauliStabilizer[qs]["State"], qs]
+        ]
+    ],
+    True,
+    TestID -> "Roundtrip-QS-RandomClifford-on-zero-2Q"
+]
+
+VerificationTest[
+    BlockRandom[SeedRandom[20260504 + 1];
+        Module[{n = 3, rc, qs0, qs},
+            rc = RandomClifford[n]["QuantumOperator"];
+            qs0 = QuantumState[ConstantArray[0, n], n];
+            qs = rc[qs0];
+            matEqQS[PauliStabilizer[qs]["State"], qs]
+        ]
+    ],
+    True,
+    TestID -> "Roundtrip-QS-RandomClifford-on-zero-3Q"
+]
+
+
+(* ============================================================================ *)
+(* TIER 1.4c -- Internal sign correctness for state-derived tableaux            *)
+(* ============================================================================ *)
+(* Direct probes of PauliStabilizer[qs]["Stabilizers"] / ["StabilizerSigns"].   *)
+(* These document the WHY behind 1.4b failures: the tableau itself encodes the  *)
+(* wrong stabilizer set.                                                        *)
+
+(* |1> stabilizer is -Z, not +Z *)
+VerificationTest[
+    PauliStabilizer[QuantumState[{0, 1}]]["StabilizerSigns"],
+    {-1},
+    TestID -> "Roundtrip-Internal-Comp-One-Sign"
+]
+
+(* |-> stabilizer is -X *)
+VerificationTest[
+    PauliStabilizer[QuantumState["Minus"]]["StabilizerSigns"],
+    {-1},
+    TestID -> "Roundtrip-Internal-Minus-Sign"
+]
+
+(* |+i> stabilizer is +Y *)
+VerificationTest[
+    PauliStabilizer[QuantumState[{1, I}/Sqrt[2]]]["StabilizerSigns"],
+    {1},
+    TestID -> "Roundtrip-Internal-PlusI-Sign"
+]
+
+(* |-i> stabilizer is -Y *)
+VerificationTest[
+    PauliStabilizer[QuantumState[{1, -I}/Sqrt[2]]]["StabilizerSigns"],
+    {-1},
+    TestID -> "Roundtrip-Internal-MinusI-Sign"
+]
+
+(* Bell phi+ stabilizer group is generated by {XX, ZZ}, both +1 *)
+VerificationTest[
+    Sort @ PauliStabilizer[QuantumState[{1, 0, 0, 1}/Sqrt[2]]]["Stabilizers"],
+    Sort @ {"XX", "ZZ"},
+    TestID -> "Roundtrip-Internal-Bell-PhiPlus-Stabilizers"
+]
+VerificationTest[
+    PauliStabilizer[QuantumState[{1, 0, 0, 1}/Sqrt[2]]]["StabilizerSigns"],
+    {1, 1},
+    TestID -> "Roundtrip-Internal-Bell-PhiPlus-Signs"
+]
+
+
+(* ============================================================================ *)
 (* TIER 1.5 — Edge cases & known-quirks codification (Edge-)                    *)
 (* ============================================================================ *)
 
