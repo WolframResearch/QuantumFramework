@@ -554,6 +554,115 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 1.4e -- Coverage matrix: every accessor in _PauliStabilizer["Properties"] *)
+(* ============================================================================ *)
+(* Locks in that every documented accessor returns a non-Missing value, and that *)
+(* name-aliases (e.g. "State"/"QuantumState", "Operator"/"QuantumOperator",      *)
+(* "Circuit"/"QuantumCircuit"/"QuantumCircuitOperator", "Stabilizer"/             *)
+(* "StabilizerTableau", "Generators"/"Stabilizers"/"PauliForm") return identical *)
+(* outputs. Probes "p" (symplectic-form diagonal vector, untested before),       *)
+(* "GlobalPhase" (Phase 5c key), and the display-only forms.                     *)
+
+(* Every property in _PauliStabilizer["Properties"] resolves to a non-Missing    *)
+(* value on a representative ps. This is a structural backstop -- if a future    *)
+(* refactor accidentally drops an accessor from the dispatch table, this fails. *)
+VerificationTest[
+    Module[{ps = PauliStabilizer["5QubitCode"], props},
+        props = ps["Properties"];
+        FreeQ[Values @ AssociationMap[ps[#] &, props], _Missing]
+    ],
+    True,
+    TestID -> "Coverage-AllPropertiesResolve-5Q"
+]
+
+(* Aliases produce identical outputs *)
+VerificationTest[
+    Module[{ps = PauliStabilizer[QuantumState["Bell"]]},
+        ps["State"] === ps["QuantumState"]
+    ],
+    True,
+    TestID -> "Coverage-Alias-State-equals-QuantumState"
+]
+VerificationTest[
+    Module[{ps = PauliStabilizer[QuantumOperator["H"]]},
+        ps["Operator"]["Matrix"] === ps["QuantumOperator"]["Matrix"]
+    ],
+    True,
+    TestID -> "Coverage-Alias-Operator-equals-QuantumOperator"
+]
+VerificationTest[
+    Module[{ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
+        ps["Circuit"] === ps["QuantumCircuit"] === ps["QuantumCircuitOperator"]
+    ],
+    True,
+    TestID -> "Coverage-Alias-Circuit-equals-QuantumCircuit"
+]
+VerificationTest[
+    Module[{ps = $ps5Q}, ps["Stabilizer"] === ps["StabilizerTableau"]],
+    True,
+    TestID -> "Coverage-Alias-Stabilizer-equals-StabilizerTableau"
+]
+VerificationTest[
+    Module[{ps = $ps5Q}, ps["Destabilizer"] === ps["DestabilizerTableau"]],
+    True,
+    TestID -> "Coverage-Alias-Destabilizer-equals-DestabilizerTableau"
+]
+VerificationTest[
+    Module[{ps = $ps5Q}, ps["Stabilizers"] === ps["Generators"] === ps["PauliForm"]],
+    True,
+    TestID -> "Coverage-Alias-Stabilizers-Generators-PauliForm"
+]
+
+(* "p" — symplectic-form diagonal: zero on a valid stabilizer state, since rows *)
+(* of the AG matrix come in commuting/anticommuting pairs that diagonal-select   *)
+(* to zero. Was never tested before this commit.                                 *)
+VerificationTest[
+    PauliStabilizer["5QubitCode"]["p"],
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    TestID -> "Coverage-p-symplectic-diagonal-zero"
+]
+VerificationTest[
+    PauliStabilizer[QuantumState["Bell"]]["p"],
+    {0, 0, 0, 0},
+    TestID -> "Coverage-p-symplectic-diagonal-Bell"
+]
+
+(* "GlobalPhase" set when constructed from QO / QS, default 1 elsewhere *)
+VerificationTest[
+    PauliStabilizer[QuantumOperator["Y"]]["GlobalPhase"],
+    -I,
+    TestID -> "Coverage-GlobalPhase-Y-is-minus-I"
+]
+VerificationTest[
+    PauliStabilizer[QuantumOperator["YY"]]["GlobalPhase"],
+    -1,
+    TestID -> "Coverage-GlobalPhase-YY-is-minus-one"
+]
+VerificationTest[
+    PauliStabilizer[QuantumState["Bell"]]["GlobalPhase"],
+    1,
+    TestID -> "Coverage-GlobalPhase-Bell-is-one"
+]
+VerificationTest[
+    Lookup[First[PauliStabilizer[3]], "GlobalPhase", "absent"],
+    "absent",
+    TestID -> "Coverage-GlobalPhase-IntegerCtor-absent"
+]
+
+(* Display-form properties produce concrete heads (not Missing). *)
+VerificationTest[
+    Head[PauliStabilizer["5QubitCode"]["TableauForm"]] =!= Missing,
+    True,
+    TestID -> "Coverage-TableauForm-NonMissing"
+]
+VerificationTest[
+    Head[PauliStabilizer["5QubitCode"]["StabilizerTableauForm"]] =!= Missing,
+    True,
+    TestID -> "Coverage-StabilizerTableauForm-NonMissing"
+]
+
+
+(* ============================================================================ *)
 (* TIER 1.5 — Edge cases & known-quirks codification (Edge-)                    *)
 (* ============================================================================ *)
 
