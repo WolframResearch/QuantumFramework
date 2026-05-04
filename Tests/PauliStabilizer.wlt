@@ -379,7 +379,7 @@ VerificationTest[
     BlockRandom[SeedRandom[20260504];
         Module[{n = 2, rc, qs0, qs},
             rc = RandomClifford[n]["QuantumOperator"];
-            qs0 = QuantumState[ConstantArray[0, n], n];
+            qs0 = QuantumState["0", QuantumBasis[2, n]];
             qs = rc[qs0];
             matEqQS[PauliStabilizer[qs]["State"], qs]
         ]
@@ -392,7 +392,7 @@ VerificationTest[
     BlockRandom[SeedRandom[20260504 + 1];
         Module[{n = 3, rc, qs0, qs},
             rc = RandomClifford[n]["QuantumOperator"];
-            qs0 = QuantumState[ConstantArray[0, n], n];
+            qs0 = QuantumState["0", QuantumBasis[2, n]];
             qs = rc[qs0];
             matEqQS[PauliStabilizer[qs]["State"], qs]
         ]
@@ -1348,13 +1348,18 @@ VerificationTest[
     TestID -> "Integration-MethodStabilizer-DefaultRegister"
 ]
 
-(* qco[qs, Method -> "Stabilizer"] -- explicit QuantumState input *)
+(* qco[qs, Method -> "Stabilizer"] -- explicit QuantumState input.              *)
+(* Phase 5c note: state-derived PS comes through the rewritten 4^n tomography   *)
+(* whose generator ordering is canonical (smallest-index stab first). When the  *)
+(* circuit auto-pads the 1-qubit register to 2 qubits via CNOT, the resulting   *)
+(* stabilizer GROUP is correct, but the tableau row order can differ from the   *)
+(* default-register path. Comparison is set-wise.                                *)
 VerificationTest[
-    QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][
+    Sort @ QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][
         QuantumState["Register", 2],
         Method -> "Stabilizer"
     ]["Stabilizers"],
-    {"XX", "ZZ"},
+    Sort @ {"XX", "ZZ"},
     TestID -> "Integration-MethodStabilizer-ExplicitState"
 ]
 

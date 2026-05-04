@@ -60,16 +60,25 @@ QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQud
 (* ============================================================================ *)
 (* PauliStabilizer -> QuantumState.                                             *)
 (* Phase 1 cleanup: dropped "QuantumSttate" typo alias                          *)
-(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]13.7).            *)
-(* Cost: O(4^n) -- materializes 2^n x 2^n matrices. Practical limit n <= 10.   *)
+(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]13.7).  *)
+(* Phase 5c: optional "GlobalPhase" association key (set by                     *)
+(* PauliStabilizer[qs_QuantumState] / PauliStabilizer[qo_QuantumOperator])      *)
+(* recovers the overall phase that the stabilizer tableau drops, so that         *)
+(* PauliStabilizer[qs]["State"] === qs exactly. Default 1 when absent.           *)
+(* Cost: O(4^n) -- materializes 2^n x 2^n matrices. Practical limit n <= 10.    *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["State" | "QuantumState"] := QuantumState @ Normalize @ Total @ NullSpace[
-    Total @ MapThread[(IdentityMatrix[Length[#2]] - #1 #2) &, {
-        ps["StabilizerSigns"],
-        kroneckerProduct @@@
-            Map[PauliMatrix, Replace[Transpose[ps["StabilizerTableau"], {3, 2, 1}], {{0, 0} -> 0, {1, 0} -> 1, {1, 1} -> 2, {0, 1} -> 3}, {2}], {2}]
-    }]
+ps_PauliStabilizer["State" | "QuantumState"] := With[{
+    canonical = Normalize @ Total @ NullSpace[
+        Total @ MapThread[(IdentityMatrix[Length[#2]] - #1 #2) &, {
+            ps["StabilizerSigns"],
+            kroneckerProduct @@@
+                Map[PauliMatrix, Replace[Transpose[ps["StabilizerTableau"], {3, 2, 1}], {{0, 0} -> 0, {1, 0} -> 1, {1, 1} -> 2, {0, 1} -> 3}, {2}], {2}]
+        }]
+    ],
+    phase = Lookup[First[ps], "GlobalPhase", 1]
+},
+    QuantumState[phase canonical]
 ]
 
 

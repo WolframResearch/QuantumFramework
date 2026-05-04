@@ -5,41 +5,125 @@ PackageScope[FromFullTableau]
 
 
 (* ============================================================================ *)
-(* Local helpers used by string-list and array constructors.                    *)
-(* (firstIndex / bitvector also used by PauliRow in Conversions.m)              *)
+(* Constructors: from QuantumState (4^n tomography)                             *)
+(* ----------------------------------------------------------------------------*)
+(* Phase 5c rewrite (was: ResourceFunction["RowSpace"] of <P>*encoding(P), then *)
+(* dual tomography in X-basis for destabilizers). The old path canonicalized   *)
+(* the row space and dropped generator signs -- |1> roundtripped to |0>,       *)
+(* Bell phi+ to phi-, etc.                                                     *)
+(*                                                                              *)
+(* The new path computes <psi|P|psi> for every Pauli P (4^n tomography), keeps *)
+(* the 2^n Paulis with |<P>| ~= 1 as the stabilizer group with their signs,    *)
+(* picks n linearly-independent generators by greedy F_2 rank, then extends    *)
+(* to a 2n-dim symplectic basis to obtain destabilizers that satisfy the AG    *)
+(* commutation pattern. Cost is still O(4^n) -- practical for n <= ~8.         *)
 (* ============================================================================ *)
 
-(* From-state constructor: tomography over all 4^n Pauli expectations.         *)
-(* Cost: O(4^n) -- practical only for n <= 8 or so.                            *)
-PauliStabilizerTableau[v_ ? ArrayQ, n_Integer ? Positive] :=
-    Enclose @ Replace[#, Thread[PadRight[ConfirmBy[DeleteCases[Union[Flatten[#]], 0], Length[#] <= 2 &], 2, -1] -> {1, -1}], {3}] & @ Transpose[
-        Partition[#, 2] & /@ Take[#, n] & @ ReverseSort @ ResourceFunction["RowSpace"][
-            With[{pauli = Tuples[Range[0, 3], n]},
-                Map[
-                    (Conjugate[v] . (kroneckerProduct @@ PauliMatrix /@ #) . v) *
-                        Catenate[Replace[#, {0 -> {0, 0}, 1 -> {1, 0}, 2 -> {1, 1}, 3 -> {0, 1}}, {1}]] &,
-                    pauli
-                ]
-            ],
-            "Basis"
+(* Symplectic form J over F_2 used by the destabilizer search. *)
+agSymplecticForm[n_Integer] := ArrayFlatten[{
+    {ConstantArray[0, {n, n}], IdentityMatrix[n]},
+    {IdentityMatrix[n], ConstantArray[0, {n, n}]}
+}]
+
+(* Encode a tuple of Paulis (each in 0..3) as a 2n-bit row {x_1,..,x_n,z_1,..,z_n}. *)
+(* Convention matches PauliRow / FromFullTableau: I=00, X=10, Y=11, Z=01.       *)
+agEncodePauli[plist_List] := Catenate[Transpose @ Replace[plist, {0 -> {0, 0}, 1 -> {1, 0}, 2 -> {1, 1}, 3 -> {0, 1}}, {1}]]
+
+(* Find n linearly-independent rows of `bits` over F_2 by greedy rank-growth.  *)
+(* Returns indices into `bits`. *)
+agPickIndependent[bits_, n_Integer] := Module[{kept = {}, rank = 0, candidate, i, augmented},
+    Do[
+        candidate = bits[[i]];
+        augmented = Append[bits[[kept]], candidate];
+        If[MatrixRank[augmented, Modulus -> 2] > rank,
+            AppendTo[kept, i];
+            rank++;
+            If[rank >= n, Break[]]
         ],
-        {3, 2, 1}
-    ]
+        {i, Length[bits]}
+    ];
+    kept
+]
 
+(* Given n stabilizer encodings (n x 2n), construct n destabilizer encodings   *)
+(* by symplectic Gram-Schmidt: each D_i satisfies symp(D_i, S_j) = delta_ij    *)
+(* and symp(D_i, D_k) = 0 for k < i.                                            *)
+agExtendToSymplecticBasis[stabBits_, n_Integer] := Module[{J, dests = {}, A, rhs, soln, i},
+    J = agSymplecticForm[n];
+    Do[
+        A = Mod[Join[stabBits, dests] . J, 2];
+        rhs = Join[
+            Normal @ SparseArray[{i -> 1}, n],
+            ConstantArray[0, Length[dests]]
+        ];
+        soln = LinearSolve[A, rhs, Modulus -> 2];
+        AppendTo[dests, soln],
+        {i, 1, n}
+    ];
+    dests
+]
 
+(* Compute <psi|P|psi> for every Pauli P on n qubits. Returns a list of        *)
+(* {encoding, sign} pairs for the 2^n Paulis with |<P>| ~= 1. The first  *)
+(* element is always {identity, 1}. *)
+agStabilizerGroup[v_, n_Integer] := Enclose @ Module[{paulis, expVals, group, identity, nonid},
+    paulis = Tuples[Range[0, 3], n];
+    expVals = Map[Chop[Conjugate[v] . (kroneckerProduct @@ Map[pauliMatrix, #]) . v] &, paulis];
+    group = Cases[
+        Transpose[{paulis, expVals}],
+        {p_, val_} /; Re[val] >= 1 - 10^-8 :> {agEncodePauli[p],  1},
+        {1}
+    ] ~Join~ Cases[
+        Transpose[{paulis, expVals}],
+        {p_, val_} /; Re[val] <= -(1 - 10^-8) :> {agEncodePauli[p], -1},
+        {1}
+    ];
+    ConfirmAssert[Length[group] == 2^n,
+        "PauliStabilizer[QuantumState] expects a stabilizer state; got " <>
+        ToString[Length[group]] <> " group elements (need 2^" <> ToString[n] <> ")"
+    ];
+    group
+]
 
-(* ============================================================================ *)
-(* Constructors: from QuantumState (expensive 4^n tomography)                   *)
-(* ============================================================================ *)
+PauliStabilizer[qs_QuantumState] := Enclose @ Module[
+    {n, v, encodings, signs, nonidIdx, genIdx, stabBits, stabSigns,
+     destBits, destSigns, fullTableau, basePS, baseAssoc, baseVec, anchor, phase},
+    n = qs["Qudits"];
+    v = Normal @ qs["Computational"]["StateVector"];
 
-PauliStabilizer[qs_QuantumState] := Enclose @ With[{
-    z = ConfirmBy[PauliStabilizerTableau[qs["Computational"]["StateVector"], qs["Qudits"]], PauliTableauQ],
-    x = ConfirmBy[PauliStabilizerTableau[QuantumState[qs, Table["X", qs["Qudits"]]]["StateVector"], qs["Qudits"]], PauliTableauQ]
-},
-{
-    tableau = MapThread[Join[##, 2] &, {x, z}]
-},
-    PauliStabilizer[<|"Signs" -> Map[First[ConfirmBy[DeleteCases[#, 0], Apply[Equal]], 1] &, Transpose[Catenate[tableau]]], "Tableau" -> Abs @ tableau|>]
+    {encodings, signs} = Transpose @ ConfirmMatch[
+        agStabilizerGroup[v, n],
+        {{_, _} ..}
+    ];
+
+    (* Drop the identity row (all-zero encoding) before picking generators. *)
+    nonidIdx = Position[encodings, _ ? (! AllTrue[#, # == 0 &] &), {1}, Heads -> False][[All, 1]];
+    genIdx = nonidIdx[[ agPickIndependent[encodings[[nonidIdx]], n] ]];
+    stabBits = encodings[[genIdx]];
+    stabSigns = signs[[genIdx]];
+
+    destBits = agExtendToSymplecticBasis[stabBits, n];
+    destSigns = ConstantArray[1, n];
+
+    (* Build the (2n) x (2n+1) tableau in PauliRow/FromFullTableau format:     *)
+    (* rows 1..n  = destabilizers, rows n+1..2n = stabilizers.                 *)
+    (* Last column = phase (0 = sign +1, 1 = sign -1).                         *)
+    fullTableau = Join[
+        MapThread[Append, {destBits, (1 - destSigns) / 2}],
+        MapThread[Append, {stabBits, (1 - stabSigns) / 2}]
+    ];
+
+    basePS = Confirm @ FromFullTableau[fullTableau];
+    baseAssoc = First[basePS];
+
+    (* Recover the overall phase the tableau drops: ps["State"] is exact only    *)
+    (* up to a complex unit. Anchor at the first nonzero amplitude of the         *)
+    (* tableau-projected state and store the ratio to the original.               *)
+    baseVec = Normal @ basePS["State"]["StateVector"];
+    anchor = First @ FirstPosition[baseVec, x_ /; Chop[x] =!= 0, {1}, Heads -> False];
+    phase = v[[anchor]] / baseVec[[anchor]];
+
+    PauliStabilizer[<|baseAssoc, "GlobalPhase" -> phase|>]
 ]
 
 
