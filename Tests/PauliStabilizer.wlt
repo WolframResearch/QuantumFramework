@@ -451,6 +451,109 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 1.4d -- Gate-update round-trip contract (UP TO GLOBAL PHASE)            *)
+(* ============================================================================ *)
+(* Phase 5c records that PauliStabilizer[qs]["gate", q] does NOT propagate     *)
+(* "GlobalPhase" through the gate update -- exact propagation requires O(2^n)  *)
+(* materialization at each step (ROADMAP \[Section]A.9). Documented contract:   *)
+(*                                                                              *)
+(*   PauliStabilizer[qs]["gate", q]["State"]  ==  gate @ qs   UP TO GLOBAL PHASE  *)
+(*                                                                              *)
+(* For *exact* equality, re-run the constructor on the post-gate state:        *)
+(*   PauliStabilizer[gate @ qs]["State"]  ===  gate @ qs   (Phase 5c TIER 1.4b)  *)
+(*                                                                              *)
+(* These tests document the up-to-phase contract on the gate-update path.      *)
+
+(* Two normalized state vectors differ by a global phase iff |<a|b>| = 1.       *)
+equalUpToGlobalPhaseQS[a_QuantumState, b_QuantumState] := Module[{v1, v2, overlap},
+    v1 = a["StateVector"] // Normal // Simplify;
+    v2 = b["StateVector"] // Normal // Simplify;
+    overlap = Quiet @ Simplify[Abs[Conjugate[v1] . v2]];
+    Quiet @ Simplify[overlap == 1] === True
+]
+
+(* X applied to |1> *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{0, 1}]]["X", 1]["State"],
+        QuantumOperator["X"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-XOn1"
+]
+
+(* Z applied to |1>: Z|1> = -|1>; tableau-recovered state is |1>; up-to-phase OK *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{0, 1}]]["Z", 1]["State"],
+        QuantumOperator["Z"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-ZOn1"
+]
+
+(* Y applied to |1>: Y|1> = -i|0>; tableau-recovered state is |0>; up-to-phase OK *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{0, 1}]]["Y", 1]["State"],
+        QuantumOperator["Y"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-YOn1"
+]
+
+(* H applied to |0> (real-valued; first-hop happens to roundtrip exact) *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{1, 0}]]["H", 1]["State"],
+        QuantumOperator["H"][QuantumState[{1, 0}]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-HOn0"
+]
+
+(* S applied to |1>: S|1> = i|1>; canary for the i-factor on diag(1, i) *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{0, 1}]]["S", 1]["State"],
+        QuantumOperator["S"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-SOn1"
+]
+
+(* CNOT applied to Bell phi+ *)
+VerificationTest[
+    equalUpToGlobalPhaseQS[
+        PauliStabilizer[QuantumState[{1, 0, 0, 1}/Sqrt[2]]]["CNOT", 1, 2]["State"],
+        QuantumOperator["CNOT"][QuantumState[{1, 0, 0, 1}/Sqrt[2]]]
+    ],
+    True,
+    TestID -> "GateUpdate-UpToPhase-CNOTOnBell"
+]
+
+(* The "escape hatch": exact equality recovered by re-running the constructor    *)
+(* on the post-gate state. This is the user-facing workaround for A.9.           *)
+VerificationTest[
+    matEqQS[
+        PauliStabilizer[QuantumOperator["Y"][QuantumState[{0, 1}]]]["State"],
+        QuantumOperator["Y"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-EscapeHatch-ConstructAfterGate-YOn1"
+]
+
+VerificationTest[
+    matEqQS[
+        PauliStabilizer[QuantumOperator["S"][QuantumState[{0, 1}]]]["State"],
+        QuantumOperator["S"][QuantumState[{0, 1}]]
+    ],
+    True,
+    TestID -> "GateUpdate-EscapeHatch-ConstructAfterGate-SOn1"
+]
+
+
+(* ============================================================================ *)
 (* TIER 1.5 — Edge cases & known-quirks codification (Edge-)                    *)
 (* ============================================================================ *)
 
