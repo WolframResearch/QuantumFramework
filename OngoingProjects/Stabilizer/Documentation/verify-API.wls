@@ -257,6 +257,43 @@ block["PS-conv-Circuit-equivalence",
 
 
 (* ============================================================================ *)
+(* Round-trip contract (Phase 5c) -- block order matches API.md doc order       *)
+(* ============================================================================ *)
+
+block["Roundtrip-QO-Y-GlobalPhase",
+    (* First-hop exact: Y is the canary (AG decomposition recovers Z@X = i*Y;
+       constructor captures the missing -I as "GlobalPhase"). *)
+    With[{ps = PauliStabilizer[QuantumOperator["Y"]]},
+        <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["QuantumOperator"]["Matrix"] === QuantumOperator["Y"]["Matrix"]|>
+    ]
+];
+
+block["Roundtrip-QS-One-GlobalPhase",
+    (* First-hop exact: |1> stabilizer-tomography returns the right state. *)
+    With[{ps = PauliStabilizer[QuantumState[{0, 1}]]},
+        <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["State"]["StateVector"] === QuantumState[{0, 1}]["StateVector"]|>
+    ]
+];
+
+block["Roundtrip-GateUpdate-UpToPhase-YOn1",
+    (* Gate-update path is up-to-phase only (ROADMAP A.9): GP is dropped. *)
+    With[{
+        actual   = PauliStabilizer[QuantumState[{0, 1}]]["Y", 1]["State"]["StateVector"] // Normal,
+        expected = (QuantumOperator["Y"][QuantumState[{0, 1}]])["StateVector"] // Normal
+    },
+        <|"actual" -> actual, "expected" -> expected, "abs-overlap" -> Quiet @ Simplify[Abs[Conjugate[actual] . expected]]|>
+    ]
+];
+
+block["Roundtrip-EscapeHatch-Y-on-1",
+    (* Escape hatch: re-construct from post-gate state to recover GP. *)
+    With[{qs = QuantumState[{0, 1}], gate = QuantumOperator["Y"]},
+        PauliStabilizer[gate[qs]]["State"]["StateVector"] // Normal // Simplify
+    ]
+];
+
+
+(* ============================================================================ *)
 (* Integration: Method -> "Stabilizer" (matches API.md doc order)               *)
 (* ============================================================================ *)
 

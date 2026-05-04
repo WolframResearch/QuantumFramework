@@ -222,6 +222,7 @@ Concatenated `[Stabilizers, Destabilizers]`.
 | `"State"` / `"QuantumState"` | materialized `QuantumState` (cost `2ⁿ`) |
 | `"Circuit"` / `"QuantumCircuitOperator"` | AG-greedy synthesized Clifford circuit |
 | `"Operator"` / `"QuantumOperator"` | matrix-form `QuantumOperator` (cost `4ⁿ`) |
+| `"GlobalPhase"` | optional complex unit set when constructed from `QuantumState` / `QuantumOperator`; multiplies `["State"]` and `["QuantumOperator"]` outputs (Phase 5c, default 1) |
 | `"Properties"` | this list |
 
 ## Methods (Clifford gates)
@@ -460,7 +461,81 @@ Numerical zero — the round-trip is correct up to global phase. For optimized s
 
 Returns a `QuantumOperator` whose action on `|0...0⟩` reproduces the state. Practical limit `n ≤ ~10`.
 
-When `ps` was constructed from a `QuantumOperator` (or a `QuantumState`), the round-trip is **exact** — `PauliStabilizer[qo]["QuantumOperator"] === qo` and `PauliStabilizer[qs]["State"] === qs` — because the constructor records the AG-decomposition's dropped global phase under a `"GlobalPhase"` association key (Phase 5c). For tableaux built without a source operator/state (e.g. `PauliStabilizer["Bell"]`, `PauliStabilizer[3]`), `GlobalPhase` defaults to 1 and the recovered operator/state matches the input *up to* a global phase. See [TIER 1.4a/1.4b in `Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) for the full round-trip contract.
+Returns a `QuantumOperator` whose action on `|0...0⟩` reproduces the state. Practical limit `n ≤ ~10`. The round-trip contract is documented in the next section.
+
+## Round-trip contract
+
+Phase 5c gives `PauliStabilizer` a phase-aware contract for the first hop (constructor → accessor) and an explicit up-to-phase contract for subsequent gate updates.
+
+| Path | Equality |
+|---|---|
+| `PauliStabilizer[qo_QuantumOperator]["QuantumOperator"]` vs `qo` | **exact** (`===`) |
+| `PauliStabilizer[qs_QuantumState]["State"]` vs `qs` | **exact** (`===`) |
+| `PauliStabilizer[qs]["gate", q]["State"]` vs `gate @ qs` | up to global phase |
+| `PauliStabilizer[gate @ qs]["State"]` vs `gate @ qs` | **exact** — the escape hatch for gate-update phase loss |
+| `PauliStabilizer[ps["Circuit"]]["State"]` vs `ps["State"]` | up to global phase (no source state, only tableau) |
+
+### First hop is exact (Phase 5c)
+
+The Y gate is the canary: AG-decomposition recovers `Z·X = i·Y`, but the constructor captures the missing `−i` factor under `"GlobalPhase"`, so `["QuantumOperator"]` returns `Y` exactly:
+
+```wolfram
+With[{ps = PauliStabilizer[QuantumOperator["Y"]]},
+    <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["QuantumOperator"]["Matrix"] === QuantumOperator["Y"]["Matrix"]|>
+]
+```
+```
+<|"GlobalPhase" -> -I, "matches" -> True|>
+```
+
+State construction is the same:
+
+```wolfram
+With[{ps = PauliStabilizer[QuantumState[{0, 1}]]},
+    <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["State"]["StateVector"] === QuantumState[{0, 1}]["StateVector"]|>
+]
+```
+```
+<|"GlobalPhase" -> 1, "matches" -> True|>
+```
+
+### Gate-update path is up to phase (ROADMAP §A.9)
+
+Clifford gate updates do **not** propagate `"GlobalPhase"`. Recovering the new phase exactly would require materializing the state at every gate update, which is `O(2ⁿ)` and defeats the AG `O(n²)` advantage. Documented as an inherent trade-off:
+
+```wolfram
+With[{
+    actual   = PauliStabilizer[QuantumState[{0, 1}]]["Y", 1]["State"]["StateVector"] // Normal,
+    expected = (QuantumOperator["Y"][QuantumState[{0, 1}]])["StateVector"] // Normal
+},
+    <|"actual" -> actual, "expected" -> expected, "abs-overlap" -> Quiet @ Simplify[Abs[Conjugate[actual] . expected]]|>
+]
+```
+```
+<|"actual" -> {1, 0}, "expected" -> {-I, 0}, "abs-overlap" -> 1|>
+```
+
+The actual is `\|0⟩` and the expected is `−i\|0⟩`; they differ by a phase but `\|⟨a\|b⟩\| = 1`.
+
+### Escape hatch for exact equality after a gate
+
+Re-construct the `PauliStabilizer` from the post-gate state:
+
+```wolfram
+With[{
+    qs = QuantumState[{0, 1}],
+    gate = QuantumOperator["Y"]
+},
+    PauliStabilizer[gate[qs]]["State"]["StateVector"] // Normal // Simplify
+]
+```
+```
+{-I, 0}
+```
+
+This re-tomographs the Y-rotated state, captures the new `GlobalPhase`, and `["State"]` returns `−i\|0⟩` exactly.
+
+For the full test surface see [TIER 1.4a/1.4b/1.4c/1.4d in `Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) and the cross-module probes in [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt). Root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md).
 
 ## Integration with QuantumFramework
 
