@@ -38,11 +38,29 @@ block["1.1-symplectic-encoding",
 ];
 
 block["1.1-multiplication-via-symplectic",
-    (* X*Z = -iY: in symplectic encoding, (1,0) XOR (0,1) = (1,1) = Y bits.
-       Demonstrate by composing two single-qubit stabilizers: X and Z stabilize disjoint
-       eigenspaces; their composition's tableau bits XOR. *)
-    With[{psX = PauliStabilizer[{"X"}], psZ = PauliStabilizer[{"Z"}]},
-        {psX["Stabilizers"], psZ["Stabilizers"], psX["Tableau"][[All, 1, 1]] + psZ["Tableau"][[All, 1, 1]]}
+    (* X * Z = -i Y: the operator-level identity, restated symplectically.
+       In symplectic encoding (x, z): X = (1, 0), Z = (0, 1), Y = (1, 1).
+       Pauli multiplication corresponds to BitXor of the (x, z) bit pairs;
+       the i-factor lives in the phase, not in the bits.
+
+       This block ties the two together:
+         operator-level:  X . Z === -i * Y         (matrix equality)
+         symplectic:      BitXor[bits(X), bits(Z)] === bits(Y) *)
+    Module[{xMat, zMat, yMat, prodMat, bitsX, bitsZ, bitsY},
+        xMat = Normal @ QuantumOperator["X"]["Matrix"];
+        zMat = Normal @ QuantumOperator["Z"]["Matrix"];
+        yMat = Normal @ QuantumOperator["Y"]["Matrix"];
+        prodMat = xMat . zMat;
+        bitsX = {1, 0};   (* (x, z) for X *)
+        bitsZ = {0, 1};
+        bitsY = {1, 1};
+        <|
+            "X . Z (matrix)"          -> prodMat,
+            "matches -i * Y"          -> (prodMat === -I * yMat),
+            "BitXor[bits X, bits Z]"  -> BitXor[bitsX, bitsZ],
+            "bits Y"                  -> bitsY,
+            "symplectic match"        -> (BitXor[bitsX, bitsZ] === bitsY)
+        |>
     ]
 ];
 

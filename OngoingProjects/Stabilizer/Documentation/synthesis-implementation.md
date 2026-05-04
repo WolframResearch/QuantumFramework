@@ -80,6 +80,36 @@ Association[
 
 The `X-bits` and `Z-bits` arrays are shape `{n_qubits, 2*GeneratorCount}` — rows are qubits, columns are tableau rows (destabilizers first, then stabilizers). For Bell state, last 2 columns are stabilizers `XX` and `ZZ`: column 3 = X-bits `{1, 1}` + Z-bits `{0, 0}` = `XX`; column 4 = X-bits `{0, 0}` + Z-bits `{1, 1}` = `ZZ`.
 
+**Pauli multiplication via the symplectic group.** The reason the symplectic encoding is useful: Pauli composition `P · Q` reduces to `BitXor` on the `(x, z)` bit pairs, while the prefactor (the `±1` or `±i`) accumulates separately in the phase. Concretely, `X · Z = −i Y` at the matrix level corresponds to `BitXor[(1, 0), (0, 1)] = (1, 1) = bits(Y)` at the symplectic level — the `−i` lives in the phase, not in the bits.
+
+**Code:**
+```wolfram
+Module[{xMat, zMat, yMat, prodMat},
+    xMat = Normal @ QuantumOperator["X"]["Matrix"];
+    zMat = Normal @ QuantumOperator["Z"]["Matrix"];
+    yMat = Normal @ QuantumOperator["Y"]["Matrix"];
+    prodMat = xMat . zMat;
+    <|
+        "X . Z (matrix)"          -> prodMat,
+        "matches -i * Y"          -> (prodMat === -I * yMat),
+        "BitXor[bits X, bits Z]"  -> BitXor[{1, 0}, {0, 1}],
+        "bits Y"                  -> {1, 1},
+        "symplectic match"        -> (BitXor[{1, 0}, {0, 1}] === {1, 1})
+    |>
+]
+```
+
+**Verified output** (block `1.1-multiplication-via-symplectic`):
+```
+<|"X . Z (matrix)" -> {{0, -1}, {1, 0}},
+  "matches -i * Y" -> True,
+  "BitXor[bits X, bits Z]" -> {1, 1},
+  "bits Y" -> {1, 1},
+  "symplectic match" -> True|>
+```
+
+The bit-XOR rule generalizes to multi-qubit Paulis: tensor-product bits XOR component-wise, and the phase cocycle (Yashin25 §2.3) tracks `i` factors per pair. This is why every Clifford gate update in `Stabilizer/GateUpdates.m` is some flavor of `BitXor` on the `Tableau` rows.
+
 **Cross-reference:** AarGot04 §2; Mueller26 §2 (binary symplectic representation); Yashin25 §2.3 (phase cocycle). Internal helper `PauliRow` at [Stabilizer/Conversions.m](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m).
 
 
