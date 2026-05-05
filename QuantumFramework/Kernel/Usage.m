@@ -485,6 +485,22 @@ objects\"}]]}}]], \"Usage\", Rule[CellID, 98385100]]\)"
 
 
 
+QuantumSimilarity::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumS\
+imilarity\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumSimilarity\", \
+\"Wolfram Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \
+\"InlineFormula\"]], \"[\", RowBox[{SubscriptBox[StyleBox[\"qs\", \"TI\"], \
+StyleBox[\"1\", \"TR\"]], \",\", SubscriptBox[StyleBox[\"qs\", \"TI\"], \
+StyleBox[\"2\", \"TR\"]], \",\", StyleBox[\"t\", \"TI\"]}], \"]\"}]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
+\"\\[LineSeparator]returns the similarity (a number in \
+[0,1]) between two quantum discrete states using measure \", \
+Cell[BoxData[StyleBox[\"t\", \"TI\"]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}}]], \"Usage\", \
+Rule[CellID, 100665971]]\)"
+
+
+
 QuantumStateEstimate::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{RowBox[{RowBox[{\"QuantumStateEstimate\", \
 \"[\", RowBox[{\"\[LeftAssociation]\", \
