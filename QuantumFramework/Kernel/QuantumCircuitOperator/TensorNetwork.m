@@ -79,7 +79,7 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
                 ],
             VertexLabels ->
                 Thread[vertices -> (Replace[#["Label"], {
-                    label : Subscript["C", cop_][__] :> Interpretation[Row[{"C", cop}], label],
+                    label : Subscript["C", cop_][__] :> Interpretation[Row["C"[cop]], label],
                     label : Subscript["R", rops__][angle_] :> Interpretation[Subscript["R", rops][angle], label]
                 }] & /@ ops)],
             GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
@@ -206,7 +206,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         (* ConfirmAssert[AllTrue[Join[DeleteElements[order[[1]], Join[traceOrder, eigenOrder]], order[[2]]], Positive]]; *)
         circuit = circuit["Bend"];
         If[ TrueQ[OptionValue["Trace"]] && circuit["TraceQudits"] > 0,
-            circuit = circuit /* MapThread[{"Cap", #2} -> {#1, #1 + width} &, {circuit["TraceOrder"], circuit["TraceBasis"]["Decompose"]}];
+            circuit = circuit /* MapThread["Cap"[#2] -> {#1, #1 + width} &, {circuit["TraceOrder"], circuit["TraceBasis"]["Decompose"]}];
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];

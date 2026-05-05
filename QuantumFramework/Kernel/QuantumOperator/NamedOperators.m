@@ -10,7 +10,7 @@ PackageScope["FromOperatorShorthand"]
 $QuantumOperatorNames = {
     "Identity", "I", "Permutation", "Uncurry", "Curry", "Zero",
     "Fourier", "InverseFourier",
-    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
+    "XRotation", "YRotation", "ZRotation", "U", "U1", "U2", "U3", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
     "PhaseShift", "FlipSign",
     "SUM", "RootNOT",
@@ -19,7 +19,7 @@ $QuantumOperatorNames = {
     "0", "1",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin", "C0SWAP", "Braid",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT", "C0NOT",
-    "S", "T", "V",
+    "S", "T", "V", "SX",
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider", "WSpider",
@@ -49,7 +49,7 @@ $ShorthandOperatorPattern =
     _String |
     _Symbol |
     _SuperDagger |
-    ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]) |
+    (name_String[___] /; MemberQ[$QuantumOperatorNames, name]) |
     (c : g_Symbol[___] /; ! NumericQ[c] && MemberQ[Attributes[g], NumericFunction])
 
 FromOperatorShorthand[f_Symbol[
@@ -72,7 +72,7 @@ FromOperatorShorthand[qm_ ? QuantumMeasurementQ -> order_ ? autoOrderQ] := Quant
 FromOperatorShorthand[SuperDagger[arg_]] := FromOperatorShorthand[Unevaluated[arg]]["Dagger"]
 FromOperatorShorthand[SuperDagger[arg_] -> rest_] := FromOperatorShorthand[Unevaluated[arg -> rest]]["Dagger"]
 
-namePattern = {name_String, ___} | name_String[___] | name_String
+namePattern = name_String[___] | name_String
 
 FromOperatorShorthand[arg : (namePattern /; MemberQ[$QuantumStateNames, name]) | (name_String /; StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..])] :=
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
@@ -115,70 +115,68 @@ QuantumOperator[arg : _String | {_String, ___}, n_Integer ? Positive, opts___] :
 
 QuantumOperator[arg_, inputOrder : _ ? orderQ | Automatic -> outputOrder : _ ? orderQ | Automatic, opts___] := QuantumOperator[arg, {outputOrder, inputOrder}, opts]
 
-QuantumOperator["Identity" | "I", opts___] := QuantumOperator["I", Automatic, opts] 
+QuantumOperator[("Identity" | "I")[], opts___] := QuantumOperator["I"[], Automatic, opts]
 
-QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic, opts___] :=
-    QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
+QuantumOperator[("Identity" | "I")[], order : _ ? orderQ | Automatic, opts___] :=
+    QuantumOperator["Identity"[Table[2, If[order === Automatic, 1, Length[order]]]], order, opts]
 
-QuantumOperator["Identity" | "I", order : {outOrder : _ ? orderQ | Automatic, inOrder : _ ? orderQ | Automatic}, opts___] :=
-    QuantumOperator[{"Identity", Table[2, If[outOrder === Automatic, 1, Length[outOrder]]], Table[2, If[inOrder === Automatic, 1, Length[inOrder]]]}, order, opts]
+QuantumOperator[("Identity" | "I")[], order : {outOrder : _ ? orderQ | Automatic, inOrder : _ ? orderQ | Automatic}, opts___] :=
+    QuantumOperator["Identity"[Table[2, If[outOrder === Automatic, 1, Length[outOrder]]], Table[2, If[inOrder === Automatic, 1, Length[inOrder]]]], order, opts]
 
-QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ...}}, opts___] := QuantumOperator[
+QuantumOperator[("Identity" | "I")[dims : {_Integer ? Positive ...}], opts___] := QuantumOperator[
     QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]]],
     opts
 ]
 
-QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, opts___] := QuantumOperator[
+QuantumOperator[("Identity" | "I")[outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}], opts___] := QuantumOperator[
     QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]]],
     opts
 ]
 
-QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
-    QuantumOperator[{"Identity", qb["FullDimensions"]}],
+QuantumOperator[("Identity" | "I")[qb_ ? QuditBasisQ], opts___] := QuantumOperator[
+    QuantumOperator["Identity"[qb["FullDimensions"]]],
     opts,
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity" | "I", qb_ ? QuantumBasisQ}, opts___] :=
-    QuantumOperator[{"Identity", qb["OutputDimensions"], qb["InputDimensions"]}, opts]
+QuantumOperator[("Identity" | "I")[qb_ ? QuantumBasisQ], opts___] :=
+    QuantumOperator["Identity"[qb["OutputDimensions"], qb["InputDimensions"]], opts]
 
-QuantumOperator[{"Identity" | "I", params__}, opts___] :=
-    Enclose @ QuantumOperator[{"Identity", ConfirmBy[QuantumBasis[params], QuantumBasisQ]}, opts]
+QuantumOperator[("Identity" | "I")[params__], opts___] :=
+    Enclose @ QuantumOperator["Identity"[ConfirmBy[QuantumBasis[params], QuantumBasisQ]], opts]
 
-QuantumOperator[{"Identity" | "I", dim_Integer ? Positive}, opts___] :=
-    Enclose @ QuantumOperator[{"Identity", {dim}}, opts]
-
-
-QuantumOperator[{"Zero" | "O", args___} | "Zero" | "O", opts___] := Log[QuantumOperator["I"[args], opts]]
+QuantumOperator[("Identity" | "I")[dim_Integer ? Positive], opts___] :=
+    Enclose @ QuantumOperator["Identity"[{dim}], opts]
 
 
-QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
+QuantumOperator[("Zero" | "O")[args___] | "Zero" | "O", opts___] := Log[QuantumOperator["I"[args], opts]]
 
-QuantumOperator[{"XRotation" | "RX", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+
+QuantumOperator[("XRotation" | "RX")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}]],
+        Exp[- I angle / 2 QuantumOperator["PauliX"[dimension]]],
         "Label" -> Subscript["R", "X"][angle]
     ],
     opts
 ]
 
-QuantumOperator[{"YRotation" | "RY", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[("YRotation" | "RY")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}]],
+        Exp[- I angle / 2 QuantumOperator["PauliY"[dimension]]],
         "Label" -> Subscript["R", "Y"][angle]
     ],
     opts
 ]
 
-QuantumOperator[{"ZRotation" | "RZ", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[("ZRotation" | "RZ")[angle_ : Pi / 2, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     FullSimplify @ QuantumOperator[
-        Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}]],
+        Exp[- I angle / 2 QuantumOperator["PauliZ"[dimension]]],
         "Label" -> Subscript["R", "Z"][angle]
     ],
     opts
 ]
 
-QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
+QuantumOperator["R"[angle_, args__], opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
     op = QuantumCircuitOperator[ops]["QuantumOperator", Method -> "Schrodinger"]["Sort"];
     orders = #["FullInputOrder"] & /@ ops;
     FullSimplify @ QuantumOperator[
@@ -188,7 +186,7 @@ QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = Confir
     ]
 ]
 
-QuantumOperator[{"U" | "U3", theta_ : 0, phi_ : Pi, lambda_ : Pi}, opts___] := QuantumOperator[
+QuantumOperator[("U" | "U3")[theta_ : 0, phi_ : Pi, lambda_ : Pi], opts___] := QuantumOperator[
     QuantumOperator[
         {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I * (phi + lambda)] Cos[theta / 2]}},
          "Label" -> "U"[theta, phi, lambda]
@@ -196,7 +194,7 @@ QuantumOperator[{"U" | "U3", theta_ : 0, phi_ : Pi, lambda_ : Pi}, opts___] := Q
     opts
 ]
 
-QuantumOperator[{"U2", phi_ : 0, lambda_ : Pi}, opts___] := QuantumOperator[
+QuantumOperator["U2"[phi_ : 0, lambda_ : Pi], opts___] := QuantumOperator[
     QuantumOperator[
         1 / Sqrt[2] {{1, - Exp[I lambda]}, {Exp[I phi], Exp[I * (phi + lambda)]}},
         "Label" -> "U2"[phi, lambda]
@@ -204,9 +202,7 @@ QuantumOperator[{"U2", phi_ : 0, lambda_ : Pi}, opts___] := QuantumOperator[
     opts
 ]
 
-QuantumOperator["Phase" | "P" | "U1", opts___] := QuantumOperator[{"Phase", Pi}, opts]
-
-QuantumOperator[{"Phase" | "P" | "U1", angle_ : Pi, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[
         SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}],
         dimension,
@@ -216,17 +212,13 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_ : Pi, dimension : _Integer ? Posit
 ]
 
 
-QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
-
-QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[
-    QuantumOperator[{"Phase", Sign[k] 2 Pi / 2 ^ Abs[k]}, "Label" -> "PhaseShift"[k]],
+QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], opts___] := QuantumOperator[
+    QuantumOperator["Phase"[Sign[k] 2 Pi / 2 ^ Abs[k]], "Label" -> "PhaseShift"[k]],
     opts
 ]
 
 
-QuantumOperator["GlobalPhase", opts___] := QuantumOperator[{"GlobalPhase", Pi}, opts]
-
-QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positive : 1}, opts___] := QuantumOperator[
+QuantumOperator["GlobalPhase"[angle_ : Pi, dimension : _Integer ? Positive : 1], opts___] := QuantumOperator[
     QuantumOperator[
         ReplacePart[identityMatrix[dimension], {i_, i_} -> Exp[I angle]],
         dimension,
@@ -235,12 +227,12 @@ QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positive : 1}, op
     opts
 ]
 
-QuantumOperator[{"Diagonal", x_ : 1, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Diagonal", x, dimension}, {1}, opts]
+QuantumOperator["Diagonal"[x_ : 1, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator["Diagonal"[x, dimension], {1}, opts]
 
-QuantumOperator[{"Diagonal", x_ : 1, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] :=
-    QuantumOperator[{"Diagonal", Table[x, dimension ^ Length[order]], dimension}, order, opts]
+QuantumOperator["Diagonal"[x_ : 1, dimension : _Integer ? Positive : 2], order_ ? orderQ, opts___] :=
+    QuantumOperator["Diagonal"[Table[x, dimension ^ Length[order]], dimension], order, opts]
 
-QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] := With[{
+QuantumOperator["Diagonal"[x_List, dimension : _Integer ? Positive : 2], order_ ? orderQ, opts___] := With[{
     size = Ceiling[Log[dimension, Length[x]]]
 },
     QuantumOperator[
@@ -254,9 +246,7 @@ QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order
     ]
 ]
 
-QuantumOperator["FlipSign", opts___] := QuantumOperator[{"FlipSign", {1, 1, 1}, 2}, opts]
-
-QuantumOperator[{"FlipSign", digits : {__Integer}, dim : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
+QuantumOperator["FlipSign"[digits : {__Integer} : {1, 1, 1}, dim : _Integer ? Positive | Automatic : Automatic], opts___] := With[{
     d = Replace[dim, Automatic :> Max[Max[digits] + 1, 2]],
     n = Length[digits]
 },
@@ -276,25 +266,23 @@ QuantumOperator[{"FlipSign", digits : {__Integer}, dim : _Integer ? Positive | A
     ] /; AllTrue[digits, Between[{0, d - 1}]]
 ]
 
-QuantumOperator[{"FlipSign", s_String, args___}, opts___] := QuantumOperator[{"FlipSign", FromDigits /@ Characters[s], args}, opts]
+QuantumOperator["FlipSign"[s_String, args___], opts___] := QuantumOperator["FlipSign"[FromDigits /@ Characters[s], args], opts]
 
 
-QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S"], opts]
+QuantumOperator["S"[], opts___] := QuantumOperator[QuantumOperator["Phase"[Pi / 2], "Label" -> "S"], opts]
 
-QuantumOperator["T", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 4}, "Label" -> "T"], opts]
+QuantumOperator["T"[], opts___] := QuantumOperator[QuantumOperator["Phase"[Pi / 4], "Label" -> "T"], opts]
 
-QuantumOperator["V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
-
-
-QuantumOperator[{"CNOT", dimension_Integer : 2}, opts___] := QuantumOperator[{"C", {"NOT", dimension} -> 2}, opts]
-
-QuantumOperator[{"C0NOT", dimension_Integer : 2}, opts___] := QuantumOperator[{"C0", {"NOT", dimension} -> 2}, opts]
+QuantumOperator[("V" | "SX")[], opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
 
 
-QuantumOperator["CPHASE" | "CP", opts___] := QuantumOperator[{"CPHASE", Pi}, opts]
+QuantumOperator["CNOT"[dimension_Integer : 2], opts___] := QuantumOperator["C"["NOT"[dimension] -> 2], opts]
 
-QuantumOperator[{"CPHASE" | "CP", angle_, dimension : _Integer ? Positive : 2}, opts___] :=
-    QuantumOperator[{"Controlled", {"Phase", angle, dimension} -> 2}, opts]
+QuantumOperator["C0NOT"[dimension_Integer : 2], opts___] := QuantumOperator["C0"["NOT"[dimension] -> 2], opts]
+
+
+QuantumOperator[("CPHASE" | "CP")[angle_ : Pi, dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator["Controlled"["Phase"[angle, dimension] -> 2], opts]
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
@@ -310,91 +298,89 @@ controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
     ]
 ]
 
-QuantumOperator[name : "CX" | "CY" | "CZ", opts___] := QuantumOperator[{name, 2}, opts]
+QuantumOperator["CX"[dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator["Controlled"["PauliX"[dimension] -> {2}], opts]
 
-QuantumOperator[{"CX", dimension : _Integer ? Positive}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliX", dimension} -> {2}}, opts]
+QuantumOperator["CY"[dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator["Controlled"["PauliY"[dimension] -> {2}], opts]
 
-QuantumOperator[{"CY", dimension : _Integer ? Positive}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliY", dimension} -> {2}}, opts]
+QuantumOperator["CZ"[dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator["Controlled"["PauliZ"[dimension] -> {2}], opts]
 
-QuantumOperator[{"CZ", dimension : _Integer ? Positive}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliZ", dimension} -> {2}}, opts]
+QuantumOperator["CH"[], opts___] := QuantumOperator["Controlled"["H" -> {2}], opts]
 
-QuantumOperator["CH", opts___] := QuantumOperator[{"Controlled", "H" ->{2}}, opts]
+QuantumOperator["CT"[], opts___] := QuantumOperator["Controlled"["T" -> {2}], opts]
 
-QuantumOperator["CT", opts___] := QuantumOperator[{"Controlled", "T" -> {2}}, opts]
-
-QuantumOperator["CS", opts___] := QuantumOperator[{"Controlled", "S" -> {2}}, opts]
+QuantumOperator["CS"[], opts___] := QuantumOperator["Controlled"["S" -> {2}], opts]
 
 
-QuantumOperator[{"C" | "Controlled", args___, ctrl_Integer ? NonNegative, order : _ ? orderQ | Automatic : Automatic}, opts___] := Block[{
+QuantumOperator[("C" | "Controlled")[args___, ctrl_Integer ? NonNegative, order : _ ? orderQ | Automatic : Automatic], opts___] := Block[{
     controlSize, controlOrder
 },
     controlSize = Max[IntegerLength[ctrl, 2], 1];
     controlOrder = Replace[order, Automatic :> Range[controlSize]];
     controlOrder = Join[controlOrder, Max[controlOrder] + Range[Max[controlSize - Length[controlOrder], 0]]];
     controlSize = Max[controlSize, Length[controlOrder]];
-    QuantumOperator[{"C", args, Splice[controlOrder[[#]] & /@ Lookup[PositionIndex[IntegerDigits[ctrl, 2, controlSize]], {1, 0}, {}]]}, opts]
+    QuantumOperator["C"[args, Splice[controlOrder[[#]] & /@ Lookup[PositionIndex[IntegerDigits[ctrl, 2, controlSize]], {1, 0}, {}]]], opts]
 ]
 
-QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qmo_ ? QuantumMeasurementOperatorQ, args___}, opts___] :=
-    QuantumOperator[{name, qmo["SuperOperator"], args}, opts]
+QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qmo_ ? QuantumMeasurementOperatorQ, args___], opts___] :=
+    QuantumOperator[name[qmo["SuperOperator"], args], opts]
 
-QuantumOperator[{"C" | "Controlled", qo : Except[_QuantumOperator], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
-    QuantumOperator[{"Controlled", QuantumOperator[qo, opts], control1, control0}]
+QuantumOperator[("C" | "Controlled")[qo : Except[_QuantumOperator], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}], opts___] :=
+    QuantumOperator["Controlled"[QuantumOperator[qo, opts], control1, control0]]
 
-QuantumOperator[{name : "C" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
+QuantumOperator[(name : "C" | "Controlled")[params : PatternSequence[___, Except[_ ? orderQ | {}]]], order_ ? orderQ, opts___] :=
     Enclose @ With[{op = ConfirmBy[QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]], QuantumOperatorQ]},
-        QuantumOperator[{name, op, {First @ order}}, opts]
+        QuantumOperator[name[op, {First @ order}], opts]
     ]
 
-QuantumOperator[{"C0" | "Controlled0", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order : _ ? orderQ, opts___] :=
+QuantumOperator[("C0" | "Controlled0")[params : PatternSequence[___, Except[_ ? orderQ | {}]]], order : _ ? orderQ, opts___] :=
     Enclose @ With[{op = ConfirmBy[QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]], QuantumOperatorQ]},
-        QuantumOperator[{"Controlled", op, {}, {First @ order}}, opts]
+        QuantumOperator["Controlled"[op, {}, {First @ order}], opts]
     ]
 
-QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ | {} : {}}, opts___] :=
+QuantumOperator[(name : "C" | "Controlled")[params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ | {} : {}], opts___] :=
     Enclose @ Block[{op = ConfirmBy[QuantumOperator[params], QuantumOperatorQ], control},
         control = Replace[defaultControl, Automatic -> {First[Complement[Range[Max[op["InputOrder"]] + 1], op["InputOrder"]]]}];
-        QuantumOperator[{"C", op, control, control0}, opts]
+        QuantumOperator["C"[op, control, control0], opts]
     ]
 
-QuantumOperator[{"C0" | "Controlled0", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl0 : _ ? orderQ | Automatic : Automatic}, opts___] :=
+QuantumOperator[("C0" | "Controlled0")[params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl0 : _ ? orderQ | Automatic : Automatic], opts___] :=
     Enclose @ Block[{op = ConfirmBy[QuantumOperator[params], QuantumOperatorQ], control0},
         control0 = Replace[defaultControl0, Automatic -> {First[Complement[Range[Max[op["InputOrder"]] + 1], op["InputOrder"]]]}];
-        QuantumOperator[{"C", op, {}, control0}, opts]
+        QuantumOperator["C"[op, {}, control0], opts]
     ]
 
-QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, Automatic, control0 : _ ? orderQ : {}}, opts___] := With[{
+QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qo_ ? QuantumOperatorQ, Automatic, control0 : _ ? orderQ : {}], opts___] := With[{
     control = {First[Complement[Range[Max[qo["InputOrder"]] + 1], qo["InputOrder"]]]}
 },
-    QuantumOperator[{name, qo, control, control0}, opts]
+    QuantumOperator[name[qo, control, control0], opts]
 ]
 
-QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
-    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control, control0}, opts]
+QuantumOperator[(name : "C" | "Controlled")[params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}], target_ ? orderQ, opts___] :=
+    Enclose @ QuantumOperator[name[ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control, control0], opts]
 
-QuantumOperator[{name : "C0" | "Controlled0", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
-    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control0}, opts]
-
-
-QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ}, opts___] :=
-    QuantumOperator[{name, qo, {First[Complement[Range[Max[qo["InputOrder"]] + 1], qo["InputOrder"]]]}}, opts]
-
-QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, control___}, target_ ? orderQ, opts___] :=
-    QuantumOperator[{name, QuantumOperator[qo, target], control}, opts]
-
-QuantumOperator[{"C0" | "Controlled0", qo_ ? QuantumOperatorQ, control0 : _ ? orderQ | {}}, opts___] := QuantumOperator[{"Controlled", qo, {}, control0}, opts]
+QuantumOperator[(name : "C0" | "Controlled0")[params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control0 : _ ? orderQ | {} : {}], target_ ? orderQ, opts___] :=
+    Enclose @ QuantumOperator[name[ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control0], opts]
 
 
-QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"] =!= {}, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
-    QuantumOperator[{"Controlled", qo["TargetOperator"],
+QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qo_ ? QuantumOperatorQ], opts___] :=
+    QuantumOperator[name[qo, {First[Complement[Range[Max[qo["InputOrder"]] + 1], qo["InputOrder"]]]}], opts]
+
+QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qo_ ? QuantumOperatorQ, control___], target_ ? orderQ, opts___] :=
+    QuantumOperator[name[QuantumOperator[qo, target], control], opts]
+
+QuantumOperator[("C0" | "Controlled0")[qo_ ? QuantumOperatorQ, control0 : _ ? orderQ | {}], opts___] := QuantumOperator["Controlled"[qo, {}, control0], opts]
+
+
+QuantumOperator[("C" | "Controlled")[qo_ ? QuantumOperatorQ /; qo["ControlOrder"] =!= {}, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}], opts___] :=
+    QuantumOperator["Controlled"[qo["TargetOperator"],
         Complement[Union[qo["ControlOrder1"], control1], control0],
         Complement[Union[qo["ControlOrder0"], control0], control1]
-    }, opts]
+    ], opts]
 
-QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] /; qo["VectorQ"] := Enclose @ With[{
+QuantumOperator[("C" | "Controlled")[qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}], opts___] /; qo["VectorQ"] := Enclose @ With[{
     controls1 = Length[control1],
     controls0 = Length[control0],
     control = Join[control0, control1],
@@ -431,8 +417,8 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
     ]
 ]
 
-QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
-    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ]["Sort"], control, target, targetDimensions
+QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qo_ ? QuantumOperatorQ, args___], opts___] /; qo["MatrixQ"] := Enclose @ Block[{
+    cop = ConfirmBy[QuantumOperator[name[qo["Bend"], args]], QuantumOperatorQ]["Sort"], control, target, targetDimensions
 },
     control = cop["ControlOrder"];
     target = cop["TargetOrder"];
@@ -459,15 +445,15 @@ QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? Quantum
         ] &
 ]
 
-QuantumOperator[{name : "C" | "Controlled"}, opts___] := QuantumOperator["CNOT", opts]
+QuantumOperator[(name : "C" | "Controlled")[], opts___] := QuantumOperator["CNOT", opts]
 
-QuantumOperator[{name : "C0" | "Controlled0"}, opts___] := QuantumOperator["C0NOT", opts]
+QuantumOperator[(name : "C0" | "Controlled0")[], opts___] := QuantumOperator["C0NOT", opts]
 
-(* QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
+(* QuantumOperator[(name : "C" | "Controlled" | "C0" | "Controlled0")[qo_ ? QuantumOperatorQ, args___], opts___] /; qo["MatrixQ"] := Enclose @ Block[{
     weights, vectors, ops
 },
     {weights, vectors} = qo["State"]["Eigensystem"];
-    ops = MapThread[Confirm[QuantumOperator[{name, QuantumOperator[QuantumState[Sqrt[#1] #2, qo["Basis"]], qo["Order"]], args}, opts]] &, {weights, vectors}];
+    ops = MapThread[Confirm[QuantumOperator[name[QuantumOperator[QuantumState[Sqrt[#1] #2, qo["Basis"]], qo["Order"]], args], opts]] &, {weights, vectors}];
     QuantumOperator[
         QuantumState[Total[Through[ops["DensityMatrix"]]], First[ops]["Basis"]],
         First[ops]["Order"]
@@ -475,7 +461,7 @@ QuantumOperator[{name : "C0" | "Controlled0"}, opts___] := QuantumOperator["C0NO
 ] *)
 
 
-QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, opts___] := Block[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
+QuantumOperator[("Multiplexer" | "BlockDiagonal")[qos__], opts___] := Block[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
     QuantumOperator[
         QuantumOperator[
             blockDiagonalMatrix[#["MatrixRepresentation"] & /@ sorted],
@@ -487,18 +473,16 @@ QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, opts___] := Block[{sor
     ]["SetFullOrder"]
 ]
 
-QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, order : _ ? autoOrderQ, opts___] := With[{
-    op = QuantumOperator[{"Multiplexer", qos}, opts]
+QuantumOperator[("Multiplexer" | "BlockDiagonal")[qos__], order : _ ? autoOrderQ, opts___] := With[{
+    op = QuantumOperator["Multiplexer"[qos], opts]
 },
     QuantumOperator[op, order, QuantumBasis[Join[Table @@@ FactorInteger[op["OutputDimension"]]], Sequence @@ op["Basis"]["Options"]]] /; op["OutputDimension"] == op["InputDimension"]
 ]
 
-QuantumOperator[{"Multiplexer" | "BlockDiagonal"}, opts___] := QuantumOperator["I", opts]
+QuantumOperator[("Multiplexer" | "BlockDiagonal")[], opts___] := QuantumOperator["I", opts]
 
 
-QuantumOperator["Fourier", opts___] := QuantumOperator[{"Fourier", 2}, opts]
-
-QuantumOperator[{"Fourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
+QuantumOperator["Fourier"[dimension : _Integer ? Positive : 2], order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
         kroneckerProduct @@ ConstantArray[FourierMatrix[dimension], Length[order]],
         dimension,
@@ -509,9 +493,7 @@ QuantumOperator[{"Fourier", dimension : _Integer ? Positive}, order : (_ ? order
     "Label" -> "QFT"
 ]
 
-QuantumOperator["InverseFourier", opts___] := QuantumOperator[{"InverseFourier", 2}, opts]
-
-QuantumOperator[{"InverseFourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
+QuantumOperator["InverseFourier"[dimension : _Integer ? Positive : 2], order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
         kroneckerProduct @@ ConstantArray[ConjugateTranspose @ FourierMatrix[dimension], Length[order]],
         dimension,
@@ -530,29 +512,21 @@ swapMatrix[dimension_] := SparseArray[# -> 1 & /@
     }]
 ]
 
-QuantumOperator["SWAP", opts___] := QuantumOperator[{"SWAP"}, opts]
+QuantumOperator["SWAP"[dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator[QuantumOperator["Permutation"[{dimension, dimension}, Cycles[{{1, 2}}]], opts], "Label" -> "SWAP"]
 
-QuantumOperator[{"SWAP", dimension : _Integer ? Positive : 2}, opts___] :=
-    QuantumOperator[QuantumOperator[{"Permutation", {dimension, dimension}, Cycles[{{1, 2}}]}, opts], "Label" -> "SWAP"]
-
-QuantumOperator["RootSWAP", opts___] := QuantumOperator[{"RootSWAP"}, opts]
-
-QuantumOperator[{"RootSWAP", dimension : _Integer ? Positive : 2}, opts___] :=
-    QuantumOperator[Sqrt[QuantumOperator[{"SWAP", dimension}, opts]], "Label" -> "RootSWAP"]
+QuantumOperator["RootSWAP"[dimension : _Integer ? Positive : 2], opts___] :=
+    QuantumOperator[Sqrt[QuantumOperator["SWAP"[dimension], opts]], "Label" -> "RootSWAP"]
 
 
-QuantumOperator["Braid", opts___] := QuantumOperator[{"Braid"}, opts]
-
-QuantumOperator[{"Braid", method_ : "Bell"}, opts___] := QuantumOperator[
+QuantumOperator["Braid"[method_ : "Bell"], opts___] := QuantumOperator[
     Switch[method, "Bell", QuditBasis["Bell"]["Matrix"], "SwapPhase" | _, ReplacePart[PermutationMatrix[{1, 3, 2, 4}], {4, 4} -> -1]],
     opts,
     "Label" -> "Braid"
 ]
 
 
-QuantumOperator["SUM", opts___] := QuantumOperator[{"SUM", 2}, opts]
-
-QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
+QuantumOperator["SUM"[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[
         SparseArray[{output_, input_} :>
             With[{
@@ -571,33 +545,29 @@ QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOpe
 ]
 
 
-QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
-
-QuantumOperator[{"PauliX" | "X" | "Shift", dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[("PauliX" | "X" | "Shift")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"],
     opts
 ]
 
-QuantumOperator[{"PauliY" | "Y", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
+QuantumOperator[("PauliY" | "Y")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"],
     opts
 ]
 
-QuantumOperator[{"PauliZ" | "Z" | "ShiftPhase", dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[("PauliZ" | "Z" | "ShiftPhase")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
     opts
 ]
 
-QuantumOperator["0", opts___] := QuantumOperator[- "Z", opts, "Label" -> "0"]
+QuantumOperator["0"[], opts___] := QuantumOperator[- "Z", opts, "Label" -> "0"]
 
-QuantumOperator["1", opts___] := QuantumOperator["Z", opts, "Label" -> "1"]
+QuantumOperator["1"[], opts___] := QuantumOperator["Z", opts, "Label" -> "1"]
 
-QuantumOperator[{"NOT", dimension : _Integer ? Positive}, opts___] := QuantumOperator[QuantumOperator[{"X", dimension}, "Label" -> "NOT"], opts]
+QuantumOperator["NOT"[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[QuantumOperator["X"[dimension], "Label" -> "NOT"], opts]
 
 
-QuantumOperator["RootNOT", opts___] := QuantumOperator[{"RootNOT", 2}, opts]
-
-QuantumOperator[{"RootNOT", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
+QuantumOperator["RootNOT"[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[
         MatrixPower[
             SparseArray[({i_, j_} /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}],
@@ -610,34 +580,31 @@ QuantumOperator[{"RootNOT", dimension : _Integer ? Positive}, opts___] := Quantu
 ]
 
 
-QuantumOperator["Hadamard" | "H", opts___]  := QuantumOperator[{"H"}, opts]
-
-QuantumOperator[{"Hadamard" | "H", dim : _Integer ? NonNegative : 2}, order : _ ? orderQ : {1}, opts___] :=
-    QuantumOperator[
-        {"Fourier", dim} -> order,
+QuantumOperator[("Hadamard" | "H")[dim : _Integer ? NonNegative : 2], order : _ ? orderQ : {1}, opts___] :=
+    QuantumOperator["Fourier"[dim] -> order,
         opts,
         "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]
     ]
 
 
 QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
-    QuantumOperator[{"Controlled", "NOT", Most[order]}, {Last[order]}]
+    QuantumOperator["Controlled"["NOT", Most[order]], {Last[order]}]
 
 
-QuantumOperator[{"CSWAP" | "Fredkin", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Controlled", "SWAP"[d] -> {2, 3}}, opts]
+QuantumOperator[("CSWAP" | "Fredkin")[d : _Integer ? Positive : 2], opts___] := QuantumOperator["Controlled"["SWAP"[d] -> {2, 3}], opts]
 
-QuantumOperator[{"C0SWAP" | "Fredkin0", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Controlled0", "SWAP"[d] -> {2, 3}}, opts]
+QuantumOperator[("C0SWAP" | "Fredkin0")[d : _Integer ? Positive : 2], opts___] := QuantumOperator["Controlled0"["SWAP"[d] -> {2, 3}], opts]
 
 
 
 QuantumOperator["RandomUnitary", order : {outputOrder_ ? orderQ, inputOrder_ ? orderQ}, opts___] := Enclose @
-    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[QuditBasis[2, Length[outputOrder]], QuditBasis[2, Length[inputOrder]]], QuantumBasisQ]}, order, opts]
+    QuantumOperator["RandomUnitary"[ConfirmBy[QuantumBasis[QuditBasis[2, Length[outputOrder]], QuditBasis[2, Length[inputOrder]]], QuantumBasisQ]], order, opts]
 
 
 QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose @
     QuantumOperator["RandomUnitary", {order, order}, opts]
 
-QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? autoOrderQ), opts___] :=
+QuantumOperator["RandomUnitary"[qb_ ? QuantumBasisQ], order : (_ ? autoOrderQ), opts___] :=
     QuantumOperator[
         Which[
             qb["InputDimension"] == 1,
@@ -650,32 +617,30 @@ QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? autoOrderQ)
         order, qb, opts, "Label" -> None
     ]
 
-QuantumOperator[{"RandomUnitary", args___}, order : (_ ? autoOrderQ) : {1}, opts___] := Enclose @
-    With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumOperator[{"RandomUnitary", basis}, Join[order, Max[order] + Range[basis["Qudits"] - Length[order]]], opts]]
+QuantumOperator["RandomUnitary"[args___], order : (_ ? autoOrderQ) : {1}, opts___] := Enclose @
+    With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumOperator["RandomUnitary"[basis], Join[order, Max[order] + Range[basis["Qudits"] - Length[order]]], opts]]
 
 
 QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclose @
-    QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order]], QuantumBasisQ]}, order, opts]
+    QuantumOperator["RandomHermitian"[ConfirmBy[QuantumBasis[2, Length[order]], QuantumBasisQ]], order, opts]
 
-QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
+QuantumOperator["RandomHermitian"[qb_ ? QuantumBasisQ], order : (_ ? orderQ) : {1}, opts___] :=
     Enclose @ With[{u = ConfirmBy[QuantumOperator["RandomUnitary"[qb], order, opts], #["InputDimensions"] == #["OutputDimensions"] &]}, u + SuperDagger[u]]
 
-QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}, opts___] := Enclose @
-    With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumOperator[{"RandomHermitian", basis}, Join[order, Max[order] + Range[basis["Qudits"] - Length[order]]], opts]]
+QuantumOperator["RandomHermitian"[args___], order : (_ ? orderQ) : {1}, opts___] := Enclose @
+    With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumOperator["RandomHermitian"[basis], Join[order, Max[order] + Range[basis["Qudits"] - Length[order]]], opts]]
 
 
-QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cycles[{{1, 2}}]}, opts]
+QuantumOperator["Permutation"[], order_ ? orderQ, opts___] := QuantumOperator["Permutation"[ConstantArray[2, Length[order]]], Sort[order] -> order, opts]
 
-QuantumOperator["Permutation", order_ ? orderQ, opts___] := QuantumOperator[{"Permutation", ConstantArray[2, Length[order]]}, Sort[order] -> order, opts]
+QuantumOperator["Permutation"[], {out_ ? orderQ, in_ ? orderQ} | (in_ ? orderQ -> out_ ? orderQ), opts___] /; Length[out] == Length[in] :=
+    QuantumOperator["Permutation"[ConstantArray[2, Length[out]]], {out, in}, opts]
 
-QuantumOperator["Permutation", {out_ ? orderQ, in_ ? orderQ} | (in_ ? orderQ -> out_ ? orderQ), opts___] /; Length[out] == Length[in] :=
-    QuantumOperator[{"Permutation", ConstantArray[2, Length[out]]}, {out, in}, opts]
+QuantumOperator["Permutation"[perm_Cycles : Cycles[{}]], opts___] := QuantumOperator["Permutation"[2, perm], opts]
 
-QuantumOperator[{"Permutation", perm_Cycles : Cycles[{}]}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
+QuantumOperator["Permutation"[dim : _Integer ? Positive, perm_Cycles : Cycles[{}]], opts___] := QuantumOperator["Permutation"[Table[dim, Max[PermutationMax[perm], 1]], perm], opts]
 
-QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles : Cycles[{}]}, opts___] := QuantumOperator[{"Permutation", Table[dim, Max[PermutationMax[perm], 1]], perm}, opts]
-
-QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles : Cycles[{}]}, opts___] :=
+QuantumOperator["Permutation"[dims : {_Integer ? Positive..}, perm_Cycles : Cycles[{}]], opts___] :=
     Enclose @ QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
@@ -684,13 +649,13 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles : Cy
         opts
     ]
 
-QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Automatic, perm_List}, opts___] :=
-    QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
+QuantumOperator["Permutation"[dims : {_Integer ? Positive..} | Automatic : Automatic, perm_List], opts___] :=
+    QuantumOperator["Permutation"[Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]], opts]
 
 
-QuantumOperator[{name : "Curry" | "Uncurry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{name, {basis, basis}}, opts]]
+QuantumOperator[(name : "Curry" | "Uncurry")[args__ : 2], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[name[{basis, basis}], opts]]
 
-QuantumOperator[{name : "Curry" | "Uncurry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
+QuantumOperator[(name : "Curry" | "Uncurry")[args_List], opts___] := With[{bases = QuditBasis /@ args},
     QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ identityMatrix[Times @@ Through[bases["Dimension"]]],
@@ -705,26 +670,24 @@ QuantumOperator[{name : "Curry" | "Uncurry", args_List}, opts___] := With[{bases
 ]
 
 
-QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},
-    order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ} | (inputOrder : _ ? orderQ -> outputOrder : _ ? orderQ), opts___] := QuantumOperator[{
-        "Spider",
-        QuantumBasis[
+QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider")[phase_ : 0],
+    order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ} | (inputOrder : _ ? orderQ -> outputOrder : _ ? orderQ), opts___] := QuantumOperator["Spider"[QuantumBasis[
             QuditBasis[StringTake[name, 1], Length[outputOrder]],
             QuditBasis[StringTake[name, 1], Length[inputOrder]]
         ],
         phase
-    },
+    ],
     order,
     opts,
     "Label" -> name[phase]
 ]
 
 
-QuantumOperator[name : "Spider" | "SimpleSpider", opts___] := QuantumOperator[{name, QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
+QuantumOperator[(name : "Spider" | "SimpleSpider")[], opts___] := QuantumOperator[name[QuantumBasis[QuditBasis[2], QuditBasis[2]]], opts]
 
-QuantumOperator[{name : "Spider" | "SimpleSpider", args_, phase_ : 0}, opts___] := Enclose @ QuantumOperator[{name, Confirm @ QuantumBasis[args], phase}, opts]
+QuantumOperator[(name : "Spider" | "SimpleSpider")[args : Except[_ ? QuantumBasisQ], phase_ : 0], opts___] := Enclose @ QuantumOperator[name[Confirm @ QuantumBasis[args], phase], opts]
 
-QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Enclose @ Block[{
+QuantumOperator["Spider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := Enclose @ Block[{
     phases, dims = Catenate[Table @@@ Catenate[FactorInteger[#] & /@ basis["Dimensions"]]], dim
 },
     dim = Max[dims, 1];
@@ -743,7 +706,7 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Encl
 ]
 
 
-QuantumOperator[{"SimpleSpider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Enclose @ Block[{
+QuantumOperator["SimpleSpider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := Enclose @ Block[{
     phases, dims = basis["Dimensions"], dim
 },
     dim = Max[dims, 1];
@@ -761,7 +724,7 @@ QuantumOperator[{"SimpleSpider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] :
     ]
 ]
 
-QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := QuantumOperator[
+QuantumOperator["WSpider"[n_Integer : 2, dim_Integer : 2], opts___] := QuantumOperator[
     QuantumState[
         If[ dim <= 1,
             {1},
@@ -779,62 +742,57 @@ QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := Quantum
 
 $Spider = "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"
 
-QuantumOperator[name : $Spider, opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[(name : $Spider)[args___], order : _ ? orderQ, opts___] :=
+    QuantumOperator[name[args], {order, order}, opts]
 
-QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
-    QuantumOperator[{name, args}, {order, order}, opts]
+QuantumOperator[(name : $Spider)[args___], opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] /; ! MatchQ[name[args], "Spider"[_ ? QuantumBasisQ, ___] | "SimpleSpider"[_ ? QuantumBasisQ, ___]] :=
+    QuantumOperator[name[args], {{1}, {1}}, opts]
 
-QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
-    QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
-QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace" | "Cap" | "Cup", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[(name : "Measure" | "Encode" | "Marginal" | "Discard" | "Trace")[args___], order : _ ? orderQ, opts___] /; Length[order] > 1 := QuantumTensorProduct[QuantumOperator[name[args], {#}, opts] & /@ order]
 
-QuantumOperator[{name : "Measure" | "Encode" | "Marginal" | "Discard" | "Trace", args___}, order : _ ? orderQ, opts___] /; Length[order] > 1 := QuantumTensorProduct[QuantumOperator[{name, args}, {#}, opts] & /@ order]
+QuantumOperator["Measure"[args__ : 2], opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Uncurry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
-QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Uncurry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
+QuantumOperator["Encode"[args__ : 2], opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Curry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
 
-QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Curry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
+QuantumOperator["Copy"[args__ : 2], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator["SimpleSpider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]], {1} -> {1, 2}], opts, "Label" -> "Copy"]]
 
-QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"SimpleSpider", QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]}, {1} -> {1, 2}], opts, "Label" -> "Copy"]]
+QuantumOperator["Decohere"[args__ : 2], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator["SimpleSpider"[QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]], {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
 
-QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"SimpleSpider", QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]}, {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
+QuantumOperator["Marginal"[args__ : 4], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
 
-QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
+QuantumOperator["Discard"[args__ : 4], opts___] := QuantumOperator[QuantumOperator["Spider"[QuantumBasis[QuditBasis[1], QuditBasis[args]]], {1} -> {}], opts, "Label" -> "Discard" ]
 
-QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
+QuantumOperator["Trace"[args__ : 2], opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator["Cap"[basis]]["Unbend"], opts, "Label" -> "Trace"]]
 
-QuantumOperator[{"Trace", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator["Cap"[basis]]["Unbend"], opts, "Label" -> "Trace"]]
-
-QuantumOperator[{"Reset", args___ : "0"}, opts___] := With[{state = QuantumState[args]},
+QuantumOperator["Reset"[args___ : "0"], opts___] := With[{state = QuantumState[args]},
     QuantumOperator[QuantumOperator[state] @ QuantumOperator["Trace"[state["Dimension"]]], opts, "Label" -> If[state["Label"] === None, None, "Reset"[state["Label"]]]]
 ]
 
-QuantumOperator[{"Measurement", args__ : "I"}, opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]
+QuantumOperator["Measurement"[args__ : "I"], opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]
 
-QuantumOperator[{"Channel", args__ : "BitFlip"}, opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
+QuantumOperator["Channel"[args__ : "BitFlip"], opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
 
-QuantumOperator[{"Cup", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
+QuantumOperator["Cup"[args__ : 2], order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
     QuantumOperator["SimpleSpider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], QuditBasis[]]], {order, {}}, opts, "Label" -> "Cup"]
 ]
 
-QuantumOperator[{"Cap", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
+QuantumOperator["Cap"[args__ : 2], order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
     QuantumOperator["SimpleSpider"[QuantumBasis[QuditBasis[], QuantumTensorProduct[basis, basis["Conjugate"]]]], {{}, order}, opts, "Label" -> "Cap"]
 ]
 
 
-QuantumOperator[{"Deutsch", theta_ : Pi}, order : _ ? orderQ : {1, 2, 3}] := With[{
+QuantumOperator["Deutsch"[theta_ : Pi], order : _ ? orderQ : {1, 2, 3}] := With[{
     controlOrder = PadRight[Most[order], 2, Range[2] + Max[order]],
     targetOrder = {Last[order]}
 },
-    QuantumOperator[{
-        "Controlled",
-        QuantumOperator[I QuantumOperator[{"XRotation", theta}, targetOrder], "Label" -> "D"[theta]],
+    QuantumOperator["Controlled"[QuantumOperator[I QuantumOperator["XRotation"[theta], targetOrder], "Label" -> "D"[theta]],
         controlOrder
-    }]
+    ]]
 ]
 
 
-QuantumOperator[{"Switch", a_ ? QuantumOperatorQ, b_ ? QuantumOperatorQ}, order : _ ? orderQ : {1, 2}, opts___] /;
+QuantumOperator["Switch"[a_ ? QuantumOperatorQ, b_ ? QuantumOperatorQ], order : _ ? orderQ : {1, 2}, opts___] /;
     a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] && Length[order] == 2 := With[{q = Max[order] + 1, d = a["InputDimension"]},
 QuantumPartialTrace[
 	QuantumOperator[
@@ -848,13 +806,11 @@ QuantumPartialTrace[
 	{q}
 ]]
 
-QuantumOperator[{"Switch"}, order : _ ? orderQ : {1, 2}, opts___] :=
-    QuantumOperator[{"Switch", QuantumOperator["RandomUnitary", "Label" -> "A"], QuantumOperator["RandomUnitary", "Label" -> "B"]}, order, opts]
+QuantumOperator["Switch"[], order : _ ? orderQ : {1, 2}, opts___] :=
+    QuantumOperator["Switch"[QuantumOperator["RandomUnitary", "Label" -> "A"], QuantumOperator["RandomUnitary", "Label" -> "B"]], order, opts]
 
 
-QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperator[{"HeisenbergWeyl", 2}, opts]
-
-QuantumOperator[{"HeisenbergWeyl", p_Integer ? Positive, i_Integer : 0, a_ : \[FormalA]}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
+QuantumOperator["HeisenbergWeyl"[p : (_Integer ? Positive) : 2, i_Integer : 0, a_ : \[FormalA]], order : _ ? orderQ : {1}, opts___] := QuantumOperator[
     QuantumOperator[
         With[{d = p ^ Length[order]},
             Total @ Table[Exp[I 2 Pi a l / d] KroneckerProduct[UnitVector[d, Mod[i + l, d] + 1], UnitVector[d, l + 1]] , {l, 0, d - 1}]
@@ -883,37 +839,37 @@ jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
 jQ[j_] := j >= 0 && IntegerQ[2 j]
 
-QuantumOperator[{"WignerD", j : _ ? jQ : 1 / 2, {a_, b_, c_}}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
+QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, {a_, b_, c_}], opts___] := QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
 
-QuantumOperator[{"WignerD", j : _ ? jQ : 1 / 2, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
+QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, b_ : 0], opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
 
 jMatrix[j_] := DiagonalMatrix[Range[- j, j], TargetStructure -> "Sparse"]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j : _ ? jQ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JX"[j]], opts, "Label" -> "JX"]
+QuantumOperator[("JX" | "AngularMomentumX")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JX"[j]], opts, "Label" -> "JX"]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j : _ ? jQ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JY"[j]], opts, "Label" -> "JY"]
+QuantumOperator[("JY" | "AngularMomentumY")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JY"[j]], opts, "Label" -> "JY"]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j : _ ? jQ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JZ"[j]], opts, "Label" -> "JZ"]
+QuantumOperator[("JZ" | "AngularMomentumZ")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JZ"[j]], opts, "Label" -> "JZ"]
 
-QuantumOperator[{name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+", j : _ ? jQ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jUp[j], StringDrop[name, -1][j]], opts, "Label" -> name]
+QuantumOperator[(name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jUp[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
-QuantumOperator[{name : "JX-" | "JY-" | "JZ-" | "JI-" | "J-", j : _ ? jQ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jDown[j], StringDrop[name, -1][j]], opts, "Label" -> name]
+QuantumOperator[(name : "JX-" | "JY-" | "JZ-" | "JI-" | "J-")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jDown[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
-QuantumOperator[{"Up" | "+" | "I+", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[DiagonalMatrix[Sqrt @ Range[qb["Dimension"] - 1], 1], qb], opts, "Label" -> "+"]]
+QuantumOperator[("Up" | "+" | "I+")[args___], opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[DiagonalMatrix[Sqrt @ Range[qb["Dimension"] - 1], 1], qb], opts, "Label" -> "+"]]
 
-QuantumOperator[{"Down" | "-" | "I-", args___}, opts___] := QuantumOperator[QuantumOperator["+"[args]]["Dagger"], opts, "Label" -> "-"]
+QuantumOperator[("Down" | "-" | "I-")[args___], opts___] := QuantumOperator[QuantumOperator["+"[args]]["Dagger"], opts, "Label" -> "-"]
 
 
-QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
+QuantumOperator["Double"[args___], opts___] := QuantumOperator[args, opts]["Double"]
 
-QuantumOperator[{"Left", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
+QuantumOperator["Left"[a_], opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
     d = A["Dimension"];
     ConfirmAssert[IntegerQ[Sqrt[d]]];
     B = QuantumOperator[A, {1}, d];
     QuantumOperator[QuantumState[ArrayReshape[Transpose[QuantumTensorProduct[B, QuantumOperator["I"[Sqrt[d]]]]["Tensor"], 2 <-> 3], {d, d}], A["Basis"]], opts, "Label" -> "Left"[A["Label"]]]
 ]
 
-QuantumOperator[{"Right", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
+QuantumOperator["Right"[a_], opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
     d = A["Dimension"];
     ConfirmAssert[IntegerQ[Sqrt[d]]];
     B = QuantumOperator[A, {1}, d];
@@ -940,7 +896,7 @@ LindbladMixedOperator[l_QuantumOperator, ldg : _QuantumOperator | None : None] :
     ]
 ]
 
-QuantumOperator[{"Liouvillian", H_, Ls : _ : {}, Gammas : _ : {}}, opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]]},
+QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]]},
 	ConfirmAssert[SameQ @@ Join[If[h === None, {}, {h["OutputDimension"], h["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]], "Hamiltonian and Lindblad operators must have the same dimensions"];
     QuantumOperator[
         If[H === None, 0, HamiltonianMixedOperator[h] / I] +
@@ -955,34 +911,32 @@ QuantumOperator[{"Liouvillian", H_, Ls : _ : {}, Gammas : _ : {}}, opts___] := E
     ]
 ]
 
-QuantumOperator[{"Liouvillian", H_, ls_ -> gammas_}, opts___] := Enclose @ QuantumOperator[{"Liouvillian", H, ls, gammas}, opts]
+QuantumOperator["Liouvillian"[H_, ls_ -> gammas_], opts___] := Enclose @ QuantumOperator["Liouvillian"[H, ls, gammas], opts]
 
-QuantumOperator[{"Hamiltonian", args___}, opts___] := Enclose @ QuantumOperator[I ConfirmBy[QuantumOperator["Liouvillian"[args]], QuantumOperatorQ], opts, "Label" -> "Hamiltonian"]
+QuantumOperator["Hamiltonian"[args___], opts___] := Enclose @ QuantumOperator[I ConfirmBy[QuantumOperator["Liouvillian"[args]], QuantumOperatorQ], opts, "Label" -> "Hamiltonian"]
 
 
-QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},
+QuantumOperator[chain_String /; StringLength[chain] > 1, opts___] := With[{chars = Characters[chain]},
     QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /;
         ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
 ]
-
-QuantumOperator[name_String[args___], opts___] := QuantumOperator[{name, args}, opts]
 
 $upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 
 QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[$upperCasesOperatorNames[name], opts]
 
-QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
-    QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
+QuantumOperator[name_String[params___], opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
+    QuantumOperator[$upperCasesOperatorNames[name][params], opts]
 
 QuantumOperator[name_String, opts___] /; MemberQ[$QuantumOperatorNames, name] :=
-    QuantumOperator[{name}, opts]
+    QuantumOperator[name[], opts]
 
 QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[Unevaluated[rule]], opts]
 
 QuantumOperator[f_Symbol[args___], opts___] /; MemberQ[Attributes[f], NumericFunction] := QuantumOperator[FromOperatorShorthand[Unevaluated[f[args]]], opts]
 
-QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | (name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
+QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | (name_String | name_String[___] /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
     Enclose @ QuantumOperator[
         QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"],
         opts
@@ -990,8 +944,14 @@ QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, 
 
 QuantumOperator[SuperDagger[arg_], opts___] := QuantumOperator[arg, opts]["Dagger"]
 
-QuantumOperator[{name_String, args__}, ___] := Failure["InvalidName", <|"MessageTemplate" -> "Invalid quantum operator ``[``]", "MessageParameters" :> {name, Row[{args}, ","]}|>]
+QuantumOperator[name_String[args___], ___] /; ! MemberQ[$QuantumOperatorNames, name] := (
+    Message[QuantumOperator::invalidName, Defer[name[args]]];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumOperator::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)
 
-QuantumOperator[{name_String}, ___] := Failure["InvalidName", <|"MessageTemplate" -> "Invalid quantum operator ``", "MessageParameters" :> {name}|>]
+QuantumOperator[name_String, ___] /; ! MemberQ[$QuantumOperatorNames, name] := (
+    Message[QuantumOperator::invalidName, name];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumOperator::invalidName, "MessageParameters" :> {name}|>]
+)
 
 

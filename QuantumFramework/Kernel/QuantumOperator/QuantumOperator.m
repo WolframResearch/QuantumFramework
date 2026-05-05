@@ -13,6 +13,7 @@ PackageScope["StackQuantumOperators"]
 
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
+QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
 
 quantumOperatorQ[QuantumOperator[qs_QuantumState /; QuantumStateQ[Unevaluated[qs]], {_ ? orderQ, _ ? orderQ}]] := True
 
@@ -219,7 +220,7 @@ QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
 QuantumOperator[array_ ? NumericArrayQ, args___] := QuantumOperator[Normal @ array, args]
 
 
-QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
+QuantumOperator[n_Integer, args___] := QuantumOperator["PhaseShift"[n], args]
 
 
 QuantumOperator[Labeled[arg_, label_], opts___] := QuantumOperator[arg, opts, "Label" -> label]
@@ -284,7 +285,7 @@ QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["Q
 QuantumOperator[q : _ ? QuantumChannelQ | _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ, opts___] := QuantumOperator[q["Operator"], opts]
 
 QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ | _ ? QuantumGateQ], args___] := Enclose @
-    ConfirmBy[QuantumOperator[{"Diagonal", If[AtomQ[x], x, HoldForm[x]]}, args], QuantumOperatorQ]
+    ConfirmBy[QuantumOperator["Diagonal"[If[AtomQ[x], x, HoldForm[x]]], args], QuantumOperatorQ]
 
 
 (* change of basis *)
@@ -589,7 +590,7 @@ Scan[
 
 QuantumOperator[qo_ ? QuantumOperatorQ] := qo
 
-QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator[{"Multiplexer", qo}]
+QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator["Multiplexer"[qo]]
 
 
 (* equality *)

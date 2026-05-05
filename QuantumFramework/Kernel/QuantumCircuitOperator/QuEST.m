@@ -37,11 +37,11 @@ InitializeQuEST[] := (
 
 FromQuESTLink[name_Symbol] /; Context[name] == "QuEST`Gate`" := ToUpperCase @ SymbolName[name]
 
-FromQuESTLink[Subscript[QuEST`Gate`Depol, order__][args___]] := QuantumChannel[{"Depolarizing", args}, {order} + 1]
+FromQuESTLink[Subscript[QuEST`Gate`Depol, order__][args___]] := QuantumChannel["Depolarizing"[args], {order} + 1]
 
-FromQuESTLink[Subscript[C, order__Integer][op_]] := QuantumOperator[{"C", FromQuESTLink[op], {order} + 1}]
+FromQuESTLink[Subscript[C, order__Integer][op_]] := QuantumOperator["C"[FromQuESTLink[op], {order} + 1]]
 
-FromQuESTLink[QuEST`Gate`R[angle_, ops_]] := QuantumOperator[{"R", angle, Splice[FromQuESTLink /@ Flatten[{Replace[ops, t_Times :> List @@ t]}]]}]
+FromQuESTLink[QuEST`Gate`R[angle_, ops_]] := QuantumOperator["R"[angle, Splice[FromQuESTLink /@ Flatten[{Replace[ops, t_Times :> List @@ t]}]]]]
 
 FromQuESTLink[Subscript[QuEST`Gate`M, order__Integer]] := QuantumMeasurementOperator[{order} + 1]
 

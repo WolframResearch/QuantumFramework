@@ -7,9 +7,9 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 $QuantumMeasurementOperatorNames = {"M", "RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "QBismSICPOVM", "HesseSICPOVM", "HoggarSICPOVM", "RandomPOVM"}
 
 
-QuantumMeasurementOperator[{"M", args__ : 2}, opts___] := QuantumMeasurementOperator[QuantumBasis[args], opts]
+QuantumMeasurementOperator["M"[args__ : 2], opts___] := QuantumMeasurementOperator[QuantumBasis[args], opts]
 
-QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
+QuantumMeasurementOperator["RandomHermitian"[args___], target : _ ? targetQ : {1}, opts___] := With[{
     basis = QuantumBasis[args, "Label" -> "Random"]
 },
     QuantumMeasurementOperator[
@@ -22,17 +22,17 @@ QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : 
 ]
 ]
 
-QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1}, opts___] := Enclose @ Simplify @ QuantumMeasurementOperator[
+QuantumMeasurementOperator["WignerMICPOVM"[args___], target : _ ? targetQ : {1}, opts___] := Enclose @ Simplify @ QuantumMeasurementOperator[
     QuantumMeasurementOperator[
         QuantumMeasurementOperator[ConfirmBy[QuantumWignerMICPOVM[args], ArrayQ[#, 3] &], target],
-        With[{basis = QuditBasis[{"WignerMIC", args}]},
+        With[{basis = QuditBasis["WignerMIC"[args]]},
             QuantumBasis[QuantumTensorProduct[QuditBasis[basis["Names"]], QuditBasis[Sqrt[basis["Dimension"]]]], QuditBasis[Sqrt[basis["Dimension"]]], "Label" -> "WignerMIC"]
         ]
     ],
     opts
 ]
 
-QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2, s_ : 0}, opts___] := 
+QuantumMeasurementOperator["GellMannMICPOVM"[d : _Integer ? Positive : 2, s_ : 0], opts___] :=
     QuantumMeasurementOperator[
         QuantumMeasurementOperator[
             GellMannMICPOVM[d, s],
@@ -41,7 +41,7 @@ QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2, s_ :
         opts
     ]
 
-QuantumMeasurementOperator[{"RandomPOVM", d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]}, opts___] := 
+QuantumMeasurementOperator["RandomPOVM"[d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]], opts___] :=
     Enclose @ QuantumMeasurementOperator[
         With[{
             povm = ConfirmBy[Replace[OptionValue[{methodOpts, Method -> "Haar"}, Method], {name_, args___} | name_ :>
@@ -55,7 +55,7 @@ QuantumMeasurementOperator[{"RandomPOVM", d : _Integer ? Positive : 2, methodOpt
         opts
     ]
 
-QuantumMeasurementOperator[{"TetrahedronSICPOVM", HoldPattern[angles : PatternSequence[__] : Sequence[0, 0, 0]]}, opts___] :=
+QuantumMeasurementOperator["TetrahedronSICPOVM"[HoldPattern[angles : PatternSequence[__] : Sequence[0, 0, 0]]], opts___] :=
     Simplify @ QuantumMeasurementOperator[
         QuantumMeasurementOperator[
             KroneckerProduct[#, Conjugate[#]] / 2 & [QuantumOperator["U"[angles]]["Matrix"] . #] & /@ {
@@ -69,7 +69,7 @@ QuantumMeasurementOperator[{"TetrahedronSICPOVM", HoldPattern[angles : PatternSe
         opts
     ]
 
-QuantumMeasurementOperator[{"QBismSICPOVM", d : _Integer : 2}, opts___] := Enclose @ QuantumMeasurementOperator[
+QuantumMeasurementOperator["QBismSICPOVM"[d : _Integer : 2], opts___] := Enclose @ QuantumMeasurementOperator[
     QuantumMeasurementOperator[
         Confirm @ QBismSICPOVM[d],
         QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2]], QuditBasis[d]], QuditBasis[d], "Label" -> "QBismSIC"]
@@ -77,7 +77,7 @@ QuantumMeasurementOperator[{"QBismSICPOVM", d : _Integer : 2}, opts___] := Enclo
     opts
 ]
 
-QuantumMeasurementOperator[{"HesseSICPOVM"}, opts___] := Enclose @ QuantumMeasurementOperator[
+QuantumMeasurementOperator["HesseSICPOVM"[], opts___] := Enclose @ QuantumMeasurementOperator[
     QuantumMeasurementOperator[
         Confirm @ HesseSICPOVM[],
         QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalH]", #] & /@ Range[9]], QuditBasis[3]], QuditBasis[3], "Label" -> "HesseSIC"]
@@ -85,7 +85,7 @@ QuantumMeasurementOperator[{"HesseSICPOVM"}, opts___] := Enclose @ QuantumMeasur
     opts
 ]
 
-QuantumMeasurementOperator[{"HoggarSICPOVM"}, opts___] := Enclose @ QuantumMeasurementOperator[
+QuantumMeasurementOperator["HoggarSICPOVM"[], opts___] := Enclose @ QuantumMeasurementOperator[
     QuantumMeasurementOperator[
         Confirm @ HoggarSICPOVM[],
         QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalH]", #] & /@ Range[64]], QuditBasis[8]], QuditBasis[8], "Label" -> "HoggarSIC"]
@@ -94,5 +94,11 @@ QuantumMeasurementOperator[{"HoggarSICPOVM"}, opts___] := Enclose @ QuantumMeasu
 ]
 
 
-QuantumMeasurementOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[{name, args}, opts]
+QuantumMeasurementOperator[name_String, opts___] /; MemberQ[$QuantumMeasurementOperatorNames, name] :=
+    QuantumMeasurementOperator[name[], opts]
 
+
+QuantumMeasurementOperator[name_String[args___], ___] /; ! MemberQ[$QuantumMeasurementOperatorNames, name] := (
+    Message[QuantumMeasurementOperator::invalidName, Defer[name[args]]];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumMeasurementOperator::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)

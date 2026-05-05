@@ -5,6 +5,8 @@ PackageExport["QuantumMeasurementOperator"]
 PackageScope["QuantumMeasurementOperatorQ"]
 
 
+QuantumMeasurementOperator::invalidName = "`1` is not a recognized QuantumMeasurementOperator constructor"
+
 
 quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]], _ ? targetsQ]] := True
 

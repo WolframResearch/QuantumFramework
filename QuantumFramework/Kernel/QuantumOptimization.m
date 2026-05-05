@@ -418,9 +418,7 @@ QuantumLockingMechanism[key_String]:=Module[{pass,flipsigns, circuit},
 	pass=IntegerString[ToCharacterCode[key],4,4];
 	
 	flipsigns=QuantumOperator[{
-								{
-								"C","FlipSign"[#,4]->(Range[StringLength@#]+1),{1}
-								}
+								"C"["FlipSign"[#,4]->(Range[StringLength@#]+1),{1}]
 							}
 				]&/@pass;
 

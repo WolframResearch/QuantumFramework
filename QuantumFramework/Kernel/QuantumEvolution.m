@@ -42,7 +42,7 @@ QuantumEvolve[
     mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
 },
     If[ defaultState =!= None,
-        state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
+        state = Replace[defaultState, Automatic :> QuantumState["Register"[hamiltonian["InputDimensions"]]]];
         phaseSpaceQ = state["Picture"] === "PhaseSpace" && state["VectorQ"] && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
     ];
     ConfirmAssert[AllTrue[Prepend[lindblad, hamiltonian] , #["OutputDimensions"] == #["InputDimensions"] &]];

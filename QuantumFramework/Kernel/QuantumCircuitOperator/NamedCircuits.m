@@ -31,7 +31,7 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator[{"Graph", HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : {"C", "1"}}, opts___] := With[{
+QuantumCircuitOperator["Graph"[HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : {"C", "1"}], opts___] := With[{
     ig = If[AllTrue[VertexList[g], Internal`PositiveIntegerQ], g, IndexGraph @ g]
 },
     QuantumCircuitOperator[
@@ -41,21 +41,20 @@ QuantumCircuitOperator[{"Graph", HoldPattern[g_Graph : RandomGraph[{5, 8}]], m :
 ]
 
 
-QuantumCircuitOperator[{"GHZ", n : _Integer ? Positive : 3}, opts___] :=
+QuantumCircuitOperator["GHZ"[n : _Integer ? Positive : 3], opts___] :=
     QuantumCircuitOperator[{"H", Splice["CNOT" -> # & /@ Partition[Range[n], 2, 1]]}, "Label" -> "GHZ", opts]
 
 
-QuantumCircuitOperator[{"GroverAmplification" | "GroverDiffusion",
-    xs : {_Integer ? Positive..},
+QuantumCircuitOperator[("GroverAmplification" | "GroverDiffusion")[xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := Module[{
+], opts___] := Module[{
     op = If[gate === Automatic, QuantumOperator["NOT", {Max[xs]}], QuantumOperator[gate]], ys
 },
     ys = DeleteCases[xs, Alternatives @@ op["OutputOrder"]];
     QuantumCircuitOperator[{
         Splice[Table[QuantumOperator["H", {q}], {q, ys}]],
         Splice[Table[QuantumOperator["X", {q}], {q, ys}]],
-        QuantumOperator[{"Controlled", op, ys}],
+        QuantumOperator["Controlled"[op, ys]],
         Splice[Table[QuantumOperator["X", {q}], {q, ys}]],
         Splice[Table[QuantumOperator["H", {q}], {q, ys}]]
     },
@@ -64,16 +63,15 @@ QuantumCircuitOperator[{"GroverAmplification" | "GroverDiffusion",
     ]
 ]
 
-QuantumCircuitOperator[{"GroverPhaseAmplification" | "GroverPhaseDiffusion",
-    xs : {_Integer ? Positive..},
+QuantumCircuitOperator[("GroverPhaseAmplification" | "GroverPhaseDiffusion")[xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := With[{
+], opts___] := With[{
     op = If[gate === Automatic, QuantumOperator["1", {Max[xs]}], QuantumOperator[gate]]
 },
     QuantumCircuitOperator[{
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
         Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
-        QuantumOperator[{"Controlled", op, DeleteElements[xs, op["OutputOrder"]]}],
+        QuantumOperator["Controlled"[op, DeleteElements[xs, op["OutputOrder"]]]],
         Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
     },
@@ -82,17 +80,16 @@ QuantumCircuitOperator[{"GroverPhaseAmplification" | "GroverPhaseDiffusion",
     ]
 ]
 
-QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0",
-    xs : {_Integer ? Positive..},
+QuantumCircuitOperator[("GroverAmplification0" | "GroverDiffusion0")[xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := Block[{
+], opts___] := Block[{
     op = If[gate === Automatic, QuantumOperator["NOT", {Max[xs]}], QuantumOperator[gate]], ys
 },
     ys = DeleteCases[xs, Alternatives @@ op["OutputOrder"]];
     QuantumCircuitOperator[
         {
             Splice[Table[QuantumOperator["H", {q}], {q, ys}]],
-            QuantumOperator[{"Controlled0", op, ys}],
+            QuantumOperator["Controlled0"[op, ys]],
             Splice[Table[QuantumOperator["H", {q}], {q, ys}]]
         },
         opts,
@@ -100,16 +97,15 @@ QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0",
     ]
 ]
 
-QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
-    xs : {_Integer ? Positive..},
+QuantumCircuitOperator[("GroverPhaseAmplification0" | "GroverPhaseDiffusion0")[xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := With[{
+], opts___] := With[{
     op = If[gate === Automatic, QuantumOperator["1", {Max[xs]}], QuantumOperator[gate]]
 },
     QuantumCircuitOperator[
         {
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
-            QuantumOperator[{"Controlled0", If[op["Label"] === "1", QuantumOperator["0", op["Order"]], - op], DeleteElements[xs, op["OutputOrder"]]}],
+            QuantumOperator["Controlled0"[If[op["Label"] === "1", QuantumOperator["0", op["Order"]], - op], DeleteElements[xs, op["OutputOrder"]]]],
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
         },
         opts,
@@ -117,19 +113,15 @@ QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
     ]
 ]
 
-QuantumCircuitOperator[{
-    name : "GroverAmplification" | "GroverAmplification0" | "GroverDiffusion" | "GroverDiffusion0" |
-    "GroverPhaseAmplification" | "GroverPhaseDiffusion" | "GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
-    n : _Integer ? Positive : 3, gate_ : Automatic}, opts___] :=
-    QuantumCircuitOperator[{name, Range[n], gate}, opts]
+QuantumCircuitOperator[(name : "GroverAmplification" | "GroverAmplification0" | "GroverDiffusion" | "GroverDiffusion0" |
+    "GroverPhaseAmplification" | "GroverPhaseDiffusion" | "GroverPhaseAmplification0" | "GroverPhaseDiffusion0")[n : _Integer ? Positive : 3, gate_ : Automatic], opts___] :=
+    QuantumCircuitOperator[name[Range[n], gate], opts]
 
 
-QuantumCircuitOperator[{
-        name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
-        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
-        op_ ? QuantumFrameworkOperatorQ,
+QuantumCircuitOperator[(name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
+        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0")[op_ ? QuantumFrameworkOperatorQ,
         gate_ : Automatic
-    },
+    ],
     opts___
 ] := QuantumCircuitOperator[
     QuantumCircuitOperator[{
@@ -142,24 +134,20 @@ QuantumCircuitOperator[{
 ]
 
 
-QuantumCircuitOperator[{
-        name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
-        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
-        formula_ : BooleanFunction[2 ^ 6, 3],
+QuantumCircuitOperator[(name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
+        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0")[formula_ : BooleanFunction[2 ^ 6, 3],
         varSpec : _List | _Association | Automatic : Automatic,
         m : _Integer | Automatic | None : Automatic,
         gate_ : Automatic
-    },
+    ],
     opts___
 ] := Enclose @ Module[{
     oracle = Confirm @ QuantumCircuitOperator[{If[StringContainsQ[name, "Phase"], "PhaseOracle", "BooleanOracle"], formula, varSpec, If[StringContainsQ[name, "Phase"], Nothing, m]}], n
 },
     n = Replace[m, Automatic :> Last @ oracle["OutputOrder"]];
-    QuantumCircuitOperator[{
-        name,
-        oracle,
+    QuantumCircuitOperator[name[oracle,
         QuantumOperator[Replace[gate, Automatic :> QuantumOperator[If[StringContainsQ[name, "Phase"], "1", "NOT"], {n}]], {n}]
-    }, opts]
+    ], opts]
 ]
 
 indicesPattern = {KeyValuePattern[0 | 1 -> {_Integer ? Positive...}]..}
@@ -200,12 +188,10 @@ OrderBooleanVariables[formula_, varSpec : _List | _Association | Automatic : Aut
     {vars, order}
 ]
 
-QuantumCircuitOperator[{"BooleanOracle",
-    formula_ : BooleanFunction[2 ^ 6, 3],
+QuantumCircuitOperator["BooleanOracle"[formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer | Automatic : Automatic,
-    gate_ : "NOT"
-}, opts___] := Enclose @ Block[{
+    gate_ : "NOT"], opts___] := Enclose @ Block[{
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, targetQubit
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
@@ -229,7 +215,7 @@ QuantumCircuitOperator[{"BooleanOracle",
             Prepend[
                 If[ #[1] === {} && #[0] === {},
                     QuantumOperator[If[esop === {{True}}, "NOT", "I"], {targetQubit}],
-                    QuantumOperator[{"Controlled", QuantumOperator[gate, {targetQubit}], #[1], #[0]}]
+                    QuantumOperator["Controlled"[QuantumOperator[gate, {targetQubit}], #[1], #[0]]]
                 ] & /@ indices,
                 If[isNegative, QuantumOperator[gate, {targetQubit}]["Dagger"], Nothing]
             ],
@@ -240,12 +226,10 @@ QuantumCircuitOperator[{"BooleanOracle",
     ]
 ]
 
-QuantumCircuitOperator[{"BooleanOracleR",
-    formula_ : BooleanFunction[2 ^ 6, 3],
+QuantumCircuitOperator["BooleanOracleR"[formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer ? NonNegative | Automatic : Automatic,
-    rotationGate : {"RX" | "RY" | "RZ", _ ? NumericQ} : {"RZ", Pi}
-}, opts___] := Enclose @ Block[{
+    rotationGate : {"RX" | "RY" | "RZ", _ ? NumericQ} : {"RZ", Pi}], opts___] := Enclose @ Block[{
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
@@ -287,12 +271,10 @@ QuantumCircuitOperator[{"BooleanOracleR",
     ]
 ]
 
-QuantumCircuitOperator[{"GrayOracle",
-    fangles : _Function | _List : {0},
+QuantumCircuitOperator["GrayOracle"[fangles : _Function | _List : {0},
     prec : _Integer ? Positive : 4,
     n : _Integer ? NonNegative | Automatic : Automatic,
-    rotationGate : "RX" | "RY" | "RZ" : "RY"
-}, opts___] := Enclose @ Block[{
+    rotationGate : "RX" | "RY" | "RZ" : "RY"], opts___] := Enclose @ Block[{
     order, angles, targetQubit
 },
     angles = PadRight[Replace[fangles, f_Function :> (1 / 2 ^ prec f[FromDigits[#, 2]] & /@ Tuples[{0, 1}, prec])], 2 ^ prec];
@@ -331,11 +313,9 @@ BooleanGrayAngles[indices : indicesPattern, angle_ : Pi] := KeyValueMap[
     GroupBy[indices, Apply[Union]]
 ]
 
-QuantumCircuitOperator[{"PhaseOracle",
-    formula_ : BooleanFunction[2 ^ 6, 3],
+QuantumCircuitOperator["PhaseOracle"[formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
-    m : _Integer ? NonNegative : 0
-}, opts___] := Enclose @ Block[{
+    m : _Integer ? NonNegative : 0], opts___] := Enclose @ Block[{
     esopFormula = Confirm @ BooleanConvert[formula, "ESOP"], esop, vars, order, indices
 },
     {vars, order} = Confirm @ OrderBooleanVariables[formula, varSpec];
@@ -347,10 +327,10 @@ QuantumCircuitOperator[{"PhaseOracle",
         Join[
             If[ #[1] === {},
                 If[ #[0] === {},
-                    If[esop === {{True}}, Nothing, QuantumOperator[{"GlobalPhase", Pi}]],
-                    QuantumOperator[{"Controlled0", "0", Most[#[0]]}, {Last[#[0]]}]
+                    If[esop === {{True}}, Nothing, QuantumOperator["GlobalPhase"[Pi]]],
+                    QuantumOperator["Controlled0"["0", Most[#[0]]], {Last[#[0]]}]
                 ],
-                QuantumOperator[{"Controlled", "1", Most[#[1]], #[0]}, {Last[#[1]]}]
+                QuantumOperator["Controlled"["1", Most[#[1]], #[0]], {Last[#[1]]}]
             ] & /@ indices,
             QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
         ],
@@ -359,20 +339,20 @@ QuantumCircuitOperator[{"PhaseOracle",
     ]
 ]
 
-QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0}, opts___] :=
-    QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]]}, opts]
+QuantumCircuitOperator["PhaseOracle"[formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0], opts___] :=
+    QuantumCircuitOperator["PhaseOracle"[formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]]], opts]
 
 
-QuantumCircuitOperator[{name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle", f_ : 1, n : _Integer ? Positive | Automatic : Automatic}, opts___] :=
+QuantumCircuitOperator[(name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle")[f_ : 1, n : _Integer ? Positive | Automatic : Automatic], opts___] :=
     With[{formula = Replace[f, i_Integer :> With[{m = Replace[n, Automatic :> Max[Ceiling[Log2[Log2[i]]], 1]]}, BooleanFunction[Mod[i - 1, 2 ^ 2 ^ m], m]]]},
         QuantumCircuitOperator[{StringReplace[name, "DeutschJozsa" -> ""], formula}, opts]
     ]
 
-QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := Enclose @ With[{
+QuantumCircuitOperator["DeutschJozsaPhase"[f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic], opts___] := Enclose @ With[{
     oracle = Confirm @ Replace[f, {
         Automatic :> 
-            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", RandomInteger[{1, 2 ^ 2 ^ m}], m}]}, "?"]}, "Oracle"]],
-        _ :> QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", f, n}]
+            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator["DeutschJozsaPhaseOracle"[RandomInteger[{1, 2 ^ 2 ^ m}], m]]}, "?"]}, "Oracle"]],
+        _ :> QuantumCircuitOperator["DeutschJozsaPhaseOracle"[f, n]]
     }]
 },
 {
@@ -389,11 +369,11 @@ QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Posi
     ]
 ]
 
-QuantumCircuitOperator[{"DeutschJozsa", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
+QuantumCircuitOperator["DeutschJozsa"[f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic], opts___] := With[{
     oracle = Replace[f, {
         Automatic :> 
-            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", RandomInteger[{1, 2 ^ 2 ^ m}], m}]}, "?"]}, "Oracle"]],
-        _ :> QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", f, n}]
+            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator["DeutschJozsaBooleanOracle"[RandomInteger[{1, 2 ^ 2 ^ m}], m]]}, "?"]}, "Oracle"]],
+        _ :> QuantumCircuitOperator["DeutschJozsaBooleanOracle"[f, n]]
     }]
 },
 {
@@ -410,16 +390,15 @@ QuantumCircuitOperator[{"DeutschJozsa", f_ : Automatic, n : _Integer ? Positive 
     ]
 ]
 
-QuantumCircuitOperator[{"DeutschPhase", f_ : Automatic}, opts___] := QuantumCircuitOperator[{"DeutschJozsaPhase", f, 1}, opts]
+QuantumCircuitOperator["DeutschPhase"[f_ : Automatic], opts___] := QuantumCircuitOperator["DeutschJozsaPhase"[f, 1], opts]
 
-QuantumCircuitOperator[{"Deutsch", f_ : Automatic}, opts___] := QuantumCircuitOperator[{"DeutschJozsa", f, 1}, opts, "Label" -> "Deutsch"]
+QuantumCircuitOperator["Deutsch"[f_ : Automatic], opts___] := QuantumCircuitOperator["DeutschJozsa"[f, 1], opts, "Label" -> "Deutsch"]
 
-QuantumCircuitOperator[name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle" | "DeutschJozsaPhase" | "DeutschJozsa" | "DeutschPhase" | "Deutsch", opts___] := QuantumCircuitOperator[{name}, opts]
 
 
 MinNumberOfArguments[f_Function] := Max[Cases[f, Verbatim[Slot][i_] :> i, All]]
 
-QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][output : {_BooleanFunction[___] ..}]}, opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
+QuantumCircuitOperator["SimonOracle"[f : Verbatim[Function][output : {_BooleanFunction[___] ..}]], opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
     ConfirmAssert[Length[output] == n, "Boolean function output should be the same size as input."];
     QuantumCircuitOperator[
         "Multiplexer" @@ QuantumTensorProduct @* Replace[{} -> QuantumOperator["I" -> n + 1]] @* MapIndexed[If[#1, Nothing, QuantumOperator["NOT", #2 + n]] &] /@ f @@@ Tuples[{0, 1}, n],
@@ -429,37 +408,36 @@ QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][output : {_Boolean
 
 ]
 
-QuantumCircuitOperator[{"Simon", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
+QuantumCircuitOperator["Simon"[f : Verbatim[Function][{_BooleanFunction[___] ..}]], opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
     QuantumCircuitOperator[{
         Splice["H" -> # & /@ Range[n]],
-        Confirm @ QuantumCircuitOperator[{"SimonOracle", f}, ClickToCopy["Simon Oracle", f]],
+        Confirm @ QuantumCircuitOperator["SimonOracle"[f], ClickToCopy["Simon Oracle", f]],
         Splice["H" -> # & /@ Range[n]],
         Splice[List /@ Range[n]]
     }, opts, "Label" -> "Simon"]
 ]
 
-QuantumCircuitOperator[{name : "SimonOracle" | "Simon", secret : {(0 | 1) ..} | Automatic : Automatic}, opts___] := Block[{
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon")[secret : {(0 | 1) ..} | Automatic : Automatic], opts___] := Block[{
     s = Replace[secret, Automatic | {0 ..} :> RandomInteger[{0, 1}, Replace[secret, {s_List :> Length[s], _ -> 3}]]], n, x, fx, bf
 },
     n = Length[s];
     x = RandomSample[Tuples[{0, 1}, n], 2 ^ (n - 1)];
     fx = RandomInteger[{0, 1}, {2 ^ (n - 1), n}];
-    QuantumCircuitOperator[{name, BooleanFunction[Catenate @ MapThread[{#1 -> #2, BitXor[#1, s] -> #2} &, {x, fx}]]}, opts]
+    QuantumCircuitOperator[name[BooleanFunction[Catenate @ MapThread[{#1 -> #2, BitXor[#1, s] -> #2} &, {x, fx}]]], opts]
 ]
 
-QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s : {(False | True) ..}}, opts___] := QuantumCircuitOperator[{name, Boole[s]}, opts]
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon")[s : {(False | True) ..}], opts___] := QuantumCircuitOperator[name[Boole[s]], opts]
 
-QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s_String}, opts___] /; StringMatchQ[s, ("0" | "1") ..] := QuantumCircuitOperator[{name, IntegerDigits[FromDigits[s, 2], 2, StringLength[s]]}, opts]
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon")[s_String], opts___] /; StringMatchQ[s, ("0" | "1") ..] := QuantumCircuitOperator[name[IntegerDigits[FromDigits[s, 2], 2, StringLength[s]]], opts]
 
-QuantumCircuitOperator[(name : "SimonOracle" | "Simon") | {name : "SimonOracle" | "Simon"}, opts___] := QuantumCircuitOperator[{name, Automatic}, opts]
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon") | {name : "SimonOracle" | "Simon"}, opts___] := QuantumCircuitOperator[name[Automatic], opts]
 
 
-QuantumCircuitOperator[name : "Bell" | "Toffoli" | "Fredkin", opts___] := QuantumCircuitOperator[{name}, opts]
 
-QuantumCircuitOperator[{"Bell", n : _Integer : 0}, opts___]  :=
+QuantumCircuitOperator["Bell"[n : _Integer : 0], opts___]  :=
     QuantumCircuitOperator[{"H", "CNOT"}, opts, "Label" -> "Bell"]["Shift", n]
 
-QuantumCircuitOperator[{"Toffoli", n : _Integer : 0}, opts___] := QuantumCircuitOperator[
+QuantumCircuitOperator["Toffoli"[n : _Integer : 0], opts___] := QuantumCircuitOperator[
     {
         "H" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3}, "T" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3},
         "T" -> 2, "T" -> 3, "H" -> 3, "CNOT" -> {1, 2},  "T" -> 1, SuperDagger["T"] -> 2, "CNOT" -> {1, 2}
@@ -468,7 +446,7 @@ QuantumCircuitOperator[{"Toffoli", n : _Integer : 0}, opts___] := QuantumCircuit
     "Label" -> "Toffoli"
 ]["Shift", n]
 
-QuantumCircuitOperator[{"Fredkin", n : _Integer : 0}, opts___] := QuantumCircuitOperator[{
+QuantumCircuitOperator["Fredkin"[n : _Integer : 0], opts___] := QuantumCircuitOperator[{
         "CNOT" -> {3, 2}, "H" -> 3, "T" -> 1, "T" -> 2, "T" -> 3, "CNOT" -> {2, 1}, "CNOT" -> {3, 2}, "CNOT" -> {1, 3}, SuperDagger["T"] -> 2, "CNOT" -> {1, 2},
         SuperDagger["T"] -> 1, SuperDagger["T"] -> 2, "T" -> 3, "CNOT" -> {3, 2}, "CNOT" -> {1, 3}, "H" -> 3, "CNOT" -> {2, 1}, "CNOT" -> {3, 2}
     },
@@ -476,12 +454,12 @@ QuantumCircuitOperator[{"Fredkin", n : _Integer : 0}, opts___] := QuantumCircuit
     "Label" -> "Fredkin"
 ]["Shift", n]
 
-QuantumCircuitOperator[{"Switch", a_QuantumOperator : QuantumOperator["RandomUnitary"], b_QuantumOperator : QuantumOperator["RandomUnitary"]}, opts___] /;
+QuantumCircuitOperator["Switch"[a_QuantumOperator : QuantumOperator["RandomUnitary"], b_QuantumOperator : QuantumOperator["RandomUnitary"]], opts___] /;
     a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] := With[{d = a["InputDimension"]},
         QuantumCircuitOperator[{"Cup"[d] -> {3, 4}, "C0SWAP"[d], a -> 2, b -> 3, "CSWAP"[d], "Cap"[d] -> {3, 4}}, opts, "Label" -> "Switch"]
     ]
 
-QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...} : {1, 0, 1}, m : _Integer ? NonNegative : 0}, opts___] := With[{n = Length[secret]},
+QuantumCircuitOperator["BernsteinVaziraniOracle"[secret : {(0 | 1) ...} : {1, 0, 1}, m : _Integer ? NonNegative : 0], opts___] := With[{n = Length[secret]},
     QuantumCircuitOperator[
         If[MatchQ[secret, {0 ...}], Append[QuantumOperator["I", {n + 1 + m}]], Identity] @
             MapIndexed[If[#1 === 1, QuantumOperator["CNOT", {First[#2], n + 1} + m], QuantumOperator["I", #2 + m]] & , secret],
@@ -490,16 +468,16 @@ QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...} : {1, 
     ]
 ]
 
-QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret_String : "101", m : _Integer ? NonNegative : 0} /; StringMatchQ[secret, ("0" | "1") ...], opts___] :=
-    QuantumCircuitOperator[{"BernsteinVaziraniOracle", Characters[secret] /. {"0" -> 0, "1" -> 1}, m}, opts]
+QuantumCircuitOperator["BernsteinVaziraniOracle"[secret_String : "101", m : _Integer ? NonNegative : 0] /; StringMatchQ[secret, ("0" | "1") ...], opts___] :=
+    QuantumCircuitOperator["BernsteinVaziraniOracle"[Characters[secret] /. {"0" -> 0, "1" -> 1}, m], opts]
 
-QuantumCircuitOperator[{"BernsteinVazirani", secret : {(0 | 1) ...} | (secret_String /; StringMatchQ[secret, ("0" | "1") ...]) : "101", m : _Integer ? NonNegative : 0}, opts___] := With[{
+QuantumCircuitOperator["BernsteinVazirani"[secret : {(0 | 1) ...} | (secret_String /; StringMatchQ[secret, ("0" | "1") ...]) : "101", m : _Integer ? NonNegative : 0], opts___] := With[{
     n = If[ListQ[secret], Length[secret], StringLength[secret]]
 },
     QuantumCircuitOperator[{
         Splice @ Table[QuantumOperator["H", {i + m}], {i, n + 1}],
         QuantumOperator["Z", {n + 1 + m}],
-        QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret, m}],
+        QuantumCircuitOperator["BernsteinVaziraniOracle"[secret, m]],
         Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
         Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
     },
@@ -509,14 +487,14 @@ QuantumCircuitOperator[{"BernsteinVazirani", secret : {(0 | 1) ...} | (secret_St
 ]
 
 
-QuantumCircuitOperator[{"Number",  n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic}, opts___] := Block[{
+QuantumCircuitOperator["Number"[n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic], opts___] := Block[{
     qs = Replace[qubits, Automatic :> Ceiling[Max[Log2[n], 0]]], bits
 },
     bits = IntegerDigits[n, 2, qs];
     QuantumCircuitOperator[MapIndexed[If[#1 == 1, "X", "I"] -> #2 &, bits], opts, "Label" -> n]
 ]
 
-QuantumCircuitOperator[{"PhaseNumber", n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic, h : True | False : True}, opts___] := Block[{
+QuantumCircuitOperator["PhaseNumber"[n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic, h : True | False : True], opts___] := Block[{
     qs = Replace[qubits, Automatic :> Ceiling[Max[Log2[n], 0]]], bits
 },
     bits = IntegerDigits[n, 2, qs];
@@ -530,12 +508,11 @@ QuantumCircuitOperator[{"PhaseNumber", n : _Integer ? NonNegative : 0, qubits : 
     ]
 ]
 
-QuantumCircuitOperator[name : "Fourier" | "InverseFourier", opts___] := QuantumCircuitOperator[{name, 2}, opts]
 
-QuantumCircuitOperator[{"Fourier", n_Integer ? Positive, m : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[Join[
+QuantumCircuitOperator["Fourier"[n : _Integer ? Positive : 2, m : _Integer ? NonNegative : 0], opts___] := QuantumCircuitOperator[Join[
 		Catenate @ Table[{
 			QuantumOperator["H", {i + m}],
-			Splice[QuantumOperator[{"Controlled", {"PhaseShift", # + 1}, {# + i + m}}, {i + m}] & /@ Range[n - i]]
+			Splice[QuantumOperator["Controlled"[{"PhaseShift", # + 1}, {# + i + m}], {i + m}] & /@ Range[n - i]]
 		},
 		{i, n}],
 		QuantumOperator["SWAP", {# + m, n - # + 1 + m}] & /@ Range[Floor[n / 2]]
@@ -544,56 +521,50 @@ QuantumCircuitOperator[{"Fourier", n_Integer ? Positive, m : _Integer ? NonNegat
 	"Label" -> "QFT"
 ]
 
-QuantumCircuitOperator[{"InverseFourier", n_Integer ? Positive, m : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[{"Fourier", n, m}, opts]["Dagger"]
+QuantumCircuitOperator["InverseFourier"[n : _Integer ? Positive : 2, m : _Integer ? NonNegative : 0], opts___] := QuantumCircuitOperator["Fourier"[n, m], opts]["Dagger"]
 
 
-QuantumCircuitOperator[{
-    "PhaseEstimation",
-    (op : _ ? QuantumOperatorQ : QuantumOperator["RandomUnitary"]),
+QuantumCircuitOperator["PhaseEstimation"[(op : _ ? QuantumOperatorQ : QuantumOperator["RandomUnitary"]),
     n : _Integer ? Positive : 4,
     m : _Integer ? NonNegative : 0,
-    params : OptionsPattern[{"PowerExpand" -> False}]
-} /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}] , opts___] :=
+    params : OptionsPattern[{"PowerExpand" -> False}]] /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}] , opts___] :=
 QuantumCircuitOperator[{
     Splice @ Table[QuantumOperator["X", {n + i + m}], {i, op["InputQudits"]}],
     Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
     With[{qo = QuantumOperator[op, op["QuditOrder"] + n + m]},
         If[ TrueQ[Lookup[{params}, "PowerExpand"]],
-            Splice @ Catenate @ Table[Table[QuantumOperator[{"Controlled", qo, {i + m}}], 2 ^ (n - i)], {i, n}],
-            Splice @ Table[QuantumOperator[{"Controlled", qo ^ 2 ^ (n - i), {i + m}}], {i, n}]
+            Splice @ Catenate @ Table[Table[QuantumOperator["Controlled"[qo, {i + m}]], 2 ^ (n - i)], {i, n}],
+            Splice @ Table[QuantumOperator["Controlled"[qo ^ 2 ^ (n - i), {i + m}]], {i, n}]
         ]
     ],
-    QuantumCircuitOperator[{"InverseFourier", n}],
+    QuantumCircuitOperator["InverseFourier"[n]],
     Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
 },
     opts,
     "Label" -> "Phase Estimation"
 ]
 
-QuantumCircuitOperator[{
-    "PhaseEstimation",
-    op_ ? QuantumCircuitOperatorQ /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}],
+QuantumCircuitOperator["PhaseEstimation"[op_ ? QuantumCircuitOperatorQ /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}],
     n : _Integer ? Positive : 4,
-    m : _Integer ? NonNegative : 0
-}, opts___] :=
+    m : _Integer ? NonNegative : 0], opts___] :=
 QuantumCircuitOperator[{
     Splice @ Table[QuantumOperator["X", {n + i + m}], {i, op["InputQudits"]}],
     Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
     With[{qo = op["Shift", m]},
-        Splice @ Catenate @ Table[Table[QuantumCircuitOperator[{"Controlled", qo, {i + m}}], 2 ^ (n - i)], {i, n}]
+        Splice @ Catenate @ Table[Table[QuantumCircuitOperator["Controlled"[qo, {i + m}]], 2 ^ (n - i)], {i, n}]
     ],
-    QuantumCircuitOperator[{"InverseFourier", n}],
+    QuantumCircuitOperator["InverseFourier"[n]],
     Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
 },
     opts,
     "Label" -> "Phase Estimation"
 ]
 
-QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
-    QuantumCircuitOperator[If[QuantumOperatorQ[#] || QuantumCircuitOperatorQ[#], Head[#][{"Controlled", #, control1, control0}], #] & /@ qc["Elements"], Subscript["C", qc["Label"]][control1, control0]]
+QuantumCircuitOperator[("C" | "Controlled")[qc_ ? QuantumCircuitOperatorQ, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}], opts___] :=
+    QuantumCircuitOperator[If[QuantumOperatorQ[#] || QuantumCircuitOperatorQ[#], Head[#]["Controlled"[#, control1, control0]], #] & /@ qc["Elements"], Subscript["C", qc["Label"]][control1, control0]]
 
-QuantumCircuitOperator[{"C" | "Controlled", qc_ : "Magic", control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
-    QuantumCircuitOperator[{"C", QuantumCircuitOperator @ FromCircuitOperatorShorthand[qc], control1, control0}, opts]
+QuantumCircuitOperator[("C" | "Controlled")[qc_ : "Magic", control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}], opts___] :=
+    QuantumCircuitOperator["C"[QuantumCircuitOperator @ FromCircuitOperatorShorthand[qc], control1, control0], opts]
 
 
 QuantumCircuitOperator[pauliString_String, opts___] := With[{chars = Characters[pauliString]},
@@ -628,7 +599,7 @@ Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps 
 	Table[newOps, reps]
 ]
 
-QuantumCircuitOperator[{"Trotterization", opArgs_ : {"X", "Y", "Z"}, args___}, opts___] := Block[{
+QuantumCircuitOperator["Trotterization"[opArgs_ : {"X", "Y", "Z"}, args___], opts___] := Block[{
     ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
     trotterization
 },
@@ -643,12 +614,12 @@ QuantumCircuitOperator[{"Trotterization", opArgs_ : {"X", "Y", "Z"}, args___}, o
     ]
 ]
 
-QuantumCircuitOperator["Magic", opts___] := QuantumCircuitOperator[{"S" -> 1, "S" -> 2, "H" -> 2, "CNOT" -> {2, 1}}, opts, "Label" -> "Magic"]
+QuantumCircuitOperator["Magic"[], opts___] := QuantumCircuitOperator[{"S" -> 1, "S" -> 2, "H" -> 2, "CNOT" -> {2, 1}}, opts, "Label" -> "Magic"]
 
 
-QuantumCircuitOperator[{"Multiplexer"| "Multiplexor"}, opts___] := QuantumCircuitOperator[{"Multiplexer", "X", "Y", "Z"}, opts]
+QuantumCircuitOperator[("Multiplexer"| "Multiplexor")[], opts___] := QuantumCircuitOperator["Multiplexer"["X", "Y", "Z"], opts]
 
-QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Integer ? Positive | Automatic : Automatic, opts___] := Block[{
+QuantumCircuitOperator[("Multiplexer"| "Multiplexor")[ops__] -> defaultK : _Integer ? Positive | Automatic : Automatic, opts___] := Block[{
     n = Length[{ops}],
     m, k, seq
 },
@@ -657,7 +628,7 @@ QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Inte
     seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, m], n];
     QuantumCircuitOperator[
         MapThread[
-            If[MatchQ[#1["Label"], "I" | CircleTimes["I" ..] | Superscript["I", _CircleTimes]], Nothing, {"C", #1, Splice[#2 /. c_Integer /; c == k :> m + 1]}] &,
+            If[MatchQ[#1["Label"], "I" | CircleTimes["I" ..] | Superscript["I", _CircleTimes]], Nothing, "C"[#1, Splice[#2 /. c_Integer /; c == k :> m + 1]]] &,
             {QuantumOperator /@ {ops}, seq}
         ],
         opts,
@@ -665,9 +636,9 @@ QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Inte
     ]
 ]
 
-QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := QuantumCircuitOperator[{"Multiplexer", ops} -> Automatic, opts]
+QuantumCircuitOperator[("Multiplexer"| "Multiplexor")[ops__], opts___] := QuantumCircuitOperator["Multiplexer"[ops] -> Automatic, opts]
 
-QuantumCircuitOperator[{"ControlledMultiplexer", matrix : _ ? MatrixQ : RandomReal[1, {4, 4}], vector : _ ? VectorQ : RandomReal[1, 4]}] :=
+QuantumCircuitOperator["ControlledMultiplexer"[matrix : _ ? MatrixQ : RandomReal[1, {4, 4}], vector : _ ? VectorQ : RandomReal[1, 4]]] :=
     QuantumLinearSolve[matrix, vector, "CircuitOperator"]
 
 
@@ -678,7 +649,7 @@ RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z, phase},
     y = Simplify[If[TrueQ[Simplify[a == b == 0]], Pi / 2, 2 ArcSin[(a - b) / Sqrt[2 (a ^ 2 + b ^ 2)]]]];
     z = Simplify[phi - psi];
     Replace[
-        {If[TrueQ[Chop[z] == 0], Nothing, {"RZ", z}], If[TrueQ[Chop[y] == 0], Nothing, {"RY", y}]},
+        {If[TrueQ[Chop[z] == 0], Nothing, "RZ"[z]], If[TrueQ[Chop[y] == 0], Nothing, "RY"[y]]},
         {} -> {"I"}
     ]
 ]
@@ -687,15 +658,15 @@ RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z, phase},
 multiplexer[qs_, n_, i_] := Block[{rzy, rzyDagger, qc, multiplexer, multiplexerDagger},
     rzy = RZY /@ Partition[qs["StateVector"], 2];
     rzyDagger = Reverse /@ rzy /. {r : "RZ" | "RY", angle_} :> {r, - angle};
-    {multiplexer, multiplexerDagger} = {"Multiplexer", Splice[#]} & /@ {rzy, rzyDagger};
+    {multiplexer, multiplexerDagger} = "Multiplexer"[Splice[#]] & /@ {rzy, rzyDagger};
     qc = If[i === 0,
         QuantumCircuitOperator[{multiplexer, Splice["H" -> # & /@ Range[qs["Qudits"]]]}],
-        QuantumCircuitOperator[{multiplexer, {"Permutation", Cycles[{{n, i}}]}}]
+        QuantumCircuitOperator[{multiplexer, "Permutation"[Cycles[{{n, i}}]]}]
     ];
     Sow[
         If[i === 0,
             {multiplexerDagger, Splice["H" -> # & /@ Range[qs["Qudits"]]]},
-            {multiplexerDagger, {"Permutation", Cycles[{{n, i}}]}}
+            {multiplexerDagger, "Permutation"[Cycles[{{n, i}}]]}
         ],
         "Operators"
     ];
@@ -723,7 +694,7 @@ QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     phase = Total[phases] / n / 2 ^ n - I Log[qs["Norm"]];
     operators = Reverse @ Catenate @ operators;
     If[ TrueQ[Chop[phase] != 0],
-        AppendTo[operators, {"GlobalPhase", phase}]
+        AppendTo[operators, "GlobalPhase"[phase]]
     ];
     operators = Join["0" -> # & /@ Range[n], operators];
     If[ qs["InputQudits"] > 0,
@@ -736,23 +707,24 @@ QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     QuantumCircuitOperator[operators, "Label" -> qs["Label"]]["Flatten"]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState" | "StatePreparation", qs_QuantumState, args___}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+QuantumCircuitOperator[qs_QuantumState | ("QuantumState" | "StatePreparation")[qs_QuantumState, args___], opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
     Enclose @ QuantumCircuitOperator[
         ConfirmBy[QuantumStatePreparation[qs, args], QuantumCircuitOperatorQ],
         "StatePreparation",
         opts
     ]
 
-QuantumCircuitOperator["QuantumState" | "StatePreparation", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
+QuantumCircuitOperator[("QuantumState" | "StatePreparation")[], opts___] :=
+    QuantumCircuitOperator["QuantumState"[QuantumState["UniformSuperposition"[3]]], opts]
 
 
-QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}, opts___] :=
+QuantumCircuitOperator["CHSH"[theta_ : Pi / 4], opts___] :=
     QuantumCircuitOperator[{
         QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
         "Barrier",
-        QuantumCircuitOperator[{"I", {"C", "H"} -> {2, 1}}, "Alice"],
-        QuantumCircuitOperator[{{"RY", theta} -> 4, {"C0", "H"} -> {3, 4}}, "Bob"],
+        QuantumCircuitOperator[{"I", "C"["H"] -> {2, 1}}, "Alice"],
+        QuantumCircuitOperator[{"RY"[theta] -> 4, "C0"["H"] -> {3, 4}}, "Bob"],
         "Barrier",
         {1}, {2}, {3}, {4}
     },
@@ -761,22 +733,22 @@ QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}, opts___] :=
     ]
 
 
-QuantumCircuitOperator[{"LeggettGarg", theta_ : Pi / 4}, opts___] := QuantumCircuitOperator[{
+QuantumCircuitOperator["LeggettGarg"[theta_ : Pi / 4], opts___] := QuantumCircuitOperator[{
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"], "Barrier",
-        QuantumCircuitOperator[{{"C", "H"} -> {2, 1}, {1}, {"C", "H"}}, "Alice"], "Barrier", 
-        QuantumCircuitOperator[{"RY"[theta], {"C0", "H"} -> {3, 1}}, "Bob"], "Barrier", {1}, {2}, {3}
+        QuantumCircuitOperator[{"C"["H"] -> {2, 1}, {1}, "C"["H"]}, "Alice"], "Barrier", 
+        QuantumCircuitOperator[{"RY"[theta], "C0"["H"] -> {3, 1}}, "Bob"], "Barrier", {1}, {2}, {3}
     },
     opts,
     "Label" -> "Leggett-Garg"
 ]
 
-QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}, opts___] := Block[{
+QuantumCircuitOperator["WignerCHSH"[theta_ : Pi / 4], opts___] := Block[{
     basis = QuditBasis[CharacterRange["a", "d"], QuditBasis["WignerMIC"]["Elements"]],
     Bell, Alice, Bob, Charlie, M
 },
     Bell = Simplify @ QuantumState[QuantumState["Bell"]["Double"], QuantumBasis[QuantumTensorProduct[basis, basis], "Label" -> "Cup"]];
-    Alice = Simplify @ QuantumOperator[QuantumOperator[{"C", "Double"["H"]}, {2, 1}]["Sort"], QuantumBasis[QuditBasis[{basis, 2}], QuantumTensorProduct[basis, QuditBasis[2]]], "Label" -> "Alice"];
-    Bob = Simplify @ QuantumOperator[QuantumOperator[{"C0", "Double"["H"]} -> {3, 4}] @ QuantumOperator["RY"[theta] -> 4]["Double"], QuantumBasis[QuditBasis[{2, basis}], QuantumTensorProduct[QuditBasis[2], basis]], "Label" -> "Bob"];
+    Alice = Simplify @ QuantumOperator[QuantumOperator["C"["Double"["H"]], {2, 1}]["Sort"], QuantumBasis[QuditBasis[{basis, 2}], QuantumTensorProduct[basis, QuditBasis[2]]], "Label" -> "Alice"];
+    Bob = Simplify @ QuantumOperator[QuantumOperator["C0"["Double"["H"]] -> {3, 4}] @ QuantumOperator["RY"[theta] -> 4]["Double"], QuantumBasis[QuditBasis[{2, basis}], QuantumTensorProduct[QuditBasis[2], basis]], "Label" -> "Bob"];
     Charlie = QuantumCircuitOperator[{QuantumState["+"] / Sqrt[2] -> 2, QuantumState["+"] / Sqrt[2] -> 3}, "Charlie"];
     M = QuantumOperator[QuantumOperator["Spider"[QuantumBasis[{2}, {4}]], QuantumBasis[QuditBasis[2], basis]], "Label" -> "Measure"];
     QuantumCircuitOperator[{
@@ -791,5 +763,17 @@ QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}, opts___] := Block[{
 ]
 
 
-QuantumCircuitOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[{name, args}, opts]
+QuantumCircuitOperator[name_String, opts___] /; MemberQ[$QuantumCircuitOperatorNames, name] :=
+    QuantumCircuitOperator[name[], opts]
+
+
+QuantumCircuitOperator[name_String[args___], ___] /; ! MemberQ[$QuantumCircuitOperatorNames, name] := (
+    Message[QuantumCircuitOperator::invalidName, Defer[name[args]]];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumCircuitOperator::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+
+QuantumCircuitOperator[name_String, ___] /; ! MemberQ[$QuantumCircuitOperatorNames, name] := (
+    Message[QuantumCircuitOperator::invalidName, name];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumCircuitOperator::invalidName, "MessageParameters" :> {name}|>]
+)
 

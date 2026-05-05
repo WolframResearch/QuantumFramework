@@ -5,6 +5,8 @@ PackageExport["QuantumChannel"]
 PackageScope["QuantumChannelQ"]
 
 
+QuantumChannel::invalidName = "`1` is not a recognized QuantumChannel constructor"
+
 
 quantumChannelQ[QuantumChannel[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]]]] :=
     qo["OutputQudits"] - qo["InputQudits"] >= 0 && AllTrue[Join[qo["InputOrder"], Drop[qo["OutputOrder"], qo["OutputQudits"] - qo["InputQudits"]]], Positive]

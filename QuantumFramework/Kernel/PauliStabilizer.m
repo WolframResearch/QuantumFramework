@@ -78,8 +78,8 @@ PauliRow[mat_ ? MatrixQ, n_Integer ? Positive, d : _Integer ? Positive : 2] := E
 
 QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] && Equal @@ qo["Dimensions"] := Enclose @ With[{n = qo["InputQudits"], d = First @ qo["Dimensions"]},
 	Join[
-		Confirm @ PauliRow[(qo @ QuantumOperator[{"X", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]],
-		Confirm @ PauliRow[(qo @ QuantumOperator[{"Z", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]]
+		Confirm @ PauliRow[(qo @ QuantumOperator["X"[d] -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]],
+		Confirm @ PauliRow[(qo @ QuantumOperator["Z"[d] -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]]
 	]
 ]
 FromFullTableau[t_] := PauliStabilizer[<|"Signs" -> 1 - 2 t[[All, -1]], "Tableau" -> Transpose[ArrayReshape[t[[All, ;; -2]], {Length[t], 2, Length[t] / 2}], {3, 1, 2}]|>]
@@ -424,7 +424,7 @@ QuantumTensorProduct[a_PauliStabilizer, b_PauliStabilizer] :=
 	]
 
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : _QuantumState | _PauliStabilizer : Automatic] := Fold[
-	#1[Replace[#2, {"C", gate : "NOT" | "X" | "Z" -> t_, c_, _} :> "C" <> gate -> Join[c, t]]] &,
+	#1[Replace[#2, "C"[gate : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> gate -> Join[c, t]]] &,
 	Replace[qs, {Automatic :> PauliStabilizer[qco["Arity"]], s_QuantumState :> PauliStabilizer[s]}],
 	QuantumShortcut[qco]
 ]

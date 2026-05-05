@@ -339,7 +339,7 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
             QuantumTensorProduct[
                 QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
                 With[{iqb = qb["Delete", pos]["Dual"]},
-                    QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
+                    QuantumOperator["Identity"[iqb], Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
                 ]
             ],
             QuantumOperator[qo, "Input" -> qb["Extract", pos]]
@@ -362,7 +362,7 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
             QuantumTensorProduct[
                 QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}, "Output" -> qb["Extract", pos]],
                 With[{iqb = qb["Delete", pos]},
-                    QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
+                    QuantumOperator["Identity"[iqb], Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
                 ]
             ],
             QuantumOperator[qo, "Output" -> qb["Extract", pos]]
@@ -678,8 +678,8 @@ QuantumOperatorProp[qo_, "EulerAnglesWithPhase"] /; qo["VectorQ"] && qo["Dimensi
 QuantumOperatorProp[qo_, "ZYZ"] /; qo["VectorQ"] && qo["Dimension"] == 4 := Enclose @ Module[{angles, phase},
     {angles, phase} = UnitaryAnglesWithPhase[qo["MatrixRepresentation"]];
     If[ NumericQ[phase] && phase == 0,
-        QuantumOperator[{"U", Splice @ angles}, qo["Order"]],
-        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}, qo["Order"]]}]
+        QuantumOperator["U"[Splice @ angles], qo["Order"]],
+        QuantumCircuitOperator[{QuantumOperator["GlobalPhase"[phase]], QuantumOperator["U"[Splice @ angles], qo["Order"]]}]
     ]
 ]
 
@@ -705,12 +705,12 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     If[n + m == 0, Return[qo]];
     QuantumOperator[
         QuantumTensorProduct[
-            QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
-            QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}]
+            QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
+            QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}]
         ] @ qo @
         QuantumTensorProduct[
-            QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
-            QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
+            QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
+            QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}]
         ],
         "Label" -> Replace[qo["Label"], Subscript["C", label_][__] :> label]
     ]
@@ -724,21 +724,21 @@ QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["Targ
                 (
                 QuantumTensorProduct[{
                     If[ n > 0,
-                        QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
+                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
                         Nothing
                     ],
                     If[ m > 0,
-                        QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}],
+                        QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}],
                         Nothing
                     ]
                 }] @ qo @
                 QuantumTensorProduct[{
                     If[ n > 0,
-                        QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
+                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
                         Nothing
                     ],
                     If[ m > 0,
-                        QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}],
+                        QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}],
                         Nothing
                     ]
                 }]

@@ -13,6 +13,8 @@ QuditBasis::inconsistentElements = "elements should have the same dimensions";
 
 QuditBasis::dependentElements = "elements should be linearly independent";
 
+QuditBasis::invalidName = "`1` is not a recognized QuditBasis constructor"
+
 
 
 quditBasisQ[QuditBasis[representations : HoldPattern[Association[({_QuditName, _Integer ? Positive} -> _) ...]]]] :=
@@ -47,7 +49,7 @@ QuditBasis[assoc_Association] /; ! AllTrue[Keys[assoc], MatchQ[{_QuditName, _Int
 
 QuditBasis[elements_ /; ArrayQ[elements, d_ /; d > 1, NumericQ]] := QuditBasis[Range[0, Length[elements] - 1], elements]
 
-QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuditBasisNames, name])] ..}] :=
+QuditBasis[names : {Except[_Integer | (name_String | name_String[___] /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, If[Length[names] == 1, {1}, identityMatrix[Length[names]]]]
 
 QuditBasis[names_List, elements_ ? ArrayQ] /; Length[names] == Length[elements] := QuditBasis[AssociationThread[names, Normal @ elements]]
@@ -59,7 +61,8 @@ QuditBasis[qb_ ? QuantumBasisQ] := qb["Output"]
 
 (* tensor product of multiple parameter basis *)
 
-QuditBasis[{name_String, params_List}, args___] := Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis[{name, #}, args], QuditBasisQ] & /@ params)]
+QuditBasis[name_String[params_List]] /; MemberQ[$QuditBasisNames, name] :=
+    Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis[name[#]], QuditBasisQ] & /@ params)]
 
 QuditBasis[params_List] := Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis[#], QuditBasisQ] & /@ params)]
 
@@ -67,7 +70,7 @@ QuditBasis[params_List] := Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis
 (* multiplicity *)
 
 QuditBasis[
-    name : _String | {_String, PatternSequence[] | PatternSequence[Except[_List], ___]} | _Integer | _Association,
+    name : _String | _String[PatternSequence[] | PatternSequence[Except[_List], ___]] | _Integer | _Association,
     multiplicity_Integer ? NonNegative, args___] :=
     QuditBasis[QuditBasis[name, args], multiplicity, args]
 
