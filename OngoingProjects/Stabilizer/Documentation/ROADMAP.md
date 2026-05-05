@@ -8,7 +8,7 @@
 
 - **Tests:** 250 / 250 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 302 / 302 passing.
 - **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip + post-mortem + cross-module audit — see "Phase 5c — DONE" below)**.
-- **Open items:** 17 (9 partial + 7 deferred + 1 latent bug). A.9 reclassified as **inherent trade-off** (documented contract, not a fix-pending item) after the 2026-05-04 follow-up.
+- **Open items:** 20 (12 partial + 7 deferred + 1 latent bug). A.9 reclassified as **inherent trade-off** (documented contract, not a fix-pending item) after the 2026-05-04 follow-up. **A.11/A.12/A.13** added 2026-05-04 from refpage-validation findings (3 small kernel bugs surfaced while writing reference pages).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
 
 > **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
@@ -164,6 +164,42 @@ Three items in the §4–§6 menus are explicitly listed as `partial` in [`synth
 | **File** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) (option a) or [`Stabilizer/Properties.m`](../../../QuantumFramework/Kernel/Stabilizer/Properties.m) (option b) |
 | **Tests to add** | revert `Integration-MethodStabilizer-ExplicitState` to list-equality once order is canonical |
 | **Effort** | ~50 LOC + 0 new tests |
+
+### A.11 — `pauliStringMatrix` fails on single-qubit input
+| | |
+|---|---|
+| **Current** | `StabilizerExpectation[PauliStabilizer[1], "Z"]` (and `"X"`, `"Y"`) on a 1-qubit input falls into the direct-vector fallback path, where `pauliStringMatrix` calls `KroneckerProduct @@ {single}`. With a one-element list, `KroneckerProduct` throws `KroneckerProduct::argmu` and the result becomes an unevaluated `Re[…KroneckerProduct[…]…]` instead of `1`. |
+| **Source** | [`Stabilizer/InnerProduct.m:104-113`](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) |
+| **Why deferred** | Surfaced 2026-05-04 during refpage validation; not blocking multi-qubit usage but breaks the simplest 1-qubit example. |
+| **Reference** | None — kernel implementation detail. |
+| **Next step** | Wrap the single-element list case: `If[Length[mats] == 1, First[mats], KroneckerProduct @@ mats]`. Or use `Apply[Dot, mats]` style fallback. |
+| **File** | [`Stabilizer/InnerProduct.m:104-113`](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) |
+| **Tests to add** | `Phase4-Expectation-OneQubit-Z` and similar 1-qubit cases (need to be added; previously only multi-qubit tested). |
+| **Effort** | ~5 LOC + 6 tests |
+
+### A.12 — `ps["Stabilizers"]` formatter throws `StringJoin::string` on symbolic phases
+| | |
+|---|---|
+| **Current** | After a `StabilizerMeasure`, the resulting `PauliStabilizer` has phase entries like `\[FormalS][k]` or `1 - 2 \[FormalS][k]`. Reading `ps["Stabilizers"]` then calls `PauliForm`, which tries `StringJoin[1 - 2 \[FormalS][k], "Z"]` and fails with `StringJoin::string`. The user can still read `ps["Phase"]` but the human-readable string list is broken until `SubstituteOutcomes` is applied. |
+| **Source** | [`Stabilizer/Formatting.m`](../../../QuantumFramework/Kernel/Stabilizer/Formatting.m) `PauliForm` — sign-prefix replacement `Replace[signs, {1 -> "", -1 -> "-"}, {1}]` doesn't handle symbolic signs. |
+| **Why deferred** | Surfaced 2026-05-04 during refpage validation. The `["Phase"]` accessor is the documented escape hatch for symbolic states; doc pages now show that path. |
+| **Reference** | None — formatter detail. |
+| **Next step** | Extend the sign-prefix replacement to handle non-numeric signs: produce `ToString[s]` or wrap symbolic signs in a `Row[{s, "·", paulistring}]` form. |
+| **File** | [`Stabilizer/Formatting.m`](../../../QuantumFramework/Kernel/Stabilizer/Formatting.m) |
+| **Tests to add** | `Phase3-Stabilizers-FormatsSymbolic` — assert `ps["Stabilizers"]` does not throw `StringJoin::string` after a `StabilizerMeasure`. |
+| **Effort** | ~10 LOC + 2 tests |
+
+### A.13 — `GraphState[ps_PauliStabilizer]` silently returns edgeless graph for non-graph-form input
+| | |
+|---|---|
+| **Current** | `GraphState[PauliStabilizer[{"XXX", "ZZI", "IZZ"}]]` (a GHZ stabilizer set) silently returns an edgeless 3-vertex graph. The constructor only handles graph-form stabilizers (`X_i ⊗ Π_{j ∈ N(i)} Z_j`); other inputs return an empty edge set without warning. Users discovering this think the conversion succeeded. |
+| **Source** | [`Stabilizer/GraphState.m`](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m) — `GraphState[ps_PauliStabilizer]` constructor. |
+| **Why deferred** | Surfaced 2026-05-04 during refpage validation. The user-facing escape is "use `LocalComplement` to convert non-graph stabilizer sets to graph form first" but that's not documented and not always possible. |
+| **Reference** | AndBri05 §2 (graph-state stabilizer form). |
+| **Next step** | Either (a) emit a `GraphState::nongraph` message when the input isn't graph-form, returning `$Failed`; or (b) attempt graph-form conversion via local Cliffords (AndBri05 Lemma 1). (a) is the immediate-fix path. |
+| **File** | [`Stabilizer/GraphState.m`](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m) |
+| **Tests to add** | `Phase5-GraphState-NonGraphForm-Fails` — assert `GraphState[PauliStabilizer["GHZ-stabilizers"]]` issues `::nongraph` and returns `$Failed`. |
+| **Effort** | ~15 LOC + 2 tests |
 
 ---
 

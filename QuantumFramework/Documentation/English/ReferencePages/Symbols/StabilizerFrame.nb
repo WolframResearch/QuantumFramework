@@ -1,0 +1,567 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     25998,        558]
+NotebookOptionsPosition[     17857,        462]
+NotebookOutlinePosition[     18179,        476]
+CellTagsIndexPosition[     18136,        473]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Wolfram`QuantumFramework`", "Text",ExpressionUUID->"2e579702-f4b1-4df2-9727-dc761f1d9890"],
+
+Cell["StabilizerFrame", "Title",ExpressionUUID->"632d0d13-9037-4c8c-9792-56ace8e0c6d1"],
+
+Cell["\<\
+Superposition of stabilizer states with (possibly symbolic) coefficients \
+\[LongDash] closes under further Clifford gates.\
+\>", "Text",ExpressionUUID->"e91aa6b2-6b5d-4771-825d-d8c974f41c55"],
+
+Cell["Details and Options", "Section",ExpressionUUID->"25084244-b032-44d9-98f8-e3b6f090b09d"],
+
+Cell["\<\
+``StabilizerFrame`` represents a state of the form `Sum_i c_i |s_i>` where \
+each `|s_i>` is a stabilizer state and `c_i` are (possibly symbolic) complex \
+coefficients.\
+\>", "Item",ExpressionUUID->"3bc789c2-40cd-476d-b2f4-c0e53e5377d8"],
+
+Cell["\<\
+Internal representation is `StabilizerFrame[<|\"Components\" -> {{c_1, ps_1}, \
+{c_2, ps_2}, ...}|>]`.\
+\>", "Item",ExpressionUUID->"5bed9476-89aa-4aac-83b7-4ee1dff9a0e8"],
+
+Cell["\<\
+When called with a list of `{coefficient, PauliStabilizer}` pairs, \
+``StabilizerFrame`` wraps them as a frame.\
+\>", "Item",ExpressionUUID->"5d810047-3053-4551-b491-ef1a0e9c0474"],
+
+Cell["\<\
+When called with a single \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer), \
+``StabilizerFrame`` lifts it to a one-component frame with coefficient 1.\
+\>", "Item",ExpressionUUID->"762dffd8-17ee-4c08-a06d-340f56e783db"],
+
+Cell["\<\
+Produced automatically by non-Clifford gates `P[\[Theta]]`, `T`, `T\[Dagger]` \
+acting on a \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer).\
+\>", "Item",ExpressionUUID->"21abe485-c209-4457-848a-e6d24e6799b4"],
+
+Cell["\<\
+Clifford gates distribute over components: `frame[gate, q]` returns a frame \
+of the same length.\
+\>", "Item",ExpressionUUID->"4139599d-a981-43e5-ac55-ef76730ab885"],
+
+Cell["\<\
+Non-Clifford gates double the component count: each application of \
+`P[\[Theta]]`, `T`, or `T\[Dagger]` doubles `Length`.\
+\>", "Item",ExpressionUUID->"2ed2d0a2-bc2d-47bc-a12e-b33d7d8365f8"],
+
+Cell["Property accessors return:", "Item",ExpressionUUID->"dbfe635e-32b8-4fa4-961b-3b4197f3e72f"],
+
+Cell["\<\
+                                                                    
+\"Components\"    list of `{coeff, PauliStabilizer}` pairs            
+\"Coefficients\"  list of coefficients only                           
+\"Stabilizers\"   list of underlying `PauliStabilizer` objects        
+\"Length\"        number of components                                
+\"Qubits\"        qubit count (assumed identical across pairs)        
+\"StateVector\"   materialized state vector (cost `2^n`)              
+\"State\"         materialized [QuantumState](paclet:ref/QuantumState)\
+\>", "Program",ExpressionUUID->"7ebd8e67-ef93-43d7-a691-5de13af9f503"],
+
+Cell["\<\
+`Plus`, `Times`, and `Equal` upvalues are defined: `a + b` concatenates \
+components; `c f` scales all coefficients; `a == b` is structural equality on \
+`Components`.\
+\>", "Item",ExpressionUUID->"f982e521-9b76-4963-9dd4-92c4813aa606"],
+
+Cell["\<\
+Reference: Garcia-Markov 2015, \"Simulation of Quantum Circuits via \
+Stabilizer Frames\" (arxiv:1712.03554), Section 3.\
+\>", "Item",ExpressionUUID->"ca1df483-2fbb-4f9b-84a8-90909a54581f"],
+
+Cell["Examples", "Section",ExpressionUUID->"ac02dc51-7a96-4698-b246-d03e3982784a"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",Ex\
+pressionUUID->"ecbe6826-6cc8-465f-9597-fe2359afd0b5"],
+
+Cell["Basic Examples (3)", "Subsection",ExpressionUUID->"7ff7abc7-515f-4500-bfbb-5274c35553b2"],
+
+Cell["`T` on `|0>` returns a 2-component frame:", "Text",ExpressionUUID->"0cc50969-8d54-4d6a-af5d-b35a17676eec"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "psT", "]"}], ",", " ", 
+   RowBox[{"psT", "[", "\"\<Length\>\"", "]"}], ",", " ", 
+   RowBox[{"psT", "[", "\"\<Coefficients\>\"", "]"}]}], "}"}]}], "Input",Expre\
+ssionUUID->"ee390700-be4d-4aa4-a582-a9ecbfbc67f8"],
+
+Cell["\<\
+{StabilizerFrame, 2, {(1 + E^((I/4)*Pi))/2, (1 - E^((I/4)*Pi))/2}}\
+\>", "Output",ExpressionUUID->"4b949450-59d8-4f11-898e-e9de99bd82ca"],
+
+Cell["\<\
+`H` after `T` distributes over components \[LongDash] frame size unchanged:\
+\>", "Text",ExpressionUUID->"39a3584f-b752-459f-b69a-6d5df59aad1b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psHT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+     RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}], "[", 
+    RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "psHT", "]"}], ",", " ", 
+   RowBox[{"psHT", "[", "\"\<Length\>\"", "]"}]}], "}"}]}], "Input",Expression\
+UUID->"7f4d055c-e154-4b96-93a7-b27807e3e8f4"],
+
+Cell["{StabilizerFrame, 2}", "Output",ExpressionUUID->"c0e8ed8d-85a7-438d-8606-333b55e1a716"],
+
+Cell["`T` then `T` on `|+>` doubles twice \[LongDash] 4-component frame:", \
+"Text",ExpressionUUID->"1f8d2d00-c0cd-4dce-9125-a3f094c77aae"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT2", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], "[", 
+     RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "psT2", "]"}], ",", " ", 
+   RowBox[{"psT2", "[", "\"\<Length\>\"", "]"}]}], "}"}]}], "Input",Expression\
+UUID->"ae2656f1-3d06-4c61-86b8-8f19474c44d1"],
+
+Cell["{StabilizerFrame, 4}", "Output",ExpressionUUID->"10d1cae1-a418-477b-9d86-0c296da1e6b0"],
+
+Cell["Scope (3)", "Subsection",ExpressionUUID->"6a0aab4c-69e9-425b-b4a1-e2f98df7753f"],
+
+Cell["Input Forms", "Subsubsection",ExpressionUUID->"978883fa-63f5-402f-84b7-db003fc70240"],
+
+Cell["From a list of `{coefficient, PauliStabilizer}` pairs:", "Text",ExpressionUUID->"c4c9c4ad-7383-4e56-98f1-e2aeea2c6c97"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"f", " ", "=", " ", 
+   RowBox[{"StabilizerFrame", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", 
+        RowBox[{"PauliStabilizer", "[", "1", "]"}]}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", 
+        RowBox[{
+         RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+         RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}]}], "}"}]}], "}"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"f", "[", "\"\<Length\>\"", "]"}], ",", " ", 
+   RowBox[{"f", "[", "\"\<Coefficients\>\"", "]"}], ",", " ", 
+   RowBox[{"f", "[", "\"\<Qubits\>\"", "]"}]}], "}"}]}], "Input",ExpressionUUI\
+D->"5c6f2167-012d-420e-8e10-28d74e938ee8"],
+
+Cell["{2, {1, 1}, 1}", "Output",ExpressionUUID->"0eb6013f-0caf-47d7-b5fb-be2797d9aff8"],
+
+Cell["From a single `PauliStabilizer` (coefficient = 1):", "Text",ExpressionUUID->"a4eb3a25-03d8-4a38-ba0a-6e9980201338"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"StabilizerFrame", "[", 
+   RowBox[{"PauliStabilizer", "[", "1", "]"}], "]"}], "[", "\"\<Length\>\"", 
+  "]"}]], "Input",ExpressionUUID->"799fbcbe-0ce0-4183-bceb-cf5637479ca1"],
+
+Cell["1", "Output",ExpressionUUID->"7c36138f-d923-4278-ae19-fe71e6b844ee"],
+
+Cell["From a non-Clifford gate on a `PauliStabilizer`:", "Text",ExpressionUUID->"44da8e69-9ebf-4f6e-bd8b-7a60be4a4f21"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"psT", "[", "\"\<Coefficients\>\"", "]"}]}], "Input",ExpressionUUID->\
+"08e85e8d-2aa3-415e-8620-684d70c4d78b"],
+
+Cell["{(1 + E^((I/4)*Pi))/2, (1 - E^((I/4)*Pi))/2}", "Output",ExpressionUUID->"099183e3-8a55-4f2c-bf02-632f69b6ba15"],
+
+Cell["Distinctive Features", "Subsubsection",ExpressionUUID->"19919a2d-f18f-41fa-abd0-fbb71c9e0405"],
+
+Cell["\<\
+Frame closes under further Clifford gates \[LongDash] `H` distributes over \
+both components:\
+\>", "Text",ExpressionUUID->"96311b60-2913-456f-bed0-45a726fefe76"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"f", " ", "=", " ", 
+   RowBox[{"StabilizerFrame", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", 
+        RowBox[{"PauliStabilizer", "[", "1", "]"}]}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", 
+        RowBox[{
+         RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+         RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}]}], "}"}]}], "}"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"fH", " ", "=", " ", 
+   RowBox[{"f", "[", 
+    RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "fH", "]"}], ",", " ", 
+   RowBox[{"fH", "[", "\"\<Length\>\"", "]"}]}], "}"}]}], "Input",ExpressionUU\
+ID->"6182fbbf-2c9f-472c-a408-94ed210a3fee"],
+
+Cell["{StabilizerFrame, 2}", "Output",ExpressionUUID->"5bd6ec8e-1287-4bf2-a57d-54c4006c5b27"],
+
+Cell["Materialize to an explicit state vector (cost `2^n`):", "Text",ExpressionUUID->"f13cfcd9-0071-4648-8d15-a7494e26b8de"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Normal", " ", "@", " ", 
+  RowBox[{"FullSimplify", " ", "@", " ", 
+   RowBox[{"psT", "[", "\"\<StateVector\>\"", "]"}]}]}]}], "Input",ExpressionU\
+UID->"056cdbbb-62f0-47a7-a592-50d2005f153a"],
+
+Cell["{1, 0}", "Output",ExpressionUUID->"e84cdaff-d46a-420e-bb8b-81c173aa862e"],
+
+Cell["`T|0> = |0>` since `|0>` is an eigenstate of `T`.", "Text",ExpressionUUID->"bd713364-4ff2-4be0-a1eb-7f66eb6d184e"],
+
+Cell["Materialize to a [QuantumState](paclet:ref/QuantumState):", "Text",ExpressionUUID->"ccedba14-e83b-4444-bf5c-31a0beb2cc31"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"qs", " ", "=", " ", 
+   RowBox[{"psT", "[", "\"\<State\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "qs", "]"}], ",", " ", 
+   RowBox[{"Normal", " ", "@", " ", 
+    RowBox[{"FullSimplify", " ", "@", " ", 
+     RowBox[{"qs", "[", "\"\<StateVector\>\"", "]"}]}]}]}], "}"}]}], "Input",E\
+xpressionUUID->"52e27c37-f49d-466c-b9ff-95a47f732308"],
+
+Cell["{QuantumState, {1, 0}}", "Output",ExpressionUUID->"64051196-1c07-418c-a2eb-8c83d66c2ab4"],
+
+Cell["Workflow Context", "Subsubsection",ExpressionUUID->"e1512267-788c-47dd-ac75-976bfbba727a"],
+
+Cell["Property list accessor:", "Text",ExpressionUUID->"4f2bf594-4002-46cd-8811-9139b29e9beb"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"StabilizerFrame", "[", 
+   RowBox[{"PauliStabilizer", "[", "1", "]"}], "]"}], 
+  "[", "\"\<Properties\>\"", "]"}]], "Input",ExpressionUUID->"cabbebae-e50d-\
+46ed-bfff-dcfee43cc28f"],
+
+Cell["\<\
+{Components, Coefficients, Stabilizers, Length, Qubits, GeneratorCount, \
+StateVector, State}\
+\>", "Output",ExpressionUUID->"41575fc4-ed36-4c25-a798-f99bac18101c"],
+
+Cell["Options (0)", "Subsection",ExpressionUUID->"d84e853c-c8d9-45ae-a271-d916f5ac8b7c"],
+
+Cell["Applications (1)", "Subsection",ExpressionUUID->"2c1b92e1-c15a-43cb-bf86-5c2945b99c9b"],
+
+Cell["`T|+>` is a magic state; the frame stays normalized:", "Text",ExpressionUUID->"0a769097-ca58-4678-987d-0a7fb2a13cda"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psTPlus", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+     RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"psTPlus", "[", "\"\<Length\>\"", "]"}], ",", " ", 
+   RowBox[{"Chop", "[", 
+    RowBox[{"N", "[", 
+     RowBox[{"Norm", "[", 
+      RowBox[{"psTPlus", "[", "\"\<StateVector\>\"", "]"}], "]"}], "]"}], 
+    "]"}]}], "}"}]}], "Input",ExpressionUUID->"88649902-e801-4c4e-93fd-\
+3b34bee72454"],
+
+Cell["{2, 1.}", "Output",ExpressionUUID->"c415586f-8e80-4e9c-8687-020a9303bc70"],
+
+Cell["Properties and Relations (3)", "Subsection",ExpressionUUID->"23d536d6-1ddd-469d-bf0b-161c737f4620"],
+
+Cell["`Plus` of two frames concatenates components:", "Text",ExpressionUUID->"139fb2cb-ee8d-4176-a0aa-aa458bbe5f7d"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"fA", " ", "=", " ", 
+   RowBox[{"StabilizerFrame", "[", 
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"fB", " ", "=", " ", 
+   RowBox[{"StabilizerFrame", "[", 
+    RowBox[{
+     RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+     RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"sum", " ", "=", " ", 
+   RowBox[{"fA", " ", "+", " ", "fB"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", "sum", "]"}], ",", " ", 
+   RowBox[{"sum", "[", "\"\<Length\>\"", "]"}], ",", " ", 
+   RowBox[{"sum", "[", "\"\<Coefficients\>\"", "]"}]}], "}"}]}], "Input",Expre\
+ssionUUID->"8c7d9e9e-ddb7-4414-93a7-d9756ad6636d"],
+
+Cell["{StabilizerFrame, 2, {1, 1}}", "Output",ExpressionUUID->"d1bdcc58-4f62-4eae-90d5-281a5c6bc941"],
+
+Cell["`Times` by a scalar scales all coefficients:", "Text",ExpressionUUID->"186f6bbc-f865-413c-b28d-31978c4c3f22"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"f", " ", "=", " ", 
+   RowBox[{"StabilizerFrame", "[", 
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"1", "/", 
+      RowBox[{"Sqrt", "[", "2", "]"}]}], ")"}], " ", "f"}], ")"}], 
+  "[", "\"\<Coefficients\>\"", "]"}]}], "Input",ExpressionUUID->"3f24dd00-\
+bebc-4f0c-acea-3b7746caf2fc"],
+
+Cell["{1/Sqrt[2]}", "Output",ExpressionUUID->"dc38aee1-c490-4365-b005-27196f1d4bbc"],
+
+Cell["Inner product round-trip \[LongDash] `<T|0>|0> = 1`:", "Text",ExpressionUUID->"7b095d3f-b716-4c0a-be4b-fe00e54fc4b2"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"ps0", " ", "=", " ", 
+   RowBox[{"PauliStabilizer", "[", "1", "]"}]}], ";"}], "\n", 
+ RowBox[{"FullSimplify", " ", "@", " ", 
+  RowBox[{"StabilizerInnerProduct", "[", 
+   RowBox[{"psT", ",", " ", "ps0"}], "]"}]}]}], "Input",ExpressionUUID->\
+"8130df2c-ce0c-4e4a-a11d-e81c4152f7f7"],
+
+Cell["1", "Output",ExpressionUUID->"368b5748-018c-4af4-9f9f-0dd07f4971f3"],
+
+Cell["Possible Issues (2)", "Subsection",ExpressionUUID->"d785f688-c2cc-4750-a0e9-339b4fba9c40"],
+
+Cell["\<\
+Non-Clifford gates double the frame size \[LongDash] circuits with many `T` \
+gates grow exponentially:\
+\>", "Text",ExpressionUUID->"985ab1f3-51fd-43e4-bb3d-adc09abb3276"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ps", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"ps", "[", 
+      RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";", " ", 
+    RowBox[{"ps", "[", "\"\<Length\>\"", "]"}]}], ",", " ", 
+   RowBox[{"{", "4", "}"}]}], "]"}]}], "Input",ExpressionUUID->"0595779e-bdda-\
+4a12-809b-a99f17e96f38"],
+
+Cell["{2, 4, 8, 16}", "Output",ExpressionUUID->"3e81cb6d-9855-4959-a3ce-49b094c2d9b0"],
+
+Cell["\<\
+Materialization is cost `2^n` \[LongDash] infeasible for large `n`. The \
+`O(n^3)` closed-form algorithm of Garcia-Markov-Cross 2012 (arxiv:1210.6646) \
+is on the roadmap.\
+\>", "Text",ExpressionUUID->"14fee387-5701-4ad8-82a6-54722a3e0aa4"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psT", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+    RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Length", " ", "@", " ", 
+  RowBox[{"psT", "[", "\"\<StateVector\>\"", "]"}]}]}], "Input",ExpressionUUID\
+->"3edec021-17d8-43e2-ae90-ae212b8baacf"],
+
+Cell["2", "Output",ExpressionUUID->"0ab67bd6-1547-4f06-a875-590a272ecec9"],
+
+Cell["Neat Examples (0)", "Subsection",ExpressionUUID->"4e3b22c2-c66c-4d5e-b15a-844a6aeb7e14"],
+
+Cell["See Also", "Section",ExpressionUUID->"e043f15f-8869-4f64-b081-72e8aac0518c"],
+
+Cell["\<\
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer)\
+\>", "Item",ExpressionUUID->"a40c353f-c21f-49fd-85b5-98a6b6f83239"],
+
+Cell["\<\
+[StabilizerInnerProduct](paclet:Wolfram/QuantumFramework/ref/\
+StabilizerInnerProduct)\
+\>", "Item",ExpressionUUID->"c578d2e8-28bb-45b1-8e2e-b3e4afa43142"],
+
+Cell["\<\
+[StabilizerExpectation](paclet:Wolfram/QuantumFramework/ref/\
+StabilizerExpectation)\
+\>", "Item",ExpressionUUID->"0537eb47-2785-4489-bb4b-f2299cb84436"],
+
+Cell["[QuantumState](paclet:ref/QuantumState)", "Item",ExpressionUUID->"a820a89c-9860-40c7-84c8-49f5e2e4c978"],
+
+Cell["[Plus](paclet:ref/Plus)", "Item",ExpressionUUID->"1702b3c3-ad5c-43f2-8468-bfc02f9fc07a"],
+
+Cell["[Times](paclet:ref/Times)", "Item",ExpressionUUID->"66f5651b-0d86-42f6-b468-774e72a01f02"],
+
+Cell["Related Guides", "Section",ExpressionUUID->"865a122c-6267-42fd-974c-4f0baa851b08"],
+
+Cell["Related Tech Notes", "Section",ExpressionUUID->"f9bd208c-8b40-4407-a0db-377e6a4e68d7"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"0663c267-7287-461f-bd14-4ecb309c504d"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 96, 0, 70, "Text",ExpressionUUID->"2e579702-f4b1-4df2-9727-dc761f1d9890"],
+Cell[653, 22, 87, 0, 70, "Title",ExpressionUUID->"632d0d13-9037-4c8c-9792-56ace8e0c6d1"],
+Cell[743, 24, 202, 3, 70, "Text",ExpressionUUID->"e91aa6b2-6b5d-4771-825d-d8c974f41c55"],
+Cell[948, 29, 93, 0, 70, "Section",ExpressionUUID->"25084244-b032-44d9-98f8-e3b6f090b09d"],
+Cell[1044, 31, 248, 4, 70, "Item",ExpressionUUID->"3bc789c2-40cd-476d-b2f4-c0e53e5377d8"],
+Cell[1295, 37, 181, 3, 70, "Item",ExpressionUUID->"5bed9476-89aa-4aac-83b7-4ee1dff9a0e8"],
+Cell[1479, 42, 190, 3, 70, "Item",ExpressionUUID->"5d810047-3053-4551-b491-ef1a0e9c0474"],
+Cell[1672, 47, 254, 4, 70, "Item",ExpressionUUID->"762dffd8-17ee-4c08-a06d-340f56e783db"],
+Cell[1929, 53, 244, 4, 70, "Item",ExpressionUUID->"21abe485-c209-4457-848a-e6d24e6799b4"],
+Cell[2176, 59, 176, 3, 70, "Item",ExpressionUUID->"4139599d-a981-43e5-ac55-ef76730ab885"],
+Cell[2355, 64, 201, 3, 70, "Item",ExpressionUUID->"2ed2d0a2-bc2d-47bc-a12e-b33d7d8365f8"],
+Cell[2559, 69, 97, 0, 70, "Item",ExpressionUUID->"dbfe635e-32b8-4fa4-961b-3b4197f3e72f"],
+Cell[2659, 71, 647, 9, 70, "Program",ExpressionUUID->"7ebd8e67-ef93-43d7-a691-5de13af9f503"],
+Cell[3309, 82, 246, 4, 70, "Item",ExpressionUUID->"f982e521-9b76-4963-9dd4-92c4813aa606"],
+Cell[3558, 88, 199, 3, 70, "Item",ExpressionUUID->"ca1df483-2fbb-4f9b-84a8-90909a54581f"],
+Cell[3760, 93, 82, 0, 70, "Section",ExpressionUUID->"ac02dc51-7a96-4698-b246-d03e3982784a"],
+Cell[3845, 95, 147, 2, 70, "Input",ExpressionUUID->"ecbe6826-6cc8-465f-9597-fe2359afd0b5"],
+Cell[3995, 99, 95, 0, 70, "Subsection",ExpressionUUID->"7ff7abc7-515f-4500-bfbb-5274c35553b2"],
+Cell[4093, 101, 112, 0, 70, "Text",ExpressionUUID->"0cc50969-8d54-4d6a-af5d-b35a17676eec"],
+Cell[4208, 103, 453, 11, 70, "Input",ExpressionUUID->"ee390700-be4d-4aa4-a582-a9ecbfbc67f8"],
+Cell[4664, 116, 147, 2, 70, "Output",ExpressionUUID->"4b949450-59d8-4f11-898e-e9de99bd82ca"],
+Cell[4814, 120, 154, 2, 70, "Text",ExpressionUUID->"39a3584f-b752-459f-b69a-6d5df59aad1b"],
+Cell[4971, 124, 461, 12, 70, "Input",ExpressionUUID->"7f4d055c-e154-4b96-93a7-b27807e3e8f4"],
+Cell[5435, 138, 93, 0, 70, "Output",ExpressionUUID->"c0e8ed8d-85a7-438d-8606-333b55e1a716"],
+Cell[5531, 140, 139, 1, 70, "Text",ExpressionUUID->"1f8d2d00-c0cd-4dce-9125-a3f094c77aae"],
+Cell[5673, 143, 533, 14, 70, "Input",ExpressionUUID->"ae2656f1-3d06-4c61-86b8-8f19474c44d1"],
+Cell[6209, 159, 93, 0, 70, "Output",ExpressionUUID->"10d1cae1-a418-477b-9d86-0c296da1e6b0"],
+Cell[6305, 161, 86, 0, 70, "Subsection",ExpressionUUID->"6a0aab4c-69e9-425b-b4a1-e2f98df7753f"],
+Cell[6394, 163, 91, 0, 70, "Subsubsection",ExpressionUUID->"978883fa-63f5-402f-84b7-db003fc70240"],
+Cell[6488, 165, 125, 0, 70, "Text",ExpressionUUID->"c4c9c4ad-7383-4e56-98f1-e2aeea2c6c97"],
+Cell[6616, 167, 742, 20, 70, "Input",ExpressionUUID->"5c6f2167-012d-420e-8e10-28d74e938ee8"],
+Cell[7361, 189, 87, 0, 70, "Output",ExpressionUUID->"0eb6013f-0caf-47d7-b5fb-be2797d9aff8"],
+Cell[7451, 191, 121, 0, 70, "Text",ExpressionUUID->"a4eb3a25-03d8-4a38-ba0a-6e9980201338"],
+Cell[7575, 193, 210, 4, 70, "Input",ExpressionUUID->"799fbcbe-0ce0-4183-bceb-cf5637479ca1"],
+Cell[7788, 199, 74, 0, 70, "Output",ExpressionUUID->"7c36138f-d923-4278-ae19-fe71e6b844ee"],
+Cell[7865, 201, 119, 0, 70, "Text",ExpressionUUID->"44da8e69-9ebf-4f6e-bd8b-7a60be4a4f21"],
+Cell[7987, 203, 308, 7, 70, "Input",ExpressionUUID->"08e85e8d-2aa3-415e-8620-684d70c4d78b"],
+Cell[8298, 212, 117, 0, 70, "Output",ExpressionUUID->"099183e3-8a55-4f2c-bf02-632f69b6ba15"],
+Cell[8418, 214, 100, 0, 70, "Subsubsection",ExpressionUUID->"19919a2d-f18f-41fa-abd0-fbb71c9e0405"],
+Cell[8521, 216, 172, 3, 70, "Text",ExpressionUUID->"96311b60-2913-456f-bed0-45a726fefe76"],
+Cell[8696, 221, 800, 23, 70, "Input",ExpressionUUID->"6182fbbf-2c9f-472c-a408-94ed210a3fee"],
+Cell[9499, 246, 93, 0, 70, "Output",ExpressionUUID->"5bd6ec8e-1287-4bf2-a57d-54c4006c5b27"],
+Cell[9595, 248, 124, 0, 70, "Text",ExpressionUUID->"f13cfcd9-0071-4648-8d15-a7494e26b8de"],
+Cell[9722, 250, 390, 9, 70, "Input",ExpressionUUID->"056cdbbb-62f0-47a7-a592-50d2005f153a"],
+Cell[10115, 261, 79, 0, 70, "Output",ExpressionUUID->"e84cdaff-d46a-420e-bb8b-81c173aa862e"],
+Cell[10197, 263, 120, 0, 70, "Text",ExpressionUUID->"bd713364-4ff2-4be0-a1eb-7f66eb6d184e"],
+Cell[10320, 265, 128, 0, 70, "Text",ExpressionUUID->"ccedba14-e83b-4444-bf5c-31a0beb2cc31"],
+Cell[10451, 267, 583, 15, 70, "Input",ExpressionUUID->"52e27c37-f49d-466c-b9ff-95a47f732308"],
+Cell[11037, 284, 95, 0, 70, "Output",ExpressionUUID->"64051196-1c07-418c-a2eb-8c83d66c2ab4"],
+Cell[11135, 286, 96, 0, 70, "Subsubsection",ExpressionUUID->"e1512267-788c-47dd-ac75-976bfbba727a"],
+Cell[11234, 288, 94, 0, 70, "Text",ExpressionUUID->"4f2bf594-4002-46cd-8811-9139b29e9beb"],
+Cell[11331, 290, 216, 5, 70, "Input",ExpressionUUID->"cabbebae-e50d-46ed-bfff-dcfee43cc28f"],
+Cell[11550, 297, 174, 3, 70, "Output",ExpressionUUID->"41575fc4-ed36-4c25-a798-f99bac18101c"],
+Cell[11727, 302, 88, 0, 70, "Subsection",ExpressionUUID->"d84e853c-c8d9-45ae-a271-d916f5ac8b7c"],
+Cell[11818, 304, 93, 0, 70, "Subsection",ExpressionUUID->"2c1b92e1-c15a-43cb-bf86-5c2945b99c9b"],
+Cell[11914, 306, 123, 0, 70, "Text",ExpressionUUID->"0a769097-ca58-4678-987d-0a7fb2a13cda"],
+Cell[12040, 308, 589, 16, 70, "Input",ExpressionUUID->"88649902-e801-4c4e-93fd-3b34bee72454"],
+Cell[12632, 326, 80, 0, 70, "Output",ExpressionUUID->"c415586f-8e80-4e9c-8687-020a9303bc70"],
+Cell[12715, 328, 105, 0, 70, "Subsection",ExpressionUUID->"23d536d6-1ddd-469d-bf0b-161c737f4620"],
+Cell[12823, 330, 116, 0, 70, "Text",ExpressionUUID->"139fb2cb-ee8d-4176-a0aa-aa458bbe5f7d"],
+Cell[12942, 332, 746, 19, 70, "Input",ExpressionUUID->"8c7d9e9e-ddb7-4414-93a7-d9756ad6636d"],
+Cell[13691, 353, 101, 0, 70, "Output",ExpressionUUID->"d1bdcc58-4f62-4eae-90d5-281a5c6bc941"],
+Cell[13795, 355, 115, 0, 70, "Text",ExpressionUUID->"186f6bbc-f865-413c-b28d-31978c4c3f22"],
+Cell[13913, 357, 416, 12, 70, "Input",ExpressionUUID->"3f24dd00-bebc-4f0c-acea-3b7746caf2fc"],
+Cell[14332, 371, 84, 0, 70, "Output",ExpressionUUID->"dc38aee1-c490-4365-b005-27196f1d4bbc"],
+Cell[14419, 373, 123, 0, 70, "Text",ExpressionUUID->"7b095d3f-b716-4c0a-be4b-fe00e54fc4b2"],
+Cell[14545, 375, 491, 12, 70, "Input",ExpressionUUID->"8130df2c-ce0c-4e4a-a11d-e81c4152f7f7"],
+Cell[15039, 389, 74, 0, 70, "Output",ExpressionUUID->"368b5748-018c-4af4-9f9f-0dd07f4971f3"],
+Cell[15116, 391, 96, 0, 70, "Subsection",ExpressionUUID->"d785f688-c2cc-4750-a0e9-339b4fba9c40"],
+Cell[15215, 393, 182, 3, 70, "Text",ExpressionUUID->"985ab1f3-51fd-43e4-bb3d-adc09abb3276"],
+Cell[15400, 398, 523, 14, 70, "Input",ExpressionUUID->"0595779e-bdda-4a12-809b-a99f17e96f38"],
+Cell[15926, 414, 86, 0, 70, "Output",ExpressionUUID->"3e81cb6d-9855-4959-a3ce-49b094c2d9b0"],
+Cell[16015, 416, 250, 4, 70, "Text",ExpressionUUID->"14fee387-5701-4ad8-82a6-54722a3e0aa4"],
+Cell[16268, 422, 345, 8, 70, "Input",ExpressionUUID->"3edec021-17d8-43e2-ae90-ae212b8baacf"],
+Cell[16616, 432, 74, 0, 70, "Output",ExpressionUUID->"0ab67bd6-1547-4f06-a875-590a272ecec9"],
+Cell[16693, 434, 94, 0, 70, "Subsection",ExpressionUUID->"4e3b22c2-c66c-4d5e-b15a-844a6aeb7e14"],
+Cell[16790, 436, 82, 0, 70, "Section",ExpressionUUID->"e043f15f-8869-4f64-b081-72e8aac0518c"],
+Cell[16875, 438, 149, 2, 70, "Item",ExpressionUUID->"a40c353f-c21f-49fd-85b5-98a6b6f83239"],
+Cell[17027, 442, 165, 3, 70, "Item",ExpressionUUID->"c578d2e8-28bb-45b1-8e2e-b3e4afa43142"],
+Cell[17195, 447, 163, 3, 70, "Item",ExpressionUUID->"0537eb47-2785-4489-bb4b-f2299cb84436"],
+Cell[17361, 452, 110, 0, 70, "Item",ExpressionUUID->"a820a89c-9860-40c7-84c8-49f5e2e4c978"],
+Cell[17474, 454, 94, 0, 70, "Item",ExpressionUUID->"1702b3c3-ad5c-43f2-8468-bfc02f9fc07a"],
+Cell[17571, 456, 96, 0, 70, "Item",ExpressionUUID->"66f5651b-0d86-42f6-b468-774e72a01f02"],
+Cell[17670, 458, 88, 0, 70, "Section",ExpressionUUID->"865a122c-6267-42fd-974c-4f0baa851b08"],
+Cell[17761, 460, 92, 0, 70, "Section",ExpressionUUID->"f9bd208c-8b40-4407-a0db-377e6a4e68d7"]
+}
+]
+*)
+
+(* End of internal cache information *)

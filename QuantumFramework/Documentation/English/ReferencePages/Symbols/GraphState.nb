@@ -1,0 +1,475 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     22661,        466]
+NotebookOptionsPosition[     15819,        384]
+NotebookOutlinePosition[     16141,        398]
+CellTagsIndexPosition[     16098,        395]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Wolfram`QuantumFramework`", "Text",ExpressionUUID->"097fd9d1-a887-43fc-b14f-3c8fab03846c"],
+
+Cell["GraphState", "Title",ExpressionUUID->"39f2a326-7aad-43ab-8bab-5371b079c0cb"],
+
+Cell["\<\
+Stabilizer state from a graph: at vertex `i` the stabilizer is `K_i = X_i \
+\[CircleTimes] \[CapitalPi]_{j \[Element] N(i)} Z_j` (AndBri05 Eq 1).\
+\>", "Text",ExpressionUUID->"b21faf32-47b7-4e40-a6ce-18c7fcadd04e"],
+
+Cell["Details and Options", "Section",ExpressionUUID->"cc7dee99-69c2-48b1-887a-f6ff2eeea68f"],
+
+Cell["\<\
+`GraphState[g]` constructs the graph state for a `Graph` `g`, with vertex \
+operators (VOPs) defaulting to all-identity.\
+\>", "Item",ExpressionUUID->"537253b9-9f85-425a-8969-066bc70d8a9e"],
+
+Cell["\<\
+`GraphState[ps]` constructs a graph state from a \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer) whose \
+generators are already in graph form, i.e. each generator has `X` at a unique \
+vertex `i` and `Z` at the neighbors of `i`.\
+\>", "Item",ExpressionUUID->"92617bc5-e8a7-4a3d-b1db-877dc0c418fe"],
+
+Cell["\<\
+The internal representation is `GraphState[<|\"Graph\" -> g, \"VOPs\" -> {0, \
+..., 0}|>]`. VOPs are integer indices into the 24-element single-qubit \
+Clifford group; index `0` denotes identity.\
+\>", "Item",ExpressionUUID->"82948698-50c3-4a48-bf14-8f513dafda3f"],
+
+Cell["\<\
+In Phase 5 v1, only the all-identity VOP case is supported; richer VOPs and \
+VOP propagation through \
+[LocalComplement](paclet:Wolfram/QuantumFramework/ref/LocalComplement) are \
+deferred (ROADMAP \[Section]A.6).\
+\>", "Item",ExpressionUUID->"ddcd96ff-23ea-4aff-8687-8508b791a6fa"],
+
+Cell["\<\
+Memory cost is `O(N \[CenterDot] d\:0304)` with `d\:0304` the average vertex \
+degree \[LongDash] sparser than the `O(N^2)` tableau for sparse codes.\
+\>", "Item",ExpressionUUID->"d767ac82-1c2b-4a2c-9739-293a3aec2f72"],
+
+Cell["The following properties can be queried with `gs[prop]`:", "Item",ExpressionUUID->"eaaeae61-6a3e-4428-b0a3-61509b045ca1"],
+
+Cell["\<\
+                                                                           
+`\"Graph\"`            the underlying `Graph`                                
+`\"VOPs\"`             vertex-operator indices (Phase 5 v1: all `0`)         
+`\"Vertices\"`         `VertexList[graph]`                                   
+`\"Edges\"`            `EdgeList[graph]`                                     
+`\"VertexCount\"`      number of vertices                                    
+`\"EdgeCount\"`        number of edges                                       
+`\"Qubits\"`           `VertexCount[graph]`                                  
+`\"AdjacencyMatrix\"`  dense adjacency matrix                                
+`\"Stabilizers\"`      string list `{K_1, ..., K_n}` of stabilizer generators
+`\"PauliStabilizer\"`  conversion to a `PauliStabilizer` head                \
+\
+\>", "Program",ExpressionUUID->"e3f005fb-bb26-4502-82d2-cb3c1b643d57"],
+
+Cell["Examples (5)", "Section",ExpressionUUID->"aec15788-2e29-442a-98a8-3c0c5fde7788"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",Ex\
+pressionUUID->"a6d7d1ad-a1ee-4a05-8c7c-9cdb997b3e17"],
+
+Cell["Basic Examples (3)", "Subsection",ExpressionUUID->"99e1e060-fa91-486b-b357-e11830aa23bc"],
+
+Cell["\<\
+A linear cluster on three vertices has stabilizers `K_1 = XZI`, `K_2 = ZXZ`, \
+`K_3 = IZX`:\
+\>", "Text",ExpressionUUID->"4efe4d5c-cc0e-4486-b363-4c21e60af888"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"PathGraph", "[", 
+    RowBox[{"Range", "[", "3", "]"}], "]"}], "]"}], "[", "\"\<Stabilizers\>\"",
+   "]"}]], "Input",ExpressionUUID->"45abf2f1-b4f2-4c53-bcde-95c6545d9c18"],
+
+Cell["{\"XZI\", \"ZXZ\", \"IZX\"}", "Output",ExpressionUUID->"3263f9c2-c71a-4080-8835-32af17e758c1"],
+
+Cell["A 5-qubit cluster state from a path graph:", "Text",ExpressionUUID->"f98010b0-7e9e-4244-84a8-20ecef4dbc4d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"PathGraph", "[", 
+    RowBox[{"Range", "[", "5", "]"}], "]"}], "]"}], "[", "\"\<Stabilizers\>\"",
+   "]"}]], "Input",ExpressionUUID->"ce9f9ec5-cb96-48b2-8a9d-3c2da860295f"],
+
+Cell["{\"XZIII\", \"ZXZII\", \"IZXZI\", \"IIZXZ\", \"IIIZX\"}", "Output",ExpressionUUID->"964fa390-4c96-488c-99b7-94edd83e4ace"],
+
+Cell["A star graph: vertex 1 connected to leaves 2, 3, 4, 5:", "Text",ExpressionUUID->"b9e3c614-010d-4fb3-b7b1-340bda87d6cf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"Graph", "[", 
+    RowBox[{
+     RowBox[{"Range", "[", "5", "]"}], ",", " ", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"1", " ", "\[UndirectedEdge]", " ", 
+        RowBox[{"(", 
+         RowBox[{"i", "+", "1"}], ")"}]}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", " ", "4"}], "}"}]}], "]"}]}], "]"}], "]"}], 
+  "[", "\"\<Stabilizers\>\"", "]"}]], "Input",ExpressionUUID->"6b7de78d-c129-\
+43f6-a8d7-7fc57f0f738d"],
+
+Cell["{\"XZZZZ\", \"ZXIII\", \"ZIXII\", \"ZIIXI\", \"ZIIIX\"}", "Output",ExpressionUUID->"33b270dc-83bc-4476-ad9b-9e8d78e57543"],
+
+Cell["Scope (3)", "Subsection",ExpressionUUID->"39cf9863-cec9-420b-ad9f-5be3aecbb897"],
+
+Cell["Input Forms", "Subsubsection",ExpressionUUID->"c47315c9-f98f-4e0c-b1ba-b397be5f589a"],
+
+Cell["\<\
+A `Graph` produced from any constructor \[LongDash] `Graph`, `PathGraph`, \
+`CycleGraph`, `CompleteGraph`, `StarGraph`:\
+\>", "Text",ExpressionUUID->"717e40df-d2c5-40d4-814a-51256d1d417d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"CycleGraph", "[", "4", "]"}], "]"}], "[", "\"\<Stabilizers\>\"", 
+  "]"}]], "Input",ExpressionUUID->"3b1faf69-664e-4711-bbad-79c86c31610a"],
+
+Cell["{\"XZIZ\", \"ZXZI\", \"IZXZ\", \"ZIZX\"}", "Output",ExpressionUUID->"da60bf47-93df-4883-90fa-b747dbc8b239"],
+
+Cell["A `Graph` built from an explicit edge list:", "Text",ExpressionUUID->"ebdad807-8dd6-4c24-ae14-976965956ad6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"Graph", "[", 
+    RowBox[{
+     RowBox[{"Range", "[", "3", "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"1", " ", "\[UndirectedEdge]", " ", "2"}], ",", " ", 
+       RowBox[{"2", " ", "\[UndirectedEdge]", " ", "3"}]}], "}"}]}], "]"}], 
+   "]"}], "[", "\"\<Stabilizers\>\"", "]"}]], "Input",ExpressionUUID->\
+"1be632af-a966-422e-95dc-d7a51adcf310"],
+
+Cell["{\"XZI\", \"ZXZ\", \"IZX\"}", "Output",ExpressionUUID->"977cf80c-797d-4d87-b230-aa72b3a4ed9a"],
+
+Cell["\<\
+A graph-form \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer) \
+\[LongDash] generators already in `X_i \[CenterDot] \[CapitalPi] Z_j` shape \
+\[LongDash] recovers the underlying graph:\
+\>", "Text",ExpressionUUID->"5ff732af-22e3-4819-bfaf-9a723742e9e6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"PauliStabilizer", "[", 
+    RowBox[{"{", 
+     RowBox[{"\"\<XZI\>\"", ",", " ", "\"\<ZXZ\>\"", ",", 
+      " ", "\"\<IZX\>\""}], "}"}], "]"}], "]"}], "[", "\"\<Edges\>\"", 
+  "]"}]], "Input",ExpressionUUID->"0eedb597-9406-4dce-ac99-73b5cbe6b53c"],
+
+Cell["{1 \\[UndirectedEdge] 2, 2 \\[UndirectedEdge] 3}", "Output",ExpressionUUID->"487adaff-725f-4fb8-ab63-fcf045cf3666"],
+
+Cell["Distinctive Features", "Subsubsection",ExpressionUUID->"be2f5e90-8617-4a46-963b-a9df55e2fcc6"],
+
+Cell["\<\
+`K_3` is the GHZ-via-cluster: every generator has `X` at one site and `Z` \
+everywhere else:\
+\>", "Text",ExpressionUUID->"3136a4bb-7bae-48bd-be8a-f0a924134940"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"GraphState", "[", 
+   RowBox[{"CompleteGraph", "[", "3", "]"}], "]"}], "[", "\"\<Stabilizers\>\"",
+   "]"}]], "Input",ExpressionUUID->"be92386a-cfa0-4e78-b462-ac0cf49e4cee"],
+
+Cell["{\"XZZ\", \"ZXZ\", \"ZZX\"}", "Output",ExpressionUUID->"123fc356-b682-4b48-b16e-a563872aca69"],
+
+Cell["Workflow Context", "Subsubsection",ExpressionUUID->"a29cab82-7084-473a-98e8-ea1847293cb0"],
+
+Cell["\<\
+The `\"PauliStabilizer\"` property converts to the tableau representation, \
+which can be checked against the equivalent Clifford circuit (Hadamards on \
+every qubit, `CZ` on every edge):\
+\>", "Text",ExpressionUUID->"625c5217-78a5-490a-9679-0e11edda0176"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gs", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"PathGraph", "[", 
+     RowBox[{"Range", "[", "5", "]"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psFromCircuit", " ", "=", " ", 
+   RowBox[{"PauliStabilizer", "[", 
+    RowBox[{"QuantumCircuitOperator", "[", "\n", "    ", 
+     RowBox[{"Join", "[", 
+      RowBox[{
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"\"\<H\>\"", " ", "->", " ", "i"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"i", ",", " ", "5"}], "}"}]}], "]"}], ",", " ", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"\"\<CZ\>\"", " ", "->", " ", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", " ", 
+            RowBox[{"i", " ", "+", " ", "1"}]}], "}"}]}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"i", ",", " ", "4"}], "}"}]}], "]"}]}], "]"}], "\n", "]"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"gs", "[", "\"\<PauliStabilizer\>\"", "]"}], 
+   "[", "\"\<Stabilizers\>\"", "]"}], " ", "===", " ", 
+  RowBox[{"psFromCircuit", "[", "\"\<Stabilizers\>\"", "]"}]}]}], "Input",Expr\
+essionUUID->"bbd1b028-7359-4b1d-98b5-0a2b960bbd24"],
+
+Cell["True", "Output",ExpressionUUID->"a021b508-c430-44ff-9ce0-28fc7e3b2896"],
+
+Cell["Options (0)", "Subsection",ExpressionUUID->"3914a0de-1eaa-48b1-8d19-3aad0f13fa6a"],
+
+Cell["Applications (0)", "Subsection",ExpressionUUID->"79b9ea28-0d50-4629-b23c-c477b26ed12f"],
+
+Cell["Properties and Relations (3)", "Subsection",ExpressionUUID->"412c862d-0353-4fcc-86bc-7e25c375fcf2"],
+
+Cell["\<\
+The stabilizer at vertex `i` follows AndBri05 Eq 1 \[LongDash] `X` at \
+position `i`, `Z` at every neighbor, `I` elsewhere \[LongDash] and can be \
+reconstructed directly from the adjacency matrix:\
+\>", "Text",ExpressionUUID->"8d4481cf-2b8f-47dd-b403-f946202c9d6f"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gs", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"PathGraph", "[", 
+     RowBox[{"Range", "[", "3", "]"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"gs", "[", "\"\<AdjacencyMatrix\>\"", "]"}], ",", " ", 
+   RowBox[{"gs", "[", "\"\<Stabilizers\>\"", "]"}]}], "}"}]}], "Input",Express\
+ionUUID->"06a68073-238d-4883-9340-2f0b1760e02a"],
+
+Cell["{{{0, 1, 0}, {1, 0, 1}, {0, 1, 0}}, {\"XZI\", \"ZXZ\", \"IZX\"}}", \
+"Output",ExpressionUUID->"51b28fdd-3726-4b51-8c31-d2ff43cd67a4"],
+
+Cell["\<\
+For all-identity VOPs, `GraphState[g][\"PauliStabilizer\"][\"Stabilizers\"]` \
+reproduces the same Pauli strings as `gs[\"Stabilizers\"]`:\
+\>", "Text",ExpressionUUID->"683d1514-9ffe-4c11-8f7d-72e5cf78ec24"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gs", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"PathGraph", "[", 
+     RowBox[{"Range", "[", "3", "]"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"gs", "[", "\"\<PauliStabilizer\>\"", "]"}], 
+   "[", "\"\<Stabilizers\>\"", "]"}], " ", "===", " ", 
+  RowBox[{"gs", "[", "\"\<Stabilizers\>\"", "]"}]}]}], "Input",ExpressionUUID->\
+"f055621b-10d8-4970-922f-3074b4e3c97f"],
+
+Cell["True", "Output",ExpressionUUID->"88031326-88bb-4eb2-9714-8c1c4ce59375"],
+
+Cell["`\"Qubits\"` and `\"VertexCount\"` are aliases:", "Text",ExpressionUUID->"0bc8134d-5498-44c7-a988-a51358a900c7"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gs", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"PathGraph", "[", 
+     RowBox[{"Range", "[", "5", "]"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"gs", "[", "\"\<Qubits\>\"", "]"}], ",", " ", 
+   RowBox[{"gs", "[", "\"\<VertexCount\>\"", "]"}]}], "}"}]}], "Input",Express\
+ionUUID->"37fbc338-208d-4649-b8b8-03d72198b0a2"],
+
+Cell["{5, 5}", "Output",ExpressionUUID->"01c7291b-89e4-4b7c-aba9-6a960f46c8e4"],
+
+Cell["Possible Issues (2)", "Subsection",ExpressionUUID->"ece7ded6-02b4-475d-9b1d-b3591769cc59"],
+
+Cell["\<\
+`GraphState[ps]` requires the input to be **already** in graph-state \
+stabilizer form (each generator `X_i \[CenterDot] \[CapitalPi] Z_j` at vertex \
+`i`). A non-graph-form stabilizer such as the GHZ tableau `{XXX, ZZI, IZZ}` \
+produces an empty edge set \[LongDash] and therefore stabilizers that \
+disagree with the input:\
+\>", "Text",ExpressionUUID->"b32fafed-296e-4925-b637-5dd917f0961b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gsBad", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"PauliStabilizer", "[", 
+     RowBox[{"{", 
+      RowBox[{"\"\<XXX\>\"", ",", " ", "\"\<ZZI\>\"", ",", 
+       " ", "\"\<IZZ\>\""}], "}"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"gsBad", "[", "\"\<Edges\>\"", "]"}], ",", " ", 
+   RowBox[{"gsBad", "[", "\"\<Stabilizers\>\"", "]"}]}], "}"}]}], "Input",Expr\
+essionUUID->"b109582e-a9ba-4e1f-a2e5-5932731d73a9"],
+
+Cell["{{}, {\"XII\", \"IXI\", \"IIX\"}}", "Output",ExpressionUUID->"5f0f4c73-92c1-4e68-b64c-862cfc66a8fe"],
+
+Cell["\<\
+Vertex operators are not yet propagated through \
+[LocalComplement](paclet:Wolfram/QuantumFramework/ref/LocalComplement) \
+(ROADMAP \[Section]A.6). The `\"VOPs\"` field is preserved unchanged when \
+applying `LocalComplement` to a `GraphState`, so the resulting Pauli strings \
+differ from the original by an unrecorded local Clifford:\
+\>", "Text",ExpressionUUID->"166dade6-7e06-4933-a88e-6f72d29ddbe4"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gs", " ", "=", " ", 
+   RowBox[{"GraphState", "[", 
+    RowBox[{"Graph", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "2", ",", " ", "3", ",", " ", "4"}], "}"}], ",",
+       " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"1", " ", "\[UndirectedEdge]", " ", "2"}], ",", " ", 
+        RowBox[{"1", " ", "\[UndirectedEdge]", " ", "3"}], ",", " ", 
+        RowBox[{"1", " ", "\[UndirectedEdge]", " ", "4"}]}], "}"}]}], "]"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"LocalComplement", "[", 
+   RowBox[{"gs", ",", " ", "1"}], "]"}], "[", "\"\<VOPs\>\"", "]"}]}], "Input",\
+ExpressionUUID->"c8c5a151-1924-4adf-af4c-6a865640a001"],
+
+Cell["{0, 0, 0, 0}", "Output",ExpressionUUID->"5091063e-b753-4d82-9662-89c31c500ce2"],
+
+Cell["Neat Examples (0)", "Subsection",ExpressionUUID->"3916bd5f-1373-42c9-a948-92f2b98a6ded"],
+
+Cell["See Also", "Section",ExpressionUUID->"b61c914f-2999-4a49-8f76-51eb94af786f"],
+
+Cell["\<\
+[LocalComplement](paclet:Wolfram/QuantumFramework/ref/LocalComplement)\
+\>", "Item",ExpressionUUID->"5b7061e6-6c01-4a31-bafc-9d8610551bf9"],
+
+Cell["\<\
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer)\
+\>", "Item",ExpressionUUID->"c4de552a-ebc7-4a4c-baba-de13f3507de8"],
+
+Cell["[Graph](paclet:ref/Graph)", "Item",ExpressionUUID->"0f4adcca-3262-4898-8379-1717d79aa56f"],
+
+Cell["[PathGraph](paclet:ref/PathGraph)", "Item",ExpressionUUID->"55703236-134c-4b7d-8c2b-9f4ebe991ee5"],
+
+Cell["[CycleGraph](paclet:ref/CycleGraph)", "Item",ExpressionUUID->"60536354-aa68-4e11-b7e4-e8f6a0a85f49"],
+
+Cell["[CompleteGraph](paclet:ref/CompleteGraph)", "Item",ExpressionUUID->"653ab3da-3170-4c83-9a6c-a06536d62519"],
+
+Cell["Related Guides", "Section",ExpressionUUID->"e6839480-1375-4562-9ae3-c919c8a906e0"],
+
+Cell["Related Tech Notes", "Section",ExpressionUUID->"ff176184-4449-4a94-bd1f-3715dad98fb7"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"40656010-b1c1-4c0c-8aa2-bad04d56c517"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 96, 0, 70, "Text",ExpressionUUID->"097fd9d1-a887-43fc-b14f-3c8fab03846c"],
+Cell[653, 22, 82, 0, 70, "Title",ExpressionUUID->"39f2a326-7aad-43ab-8bab-5371b079c0cb"],
+Cell[738, 24, 224, 3, 70, "Text",ExpressionUUID->"b21faf32-47b7-4e40-a6ce-18c7fcadd04e"],
+Cell[965, 29, 93, 0, 70, "Section",ExpressionUUID->"cc7dee99-69c2-48b1-887a-f6ff2eeea68f"],
+Cell[1061, 31, 199, 3, 70, "Item",ExpressionUUID->"537253b9-9f85-425a-8969-066bc70d8a9e"],
+Cell[1263, 36, 332, 5, 70, "Item",ExpressionUUID->"92617bc5-e8a7-4a3d-b1db-877dc0c418fe"],
+Cell[1598, 43, 274, 4, 70, "Item",ExpressionUUID->"82948698-50c3-4a48-bf14-8f513dafda3f"],
+Cell[1875, 49, 293, 5, 70, "Item",ExpressionUUID->"ddcd96ff-23ea-4aff-8687-8508b791a6fa"],
+Cell[2171, 56, 228, 3, 70, "Item",ExpressionUUID->"d767ac82-1c2b-4a2c-9739-293a3aec2f72"],
+Cell[2402, 61, 127, 0, 70, "Item",ExpressionUUID->"eaaeae61-6a3e-4428-b0a3-61509b045ca1"],
+Cell[2532, 63, 939, 13, 70, "Program",ExpressionUUID->"e3f005fb-bb26-4502-82d2-cb3c1b643d57"],
+Cell[3474, 78, 86, 0, 70, "Section",ExpressionUUID->"aec15788-2e29-442a-98a8-3c0c5fde7788"],
+Cell[3563, 80, 147, 2, 70, "Input",ExpressionUUID->"a6d7d1ad-a1ee-4a05-8c7c-9cdb997b3e17"],
+Cell[3713, 84, 95, 0, 70, "Subsection",ExpressionUUID->"99e1e060-fa91-486b-b357-e11830aa23bc"],
+Cell[3811, 86, 170, 3, 70, "Text",ExpressionUUID->"4efe4d5c-cc0e-4486-b363-4c21e60af888"],
+Cell[3984, 91, 238, 5, 70, "Input",ExpressionUUID->"45abf2f1-b4f2-4c53-bcde-95c6545d9c18"],
+Cell[4225, 98, 100, 0, 70, "Output",ExpressionUUID->"3263f9c2-c71a-4080-8835-32af17e758c1"],
+Cell[4328, 100, 113, 0, 70, "Text",ExpressionUUID->"f98010b0-7e9e-4244-84a8-20ecef4dbc4d"],
+Cell[4444, 102, 238, 5, 70, "Input",ExpressionUUID->"ce9f9ec5-cb96-48b2-8a9d-3c2da860295f"],
+Cell[4685, 109, 128, 0, 70, "Output",ExpressionUUID->"964fa390-4c96-488c-99b7-94edd83e4ace"],
+Cell[4816, 111, 125, 0, 70, "Text",ExpressionUUID->"b9e3c614-010d-4fb3-b7b1-340bda87d6cf"],
+Cell[4944, 113, 509, 14, 70, "Input",ExpressionUUID->"6b7de78d-c129-43f6-a8d7-7fc57f0f738d"],
+Cell[5456, 129, 128, 0, 70, "Output",ExpressionUUID->"33b270dc-83bc-4476-ad9b-9e8d78e57543"],
+Cell[5587, 131, 86, 0, 70, "Subsection",ExpressionUUID->"39cf9863-cec9-420b-ad9f-5be3aecbb897"],
+Cell[5676, 133, 91, 0, 70, "Subsubsection",ExpressionUUID->"c47315c9-f98f-4e0c-b1ba-b397be5f589a"],
+Cell[5770, 135, 198, 3, 70, "Text",ExpressionUUID->"717e40df-d2c5-40d4-814a-51256d1d417d"],
+Cell[5971, 140, 205, 4, 70, "Input",ExpressionUUID->"3b1faf69-664e-4711-bbad-79c86c31610a"],
+Cell[6179, 146, 113, 0, 70, "Output",ExpressionUUID->"da60bf47-93df-4883-90fa-b747dbc8b239"],
+Cell[6295, 148, 114, 0, 70, "Text",ExpressionUUID->"ebdad807-8dd6-4c24-ae14-976965956ad6"],
+Cell[6412, 150, 434, 11, 70, "Input",ExpressionUUID->"1be632af-a966-422e-95dc-d7a51adcf310"],
+Cell[6849, 163, 100, 0, 70, "Output",ExpressionUUID->"977cf80c-797d-4d87-b230-aa72b3a4ed9a"],
+Cell[6952, 165, 287, 5, 70, "Text",ExpressionUUID->"5ff732af-22e3-4819-bfaf-9a723742e9e6"],
+Cell[7242, 172, 312, 7, 70, "Input",ExpressionUUID->"0eedb597-9406-4dce-ac99-73b5cbe6b53c"],
+Cell[7557, 181, 121, 0, 70, "Output",ExpressionUUID->"487adaff-725f-4fb8-ab63-fcf045cf3666"],
+Cell[7681, 183, 100, 0, 70, "Subsubsection",ExpressionUUID->"be2f5e90-8617-4a46-963b-a9df55e2fcc6"],
+Cell[7784, 185, 171, 3, 70, "Text",ExpressionUUID->"3136a4bb-7bae-48bd-be8a-f0a924134940"],
+Cell[7958, 190, 208, 4, 70, "Input",ExpressionUUID->"be92386a-cfa0-4e78-b462-ac0cf49e4cee"],
+Cell[8169, 196, 100, 0, 70, "Output",ExpressionUUID->"123fc356-b682-4b48-b16e-a563872aca69"],
+Cell[8272, 198, 96, 0, 70, "Subsubsection",ExpressionUUID->"a29cab82-7084-473a-98e8-ea1847293cb0"],
+Cell[8371, 200, 266, 4, 70, "Text",ExpressionUUID->"625c5217-78a5-490a-9679-0e11edda0176"],
+Cell[8640, 206, 1195, 31, 70, "Input",ExpressionUUID->"bbd1b028-7359-4b1d-98b5-0a2b960bbd24"],
+Cell[9838, 239, 77, 0, 70, "Output",ExpressionUUID->"a021b508-c430-44ff-9ce0-28fc7e3b2896"],
+Cell[9918, 241, 88, 0, 70, "Subsection",ExpressionUUID->"3914a0de-1eaa-48b1-8d19-3aad0f13fa6a"],
+Cell[10009, 243, 93, 0, 70, "Subsection",ExpressionUUID->"79b9ea28-0d50-4629-b23c-c477b26ed12f"],
+Cell[10105, 245, 105, 0, 70, "Subsection",ExpressionUUID->"412c862d-0353-4fcc-86bc-7e25c375fcf2"],
+Cell[10213, 247, 276, 4, 70, "Text",ExpressionUUID->"8d4481cf-2b8f-47dd-b403-f946202c9d6f"],
+Cell[10492, 253, 409, 10, 70, "Input",ExpressionUUID->"06a68073-238d-4883-9340-2f0b1760e02a"],
+Cell[10904, 265, 139, 1, 70, "Output",ExpressionUUID->"51b28fdd-3726-4b51-8c31-d2ff43cd67a4"],
+Cell[11046, 268, 217, 3, 70, "Text",ExpressionUUID->"683d1514-9ffe-4c11-8f7d-72e5cf78ec24"],
+Cell[11266, 273, 442, 11, 70, "Input",ExpressionUUID->"f055621b-10d8-4970-922f-3074b4e3c97f"],
+Cell[11711, 286, 77, 0, 70, "Output",ExpressionUUID->"88031326-88bb-4eb2-9714-8c1c4ce59375"],
+Cell[11791, 288, 118, 0, 70, "Text",ExpressionUUID->"0bc8134d-5498-44c7-a988-a51358a900c7"],
+Cell[11912, 290, 400, 10, 70, "Input",ExpressionUUID->"37fbc338-208d-4649-b8b8-03d72198b0a2"],
+Cell[12315, 302, 79, 0, 70, "Output",ExpressionUUID->"01c7291b-89e4-4b7c-aba9-6a960f46c8e4"],
+Cell[12397, 304, 96, 0, 70, "Subsection",ExpressionUUID->"ece7ded6-02b4-475d-9b1d-b3591769cc59"],
+Cell[12496, 306, 404, 6, 70, "Text",ExpressionUUID->"b32fafed-296e-4925-b637-5dd917f0961b"],
+Cell[12903, 314, 490, 12, 70, "Input",ExpressionUUID->"b109582e-a9ba-4e1f-a2e5-5932731d73a9"],
+Cell[13396, 328, 106, 0, 70, "Output",ExpressionUUID->"5f0f4c73-92c1-4e68-b64c-862cfc66a8fe"],
+Cell[13505, 330, 414, 6, 70, "Text",ExpressionUUID->"166dade6-7e06-4933-a88e-6f72d29ddbe4"],
+Cell[13922, 338, 703, 18, 70, "Input",ExpressionUUID->"c8c5a151-1924-4adf-af4c-6a865640a001"],
+Cell[14628, 358, 85, 0, 70, "Output",ExpressionUUID->"5091063e-b753-4d82-9662-89c31c500ce2"],
+Cell[14716, 360, 94, 0, 70, "Subsection",ExpressionUUID->"3916bd5f-1373-42c9-a948-92f2b98a6ded"],
+Cell[14813, 362, 82, 0, 70, "Section",ExpressionUUID->"b61c914f-2999-4a49-8f76-51eb94af786f"],
+Cell[14898, 364, 149, 2, 70, "Item",ExpressionUUID->"5b7061e6-6c01-4a31-bafc-9d8610551bf9"],
+Cell[15050, 368, 149, 2, 70, "Item",ExpressionUUID->"c4de552a-ebc7-4a4c-baba-de13f3507de8"],
+Cell[15202, 372, 96, 0, 70, "Item",ExpressionUUID->"0f4adcca-3262-4898-8379-1717d79aa56f"],
+Cell[15301, 374, 104, 0, 70, "Item",ExpressionUUID->"55703236-134c-4b7d-8c2b-9f4ebe991ee5"],
+Cell[15408, 376, 106, 0, 70, "Item",ExpressionUUID->"60536354-aa68-4e11-b7e4-e8f6a0a85f49"],
+Cell[15517, 378, 112, 0, 70, "Item",ExpressionUUID->"653ab3da-3170-4c83-9a6c-a06536d62519"],
+Cell[15632, 380, 88, 0, 70, "Section",ExpressionUUID->"e6839480-1375-4562-9ae3-c919c8a906e0"],
+Cell[15723, 382, 92, 0, 70, "Section",ExpressionUUID->"ff176184-4449-4a94-bd1f-3715dad98fb7"]
+}
+]
+*)
+
+(* End of internal cache information *)
