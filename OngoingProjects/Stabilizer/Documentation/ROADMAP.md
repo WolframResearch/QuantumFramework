@@ -6,7 +6,7 @@
 
 ## Overall status
 
-- **Tests:** 235 / 235 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 287 / 287 passing.
+- **Tests:** 250 / 250 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 302 / 302 passing.
 - **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip + post-mortem + cross-module audit — see "Phase 5c — DONE" below)**.
 - **Open items:** 17 (9 partial + 7 deferred + 1 latent bug). A.9 reclassified as **inherent trade-off** (documented contract, not a fix-pending item) after the 2026-05-04 follow-up.
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
@@ -31,6 +31,17 @@
 Removed: `PauliStabilizerTableau` (the old broken tomography helper, 14 LOC).
 
 The fix surfaces one new partial item — **A.10** (cosmetic, generator-order canonicalization) — and reclassifies **A.9** as an inherent trade-off with a documented contract (see below).
+
+### Phase 5c — follow-up commits (2026-05-04)
+
+After `cb043441` (which produced the 5c content above), four follow-up commits polished the docs and tests without changing the underlying design:
+
+| Commit | What |
+|---|---|
+| `070eb336` | `verify-API.wls` block reorder to match `API.md` doc order. No content change. |
+| `3e0539f7` | `API.md` documents the `"GlobalPhase"` association key + the round-trip contract (`A[C[x]] === x` on first hop; up-to-phase under gate updates per §A.9). |
+| `90639b6c` | New TIER 1.4e block in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt): coverage matrix asserting every accessor in `_PauliStabilizer["Properties"]` is exercised by at least one test (+15 tests, 235 → 250). Closes the structural gap that motivated the post-mortem. |
+| `abc51f3a` | TIER 1.1 (`multiplication-via-symplectic`) rewritten to be derivation-driven, then embedded verbatim in `API.md` so the doc and the test cannot drift. No test-count change. |
 
 Two process artifacts also produced:
 
@@ -314,7 +325,7 @@ When an item is implemented:
 
 - Companion: [`synthesis-implementation.md`](synthesis-implementation.md) — the *what works* document (capability tour).
 - Companion: [`API.md`](API.md) — the per-function reference (49 verified examples).
-- Test suite: [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) — 8 tiers, 185 tests.
+- Test suite: [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) — 4 top-level tiers, 32+ sub-tiers, 250 tests.
 - Verifier (synthesis): [`verify-synthesis-implementation.wls`](verify-synthesis-implementation.wls) — re-runnable with `wolframscript`.
 - Verifier (API): [`verify-API.wls`](verify-API.wls) — re-runnable with `wolframscript`.
 - Original synthesis: [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md) — distilled from 28 papers.
