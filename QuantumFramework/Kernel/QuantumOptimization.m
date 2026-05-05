@@ -26,6 +26,10 @@ PackageExport["ClassiqSetup"]
 
 PackageExport["FubiniStudyMetricTensorLayers"]
 
+PackageExport["QuantumLockingMechanism"]
+
+PackageExport["QuantumUnlockingMechanism"]
+
 
 (* ::Section::Closed:: *)
 (*Quantum Optimization Functionalities*)
