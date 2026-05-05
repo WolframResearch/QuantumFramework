@@ -1,5 +1,16 @@
 # `PauliStabilizer.m` — Deep Audit
 
+> ⚠️ **HISTORICAL — pre-rebuild audit (anchor SHA `cbbe9368`).**
+>
+> This document audits the **monolithic** `QuantumFramework/Kernel/PauliStabilizer.m` (494 LOC) as it stood at SHA `cbbe9368` (2024-05-29). That file no longer exists: in commit `27b36f62` (Phase 1–4 rebuild) it was split into the 16-file `QuantumFramework/Kernel/Stabilizer/` subdirectory. **All `file:line` references inside this document point at lines that no longer exist.**
+>
+> Kept on disk because the audit captures the pre-rebuild surface and the reasoning that motivated the rebuild. For current information:
+>
+> - **Current API**: [`Documentation/API.md`](Documentation/API.md)
+> - **What works today (capability tour)**: [`Documentation/synthesis-implementation.md`](Documentation/synthesis-implementation.md)
+> - **Open items + design rationale**: [`Documentation/ROADMAP.md`](Documentation/ROADMAP.md)
+> - **Round-trip miss post-mortem**: [`Documentation/post-mortem-phase-5c.md`](Documentation/post-mortem-phase-5c.md)
+
 > Anchor: `Wolfram/QuantumFramework 1.6.5`, SHA `cbbe9368`. Source: `QuantumFramework/Kernel/PauliStabilizer.m` (494 LOC). Last modified 2024-05-29.
 >
 > Purpose: surface what works today vs. what needs development, **with bias toward symbolic capability**, before mapping requirements against the 33-paper SDK literature in `Planning for research/Stabilizer/`.

@@ -28,7 +28,7 @@
 | 2.2 | 24-element local Clifford group | — | — | ⏸ deferred (AndBri05 §2 footnote) |
 | 2.3 | Local complementation | 5 | `LocalComplement` | ✅ (no VOP tracking yet) |
 | 2.4 | Z-basis & Pauli-string measurement | 1, 4 | `ps["M", q]`, `ps["M", "XZZXI"]` | ✅ |
-| 2.5 | Inner products & expectation | 4 | `StabilizerInnerProduct`, `StabilizerExpectation` | ✅ (direct vector; closed-form TODO) |
+| 2.5 | Inner products & expectation | 4 | `StabilizerInnerProduct`, `StabilizerExpectation` | ✅ (direct vector; closed-form tracked in [ROADMAP §A.1](ROADMAP.md)) |
 | 2.6 | Distance / nearest neighbors | — | — | ⏸ deferred (GarMarCro12 §5) |
 | 2.7 | Counting / enumeration | 1 | (formulas at test-fixture level) | ✅ |
 | 2.8 | Random Clifford | 2 | `RandomClifford` | ✅ |
@@ -411,7 +411,7 @@ All 4 stabilizer measurements on `|0_L⟩` are deterministic with outcome bit 0 
 
 > **Synthesis** (`:162-166`): "`StabilizerInnerProduct[ψ, φ]`: zero if the stabilizer groups have a Pauli with opposite signs; otherwise `2^(-s/2)` where `s` is the minimal symmetric difference of generators (GarMarCro12 §3, `O(n³)` algorithm)."
 
-**QF kernel** (Phase 4, [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m)). `StabilizerInnerProduct[ψ, φ]` computes `⟨ψ|φ⟩` and `StabilizerExpectation[ps, "XZZXI"]` returns `⟨ψ|P|ψ⟩`. Phase 4 v1 uses **direct vector materialization** (cost `2ⁿ`); the `O(n³)` GarMarCro12 closed-form is a TODO for Phase 6+.
+**QF kernel** (Phase 4, [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m)). `StabilizerInnerProduct[ψ, φ]` computes `⟨ψ|φ⟩` and `StabilizerExpectation[ps, "XZZXI"]` returns `⟨ψ|P|ψ⟩`. Phase 4 v1 uses **direct vector materialization** (cost `2ⁿ`); the `O(n³)` GarMarCro12 closed-form is tracked in [ROADMAP §A.1](ROADMAP.md).
 
 **Code (Bell self inner product):**
 ```wolfram
@@ -829,7 +829,7 @@ The synthesis's 7 don'ts (`:451-458`) are honored:
 - **Don't store global phases of stabilizer states.** ⚠️ **Partially relaxed in Phase 5c.** The kernel still tracks `Phase ∈ {0, 1}` per row for the tableau itself. *In addition*, when a `PauliStabilizer` is constructed from a `QuantumState` or `QuantumOperator`, the constructor now records the overall complex phase that the AG decomposition drops under a `"GlobalPhase"` association key, so that `["State"]` / `["QuantumOperator"]` round-trip the input exactly. Tableau-derived `PauliStabilizer`s (no source state/operator) leave `GlobalPhase` unset (default 1). Gate updates do not yet propagate `GlobalPhase` — see [ROADMAP §A.9](ROADMAP.md).
 - **Don't reimplement the qubit-only case for qudits.** ⏸ Phase 1–5 is qubit-only by design; v2 unification deferred.
 - **Don't expose Karnaugh-map-derived gate rules to the end user.** ✅ Internal documentation only.
-- **Don't try to symbolically diagonalize 2ⁿ × 2ⁿ matrices.** ✅ Phase 4's direct-vector inner-product fallback is gated by user choice (TODO Phase 5+ for closed-form replacement).
+- **Don't try to symbolically diagonalize 2ⁿ × 2ⁿ matrices.** ✅ Phase 4's direct-vector inner-product fallback is gated by user choice (closed-form replacement tracked in [ROADMAP §A.1](ROADMAP.md)).
 - **Don't separate `pure stabilizer state` and `Clifford channel` into different code paths.** ⚠️ **VIOLATED** in v1. Phase 6+ should adopt the Yashin25 unified `CliffordChannel` representation.
 
 
