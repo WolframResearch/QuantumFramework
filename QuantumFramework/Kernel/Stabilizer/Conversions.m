@@ -137,7 +137,12 @@ ps_PauliStabilizer["Operator" | "QuantumOperator"] := With[{
 (* ============================================================================ *)
 
 qo_QuantumOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qo], ps]
-qmo_QuantumMeasurementOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]
 QuantumState[ps_PauliStabilizer] ^:= ps["State"]
 QuantumCircuitOperator[ps_PauliStabilizer] := ps["Circuit"]
 QuantumOperator[ps_PauliStabilizer] := ps["Circuit"]["QuantumOperator"]
+
+(* Note: qmo_QuantumMeasurementOperator[ps_PauliStabilizer] used to be defined  *)
+(* here as PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]. Phase 7.1     *)
+(* (2026-05-06) replaces that generic path with a basis-aware dispatch in       *)
+(* Stabilizer/HybridInterop.m so Pauli-string measurements stay in the tableau  *)
+(* (cost O(n^2)) instead of routing through circuit conversion.                 *)
