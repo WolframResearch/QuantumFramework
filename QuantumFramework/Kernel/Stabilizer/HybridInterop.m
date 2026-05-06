@@ -98,16 +98,61 @@ qmo_QuantumMeasurementOperator[sf_StabilizerFrame] ^:= (
 (* ============================================================================ *)
 (* QuantumChannel[qc][ps_PauliStabilizer] / [sf_StabilizerFrame]                *)
 (*                                                                              *)
-(* Phase 7.1 fallback: materialize and dispatch with ::nonpaulibasis info.      *)
-(* Phase 7.2 will identify Clifford channels (BitFlip, PhaseFlip, Pauli         *)
-(* mixtures) and route them through the existing tableau-level gate updates    *)
-(* without any 2^n materialization.                                             *)
+(* Phase 7.2 (2026-05-06): detect named Pauli channels (BitFlip, PhaseFlip,     *)
+(* BitPhaseFlip, Depolarizing) and return a probabilistic-mixture list          *)
+(* {{probability, ps_after_pauli}, ...} where each ps_after_pauli is the        *)
+(* original ps with the corresponding Pauli gate applied via tableau update     *)
+(* (cost O(n) per branch). This is the natural form for tableau-level Clifford- *)
+(* channel application; the user can post-process into a mixed state via QF's   *)
+(* QuantumState mixture semantics, or sample stochastically.                    *)
+(*                                                                              *)
+(* Non-Clifford channels (AmplitudeDamping, PhaseDamping, GeneralizedAmplitude- *)
+(* Damping, ResetError) still fall back to dense materialization with the       *)
+(* ::nonpaulibasis info message; their Kraus operators are not all Paulis.      *)
 (* ============================================================================ *)
 
-qc_QuantumChannel[ps_PauliStabilizer ? ConcretePauliStabilizerQ] ^:= (
-    Message[PauliStabilizer::nonpaulibasis];
-    qc[ps["State"]]
-)
+
+(* Helper: extract the Clifford-channel Pauli mixture from qc, when            *)
+(* applicable. Returns a list of {probability, pauli_string, qubit_index}       *)
+(* triples (one per Kraus branch), or Missing[] for non-Clifford channels.     *)
+(* The qubit_index is the channel's input order (single-qubit channels only).  *)
+
+PackageScope[stabilizerCliffordChannelMixture]
+
+stabilizerCliffordChannelMixture[qc_QuantumChannel] := Module[{label, target},
+    label = qc["Label"];
+    target = qc["InputOrder"];
+    (* Single-qubit named Pauli channels. Multi-qubit / non-named channels are  *)
+    (* handled by the dense fallback below.                                     *)
+    If[Length[target] =!= 1, Return[Missing["MultiQubitChannel"]]];
+    target = First[target];
+    Switch[label,
+        "BitFlip"[_],         {{1 - label[[1]], "I", target}, {label[[1]], "X", target}},
+        "PhaseFlip"[_],       {{1 - label[[1]], "I", target}, {label[[1]], "Z", target}},
+        "BitPhaseFlip"[_],    {{1 - label[[1]], "I", target}, {label[[1]], "Y", target}},
+        "\[CapitalDelta]"[_], (* Depolarizing[p] -- internal label is CapitalDelta[p] *)
+            {
+                {1 - 3 label[[1]] / 4, "I", target},
+                {label[[1]] / 4, "X", target},
+                {label[[1]] / 4, "Y", target},
+                {label[[1]] / 4, "Z", target}
+            },
+        _, Missing["NotClifford"]
+    ]
+]
+
+
+qc_QuantumChannel[ps_PauliStabilizer ? ConcretePauliStabilizerQ] ^:= Module[{mixture},
+    mixture = stabilizerCliffordChannelMixture[qc];
+    If[ListQ[mixture],
+        (* Fast path: tableau-level Pauli-mixture application. Each branch is a  *)
+        (* (probability, post-state) pair; "I" branch leaves ps unchanged.       *)
+        {#1, If[#2 === "I", ps, ps[#2, #3]]} & @@@ mixture,
+        (* Fallback: non-Clifford channel; materialize. *)
+        Message[PauliStabilizer::nonpaulibasis];
+        qc[ps["State"]]
+    ]
+]
 
 qc_QuantumChannel[sf_StabilizerFrame] ^:= (
     Message[PauliStabilizer::nonpaulibasis];

@@ -102,20 +102,102 @@ VerificationTest[
 
 
 (* ============================================================================ *)
-(* TIER C -- QuantumChannel on stabilizer / frame inputs                       *)
+(* TIER C -- QuantumChannel on stabilizer inputs (Phase 7.2 routes named       *)
+(*           Pauli channels through tableau)                                   *)
 (* ============================================================================ *)
 
-(* Bit-flip channel on |+>: emits ::nonpaulibasis info, materializes via state.
-   Phase 7.2 will identify this as a Clifford channel and route through gate
-   updates without dense materialization. *)
+(* Phase 7.2: BitFlip[p] on a stabilizer state is a named Pauli channel and   *)
+(* now stays in the tableau, returning a list {{prob, ps_branch}, ...}.       *)
+
 VerificationTest[
-    With[{psPlus = PauliStabilizer[1]["H", 1],
-          qc = QuantumChannel["BitFlip"[1/2], {1}]},
-        Head @ qc[psPlus]
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["BitFlip"[1/3], {1}]},
+        (* Two branches: (2/3, no-op identity), (1/3, X applied) *)
+        Length @ qc[ps]
+    ],
+    2,
+    {},
+    TestID -> "Phase7.2-QC-BitFlip-NumBranches"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["BitFlip"[1/3], {1}]},
+        (* The probabilities sum to 1 *)
+        Total[First /@ qc[ps]]
+    ],
+    1,
+    {},
+    TestID -> "Phase7.2-QC-BitFlip-ProbabilitiesSumToOne"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["BitFlip"[1/3], {1}]},
+        (* Identity branch keeps ps; X branch applies X to |0>, giving |1> stab Z->-Z *)
+        SameQ[
+            qc[ps][[1, 2]]["Stabilizers"],
+            ps["Stabilizers"]
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Phase7.2-QC-BitFlip-IdentityBranchUnchanged"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["PhaseFlip"[1/4], {1}]},
+        (* PhaseFlip applies Z; Z on |0> flips no sign (Z|0> = |0>). Identity branch
+           and Z branch produce the same state on |0> -- both leave stabilizer Z. *)
+        Length @ qc[ps]
+    ],
+    2,
+    {},
+    TestID -> "Phase7.2-QC-PhaseFlip-NumBranches"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1]["H", 1],
+          qc = QuantumChannel["BitPhaseFlip"[1/5], {1}]},
+        (* BitPhaseFlip applies Y. Two branches. *)
+        Length @ qc[ps]
+    ],
+    2,
+    {},
+    TestID -> "Phase7.2-QC-BitPhaseFlip-NumBranches"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["Depolarizing"[1/2], {1}]},
+        (* Depolarizing[p] has 4 branches: I, X, Y, Z. *)
+        Length @ qc[ps]
+    ],
+    4,
+    {},
+    TestID -> "Phase7.2-QC-Depolarizing-FourBranches"
+]
+
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["Depolarizing"[1/2], {1}]},
+        Total[First /@ qc[ps]]
+    ],
+    1,
+    {},
+    TestID -> "Phase7.2-QC-Depolarizing-ProbabilitiesSumToOne"
+]
+
+(* Non-Clifford channel (AmplitudeDamping) still falls back. *)
+VerificationTest[
+    With[{ps = PauliStabilizer[1],
+          qc = QuantumChannel["AmplitudeDamping"[1/2], {1}]},
+        Head @ qc[ps]
     ],
     QuantumState,
     {PauliStabilizer::nonpaulibasis},
-    TestID -> "Phase7-QC-BitFlip-on-Plus-FallbackMaterializes"
+    TestID -> "Phase7.2-QC-AmplitudeDamping-FallbackMaterializes"
 ]
 
 
