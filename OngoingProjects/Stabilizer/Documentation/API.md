@@ -1,6 +1,6 @@
 # Stabilizer subsystem — API reference
 
-> Function-by-function reference for the 6 top-level public symbols + the method-grade operations dispatched on `PauliStabilizer` (4 of which were Phase-3 top-level symbols, demoted to methods in Phase 6 — see [§API consolidation in ROADMAP.md](ROADMAP.md#a0--api-consolidation-2026-05-06)). Every code example is verified by [`verify-API.wls`](verify-API.wls) — `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`.
+> Function-by-function reference for the 4 top-level public symbols + the method-grade operations dispatched on `PauliStabilizer` (6 of which were Phase 3-4 top-level symbols, demoted to methods in Phases 6 and 6.5 — see [§API consolidation in ROADMAP.md](ROADMAP.md#phase-6--done-2026-05-06-api-consolidation)). Every code example is verified by [`verify-API.wls`](verify-API.wls) — `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`.
 
 ## Public API at a glance
 
@@ -8,12 +8,10 @@
 |---|---|---|
 | [`PauliStabilizer`](#paulistabilizer) | 1 | Stabilizer-state head: tableau-encoded n-qubit state |
 | [`StabilizerFrame`](#stabilizerframe) | 4 | Superposition of stabilizer states (for non-Clifford) |
-| [`StabilizerInnerProduct`](#stabilizerinnerproduct) | 4 | `<ψ\|φ>` for two stabilizer/frame states |
-| [`StabilizerExpectation`](#stabilizerexpectation) | 4 | `<ψ\|P\|ψ>` for an arbitrary Pauli string |
 | [`GraphState`](#graphstate) | 5 | Graph-state representation (AndBri05) |
 | [`LocalComplement`](#localcomplement) | 5 | Local complementation on a graph or graph state |
 
-### Method-grade operations on `PauliStabilizer` (Phase 6, formerly top-level)
+### Method-grade operations on `PauliStabilizer` (formerly top-level)
 
 | Method | Old top-level form | Purpose |
 |---|---|---|
@@ -21,6 +19,10 @@
 | [`ps["SymbolicMeasure", q]`](#methods-symbolic-measurement) | `StabilizerMeasure[ps, q]` | Symbolic Z-basis measurement (allocates fresh outcome symbol) |
 | [`ps["SubstituteOutcomes", rules]`](#methods-symbolic-measurement) | `SubstituteOutcomes[ps, rules]` | Plug concrete values into measurement-outcome symbols |
 | [`ps["SampleOutcomes", n]`](#methods-symbolic-measurement) | `SampleOutcomes[ps, n]` | Random samples by independent symbol substitution |
+| [`ps["InnerProduct", other]`](#methods-inner-product--expectation) | `StabilizerInnerProduct[ps, other]` | `<ps\|other>` for `other` a `PauliStabilizer` or `StabilizerFrame` (Phase 6.5) |
+| [`ps["Expectation", pauli]`](#methods-inner-product--expectation) | `StabilizerExpectation[ps, pauli]` | `<ps\|P\|ps>` for an arbitrary Pauli string (Phase 6.5) |
+
+(`StabilizerFrame` carries the same `["InnerProduct", other]` method.)
 
 **Companion:** [`synthesis-implementation.md`](synthesis-implementation.md) walks through synthesis §1–§11 by capability. [`ROADMAP.md`](ROADMAP.md) tracks the partial / deferred / known-bug items.
 
@@ -795,29 +797,22 @@ After `FullSimplify`, the diff is exactly zero — confirming `T|0⟩ = |0⟩`.
 
 ## See also
 
-- [`StabilizerInnerProduct`](#stabilizerinnerproduct) — works for both `PauliStabilizer` and `StabilizerFrame`.
+- [`ps["InnerProduct", other]`](#methods-inner-product--expectation) (or equivalently `frame["InnerProduct", other]`) — works for both `PauliStabilizer` and `StabilizerFrame` receivers.
 - GarMar15 §3 (arxiv:1712.03554) — Quipu stabilizer frames.
 
 ---
 
-# StabilizerInnerProduct
+## Methods (Inner product + Expectation)
 
-Compute `⟨ψ|φ⟩` for two stabilizer states (or stabilizer frames). Phase 4 v1 uses direct vector materialization (cost `2ⁿ`); the closed-form `O(n³)` GarMarCro12 algorithm is on [ROADMAP §A.1](ROADMAP.md).
+Phase 4 implementations of `⟨ψ|φ⟩` and `⟨ψ|P|ψ⟩`, demoted from top-level public symbols (`StabilizerInnerProduct`, `StabilizerExpectation`) in Phase 6.5.
 
-## Signatures
+### `ps["InnerProduct", other]` and `frame["InnerProduct", other]`
 
-```wolfram
-StabilizerInnerProduct[psi_PauliStabilizer, phi_PauliStabilizer]
-StabilizerInnerProduct[fA_StabilizerFrame, fB_StabilizerFrame]
-StabilizerInnerProduct[psi_PauliStabilizer, fB_StabilizerFrame]
-StabilizerInnerProduct[fA_StabilizerFrame, phi_PauliStabilizer]
-```
-
-## Examples
+Compute `⟨self|other⟩` for two stabilizer states (or frames). Phase 4 v1 uses direct vector materialization (cost `2ⁿ`); the closed-form `O(n³)` GarMarCro12 algorithm is on [ROADMAP §A.1](ROADMAP.md). Receiver and `other` may each be a `PauliStabilizer` or a `StabilizerFrame`.
 
 ```wolfram
 With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    StabilizerInnerProduct[psBell, psBell]
+    psBell["InnerProduct", psBell]
 ]
 ```
 ```
@@ -828,20 +823,20 @@ With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2
 Module[{psPhiPlus, psPhiMinus},
     psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
     psPhiMinus = psPhiPlus["Z", 1];
-    Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
+    Chop @ N @ psPhiPlus["InnerProduct", psPhiMinus]
 ]
 ```
 ```
 0
 ```
 
-(`|Φ+⟩` and `|Φ−⟩` are orthogonal Bell states.)
+`|Φ+⟩` and `|Φ−⟩` are orthogonal Bell states.
 
-**Mixed PauliStabilizer/StabilizerFrame:**
+**Mixed `PauliStabilizer`/`StabilizerFrame`:**
 
 ```wolfram
 With[{psT = PauliStabilizer[1]["T", 1], ps0 = PauliStabilizer[1]},
-    FullSimplify @ StabilizerInnerProduct[psT, ps0]
+    FullSimplify @ psT["InnerProduct", ps0]
 ]
 ```
 ```
@@ -850,30 +845,18 @@ With[{psT = PauliStabilizer[1]["T", 1], ps0 = PauliStabilizer[1]},
 
 `⟨T|0⟩|0⟩ = ⟨0|T|0⟩ = 1` since `T|0⟩ = |0⟩`.
 
----
+### `ps["Expectation", pauliString_String]`
 
-# StabilizerExpectation
-
-Compute `⟨ψ|P|ψ⟩` for an arbitrary Pauli string P. Returns ±1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation via direct vector for Paulis in `N(S) \ S`.
-
-## Signature
-
-```wolfram
-StabilizerExpectation[ps_PauliStabilizer, pauliString_String]
-```
-
-The `pauliString` is `[+/-][I|X|Y|Z]+` (n characters, with optional sign prefix).
-
-## Examples
+Compute `⟨ps|P|ps⟩` for an arbitrary Pauli string `P` (`[+/-][I|X|Y|Z]+`, length = qubit count). Returns ±1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation via direct vector for Paulis in `N(S) \ S`.
 
 **Stabilizer-group elements give +1:**
 
 ```wolfram
 With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
     <|
-        "<XX>" -> StabilizerExpectation[psBell, "XX"],
-        "<ZZ>" -> StabilizerExpectation[psBell, "ZZ"],
-        "<YY>" -> StabilizerExpectation[psBell, "YY"]
+        "<XX>" -> psBell["Expectation", "XX"],
+        "<ZZ>" -> psBell["Expectation", "ZZ"],
+        "<YY>" -> psBell["Expectation", "YY"]
     |>
 ]
 ```
@@ -887,7 +870,7 @@ With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2
 
 ```wolfram
 With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    StabilizerExpectation[psBell, "XI"]
+    psBell["Expectation", "XI"]
 ]
 ```
 ```
@@ -898,16 +881,14 @@ With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2
 
 ```wolfram
 With[{ps5 = PauliStabilizer["5QubitCode"]},
-    StabilizerExpectation[ps5, #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
+    ps5["Expectation", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
 ]
 ```
 ```
 {1, 1, 1, 1}
 ```
 
-## Messages
-
-- `StabilizerExpectation::dim` — emitted when the Pauli string length doesn't match the qubit count of the input.
+**Messages**: `PauliStabilizer::expectationdim` is emitted when the Pauli string length doesn't match the qubit count.
 
 ---
 

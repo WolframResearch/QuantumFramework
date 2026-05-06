@@ -1,7 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport[StabilizerInnerProduct]
-PackageExport[StabilizerExpectation]
+PackageScope[stabilizerInnerProduct]
+PackageScope[stabilizerExpectation]
 
 
 
@@ -10,11 +10,20 @@ PackageExport[StabilizerExpectation]
 (* materialization. Phase 5+ may add the closed-form O(n^3) algorithm of        *)
 (* Garc\[IAcute]a-Markov-Cross 2012 (arxiv:1210.6646) -- TODO: add the GMC      *)
 (* algorithm for n > 8 where state materialization OOMs.                        *)
+(*                                                                              *)
+(* Phase 6.5 (2026-05-06): demoted from top-level public symbols to method-     *)
+(* grade operations on PauliStabilizer / StabilizerFrame:                       *)
+(*   ps1["InnerProduct", ps2]   <-- was StabilizerInnerProduct[ps1, ps2]         *)
+(*   ps["Expectation", pauli]   <-- was StabilizerExpectation[ps, pauli]         *)
+(* The PauliStabilizer message tag `Expectation::dim` is renamed to             *)
+(* PauliStabilizer::expectationdim. Implementations remain here as PackageScope *)
+(* helpers; method dispatch lives in Stabilizer/Properties.m and                *)
+(* StabilizerFrame.m.                                                           *)
 (* ============================================================================ *)
 
 
 (* ============================================================================ *)
-(* StabilizerInnerProduct[\[Psi], \[Phi]]: \[LeftAngleBracket]\[Psi]|\[Phi]\[RightAngleBracket]  *)
+(* stabilizerInnerProduct[\[Psi], \[Phi]]: \[LeftAngleBracket]\[Psi]|\[Phi]\[RightAngleBracket]  *)
 (*                                                                              *)
 (* For two stabilizer states |\[Psi]>, |\[Phi]>:                                *)
 (*   - If S_\[Psi] and S_\[Phi] disagree on any sign, returns 0.                *)
@@ -24,7 +33,7 @@ PackageExport[StabilizerExpectation]
 (* Phase 5+ will use the GarMarCro12 \[Section]3 closed-form O(n^3) algorithm.  *)
 (* ============================================================================ *)
 
-StabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, phi_PauliStabilizer ? PauliStabilizerQ] /;
+stabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, phi_PauliStabilizer ? PauliStabilizerQ] /;
     psi["Qubits"] == phi["Qubits"] := Module[{vPsi, vPhi},
     vPsi = psi["State"]["StateVector"];
     vPhi = phi["State"]["StateVector"];
@@ -33,7 +42,7 @@ StabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, phi_PauliStabiliz
 
 
 (* StabilizerFrame inner product: Sum_ij conj(c_i) c_j <psi_i | psi_j> *)
-StabilizerInnerProduct[fA_StabilizerFrame, fB_StabilizerFrame] /;
+stabilizerInnerProduct[fA_StabilizerFrame, fB_StabilizerFrame] /;
     fA["Qubits"] == fB["Qubits"] := Module[{vA, vB},
     vA = fA["StateVector"];
     vB = fB["StateVector"];
@@ -42,15 +51,15 @@ StabilizerInnerProduct[fA_StabilizerFrame, fB_StabilizerFrame] /;
 
 
 (* Mixed cases *)
-StabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, fB_StabilizerFrame] :=
-    StabilizerInnerProduct[StabilizerFrame[psi], fB]
+stabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, fB_StabilizerFrame] :=
+    stabilizerInnerProduct[StabilizerFrame[psi], fB]
 
-StabilizerInnerProduct[fA_StabilizerFrame, phi_PauliStabilizer ? PauliStabilizerQ] :=
-    StabilizerInnerProduct[fA, StabilizerFrame[phi]]
+stabilizerInnerProduct[fA_StabilizerFrame, phi_PauliStabilizer ? PauliStabilizerQ] :=
+    stabilizerInnerProduct[fA, StabilizerFrame[phi]]
 
 
 (* ============================================================================ *)
-(* StabilizerExpectation[ps, P]: \[LeftAngleBracket]\[Psi]| P |\[Psi]\[RightAngleBracket] *)
+(* stabilizerExpectation[ps, P]: \[LeftAngleBracket]\[Psi]| P |\[Psi]\[RightAngleBracket] *)
 (*                                                                              *)
 (* For stabilizer state |\[Psi]> with stabilizer group S, and a Pauli string P:  *)
 (*   - If P or -P is in S \[Rule] expectation = +1 or -1 respectively           *)
@@ -69,11 +78,11 @@ pauliStringToVec[s_String] := Module[{sign, body, n, xz},
 ]
 
 
-StabilizerExpectation[ps_PauliStabilizer ? PauliStabilizerQ, P_String] /;
+stabilizerExpectation[ps_PauliStabilizer ? PauliStabilizerQ, P_String] /;
     StringMatchQ[P, RegularExpression["^-?[IXYZ]+$"]] := Module[{sign, n, pVec, gens, omega, anticomm},
     {sign, n, pVec} = pauliStringToVec[P];
     If[n != ps["Qubits"],
-        Message[StabilizerExpectation::dim, n, ps["Qubits"]];
+        Message[PauliStabilizer::expectationdim, n, ps["Qubits"]];
         Return[$Failed]
     ];
     (* Check anticommute with any stabilizer *)
@@ -97,7 +106,7 @@ StabilizerExpectation[ps_PauliStabilizer ? PauliStabilizerQ, P_String] /;
     ]
 ]
 
-StabilizerExpectation::dim = "Pauli string `1` qubits does not match PauliStabilizer `2` qubits."
+PauliStabilizer::expectationdim = "Pauli string `1` qubits does not match PauliStabilizer `2` qubits."
 
 
 (* Helper: build the matrix form of a Pauli string for fallback. *)

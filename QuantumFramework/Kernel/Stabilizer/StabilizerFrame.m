@@ -41,8 +41,13 @@ StabilizerFrameQ[_] := False
 _StabilizerFrame["Properties"] = {
     "Components", "Coefficients", "Stabilizers",
     "Length", "Qubits", "GeneratorCount",
-    "StateVector", "State"
+    "StateVector", "State", "InnerProduct"
 }
+
+
+(* Phase 6.5 (2026-05-06): InnerProduct as method-grade operation
+   (was top-level StabilizerInnerProduct). *)
+f_StabilizerFrame["InnerProduct", other_] := stabilizerInnerProduct[f, other]
 
 
 (* ============================================================================ *)

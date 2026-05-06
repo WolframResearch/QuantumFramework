@@ -28,7 +28,7 @@
 | 2.2 | 24-element local Clifford group | — | — | ⏸ deferred (AndBri05 §2 footnote) |
 | 2.3 | Local complementation | 5 | `LocalComplement` | ✅ (no VOP tracking yet) |
 | 2.4 | Z-basis & Pauli-string measurement | 1, 4 | `ps["M", q]`, `ps["M", "XZZXI"]` | ✅ |
-| 2.5 | Inner products & expectation | 4 | `StabilizerInnerProduct`, `StabilizerExpectation` | ✅ (direct vector; closed-form tracked in [ROADMAP §A.1](ROADMAP.md)) |
+| 2.5 | Inner products & expectation | 4 | `ps["InnerProduct", other]`, `ps["Expectation", pauli]` (Phase 6.5 demoted from `StabilizerInnerProduct` / `StabilizerExpectation`) | ✅ (direct vector; closed-form tracked in [ROADMAP §A.1](ROADMAP.md)) |
 | 2.6 | Distance / nearest neighbors | — | — | ⏸ deferred (GarMarCro12 §5) |
 | 2.7 | Counting / enumeration | 1 | (formulas at test-fixture level) | ✅ |
 | 2.8 | Random Clifford | 2 | `PauliStabilizer["Random", n]` (Phase 6 demoted from `RandomClifford`) | ✅ |
@@ -411,12 +411,12 @@ All 4 stabilizer measurements on `|0_L⟩` are deterministic with outcome bit 0 
 
 > **Synthesis** (`:162-166`): "`StabilizerInnerProduct[ψ, φ]`: zero if the stabilizer groups have a Pauli with opposite signs; otherwise `2^(-s/2)` where `s` is the minimal symmetric difference of generators (GarMarCro12 §3, `O(n³)` algorithm)."
 
-**QF kernel** (Phase 4, [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m)). `StabilizerInnerProduct[ψ, φ]` computes `⟨ψ|φ⟩` and `StabilizerExpectation[ps, "XZZXI"]` returns `⟨ψ|P|ψ⟩`. Phase 4 v1 uses **direct vector materialization** (cost `2ⁿ`); the `O(n³)` GarMarCro12 closed-form is tracked in [ROADMAP §A.1](ROADMAP.md).
+**QF kernel** (Phase 4, [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m); Phase 6.5 demoted to method-grade operations). `ps["InnerProduct", other]` computes `⟨ψ|φ⟩` (`other` may be a `PauliStabilizer` or `StabilizerFrame`), and `ps["Expectation", "XZZXI"]` returns `⟨ψ|P|ψ⟩`. Phase 4 v1 uses **direct vector materialization** (cost `2ⁿ`); the `O(n³)` GarMarCro12 closed-form is tracked in [ROADMAP §A.1](ROADMAP.md).
 
 **Code (Bell self inner product):**
 ```wolfram
 psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-StabilizerInnerProduct[psBell, psBell]
+psBell["InnerProduct", psBell]
 ```
 
 **Verified output** (block `2.5-inner-product-self`):
@@ -428,7 +428,7 @@ StabilizerInnerProduct[psBell, psBell]
 ```wolfram
 psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
 psPhiMinus = psPhiPlus["Z", 1];   (* |\[CapitalPhi]+\[RightAngleBracket] -> |\[CapitalPhi]-\[RightAngleBracket] *)
-Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
+Chop @ N @ psPhiPlus["InnerProduct", psPhiMinus]
 ```
 
 **Verified output** (block `2.5-inner-product-orthogonal`):
@@ -440,10 +440,10 @@ Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
 ```wolfram
 psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
 <|
-    "<XX>" -> StabilizerExpectation[psBell, "XX"],
-    "<ZZ>" -> StabilizerExpectation[psBell, "ZZ"],
-    "<YY>" -> StabilizerExpectation[psBell, "YY"],
-    "<XI>" -> StabilizerExpectation[psBell, "XI"]
+    "<XX>" -> psBell["Expectation", "XX"],
+    "<ZZ>" -> psBell["Expectation", "ZZ"],
+    "<YY>" -> psBell["Expectation", "YY"],
+    "<XI>" -> psBell["Expectation", "XI"]
 |>
 ```
 
@@ -566,7 +566,7 @@ Length @ DeleteDuplicates @ Table[
 
 > **Synthesis** (`:219-229`): "Given a stabilizer subgroup, return: `[[n, k, d]]` parameters; logical `X̄, Z̄` operators; encoder circuit; syndrome decoder; pretty-printed stabilizer table."
 
-**QF kernel.** Named codes provided (Phase 1, [Stabilizer/NamedCodes.m](../../../QuantumFramework/Kernel/Stabilizer/NamedCodes.m)): `"5QubitCode"`, `"5QubitCode1"`, `"SteaneCode"` (= `"7QubitCode"`), `"7QubitCode1"`, `"SteaneCode1"`, `"9QubitCode"`, `"9QubitCode1"`, `"Random"`. Syndrome extraction via `StabilizerExpectation` (commute/anticommute test) or `ps["M", "XZZXI"]` (Pauli-string measurement). Code distance via direct enumeration (Tier 3 of `Tests/PauliStabilizer.wlt`).
+**QF kernel.** Named codes provided (Phase 1, [Stabilizer/NamedCodes.m](../../../QuantumFramework/Kernel/Stabilizer/NamedCodes.m)): `"5QubitCode"`, `"5QubitCode1"`, `"SteaneCode"` (= `"7QubitCode"`), `"7QubitCode1"`, `"SteaneCode1"`, `"9QubitCode"`, `"9QubitCode1"`, `"Random"`. Syndrome extraction via `ps["Expectation", "XZZXI"]` (commute/anticommute test) or `ps["M", "XZZXI"]` (Pauli-string measurement). Code distance via direct enumeration (Tier 3 of `Tests/PauliStabilizer.wlt`).
 
 **Code (5Q syndrome uniqueness — defining property of `[[5,1,3]]`):**
 ```wolfram
@@ -725,7 +725,7 @@ ps1 = psPlus["M", 1][1];
 | `StabilizerToGraph[ψ]` | ✅ | `GraphState[ps]` (graph-form input only) |
 | `GraphToStabilizer[g, vops]` | ✅ | `GraphState[g]["PauliStabilizer"]` (identity VOPs) |
 | `StabilizerToQuadraticForm[ψ]` | ⏸ | DehMoo03 §4 |
-| `StabilizerInnerProduct[ψ, φ]` | ✅ | direct vector |
+| `StabilizerInnerProduct[ψ, φ]` (synthesis spec) | ✅ | `ps["InnerProduct", other]` (direct vector; Phase 6.5 demoted from top-level) |
 | `StabilizerDistance[ψ, φ]` | ⏸ | quantum Singleton |
 | `StabilizerEntanglement[ψ, partition]` | partial | via Schmidt rank of materialized state |
 | `StabilizerNearestNeighbors[ψ]` | ⏸ | GarMarCro12 §5 |

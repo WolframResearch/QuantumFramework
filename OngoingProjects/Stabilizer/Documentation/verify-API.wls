@@ -453,12 +453,12 @@ block["StabilizerFrame-T-on-zero-equals-zero",
 
 
 (* ============================================================================ *)
-(* StabilizerInnerProduct                                                       *)
+(* InnerProduct method (Phase 6.5: was StabilizerInnerProduct)                  *)
 (* ============================================================================ *)
 
 block["InnerProduct-self",
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-        StabilizerInnerProduct[psBell, psBell]
+        psBell["InnerProduct", psBell]
     ]
 ];
 
@@ -466,41 +466,41 @@ block["InnerProduct-orthogonal",
     Module[{psPhiPlus, psPhiMinus},
         psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
         psPhiMinus = psPhiPlus["Z", 1];
-        Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
+        Chop @ N @ psPhiPlus["InnerProduct", psPhiMinus]
     ]
 ];
 
 block["InnerProduct-frame",
     (* Inner product between StabilizerFrame and PauliStabilizer *)
     With[{psT = PauliStabilizer[1]["T", 1], ps0 = PauliStabilizer[1]},
-        FullSimplify @ StabilizerInnerProduct[psT, ps0]
+        FullSimplify @ psT["InnerProduct", ps0]
     ]
 ];
 
 
 (* ============================================================================ *)
-(* StabilizerExpectation                                                        *)
+(* Expectation method (Phase 6.5: was StabilizerExpectation)                    *)
 (* ============================================================================ *)
 
 block["Expectation-stabilizer-element",
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
         <|
-            "<XX>" -> StabilizerExpectation[psBell, "XX"],
-            "<ZZ>" -> StabilizerExpectation[psBell, "ZZ"],
-            "<YY>" -> StabilizerExpectation[psBell, "YY"]
+            "<XX>" -> psBell["Expectation", "XX"],
+            "<ZZ>" -> psBell["Expectation", "ZZ"],
+            "<YY>" -> psBell["Expectation", "YY"]
         |>
     ]
 ];
 
 block["Expectation-anticommuting",
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-        StabilizerExpectation[psBell, "XI"]
+        psBell["Expectation", "XI"]
     ]
 ];
 
 block["Expectation-5Q-syndromes",
     With[{ps5 = PauliStabilizer["5QubitCode"]},
-        StabilizerExpectation[ps5, #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
+        ps5["Expectation", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
     ]
 ];
 

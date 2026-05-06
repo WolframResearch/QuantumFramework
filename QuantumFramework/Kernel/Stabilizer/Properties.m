@@ -67,3 +67,15 @@ ps_PauliStabilizer["SubstituteOutcomes", rules_] := substituteOutcomes[ps, rules
 
 ps_PauliStabilizer["SampleOutcomes"] := sampleOutcomes[ps]
 ps_PauliStabilizer["SampleOutcomes", n_Integer ? Positive] := sampleOutcomes[ps, n]
+
+
+(* ============================================================================ *)
+(* Phase 6.5 (2026-05-06): InnerProduct + Expectation as method-grade           *)
+(* operations. Were Phase 4 top-level public symbols (StabilizerInnerProduct,   *)
+(* StabilizerExpectation); demoted to keep the public surface minimal.          *)
+(* Implementations remain in Stabilizer/InnerProduct.m as PackageScope helpers. *)
+(* ============================================================================ *)
+
+ps_PauliStabilizer["InnerProduct", other_] := stabilizerInnerProduct[ps, other]
+
+ps_PauliStabilizer["Expectation", pauli_String] := stabilizerExpectation[ps, pauli]

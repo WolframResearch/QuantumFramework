@@ -236,23 +236,23 @@ block["2.5-inner-product-orthogonal",
     Module[{psPhiPlus, psPhiMinus},
         psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
         psPhiMinus = psPhiPlus["Z", 1];
-        Chop @ N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]
+        Chop @ N @ psPhiPlus["InnerProduct", psPhiMinus]
     ]
 ];
 
 block["2.5-inner-product-self",
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-        StabilizerInnerProduct[psBell, psBell]
+        psBell["InnerProduct", psBell]
     ]
 ];
 
 block["2.5-stabilizer-expectation-on-Bell",
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
         <|
-            "<XX>" -> StabilizerExpectation[psBell, "XX"],
-            "<ZZ>" -> StabilizerExpectation[psBell, "ZZ"],
-            "<YY>" -> StabilizerExpectation[psBell, "YY"],
-            "<XI>" -> StabilizerExpectation[psBell, "XI"]
+            "<XX>" -> psBell["Expectation", "XX"],
+            "<ZZ>" -> psBell["Expectation", "ZZ"],
+            "<YY>" -> psBell["Expectation", "YY"],
+            "<XI>" -> psBell["Expectation", "XI"]
         |>
     ]
 ];

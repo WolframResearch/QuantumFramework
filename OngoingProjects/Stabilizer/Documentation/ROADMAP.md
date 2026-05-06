@@ -7,8 +7,8 @@
 ## Overall status
 
 - **Tests:** 249 / 249 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 301 / 301 passing.
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), **6 (API consolidation 10 → 6 public symbols — see "A.0" below)**.
-- **Public surface:** 6 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `StabilizerInnerProduct`, `StabilizerExpectation`, `GraphState`, `LocalComplement`) + 4 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, plus the `["Random", n]` named pattern).
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), **6 + 6.5 (API consolidation 10 → 4 public symbols — see "Phase 6 — DONE" below)**.
+- **Public surface:** 4 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `GraphState`, `LocalComplement`) + 6 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `InnerProduct`, `Expectation`, plus the `["Random", n]` named pattern). `StabilizerFrame` carries `["InnerProduct", other]` as well.
 - **Open items:** 19 (12 partial + 7 deferred). A.9 reclassified as **inherent trade-off**. A.11/A.12/A.13 added 2026-05-04 from refpage-validation findings. B.4 (`CliffordTableau` distinct head) **dropped 2026-05-06**: superseded by the proposed Phase 8 (Yashin25 Choi-tableau unifier — see B.2).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
 
@@ -75,6 +75,17 @@ Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbol
 - [Tests/PauliStabilizer.wlt](../../../Tests/PauliStabilizer.wlt) — TIER 5 + TIER 6 callsites rewritten; `Phase2-RandomClifford-IsPublic` renamed to `Phase2-PauliStabilizerRandom-Valid`; `Phase2-RandomClifford-Callable` renamed to `Phase2-PauliStabilizerRandom-Callable`; `Phase2-RandomClifford-UsageMessage` removed.
 - [Documentation/API.md](API.md) — public-API table 10 → 6 rows + new "Method-grade operations" subsection. Standalone sections for the four demoted symbols folded into one "Methods (Symbolic measurement)" + "Methods (Random Clifford)" pair under `# PauliStabilizer`.
 
+### Phase 6.5 — DONE (2026-05-06): borderline cases demoted
+
+After Phase 6 landed, two more public symbols flagged in the design review (the borderline cases) were demoted to methods. Public surface 6 → 4. No semantic change.
+
+| Old top-level | New form | Files |
+|---|---|---|
+| `StabilizerInnerProduct[a, b]` | `a["InnerProduct", b]` (and `frame["InnerProduct", b]`) | [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) → `PackageScope[stabilizerInnerProduct]`; method dispatches in [Stabilizer/Properties.m](../../../QuantumFramework/Kernel/Stabilizer/Properties.m) and [Stabilizer/StabilizerFrame.m](../../../QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m). |
+| `StabilizerExpectation[ps, pauli]` | `ps["Expectation", pauli]` | [Stabilizer/InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) → `PackageScope[stabilizerExpectation]`. Message tag renamed `StabilizerExpectation::dim` → `PauliStabilizer::expectationdim`. |
+
+[`_PauliStabilizer["Properties"]`](../../../QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m) extended with `"InnerProduct"` and `"Expectation"`; [`_StabilizerFrame["Properties"]`](../../../QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m) extended with `"InnerProduct"`. [`PauliStabilizer::usage`](../../../QuantumFramework/Kernel/Usage.m) and [`StabilizerFrame::usage`](../../../QuantumFramework/Kernel/Usage.m) updated.
+
 **Two follow-up phases (not in this PR):**
 
 - **Phase 7 — Hybrid interop (~250 LOC):** UpValues so `qmo[ps]`, `qc[ps]`, `qmo[sf]`, `qc[sf]` route natively. Non-Pauli measurement bases produce `StabilizerFrame` automatically. Avoids the `Picture -> "Stabilizer"` and `QuantumBasis`-wrapping designs (both would force `O(2ⁿ)` materialization through the basis pipeline; see [post-mortem-phase-5c.md](post-mortem-phase-5c.md) Phase 6 footnote and the design discussion captured at `~/.claude/plans/i-am-conviced-of-vast-kettle.md`).
@@ -84,7 +95,7 @@ Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbol
 
 ## A. Partial implementations (work-but-incomplete)
 
-### A.1 — `StabilizerInnerProduct` closed-form (`O(n³)`)
+### A.1 — `ps["InnerProduct", other]` closed-form (`O(n³)`)
 | | |
 |---|---|
 | **Current** | Direct vector materialization, `O(2ⁿ)` memory + time. Works for `n ≤ ~8`. |
@@ -96,7 +107,7 @@ Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbol
 | **Tests to add** | n = 10, 12 cases (where direct-vector OOMs); cross-check vs. direct-vector for n ≤ 8 with seeded `RandomClifford` |
 | **Effort** | ~150 LOC kernel + ~10 tests |
 
-### A.2 — `StabilizerExpectation` AG-phase i-factor tracking
+### A.2 — `ps["Expectation", pauli]` AG-phase i-factor tracking
 | | |
 |---|---|
 | **Current** | When `P ∈ ⟨g_i⟩` (commutes with all stabilizers but is in their span), falls back to direct vector for `<P>` because the `𝔽₂`-decomposition misses the `i`-factor from `Y = iXZ`. |

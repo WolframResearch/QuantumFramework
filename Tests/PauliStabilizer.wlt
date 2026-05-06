@@ -1897,7 +1897,7 @@ VerificationTest[
     Module[{psPhiPlus, psPhiMinus},
         psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
         psPhiMinus = psPhiPlus["Z", 1];   (* |\[CapitalPhi]+> -> -|\[CapitalPhi]-> via Z_1 *)
-        Chop[N @ StabilizerInnerProduct[psPhiPlus, psPhiMinus]]
+        Chop[N @ psPhiPlus["InnerProduct", psPhiMinus]]
     ],
     0,
     TestID -> "Phase4-InnerProduct-OrthogonalBellStates"
@@ -1907,7 +1907,7 @@ VerificationTest[
 VerificationTest[
     Module[{psBell},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        StabilizerInnerProduct[psBell, psBell]
+        psBell["InnerProduct", psBell]
     ],
     1,
     TestID -> "Phase4-InnerProduct-SameState"
@@ -1920,7 +1920,7 @@ VerificationTest[
         With[{psA = PauliStabilizer["Random", 3], psB = PauliStabilizer["Random", 3]},
             (* They're random Cliffords -- inner product is generally non-trivial.
                Just check it returns a number and |<a|b>| <= 1. *)
-            With[{ip = StabilizerInnerProduct[psA, psB]},
+            With[{ip = psA["InnerProduct", psB]},
                 NumberQ[N[ip]] && Abs[N[ip]] <= 1 + 10^-9
             ]
         ]
@@ -1933,7 +1933,7 @@ VerificationTest[
 VerificationTest[
     Module[{psBell},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        StabilizerExpectation[psBell, "XX"]
+        psBell["Expectation", "XX"]
     ],
     1,
     TestID -> "Phase4-Expectation-StabilizerGroupElement-XX"
@@ -1942,7 +1942,7 @@ VerificationTest[
 VerificationTest[
     Module[{psBell},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        StabilizerExpectation[psBell, "ZZ"]
+        psBell["Expectation", "ZZ"]
     ],
     1,
     TestID -> "Phase4-Expectation-StabilizerGroupElement-ZZ"
@@ -1952,7 +1952,7 @@ VerificationTest[
 VerificationTest[
     Module[{psBell},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        StabilizerExpectation[psBell, "XI"]
+        psBell["Expectation", "XI"]
     ],
     0,
     TestID -> "Phase4-Expectation-AntiCommuting-IsZero"
@@ -1962,7 +1962,7 @@ VerificationTest[
 VerificationTest[
     Module[{psBell},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        StabilizerExpectation[psBell, "YY"]
+        psBell["Expectation", "YY"]
     ],
     -1,
     TestID -> "Phase4-Expectation-YY-OnBell-Equals-MinusOne"

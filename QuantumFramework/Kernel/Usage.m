@@ -627,23 +627,18 @@ PauliStabilizer::usage =
 "ps[\"M\", q] performs Z-basis measurement on qubit q, returning <|outcome -> post_state, ...|>.\n" <>
 "ps[\"SymbolicMeasure\", q] performs a symbolic Z-basis measurement, allocating a fresh \\[FormalS][k] outcome symbol (FangYing23 SymPhase).\n" <>
 "ps[\"SubstituteOutcomes\", rules] / ps[\"SampleOutcomes\", n] resolve symbolic outcomes to concrete or sampled values.\n" <>
+"ps[\"InnerProduct\", other] returns <ps|other> for `other` a PauliStabilizer or StabilizerFrame.\n" <>
+"ps[\"Expectation\", \"XZZXI\"] returns <ps|P|ps> for an arbitrary Pauli string P.\n" <>
 "ps[prop] retrieves a property; full list via ps[\"Properties\"].\n" <>
-"References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler, FangYing23 (arxiv:2311.03906) symbolic-phase measurement."
+"References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler, FangYing23 (arxiv:2311.03906) symbolic-phase measurement, GarMarCro12 (arxiv:1210.6646) closed-form inner product."
 
 StabilizerFrame::usage =
 "StabilizerFrame[{{c_1, ps_1}, {c_2, ps_2}, ...}] represents a superposition Sum_i c_i |s_i> of stabilizer states |s_i> with (possibly symbolic) coefficients c_i.\n" <>
 "Closes under Clifford gates -- frame[gate, q] distributes over components.\n" <>
 "Non-Clifford gates (P[\\[Theta]], T, T\\[Dagger]) double the frame size; the frame stays closed.\n" <>
+"frame[\"InnerProduct\", other] returns <frame|other>.\n" <>
 "frame[\"StateVector\"] materializes the explicit state vector (cost 2^n).\n" <>
 "Reference: Garcia-Markov 2015 (arxiv:1712.03554) Section 3."
-
-StabilizerInnerProduct::usage =
-"StabilizerInnerProduct[psi, phi] returns <psi|phi> for two PauliStabilizer or StabilizerFrame states.\n" <>
-"Phase 4 implementation: direct vector materialization (cost 2^n). TODO Phase 5+: O(n^3) closed-form algorithm of Garcia-Markov-Cross 2012 (arxiv:1210.6646)."
-
-StabilizerExpectation::usage =
-"StabilizerExpectation[ps, \"XZZXI\"] returns <psi|P|psi> for an arbitrary Pauli string P.\n" <>
-"Returns +-1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation value computed via direct vector materialization for Paulis in N(S) \\\\ S."
 
 GraphState::usage =
 "GraphState[g] constructs a graph state from a Graph (with all-identity vertex operators).\n" <>

@@ -49,8 +49,6 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumEvolve",
           "Wolfram`QuantumFramework`PauliStabilizer",
           "Wolfram`QuantumFramework`StabilizerFrame",
-          "Wolfram`QuantumFramework`StabilizerInnerProduct",
-          "Wolfram`QuantumFramework`StabilizerExpectation",
           "Wolfram`QuantumFramework`GraphState",
           "Wolfram`QuantumFramework`LocalComplement"
         }
