@@ -229,7 +229,7 @@ QuantumCircuitOperator["BooleanOracle"[formula_ : BooleanFunction[2 ^ 6, 3],
 QuantumCircuitOperator["BooleanOracleR"[formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer ? NonNegative | Automatic : Automatic,
-    rotationGate : {"RX" | "RY" | "RZ", _ ? NumericQ} : {"RZ", Pi}], opts___] := Enclose @ Block[{
+    rotationGate : ("RX" | "RY" | "RZ")[_ ? NumericQ] : "RZ"[Pi]], opts___] := Enclose @ Block[{
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
@@ -247,7 +247,7 @@ QuantumCircuitOperator["BooleanOracleR"[formula_ : BooleanFunction[2 ^ 6, 3],
         isNegative = True;
     ];
     l = Length[order];
-    angles = ConfirmMatch[BooleanGrayAngles[indices, rotationGate[[2]]], {{Repeated[{_, _Integer | {}}, 2 ^ l]} ..}];
+    angles = ConfirmMatch[BooleanGrayAngles[indices, First @ rotationGate], {{Repeated[{_, _Integer | {}}, 2 ^ l]} ..}];
     With[{repl = Thread[Range[Length[order]] -> order]},
         indices = Replace[indices, repl, {3}];
         angles = MapAt[Replace[repl], angles, {All, All, 2}]
@@ -256,7 +256,7 @@ QuantumCircuitOperator["BooleanOracleR"[formula_ : BooleanFunction[2 ^ 6, 3],
         Join[
             Prepend[
                 Flatten @ Map[{
-                        If[#[[1]] == 0, Nothing, QuantumOperator[{rotationGate[[1]], #[[1]]}, {targetQubit}]],
+                        If[#[[1]] == 0, Nothing, QuantumOperator[Head[rotationGate][#[[1]]], {targetQubit}]],
                         If[#[[2]] === {}, QuantumOperator[If[esop === {{True}}, "NOT", "I"], {targetQubit}], QuantumOperator["CNOT", {#[[2]], targetQubit}]]
                     } &,
                     angles,

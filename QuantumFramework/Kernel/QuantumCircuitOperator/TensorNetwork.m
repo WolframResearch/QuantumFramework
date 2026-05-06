@@ -79,7 +79,7 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
                 ],
             VertexLabels ->
                 Thread[vertices -> (Replace[#["Label"], {
-                    label : Subscript["C", cop_][__] :> Interpretation[Row["C"[cop]], label],
+                    label : Subscript["C", cop_][__] :> Interpretation[Row[{"C", cop}], label],
                     label : Subscript["R", rops__][angle_] :> Interpretation[Subscript["R", rops][angle], label]
                 }] & /@ ops)],
             GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}

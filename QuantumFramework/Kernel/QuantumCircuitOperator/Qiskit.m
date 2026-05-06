@@ -11,8 +11,8 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 shortcutToGate = Replace[
     {
         "R"[angle_, {name_ -> order_ ? orderQ}] :> shortcutToGate["R"[angle, name]] -> order,
-        ("M" -> target_ ? orderQ) :> "Measure"[target],
-        ("M"[args___] -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], "Measure"[target]],
+        ("M" -> target_ ? orderQ) :> {"Measure", target},
+        ("M"[args___] -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], {"Measure", target}],
         (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
         "I" -> Nothing,
         "X" | "NOT" -> "XGate",
@@ -23,7 +23,7 @@ shortcutToGate = Replace[
         "T" -> "TGate",
         "V" -> "SXGate",
         "SWAP" -> "SwapGate",
-        "Diagonal"[x_] :> If[ListQ[x], "Diagonal"[NumericArray @ N[x]], {"GlobalPhaseGate", Chop[N[Arg[x]]]}],
+        "Diagonal"[x_] :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", Chop[N[Arg[x]]]}],
         "U2"[a_, b_] :> {"U2Gate", N[a], N[b]},
         "U"[a_, b_, c_] :> {"U3Gate", N[a], N[b], N[c]},
         "Permutation"[perm_] :> {"PermutationGate", PermutationList[perm] - 1},
