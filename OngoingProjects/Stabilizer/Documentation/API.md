@@ -1,23 +1,28 @@
 # Stabilizer subsystem — API reference
 
-> Function-by-function reference for the 10 public symbols + the property/method dispatch on the three head types (`PauliStabilizer`, `StabilizerFrame`, `GraphState`). Every code example is verified by [`verify-API.wls`](verify-API.wls) — `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`.
+> Function-by-function reference for the 6 top-level public symbols + the method-grade operations dispatched on `PauliStabilizer` (4 of which were Phase-3 top-level symbols, demoted to methods in Phase 6 — see [§API consolidation in ROADMAP.md](ROADMAP.md#a0--api-consolidation-2026-05-06)). Every code example is verified by [`verify-API.wls`](verify-API.wls) — `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`.
 
 ## Public API at a glance
 
 | Symbol | Phase | Purpose |
 |---|---|---|
 | [`PauliStabilizer`](#paulistabilizer) | 1 | Stabilizer-state head: tableau-encoded n-qubit state |
-| [`RandomClifford`](#randomclifford) | 2 | Uniformly random n-qubit Clifford state (Mallows sampler) |
-| [`StabilizerMeasure`](#stabilizermeasure) | 3 | Symbolic Z-basis measurement (allocates fresh outcome symbol) |
-| [`SubstituteOutcomes`](#substituteoutcomes) | 3 | Plug concrete values into measurement-outcome symbols |
-| [`SampleOutcomes`](#sampleoutcomes) | 3 | Random samples by independent symbol substitution |
 | [`StabilizerFrame`](#stabilizerframe) | 4 | Superposition of stabilizer states (for non-Clifford) |
 | [`StabilizerInnerProduct`](#stabilizerinnerproduct) | 4 | `<ψ\|φ>` for two stabilizer/frame states |
 | [`StabilizerExpectation`](#stabilizerexpectation) | 4 | `<ψ\|P\|ψ>` for an arbitrary Pauli string |
 | [`GraphState`](#graphstate) | 5 | Graph-state representation (AndBri05) |
 | [`LocalComplement`](#localcomplement) | 5 | Local complementation on a graph or graph state |
 
-**Companion:** [`synthesis-implementation.md`](synthesis-implementation.md) walks through synthesis §1–§11 by capability. [`ROADMAP.md`](ROADMAP.md) tracks the 21 partial / deferred / known-bug items.
+### Method-grade operations on `PauliStabilizer` (Phase 6, formerly top-level)
+
+| Method | Old top-level form | Purpose |
+|---|---|---|
+| [`PauliStabilizer["Random", n]`](#paulistabilizername_string--named-stabilizer-code) | `RandomClifford[n]` | Uniformly random n-qubit Clifford state (Mallows sampler) |
+| [`ps["SymbolicMeasure", q]`](#methods-symbolic-measurement) | `StabilizerMeasure[ps, q]` | Symbolic Z-basis measurement (allocates fresh outcome symbol) |
+| [`ps["SubstituteOutcomes", rules]`](#methods-symbolic-measurement) | `SubstituteOutcomes[ps, rules]` | Plug concrete values into measurement-outcome symbols |
+| [`ps["SampleOutcomes", n]`](#methods-symbolic-measurement) | `SampleOutcomes[ps, n]` | Random samples by independent symbol substitution |
+
+**Companion:** [`synthesis-implementation.md`](synthesis-implementation.md) walks through synthesis §1–§11 by capability. [`ROADMAP.md`](ROADMAP.md) tracks the partial / deferred / known-bug items.
 
 **Re-verify:** `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`
 
@@ -569,76 +574,18 @@ With[{ps = PauliStabilizer[1]},
 - `PauliStabilizer::nonclifford` — emitted when a circuit contains a gate that doesn't match any tableau-update rule (and isn't `P[θ]`/`T`/`T†`). Returns the input state unchanged so the user can recover.
 - `PauliStabilizer::tdeprecated` — historical message announcing the Phase 4 migration of `P[θ]/T/T†` from `Plus` to `StabilizerFrame`.
 
----
+## Methods (Symbolic measurement)
 
-# RandomClifford
+Phase 3 SymPhase methods (FangYing23 §3, arxiv:2311.03906). All three were Phase-3 top-level public symbols (`StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`); demoted in Phase 6 to methods on `PauliStabilizer` per the API consolidation.
 
-Uniformly random sampler from the n-qubit Clifford group via the Bravyi–Maslov / Koenig–Smolin Mallows-distribution algorithm.
+### `ps["SymbolicMeasure", q_Integer]` and `ps["SymbolicMeasure", qudits_List]`
 
-## Signature
-
-```wolfram
-RandomClifford[n_Integer]
-```
-
-Returns a `PauliStabilizer` of n qubits with random stabilizers and signs.
-
-```wolfram
-SeedRandom[42];
-With[{r = RandomClifford[3]},
-    <|"Qubits" -> r["Qubits"], "Stabilizers" -> r["Stabilizers"]|>
-]
-```
-```
-<|"Qubits" -> 3, "Stabilizers" -> {"-XIY", "XYY", "-XII"}|>
-```
-
-## Cardinality (KoeSmo14 Eq 2)
-
-`|C_n| = 2^(n² + 2n) · Π_{j=1}^n (4^j − 1)`. For `n = 1`, 24 elements. For `n = 2`, 11520. For `n = 3`, ~9.29 × 10⁷.
-
-## Uniformity smoke test
-
-200 samples on n=1 should hit most of the small number of distinct stabilizer states (single-qubit Cliffords map to one of 6 stabilizer states modulo phase, but with signs there are more):
-
-```wolfram
-SeedRandom[42];
-Length @ DeleteDuplicates @ Table[
-    With[{r = RandomClifford[1]}, {r["Stabilizers"], r["Signs"]}],
-    {200}
-]
-```
-```
-12
-```
-
-## See also
-
-- [`PauliStabilizer["Random", n]`](#paulistabilizer-random-n_integer--uniformly-random-n-qubit-clifford-state) — alias.
-- KoeSmo14 §3.2 (arxiv:1406.2170) — original algorithm.
-- [ROADMAP §B.5](ROADMAP.md) — `IndexClifford` inverse map (deferred).
-
----
-
-# StabilizerMeasure
-
-Phase 3 SymPhase symbolic Z-basis measurement. Allocates a fresh `\[FormalS][k]` symbol for non-deterministic outcomes; returns one `PauliStabilizer` instead of an `Association`.
-
-## Signatures
-
-```wolfram
-StabilizerMeasure[ps_PauliStabilizer, q_Integer]
-StabilizerMeasure[ps_PauliStabilizer, qudits_List]
-```
-
-## Examples
+Symbolic Z-basis measurement. Allocates a fresh `\[FormalS][k]` symbol per non-deterministic measurement; returns one `PauliStabilizer` instead of an `Association`.
 
 **Deterministic case** (no anticommuting stabilizer): returns the post-state directly with no fresh symbol allocated.
 
 ```wolfram
-With[{ps = PauliStabilizer[1]},
-    StabilizerMeasure[ps, 1]["Stabilizers"]
-]
+PauliStabilizer[1]["SymbolicMeasure", 1]["Stabilizers"]
 ```
 ```
 {"Z"}
@@ -647,7 +594,7 @@ With[{ps = PauliStabilizer[1]},
 **Non-deterministic case** (one anticommuting stabilizer): allocates a fresh `\[FormalS][k]` symbol and stamps it into the appropriate phase position.
 
 ```wolfram
-Module[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
+Module[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
     <|
         "Head"          -> Head[psSym],
         "Phase"         -> psSym["Phase"],
@@ -660,38 +607,18 @@ Module[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
   "FreshSymbols" -> {\[FormalS][1]}|>
 ```
 
-## Phase 3 known limitation
+**Phase 3 known limitation:** when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly by AG but is **not** stamped into the post-state's signs. Tracked in [ROADMAP §A.4](ROADMAP.md). Fix lives in Phase 4 `StabilizerFrame` integration.
 
-When a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly by AG but is **not** stamped into the post-state's signs. Tracked in [ROADMAP §A.4](ROADMAP.md). Fix lives in Phase 4 `StabilizerFrame` integration.
+### `ps["SubstituteOutcomes", rules]`
 
-## See also
-
-- [`SubstituteOutcomes`](#substituteoutcomes) — plug concrete values.
-- [`SampleOutcomes`](#sampleoutcomes) — random samples.
-- FangYing23 §3 (arxiv:2311.03906) — SymPhase algorithm.
-
----
-
-# SubstituteOutcomes
-
-Replace measurement-outcome symbols with concrete 0/1 values, reducing signs back to {-1, 1} via `Mod 2`.
-
-## Signature
-
-```wolfram
-SubstituteOutcomes[ps_PauliStabilizer, rules]
-```
-
-## Round-trip with regular `["M"]`
-
-Substituting a symbol with 0 reproduces the outcome-0 branch; with 1 reproduces outcome-1:
+Replace measurement-outcome symbols with concrete 0/1 values, reducing signs back to {-1, 1} via `Mod 2`. Substituting a symbol with 0 reproduces the outcome-0 branch; with 1 reproduces outcome-1:
 
 ```wolfram
 Module[{psSym, sym, ps0, ps1Reg},
-    psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
+    psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
     sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-    ps0 = SubstituteOutcomes[psSym, sym -> 0];
-    ps1Reg = SubstituteOutcomes[psSym, sym -> 1];
+    ps0 = psSym["SubstituteOutcomes", sym -> 0];
+    ps1Reg = psSym["SubstituteOutcomes", sym -> 1];
     <|
         "outcome 0 stabilizers" -> ps0["Stabilizers"],
         "outcome 1 stabilizers" -> ps1Reg["Stabilizers"]
@@ -702,30 +629,50 @@ Module[{psSym, sym, ps0, ps1Reg},
 <|"outcome 0 stabilizers" -> {"Z"}, "outcome 1 stabilizers" -> {"-Z"}|>
 ```
 
----
+### `ps["SampleOutcomes"]` and `ps["SampleOutcomes", n_Integer]`
 
-# SampleOutcomes
-
-Draw n random samples by independently substituting each outcome symbol with a uniformly-random 0 or 1.
-
-## Signatures
-
-```wolfram
-SampleOutcomes[ps_PauliStabilizer]            (* one sample *)
-SampleOutcomes[ps_PauliStabilizer, n_Integer] (* n samples as a list *)
-```
-
-## Example
+Draw `n` random samples by independently substituting each outcome symbol with a uniformly-random 0 or 1. Single-arg form returns one sample; with `n`, returns a list.
 
 ```wolfram
 SeedRandom[42];
-With[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
-    #["Stabilizers"] & /@ SampleOutcomes[psSym, 10]
+With[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
+    #["Stabilizers"] & /@ psSym["SampleOutcomes", 10]
 ]
 ```
 ```
 {{"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}, {"Z"}, {"Z"}}
 ```
+
+## Methods (Random Clifford)
+
+Uniformly random sampler from the n-qubit Clifford group via the Bravyi–Maslov / Koenig–Smolin Mallows-distribution algorithm. The standalone `RandomClifford[n]` was demoted in Phase 6; reach the same sampler via the named-pattern constructor:
+
+```wolfram
+SeedRandom[42];
+With[{r = PauliStabilizer["Random", 3]},
+    <|"Qubits" -> r["Qubits"], "Stabilizers" -> r["Stabilizers"]|>
+]
+```
+```
+<|"Qubits" -> 3, "Stabilizers" -> {"-XIY", "XYY", "-XII"}|>
+```
+
+**Cardinality** (KoeSmo14 Eq 2): `|C_n| = 2^(n² + 2n) · Π_{j=1}^n (4^j − 1)`. For `n = 1`, 24 elements. For `n = 2`, 11520. For `n = 3`, ~9.29 × 10⁷.
+
+**Uniformity smoke test:** 200 samples on n=1 hit most of the small number of distinct stabilizer states.
+
+```wolfram
+SeedRandom[42];
+Length @ DeleteDuplicates @ Table[
+    With[{r = PauliStabilizer["Random", 1]}, {r["Stabilizers"], r["Signs"]}],
+    {200}
+]
+```
+```
+12
+```
+
+See KoeSmo14 §3.2 (arxiv:1406.2170) and [ROADMAP §B.5](ROADMAP.md) (`IndexClifford` inverse map, deferred).
 
 10 samples, mix of outcome-0 (`{"Z"}`) and outcome-1 (`{"-Z"}`) — approximately 50/50 split.
 

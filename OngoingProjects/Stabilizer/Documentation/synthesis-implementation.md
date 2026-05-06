@@ -31,13 +31,13 @@
 | 2.5 | Inner products & expectation | 4 | `StabilizerInnerProduct`, `StabilizerExpectation` | ✅ (direct vector; closed-form tracked in [ROADMAP §A.1](ROADMAP.md)) |
 | 2.6 | Distance / nearest neighbors | — | — | ⏸ deferred (GarMarCro12 §5) |
 | 2.7 | Counting / enumeration | 1 | (formulas at test-fixture level) | ✅ |
-| 2.8 | Random Clifford | 2 | `RandomClifford` | ✅ |
+| 2.8 | Random Clifford | 2 | `PauliStabilizer["Random", n]` (Phase 6 demoted from `RandomClifford`) | ✅ |
 | 2.9 | Canonical forms | 1 | `ps["Circuit"]` (AG only) | partial |
 | 2.10 | Synthesis from a tableau | 1 | `ps["Circuit"]` | partial (no Reid24/Winderl23) |
 | 2.11 | Pauli tracking | — | — | ⏸ deferred (Paler14/RuhDev25) |
 | 2.12 | QEC code extraction | 1 | named codes + syndromes | ✅ |
 | 3.1 | Symbolic Pauli arithmetic | 3 | loosened predicates | ✅ |
-| 3.2 | Symbolic measurement | 3 | `StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes` | ✅ |
+| 3.2 | Symbolic measurement | 3 | `ps["SymbolicMeasure", q]`, `ps["SubstituteOutcomes", rules]`, `ps["SampleOutcomes", n]` (Phase 6 demoted from top-level) | ✅ |
 | 3.3 | Symbolic Clifford parameters | — | — | ⏸ deferred (Mueller26) |
 | 3.4 | Symbolic dynamical Lie algebras | — | — | ⏸ deferred |
 | 3.5 | Symbolic interconversion | 1, 4 | partial | partial |
@@ -158,7 +158,7 @@ With[{m = ps["Matrix"]}, Mod[m . omega . Transpose[m] - omega, 2]]
 {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}
 ```
 
-The all-zeros matrix confirms `M Ω Mᵀ ≡ Ω (mod 2)`. This is `Tier 2` of `Tests/PauliStabilizer.wlt` and is checked for Bell, GHZ-3, GHZ-5, Cluster-5, 5Q, Steane, Shor, and `RandomClifford[4]`.
+The all-zeros matrix confirms `M Ω Mᵀ ≡ Ω (mod 2)`. This is `Tier 2` of `Tests/PauliStabilizer.wlt` and is checked for Bell, GHZ-3, GHZ-5, Cluster-5, 5Q, Steane, Shor, and `PauliStabilizer["Random", 4]`.
 
 **Cross-reference:** AarGot04 Prop 2; Yashin25 §2.3.
 
@@ -505,12 +505,12 @@ Function[n, 2^(n^2 + 2 n) Product[4^j - 1, {j, 1, n}]] /@ Range[1, 3]
 
 > **Synthesis** (`:180-188`): "`RandomClifford[n]` and `RandomStabilizerState[n]`: KoeSmo14 §3.2 gives an `O(n³)` algorithm via symplectic transvections that maps `Range[CliffordGroupOrder[n]] → Sp(2n, 𝔽₂)` bijectively."
 
-**QF kernel** (Phase 2, [Stabilizer/RandomClifford.m](../../../QuantumFramework/Kernel/Stabilizer/RandomClifford.m)). `RandomClifford[n]` implements the Bravyi-Maslov / Koenig-Smolin Mallows-distribution sampler. Promoted to public symbol in Phase 2.
+**QF kernel** (Phase 2, [Stabilizer/RandomClifford.m](../../../QuantumFramework/Kernel/Stabilizer/RandomClifford.m)). The Bravyi-Maslov / Koenig-Smolin Mallows-distribution sampler is reached as `PauliStabilizer["Random", n]` (Phase 6 demoted the top-level alias `RandomClifford[n]` per [ROADMAP A.0](ROADMAP.md#phase-6--done-2026-05-06-api-consolidation); the named-pattern dispatch is the public form).
 
 **Code:**
 ```wolfram
 SeedRandom[20260430];
-With[{ps = RandomClifford[3]},
+With[{ps = PauliStabilizer["Random", 3]},
     <|"Qubits" -> ps["Qubits"], "Stabilizers" -> ps["Stabilizers"]|>
 ]
 ```
@@ -524,7 +524,7 @@ With[{ps = RandomClifford[3]},
 ```wolfram
 SeedRandom[12345];
 Length @ DeleteDuplicates @ Table[
-    With[{r = RandomClifford[1]}, {r["Stabilizers"], r["Signs"]}],
+    With[{r = PauliStabilizer["Random", 1]}, {r["Stabilizers"], r["Signs"]}],
     {200}
 ]
 ```
@@ -534,7 +534,7 @@ Length @ DeleteDuplicates @ Table[
 12
 ```
 
-12 distinct {stab strings, sign combinations} appeared in 200 samples. Note: this is fewer than 24 because `RandomClifford` only returns a *state* (one of 6 single-qubit stabilizer states modulo signs); the full Clifford gate group has 24 elements but maps to 6 distinct *stabilizer states* (modulo phase).
+12 distinct {stab strings, sign combinations} appeared in 200 samples. Note: this is fewer than 24 because the sampler returns a *state* (one of 6 single-qubit stabilizer states modulo signs); the full Clifford gate group has 24 elements but maps to 6 distinct *stabilizer states* (modulo phase).
 
 **Cross-reference:** KoeSmo14 §3.2; Bravyi-Maslov 2020 (the same algorithm).
 
@@ -621,16 +621,16 @@ The full Mueller26 `PauliEngine` symbolic-coefficients-on-both-sides commutator 
 
 > **Synthesis** (`:246-258`): "FangYing23 §3 (SymPhase): represent the sign vector `r⃗` in the tableau as bit-vectors over `𝔽₂^(n_s + 1)`, where `n_s` = number of fresh symbols introduced so far."
 
-**QF kernel** (Phase 3, [Stabilizer/SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m)). Three new public symbols:
+**QF kernel** (Phase 3, [Stabilizer/SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m)). Three method-grade operations on `PauliStabilizer` (Phase 3 introduced these as top-level symbols `StabilizerMeasure` / `SubstituteOutcomes` / `SampleOutcomes`; Phase 6 demoted them to methods per [ROADMAP A.0](ROADMAP.md#phase-6--done-2026-05-06-api-consolidation)):
 
-- `StabilizerMeasure[ps, q]` — single Z-basis measurement; allocates fresh `\[FormalS][k]` symbol for non-deterministic case.
-- `SubstituteOutcomes[ps, rules]` — replace measurement-outcome symbols with concrete 0/1.
-- `SampleOutcomes[ps, n]` — n random samples by independently substituting each symbol.
+- `ps["SymbolicMeasure", q]` — single Z-basis measurement; allocates fresh `\[FormalS][k]` symbol for non-deterministic case.
+- `ps["SubstituteOutcomes", rules]` — replace measurement-outcome symbols with concrete 0/1.
+- `ps["SampleOutcomes", n]` — n random samples by independently substituting each symbol.
 
-**Code (StabilizerMeasure allocates fresh symbol):**
+**Code (allocates fresh symbol):**
 ```wolfram
 psPlus = PauliStabilizer[1]["H", 1];
-psSym = StabilizerMeasure[psPlus, 1];
+psSym = psPlus["SymbolicMeasure", 1];
 syms = DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
 <|
     "Head"          -> Head[psSym],
@@ -645,15 +645,15 @@ syms = DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
   "Phase" -> {0, \[FormalS][1]}|>
 ```
 
-The `\[FormalS][1]` symbol stamps the second phase entry (= the stabilizer Z's sign-bit). `SubstituteOutcomes[psSym, \[FormalS][1] -> 0]` returns the outcome-0 branch; `-> 1` returns the outcome-1 branch.
+The `\[FormalS][1]` symbol stamps the second phase entry (= the stabilizer Z's sign-bit). `psSym["SubstituteOutcomes", \[FormalS][1] -> 0]` returns the outcome-0 branch; `-> 1` returns the outcome-1 branch.
 
 **Code (substitute-outcomes round-trip vs regular `["M"]`):**
 ```wolfram
 psPlus = PauliStabilizer[1]["H", 1];
-psSym = StabilizerMeasure[psPlus, 1];
+psSym = psPlus["SymbolicMeasure", 1];
 sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-psSub0 = SubstituteOutcomes[psSym, sym -> 0];
-psSub1 = SubstituteOutcomes[psSym, sym -> 1];
+psSub0 = psSym["SubstituteOutcomes", sym -> 0];
+psSub1 = psSym["SubstituteOutcomes", sym -> 1];
 ps0 = psPlus["M", 1][0];
 ps1 = psPlus["M", 1][1];
 <|
@@ -668,7 +668,7 @@ ps1 = psPlus["M", 1][1];
   "outcome 1 stabilizers match" -> True|>
 ```
 
-**Phase 3 known limitation** (locked down in `Tier 6 KNOWN LIMITATIONS` of `Tests/PauliStabilizer.wlt`): when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly by the AG algorithm but is not stamped into the post-state's signs. The post-state IS physically correct, but `SampleOutcomes` cannot directly recover the deterministic outcome from stabilizer signs alone. Phase 4's `StabilizerFrame` adds the outcome-record machinery needed to fix this; the `Phase3-LIMITATION-DeterministicOutcomeNotStamped` test will flip from passing to failing once that is implemented.
+**Phase 3 known limitation** (locked down in `Tier 6 KNOWN LIMITATIONS` of `Tests/PauliStabilizer.wlt`): when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly by the AG algorithm but is not stamped into the post-state's signs. The post-state IS physically correct, but `ps["SampleOutcomes", n]` cannot directly recover the deterministic outcome from stabilizer signs alone. Phase 4's `StabilizerFrame` adds the outcome-record machinery needed to fix this; the `Phase3-LIMITATION-DeterministicOutcomeNotStamped` test will flip from passing to failing once that is implemented.
 
 **Cross-reference:** FangYing23 §3 SymPhase (arxiv:2311.03906).
 
@@ -744,7 +744,7 @@ ps1 = psPlus["M", 1][1];
 | `CliffordSymplectic[T]` | ✅ | `ps["Matrix"]` |
 | `CliffordCircuit[T, gateSet, connectivity]` | partial | `ps["Circuit"]` (AG only, no connectivity) |
 | `CliffordCanonicalForm[T, "AaronsonGottesman"]` | ✅ | `ps["Circuit"]` |
-| `RandomClifford[n]` | ✅ | Phase 2 |
+| `RandomClifford[n]` (synthesis spec) | ✅ | Phase 2 (reachable as `PauliStabilizer["Random", n]` after Phase 6 demotion) |
 | `IndexClifford[T]` | ⏸ | KoeSmo14 §3.3 inverse map |
 | `ParametricCliffordRotation[P, θ]` | ⏸ | Mueller26 |
 | `CliffordChannel[circuit]` | ⏸ | Yashin25 |
@@ -755,8 +755,8 @@ ps1 = psPlus["M", 1][1];
 
 | Function | Status |
 |---|---|
-| `SymbolicMeasurementOutcome[tableau, qubit]` | ✅ `StabilizerMeasure` |
-| `SubstituteOutcomes[symbolic_state, rules]` | ✅ `SubstituteOutcomes` |
+| `SymbolicMeasurementOutcome[tableau, qubit]` | ✅ `ps["SymbolicMeasure", q]` (Phase 6 demoted from `StabilizerMeasure`) |
+| `SubstituteOutcomes[symbolic_state, rules]` | ✅ `ps["SubstituteOutcomes", rules]` (Phase 6 demoted from top-level) |
 | `SymbolicPauliCommutator[P, Q]` | ⏸ Mueller26 |
 | `DynamicalLieAlgebra[generators]` | ⏸ Mueller26 |
 | `LieClosure[generators]` | ⏸ |

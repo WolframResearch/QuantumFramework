@@ -312,7 +312,7 @@ VerificationTest[
 
 (* Random Clifford roundtrip (seeded). Each draw is exercised against itself.    *)
 VerificationTest[
-    BlockRandom[SeedRandom[20260504]; matEqQO[#["QuantumOperator"], #["QuantumOperator"]] & @ PauliStabilizer[RandomClifford[1]["QuantumOperator"]]],
+    BlockRandom[SeedRandom[20260504]; matEqQO[#["QuantumOperator"], #["QuantumOperator"]] & @ PauliStabilizer[PauliStabilizer["Random",1]["QuantumOperator"]]],
     True,
     TestID -> "Roundtrip-QO-RandomClifford-1Q-Stable"
 ]
@@ -320,7 +320,7 @@ VerificationTest[
 (* The real Random Clifford 1Q test: build from a 1Q Clifford QO, roundtrip, compare *)
 VerificationTest[
     BlockRandom[SeedRandom[20260504];
-        Module[{rc = RandomClifford[1]["QuantumOperator"]},
+        Module[{rc = PauliStabilizer["Random",1]["QuantumOperator"]},
             matEqQO[PauliStabilizer[rc]["QuantumOperator"], rc]
         ]
     ],
@@ -330,7 +330,7 @@ VerificationTest[
 
 VerificationTest[
     BlockRandom[SeedRandom[20260504 + 1];
-        Module[{rc = RandomClifford[3]["QuantumOperator"]},
+        Module[{rc = PauliStabilizer["Random",3]["QuantumOperator"]},
             matEqQO[PauliStabilizer[rc]["QuantumOperator"], rc]
         ]
     ],
@@ -378,7 +378,7 @@ VerificationTest[
 VerificationTest[
     BlockRandom[SeedRandom[20260504];
         Module[{n = 2, rc, qs0, qs},
-            rc = RandomClifford[n]["QuantumOperator"];
+            rc = PauliStabilizer["Random",n]["QuantumOperator"];
             qs0 = QuantumState["0", QuantumBasis[2, n]];
             qs = rc[qs0];
             matEqQS[PauliStabilizer[qs]["State"], qs]
@@ -391,7 +391,7 @@ VerificationTest[
 VerificationTest[
     BlockRandom[SeedRandom[20260504 + 1];
         Module[{n = 3, rc, qs0, qs},
-            rc = RandomClifford[n]["QuantumOperator"];
+            rc = PauliStabilizer["Random",n]["QuantumOperator"];
             qs0 = QuantumState["0", QuantumBasis[2, n]];
             qs = rc[qs0];
             matEqQS[PauliStabilizer[qs]["State"], qs]
@@ -1142,7 +1142,7 @@ VerificationTest[
     TestID -> "Clifford-Uniform-NoFailure-n5"
 ]
 
-(* 200 samples of RandomClifford[1] should hit at least 22 of 24 distinct elements (coupon collector) *)
+(* 200 samples of PauliStabilizer["Random",1] should hit at least 22 of 24 distinct elements (coupon collector) *)
 VerificationTest[
     Block[{samples, distinct},
         SeedRandom[12345];
@@ -1159,7 +1159,7 @@ VerificationTest[
     TestID -> "Clifford-Uniform-DistinctCount-n1"
 ]
 
-(* RandomClifford[3] should produce mostly distinct elements over 100 samples (|C_3| ~ 9.2e7) *)
+(* PauliStabilizer["Random",3] should produce mostly distinct elements over 100 samples (|C_3| ~ 9.2e7) *)
 VerificationTest[
     Block[{samples, distinct},
         SeedRandom[12345];
@@ -1594,20 +1594,22 @@ VerificationTest[
 
 
 (* ============================================================================ *)
-(* TIER 5 \[Dash] Phase 2 hygiene (errors, docs, RandomClifford promotion)      *)
+(* TIER 5 \[Dash] Phase 2 hygiene (errors, docs)                                *)
 (* ============================================================================ *)
+(* (Phase 6 demotion: RandomClifford is no longer a top-level public symbol.    *)
+(*  Random Clifford sampling is reached via PauliStabilizer["Random", n].)      *)
 
-(* RandomClifford is now a public symbol, callable bare *)
+(* PauliStabilizer["Random", n] returns a valid stabilizer state *)
 VerificationTest[
-    Block[{}, SeedRandom[20260430]; psValidQ @ RandomClifford[3]],
+    Block[{}, SeedRandom[20260430]; psValidQ @ PauliStabilizer["Random",3]],
     True,
-    TestID -> "Phase2-RandomClifford-IsPublic"
+    TestID -> "Phase2-PauliStabilizerRandom-Valid"
 ]
 
 VerificationTest[
-    Block[{}, SeedRandom[20260430]; RandomClifford[2]["Qubits"]],
+    Block[{}, SeedRandom[20260430]; PauliStabilizer["Random",2]["Qubits"]],
     2,
-    TestID -> "Phase2-RandomClifford-Callable"
+    TestID -> "Phase2-PauliStabilizerRandom-Callable"
 ]
 
 (* PauliStabilizer::nonclifford message fires for unknown gates *)
@@ -1636,18 +1638,12 @@ VerificationTest[
     TestID -> "Phase2-PauliStabilizer-UsageMessage"
 ]
 
-VerificationTest[
-    StringQ[RandomClifford::usage] && StringLength[RandomClifford::usage] > 50,
-    True,
-    TestID -> "Phase2-RandomClifford-UsageMessage"
-]
-
 (* MakeBoxes at large n: must NOT call ps["State"] (which would OOM).
    Build a 12-qubit random Clifford and ToBoxes[..., TraditionalForm] should complete fast. *)
 VerificationTest[
     Block[{},
         SeedRandom[20260430];
-        With[{t = AbsoluteTiming[ToBoxes[RandomClifford[12], TraditionalForm];][[1]]},
+        With[{t = AbsoluteTiming[ToBoxes[PauliStabilizer["Random",12], TraditionalForm];][[1]]},
             t < 5
         ]
     ],
@@ -1662,14 +1658,14 @@ VerificationTest[
 
 (* StabilizerMeasure on H|0> (= |+>) returns a PauliStabilizer (not an Assoc) *)
 VerificationTest[
-    Head @ StabilizerMeasure[PauliStabilizer[1]["H", 1], 1],
+    Head @ PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1],
     PauliStabilizer,
     TestID -> "Phase3-SymbolicMeasure-ReturnsPauliStabilizer"
 ]
 
 (* The result has a fresh \[FormalS] symbol in its phase *)
 VerificationTest[
-    With[{ps = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
+    With[{ps = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
         Length @ DeleteDuplicates @ Cases[ps["Phase"], _\[FormalS], Infinity] >= 1
     ],
     True,
@@ -1681,9 +1677,9 @@ VerificationTest[
     Module[{psPlus, ps0, sym, psSym, psSub},
         psPlus = PauliStabilizer[1]["H", 1];
         ps0 = psPlus["M", 1][0];   (* outcome-0 branch from regular measure *)
-        psSym = StabilizerMeasure[psPlus, 1];
+        psSym = psPlus["SymbolicMeasure", 1];
         sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-        psSub = SubstituteOutcomes[psSym, sym -> 0];
+        psSub = psSym["SubstituteOutcomes", sym -> 0];
         psSub["Stabilizers"] === ps0["Stabilizers"]
     ],
     True,
@@ -1695,9 +1691,9 @@ VerificationTest[
     Module[{psPlus, ps1, sym, psSym, psSub},
         psPlus = PauliStabilizer[1]["H", 1];
         ps1 = psPlus["M", 1][1];
-        psSym = StabilizerMeasure[psPlus, 1];
+        psSym = psPlus["SymbolicMeasure", 1];
         sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-        psSub = SubstituteOutcomes[psSym, sym -> 1];
+        psSub = psSym["SubstituteOutcomes", sym -> 1];
         psSub["Stabilizers"] === ps1["Stabilizers"]
     ],
     True,
@@ -1709,8 +1705,8 @@ VerificationTest[
 VerificationTest[
     Module[{psBell, psM1, psM2, syms, samples},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        psM1 = StabilizerMeasure[psBell, 1];
-        psM2 = StabilizerMeasure[psM1, 2];
+        psM1 = psBell["SymbolicMeasure", 1];
+        psM2 = psM1["SymbolicMeasure", 2];
         (* psM2 should now have its second-measurement phase EQUAL to the first
            (perfect ZZ correlation). Since the second measurement is deterministic
            given the first, no fresh symbol should be allocated. *)
@@ -1724,8 +1720,8 @@ VerificationTest[
 VerificationTest[
     Module[{psSym, sampled},
         SeedRandom[20260430];
-        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
-        sampled = SampleOutcomes[psSym];
+        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
+        sampled = psSym["SampleOutcomes"];
         psValidQ[sampled]
     ],
     True,
@@ -1736,8 +1732,8 @@ VerificationTest[
 VerificationTest[
     Module[{psSym, samples},
         SeedRandom[20260430];
-        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
-        samples = SampleOutcomes[psSym, 10];
+        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
+        samples = psSym["SampleOutcomes", 10];
         Length[samples] == 10 && AllTrue[samples, psValidQ]
     ],
     True,
@@ -1748,8 +1744,8 @@ VerificationTest[
 VerificationTest[
     Module[{psSym, samples, signs},
         SeedRandom[20260430];
-        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
-        samples = SampleOutcomes[psSym, 50];
+        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
+        samples = psSym["SampleOutcomes", 50];
         (* outcome bit = phase[2] (last row = stabilizer Z) *)
         signs = #["StabilizerSigns"][[1]] & /@ samples;
         Length[DeleteDuplicates[signs]] == 2  (* both -1 and +1 should appear *)
@@ -1762,7 +1758,7 @@ VerificationTest[
    wolframscript context shadow on bare `PauliStabilizerQ`) *)
 VerificationTest[
     Wolfram`QuantumFramework`PackageScope`PauliStabilizerQ @
-        StabilizerMeasure[PauliStabilizer[1]["H", 1], 1],
+        PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1],
     True,
     TestID -> "Phase3-PauliStabilizerQ-AcceptsSymbolic"
 ]
@@ -1770,7 +1766,7 @@ VerificationTest[
 (* ConcretePauliStabilizerQ rejects symbolic signs (the strict version) *)
 VerificationTest[
     Wolfram`QuantumFramework`PackageScope`ConcretePauliStabilizerQ @
-        StabilizerMeasure[PauliStabilizer[1]["H", 1], 1],
+        PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1],
     False,
     TestID -> "Phase3-ConcretePauliStabilizerQ-RejectsSymbolic"
 ]
@@ -1785,7 +1781,7 @@ VerificationTest[
 (* Gate updates work on symbolic phases (BitXor handles symbolic) *)
 VerificationTest[
     Module[{psSym, psSymH, sym},
-        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
+        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
         sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
         psSymH = psSym["X", 1];
         (* X gate XORs phase with Z[1]; the symbolic entry should still be there *)
@@ -1799,8 +1795,8 @@ VerificationTest[
 VerificationTest[
     Module[{psBell, psM},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        psM = StabilizerMeasure[psBell, 1];   (* random *)
-        psM = StabilizerMeasure[psM, 2];      (* deterministic given psM[1] *)
+        psM = psBell["SymbolicMeasure", 1];   (* random *)
+        psM = psM["SymbolicMeasure", 2];      (* deterministic given psM[1] *)
         Length @ DeleteDuplicates @ Cases[psM["Phase"], _\[FormalS], Infinity]
     ],
     1,
@@ -1823,9 +1819,9 @@ VerificationTest[
 VerificationTest[
     Module[{psBell, psM, samples, m1bits, m2bits},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-        psM = StabilizerMeasure[StabilizerMeasure[psBell, 1], 2];
+        psM = psBell["SymbolicMeasure", 1]["SymbolicMeasure", 2];
         SeedRandom[20260430];
-        samples = SampleOutcomes[psM, 20];
+        samples = psM["SampleOutcomes", 20];
         (* m1 outcome bit lives at phase position 3 (first stabilizer Z_1).
            m2 outcome bit ought to live at phase position 4 (second stabilizer)
            but in current Phase 3 impl that position stays 0 instead of mirroring m1. *)

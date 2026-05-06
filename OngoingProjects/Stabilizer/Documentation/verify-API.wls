@@ -9,7 +9,12 @@
      wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls
 *)
 
-PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+(* Resolve paclet directory from this script's location: ../../QuantumFramework
+   relative to OngoingProjects/Stabilizer/Documentation/. Works for both the
+   canonical repo and any worktree. *)
+$pacletDir = FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}];
+Quiet[PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]];
+PacletDirectoryLoad[$pacletDir];
 Needs["Wolfram`QuantumFramework`"];
 
 block[id_, expr_] := Module[{result},
@@ -314,13 +319,13 @@ block["Integration-UpValues",
 
 
 (* ============================================================================ *)
-(* RandomClifford                                                               *)
+(* PauliStabilizer["Random", n]  (Phase 6: was RandomClifford[n])               *)
 (* ============================================================================ *)
 
 block["RandomClifford-basic",
     Block[{},
         SeedRandom[42];
-        With[{r = RandomClifford[3]},
+        With[{r = PauliStabilizer["Random", 3]},
             <|"Qubits" -> r["Qubits"], "Stabilizers" -> r["Stabilizers"]|>
         ]
     ]
@@ -330,7 +335,7 @@ block["RandomClifford-uniformity-n1",
     Block[{},
         SeedRandom[42];
         Length @ DeleteDuplicates @ Table[
-            With[{r = RandomClifford[1]}, {r["Stabilizers"], r["Signs"]}],
+            With[{r = PauliStabilizer["Random", 1]}, {r["Stabilizers"], r["Signs"]}],
             {200}
         ]
     ]
@@ -338,19 +343,18 @@ block["RandomClifford-uniformity-n1",
 
 
 (* ============================================================================ *)
-(* StabilizerMeasure / SubstituteOutcomes / SampleOutcomes                      *)
+(* Symbolic-measurement methods on PauliStabilizer  (Phase 6: were              *)
+(*   StabilizerMeasure / SubstituteOutcomes / SampleOutcomes top-level symbols).*)
 (* ============================================================================ *)
 
 block["StabilizerMeasure-deterministic",
     (* |0> Z-measurement is deterministic, returns post-state directly *)
-    With[{ps = PauliStabilizer[1]},
-        StabilizerMeasure[ps, 1]["Stabilizers"]
-    ]
+    PauliStabilizer[1]["SymbolicMeasure", 1]["Stabilizers"]
 ];
 
 block["StabilizerMeasure-symbolic",
     (* H|0> Z-measurement is non-deterministic, allocates a fresh symbol *)
-    Module[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
+    Module[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
         <|
             "Head"          -> Head[psSym],
             "Phase"         -> psSym["Phase"],
@@ -361,10 +365,10 @@ block["StabilizerMeasure-symbolic",
 
 block["SubstituteOutcomes-roundtrip",
     Module[{psSym, sym, ps0, ps1Reg},
-        psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1];
+        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
         sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-        ps0 = SubstituteOutcomes[psSym, sym -> 0];
-        ps1Reg = SubstituteOutcomes[psSym, sym -> 1];
+        ps0 = psSym["SubstituteOutcomes", sym -> 0];
+        ps1Reg = psSym["SubstituteOutcomes", sym -> 1];
         <|
             "outcome 0 stabilizers" -> ps0["Stabilizers"],
             "outcome 1 stabilizers" -> ps1Reg["Stabilizers"]
@@ -375,8 +379,8 @@ block["SubstituteOutcomes-roundtrip",
 block["SampleOutcomes-multiple",
     Block[{},
         SeedRandom[42];
-        With[{psSym = StabilizerMeasure[PauliStabilizer[1]["H", 1], 1]},
-            #["Stabilizers"] & /@ SampleOutcomes[psSym, 10]
+        With[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
+            #["Stabilizers"] & /@ psSym["SampleOutcomes", 10]
         ]
     ]
 ];

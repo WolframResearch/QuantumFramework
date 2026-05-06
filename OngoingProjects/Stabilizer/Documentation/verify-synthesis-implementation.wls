@@ -9,7 +9,12 @@
      wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-synthesis-implementation.wls
 *)
 
-PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+(* Resolve paclet directory from this script's location: ../../QuantumFramework
+   relative to OngoingProjects/Stabilizer/Documentation/. Works for both the
+   canonical repo and any worktree. *)
+$pacletDir = FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}];
+Quiet[PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]];
+PacletDirectoryLoad[$pacletDir];
 Needs["Wolfram`QuantumFramework`"];
 
 block[id_, expr_] := Module[{result},
@@ -275,7 +280,7 @@ block["2.7-clifford-group-order",
 block["2.8-random-clifford",
     Block[{},
         SeedRandom[20260430];
-        With[{ps = RandomClifford[3]},
+        With[{ps = PauliStabilizer["Random", 3]},
             <|"Qubits" -> ps["Qubits"], "Stabilizers" -> ps["Stabilizers"]|>
         ]
     ]
@@ -286,7 +291,7 @@ block["2.8-random-clifford-uniformity",
     Block[{},
         SeedRandom[12345];
         Length @ DeleteDuplicates @ Table[
-            With[{r = RandomClifford[1]}, {r["Stabilizers"], r["Signs"]}],
+            With[{r = PauliStabilizer["Random", 1]}, {r["Stabilizers"], r["Signs"]}],
             {200}
         ]
     ]
@@ -327,9 +332,9 @@ block["2.12-5Q-syndromes",
 (* ============================================================================ *)
 
 block["3.2-symbolic-measurement-allocates-fresh-symbol",
-    (* StabilizerMeasure on H|0> allocates a fresh symbol \[FormalS][k]. *)
+    (* ps["SymbolicMeasure", q] on H|0> allocates a fresh symbol \[FormalS][k]. *)
     Module[{psPlus = PauliStabilizer[1]["H", 1], psSym, syms},
-        psSym = StabilizerMeasure[psPlus, 1];
+        psSym = psPlus["SymbolicMeasure", 1];
         syms = DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
         <|
             "Head" -> Head[psSym],
@@ -343,10 +348,10 @@ block["3.2-substitute-outcomes-roundtrip",
     (* Substituting symbol -> 0 or 1 reproduces the regular ["M"] outcome branches. *)
     Module[{psPlus, psSym, sym, psSub0, psSub1, ps0, ps1},
         psPlus = PauliStabilizer[1]["H", 1];
-        psSym = StabilizerMeasure[psPlus, 1];
+        psSym = psPlus["SymbolicMeasure", 1];
         sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-        psSub0 = SubstituteOutcomes[psSym, sym -> 0];
-        psSub1 = SubstituteOutcomes[psSym, sym -> 1];
+        psSub0 = psSym["SubstituteOutcomes", sym -> 0];
+        psSub1 = psSym["SubstituteOutcomes", sym -> 1];
         ps0 = psPlus["M", 1][0];
         ps1 = psPlus["M", 1][1];
         <|

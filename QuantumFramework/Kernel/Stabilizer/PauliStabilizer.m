@@ -60,7 +60,8 @@ _PauliStabilizer["Properties"] = {
     "Destabilizer", "DestabilizerTableau", "DestabilizerX", "DestabilizerZ", "DestabilizerSigns",
     "PauliForm", "Generators", "Stabilizers", "Destabilizers",
     "PauliStrings", "PauliSymbols", "TableauForm", "StabilizerTableauForm",
-    "State", "QuantumState", "Operator", "QuantumOperator", "Circuit", "QuantumCircuit"
+    "State", "QuantumState", "Operator", "QuantumOperator", "Circuit", "QuantumCircuit",
+    "SymbolicMeasure", "SubstituteOutcomes", "SampleOutcomes"
 }
 
 

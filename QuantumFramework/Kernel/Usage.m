@@ -625,27 +625,10 @@ PauliStabilizer::usage =
 "PauliStabilizer[qs] / [op] / [qco] converts a QuantumState / QuantumOperator / QuantumCircuitOperator (Clifford only).\n" <>
 "ps[gate, q] applies a Clifford gate (\"H\", \"S\", \"X\", \"Y\", \"Z\", \"CNOT\"->{c,t}, \"CZ\"->{c,t}, \"SWAP\"->{a,b}, \"V\", SuperDagger[\"S\"], SuperDagger[\"V\"]).\n" <>
 "ps[\"M\", q] performs Z-basis measurement on qubit q, returning <|outcome -> post_state, ...|>.\n" <>
+"ps[\"SymbolicMeasure\", q] performs a symbolic Z-basis measurement, allocating a fresh \\[FormalS][k] outcome symbol (FangYing23 SymPhase).\n" <>
+"ps[\"SubstituteOutcomes\", rules] / ps[\"SampleOutcomes\", n] resolve symbolic outcomes to concrete or sampled values.\n" <>
 "ps[prop] retrieves a property; full list via ps[\"Properties\"].\n" <>
-"References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler."
-
-RandomClifford::usage =
-"RandomClifford[n] samples a uniformly random n-qubit Clifford state from |C_n| = 2^(n^2 + 2n) Product[4^j-1, {j,1,n}] elements (Koenig-Smolin Mallows distribution algorithm).\n" <>
-"Returns a PauliStabilizer object."
-
-StabilizerMeasure::usage =
-"StabilizerMeasure[ps, q] performs a symbolic Z-basis measurement on qubit q.\n" <>
-"Unlike ps[\"M\", q] (which returns an Association of conditional outcomes), StabilizerMeasure allocates a fresh F_2 outcome symbol for each non-deterministic measurement and returns a single PauliStabilizer with that symbol embedded in the appropriate phase position.\n" <>
-"Use SubstituteOutcomes[ps, rules] to plug in concrete outcome values, or SampleOutcomes[ps, n] to draw n random samples.\n" <>
-"PHASE 3 LIMITATION: deterministic outcomes following a prior symbolic measurement (e.g. Bell ZZ correlation) are not stamped into the post-state's signs -- only non-deterministic outcomes are recorded explicitly. For workflows requiring correlation extraction across multiple measurements, use ps[\"M\", q] until Phase 4 introduces StabilizerFrame.\n" <>
-"Reference: FangYing23 SymPhase (arxiv:2311.03906) Section 3."
-
-SubstituteOutcomes::usage =
-"SubstituteOutcomes[ps, rules] applies the substitution `rules` to the symbolic phase entries of `ps` and reduces back to {0, 1} mod 2.\n" <>
-"Typical use: ps_after_measurement = StabilizerMeasure[ps, q]; SubstituteOutcomes[ps_after_measurement, \\[FormalS][1] -> 0]."
-
-SampleOutcomes::usage =
-"SampleOutcomes[ps] returns one random PauliStabilizer realization by sampling each outcome symbol with a uniformly random 0 or 1.\n" <>
-"SampleOutcomes[ps, n] returns a list of n independent samples."
+"References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler, FangYing23 (arxiv:2311.03906) symbolic-phase measurement."
 
 StabilizerFrame::usage =
 "StabilizerFrame[{{c_1, ps_1}, {c_2, ps_2}, ...}] represents a superposition Sum_i c_i |s_i> of stabilizer states |s_i> with (possibly symbolic) coefficients c_i.\n" <>

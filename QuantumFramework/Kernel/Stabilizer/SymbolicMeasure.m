@@ -1,8 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport[StabilizerMeasure]
-PackageExport[SubstituteOutcomes]
-PackageExport[SampleOutcomes]
+PackageScope[symbolicMeasure]
+PackageScope[substituteOutcomes]
+PackageScope[sampleOutcomes]
 
 
 
@@ -16,6 +16,14 @@ PackageExport[SampleOutcomes]
 (* representing un-resolved random outcomes. Sampling then substitutes those    *)
 (* symbols with random 0/1 values (one matrix-multiply over many samples).      *)
 (*                                                                              *)
+(* Phase 6 (2026-05-06): demoted from top-level public symbols to method-grade  *)
+(* operations on PauliStabilizer:                                               *)
+(*   ps["SymbolicMeasure", q]   <-- was symbolicMeasure[ps, q]                *)
+(*   ps["SubstituteOutcomes", rules] <-- was substituteOutcomes[ps, rules]      *)
+(*   ps["SampleOutcomes", n]    <-- was sampleOutcomes[ps, n]                   *)
+(* The internal helpers below are PackageScope only; method dispatch lives in   *)
+(* Stabilizer/Properties.m.                                                     *)
+(*                                                                              *)
 (* Reference: FangYing23, arxiv:2311.03906, Section 3.                          *)
 (* ============================================================================ *)
 
@@ -24,7 +32,7 @@ PackageExport[SampleOutcomes]
 (* Fresh-symbol allocator                                                       *)
 (* ============================================================================ *)
 
-(* Each call to StabilizerMeasure[..., "Symbolic" -> True] allocates a fresh   *)
+(* Each call to symbolicMeasure[..., "Symbolic" -> True] allocates a fresh   *)
 (* symbol in the form `\[FormalS][k]`. The counter is local to the user's      *)
 (* session via $StabilizerSymbolCounter; reset by the user to keep symbol      *)
 (* names short across long-running sessions.                                    *)
@@ -36,7 +44,7 @@ freshOutcome[] := \[FormalS][++$StabilizerSymbolCounter]
 
 
 (* ============================================================================ *)
-(* StabilizerMeasure[ps, q]: symbolic Z-basis measurement.                      *)
+(* symbolicMeasure[ps, q]: symbolic Z-basis measurement.                      *)
 (*                                                                              *)
 (* Like `ps["M", q]` but instead of branching on outcome, allocates a fresh     *)
 (* symbol \[FormalS][k] for the random outcome and returns ONE PauliStabilizer  *)
@@ -57,7 +65,7 @@ freshOutcome[] := \[FormalS][++$StabilizerSymbolCounter]
 (* (Association branching) until Phase 4 introduces StabilizerFrame.            *)
 (* ============================================================================ *)
 
-StabilizerMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{result},
+symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{result},
     result = ps["M", a];
     Switch[Length[result],
         1, (* deterministic *)
@@ -66,8 +74,8 @@ StabilizerMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{r
         Module[{sym = freshOutcome[]},
             (* Pick the post-state for outcome 0 and "stamp" it with the symbol.
                The post-state for outcome b has its `p` row sign flipped from outcome 0.
-               The convention: phase[p] = sym, so SubstituteOutcomes[ps, sym -> 0] gives
-               the outcome-0 branch and SubstituteOutcomes[ps, sym -> 1] gives outcome-1. *)
+               The convention: phase[p] = sym, so substituteOutcomes[ps, sym -> 0] gives
+               the outcome-0 branch and substituteOutcomes[ps, sym -> 1] gives outcome-1. *)
             With[{ps0 = result[0]},
                 Module[{phase0, phase1, p},
                     phase0 = ps0["Phase"];
@@ -89,17 +97,17 @@ StabilizerMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{r
 
 
 (* Multi-qubit symbolic measurement: fold over the qubit list *)
-StabilizerMeasure[ps_PauliStabilizer ? PauliStabilizerQ, qudits : {___Integer}] := Fold[
-    StabilizerMeasure[#1, #2] &, ps, qudits
+symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, qudits : {___Integer}] := Fold[
+    symbolicMeasure[#1, #2] &, ps, qudits
 ]
 
 
 (* ============================================================================ *)
-(* SubstituteOutcomes[ps, rules]: replace measurement-outcome symbols with      *)
+(* substituteOutcomes[ps, rules]: replace measurement-outcome symbols with      *)
 (* concrete 0/1 values, then reduce signs back to {-1, 1} via Mod 2.            *)
 (* ============================================================================ *)
 
-SubstituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{phase},
+substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{phase},
     phase = ps["Phase"] /. rules;
     phase = Mod[phase, 2];
     PauliStabilizer[<|"Phase" -> phase, "Tableau" -> ps["Tableau"]|>]
@@ -107,21 +115,21 @@ SubstituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{pha
 
 
 (* ============================================================================ *)
-(* SampleOutcomes[ps, n]: draw n independent samples by substituting each       *)
+(* sampleOutcomes[ps, n]: draw n independent samples by substituting each       *)
 (* outcome symbol with a uniformly-random 0 or 1.                               *)
 (* Returns a list of n PauliStabilizer objects, each with concrete signs.       *)
 (* ============================================================================ *)
 
-SampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, n_Integer ? Positive] := Module[{symbols, draws},
+sampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, n_Integer ? Positive] := Module[{symbols, draws},
     symbols = DeleteDuplicates @ Cases[ps["Phase"], _\[FormalS], Infinity];
     Table[
         Module[{rules},
             rules = Thread[symbols -> RandomInteger[1, Length[symbols]]];
-            SubstituteOutcomes[ps, rules]
+            substituteOutcomes[ps, rules]
         ],
         {n}
     ]
 ]
 
 
-SampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ] := First @ SampleOutcomes[ps, 1]
+sampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ] := First @ sampleOutcomes[ps, 1]

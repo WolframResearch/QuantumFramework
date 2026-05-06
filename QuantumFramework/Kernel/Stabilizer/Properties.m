@@ -50,3 +50,20 @@ ps_PauliStabilizer["PauliSymbols", n_ : Infinity] := If[StringStartsQ[#, "-"], -
 
 ps_PauliStabilizer["StabilizerTableauForm", n_ : Infinity] := TableauForm[ps, n]
 ps_PauliStabilizer["TableauForm", n_ : Infinity] := TableauForm[Take[ps["Signs"], UpTo[n]], Map[Take[#, UpTo[n]] &, ps["Tableau"], {2}], False]
+
+
+(* ============================================================================ *)
+(* Phase 6 (2026-05-06): method-grade operations.                               *)
+(* These were Phase 3 public symbols (StabilizerMeasure / SubstituteOutcomes /  *)
+(* SampleOutcomes); they were demoted to ps[...] methods to keep the public     *)
+(* surface small. Implementations live in Stabilizer/SymbolicMeasure.m as       *)
+(* PackageScope helpers.                                                        *)
+(* ============================================================================ *)
+
+ps_PauliStabilizer["SymbolicMeasure", q_Integer] := symbolicMeasure[ps, q]
+ps_PauliStabilizer["SymbolicMeasure", qudits : {___Integer}] := symbolicMeasure[ps, qudits]
+
+ps_PauliStabilizer["SubstituteOutcomes", rules_] := substituteOutcomes[ps, rules]
+
+ps_PauliStabilizer["SampleOutcomes"] := sampleOutcomes[ps]
+ps_PauliStabilizer["SampleOutcomes", n_Integer ? Positive] := sampleOutcomes[ps, n]

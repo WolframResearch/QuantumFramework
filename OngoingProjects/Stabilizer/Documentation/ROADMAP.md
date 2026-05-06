@@ -1,17 +1,20 @@
 # Stabilizer subsystem roadmap
 
-> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem (Phases 1–5). Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-04 (Phase 5c addendum); moved 2026-05-02 to `OngoingProjects/Stabilizer/Documentation/`. Branch: `stabilizer-phases-1-4`.
+> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem (Phases 1–6). Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-06 (Phase 6 API consolidation — see "A.0 — API consolidation" below). Branch: `stabilizer-phases-1-4`.
 
 > **Audit-doc context.** This document complements [`synthesis-implementation.md`](synthesis-implementation.md) (the *what works today* tour) and [`API.md`](API.md) (per-function reference) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md).
 
 ## Overall status
 
-- **Tests:** 250 / 250 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 302 / 302 passing.
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), **5c (QO/QS round-trip + post-mortem + cross-module audit — see "Phase 5c — DONE" below)**.
-- **Open items:** 20 (12 partial + 7 deferred + 1 latent bug). A.9 reclassified as **inherent trade-off** (documented contract, not a fix-pending item) after the 2026-05-04 follow-up. **A.11/A.12/A.13** added 2026-05-04 from refpage-validation findings (3 small kernel bugs surfaced while writing reference pages).
+- **Tests:** 249 / 249 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 301 / 301 passing.
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), **6 (API consolidation 10 → 6 public symbols — see "A.0" below)**.
+- **Public surface:** 6 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `StabilizerInnerProduct`, `StabilizerExpectation`, `GraphState`, `LocalComplement`) + 4 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, plus the `["Random", n]` named pattern).
+- **Open items:** 19 (12 partial + 7 deferred). A.9 reclassified as **inherent trade-off**. A.11/A.12/A.13 added 2026-05-04 from refpage-validation findings. B.4 (`CliffordTableau` distinct head) **dropped 2026-05-06**: superseded by the proposed Phase 8 (Yashin25 Choi-tableau unifier — see B.2).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
 
 > **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
+
+> **Lesson (2026-05-06, Phase 6).** Phases 3–5 added 10 public symbols organically, one per literature primitive (FangYing23, GarMar15, AndBri05, KoeSmo14). A design review with N. Murzin flagged the surface as excessive. Phase 6 demoted four (`StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `RandomClifford`) to method-grade operations, no semantic change. Process rule for future phases: end every feature-growth phase with a "consolidate the API surface" pass before merging.
 
 ---
 
@@ -48,6 +51,34 @@ Two process artifacts also produced:
 
 - `~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md` — global memory rule: "for any QF constructor-accessor pair `C`/`A`, the FIRST test in the tier must be `A[C[x]] === x`". Will load in future Claude sessions on this repo.
 - This document's **Lesson** callout above and the post-mortem are cross-linked from API.md and synthesis-implementation.md.
+
+---
+
+## Phase 6 — DONE (2026-05-06): API consolidation
+
+Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbols) as excessive. Phase 6 hard-removes 4 of them and replaces with method-grade operations on `PauliStabilizer`. **No semantic change**; all functionality is preserved as `ps[...]` methods. Net test count: 250 → 249 (one redundant `RandomClifford::usage` test dropped).
+
+| Old top-level | New form | Rationale |
+|---|---|---|
+| `RandomClifford[n]` | `PauliStabilizer["Random", n]` | Already existed as a named-pattern dispatch ([API.md:118-128](API.md)); the standalone alias was redundant. |
+| `StabilizerMeasure[ps, q]` | `ps["SymbolicMeasure", q]` | Is a method on a `PauliStabilizer`; symmetric with `ps["M", q]`. |
+| `SubstituteOutcomes[ps, rules]` | `ps["SubstituteOutcomes", rules]` | Same — single-receiver method. |
+| `SampleOutcomes[ps, n]` | `ps["SampleOutcomes", n]` | Same. |
+
+**Files touched** (1 commit set):
+- [PacletInfo.wl](../../../QuantumFramework/PacletInfo.wl) — Symbols list 10 → 6 (lines 51–54 dropped).
+- [Kernel/Usage.m](../../../QuantumFramework/Kernel/Usage.m) — drop 4 standalone usage messages; extend `PauliStabilizer::usage` to mention the new method forms.
+- [Kernel/Stabilizer/RandomClifford.m](../../../QuantumFramework/Kernel/Stabilizer/RandomClifford.m) — `PackageExport[RandomClifford]` → `PackageScope[RandomClifford]`. The bare `RandomClifford[n]` definition is unchanged; only the export status changes. The named-pattern dispatch `PauliStabilizer["Random", n] := RandomClifford[n]` continues to resolve within the package.
+- [Kernel/Stabilizer/SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m) — three exports → `PackageScope[symbolicMeasure]`, `PackageScope[substituteOutcomes]`, `PackageScope[sampleOutcomes]`. Internal callsites renamed accordingly.
+- [Kernel/Stabilizer/Properties.m](../../../QuantumFramework/Kernel/Stabilizer/Properties.m) — added 5 method dispatches: `ps["SymbolicMeasure", q_Integer]`, `ps["SymbolicMeasure", qudits_List]`, `ps["SubstituteOutcomes", rules_]`, `ps["SampleOutcomes"]`, `ps["SampleOutcomes", n_Integer ? Positive]`.
+- [Kernel/Stabilizer/PauliStabilizer.m](../../../QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m) — `_PauliStabilizer["Properties"]` registry extended with `"SymbolicMeasure"`, `"SubstituteOutcomes"`, `"SampleOutcomes"`.
+- [Tests/PauliStabilizer.wlt](../../../Tests/PauliStabilizer.wlt) — TIER 5 + TIER 6 callsites rewritten; `Phase2-RandomClifford-IsPublic` renamed to `Phase2-PauliStabilizerRandom-Valid`; `Phase2-RandomClifford-Callable` renamed to `Phase2-PauliStabilizerRandom-Callable`; `Phase2-RandomClifford-UsageMessage` removed.
+- [Documentation/API.md](API.md) — public-API table 10 → 6 rows + new "Method-grade operations" subsection. Standalone sections for the four demoted symbols folded into one "Methods (Symbolic measurement)" + "Methods (Random Clifford)" pair under `# PauliStabilizer`.
+
+**Two follow-up phases (not in this PR):**
+
+- **Phase 7 — Hybrid interop (~250 LOC):** UpValues so `qmo[ps]`, `qc[ps]`, `qmo[sf]`, `qc[sf]` route natively. Non-Pauli measurement bases produce `StabilizerFrame` automatically. Avoids the `Picture -> "Stabilizer"` and `QuantumBasis`-wrapping designs (both would force `O(2ⁿ)` materialization through the basis pipeline; see [post-mortem-phase-5c.md](post-mortem-phase-5c.md) Phase 6 footnote and the design discussion captured at `~/.claude/plans/i-am-conviced-of-vast-kettle.md`).
+- **Phase 8 — Yashin25 Choi-tableau unifier (~400 LOC):** promote [B.2](#b2--clifford-channel-via-choi-tableau-yashin25) from "deferred" to "next milestone". Implements `CliffordChannel[<|"UA", "UB", "c"|>]` per Yashin25 §2.3. After Phase 8, `PauliStabilizer` / `StabilizerFrame` / the `SymbolicMeasure` family become facade methods over `CliffordChannel`. Public API unchanged.
 
 ---
 
@@ -236,15 +267,9 @@ Three items in the §4–§6 menus are explicitly listed as `partial` in [`synth
 | **Tests** | Group closure (`g_i · g_j ∈ {g_k}`); identity = index 0; each element has an inverse; `LocalCliffordCompose[a, LocalCliffordIndex[Inverse[…]]]` = 0. |
 | **Effort** | ~250 LOC + 8 tests |
 
-### B.4 — `CliffordTableau` head distinct from `PauliStabilizer`
-| | |
-|---|---|
-| **Reference** | Synthesis §5 (the "Clifford operations" menu) |
-| **Why deferred** | Conceptually clear (`PauliStabilizer` = state's tableau; `CliffordTableau` = gate's tableau) but the current architecture conflates them since `PauliStabilizer[qo_QuantumOperator]` happens to be how Clifford gates are tableau-encoded. |
-| **What to build** | New head `CliffordTableau` with an `Apply[ct, ps]` method that lifts a gate's tableau onto a state's tableau. |
-| **File** | new `Stabilizer/CliffordTableau.m` |
-| **Tests** | `CliffordTableau[QuantumCircuitOperator[{"H" -> 1}]][PauliStabilizer[1]]` produces the same result as `PauliStabilizer[1]["H", 1]`. |
-| **Effort** | ~150 LOC + 6 tests |
+### B.4 — ~~`CliffordTableau` head distinct from `PauliStabilizer`~~ (DROPPED 2026-05-06)
+
+**Superseded by Phase 8 (Yashin25 Choi tableau, [B.2](#b2--clifford-channel-via-choi-tableau-yashin25)).** The original B.4 motivation was to disambiguate "state's tableau" (`PauliStabilizer`) from "gate's tableau" (proposed `CliffordTableau`). Phase 6 design review surfaced that adding *another* head goes the wrong direction — the principled answer is the Yashin25 unifier, which subsumes states, gates, channels, and measurements into a single Choi-tableau type. Keep the historical entry for trace; do not implement.
 
 ### B.5 — `IndexClifford` (KoeSmo14 §3.3 inverse map)
 | | |

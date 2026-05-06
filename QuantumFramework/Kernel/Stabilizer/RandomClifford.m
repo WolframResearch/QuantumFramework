@@ -1,6 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport[RandomClifford]
+PackageScope[RandomClifford]
 PackageScope[SampleMallows]
 
 
