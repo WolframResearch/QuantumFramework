@@ -632,6 +632,13 @@ PauliStabilizer::usage =
 "ps[prop] retrieves a property; full list via ps[\"Properties\"].\n" <>
 "References: AarGot04 (arxiv:quant-ph/0406196) tableau algorithm, KoeSmo14 (arxiv:1406.2170) random Clifford sampler, FangYing23 (arxiv:2311.03906) symbolic-phase measurement, GarMarCro12 (arxiv:1210.6646) closed-form inner product."
 
+CliffordChannel::usage =
+"CliffordChannel[<|\"UA\" -> ..., \"UB\" -> ..., \"c\" -> ..., \"InputQubits\" -> nA, \"OutputQubits\" -> nB|>] is the Choi-tableau encoding of a Clifford channel from |A| qubits to |B| qubits, per Yashin25 (arxiv:2504.14101) Section 2.3.\n" <>
+"CliffordChannel[ps] (where ps is a PauliStabilizer) treats the pure stabilizer state as a state-preparation Clifford channel; the resulting tableau has nA = 0 and UB equal to the state's stabilizer generators.\n" <>
+"CliffordChannel[\"Identity\", n] is the identity channel on n qubits.\n" <>
+"Phase 8.1 (2026-05-06) ships the head, predicate (CliffordChannelQ), and basic accessors (\"UA\", \"UB\", \"c\", \"InputQubits\", \"OutputQubits\", \"Rank\", \"Tableau\"). Composition (vector-space intersection) is Phase 8.2 (TODO).\n" <>
+"Reference: Yashin25 (arxiv:2504.14101) Section 2.3."
+
 StabilizerFrame::usage =
 "StabilizerFrame[{{c_1, ps_1}, {c_2, ps_2}, ...}] represents a superposition Sum_i c_i |s_i> of stabilizer states |s_i> with (possibly symbolic) coefficients c_i.\n" <>
 "Closes under Clifford gates -- frame[gate, q] distributes over components.\n" <>

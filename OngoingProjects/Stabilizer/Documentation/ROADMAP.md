@@ -6,9 +6,10 @@
 
 ## Overall status
 
-- **Tests:** 249 / 249 PauliStabilizer + 32 / 32 QuantumDistance + 20 / 20 Roundtrips = 301 / 301 passing.
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), **6 + 6.5 (API consolidation 10 → 4 public symbols — see "Phase 6 — DONE" below)**.
-- **Public surface:** 4 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `GraphState`, `LocalComplement`) + 6 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `InnerProduct`, `Expectation`, plus the `["Random", n]` named pattern). `StabilizerFrame` carries `["InnerProduct", other]` as well.
+- **Tests:** 249 PauliStabilizer + 32 QuantumDistance + 20 Roundtrips + 15 HybridInterop + 18 CliffordChannel = **334 / 334 passing**.
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), 6 + 6.5 (API consolidation 10 → 4 public symbols), **7.1 (hybrid interop UpValues, Pauli fast path)**, **7.2 (named Pauli channels routed via tableau)**, **8.1 (CliffordChannel scaffolding per Yashin25 §2.3 — head, predicate, state/identity constructors, accessors, composition stub)**.
+- **Public surface:** 5 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `CliffordChannel`, `GraphState`, `LocalComplement`) + 6 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `InnerProduct`, `Expectation`, plus the `["Random", n]` named pattern). `StabilizerFrame` carries `["InnerProduct", other]` as well. `CliffordChannel` is the new Phase 8.1 head; once Phase 8.2 (composition) lands, it becomes the underlying tableau type for `PauliStabilizer` / `StabilizerFrame` / measurement operations (Yashin25 unification).
+- **Branches:** `stabilizer-phases-1-4` (Phases 1–6.5), `claude/phase7-hybrid-interop` (7.1+7.2 stacked off 6.5), `claude/phase8-clifford-channel` (8.1 stacked off 7.2).
 - **Open items:** 19 (12 partial + 7 deferred). A.9 reclassified as **inherent trade-off**. A.11/A.12/A.13 added 2026-05-04 from refpage-validation findings. B.4 (`CliffordTableau` distinct head) **dropped 2026-05-06**: superseded by the proposed Phase 8 (Yashin25 Choi-tableau unifier — see B.2).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
 
@@ -263,15 +264,17 @@ Three items in the §4–§6 menus are explicitly listed as `partial` in [`synth
 | **Tests** | Round-trip closure for n = 3, 5; symbolic Q after Clifford action; closed-form amplitudes match direct computation for n ≤ 8. |
 | **Effort** | ~300 LOC + 12 tests |
 
-### B.2 — Clifford channel via Choi tableau (Yashin25)
+### B.2 — Clifford channel via Choi tableau (Yashin25) — Phase 8
 | | |
 |---|---|
 | **Reference** | Yashin25 §2.3 (arxiv:2504.14101) |
-| **Why deferred** | Most ambitious unification: subsumes pure states, mixed states, measurements, post-selection into a single `[U_A \| U_B \| c]` Boolean matrix. Composition via vector-space intersection. |
-| **What to build** | `CliffordChannel[<\|"UA" -> ..., "UB" -> ..., "c" -> ...\|>]` head + `ChannelCompose[Φ, Ψ]` via Gaussian elimination + interop with existing `QuantumChannel`. |
-| **File** | new `Stabilizer/CliffordChannel.m` |
-| **Tests** | (a) Round-trip `CliffordChannel[QuantumChannel["BitFlip", p]]` recovers the Choi matrix. (b) `ChannelCompose[Φ_BitFlip[p], Φ_BitFlip[q]] == Φ_BitFlip[p + q − 2 p q]`. (c) Pure stabilizer `CliffordChannel[ps]` produces the right `U_A`. |
-| **Effort** | ~400 LOC + 15 tests |
+| **Status** | **Phase 8.1 DONE (2026-05-06)**: head, predicate, basic constructors (state-as-channel from `PauliStabilizer`, identity channel), accessors (`UA`, `UB`, `c`, `InputQubits`, `OutputQubits`, `Rank`, `Tableau`). Phase 8.2 TODO: composition (vector-space intersection per Yashin25 §3.2/§3.3). |
+| **Phase 8.1 file** | [`Stabilizer/CliffordChannel.m`](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m) — public head `CliffordChannel`, predicate `CliffordChannelQ` (PackageScope). |
+| **Phase 8.1 tests** | [`Tests/CliffordChannel.wlt`](../../../Tests/CliffordChannel.wlt) — 18 tests covering identity-channel round-trip, PauliStabilizer-as-Choi-tableau (1Q, 5Q-code, Bell), tableau dimensions, composition stub. |
+| **Phase 8.2 (TODO)** | Implement `cc1[cc2]` composition: build the basis of `{[u_A \| v_C \| c⊕s] : ∃ u_B, [u_A\|u_B\|c] ∈ cc1 ∧ [u_B\|v_C\|s] ∈ cc2}` via Gaussian elimination on row-stacked tableaux. Plus: `CliffordChannel[qc_QuantumChannel]` for named Pauli channels (round-trip with the existing `QuantumChannel`). Plus: `Apply` semantics — `cc[ps]` for state evolution. |
+| **Phase 8.2 file** | extend [`Stabilizer/CliffordChannel.m`](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m) |
+| **Phase 8.2 tests** | (a) `CliffordChannel[QuantumChannel["BitFlip", p]]` round-trips. (b) `ChannelCompose[Φ_BitFlip[p], Φ_BitFlip[q]] == Φ_BitFlip[p + q − 2 p q]`. (c) Composition associativity. |
+| **Effort to date** | ~150 LOC kernel + 18 tests (Phase 8.1). Phase 8.2 budget: ~250 LOC + 15 tests. |
 
 ### B.3 — 24-element LocalClifford group (AndBri05)
 | | |
