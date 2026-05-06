@@ -458,8 +458,6 @@ Per the user's directive, these public exports are intentionally undocumented in
 - `Kernel/QuantumCircuitOperator/TensorNetwork.m`: `TensorNetworkQuantumCircuit`
 - `Kernel/Experimental.m`: `DecomposedQuantumStateProbabilities`, `QuantumBeamSearch`, `QuantumDiagramProcess`, `QuantumMPO`, `QuantumMPSApply`, `FeynmanBacktracking`
 
-`PauliStabilizer` is also out of scope on this branch (deferred to the Stabilizer track at `OngoingProjects/Stabilizer/`).
-
 ## 10. Common pitfalls
 
 10.1 Symbols not in the file you'd guess:
