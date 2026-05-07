@@ -38,15 +38,40 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope[stabilizerPauliLabelFromQMO]
 
-stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{op, label},
+(* Phase 7.3 (2026-05-06): extended detection. Recognized label forms:        *)
+(*   1. String matching ^-?[IXYZ]+$            -> direct Pauli string         *)
+(*   2. -Superscript[X|Y|Z|I, CircleTimes[m]]  -> "-XXXX..." (m copies)       *)
+(*   3. Superscript[X|Y|Z|I, CircleTimes[m]]   -> "XXXX..."  (m copies)       *)
+(*   4. Times[-1, str] with str a Pauli string -> "-" <> str                  *)
+(* For other label forms (PauliX/PauliY/PauliZ basis labels, etc.) the helper *)
+(* returns Missing["NonPauliBasis"] and the dispatcher falls back. Phase 7.4   *)
+(* may add a matrix-iteration detector for arbitrary 2^n by 2^n inputs.       *)
+
+stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{op, label, matched},
     op = qmo["Operator"];
     label = op["Label"];
-    Which[
-        StringQ[label] && StringMatchQ[label, RegularExpression["^-?[IXYZ]+$"]],
-            label,
-        True,
-            Missing["NonPauliBasis"]
-    ]
+
+    (* Form 1: plain Pauli string. *)
+    If[StringQ[label] && StringMatchQ[label, RegularExpression["^-?[IXYZ]+$"]],
+        Return[label]
+    ];
+
+    (* Forms 2/3/4: pattern-replace common label expressions. *)
+    matched = Replace[label, {
+        Times[-1, Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]]] :>
+            "-" <> StringJoin[ConstantArray[letter, m]],
+        Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]] :>
+            StringJoin[ConstantArray[letter, m]],
+        Times[-1, str_String /; StringMatchQ[str, RegularExpression["^[IXYZ]+$"]]] :>
+            "-" <> str,
+        _ :> $unmatchedPauliLabel
+    }];
+
+    If[matched =!= $unmatchedPauliLabel && StringQ[matched],
+        Return[matched]
+    ];
+
+    Missing["NonPauliBasis"]
 ]
 
 

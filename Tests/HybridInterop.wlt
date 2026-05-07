@@ -409,16 +409,81 @@ VerificationTest[
 
 (* Document a sharp edge of Phase 7.1's label gate: a QMO built from           *)
 (* QuantumOperator[-"XX"] does NOT carry a string-typed label "-XX" -- the      *)
-(* unary minus produces a Times[-1, "XX"] expression. The fast path is gated    *)
-(* on StringQ[label], so the dispatcher takes the legacy generic route in      *)
-(* this case (correct, but slower than ideal). Phase 7.3 may extend the gate.  *)
+(* unary minus produces a Times[-1, Superscript[X, CircleTimes[2]]] expression.*)
+(* Phase 7.3 (2026-05-06) extended the detector to recognize this expression  *)
+(* and route through the Pauli fast path.                                      *)
 VerificationTest[
     Module[{psBell, label},
         psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
         label = QuantumMeasurementOperator[QuantumOperator[-"XX"], {1, 2}]["Operator"]["Label"];
-        StringQ[label]   (* expected: False -- it is a Times expression *)
+        StringQ[label]   (* still: False -- it is a Times expression *)
     ],
     False,
     {},
     TestID -> "Phase7-QMO-NegativePauli-Label-NotStringForm"
+]
+
+
+(* ============================================================================ *)
+(* TIER J -- Phase 7.3 extended Pauli-label detection                          *)
+(*                                                                              *)
+(* QuantumOperator[-"XX"] has label Times[-1, Superscript["X", CircleTimes 2]].*)
+(* Phase 7.3 maps that to "-XX" and routes via the AG fast path.                *)
+(* ============================================================================ *)
+
+(* Detector recognizes -Superscript[X, CircleTimes[2]] as "-XX". *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[-"XX"], {1, 2}],
+    "-XX",
+    {},
+    TestID -> "Phase7.3-Detector-NegXX-Recognized"
+]
+
+(* Detector recognizes Superscript[Z, CircleTimes[3]] as "ZZZ". *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator["ZZZ"], {1, 2, 3}],
+    "ZZZ",
+    {},
+    TestID -> "Phase7.3-Detector-ZZZ-Recognized"
+]
+
+
+(* qmo[-XX measurement] on Bell state stays in tableau (no fallback message). *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+            qmo = QuantumMeasurementOperator[QuantumOperator[-"XX"], {1, 2}]},
+        Sort @ Keys @ qmo[psBell]
+    ],
+    {1},   (* -XX is the negative of the XX stabilizer; outcome is 1 *)
+    {},
+    TestID -> "Phase7.3-NegXX-on-Bell-DeterministicOutcomeOne"
+]
+
+(* qmo[XX measurement on Bell] still stays in tableau (positive Pauli). *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+            qmo = QuantumMeasurementOperator[QuantumOperator["XX"], {1, 2}]},
+        Sort @ Keys @ qmo[psBell]
+    ],
+    {0},
+    {},
+    TestID -> "Phase7.3-XX-on-Bell-DeterministicOutcomeZero"
+]
+
+
+(* ============================================================================ *)
+(* TIER K -- Phase 7.3 detector smoke-checks                                    *)
+(* ============================================================================ *)
+
+(* PauliX-basis QMO does NOT match Phase 7.3 detection (label is Symbol     *)
+(* "PauliX", not a Pauli string or Superscript form). It falls through to the *)
+(* legacy fallback path with the nonpaulibasis info message. Document that.   *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumBasis["PauliX"], {1}],
+    Missing["NonPauliBasis"],
+    {},
+    TestID -> "Phase7.3-Detector-PauliXBasis-FallsThrough"
 ]
