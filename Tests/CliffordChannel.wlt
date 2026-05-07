@@ -153,3 +153,171 @@ VerificationTest[
     {CliffordChannel::compose},
     TestID -> "Phase8.1-Compose-Stub-EmitsMessage"
 ]
+
+
+(* ============================================================================ *)
+(* TIER E -- More PauliStabilizer-as-CliffordChannel cases                     *)
+(* ============================================================================ *)
+
+(* Steane code: 7 qubits, 7 stabilizers; tableau is 7 x (0 + 14 + 1) = 7 x 15. *)
+VerificationTest[
+    Dimensions @ CliffordChannel[PauliStabilizer["SteaneCode"]]["Tableau"],
+    {7, 15},
+    TestID -> "Phase8.1-Tableau-Dimensions-Steane"
+]
+
+VerificationTest[
+    CliffordChannel[PauliStabilizer["SteaneCode"]]["Rank"],
+    7,
+    TestID -> "Phase8.1-Steane-Rank"
+]
+
+VerificationTest[
+    CliffordChannel[PauliStabilizer["9QubitCode"]]["Rank"],
+    9,
+    TestID -> "Phase8.1-9QubitCode-Rank"
+]
+
+(* Random-Clifford state of size n -> CliffordChannel of rank n. *)
+VerificationTest[
+    Block[{},
+        SeedRandom[20260507];
+        AllTrue[
+            Table[
+                With[{n = RandomInteger[{1, 5}]},
+                    CliffordChannel[PauliStabilizer["Random", n]]["Rank"] == n
+                ],
+                {15}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    TestID -> "Phase8.1-RandomClifford-RankMatchesQubits"
+]
+
+
+(* ============================================================================ *)
+(* TIER F -- Identity-channel sanity for varied n                              *)
+(* ============================================================================ *)
+
+VerificationTest[
+    Dimensions @ CliffordChannel["Identity", 5]["Tableau"],
+    {10, 21},  (* k=10, columns = 10 + 10 + 1 *)
+    TestID -> "Phase8.1-Identity-Tableau-Dimensions-5q"
+]
+
+VerificationTest[
+    Block[{},
+        AllTrue[
+            Table[
+                With[{cc = CliffordChannel["Identity", n]},
+                    cc["Rank"] == 2 n &&
+                    cc["UA"] == cc["UB"] &&
+                    cc["c"] === ConstantArray[0, 2 n]
+                ],
+                {n, 1, 6}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    TestID -> "Phase8.1-Identity-Invariants-Across-n"
+]
+
+
+(* ============================================================================ *)
+(* TIER G -- Choi-tableau invariants on the UB side                            *)
+(* ============================================================================ *)
+
+(* For a state-preparation Choi tableau, the rows of UB should be linearly     *)
+(* independent over F_2 (because they're stabilizer generators of a pure       *)
+(* state). Rank check via MatrixRank[matrix, Modulus -> 2].                    *)
+VerificationTest[
+    Block[{},
+        AllTrue[
+            {
+                CliffordChannel[PauliStabilizer[1]],
+                CliffordChannel[PauliStabilizer["5QubitCode"]],
+                CliffordChannel[PauliStabilizer["SteaneCode"]],
+                CliffordChannel @ PauliStabilizer @ QuantumCircuitOperator[
+                    {"H" -> 1, "CNOT" -> {1, 2}}
+                ]
+            },
+            MatrixRank[#["UB"], Modulus -> 2] == #["Rank"] &
+        ]
+    ],
+    True,
+    TestID -> "Phase8.1-UB-Rank-MatchesGenerators"
+]
+
+(* UB shape sanity: k rows, 2*nB columns. *)
+VerificationTest[
+    With[{cc = CliffordChannel[PauliStabilizer["5QubitCode"]]},
+        Dimensions[cc["UB"]] === {cc["Rank"], 2 cc["OutputQubits"]}
+    ],
+    True,
+    TestID -> "Phase8.1-UB-ShapeSanity"
+]
+
+
+(* ============================================================================ *)
+(* TIER H -- Properties contract                                               *)
+(* ============================================================================ *)
+
+VerificationTest[
+    SubsetQ[
+        CliffordChannel[PauliStabilizer[1]]["Properties"],
+        {"UA", "UB", "c", "InputQubits", "OutputQubits", "Rank", "Tableau"}
+    ],
+    True,
+    TestID -> "Phase8.1-Properties-Contains-Core"
+]
+
+VerificationTest[
+    CliffordChannel[PauliStabilizer[1]]["Source"],
+    "PauliStabilizer",
+    TestID -> "Phase8.1-Source-Tag-PS"
+]
+
+VerificationTest[
+    CliffordChannel["Identity", 2]["Source"],
+    "Identity",
+    TestID -> "Phase8.1-Source-Tag-Identity"
+]
+
+
+(* ============================================================================ *)
+(* TIER I -- Validity guard reuses cached HoldValid                            *)
+(* ============================================================================ *)
+
+(* Predicate hits HoldValidQ on an already-validated CliffordChannel: same     *)
+(* result on second call (consistent dispatch).                                 *)
+VerificationTest[
+    Module[{cc = CliffordChannel[PauliStabilizer[1]], q1, q2},
+        q1 = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc];
+        q2 = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc];
+        q1 === q2 === True
+    ],
+    True,
+    TestID -> "Phase8.1-Predicate-Idempotent"
+]
+
+
+(* ============================================================================ *)
+(* TIER J -- Composition stub fires for mixed identity / state inputs          *)
+(* ============================================================================ *)
+
+VerificationTest[
+    CliffordChannel["Identity", 2] @ CliffordChannel[PauliStabilizer[2]],
+    $Failed,
+    {CliffordChannel::compose},
+    TestID -> "Phase8.1-Compose-Stub-Identity-on-State"
+]
+
+VerificationTest[
+    CliffordChannel[PauliStabilizer["5QubitCode"]] @ CliffordChannel["Identity", 5],
+    $Failed,
+    {CliffordChannel::compose},
+    TestID -> "Phase8.1-Compose-Stub-State-on-Identity"
+]
