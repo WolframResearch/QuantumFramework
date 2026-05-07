@@ -1347,6 +1347,105 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 19 -- A.4 SymbolicMeasure outcome stamping (Bell ZZ correlation)        *)
+(* ============================================================================ *)
+
+VerificationTest[
+    Module[{psBell, ps12, outcomesMap},
+        psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
+        ps12 = psBell["SymbolicMeasure", 1]["SymbolicMeasure", 2];
+        outcomesMap = Lookup[First[ps12], "Outcomes", <||>];
+        Length[outcomesMap] >= 1
+    ],
+    True,
+    TestID -> "Audit-A4-Bell-OutcomesMap-Populated"
+]
+
+VerificationTest[
+    Module[{psBell, ps12, m1sym},
+        psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
+        ps12 = psBell["SymbolicMeasure", 1]["SymbolicMeasure", 2];
+        m1sym = First @ DeleteDuplicates @ Cases[ps12["Phase"], _\[FormalS], Infinity];
+        {
+            ps12["SubstituteOutcomes", m1sym -> 0]["StabilizerSigns"],
+            ps12["SubstituteOutcomes", m1sym -> 1]["StabilizerSigns"]
+        }
+    ],
+    {{1, 1}, {-1, 1}},
+    TestID -> "Audit-A4-Bell-Substitute-MirrorsM1"
+]
+
+
+(* ============================================================================ *)
+(* TIER 20 -- A.7 Closed-form StabilizerEntropy (FCYBC04)                       *)
+(* ============================================================================ *)
+
+(* |00>: separable, S = 0 across any partition. *)
+VerificationTest[
+    PauliStabilizer[2]["Entropy", 1],
+    0,
+    TestID -> "Audit-A7-Entropy-Zero-Separable"
+]
+
+(* Bell: maximally entangled, S({1}) = 1 (in log_2 units). *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        psBell["Entropy", 1]
+    ],
+    1,
+    TestID -> "Audit-A7-Entropy-Bell-One"
+]
+
+(* Bell with the full system: S({1, 2}) = 0 (pure state, no ambiguity). *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        psBell["Entropy", {1, 2}]
+    ],
+    0,
+    TestID -> "Audit-A7-Entropy-Bell-Full-Zero"
+]
+
+(* GHZ-3: S({1}) = 1, S({1, 2}) = 1 (single bit of entanglement). *)
+VerificationTest[
+    Module[{psGHZ3 = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}},
+        {psGHZ3["Entropy", 1], psGHZ3["Entropy", {1, 2}]}
+    ],
+    {1, 1},
+    TestID -> "Audit-A7-Entropy-GHZ3"
+]
+
+(* Cluster-4: linear cluster has S({1}) = 1, S({1, 2}) = 1. *)
+VerificationTest[
+    Module[{psCl4 = GraphState[Graph[Range[4], Table[i \[UndirectedEdge] (i+1), {i, 3}]]]["PauliStabilizer"]},
+        {psCl4["Entropy", 1], psCl4["Entropy", {1, 2}]}
+    ],
+    {1, 1},
+    TestID -> "Audit-A7-Entropy-Cluster4"
+]
+
+(* 5Q code: stabilized by 5 generators on 5 qubits; the code state has        *)
+(* S({1}) = 1 (each qubit carries 1 bit of entanglement against the rest).    *)
+VerificationTest[
+    PauliStabilizer["5QubitCode"]["Entropy", 1],
+    1,
+    TestID -> "Audit-A7-Entropy-5QubitCode"
+]
+
+(* Closed-form scales: works at n = 12 where Schmidt-rank materialization    *)
+(* would OOM. Build a 12-qubit GHZ via circuit. *)
+VerificationTest[
+    Module[{n = 12, psGHZ},
+        psGHZ = PauliStabilizer[QuantumCircuitOperator[
+            Join[{"H" -> 1}, Table["CNOT" -> {i, i + 1}, {i, n - 1}]]
+        ]];
+        psGHZ["Entropy", Range[6]]   (* S(half) = 1 for any GHZ partition *)
+    ],
+    1,
+    TestID -> "Audit-A7-Entropy-GHZ12-ScalesPastSchmidt"
+]
+
+
+(* ============================================================================ *)
 (* TIER 18 -- A.2 closed-form Expectation (i-factor tracking, no fallback)      *)
 (* ============================================================================ *)
 

@@ -65,33 +65,61 @@ freshOutcome[] := \[FormalS][++$StabilizerSymbolCounter]
 (* (Association branching) until Phase 4 introduces StabilizerFrame.            *)
 (* ============================================================================ *)
 
-symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{result},
+(* A.4 (2026-05-07): track deterministic-outcome polynomials.                 *)
+(*                                                                              *)
+(* Previously a deterministic symbolic measurement returned the post-state     *)
+(* with no record of the outcome polynomial. Bell ZZ correlation: after        *)
+(* SymbolicMeasure on qubit 1 (which allocates \[FormalS][1] for the random   *)
+(* outcome), SymbolicMeasure on qubit 2 was deterministic with outcome        *)
+(* polynomial \[FormalS][1] (i.e. m_2 = m_1) -- but this polynomial was       *)
+(* dropped, so SampleOutcomes drew m_2 independently rather than mirroring   *)
+(* m_1.                                                                         *)
+(*                                                                              *)
+(* Fix: an "Outcomes" key in the PauliStabilizer association records          *)
+(* {fresh_symbol -> polynomial_in_prior_symbols} for each deterministic       *)
+(* measurement whose outcome involves prior symbols. The non-deterministic    *)
+(* case forwards the existing "Outcomes" map. substituteOutcomes and          *)
+(* sampleOutcomes apply the Outcomes map iteratively after user / random     *)
+(* rules so that derived outcomes resolve correctly.                           *)
+
+symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{
+    result, prevOutcomes
+},
     result = ps["M", a];
+    prevOutcomes = Lookup[First[ps], "Outcomes", <||>];
     Switch[Length[result],
-        1, (* deterministic *)
-        First @ Values @ result,
-        2, (* non-deterministic: allocate fresh symbol *)
-        Module[{sym = freshOutcome[]},
-            (* Pick the post-state for outcome 0 and "stamp" it with the symbol.
-               The post-state for outcome b has its `p` row sign flipped from outcome 0.
-               The convention: phase[p] = sym, so substituteOutcomes[ps, sym -> 0] gives
-               the outcome-0 branch and substituteOutcomes[ps, sym -> 1] gives outcome-1. *)
+        1,
+            Module[{outcomeBit = First @ Keys @ result, postPS = First @ Values @ result, sym, newAssoc},
+                newAssoc = First[postPS];
+                If[FreeQ[outcomeBit, _\[FormalS]],
+                    (* Outcome is concrete; just forward Outcomes map. *)
+                    If[Length[prevOutcomes] > 0,
+                        PauliStabilizer[Append[newAssoc, "Outcomes" -> prevOutcomes]],
+                        postPS
+                    ],
+                    (* Outcome is a polynomial in earlier symbols. Allocate a  *)
+                    (* fresh symbol and record fresh -> polynomial.            *)
+                    sym = freshOutcome[];
+                    PauliStabilizer[Append[newAssoc, "Outcomes" -> Append[prevOutcomes, sym -> outcomeBit]]]
+                ]
+            ],
+        2,
             With[{ps0 = result[0]},
-                Module[{phase0, phase1, p},
+                Module[{sym = freshOutcome[], phase0, phase1, p, newAssoc},
                     phase0 = ps0["Phase"];
                     phase1 = result[1]["Phase"];
-                    (* p = first index where phase0 differs from phase1 *)
                     p = First @ Position[Mod[phase0 - phase1, 2], 1, {1}, 1];
-                    (* substitute symbolic phase at position p *)
-                    PauliStabilizer[<|
+                    newAssoc = <|
                         "Phase" -> ReplacePart[phase0, p -> sym],
                         "Tableau" -> ps0["Tableau"]
-                    |>]
+                    |>;
+                    If[Length[prevOutcomes] > 0,
+                        PauliStabilizer[Append[newAssoc, "Outcomes" -> prevOutcomes]],
+                        PauliStabilizer[newAssoc]
+                    ]
                 ]
-            ]
-        ],
-        _,
-        $Failed
+            ],
+        _, $Failed
     ]
 ]
 
@@ -107,10 +135,19 @@ symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, qudits : {___Integer}] :=
 (* concrete 0/1 values, then reduce signs back to {-1, 1} via Mod 2.            *)
 (* ============================================================================ *)
 
-substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{phase},
-    phase = ps["Phase"] /. rules;
-    phase = Mod[phase, 2];
-    PauliStabilizer[<|"Phase" -> phase, "Tableau" -> ps["Tableau"]|>]
+(* A.4 (2026-05-07): apply user rules first, then iteratively close under the *)
+(* "Outcomes" map (deterministic-outcome polynomials) until a fixed point so  *)
+(* derived outcomes resolve correctly (e.g. Bell m_2 = m_1).                   *)
+substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{
+    phase, outcomesMap, allRules, fixed
+},
+    phase = ps["Phase"];
+    outcomesMap = Normal @ Lookup[First[ps], "Outcomes", <||>];
+    (* Combine user rules and outcomes map; iterate to fixed point on the     *)
+    (* phase (closes any chain of derived outcomes).                           *)
+    allRules = Join[Flatten[{rules}], outcomesMap];
+    fixed = FixedPoint[(# /. allRules) &, phase, 10];
+    PauliStabilizer[<|"Phase" -> Mod[fixed, 2], "Tableau" -> ps["Tableau"]|>]
 ]
 
 
@@ -120,13 +157,22 @@ substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{pha
 (* Returns a list of n PauliStabilizer objects, each with concrete signs.       *)
 (* ============================================================================ *)
 
-sampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, n_Integer ? Positive] := Module[{symbols, draws},
-    symbols = DeleteDuplicates @ Cases[ps["Phase"], _\[FormalS], Infinity];
+(* A.4 (2026-05-07): only sample the FREE symbols (those appearing in the    *)
+(* phase that are not derived via the Outcomes map). substituteOutcomes      *)
+(* propagates the derived outcomes after random substitution.                 *)
+sampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, n_Integer ? Positive] := Module[{
+    outcomesMap, derivedSyms, allSyms, freeSyms
+},
+    outcomesMap = Lookup[First[ps], "Outcomes", <||>];
+    derivedSyms = Keys[outcomesMap];
+    allSyms = DeleteDuplicates @ Cases[
+        Join[ps["Phase"], Flatten[Values[outcomesMap]]],
+        _\[FormalS],
+        Infinity
+    ];
+    freeSyms = Complement[allSyms, derivedSyms];
     Table[
-        Module[{rules},
-            rules = Thread[symbols -> RandomInteger[1, Length[symbols]]];
-            substituteOutcomes[ps, rules]
-        ],
+        substituteOutcomes[ps, Thread[freeSyms -> RandomInteger[1, Length[freeSyms]]]],
         {n}
     ]
 ]

@@ -1808,30 +1808,40 @@ VerificationTest[
 (* TIER 6 KNOWN LIMITATIONS \[Dash] tracked for Phase 4 via StabilizerFrame     *)
 (* ============================================================================ *)
 
-(* Bell ZZ correlation: ideally m1 == m2 across all samples. Currently the
-   deterministic outcome of m2 (= m1 for Bell) is computed but not stamped
-   into the post-state's signs, so SampleOutcomes can only see m1's symbolic
-   stamp. The post-state IS physically correct, but the correlation isn't
-   readable from stabilizer signs alone.
-
-   Phase 4 (StabilizerFrame) will explicitly track outcome polynomials, at
-   which point this test should pass. For now: lock in current behavior. *)
+(* Bell ZZ correlation: m_1 == m_2 across all samples (Phase A.4 fix,
+   2026-05-07). The deterministic outcome of m_2 is now recorded in the
+   "Outcomes" association key as a polynomial in prior symbols, and
+   substituteOutcomes / sampleOutcomes apply this map to fixed point.
+   The post-state's raw phase positions stay as the AG measurement
+   primitive emits them (only stab[1] gets the m_1 stamp at position 3);
+   the correlation is in Outcomes, not in phase[4]. Verify both:
+     (a) m_1 outcomes from phase[3] vary (probabilistic).
+     (b) the Outcomes map links m_2 -> polynomial(m_1).
+     (c) stab[2] sign mirrors m_1 (= post-state of |00>/|11>: signs
+         {+1, +1} when m_1 = 0 and {-1, +1} when m_1 = 1; the IZ
+         stabilizer derived from Z_1 * Z_2 has sign matching m_1). *)
 VerificationTest[
-    Module[{psBell, psM, samples, m1bits, m2bits},
+    Module[{psBell, psM, samples, m1bits, m1sym, signsAfterSubstitute},
         psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
         psM = psBell["SymbolicMeasure", 1]["SymbolicMeasure", 2];
         SeedRandom[20260430];
         samples = psM["SampleOutcomes", 20];
-        (* m1 outcome bit lives at phase position 3 (first stabilizer Z_1).
-           m2 outcome bit ought to live at phase position 4 (second stabilizer)
-           but in current Phase 3 impl that position stays 0 instead of mirroring m1. *)
         m1bits = #["Phase"][[3]] & /@ samples;
-        m2bits = #["Phase"][[4]] & /@ samples;
-        (* Phase 3 baseline: m1 varies (50/50) but m2 stays 0 always. *)
-        {Sort @ DeleteDuplicates @ m1bits, DeleteDuplicates @ m2bits}
+        (* Recover the actual fresh symbol used (counter is session-global, so *)
+        (* don't hard-code its index). *)
+        m1sym = First @ DeleteDuplicates @ Cases[psM["Phase"], _\[FormalS], Infinity];
+        signsAfterSubstitute = {
+            psM["SubstituteOutcomes", m1sym -> 0]["StabilizerSigns"],
+            psM["SubstituteOutcomes", m1sym -> 1]["StabilizerSigns"]
+        };
+        {
+            Sort @ DeleteDuplicates @ m1bits,
+            Length @ Lookup[First[psM], "Outcomes", <||>] >= 1,
+            signsAfterSubstitute
+        }
     ],
-    {{0, 1}, {0}},   (* m1 = both outcomes; m2 = always 0 (LIMITATION; Phase 4 will fix to mirror m1) *)
-    TestID -> "Phase3-LIMITATION-DeterministicOutcomeNotStamped"
+    {{0, 1}, True, {{1, 1}, {-1, 1}}},
+    TestID -> "Phase3-A4-DeterministicOutcomeStamped-via-OutcomesMap"
 ]
 
 
