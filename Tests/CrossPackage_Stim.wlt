@@ -298,14 +298,27 @@ VerificationTest[
 (* installed at WL-test time. Re-run the python script when adding cases.     *)
 (* ============================================================================ *)
 
-stimFixturePath = FileNameJoin[{
-    DirectoryName[$InputFileName],
-    "fixtures",
-    "stim_fixtures.json"
-}]
+(* Resolve the fixture path robustly: prefer $InputFileName (set when the file *)
+(* is read via Get / TestReport), but fall back to FindFile or a search of    *)
+(* common test directories. This makes the file work under TestReport,        *)
+(* wolframscript -file, and direct evaluation contexts.                        *)
+stimFixtureCandidates = DeleteDuplicates @ DeleteCases[{
+    If[StringQ[$InputFileName] && $InputFileName =!= "",
+        FileNameJoin[{DirectoryName[$InputFileName], "fixtures", "stim_fixtures.json"}],
+        Nothing
+    ],
+    FileNameJoin[{Directory[], "Tests", "fixtures", "stim_fixtures.json"}],
+    FileNameJoin[{Directory[], "fixtures", "stim_fixtures.json"}],
+    "/Users/mohammadb/Documents/GitHub/QuantumFramework/Tests/fixtures/stim_fixtures.json"
+}, _Missing | None | Null]
+
+stimFixturePath = SelectFirst[stimFixtureCandidates, FileExistsQ, $Failed]
 
 (* Use "RawJSON" so the result is an Association (not a list of rules). *)
-stimFixtures = If[FileExistsQ[stimFixturePath], Import[stimFixturePath, "RawJSON"], $Failed]
+stimFixtures = If[StringQ[stimFixturePath] && FileExistsQ[stimFixturePath],
+    Import[stimFixturePath, "RawJSON"],
+    $Failed
+]
 
 (* Convert a Stim stabilizer string (e.g. "+XX", "-_Z", "+ZXZ_") to our
    convention: drop leading "+", convert "_" -> "I", keep leading "-". *)

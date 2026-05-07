@@ -487,3 +487,232 @@ VerificationTest[
     {},
     TestID -> "Phase7.3-Detector-PauliXBasis-FallsThrough"
 ]
+
+
+(* ============================================================================ *)
+(* TIER L -- Phase 7.4 matrix-iteration Pauli detector                          *)
+(*                                                                              *)
+(* For QMOs constructed from explicit matrices (where the symbolic label is    *)
+(* None or a non-Pauli expression), the detector iterates over 4^n * {+1,-1}  *)
+(* Pauli candidates and checks against the QMO's MatrixRepresentation. For    *)
+(* n <= 4 qubits the search is bounded.                                       *)
+(* ============================================================================ *)
+
+(* Detector recognizes single-qubit X matrix as "X". *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[PauliMatrix[1]], {1}],
+    "X",
+    {},
+    TestID -> "Phase7.4-Detector-X-Matrix-Recognized"
+]
+
+(* Detector recognizes single-qubit Y matrix as "Y" (complex matrix). *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[PauliMatrix[2]], {1}],
+    "Y",
+    {},
+    TestID -> "Phase7.4-Detector-Y-Matrix-Recognized"
+]
+
+(* Detector recognizes -Z matrix with sign. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[-PauliMatrix[3]], {1}],
+    "-Z",
+    {},
+    TestID -> "Phase7.4-Detector-NegZ-Matrix-Recognized"
+]
+
+(* Detector recognizes a 2-qubit Pauli tensor product matrix. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]], {1, 2}],
+    "XZ",
+    {},
+    TestID -> "Phase7.4-Detector-XZ-Matrix-Recognized"
+]
+
+(* 2-qubit -YY: complex multi-qubit Pauli with sign. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[-KroneckerProduct[PauliMatrix[2], PauliMatrix[2]]], {1, 2}],
+    "-YY",
+    {},
+    TestID -> "Phase7.4-Detector-NegYY-Matrix-Recognized"
+]
+
+(* 3-qubit XYZ. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[
+            QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]]],
+            {1, 2, 3}
+        ],
+    "XYZ",
+    {},
+    TestID -> "Phase7.4-Detector-XYZ-Matrix-Recognized"
+]
+
+(* Identity matrix recognized as I^n. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[IdentityMatrix[4]], {1, 2}],
+    "II",
+    {},
+    TestID -> "Phase7.4-Detector-Identity2Q-Matrix-Recognized"
+]
+
+(* Non-Pauli matrix returns Missing. The Hadamard matrix (1/Sqrt[2]){1,1;1,-1}
+   is NOT a Pauli matrix (it's Clifford but acts as a basis change, not as a
+   Pauli generator). *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[(1/Sqrt[2]) {{1, 1}, {1, -1}}], {1}],
+    Missing["NonPauliBasis"],
+    {},
+    TestID -> "Phase7.4-Detector-Hadamard-Matrix-Missing"
+]
+
+(* Off-diagonal non-Hermitian matrix (rank-1 projector |0><1|) returns Missing. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+        QuantumMeasurementOperator[QuantumOperator[{{0, 1}, {0, 0}}], {1}],
+    Missing["NonPauliBasis"],
+    {},
+    TestID -> "Phase7.4-Detector-RankOneProjector-Missing"
+]
+
+(* Direct test that the fast path is taken with no nonpaulibasis message:    *)
+(* matrix-form XX-measurement on Bell |Phi+> = (|00>+|11>)/Sqrt[2] is        *)
+(* deterministic outcome 0 (XX is a Bell stabilizer). With Phase 7.4, this   *)
+(* routes through the AG fast path. (n=2 chosen to dodge ROADMAP A.11.)      *)
+VerificationTest[
+    With[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+          qmo = QuantumMeasurementOperator[
+              QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[1]]], {1, 2}
+          ]},
+        Sort @ Keys @ qmo[psBell]
+    ],
+    {0},
+    {},
+    TestID -> "Phase7.4-MatrixXX-on-Bell-Deterministic-FastPath"
+]
+
+(* Same for matrix-form -XX measurement on Bell: -XX has eigenvalue -1 on    *)
+(* |Phi+> (Bell is +1 eigenstate of XX, so -XX is -1 -> outcome 1).         *)
+VerificationTest[
+    With[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+          qmo = QuantumMeasurementOperator[
+              QuantumOperator[-KroneckerProduct[PauliMatrix[1], PauliMatrix[1]]], {1, 2}
+          ]},
+        Sort @ Keys @ qmo[psBell]
+    ],
+    {1},
+    {},
+    TestID -> "Phase7.4-MatrixNegXX-on-Bell-Deterministic-FastPath"
+]
+
+(* Matrix-form ZZ-measurement on Bell: Bell state has stabilizers {XX, ZZ} so
+   ZZ measurement is deterministic outcome 0. Tests the matrix path matches the
+   string path. *)
+VerificationTest[
+    With[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+          qmoMat = QuantumMeasurementOperator[
+              QuantumOperator[KroneckerProduct[PauliMatrix[3], PauliMatrix[3]]], {1, 2}
+          ],
+          qmoStr = QuantumMeasurementOperator["ZZ", {1, 2}]},
+        Sort[Keys[qmoMat[psBell]]] === Sort[Keys[qmoStr[psBell]]]
+    ],
+    True,
+    {},
+    TestID -> "Phase7.4-MatrixZZ-vs-StringZZ-Equivalence"
+]
+
+(* Matrix-form anticommuting measurement on GHZ-3 (XII via matrix): XII
+   anticommutes with ZZI stabilizer of GHZ, so non-deterministic. *)
+VerificationTest[
+    With[{psGHZ = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}},
+          qmoMat = QuantumMeasurementOperator[
+              QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[0], PauliMatrix[0]]],
+              {1, 2, 3}
+          ]},
+        Sort @ Keys @ qmoMat[psGHZ]
+    ],
+    {0, 1},
+    {},
+    TestID -> "Phase7.4-MatrixXII-on-GHZ-NonDeterministic"
+]
+
+(* Cap test: bumping the search cap allows n = 5 detection.                  *)
+(* Wrap in Block to scope the override. *)
+VerificationTest[
+    Block[{Wolfram`QuantumFramework`PackageScope`$stabilizerPauliMatrixSearchMaxQubits = 5},
+        Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+            KroneckerProduct[PauliMatrix[1], PauliMatrix[2], PauliMatrix[3], PauliMatrix[1], PauliMatrix[2]],
+            5
+        ]
+    ],
+    "XYZXY",
+    {},
+    TestID -> "Phase7.4-Detector-MaxQubitCap-OverrideBlock"
+]
+
+(* Default cap rejects n = 5 with TooManyQubits. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+        KroneckerProduct @@ ConstantArray[PauliMatrix[1], 5],
+        5
+    ],
+    Missing["TooManyQubits"],
+    {},
+    TestID -> "Phase7.4-Detector-MaxQubitCap-DefaultRejects"
+]
+
+(* Cross-check: the matrix-iteration detector agrees with the string-form fast
+   path on a battery of seeded random Cliffords. *)
+VerificationTest[
+    Block[{},
+        SeedRandom[20260507];
+        AllTrue[
+            Table[
+                Module[{ps, qmoStr, qmoMat, sStr, sMat},
+                    ps = PauliStabilizer["Random", 3];
+                    qmoStr = QuantumMeasurementOperator["XYZ", {1, 2, 3}];
+                    qmoMat = QuantumMeasurementOperator[
+                        QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]]],
+                        {1, 2, 3}
+                    ];
+                    sStr = Sort[Keys[qmoStr[ps]]];
+                    sMat = Sort[Keys[qmoMat[ps]]];
+                    sStr === sMat
+                ],
+                {12}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Phase7.4-MatrixForm-vs-StringForm-Random3Q-12reps"
+]
+
+(* Phase 7.4 detector handles single-qubit Pauli matrices correctly. ROADMAP A.11
+   bug (KroneckerProduct on single element) is worked around in the helper. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[PauliMatrix[1], 1],
+    "X",
+    {},
+    TestID -> "Phase7.4-Detector-SingleQubit-Workaround"
+]
+
+(* Detector returns DimMismatch on a non-square matrix. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+        {{1, 0}, {0, 0}, {0, 0}, {0, 1}}, 1
+    ],
+    Missing["DimMismatch"],
+    {},
+    TestID -> "Phase7.4-Detector-NonSquareMatrix-DimMismatch"
+]

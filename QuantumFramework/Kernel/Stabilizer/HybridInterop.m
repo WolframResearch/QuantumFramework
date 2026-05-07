@@ -37,17 +37,93 @@ Package["Wolfram`QuantumFramework`"]
 (* ============================================================================ *)
 
 PackageScope[stabilizerPauliLabelFromQMO]
+PackageScope[stabilizerPauliFromMatrix]
+PackageScope[$stabilizerPauliMatrixSearchMaxQubits]
 
 (* Phase 7.3 (2026-05-06): extended detection. Recognized label forms:        *)
 (*   1. String matching ^-?[IXYZ]+$            -> direct Pauli string         *)
 (*   2. -Superscript[X|Y|Z|I, CircleTimes[m]]  -> "-XXXX..." (m copies)       *)
 (*   3. Superscript[X|Y|Z|I, CircleTimes[m]]   -> "XXXX..."  (m copies)       *)
 (*   4. Times[-1, str] with str a Pauli string -> "-" <> str                  *)
-(* For other label forms (PauliX/PauliY/PauliZ basis labels, etc.) the helper *)
-(* returns Missing["NonPauliBasis"] and the dispatcher falls back. Phase 7.4   *)
-(* may add a matrix-iteration detector for arbitrary 2^n by 2^n inputs.       *)
+(* Phase 7.4 (2026-05-06): for n <= 4 qubits, also iterates 4^n * {+1,-1}     *)
+(* Pauli candidates against the QMO's MatrixRepresentation. This catches QMOs *)
+(* built directly from explicit matrices (QuantumOperator[matrix, ...]) where *)
+(* the symbolic Label is None. For larger n the cost is exponential in n;     *)
+(* the cap keeps the search bounded (4^4 * 2 = 512 candidates).               *)
+(* ============================================================================ *)
 
-stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{op, label, matched},
+(* Cap on the matrix-iteration detector. PackageScope so tests/users may     *)
+(* override; default 4 keeps the search cost ~O(4^n) bounded.                *)
+$stabilizerPauliMatrixSearchMaxQubits = 4;
+
+
+(* ============================================================================ *)
+(* Helper: build a 2^n x 2^n matrix for a Pauli string.                        *)
+(*                                                                              *)
+(* Internal to Phase 7.4 (avoids the n=1 KroneckerProduct edge of the          *)
+(* InnerProduct.m helper -- ROADMAP A.11).                                      *)
+(* ============================================================================ *)
+
+stabilizerPauliMatrixFromString[s_String] := Module[{sign, body, mats},
+    {sign, body} = If[StringStartsQ[s, "-"], {-1, StringDrop[s, 1]}, {1, s}];
+    mats = Replace[Characters[body], {
+        "I" -> PauliMatrix[0],
+        "X" -> PauliMatrix[1],
+        "Y" -> PauliMatrix[2],
+        "Z" -> PauliMatrix[3]
+    }, {1}];
+    sign * If[Length[mats] == 1, First[mats], KroneckerProduct @@ mats]
+]
+
+
+(* ============================================================================ *)
+(* Phase 7.4: matrix-iteration Pauli detector.                                  *)
+(*                                                                              *)
+(* Given an explicit 2^n by 2^n matrix and a qubit count n, iterate over all   *)
+(* signed Pauli strings of length n and return the first one whose matrix      *)
+(* equals the input. Cost: O(4^n * 2 * 4^n) = O(16^n) for the comparisons.    *)
+(* Capped at $stabilizerPauliMatrixSearchMaxQubits (default 4).                *)
+(*                                                                              *)
+(* Returns:                                                                     *)
+(*   - String form like "X", "-XYZ", etc., if a match is found.                *)
+(*   - Missing["TooManyQubits"] if n > cap.                                    *)
+(*   - Missing["DimMismatch"] if the matrix doesn't have shape {2^n, 2^n}.    *)
+(*   - Missing["NoPauliMatch"] if no candidate matches.                        *)
+(* ============================================================================ *)
+
+stabilizerPauliFromMatrix[mat_, n_Integer ? Positive] /; n > $stabilizerPauliMatrixSearchMaxQubits :=
+    Missing["TooManyQubits"]
+
+stabilizerPauliFromMatrix[mat_, n_Integer ? Positive] := Module[{
+    dim = 2^n, normalized, candidates, result
+},
+    If[!MatrixQ[Normal[mat]] || Dimensions[Normal[mat]] =!= {dim, dim},
+        Return[Missing["DimMismatch"]]
+    ];
+
+    normalized = Normal[mat];
+    candidates = Tuples[{"I", "X", "Y", "Z"}, n];
+
+    result = Catch[
+        Do[
+            With[{str = StringJoin[c]},
+                With[{m = stabilizerPauliMatrixFromString[str]},
+                    If[normalized === Normal[m], Throw[str]];
+                    If[normalized === Normal[-m], Throw["-" <> str]]
+                ]
+            ],
+            {c, candidates}
+        ];
+        $unmatched
+    ];
+
+    If[StringQ[result], result, Missing["NoPauliMatch"]]
+]
+
+
+stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
+    op, label, matched, matrix, target, n, matSearch
+},
     op = qmo["Operator"];
     label = op["Label"];
 
@@ -69,6 +145,20 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{op, label
 
     If[matched =!= $unmatchedPauliLabel && StringQ[matched],
         Return[matched]
+    ];
+
+    (* Phase 7.4: matrix-iteration fallback for n <= cap. We require a square    *)
+    (* 2^n x 2^n matrix; non-square shapes (e.g. computational-basis projector  *)
+    (* stacks of shape {2^(n+1), 2^n}) signal a multi-Kraus QMO and fall        *)
+    (* through to the legacy path.                                              *)
+    target = qmo["InputOrder"];
+    n = Length[target];
+    If[1 <= n <= $stabilizerPauliMatrixSearchMaxQubits,
+        matrix = op["MatrixRepresentation"];
+        If[MatrixQ[Normal[matrix]] && Dimensions[Normal[matrix]] === {2^n, 2^n},
+            matSearch = stabilizerPauliFromMatrix[matrix, n];
+            If[StringQ[matSearch], Return[matSearch]]
+        ]
     ];
 
     Missing["NonPauliBasis"]

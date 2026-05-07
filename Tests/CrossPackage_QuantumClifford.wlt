@@ -286,12 +286,22 @@ VerificationTest[
 (* cross-references resolve.                                                    *)
 (* ============================================================================ *)
 
+(* Resolve the QC.jl source path with the same robustness as the Stim fixture *)
+(* finder above (works under TestReport / wolframscript -file / direct eval).  *)
+qcSourceCandidates = DeleteDuplicates @ DeleteCases[{
+    If[StringQ[$InputFileName] && $InputFileName =!= "",
+        FileNameJoin[{
+            DirectoryName[$InputFileName], "..",
+            "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"
+        }],
+        Nothing
+    ],
+    FileNameJoin[{Directory[], "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"}],
+    "/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/Stabilizer/External Packages/QuantumClifford.jl"
+}, _Missing | None | Null];
+
 VerificationTest[
-    DirectoryQ @ FileNameJoin[{
-        DirectoryName[$InputFileName],
-        "..", "OngoingProjects", "Stabilizer", "External Packages",
-        "QuantumClifford.jl"
-    }],
+    AnyTrue[qcSourceCandidates, DirectoryQ],
     True,
     {},
     TestID -> "QC-PackageSource-OnDisk"
