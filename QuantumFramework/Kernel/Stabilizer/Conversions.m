@@ -93,17 +93,21 @@ ps_PauliStabilizer["State" | "QuantumState"] := With[{
 ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := Block[{
     clifford = ps,
     n = ps["Qudits"],
-    gates = {},
+    gateBag = Internal`Bag[],
     destabX, destabZ, stabX, stabZ, destabP, stabP,
     append, setQubitX1, setRowX0, setRowZ0
 },
+    (* The AG canonical decomposition is a sequential greedy algorithm: each     *)
+    (* `append` mutates `clifford` (residual tableau) and Sows the gate. Genuine *)
+    (* state-machine — one of the cases the wl-native-style skill flags as       *)
+    (* legitimate `Do` use. Internal`Bag is the WL idiom for amortized append. *)
     destabX[q_] := Thread[clifford["DestabilizerX"][[All, q]] == 1];
     destabZ[q_] := Thread[clifford["DestabilizerZ"][[All, q]] == 1];
     stabX[q_]   := Thread[clifford["StabilizerX"][[All, q]] == 1];
     stabZ[q_]   := Thread[clifford["StabilizerZ"][[All, q]] == 1];
     destabP[q_] := clifford["Phase"][[q]] == 1;
     stabP[q_]   := clifford["Phase"][[n + q]] == 1;
-    append[gate_] := (clifford = clifford[gate]; AppendTo[gates, gate]);
+    append[gate_] := (clifford = clifford[gate]; Internal`StuffBag[gateBag, gate]);
     setQubitX1[q_] := Catch @ With[{x := destabX[q], z := destabZ[q]},
         If[x[[q]], Throw[0]];
         Do[If[x[[i]], append["SWAP" -> {i, q}]; Throw[0]], {i, q + 1, n}];
@@ -119,8 +123,9 @@ ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := B
     ];
     Do[setQubitX1[q]; setRowX0[q]; setRowZ0[q], {q, n}];
     Do[If[destabP[q], append["Z" -> q]]; If[stabP[q], append["X" -> q]], {q, n}];
-    gates = FixedPoint[SequenceReplace[{g_, g_} -> Nothing], gates];
-    QuantumCircuitOperator[gates]["Dagger"]
+    QuantumCircuitOperator[
+        FixedPoint[SequenceReplace[{g_, g_} -> Nothing], Internal`BagPart[gateBag, All]]
+    ]["Dagger"]
 ]
 
 

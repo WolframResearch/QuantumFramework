@@ -30,37 +30,43 @@ agSymplecticForm[n_Integer] := ArrayFlatten[{
 agEncodePauli[plist_List] := Catenate[Transpose @ Replace[plist, {0 -> {0, 0}, 1 -> {1, 0}, 2 -> {1, 1}, 3 -> {0, 1}}, {1}]]
 
 (* Find n linearly-independent rows of `bits` over F_2 by greedy rank-growth.  *)
-(* Returns indices into `bits`. *)
-agPickIndependent[bits_, n_Integer] := Module[{kept = {}, rank = 0, candidate, i, augmented},
-    Do[
-        candidate = bits[[i]];
-        augmented = Append[bits[[kept]], candidate];
-        If[MatrixRank[augmented, Modulus -> 2] > rank,
-            AppendTo[kept, i];
-            rank++;
-            If[rank >= n, Break[]]
+(* Returns indices into `bits`. Catch + Internal`Bag avoids the AppendTo/Break  *)
+(* anti-pattern; the algorithm itself is genuinely sequential (each accepted   *)
+(* index changes the rank residual seen by later candidates).                   *)
+agPickIndependent[bits_, n_Integer] := Module[{bag = Internal`Bag[]},
+    Catch @ Do[
+        With[{kept = Internal`BagPart[bag, All]},
+            If[MatrixRank[Append[bits[[kept]], bits[[i]]], Modulus -> 2] > Length[kept],
+                Internal`StuffBag[bag, i];
+                If[Length[kept] + 1 >= n, Throw[Null]]
+            ]
         ],
         {i, Length[bits]}
     ];
-    kept
+    Internal`BagPart[bag, All]
 ]
 
 (* Given n stabilizer encodings (n x 2n), construct n destabilizer encodings   *)
 (* by symplectic Gram-Schmidt: each D_i satisfies symp(D_i, S_j) = delta_ij    *)
-(* and symp(D_i, D_k) = 0 for k < i.                                            *)
-agExtendToSymplecticBasis[stabBits_, n_Integer] := Module[{J, dests = {}, A, rhs, soln, i},
-    J = agSymplecticForm[n];
-    Do[
-        A = Mod[Join[stabBits, dests] . J, 2];
-        rhs = Join[
-            Normal @ SparseArray[{i -> 1}, n],
-            ConstantArray[0, Length[dests]]
-        ];
-        soln = LinearSolve[A, rhs, Modulus -> 2];
-        AppendTo[dests, soln],
-        {i, 1, n}
-    ];
-    dests
+(* and symp(D_i, D_k) = 0 for k < i. Each D_i depends on prior D_k via the    *)
+(* augmented constraint matrix; expressed as Fold over Range[n].               *)
+agExtendToSymplecticBasis[stabBits_, n_Integer] := With[{J = agSymplecticForm[n]},
+    Fold[
+        Function[{dests, i},
+            Append[dests,
+                LinearSolve[
+                    Mod[Join[stabBits, dests] . J, 2],
+                    Join[
+                        Normal @ SparseArray[{i -> 1}, n],
+                        ConstantArray[0, Length[dests]]
+                    ],
+                    Modulus -> 2
+                ]
+            ]
+        ],
+        {},
+        Range[n]
+    ]
 ]
 
 (* Compute <psi|P|psi> for every Pauli P on n qubits. Returns a list of        *)

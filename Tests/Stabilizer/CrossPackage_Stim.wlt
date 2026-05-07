@@ -307,8 +307,10 @@ stimFixtureCandidates = DeleteDuplicates @ DeleteCases[{
         FileNameJoin[{DirectoryName[$InputFileName], "fixtures", "stim_fixtures.json"}],
         Nothing
     ],
+    FileNameJoin[{Directory[], "Tests", "Stabilizer", "fixtures", "stim_fixtures.json"}],
     FileNameJoin[{Directory[], "Tests", "fixtures", "stim_fixtures.json"}],
     FileNameJoin[{Directory[], "fixtures", "stim_fixtures.json"}],
+    "/Users/mohammadb/Documents/GitHub/QuantumFramework/Tests/Stabilizer/fixtures/stim_fixtures.json",
     "/Users/mohammadb/Documents/GitHub/QuantumFramework/Tests/fixtures/stim_fixtures.json"
 }, _Missing | None | Null]
 

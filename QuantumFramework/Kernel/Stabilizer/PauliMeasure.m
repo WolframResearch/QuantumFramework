@@ -36,7 +36,7 @@ sympInnerProduct[v1_List, v2_List, n_Integer] :=
 
 ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
     StringMatchQ[pauliString, RegularExpression["^-?[IXYZ]+$"]] := Enclose @ Module[{
-    targetSign, targetN, pVec, n, omega, gens, anticommIdx, kIdx, recoverable, groupSign, postPs
+    targetSign, targetN, pVec, n, omega, gens, anticommIdx, kIdx
 },
     {targetSign, targetN, pVec} = pauliStringParse[pauliString];
     n = ps["Qubits"];
@@ -64,45 +64,29 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
            Outcome b is random in {0, 1}. *)
         kIdx = First @ First @ anticommIdx;   (* index in 1..n (within stabilizer rows) *)
         (* Build post-measurement state for both outcomes *)
-        Module[{newGens, newSigns, ps0Tableau, ps0Signs, postState, outcome},
-            (* Replace stabilizer row kIdx with the new generator pVec.
-               All other anticommuting stabilizer rows i need to be multiplied by row kIdx
-               to make them commute with P. *)
-            #[[1]] -> #[[2]] & /@
-                Table[
-                    Module[{newSignsArr, newGensArr, newRowSign, b = bit},
-                        newGensArr = gens;
-                        newSignsArr = ps["StabilizerSigns"];
-                        (* For anticommuting i \[NotEqual] kIdx: multiply row i by row kIdx *)
-                        Do[
-                            Module[{i = anticommIdx[[idx, 1]]},
-                                If[i =!= kIdx,
-                                    newGensArr[[i]] = Mod[newGensArr[[i]] + gens[[kIdx]], 2];
-                                    (* Sign update from agPhase function for the row product *)
-                                    newSignsArr[[i]] = newSignsArr[[i]] * newSignsArr[[kIdx]]
-                                ]
-                            ],
-                            {idx, 1, Length[anticommIdx]}
-                        ];
-                        (* Set row kIdx = (-1)^b * P *)
-                        newGensArr[[kIdx]] = pVec;
-                        newSignsArr[[kIdx]] = targetSign * (1 - 2 b);
-                        (* Reconstruct PauliStabilizer; keep destabilizers unchanged but
-                           note they're no longer AG-valid; this is a known limitation. *)
-                        (* For the syndrome-extraction use case, we mainly want the Phase
-                           updates to reflect the outcome. *)
-                        With[{newPhase = Join[
-                                ps["Phase"][[;; ps["GeneratorCount"]]],
-                                (1 - newSignsArr) / 2
-                            ]},
-                            b -> PauliStabilizer[<|
-                                "Phase" -> newPhase,
-                                "Tableau" -> ps["Tableau"]
-                            |>]
-                        ]
-                    ],
-                    {bit, {0, 1}}
-                ] // Association
+        (* For each anticommuting stabilizer row i != kIdx, multiply its sign by  *)
+        (* sign(kIdx) (this is the AG row-multiplication trick). For row kIdx,    *)
+        (* set sign to targetSign * (1 - 2 b). The tableau itself is left intact: *)
+        (* this is the known limitation -- the post-state's destabilizers and    *)
+        (* stabilizer rows are NOT canonicalized via AG. Phase 4 v1 only updates *)
+        (* the SIGNS for the syndrome-extraction use case.                        *)
+        Module[{otherIdx, baseSigns},
+            otherIdx = DeleteCases[Flatten[anticommIdx, 1], kIdx];
+            baseSigns = MapAt[# * ps["StabilizerSigns"][[kIdx]] &, ps["StabilizerSigns"], List /@ otherIdx];
+            Association @ Table[
+                With[{
+                    newSigns = ReplacePart[baseSigns, kIdx -> targetSign * (1 - 2 b)]
+                },
+                    b -> PauliStabilizer[<|
+                        "Phase" -> Join[
+                            ps["Phase"][[;; ps["GeneratorCount"]]],
+                            (1 - newSigns) / 2
+                        ],
+                        "Tableau" -> ps["Tableau"]
+                    |>]
+                ],
+                {b, {0, 1}}
+            ]
         ]
     ]
 ]

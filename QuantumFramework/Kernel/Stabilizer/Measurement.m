@@ -19,17 +19,18 @@ agPhase[x1_, z1_, x2_, z2_] := Which[
     True, x2 (1 - 2 z2)
 ]
 
-(* rowsum(h, i): replace row h with row i XOR row h, tracking phase via g. *)
+(* rowsum(h, i): replace row h with row i XOR row h, tracking phase via g.    *)
+(* Per-qubit AG g-function contributions are vectorized via MapThread over     *)
+(* the qubit axis (Dimensions[t][[2]] entries) instead of an explicit Table. *)
 rowsum[{r_, t_}, h_Integer, i_Integer] :=
     {
         ReplacePart[r,
             h -> 1 - 2 Boole[
                 Mod[
-                    2 - r[[h]] - r[[i]] +
-                        Total @ Table[
-                            agPhase[t[[1, j, i]], t[[2, j, i]], t[[1, j, h]], t[[2, j, h]]],
-                            {j, 1, Dimensions[t][[2]]}
-                        ],
+                    2 - r[[h]] - r[[i]] + Total @ MapThread[
+                        agPhase,
+                        {t[[1, All, i]], t[[2, All, i]], t[[1, All, h]], t[[2, All, h]]}
+                    ],
                     4
                 ] == 2
             ]

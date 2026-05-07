@@ -195,29 +195,34 @@ cc_CliffordChannel["Properties"] := {
 (* P(row_1) * P(row_2) * ... * P(row_m) for selected rows in order.            *)
 (* ============================================================================ *)
 
-stabilizerRowSumAGPhase[U_, lambda_, n_Integer ? Positive] := Module[{
-    selected, accumRow, accumPhase = 0, q, idx, nextRow
-},
+stabilizerRowSumAGPhase[U_, lambda_, n_Integer ? Positive] := Module[{selected},
     selected = Pick[U, lambda, 1];
-    Which[
-        Length[selected] == 0, 0,
-        Length[selected] == 1, 0,
-        True,
-            accumRow = First[selected];
-            Do[
-                nextRow = selected[[idx]];
-                Do[
-                    accumPhase += agPhase[
-                        accumRow[[q]], accumRow[[n + q]],
-                        nextRow[[q]], nextRow[[n + q]]
-                    ],
-                    {q, n}
-                ];
-                accumRow = Mod[accumRow + nextRow, 2];
-                ,
-                {idx, 2, Length[selected]}
-            ];
-            Mod[accumPhase, 4]
+    If[Length[selected] <= 1,
+        0,
+        (* Fold: state = {accumPhase, accumRow}. At each step, add per-qubit AG  *)
+        (* g-function contributions (vectorized via MapThread) and XOR the rows. *)
+        Mod[
+            First @ Fold[
+                Function[{state, nextRow},
+                    With[{
+                        accumPhase = state[[1]],
+                        accumRow = state[[2]]
+                    },
+                        {
+                            accumPhase + Total @ MapThread[
+                                agPhase,
+                                {accumRow[[;; n]], accumRow[[n + 1 ;;]],
+                                 nextRow[[;; n]], nextRow[[n + 1 ;;]]}
+                            ],
+                            Mod[accumRow + nextRow, 2]
+                        }
+                    ]
+                ],
+                {0, First[selected]},
+                Rest[selected]
+            ],
+            4
+        ]
     ]
 ]
 

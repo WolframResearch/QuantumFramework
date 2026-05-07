@@ -289,6 +289,15 @@ VerificationTest[
 (* Resolve the QC.jl source path with the same robustness as the Stim fixture *)
 (* finder above (works under TestReport / wolframscript -file / direct eval).  *)
 qcSourceCandidates = DeleteDuplicates @ DeleteCases[{
+    (* In Tests/Stabilizer/, walk two levels up to repo root. *)
+    If[StringQ[$InputFileName] && $InputFileName =!= "",
+        FileNameJoin[{
+            DirectoryName[$InputFileName], "..", "..",
+            "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"
+        }],
+        Nothing
+    ],
+    (* Pre-move location (Tests/), one level up. *)
     If[StringQ[$InputFileName] && $InputFileName =!= "",
         FileNameJoin[{
             DirectoryName[$InputFileName], "..",
