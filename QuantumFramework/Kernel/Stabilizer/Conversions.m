@@ -143,8 +143,13 @@ ps_PauliStabilizer["Operator" | "QuantumOperator"] := With[{
 
 qo_QuantumOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qo], ps]
 QuantumState[ps_PauliStabilizer] ^:= ps["State"]
-QuantumCircuitOperator[ps_PauliStabilizer] := ps["Circuit"]
-QuantumOperator[ps_PauliStabilizer] := ps["Circuit"]["QuantumOperator"]
+(* These two were `:=` (DownValue) attempts on host-paclet protected symbols   *)
+(* and silently failed to attach. Converted to `^:=` UpValues on              *)
+(* _PauliStabilizer 2026-05-07 (audit finding from Tests/Stabilizer/           *)
+(* Connections.wlt). UpValues attach to the inner head's UpValues, not the    *)
+(* outer Protected symbol's DownValues, so they fire reliably.                *)
+QuantumCircuitOperator[ps_PauliStabilizer] ^:= ps["Circuit"]
+QuantumOperator[ps_PauliStabilizer] ^:= ps["Circuit"]["QuantumOperator"]
 
 (* Note: qmo_QuantumMeasurementOperator[ps_PauliStabilizer] used to be defined  *)
 (* here as PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]. Phase 7.1     *)

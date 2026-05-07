@@ -406,28 +406,29 @@ With[{a = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}
 
 ## Connections to other QuantumFramework heads
 
-PauliStabilizer participates in the following cross-head dispatch points. Audited against the live kernel: dispatch type **UpValue** on `_PauliStabilizer` works reliably; DownValues attempting to attach to host-paclet symbols (`QuantumOperator`, `QuantumCircuitOperator`) **do not** take effect because those symbols are Protected — use the head's own accessor (`ps["Operator"]`, `ps["Circuit"]`) instead.
+PauliStabilizer participates in 9 cross-head dispatch points. All are **UpValues on `_PauliStabilizer`** (or DownValues on `_CliffordChannel` for `cc[ps]`); none are DownValues on the host-paclet protected symbols. UpValues bypass the `Protect` restriction and fire reliably.
 
-| Pattern | Type | Defined in | Status | Effect |
-|---|---|---|---|---|
-| `QuantumState[ps]` | UpValue | [Conversions.m:145](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | ✅ active | Same as `ps["State"]` |
-| `qo_QuantumOperator[ps]` | UpValue | [Conversions.m:144](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | ✅ active | `PauliStabilizerApply[QuantumCircuitOperator[qo], ps]` (e.g. `QuantumOperator["H", 1] @ ps`) |
-| `qmo_QuantumMeasurementOperator[ps]` | UpValue | [HybridInterop.m:193](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m) | ✅ active | Pauli fast path or `::nonpaulibasis` fallback (see [Hybrid interop](#hybrid-interop-phase-7)) |
-| `qc_QuantumChannel[ps]` | UpValue | [HybridInterop.m:260](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m) | ✅ active | Tableau-mixture for named Pauli channels, dense fallback otherwise |
-| `cc_CliffordChannel[ps]` | DownValue on `_CliffordChannel` | [CliffordChannel.m:451](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m) | ✅ active | Identity / state-prep / dim-matched composition (see [CliffordChannel](#cliffordchannel)) |
-| `QuantumTensorProduct[ps_a, ps_b]` | DownValue | [Compose.m:57](../../../QuantumFramework/Kernel/Stabilizer/Compose.m) | ✅ active | Block-diagonal tensor merge |
-| `QuantumCircuitOperator[…][Method -> "Stabilizer"]` | Method dispatch | (host paclet) | ✅ active | Routes through `PauliStabilizerApply` |
-| `QuantumOperator[ps]` | DownValue (declared) | [Conversions.m:147](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | ⚠️ silently inactive (protected symbol) | Use `ps["Operator"]` or `ps["Circuit"]["QuantumOperator"]` |
-| `QuantumCircuitOperator[ps]` | DownValue (declared) | [Conversions.m:146](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | ⚠️ silently inactive (protected symbol) | Use `ps["Circuit"]` |
+| Pattern | Type | Defined in | Effect |
+|---|---|---|---|
+| `QuantumState[ps]` | UpValue on `_PauliStabilizer` | [Conversions.m:145](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | Same as `ps["State"]` |
+| `QuantumOperator[ps]` | UpValue on `_PauliStabilizer` | [Conversions.m:147](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | Same as `ps["Circuit"]["QuantumOperator"]` |
+| `QuantumCircuitOperator[ps]` | UpValue on `_PauliStabilizer` | [Conversions.m:146](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | Same as `ps["Circuit"]` |
+| `qo_QuantumOperator[ps]` | UpValue on `_PauliStabilizer` | [Conversions.m:144](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m) | `PauliStabilizerApply[QuantumCircuitOperator[qo], ps]` (e.g. `QuantumOperator["H", 1] @ ps`) |
+| `qmo_QuantumMeasurementOperator[ps]` | UpValue on `_PauliStabilizer` | [HybridInterop.m:193](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m) | Pauli fast path or `::nonpaulibasis` fallback (see [Hybrid interop](#hybrid-interop-phase-7)) |
+| `qc_QuantumChannel[ps]` | UpValue on `_PauliStabilizer` | [HybridInterop.m:260](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m) | Tableau-mixture for named Pauli channels, dense fallback otherwise |
+| `cc_CliffordChannel[ps]` | DownValue on `_CliffordChannel` | [CliffordChannel.m:451](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m) | Identity / state-prep / dim-matched composition (see [CliffordChannel](#cliffordchannel)) |
+| `QuantumTensorProduct[ps_a, ps_b]` | DownValue | [Compose.m:57](../../../QuantumFramework/Kernel/Stabilizer/Compose.m) | Block-diagonal tensor merge |
+| `QuantumCircuitOperator[…][Method -> "Stabilizer"]` | Method dispatch | (host paclet) | Routes through `PauliStabilizerApply` |
 
 ```wolfram
-QuantumState[ps]                                   (* via UpValue *)
-QuantumOperator["H", 1] @ ps                       (* via UpValue *)
-QuantumCircuitOperator[…][Method -> "Stabilizer"]  (* via Method dispatch *)
-
-ps["Circuit"]                  (* not QuantumCircuitOperator[ps] *)
-ps["Operator"]                 (* not QuantumOperator[ps] *)
+QuantumState[ps]                                   (* same as ps["State"] *)
+QuantumOperator[ps]                                (* same as ps["Circuit"]["QuantumOperator"] *)
+QuantumCircuitOperator[ps]                         (* same as ps["Circuit"] *)
+QuantumOperator["H", 1] @ ps                       (* gate dispatch *)
+QuantumCircuitOperator[…][Method -> "Stabilizer"]  (* Method dispatch *)
 ```
+
+> **Implementation note (2026-05-07).** Two of these dispatch rules (`QuantumOperator[ps]` and `QuantumCircuitOperator[ps]`) were originally written with `:=` (DownValue) at [Conversions.m:146-147](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m). DownValues against the host-paclet `Protected` symbols silently failed to attach, so the rules never fired. They were converted to `^:=` (UpValue on `_PauliStabilizer`) on 2026-05-07. UpValues bypass the `Protected` restriction because they live in the inner-head's UpValues table, not in the outer symbol's DownValues table.
 
 ## Internals (PackageScope)
 

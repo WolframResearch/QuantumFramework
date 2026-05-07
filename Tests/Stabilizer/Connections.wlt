@@ -119,14 +119,13 @@ VerificationTest[
     TestID -> "Conn2-psOperator-MatchesCircuitQO-WhenPhaseIsOne"
 ]
 
-(* Document the inactive DownValue: QuantumOperator[ps] does NOT route through *)
-(* the Stabilizer DownValue (the host symbol is protected). The result is a    *)
-(* malformed QuantumOperator wrapping the PauliStabilizer's tableau as a value.*)
-(* This test asserts the documented contract: use ps["Operator"] instead.       *)
+(* Phase 8.4 (2026-05-07): the DownValue at Conversions.m:147 was originally  *)
+(* `:=` and silently failed to attach (host symbol Protected). Converted to    *)
+(* `^:=` UpValue on _PauliStabilizer; it now fires correctly.                  *)
 VerificationTest[
     matEqQO[QuantumOperator[$psBell], $psBell["Circuit"]["QuantumOperator"]],
-    False,   (* Documents the gotcha; promote to True if the DownValue is fixed. *)
-    TestID -> "Conn2-QuantumOperatorOfPS-DownValue-Inactive-Documented"
+    True,
+    TestID -> "Conn2-QuantumOperatorOfPS-UpValue-Active"
 ]
 
 (* Round-trip via the working accessor: ps -> ps["Operator"] -> PS reproduces *)
@@ -156,11 +155,12 @@ VerificationTest[
     TestID -> "Conn3-psCircuit-IsQuantumCircuitOperator"
 ]
 
-(* Document the inactive DownValue. *)
+(* Phase 8.4 (2026-05-07): same UpValue conversion as Conn2 -- this rule now  *)
+(* fires correctly via the _PauliStabilizer UpValue.                           *)
 VerificationTest[
     QuantumCircuitOperator[$psBell] === $psBell["Circuit"],
-    False,   (* Documents the gotcha; promote to True if the DownValue is fixed. *)
-    TestID -> "Conn3-QuantumCircuitOperatorOfPS-DownValue-Inactive-Documented"
+    True,
+    TestID -> "Conn3-QuantumCircuitOperatorOfPS-UpValue-Active"
 ]
 
 (* Round-trip via the working accessor: ps -> ps["Circuit"] -> PauliStabilizer *)
