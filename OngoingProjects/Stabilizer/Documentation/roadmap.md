@@ -1,17 +1,23 @@
 # Stabilizer subsystem roadmap
 
-> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem. Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-07 (after api.md rewrite + deletion of `synthesis-implementation.md` / `verify-*.wls`). Branch: `stabilizer-phases-1-4`.
+> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem. Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-07 (A-series sweep: A.1 / A.2 / A.3 / A.4 / A.7 / A.8(part) / A.10 / A.11 / A.12 / A.13 resolved). Branch: `stabilizer-phases-1-4`.
 
-> **Audit-doc context.** This document complements [`api.md`](api.md) (per-function reference for the current public surface) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md). Authoritative verification = [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) (684 tests; the `synthesis-implementation.md` capability tour and `verify-*.wls` doc-block re-runners were retired 2026-05-07 — they were superseded by `Tests/Stabilizer/AuditMatrix.wlt` plus the rest of the test suite, which use `VerificationTest` for proper assertions).
+> **Audit-doc context.** This document complements [`api.md`](api.md) (per-function reference for the current public surface) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md). Authoritative verification = [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) (775 tests; the `synthesis-implementation.md` capability tour and `verify-*.wls` doc-block re-runners were retired 2026-05-07 — they were superseded by `Tests/Stabilizer/AuditMatrix.wlt` plus the rest of the test suite, which use `VerificationTest` for proper assertions).
 
 ## Overall status
 
-- **Tests:** 249 PauliStabilizer + 32 QuantumDistance + 20 Roundtrips + 52 HybridInterop + 76 CliffordChannel + 41 Correctness + 44 CrossPackage_Stim + 15 CrossPackage_QuantumClifford + **155 AuditMatrix** = **684 / 684 passing**. Tests reorganized into [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) (subset moved 2026-05-06; only `QuantumDistance.wlt` remains at top level).
-- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), 6 + 6.5 (API consolidation 10 → 4 public symbols), 7.1 (hybrid interop UpValues, Pauli fast path), 7.2 (named Pauli channels routed via tableau), 7.3 (extended Pauli-label detection: Times[-1, ...]/Superscript forms), 7.4 (matrix-iteration Pauli detector), 8.1 (CliffordChannel scaffolding per Yashin25 §2.3), 8.2 (CliffordChannel composition via Boolean null space + cc[ps] state evolution + QC->CC round-trip), **8.3 (AG row-sum phase tracking + Φ⁺ contraction sign in composition)**, **WL-idiom audit (2026-05-06): replaced Do/AppendTo with Internal`Bag, Fold, and MapThread in Constructors.m / Conversions.m / CliffordChannel.m / Measurement.m; removed unused Module variables in PauliMeasure.m; full coverage matrix in AuditMatrix.wlt**.
-- **Public surface:** 5 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `CliffordChannel`, `GraphState`, `LocalComplement`) + 6 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `InnerProduct`, `Expectation`, plus the `["Random", n]` named pattern). `StabilizerFrame` carries `["InnerProduct", other]` as well. `CliffordChannel` is the new Phase 8.1 head; once Phase 8.2 (composition) lands, it becomes the underlying tableau type for `PauliStabilizer` / `StabilizerFrame` / measurement operations (Yashin25 unification).
-- **Branches:** `stabilizer-phases-1-4` (Phases 1–6.5), `claude/phase7-hybrid-interop` (7.1+7.2 stacked off 6.5), `claude/phase8-clifford-channel` (8.1 stacked off 7.2).
-- **Open items:** 19 (12 partial + 7 deferred). A.9 reclassified as **inherent trade-off**. A.11/A.12/A.13 added 2026-05-04 from refpage-validation findings. B.4 (`CliffordTableau` distinct head) **dropped 2026-05-06**: superseded by the proposed Phase 8 (Yashin25 Choi-tableau unifier — see B.2).
-- **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
+- **Tests:** 244 PauliStabilizer + 32 QuantumDistance + 20 Roundtrips + 52 HybridInterop + 76 CliffordChannel + 41 Correctness + 44 CrossPackage_Stim + 15 CrossPackage_QuantumClifford + 52 Connections + **199 AuditMatrix** = **775 / 775 passing**.
+- **Phases done:** 1 (refactor + tests), 2 (hygiene), 3 (symbolic phases), 4 (frame + inner products + Pauli measurement), 5a (graph state + LC), 5b (companion MD), 5c (QO/QS round-trip + post-mortem + cross-module audit), 6 + 6.5 (API consolidation 10 → 4 public symbols), 7.1 (hybrid interop UpValues, Pauli fast path), 7.2 (named Pauli channels routed via tableau), 7.3 (extended Pauli-label detection), 7.4 (matrix-iteration Pauli detector), 8.1 (CliffordChannel scaffolding per Yashin25 §2.3), 8.2 (CliffordChannel composition via Boolean null space + cc[ps] state evolution), **8.3 (AG row-sum phase tracking + Φ⁺ contraction sign)**, **8.4 (cross-head DV→UV conversion: QuantumOperator[ps] / QuantumCircuitOperator[ps] dispatch fires)**, **WL-idiom audit (2026-05-06)**, **A-series sweep (2026-05-07): A.1, A.2, A.3, A.4, A.7, A.8 (partial), A.10, A.11, A.12, A.13 resolved (10 / 13 A-items closed)**.
+- **Public surface:** 5 top-level symbols (`PauliStabilizer`, `StabilizerFrame`, `CliffordChannel`, `GraphState`, `LocalComplement`) + 1 predicate (`StabilizerStateQ`, A.8) + 7 method-grade operations on `PauliStabilizer` (`SymbolicMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `InnerProduct`, `Expectation`, **`Entropy` (A.7)**, plus the `["Random", n]` named pattern). `StabilizerFrame` carries `["InnerProduct", other]` as well.
+- **Open items remaining (3 of 13):**
+  - **A.5** — Reid24 / Winderl23 optimal Clifford circuit synthesis (research-grade algorithm work, ~250 LOC + 8 tests). Existing AG synthesis remains correct, just non-optimal. Scoped for a follow-up PR.
+  - **A.6** — `LocalComplement` VOP tracking. Depends on B.3 (24-element LocalClifford table). Scoped for a follow-up PR alongside B.3.
+  - **A.8 (partial)** — `CliffordTableau` distinct head and `StabilizerRankDecomposition` automatic Bravyi-2016 path. ~300 LOC + 12 tests; warrants a separate phase. The first sub-item (`StabilizerStateQ` public symbol) is **DONE**.
+- **A.9** is an **inherent trade-off** (closed; documented as contract).
+- **B.4** (`CliffordTableau` distinct head) was **dropped** 2026-05-06 (superseded by Phase 8 / `CliffordChannel`).
+- **Synthesis priority hits:** 5 / 10 ✅, 2 / 10 ⚠️ partial, 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
+
+> **Lesson (2026-05-07, A-series sweep).** Of 12 partial items audited, 10 resolved: most "Phase X v1 partial" items had a clean polynomial-time replacement that was simply unwritten in v1 (closed-form inner-product magnitude per GarMarCro12 §3, AG i-factor tracking via the existing `agPhase` helper, FCYBC04 entropy as a 5-line rank computation, deterministic-outcome stamping via an Outcomes Association key). One was a kernel typo (single-qubit `KroneckerProduct`). One was a name-collision-style cascade in `Dagger` that resolved with all-+1 inner-PS signs + a singular-matrix guard. Two were 200+ LOC algorithm research items (A.5 Reid/Winderl, A.6 / B.3 LocalClifford 24-element table); those were scoped for follow-up. Process note: re-audit "deferred for v1" claims yearly — many can be retired once the per-feature phase is complete and the next maintainer has a clearer picture.
 
 > **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`postmortem.md`](postmortem.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
 
@@ -102,7 +108,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 
 ## A. Partial implementations (work-but-incomplete)
 
-### A.1 — `ps["InnerProduct", other]` closed-form (`O(n³)`)
+### A.1 — **DONE 2026-05-07** — `ps["InnerProduct", other]` closed-form (`O(n³)`)
 | | |
 |---|---|
 | **Current** | Direct vector materialization, `O(2ⁿ)` memory + time. Works for `n ≤ ~8`. |
@@ -114,7 +120,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 | **Tests to add** | n = 10, 12 cases (where direct-vector OOMs); cross-check vs. direct-vector for n ≤ 8 with seeded `RandomClifford` |
 | **Effort** | ~150 LOC kernel + ~10 tests |
 
-### A.2 — `ps["Expectation", pauli]` AG-phase i-factor tracking
+### A.2 — **DONE 2026-05-07** — `ps["Expectation", pauli]` AG-phase i-factor tracking
 | | |
 |---|---|
 | **Current** | When `P ∈ ⟨g_i⟩` (commutes with all stabilizers but is in their span), falls back to direct vector for `<P>` because the `𝔽₂`-decomposition misses the `i`-factor from `Y = iXZ`. |
@@ -126,7 +132,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 | **Tests to add** | `Phase6-Expectation-YY-Closed-Form-NoFallback` — no direct-vector fallback issued. Run on n = 8, 10 cases. |
 | **Effort** | ~50 LOC + ~5 tests |
 
-### A.3 — `["Dagger"]["Dagger"]` infinite recursion (latent bug from Phase 1)
+### A.3 — **DONE 2026-05-07** — `["Dagger"]["Dagger"]` infinite recursion (latent bug from Phase 1)
 | | |
 |---|---|
 | **Current** | `ps["Dagger"]["Dagger"]` does NOT terminate; hits `TerminatedEvaluation["IterationLimit"]`. Discovered during Phase 1 integration check (Tests/PauliStabilizer.wlt does not currently exercise `Dagger ∘ Dagger` — only single `["Dagger"]`). |
@@ -138,7 +144,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 | **Tests to add** | `Roundtrip-DaggerInvolution` — `ps["Dagger"]["Dagger"] === ps` for Bell, GHZ-3, 5Q (use the canonical-form equality of the post-Dagger-Dagger tableau against the original). |
 | **Effort** | ~30 LOC + 3 tests |
 
-### A.4 — `StabilizerMeasure` deterministic-outcome correlation
+### A.4 — **DONE 2026-05-07** — `StabilizerMeasure` deterministic-outcome correlation
 | | |
 |---|---|
 | **Current** | `StabilizerMeasure` returns the post-state but DROPS the deterministic outcome polynomial. `SampleOutcomes` cannot recover Bell ZZ correlation from stabilizer signs alone. Tracked in `Tier 6 KNOWN LIMITATIONS` of `Tests/PauliStabilizer.wlt` (`Phase3-LIMITATION-DeterministicOutcomeNotStamped`). |
@@ -174,7 +180,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 | **Tests to add** | LC followed by `["PauliStabilizer"]` reproduces the same stabilizer state up to a known local Clifford (cross-check against direct construction). |
 | **Effort** | ~30 LOC after item B.3 + 4 tests |
 
-### A.7 — `StabilizerEntanglement[ψ, partition]` via Schmidt rank only
+### A.7 — **DONE 2026-05-07** — `StabilizerEntanglement[ψ, partition]` via Schmidt rank only
 | | |
 |---|---|
 | **Current** | Bipartite entanglement entropy computed via `MatrixRank @ ArrayReshape[ps["State"]["StateVector"], {2^|A|, 2^|B|}]`. Cost `O(2ⁿ)` memory. Works for `n ≤ ~10`. |
@@ -203,7 +209,7 @@ The retired `synthesis-implementation.md` flagged three items in the §4–§6 m
 | **Future option** | If exact phase tracking through gate updates is wanted, a separate kernel option (`Method -> "PhaseAware"` or similar) could opt into the `O(2ⁿ)` materialization on every update. Out of scope for the current AG-tableau design. |
 | **Effort to upgrade to opt-in** | ~80 LOC + 15 tests, *if* the design choice is made. |
 
-### A.10 — Generator order differs between default-register and QS-derived paths
+### A.10 — **DONE 2026-05-07** — Generator order differs between default-register and QS-derived paths
 | | |
 |---|---|
 | **Current** | `QuantumCircuitOperator[circ][Method -> "Stabilizer"]["Stabilizers"]` returns generators in one order; `QuantumCircuitOperator[circ][qs_QuantumState, Method -> "Stabilizer"]["Stabilizers"]` returns the same group in a different order when `qs` has fewer qubits than the circuit and gets auto-padded. The mathematical contract (which group) is honored but the list-equality of the result depends on insertion order during pad. The `Integration-MethodStabilizer-ExplicitState` test (Tier 4) had to be made set-wise with `Sort` to accommodate this. |
@@ -215,7 +221,7 @@ The retired `synthesis-implementation.md` flagged three items in the §4–§6 m
 | **Tests to add** | revert `Integration-MethodStabilizer-ExplicitState` to list-equality once order is canonical |
 | **Effort** | ~50 LOC + 0 new tests |
 
-### A.11 — `pauliStringMatrix` fails on single-qubit input
+### A.11 — **DONE 2026-05-07** — `pauliStringMatrix` fails on single-qubit input
 | | |
 |---|---|
 | **Current** | `StabilizerExpectation[PauliStabilizer[1], "Z"]` (and `"X"`, `"Y"`) on a 1-qubit input falls into the direct-vector fallback path, where `pauliStringMatrix` calls `KroneckerProduct @@ {single}`. With a one-element list, `KroneckerProduct` throws `KroneckerProduct::argmu` and the result becomes an unevaluated `Re[…KroneckerProduct[…]…]` instead of `1`. |
@@ -227,7 +233,7 @@ The retired `synthesis-implementation.md` flagged three items in the §4–§6 m
 | **Tests to add** | `Phase4-Expectation-OneQubit-Z` and similar 1-qubit cases (need to be added; previously only multi-qubit tested). |
 | **Effort** | ~5 LOC + 6 tests |
 
-### A.12 — `ps["Stabilizers"]` formatter throws `StringJoin::string` on symbolic phases
+### A.12 — **DONE 2026-05-07** — `ps["Stabilizers"]` formatter throws `StringJoin::string` on symbolic phases
 | | |
 |---|---|
 | **Current** | After a `StabilizerMeasure`, the resulting `PauliStabilizer` has phase entries like `\[FormalS][k]` or `1 - 2 \[FormalS][k]`. Reading `ps["Stabilizers"]` then calls `PauliForm`, which tries `StringJoin[1 - 2 \[FormalS][k], "Z"]` and fails with `StringJoin::string`. The user can still read `ps["Phase"]` but the human-readable string list is broken until `SubstituteOutcomes` is applied. |
@@ -239,7 +245,7 @@ The retired `synthesis-implementation.md` flagged three items in the §4–§6 m
 | **Tests to add** | `Phase3-Stabilizers-FormatsSymbolic` — assert `ps["Stabilizers"]` does not throw `StringJoin::string` after a `StabilizerMeasure`. |
 | **Effort** | ~10 LOC + 2 tests |
 
-### A.13 — `GraphState[ps_PauliStabilizer]` silently returns edgeless graph for non-graph-form input
+### A.13 — **DONE 2026-05-07** — `GraphState[ps_PauliStabilizer]` silently returns edgeless graph for non-graph-form input
 | | |
 |---|---|
 | **Current** | `GraphState[PauliStabilizer[{"XXX", "ZZI", "IZZ"}]]` (a GHZ stabilizer set) silently returns an edgeless 3-vertex graph. The constructor only handles graph-form stabilizers (`X_i ⊗ Π_{j ∈ N(i)} Z_j`); other inputs return an empty edge set without warning. Users discovering this think the conversion succeeded. |
