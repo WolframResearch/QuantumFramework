@@ -108,6 +108,17 @@ PauliStabilizer[qs_QuantumState] := Enclose @ Module[
     stabBits = encodings[[genIdx]];
     stabSigns = signs[[genIdx]];
 
+    (* A.10 (2026-05-07): canonicalize generator order to match the integer-  *)
+    (* constructor convention PauliStabilizer[n] = {Z_1, Z_2, ..., Z_n}.     *)
+    (* Sort by FirstPosition[row, 1] ascending (= row whose active bit is at *)
+    (* the lowest-index qubit comes first).                                   *)
+    With[{order = Ordering[
+        FirstPosition[#, 1, {2 n + 1}] & /@ stabBits
+    ]},
+        stabBits = stabBits[[order]];
+        stabSigns = stabSigns[[order]]
+    ];
+
     destBits = agExtendToSymplecticBasis[stabBits, n];
     destSigns = ConstantArray[1, n];
 

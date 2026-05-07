@@ -48,6 +48,7 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumMeasurementSimulation",
           "Wolfram`QuantumFramework`QuantumEvolve",
           "Wolfram`QuantumFramework`PauliStabilizer",
+          "Wolfram`QuantumFramework`StabilizerStateQ",
           "Wolfram`QuantumFramework`StabilizerFrame",
           "Wolfram`QuantumFramework`CliffordChannel",
           "Wolfram`QuantumFramework`GraphState",

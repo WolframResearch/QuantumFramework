@@ -1446,6 +1446,50 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 21 -- A.10 generator-order canonicalization                             *)
+(* ============================================================================ *)
+
+(* Default-register and QS-derived paths now agree on stabilizer order.       *)
+VerificationTest[
+    PauliStabilizer[QuantumState["00"]]["Stabilizers"] === PauliStabilizer[2]["Stabilizers"],
+    True,
+    TestID -> "Audit-A10-QS-vs-Int-Stabilizers-Order"
+]
+
+VerificationTest[
+    PauliStabilizer[QuantumState["000"]]["Stabilizers"] === PauliStabilizer[3]["Stabilizers"],
+    True,
+    TestID -> "Audit-A10-QS-vs-Int-Stabilizers-3qubit"
+]
+
+VerificationTest[
+    Module[{viaDefault, viaQS},
+        viaDefault = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][Method -> "Stabilizer"]["Stabilizers"];
+        viaQS = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][QuantumState["00"], Method -> "Stabilizer"]["Stabilizers"];
+        viaDefault === viaQS
+    ],
+    True,
+    TestID -> "Audit-A10-MethodStabilizer-Default-vs-QS-Equal-Ordered"
+]
+
+
+(* ============================================================================ *)
+(* TIER 22 -- A.8 StabilizerStateQ public symbol                                *)
+(* ============================================================================ *)
+
+VerificationTest[StabilizerStateQ[PauliStabilizer[2]], True, TestID -> "Audit-A8-StabilizerStateQ-PS-True"]
+VerificationTest[StabilizerStateQ[PauliStabilizer["5QubitCode"]], True, TestID -> "Audit-A8-StabilizerStateQ-5Q-True"]
+VerificationTest[StabilizerStateQ[StabilizerFrame[PauliStabilizer[1]]], True, TestID -> "Audit-A8-StabilizerStateQ-Frame1-True"]
+VerificationTest[StabilizerStateQ[42], False, TestID -> "Audit-A8-StabilizerStateQ-Integer-False"]
+VerificationTest[StabilizerStateQ[QuantumState["00"]], False, TestID -> "Audit-A8-StabilizerStateQ-QS-RejectsByDefault"]
+VerificationTest[
+    StabilizerStateQ[StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]],
+    False,
+    TestID -> "Audit-A8-StabilizerStateQ-MultiCompFrame-False"
+]
+
+
+(* ============================================================================ *)
 (* TIER 18 -- A.2 closed-form Expectation (i-factor tracking, no fallback)      *)
 (* ============================================================================ *)
 

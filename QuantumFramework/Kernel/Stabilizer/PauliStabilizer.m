@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport[PauliStabilizer]
+PackageExport[StabilizerStateQ]
 PackageScope[PauliStabilizerApply]
 PackageScope[PauliStabilizerQ]
 PackageScope[ConcretePauliStabilizerQ]
@@ -46,6 +47,24 @@ ConcretePauliStabilizerQ[PauliStabilizer[KeyValuePattern[{
 }] /; Length[signs] == Dimensions[tableau][[3]] && MatchQ[signs, {(-1 | 1) ...}]]] := True
 
 ConcretePauliStabilizerQ[_] := False
+
+
+(* ============================================================================ *)
+(* A.8 (2026-05-07): StabilizerStateQ public symbol.                            *)
+(*                                                                              *)
+(* True if `expr` represents an n-qubit stabilizer state. Accepts:              *)
+(*   - PauliStabilizer that satisfies the structural predicate                 *)
+(*   - StabilizerFrame whose components all reduce to a single PauliStabilizer  *)
+(*     (rank-1 case)                                                             *)
+(*                                                                              *)
+(* Rejects QuantumState by default (stabilizer-state detection from a state    *)
+(* vector requires 4^n tomography; use PauliStabilizer[qs] to attempt          *)
+(* detection explicitly).                                                       *)
+(* ============================================================================ *)
+
+StabilizerStateQ[ps_PauliStabilizer] := PauliStabilizerQ[ps]
+StabilizerStateQ[sf_StabilizerFrame] /; StabilizerFrameQ[sf] && sf["Length"] == 1 := True
+StabilizerStateQ[_] := False
 
 
 (* ============================================================================ *)

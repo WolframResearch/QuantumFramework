@@ -639,6 +639,11 @@ CliffordChannel::usage =
 "Phase 8.1 (2026-05-06) ships the head, predicate (CliffordChannelQ), and basic accessors (\"UA\", \"UB\", \"c\", \"InputQubits\", \"OutputQubits\", \"Rank\", \"Tableau\"). Composition (vector-space intersection) is Phase 8.2 (TODO).\n" <>
 "Reference: Yashin25 (arxiv:2504.14101) Section 2.3."
 
+StabilizerStateQ::usage =
+"StabilizerStateQ[expr] returns True if expr represents an n-qubit stabilizer state.\n" <>
+"Accepts a PauliStabilizer satisfying the structural predicate, or a single-component StabilizerFrame.\n" <>
+"Use PauliStabilizer[qs_QuantumState] for explicit 4^n tomography from a state vector."
+
 StabilizerFrame::usage =
 "StabilizerFrame[{{c_1, ps_1}, {c_2, ps_2}, ...}] represents a superposition Sum_i c_i |s_i> of stabilizer states |s_i> with (possibly symbolic) coefficients c_i.\n" <>
 "Closes under Clifford gates -- frame[gate, q] distributes over components.\n" <>
