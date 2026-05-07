@@ -51,29 +51,39 @@ GraphState[g_Graph] := GraphState[<|
 |>]
 
 
+(* GraphState::nongraph emitted when the input PauliStabilizer is not in     *)
+(* graph-state form. Phase 5 v1 only handles graph-form stabilizers (X_i Z_{N(i)}). *)
+GraphState::nongraph = "PauliStabilizer `1` is not in graph-state form (each stabilizer must have X at exactly one position and Z elsewhere). Use a local-Clifford conversion (AndBri05 Lemma 1) before calling GraphState."
+
 (* From a PauliStabilizer: build the canonical graph state for a "graph-form"
-   stabilizer state. For Phase 5 v1, only handles the case where the input is
-   already in graph-state form (stabilizers of the form X_i Z_{neighbors of i}). *)
-GraphState[ps_PauliStabilizer ? PauliStabilizerQ] := Module[{n, stabs, g},
+   stabilizer state. A.13 (2026-05-07): emit ::nongraph and return $Failed when
+   the input is not graph-form (previously returned a silent edgeless graph). *)
+GraphState[ps_PauliStabilizer ? PauliStabilizerQ] := Module[{n, stabs, charSets, isGraphForm, edges, g},
     n = ps["Qubits"];
     stabs = ps["Stabilizers"];
-    (* Try to extract graph from stabilizers of the form X_i ... Z_{neighbors of i} ... I ...  *)
-    Module[{edges},
-        edges = Catenate @ Table[
-            With[{stabStr = stabs[[i]]},
-                Module[{chars = Characters @ If[StringStartsQ[stabStr, "-"], StringDrop[stabStr, 1], stabStr]},
-                    (* Position i should have "X"; other positions with "Z" are neighbors *)
-                    If[chars[[i]] === "X",
-                        Position[chars, "Z"][[All, 1]] /. j_Integer :> If[i < j, UndirectedEdge[i, j], Nothing],
-                        {}
-                    ]
-                ]
-            ],
-            {i, n}
+    charSets = Characters @ If[StringStartsQ[#, "-"], StringDrop[#, 1], #] & /@ stabs;
+
+    (* Graph-form check: there must be n stabilizer rows, the i-th row must
+       have "X" at position i, and every other position must be "Z" or "I" (no
+       "Y" anywhere, no "X" off the diagonal). *)
+    isGraphForm = Length[charSets] == n &&
+        AllTrue[
+            Range[n],
+            charSets[[#, #]] === "X" &&
+            AllTrue[Drop[charSets[[#]], {#}], MatchQ[# /. "Z" -> "I", "I"] &] &
         ];
-        g = Graph[Range[n], DeleteDuplicates @ edges];
-        GraphState[<|"Graph" -> g, "VOPs" -> ConstantArray[0, n]|>]
-    ]
+
+    If[!isGraphForm,
+        Message[GraphState::nongraph, ps];
+        Return[$Failed]
+    ];
+
+    edges = Catenate @ Table[
+        Position[charSets[[i]], "Z"][[All, 1]] /. j_Integer :> If[i < j, UndirectedEdge[i, j], Nothing],
+        {i, n}
+    ];
+    g = Graph[Range[n], DeleteDuplicates @ edges];
+    GraphState[<|"Graph" -> g, "VOPs" -> ConstantArray[0, n]|>]
 ]
 
 

@@ -14,10 +14,18 @@ PauliForm[ps_ ? PauliStabilizerQ, n : _Integer ? Positive | Infinity : Infinity,
     PauliForm[Take[ps["DestabilizerSigns"], UpTo[n]], Map[Take[#, UpTo[n]] &, ps["DestabilizerTableau"], {2}]]
 ]
 
+(* A.12 (2026-05-07): handle symbolic signs (Phase 3 SymPhase). After a       *)
+(* SymbolicMeasure, signs may be polynomials in \[FormalS][k] symbols.        *)
+(* Numeric signs format as before ("" or "-"); symbolic signs render as       *)
+(* `ToString[s, InputForm] <> "*"` to keep the result readable.                *)
+pauliFormSignString[1] := ""
+pauliFormSignString[-1] := "-"
+pauliFormSignString[s_] := ToString[s, InputForm] <> "*"
+
 PauliForm[signs_, tableau_] := If[MatchQ[Dimensions[tableau], {2, n_, m_} /; 0 < m < n], Append["\[Ellipsis]"], Identity] @ MapThread[
     StringJoin,
     {
-        Replace[signs, {1 -> "", -1 -> "-"}, {1}],
+        pauliFormSignString /@ signs,
         StringJoin @@@ Replace[Transpose[tableau, {3, 2, 1}], {{0, 0} -> "I", {1, 0} -> "X", {1, 1} -> "Y", {0, 1} -> "Z"}, {2}]
     }
 ]

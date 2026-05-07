@@ -76,6 +76,6 @@ ps_PauliStabilizer["SampleOutcomes", n_Integer ? Positive] := sampleOutcomes[ps,
 (* Implementations remain in Stabilizer/InnerProduct.m as PackageScope helpers. *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["InnerProduct", other_] := stabilizerInnerProduct[ps, other]
+ps_PauliStabilizer["InnerProduct", other_, opts : OptionsPattern[{Method -> "Direct"}]] := stabilizerInnerProduct[ps, other, opts]
 
 ps_PauliStabilizer["Expectation", pauli_String] := stabilizerExpectation[ps, pauli]

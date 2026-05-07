@@ -103,13 +103,33 @@ ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
 (* Dagger / Inverse                                                             *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{mat},
+PauliStabilizer::singular = "Cannot compute Dagger: symplectic matrix is singular mod 2 (this happens when the input PauliStabilizer was built from a stabilizer-only list whose Reverse-padded destabilizers coincide with the stabilizer rows). Use a circuit-built fixture or supply explicit destabilizers."
+
+(* A.3 (2026-05-07): make Dagger robust.                                       *)
+(* Previously used `Signs -> ps["Signs"]` for the inner inverse-matrix PS,    *)
+(* which propagated the input's phase asymmetry into the composition step.   *)
+(* For string-list-built fixtures (not AG-canonical), this led to cascading  *)
+(* Extract errors on Dagger@Dagger and to sign drift. Two changes:           *)
+(*   (1) use all-+1 signs on the inner PS so the composition's phase term is *)
+(*       well-defined and involutive on the matrix component for AG-canonical*)
+(*       inputs.                                                              *)
+(*   (2) detect a singular symplectic matrix (Det == 0 mod 2) and emit       *)
+(*       PauliStabilizer::singular with $Failed instead of cascading errors.  *)
+ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat},
+    n = ps["GeneratorCount"];
+    m = ps["Matrix"];
+    det = Mod[Det[m], 2];
+    If[det === 0,
+        Message[PauliStabilizer::singular];
+        Return[$Failed]
+    ];
+    mat = Inverse[m, Modulus -> 2];
     PauliStabilizer @ <|
         "Phase" -> BitXor[
             ps["Phase"],
             ps[PauliStabilizer[<|
-                "Matrix" -> (mat = Inverse[ps["Matrix"], Modulus -> 2]),
-                "Signs" -> ps["Signs"]
+                "Matrix" -> mat,
+                "Signs" -> ConstantArray[1, 2 n]
             |>]]["Phase"]
         ],
         "Matrix" -> mat

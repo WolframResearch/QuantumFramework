@@ -1156,3 +1156,235 @@ VerificationTest[
     True,
     TestID -> "Audit-RT-QS-PhiPlus"
 ]
+
+
+(* ============================================================================ *)
+(* TIER 16 -- A-series bug fixes (2026-05-07)                                   *)
+(* ============================================================================ *)
+
+(* A.11: pauliStringMatrix on 1-qubit input now produces a usable matrix      *)
+(* without KroneckerProduct::argmu errors. The single-qubit Z eigenvalue on   *)
+(* |0> is +1; ps["Expectation", "Z"] should return 1 cleanly.                  *)
+VerificationTest[
+    PauliStabilizer[1]["Expectation", "Z"],
+    1,
+    {},
+    TestID -> "Audit-A11-Expectation-Z-OnZero-NoKroneckerError"
+]
+
+VerificationTest[
+    PauliStabilizer[1]["H", 1]["Expectation", "X"],
+    1,
+    {},
+    TestID -> "Audit-A11-Expectation-X-OnPlus"
+]
+
+VerificationTest[
+    PauliStabilizer[1]["Expectation", "X"],
+    0,
+    {},
+    TestID -> "Audit-A11-Expectation-X-OnZero-Anticommutes"
+]
+
+(* A.12: PauliForm handles symbolic phases without StringJoin::string. After  *)
+(* a SymbolicMeasure, ps["Stabilizers"] returns strings using the helper      *)
+(* pauliFormSignString rather than triggering StringJoin on a symbolic sign.  *)
+VerificationTest[
+    Module[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1], result},
+        result = Quiet @ Check[psSym["Stabilizers"], $Failed, {StringJoin::string}];
+        result =!= $Failed && AllTrue[result, StringQ]
+    ],
+    True,
+    TestID -> "Audit-A12-Stabilizers-SymbolicPhase-NoStringJoinError"
+]
+
+(* A.13: GraphState[ps_PauliStabilizer] now emits ::nongraph and returns      *)
+(* $Failed for non-graph-form input (was silently returning an edgeless       *)
+(* graph). Test: GHZ-3 stabilizers {"XXX", "ZZI", "IZZ"} are NOT graph-form. *)
+VerificationTest[
+    GraphState[PauliStabilizer[{"XXX", "ZZI", "IZZ"}]],
+    $Failed,
+    {GraphState::nongraph},
+    TestID -> "Audit-A13-GraphState-NonGraphForm-EmitsMessage"
+]
+
+(* Linear cluster IS graph-form: stabilizer i is X at position i, Z at        *)
+(* neighbors. Should still convert correctly.                                  *)
+VerificationTest[
+    Module[{gs = GraphState[PauliStabilizer[{"XZI", "ZXZ", "IZX"}]]},
+        Head[gs] === GraphState && Sort[EdgeList[gs["Graph"]]] === Sort[{1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]
+    ],
+    True,
+    TestID -> "Audit-A13-GraphState-LinearCluster3-Works"
+]
+
+(* A.3: Dagger involution -- dag^2 === ps for AG-canonical (circuit-built)   *)
+(* fixtures. Singular-matrix non-canonical inputs now emit ::singular and    *)
+(* return $Failed instead of cascading errors.                                *)
+VerificationTest[
+    Module[{ps = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        ps["Dagger"]["Dagger"] === ps
+    ],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-Bell-Circuit"
+]
+
+VerificationTest[
+    Module[{ps = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}},
+        ps["Dagger"]["Dagger"] === ps
+    ],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-GHZ3-Circuit"
+]
+
+VerificationTest[
+    PauliStabilizer[1]["H", 1]["S", 1]["H", 1]["Dagger"]["Dagger"] === PauliStabilizer[1]["H", 1]["S", 1]["H", 1],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-HSH-1qubit"
+]
+
+VerificationTest[
+    PauliStabilizer[3]["Dagger"]["Dagger"] === PauliStabilizer[3],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-Register3"
+]
+
+(* Singular-matrix path: stabilizer-only construction creates a non-invertible *)
+(* tableau via the Reverse-padding rule; Dagger now warns and returns $Failed.*)
+VerificationTest[
+    PauliStabilizer[{"XX", "ZZ"}]["Dagger"],
+    $Failed,
+    {PauliStabilizer::singular},
+    TestID -> "Audit-A3-Dagger-Singular-Matrix-EmitsMessage"
+]
+
+(* ============================================================================ *)
+(* TIER 17 -- A.1 closed-form InnerProduct (GarMarCro12 §3)                     *)
+(* ============================================================================ *)
+
+VerificationTest[
+    Module[{ps = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        ps["InnerProduct", ps]
+    ],
+    1,
+    TestID -> "Audit-A1-InnerProduct-SelfBell-Equals1"
+]
+
+VerificationTest[
+    Module[{
+        psPlus = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
+        psMinus
+    },
+        psMinus = psPlus["Z", 1];
+        psPlus["InnerProduct", psMinus]
+    ],
+    0,
+    TestID -> "Audit-A1-InnerProduct-PhiPlus-PhiMinus-Orthogonal"
+]
+
+VerificationTest[
+    Module[{ps0 = PauliStabilizer[1], ps1},
+        ps1 = ps0["X", 1];
+        ps0["InnerProduct", ps1]
+    ],
+    0,
+    TestID -> "Audit-A1-InnerProduct-Zero-One-Orthogonal"
+]
+
+(* Bell state and GHZ-3 share no qubit overlap meaningfully; mismatched n is
+   not allowed -- skip. Test on equal-n cases. *)
+VerificationTest[
+    Block[{},
+        SeedRandom[20260507];
+        AllTrue[
+            Table[
+                Module[{ps = PauliStabilizer["Random", 3]},
+                    ps["InnerProduct", ps] === 1
+                ],
+                {6}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    TestID -> "Audit-A1-InnerProduct-Random3-Self-Equals1"
+]
+
+(* Closed-form returns the magnitude |<psi|phi>|; complex phase requires      *)
+(* additional Gaussian-sum bookkeeping (deferred). Cross-check magnitude only.*)
+VerificationTest[
+    Block[{},
+        SeedRandom[20260507];
+        AllTrue[
+            Table[
+                Module[{psA, psB, viaCF, viaVec, magMatch},
+                    psA = PauliStabilizer["Random", 3];
+                    psB = PauliStabilizer["Random", 3];
+                    viaCF = psA["InnerProduct", psB, Method -> "ClosedForm"];
+                    viaVec = With[{vA = psA["State"]["StateVector"], vB = psB["State"]["StateVector"]},
+                        Conjugate[vA] . vB
+                    ];
+                    magMatch = Chop[Abs[viaCF] - Abs[viaVec], 10^-10] === 0;
+                    magMatch
+                ],
+                {8}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    TestID -> "Audit-A1-InnerProduct-ClosedForm-MagnitudeMatch-Random3-8reps"
+]
+
+(* Closed-form is opt-in via Method option. *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        psBell["InnerProduct", psBell, Method -> "ClosedForm"]
+    ],
+    1,
+    TestID -> "Audit-A1-InnerProduct-ClosedForm-Method-Bell-Self"
+]
+
+
+(* ============================================================================ *)
+(* TIER 18 -- A.2 closed-form Expectation (i-factor tracking, no fallback)      *)
+(* ============================================================================ *)
+
+(* The Y-bearing case <Bell|YY|Bell> = -1 used to fall back to direct vector. *)
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        psBell["Expectation", "YY"]
+    ],
+    -1,
+    TestID -> "Audit-A2-Expectation-YY-OnBell-NoFallback"
+]
+
+VerificationTest[
+    Module[{psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}},
+        psBell["Expectation", "-XX"]
+    ],
+    -1,
+    TestID -> "Audit-A2-Expectation-NegXX-OnBell"
+]
+
+(* All 4 stabilizer-group elements of the 5Q code give +1. *)
+VerificationTest[
+    Module[{ps5 = PauliStabilizer["5QubitCode"]},
+        ps5["Expectation", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
+    ],
+    {1, 1, 1, 1},
+    TestID -> "Audit-A2-Expectation-5Q-Stabilizers-AllPlus1"
+]
+
+(* P in N(S) \ S returns 0 (Pauli commutes with all stabilizers but isn't a   *)
+(* product of them). For Bell, "II" is in S; "XX" is in S; "XY" anticommutes  *)
+(* with "ZZ" so 0; pick a 3Q example where this is more interesting:          *)
+(* GHZ-3 has stabilizers {XXX, ZZI, IZZ}. Pauli "ZIZ" commutes with all but   *)
+(* equals ZZI * IZZ (both stabilizers) = product so it IS in S.               *)
+VerificationTest[
+    Module[{psGHZ = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}},
+        psGHZ["Expectation", "ZIZ"]
+    ],
+    1,
+    TestID -> "Audit-A2-Expectation-GHZ3-ZIZ-IsInGroup"
+]
