@@ -1,745 +1,430 @@
 # Stabilizer subsystem — API reference
 
-> Function-by-function reference for the 4 top-level public symbols + the method-grade operations dispatched on `PauliStabilizer` (6 of which were Phase 3-4 top-level symbols, demoted to methods in Phases 6 and 6.5 — see [§API consolidation in ROADMAP.md](ROADMAP.md#phase-6--done-2026-05-06-api-consolidation)). Every code example is verified by [`verify-API.wls`](verify-API.wls) — `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`.
+> Function-by-function reference for the **5 top-level public symbols** plus the method-grade operations dispatched on `PauliStabilizer`, `StabilizerFrame`, and `CliffordChannel`. Reflects the kernel state after Phases 1–8.3 + the WL-idiom audit (2026-05-06). For the full phase log and deferred items, see [ROADMAP.md](ROADMAP.md). For the Phase 5c design lesson on global-phase contracts, see [post-mortem-phase-5c.md](post-mortem-phase-5c.md).
 
-## Public API at a glance
+## Public surface at a glance
 
 | Symbol | Phase | Purpose |
 |---|---|---|
-| [`PauliStabilizer`](#paulistabilizer) | 1 | Stabilizer-state head: tableau-encoded n-qubit state |
-| [`StabilizerFrame`](#stabilizerframe) | 4 | Superposition of stabilizer states (for non-Clifford) |
+| [`PauliStabilizer`](#paulistabilizer) | 1 | Tableau-encoded n-qubit stabilizer state |
+| [`StabilizerFrame`](#stabilizerframe) | 4 | Superposition `Σᵢ cᵢ \|sᵢ⟩` of stabilizer states (non-Clifford boundary) |
 | [`GraphState`](#graphstate) | 5 | Graph-state representation (AndBri05) |
 | [`LocalComplement`](#localcomplement) | 5 | Local complementation on a graph or graph state |
+| [`CliffordChannel`](#cliffordchannel) | 8 | Choi-tableau Clifford channel `[U_A \| U_B \| c]` (Yashin25 §2.3) |
 
-### Method-grade operations on `PauliStabilizer` (formerly top-level)
+### Method-grade operations (Phase 6 / 6.5 demoted from top-level)
 
-| Method | Old top-level form | Purpose |
+| Method | Old top-level form (pre-Phase 6) | Purpose |
 |---|---|---|
-| [`PauliStabilizer["Random", n]`](#paulistabilizername_string--named-stabilizer-code) | `RandomClifford[n]` | Uniformly random n-qubit Clifford state (Mallows sampler) |
-| [`ps["SymbolicMeasure", q]`](#methods-symbolic-measurement) | `StabilizerMeasure[ps, q]` | Symbolic Z-basis measurement (allocates fresh outcome symbol) |
-| [`ps["SubstituteOutcomes", rules]`](#methods-symbolic-measurement) | `SubstituteOutcomes[ps, rules]` | Plug concrete values into measurement-outcome symbols |
-| [`ps["SampleOutcomes", n]`](#methods-symbolic-measurement) | `SampleOutcomes[ps, n]` | Random samples by independent symbol substitution |
-| [`ps["InnerProduct", other]`](#methods-inner-product--expectation) | `StabilizerInnerProduct[ps, other]` | `<ps\|other>` for `other` a `PauliStabilizer` or `StabilizerFrame` (Phase 6.5) |
-| [`ps["Expectation", pauli]`](#methods-inner-product--expectation) | `StabilizerExpectation[ps, pauli]` | `<ps\|P\|ps>` for an arbitrary Pauli string (Phase 6.5) |
+| [`PauliStabilizer["Random", n]`](#named-pattern-random-n) | `RandomClifford[n]` | Uniformly random n-qubit Clifford state (Mallows sampler) |
+| [`ps["SymbolicMeasure", q]`](#symbolic-measurement-fangying23) | `StabilizerMeasure[ps, q]` | Symbolic Z-basis measurement |
+| [`ps["SubstituteOutcomes", rules]`](#symbolic-measurement-fangying23) | `SubstituteOutcomes[ps, rules]` | Plug concrete values into outcome symbols |
+| [`ps["SampleOutcomes", n]`](#symbolic-measurement-fangying23) | `SampleOutcomes[ps, n]` | Random outcome samples |
+| [`ps["InnerProduct", other]`](#inner-product-and-expectation) | `StabilizerInnerProduct[ps, other]` | `⟨ps\|other⟩` (PS or Frame on either side) |
+| [`ps["Expectation", pauli]`](#inner-product-and-expectation) | `StabilizerExpectation[ps, pauli]` | `⟨ps\|P\|ps⟩` for a Pauli string |
 
-(`StabilizerFrame` carries the same `["InnerProduct", other]` method.)
+### Verification
 
-**Companion:** [`synthesis-implementation.md`](synthesis-implementation.md) walks through synthesis §1–§11 by capability. [`ROADMAP.md`](ROADMAP.md) tracks the partial / deferred / known-bug items.
+The 684-test suite under [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) is the authoritative oracle:
 
-**Re-verify:** `wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls`
+```bash
+wolframscript -f Tests/RunTests.wls Stabilizer
+```
+
+The breadth-first coverage matrix is [`Tests/Stabilizer/AuditMatrix.wlt`](../../../Tests/Stabilizer/AuditMatrix.wlt) (155 tests, 15 TIERs). Run it first when reviewing a PR that touches the public surface.
 
 ---
 
 # PauliStabilizer
 
-The atomic stabilizer-state object. Encodes an n-qubit state as a `(2n × 2n)` symplectic matrix plus a length-`2n` sign vector, packaged as `PauliStabilizer[<|"Tableau" -> ..., "Signs" -> ...|>]`.
+The atomic stabilizer-state object. Encodes an n-qubit state as a `(2n × 2n)` symplectic matrix plus a length-`2n` sign vector, packaged as `PauliStabilizer[<|"Tableau" -> rank3binarray, "Signs" -> {±1, ...}|>]`. The optional `"GlobalPhase"` key (Phase 5c) carries the complex unit that the AG decomposition drops, so that constructor → accessor round-trips exactly on the first hop.
 
 ## Constructors
 
-### `PauliStabilizer[stabStrings_List]` — from a list of Pauli strings
+### Empty form: `PauliStabilizer[]`
 
-Build a stabilizer state from a list of Pauli strings (one per stabilizer). Optional `+` / `-` prefix sets the sign of each stabilizer.
+Delegates to `PauliStabilizer[1]` (single qubit `|0⟩`).
+
+### Integer form: `PauliStabilizer[n]` — n-qubit `|0…0⟩` register
 
 ```wolfram
-PauliStabilizer[{"XX", "ZZ"}]["Stabilizers"]
+PauliStabilizer[3]["Stabilizers"]
+(* {"ZII", "IZI", "IIZ"} *)
 ```
-```
-{"XX", "ZZ"}
-```
+
+`n = 0` auto-pads to one qubit (`Max[n, 1]` in [Constructors.m:241](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)).
+
+### List of Pauli strings: `PauliStabilizer[{stab1, stab2, ...}]`
+
+Each string is `[+|-]?[IXYZ]+`. Sign prefix optional.
 
 ```wolfram
 PauliStabilizer[{"-XX", "+ZZ"}]["StabilizerSigns"]
-```
-```
-{-1, 1}
+(* {-1, 1} *)
 ```
 
-### `PauliStabilizer[stabStrings, destabStrings]` — explicit stab + destab halves
+Destabilizers are auto-padded via the Reverse rule ([Constructors.m:203](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)). The result satisfies stabilizer-stabilizer commutation but **not** the full AG canonical pairing — circuit-built fixtures do.
+
+### Stabilizers + destabilizers: `PauliStabilizer[stabs, destabs]`
+
+Both lists are Pauli strings.
 
 ```wolfram
 With[{ps = PauliStabilizer[{"XX", "ZZ"}, {"IX", "ZI"}]},
     {ps["Stabilizers"], ps["Destabilizers"]}
 ]
-```
-```
-{{"XX", "ZZ"}, {"IX", "ZI"}}
+(* {{"XX", "ZZ"}, {"IX", "ZI"}} *)
 ```
 
-### `PauliStabilizer[n_Integer]` — n-qubit `|0...0⟩` register
+### Named codes: `PauliStabilizer[name_String]`
 
-```wolfram
-With[{ps = PauliStabilizer[3]},
-    {ps["Qubits"], ps["Stabilizers"], ps["Destabilizers"]}
-]
-```
-```
-{3, {"ZII", "IZI", "IIZ"}, {"XII", "IXI", "IIX"}}
-```
+Available names (see [`$PauliStabilizerNames`](../../../QuantumFramework/Kernel/Stabilizer/NamedCodes.m)):
 
-### `PauliStabilizer[name_String]` — named stabilizer code
+| Name | Aliases | What |
+|---|---|---|
+| `"5QubitCode"` | — | `\|0_L⟩` of `[[5,1,3]]` (Got97 §3.5) |
+| `"5QubitCode1"` | — | `\|1_L⟩` (last stabilizer flipped) |
+| `"7QubitCode"` | `"SteaneCode"` | `\|0_L⟩` of `[[7,1,3]]` (Got00 §4) |
+| `"7QubitCode1"` | `"SteaneCode1"` | `\|1_L⟩` |
+| `"9QubitCode"` | — | `\|0_L⟩` of `[[9,1,3]]` (Shor) |
+| `"9QubitCode1"` | — | `\|1_L⟩` |
+| `"Random"` | — | See [Random named pattern](#named-pattern-random-n) below |
 
-Available names: `"5QubitCode"`, `"5QubitCode1"`, `"SteaneCode"` (= `"7QubitCode"`), `"SteaneCode1"` (= `"7QubitCode1"`), `"9QubitCode"`, `"9QubitCode1"`, `"Random"`. The `*1` suffix denotes the logical `|1_L⟩` codeword.
+### Named pattern: `PauliStabilizer["Random", n]`
 
-```wolfram
-With[{ps = PauliStabilizer["5QubitCode"]},
-    {ps["Qubits"], ps["GeneratorCount"], ps["Stabilizers"]}
-]
-```
-```
-{5, 5, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"}}
-```
+Bravyi–Maslov / Koenig–Smolin Mallows sampler ([RandomClifford.m](../../../QuantumFramework/Kernel/Stabilizer/RandomClifford.m); KoeSmo14 §3.2). Cardinality `\|C_n\| = 2^(n²+2n) Π(4ʲ−1)` (24 for n=1, 11520 for n=2, ~9.29×10⁷ for n=3).
 
 ```wolfram
-With[{ps = PauliStabilizer["SteaneCode"]},
-    {ps["Qubits"], ps["GeneratorCount"], ps["Stabilizers"][[7]]}
-]
-```
-```
-{7, 7, "XXXXXXX"}
+SeedRandom[20260507];
+PauliStabilizer["Random", 3]["Stabilizers"]
 ```
 
-### `PauliStabilizer[qco_QuantumCircuitOperator]` — apply a Clifford circuit to `|0...0⟩`
+### From a `QuantumCircuitOperator`: `PauliStabilizer[qco]`
 
-Folds the circuit's normal operators over the n-qubit register. Each operator must be a Clifford gate; non-Clifford gates trigger `PauliStabilizer::nonclifford`.
+Folds `qco`'s normal operators over the `|0…0⟩` register. Each gate must be Clifford; non-Clifford gates emit `PauliStabilizer::nonclifford` and the state is returned unchanged.
 
 ```wolfram
 PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Stabilizers"]
-```
-```
-{"XX", "ZZ"}
+(* {"XX", "ZZ"} *)
 ```
 
-### `PauliStabilizer[qo_QuantumOperator]` — Clifford gate to tableau
+### From a `QuantumOperator`: `PauliStabilizer[qo]`
 
-Conjugate the qubit-aligned Pauli generators by `qo`; extract the resulting tableau.
+Conjugates the qubit-aligned Pauli generators by `qo`; extracts the resulting tableau. **Captures `"GlobalPhase"`** so that `["QuantumOperator"]` returns the input exactly.
 
 ```wolfram
-PauliStabilizer[QuantumOperator["H", 1]]["Stabilizers"]
-```
-```
-{"X"}
+PauliStabilizer[QuantumOperator["Y"]]["GlobalPhase"]
+(* -I *)
 ```
 
-### `PauliStabilizer["Random", n_Integer]` — uniformly-random n-qubit Clifford state
+### From a `QuantumState`: `PauliStabilizer[qs]`
 
-Bravyi–Maslov / Koenig–Smolin Mallows sampler. See also [`RandomClifford`](#randomclifford).
+Runs 4ⁿ Pauli-expectation tomography ([Constructors.m:88](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)) and picks n linearly-independent generators by greedy `𝔽₂` rank-growth. Practical for `n ≤ ~8`. **Captures `"GlobalPhase"`**.
 
 ```wolfram
-SeedRandom[20260430];
-With[{ps = PauliStabilizer["Random", 3]},
-    {ps["Qubits"], ps["Stabilizers"]}
-]
+PauliStabilizer[QuantumState[{0, 1}]]["Stabilizers"]
+(* {"-Z"} *)
 ```
-```
-{3, {"-ZXZ", "-ZZX", "XXX"}}
-```
+
+### Association forms
+
+| Form | Effect |
+|---|---|
+| `PauliStabilizer[<\|"Tableau" -> t, "Signs" -> s\|>]` | Direct construction; signs and tableau set |
+| `PauliStabilizer[<\|"Tableau" -> t\|>]` | Default signs `{1, …, 1}` |
+| `PauliStabilizer[<\|"Phase" -> ph, "Tableau" -> t\|>]` | Phase form (`Signs = 1 - 2 ph`) |
+| `PauliStabilizer[<\|"Matrix" -> m, "Phase" -> ph\|>]` | Symplectic-block layout `[X\|Z]` reshaped into the rank-3 tableau |
+| `PauliStabilizer[<\|…, "GlobalPhase" -> z\|>]` | Multiplies `["State"]` and `["QuantumOperator"]` outputs by complex unit `z` |
+
+### Shortcut form: `PauliStabilizer["H" -> 1]`
+
+Forwards a string / rule / list to `PauliStabilizer[QuantumCircuitOperator[…]]`.
 
 ## Properties
 
-Access via `ps[propName]`. Full list via `ps["Properties"]`.
+Access via `ps[propName]`. Source-of-truth: [Properties.m](../../../QuantumFramework/Kernel/Stabilizer/Properties.m). Note: `ps["Properties"]` itself currently returns a stale short list ([ROADMAP §A.14](ROADMAP.md)); use this table instead.
 
-### Shape / structural
-
-```wolfram
-With[{ps = PauliStabilizer["5QubitCode"]},
-    <|
-        "Qubits"           -> ps["Qubits"],
-        "GeneratorCount"   -> ps["GeneratorCount"],
-        "Tableau-shape"    -> Dimensions[ps["Tableau"]],
-        "Matrix-shape"     -> Dimensions[ps["Matrix"]],
-        "Signs-length"     -> Length[ps["Signs"]]
-    |>
-]
-```
-```
-<|"Qubits" -> 5, "GeneratorCount" -> 5,
-  "Tableau-shape" -> {2, 5, 10}, "Matrix-shape" -> {10, 10},
-  "Signs-length" -> 10|>
-```
-
-The tableau is shape `{2, n, 2n}` (X/Z block · qubit · row); the matrix is the flattened `[X|Z]` form of shape `{2n, 2n}`.
-
-### Stabilizer / destabilizer split
-
-```wolfram
-With[{ps = PauliStabilizer["5QubitCode"]},
-    <|
-        "Stabilizers"        -> ps["Stabilizers"],
-        "Destabilizers"      -> ps["Destabilizers"],
-        "StabilizerSigns"    -> ps["StabilizerSigns"],
-        "DestabilizerSigns"  -> ps["DestabilizerSigns"]
-    |>
-]
-```
-```
-<|"Stabilizers" -> {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"},
-  "Destabilizers" -> {"ZXXZI", "IZXXZ", "ZIZXX", "XZIZX", "ZZZZZ"},
-  "StabilizerSigns" -> {1, 1, 1, 1, 1},
-  "DestabilizerSigns" -> {1, 1, 1, 1, 1}|>
-```
-
-### Bit views
-
-```wolfram
-With[{ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    <|"X" -> ps["X"], "Z" -> ps["Z"], "Phase" -> ps["Phase"]|>
-]
-```
-```
-<|"X" -> {{0, 0, 1, 0}, {0, 1, 1, 0}},
-  "Z" -> {{1, 0, 0, 1}, {0, 0, 0, 1}},
-  "Phase" -> {0, 0, 0, 0}|>
-```
-
-`ps["X"]` and `ps["Z"]` are shape `{n_qubits, 2*GeneratorCount}` — rows are qubits, columns are tableau rows (destabilizers first, then stabilizers). `ps["Phase"] = (1 - ps["Signs"]) / 2`.
-
-### Pauli string list
-
-```wolfram
-With[{ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    ps["PauliStrings"]
-]
-```
-```
-{"XX", "ZZ", "ZI", "IX"}
-```
-
-Concatenated `[Stabilizers, Destabilizers]`.
-
-### Full property list
+### Shape
 
 | Property | Returns |
 |---|---|
-| `"Qubits"`, `"Qudits"` | n |
-| `"GeneratorCount"` | n (= rank of stabilizer group) |
-| `"Tableau"` | rank-3 binary array, shape `{2, n, 2n}` |
-| `"Matrix"` | 2n×2n binary matrix in `[X\|Z]` block layout |
-| `"Signs"` | length-2n list of ±1 (or symbolic in Phase 3+) |
+| `"Qubits"` / `"Qudits"` | n |
+| `"GeneratorCount"` | n (rank of the stabilizer group) |
+| `"Tableau"` | rank-3 binary array, shape `{2, n, 2n}` (X-block, qubit, row) |
+| `"Matrix"` | `2n × 2n` binary matrix in `[X \| Z]` block layout |
+
+### Signs / phase
+
+| Property | Returns |
+|---|---|
+| `"Signs"` | length-2n list of ±1 (or symbolic Phase-3 polynomials) |
 | `"Phase"` | `(1 - Signs) / 2` |
-| `"X"`, `"Z"` | X-bits and Z-bits (qubits × rows) |
-| `"Stabilizer"` / `"StabilizerTableau"` | last n columns of Tableau |
-| `"StabilizerX"`, `"StabilizerZ"` | X / Z bits of the n stabilizer rows |
 | `"StabilizerSigns"` | last n signs |
-| `"Destabilizer"` etc. | analogous for the first n rows |
-| `"PauliForm"`, `"Generators"`, `"Stabilizers"` | string list of stabilizers (with sign prefix) |
-| `"Destabilizers"` | string list |
-| `"PauliStrings"` | concatenated `Stabilizers ++ Destabilizers` |
-| `"PauliSymbols"` | same but as `±symbol` entries |
-| `"TableauForm"`, `"StabilizerTableauForm"` | grid display |
-| `"State"` / `"QuantumState"` | materialized `QuantumState` (cost `2ⁿ`) |
-| `"Circuit"` / `"QuantumCircuitOperator"` | AG-greedy synthesized Clifford circuit |
-| `"Operator"` / `"QuantumOperator"` | matrix-form `QuantumOperator` (cost `4ⁿ`) |
-| `"GlobalPhase"` | optional complex unit set when constructed from `QuantumState` / `QuantumOperator`; multiplies `["State"]` and `["QuantumOperator"]` outputs (Phase 5c, default 1) |
-| `"Properties"` | this list |
+| `"DestabilizerSigns"` | first n signs |
+
+### Bit views
+
+| Property | Returns |
+|---|---|
+| `"X"` | shape `{n, 2n}`: rows are qubits, columns are tableau rows (destab first) |
+| `"Z"` | analogous Z-bits |
+| `"StabilizerX"`, `"StabilizerZ"` | last n columns of `X` / `Z` |
+| `"DestabilizerX"`, `"DestabilizerZ"` | first n columns |
+| `"p"` | symplectic-product diagonal (length 2n) |
+| `"TableauPhase"` | concatenation `[Matrix \| Phase]` |
+
+### Stabilizer / destabilizer slices
+
+| Property | Returns |
+|---|---|
+| `"Stabilizer"` / `"StabilizerTableau"` | last n columns of Tableau, shape `{2, n, n}` |
+| `"Destabilizer"` / `"DestabilizerTableau"` | first n columns of Tableau |
+
+### Pauli string lists
+
+| Property | Returns |
+|---|---|
+| `"Stabilizers"` / `"PauliForm"` / `"Generators"` | string list of stabilizers (with `-` prefix where appropriate) |
+| `"Destabilizers"` | string list of destabilizers |
+| `"PauliStrings"` | concatenation `Stabilizers ++ Destabilizers` |
+| `"PauliSymbols"` | same but with `±symbol` form (for `MakeBoxes`) |
+
+Optional 2nd arg `n` truncates the list to the first `n` entries: `ps["Stabilizers", 3]`.
+
+### Display
+
+| Property | Returns |
+|---|---|
+| `"TableauForm"` | `Row[…Grid…]` for the full tableau |
+| `"StabilizerTableauForm"` | grid for stabilizer half only |
+
+### Materialization (cost ≥ 2ⁿ)
+
+| Property | Cost | Returns |
+|---|---|---|
+| `"State"` / `"QuantumState"` | `O(2ⁿ)` | `QuantumState` (multiplied by `"GlobalPhase"`) |
+| `"Operator"` / `"QuantumOperator"` | `O(4ⁿ)` | `QuantumOperator` |
+| `"Circuit"` / `"QuantumCircuit"` / `"QuantumCircuitOperator"` | `O(n³)` gates | `QuantumCircuitOperator` whose dagger applied to `\|0…0⟩` reproduces ps |
+
+### Phase 5c global-phase contract
+
+| Path | Equality | Notes |
+|---|---|---|
+| `PauliStabilizer[qo]["QuantumOperator"]` vs `qo` | **exact** (`===`) | `"GlobalPhase"` captured |
+| `PauliStabilizer[qs]["State"]` vs `qs` | **exact** (`===`) | `"GlobalPhase"` captured |
+| `PauliStabilizer[qs]["gate", q]["State"]` vs `gate[qs]` | **up to phase** | Gate updates do not propagate `"GlobalPhase"` ([ROADMAP §A.9](ROADMAP.md)) |
+| `PauliStabilizer[gate[qs]]["State"]` vs `gate[qs]` | **exact** | Re-tomograph after the gate to recover phase |
+| `PauliStabilizer[ps["Circuit"]]["State"]` vs `ps["State"]` | **up to phase** | No source state, only tableau |
+
+The Y row is the canary: `Y = i X Z` → AG-decomposed circuit `Z·X = i·Y`, so the constructor records `"GlobalPhase" -> -I` and `["QuantumOperator"]` returns Y exactly.
 
 ## Methods (Clifford gates)
 
-Each method returns a new `PauliStabilizer` (Clifford gates) or a `StabilizerFrame` (non-Clifford).
+Each gate returns a new `PauliStabilizer`. Source: [GateUpdates.m](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m).
 
 | Method | Signature | Effect |
 |---|---|---|
-| `"H"` | `ps["H", q]` | Hadamard on qubit `q` |
+| `"H"` | `ps["H", q]` | Hadamard on qubit q |
 | `"S"` | `ps["S", q]` | π/4 phase gate |
 | `SuperDagger["S"]` | `ps[SuperDagger["S"], q]` | S-dagger |
-| `"X"`, `"Y"`, `"Z"` | `ps["X", q]` | Pauli on qubit q (only flips phase) |
-| `"CNOT"` / `"CX"` | `ps["CNOT", c, t]` | controlled-NOT |
-| `"CZ"` | `ps["CZ", c, t]` | controlled-Z |
-| `"SWAP"` | `ps["SWAP", a, b]` | swap |
+| `"X"`, `"Y"`, `"Z"` | `ps["X", q]` etc. | Pauli (only flips signs) |
 | `"V"` | `ps["V", q]` | √X |
 | `SuperDagger["V"]` | `ps[SuperDagger["V"], q]` | √X-dagger |
-| `"Permute"`, `"PermuteQudits"` | `ps["PermuteQudits", Cycles[{...}]]` | row / column permutation |
-| `"Dagger"` / `"Inverse"` | `ps["Dagger"]` | tableau inverse (⚠ Phase 1 known bug at `Dagger ∘ Dagger` — see [ROADMAP §A.3](ROADMAP.md)) |
-| `"PadLeft"`, `"PadRight"` | `ps["PadRight", n]` | tensor identity to grow to n qubits |
-| `"P"[θ]` | `ps["P"[θ], q]` | non-Clifford rotation; returns `StabilizerFrame` |
-| `"T"` | `ps["T", q]` | alias for `"P"[Pi/2]` |
-| `SuperDagger["T"]` | `ps[SuperDagger["T"], q]` | alias for `"P"[-Pi/2]` |
+| `"CNOT"` / `"CX"` | `ps["CNOT", c, t]` | Controlled-NOT |
+| `"CZ"` | `ps["CZ", c, t]` | Controlled-Z (= H_t · CNOT · H_t) |
+| `"SWAP"` | `ps["SWAP", a, b]` | Swap (= column permutation) |
+| `"Permute"` | `ps["Permute", Cycles[…]]` | Permute tableau rows |
+| `"PermuteQudits"` | `ps["PermuteQudits", Cycles[…]]` | Permute tableau columns |
+| `"PadRight"` | `ps["PadRight", n]` | Tensor identity to grow to n qubits |
+| `"PadLeft"` | `ps["PadLeft", n]` | Tensor identity from the left |
+| `"Dagger"` / `"Inverse"` | `ps["Dagger"]` | Tableau inverse over `𝔽₂` |
+| `"P"[θ]` | `ps["P"[θ], q]` | Non-Clifford rotation; returns `StabilizerFrame` |
+| `"T"` | `ps["T", q]` | Alias for `"P"[π/2]` |
+| `SuperDagger["T"]` | `ps[SuperDagger["T"], q]` | Alias for `"P"[-π/2]` |
 
-### Examples
+### Convenience syntax: `op -> order`
 
-**H takes Z to X (Heisenberg conjugation):**
 ```wolfram
-PauliStabilizer[1]["H", 1]["Stabilizers"]
+ps[gate -> q]      (* same as ps[gate, q] *)
+ps[gate -> {c, t}] (* same as ps[gate, c, t] for two-qubit gates *)
 ```
-```
-{"X"}
-```
-
-**S takes X to Y:**
-```wolfram
-PauliStabilizer[1]["H", 1]["S", 1]["Stabilizers"]
-```
-```
-{"Y"}
-```
-
-**CNOT(1,2) on H|0⟩⊗|0⟩ = Bell state:**
-```wolfram
-Sort @ PauliStabilizer[2]["H", 1]["CNOT", 1, 2]["Stabilizers"]
-```
-```
-{"XX", "ZZ"}
-```
-
-**CZ(1,2) on H|0⟩⊗|0⟩:**
-```wolfram
-Sort @ PauliStabilizer[2]["H", 1]["CZ", 1, 2]["Stabilizers"]
-```
-```
-{"IZ", "XZ"}
-```
-
-**SWAP(1,2) on H|0⟩⊗|0⟩:**
-```wolfram
-Sort @ PauliStabilizer[2]["H", 1]["SWAP", 1, 2]["Stabilizers"]
-```
-```
-{"IX", "ZI"}
-```
-
-**X gate flips signs of stabilizers with Z-content at q (no tableau change):**
-```wolfram
-With[{ps5 = PauliStabilizer["5QubitCode"]},
-    ps5["X", 1]["StabilizerSigns"]
-]
-```
-```
-{1, 1, 1, -1, 1}
-```
-
-`X_1` anticommutes with the 4th stabilizer `ZXIXZ` (because it has Z at qubit 1).
-
-**Z gate similarly:**
-```wolfram
-With[{ps5 = PauliStabilizer["5QubitCode"]},
-    ps5["Z", 3]["StabilizerSigns"]
-]
-```
-```
-{1, 1, -1, 1, -1}
-```
-
-`Z_3` anticommutes with stabilizers 3 (`XIXZZ`, has X at q3) and 5 (`XXXXX`, has X at q3).
-
-**S†, V, V†:**
-```wolfram
-With[{ps = PauliStabilizer[1]["H", 1]},   (* |+>, stab X *)
-    <|
-        "Sdag-on-X" -> ps[SuperDagger["S"], 1]["Stabilizers"],
-        "V-on-X"    -> ps["V", 1]["Stabilizers"],
-        "Vdag-on-X" -> ps[SuperDagger["V"], 1]["Stabilizers"]
-    |>
-]
-```
-```
-<|"Sdag-on-X" -> {"-Y"}, "V-on-X" -> {"X"}, "Vdag-on-X" -> {"X"}|>
-```
-
-S†: `S†XS = -Y`. V (= √X): `V X V† = X` (X commutes with √X).
-
-**Convenience syntax `op -> order` flattens to `op, args`:**
-```wolfram
-With[{ps = PauliStabilizer[2]["H" -> 1]["CNOT" -> {1, 2}]},
-    Sort @ ps["Stabilizers"]
-]
-```
-```
-{"XX", "ZZ"}
-```
-
-**T returns a `StabilizerFrame` (non-Clifford boundary):**
-```wolfram
-Head @ PauliStabilizer[1]["T", 1]
-```
-```
-StabilizerFrame
-```
-
-The original `Plus` return from Phase 1 was migrated to `StabilizerFrame` in Phase 4. See [`StabilizerFrame`](#stabilizerframe).
 
 ## Methods (Measurement)
 
-### Z-basis on a single qubit: `ps["M", q]` or `ps[q]`
+### Z-basis: `ps["M", q]` or `ps[q]`
 
 Returns an `Association` keyed by outcome bit (0 or 1) and valued by the post-measurement `PauliStabilizer`.
 
-**Deterministic:**
 ```wolfram
 PauliStabilizer[1]["M", 1]
-```
-```
-<|0 -> PauliStabilizer[<|"Signs" -> {1, 1}, "Tableau" -> {{{1, 0}}, {{0, 1}}}|>]|>
+(* <|0 -> PauliStabilizer[<|"Signs" -> {1, 1}, "Tableau" -> {{{1, 0}}, {{0, 1}}}|>]|> *)
 ```
 
-**Random:**
-```wolfram
-Sort @ Keys @ PauliStabilizer[1]["H", 1]["M", 1]
-```
-```
-{0, 1}
-```
+Single key = deterministic; two keys = non-deterministic.
 
-### Pauli-string measurement: `ps["M", "XZZXI"]`
+### Pauli string: `ps["M", "XZZXI"]`
 
-Measures an arbitrary Pauli observable on the stabilizer state. Same Association return type. For the 5-qubit code state, all 5 stabilizers are deterministic with outcome bit 0:
+Measure an arbitrary Pauli observable. Same Association return type. Source: [PauliMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/PauliMeasure.m).
 
 ```wolfram
-With[{ps5 = PauliStabilizer["5QubitCode"]},
-    Keys @ ps5["M", "XZZXI"]
-]
-```
-```
-{0}
+PauliStabilizer["5QubitCode"]["M", "XZZXI"]
+(* <|0 -> PauliStabilizer[…]|>  -- deterministic, eigenvalue +1 *)
 ```
 
-### Multi-qubit: `ps["M", {q1, q2, ...}]`
+### Multi-qubit: `ps["M", {q1, q2, …}]`
 
-Returns Association keyed by outcome tuples:
+Returns Association keyed by outcome tuples.
 
 ```wolfram
-With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    Sort @ Keys @ psBell["M", {1, 2}]
-]
-```
-```
-{{0, 0}, {1, 1}}
+PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}["M", {1, 2}]
+(* <|{0, 0} -> ..., {1, 1} -> ...|>  -- Bell ZZ correlation *)
 ```
 
-Bell ZZ correlation: outcomes are perfectly correlated.
+### Symbolic measurement (FangYing23)
 
-## Composition + tensor product
+Demoted from top-level `StabilizerMeasure` / `SubstituteOutcomes` / `SampleOutcomes` in Phase 6. Source: [SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m).
 
-**Compose: `ps1[ps2]`** — applies ps1 after ps2 (right-to-left).
+#### `ps["SymbolicMeasure", q]` / `ps["SymbolicMeasure", {q1, q2, …}]`
+
+Allocates a fresh `\[FormalS][k]` symbol per non-deterministic measurement; returns a single `PauliStabilizer` instead of an Association. Deterministic measurements get a concrete sign with no fresh symbol.
 
 ```wolfram
-Module[{psH = PauliStabilizer[1]["H", 1]["S", 1]["H", 1]},
-    psH["Stabilizers"]
-]
-```
-```
-{"-Y"}
+PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]["Phase"]
+(* {0, \[FormalS][1]}  -- second sign-bit stamped with the symbol *)
 ```
 
-**Tensor product: `QuantumTensorProduct[ps1, ps2]`**
+#### `ps["SubstituteOutcomes", rules]`
+
+Replace outcome symbols with concrete 0/1 values; reduce signs back to `{-1, 1}` via `Mod 2`.
 
 ```wolfram
-With[{a = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]],
+psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
+psSym["SubstituteOutcomes", \[FormalS][1] -> 0]["Stabilizers"]
+(* {"Z"} *)
+```
+
+#### `ps["SampleOutcomes"]` / `ps["SampleOutcomes", n]`
+
+Draw n random samples by independently substituting each outcome symbol with a uniform 0/1.
+
+```wolfram
+SeedRandom[42];
+psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
+#["Stabilizers"] & /@ psSym["SampleOutcomes", 5]
+(* {{"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}} *)
+```
+
+**Phase 3 known limitation:** when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly but is not stamped into the post-state's signs. Tracked in [ROADMAP §A.4](ROADMAP.md).
+
+## Inner product and expectation
+
+Phase 6.5 demoted from top-level `StabilizerInnerProduct` / `StabilizerExpectation`. Source: [InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m).
+
+### `ps["InnerProduct", other]`
+
+`other` is a `PauliStabilizer` or a `StabilizerFrame`. Phase 4 v1 uses direct vector materialization (`O(2ⁿ)`); the closed-form `O(n³)` GarMarCro12 algorithm is on [ROADMAP §A.1](ROADMAP.md).
+
+```wolfram
+psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
+psBell["InnerProduct", psBell]
+(* 1 *)
+
+psBell["InnerProduct", psBell["Z", 1]]
+(* 0  -- |Φ+>, |Φ-> are orthogonal *)
+```
+
+### `ps["Expectation", pauliString]`
+
+`⟨ps\|P\|ps⟩` for a Pauli string `P`. Returns ±1 for stabilizer-group elements, 0 for anticommuting Paulis, exact value via direct vector for `P ∈ N(S) \ S`.
+
+```wolfram
+psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
+{psBell["Expectation", "XX"], psBell["Expectation", "ZZ"], psBell["Expectation", "YY"]}
+(* {1, 1, -1}  -- YY = -XX·ZZ because Y = iXZ *)
+```
+
+The `YY = -1` case currently uses the direct-vector fallback because the AG closed-form `i`-factor tracking ([ROADMAP §A.2](ROADMAP.md)) is not yet implemented.
+
+Message: `PauliStabilizer::expectationdim` if string length doesn't match qubit count.
+
+## Composition and tensor product
+
+### `ps1[ps2]` — apply ps1 after ps2
+
+Sequential composition. Source: [Compose.m](../../../QuantumFramework/Kernel/Stabilizer/Compose.m).
+
+### `QuantumTensorProduct[ps1, ps2]`
+
+Block-diagonal merge of destabilizers and stabilizers. Linear in `n_a + n_b`.
+
+```wolfram
+With[{a = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}},
       b = PauliStabilizer[1]},
     QuantumTensorProduct[a, b]["Stabilizers"]
 ]
-```
-```
-{"XXI", "ZZI", "IIZ"}
+(* {"XXI", "ZZI", "IIZ"} *)
 ```
 
-## Conversions
-
-### `ps["State"]` — materialize to `QuantumState` (cost `2ⁿ`)
+## QuantumFramework UpValues
 
 ```wolfram
-With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    Normal @ psBell["State"]["StateVector"]
-]
-```
-```
-{1/Sqrt[2], 0, 0, 1/Sqrt[2]}
-```
+QuantumState[ps]                 (* same as ps["State"] *)
+QuantumOperator[ps]              (* same as ps["Circuit"]["QuantumOperator"] *)
+QuantumCircuitOperator[ps]       (* same as ps["Circuit"] *)
 
-### `ps["Circuit"]` — synthesize Clifford circuit from tableau (AG greedy)
+QuantumOperator["H", 1] @ ps     (* applies the gate via PauliStabilizerApply *)
 
-The circuit's *Hermitian conjugate* applied to `|0...0⟩` reproduces `ps`. Note that `PauliStabilizer[ps["Circuit"]]` does **not** generally produce string-equal stabilizers (different generating set of the same group), but the materialized state vector matches up to global phase:
-
-```wolfram
-Module[{psBell, circ, fromCircuit, vec1, vec2},
-    psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-    circ = psBell["Circuit"];
-    fromCircuit = PauliStabilizer[circ];
-    vec1 = N @ Normal @ psBell["State"]["StateVector"];
-    vec2 = N @ Normal @ fromCircuit["State"]["StateVector"];
-    Chop @ Abs[Conjugate[vec1] . vec2] - 1
-]
-```
-```
--2.220446049250313*^-16
-```
-
-Numerical zero — the round-trip is correct up to global phase. For optimized synthesis methods (Reid24, Winderl23), see [ROADMAP §A.5](ROADMAP.md).
-
-### `ps["Operator"]` — full unitary matrix (cost `4ⁿ`)
-
-Returns a `QuantumOperator` whose action on `|0...0⟩` reproduces the state. Practical limit `n ≤ ~10`.
-
-Returns a `QuantumOperator` whose action on `|0...0⟩` reproduces the state. Practical limit `n ≤ ~10`. The round-trip contract is documented in the next section.
-
-## Round-trip contract
-
-Phase 5c gives `PauliStabilizer` a phase-aware contract for the first hop (constructor → accessor) and an explicit up-to-phase contract for subsequent gate updates.
-
-| Path | Equality |
-|---|---|
-| `PauliStabilizer[qo_QuantumOperator]["QuantumOperator"]` vs `qo` | **exact** (`===`) |
-| `PauliStabilizer[qs_QuantumState]["State"]` vs `qs` | **exact** (`===`) |
-| `PauliStabilizer[qs]["gate", q]["State"]` vs `gate @ qs` | up to global phase |
-| `PauliStabilizer[gate @ qs]["State"]` vs `gate @ qs` | **exact** — the escape hatch for gate-update phase loss |
-| `PauliStabilizer[ps["Circuit"]]["State"]` vs `ps["State"]` | up to global phase (no source state, only tableau) |
-
-### First hop is exact (Phase 5c)
-
-The Y gate is the canary: AG-decomposition recovers `Z·X = i·Y`, but the constructor captures the missing `−i` factor under `"GlobalPhase"`, so `["QuantumOperator"]` returns `Y` exactly:
-
-```wolfram
-With[{ps = PauliStabilizer[QuantumOperator["Y"]]},
-    <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["QuantumOperator"]["Matrix"] === QuantumOperator["Y"]["Matrix"]|>
-]
-```
-```
-<|"GlobalPhase" -> -I, "matches" -> True|>
-```
-
-State construction is the same:
-
-```wolfram
-With[{ps = PauliStabilizer[QuantumState[{0, 1}]]},
-    <|"GlobalPhase" -> ps["GlobalPhase"], "matches" -> ps["State"]["StateVector"] === QuantumState[{0, 1}]["StateVector"]|>
-]
-```
-```
-<|"GlobalPhase" -> 1, "matches" -> True|>
-```
-
-### Gate-update path is up to phase (ROADMAP §A.9)
-
-Clifford gate updates do **not** propagate `"GlobalPhase"`. Recovering the new phase exactly would require materializing the state at every gate update, which is `O(2ⁿ)` and defeats the AG `O(n²)` advantage. Documented as an inherent trade-off:
-
-```wolfram
-With[{
-    actual   = PauliStabilizer[QuantumState[{0, 1}]]["Y", 1]["State"]["StateVector"] // Normal,
-    expected = (QuantumOperator["Y"][QuantumState[{0, 1}]])["StateVector"] // Normal
-},
-    <|"actual" -> actual, "expected" -> expected, "abs-overlap" -> Quiet @ Simplify[Abs[Conjugate[actual] . expected]]|>
-]
-```
-```
-<|"actual" -> {1, 0}, "expected" -> {-I, 0}, "abs-overlap" -> 1|>
-```
-
-The actual is `\|0⟩` and the expected is `−i\|0⟩`; they differ by a phase but `\|⟨a\|b⟩\| = 1`.
-
-### Escape hatch for exact equality after a gate
-
-Re-construct the `PauliStabilizer` from the post-gate state:
-
-```wolfram
-With[{
-    qs = QuantumState[{0, 1}],
-    gate = QuantumOperator["Y"]
-},
-    PauliStabilizer[gate[qs]]["State"]["StateVector"] // Normal // Simplify
-]
-```
-```
-{-I, 0}
-```
-
-This re-tomographs the Y-rotated state, captures the new `GlobalPhase`, and `["State"]` returns `−i\|0⟩` exactly.
-
-For the full test surface see [TIER 1.4a/1.4b/1.4c/1.4d in `Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) and the cross-module probes in [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt). Root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md).
-
-## Integration with QuantumFramework
-
-```wolfram
-QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][Method -> "Stabilizer"]["Stabilizers"]
-```
-```
-{"XX", "ZZ"}
-```
-
-```wolfram
-QuantumCircuitOperator["GHZ"[3]][Method -> "Stabilizer"]["Stabilizers"]
-```
-```
-{"XXX", "ZZI", "IZZ"}
-```
-
-UpValues are wired so `QuantumOperator[gate, q] @ ps` works:
-
-```wolfram
-With[{ps = PauliStabilizer[1]},
-    (QuantumOperator["H", 1] @ ps)["Stabilizers"]
-]
-```
-```
-{"X"}
+QuantumCircuitOperator[…][Method -> "Stabilizer"]
+                                  (* routes through PauliStabilizerApply *)
 ```
 
 ## Messages
 
-- `PauliStabilizer::nonclifford` — emitted when a circuit contains a gate that doesn't match any tableau-update rule (and isn't `P[θ]`/`T`/`T†`). Returns the input state unchanged so the user can recover.
-- `PauliStabilizer::tdeprecated` — historical message announcing the Phase 4 migration of `P[θ]/T/T†` from `Plus` to `StabilizerFrame`.
-
-## Methods (Symbolic measurement)
-
-Phase 3 SymPhase methods (FangYing23 §3, arxiv:2311.03906). All three were Phase-3 top-level public symbols (`StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`); demoted in Phase 6 to methods on `PauliStabilizer` per the API consolidation.
-
-### `ps["SymbolicMeasure", q_Integer]` and `ps["SymbolicMeasure", qudits_List]`
-
-Symbolic Z-basis measurement. Allocates a fresh `\[FormalS][k]` symbol per non-deterministic measurement; returns one `PauliStabilizer` instead of an `Association`.
-
-**Deterministic case** (no anticommuting stabilizer): returns the post-state directly with no fresh symbol allocated.
-
-```wolfram
-PauliStabilizer[1]["SymbolicMeasure", 1]["Stabilizers"]
-```
-```
-{"Z"}
-```
-
-**Non-deterministic case** (one anticommuting stabilizer): allocates a fresh `\[FormalS][k]` symbol and stamps it into the appropriate phase position.
-
-```wolfram
-Module[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
-    <|
-        "Head"          -> Head[psSym],
-        "Phase"         -> psSym["Phase"],
-        "FreshSymbols"  -> DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity]
-    |>
-]
-```
-```
-<|"Head" -> PauliStabilizer, "Phase" -> {0, \[FormalS][1]},
-  "FreshSymbols" -> {\[FormalS][1]}|>
-```
-
-**Phase 3 known limitation:** when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly by AG but is **not** stamped into the post-state's signs. Tracked in [ROADMAP §A.4](ROADMAP.md). Fix lives in Phase 4 `StabilizerFrame` integration.
-
-### `ps["SubstituteOutcomes", rules]`
-
-Replace measurement-outcome symbols with concrete 0/1 values, reducing signs back to {-1, 1} via `Mod 2`. Substituting a symbol with 0 reproduces the outcome-0 branch; with 1 reproduces outcome-1:
-
-```wolfram
-Module[{psSym, sym, ps0, ps1Reg},
-    psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
-    sym = First @ DeleteDuplicates @ Cases[psSym["Phase"], _\[FormalS], Infinity];
-    ps0 = psSym["SubstituteOutcomes", sym -> 0];
-    ps1Reg = psSym["SubstituteOutcomes", sym -> 1];
-    <|
-        "outcome 0 stabilizers" -> ps0["Stabilizers"],
-        "outcome 1 stabilizers" -> ps1Reg["Stabilizers"]
-    |>
-]
-```
-```
-<|"outcome 0 stabilizers" -> {"Z"}, "outcome 1 stabilizers" -> {"-Z"}|>
-```
-
-### `ps["SampleOutcomes"]` and `ps["SampleOutcomes", n_Integer]`
-
-Draw `n` random samples by independently substituting each outcome symbol with a uniformly-random 0 or 1. Single-arg form returns one sample; with `n`, returns a list.
-
-```wolfram
-SeedRandom[42];
-With[{psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]},
-    #["Stabilizers"] & /@ psSym["SampleOutcomes", 10]
-]
-```
-```
-{{"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}, {"Z"}, {"Z"}}
-```
-
-## Methods (Random Clifford)
-
-Uniformly random sampler from the n-qubit Clifford group via the Bravyi–Maslov / Koenig–Smolin Mallows-distribution algorithm. The standalone `RandomClifford[n]` was demoted in Phase 6; reach the same sampler via the named-pattern constructor:
-
-```wolfram
-SeedRandom[42];
-With[{r = PauliStabilizer["Random", 3]},
-    <|"Qubits" -> r["Qubits"], "Stabilizers" -> r["Stabilizers"]|>
-]
-```
-```
-<|"Qubits" -> 3, "Stabilizers" -> {"-XIY", "XYY", "-XII"}|>
-```
-
-**Cardinality** (KoeSmo14 Eq 2): `|C_n| = 2^(n² + 2n) · Π_{j=1}^n (4^j − 1)`. For `n = 1`, 24 elements. For `n = 2`, 11520. For `n = 3`, ~9.29 × 10⁷.
-
-**Uniformity smoke test:** 200 samples on n=1 hit most of the small number of distinct stabilizer states.
-
-```wolfram
-SeedRandom[42];
-Length @ DeleteDuplicates @ Table[
-    With[{r = PauliStabilizer["Random", 1]}, {r["Stabilizers"], r["Signs"]}],
-    {200}
-]
-```
-```
-12
-```
-
-See KoeSmo14 §3.2 (arxiv:1406.2170) and [ROADMAP §B.5](ROADMAP.md) (`IndexClifford` inverse map, deferred).
-
-10 samples, mix of outcome-0 (`{"Z"}`) and outcome-1 (`{"-Z"}`) — approximately 50/50 split.
+| Message | Fired when |
+|---|---|
+| `PauliStabilizer::nonclifford` | A circuit contains a gate with no tableau-update rule and that isn't `P[θ] / T / T†`. State returned unchanged. |
+| `PauliStabilizer::tdeprecated` | Historical: announces the Phase 4 migration of `P[θ] / T / T†` from `Plus` to `StabilizerFrame`. |
+| `PauliStabilizer::expectationdim` | `ps["Expectation", P]` with `Length[P] ≠ Qubits`. |
+| `PauliStabilizer::nonpaulibasis` | A non-Pauli QMO or non-Pauli channel acts on a stabilizer; falls back to legacy circuit path. |
 
 ---
 
 # StabilizerFrame
 
-Phase 4 superposition-of-stabilizer-states head: `Σ_i c_i |s_i⟩` with (possibly symbolic) coefficients `c_i` and stabilizer states `|s_i⟩`. Produced by non-Clifford gates (`P[θ]`, `T`, `T†`) on a `PauliStabilizer`. Closes under further Clifford gates (which distribute over components) and under further non-Clifford gates (which double the component count).
+Phase 4 superposition of stabilizer states: `Σᵢ cᵢ \|sᵢ⟩` with possibly symbolic coefficients. Produced by non-Clifford gates (`P[θ]`, `T`, `T†`) on a `PauliStabilizer`. Closes under further Clifford gates (which distribute over components) and under further non-Clifford gates (which double the component count). Source: [StabilizerFrame.m](../../../QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m).
 
 ## Constructors
 
-### From a list of {coefficient, PauliStabilizer} pairs
+### From a list of `{coefficient, PauliStabilizer}` pairs
 
 ```wolfram
-With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]},
-    With[{fH = f["H", 1]},
-        <|"Length" -> fH["Length"],
-          "Stabilizers-each" -> #["Stabilizers"] & /@ fH["Stabilizers"]|>
-    ]
-]
-```
-```
-<|"Length" -> 2, "Stabilizers-each" -> {"Z"}|>
+StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]
 ```
 
-### From a single PauliStabilizer (coefficient = 1)
+### From a single PauliStabilizer (coefficient 1)
 
 ```wolfram
-With[{f = StabilizerFrame[PauliStabilizer[1]]},
-    <|"Length" -> f["Length"], "Components" -> f["Components"]|>
-]
-```
-```
-<|"Length" -> 1,
-  "Components" -> {{1, PauliStabilizer[<|"Signs" -> {1, 1},
-                                          "Tableau" -> {{{1, 0}}, {{0, 1}}}|>]}}|>
+StabilizerFrame[PauliStabilizer[1]]
 ```
 
 ### From a non-Clifford gate
 
 ```wolfram
-With[{psT = PauliStabilizer[1]["T", 1]},
-    <|
-        "Head"         -> Head[psT],
-        "Length"       -> psT["Length"],
-        "Coefficients" -> psT["Coefficients"]
-    |>
-]
-```
-```
-<|"Head" -> StabilizerFrame, "Length" -> 2,
-  "Coefficients" -> {(1 + E^((I/4)*Pi))/2, (1 - E^((I/4)*Pi))/2}|>
+PauliStabilizer[1]["T", 1]
+(* StabilizerFrame[…] of length 2 *)
 ```
 
 ## Properties
 
 | Property | Returns |
 |---|---|
-| `"Components"` | List of `{coeff, PauliStabilizer}` pairs |
+| `"Components"` | List of `{coefficient, PauliStabilizer}` pairs |
 | `"Coefficients"` | List of coefficients only |
 | `"Stabilizers"` | List of underlying `PauliStabilizer`s |
 | `"Length"` | Number of components |
-| `"Qubits"`, `"Qudits"` | Qubit count of components (assumed identical) |
+| `"Qubits"` / `"Qudits"` | Qubit count of components (assumed identical) |
 | `"GeneratorCount"` | Generator count of components |
-| `"StateVector"` | Materialized state vector (cost `2ⁿ`) |
+| `"StateVector"` | Materialized state vector (`O(2ⁿ)`) |
 | `"State"` | Materialized `QuantumState` |
 
 ## Methods
@@ -748,225 +433,121 @@ With[{psT = PauliStabilizer[1]["T", 1]},
 
 ```wolfram
 With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}]},
-    With[{fH = f["H", 1]},
-        <|"Length" -> fH["Length"],
-          "Stabilizers-each" -> #["Stabilizers"] & /@ fH["Stabilizers"]|>
-    ]
+    f["H", 1]["Length"]
 ]
-```
-```
-<|"Length" -> 2, "Stabilizers-each" -> {"Z"}|>
+(* 2  -- Same component count, each had H applied *)
 ```
 
-(Both components had `H` applied; output frame still has 2 components.)
-
-### Non-Clifford gates double component count
+### Non-Clifford gates double the count
 
 ```wolfram
-With[{psT2 = PauliStabilizer[1]["H", 1]["T", 1]["T", 1]},
-    {Head[psT2], psT2["Length"]}
-]
-```
-```
-{StabilizerFrame, 4}
+PauliStabilizer[1]["H", 1]["T", 1]["T", 1]["Length"]
+(* 4 *)
 ```
 
-`T ∘ T` on `|+⟩`: each `T` doubles the frame, ending at 4 components.
+### Inner product (Phase 6.5)
 
-### Materialization
+```wolfram
+frame["InnerProduct", other]
+(* same as ps["InnerProduct", other] *)
+```
 
-`T|0⟩ = |0⟩` (eigenstate). The frame materializes correctly:
+## Arithmetic UpValues
+
+| Form | Effect |
+|---|---|
+| `frame1 + frame2` | Concatenate component lists |
+| `c * frame` (scalar c) | Scale all coefficients |
+| `frame1 == frame2` | Structural equality on components |
+
+## Materialization
+
+`T\|0⟩ = \|0⟩` (eigenstate). The frame materializes correctly:
 
 ```wolfram
 Module[{psT = PauliStabilizer[1]["T", 1], vec},
     vec = Normal @ psT["StateVector"];
     Chop @ N @ FullSimplify[vec - {1, 0}]
 ]
+(* {0, 0} *)
 ```
-```
-{0, 0}
-```
-
-After `FullSimplify`, the diff is exactly zero — confirming `T|0⟩ = |0⟩`.
-
-## Arithmetic upvalues
-
-- `Plus` of two frames: concatenates their components (`StabilizerFrame /: Plus[a, b]`).
-- `Times` by a scalar: scales all coefficients (`StabilizerFrame /: Times[c, f]`).
-- `Equal`: structural equality on components.
-
-## See also
-
-- [`ps["InnerProduct", other]`](#methods-inner-product--expectation) (or equivalently `frame["InnerProduct", other]`) — works for both `PauliStabilizer` and `StabilizerFrame` receivers.
-- GarMar15 §3 (arxiv:1712.03554) — Quipu stabilizer frames.
-
----
-
-## Methods (Inner product + Expectation)
-
-Phase 4 implementations of `⟨ψ|φ⟩` and `⟨ψ|P|ψ⟩`, demoted from top-level public symbols (`StabilizerInnerProduct`, `StabilizerExpectation`) in Phase 6.5.
-
-### `ps["InnerProduct", other]` and `frame["InnerProduct", other]`
-
-Compute `⟨self|other⟩` for two stabilizer states (or frames). Phase 4 v1 uses direct vector materialization (cost `2ⁿ`); the closed-form `O(n³)` GarMarCro12 algorithm is on [ROADMAP §A.1](ROADMAP.md). Receiver and `other` may each be a `PauliStabilizer` or a `StabilizerFrame`.
-
-```wolfram
-With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    psBell["InnerProduct", psBell]
-]
-```
-```
-1
-```
-
-```wolfram
-Module[{psPhiPlus, psPhiMinus},
-    psPhiPlus = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
-    psPhiMinus = psPhiPlus["Z", 1];
-    Chop @ N @ psPhiPlus["InnerProduct", psPhiMinus]
-]
-```
-```
-0
-```
-
-`|Φ+⟩` and `|Φ−⟩` are orthogonal Bell states.
-
-**Mixed `PauliStabilizer`/`StabilizerFrame`:**
-
-```wolfram
-With[{psT = PauliStabilizer[1]["T", 1], ps0 = PauliStabilizer[1]},
-    FullSimplify @ psT["InnerProduct", ps0]
-]
-```
-```
-1
-```
-
-`⟨T|0⟩|0⟩ = ⟨0|T|0⟩ = 1` since `T|0⟩ = |0⟩`.
-
-### `ps["Expectation", pauliString_String]`
-
-Compute `⟨ps|P|ps⟩` for an arbitrary Pauli string `P` (`[+/-][I|X|Y|Z]+`, length = qubit count). Returns ±1 for stabilizer-group elements, 0 for anticommuting Paulis, and the exact expectation via direct vector for Paulis in `N(S) \ S`.
-
-**Stabilizer-group elements give +1:**
-
-```wolfram
-With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    <|
-        "<XX>" -> psBell["Expectation", "XX"],
-        "<ZZ>" -> psBell["Expectation", "ZZ"],
-        "<YY>" -> psBell["Expectation", "YY"]
-    |>
-]
-```
-```
-<|"<XX>" -> 1, "<ZZ>" -> 1, "<YY>" -> -1|>
-```
-
-`⟨XX⟩ = ⟨ZZ⟩ = +1` because both are in the stabilizer group `⟨XX, ZZ⟩`. **`⟨YY⟩ = −1`** because `YY = (iXZ)⊗(iXZ) = i² · XX · ZZ = −1 · XX · ZZ` — the i-factor matters! This case currently uses the direct-vector fallback; the AG-closed-form i-factor tracking is on [ROADMAP §A.2](ROADMAP.md).
-
-**Anticommuting Paulis give 0:**
-
-```wolfram
-With[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]},
-    psBell["Expectation", "XI"]
-]
-```
-```
-0
-```
-
-**5Q stabilizer measurements all give +1:**
-
-```wolfram
-With[{ps5 = PauliStabilizer["5QubitCode"]},
-    ps5["Expectation", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}
-]
-```
-```
-{1, 1, 1, 1}
-```
-
-**Messages**: `PauliStabilizer::expectationdim` is emitted when the Pauli string length doesn't match the qubit count.
 
 ---
 
 # GraphState
 
-Phase 5 graph-state representation. `GraphState[<|"Graph" -> g_Graph, "VOPs" -> {0,...,0}|>]`. The stabilizer at vertex `i` is `K_i = X_i ⊗ Π_{j ∈ N(i)} Z_j` (AndBri05 Eq 1).
+Phase 5 graph-state representation (AndBri05 §2). Each vertex `i` carries the stabilizer `K_i = X_i ⊗ Π_{j ∈ N(i)} Z_j`. Source: [GraphState.m](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
 
 ## Constructors
 
-### From a Graph
+### From a `Graph`
 
 VOPs default to identity (all zeros).
 
 ```wolfram
-With[{gs = GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]]},
-    <|
-        "Vertices"    -> gs["VertexCount"],
-        "Edges"       -> gs["EdgeCount"],
-        "Stabilizers" -> gs["Stabilizers"]
-    |>
-]
-```
-```
-<|"Vertices" -> 3, "Edges" -> 2, "Stabilizers" -> {"XZI", "ZXZ", "IZX"}|>
+gs = GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]];
+gs["Stabilizers"]
+(* {"XZI", "ZXZ", "IZX"} *)
 ```
 
-The linear cluster `1—2—3` has stabilizers `K_1 = XZI`, `K_2 = ZXZ`, `K_3 = IZX`.
-
-### Cluster-5
+### From a graph-form `PauliStabilizer`
 
 ```wolfram
-GraphState[Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]]["Stabilizers"]
-```
-```
-{"XZIII", "ZXZII", "IZXZI", "IIZXZ", "IIIZX"}
+GraphState[PauliStabilizer[{"XZI", "ZXZ", "IZX"}]]
+(* GraphState[<|"Graph" -> linear cluster, "VOPs" -> {0, 0, 0}|>] *)
 ```
 
-### From a graph-form PauliStabilizer
+Phase 5 v1 only handles graph-form input (each generator is `X_i` at one position with `Z` at neighbors).
 
-`GraphState[ps]` works when `ps` already has graph-form stabilizers (each generator is `X_i` at one position with `Z` at neighbors).
+### Association form
+
+```wolfram
+GraphState[<|"Graph" -> g, "VOPs" -> {0, …, 0}|>]
+```
+
+VOP indices > 0 are reserved for the 24-element `LocalCliffordGroup` (deferred — [ROADMAP §B.3](ROADMAP.md)).
 
 ## Properties
 
 | Property | Returns |
 |---|---|
-| `"Graph"` | the underlying `Graph` |
-| `"VOPs"` | vertex-operator indices (Phase 5 v1: all 0 = identity) |
+| `"Graph"` | Underlying `Graph` |
+| `"VOPs"` | Vertex-operator indices (Phase 5 v1: all 0 = identity) |
 | `"Vertices"` | `VertexList[graph]` |
 | `"Edges"` | `EdgeList[graph]` |
 | `"VertexCount"` | n |
 | `"EdgeCount"` | edge count |
 | `"Qubits"` / `"Qudits"` | n |
-| `"AdjacencyMatrix"` | dense adjacency matrix |
-| `"Stabilizers"` | string list of stabilizer generators (each `K_i`) |
-| `"PauliStabilizer"` | converts to a `PauliStabilizer` head |
+| `"AdjacencyMatrix"` | Dense adjacency matrix |
+| `"Stabilizers"` | String list of stabilizer generators |
+| `"PauliStabilizer"` | Convert to `PauliStabilizer` head |
 
-## Conversion to PauliStabilizer
+## Examples
+
+### Linear cluster on 5 vertices
 
 ```wolfram
-With[{gs = GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]]},
-    gs["PauliStabilizer"]["Stabilizers"]
-]
-```
-```
-{"XZI", "ZXZ", "IZX"}
+GraphState[Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]]["Stabilizers"]
+(* {"XZIII", "ZXZII", "IZXZI", "IIZXZ", "IIIZX"} *)
 ```
 
-## See also
+### Round-trip with cluster-state circuit
 
-- [`LocalComplement`](#localcomplement) — graph operation that transforms graph states by a local Clifford.
-- [ROADMAP §A.6](ROADMAP.md) — VOP tracking under LC (deferred).
-- AndBri05 §2 (arxiv:quant-ph/0504117).
+```wolfram
+g = Graph[Range[4], Table[i \[UndirectedEdge] (i + 1), {i, 3}]];
+ps = GraphState[g]["PauliStabilizer"];
+psFromCirc = PauliStabilizer[QuantumCircuitOperator[
+    Join[Table["H" -> i, {i, 4}], Table["CZ" -> {i, i + 1}, {i, 3}]]
+]];
+ps["Stabilizers"] === psFromCirc["Stabilizers"]
+(* True *)
+```
 
 ---
 
 # LocalComplement
 
-Phase 5 local-complementation operation on a `Graph` or `GraphState`. Toggles all edges among the neighbors of a vertex. Phase 5 v1 does not yet update VOPs ([ROADMAP §A.6](ROADMAP.md)).
+Phase 5 local-complementation operation (AndBri05 Definition 1). Toggles all edges among the neighbors of a vertex. Source: [GraphState.m:135](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
 
 ## Signatures
 
@@ -977,96 +558,304 @@ LocalComplement[gs_GraphState, v]
 
 ## Examples
 
-**LC at the center of a star turns the leaves into a clique:**
+### Star → K₄ minus the star
 
 ```wolfram
-With[{g = Graph[{1, 2, 3, 4}, {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4}]},
-    Sort @ EdgeList @ LocalComplement[g, 1]
-]
-```
-```
-{UndirectedEdge[1, 2], UndirectedEdge[1, 3], UndirectedEdge[1, 4],
- UndirectedEdge[2, 3], UndirectedEdge[2, 4], UndirectedEdge[3, 4]}
+g = Graph[{1, 2, 3, 4}, {1 \[UndirectedEdge] 2, 1 \[UndirectedEdge] 3, 1 \[UndirectedEdge] 4}];
+Sort @ EdgeList @ LocalComplement[g, 1]
+(* All 6 edges of K_4 *)
 ```
 
-The star `1—{2,3,4}` becomes `K_4`-minus-the-{2,3,4}-clique-attached-to-1: original edges `{1-2, 1-3, 1-4}` plus three new edges `{2-3, 2-4, 3-4}`.
-
-**LC is involutive:**
+### Involutivity
 
 ```wolfram
-With[{g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]},
-    Sort @ EdgeList @ LocalComplement[LocalComplement[g, 3], 3] === Sort @ EdgeList[g]
-]
-```
-```
-True
+g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]];
+Sort @ EdgeList @ LocalComplement[LocalComplement[g, 3], 3] === Sort @ EdgeList[g]
+(* True *)
 ```
 
-`LC ∘ LC = id` for any vertex (AndBri05 Definition 1).
-
-## See also
-
-- [`GraphState`](#graphstate) — the graph-state head.
-- AndBri05 Theorem 1 (LC preserves entanglement spectrum).
-- PatGuh26 §3.2 (arxiv:2312.02377) — graphical rules.
-- [ROADMAP §A.6](ROADMAP.md) — VOP tracking.
-- [ROADMAP §B.3](ROADMAP.md) — 24-element LocalClifford table.
+Phase 5 v1 returns the new graph but does **not** update VOPs (deferred to [ROADMAP §A.6](ROADMAP.md)).
 
 ---
 
-# Re-verification
+# CliffordChannel
 
-To re-run all 49 code blocks and confirm the embedded outputs are still correct:
+Phase 8 Choi-tableau representation of an arbitrary Clifford channel `Φ_{A→B}` per Yashin25 §2.3 (arxiv:2504.14101). Encoded as `[U_A \| U_B \| c]` where:
 
-```bash
-wolframscript -f OngoingProjects/Stabilizer/Documentation/verify-API.wls
+- `U_A` is a `k × 2|A|` bit matrix on the input system (or `{}` if `|A| = 0`)
+- `U_B` is a `k × 2|B|` bit matrix on the output system
+- `c` is a length-`k` bit vector (signs)
+- `k` ≤ rank of the Choi state
+
+Each row is a Pauli superoperator `π(u_A \| u_B \| c)[ρ_A] = (-1)^c · 2^|A| · Tr[ρ_A P(u_A)] · P(u_B)`, and the channel is `Φ[ρ] = (1 / 2^{|A|+|B|}) Σᵢ π(rowᵢ)[ρ]`.
+
+Source: [CliffordChannel.m](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m).
+
+## Constructors
+
+### Identity channel: `CliffordChannel["Identity", n]`
+
+```wolfram
+ccI = CliffordChannel["Identity", 1];
+{ccI["InputQubits"], ccI["OutputQubits"], ccI["Rank"]}
+(* {1, 1, 2} *)
 ```
 
-Drift between this document's `output` blocks and the verifier's printed output is a regression signal.
+### From a `PauliStabilizer`: `CliffordChannel[ps]`
+
+State-preparation channel (`|A| = 0`, rank = `|B|`). The Choi tableau is the state's stabilizer half.
+
+```wolfram
+With[{cc = CliffordChannel[PauliStabilizer[2]]},
+    {cc["InputQubits"], cc["OutputQubits"], cc["Rank"]}
+]
+(* {0, 2, 2} *)
+```
+
+### From a `QuantumChannel`: `CliffordChannel[qc]`
+
+Phase 8.2 v1 detects deterministic single-Pauli channels by Label (e.g., `"X"`, `"-XX"`); stochastic Pauli channels emit `CliffordChannel::stochastic`.
+
+### Association form
+
+```wolfram
+CliffordChannel[<|
+    "UA"           -> uA,    (* k x 2|A| bit matrix or {} *)
+    "UB"           -> uB,    (* k x 2|B| bit matrix *)
+    "c"            -> c,     (* length-k bit vector *)
+    "InputQubits"  -> nA,
+    "OutputQubits" -> nB,
+    "Source"       -> tag    (* informational *)
+|>]
+```
+
+## Properties
+
+| Property | Returns |
+|---|---|
+| `"UA"`, `"UB"`, `"c"` | The three components of the Choi tableau |
+| `"InputQubits"` | nA |
+| `"OutputQubits"` | nB |
+| `"Rank"` | k = `Length[c]` |
+| `"Tableau"` | Concatenation `[UA \| UB \| c]` |
+| `"Source"` | Provenance tag (`"Identity"`, `"PauliStabilizer"`, `"Composition"`, …) |
+
+Predicate (PackageScope): `Wolfram``QuantumFramework``PackageScope``CliffordChannelQ`.
+
+## Methods
+
+### Composition: `cc1[cc2]`
+
+Apply `cc2` first, then `cc1`. The composition algorithm (Phase 8.2/8.3, Yashin25 §3.2/§3.3):
+
+1. Stack `cc2.UB` (k1 rows) above `cc1.UA` (k2 rows) into a `(k1+k2) × 2nB` matrix.
+2. Compute the **left null space** `λ s.t. λ · stack = 0` via `NullSpace[Transpose[stack], Modulus -> 2]`.
+3. For each kernel vector `λ = (λ_A, λ_C)`, the composition row is:
+   - `u_A_new = λ_A · cc2.UA mod 2`
+   - `u_C_new = λ_C · cc1.UB mod 2`
+   - `c_new = (λ · cConcat) ⊕ ((rowSumPhase + contractionPhase) / 2)`
+4. Drop trivial rows; deduplicate.
+
+The **rowSumPhase** tracks the cumulative AG g-function (`agPhase`) phase across F₂-summing rows on the A, both B, and C sides; the **contractionPhase** adds `(-1)^{Σ_q x_q z_q}` for the combined u_B Pauli (Y_B contributes -1 since `Y^T = -Y`). Without these, the simple c-bit XOR gives the wrong sign for Y-bearing combined u_B (e.g., `cc_S² = cc_Z` requires the contraction sign for the X→-X row).
+
+```wolfram
+ccS = CliffordChannel[<|"UA" -> {{1, 0}, {0, 1}}, "UB" -> {{1, 1}, {0, 1}},
+                        "c" -> {0, 0}, "InputQubits" -> 1, "OutputQubits" -> 1,
+                        "Source" -> "S"|>];
+ccS3 = ccS[ccS[ccS]];
+{ccS3["UA"], ccS3["UB"], ccS3["c"]}
+(* {{{0, 1}, {1, 0}}, {{0, 1}, {1, 1}}, {0, 1}}  -- Z->Z (c=0), X->-Y (c=1) *)
+```
+
+### State evolution: `cc[ps]`
+
+Apply the channel to a `PauliStabilizer` state. Three recognized cases:
+
+- **Identity channel** (`Source -> "Identity"`, dimensions match): return ps unchanged.
+- **State-prep channel** (`nA == 0`): return the state encoded by cc.
+- **Dim-matched channel**: build `CliffordChannel[ps]`, compose, convert back to `PauliStabilizer`.
+
+```wolfram
+ccS2 = ccS[ccS];   (* = cc_Z *)
+ccS2[PauliStabilizer[1]["X", 1]]["Stabilizers"]
+(* {"-Z"}  -- Z|1> = -|1>, with Phase 8.3 phase tracking flowing through *)
+```
+
+Falls back to dense materialization with `CliffordChannel::stateevol` for unrecognized cases.
+
+## Helpers (PackageScope)
+
+| Helper | Purpose |
+|---|---|
+| `stabilizerRowSumAGPhase[U, lambda, n]` | Cumulative AG i-power mod 4 for F₂-summing Pauli rows |
+| `stabilizerContractionPhase[uB, n]` | `(-1)^{Σ_q x_q z_q}` for the |Φ⁺⟩_BB' contraction sign |
+| `cliffordChannelToPauliStabilizer[cc]` | State-channel → PauliStabilizer (uses string-list constructor) |
+
+## Messages
+
+| Message | Fired when |
+|---|---|
+| `CliffordChannel::dimmismatch` | Composition dimension mismatch (`cc2.OutputQubits ≠ cc1.InputQubits`) |
+| `CliffordChannel::stochastic` | `CliffordChannel[qc]` for a stochastic channel (rank > 1 Kraus). Phase 8.2 only handles deterministic single-Pauli channels. |
+| `CliffordChannel::stateevol` | `cc[ps]` for an unrecognized case |
+
+---
+
+# Hybrid interop (Phase 7)
+
+Cross-head dispatch so that `QuantumMeasurementOperator` / `QuantumChannel` consume a `PauliStabilizer` or `StabilizerFrame` natively, without forcing the caller to materialize via `ps["State"]` (which costs `O(2ⁿ)`). Source: [HybridInterop.m](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m).
+
+## `qmo[ps_PauliStabilizer]`
+
+UpValue on `PauliStabilizer`. Dispatches by the QMO's operator label.
+
+| Label form | Path | Cost |
+|---|---|---|
+| Pauli string `[+-]?[IXYZ]+` | `ps["M", pauli]` AG fast path | `O(n²)` |
+| `Times[-1, Superscript[X\|Y\|Z\|I, CircleTimes[m]]]` (Phase 7.3) | `"-XXXX…"` then AG fast path | `O(n²)` |
+| `Superscript[X\|Y\|Z\|I, CircleTimes[m]]` (Phase 7.3) | `"XXXX…"` then AG fast path | `O(n²)` |
+| `Times[-1, str]` for Pauli string `str` (Phase 7.3) | `"-" <> str` then AG fast path | `O(n²)` |
+| QMO matrix matches a Pauli string for `n ≤ 4` (Phase 7.4) | `stabilizerPauliFromMatrix`, then AG fast path | `O(4ⁿ)` for detection, `O(n²)` after |
+| Other (e.g. computational basis) | `PauliStabilizer::nonpaulibasis` info, fall back to `PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]` | dense |
+
+```wolfram
+psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
+QuantumMeasurementOperator["XX", {1, 2}][psBell]
+(* <|0 -> ...|>  -- routed through ps["M", "XX"], no fallback *)
+
+QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]], {1, 2}][psBell]
+(* Phase 7.4 matrix-iteration: detects "XZ", routes through fast path *)
+```
+
+The Phase 7.4 cap is `Wolfram``QuantumFramework``PackageScope``$stabilizerPauliMatrixSearchMaxQubits` (default 4); override via `Block`.
+
+## `qmo[sf_StabilizerFrame]`
+
+UpValue on `StabilizerFrame`. Currently always materializes the frame (`sf["State"]`) and applies the QMO on the materialized state. Frame-native fast path is [Phase 7.5 deferred](ROADMAP.md).
+
+## `qc[ps_PauliStabilizer]`
+
+UpValue on `PauliStabilizer`. Detects the four named single-qubit Pauli channels (`BitFlip`, `PhaseFlip`, `BitPhaseFlip`, `Depolarizing`) and returns a probabilistic-mixture list `{{prob, ps_after_pauli}, …}`:
+
+| Channel | Branches |
+|---|---|
+| `BitFlip[p]` | `{(1-p, ps), (p, ps[X, q])}` |
+| `PhaseFlip[p]` | `{(1-p, ps), (p, ps[Z, q])}` |
+| `BitPhaseFlip[p]` | `{(1-p, ps), (p, ps[Y, q])}` |
+| `Depolarizing[p]` | `{(1-3p/4, ps), (p/4, ps[X, q]), (p/4, ps[Y, q]), (p/4, ps[Z, q])}` |
+
+Cost: `O(n)` per branch.
+
+Non-Clifford channels (`AmplitudeDamping`, `PhaseDamping`, `GeneralizedAmplitudeDamping`, `ResetError`, multi-qubit named channels) emit `PauliStabilizer::nonpaulibasis` and fall back to dense materialization (`qc[ps["State"]]`).
+
+```wolfram
+QuantumChannel["BitFlip"[1/3], {1}][PauliStabilizer[1]]
+(* {{2/3, PauliStabilizer[…]}, {1/3, PauliStabilizer[…]}} *)
+```
+
+## `qc[sf_StabilizerFrame]`
+
+Same fallback as `qmo[sf]` — currently materializes; deferred to a frame-native path.
+
+---
+
+# Cross-package fixtures
+
+## Stim
+
+Live fixtures in [`Tests/Stabilizer/fixtures/stim_fixtures.json`](../../../Tests/Stabilizer/fixtures/stim_fixtures.json), generated by [`generate_stim_fixtures.py`](../../../Tests/Stabilizer/fixtures/generate_stim_fixtures.py). Tested in [`Tests/Stabilizer/CrossPackage_Stim.wlt`](../../../Tests/Stabilizer/CrossPackage_Stim.wlt) (44 tests).
+
+Stim uses `_` for I and explicit `+` / `-` signs (e.g., `"+_XX"`); the WLT files normalize via:
+
+```wolfram
+stimNormalize[s_String] := StringReplace[
+    StringReplace[s, "_" -> "I"],
+    StartOfString ~~ "+" -> ""
+]
+```
+
+## QuantumClifford.jl
+
+Hand-coded canonical results (no live import). Source repo at [OngoingProjects/Stabilizer/External Packages/QuantumClifford.jl](../../External%20Packages/QuantumClifford.jl/). Tested in [`Tests/Stabilizer/CrossPackage_QuantumClifford.wlt`](../../../Tests/Stabilizer/CrossPackage_QuantumClifford.wlt) (15 tests).
+
+Key cross-validated identity: AG g-function per qubit (`agPhase(0, 1, 1, 0) = 1`), so `Z*X = i Y` and three-qubit `ZZZ * XXX = i^3 YYY = -i YYY`, matching QC.jl `prodphase`.
 
 ---
 
 # Quick reference card
 
 ```wolfram
-(* Constructor *)
-ps = PauliStabilizer["5QubitCode"];           (* named code *)
-ps = PauliStabilizer[{"XX", "ZZ"}];           (* string list *)
-ps = PauliStabilizer[3];                       (* |0...0> register *)
+(* Construction *)
+ps = PauliStabilizer[3];                                       (* |000> *)
+ps = PauliStabilizer["5QubitCode"];                            (* named code *)
+ps = PauliStabilizer[{"XX", "ZZ"}];                            (* string list *)
 ps = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
 
 (* Random *)
-ps = RandomClifford[3];
+ps = PauliStabilizer["Random", 3];
 
 (* Properties *)
 ps["Qubits"]; ps["Stabilizers"]; ps["Tableau"]; ps["Matrix"]; ps["Phase"];
+ps["State"]; ps["QuantumOperator"]; ps["Circuit"];
 
 (* Clifford gates *)
-ps["H", q]; ps["S", q]; ps["X", q]; ps["CNOT", c, t]; ps["CZ", c, t];
+ps["H", q]; ps["S", q]; ps[SuperDagger["S"], q];
+ps["X", q]; ps["Y", q]; ps["Z", q]; ps["V", q]; ps[SuperDagger["V"], q];
+ps["CNOT", c, t]; ps["CZ", c, t]; ps["SWAP", a, b];
+ps["Permute", Cycles[…]]; ps["PadRight", n]; ps["Dagger"];
 
-(* Non-Clifford -> StabilizerFrame *)
-psT = ps["T", q];   (* StabilizerFrame head *)
-psT["StateVector"]; (* materialize *)
+(* Non-Clifford (returns StabilizerFrame) *)
+ps["T", q]; ps["P"[\[Theta]], q];
 
 (* Measurement *)
-ps["M", q];           (* Z-basis: <|0 -> ps0, 1 -> ps1|> *)
-ps["M", "XZZXI"];     (* arbitrary Pauli string *)
-ps["M", {1, 2, 3}];   (* multi-qubit *)
+ps["M", q];                  (* Z basis: <|0 -> ps0, 1 -> ps1|> *)
+ps["M", "XZZXI"];            (* arbitrary Pauli string *)
+ps["M", {1, 2, 3}];          (* multi-qubit *)
 
 (* Symbolic measurement (Phase 3) *)
-psSym = StabilizerMeasure[ps, q];
-ps0 = SubstituteOutcomes[psSym, \[FormalS][1] -> 0];
-samples = SampleOutcomes[psSym, 100];
+psSym = ps["SymbolicMeasure", q];
+ps0 = psSym["SubstituteOutcomes", \[FormalS][1] -> 0];
+samples = psSym["SampleOutcomes", 100];
 
-(* Inner product / expectation (Phase 4) *)
-StabilizerInnerProduct[psA, psB];
-StabilizerExpectation[ps, "XYZIX"];
+(* Inner product / expectation *)
+ps["InnerProduct", other];
+ps["Expectation", "XYZIX"];
 
-(* Graph state (Phase 5) *)
-gs = GraphState[Graph[Range[5], ...]];
+(* Graph state *)
+gs = GraphState[Graph[Range[5], …]];
 gs["Stabilizers"]; gs["PauliStabilizer"];
 LocalComplement[gs, vertex];
 
+(* Clifford channel (Phase 8) *)
+ccI = CliffordChannel["Identity", n];
+ccS = CliffordChannel[<|"UA" -> …, "UB" -> …, "c" -> …,
+                        "InputQubits" -> 1, "OutputQubits" -> 1|>];
+ccI[ccS];                    (* compose *)
+ccS[ps];                     (* state evolution *)
+
+(* Hybrid interop (Phase 7) *)
+QuantumMeasurementOperator["ZZ", {1, 2}][ps];                  (* AG fast path *)
+QuantumChannel["BitFlip"[p], {1}][ps];                         (* tableau-mixture *)
+
 (* QuantumFramework integration *)
 QuantumCircuitOperator[gates][Method -> "Stabilizer"];
+
+(* PackageScope tunables *)
+Wolfram`QuantumFramework`PackageScope`$stabilizerPauliMatrixSearchMaxQubits  (* default 4 *)
 ```
+
+---
+
+# References
+
+| Tag | Paper | Used in |
+|---|---|---|
+| AarGot04 | Aaronson, Gottesman, "Improved simulation of stabilizer circuits" (arxiv:quant-ph/0406196) | Tableau, gate updates, measurement (`agPhase`, `rowsum`) |
+| AndBri05 | Anders, Briegel, "Fast simulation of stabilizer circuits using a graph-state representation" (arxiv:quant-ph/0504117) | GraphState, LocalComplement |
+| FangYing23 | Fang, Ying, "SymPhase: symbolic phase representation for stabilizer simulation" (arxiv:2311.03906) | SymbolicMeasure / SubstituteOutcomes / SampleOutcomes |
+| GarMar15 | García, Markov, "Simulation of quantum circuits via stabilizer frames" (arxiv:1712.03554) | StabilizerFrame |
+| GarMarCro12 | García, Markov, Cross, "Efficient inner-product algorithm for stabilizer states" (arxiv:1210.6646) | InnerProduct (closed-form deferred to ROADMAP §A.1) |
+| KoeSmo14 | Koenig, Smolin, "How to efficiently select an arbitrary Clifford group element" (arxiv:1406.2170) | RandomClifford (Mallows sampler) |
+| Yashin25 | Yashin, "Choi-tableau formalism for Clifford channels" (arxiv:2504.14101) | CliffordChannel (composition + phase tracking) |
+| Got97 | Gottesman, "Stabilizer codes and quantum error correction" (PhD thesis) | 5-qubit code |
+| Got00 | Gottesman, "An introduction to quantum error correction and fault-tolerant computation" | Steane / Shor codes |

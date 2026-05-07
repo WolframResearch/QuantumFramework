@@ -59,7 +59,7 @@ Three reasons, each with a code anchor:
 
 1. **Mislabeled tier.** [`Tests/PauliStabilizer.wlt:224‑263`](../../../Tests/PauliStabilizer.wlt) had a tier called "Round‑trips" that didn't contain round-trips. Reviewers seeing "TIER 1.4 — Round-trips ✅ all green" had no signal that the round-trip a user would actually try wasn't covered.
 2. **Inherited convention.** Past test-writing reproduced the stabilizer-simulator convention of phase-oblivious comparison (see §2 above) without flagging it. There was no statement anywhere that QF's contract was stricter than the convention.
-3. **The verifier scripts reproduced the same blind spot.** [`OngoingProjects/Stabilizer/Documentation/verify-API.wls:242‑256`](verify-API.wls) explicitly avoids exact equality (uses `Chop @ Abs[Conjugate[vec1] . vec2] − 1`, comment on line 245: *"String equality of stabilizer generators does NOT hold"*). [`verify-synthesis-implementation.wls:98‑108, 324‑338`](verify-synthesis-implementation.wls) does test exact equality but only for stabilizer-set roundtrips that stay inside `PauliStabilizer`; it never crosses the constructor↔accessor type boundary.
+3. **The verifier scripts (now retired) reproduced the same blind spot.** The legacy `verify-API.wls` (deleted 2026-05-07) explicitly avoided exact equality, using `Chop @ Abs[Conjugate[vec1] . vec2] − 1` with the comment *"String equality of stabilizer generators does NOT hold"*. The legacy `verify-synthesis-implementation.wls` (also deleted) tested exact equality but only for stabilizer-set roundtrips that stay inside `PauliStabilizer`; it never crossed the constructor↔accessor type boundary. Their replacement is `Tests/Stabilizer/AuditMatrix.wlt` plus the existing `VerificationTest`-based `.wlt` files, which DO cross type boundaries (TIER 15 in `AuditMatrix.wlt`).
 
 The miss was structural. A single more-careful pass wouldn't have caught it; a different test-writing rule would have.
 
@@ -72,7 +72,7 @@ The miss was structural. A single more-careful pass wouldn't have caught it; a d
 | `93edc400` | TIER 1.4a/b/c added (42 tests) | 21 red — locked the spec |
 | `6f8637ee` | State tomography rewrite (`Stabilizer/Constructors.m`); 4ⁿ Pauli expectations + greedy F₂ rank growth + symplectic Gram-Schmidt; introduced `"GlobalPhase"` association key | 21 → 6 red |
 | `f7ebfd56` | Operator global-phase capture (`Stabilizer/Constructors.m`, `Stabilizer/Conversions.m`) | 6 → 0 red |
-| `57d8b53f` | Doc updates: ROADMAP/API/synthesis-implementation reflect 5c | docs aligned |
+| `57d8b53f` | Doc updates: ROADMAP / API.md reflect 5c | docs aligned |
 | `f9e2d711` | This post-mortem; A.9 contract documented (`Stabilizer/GateUpdates.m` comment block); TIER 1.4d added (up-to-phase + escape-hatch tests) | 227 → 235 |
 | `cbf51576` | Phase C cross-module audit — `Tests/Roundtrips.wlt` probes `QuantumChannel ↔ QuantumOperator` and `QuantumCircuitOperator ↔ QuantumOperator` | 20/20 PASS, no new bugs |
 
