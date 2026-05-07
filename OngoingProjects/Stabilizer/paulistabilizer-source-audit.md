@@ -6,10 +6,10 @@
 >
 > Kept on disk because the audit captures the pre-rebuild surface and the reasoning that motivated the rebuild. For current information:
 >
-> - **Current API**: [`Documentation/API.md`](Documentation/API.md)
+> - **Current API**: [`Documentation/api.md`](Documentation/api.md)
 > - **What works today (capability tour)**: [`Documentation/synthesis-implementation.md`](Documentation/synthesis-implementation.md)
-> - **Open items + design rationale**: [`Documentation/ROADMAP.md`](Documentation/ROADMAP.md)
-> - **Round-trip miss post-mortem**: [`Documentation/post-mortem-phase-5c.md`](Documentation/post-mortem-phase-5c.md)
+> - **Open items + design rationale**: [`Documentation/roadmap.md`](Documentation/roadmap.md)
+> - **Round-trip miss post-mortem**: [`Documentation/postmortem.md`](Documentation/postmortem.md)
 
 > Anchor: `Wolfram/QuantumFramework 1.6.5`, SHA `cbbe9368`. Source: `QuantumFramework/Kernel/PauliStabilizer.m` (494 LOC). Last modified 2024-05-29.
 >

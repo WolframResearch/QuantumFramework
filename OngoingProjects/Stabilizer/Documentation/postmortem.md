@@ -6,7 +6,7 @@
 
 Anchor: branch `stabilizer-phases-1-4`, commits `93edc400` (red tests), `6f8637ee` (state tomography), `f7ebfd56` (operator phase capture), `57d8b53f` (5c docs), plus the gate-update propagation commit closing §A.9.
 
-> **Phase 6 footnote (2026-05-06).** After Phase 5c shipped, a design review with N. Murzin flagged the public API surface (10 symbols across Phases 3–5) as excessive. Phase 6 demoted four of them (`RandomClifford`, `StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`) to method-grade operations on `PauliStabilizer`. **Phase 6.5** then demoted the two borderline cases (`StabilizerInnerProduct`, `StabilizerExpectation`) on the same grounds — both are single-receiver operations that read more naturally as `ps["InnerProduct", other]` and `ps["Expectation", pauli]`. Combined surface: 10 → 4 (`PauliStabilizer`, `StabilizerFrame`, `GraphState`, `LocalComplement`). No semantic change. The same review argued for routing hybrid stabilizer ↔ Schrödinger interop through cross-head **UpValues** rather than `Picture -> "Stabilizer"` or `QuantumBasis`-wrapping (both would force `O(2ⁿ)` materialization through the basis pipeline and defeat the formalism's `O(n²)` advantage). See `~/.claude/plans/i-am-conviced-of-vast-kettle.md` for the design plan and the audit findings (Picture is a guard, not metadata; `QuantumBasis` and `QuantumState` data shapes don't admit side-car keys without breaking validation; UpValues are already the proven cross-type pattern at [Stabilizer/Conversions.m:139-142](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m)). Phase 7 (UpValues for `qmo[ps]`, `qc[ps]`, etc.) and Phase 8 (Yashin25 Choi-tableau unifier per [ROADMAP §B.2](ROADMAP.md#b2--clifford-channel-via-choi-tableau-yashin25)) are the next milestones, scoped to separate PRs. Process rule going forward: every feature-growth phase ends with an "API surface consolidation" pass.
+> **Phase 6 footnote (2026-05-06).** After Phase 5c shipped, a design review with N. Murzin flagged the public API surface (10 symbols across Phases 3–5) as excessive. Phase 6 demoted four of them (`RandomClifford`, `StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`) to method-grade operations on `PauliStabilizer`. **Phase 6.5** then demoted the two borderline cases (`StabilizerInnerProduct`, `StabilizerExpectation`) on the same grounds — both are single-receiver operations that read more naturally as `ps["InnerProduct", other]` and `ps["Expectation", pauli]`. Combined surface: 10 → 4 (`PauliStabilizer`, `StabilizerFrame`, `GraphState`, `LocalComplement`). No semantic change. The same review argued for routing hybrid stabilizer ↔ Schrödinger interop through cross-head **UpValues** rather than `Picture -> "Stabilizer"` or `QuantumBasis`-wrapping (both would force `O(2ⁿ)` materialization through the basis pipeline and defeat the formalism's `O(n²)` advantage). See `~/.claude/plans/i-am-conviced-of-vast-kettle.md` for the design plan and the audit findings (Picture is a guard, not metadata; `QuantumBasis` and `QuantumState` data shapes don't admit side-car keys without breaking validation; UpValues are already the proven cross-type pattern at [Stabilizer/Conversions.m:139-142](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m)). Phase 7 (UpValues for `qmo[ps]`, `qc[ps]`, etc.) and Phase 8 (Yashin25 Choi-tableau unifier per [ROADMAP §B.2](roadmap.md#b2--clifford-channel-via-choi-tableau-yashin25)) are the next milestones, scoped to separate PRs. Process rule going forward: every feature-growth phase ends with an "API surface consolidation" pass.
 
 ---
 
@@ -72,7 +72,7 @@ The miss was structural. A single more-careful pass wouldn't have caught it; a d
 | `93edc400` | TIER 1.4a/b/c added (42 tests) | 21 red — locked the spec |
 | `6f8637ee` | State tomography rewrite (`Stabilizer/Constructors.m`); 4ⁿ Pauli expectations + greedy F₂ rank growth + symplectic Gram-Schmidt; introduced `"GlobalPhase"` association key | 21 → 6 red |
 | `f7ebfd56` | Operator global-phase capture (`Stabilizer/Constructors.m`, `Stabilizer/Conversions.m`) | 6 → 0 red |
-| `57d8b53f` | Doc updates: ROADMAP / API.md reflect 5c | docs aligned |
+| `57d8b53f` | Doc updates: roadmap / api.md reflect 5c | docs aligned |
 | `f9e2d711` | This post-mortem; A.9 contract documented (`Stabilizer/GateUpdates.m` comment block); TIER 1.4d added (up-to-phase + escape-hatch tests) | 227 → 235 |
 | `cbf51576` | Phase C cross-module audit — `Tests/Roundtrips.wlt` probes `QuantumChannel ↔ QuantumOperator` and `QuantumCircuitOperator ↔ QuantumOperator` | 20/20 PASS, no new bugs |
 
@@ -98,7 +98,7 @@ Test count: 185 → 235 on `PauliStabilizer.wlt`; 217 → 287 across the suite (
 
 ## 7. References
 
-- ROADMAP entry: [Phase 5c — DONE](ROADMAP.md#phase-5c--done-2026-05-04) (commit hashes).
+- ROADMAP entry: [Phase 5c — DONE](roadmap.md#phase-5c--done-2026-05-04) (commit hashes).
 - Global memory rule: `~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md`.
 - Cross-module probe: [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt) (Phase C of the plan).
 - Original audit: [`paulistabilizer-source-audit.md`](../paulistabilizer-source-audit.md).

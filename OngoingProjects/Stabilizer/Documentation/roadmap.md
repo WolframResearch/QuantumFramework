@@ -1,8 +1,8 @@
 # Stabilizer subsystem roadmap
 
-> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem. Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-07 (after API.md rewrite + deletion of `synthesis-implementation.md` / `verify-*.wls`). Branch: `stabilizer-phases-1-4`.
+> Status tracker for items that are **partial**, **deferred**, or have **latent bugs** in the Stabilizer subsystem. Each entry has a concrete next step (file path, signature, algorithm sketch, test to add). Updated: 2026-05-07 (after api.md rewrite + deletion of `synthesis-implementation.md` / `verify-*.wls`). Branch: `stabilizer-phases-1-4`.
 
-> **Audit-doc context.** This document complements [`API.md`](API.md) (per-function reference for the current public surface) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md). Authoritative verification = [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) (684 tests; the `synthesis-implementation.md` capability tour and `verify-*.wls` doc-block re-runners were retired 2026-05-07 — they were superseded by `Tests/Stabilizer/AuditMatrix.wlt` plus the rest of the test suite, which use `VerificationTest` for proper assertions).
+> **Audit-doc context.** This document complements [`api.md`](api.md) (per-function reference for the current public surface) by recording *what doesn't yet work, and exactly how to finish it*. The source synthesis is at [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md). Authoritative verification = [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) (684 tests; the `synthesis-implementation.md` capability tour and `verify-*.wls` doc-block re-runners were retired 2026-05-07 — they were superseded by `Tests/Stabilizer/AuditMatrix.wlt` plus the rest of the test suite, which use `VerificationTest` for proper assertions).
 
 ## Overall status
 
@@ -13,7 +13,7 @@
 - **Open items:** 19 (12 partial + 7 deferred). A.9 reclassified as **inherent trade-off**. A.11/A.12/A.13 added 2026-05-04 from refpage-validation findings. B.4 (`CliffordTableau` distinct head) **dropped 2026-05-06**: superseded by the proposed Phase 8 (Yashin25 Choi-tableau unifier — see B.2).
 - **Synthesis priority hits**: 5 / 10 ✅; 2 / 10 ⚠️ partial; 3 / 10 ⏸ deferred (per `package-design-synthesis.md` §11).
 
-> **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
+> **Lesson (2026-05-04).** Phase 5c surfaced a structural test-writing miss: TIER 1.4 was labeled "Round-trips" but contained no `A[C[x]] === x` exact-equality test for any constructor-accessor pair. The Y round-trip bug (`PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"] = i·Y`) was therefore invisible to a 185-test suite. Full root-cause + design rationale: [`postmortem.md`](postmortem.md). Process rule for future test-writing: [`feedback_user_facing_roundtrip_first.md`](~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md).
 
 > **Lesson (2026-05-06, Phase 6).** Phases 3–5 added 10 public symbols organically, one per literature primitive (FangYing23, GarMar15, AndBri05, KoeSmo14). A design review with N. Murzin flagged the surface as excessive. Phase 6 demoted four (`StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `RandomClifford`) to method-grade operations, no semantic change. Process rule for future phases: end every feature-growth phase with a "consolidate the API surface" pass before merging.
 
@@ -28,8 +28,8 @@
 | `93edc400` | (1) Lock the spec | New TIER 1.4a/1.4b/1.4c blocks in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) (42 new tests). 21 red on commit. |
 | `6f8637ee` | (2) State tomography | Rewrite `PauliStabilizer[qs_QuantumState]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)). The old `ResourceFunction["RowSpace"]` path canonicalized away generator signs — `PauliStabilizer[QuantumState[{0,1}]]` returned `\|0⟩`'s tableau, Bell phi+ returned phi-'s tableau. New path: 4ⁿ Pauli expectations → keep `\|⟨P⟩\| ≈ 1` as stabilizer group → greedy F₂ rank growth picks `n` independent generators with their signs → symplectic Gram-Schmidt extends to destabilizers. Adds `"GlobalPhase"` association key (default 1) so `["State"]` replays the overall phase. 21 → 6 red. |
 | `f7ebfd56` | (3) Operator phase capture | `PauliStabilizer[qo_QuantumOperator]` ([`Stabilizer/Constructors.m`](../../../QuantumFramework/Kernel/Stabilizer/Constructors.m)) computes `phase = qo["Matrix"] / recovered["Matrix"]` at the first nonzero entry and stores under `"GlobalPhase"`. `["QuantumOperator"]` ([`Stabilizer/Conversions.m`](../../../QuantumFramework/Kernel/Stabilizer/Conversions.m)) multiplies the canonical AG-decomposed operator by that phase. Fixes Y, YY, XY, YX, YZ, ZY round-trip. 6 → 0 red. |
-| `57d8b53f` | (4) Doc updates | ROADMAP / API.md updated for 5c. (Companion `synthesis-implementation.md` retired 2026-05-07 in favor of executable VerificationTest coverage.) |
-| `f9e2d711` | (5) Post-mortem + A.9 contract + TIER 1.4d | New [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md) writes down the structural reasons the Y bug was missable, including the explicit phase-aware vs phase-oblivious design rationale. Comment block added to [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) documenting that `"GlobalPhase"` is intentionally dropped on gate updates (A.9 is an inherent trade-off, not a closeable bug — see §A.9 below). New TIER 1.4d block with up-to-phase tests + 2 "escape hatch" exact-equality tests showing the user-facing workaround. |
+| `57d8b53f` | (4) Doc updates | roadmap / api.md updated for 5c. (Companion `synthesis-implementation.md` retired 2026-05-07 in favor of executable VerificationTest coverage.) |
+| `f9e2d711` | (5) Post-mortem + A.9 contract + TIER 1.4d | New [`postmortem.md`](postmortem.md) writes down the structural reasons the Y bug was missable, including the explicit phase-aware vs phase-oblivious design rationale. Comment block added to [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) documenting that `"GlobalPhase"` is intentionally dropped on gate updates (A.9 is an inherent trade-off, not a closeable bug — see §A.9 below). New TIER 1.4d block with up-to-phase tests + 2 "escape hatch" exact-equality tests showing the user-facing workaround. |
 | `cbf51576` | (6) Cross-module audit | New [`Tests/Roundtrips.wlt`](../../../Tests/Roundtrips.wlt) probes the two QF pairs the audit flagged as untested for exact-equality round-trip: `QuantumOperator ↔ QuantumChannel` and `QuantumOperator ↔ QuantumCircuitOperator`. 20/20 PASS — no new bugs surfaced. The original Y bug was unique to the AG-tableau projection. |
 
 Removed: `PauliStabilizerTableau` (the old broken tomography helper, 14 LOC).
@@ -42,16 +42,16 @@ After `cb043441` (which produced the 5c content above), four follow-up commits p
 
 | Commit | What |
 |---|---|
-| `070eb336` | `verify-API.wls` block reorder to match `API.md` doc order. No content change. (`verify-API.wls` retired 2026-05-07.) |
-| `3e0539f7` | `API.md` documents the `"GlobalPhase"` association key + the round-trip contract (`A[C[x]] === x` on first hop; up-to-phase under gate updates per §A.9). |
+| `070eb336` | `verify-API.wls` block reorder to match `api.md` doc order. No content change. (`verify-API.wls` retired 2026-05-07.) |
+| `3e0539f7` | `api.md` documents the `"GlobalPhase"` association key + the round-trip contract (`A[C[x]] === x` on first hop; up-to-phase under gate updates per §A.9). |
 | `90639b6c` | New TIER 1.4e block in [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt): coverage matrix asserting every accessor in `_PauliStabilizer["Properties"]` is exercised by at least one test (+15 tests, 235 → 250). Closes the structural gap that motivated the post-mortem. |
-| `abc51f3a` | TIER 1.1 (`multiplication-via-symplectic`) rewritten to be derivation-driven, then embedded verbatim in `API.md` so the doc and the test cannot drift. No test-count change. |
+| `abc51f3a` | TIER 1.1 (`multiplication-via-symplectic`) rewritten to be derivation-driven, then embedded verbatim in `api.md` so the doc and the test cannot drift. No test-count change. |
 | `48072598` + (next) | **Reference page drafts** for all 10 Stabilizer subsystem public exports (`PauliStabilizer`, `RandomClifford`, `StabilizerMeasure`, `SubstituteOutcomes`, `SampleOutcomes`, `StabilizerInnerProduct`, `StabilizerExpectation`, `StabilizerFrame`, `GraphState`, `LocalComplement`). Pipeline: 4 parallel `general-purpose` subagents wrote markdown to `/tmp/refpage-*.md` against [`refpage-template.md`](~/.claude/skills/documentation-writing/references/refpage-template.md); `wolframscript`-validated 110 code blocks (107 pass, 3 fail); `nb-writer-v2` (kernel-driven JSON→NB serializer) produced structurally valid `.nb` files. The 3 failing blocks surfaced kernel bugs (now ROADMAP §A.11/§A.12/§A.13), not doc bugs. The 10 `.nb` files now live in [`OngoingProjects/Stabilizer/Documentation/Examples for doc pages/`](Examples%20for%20doc%20pages/) as draft material — ready for promotion to `QuantumFramework/Documentation/English/ReferencePages/Symbols/` once the §A.11–§A.13 bugs are fixed and the pages are polished. |
 
 Two process artifacts also produced:
 
 - `~/.claude/projects/-Users-mohammadb-Documents-GitHub-QuantumFramework/memory/feedback_user_facing_roundtrip_first.md` — global memory rule: "for any QF constructor-accessor pair `C`/`A`, the FIRST test in the tier must be `A[C[x]] === x`". Will load in future Claude sessions on this repo.
-- This document's **Lesson** callout above and the post-mortem are cross-linked from API.md.
+- This document's **Lesson** callout above and the post-mortem are cross-linked from api.md.
 
 ---
 
@@ -61,7 +61,7 @@ Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbol
 
 | Old top-level | New form | Rationale |
 |---|---|---|
-| `RandomClifford[n]` | `PauliStabilizer["Random", n]` | Already existed as a named-pattern dispatch ([API.md:118-128](API.md)); the standalone alias was redundant. |
+| `RandomClifford[n]` | `PauliStabilizer["Random", n]` | Already existed as a named-pattern dispatch ([api.md](api.md)); the standalone alias was redundant. |
 | `StabilizerMeasure[ps, q]` | `ps["SymbolicMeasure", q]` | Is a method on a `PauliStabilizer`; symmetric with `ps["M", q]`. |
 | `SubstituteOutcomes[ps, rules]` | `ps["SubstituteOutcomes", rules]` | Same — single-receiver method. |
 | `SampleOutcomes[ps, n]` | `ps["SampleOutcomes", n]` | Same. |
@@ -74,7 +74,7 @@ Design review with N. Murzin flagged the post-Phase-5c public surface (10 symbol
 - [Kernel/Stabilizer/Properties.m](../../../QuantumFramework/Kernel/Stabilizer/Properties.m) — added 5 method dispatches: `ps["SymbolicMeasure", q_Integer]`, `ps["SymbolicMeasure", qudits_List]`, `ps["SubstituteOutcomes", rules_]`, `ps["SampleOutcomes"]`, `ps["SampleOutcomes", n_Integer ? Positive]`.
 - [Kernel/Stabilizer/PauliStabilizer.m](../../../QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m) — `_PauliStabilizer["Properties"]` registry extended with `"SymbolicMeasure"`, `"SubstituteOutcomes"`, `"SampleOutcomes"`.
 - [Tests/PauliStabilizer.wlt](../../../Tests/PauliStabilizer.wlt) — TIER 5 + TIER 6 callsites rewritten; `Phase2-RandomClifford-IsPublic` renamed to `Phase2-PauliStabilizerRandom-Valid`; `Phase2-RandomClifford-Callable` renamed to `Phase2-PauliStabilizerRandom-Callable`; `Phase2-RandomClifford-UsageMessage` removed.
-- [Documentation/API.md](API.md) — public-API table 10 → 6 rows + new "Method-grade operations" subsection. Standalone sections for the four demoted symbols folded into one "Methods (Symbolic measurement)" + "Methods (Random Clifford)" pair under `# PauliStabilizer`.
+- [Documentation/api.md](api.md) — public-API table 10 → 6 rows + new "Method-grade operations" subsection. Standalone sections for the four demoted symbols folded into one "Methods (Symbolic measurement)" + "Methods (Random Clifford)" pair under `# PauliStabilizer`.
 
 ### Phase 6.5 — DONE (2026-05-06): borderline cases demoted
 
@@ -91,7 +91,7 @@ After Phase 6 landed, two more public symbols flagged in the design review (the 
 
 Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis fast path) lives on branch `claude/phase7-hybrid-interop` (off `stabilizer-phases-1-4`).
 
-- **Phase 7.1 — DONE (2026-05-06).** UpValues `qmo[ps]`, `qmo[sf]`, `qc[ps]`, `qc[sf]` attached to `PauliStabilizer` / `StabilizerFrame` ([Stabilizer/HybridInterop.m](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m)). When the QMO's operator label is a Pauli string, the dispatcher routes to the existing `ps["M", pauli]` AG fast path (`O(n²)`, stays in tableau). When the basis is non-Pauli, the dispatcher emits `PauliStabilizer::nonpaulibasis` and falls back to the legacy `PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]` generic path (which itself was previously the unconditional behavior at `Conversions.m:140`, removed in this commit). Tests in [Tests/HybridInterop.wlt](../../../Tests/HybridInterop.wlt) (8 tests, all passing). 309 / 309 tests across the whole suite. Design rationale (UpValues over `Picture` flag over `QuantumBasis`-wrap) documented in [post-mortem-phase-5c.md](post-mortem-phase-5c.md) Phase 6 footnote.
+- **Phase 7.1 — DONE (2026-05-06).** UpValues `qmo[ps]`, `qmo[sf]`, `qc[ps]`, `qc[sf]` attached to `PauliStabilizer` / `StabilizerFrame` ([Stabilizer/HybridInterop.m](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m)). When the QMO's operator label is a Pauli string, the dispatcher routes to the existing `ps["M", pauli]` AG fast path (`O(n²)`, stays in tableau). When the basis is non-Pauli, the dispatcher emits `PauliStabilizer::nonpaulibasis` and falls back to the legacy `PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]` generic path (which itself was previously the unconditional behavior at `Conversions.m:140`, removed in this commit). Tests in [Tests/HybridInterop.wlt](../../../Tests/HybridInterop.wlt) (8 tests, all passing). 309 / 309 tests across the whole suite. Design rationale (UpValues over `Picture` flag over `QuantumBasis`-wrap) documented in [postmortem.md](postmortem.md) Phase 6 footnote.
 - **Phase 7.2 — DONE (2026-05-06)** *(channel half).* `qc[ps_PauliStabilizer]` now detects the four named Pauli channels (`BitFlip`, `PhaseFlip`, `BitPhaseFlip`, `Depolarizing`) by Label and returns a probabilistic-mixture list `{{prob, ps_after_pauli}, ...}` where each branch is the original `ps` with the Kraus-corresponding Pauli gate applied via tableau update (`O(n)` per branch). Non-Pauli channels (`AmplitudeDamping`, `PhaseDamping`, `GeneralizedAmplitudeDamping`, `ResetError`) still fall back to dense materialization — their Kraus operators are not all Paulis. New helper [`stabilizerCliffordChannelMixture`](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m) does the detection. Tests: 7 new in [Tests/HybridInterop.wlt](../../../Tests/HybridInterop.wlt) (BitFlip num-branches + identity-branch + probability-sum, PhaseFlip / BitPhaseFlip branches, Depolarizing 4-branch + probability-sum, AmplitudeDamping fallback). 15 / 15 in HybridInterop, 316 / 316 across the full suite.
 - **Phase 7.3 — DONE (2026-05-06)** *(label-detection extension).* Extended `stabilizerPauliLabelFromQMO` to recognize three more label forms: `Times[-1, Superscript[X|Y|Z|I, CircleTimes[m]]]` → `"-XXXX..."`; `Superscript[X|Y|Z|I, CircleTimes[m]]` → `"XXXX..."`; `Times[-1, str]` for Pauli string `str` → `"-" <> str`. This routes `qmo[ps]` through the AG tableau fast path for QMOs built as `QuantumOperator[-"XX"]` and similar tensor-power Pauli expressions. Tests added in [Tests/HybridInterop.wlt](../../../Tests/HybridInterop.wlt) TIER J/K (5 new).
 - **Phase 7.4 — PARTIAL DONE (2026-05-06)** *(matrix-iteration detector half).* Extended `stabilizerPauliLabelFromQMO` with a `stabilizerPauliFromMatrix` fallback that, for `n ≤ $stabilizerPauliMatrixSearchMaxQubits` (default 4) qubits, iterates `4ⁿ × {+1, -1}` candidate Pauli strings against `qmo["Operator"]["MatrixRepresentation"]` and returns the matching string. This catches QMOs built as `QuantumOperator[matrix]` (where the symbolic Label is `None`) and routes them through the AG tableau fast path. Cap is PackageScope-tunable via `Block`. Tests added in [Tests/HybridInterop.wlt](../../../Tests/HybridInterop.wlt) TIER L (15 new). 52 / 52 HybridInterop tests passing. Remaining sub-task: real `StabilizerFrame` decomposition for arbitrary low-rank non-Pauli QMO basis vectors (deferred to Phase 7.5; depends on richer mixed-state stabilizer support).
@@ -118,7 +118,7 @@ Phase 7 is split into two sub-phases. Phase 7.1 (the scaffolding + Pauli-basis f
 | | |
 |---|---|
 | **Current** | When `P ∈ ⟨g_i⟩` (commutes with all stabilizers but is in their span), falls back to direct vector for `<P>` because the `𝔽₂`-decomposition misses the `i`-factor from `Y = iXZ`. |
-| **Source** | [`Stabilizer/InnerProduct.m`](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) lines 53–64; symptom: `<Bell\|YY\|Bell> = -1` requires fallback (see API.md "Inner product and expectation"). |
+| **Source** | [`Stabilizer/InnerProduct.m`](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m) lines 53–64; symptom: `<Bell\|YY\|Bell> = -1` requires fallback (see api.md "Inner product and expectation"). |
 | **Why deferred** | The `agPhase[x1, z1, x2, z2]` function in `Measurement.m` already handles the per-pair phase. Need to thread it through a sequence of binary multiplications recovered by `LinearSolve`. |
 | **Reference** | AarGot04 §3 `g`-function; Yashin25 Eq 4 (cocycle) |
 | **Next step** | Replace the direct-vector fallback at `InnerProduct.m:62-64` with: iterate the `recoverable` coefficient list `{c_1, …, c_n}`, multiply generators in order using `Mod[BitXor[currentVec, generator_i], 2]` for the `𝔽₂` part and `Mod[totalPhase + agPhase[…], 4]` for the `i`-factor accumulator. Final `<P>` sign = `(-1)^(totalPhase / 2)` × `targetSign` × `Π signs[i]^c_i`. |
@@ -198,7 +198,7 @@ The retired `synthesis-implementation.md` flagged three items in the §4–§6 m
 | **Current** | Phase 5c added a `"GlobalPhase"` association key set by `PauliStabilizer[qs_QuantumState]` and `PauliStabilizer[qo_QuantumOperator]`, so the *first* round-trip is exact. Gate updates (`ps["H", 1]`, `ps["CNOT" -> {1, 2}]`, etc.) intentionally do not copy `"GlobalPhase"` — see the comment block at the top of [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m). As a result `PauliStabilizer[qs]["H", 1]["State"]` is correct *up to* a global phase. |
 | **Source** | [`Stabilizer/GateUpdates.m`](../../../QuantumFramework/Kernel/Stabilizer/GateUpdates.m) — every gate-update rule constructs a fresh association without `"GlobalPhase"`. |
 | **Why this is inherent (not "deferred")** | Investigated 2026-05-04 (commit `f9e2d711`). The phase factor a Clifford gate `U` picks up when applied to a stabilizer state depends not just on `U` but on the input state's tableau. Concrete counterexamples: `Z\|0⟩ = \|0⟩` (no phase) vs `Z\|1⟩ = −\|1⟩` (sign flip) — same `Z` gate, different state, different phase. Same for `S`, `Y`, etc. So no constant per-gate "phase factor" rule exists. Recovering the new `"GlobalPhase"` exactly requires materializing the state vector at every gate update — `O(2ⁿ)` per gate, which defeats the AG `O(n²)` complexity advantage that motivates the tableau representation in the first place. |
-| **Reference** | Post-mortem [`OngoingProjects/Stabilizer/Documentation/post-mortem-phase-5c.md`](post-mortem-phase-5c.md) §2 (phase-aware vs phase-oblivious design). |
+| **Reference** | Post-mortem [`OngoingProjects/Stabilizer/Documentation/postmortem.md`](postmortem.md) §2 (phase-aware vs phase-oblivious design). |
 | **Documented contract** | `PauliStabilizer[qs]["gate", q]["State"]` equals `gate @ qs` *up to global phase*. For exact equality, re-run the constructor on the post-gate state: `PauliStabilizer[gate @ qs]["State"] === gate @ qs`. Tests at [`Tests/PauliStabilizer.wlt`](../../../Tests/PauliStabilizer.wlt) TIER 1.4d (8 tests including 2 "escape hatch" exact-equality tests). |
 | **Future option** | If exact phase tracking through gate updates is wanted, a separate kernel option (`Method -> "PhaseAware"` or similar) could opt into the `O(2ⁿ)` materialization on every update. Out of scope for the current AG-tableau design. |
 | **Effort to upgrade to opt-in** | ~80 LOC + 15 tests, *if* the design choice is made. |
@@ -396,14 +396,14 @@ Each item above has:
 
 When an item is implemented:
 1. Add the new tests to the relevant file under `Tests/Stabilizer/` (add a new TIER in `AuditMatrix.wlt` for any new public surface).
-2. Update [`API.md`](API.md) with the new constructor / property / method.
+2. Update [`api.md`](api.md) with the new constructor / property / method.
 3. Mark the corresponding item in this document as **DONE** with a commit hash.
 4. Promote any new public symbols in `PacletInfo.wl` and add `Usage.m` entries.
 
 ## D. Cross-references
 
-- Companion: [`API.md`](API.md) — the per-function reference (current public surface).
-- Companion: [`post-mortem-phase-5c.md`](post-mortem-phase-5c.md) — Phase 5c learning record.
+- Companion: [`api.md`](api.md) — the per-function reference (current public surface).
+- Companion: [`postmortem.md`](postmortem.md) — Phase 5c learning record.
 - Test suite: [`Tests/Stabilizer/`](../../../Tests/Stabilizer/) — 8 files, 684 tests. Coverage matrix is `AuditMatrix.wlt` (155 tests).
 - Original synthesis: [`OngoingProjects/Stabilizer/package-design-synthesis.md`](../package-design-synthesis.md) — distilled from 28 papers.
 
