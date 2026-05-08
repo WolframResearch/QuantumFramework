@@ -59,30 +59,36 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
         With[{vec = ps["State"]["StateVector"], pauliMat = stringToPauliMatrix[pauliString]},
             <|Round[(1 - Re[Conjugate[vec] . pauliMat . vec]) / 2] -> ps|>
         ],
-        (* NON-DETERMINISTIC: at least one stabilizer anticommutes with P.
-           Pick the first anticommuting row k; replace it with (-1)^b * P.
-           Outcome b is random in {0, 1}. *)
+        (* NON-DETERMINISTIC: at least one stabilizer anticommutes with P.       *)
+        (* AG §3 Case I: replace the first anticommuting generator with (-1)^b·P*)
+        (* (step 1) and update the OTHER anticommuting generators by row-       *)
+        (* multiplication so they commute with P (step 2). Outcome b is random  *)
+        (* in {0, 1}.                                                            *)
         kIdx = First @ First @ anticommIdx;   (* index in 1..n (within stabilizer rows) *)
-        (* Build post-measurement state for both outcomes *)
-        (* For each anticommuting stabilizer row i != kIdx, multiply its sign by  *)
-        (* sign(kIdx) (this is the AG row-multiplication trick). For row kIdx,    *)
-        (* set sign to targetSign * (1 - 2 b). The tableau itself is left intact: *)
-        (* this is the known limitation -- the post-state's destabilizers and    *)
-        (* stabilizer rows are NOT canonicalized via AG. Phase 4 v1 only updates *)
-        (* the SIGNS for the syndrome-extraction use case.                        *)
-        Module[{otherIdx, baseSigns},
+        (* Patch P2 (2026-05-07, Formula_Test/findings-report.md F2): also      *)
+        (* update the tableau row, not just the sign. Previously this branch    *)
+        (* left the tableau unchanged so the post-state was NOT a +-P eigenstate*)
+        (* (single failing test S5-F2-PostMeas-State-IsEigenstate-STRICT). The  *)
+        (* fix overwrites stabilizer row kIdx with pVec's symplectic bits.      *)
+        Module[{otherIdx, baseSigns, newTableau, gen = ps["GeneratorCount"]},
             otherIdx = DeleteCases[Flatten[anticommIdx, 1], kIdx];
             baseSigns = MapAt[# * ps["StabilizerSigns"][[kIdx]] &, ps["StabilizerSigns"], List /@ otherIdx];
+            (* Replace stabilizer row kIdx of the tableau with pVec's bits.     *)
+            (* Tableau shape is {2 (X/Z block), n_qubits, 2*GeneratorCount}.    *)
+            (* Stabilizer rows live at indices gen+1 .. 2 gen along axis 3.    *)
+            newTableau = ps["Tableau"];
+            newTableau[[1, All, gen + kIdx]] = pVec[[;; n]];
+            newTableau[[2, All, gen + kIdx]] = pVec[[n + 1 ;;]];
             Association @ Table[
                 With[{
                     newSigns = ReplacePart[baseSigns, kIdx -> targetSign * (1 - 2 b)]
                 },
                     b -> PauliStabilizer[<|
                         "Phase" -> Join[
-                            ps["Phase"][[;; ps["GeneratorCount"]]],
+                            ps["Phase"][[;; gen]],
                             (1 - newSigns) / 2
                         ],
-                        "Tableau" -> ps["Tableau"]
+                        "Tableau" -> newTableau
                     |>]
                 ],
                 {b, {0, 1}}
