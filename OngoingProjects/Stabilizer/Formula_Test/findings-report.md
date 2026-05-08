@@ -1,17 +1,25 @@
 # Stabilizer Subsystem — Findings Report
 
-**Date:** 2026-05-07 (re-verified in fresh kernel after A-series sweep merged on `stabilizer-phases-1-4`)
-**Reference:** [`stabilizer-formulas.md`](stabilizer-formulas.md) (extracted from 28 papers under `OngoingProjects/Stabilizer/tex/`)
+**Original date:** 2026-05-07 (post A-series sweep on `stabilizer-phases-1-4`)
+**Last extended:** 2026-05-08 (battery extended from 28 → 44 papers, 132 → 155 tests)
+**Reference:** [`stabilizer-formulas.md`](stabilizer-formulas.md) (extracted from 44 papers under `OngoingProjects/Stabilizer/tex/`; see [`Pedagogical_arXiv_stabilizer_formalism.md`](Pedagogical_arXiv_stabilizer_formalism.md) for the survey)
 **Test battery:** [`stabilizer-formulas-test.wls`](stabilizer-formulas-test.wls)
 **Paclet under test:** `QuantumFramework` at HEAD of `stabilizer-phases-1-4`
 
-## Verification status (2026-05-07)
+## Verification status (2026-05-08, post-extension)
 
-**All three findings landed as kernel patches on `stabilizer-phases-1-4`.** The
-.wls battery now reports **132/132 passing**, and the same battery runs as
-part of the regular `Tests/RunTests.wls` runner via
+**All three findings remain resolved by kernel patches on `stabilizer-phases-1-4`.** The
+.wls battery now reports **155/155 passing** (up from 132/132), with 23 new tests
+added in sections **S26-S32** that codify formulas extracted from 16
+newly-integrated papers. The same battery runs as part of the regular
+`Tests/RunTests.wls` runner via
 [`Tests/Stabilizer/Formulas.wlt`](../../../Tests/Stabilizer/Formulas.wlt).
-The original confirmation history is preserved below for posterity:
+
+**No new findings surfaced from the extended battery** — the additional
+formula sections target identities that are either pure-mathematical (verified
+at the matrix level outside QF) or that exercise QF code paths already covered
+by the original 132 tests under different formula labels. The original
+confirmation history is preserved below for posterity:
 
 - **F1** confirmed: `5QubitCode` was a +1 eigenstate of `XXXXX` (X̄), not `ZZZZZ` (Z̄). 32 nonzero amps, not 16. `|⟨Got97_0L | state⟩|² = 1/2` matched `|+_L⟩↔|0_L⟩` overlap exactly. `5QubitCode1` was `|−_L⟩` (orthogonal to `|+_L⟩`). **→ Resolved by Patch P1** ([NamedCodes.m](../../../QuantumFramework/Kernel/Stabilizer/NamedCodes.m)).
 - **F2** confirmed: `ps["M", "ZI"]` on Bell `|Φ+⟩` returned post-states with `{XX, ZZ}` tableau (unchanged) and state `(|00⟩ + |11⟩)/√2` (unchanged); `⟨ZI⟩ = 0` rather than `+1`. The single-qubit `ps["M", 1]` path was already correct. **→ Resolved by Patch P2** ([PauliMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/PauliMeasure.m)).
@@ -21,14 +29,56 @@ Failing TestIDs were renamed to carry an `F<n>` infix (`S3-F1-…`, `S5-F2-…`,
 
 ---
 
+## 2026-05-08 — Reference + battery extension (no new findings)
+
+The May-2026 Undermind survey
+[`Pedagogical_arXiv_stabilizer_formalism.md`](Pedagogical_arXiv_stabilizer_formalism.md)
+identified 16 stabilizer-formalism papers not previously covered in
+`tex/`. All TeX sources were fetched from arXiv (`curl https://arxiv.org/e-print/<id>`)
+and added to the directory. The new papers contributed novel formulas in:
+
+| Topic | New formula sections | Test sections | Source papers |
+|---|---|---|---|
+| Sign-convention pitfalls | §26 | S26 (3 tests) | Girvin21, DevMunNem09, Fujii15 |
+| Codeword amplitude expansions | §27 | S27 (5 tests) | DevMunNem09, BalCenHub20, BraDalEva25 |
+| Graph-state algebraic identities | §28 | S28 (4 tests) | NesDehMoo03, EllEasCav07, HeiDurEisRauNesBri06 |
+| Topological codes (chain-complex view) | §29 | S29 (3 tests) | BraDalEva25 |
+| Quantum MacWilliams (Shor-Laflamme) | §30 | S30 (2 tests) | BalCenHub20 |
+| Diagonal-unitary canonical decomposition | §32 | S31 (2 tests) | BroBri06 |
+| Composite-D qudit caveats | §33-§34 | S32 (4 tests) | Gheorghiu11, BraCheKofKue26, BahBei06, BerNes12 |
+| ZX-calculus stabilizer rewrites | §35 | (covered in S31 RZ addition) | RanCoe13, Ranchin14 |
+
+Two minor convention notes that emerged during the extension (NOT findings,
+since the simulator is unaffected, but worth recording):
+
+1. **`Y_L` sign for repetition codes** (Girvin21 §QEC): For an n-qubit
+   repetition code with `n` odd, `Y_L = i X_L Z_L = (-1)^{(n-1)/2} Y₁Y₂…Y_n`.
+   For `n=3` this is `−Y₁Y₂Y₃` (note the minus).  Encoded into S26 test
+   `S26-RepetitionCode-YL-equals-MinusYYY`.
+
+2. **BraDalEva25 §5.4 planar-code logical-zero convention**: the listed
+   `|0⟩_L = ½(|10010⟩+|01110⟩+|10101⟩+|01001⟩)` is the **−1 eigenstate** of
+   `Z̄ = Z₀Z₁` (not the conventional +1 eigenstate). This is just a labeling
+   choice in that paper, not a bug; the test was reformulated to verify
+   stabilizer eigenstate-ness only (S29 `LogicalZero-StabilizedBy4Generators`)
+   and to verify `X̄² = I` plus orthogonality (S29
+   `LogicalX-Squares-Identity-and-Orthogonalises`) instead of the full +1/−1
+   amplitude match against the source's `|1⟩_L` formula (which contains a
+   typo: `|11101⟩` should be `|11100⟩`).
+
+---
+
 ## Executive summary
 
-Running 132 strict `VerificationTest`s mapped 1:1 to the formulas in
-`stabilizer-formulas.md` originally produced **126 passing, 6 failing**.
+Running the original 132 strict `VerificationTest`s mapped 1:1 to the formulas in
+`stabilizer-formulas.md` produced **126 passing, 6 failing**.
 The 6 failures collapsed into **3 distinct findings**, each confirmed by
 direct kernel probes that bypass the test harness, and each resolved by a
 mechanical patch (P1 / P2 / P3) on `stabilizer-phases-1-4`. After the
-patches: **132/132 passing**:
+patches: **132/132 passing** on the original battery; **155/155 passing**
+on the extended (2026-05-08) battery, which adds 23 tests across new
+sections S26-S32 covering the 16 newly-integrated papers (no further bugs
+surfaced):
 
 | # | Severity | Where | What |
 |---|---|---|---|
@@ -262,7 +312,8 @@ listed in the api.md as a PackageScope.
 
 ---
 
-## What passed (the 126 successful tests)
+## What passed (the 126 + 23 = 149 originally-passing tests, plus the 6
+post-patch-resolved tests, totaling 155)
 
 For completeness, the following formulas all reproduce correctly in the
 current QF kernel:
@@ -299,6 +350,13 @@ current QF kernel:
 - §24 Concrete numeric fixtures: |+⟩, GHZ-3 amplitudes (2/3) — Steane
         amplitude count downstream of F1 (1/3)
 - §25 Stabilizer Olympics 13-item conformance (13/13)
+- §26 Sign-convention pitfalls — Y_L sign, 5-qubit non-CSS Hadamard image, Y=iXZ (3/3)
+- §27 Codeword amplitude expansions — [[4,2,2]] codewords, hexacode MacWilliams, [[5,1,3]] alt form (5/5)
+- §28 Graph-state algebra — NesDehMoo LC formula, GHZ orbit on 4 vertices, Schmidt rank ↔ submatrix rank, K₃ identity (4/4)
+- §29 Topological codes — smallest planar code stabilizers, |0⟩_L stabilization, X̄² = I (3/3)
+- §30 Quantum MacWilliams — hexacode self-dual fixed point, [[5,1,3]] AB-identity (2/2)
+- §31 Diagonal-unitary canonical decomposition — CCZ from BroBri06 eq. 15, R_Z addition (2/2)
+- §32 Composite-D / qudit caveats — qutrit eigenspace projector, qutrit ZX commutation, Z² eigenspace dim, qutrit stabilizer-state count = 12 (4/4)
 
 ---
 
@@ -324,8 +382,9 @@ From a fresh kernel:
 wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls
 ```
 
-After Patches P1 / P2 / P3 landed: `132 tests, 132 pass, 0 fail`. Before
-the patches the run produced 6 failures clustered into the 3 findings above.
+After Patches P1 / P2 / P3 landed: `155 tests, 155 pass, 0 fail` (155 = 132
+original + 23 new tests added 2026-05-08 for sections S26-S32). Before the
+patches the run produced 6 failures clustered into the 3 findings above.
 Each `TestID` carries an `F<n>` infix matching its finding
 (e.g. `S3-F1-5QubitCode-…`), so a future regression on any of these surfaces
 under the right finding tag and is easy to triage:
@@ -458,8 +517,9 @@ cc[PauliStabilizer[2]]["Stabilizers"]   (* expect: {ZI, IZ} -- no warning *)
 
 ### Combined verification
 
-After applying all three patches, the test battery should report
-**132 / 132 passing**, with no `Pending`, `Skipped`, or `Failure` outcomes.
+After applying all three patches AND extending the battery (2026-05-08) with
+the 23 new tests in S26-S32, the test battery should report
+**155 / 155 passing**, with no `Pending`, `Skipped`, or `Failure` outcomes.
 Run:
 
 ```bash

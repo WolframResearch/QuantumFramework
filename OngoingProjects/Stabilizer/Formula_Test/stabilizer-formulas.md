@@ -1,7 +1,7 @@
 # Stabilizer Formalism — Test Formula Reference
 
 A consolidated catalogue of formulas, identities, and test states extracted from
-the 28 papers under `OngoingProjects/Stabilizer/tex/`. Each entry is a clean,
+the 44 papers under `OngoingProjects/Stabilizer/tex/`. Each entry is a clean,
 testable mathematical claim that any stabilizer simulator (CHP-style tableau,
 graph-state, Choi-tableau, Wigner, GF(4), check-matrix, qudit, etc.) should
 reproduce. References use the directory short-name; e.g. **Got97** is
@@ -9,30 +9,61 @@ reproduce. References use the directory short-name; e.g. **Got97** is
 
 The reference papers used here are:
 
+**Foundational stabilizer / Clifford simulation:**
 - **AarGot04** — Aaronson, Gottesman, *Improved Simulation of Stabilizer Circuits*
 - **AndBri05** — Anders, Briegel, *Fast simulation of stabilizer circuits using a graph state representation*
 - **Beaudrap11** — de Beaudrap, *A linearized stabilizer formalism for systems of finite dimension*
 - **Biswas24** — Biswas, *Step-by-step Gottesman–Knill simulation*
 - **DehMoo03** — Dehaene, De Moor, *Clifford group, stabilizer states, and linear and quadratic operations*
-- **EllEasCav08** — Elliott, Eastin, Caves, *Graphical description of Pauli measurements on stabilizer states*
-- **FangYing23** — Fang & Ying, *SymPhase: phase symbolization for stabilizer simulation*
-- **GarMar15 / GarMarCro12** — Garcia, Markov (& Cross), *Stabilizer-state inner products & frames*
 - **Gid21** — Gidney, *Stim: a fast stabilizer circuit simulator*
 - **Got97 / Got00 / Got09** — Gottesman thesis (1997), pedagogical intros (2000, 2009)
 - **Got98** — Gottesman, *The Heisenberg representation of quantum computers*
-- **HosDehMoo04** — Hostens, Dehaene, De Moor — qudit Clifford / stabilizer formalism
 - **KocHuaLov17** — Kocia, Huang, Love, *Discrete Wigner derivation of the AG tableau algorithm*
 - **KoeSmo14** — Koenig, Smolin, *How to efficiently select an arbitrary Clifford group element*
-- **MonPar23** — Monsalve, Parameswaran, *Systematic ECC encoder design from stabilizers*
 - **Mueller26** — Müller, *PauliEngine: fast arithmetic for Pauli strings*
-- **PatGuh26** — Patil, Guha, *Stabilizer formalism for Clifford+fusion linear-optical quantum computing*
 - **Paler14** — Paler et al., *Tracking quantum errors in stabilizer codes*
+
+**Inner-product / canonical-form / round-trip:**
+- **GarMar15 / GarMarCro12** — Garcia, Markov (& Cross), *Stabilizer-state inner products & frames*
+- **deSilSalYin23** — de Silva, Salfi, Yin, *Algorithms for stabiliser-state and Clifford-gate conversions*
+
+**Graph states (qubit & qudit):**
+- **EllEasCav07** — Elliott, Eastin, Caves, *Graphical description of Clifford operators on stabilizer states* (2007)
+- **EllEasCav08** — Elliott, Eastin, Caves, *Graphical description of Pauli measurements on stabilizer states*
+- **HeiEisBri03** — Hein, Eisert, Briegel, *Multiparty entanglement in graph states*
+- **HeiDurEisRauNesBri06** — Hein, Dür, Eisert, Raussendorf, Van den Nest, Briegel, *Entanglement in Graph States and its Applications*
+- **NesDehMoo03** — Van den Nest, Dehaene, De Moor, *Graphical description of local Clifford on graph states*
+- **BahBei06** — Bahramgiri, Beigi, *Graph States Under the Action of Local Clifford in Non-Binary Case*
+
+**Pedagogical / textbook QEC introductions:**
+- **DevMunNem09** — Devitt, Munro, Nemoto, *Quantum error correction for beginners*
+- **Girvin21** — Girvin, *Introduction to QEC and fault tolerance* (Les Houches 2019)
+- **Fujii15** — Fujii, *Quantum Computation with Topological Codes* (SpringerBrief)
+- **MonPar23** — Monsalve, Parameswaran, *Systematic ECC encoder design from stabilizers*
+- **BraDalEva25** — Bradshaw, Dale, Evans, *Introduction to QEC with stabilizer codes* (homological algebra view)
+- **BalCenHub20** — Ball, Centelles, Huber, *Quantum error-correcting codes and their geometries*
+
+**Qudits / general Abelian groups:**
+- **HosDehMoo04** — Hostens, Dehaene, De Moor — qudit Clifford / stabilizer formalism
+- **Gheorghiu11** — Gheorghiu, *Standard form of qudit stabilizer groups* (composite D)
+- **BraCheKofKue26** — Brandl, Cherniak, Kofler, Kueng, *QuickQudits — Extended stabilizer tableau for noisy qudit Clifford*
+- **BerNes12** — Bermejo-Vega, Van den Nest, *Classical sims of Abelian-group normalizer circuits / Gottesman–Knill for finite Abelian groups*
+
+**Measurement-based QC / fusions / one-way:**
+- **BroBri06** — Browne, Briegel, *One-way Quantum Computation tutorial introduction*
+- **PatGuh26** — Patil, Guha, *Graphical Rule Book for Clifford Manipulations of Stabilizer States*
+
+**ZX-calculus stabilizer:**
+- **Ranchin14** — Ranchin, *Depicting qudit QM and mutually unbiased qudit theories*
+- **RanCoe13** — Ranchin, Coecke, *Complete set of circuit equations for stabilizer QM*
+
+**Type theory / symbolic / channel formalism:**
+- **FangYing23** — Fang & Ying, *SymPhase: phase symbolization for stabilizer simulation*
 - **PayWin24a / WinPay24b** — Payne, Winderl, *λC and λPC: type theories for stabilizer/Clifford*
 - **Reid24** — Reid, *Tableau manipulation for noisy circuits*
 - **RuhDev25** — Ruh, Devitt, *Pauli tracking library for MBQC scheduling*
 - **Winderl23** — Winderl, *Stabilizer-circuit synthesis via inverse symplectic*
 - **Yashin25** — Yashin, *Choi-tableau formalism for arbitrary Clifford channels*
-- **deSilSalYin23** — de Silva, Salfi, Yin, *Algorithms for stabiliser-state and Clifford-gate conversions*
 
 Notation conventions in this document: `I, X, Y, Z` are the Pauli matrices;
 `H` is the Hadamard; `S = P = diag(1,i)` is the phase gate; `T = diag(1, e^{iπ/4})`
@@ -979,3 +1010,604 @@ A package passing all of the following can be considered formula-conformant:
 
 A failure on any single item localizes the bug to one of the surveyed
 papers' rules, providing a directly testable regression case.
+
+---
+
+## 26. Sign-convention pitfalls (testable failure modes)
+
+Drawn from a 2026 audit of pedagogical sources; each item is a place where naive
+implementations silently get a sign wrong.
+
+### 26.1 `Y_L = -Y₁Y₂Y₃` for the 3-qubit repetition code (Girvin21 §QEC)
+
+For `|0_L⟩ = |000⟩`, `|1_L⟩ = |111⟩`:
+```
+X_L = X₁X₂X₃,    Z_L = Z₁Z₂Z₃,    Y_L = i X_L Z_L = -Y₁Y₂Y₃
+```
+Three factors of `i` from `Y_i = iX_iZ_i` combine with the global `i` to give `−1`.
+
+**TEST**: `[X_L, Y_L] = 2iZ_L` only when the minus sign is included.
+
+### 26.2 Steane transversal `S^⊗7` enacts logical `S†`, NOT `S` (DevMunNem09 §IV-D)
+
+Bitwise `P^⊗7` (where `P = S = diag(1,i)`) on a Steane-encoded state does NOT
+enact logical `S`; it enacts logical `S†`. Codes with `Z_L = Z^⊗n` and
+`n ≡ 3 (mod 4)` flip the sign.
+
+**TEST**: Apply `S^⊗7` to `|+_L⟩` of Steane; the resulting stabilizer change
+is `X^⊗7 → −i (XZ)^⊗7`, matching `S†` not `S`.
+
+### 26.3 The 5-qubit `[[5,1,3]]` code is non-CSS — `H^⊗5` is NOT transversal (DevMunNem09 §IV)
+
+Under bitwise Hadamard:
+```
+K¹ = XZZXI →  ZXXZI       K² = IXZZX →  IZXXZ
+K³ = XIXZZ →  ZIZXX       K⁴ = ZXIXZ →  XZIZX
+```
+None of these images are in `⟨XZZXI, IXZZX, XIXZZ, ZXIXZ⟩` (the original group).
+
+**TEST**: `H^⊗5` should NOT preserve the [[5,1,3]] stabilizer; any package that
+silently accepts it as a logical Hadamard has a bug.
+
+### 26.4 Reed–Muller `[[15,1,3]]` transversal `T` enacts logical `T†` (Fujii15 §6)
+
+```
+T^⊗15 |0_L⟩ = e^{+iπ/8} |0_L⟩,    T^⊗15 |1_L⟩ = e^{-iπ/8} |1_L⟩
+```
+i.e. the bitwise `T` realizes logical `T†` (not `T`). Same pattern as Steane-`S`.
+
+### 26.5 `Y` convention (Got97 vs. modern)
+
+`Y = iXZ` (modern, Gid21, AarGot04) but Got97 occasionally uses `Y = −iXZ`.
+Heisenberg conjugation tables can disagree by an overall `−` on every `Y` row
+unless the convention is pinned.
+
+---
+
+## 27. Additional codeword amplitude expansions
+
+Concrete dense-state fixtures, useful as numerical golden expected outputs.
+
+### 27.1 `[[4,2,2]]` error-detecting code (DevMunNem09 §IV-A)
+
+```
+|00⟩_L = (|0000⟩ + |1111⟩)/√2
+|01⟩_L = (|1100⟩ + |0011⟩)/√2
+|10⟩_L = (|1010⟩ + |0101⟩)/√2
+|11⟩_L = (|0110⟩ + |1001⟩)/√2
+```
+All four are +1 eigenstates of `XXXX` and `ZZZZ`. Logicals (Got97 §3.6):
+`X̄₁ = X₁X₂`, `X̄₂ = X₁X₃`, `Z̄₁ = Z₁Z₃`, `Z̄₂ = Z₁Z₂`.
+
+**TEST**: `X̄_i |00⟩_L = |0..1..0⟩_L` (with i-th bit flipped), `Z̄_i |b₁b₂⟩_L = (-1)^{b_i}|b₁b₂⟩_L`.
+
+### 27.2 Hexacode `[[6,0,4]]_2` weight enumerator (BalCenHub20 §8.2)
+
+```
+A(x,y) = x⁶ + 45 x²y⁴ + 18 y⁶
+```
+Self-dual: `B = A`. Built from the GF(4) hexacode `[6,3,4]_4` via the F4-trick.
+
+**TEST**: stabilizer group of the hexacode contains exactly `1 + 45 + 18 = 64 = 2⁶`
+elements; weight distribution matches `(1, 0, 0, 0, 45, 0, 18)`.
+
+### 27.3 5-qubit code alternative form (DevMunNem09 §IV-B)
+
+A different 16-term `|0⟩_L` for `[[5,1,3]]` (related to the Got97 §3.7 form by
+local rotations):
+```
+|0⟩_L = (1/4) [+|00000⟩+|01010⟩+|10100⟩-|11110⟩
+              +|01001⟩-|00011⟩-|11101⟩-|10111⟩
+              +|10010⟩-|11000⟩-|00110⟩-|01100⟩
+              -|11011⟩-|10001⟩-|01111⟩+|00101⟩]
+```
+constructed via `|0⟩_L = ∏_{i=1..4}(I + Kⁱ)/√16 |00000⟩` from stabilizers
+`XZZXI, IXZZX, XIXZZ, ZXIXZ`.
+
+### 27.4 Smallest planar code `m=1, n=2` — 5 qubits (BraDalEva25 §5.4)
+
+Stabilizers (4 generators):
+```
+Z₀Z₂Z₃,   Z₁Z₂Z₄,   X₀X₁X₂,   X₂X₃X₄
+```
+Logicals: `X̄ = X₀X₃`, `Z̄ = Z₀Z₁`. Logical states:
+```
+|0⟩_L = ½(|10010⟩ + |01110⟩ + |10101⟩ + |01001⟩)
+|1⟩_L = ½(|00000⟩ + |11101⟩ + |00111⟩ + |11011⟩)
+```
+A complete 16-entry syndrome table maps each of the 15 single-qubit Pauli
+errors to a unique 4-bit syndrome (with one degeneracy: `X₀` and `X₃` have the
+same syndrome `1000`).
+
+### 27.5 Toric code logical-zero (BraDalEva25 §5.3)
+
+On an `m × n` torus:
+```
+|00⟩_L ∝ Σ_{b ∈ ∂C₂(L*)} X_{d_v + b} |0…0⟩
+|10⟩_L ∝ Σ_b X_b |0…0⟩
+|01⟩_L ∝ Σ_b X_{d_h + d_v + b} |0…0⟩
+|11⟩_L ∝ Σ_b X_{d_h + b} |0…0⟩
+```
+where `d_v, d_h` are non-trivial cycles on the dual lattice.
+
+---
+
+## 28. Graph-state algebraic identities (NesDehMoo03, EllEasCav07, HeiDurEisRauNesBri06)
+
+### 28.1 LC at vertex `i` — explicit formula on adjacency matrix (NesDehMoo03 Thm. 2)
+
+```
+g_i(θ) = θ + θ Λ_i θ + Λ
+```
+where `Λ_i` is the matrix with 1 at `(i,i)` and zero elsewhere, and `Λ` is
+diagonal chosen to zero the diagonal of the result. As a fractional-linear
+map on symmetric binary matrices, with `Q_i = [[I, diag(θ_i)], [Λ_i, I]]`:
+```
+g_i(θ) = (Aθ + B)(Cθ + D)^{-1}
+```
+
+### 28.2 Edge-LC formula (EllEasCav07 eq. 8; NesDehMoo03 Lemma 2)
+
+`g_{jk} = g_j g_k g_j` (3-fold product) acts on adjacency by:
+```
+Γ'_{lm} = Γ_{lm} + (Γ_{jl}+δ_{jl})(Γ_{km}+δ_{km})
+                 + (Γ_{jm}+δ_{jm})(Γ_{kl}+δ_{kl})
+```
+This expression is symmetric in `j, k`.
+
+### 28.3 GHZ orbit count (NesDehMoo03 Final note)
+
+Under local Clifford, the n-qubit GHZ state's orbit contains exactly `n+1`
+inequivalent graphs: the `n` stars (each centered at a different vertex) plus
+the complete graph `K_n`.
+
+A graph state with adjacency `θ` is LC-equivalent to GHZ iff
+`rank θ_i = 1 = rank θ_{i,j}` for all single-vertex / vertex-pair submatrices.
+
+### 28.4 Reduced-state rank ↔ submatrix rank (NesDehMoo03; HeiEisBri03 eq. 947)
+
+For graph state `|G⟩` with adjacency `θ`, partition into `A ∪ B`:
+```
+log₂ rank tr_A[|G⟩⟨G|] = rank_{F₂} Γ_{AB}
+```
+where `Γ_{AB}` is the off-diagonal block. Polynomial-time exact Schmidt-rank
+via GF(2) row reduction.
+
+### 28.5 Reduced state via stabilizer subgroup (HeiDurEisRauNesBri06 eq. reduced_GS_1)
+
+```
+ρ_G^A = tr_B|G⟩⟨G| = (1/2^|A|) Σ_{σ ∈ S_A} σ
+```
+where `S_A = {σ ∈ S(|G⟩) : supp(σ) ⊆ A}` (stabilizer elements supported in `A`).
+Also: `(ρ_G^A)² = (|S_A|/2^|A|) ρ_G^A` (proportional to a projector).
+
+### 28.6 Pauli error → Pauli-Z error on graph state (HeiDurEisRauNesBri06 eq. 3737)
+
+```
+σ_x^a |G⟩ = σ_z^{N_a} |G⟩,    σ_y^a |G⟩ = ±i σ_z^{N_a + a} |G⟩
+```
+Any Pauli channel acting on `|G⟩⟨G|` produces a graph-diagonal mixed state.
+
+### 28.7 Three-vertex GHZ-style identity (HeiDurEisRauNesBri06 eq. 3170)
+
+For `a, b, c` pairwise adjacent in graph `G`:
+```
+K_a K_b K_c = − σ_x^a σ_x^b σ_x^c σ_z^{N_a + N_b + N_c}
+```
+The `−1` sign drives Bell-inequality violations for graph states.
+
+### 28.8 Graph-state projector and basis (HeiDurEisRauNesBri06 eq. 734)
+
+```
+|G⟩⟨G| = (1/2^N) Σ_{σ ∈ S} σ
+|W⟩ := σ_z^W |G⟩,    K_a |W⟩ = (-1)^{W_a} |W⟩
+```
+The set `{|W⟩ : W ⊆ V}` is an orthonormal basis of `(C²)^V` (graph-state basis).
+
+### 28.9 Pauli measurement rules on a graph state (HeiEisBri03 eq. proposition `pauli`)
+
+- `σ_z` measurement at `a`:  `G' = G − {a}`,   `U_{z,+} = I`, `U_{z,−} = ∏_{b∈N_a} σ_z^b`
+- `σ_y` measurement at `a`:  `G' = G Δ E(N_a, N_a) − {a}`,   `U_{y,±} = ∏_{b∈N_a} (∓i σ_z^b)^{1/2}`
+- `σ_x` measurement at `a` with chosen neighbor `b₀ ∈ N_a`:
+  ```
+  G' = G  Δ E(N_{b₀}, N_a)  Δ E(N_{b₀} ∩ N_a, N_{b₀} ∩ N_a)  Δ E({b₀}, N_a − {b₀})  − {a}
+  U_{x,+} = (+iσ_y^{b₀})^{1/2} ∏_{b ∈ N_a − N_{b₀} − {b₀}} σ_z^b
+  U_{x,−} = (−iσ_y^{b₀})^{1/2} ∏_{b ∈ N_{b₀} − N_a − {a}} σ_z^b
+  ```
+
+### 28.10 Stabilizer-state graph decoration scheme (EllEasCav07 §III.B)
+
+A stabilizer state's graph is the simple graph from adjacency `B` (right half of
+canonical `(I|B)` form), plus three decorations:
+- `H` on qubit `j` → hollow node at vertex `j`
+- `S` on qubit `j` → loop on vertex `j`
+- `Z` on qubit `j` → minus sign on vertex `j`
+
+Every stabilizer state (not just graph states) has such a representation.
+Reduced stabilizer graphs (those with the minimum number of hollow nodes among
+all equivalent graphs) are a canonical-form invariant.
+
+### 28.11 Bipartite Schmidt-measure formulas (HeiEisBri03)
+
+For graph `G` on `N` vertices with adjacency `θ`:
+- `E_S(|G⟩) ≤ E_S(|G'⟩) + 1` and `E_S(|G'⟩) ≤ E_S(|G⟩)` under any single-Pauli measurement.
+- Even-`N` ring: `E_S = N/2`.
+- 3D cluster `(L_x, L_y, L_z)`: `E_S = ⌊L_x L_y L_z / 2⌋`.
+
+---
+
+## 29. Topological codes (chain-complex view, BraDalEva25 §5)
+
+### 29.1 Stabilizer construction from a 2-cell complex
+
+Given cell complex `X = (V, E, F)` with chain complex
+`0 → C₂ →^{∂₂} C₁ →^{∂₁} C₀ → 0` over `Z₂`:
+```
+Z_f = ∏_{e ∈ ∂₂(f)} Z_e          (one Z-stab per 2-cell)
+X_v = ∏_{e ∈ ∂*(v)} X_e          (one X-stab per 0-cell)
+[Z_c, X_d] = 0  ⟺  c · d = Σ c_i d_i = 0 (mod 2)        (intersection number)
+```
+
+### 29.2 Logical operators ↔ first homology (BraDalEva25 Prop. 5.1)
+
+```
+N(S)/S ≅ H₁(L, Z₂) ⊕ H₁(L*, Z₂)
+d = min{ ℓ(c) : 1 ≠ c ∈ H₁(L, Z₂) ∪ H₁(L*, Z₂) }
+```
+
+### 29.3 Toric code parameters
+
+- `[[2mn, 2, min(m,n)]]` on `m × n` torus
+- `2mn − 2` independent stabilizer generators (one redundancy per cell type)
+- 4-fold ground-state degeneracy (logical qubit count `k = 2`)
+- Constraints: `∏_s A_s = ∏_p B_p = I`
+
+### 29.4 Planar code parameters
+
+- `[[2mn + n − m, 1, min(m,n)]]` on `m × n` lattice (smooth top/bottom, rough sides)
+- `mn` `Z_f` plaquettes + `(m+1)(n−1)` `X_v` stars = `2mn − m + n − 1` generators
+
+### 29.5 Smallest planar code `m=1, n=2` (5 qubits)
+
+(See §27.4 above for the full state-vector data.)
+
+**TEST**: build the 4 stabilizers, verify `dim(codespace) = 2`; build the 16-entry
+syndrome lookup table; verify each Pauli error maps to a unique 4-bit syndrome.
+
+---
+
+## 30. Quantum MacWilliams identity — Shor–Laflamme form (BalCenHub20 §8.2)
+
+### 30.1 Shor–Laflamme weight enumerators
+
+```
+A_j = Σ_{wt(E) = j} Tr(E P) Tr(E† P)
+B_j = Σ_{wt(E) = j} Tr(E P E† P)
+```
+where `P` is the codespace projector and `wt(E)` is Pauli weight.
+
+### 30.2 The MacWilliams duality
+
+```
+q^n B(x, y) = A(x + (q² − 1) y, x − y)
+q^n A(x, y) = B(x + (q² − 1) y, x − y)
+```
+For qubits (`q = 2`): `2^n B(x,y) = A(x + 3y, x − y)`.
+
+### 30.3 Distance certification
+
+A code has distance `d` iff `K · B_j = A_j` for `0 ≤ j < d`, where `K = dim P`.
+
+### 30.4 Pure-code self-dual identity
+
+For `[[n,0,d]]` codes (k = 0): `A(x, y) = B(x, y)` (self-dual weight enumerator).
+
+### 30.5 TEST — hexacode `[[6,0,4]]_2`
+
+Compute `(A_0, …, A_6) = (1, 0, 0, 0, 45, 0, 18)`; verify `B = A`; verify the
+polynomial `x^6 + 45 x² y^4 + 18 y^6` is fixed by `2^6 B(x,y) = A(x + 3y, x − y)`.
+
+---
+
+## 31. Extended quantum bounds
+
+### 31.1 Quantum Hamming (BraDalEva25 eq. 3.1)
+
+For nondegenerate `[[n, k, d]]` codes correcting `t = ⌊(d−1)/2⌋` errors:
+```
+Σ_{j=0}^{t} C(n, j) · 3^j · 2^k ≤ 2^n
+```
+Verify saturation for `[[5,1,3]]` (perfect code): `2 + 5·3·2 = 32 = 2^5`.
+
+### 31.2 Quantum Singleton — strong form (BalCenHub20 Thm. 7.3)
+
+```
+n ≥ k + 2(d − 1)        for any [[n,k,d]] code with k ≥ 1
+```
+Forbids small-`d` codes that classical Singleton would allow (e.g. `[[3,1,2]]`).
+
+### 31.3 Quantum-MDS dimension bound (BalCenHub20 eq. 7.5)
+
+If a QMDS `[[n, n−2d+2, d]]_q` exists, then
+```
+n ≤ q² + d − 2
+```
+
+### 31.4 QMDS partial-trace family (BalCenHub20 §7.4)
+
+If `[[n, n−2d+2, d]]` QMDS exists, so does `[[n−s, n−2d+2+s, d−s]]` for
+`0 ≤ s ≤ d`. For every `S ⊂ {1,…,n}` with `|S| ≤ (n+k)/2`:
+```
+tr_{S^c}(P) ∝ I
+```
+
+### 31.5 Threshold theorem clean form (DevMunNem09 §VII)
+
+For `g`-level concatenation with a `[[n, k, 3]]` code:
+```
+p_L^g = (c p)^{2^g} / c,    p_th = 1/c
+```
+
+---
+
+## 32. Diagonal-unitary canonical decomposition (BroBri06)
+
+### 32.1 Pauli-Z exponential expansion (BroBri06 eq. 15)
+
+Any n-qubit diagonal unitary can be written (up to global phase) as
+```
+D_n = ∏_{m ∈ {0,1}^n \ {0}} exp[ i (φ_m / 2) Z_1^{m_1} Z_2^{m_2} … Z_n^{m_n} ]
+```
+i.e. a product over the `2^n − 1` non-trivial Pauli-Z strings.
+
+### 32.2 Toffoli-Z (CCZ) coefficients (BroBri06 Fig. 7)
+
+```
+CCZ = D_3   with   θ_{100} = θ_{010} = θ_{001} = θ_{111} = −π/4,
+                   θ_{110} = θ_{101} = θ_{011} = +π/4
+```
+Plug into eq. (15) and exponentiate; result is `diag(1,1,1,1,1,1,1,−1)`.
+
+### 32.3 Three-pattern arbitrary single-qubit unitary (BroBri06 §2.1)
+
+On a 4-qubit linear graph, measurement angles `(φ_1, φ_2, φ_3)` with adaptive
+corrections `φ_2 = (−1)^{m_1} β`, `φ_3 = (−1)^{m_2} γ` realize:
+```
+U_z(γ) U_x(β) U_z(α)        (modulo a Pauli by-product)
+```
+deterministically, regardless of measurement outcomes `m_1, m_2, m_3`.
+
+### 32.4 ZZ-rotation pattern (3-qubit star)
+
+Central ancilla `a` connected to qubits 1, 2; measuring `a` in basis
+`(−φ, −π/2)` realizes `e^{−i (φ/2) Z_1 Z_2}` on the input qubits, with optional
+`Z_1 Z_2` byproduct on outcome `1`.
+
+### 32.5 2n-qubit Clifford pattern
+
+Any n-qubit Clifford is implementable on a 2n-qubit one-way pattern using only
+Pauli measurements; no adaptivity needed. Strengthens Gottesman–Knill.
+
+---
+
+## 33. Composite-D qudit caveats (Gheorghiu11, BraCheKofKue26)
+
+### 33.1 Composite-D size theorem (Gheorghiu11 Thm. 1)
+
+```
+K · |S| = D^n
+```
+for any qudit stabilizer code with arbitrary integer `D ≥ 2`. `K = dim C` need
+not be a power of `D`.
+
+**Counterexample**: for `D = 4`, `S = ⟨X², Z²⟩` has `|S| = 4`, `K = 1` (it
+stabilizes a single state, not 4); needs **2 generators**, not 1.
+
+### 33.2 Composite-D needs up to 2n generators
+
+For composite `D`, a stabilizer can require up to `2n` generators (not `n`).
+The prime-D claim "always `n` generators" fails because non-prime `Z_D` is not
+a field.
+
+### 33.3 Standard form via Smith Normal Form (Gheorghiu11 Thm. 2)
+
+Any qudit stabilizer over `Z_D` reduces (by Clifford + row ops) to:
+```
+S' = | M    0    | Z_1   Z_3 |    rank r ≤ n
+     | 0    0    | Z_2   Z_4 |    last k − r rows
+```
+with `M = diag(m_1, …, m_r)`, `m_i | D`. For prime `D`: `M = I_r`, `Z_2 = 0`,
+`Z_1` symmetric (recovers Got97/Nielsen–Chuang form).
+
+### 33.4 Qudit SWAP factorization (Gheorghiu11 Tab. I)
+
+```
+SWAP_{ab} = CNOT_{ab} · CNOT_{ba}^† · CNOT_{ab} · (F_a² ⊗ I_b)
+```
+The extra `F²` is necessary for `D ≥ 3`.
+
+### 33.5 QuickQudits τ-phase convention (BraCheKofKue26 §2)
+
+```
+ω = e^{2πi/d},   τ = exp(πi(d² + 1)/d),   τ² = ω
+Y := τ^{-1} X Z
+W(a, b) = τ^{-ab} X^a Z^b
+W(a, b) · W(a', b') = τ^{a' b − a b'} W(a + a', b + b')
+[W(a, b), W(a', b')] = 0  ⟺  a' b − a b' ≡ 0 (mod d)
+```
+
+### 33.6 Tableau update branching for `S` (BraCheKofKue26 Tab. 2)
+
+```
+S applied to qudit i:    z_i ← z_i + x_i;    r ← r + Δ
+                         Δ = x_i²            (d even)
+                         Δ = x_i (x_i − 1)   (d odd)
+```
+Branching by parity of `d` is **required** for correctness.
+
+### 33.7 Eigenspace projector for prime p (BahBei06 Lemma 3)
+
+For `g = ω^c X(a) Z(b) ∈ G_n` non-trivial:
+```
+P_j = (1/p) [I + ω^{-j} g + ω^{-2j} g² + … + ω^{-(p-1)j} g^{p-1}]
+```
+All `p` projectors have equal rank `(dim H)/p = p^{n-1}` per qudit.
+
+### 33.8 Power formula for qudit Pauli (BahBei06 Lemma 2)
+
+For odd prime `p` and `g = ω^c X(a) Z(b)`:
+```
+g^k = ω^{(k c + C(k,2) a · b)} · X(k a) Z(k b)
+```
+In particular `g^p = I` (using `p | C(p, 2)` for odd `p`).
+
+---
+
+## 34. Stabilizer formalism over arbitrary finite Abelian groups (BerNes12)
+
+For `G = Z_{d_1} × … × Z_{d_m}`:
+
+### 34.1 Pauli operators
+
+```
+X(g) |h⟩ = |h + g⟩
+Z(g) |h⟩ = χ_g(h) |h⟩,    χ_g(h) = exp(2πi Σ_i g(i) h(i) / d_i)
+σ(a, g, h) = γ^a Z(g) X(h),    γ = e^{iπ / |G|},    a ∈ Z_{2|G|}
+```
+
+### 34.2 Commutation predicate
+
+```
+σ(a₁, g₁, h₁) σ(a₂, g₂, h₂) commute  ⟺  χ_{g₁}(h₂) = χ_{g₂}(h₁)
+```
+
+### 34.3 Stabilizer-code dimension theorem (BerNes12 Cor. 6.3)
+
+For any stabilizer group `S` over Abelian `G` with codespace `V`:
+```
+dim V = |G| / |S|
+```
+generalizing `K · |S| = D^n`. `V` is one-dimensional iff `H = D^⊥` (where `H`
+is the X-label subgroup, `D` the Z-only subgroup).
+
+### 34.4 Stabilizer-state normal form (BerNes12 Thm. 8)
+
+Every stabilizer state has the form
+```
+|φ⟩ = α (1/√|H|) Σ_{h ∈ H} ξ(h) |s + h⟩
+```
+where `α` is a global phase, `s ∈ G`, `H` is the X-label subgroup, and
+`ξ : H → C*` is a quadratic function:
+```
+ξ(g + h) = ξ(g) ξ(h) B(g, h)        for some bilinear B
+ξ(g)^{2|G|} = 1
+ξ(0) = 1
+```
+For `G = Z₂^m` recovers the Dehaene–De Moor form
+`(−1)^{q(x)} i^{ℓ(x)} |x + s⟩`.
+
+### 34.5 Pauli measurement update (BerNes12 Thm. 7)
+
+After measuring `σ` on a stabilizer state with eigenvalue `λ`:
+```
+S_m = ⟨ λ̄ σ, C_S(σ) ⟩
+```
+where `C_S(σ)` is the centralizer of `σ` inside `S`.
+
+### 34.6 Adaptive > unitary normalizer circuits (BerNes12 §7)
+
+The state `|ψ⟩ = (|0⟩ + |2⟩)/√2 ∈ C^4` (a coset state of `H = ⟨2⟩ < Z_4`)
+**cannot** be obtained by any unitary normalizer circuit applied to `|0⟩`
+(its stabilizer needs ≥ 2 generators, while a unitary preserves generator
+count). It IS reachable with measurement.
+
+This is a canonical witness that adaptive normalizer circuits are strictly
+more powerful than unitary ones.
+
+### 34.7 Subgroup-orthogonality lemma (BerNes12 Lem. 4.1)
+
+For `H, K ≤ G`:
+```
+(H^⊥)^⊥ = H,    |H^⊥| = |G|/|H|,    H ⊆ K ⟺ K^⊥ ⊆ H^⊥,
+(H ∩ K)^⊥ = ⟨H^⊥, K^⊥⟩
+```
+
+---
+
+## 35. ZX-calculus stabilizer circuit identities (RanCoe13, Ranchin14)
+
+A complete set of stabilizer-circuit equations follows from ZX-completeness;
+the most directly testable are unitary-level identities.
+
+### 35.1 π-commutation
+
+```
+X · R_Z(α) = R_Z(−α) · X
+Z · R_X(α) = R_X(−α) · Z
+```
+
+### 35.2 Hadamard Euler decomposition
+
+```
+H = R_Z(π/2) · R_X(π/2) · R_Z(π/2)        (up to global phase)
+```
+
+### 35.3 Spider fusion (S1, S2)
+
+Two same-color spiders connected by a wire fuse: their phases add modulo 2π.
+For stabilizer-restricted angles, the phase group is `Z_4 = {0, π/2, π, 3π/2}`.
+
+### 35.4 CNOT-elimination on |0⟩-control or |+⟩-target (B1)
+
+```
+CNOT (|0⟩_c ⊗ |ψ⟩_t) = |0⟩ ⊗ |ψ⟩
+CNOT (|ψ⟩_c ⊗ |+⟩_t) = |ψ⟩ ⊗ |+⟩
+```
+
+### 35.5 CNOT classical-bit identity (K1)
+
+```
+CNOT (|1⟩_c ⊗ |ψ⟩_t) = |1⟩ ⊗ X|ψ⟩
+CNOT (|ψ⟩_c ⊗ |−⟩_t) = (Z|ψ⟩) ⊗ |−⟩
+```
+
+### 35.6 Phase composition rules
+
+```
+R_Z(α) · R_Z(β) = R_Z(α + β)
+R_X(α) · R_X(β) = R_X(α + β)
+```
+
+### 35.7 D-torus picture for qudit stabilizer states (Ranchin14 §6)
+
+For prime `D`, every single-qudit stabilizer state is a vector in one of
+`D + 1` mutually unbiased bases (axes `Z, X, XZ, XZ², …, XZ^{D−1}`).
+The stabilizer states unbiased to `Z` form a `D-torus` parametrized by
+`(α₁, …, α_{D−1}) ∈ (Z_D)^{D−1}`, with `D²` points per torus.
+
+For `D = 3` (qutrit): exactly **12 single-qutrit stabilizer states**, falling on
+4 MUBs of size 3.
+
+---
+
+## 36. Updated "Stabilizer Olympics" — extended conformance checklist
+
+The following items extend §25's 13-point checklist with formulas added in 2026.
+A package passing **all 23 items** is "thoroughly conformant":
+
+14. ✅ `Y_L = −Y₁Y₂Y₃` for the 3-qubit repetition code (sign convention).
+15. ✅ `S^⊗7` on Steane enacts `S†` (logical phase-conjugation).
+16. ✅ `H^⊗5` does NOT preserve the [[5,1,3]] stabilizer (non-CSS check).
+17. ✅ `[[4,2,2]]` codeword amplitudes match §27.1 explicitly.
+18. ✅ NesDehMoo03 LC formula `g_i(θ) = θ + θ Λ_i θ + Λ` reproduces the standard
+    local-complementation graph operation on every `n ≤ 6` graph state.
+19. ✅ Reduced-state rank `log₂ rank tr_A|G⟩⟨G| = rank Γ_{AB}` holds for
+    every bipartition of every connected `n ≤ 5` graph state.
+20. ✅ Quantum Hamming bound saturates exactly for `[[5,1,3]]`, fails to
+    saturate for Steane and Shor (degenerate codes).
+21. ✅ Hexacode `[[6,0,4]]_2` weight enumerator matches MacWilliams self-dual
+    fixed point `B = A = x^6 + 45 x²y^4 + 18 y^6`.
+22. ✅ Toric code on `m × n` torus reports `[[2mn, 2, min(m,n)]]` parameters
+    with 4-dim ground-space.
+23. ✅ Smallest planar code `m=1, n=2` reproduces the §27.4 amplitudes and
+    16-entry syndrome lookup.

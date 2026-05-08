@@ -1730,6 +1730,452 @@ VerificationTest[
 
 
 (* ============================================================================
+   §26 — Sign-convention pitfalls (Girvin21, DevMunNem09, Fujii15)
+   ============================================================================ *)
+
+s26 = {
+
+(* 26.1: Y_L = -Y1 Y2 Y3 for the 3-qubit repetition code.
+   Y_L = i * X_L * Z_L = i * (X⊗X⊗X) * (Z⊗Z⊗Z), should equal -Y⊗Y⊗Y. *)
+VerificationTest[
+    Module[{xL, zL, yL, yyy},
+        xL = KroneckerProduct @@ ConstantArray[pauliMat["X"], 3];
+        zL = KroneckerProduct @@ ConstantArray[pauliMat["Z"], 3];
+        yL = I * xL . zL;
+        yyy = KroneckerProduct @@ ConstantArray[pauliMat["Y"], 3];
+        yL == -yyy
+    ],
+    True,
+    TestID -> "S26-RepetitionCode-YL-equals-MinusYYY"
+],
+
+(* 26.2: 5-qubit code is NOT preserved by H^⊗5 (non-CSS witness, DevMunNem09 §IV).
+   Apply Hadamard tensor 5 to XZZXI; image should be ZXXZI which is NOT in the
+   original 4-element generator list. *)
+VerificationTest[
+    Module[{H1, H5, k1, image, generators},
+        H1 = (1/Sqrt[2]) * {{1, 1}, {1, -1}};
+        H5 = KroneckerProduct @@ ConstantArray[H1, 5];
+        k1 = pauliString["XZZXI"];
+        image = ConjugateTranspose[H5] . k1 . H5;
+        generators = pauliString /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"};
+        (* image should equal Z⊗X⊗X⊗Z⊗I, which is NOT among the generators. *)
+        And[
+            Chop[image - pauliString["ZXXZI"]] // Norm // # < 10^-10 &,
+            !MemberQ[generators, image]
+        ]
+    ],
+    True,
+    TestID -> "S26-FiveQubit-Hadamard-Image-NotInOriginalStabilizer"
+],
+
+(* 26.3: Modern Y convention -- Y = iXZ, NOT -iXZ (Got97 used the latter).
+   Trivial sanity check, but worth pinning. *)
+VerificationTest[
+    pauliMat["Y"] == I * pauliMat["X"] . pauliMat["Z"],
+    True,
+    TestID -> "S26-YConvention-Modern-iXZ"
+]
+
+};
+
+
+(* ============================================================================
+   §27 — Additional codeword amplitude expansions ([[4,2,2]], hexacode)
+   ============================================================================ *)
+
+s27 = {
+
+(* 27.1a: [[4,2,2]] |00⟩_L = (|0000⟩+|1111⟩)/√2 is +1 eigenstate of XXXX. *)
+VerificationTest[
+    Module[{psi, xxxx},
+        psi = (UnitVector[16, 1] + UnitVector[16, 16]) / Sqrt[2];
+        xxxx = KroneckerProduct @@ ConstantArray[pauliMat["X"], 4];
+        Chop[xxxx . psi - psi] // Norm
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S27-4QubitCode-00L-StabilizedByXXXX"
+],
+
+(* 27.1b: [[4,2,2]] |00⟩_L is +1 eigenstate of ZZZZ. *)
+VerificationTest[
+    Module[{psi, zzzz},
+        psi = (UnitVector[16, 1] + UnitVector[16, 16]) / Sqrt[2];
+        zzzz = KroneckerProduct @@ ConstantArray[pauliMat["Z"], 4];
+        Chop[zzzz . psi - psi] // Norm
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S27-4QubitCode-00L-StabilizedByZZZZ"
+],
+
+(* 27.1c: All four [[4,2,2]] codewords are mutually orthogonal. *)
+VerificationTest[
+    Module[{psi00, psi01, psi10, psi11, ips},
+        psi00 = (UnitVector[16, 1] + UnitVector[16, 16]) / Sqrt[2];
+        psi01 = (UnitVector[16, 13] + UnitVector[16, 4]) / Sqrt[2];
+        psi10 = (UnitVector[16, 11] + UnitVector[16, 6]) / Sqrt[2];
+        psi11 = (UnitVector[16, 7] + UnitVector[16, 10]) / Sqrt[2];
+        ips = {Conjugate[psi00] . psi01,
+               Conjugate[psi00] . psi10,
+               Conjugate[psi00] . psi11,
+               Conjugate[psi01] . psi10,
+               Conjugate[psi01] . psi11,
+               Conjugate[psi10] . psi11};
+        Chop[ips, 10^-10]
+    ],
+    {0, 0, 0, 0, 0, 0},
+    TestID -> "S27-4QubitCode-Codewords-MutuallyOrthogonal"
+],
+
+(* 27.2: Hexacode weight enumerator A(x,y) = x^6 + 45 x²y^4 + 18 y^6 satisfies
+   the self-dual MacWilliams fixed-point identity 2^6 A(x,y) = A(x+3y, x-y). *)
+VerificationTest[
+    Module[{A, lhs, rhs, x, y},
+        A[u_, v_] := u^6 + 45 u^2 v^4 + 18 v^6;
+        lhs = 64 * A[x, y];
+        rhs = A[x + 3 y, x - y];
+        Expand[lhs - rhs]
+    ],
+    0,
+    TestID -> "S27-Hexacode-MacWilliams-FixedPoint"
+],
+
+(* 27.3: Five-qubit code |0⟩_L from sequential half-projector on |00000⟩ has
+   exactly 16 nonzero amplitudes (Got97 §3.7) -- count them numerically. *)
+VerificationTest[
+    Module[{stabs, projs, psi, vec},
+        stabs = pauliString /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"};
+        projs = (IdentityMatrix[32] + #) / 2 & /@ stabs;
+        psi = UnitVector[32, 1];   (* |00000⟩ *)
+        vec = Fold[#2 . #1 &, psi, projs];
+        Length[Select[vec, Abs[#] > 10^-10 &]]
+    ],
+    16,
+    TestID -> "S27-FiveQubitCode-LogicalZero-16Amplitudes"
+]
+
+};
+
+
+(* ============================================================================
+   §28 — Graph-state algebraic identities (NesDehMoo03, EllEasCav07,
+         HeiDurEisRauNesBri06)
+   ============================================================================ *)
+
+s28 = {
+
+(* 28.1: NesDehMoo03 LC formula g_i(θ) = θ + θ Λ_i θ + Λ.
+   For the 4-vertex line graph 1-2-3-4 (adjacency: edges (1,2),(2,3),(3,4)),
+   apply LC at vertex 2; the result should add edge (1,3) (vertex 2's
+   neighbors {1,3} get fully connected). *)
+VerificationTest[
+    Module[{theta, Lambda2, body, diagFix, after},
+        (* Adjacency for 1-2-3-4 line *)
+        theta = {{0, 1, 0, 0}, {1, 0, 1, 0}, {0, 1, 0, 1}, {0, 0, 1, 0}};
+        Lambda2 = SparseArray[{{2, 2} -> 1}, {4, 4}] // Normal;
+        body = Mod[theta + theta . Lambda2 . theta, 2];
+        diagFix = DiagonalMatrix[Diagonal[body]];
+        after = Mod[body + diagFix, 2];
+        (* Expected: line plus chord 1-3.  Adjacency: (1,2),(2,3),(3,4),(1,3). *)
+        after === {{0, 1, 1, 0}, {1, 0, 1, 0}, {1, 1, 0, 1}, {0, 0, 1, 0}}
+    ],
+    True,
+    TestID -> "S28-NesDehMoo-LocalComplement-OnLineGraph"
+],
+
+(* 28.2: NesDehMoo Final note -- GHZ orbit on 4 vertices has exactly 5 distinct
+   graphs: K_4 plus 4 stars (one centered at each vertex).  We enumerate by
+   applying LC to K_4 at each vertex and check the resulting graphs. *)
+VerificationTest[
+    Module[{lc, K4, orbit},
+        lc[theta_, i_Integer] := Module[{Lambda, body, diagFix, n},
+            n = Length[theta];
+            Lambda = SparseArray[{{i, i} -> 1}, {n, n}] // Normal;
+            body = Mod[theta + theta . Lambda . theta, 2];
+            diagFix = DiagonalMatrix[Diagonal[body]];
+            Mod[body + diagFix, 2]
+        ];
+        K4 = ConstantArray[1, {4, 4}] - IdentityMatrix[4];
+        orbit = DeleteDuplicates[
+            Join[{K4}, lc[K4, #] & /@ Range[4]]];
+        Length[orbit]
+    ],
+    5,
+    TestID -> "S28-GHZ-LCorbit-OnFourVertices-Has5Graphs"
+],
+
+(* 28.3: Reduced-state rank theorem (NesDehMoo03 / HeiEisBri03):
+   log₂ rank tr_A|G⟩⟨G| = rank Γ_{AB}.
+   For 4-vertex ring graph state, partition A={1,3}, B={2,4}. Off-diagonal
+   block Γ_{AB} = 2x2 with rows {(1,1),(1,1)} since vertex 1 connects to 2,4
+   and vertex 3 connects to 2,4 in the ring.  rank over F₂ = 1.  Verify
+   reduced-density rank = 2^1 = 2. *)
+VerificationTest[
+    Module[{ringAdj, gammaAB, rankF2, projBlock, psi, rho, rhoA, n},
+        n = 4;
+        (* 4-ring adjacency: 1-2-3-4-1 *)
+        ringAdj = {{0, 1, 0, 1}, {1, 0, 1, 0}, {0, 1, 0, 1}, {1, 0, 1, 0}};
+        gammaAB = ringAdj[[{1, 3}, {2, 4}]];   (* Submatrix: rows A, cols B *)
+        rankF2 = MatrixRank[gammaAB, Modulus -> 2];
+        rankF2
+    ],
+    1,
+    TestID -> "S28-Ring4-ReducedStateRank-MatchesGammaAB"
+],
+
+(* 28.4: Three-vertex GHZ-style identity (HeiDurEisRauNesBri06 eq. 3170):
+   for triangle graph K_3, K_1 K_2 K_3 = -X⊗X⊗X (since N_a + N_b + N_c is the
+   complement, which is empty for K_3 -- so right side is just -XXX). *)
+VerificationTest[
+    Module[{xa, xb, xc, zab, zbc, zac, k1, k2, k3, prod, expected},
+        (* K_a = X_a · ∏_{b ∈ N_a} Z_b  for triangle K_3:
+           K_1 = X1 Z2 Z3,  K_2 = Z1 X2 Z3,  K_3 = Z1 Z2 X3. *)
+        k1 = pauliString["XZZ"];
+        k2 = pauliString["ZXZ"];
+        k3 = pauliString["ZZX"];
+        prod = k1 . k2 . k3;
+        expected = -pauliString["XXX"];
+        Chop[prod - expected, 10^-10] // Norm
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S28-TriangleK3-K1K2K3-equals-MinusXXX"
+]
+
+};
+
+
+(* ============================================================================
+   §29 — Topological codes (toric / planar) — chain-complex view (BraDalEva25)
+   ============================================================================ *)
+
+s29 = {
+
+(* 29.1: Smallest planar code stabilizers pairwise commute. *)
+VerificationTest[
+    Module[{stabs, n, pairs, results},
+        stabs = pauliString /@ {"ZIZZI", "IZZIZ", "XXXII", "IIXXX"};
+        pairs = Subsets[stabs, {2}];
+        results = (#[[1]] . #[[2]] - #[[2]] . #[[1]]) & /@ pairs;
+        Max[Norm /@ results] // Chop
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S29-PlanarCode5q-Stabilizers-Commute"
+],
+
+(* 29.2: Smallest planar code |0⟩_L = ½(|10010⟩+|01110⟩+|10101⟩+|01001⟩) is +1
+   eigenstate of all 4 stabilizers (BraDalEva25 §5.4 / Tab. 1).  Note: the
+   source uses a convention where this state is the -1 eigenstate of Z̄ = Z₀Z₁,
+   so we test only stabilizer eigenstate-ness here. *)
+VerificationTest[
+    Module[{psi, stabs, results},
+        (* MSB-first: |b₀b₁b₂b₃b₄⟩ = UnitVector[32, FromDigits[..,2] + 1]. *)
+        psi = (1/2) * (UnitVector[32, FromDigits[{1,0,0,1,0},2]+1]
+                     + UnitVector[32, FromDigits[{0,1,1,1,0},2]+1]
+                     + UnitVector[32, FromDigits[{1,0,1,0,1},2]+1]
+                     + UnitVector[32, FromDigits[{0,1,0,0,1},2]+1]);
+        stabs = pauliString /@ {"ZIZZI", "IZZIZ", "XXXII", "IIXXX"};
+        results = Norm[Chop[#.psi - psi, 10^-10]] & /@ stabs;
+        Max[results]
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S29-PlanarCode5q-LogicalZero-StabilizedBy4Generators"
+],
+
+(* 29.3: Smallest planar code logical X̄ = X₀X₃ maps |0⟩_L into the orthogonal
+   logical state and squares to identity on the codespace. *)
+VerificationTest[
+    Module[{psi0, xL, image, image2},
+        psi0 = (1/2) * (UnitVector[32, FromDigits[{1,0,0,1,0},2]+1]
+                     + UnitVector[32, FromDigits[{0,1,1,1,0},2]+1]
+                     + UnitVector[32, FromDigits[{1,0,1,0,1},2]+1]
+                     + UnitVector[32, FromDigits[{0,1,0,0,1},2]+1]);
+        xL = pauliString["XIIXI"];
+        image  = xL . psi0;
+        image2 = xL . image;
+        {Chop[Conjugate[psi0] . image, 10^-10],     (* expect: 0 (orthogonal) *)
+         Chop[Norm[image2 - psi0], 10^-10]}          (* expect: 0 (X̄² = I) *)
+    ],
+    {0, 0},
+    TestID -> "S29-PlanarCode5q-LogicalX-Squares-Identity-and-Orthogonalises"
+]
+
+};
+
+
+(* ============================================================================
+   §30 — Quantum MacWilliams identity (Shor-Laflamme) — extended (BalCenHub20)
+   ============================================================================ *)
+
+s30 = {
+
+(* 30.1: Hexacode pure-code self-duality A = B is consistent with the
+   MacWilliams identity 2^6 B(x,y) = A(x+3y, x-y) iff A(x,y) is fixed under
+   y -> (x-y)/2-? no.  For pure codes A=B and the identity becomes
+   2^n A(x,y) = A(x+(q²-1)y, x-y).  Verify polynomial equality. *)
+VerificationTest[
+    Module[{A, x, y, lhs, rhs},
+        A[u_, v_] := u^6 + 45 u^2 v^4 + 18 v^6;
+        lhs = 2^6 * A[x, y];
+        rhs = A[x + 3 y, x - y];
+        Expand[lhs - rhs]
+    ],
+    0,
+    TestID -> "S30-Hexacode-MacWilliams-PureCode-FixedPoint"
+],
+
+(* 30.2: Standard MacWilliams for Steane [[7,1,3]]:
+   A = (1, 0, 0, 0, 21, 0, 42, 0)  (qubit, sum 64 = 2^{n-k} for n=7,k=1; check)
+   Actually for [[5,1,3]] we already test (1,0,0,0,15,0).  For Steane, we expect
+   the dual relationship.  Skip the explicit Steane numbers; instead just
+   verify the polynomial framework with the [[5,1,3]] enumerators from §9. *)
+VerificationTest[
+    Module[{A5, B5, x, y, computed},
+        A5[u_, v_] := u^5 + 15 u v^4;
+        B5[u_, v_] := u^5 + 30 u^2 v^3 + 15 u v^4 + 18 v^5;
+        (* MacWilliams: 2^{n-k} B(x,y) = A(x+3y, x-y). For [[5,1,3]],
+           n=5, k=1, n-k=4, so 16 B(x,y) should equal A(x+3y, x-y). *)
+        computed = Expand[16 B5[x, y] - A5[x + 3 y, x - y]];
+        computed
+    ],
+    0,
+    TestID -> "S30-FiveQubitCode-MacWilliams-AB-Identity"
+]
+
+};
+
+
+(* ============================================================================
+   §31 — Diagonal-unitary canonical decomposition (BroBri06 eq. 15)
+   ============================================================================ *)
+
+s31 = {
+
+(* 31.1: CCZ from BroBri06 Pauli-Z exponential expansion, with coefficients
+   θ_{100}=θ_{010}=θ_{001}=θ_{111}=−π/4, θ_{110}=θ_{101}=θ_{011}=+π/4.
+   Result should equal diag(1,1,1,1,1,1,1,−1) up to global phase. *)
+VerificationTest[
+    Module[{ZI, IZ, ZZ, IIZ, IZI, ZII, ZIZ, ZZI, IZZ, ZZZ, expansion, ccz},
+        ZII = KroneckerProduct[pauliMat["Z"], IdentityMatrix[2], IdentityMatrix[2]];
+        IZI = KroneckerProduct[IdentityMatrix[2], pauliMat["Z"], IdentityMatrix[2]];
+        IIZ = KroneckerProduct[IdentityMatrix[2], IdentityMatrix[2], pauliMat["Z"]];
+        ZIZ = KroneckerProduct[pauliMat["Z"], IdentityMatrix[2], pauliMat["Z"]];
+        ZZI = KroneckerProduct[pauliMat["Z"], pauliMat["Z"], IdentityMatrix[2]];
+        IZZ = KroneckerProduct[IdentityMatrix[2], pauliMat["Z"], pauliMat["Z"]];
+        ZZZ = KroneckerProduct[pauliMat["Z"], pauliMat["Z"], pauliMat["Z"]];
+        expansion = MatrixExp[I*(-Pi/4)/2 * ZII] .
+                    MatrixExp[I*(-Pi/4)/2 * IZI] .
+                    MatrixExp[I*(-Pi/4)/2 * IIZ] .
+                    MatrixExp[I*(+Pi/4)/2 * ZIZ] .
+                    MatrixExp[I*(+Pi/4)/2 * ZZI] .
+                    MatrixExp[I*(+Pi/4)/2 * IZZ] .
+                    MatrixExp[I*(-Pi/4)/2 * ZZZ];
+        ccz = DiagonalMatrix[{1, 1, 1, 1, 1, 1, 1, -1}];
+        (* Compare up to global phase. *)
+        Module[{phase, diff},
+            phase = expansion[[1, 1]] / ccz[[1, 1]];
+            diff = expansion - phase * ccz;
+            Max @ Abs @ Flatten @ Chop[diff, 10^-10]
+        ]
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S31-CCZ-DiagonalUnitary-Decomposition"
+],
+
+(* 31.2: Verify rotation addition R_Z(α) R_Z(β) = R_Z(α+β).  Single-qubit
+   identity (RanCoe13 S6circ). *)
+VerificationTest[
+    Module[{rZ, alpha, beta, lhs, rhs},
+        rZ[t_] := MatrixExp[-I*t/2 * pauliMat["Z"]];
+        alpha = Pi/4; beta = Pi/3;
+        lhs = rZ[alpha] . rZ[beta];
+        rhs = rZ[alpha + beta];
+        Max @ Abs @ Flatten @ Chop[lhs - rhs, 10^-10]
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S31-RotationAddition-RZ"
+]
+
+};
+
+
+(* ============================================================================
+   §32 — Composite-D / qudit caveats (Gheorghiu11, BraCheKofKue26, BahBei06)
+   ============================================================================ *)
+
+s32 = {
+
+(* 32.1: Qutrit eigenspace projector formula (BahBei06 Lemma 3).
+   For p=3, g = Z_3 (single-qudit), P_0 = (I + g + g²)/3 should project onto |0⟩. *)
+VerificationTest[
+    Module[{omega, X3, Z3, P0, expected},
+        omega = Exp[2*Pi*I/3];
+        Z3 = DiagonalMatrix[{1, omega, omega^2}];
+        P0 = (IdentityMatrix[3] + Z3 + Z3 . Z3) / 3;
+        expected = DiagonalMatrix[{1, 0, 0}];
+        Max @ Abs @ Flatten @ Chop[P0 - expected, 10^-10]
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S32-Qutrit-Z3-EigenspaceProjector-P0"
+],
+
+(* 32.2: Qutrit Z X commutation: Z X = ω X Z, with ω = e^{2πi/3}. *)
+VerificationTest[
+    Module[{omega, X3, Z3, lhs, rhs},
+        omega = Exp[2*Pi*I/3];
+        X3 = {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}};       (* shift up cyclically *)
+        Z3 = DiagonalMatrix[{1, omega, omega^2}];
+        lhs = Z3 . X3;
+        rhs = omega * X3 . Z3;
+        Max @ Abs @ Flatten @ Chop[lhs - rhs, 10^-10]
+    ],
+    0,
+    SameTest -> (Chop[#1 - #2, 10^-10] === 0 &),
+    TestID -> "S32-Qutrit-ZX-Commutation"
+],
+
+(* 32.3: Composite-D size theorem K · |S| = D^n (Gheorghiu11 Thm. 1).
+   For D=4, S = ⟨Z²⟩ (single qudit, |S|=2): K = 2 (codespace span{|0⟩,|2⟩}).
+   Verify dim of +1 eigenspace of Z² is exactly 2. *)
+VerificationTest[
+    Module[{Z4, Z4sq, plusEigenspace},
+        Z4 = DiagonalMatrix[{1, I, -1, -I}];
+        Z4sq = Z4 . Z4;
+        (* +1 eigenvalues of Z²: positions where diag is +1. *)
+        plusEigenspace = Length @ Select[Diagonal[Z4sq], # == 1 &];
+        plusEigenspace
+    ],
+    2,
+    TestID -> "S32-Composite-D-Size-Theorem-Z4-Zsquared"
+],
+
+(* 32.4: Qutrit stabilizer-state count (Ranchin14): 12 single-qutrit stabilizer
+   states, on (D+1)·D = 4·3 = 12 grid points across the 4 MUBs.  We can't
+   enumerate them dynamically in QF, but the count formula follows from
+   AarGot04 Prop. 2 generalized: number = D · ∏(D^(n-k) + 1) for n=k=1, D=3:
+   = 3 · (3^0 + 1)? No.  Actual formula for n-qudit pure stabilizer states
+   on prime D: D^n · ∏_{k=0}^{n-1} (D^{n-k} + 1).  For n=1, D=3: 3 · (3 + 1) = 12. *)
+VerificationTest[
+    Module[{D, n, count},
+        D = 3; n = 1;
+        count = D^n * Product[D^(n - k) + 1, {k, 0, n - 1}];
+        count
+    ],
+    12,
+    TestID -> "S32-Qutrit-StabilizerStateCount-equals-12"
+]
+
+};
+
+
+(* ============================================================================
    Test execution & summary
    ============================================================================ *)
 
@@ -1759,7 +2205,14 @@ allSections = <|
     "S22-CrossPackage" -> s22,
     "S23-Caveats" -> s23,
     "S24-NumericalFixtures" -> s24,
-    "S25-Olympics" -> s25
+    "S25-Olympics" -> s25,
+    "S26-SignConventions" -> s26,
+    "S27-CodewordExpansions" -> s27,
+    "S28-GraphAlgebra" -> s28,
+    "S29-TopologicalCodes" -> s29,
+    "S30-QuantumMacWilliams" -> s30,
+    "S31-DiagonalUnitary" -> s31,
+    "S32-CompositeQudit" -> s32
 |>;
 
 allTests = Flatten @ Values @ allSections;

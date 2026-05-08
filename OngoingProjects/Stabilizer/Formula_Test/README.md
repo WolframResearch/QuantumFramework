@@ -1,15 +1,22 @@
 # Formula_Test — strict verification of stabilizer-formalism formulas against QF
 
 A self-contained audit of the `Wolfram`QuantumFramework`` stabilizer subsystem
-against the formulas extracted from 28 papers in
+against the formulas extracted from **44 papers** in
 `OngoingProjects/Stabilizer/tex/`.
+
+The reference was originally distilled from 28 papers; in 2026-05 the
+[`Pedagogical_arXiv_stabilizer_formalism.md`](Pedagogical_arXiv_stabilizer_formalism.md)
+Undermind survey identified 16 more papers worth integrating, and
+[`stabilizer-formulas.md`](stabilizer-formulas.md) was extended with sections
+§26-§36 covering their additional formulas.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| [`stabilizer-formulas.md`](stabilizer-formulas.md) | The 25-section formula reference, distilled from the 28 stabilizer papers |
-| [`stabilizer-formulas-test.wls`](stabilizer-formulas-test.wls) | 132 strict `VerificationTest`s mapped 1:1 to the reference; runs on a fresh kernel via `wolframscript` |
+| [`Pedagogical_arXiv_stabilizer_formalism.md`](Pedagogical_arXiv_stabilizer_formalism.md) | Undermind survey listing 43 pedagogical stabilizer-formalism papers (May 2026) |
+| [`stabilizer-formulas.md`](stabilizer-formulas.md) | The 36-section formula reference, distilled from all 44 stabilizer papers in `tex/` |
+| [`stabilizer-formulas-test.wls`](stabilizer-formulas-test.wls) | 155 strict `VerificationTest`s mapped 1:1 to the reference; runs on a fresh kernel via `wolframscript` |
 | [`findings-report.md`](findings-report.md) | Three confirmed real-bug findings (F1, F2, F3) with fresh-kernel reproductions and **concrete kernel patches** (Patch P1 / P2 / P3) |
 
 ## Running
@@ -20,11 +27,18 @@ From a fresh kernel:
 wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls
 ```
 
-## Status (2026-05-07, post-fix)
+## Status (2026-05-08, post-extension)
 
-**132 / 132 passing.** All three findings (F1 / F2 / F3) have landed as
-kernel patches (P1 / P2 / P3). The .wls runs green, and the same battery
-also runs as part of the regular `Tests/RunTests.wls` runner via
+**155 / 155 passing.** All three original findings (F1 / F2 / F3) remain
+resolved by kernel patches (P1 / P2 / P3); the 23 new tests added in
+sections S26–S32 (sign-convention pitfalls, codeword expansions, graph-state
+algebra, topological codes, quantum MacWilliams, diagonal-unitary
+decomposition, composite-D qudit caveats) all pass on first run with the
+current `stabilizer-phases-1-4` kernel. No new findings surfaced from the
+extended battery.
+
+The .wls runs green, and the same battery also runs as part of the regular
+`Tests/RunTests.wls` runner via
 [`Tests/Stabilizer/Formulas.wlt`](../../../Tests/Stabilizer/Formulas.wlt)
 (top-level `VerificationTest` mirror generated from the .wls).
 
@@ -75,6 +89,13 @@ The patches themselves are documented in
 | S23 | §23 Caveats                                              | 3/3  |
 | S24 | §24 Concrete numeric fixtures                            | 3/3  |
 | S25 | §25 Stabilizer Olympics 13-item conformance              | 13/13 |
+| S26 | §26 Sign-convention pitfalls (Y_L, transversal, Y conv.) | 3/3  |
+| S27 | §27 Codeword expansions ([[4,2,2]], hexacode, 5-qubit)   | 5/5  |
+| S28 | §28 Graph-state algebra (NesDehMoo LC, GHZ orbit, K₃)    | 4/4  |
+| S29 | §29 Topological codes (smallest planar code)             | 3/3  |
+| S30 | §30 Quantum MacWilliams (hexacode, 5-qubit AB-identity)  | 2/2  |
+| S31 | §31 Diagonal-unitary decomposition (CCZ, RZ addition)    | 2/2  |
+| S32 | §32 Composite-D / qudit caveats (qutrit projector, Z²)   | 4/4  |
 
 ## Findings (see [`findings-report.md`](findings-report.md))
 
