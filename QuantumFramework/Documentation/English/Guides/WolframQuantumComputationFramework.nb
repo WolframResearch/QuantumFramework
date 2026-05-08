@@ -58,7 +58,9 @@ Cell[CellGroupData[{
 Cell["Keywords", "KeywordsSection",
  CellID->359480772,ExpressionUUID->"6f082a4d-d6e2-4969-bfce-38dfa642b2f3"],
 
-Cell["XXXX", "Keywords",
+Cell["quantum computing, quantum state, quantum operator, quantum circuit, \
+quantum measurement, quantum channel, quantum algorithm, quantum entanglement, \
+tensor network, quantum simulation", "Keywords",
  CellID->324877441,ExpressionUUID->"8b7224ea-9d33-4291-a2cd-bef4f767d642"]
 }, Open  ]],
 
@@ -191,48 +193,7 @@ Cell[TextData[{
 }], "GuideText",
  CellChangeTimes->{{3.858961340065798*^9, 3.8589613628534627`*^9}, {
   3.893635805901029*^9, 3.893635809564538*^9}},
- CellID->158537782,ExpressionUUID->"f49828ed-90c2-45c1-903a-096d05bc5de3"],
-
-Cell[TextData[{
- Cell[BoxData[
-  ButtonBox["QuantumSchmidtDecomposition",
-   BaseStyle->"Link",
-   ButtonData->
-    "paclet:Wolfram/QuantumFramework/ref/QuantumSchmidtDecomposition"]], 
-  "InlineGuideFunction",ExpressionUUID->
-  "5adf51d8-d1f4-4293-a40d-6bec7a6e0894"],
- " \[LongDash] ",
- "Schmidt decomposition of a composite discrete quantum state"
-}], "GuideText", "FutureExample",
- CellDingbat->Cell[
-   BoxData[
-    TooltipBox[
-     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
-   "TentativeWrapper"],
- CellChangeTimes->{{3.858961534230812*^9, 3.858961547015252*^9}, 
-   3.858961587144236*^9},
- CellID->662372074,ExpressionUUID->"48533e03-7f21-4bf2-a471-3248e4f617cb"],
-
-Cell[TextData[{
- Cell[BoxData[
-  ButtonBox["QuantumSpectralDecomposition",
-   BaseStyle->"Link",
-   ButtonData->
-    "paclet:Wolfram/QuantumFramework/ref/QuantumSpectralDecomposition"]], 
-  "InlineGuideFunction",ExpressionUUID->
-  "a56d5397-084e-4d77-a124-18e610672074"],
- " \[LongDash] ",
- "Spectral decomposition of a mixed discrete quantum state or a discrete \
-quantum operator"
-}], "GuideText", "FutureExample",
- CellDingbat->Cell[
-   BoxData[
-    TooltipBox[
-     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
-   "TentativeWrapper"],
- CellChangeTimes->{{3.8589615521346607`*^9, 3.8589615580322037`*^9}, 
-   3.8589615916866493`*^9},
- CellID->2503200,ExpressionUUID->"dd88eedb-aee7-4d00-b123-84d8fc9935ba"]
+ CellID->158537782,ExpressionUUID->"f49828ed-90c2-45c1-903a-096d05bc5de3"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -281,24 +242,6 @@ Cell[TextData[{
 }], "GuideText",
  CellChangeTimes->{{3.893636071506638*^9, 3.8936361016477957`*^9}},
  CellID->1764066240,ExpressionUUID->"1b4b2efb-7579-453b-816a-9c75f721f8e8"],
-
-Cell[TextData[{
- Cell[BoxData[
-  ButtonBox["QuantumCompile",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCompile"]], 
-  "InlineGuideFunction",ExpressionUUID->
-  "984079d2-d0ce-48d3-805d-50a42d340d37"],
- " \[LongDash] ",
- "decomposition of a discrete matrix operator into a sequence of operators"
-}], "GuideText", "FutureExample",
- CellDingbat->Cell[
-   BoxData[
-    TooltipBox[
-     Cell["mohammadb      ", "TentativeID"], "2022-04-14"]], 
-   "TentativeWrapper"],
- CellChangeTimes->{{3.8589616759047155`*^9, 3.8589617007994194`*^9}},
- CellID->312586213,ExpressionUUID->"fb42bc77-6239-4a21-ad57-e46a883036a3"],
 
 Cell[TextData[{
  Cell[BoxData[
@@ -504,21 +447,11 @@ Cell[TextData[ButtonBox["Tutorial",
  CellChangeTimes->{{3.8589617539608374`*^9, 3.8589617705973663`*^9}},
  CellID->80816905,ExpressionUUID->"f754d86f-4a00-4d26-9d0b-fd500dfaff22"],
 
-Cell["XXXX", "GuideTutorial",
+Cell[TextData[ButtonBox["Getting Started",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:Wolfram/QuantumFramework/tutorial/GettingStarted"]], "GuideTutorial",
  CellID->383183680,ExpressionUUID->"f7161703-21fc-4424-9300-3c86965ce5ec"]
-}, Open  ]],
-
-Cell[CellGroupData[{
-
-Cell["Related Guides", "GuideMoreAboutSection",
- CellChangeTimes->{{3.8430423939366693`*^9, 3.843042395176153*^9}},
- CellID->367765561,ExpressionUUID->"eed1bd79-5547-4277-99ff-88324b2d95ff"],
-
-Cell["XXXX", "GuideMoreAbout",
- CellID->745361118,ExpressionUUID->"5b8458fb-5a01-4ef4-9a65-014a82bea580"],
-
-Cell["XXXX", "GuideMoreAbout",
- CellID->65106871,ExpressionUUID->"87132b22-50b1-4af6-be62-0ce076a4e783"]
 }, Open  ]],
 
 Cell["Related Links", "GuideRelatedLinksSection",

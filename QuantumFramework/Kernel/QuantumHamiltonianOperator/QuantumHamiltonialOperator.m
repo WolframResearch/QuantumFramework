@@ -6,6 +6,9 @@ PackageScope["QuantumHamiltonianOperatorQ"]
 
 
 
+QuantumHamiltonianOperator::invalidName = "`1` is not a recognized QuantumHamiltonianOperator constructor"
+
+
 QuantumHamiltonianOperatorQ[QuantumHamiltonianOperator[op_]] := QuantumOperatorQ[op]
 
 QuantumHamiltonianOperatorQ[___] := False

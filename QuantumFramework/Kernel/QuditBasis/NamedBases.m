@@ -35,17 +35,18 @@ QuditBasis[args___] /; $QuditBasisCaching && FreeQ[{args}, "RandomMIC" | "Random
 
 QuditBasis[1, args___] := QuditBasis[args]
 
-QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]
+QuditBasis[dimension_Integer, args___] := QuditBasis["Computational"[dimension], args]
 
-QuditBasis["Computational" | "Identity" | "I", args___] := QuditBasis[{"Computational", 2}, args]
 
-QuditBasis[{"Computational" | "Identity" | "I", 0}, ___] := QuditBasis[{$QuditZero}, {{}}]
+QuditBasis[("Computational" | "Identity" | "I")[], args___] := QuditBasis["Computational"[2], args]
 
-QuditBasis[{"Computational" | "Identity" | "I", dimension_Integer ? Positive}, args___] :=
+QuditBasis[("Computational" | "Identity" | "I")[0], ___] := QuditBasis[{$QuditZero}, {{}}]
+
+QuditBasis[("Computational" | "Identity" | "I")[dimension_Integer ? Positive], args___] :=
     QuditBasis[QuditBasis[Range[dimension] - 1, identityMatrix[dimension]], args]
 
 
-QuditBasis["Bell", args___] := QuditBasis[
+QuditBasis["Bell"[], args___] := QuditBasis[
     AssociationThread[{
             Superscript["\[CapitalPhi]", "-"],
             Superscript["\[CapitalPsi]", "-"],
@@ -58,13 +59,9 @@ QuditBasis["Bell", args___] := QuditBasis[
 ]
 
 
-QuditBasis[name : "X" | "Y" | "Z", args___] := QuditBasis["Pauli" <> name, args]
+QuditBasis[(name : "X" | "Y" | "Z")[args___], opts___] := QuditBasis[("Pauli" <> name)[args], opts]
 
-QuditBasis[{name : "X" | "Y" | "Z", dim_Integer : 2}, args___] := QuditBasis[{"Pauli" <> name, dim}, args]
-
-QuditBasis[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuditBasis[{name, 2}, args]
-
-QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] := With[{
+QuditBasis[(name : "PauliX" | "PauliY" | "PauliZ")[dim_Integer : 2], args___] := With[{
     es = eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim], "Normalize" -> True, "Sort" -> True]
 },
     QuditBasis[
@@ -82,9 +79,8 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
     ]
 ]
 
-QuditBasis[name : "JX" | "JY" | "JZ" | "J" | "JI", args___] := QuditBasis[{name, 1 / 2}, args]
 
-QuditBasis[{name : "JX" | "JY" | "JZ" | "J" | "JI", j_ : 1 / 2}, args___] /; IntegerQ[2 j] := With[{
+QuditBasis[(name : "JX" | "JY" | "JZ" | "J" | "JI")[j_ : 1 / 2], args___] /; IntegerQ[2 j] := With[{
     es = eigensystem[spinMatrix[name /. {"JX" -> 1, "JY" -> 2, "JZ" -> 3, "J" | "JI" -> 0}, 2 j + 1], "Normalize" -> True, "Sort" -> Identity]
 },
     QuditBasis[
@@ -104,9 +100,9 @@ QuditBasis[{name : "JX" | "JY" | "JZ" | "J" | "JI", j_ : 1 / 2}, args___] /; Int
 ]
 
 
-QuditBasis["Fourier"] := QuditBasis[{"Fourier", 2}]
+QuditBasis["Fourier"[]] := QuditBasis["Fourier"[2]]
 
-QuditBasis[{"Fourier", qb_ ? QuditBasisQ}, args___] := With[{dimension = qb["Dimension"], elements = SparseArrayFlatten /@ qb["Elements"]},
+QuditBasis["Fourier"[qb_ ? QuditBasisQ], args___] := With[{dimension = qb["Dimension"], elements = SparseArrayFlatten /@ qb["Elements"]},
     QuditBasis[
         AssociationThread[
             Subscript["F", #] & /@ Range[dimension],
@@ -120,12 +116,13 @@ QuditBasis[{"Fourier", qb_ ? QuditBasisQ}, args___] := With[{dimension = qb["Dim
     ]
 ]
 
-QuditBasis[{"Fourier", basisArgs___}, args___] := Enclose @ QuditBasis[{"Fourier", ConfirmBy[QuditBasis[basisArgs], QuditBasisQ]}, args]
+QuditBasis["Fourier"[basisArgs___], args___] /; {basisArgs} =!= {} :=
+    Enclose @ QuditBasis["Fourier"[ConfirmBy[QuditBasis[basisArgs], QuditBasisQ]], args]
 
 
-QuditBasis["Schwinger"] := QuditBasis[{"Schwinger", 2}]
+QuditBasis["Schwinger"[]] := QuditBasis["Schwinger"[2]]
 
-QuditBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuditBasis[
+QuditBasis["Schwinger"[dimension_Integer ? Positive], args___] := QuditBasis[
     AssociationThread[
         Subscript["S", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
         Flatten /@ (
@@ -137,7 +134,8 @@ QuditBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuditBasis[
     args
 ]
 
-QuditBasis["Pauli", args___] := QuditBasis[
+
+QuditBasis["Pauli"[], args___] := QuditBasis[
     AssociationThread[{Subscript["\[Sigma]", "0"],
         Subscript["\[Sigma]", "1"], Subscript["\[Sigma]", "2"],
         Subscript["\[Sigma]", "3"]},
@@ -146,7 +144,8 @@ QuditBasis["Pauli", args___] := QuditBasis[
     args
 ]
 
-QuditBasis["Dirac", args___] := Module[{
+
+QuditBasis["Dirac"[], args___] := Module[{
     pauliBasis1, pauliBasis2, pauliBasis3, pauliBasis4,
     gamma1, gamma2, gamma3, gamma4
 },
@@ -175,61 +174,60 @@ QuditBasis["Dirac", args___] := Module[{
 ]
 
 
-(* phase space *)
+QuditBasis["Wigner"[]] := QuditBasis["Wigner"[2]]
 
-QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
-
-QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[WignerBasis]}, args___] :=
+QuditBasis["Wigner"[qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[WignerBasis]], args___] :=
     QuditBasis[WignerBasis[qb, opts], args]
 
-QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := Enclose @ QuditBasis[{"Wigner", ConfirmBy[QuditBasis[basisArgs], QuditBasisQ], opts}, args]
+QuditBasis["Wigner"[basisArgs___, opts : OptionsPattern[]], args___] /; {basisArgs} =!= {} :=
+    Enclose @ QuditBasis["Wigner"[ConfirmBy[QuditBasis[basisArgs], QuditBasisQ], opts], args]
 
 
-QuditBasis[{"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
+QuditBasis["WignerMIC"[args___], opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
 
 
-QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis["GellMann"[d : _Integer ? Positive : 2]] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
     Prepend[IdentityMatrix[d]] @ GellMannMatrices[d]
 ]
 
-QuditBasis[{"GellMannMIC", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
+QuditBasis["GellMannMIC"[d : _Integer ? Positive : 2, s_ : 0]] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
     With[{povm = Normal /@ GellMannMICPOVM[d, s]},
         Simplify @ GramDual[povm]
     ]
 ]
 
-QuditBasis[{"Bloch", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis["Bloch"[d : _Integer ? Positive : 2]] := QuditBasis[
     Subscript["\[ScriptCapitalB]", #] & /@ Prepend["r"] @ Range[1, d ^ 2 - 1],
     Sqrt[(d - 1) / (2 d)] Prepend[Sqrt[2 d (d + 1)] IdentityMatrix[d]] @ GellMannMatrices[d]
 ]
 
-QuditBasis[{"BlochSphere", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis["BlochSphere"[d : _Integer ? Positive : 2]] := QuditBasis[
     Subscript["\[ScriptCapitalB]", #] & /@ Prepend["\[ScriptCapitalI]"] @ Range[1, d ^ 2 - 1],
     Sqrt[(d - 1) / (2 d)] Prepend[2 IdentityMatrix[d]] @ GellMannMatrices[d]
 ]
 
-QuditBasis[{"GellMannBloch", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis["GellMannBloch"[d : _Integer ? Positive : 2]] := QuditBasis[
     Subscript["\[ScriptCapitalB]", #] & /@ Range[d ^ 2],
     Prepend[IdentityMatrix[d]][GellMannMatrices[d] Sqrt[d (d + 1) (d - 1) ^ 2 / 2]]
 ]
 
-QuditBasis[{"GellMannBlochMIC", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis["GellMannBlochMIC"[d : _Integer ? Positive : 2]] := QuditBasis[
     Subscript["\[ScriptCapitalB]", #] & /@ Range[d ^ 2],
     RotationMatrix[{UnitVector[d ^ 2, 1], ConstantArray[1, d ^ 2]}] . QuditBasis["GellMannBloch"[d]]["Elements"]
 ]
 
 
-QuditBasis[{"Wootters", d : _Integer ? Positive : 2}] := With[{factors = primeFactors[d]},
+QuditBasis["Wootters"[d : _Integer ? Positive : 2]] := With[{factors = primeFactors[d]},
     Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WoottersBasis[#]] & /@ factors]
 ]
 
-QuditBasis[{"Feynman", d : _Integer ? Positive : 2}] :=
+QuditBasis["Feynman"[d : _Integer ? Positive : 2]] :=
     QuditBasis[Subscript["\[ScriptCapitalF]", #] & /@ Range[d ^ 2], WoottersBasis[d]]
 
 
-QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]}] := Enclose @ With[{
+QuditBasis["RandomMIC"[d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]]] := Enclose @ With[{
     povm = Normal /@ ConfirmBy[
         Replace[OptionValue[{methodOpts, Method -> "Haar"}, Method], {name_, args___} | name_ :>
             Switch[name, "Haar", RandomHaarPOVM, "Bloch", RandomBlochMICPOVM][d, args]],
@@ -242,13 +240,11 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
     ]
 ]
 
-QuditBasis[{name : "RandomHaarMIC" | "RandomBlochMIC", d : _Integer ? Positive : 2, args___}] :=
-    QuditBasis[{"RandomMIC", d, Method -> {StringReplace[name, "Random" ~~ method__ ~~ "MIC" :> method], args}}]
+QuditBasis[(name : "RandomHaarMIC" | "RandomBlochMIC")[d : _Integer ? Positive : 2, args___]] :=
+    QuditBasis["RandomMIC"[d, Method -> {StringReplace[name, "Random" ~~ method__ ~~ "MIC" :> method], args}]]
 
 
-(* MUB *)
-
-QuditBasis[{"Ivanovic", d : _Integer ? PrimeQ : 2, n_Integer : 1}] /; 0 <= n <= d := QuditBasis[
+QuditBasis["Ivanovic"[d : _Integer ? PrimeQ : 2, n_Integer : 1]] /; 0 <= n <= d := QuditBasis[
     Subsuperscript["\[ScriptCapitalI]", #, d] & /@ Range[d],
     If[
         n == 0,
@@ -263,41 +259,37 @@ QuditBasis[{"Ivanovic", d : _Integer ? PrimeQ : 2, n_Integer : 1}] /; 0 <= n <= 
     ]
 ]
 
-QuditBasis[{"Ivanovic", d : _Integer ? Positive : 2, n_Integer : 1}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
+QuditBasis["Ivanovic"[d : _Integer ? Positive : 2, n_Integer : 1]] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
     QuantumTensorProduct @ MapThread[QuditBasis["Ivanovic"[##]] &, {factors, IntegerDigits[n, MixedRadix[factors + 1], Length[factors]]}]
 ]
 
 
-(* SICs *)
-
-QuditBasis[{"Tetrahedron", args___}] := QuditBasis[
+QuditBasis["Tetrahedron"[args___]] := QuditBasis[
     Subscript["\[ScriptCapitalT]", #] & /@ Range[4],
     With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"[args]]["POVMElements"]},
         Simplify @ GramDual[povm]
     ]
 ]
 
-QuditBasis[{"QBismSIC", d : _Integer : 2}] := Enclose @ QuditBasis[
+QuditBasis["QBismSIC"[d : _Integer : 2]] := Enclose @ QuditBasis[
     Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2],
     Chop @ GramDual[Confirm @ QBismSICPOVM[d]]
 ]
 
-QuditBasis[{"HesseSIC"}] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HesseSICPOVM[]]},
+QuditBasis["HesseSIC"[]] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HesseSICPOVM[]]},
     QuditBasis[
         Subscript["\[ScriptCapitalH]", #] & /@ Range[Length[basis]],
         basis
     ]
 ]
 
-QuditBasis[{"HoggarSIC"}] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HoggarSICPOVM[]]},
+QuditBasis["HoggarSIC"[]] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HoggarSICPOVM[]]},
     QuditBasis[
         Subscript["\[ScriptCapitalH]", #] & /@ Range[Length[basis]],
         basis
     ]
 ]
 
-
-(* complex patterns *)
 
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
     QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
@@ -310,5 +302,11 @@ QuditBasis[pauliString_String[dimension_Integer ? Positive]] := With[{chars = Ch
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
     QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
 
-QuditBasis[name_String[args___] | name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[{name, args}, opts]
 
+QuditBasis[name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[name[], opts]
+
+
+QuditBasis[name_String[args___], ___] /; ! MemberQ[$QuditBasisNames, name] := (
+    Message[QuditBasis::invalidName, Defer[name[args]]];
+    Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)

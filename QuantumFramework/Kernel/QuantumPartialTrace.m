@@ -81,9 +81,9 @@ QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer
     inDims = qc["InputDimensions"][[Lookup[inputIdx, in]]];
     ConfirmAssert[outDims == inDims];
     min = Min[Keys[outputIdx], Keys[inputIdx]];
-    QuantumCircuitOperator[Reverse @ MapIndexed[{"Cup", #1[[2]]} -> {min - #2[[1]], #1[[1]]} &, Thread[{out, outDims}]]] /*
+    QuantumCircuitOperator[Reverse @ MapIndexed["Cup"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{out, outDims}]]] /*
         qc /*
-    QuantumCircuitOperator[MapIndexed[{"Cap", #1[[2]]} -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]]
+    QuantumCircuitOperator[MapIndexed["Cap"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]]
 ]
 
 QuantumPartialTrace[qc_QuantumCircuitOperator] := QuantumPartialTrace[qc, Intersection @@ qc["Order"]]

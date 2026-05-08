@@ -1617,10 +1617,16 @@ VerificationTest[
     TestID -> "Phase2-PauliStabilizerRandom-Callable"
 ]
 
-(* PauliStabilizer::nonclifford message fires for unknown gates *)
+(* PauliStabilizer::nonclifford fires when the tableau-update dispatch returns
+   a non-PauliStabilizer (e.g. a StabilizerFrame from T / P[theta]). Pre-v2.0
+   this test used "FooBarUnknownGate" but v2.0's strict "name"[args] resolution
+   short-circuits unknown names with QuantumOperator::invalidName before
+   PauliStabilizerApply ever runs. Use a single T gate -- exactly one
+   ::nonclifford message and the Fold returns the prior PauliStabilizer
+   unchanged. *)
 VerificationTest[
     Head @ Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
-        QuantumCircuitOperator[{"H" -> 1, "FooBarUnknownGate" -> 1}],
+        QuantumCircuitOperator[{"H" -> 1, "T" -> 1}],
         Automatic
     ],
     PauliStabilizer,

@@ -51,8 +51,8 @@ PauliRow[mat_ ? MatrixQ, n_Integer ? Positive, d : _Integer ? Positive : 2] := E
 QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] && Equal @@ qo["Dimensions"] := Enclose @ With[
     {n = qo["InputQudits"], d = First @ qo["Dimensions"]},
     Join[
-        Confirm @ PauliRow[(qo @ QuantumOperator[{"X", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]],
-        Confirm @ PauliRow[(qo @ QuantumOperator[{"Z", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]]
+        Confirm @ PauliRow[(qo @ QuantumOperator["X"[d] -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]],
+        Confirm @ PauliRow[(qo @ QuantumOperator["Z"[d] -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]]
     ]
 ]
 

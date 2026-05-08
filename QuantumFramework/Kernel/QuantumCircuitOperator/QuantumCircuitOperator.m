@@ -7,6 +7,8 @@ PackageScope["BarrierQ"]
 PackageScope["FromCircuitOperatorShorthand"]
 
 
+QuantumCircuitOperator::invalidName = "`1` is not a recognized QuantumCircuitOperator constructor"
+
 
 BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "Barrier"[Span[_Integer, _Integer | All], ___]]
 
@@ -27,7 +29,7 @@ Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}, "Picture" -> Automa
 
 (* constructors *)
 
-circuitNamePattern = name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuantumCircuitOperatorNames, name]
+circuitNamePattern = name_String | name_String[___] /; MemberQ[$QuantumCircuitOperatorNames, name]
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[{}] := QuantumCircuitOperator[]
@@ -121,7 +123,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                 ]
             ]
         ],
-        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState["Register"[#]]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
     ]
@@ -131,7 +133,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
     "QuEST",
-    QuESTApply[qco, QuantumState[{"Register", qco["InputDimensions"]}]],
+    QuESTApply[qco, QuantumState["Register"[qco["InputDimensions"]]]],
     _,
     (QuantumCircuitOperator[
         Join[

@@ -41,10 +41,10 @@ quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := Enclose @ Wi
 quantumChannel[args___] := quantumChannel[QuantumOperator[args]]
 
 
-QuantumChannel[{"AmplitudeDamping", gamma_ : .5}, args___] :=
+QuantumChannel["AmplitudeDamping"[gamma_ : .5], args___] :=
     quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"[gamma]]
 
-QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_ : .5, p_ : .5}, args___] :=
+QuantumChannel["GeneralizedAmplitudeDamping"[gamma_ : .5, p_ : .5], args___] :=
 	quantumChannel[{
         Sqrt[p] {{1, 0}, {0, Sqrt[1 - gamma]}},
         Sqrt[p] {{0, Sqrt[gamma]}, {0, 0}},
@@ -55,20 +55,20 @@ QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_ : .5, p_ : .5}, args___] :
         "Label" -> "GeneralizedAmplitudeDamping"[gamma, p]
     ]
 
-QuantumChannel[{"PhaseDamping", lambda_ : .5}, args___] :=
+QuantumChannel["PhaseDamping"[lambda_ : .5], args___] :=
     quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"[lambda]]
 
 
-QuantumChannel[{"BitFlip", p_ : .5}, args___] :=
+QuantumChannel["BitFlip"[p_ : .5], args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
 
-QuantumChannel[{"PhaseFlip", p_ : .5}, args___] :=
+QuantumChannel["PhaseFlip"[p_ : .5], args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
 
-QuantumChannel[{"BitPhaseFlip", p_ : .5}, args___] :=
+QuantumChannel["BitPhaseFlip"[p_ : .5], args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
 
-QuantumChannel[{"Depolarizing", p_ : .5}, args___] :=
+QuantumChannel["Depolarizing"[p_ : .5], args___] :=
     quantumChannel[{
         Sqrt[1 - 3 p / 4] PauliMatrix[0],
         Sqrt[p] (1 / 2) PauliMatrix[1],
@@ -79,7 +79,7 @@ QuantumChannel[{"Depolarizing", p_ : .5}, args___] :=
         "Label" -> "\[CapitalDelta]"[p]
     ]
 
-QuantumChannel[{"ResetError", p0_ : .25, p1_ : .25}, args___] :=
+QuantumChannel["ResetError"[p0_ : .25, p1_ : .25], args___] :=
     quantumChannel[{
         Sqrt[1 - p0 - p1] IdentityMatrix[2],
         Sqrt[p0] {{1, 0}, {0, 0}},
@@ -91,10 +91,17 @@ QuantumChannel[{"ResetError", p0_ : .25, p1_ : .25}, args___] :=
         "Label" -> "ResetError"[p0, p1]
     ]
 
-QuantumChannel[name_String, args___] := QuantumChannel[{name}, args]
-
-QuantumChannel[name_String[args___], opts___] := QuantumChannel[{name, args}, opts]
+QuantumChannel[name_String, args___] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name[], args]
 
 QuantumChannel[name_ -> order_, opts___] := QuantumChannel[name, Flatten[{order}], opts]
 
 
+QuantumChannel[name_String[args___], ___] /; ! MemberQ[$QuantumChannelNames, name] := (
+    Message[QuantumChannel::invalidName, Defer[name[args]]];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumChannel::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+
+QuantumChannel[name_String, ___] /; ! MemberQ[$QuantumChannelNames, name] := (
+    Message[QuantumChannel::invalidName, name];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumChannel::invalidName, "MessageParameters" :> {name}|>]
+)

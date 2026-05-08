@@ -169,13 +169,11 @@ QuantumBasis[output : _ ? nameQ | _Integer, input  : _ ? nameQ | _Integer, args_
 QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
     Enclose @ QuantumBasis[<|
         "Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ],
-        "Label" -> Replace[output, {{name_String, ___} | name_String :> name, 2 -> "I", i_Integer :> "I"[i]}],
+        "Label" -> Replace[output, {name_String[___] | name_String :> name, 2 -> "I", i_Integer :> "I"[i]}],
         "Picture" -> If[MemberQ[$QuditPhaseSpaceBasisNames, nameString[output]], "PhaseSpace", "Schrodinger"]
         |>,
         args
     ]
-
-QuantumBasis[name_String[args___] | name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[{name, args}, opts]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
     QuantumBasis["Computational", args, "Label" -> None]

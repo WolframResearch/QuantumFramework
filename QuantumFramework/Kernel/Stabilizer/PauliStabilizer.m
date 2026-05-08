@@ -112,7 +112,7 @@ ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] := Fold[
     Function[{state, gate},
         With[{
-            rewrittenGate = Replace[gate, {"C", g : "NOT" | "X" | "Z" -> t_, c_, _} :> "C" <> g -> Join[c, t]]
+            rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
         },
             With[{result = state[rewrittenGate]},
                 Which[

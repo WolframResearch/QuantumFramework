@@ -119,18 +119,18 @@ QuantumMPS[qs_QuantumState, m : _Integer | Infinity : Infinity, OptionsPattern[]
 		QuantumCircuitOperator[MapAt[rowVector, -1] @ MapAt[If[colVector === Nothing, #, #[colVector]] &, 1] @ matrices]
 	];
 	If[	TrueQ[OptionValue["Ordered"]],
-		result = Reverse[MapIndexed[{"I", #1} -> #2 -> qs["OutputQudits"] + #2 &, qs["InputDimensions"]]] /* result
+		result = Reverse[MapIndexed["I"[#1] -> #2 -> qs["OutputQudits"] + #2 &, qs["InputDimensions"]]] /* result
 	];
 	QuantumCircuitOperator[result, "MPS"]
 ]
 
 QuantumMPS[qo_QuantumOperator, m : _Integer | Infinity : Infinity, opts : OptionsPattern[]] :=
 	With[{range = Range[Length[qo["InputOrder"]]]},
-		{{"Permutation", qo["InputDimensions"], range} -> qo["InputOrder"] -> range + Length[qo["OutputOrder"]]}
+		{"Permutation"[qo["InputDimensions"], range] -> qo["InputOrder"] -> range + Length[qo["OutputOrder"]]}
 	] /*
 	QuantumMPS[qo["State"], m, "Ordered" -> False, opts] /*
 	With[{range = Range[Length[qo["OutputOrder"]]]},
-		{{"Permutation", qo["OutputDimensions"], range} -> range -> qo["OutputOrder"]}
+		{"Permutation"[qo["OutputDimensions"], range] -> range -> qo["OutputOrder"]}
 	]
 
 
@@ -149,11 +149,11 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 			Join[top[[;; split]], MapThread[Construct, {top[[split + 1 ;;]], bot}]],
 			Join[bot[[;; - split]], MapThread[Construct, {top, bot[[- split + 1 ;;]]}]]
 		] //
-		MapAt[QuantumOperator[{"Cap", #["OutputDimensions"][[1]]}, {-1, 0}][#] &, -1] //
+		MapAt[QuantumOperator["Cap"[#["OutputDimensions"][[1]]], {-1, 0}][#] &, -1] //
 		MapAt[
 			If[
 				ContainsAll[#["OutputOrder"], {-1 ,0}],
-				QuantumOperator[{"Curry", Replace[{-1, 0}, #["OutputOrderDimensions"], {1}]}, {-1, 0} -> {0}][#],
+				QuantumOperator["Curry"[Replace[{-1, 0}, #["OutputOrderDimensions"], {1}]], {-1, 0} -> {0}][#],
 				QuantumOperator[#["State"], {#["OutputOrder"] /. -1 -> 0, #["InputOrder"]}]
 			] &,
 			{;; -2}
@@ -161,7 +161,7 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 		MapAt[
 			If[
 				ContainsAll[#["InputOrder"], {-1 ,0}],
-				#[QuantumOperator[{"Uncurry", Replace[{-1, 0}, #["InputOrderDimensions"], {1}]}, {0} -> {-1, 0}]],
+				#[QuantumOperator["Uncurry"[Replace[{-1, 0}, #["InputOrderDimensions"], {1}]], {0} -> {-1, 0}]],
 				QuantumOperator[#["State"], {#["OutputOrder"], #["InputOrder"] /. -1 -> 0}]
 			] &,
 		 	{2 ;;}
@@ -174,9 +174,9 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 	];
 	If[	TrueQ[OptionValue["Ordered"]],
 		result =
-			{{"Permutation", qo["InputDimensions"]} -> qo["InputOrder"] -> Reverse[Range[Length[qo["InputOrder"]]] + Max[split, 0]]} /*
+			{"Permutation"[qo["InputDimensions"]] -> qo["InputOrder"] -> Reverse[Range[Length[qo["InputOrder"]]] + Max[split, 0]]} /*
 			result /*
-			{{"Permutation", qo["OutputDimensions"]} -> Range[Length[qo["OutputOrder"]]] -> qo["OutputOrder"]}
+			{"Permutation"[qo["OutputDimensions"]] -> Range[Length[qo["OutputOrder"]]] -> qo["OutputOrder"]}
 	];
 	QuantumCircuitOperator[result, "MPO"]
 ]
