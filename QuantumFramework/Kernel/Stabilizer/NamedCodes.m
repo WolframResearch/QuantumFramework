@@ -25,11 +25,18 @@ $PauliStabilizerNames = {
 (* (Steane/Shor CSS construction).                                              *)
 (* ============================================================================ *)
 
-PauliStabilizer["5QubitCode"]  := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"}]
-PauliStabilizer["5QubitCode1"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "-XXXXX"}]
+(* Patch P1 (2026-05-07, Formula_Test/findings-report.md F1): replace the n-th *)
+(* generator from logical X (X-bar) to logical Z (Z-bar) so the named-code     *)
+(* states match the api.md docstring "|0_L>" / "|1_L>" instead of returning    *)
+(* "|+_L>" / "|-_L>". The 5Q / Steane / 9Q codespaces are stabilized by their *)
+(* (n-k) real parity stabilizers; |0_L> is the +1 eigenstate of Z-bar within   *)
+(* that codespace (Got97 §3.5, Got00 §4, Nielsen-Chuang §10.5).                *)
 
-PauliStabilizer["7QubitCode" | "SteaneCode"]   := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "XXXXXXX"}]
-PauliStabilizer["7QubitCode1" | "SteaneCode1"] := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "-XXXXXXX"}]
+PauliStabilizer["5QubitCode"]  := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ",  "ZZZZZ"}]
+PauliStabilizer["5QubitCode1"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "-ZZZZZ"}]
 
-PauliStabilizer["9QubitCode"]  := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "XXXXXXXXX"}]
-PauliStabilizer["9QubitCode1"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "-XXXXXXXXX"}]
+PauliStabilizer["7QubitCode" | "SteaneCode"]   := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ",  "ZZZZZZZ"}]
+PauliStabilizer["7QubitCode1" | "SteaneCode1"] := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "-ZZZZZZZ"}]
+
+PauliStabilizer["9QubitCode"]  := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX",  "ZZZZZZZZZ"}]
+PauliStabilizer["9QubitCode1"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "-ZZZZZZZZZ"}]

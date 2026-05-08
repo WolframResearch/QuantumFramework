@@ -142,13 +142,20 @@ VerificationTest[
     TestID -> "Steane-AllStabilizers-Expectation-Plus1"
 ]
 
-(* The 7th "stabilizer" listed by our framework is actually the logical X     *)
-(* operator XXXXXXX -- it commutes with all 6 stabilizers and with itself,   *)
-(* so its expectation is also +1 on |0_L>. *)
+(* Patch P1 (2026-05-07): the 7th "stabilizer" listed is now logical Z̄        *)
+(* (ZZZZZZZ, was XXXXXXX). On |0_L⟩, ⟨Z̄⟩ = +1 (defining property); ⟨X̄⟩ = 0   *)
+(* (X̄ flips |0_L⟩ to |1_L⟩, orthogonal). Update the test to match the new     *)
+(* canonical |0_L⟩ semantics.                                                  *)
+VerificationTest[
+    psSteane["Expectation", "ZZZZZZZ"],
+    1,
+    TestID -> "Steane-Logical-Z-Expectation-Plus1-on-Logical-Zero"
+]
+
 VerificationTest[
     psSteane["Expectation", "XXXXXXX"],
-    1,
-    TestID -> "Steane-Logical-X-Expectation-Plus1-on-Logical-Zero"
+    0,
+    TestID -> "Steane-Logical-X-Expectation-Zero-on-Logical-Zero"
 ]
 
 

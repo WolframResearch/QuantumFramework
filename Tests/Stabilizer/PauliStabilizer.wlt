@@ -123,10 +123,12 @@ VerificationTest[
     TestID -> "Ctor-FromInteger"
 ]
 
-(* Constructor 2.12: 5-qubit code *)
+(* Constructor 2.12: 5-qubit code. Patch P1 (2026-05-07): the n-th generator
+   is logical Z̄ (= ZZZZZ), making the state |0_L⟩ per Got97 §3.5. Previously
+   it was X̄ (= XXXXX), giving |+_L⟩ -- see Formula_Test/findings-report.md F1. *)
 VerificationTest[
     PauliStabilizer["5QubitCode"]["Stabilizers"],
-    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"},
+    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"},
     TestID -> "Ctor-FromName-5Q"
 ]
 
@@ -165,7 +167,7 @@ VerificationTest[Length[$ps5Q["X"]], 5, TestID -> "Prop-X-Shape"]
 VerificationTest[Length[$ps5Q["Z"]], 5, TestID -> "Prop-Z-Shape"]
 VerificationTest[Dimensions[$ps5Q["Tableau"]], {2, 5, 10}, TestID -> "Prop-Tableau-Shape"]
 VerificationTest[Dimensions[$ps5Q["Matrix"]], {10, 10}, TestID -> "Prop-Matrix-Shape"]
-VerificationTest[$ps5Q["Stabilizers"], {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"}, TestID -> "Prop-Stabilizers"]
+VerificationTest[$ps5Q["Stabilizers"], {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"}, TestID -> "Prop-Stabilizers"]
 VerificationTest[$ps5Q["StabilizerSigns"], {1, 1, 1, 1, 1}, TestID -> "Prop-StabilizerSigns"]
 VerificationTest[$ps5Q["DestabilizerSigns"], {1, 1, 1, 1, 1}, TestID -> "Prop-DestabilizerSigns"]
 VerificationTest[Length[$ps5Q["Stabilizer"][[1]]], 5, TestID -> "Prop-Stabilizer-Tableau-Shape"]
@@ -888,10 +890,11 @@ VerificationTest[
     TestID -> "Physics-StandardState-GHZ3"
 ]
 
-(* 5-qubit code cyclic generators (Got97 \[Section]3.5) *)
+(* 5-qubit code cyclic generators (Got97 \[Section]3.5). Patch P1 (2026-05-07):
+   the 5th generator is logical Z̄ = ZZZZZ, making the state |0_L⟩. *)
 VerificationTest[
     $ps5Q["Stabilizers"],
-    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"},
+    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"},
     TestID -> "Physics-StandardState-5Q-Generators"
 ]
 
@@ -1530,12 +1533,14 @@ VerificationTest[
 (* ============================================================================ *)
 
 (* Apply X_1 to 5Q code state, check that the resulting stabilizer signs reflect the
-   syndrome (the stabilizer that anticommutes with X_1 has its sign flipped) *)
+   syndrome (the stabilizers that anticommute with X_1 have their signs flipped).
+   Patch P1 (2026-05-07): with the 5th generator now ZZZZZ (was XXXXX), Z_1 is
+   also present in gen 5, so it ALSO anticommutes with X_1 -> sign flip. *)
 VerificationTest[
     With[{ps5QAfterX1 = $ps5Q["X", 1]},
         ps5QAfterX1["StabilizerSigns"]
     ],
-    {1, 1, 1, -1, 1},   (* only ZXIXZ (gen 4) has Z at qubit 1, anticommuting with X_1 *)
+    {1, 1, 1, -1, -1},   (* gen 4 (ZXIXZ) and gen 5 (ZZZZZ) both have Z at qubit 1 *)
     TestID -> "Physics-Measure-5Q-AfterX1-StabilizerSigns"
 ]
 
@@ -1543,7 +1548,7 @@ VerificationTest[
     With[{ps5QAfterZ3 = $ps5Q["Z", 3]},
         ps5QAfterZ3["StabilizerSigns"]
     ],
-    {1, 1, -1, 1, -1},   (* XIXZZ (gen 3) has X at qubit 3, XXXXX (gen 5) has X at qubit 3 *)
+    {1, 1, -1, 1, 1},   (* only XIXZZ (gen 3) has X at qubit 3 (gen 5 ZZZZZ has Z, commutes) *)
     TestID -> "Physics-Measure-5Q-AfterZ3-StabilizerSigns"
 ]
 

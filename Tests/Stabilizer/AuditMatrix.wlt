@@ -102,10 +102,11 @@ VerificationTest[
     TestID -> "Audit-Construct-Empty"
 ]
 
-(* 1.6 -- named code: 5QubitCode + signed variant *)
+(* 1.6 -- named code: 5QubitCode + signed variant. Patch P1 (2026-05-07): the
+   n-th generator is logical Z̄, making the state |0_L⟩ per Got97 §3.5 / api.md. *)
 VerificationTest[
     PauliStabilizer["5QubitCode"]["Stabilizers"],
-    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"},
+    {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"},
     TestID -> "Audit-Construct-Named-5QubitCode"
 ]
 
@@ -117,7 +118,7 @@ VerificationTest[
 
 VerificationTest[
     PauliStabilizer["7QubitCode"]["Stabilizers"][[7]],
-    "XXXXXXX",
+    "ZZZZZZZ",
     TestID -> "Audit-Construct-Named-7QubitCode-Last"
 ]
 

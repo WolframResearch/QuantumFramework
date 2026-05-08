@@ -432,7 +432,8 @@ VerificationTest[
     With[{ps = PauliStabilizer["5QubitCode"], ccI = CliffordChannel["Identity", 5]},
         Sort @ ccI[ps]["Stabilizers"]
     ],
-    Sort @ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"},
+    (* Patch P1 (2026-05-07): 5th generator is now ZZZZZ (logical Z̄). *)
+    Sort @ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "ZZZZZ"},
     TestID -> "Phase8.2-cc-ps-Identity5-On-5QubitCode"
 ]
 
