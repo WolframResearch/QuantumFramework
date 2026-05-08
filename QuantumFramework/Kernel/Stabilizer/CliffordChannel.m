@@ -459,13 +459,16 @@ cc_CliffordChannel[ps_PauliStabilizer ? ConcretePauliStabilizerQ] /; CliffordCha
         cc["Source"] === "Identity" && nA == ps["Qubits"],
             ps,
 
-        (* State-preparation channel: return the state encoded by cc.         *)
-        (* For now: only valid when ps has 0 qubits, which doesn't happen for  *)
-        (* PauliStabilizer (always has at least 1 qubit). So skip this case.   *)
+        (* State-preparation channel: nA == 0. Per the api.md "cc[ps]" contract *)
+        (* this should return the state encoded by cc, regardless of the input *)
+        (* ps (which has no input-side meaning for a state-prep channel). The  *)
+        (* tableau-only encoding of the prepared state is recoverable via      *)
+        (* cliffordChannelToPauliStabilizer.                                    *)
+        (* Patch P3 (2026-05-07, Formula_Test/findings-report.md F3): the      *)
+        (* previous code emitted ::stateevol and fell through to dense         *)
+        (* materialization, contradicting the documented dispatch case.        *)
         nA == 0,
-            Message[CliffordChannel::stateevol];
-            qcChannel := QuantumChannel[cc];
-            qcChannel[ps["State"]],
+            cliffordChannelToPauliStabilizer[cc],
 
         (* General case: compose CliffordChannel[ps] (state-prep) with cc to    *)
         (* get the post-state Choi tableau, then convert back to               *)
