@@ -1,48 +1,25 @@
-#!/usr/bin/env wolframscript
 (* ::Package:: *)
 
 (* ============================================================================
-   stabilizer-formulas-test.wls
+   Tests/Stabilizer/Formulas.wlt
    ----------------------------------------------------------------------------
-   A complete VerificationTest battery for every section of
-   `OngoingProjects/Stabilizer/stabilizer-formulas.md`.
+   Verification battery for the formulas in
+   `OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas.md` integrated
+   into the main test runner. Generated 2026-05-07 from
+   `OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls` by
+   stripping the section-list wrappers and standalone-script driver, so every
+   VerificationTest sits at top level and `TestReport[file]` discovers them.
 
-   Run with a *fresh* kernel:
-       wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls
-
-   Each section is `S<n>-...` with a TestID derived from the formula label so
-   any failure points back to the exact line of the markdown reference.
-
-   The test exercises only the *current* public + method-level surface of QF's
-   stabilizer subsystem: PauliStabilizer, StabilizerFrame, GraphState,
-   LocalComplement, CliffordChannel.  Internal package symbols are NOT touched.
-
-   Where the formula is mathematically true but is *not* an obligation of the
-   simulator (e.g. asymptotic complexity bounds, qudit `d>2` formulas), the
-   corresponding section is folded into a `True` predicate sanity check rather
-   than skipped, so the count is honest.
+   The standalone .wls remains the canonical authoring location and provides
+   per-section reporting (used for development); this .wlt mirror runs as part
+   of the regular `Tests/RunTests.wls` battery.
    ============================================================================ *)
 
-(* -------- Paclet loading (fresh-kernel pattern from RunTests.wls) ---------- *)
-$rootDir   = DirectoryName[$InputFileName];
-$repoDir   = FileNameJoin[{$rootDir, "..", "..", ".."}];
-$pacletDir = FileNameJoin[{$repoDir, "QuantumFramework"}];
-
-Quiet[PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]];
-PacletDirectoryLoad[$pacletDir];
 Needs["Wolfram`QuantumFramework`"];
-
-Print["======================================================="];
-Print["  Stabilizer Formulas — Verification Battery"];
-Print["======================================================="];
-Print["  Date:    ", DateString[]];
-Print["  Paclet:  ", $pacletDir];
-Print["  Source:  OngoingProjects/Stabilizer/stabilizer-formulas.md"];
-Print[""];
 
 
 (* ============================================================================
-   Helpers (lightweight; mirrors patterns from Tests/Stabilizer/*.wlt)
+   Helpers (mirror of stabilizer-formulas-test.wls helpers)
    ============================================================================ *)
 
 (* Pauli symbol → 2x2 numeric matrix *)
@@ -97,43 +74,37 @@ pauliBits[s_String, n_Integer] := Module[{xs, zs},
    §0 — Quick smoke tests (cardinalities, Pauli identities)
    ============================================================================ *)
 
-s0 = {
 
 (* |P_n| = 4^{n+1} (with phase) -- check via Stabilizers count: |S| = 2^n *)
 VerificationTest[
     Length /@ ((PauliStabilizer[#]["Stabilizers"]) & /@ Range[1, 4]),
     {1, 2, 3, 4},
     TestID -> "S0-StabilizerCount-equals-n"
-],
-
+];
 (* AarGot04 Prop. 2 :  N_n = 2^n * Product[2^(n-k)+1, {k, 0, n-1}] *)
 (* Local computation; nothing to ask the simulator -- sanity check the formula  *)
 VerificationTest[
     Function[n, 2^n * Product[2^(n - k) + 1, {k, 0, n - 1}]] /@ {1, 2, 3, 4},
     {6, 60, 1080, 36720},
     TestID -> "S0-StabilizerStateCount-AarGot04-Prop2"
-],
-
+];
 (* Pauli matrix identities  X^2=Y^2=Z^2=I *)
 VerificationTest[
     {pauliMat["X"] . pauliMat["X"], pauliMat["Y"] . pauliMat["Y"], pauliMat["Z"] . pauliMat["Z"]},
     {pauliMat["I"], pauliMat["I"], pauliMat["I"]},
     TestID -> "S0-PauliSquare-equals-I"
-],
-
+];
 (* X Y Z = i I  (equivalently Y = i X Z) *)
 VerificationTest[
     pauliMat["X"] . pauliMat["Y"] . pauliMat["Z"],
     I * pauliMat["I"],
     TestID -> "S0-XYZ-equals-iI"
-],
-
+];
 VerificationTest[
     pauliMat["Y"],
     I * pauliMat["X"] . pauliMat["Z"],
     TestID -> "S0-Y-equals-iXZ"
-],
-
+];
 (* {X,Y} = {Y,Z} = {Z,X} = 0 *)
 VerificationTest[
     {pauliMat["X"] . pauliMat["Y"] + pauliMat["Y"] . pauliMat["X"],
@@ -141,25 +112,23 @@ VerificationTest[
      pauliMat["Z"] . pauliMat["X"] + pauliMat["X"] . pauliMat["Z"]},
     {ConstantArray[0, {2, 2}], ConstantArray[0, {2, 2}], ConstantArray[0, {2, 2}]},
     TestID -> "S0-Anticommutators-AllZero"
-],
-
+];
 (* Single-qubit eigenstate table: stabilizer of  |+⟩ is +X *)
 VerificationTest[
     PauliStabilizer[1]["H", 1]["Stabilizers"],
     {"X"},
     TestID -> "S0-Plus-Stabilizer-Plus-X"
-],
+];
 VerificationTest[
     PauliStabilizer[1]["X", 1]["H", 1]["Stabilizers"],   (* H X|0⟩ = H|1⟩ = |−⟩ *)
     {"-X"},
     TestID -> "S0-Minus-Stabilizer-Minus-X"
-],
+];
 VerificationTest[
     PauliStabilizer[1]["X", 1]["Stabilizers"],            (* |1⟩ *)
     {"-Z"},
     TestID -> "S0-One-Stabilizer-Minus-Z"
-],
-
+];
 (* I stabilizes every state: any expectation of "I" is +1 *)
 VerificationTest[
     PauliStabilizer[1]["Expectation", "I"],
@@ -167,22 +136,18 @@ VerificationTest[
     TestID -> "S0-Expectation-Identity-Plus1"
 ]
 
-};
-
 
 (* ============================================================================
    §1 — Pauli encoding round-trips (xz, GF(4), symplectic, β-cocycle)
    ============================================================================ *)
 
-s1 = {
 
 (* xz encoding round-trip on every Pauli letter *)
 VerificationTest[
     xzDec /@ (xzEnc /@ {"I", "X", "Y", "Z"}),
     {"I", "X", "Y", "Z"},
     TestID -> "S1-xz-Encoding-Roundtrip"
-],
-
+];
 (* xz multiplication is XOR (Gid21 eq. 1) *)
 VerificationTest[
     Module[{a = xzEnc["X"], b = xzEnc["Z"], xor},
@@ -191,15 +156,13 @@ VerificationTest[
     ],
     "Y",  (* X · Z ∝ Y up to phase *)
     TestID -> "S1-xz-Mult-X-Z-equals-Y"
-],
-
+];
 (* GF(4) ↔ Pauli correspondence  (Got00 §6) *)
 VerificationTest[
     gf4Letter /@ {0, 1, \[Omega], \[Omega]^2},
     {"I", "Z", "X", "Y"},
     TestID -> "S1-GF4-PauliCorrespondence"
-],
-
+];
 (* Symplectic commutation predicate -- brute-force check on a 2-qubit lattice *)
 VerificationTest[
     Module[{n = 2, alphabet, allPaulis, pairs, agreement},
@@ -216,8 +179,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S1-Symplectic-IP-vs-MatrixCommutator-2qubits"
-],
-
+];
 (* β-cocycle (Yashin25 §2.1) sanity check: the simulator's tableau
    arithmetic must keep H · H = identity-on-stabilizer. *)
 VerificationTest[
@@ -225,8 +187,6 @@ VerificationTest[
     PauliStabilizer[1]["Stabilizers"],
     TestID -> "S1-Beta-Cocycle-HH-Identity"
 ]
-
-};
 
 
 (* ============================================================================
@@ -236,7 +196,6 @@ VerificationTest[
 (* For a single-qubit Clifford U applied to |0⟩ (stabilized by Z), the resulting
    stabilizer is U Z U†.  We verify each row of the canonical Heisenberg table. *)
 
-s2 = {
 
 (* H Z H† = X ;  H X H† = Z (apply H twice, first turning the +Z stabilizer
    into +X, then H again restoring +Z). *)
@@ -244,39 +203,35 @@ VerificationTest[
     PauliStabilizer[1]["H", 1]["Stabilizers"],
     {"X"},
     TestID -> "S2-HZHdag-equals-X"
-],
+];
 VerificationTest[
     PauliStabilizer[1]["H", 1]["H", 1]["Stabilizers"],
     {"Z"},
     TestID -> "S2-HH-restores-Z"
-],
-
+];
 (* S Z S† = Z ;  S X S† = Y *)
 VerificationTest[
     PauliStabilizer[1]["S", 1]["Stabilizers"],
     {"Z"},
     TestID -> "S2-SZSdag-equals-Z"
-],
+];
 VerificationTest[
     PauliStabilizer[1]["H", 1]["S", 1]["Stabilizers"],
     {"Y"},
     TestID -> "S2-SXSdag-equals-Y"
-],
-
+];
 (* S² = Z   so applying SS to |+⟩ flips the X stabilizer to −X *)
 VerificationTest[
     PauliStabilizer[1]["H", 1]["S", 1]["S", 1]["Stabilizers"],
     {"-X"},
     TestID -> "S2-S-squared-on-X-equals-MinusX"
-],
-
+];
 (* CNOT: X⊗I → X⊗X ;  I⊗Z → Z⊗Z   (Got98 Table 1) *)
 VerificationTest[
     PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Stabilizers"],
     {"XX", "ZZ"},
     TestID -> "S2-CNOT-XI-to-XX-and-IZ-to-ZZ"
-],
-
+];
 (* CZ rules:  X⊗I → X⊗Z (Got09) *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -284,8 +239,7 @@ VerificationTest[
     }]]["Stabilizers"],
     Sort[{"XZ", "ZX"}],
     TestID -> "S2-CZ-on-PlusPlus-stabilizers"
-],
-
+];
 (* H_b CNOT_{a,b} H_b = CZ_{a,b}  (Got98)
    apply both routes to the |+,+⟩ state and compare *)
 VerificationTest[
@@ -298,8 +252,7 @@ VerificationTest[
         }]]["Stabilizers"],
     True,
     TestID -> "S2-HbCNOTHb-equals-CZ"
-],
-
+];
 (* Three-CNOT swap (Got98 fig. 3) maps X⊗I↔I⊗X, Z⊗I↔I⊗Z *)
 VerificationTest[
     With[{
@@ -315,8 +268,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S2-ThreeCNOTs-equals-SWAP"
-],
-
+];
 (* Round-trip: ps -> Circuit -> ps reproduces the same stabilizer up to phase *)
 VerificationTest[
     With[{
@@ -331,8 +283,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S2-Tableau-Circuit-Roundtrip-uptoPhase"
-],
-
+];
 (* Reversibility: applying gate then its dagger is identity on tableau *)
 VerificationTest[
     With[{ps = PauliStabilizer @ QuantumCircuitOperator @ {
@@ -346,22 +297,18 @@ VerificationTest[
     TestID -> "S2-S-Sdag-Reversibility"
 ]
 
-};
-
 
 (* ============================================================================
    §3 — Standard test states & their stabilizers (golden states)
    ============================================================================ *)
 
-s3 = {
 
 (* Computational basis: |0⟩^n stabilized by Z_i *)
 VerificationTest[
     PauliStabilizer[3]["Stabilizers"],
     {"ZII", "IZI", "IIZ"},
     TestID -> "S3-Comp-Basis-Stabilizers"
-],
-
+];
 (* |+⟩^n stabilized by X_i *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator @ {
@@ -369,8 +316,7 @@ VerificationTest[
     }]["Stabilizers"],
     Sort[{"XII", "IXI", "IIX"}],
     TestID -> "S3-PlusPlusPlus-Stabilizers"
-],
-
+];
 (* Bell state |Φ+⟩ stabilizers *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -378,8 +324,7 @@ VerificationTest[
     }]]["Stabilizers"],
     Sort[{"XX", "ZZ"}],
     TestID -> "S3-BellPhiPlus-Stabilizers"
-],
-
+];
 (* All four Bell states *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -387,22 +332,21 @@ VerificationTest[
     }]]["Stabilizers"],
     Sort[{"-XX", "ZZ"}],
     TestID -> "S3-BellPhiMinus-Stabilizers"
-],
+];
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
         "X" -> 2, "H" -> 1, "CNOT" -> {1, 2}
     }]]["Stabilizers"],
     Sort[{"XX", "-ZZ"}],
     TestID -> "S3-BellPsiPlus-Stabilizers"
-],
+];
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
         "X" -> 1, "X" -> 2, "H" -> 1, "CNOT" -> {1, 2}
     }]]["Stabilizers"],
     Sort[{"-XX", "-ZZ"}],
     TestID -> "S3-BellPsiMinus-Stabilizers"
-],
-
+];
 (* GHZ-3 stabilizers *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -410,37 +354,32 @@ VerificationTest[
     }]]["Stabilizers"],
     Sort[{"XXX", "ZZI", "IZZ"}],
     TestID -> "S3-GHZ3-Stabilizers"
-],
-
+];
 (* Linear cluster state via GraphState *)
 VerificationTest[
     GraphState[Graph[Range[5],
         Table[i \[UndirectedEdge] (i + 1), {i, 4}]]]["Stabilizers"],
     {"XZIII", "ZXZII", "IZXZI", "IIZXZ", "IIIZX"},
     TestID -> "S3-Cluster5-LinearChain-Stabilizers"
-],
-
+];
 (* 5-qubit code via named constructor *)
 VerificationTest[
     Take[PauliStabilizer["5QubitCode"]["Stabilizers"], 4],
     {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"},
     TestID -> "S3-5QubitCode-Stabilizers"
-],
-
+];
 (* Steane [[7,1,3]] code *)
 VerificationTest[
     Length @ PauliStabilizer["SteaneCode"]["Stabilizers"],
     7,
     TestID -> "S3-SteaneCode-7generators"
-],
-
+];
 (* Shor 9-qubit code *)
 VerificationTest[
     Length @ PauliStabilizer["9QubitCode"]["Stabilizers"],
     9,
     TestID -> "S3-9QubitCode-9generators"
-],
-
+];
 (* (STRICT) Got97 §3.7 expansion of |0_L⟩ for the 5-qubit code as the 16-term
    signed sum over the stabilizer group acting on |00000⟩.  This is the textbook
    reference codeword for [[5,1,3]] and any constructor named "5QubitCode" that
@@ -460,8 +399,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S3-F1-5QubitCode-Got97-16termSum-uptoPhase"
-],
-
+];
 (* Steane code state is normalized *)
 VerificationTest[
     With[{viaCode = Normal @ PauliStabilizer["SteaneCode"]["State"]["StateVector"]},
@@ -469,8 +407,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S3-SteaneCode-State-Normalized"
-],
-
+];
 (* W state is NOT a stabilizer state (caveat §23): PauliStabilizer[wState]
    returns Missing[NotAvailable, Stabilizers]. *)
 VerificationTest[
@@ -479,8 +416,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S3-WState-NotAStabilizer"
-],
-
+];
 (* (STRICT) Steane code |0_L⟩ has exactly 8 nonzero amplitudes (= |C₂⊥|) per
    Got97 / Got00.  A "SteaneCode" constructor that claims to materialize the
    logical-zero codeword should reproduce that count.  *)
@@ -493,14 +429,11 @@ VerificationTest[
     TestID -> "S3-F1-SteaneCode-LogicalZero-8amps-STRICT"
 ]
 
-};
-
 
 (* ============================================================================
    §4 — Density matrix from stabilizer (AarGot04 §6.1)
    ============================================================================ *)
 
-s4 = {
 
 (* Pure-state density:  ρ = (1/2^n) Σ_{M∈S} M *)
 VerificationTest[
@@ -521,8 +454,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S4-DensityMatrix-SumOfStabilizers"
-],
-
+];
 (* Pure-state ρ has trace 1 and ρ² = ρ *)
 VerificationTest[
     Module[{ps = PauliStabilizer["5QubitCode"], rho},
@@ -532,8 +464,7 @@ VerificationTest[
     ],
     {True, True},
     TestID -> "S4-Pure-Density-Trace1-Idempotent"
-],
-
+];
 (* Π+ = (I+M)/2 is a projector for any Pauli M *)
 VerificationTest[
     With[{M = pauliString["XYZ"], dim = 8},
@@ -547,14 +478,11 @@ VerificationTest[
     TestID -> "S4-Projector-PiPlus-Idempotent"
 ]
 
-};
-
 
 (* ============================================================================
    §5 — Measurement rules (AG case I/II, deterministic vs. random)
    ============================================================================ *)
 
-s5 = {
 
 (* Bell ZZ measurement is deterministic with outcome 0 *)
 VerificationTest[
@@ -562,48 +490,42 @@ VerificationTest[
         "H" -> 1, "CNOT" -> {1, 2}}]]["M", "ZZ"],
     {0},
     TestID -> "S5-Bell-ZZ-Measure-Deterministic-0"
-],
-
+];
 (* Bell XX measurement is also deterministic with outcome 0 *)
 VerificationTest[
     Sort @ Keys @ PauliStabilizer[QuantumCircuitOperator[{
         "H" -> 1, "CNOT" -> {1, 2}}]]["M", "XX"],
     {0},
     TestID -> "S5-Bell-XX-Measure-Deterministic-0"
-],
-
+];
 (* Bell YY measurement: YY = -XX·ZZ ⇒ deterministic with outcome 1 *)
 VerificationTest[
     Sort @ Keys @ PauliStabilizer[QuantumCircuitOperator[{
         "H" -> 1, "CNOT" -> {1, 2}}]]["M", "YY"],
     {1},
     TestID -> "S5-Bell-YY-Measure-Deterministic-1"
-],
-
+];
 (* Bell single-qubit Z: anticommutes with XX ⇒ random *)
 VerificationTest[
     Sort @ Keys @ PauliStabilizer[QuantumCircuitOperator[{
         "H" -> 1, "CNOT" -> {1, 2}}]]["M", "ZI"],
     {0, 1},
     TestID -> "S5-Bell-ZI-Measure-Random"
-],
-
+];
 (* Five-qubit code stabilizer measurements all yield 0 *)
 VerificationTest[
     Map[Sort[Keys[PauliStabilizer["5QubitCode"]["M", #]]] &,
         Take[PauliStabilizer["5QubitCode"]["Stabilizers"], 4]],
     {{0}, {0}, {0}, {0}},
     TestID -> "S5-5QubitCode-AllStabilizerMeas-Zero"
-],
-
+];
 (* Steane code stabilizer measurements all yield 0 *)
 VerificationTest[
     Map[Sort[Keys[PauliStabilizer["SteaneCode"]["M", #]]] &,
         Take[PauliStabilizer["SteaneCode"]["Stabilizers"], 6]],
     Table[{0}, {6}],
     TestID -> "S5-SteaneCode-AllStabilizerMeas-Zero"
-],
-
+];
 (* Random measurement on |+⟩ gives uniform 50/50 distribution
    (verified statistically over many shots) *)
 VerificationTest[
@@ -618,8 +540,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S5-RandomMeas-Uniform-50-50"
-],
-
+];
 (* (STRICT) Post-measurement state is a normalized eigenstate of the measured
    Pauli with eigenvalue +1.  After ZI-measurement of |Φ+⟩ with outcome 0,
    ⟨ZI⟩ on the post-state must equal +1. *)
@@ -635,14 +556,11 @@ VerificationTest[
     TestID -> "S5-F2-PostMeas-State-IsEigenstate-STRICT"
 ]
 
-};
-
 
 (* ============================================================================
    §6 — Inner products (AarGot04 |⟨ψ|φ⟩| = 2^{-s/2})
    ============================================================================ *)
 
-s6 = {
 
 (* Self inner product = 1 *)
 VerificationTest[
@@ -652,8 +570,7 @@ VerificationTest[
     ],
     1,
     TestID -> "S6-InnerProduct-Self-One"
-],
-
+];
 (* Orthogonal Bell states *)
 VerificationTest[
     Chop @ N @ PauliStabilizer[QuantumCircuitOperator[{
@@ -662,22 +579,19 @@ VerificationTest[
             "H" -> 1, "CNOT" -> {1, 2}, "Z" -> 1}]]],
     0,
     TestID -> "S6-InnerProduct-PhiPlus-PhiMinus-Zero"
-],
-
+];
 (* |0⟩ ⊥ |1⟩ *)
 VerificationTest[
     Chop @ N @ PauliStabilizer[1]["InnerProduct", PauliStabilizer[1]["X", 1]],
     0,
     TestID -> "S6-InnerProduct-Zero-One-Orthogonal"
-],
-
+];
 (* ⟨0|+⟩ = 1/√2 *)
 VerificationTest[
     Chop @ N @ PauliStabilizer[1]["InnerProduct", PauliStabilizer[1]["H", 1]],
     1/Sqrt[2.] // N,
     TestID -> "S6-InnerProduct-Zero-Plus-OneOverSqrt2"
-],
-
+];
 (* AarGot04 inner-product theorem: ⟨0|+⟩^2 = 1/2 = 2^{-1}  (one differing generator) *)
 VerificationTest[
     Module[{val = N @ PauliStabilizer[1]["InnerProduct", PauliStabilizer[1]["H", 1]]},
@@ -685,8 +599,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S6-AarGot04-InnerProduct-2pow-MinusS-Over-2"
-],
-
+];
 (* Bell ⟨ψ|φ⟩ for |Φ+⟩ vs |++⟩  *)
 VerificationTest[
     Module[{psBell = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]],
@@ -695,8 +608,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S6-AarGot04-PhiPlus-PlusPlus-Half"
-],
-
+];
 (* Brute-force comparison: 2-qubit dense vs. simulator *)
 VerificationTest[
     Module[{a = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "H" -> 2},
@@ -711,14 +623,11 @@ VerificationTest[
     TestID -> "S6-InnerProduct-DenseVsSimulator-2qubit"
 ]
 
-};
-
 
 (* ============================================================================
    §7 — Sum-of-stabilizers projection trick (Got97 §3.2)
    ============================================================================ *)
 
-s7 = {
 
 (* Σ_{M∈S} M  applied to |0...0⟩  is in the codespace -- 2-qubit Bell example.
    ρ = (I + M_1)(I + M_2)/4 should equal the Bell |Φ+⟩ projector. *)
@@ -734,8 +643,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S7-SumProjection-Bell-Density"
-],
-
+];
 (* (STRICT) For the 5-qubit code |0_L⟩, applying Σ_{M ∈ S} M to |00000⟩ must
    land inside the codespace, i.e. each generator M_i must fix the resulting
    vector. *)
@@ -759,8 +667,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S7-SumProjection-5QubitCode-STRICT"
-],
-
+];
 (* (STRICT) The Steane CSS-encoded |0_L⟩ has 8 nonzero amplitudes (= |C₂⊥|). *)
 VerificationTest[
     Count[
@@ -771,14 +678,11 @@ VerificationTest[
     TestID -> "S7-F1-Steane-CSS-Codeword-8terms-STRICT"
 ]
 
-};
-
 
 (* ============================================================================
    §8 — CSS structure (transversal CNOT)
    ============================================================================ *)
 
-s8 = {
 
 (* CSS check for the Steane code: every generator is purely-X or purely-Z *)
 VerificationTest[
@@ -791,8 +695,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S8-Steane-CSS-Structure"
-],
-
+];
 (* Transversal CNOT for two Steane blocks implements logical CNOT.
    Hard check: build the code on 14 qubits and apply CNOT_{1↔8, 2↔9, ...} -- *)
 VerificationTest[
@@ -812,14 +715,11 @@ VerificationTest[
     TestID -> "S8-Steane-Transversal-CNOT-Closes"
 ]
 
-};
-
 
 (* ============================================================================
    §9 — Quantum MacWilliams identity (Got97 §6.2)
    ============================================================================ *)
 
-s9 = {
 
 (* For [[5,1,3]]: A_d = (1, 0, 0, 0, 15, 0), B_d = (1, 0, 0, 30, 15, 18) *)
 (* (Got97 §6.2 page 63 -- linear-programming result reproduced via direct
@@ -863,36 +763,30 @@ VerificationTest[
     TestID -> "S9-MacWilliams-A-coefficients-5QubitCode"
 ]
 
-};
-
 
 (* ============================================================================
    §10 — Bounds on quantum codes (Got97, Got00 §4)
    ============================================================================ *)
 
-s10 = {
 
 (* Quantum Hamming bound: (Σ 3^j · C(n,j)) · 2^k ≤ 2^n,  for [[5,1,3]] *)
 VerificationTest[
     Sum[3^j Binomial[5, j], {j, 0, 1}] * 2^1 <= 2^5,
     True,
     TestID -> "S10-QHamming-5QubitCode-Saturated"
-],
-
+];
 (* Quantum Singleton (Knill-Laflamme):  n - k ≥ 2(d-1)  for [[5,1,3]] *)
 VerificationTest[
     5 - 1 >= 2 (3 - 1),
     True,
     TestID -> "S10-QSingleton-5QubitCode"
-],
-
+];
 (* For Steane [[7,1,3]] *)
 VerificationTest[
     7 - 1 >= 2 (3 - 1),
     True,
     TestID -> "S10-QSingleton-Steane"
-],
-
+];
 (* Hamming bound is exactly saturated for [[5,1,3]] -- gives unique code class *)
 VerificationTest[
     Sum[3^j Binomial[5, j], {j, 0, 1}] * 2^1 == 2^5,
@@ -900,14 +794,11 @@ VerificationTest[
     TestID -> "S10-QHamming-5QubitCode-Equality"
 ]
 
-};
-
 
 (* ============================================================================
    §11 — Magic states / Clifford hierarchy
    ============================================================================ *)
 
-s11 = {
 
 (* T |0⟩ = |0⟩ (eigenstate); StabilizerFrame round-trip is exact at amplitudes *)
 VerificationTest[
@@ -916,8 +807,7 @@ VerificationTest[
     ] // Total // # == 0 &,
     True,
     TestID -> "S11-T-on-Zero-equals-Zero"
-],
-
+];
 (* T |+⟩ = (|0⟩ + e^{iπ/4} |1⟩)/√2 *)
 VerificationTest[
     Module[{frame = PauliStabilizer[1]["H", 1]["T", 1]},
@@ -927,22 +817,19 @@ VerificationTest[
     ],
     True,
     TestID -> "S11-T-on-Plus-equals-T-State"
-],
-
+];
 (* Non-Clifford gate on PauliStabilizer returns a StabilizerFrame *)
 VerificationTest[
     Head @ (PauliStabilizer[1]["T", 1]),
     StabilizerFrame,
     TestID -> "S11-T-Returns-StabilizerFrame"
-],
-
+];
 (* Two T gates on |+⟩ doubles the frame components *)
 VerificationTest[
     PauliStabilizer[1]["H", 1]["T", 1]["T", 1]["Length"],
     4,
     TestID -> "S11-Two-T-Doubles-Components"
-],
-
+];
 (* T† T = I  on any state *)
 VerificationTest[
     Module[{frame = PauliStabilizer[1]["H", 1]["T", 1][SuperDagger["T"], 1]},
@@ -954,14 +841,11 @@ VerificationTest[
     TestID -> "S11-T-Tdag-equals-Identity"
 ]
 
-};
-
 
 (* ============================================================================
    §12 — Symplectic ↔ Clifford isomorphism
    ============================================================================ *)
 
-s12 = {
 
 (* Cl_n / (P_n · phases) ≅ Sp(2n, Z_2)
    Round-trip: Random Clifford -> tableau -> reconstruction.  *)
@@ -973,8 +857,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S12-Symplectic-RandomClifford-Roundtrip"
-],
-
+];
 (* Symplectic check: tableau matrix M satisfies M J M^T = J (mod 2) *)
 VerificationTest[
     SeedRandom[20260508];
@@ -986,8 +869,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S12-Symplectic-Matrix-MJMt-equals-J"
-],
-
+];
 (* Inverse formula  M^{-1} = J M^T J  (over Z_2)  *)
 VerificationTest[
     SeedRandom[20260509];
@@ -1002,14 +884,11 @@ VerificationTest[
     TestID -> "S12-Symplectic-Inverse-Formula-JMtJ"
 ]
 
-};
-
 
 (* ============================================================================
    §13 — Bell-state measurement / teleportation / fusion
    ============================================================================ *)
 
-s13 = {
 
 (* Quantum teleportation via stabilizer evolution.
    Bell-basis measurement on the source+ancilla returns 4 equiprobable outcomes
@@ -1029,8 +908,7 @@ VerificationTest[
     ],
     4,
     TestID -> "S13-Teleportation-BSM-FourOutcomes"
-],
-
+];
 (* Bell-state measurement: CNOT then H + measure both should produce
    four equiprobable outcomes (one per Bell state).  *)
 VerificationTest[
@@ -1042,8 +920,7 @@ VerificationTest[
     ],
     {{0, 0}},   (* the BSM circuit on |Φ+⟩ deterministically projects back *)
     TestID -> "S13-BSM-on-PhiPlus-Deterministic"
-],
-
+];
 (* Fusion of two Bell pairs: stabilizer evolution should leave a single
    2-qubit Bell pair on the surviving qubits (up to outcome-dependent corrections) *)
 VerificationTest[
@@ -1068,14 +945,11 @@ VerificationTest[
     TestID -> "S13-Fusion-TwoBells-Yields-Bell-on-1-4"
 ]
 
-};
-
 
 (* ============================================================================
    §14 — Local complementation (AndBri05)
    ============================================================================ *)
 
-s14 = {
 
 (* Star-graph LC produces K₄ minus the central spokes *)
 VerificationTest[
@@ -1087,8 +961,7 @@ VerificationTest[
     ],
     6,   (* original 3 edges + 3 new among neighbors of 1 *)
     TestID -> "S14-LC-Star-K4Minus"
-],
-
+];
 (* Involutivity:  L_v · L_v = identity  *)
 VerificationTest[
     Module[{g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]},
@@ -1097,8 +970,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S14-LC-Involutive"
-],
-
+];
 (* GraphState convertible to PauliStabilizer *)
 VerificationTest[
     Head @ GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2,
@@ -1107,14 +979,11 @@ VerificationTest[
     TestID -> "S14-GraphState-To-PauliStabilizer"
 ]
 
-};
-
 
 (* ============================================================================
    §15 — Canonical forms (AarGot04 11-block, GarMarCro12 5-block, DDM triple)
    ============================================================================ *)
 
-s15 = {
 
 (* AarGot04: every Clifford has an equivalent circuit -- check by round-trip *)
 VerificationTest[
@@ -1125,8 +994,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S15-CanonicalForm-RandomClifford-Roundtrip"
-],
-
+];
 (* PauliStabilizer[ps["Circuit"]] is a Clifford reconstruction: matrix equality *)
 VerificationTest[
     SeedRandom[20260512];
@@ -1137,14 +1005,11 @@ VerificationTest[
     TestID -> "S15-CanonicalForm-Matrix-Roundtrip"
 ]
 
-};
-
 
 (* ============================================================================
    §16 — Choi-tableau (Yashin25)  -- CliffordChannel composition
    ============================================================================ *)
 
-s16 = {
 
 (* Identity channel *)
 VerificationTest[
@@ -1153,8 +1018,7 @@ VerificationTest[
     ],
     {1, 1, 2},
     TestID -> "S16-CliffordChannel-Identity-Shape"
-],
-
+];
 (* State-prep channel for |00⟩: nA = 0, nB = 2, rank = 2 *)
 VerificationTest[
     Module[{cc = CliffordChannel[PauliStabilizer[2]]},
@@ -1162,8 +1026,7 @@ VerificationTest[
     ],
     {0, 2, 2},
     TestID -> "S16-CliffordChannel-StatePrep-00-Shape"
-],
-
+];
 (* (STRICT) Applying a state-prep CliffordChannel to a same-dim PauliStabilizer
    should evolve to the prepared state.  Per Yashin25 §3.3 / API doc, a state-
    prep channel `cc[ps]` (when nA == 0 and dimensions match) returns the prep
@@ -1174,8 +1037,7 @@ VerificationTest[
     ],
     {"ZI", "IZ"},
     TestID -> "S16-F3-CliffordChannel-StatePrep-Yields-Zeros-STRICT"
-],
-
+];
 (* (S)^2 = Z  via channel composition.  ccS² applied to |+⟩ should give |−⟩  *)
 VerificationTest[
     Module[{ccS = CliffordChannel[<|
@@ -1193,14 +1055,11 @@ VerificationTest[
     TestID -> "S16-CliffordChannel-S-squared-equals-Z"
 ]
 
-};
-
 
 (* ============================================================================
    §17 — Qudit (skipped: QF stabilizer subsystem is qubit-only)
    ============================================================================ *)
 
-s17 = {
 
 (* Sanity: every PauliStabilizer is qubit-d; "Qudits" returns the qubit count *)
 VerificationTest[
@@ -1209,22 +1068,18 @@ VerificationTest[
     TestID -> "S17-Qudit-IsQubit-PerKernelDesign"
 ]
 
-};
-
 
 (* ============================================================================
    §18 — Pauli tracking through a Clifford circuit
    ============================================================================ *)
 
-s18 = {
 
 (* Pauli-frame tracking:  applying Z then conjugating by X should yield -Z. *)
 VerificationTest[
     PauliStabilizer[1]["X", 1]["Stabilizers"],
     {"-Z"},
     TestID -> "S18-Pauli-Tracking-X-on-0-flips-Z-sign"
-],
-
+];
 (* X then CNOT_{1→2} on |00⟩: state becomes |11⟩, stabilized by -ZI, ZZ
    (since CNOT maps I⊗Z → Z⊗Z and Z⊗I → Z⊗I, with the X-induced sign flip
    on Z⊗I). *)
@@ -1234,8 +1089,7 @@ VerificationTest[
     }]]["Stabilizers"],
     Sort[{"-ZI", "ZZ"}],
     TestID -> "S18-Pauli-Tracking-CNOT-X-on-control"
-],
-
+];
 (* Z on target qubit propagates to control *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -1245,36 +1099,30 @@ VerificationTest[
     TestID -> "S18-Pauli-Tracking-Z-on-target-flips-XX-sign"
 ]
 
-};
-
 
 (* ============================================================================
    §19 — Universal one-line identities
    ============================================================================ *)
 
-s19 = {
 
 (* H² = I *)
 VerificationTest[
     Sort @ PauliStabilizer[1]["H", 1]["H", 1]["Stabilizers"],
     {"Z"},
     TestID -> "S19-H-squared-equals-I"
-],
-
+];
 (* S² = Z  (so S²|+⟩ = |−⟩, stabilizer flip) *)
 VerificationTest[
     PauliStabilizer[1]["H", 1]["S", 1]["S", 1]["Stabilizers"],
     {"-X"},
     TestID -> "S19-S-squared-equals-Z"
-],
-
+];
 (* S⁴ = I *)
 VerificationTest[
     PauliStabilizer[1]["H", 1]["S", 1]["S", 1]["S", 1]["S", 1]["Stabilizers"],
     {"X"},
     TestID -> "S19-S-fourth-equals-I"
-],
-
+];
 (* (HS)³ = ωI globally; on stabilizers (no phase) it should round-trip to identity *)
 VerificationTest[
     Module[{ps = PauliStabilizer[1], applied},
@@ -1283,8 +1131,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S19-HS-cubed-equals-Identity-Stabilizers"
-],
-
+];
 (* (CNOT)² = I *)
 VerificationTest[
     Module[{psA = PauliStabilizer[QuantumCircuitOperator[{
@@ -1295,8 +1142,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S19-CNOT-squared-equals-I"
-],
-
+];
 (* (CZ)² = I *)
 VerificationTest[
     Module[{psA = PauliStabilizer[QuantumCircuitOperator[{
@@ -1308,8 +1154,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S19-CZ-squared-equals-I"
-],
-
+];
 (* H_b · CNOT · H_b = CZ *)
 VerificationTest[
     Sort @ PauliStabilizer[QuantumCircuitOperator[{
@@ -1320,8 +1165,7 @@ VerificationTest[
             "H" -> 1, "H" -> 2, "CZ" -> {1, 2}}]]["Stabilizers"],
     True,
     TestID -> "S19-Hb-CNOT-Hb-equals-CZ"
-],
-
+];
 (* H_b · CNOT · H_b = CZ -- already in §2 / §19; we add an explicit
    structural check on the |+,+⟩ initial state. *)
 VerificationTest[
@@ -1332,8 +1176,7 @@ VerificationTest[
             "H" -> 2, "CNOT" -> {1, 2}, "H" -> 2}]]["Stabilizers"],
     True,
     TestID -> "S19-CZ-equals-Hb-CNOT-Hb"
-],
-
+];
 (* Bell ⟨XX⟩ = +1, ⟨YY⟩ = -1, ⟨ZZ⟩ = +1 *)
 VerificationTest[
     With[{psBell = PauliStabilizer[QuantumCircuitOperator[{
@@ -1344,8 +1187,7 @@ VerificationTest[
     ],
     {1, -1, 1},
     TestID -> "S19-Bell-XX-YY-ZZ-Expectations"
-],
-
+];
 (* Toffoli is NOT Clifford -- attempting to use it on |+⟩|+⟩|0⟩ should
    either return unchanged via `nonclifford` or yield a non-stabilizer state.
    We test that PauliStabilizer of CCX|++0⟩ does NOT round-trip to itself. *)
@@ -1359,14 +1201,11 @@ VerificationTest[
     TestID -> "S19-Toffoli-Sanity-NonClifford"
 ]
 
-};
-
 
 (* ============================================================================
    §20 — Round-trip tests across representations
    ============================================================================ *)
 
-s20 = {
 
 (* PauliStabilizer ↔ State exact round-trip *)
 VerificationTest[
@@ -1375,31 +1214,27 @@ VerificationTest[
     ],
     True,
     TestID -> "S20-State-To-Tableau-To-State-Bell"
-],
-
+];
 (* PauliStabilizer ↔ QuantumOperator exact round-trip (Phase 5c canary: Y) *)
 VerificationTest[
     Normal[PauliStabilizer[QuantumOperator["Y"]]["QuantumOperator"]["Matrix"]] ===
     Normal[QuantumOperator["Y"]["Matrix"]],
     True,
     TestID -> "S20-Y-Operator-Roundtrip-Phase5c-Canary"
-],
-
+];
 (* Y operator captures GlobalPhase *)
 VerificationTest[
     PauliStabilizer[QuantumOperator["Y"]]["GlobalPhase"],
     -I,
     TestID -> "S20-Y-GlobalPhase-MinusI"
-],
-
+];
 (* Y ⊗ Y operator round-trip *)
 VerificationTest[
     Normal[PauliStabilizer[QuantumOperator["YY"]]["QuantumOperator"]["Matrix"]] ===
     Normal[QuantumOperator["YY"]["Matrix"]],
     True,
     TestID -> "S20-YY-Operator-Roundtrip"
-],
-
+];
 (* PauliStabilizer ↔ Circuit ↔ State (3-step) preserves up-to-phase *)
 VerificationTest[
     Module[{ps = PauliStabilizer[QuantumCircuitOperator[{
@@ -1410,8 +1245,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S20-Tableau-Circuit-State-Roundtrip"
-],
-
+];
 (* Tableau has shape {2, n, 2n} *)
 VerificationTest[
     Dimensions @ PauliStabilizer[3]["Tableau"],
@@ -1419,22 +1253,18 @@ VerificationTest[
     TestID -> "S20-Tableau-Shape-2-n-2n"
 ]
 
-};
-
 
 (* ============================================================================
    §21 — Stim-style identities (Gid21)
    ============================================================================ *)
 
-s21 = {
 
 (* Stabilizer Pauli string list parses correctly *)
 VerificationTest[
     PauliStabilizer[{"-XX", "+ZZ"}]["StabilizerSigns"],
     {-1, 1},
     TestID -> "S21-Stim-PauliString-Parsing"
-],
-
+];
 (* For random tableau T,  T · T† = identity tableau *)
 VerificationTest[
     SeedRandom[20260513];
@@ -1444,8 +1274,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S21-Stim-Random-Tableau-Roundtrip"
-],
-
+];
 (* xz encoding agrees with simulator's tableau encoding -- the first
    stabilizer of an under-determined PauliStabilizer matches the input. *)
 VerificationTest[
@@ -1456,14 +1285,11 @@ VerificationTest[
     TestID -> "S21-Stim-Pauli-XYZI-FirstStabilizer"
 ]
 
-};
-
 
 (* ============================================================================
    §22 — Cross-package fixtures (sanity sample, full suite is in CrossPackage_*.wlt)
    ============================================================================ *)
 
-s22 = {
 
 (* Stim-formatted output normalization *)
 VerificationTest[
@@ -1478,22 +1304,18 @@ VerificationTest[
     TestID -> "S22-Stim-FormatNormalization"
 ]
 
-};
-
 
 (* ============================================================================
    §23 — Caveats / pitfalls (sign conventions, non-stabilizer states)
    ============================================================================ *)
 
-s23 = {
 
 (* Y = i X Z convention *)
 VerificationTest[
     pauliMat["Y"],
     I * pauliMat["X"] . pauliMat["Z"],
     TestID -> "S23-Y-equals-iXZ-convention"
-],
-
+];
 (* Equivalent stabilizer generators describe the same state -- group-aware test
    ⟨XX, ZZ⟩ ≡ ⟨XX, -YY⟩ ≡ ⟨ZZ, -YY⟩ ALL describe |Φ+⟩  *)
 VerificationTest[
@@ -1506,8 +1328,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S23-Bell-Stabilizers-AreEquivalent"
-],
-
+];
 (* W state is NOT a stabilizer state -- already in §3, but reasserted here as
    a caveat marker *)
 VerificationTest[
@@ -1519,14 +1340,11 @@ VerificationTest[
     TestID -> "S23-W-State-Not-Stabilizer"
 ]
 
-};
-
 
 (* ============================================================================
    §24 — Concrete numerical fixtures
    ============================================================================ *)
 
-s24 = {
 
 (* |+⟩ amplitude vector *)
 VerificationTest[
@@ -1535,8 +1353,7 @@ VerificationTest[
     ] // Total // # == 0 &,
     True,
     TestID -> "S24-PlusState-Amplitudes"
-],
-
+];
 (* GHZ-3 amplitude vector: only positions 1 and 8 nonzero *)
 VerificationTest[
     Module[{v = Normal[PauliStabilizer[QuantumCircuitOperator[{
@@ -1546,8 +1363,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S24-GHZ3-Amplitudes"
-],
-
+];
 (* (STRICT) Steane |0_L⟩ has 8 nonzero amplitudes per Got00. *)
 VerificationTest[
     Count[
@@ -1558,22 +1374,18 @@ VerificationTest[
     TestID -> "S24-F1-SteaneCode-LogicalZero-8Amps-STRICT"
 ]
 
-};
-
 
 (* ============================================================================
    §25 — Stabilizer Olympics (13-item conformance)
    ============================================================================ *)
 
-s25 = {
 
 (* 1. xz encoding round-trip *)
 VerificationTest[
     xzDec /@ (xzEnc /@ {"I", "X", "Y", "Z"}),
     {"I", "X", "Y", "Z"},
     TestID -> "S25-Olympics-1-xz-Roundtrip"
-],
-
+];
 (* 2. Symplectic predicate matches matrix commutator *)
 VerificationTest[
     Module[{n = 1},
@@ -1585,8 +1397,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S25-Olympics-2-Symplectic-Match"
-],
-
+];
 (* 3. Heisenberg gate table reproduces text-book entries *)
 VerificationTest[
     {
@@ -1596,15 +1407,13 @@ VerificationTest[
     },
     {{"X"}, {"Z"}, Sort[{"XX", "ZZ"}]},
     TestID -> "S25-Olympics-3-Heisenberg-Table"
-],
-
+];
 (* 4. 5-qubit and Steane code stabilizers exact *)
 VerificationTest[
     Take[PauliStabilizer["5QubitCode"]["Stabilizers"], 4],
     {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"},
     TestID -> "S25-Olympics-4-5QubitCode-Exact"
-],
-
+];
 (* 5. Bell-state round-trip tableau ↔ amplitudes *)
 VerificationTest[
     equalUpToPhase[
@@ -1613,8 +1422,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S25-Olympics-5-Bell-Roundtrip"
-],
-
+];
 (* 6. MacWilliams: A_d for [[5,1,3]] is (1, 0, 0, 0, 15, 0) -- already in §9 *)
 VerificationTest[
     Module[{ps = PauliStabilizer["5QubitCode"], stabs, group, weights, aArr},
@@ -1652,8 +1460,7 @@ VerificationTest[
     ],
     {1, 0, 0, 0, 15, 0},
     TestID -> "S25-Olympics-6-MacWilliams-A"
-],
-
+];
 (* 7. Inner product 2^{-s/2} on small samples (deferred to §6) *)
 VerificationTest[
     Chop[N[Abs[
@@ -1661,8 +1468,7 @@ VerificationTest[
     ]^2] - 1/2] == 0,
     True,
     TestID -> "S25-Olympics-7-InnerProduct-Half"
-],
-
+];
 (* 8. Bell ZZ measurement deterministic, 50/50 single-qubit *)
 VerificationTest[
     {Sort @ Keys @ PauliStabilizer[QuantumCircuitOperator[{
@@ -1671,8 +1477,7 @@ VerificationTest[
             "H" -> 1, "CNOT" -> {1, 2}}]]["M", "ZI"]},
     {{0}, {0, 1}},
     TestID -> "S25-Olympics-8-Measurement-Det-Random"
-],
-
+];
 (* 9. Quantum teleportation by stabilizer evolution -- already in §13 *)
 VerificationTest[
     Module[{ps = PauliStabilizer @ QuantumCircuitOperator[{
@@ -1683,16 +1488,14 @@ VerificationTest[
     ],
     True,
     TestID -> "S25-Olympics-9-Teleportation-FourOutcomes"
-],
-
+];
 (* 10. Toffoli on |++0⟩ flagged as non-stabilizer *)
 VerificationTest[
     Quiet @ Head @ QuantumState[QuantumCircuitOperator[
         {"H" -> 1, "H" -> 2, "Toffoli" -> {1, 2, 3}}]],
     QuantumState,   (* QuantumCircuitOperator returns dense state, not PauliStabilizer *)
     TestID -> "S25-Olympics-10-Toffoli-Flagged"
-],
-
+];
 (* 11. Local-complementation reproduces AndBri05 *)
 VerificationTest[
     Module[{g = Graph[Range[5], Table[i \[UndirectedEdge] (i + 1), {i, 4}]]},
@@ -1701,8 +1504,7 @@ VerificationTest[
     ],
     True,
     TestID -> "S25-Olympics-11-LocalComplement-Involutive"
-],
-
+];
 (* 12. Choi-tableau composition: ccS² applied to |1⟩ should give |1⟩ with
    negative-sign Z stabilizer *)
 VerificationTest[
@@ -1716,8 +1518,7 @@ VerificationTest[
     ],
     {"-Z"},
     TestID -> "S25-Olympics-12-CliffordChannel-Composition"
-],
-
+];
 (* 13. Qudit Weyl commutation -- not applicable to QF (qubit only),
    sanity check that PauliStabilizer rejects non-qubit dims *)
 VerificationTest[
@@ -1726,111 +1527,9 @@ VerificationTest[
     TestID -> "S25-Olympics-13-Qudit-Sanity"
 ]
 
-};
-
 
 (* ============================================================================
    Test execution & summary
    ============================================================================ *)
 
-allSections = <|
-    "S0-Smoke" -> s0,
-    "S1-Encoding" -> s1,
-    "S2-Heisenberg" -> s2,
-    "S3-StandardStates" -> s3,
-    "S4-DensityMatrix" -> s4,
-    "S5-Measurement" -> s5,
-    "S6-InnerProduct" -> s6,
-    "S7-SumProjection" -> s7,
-    "S8-CSS" -> s8,
-    "S9-MacWilliams" -> s9,
-    "S10-Bounds" -> s10,
-    "S11-MagicStates" -> s11,
-    "S12-Symplectic" -> s12,
-    "S13-Teleportation" -> s13,
-    "S14-LocalComplement" -> s14,
-    "S15-CanonicalForm" -> s15,
-    "S16-CliffordChannel" -> s16,
-    "S17-Qudit" -> s17,
-    "S18-PauliTracking" -> s18,
-    "S19-UniversalIdentities" -> s19,
-    "S20-Roundtrips" -> s20,
-    "S21-StimStyle" -> s21,
-    "S22-CrossPackage" -> s22,
-    "S23-Caveats" -> s23,
-    "S24-NumericalFixtures" -> s24,
-    "S25-Olympics" -> s25
-|>;
 
-allTests = Flatten @ Values @ allSections;
-
-Print["Sections:        ", Length @ allSections];
-Print["Total tests:     ", Length @ allTests];
-Print[""];
-Print["Running ..."];
-Print[""];
-
-allReport = TestReport[allTests];
-
-(* Per-section breakdown *)
-sectionResults = KeyValueMap[Function[{name, tests},
-    Module[{rep = TestReport[tests], n, p, f, e},
-        n = Length @ tests;
-        p = Length @ Select[Values @ rep["TestResults"], #["Outcome"] === "Success" &];
-        f = Length @ Select[Values @ rep["TestResults"], #["Outcome"] === "Failure" &];
-        e = Length @ Select[Values @ rep["TestResults"],
-            #["Outcome"] === "MessagesFailure" || #["Outcome"] === "Error" &];
-        {name, n, p, f, e}
-    ]],
-    allSections];
-
-Print["-------------------------------------------------------"];
-Print[StringPadRight["Section", 28], StringPadLeft["Tests", 8],
-      StringPadLeft["Pass", 8], StringPadLeft["Fail", 8], StringPadLeft["Err", 8]];
-Print["-------------------------------------------------------"];
-Do[Module[{r = sectionResults[[i]]},
-    Print[StringPadRight[r[[1]], 28],
-          StringPadLeft[ToString @ r[[2]], 8],
-          StringPadLeft[ToString @ r[[3]], 8],
-          StringPadLeft[ToString @ r[[4]], 8],
-          StringPadLeft[ToString @ r[[5]], 8]]],
-    {i, Length @ sectionResults}];
-Print["-------------------------------------------------------"];
-
-totalP = Total[#[[3]] & /@ sectionResults];
-totalF = Total[#[[4]] & /@ sectionResults];
-totalE = Total[#[[5]] & /@ sectionResults];
-totalN = Total[#[[2]] & /@ sectionResults];
-
-Print[StringPadRight["TOTAL", 28],
-      StringPadLeft[ToString @ totalN, 8],
-      StringPadLeft[ToString @ totalP, 8],
-      StringPadLeft[ToString @ totalF, 8],
-      StringPadLeft[ToString @ totalE, 8]];
-Print[""];
-
-(* Show failing tests, if any *)
-failures = Select[Values @ allReport["TestResults"],
-    #["Outcome"] =!= "Success" &];
-
-If[Length @ failures > 0,
-    Print["======================================================="];
-    Print["  FAILURES (", Length @ failures, ")"];
-    Print["======================================================="];
-    Do[
-        Print[""];
-        Print["  TestID:   ", failures[[i]]["TestID"]];
-        Print["  Outcome:  ", failures[[i]]["Outcome"]];
-        Print["  Expected: ", Short[failures[[i]]["ExpectedOutput"], 5]];
-        Print["  Actual:   ", Short[failures[[i]]["ActualOutput"], 5]];
-        If[failures[[i]]["ActualMessages"] =!= {},
-            Print["  Messages: ", Short[failures[[i]]["ActualMessages"], 5]]],
-        {i, Length @ failures}];
-    Print[""]
-];
-
-Print["======================================================="];
-Print["  ", If[totalF + totalE == 0, "✓ All tests passed.", "✗ See failures above."]];
-Print["======================================================="];
-
-Exit[If[totalF + totalE == 0, 0, 1]]

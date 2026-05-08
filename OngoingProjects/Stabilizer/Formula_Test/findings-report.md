@@ -1,18 +1,34 @@
 # Stabilizer Subsystem — Findings Report
 
-**Date:** 2026-05-07
+**Date:** 2026-05-07 (re-verified in fresh kernel after A-series sweep merged on `stabilizer-phases-1-4`)
 **Reference:** [`stabilizer-formulas.md`](stabilizer-formulas.md) (extracted from 28 papers under `OngoingProjects/Stabilizer/tex/`)
 **Test battery:** [`stabilizer-formulas-test.wls`](stabilizer-formulas-test.wls)
-**Paclet under test:** `QuantumFramework` at HEAD of `master`
+**Paclet under test:** `QuantumFramework` at HEAD of `stabilizer-phases-1-4`
+
+## Verification status (2026-05-07)
+
+**All three findings landed as kernel patches on `stabilizer-phases-1-4`.** The
+.wls battery now reports **132/132 passing**, and the same battery runs as
+part of the regular `Tests/RunTests.wls` runner via
+[`Tests/Stabilizer/Formulas.wlt`](../../../Tests/Stabilizer/Formulas.wlt).
+The original confirmation history is preserved below for posterity:
+
+- **F1** confirmed: `5QubitCode` was a +1 eigenstate of `XXXXX` (X̄), not `ZZZZZ` (Z̄). 32 nonzero amps, not 16. `|⟨Got97_0L | state⟩|² = 1/2` matched `|+_L⟩↔|0_L⟩` overlap exactly. `5QubitCode1` was `|−_L⟩` (orthogonal to `|+_L⟩`). **→ Resolved by Patch P1** ([NamedCodes.m](../../../QuantumFramework/Kernel/Stabilizer/NamedCodes.m)).
+- **F2** confirmed: `ps["M", "ZI"]` on Bell `|Φ+⟩` returned post-states with `{XX, ZZ}` tableau (unchanged) and state `(|00⟩ + |11⟩)/√2` (unchanged); `⟨ZI⟩ = 0` rather than `+1`. The single-qubit `ps["M", 1]` path was already correct. **→ Resolved by Patch P2** ([PauliMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/PauliMeasure.m)).
+- **F3** confirmed: `cc = CliffordChannel[PauliStabilizer[2]]` correctly created a state-prep channel (`InputQubits == 0`); `cc[PauliStabilizer[2]]` emitted `CliffordChannel::stateevol` and fell through to dense materialization. **→ Resolved by Patch P3** ([CliffordChannel.m](../../../QuantumFramework/Kernel/Stabilizer/CliffordChannel.m)).
+
+Failing TestIDs were renamed to carry an `F<n>` infix (`S3-F1-…`, `S5-F2-…`, `S7-F1-…`, `S16-F3-…`, `S24-F1-…`) so a future regression on any of these surfaces directly under the corresponding finding tag.
 
 ---
 
 ## Executive summary
 
 Running 132 strict `VerificationTest`s mapped 1:1 to the formulas in
-`stabilizer-formulas.md` produced **126 passing, 6 failing**. The 6 failures
-collapse into **3 distinct findings**, all confirmed by direct kernel probes
-that bypass the test harness:
+`stabilizer-formulas.md` originally produced **126 passing, 6 failing**.
+The 6 failures collapsed into **3 distinct findings**, each confirmed by
+direct kernel probes that bypass the test harness, and each resolved by a
+mechanical patch (P1 / P2 / P3) on `stabilizer-phases-1-4`. After the
+patches: **132/132 passing**:
 
 | # | Severity | Where | What |
 |---|---|---|---|
@@ -308,13 +324,147 @@ From a fresh kernel:
 wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls
 ```
 
-Expected output: `132 tests, 126 pass, 6 fail`. The 6 failures cluster into
-the 3 findings above. Each `TestID` matches its row in the formula reference
-[`stabilizer-formulas.md`](stabilizer-formulas.md), so a fix can be verified
-by re-running the affected tier alone:
+After Patches P1 / P2 / P3 landed: `132 tests, 132 pass, 0 fail`. Before
+the patches the run produced 6 failures clustered into the 3 findings above.
+Each `TestID` carries an `F<n>` infix matching its finding
+(e.g. `S3-F1-5QubitCode-…`), so a future regression on any of these surfaces
+under the right finding tag and is easy to triage:
 
 ```bash
-# After applying a fix, narrow the run via grep on TestID strings:
+# Narrow a regression run to F1/F2/F3 TestIDs:
 wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls 2>&1 \
-    | grep -E "S3-|S5-PostMeas|S7-Steane|S16-Clifford|S24-Steane"
+    | grep -E "F1-|F2-|F3-"
 ```
+
+---
+
+## Patches (landed on `stabilizer-phases-1-4`)
+
+Three kernel-side patches collectively turn `132 / 132` green. They are
+applied on `stabilizer-phases-1-4`; the diffs below document what they
+changed for future reference.
+
+### Patch P1 — `NamedCodes.m` (resolves F1, four failing tests)
+
+Replace logical X̄ with logical Z̄ on the n-th generator of each named code; flip
+the sign on Z̄ for each `*Code1`:
+
+```mathematica
+(* QuantumFramework/Kernel/Stabilizer/NamedCodes.m  -- replace lines 28-35 *)
+
+PauliStabilizer["5QubitCode"]  := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ",  "ZZZZZ"}]
+PauliStabilizer["5QubitCode1"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "-ZZZZZ"}]
+
+PauliStabilizer["7QubitCode" | "SteaneCode"]   := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ",  "ZZZZZZZ"}]
+PauliStabilizer["7QubitCode1" | "SteaneCode1"] := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "-ZZZZZZZ"}]
+
+PauliStabilizer["9QubitCode"]  := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX",  "ZZZZZZZZZ"}]
+PauliStabilizer["9QubitCode1"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "-ZZZZZZZZZ"}]
+```
+
+**Why this is correct.** Per Got97 §3.5 / Got00 §4: for `[[5,1,3]]` the
+codespace is the simultaneous +1 eigenspace of `{4 stabilizers}`; logical
+qubit's `|0_L⟩` is the +1 eigenstate of Z̄ = ZZZZZ within that codespace,
+`|1_L⟩` the −1 eigenstate. The current implementation listed X̄ as the n-th
+generator, producing the +1 eigenstate of X̄ (i.e. `|+_L⟩`).
+
+**Verification after applying P1:**
+```wolfram
+ps5 = PauliStabilizer["5QubitCode"];
+v   = Normal @ ps5["State"]["StateVector"];
+zL  = KroneckerProduct @@ ConstantArray[{{1, 0}, {0, -1}}, 5];
+Chop[zL . v - v]                          (* expect: 0-vector  *)
+Count[v, x_ /; Abs[x] > 10^-10]           (* expect: 16        *)
+```
+
+### Patch P2 — `PauliMeasure.m` (resolves F2, one failing test)
+
+Update the random-outcome branch to also overwrite tableau row `kIdx`'s
+symplectic bits with the measured Pauli's `pVec`. Currently the branch only
+toggles signs and leaves the tableau intact, leaving the post-state in the
+*input*'s eigenspace rather than `±M`'s.
+
+```mathematica
+(* QuantumFramework/Kernel/Stabilizer/PauliMeasure.m  -- random-outcome branch
+   (the Module body around lines 67-94, after the otherIdx / baseSigns lines). *)
+
+Module[{otherIdx, baseSigns, newTableau, gen = ps["GeneratorCount"]},
+    otherIdx  = DeleteCases[Flatten[anticommIdx, 1], kIdx];
+    baseSigns = MapAt[# * ps["StabilizerSigns"][[kIdx]] &,
+                       ps["StabilizerSigns"], List /@ otherIdx];
+
+    (* NEW: replace stabilizer row `kIdx` of the tableau with pVec.            *)
+    (* Tableau shape is {2 (X/Z block), n (qubit), 2 gen (rows)};              *)
+    (* stabilizer rows live at columns gen+1 .. 2 gen.                          *)
+    newTableau = ps["Tableau"];
+    newTableau[[1, All, gen + kIdx]] = pVec[[;; n]];
+    newTableau[[2, All, gen + kIdx]] = pVec[[n + 1 ;;]];
+
+    Association @ Table[
+        With[{newSigns = ReplacePart[baseSigns, kIdx -> targetSign * (1 - 2 b)]},
+            b -> PauliStabilizer[<|
+                "Phase"   -> Join[ps["Phase"][[;; gen]], (1 - newSigns) / 2],
+                "Tableau" -> newTableau
+            |>]
+        ],
+        {b, {0, 1}}
+    ]
+]
+```
+
+**Why this is correct.** AG §3 Case I (random outcome): replace one
+anti-commuting generator with `(-1)^a · M` (where `a ∈ {0,1}` is the
+random outcome bit). The current kernel does step (2) of Case I (rowsum
+the *other* anti-commuting generators against the chosen one to make them
+commute with `M`) but not step (1) (the actual replacement). Single-qubit
+`ps["M", q_Integer]` (in `Measurement.m`) does both correctly.
+
+**Verification after applying P2:**
+```wolfram
+ps  = PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]];
+ps0 = ps["M", "ZI"][0];
+ps0["Stabilizers"]                    (* expect: {ZI, ZZ}     *)
+ps0["Expectation", "ZI"]              (* expect: 1            *)
+Normal @ ps0["State"]["StateVector"]  (* expect: {1, 0, 0, 0} *)
+```
+
+### Patch P3 — `CliffordChannel.m` (resolves F3, one failing test)
+
+Add an `nA == 0` dispatch arm BEFORE the `Which` fallback that emits
+`CliffordChannel::stateevol`:
+
+```mathematica
+(* QuantumFramework/Kernel/Stabilizer/CliffordChannel.m  -- insert before the
+   existing cc_CliffordChannel[ps_PauliStabilizer ? ConcretePauliStabilizerQ]
+   Which dispatch around line 451. *)
+
+cc_CliffordChannel[ps_PauliStabilizer ? ConcretePauliStabilizerQ] /;
+    CliffordChannelQ[cc] && cc["InputQubits"] === 0 :=
+        cliffordChannelToPauliStabilizer[cc]
+```
+
+**Why this is correct.** The api.md `cc[ps]` docstring lists three
+dispatch cases: identity, state-prep (`nA == 0`), and dim-matched
+composition. The state-prep case was missing from the dispatch tree;
+the current code falls through to the `CliffordChannel::stateevol` warning
+and a dense fallback. The `cliffordChannelToPauliStabilizer[cc]` helper
+already exists as a `PackageScope` symbol — this patch just routes to it.
+
+**Verification after applying P3:**
+```wolfram
+cc = CliffordChannel[PauliStabilizer[2]];
+cc[PauliStabilizer[2]]["Stabilizers"]   (* expect: {ZI, IZ} -- no warning *)
+```
+
+### Combined verification
+
+After applying all three patches, the test battery should report
+**132 / 132 passing**, with no `Pending`, `Skipped`, or `Failure` outcomes.
+Run:
+
+```bash
+wolframscript -f OngoingProjects/Stabilizer/Formula_Test/stabilizer-formulas-test.wls
+```
+
+The `F1`/`F2`/`F3`-tagged TestIDs serve as direct regression markers if the
+underlying behaviour ever drifts back.
