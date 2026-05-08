@@ -65,13 +65,26 @@ buildOps[hSpec_] := Module[{h, qfOps, matOps},
 
 (* QF's gate matrices in circuit order. For reps > 1, QF wraps each Trotter
    step as a sub-QuantumCircuitOperator; ["Flatten"]["Operators"] unwraps. *)
+(* NOTE on syntax: QF's dispatch rule is
+       QuantumCircuitOperator["Trotterization"[opArgs_, args___], opts___]
+   so the named circuit must be passed as the curried head form
+       QuantumCircuitOperator["Trotterization"[ops, order, reps, t]]
+   Wrapping the arguments in a List instead -- e.g.
+       QuantumCircuitOperator[{"Trotterization", ops, order, reps, t}]  (* WRONG *)
+   does NOT call the named circuit; QuantumCircuitOperator interprets the list
+   as a sequence of gate elements ("Trotterization" alone triggers the default
+   3q X/Y/Z Trotterization, the operator list becomes a sub-circuit, and the
+   numeric arguments are silently turned into PhaseShift/OverHat gates). The
+   user-facing notebook at 411282707.nb has the same bug and produces garbage
+   unitaries for that reason. *)
+
 qfGateMatrices[qfOps_, order_, reps_, t_] := Module[{c},
-    c = QuantumCircuitOperator[{"Trotterization", qfOps, order, reps, t}];
+    c = QuantumCircuitOperator["Trotterization"[qfOps, order, reps, t]];
     Normal[#["Matrix"]] & /@ c["Flatten"]["Operators"]
 ];
 
 qfCircuitMatrix[qfOps_, order_, reps_, t_] := Module[{c},
-    c = QuantumCircuitOperator[{"Trotterization", qfOps, order, reps, t}];
+    c = QuantumCircuitOperator["Trotterization"[qfOps, order, reps, t]];
     Normal @ c["Matrix"]
 ];
 
@@ -266,8 +279,10 @@ Scan[If[! #[[2]], AppendTo[failures, {"T5", #[[1]]}]] &, t5Checks];
 (*    h = QuantumOperator["X"+("X"->{2})+("X"->{3})-"ZZ"-("ZZ"->{2,3})] *)
 (*    ops = KeyValueMap[QuantumOperator[#2 #1]&, h["PauliDecompose"]]   *)
 (*    For order in {1,2,4} and steps in 1..10, build                    *)
-(*       cQF       = QuantumCircuitOperator[{"Trotterization", N@ops, order, steps, 1}] *)
+(*       cQF       = QuantumCircuitOperator["Trotterization"[N@ops, order, steps, 1]] *)
 (*       cStandalone = standalone unitary from N matrices               *)
+(*    (Note: the notebook itself uses the LIST form which is buggy;     *)
+(*    we use the curried form here to actually exercise the algorithm.) *)
 (*    Compare unitaries (T6a), trace distances to MatrixExp[-I H] (T6), *)
 (*    and spectral 2-norm distances (T7).                               *)
 (* ==================================================================== *)
@@ -285,7 +300,7 @@ stepList  = Range[10];
 nbResults = Reap[
     Do[
         Module[{cQF, qfMat, sMat, traceDist, twoNorm, gateCnt, expectedCnt},
-            cQF = N @ QuantumCircuitOperator[{"Trotterization", N @ qfOpsNb, order, steps, 1}];
+            cQF = N @ QuantumCircuitOperator["Trotterization"[N @ qfOpsNb, order, steps, 1]];
             qfMat = Normal @ cQF["Matrix"];
             sMat  = TrotterizationMatrices[matOpsNb, order, steps, 1.0, "Form" -> "Unitary"];
 
@@ -425,7 +440,7 @@ matOpsSym = buildOps[hA][[3]];
 sym = Symbol["tSym"];  (* avoid colliding with global t *)
 
 (* QF circuit at symbolic time *)
-cSymQF = QuantumCircuitOperator[{"Trotterization", qfOpsSym, 2, 2, sym}];
+cSymQF = QuantumCircuitOperator["Trotterization"[qfOpsSym, 2, 2, sym]];
 gatesQFSym = Normal[#["Matrix"]] & /@ cSymQF["Flatten"]["Operators"];
 gatesStdSym = TrotterizationMatrices[matOpsSym, 2, 2, sym];
 
