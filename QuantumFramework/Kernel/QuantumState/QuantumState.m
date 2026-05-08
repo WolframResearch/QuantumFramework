@@ -302,31 +302,88 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (top_QuantumState ? QuantumStateQ)[(bot_QuantumState ? QuantumStateQ)] := (QuantumOperator[top] @ QuantumOperator[bot])["Sort"]["State"]
 
 
-(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] := Module[{
-    q1 = qs1["Computational"], q2 = qs2["Computational"], state
+(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; (
+    qs1["InputQudits"] >= 1 && qs2["OutputQudits"] >= 1 && (
+        (qs1["InputQudits"] <= qs2["OutputQudits"] && Take[qs2["OutputDimensions"], qs1["InputQudits"]] === qs1["InputDimensions"]) ||
+        (qs2["OutputQudits"] <= qs1["InputQudits"] && Take[qs1["InputDimensions"], qs2["OutputQudits"]] === qs2["OutputDimensions"])
+    ) && (
+        qs1["OutputDimension"] * qs2["InputDimension"] == 0 ||
+        (
+            qs1["VectorQ"] && qs1["Picture"] === "Schrodinger" && qs2["Picture"] === "Schrodinger" &&
+            (qs2["VectorQ"] || qs1["InputQudits"] <= qs2["OutputQudits"])
+        ) || qs1["InputQudits"] == qs2["OutputQudits"]
+    )
+) := Block[{
+    kMin = Min[qs1["InputQudits"], qs2["OutputQudits"]],
+    inDim = qs2["InputDimension"],
+    restOut, restOutDim, restIn, restInDim,
+    q1, q2, q1Mat, q1ConjMat, liftedQ1, liftedQ1Dag, q2Mat, liftedQ2, state, outBasis, inBasis
 },
-    state = Which[
-        qs1["OutputDimension"] * qs2["InputDimension"] == 0,
-        {},
-        TrueQ[qs1["VectorQ"] && qs2["VectorQ"]],
-        SparseArrayFlatten[q1["StateMatrix"] . q2["StateMatrix"]],
+    restOut = qs2["Output"]["Decompose"][[kMin + 1 ;;]];
+    restOutDim = Times @@ Drop[qs2["OutputDimensions"], kMin];
+    restIn = qs1["Input"]["Decompose"][[kMin + 1 ;;]];
+    restInDim = Times @@ Drop[qs1["InputDimensions"], kMin];
+    Which[
+        qs1["OutputDimension"] * inDim == 0,
+            QuantumState[{},
+                QuantumBasis[
+                    "Output" -> qs1["Output"], "Input" -> qs2["Input"],
+                    "Label" -> qs1["Label"] @* qs2["Label"],
+                    "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
+                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                ]
+            ],
+        qs1["VectorQ"] && qs1["Picture"] === "Schrodinger" && qs2["Picture"] === "Schrodinger",
+            q1 = qs1["Computational"]; q2 = qs2["Computational"];
+            q1Mat = q1["Matrix"];
+            liftedQ1 = If[restOutDim == 1, q1Mat, KroneckerProduct[q1Mat, IdentityMatrix[restOutDim, SparseArray]]];
+            state = If[TrueQ[q2["VectorQ"]],
+                q2Mat = q2["Matrix"];
+                liftedQ2 = If[restInDim == 1, q2Mat, KroneckerProduct[q2Mat, IdentityMatrix[restInDim, SparseArray]]];
+                SparseArrayFlatten[liftedQ1 . liftedQ2],
+                q1ConjMat = ConjugateTranspose[q1Mat];
+                liftedQ1Dag = If[restOutDim == 1, q1ConjMat, KroneckerProduct[q1ConjMat, IdentityMatrix[restOutDim, SparseArray]]];
+                If[inDim == 1,
+                    liftedQ1 . q2["DensityMatrix"] . liftedQ1Dag,
+                    KroneckerProduct[liftedQ1, IdentityMatrix[inDim, SparseArray]] . q2["DensityMatrix"] . KroneckerProduct[liftedQ1Dag, IdentityMatrix[inDim, SparseArray]]
+                ]
+            ];
+            outBasis = Which[
+                qs1["OutputDimension"] == 1 && restOut === {}, qs1["Output"],
+                qs1["OutputDimension"] == 1, QuantumTensorProduct @ restOut,
+                restOut === {}, qs1["Output"],
+                True, QuantumTensorProduct @ Join[qs1["Output"]["Decompose"], restOut]
+            ];
+            inBasis = Which[
+                inDim == 1 && restIn === {}, qs2["Input"],
+                inDim == 1, QuantumTensorProduct @ restIn,
+                restIn === {}, qs2["Input"],
+                True, QuantumTensorProduct @ Join[qs2["Input"]["Decompose"], restIn]
+            ];
+            QuantumState[state,
+                QuantumBasis[
+                    "Output" -> outBasis, "Input" -> inBasis,
+                    "Label" -> qs1["Label"] @* qs2["Label"],
+                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                ]
+            ],
         True,
-        q1 = q1["Double"];
-        q2 = q2["Double"];
-        ArrayReshape[
-            q1["StateMatrix"] . q2["StateMatrix"],
-            Table[qs1["OutputDimension"] qs2["InputDimension"], 2]
-        ]
-    ];
-    With[{
-        s = QuantumState[state, "Output" -> QuditBasis @ qs1["OutputDimensions"], "Input" -> QuditBasis @ qs2["InputDimensions"]],
-        b = QuantumBasis[
-            "Output" -> qs1["Output"], "Input" -> qs2["Input"],
-            "Label" -> qs1["Label"] @* qs2["Label"],
-            "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
-            "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
-    ]},
-        QuantumState[s, b]
+            q1 = qs1["Computational"]["Double"]; q2 = qs2["Computational"]["Double"];
+            state = ArrayReshape[
+                q1["StateMatrix"] . q2["StateMatrix"],
+                Table[qs1["OutputDimension"] inDim, 2]
+            ];
+            With[{
+                s = QuantumState[state, "Output" -> QuditBasis @ qs1["OutputDimensions"], "Input" -> QuditBasis @ qs2["InputDimensions"]],
+                b = QuantumBasis[
+                    "Output" -> qs1["Output"], "Input" -> qs2["Input"],
+                    "Label" -> qs1["Label"] @* qs2["Label"],
+                    "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
+                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+                ]
+            },
+                QuantumState[s, b]
+            ]
     ]
 ]
 

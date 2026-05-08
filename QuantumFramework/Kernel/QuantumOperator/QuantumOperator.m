@@ -344,96 +344,87 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ, opts___] := QuantumCircuitOperator[qo][qs, opts]
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := QuantumOperator @ QuantumCircuitOperator[{qo2, qo1}]
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_QuantumOperator ? QuantumOperatorQ] /; (
+    (qo1["MatrixQ"] || qo2["MatrixQ"]) && qo1["Picture"] === qo2["Picture"] &&
+    Intersection[qo1["OutputOrder"], Complement[qo2["OutputOrder"], qo1["InputOrder"]]] === {} &&
+    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {}
+) := With[{shift = Max[qo1["Order"], qo2["Order"]] + 1},
+    qo1["Bend", shift][qo2["Bend", shift]]["Unbend"]
+]
 
-(* (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
-    top = qo1["Sort"], bot = qo2["Sort"], computationalQ = False,
-    fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in,
-    basis, tensor
+
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_QuantumOperator ? QuantumOperatorQ] /; (
+    qo1["VectorQ"] && qo2["VectorQ"] && qo1["Picture"] === qo2["Picture"] &&
+    Intersection[qo1["OutputOrder"], Complement[qo2["OutputOrder"], qo1["InputOrder"]]] === {} &&
+    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {}
+) := Module[{
+    s1, s2, q1OutOrder, q1InOrder, q2OutOrder, q2InOrder,
+    q1OutQ, q1InQ, q2OutQ, q2InQ,
+    shared, posQ1In, posQ2Out, sharedQ1Idx, sharedQ2Idx,
+    keepQ1InIdx, keepQ2OutIdx,
+    contractPairs, resultTensor, resultOutOrder, resultInOrder,
+    resultOutDecompose, resultInDecompose
 },
-    fullTopOut = 1 /@ top["FullOutputOrder"];
-    fullTopIn = If[MemberQ[bot["OutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
-    fullBotOut = If[MemberQ[top["InputOrder"], #], 0, 1][#] & /@ bot["FullOutputOrder"];
-    fullBotIn = 2 /@ bot["FullInputOrder"];
-    topOut = Join[
-        DeleteElements[fullTopOut, 1 /@ Complement[top["FullOutputOrder"], top["OutputOrder"]]],
-        Cases[2 /@ DeleteElements[top["OutputOrder"], top["FullOutputOrder"]], Alternatives @@ fullBotIn]
+    s1 = qo1["Sort"]; s2 = qo2["Sort"];
+    q1OutOrder = s1["OutputOrder"]; q1InOrder = s1["InputOrder"];
+    q2OutOrder = s2["OutputOrder"]; q2InOrder = s2["InputOrder"];
+    q1OutQ = Length[q1OutOrder]; q1InQ = Length[q1InOrder];
+    q2OutQ = Length[q2OutOrder]; q2InQ = Length[q2InOrder];
+
+    shared = Intersection[q1InOrder, q2OutOrder];
+    posQ1In = AssociationThread[q1InOrder, Range[q1InQ]];
+    posQ2Out = AssociationThread[q2OutOrder, Range[q2OutQ]];
+    sharedQ1Idx = Lookup[posQ1In, shared];
+    sharedQ2Idx = Lookup[posQ2Out, shared];
+    keepQ1InIdx = Complement[Range[q1InQ], sharedQ1Idx];
+    keepQ2OutIdx = Complement[Range[q2OutQ], sharedQ2Idx];
+
+    contractPairs = Transpose[{q1OutQ + sharedQ1Idx, q1OutQ + q1InQ + sharedQ2Idx}];
+    resultTensor = If[Length[contractPairs] == 0,
+        TensorProduct[s1["StateTensor"], s2["StateTensor"]],
+        TensorContract[TensorProduct[s1["StateTensor"], s2["StateTensor"]], contractPairs]
     ];
-    botIn = Join[
-        DeleteElements[fullBotIn, 2 /@ Complement[bot["FullInputOrder"], bot["InputOrder"]]],
-        Cases[1 /@ DeleteElements[bot["InputOrder"], bot["FullInputOrder"]], Alternatives @@ fullTopOut]
-    ];
-    out = Join[topOut, Cases[fullBotOut, 1[_]]];
-    in = Join[Cases[fullTopIn, 2[_]], botIn];
-    Block[{
-        topOutBases, botInBases, topInBases, botOutBases, outBasis, inBasis,
-        outIndex = First /@ PositionIndex[Join[fullTopOut, fullBotOut]],
-        inIndex = First /@ PositionIndex[Join[fullTopIn, fullBotIn]],
-        topInIndex = First /@ PositionIndex[fullTopIn],
-        botOutIndex = First /@ PositionIndex[fullBotOut]
+
+    (* After contraction, surviving axes appear in tensor order:
+         [q1.outputs] [q1.inputs kept] [q2.outputs kept] [q2.inputs]
+       Permute so all outputs come first, then all inputs:
+         [q1.outputs] [q2.outputs kept] [q1.inputs kept] [q2.inputs] *)
+    With[{
+        n1Out = q1OutQ, n1In = Length[keepQ1InIdx],
+        n2Out = Length[keepQ2OutIdx], n2In = q2InQ
     },
-        topOutBases = top["Output"]["Decompose"];
-        botOutBases = bot["Output"]["Decompose"];
-        topInBases = top["Input"]["Decompose"];
-        botInBases = bot["Input"]["Decompose"];
-        outBasis = Join[topOutBases, botOutBases];
-        inBasis = Join[topInBases, botInBases];
-        basis = QuantumBasis[
-            QuantumBasis[
-                QuantumTensorProduct @ Replace[
-                    Join[out, in], {
-                        i : 1[_] :> outBasis[[outIndex[i]]],
-                        i : 2[_] :> inBasis[[inIndex[i]]]
-                    },
-                    {1}
-                ]
-            ]["Split", Length[out]],
-            "Picture" -> If[MemberQ[{top["Picture"], bot["Picture"]}, "PhaseSpace"], "PhaseSpace", top["Picture"]],
-            "Label" -> Replace[DeleteCases[top["Label"] @* bot["Label"], None], Identity -> None],
-            "ParameterSpec" -> MergeParameterSpecs[top, bot]
-        ];
-        With[{
-            topContracts = topInBases[[ Lookup[topInIndex, Sort[Cases[fullTopIn, 0[_]]]] ]],
-            botContracts = botOutBases[[ Lookup[botOutIndex, Sort[Cases[fullBotOut, 0[_]]]] ]]
-        },
-            If[ Length[topContracts] != Length[botContracts] || ! AllTrue[Thread[{topContracts, botContracts}], Apply[Equal]],
-                computationalQ = True;
-                top = top["Computational"];
-                bot = bot["Computational"];
+        resultTensor = Transpose[resultTensor,
+            FindPermutation @ Join[
+                Range[n1Out],
+                Range[n1Out + n1In + 1, n1Out + n1In + n2Out],
+                Range[n1Out + 1, n1Out + n1In],
+                Range[n1Out + n1In + n2Out + 1, n1Out + n1In + n2Out + n2In]
             ]
         ]
     ];
-    tensor = Confirm[
-        If[
-            top["VectorQ"] && bot["VectorQ"],
-            SparseArrayFlatten @ Confirm @ EinsteinSummation[
-                {Join[fullTopOut, fullTopIn], Join[fullBotOut, fullBotIn]} -> Join[out, in],
-                {top["Tensor"], bot["Tensor"]}
-            ],
-            ArrayReshape[
-                Confirm @ EinsteinSummation[
-                    {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
-                        Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
-                    {If[top["VectorQ"], top["State"]["Bend"], top]["Tensor"], If[bot["VectorQ"], bot["State"]["Bend"], bot]["Tensor"]}
-                ],
-                Table[basis["Dimension"], 2]
-            ]
-        ]
-    ];
+
+    resultOutOrder = Join[q1OutOrder, q2OutOrder[[keepQ2OutIdx]]];
+    resultInOrder = Join[q1InOrder[[keepQ1InIdx]], q2InOrder];
+    resultOutDecompose = Join[s1["Output"]["Decompose"], s2["Output"]["Decompose"][[keepQ2OutIdx]]];
+    resultInDecompose = Join[s1["Input"]["Decompose"][[keepQ1InIdx]], s2["Input"]["Decompose"]];
+
     QuantumOperator[
-        If[ computationalQ,
-            QuantumState[
-                QuantumState[
-                    tensor,
-                    QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
-                ],
-                basis
-            ],
-            QuantumState[tensor, basis]
+        QuantumState[
+            SparseArrayFlatten @ resultTensor,
+            QuantumBasis[
+                "Output" -> If[resultOutDecompose === {}, QuditBasis[], QuantumTensorProduct @@ resultOutDecompose],
+                "Input"  -> If[resultInDecompose === {}, QuditBasis[], QuantumTensorProduct @@ resultInDecompose],
+                "Label" -> qo1["Label"] @* qo2["Label"],
+                "Picture" -> qo1["Picture"],
+                "ParameterSpec" -> MergeParameterSpecs[qo1, qo2]
+            ]
         ],
-        orderDuplicates /@ Map[First, {out, in}, {2}]
+        {resultOutOrder, resultInOrder}
     ]
-] *)
+]
+
+
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := QuantumOperator @ QuantumCircuitOperator[{qo2, qo1}]
 
 orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
