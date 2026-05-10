@@ -5,7 +5,7 @@ PackageScope[stabilizerEntropy]
 
 
 (* ============================================================================ *)
-(* A.7 (2026-05-07): closed-form polynomial-time stabilizer-state entropy.      *)
+(* Closed-form polynomial-time stabilizer-state entropy.                        *)
 (*                                                                              *)
 (* Reference: Fattal, Cubitt, Yamamoto, Bravyi, Chuang 2004                    *)
 (* (arxiv:quant-ph/0406168) Theorem 1: for an n-qubit stabilizer state psi    *)

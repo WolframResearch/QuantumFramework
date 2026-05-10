@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 (* ============================================================================ *)
-(* Phase 4 \[Dash] Pauli-string measurement.                                    *)
+(* Pauli-string measurement.                                                    *)
 (*                                                                              *)
 (* `ps["M", "XZZXI"]` measures the joint Pauli observable on a stabilizer state.*)
 (*                                                                              *)
@@ -54,7 +54,7 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
     If[anticommIdx === {},
         (* DETERMINISTIC: P (or -P) commutes with all stabilizers => P is in the
            Abelian closure. Compute <P> exactly via direct vector materialization
-           (Phase 4 v1; TODO Phase 5+: AG closed-form with i-factor tracking).
+           (TODO: AG closed-form with i-factor tracking).
            The outcome bit is (1 - <P>) / 2. *)
         With[{vec = ps["State"]["StateVector"], pauliMat = stringToPauliMatrix[pauliString]},
             <|Round[(1 - Re[Conjugate[vec] . pauliMat . vec]) / 2] -> ps|>
@@ -65,11 +65,9 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
         (* multiplication so they commute with P (step 2). Outcome b is random  *)
         (* in {0, 1}.                                                            *)
         kIdx = First @ First @ anticommIdx;   (* index in 1..n (within stabilizer rows) *)
-        (* Patch P2 (2026-05-07, Formula_Test/findings-report.md F2): also      *)
-        (* update the tableau row, not just the sign. Previously this branch    *)
-        (* left the tableau unchanged so the post-state was NOT a +-P eigenstate*)
-        (* (single failing test S5-F2-PostMeas-State-IsEigenstate-STRICT). The  *)
-        (* fix overwrites stabilizer row kIdx with pVec's symplectic bits.      *)
+        (* Update both the sign AND the tableau row: stabilizer row kIdx is    *)
+        (* overwritten with pVec's symplectic bits so the post-state is a       *)
+        (* +-P eigenstate (AG §3 Case I, step 1).                              *)
         Module[{otherIdx, baseSigns, newTableau, gen = ps["GeneratorCount"]},
             otherIdx = DeleteCases[Flatten[anticommIdx, 1], kIdx];
             baseSigns = MapAt[# * ps["StabilizerSigns"][[kIdx]] &, ps["StabilizerSigns"], List /@ otherIdx];

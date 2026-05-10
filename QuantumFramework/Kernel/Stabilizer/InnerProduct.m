@@ -6,19 +6,17 @@ PackageScope[stabilizerExpectation]
 
 
 (* ============================================================================ *)
-(* Phase 4 \[Dash] inner products and expectation values via direct vector       *)
-(* materialization. Phase 5+ may add the closed-form O(n^3) algorithm of        *)
-(* Garc\[IAcute]a-Markov-Cross 2012 (arxiv:1210.6646) -- TODO: add the GMC      *)
-(* algorithm for n > 8 where state materialization OOMs.                        *)
+(* Inner products and expectation values.                                       *)
 (*                                                                              *)
-(* Phase 6.5 (2026-05-06): demoted from top-level public symbols to method-     *)
-(* grade operations on PauliStabilizer / StabilizerFrame:                       *)
-(*   ps1["InnerProduct", ps2]   <-- was StabilizerInnerProduct[ps1, ps2]         *)
-(*   ps["Expectation", pauli]   <-- was StabilizerExpectation[ps, pauli]         *)
-(* The PauliStabilizer message tag `Expectation::dim` is renamed to             *)
-(* PauliStabilizer::expectationdim. Implementations remain here as PackageScope *)
-(* helpers; method dispatch lives in Stabilizer/Properties.m and                *)
-(* StabilizerFrame.m.                                                           *)
+(* Two paths are exposed via Method:                                            *)
+(*   "Direct"     -- materialize state vectors (O(2^n); recovers complex phase) *)
+(*   "ClosedForm" -- García-Markov-Cross 2012 §3 (O(n^3); magnitude only)       *)
+(*                                                                              *)
+(* Method-grade entry points:                                                   *)
+(*   ps1["InnerProduct", ps2]                                                   *)
+(*   ps["Expectation", pauli]                                                   *)
+(* Implementations live here as PackageScope helpers; method dispatch is in     *)
+(* Stabilizer/Properties.m and StabilizerFrame.m.                               *)
 (* ============================================================================ *)
 
 
@@ -29,12 +27,10 @@ PackageScope[stabilizerExpectation]
 (*   - If S_\[Psi] and S_\[Phi] disagree on any sign, returns 0.                *)
 (*   - Otherwise returns 2^(-s/2) where s = n - dim(S_\[Psi] \[Intersection] S_\[Phi]).         *)
 (*                                                                              *)
-(* Phase 4 implementation: materialize state vectors and compute directly.      *)
-(* Phase 5+ will use the GarMarCro12 \[Section]3 closed-form O(n^3) algorithm.  *)
+(* Default implementation: materialize state vectors and compute directly.     *)
 (* ============================================================================ *)
 
-(* A.1 (2026-05-07): closed-form O(n^3) inner-product MAGNITUDE per           *)
-(* GarMarCro12 §3.                                                              *)
+(* Closed-form O(n^3) inner-product MAGNITUDE per GarMarCro12 §3.              *)
 (*                                                                              *)
 (* For two stabilizer states |psi>, |phi> on n qubits with stabilizer groups  *)
 (* S_psi, S_phi:                                                                *)
@@ -43,11 +39,11 @@ PackageScope[stabilizerExpectation]
 (*                = 2^(-s/2)     otherwise, where s = n - dim(S_psi cap S_phi).*)
 (*                                                                              *)
 (* The COMPLEX phase of <psi | phi> requires Gaussian-sum bookkeeping over the *)
-(* intersection generators (deferred). For the magnitude (and ±1 sign for     *)
+(* intersection generators (TODO). For the magnitude (and ±1 sign for         *)
 (* perfectly-aligned states), the closed form is `O(n^3)` and works at any n.  *)
 (*                                                                              *)
 (* Available as `ps["InnerProduct", other, Method -> "ClosedForm"]`. The       *)
-(* default `ps["InnerProduct", other]` still uses direct-vector materialization*)
+(* default `ps["InnerProduct", other]` uses direct-vector materialization      *)
 (* (`O(2^n)` time + memory; recovers the full complex phase). For n > 8 where *)
 (* materialization OOMs, use the closed-form Method.                            *)
 
@@ -148,8 +144,7 @@ pauliStringToVec[s_String] := Module[{sign, body, n, xz},
 ]
 
 
-(* A.2 (2026-05-07): closed-form expectation via AG-phase i-factor tracking.  *)
-(* Replaces the Phase-4 v1 direct-vector fallback. Algorithm:                 *)
+(* Closed-form expectation via AG-phase i-factor tracking. Algorithm:         *)
 (*   1. P anticommutes with any stabilizer => <P> = 0.                        *)
 (*   2. P commutes with all stabilizers => decompose pVec over generators    *)
 (*      via LinearSolve over F_2.                                              *)
@@ -201,9 +196,9 @@ PauliStabilizer::expectationdim = "Pauli string `1` qubits does not match PauliS
 
 
 (* Helper: build the matrix form of a Pauli string for fallback.              *)
-(* A.11 (2026-05-07): handle the 1-qubit case explicitly -- KroneckerProduct  *)
-(* with a single argument throws KroneckerProduct::argmu and produces an      *)
-(* unevaluated expression that breaks downstream `Re[...]` of the expectation. *)
+(* The 1-qubit case is handled explicitly because KroneckerProduct with a    *)
+(* single argument throws KroneckerProduct::argmu and produces an            *)
+(* unevaluated expression that breaks downstream `Re[...]` of the expectation.*)
 pauliStringMatrix[s_String] := Module[{sign, body, mats},
     {sign, body} = If[StringStartsQ[s, "-"], {-1, StringDrop[s, 1]}, {1, s}];
     mats = Replace[Characters[body], {

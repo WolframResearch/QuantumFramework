@@ -3,29 +3,25 @@ Package["Wolfram`QuantumFramework`"]
 
 
 (* ============================================================================ *)
-(* Phase 7.1 (2026-05-06): Hybrid interop UpValues.                             *)
+(* Hybrid interop UpValues.                                                     *)
 (*                                                                              *)
 (* Cross-head dispatch so QF measurement / channel operators consume a          *)
 (* PauliStabilizer or StabilizerFrame natively without forcing the caller to    *)
 (* materialize via ps["State"] (which costs O(2^n)). Mirrors the existing       *)
-(* PauliStabilizer integration UpValues at Stabilizer/Conversions.m:139-142.    *)
+(* PauliStabilizer integration UpValues in Stabilizer/Conversions.m.            *)
 (*                                                                              *)
-(* Design rationale (Phase 6 review with N. Murzin): UpValues attached to       *)
-(* PauliStabilizer / StabilizerFrame -- not a Picture flag, not a QuantumBasis  *)
-(* wrapper. Both alternatives would route through QuantumBasis machinery        *)
-(* (KroneckerProduct[Output, Input] + MatrixInverse[ReducedMatrix]) and pay     *)
-(* O(2^n)..O(8^n), defeating the formalism's O(n^2) advantage. UpValues stay   *)
-(* in the tableau when they can.                                                *)
+(* Design rationale: UpValues attached to PauliStabilizer / StabilizerFrame --  *)
+(* not a Picture flag, not a QuantumBasis wrapper. Both alternatives would      *)
+(* route through QuantumBasis machinery (KroneckerProduct[Output, Input] +      *)
+(* MatrixInverse[ReducedMatrix]) and pay O(2^n)..O(8^n), defeating the          *)
+(* formalism's O(n^2) advantage. UpValues stay in the tableau when they can.    *)
 (*                                                                              *)
 (* Dispatch ladder for qmo[ps]:                                                 *)
 (*   1. QMO basis is a Pauli string  -> ps["M", pauli], stays in tableau.       *)
-(*   2. QMO basis is non-Pauli       -> Phase 7.2: decompose in stabilizer      *)
-(*                                       frame. Currently emits                  *)
-(*                                       PauliStabilizer::nonpaulibasis and    *)
-(*                                       falls back to                          *)
+(*   2. QMO basis is non-Pauli       -> emits PauliStabilizer::nonpaulibasis    *)
+(*                                       and falls back to                      *)
 (*                                       PauliStabilizerApply[                  *)
-(*                                         QuantumCircuitOperator[qmo], ps]    *)
-(*                                       (the legacy generic path).             *)
+(*                                         QuantumCircuitOperator[qmo], ps].   *)
 (* ============================================================================ *)
 
 
@@ -40,12 +36,12 @@ PackageScope[stabilizerPauliLabelFromQMO]
 PackageScope[stabilizerPauliFromMatrix]
 PackageScope[$stabilizerPauliMatrixSearchMaxQubits]
 
-(* Phase 7.3 (2026-05-06): extended detection. Recognized label forms:        *)
+(* Recognized label forms:                                                    *)
 (*   1. String matching ^-?[IXYZ]+$            -> direct Pauli string         *)
 (*   2. -Superscript[X|Y|Z|I, CircleTimes[m]]  -> "-XXXX..." (m copies)       *)
 (*   3. Superscript[X|Y|Z|I, CircleTimes[m]]   -> "XXXX..."  (m copies)       *)
 (*   4. Times[-1, str] with str a Pauli string -> "-" <> str                  *)
-(* Phase 7.4 (2026-05-06): for n <= 4 qubits, also iterates 4^n * {+1,-1}     *)
+(* Matrix-iteration fallback: for n <= cap qubits, also iterates 4^n*{+1,-1}  *)
 (* Pauli candidates against the QMO's MatrixRepresentation. This catches QMOs *)
 (* built directly from explicit matrices (QuantumOperator[matrix, ...]) where *)
 (* the symbolic Label is None. For larger n the cost is exponential in n;     *)
@@ -60,8 +56,8 @@ $stabilizerPauliMatrixSearchMaxQubits = 4;
 (* ============================================================================ *)
 (* Helper: build a 2^n x 2^n matrix for a Pauli string.                        *)
 (*                                                                              *)
-(* Internal to Phase 7.4 (avoids the n=1 KroneckerProduct edge of the          *)
-(* InnerProduct.m helper -- ROADMAP A.11).                                      *)
+(* Internal helper for the matrix-iteration detector (handles the n=1          *)
+(* KroneckerProduct edge case).                                                 *)
 (* ============================================================================ *)
 
 stabilizerPauliMatrixFromString[s_String] := Module[{sign, body, mats},
@@ -77,7 +73,7 @@ stabilizerPauliMatrixFromString[s_String] := Module[{sign, body, mats},
 
 
 (* ============================================================================ *)
-(* Phase 7.4: matrix-iteration Pauli detector.                                  *)
+(* Matrix-iteration Pauli detector.                                             *)
 (*                                                                              *)
 (* Given an explicit 2^n by 2^n matrix and a qubit count n, iterate over all   *)
 (* signed Pauli strings of length n and return the first one whose matrix      *)
@@ -147,7 +143,7 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
         Return[matched]
     ];
 
-    (* Phase 7.4: matrix-iteration fallback for n <= cap. We require a square    *)
+    (* Matrix-iteration fallback for n <= cap. We require a square              *)
     (* 2^n x 2^n matrix; non-square shapes (e.g. computational-basis projector  *)
     (* stacks of shape {2^(n+1), 2^n}) signal a multi-Kraus QMO and fall        *)
     (* through to the legacy path.                                              *)
@@ -167,13 +163,12 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
 
 (* ============================================================================ *)
 (* PauliStabilizer::nonpaulibasis -- fired when a non-Pauli QMO/channel acts    *)
-(* on a stabilizer-form input. Phase 7.1 falls back to the generic              *)
-(* PauliStabilizerApply circuit-conversion path; Phase 7.2 will instead         *)
-(* return a StabilizerFrame whose components are the Pauli decomposition of     *)
-(* the basis vectors, keeping the cost at O(rank * n^2) rather than O(2^n).    *)
+(* on a stabilizer-form input. Currently falls back to the generic              *)
+(* PauliStabilizerApply circuit-conversion path. A future StabilizerFrame       *)
+(* decomposition would keep the cost at O(rank * n^2) rather than O(2^n).      *)
 (* ============================================================================ *)
 
-PauliStabilizer::nonpaulibasis = "Hybrid interop: the measurement/channel basis is non-Pauli; falling back to the generic circuit path. Phase 7.2 will route this through a StabilizerFrame decomposition."
+PauliStabilizer::nonpaulibasis = "Hybrid interop: the measurement/channel basis is non-Pauli; falling back to the generic circuit path."
 
 
 (* ============================================================================ *)
@@ -184,10 +179,9 @@ PauliStabilizer::nonpaulibasis = "Hybrid interop: the measurement/channel basis 
 (* directly to ps["M", pauliString] which is the existing AG measurement       *)
 (* primitive (Stabilizer/PauliMeasure.m). Stays in the tableau, O(n^2).        *)
 (*                                                                              *)
-(* Fallback: emit ::nonpaulibasis info message and use the legacy generic       *)
-(* path PauliStabilizerApply[QuantumCircuitOperator[qmo], ps] which converts    *)
-(* the QMO to a circuit and folds gates over the tableau. This was the         *)
-(* unconditional behavior before Phase 7.1 (Conversions.m:140 prior to refactor)*)
+(* Fallback: emit ::nonpaulibasis info message and use the generic path        *)
+(* PauliStabilizerApply[QuantumCircuitOperator[qmo], ps] which converts        *)
+(* the QMO to a circuit and folds gates over the tableau.                      *)
 (* ============================================================================ *)
 
 qmo_QuantumMeasurementOperator[ps_PauliStabilizer ? ConcretePauliStabilizerQ] ^:= Module[{label},
@@ -201,8 +195,7 @@ qmo_QuantumMeasurementOperator[ps_PauliStabilizer ? ConcretePauliStabilizerQ] ^:
 
 
 (* StabilizerFrame: same dispatch shape but no native "M" method on a frame    *)
-(* yet (Phase 7.2). For now, materialize the frame and apply the qmo on the    *)
-(* materialized state.                                                          *)
+(* yet. Materialize the frame and apply the qmo on the materialized state.     *)
 
 qmo_QuantumMeasurementOperator[sf_StabilizerFrame] ^:= (
     Message[PauliStabilizer::nonpaulibasis];
@@ -213,8 +206,8 @@ qmo_QuantumMeasurementOperator[sf_StabilizerFrame] ^:= (
 (* ============================================================================ *)
 (* QuantumChannel[qc][ps_PauliStabilizer] / [sf_StabilizerFrame]                *)
 (*                                                                              *)
-(* Phase 7.2 (2026-05-06): detect named Pauli channels (BitFlip, PhaseFlip,     *)
-(* BitPhaseFlip, Depolarizing) and return a probabilistic-mixture list          *)
+(* Detect named Pauli channels (BitFlip, PhaseFlip, BitPhaseFlip,              *)
+(* Depolarizing) and return a probabilistic-mixture list                        *)
 (* {{probability, ps_after_pauli}, ...} where each ps_after_pauli is the        *)
 (* original ps with the corresponding Pauli gate applied via tableau update     *)
 (* (cost O(n) per branch). This is the natural form for tableau-level Clifford- *)

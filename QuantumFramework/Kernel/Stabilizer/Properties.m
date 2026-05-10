@@ -53,11 +53,8 @@ ps_PauliStabilizer["TableauForm", n_ : Infinity] := TableauForm[Take[ps["Signs"]
 
 
 (* ============================================================================ *)
-(* Phase 6 (2026-05-06): method-grade operations.                               *)
-(* These were Phase 3 public symbols (StabilizerMeasure / SubstituteOutcomes /  *)
-(* SampleOutcomes); they were demoted to ps[...] methods to keep the public     *)
-(* surface small. Implementations live in Stabilizer/SymbolicMeasure.m as       *)
-(* PackageScope helpers.                                                        *)
+(* Method-grade symbolic-measurement operations.                                *)
+(* Implementations live in Stabilizer/SymbolicMeasure.m as PackageScope helpers.*)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["SymbolicMeasure", q_Integer] := symbolicMeasure[ps, q]
@@ -70,9 +67,7 @@ ps_PauliStabilizer["SampleOutcomes", n_Integer ? Positive] := sampleOutcomes[ps,
 
 
 (* ============================================================================ *)
-(* Phase 6.5 (2026-05-06): InnerProduct + Expectation as method-grade           *)
-(* operations. Were Phase 4 top-level public symbols (StabilizerInnerProduct,   *)
-(* StabilizerExpectation); demoted to keep the public surface minimal.          *)
+(* Method-grade InnerProduct + Expectation.                                     *)
 (* Implementations remain in Stabilizer/InnerProduct.m as PackageScope helpers. *)
 (* ============================================================================ *)
 

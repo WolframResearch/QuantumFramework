@@ -6,8 +6,6 @@ PackageScope[$PauliStabilizerNames]
 
 (* ============================================================================ *)
 (* Catalog of named codes.                                                      *)
-(* Phase 1 cleanup: dropped duplicate "SteaneCode" entry                        *)
-(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]2.13).           *)
 (* ============================================================================ *)
 
 $PauliStabilizerNames = {
@@ -25,12 +23,11 @@ $PauliStabilizerNames = {
 (* (Steane/Shor CSS construction).                                              *)
 (* ============================================================================ *)
 
-(* Patch P1 (2026-05-07, Formula_Test/findings-report.md F1): replace the n-th *)
-(* generator from logical X (X-bar) to logical Z (Z-bar) so the named-code     *)
-(* states match the api.md docstring "|0_L>" / "|1_L>" instead of returning    *)
-(* "|+_L>" / "|-_L>". The 5Q / Steane / 9Q codespaces are stabilized by their *)
-(* (n-k) real parity stabilizers; |0_L> is the +1 eigenstate of Z-bar within   *)
-(* that codespace (Got97 §3.5, Got00 §4, Nielsen-Chuang §10.5).                *)
+(* The n-th generator is logical Z-bar (not X-bar) so the named-code states   *)
+(* are |0_L> / |1_L> rather than |+_L> / |-_L>. The 5Q / Steane / 9Q          *)
+(* codespaces are stabilized by their (n-k) real parity stabilizers; |0_L> is *)
+(* the +1 eigenstate of Z-bar within that codespace (Got97 §3.5, Got00 §4,    *)
+(* Nielsen-Chuang §10.5).                                                       *)
 
 PauliStabilizer["5QubitCode"]  := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ",  "ZZZZZ"}]
 PauliStabilizer["5QubitCode1"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "-ZZZZZ"}]

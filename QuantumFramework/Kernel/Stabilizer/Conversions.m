@@ -59,13 +59,11 @@ QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQud
 
 (* ============================================================================ *)
 (* PauliStabilizer -> QuantumState.                                             *)
-(* Phase 1 cleanup: dropped "QuantumSttate" typo alias                          *)
-(* (OngoingProjects/Stabilizer/paulistabilizer-source-audit.md \[Section]13.7).  *)
-(* Phase 5c: optional "GlobalPhase" association key (set by                     *)
-(* PauliStabilizer[qs_QuantumState] / PauliStabilizer[qo_QuantumOperator])      *)
-(* recovers the overall phase that the stabilizer tableau drops, so that         *)
-(* PauliStabilizer[qs]["State"] === qs exactly. Default 1 when absent.           *)
-(* Cost: O(4^n) -- materializes 2^n x 2^n matrices. Practical limit n <= 10.    *)
+(* Optional "GlobalPhase" association key (set by PauliStabilizer[qs] /         *)
+(* PauliStabilizer[qo]) recovers the overall phase that the stabilizer tableau *)
+(* drops, so that PauliStabilizer[qs]["State"] === qs exactly. Default 1 when  *)
+(* absent. Cost: O(4^n) -- materializes 2^n x 2^n matrices. Practical limit    *)
+(* n <= 10.                                                                     *)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["State" | "QuantumState"] := With[{
@@ -86,8 +84,8 @@ ps_PauliStabilizer["State" | "QuantumState"] := With[{
 (* PauliStabilizer -> QuantumCircuitOperator (AG canonical decomposition).      *)
 (* Greedy: for each qubit, set destab-X to a single 1, zero destab-Z, zero     *)
 (* stab-X. Returns a Clifford circuit whose dagger equals `ps`.                 *)
-(* Performance: O(n^3) gates. Circuit length is NOT minimized -- Reid24,        *)
-(* Winderl23 propose better (Phase 5).                                          *)
+(* Performance: O(n^3) gates. Circuit length is NOT minimized; Reid24 and      *)
+(* Winderl23 propose more compact synthesis algorithms (TODO).                 *)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := Block[{
@@ -143,16 +141,14 @@ ps_PauliStabilizer["Operator" | "QuantumOperator"] := With[{
 
 qo_QuantumOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qo], ps]
 QuantumState[ps_PauliStabilizer] ^:= ps["State"]
-(* These two were `:=` (DownValue) attempts on host-paclet protected symbols   *)
-(* and silently failed to attach. Converted to `^:=` UpValues on              *)
-(* _PauliStabilizer 2026-05-07 (audit finding from Tests/Stabilizer/           *)
-(* Connections.wlt). UpValues attach to the inner head's UpValues, not the    *)
-(* outer Protected symbol's DownValues, so they fire reliably.                *)
+(* The two below are `^:=` (UpValues on _PauliStabilizer) rather than         *)
+(* DownValues on host-paclet protected symbols, which silently fail to attach.*)
+(* UpValues attach to the inner head's UpValues, not the outer Protected      *)
+(* symbol's DownValues, so they fire reliably.                                *)
 QuantumCircuitOperator[ps_PauliStabilizer] ^:= ps["Circuit"]
 QuantumOperator[ps_PauliStabilizer] ^:= ps["Circuit"]["QuantumOperator"]
 
-(* Note: qmo_QuantumMeasurementOperator[ps_PauliStabilizer] used to be defined  *)
-(* here as PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]. Phase 7.1     *)
-(* (2026-05-06) replaces that generic path with a basis-aware dispatch in       *)
-(* Stabilizer/HybridInterop.m so Pauli-string measurements stay in the tableau  *)
-(* (cost O(n^2)) instead of routing through circuit conversion.                 *)
+(* qmo_QuantumMeasurementOperator[ps_PauliStabilizer] is now defined in        *)
+(* Stabilizer/HybridInterop.m with a basis-aware dispatch so Pauli-string      *)
+(* measurements stay in the tableau (cost O(n^2)) instead of routing through  *)
+(* circuit conversion.                                                          *)

@@ -14,10 +14,9 @@ PauliForm[ps_ ? PauliStabilizerQ, n : _Integer ? Positive | Infinity : Infinity,
     PauliForm[Take[ps["DestabilizerSigns"], UpTo[n]], Map[Take[#, UpTo[n]] &, ps["DestabilizerTableau"], {2}]]
 ]
 
-(* A.12 (2026-05-07): handle symbolic signs (Phase 3 SymPhase). After a       *)
-(* SymbolicMeasure, signs may be polynomials in \[FormalS][k] symbols.        *)
-(* Numeric signs format as before ("" or "-"); symbolic signs render as       *)
-(* `ToString[s, InputForm] <> "*"` to keep the result readable.                *)
+(* Handle symbolic signs (after SymbolicMeasure, signs may be polynomials in   *)
+(* \[FormalS][k] symbols). Numeric signs format as "" / "-"; symbolic signs    *)
+(* render as `ToString[s, InputForm] <> "*"` to keep the result readable.      *)
 pauliFormSignString[1] := ""
 pauliFormSignString[-1] := "-"
 pauliFormSignString[s_] := ToString[s, InputForm] <> "*"
@@ -59,8 +58,8 @@ TableauForm[signs_, tableau_, stab_ : True] := With[{
 (* MakeBoxes: TraditionalForm + summary box                                     *)
 (* ============================================================================ *)
 
-(* Phase 2 cleanup: gate TraditionalForm on Qubits <= 8 to avoid OOM.
-   Above 8 qubits, ps["State"] would materialize a 2^n vector -- prohibitive.
+(* Gate TraditionalForm on Qubits <= 8 to avoid OOM.  Above 8 qubits,
+   ps["State"] would materialize a 2^n vector -- prohibitive.
    Fallback: typeset the PauliForm string list. *)
 MakeBoxes[ps_PauliStabilizer ? PauliStabilizerQ, TraditionalForm] ^:= If[
     ps["Qubits"] <= 8,

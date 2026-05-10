@@ -6,7 +6,7 @@ PackageScope[StabilizerFrameQ]
 
 
 (* ============================================================================ *)
-(* Phase 4 \[Dash] StabilizerFrame: superpositions of stabilizer states.        *)
+(* StabilizerFrame: superpositions of stabilizer states.                        *)
 (*                                                                              *)
 (* A `StabilizerFrame` represents a state of the form                           *)
 (*       Sum_i c_i |s_i\[RightAngleBracket]                                     *)
@@ -45,8 +45,7 @@ _StabilizerFrame["Properties"] = {
 }
 
 
-(* Phase 6.5 (2026-05-06): InnerProduct as method-grade operation
-   (was top-level StabilizerInnerProduct). *)
+(* Method-grade InnerProduct on a frame. *)
 f_StabilizerFrame["InnerProduct", other_] := stabilizerInnerProduct[f, other]
 
 

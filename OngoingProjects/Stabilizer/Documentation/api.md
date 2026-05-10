@@ -1,27 +1,27 @@
 # Stabilizer subsystem — API reference
 
-> Function-by-function reference for the **5 top-level public symbols** plus the method-grade operations dispatched on `PauliStabilizer`, `StabilizerFrame`, and `CliffordChannel`. Reflects the kernel state after Phases 1–8.3 + the WL-idiom audit (2026-05-06). For the full phase log and deferred items, see [roadmap.md](roadmap.md). For the Phase 5c design lesson on global-phase contracts, see [postmortem.md](postmortem.md).
+> Function-by-function reference for the **5 top-level public symbols** plus the method-grade operations dispatched on `PauliStabilizer`, `StabilizerFrame`, and `CliffordChannel`. For the open work and deferred features, see [roadmap.md](roadmap.md). For the global-phase contract design lesson, see [postmortem.md](postmortem.md).
 
 ## Public surface at a glance
 
-| Symbol | Phase | Purpose |
-|---|---|---|
-| [`PauliStabilizer`](#paulistabilizer) | 1 | Tableau-encoded n-qubit stabilizer state |
-| [`StabilizerFrame`](#stabilizerframe) | 4 | Superposition `Σᵢ cᵢ \|sᵢ⟩` of stabilizer states (non-Clifford boundary) |
-| [`GraphState`](#graphstate) | 5 | Graph-state representation (AndBri05) |
-| [`LocalComplement`](#localcomplement) | 5 | Local complementation on a graph or graph state |
-| [`CliffordChannel`](#cliffordchannel) | 8 | Choi-tableau Clifford channel `[U_A \| U_B \| c]` (Yashin25 §2.3) |
+| Symbol | Purpose |
+|---|---|
+| [`PauliStabilizer`](#paulistabilizer) | Tableau-encoded n-qubit stabilizer state |
+| [`StabilizerFrame`](#stabilizerframe) | Superposition `Σᵢ cᵢ \|sᵢ⟩` of stabilizer states (non-Clifford boundary) |
+| [`GraphState`](#graphstate) | Graph-state representation (AndBri05) |
+| [`LocalComplement`](#localcomplement) | Local complementation on a graph or graph state |
+| [`CliffordChannel`](#cliffordchannel) | Choi-tableau Clifford channel `[U_A \| U_B \| c]` (Yashin25 §2.3) |
 
-### Method-grade operations (Phase 6 / 6.5 demoted from top-level)
+### Method-grade operations
 
-| Method | Old top-level form (pre-Phase 6) | Purpose |
-|---|---|---|
-| [`PauliStabilizer["Random", n]`](#named-pattern-random-n) | `RandomClifford[n]` | Uniformly random n-qubit Clifford state (Mallows sampler) |
-| [`ps["SymbolicMeasure", q]`](#symbolic-measurement-fangying23) | `StabilizerMeasure[ps, q]` | Symbolic Z-basis measurement |
-| [`ps["SubstituteOutcomes", rules]`](#symbolic-measurement-fangying23) | `SubstituteOutcomes[ps, rules]` | Plug concrete values into outcome symbols |
-| [`ps["SampleOutcomes", n]`](#symbolic-measurement-fangying23) | `SampleOutcomes[ps, n]` | Random outcome samples |
-| [`ps["InnerProduct", other]`](#inner-product-and-expectation) | `StabilizerInnerProduct[ps, other]` | `⟨ps\|other⟩` (PS or Frame on either side) |
-| [`ps["Expectation", pauli]`](#inner-product-and-expectation) | `StabilizerExpectation[ps, pauli]` | `⟨ps\|P\|ps⟩` for a Pauli string |
+| Method | Purpose |
+|---|---|
+| [`PauliStabilizer["Random", n]`](#named-pattern-random-n) | Uniformly random n-qubit Clifford state (Mallows sampler) |
+| [`ps["SymbolicMeasure", q]`](#symbolic-measurement-fangying23) | Symbolic Z-basis measurement |
+| [`ps["SubstituteOutcomes", rules]`](#symbolic-measurement-fangying23) | Plug concrete values into outcome symbols |
+| [`ps["SampleOutcomes", n]`](#symbolic-measurement-fangying23) | Random outcome samples |
+| [`ps["InnerProduct", other]`](#inner-product-and-expectation) | `⟨ps\|other⟩` (PS or Frame on either side) |
+| [`ps["Expectation", pauli]`](#inner-product-and-expectation) | `⟨ps\|P\|ps⟩` for a Pauli string |
 
 ### Verification
 
@@ -37,7 +37,7 @@ The breadth-first coverage matrix is [`Tests/Stabilizer/AuditMatrix.wlt`](../../
 
 # PauliStabilizer
 
-The atomic stabilizer-state object. Encodes an n-qubit state as a `(2n × 2n)` symplectic matrix plus a length-`2n` sign vector, packaged as `PauliStabilizer[<|"Tableau" -> rank3binarray, "Signs" -> {±1, ...}|>]`. The optional `"GlobalPhase"` key (Phase 5c) carries the complex unit that the AG decomposition drops, so that constructor → accessor round-trips exactly on the first hop.
+The atomic stabilizer-state object. Encodes an n-qubit state as a `(2n × 2n)` symplectic matrix plus a length-`2n` sign vector, packaged as `PauliStabilizer[<|"Tableau" -> rank3binarray, "Signs" -> {±1, ...}|>]`. The optional `"GlobalPhase"` key carries the complex unit that the AG decomposition drops, so that constructor → accessor round-trips exactly on the first hop.
 
 ## Constructors
 
@@ -222,13 +222,13 @@ Optional 2nd arg `n` truncates the list to the first `n` entries: `ps["Stabilize
 | `"Operator"` / `"QuantumOperator"` | `O(4ⁿ)` | `QuantumOperator` |
 | `"Circuit"` / `"QuantumCircuit"` / `"QuantumCircuitOperator"` | `O(n³)` gates | `QuantumCircuitOperator` whose dagger applied to `\|0…0⟩` reproduces ps |
 
-### Phase 5c global-phase contract
+### Global-phase contract
 
 | Path | Equality | Notes |
 |---|---|---|
 | `PauliStabilizer[qo]["QuantumOperator"]` vs `qo` | **exact** (`===`) | `"GlobalPhase"` captured |
 | `PauliStabilizer[qs]["State"]` vs `qs` | **exact** (`===`) | `"GlobalPhase"` captured |
-| `PauliStabilizer[qs]["gate", q]["State"]` vs `gate[qs]` | **up to phase** | Gate updates do not propagate `"GlobalPhase"` ([ROADMAP §A.9](roadmap.md)) |
+| `PauliStabilizer[qs]["gate", q]["State"]` vs `gate[qs]` | **up to phase** | Gate updates do not propagate `"GlobalPhase"` (documented contract; see [roadmap.md](roadmap.md)) |
 | `PauliStabilizer[gate[qs]]["State"]` vs `gate[qs]` | **exact** | Re-tomograph after the gate to recover phase |
 | `PauliStabilizer[ps["Circuit"]]["State"]` vs `ps["State"]` | **up to phase** | No source state, only tableau |
 
@@ -321,7 +321,7 @@ PauliStabilizer[2]["H", 1]["RowSum", 4, 3]   (* combine stabilizer rows 3 and 4 
 
 ### Symbolic measurement (FangYing23)
 
-Demoted from top-level `StabilizerMeasure` / `SubstituteOutcomes` / `SampleOutcomes` in Phase 6. Source: [SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m).
+Source: [SymbolicMeasure.m](../../../QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m).
 
 #### `ps["SymbolicMeasure", q]` / `ps["SymbolicMeasure", {q1, q2, …}]`
 
@@ -353,15 +353,15 @@ psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
 (* {{"Z"}, {"-Z"}, {"-Z"}, {"Z"}, {"-Z"}} *)
 ```
 
-**Phase 3 known limitation:** when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly but is not stamped into the post-state's signs. Tracked in [ROADMAP §A.4](roadmap.md).
+**Limitation:** when a deterministic measurement follows a prior symbolic one (e.g. Bell ZZ correlation), the deterministic outcome polynomial is computed correctly but is not stamped into the post-state's signs.
 
 ## Inner product and expectation
 
-Phase 6.5 demoted from top-level `StabilizerInnerProduct` / `StabilizerExpectation`. Source: [InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m).
+Source: [InnerProduct.m](../../../QuantumFramework/Kernel/Stabilizer/InnerProduct.m).
 
 ### `ps["InnerProduct", other]`
 
-`other` is a `PauliStabilizer` or a `StabilizerFrame`. Phase 4 v1 uses direct vector materialization (`O(2ⁿ)`); the closed-form `O(n³)` GarMarCro12 algorithm is on [ROADMAP §A.1](roadmap.md).
+`other` is a `PauliStabilizer` or a `StabilizerFrame`. Uses the closed-form `O(n³)` GarMarCro12 algorithm.
 
 ```wolfram
 psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}};
@@ -381,8 +381,6 @@ psBell = PauliStabilizer @ QuantumCircuitOperator @ {"H" -> 1, "CNOT" -> {1, 2}}
 {psBell["Expectation", "XX"], psBell["Expectation", "ZZ"], psBell["Expectation", "YY"]}
 (* {1, 1, -1}  -- YY = -XX·ZZ because Y = iXZ *)
 ```
-
-The `YY = -1` case currently uses the direct-vector fallback because the AG closed-form `i`-factor tracking ([ROADMAP §A.2](roadmap.md)) is not yet implemented.
 
 Message: `PauliStabilizer::expectationdim` if string length doesn't match qubit count.
 
@@ -436,7 +434,7 @@ These are not part of the public surface but are referenced from tests, document
 
 | Symbol | Role |
 |---|---|
-| `PauliStabilizerQ[expr]` | Predicate. Matches `PauliStabilizer[<\|"Signs" -> List, "Tableau" -> rank-3 array of ±1/0\|>]` with consistent dimensions. Phase 3 loosened to accept symbolic signs. |
+| `PauliStabilizerQ[expr]` | Predicate. Matches `PauliStabilizer[<\|"Signs" -> List, "Tableau" -> rank-3 array of ±1/0\|>]` with consistent dimensions. Symbolic signs are accepted. |
 | `ConcretePauliStabilizerQ[expr]` | Strict predicate: signs are concrete `(-1\|1)` integers (no symbolic phase). Used to gate the HybridInterop fast paths and `cc[ps]` evolution. |
 | `PauliTableauQ[t]` | Predicate. Matches a rank-3 binary array of shape `{2, n, m}` with `0`/`1`/`-1` entries. |
 | `PauliStabilizerApply[qco, qs : Automatic \| _QuantumState \| _PauliStabilizer : Automatic]` | The folder over a `QuantumCircuitOperator`'s normal operators that applies each gate via `state[gate]` and bails to `Plus` / `::nonclifford` on non-Clifford gates. Entry point for `Method -> "Stabilizer"`. |
@@ -451,7 +449,7 @@ These are not part of the public surface but are referenced from tests, document
 | Message | Fired when |
 |---|---|
 | `PauliStabilizer::nonclifford` | A circuit contains a gate with no tableau-update rule and that isn't `P[θ] / T / T†`. State returned unchanged. |
-| `PauliStabilizer::tdeprecated` | Historical: announces the Phase 4 migration of `P[θ] / T / T†` from `Plus` to `StabilizerFrame`. |
+| `PauliStabilizer::tdeprecated` | Announces routing of `P[θ] / T / T†` through `StabilizerFrame` rather than `Plus`. |
 | `PauliStabilizer::expectationdim` | `ps["Expectation", P]` with `Length[P] ≠ Qubits`. |
 | `PauliStabilizer::nonpaulibasis` | A non-Pauli QMO or non-Pauli channel acts on a stabilizer; falls back to legacy circuit path. |
 
@@ -459,7 +457,7 @@ These are not part of the public surface but are referenced from tests, document
 
 # StabilizerFrame
 
-Phase 4 superposition of stabilizer states: `Σᵢ cᵢ \|sᵢ⟩` with possibly symbolic coefficients. Produced by non-Clifford gates (`P[θ]`, `T`, `T†`) on a `PauliStabilizer`. Closes under further Clifford gates (which distribute over components) and under further non-Clifford gates (which double the component count). Source: [StabilizerFrame.m](../../../QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m).
+Superposition of stabilizer states: `Σᵢ cᵢ \|sᵢ⟩` with possibly symbolic coefficients. Produced by non-Clifford gates (`P[θ]`, `T`, `T†`) on a `PauliStabilizer`. Closes under further Clifford gates (which distribute over components) and under further non-Clifford gates (which double the component count). Source: [StabilizerFrame.m](../../../QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m).
 
 Predicate (PackageScope): `Wolfram``QuantumFramework``PackageScope``StabilizerFrameQ`.
 
@@ -521,7 +519,7 @@ PauliStabilizer[1]["H", 1]["T", 1]["T", 1]["Length"]
 (* 4 *)
 ```
 
-### Inner product (Phase 6.5)
+### Inner product
 
 ```wolfram
 frame["InnerProduct", other]
@@ -552,7 +550,7 @@ Module[{psT = PauliStabilizer[1]["T", 1], vec},
 
 # GraphState
 
-Phase 5 graph-state representation (AndBri05 §2). Each vertex `i` carries the stabilizer `K_i = X_i ⊗ Π_{j ∈ N(i)} Z_j`. Source: [GraphState.m](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
+Graph-state representation (AndBri05 §2). Each vertex `i` carries the stabilizer `K_i = X_i ⊗ Π_{j ∈ N(i)} Z_j`. Source: [GraphState.m](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
 
 Predicate (PackageScope): `Wolfram``QuantumFramework``PackageScope``GraphStateQ`.
 
@@ -575,7 +573,7 @@ GraphState[PauliStabilizer[{"XZI", "ZXZ", "IZX"}]]
 (* GraphState[<|"Graph" -> linear cluster, "VOPs" -> {0, 0, 0}|>] *)
 ```
 
-Phase 5 v1 only handles graph-form input (each generator is `X_i` at one position with `Z` at neighbors).
+Only graph-form input is currently supported (each generator is `X_i` at one position with `Z` at neighbors).
 
 ### Association form
 
@@ -583,14 +581,14 @@ Phase 5 v1 only handles graph-form input (each generator is `X_i` at one positio
 GraphState[<|"Graph" -> g, "VOPs" -> {0, …, 0}|>]
 ```
 
-VOP indices > 0 are reserved for the 24-element `LocalCliffordGroup` (deferred — [ROADMAP §B.3](roadmap.md)).
+VOP indices > 0 are reserved for the 24-element `LocalCliffordGroup` (see [roadmap.md](roadmap.md) — deferred).
 
 ## Properties
 
 | Property | Returns |
 |---|---|
 | `"Graph"` | Underlying `Graph` |
-| `"VOPs"` | Vertex-operator indices (Phase 5 v1: all 0 = identity) |
+| `"VOPs"` | Vertex-operator indices (currently all 0 = identity) |
 | `"Vertices"` | `VertexList[graph]` |
 | `"Edges"` | `EdgeList[graph]` |
 | `"VertexCount"` | n |
@@ -625,7 +623,7 @@ ps["Stabilizers"] === psFromCirc["Stabilizers"]
 
 # LocalComplement
 
-Phase 5 local-complementation operation (AndBri05 Definition 1). Toggles all edges among the neighbors of a vertex. Source: [GraphState.m:135](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
+Local-complementation operation (AndBri05 Definition 1). Toggles all edges among the neighbors of a vertex. Source: [GraphState.m:135](../../../QuantumFramework/Kernel/Stabilizer/GraphState.m).
 
 ## Signatures
 
@@ -652,13 +650,13 @@ Sort @ EdgeList @ LocalComplement[LocalComplement[g, 3], 3] === Sort @ EdgeList[
 (* True *)
 ```
 
-Phase 5 v1 returns the new graph but does **not** update VOPs (deferred to [ROADMAP §A.6](roadmap.md)).
+Currently returns the new graph but does **not** update VOPs (see [roadmap.md](roadmap.md)).
 
 ---
 
 # CliffordChannel
 
-Phase 8 Choi-tableau representation of an arbitrary Clifford channel `Φ_{A→B}` per Yashin25 §2.3 (arxiv:2504.14101). Encoded as `[U_A \| U_B \| c]` where:
+Choi-tableau representation of an arbitrary Clifford channel `Φ_{A→B}` per Yashin25 §2.3 (arxiv:2504.14101). Encoded as `[U_A \| U_B \| c]` where:
 
 - `U_A` is a `k × 2|A|` bit matrix on the input system (or `{}` if `|A| = 0`)
 - `U_B` is a `k × 2|B|` bit matrix on the output system
@@ -698,7 +696,7 @@ With[{cc = CliffordChannel[PauliStabilizer[2]]},
 
 ### From a `QuantumChannel`: `CliffordChannel[qc]`
 
-Phase 8.2 v1 detects deterministic single-Pauli channels by Label (e.g., `"X"`, `"-XX"`); stochastic Pauli channels emit `CliffordChannel::stochastic`.
+Currently detects deterministic single-Pauli channels by Label (e.g., `"X"`, `"-XX"`); stochastic Pauli channels emit `CliffordChannel::stochastic`.
 
 ### Association form
 
@@ -730,7 +728,7 @@ Predicate (PackageScope): `Wolfram``QuantumFramework``PackageScope``CliffordChan
 
 ### Composition: `cc1[cc2]`
 
-Apply `cc2` first, then `cc1`. The composition algorithm (Phase 8.2/8.3, Yashin25 §3.2/§3.3):
+Apply `cc2` first, then `cc1`. The composition algorithm (Yashin25 §3.2/§3.3):
 
 1. Stack `cc2.UB` (k1 rows) above `cc1.UA` (k2 rows) into a `(k1+k2) × 2nB` matrix.
 2. Compute the **left null space** `λ s.t. λ · stack = 0` via `NullSpace[Transpose[stack], Modulus -> 2]`.
@@ -762,7 +760,7 @@ Apply the channel to a `PauliStabilizer` state. Three recognized cases:
 ```wolfram
 ccS2 = ccS[ccS];   (* = cc_Z *)
 ccS2[PauliStabilizer[1]["X", 1]]["Stabilizers"]
-(* {"-Z"}  -- Z|1> = -|1>, with Phase 8.3 phase tracking flowing through *)
+(* {"-Z"}  -- Z|1> = -|1>, with AG phase tracking flowing through *)
 ```
 
 Falls back to dense materialization with `CliffordChannel::stateevol` for unrecognized cases.
@@ -780,12 +778,12 @@ Falls back to dense materialization with `CliffordChannel::stateevol` for unreco
 | Message | Fired when |
 |---|---|
 | `CliffordChannel::dimmismatch` | Composition dimension mismatch (`cc2.OutputQubits ≠ cc1.InputQubits`) |
-| `CliffordChannel::stochastic` | `CliffordChannel[qc]` for a stochastic channel (rank > 1 Kraus). Phase 8.2 only handles deterministic single-Pauli channels. |
+| `CliffordChannel::stochastic` | `CliffordChannel[qc]` for a stochastic channel (rank > 1 Kraus). Only deterministic single-Pauli channels are currently handled. |
 | `CliffordChannel::stateevol` | `cc[ps]` for an unrecognized case |
 
 ---
 
-# Hybrid interop (Phase 7)
+# Hybrid interop
 
 Cross-head dispatch so that `QuantumMeasurementOperator` / `QuantumChannel` consume a `PauliStabilizer` or `StabilizerFrame` natively, without forcing the caller to materialize via `ps["State"]` (which costs `O(2ⁿ)`). Source: [HybridInterop.m](../../../QuantumFramework/Kernel/Stabilizer/HybridInterop.m).
 
@@ -796,10 +794,10 @@ UpValue on `PauliStabilizer`. Dispatches by the QMO's operator label.
 | Label form | Path | Cost |
 |---|---|---|
 | Pauli string `[+-]?[IXYZ]+` | `ps["M", pauli]` AG fast path | `O(n²)` |
-| `Times[-1, Superscript[X\|Y\|Z\|I, CircleTimes[m]]]` (Phase 7.3) | `"-XXXX…"` then AG fast path | `O(n²)` |
-| `Superscript[X\|Y\|Z\|I, CircleTimes[m]]` (Phase 7.3) | `"XXXX…"` then AG fast path | `O(n²)` |
-| `Times[-1, str]` for Pauli string `str` (Phase 7.3) | `"-" <> str` then AG fast path | `O(n²)` |
-| QMO matrix matches a Pauli string for `n ≤ 4` (Phase 7.4) | `stabilizerPauliFromMatrix`, then AG fast path | `O(4ⁿ)` for detection, `O(n²)` after |
+| `Times[-1, Superscript[X\|Y\|Z\|I, CircleTimes[m]]]` | `"-XXXX…"` then AG fast path | `O(n²)` |
+| `Superscript[X\|Y\|Z\|I, CircleTimes[m]]` | `"XXXX…"` then AG fast path | `O(n²)` |
+| `Times[-1, str]` for Pauli string `str` | `"-" <> str` then AG fast path | `O(n²)` |
+| QMO matrix matches a Pauli string for `n ≤ 4` | `stabilizerPauliFromMatrix`, then AG fast path | `O(4ⁿ)` for detection, `O(n²)` after |
 | Other (e.g. computational basis) | `PauliStabilizer::nonpaulibasis` info, fall back to `PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]` | dense |
 
 ```wolfram
@@ -808,14 +806,14 @@ QuantumMeasurementOperator["XX", {1, 2}][psBell]
 (* <|0 -> ...|>  -- routed through ps["M", "XX"], no fallback *)
 
 QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]], {1, 2}][psBell]
-(* Phase 7.4 matrix-iteration: detects "XZ", routes through fast path *)
+(* Matrix-iteration: detects "XZ", routes through fast path *)
 ```
 
-The Phase 7.4 cap is `Wolfram``QuantumFramework``PackageScope``$stabilizerPauliMatrixSearchMaxQubits` (default 4); override via `Block`.
+The matrix-iteration cap is `Wolfram``QuantumFramework``PackageScope``$stabilizerPauliMatrixSearchMaxQubits` (default 4); override via `Block`.
 
 ## `qmo[sf_StabilizerFrame]`
 
-UpValue on `StabilizerFrame`. Currently always materializes the frame (`sf["State"]`) and applies the QMO on the materialized state. Frame-native fast path is [Phase 7.5 deferred](roadmap.md).
+UpValue on `StabilizerFrame`. Currently always materializes the frame (`sf["State"]`) and applies the QMO on the materialized state. A frame-native fast path is on [roadmap.md](roadmap.md).
 
 ## `qc[ps_PauliStabilizer]`
 
@@ -846,10 +844,10 @@ Same fallback as `qmo[sf]` — currently materializes; deferred to a frame-nativ
 | Symbol | Role |
 |---|---|
 | `stabilizerPauliLabelFromQMO[qmo]` | Map a QMO's operator label to a Pauli string (with optional `-` prefix) or `Missing[…]`. Implements the four label-form detectors + the matrix-iteration fallback. |
-| `stabilizerPauliFromMatrix[mat, n]` | Phase 7.4 matrix-iteration detector. Iterates `Tuples[{"I","X","Y","Z"}, n]` against `mat` and returns the first Pauli string match (with sign), or `Missing["TooManyQubits"]` if `n > $stabilizerPauliMatrixSearchMaxQubits`. |
+| `stabilizerPauliFromMatrix[mat, n]` | Matrix-iteration detector. Iterates `Tuples[{"I","X","Y","Z"}, n]` against `mat` and returns the first Pauli string match (with sign), or `Missing["TooManyQubits"]` if `n > $stabilizerPauliMatrixSearchMaxQubits`. |
 | `stabilizerPauliMatrixFromString[str]` | Internal helper: build the `2ⁿ × 2ⁿ` matrix for a (signed) Pauli string, handling the n=1 single-qubit case. |
 | `stabilizerCliffordChannelMixture[qc]` | Map a `QuantumChannel` Label (e.g. `"BitFlip"[p]`) to a list of `{prob, paulistring, qubit}` triples, or `Missing["MultiQubitChannel"\|"NotClifford"]`. |
-| `$stabilizerPauliMatrixSearchMaxQubits` | Cap on Phase 7.4 matrix iteration. Default 4 (= 512 candidates × 4ⁿ size). User-tunable via `Block`. |
+| `$stabilizerPauliMatrixSearchMaxQubits` | Cap on matrix iteration. Default 4 (= 512 candidates × 4ⁿ size). User-tunable via `Block`. |
 
 ---
 
@@ -906,7 +904,7 @@ ps["M", q];                  (* Z basis: <|0 -> ps0, 1 -> ps1|> *)
 ps["M", "XZZXI"];            (* arbitrary Pauli string *)
 ps["M", {1, 2, 3}];          (* multi-qubit *)
 
-(* Symbolic measurement (Phase 3) *)
+(* Symbolic measurement *)
 psSym = ps["SymbolicMeasure", q];
 ps0 = psSym["SubstituteOutcomes", \[FormalS][1] -> 0];
 samples = psSym["SampleOutcomes", 100];
@@ -920,14 +918,14 @@ gs = GraphState[Graph[Range[5], …]];
 gs["Stabilizers"]; gs["PauliStabilizer"];
 LocalComplement[gs, vertex];
 
-(* Clifford channel (Phase 8) *)
+(* Clifford channel *)
 ccI = CliffordChannel["Identity", n];
 ccS = CliffordChannel[<|"UA" -> …, "UB" -> …, "c" -> …,
                         "InputQubits" -> 1, "OutputQubits" -> 1|>];
 ccI[ccS];                    (* compose *)
 ccS[ps];                     (* state evolution *)
 
-(* Hybrid interop (Phase 7) *)
+(* Hybrid interop *)
 QuantumMeasurementOperator["ZZ", {1, 2}][ps];                  (* AG fast path *)
 QuantumChannel["BitFlip"[p], {1}][ps];                         (* tableau-mixture *)
 
@@ -948,7 +946,7 @@ Wolfram`QuantumFramework`PackageScope`$stabilizerPauliMatrixSearchMaxQubits  (* 
 | AndBri05 | Anders, Briegel, "Fast simulation of stabilizer circuits using a graph-state representation" (arxiv:quant-ph/0504117) | GraphState, LocalComplement |
 | FangYing23 | Fang, Ying, "SymPhase: symbolic phase representation for stabilizer simulation" (arxiv:2311.03906) | SymbolicMeasure / SubstituteOutcomes / SampleOutcomes |
 | GarMar15 | García, Markov, "Simulation of quantum circuits via stabilizer frames" (arxiv:1712.03554) | StabilizerFrame |
-| GarMarCro12 | García, Markov, Cross, "Efficient inner-product algorithm for stabilizer states" (arxiv:1210.6646) | InnerProduct (closed-form deferred to ROADMAP §A.1) |
+| GarMarCro12 | García, Markov, Cross, "Efficient inner-product algorithm for stabilizer states" (arxiv:1210.6646) | InnerProduct (closed-form `O(n³)`) |
 | KoeSmo14 | Koenig, Smolin, "How to efficiently select an arbitrary Clifford group element" (arxiv:1406.2170) | RandomClifford (Mallows sampler) |
 | Yashin25 | Yashin, "Choi-tableau formalism for Clifford channels" (arxiv:2504.14101) | CliffordChannel (composition + phase tracking) |
 | Got97 | Gottesman, "Stabilizer codes and quantum error correction" (PhD thesis) | 5-qubit code |

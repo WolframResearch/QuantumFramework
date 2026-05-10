@@ -7,7 +7,7 @@ PackageScope[sampleOutcomes]
 
 
 (* ============================================================================ *)
-(* Phase 3 \[Dash] symbolic measurement outcomes (FangYing23 SymPhase).         *)
+(* Symbolic measurement outcomes (FangYing23 SymPhase).                         *)
 (*                                                                              *)
 (* The standard `ps["M", q]` returns an Association of conditional outcomes,    *)
 (* requiring the user to RandomChoice for an actual sample and re-traverse the  *)
@@ -16,11 +16,10 @@ PackageScope[sampleOutcomes]
 (* representing un-resolved random outcomes. Sampling then substitutes those    *)
 (* symbols with random 0/1 values (one matrix-multiply over many samples).      *)
 (*                                                                              *)
-(* Phase 6 (2026-05-06): demoted from top-level public symbols to method-grade  *)
-(* operations on PauliStabilizer:                                               *)
-(*   ps["SymbolicMeasure", q]   <-- was symbolicMeasure[ps, q]                *)
-(*   ps["SubstituteOutcomes", rules] <-- was substituteOutcomes[ps, rules]      *)
-(*   ps["SampleOutcomes", n]    <-- was sampleOutcomes[ps, n]                   *)
+(* Public surface (method-grade on PauliStabilizer):                            *)
+(*   ps["SymbolicMeasure", q]                                                   *)
+(*   ps["SubstituteOutcomes", rules]                                            *)
+(*   ps["SampleOutcomes", n]                                                    *)
 (* The internal helpers below are PackageScope only; method dispatch lives in   *)
 (* Stabilizer/Properties.m.                                                     *)
 (*                                                                              *)
@@ -53,34 +52,24 @@ freshOutcome[] := \[FormalS][++$StabilizerSymbolCounter]
 (* For deterministic measurements (no anticommuting stabilizer), returns the    *)
 (* PauliStabilizer with a concrete 0/1 outcome (no fresh symbol).               *)
 (*                                                                              *)
-(* PHASE 3 LIMITATION (TODO: address in Phase 4 via StabilizerFrame):           *)
+(* LIMITATION:                                                                  *)
 (* When a deterministic measurement is performed AFTER a prior symbolic         *)
 (* measurement, the deterministic outcome polynomial (e.g. m2 = s_1 for Bell    *)
-(* ZZ correlation) is computed correctly by the AG algorithm but is NOT        *)
+(* ZZ correlation) is computed correctly by the AG algorithm but is NOT         *)
 (* explicitly stamped into the post-state's signs. The physics is preserved     *)
 (* (the post-state is the right quantum state), but `SampleOutcomes` cannot     *)
 (* directly recover the deterministic outcome from the stabilizer signs alone   *)
 (* -- the correlation is "implicit" in the unrewritten stabilizer rows.         *)
 (* For workflows that need explicit outcome correlation, use `ps["M", q]`       *)
-(* (Association branching) until Phase 4 introduces StabilizerFrame.            *)
+(* (Association branching) or build a StabilizerFrame.                          *)
 (* ============================================================================ *)
 
-(* A.4 (2026-05-07): track deterministic-outcome polynomials.                 *)
-(*                                                                              *)
-(* Previously a deterministic symbolic measurement returned the post-state     *)
-(* with no record of the outcome polynomial. Bell ZZ correlation: after        *)
-(* SymbolicMeasure on qubit 1 (which allocates \[FormalS][1] for the random   *)
-(* outcome), SymbolicMeasure on qubit 2 was deterministic with outcome        *)
-(* polynomial \[FormalS][1] (i.e. m_2 = m_1) -- but this polynomial was       *)
-(* dropped, so SampleOutcomes drew m_2 independently rather than mirroring   *)
-(* m_1.                                                                         *)
-(*                                                                              *)
-(* Fix: an "Outcomes" key in the PauliStabilizer association records          *)
-(* {fresh_symbol -> polynomial_in_prior_symbols} for each deterministic       *)
-(* measurement whose outcome involves prior symbols. The non-deterministic    *)
-(* case forwards the existing "Outcomes" map. substituteOutcomes and          *)
-(* sampleOutcomes apply the Outcomes map iteratively after user / random     *)
-(* rules so that derived outcomes resolve correctly.                           *)
+(* Deterministic-outcome polynomials are tracked via an "Outcomes" key in the  *)
+(* PauliStabilizer association: {fresh_symbol -> polynomial_in_prior_symbols}  *)
+(* for each deterministic measurement whose outcome involves prior symbols.   *)
+(* substituteOutcomes / sampleOutcomes apply this map iteratively after user  *)
+(* / random rules so derived outcomes (e.g. Bell ZZ correlation m_2 = m_1)   *)
+(* resolve correctly.                                                          *)
 
 symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, a_Integer] := Module[{
     result, prevOutcomes
@@ -135,9 +124,9 @@ symbolicMeasure[ps_PauliStabilizer ? PauliStabilizerQ, qudits : {___Integer}] :=
 (* concrete 0/1 values, then reduce signs back to {-1, 1} via Mod 2.            *)
 (* ============================================================================ *)
 
-(* A.4 (2026-05-07): apply user rules first, then iteratively close under the *)
-(* "Outcomes" map (deterministic-outcome polynomials) until a fixed point so  *)
-(* derived outcomes resolve correctly (e.g. Bell m_2 = m_1).                   *)
+(* Apply user rules first, then iteratively close under the "Outcomes" map    *)
+(* (deterministic-outcome polynomials) until a fixed point so derived         *)
+(* outcomes resolve correctly (e.g. Bell m_2 = m_1).                           *)
 substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{
     phase, outcomesMap, allRules, fixed
 },
@@ -157,9 +146,9 @@ substituteOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, rules_] := Module[{
 (* Returns a list of n PauliStabilizer objects, each with concrete signs.       *)
 (* ============================================================================ *)
 
-(* A.4 (2026-05-07): only sample the FREE symbols (those appearing in the    *)
-(* phase that are not derived via the Outcomes map). substituteOutcomes      *)
-(* propagates the derived outcomes after random substitution.                 *)
+(* Only sample the FREE symbols (those appearing in the phase that are not   *)
+(* derived via the Outcomes map). substituteOutcomes propagates the derived  *)
+(* outcomes after random substitution.                                         *)
 sampleOutcomes[ps_PauliStabilizer ? PauliStabilizerQ, n_Integer ? Positive] := Module[{
     outcomesMap, derivedSyms, allSyms, freeSyms
 },

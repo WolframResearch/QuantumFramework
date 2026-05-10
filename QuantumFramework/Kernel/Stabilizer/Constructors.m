@@ -5,18 +5,13 @@ PackageScope[FromFullTableau]
 
 
 (* ============================================================================ *)
-(* Constructors: from QuantumState (4^n tomography)                             *)
-(* ----------------------------------------------------------------------------*)
-(* Phase 5c rewrite (was: ResourceFunction["RowSpace"] of <P>*encoding(P), then *)
-(* dual tomography in X-basis for destabilizers). The old path canonicalized   *)
-(* the row space and dropped generator signs -- |1> roundtripped to |0>,       *)
-(* Bell phi+ to phi-, etc.                                                     *)
+(* Constructors: from QuantumState (4^n tomography).                            *)
 (*                                                                              *)
-(* The new path computes <psi|P|psi> for every Pauli P (4^n tomography), keeps *)
-(* the 2^n Paulis with |<P>| ~= 1 as the stabilizer group with their signs,    *)
-(* picks n linearly-independent generators by greedy F_2 rank, then extends    *)
-(* to a 2n-dim symplectic basis to obtain destabilizers that satisfy the AG    *)
-(* commutation pattern. Cost is still O(4^n) -- practical for n <= ~8.         *)
+(* Compute <psi|P|psi> for every Pauli P (4^n tomography), keep the 2^n Paulis *)
+(* with |<P>| ~= 1 as the stabilizer group with their signs, pick n linearly-  *)
+(* independent generators by greedy F_2 rank, then extend to a 2n-dim          *)
+(* symplectic basis to obtain destabilizers that satisfy the AG commutation    *)
+(* pattern. Cost is O(4^n) -- practical for n <= ~8.                            *)
 (* ============================================================================ *)
 
 (* Symplectic form J over F_2 used by the destabilizer search. *)
@@ -108,9 +103,9 @@ PauliStabilizer[qs_QuantumState] := Enclose @ Module[
     stabBits = encodings[[genIdx]];
     stabSigns = signs[[genIdx]];
 
-    (* A.10 (2026-05-07): canonicalize generator order to match the integer-  *)
-    (* constructor convention PauliStabilizer[n] = {Z_1, Z_2, ..., Z_n}.     *)
-    (* Sort by FirstPosition[row, 1] ascending (= row whose active bit is at *)
+    (* Canonicalize generator order to match the integer-constructor          *)
+    (* convention PauliStabilizer[n] = {Z_1, Z_2, ..., Z_n}.                  *)
+    (* Sort by FirstPosition[row, 1] ascending (row whose active bit is at   *)
     (* the lowest-index qubit comes first).                                   *)
     With[{order = Ordering[
         FirstPosition[#, 1, {2 n + 1}] & /@ stabBits
@@ -166,9 +161,9 @@ FromFullTableau[t_] := PauliStabilizer[<|
 |>]
 
 
-(* Phase 5c: capture the global phase the AG decomposition drops. The tableau   *)
-(* is invariant under U -> e^{i alpha} U, so for Y = -i X Z the AG-recovered   *)
-(* circuit Z@X equals i*Y; we record -i as "GlobalPhase" so that the inverse   *)
+(* Capture the global phase the AG decomposition drops. The tableau is         *)
+(* invariant under U -> e^{i alpha} U, so for Y = -i X Z the AG-recovered     *)
+(* circuit Z@X equals i*Y; we record -i as "GlobalPhase" so that the inverse  *)
 (* path ps["QuantumOperator"] returns Y exactly.                                *)
 PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; Sort[qo["OutputOrder"]] == Sort[qo["InputOrder"]] :=
 Enclose @ Module[{max, basePS, baseAssoc, m1, m2, anchor, phase},

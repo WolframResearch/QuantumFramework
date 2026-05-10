@@ -21,9 +21,8 @@ phaseLookup := phaseLookup = SparseArray[
 
 (* ============================================================================ *)
 (* Composition: left @ right -- apply `left` after `right`.                     *)
-(* Performance: O(n^3) (matrix multiply mod 2). No bit-packed SIMD path         *)
-(* (Phase 5+ may add an opt-in path; per synthesis \[Section]9, Wolfram does    *)
-(*  NOT compete with Stim on raw qubit count).                                  *)
+(* Performance: O(n^3) (matrix multiply mod 2). No bit-packed SIMD path; this  *)
+(* simulator is not intended to compete with Stim on raw qubit count.          *)
 (* ============================================================================ *)
 
 left_PauliStabilizer[right_PauliStabilizer] := Enclose @ Block[{

@@ -8,13 +8,13 @@ Package["Wolfram`QuantumFramework`"]
 (* \[Section]3 (pedagogical derivation), PatGuh26 \[Section]3.3 (Karnaugh-map  *)
 (* derivation).                                                                 *)
 (*                                                                              *)
-(* GlobalPhase note (Phase 5c, ROADMAP \[Section]A.9): every rule below builds *)
-(* a fresh association without forwarding "GlobalPhase". This is intentional.   *)
-(* The phase factor a Clifford gate U picks up when applied to a state          *)
-(* depends not just on U but on the input state's tableau (e.g., Z\[VerticalSeparator]0\[RightAngleBracket] = \[VerticalSeparator]0\[RightAngleBracket] vs   *)
-(* Z\[VerticalSeparator]1\[RightAngleBracket] = -\[VerticalSeparator]1\[RightAngleBracket]; same Z gate, different phase). Recovering the new       *)
-(* GlobalPhase exactly requires materializing the state vector at every gate   *)
-(* update, which is O(2^n) and defeats the AG complexity advantage.            *)
+(* GlobalPhase contract: every rule below builds a fresh association without   *)
+(* forwarding "GlobalPhase". This is intentional. The phase factor a Clifford  *)
+(* gate U picks up depends not just on U but on the input state's tableau     *)
+(* (e.g., Z\[VerticalSeparator]0\[RightAngleBracket] = \[VerticalSeparator]0\[RightAngleBracket] vs Z\[VerticalSeparator]1\[RightAngleBracket] = -\[VerticalSeparator]1\[RightAngleBracket]; same Z gate, different    *)
+(* phase). Recovering the new GlobalPhase exactly requires materializing the   *)
+(* state vector at every gate update, which is O(2^n) and defeats the AG      *)
+(* complexity advantage.                                                        *)
 (*                                                                              *)
 (* Contract: PauliStabilizer[qs][...gates...]["State"] is correct *up to a     *)
 (* global phase*, not exactly. For exact equality, re-run the constructor on   *)
@@ -105,15 +105,11 @@ ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
 
 PauliStabilizer::singular = "Cannot compute Dagger: symplectic matrix is singular mod 2 (this happens when the input PauliStabilizer was built from a stabilizer-only list whose Reverse-padded destabilizers coincide with the stabilizer rows). Use a circuit-built fixture or supply explicit destabilizers."
 
-(* A.3 (2026-05-07): make Dagger robust.                                       *)
-(* Previously used `Signs -> ps["Signs"]` for the inner inverse-matrix PS,    *)
-(* which propagated the input's phase asymmetry into the composition step.   *)
-(* For string-list-built fixtures (not AG-canonical), this led to cascading  *)
-(* Extract errors on Dagger@Dagger and to sign drift. Two changes:           *)
-(*   (1) use all-+1 signs on the inner PS so the composition's phase term is *)
-(*       well-defined and involutive on the matrix component for AG-canonical*)
-(*       inputs.                                                              *)
-(*   (2) detect a singular symplectic matrix (Det == 0 mod 2) and emit       *)
+(* Notes on Dagger:                                                            *)
+(*   (1) the inner inverse-matrix PS uses all-+1 signs so the composition's   *)
+(*       phase term is well-defined and involutive on the matrix component   *)
+(*       for AG-canonical inputs.                                              *)
+(*   (2) a singular symplectic matrix (Det == 0 mod 2) emits                  *)
 (*       PauliStabilizer::singular with $Failed instead of cascading errors.  *)
 ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat},
     n = ps["GeneratorCount"];
@@ -147,9 +143,9 @@ ps_PauliStabilizer["PadLeft", n_]  := QuantumTensorProduct[PauliStabilizer[Max[n
 
 (* ============================================================================ *)
 (* Non-Clifford boundary: P[\[Theta]] / T / T^\[Dagger]                         *)
-(* (Phase 4: returns a `StabilizerFrame` (GarMar15 \[Section]3) that closes     *)
-(*  under further Clifford updates. The legacy `Plus` return is preserved for   *)
-(*  one release behind OptionValue["LegacyPRule" -> True].)                     *)
+(* Returns a `StabilizerFrame` (GarMar15 \[Section]3) that closes under further *)
+(* Clifford updates. The legacy `Plus` return is preserved for one release     *)
+(* behind OptionValue["LegacyPRule" -> True].                                   *)
 (* ============================================================================ *)
 
 PauliStabilizer::tdeprecated = "ps[\"P\"[\[Theta]], j], ps[\"T\", j], and ps[SuperDagger[\"T\"], j] now return a StabilizerFrame (closes under further Clifford gates) instead of a top-level Plus. Pattern-matching code that relied on Head -> Plus needs updating."

@@ -7,7 +7,7 @@ PackageScope[GraphStateQ]
 
 
 (* ============================================================================ *)
-(* Phase 5 \[Dash] Graph-state representation (Anders & Briegel 2005).          *)
+(* Graph-state representation (Anders & Briegel 2005).                          *)
 (*                                                                              *)
 (* Every stabilizer state is local-Clifford-equivalent to a graph state         *)
 (* (AndBri05 \[Section]2; cite van den Nest, Dehaene, De Moor 2004).            *)
@@ -19,8 +19,8 @@ PackageScope[GraphStateQ]
 (*                                                                              *)
 (* The VOPs are integer indices into the 24-element single-qubit Clifford       *)
 (* group; index 0 = identity, others enumerated per AndBri05 \[Section]2        *)
-(* footnote (the "And05" reference). For Phase 5 v1, only index 0 (identity)    *)
-(* is supported; richer VOPs deferred (synthesis \[Section]2.2).                *)
+(* footnote. Currently only index 0 (identity) is supported; richer VOPs are    *)
+(* on the roadmap.                                                              *)
 (* ============================================================================ *)
 
 
@@ -52,12 +52,12 @@ GraphState[g_Graph] := GraphState[<|
 
 
 (* GraphState::nongraph emitted when the input PauliStabilizer is not in     *)
-(* graph-state form. Phase 5 v1 only handles graph-form stabilizers (X_i Z_{N(i)}). *)
+(* graph-state form. Only graph-form stabilizers (X_i Z_{N(i)}) are handled. *)
 GraphState::nongraph = "PauliStabilizer `1` is not in graph-state form (each stabilizer must have X at exactly one position and Z elsewhere). Use a local-Clifford conversion (AndBri05 Lemma 1) before calling GraphState."
 
-(* From a PauliStabilizer: build the canonical graph state for a "graph-form"
-   stabilizer state. A.13 (2026-05-07): emit ::nongraph and return $Failed when
-   the input is not graph-form (previously returned a silent edgeless graph). *)
+(* From a PauliStabilizer: build the canonical graph state for a "graph-form" *)
+(* stabilizer state. Emits ::nongraph and returns $Failed when the input is  *)
+(* not graph-form.                                                            *)
 GraphState[ps_PauliStabilizer ? PauliStabilizerQ] := Module[{n, stabs, charSets, isGraphForm, edges, g},
     n = ps["Qubits"];
     stabs = ps["Stabilizers"];
@@ -138,8 +138,8 @@ gs_GraphState["PauliStabilizer"] := PauliStabilizer @ gs["Stabilizers"]
 (* a known local unitary U \[Proportional] sqrt(K_G^(v)), captured by VOP       *)
 (* updates per Eq (8) of AndBri05.                                              *)
 (*                                                                              *)
-(* Phase 5 v1: returns the new Graph (with edges toggled) but does not update   *)
-(* VOPs. For VOP-tracked LC, defer to a richer Phase 5 follow-up.               *)
+(* Currently returns the new Graph (with edges toggled) but does not update    *)
+(* VOPs. VOP-tracked LC is on the roadmap.                                     *)
 (* ============================================================================ *)
 
 LocalComplement[g_Graph, v_] := Module[{neighbors, neighborPairs},
@@ -159,7 +159,7 @@ LocalComplement[g_Graph, v_] := Module[{neighbors, neighborPairs},
 LocalComplement[gs_GraphState, v_] :=
     GraphState[<|
         "Graph" -> LocalComplement[gs["Graph"], v],
-        "VOPs" -> gs["VOPs"]    (* TODO Phase 5+: track VOP updates per AndBri05 Eq 8 *)
+        "VOPs" -> gs["VOPs"]    (* TODO: track VOP updates per AndBri05 Eq 8 *)
     |>]
 
 
