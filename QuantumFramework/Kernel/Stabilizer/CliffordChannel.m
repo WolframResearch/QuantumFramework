@@ -528,3 +528,67 @@ cliffordChannelToPauliStabilizer[cc_CliffordChannel] := Module[{
 
     PauliStabilizer[stabStrings]
 ]
+
+
+(* ============================================================================ *)
+(* Formatting: summary box                                                      *)
+(*                                                                              *)
+(* Decode each tableau row [u_A | u_B | c] to a pretty Pauli-superoperator      *)
+(* representation. Mirror the script-letter icon convention used by the         *)
+(* sibling Stabilizer heads (PauliStabilizer, StabilizerFrame, GraphState).     *)
+(* ============================================================================ *)
+
+cliffordChannelPauliRow[row_, n_Integer] := If[n == 0,
+    "\[CenterDot]",
+    StringJoin @@ Table[
+        Replace[{row[[q]], row[[n + q]]},
+            {{0, 0} -> "I", {1, 0} -> "X", {1, 1} -> "Y", {0, 1} -> "Z"}],
+        {q, n}
+    ]
+]
+
+cliffordChannelDisplayRow[uARow_, uBRow_, cBit_, nA_Integer, nB_Integer] := Row[{
+    If[cBit == 0, "+ ", "\[Minus] "],
+    cliffordChannelPauliRow[uARow, nA],
+    " \[RightArrow] ",
+    cliffordChannelPauliRow[uBRow, nB]
+}]
+
+
+MakeBoxes[cc : CliffordChannel[data_Association] ? CliffordChannelQ, form_] ^:= With[{
+    nA = data["InputQubits"],
+    nB = data["OutputQubits"],
+    k = Length[data["c"]],
+    source = Lookup[data, "Source", Missing[]]
+},
+    BoxForm`ArrangeSummaryBox["CliffordChannel",
+        cc,
+        Tooltip[Framed["\[ScriptCapitalC]"],
+            If[MissingQ[source], "Clifford channel", "Source: " <> ToString[source]]],
+        Join[
+            {{BoxForm`SummaryItem[{"Qubits: ", Row[{nA, "\[RightArrow]", nB}]}]}},
+            {{BoxForm`SummaryItem[{"Tableau rows: ", k}]}},
+            If[! MissingQ[source] && source =!= "Composition",
+                {{BoxForm`SummaryItem[{"Source: ", source}]}},
+                {}
+            ]
+        ],
+        If[k <= 32,
+            With[{rowStrs = Table[
+                cliffordChannelDisplayRow[
+                    If[data["UA"] === {}, {}, data["UA"][[r]]],
+                    data["UB"][[r]],
+                    data["c"][[r]],
+                    nA, nB
+                ],
+                {r, Min[k, 8]}
+            ]},
+                {{BoxForm`SummaryItem[{"Tableau: ",
+                    Column[If[k > 8, Append[rowStrs, "\[VerticalEllipsis]"], rowStrs]]
+                }]}}
+            ],
+            {{BoxForm`SummaryItem[{"Tableau: ", Row[{k, " rows (preview suppressed)"}]}]}}
+        ],
+        form
+    ]
+]

@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     18919,        522]
-NotebookOptionsPosition[     13053,        396]
-NotebookOutlinePosition[     13840,        422]
-CellTagsIndexPosition[     13761,        417]
+NotebookDataLength[     82032,       2097]
+NotebookOptionsPosition[     64613,       1745]
+NotebookOutlinePosition[     65401,       1771]
+CellTagsIndexPosition[     65321,       1766]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -21,53 +21,235 @@ Notebook[{
 
 Cell[CellGroupData[{
 Cell["StabilizerStateQ", "ObjectName",
- CellID->1250975830,ExpressionUUID->"55139384-20b6-4659-ab21-e14bf1b29fe8"],
+ CellID->304559058,ExpressionUUID->"dd07f376-04f4-4c23-95ac-1b9f5414cef2"],
 
 Cell[TextData[{
- Cell["   ", "ModInfo",ExpressionUUID->"bbc3afe0-2dfe-49db-a876-0a098f0e3903"],
+ Cell["   ", "ModInfo",ExpressionUUID->"84f386dc-0edf-4387-99bc-aa828b2d1dc7"],
  Cell[BoxData[
   RowBox[{
    ButtonBox["StabilizerStateQ",
     BaseStyle->"Link",
-    ButtonData->"paclet:WolframQuantumFramework/ref/StabilizerStateQ"], "[", 
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"], "[", 
+   
    StyleBox["expr", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
-  "99b82849-6c29-4cca-af6c-73af2b78077e"],
+  "18331929-7da8-433d-81a5-5302ad4aa31c"],
  "\[LineSeparator]returns ",
  Cell[BoxData[
-  ButtonBox["True",
-   BaseStyle->"Link"]], "InlineFormula",ExpressionUUID->
-  "54ceec4a-dd5a-4487-bd11-989d2ca57ded"],
+ "True"], "InlineFormula",ExpressionUUID->
+  "d9af3c5d-f090-41c0-975a-d97ff05228ac"],
  " if ",
  Cell[BoxData[
-  StyleBox["expr", "TI"]], "InlineFormula",ExpressionUUID->
-  "39709dfd-1c55-4fe1-b157-33eb08302e33"],
- " represents an n-qubit stabilizer state. Accepts a ",
+  FormBox[
+   StyleBox["expr", "TI"], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "063d3066-0213-4bd4-92bc-8500c0b6c559"],
+ " is a structurally valid stabilizer-state representation (a ",
  Cell[BoxData[
   ButtonBox["PauliStabilizer",
    BaseStyle->"Link",
    ButtonData->"paclet:Wolfram/QuantumFramework/ref/PauliStabilizer"]], 
-  "InlineFormula",ExpressionUUID->"99b0ba45-13b5-46ae-bc61-1e83314d9a0a"],
- " satisfying the structural predicate,or a single-component ",
+  "InlineFormula",ExpressionUUID->"b3c84bd6-1b24-4837-a67d-ac9969e62156"],
+ " or a single-component ",
  Cell[BoxData[
   ButtonBox["StabilizerFrame",
    BaseStyle->"Link",
    ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerFrame"]], 
-  "InlineFormula",ExpressionUUID->"1ac6abd5-7a5b-44db-bf1c-971796c82561"],
- ". Use ",
+  "InlineFormula",ExpressionUUID->"729ceaea-8417-4284-b0ad-15d99ae2974a"],
+ "), and ",
+ Cell[BoxData[
+ "False"], "InlineFormula",ExpressionUUID->
+  "34bf9984-2634-4ed8-84b8-d971ce1da89a"],
+ " otherwise."
+}], "Usage",
+ CellID->284854746,ExpressionUUID->"645fdbe3-3a7c-4d6d-842e-de6c7eeecce3"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"99df4963-7c26-48b6-97e2-d2f20cd48154"],
+ " is a structural predicate: it inspects the head and ",
+ "tableau shape of its argument and does not perform any state-vector ",
+ "tomography or numerical comparison."
+}], "Notes",
+ CellID->256619478,ExpressionUUID->"94e450b1-21f8-480e-88d1-a73ea7fb5f92"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["StabilizerStateQ",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"], "[", 
+   
+   StyleBox["ps", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
+  "ab266ed6-7aff-46cd-9c01-8d3a334bb95c"],
+ " returns ",
+ Cell[BoxData[
+ "True"], "InlineFormula",ExpressionUUID->
+  "c20a5a29-021c-4db5-83a0-a7975a4f48bb"],
+ " when ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["ps", "TI"], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "6b3f57c9-1c7b-46aa-9b9d-23852c36d6fd"],
+ " is a ",
+ Cell[BoxData[
+  ButtonBox["PauliStabilizer",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/PauliStabilizer"]], 
+  "InlineFormula",ExpressionUUID->"52fd09a4-2d14-4fc0-92fa-cefdca65997e"],
+ " with the required ",
+ Cell[BoxData["\"\<Signs\>\""], "InlineFormula",ExpressionUUID->
+  "3dd6eb1c-7e0f-49ca-82cf-758cac1194ef"],
+ " and ",
+ Cell[BoxData["\"\<Tableau\>\""], "InlineFormula",ExpressionUUID->
+  "fe3645b3-c089-4adb-b9a6-ddb5988463b4"],
+ " keys whose dimensions match (length-",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["m", "TI"], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "89f1a671-52ff-4867-b511-235c827dc361"],
+ " sign vector and a ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "\[Times]", 
+    StyleBox["n", "TI"], "\[Times]", 
+    StyleBox["m", "TI"]}], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "4af15047-ceeb-4693-aefc-cc2108fe3c95"],
+ " tableau)."
+}], "Notes",
+ CellID->32417110,ExpressionUUID->"04acb6c2-6c4f-4585-87e1-d2f32555efab"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["StabilizerStateQ",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"], "[", 
+   
+   StyleBox["sf", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
+  "ae40223c-ef23-4078-9e83-a489db4d09c6"],
+ " returns ",
+ Cell[BoxData[
+ "True"], "InlineFormula",ExpressionUUID->
+  "bd3ad81b-fb5d-43f7-b1e2-7d3d359bfbd5"],
+ " when ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["sf", "TI"], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "337f0934-ab14-45c8-9790-af0cc78d6176"],
+ " is a ",
+ Cell[BoxData[
+  ButtonBox["StabilizerFrame",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerFrame"]], 
+  "InlineFormula",ExpressionUUID->"fb7e23b4-f100-4179-b95d-0803f3deaa74"],
+ " whose ",
+ Cell[BoxData["\"\<Length\>\""], "InlineFormula",ExpressionUUID->
+  "48628022-70d5-45a5-a531-474ecffcb095"],
+ " is exactly one (a single-component frame ",
+ "is equivalent to a stabilizer state up to a scalar)."
+}], "Notes",
+ CellID->730089987,ExpressionUUID->"bfd76dce-54cb-40bd-86c4-587b32667131"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"51c6662a-5775-47ff-9396-2784956f8791"],
+ " returns ",
+ Cell[BoxData[
+ "False"], "InlineFormula",ExpressionUUID->
+  "f9a79bc3-08f8-498a-a7bb-1e396510a26d"],
+ " on every other input, ",
+ "including ",
+ Cell[BoxData[
+  ButtonBox["QuantumState",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumState"]], 
+  "InlineFormula",ExpressionUUID->"b5e56fde-5b7a-4203-a548-c30d03f2e4fa"],
+ " expressions. Detecting whether an arbitrary ",
+ Cell[BoxData[
+ "QuantumState"], "InlineFormula",ExpressionUUID->
+  "5fc86762-216a-47ba-9e88-376ed73cd7e2"],
+ " is a stabilizer state requires ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["4", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "84af5372-4f0a-4d84-ba60-9c6610d2bc82"],
+ " Pauli tomography and is exposed separately via ",
  Cell[BoxData[
   RowBox[{
    ButtonBox["PauliStabilizer",
     BaseStyle->"Link",
     ButtonData->"paclet:Wolfram/QuantumFramework/ref/PauliStabilizer"], "[", 
-   StyleBox["qs_QuantumState", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
-  "148321f1-ebe8-4fe2-b28b-1175b6708557"],
- " for explicit 4^n tomography from a state vector."
-}], "Usage",
- CellChangeTimes->{{3.9873675816967707`*^9, 3.9873675823083057`*^9}},
- CellID->1285870680,ExpressionUUID->"1e0862d8-0064-4b22-9a18-726f1c71595d"],
+   StyleBox["qs", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
+  "ef985868-c02f-4ebd-b299-62914e776f75"],
+ ", which returns a ",
+ Cell[BoxData[
+ "PauliStabilizer"], "InlineFormula",ExpressionUUID->
+  "2f1e8bd0-b031-433e-bb21-3a22cf45b29a"],
+ " on success or ",
+ Cell[BoxData[
+ "$Failed"], "InlineFormula",ExpressionUUID->
+  "cd392345-28e9-4f89-b8fb-4f4ee7059239"],
+ " otherwise."
+}], "Notes",
+ CellID->319845756,ExpressionUUID->"828d2cad-4681-4e3b-8896-50359fdb55e8"],
 
-Cell["XXXX", "Notes",
- CellID->1500578999,ExpressionUUID->"1d13a697-219c-4cc5-9586-86c45e1570c6"]
+Cell[TextData[{
+ "A multi-component ",
+ Cell[BoxData[
+ "StabilizerFrame"], "InlineFormula",ExpressionUUID->
+  "3a71f1d5-5ad1-4168-b63a-a5ab2810f8ee"],
+ " (such as the result of applying a non-Clifford ",
+ Cell[BoxData[
+ "T"], "InlineFormula",ExpressionUUID->"e468c835-19bb-4b49-8cff-634cf07c2808"],
+ " gate) is ",
+ Cell[BoxData[
+ "False"], "InlineFormula",ExpressionUUID->
+  "2c9d9cb5-9bf9-4b80-b7a5-15d80336c71c"],
+ " under ",
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"62b32cff-6221-498a-a4bf-33d0974fc38c"],
+ " because it represents a superposition of stabilizer states rather than ",
+ "a stabilizer state itself."
+}], "Notes",
+ CellID->155852549,ExpressionUUID->"e75d2850-9c17-4888-afb5-752ba4fb3a0b"],
+
+Cell[TextData[{
+ "Stabilizer states form a non-generic measure-zero subset of the ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["2", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "1e73db10-55aa-4967-bcc6-be182228187c"],
+ "-dimensional Hilbert space; their cardinality scales ",
+ "as ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", 
+     StyleBox["n", "TI"]], "\[CenterDot]", 
+    RowBox[{
+     UnderoverscriptBox["\[Product]", 
+      RowBox[{
+       StyleBox["k", "TI"], "=", "1"}], 
+      StyleBox["n", "TI"]], 
+     RowBox[{"(", 
+      SuperscriptBox["2", 
+       StyleBox["k", "TI"]], "+", "1", ")"}]}]}], TraditionalForm]], 
+  "InlineFormula",ExpressionUUID->"2308e76f-8edc-4af5-8729-b6a651e03b99"],
+ " (Aaronson-Gottesman 2004). The predicate is therefore a useful guard ",
+ "for fast-path dispatch in functions that accept either tableau or ",
+ "state-vector inputs."
+}], "Notes",
+ CellID->829389816,ExpressionUUID->"b534fca9-3ee1-48ff-9044-b7690435572a"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -83,51 +265,81 @@ Cell[TextData[{
        "Insert links to any related reference (function) pages.", 
         "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "1c806372-4d68-472a-ba05-b10bcd9a13fe"]
+  "6dfae99b-05af-460b-bf5a-62eeee49493d"]
 }], "SeeAlsoSection",
- CellID->183285825,ExpressionUUID->"69e9e52f-6f41-4204-bebd-c2c45a169bbd"],
+ CellID->42385047,ExpressionUUID->"5f594745-1c50-4293-869a-6e1dc3c0bab6"],
 
 Cell[TextData[{
  Cell[BoxData[
-  TagBox[
-   FrameBox["\<\"XXXX\"\>"],
-   "FunctionPlaceholder"]], "InlineSeeAlsoFunction",
+  ButtonBox["PauliStabilizer",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/PauliStabilizer"]], 
+  "InlineSeeAlsoFunction",
   TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
-  "b83eb76f-60f0-4ef3-bedf-6d0b3bda8659"],
+  "82859bf2-54d3-4235-97c2-18f6b4254437"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
  Cell[BoxData[
-  RowBox[{
-  Cell[TextData[StyleBox[
-   " \[FilledVerySmallSquare] ", "InlineSeparator"]],ExpressionUUID->
-    "99d35158-da5f-4acb-b59c-c9ea23f139c5"], 
-   DynamicModuleBox[{$CellContext`nbobj$$ = NotebookObject[
-     FrontEndObject[
-      LinkObject["i7bzb_shm", 209, 9]], 22], $CellContext`cellobj$$ = 
-    CellObject[6753]}, 
-    TemplateBox[{
-      GraphicsBox[{{
-         Thickness[0.06], 
-         StrokeForm[
-          Hue[0.4167, 0.406, 0.502]], 
-         CircleBox[{0, 0}]}, {
-         Thickness[0.06], 
-         StrokeForm[
-          Hue[0.4167, 0.406, 0.502]], 
-         LineBox[{{0, 0.62}, {0, -0.62}}]}, {
-         Thickness[0.06], 
-         StrokeForm[
-          Hue[0.4167, 0.406, 0.502]], 
-         LineBox[{{-0.62, 0}, {0.62, 0}}]}}, 
-       ImagePadding -> {{1., 1.}, {2.4, 1.}}, ImageSize -> 16, 
-       PlotRange -> {{-1.06, 1.06}, {-1.06, 1.06}}, 
-       BaselinePosition -> (Center -> 
-        Center)], $CellContext`nbobj$$, $CellContext`cellobj$$},
-     "InlineListingAddButton"],
-    Initialization:>($CellContext`nbobj$$ = 
-      EvaluationNotebook[]; $CellContext`cellobj$$ = EvaluationCell[])]}]], 
-  "InlineListingAddButton",ExpressionUUID->
-  "7559fd46-846c-4e2b-80c1-6642ced45b35"]
+  ButtonBox["StabilizerFrame",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerFrame"]], 
+  "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "d70b053c-a359-4221-8e24-1e24479a16e6"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["CliffordChannel",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/CliffordChannel"]], 
+  "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "70778a10-ee20-4e24-b98c-e10c7da4588d"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["GraphState",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/GraphState"]], 
+  "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "7a87ea96-edd5-48e0-bdfe-a8d80e42b656"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["LocalComplement",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/LocalComplement"]], 
+  "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "6932a531-fd11-48ba-88b2-63dd871b8920"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["QuantumState",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumState"]], 
+  "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "4d4409f1-03d4-46a3-b31c-6c8369d5b6fa"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["MatrixQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:ref/MatrixQ"]], "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "eb821fb9-e470-4f01-b0f8-06f905527230"],
+ Cell[TextData[StyleBox[" \[FilledVerySmallSquare] ", "InlineSeparator"]],
+  ExpressionUUID->"b7fc3f7a-4e12-4166-a23e-0c065ac37588"],
+ Cell[BoxData[
+  ButtonBox["BooleanQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:ref/BooleanQ"]], "InlineSeeAlsoFunction",
+  TaggingRules->{"PageType" -> "Function"},ExpressionUUID->
+  "20c0b3f5-072a-48e4-8c7d-ec0c82ce6002"]
 }], "SeeAlso",
- CellID->993310977,ExpressionUUID->"8c28bed2-9d9b-43d2-ae06-645481516dee"]
+ CellID->479633546,ExpressionUUID->"02e9747f-b6e8-4f7f-a242-9a3d9dedef64"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -142,21 +354,28 @@ Cell[TextData[{
        Cell["Insert links to related tech notes.", "MoreInfoText"], BaseStyle -> 
        "IFrameBox"]], "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "e75c3bd0-15fc-47f5-986b-47ce6131cddc"]
+  "1bad32f8-0717-4449-925b-9a69575737a7"]
 }], "TechNotesSection",
- CellID->39718661,ExpressionUUID->"88e6be7c-0bae-4d1e-acd7-53cb89eabd64"],
+ CellID->584954980,ExpressionUUID->"62f1a227-7b08-4778-9ea8-2d2cf0253ebd"],
 
 Cell["XXXX", "Tutorials",
- CellID->1831604857,ExpressionUUID->"7d1fd3dd-44a2-4cea-a2b4-a0940519fd83"]
+ CellID->483107987,ExpressionUUID->"0c90db26-d4a9-4bf2-be91-a85902e8cb09"]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
 Cell["Related Guides", "MoreAboutSection",
- CellID->1752235501,ExpressionUUID->"5cd7cea7-1c51-42b0-9aff-341d5174c510"],
+ CellID->722832871,ExpressionUUID->"1ac21997-7dcd-4ea3-8a20-dadc71513e2d"],
 
-Cell["XXXX", "MoreAbout",
- CellID->1378813996,ExpressionUUID->"815ae76b-1a81-48cf-93f7-8215c6f0071f"]
+Cell[TextData[Cell[BoxData[
+ ButtonBox[
+  RowBox[{"Wolfram", " ", "Quantum", " ", "Computation", " ", "Framework"}],
+  BaseStyle->"Link",
+  ButtonData->
+   "paclet:Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework"]\
+], "InlineFormula",ExpressionUUID->"ff73d9f2-14e3-4e8f-83b0-c246982f2d45"]], \
+"MoreAbout",
+ CellID->870642589,ExpressionUUID->"4229f664-882c-4757-af61-882c63da0621"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -172,12 +391,12 @@ Cell[TextData[{
        "Insert links to any related page, including web pages.", 
         "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "f1f9b952-086a-4e0f-b9f0-b26e5443c3f0"]
+  "a373e905-1b0a-4485-8465-7f8e2d0d3e13"]
 }], "RelatedLinksSection",
- CellID->230795995,ExpressionUUID->"a11d2dd5-cb25-42d4-b5cf-51d918693ff8"],
+ CellID->292872097,ExpressionUUID->"c1eb9b0c-be31-40de-b919-ef9d479e0deb"],
 
 Cell["XXXX", "RelatedLinks",
- CellID->632821483,ExpressionUUID->"4a79942b-71ac-4597-ad92-ca34a6b3e2eb"]
+ CellID->478875771,ExpressionUUID->"b583d380-5947-42d3-b6a1-2b6285beba9c"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -194,15 +413,17 @@ Cell[TextData[{
 Needs[\[Ellipsis]].", "MoreInfoText"], BaseStyle -> "IFrameBox"]], 
      "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "e2cbb952-32cb-4cf5-971d-f9174740a9e7"]
+  "ebd56d23-a9db-42aa-baa0-b0fea023e54c"]
 }], "ExamplesInitializationSection",
- CellID->1491644837,ExpressionUUID->"1031afa1-1d47-4607-b286-152385803f97"],
+ CellID->782610730,ExpressionUUID->"9f240af5-22b2-4319-b26c-fb04a2fa28b8"],
 
 Cell[BoxData[
  RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", 
   "]"}]], "ExampleInitialization",
- CellID->350680381,ExpressionUUID->"8ea51dd6-c4c9-4192-a453-b27b67b164cf"]
+ CellID->250653186,ExpressionUUID->"18e1e02c-aaa3-43be-b701-8c6678e767f8"]
 }, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[GridBox[{
@@ -216,7 +437,101 @@ Cell[BoxData[
       ButtonData:>"ExtendedExamples"]}
    }],
   $Line = 0; Null]], "PrimaryExamplesSection",
- CellID->1190036099,ExpressionUUID->"058c799d-4174-40bb-b722-eb9ce1bc354f"],
+ CellID->580626467,ExpressionUUID->"5def6469-1f68-495c-b2d3-1bf63644ded9"],
+
+Cell["Test the empty (1-qubit) stabilizer register:", "ExampleText",
+ CellID->914920450,ExpressionUUID->"48cdc7b1-216d-4934-9f1b-73f37af591d0"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"PauliStabilizer", "[", "]"}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->431528768,ExpressionUUID->"182fd1e9-20c1-43a9-8922-b9bf33dc08d0"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->152841327,ExpressionUUID->"c16101a1-d02f-4790-a224-424df1bbc70b"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->326136997,ExpressionUUID->"0066b561-af0b-4700-bc81-30954ffae925"],
+
+Cell["Test a 3-qubit |000\[RightAngleBracket] register:", "ExampleText",
+ CellID->769459341,ExpressionUUID->"57d60a5c-b0cf-4d13-a777-ceabbf0a8092"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"PauliStabilizer", "[", "3", "]"}], "]"}]], "Input",
+ CellLabel->"In[2]:=",
+ CellID->823141348,ExpressionUUID->"a2c2d944-d871-4a95-82f2-9bf28ca35a10"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[2]=",
+ CellID->586648537,ExpressionUUID->"7963d412-ea8a-4880-8d2b-f4534b33cf21"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->661147381,ExpressionUUID->"0da77989-7142-412d-bfa7-e10d93c38a36"],
+
+Cell["Test a Bell-state stabilizer constructed from Pauli strings:", \
+"ExampleText",
+ CellID->666944493,ExpressionUUID->"4ef888c1-8e50-4d35-aecd-a7ba17aea9d9"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"PauliStabilizer", "[", 
+   RowBox[{"{", 
+    RowBox[{"\"\<XX\>\"", ",", " ", "\"\<ZZ\>\""}], "}"}], "]"}], 
+  "]"}]], "Input",
+ CellLabel->"In[3]:=",
+ CellID->675360451,ExpressionUUID->"eaa5c3f9-41a7-4232-a4a0-0497e10a3e32"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[3]=",
+ CellID->100230999,ExpressionUUID->"5bb8b686-60ae-4492-8f43-23b5a1d95fc4"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->136461217,ExpressionUUID->"7b5e9bb6-be9a-48c1-8846-18f4f34eec7f"],
+
+Cell["\<\
+A QuantumState is not implicitly tomographed; the predicate returns False:\
+\>", "ExampleText",
+ CellID->107626908,ExpressionUUID->"d2602fa9-54c2-4a6c-a642-7dec9c0f8697"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], "]"}]], "Input",
+ CellLabel->"In[4]:=",
+ CellID->455702595,ExpressionUUID->"6f6f19f6-28fb-4e5e-8f70-034b97f5a13f"],
+
+Cell[BoxData["False"], "Output",
+ CellLabel->"Out[4]=",
+ CellID->991757077,ExpressionUUID->"bd29a2a4-fcdd-4d5f-83c7-4428919273e9"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->917656195,ExpressionUUID->"48e13a11-acd3-4787-bab8-6b2c59e56aaa"],
+
+Cell["\<\
+A single-component StabilizerFrame qualifies; a non-state value does not:\
+\>", "ExampleText",
+ CellID->195371597,ExpressionUUID->"4b359cb8-3aa5-498c-8e1a-3dad68026912"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"StabilizerStateQ", "[", 
+    RowBox[{"StabilizerFrame", "[", 
+     RowBox[{"PauliStabilizer", "[", "2", "]"}], "]"}], "]"}], ",", " ", 
+   RowBox[{"StabilizerStateQ", "[", "42", "]"}]}], "}"}]], "Input",
+ CellLabel->"In[5]:=",
+ CellID->879103194,ExpressionUUID->"75780883-a3bf-4ddb-a7bc-22cdff30ce00"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[5]=",
+ CellID->562671291,ExpressionUUID->"3fed0db5-d00d-4649-bf09-cf51891f2682"]
+}, Open  ]],
 
 Cell[CellGroupData[{
 
@@ -230,103 +545,1116 @@ Cell[TextData[{
        Cell["Extended examples in standardized sections.", "MoreInfoText"], 
        BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "0361d41b-bf14-48cd-87d1-3e357bdee109"]
+  "2aaaa475-b962-4642-bfd5-9a00c651c6aa"]
 }], "ExtendedExamplesSection",
  CellTags->"ExtendedExamples",
- CellID->1421511382,ExpressionUUID->"fb66c34f-eecc-4f20-a91c-bc3207e28315"],
+ CellID->856460028,ExpressionUUID->"af1ab76c-2210-453c-b3ba-95c69c7c15e9"],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Scope", "ExampleSection",ExpressionUUID->
-   "db7e4327-902f-4d77-8d99-fa4488c73826"],
+   "45045ba2-9a04-4bd5-96f4-effe257ee6d3"],
   $Line = 0; Null]], "ExampleSection",
- CellID->586224399,ExpressionUUID->"b992e60f-126f-4838-8c41-3fe875de724e"],
+ CellID->526437158,ExpressionUUID->"0ae2ebd4-8be4-45c2-966a-bcf3ccc2fa7b"],
+
+Cell[CellGroupData[{
+
+Cell["PauliStabilizer inputs", "ExampleSubsection",
+ CellID->343679028,ExpressionUUID->"904c320d-86c3-49fe-a83d-f1645896d500"],
+
+Cell["\<\
+Every well-formed PauliStabilizer is recognized regardless of how it was \
+constructed:\
+\>", "ExampleText",
+ CellID->173543759,ExpressionUUID->"8f5c960f-668c-4618-876b-174cc600c87f"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"PauliStabilizer", "[", "]"}], ",", " ", 
+    RowBox[{"PauliStabilizer", "[", "5", "]"}], ",", " ", 
+    RowBox[{"PauliStabilizer", "[", 
+     RowBox[{"{", 
+      RowBox[{"\"\<XX\>\"", ",", " ", "\"\<ZZ\>\""}], "}"}], "]"}], ",", " ", 
+    
+    RowBox[{"PauliStabilizer", "[", "\"\<5QubitCode\>\"", "]"}], ",", " ", 
+    RowBox[{"PauliStabilizer", "[", 
+     RowBox[{"\"\<Random\>\"", ",", " ", "3"}], "]"}]}], "}"}]}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->344619219,ExpressionUUID->"83104e99-bb05-41e5-975d-e31c65cf5e2d"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "True", ",", "True", ",", "True", ",", "True"}], 
+  "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->60759609,ExpressionUUID->"bb6fcc88-8e19-4a4e-b97f-8537148e48e7"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["StabilizerFrame inputs", "ExampleSubsection",
+ CellID->489415006,ExpressionUUID->"7216fdaf-e5a4-48f1-a537-55b5c0b9a28c"],
+
+Cell["\<\
+A single-component frame is recognized as a stabilizer state:\
+\>", "ExampleText",
+ CellID->952336835,ExpressionUUID->"249872a9-a3a8-45f1-a688-b113cf1ba9ab"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"StabilizerFrame", "[", 
+   RowBox[{"PauliStabilizer", "[", "3", "]"}], "]"}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->739227857,ExpressionUUID->"d10bfa06-9f77-4c26-8e83-acbf547f0400"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->357047310,ExpressionUUID->"d91ec3b1-bd9a-4ac3-9270-b6a0e06f4268"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->479225243,ExpressionUUID->"2ef0fe7a-cc7b-4a53-86e2-2002d64c4afe"],
+
+Cell["\<\
+A multi-component frame (e.g. the result of a T gate) is rejected:\
+\>", "ExampleText",
+ CellID->606838166,ExpressionUUID->"a05f3c03-2b15-4d01-92c5-2dc65f45695f"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", "ps", "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"PauliStabilizer", "[", "2", "]"}]}], ";", " ", 
+    RowBox[{"StabilizerStateQ", "[", 
+     RowBox[{"ps", "[", 
+      RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}], "]"}]}]}], "]"}]], "Input",\
+
+ CellLabel->"In[1]:=",
+ CellID->963765333,ExpressionUUID->"98114418-46aa-4c7a-b3b8-6d69aa5a1eef"],
+
+Cell[BoxData["False"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->655247529,ExpressionUUID->"ee1c0ae5-33c7-43c3-ad07-0288de2d7017"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Rejection cases", "ExampleSubsection",
+ CellID->787737781,ExpressionUUID->"2e6d5976-b5bf-489f-aa9f-53feb533c37c"],
+
+Cell["\<\
+QuantumState, plain matrices, and non-state expressions return False:\
+\>", "ExampleText",
+ CellID->240384154,ExpressionUUID->"ff5d4d6b-53fa-41d0-bbb7-3749f8e05d3d"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"QuantumState", "[", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}], ",", 
+    " ", 
+    RowBox[{"IdentityMatrix", "[", "2", "]"}], ",", 
+    " ", "\"\<PauliStabilizer\>\"", ",", " ", "Null"}], "}"}]}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->869116933,ExpressionUUID->"8522dc83-00ea-4c5b-abeb-bc351065ea6b"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"False", ",", "False", ",", "False", ",", "False", ",", "False"}], 
+  "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->708649767,ExpressionUUID->"abe9cbe2-2ec5-4e81-90fb-95fd24821c3a"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Generalizations & Extensions", "ExampleSection",ExpressionUUID->
-   "d36631e8-9121-4f2f-bc3f-3f75d12a4286"],
+   "a26f8a83-3bef-4ccd-80b6-80d636c9adff"],
   $Line = 0; Null]], "ExampleSection",
- CellID->18501557,ExpressionUUID->"82c4e163-acfa-4589-a2b7-c223a6712b76"],
+ CellID->121600773,ExpressionUUID->"ecb05d7d-821c-4181-b12c-8f3c3c35b54f"],
+
+Cell[CellGroupData[{
+
+Cell["Tomographic detection from a QuantumState", "ExampleSubsection",
+ CellID->720772714,ExpressionUUID->"39e60aa7-5e9f-448f-938e-91b68031be11"],
+
+Cell[TextData[{
+ "Tomographic detection from a generic ",
+ Cell[BoxData[
+  ButtonBox["QuantumState",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumState"]], 
+  "InlineFormula",ExpressionUUID->"50212943-1982-4121-bbeb-e5978a7c4bb1"],
+ " is intentionally not done inside ",
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"ce4d399e-124f-42df-8966-1422d718325f"],
+ ". Use the ",
+ Cell[BoxData[
+  ButtonBox["PauliStabilizer",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/PauliStabilizer"]], 
+  "InlineFormula",ExpressionUUID->"29c59fbd-6df9-4e7d-bf5a-814aea94bf87"],
+ " constructor on a QuantumState and check the result:"
+}], "ExampleText",
+ CellID->228142019,ExpressionUUID->"ac086df3-58c9-48b6-ba1e-808744b0c478"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"qs", ",", " ", "ps"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"qs", " ", "=", " ", 
+     RowBox[{"QuantumState", "[", "\"\<GHZ\>\"", "]"}]}], ";", " ", 
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"Quiet", "[", 
+      RowBox[{"PauliStabilizer", "[", "qs", "]"}], "]"}]}], ";", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Head", "[", "ps", "]"}], ",", " ", 
+      RowBox[{"StabilizerStateQ", "[", "ps", "]"}]}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->43114735,ExpressionUUID->"9907bb3d-dbfd-4c2b-b6b2-56d49fae0a78"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"PauliStabilizer", ",", "True"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->258959829,ExpressionUUID->"3e1a3748-1e8b-442a-8290-70750d28b478"]
+}, Open  ]]
+}, Open  ]],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Options", "ExampleSection",ExpressionUUID->
-   "c8de2390-b034-4394-be88-d91a77244be0"],
+   "d1815288-5590-4849-965c-587b97b82625"],
   $Line = 0; Null]], "ExampleSection",
- CellID->1718023331,ExpressionUUID->"eb4e7998-9d87-460f-bdc3-01b1f3d8d9ca"],
+ CellID->391334629,ExpressionUUID->"29316b66-4a70-4a18-8255-304696e577e5"],
 
-Cell[BoxData[
- InterpretationBox[Cell[
-  "XXXX", "ExampleSubsection",ExpressionUUID->
-   "6483b5dd-0e5a-4e22-b472-334a4470eab4"],
-  $Line = 0; Null]], "ExampleSubsection",
- CellID->1900490202,ExpressionUUID->"6d372f36-8e71-40d5-8e2d-53ec68074d17"],
+Cell[CellGroupData[{
 
-Cell[BoxData[
- InterpretationBox[Cell[
-  "XXXX", "ExampleSubsection",ExpressionUUID->
-   "2df1dbec-59a2-4cc1-bd5c-9e5d0e4154bb"],
-  $Line = 0; Null]], "ExampleSubsection",
- CellID->2014543183,ExpressionUUID->"dd12b624-e160-4d32-96c6-fc4c0bc2b911"]
+Cell["No options", "ExampleSubsection",
+ CellID->235341192,ExpressionUUID->"e367937d-7d0f-4440-b058-29139941047b"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"243692f4-773b-4e77-b7e4-a63c09c0b734"],
+ " takes no options."
+}], "ExampleText",
+ CellID->404581489,ExpressionUUID->"dfd6c5a3-a71f-4fd9-917f-2ee5653c250b"]
+}, Open  ]]
 }, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Applications", "ExampleSection",ExpressionUUID->
-   "2a41d8cf-6be6-49d4-977b-b6c5243265e0"],
+   "204c5740-c8cd-4b2c-a3e1-a585ae1d92a7"],
   $Line = 0; Null]], "ExampleSection",
- CellID->1200098079,ExpressionUUID->"da04aeec-9205-4204-8926-7c187718524b"],
+ CellID->191568572,ExpressionUUID->"711e82ce-9ce1-4b69-a4f7-ae11b88ee515"],
+
+Cell[CellGroupData[{
+
+Cell["Filter a mixed list of states", "ExampleSubsection",
+ CellID->89059974,ExpressionUUID->"6702faa1-5fe4-41f7-b57c-cae583026c1b"],
+
+Cell["Select stabilizer-state entries from a heterogeneous list:", \
+"ExampleText",
+ CellID->424984611,ExpressionUUID->"58688a74-a4df-4a26-9c06-3985db0dc19e"],
+
+Cell[BoxData[
+ RowBox[{"Select", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"PauliStabilizer", "[", "2", "]"}], ",", " ", 
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], ",", " ", 
+     RowBox[{"PauliStabilizer", "[", 
+      RowBox[{"{", 
+       RowBox[{"\"\<XY\>\"", ",", " ", "\"\<ZZ\>\""}], "}"}], "]"}], ",", " ",
+      "42", ",", " ", 
+     RowBox[{"StabilizerFrame", "[", 
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "]"}]}], "}"}], ",", " ", 
+   "StabilizerStateQ"}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->184092731,ExpressionUUID->"a673f2bc-c1e4-4aa7-b382-42f7e4f1812c"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   InterpretationBox[
+    RowBox[{
+     TagBox["PauliStabilizer",
+      "SummaryHead"], "[", 
+     DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = 
+      "Ready"}, 
+      TemplateBox[{
+        PaneSelectorBox[{False -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]],
+                 ButtonFunction :> (Typeset`open$$ = True), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalS]\"", StripOnInput -> False], 
+              GridBox[{{
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"\"ZI\"", ",", "\"IZ\""}], "}"}], 
+                  "SummaryItem"]}, {
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"0", "0", "1", "0"}, {"0", "0", "0", "1"}}, 
+                    AutoDelete -> False, 
+                    GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, "Rows" -> {{False}}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                  "SummaryItem"]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}], True -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]],
+                 ButtonFunction :> (Typeset`open$$ = False), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalS]\"", StripOnInput -> False], 
+              GridBox[{{
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"\"ZI\"", ",", "\"IZ\""}], "}"}], 
+                  "SummaryItem"]}, {
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"0", "0", "1", "0"}, {"0", "0", "0", "1"}}, 
+                    AutoDelete -> False, 
+                    GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, "Rows" -> {{False}}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                  "SummaryItem"]}, {
+                 RowBox[{
+                   TagBox["\"Destabilizers: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                    RowBox[{"{", 
+                    RowBox[{"\"XI\"", ",", "\"IX\""}], "}"}], 
+                    "SummaryItem"]}]}, {
+                 RowBox[{
+                   TagBox["\"Tableau: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                    TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}, {"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"1", "0", "0", "0"}, {"0", "1", "0", "0"}, {
+                    "0", "0", "1", "0"}, {"0", "0", "0", "1"}}, AutoDelete -> 
+                    False, GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, 
+                    "RowsIndexed" -> {3 -> True}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                    "SummaryItem"]}]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}]}, 
+         Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+       "SummaryPanel"],
+      DynamicModuleValues:>{}], "]"}],
+    Wolfram`QuantumFramework`PauliStabilizer[<|
+     "Signs" -> {1, 1, 1, 1}, 
+      "Tableau" -> {{{1, 0, 0, 0}, {0, 1, 0, 0}}, {{0, 0, 1, 0}, {0, 0, 0, 
+       1}}}|>],
+    Editable->False,
+    SelectWithContents->True,
+    Selectable->False], ",", 
+   InterpretationBox[
+    RowBox[{
+     TagBox["PauliStabilizer",
+      "SummaryHead"], "[", 
+     DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = 
+      "Ready"}, 
+      TemplateBox[{
+        PaneSelectorBox[{False -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]],
+                 ButtonFunction :> (Typeset`open$$ = True), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalS]\"", StripOnInput -> False], 
+              GridBox[{{
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"\"XY\"", ",", "\"ZZ\""}], "}"}], 
+                  "SummaryItem"]}, {
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"1", "1", "0", "1"}, {"0", "0", "1", "1"}}, 
+                    AutoDelete -> False, 
+                    GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, "Rows" -> {{False}}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                  "SummaryItem"]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}], True -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]],
+                 ButtonFunction :> (Typeset`open$$ = False), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalS]\"", StripOnInput -> False], 
+              GridBox[{{
+                 TagBox[
+                  RowBox[{"{", 
+                    RowBox[{"\"XY\"", ",", "\"ZZ\""}], "}"}], 
+                  "SummaryItem"]}, {
+                 TagBox[
+                  TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"1", "1", "0", "1"}, {"0", "0", "1", "1"}}, 
+                    AutoDelete -> False, 
+                    GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, "Rows" -> {{False}}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                  "SummaryItem"]}, {
+                 RowBox[{
+                   TagBox["\"Destabilizers: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                    RowBox[{"{", 
+                    RowBox[{"\"ZY\"", ",", "\"XX\""}], "}"}], 
+                    "SummaryItem"]}]}, {
+                 RowBox[{
+                   TagBox["\"Tableau: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                    TemplateBox[{
+                    TagBox[
+                    
+                    GridBox[{{"\"\""}, {"\"\""}, {"\"\""}, {"\"\""}}, 
+                    GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                    DefaultBaseStyle -> "Column", 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Column"], 
+                    TagBox[
+                    RowBox[{"(", "\[NoBreak]", 
+                    GridBox[{{
+                    TagBox[
+                    
+                    GridBox[{{"0", "1", "1", "1"}, {"1", "1", "0", "0"}, {
+                    "1", "1", "0", "1"}, {"0", "0", "1", "1"}}, AutoDelete -> 
+                    False, GridBoxDividers -> {
+                    "ColumnsIndexed" -> {3 -> True}, 
+                    "RowsIndexed" -> {3 -> True}}, 
+                    GridBoxItemSize -> {
+                    "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}], 
+                    "Grid"]}}, RowSpacings -> 1, ColumnSpacings -> 1, 
+                    RowAlignments -> Baseline, ColumnAlignments -> Center], 
+                    "\[NoBreak]", ")"}], 
+                    Function[BoxForm`e$, 
+                    MatrixForm[BoxForm`e$]]]}, "RowDefault"], 
+                    "SummaryItem"]}]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}]}, 
+         Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+       "SummaryPanel"],
+      DynamicModuleValues:>{}], "]"}],
+    Wolfram`QuantumFramework`PauliStabilizer[<|
+     "Signs" -> {1, 1, 1, 1}, 
+      "Tableau" -> {{{0, 1, 1, 0}, {1, 1, 1, 0}}, {{1, 0, 0, 1}, {1, 0, 1, 
+       1}}}|>],
+    Editable->False,
+    SelectWithContents->True,
+    Selectable->False], ",", 
+   InterpretationBox[
+    RowBox[{
+     TagBox["StabilizerFrame",
+      "SummaryHead"], "[", 
+     DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = 
+      "Ready"}, 
+      TemplateBox[{
+        PaneSelectorBox[{False -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]],
+                 ButtonFunction :> (Typeset`open$$ = True), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalF]\"", StripOnInput -> False], 
+              GridBox[{{
+                 RowBox[{
+                   TagBox["\"Components: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["1", "SummaryItem"]}]}, {
+                 RowBox[{
+                   TagBox["\"Qubits: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["1", "SummaryItem"]}]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}], True -> GridBox[{{
+              PaneBox[
+               ButtonBox[
+                DynamicBox[
+                 FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]],
+                 ButtonFunction :> (Typeset`open$$ = False), Appearance -> 
+                None, BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+                "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+               Dynamic[{
+                 Automatic, 
+                  3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                   Magnification])}]], 
+              FrameBox["\"\[ScriptCapitalF]\"", StripOnInput -> False], 
+              GridBox[{{
+                 RowBox[{
+                   TagBox["\"Components: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["1", "SummaryItem"]}]}, {
+                 RowBox[{
+                   TagBox["\"Qubits: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["1", "SummaryItem"]}]}, {
+                 RowBox[{
+                   TagBox["\"First coefficient: \"", "SummaryItemAnnotation"],
+                    "\[InvisibleSpace]", 
+                   TagBox["1", "SummaryItem"]}]}}, 
+               GridBoxAlignment -> {
+                "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+               False, GridBoxItemSize -> {
+                "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+               GridBoxSpacings -> {
+                "Columns" -> {{2}}, "Rows" -> {{Automatic}}}, 
+               BaseStyle -> {
+                ShowStringCharacters -> False, NumberMarks -> False, 
+                 PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+            GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+            AutoDelete -> False, 
+            GridBoxItemSize -> {
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+            BaselinePosition -> {1, 1}]}, 
+         Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+       "SummaryPanel"],
+      DynamicModuleValues:>{}], "]"}],
+    Wolfram`QuantumFramework`StabilizerFrame[<|"Components" -> {{1, 
+         Wolfram`QuantumFramework`PauliStabilizer[<|
+          "Signs" -> {1, 1}, "Tableau" -> {{{1, 0}}, {{0, 1}}}|>]}}|>],
+    Editable->False,
+    SelectWithContents->True,
+    Selectable->False]}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->493155827,ExpressionUUID->"bf486ec8-b395-4d1d-90cf-f2d7034c883e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Verify a round-trip QuantumState -> PauliStabilizer", \
+"ExampleSubsection",
+ CellID->395042370,ExpressionUUID->"c3b67c58-cc6c-4c95-896a-defb1a2d1f17"],
+
+Cell["\<\
+Confirm that PauliStabilizer[qs] succeeds by checking the result:\
+\>", "ExampleText",
+ CellID->402038901,ExpressionUUID->"755bbd18-170f-4122-be28-e98ad712c83f"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"qs", ",", " ", "ps"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"qs", " ", "=", " ", 
+     RowBox[{"QuantumState", "[", "\"\<Bell\>\"", "]"}]}], ";", " ", 
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"PauliStabilizer", "[", "qs", "]"}]}], ";", " ", 
+    RowBox[{"StabilizerStateQ", "[", "ps", "]"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->49155168,ExpressionUUID->"30304e13-da18-4e6b-a3e3-321dc282316f"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->229501076,ExpressionUUID->"c126c7c0-756a-424e-baf7-bb2d7b65c7fc"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Properties & Relations", "ExampleSection",ExpressionUUID->
-   "7611f421-dd1e-40ea-8800-fd7a15ba85eb"],
+   "202c0edd-7a0a-428b-9c08-1e1b53a76d7d"],
   $Line = 0; Null]], "ExampleSection",
- CellID->882001129,ExpressionUUID->"b1ed1194-a70c-48ae-9c5c-43eceff9a385"],
+ CellID->545109518,ExpressionUUID->"9ce6395c-0b15-4383-b5ad-c63245cf0cab"],
+
+Cell[CellGroupData[{
+
+Cell["Single-component frame equivalence", "ExampleSubsection",
+ CellID->611658157,ExpressionUUID->"4958decc-876a-448f-94cf-7bfa8dc86a21"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["StabilizerStateQ",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/StabilizerStateQ"]], 
+  "InlineFormula",ExpressionUUID->"7c016750-db68-4a56-b062-76cbac4f16e9"],
+ " agrees on a ",
+ Cell[BoxData[
+ "PauliStabilizer"], "InlineFormula",ExpressionUUID->
+  "0d27c172-bf24-4fde-9bcf-dd71e5bf30ca"],
+ " and its single-component-frame embedding:"
+}], "ExampleText",
+ CellID->152900321,ExpressionUUID->"96b2a2ad-58ff-456f-b867-41d4b625b5b3"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", "ps", "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"PauliStabilizer", "[", 
+      RowBox[{"{", 
+       RowBox[{"\"\<XX\>\"", ",", " ", "\"\<ZZ\>\""}], "}"}], "]"}]}], ";", 
+    " ", 
+    RowBox[{
+     RowBox[{"StabilizerStateQ", "[", "ps", "]"}], " ", "===", " ", 
+     RowBox[{"StabilizerStateQ", "[", 
+      RowBox[{"StabilizerFrame", "[", "ps", "]"}], "]"}]}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->730150165,ExpressionUUID->"2a5c2680-8824-4964-a962-61288d9c820a"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->739878250,ExpressionUUID->"0819ab2e-114f-4c78-9225-60ad18936a44"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["T-gate exits the predicate", "ExampleSubsection",
+ CellID->965800165,ExpressionUUID->"26a1f2e3-eff8-4844-8b3b-c7f0b61ed1c0"],
+
+Cell["\<\
+Applying a T gate promotes a PauliStabilizer to a multi-component frame, so \
+the predicate flips to False:\
+\>", "ExampleText",
+ CellID->227051850,ExpressionUUID->"3306ac8f-9f9e-41e2-a9d2-2f195c8b5f58"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"ps", ",", " ", "after"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"PauliStabilizer", "[", "2", "]"}]}], ";", " ", 
+    RowBox[{"after", " ", "=", " ", 
+     RowBox[{"ps", "[", 
+      RowBox[{"\"\<T\>\"", ",", " ", "1"}], "]"}]}], ";", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"StabilizerStateQ", "[", "ps", "]"}], ",", " ", 
+      RowBox[{"StabilizerStateQ", "[", "after", "]"}]}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->765384274,ExpressionUUID->"ecc107c9-6f97-4880-b2d4-04bf99fe5ab9"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->691928651,ExpressionUUID->"5ea2362e-50f4-4f59-8eb0-13d5cb114537"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Clifford gates preserve the predicate", "ExampleSubsection",
+ CellID->517505003,ExpressionUUID->"0160693e-7919-471c-8b73-9a7e6b1bc91d"],
+
+Cell["\<\
+All Clifford gates on a PauliStabilizer return a PauliStabilizer, so the \
+predicate is preserved:\
+\>", "ExampleText",
+ CellID->424738596,ExpressionUUID->"e456f6f6-1df5-4aab-93e5-b08ab6a94b75"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"ps", ",", " ", "after"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"ps", " ", "=", " ", 
+     RowBox[{"PauliStabilizer", "[", "3", "]"}]}], ";", " ", 
+    RowBox[{"after", " ", "=", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"ps", "[", 
+        RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], "[", 
+       RowBox[{"\"\<CNOT\>\"", ",", " ", "1", ",", " ", "2"}], "]"}], "[", 
+      RowBox[{"\"\<S\>\"", ",", " ", "3"}], "]"}]}], ";", " ", 
+    RowBox[{"StabilizerStateQ", "[", "after", "]"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->383253421,ExpressionUUID->"abf812c9-48e6-4e18-8203-aa9ddee02cb6"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->50637580,ExpressionUUID->"632c2e03-a8ce-434b-a780-63331e60633b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Non-state objects return False", "ExampleSubsection",
+ CellID->828437631,ExpressionUUID->"1cff36a2-d975-4a2f-ae15-52050a0d1eb6"],
+
+Cell["\<\
+Channels, operators, and circuits are not stabilizer states even if they \
+encode Clifford behaviour:\
+\>", "ExampleText",
+ CellID->545713482,ExpressionUUID->"a3638210-60bf-41a6-8809-e21f75e47029"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"CliffordChannel", "[", 
+     RowBox[{"\"\<Identity\>\"", ",", " ", "2"}], "]"}], ",", " ", 
+    RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], ",", " ", 
+    RowBox[{"QuantumCircuitOperator", "[", "\"\<GHZ\>\"", "]"}]}], 
+   "}"}]}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->161357917,ExpressionUUID->"46a17162-edca-40e7-9645-ee4822742bf2"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"False", ",", "False", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->378613687,ExpressionUUID->"a5b74e4a-2c2d-4015-8c1c-36537173b02b"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Possible Issues", "ExampleSection",ExpressionUUID->
-   "eefd5e77-be36-4197-a1fd-e2c0eecb1d7e"],
+   "cf122b4f-d2fa-4b91-8b98-53dd358dc1c7"],
   $Line = 0; Null]], "ExampleSection",
- CellID->1860843509,ExpressionUUID->"c09fd146-9e2d-4021-aad6-04aa358c6f01"],
+ CellID->13662548,ExpressionUUID->"2460b03e-8444-4104-b03c-6cf8e191ec75"],
+
+Cell[CellGroupData[{
+
+Cell["QuantumState is never True without explicit conversion", \
+"ExampleSubsection",
+ CellID->132782778,ExpressionUUID->"14a78786-80dd-47b8-965d-fa876a68dbe3"],
+
+Cell[TextData[{
+ "Even known stabilizer states return ",
+ Cell[BoxData[
+ "False"], "InlineFormula",ExpressionUUID->
+  "c20e33a5-d860-4e26-853b-8d5823e567b2"],
+ " when wrapped ",
+ "in a ",
+ Cell[BoxData[
+ "QuantumState"], "InlineFormula",ExpressionUUID->
+  "08d088e0-f478-45d9-b401-5af2f492121a"],
+ " (the predicate intentionally avoids ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["4", 
+    StyleBox["n", "TI"]], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "b11def54-c97d-46e6-b50a-45993aedbec6"],
+ " tomography):"
+}], "ExampleText",
+ CellID->902057041,ExpressionUUID->"aa00d39c-6124-4c4c-86ac-bcfeb92f1ffa"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"QuantumState", "[", "\"\<Bell\>\"", "]"}], ",", " ", 
+    RowBox[{"QuantumState", "[", "\"\<GHZ\>\"", "]"}], ",", " ", 
+    RowBox[{"QuantumState", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}], "/",
+       "1"}], "]"}]}], "}"}]}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->903777866,ExpressionUUID->"084a22b3-0e76-4fe4-a8ec-c87afcb07524"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"False", ",", "False", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->379964263,ExpressionUUID->"962d9211-03a6-4833-b162-2efa7af767c6"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Multi-component StabilizerFrame returns False", "ExampleSubsection",
+ CellID->443482242,ExpressionUUID->"1f1e10a8-c2bd-40e8-99a3-30f2845a0bd2"],
+
+Cell["\<\
+The predicate is restricted to length-1 frames; longer frames represent \
+superpositions, not single stabilizer states:\
+\>", "ExampleText",
+ CellID->227842880,ExpressionUUID->"3ae59cbb-0326-4cfe-aade-6c5cbfa78f26"],
+
+Cell[BoxData[
+ RowBox[{"Module", "[", 
+  RowBox[{
+   RowBox[{"{", "f", "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"f", " ", "=", " ", 
+     RowBox[{"StabilizerFrame", "[", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", 
+          RowBox[{"PauliStabilizer", "[", "1", "]"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", 
+          RowBox[{"PauliStabilizer", "[", 
+           RowBox[{"{", "\"\<Z\>\"", "}"}], "]"}]}], "}"}]}], "}"}], "]"}]}], 
+    ";", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"f", "[", "\"\<Length\>\"", "]"}], ",", " ", 
+      RowBox[{"StabilizerStateQ", "[", "f", "]"}]}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->918132305,ExpressionUUID->"470fc203-7a56-4a83-8f96-6b1b3ba31963"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"2", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->666528661,ExpressionUUID->"9824dd4e-8b6f-4bda-897e-492225319316"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Malformed Association arguments", "ExampleSubsection",
+ CellID->534478723,ExpressionUUID->"2d66adb3-9719-45cd-bb23-e9a02b3b656a"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData[
+ "PauliStabilizer"], "InlineFormula",ExpressionUUID->
+  "2e0afd80-15ca-4d9a-8831-37479b42a0df"],
+ " whose internal Association is missing ",
+ "the required keys is structurally invalid and the predicate is ",
+ Cell[BoxData[
+ "False"], "InlineFormula",ExpressionUUID->
+  "4e5c356a-5fa5-46ff-aa28-5b9abc6ae094"],
+ ":"
+}], "ExampleText",
+ CellID->141572393,ExpressionUUID->"214c7ea0-1f3c-4f29-995d-1b04b9cba25f"],
+
+Cell[BoxData[
+ RowBox[{"StabilizerStateQ", "[", 
+  RowBox[{"PauliStabilizer", "[", 
+   RowBox[{"Association", "[", 
+    RowBox[{"\"\<Junk\>\"", " ", "->", " ", "0"}], "]"}], "]"}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->428819311,ExpressionUUID->"3413aafd-c7b8-4bf7-9b53-7ffadd8ccf36"],
+
+Cell[BoxData["False"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->277943834,ExpressionUUID->"718999de-acd1-4c31-b175-a9ceeab22592"]
+}, Open  ]]
+}, Open  ]],
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Interactive Examples", "ExampleSection",ExpressionUUID->
-   "044b0772-ef8c-41e3-b1c1-1602370021c4"],
+   "a4b48d15-0ec1-4508-b0af-b8cdd146101e"],
   $Line = 0; Null]], "ExampleSection",
- CellID->1392504502,ExpressionUUID->"8cdfd643-7eec-4f07-b984-7f0afab3fc9d"],
+ CellID->81993083,ExpressionUUID->"453b3455-ffde-4bd3-9862-7d07b57072f2"],
+
+Cell[CellGroupData[{
 
 Cell[BoxData[
  InterpretationBox[Cell[
   "Neat Examples", "ExampleSection",ExpressionUUID->
-   "3069f78a-ffd9-4015-a40e-4c63dbdc7a1c"],
+   "34bca073-ec32-42cb-9b02-2dbbdd6df53b"],
   $Line = 0; Null]], "ExampleSection",
- CellID->546380108,ExpressionUUID->"5380e15d-987d-4e70-8d78-ae2ca4c03ac3"]
+ CellID->567868707,ExpressionUUID->"1d92251b-d271-4655-b350-d100172f49bb"],
+
+Cell[CellGroupData[{
+
+Cell["Counting stabilizer states", "ExampleSubsection",
+ CellID->358560031,ExpressionUUID->"62e7246b-f58a-4d50-826d-4b5587c583ae"],
+
+Cell[TextData[{
+ "The number of ",
+ Cell[BoxData[
+  FormBox[
+   StyleBox["n", "TI"], TraditionalForm]], "InlineFormula",ExpressionUUID->
+  "f0f8f9dd-cb9f-49e3-be37-4e05639ad1e5"],
+ "-qubit pure stabilizer states is ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SuperscriptBox["2", 
+     StyleBox["n", "TI"]], "\[CenterDot]", 
+    RowBox[{
+     UnderoverscriptBox["\[Product]", 
+      RowBox[{
+       StyleBox["k", "TI"], "=", "1"}], 
+      StyleBox["n", "TI"]], 
+     RowBox[{"(", 
+      SuperscriptBox["2", 
+       StyleBox["k", "TI"]], "+", "1", ")"}]}]}], TraditionalForm]], 
+  "InlineFormula",ExpressionUUID->"59e18f1b-7e35-484b-96e7-7d3781c97133"],
+ ". Compute the first few terms:"
+}], "ExampleText",
+ CellID->622142062,ExpressionUUID->"2916d9e2-6347-4f60-a3d7-db72ccf53b05"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"2", "^", "n"}], "*", 
+    RowBox[{"Product", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"2", "^", "k"}], " ", "+", " ", "1"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"k", ",", " ", "1", ",", " ", "n"}], "}"}]}], "]"}]}], ",", 
+   " ", 
+   RowBox[{"{", 
+    RowBox[{"n", ",", " ", "1", ",", " ", "6"}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->870037326,ExpressionUUID->"2a6c1fb0-2254-43ee-9f5f-847dbee67642"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "6", ",", "60", ",", "1080", ",", "36720", ",", "2423520", ",", 
+   "315057600"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->308675758,ExpressionUUID->"ab98c7ba-ce62-4e34-8b14-f883f32dc7cc"]
+}, Open  ]]
+}, Open  ]]
 }, Open  ]],
 
 Cell[CellGroupData[{
 
 Cell["Metadata", "MetadataSection",
- CellID->370400584,ExpressionUUID->"fc22aa04-3928-400d-85fb-201e68c6a674"],
+ CellID->562691819,ExpressionUUID->"13bfea31-c483-4965-b8e0-a84471f90f2a"],
 
 Cell[TextData[{
  "New in: ",
- Cell["XX", "HistoryData",
-  CellTags->"New",ExpressionUUID->"a123bac9-ff68-496e-b2e4-903680c6024e"],
+ Cell["14.0", "HistoryData",
+  CellTags->"New",ExpressionUUID->"ac6f2a15-5673-4faf-ac19-9c8f4b2b2795"],
  " | Modified in: ",
  Cell[" ", "HistoryData",
-  CellTags->"Modified",ExpressionUUID->"eafb988f-0ce3-447b-a757-d9a278d6229a"],
+  CellTags->"Modified",ExpressionUUID->"b941874e-b6ae-4570-a30d-e3d93be5c125"],
  " | Obsolete in: ",
  Cell[" ", "HistoryData",
   CellTags->"Obsolete",ExpressionUUID->
-  "60518f26-d59c-4597-9797-2606150d7e7f"]
+  "eae58b09-7a44-4078-91bd-0d93c5af74df"]
 }], "History",
- CellID->1915006282,ExpressionUUID->"6bd76c5a-c45e-4aac-b19d-4acee86f2c4f"],
+ CellID->926998060,ExpressionUUID->"12c5e21d-6105-4d44-a620-c1f753f93c1f"],
 
 Cell[CellGroupData[{
 
@@ -341,56 +1669,77 @@ Cell[TextData[{
        "Metadata such as page URI, context, and type of documentation page.", 
         "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
    "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
-  "1682b92a-a589-4c48-b1dd-f2b3e8739a7a"]
+  "427a71cb-f948-4b1e-8f37-91c52e143377"]
 }], "CategorizationSection",
- CellID->1173163985,ExpressionUUID->"41e732a6-e0c4-49c3-b567-1dc89109a219"],
+ CellID->393872310,ExpressionUUID->"d52cfc36-d6cd-41ac-b4a9-0f6215b9c741"],
 
 Cell["Symbol", "Categorization",
  CellLabel->"Entity Type",
- CellID->1319732788,ExpressionUUID->"a3eb9751-7487-48fa-aaa7-ddf60ed843a3"],
+ CellID->889931053,ExpressionUUID->"fa3d1bbf-5cab-4940-8606-4d01b2af0e7d"],
 
 Cell["Wolfram/QuantumFramework", "Categorization",
  CellLabel->"Paclet Name",
- CellID->1996052265,ExpressionUUID->"4eab44f3-305a-4067-9f2c-fc1ed9c74667"],
+ CellID->560148948,ExpressionUUID->"a2465860-3fe3-447c-a2fa-0bf38f83f042"],
 
 Cell["Wolfram`QuantumFramework`", "Categorization",
  CellLabel->"Context",
- CellID->1808368068,ExpressionUUID->"3ed49bb8-ac3d-41f6-b2c0-4251c2753998"],
+ CellID->495612895,ExpressionUUID->"0aff2117-0353-4d35-90e6-0b4e77c21c64"],
 
 Cell["Wolfram/QuantumFramework/ref/StabilizerStateQ", "Categorization",
  CellLabel->"URI",
- CellID->2053546532,ExpressionUUID->"9de44182-6fa3-4837-a55f-c16c594ad61c"]
+ CellID->683533138,ExpressionUUID->"9ebb5a83-090b-484d-8b6f-ec9bfa2f7fc4"]
 }, Closed]],
 
 Cell[CellGroupData[{
 
 Cell["Keywords", "KeywordsSection",
- CellID->686983305,ExpressionUUID->"53f85059-4ecd-4b17-9b4e-cd89d5c79ea8"],
+ CellID->952103060,ExpressionUUID->"f3c9a934-c743-4b46-b1fe-3f45e5e64ef6"],
 
-Cell["XXXX", "Keywords",
- CellID->1256320863,ExpressionUUID->"46b7a712-e529-4195-99aa-3c2d217dc8f9"]
+Cell["stabilizer state", "Keywords",
+ CellID->581599256,ExpressionUUID->"47c99292-c764-4887-b460-729d1b410e04"],
+
+Cell["predicate", "Keywords",
+ CellID->976899759,ExpressionUUID->"f0738d43-e462-4092-807a-8701e5ae58c8"],
+
+Cell["Pauli", "Keywords",
+ CellID->356563929,ExpressionUUID->"b35a6952-0c4f-4045-aaa6-d12ee262f026"],
+
+Cell["tableau", "Keywords",
+ CellID->520321659,ExpressionUUID->"acfcdf37-a441-4f4f-a778-ead2deaa4671"],
+
+Cell["Clifford", "Keywords",
+ CellID->353075026,ExpressionUUID->"08aaf3e8-4578-4543-bf45-703b69671bdf"],
+
+Cell["Aaronson-Gottesman", "Keywords",
+ CellID->861371533,ExpressionUUID->"6721ffb3-2841-4157-8cf0-2adee7adfea1"],
+
+Cell["structural check", "Keywords",
+ CellID->128341136,ExpressionUUID->"c86d4dce-b7cc-45e7-a003-c0e2d319ef70"],
+
+Cell["type guard", "Keywords",
+ CellID->973783050,ExpressionUUID->"5b3fd2ef-42be-4d73-acd1-f03cbbda54be"]
 }, Closed]],
 
 Cell[CellGroupData[{
 
 Cell["Syntax Templates", "TemplatesSection",
- CellID->925527137,ExpressionUUID->"15121fee-6bc2-49f9-b7b5-cedd6d32ac28"],
+ CellID->572932290,ExpressionUUID->"61d68e33-8928-4090-9682-8efa2e6f9cad"],
 
 Cell[BoxData[""], "Template",
  CellLabel->"Additional Function Template",
- CellID->1110536338,ExpressionUUID->"f3fc9dcd-5aaa-4331-9a4f-be0519a92c96"],
+ CellID->302490827,ExpressionUUID->"1f1ef856-e602-4c41-893e-ab14bff8165b"],
 
 Cell[BoxData[""], "Template",
  CellLabel->"Arguments Pattern",
- CellID->1003856689,ExpressionUUID->"7313564c-2d73-4261-95b7-81e76ec55ff4"],
+ CellID->248760172,ExpressionUUID->"bf3fb9d0-4543-4d25-ae6e-935bbdc7cda0"],
 
 Cell[BoxData[""], "Template",
  CellLabel->"Local Variables",
- CellID->1187841191,ExpressionUUID->"2bbf06d6-e3dd-4709-b817-d4e056655ec5"],
+ CellID->83129707,ExpressionUUID->"40625c1c-8280-4f27-9d35-651e58bd9c65"],
 
 Cell[BoxData[""], "Template",
  CellLabel->"Color Equal Signs",
- CellID->1038914625,ExpressionUUID->"5ecaf578-9c95-4c31-8d02-d834e149bfc5"]
+ CellID->895046840,ExpressionUUID->"bda23cfe-2f2c-4f6e-9e16-9465693080fe"]
 }, Closed]]
 }, Open  ]]
 },
@@ -401,7 +1750,7 @@ CellContext->"Global`",
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStylesExt.nb", 
   CharacterEncoding -> "UTF-8"],
-ExpressionUUID->"89db95de-0b91-4614-814e-6b5013700f24"
+ExpressionUUID->"7dcda09a-86d7-4e95-9588-c01f4dcad0d0"
 ]
 (* End of Notebook Content *)
 
@@ -409,119 +1758,345 @@ ExpressionUUID->"89db95de-0b91-4614-814e-6b5013700f24"
 (*CellTagsOutline
 CellTagsIndex->{
  "ExtendedExamples"->{
-  Cell[7234, 222, 488, 13, 56, "ExtendedExamplesSection",ExpressionUUID->"fb66c34f-eecc-4f20-a91c-bc3207e28315",
+  Cell[18714, 537, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"af1ab76c-2210-453c-b3ba-95c69c7c15e9",
    CellTags->"ExtendedExamples",
-   CellID->1421511382]}
+   CellID->856460028]}
  }
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"ExtendedExamples", 13567, 410}
+ {"ExtendedExamples", 65127, 1759}
  }
 *)
 (*NotebookFileOutline
 Notebook[{
 Cell[CellGroupData[{
-Cell[576, 22, 114, 1, 72, "ObjectName",ExpressionUUID->"55139384-20b6-4659-ab21-e14bf1b29fe8",
- CellID->1250975830],
-Cell[693, 25, 1713, 41, 111, "Usage",ExpressionUUID->"1e0862d8-0064-4b22-9a18-726f1c71595d",
- CellID->1285870680],
-Cell[2409, 68, 97, 1, 26, "Notes",ExpressionUUID->"1d13a697-219c-4cc5-9586-86c45e1570c6",
- CellID->1500578999]
+Cell[576, 22, 113, 1, 70, "ObjectName",ExpressionUUID->"dd07f376-04f4-4c23-95ac-1b9f5414cef2",
+ CellID->304559058],
+Cell[692, 25, 1400, 37, 70, "Usage",ExpressionUUID->"645fdbe3-3a7c-4d6d-842e-de6c7eeecce3",
+ CellID->284854746],
+Cell[2095, 64, 491, 10, 70, "Notes",ExpressionUUID->"94e450b1-21f8-480e-88d1-a73ea7fb5f92",
+ CellID->256619478],
+Cell[2589, 76, 1567, 44, 70, "Notes",ExpressionUUID->"04acb6c2-6c4f-4585-87e1-d2f32555efab",
+ CellID->32417110],
+Cell[4159, 122, 1100, 30, 70, "Notes",ExpressionUUID->"bfd76dce-54cb-40bd-86c4-587b32667131",
+ CellID->730089987],
+Cell[5262, 154, 1652, 45, 70, "Notes",ExpressionUUID->"828d2cad-4681-4e3b-8896-50359fdb55e8",
+ CellID->319845756],
+Cell[6917, 201, 840, 21, 70, "Notes",ExpressionUUID->"e75d2850-9c17-4888-afb5-752ba4fb3a0b",
+ CellID->155852549],
+Cell[7760, 224, 1014, 27, 70, "Notes",ExpressionUUID->"b534fca9-3ee1-48ff-9044-b7690435572a",
+ CellID->829389816]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[2543, 74, 458, 13, 38, "SeeAlsoSection",ExpressionUUID->"69e9e52f-6f41-4204-bebd-c2c45a169bbd",
- CellID->183285825],
-Cell[3004, 89, 1543, 40, 21, "SeeAlso",ExpressionUUID->"8c28bed2-9d9b-43d2-ae06-645481516dee",
- CellID->993310977]
+Cell[8811, 256, 457, 13, 70, "SeeAlsoSection",ExpressionUUID->"5f594745-1c50-4293-869a-6e1dc3c0bab6",
+ CellID->42385047],
+Cell[9271, 271, 3108, 70, 70, "SeeAlso",ExpressionUUID->"02e9747f-b6e8-4f7f-a242-9a3d9dedef64",
+ CellID->479633546]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[4584, 134, 434, 12, 39, "TechNotesSection",ExpressionUUID->"88e6be7c-0bae-4d1e-acd7-53cb89eabd64",
- CellID->39718661],
-Cell[5021, 148, 101, 1, 17, "Tutorials",ExpressionUUID->"7d1fd3dd-44a2-4cea-a2b4-a0940519fd83",
- CellID->1831604857]
+Cell[12416, 346, 435, 12, 70, "TechNotesSection",ExpressionUUID->"62f1a227-7b08-4778-9ea8-2d2cf0253ebd",
+ CellID->584954980],
+Cell[12854, 360, 100, 1, 70, "Tutorials",ExpressionUUID->"0c90db26-d4a9-4bf2-be91-a85902e8cb09",
+ CellID->483107987]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[5159, 154, 118, 1, 37, "MoreAboutSection",ExpressionUUID->"5cd7cea7-1c51-42b0-9aff-341d5174c510",
- CellID->1752235501],
-Cell[5280, 157, 101, 1, 17, "MoreAbout",ExpressionUUID->"815ae76b-1a81-48cf-93f7-8215c6f0071f",
- CellID->1378813996]
+Cell[12991, 366, 117, 1, 70, "MoreAboutSection",ExpressionUUID->"1ac21997-7dcd-4ea3-8a20-dadc71513e2d",
+ CellID->722832871],
+Cell[13111, 369, 399, 8, 70, "MoreAbout",ExpressionUUID->"4229f664-882c-4757-af61-882c63da0621",
+ CellID->870642589]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[5418, 163, 472, 13, 38, "RelatedLinksSection",ExpressionUUID->"a11d2dd5-cb25-42d4-b5cf-51d918693ff8",
- CellID->230795995],
-Cell[5893, 178, 103, 1, 17, "RelatedLinks",ExpressionUUID->"4a79942b-71ac-4597-ad92-ca34a6b3e2eb",
- CellID->632821483]
+Cell[13547, 382, 472, 13, 70, "RelatedLinksSection",ExpressionUUID->"c1eb9b0c-be31-40de-b919-ef9d479e0deb",
+ CellID->292872097],
+Cell[14022, 397, 103, 1, 70, "RelatedLinks",ExpressionUUID->"b583d380-5947-42d3-b6a1-2b6285beba9c",
+ CellID->478875771]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[6033, 184, 531, 14, 68, "ExamplesInitializationSection",ExpressionUUID->"1031afa1-1d47-4607-b286-152385803f97",
- CellID->1491644837],
-Cell[6567, 200, 184, 3, 46, "ExampleInitialization",ExpressionUUID->"8ea51dd6-c4c9-4192-a453-b27b67b164cf",
- CellID->350680381]
+Cell[14162, 403, 530, 14, 70, "ExamplesInitializationSection",ExpressionUUID->"9f240af5-22b2-4319-b26c-fb04a2fa28b8",
+ CellID->782610730],
+Cell[14695, 419, 184, 3, 70, "ExampleInitialization",ExpressionUUID->"18e1e02c-aaa3-43be-b701-8c6678e767f8",
+ CellID->250653186]
 }, Open  ]],
-Cell[6766, 206, 443, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"058c799d-4174-40bb-b722-eb9ce1bc354f",
- CellID->1190036099],
 Cell[CellGroupData[{
-Cell[7234, 222, 488, 13, 56, "ExtendedExamplesSection",ExpressionUUID->"fb66c34f-eecc-4f20-a91c-bc3207e28315",
+Cell[14916, 427, 442, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"5def6469-1f68-495c-b2d3-1bf63644ded9",
+ CellID->580626467],
+Cell[15361, 441, 143, 1, 70, "ExampleText",ExpressionUUID->"48cdc7b1-216d-4934-9f1b-73f37af591d0",
+ CellID->914920450],
+Cell[15507, 444, 204, 4, 70, "Input",ExpressionUUID->"182fd1e9-20c1-43a9-8922-b9bf33dc08d0",
+ CellID->431528768],
+Cell[15714, 450, 129, 2, 70, "Output",ExpressionUUID->"c16101a1-d02f-4790-a224-424df1bbc70b",
+ CellID->152841327],
+Cell[15846, 454, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"0066b561-af0b-4700-bc81-30954ffae925",
+ CellID->326136997],
+Cell[15961, 457, 147, 1, 70, "ExampleText",ExpressionUUID->"57d60a5c-b0cf-4d13-a777-ceabbf0a8092",
+ CellID->769459341],
+Cell[16111, 460, 209, 4, 70, "Input",ExpressionUUID->"a2c2d944-d871-4a95-82f2-9bf28ca35a10",
+ CellID->823141348],
+Cell[16323, 466, 129, 2, 70, "Output",ExpressionUUID->"7963d412-ea8a-4880-8d2b-f4534b33cf21",
+ CellID->586648537],
+Cell[16455, 470, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"0da77989-7142-412d-bfa7-e10d93c38a36",
+ CellID->661147381],
+Cell[16570, 473, 160, 2, 70, "ExampleText",ExpressionUUID->"4ef888c1-8e50-4d35-aecd-a7ba17aea9d9",
+ CellID->666944493],
+Cell[16733, 477, 284, 7, 70, "Input",ExpressionUUID->"eaa5c3f9-41a7-4232-a4a0-0497e10a3e32",
+ CellID->675360451],
+Cell[17020, 486, 129, 2, 70, "Output",ExpressionUUID->"5bb8b686-60ae-4492-8f43-23b5a1d95fc4",
+ CellID->100230999],
+Cell[17152, 490, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"7b5e9bb6-be9a-48c1-8846-18f4f34eec7f",
+ CellID->136461217],
+Cell[17267, 493, 180, 3, 70, "ExampleText",ExpressionUUID->"d2602fa9-54c2-4a6c-a642-7dec9c0f8697",
+ CellID->107626908],
+Cell[17450, 498, 260, 6, 70, "Input",ExpressionUUID->"6f6f19f6-28fb-4e5e-8f70-034b97f5a13f",
+ CellID->455702595],
+Cell[17713, 506, 130, 2, 70, "Output",ExpressionUUID->"bd29a2a4-fcdd-4d5f-83c7-4428919273e9",
+ CellID->991757077],
+Cell[17846, 510, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"48e13a11-acd3-4787-bab8-6b2c59e56aaa",
+ CellID->917656195],
+Cell[17961, 513, 179, 3, 70, "ExampleText",ExpressionUUID->"4b359cb8-3aa5-498c-8e1a-3dad68026912",
+ CellID->195371597],
+Cell[18143, 518, 353, 8, 70, "Input",ExpressionUUID->"75780883-a3bf-4ddb-a7bc-22cdff30ce00",
+ CellID->879103194],
+Cell[18499, 528, 178, 4, 70, "Output",ExpressionUUID->"3fed0db5-d00d-4649-bf09-cf51891f2682",
+ CellID->562671291]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[18714, 537, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"af1ab76c-2210-453c-b3ba-95c69c7c15e9",
  CellTags->"ExtendedExamples",
- CellID->1421511382],
-Cell[7725, 237, 241, 5, 32, "ExampleSection",ExpressionUUID->"b992e60f-126f-4838-8c41-3fe875de724e",
- CellID->586224399],
-Cell[7969, 244, 263, 5, 20, "ExampleSection",ExpressionUUID->"82c4e163-acfa-4589-a2b7-c223a6712b76",
- CellID->18501557],
+ CellID->856460028],
 Cell[CellGroupData[{
-Cell[8257, 253, 244, 5, 20, "ExampleSection",ExpressionUUID->"eb4e7998-9d87-460f-bdc3-01b1f3d8d9ca",
- CellID->1718023331],
-Cell[8504, 260, 247, 5, 23, "ExampleSubsection",ExpressionUUID->"6d372f36-8e71-40d5-8e2d-53ec68074d17",
- CellID->1900490202],
-Cell[8754, 267, 247, 5, 19, "ExampleSubsection",ExpressionUUID->"dd12b624-e160-4d32-96c6-fc4c0bc2b911",
- CellID->2014543183]
-}, Open  ]],
-Cell[9016, 275, 249, 5, 32, "ExampleSection",ExpressionUUID->"da04aeec-9205-4204-8926-7c187718524b",
- CellID->1200098079],
-Cell[9268, 282, 258, 5, 20, "ExampleSection",ExpressionUUID->"b1ed1194-a70c-48ae-9c5c-43eceff9a385",
- CellID->882001129],
-Cell[9529, 289, 252, 5, 20, "ExampleSection",ExpressionUUID->"c09fd146-9e2d-4021-aad6-04aa358c6f01",
- CellID->1860843509],
-Cell[9784, 296, 257, 5, 20, "ExampleSection",ExpressionUUID->"8cdfd643-7eec-4f07-b984-7f0afab3fc9d",
- CellID->1392504502],
-Cell[10044, 303, 249, 5, 20, "ExampleSection",ExpressionUUID->"5380e15d-987d-4e70-8d78-ae2ca4c03ac3",
- CellID->546380108]
+Cell[19226, 554, 241, 5, 70, "ExampleSection",ExpressionUUID->"0ae2ebd4-8be4-45c2-966a-bcf3ccc2fa7b",
+ CellID->526437158],
+Cell[CellGroupData[{
+Cell[19492, 563, 126, 1, 70, "ExampleSubsection",ExpressionUUID->"904c320d-86c3-49fe-a83d-f1645896d500",
+ CellID->343679028],
+Cell[19621, 566, 193, 4, 70, "ExampleText",ExpressionUUID->"8f5c960f-668c-4618-876b-174cc600c87f",
+ CellID->173543759],
+Cell[19817, 572, 627, 14, 70, "Input",ExpressionUUID->"83104e99-bb05-41e5-975d-e31c65cf5e2d",
+ CellID->344619219],
+Cell[20447, 588, 218, 5, 70, "Output",ExpressionUUID->"bb6fcc88-8e19-4a4e-b97f-8537148e48e7",
+ CellID->60759609]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[10330, 313, 110, 1, 71, "MetadataSection",ExpressionUUID->"fc22aa04-3928-400d-85fb-201e68c6a674",
- CellID->370400584],
-Cell[10443, 316, 477, 12, 25, "History",ExpressionUUID->"6bd76c5a-c45e-4aac-b19d-4acee86f2c4f",
- CellID->1915006282],
+Cell[20702, 598, 126, 1, 70, "ExampleSubsection",ExpressionUUID->"7216fdaf-e5a4-48f1-a537-55b5c0b9a28c",
+ CellID->489415006],
+Cell[20831, 601, 167, 3, 70, "ExampleText",ExpressionUUID->"249872a9-a3a8-45f1-a688-b113cf1ba9ab",
+ CellID->952336835],
+Cell[21001, 606, 252, 5, 70, "Input",ExpressionUUID->"d10bfa06-9f77-4c26-8e83-acbf547f0400",
+ CellID->739227857],
+Cell[21256, 613, 129, 2, 70, "Output",ExpressionUUID->"d91ec3b1-bd9a-4ac3-9270-b6a0e06f4268",
+ CellID->357047310],
+Cell[21388, 617, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"2ef0fe7a-cc7b-4a53-86e2-2002d64c4afe",
+ CellID->479225243],
+Cell[21503, 620, 172, 3, 70, "ExampleText",ExpressionUUID->"a05f3c03-2b15-4d01-92c5-2dc65f45695f",
+ CellID->606838166],
+Cell[21678, 625, 439, 12, 70, "Input",ExpressionUUID->"98114418-46aa-4c7a-b3b8-6d69aa5a1eef",
+ CellID->963765333],
+Cell[22120, 639, 130, 2, 70, "Output",ExpressionUUID->"ee1c0ae5-33c7-43c3-ad07-0288de2d7017",
+ CellID->655247529]
+}, Open  ]],
 Cell[CellGroupData[{
-Cell[10945, 332, 485, 13, 20, "CategorizationSection",ExpressionUUID->"41e732a6-e0c4-49c3-b567-1dc89109a219",
- CellID->1173163985],
-Cell[11433, 347, 135, 2, 34, "Categorization",ExpressionUUID->"a3eb9751-7487-48fa-aaa7-ddf60ed843a3",
- CellID->1319732788],
-Cell[11571, 351, 153, 2, 34, "Categorization",ExpressionUUID->"4eab44f3-305a-4067-9f2c-fc1ed9c74667",
- CellID->1996052265],
-Cell[11727, 355, 150, 2, 34, "Categorization",ExpressionUUID->"3ed49bb8-ac3d-41f6-b2c0-4251c2753998",
- CellID->1808368068],
-Cell[11880, 359, 166, 2, 34, "Categorization",ExpressionUUID->"9de44182-6fa3-4837-a55f-c16c594ad61c",
- CellID->2053546532]
+Cell[22287, 646, 119, 1, 70, "ExampleSubsection",ExpressionUUID->"2e6d5976-b5bf-489f-aa9f-53feb533c37c",
+ CellID->787737781],
+Cell[22409, 649, 175, 3, 70, "ExampleText",ExpressionUUID->"ff5d4d6b-53fa-41d0-bbb7-3749f8e05d3d",
+ CellID->240384154],
+Cell[22587, 654, 533, 13, 70, "Input",ExpressionUUID->"8522dc83-00ea-4c5b-abeb-bc351065ea6b",
+ CellID->869116933],
+Cell[23123, 669, 224, 5, 70, "Output",ExpressionUUID->"abe9cbe2-2ec5-4e81-90fb-95fd24821c3a",
+ CellID->708649767]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23396, 680, 264, 5, 70, "ExampleSection",ExpressionUUID->"ecb05d7d-821c-4181-b12c-8f3c3c35b54f",
+ CellID->121600773],
+Cell[CellGroupData[{
+Cell[23685, 689, 145, 1, 70, "ExampleSubsection",ExpressionUUID->"39e60aa7-5e9f-448f-938e-91b68031be11",
+ CellID->720772714],
+Cell[23833, 692, 905, 21, 70, "ExampleText",ExpressionUUID->"ac086df3-58c9-48b6-ba1e-808744b0c478",
+ CellID->228142019],
+Cell[24741, 715, 633, 17, 70, "Input",ExpressionUUID->"9907bb3d-dbfd-4c2b-b6b2-56d49fae0a78",
+ CellID->43114735],
+Cell[25377, 734, 188, 4, 70, "Output",ExpressionUUID->"3e1a3748-1e8b-442a-8290-70750d28b478",
+ CellID->258959829]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[25614, 744, 243, 5, 70, "ExampleSection",ExpressionUUID->"29316b66-4a70-4a18-8255-304696e577e5",
+ CellID->391334629],
+Cell[CellGroupData[{
+Cell[25882, 753, 114, 1, 70, "ExampleSubsection",ExpressionUUID->"e367937d-7d0f-4440-b058-29139941047b",
+ CellID->235341192],
+Cell[25999, 756, 349, 8, 70, "ExampleText",ExpressionUUID->"dfd6c5a3-a71f-4fd9-917f-2ee5653c250b",
+ CellID->404581489]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[26397, 770, 248, 5, 70, "ExampleSection",ExpressionUUID->"711e82ce-9ce1-4b69-a4f7-ae11b88ee515",
+ CellID->191568572],
+Cell[CellGroupData[{
+Cell[26670, 779, 132, 1, 70, "ExampleSubsection",ExpressionUUID->"6702faa1-5fe4-41f7-b57c-cae583026c1b",
+ CellID->89059974],
+Cell[26805, 782, 158, 2, 70, "ExampleText",ExpressionUUID->"58688a74-a4df-4a26-9c06-3985db0dc19e",
+ CellID->424984611],
+Cell[26966, 786, 671, 17, 70, "Input",ExpressionUUID->"a673f2bc-c1e4-4aa7-b382-42f7e4f1812c",
+ CellID->184092731],
+Cell[27640, 805, 20765, 439, 70, "Output",ExpressionUUID->"bf486ec8-b395-4d1d-90cf-f2d7034c883e",
+ CellID->493155827]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[48442, 1249, 157, 2, 70, "ExampleSubsection",ExpressionUUID->"c3b67c58-cc6c-4c95-896a-defb1a2d1f17",
+ CellID->395042370],
+Cell[48602, 1253, 171, 3, 70, "ExampleText",ExpressionUUID->"755bbd18-170f-4122-be28-e98ad712c83f",
+ CellID->402038901],
+Cell[48776, 1258, 501, 12, 70, "Input",ExpressionUUID->"30304e13-da18-4e6b-a3e3-321dc282316f",
+ CellID->49155168],
+Cell[49280, 1272, 129, 2, 70, "Output",ExpressionUUID->"c126c7c0-756a-424e-baf7-bb2d7b65c7fc",
+ CellID->229501076]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[49458, 1280, 258, 5, 70, "ExampleSection",ExpressionUUID->"9ce6395c-0b15-4383-b5ad-c63245cf0cab",
+ CellID->545109518],
+Cell[CellGroupData[{
+Cell[49741, 1289, 138, 1, 70, "ExampleSubsection",ExpressionUUID->"4958decc-876a-448f-94cf-7bfa8dc86a21",
+ CellID->611658157],
+Cell[49882, 1292, 503, 12, 70, "ExampleText",ExpressionUUID->"96b2a2ad-58ff-456f-b867-41d4b625b5b3",
+ CellID->152900321],
+Cell[50388, 1306, 583, 16, 70, "Input",ExpressionUUID->"2a5c2680-8824-4964-a962-61288d9c820a",
+ CellID->730150165],
+Cell[50974, 1324, 129, 2, 70, "Output",ExpressionUUID->"0819ab2e-114f-4c78-9225-60ad18936a44",
+ CellID->739878250]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[51140, 1331, 130, 1, 70, "ExampleSubsection",ExpressionUUID->"26a1f2e3-eff8-4844-8b3b-c7f0b61ed1c0",
+ CellID->965800165],
+Cell[51273, 1334, 213, 4, 70, "ExampleText",ExpressionUUID->"3306ac8f-9f9e-41e2-a9d2-2f195c8b5f58",
+ CellID->227051850],
+Cell[51489, 1340, 638, 17, 70, "Input",ExpressionUUID->"ecc107c9-6f97-4880-b2d4-04bf99fe5ab9",
+ CellID->765384274],
+Cell[52130, 1359, 178, 4, 70, "Output",ExpressionUUID->"5ea2362e-50f4-4f59-8eb0-13d5cb114537",
+ CellID->691928651]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[52345, 1368, 141, 1, 70, "ExampleSubsection",ExpressionUUID->"0160693e-7919-471c-8b73-9a7e6b1bc91d",
+ CellID->517505003],
+Cell[52489, 1371, 204, 4, 70, "ExampleText",ExpressionUUID->"e456f6f6-1df5-4aab-93e5-b08ab6a94b75",
+ CellID->424738596],
+Cell[52696, 1377, 695, 17, 70, "Input",ExpressionUUID->"abf812c9-48e6-4e18-8203-aa9ddee02cb6",
+ CellID->383253421],
+Cell[53394, 1396, 128, 2, 70, "Output",ExpressionUUID->"632c2e03-a8ce-434b-a780-63331e60633b",
+ CellID->50637580]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[53559, 1403, 134, 1, 70, "ExampleSubsection",ExpressionUUID->"1cff36a2-d975-4a2f-ae15-52050a0d1eb6",
+ CellID->828437631],
+Cell[53696, 1406, 207, 4, 70, "ExampleText",ExpressionUUID->"a3638210-60bf-41a6-8809-e21f75e47029",
+ CellID->545713482],
+Cell[53906, 1412, 447, 10, 70, "Input",ExpressionUUID->"46a17162-edca-40e7-9645-ee4822742bf2",
+ CellID->161357917],
+Cell[54356, 1424, 193, 4, 70, "Output",ExpressionUUID->"a5b74e4a-2c2d-4015-8c1c-36537173b02b",
+ CellID->378613687]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[54598, 1434, 250, 5, 70, "ExampleSection",ExpressionUUID->"2460b03e-8444-4104-b03c-6cf8e191ec75",
+ CellID->13662548],
+Cell[CellGroupData[{
+Cell[54873, 1443, 160, 2, 70, "ExampleSubsection",ExpressionUUID->"14a78786-80dd-47b8-965d-fa876a68dbe3",
+ CellID->132782778],
+Cell[55036, 1447, 620, 18, 70, "ExampleText",ExpressionUUID->"aa00d39c-6124-4c4c-86ac-bcfeb92f1ffa",
+ CellID->902057041],
+Cell[55659, 1467, 507, 12, 70, "Input",ExpressionUUID->"084a22b3-0e76-4fe4-a8ec-c87afcb07524",
+ CellID->903777866],
+Cell[56169, 1481, 193, 4, 70, "Output",ExpressionUUID->"962d9211-03a6-4833-b162-2efa7af767c6",
+ CellID->379964263]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[56399, 1490, 149, 1, 70, "ExampleSubsection",ExpressionUUID->"1f1e10a8-c2bd-40e8-99a3-30f2845a0bd2",
+ CellID->443482242],
+Cell[56551, 1493, 225, 4, 70, "ExampleText",ExpressionUUID->"3ae59cbb-0326-4cfe-aade-6c5cbfa78f26",
+ CellID->227842880],
+Cell[56779, 1499, 802, 23, 70, "Input",ExpressionUUID->"470fc203-7a56-4a83-8f96-6b1b3ba31963",
+ CellID->918132305],
+Cell[57584, 1524, 175, 4, 70, "Output",ExpressionUUID->"9824dd4e-8b6f-4bda-897e-492225319316",
+ CellID->666528661]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[57796, 1533, 135, 1, 70, "ExampleSubsection",ExpressionUUID->"2d66adb3-9719-45cd-bb23-e9a02b3b656a",
+ CellID->534478723],
+Cell[57934, 1536, 447, 12, 70, "ExampleText",ExpressionUUID->"214c7ea0-1f3c-4f29-995d-1b04b9cba25f",
+ CellID->141572393],
+Cell[58384, 1550, 298, 7, 70, "Input",ExpressionUUID->"3413aafd-c7b8-4bf7-9b53-7ffadd8ccf36",
+ CellID->428819311],
+Cell[58685, 1559, 130, 2, 70, "Output",ExpressionUUID->"718999de-acd1-4c31-b175-a9ceeab22592",
+ CellID->277943834]
+}, Open  ]]
+}, Open  ]],
+Cell[58842, 1565, 255, 5, 70, "ExampleSection",ExpressionUUID->"453b3455-ffde-4bd3-9862-7d07b57072f2",
+ CellID->81993083],
+Cell[CellGroupData[{
+Cell[59122, 1574, 249, 5, 70, "ExampleSection",ExpressionUUID->"1d92251b-d271-4655-b350-d100172f49bb",
+ CellID->567868707],
+Cell[CellGroupData[{
+Cell[59396, 1583, 130, 1, 70, "ExampleSubsection",ExpressionUUID->"62e7246b-f58a-4d50-826d-4b5587c583ae",
+ CellID->358560031],
+Cell[59529, 1586, 780, 23, 70, "ExampleText",ExpressionUUID->"2916d9e2-6347-4f60-a3d7-db72ccf53b05",
+ CellID->622142062],
+Cell[60312, 1611, 513, 15, 70, "Input",ExpressionUUID->"2a6c1fb0-2254-43ee-9f5f-847dbee67642",
+ CellID->870037326],
+Cell[60828, 1628, 240, 6, 70, "Output",ExpressionUUID->"ab98c7ba-ce62-4e34-8b14-f883f32dc7cc",
+ CellID->308675758]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[61129, 1641, 110, 1, 70, "MetadataSection",ExpressionUUID->"13bfea31-c483-4965-b8e0-a84471f90f2a",
+ CellID->562691819],
+Cell[61242, 1644, 478, 12, 70, "History",ExpressionUUID->"12c5e21d-6105-4d44-a620-c1f753f93c1f",
+ CellID->926998060],
+Cell[CellGroupData[{
+Cell[61745, 1660, 484, 13, 70, "CategorizationSection",ExpressionUUID->"d52cfc36-d6cd-41ac-b4a9-0f6215b9c741",
+ CellID->393872310],
+Cell[62232, 1675, 134, 2, 70, "Categorization",ExpressionUUID->"fa3d1bbf-5cab-4940-8606-4d01b2af0e7d",
+ CellID->889931053],
+Cell[62369, 1679, 152, 2, 70, "Categorization",ExpressionUUID->"a2465860-3fe3-447c-a2fa-0bf38f83f042",
+ CellID->560148948],
+Cell[62524, 1683, 149, 2, 70, "Categorization",ExpressionUUID->"0aff2117-0353-4d35-90e6-0b4e77c21c64",
+ CellID->495612895],
+Cell[62676, 1687, 165, 2, 70, "Categorization",ExpressionUUID->"9ebb5a83-090b-484d-8b6f-ec9bfa2f7fc4",
+ CellID->683533138]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[12083, 366, 110, 1, 20, "KeywordsSection",ExpressionUUID->"53f85059-4ecd-4b17-9b4e-cd89d5c79ea8",
- CellID->686983305],
-Cell[12196, 369, 100, 1, 70, "Keywords",ExpressionUUID->"46b7a712-e529-4195-99aa-3c2d217dc8f9",
- CellID->1256320863]
+Cell[62878, 1694, 110, 1, 70, "KeywordsSection",ExpressionUUID->"f3c9a934-c743-4b46-b1fe-3f45e5e64ef6",
+ CellID->952103060],
+Cell[62991, 1697, 111, 1, 70, "Keywords",ExpressionUUID->"47c99292-c764-4887-b460-729d1b410e04",
+ CellID->581599256],
+Cell[63105, 1700, 104, 1, 70, "Keywords",ExpressionUUID->"f0738d43-e462-4092-807a-8701e5ae58c8",
+ CellID->976899759],
+Cell[63212, 1703, 100, 1, 70, "Keywords",ExpressionUUID->"b35a6952-0c4f-4045-aaa6-d12ee262f026",
+ CellID->356563929],
+Cell[63315, 1706, 102, 1, 70, "Keywords",ExpressionUUID->"acfcdf37-a441-4f4f-a778-ead2deaa4671",
+ CellID->520321659],
+Cell[63420, 1709, 103, 1, 70, "Keywords",ExpressionUUID->"08aaf3e8-4578-4543-bf45-703b69671bdf",
+ CellID->353075026],
+Cell[63526, 1712, 113, 1, 70, "Keywords",ExpressionUUID->"6721ffb3-2841-4157-8cf0-2adee7adfea1",
+ CellID->861371533],
+Cell[63642, 1715, 111, 1, 70, "Keywords",ExpressionUUID->"c86d4dce-b7cc-45e7-a003-c0e2d319ef70",
+ CellID->128341136],
+Cell[63756, 1718, 105, 1, 70, "Keywords",ExpressionUUID->"5b3fd2ef-42be-4d73-acd1-f03cbbda54be",
+ CellID->973783050]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[12333, 375, 119, 1, 20, "TemplatesSection",ExpressionUUID->"15121fee-6bc2-49f9-b7b5-cedd6d32ac28",
- CellID->925527137],
-Cell[12455, 378, 149, 2, 70, "Template",ExpressionUUID->"f3fc9dcd-5aaa-4331-9a4f-be0519a92c96",
- CellID->1110536338],
-Cell[12607, 382, 138, 2, 70, "Template",ExpressionUUID->"7313564c-2d73-4261-95b7-81e76ec55ff4",
- CellID->1003856689],
-Cell[12748, 386, 136, 2, 70, "Template",ExpressionUUID->"2bbf06d6-e3dd-4709-b817-d4e056655ec5",
- CellID->1187841191],
-Cell[12887, 390, 138, 2, 70, "Template",ExpressionUUID->"5ecaf578-9c95-4c31-8d02-d834e149bfc5",
- CellID->1038914625]
+Cell[63898, 1724, 119, 1, 70, "TemplatesSection",ExpressionUUID->"61d68e33-8928-4090-9682-8efa2e6f9cad",
+ CellID->572932290],
+Cell[64020, 1727, 148, 2, 70, "Template",ExpressionUUID->"1f1ef856-e602-4c41-893e-ab14bff8165b",
+ CellID->302490827],
+Cell[64171, 1731, 137, 2, 70, "Template",ExpressionUUID->"bf3fb9d0-4543-4d25-ae6e-935bbdc7cda0",
+ CellID->248760172],
+Cell[64311, 1735, 134, 2, 70, "Template",ExpressionUUID->"40625c1c-8280-4f27-9d35-651e58bd9c65",
+ CellID->83129707],
+Cell[64448, 1739, 137, 2, 70, "Template",ExpressionUUID->"bda23cfe-2f2c-4f6e-9e16-9465693080fe",
+ CellID->895046840]
 }, Closed]]
 }, Open  ]]
 }
@@ -529,4 +2104,3 @@ Cell[12887, 390, 138, 2, 70, "Template",ExpressionUUID->"5ecaf578-9c95-4c31-8d02
 *)
 
 (* End of internal cache information *)
-

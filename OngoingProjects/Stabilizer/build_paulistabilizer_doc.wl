@@ -976,7 +976,7 @@ seeAlsoLinks = {
     "QuantumCircuitOperator", "QuantumMeasurementOperator", "QuantumChannel"
 };
 
-systemSeeAlso = {"Pauli", "KroneckerProduct"};
+systemSeeAlso = {"PauliMatrix", "KroneckerProduct"};
 
 seeAlsoCell = Cell[TextData[Riffle[
     Join[
