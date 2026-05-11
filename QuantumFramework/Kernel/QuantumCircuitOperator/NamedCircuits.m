@@ -31,7 +31,7 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator["Graph"[HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : {"C", "1"}], opts___] := With[{
+QuantumCircuitOperator["Graph"[HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : "C"["1"]], opts___] := With[{
     ig = If[AllTrue[VertexList[g], Internal`PositiveIntegerQ], g, IndexGraph @ g]
 },
     QuantumCircuitOperator[
