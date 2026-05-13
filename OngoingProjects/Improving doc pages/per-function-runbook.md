@@ -83,6 +83,29 @@ Path: `$DOCS/verify-doc-page.wls`. **If missing, build it before any work that n
 
 Path: `$DOCS/issues-report.md`. If missing, create it with a header skeleton (see §7).
 
+### 0.6 Function-relation graph
+
+The Properties & Relations subsection of every reference page is sourced from a per-paclet **function-relation graph**: an Association mapping each public symbol to its `Kind` / `Accepts` / `OperatesOn` / `ConsumedBy`. The graph is built and rendered by the `Wolfram/PacletFunctionGraph` paclet (lives in this repo at `OngoingProjects/Improving doc pages/PacletFunctionGraph/`). See [`function-graph-design.md`](function-graph-design.md) for the full design (schema, edge model, auto-detection of predicates).
+
+Before any Branch-A or Branch-B work, build (or rebuild) the graph in-memory:
+
+```wolfram
+PacletDirectoryLoad[
+    "<repo>/OngoingProjects/Improving doc pages/PacletFunctionGraph"];
+Needs["Wolfram`PacletFunctionGraph`"];
+
+graphData = BuildFunctionGraph[<PACLET-path>, "WriteFile" -> False];
+```
+
+`BuildFunctionGraph` walks every public symbol's `DownValues` / `SubValues` and auto-detects every paclet predicate (no `"PredicateHeads"` table to maintain). The build is fast (a few seconds even for a 20-symbol paclet); there is no on-disk cache to invalidate, so freshness is automatic — each invocation reads the current in-kernel definitions.
+
+The graph is the source for:
+- The code-triple Properties & Relations content (§A.5.c, §B.6 Properties & Relations bullet).
+- The Neat-Examples Graph cell on each ref page (§A.5.h, §B.6 step 14).
+- The optional paclet-wide overview `Graph[]` on the Guide page (see §12).
+
+Render-side helpers ship with the same paclet: `PacletFlowEdges[graphData]` (raw edge list), `SymbolNeighborhoodGraph[graphData, symName]` (one-symbol view), `PacletOverviewGraph[graphData]` (whole-paclet view).
+
 ## 1. Determine the branch
 
 ### 1.1 Check that `F` is a public paclet export
@@ -167,7 +190,13 @@ A.5.a **For each missing form**: add an `ExampleText` describing the form, then 
 
 A.5.b **For each missing option**: add an `ExampleSubsection` titled with the option name under the existing **Options** section. Body: short `ExampleText` explaining the option, an `Input` showing default vs explicit value, and the resulting `Output`.
 
-A.5.c **For each missing property**: add either (a) a brief `ExampleText` + `Input` + `Output` triple under **Properties & Relations**, or (b) an entry in the **Notes** 2ColumnTableMod table at the top of the page if it's better summarized than demonstrated. Default: at least one demonstration in Examples for every property.
+A.5.c **Properties & Relations from the function-graph**: call `BuildFunctionGraph[<PACLET>, "WriteFile" -> False]` (see §0.6) and read the entry for `F`. The graph encodes `Accepts` (input heads `F` recognizes, tagged by `Role`), `OperatesOn` (input → output map for `F[…][x]` application), and `ConsumedBy` (downstream symbols that take `F` as input). For Properties & Relations, demonstrate **3-6 of the highest-pedagogical-value edges** as code triples (`ExampleText` → `Input` → `Output`). Three canonical patterns must be included when applicable:
+
+  - **Round-trip:** for any constructor/accessor pair `C`/`A`, the FIRST entry in this section must be `A[C[x]] === x` — per §10.6.
+  - **Operator application:** when `OperatesOn` is non-empty, demonstrate at least one `F[args][x]` edge — e.g. `qo = QuantumOperator[...]; qo[QuantumState[…]]` returns a `QuantumState`.
+  - **Consumed-by spotlight:** when `ConsumedBy` is non-empty, demonstrate at least one downstream symbol that takes `F` as input.
+
+  Each missing property can be either (a) demonstrated with a code triple here, or (b) summarized in the **Notes** 2ColumnTableMod table at the top of the page if better explained than shown. Default: every property the graph lists gets at least one demonstration somewhere on the page (Scope or Properties & Relations).
 
 A.5.d **For each missing named instance class**: add at least one `Input` example per group under **Scope**.
 
@@ -181,6 +210,28 @@ A.5.e **Style discipline**:
 A.5.f Skill cascade: `documentation-writing` → `nb-writer-v2` → `nb-writer`. If `documentation-writing` defers cell-level bytes to you, use `nb-writer-v2`. If that cannot match the existing schema exactly, fall back to `nb-writer`, or hand-construct cells by reading 2–3 sibling pages with `nb-reader` and copying their cell expressions verbatim, then editing the BoxData payload.
 
 A.5.g Save F.nb. Do **not** delete or reorder existing cells unless they are clearly broken. If you must delete, anchor the removal in the issues report.
+
+A.5.h **Neat-Examples Graph cell**: add one cell to the "Neat Examples" subsection that renders `F`'s neighborhood. The cell loads the `Wolfram/PacletFunctionGraph` paclet (hardcoded dev-tree path until the paclet is published) and builds the graph on demand — there is no shipped `Resources/FunctionGraph.wl` to keep in sync:
+
+```wl
+(* hardcoded dev path; replace with PacletInstall["Wolfram/PacletFunctionGraph"] once published *)
+PacletDirectoryLoad[
+    "<repo>/OngoingProjects/Improving doc pages/PacletFunctionGraph"];
+Needs["<PacletPrimaryContext>"];
+Needs["Wolfram`PacletFunctionGraph`"];
+
+pacletRoot = ParentDirectory[NotebookDirectory[], 3];
+graphData  = BuildFunctionGraph[pacletRoot, "WriteFile" -> False];
+SymbolNeighborhoodGraph[graphData, "F"]
+```
+
+The variable is named `graphData` (not `graph`) because the value is an `Association` holding the relation data; calling `SymbolNeighborhoodGraph[graphData, …]` or `PacletOverviewGraph[graphData]` is what produces an actual `Graph[]` object.
+
+The cell evaluates at notebook-open time and renders a directed `Graph[]`. Edges point in the direction of data flow (e.g. `QuantumState → QuantumDistance` because Distance consumes states); vertex face color encodes `Kind` (Constructor / Operator / Transform / Predicate / Distance), and the focal symbol carries a heavier black border.
+
+**Caching.** `BuildFunctionGraph` runs in a few seconds even for a 20-symbol paclet; the doc-page builder pre-evaluates this cell and embeds the rendered `GraphicsBox` as an Output cell, so the user opening the notebook sees the graph immediately without re-evaluating.
+
+Skip this cell only if `F` has empty `Accepts`, `OperatesOn`, and `ConsumedBy` (rare — basically never).
 
 ### A.6 Verify all examples in F.nb
 
@@ -290,10 +341,10 @@ Use the picked templates as scaffolding for cell types and section ordering.
     - **Generalizations & Extensions** — usually placeholder.
     - **Options** — one ExampleSubsection per option.
     - **Applications** — at least one realistic-use example if possible.
-    - **Properties & Relations** — one example per property (or grouped logically).
+    - **Properties & Relations** — sourced from `BuildFunctionGraph[<PACLET>, "WriteFile" -> False]` (see §0.6 and §A.5.c). Demonstrate 3-6 highest-value edges as code triples, including the three canonical patterns (round-trip, operator application, consumed-by spotlight) when applicable.
     - **Possible Issues** — known footguns.
     - **Interactive Examples** — placeholder unless `F` integrates with `Manipulate`/etc.
-    - **Neat Examples** — at least one visual or otherwise-impressive demonstration.
+    - **Neat Examples** — at least one visual or otherwise-impressive demonstration. **Include the `SymbolNeighborhoodGraph[graph, "F"]` cell here** — see §A.5.h for the exact body.
 
 Required global cell options (lift from a sibling page):
 - `WindowToolbars -> "MultipurposeBar"`, `Magnification -> 1.5 Inherited`, `CellContext -> CellGroup`.
@@ -474,6 +525,29 @@ The list typically includes:
 10.6 **Round-trip discipline** — for any constructor/accessor pair `C`/`A`, the FIRST property example on the page should be `A[C[x]] === x`. Phase-oblivious / set-wise comparisons come after, opt-in via a named helper.
 
 10.7 **Never use `Co-Authored-By: Claude` trailers.** Author commits with the user's identity only.
+
+## 12. Guide-page overview graph (optional, one-time per paclet)
+
+When a paclet has a single canonical Guide page (the file under `$GUIDES`), add **one cell** near the top rendering `PacletOverviewGraph[graph]` — the paclet-wide function-relation graph. This is a one-time addition per Guide page, not a per-function step.
+
+Body of the overview cell (same paclet load as §A.5.h):
+
+```wl
+PacletDirectoryLoad[
+    "<repo>/OngoingProjects/Improving doc pages/PacletFunctionGraph"];
+Needs["<PrimaryContext>"];
+Needs["Wolfram`PacletFunctionGraph`"];
+
+pacletRoot = ParentDirectory[NotebookDirectory[], 3];
+graphData  = BuildFunctionGraph[pacletRoot, "WriteFile" -> False];
+PacletOverviewGraph[graphData]
+```
+
+The resulting `Graph[]` shows every public symbol (excluding any in `BuildFunctionGraph`'s `"Exclude"` option) as a node, colored by `Kind`. Every directed flow edge is included; the default `"DiscreteSpiralEmbedding"` layout was tuned empirically to keep labels legible on dense paclets. Set `"IncludeIsolated" -> True` to keep symbols that have no flow edges (typically constants or stale public symbols).
+
+If the Guide page already has an introductory diagram or table, place the overview cell *after* it, not before. The overview complements, doesn't replace, the curated intro.
+
+---
 
 ## 11. Worked example — invoking the runbook for QuantumFramework
 
