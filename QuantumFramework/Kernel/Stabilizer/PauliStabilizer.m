@@ -111,22 +111,31 @@ ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
 
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] := Fold[
     Function[{state, gate},
-        With[{
-            rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
-        },
-            With[{result = state[rewrittenGate]},
-                Which[
-                    (* normal Clifford gate update *)
-                    PauliStabilizerQ[result], result,
-                    (* P[\[Theta]] / T / T\[Dagger] return a Plus -- legacy non-Clifford boundary.
-                       Modern path returns a StabilizerFrame instead; this legacy branch is
-                       retained for the OptionValue["LegacyPRule" -> True] path.
-                       Continue silently; further gates won't reduce but no message either. *)
-                    MatchQ[result, _Plus], result,
-                    (* state was already a Plus from a previous P/T -- can't compose further *)
-                    MatchQ[state, _Plus], state,
-                    (* unknown gate: state[gate] didn't reduce to a PauliStabilizer or Plus *)
-                    True, Message[PauliStabilizer::nonclifford, gate]; state
+        (* Short-circuit: once a non-Clifford gate has aborted the fold,        *)
+        (* propagate $Failed without firing the message again for every         *)
+        (* remaining gate.                                                       *)
+        If[state === $Failed,
+            $Failed,
+            With[{
+                rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
+            },
+                With[{result = state[rewrittenGate]},
+                    Which[
+                        (* normal Clifford gate update *)
+                        PauliStabilizerQ[result], result,
+                        (* Modern non-Clifford boundary: P[\[Theta]] / T / T\[Dagger] return *)
+                        (* a StabilizerFrame that closes under further Clifford updates.      *)
+                        StabilizerFrameQ[result], result,
+                        (* Legacy non-Clifford boundary: P / T return a top-level Plus.       *)
+                        (* Retained for OptionValue["LegacyPRule" -> True] path.              *)
+                        MatchQ[result, _Plus], result,
+                        (* state was already a Plus from a previous P/T -- can't compose      *)
+                        (* further; carry it through.                                          *)
+                        MatchQ[state, _Plus], state,
+                        (* Genuinely unknown / unsupported gate: emit a clean named message  *)
+                        (* and fail the fold via $Failed.                                     *)
+                        True, Message[PauliStabilizer::nonclifford, gate]; $Failed
+                    ]
                 ]
             ]
         ]

@@ -188,8 +188,12 @@ qmo_QuantumMeasurementOperator[ps_PauliStabilizer ? ConcretePauliStabilizerQ] ^:
     label = stabilizerPauliLabelFromQMO[qmo];
     If[StringQ[label],
         ps["M", label],
+        (* Non-Pauli basis: fire a single PauliStabilizer::nonpaulibasis notice *)
+        (* and route through the dense state-vector path. Avoids cascading      *)
+        (* through PauliStabilizerApply (which would also emit ::nonclifford   *)
+        (* for the same input).                                                 *)
         Message[PauliStabilizer::nonpaulibasis];
-        PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]
+        qmo[ps["State"]]
     ]
 ]
 

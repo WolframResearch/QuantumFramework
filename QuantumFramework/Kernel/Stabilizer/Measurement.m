@@ -49,6 +49,14 @@ ps_PauliStabilizer["RowSum", h_Integer, i_Integer] :=
 (* Reference: AarGot04 \[Section]3 (measurement update, "destabilizer trick").  *)
 (* ============================================================================ *)
 
+(* Out-of-range index: emit a clean PauliStabilizer::partition message and    *)
+(* return $Failed (parity with stabilizerEntropy in Entropy.m).               *)
+ps_PauliStabilizer["Measure" | "M", a_Integer] /;
+    With[{n = ps["GeneratorCount"]}, ! (1 <= a <= n)] := (
+        Message[PauliStabilizer::partition, {a}, ps["GeneratorCount"]];
+        $Failed
+)
+
 ps_PauliStabilizer["Measure" | "M", a_Integer] := Enclose @ Block[{
     r = ps["Signs"],
     t = ps["Tableau"],
@@ -82,6 +90,13 @@ ps_PauliStabilizer["Measure" | "M", a_Integer] := Enclose @ Block[{
     ]
 ]
 
+
+(* Out-of-range index in a partition list: same partition message as Entropy *)
+ps_PauliStabilizer["Measure" | "M", qudits : {___Integer}] /;
+    With[{n = ps["GeneratorCount"]}, ! AllTrue[qudits, 1 <= # <= n &]] := (
+        Message[PauliStabilizer::partition, qudits, ps["GeneratorCount"]];
+        $Failed
+)
 
 (* Multi-qubit measurement: recursive single-qubit, building a flat keyed assoc *)
 ps_PauliStabilizer["Measure" | "M", qudits : {___Integer}] := Enclose @
