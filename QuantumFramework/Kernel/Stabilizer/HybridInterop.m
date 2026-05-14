@@ -146,7 +146,7 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
     (* Matrix-iteration fallback for n <= cap. We require a square              *)
     (* 2^n x 2^n matrix; non-square shapes (e.g. computational-basis projector  *)
     (* stacks of shape {2^(n+1), 2^n}) signal a multi-Kraus QMO and fall        *)
-    (* through to the legacy path.                                              *)
+    (* through to the dense materialization path.                                *)
     target = qmo["InputOrder"];
     n = Length[target];
     If[1 <= n <= $stabilizerPauliMatrixSearchMaxQubits,

@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 (* ============================================================================ *)
-(* Direct property handlers (line ranges :192-214 in old PauliStabilizer.m)     *)
+(* Direct property handlers                                                     *)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["Qudits" | "Qubits"] := Dimensions[ps["Tableau"]][[2]]
@@ -39,7 +39,7 @@ ps_PauliStabilizer["TableauPhase"] := Join[ps["Matrix"], ArrayReshape[ps["Phase"
 
 
 (* ============================================================================ *)
-(* Display-form property handlers (line ranges :469-475 in old kernel)          *)
+(* Display-form property handlers                                               *)
 (* (Definitions of PauliForm, TableauForm live in Formatting.m.)                *)
 (* ============================================================================ *)
 
@@ -68,7 +68,7 @@ ps_PauliStabilizer["SampleOutcomes", n_Integer ? Positive] := sampleOutcomes[ps,
 
 (* ============================================================================ *)
 (* Method-grade InnerProduct + Expectation.                                     *)
-(* Implementations remain in Stabilizer/InnerProduct.m as PackageScope helpers. *)
+(* Implementations live in Stabilizer/InnerProduct.m as PackageScope helpers.   *)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["InnerProduct", other_, opts : OptionsPattern[{Method -> "Direct"}]] := stabilizerInnerProduct[ps, other, opts]

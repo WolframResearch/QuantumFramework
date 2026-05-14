@@ -428,12 +428,9 @@ CliffordChannel[qc_QuantumChannel] /; QuantumChannelQ[qc] := Module[{
                 "Source"       -> "QuantumChannel-DetPauli"
             |>],
         _,
-            (* Stochastic channel: emit a clean named message and fail.        *)
-            (* The previous behavior (placeholder CliffordChannel["Identity",n])*)
-            (* was misleading because BitFlip / PhaseFlip / etc. are NOT        *)
-            (* identity channels; callers had to read the message to know they *)
-            (* were getting a stub. For tableau-level stochastic application,   *)
-            (* use the qc[ps] form (see HybridInterop.m).                       *)
+            (* Stochastic channel: emit CliffordChannel::stochastic and fail.   *)
+            (* For tableau-level stochastic application, use qc[ps]             *)
+            (* (see HybridInterop.m).                                            *)
             Message[CliffordChannel::stochastic];
             $Failed
     ]

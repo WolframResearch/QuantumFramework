@@ -144,11 +144,8 @@ ps_PauliStabilizer["PadLeft", n_]  := QuantumTensorProduct[PauliStabilizer[Max[n
 (* ============================================================================ *)
 (* Non-Clifford boundary: P[\[Theta]] / T / T^\[Dagger]                         *)
 (* Returns a `StabilizerFrame` (GarMar15 \[Section]3) that closes under further *)
-(* Clifford updates. The legacy `Plus` return is preserved for one release     *)
-(* behind OptionValue["LegacyPRule" -> True].                                   *)
+(* Clifford updates.                                                            *)
 (* ============================================================================ *)
-
-PauliStabilizer::tdeprecated = "ps[\"P\"[\[Theta]], j], ps[\"T\", j], and ps[SuperDagger[\"T\"], j] now return a StabilizerFrame (closes under further Clifford gates) instead of a top-level Plus. Pattern-matching code that relied on Head -> Plus needs updating."
 
 ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase / 2]},
     StabilizerFrame[{

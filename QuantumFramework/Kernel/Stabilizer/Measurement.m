@@ -6,12 +6,11 @@ PackageScope[rowsum]
 
 
 (* ============================================================================ *)
-(* AG phase function and rowsum primitive (line :280, :282 in old kernel)       *)
+(* AG phase function and rowsum primitive.                                      *)
 (* Reference: AarGot04 \[Section]3, Lemma 3.                                     *)
 (* ============================================================================ *)
 
-(* The AG phase increment g(x1, z1, x2, z2) for multiplying tableau rows.       *)
-(* (Symbol renamed from `g` to `agPhase` to avoid PackageScope name collision.) *)
+(* The AG phase increment g(x1, z1, x2, z2) for multiplying tableau rows. *)
 agPhase[x1_, z1_, x2_, z2_] := Which[
     x1 == z1 == 0, 0,
     x1 == z1 == 1, z2 - x2,

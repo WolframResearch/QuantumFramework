@@ -121,19 +121,15 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
             },
                 With[{result = state[rewrittenGate]},
                     Which[
-                        (* normal Clifford gate update *)
+                        (* Clifford gate: PauliStabilizer in, PauliStabilizer out. *)
                         PauliStabilizerQ[result], result,
-                        (* Modern non-Clifford boundary: P[\[Theta]] / T / T\[Dagger] return *)
-                        (* a StabilizerFrame that closes under further Clifford updates.      *)
+                        (* Non-Clifford gate that returns a StabilizerFrame (e.g. P[\[Theta]], T, T\[Dagger]). *)
                         StabilizerFrameQ[result], result,
-                        (* Legacy non-Clifford boundary: P / T return a top-level Plus.       *)
-                        (* Retained for OptionValue["LegacyPRule" -> True] path.              *)
+                        (* Gate produced a Plus (superposition of stabilizer states): carry it through. *)
                         MatchQ[result, _Plus], result,
-                        (* state was already a Plus from a previous P/T -- can't compose      *)
-                        (* further; carry it through.                                          *)
+                        (* state was already a Plus and didn't distribute over the gate; pass it through. *)
                         MatchQ[state, _Plus], state,
-                        (* Genuinely unknown / unsupported gate: emit a clean named message  *)
-                        (* and fail the fold via $Failed.                                     *)
+                        (* Unknown / unsupported gate. *)
                         True, Message[PauliStabilizer::nonclifford, gate]; $Failed
                     ]
                 ]
