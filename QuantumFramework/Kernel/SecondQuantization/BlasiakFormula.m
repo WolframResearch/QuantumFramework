@@ -7,101 +7,153 @@ PackageScope["BlasiakNormalOrder"]
 PackageScope["MultiModeBlasiakOrder"]
 
 
-BlasiakBuildTerm[coeff_,p_,q_,b_,bdag_]:=Which[p==0&&q==0,coeff,
-p==0,coeff GeneralizedPower[NonCommutativeMultiply,b,q],
-q==0,coeff GeneralizedPower[NonCommutativeMultiply,bdag,p],
-True,coeff GeneralizedPower[NonCommutativeMultiply,bdag,p]**GeneralizedPower[NonCommutativeMultiply,b,q]];
+blasiakBuildTerm[coeff_, p_, q_, b_, bdag_] := Which[
+    p == 0 && q == 0,
+        coeff,
+    p == 0,
+        coeff GeneralizedPower[NonCommutativeMultiply, b, q],
+    q == 0,
+        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p],
+    True,
+        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** GeneralizedPower[NonCommutativeMultiply, b, q]
+]
 
-BlasiakBuildTerm[coeff_,1,q_,b_,bdag_]:=Which[q==0,coeff bdag,q==1,coeff bdag**b,True,coeff bdag**GeneralizedPower[NonCommutativeMultiply,b,q]];
-BlasiakBuildTerm[coeff_,p_,1,b_,bdag_]:=Which[p==0,coeff b,p==1,coeff bdag**b,True,coeff GeneralizedPower[NonCommutativeMultiply,bdag,p]**b];
-BlasiakBuildTerm[coeff_,1,1,b_,bdag_]:=coeff bdag**b;
-BlasiakBuildTerm[coeff_,0,1,b_,bdag_]:=coeff b;
-BlasiakBuildTerm[coeff_,1,0,b_,bdag_]:=coeff bdag;
+blasiakBuildTerm[coeff_, 1, q_, b_, bdag_] := Which[
+    q == 0,
+        coeff bdag,
+    q == 1,
+        coeff bdag ** b,
+    True,
+        coeff bdag ** GeneralizedPower[NonCommutativeMultiply, b, q]
+]
+
+blasiakBuildTerm[coeff_, p_, 1, b_, bdag_] := Which[
+    p == 0,
+        coeff b,
+    p == 1,
+        coeff bdag ** b,
+    True,
+        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** b
+]
+
+blasiakBuildTerm[coeff_, 1, 1, b_, bdag_] := coeff bdag ** b
+
+blasiakBuildTerm[coeff_, 0, 1, b_, bdag_] := coeff b
+
+blasiakBuildTerm[coeff_, 1, 0, b_, bdag_] := coeff bdag
+
 
 
 BlasiakNormalOrder[rList_List, sList_List, var_] :=
-  Module[{M = Length[rList], b = var, bdag = SuperDagger[var],
-          cumD, SrsCache, Srs, dM},
+Block[{
+    M = Length[rList],
+    b = var,
+    bdag = SuperDagger[var],
+    cumD,
+    srsCache,
+    srs,
+    dM
+},
+    cumD = FoldList[Plus, 0, rList - sList];
 
-   
-    cumD = FoldList[Plus, 0, rList - sList];  
-  
-    SrsCache = <||>;
-    Srs[k_] := Lookup[SrsCache, k,
-      SrsCache[k] =
-        (1/k!) * Sum[
-          Binomial[k, j] * (-1)^(k - j) *
-            Product[FactorialPower[cumD[[m]] + j, sList[[m]]], {m, 1, M}],
-          {j, 0, k}]
-    ];
-
-    dM = cumD[[-1]];  
-    If[dM >= 0,
-      Sum[BlasiakBuildTerm[Srs[k], dM + k, k, b, bdag],
-          {k, sList[[1]], Total[sList]}],
-
-      Module[{rRev = Reverse[rList], sRev = Reverse[sList],
-              cumDRev, SrsCacheRev, SrsRev},
-        cumDRev    = FoldList[Plus, 0, sRev - rRev];
-        SrsCacheRev = <||>;
-        SrsRev[k_] := Lookup[SrsCacheRev, k,
-          SrsCacheRev[k] =
+    srsCache = <||>;
+    srs[k_] := Lookup[srsCache, k,
+        srsCache[k] =
             (1/k!) * Sum[
-              Binomial[k, j] * (-1)^(k - j) *
-                Product[FactorialPower[cumDRev[[m]] + j, rRev[[m]]], {m, 1, M}],
-              {j, 0, k}]
-        ];
-        Sum[BlasiakBuildTerm[SrsRev[k], k, k - dM, b, bdag],
-            {k, rList[[-1]], Total[rList]}]
-      ]
-    ]
-  ];
-
-
-ParseBlasiakMonomial[expr_, var_] :=
-  Module[{bdag = SuperDagger[var], factors, blocks, cur, typ, pow,
-          rList, sList},
-
-    factors = If[Head[expr] === NonCommutativeMultiply, List @@ expr, {expr}];
-
-    blocks = {};
-    Do[
-      {typ, pow} = Which[
-        f === var,
-          {"b", 1},
-        f === bdag,
-          {"bdag", 1},
-        MatchQ[f, GeneralizedPower[NonCommutativeMultiply, var,  _]],
-          {"b",    f[[3]]},
-        MatchQ[f, GeneralizedPower[NonCommutativeMultiply, bdag, _]],
-          {"bdag", f[[3]]},
-        MatchQ[f, Power[var,  _]],
-          {"b",    f[[2]]},
-        MatchQ[f, Power[bdag, _]],
-          {"bdag", f[[2]]},
-        True,
-          {"unknown", 0}
-      ];
-      If[typ === "unknown",
-        Print["Error: unsupported non-ladder factor: ", f];
-        Return[$Failed, Module]
-      ];
-      If[Length[blocks] > 0 && blocks[[-1, 1]] === typ,
-        blocks[[-1, 2]] += pow,
-        AppendTo[blocks, {typ, pow}]
-      ],
-      {f, factors}
+                Binomial[k, j] * (-1)^(k - j) * Product[FactorialPower[cumD[[m]] + j, sList[[m]]], {m, 1, M}],
+                {j, 0, k}
+            ]
     ];
 
-    If[Length[blocks] > 0 && blocks[[-1, 1]] === "bdag",
-      AppendTo[blocks, {"b", 0}]];
-    If[Length[blocks] > 0 && blocks[[1, 1]] === "b",
-      PrependTo[blocks, {"bdag", 0}]];
-      
+    dM = cumD[[-1]];
+    If[ dM >= 0,
+        Sum[blasiakBuildTerm[srs[k], dM + k, k, b, bdag], {k, sList[[1]], Total[sList]}],
+        Block[{
+            rRev = Reverse[rList],
+            sRev = Reverse[sList],
+            cumDRev,
+            srsCacheRev,
+            srsRev
+        },
+            cumDRev = FoldList[Plus, 0, sRev - rRev];
+            srsCacheRev = <||>;
+            srsRev[k_] := Lookup[srsCacheRev, k,
+                srsCacheRev[k] =
+                    (1/k!) * Sum[
+                        Binomial[k, j] * (-1)^(k - j) * Product[FactorialPower[cumDRev[[m]] + j, rRev[[m]]], {m, 1, M}],
+                        {j, 0, k}
+                    ]
+            ];
+            Sum[blasiakBuildTerm[srsRev[k], k, k - dM, b, bdag], {k, rList[[-1]], Total[rList]}]
+        ]
+    ]
+]
+
+
+parseBlasiakMonomial::badfactor = "Unsupported non-ladder factor: `1`."
+
+parseBlasiakMonomial[expr_, var_] :=
+Block[{
+    bdag = SuperDagger[var],
+    factors,
+    blocks,
+    rList,
+    sList
+},
+    factors = If[ MatchQ[expr, _NonCommutativeMultiply],
+        List @@ expr,
+        {expr}
+    ];
+
+    (* classify each factor as {"bdag", pow} or {"b", pow}, merge adjacent same-type runs *)
+    blocks = Fold[
+        Function[{acc, f},
+            Block[{typ, pow},
+                {typ, pow} = Which[
+                    f === var,
+                        {"b", 1},
+                    f === bdag,
+                        {"bdag", 1},
+                    MatchQ[f, GeneralizedPower[NonCommutativeMultiply, var, _]],
+                        {"b", f[[3]]},
+                    MatchQ[f, GeneralizedPower[NonCommutativeMultiply, bdag, _]],
+                        {"bdag", f[[3]]},
+                    MatchQ[f, Power[var, _]],
+                        {"b", f[[2]]},
+                    MatchQ[f, Power[bdag, _]],
+                        {"bdag", f[[2]]},
+                    True,
+                        {"unknown", 0}
+                ];
+                If[ typ === "unknown",
+                    Message[parseBlasiakMonomial::badfactor, f];
+                    Return[$Failed, Block]
+                ];
+                If[ Length[acc] > 0 && acc[[-1, 1]] === typ,
+                    ReplacePart[acc, -1 -> {typ, acc[[-1, 2]] + pow}],
+                    Append[acc, {typ, pow}]
+                ]
+            ]
+        ],
+        {},
+        factors
+    ];
+
+    If[ blocks === $Failed, Return[$Failed] ];
+
+    blocks = If[ Length[blocks] > 0 && blocks[[-1, 1]] === "bdag",
+        Append[blocks, {"b", 0}],
+        blocks
+    ];
+    blocks = If[ Length[blocks] > 0 && blocks[[1, 1]] === "b",
+        Prepend[blocks, {"bdag", 0}],
+        blocks
+    ];
+
     sList = Reverse[blocks[[2 ;; ;; 2, 2]]];
     rList = Reverse[blocks[[1 ;; ;; 2, 2]]];
     {rList, sList}
-  ];
+]
 
 
 MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
