@@ -1,3 +1,3 @@
-Package["Wolfram`QuantumFramework`SecondQuantization`"]
+(* ::Package:: *)
 
-$FockSize = 16
+Package["Wolfram`QuantumFramework`SecondQuantization`"]

@@ -104,3 +104,6 @@ G1Correlation[state_QuantumState,{{r1_,t1_},{r2_,t2_}}]:=Module[{aOp,Eminus1,Epl
 		Tr[state["DensityMatrix"] . (Eminus1@Eplus2)["Matrix"]]
 	]
 ]
+
+
+$FockSize = 16;
