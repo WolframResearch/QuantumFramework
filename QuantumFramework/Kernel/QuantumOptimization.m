@@ -35,7 +35,7 @@ PackageExport["QuantumUnlockingMechanism"]
 (*Quantum Optimization Functionalities*)
 
 
-ParametrizedLayer::dimensions = "Number of qubits and parameters of unequal lenght"
+ParametrizedLayer::dimensions = "Number of qubits and parameters of unequal length"
 
 Options[ParametrizedLayer]={"Symbol"->"\[Theta]"};
 ParametrizedLayer[op_,range_List,OptionsPattern[]]:=Sequence@@Table[op[Symbol[OptionValue["Symbol"]<>ToString[i]]]->Flatten[Position[range,i]],{i,range}]
@@ -277,7 +277,7 @@ FubiniStudyMetricTensorLayers[qc_QuantumCircuitOperator, parameters_List]:=Modul
 
 		input=#["Label"]->#["InputOrder"]&/@elements;
 
-	(*Cleaning inputs (subscripts and innecesary brackets) to correctly build subcircuits*)
+	(*Cleaning inputs (subscripts and unnecessary brackets) to correctly build subcircuits*)
 
 		input=input/.Subscript[x_String,y_String]:>x<>y/."CNOT"[___]:>"CNOT";
 
@@ -289,11 +289,11 @@ FubiniStudyMetricTensorLayers[qc_QuantumCircuitOperator, parameters_List]:=Modul
 
 		layers=Table[input[[;;i]],{i,Range[2,Length@input,2]}];
 
-	(*Changing last parametric Pauli gates from each layer to their correspondant QuantumMeasurementOperator*)
+	(*Changing last parametric Pauli gates from each layer to their corresponding QuantumMeasurementOperator*)
 
 		layers=MapAt[#/.Rule[(pauli:("RX"|"RY"|"RZ"))[_],n_]:>QuantumMeasurementOperator[StringDelete[pauli,"R"],n]&,layers,{All,-1}];
 
-	(*Output: QuantumState of first layer (parametrization is possible for QuamtumState from a Parametrized QuantumCircuit) and Measurements*)
+	(*Output: QuantumState of first layer (parametrization is possible for QuantumState from a Parametrized QuantumCircuit) and Measurements*)
 
 		{QuantumCircuitOperator[Flatten[#[[;;-2]]],"Parameters"->parameters][],#[[-1]]}&/@layers
 ]
@@ -504,7 +504,7 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 
 
 (* ::Subsection:: *)
-(*Auxiliar functions*)
+(*Auxiliary functions*)
 
 
 CheapGradient[f_, vars_List, values_ ? VectorQ]:=Module[{permutedVars,nd},

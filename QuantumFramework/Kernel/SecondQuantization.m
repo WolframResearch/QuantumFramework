@@ -175,7 +175,7 @@ QuantumState[SparseArray[{FromDigits[vals,size]+1->1},size^Length[vals]],
 			ConstantArray[size,Length[vals]]]
   ]
 
-FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
+FockVals::len="Values of `1` must be non-negative integers less than the desired size of the space: `2`";
 
 
 AnnihilationOperator[order_?orderQ]:= AnnihilationOperator[$FockSize, order]

@@ -694,7 +694,7 @@ QuantumOperatorProp[qo_, "SimpleQASM"] :=
     Replace[qo["Label"], {
         "SWAP" | "\[Pi]"[_, _] :> "swap",
         Superscript[label_, CircleTimes[_]] :> QuantumOperator[label]["SimpleQASM"],
-        label_ :> StringTemplate["// Unimplimented QASM for operator with label: `` ----"][label]
+        label_ :> StringTemplate["// Unimplemented QASM for operator with label: `` ----"][label]
     }]
 
 QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
