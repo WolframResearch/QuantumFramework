@@ -21,8 +21,11 @@ FockState::usage =
 FockState::clip = "Index `1` was outside the valid range {0, `2`} and has been clipped.";
 
 FockState[n_Integer, size_ : $FockSize] := Block[{nEff = n},
+
   If[n < 0 || n >= size,
+  
     Message[FockState::clip, n, size - 1];
+    
     nEff = Clip[n, {0, size - 1}];
   ];
   
@@ -33,12 +36,13 @@ FockState[n_Integer, size_ : $FockSize] := Block[{nEff = n},
 
 FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
 
-FockState[vals_List, size_:$FockSize]:= 
+FockState[vals_List, size_:$FockSize]:= If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size)&], 
 
-If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size)&], Message[FockVals::len,vals,size],
+	Message[FockVals::len,vals,size],
 
-QuantumState[SparseArray[{FromDigits[vals,size]+1->1},size^Length[vals]],
-			ConstantArray[size,Length[vals]]]
+	With[{idx = FromDigits[vals, size] + 1, dim = size^Length[vals]},
+      QuantumState[SparseArray[{idx -> 1}, dim], ConstantArray[size, Length[vals]]]
+    ]
   ]
 
 
@@ -51,52 +55,53 @@ CoherentState::usage =
 
 Options[CoherentState] = {"Normalized" -> True};
 
-CoherentState[size_Integer: $FockSize, OptionsPattern[]] := 
- Block[{n = 0},
+CoherentState[size_Integer: $FockSize, OptionsPattern[]] := Block[{n = 0},
+ 
   If[OptionValue["Normalized"], #["Normalize"] &, Identity] @
+  
    QuantumState[
+    
     NestList[(n++; # \[FormalAlpha] / Sqrt[n]) &, 1, size - 1], 
+    
     size, 
+    
     "Parameters" -> \[FormalAlpha]
    ]
  ]
 
 
 
-ThermalState::usage = "
-\!\(ThermalState[nbar]\) Creates a thermal (Bose-Einstein) mixed state with mean photon number nbar.
+ThermalState::usage =
+"\!\(ThermalState[nbar]\) Creates a thermal (Bose-Einstein) mixed state with mean photon number nbar.
 \!\(ThermalState[nbar, size]\) Specifies the Fock space size (default: $FockSize).";
 
 ThermalState[nbar_, size_:$FockSize] :=
+
     QuantumOperator[
+    
         DiagonalMatrix[1 / (1 + nbar)
+        
             Table[(nbar / (1 + nbar)) ^ n,
+            
            {n, 0, size-1}
           ]
-        ],
-    size]["MatrixQuantumState"]["Normalize"]
+        ], size]["MatrixQuantumState"]["Normalize"]
 
 
 
 CatState::usage = 
-"\!\(CatState[]\)Returns a parametric Schr\[ODoubleDot]dinger cat state (|\[Alpha]\[RightAngleBracket] + e^{i\[Phi]}|-\[Alpha]\[RightAngleBracket])/N, with formal parameters \[FormalAlpha] and \[FormalPhi].
+"\!\(CatState[]\)Returns a parametric Schr\[ODoubleDot]dinger cat state \!\(\*SubscriptBox[\(N\), \(\[Alpha]\)]\)(|\[Alpha]\[RightAngleBracket] + exp(i\[Phi])|-\[Alpha]\[RightAngleBracket]), with formal parameters \[FormalAlpha] and \[FormalPhi].
 \!\(CatState[size]\) Specifies the Fock space size (default: $FockSize).";
  
-CatState[size_:$FockSize] :=
-    Block[{amplitudes,n=0},
-        amplitudes =
-            Transpose[
-                    NestList[
-                        (
-                            n++;
-                            # {\[FormalAlpha] / Sqrt[n], -\[FormalAlpha] / Sqrt[n]}
-                        )&
-                        ,
-                        {1, 1}
-                        ,
-                        size - 1
-                    ]
-            ];
-        QuantumState[amplitudes[[1]] + E ^ (I \[FormalPhi]) amplitudes[[2]], size,
-             "Parameters" -> {\[FormalAlpha], \[FormalPhi]}]["Normalize"]
-    ]
+CatState[size_: $FockSize] := With[{ns = Range[0, size - 1]},
+  
+    QuantumState[
+    
+      (\[FormalAlpha]^ns / Sqrt[ns!]) (1 + E^(I \[FormalPhi]) (-1)^ns),
+      
+      size,
+      
+      "Parameters" -> {\[FormalAlpha], \[FormalPhi]}
+      
+    ]["Normalize"]
+  ]
