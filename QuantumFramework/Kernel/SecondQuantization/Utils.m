@@ -74,13 +74,14 @@ ExtractNCVars[ops_List] :=
     DeleteDuplicates @ Cases[ops, (v : (_? FormalSymbolQ | SuperDagger[_? FormalSymbolQ])) :> v, {0, Infinity}]
 
 
+(* Working order for default behavior of NCA in version 15 *)
 OrderVariables[vars_List] := Block[{annihilators, creators},
 
     annihilators = Select[vars, FreeQ[#, SuperDagger] &];
     
     creators     = Select[vars, !FreeQ[#, SuperDagger] &];
     
-    Join[ReverseSort[annihilators], ReverseSort[creators]]
+    Join[Sort[creators],Sort[annihilators]]
 ]
 
 

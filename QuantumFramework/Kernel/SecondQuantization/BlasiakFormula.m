@@ -90,70 +90,53 @@ Block[{
 ]
 
 
-parseBlasiakMonomial::badfactor = "Unsupported non-ladder factor: `1`."
+ParseBlasiakMonomial::badfactor = "unsupported non-ladder factor: `1`"
 
-parseBlasiakMonomial[expr_, var_] :=
-Block[{
-    bdag = SuperDagger[var],
-    factors,
-    blocks,
-    rList,
-    sList
-},
-    factors = If[ MatchQ[expr, _NonCommutativeMultiply],
-        List @@ expr,
-        {expr}
+ParseBlasiakMonomial[expr_, var_] :=
+  Block[{bdag = SuperDagger[var], factors, blocks, cur, typ, pow,
+          rList, sList},
+
+    factors = If[MatchQ[expr, _NonCommutativeMultiply], List @@ expr, {expr}];
+
+    blocks = {};
+    Do[
+      {typ, pow} = Which[
+        f === var,
+          {"b", 1},
+        f === bdag,
+          {"bdag", 1},
+        MatchQ[f, GeneralizedPower[NonCommutativeMultiply, var,  _]],
+          {"b",    f[[3]]},
+        MatchQ[f, GeneralizedPower[NonCommutativeMultiply, bdag, _]],
+          {"bdag", f[[3]]},
+        MatchQ[f, Power[var,  _]],
+          {"b",    f[[2]]},
+        MatchQ[f, Power[bdag, _]],
+          {"bdag", f[[2]]},
+        True,
+          {"unknown", 0}
+      ];
+      If[typ === "unknown",
+        Message[ParseBlasiakMonomial::badfactor, pow];
+        Return[$Failed]
+      ];
+      If[Length[blocks] > 0 && blocks[[-1, 1]] === typ,
+        blocks[[-1, 2]] += pow,
+        AppendTo[blocks, {typ, pow}]
+      ],
+      {f, factors}
     ];
 
-    (* classify each factor as {"bdag", pow} or {"b", pow}, merge adjacent same-type runs *)
-    blocks = Fold[
-        Function[{acc, f},
-            Block[{typ, pow},
-                {typ, pow} = Which[
-                    f === var,
-                        {"b", 1},
-                    f === bdag,
-                        {"bdag", 1},
-                    MatchQ[f, GeneralizedPower[NonCommutativeMultiply, var, _]],
-                        {"b", f[[3]]},
-                    MatchQ[f, GeneralizedPower[NonCommutativeMultiply, bdag, _]],
-                        {"bdag", f[[3]]},
-                    MatchQ[f, Power[var, _]],
-                        {"b", f[[2]]},
-                    MatchQ[f, Power[bdag, _]],
-                        {"bdag", f[[2]]},
-                    True,
-                        {"unknown", 0}
-                ];
-                If[ typ === "unknown",
-                    Message[parseBlasiakMonomial::badfactor, f];
-                    Return[$Failed, Block]
-                ];
-                If[ Length[acc] > 0 && acc[[-1, 1]] === typ,
-                    ReplacePart[acc, -1 -> {typ, acc[[-1, 2]] + pow}],
-                    Append[acc, {typ, pow}]
-                ]
-            ]
-        ],
-        {},
-        factors
+    blocks = Join[
+        If[blocks =!= {} && blocks[[1,  1]] === "b",    {{"bdag", 0}}, {}],
+        blocks,
+        If[blocks =!= {} && blocks[[-1, 1]] === "bdag", {{"b",    0}}, {}]
     ];
-
-    If[ blocks === $Failed, Return[$Failed] ];
-
-    blocks = If[ Length[blocks] > 0 && blocks[[-1, 1]] === "bdag",
-        Append[blocks, {"b", 0}],
-        blocks
-    ];
-    blocks = If[ Length[blocks] > 0 && blocks[[1, 1]] === "b",
-        Prepend[blocks, {"bdag", 0}],
-        blocks
-    ];
-
+      
     sList = Reverse[blocks[[2 ;; ;; 2, 2]]];
     rList = Reverse[blocks[[1 ;; ;; 2, 2]]];
     {rList, sList}
-]
+  ];
 
 
 MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=

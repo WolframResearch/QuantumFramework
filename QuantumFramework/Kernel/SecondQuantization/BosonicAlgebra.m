@@ -78,7 +78,7 @@ Block[{rels, scalars, alg},
         Infinity
     ];
     alg = NonCommutativeAlgebra["ScalarVariables" -> scalars];
-    NonCommutativePolynomialReduce[poly, rels, ncVars, alg][[2]]
+    NonCommutativePolynomialReduce[poly, rels, OrderVariables[ncVars], alg][[2]]
 ]
 
 
