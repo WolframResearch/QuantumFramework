@@ -8,6 +8,10 @@ PackageExport["WignerRepresentation"]
 
 PackageExport["HusimiQRepresentation"]
 
+PackageExport["WignerFunction"]
+
+PackageExport["HusimiQFunction"]
+
 
 (* ::Input::Initialization::Plain:: *)
 WignerRepresentation::usage = 
@@ -86,6 +90,97 @@ WigLaguerreVal[L_, x_, c_] :=
         ];
         y0 - y1 Sqrt[1 / (L + 1.)] (L + 1. - x)
     ]
+
+
+(* Phase space Kernels *)
+\[ScriptCapitalK]mn[\[Gamma]_, m_, n_] :=
+ With[{\[Zeta] = 2 \[Gamma]},
+  (-1)^n Exp[-(Abs[\[Zeta]]^2)/2] If[m >= n,
+   Sqrt[n!/m!] \[Zeta]^(m - n) LaguerreL[n, m - n, Abs[\[Zeta]]^2],
+   Sqrt[m!/n!] Conjugate[-\[Zeta]]^(n - m) LaguerreL[m, n - m, Abs[\[Zeta]]^2]]]
+   
+\[ScriptCapitalK]mnWirt[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
+ With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
+  (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
+   Sqrt[n!/m!] \[Zeta]^(m - n) LaguerreL[n, m - n, \[Zeta] \[Zeta]Star],
+   Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) LaguerreL[m, n - m, \[Zeta] \[Zeta]Star]]]
+   
+\[ScriptCapitalK]mnWirtInactive[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
+ With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
+  (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
+   Sqrt[n!/m!] \[Zeta]^(m - n) Inactive[LaguerreL][n, m - n, \[Zeta] \[Zeta]Star],
+   Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) Inactive[LaguerreL][m, n - m, \[Zeta] \[Zeta]Star]]]
+   
+\[ScriptCapitalK]HusimiMN[\[Alpha]_, m_, n_] := 
+ Exp[-Abs[\[Alpha]]^2] \[Alpha]^n Conjugate[\[Alpha]]^m / Sqrt[m! n!]
+   
+SetAttributes[{\[ScriptCapitalK]mn, \[ScriptCapitalK]mnWirt, \[ScriptCapitalK]mnWirtInactive,\[ScriptCapitalK]HusimiMN}, Listable]
+
+
+
+WignerFunction::usage = 
+"\!\(WignerFunction[\[Rho], \[Alpha]]\) Computes W(\[Alpha]) using the complex amplitude directly.
+\!\(WignerFunction[\[Rho], {x,p}]\) Computes the Wigner quasi-probability distribution for quantum state \[Rho] using real quadrature variables x and p.
+\!\(WignerFunction[\[Ellipsis], SymbolicForm \[Rule] Automatic]\) 'Wirtinger' treats \[Alpha] and \[Alpha]\[Conjugate] as independent variables, 'LaguerreForm' holds Laguerre polynomials Inactive";
+
+
+WignerFunction::badopt = "Unknown SymbolicForm `1`. Use Automatic, \"Wirtinger\", or \"LaguerreForm\".";
+
+Options[WignerFunction] = {SymbolicForm -> Automatic};
+
+WignerFunction[\[Rho]_QuantumState, {x_, p_}, opts:OptionsPattern[]] := 
+  1/2 ComplexExpand[ WignerFunction[\[Rho], (x + I p)/Sqrt[2], opts] ];
+
+WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[\[Alpha]] := 
+  Block[{
+    mat = \[Rho]["DensityMatrix"],
+    form = OptionValue[SymbolicForm],
+    pos,
+    vals
+  },
+    pos = mat["ExplicitPositions"];
+    vals = mat["ExplicitValues"];
+    Which[
+      form === "Wirtinger",
+       2/\[Pi] Dot[
+           mat["ExplicitValues"],
+           \[ScriptCapitalK]mnWirt[\[Alpha], Conjugate[\[Alpha]], pos[[All,2]] - 1, pos[[All,1]] - 1]
+           ],
+        
+      form === "LaguerreForm",
+       2/\[Pi] Dot[
+           mat["ExplicitValues"],
+           \[ScriptCapitalK]mnWirtInactive[\[Alpha], Conjugate[\[Alpha]], pos[[All,2]] - 1, pos[[All,1]] - 1] 
+           ],
+        
+      form === Automatic,
+       2/\[Pi] Dot[
+           mat["ExplicitValues"],
+           \[ScriptCapitalK]mn[\[Alpha], pos[[All,2]] - 1, pos[[All,1]]-1] 
+           ],
+        
+      True,
+       Message[WignerFunction::badopt, form]; $Failed
+    ]
+  ]
+
+
+HusimiQFunction::usage = 
+"\!\(HusimiQFunction[\[Rho], \[Alpha]]\) Computes Q(\[Alpha]) for the state \[Rho] using the complex amplitude  \[Alpha] directly.
+\!\(HusimiQFunction[\[Rho], {x,p}]\) Computes the Husimi Q function for quantum state \[Rho] using real quadrature variables x and p."
+
+HusimiQFunction[\[Rho]_QuantumState, {x_, p_}] := 
+  1/2 ComplexExpand[HusimiQFunction[\[Rho], (x + I p)/Sqrt[2]]];
+
+HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] := 
+ Block[{
+   mat = \[Rho]["DensityMatrix"],
+   pos,
+   val},
+   pos = mat["ExplicitPositions"];
+   val = mat["ExplicitValues"]; 
+   1/\[Pi] Dot[val, \[ScriptCapitalK]HusimiMN[\[Alpha], pos[[All,2]] - 1, pos[[All,1]] - 1]]
+   ]
 
 
 (* ::Input::Initialization::Plain:: *)

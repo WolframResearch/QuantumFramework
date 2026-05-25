@@ -29,7 +29,7 @@ FockState[n_Integer, size_ : $FockSize] := Block[{nEff = n},
     nEff = Clip[n, {0, size - 1}];
   ];
   
-  QuantumState[SparseArray[{nEff + 1 -> 1}, size], size]
+  QuantumState[SparseArray[{nEff + 1 -> 1}, size], size, "Label"-> Ket[{n}]]
 ];
 
 
@@ -41,7 +41,7 @@ FockState[vals_List, size_:$FockSize]:= If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size
 	Message[FockVals::len,vals,size],
 
 	With[{idx = FromDigits[vals, size] + 1, dim = size^Length[vals]},
-      QuantumState[SparseArray[{idx -> 1}, dim], ConstantArray[size, Length[vals]]]
+      QuantumState[SparseArray[{idx -> 1}, dim], ConstantArray[size, Length[vals],"Label"->Ket[vals]]]
     ]
   ]
 
@@ -65,7 +65,9 @@ CoherentState[size_Integer: $FockSize, OptionsPattern[]] := Block[{n = 0},
     
     size, 
     
-    "Parameters" -> \[FormalAlpha]
+    "Parameters" -> \[FormalAlpha],
+    
+    "Label"-> HoldForm[StringForm["CoherentState[``]",\[FormalAlpha]]]
    ]
  ]
 
@@ -77,7 +79,7 @@ ThermalState::usage =
 
 ThermalState[nbar_, size_:$FockSize] :=
 
-    QuantumOperator[
+    QuantumState[
     
         DiagonalMatrix[1 / (1 + nbar)
         
@@ -85,7 +87,7 @@ ThermalState[nbar_, size_:$FockSize] :=
             
            {n, 0, size-1}
           ]
-        ], size]["MatrixQuantumState"]["Normalize"]
+        ], size, "Label"->StringForm["ThermalState[``]",nbar]]["Normalize"]
 
 
 
@@ -101,7 +103,9 @@ CatState[size_: $FockSize] := With[{ns = Range[0, size - 1]},
       
       size,
       
-      "Parameters" -> {\[FormalAlpha], \[FormalPhi]}
+      "Parameters" -> {\[FormalAlpha], \[FormalPhi]},
+      
+      "Label"-> HoldForm[StringForm["CatState[``,``]",\[FormalAlpha], \[FormalPhi]]]
       
     ]["Normalize"]
   ]
