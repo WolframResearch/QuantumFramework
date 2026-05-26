@@ -58,6 +58,27 @@ DisplacementOperator[\[Alpha]_, size_, opts : OptionsPattern[]] := DisplacementO
 
 DisplacementOperator[\[Alpha]_, order_?orderQ, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha],$FockSize,order, opts];
 
+DisplacementOperator[\[Alpha]_, \[Infinity], opts : OptionsPattern[]] := DisplacementOperator[\[Alpha], \[Infinity], {1}, opts]
+
+DisplacementOperator[\[Alpha]_, \[Infinity], order_?orderQ, OptionsPattern[]] :=
+Block[{
+    ordering = OptionValue["Ordering"],
+    a, adag
+},
+    {a, adag} = FieldVariables[order];
+    Switch[ordering,
+        "Normal",
+            Exp[-\[Alpha] Conjugate[\[Alpha]]/2] * Exp[\[Alpha] * adag] ** Exp[-Conjugate[\[Alpha]] * a],
+        "Weak",
+            Exp[\[Alpha] * adag - Conjugate[\[Alpha]] * a],
+        "Antinormal",
+            Exp[\[Alpha] Conjugate[\[Alpha]]/2] * Exp[-Conjugate[\[Alpha]] * a] ** Exp[\[Alpha] * adag],
+        _,
+            Message[DisplacementOperator::invalidorder, ordering];
+            Abort[]
+    ]
+]
+
 DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
     Block[{a = AnnihilationOperator[size,order], ordering},
         

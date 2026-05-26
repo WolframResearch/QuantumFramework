@@ -10,6 +10,8 @@ PackageExport["BosonicBCH"]
 
 PackageExport["BosonicZassenhaus"]
 
+PackageExport["BosonicBCHExact"]
+
 
 BosonicRelations::usage =
 "\!\(BosonicRelations[vars]\) Returns the list of bosonic commutation relations for the operators in vars.";
@@ -106,3 +108,86 @@ Block[{zassTerm},
     zassTerm = ResourceFunction["ZassenhausTerms"][ops, n];
     bosonicReduce[NonCommutativeExpand[zassTerm], ncVars]
 ]
+
+
+$nonuls  = {0. -> 0, 0. I -> 0, Complex[0.,0.] -> 0, Complex[x_, 0.]->x,
+          Complex[0.,y_] -> I y};
+          
+BosonicBCHExact::usage = "\!\(BosonicBCHExact[expr, vars]\) Exactly evaluates a product of exponentials or an exponential conjugation when the algebra closes, using BCH and adjoint action identities.
+\!\(BosonicBCHExact[expr, vars, \"Scalars\" -> syms]\) Treats syms as commuting scalars.";
+
+Options[BosonicBCHExact] = {"Scalars" -> {}};
+
+BosonicBCHExact[expr_] :=
+    Block[{vars, scalars},
+        vars = ExtractNCVars[{expr}];
+        scalars = DeleteDuplicates @ Cases[{expr}, s_Symbol /; !FormalSymbolQ[
+            s] && !NumericQ[s], Infinity];
+        BosonicBCHExact[expr, vars, "Scalars" -> scalars]
+    ]
+        
+
+BosonicBCHExact[Exp[b1_] ** Exp[b2_], vars_List, opts : OptionsPattern[
+    ]] :=
+    Block[{scalars = OptionValue["Scalars"], cmt},
+        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, b2], vars,
+             "Scalars" -> scalars];
+        Which[
+            cmt === 0,
+                Exp[b1 + b2]
+            ,
+            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
+                Exp[cmt / 2] * Exp[b1 + b2]
+            ,
+            True,
+                Exp[b1] ** Exp[b2]
+        ]
+    ]
+
+BosonicBCHExact[Exp[b1_] ** op_ ** Exp[b3_], vars_List, opts : OptionsPattern[
+    ]] /; b3 === -b1 :=
+    Block[{scalars = OptionValue["Scalars"], cmt, cmt2, lam},
+        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, op], vars,
+             "Scalars" -> scalars];
+        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b1, cmt], vars,
+             "Scalars" -> scalars];
+        Which[
+            cmt === 0,
+                op
+            ,
+            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
+                op + cmt
+            ,
+            (cmt2 /. $nonuls) === 0,
+                op + cmt
+            ,
+            FreeQ[Simplify[cmt2 / op] /. $nonuls, Alternatives @@ vars
+                ],
+                Block[{},
+                    lam = Simplify[cmt2 / op] /. $nonuls;
+                    Simplify[Cos[I Sqrt[lam]] * op + Sin[I Sqrt[lam]]
+                         / (I Sqrt[lam]) * cmt] /. $nonuls
+                ]
+            ,
+            True,
+                Exp[b1] ** op ** Exp[b3]
+        ]
+    ]
+
+BosonicBCHExact[op_ ** Exp[b3_], vars_List, opts : OptionsPattern[]] :=
+    Block[{scalars = OptionValue["Scalars"], cmt, cmt2},
+        cmt = Simplify @ BosonicNormalOrder[Commutator[b3, op], vars,
+             "Scalars" -> scalars];
+        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b3, cmt], vars,
+             "Scalars" -> scalars];
+        Which[
+            cmt === 0,
+                Exp[b3] ** op
+            ,
+            (cmt2 /. $nonuls) === 0,
+                Exp[b3] ** op - Exp[b3] ** cmt
+            ,
+            True,
+                op ** Exp[b3]
+        ]
+    ]
