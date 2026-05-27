@@ -144,6 +144,10 @@ BosonicBCHExact[Exp[b1_] ** Exp[b2_], vars_List, opts : OptionsPattern[
         ]
     ]
 
+BosonicBCHExact[Exp[b1_] ** ops__ ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
+    b3 === -b1 && Length[{ops}] > 1 :=
+    NonCommutativeMultiply @@ (BosonicBCHExact[Exp[b1] ** # ** Exp[b3], vars, opts] & /@ {ops})
+
 BosonicBCHExact[Exp[b1_] ** op_ ** Exp[b3_], vars_List, opts : OptionsPattern[
     ]] /; b3 === -b1 :=
     Block[{scalars = OptionValue["Scalars"], cmt, cmt2, lam},
@@ -191,3 +195,13 @@ BosonicBCHExact[op_ ** Exp[b3_], vars_List, opts : OptionsPattern[]] :=
                 op ** Exp[b3]
         ]
     ]
+    
+BosonicBCHExact[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
+    b3 === -b1 :=
+	Block[{scalars = OptionValue["Scalars"], newb2},
+    newb2 = BosonicBCHExact[Exp[b1] ** b2 ** Exp[b3], vars, opts];
+    If[FreeQ[newb2, BosonicBCHExact],
+        Exp[newb2],
+        Exp[b1] ** Exp[b2] ** Exp[b3]
+    ]
+]
