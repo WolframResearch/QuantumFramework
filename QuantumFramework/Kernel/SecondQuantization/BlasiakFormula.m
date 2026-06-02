@@ -7,40 +7,17 @@ PackageScope["BlasiakNormalOrder"]
 PackageScope["MultiModeBlasiakOrder"]
 
 
-blasiakBuildTerm[coeff_, p_, q_, b_, bdag_] := Which[
-    p == 0 && q == 0,
-        coeff,
-    p == 0,
-        coeff GeneralizedPower[NonCommutativeMultiply, b, q],
-    q == 0,
-        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p],
-    True,
-        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** GeneralizedPower[NonCommutativeMultiply, b, q]
-]
 
-blasiakBuildTerm[coeff_, 1, q_, b_, bdag_] := Which[
-    q == 0,
-        coeff bdag,
-    q == 1,
-        coeff bdag ** b,
-    True,
-        coeff bdag ** GeneralizedPower[NonCommutativeMultiply, b, q]
-]
-
-blasiakBuildTerm[coeff_, p_, 1, b_, bdag_] := Which[
-    p == 0,
-        coeff b,
-    p == 1,
-        coeff bdag ** b,
-    True,
-        coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** b
-]
-
-blasiakBuildTerm[coeff_, 1, 1, b_, bdag_] := coeff bdag ** b
-
+blasiakBuildTerm[coeff_, 0, 0, b_, bdag_] := coeff
 blasiakBuildTerm[coeff_, 0, 1, b_, bdag_] := coeff b
-
 blasiakBuildTerm[coeff_, 1, 0, b_, bdag_] := coeff bdag
+blasiakBuildTerm[coeff_, 1, 1, b_, bdag_] := coeff bdag ** b
+blasiakBuildTerm[coeff_, 0, q_, b_, bdag_] := coeff GeneralizedPower[NonCommutativeMultiply, b, q]
+blasiakBuildTerm[coeff_, p_, 0, b_, bdag_] := coeff GeneralizedPower[NonCommutativeMultiply, bdag, p]
+blasiakBuildTerm[coeff_, 1, q_, b_, bdag_] := coeff bdag ** GeneralizedPower[NonCommutativeMultiply, b, q]
+blasiakBuildTerm[coeff_, p_, 1, b_, bdag_] := coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** b
+blasiakBuildTerm[coeff_, p_, q_, b_, bdag_] :=
+    coeff GeneralizedPower[NonCommutativeMultiply, bdag, p] ** GeneralizedPower[NonCommutativeMultiply, b, q]
 
 
 
@@ -141,7 +118,7 @@ ParseBlasiakMonomial[expr_, var_] :=
 
 MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
   Module[{expr, factors, modeVars, modePolys, scalarFactors,
-          finalExpr, getOrderWeight},
+          finalExpr},
 
     expr = exprIn //. {
       GeneralizedPower[NonCommutativeMultiply,
@@ -152,11 +129,13 @@ MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
       NonCommutativeMultiply[a___, NonCommutativeMultiply[b__], c___] :>
           NonCommutativeMultiply[a, b, c]
     };
+     
+    factors = If[MatchQ[expr, _NonCommutativeMultiply], List @@ expr, {expr}];
 
-    factors = If[Head[expr] === NonCommutativeMultiply, List @@ expr, {expr}];
-
-    scalarFactors = Select[factors, FreeQ[#, Alternatives @@ vars] &];
-    factors       = Select[factors, !FreeQ[#, Alternatives @@ vars] &];
+    With[{altVars = Alternatives @@ vars},
+        scalarFactors = Select[factors, FreeQ[#, altVars] &];
+        factors       = Select[factors, !FreeQ[#, altVars] &]
+    ];
 
     modeVars = Partition[vars, 2];
 
@@ -199,16 +178,11 @@ MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
       NonCommutativeMultiply[]   -> 1
     };
 
-    getOrderWeight[x_] :=
-      Module[{isDagger, varIndex},
-        isDagger = !FreeQ[x, SuperDagger];
-        varIndex = SelectFirst[Range[Length[vars]],
-                     !FreeQ[x, vars[[#]]] &, 999];
-        If[isDagger, -1000 + varIndex, 1000 + varIndex]
-      ];
-
     finalExpr = finalExpr /. NonCommutativeMultiply[args__] :>
-      NonCommutativeMultiply @@ SortBy[{args}, getOrderWeight];
+      NonCommutativeMultiply @@ SortBy[{args}, {
+          FreeQ[#, SuperDagger] &,
+          Function[x, SelectFirst[Range[Length[vars]], !FreeQ[x, vars[[#]]] &, 999]]
+      }];
 
     If[Length[scalarFactors] > 0,
       (Times @@ scalarFactors) * finalExpr,
