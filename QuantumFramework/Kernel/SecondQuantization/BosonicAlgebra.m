@@ -6,11 +6,15 @@ PackageExport["BosonicRelations"]
 
 PackageExport["BosonicNormalOrder"]
 
-PackageExport["BosonicBCH"]
+PackageExport["BosonicBCHTerms"]
 
-PackageExport["BosonicZassenhaus"]
+PackageExport["BosonicZassenhausTerms"]
 
 PackageExport["BosonicBCHExact"]
+
+PackageExport["BosonVEV"]
+
+PackageExport["BosonicMatrixElement"]
 
 
 BosonicRelations::usage =
@@ -84,26 +88,26 @@ Block[{rels, scalars, alg},
 ]
 
 
-BosonicBCH::usage =
-"\!\(BosonicBCH[ops, n]\) Computes the BCH series log(e\!\(\*SuperscriptBox[\()\), \(X1\)]\) e\!\(\*SuperscriptBox[\()\), \(X2\)]\)\[Ellipsis]) truncated at order n and reduces the result using bosonic commutation relations.
-\!\(BosonicBCH[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
+BosonicBCHTerms::usage =
+"\!\(BosonicBCHTerms[ops, n]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]), reduced using bosonic commutation relations.
+\!\(BosonicBCHTerms[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
 
-BosonicBCH[ops_List, n_Integer] := BosonicBCH[ops, n, ExtractNCVars[ops]]
+BosonicBCHTerms[ops_List, n_Integer] := BosonicBCH[ops, n, ExtractNCVars[ops]]
 
-BosonicBCH[ops_List, n_Integer, ncVars_List] :=
+BosonicBCHTerms[ops_List, n_Integer, ncVars_List] :=
 Block[{bchTerm},
     bchTerm = ResourceFunction["BakerCampbellHausdorffTerms"][ops, n];
     bosonicReduce[NonCommutativeExpand[bchTerm], ncVars]
 ]
 
 
-BosonicZassenhaus::usage =
-"\!\(BosonicZassenhaus[ops, n]\) Computes the Zassenhaus factorisation e\!\(\*SuperscriptBox[\()\), \(X1+X2+\[Ellipsis]\)]\) = e\!\(\*SuperscriptBox[\()\), \(X1\)]\) e\!\(\*SuperscriptBox[\()\), \(X2\)]\)\[Ellipsis] truncated at order n and reduces each factor using bosonic commutation relations.
-\!\(BosonicZassenhaus[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
+BosonicZassenhausTerms::usage =
+"\!\(BosonicZassenhausTerms[ops, n]\) Computes the nth term of the Zassenhaus formula and reduces the expression using bosonic commutation relations.
+\!\(BosonicZassenhausTerms[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
 
-BosonicZassenhaus[ops_List, n_Integer] := BosonicZassenhaus[ops, n, ExtractNCVars[ops]]
+BosonicZassenhausTerms[ops_List, n_Integer] := BosonicZassenhaus[ops, n, ExtractNCVars[ops]]
 
-BosonicZassenhaus[ops_List, n_Integer, ncVars_List] :=
+BosonicZassenhausTerms[ops_List, n_Integer, ncVars_List] :=
 Block[{zassTerm},
     zassTerm = ResourceFunction["ZassenhausTerms"][ops, n];
     bosonicReduce[NonCommutativeExpand[zassTerm], ncVars]
@@ -205,3 +209,53 @@ BosonicBCHExact[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPatte
         Exp[b1] ** Exp[b2] ** Exp[b3]
     ]
 ]
+
+
+BosonVEV::usage =
+"\!\(BosonVEV[expr, vars]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] by normal-ordering expr and extracting the scalar (c-number) part.
+\!\(BosonVEV[expr]\) Auto-detects non-commutative variables from expr.
+\!\(BosonVEV[expr, vars, Method -> m]\) Passes method options to BosonicNormalOrder.";
+
+Options[BosonVEV] = Options[BosonicNormalOrder];
+
+BosonVEV[expr_, opts : OptionsPattern[]] :=
+    Block[{vars = ExtractNCVars[{expr}]},
+        VacuumExpectation[expr, vars, opts]
+    ]
+
+BosonVEV[expr_, vars_List, opts : OptionsPattern[]] :=
+    Block[{normalOrdered, terms},
+        normalOrdered = BosonicNormalOrder[expr, vars, opts];
+        terms = If[Head[normalOrdered] === Plus, List @@ normalOrdered, {normalOrdered}];
+        Total @ Select[terms, FreeQ[#, Alternatives @@ vars] &]
+    ]
+
+
+BosonicMatrixElement::usage =
+"\!\(BosonicMatrixElement[{m, n}, DisplacementOperator[\[Alpha]]]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.
+\!\(BosonicMatrixElement[{m, n}, SqueezeOperator[\[Xi]]]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).";
+
+SetAttributes[BosonicMatrixElement, HoldRest]
+
+BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, DisplacementOperator[\[Alpha]_]] :=
+    With[{a2 = Abs[\[Alpha]]^2},
+        If[m >= n,
+            E^(-a2/2) Sqrt[n!/m!] \[Alpha]^(m - n) LaguerreL[n, m - n, a2],
+            E^(-a2/2) Sqrt[m!/n!] (-Conjugate[\[Alpha]])^(n - m) LaguerreL[m, n - m, a2]
+        ]
+    ]
+
+
+BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, SqueezeOperator[\[Xi]_]] :=
+    Module[{r = Abs[\[Xi]], \[Phi] = Arg[\[Xi]], \[Tau], s},
+        If[OddQ[m + n], Return[0]];
+        \[Tau] = Exp[I \[Phi]] Tanh[r];
+        If[m >= n,
+            s = (m - n)/2;
+            (-\[Tau]/2)^s / s! Sqrt[m!/n!] Sech[r]^(n + 1/2) *
+                Hypergeometric2F1[-n/2, (1 - n)/2, s + 1, -Sinh[r]^2],
+            s = (n - m)/2;
+            (Conjugate[\[Tau]]/2)^s / s! Sqrt[n!/m!] Sech[r]^(m + 1/2) *
+                Hypergeometric2F1[-m/2, (1 - m)/2, s + 1, -Sinh[r]^2]
+        ]
+    ]

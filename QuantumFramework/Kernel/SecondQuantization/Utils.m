@@ -56,6 +56,9 @@ FieldVariables[] := {\[FormalA], SuperDagger[\[FormalA]]}
 
 FieldVariables[var_Symbol ?FormalSymbolQ] := {var, SuperDagger[var]}
 
+FieldVariables[vars : {__Symbol ? FormalSymbolQ}] :=
+    Flatten[{#, SuperDagger[#]} & /@ vars]
+
 FieldVariables[labels_List] := FieldVariables[\[FormalA], labels]
 
 FieldVariables[var_Symbol ?FormalSymbolQ, labels_List] :=

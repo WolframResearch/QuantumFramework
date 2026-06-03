@@ -47,9 +47,11 @@ DisplacementOperator::usage =
 "\!\(DisplacementOperator[\[Alpha]]\) Creates the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].
 \!\(DisplacementOperator[\[Alpha], size]\) Specifies the Fock space size (default: $FockSize).
 \!\(DisplacementOperator[\[Alpha], size, order]\) Specifies the subsystem order.
-\!\(DisplacementOperator[\[Ellipsis], \"Ordering\"\[Rule] ]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+\!\(DisplacementOperator[\[Ellipsis], \"Ordering\"\[Rule] ]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.
+\!\(DisplacementOperator[\[Alpha], \[Infinity], order]\) Returns a symbolic expression using field variables and non-commutative algebra.";
 
-Options[DisplacementOperator] = {"Ordering" -> "Normal"};
+
+Options[DisplacementOperator] = {"Ordering" -> Automatic};
 DisplacementOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'Normal', 'Weak', or 'Antinormal'.";
 
 DisplacementOperator[\[Alpha]_, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha], $FockSize,{1}, opts];
@@ -58,20 +60,20 @@ DisplacementOperator[\[Alpha]_, size_, opts : OptionsPattern[]] := DisplacementO
 
 DisplacementOperator[\[Alpha]_, order_?orderQ, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha],$FockSize,order, opts];
 
-DisplacementOperator[\[Alpha]_, \[Infinity], opts : OptionsPattern[]] := DisplacementOperator[\[Alpha], \[Infinity], {1}, opts]
-
-DisplacementOperator[\[Alpha]_, \[Infinity], order_?orderQ, OptionsPattern[]] :=
-Block[{
-    ordering = OptionValue["Ordering"],
-    a, adag
-},
-    {a, adag} = FieldVariables[order];
-    Switch[ordering,
-        "Normal",
+DisplacementOperator[\[Alpha]_, \[Infinity], Optional[order_?orderQ, {1}], OptionsPattern[]] :=
+    Block[{
+        ordering = Replace[OptionValue["Ordering"], Automatic -> "Weak"],
+        a, adag
+    },
+        {a, adag} = FieldVariables[order];
+        Switch[ordering,
+            "Normal",
             Exp[-\[Alpha] Conjugate[\[Alpha]]/2] * Exp[\[Alpha] * adag] ** Exp[-Conjugate[\[Alpha]] * a],
-        "Weak",
+        
+            "Weak",
             Exp[\[Alpha] * adag - Conjugate[\[Alpha]] * a],
-        "Antinormal",
+        
+            "Antinormal",
             Exp[\[Alpha] Conjugate[\[Alpha]]/2] * Exp[-Conjugate[\[Alpha]] * a] ** Exp[\[Alpha] * adag],
         _,
             Message[DisplacementOperator::invalidorder, ordering];
@@ -79,11 +81,12 @@ Block[{
     ]
 ]
 
+
 DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
-    Block[{a = AnnihilationOperator[size,order], ordering},
-        
-        ordering = OptionValue["Ordering"];
-        
+    Block[
+        {a = AnnihilationOperator[size,order],
+        ordering = Replace[OptionValue["Ordering"], Automatic -> "Normal"]
+    },
         Switch[ordering,
             "Normal",
                 Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[\[Alpha] (a["Dagger"])] @ MatrixExp[-Conjugate[\[Alpha]] a],
@@ -149,26 +152,29 @@ SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
     ]
 
 
-BeamsplitterMatrix[\[Theta]_,\[Phi]_,cutoff_]:=Module[{sqrt,ct,st,R,Z},
+
+
+
+BeamsplitterMatrix[\[Theta]_,\[Phi]_,cutoff_]:= Block[{sqrt,ct,st,stconj,Z},
 	sqrt=Sqrt[Range[0,cutoff-1]];
 	ct=Cos[\[Theta]];
 	st=Sin[\[Theta]] Exp[I \[Phi]];
-	R={{0,0,ct,-Conjugate[st]},{0,0,st,ct},{ct,st,0,0},{-Conjugate[st],ct,0,0}};
+    stconj = -Exp[-I \[Phi]] Sin[\[Theta]];
 	Z=ConstantArray[0,{cutoff,cutoff,cutoff,cutoff}];
 	Z[[1,1,1,1]]=1;
 	Do[
 		If[0<p<cutoff,
 			Z[[m+1,n+1,p+1,1]]=
-			  If[m>0,R[[1,3]] sqrt[[m+1]]/sqrt[[p+1]] Z[[m,n+1,p,1]],0]+
-			  If[n>0,R[[2,3]] sqrt[[n+1]]/sqrt[[p+1]] Z[[m+1,n,p,1]],0]
+			  If[m>0, ct sqrt[[m+1]]/sqrt[[p+1]] Z[[m,n+1,p,1]],0]+
+			  If[n>0, st sqrt[[n+1]]/sqrt[[p+1]] Z[[m+1,n,p,1]],0]
 			],
 			{m,0,cutoff-1},{n,0,cutoff-1},{p,m+n,m+n}];
 	Do[
 		With[{q=m+n-p},
 			If[0<q<cutoff,
 				Z[[m+1,n+1,p+1,q+1]]=
-				  If[m>0,R[[1,4]] sqrt[[m+1]]/sqrt[[q+1]] Z[[m,n+1,p+1,q]],0]+
-				  If[n>0,R[[2,4]] sqrt[[n+1]]/sqrt[[q+1]] Z[[m+1,n,p+1,q]],0]]
+				  If[m>0, stconj sqrt[[m+1]]/sqrt[[q+1]] Z[[m,n+1,p+1,q]],0]+
+				  If[n>0, ct sqrt[[n+1]]/sqrt[[q+1]] Z[[m+1,n,p+1,q]],0]]
 				],
 			{m,0,cutoff-1},{n,0,cutoff-1},{p,0,cutoff-1}];
 	Z]
