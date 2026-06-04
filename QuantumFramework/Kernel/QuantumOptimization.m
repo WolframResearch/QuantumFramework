@@ -124,9 +124,9 @@ prop={"Hamiltonian","Energies","Eigenvectors","Eigensystem","LowestEnergies","En
 s=OptionValue["Parameter"];
 schedule=OptionValue["Schedule"];
 If[MatchQ[schedule,None],
-	H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}];
-	H=QuantumOperator[(1-s)*Hb+schedule*Hp,"Parameters"->{s}]
-]
+	H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}],
+	H=QuantumOperator[(1-schedule)*Hb+schedule*Hp,"Parameters"->{s}]
+];
 
 eigensystem=Simplify[H["Eigensystem"],0<=s<=1];
 
@@ -152,6 +152,7 @@ If[MatchQ[mingap,$Failed],Message[QuantumAdiabaticEvolve::gap];Return[$Failed,Mo
 QuantumAdiabaticEvolution[<|"Hamiltonian"->H,"Eigensystem"->sortedeigensystem,"Energies"->energies,"Eigenvectors"->sortedeigensystem[[All,2]],"LowestEnergies"->lowestenergies,"EnergyGap"->gap,"MinimalEnergyGap"->{gmin,smin},"LowestEnergyEigenvector"->\[Psi]E0, "MaxAdiabaticCoupling"->{\[Xi],smax},"AdiabaticCoupling"->\[Xi]function,"AdiabaticTimeEstimate"->OptionValue["TimeScaling"]*\[Xi]/gmin^2,"Parameters"->s,"Properties"->prop|>]
 
 ]
+
 
 adiabaticTest[eigensystem_,s_]:=Module[{sorted,energies,solutions,cases,gap,mingap},
 sorted=SortBy[eigensystem,ReplaceAll[#[[1]],s->10^-10]&]; 
