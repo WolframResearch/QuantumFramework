@@ -32,6 +32,8 @@ PackageExport["QuantumUnlockingMechanism"]
 
 PackageExport["QuantumAdiabaticEvolve"]
 
+PackageExport["QuantumAdiabaticEvolution"]
+
 
 (* ::Section:: *)
 (*Quantum Optimization Functionalities*)
