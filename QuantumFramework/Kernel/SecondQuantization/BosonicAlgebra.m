@@ -220,7 +220,7 @@ Options[BosonVEV] = Options[BosonicNormalOrder];
 
 BosonVEV[expr_, opts : OptionsPattern[]] :=
     Block[{vars = ExtractNCVars[{expr}]},
-        VacuumExpectation[expr, vars, opts]
+        BosonVEV[expr, vars, opts]
     ]
 
 BosonVEV[expr_, vars_List, opts : OptionsPattern[]] :=
