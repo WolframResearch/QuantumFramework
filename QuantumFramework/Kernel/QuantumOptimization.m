@@ -114,15 +114,19 @@ QuantumAdiabaticEvolution[asc_?AssociationQ][plot:Alternatives@@{"EnergySpectrum
 ClearAll[QuantumAdiabaticEvolve];
 QuantumAdiabaticEvolve::gap ="The minimum spectral gap is zero. The adiabatic condition is violated and the evolution is not guaranteed to reach the ground state.";
 QuantumAdiabaticEvolve::num="The eigensystem contains Root objects. Symbolic expressions may remain unresolved and the computation will proceed using numerical approximations.";
-Options[QuantumAdiabaticEvolve]={"Parameter"->\[FormalS],"TimeScaling"->10};
+Options[QuantumAdiabaticEvolve]={"Parameter"->\[FormalS],"TimeScaling"->10,"Schedule"->None};
 
 QuantumAdiabaticEvolve[Hb_QuantumOperator,Hp_QuantumOperator,opts:OptionsPattern[]]:=
-Module[{s,H,output,plotoutput,cachedResults,reporter,energies,gap,gmin,\[Psi]E0,\[Psi]E1,lowestenergies,eigensystem,sortedstates,\[Xi]function,\[Xi],smin,smax,sortedeigensystem,plotnames,functions,plots,simplifier,mingap,prop},
+Module[{s,schedule,H,output,plotoutput,cachedResults,reporter,energies,gap,gmin,\[Psi]E0,\[Psi]E1,lowestenergies,eigensystem,sortedstates,\[Xi]function,\[Xi],smin,smax,sortedeigensystem,plotnames,functions,plots,simplifier,mingap,prop},
 
 prop={"Hamiltonian","Energies","Eigenvectors","Eigensystem","LowestEnergies","EnergyGap","MinimalEnergyGap","LowestEnergyEigenvector","AdiabaticCoupling","MaxAdiabaticCoupling","AdiabaticTimeEstimate","EnergySpectrumPlot","SpectralGapPlot","AdiabaticCouplingPlot","AdiabaticPathPlot"};
 
 s=OptionValue["Parameter"];
-H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}];
+schedule=OptionValue["Schedule"];
+If[MatchQ[schedule,None],
+	H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}];
+	H=QuantumOperator[(1-s)*Hb+schedule*Hp,"Parameters"->{s}]
+]
 
 eigensystem=Simplify[H["Eigensystem"],0<=s<=1];
 
