@@ -39,6 +39,73 @@ VerificationTest[Length @ QuantumCircuitOperator["GHZ"[3]]["Elements"], 3, TestI
 EndTestSection[]
 
 
+BeginTestSection["QuantumCircuitOperator - named circuit fidelity"]
+
+(* These cover the class of v2.0 list-form regressions where a named circuit
+   silently built a wrong operator: the Multiplexer collapsed every input list
+   to arity 1, the Fourier circuit used a legacy {"PhaseShift", k} arg that
+   v2.0 interprets as a tensor product, and the Graph circuit defaulted to
+   the legacy {"C", "1"} controlled-gate spec. The fixes are observable as
+   non-trivial arity and as matrix equivalence with the corresponding
+   QuantumOperator. *)
+
+(* Fourier circuit must match QuantumOperator["Fourier"[d]] *)
+fourierMatDiff[n_] := Chop @ Norm @ Flatten[
+    N @ (QuantumOperator @ QuantumCircuitOperator["Fourier"[n]])["Sort"]["Matrix"]
+    - N @ QuantumOperator["Fourier"[2^n]]["Matrix"]
+]
+
+VerificationTest[fourierMatDiff[2], 0, TestID -> "Fourier-2-matches-QO"]
+VerificationTest[fourierMatDiff[3], 0, TestID -> "Fourier-3-matches-QO"]
+VerificationTest[fourierMatDiff[4], 0, TestID -> "Fourier-4-matches-QO"]
+
+(* Multiplexer arity scales with the number of ops *)
+VerificationTest[QuantumCircuitOperator["Multiplexer"["X", "Y"]]["Arity"], 2, TestID -> "Multiplexer-2-arity"]
+VerificationTest[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z"]]["Arity"], 3, TestID -> "Multiplexer-3-arity"]
+VerificationTest[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H"]]["Arity"], 3, TestID -> "Multiplexer-4-arity"]
+VerificationTest[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H", "S"]]["Arity"], 4, TestID -> "Multiplexer-5-arity"]
+VerificationTest[QuantumCircuitOperator["Multiplexer"["I", "X"]]["Arity"], 2, TestID -> "Multiplexer-with-I"]
+
+(* Multiplexer must produce a unitary *)
+VerificationTest[
+    (QuantumOperator @ QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H"]])["UnitaryQ"],
+    True,
+    TestID -> "Multiplexer-unitary"
+]
+
+(* Graph circuit arity tracks vertex count *)
+VerificationTest[QuantumCircuitOperator["Graph"[CompleteGraph[5]]]["Arity"], 5, TestID -> "Graph-K5-arity"]
+VerificationTest[QuantumCircuitOperator["Graph"[PathGraph[Range[4]]]]["Arity"], 4, TestID -> "Graph-P4-arity"]
+VerificationTest[QuantumCircuitOperator["Graph"[CycleGraph[3]]]["Arity"], 3, TestID -> "Graph-C3-arity"]
+VerificationTest[QuantumCircuitOperator["Graph"[CompleteGraph[3], 2]]["Arity"], 5, TestID -> "Graph-K3-offset-2"]
+
+(* Graph element count: 1 H per vertex + 1 CNOT per edge.
+   K5 has 5 vertices, 10 edges -> 15 elements. *)
+VerificationTest[Length @ QuantumCircuitOperator["Graph"[CompleteGraph[5]]]["Elements"], 15, TestID -> "Graph-K5-element-count"]
+
+(* Constructing every named circuit emits no QF-level messages (no failprop,
+   undefprop, or InvalidName from the construction itself). *)
+quietBuild[expr_] := Module[{r, msgs = {}},
+    Internal`HandlerBlock[
+        {"Message", Function[m,
+            With[{s = ToString[InputForm[m]]},
+                If[ StringContainsQ[s, "failprop" | "undefprop" | "InvalidName"],
+                    AppendTo[msgs, m]
+                ]
+            ]
+        ]},
+        r = expr
+    ];
+    {Head[r], Length[msgs]}
+]
+
+VerificationTest[quietBuild[QuantumCircuitOperator["Graph"[CompleteGraph[5]]]], {QuantumCircuitOperator, 0}, TestID -> "Graph-K5-quiet-build"]
+VerificationTest[quietBuild[QuantumCircuitOperator["Fourier"[3]]], {QuantumCircuitOperator, 0}, TestID -> "Fourier-3-quiet-build"]
+VerificationTest[quietBuild[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H", "S"]]], {QuantumCircuitOperator, 0}, TestID -> "Multiplexer-quiet-build"]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumCircuitOperator - shortcut roundtrip"]
 
 (* QuantumShortcut compresses a circuit to its named-shorthand form;

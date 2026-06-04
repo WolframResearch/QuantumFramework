@@ -512,7 +512,7 @@ QuantumCircuitOperator["PhaseNumber"[n : _Integer ? NonNegative : 0, qubits : _I
 QuantumCircuitOperator["Fourier"[n : _Integer ? Positive : 2, m : _Integer ? NonNegative : 0], opts___] := QuantumCircuitOperator[Join[
 		Catenate @ Table[{
 			QuantumOperator["H", {i + m}],
-			Splice[QuantumOperator["Controlled"[{"PhaseShift", # + 1}, {# + i + m}], {i + m}] & /@ Range[n - i]]
+			Splice[QuantumOperator["Controlled"["PhaseShift"[# + 1], {# + i + m}], {i + m}] & /@ Range[n - i]]
 		},
 		{i, n}],
 		QuantumOperator["SWAP", {# + m, n - # + 1 + m}] & /@ Range[Floor[n / 2]]
@@ -628,7 +628,7 @@ QuantumCircuitOperator[("Multiplexer"| "Multiplexor")[ops__] -> defaultK : _Inte
     seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, m], n];
     QuantumCircuitOperator[
         MapThread[
-            If[MatchQ[#1["Label"], "I" | CircleTimes["I" ..] | Superscript["I", _CircleTimes]], Nothing, "C"[#1, Splice[#2 /. c_Integer /; c == k :> m + 1]]] &,
+            If[MatchQ[#1["Label"], "I" | CircleTimes["I" ..] | Superscript["I", _CircleTimes]], Nothing, "C"[#1, Splice[#2 /. c_Integer /; c == k :> m + 1, "C"]]] &,
             {QuantumOperator /@ {ops}, seq}
         ],
         opts,
