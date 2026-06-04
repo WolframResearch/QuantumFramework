@@ -177,8 +177,8 @@ QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
             If[ basis["InputDimension"] == 1,
                 basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
             ];
-            outMultiplicity = Quiet @ Log[basis["OutputDimension"], outputs];
-            inMultiplicity = Quiet @ Log[basis["InputDimension"], inputs];
+            outMultiplicity = If[basis["OutputDimension"] === 1, Indeterminate, Log[basis["OutputDimension"], outputs]];
+            inMultiplicity = If[basis["InputDimension"] === 1, Indeterminate, Log[basis["InputDimension"], inputs]];
             If[
                 IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
                 (* multiply existing basis *)

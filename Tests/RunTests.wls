@@ -17,7 +17,7 @@ Needs["Wolfram`QuantumFramework`"];
 
 (* Find test files *)
 pattern = If[Length[$ScriptCommandLine] > 1, $ScriptCommandLine[[2]], ""];
-testFiles = FileNames["*.wlt", FileNameJoin[{$rootDir}]];
+testFiles = FileNames["*.wlt", $rootDir, Infinity];
 If[pattern =!= "",
     testFiles = Select[testFiles, StringContainsQ[FileNameTake[#], pattern, IgnoreCase -> True] &]
 ];

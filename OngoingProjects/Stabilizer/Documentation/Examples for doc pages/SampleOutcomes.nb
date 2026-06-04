@@ -1,0 +1,402 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     17006,        393]
+NotebookOptionsPosition[     12514,        336]
+NotebookOutlinePosition[     12836,        350]
+CellTagsIndexPosition[     12793,        347]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Wolfram`QuantumFramework`", "Text",ExpressionUUID->"904da954-d3c5-4ae2-9296-db8a4a4bdb0f"],
+
+Cell["SampleOutcomes", "Title",ExpressionUUID->"e88342f6-de85-4307-9690-03e0c1c953d1"],
+
+Cell["\<\
+Draw concrete-outcome PauliStabilizer realizations from a \
+symbolic-measurement PauliStabilizer.\
+\>", "Text",ExpressionUUID->"17602eb3-600d-491a-9822-2fd8437e58fb"],
+
+Cell["Details and Options", "Section",ExpressionUUID->"1a54d76c-5fa5-4212-afbb-164a68bc0fde"],
+
+Cell["\<\
+``SampleOutcomes[ps]`` returns one \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer) \
+realization. Each `\\[FormalS][k]` outcome symbol in `ps[\"Phase\"]` is \
+replaced by an independent uniform Bernoulli-`(1/2)` `0/1` draw.\
+\>", "Item",ExpressionUUID->"fb5e2ed2-730d-4103-b33b-1c7e6d904a52"],
+
+Cell["\<\
+``SampleOutcomes[ps, n]`` returns a list of `n` independent realizations.\
+\>", "Item",ExpressionUUID->"c033b8b9-faee-4b1c-aafd-751380950b7c"],
+
+Cell["\<\
+Each draw uses a fresh independent uniform sample for every outcome symbol; \
+symbols that share a name across draws are independent across draws.\
+\>", "Item",ExpressionUUID->"0cedc2c0-c509-41b9-b5fb-a5088b8d840f"],
+
+Cell["\<\
+Determinism with [SeedRandom](paclet:ref/SeedRandom) applies \[LongDash] set \
+the seed before invocation to reproduce the same list of samples.\
+\>", "Item",ExpressionUUID->"2ab76ed5-7e26-4a04-9b76-a4f9e85eada2"],
+
+Cell["\<\
+Phase 3 limitation (ROADMAP \[Section]A.4): correlations between symbolic and \
+deterministic measurements (e.g. the Bell `ZZ` correlation `m_2 = m_1`) are \
+**not** stamped into the sampled phases. Samples appear independent even when \
+the physics says they are not. Use ``ps[\"M\", q]`` (the \
+[Association](paclet:ref/Association) form) for workflows requiring \
+cross-measurement correlation until Phase 4 \
+[StabilizerFrame](paclet:Wolfram/QuantumFramework/ref/StabilizerFrame) lands.\
+\
+\>", "Item",ExpressionUUID->"4561c05c-12e9-47af-be67-bb514eff3784"],
+
+Cell["Examples (4)", "Section",ExpressionUUID->"66680287-d5fe-4adb-946c-79975008ea3a"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",Ex\
+pressionUUID->"1264a559-af23-4625-8a4a-637773913f8a"],
+
+Cell["Basic Examples (2)", "Subsection",ExpressionUUID->"d9f807b2-b73d-4413-ae16-625581e08fc1"],
+
+Cell["\<\
+Ten samples of `H|0>` after a Z-basis measurement, mixing outcome-0 \
+(`{\"Z\"}`) and outcome-1 (`{\"-Z\"}`):\
+\>", "Text",ExpressionUUID->"7d067f52-07fa-4ec6-98a6-6369be2fde25"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psSym", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], ",", " ", "1"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"#", "[", "\"\<Stabilizers\>\"", "]"}], " ", "&"}], " ", "/@", " ", 
+  RowBox[{"SampleOutcomes", "[", 
+   RowBox[{"psSym", ",", " ", "10"}], "]"}]}]}], "Input",ExpressionUUID->\
+"50b6c10c-a4a8-408f-aaf2-2a7e8f8a0cf2"],
+
+Cell["\<\
+{{\"Z\"}, {\"-Z\"}, {\"-Z\"}, {\"Z\"}, {\"-Z\"}, {\"-Z\"}, {\"Z\"}, {\"-Z\"}, \
+{\"Z\"}, {\"Z\"}}\
+\>", "Output",ExpressionUUID->"65ac3923-8b58-4e22-8e18-9b2f9b5b5448"],
+
+Cell["\<\
+A bare ``SampleOutcomes[ps]`` returns a single sample (not a length-1 list):\
+\>", "Text",ExpressionUUID->"ed05be0d-2dc3-400f-bde0-cb0494996ff2"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "1", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psSym", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], ",", " ", "1"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SampleOutcomes", "[", "psSym", "]"}], "[", "\"\<Stabilizers\>\"", 
+  "]"}]}], "Input",ExpressionUUID->"2460df47-6512-41ac-ace5-bca84611e61b"],
+
+Cell["{\"-Z\"}", "Output",ExpressionUUID->"0f1defc7-71a9-4abe-ac83-05ff64555253"],
+
+Cell["Scope (2)", "Subsection",ExpressionUUID->"ab84a97f-50ce-43c2-9624-492c4737ab17"],
+
+Cell["Input Forms", "Subsubsection",ExpressionUUID->"ada07e19-7d08-4302-abd8-77df7e8736a9"],
+
+Cell["\<\
+The 1-argument form returns one sample; the 2-argument form returns a list of \
+`n` samples:\
+\>", "Text",ExpressionUUID->"f7ec00ea-9cf6-4b7f-8d33-bbc3c9bbf0a5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psSym", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], ",", " ", "1"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", " ", "@", " ", 
+    RowBox[{"SampleOutcomes", "[", "psSym", "]"}]}], ",", " ", 
+   RowBox[{"Length", " ", "@", " ", 
+    RowBox[{"SampleOutcomes", "[", 
+     RowBox[{"psSym", ",", " ", "5"}], "]"}]}]}], "}"}]}], "Input",ExpressionU\
+UID->"81484cdc-d76d-4d56-a68d-f5903b51567e"],
+
+Cell["{PauliStabilizer, 5}", "Output",ExpressionUUID->"ca5d7d67-5bf8-4c33-9746-1ad82f8f0903"],
+
+Cell["Distinctive Features", "Subsubsection",ExpressionUUID->"0876709d-ffd6-400c-92b3-e626f63b62df"],
+
+Cell["\<\
+A symbolic post-state can be sampled millions of times without re-traversing \
+the upstream Clifford circuit; per-sample cost is the substitution and `mod \
+2`.\
+\>", "Text",ExpressionUUID->"567d4571-d376-4415-b286-c287e8b5c7bb"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psSym", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], ",", " ", "1"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"samples", " ", "=", " ", 
+   RowBox[{"SampleOutcomes", "[", 
+    RowBox[{"psSym", ",", " ", "50"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Sort", " ", "@", " ", 
+  RowBox[{"DeleteDuplicates", " ", "@", " ", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", "\"\<StabilizerSigns\>\"", "]"}], "[", 
+       RowBox[{"[", "1", "]"}], "]"}], " ", "&"}], " ", "/@", " ", 
+     "samples"}], ")"}]}]}]}], "Input",ExpressionUUID->"5d98d7f5-5d7f-453c-\
+ab35-fd32acecb0dd"],
+
+Cell["{-1, 1}", "Output",ExpressionUUID->"b2f07240-041e-4670-b423-2a2f0094ce85"],
+
+Cell["Options (0)", "Subsection",ExpressionUUID->"f9971731-add7-4e91-85b4-692bb46050ac"],
+
+Cell["Applications (0)", "Subsection",ExpressionUUID->"62393284-9374-4d70-835a-6e334f7c267a"],
+
+Cell["Properties and Relations (1)", "Subsection",ExpressionUUID->"1f423af7-7009-44be-8f03-21042c87da37"],
+
+Cell["\<\
+``SampleOutcomes[ps, n]`` is equivalent to ``n`` independent calls to \
+[SubstituteOutcomes](paclet:Wolfram/QuantumFramework/ref/SubstituteOutcomes) \
+with each outcome symbol drawn uniformly:\
+\>", "Text",ExpressionUUID->"b826db5b-7831-4f75-8dd6-74b26c8b6dd8"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psSym", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliStabilizer", "[", "1", "]"}], "[", 
+      RowBox[{"\"\<H\>\"", ",", " ", "1"}], "]"}], ",", " ", "1"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"samples", " ", "=", " ", 
+   RowBox[{"SampleOutcomes", "[", 
+    RowBox[{"psSym", ",", " ", "4"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"First", "[", 
+      RowBox[{"#", "[", "\"\<Phase\>\"", "]"}], "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<Phase\>\"", "]"}], "[", 
+      RowBox[{"[", "2", "]"}], "]"}]}], "}"}], " ", "&"}], " ", "/@", " ", 
+  "samples"}]}], "Input",ExpressionUUID->"c1940ebc-bebf-427e-bad2-\
+10f0a26e67eb"],
+
+Cell["{{0, 0}, {0, 1}, {0, 1}, {0, 0}}", "Output",ExpressionUUID->"5edfc7ae-b5ee-4a3d-8329-29ffff69999d"],
+
+Cell["Possible Issues (1)", "Subsection",ExpressionUUID->"d51ddfbc-1099-4f1c-a4e3-d65b78f0e389"],
+
+Cell["\<\
+Phase 3 limitation (ROADMAP \[Section]A.4): for correlated measurements (e.g. \
+Bell `ZZ`), the deterministic outcome bit is **not** sampled \[LongDash] its \
+phase entry stays `0` regardless of the symbolic outcome. The samples \
+therefore look independent across the two measurements:\
+\>", "Text",ExpressionUUID->"08af5e15-bad0-4684-803b-7afffa4e8dc1"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "Wolfram`QuantumFramework`PackageScope`$StabilizerSymbolCounter", " ", "=", 
+   " ", "0"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psBell", " ", "=", " ", 
+   RowBox[{"PauliStabilizer", "[", 
+    RowBox[{"QuantumCircuitOperator", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+       RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2"}], "}"}]}]}], "}"}], "]"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psM", " ", "=", " ", 
+   RowBox[{"StabilizerMeasure", "[", 
+    RowBox[{
+     RowBox[{"StabilizerMeasure", "[", 
+      RowBox[{"psBell", ",", " ", "1"}], "]"}], ",", " ", "2"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "20260430", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"samples", " ", "=", " ", 
+   RowBox[{"SampleOutcomes", "[", 
+    RowBox[{"psM", ",", " ", "20"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Sort", " ", "@", " ", 
+    RowBox[{"DeleteDuplicates", " ", "@", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", "[", "\"\<Phase\>\"", "]"}], "[", 
+         RowBox[{"[", "3", "]"}], "]"}], " ", "&"}], " ", "/@", " ", 
+       "samples"}], ")"}]}]}], ",", "\n", " ", 
+   RowBox[{"Sort", " ", "@", " ", 
+    RowBox[{"DeleteDuplicates", " ", "@", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", "[", "\"\<Phase\>\"", "]"}], "[", 
+         RowBox[{"[", "4", "]"}], "]"}], " ", "&"}], " ", "/@", " ", 
+       "samples"}], ")"}]}]}]}], "}"}]}], "Input",ExpressionUUID->"f6fd9d1f-\
+a203-42cc-b108-e12d76913d34"],
+
+Cell["{{0, 1}, {0}}", "Output",ExpressionUUID->"76f6ea9f-e261-4ac9-9951-59cb79469563"],
+
+Cell["Neat Examples (0)", "Subsection",ExpressionUUID->"4a078f28-057c-41e3-b749-db1b346fb4d9"],
+
+Cell["See Also", "Section",ExpressionUUID->"fe70c1b4-5ca2-442f-a95b-0c242adaab3a"],
+
+Cell["\<\
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer)\
+\>", "Item",ExpressionUUID->"10d948ad-cee8-4a5d-9a38-669e24812940"],
+
+Cell["\<\
+[StabilizerMeasure](paclet:Wolfram/QuantumFramework/ref/StabilizerMeasure)\
+\>", "Item",ExpressionUUID->"b375f5b1-991c-4816-9fc4-9f44e79cbef0"],
+
+Cell["\<\
+[SubstituteOutcomes](paclet:Wolfram/QuantumFramework/ref/SubstituteOutcomes)\
+\>", "Item",ExpressionUUID->"5f503d98-8984-4210-adc7-0c27106f7ae9"],
+
+Cell["\<\
+[RandomClifford](paclet:Wolfram/QuantumFramework/ref/RandomClifford)\
+\>", "Item",ExpressionUUID->"bd8a2b90-8817-4ec3-9663-5c36dc8507b8"],
+
+Cell["[SeedRandom](paclet:ref/SeedRandom)", "Item",ExpressionUUID->"c8ac5ec0-2b0e-4e1f-b5aa-3a9eb0a73797"],
+
+Cell["Related Guides", "Section",ExpressionUUID->"db1adf58-0da0-4b79-a9d5-023b2418d919"],
+
+Cell["Related Tech Notes", "Section",ExpressionUUID->"4b63e7fa-7e2f-4d1c-8bca-c0a2a73e2894"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"5e0bcd1f-c426-4821-99bc-1408794ddff5"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 96, 0, 70, "Text",ExpressionUUID->"904da954-d3c5-4ae2-9296-db8a4a4bdb0f"],
+Cell[653, 22, 86, 0, 70, "Title",ExpressionUUID->"e88342f6-de85-4307-9690-03e0c1c953d1"],
+Cell[742, 24, 176, 3, 70, "Text",ExpressionUUID->"17602eb3-600d-491a-9822-2fd8437e58fb"],
+Cell[921, 29, 93, 0, 70, "Section",ExpressionUUID->"1a54d76c-5fa5-4212-afbb-164a68bc0fde"],
+Cell[1017, 31, 327, 5, 70, "Item",ExpressionUUID->"fb5e2ed2-730d-4103-b33b-1c7e6d904a52"],
+Cell[1347, 38, 152, 2, 70, "Item",ExpressionUUID->"c033b8b9-faee-4b1c-aafd-751380950b7c"],
+Cell[1502, 42, 225, 3, 70, "Item",ExpressionUUID->"0cedc2c0-c509-41b9-b5fb-a5088b8d840f"],
+Cell[1730, 47, 223, 3, 70, "Item",ExpressionUUID->"2ab76ed5-7e26-4a04-9b76-a4f9e85eada2"],
+Cell[1956, 52, 571, 9, 70, "Item",ExpressionUUID->"4561c05c-12e9-47af-be67-bb514eff3784"],
+Cell[2530, 63, 86, 0, 70, "Section",ExpressionUUID->"66680287-d5fe-4adb-946c-79975008ea3a"],
+Cell[2619, 65, 147, 2, 70, "Input",ExpressionUUID->"1264a559-af23-4625-8a4a-637773913f8a"],
+Cell[2769, 69, 95, 0, 70, "Subsection",ExpressionUUID->"d9f807b2-b73d-4413-ae16-625581e08fc1"],
+Cell[2867, 71, 188, 3, 70, "Text",ExpressionUUID->"7d067f52-07fa-4ec6-98a6-6369be2fde25"],
+Cell[3058, 76, 719, 20, 70, "Input",ExpressionUUID->"50b6c10c-a4a8-408f-aaf2-2a7e8f8a0cf2"],
+Cell[3780, 98, 178, 3, 70, "Output",ExpressionUUID->"65ac3923-8b58-4e22-8e18-9b2f9b5b5448"],
+Cell[3961, 103, 155, 2, 70, "Text",ExpressionUUID->"ed05be0d-2dc3-400f-bde0-cb0494996ff2"],
+Cell[4119, 107, 631, 17, 70, "Input",ExpressionUUID->"2460df47-6512-41ac-ace5-bca84611e61b"],
+Cell[4753, 126, 81, 0, 70, "Output",ExpressionUUID->"0f1defc7-71a9-4abe-ac83-05ff64555253"],
+Cell[4837, 128, 86, 0, 70, "Subsection",ExpressionUUID->"ab84a97f-50ce-43c2-9624-492c4737ab17"],
+Cell[4926, 130, 91, 0, 70, "Subsubsection",ExpressionUUID->"ada07e19-7d08-4302-abd8-77df7e8736a9"],
+Cell[5020, 132, 171, 3, 70, "Text",ExpressionUUID->"f7ec00ea-9cf6-4b7f-8d33-bbc3c9bbf0a5"],
+Cell[5194, 137, 792, 22, 70, "Input",ExpressionUUID->"81484cdc-d76d-4d56-a68d-f5903b51567e"],
+Cell[5989, 161, 93, 0, 70, "Output",ExpressionUUID->"ca5d7d67-5bf8-4c33-9746-1ad82f8f0903"],
+Cell[6085, 163, 100, 0, 70, "Subsubsection",ExpressionUUID->"0876709d-ffd6-400c-92b3-e626f63b62df"],
+Cell[6188, 165, 239, 4, 70, "Text",ExpressionUUID->"567d4571-d376-4415-b286-c287e8b5c7bb"],
+Cell[6430, 171, 981, 28, 70, "Input",ExpressionUUID->"5d98d7f5-5d7f-453c-ab35-fd32acecb0dd"],
+Cell[7414, 201, 80, 0, 70, "Output",ExpressionUUID->"b2f07240-041e-4670-b423-2a2f0094ce85"],
+Cell[7497, 203, 88, 0, 70, "Subsection",ExpressionUUID->"f9971731-add7-4e91-85b4-692bb46050ac"],
+Cell[7588, 205, 93, 0, 70, "Subsection",ExpressionUUID->"62393284-9374-4d70-835a-6e334f7c267a"],
+Cell[7684, 207, 105, 0, 70, "Subsection",ExpressionUUID->"1f423af7-7009-44be-8f03-21042c87da37"],
+Cell[7792, 209, 271, 4, 70, "Text",ExpressionUUID->"b826db5b-7831-4f75-8dd6-74b26c8b6dd8"],
+Cell[8066, 215, 984, 29, 70, "Input",ExpressionUUID->"c1940ebc-bebf-427e-bad2-10f0a26e67eb"],
+Cell[9053, 246, 105, 0, 70, "Output",ExpressionUUID->"5edfc7ae-b5ee-4a3d-8329-29ffff69999d"],
+Cell[9161, 248, 96, 0, 70, "Subsection",ExpressionUUID->"d51ddfbc-1099-4f1c-a4e3-d65b78f0e389"],
+Cell[9260, 250, 365, 5, 70, "Text",ExpressionUUID->"08af5e15-bad0-4684-803b-7afffa4e8dc1"],
+Cell[9628, 257, 1700, 49, 70, "Input",ExpressionUUID->"f6fd9d1f-a203-42cc-b108-e12d76913d34"],
+Cell[11331, 308, 86, 0, 70, "Output",ExpressionUUID->"76f6ea9f-e261-4ac9-9951-59cb79469563"],
+Cell[11420, 310, 94, 0, 70, "Subsection",ExpressionUUID->"4a078f28-057c-41e3-b749-db1b346fb4d9"],
+Cell[11517, 312, 82, 0, 70, "Section",ExpressionUUID->"fe70c1b4-5ca2-442f-a95b-0c242adaab3a"],
+Cell[11602, 314, 149, 2, 70, "Item",ExpressionUUID->"10d948ad-cee8-4a5d-9a38-669e24812940"],
+Cell[11754, 318, 153, 2, 70, "Item",ExpressionUUID->"b375f5b1-991c-4816-9fc4-9f44e79cbef0"],
+Cell[11910, 322, 155, 2, 70, "Item",ExpressionUUID->"5f503d98-8984-4210-adc7-0c27106f7ae9"],
+Cell[12068, 326, 147, 2, 70, "Item",ExpressionUUID->"bd8a2b90-8817-4ec3-9663-5c36dc8507b8"],
+Cell[12218, 330, 106, 0, 70, "Item",ExpressionUUID->"c8ac5ec0-2b0e-4e1f-b5aa-3a9eb0a73797"],
+Cell[12327, 332, 88, 0, 70, "Section",ExpressionUUID->"db1adf58-0da0-4b79-a9d5-023b2418d919"],
+Cell[12418, 334, 92, 0, 70, "Section",ExpressionUUID->"4b63e7fa-7e2f-4d1c-8bca-c0a2a73e2894"]
+}
+]
+*)
+
+(* End of internal cache information *)

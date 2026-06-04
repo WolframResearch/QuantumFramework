@@ -54,6 +54,7 @@ QuantumState::failprop = "property `` failed with ``"
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "Basis"}, prop] &&
         QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumStateProp[qs, prop, args] = result, Rule::rhs],
         result
     ] /;
@@ -384,8 +385,10 @@ QuantumStateProp[qs_, "NormalizedState"] := With[{state = qs["State"]},
     ]
 ]
 
-QuantumStateProp[qs_, "NormalizedAmplitudes"] := Enclose @ With[{amplitudes = qs["Amplitudes"]},
-    ConfirmQuiet[amplitudes / Norm[Values[amplitudes]], Power::infy]
+QuantumStateProp[qs_, "NormalizedAmplitudes"] := With[{amplitudes = qs["Amplitudes"]},
+    With[{norm = Norm[Values[amplitudes]]},
+        If[TrueQ[norm == 0], $Failed, amplitudes / norm]
+    ]
 ]
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
@@ -394,7 +397,7 @@ QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[Spars
 
 QuantumStateProp[qs_, "CanonicalState"] := If[qs["PureStateQ"], QuantumState[qs["CanonicalStateVector"], qs["Basis"]], qs]
 
-QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
+QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "Operator", args___] := QuantumOperator[qs["Projector"], args]
 

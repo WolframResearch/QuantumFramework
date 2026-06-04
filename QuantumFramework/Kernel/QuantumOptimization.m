@@ -243,14 +243,19 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			
 			If[$VersionNumber > 14.0,
 			
-			versions=Quiet[(#->ExternalEvaluate[#,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]])&/@ExternalEvaluators["Python"]];
+			(* TODO: enumerate exact ExternalEvaluate::* messages emitted on bad/missing Python evaluators and tighten the suppression list *)
+			versions=Quiet[
+				(#->ExternalEvaluate[#,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]])&/@ExternalEvaluators["Python"],
+				{ExternalEvaluate::script, ExternalEvaluate::extss, ExternalEvaluate::nofile, ExternalEvaluate::venv, General::stop}
+			];
 			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
 			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
 			path=First[First[compatible]]["Evaluator"];
 			session=StartExternalSession[<|"System" -> "Python", "Evaluator"->path ,"ID" -> "default-python-session"|>],
 			
 			versions=FindExternalEvaluators["Python"][All,"Executable"]//Normal//Values;
-			versions=Table[py->Quiet@ExternalEvaluate[<|"System"->"Python","Executable"->py|>,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]],{py,versions}];
+			(* TODO: enumerate exact ExternalEvaluate::* messages emitted on bad/missing Python evaluators and tighten the suppression list *)
+			versions=Table[py->Quiet[ExternalEvaluate[<|"System"->"Python","Executable"->py|>,"import sys; sys.version_info"],{ExternalEvaluate::script, ExternalEvaluate::extss, ExternalEvaluate::nofile, ExternalEvaluate::venv, General::stop}]/._Failure->$Failed/.x_List:>x[[;;3]],{py,versions}];
 			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
 			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
 			path=First[First[compatible]];
