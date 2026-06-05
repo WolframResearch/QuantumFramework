@@ -102,3 +102,8 @@ QuantumMeasurementOperator[name_String[args___], ___] /; ! MemberQ[$QuantumMeasu
     Message[QuantumMeasurementOperator::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumMeasurementOperator::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
+
+QuantumMeasurementOperator[name_String[args___], ___] /; MemberQ[$QuantumMeasurementOperatorNames, name] := (
+    Message[QuantumMeasurementOperator::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumMeasurementOperator::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)

@@ -310,3 +310,8 @@ QuditBasis[name_String[args___], ___] /; ! MemberQ[$QuditBasisNames, name] := (
     Message[QuditBasis::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
+
+QuditBasis[name_String[args___], ___] /; MemberQ[$QuditBasisNames, name] := (
+    Message[QuditBasis::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuditBasis::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)

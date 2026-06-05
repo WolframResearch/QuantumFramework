@@ -8,6 +8,7 @@ PackageScope["addQuantumStates"]
 
 
 QuantumState::invalidName = "`1` is not a recognized QuantumState constructor"
+QuantumState::invalidArgs = "QuantumState constructor `1` did not match any rule"
 
 
 quantumStateQ[QuantumState[state_SparseArray ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := Length[state] === qb["Dimension"]

@@ -14,6 +14,7 @@ PackageScope["StackQuantumOperators"]
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
+QuantumOperator::invalidArgs = "QuantumOperator constructor `1` did not match any rule"
 
 quantumOperatorQ[QuantumOperator[qs_QuantumState /; QuantumStateQ[Unevaluated[qs]], {_ ? orderQ, _ ? orderQ}]] := True
 

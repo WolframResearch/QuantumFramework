@@ -107,19 +107,13 @@ VerificationTest[quietBuild[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", 
    arg of "PhaseOracle"[formula, varSpec, Nothing], which doesn't vanish in
    function-call arg position and missed every PhaseOracle dispatch pattern -
    the call fell back to the Grover rule itself and recursed to the depth
-   limit. Each of these constructions must return a QuantumCircuitOperator
-   without recursion or messages. *)
+   limit. With the recursion fixed and an invalidArgs catch-all in place, each
+   of these constructions must return a QuantumCircuitOperator. *)
 
-groverTerminates[expr_] := MatchQ[
-    TimeConstrained[Quiet[expr, $RecursionLimit::reclim], 30, $TimedOut],
-    _QuantumCircuitOperator
-]
-SetAttributes[groverTerminates, HoldFirst]
-
-VerificationTest[groverTerminates[QuantumCircuitOperator["Grover"[]]], True, TestID -> "Grover-bare-terminates"]
-VerificationTest[groverTerminates[QuantumCircuitOperator["GroverPhase"[]]], True, TestID -> "GroverPhase-bare-terminates"]
-VerificationTest[groverTerminates[QuantumCircuitOperator["Grover0"[]]], True, TestID -> "Grover0-bare-terminates"]
-VerificationTest[groverTerminates[QuantumCircuitOperator["GroverPhase0"[]]], True, TestID -> "GroverPhase0-bare-terminates"]
+VerificationTest[Head @ QuantumCircuitOperator["Grover"[]], QuantumCircuitOperator, TestID -> "Grover-bare"]
+VerificationTest[Head @ QuantumCircuitOperator["GroverPhase"[]], QuantumCircuitOperator, TestID -> "GroverPhase-bare"]
+VerificationTest[Head @ QuantumCircuitOperator["Grover0"[]], QuantumCircuitOperator, TestID -> "Grover0-bare"]
+VerificationTest[Head @ QuantumCircuitOperator["GroverPhase0"[]], QuantumCircuitOperator, TestID -> "GroverPhase0-bare"]
 
 (* Grover with an explicit oracle / formula goes through the QuantumFrameworkOperatorQ
    dispatcher (line 121), whose RHS previously used a {nameString, order, gate}
@@ -127,15 +121,15 @@ VerificationTest[groverTerminates[QuantumCircuitOperator["GroverPhase0"[]]], Tru
    single-gate call. *)
 
 VerificationTest[
-    groverTerminates[QuantumCircuitOperator["Grover"[QuantumOperator["X", {1}]]]],
-    True,
-    TestID -> "Grover-with-op-terminates"
+    Head @ QuantumCircuitOperator["Grover"[QuantumOperator["X", {1}]]],
+    QuantumCircuitOperator,
+    TestID -> "Grover-with-op"
 ]
 
 VerificationTest[
-    groverTerminates[QuantumCircuitOperator["GroverPhase"[BooleanFunction[2^6, 3]]]],
-    True,
-    TestID -> "GroverPhase-with-formula-terminates"
+    Head @ QuantumCircuitOperator["GroverPhase"[BooleanFunction[2^6, 3]]],
+    QuantumCircuitOperator,
+    TestID -> "GroverPhase-with-formula"
 ]
 
 (* DeutschJozsa[Phase]Oracle previously used the same {nameString, formula}
@@ -239,6 +233,25 @@ VerificationTest[
     Quiet @ Head @ QuantumCircuitOperator[{"U"[Pi/3, Pi/4, Pi/5] -> 1}]["Qiskit"],
     QiskitCircuit,
     TestID -> "Qiskit-U3"
+]
+
+(* Last-resort invalidArgs catch-all: a known name with unmatched call shape
+   returns Failure["InvalidArguments"] rather than recursing or falling
+   through unevaluated. This is the safety net that would have turned the
+   GroverPhase[] recursion-limit hang into a clear failure. *)
+
+VerificationTest[
+    Quiet @ QuantumCircuitOperator["Fourier"[-1]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-Fourier"
+]
+
+VerificationTest[
+    Quiet @ QuantumCircuitOperator["GHZ"["not-an-integer"]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-GHZ"
 ]
 
 EndTestSection[]

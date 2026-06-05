@@ -207,3 +207,8 @@ QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] :
     Message[QuantumState::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
+
+QuantumState[name_String[args___], ___] /; MemberQ[$QuantumStateNames, name] := (
+    Message[QuantumState::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumState::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)

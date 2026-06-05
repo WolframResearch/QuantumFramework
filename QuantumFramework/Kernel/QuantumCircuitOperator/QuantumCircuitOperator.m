@@ -9,6 +9,8 @@ PackageScope["FromCircuitOperatorShorthand"]
 
 QuantumCircuitOperator::invalidName = "`1` is not a recognized QuantumCircuitOperator constructor"
 
+QuantumCircuitOperator::invalidArgs = "QuantumCircuitOperator constructor `1` did not match any rule"
+
 
 BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "Barrier"[Span[_Integer, _Integer | All], ___]]
 

@@ -955,4 +955,11 @@ QuantumOperator[name_String, ___] /; ! MemberQ[$QuantumOperatorNames, name] := (
     Failure["InvalidName", <|"MessageTemplate" :> QuantumOperator::invalidName, "MessageParameters" :> {name}|>]
 )
 
+(* Last-resort fallback for known names with unmatched call shape; see the
+   matching block in NamedCircuits.m for rationale. *)
+QuantumOperator[name_String[args___], ___] /; MemberQ[$QuantumOperatorNames, name] := (
+    Message[QuantumOperator::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+
 

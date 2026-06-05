@@ -782,3 +782,13 @@ QuantumCircuitOperator[name_String, ___] /; ! MemberQ[$QuantumCircuitOperatorNam
     Failure["InvalidName", <|"MessageTemplate" :> QuantumCircuitOperator::invalidName, "MessageParameters" :> {name}|>]
 )
 
+(* Last-resort fallback: name is in the registry but the call shape did not
+   match any specific rule above. Without this, the call would either fall
+   through unevaluated, recurse on a dispatcher that re-enters with the same
+   shape, or trigger a Confirm/Enclose chain. Return a Failure so the caller
+   sees a clear error instead of $RecursionLimit. *)
+QuantumCircuitOperator[name_String[args___], ___] /; MemberQ[$QuantumCircuitOperatorNames, name] := (
+    Message[QuantumCircuitOperator::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumCircuitOperator::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+

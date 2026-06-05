@@ -105,3 +105,8 @@ QuantumChannel[name_String, ___] /; ! MemberQ[$QuantumChannelNames, name] := (
     Message[QuantumChannel::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumChannel::invalidName, "MessageParameters" :> {name}|>]
 )
+
+QuantumChannel[name_String[args___], ___] /; MemberQ[$QuantumChannelNames, name] := (
+    Message[QuantumChannel::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumChannel::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
+)

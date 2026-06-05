@@ -68,4 +68,11 @@ VerificationTest[
     TestID -> "InvalidName-call-form"
 ]
 
+VerificationTest[
+    Quiet @ QuditBasis["Fourier"["bad-arg"]],
+    Failure["InvalidArguments" | "ConfirmationFailed", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-Fourier"
+]
+
 EndTestSection[]
