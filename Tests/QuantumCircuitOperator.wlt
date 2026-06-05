@@ -103,6 +103,76 @@ VerificationTest[quietBuild[QuantumCircuitOperator["Graph"[CompleteGraph[5]]]], 
 VerificationTest[quietBuild[QuantumCircuitOperator["Fourier"[3]]], {QuantumCircuitOperator, 0}, TestID -> "Fourier-3-quiet-build"]
 VerificationTest[quietBuild[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H", "S"]]], {QuantumCircuitOperator, 0}, TestID -> "Multiplexer-quiet-build"]
 
+(* The Grover formula-default rule used to feed Nothing as the third positional
+   arg of "PhaseOracle"[formula, varSpec, Nothing], which doesn't vanish in
+   function-call arg position and missed every PhaseOracle dispatch pattern -
+   the call fell back to the Grover rule itself and recursed to the depth
+   limit. Each of these constructions must return a QuantumCircuitOperator
+   without recursion or messages. *)
+
+groverTerminates[expr_] := MatchQ[
+    TimeConstrained[Quiet[expr, $RecursionLimit::reclim], 30, $TimedOut],
+    _QuantumCircuitOperator
+]
+SetAttributes[groverTerminates, HoldFirst]
+
+VerificationTest[groverTerminates[QuantumCircuitOperator["Grover"[]]], True, TestID -> "Grover-bare-terminates"]
+VerificationTest[groverTerminates[QuantumCircuitOperator["GroverPhase"[]]], True, TestID -> "GroverPhase-bare-terminates"]
+VerificationTest[groverTerminates[QuantumCircuitOperator["Grover0"[]]], True, TestID -> "Grover0-bare-terminates"]
+VerificationTest[groverTerminates[QuantumCircuitOperator["GroverPhase0"[]]], True, TestID -> "GroverPhase0-bare-terminates"]
+
+(* Grover with an explicit oracle / formula goes through the QuantumFrameworkOperatorQ
+   dispatcher (line 121), whose RHS previously used a {nameString, order, gate}
+   list interpreted post-v2.0 as a sequence-of-gates rather than the intended
+   single-gate call. *)
+
+VerificationTest[
+    groverTerminates[QuantumCircuitOperator["Grover"[QuantumOperator["X", {1}]]]],
+    True,
+    TestID -> "Grover-with-op-terminates"
+]
+
+VerificationTest[
+    groverTerminates[QuantumCircuitOperator["GroverPhase"[BooleanFunction[2^6, 3]]]],
+    True,
+    TestID -> "GroverPhase-with-formula-terminates"
+]
+
+(* DeutschJozsa[Phase]Oracle previously used the same {nameString, formula}
+   list-form post-stripping "DeutschJozsa". The resulting circuit was dispatched
+   as two separate gates and the downstream DeutschJozsa[] / Deutsch[] circuits
+   inherited the broken width. *)
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["DeutschJozsaPhaseOracle"[]],
+    QuantumCircuitOperator,
+    TestID -> "DeutschJozsaPhaseOracle-bare"
+]
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["DeutschJozsaBooleanOracle"[]],
+    QuantumCircuitOperator,
+    TestID -> "DeutschJozsaBooleanOracle-bare"
+]
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["DeutschJozsa"[]],
+    QuantumCircuitOperator,
+    TestID -> "DeutschJozsa-bare"
+]
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["DeutschPhase"[]],
+    QuantumCircuitOperator,
+    TestID -> "DeutschPhase-bare"
+]
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["Deutsch"[]],
+    QuantumCircuitOperator,
+    TestID -> "Deutsch-bare"
+]
+
 EndTestSection[]
 
 

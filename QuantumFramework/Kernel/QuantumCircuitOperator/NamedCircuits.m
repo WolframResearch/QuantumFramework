@@ -124,11 +124,11 @@ QuantumCircuitOperator[(name : "GroverOperator" | "Grover" | "GroverOperator0" |
     ],
     opts___
 ] := QuantumCircuitOperator[
-    QuantumCircuitOperator[{
-        "Grover" <> If[StringContainsQ[name, "Phase"], "Phase", ""] <> "Diffusion" <> If[StringEndsQ[name, "0"], "0", ""],
-        op["OutputOrder"],
-        gate
-    }
+    QuantumCircuitOperator[
+        ("Grover" <> If[StringContainsQ[name, "Phase"], "Phase", ""] <> "Diffusion" <> If[StringEndsQ[name, "0"], "0", ""])[
+            op["OutputOrder"],
+            gate
+        ]
     ] @ op,
     opts
 ]
@@ -142,7 +142,12 @@ QuantumCircuitOperator[(name : "GroverOperator" | "Grover" | "GroverOperator0" |
     ],
     opts___
 ] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{If[StringContainsQ[name, "Phase"], "PhaseOracle", "BooleanOracle"], formula, varSpec, If[StringContainsQ[name, "Phase"], Nothing, m]}], n
+    oracle = Confirm @ QuantumCircuitOperator[
+        If[ StringContainsQ[name, "Phase"],
+            "PhaseOracle"[formula, varSpec],
+            "BooleanOracle"[formula, varSpec, m]
+        ]
+    ], n
 },
     n = Replace[m, Automatic :> Last @ oracle["OutputOrder"]];
     QuantumCircuitOperator[name[oracle,
@@ -345,7 +350,7 @@ QuantumCircuitOperator["PhaseOracle"[formula_ : BooleanFunction[2 ^ 6, 3], vars 
 
 QuantumCircuitOperator[(name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle")[f_ : 1, n : _Integer ? Positive | Automatic : Automatic], opts___] :=
     With[{formula = Replace[f, i_Integer :> With[{m = Replace[n, Automatic :> Max[Ceiling[Log2[Log2[i]]], 1]]}, BooleanFunction[Mod[i - 1, 2 ^ 2 ^ m], m]]]},
-        QuantumCircuitOperator[{StringReplace[name, "DeutschJozsa" -> ""], formula}, opts]
+        QuantumCircuitOperator[StringReplace[name, "DeutschJozsa" -> ""][formula], opts]
     ]
 
 QuantumCircuitOperator["DeutschJozsaPhase"[f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic], opts___] := Enclose @ With[{
