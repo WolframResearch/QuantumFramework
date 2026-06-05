@@ -274,3 +274,69 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - state preparation round-trip"]
+
+(* QuantumCircuitOperator["QuantumState"[qs]][] must reproduce qs (the |0...0> -> qs
+   map). Guards the multiplexer-dagger angle negation: a state with any nonzero
+   RY/RZ angle is wrong if the dagger is not applied. Exact-equality round-trips
+   first (including global phase), then fidelity for numeric / random states. *)
+
+(* exact-equality round-trips: Norm of the state-vector difference is exactly 0 *)
+VerificationTest[
+    Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["1"]]][]["StateVector"] - QuantumState["1"]["StateVector"]],
+    0,
+    TestID -> "StatePrep-roundtrip-ket1"
+]
+
+VerificationTest[
+    Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["010"]]][]["StateVector"] - QuantumState["010"]["StateVector"]],
+    0,
+    TestID -> "StatePrep-roundtrip-ket010"
+]
+
+VerificationTest[
+    Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["GHZ"[3]]]][]["StateVector"] - QuantumState["GHZ"[3]]["StateVector"]],
+    0,
+    TestID -> "StatePrep-roundtrip-GHZ3"
+]
+
+VerificationTest[
+    Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"] - QuantumState["W"[3]]["StateVector"]],
+    0,
+    TestID -> "StatePrep-roundtrip-W3"
+]
+
+(* global phase is preserved, not just the ray *)
+VerificationTest[
+    With[{qs = Exp[I 6/5] QuantumState["+"]},
+        Chop @ Norm[N @ QuantumCircuitOperator["QuantumState"[qs]][]["StateVector"] - N @ qs["StateVector"]]
+    ],
+    0,
+    TestID -> "StatePrep-roundtrip-global-phase"
+]
+
+(* fidelity round-trips for numeric / random states across dimensions *)
+VerificationTest[
+    Block[{qs = QuantumState[Normalize[{1, 2 I, -3, 0, 0.5, -1.5 I, 2, 1 + I}]]},
+        Chop[1 - QuantumDistance[QuantumCircuitOperator["QuantumState"[qs]][], qs, "Fidelity"]]
+    ],
+    1,
+    SameTest -> (Abs[#1 - #2] < 10^-8 &),
+    TestID -> "StatePrep-roundtrip-explicit-vector"
+]
+
+VerificationTest[
+    Table[
+        With[{qs = (SeedRandom[n]; QuantumState["RandomPure"[n]])},
+            Chop[1 - QuantumDistance[QuantumCircuitOperator["QuantumState"[qs]][], qs, "Fidelity"]]
+        ],
+        {n, 1, 5}
+    ],
+    {1, 1, 1, 1, 1},
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
+    TestID -> "StatePrep-roundtrip-random-1to5"
+]
+
+EndTestSection[]

@@ -662,7 +662,7 @@ RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z, phase},
 
 multiplexer[qs_, n_, i_] := Block[{rzy, rzyDagger, qc, multiplexer, multiplexerDagger},
     rzy = RZY /@ Partition[qs["StateVector"], 2];
-    rzyDagger = Reverse /@ rzy /. {r : "RZ" | "RY", angle_} :> {r, - angle};
+    rzyDagger = Reverse /@ rzy /. (r : "RZ" | "RY")[angle_] :> r[- angle];
     {multiplexer, multiplexerDagger} = "Multiplexer"[Splice[#]] & /@ {rzy, rzyDagger};
     qc = If[i === 0,
         QuantumCircuitOperator[{multiplexer, Splice["H" -> # & /@ Range[qs["Qudits"]]]}],
