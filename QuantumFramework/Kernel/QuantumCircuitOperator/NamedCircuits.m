@@ -685,11 +685,51 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
 
 Options[QuantumStatePreparation] = Join[{Method -> Automatic}, Options[QuantumStateMultiplexer], Options[ClassiqQuantumState]]
 
-QuantumStatePreparation[qs_QuantumState, opts: OptionsPattern[]] /; MatchQ[qs["Dimensions"], {2 ..}] := Switch[OptionValue[Method],
-    Automatic,
-    QuantumStateMultiplexer[qs["Computational"], FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
-    "Classiq",
-    ClassiqQuantumState[qs["Computational"], FilterRules[{opts}, Options[ClassiqQuantumState]]]
+QuantumCircuitOperator::badmethod = "Method `1` is not a recognized state-preparation method; use Automatic, \"Multiplexer\", \"BlockDiagonal\", or \"Classiq\"."
+
+QuantumCircuitOperator::qubitonly = "Method \"Multiplexer\" requires an all-qubit state, but `1` has dimensions `2`."
+
+(* Single entry point. Method -> Automatic routes all-qubit states {2..} through the
+   qubit multiplexer and any qudit state through the block-diagonal algorithm. The
+   multiplexer is qubit-only by construction (RZY takes amplitude pairs), so "Multiplexer"
+   rejects non-qubit states; "BlockDiagonal" works for any dimensions. *)
+QuantumStatePreparation[qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
+    method = OptionValue[Method], dims = qs["Dimensions"], qubitsQ
+},
+    qubitsQ = MatchQ[dims, {2 ..}];
+    If[ ! TrueQ[qs["PureStateQ"]],
+        Message[QuantumCircuitOperator::nonpure, qs];
+        Confirm @ Failure["NonPureState", <|
+            "MessageTemplate" :> QuantumCircuitOperator::nonpure,
+            "MessageParameters" :> {qs}
+        |>]
+    ];
+    Switch[method,
+        Automatic,
+            If[ qubitsQ,
+                QuantumStateMultiplexer[qs["Computational"], FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
+                QuantumStateBlockDiagonal[qs]
+            ],
+        "Multiplexer",
+            If[ qubitsQ,
+                QuantumStateMultiplexer[qs["Computational"], FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
+                Message[QuantumCircuitOperator::qubitonly, qs, dims];
+                Confirm @ Failure["QubitOnlyMethod", <|
+                    "MessageTemplate" :> QuantumCircuitOperator::qubitonly,
+                    "MessageParameters" :> {qs, dims}
+                |>]
+            ],
+        "BlockDiagonal",
+            QuantumStateBlockDiagonal[qs],
+        "Classiq",
+            ClassiqQuantumState[qs["Computational"], FilterRules[{opts}, Options[ClassiqQuantumState]]],
+        _,
+            Message[QuantumCircuitOperator::badmethod, method];
+            Confirm @ Failure["BadMethod", <|
+                "MessageTemplate" :> QuantumCircuitOperator::badmethod,
+                "MessageParameters" :> {method}
+            |>]
+    ]
 ]
 
 QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
@@ -712,7 +752,7 @@ QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     QuantumCircuitOperator[operators, "Label" -> qs["Label"]]["Flatten"]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | ("QuantumState" | "StatePreparation")[qs_QuantumState, args___], opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+QuantumCircuitOperator[qs_QuantumState | ("QuantumState" | "StatePreparation")[qs_QuantumState, args___], opts___] :=
     Enclose @ QuantumCircuitOperator[
         ConfirmBy[QuantumStatePreparation[qs, args], QuantumCircuitOperatorQ],
         "StatePreparation",
@@ -721,6 +761,51 @@ QuantumCircuitOperator[qs_QuantumState | ("QuantumState" | "StatePreparation")[q
 
 QuantumCircuitOperator[("QuantumState" | "StatePreparation")[], opts___] :=
     QuantumCircuitOperator["QuantumState"[QuantumState["UniformSuperposition"[3]]], opts]
+
+
+(* Block-diagonal state preparation for a register of qudits with possibly different
+   dimensions. Emits one block-diagonal uniformly-controlled gate per qudit, branching
+   over the computational-basis configurations of the inner qudits, applied
+   left-to-right to |0...0>. Backs Method -> "BlockDiagonal" and the Automatic qudit path. *)
+
+(* Unitary whose first column is the unit vector v. Orthogonalize emits a zero
+   vector in place for any input dependent on the span, so the collapsed null row
+   is dropped before taking the first d orthonormal vectors. *)
+QuditColumnComplete[v_] := With[{d = Length[v]},
+    Transpose @ Take[
+        DeleteCases[Orthogonalize[Join[{Normalize[v]}, IdentityMatrix[d]]], z_ /; Chop[Norm[z]] == 0.],
+        d
+    ]
+]
+
+(* Gate list preparing the amplitude vector v on qudits of dimensions dims.
+   Gate j is block-diagonal over the configurations of qudits 1..j-1, acting on
+   qudit j; the inner qudits are prepared first from the conditional row norms. *)
+QuditPrepGates[v_, {d_Integer}] := {QuantumOperator[QuditColumnComplete[v], {1}, QuantumBasis[{d}]]}
+
+QuditPrepGates[v_, dims : {__Integer}] := Block[{
+    n = Length[dims], dn = Last[dims], rest = Most[dims], R, A, rownorms, blocks
+},
+    R = Times @@ rest;
+    A = ArrayReshape[v, {R, dn}];
+    rownorms = Sqrt[Total[Abs[A] ^ 2, {2}]];
+    blocks = MapThread[
+        If[Chop[#2] == 0, IdentityMatrix[dn], QuditColumnComplete[#1 / #2]] &,
+        {A, rownorms}
+    ];
+    Append[
+        QuditPrepGates[rownorms, rest],
+        QuantumOperator[SparseArray[Band[{1, 1}] -> blocks], Range[n], QuantumBasis[dims]]
+    ]
+]
+
+(* Returns the unlabeled gate-list circuit; the calling dispatch rule re-labels it
+   "StatePreparation". The pure-state check lives upstream in QuantumStatePreparation. *)
+QuantumStateBlockDiagonal[qs_QuantumState] := Enclose @ Block[{dims, v},
+    dims = qs["Dimensions"];
+    v = qs["Computational"]["StateVector"];
+    QuantumCircuitOperator[Confirm @ QuditPrepGates[Normalize[v], dims]]
+]
 
 
 QuantumCircuitOperator["CHSH"[theta_ : Pi / 4], opts___] :=
@@ -777,7 +862,7 @@ QuantumCircuitOperator[name_String[args___], ___] /; ! MemberQ[$QuantumCircuitOp
     Failure["InvalidName", <|"MessageTemplate" :> QuantumCircuitOperator::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
 
-QuantumCircuitOperator[name_String, ___] /; ! MemberQ[$QuantumCircuitOperatorNames, name] := (
+QuantumCircuitOperator[name_String, ___] /; ! MemberQ[$QuantumCircuitOperatorNames, name] && ! qasmStringQ[name] && ! qasmFileQ[name] := (
     Message[QuantumCircuitOperator::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumCircuitOperator::invalidName, "MessageParameters" :> {name}|>]
 )

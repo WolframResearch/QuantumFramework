@@ -47,7 +47,7 @@ bool(Operator(out).equiv(Operator(c)))
 
 (* ---- Layer 1: cross-check QuantumQASM output against raw qiskit, string-for-string ---- *)
 
-qtest[QuantumQASM[qc], gtQASM[qc["Qiskit"]["Bytes"], <||>, 3], "faithful-qasm3-matches-qiskit"]
+qtest[QuantumQASM[qc, "Version" -> 3], gtQASM[qc["Qiskit"]["Bytes"], <||>, 3], "faithful-qasm3-matches-qiskit"]
 
 qtest[QuantumQASM[qc, "Version" -> 2], gtQASM[qc["Qiskit"]["Bytes"], <||>, 2], "faithful-qasm2-matches-qiskit"]
 
@@ -75,13 +75,50 @@ qtest[
 ]
 
 qtest[
-    With[{s = QuantumQASM[qc]}, StringContainsQ[s, "h q[0]"] && StringContainsQ[s, "cx q[0], q[1]"]],
-    True, "faithful-generic-gates"
+    With[{s = QuantumQASM[qc, "Version" -> 3]}, StringContainsQ[s, "h q[0]"] && StringContainsQ[s, "cx q[0], q[1]"]],
+    True, "qiskit-faithful-named-gates"
 ]
 
 qtest[StringStartsQ[QuantumQASM[qc, "Version" -> 2], "OPENQASM 2.0"], True, "qasm2-prefix"]
 
-qtest[StringStartsQ[QuantumQASM[qc], "OPENQASM 3.0"], True, "qasm3-prefix"]
+(* bare QuantumQASM (no args) is the native, dependency-free WL emission *)
+qtest[StringStartsQ[QuantumQASM[qc], "OPENQASM 3.0"], True, "native-default-prefix"]
+
+
+(* ---- qubit-only guard: OpenQASM models qubits only, so any qudit dimension > 2 is a
+   clear Failure rather than an unevaluated emitter call or an opaque ConfirmBy error.
+   These are pure-native checks (no qiskit needed), so they use VerificationTest directly. *)
+
+VerificationTest[
+    FailureQ @ QuantumQASM[QuantumOperator["X"[3]]],
+    True, TestID -> "qudit-operator-failure"
+]
+
+VerificationTest[
+    FailureQ @ QuantumQASM[QuantumOperator["X"[3]], "Simple"],
+    True, TestID -> "qudit-operator-simple-failure"
+]
+
+VerificationTest[
+    FailureQ @ QuantumQASM[QuantumCircuitOperator[{"X"[3] -> 1}]],
+    True, TestID -> "qudit-circuit-failure"
+]
+
+VerificationTest[
+    FailureQ @ QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "X"[3] -> 2}], "WL"],
+    True, TestID -> "mixed-qubit-qudit-circuit-failure"
+]
+
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"X"[3] -> 1}]]["NonQubitDimensions"],
+    {3}, TestID -> "qudit-failure-reports-dimensions"
+]
+
+(* the guard must not reject genuine qubit operators/circuits *)
+VerificationTest[
+    StringQ @ QuantumQASM[QuantumOperator["X"]],
+    True, TestID -> "qubit-operator-still-emits"
+]
 
 
 (* ---- Layer 3: design, consistency, downvalues ---- *)

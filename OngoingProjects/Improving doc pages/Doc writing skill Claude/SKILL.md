@@ -22,11 +22,11 @@ Use this skill whenever asked to document a function, write a reference page, cr
    - `references/guide-template.md` — Guide pages
    - `references/technote-template.md` — Tech Note / tutorial pages
 2. **The source material** — function definition, paclet source code, or concept to document
-3. **An existing page for grounding** — read a shipped documentation page via `mcp__Wolfram__ReadNotebook` to see conventions in practice. System documentation is at `/Library/Wolfram/Documentation/<version>/en-us/Documentation/English/System/` under `ReferencePages/Symbols/`, `Guides/`, or `Tutorials/`. Paclet documentation is under `.../Paclets/<PacletName>/`.
+3. **An existing page for grounding** — read a shipped documentation page (via the `nb-reader` skill, or `Get` / `NotebookImport` in `wolframscript`) to see conventions in practice. System documentation is at `/Library/Wolfram/Documentation/<version>/en-us/Documentation/English/System/` under `ReferencePages/Symbols/`, `Guides/`, or `Tutorials/`. Paclet documentation is under `.../Paclets/<PacletName>/`.
 
 ### Recommended exemplar pages
 
-Use these as grounding references (read via `mcp__Wolfram__ReadNotebook`). All paths below are for macOS (`/Library/Wolfram/Documentation/...`). On Windows the root is typically `C:\Program Files\Wolfram Research\Mathematica\<version>\Documentation\English\`. Adjust accordingly. Paths are relative to `.../Documentation/15.0/en-us/Documentation/English/`:
+Use these as grounding references (read via the `nb-reader` skill or `wolframscript`). All paths below are for macOS (`/Library/Wolfram/Documentation/...`). On Windows the root is typically `C:\Program Files\Wolfram Research\Mathematica\<version>\Documentation\English\`. Adjust accordingly. Paths are relative to `.../Documentation/15.0/en-us/Documentation/English/`:
 
 **WFR / Reference pages:**
 - `System/ReferencePages/Symbols/Sin.nb` — good model for mathematical functions. Its structure (usage patterns, details, examples progression) is the template shared by all elementary and special function pages.
@@ -60,7 +60,7 @@ These answers determine the section structure, code-to-prose ratio, and whether 
 
 ### 2. Gather context
 
-**For all paclet page types (Ref Page, Guide, Tech Note)**, start by resolving the paclet identity. Evaluate via the MCP evaluator:
+**For all paclet page types (Ref Page, Guide, Tech Note)**, start by resolving the paclet identity. Evaluate via `wolframscript`:
 
 ```wolfram
 {$PublisherID, PacletObject["PacletName"]["Name"]}
@@ -106,7 +106,7 @@ Before writing any markdown, produce a short outline appropriate to the page typ
 - Usage lines — one per calling pattern. EVERY public calling pattern must appear as a separate line. This is the most visible part of the page and cannot be abbreviated.
 - Details and Options bullet points
 - Example plan: 2–3 basic examples, scope subsections (input forms, distinctive features, workflow context), application ideas
-- See Also — both paclet symbols and system symbols. Use `WolframLanguageContext` via MCP evaluator for system symbols.
+- See Also — both paclet symbols and system symbols. Resolve a system symbol's context with `Context[...]` in `wolframscript` (or the read-only `mcp__Wolfram__WolframContext` lookup, which CLAUDE.md permits).
 - Related Guides and Tech Notes
 
 **WFR:**
@@ -167,7 +167,7 @@ Follow the appropriate template exactly — it contains all sections and formatt
 
 ### 5. Validate examples
 
-Run every code block through the MCP evaluator (`mcp__Wolfram__WolframLanguageEvaluator`). Do this as a batch after writing the full markdown — not interleaved with writing.
+Run every code block through `wolframscript` (per Mohammad's CLAUDE.md: write a `.wls` and run `wolframscript -file …`, not the WL-evaluator MCP). Do this as a batch after writing the full markdown — not interleaved with writing.
 
 For WFR: evaluate the function definition first so it's available in the session.
 For paclet pages: load the paclet first via `PacletDirectoryLoad` + `Get`.
@@ -180,15 +180,18 @@ Collect all issues (errors, unexpected results, warnings) into a list.
 
 **Report validation results** to the user: total blocks run, blocks passed, blocks failed with error summary.
 
-### 6. Write the notebook
+### 6. Build the notebook
 
-Use the MCP tool directly:
+**Detect the toolchain first**, per the authoritative `documentation-writing` skill. A paclet whose doc sources are `.md` files with `Template:` frontmatter sitting beside their `.nb` in `Documentation/English/{ReferencePages/Symbols,Guides,Tutorials}/` is a **MarkdownToNotebook** paclet (QuantumFramework is one). For such a paclet you author the `.md` and the `.nb` is *built* from it — never hand-written, and never via an MCP tool:
+
+```wolframscript
+Get["/Users/mohammadb/Documents/GitHub/MarkdownToNotebook/MarkdownToNotebook.wl"];
+MarkdownToNotebook["<…>/<PageName>.md", "<…>/<PageName>.nb"]
 ```
-mcp__Wolfram__WriteNotebook[
-    file -> "<output-path>/<PageName>.nb",
-    markdown -> <the full markdown string>
-]
-```
+
+then `DocumentationBuild` (both need `UsingFrontEnd`). Run it through `wolframscript` (per Mohammad's CLAUDE.md), not the WL-evaluator MCP. The repo also ships a `build.wls`; reuse it if present. The per-template authoring rules and the trap list live in the MarkdownToNotebook repo (`/Users/mohammadb/Documents/GitHub/MarkdownToNotebook/skills/{wolfram-symbol-page,wolfram-guide-page,wolfram-tech-note,wolfram-paclet}/SKILL.md` and `docs/subtleties.md`), not in this file.
+
+If instead the paclet has only `.nb` doc sources and no markdown layer, use the `nb-writer` skill. Decide which before drafting.
 
 ### 8. Report issues (if any)
 
@@ -196,7 +199,7 @@ If validation found issues or design tensions, present them to the user as a sum
 - Code that failed and the error message
 - Any design tensions discovered during documentation (e.g. undocumented features, API gaps, missing edge case handling)
 
-For non-trivial issues, create a separate `<PageName>_Issues.nb` notebook via `WriteNotebook` so issues are tracked alongside the doc page.
+For non-trivial issues, track them in a separate `<PageName>_Issues.md` authored and built the same way (MarkdownToNotebook), so issues live alongside the doc page.
 
 ---
 
@@ -218,9 +221,9 @@ For non-trivial issues, create a separate `<PageName>_Issues.nb` notebook via `W
 - [ ] See Also has both paclet and system symbols
 - [ ] Related Guides and Related Tech Notes listed
 - [ ] All formatting follows `references/refpage-template.md`
-- [ ] Every code block validated via MCP evaluator (batch, after writing)
+- [ ] Every code block validated via `wolframscript` (batch, after writing)
 - [ ] Validation results reported (total/passed/failed)
-- [ ] Notebook written via `WriteNotebook` MCP tool
+- [ ] Notebook built from the `.md` via `MarkdownToNotebook` (wolframscript, no MCP)
 
 ## Checklist — WFR
 
@@ -236,9 +239,9 @@ For non-trivial issues, create a separate `<PageName>_Issues.nb` notebook via `W
 - [ ] Related Symbols has 5–10 documented system symbols
 - [ ] Tests section has verification tests
 - [ ] Compatibility section is filled in
-- [ ] Every code block validated via MCP evaluator (batch, after writing)
+- [ ] Every code block validated via `wolframscript` (batch, after writing)
 - [ ] Validation results reported (total/passed/failed)
-- [ ] Notebook written via `WriteNotebook` MCP tool
+- [ ] Notebook built from the `.md` via `MarkdownToNotebook` (wolframscript, no MCP)
 
 ## Checklist — Guide
 
@@ -251,7 +254,7 @@ For non-trivial issues, create a separate `<PageName>_Issues.nb` notebook via `W
 - [ ] Related Guides listed
 - [ ] Keywords present
 - [ ] All formatting follows `references/guide-template.md`
-- [ ] Notebook written via `WriteNotebook` MCP tool
+- [ ] Notebook built from the `.md` via `MarkdownToNotebook` (wolframscript, no MCP)
 
 ## Checklist — Tech Note
 
@@ -267,6 +270,6 @@ For non-trivial issues, create a separate `<PageName>_Issues.nb` notebook via `W
 - [ ] Related Guides and Related Tech Notes listed
 - [ ] Keywords present
 - [ ] All formatting follows `references/technote-template.md`
-- [ ] Every code block validated via MCP evaluator (batch, after writing)
+- [ ] Every code block validated via `wolframscript` (batch, after writing)
 - [ ] Validation results reported (total/passed/failed)
-- [ ] Notebook written via `WriteNotebook` MCP tool
+- [ ] Notebook built from the `.md` via `MarkdownToNotebook` (wolframscript, no MCP)

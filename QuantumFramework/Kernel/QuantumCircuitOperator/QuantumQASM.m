@@ -3,6 +3,10 @@ Package["Wolfram`QuantumFramework`"]
 PackageExport["QuantumQASM"]
 PackageExport["QiskitTarget"]
 
+PackageScope["qasmEmitCircuit"]
+PackageScope["qasmEmitOperator"]
+PackageScope["qasmEmitSimple"]
+
 
 
 (* Option-key normalization.
@@ -42,8 +46,8 @@ accepted = sorted(inspect.signature(transpile).parameters)
 unknown = sorted(k for k in kwargs if k not in accepted)
 if unknown:
     result = wl.Failure('QuantumQASM', {
-        'MessageTemplate': 'Unknown transpile option(s): `1`. Accepted (qiskit `2`): `3`.',
-        'MessageParameters': [unknown, qiskit.__version__, accepted],
+        'MessageTemplate': 'Unknown transpile option(s): ' + ', '.join(unknown) + '. Accepted (qiskit '
+            + qiskit.__version__ + '): ' + ', '.join(accepted) + '.',
         'Unknown': unknown,
         'Accepted': accepted,
         'QiskitVersion': qiskit.__version__})
@@ -75,8 +79,7 @@ else:
         result = wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(out))
     except Exception as e:
         result = wl.Failure('QuantumQASM', {
-            'MessageTemplate': 'qiskit transpile failed: `1`',
-            'MessageParameters': [type(e).__name__ + ': ' + str(e)],
+            'MessageTemplate': 'qiskit transpile failed: ' + type(e).__name__ + ': ' + str(e),
             'PythonError': str(e)})
 result
 "],
@@ -111,10 +114,26 @@ try:
         result = wl.Failure('QuantumQASM', {
             'MessageTemplate': 'OpenQASM export did not produce an OPENQASM string.'})
 except Exception as e:
+    # The faithful dump only fails on gates qiskit's OpenQASM exporter cannot render
+    # as-is: non-standard or array-parameter instructions (Permutation, state
+    # preparation, some custom unitaries). Name them and point to the fix.
+    try:
+        from qiskit.circuit.library import get_standard_gate_name_mapping
+        std = set(get_standard_gate_name_mapping()) | {'measure', 'reset', 'barrier', 'delay'}
+        offenders = sorted({d.operation.name for d in circuit.data if d.operation.name not in std})
+    except Exception:
+        offenders = []
+    detail = (' Non-standard gate(s) present: ' + ', '.join(offenders) + '.') if offenders else ''
+    # The whole message is built here as one plain string: ExternalEvaluate's code
+    # templater consumes WL `MessageTemplate` backtick slots, so we use none.
     result = wl.Failure('QuantumQASM', {
-        'MessageTemplate': 'OpenQASM`1` export failed: `2`',
-        'MessageParameters': [<* pythonVersion *>, type(e).__name__ + ': ' + str(e)],
-        'PythonError': str(e)})
+        'MessageTemplate': 'OpenQASM' + str(<* pythonVersion *>) + ' export of the circuit as-is failed: '
+            + type(e).__name__ + ': ' + str(e) + '.' + detail
+            + ' Pass a native gate set (a second argument, for example x, sx, rz, cz) so'
+            + ' QuantumQASM transpiles the circuit to serializable gates first.',
+        'PythonError': str(e),
+        'NonNativeGates': offenders,
+        'Hint': 'Pass a native gate set so QuantumQASM transpiles the circuit first.'})
 result
 "],
         MatchQ[_String | _Failure]
@@ -135,8 +154,7 @@ try:
     from qiskit.transpiler import Target
 except Exception as e:
     result = wl.Failure('QiskitTarget', {
-        'MessageTemplate': 'qiskit Target is unavailable: `1`',
-        'MessageParameters': [str(e)]})
+        'MessageTemplate': 'qiskit Target is unavailable: ' + str(e)})
 else:
     if not hasattr(Target, 'from_configuration'):
         result = wl.Failure('QiskitTarget', {
@@ -147,8 +165,7 @@ else:
         unknown = sorted(k for k in spec if k not in accepted)
         if unknown:
             result = wl.Failure('QiskitTarget', {
-                'MessageTemplate': 'Unknown Target option(s): `1`. Accepted: `2`.',
-                'MessageParameters': [unknown, accepted],
+                'MessageTemplate': 'Unknown Target option(s): ' + ', '.join(unknown) + '. Accepted: ' + ', '.join(accepted) + '.',
                 'Unknown': unknown,
                 'Accepted': accepted})
         else:
@@ -196,11 +213,69 @@ QiskitTarget /: MakeBoxes[qt : QiskitTarget[data_Association] /; KeyExistsQ[data
     ]
 
 
-(* QuantumQASM: circuit -> OpenQASM string. Faithful dump by default; transpile to a
-   native basis only when a basis / Target / coupling map / any transpile option is
-   given. Returns an OpenQASM String or a Failure. *)
+(* QuantumQASM is the single QASM hub: it serializes a circuit/operator to OpenQASM and
+   imports OpenQASM source back into a QuantumCircuitOperator. *)
 
-QuantumQASM[qco_QuantumCircuitOperator, args___] := With[{qk = qco["Qiskit"]},
+(* --- import: OpenQASM source / file -> QuantumCircuitOperator (native, no qiskit) --- *)
+
+QuantumQASM[src_String /; qasmStringQ[src]] := ImportOpenQASM[src]
+
+QuantumQASM[File[f_String]] := importQASMFile[f]
+
+QuantumQASM[f_String /; qasmFileQ[f]] := importQASMFile[f]
+
+(* the QuantumCircuitOperator constructor accepts OpenQASM source / file directly *)
+
+QuantumCircuitOperator[src_String /; qasmStringQ[src], ___] := QuantumQASM[src]
+
+QuantumCircuitOperator[f_String /; qasmFileQ[f], ___] := QuantumQASM[File[f]]
+
+QuantumCircuitOperator[File[f_String], ___] := QuantumQASM[File[f]]
+
+importQASMFile[f_String] := With[{s = Quiet @ Check[Import[f, "Text"], $Failed]},
+    If[ ! StringQ[s],
+        Failure["QuantumQASM", <|"MessageTemplate" -> "Could not read OpenQASM file `1`.", "MessageParameters" -> {f}, "Category" -> "FileRead"|>],
+        QuantumQASM[s]
+    ]
+]
+
+(* --- export --- *)
+
+(* OpenQASM models qubit registers only: every qudit must be 2-dimensional. A circuit or
+   operator carrying any higher-dimensional qudit has no OpenQASM representation, so the
+   export is rejected with a clear Failure rather than left unevaluated or surfaced as an
+   opaque ConfirmBy error from the emitter. *)
+
+qasmQuditDimensions[qco_QuantumCircuitOperator] := Join[qco["InputDimensions"], qco["OutputDimensions"]]
+qasmQuditDimensions[qo_QuantumOperator] := qo["Dimensions"]
+
+qasmQubitsQ[obj_] := AllTrue[qasmQuditDimensions[obj], # === 2 &]
+
+qasmNonQubitFailure[obj_] := With[{nonQubit = DeleteDuplicates @ DeleteCases[qasmQuditDimensions[obj], 2]},
+    Failure["QuantumQASM", <|
+        "MessageTemplate" -> "QuantumQASM supports qubit (2-dimensional) systems only; the given `1` has non-qubit qudit dimension(s) `2`. OpenQASM has no representation for higher-dimensional qudits.",
+        "MessageParameters" -> {If[QuantumCircuitOperatorQ[obj], "circuit", "operator"], nonQubit},
+        "NonQubitDimensions" -> nonQubit
+    |>]
+]
+
+QuantumQASM[obj : _QuantumCircuitOperator | _QuantumOperator, ___] /; ! qasmQubitsQ[obj] := qasmNonQubitFailure[obj]
+
+(* default export is native, dependency-free WL emission (no Python, no qiskit): the
+   circuit serialized exactly as built, in a generic gate set, immune to qiskit changes.
+   "WL" is an explicit synonym for this path. *)
+QuantumQASM[qco_QuantumCircuitOperator] := qasmEmitCircuit[qco]
+
+QuantumQASM[qco_QuantumCircuitOperator, "WL"] := qasmEmitCircuit[qco]
+
+QuantumQASM[qo_QuantumOperator, "Simple"] := qasmEmitSimple[qo]
+
+QuantumQASM[qo_QuantumOperator] := qasmEmitOperator[qo]
+
+(* supplying any argument (a native gate set, a Target / CouplingMap, an OpenQASM Version,
+   or any transpiler option) routes through qiskit: a faithful qiskit dump, or a transpile
+   to a native basis. This is the only export path that needs the Python session. *)
+QuantumQASM[qco_QuantumCircuitOperator, args__] := With[{qk = qco["Qiskit"]},
     If[MatchQ[qk, _QiskitCircuit], QuantumQASM[qk, args], qk]
 ]
 
@@ -218,6 +293,13 @@ QuantumQASM[qc_QiskitCircuit, basisGates : {___String} | Automatic : Automatic, 
     ];
     version = Lookup[normOpts, "version", Lookup[normOpts, "qasm_version", 3]];
     normOpts = KeyDrop[normOpts, {"version", "qasm_version"}];
+    (* a Provider / Backend request engages the hardware-provider export path (transpile
+       against a real backend, with the AWS-Braket OpenQASM conversion) handled by qiskitQASM *)
+    If[ KeyExistsQ[normOpts, "provider"] || KeyExistsQ[normOpts, "backend"],
+        Return @ qiskitQASM[qc, "Version" -> version,
+            "Provider" -> Lookup[normOpts, "provider", None],
+            "Backend" -> Lookup[normOpts, "backend", Automatic]]
+    ];
     If[ basisGates =!= Automatic,
         If[ KeyExistsQ[normOpts, "basis_gates"],
             Return @ Failure["QuantumQASM", <|"MessageTemplate" ->

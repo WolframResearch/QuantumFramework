@@ -287,25 +287,25 @@ BeginTestSection["QuantumCircuitOperator - state preparation round-trip"]
 VerificationTest[
     Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["1"]]][]["StateVector"] - QuantumState["1"]["StateVector"]],
     0,
-    TestID -> "StatePrep-roundtrip-ket1"
+    TestID -> "StatePreparation-roundtrip-ket1"
 ]
 
 VerificationTest[
     Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["010"]]][]["StateVector"] - QuantumState["010"]["StateVector"]],
     0,
-    TestID -> "StatePrep-roundtrip-ket010"
+    TestID -> "StatePreparation-roundtrip-ket010"
 ]
 
 VerificationTest[
     Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["GHZ"[3]]]][]["StateVector"] - QuantumState["GHZ"[3]]["StateVector"]],
     0,
-    TestID -> "StatePrep-roundtrip-GHZ3"
+    TestID -> "StatePreparation-roundtrip-GHZ3"
 ]
 
 VerificationTest[
     Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"] - QuantumState["W"[3]]["StateVector"]],
     0,
-    TestID -> "StatePrep-roundtrip-W3"
+    TestID -> "StatePreparation-roundtrip-W3"
 ]
 
 (* global phase is preserved, not just the ray *)
@@ -314,7 +314,7 @@ VerificationTest[
         Chop @ Norm[N @ QuantumCircuitOperator["QuantumState"[qs]][]["StateVector"] - N @ qs["StateVector"]]
     ],
     0,
-    TestID -> "StatePrep-roundtrip-global-phase"
+    TestID -> "StatePreparation-roundtrip-global-phase"
 ]
 
 (* fidelity round-trips for numeric / random states across dimensions *)
@@ -324,7 +324,7 @@ VerificationTest[
     ],
     1,
     SameTest -> (Abs[#1 - #2] < 10^-8 &),
-    TestID -> "StatePrep-roundtrip-explicit-vector"
+    TestID -> "StatePreparation-roundtrip-explicit-vector"
 ]
 
 VerificationTest[
@@ -336,7 +336,180 @@ VerificationTest[
     ],
     {1, 1, 1, 1, 1},
     SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
-    TestID -> "StatePrep-roundtrip-random-1to5"
+    TestID -> "StatePreparation-roundtrip-random-1to5"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - StatePreparation block-diagonal (heterogeneous qudits)"]
+
+(* The block-diagonal algorithm (Method -> "BlockDiagonal") prepares an arbitrary pure
+   state on a register whose qudits may have different dimensions. Workflow under test:
+   generate a random state vector for a dimension profile, build the circuit, run qc[]
+   (no input -> |0...0>), and compare with the original vector (norm, exact amplitudes,
+   fidelity). prepCirc forces "BlockDiagonal" so every profile, including all-qubit ones,
+   exercises this algorithm rather than the Automatic multiplexer route. *)
+
+heteroDims = {{2, 3, 2}, {4, 2, 3}, {3, 3, 3}, {5, 3}, {2, 2, 2, 2}, {2, 5}, {7}};
+
+svGen[dims_, seed_] := (SeedRandom[seed]; Normalize[RandomComplex[{-1 - I, 1 + I}, Times @@ dims]]);
+
+prepCirc[dims_, seed_] := QuantumCircuitOperator["StatePreparation"[QuantumState[svGen[dims, seed], QuantumBasis[dims]], Method -> "BlockDiagonal"]];
+
+(* qc[] preserves the norm *)
+VerificationTest[
+    Table[Chop[Norm[prepCirc[d, 11][]["StateVector"]] - 1], {d, heteroDims}],
+    ConstantArray[0, Length[heteroDims]],
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
+    TestID -> "StatePreparation-blockdiag-norm"
+]
+
+(* qc[] reproduces the original amplitude vector exactly *)
+VerificationTest[
+    Table[Chop[Norm[prepCirc[d, 11][]["StateVector"] - svGen[d, 11]]], {d, heteroDims}],
+    ConstantArray[0, Length[heteroDims]],
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
+    TestID -> "StatePreparation-blockdiag-vector-roundtrip"
+]
+
+(* fidelity with the target is 1 (QuantumDistance "Fidelity" returns a distance, 0 when identical) *)
+VerificationTest[
+    Table[Chop[1 - QuantumDistance[prepCirc[d, 11][], QuantumState[svGen[d, 11], QuantumBasis[d]], "Fidelity"]], {d, heteroDims}],
+    ConstantArray[1, Length[heteroDims]],
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
+    TestID -> "StatePreparation-blockdiag-fidelity"
+]
+
+(* the prepared state keeps the requested per-qudit dimensions *)
+VerificationTest[
+    Table[prepCirc[d, 11][]["Dimensions"], {d, heteroDims}],
+    heteroDims,
+    TestID -> "StatePreparation-blockdiag-dims-preserved"
+]
+
+(* the compiled circuit operator is unitary *)
+VerificationTest[
+    Table[(QuantumOperator @ prepCirc[d, 11])["UnitaryQ"], {d, heteroDims}],
+    ConstantArray[True, Length[heteroDims]],
+    TestID -> "StatePreparation-blockdiag-unitary"
+]
+
+(* one block-diagonal gate per qudit (count the flattened operators) *)
+VerificationTest[
+    Table[Length[prepCirc[d, 11]["Flatten"]["Operators"]], {d, heteroDims}],
+    Length /@ heteroDims,
+    TestID -> "StatePreparation-blockdiag-gate-count"
+]
+
+(* explicit |0...0> input matches the qc[] form *)
+VerificationTest[
+    With[{d = {2, 3, 2}},
+        Chop @ Norm[
+            prepCirc[d, 11][QuantumState[SparseArray[{1 -> 1}, Times @@ d], QuantumBasis[d]]]["StateVector"]
+            - prepCirc[d, 11][]["StateVector"]
+        ]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-8 &),
+    TestID -> "StatePreparation-blockdiag-explicit-input-matches"
+]
+
+(* a state given in a non-computational basis is prepared via its Computational form *)
+VerificationTest[
+    With[{qs = QuantumState["+", QuantumBasis["X"]]},
+        QuantumCircuitOperator["StatePreparation"[qs, Method -> "BlockDiagonal"]][] == qs["Computational"]
+    ],
+    True,
+    TestID -> "StatePreparation-blockdiag-noncomputational-basis"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - StatePreparation method routing"]
+
+(* Automatic routes all-qubit states through the multiplexer and any qudit state through
+   the block-diagonal algorithm, with no explicit Method. "QuantumState" and
+   "StatePreparation" are the same entry point; "StatePrep" has been removed. *)
+
+(* single qudit (dim != 2) round-trips under Automatic *)
+VerificationTest[
+    With[{qs = QuantumState[svGen[{5}, 3], QuantumBasis[{5}]]},
+        Chop @ Norm[QuantumCircuitOperator["StatePreparation"[qs]][]["StateVector"] - svGen[{5}, 3]]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-8 &),
+    TestID -> "StatePreparation-automatic-single-qudit"
+]
+
+(* heterogeneous multi-qudit round-trips under Automatic (no Method) *)
+VerificationTest[
+    Table[
+        With[{qs = QuantumState[svGen[d, 4], QuantumBasis[d]]},
+            Chop @ Norm[QuantumCircuitOperator["StatePreparation"[qs]][]["StateVector"] - svGen[d, 4]]
+        ],
+        {d, {{3, 2}, {2, 3, 2}, {3, 3, 3}}}
+    ],
+    {0, 0, 0},
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-8 &),
+    TestID -> "StatePreparation-automatic-heterogeneous"
+]
+
+(* "QuantumState" and "StatePreparation" name the same entry point *)
+VerificationTest[
+    With[{qs = QuantumState["GHZ"[3]]},
+        InputForm[QuantumCircuitOperator["QuantumState"[qs]]] === InputForm[QuantumCircuitOperator["StatePreparation"[qs]]]
+    ],
+    True,
+    TestID -> "StatePreparation-QuantumState-alias"
+]
+
+(* Automatic on an all-qubit state uses the multiplexer: more gates than block-diagonal *)
+VerificationTest[
+    With[{qs = QuantumState[svGen[{2, 2, 2}, 9], QuantumBasis[{2, 2, 2}]]},
+        Length[QuantumCircuitOperator["StatePreparation"[qs]]["Flatten"]["Operators"]] >
+            Length[QuantumCircuitOperator["StatePreparation"[qs, Method -> "BlockDiagonal"]]["Flatten"]["Operators"]]
+    ],
+    True,
+    TestID -> "StatePreparation-multiplexer-vs-blockdiagonal-gatecount"
+]
+
+(* "Multiplexer" forced on a qudit is qubit-only: returns a Failure with ::qubitonly *)
+VerificationTest[
+    FailureQ @ QuantumCircuitOperator["StatePreparation"[QuantumState[svGen[{3}, 1], QuantumBasis[{3}]], Method -> "Multiplexer"]],
+    True,
+    {QuantumCircuitOperator::qubitonly},
+    TestID -> "StatePreparation-multiplexer-qudit-failure"
+]
+
+(* an unrecognized Method returns a Failure with ::badmethod *)
+VerificationTest[
+    FailureQ @ QuantumCircuitOperator["StatePreparation"[QuantumState["GHZ"[2]], Method -> "Nonsense"]],
+    True,
+    {QuantumCircuitOperator::badmethod},
+    TestID -> "StatePreparation-badmethod-failure"
+]
+
+(* a mixed state returns a Failure and emits QuantumCircuitOperator::nonpure *)
+VerificationTest[
+    FailureQ @ QuantumCircuitOperator["StatePreparation"[QuantumState["RandomMixed", {2, 3}]]],
+    True,
+    {QuantumCircuitOperator::nonpure},
+    TestID -> "StatePreparation-nonpure-failure"
+]
+
+(* the no-argument forms build a circuit (3-qubit uniform superposition) *)
+VerificationTest[Head @ QuantumCircuitOperator["StatePreparation"[]], QuantumCircuitOperator, TestID -> "StatePreparation-noarg"]
+
+VerificationTest[Head @ QuantumCircuitOperator["QuantumState"[]], QuantumCircuitOperator, TestID -> "QuantumState-noarg"]
+
+(* "StatePrep" has been removed: it no longer matches a constructor rule *)
+VerificationTest[
+    FailureQ @ QuantumCircuitOperator["StatePrep"[QuantumState["GHZ"[3]]]],
+    True,
+    {QuantumCircuitOperator::invalidName},
+    TestID -> "StatePrep-removed"
 ]
 
 EndTestSection[]

@@ -11,6 +11,8 @@ QuantumCircuitOperator::invalidName = "`1` is not a recognized QuantumCircuitOpe
 
 QuantumCircuitOperator::invalidArgs = "QuantumCircuitOperator constructor `1` did not match any rule"
 
+QuantumCircuitOperator::nonpure = "State preparation requires a pure state, but `1` is not pure"
+
 
 BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "Barrier"[Span[_Integer, _Integer | All], ___]]
 
@@ -45,6 +47,8 @@ FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorSh
 
 
 
+QuantumCircuitOperator[f_Failure, ___] := f
+
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
@@ -74,7 +78,7 @@ QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNa
 
 QuantumCircuitOperator[g_ ? GraphQ, opts___] := TensorNetworkQuantumCircuit[GraphTensorNetwork[g, opts, Method -> "Random"]]
 
-QuantumCircuitOperator[arg : Except[_List | _Association]] := QuantumCircuitOperator[{arg}]
+QuantumCircuitOperator[arg : Except[_List | _Association | _File] /; ! (StringQ[arg] && (qasmStringQ[arg] || qasmFileQ[arg]))] := QuantumCircuitOperator[{arg}]
 
 QuantumCircuitOperator[operators_, label_, opts : OptionsPattern[]] := QuantumCircuitOperator[ToList[operators], "Label" -> label, opts]
 
