@@ -6,6 +6,7 @@ PackageScope["QuantumChannelQ"]
 
 
 QuantumChannel::invalidName = "`1` is not a recognized QuantumChannel constructor"
+QuantumChannel::invalidArgs = "QuantumChannel constructor `1` did not match any rule"
 
 
 quantumChannelQ[QuantumChannel[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]]]] :=

@@ -1,0 +1,345 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     15907,        336]
+NotebookOptionsPosition[     10510,        269]
+NotebookOutlinePosition[     10832,        283]
+CellTagsIndexPosition[     10789,        280]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Wolfram`QuantumFramework`", "Text",ExpressionUUID->"9bac2a45-6790-406d-b54d-c324dcf6b579"],
+
+Cell["RandomClifford", "Title",ExpressionUUID->"e402e21e-a43d-48a9-a1a8-4bbd3264a075"],
+
+Cell["Uniformly-random sample from the n-qubit Clifford group.", "Text",ExpressionUUID->"ec995383-1a1c-4b90-b7d0-b731dc14b56e"],
+
+Cell["Details and Options", "Section",ExpressionUUID->"247ab6a3-cddc-42c7-b588-e71c25ee6542"],
+
+Cell["\<\
+``RandomClifford[n]`` returns a \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer) of `n` \
+qubits drawn uniformly from the Clifford group `C_n`.\
+\>", "Item",ExpressionUUID->"e0d676dc-6241-4ed9-83ac-105e4db5a7b5"],
+
+Cell["The cardinality of the Clifford group is", "Item",ExpressionUUID->"393c821e-3eca-4444-bf1d-16d4c1315b83"],
+
+Cell["`|C_n| = 2^(n^2 + 2n) Product[4^j - 1, {j, 1, n}]`.", "Text",ExpressionUUID->"7c680962-2700-4eba-911b-482432b03d66"],
+
+Cell["\<\
+For example: `|C_1| = 24`, `|C_2| = 11520`, `|C_3| = 92897280`.\
+\>", "Text",ExpressionUUID->"2dee8ae1-dd1c-402d-b6e9-c140041369e8"],
+
+Cell["\<\
+The sampler is the Bravyi\[Dash]Maslov / Koenig\[Dash]Smolin \
+Mallows-distribution algorithm (Koenig & Smolin 2014, arXiv:1406.2170, \
+Section 3.2).\
+\>", "Item",ExpressionUUID->"51b13cf9-9cfd-4e3e-905f-5dc8a14ff994"],
+
+Cell["\<\
+The result is reproducible across calls by setting \
+[SeedRandom](paclet:ref/SeedRandom) before invocation.\
+\>", "Item",ExpressionUUID->"4b981704-b717-4543-8168-e5edbf48d6a7"],
+
+Cell["\<\
+``PauliStabilizer[\"Random\", n]`` is an alias for ``RandomClifford[n]`` with \
+default `n = 5`.\
+\>", "Item",ExpressionUUID->"9bb2d6d5-d15f-4cb8-8e5c-978e72bf674e"],
+
+Cell["Examples (4)", "Section",ExpressionUUID->"7a2351ef-db4f-46f1-bfaa-9ab4a4cf6190"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",Ex\
+pressionUUID->"bb1e764a-3359-4d6e-a264-cb8a4c384eee"],
+
+Cell["Basic Examples (2)", "Subsection",ExpressionUUID->"3dad60a1-bbb0-4c2f-a26b-b096cbfdc13e"],
+
+Cell["A 3-qubit uniformly-random Clifford state:", "Text",ExpressionUUID->"4faa94c1-fb5e-4d43-81a7-65c7c4149fb0"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";", " ", 
+  RowBox[{"r", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "3", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"r", "[", "\"\<Qubits\>\"", "]"}], ",", " ", 
+   RowBox[{"r", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+   RowBox[{"r", "[", "\"\<Signs\>\"", "]"}]}], "}"}]}], "Input",ExpressionUUID\
+->"c1c94ccb-1d02-4edd-a5a2-a819888b45c8"],
+
+Cell["{3, {\"-XIY\", \"XYY\", \"-XII\"}, {-1, 1, 1, -1, 1, -1}}", "Output",ExpressionUUID->"70e16c5d-0406-4ba3-a298-1b851269d6a9"],
+
+Cell["The result is a ``PauliStabilizer`` object:", "Text",ExpressionUUID->"461cd53b-6491-4a6b-bddd-e97292e99277"],
+
+Cell[BoxData[
+ RowBox[{"Head", " ", "@", " ", 
+  RowBox[{"RandomClifford", "[", "2", "]"}]}]], "Input",ExpressionUUID->\
+"0a090295-0f78-46ee-b5c9-37b0a2ae831e"],
+
+Cell["PauliStabilizer", "Output",ExpressionUUID->"43c6b799-d15b-4422-ada5-aff86757d48b"],
+
+Cell["Scope (3)", "Subsection",ExpressionUUID->"cec51f70-eba9-4195-873e-7a1f788d8836"],
+
+Cell["Input Forms", "Subsubsection",ExpressionUUID->"5eed1083-0481-4efc-a10e-b672ebf6320b"],
+
+Cell["A single positive integer specifies the number of qubits:", "Text",ExpressionUUID->"39fd48e8-31c8-4d37-ad34-0f45800a1778"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "1", "]"}], ";", " ", 
+  RowBox[{
+   RowBox[{"RandomClifford", "[", "1", "]"}], "[", "\"\<Qubits\>\"", 
+   "]"}]}]], "Input",ExpressionUUID->"b3ff2c13-4d0e-4ee2-9775-b3b22f548c8e"],
+
+Cell["1", "Output",ExpressionUUID->"7e2e78fa-17ce-4b6a-a0a8-b2b8beb3385f"],
+
+Cell["\<\
+The ``\"Random\"`` shorthand on \
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer) is an \
+alias:\
+\>", "Text",ExpressionUUID->"ff967e77-608f-4f0d-abff-89945b2d1323"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "1", "]"}], ";", " ", 
+  RowBox[{
+   RowBox[{"PauliStabilizer", "[", 
+    RowBox[{"\"\<Random\>\"", ",", " ", "2"}], "]"}], "[", "\"\<Qubits\>\"", 
+   "]"}]}]], "Input",ExpressionUUID->"2d7df706-cbbb-47f8-b40f-ffc65d9b8e76"],
+
+Cell["2", "Output",ExpressionUUID->"a4d9f3ea-a40a-4f96-aa16-56dbcd73bc77"],
+
+Cell["Distinctive Features", "Subsubsection",ExpressionUUID->"930eef69-b0d4-43e2-a497-bda6c1a6dcc0"],
+
+Cell["\<\
+200 single-qubit samples cover the small `C_1` state-orbit space (signs \
+included):\
+\>", "Text",ExpressionUUID->"fc8dce90-aa8c-400d-b41e-bf54ca197780"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";"}], "\n", 
+ RowBox[{"Length", " ", "@", " ", 
+  RowBox[{"DeleteDuplicates", " ", "@", " ", 
+   RowBox[{"Table", "[", "\n", "   ", 
+    RowBox[{
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"r", " ", "=", " ", 
+         RowBox[{"RandomClifford", "[", "1", "]"}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"r", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+         RowBox[{"r", "[", "\"\<Signs\>\"", "]"}]}], "}"}]}], "]"}], ",", 
+     "\n", "   ", 
+     RowBox[{"{", "200", "}"}]}], "\n", "]"}]}]}]}], "Input",ExpressionUUID->\
+"c07bbb4c-7dcb-4f4c-93b8-64ca6eb0e40a"],
+
+Cell["12", "Output",ExpressionUUID->"b01b602a-6d34-4b4f-925f-b1ca4dd10654"],
+
+Cell["Options (0)", "Subsection",ExpressionUUID->"57b3d387-1e53-4340-9fe4-683ca5f42651"],
+
+Cell["Applications (0)", "Subsection",ExpressionUUID->"ae6f40b8-7341-41be-92c9-60caf88b189f"],
+
+Cell["Properties and Relations (2)", "Subsection",ExpressionUUID->"473fe242-d86a-466b-8c31-89af08f55639"],
+
+Cell["\<\
+``RandomClifford[n]`` is identical to ``PauliStabilizer[\"Random\", n]``:\
+\>", "Text",ExpressionUUID->"79152f7f-bf42-4a3a-91f6-43a1eeba1379"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "7", "]"}], ";", " ", 
+  RowBox[{"a", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "3", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "7", "]"}], ";", " ", 
+  RowBox[{"b", " ", "=", " ", 
+   RowBox[{"PauliStabilizer", "[", 
+    RowBox[{"\"\<Random\>\"", ",", " ", "3"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"a", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+    RowBox[{"a", "[", "\"\<Signs\>\"", "]"}]}], "}"}], " ", "===", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"b", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+    RowBox[{"b", "[", "\"\<Signs\>\"", "]"}]}], "}"}]}]}], "Input",ExpressionU\
+UID->"40d8c0ae-b60d-4bd0-b75c-3efba6e13902"],
+
+Cell["True", "Output",ExpressionUUID->"779c86d4-87e3-44fc-b341-d1b21bb5238e"],
+
+Cell["\<\
+Each call returns a fresh ``PauliStabilizer`` and is reproducible with \
+[SeedRandom](paclet:ref/SeedRandom):\
+\>", "Text",ExpressionUUID->"da6d5b82-b886-4d45-ad25-d3058a8529f0"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";", " ", 
+  RowBox[{"a", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "3", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "42", "]"}], ";", " ", 
+  RowBox[{"b", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "3", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"a", "[", "\"\<Stabilizers\>\"", "]"}], " ", "===", " ", 
+   RowBox[{"b", "[", "\"\<Stabilizers\>\"", "]"}]}], " ", "&&", " ", 
+  RowBox[{
+   RowBox[{"a", "[", "\"\<Signs\>\"", "]"}], " ", "===", " ", 
+   RowBox[{"b", "[", "\"\<Signs\>\"", "]"}]}]}]}], "Input",ExpressionUUID->\
+"4bad89db-9cb9-4182-93e0-58f945c38fc5"],
+
+Cell["True", "Output",ExpressionUUID->"52f7c477-665b-43ca-bc81-01161dcaadfe"],
+
+Cell["Possible Issues (2)", "Subsection",ExpressionUUID->"3f9fda6f-01ad-4b00-8a1d-4321a2f22fcb"],
+
+Cell["\<\
+Without [SeedRandom](paclet:ref/SeedRandom), successive calls return \
+independent samples:\
+\>", "Text",ExpressionUUID->"7969ec0e-2d26-45f5-b693-ce511af36f6b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"a", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "2", "]"}]}], ";", " ", 
+  RowBox[{"b", " ", "=", " ", 
+   RowBox[{"RandomClifford", "[", "2", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"a", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+    RowBox[{"a", "[", "\"\<Signs\>\"", "]"}]}], "}"}], " ", "===", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"b", "[", "\"\<Stabilizers\>\"", "]"}], ",", " ", 
+    RowBox[{"b", "[", "\"\<Signs\>\"", "]"}]}], "}"}]}]}], "Input",ExpressionU\
+UID->"1dda47f5-4dd2-41da-8f11-71404eda2404"],
+
+Cell["False", "Output",ExpressionUUID->"3c49ca37-2156-4d0e-bc1f-44df8be32ef5"],
+
+Cell["\<\
+The Mallows sampler scales as `O(n^3)` per draw; very large `n` is \
+impractical. For example, `RandomClifford[20]` allocates and inverts `40 x \
+40` matrices. No upper-`n` limit is enforced.\
+\>", "Text",ExpressionUUID->"d5cfac57-c8b5-4ef9-b458-30e8e025cd9c"],
+
+Cell["Neat Examples (0)", "Subsection",ExpressionUUID->"46f2e3ce-5d0b-4294-8a42-bbe1073c33e7"],
+
+Cell["See Also", "Section",ExpressionUUID->"964202d1-f6ae-4b3a-8366-ebb360c568d4"],
+
+Cell["\<\
+[PauliStabilizer](paclet:Wolfram/QuantumFramework/ref/PauliStabilizer)\
+\>", "Item",ExpressionUUID->"35db4ded-4c9d-4f3b-8b49-4918a78e7301"],
+
+Cell["\<\
+[StabilizerMeasure](paclet:Wolfram/QuantumFramework/ref/StabilizerMeasure)\
+\>", "Item",ExpressionUUID->"df290e94-84f0-4eca-b369-01075ec8780f"],
+
+Cell["\<\
+[SubstituteOutcomes](paclet:Wolfram/QuantumFramework/ref/SubstituteOutcomes)\
+\>", "Item",ExpressionUUID->"f3457a24-3b13-439a-96a6-a5db44c10ae5"],
+
+Cell["\<\
+[SampleOutcomes](paclet:Wolfram/QuantumFramework/ref/SampleOutcomes)\
+\>", "Item",ExpressionUUID->"38a59509-3d7c-4c94-b4e4-57f26a063a42"],
+
+Cell["[RandomSample](paclet:ref/RandomSample)", "Item",ExpressionUUID->"f874e35b-9fc1-4529-b53f-ff41609de198"],
+
+Cell["[SeedRandom](paclet:ref/SeedRandom)", "Item",ExpressionUUID->"c578094b-655c-45de-b05d-20c3fc7735ee"],
+
+Cell["Related Guides", "Section",ExpressionUUID->"28712e1c-2718-4f7e-a51a-103a74d94518"],
+
+Cell["Related Tech Notes", "Section",ExpressionUUID->"8904c6df-ebb5-4a12-b447-0357fcc3158a"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"62d5ebca-b0ed-47d1-af61-0d6cb351390b"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 96, 0, 70, "Text",ExpressionUUID->"9bac2a45-6790-406d-b54d-c324dcf6b579"],
+Cell[653, 22, 86, 0, 70, "Title",ExpressionUUID->"e402e21e-a43d-48a9-a1a8-4bbd3264a075"],
+Cell[742, 24, 127, 0, 70, "Text",ExpressionUUID->"ec995383-1a1c-4b90-b7d0-b731dc14b56e"],
+Cell[872, 26, 93, 0, 70, "Section",ExpressionUUID->"247ab6a3-cddc-42c7-b588-e71c25ee6542"],
+Cell[968, 28, 246, 4, 70, "Item",ExpressionUUID->"e0d676dc-6241-4ed9-83ac-105e4db5a7b5"],
+Cell[1217, 34, 111, 0, 70, "Item",ExpressionUUID->"393c821e-3eca-4444-bf1d-16d4c1315b83"],
+Cell[1331, 36, 122, 0, 70, "Text",ExpressionUUID->"7c680962-2700-4eba-911b-482432b03d66"],
+Cell[1456, 38, 142, 2, 70, "Text",ExpressionUUID->"2dee8ae1-dd1c-402d-b6e9-c140041369e8"],
+Cell[1601, 42, 228, 4, 70, "Item",ExpressionUUID->"51b13cf9-9cfd-4e3e-905f-5dc8a14ff994"],
+Cell[1832, 48, 186, 3, 70, "Item",ExpressionUUID->"4b981704-b717-4543-8168-e5edbf48d6a7"],
+Cell[2021, 53, 175, 3, 70, "Item",ExpressionUUID->"9bb2d6d5-d15f-4cb8-8e5c-978e72bf674e"],
+Cell[2199, 58, 86, 0, 70, "Section",ExpressionUUID->"7a2351ef-db4f-46f1-bfaa-9ab4a4cf6190"],
+Cell[2288, 60, 147, 2, 70, "Input",ExpressionUUID->"bb1e764a-3359-4d6e-a264-cb8a4c384eee"],
+Cell[2438, 64, 95, 0, 70, "Subsection",ExpressionUUID->"3dad60a1-bbb0-4c2f-a26b-b096cbfdc13e"],
+Cell[2536, 66, 113, 0, 70, "Text",ExpressionUUID->"4faa94c1-fb5e-4d43-81a7-65c7c4149fb0"],
+Cell[2652, 68, 437, 10, 70, "Input",ExpressionUUID->"c1c94ccb-1d02-4edd-a5a2-a819888b45c8"],
+Cell[3092, 80, 130, 0, 70, "Output",ExpressionUUID->"70e16c5d-0406-4ba3-a298-1b851269d6a9"],
+Cell[3225, 82, 114, 0, 70, "Text",ExpressionUUID->"461cd53b-6491-4a6b-bddd-e97292e99277"],
+Cell[3342, 84, 160, 3, 70, "Input",ExpressionUUID->"0a090295-0f78-46ee-b5c9-37b0a2ae831e"],
+Cell[3505, 89, 88, 0, 70, "Output",ExpressionUUID->"43c6b799-d15b-4422-ada5-aff86757d48b"],
+Cell[3596, 91, 86, 0, 70, "Subsection",ExpressionUUID->"cec51f70-eba9-4195-873e-7a1f788d8836"],
+Cell[3685, 93, 91, 0, 70, "Subsubsection",ExpressionUUID->"5eed1083-0481-4efc-a10e-b672ebf6320b"],
+Cell[3779, 95, 128, 0, 70, "Text",ExpressionUUID->"39fd48e8-31c8-4d37-ad34-0f45800a1778"],
+Cell[3910, 97, 233, 5, 70, "Input",ExpressionUUID->"b3ff2c13-4d0e-4ee2-9775-b3b22f548c8e"],
+Cell[4146, 104, 74, 0, 70, "Output",ExpressionUUID->"7e2e78fa-17ce-4b6a-a0a8-b2b8beb3385f"],
+Cell[4223, 106, 198, 4, 70, "Text",ExpressionUUID->"ff967e77-608f-4f0d-abff-89945b2d1323"],
+Cell[4424, 112, 277, 6, 70, "Input",ExpressionUUID->"2d7df706-cbbb-47f8-b40f-ffc65d9b8e76"],
+Cell[4704, 120, 74, 0, 70, "Output",ExpressionUUID->"a4d9f3ea-a40a-4f96-aa16-56dbcd73bc77"],
+Cell[4781, 122, 100, 0, 70, "Subsubsection",ExpressionUUID->"930eef69-b0d4-43e2-a497-bda6c1a6dcc0"],
+Cell[4884, 124, 163, 3, 70, "Text",ExpressionUUID->"fc8dce90-aa8c-400d-b41e-bf54ca197780"],
+Cell[5050, 129, 704, 18, 70, "Input",ExpressionUUID->"c07bbb4c-7dcb-4f4c-93b8-64ca6eb0e40a"],
+Cell[5757, 149, 75, 0, 70, "Output",ExpressionUUID->"b01b602a-6d34-4b4f-925f-b1ca4dd10654"],
+Cell[5835, 151, 88, 0, 70, "Subsection",ExpressionUUID->"57b3d387-1e53-4340-9fe4-683ca5f42651"],
+Cell[5926, 153, 93, 0, 70, "Subsection",ExpressionUUID->"ae6f40b8-7341-41be-92c9-60caf88b189f"],
+Cell[6022, 155, 105, 0, 70, "Subsection",ExpressionUUID->"473fe242-d86a-466b-8c31-89af08f55639"],
+Cell[6130, 157, 152, 2, 70, "Text",ExpressionUUID->"79152f7f-bf42-4a3a-91f6-43a1eeba1379"],
+Cell[6285, 161, 758, 19, 70, "Input",ExpressionUUID->"40d8c0ae-b60d-4bd0-b75c-3efba6e13902"],
+Cell[7046, 182, 77, 0, 70, "Output",ExpressionUUID->"779c86d4-87e3-44fc-b341-d1b21bb5238e"],
+Cell[7126, 184, 188, 3, 70, "Text",ExpressionUUID->"da6d5b82-b886-4d45-ad25-d3058a8529f0"],
+Cell[7317, 189, 677, 16, 70, "Input",ExpressionUUID->"4bad89db-9cb9-4182-93e0-58f945c38fc5"],
+Cell[7997, 207, 77, 0, 70, "Output",ExpressionUUID->"52f7c477-665b-43ca-bc81-01161dcaadfe"],
+Cell[8077, 209, 96, 0, 70, "Subsection",ExpressionUUID->"3f9fda6f-01ad-4b00-8a1d-4321a2f22fcb"],
+Cell[8176, 211, 170, 3, 70, "Text",ExpressionUUID->"7969ec0e-2d26-45f5-b693-ce511af36f6b"],
+Cell[8349, 216, 597, 15, 70, "Input",ExpressionUUID->"1dda47f5-4dd2-41da-8f11-71404eda2404"],
+Cell[8949, 233, 78, 0, 70, "Output",ExpressionUUID->"3c49ca37-2156-4d0e-bc1f-44df8be32ef5"],
+Cell[9030, 235, 270, 4, 70, "Text",ExpressionUUID->"d5cfac57-c8b5-4ef9-b458-30e8e025cd9c"],
+Cell[9303, 241, 94, 0, 70, "Subsection",ExpressionUUID->"46f2e3ce-5d0b-4294-8a42-bbe1073c33e7"],
+Cell[9400, 243, 82, 0, 70, "Section",ExpressionUUID->"964202d1-f6ae-4b3a-8366-ebb360c568d4"],
+Cell[9485, 245, 149, 2, 70, "Item",ExpressionUUID->"35db4ded-4c9d-4f3b-8b49-4918a78e7301"],
+Cell[9637, 249, 153, 2, 70, "Item",ExpressionUUID->"df290e94-84f0-4eca-b369-01075ec8780f"],
+Cell[9793, 253, 155, 2, 70, "Item",ExpressionUUID->"f3457a24-3b13-439a-96a6-a5db44c10ae5"],
+Cell[9951, 257, 147, 2, 70, "Item",ExpressionUUID->"38a59509-3d7c-4c94-b4e4-57f26a063a42"],
+Cell[10101, 261, 110, 0, 70, "Item",ExpressionUUID->"f874e35b-9fc1-4529-b53f-ff41609de198"],
+Cell[10214, 263, 106, 0, 70, "Item",ExpressionUUID->"c578094b-655c-45de-b05d-20c3fc7735ee"],
+Cell[10323, 265, 88, 0, 70, "Section",ExpressionUUID->"28712e1c-2718-4f7e-a51a-103a74d94518"],
+Cell[10414, 267, 92, 0, 70, "Section",ExpressionUUID->"8904c6df-ebb5-4a12-b447-0357fcc3158a"]
+}
+]
+*)
+
+(* End of internal cache information *)

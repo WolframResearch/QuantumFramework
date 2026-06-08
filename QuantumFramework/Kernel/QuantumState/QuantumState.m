@@ -8,6 +8,7 @@ PackageScope["addQuantumStates"]
 
 
 QuantumState::invalidName = "`1` is not a recognized QuantumState constructor"
+QuantumState::invalidArgs = "QuantumState constructor `1` did not match any rule"
 
 
 quantumStateQ[QuantumState[state_SparseArray ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := Length[state] === qb["Dimension"]
@@ -150,6 +151,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         QuantumState[qs["State"], newBasis],
         qs["VectorQ"],
         QuantumState[
+            (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
             SparseArrayFlatten @ ConfirmQuiet[
                 Dot[
                     MatrixInverse[newBasis["Output"]["ReducedMatrix"]],
@@ -162,6 +164,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         ],
         qs["MatrixQ"],
         QuantumState[
+            (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
             ConfirmQuiet[
                 Dot[
                     MatrixInverse[newBasis["ReducedMatrix"]],

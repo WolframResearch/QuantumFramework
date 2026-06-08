@@ -39,5 +39,5 @@ model = create_model(main)
 qprog = synthesize(model)
 qprog.qasm, qprog.data.qubit_mapping.logical_outputs['io']
 ", "classiq"];
-    QuantumCircuitOperator[ImportQASMCircuit[qasm]["QuantumCircuit"], Reverse[mapping] + 1]
+    QuantumCircuitOperator[QuantumQASM[qasm], Reverse[mapping] + 1]
 ]

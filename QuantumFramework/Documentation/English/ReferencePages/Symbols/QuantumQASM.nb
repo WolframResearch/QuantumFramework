@@ -1,0 +1,2633 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    110812,       2625]
+NotebookOptionsPosition[     96331,       2348]
+NotebookOutlinePosition[     97579,       2384]
+CellTagsIndexPosition[     97499,       2379]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["QuantumQASM", "ObjectName",
+ CellID->1224892054,ExpressionUUID->"8393d601-4014-44ba-afc9-60862df940ec"],
+
+Cell[TextData[{
+ Cell["   ", "ModInfo",ExpressionUUID->"1700ab8e-c195-456c-9940-e9d8e9a162f7"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["QuantumQASM",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumQASM"], "[", 
+   StyleBox["circ", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
+  "9b92e7ee-26de-4628-b9d1-861c86aac6bd"],
+ " ",
+ "gives the OpenQASM 3 string for the quantum circuit ",
+ StyleBox["circ", "TI"],
+ ", serialized exactly as built.",
+ "\n",
+ Cell["   ", "ModInfo",ExpressionUUID->"d328814f-760e-4b0c-9016-4de111f2a31b"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["QuantumQASM",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumQASM"], "[", 
+   RowBox[{
+    StyleBox["circ", "TI"], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      SubscriptBox[
+       StyleBox["g", "TI"], 
+       StyleBox["1", "TR"]], ",", " ", 
+      SubscriptBox[
+       StyleBox["g", "TI"], 
+       StyleBox["2", "TR"]], ",", " ", "\[Ellipsis]"}], "}"}]}], "]"}]], 
+  "InlineFormula",ExpressionUUID->"2ec46855-de1f-4009-b304-a62c3f28e00a"],
+ " ",
+ "transpiles ",
+ StyleBox["circ", "TI"],
+ " to the native gate set ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    SubscriptBox[
+     StyleBox["g", "TI"], "1"]}], ",", "\[ThinSpace]", 
+   SubscriptBox[
+    StyleBox["g", "TI"], "2"], ",", "\[ThinSpace]", 
+   RowBox[{"\[Ellipsis]", "}"}]}]], "InlineFormula",ExpressionUUID->
+  "ec0797ad-f642-40c1-9629-60be2c982ed3"],
+ " and gives the resulting native OpenQASM.",
+ "\n",
+ Cell["   ", "ModInfo",ExpressionUUID->"9ce48e1d-db01-41c2-b362-ac6a86445b6e"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["QuantumQASM",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumQASM"], "[", 
+   RowBox[{
+    StyleBox["circ", "TI"], ",", " ", 
+    StyleBox["basis", "TI"], ",", " ", 
+    StyleBox["opts", "TI"]}], "]"}]], "InlineFormula",ExpressionUUID->
+  "ad24de6b-ad15-4d65-8e78-54df4e1cb8e3"],
+ " ",
+ "applies qiskit transpiler options ",
+ StyleBox["opts", "TI"],
+ " such as ",
+ Cell[BoxData["\"\<CouplingMap\>\""], "InlineFormula",ExpressionUUID->
+  "fa63b71a-254e-402e-b67a-86aee1e0e1cf"],
+ ", ",
+ Cell[BoxData["\"\<OptimizationLevel\>\""], "InlineFormula",ExpressionUUID->
+  "da01b3a2-5cae-4a2b-9c03-8f8b38e2babc"],
+ " and ",
+ Cell[BoxData["\"\<Target\>\""], "InlineFormula",ExpressionUUID->
+  "905414d5-e438-4502-a05f-526141c83dc0"],
+ ".",
+ "\n",
+ Cell["   ", "ModInfo",ExpressionUUID->"8fc4e8cb-dcc9-43a2-ac90-c369f8de08e8"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["QuantumQASM",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumQASM"], "[", 
+   RowBox[{
+    StyleBox["circ", "TI"], ",", " ", 
+    RowBox[{"\"\<Version\>\"", " ", "->", " ", "2"}]}], "]"}]], 
+  "InlineFormula",ExpressionUUID->"a51a5529-e080-4308-9394-aa7c3b8e0794"],
+ " ",
+ "gives OpenQASM 2 instead of the default OpenQASM 3."
+}], "Usage",ExpressionUUID->"f2b768c8-b2c3-42d6-b34b-d582dd5ee4c7"],
+
+Cell[TextData[{
+ StyleBox["circ", "TI"],
+ " can be a ",
+ Cell[BoxData[
+  ButtonBox["QuantumCircuitOperator",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator"]],
+   "InlineFormula",ExpressionUUID->"d9e09196-5aa9-4082-88a6-a001d505c96a"],
+ " or a ",
+ Cell[BoxData[
+  ButtonBox["QiskitCircuit",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitCircuit"]], 
+  "InlineFormula",ExpressionUUID->"9ce0884e-1bfa-4408-ad36-a5a577e209ce"],
+ " (the value of ",
+ Cell[BoxData[
+  RowBox[{"qco", "[", "\"\<Qiskit\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"6d41a45c-2899-4268-9b55-0e4bb3f67faa"],
+ ")."
+}], "Notes",ExpressionUUID->"60ba1b5a-a13f-4447-913f-c127b983a964"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "529b34fb-0ba4-4917-9198-7f41989ed92d"],
+ " is ",
+ StyleBox["faithful by default",
+  FontWeight->"Bold"],
+ ": with no native gate set and no ",
+ Cell[BoxData["\"\<Target\>\""], "InlineFormula",ExpressionUUID->
+  "2be26d79-68ae-4327-b8cf-235462e09a62"],
+ ", ",
+ Cell[BoxData["\"\<CouplingMap\>\""], "InlineFormula",ExpressionUUID->
+  "0b2b5a72-f732-4e90-8408-1c2ec35e0d1e"],
+ " or other transpiler option, ",
+ StyleBox["circ", "TI"],
+ " is serialized exactly as built, with no qubit routing or optimization. \
+Supplying any native gate set, target, coupling map or transpiler option \
+makes ",
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "ade1d605-2fa7-4ded-bb03-6ee4fe0a37b2"],
+ " transpile ",
+ StyleBox["circ", "TI"],
+ " first, then serialize the result."
+}], "Notes",ExpressionUUID->"5ce9030d-7aa3-4364-af44-167c3a6ff41a"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "640bad44-03c6-4c00-a44e-a0c83af52913"],
+ " returns an OpenQASM ",
+ Cell[BoxData[
+ "String"], "InlineFormula",ExpressionUUID->
+  "ba66dd76-53fe-4a7d-8d10-59aa2c07d52e"],
+ ". On any error it returns a ",
+ Cell[BoxData[
+  ButtonBox["Failure",
+   BaseStyle->"Link",
+   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
+  "15412509-b635-4d78-acaa-6f2299a65d6a"],
+ " instead of a partial program (see Possible Issues). It has no further \
+property or accessor calls; the device model it accepts through ",
+ Cell[BoxData["\"\<Target\>\""], "InlineFormula",ExpressionUUID->
+  "3df7f966-0ac8-4543-bc82-0634a421ec2a"],
+ ", a ",
+ Cell[BoxData[
+  ButtonBox["QiskitTarget",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitTarget"]], 
+  "InlineFormula",ExpressionUUID->"86a886e2-9541-4087-a99d-98df48b9dfdf"],
+ " object, is what carries accessors such as ",
+ Cell[BoxData[
+  RowBox[{"[", "\"\<NumQubits\>\"", "]"}]], "InlineFormula",ExpressionUUID->
+  "8c4edbd2-5f8f-4c94-b0a1-7e7d8b7b0974"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"[", "\"\<OperationNames\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"5ae5f7a8-3135-4dbd-9143-db8f0bea6a32"],
+ " (shown under Options)."
+}], "Notes",ExpressionUUID->"2e69fb33-044a-4e50-8ba8-0fd3a9583d40"],
+
+Cell[TextData[{
+ "The native gate set is a list of qiskit ",
+ StyleBox["standard gate names", "TI"],
+ " such as ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+    " ", "\"\<cz\>\""}], "}"}]], "InlineFormula",ExpressionUUID->
+  "897bc4ca-49fb-42df-b478-cf9fc9005078"],
+ "; it can equivalently be given through the ",
+ Cell[BoxData["\"\<BasisGates\>\""], "InlineFormula",ExpressionUUID->
+  "2f505da4-637d-454d-9a5a-f6d06d8b7e76"],
+ " option. The names are defined by the installed qiskit (54 in qiskit 2.4.1, \
+e.g. ",
+ Cell[BoxData["\"\<x\>\""], "InlineFormula",ExpressionUUID->
+  "87e8cae1-f18c-4d77-b902-d8e7f23e1c32"],
+ ", ",
+ Cell[BoxData["\"\<sx\>\""], "InlineFormula",ExpressionUUID->
+  "d4dbe2a1-aa78-4f50-ad78-67c2995bda92"],
+ ", ",
+ Cell[BoxData["\"\<rz\>\""], "InlineFormula",ExpressionUUID->
+  "43d9fcdb-ab99-4c02-9d99-9f11d26c8c25"],
+ ", ",
+ Cell[BoxData["\"\<cz\>\""], "InlineFormula",ExpressionUUID->
+  "74569bbe-918b-4c1e-8ed1-b5dcda9dd008"],
+ ", ",
+ Cell[BoxData["\"\<h\>\""], "InlineFormula",ExpressionUUID->
+  "6b2ac69b-ea92-4537-a007-990c74b7c920"],
+ ", ",
+ Cell[BoxData["\"\<cx\>\""], "InlineFormula",ExpressionUUID->
+  "b304eb08-554d-4226-9729-2b57a4e3e05f"],
+ ", ",
+ Cell[BoxData["\"\<ecr\>\""], "InlineFormula",ExpressionUUID->
+  "38c732ac-1824-49bd-be8d-51f7eaa8dfaf"],
+ ", ",
+ Cell[BoxData["\"\<swap\>\""], "InlineFormula",ExpressionUUID->
+  "d3a3144f-b66e-4a3a-9551-61dc493bc63e"],
+ ", ",
+ Cell[BoxData["\"\<ccx\>\""], "InlineFormula",ExpressionUUID->
+  "50d90de4-39a8-4ec9-80bb-8e25053400ad"],
+ "); this set can differ between qiskit versions, so the complete, \
+version-correct list is qiskit's standard gate-name mapping, obtainable with ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"qiskit", ".", "circuit", ".", "library", ".", "get_standard"}], 
+   "_gate", "_name", "_mapping"}]], "InlineFormula",ExpressionUUID->
+  "7288b183-2031-49e3-903e-0e99c56b1392"],
+ " or from qiskit's ",
+ ButtonBox["circuit-library documentation",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://docs.quantum.ibm.com/api/qiskit/circuit_library"], None}],
+ "."
+}], "Notes",ExpressionUUID->"e3ee61b5-2e67-4dcd-b0e2-599436d9cf10"],
+
+Cell[TextData[{
+ "Every option other than ",
+ Cell[BoxData["\"\<Version\>\""], "InlineFormula",ExpressionUUID->
+  "2b49ea7f-d3e1-49cd-9dfc-60ee5138a756"],
+ " is forwarded to qiskit's transpiler. Option names are CamelCase and map to \
+qiskit's snake_case parameter names (",
+ Cell[BoxData["\"\<CouplingMap\>\""], "InlineFormula",ExpressionUUID->
+  "3f9c5d76-a11d-4805-a02a-ea146db17eb8"],
+ " to ",
+ Cell[BoxData[
+ "coupling_map"], "InlineFormula",ExpressionUUID->
+  "8aab4eaf-538c-4f58-a150-4d945188fecf"],
+ "); the raw snake_case name is accepted too. Any current or future qiskit \
+transpile parameter therefore works without a change to ",
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "693bf4c4-de87-484a-8256-eb00ef085cb4"],
+ "."
+}], "Notes",ExpressionUUID->"475dbab3-87de-479d-b064-e3ea9a88c9aa"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData["\"\<CouplingMap\>\""], "InlineFormula",ExpressionUUID->
+  "80218fe7-71a5-4dc7-8329-4b5d0129c86a"],
+ " is a list of directed pairs ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"c", ",", " ", "t"}], "}"}], ",", " ", "\[Ellipsis]"}], "}"}]], 
+  "InlineFormula",ExpressionUUID->"0d8b0043-e889-4e7b-ab37-d768271c9a63"],
+ " of physical qubit indices that may interact; two-qubit gates are emitted \
+in that calibrated direction."
+}], "Notes",ExpressionUUID->"465f2999-0656-43c4-84a2-a84535c2191e"],
+
+Cell[TextData[{
+ "A qiskit-free alternative is the pure-Wolfram emitter ",
+ Cell[BoxData[
+  ButtonBox["QuantumCircuitOperator",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator"]],
+   "InlineFormula",ExpressionUUID->"a48637b4-3d19-4faf-9701-9f862e557087"],
+ " property ",
+ Cell[BoxData["\"\<QASM\>\""], "InlineFormula",ExpressionUUID->
+  "ead2d26e-159b-407a-9394-6b3169f30e11"],
+ ", which emits a generic gate set; ",
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "778fded1-751c-40b9-8667-651627e5d61c"],
+ " instead routes through qiskit and can decompose to a hardware-native basis."
+}], "Notes",ExpressionUUID->"aea60c19-2661-4d7f-aa74-f897a3012200"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "9ff35f5b-923e-4a0a-a606-15ba5dc8c91b"],
+ " builds the qiskit circuit through ",
+ Cell[BoxData[
+  RowBox[{"qco", "[", "\"\<Qiskit\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"3fb98608-d02b-4619-a1f1-5443108cd33b"],
+ " and runs the qiskit transpiler in the framework's Python session; the \
+qiskit package is installed automatically on first use."
+}], "Notes",ExpressionUUID->"91da51b8-8a77-4d33-a7ce-7fd0be9d7a82"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "a5a750fc-6b5e-4ceb-b127-a7c99f65c4fd"], Cell["Option", "TableText",
+     FontWeight->Bold,ExpressionUUID->"193224f3-72cc-48ac-8a28-0d6ebf691f41"],
+     Cell["Default value", "TableText",
+     FontWeight->Bold,ExpressionUUID->"034242d8-1b4a-477f-8430-a2926c4b42e6"],
+     Cell["Description", "TableText",
+     FontWeight->Bold,ExpressionUUID->"bcf4dfa5-9af3-4729-a58a-745c665fc66e"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "1f433a87-dec0-4540-a277-3282847e9369"], Cell[TextData[Cell[
+    BoxData["\"\<Version\>\""], "InlineFormula",ExpressionUUID->
+     "c1f73d11-785b-4133-aed7-78920a4414e0"]], "TableText",ExpressionUUID->
+     "744e6f2d-7956-40bc-81b8-f9a97537c088"], Cell[
+    "3", "TableText",ExpressionUUID->"e1347f4b-c7e0-4e8a-8b7a-a497da55d920"], 
+    Cell["the OpenQASM version to emit, 2 or 3", "TableText",ExpressionUUID->
+     "6ade047c-6dbd-4687-8948-df1361a0cb61"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "86a2ae68-663b-45eb-95de-e6b130aa5d5e"], Cell[TextData[Cell[
+    BoxData["\"\<BasisGates\>\""], "InlineFormula",ExpressionUUID->
+     "6f7bfebc-26e4-42c7-8627-a8ccac5bf734"]], "TableText",ExpressionUUID->
+     "508277dd-e737-4a06-aba3-b0c693005173"], Cell[
+    "Automatic", "TableText",ExpressionUUID->
+     "452552d9-b38f-4d47-a3d0-dd412202f61a"], Cell[
+    "the native gate set (the same as the second argument)", "TableText",
+     ExpressionUUID->"7ef7f644-3500-4dfc-a6b9-e9f143b533dd"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "9e0b3ee1-8dcc-4df6-8182-acd0c99bb931"], Cell[TextData[Cell[
+    BoxData["\"\<CouplingMap\>\""], "InlineFormula",ExpressionUUID->
+     "1fd7fa98-3e05-483c-afbc-77bce2ec3784"]], "TableText",ExpressionUUID->
+     "b7ed0581-b31c-410b-b1b6-03dd55732068"], Cell[
+    "Automatic", "TableText",ExpressionUUID->
+     "11887923-c080-4b59-b335-ecf7429d72aa"], Cell[
+    "directed pairs of physical qubits that may interact", "TableText",
+     ExpressionUUID->"a7ff21c9-70d2-42d3-bc32-50b6393c83f3"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "8d0a8cf4-2644-4a7c-b9e8-8fe2dc6962da"], Cell[TextData[Cell[
+    BoxData["\"\<OptimizationLevel\>\""], "InlineFormula",ExpressionUUID->
+     "bf251c84-efcd-4dee-8a23-c84e75b2cf88"]], "TableText",ExpressionUUID->
+     "eef0e561-c631-4895-853e-4ac8dcf8c26d"], Cell[
+    "Automatic", "TableText",ExpressionUUID->
+     "378b3ff6-42f8-4ee8-bbb3-64b708194963"], Cell[
+    "the qiskit optimization level, 0 through 3", "TableText",ExpressionUUID->
+     "00a218d1-64e8-40b6-8ef9-6ed0946f5299"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "4c78ddfd-e07c-4a31-bceb-9c1771d50ccb"], Cell[TextData[Cell[
+    BoxData["\"\<Target\>\""], "InlineFormula",ExpressionUUID->
+     "574eea5d-e46b-44d8-bc1b-b9d6f61fb252"]], "TableText",ExpressionUUID->
+     "073dc450-f3b1-4ef5-a523-0d5aee54d13e"], Cell[
+    "None", "TableText",ExpressionUUID->
+     "35f9f829-169b-4acb-aa95-dac41f1a912a"], Cell[TextData[{
+     "a ",
+     Cell[BoxData[
+      ButtonBox["QiskitTarget",
+       BaseStyle->"Link",
+       ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitTarget"]], 
+      "InlineFormula",ExpressionUUID->"bae784a3-85ec-4902-96e8-d1e98a5be910"],
+     
+     " object or an Association device spec"
+    }], "TableText",ExpressionUUID->"569d563f-1ffb-47cb-b8b1-f423cd6f6cfe"]}
+  }]], "3ColumnTableMod",ExpressionUUID->"46328502-4751-4101-8c06-\
+4c299cbc7d0e"],
+
+Cell[TextData[{
+ "Any other qiskit ",
+ Cell[BoxData[
+ "transpile"], "InlineFormula",ExpressionUUID->
+  "c73decc4-9ed1-4ea5-891f-dd463607f2be"],
+ " parameter (for example ",
+ Cell[BoxData["\"\<InitialLayout\>\""], "InlineFormula",ExpressionUUID->
+  "a818be64-a5e7-41de-b063-5f2b2dbfde18"],
+ ", ",
+ Cell[BoxData["\"\<RoutingMethod\>\""], "InlineFormula",ExpressionUUID->
+  "02e8c125-35ea-4c79-9aaa-cb9d735635b5"],
+ ", ",
+ Cell[BoxData["\"\<SeedTranspiler\>\""], "InlineFormula",ExpressionUUID->
+  "dbc8e0b4-1165-41b7-b062-1f18d31f7323"],
+ ") is also accepted."
+}], "Notes",ExpressionUUID->"28ee5133-ecfd-4809-beb4-bdbd89e1056e"],
+
+Cell[TextData[{
+ "The string value of a ",
+ StyleBox["method", "TI"],
+ " option \[LongDash] ",
+ Cell[BoxData["\"\<LayoutMethod\>\""], "InlineFormula",ExpressionUUID->
+  "b8a2f7a2-19ac-4a89-8564-ce0a6e5b3fd0"],
+ ", ",
+ Cell[BoxData["\"\<RoutingMethod\>\""], "InlineFormula",ExpressionUUID->
+  "001ec675-3509-470f-a5d7-b1e7b0a85a8d"],
+ ", ",
+ Cell[BoxData["\"\<TranslationMethod\>\""], "InlineFormula",ExpressionUUID->
+  "b4488019-7247-40ef-afb6-d1cb742f78d4"],
+ ", ",
+ Cell[BoxData["\"\<SchedulingMethod\>\""], "InlineFormula",ExpressionUUID->
+  "32e830d7-a8e4-4d9a-8576-e89a5f830645"],
+ ", ",
+ Cell[BoxData["\"\<InitMethod\>\""], "InlineFormula",ExpressionUUID->
+  "1db71e26-47d6-48dd-890e-1bdb493ba9d1"],
+ ", ",
+ Cell[BoxData["\"\<OptimizationMethod\>\""], "InlineFormula",ExpressionUUID->
+  "0b92f555-e834-474d-a815-5e02d9a064f2"],
+ ", ",
+ Cell[BoxData["\"\<UnitarySynthesisMethod\>\""], "InlineFormula",
+  ExpressionUUID->"c70ff4a6-9b66-4c7a-a8df-86e183e9736e"],
+ " \[LongDash] is the name of a qiskit transpiler ",
+ StyleBox["stage plugin", "TI"],
+ ". These names are defined by the installed qiskit, not by ",
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "9b97b973-9b9b-45d0-93b2-5572a022d132"],
+ ", and vary by version; the authoritative list is qiskit's ",
+ ButtonBox["transpilation defaults and configuration options",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://quantum.cloud.ibm.com/docs/en/guides/defaults-and-\
+configuration-options"], None}],
+ " guide, and they can be enumerated from the installed qiskit through ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+   "qiskit", ".", "transpiler", ".", "preset_passmanagers", ".", "plugin", ".",
+     "list_stage"}], "_plugins"}]], "InlineFormula",ExpressionUUID->
+  "c081e653-9050-44b1-8200-249faa3eaca0"],
+ ". For the qiskit 2.4.1 bundled with the framework the values are:"
+}], "Notes",ExpressionUUID->"9e3c2356-e342-4686-9282-d1ac94be793b"],
+
+Cell[BoxData[GridBox[{
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "50af0fda-8dba-42d2-a79e-2807eecd5ea5"], Cell[
+    "Method option", "TableText",
+     FontWeight->Bold,ExpressionUUID->"1ed593ed-3eed-4654-983b-121b90e0eef6"],
+     Cell["qiskit 2.4.1 plugin names", "TableText",
+     FontWeight->Bold,ExpressionUUID->"61108350-76eb-47f2-a9ed-51f67b823fe9"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "544059fb-47f0-4f83-9e93-521ddd5fff70"], Cell[TextData[Cell[
+    BoxData["\"\<LayoutMethod\>\""], "InlineFormula",ExpressionUUID->
+     "74964e99-ffe1-4d9d-bda8-9f5a72143d5f"]], "TableText",ExpressionUUID->
+     "c55f0b2c-7f33-44c2-9932-44423664151d"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<trivial\>\""], "InlineFormula",ExpressionUUID->
+      "ccedad8c-0fd7-42a3-9f8f-06366557c0cd"],
+     ", ",
+     Cell[
+     BoxData["\"\<dense\>\""], "InlineFormula",ExpressionUUID->
+      "818ada87-2bf2-4bbf-b994-3ae00d04a13b"],
+     ", ",
+     Cell[
+     BoxData["\"\<sabre\>\""], "InlineFormula",ExpressionUUID->
+      "6f5c6c83-7d19-421e-9c3e-4232c8ba417f"],
+     ", ",
+     Cell[
+     BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+      "1d3a46c8-c35b-46c8-ab99-5b181c26fa83"]
+    }], "TableText",ExpressionUUID->"2a367bf9-5c3b-4fca-bc3d-8754410d91ef"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "dc0c124c-178c-4d72-ac29-edc0f1cff25e"], Cell[TextData[Cell[
+    BoxData["\"\<RoutingMethod\>\""], "InlineFormula",ExpressionUUID->
+     "d9b44fe3-656a-4e00-82b9-16bcb08cecb1"]], "TableText",ExpressionUUID->
+     "65380189-95f5-4340-830d-2dc6004c8144"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<basic\>\""], "InlineFormula",ExpressionUUID->
+      "26d46ba8-0792-4513-91a5-a6fa2ae43dad"],
+     ", ",
+     Cell[
+     BoxData["\"\<lookahead\>\""], "InlineFormula",ExpressionUUID->
+      "141cdb6a-6316-4062-ab02-391761e28a04"],
+     ", ",
+     Cell[
+     BoxData["\"\<sabre\>\""], "InlineFormula",ExpressionUUID->
+      "2b9a3cc4-1e4c-400f-bfe0-2d3414c09f1f"],
+     ", ",
+     Cell[
+     BoxData["\"\<none\>\""], "InlineFormula",ExpressionUUID->
+      "cfba64be-7737-4a9e-8a70-efbfbc179077"],
+     ", ",
+     Cell[
+     BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+      "108ee177-c45a-4d31-bec2-d8eb3887c15d"]
+    }], "TableText",ExpressionUUID->"7f5b3c8d-638b-41c8-8a22-d3b6cb3ab57d"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "be428731-4269-4550-80ac-f8d5ba879ee2"], Cell[TextData[Cell[
+    BoxData["\"\<TranslationMethod\>\""], "InlineFormula",ExpressionUUID->
+     "77e45daa-3163-4ef6-957b-96f748b3e71d"]], "TableText",ExpressionUUID->
+     "ae139df4-f07f-46fa-8d52-193e6333f171"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<translator\>\""], "InlineFormula",ExpressionUUID->
+      "5436bc03-2435-43d1-ade1-073d81d10bb5"],
+     ", ",
+     Cell[
+     BoxData["\"\<synthesis\>\""], "InlineFormula",ExpressionUUID->
+      "da11013c-ff14-41da-b354-196100440b0f"],
+     ", ",
+     Cell[
+     BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+      "73a28056-bbca-476d-8e5d-1b2f52991fdc"],
+     " (plus backend-specific ",
+     Cell[
+     BoxData["\"\<ibm_\[Ellipsis]\>\""], "InlineFormula",ExpressionUUID->
+      "631f6be8-b630-4dff-9f94-696e9b209112"],
+     " variants)"
+    }], "TableText",ExpressionUUID->"cbba37bc-90f4-4692-8918-128c4e4714bb"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "998d2b91-dc2a-46ce-a20a-53e1b2828c35"], Cell[TextData[Cell[
+    BoxData["\"\<SchedulingMethod\>\""], "InlineFormula",ExpressionUUID->
+     "ffc261a8-c3a7-4913-be70-3b5204bb44d7"]], "TableText",ExpressionUUID->
+     "ecccc21c-c658-4504-9d03-370c078f67fa"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<asap\>\""], "InlineFormula",ExpressionUUID->
+      "4f9a16eb-e560-4cbf-9777-7ad43efce15a"],
+     ", ",
+     Cell[
+     BoxData["\"\<alap\>\""], "InlineFormula",ExpressionUUID->
+      "211e4d7d-b90f-41f2-9f07-dd2bbd9e3c6d"],
+     ", ",
+     Cell[
+     BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+      "a1f83e14-3cfb-495c-8583-e469a3e5e4c6"]
+    }], "TableText",ExpressionUUID->"c238fa1d-a4f9-4a62-b220-29853481331b"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "78a4d647-b5ba-44a7-b5e9-5355636fb04e"], Cell[TextData[Cell[
+    BoxData["\"\<UnitarySynthesisMethod\>\""], "InlineFormula",ExpressionUUID->
+     "ec5c3973-66ea-4aea-974a-35fd82b160dc"]], "TableText",ExpressionUUID->
+     "1a3db8fc-2828-434c-beb3-f642aec47640"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+      "10f0cb38-c1d5-47b7-877d-4063c9a22b55"],
+     ", ",
+     Cell[
+     BoxData["\"\<aqc\>\""], "InlineFormula",ExpressionUUID->
+      "95d14b6a-70ea-4c66-ac82-fd0c3936eea5"],
+     ", ",
+     Cell[
+     BoxData["\"\<clifford\>\""], "InlineFormula",ExpressionUUID->
+      "1ab0b4f6-41b6-49ee-aeef-2a7cf80c8ced"],
+     ", ",
+     Cell[
+     BoxData["\"\<gridsynth\>\""], "InlineFormula",ExpressionUUID->
+      "6cfef62d-c49c-4600-902e-283808d41034"],
+     ", ",
+     Cell[
+     BoxData["\"\<sk\>\""], "InlineFormula",ExpressionUUID->
+      "c8338ed1-1e1d-4a5e-a296-78aef40cdbdf"]
+    }], "TableText",ExpressionUUID->"27846747-df88-4a9c-9a52-6cd1c75d14bc"]},
+   {Cell["      ", "ModInfo",ExpressionUUID->
+     "bbd55cde-16fc-47e5-8121-f5bfac34050a"], Cell[TextData[{
+     Cell[
+     BoxData["\"\<InitMethod\>\""], "InlineFormula",ExpressionUUID->
+      "9e7256a8-f745-4185-8b76-83cdee5c5705"],
+     ", ",
+     Cell[
+     BoxData["\"\<OptimizationMethod\>\""], "InlineFormula",ExpressionUUID->
+      "6c89c1d3-49fc-405e-94d6-8265db38044c"]
+    }], "TableText",ExpressionUUID->"6b4c02b3-ab88-445f-a96c-ba9244bec56f"], 
+    Cell[TextData[Cell[
+    BoxData["\"\<default\>\""], "InlineFormula",ExpressionUUID->
+     "a7c2ba35-5e9c-4425-aa75-c606949704b2"]], "TableText",ExpressionUUID->
+     "3014ad5d-2514-4673-8993-896d70e14774"]}
+  }]], "2ColumnTableMod",ExpressionUUID->"1838318b-9321-4e84-b822-\
+d783936a8d99"],
+
+Cell[TextData[{
+ "The table above is a snapshot of qiskit 2.4.1. A different qiskit version \
+may add, rename, or remove these plugin names, so the list could differ from \
+what is shown here \[LongDash] the authoritative set is always whatever the \
+installed qiskit reports (queryable through ",
+ Cell[BoxData[
+  RowBox[{"list_stage", "_plugins"}]], "InlineFormula",ExpressionUUID->
+  "24d99f6d-a6ad-46bf-bd0c-a1cbe4f6a9d5"],
+ "), not this page. ",
+ Cell[BoxData[
+ "QuantumQASM"], "InlineFormula",ExpressionUUID->
+  "c4daa787-02d2-446f-9ee4-dc20a415d25c"],
+ " itself does not depend on the table: it forwards whatever value you give \
+straight to qiskit, so a value the installed qiskit does not recognize comes \
+back as a ",
+ Cell[BoxData[
+ "Failure"], "InlineFormula",ExpressionUUID->
+  "4a4038c9-eb31-4903-b85d-e3284f0cf1d3"],
+ " carrying qiskit's own message."
+}], "Notes",ExpressionUUID->"e64b3a7a-093f-46f1-8281-51ce10609fd1"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<OptimizationLevel\>\""], "InlineFormula",ExpressionUUID->
+  "89e96a79-3232-40bd-8a22-962fd129b5a3"],
+ " takes an integer 0 through 3; ",
+ Cell[BoxData["\"\<SeedTranspiler\>\""], "InlineFormula",ExpressionUUID->
+  "b5dbc82e-ef9d-4391-a2ca-722a3535bb7f"],
+ " takes any integer."
+}], "Notes",ExpressionUUID->"781d9730-5b0c-44c0-99a4-ada6c20dc131"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "See Also",
+ Cell[BoxData[
+  TemplateBox[{"SeeAlso", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell[
+       "Insert links to any related reference (function) pages.", 
+        "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "b7caa910-e086-4d39-871e-e78bfb02a4b9"]
+}], "SeeAlsoSection",
+ CellID->1559318232,ExpressionUUID->"6019c63b-8124-433f-bd7e-253812d6da0e"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["QiskitTarget",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitTarget"]], 
+  "InlineFormula",ExpressionUUID->"8a4cf324-ba35-4946-995b-6538783f975c"],
+ " \[FilledVerySmallSquare] ",
+ Cell[BoxData[
+  ButtonBox["QuantumCircuitOperator",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator"]],
+   "InlineFormula",ExpressionUUID->"b09e3d1f-df7e-4d82-b0c3-9c527a8396c7"],
+ " \[FilledVerySmallSquare] ",
+ Cell[BoxData[
+  ButtonBox["QiskitCircuit",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitCircuit"]], 
+  "InlineFormula",ExpressionUUID->"6647b4ea-7c0b-455a-bdb7-370c44da11dc"],
+ " \[FilledVerySmallSquare] ",
+ Cell[BoxData[
+  ButtonBox["ImportQASMCircuit",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/ImportQASMCircuit"]], 
+  "InlineFormula",ExpressionUUID->"c39a9e2c-d6c6-476e-a9dc-8c9078a06d88"]
+}], "SeeAlso",ExpressionUUID->"71efea40-1ef6-4e87-b907-ccdf950f97bd"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Tech Notes",
+ Cell[BoxData[
+  TemplateBox[{"TechNotes", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell["Insert links to related tech notes.", "MoreInfoText"], BaseStyle -> 
+       "IFrameBox"]], "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "a0027a76-2f69-4270-bf06-cff364aa09d7"]
+}], "TechNotesSection",
+ CellID->792424486,ExpressionUUID->"fc30b7bb-1c24-4df4-b93c-2a46876a3e74"],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "MoreAboutSection",
+ CellID->38303248,ExpressionUUID->"090ecd4e-77ab-48e0-ba7a-1f9acccd0dd5"],
+
+Cell[TextData[Cell[BoxData[
+ ButtonBox["WolframQuantumComputationFramework",
+  BaseStyle->"Link",
+  ButtonData->
+   "paclet:guide/WolframQuantumComputationFramework"]], \
+"InlineFormula",ExpressionUUID->"8149fd34-d9c0-40d8-bf4e-0034cf2ec4ca"]], \
+"MoreAbout",ExpressionUUID->"3e783fbf-9063-41df-8025-8a1a1f46fd0d"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Related Links",
+ Cell[BoxData[
+  TemplateBox[{"RelatedLinks", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell[
+       "Insert links to any related page, including web pages.", 
+        "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "88f916ad-99d1-4784-a15f-dfa2faf44f02"]
+}], "RelatedLinksSection",
+ CellID->47113304,ExpressionUUID->"c8e1cebd-677a-4282-8b17-38a138b1b0ea"],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Examples Initialization",
+ Cell[BoxData[
+  TemplateBox[{"ExamplesInitialization", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell[
+       "Input that is to be evaluated before any examples are run, e.g. \
+Needs[\[Ellipsis]].", "MoreInfoText"], BaseStyle -> "IFrameBox"]], 
+     "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "1ca4d14a-308f-4a68-bbf6-e6901ce2ab4c"]
+}], "ExamplesInitializationSection",
+ CellID->1718580883,ExpressionUUID->"6961daab-c21b-4e4b-b6ac-a9a47f06ffa5"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", 
+  "]"}]], "ExampleInitialization",
+ CellID->1969679695,ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[GridBox[{
+    {
+     StyleBox[
+      RowBox[{"Basic", " ", "Examples"}], "PrimaryExamplesSection"], 
+     ButtonBox[
+      RowBox[{
+       RowBox[{"More", " ", "Examples"}], " ", "\[RightTriangle]"}],
+      BaseStyle->"ExtendedExamplesLink",
+      ButtonData:>"ExtendedExamples"]}
+   }],
+  $Line = 0; Null]], "PrimaryExamplesSection",
+ CellID->880084151,ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42"],
+
+Cell["\<\
+The OpenQASM 3 of a circuit, serialized exactly as built: Transpile the same \
+circuit to a native gate set: Route onto a device coupling map, emitting \
+two-qubit gates in the calibrated direction:\
+\>", "ExampleText",ExpressionUUID->"cb26c953-e03c-4850-bc62-26139ad13126"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"qc", "=", 
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"QuantumOperator", "@", "\"\<Toffoli\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"qc", "[", "\"\<Diagram\>\"", "]"}]}], "Input",
+ CellChangeTimes->{{3.989680251238019*^9, 3.9896803693963614`*^9}},
+ CellLabel->"In[21]:=",
+ CellID->1770409450,ExpressionUUID->"082dca6b-b657-42d9-acec-357ba668a195"],
+
+Cell[BoxData[
+ GraphicsBox[{{
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -1}, {0.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -2}, {0.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{0.375, -3}, {0.625, -3}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -1}, {1.625, -1}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -2}, {1.625, -2}}]}}, 
+    {RGBColor[0.537254, 0.537254, 0.537254], Opacity[0.3], CapForm[None], 
+     {AbsoluteThickness[1], Opacity[0.3], 
+      LineBox[{{1.375, -3}, {1.625, -3}}]}}}, 
+   TagBox[
+    TooltipBox[{{
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], LineBox[{{0.625, -3.}, {0.85, -3.}}], 
+          LineBox[{{1.15, -3.}, {1.375, -3.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{1., -3.}, 0.15000000000000002], 
+           {RGBColor[0.880722, 0.611041, 0.142051], Opacity[1], 
+            LineBox[{{0.85, -3.}, {1.15, -3.}}], 
+            LineBox[{{1., -3.15}, {1., -2.85}}]}}},
+         "\"NOT\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "NOT", "Tooltip"]& ], {
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{1., -1.09375}, {1., -1.90625}}]}, 
+        {RGBColor[0.880722, 0.611041, 0.142051], 
+         LineBox[{{1., -2.09375}, {1., -2.85}}]}}}, {
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{0.625, -1.}, {0.90625, -1.}}], 
+          LineBox[{{1.09375, -1.}, {1.375, -1.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{1., -1.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ], 
+       TagBox[
+        TooltipBox[
+         {RGBColor[0.537254, 0.537254, 0.537254], AbsoluteThickness[1], 
+          Opacity[0.3], CapForm[None], 
+          LineBox[{{0.625, -2.}, {0.90625, -2.}}], 
+          LineBox[{{1.09375, -2.}, {1.375, -2.}}], 
+          {EdgeForm[RGBColor[0.880722, 0.611041, 0.142051]], FaceForm[{
+           RGBColor[0.880722, 0.611041, 0.142051], Opacity[0.3]}], 
+           DiskBox[{1., -2.}, 0.09375]}},
+         "\"1\"",
+         TooltipStyle->"TextStyling"],
+        Annotation[#, "1", "Tooltip"]& ]}, {}},
+     RowBox[{
+       SubscriptBox["\"C\"", "\"NOT\""], "[", 
+       RowBox[{
+         RowBox[{"{", 
+           RowBox[{"1", ",", "2"}], "}"}], ",", 
+         RowBox[{"{", "}"}]}], "]"}]],
+    Annotation[#, 
+     Subscript["C", "NOT"][{1, 2}, {}], "Tooltip"]& ], {InsetBox[
+     StyleBox["1",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -1}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["2",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -2}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]], InsetBox[
+     StyleBox["3",
+      StripOnInput->False,
+      FontSize->10,
+      FontSlant->Italic,
+      FontColor->RGBColor[0.537254, 0.537254, 0.537254],
+      Background->GrayLevel[0, 0]], {0.28125, -3}, NCache[
+     ImageScaled[{1, Rational[1, 2]}], ImageScaled[{1, 0.5}]]]}},
+  ImageSize->{57.157652325331014`, 93.61886074101658}]], "Output",
+ CellChangeTimes->{{3.9896803184833317`*^9, 3.989680369843205*^9}},
+ CellLabel->"Out[22]=",
+ CellID->161612657,ExpressionUUID->"c5182182-9794-4538-8984-2c7f8e9c5345"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", "qc", "]"}]], "Input",
+ CellChangeTimes->{{3.989680297369244*^9, 3.9896802975804453`*^9}},
+ CellLabel->"In[23]:=",ExpressionUUID->"f7820160-3c38-4a58-b1e6-cc89c04fcce6"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nqubit[3] q;\
+\\nccx q[0], q[1], q[2];\\n\"\>"], "Output",
+ CellChangeTimes->{
+  3.989680233269269*^9, {3.989680289078787*^9, 3.9896803229115877`*^9}, 
+   3.989680378775752*^9},
+ CellLabel->"Out[23]=",
+ CellID->1639132160,ExpressionUUID->"4bc710c9-7f87-438b-b74a-c1bb16d50397"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{"qc", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.989680389277157*^9, 3.989680392202091*^9}},
+ CellLabel->"In[27]:=",ExpressionUUID->"351ce681-1c08-4bec-89cd-bdac9ad3ff71"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nqubit[3] q;\
+\\nrz(pi/2) q[2];\\ncz q[1], q[2];\\nsx q[2];\\nrz(3*pi/4) q[2];\\nsx \
+q[2];\\nrz(pi) q[2];\\ncz q[0], q[2];\\nsx q[2];\\nrz(5*pi/4) q[2];\\nsx \
+q[2];\\nrz(pi) q[2];\\ncz q[1], q[2];\\nrz(3*pi/4) q[1];\\nsx q[1];\\nrz(pi) \
+q[1];\\nsx q[2];\\nrz(3*pi/4) q[2];\\nsx q[2];\\nrz(pi) q[2];\\ncz q[0], \
+q[2];\\ncz q[0], q[1];\\nrz(pi/4) q[0];\\nsx q[1];\\nrz(3*pi/4) q[1];\\nsx \
+q[1];\\nrz(pi) q[1];\\ncz q[0], q[1];\\nsx q[1];\\nrz(pi/2) q[1];\\nsx \
+q[2];\\nrz(5*pi/4) q[2];\\nsx q[2];\\nrz(pi/2) q[2];\\n\"\>"], "Output",
+ CellChangeTimes->{
+  3.989680236172353*^9, {3.989680390000182*^9, 3.989680392437627*^9}, 
+   3.989680431408979*^9},
+ CellLabel->"Out[27]=",
+ CellID->134197708,ExpressionUUID->"cdc5f0bc-16fa-456a-ac1b-53f409e57417"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{"qc", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}], ",", " ", 
+   RowBox[{"\"\<OptimizationLevel\>\"", " ", "->", " ", "3"}]}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.989680396744362*^9, 3.989680399057151*^9}},
+ CellLabel->"In[26]:=",ExpressionUUID->"6a29b6bb-f1ba-458d-89c1-41b96647fa33"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nrz(pi/2) \
+$2;\\ncz $2, $3;\\nsx $2;\\nrz(3*pi/4) $2;\\nsx $2;\\nrz(pi) $2;\\ncz $2, $0;\
+\\nsx $2;\\nrz(5*pi/4) $2;\\nsx $2;\\nrz(pi) $2;\\ncz $2, $3;\\nsx \
+$2;\\nrz(3*pi/4) $2;\\nsx $2;\\nrz(pi) $2;\\ncz $2, $0;\\nsx $2;\\nrz(-pi/4) \
+$2;\\nsx $2;\\nrz(pi/2) $2;\\nrz(-pi/4) $3;\\ncz $2, $3;\\nsx $2;\\nsx \
+$3;\\ncz $2, $3;\\nsx $2;\\nsx $3;\\ncz $2, $3;\\ncz $2, $0;\\nrz(pi/4) \
+$0;\\nsx $2;\\nrz(3*pi/4) $2;\\nsx $2;\\nrz(pi) $2;\\ncz $2, $0;\\nsx \
+$2;\\nrz(pi/2) $2;\\n\"\>"], "Output",
+ CellChangeTimes->{3.989680237726315*^9, 3.989680399459633*^9},
+ CellLabel->"Out[26]=",
+ CellID->177660991,ExpressionUUID->"751be413-630d-48f2-b325-defe3d1a2bbb"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "More Examples",
+ Cell[BoxData[
+  TemplateBox[{"MoreExamples", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell["Extended examples in standardized sections.", "MoreInfoText"], 
+       BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "352b6acf-a93b-4224-8779-658881cdabd0"]
+}], "ExtendedExamplesSection",
+ CellTags->"ExtendedExamples",
+ CellID->533848431,ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Scope", "ExampleSection",ExpressionUUID->
+   "32e79d70-f7af-47ff-bb41-513374ef55db"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->1293636265,ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData[
+  ButtonBox["QiskitCircuit",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitCircuit"]], 
+  "InlineFormula",ExpressionUUID->"38422f2b-985f-4717-8b36-016f039ec318"],
+ " (the value of ",
+ Cell[BoxData[
+  RowBox[{"qco", "[", "\"\<Qiskit\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"c238d241-3693-43cc-8e0b-f6b68cd49b05"],
+ ") is accepted directly:"
+}], "ExampleText",ExpressionUUID->"00d3d117-6e16-4c2e-a858-607c72f49399"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"QuantumCircuitOperator", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+       RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+       RowBox[{"{", "1", "}"}], ",", " ", 
+       RowBox[{"{", "2", "}"}]}], "}"}], "]"}], "[", "\"\<Qiskit\>\"", "]"}], 
+   ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[2]:=",ExpressionUUID->"02a62f95-4b81-452c-83bf-a5ad3a52fb7c"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nbit[2] \
+c;\\nqubit[2] q;\\nrz(pi/2) q[0];\\nsx q[0];\\nrz(pi/2) q[0];\\nrz(pi/2) \
+q[1];\\nsx q[1];\\nrz(pi) q[1];\\ncz q[0], q[1];\\nsx q[1];\\nrz(pi/2) \
+q[1];\\nc[0] = measure q[0];\\nc[1] = measure q[1];\\n\"\>"], "Output",
+ CellChangeTimes->{3.989680404977569*^9, 3.9896805589671392`*^9},
+ CellLabel->"Out[2]=",
+ CellID->166721213,ExpressionUUID->"6e1c412e-3a86-4a9e-9045-df5644170e2b"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"bb24ca59-dae1-41b6-82ba-b66fa8ddb2c4"],
+
+Cell["\<\
+Option names are case-insensitive: CamelCase and qiskit's snake_case \
+spellings are interchangeable:\
+\>", "ExampleText",ExpressionUUID->"b887fd02-1fa6-4759-9d89-1518309766ed"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"qc", " ", "=", " ", 
+      RowBox[{"QuantumCircuitOperator", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+         RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+         RowBox[{"{", "1", "}"}], ",", " ", 
+         RowBox[{"{", "2", "}"}]}], "}"}], "]"}]}], ",", " ", 
+     RowBox[{"cm", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"b", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",",
+         " ", "\"\<cz\>\""}], "}"}]}]}], "}"}], ",", "\n", "  ", 
+   RowBox[{
+    RowBox[{"QuantumQASM", "[", 
+     RowBox[{"qc", ",", " ", "b", ",", " ", 
+      RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", "cm"}], ",", " ", 
+      RowBox[{"\"\<OptimizationLevel\>\"", " ", "->", " ", "1"}]}], "]"}], 
+    " ", "===", " ", 
+    RowBox[{"QuantumQASM", "[", 
+     RowBox[{"qc", ",", " ", "b", ",", " ", 
+      RowBox[{"\"\<couplingMap\>\"", " ", "->", " ", "cm"}], ",", " ", 
+      RowBox[{"\"\<optimization_level\>\"", " ", "->", " ", "1"}]}], 
+     "]"}]}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[2]:=",ExpressionUUID->"28958f4b-165b-423f-8a17-8e23c5bf630c"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.989680409351403*^9, 3.9896805617888737`*^9},
+ CellLabel->"Out[2]=",
+ CellID->1858887104,ExpressionUUID->"4f36ee8e-9ab6-4b08-87d8-e54d3dad0b37"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"0f76338c-b377-4218-8e86-a78be108b018"],
+
+Cell["\<\
+Any qiskit transpiler parameter is forwarded, here the routing method and \
+seed:\
+\>", "ExampleText",ExpressionUUID->"a98104a4-6d00-4f35-9c63-d7c2feb5246e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}], ",", " ", 
+   RowBox[{"\"\<RoutingMethod\>\"", " ", "->", " ", "\"\<sabre\>\""}], ",", 
+   " ", 
+   RowBox[{"\"\<SeedTranspiler\>\"", " ", "->", " ", "42"}]}], "]"}]], "Input",\
+
+ CellLabel->"In[2]:=",ExpressionUUID->"c7489525-7d58-4ab1-8574-c6fa573c8f9f"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nbit[2] \
+c;\\nrz(pi/2) $0;\\nsx $0;\\nrz(pi/2) $0;\\nrz(pi/2) $1;\\nsx $1;\\nrz(pi) \
+$1;\\ncz $1, $0;\\nsx $1;\\nrz(pi/2) $1;\\nc[0] = measure $0;\\nc[1] = \
+measure $1;\\n\"\>"], "Output",
+ CellChangeTimes->{3.98968041111487*^9, 3.98968056327894*^9},
+ CellLabel->"Out[2]=",
+ CellID->305183709,ExpressionUUID->"8cdad12d-0700-4dc9-a53c-bdb471414660"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Options", "ExampleSection",ExpressionUUID->
+   "b26b6366-7922-4236-a426-38c0f5de13f0"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->2061341341,ExpressionUUID->"3276b1d7-cf51-4f3b-970a-56b0e7c469f0"],
+
+Cell[CellGroupData[{
+
+Cell["\"Version\"", "ExampleSubsection",ExpressionUUID->"48ac8b5b-1072-4546-aeb0-709ce7b01928"],
+
+Cell["Emit OpenQASM 2 instead of the default OpenQASM 3:", "ExampleText",ExpressionUUID->"c83d1d0a-fdcf-43fa-9bed-f9b6942c410b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"\"\<Version\>\"", " ", "->", " ", "2"}]}], "]"}]], "Input",
+ CellLabel->"In[2]:=",ExpressionUUID->"7eab8d0b-6e4d-4d9d-963f-a322840829a3"],
+
+Cell[BoxData["\<\"OPENQASM 2.0;\\ninclude \\\"qelib1.inc\\\";\\nqreg \
+q[2];\\ncreg c[2];\\nh q[0];\\ncx q[0],q[1];\\nmeasure q[0] -> \
+c[0];\\nmeasure q[1] -> c[1];\"\>"], "Output",
+ CellChangeTimes->{3.98968041626816*^9, 3.989680565258048*^9},
+ CellLabel->"Out[2]=",
+ CellID->1648451959,ExpressionUUID->"4aa4191a-2e0c-48e2-9c11-4917a548a59a"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\"CouplingMap\"", "ExampleSubsection",ExpressionUUID->"dd0271de-6c0c-49ee-8ca7-574fc701cd0d"],
+
+Cell["\<\
+Restrict two-qubit gates to a device's connected qubit pairs, given as \
+directed pairs:\
+\>", "ExampleText",ExpressionUUID->"5ae65acc-1481-4439-abfc-4032848e5639"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"1cd8f731-2a1a-4d2a-b660-ec4583f18c4a"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nbit[2] \
+c;\\nrz(pi/2) $0;\\nsx $0;\\nrz(pi/2) $0;\\nrz(pi/2) $1;\\nsx $1;\\nrz(pi) \
+$1;\\ncz $1, $0;\\nsx $1;\\nrz(pi/2) $1;\\nc[0] = measure $0;\\nc[1] = \
+measure $1;\\n\"\>"], "Output",
+ CellChangeTimes->{3.9896805670258636`*^9},
+ CellLabel->"Out[1]=",
+ CellID->1295423776,ExpressionUUID->"2b5b2158-ec9b-4226-9309-3206527f7233"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\"OptimizationLevel\"", "ExampleSubsection",ExpressionUUID->"d5f46cde-12d3-4e9b-aee9-aa1003a2aed9"],
+
+Cell["\<\
+Higher optimization levels can shrink the program; compare the OpenQASM \
+length at levels 0 and 3:\
+\>", "ExampleText",ExpressionUUID->"445fbb87-daaa-4141-8335-b5fc06343f97"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"StringLength", " ", "@", " ", 
+    RowBox[{"QuantumQASM", "[", 
+     RowBox[{
+      RowBox[{"QuantumCircuitOperator", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+         RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+         RowBox[{"{", "1", "}"}], ",", " ", 
+         RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",",
+         " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+      RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}], ",", " ", 
+      RowBox[{"\"\<OptimizationLevel\>\"", " ", "->", " ", "#"}]}], "]"}]}], 
+   " ", "&"}], " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{"0", ",", " ", "3"}], "}"}]}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"67691097-3b52-40d3-91e1-5d180c922b64"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"196", ",", "181"}], "}"}]], "Output",
+ CellChangeTimes->{3.98968056968569*^9},
+ CellLabel->"Out[1]=",
+ CellID->1382091595,ExpressionUUID->"823917bd-6a3a-41f0-bd0a-724bd08740fd"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\"Target\"", "ExampleSubsection",ExpressionUUID->"36dbadb5-4465-491f-b881-84293fae1ae6"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData[
+  ButtonBox["QiskitTarget",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitTarget"]], 
+  "InlineFormula",ExpressionUUID->"55e79003-ceff-4620-b702-0707f7bc3c90"],
+ " bundles a native basis with directed connectivity; transpile against it:"
+}], "ExampleText",ExpressionUUID->"4b2d4926-ab78-481a-8a8c-1f4dcf8123ff"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"\"\<Target\>\"", " ", "->", " ", 
+    RowBox[{"QiskitTarget", "[", 
+     RowBox[{"<|", 
+      RowBox[{
+       RowBox[{"\"\<BasisGates\>\"", " ", "->", " ", 
+        RowBox[{"{", 
+         RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", 
+          ",", " ", "\"\<cz\>\""}], "}"}]}], ",", " ", 
+       RowBox[{"\"\<NumQubits\>\"", " ", "->", " ", "4"}], ",", " ", 
+       RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}]}], "|>"}], 
+     "]"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"d2e5906c-60d6-4d18-b4b4-e86ac9ecc90a"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nbit[2] \
+c;\\nrz(pi/2) $0;\\nsx $0;\\nrz(pi/2) $0;\\nrz(pi/2) $1;\\nsx $1;\\nrz(pi) \
+$1;\\ncz $1, $0;\\nsx $1;\\nrz(pi/2) $1;\\nc[0] = measure $0;\\nc[1] = \
+measure $1;\\n\"\>"], "Output",
+ CellChangeTimes->{3.98968057149044*^9},
+ CellLabel->"Out[1]=",
+ CellID->2025125127,ExpressionUUID->"ed7d1dfb-53b1-4166-8c85-6295f202da22"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"050fc2be-31f9-44cf-95a5-0f6e2a3101b8"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData[
+  ButtonBox["QiskitTarget",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QiskitTarget"]], 
+  "InlineFormula",ExpressionUUID->"331ae1a1-8f6a-4e68-8012-32aaf9f23d68"],
+ " carries device accessors, including the auto-added ",
+ Cell[BoxData[
+ "measure"], "InlineFormula",ExpressionUUID->
+  "392cdc2f-ca52-40a9-bb10-c12d129b2d9e"],
+ " and ",
+ Cell[BoxData[
+ "reset"], "InlineFormula",ExpressionUUID->
+  "4780e66f-932b-4ae6-bb3c-358fb7dea1dd"],
+ ":"
+}], "ExampleText",ExpressionUUID->"ae5f45c9-09e9-47b1-933f-70225cceb808"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"tgt", " ", "=", " ", 
+     RowBox[{"QiskitTarget", "[", 
+      RowBox[{"<|", 
+       RowBox[{
+        RowBox[{"\"\<BasisGates\>\"", " ", "->", " ", 
+         RowBox[{"{", 
+          
+          RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"",
+            ",", " ", "\"\<cz\>\""}], "}"}]}], ",", " ", 
+        RowBox[{"\"\<NumQubits\>\"", " ", "->", " ", "4"}], ",", " ", 
+        RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}]}], "|>"}], "]"}]}],
+     "}"}], ",", "\n", "  ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"tgt", "[", "\"\<NumQubits\>\"", "]"}], ",", " ", 
+     RowBox[{"tgt", "[", "\"\<OperationNames\>\"", "]"}]}], "}"}]}], "\n", 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"5bc66100-2c7c-4e87-913f-ad386cb28f5d"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"4", ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"cz\"\>", ",", "\<\"measure\"\>", ",", "\<\"reset\"\>", 
+     ",", "\<\"rz\"\>", ",", "\<\"sx\"\>", ",", "\<\"x\"\>"}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.989680574467326*^9},
+ CellLabel->"Out[1]=",
+ CellID->154817643,ExpressionUUID->"5a196b98-88b5-4f9a-a4eb-485154400d21"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"22b8c9f9-70f4-4ef3-9e72-9bf252f22e8a"],
+
+Cell["The target can also be given inline as an Association:", "ExampleText",ExpressionUUID->"f042e179-6caa-445c-b14b-f0cfac22e70f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"\"\<Target\>\"", " ", "->", " ", 
+    RowBox[{"<|", 
+     RowBox[{
+      RowBox[{"\"\<BasisGates\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",",
+          " ", "\"\<cz\>\""}], "}"}]}], ",", " ", 
+      RowBox[{"\"\<NumQubits\>\"", " ", "->", " ", "4"}], ",", " ", 
+      RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "3"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"2", ",", " ", "3"}], "}"}]}], "}"}]}]}], "|>"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"e6bbd0db-3007-4a99-bdef-6e139195b521"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nbit[2] \
+c;\\nrz(pi/2) $0;\\nsx $0;\\nrz(pi/2) $0;\\nrz(pi/2) $1;\\nsx $1;\\nrz(pi) \
+$1;\\ncz $1, $0;\\nsx $1;\\nrz(pi/2) $1;\\nc[0] = measure $0;\\nc[1] = \
+measure $1;\\n\"\>"], "Output",
+ CellChangeTimes->{3.989680576255962*^9},
+ CellLabel->"Out[1]=",
+ CellID->44003294,ExpressionUUID->"1b123742-62b6-4c36-9611-01251a11c4fc"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Applications", "ExampleSection",ExpressionUUID->
+   "d5715ee2-1cae-4f33-89b2-0e99ea9caa6e"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->258228157,ExpressionUUID->"1cd6234d-1e3c-431d-9989-71f3025eee95"],
+
+Cell["\<\
+Take an algorithm built in the framework and emit native, routed OpenQASM 3 \
+ready for a hardware compiler \[LongDash] decomposed to the device gate set \
+and mapped onto its connectivity:\
+\>", "ExampleText",ExpressionUUID->"9ae015c9-a181-4f2f-886e-7339f5467c56"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"\"\<GHZ\>\"", "[", "3", "]"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", "1"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "2"}], "}"}]}], "}"}]}], ",", " ", 
+   RowBox[{"\"\<OptimizationLevel\>\"", " ", "->", " ", "3"}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"298625b6-2149-4408-a552-a534dc02879e"],
+
+Cell[BoxData["\<\"OPENQASM 3.0;\\ninclude \\\"stdgates.inc\\\";\\nrz(pi/2) \
+$0;\\nsx $0;\\nrz(pi/2) $0;\\nrz(pi/2) $1;\\nsx $1;\\nrz(pi) $1;\\ncz $0, $1;\
+\\nsx $1;\\nrz(pi/2) $1;\\nrz(pi/2) $2;\\nsx $2;\\nrz(pi) $2;\\ncz $1, \
+$2;\\nsx $2;\\nrz(pi/2) $2;\\n\"\>"], "Output",
+ CellChangeTimes->{3.9896805787011337`*^9},
+ CellLabel->"Out[1]=",
+ CellID->301748881,ExpressionUUID->"483792e7-1cfc-46ed-ab3e-2878b3b10d0a"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Possible Issues", "ExampleSection",ExpressionUUID->
+   "dda06a82-eb41-4b48-8510-6cb821647761"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->1305812373,ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f"],
+
+Cell[TextData[{
+ "An option qiskit does not recognize gives a ",
+ Cell[BoxData[
+  ButtonBox["Failure",
+   BaseStyle->"Link",
+   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
+  "5bae437d-3a7b-4bda-b774-ffee565a6b6e"],
+ " that names the unknown key and the accepted set:"
+}], "ExampleText",ExpressionUUID->"254a41cf-e866-4d7e-8886-144f5dda5bd5"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<NoSuchParam\>\"", " ", "->", " ", "5"}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"dca363b4-03b3-4a23-8246-b9d820ec5e01"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["Failure",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Unknown transpile option(s): wl_expr_3. Accepted \
+(qiskit wl_expr_4): wl_expr_5.\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Unknown transpile option(s): wl_expr_3. Accepted \
+(qiskit wl_expr_4): wl_expr_5.\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Unknown\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                   RowBox[{"{", "\"no_such_param\"", "}"}], HoldForm], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Accepted\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                   RowBox[{"{", 
+                    
+                    RowBox[{
+                    "\"approximation_degree\"", ",", "\"backend\"", ",", 
+                    "\"basis_gates\"", ",", "\"callback\"", ",", 
+                    "\"circuits\"", ",", "\"coupling_map\"", ",", "\"dt\"", 
+                    ",", "\"hls_config\"", ",", 
+                    "\"ignore_backend_supplied_default_methods\"", ",", 
+                    "\"init_method\"", ",", "\"initial_layout\"", ",", 
+                    "\"layout_method\"", ",", "\"num_processes\"", ",", 
+                    "\"optimization_level\"", ",", "\"optimization_method\"", 
+                    ",", "\"output_name\"", ",", "\"qubits_initially_zero\"", 
+                    ",", "\"routing_method\"", ",", "\"scheduling_method\"", 
+                    ",", "\"seed_transpiler\"", ",", "\"target\"", ",", 
+                    "\"translation_method\"", ",", 
+                    "\"unitary_synthesis_method\"", ",", 
+                    "\"unitary_synthesis_plugin_config\""}], "}"}], HoldForm],
+                   "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"QiskitVersion\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"2.4.1\"", HoldForm], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Failure[
+  "QuantumQASM", <|
+   "MessageTemplate" -> 
+    "Unknown transpile option(s): wl_expr_3. Accepted (qiskit wl_expr_4): \
+wl_expr_5.", 
+    "MessageParameters" -> {{"no_such_param"}, "2.4.1", {
+      "approximation_degree", "backend", "basis_gates", "callback", 
+       "circuits", "coupling_map", "dt", "hls_config", 
+       "ignore_backend_supplied_default_methods", "init_method", 
+       "initial_layout", "layout_method", "num_processes", 
+       "optimization_level", "optimization_method", "output_name", 
+       "qubits_initially_zero", "routing_method", "scheduling_method", 
+       "seed_transpiler", "target", "translation_method", 
+       "unitary_synthesis_method", "unitary_synthesis_plugin_config"}}, 
+    "Unknown" -> {"no_such_param"}, 
+    "Accepted" -> {
+     "approximation_degree", "backend", "basis_gates", "callback", "circuits",
+       "coupling_map", "dt", "hls_config", 
+      "ignore_backend_supplied_default_methods", "init_method", 
+      "initial_layout", "layout_method", "num_processes", 
+      "optimization_level", "optimization_method", "output_name", 
+      "qubits_initially_zero", "routing_method", "scheduling_method", 
+      "seed_transpiler", "target", "translation_method", 
+      "unitary_synthesis_method", "unitary_synthesis_plugin_config"}, 
+    "QiskitVersion" -> "2.4.1"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.989680582472373*^9},
+ CellLabel->"Out[1]=",
+ CellID->966358493,ExpressionUUID->"3bdb914c-7498-4de5-9817-64dc0fbaff47"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"fc54386d-2d4b-4ec5-a444-deae85d16865"],
+
+Cell["\<\
+A non-universal native gate set that qiskit cannot compile to gives a \
+transpile Failure rather than a partial program:\
+\>", "ExampleText",ExpressionUUID->"d7a97177-3aff-44a2-adf1-e415432d214b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<cz\>\""}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"35ea4c50-21a5-4ba9-9833-428cc4853ea0"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["Failure",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Message\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"qiskit transpile failed: wl_expr_6\"", HoldForm], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Tag\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"QuantumQASM\"", HoldForm], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"PythonError\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"'Unable to translate the operations in the circuit: {(\\\
+\"h\\\", 1), (\\\"cx\\\", 2), (\\\"measure\\\", 1)} to the backend\\\\'s (or \
+manually specified) target basis: {\\\"for_loop\\\", \\\"x\\\", \
+\\\"delay\\\", \\\"if_else\\\", \\\"box\\\", \\\"while_loop\\\", \
+\\\"switch_case\\\", \\\"measure\\\", \\\"reset\\\", \\\"cz\\\", \
+\\\"barrier\\\", \\\"snapshot\\\", \\\"store\\\"}. This likely means the \
+target basis is not universal or there are additional equivalence rules \
+needed in the EquivalenceLibrary being used. For more details on this error \
+see: https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.passes.\
+BasisTranslator#translation-errors'\"", HoldForm], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Message\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"qiskit transpile failed: wl_expr_6\"", HoldForm], 
+                  "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Tag\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"QuantumQASM\"", HoldForm], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"PythonError\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"'Unable to translate the operations in the circuit: {(\\\
+\"h\\\", 1), (\\\"cx\\\", 2), (\\\"measure\\\", 1)} to the backend\\\\'s (or \
+manually specified) target basis: {\\\"for_loop\\\", \\\"x\\\", \
+\\\"delay\\\", \\\"if_else\\\", \\\"box\\\", \\\"while_loop\\\", \
+\\\"switch_case\\\", \\\"measure\\\", \\\"reset\\\", \\\"cz\\\", \
+\\\"barrier\\\", \\\"snapshot\\\", \\\"store\\\"}. This likely means the \
+target basis is not universal or there are additional equivalence rules \
+needed in the EquivalenceLibrary being used. For more details on this error \
+see: https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.passes.\
+BasisTranslator#translation-errors'\"", HoldForm], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Failure[
+  "QuantumQASM", <|
+   "MessageTemplate" -> "qiskit transpile failed: wl_expr_6", 
+    "MessageParameters" -> {
+     "TranspilerError: 'Unable to translate the operations in the circuit: {(\
+\"h\", 1), (\"cx\", 2), (\"measure\", 1)} to the backend\\'s (or manually \
+specified) target basis: {\"for_loop\", \"x\", \"delay\", \"if_else\", \
+\"box\", \"while_loop\", \"switch_case\", \"measure\", \"reset\", \"cz\", \
+\"barrier\", \"snapshot\", \"store\"}. This likely means the target basis is \
+not universal or there are additional equivalence rules needed in the \
+EquivalenceLibrary being used. For more details on this error see: \
+https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.passes.\
+BasisTranslator#translation-errors'"}, "PythonError" -> 
+    "'Unable to translate the operations in the circuit: {(\"h\", 1), \
+(\"cx\", 2), (\"measure\", 1)} to the backend\\'s (or manually specified) \
+target basis: {\"for_loop\", \"x\", \"delay\", \"if_else\", \"box\", \
+\"while_loop\", \"switch_case\", \"measure\", \"reset\", \"cz\", \"barrier\", \
+\"snapshot\", \"store\"}. This likely means the target basis is not universal \
+or there are additional equivalence rules needed in the EquivalenceLibrary \
+being used. For more details on this error see: \
+https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.passes.\
+BasisTranslator#translation-errors'"|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.989680584468759*^9},
+ CellLabel->"Out[1]=",
+ CellID->986063849,ExpressionUUID->"d015cf59-5e78-4799-8bf8-a3d594fe8f0b"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"ea73f993-42ba-4585-9e52-a994961023af"],
+
+Cell["\<\
+Passing the same option under two spellings is rejected as ambiguous:\
+\>", "ExampleText",ExpressionUUID->"116c596a-5bef-4838-954d-85c235f983d7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<CouplingMap\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", "0"}], "}"}], "}"}]}], ",", " ", 
+   RowBox[{"\"\<coupling_map\>\"", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", "0"}], "}"}], "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"2cb3a6a2-2c1c-41e1-a7a0-54f1e20d7f17"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["Failure",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Ambiguous duplicate option after key normalization (for \
+example CouplingMap and coupling_map together).\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Ambiguous duplicate option after key normalization (for \
+example CouplingMap and coupling_map together).\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Failure[
+  "QuantumQASM", <|
+   "MessageTemplate" -> 
+    "Ambiguous duplicate option after key normalization (for example \
+CouplingMap and coupling_map together)."|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.989680588754443*^9},
+ CellLabel->"Out[1]=",
+ CellID->705490453,ExpressionUUID->"a5f63f89-bee2-4ca4-b692-fe7727645abe"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"9387e48e-a577-4861-9961-092fb28022e0"],
+
+Cell[TextData[{
+ "Giving the native gates both positionally and through the ",
+ Cell[BoxData["\"\<BasisGates\>\""], "InlineFormula",ExpressionUUID->
+  "aa75c3a8-e9d5-489a-9f46-e9db478ba664"],
+ " option is an error:"
+}], "ExampleText",ExpressionUUID->"e8ce7e8b-0ccb-4a65-bc67-facb246f2ba7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<x\>\"", ",", " ", "\"\<sx\>\"", ",", " ", "\"\<rz\>\"", ",", 
+     " ", "\"\<cz\>\""}], "}"}], ",", " ", 
+   RowBox[{"\"\<BasisGates\>\"", " ", "->", " ", 
+    RowBox[{"{", "\"\<x\>\"", "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"4e63c857-ede1-42b8-a15f-ed7b2a401dc6"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["Failure",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Native gates given both positionally and as the \
+BasisGates option.\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Message: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox[
+                   "\"Native gates given both positionally and as the \
+BasisGates option.\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}, {
+               TagBox[
+                GridBox[{{
+                   TagBox["\"Tag: \"", "SummaryItemAnnotation"], 
+                   "\[InvisibleSpace]", 
+                   TagBox["\"QuantumQASM\"", "SummaryItem"]}}, 
+                 GridBoxItemSize -> {"Columns" -> {6.5, All, Automatic}}, 
+                 GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                 GridBoxSpacings -> {"Columns" -> {{0}}}], "SummaryItem"]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Failure[
+  "QuantumQASM", <|
+   "MessageTemplate" -> 
+    "Native gates given both positionally and as the BasisGates option."|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.989680590802473*^9},
+ CellLabel->"Out[1]=",
+ CellID->95745442,ExpressionUUID->"de53ca28-869a-4be5-8559-543c2b37ac8c"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"1246ce9e-a61b-4bce-8709-024c117ec96f"],
+
+Cell["\<\
+A gate the chosen OpenQASM version cannot express makes the export fail; here \
+a global phase in OpenQASM 2:\
+\>", "ExampleText",ExpressionUUID->"c2712749-d90e-4aa1-8b6f-d9d1ac8f4516"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"QuantumQASM", "[", 
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<GlobalPhase\>\"", "[", "0.3", "]"}], " ", "->", " ", "1"}],
+      "}"}], "]"}], ",", " ", 
+   RowBox[{"\"\<Version\>\"", " ", "->", " ", "2"}]}], "]"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"e2b1126a-cf45-49f5-8b97-56cfb2ba8761"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["Failure",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Message\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"OpenQASMwl_expr_3 export failed: wl_expr_4\"", HoldForm],
+                   "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Tag\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"QuantumQASM\"", HoldForm], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"PythonError\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"\\\"OpenQASM 2 cannot represent 'global_phase', which \
+acts on zero qubits.\\\"\"", HoldForm], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            FrameBox[
+             StyleBox["\"\[WarningSign]\"", 
+              Directive["Message", 35], StripOnInput -> False], 
+             ContentPadding -> False, FrameStyle -> None, 
+             FrameMargins -> {{0, 0}, {0, 0}}, StripOnInput -> False], 
+            GridBox[{{
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Message\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"OpenQASMwl_expr_3 export failed: wl_expr_4\"", HoldForm],
+                   "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"Tag\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox["\"QuantumQASM\"", HoldForm], "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox[
+                  TemplateBox[{"\"PythonError\"", "\": \""}, "RowDefault"], 
+                  "SummaryItemAnnotation"], "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                  "\"\\\"OpenQASM 2 cannot represent 'global_phase', which \
+acts on zero qubits.\\\"\"", HoldForm], "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  Failure[
+  "QuantumQASM", <|
+   "MessageTemplate" -> "OpenQASMwl_expr_3 export failed: wl_expr_4", 
+    "MessageParameters" -> {
+     2, "QASM2ExportError: \"OpenQASM 2 cannot represent 'global_phase', \
+which acts on zero qubits.\""}, "PythonError" -> 
+    "\"OpenQASM 2 cannot represent 'global_phase', which acts on zero qubits.\
+\""|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.989680592658926*^9},
+ CellLabel->"Out[1]=",
+ CellID->1183512311,ExpressionUUID->"9ecc4610-ac44-4c1c-8549-7f37a96861fd"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->311882160,ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["XX", "HistoryData",
+  CellTags->"New",ExpressionUUID->"c83e5b59-d200-4539-afdc-500ed06d3c87"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"d4e38c0c-d937-44f2-85a5-7c0e8fc755ab"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "4c68d818-8923-4121-80f8-cf0eabb4c0de"]
+}], "History",
+ CellID->341476719,ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046"],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ "Categorization",
+ Cell[BoxData[
+  TemplateBox[{"Metadata", 
+    Cell[
+     BoxData[
+      FrameBox[
+       Cell[
+       "Metadata such as page URI, context, and type of documentation page.", 
+        "MoreInfoText"], BaseStyle -> "IFrameBox"]], "MoreInfoTextOuter"]},
+   "MoreInfoOpenerButtonTemplate"]],ExpressionUUID->
+  "4b3d4122-3cd4-481f-a8ff-5aefbb03e00d"]
+}], "CategorizationSection",
+ CellID->1755438392,ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329"],
+
+Cell["Symbol", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->686433507,ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a"],
+
+Cell["Wolfram/QuantumFramework", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->605800465,ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec"],
+
+Cell["Wolfram`QuantumFramework`", "Categorization",
+ CellLabel->"Context",
+ CellID->468444828,ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191"],
+
+Cell["Wolfram/QuantumFramework/ref/QuantumQASM", "Categorization",
+ CellLabel->"URI",ExpressionUUID->"09b4505c-c28d-4f52-ac20-3d3894f8afc9"]
+}, Closed]],
+
+Cell["Keywords", "KeywordsSection",
+ CellID->477174294,ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6"],
+
+Cell[CellGroupData[{
+
+Cell["Syntax Templates", "TemplatesSection",
+ CellID->1872225408,ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Additional Function Template",
+ CellID->1562036412,ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Arguments Pattern",
+ CellID->158391909,ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Local Variables",
+ CellID->1360575930,ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Color Equal Signs",
+ CellID->793782254,ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648"]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{1920, 931},
+WindowMargins->{{Automatic, 1728}, {Automatic, -13}},
+TaggingRules->{
+ "Metadata" -> {
+   "title" -> "QuantumQASM", "context" -> "Wolfram`QuantumFramework`", 
+    "keywords" -> {
+     "OpenQASM", "QASM", "qiskit", "transpile", "transpiler", "native gates", 
+      "coupling map", "hardware", "quantum circuit"}, "summary" -> "", 
+    "paclet" -> "Wolfram/QuantumFramework", "uri" -> 
+    "Wolfram/QuantumFramework/ref/QuantumQASM", "type" -> "Symbol", "index" -> 
+    True, "language" -> "en"}, "Paclet" -> "None"},
+CreateCellID->True,
+CellContext->CellGroup,
+Magnification:>2. Inherited,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"c207366e-060a-406b-a297-9e30e1628f43"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "ExtendedExamples"->{
+  Cell[37509, 927, 487, 13, 113, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+   CellTags->"ExtendedExamples",
+   CellID->533848431]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"ExtendedExamples", 97304, 2372}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 109, 1, 145, "ObjectName",ExpressionUUID->"8393d601-4014-44ba-afc9-60862df940ec",
+ CellID->1224892054],
+Cell[688, 25, 2960, 83, 339, "Usage",ExpressionUUID->"f2b768c8-b2c3-42d6-b34b-d582dd5ee4c7"],
+Cell[3651, 110, 741, 19, 52, "Notes",ExpressionUUID->"60ba1b5a-a13f-4447-913f-c127b983a964"],
+Cell[4395, 131, 930, 24, 156, "Notes",ExpressionUUID->"5ce9030d-7aa3-4364-af44-167c3a6ff41a"],
+Cell[5328, 157, 1358, 33, 156, "Notes",ExpressionUUID->"2e69fb33-044a-4e50-8ba8-0fd3a9583d40"],
+Cell[6689, 192, 2206, 53, 226, "Notes",ExpressionUUID->"e3ee61b5-2e67-4dcd-b0e2-599436d9cf10"],
+Cell[8898, 247, 823, 18, 156, "Notes",ExpressionUUID->"475dbab3-87de-479d-b064-e3ea9a88c9aa"],
+Cell[9724, 267, 561, 13, 87, "Notes",ExpressionUUID->"465f2999-0656-43c4-84a2-a84535c2191e"],
+Cell[10288, 282, 721, 15, 122, "Notes",ExpressionUUID->"aea60c19-2661-4d7f-aa74-f897a3012200"],
+Cell[11012, 299, 502, 10, 87, "Notes",ExpressionUUID->"91da51b8-8a77-4d33-a7ce-7fd0be9d7a82"],
+Cell[11517, 311, 3450, 60, 269, "3ColumnTableMod",ExpressionUUID->"46328502-4751-4101-8c06-4c299cbc7d0e"],
+Cell[14970, 373, 626, 15, 87, "Notes",ExpressionUUID->"28ee5133-ecfd-4809-beb4-bdbd89e1056e"],
+Cell[15599, 390, 1933, 44, 260, "Notes",ExpressionUUID->"9e3c2356-e342-4686-9282-d1ac94be793b"],
+Cell[17535, 436, 5935, 132, 310, "2ColumnTableMod",ExpressionUUID->"1838318b-9321-4e84-b822-d783936a8d99"],
+Cell[23473, 570, 935, 19, 191, "Notes",ExpressionUUID->"e64b3a7a-093f-46f1-8281-51ce10609fd1"],
+Cell[24411, 591, 379, 7, 52, "Notes",ExpressionUUID->"781d9730-5b0c-44c0-99a4-ada6c20dc131"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[24827, 603, 459, 13, 77, "SeeAlsoSection",ExpressionUUID->"6019c63b-8124-433f-bd7e-253812d6da0e",
+ CellID->1559318232],
+Cell[25289, 618, 1049, 24, 38, "SeeAlso",ExpressionUUID->"71efea40-1ef6-4e87-b907-ccdf950f97bd"]
+}, Open  ]],
+Cell[26353, 645, 435, 12, 79, "TechNotesSection",ExpressionUUID->"fc30b7bb-1c24-4df4-b93c-2a46876a3e74",
+ CellID->792424486],
+Cell[CellGroupData[{
+Cell[26813, 661, 116, 1, 67, "MoreAboutSection",ExpressionUUID->"090ecd4e-77ab-48e0-ba7a-1f9acccd0dd5",
+ CellID->38303248],
+Cell[26932, 664, 314, 6, 38, "MoreAbout",ExpressionUUID->"3e783fbf-9063-41df-8025-8a1a1f46fd0d"]
+}, Open  ]],
+Cell[27261, 673, 471, 13, 77, "RelatedLinksSection",ExpressionUUID->"c8e1cebd-677a-4282-8b17-38a138b1b0ea",
+ CellID->47113304],
+Cell[CellGroupData[{
+Cell[27757, 690, 531, 14, 125, "ExamplesInitializationSection",ExpressionUUID->"6961daab-c21b-4e4b-b6ac-a9a47f06ffa5",
+ CellID->1718580883],
+Cell[28291, 706, 185, 3, 92, "ExampleInitialization",ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502",
+ CellID->1969679695]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[28513, 714, 442, 12, 141, "PrimaryExamplesSection",ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42",
+ CellID->880084151],
+Cell[28958, 728, 284, 4, 78, "ExampleText",ExpressionUUID->"cb26c953-e03c-4850-bc62-26139ad13126"],
+Cell[CellGroupData[{
+Cell[29267, 736, 411, 8, 89, "Input",ExpressionUUID->"082dca6b-b657-42d9-acec-357ba668a195",
+ CellID->1770409450],
+Cell[29681, 746, 4366, 96, 207, "Output",ExpressionUUID->"c5182182-9794-4538-8984-2c7f8e9c5345",
+ CellID->161612657]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[34084, 847, 212, 3, 52, "Input",ExpressionUUID->"f7820160-3c38-4a58-b1e6-cc89c04fcce6"],
+Cell[34299, 852, 342, 6, 201, "Output",ExpressionUUID->"4bc710c9-7f87-438b-b74a-c1bb16d50397",
+ CellID->1639132160]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[34678, 863, 363, 7, 52, "Input",ExpressionUUID->"351ce681-1c08-4bec-89cd-bdac9ad3ff71"],
+Cell[35044, 872, 818, 12, 1407, "Output",ExpressionUUID->"cdc5f0bc-16fa-456a-ac1b-53f409e57417",
+ CellID->134197708]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[35899, 889, 834, 20, 127, "Input",ExpressionUUID->"6a29b6bb-f1ba-458d-89c1-41b96647fa33"],
+Cell[36736, 911, 724, 10, 1558, "Output",ExpressionUUID->"751be413-630d-48f2-b325-defe3d1a2bbb",
+ CellID->177660991]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37509, 927, 487, 13, 113, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+ CellTags->"ExtendedExamples",
+ CellID->533848431],
+Cell[CellGroupData[{
+Cell[38021, 944, 242, 5, 64, "ExampleSection",ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75",
+ CellID->1293636265],
+Cell[38266, 951, 494, 12, 46, "ExampleText",ExpressionUUID->"00d3d117-6e16-4c2e-a858-607c72f49399"],
+Cell[CellGroupData[{
+Cell[38785, 967, 697, 17, 127, "Input",ExpressionUUID->"02a62f95-4b81-452c-83bf-a5ad3a52fb7c"],
+Cell[39485, 986, 458, 6, 615, "Output",ExpressionUUID->"6e1c412e-3a86-4a9e-9045-df5644170e2b",
+ CellID->166721213]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[39980, 997, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"bb24ca59-dae1-41b6-82ba-b66fa8ddb2c4"],
+Cell[40068, 999, 187, 3, 46, "ExampleText",ExpressionUUID->"b887fd02-1fa6-4759-9d89-1518309766ed"],
+Cell[CellGroupData[{
+Cell[40280, 1006, 1699, 41, 240, "Input",ExpressionUUID->"28958f4b-165b-423f-8a17-8e23c5bf630c"],
+Cell[41982, 1049, 196, 3, 50, "Output",ExpressionUUID->"4f36ee8e-9ab6-4b08-87d8-e54d3dad0b37",
+ CellID->1858887104]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[42227, 1058, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"0f76338c-b377-4218-8e86-a78be108b018"],
+Cell[42315, 1060, 167, 3, 46, "ExampleText",ExpressionUUID->"a98104a4-6d00-4f35-9c63-d7c2feb5246e"],
+Cell[CellGroupData[{
+Cell[42507, 1067, 1196, 30, 165, "Input",ExpressionUUID->"c7489525-7d58-4ab1-8574-c6fa573c8f9f"],
+Cell[43706, 1099, 416, 6, 578, "Output",ExpressionUUID->"8cdad12d-0700-4dc9-a53c-bdb471414660",
+ CellID->305183709]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[44183, 1112, 244, 5, 64, "ExampleSection",ExpressionUUID->"3276b1d7-cf51-4f3b-970a-56b0e7c469f0",
+ CellID->2061341341],
+Cell[CellGroupData[{
+Cell[44452, 1121, 95, 0, 46, "ExampleSubsection",ExpressionUUID->"48ac8b5b-1072-4546-aeb0-709ce7b01928"],
+Cell[44550, 1123, 128, 0, 46, "ExampleText",ExpressionUUID->"c83d1d0a-fdcf-43fa-9bed-f9b6942c410b"],
+Cell[CellGroupData[{
+Cell[44703, 1127, 566, 13, 89, "Input",ExpressionUUID->"7eab8d0b-6e4d-4d9d-963f-a322840829a3"],
+Cell[45272, 1142, 344, 5, 314, "Output",ExpressionUUID->"4aa4191a-2e0c-48e2-9c11-4917a548a59a",
+ CellID->1648451959]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[45665, 1153, 99, 0, 46, "ExampleSubsection",ExpressionUUID->"dd0271de-6c0c-49ee-8ca7-574fc701cd0d"],
+Cell[45767, 1155, 174, 3, 46, "ExampleText",ExpressionUUID->"5ae65acc-1481-4439-abfc-4032848e5639"],
+Cell[CellGroupData[{
+Cell[45966, 1162, 1036, 26, 127, "Input",ExpressionUUID->"1cd8f731-2a1a-4d2a-b660-ec4583f18c4a"],
+Cell[47005, 1190, 399, 6, 578, "Output",ExpressionUUID->"2b5b2158-ec9b-4226-9309-3206527f7233",
+ CellID->1295423776]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[47453, 1202, 105, 0, 46, "ExampleSubsection",ExpressionUUID->"d5f46cde-12d3-4e9b-aee9-aa1003a2aed9"],
+Cell[47561, 1204, 185, 3, 46, "ExampleText",ExpressionUUID->"445fbb87-daaa-4141-8335-b5fc06343f97"],
+Cell[CellGroupData[{
+Cell[47771, 1211, 1345, 33, 203, "Input",ExpressionUUID->"67691097-3b52-40d3-91e1-5d180c922b64"],
+Cell[49119, 1246, 217, 5, 50, "Output",ExpressionUUID->"823917bd-6a3a-41f0-bd0a-724bd08740fd",
+ CellID->1382091595]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[49385, 1257, 94, 0, 46, "ExampleSubsection",ExpressionUUID->"36dbadb5-4465-491f-b881-84293fae1ae6"],
+Cell[49482, 1259, 383, 8, 46, "ExampleText",ExpressionUUID->"4b2d4926-ab78-481a-8a8c-1f4dcf8123ff"],
+Cell[CellGroupData[{
+Cell[49890, 1271, 1361, 33, 240, "Input",ExpressionUUID->"d2e5906c-60d6-4d18-b4b4-e86ac9ecc90a"],
+Cell[51254, 1306, 396, 6, 578, "Output",ExpressionUUID->"ed7d1dfb-53b1-4166-8c85-6295f202da22",
+ CellID->2025125127]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[51687, 1317, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"050fc2be-31f9-44cf-95a5-0f6e2a3101b8"],
+Cell[51775, 1319, 584, 16, 46, "ExampleText",ExpressionUUID->"ae5f45c9-09e9-47b1-933f-70225cceb808"],
+Cell[CellGroupData[{
+Cell[52384, 1339, 1222, 31, 240, "Input",ExpressionUUID->"5bc66100-2c7c-4e87-913f-ad386cb28f5d"],
+Cell[53609, 1372, 372, 9, 50, "Output",ExpressionUUID->"5a196b98-88b5-4f9a-a4eb-485154400d21",
+ CellID->154817643]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[54030, 1387, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"22b8c9f9-70f4-4ef3-9e72-9bf252f22e8a"],
+Cell[54118, 1389, 132, 0, 46, "ExampleText",ExpressionUUID->"f042e179-6caa-445c-b14b-f0cfac22e70f"],
+Cell[CellGroupData[{
+Cell[54275, 1393, 1299, 32, 165, "Input",ExpressionUUID->"e6bbd0db-3007-4a99-bdef-6e139195b521"],
+Cell[55577, 1427, 395, 6, 578, "Output",ExpressionUUID->"1b123742-62b6-4c36-9611-01251a11c4fc",
+ CellID->44003294]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[56045, 1441, 248, 5, 64, "ExampleSection",ExpressionUUID->"1cd6234d-1e3c-431d-9989-71f3025eee95",
+ CellID->258228157],
+Cell[56296, 1448, 275, 4, 78, "ExampleText",ExpressionUUID->"9ae015c9-a181-4f2f-886e-7339f5467c56"],
+Cell[CellGroupData[{
+Cell[56596, 1456, 706, 17, 89, "Input",ExpressionUUID->"298625b6-2149-4408-a552-a534dc02879e"],
+Cell[57305, 1475, 418, 6, 691, "Output",ExpressionUUID->"483792e7-1cfc-46ed-ab3e-2878b3b10d0a",
+ CellID->301748881]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[57772, 1487, 252, 5, 64, "ExampleSection",ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f",
+ CellID->1305812373],
+Cell[58027, 1494, 366, 8, 46, "ExampleText",ExpressionUUID->"254a41cf-e866-4d7e-8886-144f5dda5bd5"],
+Cell[CellGroupData[{
+Cell[58418, 1506, 710, 16, 127, "Input",ExpressionUUID->"dca363b4-03b3-4a23-8246-b9d820ec5e01"],
+Cell[59131, 1524, 8896, 176, 160, "Output",ExpressionUUID->"3bdb914c-7498-4de5-9817-64dc0fbaff47",
+ CellID->966358493]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[68064, 1705, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"fc54386d-2d4b-4ec5-a444-deae85d16865"],
+Cell[68152, 1707, 206, 3, 78, "ExampleText",ExpressionUUID->"d7a97177-3aff-44a2-adf1-e415432d214b"],
+Cell[CellGroupData[{
+Cell[68383, 1714, 588, 14, 89, "Input",ExpressionUUID->"35ea4c50-21a5-4ba9-9833-428cc4853ea0"],
+Cell[68974, 1730, 7171, 135, 265, "Output",ExpressionUUID->"d015cf59-5e78-4799-8bf8-a3d594fe8f0b",
+ CellID->986063849]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[76194, 1871, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"ea73f993-42ba-4585-9e52-a994961023af"],
+Cell[76282, 1873, 155, 2, 46, "ExampleText",ExpressionUUID->"116c596a-5bef-4838-954d-85c235f983d7"],
+Cell[CellGroupData[{
+Cell[76462, 1879, 945, 23, 127, "Input",ExpressionUUID->"2cb3a6a2-2c1c-41e1-a7a0-54f1e20d7f17"],
+Cell[77410, 1904, 4742, 96, 127, "Output",ExpressionUUID->"a5f63f89-bee2-4ca4-b692-fe7727645abe",
+ CellID->705490453]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[82201, 2006, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"9387e48e-a577-4861-9961-092fb28022e0"],
+Cell[82289, 2008, 289, 5, 46, "ExampleText",ExpressionUUID->"e8ce7e8b-0ccb-4a65-bc67-facb246f2ba7"],
+Cell[CellGroupData[{
+Cell[82603, 2017, 742, 17, 127, "Input",ExpressionUUID->"4e63c857-ede1-42b8-a15f-ed7b2a401dc6"],
+Cell[83348, 2036, 4628, 95, 104, "Output",ExpressionUUID->"de53ca28-869a-4be5-8559-543c2b37ac8c",
+ CellID->95745442]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[88025, 2137, 85, 0, 33, "ExampleDelimiter",ExpressionUUID->"1246ce9e-a61b-4bce-8709-024c117ec96f"],
+Cell[88113, 2139, 195, 3, 78, "ExampleText",ExpressionUUID->"c2712749-d90e-4aa1-8b6f-d9d1ac8f4516"],
+Cell[CellGroupData[{
+Cell[88333, 2146, 389, 9, 89, "Input",ExpressionUUID->"e2b1126a-cf45-49f5-8b97-56cfb2ba8761"],
+Cell[88725, 2157, 4978, 107, 118, "Output",ExpressionUUID->"9ecc4610-ac44-4c1c-8549-7f37a96861fd",
+ CellID->1183512311]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[93776, 2272, 110, 1, 142, "MetadataSection",ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd",
+ CellID->311882160],
+Cell[93889, 2275, 476, 12, 51, "History",ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046",
+ CellID->341476719],
+Cell[CellGroupData[{
+Cell[94390, 2291, 485, 13, 40, "CategorizationSection",ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329",
+ CellID->1755438392],
+Cell[94878, 2306, 134, 2, 140, "Categorization",ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a",
+ CellID->686433507],
+Cell[95015, 2310, 152, 2, 140, "Categorization",ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec",
+ CellID->605800465],
+Cell[95170, 2314, 149, 2, 140, "Categorization",ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191",
+ CellID->468444828],
+Cell[95322, 2318, 140, 1, 140, "Categorization",ExpressionUUID->"09b4505c-c28d-4f52-ac20-3d3894f8afc9",
+ CellID->1733544957]
+}, Closed]],
+Cell[95477, 2322, 110, 1, 38, "KeywordsSection",ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6",
+ CellID->477174294],
+Cell[CellGroupData[{
+Cell[95612, 2327, 120, 1, 38, "TemplatesSection",ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c",
+ CellID->1872225408],
+Cell[95735, 2330, 149, 2, 140, "Template",ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72",
+ CellID->1562036412],
+Cell[95887, 2334, 137, 2, 140, "Template",ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec",
+ CellID->158391909],
+Cell[96027, 2338, 136, 2, 140, "Template",ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9",
+ CellID->1360575930],
+Cell[96166, 2342, 137, 2, 140, "Template",ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648",
+ CellID->793782254]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+

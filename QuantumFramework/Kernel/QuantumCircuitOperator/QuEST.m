@@ -15,7 +15,8 @@ QuEST::pkg = "Can't import QuESTLink package from `1`. Please Import or Get it m
 QuEST::link = "Can't install QuEST library. Please download or compilie it manually following instructions on https://github.com/QuEST-Kit/QuEST and load the library with Install['quest_link']"
 
 
-QuESTLinkQ[] := ! FailureQ[Quiet[Needs["QuEST`"]]]
+(* TODO: probe via PacletFind/FindFile instead of Needs to avoid the load attempt; for now restrict suppression to known Needs::* tags *)
+QuESTLinkQ[] := ! FailureQ[Quiet[Needs["QuEST`"], {Needs::nocont, Needs::namc, General::stop}]]
 
 ImportQuEST[] := If[! QuESTLinkQ[],
 	Get[$QuESTPackageURL];

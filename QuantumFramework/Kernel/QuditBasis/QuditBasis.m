@@ -14,6 +14,7 @@ QuditBasis::inconsistentElements = "elements should have the same dimensions";
 QuditBasis::dependentElements = "elements should be linearly independent";
 
 QuditBasis::invalidName = "`1` is not a recognized QuditBasis constructor"
+QuditBasis::invalidArgs = "QuditBasis constructor `1` did not match any rule"
 
 
 

@@ -34,6 +34,7 @@ $QuantumCircuitPreventCache = {
     result = QuantumCircuitOperatorProp[qds, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[$QuantumCircuitPreventCache, propName[prop]],
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumCircuitOperatorProp[qds, prop, args] = result, Rule::rhs],
         result
     ] /; !MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop]
@@ -416,9 +417,46 @@ QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCirc
 QuantumCircuitOperatorProp[qco_, "ZXTensorNetwork", opts : OptionsPattern[ZXTensorNetwork]] := ZXTensorNetwork[qco, opts]
 
 
-QuantumCircuitOperatorProp[qco_, "QASM"] :=
-    Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["TargetCount"]] <>
-        StringRiffle[ConfirmBy[#["QASM"], StringQ] & /@ qco["Flatten"]["Operators"], "\n"]]
+qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
+    (* fold over operators threading a global classical-bit counter, so successive
+       measurements write c[0], c[1], ... instead of every one writing c[0]. *)
+    lines = DeleteCases[""] @ First @ Fold[
+        Function[{state, op},
+            With[{acc = state[[1]], clbit = state[[2]]},
+                If[ QuantumMeasurementOperatorQ[op],
+                    With[{targets = op["Target"]},
+                        {
+                            Append[acc, StringRiffle[MapIndexed[
+                                "c[" <> ToString[clbit + First[#2] - 1] <> "] = measure q[" <> ToString[#1 - 1] <> "];" &,
+                                targets], "\n"]],
+                            clbit + Length[targets]
+                        }
+                    ],
+                    {Append[acc, ConfirmBy[op["QASM"], StringQ]], clbit}
+                ]
+            ]
+        ],
+        {{}, 0},
+        qco["Flatten"]["Operators"]
+    ];
+    (* a leftover "// Unimplemented" comment means the WL emitter cannot serialize a gate;
+       surface a clean Failure rather than emitting invalid OpenQASM. *)
+    unimpl = DeleteDuplicates @ Flatten @ StringCases[
+        Select[lines, StringContainsQ[#, "// Unimplemented"] &],
+        "label: " ~~ l___ ~~ " ----" :> StringTrim[l]
+    ];
+    If[ unimpl =!= {},
+        Return @ Failure["QuantumQASM", <|
+            "MessageTemplate" -> "The Wolfram Language OpenQASM emitter cannot serialize gate(s): " <> StringRiffle[unimpl, ", "] <>
+                ". Pass a native gate set (a second argument, such as {\"x\", \"sx\", \"rz\", \"cz\"}) so the circuit is transpiled through qiskit first.",
+            "NonNativeGates" -> unimpl,
+            "Hint" -> "Pass a native gate set so QuantumQASM transpiles the circuit first."
+        |>]
+    ];
+    StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
+]
+
+QuantumCircuitOperatorProp[qco_, "QASM"] := QuantumQASM[qco, "WL"]
 
 
 Options[CircuitTopology] = Join[{PlotLegends -> None}, Options[Graph]]

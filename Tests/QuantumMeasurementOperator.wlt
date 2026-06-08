@@ -38,4 +38,11 @@ VerificationTest[
     TestID -> "InvalidName-call-form"
 ]
 
+VerificationTest[
+    Quiet @ QuantumMeasurementOperator["HesseSICPOVM"["bad-arg"]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-HesseSICPOVM"
+]
+
 EndTestSection[]

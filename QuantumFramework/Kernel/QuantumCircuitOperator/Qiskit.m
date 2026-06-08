@@ -54,15 +54,15 @@ shortcutToGate = Replace[
                     ]
                 }
             ],
-            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order}
+            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal64"], ToString[label], order}
         ],
-        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal32"], ToString[shortcut], op["Order"]}]
+        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal64"], ToString[shortcut], op["Order"]}]
     }
 ]
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     gates = Confirm @* shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
-    arity = {qco["Max"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Max"], Replace[qco["TargetArity"], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl
@@ -549,9 +549,9 @@ result
 ", env]
 ]
 
-qc_QiskitCircuit["QASM" | "QASM2", opts___] := qiskitQASM[qc, "Version" -> 2, opts]
+qc_QiskitCircuit["QASM" | "QASM2", opts___] := QuantumQASM[qc, "Version" -> 2, opts]
 
-qc_QiskitCircuit["QASM3", opts___] := qiskitQASM[qc, "Version" -> 3, opts]
+qc_QiskitCircuit["QASM3", opts___] := QuantumQASM[qc, "Version" -> 3, opts]
 
 
 qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{env},
@@ -639,25 +639,17 @@ fireopal.validate(
 ", "qctrl"]
 ]
 
-ImportQASMCircuit[file_ /; FileExistsQ[file], basisGates : {_String...} | None] := ImportQASMCircuit[Import[file, "String"], basisGates]
+ImportQASMCircuit::deprecated = "ImportQASMCircuit is deprecated. Use QuantumQASM[source] or QuantumCircuitOperator[source] to import OpenQASM directly.";
 
-ImportQASMCircuit[str_String, backend : _String | Automatic : Automatic, basisGates : {_String...} | None : None] := Block[{
-    $pythonString = str,
-    $backend = Replace[backend, Automatic -> Null],
-    $basisGates = Replace[basisGates, None -> Null]
-},
-PythonEvaluate[Context[$backend], "
-import pickle
-from qiskit import QuantumCircuit, transpile
-from wolframclient.language import wl
+ImportQASMCircuit[file_String /; FileExistsQ[file], ___] := (
+    Message[ImportQASMCircuit::deprecated];
+    QuantumQASM[File[file]]
+)
 
-qc = QuantumCircuit.from_qasm_str(<* $pythonString *>)
-
-qc = transpile(qc, backend=<* $backend *>, basis_gates=<* $basisGates *>)
-wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(qc))
-"
-]
-]
+ImportQASMCircuit[str_String, ___] := (
+    Message[ImportQASMCircuit::deprecated];
+    QuantumQASM[str]
+)
 
 
 (* Formatting *)
