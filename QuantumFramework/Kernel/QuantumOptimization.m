@@ -97,7 +97,7 @@ props={asc["MinimalEnergyGap"],Flatten@asc["MaxAdiabaticCoupling"],asc["Adiabati
 ];
 
 myObjectAscQ[asc_?AssociationQ]:=AllTrue[{
-"Hamiltonian","Energies","Eigenvectors","Eigensystem","LowestEnergies","EnergyGap","MinimalEnergyGap","LowestEnergyEigenvector","AdiabaticCoupling","MaxAdiabaticCoupling","AdiabaticTimeEstimate","Parameters","Properties"},KeyExistsQ[asc,#]&]
+"Hamiltonian","Energies","Eigenvectors","Eigensystem","LowestEnergies","EnergyGap","MinimalEnergyGap","LowestEnergyEigenvector","AdiabaticCoupling","MaxAdiabaticCoupling","AdiabaticTimeEstimate","Parameters","Schedule","Properties"},KeyExistsQ[asc,#]&]
 
 myObjectAscQ[_]=False;
 
@@ -106,7 +106,10 @@ QuantumAdiabaticEvolution[asc_?AssociationQ][prop_]:=Lookup[asc,prop]
 QuantumAdiabaticEvolution[asc_?AssociationQ][plots_List/;SubsetQ[{"EnergySpectrumPlot","SpectralGapPlot","AdiabaticCouplingPlot","AdiabaticPathPlot"},plots]]:=QuantumAdiabaticEvolution[asc][#]&/@plots
 
 QuantumAdiabaticEvolution[asc_?AssociationQ][plot:Alternatives@@{"EnergySpectrumPlot","SpectralGapPlot","AdiabaticCouplingPlot","AdiabaticPathPlot"}]:=Module[{ass},ass=Association@Thread[{"EnergySpectrumPlot","SpectralGapPlot","AdiabaticCouplingPlot","AdiabaticPathPlot"}->{"Energies","EnergyGap","AdiabaticCoupling","LowestEnergyEigenvector"}];
-	adiabticPlot[asc[ass[plot]],plot,asc["Parameters"]]
+	If[MatchQ[asc["Schedule"],None],
+	adiabticPlot[asc[ass[plot]],plot,asc["Parameters"]],
+	adiabticPlot[asc[ass[plot]],plot,asc["Parameters"],asc["Schedule"]]
+	]
 ]
 
 
@@ -117,52 +120,63 @@ QuantumAdiabaticEvolve::num="The eigensystem contains Root objects. Symbolic exp
 Options[QuantumAdiabaticEvolve]={"Parameter"->\[FormalS],"TimeScaling"->10,"Schedule"->None};
 
 QuantumAdiabaticEvolve[Hb_QuantumOperator,Hp_QuantumOperator,opts:OptionsPattern[]]:=
-Module[{s,schedule,H,output,plotoutput,cachedResults,reporter,energies,gap,gmin,\[Psi]E0,\[Psi]E1,lowestenergies,eigensystem,sortedstates,\[Xi]function,\[Xi],smin,smax,sortedeigensystem,plotnames,functions,plots,simplifier,mingap,prop},
+Module[{s,schedule,assumptions,H,output,plotoutput,cachedResults,reporter,energies,gap,gmin,\[Psi]E0,\[Psi]E1,lowestenergies,eigensystem,sortedstates,\[Xi]function,\[Xi],smin,smax,sortedeigensystem,plotnames,functions,plots,simplifier,mingap,prop},
 
 prop={"Hamiltonian","Energies","Eigenvectors","Eigensystem","LowestEnergies","EnergyGap","MinimalEnergyGap","LowestEnergyEigenvector","AdiabaticCoupling","MaxAdiabaticCoupling","AdiabaticTimeEstimate","EnergySpectrumPlot","SpectralGapPlot","AdiabaticCouplingPlot","AdiabaticPathPlot"};
 
 s=OptionValue["Parameter"];
 schedule=OptionValue["Schedule"];
 If[MatchQ[schedule,None],
-	H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}],
-	H=QuantumOperator[(1-schedule)*Hb+schedule*Hp,"Parameters"->{s}]
+	H=QuantumOperator[(1-s)*Hb+s*Hp,"Parameters"->{s}];
+	assumptions=0<=s<=1;
+	,
+	assumptions=(#[[1]]<=s<=#[[2]])&@Last[schedule];
+	H=QuantumOperator[(1-First[schedule])*Hb+First[schedule]*Hp,"Parameters"->{s}];
+	
 ];
 
-eigensystem=Simplify[H["Eigensystem"],0<=s<=1];
+eigensystem=Simplify[H["Eigensystem"],assumptions];
 
-{sortedeigensystem,gap,mingap}=adiabaticTest[Thread@eigensystem,s];
+{sortedeigensystem,gap,mingap}=adiabaticTest[Thread@eigensystem,s,assumptions];
 
 energies=sortedeigensystem[[All,1]];
 
 lowestenergies=sortedeigensystem[[;;2]][[All,1]];
+
+
+
 
 If[MatchQ[mingap,$Failed],Message[QuantumAdiabaticEvolve::gap];Return[$Failed,Module],{gmin,smin}=mingap];
 
 	If[gmin<=0,Message[QuantumAdiabaticEvolve::gap];Return[$Failed,Module],
 		{\[Psi]E0,\[Psi]E1}=QuantumState[#,"Parameters"->{s}]&/@sortedeigensystem[[;;2]][[All,2]];
 		\[Xi]function=If[FreeQ[sortedeigensystem[[;;2]][[All,2]][[1]],_Root,Infinity],
-			FullSimplify[Abs["Scalar"//SuperDagger[\[Psi]E1]@D[H,s]@\[Psi]E0],s\[Element]Reals&&0<=s<=1],
+			FullSimplify[Abs["Scalar"//SuperDagger[\[Psi]E1]@D[H,s]@\[Psi]E0],s\[Element]Reals&&assumptions],
 			Message[QuantumAdiabaticEvolve::num];
 			Abs["Scalar"//SuperDagger[\[Psi]E1]@D[H,s]@\[Psi]E0]
 		];
-		{\[Xi],smax}=Maximize[{\[Xi]function,0<=s<=1},s]
+		{\[Xi],smax}=Maximize[{\[Xi]function,assumptions},s]
 	];
 
 
-QuantumAdiabaticEvolution[<|"Hamiltonian"->H,"Eigensystem"->sortedeigensystem,"Energies"->energies,"Eigenvectors"->sortedeigensystem[[All,2]],"LowestEnergies"->lowestenergies,"EnergyGap"->gap,"MinimalEnergyGap"->{gmin,smin},"LowestEnergyEigenvector"->\[Psi]E0, "MaxAdiabaticCoupling"->{\[Xi],smax},"AdiabaticCoupling"->\[Xi]function,"AdiabaticTimeEstimate"->OptionValue["TimeScaling"]*\[Xi]/gmin^2,"Parameters"->s,"Properties"->prop|>]
+QuantumAdiabaticEvolution[<|"Hamiltonian"->H,"Eigensystem"->sortedeigensystem,"Energies"->energies,"Eigenvectors"->sortedeigensystem[[All,2]],"LowestEnergies"->lowestenergies,
+"EnergyGap"->gap,"MinimalEnergyGap"->{gmin,smin},"LowestEnergyEigenvector"->\[Psi]E0, "MaxAdiabaticCoupling"->{\[Xi],smax},"AdiabaticCoupling"->\[Xi]function,
+"AdiabaticTimeEstimate"->OptionValue["TimeScaling"]*\[Xi]/gmin^2,"Parameters"->s,"Schedule"->schedule,"Properties"->prop|>]
 
 ]
 
 
-adiabaticTest[eigensystem_,s_]:=Module[{sorted,energies,solutions,cases,gap,mingap},
-sorted=SortBy[eigensystem,ReplaceAll[#[[1]],s->10^-10]&]; 
-If[!DuplicateFreeQ[ReplaceAll[sorted[[All,1]],s->10^-10]],sorted=SortBy[eigensystem,ReplaceAll[#[[1]],s->0.1]&]];
+adiabaticTest[eigensystem_,s_,assumptions_]:=Module[{sorted,energies,solutions,cases,gap,mingap},
+	sorted=SortBy[eigensystem,ReplaceAll[#[[1]],s->10^-10]&]; 
+	If[!DuplicateFreeQ[ReplaceAll[sorted[[All,1]],s->10^-10]],
+		sorted=SortBy[eigensystem,ReplaceAll[#[[1]],s->0.1]&]
+	];
 	energies=sorted[[All,1]];
-	gap=Simplify[Abs[Subtract@@Reverse@energies[[;;2]]],s\[Element]Reals&&0<=s<=1];
-	solutions=Quiet@Flatten@(NSolve[{energies[[1]]==# && 0<=s<=1},s,Reals])&/@energies[[2;;]];
+	gap=Simplify[Abs[Subtract@@Reverse@energies[[;;2]]],s\[Element]Reals&&assumptions];
+	solutions=Quiet@Flatten@(NSolve[{energies[[1]]==# && assumptions},s,Reals])&/@energies[[2;;]];
 	cases=Cases[solutions,List[_Rule]];
 	If[MatchQ[cases,{}],
-		mingap=First@SortBy[Flatten@Minimize[{Abs[energies[[1]]-#] , 0<=s<=1},s]&/@energies[[2;;]],#[[1]]&]; 
+		mingap=First@SortBy[Flatten@Minimize[{Abs[energies[[1]]-#] , assumptions},s]&/@energies[[2;;]],#[[1]]&]; 
 		{sorted,gap,mingap} 
 		,
 		{sorted,gap,$Failed}
@@ -174,9 +188,22 @@ adiabticPlot[f_,name_String,s_]:=Switch[name,
 	"SpectralGapPlot", Plot[f,{s,0,1},Sequence[AxesLabel -> {"s", "\!\(\*g(s)\)"}, PlotRange -> {{0, 1}, {0, Automatic}}, PlotLabel -> "Spectral Gap", LabelStyle -> 13]],
 	"AdiabaticCouplingPlot",Plot[f,{s,0,1},Sequence[PlotRange -> All, AxesLabel -> {"s", "\[Xi](s)"}, PlotLabel -> "Adiabatic Coupling", LabelStyle -> 13]],
 	"AdiabaticPathPlot",Plot[Evaluate@Keys[#],{s,0,1},Sequence[AxesLabel -> {"\!\(\*s = t/T\)", "Probability"}, LabelStyle -> 13, PlotLegends -> Map[adiabticPlotLabels[#]& , Values[#]], PlotLabel -> "Adiabatic Path", PlotRange -> {{0, 1}, {0, 1}}]]&@GroupBy[Normal[f[s]["Probability"]],Values[#]&,Keys],
-"Icon",Rasterize[Plot[Evaluate@#[[1]],{s,0,1},Sequence[Ticks -> None, Axes -> False, PlotRange -> {Values[Part[#, 2]] + {-0.1, 0.1}, {ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] - 0.1], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] + 0.1]}}, Epilog -> {Gray, Arrowheads[{{0.1, 1}, {-0.1, 0}}], Arrow[{{Values[Part[#, 2]], ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}, {Values[Part[#, 2]], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}}]}]]&@f,Background->None,ImageSize->10^1.9],
+	"Icon",Rasterize[Plot[Evaluate@#[[1]],{s,0,1},Sequence[Ticks -> None, Axes -> False, PlotRange -> {Values[Part[#, 2]] + {-0.1, 0.1}, {ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] - 0.1], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] + 0.1]}}, Epilog -> {Gray, Arrowheads[{{0.1, 1}, {-0.1, 0}}], Arrow[{{Values[Part[#, 2]], ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}, {Values[Part[#, 2]], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}}]}]]&@f,Background->None,ImageSize->10^1.9],
 	_,None
 ]
+
+adiabticPlot[f_,name_String,s_,schedule_]:=Module[{range},
+	range=Sequence@@Last[schedule];
+	Switch[name,
+		"EnergySpectrumPlot", Plot[Evaluate@Values[#],{s,range},Sequence[PlotRange -> All, AxesLabel -> {ToString@s, "Eigenvalues"}, PlotLegends -> Keys[#], PlotLabel -> "Energy Spectrum", LabelStyle -> 13]]&@energyPlotLabels[f],
+		"SpectralGapPlot", Plot[f,{s,range},Sequence[AxesLabel -> {ToString@s,"g("<>ToString@s<>")"}, PlotRange -> {{0, 1}, {0, Automatic}}, PlotLabel -> "Spectral Gap", LabelStyle -> 13]],
+		"AdiabaticCouplingPlot",Plot[f,{s,range},Sequence[PlotRange -> All, AxesLabel -> {"s", "\[Xi]("<>ToString@s<>")"}, PlotLabel -> "Adiabatic Coupling", LabelStyle -> 13]],
+		"AdiabaticPathPlot",Plot[Evaluate@Keys[#],{s,range},Sequence[AxesLabel -> {ToString@s, "Probability"}, LabelStyle -> 13, PlotLegends -> Map[adiabticPlotLabels[#]& , Values[#]], PlotLabel -> "Adiabatic Path", PlotRange -> Full]]&@GroupBy[Normal[f[s]["Probability"]],Values[#]&,Keys],
+		"Icon",Rasterize[Plot[Evaluate@#[[1]],{s,0,1},Sequence[Ticks -> None, Axes -> False, PlotRange -> {Values[Part[#, 2]] + {-0.1, 0.1}, {ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] - 0.1], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]] + 0.1]}}, Epilog -> {Gray, Arrowheads[{{0.1, 1}, {-0.1, 0}}], Arrow[{{Values[Part[#, 2]], ReplaceAll[First[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}, {Values[Part[#, 2]], ReplaceAll[Last[Part[#, 1]], Keys[Part[#, 2]] -> Values[Part[#, 2]]]}}]}]]&@f,Background->None,ImageSize->10^1.9],
+		_,None
+	]
+]
+
 
 adiabticPlotLabels[label_]:=If[Length@#>1,Tooltip[ToString[Ket[{StringJoin[ToString/@First@First[#]]}], FormatType -> TraditionalForm]<>" \[Ellipsis]",#],First@#]&@label
 energyPlotLabels[energies_]:=Module[{grouping,rangeformat},
