@@ -3,6 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["UnitaryEulerAngles"]
 PackageScope["UnitaryEulerAnglesWithPhase"]
 PackageScope["TwoQubitKAK"]
+PackageScope["TwoQubitKAKSymbolic"]
 PackageScope["$MagicBasis"]
 
 
@@ -762,6 +763,57 @@ TwoQubitKAK[u_ ? SquareMatrixQ] /; Dimensions[u] === {4, 4} := Module[{
     <|"GlobalPhase" -> Arg[Det[u] ^ (1/4)], "Left" -> left, "Canonical" -> coords, "Right" -> right|>
 ]
 
+
+(* Pivot-anchored Kronecker factor: read A (x) B off a nonzero 2x2 block and a nonzero pivot inside it.
+   Exact and symbolic-safe (no SingularValueDecomposition, which returns a Sqrt[0] on degenerate
+   symbolic locals such as the local factors of a controlled-phase gate). *)
+kakKroneckerFactorSymbolic[mat_, simp_] := Module[{blocks, a0, c0, b, r0, s0},
+    blocks = Table[mat[[2 (a - 1) + 1 ;; 2 a, 2 (c - 1) + 1 ;; 2 c]], {a, 2}, {c, 2}];
+    {a0, c0} = First @ Position[blocks, blk_ /; AnyTrue[Flatten[blk], ! PossibleZeroQ[#] &], {2}, Heads -> False];
+    b = blocks[[a0, c0]];
+    {r0, s0} = First @ Position[b, e_ /; ! PossibleZeroQ[e], {2}, Heads -> False];
+    {Table[simp[blocks[[a, c]][[r0, s0]] / b[[r0, s0]]], {a, 2}, {c, 2}], b}
+]
+
+(* Continuous angle of a unit-modulus symbolic expression. Arg gives the principal value
+   (Arg[E^{-I theta}] is theta mod 2 Pi, not theta), which leaves the magic phases unable to cancel and
+   makes K1 nonlocal for gates such as RXX. Reading the exponent off the Exp form instead recovers the
+   continuous angle exactly. Valid here because every input (the diagonalized m2 eigenvalues and
+   Det[u]^(1/4)) is unit modulus under the real-parameter assumption. *)
+kakUnwrapAngle[z_] := - I PowerExpand[Log[Simplify[TrigToExp[z]]]]
+
+(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic. ComplexExpand makes
+   Re/Im split once the parameters are declared real, an exact Sqrt[2] separates the eigenvalues,
+   Orthogonalize forces a real-orthonormal eigenbasis, kakUnwrapAngle reads off the continuous angles,
+   and FullSimplify[..., assum] reduces to closed form. Returns the same association as TwoQubitKAK (for
+   a generic dense symbolic matrix the eigensolve is a Root blowup; the caller bounds it). *)
+TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, assum_] /; Dimensions[u] === {4, 4} := Module[{
+    mb = $MagicBasis, mbd = ConjugateTranspose[$MagicBasis], signs = $kakBellSigns,
+    simp, su, uMagic, m2, proj, k1, theta, coords, corr
+},
+    simp = FullSimplify[#, assum] &;
+    su = u / Det[u] ^ (1/4);
+    uMagic = simp @ ComplexExpand[mbd . su . mb];
+    m2 = simp @ ComplexExpand[Transpose[uMagic] . uMagic];
+    proj = simp @ ComplexExpand @ Transpose[Orthogonalize[
+        Eigensystem[ComplexExpand[Re[m2]] + Sqrt[2] ComplexExpand[Im[m2]]][[2]]]];
+    If[TrueQ[simp[Re[Det[proj]]] < 0], proj[[All, 1]] = - proj[[All, 1]]];
+    theta = simp[kakUnwrapAngle[Diagonal[Transpose[proj] . m2 . proj]] / 2];
+    k1 = simp @ ComplexExpand[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
+    If[TrueQ[simp[Re[Det[k1]]] < 0], k1[[All, 1]] = - k1[[All, 1]]; theta[[1]] += Pi];
+    coords = simp[Transpose[signs] . theta / 4];
+    corr = simp @ ComplexExpand[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
+    <|
+        "GlobalPhase" -> simp @ kakUnwrapAngle[Det[u] ^ (1/4)],
+        "Left" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . k1 . mbd . corr], simp],
+        "Canonical" -> coords,
+        "Right" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . Transpose[proj] . mbd], simp]
+    |>
+]
+
+(* Wall-clock budget for the symbolic eigensolve before bailing to the undecomposed-operator path. *)
+$kakSymbolicTimeBudget = 60;
+
 (* exp(i c P (x) P) gadget as a circuit fragment on {o1, o2}: a CNOT, an Rz on the target, a CNOT,
    conjugated into the X / Y / Z basis. Single-qubit pieces are emitted as "U" gates (phaseless);
    the dropped global phases are recovered once, at the end, by projection. *)
@@ -776,7 +828,7 @@ $kakBasisY = MatrixExp[-I Pi / 4 PauliMatrix[1]];                            (* 
    theta == 0 test in UnitaryEulerAngles and sends Arg of numerical zeros into the angles. *)
 kakUGate[mat_, order_] := QuantumOperator["U" @@ First[UnitaryAnglesWithPhase[Chop[mat]]], order]
 
-kakInteractionGadget[c_, basis_, {o1_, o2_}] := If[Chop[c] == 0, {},
+kakInteractionGadget[c_, basis_, {o1_, o2_}] := If[TrueQ[Chop[c] == 0] || PossibleZeroQ[c], {},
     {
         If[basis === IdentityMatrix[2], Nothing, kakUGate[basis, {o1}]],
         If[basis === IdentityMatrix[2], Nothing, kakUGate[basis, {o2}]],
@@ -788,37 +840,88 @@ kakInteractionGadget[c_, basis_, {o1_, o2_}] := If[Chop[c] == 0, {},
     }
 ]
 
-QuantumCircuitOperator::kaksymbolic = "KAK requires a numeric 2-qubit operator; `1` is symbolic and is returned undecomposed. Substitute numeric parameters first.";
+(* Symbolic emission: single-qubit pieces go in as direct matrix gates rather than "U" angles.
+   Re-extracting Euler angles from an Arg / ArcTan-laden symbolic factor is unreliable; a matrix gate
+   is exact and preserves the factor's own phase, so the whole circuit equals the operator up to the
+   single global phase Arg[Det[u]^(1/4)] returned by the worker, with no projection needed. *)
+kakInteractionGadgetSymbolic[c_, basis_, {o1_, o2_}] := If[PossibleZeroQ[c], {},
+    {
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[basis, {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[basis, {o2}]],
+        QuantumOperator["CX", {o1, o2}],
+        QuantumOperator[$kakRotZ[-2 c], {o2}],
+        QuantumOperator["CX", {o1, o2}],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[ConjugateTranspose[basis], {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[ConjugateTranspose[basis], {o2}]]
+    }
+]
+
+QuantumCircuitOperator::kaksymbolic = "KAK could not decompose `1` symbolically (a generic dense symbolic 2-qubit unitary is a Root blowup); it is returned undecomposed. Substitute numeric parameters, or pass a structured / parametric gate.";
 
 QuantumOperatorProp[qo_, "KAK"] /; qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] :=
 Enclose @ Module[{
-    data, c, a, b, o1, o2, order, gates, circuit, residualPhase, mat = N @ qo["MatrixRepresentation"]
+    mat = Normal @ qo["MatrixRepresentation"], numericQ, vars, assum, data, c, a, b, o1, o2, order,
+    gates, circuit, circMat, residualPhase
 },
-    (* The magic-basis simultaneous diagonalization is a numeric eigensolve; a symbolic / parametric
-       matrix is not yet supported. Return the operator as a one-gate circuit with a message rather
-       than hanging on a symbolic eigensolve. *)
-    If[ ! MatrixQ[mat, NumericQ],
-        Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
-        Return[QuantumCircuitOperator[{qo}, "Label" -> "KAK"], Module]
-    ];
+    numericQ = MatrixQ[Quiet @ N @ mat, NumericQ];
     order = qo["Order"][[1]];
     {o1, o2} = order;
-    data = TwoQubitKAK[mat];
-    {c, a, b} = {data["Canonical"], data["Left"], data["Right"]};
-    (* circuit order applies first -> last: right locals, ZZ, YY, XX gadgets, left locals *)
-    gates = Flatten @ {
-        kakUGate[b[[1]], {o1}], kakUGate[b[[2]], {o2}],
-        kakInteractionGadget[c[[3]], IdentityMatrix[2], {o1, o2}],
-        kakInteractionGadget[c[[2]], $kakBasisY, {o1, o2}],
-        kakInteractionGadget[c[[1]], $kakBasisX, {o1, o2}],
-        kakUGate[a[[1]], {o1}], kakUGate[a[[2]], {o2}]
-    };
-    circuit = QuantumCircuitOperator[gates];
-    (* recover the single residual global phase by projection (convention-agnostic) *)
-    residualPhase = Arg[Tr[ConjugateTranspose[(QuantumOperator @ circuit)["MatrixRepresentation"]] . N @ qo["MatrixRepresentation"]] / 4];
-    QuantumCircuitOperator[
-        If[Chop[residualPhase] == 0, gates, Prepend[gates, QuantumOperator["GlobalPhase"[residualPhase]]]],
-        "Label" -> "KAK"
+    If[ numericQ,
+    (* ---- numeric path: "U"-angle gadgets, global phase recovered by projection ---- *)
+        data = TwoQubitKAK[N @ mat];
+        {c, a, b} = {data["Canonical"], data["Left"], data["Right"]};
+        (* circuit order applies first -> last: right locals, ZZ, YY, XX gadgets, left locals *)
+        gates = Flatten @ {
+            kakUGate[b[[1]], {o1}], kakUGate[b[[2]], {o2}],
+            kakInteractionGadget[c[[3]], IdentityMatrix[2], {o1, o2}],
+            kakInteractionGadget[c[[2]], $kakBasisY, {o1, o2}],
+            kakInteractionGadget[c[[1]], $kakBasisX, {o1, o2}],
+            kakUGate[a[[1]], {o1}], kakUGate[a[[2]], {o2}]
+        };
+        circMat = Normal @ (QuantumOperator @ QuantumCircuitOperator[gates])["MatrixRepresentation"];
+        residualPhase = Arg[Tr[ConjugateTranspose[N @ circMat] . N @ mat] / 4];
+        QuantumCircuitOperator[
+            If[Chop[residualPhase] == 0, gates, Prepend[gates, QuantumOperator["GlobalPhase"[residualPhase]]]],
+            "Label" -> "KAK"
+        ]
+    ,
+    (* ---- structured-symbolic path: direct matrix gates, global phase = worker's gp (no projection).
+       A generic dense symbolic eigensolve is a Root blowup, so the worker is time-bounded and bails. ---- *)
+        (* the free parameters: actual non-System symbols (Variables misses these inside Cos / E^...) *)
+        vars = DeleteDuplicates @ Cases[mat, _Symbol ? (Context[#] =!= "System`" &), Infinity];
+        assum = Element[vars, Reals];
+        data = TimeConstrained[TwoQubitKAKSymbolic[mat, assum], $kakSymbolicTimeBudget, $Failed];
+        If[ ! AssociationQ[data],
+            Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
+            Return[QuantumCircuitOperator[{qo}, "Label" -> "KAK"], Module]
+        ];
+        {c, a, b} = {data["Canonical"], data["Left"], data["Right"]};
+        gates = Flatten @ {
+            QuantumOperator[b[[1]], {o1}], QuantumOperator[b[[2]], {o2}],
+            kakInteractionGadgetSymbolic[c[[3]], IdentityMatrix[2], {o1, o2}],
+            kakInteractionGadgetSymbolic[c[[2]], $kakBasisY, {o1, o2}],
+            kakInteractionGadgetSymbolic[c[[1]], $kakBasisX, {o1, o2}],
+            QuantumOperator[a[[1]], {o1}], QuantumOperator[a[[2]], {o2}]
+        };
+        residualPhase = data["GlobalPhase"];
+        circuit = QuantumCircuitOperator[
+            If[PossibleZeroQ[residualPhase], gates, Prepend[gates, QuantumOperator["GlobalPhase"[residualPhase]]]],
+            "Label" -> "KAK"
+        ];
+        (* Safety self-check: symbolic eigendecomposition under a generic real assumption is not always
+           reliable (the eigenvectors, hence the local factors, can come out wrong even when the
+           coordinates are right). Verify the circuit reproduces the operator at a probe substitution;
+           if it does not, return the operator undecomposed rather than a silently wrong circuit. *)
+        Module[{probeSub, checkErr},
+            probeSub = Thread[vars -> Table[Sqrt[Prime[k + 1]] / 5, {k, Max[Length[vars], 1]}]];
+            checkErr = Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circuit)["MatrixRepresentation"]] /. probeSub] - N[mat /. probeSub]], Infinity];
+            If[ TrueQ[checkErr < 10.^-6],
+                circuit,
+                Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
+                QuantumCircuitOperator[{qo}, "Label" -> "KAK"]
+            ]
+        ]
     ]
 ]
 

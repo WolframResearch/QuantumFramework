@@ -205,15 +205,63 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["TwoQubitKAK - symbolic guard"]
+BeginTestSection["TwoQubitKAK - structured symbolic"]
 
-(* a symbolic / parametric operator is not decomposed; it returns the operator undecomposed
-   (a one-gate circuit) with a message, and does not hang or recurse *)
+(* a structured parametric gate is decomposed symbolically and reconstructs exactly at sampled
+   parameter values (the single-qubit factors go in as exact matrix gates, so reconstruction is exact) *)
 VerificationTest[
-    Head @ QuantumOperator[MatrixExp[-I \[Theta] / 2 kakKP[kakX, kakX]], {1, 2}]["KAK"],
-    QuantumCircuitOperator,
-    {QuantumCircuitOperator::kaksymbolic},
-    TestID -> "KAK-symbolic-guard"
+    With[{circ = QuantumOperator[MatrixExp[-I \[Theta] / 2 kakKP[kakY, kakY]], {1, 2}]["KAK"]},
+        Max @ Table[
+            Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circ)["MatrixRepresentation"]] /. \[Theta] -> v] -
+                N[Normal[MatrixExp[-I v / 2 kakKP[kakY, kakY]]]]], Infinity],
+            {v, {0.4, 1.3}}]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-6 &),
+    TestID -> "KAK-symbolic-RYY-exact"
+]
+
+VerificationTest[
+    With[{circ = QuantumOperator[DiagonalMatrix[{1, 1, 1, Exp[I \[Phi]]}], {1, 2}]["KAK"]},
+        Max @ Table[
+            Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circ)["MatrixRepresentation"]] /. \[Phi] -> v] -
+                N[Normal[DiagonalMatrix[{1, 1, 1, Exp[I v]}]]]], Infinity],
+            {v, {0.4, 1.3}}]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-6 &),
+    TestID -> "KAK-symbolic-CPhase-exact"
+]
+
+(* RXX exercised the Arg-unwrapping fix: its magic phases are +-theta, which Arg returns mod 2 Pi;
+   kakUnwrapAngle reads the continuous angle off the Exp form, so it now decomposes exactly *)
+VerificationTest[
+    With[{circ = QuantumOperator[MatrixExp[-I \[Theta] / 2 kakKP[kakX, kakX]], {1, 2}]["KAK"]},
+        Max @ Table[
+            Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circ)["MatrixRepresentation"]] /. \[Theta] -> v] -
+                N[Normal[MatrixExp[-I v / 2 kakKP[kakX, kakX]]]]], Infinity],
+            {v, {0.4, 1.3, 2.6}}]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-6 &),
+    TestID -> "KAK-symbolic-RXX-exact"
+]
+
+(* a multi-parameter canonical gate Can(a, b, c) decomposes symbolically and reconstructs exactly *)
+VerificationTest[
+    With[{circ = QuantumOperator[MatrixExp[I (\[Alpha] kakKP[kakX, kakX] + \[Beta] kakKP[kakY, kakY] + \[Gamma] kakKP[kakZ, kakZ])], {1, 2}]["KAK"]},
+        Max @ Table[
+            Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circ)["MatrixRepresentation"]] /. s] -
+                N[Normal[MatrixExp[I (\[Alpha] kakKP[kakX, kakX] + \[Beta] kakKP[kakY, kakY] + \[Gamma] kakKP[kakZ, kakZ])] /. s]]], Infinity],
+            {s, {{\[Alpha] -> 3/10, \[Beta] -> 1/5, \[Gamma] -> 1/10}, {\[Alpha] -> 11/10, \[Beta] -> -2/5, \[Gamma] -> 7/10}}}]
+    ],
+    0,
+    SameTest -> (Abs[#1 - #2] < 10^-6 &),
+    TestID -> "KAK-symbolic-Can-exact"
 ]
 
 EndTestSection[]
