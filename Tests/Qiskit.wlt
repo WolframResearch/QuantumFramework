@@ -84,6 +84,14 @@ qtest[StringStartsQ[QuantumQASM[qc, "Version" -> 2], "OPENQASM 2.0"], True, "qas
 (* bare QuantumQASM (no args) is the native, dependency-free WL emission *)
 qtest[StringStartsQ[QuantumQASM[qc], "OPENQASM 3.0"], True, "native-default-prefix"]
 
+(* a Provider / Backend request engages the hardware-provider export path (transpile against
+   a real backend) in qiskitQASM, which lives in Qiskit.m and is reached cross-file from the
+   QuantumQASM hub: the guard pins that cross-file reach so the branch cannot silently fall
+   back to an unevaluated symbol. "Backend" -> Automatic uses the local Aer/BasicProvider, so
+   no credentials are needed; the measured qc avoids the save_statevector instruction that a
+   pure-unitary circuit on Aer would emit (qasm3 cannot export it). *)
+qtest[StringStartsQ[QuantumQASM[qc, "Backend" -> Automatic], "OPENQASM 3.0;"], True, "provider-backend-path-exports-qasm3"]
+
 
 (* ---- qubit-only guard: OpenQASM models qubits only, so any qudit dimension > 2 is a
    clear Failure rather than an unevaluated emitter call or an opaque ConfirmBy error.
@@ -118,6 +126,39 @@ VerificationTest[
 VerificationTest[
     StringQ @ QuantumQASM[QuantumOperator["X"]],
     True, TestID -> "qubit-operator-still-emits"
+]
+
+
+(* ---- joint measurements: a joint multi-qubit measurement carries a single classical
+   outcome register whose dimension is the product of the measured qubits' dimensions (2^n
+   for n qubits). That register is emitted as OpenQASM bits, not a quantum wire, so the guard
+   tests the quantum wires of each operator (positive orders) and a joint measurement on
+   qubits exports exactly like the equivalent separate single-qubit measurements. These are
+   pure-native checks (no qiskit needed). *)
+
+VerificationTest[
+    StringQ @ QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2}}]],
+    True, TestID -> "joint-measurement-exports"
+]
+
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2}}]] ===
+        QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1}, {2}}]],
+    True, TestID -> "joint-measurement-matches-separate"
+]
+
+(* a genuine non-qubit quantum wire is still rejected when a joint measurement also adds a
+   2^n outcome register: only the qutrit dimension is reported, not the classical register. *)
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H"[3] -> 1, "H" -> 2, "H" -> 3, {1, 2, 3}}]]["NonQubitDimensions"],
+    {3}, TestID -> "qutrit-with-joint-measurement-reports-only-qutrit"
+]
+
+(* the wire dimensions are read per operator, so a non-qubit wire whose dimension is masked
+   in the circuit's aggregate OutputDimensions by a downstream measurement is still caught. *)
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H"[3] -> 1, "H" -> 2, {1, 2, 3}}]]["NonQubitDimensions"],
+    {3}, TestID -> "qutrit-masked-by-measurement-still-caught"
 ]
 
 
@@ -165,5 +206,58 @@ qtest[FailureQ @ QiskitTarget[<|"BasisGates" -> {"x"}, "Bogus" -> 1|>], True, "t
 qtest[StringStartsQ[QuantumQASM[qc, "Target" -> QiskitTarget[tspec]], "OPENQASM 3.0"], True, "measured-via-target"]
 
 qtest[StringStartsQ[QuantumQASM[qc, "Target" -> tspec], "OPENQASM 3.0"], True, "inline-target-spec"]
+
+
+(* ---- IBM sample decoding: classical-bit -> ascending-qubit reordering ----
+
+   IBM / qiskit return each shot in classical-bit order, which follows the measurement's
+   emission (target) order; QuantumMeasurement reports outcomes in ascending qubit order. A
+   non-ascending (permuted) measurement, or any backend whose transpiled measure -> clbit map
+   is not the identity, must be reordered with the per-clbit original-qubit map captured at
+   submission time. These are pure-WL checks (no qiskit / no credentials needed) so they run
+   in CI and lock the decode against silent mis-ordering. *)
+
+reorder = Wolfram`QuantumFramework`PackageScope`qiskitReorderByQubit;
+
+VerificationTest[reorder[{1, 0, 1}, {0, 1, 2}], {1, 0, 1}, TestID -> "reorder-identity"]
+VerificationTest[reorder[{1, 1, 0}, {2, 0, 1}], {1, 0, 1}, TestID -> "reorder-permuted"]
+VerificationTest[reorder[{1, 1, 0}, {2, 0}],    {1, 1, 0}, TestID -> "reorder-length-mismatch-noop"]
+VerificationTest[reorder[{1, 1, 0}, Automatic], {1, 1, 0}, TestID -> "reorder-no-map-noop"]
+
+(* synthetic Completed IBMJob carrying raw hex samples + the captured map: the permuted
+   measurement {3,1,2} of X@1, X@3 (qubit values q1=1, q2=0, q3=1) is read into classical
+   bits in target order [q3,q1,q2] = [1,1,0] (integer 0x3), and the map {2,0,1} must reorder
+   it to the ascending-qubit outcome {1,0,1} that QuantumCircuitOperator[...][] gives. *)
+ibmRawJob[map_, hex_, nbits_] := Wolfram`QuantumFramework`IBMJob[<|
+    "ID" -> "regression", "Status" -> "Completed", "Backend" -> "sim", "MeasuredQubits" -> map,
+    "Raw" -> <|"Results" -> <|"results" -> {<|"data" -> <|"c" -> <|"samples" -> {hex}, "num_bits" -> nbits|>|>|>}|>|>
+|>]
+
+VerificationTest[
+    Keys @ Normal @ ibmRawJob[{2, 0, 1}, "0x3", 3]["Counts"],
+    {{1, 0, 1}},
+    TestID -> "ibm-decode-permuted-reordered"
+]
+
+VerificationTest[
+    First @ Keys @ Normal @ ibmRawJob[{2, 0, 1}, "0x3", 3]["Counts"] ===
+        Replace[First @ Keys @ Select[QuantumCircuitOperator[{"X" -> 1, "X" -> 3, {3, 1, 2}}][]["Probabilities"], # > 1/2 &], QuditName[v_, ___] :> v],
+    True,
+    TestID -> "ibm-decode-matches-exact-distribution"
+]
+
+(* without a map the decode falls back to classical-bit order: the old, unreordered outcome *)
+VerificationTest[
+    First @ Keys @ Normal @ ibmRawJob[Automatic, "0x3", 3]["Counts"],
+    {1, 1, 0},
+    TestID -> "ibm-decode-no-map-is-clbit-order"
+]
+
+(* identity map (ascending full measurement) is unchanged: q1=1,q2=0,q3=1 -> 0x5 -> {1,0,1} *)
+VerificationTest[
+    First @ Keys @ Normal @ ibmRawJob[{0, 1, 2}, "0x5", 3]["Counts"],
+    {1, 0, 1},
+    TestID -> "ibm-decode-identity-unchanged"
+]
 
 EndTestSection[]

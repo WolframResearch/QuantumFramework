@@ -241,13 +241,27 @@ importQASMFile[f_String] := With[{s = Quiet @ Check[Import[f, "Text"], $Failed]}
 
 (* --- export --- *)
 
-(* OpenQASM models qubit registers only: every qudit must be 2-dimensional. A circuit or
-   operator carrying any higher-dimensional qudit has no OpenQASM representation, so the
-   export is rejected with a clear Failure rather than left unevaluated or surfaced as an
-   opaque ConfirmBy error from the emitter. *)
+(* OpenQASM models qubit registers only: every quantum wire must be 2-dimensional. A circuit
+   or operator carrying any higher-dimensional quantum wire has no OpenQASM representation, so
+   the export is rejected with a clear Failure rather than left unevaluated or surfaced as an
+   opaque ConfirmBy error from the emitter.
 
-qasmQuditDimensions[qco_QuantumCircuitOperator] := Join[qco["InputDimensions"], qco["OutputDimensions"]]
-qasmQuditDimensions[qo_QuantumOperator] := qo["Dimensions"]
+   The wire dimensions are gathered per operator, over the same qco["Flatten"]["Operators"]
+   the emitter serializes, so the guard and the emitter agree by construction. For each
+   operator the quantum systems it acts on sit at positive orders; a measurement's outcome
+   register and a channel's trace register sit at non-positive output orders (the
+   Eigenorder / TraceOrder split used by "NormalOrders") and are classical / discarded, not
+   qubits, so they are excluded. Working per operator also avoids circuit-level dimension
+   coercion, where a downstream measurement can mask an upstream qudit's true dimension in
+   the circuit's OutputDimensions. *)
+
+qasmWireDimensions[op_] := Join[
+    Pick[op["InputDimensions"], op["InputOrder"], _ ? Positive],
+    Pick[op["OutputDimensions"], op["OutputOrder"], _ ? Positive]
+]
+
+qasmQuditDimensions[qco_QuantumCircuitOperator] := Catenate[qasmWireDimensions /@ qco["Flatten"]["Operators"]]
+qasmQuditDimensions[qo_QuantumOperator] := qasmWireDimensions[qo]
 
 qasmQubitsQ[obj_] := AllTrue[qasmQuditDimensions[obj], # === 2 &]
 

@@ -5,6 +5,9 @@ PackageExport["ImportQASMCircuit"]
 PackageExport["ImportQPY"]
 
 PackageScope["QuantumCircuitOperatorToQiskit"]
+PackageScope["qiskitQASM"]
+PackageScope["qiskitISAWithLayout"]
+PackageScope["qiskitReorderByQubit"]
 
 
 
@@ -417,6 +420,39 @@ backend = AerSimulator(method=method)
     env
 ]
 
+(* qiskit get_counts gives string keys "c_{n-1}...c_0"; reverse to the WL bit-list outcome *)
+qiskitBitCounts[result_Association] := KeyMap[
+    Reverse[Characters[StringDelete[#, Whitespace]]] /. {"0" -> 0, "1" -> 1} &
+] @ result
+
+(* IBM / qiskit return each shot as a classical-register bit list in classical-bit order,
+   which follows the order the measurements were emitted to qiskit (the measurement's target
+   order). QuantumMeasurement instead reports outcomes in ascending qubit order, so a circuit
+   whose measurement targets are not already ascending (a permuted or interleaved measurement,
+   or any backend whose transpiled measure -> clbit map is not the identity) needs the bits
+   reordered. measuredQubits[[c+1]] is the original (pre-transpile) qubit index read into
+   classical bit c, captured at transpile time; sorting the {clbit -> bit} pairs by that qubit
+   index restores the ascending-qubit order. A missing (Automatic) or length-mismatched map is
+   a no-op, leaving the classical-bit order untouched. *)
+qiskitReorderByQubit[bits_List, measuredQubits_List] /; Length[measuredQubits] === Length[bits] :=
+    Values @ KeySort @ AssociationThread[measuredQubits -> bits]
+qiskitReorderByQubit[bits_List, _] := bits
+
+qiskitMeasurementFromBitCounts[bitCounts_Association] := Block[{size = Length @ First @ Keys @ bitCounts},
+    Enclose[
+        ConfirmAssert[size <= 8];
+        ConfirmBy[
+            QuantumMeasurement[
+                Join[Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]], bitCounts]
+            ],
+            QuantumMeasurementQ
+        ],
+        bitCounts &
+    ]
+]
+
+qiskitCountsToMeasurement[result_Association] := qiskitMeasurementFromBitCounts @ qiskitBitCounts @ result
+
 Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
@@ -484,28 +520,54 @@ elif isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
 else:
     from qiskit_ibm_runtime import SamplerV2 as Sampler
     sampler = Sampler(mode=backend)
-    result = sampler.run([circuit], shots = <* $shots *>).result()
-    result = result[0].join_data().get_counts()
+    _job = sampler.run([circuit], shots = <* $shots *>)
+    try:
+        _jid = _job.job_id()
+    except Exception:
+        _jid = None
+    # classical bit -> original (pre-transpile) qubit, so the counts can be reordered into
+    # ascending-qubit order regardless of the transpiled measure -> clbit layout
+    _c2p = {}
+    for _ins in circuit.data:
+        if _ins.operation.name == 'measure':
+            _c2p[circuit.find_bit(_ins.clbits[0]).index] = circuit.find_bit(_ins.qubits[0]).index
+    _ncl = circuit.num_clbits
+    _measured = None
+    _layout = getattr(circuit, 'layout', None)
+    if _layout is not None:
+        try:
+            _final = _layout.final_index_layout(filter_ancillas=True)
+            _p2o = {ph: o for o, ph in enumerate(_final)}
+            _measured = [_p2o.get(_c2p.get(c), _c2p.get(c)) for c in range(_ncl)]
+        except Exception:
+            _measured = None
+    if _measured is None:
+        _measured = [_c2p.get(c, c) for c in range(_ncl)]
+    result = {'__counts__': _job.result()[0].join_data().get_counts(),
+              '__job_id__': _jid,
+              '__backend__': getattr(backend, 'name', None),
+              '__measured_qubits__': _measured}
 result
 ", env];
     Which[
-        AssociationQ[result],
-        Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
-            Enclose[
-                size = StringLength @ First @ Keys[counts];
-                ConfirmAssert[size <= 8];
-                ConfirmBy[
-                    QuantumMeasurement[
-                        Join[
-                            Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]],
-                            KeyMap[Reverse[Characters[#]] /. {"0" -> 0, "1" -> 1} &] @ counts
-                        ]
-                    ],
-                    QuantumMeasurementQ
-                ],
-                counts &
+        (* IBM Runtime SamplerV2: return an IBMJob carrying the job id + measurement. The raw
+           counts are keyed by classical-bit order; reorder each outcome into ascending-qubit
+           order via the captured classical-bit -> original-qubit map before building the
+           measurement, so a permuted measurement or non-identity layout decodes correctly. *)
+        AssociationQ[result] && KeyExistsQ[result, "__job_id__"],
+        With[{bitCounts = KeyMap[
+                qiskitReorderByQubit[#, Lookup[result, "__measured_qubits__", Automatic]] &,
+                qiskitBitCounts[result["__counts__"]]
+            ]},
+            With[{qm = qiskitMeasurementFromBitCounts[bitCounts]},
+                If[ env === "ibm" && StringQ[result["__job_id__"]],
+                    iMethodIBMJob[qm, bitCounts, result["__job_id__"], result["__backend__"]],
+                    qm
+                ]
             ]
         ],
+        AssociationQ[result],
+        qiskitCountsToMeasurement[result],
         NumericArrayQ[result],
         QuantumState[Chop @ Normal[result]]["Reverse"],
         True,
@@ -548,6 +610,60 @@ except:
 result
 ", env]
 ]
+
+(* ISA OpenQASM for hardware submission, plus the authoritative classical-bit -> original-qubit
+   map needed to decode the returned samples. Transpiles against the backend exactly as qiskitQASM
+   does, then reads the map from the transpiled circuit it returns: each measure instruction gives
+   clbit -> physical qubit, and the transpile layout (final_index_layout) inverts physical -> the
+   original pre-transpile qubit. Returns <|"QASM" -> _String, "MeasuredQubits" -> {_Integer..}|>
+   (0-indexed qubits, clbit order) or a Failure. The map is read from the same circuit that is
+   submitted, so it is correct under any layout / routing permutation rather than assuming the
+   classical-bit order matches the qubit order. *)
+qiskitISAWithLayout[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] :=
+    Enclose @ Block[{$version = OptionValue["Version"], env},
+        env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
+        ConfirmBy[
+            PythonEvaluate[Context[$version], "
+from qiskit import transpile
+from wolframclient.language import wl
+tcirc = transpile(qc, backend)
+try:
+    from qiskit_braket_provider import AWSBraketProvider
+    if isinstance(provider, AWSBraketProvider):
+        from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit
+        from braket.circuits.serialization import IRType
+        qasm = convert_qiskit_to_braket_circuit(tcirc).to_ir(IRType.OPENQASM).source
+    else:
+        raise Exception('not a braket provider')
+except Exception:
+    if <* $version *> == 3:
+        from qiskit import qasm3
+        qasm = qasm3.dumps(tcirc)
+    else:
+        from qiskit import qasm2
+        qasm = qasm2.dumps(tcirc)
+clbit_to_phys = {}
+for ins in tcirc.data:
+    if ins.operation.name == 'measure':
+        clbit_to_phys[tcirc.find_bit(ins.clbits[0]).index] = tcirc.find_bit(ins.qubits[0]).index
+ncl = tcirc.num_clbits
+measured = None
+layout = getattr(tcirc, 'layout', None)
+if layout is not None:
+    try:
+        final = layout.final_index_layout(filter_ancillas=True)   # original qubit -> final physical
+        phys_to_orig = {phys: orig for orig, phys in enumerate(final)}
+        measured = [phys_to_orig.get(clbit_to_phys.get(c), clbit_to_phys.get(c)) for c in range(ncl)]
+    except Exception:
+        measured = None
+if measured is None:
+    measured = [clbit_to_phys.get(c, c) for c in range(ncl)]
+wl.Association(wl.Rule('QASM', qasm), wl.Rule('MeasuredQubits', measured))
+", env],
+            AssociationQ
+        ]
+    ]
+
 
 qc_QiskitCircuit["QASM" | "QASM2", opts___] := QuantumQASM[qc, "Version" -> 2, opts]
 

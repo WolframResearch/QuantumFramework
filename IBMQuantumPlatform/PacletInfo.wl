@@ -1,6 +1,6 @@
 PacletObject[<|
     "Name" -> "IBMQuantumPlatform",
-    "Version" -> "0.0.2",
+    "Version" -> "0.0.3",
     "WolframVersion" -> "14.3+",
     "Extensions" ->
         {
