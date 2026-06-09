@@ -396,35 +396,103 @@ VerificationTest[
 ]
 
 
-(* ---- Layer 5: QiskitCircuit -> QuantumCircuitOperator decoding. Controlled and parametrized
-   gates must decode to named call-form operators ("C"[...] / "RX"[t]); the list forms the decoder
-   used to emit ({"C", ...} / {"RX", t}) are no longer read as named operators and decay to a
-   degenerate Label -> None state, so a round trip would corrupt the circuit. ---- *)
+(* ================================================================================================
+   Layer 5: QiskitCircuit <-> QuantumCircuitOperator gate-level fidelity.
 
-(* the reported symptom: a Toffoli round-trips and QuantumShortcut yields clean controlled-NOT
-   shortcuts with no degenerate (None-labeled / raw state-data) element *)
-qtest[
-    FreeQ[QuantumShortcut[QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]]], None],
-    True, "decode-toffoli-no-none-shortcut"
-]
+   The earlier layers exercise the QASM-string direction and byte-level unitary equivalence, but
+   never the QiskitCircuit -> QuantumCircuitOperator decode (qc_to_QuantumCircuitOperator). That is
+   exactly where named operators are reconstructed, and where a decode could silently emit a
+   degenerate Label -> None operator (controlled / parametrized gates routed through dead list
+   forms) or a wrong-dimension operator ("SX" became a 2-qubit S(x)X in 2.0.0; sqrt(X) is "V"),
+   while every existing test stayed green. This layer pins, per gate and per accessor:
+     (a) the decoded circuit reproduces the source unitary up to global phase  (opEquivQ),
+     (b) no decoded operator is a degenerate Label -> None state              (noNoneQ),
+     (c) named structure survives (controlled gates stay controlled shortcuts),
+     (d) the QiskitCircuit accessors report correct outcomes.
+   ================================================================================================ *)
 
-qtest[
-    QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]]["Sort"]["Matrix"] === QuantumCircuitOperator["Toffoli"]["Sort"]["Matrix"],
-    True, "decode-toffoli-unitary-preserved"
-]
+(* matrix equivalence up to a global phase and float tolerance *)
+matEquivQ[a_, b_, tol_ : 1.*^-7] := Block[{m1 = N @ Normal @ a, m2 = N @ Normal @ b, idx, r},
+    If[Dimensions[m1] =!= Dimensions[m2], Return[False]];
+    idx = FirstPosition[m2, x_ /; Abs[x] > tol, None, {2}];
+    If[idx === None, Return[Max[Abs[Flatten[m1]]] < tol]];
+    r = Extract[m1, idx] / Extract[m2, idx];
+    Max[Abs[Flatten[m1 - r m2]]] < tol
+];
+opEquivQ[x_, y_] := matEquivQ[x["Sort"]["Matrix"], y["Sort"]["Matrix"]];
+qcoRT[qco_] := QuantumCircuitOperator[QiskitCircuit[qco]];                 (* decode round trip *)
+noNoneQ[qco_] := FreeQ[#["Label"] & /@ qco["Flatten"]["Operators"], None]; (* no degenerate op *)
+(* a clean decode that both preserves the unitary and leaves no degenerate operator *)
+decodeCleanQ[qco_] := With[{b = qcoRT[qco]}, opEquivQ[b, qco] && noNoneQ[b]];
 
-(* an open (zero) control decodes to the correct controlled operator *)
-qtest[
-    QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"C0"["NOT" -> 2] -> {1, 2}}]]]["Sort"]["Matrix"] === QuantumCircuitOperator[{"C0"["NOT" -> 2] -> {1, 2}}]["Sort"]["Matrix"],
-    True, "decode-open-control-unitary-preserved"
-]
+(* ---- 5a: single-qubit named gates decode to the right unitary, no degenerate operator ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator[{"X" -> {1}}]], True, "decode-X"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"Y" -> {1}}]], True, "decode-Y"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"Z" -> {1}}]], True, "decode-Z"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"H" -> {1}}]], True, "decode-H"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"S" -> {1}}]], True, "decode-S"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"T" -> {1}}]], True, "decode-T"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{SuperDagger["T"] -> {1}}]], True, "decode-Tdg"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{SuperDagger["S"] -> {1}}]], True, "decode-Sdg"]
 
-(* parametrized single-qubit gates decode through the call form, not the dead {"RX", t} list form *)
+(* sqrt(X): qiskit sx must decode to QF "V" (sqrt(X)), not "SX" (which is a 2-qubit S(x)X in 2.0.0) *)
+qtest[decodeCleanQ[QuantumCircuitOperator[{"V" -> {1}}]], True, "decode-V-sqrtX"]
+qtest[QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"V" -> {1}}]]]["Sort"]["Dimensions"], {2, 2}, "decode-V-is-single-qubit"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{SuperDagger["V"] -> {1}}]], True, "decode-Vdg-sqrtXdg"]
+
+(* ---- 5b: parametrized single-qubit gates decode through the "Name"[args] call form ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator[{"RX"[0.7] -> {1}}]], True, "decode-RX"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"RY"[1.1] -> {1}}]], True, "decode-RY"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"RZ"[0.5] -> {1}}]], True, "decode-RZ"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"P"[0.9] -> {1}}]], True, "decode-P"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"U"[0.3, 0.4, 0.5] -> {1}}]], True, "decode-U3"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"U2"[0.3, 0.4] -> {1}}]], True, "decode-U2"]
+(* the symptom that exposed the list-form rot: a None-labeled operator must never appear *)
 qtest[
-    With[{b = QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"RX"[0.7] -> {1}, "RZ"[0.5] -> {1}, "U"[0.3, 0.4, 0.5] -> {2}}]]]},
-        FreeQ[#["Label"] & /@ b["Flatten"]["Operators"], None]
-    ],
+    noNoneQ @ QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"RX"[0.7] -> {1}, "RZ"[0.5] -> {1}, "U"[0.3, 0.4, 0.5] -> {2}}]]],
     True, "decode-parametrized-no-none-label"
 ]
+
+(* ---- 5c: SWAP and controlled gates (1-control, open control, multi-control, controlled-param) ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator[{"SWAP" -> {1, 2}}]], True, "decode-SWAP"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"CNOT" -> {1, 2}}]], True, "decode-CNOT"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"CZ" -> {1, 2}}]], True, "decode-CZ"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"C0"["NOT" -> 2] -> {1, 2}}]], True, "decode-open-control-C0NOT"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"C"["R"[0.7, "X"] -> 2] -> {1, 2}}]], True, "decode-controlled-RX"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"C"["V" -> 2] -> {1, 2}}]], True, "decode-controlled-V"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"C"["Z" -> 3, {1}, {2}] -> {1, 2, 3}}]], True, "decode-mixed-control-CCZ"]
+
+(* ---- 5d: the originally reported case, end to end ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator["Toffoli"]], True, "decode-Toffoli-clean"]
+(* the exact reported symptom: QuantumShortcut yields clean shortcuts, no degenerate element *)
+qtest[FreeQ[QuantumShortcut[qcoRT[QuantumCircuitOperator["Toffoli"]]], None], True, "decode-Toffoli-no-none-shortcut"]
+(* named structure survives: the standard Toffoli decomposition has exactly six controlled-NOTs,
+   each a "C"[...] shortcut rather than a raw unitary block *)
+qtest[Length @ Cases[QuantumShortcut[qcoRT[QuantumCircuitOperator["Toffoli"]]], "C"[___]], 6, "decode-Toffoli-six-controlled-nots"]
+
+(* ---- 5e: composite circuits ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]], True, "decode-Bell"]
+qtest[decodeCleanQ[QuantumCircuitOperator["Fourier"[4]]], True, "decode-QFT4"]
+qtest[decodeCleanQ[QuantumCircuitOperator[{"H" -> 1, "RX"[0.4] -> 2, "CNOT" -> {1, 2}, SuperDagger["T"] -> 2, "CZ" -> {2, 3}}]], True, "decode-mixed-circuit"]
+qtest[opEquivQ[qcoRT[QuantumCircuitOperator[{"Permutation"[Cycles[{{1, 2, 3}}]] -> {1, 2, 3}}]], QuantumCircuitOperator[{"Permutation"[Cycles[{{1, 2, 3}}]] -> {1, 2, 3}}]], True, "decode-Permutation"]
+
+(* ---- 5f: measurement decode structure (a measured circuit decodes to a QuantumMeasurementOperator) ---- *)
+qtest[
+    ! FreeQ[QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1}, {2}}]]]["Elements"], _QuantumMeasurementOperator],
+    True, "decode-measurement-structure"
+]
+
+(* ---- 5g: QiskitCircuit accessors report correct outcomes ---- *)
+qtest[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Qubits"], 2, "accessor-qubits"]
+qtest[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Depth"], 2, "accessor-depth"]
+qtest[Lookup[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Ops"], "cx"], 1, "accessor-ops-cx-count"]
+(* the qiskit-side unitary (Operator) equals the source unitary up to global phase *)
+qtest[matEquivQ[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["QuantumOperator"]["Matrix"], QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]["Sort"]["Matrix"]], True, "accessor-quantumoperator-unitary"]
+qtest[matEquivQ[QiskitCircuit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]["Matrix"], QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]["Sort"]["Matrix"]], True, "accessor-matrix-unitary"]
+(* Decompose keeps the unitary invariant *)
+qtest[matEquivQ[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]["Decompose"]["Matrix"], QuantumCircuitOperator["Toffoli"]["Sort"]["Matrix"]], True, "accessor-decompose-unitary"]
+
+(* ---- 5h: scale / outcome on a larger circuit (8x8 ... 64x64 unitaries) ---- *)
+qtest[decodeCleanQ[QuantumCircuitOperator["Fourier"[6]]], True, "decode-QFT6-scale"]
 
 EndTestSection[]
