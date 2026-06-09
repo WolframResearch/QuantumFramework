@@ -30,17 +30,14 @@ ibmActiveConnection[] := With[{so = ServiceFramework`GetDefaultServiceObject[$ib
 ]
 
 
-(* ---- option handling: CamelCase -> snake_case, recursively, with deep merge ---- *)
+(* ---- option handling: CamelCase -> snake_case, recursively ----
+   the snake_cased tree is applied onto qiskit's own primitive options object, so qiskit owns
+   the option schema; this only fixes up the key spelling *)
 
 ibmSnakeKey[s_] := ToLowerCase @ StringReplace[ToString[s], RegularExpression["(?<=[a-z0-9])([A-Z])"] -> "_$1"]
 
 ibmSnakeKeys[a_Association] := Association @ KeyValueMap[ibmSnakeKey[#1] -> ibmSnakeKeys[#2] &, a]
 ibmSnakeKeys[x_] := x
-
-ibmDeepMerge[a_Association, b_Association] := Merge[{a, b}, ibmMergeFn]
-ibmMergeFn[{x_}] := x
-ibmMergeFn[{x_Association, y_Association}] := ibmDeepMerge[x, y]
-ibmMergeFn[{_, y_}] := y
 
 
 (* ---- submission ---- *)
@@ -49,13 +46,12 @@ Options[IBMJobSubmit] = {
     "Primitive" -> "sampler",
     "Shots" -> 4096,
     "Observable" -> "Z",
-    "Version" -> 2,
     "Wait" -> False,
     "PrimitiveOptions" -> <||>
 }
 
 IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automatic, opts : OptionsPattern[]] := Enclose @ Module[{
-    so, primitive, shots, version, waitQ, observable, userOpts, bk, isa, qasm, measuredQubits, optionsAssoc, paramsAssoc, resp, id, job
+    so, primitive, shots, waitQ, observable, userOpts, bk, obsTerms, sub, id, measured, job
 },
     so = ibmActiveConnection[];
     If[ so === $Failed,
@@ -66,8 +62,13 @@ IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automat
     ];
 
     primitive = ToLowerCase @ ToString @ OptionValue["Primitive"];
+    If[! MemberQ[{"sampler", "estimator"}, primitive],
+        Return @ Failure["IBMJobSubmit", <|
+            "MessageTemplate" -> "Primitive must be \"sampler\" or \"estimator\", not `1`.",
+            "MessageParameters" -> {primitive}
+        |>]
+    ];
     shots = OptionValue["Shots"];
-    version = OptionValue["Version"];
     waitQ = TrueQ @ OptionValue["Wait"];
     observable = OptionValue["Observable"];
     userOpts = Replace[OptionValue["PrimitiveOptions"], Except[_Association] :> <||>];
@@ -80,41 +81,70 @@ IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automat
     (* reject non-qubit systems up front with the same clear message QuantumQASM gives *)
     If[! qasmQubitsQ[qco], Return @ qasmNonQubitFailure[qco]];
 
-    (* ISA OpenQASM via the version-resilient provider path (needs qiskit for transpilation),
-       together with the classical-bit -> original-qubit map read from the transpiled circuit,
-       so the returned samples decode into ascending-qubit order under any layout permutation. *)
-    isa = qiskitISAWithLayout[qco["Qiskit"], "Provider" -> "IBMProvider", "Backend" -> bk, "Version" -> version];
-    If[! AssociationQ[isa], Return @ isa];   (* surface the qiskit Failure verbatim *)
-    qasm = isa["QASM"];
-    If[! StringQ[qasm], Return @ isa];
-    measuredQubits = isa["MeasuredQubits"];
+    (* estimator observable -> Pauli triples qiskit turns into a layout-mapped SparsePauliOp *)
+    obsTerms = If[primitive === "estimator", Confirm @ ibmObsTerms[observable], Null];
 
-    (* merge the user's full pass-through option tree over the defaults *)
-    optionsAssoc = ibmDeepMerge[
-        <|"default_shots" -> shots, "dynamical_decoupling" -> <|"enable" -> True|>|>,
-        ibmSnakeKeys[userOpts]
+    (* qiskit builds, transpiles, lays out the observable, serializes, and submits via its own
+       SamplerV2 / EstimatorV2; run() is not awaited, so a job handle returns immediately *)
+    sub = qiskitPrimitiveSubmit[
+        qco["Qiskit"], primitive, obsTerms, shots, ibmSnakeKeys[userOpts],
+        "Provider" -> "IBMProvider", "Backend" -> bk
     ];
-
-    paramsAssoc = <|
-        "pubs" -> {{qasm, If[primitive === "estimator", observable, Nothing]}},
-        "options" -> optionsAssoc,
-        "version" -> 2
-    |>;
-
-    (* low-level RawJobRun: full control over params.options (the high-level JobRun
-       hardcodes a fixed options block) *)
-    resp = so["RawJobRun", {"program_id" -> primitive, "backend" -> bk, "params" -> paramsAssoc}];
-    id = Lookup[resp, "id", $Failed];
+    If[! AssociationQ[sub], Return @ sub];   (* surface the qiskit Failure verbatim *)
+    id = Lookup[sub, "JobID", $Failed];
     If[! StringQ[id],
         Return @ Failure["IBMJobSubmit", <|
             "MessageTemplate" -> "Job submission did not return a job id.",
-            "Response" -> resp
+            "Response" -> sub
         |>]
     ];
+    measured = Lookup[sub, "MeasuredQubits", Automatic];
 
-    job = IBMJob[<|"ID" -> id, "Backend" -> bk, "ServiceObject" -> so, "MeasuredQubits" -> measuredQubits|>];
+    job = IBMJob[<|"ID" -> id, "Backend" -> bk, "ServiceObject" -> so, "MeasuredQubits" -> measured, "Primitive" -> primitive|>];
     (* one initial status fetch so the handle / summary box has a status without re-querying *)
     If[waitQ, ibmWaitFor[job], job["Refresh"]]
+]
+
+
+(* Normalize the estimator observable into {pauliString, reCoeff, imCoeff} triples that qiskit
+   turns into a SparsePauliOp. Accepts a single Pauli string, a list of Pauli strings, or a list
+   of {pauliString, coefficient} pairs. The Pauli width must match the circuit's qubit count;
+   qiskit's apply_layout then widens it to the device register. *)
+ibmObsTerms[s_String] := {{s, 1., 0.}}
+ibmObsTerms[l : {__String}] := {#, 1., 0.} & /@ l
+ibmObsTerms[l : {{_String, _} ..}] := {#[[1]], N @ Re @ #[[2]], N @ Im @ #[[2]]} & /@ l
+ibmObsTerms[other_] := Failure["IBMJobSubmit", <|
+    "MessageTemplate" -> "Observable `1` must be a Pauli string (e.g. \"ZZZ\"), a list of Pauli strings, or a list of {pauliString, coefficient} pairs.",
+    "MessageParameters" -> {other}
+|>]
+
+
+(* Estimator results come back as RuntimeEncoder ndarrays; let qiskit deserialize them rather than
+   parsing the ndarray JSON in WL. Reconstructs the runtime service from the saved account (the
+   same API key the WL connection uses) and reads the expectation values + standard errors. *)
+ibmPrimitiveResult[id_String] := Enclose @ Block[{
+    $jid = id,
+    $token = Replace[SystemCredential["IBMQuantumPlatform_APIKEY"], Except[_String] -> Null]
+},
+    ConfirmBy[
+        PythonEvaluate[Context[$jid], "
+from qiskit_ibm_runtime import QiskitRuntimeService
+from wolframclient.language import wl
+import numpy as np
+try:
+    service = QiskitRuntimeService()
+except Exception:
+    token = <* $token *>
+    if token is not None:
+        QiskitRuntimeService.save_account(channel='ibm_quantum_platform', token=token, overwrite=True)
+    service = QiskitRuntimeService()
+pr = service.job(<* $jid *>).result()[0]
+evs = np.atleast_1d(np.asarray(pr.data.evs, dtype=float)).tolist()
+stds = np.atleast_1d(np.asarray(pr.data.stds, dtype=float)).tolist()
+wl.Association(wl.Rule('EVs', evs), wl.Rule('Stds', stds))
+", "ibm"],
+        AssociationQ
+    ]
 ]
 
 
@@ -150,6 +180,8 @@ ibmRawAssoc[d_Association, sect_String] := Replace[ibmRaw[d, sect], Except[_Asso
 ibmStatus[det_Association] := Lookup[det, "status", Lookup[Lookup[det, "state", <||>], "status", "Unknown"]]
 ibmStatus[_] := "Unknown"
 
+ibmIsEstimator[d_Association] := Lookup[d, "Primitive", "sampler"] === "estimator"
+
 $ibmTerminal = {"Completed", "Cancelled", "Failed"}
 
 
@@ -157,14 +189,19 @@ $ibmTerminal = {"Completed", "Cancelled", "Failed"}
 
 IBMJob[d_Association]["Refresh"] := With[{so = ibmSO[d]},
     If[ so === $Failed, IBMJob[d],
-        Module[{id = d["ID"], det, raw},
+        Module[{id = d["ID"], det, raw, extra = <||>},
             det = so["RawJobDetails", "JobID" -> id];
             raw = <|"Details" -> det|>;
             If[ ibmStatus[det] === "Completed",
                 raw["Results"] = so["RawJobResults", "JobID" -> id];
-                raw["Metrics"] = so["RawJobMetrics", "JobID" -> id]
+                raw["Metrics"] = so["RawJobMetrics", "JobID" -> id];
+                (* cache the qiskit-decoded expectation values once, so estimator accessors and
+                   the summary box never re-fetch from IBM on every call / render *)
+                If[ ibmIsEstimator[d],
+                    With[{er = ibmPrimitiveResult[id]}, If[AssociationQ[er], extra["EstimatorResult"] = er]]
+                ]
             ];
-            IBMJob[<|d, "Raw" -> raw|>]
+            IBMJob[<|d, "Raw" -> raw, extra|>]
         ]
     ]
 ]
@@ -216,8 +253,9 @@ ibmSamples[res_Association] := Enclose @ Module[{data, creg},
 ]
 ibmSamples[_] := $Failed
 
-IBMJob[d_Association]["Samples"] := With[{s = ibmSamples @ ibmRawAssoc[d, "Results"]},
-    If[ListQ[s], First[s], Missing["NotAvailable"]]]
+IBMJob[d_Association]["Samples"] := If[ibmIsEstimator[d], Missing["NotApplicable", "estimator"],
+    With[{s = ibmSamples @ ibmRawAssoc[d, "Results"]},
+        If[ListQ[s], First[s], Missing["NotAvailable"]]]]
 
 (* exact integer counts keyed by the WL bit-list outcome. Method path: stored verbatim.
    Raw-samples path: built from the per-shot hex once the job is Completed. IBM is
@@ -227,6 +265,9 @@ IBMJob[d_Association]["Samples"] := With[{s = ibmSamples @ ibmRawAssoc[d, "Resul
    submitted, transpiled circuit, so a permuted measurement or any non-identity transpile
    layout decodes correctly. *)
 ibmCounts[d_Association] := If[
+    ibmIsEstimator[d],
+    Missing["NotApplicable", "estimator"],
+    If[
     KeyExistsQ[d, "Counts"],
     d["Counts"],
     Module[{status, sn, samples, size, measuredQubits},
@@ -238,7 +279,7 @@ ibmCounts[d_Association] := If[
         measuredQubits = Lookup[d, "MeasuredQubits", Automatic];
         Counts[qiskitReorderByQubit[Reverse[IntegerDigits[Interpreter["HexInteger"][#], 2, size]], measuredQubits] & /@ samples]
     ]
-]
+]]
 
 ibmMeasurement[d_Association] := If[
     KeyExistsQ[d, "Measurement"],
@@ -265,6 +306,29 @@ IBMJob[d_Association]["Shots"] := With[{c = ibmCounts[d]},
 IBMJob[d_Association]["Measurement"]   := ibmMeasurement[d]
 IBMJob[d_Association]["Counts"]        := ibmCounts[d]
 IBMJob[d_Association]["Probabilities"] := With[{m = ibmMeasurement[d]}, If[MatchQ[m, _QuantumMeasurement], m["Probabilities"], m]]
+
+(* ---- estimator results: the qiskit-decoded expectation values + standard errors ---- *)
+
+IBMJob[d_Association]["Primitive"] := Lookup[d, "Primitive", "sampler"]
+
+(* prefer the value cached at Refresh; fall back to a live qiskit fetch for a handle that has
+   not been refreshed since completion *)
+ibmEstimatorResult[d_Association] := If[
+    KeyExistsQ[d, "EstimatorResult"],
+    d["EstimatorResult"],
+    With[{status = IBMJob[d]["Status"]},
+        If[status =!= "Completed", Missing["JobNotComplete", status], ibmPrimitiveResult[d["ID"]]]
+    ]
+]
+
+IBMJob[d_Association]["ExpectationValues"] := If[! ibmIsEstimator[d], Missing["NotApplicable", "sampler"],
+    With[{r = ibmEstimatorResult[d]}, If[AssociationQ[r], r["EVs"], r]]]
+
+IBMJob[d_Association]["StandardErrors"] := If[! ibmIsEstimator[d], Missing["NotApplicable", "sampler"],
+    With[{r = ibmEstimatorResult[d]}, If[AssociationQ[r], r["Stds"], r]]]
+
+IBMJob[d_Association]["ExpectationValue"] := With[{evs = IBMJob[d]["ExpectationValues"]},
+    If[ListQ[evs] && Length[evs] === 1, First[evs], evs]]
 
 (* the server-side-transpiled circuit IBM ran; presigned URL -> QPY blob. Two
    constraints shape the failure handling:
@@ -332,16 +396,17 @@ IBMJob[d_Association]["Raw"] := Lookup[d, "Raw", <||>]
 IBMJob[d_Association]["Raw", sect_String] := ibmRaw[d, sect]
 
 $ibmProperties = {
-    "ID", "Backend", "ServiceObject", "Status", "UserID", "ProgramID",
+    "ID", "Backend", "ServiceObject", "Status", "Primitive", "UserID", "ProgramID",
     "Cost", "EstimatedRunTime", "SubmittedCircuit", "Options", "QuantumSeconds",
     "Timestamps", "Duration", "Samples", "MeasuredQubits", "NumBits", "Qubits", "Shots",
-    "Measurement", "Counts", "Probabilities", "ExecutedCircuit", "ExecutionSpans",
+    "Measurement", "Counts", "Probabilities", "ExpectationValue", "ExpectationValues",
+    "StandardErrors", "ExecutedCircuit", "ExecutionSpans",
     "Refresh", "Cancel", "Raw", "Properties"
 }
 IBMJob[_Association]["Properties"] := $ibmProperties
 
-(* default application -> the primary result *)
-IBMJob[d_Association][] := ibmMeasurement[d]
+(* default application -> the primary result for the job's primitive *)
+IBMJob[d_Association][] := If[ibmIsEstimator[d], IBMJob[d]["ExpectationValue"], ibmMeasurement[d]]
 
 (* catch-all for unknown string properties *)
 IBMJob[d_Association][prop_String] /; ! MemberQ[$ibmProperties, prop] :=
@@ -374,16 +439,23 @@ ibmDisplayStatus[d_Association] := If[KeyExistsQ[d, "Status"], d["Status"],
 
 IBMJob /: MakeBoxes[job : IBMJob[d_Association], fmt_] := Block[{
     st = ibmDisplayStatus[d],
-    icon = Replace[$quantumServiceIcon, None -> QuantumCircuitOperator[{"H"}]["Icon"]],
+    icon = Replace[$quantumServiceIcon, Except[_Image] -> QuantumCircuitOperator[{"H"}]["Icon"]],
     extra
 },
-    extra = If[ st === "Completed",
+    extra = Which[
+        st =!= "Completed",
+        {{BoxForm`SummaryItem[{"", Style["Results not available yet.", Gray]}]}},
+        ibmIsEstimator[d],
+        {
+            {BoxForm`SummaryItem[{"Expectation: ", job["ExpectationValue"]}]},
+            {BoxForm`SummaryItem[{"Quantum time: ", job["QuantumSeconds"]}]}
+        },
+        True,
         {
             {BoxForm`SummaryItem[{"Qubits: ", job["NumBits"]}]},
             {BoxForm`SummaryItem[{"Shots: ", job["Shots"]}]},
             {BoxForm`SummaryItem[{"Quantum time: ", job["QuantumSeconds"]}]}
-        },
-        {{BoxForm`SummaryItem[{"", Style["Results not available yet.", Gray]}]}}
+        }
     ];
     BoxForm`ArrangeSummaryBox[
         "IBMJob",

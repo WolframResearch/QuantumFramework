@@ -16,7 +16,7 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 
 <code>[IBMJob]()[*assoc*][*"prop"*]</code> gives the value of the property *"prop"*, such as `"Status"`, `"Counts"` or `"QuantumSeconds"`.
 
-<code>[IBMJob]()[*assoc*][]</code> gives the primary result, the [QuantumMeasurement]() reconstructed from the hardware counts.
+<code>[IBMJob]()[*assoc*][]</code> gives the primary result: the [QuantumMeasurement]() reconstructed from the hardware counts for a sampler job, or the observable's expectation value for an estimator job.
 
 ## Details & Options
 
@@ -25,9 +25,10 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 - Accessors **fetch lazily**: a property reads from the stored snapshot when present, otherwise queries the service object. With no reachable connection an accessor gives `Missing["NoConnection"]`; before the job is `"Completed"` the result accessors give `Missing["JobNotComplete", `*status*`]`.
 - `"Status"` is one of `"Queued"`, `"Validating"`, `"Initializing"`, `"Running"`, `"Completed"`, `"Cancelled"` or `"Failed"`; the terminal statuses are `"Completed"`, `"Cancelled"` and `"Failed"`.
 - The hardware counts decode into the Wolfram Language qubit order (ascending qubit) using the `"MeasuredQubits"` map (classical bit to original qubit) captured at submission time, so a permuted or partial measurement and any backend layout decode correctly.
-- `IBMJob[`*assoc*`]["Refresh"]` re-queries the service and gives a **new** `IBMJob` with an updated `"Raw"` snapshot; once the job is `"Completed"` it also pulls the results and metrics. `IBMJob[`*assoc*`]["Cancel"]` requests cancellation.
+- `IBMJob[`*assoc*`]["Refresh"]` re-queries the service and gives a **new** `IBMJob` with an updated `"Raw"` snapshot; once the job is `"Completed"` it also pulls the results and metrics, and for an estimator job caches the qiskit-decoded expectation values. `IBMJob[`*assoc*`]["Cancel"]` requests cancellation.
+- The result accessors are primitive-specific. For a **sampler** job the live accessors are `"Counts"`, `"Measurement"`, `"Probabilities"`, `"Samples"`, `"NumBits"` and `"Shots"`; for an **estimator** job they are `"ExpectationValue"`, `"ExpectationValues"` and `"StandardErrors"`. An accessor that does not apply to the job's primitive gives `Missing["NotApplicable", `*primitive*`]`.
 - An unknown property name gives a [Failure]() listing the valid properties (see Possible Issues).
-- The summary box shows the status (with a colored indicator), the backend and the job id; once `"Completed"` it also shows the qubit count, shot count and quantum-processing time.
+- The summary box shows the status (with a colored indicator), the backend and the job id; once `"Completed"` a sampler job also shows the qubit count, shot count and quantum-processing time, and an estimator job shows the expectation value and quantum-processing time.
 
 The full property list (`IBMJob[`*assoc*`]["Properties"]`):
 
@@ -37,12 +38,13 @@ The full property list (`IBMJob[`*assoc*`]["Properties"]`):
 | `"Backend"` | the backend name |
 | `"ServiceObject"` | the `ServiceObject` the job is bound to |
 | `"Status"` | the current job status |
+| `"Primitive"` | the IBM Runtime primitive the job was submitted with, `"sampler"` or `"estimator"` |
 | `"UserID"` | the submitting user id |
 | `"ProgramID"` | the primitive program, `"sampler"` or `"estimator"` |
 | `"Cost"` | the reserved cost, in seconds |
 | `"EstimatedRunTime"` | the estimated running time, in seconds |
 | `"QuantumSeconds"` | the quantum-processing time used, in seconds |
-| `"SubmittedCircuit"` | the submitted ISA OpenQASM program |
+| `"SubmittedCircuit"` | the submitted circuit, as stored in the job's `params` |
 | `"Options"` | the `params.options` block sent with the job |
 | `"Timestamps"` | an Association of lifecycle `DateObject`s |
 | `"Duration"` | the running-to-finished wall-clock duration |
@@ -50,9 +52,12 @@ The full property list (`IBMJob[`*assoc*`]["Properties"]`):
 | `"MeasuredQubits"` | the classical-bit to original-qubit decode map |
 | `"NumBits"`, `"Qubits"` | the number of measured qubits |
 | `"Shots"` | the total number of shots |
-| `"Measurement"` | the [QuantumMeasurement]() of the outcome |
-| `"Counts"` | exact integer counts keyed by the bit-list outcome |
-| `"Probabilities"` | the outcome probabilities |
+| `"Measurement"` | the [QuantumMeasurement]() of the outcome (sampler) |
+| `"Counts"` | exact integer counts keyed by the bit-list outcome (sampler) |
+| `"Probabilities"` | the outcome probabilities (sampler) |
+| `"ExpectationValue"` | the observable's expectation value (estimator); a single value for one observable, else a list |
+| `"ExpectationValues"` | the list of expectation values, one per observable (estimator) |
+| `"StandardErrors"` | the per-observable standard error of the expectation value (estimator) |
 | `"ExecutedCircuit"` | the server-side transpiled circuit (see Possible Issues) |
 | `"ExecutionSpans"` | the execution time spans reported by the service |
 | `"Refresh"` | a new `IBMJob` with a re-queried snapshot |

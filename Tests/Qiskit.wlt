@@ -260,4 +260,171 @@ VerificationTest[
     TestID -> "ibm-decode-identity-unchanged"
 ]
 
+
+(* ---- estimator primitive: observable layout + the IBMJob result accessors ----
+
+   IBMJobSubmit[..., "Primitive" -> "estimator", "Observable" -> "ZZZ"] used to fail on hardware
+   with IBM error 1501 ("number of qubits of the circuit (156) does not match ... the observable
+   (3)"): the ISA circuit is transpiled to the backend's full physical register, but the bare
+   Pauli string was submitted unchanged at logical width. The fix delegates submission to qiskit's
+   EstimatorV2, which lays out AND widens the observable to the device register via the transpiled
+   circuit's layout. The estimator result is the expectation value, decoded by qiskit (not bit
+   samples), so the sampler-only accessors are inert and ExpectationValue(s) / StandardErrors are
+   the live ones. *)
+
+(* core mechanism, in the qiskit session (no IBM auth): a 3-qubit observable is widened to the
+   device width by apply_layout on the transpiled circuit's layout *)
+obsLayoutWidth[deviceQubits_] := Block[{pn = deviceQubits}, pe[Context[pn], "
+from qiskit import QuantumCircuit, transpile
+from qiskit.quantum_info import SparsePauliOp
+from qiskit.providers.fake_provider import GenericBackendV2
+be = GenericBackendV2(num_qubits=<* pn *>, seed=1)
+c = QuantumCircuit(3); c.h(0); c.cx(0, 1); c.cx(1, 2)
+isa = transpile(c, be, optimization_level=1)
+int(SparsePauliOp('ZZZ').apply_layout(isa.layout).num_qubits)
+"]];
+qtest[obsLayoutWidth[7], 7, "estimator-observable-widened-to-device"]
+
+(* an estimator IBMJob exposes the qiskit-decoded expectation value + standard error; the value
+   cached at Refresh under "EstimatorResult" is read without any service round-trip *)
+estJob = Wolfram`QuantumFramework`IBMJob[<|
+    "ID" -> "est", "Status" -> "Completed", "Backend" -> "sim", "Primitive" -> "estimator",
+    "EstimatorResult" -> <|"EVs" -> {0.42}, "Stds" -> {0.05}|>
+|>];
+
+VerificationTest[estJob["ExpectationValue"], 0.42, TestID -> "estimator-expectation-value"]
+VerificationTest[estJob["ExpectationValues"], {0.42}, TestID -> "estimator-expectation-values"]
+VerificationTest[estJob["StandardErrors"], {0.05}, TestID -> "estimator-standard-errors"]
+VerificationTest[estJob[], 0.42, TestID -> "estimator-default-is-expectation-value"]
+VerificationTest[estJob["Primitive"], "estimator", TestID -> "estimator-primitive-label"]
+
+(* sampler-only accessors are not applicable to an estimator job and say so, instead of decoding
+   the (absent) bit samples into garbage *)
+VerificationTest[estJob["Counts"], Missing["NotApplicable", "estimator"], TestID -> "estimator-counts-not-applicable"]
+VerificationTest[estJob["Measurement"], Missing["NotApplicable", "estimator"], TestID -> "estimator-measurement-not-applicable"]
+VerificationTest[estJob["Samples"], Missing["NotApplicable", "estimator"], TestID -> "estimator-samples-not-applicable"]
+
+(* a multi-observable estimator keeps the full expectation-value list (no single-value unwrap) *)
+VerificationTest[
+    Wolfram`QuantumFramework`IBMJob[<|
+        "ID" -> "est2", "Status" -> "Completed", "Primitive" -> "estimator",
+        "EstimatorResult" -> <|"EVs" -> {0.1, -0.2}, "Stds" -> {0.01, 0.02}|>
+    |>]["ExpectationValue"],
+    {0.1, -0.2},
+    TestID -> "estimator-multi-observable-expectation-values"
+]
+
+(* the estimator summary box renders without recursion / messages *)
+VerificationTest[FreeQ[ToBoxes[estJob], TerminatedEvaluation], True, TestID -> "estimator-box-no-recursion"]
+
+(* a job with no "Primitive" key defaults to sampler, so the existing sampler decode is unchanged *)
+VerificationTest[
+    Wolfram`QuantumFramework`IBMJob[<|"ID" -> "s", "Backend" -> "sim"|>]["Primitive"],
+    "sampler",
+    TestID -> "primitive-defaults-to-sampler"
+]
+
+
+(* ---- QiskitCircuit constructor: OpenQASM-string import, bad-argument guard, and the
+   summary-box recursion regression ----
+
+   A QiskitCircuit wraps a pickled qiskit circuit (a ByteArray). Three behaviors are pinned:
+
+   (1) an OpenQASM string is imported into a real handle, so QiskitCircuit[QuantumQASM[qco]]
+       round-trips a circuit (the import reuses QuantumCircuitOperator[source]["Qiskit"]);
+   (2) a non-OpenQASM string is a clean $Failed with a message, never a live object;
+   (3) a handle whose argument is not a ByteArray must NOT recurse when displayed. The
+       summary-box formatter is restricted to QiskitCircuit[_ByteArray]; a malformed handle
+       falls back to default boxes instead of re-entering MakeBoxes forever (which previously
+       produced TerminatedEvaluation["RecursionLimit"] when an accessor re-embedded the object). *)
+
+(* tolerance-aware unitary equivalence, up to global phase; atol matched to QuantumQASM's
+   ~6-significant-figure angle literals, so the truncated angles in the QASM text do not
+   register as a structural difference. *)
+qcEquivTol[ba_, bb_] := Block[{pa = ba, pb = bb}, pe[Context[pa], "
+import pickle
+from qiskit.quantum_info import Operator
+a = pickle.loads(<* pa *>); b = pickle.loads(<* pb *>)
+bool(Operator(a).equiv(Operator(b), rtol=1e-4, atol=1e-4))
+"]];
+
+(* (1) the reported form QiskitCircuit[QuantumQASM[QCO[...]]] builds a real ByteArray handle *)
+qtest[Head @ QiskitCircuit[QuantumQASM[QuantumCircuitOperator["Toffoli"]]], QiskitCircuit, "qasm-string-builds-handle"]
+
+qtest[MatchQ[QiskitCircuit[QuantumQASM[qcU]], QiskitCircuit[_ByteArray]], True, "qasm-string-handle-is-bytearray"]
+
+(* the round trip preserves the unitary (Toffoli and Bell), up to global phase and QASM precision *)
+qtest[
+    qcEquivTol[QuantumCircuitOperator["Toffoli"]["Qiskit"]["Bytes"], QiskitCircuit[QuantumQASM[QuantumCircuitOperator["Toffoli"]]]["Bytes"]],
+    True, "qasm-string-roundtrip-toffoli-unitary"
+]
+
+qtest[qcEquivTol[qcU["Qiskit"]["Bytes"], QiskitCircuit[QuantumQASM[qcU]]["Bytes"]], True, "qasm-string-roundtrip-bell-unitary"]
+
+(* OpenQASM 2.0 source imports as well as the default 3.0 *)
+qtest[MatchQ[QiskitCircuit[QuantumQASM[qcU, "Version" -> 2]], QiskitCircuit[_ByteArray]], True, "qasm2-string-imports"]
+
+(* displaying a freshly imported handle uses the summary box without recursing and without
+   messages (the icon falls back to a graphic whenever $quantumServiceIcon is not an Image,
+   so Show never receives a non-graphics symbol) *)
+qtest[FreeQ[ToBoxes @ QiskitCircuit[QuantumQASM[qcU]], TerminatedEvaluation], True, "qasm-string-handle-displays"]
+
+(* (2) a non-OpenQASM string is rejected cleanly with a message - pure WL, no qiskit needed *)
+VerificationTest[
+    QiskitCircuit["not an openqasm program"],
+    $Failed, {QiskitCircuit::badarg},
+    TestID -> "non-qasm-string-fails-with-message"
+]
+
+(* (3) recursion regression: a non-ByteArray handle must format without blowing the stack.
+   Pure WL, no qiskit needed; would TerminatedEvaluation["RecursionLimit"] before the fix. *)
+VerificationTest[
+    Block[{$RecursionLimit = 200}, FreeQ[ToBoxes @ QiskitCircuit[12345], TerminatedEvaluation]],
+    True, TestID -> "nonbytearray-handle-no-recursion"
+]
+
+(* the bad-argument guard keys on a literal String type, so it does not fire on pattern
+   expressions: QiskitCircuit[...] patterns stay inert and match normally - pure WL *)
+VerificationTest[
+    MatchQ[QiskitCircuit[ByteArray[{1, 2, 3}]], QiskitCircuit[_ByteArray]],
+    True, TestID -> "bytearray-handle-matches-pattern"
+]
+
+VerificationTest[
+    Length @ Cases[{QiskitCircuit[ByteArray[{1}]], $Failed, QiskitCircuit[ByteArray[{2}]]}, QiskitCircuit[_ByteArray]],
+    2, TestID -> "qiskitcircuit-pattern-not-shadowed-by-guard"
+]
+
+
+(* ---- Layer 5: QiskitCircuit -> QuantumCircuitOperator decoding. Controlled and parametrized
+   gates must decode to named call-form operators ("C"[...] / "RX"[t]); the list forms the decoder
+   used to emit ({"C", ...} / {"RX", t}) are no longer read as named operators and decay to a
+   degenerate Label -> None state, so a round trip would corrupt the circuit. ---- *)
+
+(* the reported symptom: a Toffoli round-trips and QuantumShortcut yields clean controlled-NOT
+   shortcuts with no degenerate (None-labeled / raw state-data) element *)
+qtest[
+    FreeQ[QuantumShortcut[QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]]], None],
+    True, "decode-toffoli-no-none-shortcut"
+]
+
+qtest[
+    QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]]["Sort"]["Matrix"] === QuantumCircuitOperator["Toffoli"]["Sort"]["Matrix"],
+    True, "decode-toffoli-unitary-preserved"
+]
+
+(* an open (zero) control decodes to the correct controlled operator *)
+qtest[
+    QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"C0"["NOT" -> 2] -> {1, 2}}]]]["Sort"]["Matrix"] === QuantumCircuitOperator[{"C0"["NOT" -> 2] -> {1, 2}}]["Sort"]["Matrix"],
+    True, "decode-open-control-unitary-preserved"
+]
+
+(* parametrized single-qubit gates decode through the call form, not the dead {"RX", t} list form *)
+qtest[
+    With[{b = QuantumCircuitOperator[QiskitCircuit[QuantumCircuitOperator[{"RX"[0.7] -> {1}, "RZ"[0.5] -> {1}, "U"[0.3, 0.4, 0.5] -> {2}}]]]},
+        FreeQ[#["Label"] & /@ b["Flatten"]["Operators"], None]
+    ],
+    True, "decode-parametrized-no-none-label"
+]
+
 EndTestSection[]
