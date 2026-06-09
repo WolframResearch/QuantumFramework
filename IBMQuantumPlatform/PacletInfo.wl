@@ -1,11 +1,11 @@
 PacletObject[<|
     "Name" -> "IBMQuantumPlatform",
-    "Version" -> "0.0.3",
+    "Version" -> "0.0.4",
     "WolframVersion" -> "14.3+",
     "Extensions" ->
         {
             {"Kernel", "Root" -> "Kernel", "Context" -> {"IBMQuantumPlatform`"}},
-            {"Asset", "Root" -> "Assets", "Assets" -> {{"logo", "IBM_Quantum_logotype_pos_RGB.png"}}},
+            {"Asset", "Root" -> "Assets", "Assets" -> {{"logo", "IBM_Quantum_logotype_pos_RGB.png"}, {"icon", "QuantumServiceIcon.png"}}},
             {"ServiceConnection", "Name" -> "IBMQuantumPlatform", "Context" -> {"IBMQuantumPlatform`"}}
         }
 |>]

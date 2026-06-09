@@ -351,10 +351,10 @@ IBMJob[d_Association][prop_String] /; ! MemberQ[$ibmProperties, prop] :=
     |>]
 
 
-(* ---- formatting: status + the IBM-Q service-connection icon ---- *)
+(* ---- formatting: status + the quantum-service summary-box icon ---- *)
 
-$ibmIcon := $ibmIcon = Replace[
-    Enclose @ With[{path = PacletObject[$ibmService]["AssetLocation", "logo"]},
+$quantumServiceIcon := $quantumServiceIcon = Replace[
+    Enclose @ With[{path = PacletObject[$ibmService]["AssetLocation", "icon"]},
         ImageTrim[
             ConfirmBy[If[StringQ[path] && FileExistsQ[path], Import[path], $Failed], ImageQ],
             ImageValuePositions[#, "Max"] &
@@ -374,7 +374,7 @@ ibmDisplayStatus[d_Association] := If[KeyExistsQ[d, "Status"], d["Status"],
 
 IBMJob /: MakeBoxes[job : IBMJob[d_Association], fmt_] := Block[{
     st = ibmDisplayStatus[d],
-    icon = Replace[$ibmIcon, None -> QuantumCircuitOperator[{"H"}]["Icon"]],
+    icon = Replace[$quantumServiceIcon, None -> QuantumCircuitOperator[{"H"}]["Icon"]],
     extra
 },
     extra = If[ st === "Completed",
@@ -388,7 +388,7 @@ IBMJob /: MakeBoxes[job : IBMJob[d_Association], fmt_] := Block[{
     BoxForm`ArrangeSummaryBox[
         "IBMJob",
         job,
-        Show[icon, ImageSize -> 24],
+        Show[icon, ImageSize -> 12],
         {
             {BoxForm`SummaryItem[{"Status: ",
                 Row[{Style["\[FilledCircle] ", Lookup[$ibmStatusColor, st, Gray]], st}]}]},

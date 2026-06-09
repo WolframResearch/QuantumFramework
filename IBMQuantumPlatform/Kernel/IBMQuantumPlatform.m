@@ -51,7 +51,7 @@ params = <|
     "ServiceFrameworkVersion" -> "0.1.0",
     "ServiceName" -> "IBMQuantumPlatform",
     "Information" -> "IBM Quantum Platform service connection for Wolfram Language",
-    "Icon" -> ImageTrim[Import[PacletObject["IBMQuantumPlatform"]["AssetLocation", "logo"]], ImageValuePositions[#, "Max"] &],
+    "Icon" -> Show[ImageTrim[Import[PacletObject["IBMQuantumPlatform"]["AssetLocation", "icon"]], ImageValuePositions[#, "Max"] &], ImageSize -> 12],
     "AuthenticationMethod" -> "APIKey",
     "AuthenticationFunction" -> Function[key, <|"Headers" -> {"Authorization" -> IBMToken[key], "Service-CRN" -> IBMCrn[]}|>],
     "ClientDialog" -> Function[

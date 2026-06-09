@@ -59,7 +59,7 @@ PacletObject[
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"},
       {"Asset", "Root" -> "Assets", "Assets" -> {
-        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.3.paclet"}
+        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.4.paclet"}
       }}
     }
   |>

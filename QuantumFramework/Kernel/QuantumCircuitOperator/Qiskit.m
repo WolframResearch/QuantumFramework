@@ -774,7 +774,7 @@ QiskitCircuit /: MakeBoxes[qc_QiskitCircuit, format_] :=
     BoxForm`ArrangeSummaryBox[
         "QiskitCircuit",
         qc,
-        If[qc["Depth"] <= 32, qc["Diagram", "Scale" -> 1], QuantumCircuitOperator[{"Fourier"[3]}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]],
+        Show[Replace[$quantumServiceIcon, None -> QuantumCircuitOperator[{"Fourier"[3]}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]], ImageSize -> 12],
         {
             {BoxForm`SummaryItem[{"Qubits: ", qc["Qubits"]}]},
             {BoxForm`SummaryItem[{"Depth: ", qc["Depth"]}]}

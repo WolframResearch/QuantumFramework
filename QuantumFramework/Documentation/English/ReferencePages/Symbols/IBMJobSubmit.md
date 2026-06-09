@@ -35,7 +35,7 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 | `"Observable"` | `"Z"` | the observable, used only when `"Primitive"` is `"estimator"` |
 | `"Version"` | 2 | the OpenQASM version of the submitted ISA circuit, 2 or 3 |
 | `"Wait"` | False | whether to block until the job reaches a terminal status |
-| `"PrimitiveOptions"` | `<||>` | an Association of IBM Runtime primitive options, deep-merged over the defaults |
+| `"PrimitiveOptions"` | `<\|\|>` | an Association of IBM Runtime primitive options, deep-merged over the defaults |
 
 ## Basic Examples
 
