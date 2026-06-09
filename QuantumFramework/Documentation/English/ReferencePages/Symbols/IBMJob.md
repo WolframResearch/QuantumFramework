@@ -4,7 +4,7 @@ Name: IBMJob
 Context: Wolfram`QuantumFramework`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/ref/IBMJob
-Keywords: [IBM Quantum, QPU, job, result, counts, measurement, SamplerV2, quantum seconds, ServiceConnect, hardware]
+Keywords: [IBM Quantum, QPU, job, result, counts, measurement, expectation value, SamplerV2, EstimatorV2, quantum seconds, ServiceConnect, hardware]
 SeeAlso: [IBMJobSubmit, QuantumMeasurement, QuantumCircuitOperator, QuantumQASM]
 RelatedGuides: [WolframQuantumComputationFramework]
 RelatedTutorials: [SendingQueriesToIBMQPUs]
@@ -155,6 +155,19 @@ Short[job["Samples"], 2]
 
 <!-- => {"0x5", "0x0", "0x7", ...} -->
 
+### Estimator results
+
+For a job submitted with `"Primitive" -> "estimator"`, the result is the observable's expectation value and its standard error rather than a measurement; the sampler accessors report `Missing["NotApplicable", "estimator"]`:
+
+```wl
+#| eval: false
+estJob = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez",
+  "Primitive" -> "estimator", "Observable" -> "ZZZ", "Wait" -> True];
+{estJob["ExpectationValue"], estJob["StandardErrors"]}
+```
+
+<!-- => {0.03..., {0.01...}} -->
+
 ### Job metadata
 
 The job identifier and backend:
@@ -190,14 +203,14 @@ The lifecycle timestamps and the running-to-finished duration:
 
 ---
 
-The submitted ISA OpenQASM program, as actually sent to the QPU:
+The submitted circuit, as stored in the job's `params` (qiskit serializes it before submission, so it is not OpenQASM text):
 
 ```wl
 #| eval: false
-StringTake[job["SubmittedCircuit"], 40]
+job["SubmittedCircuit"]
 ```
 
-<!-- => OPENQASM 2.0; include "qelib1.inc"; qreg q -->
+<!-- => (the submitted circuit, as serialized in the job's params) -->
 
 ### Lifecycle
 

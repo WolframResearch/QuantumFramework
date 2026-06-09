@@ -23,7 +23,7 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 - *circ* is a [QuantumCircuitOperator](). It is transpiled against the chosen backend and submitted through qiskit's own `SamplerV2` / `EstimatorV2` primitive, so qiskit owns every wire format: the circuit serialization, the estimator observable's layout, and the primitive options schema. The job is launched without blocking on its result, so the handle returns while the job is still queued.
 - `IBMJobSubmit` requires an **active** service connection: it consults <code>ServiceFramework`GetDefaultServiceObject["IBMQuantumPlatform"]</code> and never creates a connection or prompts for credentials. Run <code>[ServiceConnect]()["IBMQuantumPlatform"]</code> first (see the [Sending Queries to IBM QPUs]() tech note). With no active connection it returns a [Failure]() and never submits.
 - `IBMJobSubmit` returns immediately with an asynchronous [IBMJob]() handle whose `"Status"` is whatever the service reports (typically `"Queued"`). Query the handle later, or pass `"Wait" -> True` to block until the job reaches a terminal status (`"Completed"`, `"Cancelled"` or `"Failed"`).
-- The submission carries the per-classical-bit to original-qubit map captured at transpile time into the [IBMJob]() as `"MeasuredQubits"`, so the returned samples decode into ascending-qubit order regardless of how the backend lays out and routes the circuit.
+- For a sampler job the submission carries the per-classical-bit to original-qubit map captured at transpile time into the [IBMJob]() as `"MeasuredQubits"`, so the returned samples decode into ascending-qubit order regardless of how the backend lays out and routes the circuit.
 - *backend* defaults to `Automatic`, the first backend in `so["Backends"]` for the active connection *so*; give a string such as `"ibm_fez"` to target a specific QPU.
 - For the `"estimator"` primitive the `"Observable"` is built into a qiskit `SparsePauliOp` and mapped onto the transpiled circuit's layout, which both reorders and **widens** it to the backend's physical register. Submitting the bare logical-width observable is what an IBM Runtime estimator rejects (error 1501, "the number of qubits of the circuit does not match the number of qubits of the observable").
 - The `"PrimitiveOptions"` tree is applied onto the qiskit primitive's own options object over the defaults `default_shots -> shots` and `dynamical_decoupling.enable -> True`, so qiskit validates the option schema. Keys are written in CamelCase and converted to qiskit's snake_case attributes recursively (`"DynamicalDecoupling"` to `dynamical_decoupling`), so the whole options schema is reachable without a curated key list.
@@ -112,7 +112,7 @@ Submit an `"estimator"` job with an observable instead of a sampler job. The obs
 IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ"]
 ```
 
-<!-- => IBMJob[<| Status: Queued, ProgramID: estimator, Backend: ibm_fez, Job ID: ... |>] -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
 
 ---
 
@@ -184,7 +184,7 @@ IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}]]
 
 ---
 
-A circuit carrying any non-qubit (higher-dimensional) system has no OpenQASM representation, so it is rejected before submission with the same [Failure]() [QuantumQASM]() gives:
+A circuit carrying any non-qubit (higher-dimensional) system is not a qubit circuit a QPU can run, so it is rejected before submission with the same [Failure]() [QuantumQASM]() gives:
 
 ```wl
 #| eval: false
