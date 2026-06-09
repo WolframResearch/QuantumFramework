@@ -103,6 +103,24 @@ VerificationTest[quietBuild[QuantumCircuitOperator["Graph"[CompleteGraph[5]]]], 
 VerificationTest[quietBuild[QuantumCircuitOperator["Fourier"[3]]], {QuantumCircuitOperator, 0}, TestID -> "Fourier-3-quiet-build"]
 VerificationTest[quietBuild[QuantumCircuitOperator["Multiplexer"["X", "Y", "Z", "H", "S"]]], {QuantumCircuitOperator, 0}, TestID -> "Multiplexer-quiet-build"]
 
+
+shouldBeUnitary[circuit_] := MatchQ[QuantumOperator @ circuit, _QuantumOperator] && Chop @ QuantumOperator[circuit]["UnitaryQ"]
+SetAttributes[shouldBeUnitary, HoldFirst]
+
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GrayOracle"[# &]]], True, TestID -> "Unitary-GrayOracle-default"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GrayOracle"[# &, 3, Automatic, "RX"]]], True, TestID -> "Unitary-GrayOracle-RX"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GrayOracle"[# &, 3, Automatic, "RY"]]], True, TestID -> "Unitary-GrayOracle-RY"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GrayOracle"[# &, 3, Automatic, "RZ"]]], True, TestID -> "Unitary-GrayOracle-RZ"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["BooleanOracleR"[BooleanFunction[1, 3]]]], True, TestID -> "Unitary-BooleanOracleR"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["BooleanOracle"[BooleanFunction[1, 3]]]], True, TestID -> "Unitary-BooleanOracle"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["PhaseOracle"[BooleanFunction[1, 3]]]], True, TestID -> "Unitary-PhaseOracle"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["BernsteinVaziraniOracle"[]]], True, TestID -> "Unitary-BernsteinVaziraniOracle"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GroverDiffusion"[{1, 2, 3}]]], True, TestID -> "Unitary-GroverDiffusion"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["GroverPhaseDiffusion"[{1, 2, 3}]]], True, TestID -> "Unitary-GroverPhaseDiffusion"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["Toffoli"]], True, TestID -> "Unitary-Toffoli"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["Fredkin"]], True, TestID -> "Unitary-Fredkin"]
+VerificationTest[shouldBeUnitary[QuantumCircuitOperator["Magic"[]]], True, TestID -> "Unitary-Magic"]
+
 (* The Grover formula-default rule used to feed Nothing as the third positional
    arg of "PhaseOracle"[formula, varSpec, Nothing], which doesn't vanish in
    function-call arg position and missed every PhaseOracle dispatch pattern -

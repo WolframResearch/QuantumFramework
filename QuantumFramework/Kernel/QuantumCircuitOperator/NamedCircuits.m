@@ -293,7 +293,7 @@ QuantumCircuitOperator["GrayOracle"[fangles : _Function | _List : {0},
     angles = Thread[{1 / 2 ^ prec Transpose[GrayMatrix[prec]] . angles, Extract[order, GrayOrders[prec]]}];
 	QuantumCircuitOperator[
         Splice @ {
-            QuantumOperator[{rotationGate, #1}, {targetQubit}],
+            QuantumOperator[rotationGate[#1], {targetQubit}],
             QuantumOperator["CNOT", {#2, targetQubit}]
         } & @@@ angles,
         opts,

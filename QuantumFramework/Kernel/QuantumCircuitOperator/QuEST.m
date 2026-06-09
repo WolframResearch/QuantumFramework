@@ -47,7 +47,7 @@ FromQuESTLink[QuEST`Gate`R[angle_, ops_]] := QuantumOperator["R"[angle, Splice[F
 FromQuESTLink[Subscript[QuEST`Gate`M, order__Integer]] := QuantumMeasurementOperator[{order} + 1]
 
 FromQuESTLink[Subscript[name_Symbol, order__Integer]] := QuantumOperator[FromQuESTLink[name], {order} + 1]
-FromQuESTLink[Subscript[name_Symbol, order__Integer][args___]] := QuantumOperator[{FromQuESTLink[name], args}, {order} + 1]
+FromQuESTLink[Subscript[name_Symbol, order__Integer][args___]] := QuantumOperator[FromQuESTLink[name][args], {order} + 1]
 
 FromQuESTLink[expr_] := Missing["NotImplemented", expr]
 
