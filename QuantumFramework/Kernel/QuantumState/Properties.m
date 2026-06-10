@@ -52,7 +52,7 @@ QuantumState::failprop = "property `` failed with ``"
     result = QuantumStateProp[qs, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "Basis"}, prop] &&
         QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumStateProp[qs, prop, args] = result, Rule::rhs],
@@ -64,6 +64,9 @@ QuantumState::failprop = "property `` failed with ``"
 
 
 QuantumStateProp[qs_, "Properties"] :=
+    If[qs["Dimension"] == 2, Union @ $QuantumStateProperties, DeleteCases[Union @ $QuantumStateProperties, _ ? (StringStartsQ["Bloch"])]]
+
+QuantumStateProp[qs_, "AllProperties"] :=
     If[qs["Dimension"] == 2, QuantumState["Properties"], DeleteCases[QuantumState["Properties"], _ ? (StringStartsQ["Bloch"])]]
 
 

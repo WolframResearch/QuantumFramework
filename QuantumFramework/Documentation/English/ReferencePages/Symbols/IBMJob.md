@@ -25,12 +25,12 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 - Accessors **fetch lazily**: a property reads from the stored snapshot when present, otherwise queries the service object. With no reachable connection an accessor gives `Missing["NoConnection"]`; before the job is `"Completed"` the result accessors give `Missing["JobNotComplete", `*status*`]`.
 - `"Status"` is one of `"Queued"`, `"Validating"`, `"Initializing"`, `"Running"`, `"Completed"`, `"Cancelled"` or `"Failed"`; the terminal statuses are `"Completed"`, `"Cancelled"` and `"Failed"`.
 - The hardware counts decode into the Wolfram Language qubit order (ascending qubit) using the `"MeasuredQubits"` map (classical bit to original qubit) captured at submission time, so a permuted or partial measurement and any backend layout decode correctly.
-- `IBMJob[`*assoc*`]["Refresh"]` re-queries the service and gives a **new** `IBMJob` with an updated `"Raw"` snapshot; once the job is `"Completed"` it also pulls the results and metrics, and for an estimator job caches the qiskit-decoded expectation values. `IBMJob[`*assoc*`]["Cancel"]` requests cancellation.
+- The handle exposes two kinds of names. **Properties** (`IBMJob[`*assoc*`]["Properties"]`) are local accessors that read the cached snapshot and never touch the network, so a bulk map over them is fast and has no side effects. **Actions** (`IBMJob[`*assoc*`]["Actions"]`) each require a live connection and are kept out of the property list, so that map never re-queries, cancels or blocks on a remote fetch; each is still callable by name. `IBMJob[`*assoc*`]["Refresh"]` re-queries the service and gives a **new** `IBMJob` with an updated `"Raw"` snapshot (once `"Completed"` it also pulls the results and metrics, and for an estimator job caches the qiskit-decoded expectation values); `IBMJob[`*assoc*`]["Cancel"]` requests cancellation; `IBMJob[`*assoc*`]["ExecutedCircuit"]` downloads the server-side transpiled circuit (see Possible Issues).
 - The result accessors are primitive-specific. For a **sampler** job the live accessors are `"Counts"`, `"Measurement"`, `"Probabilities"`, `"Samples"`, `"NumBits"` and `"Shots"`; for an **estimator** job they are `"ExpectationValue"`, `"ExpectationValues"` and `"StandardErrors"`. An accessor that does not apply to the job's primitive gives `Missing["NotApplicable", `*primitive*`]`.
 - An unknown property name gives a [Failure]() listing the valid properties (see Possible Issues).
 - The summary box shows the status (with a colored indicator), the backend and the job id; once `"Completed"` a sampler job also shows the qubit count, shot count and quantum-processing time, and an estimator job shows the expectation value and quantum-processing time.
 
-The full property list (`IBMJob[`*assoc*`]["Properties"]`):
+The data properties (`IBMJob[`*assoc*`]["Properties"]`), each read from the cached snapshot with no network access:
 
 | Property | Result |
 |---|---|
@@ -48,7 +48,7 @@ The full property list (`IBMJob[`*assoc*`]["Properties"]`):
 | `"Options"` | the `params.options` block sent with the job |
 | `"Timestamps"` | an Association of lifecycle `DateObject`s |
 | `"Duration"` | the running-to-finished wall-clock duration |
-| `"Samples"` | the per-shot classical-register readouts |
+| `"Samples"` | the per-shot outcomes, each the integer value of the classical register for that shot |
 | `"MeasuredQubits"` | the classical-bit to original-qubit decode map |
 | `"NumBits"`, `"Qubits"` | the number of measured qubits |
 | `"Shots"` | the total number of shots |
@@ -58,12 +58,18 @@ The full property list (`IBMJob[`*assoc*`]["Properties"]`):
 | `"ExpectationValue"` | the observable's expectation value (estimator); a single value for one observable, else a list |
 | `"ExpectationValues"` | the list of expectation values, one per observable (estimator) |
 | `"StandardErrors"` | the per-observable standard error of the expectation value (estimator) |
-| `"ExecutedCircuit"` | the server-side transpiled circuit (see Possible Issues) |
 | `"ExecutionSpans"` | the execution time spans reported by the service |
-| `"Refresh"` | a new `IBMJob` with a re-queried snapshot |
-| `"Cancel"` | requests cancellation of the job |
 | `"Raw"` | the raw service responses; `["Raw", `*"sect"*`]` gives one section |
-| `"Properties"` | the list of property names |
+| `"Properties"` | the list of data property names |
+| `"Actions"` | the list of action names |
+
+The actions (`IBMJob[`*assoc*`]["Actions"]`), each requiring a live connection and so kept out of `"Properties"`:
+
+| Action | Result |
+|---|---|
+| `"Refresh"` | re-queries the service and gives a new `IBMJob` with an updated snapshot |
+| `"Cancel"` | requests cancellation of the job |
+| `"ExecutedCircuit"` | downloads the server-side transpiled circuit (see Possible Issues) |
 
 ## Basic Examples
 
@@ -146,14 +152,14 @@ job["MeasuredQubits"]
 
 ---
 
-The raw per-shot classical-register readouts:
+The raw per-shot outcomes, each the integer value of the classical register for that shot:
 
 ```wl
 #| eval: false
 Short[job["Samples"], 2]
 ```
 
-<!-- => {"0x5", "0x0", "0x7", ...} -->
+<!-- => {5, 0, 7, 0, 4, 7, 2, ...} -->
 
 ### Estimator results
 
@@ -234,6 +240,28 @@ job["Cancel"]
 
 <!-- => <|...|> -->
 
+### Properties and actions
+
+`"Properties"` lists the local accessors; mapping over them reads only the cached snapshot, with no network access:
+
+```wl
+#| eval: false
+AssociationMap[job, job["Properties"]]
+```
+
+<!-- => <|ID -> d8jhf29e8nrc73bjk610, Backend -> ibm_fez, Status -> Completed, ...|> -->
+
+---
+
+`"Actions"` lists the names that need a live connection, kept out of `"Properties"` so a bulk map never re-queries, cancels or blocks on a remote fetch:
+
+```wl
+#| eval: false
+job["Actions"]
+```
+
+<!-- => {Refresh, Cancel, ExecutedCircuit} -->
+
 ### Raw responses
 
 The complete raw service responses are kept verbatim; ask for a single section by name:
@@ -254,14 +282,14 @@ job["Raw", "Metrics"]
 
 ## Possible Issues
 
-An unknown property gives a [Failure]() listing the valid property names:
+An unknown property gives a [Failure]() listing the valid data properties and actions:
 
 ```wl
 #| eval: false
 job["Frobnicate"]
 ```
 
-<!-- => Failure["IBMJob", <|"MessageTemplate" -> "Unknown property `1`. Use one of: `2`.", "MessageParameters" -> {"Frobnicate", {"ID", "Backend", ...}}|>] -->
+<!-- => Failure["IBMJob", <|"MessageTemplate" -> "Unknown property `1`. Data properties: `2`. Actions (need a live connection): `3`.", "MessageParameters" -> {"Frobnicate", {"ID", "Backend", ...}, {"Refresh", "Cancel", "ExecutedCircuit"}}|>] -->
 
 ---
 

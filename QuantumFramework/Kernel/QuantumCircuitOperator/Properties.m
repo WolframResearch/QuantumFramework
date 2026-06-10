@@ -14,9 +14,11 @@ $QuantumCircuitOperatorProperties = {
 
 QuantumCircuitOperator["Properties"] := Sort @ $QuantumCircuitOperatorProperties
 
-QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ Union @ Join[
+QuantumCircuitOperatorProp[qco_, "Properties"] := QuantumCircuitOperator["Properties"]
+
+QuantumCircuitOperatorProp[qco_, "AllProperties"] := Enclose @ Union @ Join[
     QuantumCircuitOperator["Properties"],
-    ConfirmBy[Last[qco["FullOperators"]], QuantumFrameworkOperatorQ]["Properties"]
+    ConfirmBy[Last[qco["FullOperators"]], QuantumFrameworkOperatorQ]["AllProperties"]
 ]
 
 
@@ -27,7 +29,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 $QuantumCircuitPreventCache = {
     "Association", "Elements", "Operators", "FullOperators", "FullElements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
-    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ToggleExpand", "ExpandElements", "Picture", "Parameters", "ParameterArity"
+    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ToggleExpand", "ExpandElements", "Picture", "Parameters", "ParameterArity", "AllProperties"
 }
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
@@ -495,5 +497,5 @@ QuantumCircuitOperatorProp[qco_, "ParameterArity"] := Length[qco["Parameters"]]
 (* operator properties *)
 
 QuantumCircuitOperatorProp[qco_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[Last[qco["FullOperators"]]["Properties"], qco["Properties"]], prop] := qco["CircuitOperator"][args]
+    MemberQ[Intersection[Last[qco["FullOperators"]]["AllProperties"], qco["AllProperties"]], prop] := qco["CircuitOperator"][args]
 

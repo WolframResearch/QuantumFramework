@@ -224,23 +224,45 @@ VerificationTest[reorder[{1, 1, 0}, {2, 0, 1}], {1, 0, 1}, TestID -> "reorder-pe
 VerificationTest[reorder[{1, 1, 0}, {2, 0}],    {1, 1, 0}, TestID -> "reorder-length-mismatch-noop"]
 VerificationTest[reorder[{1, 1, 0}, Automatic], {1, 1, 0}, TestID -> "reorder-no-map-noop"]
 
-(* synthetic Completed IBMJob carrying raw hex samples + the captured map: the permuted
-   measurement {3,1,2} of X@1, X@3 (qubit values q1=1, q2=0, q3=1) is read into classical
-   bits in target order [q3,q1,q2] = [1,1,0] (integer 0x3), and the map {2,0,1} must reorder
-   it to the ascending-qubit outcome {1,0,1} that QuantumCircuitOperator[...][] gives. *)
-ibmRawJob[map_, hex_, nbits_] := Wolfram`QuantumFramework`IBMJob[<|
+(* Build a real SamplerV2 /results payload in pure WL: per-shot integer outcomes -> a
+   base64(zlib(.npy uint8)) BitArray, the exact shape IBM's RuntimeEncoder emits. RawCompress
+   is the inverse of the decoder's RawUncompress, so this round-trips without qiskit. *)
+ibmNpyEncode[values_, numBits_] := Module[{nbytes, data, dict, padLen, headerStr, hlen, npy},
+    nbytes = Ceiling[numBits / 8];
+    data = Flatten[IntegerDigits[#, 256, nbytes] & /@ values];
+    dict = "{'descr': '|u1', 'fortran_order': False, 'shape': (" <> ToString[Length[values]] <> ", " <> ToString[nbytes] <> "), }";
+    padLen = Mod[-(10 + StringLength[dict] + 1), 64];
+    headerStr = dict <> StringJoin[ConstantArray[" ", padLen]] <> "\n";
+    hlen = StringLength[headerStr];
+    npy = Join[{147, 78, 85, 77, 80, 89, 1, 0}, Reverse @ IntegerDigits[hlen, 256, 2], ToCharacterCode[headerStr], data];
+    BaseEncode @ ByteArray @ Developer`RawCompress @ FromCharacterCode[npy]
+]
+
+(* synthetic Completed IBMJob carrying one shot of value `sample` + the captured map: the permuted
+   measurement {3,1,2} of X@1, X@3 (qubit values q1=1, q2=0, q3=1) is read into classical bits in
+   target order [q3,q1,q2] = [1,1,0] (integer 3), and the map {2,0,1} must reorder it to the
+   ascending-qubit outcome {1,0,1} that QuantumCircuitOperator[...][] gives. *)
+ibmRawJob[map_, sample_, nbits_] := Wolfram`QuantumFramework`IBMJob[<|
     "ID" -> "regression", "Status" -> "Completed", "Backend" -> "sim", "MeasuredQubits" -> map,
-    "Raw" -> <|"Results" -> <|"results" -> {<|"data" -> <|"c" -> <|"samples" -> {hex}, "num_bits" -> nbits|>|>|>}|>|>
+    "Raw" -> <|"Results" -> <|"__type__" -> "PrimitiveResult", "__value__" -> <|
+        "pub_results" -> {<|"__type__" -> "SamplerPubResult", "__value__" -> <|
+            "data" -> <|"__type__" -> "DataBin", "__value__" -> <|
+                "field_names" -> {"c"},
+                "fields" -> <|"c" -> <|"__type__" -> "BitArray", "__value__" -> <|
+                    "array" -> <|"__type__" -> "ndarray", "__value__" -> ibmNpyEncode[{sample}, nbits]|>,
+                    "num_bits" -> nbits|>|>|>|>|>
+        |>|>},
+        "version" -> 2|>|>|>
 |>]
 
 VerificationTest[
-    Keys @ Normal @ ibmRawJob[{2, 0, 1}, "0x3", 3]["Counts"],
+    Keys @ Normal @ ibmRawJob[{2, 0, 1}, 3, 3]["Counts"],
     {{1, 0, 1}},
     TestID -> "ibm-decode-permuted-reordered"
 ]
 
 VerificationTest[
-    First @ Keys @ Normal @ ibmRawJob[{2, 0, 1}, "0x3", 3]["Counts"] ===
+    First @ Keys @ Normal @ ibmRawJob[{2, 0, 1}, 3, 3]["Counts"] ===
         Replace[First @ Keys @ Select[QuantumCircuitOperator[{"X" -> 1, "X" -> 3, {3, 1, 2}}][]["Probabilities"], # > 1/2 &], QuditName[v_, ___] :> v],
     True,
     TestID -> "ibm-decode-matches-exact-distribution"
@@ -248,14 +270,14 @@ VerificationTest[
 
 (* without a map the decode falls back to classical-bit order: the old, unreordered outcome *)
 VerificationTest[
-    First @ Keys @ Normal @ ibmRawJob[Automatic, "0x3", 3]["Counts"],
+    First @ Keys @ Normal @ ibmRawJob[Automatic, 3, 3]["Counts"],
     {1, 1, 0},
     TestID -> "ibm-decode-no-map-is-clbit-order"
 ]
 
 (* identity map (ascending full measurement) is unchanged: q1=1,q2=0,q3=1 -> 0x5 -> {1,0,1} *)
 VerificationTest[
-    First @ Keys @ Normal @ ibmRawJob[{0, 1, 2}, "0x5", 3]["Counts"],
+    First @ Keys @ Normal @ ibmRawJob[{0, 1, 2}, 5, 3]["Counts"],
     {1, 0, 1},
     TestID -> "ibm-decode-identity-unchanged"
 ]

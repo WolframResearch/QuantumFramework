@@ -41,7 +41,9 @@ QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Comple
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]];
 
-QuantumOperatorProp[qo_, "Properties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["Properties"], {
+QuantumOperatorProp[qo_, "Properties"] := Union @ $QuantumOperatorProperties
+
+QuantumOperatorProp[qo_, "AllProperties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["AllProperties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]]
 
@@ -69,7 +71,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
     result = QuantumOperatorProp[qo, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "State", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "State", "Basis"}, prop] &&
         QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumOperatorProp[qo, prop, args] = result, Rule::rhs],
@@ -1033,5 +1035,5 @@ QuantumOperatorProp[qo_, "CircuitDiagram", opts___] := QuantumCircuitOperator[qo
 (* state properties *)
 
 QuantumOperatorProp[qo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qo["State"]["Properties"], qo["Properties"]], prop] := qo["State"][args]
+    MemberQ[Intersection[qo["State"]["AllProperties"], qo["AllProperties"]], prop] := qo["State"][args]
 

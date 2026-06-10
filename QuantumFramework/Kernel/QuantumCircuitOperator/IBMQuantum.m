@@ -245,11 +245,50 @@ IBMJob[d_Association]["Duration"] := With[{ts = Lookup[ibmRawAssoc[d, "Metrics"]
     Module[{a = ibmDate @ Lookup[ts, "running", Null], b = ibmDate @ Lookup[ts, "finished", Null]},
         If[DateObjectQ[a] && DateObjectQ[b], b - a, Missing["NotAvailable"]]]]
 
-(* classical-register samples -> {hex-list, num_bits} *)
-ibmSamples[res_Association] := Enclose @ Module[{data, creg},
-    data = ConfirmBy[res[["results", 1, "data"]], AssociationQ];
-    creg = First @ Keys @ data;
-    {data[creg]["samples"], data[creg]["num_bits"]}
+(* The /jobs/<id>/results payload is a RuntimeEncoder-serialized PrimitiveResult: a
+   nested envelope where every non-primitive node is <|"__type__" -> tag, "__value__" -> v|>.
+   ibmUnwrap strips one envelope layer; bare values pass through. *)
+ibmUnwrap[KeyValuePattern[{"__type__" -> _, "__value__" -> v_}]] := v
+ibmUnwrap[x_] := x
+
+(* A serialized ndarray is <|"__type__" -> "ndarray", "__value__" -> base64(zlib(.npy))|>.
+   Inflate (Developer`RawUncompress is a zlib inflater taking a list of byte integers),
+   then skip the .npy header (6-byte magic 0x93 'NUMPY', 1-byte major/minor, then a
+   2-byte (v1) or 4-byte (v2+) little-endian header length) to reach the raw data bytes. *)
+ibmNpyDataBytes[b64_String] := Enclose @ Module[{npy, hlenField, hlen},
+    npy = ConfirmBy[Developer`RawUncompress[Normal @ Confirm @ BaseDecode[b64]], ListQ];
+    ConfirmAssert[Take[npy, UpTo[6]] === {147, 78, 85, 77, 80, 89}];
+    hlenField = If[npy[[7]] >= 2, 4, 2];
+    hlen = FromDigits[Reverse @ npy[[9 ;; 8 + hlenField]], 256];
+    npy[[8 + hlenField + hlen + 1 ;;]]
+]
+
+(* A serialized BitArray is <|"array" -> ndarray, "num_bits" -> n|> (under one envelope).
+   The packed uint8 data is ceil(n/8) bytes per shot, most-significant byte first, so each
+   shot's integer outcome is FromDigits[bytes, 256]. Works for any n and any shot count. *)
+ibmBitArraySamples[ba_] := Enclose @ Module[{val, numBits, bytes},
+    val = ibmUnwrap[ba];
+    numBits = ConfirmBy[val["num_bits"], IntegerQ];
+    bytes = Confirm @ ibmNpyDataBytes @ ConfirmBy[ibmUnwrap[val["array"]], StringQ];
+    {FromDigits[#, 256] & /@ Partition[bytes, Ceiling[numBits / 8]], numBits}
+]
+
+(* PrimitiveResult -> first PUB -> DataBin. Decode every classical register's BitArray and
+   pack them into one integer per shot. "field_names" is in classical-register order, which is
+   the classical-bit order qiskit assigns, so register k occupies the bits above the registers
+   before it (field 0 in the lowest bits). The packed integer therefore indexes the same global
+   classical-bit space as the "MeasuredQubits" map. A circuit with a single register (every
+   circuit QuantumCircuitOperator submits, and measure_all jobs) reduces to that register's
+   outcomes with offset 0. Returns {per-shot integer outcomes, total bit width}. *)
+ibmSamples[res_Association] := Enclose @ Module[{prim, pub, dataBin, names, perReg, widths, offsets},
+    prim = ibmUnwrap[res];
+    pub = ibmUnwrap @ First @ ConfirmMatch[prim["pub_results"], {__Association}];
+    dataBin = ibmUnwrap[pub["data"]];
+    names = ConfirmMatch[dataBin["field_names"], {__String}];
+    perReg = Confirm @ ibmBitArraySamples[dataBin["fields"][#]] & /@ names;
+    widths = perReg[[All, 2]];
+    offsets = Most @ Prepend[Accumulate[widths], 0];
+    {Total @ MapThread[#1 * 2 ^ #2 &, {perReg[[All, 1]], offsets}], Total[widths]}
 ]
 ibmSamples[_] := $Failed
 
@@ -258,7 +297,7 @@ IBMJob[d_Association]["Samples"] := If[ibmIsEstimator[d], Missing["NotApplicable
         If[ListQ[s], First[s], Missing["NotAvailable"]]]]
 
 (* exact integer counts keyed by the WL bit-list outcome. Method path: stored verbatim.
-   Raw-samples path: built from the per-shot hex once the job is Completed. IBM is
+   Raw-samples path: decoded per-shot integer outcomes once the job is Completed. IBM is
    little-endian (c[0] is the LSB), so Reverse[IntegerDigits[...]] gives the bits in
    classical-bit order; qiskitReorderByQubit then sorts them into ascending-qubit order
    using the "MeasuredQubits" map (classical bit -> original qubit) captured from the
@@ -277,7 +316,7 @@ ibmCounts[d_Association] := If[
         If[! ListQ[sn], Return[Missing["NoSamples"], Module]];
         {samples, size} = sn;
         measuredQubits = Lookup[d, "MeasuredQubits", Automatic];
-        Counts[qiskitReorderByQubit[Reverse[IntegerDigits[Interpreter["HexInteger"][#], 2, size]], measuredQubits] & /@ samples]
+        Counts[qiskitReorderByQubit[Reverse[IntegerDigits[#, 2, size]], measuredQubits] & /@ samples]
     ]
 ]]
 
@@ -395,24 +434,36 @@ IBMJob[d_Association]["Cancel"] := With[{so = ibmSO[d]},
 IBMJob[d_Association]["Raw"] := Lookup[d, "Raw", <||>]
 IBMJob[d_Association]["Raw", sect_String] := ibmRaw[d, sect]
 
+(* "Properties" lists only LOCAL accessors: each reads the cached snapshot (or a value stored on
+   the handle) and never touches the network, so AssociationMap[job, job["Properties"]] is fast
+   and has no side effects. *)
 $ibmProperties = {
     "ID", "Backend", "ServiceObject", "Status", "Primitive", "UserID", "ProgramID",
     "Cost", "EstimatedRunTime", "SubmittedCircuit", "Options", "QuantumSeconds",
     "Timestamps", "Duration", "Samples", "MeasuredQubits", "NumBits", "Qubits", "Shots",
     "Measurement", "Counts", "Probabilities", "ExpectationValue", "ExpectationValues",
-    "StandardErrors", "ExecutedCircuit", "ExecutionSpans",
-    "Refresh", "Cancel", "Raw", "Properties"
+    "StandardErrors", "ExecutionSpans", "Raw", "Properties", "Actions"
 }
+
+(* "Actions" each REQUIRE a live connection, so they are kept OUT of "Properties": "Refresh"
+   re-queries IBM for a fresh snapshot, "Cancel" asks the server to cancel the job, and
+   "ExecutedCircuit" downloads the server-transpiled circuit from Cloud Object Storage (a
+   presigned, VPC-private URL that is slow or 404s for already-ISA jobs). Each is still callable
+   by name; they are only excluded from the bulk-mappable property set so a "dump everything"
+   never re-queries, cancels, or blocks on a remote fetch. *)
+$ibmActions = {"Refresh", "Cancel", "ExecutedCircuit"}
+
 IBMJob[_Association]["Properties"] := $ibmProperties
+IBMJob[_Association]["Actions"] := $ibmActions
 
 (* default application -> the primary result for the job's primitive *)
 IBMJob[d_Association][] := If[ibmIsEstimator[d], IBMJob[d]["ExpectationValue"], ibmMeasurement[d]]
 
 (* catch-all for unknown string properties *)
-IBMJob[d_Association][prop_String] /; ! MemberQ[$ibmProperties, prop] :=
+IBMJob[d_Association][prop_String] /; ! MemberQ[$ibmProperties, prop] && ! MemberQ[$ibmActions, prop] :=
     Failure["IBMJob", <|
-        "MessageTemplate" -> "Unknown property `1`. Use one of: `2`.",
-        "MessageParameters" -> {prop, $ibmProperties}
+        "MessageTemplate" -> "Unknown property `1`. Data properties: `2`. Actions (need a live connection): `3`.",
+        "MessageParameters" -> {prop, $ibmProperties, $ibmActions}
     |>]
 
 

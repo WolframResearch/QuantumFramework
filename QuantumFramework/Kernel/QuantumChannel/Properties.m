@@ -26,7 +26,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
     result = QuantumChannelProp[qc, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "Operator", "QuantumOperator"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator"}, prop] &&
         QuantumChannelProp[qc, "Basis"]["ParameterArity"] == 0,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumChannelProp[qc, prop, args] = result, Rule::rhs],
@@ -34,8 +34,10 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumChannelProp] || Message[QuantumChannel::undefprop, prop])
 ]
 
-QuantumChannelProp[qc_, "Properties"] :=
-    Union @ Join[QuantumChannel["Properties"], qc["Operator"]["Properties"]]
+QuantumChannelProp[qc_, "Properties"] := Union @ $QuantumChannelProperties
+
+QuantumChannelProp[qc_, "AllProperties"] :=
+    Union @ Join[QuantumChannel["Properties"], qc["Operator"]["AllProperties"]]
 
 
 (* getters *)
@@ -116,5 +118,5 @@ QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
 (* operator properties *)
 
 QuantumChannelProp[qc_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qc["Operator"]["Properties"], qc["Properties"]], prop] := qc["Operator"][args]
+    MemberQ[Intersection[qc["Operator"]["AllProperties"], qc["AllProperties"]], prop] := qc["Operator"][args]
 
