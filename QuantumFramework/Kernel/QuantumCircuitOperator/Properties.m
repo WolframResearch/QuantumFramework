@@ -452,6 +452,29 @@ qasmStatePrepLines[op_] := Module[{state = op["State"], order = op["OutputOrder"
     ]
 ]
 
+(* OpenQASM measures only in the computational basis, so a measurement in any other basis B
+   must be lowered before emission, the same way the qiskit export path does it (Qiskit.m): the
+   basis-change gate Inverse[B] rotates B's eigenstates onto the computational basis, after which
+   a computational measurement reproduces the original outcome statistics. QuantumShortcut
+   decomposes that unitary into emittable gates. A computational measurement (Inverse[B] is the
+   identity) is returned untouched, so existing exports are byte-for-byte unchanged; a
+   non-square basis matrix (a genuine POVM, which has no unitary basis-change) is also left
+   as-is. *)
+qasmComputationalBasisQ[m_] := With[{n = Length[m]}, Chop[Normal[m] - IdentityMatrix[n]] == ConstantArray[0, {n, n}]]
+
+qasmRebaseMeasurement[op_ ? QuantumMeasurementOperatorQ] := With[{bm = Normal @ op["Basis"]["Input"]["Matrix"]},
+    If[ ! SquareMatrixQ[bm],
+        {op},
+        With[{rot = Inverse[bm], targets = op["Target"]},
+            If[ qasmComputationalBasisQ[rot],
+                {op},
+                Append[QuantumOperator /@ QuantumShortcut[QuantumOperator[rot, targets]], QuantumMeasurementOperator[targets]]
+            ]
+        ]
+    ]
+]
+qasmRebaseMeasurement[op_] := {op}
+
 qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
     (* fold over operators threading a global classical-bit counter, so successive
        measurements write c[0], c[1], ... instead of every one writing c[0]. *)
@@ -476,7 +499,7 @@ qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
             ]
         ],
         {{}, 0},
-        qco["Flatten"]["Operators"]
+        Catenate[qasmRebaseMeasurement /@ qco["Flatten"]["Operators"]]
     ];
     (* a leftover "// Unimplemented" comment means the WL emitter cannot serialize a gate;
        surface a clean Failure rather than emitting invalid OpenQASM. *)
