@@ -531,3 +531,30 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - Graph constructor"]
+
+(* gh#2: QuantumCircuitOperator[g_Graph] used to call the now-removed
+   GraphTensorNetwork and return an inert TensorNetworkQuantumCircuit[...].
+   It must evaluate to a real QuantumCircuitOperator after the rename to
+   ToTensorNetworkGraph. *)
+VerificationTest[
+    Head @ QuantumCircuitOperator[CycleGraph[4]],
+    QuantumCircuitOperator,
+    TestID -> "Graph-CycleGraph-head"
+]
+
+VerificationTest[
+    QuantumCircuitOperator[CycleGraph[4]]["GateCount"],
+    4,
+    TestID -> "Graph-CycleGraph-gateCount"
+]
+
+VerificationTest[
+    Head @ QuantumCircuitOperator[PathGraph[Range[3]]],
+    QuantumCircuitOperator,
+    TestID -> "Graph-PathGraph-head"
+]
+
+EndTestSection[]

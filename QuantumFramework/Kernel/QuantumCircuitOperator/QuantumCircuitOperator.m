@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`TensorNetworks`"]
+
 PackageExport["QuantumCircuitOperator"]
 
 PackageScope["QuantumCircuitOperatorQ"]
@@ -76,7 +78,7 @@ QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOp
 QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNames, ___}, _List]] :=
     Enclose @ QuantumCircuitOperator[ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & @@ Replace[#, param : Except[_List] :> {param}] & /@ params]
 
-QuantumCircuitOperator[g_ ? GraphQ, opts___] := TensorNetworkQuantumCircuit[GraphTensorNetwork[g, opts, Method -> "Random"]]
+QuantumCircuitOperator[g_ ? GraphQ, opts___] := TensorNetworkQuantumCircuit[ToTensorNetworkGraph[g, opts, Method -> "Random"]]
 
 QuantumCircuitOperator[arg : Except[_List | _Association | _File] /; ! (StringQ[arg] && (qasmStringQ[arg] || qasmFileQ[arg]))] := QuantumCircuitOperator[{arg}]
 
