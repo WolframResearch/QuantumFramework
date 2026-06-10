@@ -147,22 +147,21 @@ QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDr
     ]
 
 
-Options[quantumCircuitCompile] := Join[{Method -> Automatic}, Options[TensorNetworkCompile]]
+Options[quantumCircuitCompile] := {Method -> Automatic}
 
 quantumCircuitCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :=
-    Switch[
-        OptionValue[Method],
-        "Schrodinger",
-        Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
-        Automatic | "TensorNetwork",
-        TensorNetworkCompile[qco, FilterRules[{opts}, Options[TensorNetworkCompile]]],
-        "QuEST",
-        QuESTCompile[qco],
-        "Qiskit",
-        qco["Qiskit"]["QuantumOperator"],
-        _,
-        $Failed
-    ]
+    Replace[OptionValue[Method], {
+        "Schrodinger" :>
+            Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
+        Automatic | "TensorNetwork" | {"TensorNetwork", subOpts___} :>
+            TensorNetworkCompile[qco, FilterRules[{subOpts}, Options[TensorNetworkCompile]]],
+        "QuEST" :>
+            QuESTCompile[qco],
+        "Qiskit" :>
+            qco["Qiskit"]["QuantumOperator"],
+        _ :>
+            $Failed
+    }]
 
 QuantumCircuitOperatorProp[qco_, "QuantumOperator" | "CircuitOperator" | "Compile", opts : OptionsPattern[quantumCircuitCompile]] := quantumCircuitCompile[qco["Flatten"], opts]
 

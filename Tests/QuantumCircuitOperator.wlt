@@ -558,3 +558,35 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - contraction path"]
+
+(* gh#4: TensorNetworkCompile now exposes the contraction-path argument
+   through the "Path" option, reachable via
+   Method -> {"TensorNetwork", "Path" -> spec}. Greedy and Optimal paths
+   must produce results numerically equal to the Automatic default. *)
+With[{
+    qc = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "H" -> 2}],
+    psi0 = QuantumState["00"]
+},
+    VerificationTest[
+        Chop @ Normal @ qc[psi0, Method -> {"TensorNetwork", "Path" -> "Greedy"}]["StateVector"],
+        Chop @ Normal @ qc[psi0]["StateVector"],
+        TestID -> "ContractionPath-Greedy-eq-default"
+    ];
+
+    VerificationTest[
+        Chop @ Normal @ qc[psi0, Method -> {"TensorNetwork", "Path" -> "Optimal"}]["StateVector"],
+        Chop @ Normal @ qc[psi0]["StateVector"],
+        TestID -> "ContractionPath-Optimal-eq-default"
+    ];
+
+    VerificationTest[
+        Head @ qc[psi0, Method -> {"TensorNetwork", "Path" -> "Greedy"}],
+        QuantumState,
+        TestID -> "ContractionPath-Greedy-returns-state"
+    ]
+]
+
+EndTestSection[]
