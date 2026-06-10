@@ -22,7 +22,8 @@ $QuantumOperatorNames = {
     "S", "T", "V", "SX",
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
-    "Spider", "ZSpider", "XSpider", "WSpider",
+    "Spider", "SimpleSpider", "ZSpider", "XSpider", "WSpider",
+    "HeisenbergWeyl",
     "Measure", "Encode", "Copy", "Decohere", "Marginal", "Discard",
     "Cup", "Cap", "Trace", "Reset", "Channel", "Measurement",
     "Switch",
@@ -952,6 +953,13 @@ QuantumOperator[name_String[args___], ___] /; ! MemberQ[$QuantumOperatorNames, n
 QuantumOperator[name_String, ___] /; ! MemberQ[$QuantumOperatorNames, name] := (
     Message[QuantumOperator::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumOperator::invalidName, "MessageParameters" :> {name}|>]
+)
+
+(* Last-resort fallback for known names with unmatched call shape; see the
+   matching block in NamedCircuits.m for rationale. *)
+QuantumOperator[name_String[args___], ___] /; MemberQ[$QuantumOperatorNames, name] := (
+    Message[QuantumOperator::invalidArgs, Defer[name[args]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::invalidArgs, "MessageParameters" :> {Defer[name[args]]}|>]
 )
 
 

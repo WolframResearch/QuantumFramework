@@ -2,6 +2,9 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope["UnitaryEulerAngles"]
 PackageScope["UnitaryEulerAnglesWithPhase"]
+PackageScope["TwoQubitKAK"]
+PackageScope["TwoQubitKAKSymbolic"]
+PackageScope["$MagicBasis"]
 
 
 
@@ -28,6 +31,7 @@ $QuantumOperatorProperties = {
     "Dagger", "Dual",
     "TraceNorm",
     "PauliDecompose",
+    "KAK", "Decompose",
     "CircuitDiagram",
     "OrderedFormula",
     "Simplify", "FullSimplify", "Chop", "ComplexExpand"
@@ -37,7 +41,9 @@ QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Comple
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]];
 
-QuantumOperatorProp[qo_, "Properties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["Properties"], {
+QuantumOperatorProp[qo_, "Properties"] := Union @ $QuantumOperatorProperties
+
+QuantumOperatorProp[qo_, "AllProperties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["AllProperties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]]
 
@@ -65,8 +71,9 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
     result = QuantumOperatorProp[qo, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "State", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "State", "Basis"}, prop] &&
         QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumOperatorProp[qo, prop, args] = result, Rule::rhs],
         result
     ] /;
@@ -678,24 +685,292 @@ QuantumOperatorProp[qo_, "EulerAnglesWithPhase"] /; qo["VectorQ"] && qo["Dimensi
 QuantumOperatorProp[qo_, "ZYZ"] /; qo["VectorQ"] && qo["Dimension"] == 4 := Enclose @ Module[{angles, phase},
     {angles, phase} = UnitaryAnglesWithPhase[qo["MatrixRepresentation"]];
     If[ NumericQ[phase] && phase == 0,
-        QuantumOperator["U"[Splice @ angles], qo["Order"]],
-        QuantumCircuitOperator[{QuantumOperator["GlobalPhase"[phase]], QuantumOperator["U"[Splice @ angles], qo["Order"]]}]
+        QuantumOperator["U" @@ angles, qo["Order"]],
+        QuantumCircuitOperator[{QuantumOperator["GlobalPhase"[phase]], QuantumOperator["U" @@ angles, qo["Order"]]}]
     ]
 ]
 
-QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
-    angles = ToLowerCase @ ToString[NumberForm[N[#]]] & /@
-        ConfirmBy[UnitaryAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
+
+(* ::Section:: Two-qubit Cartan (KAK) decomposition *)
+
+(* Magic (Bell) basis: conjugation by it maps local SU(2) (x) SU(2) to real SO(4). *)
+$MagicBasis = (1 / Sqrt[2]) {{1, 0, 0, I}, {0, I, 1, 0}, {0, I, -1, 0}, {1, 0, 0, -I}};
+
+(* Eigenvalue signs of XX, YY, ZZ on the magic-basis Bell states (rows = Bell, cols = X/Y/Z). *)
+$kakBellSigns := $kakBellSigns = With[{
+    mbd = ConjugateTranspose[$MagicBasis],
+    pauliPair = KroneckerProduct[PauliMatrix[#], PauliMatrix[#]] &
+},
+    Transpose[Chop @ Re @ Table[Diagonal[mbd . pauliPair[k] . $MagicBasis], {k, 3}]]
+]
+
+(* Split a 4x4 local operator L = KroneckerProduct[a, b] into its two single-qubit factors
+   via the reshuffle (realignment) trick: the reshuffled matrix is rank one. *)
+kakKroneckerFactor[mat_] := Module[{reshuffled, u, s, v},
+    reshuffled = ArrayReshape[
+        Table[mat[[2 (i1 - 1) + i2, 2 (j1 - 1) + j2]], {i1, 2}, {j1, 2}, {i2, 2}, {j2, 2}],
+        {4, 4}
+    ];
+    {u, s, v} = SingularValueDecomposition[reshuffled];
+    {
+        ArrayReshape[Sqrt[s[[1, 1]]] u[[All, 1]], {2, 2}],
+        ArrayReshape[Sqrt[s[[1, 1]]] Conjugate[v[[All, 1]]], {2, 2}]
+    }
+]
+
+(* Off-diagonal mass of proj^T . m2 . proj: zero iff proj diagonalizes the complex-symmetric m2. *)
+kakOffDiagonal[proj_, m2_] := With[{d = Transpose[proj] . m2 . proj},
+    Norm[Flatten[d - DiagonalMatrix[Diagonal[d]]]]
+]
+
+(* Real-orthonormal simultaneous diagonalizer of the commuting pair {Re[m2], Im[m2]}.
+   m2 is complex-symmetric and unitary, so a single real orthogonal basis diagonalizes it; we get it
+   from Eigensystem of the real-symmetric combination Re[m2] + sep Im[m2]. A *fixed* separator merges
+   two distinct m2 eigenvalues whenever their phases are mirror-symmetric about ArcTan[sep] (a
+   measure-zero resonance, but reachable: the c1 = ArcTan[Sqrt[2]]/2 class with nontrivial local
+   factors fails at sep = Sqrt[2]). Fast-path Sqrt[2.]; on the rare resonance, fall back to the
+   separator that best diagonalizes m2. *)
+kakEigenbasis[m2_] := Module[{seps = {Sqrt[2.], Sqrt[3.], Sqrt[5.], N[Pi], N[E]}, first},
+    first = Transpose[Eigensystem[Re[m2] + First[seps] Im[m2]][[2]]];
+    If[ kakOffDiagonal[first, m2] < 10.^-9,
+        first,
+        First @ MinimalBy[
+            Table[Transpose[Eigensystem[Re[m2] + sep Im[m2]][[2]]], {sep, Rest[seps]}],
+            kakOffDiagonal[#, m2] &
+        ]
+    ]
+]
+
+(* Core: factor a 4x4 unitary u as u = e^{i phi} (a1 (x) a2) . exp(i (c1 XX + c2 YY + c3 ZZ)) . (b1 (x) b2).
+   Returns <|"GlobalPhase", "Left" -> {a1, a2}, "Canonical" -> {c1, c2, c3}, "Right" -> {b1, b2}|>. *)
+TwoQubitKAK[u_ ? SquareMatrixQ] /; Dimensions[u] === {4, 4} := Module[{
+    mb = $MagicBasis, mbd = ConjugateTranspose[$MagicBasis], signs = $kakBellSigns,
+    su, uMagic, m2, proj, k1, k2, theta, coords, corr, left, right
+},
+    su = u / Det[u] ^ (1/4);
+    uMagic = mbd . su . mb;
+    m2 = Transpose[uMagic] . uMagic;
+    (* commuting real-symmetric pair Re[m2], Im[m2] share a real orthonormal eigenbasis;
+       kakEigenbasis picks a separator that actually diagonalizes m2 (guards the resonance) *)
+    proj = kakEigenbasis[m2];
+    If[Re[Det[proj]] < 0, proj[[All, 1]] = - proj[[All, 1]]];        (* K2 in SO(4) *)
+    k2 = proj;
+    theta = Arg[Diagonal[Transpose[k2] . m2 . k2]] / 2;
+    k1 = uMagic . k2 . DiagonalMatrix[Exp[- I theta]];
+    If[Re[Det[k1]] < 0, k1[[All, 1]] = - k1[[All, 1]]; theta[[1]] += Pi];   (* K1 in SO(4) *)
+    coords = Transpose[signs] . theta / 4;
+    corr = mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd;       (* local residual *)
+    left = kakKroneckerFactor[mb . k1 . mbd . corr];
+    right = kakKroneckerFactor[mb . Transpose[k2] . mbd];
+    <|"GlobalPhase" -> Arg[Det[u] ^ (1/4)], "Left" -> left, "Canonical" -> coords, "Right" -> right|>
+]
+
+
+(* Pivot-anchored Kronecker factor: read A (x) B off a nonzero 2x2 block and a nonzero pivot inside it.
+   Exact and symbolic-safe (no SingularValueDecomposition, which returns a Sqrt[0] on degenerate
+   symbolic locals such as the local factors of a controlled-phase gate). *)
+kakKroneckerFactorSymbolic[mat_, simp_] := Module[{blocks, a0, c0, b, r0, s0},
+    blocks = Table[mat[[2 (a - 1) + 1 ;; 2 a, 2 (c - 1) + 1 ;; 2 c]], {a, 2}, {c, 2}];
+    {a0, c0} = First @ Position[blocks, blk_ /; AnyTrue[Flatten[blk], ! PossibleZeroQ[#] &], {2}, Heads -> False];
+    b = blocks[[a0, c0]];
+    {r0, s0} = First @ Position[b, e_ /; ! PossibleZeroQ[e], {2}, Heads -> False];
+    {Table[simp[blocks[[a, c]][[r0, s0]] / b[[r0, s0]]], {a, 2}, {c, 2}], b}
+]
+
+(* Continuous angle of a unit-modulus symbolic expression. Arg gives the principal value
+   (Arg[E^{-I theta}] is theta mod 2 Pi, not theta), which leaves the magic phases unable to cancel and
+   makes K1 nonlocal for gates such as RXX. Reading the exponent off the Exp form instead recovers the
+   continuous angle exactly. Valid here because every input (the diagonalized m2 eigenvalues and
+   Det[u]^(1/4)) is unit modulus under the real-parameter assumption. *)
+kakUnwrapAngle[z_] := - I PowerExpand[Log[Simplify[TrigToExp[z]]]]
+
+(* Structured-symbolic KAK: the same magic-basis factorization in exact arithmetic. ComplexExpand makes
+   Re/Im split once the parameters are declared real, an exact Sqrt[2] separates the eigenvalues,
+   Orthogonalize forces a real-orthonormal eigenbasis, kakUnwrapAngle reads off the continuous angles,
+   and FullSimplify[..., assum] reduces to closed form. Returns the same association as TwoQubitKAK (for
+   a generic dense symbolic matrix the eigensolve is a Root blowup; the caller bounds it). *)
+TwoQubitKAKSymbolic[u_ ? SquareMatrixQ, assum_] /; Dimensions[u] === {4, 4} := Module[{
+    mb = $MagicBasis, mbd = ConjugateTranspose[$MagicBasis], signs = $kakBellSigns,
+    simp, su, uMagic, m2, proj, k1, theta, coords, corr
+},
+    simp = FullSimplify[#, assum] &;
+    su = u / Det[u] ^ (1/4);
+    uMagic = simp @ ComplexExpand[mbd . su . mb];
+    m2 = simp @ ComplexExpand[Transpose[uMagic] . uMagic];
+    proj = simp @ ComplexExpand @ Transpose[Orthogonalize[
+        Eigensystem[ComplexExpand[Re[m2]] + Sqrt[2] ComplexExpand[Im[m2]]][[2]]]];
+    If[TrueQ[simp[Re[Det[proj]]] < 0], proj[[All, 1]] = - proj[[All, 1]]];
+    theta = simp[kakUnwrapAngle[Diagonal[Transpose[proj] . m2 . proj]] / 2];
+    k1 = simp @ ComplexExpand[uMagic . proj . DiagonalMatrix[Exp[- I theta]]];
+    If[TrueQ[simp[Re[Det[k1]]] < 0], k1[[All, 1]] = - k1[[All, 1]]; theta[[1]] += Pi];
+    coords = simp[Transpose[signs] . theta / 4];
+    corr = simp @ ComplexExpand[mb . DiagonalMatrix[Exp[I (theta - signs . coords)]] . mbd];
+    <|
+        "GlobalPhase" -> simp @ kakUnwrapAngle[Det[u] ^ (1/4)],
+        "Left" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . k1 . mbd . corr], simp],
+        "Canonical" -> coords,
+        "Right" -> kakKroneckerFactorSymbolic[simp @ ComplexExpand[mb . Transpose[proj] . mbd], simp]
+    |>
+]
+
+(* Wall-clock budget for the symbolic eigensolve before bailing to the undecomposed-operator path. *)
+$kakSymbolicTimeBudget = 60;
+
+(* exp(i c P (x) P) gadget as a circuit fragment on {o1, o2}: a CNOT, an Rz on the target, a CNOT,
+   conjugated into the X / Y / Z basis. Single-qubit pieces are emitted as "U" gates (phaseless);
+   the dropped global phases are recovered once, at the end, by projection. *)
+$kakRotZ = MatrixExp[-I # / 2 PauliMatrix[3]] &;
+$kakBasisX = (PauliMatrix[1] + PauliMatrix[3]) / Sqrt[2];                      (* Hadamard *)
+$kakBasisY = MatrixExp[-I Pi / 4 PauliMatrix[1]];                            (* Rx[Pi/2] up to phase *)
+
+(* Use the with-phase angles: "U" @@ UnitaryAngles[mat] alone drops Arg[mat[[1,1]]], which is a
+   *relative* (not global) phase error for gates like Rz. The with-phase angles represent mat up to
+   a single global phase, which folds into the final projected GlobalPhase. Chop first: a near-diagonal
+   factor (e.g. the identity local of X (x) I) carries tiny off-diagonal noise that fails the exact
+   theta == 0 test in UnitaryEulerAngles and sends Arg of numerical zeros into the angles. *)
+kakUGate[mat_, order_] := QuantumOperator["U" @@ First[UnitaryAnglesWithPhase[Chop[mat]]], order]
+
+kakInteractionGadget[c_, basis_, {o1_, o2_}] := If[TrueQ[Chop[c] == 0] || PossibleZeroQ[c], {},
+    {
+        If[basis === IdentityMatrix[2], Nothing, kakUGate[basis, {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, kakUGate[basis, {o2}]],
+        QuantumOperator["CX", {o1, o2}],
+        kakUGate[$kakRotZ[-2 c], {o2}],
+        QuantumOperator["CX", {o1, o2}],
+        If[basis === IdentityMatrix[2], Nothing, kakUGate[ConjugateTranspose[basis], {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, kakUGate[ConjugateTranspose[basis], {o2}]]
+    }
+]
+
+(* Symbolic emission: single-qubit pieces go in as direct matrix gates rather than "U" angles.
+   Re-extracting Euler angles from an Arg / ArcTan-laden symbolic factor is unreliable; a matrix gate
+   is exact and preserves the factor's own phase, so the whole circuit equals the operator up to the
+   single global phase Arg[Det[u]^(1/4)] returned by the worker, with no projection needed. *)
+kakInteractionGadgetSymbolic[c_, basis_, {o1_, o2_}] := If[PossibleZeroQ[c], {},
+    {
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[basis, {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[basis, {o2}]],
+        QuantumOperator["CX", {o1, o2}],
+        QuantumOperator[$kakRotZ[-2 c], {o2}],
+        QuantumOperator["CX", {o1, o2}],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[ConjugateTranspose[basis], {o1}]],
+        If[basis === IdentityMatrix[2], Nothing, QuantumOperator[ConjugateTranspose[basis], {o2}]]
+    }
+]
+
+QuantumCircuitOperator::kaksymbolic = "KAK could not decompose `1` symbolically (a generic dense symbolic 2-qubit unitary is a Root blowup); it is returned undecomposed. Substitute numeric parameters, or pass a structured / parametric gate.";
+
+QuantumOperatorProp[qo_, "KAK"] /; qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] :=
+Enclose @ Module[{
+    mat = Normal @ qo["MatrixRepresentation"], numericQ, vars, assum, data, c, a, b, o1, o2, order,
+    gates, circuit, circMat, residualPhase
+},
+    numericQ = MatrixQ[Quiet @ N @ mat, NumericQ];
+    order = qo["Order"][[1]];
+    {o1, o2} = order;
+    If[ numericQ,
+    (* ---- numeric path: "U"-angle gadgets, global phase recovered by projection ---- *)
+        data = TwoQubitKAK[N @ mat];
+        {c, a, b} = {data["Canonical"], data["Left"], data["Right"]};
+        (* circuit order applies first -> last: right locals, ZZ, YY, XX gadgets, left locals *)
+        gates = Flatten @ {
+            kakUGate[b[[1]], {o1}], kakUGate[b[[2]], {o2}],
+            kakInteractionGadget[c[[3]], IdentityMatrix[2], {o1, o2}],
+            kakInteractionGadget[c[[2]], $kakBasisY, {o1, o2}],
+            kakInteractionGadget[c[[1]], $kakBasisX, {o1, o2}],
+            kakUGate[a[[1]], {o1}], kakUGate[a[[2]], {o2}]
+        };
+        circMat = Normal @ (QuantumOperator @ QuantumCircuitOperator[gates])["MatrixRepresentation"];
+        residualPhase = Arg[Tr[ConjugateTranspose[N @ circMat] . N @ mat] / 4];
+        QuantumCircuitOperator[
+            If[Chop[residualPhase] == 0, gates, Prepend[gates, QuantumOperator["GlobalPhase"[residualPhase]]]],
+            "Label" -> "KAK"
+        ]
+    ,
+    (* ---- structured-symbolic path: direct matrix gates, global phase = worker's gp (no projection).
+       A generic dense symbolic eigensolve is a Root blowup, so the worker is time-bounded and bails. ---- *)
+        (* the free parameters: actual non-System symbols (Variables misses these inside Cos / E^...) *)
+        vars = DeleteDuplicates @ Cases[mat, _Symbol ? (Context[#] =!= "System`" &), Infinity];
+        assum = Element[vars, Reals];
+        data = TimeConstrained[TwoQubitKAKSymbolic[mat, assum], $kakSymbolicTimeBudget, $Failed];
+        If[ ! AssociationQ[data],
+            Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
+            Return[QuantumCircuitOperator[{qo}, "Label" -> "KAK"], Module]
+        ];
+        {c, a, b} = {data["Canonical"], data["Left"], data["Right"]};
+        gates = Flatten @ {
+            QuantumOperator[b[[1]], {o1}], QuantumOperator[b[[2]], {o2}],
+            kakInteractionGadgetSymbolic[c[[3]], IdentityMatrix[2], {o1, o2}],
+            kakInteractionGadgetSymbolic[c[[2]], $kakBasisY, {o1, o2}],
+            kakInteractionGadgetSymbolic[c[[1]], $kakBasisX, {o1, o2}],
+            QuantumOperator[a[[1]], {o1}], QuantumOperator[a[[2]], {o2}]
+        };
+        residualPhase = data["GlobalPhase"];
+        circuit = QuantumCircuitOperator[
+            If[PossibleZeroQ[residualPhase], gates, Prepend[gates, QuantumOperator["GlobalPhase"[residualPhase]]]],
+            "Label" -> "KAK"
+        ];
+        (* Safety self-check: symbolic eigendecomposition under a generic real assumption is not always
+           reliable (the eigenvectors, hence the local factors, can come out wrong even when the
+           coordinates are right). Verify the circuit reproduces the operator at a probe substitution;
+           if it does not, return the operator undecomposed rather than a silently wrong circuit. *)
+        Module[{probeSub, checkErr},
+            probeSub = Thread[vars -> Table[Sqrt[Prime[k + 1]] / 5, {k, Max[Length[vars], 1]}]];
+            checkErr = Chop @ Norm[Flatten[
+                N[Normal[(QuantumOperator @ circuit)["MatrixRepresentation"]] /. probeSub] - N[mat /. probeSub]], Infinity];
+            If[ TrueQ[checkErr < 10.^-6],
+                circuit,
+                Message[QuantumCircuitOperator::kaksymbolic, qo["Label"]];
+                QuantumCircuitOperator[{qo}, "Label" -> "KAK"]
+            ]
+        ]
+    ]
+]
+
+(* Umbrella synthesis into the gate set: 1-qubit -> ZYZ, 2-qubit -> KAK. Larger operators fall
+   through to the standard undefined-property path (the n>=3 QSD slot is future work). *)
+QuantumOperatorProp[qo_, "Decompose", gateset : {___String} : {"U", "CX"}] /;
+    qo["Dimension"] == 4 && qo["VectorQ"] := qo["ZYZ"]
+
+QuantumOperatorProp[qo_, "Decompose", gateset : {___String} : {"U", "CX"}] /;
+    qo["Dimension"] == 16 && MatchQ[qo["Dimensions"], {2, 2, 2, 2}] := qo["KAK"]
+
+(* OpenQASM emit workers: the public ["QASM"]/["SimpleQASM"] downvalues route through the
+   QuantumQASM hub, which calls these. *)
+
+(* The single-qubit-unitary branch fires only on a genuine 1-qubit gate. SquareQ
+   (OutputDimension == InputDimension) is required because non-square state-injection
+   tensors share the {2, 2} leg signature: a 2-output/0-input Cup also reports
+   Dimensions === {2, 2} but has a 4x1 matrix, so without this guard UnitaryAngles is
+   handed a non-square matrix and the emit fails opaquely. Non-square operators fall
+   through to the catch-all, which emits the "// Unimplemented" marker that
+   qasmEmitCircuit turns into a clean QuantumQASM failure naming the gate. *)
+(* Format a real for an OpenQASM literal: full machine precision (NumberForm truncates to 6
+   digits, capping round-trip fidelity, and renders small/large magnitudes as a "x10"
+   superscript that wraps across lines, which is not a valid literal). InputForm gives a flat
+   decimal; "*^" becomes the OpenQASM "e" exponent (the importer parses both). *)
+qasmReal[x_] := StringReplace[ToString[N[x], InputForm], "*^" -> "e"]
+
+(* Decompose a 1-qubit gate as U(angles) up to a global phase. UnitaryAnglesWithPhase, not
+   UnitaryAngles: the latter folds Arg[mat[[1,1]]] into the phi/lambda angles, which is a
+   diagonal Z-conjugation (mat == D.U(UnitaryAngles).D, D = diag(E^(I a/2), E^(-I a/2))),
+   NOT a global phase, so U(UnitaryAngles[mat]) is a different operator whenever mat[[1,1]]
+   is complex. The leftover phase here is a true global phase and is dropped (callers are all
+   uncontrolled single-qubit contexts; the controlled path emits it as a controlled gphase). *)
+qasmEmitSimple[qo_] /; qo["SquareQ"] && qo["Dimensions"] === {2, 2} := Enclose @ With[{
+    angles = qasmReal /@ ConfirmBy[First @ UnitaryAnglesWithPhase[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
 
-QuantumOperatorProp[qo_, "SimpleQASM"] :=
+qasmEmitSimple[qo_] :=
     Replace[qo["Label"], {
         "SWAP" | "\[Pi]"[_, _] :> "swap",
-        Superscript[label_, CircleTimes[_]] :> QuantumOperator[label]["SimpleQASM"],
-        label_ :> StringTemplate["// Unimplimented QASM for operator with label: `` ----"][label]
+        Superscript[label_, CircleTimes[_]] :> qasmEmitSimple[QuantumOperator[label]],
+        label_ :> StringTemplate["// Unimplemented QASM for operator with label: `` ----"][label]
     }]
+
+QuantumOperatorProp[qo_, "SimpleQASM"] := QuantumQASM[qo, "Simple"]
 
 QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     control1 = qo["ControlOrder1"];
@@ -716,40 +991,77 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     ]
 ]
 
-QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
+qasmEmitOperator[qo_] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
     Replace[qo["Label"], {
         Subscript["C", _][control1_, control0_] :>
             With[{n = Length[control1], m = Length[control0]},
-                StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
-                (
-                QuantumTensorProduct[{
-                    If[ n > 0,
-                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
-                        Nothing
-                    ],
-                    If[ m > 0,
-                        QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}],
-                        Nothing
-                    ]
-                }] @ qo @
-                QuantumTensorProduct[{
-                    If[ n > 0,
-                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
-                        Nothing
-                    ],
-                    If[ m > 0,
-                        QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}],
-                        Nothing
-                    ]
-                }]
-                )["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";"
+                Module[{proj, mat, angles, phase, ctrlPrefix, ctrlQubits, gateLine, phaseLine},
+                    proj =
+                        QuantumTensorProduct[{
+                            If[ n > 0,
+                                QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
+                                Nothing
+                            ],
+                            If[ m > 0,
+                                QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}],
+                                Nothing
+                            ]
+                        }] @ qo @
+                        QuantumTensorProduct[{
+                            If[ n > 0,
+                                QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
+                                Nothing
+                            ],
+                            If[ m > 0,
+                                QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}],
+                                Nothing
+                            ]
+                        }];
+                    mat = proj["MatrixRepresentation"];
+                    If[ ! MatchQ[Dimensions[mat], {2, 2}], Return[$Failed, Module]];
+                    (* Split the 1-qubit target into a U(angles) carrying no global phase plus the
+                       leftover phase: mat == E^(I phase) . U(angles). A bare U cannot carry that
+                       phase (its (1,1) entry is real). Uncontrolled it is unobservable, but under
+                       control it is a physical relative phase, so emit it as a controlled gphase on
+                       the control qubits alongside the controlled U. *)
+                    {angles, phase} = UnitaryAnglesWithPhase[mat];
+                    ctrlPrefix = StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m];
+                    ctrlQubits = StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0] - 1], " "];
+                    gateLine = ctrlPrefix <> StringTemplate["U(``, ``, ``)"][Sequence @@ (qasmReal /@ angles)] <>
+                        " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";";
+                    phaseLine = If[ TrueQ[Chop[N[phase]] == 0],
+                        Nothing,
+                        ctrlPrefix <> "gphase(" <> qasmReal[phase] <> ") " <> ctrlQubits <> ";"
+                    ];
+                    StringRiffle[DeleteCases[{gateLine, phaseLine}, Nothing], "\n"]
+                ]
             ],
         _ :> $Failed
         }
     ]
 
-QuantumOperatorProp[qo_, "QASM"] /; MatchQ[qo["Dimensions"], {2 ..}] :=
-    qo["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
+(* a global phase is a 0-qudit (1x1) operator e^(i phi): OpenQASM 3 gphase(phi) *)
+qasmEmitOperator[qo_] /; qo["Dimensions"] === {} :=
+    "gphase(" <> qasmReal[Arg[qo["MatrixRepresentation"][[1, 1]]]] <> ");"
+
+(* a qudit permutation decomposes into SWAP gates: each cycle (c1 c2 ... ck) becomes the
+   transpositions (c1 c2)(c1 c3) ... (c1 ck), applied left to right (verified by matrix). *)
+qasmEmitOperator[qo_] /; MatchQ[qo["Label"], "\[Pi]"[__]] := With[{
+    order = qo["InputOrder"],
+    transpositions = Catenate[
+        Function[cyc, {First[cyc], #} & /@ Rest[cyc]] /@ PermutationCycles[List @@ qo["Label"]][[1]]
+    ]
+},
+    StringRiffle[
+        ("swap q[" <> ToString[order[[#[[1]]]] - 1] <> "] q[" <> ToString[order[[#[[2]]]] - 1] <> "];") & /@ transpositions,
+        "\n"
+    ]
+]
+
+qasmEmitOperator[qo_] /; MatchQ[qo["Dimensions"], {2 ..}] :=
+    qasmEmitSimple[qo] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
+
+QuantumOperatorProp[qo_, "QASM"] := QuantumQASM[qo]
 
 
 QuantumOperatorProp[qo_, "CircuitDiagram", opts___] := QuantumCircuitOperator[qo]["Diagram", opts]
@@ -758,5 +1070,5 @@ QuantumOperatorProp[qo_, "CircuitDiagram", opts___] := QuantumCircuitOperator[qo
 (* state properties *)
 
 QuantumOperatorProp[qo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qo["State"]["Properties"], qo["Properties"]], prop] := qo["State"][args]
+    MemberQ[Intersection[qo["State"]["AllProperties"], qo["AllProperties"]], prop] := qo["State"][args]
 

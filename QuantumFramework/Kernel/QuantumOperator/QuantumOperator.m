@@ -14,6 +14,7 @@ PackageScope["StackQuantumOperators"]
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
+QuantumOperator::invalidArgs = "QuantumOperator constructor `1` did not match any rule"
 
 quantumOperatorQ[QuantumOperator[qs_QuantumState /; QuantumStateQ[Unevaluated[qs]], {_ ? orderQ, _ ? orderQ}]] := True
 
@@ -177,8 +178,8 @@ QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
             If[ basis["InputDimension"] == 1,
                 basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
             ];
-            outMultiplicity = Quiet @ Log[basis["OutputDimension"], outputs];
-            inMultiplicity = Quiet @ Log[basis["InputDimension"], inputs];
+            outMultiplicity = If[basis["OutputDimension"] === 1, Indeterminate, Log[basis["OutputDimension"], outputs]];
+            inMultiplicity = If[basis["InputDimension"] === 1, Indeterminate, Log[basis["InputDimension"], inputs]];
             If[
                 IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
                 (* multiply existing basis *)

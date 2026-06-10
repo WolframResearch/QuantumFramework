@@ -30,7 +30,7 @@ qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
 QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` is undefined for this operator";
 
 
-$QuantumMeasurementOperatorPreventCache = {"Properties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits"}
+$QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits"}
 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
@@ -38,6 +38,7 @@ $QuantumMeasurementOperatorPreventCache = {"Properties", "QuantumOperator", "Ope
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
         QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumMeasurementOperatorProp[qmo, prop, args] = result, Rule::rhs],
         result
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
@@ -48,8 +49,10 @@ CacheProperty[QuantumMeasurementOperator][args___, value_] := PrependTo[
     HoldPattern[QuantumMeasurementOperatorProp[args]] :> value
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["Operator"]["Properties"]]
+QuantumMeasurementOperatorProp[qmo_, "Properties"] := Union @ $QuantumMeasurementOperatorProperties
+
+QuantumMeasurementOperatorProp[qmo_, "AllProperties"] :=
+    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["Operator"]["AllProperties"]]
 
 
 (* getters *)
@@ -330,5 +333,5 @@ QuantumMeasurementOperatorProp[qmo_, prop : "Double", args___] :=
 
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qmo["Operator"]["Properties"], qmo["Properties"]], prop] := qmo["Operator"][args]
+    MemberQ[Intersection[qmo["Operator"]["AllProperties"], qmo["AllProperties"]], prop] := qmo["Operator"][args]
 

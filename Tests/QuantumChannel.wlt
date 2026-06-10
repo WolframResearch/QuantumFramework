@@ -67,4 +67,11 @@ VerificationTest[
     TestID -> "InvalidName-bare"
 ]
 
+VerificationTest[
+    Quiet @ QuantumChannel["BitFlip"["bad-arg-1", "bad-arg-2", "bad-arg-3"]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-BitFlip"
+]
+
 EndTestSection[]

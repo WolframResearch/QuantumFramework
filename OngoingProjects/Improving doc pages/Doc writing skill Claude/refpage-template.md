@@ -181,7 +181,17 @@ Out[1]= result
 
 (How this function relates to others — both within the paclet and to system functions. Each entry is one fact demonstrated with code.)
 
-(Patterns to look for:)
+(Source: the per-paclet function-relation graph at `$DOCS/function-graph.wl`. The graph's entry for this symbol has Accepts / Returns / OperatesOn / ConsumedBy / Properties — pick 3–6 of the highest-pedagogical-value edges and demonstrate each with `ExampleText` → `Input` → `Output`. See `per-function-runbook.md` §0.6 and §A.5.c for the build/check protocol.)
+
+(Three canonical patterns must be included when applicable:)
+
+(1) **Round-trip**: for any constructor/accessor pair `C`/`A`, the FIRST entry must be `A[C[x]] === x`. Origin: prior Phase 5c Y miss. See `per-function-runbook.md` §10.6.
+
+(2) **Operator application**: when the graph's `OperatesOn` is non-empty, demonstrate at least one `F[args][x]` edge — e.g. `qo[QuantumState[...]]` produces a `QuantumState`.
+
+(3) **Consumed-by spotlight**: when `ConsumedBy` is non-empty, demonstrate at least one downstream symbol that takes this one as input (e.g. `QuantumDistance[QuantumState[...], ...]` consuming a state).
+
+(Additional patterns to look for:)
 (- Equivalence to a system function under specific conditions)
 (- Relationship between different calling patterns)
 (- How return values feed into other functions)
@@ -215,7 +225,25 @@ Out[1]= unexpected or error result
 
 ### Neat Examples (N)
 
-(Only when genuinely impressive. Leave empty otherwise.)
+(Two kinds of cells live here. The Graph cell is mandatory whenever the function-relation graph is meaningful for the symbol; visually-impressive demos are optional.)
+
+(1) **Function-relation graph cell** — renders this symbol's immediate neighborhood by building the function-relation graph on demand via the `Wolfram/PacletFunctionGraph` paclet. There is no shipped `Resources/FunctionGraph.wl` to keep in sync; the build runs in a few seconds and the doc-page builder pre-evaluates this cell so the user opening the notebook sees the graph immediately:
+
+```wl
+(* hardcoded dev path until Wolfram/PacletFunctionGraph is published *)
+PacletDirectoryLoad[
+    "<repo>/OngoingProjects/Improving doc pages/PacletFunctionGraph"];
+Needs["PublisherID`PacletName`"];
+Needs["Wolfram`PacletFunctionGraph`"];
+
+pacletRoot = ParentDirectory[NotebookDirectory[], 3];
+graphData  = BuildFunctionGraph[pacletRoot, "WriteFile" -> False];
+SymbolNeighborhoodGraph[graphData, "SymbolName"]
+```
+
+Returns a directed `Graph[]`. Edges point in the direction of data flow (`A → B` means "A flows into B" — A is one of B's accepted inputs, or A is what B produces on application). Vertex face color encodes `Kind` (Constructor / Operator / Transform / Predicate / Distance per `$FunctionGraphKindColors`); the focal symbol carries a heavier black border. No caption beyond a one-line ExampleText is needed.
+
+(2) **Visually impressive demo** — optional. Only when genuinely impressive. Leave the cell empty otherwise.
 
 ## See Also
 

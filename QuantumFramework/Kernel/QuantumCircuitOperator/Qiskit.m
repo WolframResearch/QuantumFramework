@@ -5,6 +5,33 @@ PackageExport["ImportQASMCircuit"]
 PackageExport["ImportQPY"]
 
 PackageScope["QuantumCircuitOperatorToQiskit"]
+PackageScope["qiskitQASM"]
+PackageScope["qiskitPrimitiveSubmit"]
+PackageScope["qiskitReorderByQubit"]
+PackageScope["qiskitControlledOperator"]
+PackageScope["qiskitNamedOperator"]
+
+
+(* Build a named QuantumOperator in call form, e.g. qiskitNamedOperator["RX", {0.7}, {1}] gives
+   QuantumOperator["RX"[0.7], {1}]. The qiskit -> QF decoder must emit the call form "Name"[args];
+   the list form {"Name", args} is no longer read as a named operator and decays to a Label -> None
+   state. wolframclient cannot serialize a String-headed expression (a string in head position
+   becomes a Symbol), so the head is reattached here via Apply. *)
+qiskitNamedOperator[name_String, args_List, order_List] := QuantumOperator[Apply[name, args], order]
+
+
+(* Build a controlled QuantumOperator from the data a qiskit controlled gate carries: the
+   (already 1-indexed) control qubit order and a ctrl_state integer whose bits select, MSB first
+   over controlOrder, which controls are active on |1> vs |0> (the same IntegerDigits partition
+   the named "C"[\[Ellipsis], ctrl_Integer, \[Ellipsis]] constructor uses). The explicit control1 /
+   control0 lists are handed to the "C"[base, control1, control0] call form directly: Splice does
+   not expand inside a String-headed "C"[\[Ellipsis]], so the integer-ctrl constructor itself fails
+   when base is a QuantumOperator. *)
+qiskitControlledOperator[base_, ctrl_Integer, controlOrder_List] := Block[{
+    bits = IntegerDigits[ctrl, 2, Length[controlOrder]]
+},
+    QuantumOperator["C"[base, Pick[controlOrder, bits, 1], Pick[controlOrder, bits, 0]]]
+]
 
 
 
@@ -54,15 +81,15 @@ shortcutToGate = Replace[
                     ]
                 }
             ],
-            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order}
+            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal64"], ToString[label], order}
         ],
-        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal32"], ToString[shortcut], op["Order"]}]
+        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal64"], ToString[shortcut], op["Order"]}]
     }
 ]
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     gates = Confirm @* shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
-    arity = {qco["Max"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Max"], Replace[qco["TargetArity"], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl
@@ -106,6 +133,10 @@ def make_gate(gate_spec):
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
         order = list(args[2][0])[::-1]
     elif name == 'Barrier':
+        # a bare barrier (no explicit qubits) spans the whole circuit; emitting a
+        # zero-qubit Barrier(0) drops the barrier and dumps as a meaningless 'barrier ;'
+        if len(order) == 0:
+            order = list(range(1, circuit.num_qubits + 1))
         gate = Barrier(len(order))
     elif name == 'Delay':
         gate = Delay(args[0])
@@ -145,6 +176,12 @@ wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
 QiskitCircuit[qc_QuantumCircuitOperator] := qc["Qiskit"]
 
 QiskitCircuit[bytes_ByteArray]["Bytes"] := bytes
+
+QiskitCircuit[s_String /; qasmStringQ[s]] := QuantumCircuitOperator[s]["Qiskit"]
+
+QiskitCircuit::badarg = "QiskitCircuit wraps a pickled ByteArray. Build one from a circuit with QuantumCircuitOperator[\[Ellipsis]][\"Qiskit\"]; a plain string is read only when it is OpenQASM source."
+
+QiskitCircuit[_String] := (Message[QiskitCircuit::badarg]; $Failed)
 
 qc_QiskitCircuit["Eval", attr_String, args___, kwargs : OptionsPattern[]] :=
     PythonEvalAttr[{qc["Bytes"], attr, args, kwargs}]
@@ -239,10 +276,14 @@ def gate_to_QuantumOperator(gate, order):
                 xs.append(x)
     if gate.name == 'x':
         return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
-    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap', 'sx']:
+    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
         return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
+    elif gate.name == 'sx':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('V', order)
+    elif gate.name == 'sxdg':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('V', order)('Dagger')
     elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
-        return wl.Wolfram.QuantumFramework.QuantumOperator([gate.name.upper(), *xs], order)
+        return wl.Wolfram.QuantumFramework.PackageScope.qiskitNamedOperator(gate.name.upper(), xs, order)
     elif gate.name == 'tdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
     elif gate.name == 'sdg':
@@ -258,8 +299,8 @@ def gate_to_QuantumOperator(gate, order):
     elif gate.name == 'save_statevector':
         return wl.Nothing
     elif hasattr(gate, 'num_ctrl_qubits'):
-        arg = ['C', gate_to_QuantumOperator(gate.base_gate, order[gate.num_ctrl_qubits:]), reverse_binary(gate.ctrl_state, gate.num_ctrl_qubits), order[:gate.num_ctrl_qubits]]
-        return wl.Wolfram.QuantumFramework.QuantumOperator(arg)
+        base = gate_to_QuantumOperator(gate.base_gate, order[gate.num_ctrl_qubits:])
+        return wl.Wolfram.QuantumFramework.PackageScope.qiskitControlledOperator(base, reverse_binary(gate.ctrl_state, gate.num_ctrl_qubits), order[:gate.num_ctrl_qubits])
     else:
         from qiskit.quantum_info import Operator
         return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.name if gate.name else None))
@@ -417,6 +458,39 @@ backend = AerSimulator(method=method)
     env
 ]
 
+(* qiskit get_counts gives string keys "c_{n-1}...c_0"; reverse to the WL bit-list outcome *)
+qiskitBitCounts[result_Association] := KeyMap[
+    Reverse[Characters[StringDelete[#, Whitespace]]] /. {"0" -> 0, "1" -> 1} &
+] @ result
+
+(* IBM / qiskit return each shot as a classical-register bit list in classical-bit order,
+   which follows the order the measurements were emitted to qiskit (the measurement's target
+   order). QuantumMeasurement instead reports outcomes in ascending qubit order, so a circuit
+   whose measurement targets are not already ascending (a permuted or interleaved measurement,
+   or any backend whose transpiled measure -> clbit map is not the identity) needs the bits
+   reordered. measuredQubits[[c+1]] is the original (pre-transpile) qubit index read into
+   classical bit c, captured at transpile time; sorting the {clbit -> bit} pairs by that qubit
+   index restores the ascending-qubit order. A missing (Automatic) or length-mismatched map is
+   a no-op, leaving the classical-bit order untouched. *)
+qiskitReorderByQubit[bits_List, measuredQubits_List] /; Length[measuredQubits] === Length[bits] :=
+    Values @ KeySort @ AssociationThread[measuredQubits -> bits]
+qiskitReorderByQubit[bits_List, _] := bits
+
+qiskitMeasurementFromBitCounts[bitCounts_Association] := Block[{size = Length @ First @ Keys @ bitCounts},
+    Enclose[
+        ConfirmAssert[size <= 8];
+        ConfirmBy[
+            QuantumMeasurement[
+                Join[Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]], bitCounts]
+            ],
+            QuantumMeasurementQ
+        ],
+        bitCounts &
+    ]
+]
+
+qiskitCountsToMeasurement[result_Association] := qiskitMeasurementFromBitCounts @ qiskitBitCounts @ result
+
 Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
@@ -484,28 +558,54 @@ elif isinstance(backend, AerSimulator) and circuit.num_clbits == 0:
 else:
     from qiskit_ibm_runtime import SamplerV2 as Sampler
     sampler = Sampler(mode=backend)
-    result = sampler.run([circuit], shots = <* $shots *>).result()
-    result = result[0].join_data().get_counts()
+    _job = sampler.run([circuit], shots = <* $shots *>)
+    try:
+        _jid = _job.job_id()
+    except Exception:
+        _jid = None
+    # classical bit -> original (pre-transpile) qubit, so the counts can be reordered into
+    # ascending-qubit order regardless of the transpiled measure -> clbit layout
+    _c2p = {}
+    for _ins in circuit.data:
+        if _ins.operation.name == 'measure':
+            _c2p[circuit.find_bit(_ins.clbits[0]).index] = circuit.find_bit(_ins.qubits[0]).index
+    _ncl = circuit.num_clbits
+    _measured = None
+    _layout = getattr(circuit, 'layout', None)
+    if _layout is not None:
+        try:
+            _final = _layout.final_index_layout(filter_ancillas=True)
+            _p2o = {ph: o for o, ph in enumerate(_final)}
+            _measured = [_p2o.get(_c2p.get(c), _c2p.get(c)) for c in range(_ncl)]
+        except Exception:
+            _measured = None
+    if _measured is None:
+        _measured = [_c2p.get(c, c) for c in range(_ncl)]
+    result = {'__counts__': _job.result()[0].join_data().get_counts(),
+              '__job_id__': _jid,
+              '__backend__': getattr(backend, 'name', None),
+              '__measured_qubits__': _measured}
 result
 ", env];
     Which[
-        AssociationQ[result],
-        Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
-            Enclose[
-                size = StringLength @ First @ Keys[counts];
-                ConfirmAssert[size <= 8];
-                ConfirmBy[
-                    QuantumMeasurement[
-                        Join[
-                            Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]],
-                            KeyMap[Reverse[Characters[#]] /. {"0" -> 0, "1" -> 1} &] @ counts
-                        ]
-                    ],
-                    QuantumMeasurementQ
-                ],
-                counts &
+        (* IBM Runtime SamplerV2: return an IBMJob carrying the job id + measurement. The raw
+           counts are keyed by classical-bit order; reorder each outcome into ascending-qubit
+           order via the captured classical-bit -> original-qubit map before building the
+           measurement, so a permuted measurement or non-identity layout decodes correctly. *)
+        AssociationQ[result] && KeyExistsQ[result, "__job_id__"],
+        With[{bitCounts = KeyMap[
+                qiskitReorderByQubit[#, Lookup[result, "__measured_qubits__", Automatic]] &,
+                qiskitBitCounts[result["__counts__"]]
+            ]},
+            With[{qm = qiskitMeasurementFromBitCounts[bitCounts]},
+                If[ env === "ibm" && StringQ[result["__job_id__"]],
+                    iMethodIBMJob[qm, bitCounts, result["__job_id__"], result["__backend__"]],
+                    qm
+                ]
             ]
         ],
+        AssociationQ[result],
+        qiskitCountsToMeasurement[result],
         NumericArrayQ[result],
         QuantumState[Chop @ Normal[result]]["Reverse"],
         True,
@@ -549,9 +649,110 @@ result
 ", env]
 ]
 
-qc_QiskitCircuit["QASM" | "QASM2", opts___] := qiskitQASM[qc, "Version" -> 2, opts]
+(* Async primitive submission through qiskit's own SamplerV2 / EstimatorV2 objects, so qiskit
+   owns every wire format: circuit serialization, the estimator observable's layout +
+   ObservablesArray, the PUB tuple, and the primitive options schema. The job is launched with
+   run() but NOT awaited, so this returns immediately with the job id plus the classical-bit ->
+   original-qubit decode map for sampler counts. obsTerms is a list of {pauliString, reCoeff,
+   imCoeff} triples (estimator) or Null (sampler); primOpts is an already snake_cased option tree
+   applied onto the primitive's own options object. Returns an Association or a Failure. *)
+qiskitPrimitiveSubmit[
+    qc_QiskitCircuit, primitive_String, obsTerms : _List | Null, shots_Integer,
+    primOpts_Association, opts : OptionsPattern[qiskitInitBackend]
+] := Enclose @ Block[{
+    $primitive = primitive,
+    $obsTerms = Replace[obsTerms, None -> Null],
+    $shots = shots,
+    $primOpts = primOpts,
+    env
+},
+    env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
+    With[{res = PythonEvaluate[Context[$primitive], "
+from qiskit.transpiler import generate_preset_pass_manager
+from qiskit.quantum_info import SparsePauliOp
+from wolframclient.language import wl
 
-qc_QiskitCircuit["QASM3", opts___] := qiskitQASM[qc, "Version" -> 3, opts]
+primitive = <* $primitive *>
+shots = <* $shots *>
+opts = <* $primOpts *> or {}
+
+# the estimator measures observables, so any terminal measurement the circuit carries is
+# stripped; the sampler needs a classical register, added only when the circuit has none
+circ = qc
+if primitive == 'estimator':
+    circ = circ.remove_final_measurements(inplace=False)
+elif circ.num_clbits == 0:
+    circ = circ.copy()
+    circ.measure_all()
+
+isa = generate_preset_pass_manager(backend=backend, optimization_level=1).run(circ)
+
+# classical bit -> original (pre-transpile) qubit, so sampler counts can be reordered into
+# ascending-qubit order regardless of the transpiled measure -> clbit layout
+clbit_to_phys = {}
+for ins in isa.data:
+    if ins.operation.name == 'measure':
+        clbit_to_phys[isa.find_bit(ins.clbits[0]).index] = isa.find_bit(ins.qubits[0]).index
+ncl = isa.num_clbits
+measured = None
+layout = getattr(isa, 'layout', None)
+if layout is not None:
+    try:
+        final = layout.final_index_layout(filter_ancillas=True)
+        phys_to_orig = {phys: orig for orig, phys in enumerate(final)}
+        measured = [phys_to_orig.get(clbit_to_phys.get(c), clbit_to_phys.get(c)) for c in range(ncl)]
+    except Exception:
+        measured = None
+if measured is None:
+    measured = [clbit_to_phys.get(c, c) for c in range(ncl)]
+
+# forward the user's option tree onto the primitive's own options object (qiskit owns the
+# schema). The keys were validated against that schema before transpile by
+# ibmValidatePrimitiveOptions, so a plain setattr here is safe.
+def apply_opts(o, d):
+    for k, v in (d or {}).items():
+        if isinstance(v, dict):
+            apply_opts(getattr(o, k), v)
+        else:
+            setattr(o, k, v)
+
+if primitive == 'estimator':
+    from qiskit_ibm_runtime import EstimatorV2
+    terms = <* $obsTerms *>
+    obs = SparsePauliOp.from_list([(t[0], complex(t[1], t[2])) for t in terms]).apply_layout(isa.layout)
+    est = EstimatorV2(mode=backend)
+    est.options.default_shots = shots
+    est.options.dynamical_decoupling.enable = True
+    apply_opts(est.options, opts)
+    job = est.run([(isa, obs)])
+else:
+    from qiskit_ibm_runtime import SamplerV2
+    smp = SamplerV2(mode=backend)
+    smp.options.default_shots = shots
+    smp.options.dynamical_decoupling.enable = True
+    apply_opts(smp.options, opts)
+    job = smp.run([(isa,)])
+
+try:
+    jid = job.job_id()
+except Exception:
+    jid = None
+
+wl.Association(
+    wl.Rule('JobID', jid),
+    wl.Rule('MeasuredQubits', measured),
+    wl.Rule('Primitive', primitive),
+    wl.Rule('Backend', getattr(backend, 'name', None))
+)
+", env]},
+        If[FailureQ[res], res, ConfirmBy[res, AssociationQ]]
+    ]
+]
+
+
+qc_QiskitCircuit["QASM" | "QASM2", opts___] := QuantumQASM[qc, "Version" -> 2, opts]
+
+qc_QiskitCircuit["QASM3", opts___] := QuantumQASM[qc, "Version" -> 3, opts]
 
 
 qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{env},
@@ -639,34 +840,26 @@ fireopal.validate(
 ", "qctrl"]
 ]
 
-ImportQASMCircuit[file_ /; FileExistsQ[file], basisGates : {_String...} | None] := ImportQASMCircuit[Import[file, "String"], basisGates]
+ImportQASMCircuit::deprecated = "ImportQASMCircuit is deprecated. Use QuantumQASM[source] or QuantumCircuitOperator[source] to import OpenQASM directly.";
 
-ImportQASMCircuit[str_String, backend : _String | Automatic : Automatic, basisGates : {_String...} | None : None] := Block[{
-    $pythonString = str,
-    $backend = Replace[backend, Automatic -> Null],
-    $basisGates = Replace[basisGates, None -> Null]
-},
-PythonEvaluate[Context[$backend], "
-import pickle
-from qiskit import QuantumCircuit, transpile
-from wolframclient.language import wl
+ImportQASMCircuit[file_String /; FileExistsQ[file], ___] := (
+    Message[ImportQASMCircuit::deprecated];
+    QuantumQASM[File[file]]
+)
 
-qc = QuantumCircuit.from_qasm_str(<* $pythonString *>)
-
-qc = transpile(qc, backend=<* $backend *>, basis_gates=<* $basisGates *>)
-wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(qc))
-"
-]
-]
+ImportQASMCircuit[str_String, ___] := (
+    Message[ImportQASMCircuit::deprecated];
+    QuantumQASM[str]
+)
 
 
 (* Formatting *)
 
-QiskitCircuit /: MakeBoxes[qc_QiskitCircuit, format_] :=
+QiskitCircuit /: MakeBoxes[qc : QiskitCircuit[_ByteArray], format_] :=
     BoxForm`ArrangeSummaryBox[
         "QiskitCircuit",
         qc,
-        If[qc["Depth"] <= 32, qc["Diagram", "Scale" -> 1], QuantumCircuitOperator[{"Fourier"[3]}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]],
+        Show[Replace[$quantumServiceIcon, Except[_Image] -> QuantumCircuitOperator[{"Fourier"[3]}]["Icon", "GateBackgroundStyle" -> _ -> LightGray, "GateBoundaryStyle" -> _ -> Gray]], ImageSize -> 12],
         {
             {BoxForm`SummaryItem[{"Qubits: ", qc["Qubits"]}]},
             {BoxForm`SummaryItem[{"Depth: ", qc["Depth"]}]}

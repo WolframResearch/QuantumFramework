@@ -26,7 +26,7 @@ $PythonSession[env_String] := With[{id = StringTemplate["QuantumFramework_``"] @
         With[{versions = Through[PacletFind["ExternalEvaluate"]["Version"]], required = "32.2"},
             If[ AllTrue[versions, ResourceFunction["VersionOrder"][#, required] > 0 &], 
                 Failure["DependencyFailure", <|
-                    "MessageTemplate" ->  "ExternalEvaluate paclet should be at least version `` (availabe in Wolfram Language 14), but only versions {``} are found", 
+                    "MessageTemplate" ->  "ExternalEvaluate paclet should be at least version `` (available in Wolfram Language 14), but only versions {``} are found",
                     "MessageParameters" -> {required, StringRiffle[versions, ", "]}
                 |>],
                 StartExternalSession[{{"Python", "StandardErrorFunction" -> Null},

@@ -78,9 +78,10 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
     If[ ! TrueQ[$QuantumFrameworkPropCache] ||
         (* don't cache Simulated* results *)
         MatchQ[prop, name_String | {name_String, ___} /; StringStartsQ[name, "Simulated"]] ||
-        MemberQ[{"Properties", "QuantumOperator"}, prop] ||
+        MemberQ[{"Properties", "AllProperties", "QuantumOperator"}, prop] ||
         QuantumMeasurementProp[qm, "Basis"]["ParameterArity"] > 0,
         result,
+        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumMeasurementProp[qm, prop, args] = result, Rule::rhs]
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
@@ -90,7 +91,9 @@ QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[Quantum
 QuantumMeasurement[qmo_QuantumMeasurementOperator, args__] := QuantumMeasurement[QuantumMeasurementOperator[qmo, args]]
 
 
-QuantumMeasurementProp[qm_, "Properties"] := Union @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
+QuantumMeasurementProp[qm_, "Properties"] := Union @ $QuantumMeasurementProperties
+
+QuantumMeasurementProp[qm_, "AllProperties"] := Union @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["AllProperties"]]
 
 QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
@@ -248,7 +251,7 @@ QuantumMeasurementProp[qm_, prop : "Simplify" | "FullSimplify" | "Chop" | "Compl
 (* qmo properties *)
 
 QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[qm["QuantumOperator"]["Properties"], qm["Properties"]]] := qm["QuantumOperator"][prop, args]
+    MatchQ[prop, Alternatives @@ Intersection[qm["QuantumOperator"]["AllProperties"], qm["AllProperties"]]] := qm["QuantumOperator"][prop, args]
 
 
 (* equality *)
@@ -269,7 +272,7 @@ Scan[
 
 (* parameterization *)
 
-(qm_QuantumMeasurement ? QuantumMeasurementQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumMeasuremen["Properties"], p] && Length[{ps}] <= qm["ParameterArity"] :=
+(qm_QuantumMeasurement ? QuantumMeasurementQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumMeasurement["Properties"], p] && Length[{ps}] <= qm["ParameterArity"] :=
     qm[AssociationThread[Take[qm["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qm_QuantumMeasurement ? QuantumMeasurementQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qm["Parameters"]] :=
@@ -314,7 +317,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Une
         },
         {
             {
-                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qm["Entropy"]], Indeterminate &], 1]}]
+                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[Confirm[N @ qm["Entropy"]], Indeterminate &], 1]}]
             },
             {
                 BoxForm`SummaryItem[{"Parameters: ", qm["Parameters"]}]

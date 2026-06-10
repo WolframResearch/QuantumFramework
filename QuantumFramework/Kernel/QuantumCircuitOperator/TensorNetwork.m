@@ -212,7 +212,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
     net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
-    res = Confirm @ TensorNetworkContract[net, FilterRules[{opts}, Options[TensorNetworkContract]]];
+    res = Confirm @ TensorNetworkContract[net, Automatic, FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],

@@ -46,14 +46,20 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumChannel",
           "Wolfram`QuantumFramework`QuantumStateEstimate",
           "Wolfram`QuantumFramework`QuantumMeasurementSimulation",
-          "Wolfram`QuantumFramework`QuantumEvolve"
+          "Wolfram`QuantumFramework`QuantumEvolve",
+          "Wolfram`QuantumFramework`PauliStabilizer",
+          "Wolfram`QuantumFramework`StabilizerStateQ",
+          "Wolfram`QuantumFramework`StabilizerFrame",
+          "Wolfram`QuantumFramework`CliffordChannel",
+          "Wolfram`QuantumFramework`GraphState",
+          "Wolfram`QuantumFramework`LocalComplement"
         }
       },
       {"Documentation", "Language" -> "English"},
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"},
       {"Asset", "Root" -> "Assets", "Assets" -> {
-        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.2.paclet"}
+        {"IBMQuantumPlatform.paclet", "IBMQuantumPlatform-0.0.4.paclet"}
       }}
     }
   |>

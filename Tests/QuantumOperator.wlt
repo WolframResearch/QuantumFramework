@@ -239,4 +239,13 @@ VerificationTest[
     TestID -> "InvalidName-call-form"
 ]
 
+(* Known name with unmatched call shape returns Failure["InvalidArguments"]
+   rather than recursing or falling through unevaluated. *)
+VerificationTest[
+    Quiet @ QuantumOperator["X"["bad-arg"]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-X"
+]
+
 EndTestSection[]

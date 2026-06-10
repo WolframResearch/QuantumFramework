@@ -148,4 +148,11 @@ VerificationTest[
     TestID -> "InvalidName-call-form"
 ]
 
+VerificationTest[
+    Quiet @ QuantumState["GHZ"["bad-arg"]],
+    Failure["InvalidArguments", _],
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-GHZ"
+]
+
 EndTestSection[]

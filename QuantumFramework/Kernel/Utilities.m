@@ -64,7 +64,10 @@ ToList = Developer`ToList
 
 SymbolicQ[expr_] := ! FreeQ[expr, sym_Symbol ? Developer`SymbolQ /; ! MemberQ[{Rational, Complex}, sym] && ! MemberQ[Attributes[sym], NumericFunction | Constant]]
 
-basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except[_Integer ? Positive] -> 1], {Divide::indet, Power::infy}]
+basisMultiplicity[dim_, size_] := If[
+    size === 1, 1,
+    Replace[Ceiling @ Log[size, dim], Except[_Integer ? Positive] -> 1]
+]
 
 
 (* test functions *)
@@ -153,9 +156,12 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 If[ Precision[matrix] === MachinePrecision,
-                    Quiet @ Check[
-                        Eigensystem[matrix, ZeroTest -> (Chop[N[#1]] == 0 &)],
-                        Eigensystem[matrix],
+                    Quiet[
+                        Check[
+                            Eigensystem[matrix, ZeroTest -> (Chop[N[#1]] == 0 &)],
+                            Eigensystem[matrix],
+                            Eigensystem::eivec0
+                        ],
                         Eigensystem::eivec0
                     ],
                     Eigensystem[Chop @ matrix]
@@ -300,7 +306,11 @@ SparseArrayFlatten[x_ ? NumericQ] := x
 SparseArrayFlatten[array_] := Flatten[array]
 
 
-MatrixInverse[matrix_] := If[SquareMatrixQ[matrix], Quiet @ Check[Inverse[matrix], PseudoInverse[matrix]], PseudoInverse[matrix]]
+MatrixInverse[matrix_] := If[
+    SquareMatrixQ[matrix],
+    Quiet[Check[Inverse[matrix], PseudoInverse[matrix], Inverse::sing], Inverse::sing],
+    PseudoInverse[matrix]
+]
 
 
 matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := Switch[f,
@@ -348,7 +358,8 @@ alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
 
 TranscendentalRecognize[num_ ? NumericQ, basis : _ ? VectorQ : {Pi}] := Enclose[
     Block[{lr, ans},
-        lr = ConfirmBy[Quiet @ FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]], ListQ];
+        (* TODO: identify exact FindIntegerNullVector::* messages emitted on no-relation cases; until then, ConfirmBy -> Enclose handles failure path *)
+        lr = ConfirmBy[FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]], ListQ];
         ans = Rest[lr] . basis / First[lr];
         If[Numerator[ans] > 1*^3 || Denominator[ans] > 1*^3,
             num,

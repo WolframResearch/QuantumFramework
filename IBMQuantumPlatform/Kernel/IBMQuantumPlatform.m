@@ -51,7 +51,7 @@ params = <|
     "ServiceFrameworkVersion" -> "0.1.0",
     "ServiceName" -> "IBMQuantumPlatform",
     "Information" -> "IBM Quantum Platform service connection for Wolfram Language",
-    "Icon" -> ImageTrim[Import[PacletObject["IBMQuantumPlatform"]["AssetLocation", "logo"]], ImageValuePositions[#, "Max"] &],
+    "Icon" -> Show[ImageTrim[Import[PacletObject["IBMQuantumPlatform"]["AssetLocation", "icon"]], ImageValuePositions[#, "Max"] &], ImageSize -> 12],
     "AuthenticationMethod" -> "APIKey",
     "AuthenticationFunction" -> Function[key, <|"Headers" -> {"Authorization" -> IBMToken[key], "Service-CRN" -> IBMCrn[]}|>],
     "ClientDialog" -> Function[
@@ -321,9 +321,13 @@ params["ParameterMap"] = <|
 
 (* Processed Requests *)
 
+(* These use immediate assignment (=), not SetDelayed (:=): := on an
+   Association part stores a RuleDelayed entry, and ServiceFramework's
+   addDefaultParameters cannot Part-assign default keys into a delayed-held
+   entry, which surfaces as Set::pspec1 and Function::slota at load time. *)
 params["ProcessedRequests"] = <||>;
 
-params["ProcessedRequests", "Backends"] := <|
+params["ProcessedRequests", "Backends"] = <|
     "ExecuteFunction" -> SF`RequestExecute["RawBackends"],
     "SubmitFunction" -> SF`RequestExecute["RawBackends"],
     "Parameters" -> {},
@@ -332,7 +336,7 @@ params["ProcessedRequests", "Backends"] := <|
     "PreprocessingFunction" -> Identity,
     "ExecuteResultProcessing" -> Function[Enclose[Lookup[ConfirmBy[#, AssociationQ], "devices"]]]
 |>
-params["ProcessedRequests", "JobRun"] := <|
+params["ProcessedRequests", "JobRun"] = <|
 		"ExecuteFunction" -> SF`RequestExecute["RawJobRun"],
 		"SubmitFunction" -> SF`RequestSubmit["RawJobRun"],
 		"Parameters" -> {
@@ -355,7 +359,7 @@ params["ProcessedRequests", "JobRun"] := <|
         "ExecuteResultProcessing" -> Identity
 	|>
 
-params["ProcessedRequests", "JobResults"] := <|
+params["ProcessedRequests", "JobResults"] = <|
     "ExecuteFunction" -> SF`RequestExecute["RawJobResults"],
     "SubmitFunction" -> SF`RequestExecute["RawJobResults"],
     "Parameters" -> {"JobID" -> Automatic},

@@ -1,0 +1,333 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     12579,        324]
+NotebookOptionsPosition[      7999,        228]
+NotebookOutlinePosition[      8555,        247]
+CellTagsIndexPosition[      8512,        244]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["PacletFunctionGraph", "GuideTitle",
+ CellID->595721978,ExpressionUUID->"aea2604b-d295-4a16-943e-8242a8a04c9d"],
+
+Cell[TextData[{
+ "PacletFunctionGraph introspects any Wolfram Language paclet and produces a \
+directed function-relation graph capturing how the paclet's head symbols \
+compose. Each public symbol becomes a node; directed edges record which heads \
+accept which others as inputs, and which produce which on application. The \
+graph is paclet-agnostic \[LongDash] no manual configuration is required for \
+predicates, options, or naming conventions: predicate guards like ",
+ Cell[BoxData[
+  RowBox[{"_", "?", "MyHeadQ"}]], "InlineFormula",ExpressionUUID->
+  "9192ca28-d369-47f4-a24b-0462452211a5"],
+ " are resolved automatically by walking the predicate's own DownValues."
+}], "GuideAbstract",
+ CellID->963500335,ExpressionUUID->"34dbc6d6-b124-41b4-b740-6cf04839a859"],
+
+Cell["\<\
+The workflow has three steps: build the graph from a paclet path, optionally \
+cache it to disk, then query or render. Two paclet-agnostic renderers ship \
+for the most common views \[LongDash] a whole-paclet overview and a \
+single-symbol neighborhood \[LongDash] and the underlying edge list is \
+exposed as a primitive for custom analyses.\
+\>", "GuideAbstract",
+ CellID->881007594,ExpressionUUID->"466add87-b527-4165-ba12-6e5c689cda45"],
+
+Cell[CellGroupData[{
+
+Cell["", "GuideFunctionsSection",
+ CellID->100024402,ExpressionUUID->"a55d28d3-bf01-407b-9f3d-b48c49b0ffa6"],
+
+Cell["Building the graph", "GuideFunctionsSubsection",
+ CellID->337615641,ExpressionUUID->"6b8ab96e-c84c-46b3-acc6-2af0233575b2"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["BuildFunctionGraph",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/BuildFunctionGraph"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "7f1c1085-1e04-4cda-b591-3eec80587c2e"],
+ " \[LongDash] ",
+ "introspect a paclet and emit the function-relation graph as an Association"
+}], "GuideText",
+ CellID->449441864,ExpressionUUID->"b2593486-08f5-41c2-ad82-53f3481299c1"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["LoadFunctionGraph",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/LoadFunctionGraph"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "024be510-b1a5-4751-8a59-45a7dbeaa76a"],
+ " \[LongDash] ",
+ "read a previously-built graph from disk in a sandboxed context"
+}], "GuideText",
+ CellID->435788883,ExpressionUUID->"5c75409f-60f6-46a7-aad0-b7a5fdd98d10"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "GuideFunctionsSection",
+ CellID->691240238,ExpressionUUID->"6446b8ba-45f1-4458-9933-e62e5ad78326"],
+
+Cell["Rendering", "GuideFunctionsSubsection",
+ CellID->791972565,ExpressionUUID->"c7d68856-0f8d-44af-b17e-6c5cbcbe45b9"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["SymbolNeighborhoodGraph",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/PacletFunctionGraph/ref/SymbolNeighborhoodGraph"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "0bdb4102-1f1d-4b67-842c-b594d8477565"],
+ " \[LongDash] ",
+ "render every directed edge that touches one symbol, colored by Kind"
+}], "GuideText",
+ CellID->476553514,ExpressionUUID->"a2f2a1dc-3592-4e79-a407-f92487c49dee"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["PacletOverviewGraph",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/PacletOverviewGraph"]],
+   "InlineGuideFunction",ExpressionUUID->
+  "909cc2bc-ddac-4887-b848-4698e7d1dcd7"],
+ " \[LongDash] ",
+ "render the whole paclet's flow graph between all paclet head symbols"
+}], "GuideText",
+ CellID->970036744,ExpressionUUID->"576414cf-24b2-46e4-b87f-f414be1c7973"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["", "GuideFunctionsSection",
+ CellID->600876670,ExpressionUUID->"dc74abd3-51fd-41a9-982a-cffdec3ceaeb"],
+
+Cell["Primitives and styling", "GuideFunctionsSubsection",
+ CellID->54617505,ExpressionUUID->"d3a35ebb-42fa-4ce7-96ca-38aed1804668"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["PacletFlowEdges",
+   BaseStyle->"Link",
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/PacletFlowEdges"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "b97a44ee-1493-4bd5-ab36-5f0883f38835"],
+ " \[LongDash] ",
+ "the underlying deduplicated list of directed edges between paclet heads"
+}], "GuideText",
+ CellID->420476207,ExpressionUUID->"f10e7d32-f2c2-4707-947b-91817cb82838"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["$FunctionGraphKindColors",
+   BaseStyle->"Link",
+   ButtonData->
+    "paclet:Wolfram/PacletFunctionGraph/ref/$FunctionGraphKindColors"]], 
+  "InlineGuideFunction",ExpressionUUID->
+  "980bde44-e221-484d-800c-bc14fc00966a"],
+ " \[LongDash] ",
+ "Kind \[Rule] RGBColor palette used by the renderers"
+}], "GuideText",
+ CellID->356020831,ExpressionUUID->"c28d8b3e-01b7-4b43-a66e-fcd479fb4456"]
+}, Open  ]],
+
+Cell["Tech Notes", "GuideTutorialsSection",
+ CellID->498233526,ExpressionUUID->"576756a7-94a8-42c7-bb07-2ea04412c37e"],
+
+Cell[CellGroupData[{
+
+Cell["Related Links", "GuideRelatedLinksSection",
+ CellID->216008645,ExpressionUUID->"a5cfd53b-aed3-4688-97c4-6c166f777fd8"],
+
+Cell["XXXX", "GuideMoreAbout",
+ CellID->792946297,ExpressionUUID->"c57e413f-7364-4069-b7e7-c4be971db2e0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->174169756,ExpressionUUID->"280275a0-b7c0-4023-8713-6cd3c22544cb"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["0.1", "HistoryData",
+  CellTags->"New",ExpressionUUID->"cf394e03-ec77-4750-a583-7b588490694a"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"3aa97512-a78e-4aed-bf48-511eb1cd5c26"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "75fd3560-fca1-4c8f-9dd8-d768a5adc858"]
+}], "History",
+ CellID->336341515,ExpressionUUID->"c9dad20a-b478-4af0-aa66-877b8e4862d4"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",
+ CellID->365447421,ExpressionUUID->"76fd64d9-05d5-4e5e-9674-8f7f5643579f"],
+
+Cell["Guide", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->518898153,ExpressionUUID->"4fddcb1f-ceea-453c-907f-2b5251d7786b"],
+
+Cell["Wolfram/PacletFunctionGraph", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->840260826,ExpressionUUID->"c974e8a8-1fdb-459a-badf-a551b0b2e7d9"],
+
+Cell["Wolfram`PacletFunctionGraph`", "Categorization",
+ CellLabel->"Context",
+ CellID->619472931,ExpressionUUID->"6653e122-adb3-420a-a02a-da0c02867a31"],
+
+Cell["Wolfram/PacletFunctionGraph/guide/PacletFunctionGraph", "Categorization",
+ CellLabel->"URI",
+ CellID->744478682,ExpressionUUID->"6b45b690-42b7-4309-9b07-ded3fc02d655"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->526968765,ExpressionUUID->"a74a291e-6d9d-457b-8127-4e8189041911"],
+
+Cell["function graph", "Keywords",
+ CellID->858046179,ExpressionUUID->"24e27342-af87-4c33-b659-33837c85d8b1"],
+
+Cell["paclet introspection", "Keywords",
+ CellID->402342839,ExpressionUUID->"eab5d919-e7bd-4f5c-b157-c70a51407c37"],
+
+Cell["dataflow", "Keywords",
+ CellID->905321000,ExpressionUUID->"62e4b3b3-bd3c-46b1-a3f3-efc514b01141"],
+
+Cell["function-relation graph", "Keywords",
+ CellID->769065061,ExpressionUUID->"6d1c0753-4b12-4dc9-b4c1-3fa529693b7f"],
+
+Cell["paclet metadata", "Keywords",
+ CellID->940648990,ExpressionUUID->"06c0a7f6-82c2-4c29-b7a6-54f4ed1f9858"],
+
+Cell["DownValues", "Keywords",
+ CellID->722331747,ExpressionUUID->"30e63e8c-b12b-49f5-9263-968c8e444cc2"]
+}, Closed]]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{800, 770},
+WindowMargins->{{5, Automatic}, {Automatic, 0}},
+TaggingRules-><|"Paclet" -> "Wolfram/PacletFunctionGraph"|>,
+CellContext->"Global`",
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "GuidePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"ec8588e0-ccf0-4ff7-a058-4ae1de29c814"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 116, 1, 70, "GuideTitle",ExpressionUUID->"aea2604b-d295-4a16-943e-8242a8a04c9d",
+ CellID->595721978],
+Cell[695, 25, 769, 12, 70, "GuideAbstract",ExpressionUUID->"34dbc6d6-b124-41b4-b740-6cf04839a859",
+ CellID->963500335],
+Cell[1467, 39, 450, 7, 70, "GuideAbstract",ExpressionUUID->"466add87-b527-4165-ba12-6e5c689cda45",
+ CellID->881007594],
+Cell[CellGroupData[{
+Cell[1942, 50, 108, 1, 70, "GuideFunctionsSection",ExpressionUUID->"a55d28d3-bf01-407b-9f3d-b48c49b0ffa6",
+ CellID->100024402],
+Cell[2053, 53, 129, 1, 70, "GuideFunctionsSubsection",ExpressionUUID->"6b8ab96e-c84c-46b3-acc6-2af0233575b2",
+ CellID->337615641],
+Cell[2185, 56, 437, 10, 70, "GuideText",ExpressionUUID->"b2593486-08f5-41c2-ad82-53f3481299c1",
+ CellID->449441864],
+Cell[2625, 68, 423, 10, 70, "GuideText",ExpressionUUID->"5c75409f-60f6-46a7-aad0-b7a5fdd98d10",
+ CellID->435788883]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3085, 83, 108, 1, 70, "GuideFunctionsSection",ExpressionUUID->"6446b8ba-45f1-4458-9933-e62e5ad78326",
+ CellID->691240238],
+Cell[3196, 86, 120, 1, 70, "GuideFunctionsSubsection",ExpressionUUID->"c7d68856-0f8d-44af-b17e-6c5cbcbe45b9",
+ CellID->791972565],
+Cell[3319, 89, 445, 11, 70, "GuideText",ExpressionUUID->"a2f2a1dc-3592-4e79-a407-f92487c49dee",
+ CellID->476553514],
+Cell[3767, 102, 433, 10, 70, "GuideText",ExpressionUUID->"576414cf-24b2-46e4-b87f-f414be1c7973",
+ CellID->970036744]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4237, 117, 108, 1, 70, "GuideFunctionsSection",ExpressionUUID->"dc74abd3-51fd-41a9-982a-cffdec3ceaeb",
+ CellID->600876670],
+Cell[4348, 120, 132, 1, 70, "GuideFunctionsSubsection",ExpressionUUID->"d3a35ebb-42fa-4ce7-96ca-38aed1804668",
+ CellID->54617505],
+Cell[4483, 123, 428, 10, 70, "GuideText",ExpressionUUID->"f10e7d32-f2c2-4707-947b-91817cb82838",
+ CellID->420476207],
+Cell[4914, 135, 431, 11, 70, "GuideText",ExpressionUUID->"c28d8b3e-01b7-4b43-a66e-fcd479fb4456",
+ CellID->356020831]
+}, Open  ]],
+Cell[5360, 149, 118, 1, 70, "GuideTutorialsSection",ExpressionUUID->"576756a7-94a8-42c7-bb07-2ea04412c37e",
+ CellID->498233526],
+Cell[CellGroupData[{
+Cell[5503, 154, 124, 1, 70, "GuideRelatedLinksSection",ExpressionUUID->"a5cfd53b-aed3-4688-97c4-6c166f777fd8",
+ CellID->216008645],
+Cell[5630, 157, 105, 1, 70, "GuideMoreAbout",ExpressionUUID->"c57e413f-7364-4069-b7e7-c4be971db2e0",
+ CellID->792946297]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5772, 163, 110, 1, 70, "MetadataSection",ExpressionUUID->"280275a0-b7c0-4023-8713-6cd3c22544cb",
+ CellID->174169756],
+Cell[5885, 166, 477, 12, 70, "History",ExpressionUUID->"c9dad20a-b478-4af0-aa66-877b8e4862d4",
+ CellID->336341515],
+Cell[CellGroupData[{
+Cell[6387, 182, 122, 1, 70, "CategorizationSection",ExpressionUUID->"76fd64d9-05d5-4e5e-9674-8f7f5643579f",
+ CellID->365447421],
+Cell[6512, 185, 133, 2, 70, "Categorization",ExpressionUUID->"4fddcb1f-ceea-453c-907f-2b5251d7786b",
+ CellID->518898153],
+Cell[6648, 189, 155, 2, 70, "Categorization",ExpressionUUID->"c974e8a8-1fdb-459a-badf-a551b0b2e7d9",
+ CellID->840260826],
+Cell[6806, 193, 152, 2, 70, "Categorization",ExpressionUUID->"6653e122-adb3-420a-a02a-da0c02867a31",
+ CellID->619472931],
+Cell[6961, 197, 173, 2, 70, "Categorization",ExpressionUUID->"6b45b690-42b7-4309-9b07-ded3fc02d655",
+ CellID->744478682]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[7171, 204, 110, 1, 70, "KeywordsSection",ExpressionUUID->"a74a291e-6d9d-457b-8127-4e8189041911",
+ CellID->526968765],
+Cell[7284, 207, 109, 1, 70, "Keywords",ExpressionUUID->"24e27342-af87-4c33-b659-33837c85d8b1",
+ CellID->858046179],
+Cell[7396, 210, 115, 1, 70, "Keywords",ExpressionUUID->"eab5d919-e7bd-4f5c-b157-c70a51407c37",
+ CellID->402342839],
+Cell[7514, 213, 103, 1, 70, "Keywords",ExpressionUUID->"62e4b3b3-bd3c-46b1-a3f3-efc514b01141",
+ CellID->905321000],
+Cell[7620, 216, 118, 1, 70, "Keywords",ExpressionUUID->"6d1c0753-4b12-4dc9-b4c1-3fa529693b7f",
+ CellID->769065061],
+Cell[7741, 219, 110, 1, 70, "Keywords",ExpressionUUID->"06c0a7f6-82c2-4c29-b7a6-54f4ed1f9858",
+ CellID->940648990],
+Cell[7854, 222, 105, 1, 70, "Keywords",ExpressionUUID->"30e63e8c-b12b-49f5-9263-968c8e444cc2",
+ CellID->722331747]
+}, Closed]]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

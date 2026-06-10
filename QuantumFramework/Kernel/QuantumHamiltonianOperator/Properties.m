@@ -21,8 +21,10 @@ QuantumHamiltonianOperator["Properties"] := DeleteDuplicates @ Join[
 qho_QuantumHamiltonianOperator["ValidQ"] := QuantumHamiltonianOperatorQ[qho]
 
 
-QuantumHamiltonianOperatorProp[qho_, "Properties"] :=
-    Union @ Join[QuantumHamiltonianOperator["Properties"], qho["QuantumOperator"]["Properties"]]
+QuantumHamiltonianOperatorProp[qho_, "Properties"] := DeleteDuplicates @ $QuantumHamiltonianOperatorProperties
+
+QuantumHamiltonianOperatorProp[qho_, "AllProperties"] :=
+    Union @ Join[QuantumHamiltonianOperator["Properties"], qho["QuantumOperator"]["AllProperties"]]
 
 
 QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` is undefined for this operator";
@@ -32,7 +34,7 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
     result = QuantumHamiltonianOperatorProp[qho, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "Basis"}, prop] &&
         QuantumHamiltonianOperatorProp[qho, "Basis"]["ParameterArity"] == 0,
         QuantumHamiltonianOperatorProp[qho, prop, args] = result,
         result
@@ -125,5 +127,5 @@ QuantumHamiltonianOperatorProp[qho_, "FinalEvolutionOperator"] := qho["Evolution
 (* operator properties *)
 
 QuantumHamiltonianOperatorProp[qho_, args : PatternSequence[prop_String, ___]] /;
-    MemberQ[Intersection[qho["QuantumOperator"]["Properties"], qho["Properties"]], prop] := qho["QuantumOperator"][args]
+    MemberQ[Intersection[qho["QuantumOperator"]["AllProperties"], qho["AllProperties"]], prop] := qho["QuantumOperator"][args]
 

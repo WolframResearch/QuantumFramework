@@ -1,0 +1,402 @@
+BeginTestSection["OpenQASMImport"]
+
+(* Native Wolfram-Language OpenQASM importer. This suite is PURE WL: it needs no qiskit /
+   Python session, so it runs everywhere (a strict improvement over the qiskit-coupled
+   QuantumQASM export tests). The importer is exercised through the public surface:
+   QuantumQASM[source] and QuantumCircuitOperator[source]. *)
+
+(* matrix-equivalence helpers *)
+mnorm[a_, b_] := Norm[Flatten[Normal[N[a["Matrix"]]] - Normal[N[b["Matrix"]]]]];
+exactQ[a_, b_] := TrueQ[Chop[mnorm[a, b]] == 0];
+closeQ[a_, b_] := TrueQ[mnorm[a, b] < 1.*^-4];
+
+bell = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}];
+
+(* ---- basic parse: v2 and v3, with measurement ---- *)
+
+VerificationTest[
+    Head @ QuantumQASM["OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[2];\ncreg c[2];\nh q[0];\ncx q[0],q[1];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];"],
+    QuantumCircuitOperator,
+    TestID -> "v2-bell-measure-parses"
+]
+
+VerificationTest[
+    Head @ QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nh q[0];\ncx q[0], q[1];\nc[0] = measure q[0];\nc[1] = measure q[1];"],
+    QuantumCircuitOperator,
+    TestID -> "v3-bell-measure-parses"
+]
+
+(* ---- v2 / v3 parity: same Bell unitary in both dialects ---- *)
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[2];\nh q[0];\ncx q[0],q[1];"],
+        QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nh q[0];\ncx q[0], q[1];"]
+    ],
+    True,
+    TestID -> "v2-v3-parity"
+]
+
+(* ---- exact round-trip on hand-written standard QASM ---- *)
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nh q[0];\ncx q[0], q[1];\nrz(pi/3) q[1];"],
+        QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "RZ"[Pi/3] -> 2}]
+    ],
+    True,
+    TestID -> "exact-roundtrip-standard"
+]
+
+(* ---- emitter round-trip (tolerance: the WL emitter rounds angles to ~6 digits) ---- *)
+
+VerificationTest[
+    closeQ[QuantumCircuitOperator[bell["QASM"]], bell],
+    True,
+    TestID -> "emitter-roundtrip"
+]
+
+(* ---- custom gate definition -> named subcircuit ---- *)
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\ngate mygate a, b { h a; cx a, b; }\nqubit[2] q;\nmygate q[0], q[1];"],
+        bell
+    ],
+    True,
+    TestID -> "custom-gate-def"
+]
+
+(* ---- named controlled gates ---- *)
+
+VerificationTest[
+    exactQ[QuantumQASM["OPENQASM 3.0;\nqubit[2] q;\ncx q[0],q[1];"], QuantumCircuitOperator[{"CNOT" -> {1, 2}}]],
+    True,
+    TestID -> "named-cx"
+]
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 3.0;\nqubit[3] q;\nccx q[0],q[1],q[2];"],
+        QuantumCircuitOperator[{QuantumOperator["C"["X", {1, 2}, {}], {3}]}]
+    ],
+    True,
+    TestID -> "named-ccx-toffoli"
+]
+
+(* ---- gate modifiers ---- *)
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 3.0;\nqubit[2] q;\ncx q[0],q[1];"],
+        QuantumQASM["OPENQASM 3.0;\nqubit[2] q;\nctrl @ x q[0],q[1];"]
+    ],
+    True,
+    TestID -> "ctrl-modifier-equals-named"
+]
+
+VerificationTest[
+    exactQ[
+        QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\ninv @ s q[0];"],
+        QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nsdg q[0];"]
+    ],
+    True,
+    TestID -> "inv-modifier-equals-sdg"
+]
+
+VerificationTest[
+    Length @ QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\npow(2) @ x q[0];"]["Operators"],
+    2,
+    TestID -> "pow-modifier-repeats"
+]
+
+(* ---- multi-register ordering ---- *)
+
+VerificationTest[
+    QuantumQASM["OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg a[2];\nqreg b[1];\ncx a[1], b[0];"]["Operators"][[1]]["Order"],
+    {{2, 3}, {2, 3}},
+    TestID -> "multi-register-order"
+]
+
+(* ---- reset / barrier / gphase parse ---- *)
+
+VerificationTest[
+    Head @ QuantumQASM["OPENQASM 3.0;\nqubit[2] q;\nh q[0];\nbarrier q;\nreset q[1];\ngphase(pi/4);"],
+    QuantumCircuitOperator,
+    TestID -> "reset-barrier-gphase"
+]
+
+(* ---- parametrized gate with a pi expression ---- *)
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nrx(pi/2) q[0];"]["Operators"][[1]]["Label"],
+    Subscript["R", "X"][Pi/2],
+    TestID -> "param-pi-expression"
+]
+
+(* ---- failure categories ---- *)
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nfoo q[0];"]["Category"],
+    "UnknownGate",
+    TestID -> "fail-unknown-gate"
+]
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nfor int i in [0:2] { h q[0]; }"]["Category"],
+    "Unsupported",
+    TestID -> "fail-unsupported-construct"
+]
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nh q[5];"]["Category"],
+    "Range",
+    TestID -> "fail-out-of-range"
+]
+
+VerificationTest[
+    QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\nrx(Run[\"x\"]) q[0];"]["Category"],
+    "BadExpression",
+    TestID -> "fail-injection-refused"
+]
+
+VerificationTest[
+    FailureQ @ QuantumQASM["OPENQASM 3.0;\nqubit[1] q;\ncx q[0];"],
+    True,
+    TestID -> "fail-arity"
+]
+
+(* ---- named-circuit guard regression: the QASM overload must not shadow named circuits ---- *)
+
+VerificationTest[
+    Head @ QuantumCircuitOperator["Bell"],
+    QuantumCircuitOperator,
+    TestID -> "named-circuit-still-works"
+]
+
+VerificationTest[
+    FailureQ @ Quiet @ QuantumCircuitOperator["DefinitelyNotACircuit"],
+    True,
+    TestID -> "invalid-name-still-fails"
+]
+
+(* ---- constructor surface ---- *)
+
+VerificationTest[
+    exactQ[QuantumCircuitOperator["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nh q[0];\ncx q[0], q[1];"], bell],
+    True,
+    TestID -> "constructor-from-string"
+]
+
+VerificationTest[
+    With[{tmp = FileNameJoin[{$TemporaryDirectory, "qf-openqasm-test.qasm"}]},
+        Export[tmp, "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nh q[0];\ncx q[0], q[1];", "Text"];
+        exactQ[QuantumCircuitOperator[File[tmp]], bell]
+    ],
+    True,
+    TestID -> "constructor-from-file"
+]
+
+(* ---- hub delegation: properties go through QuantumQASM ---- *)
+
+VerificationTest[
+    bell["QASM"] === QuantumQASM[bell, "WL"],
+    True,
+    TestID -> "circuit-qasm-delegates-to-hub"
+]
+
+VerificationTest[
+    QuantumOperator["H", {1}]["QASM"] === QuantumQASM[QuantumOperator["H", {1}]],
+    True,
+    TestID -> "operator-qasm-delegates-to-hub"
+]
+
+VerificationTest[
+    QuantumOperator["H", {1}]["SimpleQASM"] === QuantumQASM[QuantumOperator["H", {1}], "Simple"],
+    True,
+    TestID -> "operator-simpleqasm-delegates-to-hub"
+]
+
+(* the native "WL" export mode is dependency-free (no qiskit) and starts with the header *)
+VerificationTest[
+    StringStartsQ[QuantumQASM[bell, "WL"], "OPENQASM 3.0"],
+    True,
+    TestID -> "wl-export-dependency-free"
+]
+
+(* ---- back-compat: deprecated ImportQASMCircuit still imports (now returns a QCO) ---- *)
+
+VerificationTest[
+    exactQ[
+        Quiet[ImportQASMCircuit["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nh q[0];\ncx q[0], q[1];"], ImportQASMCircuit::deprecated],
+        bell
+    ],
+    True,
+    TestID -> "import-qasm-circuit-deprecated-shim"
+]
+
+(* ---- state-injection circuits export via auto state-prep; projections fail cleanly ---- *)
+
+(* The CHSH circuit begins with non-unitary state injections (a Cup Bell-pair tensor and |+>
+   kets). OpenQASM starts every qubit in |0>, so each injection is lowered to a reset plus a
+   preparation gate sequence. The export is a valid OpenQASM string (no stray Part::partw
+   message from a non-square matrix reaching UnitaryAngles). *)
+
+VerificationTest[
+    StringQ[QuantumQASM[QuantumCircuitOperator["CHSH"]]],
+    True,
+    TestID -> "stateprep-circuit-exports"
+]
+
+(* the lowering emits resets for the |0> base of each prepared state *)
+VerificationTest[
+    StringContainsQ[QuantumQASM[QuantumCircuitOperator["CHSH"]], "reset q["],
+    True,
+    TestID -> "stateprep-lowers-to-reset"
+]
+
+(* the exported circuit round-trips to the same measurement statistics, within the WL
+   emitter's ~6-digit angle rounding *)
+VerificationTest[
+    With[{chsh = QuantumCircuitOperator["CHSH"]},
+        Max[Abs[chsh[]["ProbabilitiesList"] - QuantumQASM[QuantumQASM[chsh]][]["ProbabilitiesList"]]] < 1.*^-4
+    ],
+    True,
+    TestID -> "stateprep-roundtrip-equivalent"
+]
+
+(* OpenQASM `reset` is dropped on import (a QF wire with no initial state is already |0>):
+   the re-imported circuit carries no Reset element, so it does not accumulate the malformed
+   growing-dimension Reset[QuantumState[\[Ellipsis]]] artifacts that "Reset" -> wire produced *)
+VerificationTest[
+    FreeQ[QuantumQASM[QuantumQASM[QuantumCircuitOperator["CHSH"]]]["Elements"], Reset | "Reset"],
+    True,
+    TestID -> "stateprep-roundtrip-no-reset-artifact"
+]
+
+(* a co-state / projection (Cap: input legs, no output) is NOT a preparable state, so it has
+   no OpenQASM form and the circuit export fails cleanly, naming the offending gate, rather
+   than letting a non-square matrix reach UnitaryAngles *)
+VerificationTest[
+    With[{r = QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumOperator["Cap"] -> {1, 2}}]]},
+        MatchQ[r, Failure["QuantumQASM", _Association]] && StringContainsQ[r[[2]]["MessageTemplate"], "Cap"]
+    ],
+    True,
+    TestID -> "projection-circuit-clean-failure"
+]
+
+(* a genuine square 1-qubit gate is unaffected and still emits a U(...) gate *)
+VerificationTest[
+    StringStartsQ[QuantumQASM[QuantumOperator["H"], "Simple"], "U("],
+    True,
+    TestID -> "square-gate-still-emits-u"
+]
+
+(* physical qubits ($N: OpenQASM 3 hardware qubits, declared by no register) import; qiskit
+   emits these for transpiled circuits *)
+VerificationTest[
+    Head @ QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[2] c;\nh $0;\ncx $0, $1;\nc[0] = measure $0;\nc[1] = measure $1;"],
+    QuantumCircuitOperator,
+    TestID -> "physical-qubit-import"
+]
+
+(* ---- non-qubit (higher-dimensional) systems are rejected with a clear failure ---- *)
+
+(* OpenQASM models qubit registers only. A circuit carrying any d != 2 quantum wire (here a
+   qutrit Hadamard plus a d=3 measurement) has no OpenQASM representation, so the export is
+   rejected up front with a named QuantumQASM failure naming the offending dimension, not an
+   opaque qiskit ConfirmationFailed. This is the same failure IBMJobSubmit reuses to reject a
+   non-qubit circuit before contacting the QPU. *)
+
+qutritCircuit = QuantumCircuitOperator[{"H"[3], "M"[QuantumBasis[3]]}];
+
+VerificationTest[
+    With[{r = QuantumQASM[qutritCircuit]},
+        MatchQ[r, Failure["QuantumQASM", _Association]] &&
+            StringContainsQ[r[[2]]["MessageTemplate"], "qubit (2-dimensional) systems only"] &&
+            r[[2]]["NonQubitDimensions"] === {3}
+    ],
+    True,
+    TestID -> "non-qubit-circuit-clean-failure"
+]
+
+(* a pure-qubit circuit is unaffected and still exports *)
+VerificationTest[
+    FailureQ @ QuantumQASM[bell],
+    False,
+    TestID -> "qubit-circuit-not-rejected"
+]
+
+(* ---- cross-package scoping regression for the IBMJobSubmit non-qubit guard ----
+   The guard helpers must be shared PackageScope symbols, not file-private to QuantumQASM.m.
+   When they were private, IBMQuantum.m's guard referenced a different, undefined symbol, so
+   qasmQubitsQ[qco] stayed unevaluated, ! unevaluated was not True, the If never fired, and a
+   qutrit circuit fell through to qiskit and surfaced an opaque PythonError instead of the clean
+   failure above. These tests pin the symbols as defined and resolving the same way both files
+   see them. *)
+
+VerificationTest[
+    {
+        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[qutritCircuit],
+        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[bell]
+    },
+    {False, True},
+    TestID -> "qasmQubitsQ-shared-and-defined"
+]
+
+VerificationTest[
+    MatchQ[Wolfram`QuantumFramework`PackageScope`qasmNonQubitFailure[qutritCircuit], Failure["QuantumQASM", _Association]],
+    True,
+    TestID -> "qasmNonQubitFailure-shared-and-defined"
+]
+
+(* ---- non-computational measurement basis is preserved on export ----
+   OpenQASM measures only in the computational basis, so a measurement in basis B must be
+   lowered to "rotate by Inverse[B], then measure computationally" (the same lowering the
+   qiskit export path uses). A plain Z measurement must be left byte-for-byte unchanged. *)
+
+probDist[qc_] := N @ qc[]["ProbabilitiesList"];
+qasmStatsRoundtripQ[qc_] := With[{rt = QuantumCircuitOperator @ QuantumQASM[qc]},
+    TrueQ[Chop[Total @ Abs[probDist[qc] - N @ rt[]["ProbabilitiesList"]]] == 0]
+];
+
+(* X-basis measurement of |0> must round-trip to {1/2, 1/2}, not the Z result {1, 0} *)
+VerificationTest[
+    With[{rt = QuantumCircuitOperator @ QuantumQASM[QuantumCircuitOperator[{QuantumMeasurementOperator["X", {1}]}]]},
+        TrueQ[Chop[Total @ Abs[N @ rt[QuantumState["0"]]["ProbabilitiesList"] - {0.5, 0.5}]] == 0]
+    ],
+    True,
+    TestID -> "x-basis-measurement-roundtrip-stats"
+]
+
+(* the export carries a basis-change gate before the measure (not a bare computational measure) *)
+VerificationTest[
+    StringContainsQ[
+        QuantumQASM[QuantumCircuitOperator[{QuantumMeasurementOperator["X", {1}]}]],
+        "U(" ~~ ___ ~~ "measure q[0]"
+    ],
+    True,
+    TestID -> "x-basis-measurement-emits-rotation"
+]
+
+(* Y-basis and the Deutsch-Jozsa-phase circuit (X-basis terminal measurements) round-trip *)
+VerificationTest[
+    qasmStatsRoundtripQ[QuantumCircuitOperator[{"H" -> 1, QuantumMeasurementOperator["Y", {1}]}]],
+    True,
+    TestID -> "y-basis-measurement-roundtrip-stats"
+]
+
+VerificationTest[
+    qasmStatsRoundtripQ[QuantumCircuitOperator["DeutschJozsaPhase"[3, 2]]],
+    True,
+    TestID -> "deutsch-jozsa-phase-measurement-roundtrip-stats"
+]
+
+(* a plain computational (Z) measurement gets no spurious rotation gate: export is unchanged *)
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2}}]],
+    "OPENQASM 3.0;\nqubit[2] q;\nbit[2] c;\nU(1.5707963267948966, 0., 3.141592653589793) q[0];\nctrl(1) @ negctrl(0) @ U(3.141592653589793, 0., 3.141592653589793) q[0] q[1];\nc[0] = measure q[0];\nc[1] = measure q[1];",
+    TestID -> "computational-measurement-unchanged"
+]
+
+EndTestSection[]

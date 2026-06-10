@@ -1,0 +1,3866 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    160443,       3857]
+NotebookOptionsPosition[    142691,       3519]
+NotebookOutlinePosition[    143736,       3550]
+CellTagsIndexPosition[    143612,       3544]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["BuildFunctionGraph", "ObjectName",
+ CellID->675019506,ExpressionUUID->"f9d92f1e-e210-47fa-a704-013324fd7496"],
+
+Cell[TextData[{
+ Cell["\t", "ModInfo",ExpressionUUID->
+  "932afd24-f8b3-417e-a48f-241f84862b4b"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["BuildFunctionGraph",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/BuildFunctionGraph"], 
+   "[", 
+   StyleBox["path", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
+  "c6446901-1fd1-4137-8ddb-4788c4a1ee32"],
+ "\[LineSeparator]loads the paclet at ",
+ Cell[BoxData[
+  StyleBox["path", "TI"]], "InlineFormula",ExpressionUUID->
+  "dd808feb-9c0b-4259-8284-47fa14b7d605"],
+ ", walks every public symbol's DownValues and SubValues, and returns an \
+Association keyed by symbol name. As a side effect, writes the same \
+Association to ",
+ Cell[BoxData["\"\<path\>\""], "InlineFormula",ExpressionUUID->
+  "08d59ea4-9ef1-43da-9465-85e8ce44597c"],
+ "/Resources/FunctionGraph.wl.\n",
+ Cell["\t", "ModInfo",ExpressionUUID->
+  "fe150cbd-457b-499e-ad82-6fd4021b07c9"],
+ Cell[BoxData[
+  RowBox[{
+   ButtonBox["BuildFunctionGraph",
+    BaseStyle->"Link",
+    ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/BuildFunctionGraph"], 
+   "[", 
+   RowBox[{
+    StyleBox["path", "TI"], ",", " ", 
+    StyleBox["opts", "TI"]}], "]"}]], "InlineFormula",ExpressionUUID->
+  "16113fd9-5dee-45dd-a7b1-9026fae8b811"],
+ "\[LineSeparator]accepts options that customize introspection, output \
+target, and predicate resolution."
+}], "Usage",
+ CellID->593192022,ExpressionUUID->"9213165b-b182-4ed6-87f6-617c4522ee4d"],
+
+Cell[TextData[{
+ "The paclet at ",
+ Cell[BoxData[
+  StyleBox["path", "TI"]], "InlineFormula",ExpressionUUID->
+  "dc58a6b9-e38e-4de0-8cd5-2bfb48e70258"],
+ " is loaded into the current kernel via ",
+ Cell[BoxData[
+ "PacletDirectoryLoad"], "InlineFormula",ExpressionUUID->
+  "42ebc692-6749-48ca-aa66-4dfe5bbbd105"],
+ " and ",
+ Cell[BoxData[
+ "Needs"], "InlineFormula",ExpressionUUID->
+  "3c5519a8-0582-4474-b746-09011bf95309"],
+ ". The list of public symbols is read from the ",
+ Cell[BoxData["\"\<Symbols\>\""], "InlineFormula",ExpressionUUID->
+  "37cb994f-4830-4ce0-8d0a-6566d01e226e"],
+ " field of the paclet's Kernel extension in ",
+ Cell[BoxData[
+  RowBox[{"PacletInfo", ".", "wl"}]], "InlineFormula",ExpressionUUID->
+  "5c776a66-4a4b-4419-a051-c0058b7d4b94"],
+ "."
+}], "Notes",
+ CellID->816796639,ExpressionUUID->"1dffe3fc-e780-41d9-9148-f90923defd52"],
+
+Cell[TextData[{
+ "The returned Association has two top-level levels: a ",
+ Cell[BoxData["\"\<$Meta\>\""], "InlineFormula",ExpressionUUID->
+  "b0df5a67-c1a5-4f9d-8bb9-7c41fca5e760"],
+ " entry recording paclet name, version, primary context, timestamp, and any \
+generation issues; and one entry per public symbol carrying the symbol's \
+per-API record."
+}], "Notes",
+ CellID->763194896,ExpressionUUID->"90968fcf-124a-41ef-aaeb-b687238d1c86"],
+
+Cell[TextData[{
+ "Each per-symbol entry is itself an Association with keys ",
+ Cell[BoxData["\"\<Kind\>\""], "InlineFormula",ExpressionUUID->
+  "b25b14ec-112c-4815-aa44-2f95202ecfd3"],
+ ", ",
+ Cell[BoxData["\"\<Accepts\>\""], "InlineFormula",ExpressionUUID->
+  "f4cce324-c1e7-4e8d-ba79-a26dc6264f7e"],
+ ", ",
+ Cell[BoxData["\"\<OperatesOn\>\""], "InlineFormula",ExpressionUUID->
+  "34320efa-2f0c-418a-931a-bdd9199d5e39"],
+ ", and ",
+ Cell[BoxData["\"\<ConsumedBy\>\""], "InlineFormula",ExpressionUUID->
+  "a730cd33-3a40-4a30-912e-872116f8cc7e"],
+ "."
+}], "Notes",
+ CellID->552817229,ExpressionUUID->"40f5b567-41e3-49c8-bc40-217f1d33bf72"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<Kind\>\""], "InlineFormula",ExpressionUUID->
+  "6f34a78c-ea36-42df-88e2-de7476a7f09c"],
+ " is a classification string: ",
+ Cell[BoxData["\"\<Constructor\>\""], "InlineFormula",ExpressionUUID->
+  "f371a6a3-ce89-41f5-b63f-ce2e90bc4e18"],
+ ", ",
+ Cell[BoxData["\"\<Operator\>\""], "InlineFormula",ExpressionUUID->
+  "d7310c6d-e3dd-4070-aac1-df2099c80ef1"],
+ ", ",
+ Cell[BoxData["\"\<Transform\>\""], "InlineFormula",ExpressionUUID->
+  "1863cf13-bd86-48f9-b204-2424bf0def1d"],
+ ", ",
+ Cell[BoxData["\"\<Predicate\>\""], "InlineFormula",ExpressionUUID->
+  "364e7e29-5b18-49fe-a612-389bc7feedeb"],
+ ", ",
+ Cell[BoxData["\"\<Distance\>\""], "InlineFormula",ExpressionUUID->
+  "ae6a2434-4869-4f0d-a664-4932c2e1c349"],
+ ", ",
+ Cell[BoxData["\"\<NamedInstance\>\""], "InlineFormula",ExpressionUUID->
+  "75cf3842-6eb5-4ff4-8bff-d2e436681808"],
+ ", or ",
+ Cell[BoxData["\"\<Utility\>\""], "InlineFormula",ExpressionUUID->
+  "5bfcd60c-559e-4b6f-bd48-32a59fcf2399"],
+ "."
+}], "Notes",
+ CellID->614759223,ExpressionUUID->"8fe44f67-660f-463e-8e08-4acba9aa42be"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<Accepts\>\""], "InlineFormula",ExpressionUUID->
+  "7370b20c-0a06-4702-b24d-1cbfcdb06ac5"],
+ " is a list of Associations describing the symbol's first-argument input \
+forms. Each entry carries ",
+ Cell[BoxData["\"\<Head\>\""], "InlineFormula",ExpressionUUID->
+  "7ce12eb1-7ac9-4d71-a58d-888995dd8678"],
+ " (the WL head), ",
+ Cell[BoxData["\"\<Role\>\""], "InlineFormula",ExpressionUUID->
+  "433d8a66-ea1a-4c5b-9893-dad4678f108c"],
+ " (semantic role such as ",
+ Cell[BoxData["\"\<Primary\>\""], "InlineFormula",ExpressionUUID->
+  "1da4c555-8df2-445e-9988-35576768f516"],
+ ", ",
+ Cell[BoxData["\"\<Mutation\>\""], "InlineFormula",ExpressionUUID->
+  "eb2158c9-2671-4959-b840-66bc01c93248"],
+ ", or ",
+ Cell[BoxData["\"\<Conversion\>\""], "InlineFormula",ExpressionUUID->
+  "93d02409-45c3-4632-a229-e908e7a28297"],
+ "), and ",
+ Cell[BoxData["\"\<Description\>\""], "InlineFormula",ExpressionUUID->
+  "40f1aa9b-bc2e-4362-be22-193899a948d9"],
+ "."
+}], "Notes",
+ CellID->398471814,ExpressionUUID->"c18d8e4e-331e-4a44-ab0f-b28d63d98b7b"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<OperatesOn\>\""], "InlineFormula",ExpressionUUID->
+  "46e9a0f0-eb6c-4e6d-8da6-421e99201f87"],
+ " is ",
+ Cell[BoxData[
+ "None"], "InlineFormula",ExpressionUUID->
+  "1e95427b-1786-488d-b296-604a48795090"],
+ " for non-operator symbols. For operator-like heads it is an Association \
+mapping target heads to result-head descriptions."
+}], "Notes",
+ CellID->178488255,ExpressionUUID->"4ca9eade-1b17-42eb-b656-c708db3c6c96"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<ConsumedBy\>\""], "InlineFormula",ExpressionUUID->
+  "9286ab86-c18e-42fd-ba3f-b9fea5df31c5"],
+ " is a reverse-edge list: every other paclet symbol that takes this one as \
+an input."
+}], "Notes",
+ CellID->237315060,ExpressionUUID->"825034a4-df6a-4d3e-bfae-00d1da9b008f"],
+
+Cell[TextData[{
+ "Predicates the paclet uses \[LongDash] such as ",
+ Cell[BoxData[
+  RowBox[{"_", "?", "QuantumStateQ"}]], "InlineFormula",ExpressionUUID->
+  "8ab92101-7f63-4271-9b95-77f88ef8b088"],
+ " or ",
+ Cell[BoxData[
+  RowBox[{"_", "?", "propQ"}]], "InlineFormula",ExpressionUUID->
+  "d6e60734-8d6c-4f33-8f64-ee263c8396a0"],
+ " \[LongDash] are resolved automatically by walking each predicate's own \
+DownValues. No manual configuration is required for any paclet. The \
+auto-detector recognizes four LHS/RHS shapes: explicit head blanks, call-form \
+patterns, delegated predicates, and ",
+ Cell[BoxData[
+ "MatchQ"], "InlineFormula",ExpressionUUID->
+  "ff3691a4-563c-48a5-9a82-8c3586105459"],
+ "-based dispatch."
+}], "Notes",
+ CellID->129333348,ExpressionUUID->"9b28ca5b-e0d0-4b4f-965b-d91b8f602bbd"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "BuildFunctionGraph"], "InlineFormula",ExpressionUUID->
+  "090cbe39-9864-4e1e-946f-5a02cea3f923"],
+ " returns a ",
+ Cell[BoxData[
+ "Failure"], "InlineFormula",ExpressionUUID->
+  "3a569c8d-afc6-475a-9229-d5ffa239970d"],
+ " object",
+ " when the paclet path does not exist, when ",
+ Cell[BoxData[
+  RowBox[{"PacletInfo", ".", "wl"}]], "InlineFormula",ExpressionUUID->
+  "33f80547-0930-4eaa-88fb-28013841437e"],
+ " is missing or malformed, when the paclet has no Kernel extension, or when \
+the paclet's primary context loads zero symbols."
+}], "Notes",
+ CellID->869339655,ExpressionUUID->"2cd5de95-5f3c-44a1-8539-9ed8fecd7255"],
+
+Cell[TextData[{
+ "Issues encountered during generation are NOT surfaced as Messages \
+\[LongDash] they are recorded in ",
+ Cell[BoxData[
+  RowBox[{"$Meta", "[", "\"\<GenerationIssues\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"fac6f083-fed7-4efa-aba0-cbc7fc7cdd4b"],
+ " so a build can complete with partial information."
+}], "Notes",
+ CellID->392990222,ExpressionUUID->"f59f1763-ac5f-40f8-90de-690234530b5d"],
+
+Cell["The following options can be given:", "Notes",
+ CellID->482650468,ExpressionUUID->"3e401d43-3996-4b07-9b12-74fe28566607"],
+
+Cell[BoxData[GridBox[{
+   {Cell["", "ModInfo",ExpressionUUID->
+     "cc4d78d1-6d1f-49a6-a34a-482f7dd6157d"], Cell[
+    "\"OutputFile\"", "TableText",ExpressionUUID->
+     "6bc61e4c-9883-4dcd-bdbb-c13e76d2d811"], Cell[
+    "Automatic", "TableText",ExpressionUUID->
+     "ea877e8a-5621-421d-8ea6-a18642643f2e"], Cell["\<\
+path to write the graph to; Automatic resolves to \
+<path>/Resources/FunctionGraph.wl\
+\>", "TableText",ExpressionUUID->"0012a6ea-053f-414f-84f2-3ce751bc74f4"]},
+   {Cell["", "ModInfo",ExpressionUUID->
+     "906c7391-40a0-4522-8896-fd81fd49f810"], Cell[
+    "\"WriteFile\"", "TableText",ExpressionUUID->
+     "2920921b-3f68-47a1-a8bf-171f09d219b3"], Cell[
+    "True", "TableText",ExpressionUUID->
+     "7e5a1a92-9636-48d6-8ace-5eda8f38b216"], Cell[
+    "when False, return the Association without writing to disk", "TableText",
+     ExpressionUUID->"4729671b-b5bd-4cb6-85fb-3efcf7350c43"]},
+   {Cell["", "ModInfo",ExpressionUUID->
+     "a111ee7d-8906-4e72-87ed-715f696fe47d"], Cell[
+    "\"Exclude\"", "TableText",ExpressionUUID->
+     "70c3cc24-dca0-4c6a-b670-ec48f278abd3"], Cell[
+    "{}", "TableText",ExpressionUUID->"3c6dc694-148a-45a3-87e8-65152fa9b8d4"],
+     Cell["list of symbol names to skip during introspection", "TableText",
+     ExpressionUUID->"3c0e60ee-3597-4701-a280-84662511bffb"]},
+   {Cell["", "ModInfo",ExpressionUUID->
+     "901513fb-d328-40b6-a65d-bcd77bef104e"], Cell[
+    "\"OnlySymbol\"", "TableText",ExpressionUUID->
+     "5b282006-d4c0-45d4-abfd-d1563e3b41f1"], Cell[
+    "None", "TableText",ExpressionUUID->
+     "4d1ec3a1-97e7-4d62-b39c-6ef267afec19"], Cell["\<\
+when set to a string, limit introspection to that single symbol\
+\>", "TableText",ExpressionUUID->"eb21593e-f8b0-40ba-a6e1-87a9a339d8c1"]},
+   {Cell["", "ModInfo",ExpressionUUID->
+     "8205f534-aae9-440f-a398-ec7bf8464ff4"], Cell[
+    "\"PredicateHeads\"", "TableText",ExpressionUUID->
+     "eeb777e3-a21c-40fd-a7c6-b2ceb8f13b91"], Cell[
+    "<||>", "TableText",ExpressionUUID->
+     "40055ef1-d753-41cb-b871-abbf1197d3a4"], Cell["\<\
+extra predicateName -> {Head, ...} entries that override or supplement \
+auto-detection\
+\>", "TableText",ExpressionUUID->"0c518fe0-1988-4918-bcc7-8830186adbcf"]},
+   {Cell["", "ModInfo",ExpressionUUID->
+     "bc3326bb-9e2f-4d2b-b602-68763f2a83a1"], Cell[
+    "\"KindClassifier\"", "TableText",ExpressionUUID->
+     "faeeda35-211a-4a96-ad9c-13e89bc8545b"], Cell[
+    "Automatic", "TableText",ExpressionUUID->
+     "e6a1c88a-ef5f-4ce3-891a-c998d93938f9"], Cell["\<\
+custom Symbol -> Kind classifier; Automatic uses a name-based heuristic\
+\>", "TableText",ExpressionUUID->"d84ab755-ce88-4c06-848a-537705e577ed"]}
+  },
+  GridBoxAlignment->{
+   "Columns" -> {{Left}}, "Rows" -> {{Baseline}}}]], "3ColumnTableMod",
+ CellID->791664283,ExpressionUUID->"87e3a3a0-4987-452b-9c8c-7ae22bb1bec1"],
+
+Cell[CellGroupData[{
+
+Cell["", "ExamplesInitializationSection",
+ CellTags->"ExamplesInitialization",
+ CellID->577570221,ExpressionUUID->"a7e86f65-7252-4493-81f8-d11b7326d2f3"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`PacletFunctionGraph`\>\"", 
+  "]"}]], "ExampleInitialization",
+ CellID->119869117,ExpressionUUID->"b68f8cc5-74ce-4468-a551-4f9622ca17ac"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[GridBox[{
+   {
+    StyleBox[
+     RowBox[{"Basic", " ", "Examples"}],
+     FontSize->18,
+     FontWeight->"Bold",
+     FontColor->RGBColor[0.4, 0.5, 0.6]], 
+    ButtonBox[
+     RowBox[{
+      RowBox[{"More", " ", "Examples"}], " ", "\[RightTriangle]"}],
+     Active->True,
+     BaseStyle->"ExtendedExamplesLink",
+     ButtonData->"ExtendedExamples"]}
+  },
+  GridBoxAlignment->{"Columns" -> {Left, {Right}}, "Rows" -> {{Baseline}}},
+  GridBoxSpacings->{"Columns" -> {
+      Offset[0.27999999999999997`], {
+       Offset[0.35]}, 
+      Offset[0.27999999999999997`]}, "Rows" -> {
+      Offset[0.2], {
+       Offset[0.4]}, 
+      Offset[0.2]}}]], "PrimaryExamplesSection",
+ CellID->50097582,ExpressionUUID->"2b4f308e-f449-48b7-857e-781503813a52"],
+
+Cell["\<\
+Build the function-relation graph for QuantumFramework, return the \
+Association in memory without writing to disk, and list the top-level keys:\
+\>", "ExampleText",
+ CellID->717130041,ExpressionUUID->"c2d7aa46-5bad-4b49-a83a-2bab88cd2dd3"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"qfRoot", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"PacletObject", "[", "\"\<Wolfram/QuantumFramework\>\"", "]"}], 
+    "[", "\"\<Location\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"Keys", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->528883189,ExpressionUUID->"5afc8a3f-d49f-474e-9bf6-265187f9f6b2"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"$Meta\"\>", ",", "\<\"QuantumBasis\"\>", 
+   ",", "\<\"QuantumChannel\"\>", ",", "\<\"QuantumCircuitOperator\"\>", 
+   ",", "\<\"QuantumDistance\"\>", ",", "\<\"QuantumEntangledQ\"\>", 
+   ",", "\<\"QuantumEntanglementMonotone\"\>", ",", "\<\"QuantumEvolve\"\>", 
+   ",", "\<\"QuantumMeasurement\"\>", 
+   ",", "\<\"QuantumMeasurementOperator\"\>", 
+   ",", "\<\"QuantumMeasurementSimulation\"\>", 
+   ",", "\<\"QuantumOperator\"\>", ",", "\<\"QuantumPartialTrace\"\>", 
+   ",", "\<\"QuantumPhaseSpaceTransform\"\>", 
+   ",", "\<\"QuantumSimilarity\"\>", ",", "\<\"QuantumState\"\>", 
+   ",", "\<\"QuantumStateEstimate\"\>", ",", "\<\"QuantumTensorProduct\"\>", 
+   ",", "\<\"QuantumWignerTransform\"\>", ",", "\<\"QuditBasis\"\>", 
+   ",", "\<\"QuditName\"\>"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->395874301,ExpressionUUID->"bb7b2e36-69da-4fb8-8d94-26b40252c19e"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->517794072,ExpressionUUID->"a16d3842-8720-4aa6-bf14-42ff0c1d013b"],
+
+Cell["Inspect the paclet identity from the metadata:", "ExampleText",
+ CellID->502877523,ExpressionUUID->"49ee9b98-07a5-4a4e-8aab-6d6984d23d38"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"g", "[", 
+    RowBox[{"\"\<$Meta\>\"", ",", " ", "\"\<Paclet\>\""}], "]"}], ",", " ", 
+   RowBox[{"g", "[", 
+    RowBox[{"\"\<$Meta\>\"", ",", " ", "\"\<PacletVersion\>\""}], "]"}]}], 
+  "}"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->546026023,ExpressionUUID->"22ac4282-fcb8-44ce-a1af-b7e675089104"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"Wolfram/QuantumFramework\"\>", ",", "\<\"2.0.0\"\>"}], 
+  "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->308016438,ExpressionUUID->"d3b059f0-3285-4138-bcca-ad0ba247aa6b"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->270288873,ExpressionUUID->"b5466262-adc3-4f9a-878b-c7353d538901"],
+
+Cell["\<\
+Inspect one symbol's entry. The four-field record summarises the symbol's API \
+surface:\
+\>", "ExampleText",
+ CellID->824157304,ExpressionUUID->"67b22193-61a3-4a76-936b-e0d4ee54e121"],
+
+Cell[BoxData[
+ RowBox[{"g", "[", "\"\<QuantumDistance\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->872523100,ExpressionUUID->"1265ab69-ae8d-4b28-99f3-51018b77a559"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"Kind\"\>", "\[Rule]", "\<\"Distance\"\>"}], ",", 
+   RowBox[{"\<\"Accepts\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"\[LeftAssociation]", 
+      RowBox[{
+       RowBox[{"\<\"Head\"\>", "\[Rule]", "QuantumState"}], ",", 
+       RowBox[{"\<\"Description\"\>", "\[Rule]", "\<\"?QuantumStateQ\"\>"}], ",", 
+       RowBox[{"\<\"Role\"\>", "\[Rule]", "\<\"Primary\"\>"}]}], 
+      "\[RightAssociation]"}], "}"}]}], ",", 
+   RowBox[{"\<\"OperatesOn\"\>", "\[Rule]", "None"}], ",", 
+   RowBox[{"\<\"ConsumedBy\"\>", "\[Rule]", 
+    RowBox[{"{", "}"}]}]}], "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->996305358,ExpressionUUID->"c19ffbc4-f5d3-4616-832c-2c5f7bd73bd0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["More Examples", "ExtendedExamplesSection",
+ CellTags->"ExtendedExamples",
+ CellID->944866612,ExpressionUUID->"41164e5c-bcbc-42d1-a751-e2a143b4bd1e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Scope", "ExampleSection",ExpressionUUID->
+   "5115e50c-7907-483c-9128-759e76ae4f81"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->456828700,ExpressionUUID->"72f333fd-786c-46f3-877e-36ca73852f6e"],
+
+Cell[CellGroupData[{
+
+Cell["Calling patterns", "ExampleSubsection",
+ CellID->999205229,ExpressionUUID->"a3e2204f-1990-4bda-b55a-6221cb695d70"],
+
+Cell[TextData[{
+ "Default: writes ",
+ Cell[BoxData["\"\<<path>/Resources/FunctionGraph.wl\>\""], "InlineFormula",
+  ExpressionUUID->"dbf3d784-547f-43f5-8da4-cdaf1b13359d"],
+ " and returns the Association:"
+}], "ExampleText",
+ CellID->587619412,ExpressionUUID->"db3ee372-e60e-4413-bc4d-d55c39323667"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"BuildFunctionGraph", "[", "qfRoot", "]"}], ";"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->983416227,ExpressionUUID->"7903ab7c-c12d-496b-8a90-ca179e296189"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->4307525,ExpressionUUID->"cc028486-d571-4a62-a9be-14b81d1d3485"],
+
+Cell["\<\
+In-memory only \[LongDash] useful for inspection without touching the \
+filesystem:\
+\>", "ExampleText",
+ CellID->963296799,ExpressionUUID->"581eaef2-6128-4d8c-b2c7-c19af9debeb7"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"Length", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[2]:=",
+ CellID->230149098,ExpressionUUID->"28637d7f-f858-42ff-8b46-49fd1c2fc449"],
+
+Cell[BoxData["21"], "Output",
+ CellLabel->"Out[2]=",
+ CellID->206272464,ExpressionUUID->"00a3c84c-d875-478b-b8c2-0335330fd087"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->342292811,ExpressionUUID->"70236486-bd12-4383-ad70-4d89fa17dcd6"],
+
+Cell["Write to a custom location:", "ExampleText",
+ CellID->964485183,ExpressionUUID->"08e76ad6-1722-4e96-a0a6-4c6aaa944c30"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"BuildFunctionGraph", "[", 
+   RowBox[{"qfRoot", ",", " ", 
+    RowBox[{"\"\<OutputFile\>\"", " ", "->", 
+     " ", "\"\</tmp/qf-graph.wl\>\""}]}], "]"}], ";"}], "\n", 
+ RowBox[{"FileExistsQ", "[", "\"\</tmp/qf-graph.wl\>\"", "]"}]}], "Input",
+ CellLabel->"In[3]:=",
+ CellID->627245249,ExpressionUUID->"22ec7d8d-4fad-4a7e-9b4a-b09d90ee512d"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[3]=",
+ CellID->465309264,ExpressionUUID->"0488f864-03be-4b9c-b123-e47ffcf560d1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Distinctive Features", "ExampleSubsection",
+ CellID->358560574,ExpressionUUID->"dac3a174-bade-4199-aaba-4fb6637acf71"],
+
+Cell[TextData[{
+ "Auto-detection of paclet predicates is the package's distinguishing \
+capability. QuantumFramework defines ",
+ Cell[BoxData[
+ "QuantumStateQ"], "InlineFormula",ExpressionUUID->
+  "a50e2142-0cc2-4b25-bb74-95c847b7f0cd"],
+ ", ",
+ Cell[BoxData[
+ "QuantumOperatorQ"], "InlineFormula",ExpressionUUID->
+  "0ffd08db-0114-4b50-af04-6f8cfa8d3137"],
+ ", ",
+ Cell[BoxData[
+ "propQ"], "InlineFormula",ExpressionUUID->
+  "1fd9bc2e-ace7-47ab-af93-43ce3a752059"],
+ ", ",
+ Cell[BoxData[
+ "QuantumFrameworkOperatorQ"], "InlineFormula",ExpressionUUID->
+  "55da1ffb-102b-4052-a958-2e7734607186"],
+ ", and a dozen more \[LongDash] none of them needs to be declared by the \
+caller. Look at QuantumDistance's accepted inputs: the ",
+ Cell[BoxData[
+  RowBox[{"_", "?", "QuantumStateQ"}]], "InlineFormula",ExpressionUUID->
+  "e2de150d-5f0a-465f-9926-6c676f844933"],
+ " guard was resolved automatically to ",
+ Cell[BoxData[
+ "QuantumState"], "InlineFormula",ExpressionUUID->
+  "49e23968-945a-4b61-a89f-6fc0ad097c97"],
+ ":"
+}], "ExampleText",
+ CellID->528818214,ExpressionUUID->"6b5ffae7-569e-4caf-9d61-ad984d780a6e"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"g", "[", 
+  RowBox[{"\"\<QuantumDistance\>\"", ",", " ", "\"\<Accepts\>\""}], 
+  "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->381895340,ExpressionUUID->"82984a37-508e-4b8e-a993-a53d0ada21d5"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\[LeftAssociation]", 
+   RowBox[{
+    RowBox[{"\<\"Head\"\>", "\[Rule]", "QuantumState"}], ",", 
+    RowBox[{"\<\"Description\"\>", "\[Rule]", "\<\"?QuantumStateQ\"\>"}], ",", 
+    RowBox[{"\<\"Role\"\>", "\[Rule]", "\<\"Primary\"\>"}]}], 
+   "\[RightAssociation]"}], "}"}]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->722140897,ExpressionUUID->"05b7a265-d13c-40e2-8e54-ddf5bda58ad9"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->948015644,ExpressionUUID->"5cf426c7-6cea-4bb9-bc2f-9bd95be79bbb"],
+
+Cell[TextData[{
+ "Predicates whose dispatch logic is too complex for the heuristics fall back \
+to the bare ",
+ Cell[BoxData[
+ "Symbol"], "InlineFormula",ExpressionUUID->
+  "40b0f158-ee32-4814-b516-30aa12e47652"],
+ " head and are listed in ",
+ Cell[BoxData[
+  RowBox[{"$Meta", "[", "\"\<GenerationIssues\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"d1dc0438-ded3-40e9-8df9-1c4f7e3ff663"],
+ ". Use this to audit what auto-detection caught:"
+}], "ExampleText",
+ CellID->260574504,ExpressionUUID->"8869ddf7-307d-498b-b36d-3bd4c2215e83"],
+
+Cell[BoxData[
+ RowBox[{"Tally", "[", 
+  RowBox[{"g", "[", 
+   RowBox[{"\"\<$Meta\>\"", ",", " ", "\"\<GenerationIssues\>\""}], "]"}], 
+  "]"}]], "Input",
+ CellLabel->"In[2]:=",
+ CellID->633631458,ExpressionUUID->"2da69e9c-2110-4bee-a95e-91f8f5f53bc4"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"\<\"unresolved predicate targetsQ - fallback to Symbol\"\>", ",",
+      "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"unresolved predicate targetQ - fallback to Symbol\"\>", ",", 
+     "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"unresolved predicate stateQ - fallback to Symbol\"\>", ",", 
+     "5"}], "}"}]}], "}"}]], "Output",
+ CellLabel->"Out[2]=",
+ CellID->461614459,ExpressionUUID->"4386f2ab-1b84-46ff-b478-b4220c0f463e"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Workflow Context", "ExampleSubsection",
+ CellID->930809500,ExpressionUUID->"2b207fa7-98e1-4603-9764-74873611f59e"],
+
+Cell["\<\
+The returned Association is the input to every other rendering helper in the \
+package:\
+\>", "ExampleText",
+ CellID->299162394,ExpressionUUID->"26fd61d2-b71d-4c02-9b6e-0946c4f80713"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"edges", " ", "=", " ", 
+   RowBox[{"PacletFlowEdges", "[", "g", "]"}]}], ";"}], "\n", 
+ RowBox[{"Length", "[", "edges", "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->865399705,ExpressionUUID->"108d100a-3d0d-4d48-8939-2315e004bea8"],
+
+Cell[BoxData["80"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->421002024,ExpressionUUID->"b8b8dc61-6889-4d1f-a724-f3a62079eb45"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->67912441,ExpressionUUID->"015d123c-853e-42a8-97e4-62cbda01e121"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "SymbolNeighborhoodGraph"], "InlineFormula",ExpressionUUID->
+  "dacecf2d-1cb8-4e29-addc-78e47ed30d66"],
+ " consumes the same data:"
+}], "ExampleText",
+ CellID->535855052,ExpressionUUID->"1bf1c7d2-6dc1-4771-99e8-c3a387c6aef9"],
+
+Cell[BoxData[
+ RowBox[{"SymbolNeighborhoodGraph", "[", 
+  RowBox[{"g", ",", " ", "\"\<QuantumState\>\""}], "]"}]], "Input",
+ CellLabel->"In[2]:=",
+ CellID->758425120,ExpressionUUID->"27148e04-ecdf-44fb-a009-1a41582800aa"],
+
+Cell[BoxData[
+ GraphicsBox[
+  NamespaceBox["NetworkGraphics",
+   DynamicModuleBox[{Typeset`graph = HoldComplete[
+     Graph[{
+      "QuantumBasis", "QuantumChannel", "QuantumCircuitOperator", 
+       "QuantumDistance", "QuantumEntangledQ", "QuantumEntanglementMonotone", 
+       "QuantumMeasurement", "QuantumMeasurementOperator", 
+       "QuantumMeasurementSimulation", "QuantumOperator", 
+       "QuantumPartialTrace", "QuantumPhaseSpaceTransform", 
+       "QuantumSimilarity", "QuantumState", "QuantumTensorProduct", 
+       "QuantumWignerTransform", "QuditBasis"}, {{{14, 1}, {14, 3}, {3, 14}, {
+       14, 4}, {14, 5}, {14, 6}, {14, 7}, {14, 8}, {8, 14}, {14, 9}, {14, 
+       10}, {10, 14}, {14, 11}, {14, 12}, {14, 13}, {7, 14}, {2, 14}, {17, 
+       14}, {1, 14}, {14, 14}, {14, 15}, {14, 16}}, Null}, {
+      GraphLayout -> "SpringElectricalEmbedding", ImageSize -> 700, PlotLabel -> 
+       Style["QuantumState \[LongDash] flow neighborhood", Bold, 14], 
+       VertexLabels -> {"QuantumDistance" -> Placed[
+           Style[
+           "QuantumDistance", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumPhaseSpaceTransform" -> Placed[
+           Style[
+           "QuantumPhaseSpaceTransform", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center], "QuantumSimilarity" -> Placed[
+           Style[
+           "QuantumSimilarity", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumTensorProduct" -> Placed[
+           Style[
+           "QuantumTensorProduct", FontSize -> 11, FontFamily -> "Helvetica"],
+            Center], "QuantumChannel" -> Placed[
+           Style["QuantumChannel", FontSize -> 11, FontFamily -> "Helvetica"],
+            Center], "QuditBasis" -> Placed[
+           Style["QuditBasis", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumMeasurementSimulation" -> Placed[
+           Style[
+           "QuantumMeasurementSimulation", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center], "QuantumOperator" -> Placed[
+           Style[
+           "QuantumOperator", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntanglementMonotone" -> Placed[
+           Style[
+           "QuantumEntanglementMonotone", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center], "QuantumMeasurementOperator" -> Placed[
+           Style[
+           "QuantumMeasurementOperator", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center], "QuantumWignerTransform" -> Placed[
+           Style[
+           "QuantumWignerTransform", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center], "QuantumMeasurement" -> Placed[
+           Style[
+           "QuantumMeasurement", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumBasis" -> Placed[
+           Style["QuantumBasis", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntangledQ" -> Placed[
+           Style[
+           "QuantumEntangledQ", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumState" -> Placed[
+           Style[
+           "QuantumState", Bold, FontSize -> 13, FontFamily -> "Helvetica"], 
+           Center], "QuantumPartialTrace" -> Placed[
+           Style[
+           "QuantumPartialTrace", FontSize -> 11, FontFamily -> "Helvetica"], 
+           Center], "QuantumCircuitOperator" -> Placed[
+           Style[
+           "QuantumCircuitOperator", FontSize -> 11, FontFamily -> 
+            "Helvetica"], Center]}, VertexSize -> {0.45}, 
+       VertexStyle -> {"QuditBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurement" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPartialTrace" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumTensorProduct" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumWignerTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumSimilarity" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumCircuitOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntanglementMonotone" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementSimulation" -> 
+         Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntangledQ" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.7, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPhaseSpaceTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumDistance" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumState" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0], 
+             Thickness[0.005]]]], "QuantumChannel" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]]}}]]}, 
+    TagBox[GraphicsGroupBox[{
+       {Hue[0.6, 0.7, 0.7], Opacity[0.7], CapForm["Round"], Arrowheads[
+        Medium], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$1", Automatic, Center], {
+           0.5911110780492327, 1.419946578825788}, DynamicLocation[
+           "VertexID$14", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.2266297762823817`, 0.6994575592350067}, DynamicLocation[
+           "VertexID$14", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           1.5574806435010693`, 0.8941186702315481}, DynamicLocation[
+           "VertexID$14", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.641938588971452, 0.5901049131229674}, DynamicLocation[
+           "VertexID$14", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$10", Automatic, Center], {
+           0.8359568457320583, 1.3619382493441212`}, DynamicLocation[
+           "VertexID$14", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           0.4455871301645507, 1.0827334560904582`}, DynamicLocation[
+           "VertexID$1", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           1.3846999153412596`, 0.8801115918396298}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$4", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$5", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$6", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           1.5354215625433227`, 1.233152991024584}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           0.9790546500602502, 0.445055613273805}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$9", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           0.677067723993962, 1.1813800521889777`}, DynamicLocation[
+           "VertexID$10", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$11", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$12", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$13", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$14", Automatic, Center], {
+           1.4811383397316946`, 1.0292071787350379`}, {1.509785358901192, 
+           1.0049836046553886`}, {1.5211507223978773`, 0.9825542381299862}, {
+           1.5087649007566446`, 0.9107319166776859}, {1.4905434995517841`, 
+           0.8934048133919622}, {1.455437692196325, 0.8801754695529349}, 
+           DynamicLocation["VertexID$14", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$14", Automatic, Center], DynamicLocation[
+          "VertexID$16", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$17", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}]}, 
+       {Hue[0.6, 0.5, 1.], EdgeForm[{GrayLevel[0], Opacity[0.7]}], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0.005682492406601014, 1.4725807232708998`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$1"], InsetBox[
+           StyleBox["\<\"QuantumBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$1", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$1"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.5475971710880096, 0.4820535238157644}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$2"], InsetBox[
+           StyleBox["\<\"QuantumChannel\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$2", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$2"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{1.580313975816469, 0.549469839429285}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$3"], InsetBox[
+           StyleBox["\<\"QuantumCircuitOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$3", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$3"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{0.9643680394235741, 2.062011899061736}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$4"], InsetBox[
+           StyleBox["\<\"QuantumDistance\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$4", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$4"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.7, 0.7]], 
+            DiskBox[{1.5127626485766161`, 1.5802917847544053`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$5"], InsetBox[
+           StyleBox["\<\"QuantumEntangledQ\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$5", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$5"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0., 0.9645919466871423}, 0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$6"], InsetBox[
+           StyleBox["\<\"QuantumEntanglementMonotone\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$6", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$6"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{2.0618864902372334`, 1.097172349610783}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$7"], InsetBox[
+           StyleBox["\<\"QuantumMeasurement\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$7", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$7"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.5899775232245246, 0.005061214751419296}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$8"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$8", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$8"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.9907963873802923`, 1.5998152882546386`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$9"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementSimulation\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$9", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$9"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.4820088539188485, 1.5132189898877448`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$10"], InsetBox[
+           StyleBox["\<\"QuantumOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$10", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$10"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.0974675173391866`, 0.}, 0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$11"], InsetBox[
+           StyleBox["\<\"QuantumPartialTrace\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$11", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$11"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.5998631861611434`, 0.07086234152150206}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$12"], InsetBox[
+           StyleBox["\<\"QuantumPhaseSpaceTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$12", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$12"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{1.4720887237963047`, 2.0561333903153933`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$13"], InsetBox[
+           StyleBox["\<\"QuantumSimilarity\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$13", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$13"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0], Thickness[0.005]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.0310157158071753`, 1.0300993116453512`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$14"], InsetBox[
+           StyleBox["\<\"QuantumState\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->13,
+            FontWeight->Bold], DynamicLocation["VertexID$14", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$14"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.4622488912784106, 1.990012100074624}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$15"], InsetBox[
+           StyleBox["\<\"QuantumTensorProduct\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$15", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$15"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.0703325089414576, 0.46148539652772647`}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$16"], InsetBox[
+           StyleBox["\<\"QuantumWignerTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$16", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$16"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{2.056712750396389, 0.5885424052405646}, 
+             0.10737053893428924]},
+           "DynamicName",
+           BoxID -> "VertexID$17"], InsetBox[
+           StyleBox["\<\"QuditBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->11], DynamicLocation["VertexID$17", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$17"]}}],
+     MouseAppearanceTag["NetworkGraphics"]],
+    AllowKernelInitialization->False]],
+  DefaultBaseStyle->"NetworkGraphics",
+  FormatType->TraditionalForm,
+  FrameTicks->None,
+  ImageSize->700,
+  PlotLabel->FormBox[
+    StyleBox[
+    "\"QuantumState \[LongDash] flow neighborhood\"", Bold, 14, StripOnInput -> 
+     False], TraditionalForm]]], "Output",
+ CellLabel->"Out[2]=",
+ CellID->965857363,ExpressionUUID->"ce75c8ae-d27e-4094-a752-03d5377140ee"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Limiting scope", "ExampleSubsection",
+ CellID->751503295,ExpressionUUID->"129d239c-a8e6-4128-8d19-b8bf5ede8f09"],
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData["\"\<OnlySymbol\>\""], "InlineFormula",ExpressionUUID->
+  "1ae3cc94-f5a9-4156-b875-2e05558ff3ad"],
+ " to iterate on a single symbol's signature without re-introspecting the \
+whole paclet:"
+}], "ExampleText",
+ CellID->569603488,ExpressionUUID->"9132cbe3-e890-46ff-90c6-588aa4034f52"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<OnlySymbol\>\"", " ", "->", 
+      " ", "\"\<QuantumDistance\>\""}], ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"Keys", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->204740828,ExpressionUUID->"4869b397-42fa-447c-9454-77fa5c262a08"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"$Meta\"\>", ",", "\<\"QuantumDistance\"\>"}], "}"}]], "Output",\
+
+ CellLabel->"Out[1]=",
+ CellID->444545760,ExpressionUUID->"00b6366c-df95-40ba-9a1f-11c7d3728e58"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->871936427,ExpressionUUID->"3eb04bf3-6060-4bbd-8c1c-ec89320173c7"],
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData["\"\<Exclude\>\""], "InlineFormula",ExpressionUUID->
+  "cf6449f5-8fe6-4eb8-8e65-eb294120a947"],
+ " to drop one or more symbols from a full build:"
+}], "ExampleText",
+ CellID->10158308,ExpressionUUID->"759a9b1e-eb6a-447c-8079-a4df0c79e64c"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<Exclude\>\"", " ", "->", " ", 
+      RowBox[{"{", "\"\<QuantumStateEstimate\>\"", "}"}]}], ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"MemberQ", "[", 
+  RowBox[{
+   RowBox[{"Keys", "[", "g", "]"}], ",", 
+   " ", "\"\<QuantumStateEstimate\>\""}], "]"}]}], "Input",
+ CellLabel->"In[2]:=",
+ CellID->770165108,ExpressionUUID->"e5bb03bd-2f60-44e0-8e0e-02d75068d962"],
+
+Cell[BoxData["False"], "Output",
+ CellLabel->"Out[2]=",
+ CellID->212926828,ExpressionUUID->"ae02e25e-bdbb-4701-8af3-fc1704e3ca43"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Manual predicate overrides", "ExampleSubsection",
+ CellID->592597773,ExpressionUUID->"8e545a7e-aa13-41b3-af86-beb631178891"],
+
+Cell["\<\
+For predicates whose heads cannot be inferred from DownValues alone, supply \
+them explicitly. Entries supplied here take precedence over auto-detection:\
+\>", "ExampleText",
+ CellID->804002361,ExpressionUUID->"9de1a8d5-c242-412e-94cf-b3f84dc2ffb9"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"BuildFunctionGraph", "[", 
+   RowBox[{"qfRoot", ",", "\n", "    ", 
+    RowBox[{"\"\<PredicateHeads\>\"", " ", "->", " ", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<MyExoticPredQ\>\"", " ", "->", " ", 
+       RowBox[{"{", 
+        RowBox[{"\"\<MyHead1\>\"", ",", " ", "\"\<MyHead2\>\""}], "}"}]}], 
+      "|>"}]}], ",", "\n", "    ", 
+    RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}], 
+  ";"}]], "Input",
+ CellLabel->"In[1]:=",
+ CellID->638685167,ExpressionUUID->"4f82788d-34ed-4100-b48a-3083fafbebcb"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Options", "ExampleSection",ExpressionUUID->
+   "a353564d-82eb-4009-aeb0-249885045e2d"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->962261226,ExpressionUUID->"60954635-c0a4-4d85-83bb-b4093d43ebfb"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`OutputFile]]], "Input",ExpressionUUID->"6a1bd468-5d28-\
+4b69-af1f-ce926bdc367c"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`WriteFile]]], "Input",ExpressionUUID->"475dbf7d-7dbe-\
+4325-bc7a-ac4df82f5802"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`Exclude]]], "Input",ExpressionUUID->"d1fe8e6f-945a-4b1b-\
+adfc-a7ff50d69bdb"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`OnlySymbol]]], "Input",ExpressionUUID->"da2a2def-b704-\
+443e-82c6-41c7e6a50c36"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`PredicateHeads]]], "Input",ExpressionUUID->"23edf72c-\
+4280-469d-a1f6-39ff3a88ff5f"],
+
+Cell[BoxData[
+ Pattern[$CellContext`$Opt, 
+  Blank[$CellContext`KindClassifier]]], "Input",ExpressionUUID->"62786438-\
+fd6a-4796-accd-8aeb604c5d25"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Applications", "ExampleSection",ExpressionUUID->
+   "15126ce0-a6d3-49cd-958f-f0fbbcb752d1"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->646813946,ExpressionUUID->"1824c5a0-f14c-40e0-bbc2-fa5866cad0fe"],
+
+Cell["Build the QF graph and render the paclet-wide overview:", "ExampleText",
+ CellID->739808602,ExpressionUUID->"4b866270-b55d-41e3-952b-19413832fefb"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"PacletOverviewGraph", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->778072856,ExpressionUUID->"a2cf9921-aab4-4c45-a5d2-7d39ca3e32dd"],
+
+Cell[BoxData[
+ GraphicsBox[
+  NamespaceBox["NetworkGraphics",
+   DynamicModuleBox[{Typeset`graph = HoldComplete[
+     Graph[{
+      "QuditBasis", "QuantumBasis", "QuantumState", "QuantumOperator", 
+       "QuantumChannel", "QuantumMeasurementOperator", "QuantumMeasurement", 
+       "QuantumCircuitOperator", "QuantumDistance", "QuantumEntangledQ", 
+       "QuantumEntanglementMonotone", "QuantumEvolve", 
+       "QuantumMeasurementSimulation", "QuantumPartialTrace", 
+       "QuantumPhaseSpaceTransform", "QuantumSimilarity", 
+       "QuantumTensorProduct", "QuditName", "QuantumWignerTransform"}, {{{1, 
+       2}, {3, 2}, {4, 5}, {6, 5}, {7, 5}, {5, 5}, {8, 5}, {5, 7}, {5, 4}, {5,
+        6}, {5, 8}, {3, 8}, {4, 8}, {6, 8}, {8, 8}, {7, 8}, {8, 4}, {8, 6}, {
+       8, 3}, {8, 7}, {3, 9}, {3, 10}, {3, 11}, {4, 12}, {3, 7}, {4, 7}, {6, 
+       7}, {2, 6}, {4, 6}, {7, 6}, {3, 6}, {6, 6}, {6, 3}, {6, 4}, {3, 13}, {
+       3, 4}, {1, 4}, {2, 4}, {7, 4}, {4, 4}, {4, 2}, {4, 3}, {3, 14}, {1, 
+       14}, {2, 14}, {4, 14}, {7, 14}, {8, 14}, {6, 14}, {5, 14}, {1, 15}, {2,
+        15}, {3, 15}, {4, 15}, {5, 15}, {6, 15}, {8, 15}, {3, 16}, {7, 3}, {5,
+        3}, {1, 3}, {2, 3}, {3, 3}, {1, 17}, {2, 17}, {3, 17}, {4, 17}, {5, 
+       17}, {6, 17}, {7, 17}, {8, 17}, {18, 17}, {1, 19}, {2, 19}, {3, 19}, {
+       4, 19}, {5, 19}, {6, 19}, {8, 19}, {2, 1}}, Null}, {
+      GraphLayout -> "DiscreteSpiralEmbedding", ImageSize -> 1200, PlotLabel -> 
+       Style["Wolfram/QuantumFramework \[LongDash] paclet flow", Bold, 16], 
+       VertexLabels -> {"QuantumDistance" -> Placed[
+           Style[
+           "QuantumDistance", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumPhaseSpaceTransform" -> Placed[
+           Style[
+           "QuantumPhaseSpaceTransform", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumSimilarity" -> Placed[
+           Style[
+           "QuantumSimilarity", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumTensorProduct" -> Placed[
+           Style[
+           "QuantumTensorProduct", FontSize -> 12, FontFamily -> "Helvetica"],
+            Center], "QuantumChannel" -> Placed[
+           Style["QuantumChannel", FontSize -> 12, FontFamily -> "Helvetica"],
+            Center], "QuditBasis" -> Placed[
+           Style["QuditBasis", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumMeasurementSimulation" -> Placed[
+           Style[
+           "QuantumMeasurementSimulation", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumOperator" -> Placed[
+           Style[
+           "QuantumOperator", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntanglementMonotone" -> Placed[
+           Style[
+           "QuantumEntanglementMonotone", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumMeasurementOperator" -> Placed[
+           Style[
+           "QuantumMeasurementOperator", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuditName" -> Placed[
+           Style["QuditName", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumWignerTransform" -> Placed[
+           Style[
+           "QuantumWignerTransform", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumEvolve" -> Placed[
+           Style["QuantumEvolve", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumMeasurement" -> Placed[
+           Style[
+           "QuantumMeasurement", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumBasis" -> Placed[
+           Style["QuantumBasis", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntangledQ" -> Placed[
+           Style[
+           "QuantumEntangledQ", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumState" -> Placed[
+           Style["QuantumState", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumPartialTrace" -> Placed[
+           Style[
+           "QuantumPartialTrace", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumCircuitOperator" -> Placed[
+           Style[
+           "QuantumCircuitOperator", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center]}, VertexSize -> {0.4}, 
+       VertexStyle -> {"QuditBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurement" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPartialTrace" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumTensorProduct" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumWignerTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumSimilarity" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumCircuitOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntanglementMonotone" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementSimulation" -> 
+         Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntangledQ" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.7, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPhaseSpaceTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumDistance" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumState" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumChannel" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuditName" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEvolve" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]]}}]]}, 
+    TagBox[GraphicsGroupBox[{
+       {Hue[0.6, 0.7, 0.7], Opacity[0.7], CapForm["Round"], Arrowheads[
+        Medium], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$1", Automatic, Center], {
+           1.6505619010612895`, 0.6454972243679101}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$3", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$4", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.7920899622341946`, 0.645497224367876}, DynamicLocation[
+           "VertexID$1", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.6505619010612986`, 1.0758287072797963`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.4353961596053297`, 1.0050646766933733`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$6", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.7920899622341961`, 1.0758287072798027`}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.648985883694573, 1.4884630597596247`}, {1.7497360383162248`, 
+           1.6689695453360027`}, {1.8813481994506236`, 1.717203806069001}, {
+           2.1475352889809356`, 1.451016716538689}, {2.0993010282479374`, 
+           1.31940455540429}, {1.9187945426715598`, 1.218654400782638}, 
+           DynamicLocation["VertexID$3", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.5061601901917594`, 1.2202304181493475`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.075828707279835, 1.078702356976437}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           0.8606629658238757, 1.0079383263899766`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           0.9314269964103208, 0.7927725849340095}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$9", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$10", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$11", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$13", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$16", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.5769242207782364`, 1.1465927378662946`}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.5061601901917596`, 1.3617584793222623`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.0754328555102188`, 1.4335256867238062`}, {1.0571385769878459`, 
+           1.6159321359444327`}, {1.121130836230322, 1.7220513817129486`}, {
+           1.460858061241289, 1.7220513817129488`}, {1.5248503204837653`, 
+           1.615932135944433}, {1.5065560419613924`, 1.4335256867238062`}, 
+           DynamicLocation["VertexID$4", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.0758287072798622`, 1.2202304181493502`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.8606629658238645, 1.1494663875628928`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.6454972243679017, 1.0787023569764365`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.7162612549543624, 0.863536615520466}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$12", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$3", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           1.0758287072798263`, 1.3617584793222575`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.6451013725982836, 1.4335256867238062`}, {0.6268070940759106, 
+           1.6159321359444327`}, {0.6907993533183868, 1.7220513817129486`}, {
+           1.0305265783293538`, 1.7220513817129488`}, {1.09451883757183, 
+           1.615932135944433}, {1.0762245590494572`, 1.4335256867238062`}, 
+           DynamicLocation["VertexID$5", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.6454972243678838, 1.2202304181493542`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.43033148291193113`, 1.1494663875628925`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.5010955134983924, 0.9343006461069234}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           1.075828707279827, 1.5032865404951745`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.8606629658238806, 1.4325225099087229`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.6454972243679026, 1.361758479322259}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.2147698896863484, 1.4335256867238062`}, {0.19647561116397544`, 
+           1.6159321359444327`}, {0.26046787040645153`, 
+           1.7220513817129486`}, {0.6001950954174184, 1.7220513817129488`}, {
+           0.6641873546598948, 1.615932135944433}, {0.6458930761375219, 
+           1.4335256867238062`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.21516574145597006`, 1.22023041814935}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.2859297720424249, 1.005064676693381}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.8606629658238668, 1.574050571081633}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.6454972243678985, 1.5032865404951743`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.4303314829119392, 1.4325225099087213`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.21516574145596895`, 1.3617584793222621`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.07076403058645674, 1.0758287072798365`}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$7", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$7", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.7898989352374076, 1.3588848296256635`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.5747331937814417, 1.288120799039208}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.3595674523254824, 1.2173567684527562`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.14440171086951153`, 1.1465927378662963`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation[
+           "VertexID$8", Automatic, Center], {-0.07076403058645726, 
+           1.0758287072798383`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.025035888469314302`, 0.6518565024035657}, {-0.11449098994383881`,
+            0.49932638999390716`}, {-0.2536643550434057, 
+           0.48262072287797164`}, {-0.45157340970654725`, 
+           0.8028443000042952}, {-0.37439118579025576`, 
+           0.9198537405561636}, {-0.17556578884075183`, 0.976436834491491}, 
+           DynamicLocation["VertexID$8", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$18", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}]}, 
+       {Hue[0.6, 0.5, 1.], EdgeForm[{GrayLevel[0], Opacity[0.7]}], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$1"], InsetBox[
+           StyleBox["\<\"QuditBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$1", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$1"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$2"], InsetBox[
+           StyleBox["\<\"QuantumBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$2", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$2"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$3"], InsetBox[
+           StyleBox["\<\"QuantumState\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$3", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$3"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{1.2909944487358056`, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$4"], InsetBox[
+           StyleBox["\<\"QuantumOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$4", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$4"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.8606629658238704, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$5"], InsetBox[
+           StyleBox["\<\"QuantumChannel\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$5", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$5"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.4303314829119352, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$6"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$6", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$6"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0., 1.2909944487358056`}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$7"], InsetBox[
+           StyleBox["\<\"QuantumMeasurement\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$7", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$7"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0., 0.8606629658238704}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$8"], InsetBox[
+           StyleBox["\<\"QuantumCircuitOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$8", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$8"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{0.4303314829119352, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$9"], InsetBox[
+           StyleBox["\<\"QuantumDistance\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$9", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$9"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.7, 0.7]], 
+            DiskBox[{0.4303314829119352, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$10"], InsetBox[
+           StyleBox["\<\"QuantumEntangledQ\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$10", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$10"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0.8606629658238704, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$11"], InsetBox[
+           StyleBox["\<\"QuantumEntanglementMonotone\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$11", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$11"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0.4303314829119352, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$12"], InsetBox[
+           StyleBox["\<\"QuantumEvolve\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$12", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$12"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.2909944487358056`, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$13"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementSimulation\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$13", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$13"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.8606629658238704, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$14"], InsetBox[
+           StyleBox["\<\"QuantumPartialTrace\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$14", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$14"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.2909944487358056`, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$15"], InsetBox[
+           StyleBox["\<\"QuantumPhaseSpaceTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$15", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$15"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{1.7213259316477407`, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$16"], InsetBox[
+           StyleBox["\<\"QuantumSimilarity\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$16", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$16"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.2909944487358056`, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$17"], InsetBox[
+           StyleBox["\<\"QuantumTensorProduct\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$17", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$17"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0., 0.4303314829119352}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$18"], InsetBox[
+           StyleBox["\<\"QuditName\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$18", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$18"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.8606629658238704, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$19"], InsetBox[
+           StyleBox["\<\"QuantumWignerTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$19", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$19"]}}],
+     MouseAppearanceTag["NetworkGraphics"]],
+    AllowKernelInitialization->False]],
+  DefaultBaseStyle->"NetworkGraphics",
+  FormatType->TraditionalForm,
+  FrameTicks->None,
+  ImageSize->1200,
+  PlotLabel->FormBox[
+    StyleBox[
+    "\"Wolfram/QuantumFramework \[LongDash] paclet flow\"", Bold, 16, 
+     StripOnInput -> False], TraditionalForm]]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->592853137,ExpressionUUID->"162681b1-1bfd-46d4-8c5e-868448b9a042"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->424200470,ExpressionUUID->"0f22902f-e09b-4494-ab76-ebb8ce7aaa4c"],
+
+Cell[TextData[{
+ "Query \[OpenCurlyDoubleQuote]which symbols produce a QuantumState?\
+\[CloseCurlyDoubleQuote] by filtering the flow edges. ",
+ Cell[BoxData[
+ "QuantumState"], "InlineFormula",ExpressionUUID->
+  "2f3f5a26-28ac-4433-a9a1-57e4371f6e37"],
+ " appears in its own producer list \[LongDash] that self-loop is the \
+constructor accepting ",
+ Cell[BoxData[
+ "_QuantumState"], "InlineFormula",ExpressionUUID->
+  "1da9eb54-039e-4bfa-9dd5-14b7cc7d853e"],
+ " as a mutation input:"
+}], "ExampleText",
+ CellID->148347712,ExpressionUUID->"faf7631b-1012-4af3-94f4-9fe4087b40bb"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"edges", " ", "=", " ", 
+   RowBox[{"PacletFlowEdges", "[", "g", "]"}]}], ";"}], "\n", 
+ RowBox[{"producers", " ", "=", " ", 
+  RowBox[{"Cases", "[", 
+   RowBox[{"edges", ",", " ", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"f_", ",", " ", "\"\<QuantumState\>\""}], "}"}], " ", ":>", " ",
+      "f"}]}], "]"}]}]}], "Input",
+ CellLabel->"In[2]:=",
+ CellID->777066994,ExpressionUUID->"03eeb6c3-03ed-4f41-828a-270deed63fd4"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"QuantumCircuitOperator\"\>", 
+   ",", "\<\"QuantumMeasurementOperator\"\>", ",", "\<\"QuantumOperator\"\>", 
+   ",", "\<\"QuantumMeasurement\"\>", ",", "\<\"QuantumChannel\"\>", 
+   ",", "\<\"QuditBasis\"\>", ",", "\<\"QuantumBasis\"\>", 
+   ",", "\<\"QuantumState\"\>"}], "}"}]], "Output",
+ CellLabel->"Out[2]=",
+ CellID->566403939,ExpressionUUID->"4ea3958c-ce99-46d2-b733-aed0355b6126"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->373613802,ExpressionUUID->"1757a825-c283-4b05-9f75-8e654c35b882"],
+
+Cell[TextData[{
+ "Apply the package to itself. ",
+ Cell[BoxData[
+  RowBox[{"Wolfram", "/", "PacletFunctionGraph"}]], "InlineFormula",
+  ExpressionUUID->"aed13ce0-e5ed-4b4a-8497-3eb52ccd876b"],
+ " is itself a paclet, so it has a function graph; only the callable symbols \
+are introspected:"
+}], "ExampleText",
+ CellID->724089843,ExpressionUUID->"050827c3-19a0-45a8-964c-e2189685ab3e"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+      "PacletObject", "[", "\"\<Wolfram/PacletFunctionGraph\>\"", "]"}], 
+      "[", "\"\<Location\>\"", "]"}], ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"Keys", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[3]:=",
+ CellID->556468638,ExpressionUUID->"23c7390c-97dd-4584-abfa-3688b8aac0ef"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"$Meta\"\>", ",", "\<\"BuildFunctionGraph\"\>", 
+   ",", "\<\"LoadFunctionGraph\"\>", ",", "\<\"PacletFlowEdges\"\>", 
+   ",", "\<\"PacletOverviewGraph\"\>", 
+   ",", "\<\"SymbolNeighborhoodGraph\"\>"}], "}"}]], "Output",
+ CellLabel->"Out[3]=",
+ CellID->701406546,ExpressionUUID->"733a7f28-9e38-45d6-9414-a5c98d1fd65c"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Properties & Relations", "ExampleSection",ExpressionUUID->
+   "3539068b-4072-4601-946d-a5cc08f4cb93"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->300226860,ExpressionUUID->"5e23e539-f605-4425-a8ff-a5992f90a526"],
+
+Cell[TextData[{
+ "The schema written to disk is the same as the in-memory return value \
+\[LongDash] ",
+ Cell[BoxData[
+ "LoadFunctionGraph"], "InlineFormula",ExpressionUUID->
+  "74adc1f9-e164-416e-8c64-dd004f8a746a"],
+ " round-trips at the key level (head symbols are re-interned in a sandbox \
+context on load):"
+}], "ExampleText",
+ CellID->588330894,ExpressionUUID->"6546e592-634d-4fd3-8dfe-1262ddc3bc3a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"BuildFunctionGraph", "[", 
+   RowBox[{"qfRoot", ",", " ", 
+    RowBox[{"\"\<OutputFile\>\"", " ", "->", " ", "\"\</tmp/g.wl\>\""}]}], 
+   "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"loaded", " ", "=", " ", 
+   RowBox[{"LoadFunctionGraph", "[", "\"\</tmp/g.wl\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"inMem", "  ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Sort", "@", 
+   RowBox[{"Keys", "[", 
+    RowBox[{"KeyDrop", "[", 
+     RowBox[{"loaded", ",", " ", "\"\<$Meta\>\""}], "]"}], "]"}]}], " ", "===",
+   " ", 
+  RowBox[{"Sort", "@", 
+   RowBox[{"Keys", "[", 
+    RowBox[{"KeyDrop", "[", 
+     RowBox[{"inMem", ",", " ", "\"\<$Meta\>\""}], "]"}], "]"}]}]}]}], "Input",\
+
+ CellLabel->"In[1]:=",
+ CellID->637904924,ExpressionUUID->"0235860a-1685-4e88-906e-aa4e5a012604"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->859031665,ExpressionUUID->"5b8d3314-8a5b-4bc3-8b4c-35d7a025eff7"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->181733297,ExpressionUUID->"27165c46-ddcb-4a69-9800-a9ce12292057"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<OnlySymbol\>\""], "InlineFormula",ExpressionUUID->
+  "6783ae0f-4a7b-40eb-bb6b-340e08150245"],
+ " produces a strict subset of the full build's Accepts and OperatesOn for \
+that symbol. ConsumedBy differs because the reverse-edge pass over a \
+one-symbol graph can't see who consumes it:"
+}], "ExampleText",
+ CellID->630201173,ExpressionUUID->"cfb161e1-5e0e-4113-93c2-dc16f1b6c3e5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"full", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"sub", "  ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<OnlySymbol\>\"", " ", "->", " ", "\"\<QuantumState\>\""}], ",",
+      " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"KeyDrop", "[", 
+   RowBox[{
+    RowBox[{"sub", "[", "\"\<QuantumState\>\"", "]"}], ",", 
+    " ", "\"\<ConsumedBy\>\""}], "]"}], " ", "===", " ", 
+  RowBox[{"KeyDrop", "[", 
+   RowBox[{
+    RowBox[{"full", "[", "\"\<QuantumState\>\"", "]"}], ",", 
+    " ", "\"\<ConsumedBy\>\""}], "]"}]}]}], "Input",
+ CellLabel->"In[2]:=",
+ CellID->807270991,ExpressionUUID->"b266c2c0-bc20-4601-9d0e-4f83431ca10d"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[2]=",
+ CellID->950844128,ExpressionUUID->"fae3a492-83b1-41b6-99ed-b3939a8922b8"],
+
+Cell[BoxData[""], "ExampleDelimiter",
+ CellID->815943752,ExpressionUUID->"7334e7ee-4515-462f-af86-9b8d7be80f71"],
+
+Cell[TextData[{
+ Cell[BoxData[
+ "PacletFlowEdges"], "InlineFormula",ExpressionUUID->
+  "3a948230-c580-4471-a590-f563ad0d1640"],
+ ", ",
+ Cell[BoxData[
+ "SymbolNeighborhoodGraph"], "InlineFormula",ExpressionUUID->
+  "324780d7-247e-459a-b3be-bbfa3d54597d"],
+ ", and ",
+ Cell[BoxData[
+ "PacletOverviewGraph"], "InlineFormula",ExpressionUUID->
+  "ef996345-c845-4ac7-b7ef-e2e7fc3b8eca"],
+ " all accept the returned Association directly \[LongDash] \
+BuildFunctionGraph is the sole entry point producing graph data:"
+}], "ExampleText",
+ CellID->328168171,ExpressionUUID->"5e110b6b-34c2-4f61-a06a-92ba1de4900d"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Head", "[", 
+    RowBox[{"PacletFlowEdges", "[", "g", "]"}], "]"}], ",", " ", 
+   RowBox[{"Head", "[", 
+    RowBox[{"SymbolNeighborhoodGraph", "[", 
+     RowBox[{"g", ",", " ", "\"\<QuantumState\>\""}], "]"}], "]"}], ",", " ", 
+   
+   RowBox[{"Head", "[", 
+    RowBox[{"PacletOverviewGraph", "[", "g", "]"}], "]"}]}], "}"}]}], "Input",\
+
+ CellLabel->"In[3]:=",
+ CellID->690719805,ExpressionUUID->"09aaed5d-38dd-495c-a443-9ad482a7787b"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"List", ",", "Graph", ",", "Graph"}], "}"}]], "Output",
+ CellLabel->"Out[3]=",
+ CellID->386385911,ExpressionUUID->"67350a50-4509-46bb-809b-d2d1e1e407d8"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Possible Issues", "ExampleSection",ExpressionUUID->
+   "5b811072-47f1-40da-a577-39c13afd3434"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->943048516,ExpressionUUID->"8d4f61ea-ab05-4c3e-8780-12082ca74f35"],
+
+Cell[TextData[{
+ "The paclet must list its public symbols in the ",
+ Cell[BoxData["\"\<Symbols\>\""], "InlineFormula",ExpressionUUID->
+  "943cb387-4d1c-4e11-b1ad-21717aabde22"],
+ " field of the Kernel extension. Paclets that omit this list produce a graph \
+with only ",
+ Cell[BoxData["\"\<$Meta\>\""], "InlineFormula",ExpressionUUID->
+  "9940db38-8bff-4285-988a-205e5654da2e"],
+ "."
+}], "ExampleText",
+ CellID->262301551,ExpressionUUID->"8dfcd7fb-5d9c-44a0-9247-a0f0c4940307"],
+
+Cell[TextData[{
+ "The paclet is loaded with ",
+ Cell[BoxData[
+ "Needs"], "InlineFormula",ExpressionUUID->
+  "285bc510-80e4-44c4-b967-61844c0df6a8"],
+ " into the current kernel. If kernel files were modified after a previous \
+build, restart the kernel before rebuilding \[LongDash] the existing \
+in-kernel definitions are used, not the on-disk source."
+}], "ExampleText",
+ CellID->844474354,ExpressionUUID->"c36d2d93-ca62-4522-bdf8-271319dbbaeb"],
+
+Cell[TextData[{
+ "Generation issues are recorded in ",
+ Cell[BoxData[
+  RowBox[{"$Meta", "[", "\"\<GenerationIssues\>\"", "]"}]], "InlineFormula",
+  ExpressionUUID->"d5748bc1-a2bf-4938-aa0f-7ad798938a7b"],
+ ", not surfaced as Messages. Non-empty means some predicates could not be \
+auto-resolved:"
+}], "ExampleText",
+ CellID->310853475,ExpressionUUID->"03f5b0cc-2dfe-4fbf-b8e9-f76f59a3bf75"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{"qfRoot", ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"Length", "[", 
+  RowBox[{"g", "[", 
+   RowBox[{"\"\<$Meta\>\"", ",", " ", "\"\<GenerationIssues\>\""}], "]"}], 
+  "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->317891433,ExpressionUUID->"2ad64bc8-516c-4485-8539-9a756eba8952"],
+
+Cell[BoxData["7"], "Output",
+ CellLabel->"Out[1]=",
+ CellID->607577140,ExpressionUUID->"17cb9895-69ad-498b-820e-2ac477dcd1d2"],
+
+Cell[TextData[{
+ "Symbols whose DownValues are dispatched purely through ",
+ Cell[BoxData[
+ "MatchQ"], "InlineFormula",ExpressionUUID->
+  "80bb89fe-4da8-4678-9c2b-63b3967d6eae"],
+ " on non-head patterns (e.g. ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"Q", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"x", " ", ">", " ", "0"}]}]], "InlineFormula",ExpressionUUID->
+  "f8ab823e-df77-4939-b9c4-5c1ca4f7bc69"],
+ ") cannot be classified by head and contribute no edges. The symbol still \
+appears as a node, but its Accepts list will be sparse."
+}], "ExampleText",
+ CellID->47118688,ExpressionUUID->"5f54e41d-3197-4a50-beab-3a258d05ec3d"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ InterpretationBox[Cell[
+  "Neat Examples", "ExampleSection",ExpressionUUID->
+   "a91fc94e-efc2-429c-9fbd-7acccbbb6a0b"],
+  $Line = 0; Null]], "ExampleSection",
+ CellID->495369279,ExpressionUUID->"df4f8455-9906-4732-84a1-fc06b2ca6c9d"],
+
+Cell["\<\
+Render the QF function-relation graph \[LongDash] the result is the \
+visualization the package was built to produce:\
+\>", "ExampleText",
+ CellID->933368380,ExpressionUUID->"edb2d979-c5d9-4f84-9908-7210ad50b39c"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"g", " ", "=", " ", 
+   RowBox[{"BuildFunctionGraph", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PacletObject", "[", "\"\<Wolfram/QuantumFramework\>\"", "]"}], 
+      "[", "\"\<Location\>\"", "]"}], ",", " ", 
+     RowBox[{"\"\<WriteFile\>\"", " ", "->", " ", "False"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"PacletOverviewGraph", "[", "g", "]"}]}], "Input",
+ CellLabel->"In[1]:=",
+ CellID->256924188,ExpressionUUID->"4088ab76-886a-45b7-9d55-e2d70593c02f"],
+
+Cell[BoxData[
+ GraphicsBox[
+  NamespaceBox["NetworkGraphics",
+   DynamicModuleBox[{Typeset`graph = HoldComplete[
+     Graph[{
+      "QuditBasis", "QuantumBasis", "QuantumState", "QuantumOperator", 
+       "QuantumChannel", "QuantumMeasurementOperator", "QuantumMeasurement", 
+       "QuantumCircuitOperator", "QuantumDistance", "QuantumEntangledQ", 
+       "QuantumEntanglementMonotone", "QuantumEvolve", 
+       "QuantumMeasurementSimulation", "QuantumPartialTrace", 
+       "QuantumPhaseSpaceTransform", "QuantumSimilarity", 
+       "QuantumTensorProduct", "QuditName", "QuantumWignerTransform"}, {{{1, 
+       2}, {3, 2}, {4, 5}, {6, 5}, {7, 5}, {5, 5}, {8, 5}, {5, 7}, {5, 4}, {5,
+        6}, {5, 8}, {3, 8}, {4, 8}, {6, 8}, {8, 8}, {7, 8}, {8, 4}, {8, 6}, {
+       8, 3}, {8, 7}, {3, 9}, {3, 10}, {3, 11}, {4, 12}, {3, 7}, {4, 7}, {6, 
+       7}, {2, 6}, {4, 6}, {7, 6}, {3, 6}, {6, 6}, {6, 3}, {6, 4}, {3, 13}, {
+       3, 4}, {1, 4}, {2, 4}, {7, 4}, {4, 4}, {4, 2}, {4, 3}, {3, 14}, {1, 
+       14}, {2, 14}, {4, 14}, {7, 14}, {8, 14}, {6, 14}, {5, 14}, {1, 15}, {2,
+        15}, {3, 15}, {4, 15}, {5, 15}, {6, 15}, {8, 15}, {3, 16}, {7, 3}, {5,
+        3}, {1, 3}, {2, 3}, {3, 3}, {1, 17}, {2, 17}, {3, 17}, {4, 17}, {5, 
+       17}, {6, 17}, {7, 17}, {8, 17}, {18, 17}, {1, 19}, {2, 19}, {3, 19}, {
+       4, 19}, {5, 19}, {6, 19}, {8, 19}, {2, 1}}, Null}, {
+      GraphLayout -> "DiscreteSpiralEmbedding", ImageSize -> 1200, PlotLabel -> 
+       Style["Wolfram/QuantumFramework \[LongDash] paclet flow", Bold, 16], 
+       VertexLabels -> {"QuantumDistance" -> Placed[
+           Style[
+           "QuantumDistance", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumPhaseSpaceTransform" -> Placed[
+           Style[
+           "QuantumPhaseSpaceTransform", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumSimilarity" -> Placed[
+           Style[
+           "QuantumSimilarity", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumTensorProduct" -> Placed[
+           Style[
+           "QuantumTensorProduct", FontSize -> 12, FontFamily -> "Helvetica"],
+            Center], "QuantumChannel" -> Placed[
+           Style["QuantumChannel", FontSize -> 12, FontFamily -> "Helvetica"],
+            Center], "QuditBasis" -> Placed[
+           Style["QuditBasis", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumMeasurementSimulation" -> Placed[
+           Style[
+           "QuantumMeasurementSimulation", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumOperator" -> Placed[
+           Style[
+           "QuantumOperator", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntanglementMonotone" -> Placed[
+           Style[
+           "QuantumEntanglementMonotone", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumMeasurementOperator" -> Placed[
+           Style[
+           "QuantumMeasurementOperator", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuditName" -> Placed[
+           Style["QuditName", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumWignerTransform" -> Placed[
+           Style[
+           "QuantumWignerTransform", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center], "QuantumEvolve" -> Placed[
+           Style["QuantumEvolve", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumMeasurement" -> Placed[
+           Style[
+           "QuantumMeasurement", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumBasis" -> Placed[
+           Style["QuantumBasis", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumEntangledQ" -> Placed[
+           Style[
+           "QuantumEntangledQ", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumState" -> Placed[
+           Style["QuantumState", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumPartialTrace" -> Placed[
+           Style[
+           "QuantumPartialTrace", FontSize -> 12, FontFamily -> "Helvetica"], 
+           Center], "QuantumCircuitOperator" -> Placed[
+           Style[
+           "QuantumCircuitOperator", FontSize -> 12, FontFamily -> 
+            "Helvetica"], Center]}, VertexSize -> {0.4}, 
+       VertexStyle -> {"QuditBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurement" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPartialTrace" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumTensorProduct" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumWignerTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumSimilarity" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumCircuitOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntanglementMonotone" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumBasis" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumMeasurementSimulation" -> 
+         Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEntangledQ" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.7, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumOperator" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumPhaseSpaceTransform" -> Directive[
+           FaceForm[
+            RGBColor[1, 0.9, 0.6]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumDistance" -> Directive[
+           FaceForm[
+            RGBColor[0.9, 0.7, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumState" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumChannel" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 1, 0.7]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuditName" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]], "QuantumEvolve" -> Directive[
+           FaceForm[
+            RGBColor[0.7, 0.85, 1]], 
+           EdgeForm[
+            Directive[
+             GrayLevel[0.5], 
+             Thickness[0.001]]]]}}]]}, 
+    TagBox[GraphicsGroupBox[{
+       {Hue[0.6, 0.7, 0.7], Opacity[0.7], CapForm["Round"], Arrowheads[
+        Medium], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$1", Automatic, Center], {
+           1.6505619010612895`, 0.6454972243679101}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$3", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$4", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$1", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.7920899622341946`, 0.645497224367876}, DynamicLocation[
+           "VertexID$1", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.6505619010612986`, 1.0758287072797963`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$2", Automatic, Center], {
+           1.4353961596053297`, 1.0050646766933733`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$6", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$2", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.7920899622341961`, 1.0758287072798027`}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.648985883694573, 1.4884630597596247`}, {1.7497360383162248`, 
+           1.6689695453360027`}, {1.8813481994506236`, 1.717203806069001}, {
+           2.1475352889809356`, 1.451016716538689}, {2.0993010282479374`, 
+           1.31940455540429}, {1.9187945426715598`, 1.218654400782638}, 
+           DynamicLocation["VertexID$3", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.5061601901917594`, 1.2202304181493475`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           1.075828707279835, 1.078702356976437}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           0.8606629658238757, 1.0079383263899766`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$3", Automatic, Center], {
+           0.9314269964103208, 0.7927725849340095}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$9", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$10", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$11", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$13", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$16", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$3", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.5769242207782364`, 1.1465927378662946`}, DynamicLocation[
+           "VertexID$2", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.5061601901917596`, 1.3617584793222623`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.0754328555102188`, 1.4335256867238062`}, {1.0571385769878459`, 
+           1.6159321359444327`}, {1.121130836230322, 1.7220513817129486`}, {
+           1.460858061241289, 1.7220513817129488`}, {1.5248503204837653`, 
+           1.615932135944433}, {1.5065560419613924`, 1.4335256867238062`}, 
+           DynamicLocation["VertexID$4", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           1.0758287072798622`, 1.2202304181493502`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.8606629658238645, 1.1494663875628928`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.6454972243679017, 1.0787023569764365`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$4", Automatic, Center], {
+           0.7162612549543624, 0.863536615520466}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$12", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$4", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$3", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           1.0758287072798263`, 1.3617584793222575`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.6451013725982836, 1.4335256867238062`}, {0.6268070940759106, 
+           1.6159321359444327`}, {0.6907993533183868, 1.7220513817129486`}, {
+           1.0305265783293538`, 1.7220513817129488`}, {1.09451883757183, 
+           1.615932135944433}, {1.0762245590494572`, 1.4335256867238062`}, 
+           DynamicLocation["VertexID$5", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.6454972243678838, 1.2202304181493542`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.43033148291193113`, 1.1494663875628925`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$5", Automatic, Center], {
+           0.5010955134983924, 0.9343006461069234}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$5", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           1.075828707279827, 1.5032865404951745`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.8606629658238806, 1.4325225099087229`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.6454972243679026, 1.361758479322259}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.2147698896863484, 1.4335256867238062`}, {0.19647561116397544`, 
+           1.6159321359444327`}, {0.26046787040645153`, 
+           1.7220513817129486`}, {0.6001950954174184, 1.7220513817129488`}, {
+           0.6641873546598948, 1.615932135944433}, {0.6458930761375219, 
+           1.4335256867238062`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.21516574145597006`, 1.22023041814935}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$6", Automatic, Center], {
+           0.2859297720424249, 1.005064676693381}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$6", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.8606629658238668, 1.574050571081633}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.6454972243678985, 1.5032865404951743`}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.4303314829119392, 1.4325225099087213`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.21516574145596895`, 1.3617584793222621`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$7", Automatic, Center], {
+           0.07076403058645674, 1.0758287072798365`}, DynamicLocation[
+           "VertexID$8", Automatic, Center]}]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$7", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$7", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.7898989352374076, 1.3588848296256635`}, DynamicLocation[
+           "VertexID$3", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.5747331937814417, 1.288120799039208}, DynamicLocation[
+           "VertexID$4", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.3595674523254824, 1.2173567684527562`}, DynamicLocation[
+           "VertexID$5", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.14440171086951153`, 1.1465927378662963`}, DynamicLocation[
+           "VertexID$6", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation[
+           "VertexID$8", Automatic, Center], {-0.07076403058645726, 
+           1.0758287072798383`}, DynamicLocation[
+           "VertexID$7", Automatic, Center]}]], 
+        ArrowBox[
+         BezierCurveBox[{
+          DynamicLocation["VertexID$8", Automatic, Center], {
+           0.025035888469314302`, 0.6518565024035657}, {-0.11449098994383881`,
+            0.49932638999390716`}, {-0.2536643550434057, 
+           0.48262072287797164`}, {-0.45157340970654725`, 
+           0.8028443000042952}, {-0.37439118579025576`, 
+           0.9198537405561636}, {-0.17556578884075183`, 0.976436834491491}, 
+           DynamicLocation["VertexID$8", Automatic, Center]},
+          SplineDegree->7]], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$14", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$15", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$8", Automatic, Center], DynamicLocation[
+          "VertexID$19", Automatic, Center]}], 
+        ArrowBox[{
+         DynamicLocation["VertexID$18", Automatic, Center], DynamicLocation[
+          "VertexID$17", Automatic, Center]}]}, 
+       {Hue[0.6, 0.5, 1.], EdgeForm[{GrayLevel[0], Opacity[0.7]}], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$1"], InsetBox[
+           StyleBox["\<\"QuditBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$1", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$1"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$2"], InsetBox[
+           StyleBox["\<\"QuantumBasis\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$2", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$2"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.7213259316477407`, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$3"], InsetBox[
+           StyleBox["\<\"QuantumState\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$3", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$3"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{1.2909944487358056`, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$4"], InsetBox[
+           StyleBox["\<\"QuantumOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$4", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$4"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.8606629658238704, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$5"], InsetBox[
+           StyleBox["\<\"QuantumChannel\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$5", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$5"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0.4303314829119352, 1.2909944487358056`}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$6"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$6", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$6"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0., 1.2909944487358056`}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$7"], InsetBox[
+           StyleBox["\<\"QuantumMeasurement\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$7", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$7"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 1, 0.7]], 
+            DiskBox[{0., 0.8606629658238704}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$8"], InsetBox[
+           StyleBox["\<\"QuantumCircuitOperator\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$8", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$8"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{0.4303314829119352, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$9"], InsetBox[
+           StyleBox["\<\"QuantumDistance\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$9", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$9"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.7, 0.7]], 
+            DiskBox[{0.4303314829119352, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$10"], InsetBox[
+           StyleBox["\<\"QuantumEntangledQ\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$10", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$10"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0.8606629658238704, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$11"], InsetBox[
+           StyleBox["\<\"QuantumEntanglementMonotone\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$11", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$11"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0.4303314829119352, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$12"], InsetBox[
+           StyleBox["\<\"QuantumEvolve\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$12", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$12"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{1.2909944487358056`, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$13"], InsetBox[
+           StyleBox["\<\"QuantumMeasurementSimulation\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$13", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$13"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.8606629658238704, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$14"], InsetBox[
+           StyleBox["\<\"QuantumPartialTrace\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$14", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$14"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.2909944487358056`, 0.4303314829119352}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$15"], InsetBox[
+           StyleBox["\<\"QuantumPhaseSpaceTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$15", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$15"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.9, 0.7, 1]], 
+            DiskBox[{1.7213259316477407`, 0.}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$16"], InsetBox[
+           StyleBox["\<\"QuantumSimilarity\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$16", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$16"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{1.2909944487358056`, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$17"], InsetBox[
+           StyleBox["\<\"QuantumTensorProduct\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$17", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$17"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            0.7, 0.85, 1]], 
+            DiskBox[{0., 0.4303314829119352}, 0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$18"], InsetBox[
+           StyleBox["\<\"QuditName\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$18", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$18"], 
+        TagBox[{
+          TagBox[
+           {EdgeForm[{GrayLevel[0.5], Thickness[0.001]}], FaceForm[RGBColor[
+            1, 0.9, 0.6]], 
+            DiskBox[{0.8606629658238704, 0.8606629658238704}, 
+             0.08606629658238703]},
+           "DynamicName",
+           BoxID -> "VertexID$19"], InsetBox[
+           StyleBox["\<\"QuantumWignerTransform\"\>",
+            StripOnInput->False,
+            FontFamily->"Helvetica",
+            FontSize->12], DynamicLocation["VertexID$19", None, Center],
+           BaseStyle->"Graphics"]},
+         "DynamicName",
+         BoxID -> "VertexLabelID$19"]}}],
+     MouseAppearanceTag["NetworkGraphics"]],
+    AllowKernelInitialization->False]],
+  DefaultBaseStyle->"NetworkGraphics",
+  FormatType->TraditionalForm,
+  FrameTicks->None,
+  ImageSize->1200,
+  PlotLabel->FormBox[
+    StyleBox[
+    "\"Wolfram/QuantumFramework \[LongDash] paclet flow\"", Bold, 16, 
+     StripOnInput -> False], TraditionalForm]]], "Output",
+ CellLabel->"Out[1]=",
+ CellID->295801612,ExpressionUUID->"3400f963-7147-4869-a29a-14c714d079ee"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["See Also", "SeeAlsoSection",
+ CellID->881146640,ExpressionUUID->"a55d4243-533c-4a78-8692-4e739c050e7e"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  ButtonBox["LoadFunctionGraph",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/LoadFunctionGraph"]], 
+  "InlineFormula",ExpressionUUID->"3c4243f3-8be3-4c6b-a992-f3cd99c2f09e"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "a04d8fff-9a2e-4738-a77c-b385dcbd6e0c"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["PacletFlowEdges",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/PacletFlowEdges"]], 
+  "InlineFormula",ExpressionUUID->"6f27683b-e567-4fd9-bcc4-f2208650d757"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "7729c4f1-ad9b-406c-b441-ee4003fd7dd4"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["SymbolNeighborhoodGraph",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->
+    "paclet:Wolfram/PacletFunctionGraph/ref/SymbolNeighborhoodGraph"]], 
+  "InlineFormula",ExpressionUUID->"3faa1717-bd44-483c-a8d2-ccec3a3a53ae"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "6007577d-b5c2-4e70-bf95-3636aff7b04f"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["PacletOverviewGraph",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:Wolfram/PacletFunctionGraph/ref/PacletOverviewGraph"]],
+   "InlineFormula",ExpressionUUID->"3906dc3c-10fc-4f23-bb77-39e59b4d7699"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "9156f48c-006c-4ead-8001-77ac20f905b8"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["$FunctionGraphKindColors",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->
+    "paclet:Wolfram/PacletFunctionGraph/ref/$FunctionGraphKindColors"]], 
+  "InlineFormula",ExpressionUUID->"0804259b-6173-4d70-92b1-3161364c9c58"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "46a3709c-3202-4471-8832-29e9b0273e07"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["PacletObject",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:ref/PacletObject"]], "InlineFormula",ExpressionUUID->
+  "ac3d747c-dfad-492d-a449-bf950b483dd7"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "9f1c1e5b-2074-463b-b938-7c3295cd902d"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["DownValues",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:ref/DownValues"]], "InlineFormula",ExpressionUUID->
+  "3b349f9c-71b2-4d95-a59e-45c058a5a30b"],
+ " ",
+ Cell["\[FilledVerySmallSquare]", "InlineSeparator",ExpressionUUID->
+  "ce899508-18dd-4af8-93c5-41df3e37afca"],
+ " ",
+ Cell[BoxData[
+  ButtonBox["SubValues",
+   BaseStyle->{"Link", "InlineSeeAlsoFunction"},
+   ButtonData->"paclet:ref/SubValues"]], "InlineFormula",ExpressionUUID->
+  "c564e2b9-703b-4eec-b678-6398e1eafeaf"]
+}], "SeeAlso",
+ CellID->150352622,ExpressionUUID->"30f621bb-5639-43dd-8b5c-cd152385d95e"]
+}, Open  ]],
+
+Cell["Tech Notes", "TechNotesSection",
+ CellID->96553520,ExpressionUUID->"888f726d-22dc-444c-b076-73b6a7ebf94f"],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "MoreAboutSection",
+ CellID->792625737,ExpressionUUID->"9d0cf34e-2900-4142-a071-c4daf34b20b3"],
+
+Cell[TextData[ButtonBox["PacletFunctionGraph",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:Wolfram/PacletFunctionGraph/guide/PacletFunctionGraph"]], \
+"MoreAbout",
+ CellID->150752594,ExpressionUUID->"b9687321-b16e-4f10-a905-f880c4ed6bf0"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Links", "RelatedLinksSection",
+ CellID->440650122,ExpressionUUID->"d0313558-717f-401f-9ef8-03d97e1da9c7"],
+
+Cell["XXXX", "RelatedLinks",
+ CellID->201303935,ExpressionUUID->"3f9cfe0f-967d-489b-b070-2a438c9dcaa1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->175058844,ExpressionUUID->"5914b6e2-17f6-444b-93b0-76f3e0755fcb"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["0.1", "HistoryData",
+  CellTags->"New",ExpressionUUID->"e0cb95fd-e82b-4b33-8665-640dd6d5abc5"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"93f03ad3-06a7-4cd1-bb18-3845fa79eacc"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "490ff9ba-9c89-48cb-a055-e74c671e88bc"]
+}], "History",
+ CellID->683565489,ExpressionUUID->"82b3f976-5e6c-4fcb-a119-0de2f67114ef"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",
+ CellID->184980551,ExpressionUUID->"9d1176b8-56fe-473a-b065-2de1aa579dd3"],
+
+Cell["Symbol", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->119261104,ExpressionUUID->"b331e116-ee6b-49c0-90bb-5ffdeda0609a"],
+
+Cell["Wolfram/PacletFunctionGraph", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->306002859,ExpressionUUID->"1c6c89c6-40af-466f-9f91-7e06e35005f9"],
+
+Cell["Wolfram`PacletFunctionGraph`", "Categorization",
+ CellLabel->"Context",
+ CellID->762839099,ExpressionUUID->"26a7917b-0b5f-4bee-a9c0-063ffa93649b"],
+
+Cell["Wolfram/PacletFunctionGraph/ref/BuildFunctionGraph", "Categorization",
+ CellLabel->"URI",
+ CellID->15508845,ExpressionUUID->"b0f87665-6d46-4581-86cc-5366760f4eab"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->20349526,ExpressionUUID->"7133a4db-1b28-4151-8ccd-153c274033fd"],
+
+Cell["function graph", "Keywords",
+ CellID->14549378,ExpressionUUID->"6843664e-3a02-4b4b-bc41-73d9a410a2ee"],
+
+Cell["paclet introspection", "Keywords",
+ CellID->242710720,ExpressionUUID->"fce15cec-3f15-40af-9aa3-e861a9a194af"],
+
+Cell["DownValues", "Keywords",
+ CellID->63142824,ExpressionUUID->"d5f216ec-3dfe-45c4-9ec2-138f957a682e"],
+
+Cell["function-relation graph", "Keywords",
+ CellID->540063663,ExpressionUUID->"c041b18e-49f2-4100-b999-0f02d266fb29"],
+
+Cell["dataflow", "Keywords",
+ CellID->390976286,ExpressionUUID->"62591954-a1c4-42a4-b5a3-27c52848e3aa"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Templates", "TemplatesSection",
+ CellID->984371369,ExpressionUUID->"1cbcbaa3-74bb-4aa6-a51a-0400a1c2343a"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Additional Function Template",
+ CellID->421814293,ExpressionUUID->"60aab07e-6975-46bf-8495-6ffcbe9eb414"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Arguments Pattern",
+ CellID->630153105,ExpressionUUID->"19ce115c-0042-4fe9-b889-d9649962dc1a"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Local Variables",
+ CellID->735501865,ExpressionUUID->"8bc87576-f8ff-47ca-bad6-8fb48784c5e9"],
+
+Cell[BoxData[""], "Template",
+ CellLabel->"Color Equal Signs",
+ CellID->159324005,ExpressionUUID->"375e84b9-617d-4cc3-a8c7-0bb7e1f6e0bf"]
+}, Closed]]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{700, 770},
+WindowMargins->{{5, Automatic}, {Automatic, 0}},
+TaggingRules-><|"Paclet" -> "Wolfram/PacletFunctionGraph"|>,
+CellContext->"Global`",
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"480b3d45-2a46-4d59-8a66-928f48a1f654"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "ExamplesInitialization"->{
+  Cell[11886, 296, 153, 2, 70, "ExamplesInitializationSection",ExpressionUUID->"a7e86f65-7252-4493-81f8-d11b7326d2f3",
+   CellTags->"ExamplesInitialization",
+   CellID->577570221]},
+ "ExtendedExamples"->{
+  Cell[16877, 431, 154, 2, 70, "ExtendedExamplesSection",ExpressionUUID->"41164e5c-bcbc-42d1-a751-e2a143b4bd1e",
+   CellTags->"ExtendedExamples",
+   CellID->944866612]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"ExamplesInitialization", 143214, 3533},
+ {"ExtendedExamples", 143419, 3537}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 115, 1, 70, "ObjectName",ExpressionUUID->"f9d92f1e-e210-47fa-a704-013324fd7496",
+ CellID->675019506],
+Cell[694, 25, 1459, 36, 70, "Usage",ExpressionUUID->"9213165b-b182-4ed6-87f6-617c4522ee4d",
+ CellID->593192022],
+Cell[2156, 63, 855, 22, 70, "Notes",ExpressionUUID->"1dffe3fc-e780-41d9-9148-f90923defd52",
+ CellID->816796639],
+Cell[3014, 87, 440, 8, 70, "Notes",ExpressionUUID->"90968fcf-124a-41ef-aaeb-b687238d1c86",
+ CellID->763194896],
+Cell[3457, 97, 638, 15, 70, "Notes",ExpressionUUID->"40f5b567-41e3-49c8-bc40-217f1d33bf72",
+ CellID->552817229],
+Cell[4098, 114, 1080, 26, 70, "Notes",ExpressionUUID->"8fe44f67-660f-463e-8e08-4acba9aa42be",
+ CellID->614759223],
+Cell[5181, 142, 1064, 24, 70, "Notes",ExpressionUUID->"c18d8e4e-331e-4a44-ab0f-b28d63d98b7b",
+ CellID->398471814],
+Cell[6248, 168, 453, 10, 70, "Notes",ExpressionUUID->"4ca9eade-1b17-42eb-b656-c708db3c6c96",
+ CellID->178488255],
+Cell[6704, 180, 305, 6, 70, "Notes",ExpressionUUID->"825034a4-df6a-4d3e-bfae-00d1da9b008f",
+ CellID->237315060],
+Cell[7012, 188, 806, 18, 70, "Notes",ExpressionUUID->"9b28ca5b-e0d0-4b4f-965b-d91b8f602bbd",
+ CellID->129333348],
+Cell[7821, 208, 656, 16, 70, "Notes",ExpressionUUID->"2cd5de95-5f3c-44a1-8539-9ed8fecd7255",
+ CellID->869339655],
+Cell[8480, 226, 414, 8, 70, "Notes",ExpressionUUID->"f59f1763-ac5f-40f8-90de-690234530b5d",
+ CellID->392990222],
+Cell[8897, 236, 127, 1, 70, "Notes",ExpressionUUID->"3e401d43-3996-4b07-9b12-74fe28566607",
+ CellID->482650468],
+Cell[9027, 239, 2834, 53, 70, "3ColumnTableMod",ExpressionUUID->"87e3a3a0-4987-452b-9c8c-7ae22bb1bec1",
+ CellID->791664283],
+Cell[CellGroupData[{
+Cell[11886, 296, 153, 2, 70, "ExamplesInitializationSection",ExpressionUUID->"a7e86f65-7252-4493-81f8-d11b7326d2f3",
+ CellTags->"ExamplesInitialization",
+ CellID->577570221],
+Cell[12042, 300, 187, 3, 70, "ExampleInitialization",ExpressionUUID->"b68f8cc5-74ce-4468-a551-4f9622ca17ac",
+ CellID->119869117]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12266, 308, 755, 22, 70, "PrimaryExamplesSection",ExpressionUUID->"2b4f308e-f449-48b7-857e-781503813a52",
+ CellID->50097582],
+Cell[13024, 332, 250, 4, 70, "ExampleText",ExpressionUUID->"c2d7aa46-5bad-4b49-a83a-2bab88cd2dd3",
+ CellID->717130041],
+Cell[13277, 338, 546, 14, 70, "Input",ExpressionUUID->"5afc8a3f-d49f-474e-9bf6-265187f9f6b2",
+ CellID->528883189],
+Cell[13826, 354, 923, 16, 70, "Output",ExpressionUUID->"bb7b2e36-69da-4fb8-8d94-26b40252c19e",
+ CellID->395874301],
+Cell[14752, 372, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"a16d3842-8720-4aa6-bf14-42ff0c1d013b",
+ CellID->517794072],
+Cell[14867, 375, 144, 1, 70, "ExampleText",ExpressionUUID->"49ee9b98-07a5-4a4e-8aab-6d6984d23d38",
+ CellID->502877523],
+Cell[15014, 378, 353, 9, 70, "Input",ExpressionUUID->"22ac4282-fcb8-44ce-a1af-b7e675089104",
+ CellID->546026023],
+Cell[15370, 389, 217, 5, 70, "Output",ExpressionUUID->"d3b059f0-3285-4138-bcca-ad0ba247aa6b",
+ CellID->308016438],
+Cell[15590, 396, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"b5466262-adc3-4f9a-878b-c7353d538901",
+ CellID->270288873],
+Cell[15705, 399, 194, 4, 70, "ExampleText",ExpressionUUID->"67b22193-61a3-4a76-936b-e0d4ee54e121",
+ CellID->824157304],
+Cell[15902, 405, 174, 3, 70, "Input",ExpressionUUID->"1265ab69-ae8d-4b28-99f3-51018b77a559",
+ CellID->872523100],
+Cell[16079, 410, 761, 16, 70, "Output",ExpressionUUID->"c19ffbc4-f5d3-4616-832c-2c5f7bd73bd0",
+ CellID->996305358]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16877, 431, 154, 2, 70, "ExtendedExamplesSection",ExpressionUUID->"41164e5c-bcbc-42d1-a751-e2a143b4bd1e",
+ CellTags->"ExtendedExamples",
+ CellID->944866612],
+Cell[CellGroupData[{
+Cell[17056, 437, 241, 5, 70, "ExampleSection",ExpressionUUID->"72f333fd-786c-46f3-877e-36ca73852f6e",
+ CellID->456828700],
+Cell[CellGroupData[{
+Cell[17322, 446, 120, 1, 70, "ExampleSubsection",ExpressionUUID->"a3e2204f-1990-4bda-b55a-6221cb695d70",
+ CellID->999205229],
+Cell[17445, 449, 299, 6, 70, "ExampleText",ExpressionUUID->"db3ee372-e60e-4413-bc4d-d55c39323667",
+ CellID->587619412],
+Cell[17747, 457, 192, 4, 70, "Input",ExpressionUUID->"7903ab7c-c12d-496b-8a90-ca179e296189",
+ CellID->983416227],
+Cell[17942, 463, 110, 1, 70, "ExampleDelimiter",ExpressionUUID->"cc028486-d571-4a62-a9be-14b81d1d3485",
+ CellID->4307525],
+Cell[18055, 466, 189, 4, 70, "ExampleText",ExpressionUUID->"581eaef2-6128-4d8c-b2c7-c19af9debeb7",
+ CellID->963296799],
+Cell[18247, 472, 361, 9, 70, "Input",ExpressionUUID->"28637d7f-f858-42ff-8b46-49fd1c2fc449",
+ CellID->230149098],
+Cell[18611, 483, 127, 2, 70, "Output",ExpressionUUID->"00a3c84c-d875-478b-b8c2-0335330fd087",
+ CellID->206272464],
+Cell[18741, 487, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"70236486-bd12-4383-ad70-4d89fa17dcd6",
+ CellID->342292811],
+Cell[18856, 490, 125, 1, 70, "ExampleText",ExpressionUUID->"08e76ad6-1722-4e96-a0a6-4c6aaa944c30",
+ CellID->964485183],
+Cell[18984, 493, 376, 8, 70, "Input",ExpressionUUID->"22ec7d8d-4fad-4a7e-9b4a-b09d90ee512d",
+ CellID->627245249],
+Cell[19363, 503, 129, 2, 70, "Output",ExpressionUUID->"0488f864-03be-4b9c-b123-e47ffcf560d1",
+ CellID->465309264]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[19529, 510, 124, 1, 70, "ExampleSubsection",ExpressionUUID->"dac3a174-bade-4199-aaba-4fb6637acf71",
+ CellID->358560574],
+Cell[19656, 513, 1110, 29, 70, "ExampleText",ExpressionUUID->"6b5ffae7-569e-4caf-9d61-ad984d780a6e",
+ CellID->528818214],
+Cell[20769, 544, 423, 11, 70, "Input",ExpressionUUID->"82984a37-508e-4b8e-a993-a53d0ada21d5",
+ CellID->381895340],
+Cell[21195, 557, 423, 9, 70, "Output",ExpressionUUID->"05b7a265-d13c-40e2-8e54-ddf5bda58ad9",
+ CellID->722140897],
+Cell[21621, 568, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"5cf426c7-6cea-4bb9-bc2f-9bd95be79bbb",
+ CellID->948015644],
+Cell[21736, 571, 538, 12, 70, "ExampleText",ExpressionUUID->"8869ddf7-307d-498b-b36d-3bd4c2215e83",
+ CellID->260574504],
+Cell[22277, 585, 251, 6, 70, "Input",ExpressionUUID->"2da69e9c-2110-4bee-a95e-91f8f5f53bc4",
+ CellID->633631458],
+Cell[22531, 593, 514, 13, 70, "Output",ExpressionUUID->"4386f2ab-1b84-46ff-b478-b4220c0f463e",
+ CellID->461614459]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[23082, 611, 120, 1, 70, "ExampleSubsection",ExpressionUUID->"2b207fa7-98e1-4603-9764-74873611f59e",
+ CellID->930809500],
+Cell[23205, 614, 193, 4, 70, "ExampleText",ExpressionUUID->"26fd61d2-b71d-4c02-9b6e-0946c4f80713",
+ CellID->299162394],
+Cell[23401, 620, 271, 6, 70, "Input",ExpressionUUID->"108d100a-3d0d-4d48-8939-2315e004bea8",
+ CellID->865399705],
+Cell[23675, 628, 127, 2, 70, "Output",ExpressionUUID->"b8b8dc61-6889-4d1f-a724-f3a62079eb45",
+ CellID->421002024],
+Cell[23805, 632, 111, 1, 70, "ExampleDelimiter",ExpressionUUID->"015d123c-853e-42a8-97e4-62cbda01e121",
+ CellID->67912441],
+Cell[23919, 635, 257, 6, 70, "ExampleText",ExpressionUUID->"1bf1c7d2-6dc1-4771-99e8-c3a387c6aef9",
+ CellID->535855052],
+Cell[24179, 643, 221, 4, 70, "Input",ExpressionUUID->"27148e04-ecdf-44fb-a009-1a41582800aa",
+ CellID->758425120],
+Cell[24403, 649, 22227, 531, 70, "Output",ExpressionUUID->"ce75c8ae-d27e-4094-a752-03d5377140ee",
+ CellID->965857363]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[46667, 1185, 118, 1, 70, "ExampleSubsection",ExpressionUUID->"129d239c-a8e6-4128-8d19-b8bf5ede8f09",
+ CellID->751503295],
+Cell[46788, 1188, 322, 7, 70, "ExampleText",ExpressionUUID->"9132cbe3-e890-46ff-90c6-588aa4034f52",
+ CellID->569603488],
+Cell[47113, 1197, 457, 11, 70, "Input",ExpressionUUID->"4869b397-42fa-447c-9454-77fa5c262a08",
+ CellID->204740828],
+Cell[47573, 1210, 207, 5, 70, "Output",ExpressionUUID->"00b6366c-df95-40ba-9a1f-11c7d3728e58",
+ CellID->444545760],
+Cell[47783, 1217, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"3eb04bf3-6060-4bbd-8c1c-ec89320173c7",
+ CellID->871936427],
+Cell[47898, 1220, 278, 6, 70, "ExampleText",ExpressionUUID->"759a9b1e-eb6a-447c-8079-a4df0c79e64c",
+ CellID->10158308],
+Cell[48179, 1228, 573, 14, 70, "Input",ExpressionUUID->"e5bb03bd-2f60-44e0-8e0e-02d75068d962",
+ CellID->770165108],
+Cell[48755, 1244, 130, 2, 70, "Output",ExpressionUUID->"ae02e25e-bdbb-4701-8af3-fc1704e3ca43",
+ CellID->212926828]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[48922, 1251, 130, 1, 70, "ExampleSubsection",ExpressionUUID->"8e545a7e-aa13-41b3-af86-beb631178891",
+ CellID->592597773],
+Cell[49055, 1254, 259, 4, 70, "ExampleText",ExpressionUUID->"9de1a8d5-c242-412e-94cf-b3f84dc2ffb9",
+ CellID->804002361],
+Cell[49317, 1260, 553, 13, 70, "Input",ExpressionUUID->"4f82788d-34ed-4100-b48a-3083fafbebcb",
+ CellID->638685167]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[49919, 1279, 243, 5, 70, "ExampleSection",ExpressionUUID->"60954635-c0a4-4d85-83bb-b4093d43ebfb",
+ CellID->962261226],
+Cell[50165, 1286, 144, 3, 70, "Input",ExpressionUUID->"6a1bd468-5d28-4b69-af1f-ce926bdc367c"],
+Cell[50312, 1291, 143, 3, 70, "Input",ExpressionUUID->"475dbf7d-7dbe-4325-bc7a-ac4df82f5802"],
+Cell[50458, 1296, 141, 3, 70, "Input",ExpressionUUID->"d1fe8e6f-945a-4b1b-adfc-a7ff50d69bdb"],
+Cell[50602, 1301, 144, 3, 70, "Input",ExpressionUUID->"da2a2def-b704-443e-82c6-41c7e6a50c36"],
+Cell[50749, 1306, 148, 3, 70, "Input",ExpressionUUID->"23edf72c-4280-469d-a1f6-39ff3a88ff5f"],
+Cell[50900, 1311, 148, 3, 70, "Input",ExpressionUUID->"62786438-fd6a-4796-accd-8aeb604c5d25"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[51085, 1319, 248, 5, 70, "ExampleSection",ExpressionUUID->"1824c5a0-f14c-40e0-bbc2-fa5866cad0fe",
+ CellID->646813946],
+Cell[51336, 1326, 153, 1, 70, "ExampleText",ExpressionUUID->"4b866270-b55d-41e3-952b-19413832fefb",
+ CellID->739808602],
+Cell[51492, 1329, 374, 9, 70, "Input",ExpressionUUID->"a2cf9921-aab4-4c45-a5d2-7d39ca3e32dd",
+ CellID->778072856],
+Cell[51869, 1340, 36160, 826, 70, "Output",ExpressionUUID->"162681b1-1bfd-46d4-8c5e-868448b9a042",
+ CellID->592853137],
+Cell[88032, 2168, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"0f22902f-e09b-4494-ab76-ebb8ce7aaa4c",
+ CellID->424200470],
+Cell[88147, 2171, 577, 13, 70, "ExampleText",ExpressionUUID->"faf7631b-1012-4af3-94f4-9fe4087b40bb",
+ CellID->148347712],
+Cell[88727, 2186, 460, 12, 70, "Input",ExpressionUUID->"03eeb6c3-03ed-4f41-828a-270deed63fd4",
+ CellID->777066994],
+Cell[89190, 2200, 432, 8, 70, "Output",ExpressionUUID->"4ea3958c-ce99-46d2-b733-aed0355b6126",
+ CellID->566403939],
+Cell[89625, 2210, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"1757a825-c283-4b05-9f75-8e654c35b882",
+ CellID->373613802],
+Cell[89740, 2213, 384, 8, 70, "ExampleText",ExpressionUUID->"050827c3-19a0-45a8-964c-e2189685ab3e",
+ CellID->724089843],
+Cell[90127, 2223, 491, 13, 70, "Input",ExpressionUUID->"23c7390c-97dd-4584-abfa-3688b8aac0ef",
+ CellID->556468638],
+Cell[90621, 2238, 362, 7, 70, "Output",ExpressionUUID->"733a7f28-9e38-45d6-9414-a5c98d1fd65c",
+ CellID->701406546]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[91020, 2250, 258, 5, 70, "ExampleSection",ExpressionUUID->"5e23e539-f605-4425-a8ff-a5992f90a526",
+ CellID->300226860],
+Cell[91281, 2257, 407, 9, 70, "ExampleText",ExpressionUUID->"6546e592-634d-4fd3-8dfe-1262ddc3bc3a",
+ CellID->588330894],
+Cell[91691, 2268, 963, 27, 70, "Input",ExpressionUUID->"0235860a-1685-4e88-906e-aa4e5a012604",
+ CellID->637904924],
+Cell[92657, 2297, 129, 2, 70, "Output",ExpressionUUID->"5b8d3314-8a5b-4bc3-8b4c-35d7a025eff7",
+ CellID->859031665],
+Cell[92789, 2301, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"27165c46-ddcb-4a69-9800-a9ce12292057",
+ CellID->181733297],
+Cell[92904, 2304, 415, 7, 70, "ExampleText",ExpressionUUID->"cfb161e1-5e0e-4113-93c2-dc16f1b6c3e5",
+ CellID->630201173],
+Cell[93322, 2313, 938, 25, 70, "Input",ExpressionUUID->"b266c2c0-bc20-4601-9d0e-4f83431ca10d",
+ CellID->807270991],
+Cell[94263, 2340, 129, 2, 70, "Output",ExpressionUUID->"fae3a492-83b1-41b6-99ed-b3939a8922b8",
+ CellID->950844128],
+Cell[94395, 2344, 112, 1, 70, "ExampleDelimiter",ExpressionUUID->"7334e7ee-4515-462f-af86-9b8d7be80f71",
+ CellID->815943752],
+Cell[94510, 2347, 603, 15, 70, "ExampleText",ExpressionUUID->"5e110b6b-34c2-4f61-a06a-92ba1de4900d",
+ CellID->328168171],
+Cell[95116, 2364, 690, 19, 70, "Input",ExpressionUUID->"09aaed5d-38dd-495c-a443-9ad482a7787b",
+ CellID->690719805],
+Cell[95809, 2385, 192, 4, 70, "Output",ExpressionUUID->"67350a50-4509-46bb-809b-d2d1e1e407d8",
+ CellID->386385911]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[96038, 2394, 251, 5, 70, "ExampleSection",ExpressionUUID->"8d4f61ea-ab05-4c3e-8780-12082ca74f35",
+ CellID->943048516],
+Cell[96292, 2401, 477, 10, 70, "ExampleText",ExpressionUUID->"8dfcd7fb-5d9c-44a0-9247-a0f0c4940307",
+ CellID->262301551],
+Cell[96772, 2413, 447, 9, 70, "ExampleText",ExpressionUUID->"c36d2d93-ca62-4522-bdf8-271319dbbaeb",
+ CellID->844474354],
+Cell[97222, 2424, 392, 8, 70, "ExampleText",ExpressionUUID->"03f5b0cc-2dfe-4fbf-b8e9-f76f59a3bf75",
+ CellID->310853475],
+Cell[97617, 2434, 456, 12, 70, "Input",ExpressionUUID->"2ad64bc8-516c-4485-8539-9a756eba8952",
+ CellID->317891433],
+Cell[98076, 2448, 126, 2, 70, "Output",ExpressionUUID->"17cb9895-69ad-498b-820e-2ac477dcd1d2",
+ CellID->607577140],
+Cell[98205, 2452, 632, 14, 70, "ExampleText",ExpressionUUID->"5f54e41d-3197-4a50-beab-3a258d05ec3d",
+ CellID->47118688]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[98874, 2471, 249, 5, 70, "ExampleSection",ExpressionUUID->"df4f8455-9906-4732-84a1-fc06b2ca6c9d",
+ CellID->495369279],
+Cell[99126, 2478, 223, 4, 70, "ExampleText",ExpressionUUID->"edb2d979-c5d9-4f84-9908-7210ad50b39c",
+ CellID->933368380],
+Cell[99352, 2484, 496, 12, 70, "Input",ExpressionUUID->"4088ab76-886a-45b7-9d55-e2d70593c02f",
+ CellID->256924188],
+Cell[99851, 2498, 36160, 826, 70, "Output",ExpressionUUID->"3400f963-7147-4869-a29a-14c714d079ee",
+ CellID->295801612]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[136060, 3330, 109, 1, 70, "SeeAlsoSection",ExpressionUUID->"a55d4243-533c-4a78-8692-4e739c050e7e",
+ CellID->881146640],
+Cell[136172, 3333, 2884, 72, 70, "SeeAlso",ExpressionUUID->"30f621bb-5639-43dd-8b5c-cd152385d95e",
+ CellID->150352622]
+}, Open  ]],
+Cell[139071, 3408, 112, 1, 70, "TechNotesSection",ExpressionUUID->"888f726d-22dc-444c-b076-73b6a7ebf94f",
+ CellID->96553520],
+Cell[CellGroupData[{
+Cell[139208, 3413, 117, 1, 70, "MoreAboutSection",ExpressionUUID->"9d0cf34e-2900-4142-a071-c4daf34b20b3",
+ CellID->792625737],
+Cell[139328, 3416, 238, 5, 70, "MoreAbout",ExpressionUUID->"b9687321-b16e-4f10-a905-f880c4ed6bf0",
+ CellID->150752594]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[139603, 3426, 119, 1, 70, "RelatedLinksSection",ExpressionUUID->"d0313558-717f-401f-9ef8-03d97e1da9c7",
+ CellID->440650122],
+Cell[139725, 3429, 103, 1, 70, "RelatedLinks",ExpressionUUID->"3f9cfe0f-967d-489b-b070-2a438c9dcaa1",
+ CellID->201303935]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[139865, 3435, 110, 1, 70, "MetadataSection",ExpressionUUID->"5914b6e2-17f6-444b-93b0-76f3e0755fcb",
+ CellID->175058844],
+Cell[139978, 3438, 477, 12, 70, "History",ExpressionUUID->"82b3f976-5e6c-4fcb-a119-0de2f67114ef",
+ CellID->683565489],
+Cell[CellGroupData[{
+Cell[140480, 3454, 122, 1, 70, "CategorizationSection",ExpressionUUID->"9d1176b8-56fe-473a-b065-2de1aa579dd3",
+ CellID->184980551],
+Cell[140605, 3457, 134, 2, 70, "Categorization",ExpressionUUID->"b331e116-ee6b-49c0-90bb-5ffdeda0609a",
+ CellID->119261104],
+Cell[140742, 3461, 155, 2, 70, "Categorization",ExpressionUUID->"1c6c89c6-40af-466f-9f91-7e06e35005f9",
+ CellID->306002859],
+Cell[140900, 3465, 152, 2, 70, "Categorization",ExpressionUUID->"26a7917b-0b5f-4bee-a9c0-063ffa93649b",
+ CellID->762839099],
+Cell[141055, 3469, 169, 2, 70, "Categorization",ExpressionUUID->"b0f87665-6d46-4581-86cc-5366760f4eab",
+ CellID->15508845]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[141261, 3476, 109, 1, 70, "KeywordsSection",ExpressionUUID->"7133a4db-1b28-4151-8ccd-153c274033fd",
+ CellID->20349526],
+Cell[141373, 3479, 108, 1, 70, "Keywords",ExpressionUUID->"6843664e-3a02-4b4b-bc41-73d9a410a2ee",
+ CellID->14549378],
+Cell[141484, 3482, 115, 1, 70, "Keywords",ExpressionUUID->"fce15cec-3f15-40af-9aa3-e861a9a194af",
+ CellID->242710720],
+Cell[141602, 3485, 104, 1, 70, "Keywords",ExpressionUUID->"d5f216ec-3dfe-45c4-9ec2-138f957a682e",
+ CellID->63142824],
+Cell[141709, 3488, 118, 1, 70, "Keywords",ExpressionUUID->"c041b18e-49f2-4100-b999-0f02d266fb29",
+ CellID->540063663],
+Cell[141830, 3491, 103, 1, 70, "Keywords",ExpressionUUID->"62591954-a1c4-42a4-b5a3-27c52848e3aa",
+ CellID->390976286]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[141970, 3497, 112, 1, 70, "TemplatesSection",ExpressionUUID->"1cbcbaa3-74bb-4aa6-a51a-0400a1c2343a",
+ CellID->984371369],
+Cell[142085, 3500, 148, 2, 70, "Template",ExpressionUUID->"60aab07e-6975-46bf-8495-6ffcbe9eb414",
+ CellID->421814293],
+Cell[142236, 3504, 137, 2, 70, "Template",ExpressionUUID->"19ce115c-0042-4fe9-b889-d9649962dc1a",
+ CellID->630153105],
+Cell[142376, 3508, 135, 2, 70, "Template",ExpressionUUID->"8bc87576-f8ff-47ca-bad6-8fb48784c5e9",
+ CellID->735501865],
+Cell[142514, 3512, 137, 2, 70, "Template",ExpressionUUID->"375e84b9-617d-4cc3-a8c7-0bb7e1f6e0bf",
+ CellID->159324005]
+}, Closed]]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
