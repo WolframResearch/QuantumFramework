@@ -350,4 +350,53 @@ VerificationTest[
     TestID -> "qasmNonQubitFailure-shared-and-defined"
 ]
 
+(* ---- non-computational measurement basis is preserved on export ----
+   OpenQASM measures only in the computational basis, so a measurement in basis B must be
+   lowered to "rotate by Inverse[B], then measure computationally" (the same lowering the
+   qiskit export path uses). A plain Z measurement must be left byte-for-byte unchanged. *)
+
+probDist[qc_] := N @ qc[]["ProbabilitiesList"];
+qasmStatsRoundtripQ[qc_] := With[{rt = QuantumCircuitOperator @ QuantumQASM[qc]},
+    TrueQ[Chop[Total @ Abs[probDist[qc] - N @ rt[]["ProbabilitiesList"]]] == 0]
+];
+
+(* X-basis measurement of |0> must round-trip to {1/2, 1/2}, not the Z result {1, 0} *)
+VerificationTest[
+    With[{rt = QuantumCircuitOperator @ QuantumQASM[QuantumCircuitOperator[{QuantumMeasurementOperator["X", {1}]}]]},
+        TrueQ[Chop[Total @ Abs[N @ rt[QuantumState["0"]]["ProbabilitiesList"] - {0.5, 0.5}]] == 0]
+    ],
+    True,
+    TestID -> "x-basis-measurement-roundtrip-stats"
+]
+
+(* the export carries a basis-change gate before the measure (not a bare computational measure) *)
+VerificationTest[
+    StringContainsQ[
+        QuantumQASM[QuantumCircuitOperator[{QuantumMeasurementOperator["X", {1}]}]],
+        "U(" ~~ ___ ~~ "measure q[0]"
+    ],
+    True,
+    TestID -> "x-basis-measurement-emits-rotation"
+]
+
+(* Y-basis and the Deutsch-Jozsa-phase circuit (X-basis terminal measurements) round-trip *)
+VerificationTest[
+    qasmStatsRoundtripQ[QuantumCircuitOperator[{"H" -> 1, QuantumMeasurementOperator["Y", {1}]}]],
+    True,
+    TestID -> "y-basis-measurement-roundtrip-stats"
+]
+
+VerificationTest[
+    qasmStatsRoundtripQ[QuantumCircuitOperator["DeutschJozsaPhase"[3, 2]]],
+    True,
+    TestID -> "deutsch-jozsa-phase-measurement-roundtrip-stats"
+]
+
+(* a plain computational (Z) measurement gets no spurious rotation gate: export is unchanged *)
+VerificationTest[
+    QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2}}]],
+    "OPENQASM 3.0;\nqubit[2] q;\nbit[2] c;\nU(1.5707963267948966, 0., 3.141592653589793) q[0];\nctrl(1) @ negctrl(0) @ U(3.141592653589793, 0., 3.141592653589793) q[0] q[1];\nc[0] = measure q[0];\nc[1] = measure q[1];",
+    TestID -> "computational-measurement-unchanged"
+]
+
 EndTestSection[]
