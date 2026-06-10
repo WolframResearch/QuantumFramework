@@ -235,4 +235,119 @@ VerificationTest[
     TestID -> "import-qasm-circuit-deprecated-shim"
 ]
 
+(* ---- state-injection circuits export via auto state-prep; projections fail cleanly ---- *)
+
+(* The CHSH circuit begins with non-unitary state injections (a Cup Bell-pair tensor and |+>
+   kets). OpenQASM starts every qubit in |0>, so each injection is lowered to a reset plus a
+   preparation gate sequence. The export is a valid OpenQASM string (no stray Part::partw
+   message from a non-square matrix reaching UnitaryAngles). *)
+
+VerificationTest[
+    StringQ[QuantumQASM[QuantumCircuitOperator["CHSH"]]],
+    True,
+    TestID -> "stateprep-circuit-exports"
+]
+
+(* the lowering emits resets for the |0> base of each prepared state *)
+VerificationTest[
+    StringContainsQ[QuantumQASM[QuantumCircuitOperator["CHSH"]], "reset q["],
+    True,
+    TestID -> "stateprep-lowers-to-reset"
+]
+
+(* the exported circuit round-trips to the same measurement statistics, within the WL
+   emitter's ~6-digit angle rounding *)
+VerificationTest[
+    With[{chsh = QuantumCircuitOperator["CHSH"]},
+        Max[Abs[chsh[]["ProbabilitiesList"] - QuantumQASM[QuantumQASM[chsh]][]["ProbabilitiesList"]]] < 1.*^-4
+    ],
+    True,
+    TestID -> "stateprep-roundtrip-equivalent"
+]
+
+(* OpenQASM `reset` is dropped on import (a QF wire with no initial state is already |0>):
+   the re-imported circuit carries no Reset element, so it does not accumulate the malformed
+   growing-dimension Reset[QuantumState[\[Ellipsis]]] artifacts that "Reset" -> wire produced *)
+VerificationTest[
+    FreeQ[QuantumQASM[QuantumQASM[QuantumCircuitOperator["CHSH"]]]["Elements"], Reset | "Reset"],
+    True,
+    TestID -> "stateprep-roundtrip-no-reset-artifact"
+]
+
+(* a co-state / projection (Cap: input legs, no output) is NOT a preparable state, so it has
+   no OpenQASM form and the circuit export fails cleanly, naming the offending gate, rather
+   than letting a non-square matrix reach UnitaryAngles *)
+VerificationTest[
+    With[{r = QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumOperator["Cap"] -> {1, 2}}]]},
+        MatchQ[r, Failure["QuantumQASM", _Association]] && StringContainsQ[r[[2]]["MessageTemplate"], "Cap"]
+    ],
+    True,
+    TestID -> "projection-circuit-clean-failure"
+]
+
+(* a genuine square 1-qubit gate is unaffected and still emits a U(...) gate *)
+VerificationTest[
+    StringStartsQ[QuantumQASM[QuantumOperator["H"], "Simple"], "U("],
+    True,
+    TestID -> "square-gate-still-emits-u"
+]
+
+(* physical qubits ($N: OpenQASM 3 hardware qubits, declared by no register) import; qiskit
+   emits these for transpiled circuits *)
+VerificationTest[
+    Head @ QuantumQASM["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[2] c;\nh $0;\ncx $0, $1;\nc[0] = measure $0;\nc[1] = measure $1;"],
+    QuantumCircuitOperator,
+    TestID -> "physical-qubit-import"
+]
+
+(* ---- non-qubit (higher-dimensional) systems are rejected with a clear failure ---- *)
+
+(* OpenQASM models qubit registers only. A circuit carrying any d != 2 quantum wire (here a
+   qutrit Hadamard plus a d=3 measurement) has no OpenQASM representation, so the export is
+   rejected up front with a named QuantumQASM failure naming the offending dimension, not an
+   opaque qiskit ConfirmationFailed. This is the same failure IBMJobSubmit reuses to reject a
+   non-qubit circuit before contacting the QPU. *)
+
+qutritCircuit = QuantumCircuitOperator[{"H"[3], "M"[QuantumBasis[3]]}];
+
+VerificationTest[
+    With[{r = QuantumQASM[qutritCircuit]},
+        MatchQ[r, Failure["QuantumQASM", _Association]] &&
+            StringContainsQ[r[[2]]["MessageTemplate"], "qubit (2-dimensional) systems only"] &&
+            r[[2]]["NonQubitDimensions"] === {3}
+    ],
+    True,
+    TestID -> "non-qubit-circuit-clean-failure"
+]
+
+(* a pure-qubit circuit is unaffected and still exports *)
+VerificationTest[
+    FailureQ @ QuantumQASM[bell],
+    False,
+    TestID -> "qubit-circuit-not-rejected"
+]
+
+(* ---- cross-package scoping regression for the IBMJobSubmit non-qubit guard ----
+   The guard helpers must be shared PackageScope symbols, not file-private to QuantumQASM.m.
+   When they were private, IBMQuantum.m's guard referenced a different, undefined symbol, so
+   qasmQubitsQ[qco] stayed unevaluated, ! unevaluated was not True, the If never fired, and a
+   qutrit circuit fell through to qiskit and surfaced an opaque PythonError instead of the clean
+   failure above. These tests pin the symbols as defined and resolving the same way both files
+   see them. *)
+
+VerificationTest[
+    {
+        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[qutritCircuit],
+        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[bell]
+    },
+    {False, True},
+    TestID -> "qasmQubitsQ-shared-and-defined"
+]
+
+VerificationTest[
+    MatchQ[Wolfram`QuantumFramework`PackageScope`qasmNonQubitFailure[qutritCircuit], Failure["QuantumQASM", _Association]],
+    True,
+    TestID -> "qasmNonQubitFailure-shared-and-defined"
+]
+
 EndTestSection[]

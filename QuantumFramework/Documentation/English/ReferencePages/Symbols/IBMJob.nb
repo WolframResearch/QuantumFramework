@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     61774,       1368]
-NotebookOptionsPosition[     49622,       1189]
-NotebookOutlinePosition[     50853,       1225]
-CellTagsIndexPosition[     50773,       1220]
+NotebookDataLength[     64757,       1548]
+NotebookOptionsPosition[     50302,       1249]
+NotebookOutlinePosition[     51549,       1286]
+CellTagsIndexPosition[     51469,       1281]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -749,6 +749,8 @@ Cell[BoxData[
  CellID->1969679695,ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502"]
 }, Open  ]],
 
+Cell[CellGroupData[{
+
 Cell[BoxData[
  InterpretationBox[GridBox[{
     {
@@ -786,6 +788,8 @@ Cell[BoxData[
      " ", "\"\<ibm_fez\>\""}], "]"}]}]], "Input",ExpressionUUID->"86fa0af7-\
 add0-4e0a-a501-c8f57a6db147"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"da0c6392-10e8-4b25-8860-bacfdb66b813"],
 
 Cell["Check the status, refreshing the snapshot from the service:", \
@@ -796,7 +800,10 @@ Cell[BoxData[
   RowBox[{"job", " ", "=", " ", 
    RowBox[{"job", "[", "\"\<Refresh\>\"", "]"}]}], ";", " ", 
   RowBox[{"job", "[", "\"\<Status\>\"", "]"}]}]], "Input",ExpressionUUID->\
-"d585ca27-9716-48e5-8762-965a2c011d2f"],
+"d585ca27-9716-48e5-8762-965a2c011d2f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"c03af505-5f2e-405a-9ced-d7f9c692418e"],
 
@@ -806,7 +813,9 @@ The default output is the measurement reconstructed from the hardware counts:\
 \>", "ExampleText",ExpressionUUID->"1f13d7c3-f391-43d1-9cdc-9504249d41f9"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "]"}]], "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d"],
+ RowBox[{"job", "[", "]"}]], "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d"]
+}, Open  ]]
+}, Open  ]],
 
 Cell[CellGroupData[{
 
@@ -834,6 +843,8 @@ Cell[BoxData[
   $Line = 0; Null]], "ExampleSection",
  CellID->1293636265,ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75"],
 
+Cell[CellGroupData[{
+
 Cell["Results", "ExampleSubsection",ExpressionUUID->"dadfd45e-c9ac-42e7-a00d-bc70e4f9cb35"],
 
 Cell["\<\
@@ -844,12 +855,17 @@ to the Wolfram Language qubit order:\
 Cell[BoxData[
  RowBox[{"job", "[", "\"\<Probabilities\>\"", "]"}]], "Input",ExpressionUUID->"a19a5177-cce4-4085-b929-bb9687c91998"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"87108ce8-bf0c-4f7b-b464-75bcb4469b9b"],
 
 Cell["Exact integer counts keyed by the bit-list outcome:", "ExampleText",ExpressionUUID->"68133ccc-12dd-455c-8b18-ae698c8bd7bf"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Counts\>\"", "]"}]], "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2"],
+ RowBox[{"job", "[", "\"\<Counts\>\"", "]"}]], "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"b0573bbb-6713-4927-9f80-ce8e164821dc"],
 
@@ -861,7 +877,10 @@ Cell[BoxData[
   RowBox[{
    RowBox[{"job", "[", "\"\<NumBits\>\"", "]"}], ",", " ", 
    RowBox[{"job", "[", "\"\<Shots\>\"", "]"}]}], "}"}]], "Input",ExpressionUUI\
-D->"ac0600ba-8f32-4807-ad64-1602796ea9d5"],
+D->"ac0600ba-8f32-4807-ad64-1602796ea9d5"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"b9115ba6-940a-4320-9133-284c8f27a510"],
 
@@ -871,7 +890,10 @@ order:\
 \>", "ExampleText",ExpressionUUID->"09626ed0-0054-447b-be4d-d5b2abdd765a"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<MeasuredQubits\>\"", "]"}]], "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f"],
+ RowBox[{"job", "[", "\"\<MeasuredQubits\>\"", "]"}]], "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"f5b878bf-e8a4-4ea3-80bc-38eb17382c27"],
 
@@ -884,7 +906,11 @@ Cell[BoxData[
  RowBox[{"Short", "[", 
   RowBox[{
    RowBox[{"job", "[", "\"\<Samples\>\"", "]"}], ",", " ", "2"}], 
-  "]"}]], "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5"],
+  "]"}]], "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["Estimator results", "ExampleSubsection",ExpressionUUID->"834fa20a-fa7b-4b9b-ad78-d68c7f67dc64"],
 
@@ -922,7 +948,10 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{"estJob", "[", "\"\<ExpectationValue\>\"", "]"}], ",", " ", 
    RowBox[{"estJob", "[", "\"\<StandardErrors\>\"", "]"}]}], "}"}]}], "Input",\
-ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65"],
+ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["Job metadata", "ExampleSubsection",ExpressionUUID->"b8421cc9-4d70-45ff-9acc-2de1a5042bf4"],
 
@@ -935,6 +964,8 @@ Cell[BoxData[
    RowBox[{"job", "[", "\"\<Backend\>\"", "]"}]}], "}"}]], "Input",ExpressionU\
 UID->"7541d19f-2f49-4a7a-bc3a-c6ad85a2af02"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"9fa2fa94-c7b8-4d6b-a10d-530b7971c1f2"],
 
 Cell[TextData[{
@@ -946,7 +977,10 @@ Cell[TextData[{
 }], "ExampleText",ExpressionUUID->"e8eb7881-808f-478b-9694-4edb3d366ce4"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<QuantumSeconds\>\"", "]"}]], "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3"],
+ RowBox[{"job", "[", "\"\<QuantumSeconds\>\"", "]"}]], "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"3fcff46d-d873-4a01-ab2f-f50d9f876d40"],
 
@@ -959,7 +993,10 @@ Cell[BoxData[
   RowBox[{
    RowBox[{"job", "[", "\"\<Timestamps\>\"", "]"}], ",", " ", 
    RowBox[{"job", "[", "\"\<Duration\>\"", "]"}]}], "}"}]], "Input",Expression\
-UUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1"],
+UUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"7b6341c6-bb9f-4b15-826b-0ab09b372e7a"],
 
@@ -972,7 +1009,11 @@ Cell[TextData[{
 }], "ExampleText",ExpressionUUID->"8417cc59-782c-46eb-9d54-339d8e674dcd"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<SubmittedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d"],
+ RowBox[{"job", "[", "\"\<SubmittedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["Lifecycle", "ExampleSubsection",ExpressionUUID->"d60f5ea6-0e3d-4891-a5c5-41065c60b4e7"],
 
@@ -987,6 +1028,8 @@ Cell[BoxData[
   RowBox[{"job", "[", "\"\<Refresh\>\"", "]"}], "[", "\"\<Status\>\"", 
   "]"}]], "Input",ExpressionUUID->"82296f10-2ec8-41f1-8aa3-e807cd697748"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"2877dfcf-fa24-4ce5-a974-6c118b58b654"],
 
 Cell[TextData[{
@@ -996,7 +1039,11 @@ Cell[TextData[{
 }], "ExampleText",ExpressionUUID->"8c963825-a5a1-4dce-abd6-768efea2b95d"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Cancel\>\"", "]"}]], "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2"],
+ RowBox[{"job", "[", "\"\<Cancel\>\"", "]"}]], "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["Properties and actions", "ExampleSubsection",ExpressionUUID->"9bab9e6c-15a4-457f-bfbb-031113a08fa3"],
 
@@ -1013,6 +1060,8 @@ Cell[BoxData[
    RowBox[{"job", "[", "\"\<Properties\>\"", "]"}]}], "]"}]], "Input",Expressi\
 onUUID->"47b8606c-2473-4b04-99e7-4ca58d3841da"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"8ba3cb44-1569-4414-8698-80fa34856857"],
 
 Cell[TextData[{
@@ -1025,7 +1074,11 @@ Cell[TextData[{
 }], "ExampleText",ExpressionUUID->"ba3e4563-fbb4-4314-9979-77b548fe2ed9"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Actions\>\"", "]"}]], "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd"],
+ RowBox[{"job", "[", "\"\<Actions\>\"", "]"}]], "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["Raw responses", "ExampleSubsection",ExpressionUUID->"ee3b2404-bbc2-4d7f-b600-5d9105c4e01e"],
 
@@ -1043,6 +1096,7 @@ Cell[BoxData[
  RowBox[{"job", "[", 
   RowBox[{"\"\<Raw\>\"", ",", " ", "\"\<Metrics\>\""}], "]"}]], "Input",Expres\
 sionUUID->"04ad4882-ba23-4e34-a85c-5c3982854e99"]
+}, Open  ]]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -1067,6 +1121,8 @@ Cell[TextData[{
 Cell[BoxData[
  RowBox[{"job", "[", "\"\<Frobnicate\>\"", "]"}]], "Input",ExpressionUUID->"61f3d740-949c-4f4b-bae6-9c5033613adc"],
 
+Cell[CellGroupData[{
+
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"f472ba71-9493-405d-be3d-30294bdf65a3"],
 
 Cell[TextData[{
@@ -1084,7 +1140,10 @@ to the V2 primitives stores none, so the request gives a ",
 }], "ExampleText",ExpressionUUID->"6d9fc826-2ed3-49a7-9e26-e88080b0e52a"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3"],
+ RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3"]
+}, Open  ]],
+
+Cell[CellGroupData[{
 
 Cell["\t", "ExampleDelimiter",ExpressionUUID->"5c3fbd56-e032-4055-b3cb-df78afdd68c4"],
 
@@ -1106,6 +1165,7 @@ gives a ",
 
 Cell[BoxData[
  RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"e4c3bfa0-dfe7-4147-a7b8-aedd06d64009"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]],
 
@@ -1189,6 +1249,7 @@ Cell[BoxData[""], "Template",
 },
 WindowSize->{700, 770},
 WindowMargins->{{5, Automatic}, {Automatic, 0}},
+Visible->False,
 TaggingRules->{
  "Metadata" -> {
    "title" -> "IBMJob", "context" -> "Wolfram`QuantumFramework`", 
@@ -1200,7 +1261,7 @@ TaggingRules->{
     "Wolfram/QuantumFramework/ref/IBMJob", "type" -> "Symbol", "index" -> 
     True, "language" -> "en"}},
 CreateCellID->True,
-CellContext->"Global`",
+CellContext->CellGroup,
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStylesExt.nb", 
   CharacterEncoding -> "UTF-8"],
@@ -1212,14 +1273,14 @@ ExpressionUUID->"c207366e-060a-406b-a297-9e30e1628f43"
 (*CellTagsOutline
 CellTagsIndex->{
  "ExtendedExamples"->{
-  Cell[35256, 812, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+  Cell[35358, 821, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
    CellTags->"ExtendedExamples",
    CellID->533848431]}
  }
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"ExtendedExamples", 50579, 1213}
+ {"ExtendedExamples", 51275, 1274}
  }
 *)
 (*NotebookFileOutline
@@ -1227,32 +1288,48 @@ Notebook[{
 Cell[CellGroupData[{
 Cell[576, 22, 104, 1, 70, "ObjectName",ExpressionUUID->"8393d601-4014-44ba-afc9-60862df940ec",
  CellID->1224892054],
-Cell[683, 25, 2006, 50, 70, "Usage",ExpressionUUID->"aee0dc0a-5f57-4185-b6a9-7a0470a17440"],
-Cell[2692, 77, 944, 25, 70, "Notes",ExpressionUUID->"a2b988c6-517f-4855-a505-d5dc8026a236"],
-Cell[3639, 104, 410, 9, 70, "Notes",ExpressionUUID->"9a9e05d1-02b9-4627-a699-a294313c9f29"],
-Cell[4052, 115, 908, 21, 70, "Notes",ExpressionUUID->"6c74774e-c312-4d51-9c0c-23ffaa188ca5"],
-Cell[4963, 138, 1420, 34, 70, "Notes",ExpressionUUID->"65a07c1f-9c64-49ca-86e6-98a6ff91abca"],
-Cell[6386, 174, 451, 7, 70, "Notes",ExpressionUUID->"00d1e354-339a-48d6-8d8c-8175fe446b02"],
-Cell[6840, 183, 2723, 70, 70, "Notes",ExpressionUUID->"a099d18c-b861-4e81-9587-c2ca0be4c8de"],
-Cell[9566, 255, 1736, 43, 70, "Notes",ExpressionUUID->"95a043f0-d6f9-4873-a707-b08d5afcd517"],
-Cell[11305, 300, 352, 8, 70, "Notes",ExpressionUUID->"89b6ef4c-8199-4f2d-9304-9853bc219421"],
-Cell[11660, 310, 464, 8, 70, "Notes",ExpressionUUID->"543cc6c8-fe1c-4ecd-b25f-732198fa237e"],
-Cell[12127, 320, 474, 11, 70, "Notes",ExpressionUUID->"78569628-a6a1-4454-bcc5-899ae12cb03a"],
-Cell[12604, 333, 14355, 254, 70, "2ColumnTableMod",ExpressionUUID->"25a303c9-c1ee-4289-9e24-ef4337435158"],
-Cell[26962, 589, 576, 14, 70, "Notes",ExpressionUUID->"59483de1-fdf3-4ae7-9352-591c53aa0f64"],
-Cell[27541, 605, 1885, 32, 70, "2ColumnTableMod",ExpressionUUID->"9552e551-3f49-42a8-ac80-540bc0fd056e"]
+Cell[683, 25, 2006, 50, 70, "Usage",ExpressionUUID->"aee0dc0a-5f57-4185-b6a9-7a0470a17440",
+ CellID->1029672844],
+Cell[2692, 77, 944, 25, 70, "Notes",ExpressionUUID->"a2b988c6-517f-4855-a505-d5dc8026a236",
+ CellID->1288261582],
+Cell[3639, 104, 410, 9, 70, "Notes",ExpressionUUID->"9a9e05d1-02b9-4627-a699-a294313c9f29",
+ CellID->882279620],
+Cell[4052, 115, 908, 21, 70, "Notes",ExpressionUUID->"6c74774e-c312-4d51-9c0c-23ffaa188ca5",
+ CellID->98990805],
+Cell[4963, 138, 1420, 34, 70, "Notes",ExpressionUUID->"65a07c1f-9c64-49ca-86e6-98a6ff91abca",
+ CellID->1586116857],
+Cell[6386, 174, 451, 7, 70, "Notes",ExpressionUUID->"00d1e354-339a-48d6-8d8c-8175fe446b02",
+ CellID->1151505388],
+Cell[6840, 183, 2723, 70, 70, "Notes",ExpressionUUID->"a099d18c-b861-4e81-9587-c2ca0be4c8de",
+ CellID->228429352],
+Cell[9566, 255, 1736, 43, 70, "Notes",ExpressionUUID->"95a043f0-d6f9-4873-a707-b08d5afcd517",
+ CellID->1658841875],
+Cell[11305, 300, 352, 8, 70, "Notes",ExpressionUUID->"89b6ef4c-8199-4f2d-9304-9853bc219421",
+ CellID->1522687771],
+Cell[11660, 310, 464, 8, 70, "Notes",ExpressionUUID->"543cc6c8-fe1c-4ecd-b25f-732198fa237e",
+ CellID->250745898],
+Cell[12127, 320, 474, 11, 70, "Notes",ExpressionUUID->"78569628-a6a1-4454-bcc5-899ae12cb03a",
+ CellID->923392272],
+Cell[12604, 333, 14355, 254, 70, "2ColumnTableMod",ExpressionUUID->"25a303c9-c1ee-4289-9e24-ef4337435158",
+ CellID->1737082282],
+Cell[26962, 589, 576, 14, 70, "Notes",ExpressionUUID->"59483de1-fdf3-4ae7-9352-591c53aa0f64",
+ CellID->101732609],
+Cell[27541, 605, 1885, 32, 70, "2ColumnTableMod",ExpressionUUID->"9552e551-3f49-42a8-ac80-540bc0fd056e",
+ CellID->422976451]
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[29463, 642, 459, 13, 70, "SeeAlsoSection",ExpressionUUID->"6019c63b-8124-433f-bd7e-253812d6da0e",
  CellID->1559318232],
-Cell[29925, 657, 1047, 24, 70, "SeeAlso",ExpressionUUID->"3e1b754a-c8ba-4e02-891f-56625139048a"]
+Cell[29925, 657, 1047, 24, 70, "SeeAlso",ExpressionUUID->"3e1b754a-c8ba-4e02-891f-56625139048a",
+ CellID->794340387]
 }, Open  ]],
 Cell[30987, 684, 435, 12, 70, "TechNotesSection",ExpressionUUID->"fc30b7bb-1c24-4df4-b93c-2a46876a3e74",
  CellID->792424486],
 Cell[CellGroupData[{
 Cell[31447, 700, 116, 1, 70, "MoreAboutSection",ExpressionUUID->"090ecd4e-77ab-48e0-ba7a-1f9acccd0dd5",
  CellID->38303248],
-Cell[31566, 703, 314, 6, 70, "MoreAbout",ExpressionUUID->"ca1bbd33-862e-4477-a313-9b478489e500"]
+Cell[31566, 703, 314, 6, 70, "MoreAbout",ExpressionUUID->"ca1bbd33-862e-4477-a313-9b478489e500",
+ CellID->1720534557]
 }, Open  ]],
 Cell[31895, 712, 471, 13, 70, "RelatedLinksSection",ExpressionUUID->"c8e1cebd-677a-4282-8b17-38a138b1b0ea",
  CellID->47113304],
@@ -1262,111 +1339,214 @@ Cell[32391, 729, 531, 14, 70, "ExamplesInitializationSection",ExpressionUUID->"6
 Cell[32925, 745, 185, 3, 70, "ExampleInitialization",ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502",
  CellID->1969679695]
 }, Open  ]],
-Cell[33125, 751, 442, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42",
+Cell[CellGroupData[{
+Cell[33147, 753, 442, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42",
  CellID->880084151],
-Cell[33570, 765, 363, 8, 70, "ExampleText",ExpressionUUID->"60a9dabf-5699-46a3-94f6-5e969516ded4"],
-Cell[33936, 775, 463, 11, 70, "Input",ExpressionUUID->"86fa0af7-add0-4e0a-a501-c8f57a6db147"],
-Cell[34402, 788, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"da0c6392-10e8-4b25-8860-bacfdb66b813"],
-Cell[34490, 790, 139, 1, 70, "ExampleText",ExpressionUUID->"3ebe4fed-fb93-47c7-9b4e-b48668bc8443"],
-Cell[34632, 793, 234, 5, 70, "Input",ExpressionUUID->"d585ca27-9716-48e5-8762-965a2c011d2f"],
-Cell[34869, 800, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"c03af505-5f2e-405a-9ced-d7f9c692418e"],
-Cell[34957, 802, 165, 3, 70, "ExampleText",ExpressionUUID->"1f13d7c3-f391-43d1-9cdc-9504249d41f9"],
-Cell[35125, 807, 106, 1, 70, "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d"],
+Cell[33592, 767, 363, 8, 70, "ExampleText",ExpressionUUID->"60a9dabf-5699-46a3-94f6-5e969516ded4",
+ CellID->1156992644],
+Cell[33958, 777, 463, 11, 70, "Input",ExpressionUUID->"86fa0af7-add0-4e0a-a501-c8f57a6db147",
+ CellID->110944123],
 Cell[CellGroupData[{
-Cell[35256, 812, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
- CellTags->"ExtendedExamples",
- CellID->533848431],
-Cell[CellGroupData[{
-Cell[35768, 829, 242, 5, 70, "ExampleSection",ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75",
- CellID->1293636265],
-Cell[36013, 836, 91, 0, 70, "ExampleSubsection",ExpressionUUID->"dadfd45e-c9ac-42e7-a00d-bc70e4f9cb35"],
-Cell[36107, 838, 202, 3, 70, "ExampleText",ExpressionUUID->"9a100318-fb87-46c5-a64d-80ecc1140dfa"],
-Cell[36312, 843, 131, 1, 70, "Input",ExpressionUUID->"a19a5177-cce4-4085-b929-bb9687c91998"],
-Cell[36446, 846, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"87108ce8-bf0c-4f7b-b464-75bcb4469b9b"],
-Cell[36534, 848, 129, 0, 70, "ExampleText",ExpressionUUID->"68133ccc-12dd-455c-8b18-ae698c8bd7bf"],
-Cell[36666, 850, 124, 1, 70, "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2"],
-Cell[36793, 853, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b0573bbb-6713-4927-9f80-ce8e164821dc"],
-Cell[36881, 855, 140, 1, 70, "ExampleText",ExpressionUUID->"d0fa0241-6941-49ac-9833-73b86b9f5379"],
-Cell[37024, 858, 222, 5, 70, "Input",ExpressionUUID->"ac0600ba-8f32-4807-ad64-1602796ea9d5"],
-Cell[37249, 865, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b9115ba6-940a-4320-9133-284c8f27a510"],
-Cell[37337, 867, 172, 3, 70, "ExampleText",ExpressionUUID->"09626ed0-0054-447b-be4d-d5b2abdd765a"],
-Cell[37512, 872, 132, 1, 70, "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f"],
-Cell[37647, 875, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f5b878bf-e8a4-4ea3-80bc-38eb17382c27"],
-Cell[37735, 877, 178, 3, 70, "ExampleText",ExpressionUUID->"cc4ae2ba-6dc8-455a-8926-5679eee00e5c"],
-Cell[37916, 882, 189, 4, 70, "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5"],
-Cell[38108, 888, 101, 0, 70, "ExampleSubsection",ExpressionUUID->"834fa20a-fa7b-4b9b-ad78-d68c7f67dc64"],
-Cell[38212, 890, 618, 12, 70, "ExampleText",ExpressionUUID->"fa5f22c0-e0fb-4977-bf96-ad882780518f"],
-Cell[38833, 904, 853, 20, 70, "Input",ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65"],
-Cell[39689, 926, 96, 0, 70, "ExampleSubsection",ExpressionUUID->"b8421cc9-4d70-45ff-9acc-2de1a5042bf4"],
-Cell[39788, 928, 109, 0, 70, "ExampleText",ExpressionUUID->"31b09e4f-e671-46f4-82a9-78c34ca4866f"],
-Cell[39900, 930, 219, 5, 70, "Input",ExpressionUUID->"7541d19f-2f49-4a7a-bc3a-c6ad85a2af02"],
-Cell[40122, 937, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"9fa2fa94-c7b8-4d6b-a10d-530b7971c1f2"],
-Cell[40210, 939, 258, 6, 70, "ExampleText",ExpressionUUID->"e8eb7881-808f-478b-9694-4edb3d366ce4"],
-Cell[40471, 947, 132, 1, 70, "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3"],
-Cell[40606, 950, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"3fcff46d-d873-4a01-ab2f-f50d9f876d40"],
-Cell[40694, 952, 148, 2, 70, "ExampleText",ExpressionUUID->"92bc33c0-9fa9-411d-b2ce-b97308ae24bd"],
-Cell[40845, 956, 228, 5, 70, "Input",ExpressionUUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1"],
-Cell[41076, 963, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"7b6341c6-bb9f-4b15-826b-0ab09b372e7a"],
-Cell[41164, 965, 317, 6, 70, "ExampleText",ExpressionUUID->"8417cc59-782c-46eb-9d54-339d8e674dcd"],
-Cell[41484, 973, 134, 1, 70, "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d"],
-Cell[41621, 976, 93, 0, 70, "ExampleSubsection",ExpressionUUID->"d60f5ea6-0e3d-4891-a5c5-41065c60b4e7"],
-Cell[41717, 978, 275, 4, 70, "ExampleText",ExpressionUUID->"397d4cdd-f8ee-4088-bc5b-0acb3b9d3c5b"],
-Cell[41995, 984, 169, 3, 70, "Input",ExpressionUUID->"82296f10-2ec8-41f1-8aa3-e807cd697748"],
-Cell[42167, 989, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"2877dfcf-fa24-4ce5-a974-6c118b58b654"],
-Cell[42255, 991, 252, 4, 70, "ExampleText",ExpressionUUID->"8c963825-a5a1-4dce-abd6-768efea2b95d"],
-Cell[42510, 997, 124, 1, 70, "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2"],
-Cell[42637, 1000, 106, 0, 70, "ExampleSubsection",ExpressionUUID->"9bab9e6c-15a4-457f-bfbb-031113a08fa3"],
-Cell[42746, 1002, 309, 5, 70, "ExampleText",ExpressionUUID->"e4a56380-c17b-4172-a9b5-e8df9090fd86"],
-Cell[43058, 1009, 202, 4, 70, "Input",ExpressionUUID->"47b8606c-2473-4b04-99e7-4ca58d3841da"],
-Cell[43263, 1015, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"8ba3cb44-1569-4414-8698-80fa34856857"],
-Cell[43351, 1017, 448, 7, 70, "ExampleText",ExpressionUUID->"ba3e4563-fbb4-4314-9979-77b548fe2ed9"],
-Cell[43802, 1026, 125, 1, 70, "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd"],
-Cell[43930, 1029, 97, 0, 70, "ExampleSubsection",ExpressionUUID->"ee3b2404-bbc2-4d7f-b600-5d9105c4e01e"],
-Cell[44030, 1031, 175, 3, 70, "ExampleText",ExpressionUUID->"fa2512cb-c082-47a7-a1a8-b6e68b94cc32"],
-Cell[44208, 1036, 159, 3, 70, "Input",ExpressionUUID->"da64cb9d-bfc2-4ba7-a884-6d012d4666ad"],
-Cell[44370, 1041, 165, 3, 70, "Input",ExpressionUUID->"04ad4882-ba23-4e34-a85c-5c3982854e99"]
+Cell[34446, 792, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"da0c6392-10e8-4b25-8860-bacfdb66b813",
+ CellID->622069665],
+Cell[34534, 794, 139, 1, 70, "ExampleText",ExpressionUUID->"3ebe4fed-fb93-47c7-9b4e-b48668bc8443",
+ CellID->1174466059],
+Cell[34676, 797, 234, 5, 70, "Input",ExpressionUUID->"d585ca27-9716-48e5-8762-965a2c011d2f",
+ CellID->1728854036]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[44572, 1049, 252, 5, 70, "ExampleSection",ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f",
- CellID->1305812373],
-Cell[44827, 1056, 348, 8, 70, "ExampleText",ExpressionUUID->"04330d56-cb01-4f19-ab7a-5d2171cc7fae"],
-Cell[45178, 1066, 128, 1, 70, "Input",ExpressionUUID->"61f3d740-949c-4f4b-bae6-9c5033613adc"],
-Cell[45309, 1069, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f472ba71-9493-405d-be3d-30294bdf65a3"],
-Cell[45397, 1071, 625, 12, 70, "ExampleText",ExpressionUUID->"6d9fc826-2ed3-49a7-9e26-e88080b0e52a"],
-Cell[46025, 1085, 133, 1, 70, "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3"],
-Cell[46161, 1088, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"5c3fbd56-e032-4055-b3cb-df78afdd68c4"],
-Cell[46249, 1090, 638, 14, 70, "ExampleText",ExpressionUUID->"35b13b1e-8537-4a6c-a267-d2c5baeb83ca"],
-Cell[46890, 1106, 133, 1, 70, "Input",ExpressionUUID->"e4c3bfa0-dfe7-4147-a7b8-aedd06d64009"]
+Cell[34947, 807, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"c03af505-5f2e-405a-9ced-d7f9c692418e",
+ CellID->1396039142],
+Cell[35035, 809, 165, 3, 70, "ExampleText",ExpressionUUID->"1f13d7c3-f391-43d1-9cdc-9504249d41f9",
+ CellID->1971016119],
+Cell[35203, 814, 106, 1, 70, "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d",
+ CellID->1932657058]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[47072, 1113, 110, 1, 70, "MetadataSection",ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd",
+Cell[35358, 821, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+ CellTags->"ExtendedExamples",
+ CellID->533848431],
+Cell[CellGroupData[{
+Cell[35870, 838, 242, 5, 70, "ExampleSection",ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75",
+ CellID->1293636265],
+Cell[CellGroupData[{
+Cell[36137, 847, 91, 0, 70, "ExampleSubsection",ExpressionUUID->"dadfd45e-c9ac-42e7-a00d-bc70e4f9cb35",
+ CellID->1477012931],
+Cell[36231, 849, 202, 3, 70, "ExampleText",ExpressionUUID->"9a100318-fb87-46c5-a64d-80ecc1140dfa",
+ CellID->1392855644],
+Cell[36436, 854, 131, 1, 70, "Input",ExpressionUUID->"a19a5177-cce4-4085-b929-bb9687c91998",
+ CellID->5572761],
+Cell[CellGroupData[{
+Cell[36592, 859, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"87108ce8-bf0c-4f7b-b464-75bcb4469b9b",
+ CellID->1319597306],
+Cell[36680, 861, 129, 0, 70, "ExampleText",ExpressionUUID->"68133ccc-12dd-455c-8b18-ae698c8bd7bf",
+ CellID->1408299373],
+Cell[36812, 863, 124, 1, 70, "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2",
+ CellID->1870288424]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[36973, 869, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b0573bbb-6713-4927-9f80-ce8e164821dc",
+ CellID->1219401029],
+Cell[37061, 871, 140, 1, 70, "ExampleText",ExpressionUUID->"d0fa0241-6941-49ac-9833-73b86b9f5379",
+ CellID->1036651082],
+Cell[37204, 874, 222, 5, 70, "Input",ExpressionUUID->"ac0600ba-8f32-4807-ad64-1602796ea9d5",
+ CellID->459907063]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37463, 884, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b9115ba6-940a-4320-9133-284c8f27a510",
+ CellID->864362288],
+Cell[37551, 886, 172, 3, 70, "ExampleText",ExpressionUUID->"09626ed0-0054-447b-be4d-d5b2abdd765a",
+ CellID->1757586108],
+Cell[37726, 891, 132, 1, 70, "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f",
+ CellID->1112152671]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[37895, 897, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f5b878bf-e8a4-4ea3-80bc-38eb17382c27",
+ CellID->252278009],
+Cell[37983, 899, 178, 3, 70, "ExampleText",ExpressionUUID->"cc4ae2ba-6dc8-455a-8926-5679eee00e5c",
+ CellID->903778085],
+Cell[38164, 904, 189, 4, 70, "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5",
+ CellID->646439364]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[38402, 914, 101, 0, 70, "ExampleSubsection",ExpressionUUID->"834fa20a-fa7b-4b9b-ad78-d68c7f67dc64",
+ CellID->586620575],
+Cell[38506, 916, 618, 12, 70, "ExampleText",ExpressionUUID->"fa5f22c0-e0fb-4977-bf96-ad882780518f",
+ CellID->234580648],
+Cell[39127, 930, 853, 20, 70, "Input",ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65",
+ CellID->1964458691]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[40017, 955, 96, 0, 70, "ExampleSubsection",ExpressionUUID->"b8421cc9-4d70-45ff-9acc-2de1a5042bf4",
+ CellID->1243630659],
+Cell[40116, 957, 109, 0, 70, "ExampleText",ExpressionUUID->"31b09e4f-e671-46f4-82a9-78c34ca4866f",
+ CellID->242149562],
+Cell[40228, 959, 219, 5, 70, "Input",ExpressionUUID->"7541d19f-2f49-4a7a-bc3a-c6ad85a2af02",
+ CellID->1686454339],
+Cell[CellGroupData[{
+Cell[40472, 968, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"9fa2fa94-c7b8-4d6b-a10d-530b7971c1f2",
+ CellID->1748902467],
+Cell[40560, 970, 258, 6, 70, "ExampleText",ExpressionUUID->"e8eb7881-808f-478b-9694-4edb3d366ce4",
+ CellID->1195086380],
+Cell[40821, 978, 132, 1, 70, "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3",
+ CellID->402238269]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[40990, 984, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"3fcff46d-d873-4a01-ab2f-f50d9f876d40",
+ CellID->140066327],
+Cell[41078, 986, 148, 2, 70, "ExampleText",ExpressionUUID->"92bc33c0-9fa9-411d-b2ce-b97308ae24bd",
+ CellID->452680777],
+Cell[41229, 990, 228, 5, 70, "Input",ExpressionUUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1",
+ CellID->1818741365]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[41494, 1000, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"7b6341c6-bb9f-4b15-826b-0ab09b372e7a",
+ CellID->303890157],
+Cell[41582, 1002, 317, 6, 70, "ExampleText",ExpressionUUID->"8417cc59-782c-46eb-9d54-339d8e674dcd",
+ CellID->765756133],
+Cell[41902, 1010, 134, 1, 70, "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d",
+ CellID->193830860]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[42085, 1017, 93, 0, 70, "ExampleSubsection",ExpressionUUID->"d60f5ea6-0e3d-4891-a5c5-41065c60b4e7",
+ CellID->2130055168],
+Cell[42181, 1019, 275, 4, 70, "ExampleText",ExpressionUUID->"397d4cdd-f8ee-4088-bc5b-0acb3b9d3c5b",
+ CellID->1284813086],
+Cell[42459, 1025, 169, 3, 70, "Input",ExpressionUUID->"82296f10-2ec8-41f1-8aa3-e807cd697748",
+ CellID->905465817],
+Cell[CellGroupData[{
+Cell[42653, 1032, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"2877dfcf-fa24-4ce5-a974-6c118b58b654",
+ CellID->1094863677],
+Cell[42741, 1034, 252, 4, 70, "ExampleText",ExpressionUUID->"8c963825-a5a1-4dce-abd6-768efea2b95d",
+ CellID->1733931843],
+Cell[42996, 1040, 124, 1, 70, "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2",
+ CellID->839395511]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[43169, 1047, 106, 0, 70, "ExampleSubsection",ExpressionUUID->"9bab9e6c-15a4-457f-bfbb-031113a08fa3",
+ CellID->900276234],
+Cell[43278, 1049, 309, 5, 70, "ExampleText",ExpressionUUID->"e4a56380-c17b-4172-a9b5-e8df9090fd86",
+ CellID->1920371723],
+Cell[43590, 1056, 202, 4, 70, "Input",ExpressionUUID->"47b8606c-2473-4b04-99e7-4ca58d3841da",
+ CellID->1155817698],
+Cell[CellGroupData[{
+Cell[43817, 1064, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"8ba3cb44-1569-4414-8698-80fa34856857",
+ CellID->1838463171],
+Cell[43905, 1066, 448, 7, 70, "ExampleText",ExpressionUUID->"ba3e4563-fbb4-4314-9979-77b548fe2ed9",
+ CellID->1055801961],
+Cell[44356, 1075, 125, 1, 70, "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd",
+ CellID->206183366]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[44530, 1082, 97, 0, 70, "ExampleSubsection",ExpressionUUID->"ee3b2404-bbc2-4d7f-b600-5d9105c4e01e",
+ CellID->1432709751],
+Cell[44630, 1084, 175, 3, 70, "ExampleText",ExpressionUUID->"fa2512cb-c082-47a7-a1a8-b6e68b94cc32",
+ CellID->1966134893],
+Cell[44808, 1089, 159, 3, 70, "Input",ExpressionUUID->"da64cb9d-bfc2-4ba7-a884-6d012d4666ad",
+ CellID->1498270262],
+Cell[44970, 1094, 165, 3, 70, "Input",ExpressionUUID->"04ad4882-ba23-4e34-a85c-5c3982854e99",
+ CellID->35048712]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[45184, 1103, 252, 5, 70, "ExampleSection",ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f",
+ CellID->1305812373],
+Cell[45439, 1110, 348, 8, 70, "ExampleText",ExpressionUUID->"04330d56-cb01-4f19-ab7a-5d2171cc7fae",
+ CellID->653183306],
+Cell[45790, 1120, 128, 1, 70, "Input",ExpressionUUID->"61f3d740-949c-4f4b-bae6-9c5033613adc",
+ CellID->115420478],
+Cell[CellGroupData[{
+Cell[45943, 1125, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f472ba71-9493-405d-be3d-30294bdf65a3",
+ CellID->694240505],
+Cell[46031, 1127, 625, 12, 70, "ExampleText",ExpressionUUID->"6d9fc826-2ed3-49a7-9e26-e88080b0e52a",
+ CellID->821513384],
+Cell[46659, 1141, 133, 1, 70, "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3",
+ CellID->1003078325]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[46829, 1147, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"5c3fbd56-e032-4055-b3cb-df78afdd68c4",
+ CellID->990779325],
+Cell[46917, 1149, 638, 14, 70, "ExampleText",ExpressionUUID->"35b13b1e-8537-4a6c-a267-d2c5baeb83ca",
+ CellID->439916437],
+Cell[47558, 1165, 133, 1, 70, "Input",ExpressionUUID->"e4c3bfa0-dfe7-4147-a7b8-aedd06d64009",
+ CellID->2036843685]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[47752, 1173, 110, 1, 70, "MetadataSection",ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd",
  CellID->311882160],
-Cell[47185, 1116, 476, 12, 70, "History",ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046",
+Cell[47865, 1176, 476, 12, 70, "History",ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046",
  CellID->341476719],
 Cell[CellGroupData[{
-Cell[47686, 1132, 485, 13, 70, "CategorizationSection",ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329",
+Cell[48366, 1192, 485, 13, 70, "CategorizationSection",ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329",
  CellID->1755438392],
-Cell[48174, 1147, 134, 2, 70, "Categorization",ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a",
+Cell[48854, 1207, 134, 2, 70, "Categorization",ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a",
  CellID->686433507],
-Cell[48311, 1151, 152, 2, 70, "Categorization",ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec",
+Cell[48991, 1211, 152, 2, 70, "Categorization",ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec",
  CellID->605800465],
-Cell[48466, 1155, 149, 2, 70, "Categorization",ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191",
+Cell[49146, 1215, 149, 2, 70, "Categorization",ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191",
  CellID->468444828],
-Cell[48618, 1159, 135, 1, 70, "Categorization",ExpressionUUID->"0029a932-58bd-4116-8780-7c1aad96de92"]
+Cell[49298, 1219, 135, 1, 70, "Categorization",ExpressionUUID->"0029a932-58bd-4116-8780-7c1aad96de92",
+ CellID->194996968]
 }, Closed]],
-Cell[48768, 1163, 110, 1, 70, "KeywordsSection",ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6",
+Cell[49448, 1223, 110, 1, 70, "KeywordsSection",ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6",
  CellID->477174294],
 Cell[CellGroupData[{
-Cell[48903, 1168, 120, 1, 70, "TemplatesSection",ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c",
+Cell[49583, 1228, 120, 1, 70, "TemplatesSection",ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c",
  CellID->1872225408],
-Cell[49026, 1171, 149, 2, 70, "Template",ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72",
+Cell[49706, 1231, 149, 2, 70, "Template",ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72",
  CellID->1562036412],
-Cell[49178, 1175, 137, 2, 70, "Template",ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec",
+Cell[49858, 1235, 137, 2, 70, "Template",ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec",
  CellID->158391909],
-Cell[49318, 1179, 136, 2, 70, "Template",ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9",
+Cell[49998, 1239, 136, 2, 70, "Template",ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9",
  CellID->1360575930],
-Cell[49457, 1183, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648",
+Cell[50137, 1243, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648",
  CellID->793782254]
 }, Closed]]
 }, Open  ]]
@@ -1375,3 +1555,4 @@ Cell[49457, 1183, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afc
 *)
 
 (* End of internal cache information *)
+

@@ -45,7 +45,14 @@ With an active IBM Quantum Platform connection, submit a circuit and get back a 
 job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", "Fourier"[3], {1, 2, 3}}], "ibm_fez"]
 ```
 
-<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8jhf29e8nrc73bjk610 |>] -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kcdur2d42s73ca1r40 |>] -->
+
+```wl
+#| eval: false
+job["Status"]
+```
+
+<!-- => "Queued" -->
 
 ---
 
@@ -53,10 +60,37 @@ Once the job completes, the handle's default output is the measurement reconstru
 
 ```wl
 #| eval: false
-job["Refresh"][]
+job["Refresh"]
+```
+
+<!-- => IBMJob[<| Status: Completed, Backend: ibm_fez, Job ID: d8kcdur2d42s73ca1r40 |>] -->
+
+Get the measurement results from the QPU:
+
+```wl
+#| eval: false
+qpu = job["Refresh"][]
 ```
 
 <!-- => QuantumMeasurement[3 qubits, 4096 shots] -->
+
+Compute the corresponding measurement results in the Wolfram Language:
+
+```wl
+#| eval: false
+wl = QuantumCircuitOperator[{"GHZ", "Fourier"[3], {1, 2, 3}}][];
+```
+
+Compare the exact Wolfram Language probabilities with the QPU estimates:
+
+```wl
+#| eval: false
+BarChart[Transpose[Values @* KeySort /@ {wl["Probabilities"], qpu["Probabilities"]}],
+  AspectRatio -> 1/2, Frame -> True, ChartLegends -> {"Exact WL", "QPU"},
+  PlotLabels -> Keys[wl["Probabilities"]]]
+```
+
+<!-- => (bar chart: exact-WL vs QPU probability per basis state) -->
 
 ## Scope
 
@@ -64,10 +98,19 @@ Submit to the active connection's default backend by omitting the backend argume
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}]]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}]]
 ```
 
-<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kcgfg32u0s73f8jbu0 |>] -->
+
+Once the job completes, plot the probabilities the QPU measured:
+
+```wl
+#| eval: false
+job["Refresh"][]["ProbabilityPlot", AspectRatio -> 1/3]
+```
+
+<!-- => (probability bar chart over the measured basis states) -->
 
 ---
 
@@ -75,33 +118,54 @@ Block until the job finishes with `"Wait" -> True`; the returned handle is alrea
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Wait" -> True]["Status"]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Wait" -> True]
 ```
 
-<!-- => Completed -->
-
----
-
-Set the number of shots:
+<!-- => IBMJob[<| Status: Completed, Backend: ibm_fez, Job ID: d8kcguj2d42s73ca1u3g |>] -->
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Shots" -> 1024]
+job["Status"]
 ```
 
-<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
+<!-- => "Completed" -->
 
 ---
 
-Reach into the IBM Runtime options schema through `"PrimitiveOptions"`, given in CamelCase and converted to the service's snake_case keys (here turning off dynamical decoupling and selecting a resilience level):
+Set the number of shots, then read the hardware counts back:
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez",
-  "PrimitiveOptions" -> <|"DynamicalDecoupling" -> <|"Enable" -> False|>, "ResilienceLevel" -> 1|>]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Shots" -> 1024]
 ```
 
-<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kch2032u0s73f8jch0 |>] -->
+
+```wl
+#| eval: false
+job["Refresh"]["Counts"]
+```
+
+<!-- => <|{1, 1, 1} -> 454, {1, 0, 0} -> 54, {0, 1, 1} -> 68, {0, 0, 0} -> 420, {1, 0, 1} -> 9, {0, 1, 0} -> 3, {0, 0, 1} -> 6, {1, 1, 0} -> 10|> -->
+
+---
+
+Reach into the IBM Runtime options schema through `"PrimitiveOptions"`, given in CamelCase and converted to the service's snake_case keys (here turning off dynamical decoupling):
+
+```wl
+#| eval: false
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez",
+  "PrimitiveOptions" -> <|"DynamicalDecoupling" -> <|"Enable" -> False|>|>]
+```
+
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kci4rnn5bs738qmb50 |>] -->
+
+```wl
+#| eval: false
+N[job["Refresh"][]["Probabilities"]]
+```
+
+<!-- => <||000⟩ -> 0.451172, |001⟩ -> 0.003174, |010⟩ -> 0.004150, |011⟩ -> 0.070313, |100⟩ -> 0.057373, |101⟩ -> 0.009277, |110⟩ -> 0.003174, |111⟩ -> 0.401367|> -->
 
 ---
 
@@ -109,12 +173,17 @@ Submit an `"estimator"` job with an observable instead of a sampler job. The obs
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ"]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ"]
 ```
 
-<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kcilr2d42s73ca1vo0 |>] -->
 
----
+```wl
+#| eval: false
+job["Refresh"]
+```
+
+<!-- => IBMJob[<| Status: Completed, Backend: ibm_fez, Job ID: d8kcilr2d42s73ca1vo0 |>] -->
 
 Once an estimator job completes, its default output and `"ExpectationValue"` are the qiskit-decoded expectation value of the observable, with `"StandardErrors"` giving the per-observable standard error:
 
@@ -123,7 +192,16 @@ Once an estimator job completes, its default output and `"ExpectationValue"` are
 IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ", "Wait" -> True]["ExpectationValue"]
 ```
 
-<!-- => 0.03... -->
+<!-- => 0.055201698513800426 -->
+
+The exact Wolfram Language value of the same expectation is zero, so the hardware estimate sits near zero up to shot noise:
+
+```wl
+#| eval: false
+With[{qs = QuantumCircuitOperator[{"GHZ"}][]}, qs["Dagger"][QuantumOperator["ZZZ"][qs]]["Scalar"]]
+```
+
+<!-- => 0 -->
 
 ## Options
 
@@ -133,7 +211,14 @@ The number of shots is forwarded as the primitive's `default_shots`:
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Shots" -> 8192]["Shots"]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Shots" -> 8192]
+```
+
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kei2o32u0s73f8lml0 |>] -->
+
+```wl
+#| eval: false
+job["Refresh"]["Shots"]
 ```
 
 <!-- => 8192 -->
@@ -144,10 +229,17 @@ IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Shots" -> 8
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Wait" -> True]["QuantumSeconds"]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Wait" -> True]
 ```
 
-<!-- => Quantity[..., "Seconds"] -->
+<!-- => IBMJob[<| Status: Completed, Backend: ibm_fez, Job ID: d8keibjqv2lc73856j40 |>] -->
+
+```wl
+#| eval: false
+job["QuantumSeconds"]
+```
+
+<!-- => Quantity[3, "Seconds"] -->
 
 ### "Primitive"
 
@@ -155,10 +247,17 @@ Choose between the `"sampler"` and `"estimator"` primitives; `"Observable"` appl
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ"]["ProgramID"]
+job = IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez", "Primitive" -> "estimator", "Observable" -> "ZZZ"]
 ```
 
-<!-- => estimator -->
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8keikjnn5bs738qol20 |>] -->
+
+```wl
+#| eval: false
+job["ProgramID"]
+```
+
+<!-- => "estimator" -->
 
 ## Possible Issues
 
@@ -173,7 +272,7 @@ IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez"]
 
 ---
 
-When the backend is `Automatic` and the active connection exposes no backends, the default backend cannot be determined:
+When the backend is `Automatic`, the first backend the active connection exposes is used. If the connection exposes none, the default backend cannot be determined and the submission fails before any request is sent:
 
 ```wl
 #| eval: false
@@ -188,18 +287,18 @@ A circuit carrying any non-qubit (higher-dimensional) system is not a qubit circ
 
 ```wl
 #| eval: false
-IBMJobSubmit[QuantumCircuitOperator[{"H"[3] -> 1, {1}}], "ibm_fez"]
+IBMJobSubmit[QuantumCircuitOperator[{"H"[3], "M"[QuantumBasis[3]]}], "ibm_fez"]
 ```
 
-<!-- => Failure["QuantumQASM", <|... "NonQubitDimensions" -> {3}|>] : QuantumQASM supports qubit (2-dimensional) systems only. -->
+<!-- => Failure["QuantumQASM", <|"MessageTemplate" -> "QuantumQASM supports qubit (2-dimensional) systems only; the given `1` has non-qubit qudit dimension(s) `2`. OpenQASM has no representation for higher-dimensional qudits.", "MessageParameters" -> {"circuit", {3}}, "NonQubitDimensions" -> {3}|>] -->
 
 ---
 
-If the service accepts the request but returns no job id, the response is surfaced in the [Failure]():
+If the service accepts the request but the response carries no job id, the raw response is surfaced under the `"Response"` key of the [Failure]():
 
 ```wl
 #| eval: false
 IBMJobSubmit[QuantumCircuitOperator[{"GHZ", {1, 2, 3}}], "ibm_fez"]
 ```
 
-<!-- => Failure["IBMJobSubmit", <|"MessageTemplate" -> "Job submission did not return a job id.", "Response" -> <|...|>|>] -->
+<!-- => Failure["IBMJobSubmit", <|"MessageTemplate" -> "Job submission did not return a job id.", "Response" -> <|"status" -> "accepted"|>|>] -->

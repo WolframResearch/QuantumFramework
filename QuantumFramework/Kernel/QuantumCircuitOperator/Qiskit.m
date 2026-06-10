@@ -133,6 +133,10 @@ def make_gate(gate_spec):
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
         order = list(args[2][0])[::-1]
     elif name == 'Barrier':
+        # a bare barrier (no explicit qubits) spans the whole circuit; emitting a
+        # zero-qubit Barrier(0) drops the barrier and dumps as a meaningless 'barrier ;'
+        if len(order) == 0:
+            order = list(range(1, circuit.num_qubits + 1))
         gate = Barrier(len(order))
     elif name == 'Delay':
         gate = Delay(args[0])
@@ -663,8 +667,7 @@ qiskitPrimitiveSubmit[
     env
 },
     env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
-    ConfirmBy[
-        PythonEvaluate[Context[$primitive], "
+    With[{res = PythonEvaluate[Context[$primitive], "
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.quantum_info import SparsePauliOp
 from wolframclient.language import wl
@@ -703,7 +706,9 @@ if layout is not None:
 if measured is None:
     measured = [clbit_to_phys.get(c, c) for c in range(ncl)]
 
-# forward the user's option tree onto the primitive's own options object (qiskit owns the schema)
+# forward the user's option tree onto the primitive's own options object (qiskit owns the
+# schema). The keys were validated against that schema before transpile by
+# ibmValidatePrimitiveOptions, so a plain setattr here is safe.
 def apply_opts(o, d):
     for k, v in (d or {}).items():
         if isinstance(v, dict):
@@ -739,8 +744,8 @@ wl.Association(
     wl.Rule('Primitive', primitive),
     wl.Rule('Backend', getattr(backend, 'name', None))
 )
-", env],
-        AssociationQ
+", env]},
+        If[FailureQ[res], res, ConfirmBy[res, AssociationQ]]
     ]
 ]
 

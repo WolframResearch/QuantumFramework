@@ -128,6 +128,9 @@ qasmSplitQargs[s_String] := Module[{state},
 
 
 qasmAngle[str_String] := Module[{e = StringTrim[str], idents, wl, val},
+    (* normalize scientific notation (1.5e-3, 2E4) to WL's "*^" so the digit-adjacent
+       exponent letter is not mistaken for an identifier below *)
+    e = StringReplace[e, RegularExpression["(\\d)[eE]([+-]?\\d)"] -> "$1*^$2"];
     idents = ToLowerCase /@ DeleteDuplicates @ StringCases[e, RegularExpression["[A-Za-z_][A-Za-z0-9_]*"]];
     If[ ! SubsetQ[{"pi", "tau", "euler"}, idents],
         qasmThrow["BadExpression",
@@ -252,8 +255,8 @@ qasmProcess[stmt_String, regs_, cregs_, gateDefs_, offset_] := Module[{state, mk
             mk @ qasmBarrier[stmt, state],
         StringMatchQ[stmt, RegularExpression["reset\\b[\\s\\S]*"]],
             mk @ qasmReset[stmt, state],
-        StringMatchQ[stmt, RegularExpression["gphase\\b[\\s\\S]*"]],
-            mk @ qasmGPhase[stmt],
+        StringMatchQ[stmt, RegularExpression["(?:(?:inv|pow\\s*\\([^)]*\\)|ctrl(?:\\s*\\(\\s*\\d+\\s*\\))?|negctrl(?:\\s*\\(\\s*\\d+\\s*\\))?)\\s*@\\s*)*gphase\\b[\\s\\S]*"]],
+            mk @ qasmGPhase[stmt, state],
         StringMatchQ[stmt, RegularExpression["[\\s\\S]*=\\s*measure\\b[\\s\\S]*"]],
             mk @ qasmMeasure[stmt, state, "v3"],
         StringMatchQ[stmt, RegularExpression["measure\\b[\\s\\S]*"]],
@@ -298,18 +301,25 @@ qasmParseDecl[stmt_String, kind_String] := Module[{m},
 
 (* -- qubit-argument resolution -- *)
 
-qasmResolveQ[ref_String, regs_] := Module[{m, nm, idx, reg},
-    m = StringCases[StringTrim[ref], RegularExpression["^([A-Za-z_][A-Za-z0-9_]*)\\s*\\[\\s*(\\d+)\\s*\\]$"] :> {"$1", "$2"}];
-    If[ m =!= {},
-        nm = m[[1, 1]]; idx = ToExpression[m[[1, 2]]];
-        reg = Lookup[regs, nm, qasmThrow["Range", "Undeclared register `1`.", {nm}]];
-        If[ idx < 0 || idx >= reg["size"],
-            qasmThrow["Range", "Qubit index `1` out of range for register `2`[`3`].", {idx, nm, reg["size"]}]
-        ];
-        {reg["offset"] + idx + 1},
-        nm = StringTrim[ref];
-        reg = Lookup[regs, nm, qasmThrow["Range", "Undeclared register `1`.", {nm}]];
-        Range[reg["offset"] + 1, reg["offset"] + reg["size"]]
+qasmResolveQ[ref_String, regs_] := Module[{trimmed = StringTrim[ref], m, nm, idx, reg},
+    Which[
+        (* physical qubit $N (an OpenQASM 3 hardware qubit, declared by no register) maps
+           directly to absolute wire N+1; qiskit emits this for transpiled circuits *)
+        StringMatchQ[trimmed, RegularExpression["\\$\\d+"]],
+            {ToExpression[StringDrop[trimmed, 1]] + 1},
+        (* indexed register reg[i] *)
+        (m = StringCases[trimmed, RegularExpression["^([A-Za-z_][A-Za-z0-9_]*)\\s*\\[\\s*(\\d+)\\s*\\]$"] :> {"$1", "$2"}]) =!= {},
+            nm = m[[1, 1]]; idx = ToExpression[m[[1, 2]]];
+            reg = Lookup[regs, nm, qasmThrow["Range", "Undeclared register `1`.", {nm}]];
+            If[ idx < 0 || idx >= reg["size"],
+                qasmThrow["Range", "Qubit index `1` out of range for register `2`[`3`].", {idx, nm, reg["size"]}]
+            ];
+            {reg["offset"] + idx + 1},
+        (* whole register reg *)
+        True,
+            nm = trimmed;
+            reg = Lookup[regs, nm, qasmThrow["Range", "Undeclared register `1`.", {nm}]];
+            Range[reg["offset"] + 1, reg["offset"] + reg["size"]]
     ]
 ]
 
@@ -326,15 +336,58 @@ qasmBarrier[stmt_String, state_] := Module[{argStr, wires},
 ]
 
 qasmReset[stmt_String, state_] := Module[{argStr, wires},
+    (* OpenQASM `reset` returns a qubit to |0>. A QF circuit has no per-wire reset-to-|0>
+       primitive and already treats any wire with no explicit initial state as |0> (the
+       register), so a reset is the identity at circuit start and is dropped. Operands are
+       still resolved so an out-of-range or undeclared qubit is reported. *)
     argStr = StringTrim @ StringReplace[stmt, RegularExpression["^reset\\b"] -> ""];
     wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[argStr]];
-    Map[("Reset" -> #) &, wires]
+    {}
 ]
 
-qasmGPhase[stmt_String] := Module[{m},
-    m = StringCases[stmt, RegularExpression["gphase\\s*\\(([^)]*)\\)"] -> "$1"];
+(* gphase(theta) is a global phase E^(I theta). With ctrl / negctrl modifiers it becomes a
+   phase applied only on the control-active configuration: a multi-controlled phase. It is
+   realized by hosting a 1-qubit phase gate on one control wire and controlling it with the
+   rest, so an uncontrolled gphase stays a 0-qudit GlobalPhase and a controlled one is a
+   genuine operator on the control qubits. *)
+qasmGPhase[stmt_String, state_] := Module[{
+    mods, rest, nc1 = 0, nc0 = 0, invQ = False, powK = 1, m, theta, qargStr, wires, w1, w0, host, gate, restCtrl1, restCtrl0
+},
+    {mods, rest} = qasmStripModifiers[stmt];
+    Scan[
+        Replace[#, {
+            "inv" :> (invQ = ! invQ),
+            "ctrl"[k_] :> (nc1 += k),
+            "negctrl"[k_] :> (nc0 += k),
+            "pow"[k_] :> (powK *= k)
+        }] &,
+        mods
+    ];
+    m = StringCases[rest, RegularExpression["gphase\\s*\\(([^)]*)\\)\\s*([\\s\\S]*)$"] :> {"$1", "$2"}];
     If[m === {}, qasmThrow["Syntax", "Malformed gphase: `1`.", {stmt}]];
-    {"GlobalPhase"[qasmAngle[First[m]]]}
+    theta = powK * qasmAngle[m[[1, 1]]];
+    If[invQ, theta = - theta];
+    If[ nc1 + nc0 == 0,
+        Return @ {"GlobalPhase"[theta]}
+    ];
+    qargStr = StringTrim[m[[1, 2]]];
+    wires = Flatten[qasmResolveQ[#, state["regs"]] & /@ qasmSplitQargs[qargStr]];
+    If[ Length[wires] =!= nc1 + nc0,
+        qasmThrow["Arity", "Controlled gphase expects `1` control qubit(s), got `2`.", {nc1 + nc0, Length[wires]}]
+    ];
+    w1 = wires[[1 ;; nc1]];
+    w0 = wires[[nc1 + 1 ;; nc1 + nc0]];
+    (* host gate carries the phase on |1> (positive control) or |0> (negative control) *)
+    If[ w1 =!= {},
+        host = Last[w1]; gate = {{1, 0}, {0, Exp[I theta]}}; restCtrl1 = Most[w1]; restCtrl0 = w0,
+        host = Last[w0]; gate = {{Exp[I theta], 0}, {0, 1}}; restCtrl1 = {}; restCtrl0 = Most[w0]
+    ];
+    {
+        If[ restCtrl1 === {} && restCtrl0 === {},
+            QuantumOperator[gate, {host}],
+            QuantumOperator["C"[gate, restCtrl1, restCtrl0], {host}]
+        ]
+    }
 ]
 
 

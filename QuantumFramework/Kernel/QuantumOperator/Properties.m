@@ -938,9 +938,27 @@ QuantumOperatorProp[qo_, "Decompose", gateset : {___String} : {"U", "CX"}] /;
 (* OpenQASM emit workers: the public ["QASM"]/["SimpleQASM"] downvalues route through the
    QuantumQASM hub, which calls these. *)
 
-qasmEmitSimple[qo_] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
-    angles = ToLowerCase @ ToString[NumberForm[N[#]]] & /@
-        ConfirmBy[UnitaryAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
+(* The single-qubit-unitary branch fires only on a genuine 1-qubit gate. SquareQ
+   (OutputDimension == InputDimension) is required because non-square state-injection
+   tensors share the {2, 2} leg signature: a 2-output/0-input Cup also reports
+   Dimensions === {2, 2} but has a 4x1 matrix, so without this guard UnitaryAngles is
+   handed a non-square matrix and the emit fails opaquely. Non-square operators fall
+   through to the catch-all, which emits the "// Unimplemented" marker that
+   qasmEmitCircuit turns into a clean QuantumQASM failure naming the gate. *)
+(* Format a real for an OpenQASM literal: full machine precision (NumberForm truncates to 6
+   digits, capping round-trip fidelity, and renders small/large magnitudes as a "x10"
+   superscript that wraps across lines, which is not a valid literal). InputForm gives a flat
+   decimal; "*^" becomes the OpenQASM "e" exponent (the importer parses both). *)
+qasmReal[x_] := StringReplace[ToString[N[x], InputForm], "*^" -> "e"]
+
+(* Decompose a 1-qubit gate as U(angles) up to a global phase. UnitaryAnglesWithPhase, not
+   UnitaryAngles: the latter folds Arg[mat[[1,1]]] into the phi/lambda angles, which is a
+   diagonal Z-conjugation (mat == D.U(UnitaryAngles).D, D = diag(E^(I a/2), E^(-I a/2))),
+   NOT a global phase, so U(UnitaryAngles[mat]) is a different operator whenever mat[[1,1]]
+   is complex. The leftover phase here is a true global phase and is dropped (callers are all
+   uncontrolled single-qubit contexts; the controlled path emits it as a controlled gphase). *)
+qasmEmitSimple[qo_] /; qo["SquareQ"] && qo["Dimensions"] === {2, 2} := Enclose @ With[{
+    angles = qasmReal /@ ConfirmBy[First @ UnitaryAnglesWithPhase[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
@@ -977,29 +995,46 @@ qasmEmitOperator[qo_] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], 
     Replace[qo["Label"], {
         Subscript["C", _][control1_, control0_] :>
             With[{n = Length[control1], m = Length[control0]},
-                StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
-                qasmEmitSimple[(
-                QuantumTensorProduct[{
-                    If[ n > 0,
-                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
-                        Nothing
-                    ],
-                    If[ m > 0,
-                        QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}],
-                        Nothing
-                    ]
-                }] @ qo @
-                QuantumTensorProduct[{
-                    If[ n > 0,
-                        QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
-                        Nothing
-                    ],
-                    If[ m > 0,
-                        QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}],
-                        Nothing
-                    ]
-                }]
-                )] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";"
+                Module[{proj, mat, angles, phase, ctrlPrefix, ctrlQubits, gateLine, phaseLine},
+                    proj =
+                        QuantumTensorProduct[{
+                            If[ n > 0,
+                                QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]]["Dagger"], {{}, control1}],
+                                Nothing
+                            ],
+                            If[ m > 0,
+                                QuantumOperator[QuantumState["Register"[m, 0]]["Dagger"], {{}, control0}],
+                                Nothing
+                            ]
+                        }] @ qo @
+                        QuantumTensorProduct[{
+                            If[ n > 0,
+                                QuantumOperator[QuantumState["Register"[n, 2 ^ n - 1]], {control1, {}}],
+                                Nothing
+                            ],
+                            If[ m > 0,
+                                QuantumOperator[QuantumState["Register"[m, 0]], {control0, {}}],
+                                Nothing
+                            ]
+                        }];
+                    mat = proj["MatrixRepresentation"];
+                    If[ ! MatchQ[Dimensions[mat], {2, 2}], Return[$Failed, Module]];
+                    (* Split the 1-qubit target into a U(angles) carrying no global phase plus the
+                       leftover phase: mat == E^(I phase) . U(angles). A bare U cannot carry that
+                       phase (its (1,1) entry is real). Uncontrolled it is unobservable, but under
+                       control it is a physical relative phase, so emit it as a controlled gphase on
+                       the control qubits alongside the controlled U. *)
+                    {angles, phase} = UnitaryAnglesWithPhase[mat];
+                    ctrlPrefix = StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m];
+                    ctrlQubits = StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0] - 1], " "];
+                    gateLine = ctrlPrefix <> StringTemplate["U(``, ``, ``)"][Sequence @@ (qasmReal /@ angles)] <>
+                        " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";";
+                    phaseLine = If[ TrueQ[Chop[N[phase]] == 0],
+                        Nothing,
+                        ctrlPrefix <> "gphase(" <> qasmReal[phase] <> ") " <> ctrlQubits <> ";"
+                    ];
+                    StringRiffle[DeleteCases[{gateLine, phaseLine}, Nothing], "\n"]
+                ]
             ],
         _ :> $Failed
         }
@@ -1007,7 +1042,7 @@ qasmEmitOperator[qo_] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], 
 
 (* a global phase is a 0-qudit (1x1) operator e^(i phi): OpenQASM 3 gphase(phi) *)
 qasmEmitOperator[qo_] /; qo["Dimensions"] === {} :=
-    "gphase(" <> ToLowerCase[ToString[NumberForm[N @ Arg[qo["MatrixRepresentation"][[1, 1]]]]]] <> ");"
+    "gphase(" <> qasmReal[Arg[qo["MatrixRepresentation"][[1, 1]]]] <> ");"
 
 (* a qudit permutation decomposes into SWAP gates: each cycle (c1 c2 ... ck) becomes the
    transpositions (c1 c2)(c1 c3) ... (c1 ck), applied left to right (verified by matrix). *)

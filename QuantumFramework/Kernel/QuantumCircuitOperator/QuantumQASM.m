@@ -6,6 +6,8 @@ PackageExport["QiskitTarget"]
 PackageScope["qasmEmitCircuit"]
 PackageScope["qasmEmitOperator"]
 PackageScope["qasmEmitSimple"]
+PackageScope["qasmQubitsQ"]
+PackageScope["qasmNonQubitFailure"]
 
 
 
@@ -34,7 +36,7 @@ qqasmTranspileBytes[bytes_ByteArray, opts_Association] := Enclose @ Block[{
     ConfirmBy[
         PythonEvaluate[Context[pythonBytes], "
 import pickle, inspect, qiskit
-from qiskit import transpile
+from qiskit import transpile, QuantumCircuit
 from qiskit.transpiler import CouplingMap, Target
 from qiskit.circuit import Measure, Reset
 from wolframclient.language import wl
@@ -76,6 +78,16 @@ else:
         if isinstance(kwargs.get('target'), dict):
             kwargs['target'] = build_target(kwargs['target'])
         out = transpile(circuit, **kwargs)
+        # A bare basis-gate translation (no routing target) still gets a TranspileLayout
+        # attached, which makes qasm3.dumps emit physical qubits ($0) with no qubit
+        # declaration: not portable, not re-importable. Rebuild a layout-free circuit so
+        # the dump uses the named register (compose carries global_phase and drops the
+        # layout). With a real coupling_map/target, the physical layout is meaningful and
+        # is kept.
+        if kwargs.get('coupling_map') is None and kwargs.get('target') is None and out.layout is not None:
+            clean = QuantumCircuit(*out.qregs, *out.cregs)
+            clean.compose(out, inplace=True)
+            out = clean
         result = wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(out))
     except Exception as e:
         result = wl.Failure('QuantumQASM', {

@@ -4,6 +4,7 @@ PackageExport["IBMJobSubmit"]
 PackageExport["IBMJob"]
 
 PackageScope["iMethodIBMJob"]
+PackageScope["ibmValidatePrimitiveOptions"]
 
 
 
@@ -40,6 +41,74 @@ ibmSnakeKeys[a_Association] := Association @ KeyValueMap[ibmSnakeKey[#1] -> ibmS
 ibmSnakeKeys[x_] := x
 
 
+(* ---- pre-submit option validation (no backend / transpile / network) ----
+   Validates the user's PrimitiveOptions against qiskit's own SamplerOptions / EstimatorOptions
+   schema by applying the snake-cased tree onto a throwaway options object. qiskit owns the schema,
+   so an unknown or mis-nested key (or a value qiskit rejects) is caught here, before the circuit is
+   transpiled or any job is submitted. Returns Null when the options are valid, or a Failure naming
+   the offending key, the primitive, the valid options at that level, and (for the common
+   resilience/observable mix-up) a cross-primitive hint. *)
+
+ibmValidatePrimitiveOptions[primitive_String, userOpts_Association] := Block[{
+    $primitive = primitive,
+    $opts = ibmSnakeKeys[userOpts]
+},
+    PythonEvaluate[Context[$primitive], "
+from qiskit_ibm_runtime.options import SamplerOptions, EstimatorOptions
+from wolframclient.language import wl
+
+primitive = <* $primitive *>
+opts = <* $opts *> or {}
+
+class OptionError(Exception):
+    pass
+
+def _camel(s):
+    return ''.join(p[:1].upper() + p[1:] for p in s.split('_'))
+
+def _fields(o):
+    df = getattr(o, '__dataclass_fields__', None)
+    return [k for k in df if not k.startswith('_')] if df else None
+
+base = EstimatorOptions() if primitive == 'estimator' else SamplerOptions()
+other_top = _fields(SamplerOptions() if primitive == 'estimator' else EstimatorOptions()) or []
+other_name = 'estimator' if primitive == 'sampler' else 'sampler'
+
+def check_opts(o, d, path=()):
+    valid = _fields(o)
+    for k, v in (d or {}).items():
+        if valid is not None and k not in valid:
+            where = '.'.join(_camel(p) for p in (path + (k,)))
+            hint = ''
+            if not path and k in other_top:
+                hint = ' It is an %r option, but this is a %r job.' % (other_name, primitive)
+            opts_list = ', '.join(_camel(x) for x in sorted(valid))
+            raise OptionError(
+                '%r is not a valid option for the %r primitive.%s Valid options here: %s.'
+                % (where, primitive, hint, opts_list))
+        if isinstance(v, dict):
+            check_opts(getattr(o, k), v, path + (k,))
+        else:
+            try:
+                setattr(o, k, v)
+            except Exception as exc:
+                where = '.'.join(_camel(p) for p in (path + (k,)))
+                raise OptionError('%r could not be set to %r (%s).' % (where, v, type(exc).__name__))
+
+err = None
+try:
+    check_opts(base, opts)
+except OptionError as exc:
+    err = str(exc)
+
+wl.Failure('IBMJobSubmit', wl.Association(
+    wl.Rule('MessageTemplate', '`1`'),
+    wl.Rule('MessageParameters', [err])
+)) if err is not None else None
+", "ibm"]
+]
+
+
 (* ---- submission ---- *)
 
 Options[IBMJobSubmit] = {
@@ -51,7 +120,7 @@ Options[IBMJobSubmit] = {
 }
 
 IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automatic, opts : OptionsPattern[]] := Enclose @ Module[{
-    so, primitive, shots, waitQ, observable, userOpts, bk, obsTerms, sub, id, measured, job
+    so, primitive, shots, waitQ, observable, userOpts, bk, obsTerms, sub, id, measured, job, vfail
 },
     so = ibmActiveConnection[];
     If[ so === $Failed,
@@ -83,6 +152,11 @@ IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automat
 
     (* estimator observable -> Pauli triples qiskit turns into a layout-mapped SparsePauliOp *)
     obsTerms = If[primitive === "estimator", Confirm @ ibmObsTerms[observable], Null];
+
+    (* validate the primitive options against qiskit's schema BEFORE the (slow) transpile + submit,
+       so a bad option fails in milliseconds with a clear message instead of after a full compile *)
+    vfail = ibmValidatePrimitiveOptions[primitive, userOpts];
+    If[FailureQ[vfail], Return @ vfail];
 
     (* qiskit builds, transpiles, lays out the observable, serializes, and submits via its own
        SamplerV2 / EstimatorV2; run() is not awaited, so a job handle returns immediately *)

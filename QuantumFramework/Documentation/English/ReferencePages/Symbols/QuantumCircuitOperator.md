@@ -133,14 +133,16 @@ Shorthand representation of the circuit:
 QuantumCircuitOperator["XY"]["Diagram"]
 ```
 
-Another shorter version of input, to create above circuit:
+Recover a shorthand specification of the circuit:
 
 ```wl
 QuantumShortcut@qc
 ```
 
+The shorthand, fed back to the constructor, rebuilds the same circuit:
+
 ```wl
-QuantumCircuitOperator[%]["Diagram"]
+QuantumCircuitOperator[QuantumShortcut[qc]]["Diagram"]
 ```
 
 ---
@@ -152,7 +154,7 @@ qc = QuantumCircuitOperator[{QuantumOperator["CNOT"],
     QuantumOperator["H" -> {1, 2}]}];
 ```
 
-Associated circuit diagram:
+Draw the associated circuit diagram:
 
 ```wl
 qc["Diagram"]
@@ -164,7 +166,7 @@ The above circuit has a shorthand representation, too:
 QuantumCircuitOperator[{"CNOT", "H" -> {1, 2}}] == qc
 ```
 
-The dashed line between two Hadamards imply that they are defined as tensor product, although they are separable. Compared it with this case:
+The dashed line between the two Hadamards indicates that they are defined as a tensor product, although they are separable. Compare it with this case, where each gate is placed separately:
 
 ```wl
 QuantumCircuitOperator[{"CNOT", "H", "H" -> {2}}]["Diagram"]
@@ -172,13 +174,13 @@ QuantumCircuitOperator[{"CNOT", "H", "H" -> {2}}]["Diagram"]
 
 ---
 
-A quantum state is transformed by a quantum circuit
+A quantum state is transformed by applying the circuit to it:
 
 ```wl
 QuantumCircuitOperator[{"CNOT", "H", "S" -> {2}}][QuantumState["01"]]
 ```
 
-If no input is given, the initial state is set as the corresponding register state
+If no input is given, the initial state is taken to be the corresponding register state:
 
 ```wl
 QuantumCircuitOperator[{"CNOT", "H", "S" -> {2}}][]
@@ -186,14 +188,21 @@ QuantumCircuitOperator[{"CNOT", "H", "S" -> {2}}][]
 
 ---
 
-Quantum circuit can include many quantum objects:
+A quantum circuit can include many kinds of quantum objects: here a state, gates, a noise channel, a phase, and measurements:
 
 ```wl
 qc = QuantumCircuitOperator[{QuantumState["Bell", "Label" -> "Bell"], 
     "XY", {"C", "RY"[\[Pi]/4]}, "BitFlip"[.3], "H" -> 2, 
     "P"[\[Pi]/3] -> 2, {1}, "M"["X"] -> 2}];
+```
+
+Draw its circuit diagram:
+
+```wl
 qc["Diagram"]
 ```
+
+The outcome probabilities after running the circuit on the register state:
 
 ```wl
 qc[]["ProbabilityPlot"]
@@ -247,7 +256,7 @@ The action of Bell circuit on the register state generates the Bell state:
 QuantumCircuitOperator["Bell"][] == QuantumState["Bell"]
 ```
 
-Bell circuit is similar to "Cup", with $\sqrt{2}$ factor
+The Bell circuit is similar to the "Cup" circuit, up to a $\sqrt{2}$ factor:
 
 ```wl
 QuantumCircuitOperator[{"Cup"}]["Diagram"]
@@ -272,6 +281,8 @@ The Toffoli circuit as a combination of one-qubit and two-qubit gates:
 ```wl
 QuantumCircuitOperator["Toffoli"]["Diagram"]
 ```
+
+Its collapsed circuit operator equals the built-in Toffoli operator:
 
 ```wl
 QuantumCircuitOperator["Toffoli"]["CircuitOperator"] == 
@@ -304,7 +315,7 @@ InverseFourier circuit of 5-qubits:
 QuantumCircuitOperator["InverseFourier"[5]]["Diagram"]
 ```
 
-InverseFourier circuit transforms from the momentum (Pauli-X) basis into the computational basis into . Check $|x_{+}x_{+}\rangle$ is transformed into $|00\rangle$:
+InverseFourier circuit transforms from the momentum (Pauli-X) basis back into the computational basis. Check $|x_{+}x_{+}\rangle$ is transformed into $|00\rangle$:
 
 ```wl
 QuantumCircuitOperator["InverseFourier"][QuantumState["++"]]
@@ -317,14 +328,13 @@ QuantumCircuitOperator["InverseFourier"] ==
  QuantumCircuitOperator["Fourier"]["Dagger"]
 ```
 
-QFT is the same as basis transformation into the Fourier basis:
+For 3 qubits, the QFT is the same as a basis transformation into the Fourier basis:
 
 ```wl
-n = 3;
 SparseArray[
-  QuantumCircuitOperator["Fourier"[n]][#]["StateVector"] & /@ 
-   QuantumBasis[2, n]["BasisStates"]] == 
- QuantumBasis["Fourier"[2^n]]["Elements"]
+   QuantumCircuitOperator["Fourier"[3]][#]["StateVector"] & /@ 
+    QuantumBasis[2, 3]["BasisStates"]] == 
+ QuantumBasis["Fourier"[2^3]]["Elements"]
 ```
 
 #### Phase estimation circuit
@@ -341,44 +351,62 @@ Create the corresponding QPE circuit to find one of its eigenvalues:
 
 ```wl
 qc = QuantumCircuitOperator["PhaseEstimation"[u]];
+```
+
+Draw its circuit diagram:
+
+```wl
 qc["Diagram"]
 ```
 
-Calculate corresponding measurement probabilities:
+Calculate the corresponding measurement probabilities:
 
 ```wl
 N[qc][]["ProbabilityPlot", "LabelsAngle" -> \[Pi]/2, 
  AspectRatio -> 1/4]
 ```
 
-Given the result with max probability, estimate the eigenvalue:
+Read off the most probable measurement outcome as a bit-string:
 
 ```wl
-Keys[TakeLargest[N[qc][]["Probabilities"], 1]][[1]]["Name"]
-est1 = FromDigits[%, 2]/2^4 // N
+bits1 = Keys[TakeLargest[N[qc][]["Probabilities"], 1]][[1]]["Name"]
 ```
 
-Generate another QPE circuit, to obtain the other eigenvalue:
+Convert that bit-string into the estimated eigenvalue:
+
+```wl
+est1 = FromDigits[bits1, 2]/2^4 // N
+```
+
+Generate another QPE circuit (dropping the leading Pauli-X gate) to obtain the other eigenvalue:
 
 ```wl
 qc2 = qc[[2 ;;]];
+```
+
+Draw its flattened circuit diagram:
+
+```wl
 qc2["Flatten"]["Diagram"]
 ```
 
-Note the only difference is dropping the Pauli-X gate.
-
-Calculate corresponding measurement probabilities:
+Calculate the corresponding measurement probabilities:
 
 ```wl
 N[qc2][]["ProbabilityPlot", "LabelsAngle" -> \[Pi]/2, 
  AspectRatio -> 1/4]
 ```
 
-Given the result with max probability, estimate the eigenvalue:
+Read off the most probable measurement outcome as a bit-string:
 
 ```wl
-Keys[TakeLargest[N[qc2][]["Probabilities"], 1]][[1]]["Name"]
-est2 = FromDigits[%, 2]/2^4 // N
+bits2 = Keys[TakeLargest[N[qc2][]["Probabilities"], 1]][[1]]["Name"]
+```
+
+Convert that bit-string into the estimated eigenvalue:
+
+```wl
+est2 = FromDigits[bits2, 2]/2^4 // N
 ```
 
 Find corresponding eigenvalues (note they should be in the form $e^{i\, 2\pi \, \lambda }$):
@@ -395,17 +423,19 @@ Calculate the estimated eigenvalues, compared to the expected ones and find the 
 
 #### Graph circuit
 
-Given a graph, the corresponding circuit (which generates quantum graph/cluster states) is a series of controlled-Z operators on edges of graph:
+Start from a random graph:
 
 ```wl
 g = Graph[RandomGraph[{4, 5}], VertexLabels -> "Name"]
 ```
 
+The corresponding circuit applies a controlled-Z along each edge of the graph (and so prepares a graph/cluster state):
+
 ```wl
 QuantumCircuitOperator["Graph"[g]]["Diagram"]
 ```
 
-Graph circuit generates graph state (also called as cluster state):
+The graph circuit generates the graph state (also called a cluster state):
 
 ```wl
 QuantumCircuitOperator["Graph"[g]][] == QuantumState["Graph"[g]]
@@ -420,7 +450,7 @@ With[{st = QuantumState["Graph"[g]]},
 
 #### Bernstein-Vazirani circuit
 
-For the Bernstein-Vazirani algorithm, one needs to specify a secret string bit st as st as follows: for the oracle we have <code>[QuantumCircuitOperator]()[[BernsteinVaziraniOracle]()[st]]</code>, and for the whole circuit e <code>[QuantumCircuitOperator]()[[BernsteinVazirani]()[st]]</code>. For example, the Bernstein-Vazirani oracle for the secret bit of 101:
+For the Bernstein-Vazirani algorithm, one specifies a secret bit-string *st*: the oracle is <code>[QuantumCircuitOperator]()[[BernsteinVaziraniOracle]()[*st*]]</code>, and the whole circuit is <code>[QuantumCircuitOperator]()[[BernsteinVazirani]()[*st*]]</code>. For example, the Bernstein-Vazirani oracle for the secret bit-string 101:
 
 ```wl
 QuantumCircuitOperator["BernsteinVaziraniOracle"["101"]]["Diagram"]
@@ -439,7 +469,7 @@ QuantumCircuitOperator[
    "BernsteinVazirani"["101"]][]["ProbabilitiesPlot"]
 ```
 
-BernsteinVaziraniOracle circuit can take a binary vector, or bit-strings
+The BernsteinVaziraniOracle circuit accepts the secret as a binary vector or as a bit-string, equivalently:
 
 ```wl
 QuantumCircuitOperator["BernsteinVaziraniOracle"[{1, 0, 1}]] == 
@@ -450,14 +480,19 @@ QuantumCircuitOperator["BernsteinVaziraniOracle"[{1, 0, 1}]] ==
 
 Simon’s algorithm is a quantum algorithm designed to solve the Simon’s problem efficiently. It aims to find a hidden bit-string by querying a black-box function.
 
-Create corresponding Simon oracle:
+Create the corresponding Simon oracle:
 
 ```wl
 so = QuantumCircuitOperator["SimonOracle"[{1, 0, 1, 1}]];
+```
+
+Draw its circuit diagram:
+
+```wl
 so["Diagram"]
 ```
 
-A function that return the Boolean table of a Simon oracle:
+Define a function that returns the Boolean table of a Simon oracle:
 
 ```wl
 boolTable[oracle_] := 
@@ -468,18 +503,23 @@ boolTable[oracle_] :=
     QuantumBasis[2, n]["BasisStates"]]]
 ```
 
-Return Boolean table of above Simon oracle:
+Return the Boolean table of the above Simon oracle:
 
 ```wl
 TableForm[boolTable[so], TableDepth -> 2, 
  TableHeadings -> {None, {"bit", "oracle[bit]"}}]
 ```
 
-Simon circuit for a given hidden sequence:
+Build a Simon circuit for a given hidden sequence (seeding the random oracle for reproducibility):
 
 ```wl
 SeedRandom[0];
 simon = QuantumCircuitOperator["Simon"[seq = {1, 0, 0, 1}]];
+```
+
+Draw its circuit diagram:
+
+```wl
 simon["Diagram"]
 ```
 
@@ -496,32 +536,37 @@ simonMeas["ProbabilitiesPlot", AspectRatio -> 1/4,
  "LabelsAngle" -> \[Pi]/2]
 ```
 
-List of all potential results:
+List of all measured outcomes with nonzero probability (chopping the numerical noise from the floating-point measurement):
 
 ```wl
-m = Normal /@ Keys@Select[simonMeas["Probabilities"], Positive]
+m = Normal /@ Keys@Select[simonMeas["Probabilities"], Chop[#] > 0 &]
 ```
 
-Find the null vector (`matrix·m=0 mod 2`):
+Find the null space of that matrix modulo 2:
 
 ```wl
 NullSpace[m, Modulus -> 2]
 ```
 
-We found the secret bit:
+The recovered null vector matches the secret bit-string:
 
 ```wl
-seq == %[[1]]
+seq == NullSpace[m, Modulus -> 2][[1]]
 ```
 
-Note, the Simon circuit and its corresponding Boolean function is not uniquely determined. For each evaluation, one gets a different oracle that can solve the Simon problem:
+The Simon circuit and its Boolean function are not uniquely determined: each evaluation yields a different oracle that still solves the Simon problem. Build a second one for the same secret:
 
 ```wl
 simon2 = QuantumCircuitOperator["Simon"[seq]];
+```
+
+It differs from the first circuit:
+
+```wl
 simon == simon2
 ```
 
-With the new circuit, one can find the hidden sequence:
+With the new circuit, one can still recover the hidden sequence:
 
 ```wl
 NullSpace[Normal /@ Keys@Select[simon2[]["Probabilities"], Positive], 
@@ -556,15 +601,20 @@ QuantumCircuitOperator[
  "ShowGateLabels" -> False]
 ```
 
-GrayOracle is the same as Multiplexer with angles:
+The same oracle can be built as a multiplexer over the same angles:
 
 ```wl
 inv = QuantumCircuitOperator["Multiplexer" @@ "RY" /@ angles, 
    RotateLeft[Range[prec + 1]]];
+```
+
+Draw its circuit diagram:
+
+```wl
 inv["Diagram", "ShowGateLabels" -> False]
 ```
 
-Check the Multiplexer is the same as GrayOracle:
+Check the multiplexer realizes the same unitary as the GrayOracle:
 
 ```wl
 (inv["Matrix"] - 
@@ -577,14 +627,19 @@ Check the Multiplexer is the same as GrayOracle:
 
 There are a collection of named-circuits for the Grover search algorithm, and its oracles (e.g., Boolean, or Phase oracles) or amplification. The class of Grover-related named-circuits are <code>[QuantumCircuitOperator]()[name[boo]]</code> with *boo* a Boolean function.
 
-Boolean oracle for a given Boolean function:
+Build a Boolean oracle for a given Boolean function:
 
 ```wl
 bo = QuantumCircuitOperator["BooleanOracle"[a && ! b]];
+```
+
+Draw its circuit diagram:
+
+```wl
 bo["Diagram"]
 ```
 
-Boolean oracle will flip the ancillary qubit (in above example, 3rd qubit) only if the quantum state is a solution of the Boolean function. For example, `{True,False}` (10) is a solution of `a&&!b`, thus the ancillary qubit will be flipped:
+The Boolean oracle flips the ancillary qubit (here the 3rd qubit) only when the input state is a solution of the Boolean function. For example, `{True, False}` (that is, 10) is a solution of `a && !b`, so the ancillary qubit is flipped:
 
 ```wl
 bo[QuantumState["100"]]["Formula"]
@@ -596,22 +651,31 @@ One can also get the decomposition of a Boolean oracle, in terms of CNOTs and Z-
 QuantumCircuitOperator["BooleanOracleR"[a && ! b]]["Diagram"]
 ```
 
-For the diffusion part of the Grover circuit (also called, the amplification part), one only needs to specify the number of qubits:
+For the diffusion part of the Grover circuit (also called the amplification part), one only needs to specify the number of qubits:
 
 ```wl
 QuantumCircuitOperator["GroverDiffusion"[3]]["Diagram"]
 ```
 
+The controlled-on-zero variant reflects about the all-zeros state instead:
+
 ```wl
 QuantumCircuitOperator["GroverDiffusion0"[3]]["Diagram"]
 ```
 
-Another way of storing the solution of a Boolean function is to save it as a phase, rather than on an ancillary qubit. This can be archived by using a phase oracle, that add an overall phase of π if the quantum state is a solution of the Boolean function.
+Another way to store the solution of a Boolean function is to record it as a phase rather than on an ancillary qubit. This is achieved with a phase oracle, which adds an overall phase of $\pi$ when the input state is a solution of the Boolean function:
 
 ```wl
 po = QuantumCircuitOperator["PhaseOracle"[a && ! b]];
+```
+
+Draw its circuit diagram:
+
+```wl
 po["Diagram"]
 ```
+
+Applied to a solution, the phase oracle multiplies the state by $-1$:
 
 ```wl
 po[QuantumState["10"]]["Formula"]
@@ -675,93 +739,97 @@ NProbability[
 
 #### Trotter-Suzuki
 
-One can find Trotter-Suzuki decomposition, to approximate a time evolution.
+One can build a Trotter-Suzuki decomposition to approximate a time evolution.
 
-First order, only:
+First-order decomposition, one step:
 
 ```wl
-qc = QuantumCircuitOperator[{"Trotterization", {QuantumOperator[
-      "X", {1, 2}], QuantumOperator["X", {2, 3}]}, 1, 1, 1}];
-qc["Diagram"]
+QuantumCircuitOperator[{"Trotterization", {QuantumOperator["X", {1, 2}], 
+    QuantumOperator["X", {2, 3}]}, 1, 1, 1}]["Diagram"]
 ```
 
-2nd order:
+Second-order decomposition:
 
 ```wl
-qc = QuantumCircuitOperator[{"Trotterization", {QuantumOperator[
-      "X", {1, 2}], QuantumOperator["X", {2, 3}]}, 2, 1, 1}];
-qc["Diagram"]
+QuantumCircuitOperator[{"Trotterization", {QuantumOperator["X", {1, 2}], 
+    QuantumOperator["X", {2, 3}]}, 2, 1, 1}]["Diagram"]
 ```
 
-2nd order, with 4 steps:
+Second-order decomposition with 4 steps:
 
 ```wl
-qc = QuantumCircuitOperator[{"Trotterization", {QuantumOperator[
-      "X", {1, 2}], QuantumOperator["X", {2, 3}]}, 2, 4, 1}];
-qc["Diagram", FontSize -> 8]
+QuantumCircuitOperator[{"Trotterization", {QuantumOperator["X", {1, 2}], 
+    QuantumOperator["X", {2, 3}]}, 2, 4, 1}]["Diagram", FontSize -> 8]
 ```
 
-4th order, only 1 step:
+Fourth-order decomposition, one step:
 
 ```wl
-qc = QuantumCircuitOperator[{"Trotterization", {QuantumOperator[
-      "X", {1, 2}], QuantumOperator["X", {2, 3}]}, 4, 1, 1}];
-qc["Diagram", "ShowGateLabels" -> False]
+QuantumCircuitOperator[{"Trotterization", {QuantumOperator["X", {1, 2}], 
+    QuantumOperator["X", {2, 3}]}, 4, 1, 1}]["Diagram", "ShowGateLabels" -> False]
 ```
 
 #### PhaseNumber circuit
 
-PhaseNumber circuit encodes a number in n-qubit.
+The PhaseNumber circuit encodes a number in *n* qubits as relative phases.
 
-Encode 5 in 4-qubits:
+Encode 5 in 4 qubits:
 
 ```wl
-num = 5;
-QuantumCircuitOperator["PhaseNumber"[num, 4]]["Diagram"]
+QuantumCircuitOperator["PhaseNumber"[5, 4]]["Diagram"]
 ```
 
-Remove Hadamards:
+Encode the same number without the leading Hadamards:
 
 ```wl
-QuantumCircuitOperator["PhaseNumber"[num, 4, False]]["Diagram"]
+QuantumCircuitOperator["PhaseNumber"[5, 4, False]]["Diagram"]
 ```
 
-PhaseNumber followed by InverseFourier generates a circuit that can be used to calculate the encoded number:
+PhaseNumber followed by InverseFourier gives a circuit that reads back the encoded number:
 
 ```wl
-num = 5;
-qc = QuantumCircuitOperator[{"PhaseNumber"[num, 6], 
+qc = QuantumCircuitOperator[{"PhaseNumber"[5, 6], 
     "InverseFourier"[6], Range[6]}];
+```
+
+Draw its circuit diagram:
+
+```wl
 qc["Diagram"]
 ```
 
-Corresponding measurement probabilities:
+Compute the corresponding measurement probabilities:
 
 ```wl
 m = N[qc][]
 ```
 
-Given the result with max probability, find the corresponding integer from bit-string:
+Given the most probable result, recover the integer from its bit-string:
 
 ```wl
-FromDigits[Keys[TakeLargest[m["Probabilities"], 1]][[1]]["Name"], 2]
+decoded = FromDigits[Keys[TakeLargest[m["Probabilities"], 1]][[1]]["Name"], 2]
 ```
 
-Check it is the same as initial encoded number:
+It matches the originally encoded number:
 
 ```wl
-% == num
+decoded == 5
 ```
 
-The PhaseNumber circuits follow the usual addition:
+The PhaseNumber circuits follow the usual addition. Build a circuit encoding 5 and another encoding 3:
 
 ```wl
 qc1 = QuantumCircuitOperator[{"PhaseNumber", 5, 6}];
 qc2 = QuantumCircuitOperator[{"PhaseNumber", 3, 6, False}];
+```
+
+Composing them gives the diagram:
+
+```wl
 (qc1/*qc2)["Diagram"]
 ```
 
-Test that 5+3=8, in terms of their circuits:
+Their composition encodes 5 + 3 = 8:
 
 ```wl
 (qc1/*qc2)["CircuitOperator"] == 
@@ -776,26 +844,33 @@ Define a balanced Boolean function:
 
 ```wl
 bf = BooleanFunction[2, 2];
+```
+
+Show its disjunctive form:
+
+```wl
 BooleanConvert[bf][\[FormalX], \[FormalY]]
 ```
 
-Show its Boolean table (note same number of True and False)
+Show its Boolean table (note the equal number of True and False entries):
 
 ```wl
 BooleanTable[bf]
 ```
 
+The Deutsch-Jozsa circuit for this function:
+
 ```wl
 QuantumCircuitOperator["DeutschJozsa"[bf]]["Diagram"]
 ```
 
-One can also get the Deutsch-Jozsa with a Phase oracle:
+One can also build the Deutsch-Jozsa circuit with a phase oracle:
 
 ```wl
 QuantumCircuitOperator["DeutschJozsaPhase"[bf]]["Diagram"]
 ```
 
-Also, “DeutschJozsaPhase” can take two integers, with the first one $k+1$ and second one as $n$, where the Boolean function is defined as BooleanFunction[k,n]
+`"DeutschJozsaPhase"` can also take two integers: the first is $k+1$ and the second is $n$, selecting the Boolean function `BooleanFunction[k, n]`:
 
 ```wl
 QuantumCircuitOperator["DeutschJozsaPhase"[3, 2]]["Diagram"]
@@ -818,7 +893,9 @@ Grid[Prepend[
  Alignment -> {{Left, Center, Center, Center}}]
 ```
 
-#### Leggett-Garg:
+#### Leggett-Garg
+
+The Leggett-Garg circuit:
 
 ```wl
 QuantumCircuitOperator["LeggettGarg"]["Diagram"]
@@ -826,20 +903,25 @@ QuantumCircuitOperator["LeggettGarg"]["Diagram"]
 
 #### State-preparation
 
-Generate a random pure state of 3-qubits:
+Generate a random pure state of 3 qubits:
 
 ```wl
 state = QuantumState["RandomPure"[3]]
 ```
 
-Generate a circuit whose outcome is above state:
+Generate a circuit that prepares the above state:
 
 ```wl
 qc = QuantumCircuitOperator["QuantumState"[state]];
+```
+
+Draw its circuit diagram:
+
+```wl
 qc["Diagram", "ShowGateLabels" -> False]
 ```
 
-Check the execution of the circuit gives the expected state:
+Check that running the circuit gives the expected state:
 
 ```wl
 qc[] == state
@@ -854,7 +936,9 @@ QuantumCircuitOperator["StatePreparation"[state]]["Diagram",
 
 ### Quantum circuit diagram
 
-One can customize many features of a circuit diagram. See [Circuit Diagram]() documentation page, for more details.
+One can customize many features of a circuit diagram. See the [Circuit Diagram]() documentation page for more details.
+
+Add custom wire labels and a measurement-wire label:
 
 ```wl
 QuantumCircuitOperator[{"H", "CY", "H", {1}}]["Diagram", 
@@ -863,16 +947,21 @@ QuantumCircuitOperator[{"H", "CY", "H", {1}}]["Diagram",
  "MeasurementWireLabel" -> "Measurement Wire"]
 ```
 
-Also, the overall size of the circuit can be adjusted:
+Define a sample superdense-coding circuit:
 
 ```wl
 superdense = 
   QuantumCircuitOperator[{"H", "CNOT", "CX" -> {4, 1}, "CZ" -> {3, 1},
      "CNOT", "H", {1}, {2}}];
+```
+
+Adjust the overall size of the circuit:
+
+```wl
 superdense["Diagram", "Size" -> .5]
 ```
 
-Additionally, one can customize the horizontal and vertical gaps:
+Customize the horizontal gap:
 
 ```wl
 superdense["Diagram", "HorizontalGapSize" -> 3]
@@ -884,14 +973,14 @@ Customize the vertical gap:
 superdense["Diagram", "VerticalGapSize" -> 2]
 ```
 
-Another interesting feature for the Diagram is showing the connectors as dot, specifying explicitly on what wires a gate acts:
+Show the connectors as dots, making explicit which wires a gate acts on:
 
 ```wl
 QuantumCircuitOperator[{QuantumOperator[{"R", \[Theta], "XX"}, {1, 
      3}]}]["Diagram", "ShowConnectors" -> True]
 ```
 
-But a portion of a circuit in a gray box, to emphasizing one portion:
+A nested labeled sub-circuit is drawn inside a gray box, emphasizing that portion:
 
 ```wl
 QuantumCircuitOperator[{"CNOT", 
@@ -899,7 +988,7 @@ QuantumCircuitOperator[{"CNOT",
      QuantumOperator[{"Phase", \[Gamma]}]}, "MyCir"]}]["Diagram"]
 ```
 
-Drop the gate labels (if you hover you mouse over the diagram, the labels will be shown):
+Drop the gate labels (hovering the mouse over the diagram still shows them):
 
 ```wl
 QuantumCircuitOperator[{"H", "CY", "H", {1}}]["Diagram", 
@@ -908,13 +997,15 @@ QuantumCircuitOperator[{"H", "CY", "H", {1}}]["Diagram",
 
 ### Tensor network of a quantum circuit
 
-Corresponding tensor network of a quantum circuit can be generated as a property. See [Tensor Network]() documentation page, for more details.
+The corresponding tensor network of a quantum circuit can be generated as a property. See the [Tensor Network]() documentation page for more details.
+
+Generate the tensor network of a Grover circuit:
 
 ```wl
 tn = QuantumCircuitOperator["Grover"[a && ! b || c]]["TensorNetwork"]
 ```
 
-Corresponding index graph:
+Draw its corresponding index graph:
 
 ```wl
 TensorNetworkIndexGraph[tn, 
@@ -1026,6 +1117,7 @@ qc["QASM"]
 The corresponding Qiskit circuit (requires Python as an external evaluator):
 
 ```wl
+#| eval: false
 qc["QiskitCircuit"]
 ```
 
@@ -1035,12 +1127,14 @@ Shift the qudits the circuit acts on by an offset (here, by 2):
 qc["Shift", 2]["Orders"]
 ```
 
-For a parametrized circuit, `"Parameters"` lists the declared parameters and `"ParameterArity"` counts them:
+Define a parametrized circuit:
 
 ```wl
 pqc = QuantumCircuitOperator[{"RY"[\[Theta]], "RZ"[\[Phi]] -> 2}, 
    "Parameters" -> {\[Theta], \[Phi]}]
 ```
+
+`"Parameters"` lists the declared parameters and `"ParameterArity"` counts them:
 
 ```wl
 {pqc["Parameters"], pqc["ParameterArity"]}
@@ -1050,7 +1144,7 @@ pqc = QuantumCircuitOperator[{"RY"[\[Theta]], "RZ"[\[Phi]] -> 2},
 
 ---
 
-`QuantumCircuitOperator` also supports controlled operators with more than one control or targets.
+`QuantumCircuitOperator` also supports controlled operators with more than one control or target:
 
 ```wl
 QuantumCircuitOperator[
@@ -1059,21 +1153,28 @@ QuantumCircuitOperator[
 
 ---
 
-Decompose Toffoli gate:
+Decompose the Toffoli gate. First define the gate $V=\sqrt{X}$:
 
 ```wl
 v = QuantumOperator[MatrixPower[PauliMatrix[1], 1/2], "Label" -> "V"];
 ```
+
+Build the decomposition from controlled-$V$ gates and CNOTs:
 
 ```wl
 qc = QuantumCircuitOperator[{QuantumOperator[{"Controlled", v}, {2, 3}],
      QuantumOperator["CX"], 
     QuantumOperator[{"Controlled", v["Dagger"]}, {2, 3}], 
     QuantumOperator["CX"], QuantumOperator[{"Controlled", v}, {1, 3}]}];
+```
+
+Draw its circuit diagram:
+
+```wl
 qc["Diagram"]
 ```
 
-Show above implementation is the same as built-in Toffoli gate:
+Show the implementation matches the built-in Toffoli gate:
 
 ```wl
 QuantumOperator["Toffoli"] == qc["CircuitOperator"]
@@ -1087,21 +1188,6 @@ Quantum circuits consisting of qudit gates are supported. Define a qudit gate of
 QuantumCircuitOperator[{"RandomUnitary"[3], 
    "Spider"[QuantumBasis[{3, 2}, {3, 2}]] -> {1, 2} -> {2, 
       1}}]["Diagram", "ShowWireDimensions" -> True]
-```
-
----
-
-One can shift a circuit, which means changing its overall order
-
-```wl
-qc = QuantumCircuitOperator[{"Fourier", 3}];
-qc["Diagram"]
-```
-
-Shift above circuit by 2 qudits:
-
-```wl
-qc["Shift", 2]["Diagram"]
 ```
 
 ## Options
@@ -1136,12 +1222,14 @@ QuantumCircuitOperator[{"H", "CNOT"}][Method -> "Stabilizer"]
 With `Method -> "QuEST"`, the circuit is simulated through the external QuEST high-performance simulator (qubit circuits only, requires the QuESTLink paclet):
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{"H", "CNOT"}][Method -> "QuEST"]
 ```
 
-Convert the circuit into Qiskit, and simulate it using the Qiskit default backend such as Aer (the results will be quantum objects in Wolfram quantum framework):
+Convert the circuit into Qiskit, and simulate it using the Qiskit default backend such as Aer (the results will be quantum objects in the Wolfram quantum framework):
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]], 
    Range[5]}][Method -> "Qiskit"]
 ```
@@ -1149,6 +1237,7 @@ QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]],
 IBMProvider as Qiskit provider:
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]], 
    Range[5]}][Method -> {"Qiskit", "Provider" -> "IBMProvider"}]
 ```
@@ -1156,45 +1245,69 @@ QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]],
 IBMProvider as Qiskit provider on a specific backend:
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]], 
    Range[5]}][Method -> {"Qiskit", "Provider" -> "IBMProvider", 
    "Backend" -> backend}]
 ```
 
-A delay can be added into Qiskit circuit too:
+A delay can be added into the Qiskit circuit too:
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{"I" -> "Delay"[2], "M"}]["Qiskit"]
 ```
 
 Return the list of IBM-quantum backends and their queue:
 
 ```wl
+#| eval: false
 ServiceConnect["IBMQ", "New"]["BackendQueue"]
 ```
 
 AWSBraket as Qiskit provider on a specific backend:
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[5]], 
    Range[5]}][Method -> {"Qiskit", "Provider" -> "AWSBraket", 
    "Backend" -> backend}]
 ```
 
-Return the list of AWSBraket backends:
+Connect to AWS:
 
 ```wl
+#| eval: false
 aws = ServiceConnect["AWS"];
+```
+
+Get the Braket service:
+
+```wl
+#| eval: false
 braket = ServiceExecute[aws, "GetService", {"Name" -> "Braket"}];
+```
+
+List the available Braket devices:
+
+```wl
+#| eval: false
 devices = braket["SearchDevices", "Filters" -> {}]["Devices", All]
 ```
 
-For some circuit creation, users can connect to Classiq:
+For some circuit constructions, users can connect to Classiq:
 
 ```wl
+#| eval: false
 qc = QuantumCircuitOperator[
    QuantumState[RandomReal[{0, 1}, 2^3]]["Normalized"], 
    Method -> "Classiq"];
+```
+
+Draw its circuit diagram:
+
+```wl
+#| eval: false
 qc["Diagram", "ShowGateLabels" -> False]
 ```
 
@@ -1204,20 +1317,26 @@ qc["Diagram", "ShowGateLabels" -> False]
 
 Collective measurement as well as POVM measurement are supported.
 
-Define a POVM measurement in a minimal information-ally complete basis:
+Define a POVM measurement in a minimal informationally complete basis:
 
 ```wl
 povm = QuantumMeasurementOperator["WignerMICPOVM"]
 ```
 
-Define a circuit consisting of the above measurements:
+Define a circuit consisting of a random state followed by the above measurement:
 
 ```wl
 qc = QuantumCircuitOperator[{QuantumState["RandomPure", 
-    "Label" -> "RandomState"], povm}]; qc["Diagram"]
+    "Label" -> "RandomState"], povm}];
 ```
 
-Show
+Draw its circuit diagram:
+
+```wl
+qc["Diagram"]
+```
+
+Show the outcome probabilities of the POVM:
 
 ```wl
 qc[]["Probabilities"]
@@ -1225,7 +1344,9 @@ qc[]["Probabilities"]
 
 ### Quantum teleportation
 
-We shall implement a quantum circuit for teleporting a qubit. The 1st and 2nd qubits represent Alice’s system, while the last one is Bob’s. The double lines carry classical bits. The state to be teleported is $|\psi _{1}\rangle=\alpha |0\rangle+\beta |1\rangle$, where α and β are unknown amplitudes.
+We shall implement a quantum circuit for teleporting a qubit. The 1st and 2nd qubits represent Alice's system, while the last one is Bob's. The double lines carry classical bits. The state to be teleported is $|\psi _{1}\rangle=\alpha |0\rangle+\beta |1\rangle$, where $\alpha$ and $\beta$ are unknown amplitudes.
+
+Build the teleportation circuit:
 
 ```wl
 circuit = 
@@ -1234,11 +1355,13 @@ circuit =
     "CX" -> {2, 3}, "CZ" -> {1, 3}, {1}, {2}}];
 ```
 
+Draw its circuit diagram:
+
 ```wl
 circuit["Diagram"]
 ```
 
-Trace out 1st and 2nd qubit on possible post-measurement states, and compare the reduced state of only qubit 3:
+Trace out the 1st and 2nd qubits for each possible post-measurement state, and compare the reduced state of qubit 3:
 
 ```wl
 Thread[QuantumState[{\[Alpha], \[Beta]}] == 
@@ -1254,23 +1377,35 @@ As an example of a quantum key distribution (QKD), consider the BB84 protocol. A
 aliceBits = RandomChoice[{0, 1}, 9]
 ```
 
+Her randomly chosen measurement bases:
+
 ```wl
 aliceBases = RandomChoice[{"Z", "X"}, 9]
 ```
 
-Depending on her choice of bit and base, she follows the following protocol for sending a qubit to Bob:
+Depending on her choice of bit and basis, she follows this protocol for sending a qubit to Bob:
 
 ```wl
 aliceProtocol = <|{0, "Z"} -> QuantumState[{1, 0}, "Z"], {0, "X"} -> 
     QuantumState[{1, 0}, "X"], {1, "Z"} -> 
     QuantumState[{0, 1}, "Z"], {1, "X"} -> QuantumState[{0, 1}, "X"]|>;
+```
+
+Show each protocol state as a formula:
+
+```wl
 #["Formula"] & /@ aliceProtocol // Normal // Column
 ```
 
-With Alice's bits and bases having been generated randomly, she will send Bob these qubits:
+With Alice's bits and bases generated randomly, she sends Bob the corresponding qubits:
 
 ```wl
 aliceQubits = aliceProtocol /@ Thread[List[aliceBits, aliceBases]];
+```
+
+Show each of those qubits as a formula:
+
+```wl
 #["Formula"] & /@ aliceQubits
 ```
 
@@ -1292,7 +1427,7 @@ Post-measurement, it is the case that, whenever Bob's measurement basis is not t
 mea = MapThread[#1[#2] &, {ops, aliceQubits}];
 ```
 
-Return one possible realization of Bob' s series of measurements (noting that some results will be consistent and other random, depending on Alice' s qubit and Bob's measurement):
+Return one possible realization of Bob's series of measurements (noting that some results will be consistent and others random, depending on Alice's qubit and Bob's measurement basis):
 
 ```wl
 bobRealization = #["SimulatedMeasurement"] & /@ mea
@@ -1316,11 +1451,15 @@ aliceSecretKey =
      bobBases}], #[[2]] == #[[3]] &][[All, 1]]
 ```
 
+Likewise, Bob keeps the bits where the bases agreed:
+
 ```wl
 bobSecretKey = 
  Select[Transpose[{bobBits, aliceBases, 
      bobBases}], #[[2]] == #[[3]] &][[All, 1]]
 ```
+
+The two secret keys coincide:
 
 ```wl
 bobSecretKey == aliceSecretKey
@@ -1376,12 +1515,17 @@ Apply this circuit to $|000\rangle\otimes |0\rangle$ (even parity) and $|001\ran
 
 ### Quantum Approximate Optimization Algorithm  (QAOA)
 
-One can find a binary vector $x$ that minimizes (or maximizes) the quadratic objective $x.q.x+c.x$, with no constrains. This is usually called as Quadratic Unconstrained Binary Optimization (QUBO). The linear term $c$ can be dropped, without losing generality.
+One can find a binary vector $x$ that minimizes (or maximizes) the quadratic objective $x.q.x+c.x$, with no constraints. This is usually called Quadratic Unconstrained Binary Optimization (QUBO). The linear term $c$ can be dropped without losing generality.
 
-Define a $4\times 4$ real-valued upper triangular matrix, as the objective matrix:
+Define a $4\times 4$ real-valued upper-triangular objective matrix:
 
 ```wl
 q = UpperTriangularize[RandomReal[{-5, 5}, {4, 4}]];
+```
+
+Show it in matrix form:
+
+```wl
 q // MatrixForm
 ```
 
@@ -1392,12 +1536,17 @@ Expand@Block[{x = Array[Indexed[\[FormalX], #] &, Length[q]]},
   x . q . x]
 ```
 
-Maximize and minimize the objective function (classical approach):
+Maximize the objective function classically:
 
 ```wl
 solMax = 
  NArgMax[{x . q . x, 0 \[VectorLess] x^2 \[VectorLessEqual] 1}, 
   x \[Element] Vectors[Length[q], Integers]]
+```
+
+Minimize it likewise:
+
+```wl
 solMin = 
  NArgMin[{x . q . x, 0 \[VectorLess] x^2 \[VectorLessEqual] 1}, 
   x \[Element] Vectors[Length[q], Integers]]
@@ -1424,14 +1573,19 @@ qaoa[obj_?SquareMatrixQ, p_ : 1] := With[{l = Length[obj]},
     ]["Flatten"]]
 ```
 
-Generate the circuit for the objective matrix, with only two layers:
+Set the number of QAOA layers:
 
 ```wl
 p = 2;
+```
+
+Generate the circuit for the objective matrix with two layers:
+
+```wl
 qaoa[q, p]["Diagram", FontSize -> 9, "ShowGateLabels" -> False]
 ```
 
-Define variable (angles) that should be optimized
+Define the variables (angles) to be optimized:
 
 ```wl
 var = Join[Table[\[Gamma][i], {i, p}], Table[\[Beta][i], {i, p}]]
@@ -1443,7 +1597,7 @@ Find the corresponding probabilities in the computational basis:
 weight = Abs[qaoa[q, p]["Amplitudes"]]^2;
 ```
 
-Find $\langle \gamma ,\beta |H|\gamma ,\beta \rangle$ with $H=\sum _{i>j}q_{\mathit{ij}}\sigma _{z,i}\sigma _{z,j}$ and $|\gamma ,\beta \rangle$ the output of above circuit
+Find $\langle \gamma ,\beta |H|\gamma ,\beta \rangle$ with $H=\sum _{i>j}q_{\mathit{ij}}\sigma _{z,i}\sigma _{z,j}$ and $|\gamma ,\beta \rangle$ the output of the above circuit:
 
 ```wl
 weightedEnergy = 
@@ -1454,13 +1608,18 @@ weightedEnergy =
      weight];
 ```
 
-Maximize and minimize the total weighted-mean value
+Maximize the total weighted-mean value over the angles:
 
 ```wl
 optMax = 
  Thread[var -> 
    NArgMax[{Total[weightedEnergy], 
      0 \[VectorLessEqual] var \[VectorLessEqual] 2 \[Pi]}, var]]
+```
+
+Minimize it likewise:
+
+```wl
 optMin = 
  Thread[var -> 
    NArgMin[{Total[weightedEnergy], 
@@ -1484,15 +1643,17 @@ Row[{With[{data = N[weightedEnergy /. optMax]},
     PlotLabel -> "Minimizing objective function", ImageSize -> 200]]}]
 ```
 
-Two solutions is due to the fact that NOT of solution is also a max/min ($(-x).q.(-x)=x.q.x$)
+There are two solutions because the NOT of a solution is also a max/min ($(-x).q.(-x)=x.q.x$).
 
-Check the classical solution is the same as quantum one:
+Check that the classical maximizing solution matches the quantum one:
 
 ```wl
 MemberQ[#["Name"] & /@ 
   Keys[TakeLargestBy[Normal@N[weightedEnergy /. optMax], Last, 2]], 
  solMax /. -1 -> 0]
 ```
+
+And likewise for the minimizing solution:
 
 ```wl
 MemberQ[#["Name"] & /@ 
@@ -1502,9 +1663,9 @@ MemberQ[#["Name"] & /@
 
 ### Harrow-Hassidim-Lloyd (HHL) algorithm
 
-Given a matrix A and a vector b, we want to solve $A\cdot x=b$
+Given a matrix *A* and a vector *b*, we want to solve $A\cdot x=b$.
 
-Generate HHL circuit that takes *A*, *b*, and number of ancillary qubits:
+Define a function that generates an HHL circuit from *A*, *b*, and a number of ancillary qubits:
 
 ```wl
 ClearAll[HHL]
@@ -1540,11 +1701,16 @@ HHL[A_?SquareMatrixQ, b_?VectorQ, prec : _Integer?Positive : 4] :=
   ]
 ```
 
-Generate a complex-valued random Hermitian of *n*-qubits (a matrix of *n×n*)
+Generate a complex-valued random Hermitian matrix on *n* = 4 qubits (size $2^n \times 2^n$):
 
 ```wl
 n = 4;
 a = QuantumOperator["RandomHermitian", n]["Matrix"];
+```
+
+Confirm it is Hermitian:
+
+```wl
 HermitianMatrixQ[a]
 ```
 
@@ -1552,42 +1718,52 @@ Generate a complex-valued random vector *b*:
 
 ```wl
 b = QuantumOperator["RandomUnitary", n]["Matrix"][[All, 1]];
+```
+
+Confirm it is normalized:
+
+```wl
 Norm[b]
 ```
 
-Create HHL circuit:
+Create the HHL circuit:
 
 ```wl
 hhl = N@HHL[a, b, 6];
+```
+
+Draw its circuit diagram:
+
+```wl
 hhl["Diagram", "ShowGateLabels" -> False]
 ```
 
-Given the result of above circuit, find corresponding amplitudes, and then normalize them to get solution of HHL solver:
+Given the result of the above circuit, find the corresponding amplitudes and normalize them to get the HHL solution:
 
 ```wl
 xHHL = hhl[]["Normalize"]["AmplitudesList"] // Chop
 ```
 
-Find the corresponding solution using classical approach:
+Find the corresponding solution using the classical approach:
 
 ```wl
 xClassical = Normalize@LinearSolve[a, b]
 ```
 
-Compare classical result with the quantum one (using the inner product as a measure; the closer to one the better)"
+Compare the classical result with the quantum one (using the inner product as a measure; the closer to one, the better):
 
 ```wl
 Abs[Conjugate[xClassical] . xHHL]^2
 ```
 
-As mentioned, the number of phase-estimation qubits (3rd argument) determines the precision of final outcome. Execute HHL with less phase-estimation qubits::
+The number of phase-estimation qubits (the 3rd argument) determines the precision of the final outcome. Execute HHL with fewer phase-estimation qubits:
 
 ```wl
 xHHLLowPrecision = 
  N[HHL[a, b, 3]][]["Normalize"]["AmplitudesList"] // Chop
 ```
 
-Quantify the good ness of HHL result in compared with the classical result:
+Quantify the goodness of the HHL result compared with the classical result:
 
 ```wl
 Abs[Conjugate[xClassical] . xHHLLowPrecision]^2
@@ -1630,12 +1806,17 @@ Compare the fidelity of the recovered logical qubit with that of the same qubit 
 
 The encoded qubit stays closer to the original. Because the code removes every single-qubit error, the logical infidelity grows as $p^2$ rather than $p$, so encoding wins for every $p<1/2$.
 
-Tabulate both fidelities across the noise range and plot them:
+Tabulate both fidelities across the noise range:
 
 ```wl
 data = Table[{p, QuantumSimilarity[psi, protected[p], "Fidelity"], 
     QuantumSimilarity[psi, QuantumChannel["BitFlip"[p]][psi], 
      "Fidelity"]}, {p, 0, 0.5, 0.05}];
+```
+
+Plot the encoded and unencoded fidelities together:
+
+```wl
 ListLinePlot[{data[[All, {1, 2}]], data[[All, {1, 3}]]}, 
  PlotLegends -> {"encoded", "unencoded"}, 
  AxesLabel -> {"p", "fidelity"}, PlotMarkers -> Automatic]
@@ -1686,9 +1867,10 @@ switchTest[QuantumOperator["X"], QuantumOperator["H"]][]["Probabilities"]
 
 ## Possible Issues
 
-Using Qiskit as Method, if too many qubits, the result will be an association and not a quantum measurement object:
+Using Qiskit as the method, when there are too many qubits, the result is an Association rather than a quantum measurement object:
 
 ```wl
+#| eval: false
 QuantumCircuitOperator[{QuantumOperator["RandomUnitary", Range[10]], 
    Range[10]}][Method -> "Qiskit"]
 ```

@@ -187,6 +187,28 @@ qtest[FailureQ @ QuantumQASM[qc, {"x", "sx", "rz", "cz"}, "CouplingMap" -> cmap,
 qtest[FailureQ @ QuantumQASM[qc, {"x", "sx", "rz", "cz"}, "BasisGates" -> {"x"}], True, "basis-given-twice-failure"]
 
 
+(* ---- transpiled export with no routing target is portable and round-trips ----
+   transpile attaches a TranspileLayout even with no coupling map / target, which makes
+   qasm3.dumps emit physical qubits ($0) with no qubit declaration: not portable, not
+   re-importable. The layout is stripped in that case so the dump uses the named register.
+   CHSH is used because its permutation forces a non-trivial layout. *)
+
+chshCirc = QuantumCircuitOperator["CHSH"];
+
+qtest[
+    With[{s = QuantumQASM[chshCirc, {"u", "cx"}]},
+        StringQ[s] && StringContainsQ[s, "qubit["] && ! StringContainsQ[s, "$"]
+    ],
+    True, "transpiled-export-portable-no-physical-qubits"
+]
+
+qtest[Head @ QuantumQASM[QuantumQASM[chshCirc, {"u", "cx"}]], QuantumCircuitOperator, "transpiled-export-roundtrips"]
+
+(* a bare (full-width) barrier spans all qubits, not the meaningless empty 'barrier ;' a
+   zero-qubit Barrier(0) would dump *)
+qtest[! StringContainsQ[QuantumQASM[chshCirc, {"u", "cx"}], "barrier ;"], True, "bare-barrier-spans-all-qubits"]
+
+
 (* ---- QiskitTarget ---- *)
 
 qtest[Head @ QiskitTarget[tspec], QiskitTarget, "target-head"]
@@ -516,5 +538,77 @@ qtest[matEquivQ[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]["Decompose"]["M
 
 (* ---- 5h: scale / outcome on a larger circuit (8x8 ... 64x64 unitaries) ---- *)
 qtest[decodeCleanQ[QuantumCircuitOperator["Fourier"[6]]], True, "decode-QFT6-scale"]
+
+EndTestSection[]
+
+
+BeginTestSection["IBMJobSubmitOptionValidation"]
+
+(* IBMJobSubmit validates its PrimitiveOptions against qiskit's own SamplerOptions /
+   EstimatorOptions schema BEFORE transpiling or submitting, via ibmValidatePrimitiveOptions, which
+   applies the options to a throwaway options object (no backend, no network). These tests pin the
+   error MESSAGE for each failure mode and confirm valid options pass. They reuse the qiskitOK
+   self-guard above, so they trivially pass when no qiskit Python session is available.
+
+   Assertions match the STABLE part of each message (the offending key, the primitive, and the
+   cross-primitive hint) with StringContainsQ; the trailing "Valid options here: ..." list is
+   checked only for representative entries, since qiskit may add option fields between versions. *)
+
+iv = Wolfram`QuantumFramework`PackageScope`ibmValidatePrimitiveOptions;
+ivMsg[prim_String, o_Association] := Replace[iv[prim, o], f_?FailureQ :> f[[2]]["MessageParameters"][[1]]];
+
+(* a key valid only on the OTHER primitive (resilience_level is estimator-only) gets the full
+   diagnostic: the key, "not a valid option for the 'sampler' primitive", and the cross-primitive
+   hint, followed by the valid sampler options *)
+qtest[
+    With[{m = ivMsg["sampler", <|"ResilienceLevel" -> 1|>]},
+        StringContainsQ[m,
+            "'ResilienceLevel' is not a valid option for the 'sampler' primitive. It is an 'estimator' option, but this is a 'sampler' job. Valid options here:"] &&
+        StringContainsQ[m, "DynamicalDecoupling"] && StringContainsQ[m, "MaxExecutionTime"]
+    ],
+    True, "ibmopt-sampler-resilience-crossprimitive-message"
+]
+
+(* the same call is a Failure tagged IBMJobSubmit *)
+qtest[FailureQ @ iv["sampler", <|"ResilienceLevel" -> 1|>], True, "ibmopt-invalid-is-failure"]
+qtest[iv["sampler", <|"ResilienceLevel" -> 1|>][[1]], "IBMJobSubmit", "ibmopt-failure-tag"]
+
+(* a typo in a NESTED option reports the dotted path and the valid keys of that sub-object *)
+qtest[
+    With[{m = ivMsg["sampler", <|"DynamicalDecoupling" -> <|"Enabel" -> True|>|>]},
+        StringContainsQ[m, "'DynamicalDecoupling.Enabel' is not a valid option for the 'sampler' primitive."] &&
+        StringContainsQ[m, "Enable"]
+    ],
+    True, "ibmopt-nested-typo-message"
+]
+
+(* an unknown top-level key that is NOT an option of the other primitive gets NO cross hint *)
+qtest[
+    With[{m = ivMsg["sampler", <|"Flibbertigibbet" -> 7|>]},
+        StringContainsQ[m, "'Flibbertigibbet' is not a valid option for the 'sampler' primitive."] &&
+        ! StringContainsQ[m, "It is an"]
+    ],
+    True, "ibmopt-unknown-key-no-crosshint"
+]
+
+(* a value qiskit's schema rejects (wrong type) is reported per-key, not as a raw pydantic dump *)
+qtest[
+    With[{m = ivMsg["sampler", <|"DefaultShots" -> "lots"|>]},
+        StringContainsQ[m, "'DefaultShots' could not be set to 'lots'"] && StringContainsQ[m, "ValidationError"]
+    ],
+    True, "ibmopt-bad-value-type-message"
+]
+
+(* valid sampler options (including a nested one) pass: validator returns Null *)
+qtest[
+    iv["sampler", <|"DefaultShots" -> 1000, "DynamicalDecoupling" -> <|"Enable" -> False|>, "Twirling" -> <|"EnableGates" -> True|>|>],
+    Null, "ibmopt-sampler-valid-passes"
+]
+
+(* resilience_level IS valid on the estimator, so the same option that fails for a sampler passes here *)
+qtest[iv["estimator", <|"ResilienceLevel" -> 1|>], Null, "ibmopt-estimator-resilience-valid"]
+
+(* empty options are trivially valid *)
+qtest[iv["sampler", <||>], Null, "ibmopt-empty-valid"]
 
 EndTestSection[]

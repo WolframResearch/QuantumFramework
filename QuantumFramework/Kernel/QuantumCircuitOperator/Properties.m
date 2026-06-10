@@ -419,13 +419,47 @@ QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCirc
 QuantumCircuitOperatorProp[qco_, "ZXTensorNetwork", opts : OptionsPattern[ZXTensorNetwork]] := ZXTensorNetwork[qco, opts]
 
 
+(* A state-injection operator has no input qudits and at least one output qudit (e.g. a
+   Cup or a |+> ket): it prepares a state rather than acting as a gate, so OpenQASM (which
+   starts every qubit in |0>) cannot represent it directly. It is lowered to a reset
+   followed by a preparation gate sequence (the same decomposition the qiskit path uses).
+   A co-state / projection (Cap: output dim 1, input dim > 1) is NOT an injection and falls
+   through to the gate emitter, which reports it as non-serializable. *)
+qasmStateInjectionQ[op_] := MatchQ[op, _QuantumOperator] && op["InputDimension"] == 1 && op["OutputDimension"] >= 2
+
+qasmZeroStateQ[state_] := With[{v = Normal[state["StateVector"]]},
+    TrueQ[Chop[Norm[v - UnitVector[Length[v], 1]]] == 0]
+]
+
+(* Lower a state-injection operator to OpenQASM lines: reset for a |0...0> injection (the
+   base case), otherwise decompose the state into a preparation circuit on the target wires
+   and recurse (its leading |0> kets become resets, the rest become gates). *)
+qasmStatePrepLines[op_] := Module[{state = op["State"], order = op["OutputOrder"], subOps},
+    If[ qasmZeroStateQ[state],
+        Map["reset q[" <> ToString[# - 1] <> "];" &, order],
+        subOps = QuantumCircuitOperator[QuantumCircuitOperator[state], order]["Flatten"]["Operators"];
+        Catenate @ Map[
+            Function[sub,
+                If[ qasmStateInjectionQ[sub],
+                    qasmStatePrepLines[sub],
+                    (* qasmEmitOperator always returns a string: a gate line, or the
+                       "// Unimplemented" marker that qasmEmitCircuit turns into a failure *)
+                    {sub["QASM"]}
+                ]
+            ],
+            subOps
+        ]
+    ]
+]
+
 qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
     (* fold over operators threading a global classical-bit counter, so successive
        measurements write c[0], c[1], ... instead of every one writing c[0]. *)
     lines = DeleteCases[""] @ First @ Fold[
         Function[{state, op},
             With[{acc = state[[1]], clbit = state[[2]]},
-                If[ QuantumMeasurementOperatorQ[op],
+                Which[
+                    QuantumMeasurementOperatorQ[op],
                     With[{targets = op["Target"]},
                         {
                             Append[acc, StringRiffle[MapIndexed[
@@ -434,6 +468,9 @@ qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
                             clbit + Length[targets]
                         }
                     ],
+                    qasmStateInjectionQ[op],
+                    {Join[acc, qasmStatePrepLines[op]], clbit},
+                    True,
                     {Append[acc, ConfirmBy[op["QASM"], StringQ]], clbit}
                 ]
             ]
@@ -455,7 +492,9 @@ qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
             "Hint" -> "Pass a native gate set so QuantumQASM transpiles the circuit first."
         |>]
     ];
-    StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
+    (* qubit count is the highest wire index ("Max"), not "Arity": a circuit that begins
+       with state preparation has input arity 0 but still acts on all its wires *)
+    StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Max"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
 ]
 
 QuantumCircuitOperatorProp[qco_, "QASM"] := QuantumQASM[qco, "WL"]
