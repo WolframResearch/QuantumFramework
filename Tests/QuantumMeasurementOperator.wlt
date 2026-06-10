@@ -29,6 +29,49 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QuantumMeasurementOperator - Computational property"]
+
+(* gh#3: ["Computational"] used to silently corrupt non-Z measurement statistics
+   by rebuilding the QMO with the operator re-seated into the computational frame,
+   stripping the eigenvalue-tagged pointer labels. It should now leave a non-
+   computational measurement untouched. *)
+VerificationTest[
+    Values @ QuantumMeasurementOperator["X", {1}]["Computational"][QuantumState["+"]]["Probabilities"],
+    {1, 0},
+    TestID -> "Computational-X-plus"
+]
+
+VerificationTest[
+    Values @ QuantumMeasurementOperator["X", {1}]["Computational"][QuantumState["-"]]["Probabilities"],
+    {0, 1},
+    TestID -> "Computational-X-minus"
+]
+
+VerificationTest[
+    Values @ QuantumMeasurementOperator["Y", {1}]["Computational"][QuantumState["+"]]["Probabilities"],
+    {1/2, 1/2},
+    TestID -> "Computational-Y-plus"
+]
+
+(* a Z measurement is already in the computational frame and continues to be
+   rebuilt through the standard path *)
+VerificationTest[
+    Values @ QuantumMeasurementOperator["Z", {1}]["Computational"][QuantumState["0"]]["Probabilities"],
+    {1, 0},
+    TestID -> "Computational-Z-zero"
+]
+
+(* circuit-level: QuantumCircuitOperator[...]["Computational"] maps the property
+   over each element; the non-Z measurement inside must stay faithful *)
+VerificationTest[
+    Values @ QuantumCircuitOperator[{"H" -> 1, QuantumMeasurementOperator["X", {1}]}]["Computational"][QuantumState["0"]]["Probabilities"],
+    {1, 0},
+    TestID -> "Computational-circuit-H-then-X"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumMeasurementOperator - failure"]
 
 VerificationTest[
