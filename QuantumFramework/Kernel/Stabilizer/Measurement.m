@@ -2,6 +2,8 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope[agPhase]
 PackageScope[rowsum]
+PackageScope[packedRowSumPhase]
+PackageScope[packedMeasureZ]
 
 
 
@@ -56,34 +58,114 @@ ps_PauliStabilizer["Measure" | "M", a_Integer] /;
         $Failed
 )
 
-ps_PauliStabilizer["Measure" | "M", a_Integer] := Enclose @ Block[{
-    r = ps["Signs"],
-    t = ps["Tableau"],
-    n = ps["GeneratorCount"],
-    pos
-},
-    ConfirmAssert[1 <= a <= n];
-    pos = Lookup[PositionIndex[t[[1, a]]], 1, {}];
-    Association @ With[{p = SelectFirst[pos, GreaterThan[n]]},
-        If[ MissingQ[p],
-            (* deterministic case: no stabilizer anticommutes with Z_a *)
-            {(1 - Last[#1]) / 2 -> PauliStabilizer[<|"Signs" -> Most[#1], "Tableau" -> t|>]} & @@
-                Fold[
-                    rowsum[#1, 2 n + 1, #2 + n] &,
-                    {Append[r, 1], PadRight[t, Dimensions[t] + {0, 0, 1}]},
-                    Select[pos, LessEqualThan[n]]
-                ],
+(* ============================================================================ *)
+(* Packed AG measurement (Stabilizer/Packed.m representation).                   *)
+(*                                                                              *)
+(* packedRowSumPhase computes the AG i-power (mod 4) of the Pauli product        *)
+(* P(row i) . P(row h) by the carry-save trick (external-packages-audit          *)
+(* \[Section]4.1): two parity bits accumulated word-by-word over the packed      *)
+(* chunks, then popcount via DigitCount. This is the bit-for-bit equivalent of   *)
+(* Total @ MapThread[agPhase, ...] over the rank-3 tableau (verified, TIER 11).  *)
+(* X, Z are {#chunks, 2n} machine-int matrices (chunk \[Times] row).             *)
+(* ============================================================================ *)
 
-            (* non-deterministic case: one stabilizer anticommutes *)
-            Block[{r2, t2},
-                {r2, t2} = Fold[rowsum[#1, #2, p] &, {r, t}, Select[pos, GreaterThan[p]]];
-                t2[[All, All, p - n]] = t2[[All, All, p]];
-                t2[[All, All, p]] = 0;
-                t2[[2, a, p]] = 1;
-                # -> PauliStabilizer[<|
-                    "Signs" -> ReplacePart[r2, p -> 1 - 2 #],
-                    "Tableau" -> t2
-                |>] & /@ {0, 1}
+packedRowSumPhase[x_, z_, i_Integer, h_Integer] := Mod[#1 + 2 #2, 4] & @@ DigitCount[
+    Fold[
+        Function[{cc, w},
+            With[{
+                anti = BitXor[BitAnd[x[[w, h]], z[[w, i]]], BitAnd[x[[w, i]], z[[w, h]]]]
+            },
+                {
+                    BitXor[cc[[1]], anti],
+                    BitXor[cc[[2]], BitAnd[BitXor[cc[[1]], x[[w, i]], x[[w, h]], z[[w, i]], z[[w, h]], BitAnd[x[[w, i]], z[[w, h]]]], anti]]
+                }
+            ]
+        ],
+        {0, 0},
+        Range[Length[x]]
+    ],
+    2, 1
+]
+
+(* packedMeasureZ[ps, a]: Z-basis measurement of qubit a on a concrete ps,       *)
+(* returning the same conditional Association as the canonical path -- a single  *)
+(* key for deterministic outcomes, {0 -> ., 1 -> .} when random. Post-states are *)
+(* packed. Mirrors AarGot04 \[Section]3 (destabilizer trick).                    *)
+packedMeasureZ[ps_PauliStabilizer, a_Integer] := Block[{
+    tup = psGetPacked[ps], n, x, z, ph, ca, ba, m, pos, p
+},
+    n = tup[[1]]; x = tup[[2]]; z = tup[[3]]; ph = (1 - tup[[4]]) / 2;
+    ca = Quotient[a - 1, $chunkWidth] + 1; ba = Mod[a - 1, $chunkWidth]; m = BitShiftLeft[1, ba];
+    pos = Lookup[PositionIndex[Sign[BitAnd[x[[ca]], m]]], 1, {}];
+    With[{firstStab = SelectFirst[pos, GreaterThan[n]]},
+        If[ MissingQ[firstStab],
+            (* deterministic: accumulate the stabilizer product into a scratch    *)
+            (* row (column 2n+1) and read its phase bit as the outcome; state      *)
+            (* unchanged.                                                          *)
+            Block[{xs = Map[Append[#, 0] &, x], zs = Map[Append[#, 0] &, z], phs = Append[ph, 0], sc = 2 n + 1},
+                Scan[
+                    Function[i,
+                        phs[[sc]] = Mod[2 phs[[sc]] + 2 phs[[i + n]] + packedRowSumPhase[xs, zs, i + n, sc], 4] / 2;
+                        xs[[All, sc]] = BitXor[xs[[All, sc]], xs[[All, i + n]]];
+                        zs[[All, sc]] = BitXor[zs[[All, sc]], zs[[All, i + n]]]
+                    ],
+                    Select[pos, LessEqualThan[n]]
+                ];
+                <|phs[[sc]] -> ps|>
+            ],
+            (* non-deterministic: clear the other anticommuting rows into          *)
+            (* firstStab, promote it to a destabilizer, install Z_a with random    *)
+            (* sign.                                                               *)
+            Block[{x2 = x, z2 = z, ph2 = ph, p = firstStab},
+                Scan[
+                    Function[h,
+                        ph2[[h]] = Mod[2 ph2[[h]] + 2 ph2[[p]] + packedRowSumPhase[x2, z2, p, h], 4] / 2;
+                        x2[[All, h]] = BitXor[x2[[All, h]], x2[[All, p]]];
+                        z2[[All, h]] = BitXor[z2[[All, h]], z2[[All, p]]]
+                    ],
+                    Select[pos, GreaterThan[p]]
+                ];
+                x2[[All, p - n]] = x2[[All, p]]; z2[[All, p - n]] = z2[[All, p]];
+                x2[[All, p]] = 0 x2[[All, p]]; z2[[All, p]] = 0 z2[[All, p]];
+                z2[[ca, p]] = m;
+                Association[# -> psFromPacked[{n, x2, z2, 1 - 2 ReplacePart[ph2, p -> #]}] & /@ {0, 1}]
+            ]
+        ]
+    ]
+]
+
+
+ps_PauliStabilizer["Measure" | "M", a_Integer] := If[psConcreteFastQ[ps] && 1 <= a <= ps["GeneratorCount"],
+    packedMeasureZ[ps, a],
+    Enclose @ Block[{
+        r = ps["Signs"],
+        t = ps["Tableau"],
+        n = ps["GeneratorCount"],
+        pos
+    },
+        ConfirmAssert[1 <= a <= n];
+        pos = Lookup[PositionIndex[t[[1, a]]], 1, {}];
+        Association @ With[{p = SelectFirst[pos, GreaterThan[n]]},
+            If[ MissingQ[p],
+                (* deterministic case: no stabilizer anticommutes with Z_a *)
+                {(1 - Last[#1]) / 2 -> PauliStabilizer[<|"Signs" -> Most[#1], "Tableau" -> t|>]} & @@
+                    Fold[
+                        rowsum[#1, 2 n + 1, #2 + n] &,
+                        {Append[r, 1], PadRight[t, Dimensions[t] + {0, 0, 1}]},
+                        Select[pos, LessEqualThan[n]]
+                    ],
+
+                (* non-deterministic case: one stabilizer anticommutes *)
+                Block[{r2, t2},
+                    {r2, t2} = Fold[rowsum[#1, #2, p] &, {r, t}, Select[pos, GreaterThan[p]]];
+                    t2[[All, All, p - n]] = t2[[All, All, p]];
+                    t2[[All, All, p]] = 0;
+                    t2[[2, a, p]] = 1;
+                    # -> PauliStabilizer[<|
+                        "Signs" -> ReplacePart[r2, p -> 1 - 2 #],
+                        "Tableau" -> t2
+                    |>] & /@ {0, 1}
+                ]
             ]
         ]
     ]

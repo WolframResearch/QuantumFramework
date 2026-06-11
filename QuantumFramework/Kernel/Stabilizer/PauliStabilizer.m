@@ -120,33 +120,49 @@ ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
 (* (preserves Method -> "Stabilizer" wire compatibility for QuantumCircuitOperator)  *)
 (* ============================================================================ *)
 
-PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] := Fold[
-    Function[{state, gate},
-        (* Short-circuit: once a non-Clifford gate has aborted the fold,        *)
-        (* propagate $Failed without firing the message again for every         *)
-        (* remaining gate.                                                       *)
-        If[state === $Failed,
-            $Failed,
-            With[{
-                rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
-            },
-                With[{result = state[rewrittenGate]},
-                    Which[
-                        (* Clifford gate: PauliStabilizer in, PauliStabilizer out. *)
-                        PauliStabilizerQ[result], result,
-                        (* Non-Clifford gate that returns a StabilizerFrame (e.g. P[\[Theta]], T, T\[Dagger]). *)
-                        StabilizerFrameQ[result], result,
-                        (* Gate produced a Plus (superposition of stabilizer states): carry it through. *)
-                        MatchQ[result, _Plus], result,
-                        (* state was already a Plus and didn't distribute over the gate; pass it through. *)
-                        MatchQ[state, _Plus], state,
-                        (* Unknown / unsupported gate. *)
-                        True, Message[PauliStabilizer::nonclifford, gate]; $Failed
-                    ]
+PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] :=
+    With[{
+        init = Replace[qs, {Automatic :> PauliStabilizer[qco["Arity"]], s_QuantumState :> PauliStabilizer[s]}],
+        gateSpecs = QuantumShortcut[qco]
+    },
+        (* Fast path: a pure-Clifford circuit (every gate in the compiled set)    *)
+        (* over a concrete state folds in one compiled kernel call               *)
+        (* (Stabilizer/Compiled.m). encodeStabilizerGates returns $Failed for any *)
+        (* gate outside the set, so non-Clifford or controlled circuits fall      *)
+        (* through to the per-gate fold below unchanged.                          *)
+        With[{gates = If[PauliStabilizerQ[init] && psConcreteFastQ[init], encodeStabilizerGates[gateSpecs], $Failed]},
+            If[ ListQ[gates],
+                applyCompiledFold[init, gates],
+                Fold[
+                    Function[{state, gate},
+                        (* Short-circuit: once a non-Clifford gate has aborted the fold,        *)
+                        (* propagate $Failed without firing the message again for every         *)
+                        (* remaining gate.                                                       *)
+                        If[state === $Failed,
+                            $Failed,
+                            With[{
+                                rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
+                            },
+                                With[{result = state[rewrittenGate]},
+                                    Which[
+                                        (* Clifford gate: PauliStabilizer in, PauliStabilizer out. *)
+                                        PauliStabilizerQ[result], result,
+                                        (* Non-Clifford gate that returns a StabilizerFrame (e.g. P[\[Theta]], T, T\[Dagger]). *)
+                                        StabilizerFrameQ[result], result,
+                                        (* Gate produced a Plus (superposition of stabilizer states): carry it through. *)
+                                        MatchQ[result, _Plus], result,
+                                        (* state was already a Plus and didn't distribute over the gate; pass it through. *)
+                                        MatchQ[state, _Plus], state,
+                                        (* Unknown / unsupported gate. *)
+                                        True, Message[PauliStabilizer::nonclifford, gate]; $Failed
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    init,
+                    gateSpecs
                 ]
             ]
         ]
-    ],
-    Replace[qs, {Automatic :> PauliStabilizer[qco["Arity"]], s_QuantumState :> PauliStabilizer[s]}],
-    QuantumShortcut[qco]
-]
+    ]

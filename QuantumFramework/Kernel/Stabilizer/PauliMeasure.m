@@ -53,12 +53,10 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
     ];
     If[anticommIdx === {},
         (* DETERMINISTIC: P (or -P) commutes with all stabilizers => P is in the
-           Abelian closure. Compute <P> exactly via direct vector materialization
-           (TODO: AG closed-form with i-factor tracking).
-           The outcome bit is (1 - <P>) / 2. *)
-        With[{vec = ps["State"]["StateVector"], pauliMat = stringToPauliMatrix[pauliString]},
-            <|Round[(1 - Re[Conjugate[vec] . pauliMat . vec]) / 2] -> ps|>
-        ],
+           Abelian closure. The expectation <P> = +-1 is recovered by the AG
+           closed-form i-factor tracking (stabilizerExpectation, O(n^2)) rather
+           than materializing the 2^n state vector. The outcome bit is (1-<P>)/2. *)
+        <|(1 - stabilizerExpectation[ps, pauliString]) / 2 -> ps|>,
         (* NON-DETERMINISTIC: at least one stabilizer anticommutes with P.       *)
         (* AG §3 Case I: replace the first anticommuting generator with (-1)^b·P*)
         (* (step 1) and update the OTHER anticommuting generators by row-       *)

@@ -1,5 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope[$chunkWidth]
 PackageScope[psPackedQ]
 PackageScope[psConcreteFastQ]
 PackageScope[psGetPacked]

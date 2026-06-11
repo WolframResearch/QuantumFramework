@@ -6,9 +6,13 @@ Package["Wolfram`QuantumFramework`"]
 (* Direct property handlers                                                     *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["Qudits" | "Qubits"] := Dimensions[ps["Tableau"]][[2]]
+(* Packed objects carry the qubit count directly; reading it avoids             *)
+(* reconstructing the rank-3 array (an O(n^2) rebuild) just to take a dimension. *)
+ps_PauliStabilizer["Qudits" | "Qubits"] :=
+    If[ KeyExistsQ[First[ps], "PackedX"], First[ps]["Qubits"], Dimensions[ps["Tableau"]][[2]] ]
 
-ps_PauliStabilizer["GeneratorCount"] := Dimensions[ps["Tableau"]][[3]] / 2
+ps_PauliStabilizer["GeneratorCount"] :=
+    If[ KeyExistsQ[First[ps], "PackedX"], First[ps]["Qubits"], Dimensions[ps["Tableau"]][[3]] / 2 ]
 
 ps_PauliStabilizer["StabilizerSigns"] := Drop[ps["Signs"], ps["GeneratorCount"]]
 ps_PauliStabilizer["StabilizerTableau" | "Stabilizer"] := Map[Drop[#, ps["GeneratorCount"]] &, ps["Tableau"], {2}]

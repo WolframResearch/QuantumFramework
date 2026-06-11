@@ -34,8 +34,13 @@ left_PauliStabilizer[right_PauliStabilizer] := Enclose @ Block[{
     {x1, z1} = Transpose /@ first["Tableau"];
     ifacts = Total[BitAnd[second["X"], second["Z"]]] + Map[
         With[{x1s = Pick[x1, #, 1], z1s = Pick[z1, #, 1]},
-            Total @ Extract[phaseLookup,
-                Thread[Flatten[#] + 1 & /@ {Rest[x1s], Rest[z1s], Most @ FoldList[BitXor, x1s], Most @ FoldList[BitXor, z1s]}]
+            (* A row selecting 0 or 1 generators contributes no consecutive-product *)
+            (* phase; guarding it also avoids Rest[{}]/Most[{}] on an all-zero row.  *)
+            If[ Length[x1s] <= 1,
+                0,
+                Total @ Extract[phaseLookup,
+                    Thread[Flatten[#] + 1 & /@ {Rest[x1s], Rest[z1s], Most @ FoldList[BitXor, x1s], Most @ FoldList[BitXor, z1s]}]
+                ]
             ]
         ] &,
         second["Matrix"]

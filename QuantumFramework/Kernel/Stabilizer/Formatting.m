@@ -4,6 +4,11 @@ PackageScope[PauliForm]
 PackageScope[TableauForm]
 
 
+(* Pauli letter indexed by the code  x + 2 z  (I=00, X=10, Z=01, Y=11), i.e.    *)
+(* {0,0}->I, {1,0}->X, {0,1}->Z, {1,1}->Y. The 1-based offset is applied below.  *)
+$pauliLetters = {"I", "X", "Z", "Y"}
+
+
 
 (* ============================================================================ *)
 (* Pauli-string display form                                                    *)
@@ -21,11 +26,15 @@ pauliFormSignString[1] := ""
 pauliFormSignString[-1] := "-"
 pauliFormSignString[s_] := ToString[s, InputForm] <> "*"
 
+(* The Pauli letters are read off by arithmetic indexing  x + 2 z  into          *)
+(* $pauliLetters, replacing an O(n_qubits * n_rows) element-by-element pattern    *)
+(* Replace with one Part lookup per row. tableau[[1]]/[[2]] are the X/Z blocks    *)
+(* {n_qubits, n_rows}; transposing the code grid gives one index vector per row.  *)
 PauliForm[signs_, tableau_] := If[MatchQ[Dimensions[tableau], {2, n_, m_} /; 0 < m < n], Append["\[Ellipsis]"], Identity] @ MapThread[
     StringJoin,
     {
         pauliFormSignString /@ signs,
-        StringJoin @@@ Replace[Transpose[tableau, {3, 2, 1}], {{0, 0} -> "I", {1, 0} -> "X", {1, 1} -> "Y", {0, 1} -> "Z"}, {2}]
+        StringJoin[$pauliLetters[[#]]] & /@ Transpose[tableau[[1]] + 2 tableau[[2]] + 1]
     }
 ]
 

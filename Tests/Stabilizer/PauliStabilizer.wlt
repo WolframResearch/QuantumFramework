@@ -2205,4 +2205,138 @@ Do[
 ]
 
 
+(* ============================================================================ *)
+(* TIER 10 -- Compiled bulk gate-fold (Stabilizer/Compiled.m).                   *)
+(*                                                                              *)
+(* ps["ApplyCircuit", specs] folds a whole Clifford circuit in one compiled      *)
+(* kernel call. It must reproduce the per-gate dispatch fold exactly across      *)
+(* single-chunk, chunk-boundary, and multi-chunk sizes, for every gate in the    *)
+(* compiled set, and fall back cleanly on non-Clifford gates.                    *)
+(* ============================================================================ *)
+
+SeedRandom[101010];
+randCircSpec[n_] := With[{g = RandomChoice[{"H", "S", "X", "Y", "Z", "CNOT", "CZ", "SWAP"}]},
+    If[MatchQ[g, "CNOT" | "CZ" | "SWAP"],
+        g -> With[{a = RandomInteger[{1, n}]}, {a, With[{b = RandomInteger[{1, n}]}, If[b == a, Mod[a, n] + 1, b]]}],
+        g -> RandomInteger[{1, n}]
+    ]
+];
+
+Do[
+    VerificationTest[
+        Module[{specs = Table[randCircSpec[n], {300}], compiled, folded},
+            compiled = PauliStabilizer[n]["ApplyCircuit", specs];
+            folded = Fold[#1[#2] &, PauliStabilizer[n], specs];
+            compiled["Tableau"] === folded["Tableau"] && compiled["Signs"] === folded["Signs"]
+        ],
+        True,
+        TestID -> "Tier10-CompiledFold-n" <> ToString[n]
+    ],
+    {n, {3, 8, 62, 63, 100, 130}}
+]
+
+VerificationTest[
+    PauliStabilizer[5]["ApplyCircuit", {}]["Stabilizers"],
+    PauliStabilizer[5]["Stabilizers"],
+    TestID -> "Tier10-EmptyCircuit-Identity"
+]
+
+(* The closed-form integer constructor must agree exactly with the generic       *)
+(* validated-array route it replaced.                                            *)
+VerificationTest[
+    AllTrue[Range[12],
+        Function[q,
+            With[{direct = PauliStabilizer[q], validated = PauliStabilizer[{ConstantArray[0, {q, q}], Normal @ IdentityMatrix[q]}]},
+                direct["Tableau"] === validated["Tableau"] && direct["Signs"] === validated["Signs"]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "Tier10-IntegerCtor-ClosedForm"
+]
+
+VerificationTest[
+    PauliStabilizer[2]["H", 1]["H", 2]["ApplyCircuit", {"CZ" -> {1, 2}}]["Stabilizers"],
+    PauliStabilizer[2]["H", 1]["H", 2]["ApplyCircuit", {"CZ" -> {2, 1}}]["Stabilizers"],
+    TestID -> "Tier10-CZ-Symmetric"
+]
+
+(* Single-gate ApplyCircuit equals the direct gate call. *)
+VerificationTest[
+    With[{ps = PauliStabilizer[4]["H", 1]["CNOT", 1, 2]},
+        And @@ (
+            ps["ApplyCircuit", {#}]["Tableau"] === ps[Sequence @@ Replace[#, (h_ -> o_) :> {h, Sequence @@ Flatten[{o}]}]]["Tableau"] & /@
+                {"H" -> 3, "S" -> 2, "X" -> 1, "Z" -> 4, "CNOT" -> {2, 3}, "SWAP" -> {1, 4}}
+        )
+    ],
+    True,
+    TestID -> "Tier10-SingleGate-Matches"
+]
+
+(* Non-Clifford gate is not encodable -> ApplyCircuit falls back to the per-gate *)
+(* dispatch, and T returns a StabilizerFrame. *)
+VerificationTest[
+    Head @ PauliStabilizer[1]["ApplyCircuit", {"H" -> 1, "T" -> 1}],
+    StabilizerFrame,
+    TestID -> "Tier10-NonClifford-Fallback"
+]
+
+
+(* ============================================================================ *)
+(* TIER 11 -- Packed AG measurement (Stabilizer/Measurement.m).                  *)
+(*                                                                              *)
+(* The packed Z-basis measurement is checked against an INDEPENDENT projective   *)
+(* measurement of the materialized state vector, plus the textbook determinism   *)
+(* and correlation structure.                                                    *)
+(* ============================================================================ *)
+
+VerificationTest[Keys @ PauliStabilizer[4]["M", 2], {0}, TestID -> "Tier11-Zero-Deterministic"]
+
+VerificationTest[
+    Keys @ (PauliStabilizer[2]["H", 1]["CNOT", 1, 2])["M", {1, 2}],
+    {{0, 0}, {1, 1}},
+    TestID -> "Tier11-Bell-Correlated"
+]
+
+VerificationTest[
+    Keys @ (PauliStabilizer[3]["H", 1]["CNOT", 1, 2]["CNOT", 2, 3])["M", {1, 2, 3}],
+    {{0, 0, 0}, {1, 1, 1}},
+    TestID -> "Tier11-GHZ-Correlated"
+]
+
+(* Physical equivalence: every returned outcome's post-state matches the         *)
+(* normalized projection P_b|psi> up to global phase, for random states.         *)
+SeedRandom[222222];
+projMeasureMatchQ[n_Integer] := Module[{ps, a, vec, za, kerAssoc},
+    ps = Fold[#1[#2] &, PauliStabilizer[n], Table[randCircSpec[n], {3 n}]];
+    a = RandomInteger[{1, n}];
+    vec = Normal @ ps["State"]["StateVector"];
+    za = KroneckerProduct @@ ReplacePart[ConstantArray[IdentityMatrix[2], n], a -> PauliMatrix[3]];
+    kerAssoc = ps["M", a];
+    AllTrue[Keys[kerAssoc],
+        Function[b,
+            Module[{pv = ((IdentityMatrix[2^n] + (1 - 2 b) za) / 2) . vec},
+                Chop[Norm[pv]] == 0 ||
+                    Chop[Abs[Conjugate[Normalize[pv]] . Normal[kerAssoc[b]["State"]["StateVector"]]] - 1] == 0
+            ]
+        ]
+    ]
+];
+Do[VerificationTest[projMeasureMatchQ[n], True, TestID -> "Tier11-Projective-n" <> ToString[n]], {n, {2, 3, 4, 5}}]
+
+(* Pauli-string measurement: a stabilizer of the state is deterministic;         *)
+(* an anticommuting Pauli is random. *)
+VerificationTest[Keys @ (PauliStabilizer[2]["H", 1]["CNOT", 1, 2])["M", "ZZ"], {0}, TestID -> "Tier11-PauliString-Deterministic"]
+VerificationTest[Keys @ (PauliStabilizer[2]["H", 1]["CNOT", 1, 2])["M", "XX"], {0}, TestID -> "Tier11-PauliString-Deterministic-XX"]
+VerificationTest[Sort @ Keys @ (PauliStabilizer[2]["H", 1]["CNOT", 1, 2])["M", "ZI"], {0, 1}, TestID -> "Tier11-PauliString-Random"]
+
+(* Out-of-range qubit still emits the partition message and $Failed. *)
+VerificationTest[
+    PauliStabilizer[3]["M", 5],
+    $Failed,
+    {PauliStabilizer::partition},
+    TestID -> "Tier11-Measure-OutOfRange"
+]
+
+
 EndTestSection[]

@@ -248,7 +248,21 @@ PauliStabilizer[stabString : {__String}, destabStrings : {__String}] /; AllTrue[
 
 (* ============================================================================ *)
 (* Integer constructor: |0...0> register                                        *)
+(*                                                                              *)
+(* The register tableau is known in closed form (destabilizers X_i in rows      *)
+(* 1..q, stabilizers Z_i in rows q+1..2q, all signs +1), so it is assembled     *)
+(* directly instead of routing the {2, q, 2q} array through the generic rank-3  *)
+(* validating constructor, whose per-element pattern matching is O(q^2) and     *)
+(* dominated circuit-simulation setup at q ~ 10^3.                              *)
 (* ============================================================================ *)
+
+PauliStabilizer[q_Integer ? Positive] := PauliStabilizer[<|
+    "Signs" -> ConstantArray[1, 2 q],
+    "Tableau" -> {
+        PadRight[IdentityMatrix[q], {q, 2 q}],
+        Join[ConstantArray[0, {q, q}], IdentityMatrix[q], 2]
+    }
+|>]
 
 PauliStabilizer[q_Integer ? NonNegative] := PauliStabilizer[{ConstantArray[0, {Max[q, 1], q}], identityMatrix[q]}]
 
