@@ -28,12 +28,15 @@ agOmega[n_Integer] := ArrayFlatten[{
 
 (* Validity check that doesn't depend on PauliStabilizerQ context resolution.
    Phase 1 typo-fix follow-up: promote PauliStabilizerQ to PackageScope so
-   bare-name resolution works in Tests/ files. For now, structural Head check. *)
-psValidQ[ps_PauliStabilizer] := Module[{a = First[ps]},
-    AssociationQ[a] && KeyExistsQ[a, "Signs"] && KeyExistsQ[a, "Tableau"] &&
-    MatchQ[a["Signs"], {(-1 | 1) ...}] &&
-    ArrayQ[a["Tableau"], 3, MatchQ[0 | 1] (* unsigned *)] &&
-    Length[a["Signs"]] === Dimensions[a["Tableau"]][[3]]
+   bare-name resolution works in Tests/ files. For now, structural Head check.
+   Accepts both the canonical rank-3 "Tableau" form and the bit-packed form
+   (Stabilizer/Packed.m, "PackedX"/"PackedZ" keys); both must reconstruct to a
+   valid binary tableau via ps["Tableau"]. *)
+psValidQ[ps_PauliStabilizer] := Module[{a = First[ps], t},
+    AssociationQ[a] && KeyExistsQ[a, "Signs"] && MatchQ[a["Signs"], {(-1 | 1) ...}] &&
+    (KeyExistsQ[a, "Tableau"] || KeyExistsQ[a, "PackedX"]) &&
+    (t = ps["Tableau"]; ArrayQ[t, 3, MatchQ[0 | 1] (* unsigned *)] &&
+        Length[a["Signs"]] === Dimensions[t][[3]])
 ]
 psValidQ[_] := False
 
@@ -2132,6 +2135,73 @@ VerificationTest[
     ],
     True,
     TestID -> "Phase5-LocalComplement-PreservesSchmidtRank"
+]
+
+
+(* ============================================================================ *)
+(* TIER 9 -- Packed fast path vs canonical equivalence (Stabilizer/Packed.m).   *)
+(*                                                                              *)
+(* The kernel routes concrete Clifford gate updates through the bit-packed      *)
+(* path. Here we re-derive the post-gate tableau + signs with a SELF-CONTAINED  *)
+(* canonical reference (the pre-packing rank-3-array rules, transcribed below)  *)
+(* and assert the kernel result reconstructs to exactly the same Tableau and    *)
+(* Signs on deterministic random Clifford streams under SeedRandom.             *)
+(* ============================================================================ *)
+
+(* Canonical reference gate updates operating on {tableau, signs} directly,     *)
+(* independent of the kernel's packed implementation.                           *)
+refH[{t_, s_}, j_] := {
+    ReplacePart[t, Thread[{{1, j}, {2, j}} -> Extract[t, {{2, j}, {1, j}}]]],
+    MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, -#, #] &, s]
+};
+refS[{t_, s_}, j_] := {
+    ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[t, {{1, j}, {2, j}}]]],
+    MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, -#, #] &, s]
+};
+refSdg[{t_, s_}, j_] := {
+    ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[t, {{1, j}, {2, j}}]]],
+    MapIndexed[If[t[[1, j, #2[[1]]]] == 1 - t[[2, j, #2[[1]]]] == 1, -#, #] &, s]
+};
+refCNOT[{t_, s_}, j_, k_] := {
+    ReplacePart[t, {
+        {1, k} -> MapThread[BitXor, Extract[t, {{1, j}, {1, k}}]],
+        {2, j} -> MapThread[BitXor, Extract[t, {{2, j}, {2, k}}]]
+    }],
+    MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, k, #2[[1]]]] == 1 && t[[1, k, #2[[1]]]] == t[[2, j, #2[[1]]]], -#, #] &, s]
+};
+refX[{t_, s_}, j_] := {t, s (1 - 2 t[[2, j]])};
+refZ[{t_, s_}, j_] := {t, s (1 - 2 t[[1, j]])};
+refY[{t_, s_}, j_] := {t, s (1 - 2 BitXor[t[[1, j]], t[[2, j]]])};
+refSWAP[{t_, s_}, j_, k_] := {Map[Permute[#, Cycles[{{j, k}}]] &, t], s};
+
+refApply[st_, op_] := Switch[op[[1]],
+    "H", refH[st, op[[2]]], "S", refS[st, op[[2]]], "Sdg", refSdg[st, op[[2]]],
+    "X", refX[st, op[[2]]], "Y", refY[st, op[[2]]], "Z", refZ[st, op[[2]]],
+    "SWAP", refSWAP[st, op[[2]], op[[3]]], "CNOT", refCNOT[st, op[[2]], op[[3]]]];
+kerApply[ps_, op_] := Switch[op[[1]],
+    "H", ps["H", op[[2]]], "S", ps["S", op[[2]]], "Sdg", ps[SuperDagger["S"], op[[2]]],
+    "X", ps["X", op[[2]]], "Y", ps["Y", op[[2]]], "Z", ps["Z", op[[2]]],
+    "SWAP", ps["SWAP", op[[2]], op[[3]]], "CNOT", ps["CNOT", op[[2]], op[[3]]]];
+
+randCliffOp[n_] := With[{g = RandomChoice[{"H", "S", "Sdg", "X", "Y", "Z", "SWAP", "CNOT"}]},
+    If[MatchQ[g, "CNOT" | "SWAP"],
+        With[{a = RandomInteger[{1, n}]}, {g, a, With[{b = RandomInteger[{1, n}]}, If[b == a, Mod[a, n] + 1, b]]}],
+        {g, RandomInteger[{1, n}]}]];
+
+(* Single chunk (n <= 62), multi chunk, and chunk-boundary two-qubit gates. *)
+SeedRandom[424242];
+Do[
+    VerificationTest[
+        Module[{ps0 = PauliStabilizer[n], ops, kerPS, refTS},
+            ops = Table[randCliffOp[n], {400}];
+            kerPS = Fold[kerApply, ps0, ops];
+            refTS = Fold[refApply, {ps0["Tableau"], ps0["Signs"]}, ops];
+            kerPS["Tableau"] === refTS[[1]] && kerPS["Signs"] === refTS[[2]]
+        ],
+        True,
+        TestID -> "Tier9-PackedVsCanonical-n" <> ToString[n]
+    ],
+    {n, {3, 8, 40, 62, 63, 70, 100, 130}}
 ]
 
 

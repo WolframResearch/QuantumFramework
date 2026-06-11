@@ -29,10 +29,23 @@ PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[t], {
    propagates symbols through Clifford gates via BitXor's canonical form. Concrete
    signs are still {-1, 1} integers; symbolic signs look like (1 - 2 s_k) etc. *)
 
-PauliStabilizerQ[PauliStabilizer[KeyValuePattern[{
-    "Signs" -> signs_List,
-    "Tableau" -> tableau_ ? PauliTableauQ
-}] /; Length[signs] == Dimensions[tableau][[3]]]] := True
+(* Two storage shapes are accepted: the canonical rank-3 "Tableau" + "Signs"    *)
+(* form, and the bit-packed form (Stabilizer/Packed.m) with "PackedX"/"PackedZ" *)
+(* integer-row lists + "Qubits". A single Which-body inspects which keys are    *)
+(* present so the structural conditions never run against the wrong shape.       *)
+PauliStabilizerQ[PauliStabilizer[a_Association]] := Which[
+    KeyExistsQ[a, "PackedX"],
+        (* chunk-major: "PackedX"/"PackedZ" are {#chunks} lists of length-2n      *)
+        (* machine-int vectors; "Signs" has the 2n entries.                       *)
+        MatchQ[a["PackedX"], {__List}] && MatchQ[a["PackedZ"], {__List}] && MatchQ[a["Signs"], _List] &&
+            IntegerQ[Lookup[a, "Qubits"]] &&
+            Length[a["PackedX"]] == Length[a["PackedZ"]] &&
+            Length[First[a["PackedX"]]] == Length[a["Signs"]],
+    KeyExistsQ[a, "Tableau"] && KeyExistsQ[a, "Signs"],
+        MatchQ[a["Signs"], _List] && PauliTableauQ[a["Tableau"]] &&
+            Length[a["Signs"]] == Dimensions[a["Tableau"]][[3]],
+    True, False
+]
 
 PauliStabilizerQ[_] := False
 
@@ -41,10 +54,8 @@ PauliStabilizerQ[_] := False
    Used internally where symbolic signs are not yet supported (e.g. State materialization).
    The {-1, 1} typed-pattern check is moved into the Condition to avoid pattern-engine
    noise (Length/Dimensions::argx) when the structure matches but signs are symbolic. *)
-ConcretePauliStabilizerQ[PauliStabilizer[KeyValuePattern[{
-    "Signs" -> signs_List,
-    "Tableau" -> tableau_ ? PauliTableauQ
-}] /; Length[signs] == Dimensions[tableau][[3]] && MatchQ[signs, {(-1 | 1) ...}]]] := True
+ConcretePauliStabilizerQ[ps : PauliStabilizer[a_Association]] :=
+    PauliStabilizerQ[ps] && MatchQ[a["Signs"], {(-1 | 1) ...}]
 
 ConcretePauliStabilizerQ[_] := False
 

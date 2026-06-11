@@ -21,55 +21,84 @@ Package["Wolfram`QuantumFramework`"]
 (* the post-gate state: PauliStabilizer[qs[gate]]["State"] === qs[gate].       *)
 (* ============================================================================ *)
 
+(* Each Clifford-generator rule dispatches through the bit-packed fast path      *)
+(* (Stabilizer/Packed.m) when the tableau and signs are concrete; the canonical  *)
+(* rank-3-array body is the fallback for symbolic-phase / StabilizerFrame states. *)
+(* The two branches are equivalent bit-for-bit (PauliStabilizer.wlt asserts it). *)
+
 (* H_j: swap X[j]<->Z[j]; flip sign on rows where x[j] == z[j] == 1 *)
-ps_PauliStabilizer["H", j_Integer] := With[{t = ps["Tableau"]},
-    PauliStabilizer[<|
-        "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
-        "Tableau" -> ReplacePart[t, Thread[{{1, j}, {2, j}} -> Extract[t, {{2, j}, {1, j}}]]]
-    |>]
+ps_PauliStabilizer["H", j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateH[psGetPacked[ps], j],
+    With[{t = ps["Tableau"]},
+        PauliStabilizer[<|
+            "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
+            "Tableau" -> ReplacePart[t, Thread[{{1, j}, {2, j}} -> Extract[t, {{2, j}, {1, j}}]]]
+        |>]
+    ]
 ]
 
 (* S_j: Z[j] := Z[j] XOR X[j]; flip sign on rows where x[j] == z[j] == 1 *)
-ps_PauliStabilizer["S", j_Integer] := With[{t = ps["Tableau"]},
-    PauliStabilizer[<|
-        "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
-        "Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
-    |>]
+ps_PauliStabilizer["S", j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateS[psGetPacked[ps], j],
+    With[{t = ps["Tableau"]},
+        PauliStabilizer[<|
+            "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
+            "Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
+        |>]
+    ]
 ]
 
 (* S^\[Dagger]_j: same Z-update; sign flip when x[j] == 1 and z[j] == 0 *)
-ps_PauliStabilizer[SuperDagger["S"], j_Integer] := With[{t = ps["Tableau"]},
-    PauliStabilizer[<|
-        "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == 1 - t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
-        "Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
-    |>]
+ps_PauliStabilizer[SuperDagger["S"], j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateSdg[psGetPacked[ps], j],
+    With[{t = ps["Tableau"]},
+        PauliStabilizer[<|
+            "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == 1 - t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
+            "Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
+        |>]
+    ]
 ]
 
 (* CNOT j -> k: X[k] := X[k] XOR X[j]; Z[j] := Z[j] XOR Z[k]; sign flip when AG conditions met *)
-ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := With[{t = ps["Tableau"]},
-    PauliStabilizer[<|
-        "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, k, #2[[1]]]] == 1 && t[[1, k, #2[[1]]]] == t[[2, j, #2[[1]]]], - #, #] &, ps["Signs"]],
-        "Tableau" -> ReplacePart[t, {
-            {1, k} -> MapThread[BitXor, Extract[t, {{1, j}, {1, k}}]],
-            {2, j} -> MapThread[BitXor, Extract[t, {{2, j}, {2, k}}]]
-        }]
-    |>]
+ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateCNOT[psGetPacked[ps], j, k],
+    With[{t = ps["Tableau"]},
+        PauliStabilizer[<|
+            "Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, k, #2[[1]]]] == 1 && t[[1, k, #2[[1]]]] == t[[2, j, #2[[1]]]], - #, #] &, ps["Signs"]],
+            "Tableau" -> ReplacePart[t, {
+                {1, k} -> MapThread[BitXor, Extract[t, {{1, j}, {1, k}}]],
+                {2, j} -> MapThread[BitXor, Extract[t, {{2, j}, {2, k}}]]
+            }]
+        |>]
+    ]
 ]
 
 (* X_j: phase XOR with Z[j] row -- tableau unchanged *)
-ps_PauliStabilizer["X", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+ps_PauliStabilizer["X", j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateX[psGetPacked[ps], j],
+    PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+]
 
 (* Y_j: phase XOR with X[j] XOR Z[j] *)
-ps_PauliStabilizer["Y", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+ps_PauliStabilizer["Y", j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateY[psGetPacked[ps], j],
+    PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+]
 
 (* Z_j: phase XOR with X[j] row *)
-ps_PauliStabilizer["Z", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]]], "Tableau" -> ps["Tableau"]|>]
+ps_PauliStabilizer["Z", j_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateZ[psGetPacked[ps], j],
+    PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]]], "Tableau" -> ps["Tableau"]|>]
+]
 
 (* CZ = H_k . CNOT(j,k) . H_k *)
 ps_PauliStabilizer["CZ", j_Integer, k_Integer] := ps["H", k]["CNOT", j, k]["H", k]
 
 (* SWAP via column permutation *)
-ps_PauliStabilizer["SWAP", j_Integer, k_Integer] := ps["PermuteQudits", Cycles[{{j, k}}]]
+ps_PauliStabilizer["SWAP", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
+    psFromPacked @ packedGateSWAP[psGetPacked[ps], j, k],
+    ps["PermuteQudits", Cycles[{{j, k}}]]
+]
 
 
 (* ============================================================================ *)
@@ -111,7 +140,7 @@ PauliStabilizer::singular = "Cannot compute Dagger: symplectic matrix is singula
 (*       for AG-canonical inputs.                                              *)
 (*   (2) a singular symplectic matrix (Det == 0 mod 2) emits                  *)
 (*       PauliStabilizer::singular with $Failed instead of cascading errors.  *)
-ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat},
+ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat, result},
     n = ps["GeneratorCount"];
     m = ps["Matrix"];
     det = Mod[Det[m], 2];
@@ -120,7 +149,7 @@ ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat},
         Return[$Failed]
     ];
     mat = Inverse[m, Modulus -> 2];
-    PauliStabilizer @ <|
+    result = PauliStabilizer @ <|
         "Phase" -> BitXor[
             ps["Phase"],
             ps[PauliStabilizer[<|
@@ -129,7 +158,10 @@ ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat},
             |>]]["Phase"]
         ],
         "Matrix" -> mat
-    |>
+    |>;
+    (* Preserve the input's storage form so structural (===) comparisons stay   *)
+    (* consistent: packed in -> packed out, canonical in -> canonical out.       *)
+    If[psPackedQ[ps], psFromPacked @ psGetPacked @ result, result]
 ]
 
 
