@@ -273,4 +273,16 @@ PauliStabilizer[q_Integer ? NonNegative] := PauliStabilizer[{ConstantArray[0, {M
 
 PauliStabilizer[] := PauliStabilizer[1]
 
-PauliStabilizer[shortcut : _String | (_String -> _ ? orderQ | _Integer) | _List] := PauliStabilizer[QuantumCircuitOperator[shortcut]]
+(* Registered PauliStabilizer names (NamedCodes.m, RandomClifford.m) have      *)
+(* their own dispatch rules; the shortcut must not capture them, in either     *)
+(* bare-string or "Name"[args] call form.                                      *)
+pauliStabilizerShortcutQ[(name_String)[___]] := ! MemberQ[$PauliStabilizerNames, name]
+pauliStabilizerShortcutQ[name_String] := ! MemberQ[$PauliStabilizerNames, name]
+pauliStabilizerShortcutQ[_] := True
+
+(* A bare rule ("CNOT" -> {1, 2}) is wrapped in a list because the circuit     *)
+(* constructor only accepts shorthand rules inside a list. ConfirmBy turns an  *)
+(* unrecognized name into a propagated Failure instead of an unevaluated       *)
+(* PauliStabilizer[Failure[...]].                                              *)
+PauliStabilizer[shortcut : (_String | _String[___] | (_String -> _ ? orderQ | _Integer) | _List) ? pauliStabilizerShortcutQ] :=
+    Enclose @ PauliStabilizer @ ConfirmBy[QuantumCircuitOperator[Replace[shortcut, r_Rule :> {r}]], QuantumCircuitOperatorQ]

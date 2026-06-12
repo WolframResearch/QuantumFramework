@@ -228,6 +228,68 @@ VerificationTest[
     TestID -> "Audit-Construct-Shortcut-StringRule"
 ]
 
+VerificationTest[
+    psValidQ @ PauliStabilizer["CNOT" -> {1, 2}],
+    True,
+    TestID -> "Audit-Construct-Shortcut-StringRule-ListTarget"
+]
+
+(* 1.15 -- shortcut form: named-circuit call form "Name"[args] *)
+VerificationTest[
+    PauliStabilizer["GHZ"[5]],
+    PauliStabilizer[QuantumCircuitOperator["GHZ"[5]]],
+    TestID -> "Audit-Construct-Shortcut-NamedCircuitCallForm"
+]
+
+VerificationTest[
+    PauliStabilizer["GHZ"[5]]["State"]["StateVector"],
+    QuantumState["GHZ"[5]]["StateVector"],
+    SameTest -> (Chop[Norm[Normal[#1] - Normal[#2]]] == 0 &),
+    TestID -> "Audit-Construct-Shortcut-NamedCircuitCallForm-State"
+]
+
+VerificationTest[
+    PauliStabilizer["GHZ"],
+    PauliStabilizer["GHZ"[3]],
+    TestID -> "Audit-Construct-Shortcut-BareString-DefaultArgs"
+]
+
+(* 1.16 -- "Random" dispatches to RandomClifford in all three call shapes,     *)
+(* never into the circuit shortcut.                                            *)
+VerificationTest[
+    psValidQ @ PauliStabilizer["Random"] && PauliStabilizer["Random"]["Qubits"] === 5,
+    True,
+    TestID -> "Audit-Construct-Random-Bare"
+]
+
+VerificationTest[
+    PauliStabilizer["Random"[7]]["Qubits"],
+    7,
+    TestID -> "Audit-Construct-Random-CallForm"
+]
+
+VerificationTest[
+    PauliStabilizer["Random", 4]["Qubits"],
+    4,
+    TestID -> "Audit-Construct-Random-TwoArg"
+]
+
+(* 1.17 -- an unrecognized name returns a propagated Failure (never an         *)
+(* unevaluated PauliStabilizer[...] expression).                                *)
+VerificationTest[
+    FailureQ @ PauliStabilizer["NotACircuitName"],
+    True,
+    {QuantumCircuitOperator::invalidName},
+    TestID -> "Audit-Construct-Shortcut-InvalidName-Bare"
+]
+
+VerificationTest[
+    FailureQ @ PauliStabilizer["NotACircuitName"[3]],
+    True,
+    {QuantumCircuitOperator::invalidName},
+    TestID -> "Audit-Construct-Shortcut-InvalidName-CallForm"
+]
+
 
 (* ============================================================================ *)
 (* TIER 2 -- PauliStabilizer Properties: every key in ps["Properties"].         *)

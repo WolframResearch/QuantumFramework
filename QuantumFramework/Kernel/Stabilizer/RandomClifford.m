@@ -71,3 +71,10 @@ RandomClifford[n_] := Block[{h, perm, gamma1, delta1, gamma2, delta2, zero, prod
 
 
 PauliStabilizer["Random", n : _Integer ? Positive : 5] := RandomClifford[n]
+
+(* Literal-headed rules so "Random" dispatches here rather than into the       *)
+(* circuit-shortcut constructor ("Random" is not a circuit name): the bare     *)
+(* form and the "Random"[n] call form both sample a random Clifford.           *)
+PauliStabilizer["Random"] := RandomClifford[5]
+
+PauliStabilizer["Random"[n : _Integer ? Positive : 5]] := RandomClifford[n]
