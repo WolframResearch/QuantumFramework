@@ -291,8 +291,8 @@ QuantumStateProp[qs_, "TransitionGraph", opts : OptionsPattern[]] := With[{
         Replace[Normal[mat], 0 | 0. -> Infinity, {2}],
         FilterRules[{opts}, Options[Graph]],
         EdgeLabelStyle -> {_ -> Background -> White},
-        VertexShapeFunction -> Catenate @ MapThread[{xs, color} |-> Thread[xs -> Function[Inset[Framed[Style[#2, Black], Background -> color], #1, #3]]], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
-        VertexStyle -> Catenate @ MapThread[{xs, color} |-> Thread[xs -> color], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
+        VertexShapeFunction -> Catenate @ MapThread[{verts, color} |-> Thread[verts -> Function[Inset[Framed[Style[#2, Black], Background -> color], #1, #3]]], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
+        VertexStyle -> Catenate @ MapThread[{verts, color} |-> Thread[verts -> color], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
         PerformanceGoal -> "Quality"
     ]
 },

@@ -58,7 +58,7 @@ expandLabel[label_] := label
 collectLabel[label_] := FixedPoint[
     Replace[{
         CircleTimes[x_] :> x,
-        ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, xs : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[xs]]]]
+        ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, run : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[run]]]]
     }],
     label
 ]

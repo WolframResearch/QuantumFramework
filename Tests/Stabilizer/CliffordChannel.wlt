@@ -441,17 +441,16 @@ VerificationTest[
 (* ============================================================================ *)
 (* TIER N -- CliffordChannel from QuantumChannel (deterministic Pauli only)    *)
 (*                                                                              *)
-(* Phase 8.2 v1: only deterministic single-Pauli channels round-trip. Test    *)
-(* the predicate-validity of those constructions. Stochastic channels emit a  *)
-(* notice and create a placeholder identity channel.                           *)
+(* Only deterministic single-Pauli channels round-trip. Test the predicate-    *)
+(* validity of those constructions. Stochastic Pauli channels (rank > 1 Kraus  *)
+(* set) emit CliffordChannel::stochastic and return $Failed; tableau-level     *)
+(* stochastic application is the mixture form qc[ps] (HybridInterop.m).        *)
 (* ============================================================================ *)
 
-(* Stochastic BitFlip emits notice and returns identity-shaped placeholder.   *)
+(* Stochastic BitFlip emits exactly one notice and fails cleanly.              *)
 VerificationTest[
-    Module[{cc = CliffordChannel[QuantumChannel["BitFlip"[1/4], {1}]]},
-        cc["InputQubits"] == 1 && cc["OutputQubits"] == 1
-    ],
-    True,
+    CliffordChannel[QuantumChannel["BitFlip"[1/4], {1}]],
+    $Failed,
     {CliffordChannel::stochastic},
     TestID -> "Phase8.2-CCfromQC-BitFlip-StochasticNotice"
 ]

@@ -429,18 +429,29 @@ VerificationTest[
 ];
 
 (* Keywords cells in the touched pages must contain real keywords (not
-   "XXXX"). Spot-check QuantumState. *)
+   "XXXX"). Spot-check QuantumState. Match on the parsed Notebook expression,
+   not the raw file text: the front end wraps saved .nb files at 80 columns
+   with backslash-newline continuations inside string literals, so a raw-text
+   substring match breaks whenever the wrap point moves. *)
 VerificationTest[
-  StringContainsQ[
-    Import[
-      FileNameJoin[{
-        DirectoryName[$InputFileName], "..", "QuantumFramework",
-        "Documentation", "English", "ReferencePages", "Symbols",
-        "QuantumState.nb"
-      }],
-      "Text"
-    ],
-    "Cell[\"quantum state, density matrix"
+  With[{
+    keywords = FirstCase[
+      Import[
+        FileNameJoin[{
+          DirectoryName[$InputFileName], "..", "QuantumFramework",
+          "Documentation", "English", "ReferencePages", "Symbols",
+          "QuantumState.nb"
+        }],
+        "Notebook"
+      ],
+      Cell[s_String, "Keywords", ___] :> s,
+      "",
+      Infinity
+    ]
+  },
+    StringContainsQ[keywords, "quantum state"] &&
+      StringContainsQ[keywords, "density matrix"] &&
+      ! StringContainsQ[keywords, "XXXX"]
   ]
   ,
   True

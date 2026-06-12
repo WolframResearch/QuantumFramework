@@ -966,11 +966,12 @@ VerificationTest[
     TestID -> "Audit-Hybrid-QMO-ZZ-on-Bell-FastPath"
 ]
 
-(* Non-Pauli QMO falls back with info message. *)
+(* Non-Pauli QMO falls back with a single info message to the dense
+   state-vector path, returning a QuantumMeasurement. *)
 VerificationTest[
     Head @ QuantumMeasurementOperator[QuantumBasis["Computational"], {1}][PauliStabilizer[1]],
-    PauliStabilizer,
-    {PauliStabilizer::nonpaulibasis, PauliStabilizer::nonclifford},
+    QuantumMeasurement,
+    {PauliStabilizer::nonpaulibasis},
     TestID -> "Audit-Hybrid-QMO-NonPauli-Fallback"
 ]
 

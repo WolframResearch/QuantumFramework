@@ -86,17 +86,16 @@ VerificationTest[
 (* ============================================================================ *)
 
 (* A computational-basis projector measurement (label not Pauli) triggers the
-   ::nonpaulibasis fallback. The Phase 7.1 fallback routes through the legacy
-   PauliStabilizerApply path which keeps the result as a PauliStabilizer (and
-   may itself emit nonclifford for unrecognized gates). Smoke check: message is
-   emitted, the call doesn't crash. *)
+   ::nonpaulibasis fallback: a single notice, then the dense state-vector path
+   qmo[ps["State"]], which performs the measurement and returns a
+   QuantumMeasurement. Exactly one message; no cascading ::nonclifford. *)
 VerificationTest[
     With[{ps = PauliStabilizer[1],
           qmo = QuantumMeasurementOperator[QuantumBasis["Computational"], {1}]},
         Head @ qmo[ps]
     ],
-    PauliStabilizer,
-    {PauliStabilizer::nonpaulibasis, PauliStabilizer::nonclifford},
+    QuantumMeasurement,
+    {PauliStabilizer::nonpaulibasis},
     TestID -> "Phase7-QMO-NonPauliBasis-Fallback-EmitsMessage"
 ]
 

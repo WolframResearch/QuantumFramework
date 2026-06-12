@@ -1637,21 +1637,33 @@ VerificationTest[
     TestID -> "Phase2-PauliStabilizerRandom-Callable"
 ]
 
-(* PauliStabilizer::nonclifford fires when the tableau-update dispatch returns
-   a non-PauliStabilizer (e.g. a StabilizerFrame from T / P[theta]). Pre-v2.0
-   this test used "FooBarUnknownGate" but v2.0's strict "name"[args] resolution
-   short-circuits unknown names with QuantumOperator::invalidName before
-   PauliStabilizerApply ever runs. Use a single T gate -- exactly one
-   ::nonclifford message and the Fold returns the prior PauliStabilizer
-   unchanged. *)
+(* PauliStabilizer::nonclifford fires when a gate is neither Clifford nor
+   frame-decomposable (T / P[theta] / TDagger return a StabilizerFrame and are
+   handled silently). A rotation like RX[0.3] has no tableau or frame form:
+   exactly one ::nonclifford message and the fold stops with $Failed.
+   "FooBarUnknownGate" cannot exercise this path -- strict "name"[args]
+   resolution short-circuits unknown names with QuantumOperator::invalidName
+   before PauliStabilizerApply ever runs. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
+        QuantumCircuitOperator[{"H" -> 1, "RX"[0.3] -> 1}],
+        Automatic
+    ],
+    $Failed,
+    {PauliStabilizer::nonclifford},
+    TestID -> "Phase2-NonClifford-Message"
+]
+
+(* Frame-decomposable non-Clifford boundary: T doubles the frame instead of
+   failing; no message. *)
 VerificationTest[
     Head @ Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
         QuantumCircuitOperator[{"H" -> 1, "T" -> 1}],
         Automatic
     ],
-    PauliStabilizer,
-    {PauliStabilizer::nonclifford},
-    TestID -> "Phase2-NonClifford-Message"
+    StabilizerFrame,
+    {},
+    TestID -> "Phase2-NonClifford-T-ReturnsFrame"
 ]
 
 (* Clifford-only circuits: NO message *)

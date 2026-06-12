@@ -242,11 +242,12 @@ VerificationTest[
     TestID -> "Conn5-qmoZZ-on-Bell-Deterministic"
 ]
 
-(* Non-Pauli basis falls back via ::nonpaulibasis. *)
+(* Non-Pauli basis falls back via a single ::nonpaulibasis notice to the dense
+   state-vector path, returning a QuantumMeasurement. *)
 VerificationTest[
     Head @ QuantumMeasurementOperator[QuantumBasis["Computational"], {1}][$ps0],
-    PauliStabilizer,
-    {PauliStabilizer::nonpaulibasis, PauliStabilizer::nonclifford},
+    QuantumMeasurement,
+    {PauliStabilizer::nonpaulibasis},
     TestID -> "Conn5-qmoComputational-FallsBack"
 ]
 
