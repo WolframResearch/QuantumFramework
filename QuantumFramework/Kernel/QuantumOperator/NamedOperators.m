@@ -897,8 +897,17 @@ LindbladMixedOperator[l_QuantumOperator, ldg : _QuantumOperator | None : None] :
     ]
 ]
 
-QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]]},
+QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enclose @ Block[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]], basis},
 	ConfirmAssert[SameQ @@ Join[If[h === None, {}, {h["OutputDimension"], h["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]], "Hamiltonian and Lindblad operators must have the same dimensions"];
+    (* represent everything in one common basis (the Hamiltonian's output basis, or the computational
+       basis when there is no Hamiltonian), so a named operator carrying its own basis (e.g. "J-")
+       enters with its operator meaning rather than its raw matrix; QuantumEvolve's direct path
+       rebases the same way *)
+    basis = If[h === None, If[ls === {}, None, QuantumBasis[First[ls]["OutputDimensions"]]], h["OutputBasis"]];
+    If[ basis =!= None,
+        If[h =!= None, h = QuantumOperator[h, basis]];
+        ls = QuantumOperator[#, basis] & /@ ls
+    ];
     QuantumOperator[
         If[H === None, 0, HamiltonianMixedOperator[h] / I] +
             Which[

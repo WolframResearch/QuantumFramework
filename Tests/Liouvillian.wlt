@@ -73,6 +73,51 @@ With[{tol = 1*^-4},
     ]
 ]
 
+(* Named jump operators carry their own basis ("J-"/"J+" live in the spin-J basis,
+   whose element ordering is reversed relative to the computational basis). Both
+   Lindblad paths must rebase them into the Hamiltonian's basis the same way: with
+   unequal rates on an adjoint pair, an orientation flip in either path swaps the
+   steady-state populations. cmpEvolve compares raw density matrices, so these
+   tests also pin that every route returns its state in the same basis. *)
+
+With[{tol = 1*^-4},
+    Block[{h, ls, γs, ρ, ll, hh, gA, gB, gC, gD, gE, gF},
+        h  = 0.35 QuantumOperator["Z"];
+        ls = {QuantumOperator["J-"], QuantumOperator["J+"]};
+        γs = {4, 3};
+        ρ  = QuantumState[{{0.25, 0.1 + 0.05 I}, {0.1 - 0.05 I, 0.75}}];
+        ll = QuantumOperator["Liouvillian"[h, ls, γs]];
+        hh = QuantumOperator["Hamiltonian"[h, ls, γs]];
+
+        gA = Chop @ QuantumEvolve[h, ls -> γs, ρ, {t, 0, 2}][2];
+        gB = Chop @ QuantumEvolve[h, Sqrt[γs] ls, ρ, {t, 0, 2}][2];
+        gC = Chop[QuantumEvolve[I ll, None, {t, 0, 2}][2][ρ]];
+        gD = Chop[Exp[2 ll][ρ]];
+        gE = Chop @ QuantumEvolve[hh, ρ, {t, 0, 2}][2];
+        gF = Chop[QuantumEvolve[h, ls -> γs, None, {t, 0, 2}][2][ρ]];
+
+        VerificationTest[cmpEvolve[gA, gB] < tol, True, TestID -> "Named-J-folded-rates"];
+        VerificationTest[cmpEvolve[gA, gC] < tol, True, TestID -> "Named-J-Liouvillian-op-then-state"];
+        VerificationTest[cmpEvolve[gA, gD] < tol, True, TestID -> "Named-J-Exp-ℒ"];
+        VerificationTest[cmpEvolve[gA, gE] < tol, True, TestID -> "Named-J-Hamiltonian-form"];
+        VerificationTest[cmpEvolve[gA, gF] < tol, True, TestID -> "Named-J-evolution-op-then-state"];
+    ]
+]
+
+(* Orientation pin: "J-" lowers the spin projection m, so with J- at rate 4 and
+   J+ at rate 3 the populations relax to {3/7, 4/7} in the computational basis
+   (|1⟩ is m = -1/2). A raw-matrix reading of "J-" would give the transpose and
+   swap the diagonal. *)
+VerificationTest[
+    Block[{ll, ρ},
+        ll = QuantumOperator["Liouvillian"[0 QuantumOperator["Z"], {QuantumOperator["J-"], QuantumOperator["J+"]}, {4, 3}]];
+        ρ = Exp[2 ll][QuantumState[{{0, 0}, {0, 1}}]];
+        Norm[Flatten[N[ρ["Computational"]["DensityMatrix"]] - DiagonalMatrix[{3/7, 4/7}]]] < 1*^-4
+    ],
+    True,
+    TestID -> "Named-J-orientation-Jminus-lowers-toward-ket1"
+];
+
 EndTestSection[]
 
 
@@ -112,6 +157,22 @@ VerificationTest[
     ],
     True,
     TestID -> "Kossakowski-diagonal-equals-vector-rates"
+];
+
+(* Same identity with named-basis jump operators: the matrix-rate route goes
+   through the "Hamiltonian" superoperator, the vector-rate route through the
+   direct master equation, so this catches any basis-handling drift between them. *)
+VerificationTest[
+    Block[{ls, h, ρ, fVec, fMat},
+        ls = {QuantumOperator["J-"], QuantumOperator["J+"]};
+        h = 0.35 QuantumOperator["Z"];
+        ρ = QuantumState[{{0.25, 0.1 + 0.05 I}, {0.1 - 0.05 I, 0.75}}];
+        fVec = QuantumEvolve[h, ls -> {4, 3}, ρ, {t, 0, 1}][1];
+        fMat = QuantumEvolve[h, ls -> {{4, 0}, {0, 3}}, ρ, {t, 0, 1}][1];
+        Norm[Flatten[N[fVec["DensityMatrix"]] - N[fMat["DensityMatrix"]]]] < 1*^-4
+    ],
+    True,
+    TestID -> "Kossakowski-named-J-diagonal-equals-vector-rates"
 ];
 
 (* Full off-diagonal rate matrix against a hand-written master equation
