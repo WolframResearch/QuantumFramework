@@ -113,9 +113,12 @@ packedMeasureZ[ps_PauliStabilizer, a_Integer] := Block[{
                 ];
                 <|phs[[sc]] -> ps|>
             ],
-            (* non-deterministic: clear the other anticommuting rows into          *)
-            (* firstStab, promote it to a destabilizer, install Z_a with random    *)
-            (* sign.                                                               *)
+            (* non-deterministic: clear every other anticommuting row into         *)
+            (* firstStab -- destabilizer rows included (AarGot04 \[Section]3:      *)
+            (* "for each i != p with x_ia = 1, rowsum(i, p)"); skipping the        *)
+            (* destabilizers breaks the symplectic pairing and corrupts later      *)
+            (* deterministic outcomes. Then promote firstStab to a destabilizer    *)
+            (* and install Z_a with random sign.                                   *)
             Block[{x2 = x, z2 = z, ph2 = ph, p = firstStab},
                 Scan[
                     Function[h,
@@ -123,7 +126,7 @@ packedMeasureZ[ps_PauliStabilizer, a_Integer] := Block[{
                         x2[[All, h]] = BitXor[x2[[All, h]], x2[[All, p]]];
                         z2[[All, h]] = BitXor[z2[[All, h]], z2[[All, p]]]
                     ],
-                    Select[pos, GreaterThan[p]]
+                    DeleteCases[pos, p]
                 ];
                 x2[[All, p - n]] = x2[[All, p]]; z2[[All, p - n]] = z2[[All, p]];
                 x2[[All, p]] = 0 x2[[All, p]]; z2[[All, p]] = 0 z2[[All, p]];
@@ -155,9 +158,12 @@ ps_PauliStabilizer["Measure" | "M", a_Integer] := If[psConcreteFastQ[ps] && 1 <=
                         Select[pos, LessEqualThan[n]]
                     ],
 
-                (* non-deterministic case: one stabilizer anticommutes *)
+                (* non-deterministic case: one stabilizer anticommutes. Every other *)
+                (* row with x_a = 1 -- destabilizers included -- must be rowsummed  *)
+                (* with p (AarGot04 \[Section]3), or the symplectic pairing breaks  *)
+                (* and later deterministic outcomes come out wrong.                 *)
                 Block[{r2, t2},
-                    {r2, t2} = Fold[rowsum[#1, #2, p] &, {r, t}, Select[pos, GreaterThan[p]]];
+                    {r2, t2} = Fold[rowsum[#1, #2, p] &, {r, t}, DeleteCases[pos, p]];
                     t2[[All, All, p - n]] = t2[[All, All, p]];
                     t2[[All, All, p]] = 0;
                     t2[[2, a, p]] = 1;

@@ -2338,5 +2338,40 @@ VerificationTest[
     TestID -> "Tier11-Measure-OutOfRange"
 ]
 
+(* Sequential full-register measurement must enumerate exactly the support of    *)
+(* the materialized state vector. Regression for the AarGot04 \[Section]3        *)
+(* omission where rows BELOW the pivot (the destabilizers) were not rowsummed     *)
+(* in the non-deterministic branch, silently corrupting later deterministic       *)
+(* outcomes (caught 2026-06-11 by cross-checking against dense simulation and     *)
+(* Stim; SeedRandom[2026] draw 8 below reproduces the original failing circuit).  *)
+SeedRandom[2026];
+seqMeasSpecs[n_, m_] := Table[With[{g = RandomChoice[{"H", "S", "CNOT"}]},
+    If[g === "CNOT",
+        With[{a = RandomInteger[{1, n}]}, "CNOT" -> {a, If[# == a, Mod[a, n] + 1, #] &[RandomInteger[{1, n}]]}],
+        g -> RandomInteger[{1, n}]]], {m}];
+seqMeasSupportMatchQ[n_, specs_] := Module[{ps, vec, supVec, supMeas},
+    ps = Fold[#1[#2] &, PauliStabilizer[n], specs];
+    vec = Chop @ N @ Normal @ ps["State"]["StateVector"];
+    supVec = Flatten @ Position[Abs[vec]^2, x_ /; x > 10^-6, {1}, Heads -> False];
+    supMeas = Sort[FromDigits[#, 2] + 1 & /@ Keys[ps["M", Range[n]]]];
+    supVec === supMeas
+];
+Do[
+    VerificationTest[
+        seqMeasSupportMatchQ[5, seqMeasSpecs[5, 50]],
+        True,
+        TestID -> "Tier11-SequentialMeasure-Support-5q-" <> ToString[k]
+    ],
+    {k, 11}
+]
+Do[
+    VerificationTest[
+        seqMeasSupportMatchQ[6, seqMeasSpecs[6, 80]],
+        True,
+        TestID -> "Tier11-SequentialMeasure-Support-6q-" <> ToString[k]
+    ],
+    {k, 4}
+]
+
 
 EndTestSection[]

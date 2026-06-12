@@ -122,7 +122,10 @@ ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
 
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] :=
     With[{
-        init = Replace[qs, {Automatic :> PauliStabilizer[qco["Arity"]], s_QuantumState :> PauliStabilizer[s]}],
+        (* Register size must cover the highest wire INDEX, not the wire count:    *)
+        (* a circuit like {"H" -> 2} has Arity 1 but acts on wire 2, and an        *)
+        (* Arity-sized register silently drops the gate off the register edge.     *)
+        init = Replace[qs, {Automatic :> PauliStabilizer[Max[qco["Arity"], qco["Max"]]], s_QuantumState :> PauliStabilizer[s]}],
         gateSpecs = QuantumShortcut[qco]
     },
         (* Fast path: a pure-Clifford circuit (every gate in the compiled set)    *)
