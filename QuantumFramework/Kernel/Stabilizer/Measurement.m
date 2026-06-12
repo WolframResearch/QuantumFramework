@@ -105,7 +105,7 @@ packedMeasureZ[ps_PauliStabilizer, a_Integer] := Block[{
             Block[{xs = Map[Append[#, 0] &, x], zs = Map[Append[#, 0] &, z], phs = Append[ph, 0], sc = 2 n + 1},
                 Scan[
                     Function[i,
-                        phs[[sc]] = Mod[2 phs[[sc]] + 2 phs[[i + n]] + packedRowSumPhase[xs, zs, i + n, sc], 4] / 2;
+                        phs[[sc]] = Boole[Mod[2 phs[[sc]] + 2 phs[[i + n]] + packedRowSumPhase[xs, zs, i + n, sc], 4] == 2];
                         xs[[All, sc]] = BitXor[xs[[All, sc]], xs[[All, i + n]]];
                         zs[[All, sc]] = BitXor[zs[[All, sc]], zs[[All, i + n]]]
                     ],
@@ -122,7 +122,12 @@ packedMeasureZ[ps_PauliStabilizer, a_Integer] := Block[{
             Block[{x2 = x, z2 = z, ph2 = ph, p = firstStab},
                 Scan[
                     Function[h,
-                        ph2[[h]] = Mod[2 ph2[[h]] + 2 ph2[[p]] + packedRowSumPhase[x2, z2, p, h], 4] / 2;
+                        (* The product phase i-power is even for stabilizer rows  *)
+                        (* (group closure); for a destabilizer row it can be odd, *)
+                        (* and the Boole collapses it to phase bit 0, the same    *)
+                        (* convention as the canonical rowsum (destabilizer signs *)
+                        (* are not physical).                                     *)
+                        ph2[[h]] = Boole[Mod[2 ph2[[h]] + 2 ph2[[p]] + packedRowSumPhase[x2, z2, p, h], 4] == 2];
                         x2[[All, h]] = BitXor[x2[[All, h]], x2[[All, p]]];
                         z2[[All, h]] = BitXor[z2[[All, h]], z2[[All, p]]]
                     ],

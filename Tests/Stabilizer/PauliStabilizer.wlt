@@ -2518,5 +2518,74 @@ Do[
     {k, 4}
 ]
 
+(* Packed Pauli-string measurement (PauliMeasure.m, packedMeasurePauliString):    *)
+(* the packed path must agree EXACTLY with the canonical rank-3-array path        *)
+(* (outcome keys, signs, tableau) on random Clifford states, signed strings       *)
+(* included, and every branch must keep concrete {-1, 1} signs (an odd AG i-power *)
+(* on a destabilizer row collapses to phase bit 0, not to a sign of 0 that would  *)
+(* knock the branch off the packed fast path). The canonical path is forced by    *)
+(* Blocking the psConcreteFastQ gate.                                             *)
+SeedRandom[20260612];
+packedCanonicalMatchQ[n_Integer, measureSpec_] := Module[{ps, packed, canonical},
+    ps = Fold[#1[#2] &, PauliStabilizer[n], Table[randCircSpec[n], {4 n}]];
+    packed = ps["M", measureSpec];
+    canonical = Block[{Wolfram`QuantumFramework`PackageScope`psConcreteFastQ},
+        Wolfram`QuantumFramework`PackageScope`psConcreteFastQ[_] := False;
+        ps["M", measureSpec]
+    ];
+    Keys[packed] === Keys[canonical] &&
+        AllTrue[Keys[packed],
+            packed[#]["Signs"] === canonical[#]["Signs"] && packed[#]["Tableau"] === canonical[#]["Tableau"] &] &&
+        AllTrue[Values[packed], MatchQ[#["Signs"], {(-1 | 1) ..}] &]
+];
+randPauliString[n_Integer] :=
+    If[RandomInteger[] == 1, "-", ""] <> StringJoin @ Table[RandomChoice[{"I", "X", "Y", "Z"}], {n}]
+Do[
+    VerificationTest[
+        packedCanonicalMatchQ[n, randPauliString[n]],
+        True,
+        TestID -> "Tier11-PauliStringMeasure-PackedCanonical-n" <> ToString[n] <> "-" <> ToString[k]
+    ],
+    {n, {5, 20, 40}}, {k, 3}
+]
+
+(* Same exact-equivalence contract for the single-qubit packed path               *)
+(* (packedMeasureZ), whose non-deterministic branch clears destabilizer rows too. *)
+Do[
+    VerificationTest[
+        packedCanonicalMatchQ[n, RandomInteger[{1, n}]],
+        True,
+        TestID -> "Tier11-Measure-PackedCanonical-n" <> ToString[n] <> "-" <> ToString[k]
+    ],
+    {n, {5, 20, 40}}, {k, 3}
+]
+
+(* Performance budget: the non-deterministic string branch must stay on the       *)
+(* packed path. The interpreted rank-3 rowsum Fold took 393 ms at n=100 and       *)
+(* 42.3 s at n=500 (M2 Pro); the packed loop runs in single-digit ms / tens of    *)
+(* ms. Bounds carry ~10x headroom for slower machines.                            *)
+VerificationTest[
+    Block[{},
+        SeedRandom[3];
+        With[{ps = PauliStabilizer["Random"[100]], str = StringRepeat["Z", 100]},
+            Length[ps["M", str]] == 2 &&
+                Min[Table[ClearSystemCache[]; First @ AbsoluteTiming[ps["M", str];], {3}]] < 0.05
+        ]
+    ],
+    True,
+    TestID -> "Tier11-PauliStringMeasure-Packed-Perf-n100"
+]
+VerificationTest[
+    Block[{},
+        SeedRandom[3];
+        With[{ps = PauliStabilizer["Random"[500]], str = StringRepeat["Z", 500]},
+            Length[ps["M", str]] == 2 &&
+                Min[Table[ClearSystemCache[]; First @ AbsoluteTiming[ps["M", str];], {3}]] < 2
+        ]
+    ],
+    True,
+    TestID -> "Tier11-PauliStringMeasure-Packed-Perf-n500"
+]
+
 
 EndTestSection[]

@@ -34,8 +34,69 @@ sympInnerProduct[v1_List, v2_List, n_Integer] :=
     Mod[v1[[;; n]] . v2[[n + 1 ;; 2 n]] + v2[[;; n]] . v1[[n + 1 ;; 2 n]], 2]
 
 
+(* Packed-representation Pauli-string measurement (Stabilizer/Packed.m layout,    *)
+(* same physics as the canonical rule below). Row r anticommutes with P iff       *)
+(* popcount(x_r AND z_P) + popcount(z_r AND x_P) is odd, computed per chunk by    *)
+(* a vectorized DigitCount parity against P's packed word-vector. The AG          *)
+(* row-clearing loop reuses packedRowSumPhase (Measurement.m), so each cleared    *)
+(* row costs O(n/62) machine words instead of an O(n^2) tableau copy. Returns     *)
+(* the same conditional Association contract as the canonical path.               *)
+packedMeasurePauliString[ps_PauliStabilizer, pauliString_String] := Enclose @ Block[{
+    tup = psGetPacked[ps], targetSign, targetN, pVec, n, x, z, ph, pxP, pzP, par, pos
+},
+    {targetSign, targetN, pVec} = pauliStringParse[pauliString];
+    n = tup[[1]]; x = tup[[2]]; z = tup[[3]]; ph = (1 - tup[[4]]) / 2;
+    ConfirmAssert[targetN == n];
+    pxP = packChunks[Transpose[{pVec[[;; n]]}], n][[All, 1]];
+    pzP = packChunks[Transpose[{pVec[[n + 1 ;;]]}], n][[All, 1]];
+    par = Mod[
+        Total @ MapThread[
+            DigitCount[BitAnd[#1, #4], 2, 1] + DigitCount[BitAnd[#2, #3], 2, 1] &,
+            {x, z, pxP, pzP}
+        ],
+        2
+    ];
+    pos = Lookup[PositionIndex[par], 1, {}];
+    With[{firstStab = SelectFirst[pos, GreaterThan[n]]},
+        If[ MissingQ[firstStab],
+            (* DETERMINISTIC: P (or -P) commutes with all stabilizers; outcome     *)
+            (* from the closed-form i-factor tracking, state unchanged.            *)
+            <|(1 - stabilizerExpectation[ps, pauliString]) / 2 -> ps|>,
+            (* NON-DETERMINISTIC: clear every other anticommuting row into the     *)
+            (* pivot stabilizer p -- destabilizers included (AarGot04 \[Section]3),*)
+            (* or the symplectic pairing breaks and later deterministic outcomes   *)
+            (* come out wrong. Then promote p to its destabilizer slot and install *)
+            (* (-1)^b * P as the new stabilizer.                                   *)
+            Block[{x2 = x, z2 = z, ph2 = ph, p = firstStab},
+                Scan[
+                    Function[h,
+                        (* Boole collapses an odd i-power (possible only for a    *)
+                        (* destabilizer row, whose sign is not physical) to phase *)
+                        (* bit 0, matching the canonical rowsum convention.       *)
+                        ph2[[h]] = Boole[Mod[2 ph2[[h]] + 2 ph2[[p]] + packedRowSumPhase[x2, z2, p, h], 4] == 2];
+                        x2[[All, h]] = BitXor[x2[[All, h]], x2[[All, p]]];
+                        z2[[All, h]] = BitXor[z2[[All, h]], z2[[All, p]]]
+                    ],
+                    DeleteCases[pos, p]
+                ];
+                x2[[All, p - n]] = x2[[All, p]]; z2[[All, p - n]] = z2[[All, p]];
+                x2[[All, p]] = pxP; z2[[All, p]] = pzP;
+                Association[
+                    # -> psFromPacked[{n, x2, z2, 1 - 2 ReplacePart[ph2, p -> (1 - targetSign (1 - 2 #)) / 2]}] & /@ {0, 1}
+                ]
+            ]
+        ]
+    ]
+]
+
+
+(* Concrete states take the packed path; the canonical rank-3-array path handles  *)
+(* symbolic signs (non-Clifford P/T residues, SymPhase states), which fail the    *)
+(* psConcreteFastQ gate.                                                           *)
 ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
-    StringMatchQ[pauliString, RegularExpression["^-?[IXYZ]+$"]] := Enclose @ Module[{
+    StringMatchQ[pauliString, RegularExpression["^-?[IXYZ]+$"]] := If[psConcreteFastQ[ps],
+    packedMeasurePauliString[ps, pauliString],
+    Enclose @ Module[{
     targetSign, targetN, pVec, n, omega, anticommPos
 },
     {targetSign, targetN, pVec} = pauliStringParse[pauliString];
@@ -75,7 +136,7 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
             ]
         ]
     ]]
-]
+]]
 
 
 (* String-list bulk Pauli measurement: measure each in sequence, collect outcomes *)
