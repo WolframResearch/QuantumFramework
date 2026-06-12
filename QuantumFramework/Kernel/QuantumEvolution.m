@@ -24,10 +24,13 @@ QuantumEvolve[hamiltonian_QuantumOperator, lindblad : {___QuantumOperator}, args
 
 QuantumEvolve[hamiltonian_QuantumOperator, (lindblad : Except[_List] -> gamma_) | (lindblad_ -> gamma : Except[_List]), args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
 
+(* a matrix of rates is a Kossakowski matrix: evolve with the corresponding Liouvillian superoperator *)
+QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List ? MatrixQ, args___] :=
+    QuantumEvolve[QuantumOperator["Hamiltonian"[hamiltonian, lindblad, gammas]], args]
 
 QuantumEvolve[
     hamiltonian_ ? QuantumOperatorQ,
-    lindblad : {___ ? QuantumOperatorQ} -> gammas_List,
+    lindblad : {___ ? QuantumOperatorQ} -> gammas_List ? VectorQ,
     defaultState : _ ? QuantumStateQ | Automatic | None : Automatic,
     defaultParameter : _Symbol | {_Symbol, _ ? NumericQ, _ ? NumericQ} | Automatic : Automatic,
     opts : OptionsPattern[]
@@ -170,7 +173,7 @@ QuantumEvolve[
             equations,
             return,
             param,
-            FilterRules[{opts}, Options[NDSolveValue]]
+            FilterRules[{opts}, Options[DSolveValue]]
         ]
     ];
     If[ TrueQ[OptionValue["ReturnSolution"]], Return[solution]];

@@ -76,6 +76,94 @@ With[{tol = 1*^-4},
 EndTestSection[]
 
 
+BeginTestSection["Liouvillian - Kossakowski matrix rates"]
+
+(* A symbolic rate matrix must build: the zero-rate skip in the matrix branch
+   applies only to provably zero entries, so undecidable comparisons like
+   γ == 0 fall through to the general term instead of leaving an If behind. *)
+VerificationTest[
+    Block[{σm, id, l1, l2, h, ll},
+        σm = QuantumOperator[{{0, 1}, {0, 0}}];
+        id = QuantumOperator["I"];
+        l1 = QuantumTensorProduct[σm, id];
+        l2 = QuantumTensorProduct[id, σm];
+        h = QuantumOperator["ZI"] + QuantumOperator["IZ"];
+        ll = QuantumOperator["Liouvillian"[h, {l1, l2}, {{\[FormalG], \[FormalC]}, {\[FormalC], \[FormalG]}}]];
+        MatchQ[ll, _QuantumOperator] && FreeQ[ll["Matrix"], If]
+    ],
+    True,
+    TestID -> "Kossakowski-symbolic-rates-build"
+];
+
+(* QuantumEvolve accepts a rate matrix; a diagonal one must reproduce the
+   vector-rate evolution. *)
+VerificationTest[
+    Block[{σm, id, l1, l2, h, ρ, fVec, fMat},
+        SeedRandom[3];
+        σm = QuantumOperator[{{0, 1}, {0, 0}}];
+        id = QuantumOperator["I"];
+        l1 = QuantumTensorProduct[σm, id];
+        l2 = QuantumTensorProduct[id, σm];
+        h = 0.35 (QuantumOperator["ZI"] + QuantumOperator["IZ"]);
+        ρ = QuantumState["RandomMixed", {2, 2}];
+        fVec = QuantumEvolve[h, {l1, l2} -> {0.8, 0.5}, ρ, {t, 0, 1}][1];
+        fMat = QuantumEvolve[h, {l1, l2} -> {{0.8, 0.}, {0., 0.5}}, ρ, {t, 0, 1}][1];
+        Norm[Flatten[N[fVec["DensityMatrix"]] - N[fMat["DensityMatrix"]]]] < 1*^-4
+    ],
+    True,
+    TestID -> "Kossakowski-diagonal-equals-vector-rates"
+];
+
+(* Full off-diagonal rate matrix against a hand-written master equation
+   dρ/dt = -i[H,ρ] + Σ_jk β_jk (L_j ρ L_k† - {L_k† L_j, ρ}/2). *)
+VerificationTest[
+    Block[{σm, id, l1, l2, lm, h, hm, β, ρ, f, rhs, ref},
+        SeedRandom[3];
+        σm = QuantumOperator[{{0, 1}, {0, 0}}];
+        id = QuantumOperator["I"];
+        l1 = QuantumTensorProduct[σm, id];
+        l2 = QuantumTensorProduct[id, σm];
+        lm = Normal /@ {l1["Matrix"], l2["Matrix"]};
+        h = 0.35 (QuantumOperator["ZI"] + QuantumOperator["IZ"]);
+        hm = Normal[h["Matrix"]];
+        β = {{0.8, 0.3}, {0.3, 0.5}};
+        ρ = QuantumState["RandomMixed", {2, 2}];
+        f = QuantumEvolve[h, {l1, l2} -> β, ρ, {t, 0, 1}][1];
+        rhs[m_] := -I (hm . m - m . hm) + Sum[
+            β[[j, k]] (lm[[j]] . m . ConjugateTranspose[lm[[k]]] -
+                (ConjugateTranspose[lm[[k]]] . lm[[j]] . m + m . ConjugateTranspose[lm[[k]]] . lm[[j]]) / 2),
+            {j, 2}, {k, 2}];
+        ref = NDSolveValue[{\[FormalR]'[t] == rhs[\[FormalR][t]], \[FormalR][0] == Normal[ρ["DensityMatrix"]]}, \[FormalR][1], {t, 0, 1}];
+        Norm[Flatten[N[f["Computational"]["DensityMatrix"]] - ref]] < 1*^-4
+    ],
+    True,
+    TestID -> "Kossakowski-matrix-rates-vs-master-equation"
+];
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumEvolve - DSolve options"]
+
+(* DSolve-only options (notably Assumptions) must be forwarded to DSolveValue
+   on the symbolic branch instead of being filtered against NDSolveValue. *)
+VerificationTest[
+    Block[{captured = $Failed, dsvOpts = Options[DSolveValue]},
+        Block[{DSolveValue},
+            Options[DSolveValue] = dsvOpts;
+            DSolveValue[_, ret_, _, o___] := (captured = Flatten[{o}]; ret);
+            QuantumEvolve[QuantumOperator["Z"], {QuantumOperator[{{0, 1}, {0, 0}}]} -> {\[FormalG]},
+                QuantumState["1"], t, "ReturnSolution" -> True, Assumptions -> \[FormalG] > 0]
+        ];
+        MemberQ[captured, Assumptions -> \[FormalG] > 0]
+    ],
+    True,
+    TestID -> "Evolve-Assumptions-reaches-DSolveValue"
+];
+
+EndTestSection[]
+
+
 BeginTestSection["Liouvillian - phase-space (Wootters)"]
 
 With[{d = 2},
