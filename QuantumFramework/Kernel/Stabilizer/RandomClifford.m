@@ -15,7 +15,11 @@ SampleMallows[n_] := Block[{h = ConstantArray[0, n], perm = ConstantArray[0, n],
     Do[
         Block[{m = n - i, eps, r, index, k},
             eps = 4 ^ (- m);
-            r = RandomReal[];
+            (* r is exactified so the Log2 argument stays an exact rational:    *)
+            (* in machine arithmetic the weight (1 - r) eps drops below         *)
+            (* $MinMachineNumber once m >~ 538 (eps = 4^-m) and emits           *)
+            (* General::munfl; Ceiling[Log2[exact]] needs no machine coercion.  *)
+            r = SetPrecision[RandomReal[], Infinity];
             index = - Ceiling[Log2[r + (1 - r) eps]];
             h[[i + 1]] = Boole[index < m];
             k = If[index < m, index, 2 m - index - 1];
