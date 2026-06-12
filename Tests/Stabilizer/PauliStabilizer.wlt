@@ -1148,6 +1148,23 @@ VerificationTest[
     TestID -> "Clifford-Uniform-NoFailure-n5"
 ]
 
+(* Large register: the sampler must stay on packed mod-2 arithmetic. Structured  *)
+(* fillTril arrays (SymmetrizedArray . LowerTriangularMatrix) route Dot through  *)
+(* a generic tensor path with multi-GB intermediates, and an exact               *)
+(* (non-Modulus-2) Inverse turns the final 2n x 2n product into a big-integer    *)
+(* matmul; either kills the kernel near n ~ 500. The sample must also land in    *)
+(* Sp(2n, F_2).                                                                  *)
+VerificationTest[
+    Block[{ps}, SeedRandom[12345];
+        ps = PauliStabilizer["Random", 500];
+        psValidQ[ps] && With[{m = ps["Matrix"], n = ps["Qubits"]},
+            Mod[m . agOmega[n] . Transpose[m] - agOmega[n], 2] === ConstantArray[0, {2 n, 2 n}]
+        ]
+    ],
+    True,
+    TestID -> "Clifford-Uniform-NoFailure-n500"
+]
+
 (* 200 samples of PauliStabilizer["Random",1] should hit at least 22 of 24 distinct elements (coupon collector) *)
 VerificationTest[
     Block[{samples, distinct},
@@ -2369,6 +2386,74 @@ Do[
         seqMeasSupportMatchQ[6, seqMeasSpecs[6, 80]],
         True,
         TestID -> "Tier11-SequentialMeasure-Support-6q-" <> ToString[k]
+    ],
+    {k, 4}
+]
+
+(* Non-deterministic Pauli-STRING measurement (PauliMeasure.m). Regression for   *)
+(* the same AarGot04 \[Section]3 omission in the string branch, which was worse:  *)
+(* the other anticommuting stabilizers kept their tableau bits (only signs were   *)
+(* multiplied, without the g-function i-phase) and destabilizers were never       *)
+(* rowsummed, leaving a non-abelian "stabilizer group" whose branches             *)
+(* materialized to garbage (caught 2026-06-11 vs dense simulation and Stim).      *)
+
+(* Minimal case with TWO anticommuting stabilizers: |++> measured with ZZ must    *)
+(* branch into the two Bell-pair parities, on which XX stays deterministic.       *)
+VerificationTest[
+    With[{res = PauliStabilizer[2]["H", 1]["H", 2]["M", "ZZ"]},
+        {
+            Keys @ res[0]["M", "XX"], Keys @ res[1]["M", "XX"],
+            Keys @ res[0]["M", {1, 2}], Keys @ res[1]["M", {1, 2}]
+        }
+    ],
+    {{0}, {0}, {{0, 0}, {1, 1}}, {{0, 1}, {1, 0}}},
+    TestID -> "Tier11-PauliStringMeasure-TwoAnticommuting-Bell"
+]
+
+(* Random circuits: every non-deterministic Pauli-string branch must match the    *)
+(* dense projection (1 + (1-2b) P)/2 |psi> -- branch state up to global phase     *)
+(* AND sequential full-register support.                                          *)
+SeedRandom[20260611];
+pauliStringMatrix[s_String] := With[{body = If[StringStartsQ[s, "-"], StringDrop[s, 1], s]},
+    If[StringStartsQ[s, "-"], -1, 1] * KroneckerProduct @@ Replace[Characters[body],
+        {"I" -> PauliMatrix[0], "X" -> PauliMatrix[1], "Y" -> PauliMatrix[2], "Z" -> PauliMatrix[3]}, {1}]
+];
+pauliStringMeasureMatchQ[n_, specs_] := Module[{ps, str, res, vec, mat},
+    ps = Fold[#1[#2] &, PauliStabilizer[n], specs];
+    (* draw strings until one is non-deterministic for this state *)
+    str = NestWhile[
+        StringJoin @ Table[RandomChoice[{"I", "X", "Y", "Z"}], {n}] &,
+        StringJoin @ Table[RandomChoice[{"I", "X", "Y", "Z"}], {n}],
+        Length[ps["M", #]] =!= 2 &, 1, 100
+    ];
+    res = ps["M", str];
+    Length[res] === 2 &&
+        (vec = N @ Normal @ ps["State"]["StateVector"];
+         mat = pauliStringMatrix[str];
+         AllTrue[{0, 1},
+            Function[b,
+                Module[{proj = ((IdentityMatrix[2^n] + (1 - 2 b) mat) / 2) . vec},
+                    Chop[Norm[proj]] != 0 &&
+                        Chop[Abs[Conjugate[Normalize[proj]] . Normalize[N @ Normal @ res[b]["State"]["StateVector"]]] - 1] == 0 &&
+                        Flatten @ Position[Abs[Normalize[proj]]^2, x_ /; x > 10^-6, {1}, Heads -> False] ===
+                            Sort[FromDigits[#, 2] + 1 & /@ Keys[res[b]["M", Range[n]]]]
+                ]
+            ]
+         ])
+];
+Do[
+    VerificationTest[
+        pauliStringMeasureMatchQ[5, seqMeasSpecs[5, 40]],
+        True,
+        TestID -> "Tier11-PauliStringMeasure-Support-5q-" <> ToString[k]
+    ],
+    {k, 8}
+]
+Do[
+    VerificationTest[
+        pauliStringMeasureMatchQ[6, seqMeasSpecs[6, 60]],
+        True,
+        TestID -> "Tier11-PauliStringMeasure-Support-6q-" <> ToString[k]
     ],
     {k, 4}
 ]

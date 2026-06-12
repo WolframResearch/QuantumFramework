@@ -36,7 +36,7 @@ sympInnerProduct[v1_List, v2_List, n_Integer] :=
 
 ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
     StringMatchQ[pauliString, RegularExpression["^-?[IXYZ]+$"]] := Enclose @ Module[{
-    targetSign, targetN, pVec, n, omega, gens, anticommIdx, kIdx
+    targetSign, targetN, pVec, n, omega, anticommPos
 },
     {targetSign, targetN, pVec} = pauliStringParse[pauliString];
     n = ps["Qubits"];
@@ -45,52 +45,36 @@ ps_PauliStabilizer["Measure" | "M", pauliString_String] /;
         {ConstantArray[0, {n, n}], IdentityMatrix[n]},
         {IdentityMatrix[n], ConstantArray[0, {n, n}]}
     }];
-    gens = ps["Matrix"][[ps["GeneratorCount"] + 1 ;; 2 ps["GeneratorCount"]]];
-    (* Find indices where pauliString anticommutes with stabilizer rows *)
-    anticommIdx = Position[
-        Mod[gens . omega . pVec, 2],
-        1, {1}, Heads -> False
-    ];
-    If[anticommIdx === {},
+    (* Rows of ps["Matrix"] (destabilizers 1..n, stabilizers n+1..2n) that      *)
+    (* anticommute with P, via the symplectic form.                             *)
+    anticommPos = Lookup[PositionIndex[Mod[ps["Matrix"] . omega . pVec, 2]], 1, {}];
+    With[{firstStab = SelectFirst[anticommPos, GreaterThan[n]]},
+    If[MissingQ[firstStab],
         (* DETERMINISTIC: P (or -P) commutes with all stabilizers => P is in the
            Abelian closure. The expectation <P> = +-1 is recovered by the AG
            closed-form i-factor tracking (stabilizerExpectation, O(n^2)) rather
            than materializing the 2^n state vector. The outcome bit is (1-<P>)/2. *)
         <|(1 - stabilizerExpectation[ps, pauliString]) / 2 -> ps|>,
         (* NON-DETERMINISTIC: at least one stabilizer anticommutes with P.       *)
-        (* AG §3 Case I: replace the first anticommuting generator with (-1)^b·P*)
-        (* (step 1) and update the OTHER anticommuting generators by row-       *)
-        (* multiplication so they commute with P (step 2). Outcome b is random  *)
-        (* in {0, 1}.                                                            *)
-        kIdx = First @ First @ anticommIdx;   (* index in 1..n (within stabilizer rows) *)
-        (* Update both the sign AND the tableau row: stabilizer row kIdx is    *)
-        (* overwritten with pVec's symplectic bits so the post-state is a       *)
-        (* +-P eigenstate (AG §3 Case I, step 1).                              *)
-        Module[{otherIdx, baseSigns, newTableau, gen = ps["GeneratorCount"]},
-            otherIdx = DeleteCases[Flatten[anticommIdx, 1], kIdx];
-            baseSigns = MapAt[# * ps["StabilizerSigns"][[kIdx]] &, ps["StabilizerSigns"], List /@ otherIdx];
-            (* Replace stabilizer row kIdx of the tableau with pVec's bits.     *)
-            (* Tableau shape is {2 (X/Z block), n_qubits, 2*GeneratorCount}.    *)
-            (* Stabilizer rows live at indices gen+1 .. 2 gen along axis 3.    *)
-            newTableau = ps["Tableau"];
-            newTableau[[1, All, gen + kIdx]] = pVec[[;; n]];
-            newTableau[[2, All, gen + kIdx]] = pVec[[n + 1 ;;]];
-            Association @ Table[
-                With[{
-                    newSigns = ReplacePart[baseSigns, kIdx -> targetSign * (1 - 2 b)]
-                },
-                    b -> PauliStabilizer[<|
-                        "Phase" -> Join[
-                            ps["Phase"][[;; gen]],
-                            (1 - newSigns) / 2
-                        ],
-                        "Tableau" -> newTableau
-                    |>]
-                ],
-                {b, {0, 1}}
+        (* AG §3 generalized to a Pauli string: rowsum EVERY other anticommuting *)
+        (* row -- destabilizers included -- into the pivot stabilizer p, so all  *)
+        (* remaining generators commute with P and the symplectic pairing is     *)
+        (* preserved (skipping rows here silently corrupts later deterministic   *)
+        (* outcomes). Then promote p's row to its destabilizer slot and install  *)
+        (* (-1)^b * P as the new stabilizer. Outcome b is random in {0, 1}.      *)
+        Block[{r2, t2},
+            {r2, t2} = Fold[rowsum[#1, #2, firstStab] &, {ps["Signs"], ps["Tableau"]}, DeleteCases[anticommPos, firstStab]];
+            t2[[All, All, firstStab - n]] = t2[[All, All, firstStab]];
+            t2[[1, All, firstStab]] = pVec[[;; n]];
+            t2[[2, All, firstStab]] = pVec[[n + 1 ;;]];
+            Association[
+                # -> PauliStabilizer[<|
+                    "Signs" -> ReplacePart[r2, firstStab -> targetSign * (1 - 2 #)],
+                    "Tableau" -> t2
+                |>] & /@ {0, 1}
             ]
         ]
-    ]
+    ]]
 ]
 
 

@@ -28,10 +28,16 @@ SampleMallows[n_] := Block[{h = ConstantArray[0, n], perm = ConstantArray[0, n],
 ]
 
 
-fillTril[n_, symmetric_ : False] := If[symmetric,
-    SymmetrizedArray[# + UpperTriangularize[Transpose[#], 1]],
-    LowerTriangularMatrix[# + IdentityMatrix[n]]
-] & @ LowerTriangularize[RandomInteger[1, {n, n}], If[symmetric, 0, -1]]
+(* Plain packed integer matrices throughout: structured-array wrappers          *)
+(* (SymmetrizedArray, LowerTriangularMatrix) make the downstream Dot fall off   *)
+(* the packed-matmul path onto a generic tensor route whose intermediates       *)
+(* reach tens of GB at n ~ 500 and kill the kernel.                             *)
+fillTril[n_, symmetric_ : False] := With[{lt = LowerTriangularize[RandomInteger[1, {n, n}], If[symmetric, 0, -1]]},
+    If[symmetric,
+        lt + Transpose[LowerTriangularize[lt, -1]],
+        lt + IdentityMatrix[n]
+    ]
+]
 
 
 
@@ -49,8 +55,12 @@ RandomClifford[n_] := Block[{h, perm, gamma1, delta1, gamma2, delta2, zero, prod
     zero = ConstantArray[0, {n, n}];
     prod1 = Mod[gamma1 . delta1, 2];
     prod2 = Mod[gamma2 . delta2, 2];
-    inv1 = Transpose[Inverse[delta1]];
-    inv2 = Transpose[Inverse[delta2]];
+    (* The tableau lives over F_2 (the final product is reduced mod 2), so      *)
+    (* invert mod 2: the exact integer inverse of a unit lower-triangular 0/1   *)
+    (* matrix has entries that grow exponentially with n, turning the final     *)
+    (* 2n x 2n Dot into a big-integer matmul.                                   *)
+    inv1 = Transpose[Inverse[delta1, Modulus -> 2]];
+    inv2 = Transpose[Inverse[delta2, Modulus -> 2]];
     table1 = Join[Join[delta1, zero, 2], Join[prod1, inv1, 2]];
     table2 = Join[Join[delta2, zero, 2], Join[prod2, inv2, 2]];
     table = table2[[Join[perm, perm + n]]];
