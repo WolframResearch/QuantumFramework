@@ -1674,11 +1674,59 @@ VerificationTest[
     TestID -> "Phase2-Clifford-NoMessage"
 ]
 
-(* Usage messages present *)
+(* Public API signature surface of the six exported stabilizer symbols.
+   Probed by CALLING each canonical form (the package loader makes DownValues
+   inspection unreliable, and ::usage strings live in the auto-generated
+   Usage.m, which is not a kernel contract). Each key names one signature;
+   the test returns the keys of any form that no longer evaluates as
+   documented, so the expected output is {}. *)
 VerificationTest[
-    StringQ[PauliStabilizer::usage] && StringLength[PauliStabilizer::usage] > 100,
-    True,
-    TestID -> "Phase2-PauliStabilizer-UsageMessage"
+    Block[{checks}, SeedRandom[20260612];
+        checks = <|
+            "PauliStabilizer[stabStrings]" ->
+                Head[PauliStabilizer[{"XX", "ZZ"}]] === PauliStabilizer,
+            "PauliStabilizer[name]" ->
+                Head[PauliStabilizer["SteaneCode"]] === PauliStabilizer,
+            "PauliStabilizer[Random, n]" ->
+                Head[PauliStabilizer["Random", 3]] === PauliStabilizer,
+            "PauliStabilizer[n]" ->
+                Head[PauliStabilizer[3]] === PauliStabilizer,
+            "PauliStabilizer[qs]" ->
+                Head[PauliStabilizer[QuantumState["Bell"]]] === PauliStabilizer,
+            "PauliStabilizer[qo]" ->
+                Head[PauliStabilizer[QuantumOperator["H"]]] === PauliStabilizer,
+            "PauliStabilizer[qco]" ->
+                Head[PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]] === PauliStabilizer,
+            "ps[gate, q]" ->
+                Head[PauliStabilizer[2]["CNOT" -> {1, 2}]] === PauliStabilizer,
+            "ps[M, q]" ->
+                MatchQ[PauliStabilizer[1]["M", 1], _Association],
+            "ps[Expectation, pauli]" ->
+                PauliStabilizer[{"XX", "ZZ"}]["Expectation", "ZZ"] === 1,
+            "ps[InnerProduct, other]" ->
+                PauliStabilizer[1]["InnerProduct", PauliStabilizer[1]] === 1,
+            "ps[prop]" ->
+                IntegerQ[PauliStabilizer[2]["Qubits"]] && ListQ[PauliStabilizer[1]["Properties"]],
+            "StabilizerStateQ" ->
+                StabilizerStateQ[PauliStabilizer[1]] && ! StabilizerStateQ[42],
+            "StabilizerFrame[ps] / [{{c, ps}..}]" ->
+                StabilizerFrame[PauliStabilizer[1]]["Length"] === 1 &&
+                    ListQ[StabilizerFrame[{{1, PauliStabilizer[1]}}]["Coefficients"]],
+            "non-Clifford gate -> StabilizerFrame" ->
+                Head[PauliStabilizer[1]["H", 1]["T", 1]] === StabilizerFrame,
+            "CliffordChannel[Identity, n]" ->
+                Head[CliffordChannel["Identity", 2]] === CliffordChannel,
+            "CliffordChannel[ps]" ->
+                Head[CliffordChannel[PauliStabilizer[2]]] === CliffordChannel,
+            "GraphState[g]" ->
+                Head[GraphState[PathGraph[Range[3]]]] === GraphState,
+            "LocalComplement[g, v]" ->
+                Head[LocalComplement[PathGraph[Range[3]], 2]] === Graph
+        |>;
+        Keys @ Select[checks, # =!= True &]
+    ],
+    {},
+    TestID -> "Phase2-PauliStabilizer-KernelSignatures"
 ]
 
 (* MakeBoxes at large n: must NOT call ps["State"] (which would OOM).
