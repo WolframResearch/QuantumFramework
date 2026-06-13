@@ -54,6 +54,7 @@ PackageScope["QuditAdjacencyMatrix"]
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
 PackageScope["Memoize"]
+PackageScope["cacheProperty"]
 
 
 
@@ -414,6 +415,21 @@ Memoize[f_ ? Developer`SymbolQ, opts : OptionsPattern[]] := With[{g = Unique[f],
         ]
     ]
 ]
+
+(* Safe store for the *Prop property caches. Replaces the fragile
+   `Quiet[HeadProp[obj, prop, args] = result, Rule::rhs]` (and bare Set) used in the object
+   wrappers: it commits the cache DownValue only when the held key is free of pattern
+   constructs. A pattern-bearing key - only ever a symbolic / meta call - would otherwise create
+   an over-matching DownValue (the latent bug the old code masked with Quiet) and emit Rule::rhs;
+   such keys are simply left uncached. The key is small (obj + prop + args), so the FreeQ check
+   is cheap, and no Quiet is needed. Returns result either way. *)
+SetAttributes[cacheProperty, HoldFirst];
+cacheProperty[prop_, result_] := (
+    If[ FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
+        prop = result
+    ];
+    result
+)
 
 MyBlockDiagonalMatrix[{m1_ ? matrixQ, m2_ ? matrixQ}] := Block[{
     r1, r2, c1, c2

@@ -36,7 +36,7 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "QuantumOperator"}, prop] &&
         QuantumHamiltonianOperatorProp[qho, "Basis"]["ParameterArity"] == 0,
-        QuantumHamiltonianOperatorProp[qho, prop, args] = result,
+        cacheProperty[QuantumHamiltonianOperatorProp[qho, prop, args], result],
         result
     ] /; !MatchQ[result, _QuantumHamiltonianOperatorProp] || Message[QuantumHamiltonianOperator::undefprop, prop]
 ]

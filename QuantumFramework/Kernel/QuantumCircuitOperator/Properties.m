@@ -36,8 +36,7 @@ $QuantumCircuitPreventCache = {
     result = QuantumCircuitOperatorProp[qds, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[$QuantumCircuitPreventCache, propName[prop]],
-        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
-        Quiet[QuantumCircuitOperatorProp[qds, prop, args] = result, Rule::rhs],
+        cacheProperty[QuantumCircuitOperatorProp[qds, prop, args], result],
         result
     ] /; !MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop]
 ]

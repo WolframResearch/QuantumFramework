@@ -81,8 +81,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
         MemberQ[{"Properties", "AllProperties", "QuantumOperator", "Basis"}, prop] ||
         QuantumMeasurementProp[qm, "Basis"]["ParameterArity"] > 0,
         result,
-        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
-        Quiet[QuantumMeasurementProp[qm, prop, args] = result, Rule::rhs]
+        cacheProperty[QuantumMeasurementProp[qm, prop, args], result]
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
 

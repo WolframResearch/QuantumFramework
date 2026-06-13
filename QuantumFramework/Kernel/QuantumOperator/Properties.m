@@ -80,8 +80,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
         QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
-        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
-        Quiet[QuantumOperatorProp[qo, prop, args] = result, Rule::rhs],
+        cacheProperty[QuantumOperatorProp[qo, prop, args], result],
         result
     ] /;
         (!FailureQ[Unevaluated @ result] || Message[QuantumOperator::failprop, prop, result]) &&

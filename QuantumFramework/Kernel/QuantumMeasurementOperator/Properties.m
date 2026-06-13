@@ -38,8 +38,7 @@ $QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "Quant
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
         QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
-        (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
-        Quiet[QuantumMeasurementOperatorProp[qmo, prop, args] = result, Rule::rhs],
+        cacheProperty[QuantumMeasurementOperatorProp[qmo, prop, args], result],
         result
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
 ]
