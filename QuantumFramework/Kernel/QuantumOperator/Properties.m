@@ -60,6 +60,13 @@ QuantumOperator::failprop = "property `` have failed with ``";
 
 QuantumOperatorProp[QuantumOperator[state_, _], "State"] := state
 
+(* Direct structural getter: the basis lives in the wrapped state. Without this, qo["Basis"]
+   falls through all ~124 QuantumOperatorProp clauses to the generic delegation, whose guard
+   recomputes AllProperties on both operator and state and intersects them. Because the
+   cache-eligibility guard reads qo["Basis"]["ParameterArity"] on every property access, that
+   fall-through taxed every read; the direct getter removes it. *)
+QuantumOperatorProp[QuantumOperator[state_, _], "Basis"] := state["Basis"]
+
 QuantumOperatorProp[QuantumOperator[_, order : {_, _}], "Order"] := order
 
 QuantumOperatorProp[QuantumOperator[_, {_, inputOrder_}], "InputOrder"] := inputOrder
@@ -71,7 +78,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
     result = QuantumOperatorProp[qo, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "AllProperties", "State", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
         QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumOperatorProp[qo, prop, args] = result, Rule::rhs],

@@ -30,7 +30,7 @@ qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
 QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` is undefined for this operator";
 
 
-$QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits"}
+$QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits", "Basis"}
 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
@@ -58,6 +58,9 @@ QuantumMeasurementOperatorProp[qmo_, "AllProperties"] :=
 (* getters *)
 
 QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
+
+(* direct getter so qmo["Basis"] does not fall through to the AllProperties-intersection delegation *)
+QuantumMeasurementOperatorProp[_[op_, _], "Basis"] := op["Basis"]
 
 QuantumMeasurementOperatorProp[_[_, targets_], "Targets"] := targets
 

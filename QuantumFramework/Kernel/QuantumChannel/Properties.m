@@ -26,7 +26,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
     result = QuantumChannelProp[qc, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator", "Basis"}, prop] &&
         QuantumChannelProp[qc, "Basis"]["ParameterArity"] == 0,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
         Quiet[QuantumChannelProp[qc, prop, args] = result, Rule::rhs],
@@ -43,6 +43,9 @@ QuantumChannelProp[qc_, "AllProperties"] :=
 (* getters *)
 
 QuantumChannelProp[_[op_], "Operator" | "QuantumOperator"] := op
+
+(* direct getter so qc["Basis"] does not fall through to the AllProperties-intersection delegation *)
+QuantumChannelProp[_[op_], "Basis"] := op["Basis"]
 
 
 QuantumChannelProp[qc_, "TraceOrder"] := Select[qc["FullOutputOrder"], NonPositive]

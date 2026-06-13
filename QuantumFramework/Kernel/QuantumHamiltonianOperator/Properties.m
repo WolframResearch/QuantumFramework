@@ -34,7 +34,7 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
     result = QuantumHamiltonianOperatorProp[qho, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "AllProperties", "Basis"}, prop] &&
+        ! MemberQ[{"Properties", "AllProperties", "Basis", "QuantumOperator"}, prop] &&
         QuantumHamiltonianOperatorProp[qho, "Basis"]["ParameterArity"] == 0,
         QuantumHamiltonianOperatorProp[qho, prop, args] = result,
         result
@@ -45,6 +45,9 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
 (* getters *)
 
 QuantumHamiltonianOperatorProp[_[op_], "QuantumOperator"] := op
+
+(* direct getter so qho["Basis"] does not fall through to the AllProperties-intersection delegation *)
+QuantumHamiltonianOperatorProp[_[op_], "Basis"] := op["Basis"]
 
 QuantumHamiltonianOperatorProp[qho_, "ParameterSpec"] := First @ qho["Basis"]["ParameterSpec"]
 

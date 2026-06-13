@@ -20,7 +20,10 @@ QuditBasis::undefprop = "QuditBasis property `` is undefined for this basis";
 (qb_QuditBasis[prop_ ? propQ, args___]) /; QuditBasisQ[qb] := With[{
     result = QuditBasisProp[qb, prop, args]
 },
-    If[$QuantumFrameworkPropCache, QuditBasisProp[qb, prop, args] = result, result] /; !FailureQ[Unevaluated @ result] &&
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Properties", "Representations"}, prop],
+        QuditBasisProp[qb, prop, args] = result,
+        result
+    ] /; !FailureQ[Unevaluated @ result] &&
     (!MatchQ[result, _QuditBasisProp] || Message[QuditBasis::undefprop, prop])
 ]
 

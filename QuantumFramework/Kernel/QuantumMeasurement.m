@@ -78,7 +78,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
     If[ ! TrueQ[$QuantumFrameworkPropCache] ||
         (* don't cache Simulated* results *)
         MatchQ[prop, name_String | {name_String, ___} /; StringStartsQ[name, "Simulated"]] ||
-        MemberQ[{"Properties", "AllProperties", "QuantumOperator"}, prop] ||
+        MemberQ[{"Properties", "AllProperties", "QuantumOperator", "Basis"}, prop] ||
         QuantumMeasurementProp[qm, "Basis"]["ParameterArity"] > 0,
         result,
         (* TODO: refactor cache to avoid Set-on-non-symbol; Rule::rhs fires when prop/args contain pattern symbols *)
@@ -96,6 +96,9 @@ QuantumMeasurementProp[qm_, "Properties"] := Union @ $QuantumMeasurementProperti
 QuantumMeasurementProp[qm_, "AllProperties"] := Union @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["AllProperties"]]
 
 QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
+
+(* direct getter so qm["Basis"] does not fall through to the AllProperties-intersection delegation *)
+QuantumMeasurementProp[QuantumMeasurement[qmo_], "Basis"] := qmo["Basis"]
 
 QuantumMeasurementProp[qm_, "Operator"] := qm["QuantumOperator"]["Operator"]
 
