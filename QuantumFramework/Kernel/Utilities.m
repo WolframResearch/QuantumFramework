@@ -378,12 +378,40 @@ ReverseHalf[list_] /; Divisible[Length[list], 2] := Catenate @ Reverse[TakeDrop[
 
 HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Insert[#, Splice @ ReverseHalf[# + Length[#]], Length[#] / 2 + 1] &, {1, 2}, n - 1]
 
-(* TODO: WFR *)
-Memoize[f_ ? Developer`SymbolQ] := With[{g = Unique[f]},
+(* Memoize[f] rewrites f so its results are cached. Results are stored in a private
+   Association keyed on Hash[Hold[args]] (with the held key kept alongside for collision
+   safety), instead of appending literal f[args] -> res DownValues. Because the cache key
+   is an integer hash and never a pattern, this never trips Rule::rhs even when arguments
+   contain Blank/Pattern (the failure the old QuantumOperatorProp cache had to Quiet).
+
+   Memoize[f, "CacheQ" -> pred] only caches calls for which pred @@ args is True; pred is
+   evaluated once on a cache miss (never on a hit), so an expensive cacheability predicate
+   does not tax repeated reads. The original definitions are preserved on a shadow symbol
+   whose bodies still call f, so recursion stays memoized.
+   TODO: WFR. *)
+Options[Memoize] = {"CacheQ" -> Automatic};
+
+Memoize[f_ ? Developer`SymbolQ, opts : OptionsPattern[]] := With[{g = Unique[f], cache = Unique[f]},
+    cache = <||>;
     SetAttributes[g, HoldAll];
     DownValues[g] = MapAt[ReplaceAll[f -> g], DownValues[f], {All, 1}];
-    ResourceFunction["BlockProtected"][{f},
-        DownValues[f] = {HoldPattern[f[args___]] :> ResourceFunction["BlockProtected"][{f}, With[{res = g[args]}, AppendTo[DownValues[f], HoldPattern[f[args]] -> res]; res]]};
+    With[{cacheQ = Replace[OptionValue[Memoize, {opts}, "CacheQ"], Automatic -> (True &)]},
+        ResourceFunction["BlockProtected"][{f},
+            DownValues[f] = {
+                HoldPattern[f[args___]] :> With[{held = Hold[args]},
+                    Module[{key = Hash[held], hit},
+                        hit = Lookup[cache, key, Missing[]];
+                        If[ ! MissingQ[hit] && First[hit] === held,
+                            Last[hit],
+                            With[{res = g[args]},
+                                If[ TrueQ[cacheQ[args]], cache[key] = {held, res}];
+                                res
+                            ]
+                        ]
+                    ]
+                ]
+            }
+        ]
     ]
 ]
 
