@@ -139,6 +139,49 @@ With[{
 EndTestSection[]
 
 
+BeginTestSection["QuantumState - padding"]
+
+(* A vector whose length is not a power of the qudit dimension is zero-padded
+   into the next larger qudit space; that changes the qudit count, so it warns. *)
+VerificationTest[
+    QuantumState[Table[0, {12}], 2]["Dimension"],
+    16,
+    {QuantumState::padded},
+    TestID -> "Pad-nonpower-vector-warns"
+]
+
+VerificationTest[
+    QuantumState[Table[0, {12}], 2]["Norm"],
+    0,
+    {QuantumState::padded},
+    TestID -> "Pad-zero-vector-norm0"
+]
+
+VerificationTest[
+    QuantumState[ConstantArray[0, {12, 12}], 2]["Dimension"],
+    16,
+    {QuantumState::padded},
+    TestID -> "Pad-nonpower-matrix-warns"
+]
+
+(* Exact power of the qudit dimension: no padding, no message. *)
+VerificationTest[
+    QuantumState[Normalize @ Table[1, {16}], 2]["Dimension"],
+    16,
+    TestID -> "Pad-exact-power-silent"
+]
+
+(* Single-qudit amplitude-prefix pad (multiplicity 1) stays silent; the
+   tensor-network initial-state prepend relies on QuantumState[{1}, dim]. *)
+VerificationTest[
+    Normal @ QuantumState[{1}, 2]["StateVector"],
+    {1, 0},
+    TestID -> "Pad-prefix-single-qudit-silent"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumState - failure"]
 
 VerificationTest[

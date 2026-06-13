@@ -99,7 +99,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsP
     {
         "Schrodinger" :> Block[{n = 1, m = qco["Gates"]},
             Progress`EvaluateWithProgress[
-                Fold[(n++; FullSimplify @ #2[#1, "Computational" -> False]) &, qs, qco["NormalOperators"]],
+                Fold[(n++; FullSimplify @ #2[#1, Method -> {"TensorNetwork", "Computational" -> False}]) &, qs, qco["NormalOperators"]],
                 <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
             ]
         ],

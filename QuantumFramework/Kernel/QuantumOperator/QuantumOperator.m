@@ -9,12 +9,18 @@ PackageExport["QuantumOperator"]
 
 PackageScope["QuantumOperatorQ"]
 PackageScope["StackQuantumOperators"]
+PackageScope["$QuantumOperatorBroadcastLimit"]
 
 
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
 QuantumOperator::invalidArgs = "QuantumOperator constructor `1` did not match any rule"
+QuantumOperator::broadcast = "broadcasting a `1`-qudit operator over an order of length `2` would build a tensor power of dimension `3`, exceeding `4`; supply an operator and order of matching size"
+
+
+(* largest implied dimension the order-driven multiplicity broadcast may materialize *)
+$QuantumOperatorBroadcastLimit = 2^24
 
 quantumOperatorQ[QuantumOperator[qs_QuantumState /; QuantumStateQ[Unevaluated[qs]], {_ ? orderQ, _ ? orderQ}]] := True
 
@@ -248,11 +254,18 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic
     outputQudits = Max[qo["FullOutputQudits"], 1],
     inputQudits = Max[qo["FullInputQudits"], 1]
 },
-    QuantumOperator[
-        {qo, LCM[Quotient[Length[outputOrder], outputQudits], Quotient[Length[inputOrder], inputQudits]]},
-        {outputOrder, inputOrder},
-        opts
-     ] /;
+    With[{
+        multiplicity = LCM[Quotient[Length[outputOrder], outputQudits], Quotient[Length[inputOrder], inputQudits]]
+    },
+        If[ qo["Dimension"] ^ multiplicity > $QuantumOperatorBroadcastLimit,
+            Message[QuantumOperator::broadcast,
+                Max[outputQudits, inputQudits], Max[Length[outputOrder], Length[inputOrder]],
+                qo["Dimension"] ^ multiplicity, $QuantumOperatorBroadcastLimit
+            ];
+            $Failed,
+            QuantumOperator[{qo, multiplicity}, {outputOrder, inputOrder}, opts]
+        ]
+    ] /;
         Length[outputOrder] > outputQudits && Divisible[Length[outputOrder], outputQudits] &&
         Length[inputOrder] > inputQudits && Divisible[Length[inputOrder], inputQudits]
 ]

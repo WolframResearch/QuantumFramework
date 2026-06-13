@@ -9,6 +9,7 @@ PackageScope["addQuantumStates"]
 
 QuantumState::invalidName = "`1` is not a recognized QuantumState constructor"
 QuantumState::invalidArgs = "QuantumState constructor `1` did not match any rule"
+QuantumState::padded = "state of length `1` is zero-padded to dimension `2` (`3` qudits); use a length that is a power of the qudit dimension, or \"Register\"[n] for an n-qudit register"
 
 
 quantumStateQ[QuantumState[state_SparseArray ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := Length[state] === qb["Dimension"]
@@ -34,6 +35,11 @@ QuantumState[state_ ? stateQ, basisArgs__] /; ! QuantumBasisQ[basisArgs] := Encl
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ];
     multiplicity = basisMultiplicity[Length[state], basis["Dimension"]];
     basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
+    (* a multi-qudit pad means the qudit count was inferred by rounding up,
+       not given exactly; the single-qudit amplitude-prefix pad stays silent *)
+    If[ multiplicity > 1 && Length[state] =!= basis["Dimension"],
+        Message[QuantumState::padded, Length[state], basis["Dimension"], basis["Qudits"]]
+    ];
     QuantumState[
         PadRight[state, Table[basis["Dimension"], TensorRank[state]]],
         basis

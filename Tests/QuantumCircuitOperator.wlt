@@ -590,3 +590,35 @@ With[{
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - Schrodinger method"]
+
+(* Method -> "Schrodinger" folds gates one at a time; each per-gate apply
+   re-enters quantumCircuitApply, so its options must travel inside the
+   Method spec. VerificationTest fails on any emitted message, so these
+   also guard against OptionValue::nodef from a stray top-level option. *)
+With[{
+    qc = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}],
+    psi0 = QuantumState["Register"[2]]
+},
+    VerificationTest[
+        Normal @ qc[psi0, Method -> "Schrodinger"]["StateVector"],
+        {1/Sqrt[2], 0, 0, 1/Sqrt[2]},
+        TestID -> "Schrodinger-Bell-stateVector"
+    ];
+
+    VerificationTest[
+        Head @ qc[psi0, Method -> "Schrodinger"],
+        QuantumState,
+        TestID -> "Schrodinger-returns-state"
+    ];
+
+    VerificationTest[
+        Normal @ qc[psi0, Method -> "Schrodinger"]["StateVector"],
+        Normal @ qc[psi0]["StateVector"],
+        TestID -> "Schrodinger-eq-TensorNetwork-default"
+    ]
+]
+
+EndTestSection[]

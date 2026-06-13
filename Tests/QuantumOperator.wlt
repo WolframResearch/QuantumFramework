@@ -230,6 +230,58 @@ With[{xMix = mkMatrixOp @ QuantumOperator["X"], h2Mix = mkMatrixOp @ QuantumOper
 EndTestSection[]
 
 
+BeginTestSection["QuantumOperator - broadcast"]
+
+(* Small multiplicity broadcasts: an operator given an order longer than its
+   qudit count tensors copies of itself across the order. *)
+VerificationTest[
+    QuantumOperator["H", {1, 2, 3}]["Dimensions"],
+    {2, 2, 2, 2, 2, 2},
+    TestID -> "Broadcast-H-3qubits"
+]
+
+VerificationTest[
+    QuantumOperator["H", {1, 2, 3}]["MatrixRepresentation"],
+    QuantumTensorProduct[QuantumOperator["H", {1}], QuantumOperator["H", {2}], QuantumOperator["H", {3}]]["MatrixRepresentation"],
+    TestID -> "Broadcast-H-3qubits-matrix"
+]
+
+VerificationTest[
+    QuantumOperator["CNOT", {1, 2, 3, 4}]["Dimensions"],
+    {2, 2, 2, 2, 2, 2, 2, 2},
+    TestID -> "Broadcast-CNOT-2x"
+]
+
+(* A state-shaped operator (ket, no input qudits) broadcasts too, as long as
+   the implied tensor power stays below $QuantumOperatorBroadcastLimit. *)
+VerificationTest[
+    QuantumOperator[QuantumOperator[QuantumState["Register"[2]]], Range[4]]["Dimensions"],
+    {2, 2, 2, 2, 2, 2, 2, 2},
+    TestID -> "Broadcast-ket-small"
+]
+
+(* A 4-qubit ket over a length-12 order implies a 16^12-amplitude tensor power;
+   the guard turns the kernel-killing materialization into a message. *)
+VerificationTest[
+    QuantumOperator[QuantumOperator[QuantumState["Register"[4]]], Range[12]],
+    $Failed,
+    {QuantumOperator::broadcast},
+    TestID -> "Broadcast-limit-ket-12"
+]
+
+(* Same guard on a plain gate object: H over 14 wires implies dimension 4^14 > 2^24.
+   (The named form QuantumOperator["H", order] takes the Fourier construction
+   path instead and never reaches the broadcast rule.) *)
+VerificationTest[
+    QuantumOperator[QuantumOperator["H"], Range[14]],
+    $Failed,
+    {QuantumOperator::broadcast},
+    TestID -> "Broadcast-limit-H-14"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumOperator - failure"]
 
 VerificationTest[
