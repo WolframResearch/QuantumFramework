@@ -182,3 +182,159 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurement - Symbolic Probabilities"]
+
+(* Outcome ordering ("TopProbabilities") and Monte-Carlo sampling ("SimulatedMeasurement",
+   "SimulatedCounts", "SimulatedStateMeasurement"), together with the generic
+   "DistributionInformation" passthrough, are defined only when every outcome probability
+   is numeric. On a symbolic / parametric measurement the old code fed a non-numeric
+   distribution into Information / RandomVariate and leaked CategoricalDistribution::elmntavsl,
+   MultinomialDistribution::vprobprm, Extract::psl1, RandomVariate::unsdst, KeyMap::invak, etc.,
+   including on plain display. These now return Indeterminate (mirroring "Entropy"). The empty
+   expected-message list makes any leaked message fail the test. *)
+
+(* --- the reported regression: no leaked messages, Indeterminate value --- *)
+
+(* TopProbabilities needs to order the weights (was CategoricalDistribution::elmntavsl) *)
+VerificationTest[
+    Module[{t}, QuantumCircuitOperator[{QuantumState[{1, 0}], "RY"[t], {1}}][]["TopProbabilities"]],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-TopProbabilities"
+]
+
+(* SimulatedCounts samples a MultinomialDistribution (was MultinomialDistribution::vprobprm) *)
+VerificationTest[
+    Module[{t}, QuantumCircuitOperator[{QuantumState[{1, 0}], "RY"[t], {1}}][]["SimulatedCounts", 10]],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-SimulatedCounts"
+]
+
+(* SimulatedMeasurement samples the CategoricalDistribution; previously returned an
+   unevaluated RandomVariate[...] instead of a clean value *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["SimulatedMeasurement"],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-SimulatedMeasurement"
+]
+
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["SimulatedMeasurement", 3],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-SimulatedMeasurement-n"
+]
+
+(* the explicit DistributionInformation path with a sampling sub-property: the exact pair
+   from the Entropy regression, Extract::psl1 + RandomVariate::unsdst *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["DistributionInformation", "Entropy"],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-DistributionInformation-Entropy"
+]
+
+(* same path under N, the route the summary box used to take on display *)
+VerificationTest[
+    N @ QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["DistributionInformation", "Entropy"],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-DistributionInformation-Entropy-N"
+]
+
+(* SimulatedStateMeasurement keys the state association by a simulated outcome *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["SimulatedStateMeasurement"],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-SimulatedStateMeasurement"
+]
+
+(* list form was RandomVariate::array + Part::pkspec1 *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["SimulatedStateMeasurement", 3],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-SimulatedStateMeasurement-n"
+]
+
+(* TopStateProbabilities depends on the (now guarded) TopProbabilities; was KeyMap::invak *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["TopStateProbabilities"],
+    Indeterminate,
+    {},
+    TestID -> "SymProb-TopStateProbabilities"
+]
+
+(* display path stays quiet on a symbolic measurement *)
+VerificationTest[
+    Module[{t}, ToBoxes @ QuantumCircuitOperator[{QuantumState[{1, 0}], "RY"[t], {1}}][]; True],
+    True,
+    {},
+    TestID -> "SymProb-Display"
+]
+
+(* --- properties that are well defined symbolically must NOT degrade to Indeterminate --- *)
+
+(* Categories is just the outcome support, independent of the probability values *)
+VerificationTest[
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["Categories"],
+    QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["Outcomes"],
+    {},
+    TestID -> "SymProb-Categories-Preserved"
+]
+
+(* ProbabilityArray is the symbolic weight vector, fully resolved (no leftover Information) *)
+VerificationTest[
+    With[{a = QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["ProbabilityArray"]},
+        Head[a] === List && FreeQ[a, _Information | _CategoricalDistribution]
+    ],
+    True,
+    {},
+    TestID -> "SymProb-ProbabilityArray-Preserved"
+]
+
+VerificationTest[
+    Head @ QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["ProbabilityTable"],
+    Dataset,
+    {},
+    TestID -> "SymProb-ProbabilityTable-Preserved"
+]
+
+(* --- numeric measurements are unchanged and stay message-free --- *)
+
+VerificationTest[
+    Length @ QuantumMeasurementOperator["Z"][QuantumState[{1, Sqrt[3]} / 2]]["TopProbabilities"],
+    2,
+    {},
+    TestID -> "SymProb-Numeric-TopProbabilities"
+]
+
+VerificationTest[
+    Total @ QuantumMeasurementOperator["Z"][QuantumState[{1, Sqrt[3]} / 2]]["SimulatedCounts", 50],
+    50,
+    {},
+    TestID -> "SymProb-Numeric-SimulatedCounts"
+]
+
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[{1, Sqrt[3]} / 2]]},
+        MemberQ[qm["Outcomes"], qm["SimulatedMeasurement"]]
+    ],
+    True,
+    {},
+    TestID -> "SymProb-Numeric-SimulatedMeasurement"
+]
+
+VerificationTest[
+    NumericQ @ QuantumMeasurementOperator["Z"][QuantumState[{1, Sqrt[3]} / 2]]["DistributionInformation", "Entropy"],
+    True,
+    {},
+    TestID -> "SymProb-Numeric-DistributionInformation"
+]
+
+EndTestSection[]

@@ -173,6 +173,18 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
     QuantumTensorProduct @@@ Tuples[{qm["Outcomes"], #["Dual"] & /@ qm["Outcomes"]}]
 ]
 
+(* Outcome ordering and Monte-Carlo sampling are defined only when every outcome
+   probability is numeric. For a symbolic / parametric measurement the held body would
+   feed a non-numeric distribution into Information / RandomVariate, whose sampling
+   fallback then emits RandomVariate::unsdst, MultinomialDistribution::vprobprm,
+   CategoricalDistribution::elmntavsl, Extract::psl1 and the like. Return Indeterminate
+   instead, mirroring QuantumState["VonNeumannEntropy"] and QuantumMeasurement["Entropy"]. *)
+numericProbabilitiesQ[qm_] := AllTrue[qm["ProbabilitiesList"], NumericQ]
+
+SetAttributes[whenNumericProbabilities, HoldRest]
+whenNumericProbabilities[qm_, body_] := Enclose[ConfirmAssert[numericProbabilitiesQ[qm]]; body, Indeterminate &]
+
+
 QuantumMeasurementProp[qm_, "NDistribution"] := CategoricalDistribution[
     qm["Outcomes"],
     Chop @ N @ qm["ProbabilitiesList"]
@@ -203,11 +215,17 @@ QuantumMeasurementProp[qm_, "Probability"] :=  With[{proba = Chop @ SparseArray 
     ]
 ]
 
-QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
+QuantumMeasurementProp[qm_, "DistributionInformation", args___] :=
+    whenNumericProbabilities[qm, Information[qm["Distribution"], args]]
 
+(* outcome categories and the probability vector / table are well defined for symbolic
+   probabilities, so query the distribution directly and skip the numeric guard *)
 QuantumMeasurementProp[qm_, args :
-    "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray" |
-    "TopProbabilities" | ("TopProbabilities" -> _Integer)] := qm["DistributionInformation", args]
+    "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray"] := Information[qm["Distribution"], args]
+
+(* the top outcomes require ordering the probabilities, which needs them numeric *)
+QuantumMeasurementProp[qm_, args : "TopProbabilities" | ("TopProbabilities" -> _Integer)] :=
+    whenNumericProbabilities[qm, Information[qm["Distribution"], args]]
 
 QuantumMeasurementProp[qm_, "ProbabilityPlot" | "ProbabilityChart", opts___] := ProbabilityChart[qm["Probability"], FilterRules[{opts}, Options[ProbabilityChart]]]
 
@@ -226,11 +244,14 @@ QuantumMeasurementProp[qm_, "Entropy"] := Quantity[qm["Entropy", 2], "Bits"]
 
 QuantumMeasurementProp[qm_, {"Entropy", logBase_}] := qm["Entropy", logBase]
 
-QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
+QuantumMeasurementProp[qm_, "SimulatedMeasurement"] :=
+    whenNumericProbabilities[qm, RandomVariate[qm["Distribution"]]]
 
-QuantumMeasurementProp[qm_, "SimulatedMeasurement", n_Integer] := RandomVariate[qm["Distribution"], n]
+QuantumMeasurementProp[qm_, "SimulatedMeasurement", n_Integer] :=
+    whenNumericProbabilities[qm, RandomVariate[qm["Distribution"], n]]
 
-QuantumMeasurementProp[qm_, "SimulatedCounts", n_Integer : 100] := RandomVariate[MultinomialDistribution[n, qm["ProbabilitiesList"]]]
+QuantumMeasurementProp[qm_, "SimulatedCounts", n_Integer : 100] :=
+    whenNumericProbabilities[qm, RandomVariate[MultinomialDistribution[n, qm["ProbabilitiesList"]]]]
 
 QuantumMeasurementProp[qm_, "Mean"] := Replace[Total @ MapThread[Times, {QuantumMeasurement[qm, "Label" -> "Eigen"]["ProbabilitiesList"], qm["EigenvalueVectors"]}], {x_} :> x]
 
@@ -247,13 +268,17 @@ QuantumMeasurementProp[qm_, "StateProbabilities"] := Select[Chop /@ Merge[Thread
 
 QuantumMeasurementProp[qm_, "StateProbabilityTable"] := Dataset[qm["StateProbabilities"]]
 
-QuantumMeasurementProp[qm_, "TopStateProbabilities"] := KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities"]]
+QuantumMeasurementProp[qm_, "TopStateProbabilities"] :=
+    whenNumericProbabilities[qm, KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities"]]]
 
-QuantumMeasurementProp[qm_, "TopStateProbabilities" -> n_Integer] := KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities" -> n]]
+QuantumMeasurementProp[qm_, "TopStateProbabilities" -> n_Integer] :=
+    whenNumericProbabilities[qm, KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities" -> n]]]
 
-QuantumMeasurementProp[qm_, "SimulatedStateMeasurement"] := qm["StateAssociation"][qm["SimulatedMeasurement"]]
+QuantumMeasurementProp[qm_, "SimulatedStateMeasurement"] :=
+    whenNumericProbabilities[qm, qm["StateAssociation"][qm["SimulatedMeasurement"]]]
 
-QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAssociation"], Key /@ qm["SimulatedMeasurement", n]]
+QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] :=
+    whenNumericProbabilities[qm, Part[qm["StateAssociation"], Key /@ qm["SimulatedMeasurement", n]]]
 
 QuantumMeasurementProp[qm_, "MeanState"] := Total @ KeyValueMap[Times, qm["StateAssociation"]]
 
