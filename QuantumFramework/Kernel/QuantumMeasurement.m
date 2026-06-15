@@ -214,7 +214,17 @@ QuantumMeasurementProp[qm_, "ProbabilityPlot" | "ProbabilityChart", opts___] := 
 QuantumMeasurementProp[qm_, "ProbabilitiesPlot" | "ProbabilitiesChart", opts___] := ProbabilityChart[qm["Probabilities"], FilterRules[{opts}, Options[ProbabilityChart]]]
 
 
-QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"], 1]
+QuantumMeasurementProp[qm_, "Entropy", logBase_ ? NumericQ] := Enclose[
+    With[{probs = qm["ProbabilitiesList"]},
+        ConfirmAssert[Length[probs] < 2 ^ 10];
+        Chop @ Simplify[Total[- # Log[logBase, #]] & @ Normalize[Select[probs, ! NumericQ[#] || # != 0 &], Total]]
+    ],
+    Indeterminate &
+]
+
+QuantumMeasurementProp[qm_, "Entropy"] := Quantity[qm["Entropy", 2], "Bits"]
+
+QuantumMeasurementProp[qm_, {"Entropy", logBase_}] := qm["Entropy", logBase]
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 
@@ -319,7 +329,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Une
         },
         {
             {
-                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[Confirm[N @ qm["Entropy"]], Indeterminate &], 1]}]
+                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmBy[N @ qm["Entropy"], NumericQ @* QuantityMagnitude], Indeterminate &], 1]}]
             },
             {
                 BoxForm`SummaryItem[{"Parameters: ", qm["Parameters"]}]
