@@ -2,6 +2,7 @@
 
 **Status:** exploration / design note. Started 2026-06-10.
 **Scope:** why QF realizes measurement by enlarging the Hilbert space, why that is physically faithful, where it becomes computationally catastrophic, and a menu of escape routes (some already in the kernel, some standard QIS techniques to adopt, some open).
+**Empirical companion:** [`Computing-Probabilities-And-Expectations.md`](Computing-Probabilities-And-Expectations.md) runs the Section 4 experiments and turns them into a decision guide (state-then-probabilities vs inner-product vs measurement-operator; verified at HEAD `f9dc1cdc`).
 
 Kernel anchors below are against paclet 2.0.0 (audit anchor SHA `ac32bda8`, 2026-06-09). Re-verify `file:line` against the live kernel before relying on any single line.
 

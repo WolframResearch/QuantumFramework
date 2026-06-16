@@ -35,6 +35,7 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 | `"Observable"` | `"Z"` | the estimator observable: a Pauli string (`"ZZZ"`), a list of Pauli strings, or a list of `{pauliString, coefficient}` pairs; used only when `"Primitive"` is `"estimator"` |
 | `"Wait"` | False | whether to block until the job reaches a terminal status |
 | `"PrimitiveOptions"` | `<\|\|>` | an Association of IBM Runtime primitive options, applied onto the qiskit primitive's options object over the defaults |
+| `"OptimizationLevel"` | Automatic | the transpiler optimization level (0–3) for the submitted circuit. Submission always transpiles against the backend's own `Target` (per-instruction error and duration), so layout and routing are error-aware; this controls how aggressively. Automatic uses qiskit's preset default. |
 
 ## Basic Examples
 
@@ -258,6 +259,19 @@ job["ProgramID"]
 ```
 
 <!-- => "estimator" -->
+
+### "OptimizationLevel"
+
+Submission always transpiles the circuit against the backend's own `Target`, which carries per-instruction error and duration, so layout and routing are **error-aware**: the circuit is placed on the backend's lowest-error qubits and pairs automatically. `"OptimizationLevel"` (0–3) controls how hard the transpiler works at that; `Automatic` uses qiskit's preset default. Raise it for a deeper search on a noisy device:
+
+```wl
+#| eval: false
+job = IBMJobSubmit[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1}, {2}}], "ibm_fez", "OptimizationLevel" -> 3]
+```
+
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: ... |>] -->
+
+The fidelity payoff of this error-aware placement is quantified on the [QiskitTarget]() page (reading the same backend's error model, the chosen embedding's total expected error was about 4x lower than a connectivity-only placement). To inspect or pre-select that placement before submitting, build the target explicitly with `QiskitTarget["FromBackend" -> "ibm_fez", "Provider" -> "IBMProvider"]` and transpile with [QuantumQASM]().
 
 ## Possible Issues
 

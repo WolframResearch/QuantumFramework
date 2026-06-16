@@ -223,11 +223,76 @@ qtest[Head @ ToBoxes @ QiskitTarget[tspec], InterpretationBox, "target-makeboxes
 
 qtest[FailureQ @ QiskitTarget[<|"BasisGates" -> {"x"}, "Bogus" -> 1|>], True, "target-bad-key-failure"]
 
+(* a non-QiskitTarget / non-Association Target (e.g. a forwarded failed QiskitTarget[spec])
+   must be rejected with a clean Failure, not forwarded to Python where it surfaces as an
+   opaque build_coupling_map AttributeError. *)
+qtest[FailureQ @ QuantumQASM[qc, "Target" -> QiskitTarget[<|"Bogus" -> 1|>]], True, "target-non-target-failure"]
+
 (* a MEASURED circuit transpiled via a QiskitTarget built from a bare unitary basis must
    succeed — proves the automatic measure/reset add. *)
 qtest[StringStartsQ[QuantumQASM[qc, "Target" -> QiskitTarget[tspec]], "OPENQASM 3.0"], True, "measured-via-target"]
 
 qtest[StringStartsQ[QuantumQASM[qc, "Target" -> tspec], "OPENQASM 3.0"], True, "inline-target-spec"]
+
+
+(* ---- QiskitTarget per-instruction errors: error-aware transpilation ----
+
+   A QiskitTarget carrying InstructionProperties (per-gate/per-qubit error+duration) makes the
+   layout/routing passes error-aware. On a 4-qubit ring where exactly one cz edge {1,2} has a
+   far lower error, optimization_level 3 must route the Bell's cz onto that edge, deterministically;
+   without the errors it does not. (Proven mechanism, locked here against regression.) *)
+
+czOf[q_String] := StringCases[q, "cz $" ~~ a : DigitCharacter .. ~~ ", $" ~~ b : DigitCharacter .. :> Sort[{FromDigits[a], FromDigits[b]}]]
+ringMap = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {3, 0}, {0, 3}};
+eaProps = Join[
+    Function[e, {"cz", e, <|"Error" -> 0.2|>}] /@ {{0, 1}, {1, 0}, {2, 3}, {3, 2}, {3, 0}, {0, 3}},
+    Function[e, {"cz", e, <|"Error" -> 0.001|>}] /@ {{1, 2}, {2, 1}}];
+eaSpec = <|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 4, "CouplingMap" -> ringMap, "InstructionProperties" -> eaProps|>;
+eaQASM[spec_] := QuantumQASM[qc, "Target" -> QiskitTarget[spec], "OptimizationLevel" -> 3, "SeedTranspiler" -> 0];
+
+qtest[Head @ QiskitTarget[eaSpec], QiskitTarget, "error-aware-key-accepted"]
+
+qtest[Length @ QiskitTarget[eaSpec]["InstructionProperties"], 8, "error-aware-ip-roundtrip"]
+
+qtest[First @ czOf @ eaQASM[eaSpec], {1, 2}, "bell-lands-on-low-error-edge"]
+
+qtest[First @ czOf @ eaQASM[KeyDrop[eaSpec, "InstructionProperties"]] =!= {1, 2}, True, "no-error-does-not-pick-low-edge"]
+
+(* a property row for a gate not in the basis is skipped, transpile still succeeds, and the
+   valid cz errors still steer the layout to the low-error edge *)
+qtest[StringStartsQ[eaQASM[<|eaSpec, "InstructionProperties" -> Append[eaProps, {"ecr", {0, 1}, <|"Error" -> 0.5|>}]|>], "OPENQASM 3.0"], True, "unknown-gate-prop-skipped"]
+qtest[First @ czOf @ eaQASM[<|eaSpec, "InstructionProperties" -> Append[eaProps, {"ecr", {0, 1}, <|"Error" -> 0.5|>}]|>], {1, 2}, "unknown-gate-skip-still-error-aware"]
+
+(* rows with only Error or only Duration are tolerated *)
+qtest[StringStartsQ[eaQASM[<|eaSpec, "InstructionProperties" -> {{"cz", {1, 2}, <|"Error" -> 0.001|>}, {"cz", {2, 1}, <|"Duration" -> 4.*^-8|>}, {"cz", {0, 1}, <|"Error" -> 0.2|>}, {"cz", {1, 0}, <|"Error" -> 0.2|>}}|>], "OPENQASM 3.0"], True, "partial-instruction-props-tolerated"]
+
+(* readout (measure) error also feeds the layout scorer: a uniform-cz ring with one bad-readout
+   qubit (q0) must place the Bell off q0 *)
+mSpec = <|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 4, "CouplingMap" -> ringMap,
+    "InstructionProperties" -> Join[
+        Function[e, {"cz", e, <|"Error" -> 0.01|>}] /@ ringMap,
+        Function[q, {"measure", {q}, <|"Error" -> If[q === 0, 0.5, 0.005]|>}] /@ {0, 1, 2, 3}]|>;
+qtest[FreeQ[First @ czOf @ eaQASM[mSpec], 0], True, "measure-error-influences-layout"]
+
+
+(* ---- QiskitTarget["FromBackend"]: generic backend extractor (IBM / AWS / local) ----
+
+   Exercised against the local GenericV2 fake device (qiskit's GenericBackendV2): a populated,
+   error-aware Target with no credentials and no network. Proves the extractor reads a live
+   backend's per-instruction errors into the carrier spec, and that both the extracted target
+   and the live-backend transpile path produce valid error-aware QASM. *)
+
+eaBackendTgt = If[qiskitOK, QiskitTarget["FromBackend" -> 5, "Provider" -> "GenericV2"], Null];
+
+qtest[Head @ eaBackendTgt, QiskitTarget, "extractor-builds-target"]
+qtest[eaBackendTgt["NumQubits"], 5, "extractor-numqubits"]
+qtest[Length @ eaBackendTgt["InstructionProperties"] > 0 &&
+    AllTrue[eaBackendTgt["InstructionProperties"], MatchQ[{_String, {__Integer}, _Association}]], True, "extractor-populates-rows"]
+qtest[MemberQ[eaBackendTgt["InstructionProperties"], {"cx", {_, _}, p_ /; KeyExistsQ[p, "Error"]}], True, "extractor-has-2q-errors"]
+qtest[StringStartsQ[QuantumQASM[qc, "Target" -> eaBackendTgt, "OptimizationLevel" -> 3], "OPENQASM 3.0"], True, "extractor-target-transpiles"]
+
+(* live-backend route: QuantumQASM transpiles directly against the backend's own Target *)
+qtest[StringStartsQ[QuantumQASM[qc, "Backend" -> 5, "Provider" -> "GenericV2", "OptimizationLevel" -> 3], "OPENQASM"], True, "live-backend-transpile-error-aware"]
 
 
 (* ---- IBM sample decoding: classical-bit -> ascending-qubit reordering ----

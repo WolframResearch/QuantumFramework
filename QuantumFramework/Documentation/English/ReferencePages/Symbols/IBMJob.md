@@ -14,8 +14,6 @@ RelatedTutorials: [SendingQueriesToIBMQPUs]
 
 <code>[IBMJob]()[*assoc*]</code> represents a job submitted to an IBM Quantum processing unit, carrying its identifier, backend and the raw service responses, with curated accessors layered on top.
 
-<code>[IBMJob]()[*assoc*][*"prop"*]</code> gives the value of the property *"prop"*, such as `"Status"`, `"Counts"` or `"QuantumSeconds"`.
-
 <code>[IBMJob]()[*assoc*][]</code> gives the primary result: the [QuantumMeasurement]() reconstructed from the hardware counts for a sampler job, or the observable's expectation value for an estimator job.
 
 ## Details & Options

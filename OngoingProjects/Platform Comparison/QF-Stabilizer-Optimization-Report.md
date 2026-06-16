@@ -1,6 +1,6 @@
 # QF stabilizer optimization, round 2: compiled fold + full hot-path rework
 
-**Date:** 2026-06-12 (revision; original 2026-06-11. Round 1 = `QF-Stabilizer-Packed-FastPath.md`, plan = `QF-Stabilizer-Bottleneck-Audit.md`)
+**Date:** 2026-06-12 (revision; original 2026-06-11. Round 1 = `QF-Stabilizer-Packed-FastPath.md`, plan = `QF-Stabilizer-Bottleneck-Audit.md`). **Still current at HEAD `f9dc1cdc` (2026-06-14):** the mid-June property-cache refactor (`dfc741dc`/`f9dc1cdc`) touches the `QuantumOperator`/`QuantumState`/`QuantumBasis` property dispatch and the state-vector apply path, not `Stabilizer/`; the numbers below reproduce within run-to-run noise (e.g. `ApplyCircuit` $n=1000$ 62.7 ms, ctor 5.08 ms).
 **Repo:** WolframResearch/QuantumFramework (paclet 2.0.0). Round 1 shipped as `95566e93`, round 2 as `e37b7fad`; this revision re-measures everything at HEAD `6f953ad5`, which includes three post-ship stabilizer fixes (`1c524432`, `52d3ea89`, `6f953ad5`; see "Kernel updates since the round-2 ship").
 **Machine:** Apple M2 Pro, Mathematica 15.0.0. Externals re-measured fresh at this revision: Stim 1.16.0, QuantumClifford.jl 0.11 (Julia 1.12.6).
 **Scope:** `QuantumFramework/Kernel/Stabilizer/` only; nothing outside the stabilizer subsystem was touched.

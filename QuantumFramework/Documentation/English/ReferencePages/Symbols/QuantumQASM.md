@@ -15,7 +15,7 @@ RelatedGuides: [WolframQuantumComputationFramework]
 
 <code>[QuantumQASM]()[*circ*, {$g_1$, $g_2$, …}]</code> transpiles *circ* to the native gate set $\{g_1, g_2, \dots\}$ and gives the resulting native OpenQASM.
 
-<code>[QuantumQASM]()[*circ*, *basis*, *opts*]</code> applies qiskit transpiler options *opts* such as `"CouplingMap"`, `"OptimizationLevel"` and `"Target"`.
+<code>[QuantumQASM]()[*circ*, *basis*, *opts*]</code> transpiles *circ* to the native gate set *basis*, applying the qiskit transpiler options *opts*.
 
 <code>[QuantumQASM]()[*circ*, "Version" -> 2]</code> gives OpenQASM 2 instead of the default OpenQASM 3.
 

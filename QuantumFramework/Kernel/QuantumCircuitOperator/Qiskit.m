@@ -439,6 +439,15 @@ if backend_name is None:
 else:
     backend = provider.get_backend('basic_simulator')
 ",
+    (* A representative fake device with a populated error-aware Target (per-instruction
+       error/duration, readout error, coupling map). No credentials and no network: used to
+       exercise the error-aware transpile / target-extraction paths offline. Backend is the
+       qubit count. *)
+    "GenericV2",
+"
+from qiskit.providers.fake_provider import GenericBackendV2
+backend = GenericBackendV2(num_qubits=int(backend_name) if backend_name is not None else 5, seed=42)
+",
     _,
 "
 from qiskit_aer import AerSimulator
@@ -627,11 +636,14 @@ qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, Automati
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
 
-qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"], env},
+qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2, "OptimizationLevel" -> Automatic}, Options[qiskitInitBackend]]]] := Enclose @ Block[
+    {$version = OptionValue["Version"], $optLevel = Replace[OptionValue["OptimizationLevel"], Automatic -> 1], env},
     env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
+    (* transpile against the live backend's Target, which carries per-instruction error +
+       duration: layout and routing are error-aware. optimization_level is user-controllable. *)
     PythonEvaluate[Context[$version], "
 from qiskit import transpile
-circuit = transpile(qc, backend)
+circuit = transpile(qc, backend, optimization_level=<* $optLevel *>)
 try:
     from qiskit_braket_provider import AWSBraketProvider
     if isinstance(provider, AWSBraketProvider):
@@ -649,6 +661,62 @@ result
 ", env]
 ]
 
+(* QiskitTarget["FromBackend" -> name, "Provider" -> p] (the generic backend extractor): build an
+   error-aware QiskitTarget by reading a live backend's own qiskit Target, which is already
+   populated with per-instruction error + duration. ONE implementation for every qiskit-ecosystem
+   backend (IBM, AWS Braket, and the local GenericV2 fake device) through the shared
+   qiskitInitBackend -- the provider is a parameter, not hardcoded. The result is the same
+   InstructionProperties-carrying spec the arbel adapter produces, so downstream transpilation is
+   error-aware identically. *)
+QiskitTarget["FromBackend" -> name_, opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{$session, qc, env, spec},
+    qc  = ConfirmMatch[QuantumCircuitOperator[{"H" -> 1}]["Qiskit"], _QiskitCircuit];
+    env = Confirm @ qiskitInitBackend[qc, "Backend" -> name,
+        Sequence @@ FilterRules[{opts}, {"Provider", "FireOpal", "DensityMatrix"}]];
+    spec = Confirm @ PythonEvaluate[Context[$session], "
+from wolframclient.language import wl
+t = backend.target
+# Target.operation_names mixes real gates with control-flow ops (if_else, for_loop, ...) and
+# directives (delay, barrier); only standard gate names are valid basis_gates, so filter to
+# those. measure is kept for the instruction-properties walk (its error steers readout-aware
+# layout) but not put in basis_gates (the carrier adds measure/reset universally).
+try:
+    from qiskit.circuit.library import get_standard_gate_name_mapping
+    gateset = set(get_standard_gate_name_mapping())
+except Exception:
+    gateset = None
+nonbasis = {'measure', 'reset', 'delay', 'barrier', 'if_else', 'for_loop', 'while_loop', 'switch_case'}
+def _isgate(nm):
+    return (nm in gateset) if gateset is not None else (nm not in nonbasis)
+basis = sorted(nm for nm in t.operation_names if _isgate(nm))
+nq = t.num_qubits
+cm = t.build_coupling_map()
+coupling = [list(e) for e in cm.get_edges()] if cm is not None else []
+props = []
+for nm in [n for n in t.operation_names if _isgate(n) or n == 'measure']:
+    qmap = t[nm]
+    if not hasattr(qmap, 'items'):
+        continue
+    for qargs, ip in qmap.items():
+        if qargs is None:
+            continue
+        row = {}
+        if ip is not None:
+            if getattr(ip, 'error', None) is not None:
+                row['Error'] = ip.error
+            if getattr(ip, 'duration', None) is not None:
+                row['Duration'] = ip.duration
+        if row:
+            props.append([nm, list(qargs), row])
+result = wl.Association(
+    wl.Rule('BasisGates', basis),
+    wl.Rule('NumQubits', nq),
+    wl.Rule('CouplingMap', coupling),
+    wl.Rule('InstructionProperties', props))
+result
+", env];
+    ConfirmMatch[QiskitTarget[spec], _QiskitTarget]
+]
+
 (* Async primitive submission through qiskit's own SamplerV2 / EstimatorV2 objects, so qiskit
    owns every wire format: circuit serialization, the estimator observable's layout +
    ObservablesArray, the PUB tuple, and the primitive options schema. The job is launched with
@@ -658,12 +726,15 @@ result
    applied onto the primitive's own options object. Returns an Association or a Failure. *)
 qiskitPrimitiveSubmit[
     qc_QiskitCircuit, primitive_String, obsTerms : _List | Null, shots_Integer,
-    primOpts_Association, opts : OptionsPattern[qiskitInitBackend]
+    primOpts_Association, opts : OptionsPattern[Join[{"OptimizationLevel" -> Automatic}, Options[qiskitInitBackend]]]
 ] := Enclose @ Block[{
     $primitive = primitive,
     $obsTerms = Replace[obsTerms, None -> Null],
     $shots = shots,
     $primOpts = primOpts,
+    (* level 1 already runs the error-aware layout passes against backend.target; users may
+       raise to 2 / 3 for more optimization. Default preserves prior submission behavior. *)
+    $optLevel = Replace[OptionValue["OptimizationLevel"], Automatic -> 1],
     env
 },
     env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
@@ -685,7 +756,7 @@ elif circ.num_clbits == 0:
     circ = circ.copy()
     circ.measure_all()
 
-isa = generate_preset_pass_manager(backend=backend, optimization_level=1).run(circ)
+isa = generate_preset_pass_manager(backend=backend, optimization_level=<* $optLevel *>).run(circ)
 
 # classical bit -> original (pre-transpile) qubit, so sampler counts can be reordered into
 # ascending-qubit order regardless of the transpiled measure -> clbit layout

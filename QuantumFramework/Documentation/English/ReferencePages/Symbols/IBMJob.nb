@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     64757,       1548]
-NotebookOptionsPosition[     50302,       1249]
-NotebookOutlinePosition[     51549,       1286]
-CellTagsIndexPosition[     51469,       1281]
+NotebookDataLength[     64831,       1477]
+NotebookOptionsPosition[     52655,       1298]
+NotebookOutlinePosition[     53886,       1334]
+CellTagsIndexPosition[     53806,       1329]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -24,68 +24,58 @@ Cell["IBMJob", "ObjectName",
  CellID->1224892054,ExpressionUUID->"8393d601-4014-44ba-afc9-60862df940ec"],
 
 Cell[TextData[{
- Cell["   ", "ModInfo",ExpressionUUID->"afc0abac-ffa3-4fc0-9552-1537f54ba191"],
+ Cell["   ", "ModInfo",ExpressionUUID->"78ccd421-025e-47f5-b3dc-e00a6e010e2e"],
  Cell[BoxData[
   RowBox[{
-   ButtonBox["IBMJob",
-    BaseStyle->"Link",
-    ButtonData->"paclet:Wolfram/QuantumFramework/ref/IBMJob"], "[", 
+   TemplateBox[{
+     Cell[
+      TextData["IBMJob"]], "paclet:Wolfram/QuantumFramework/ref/IBMJob", 
+     "Wolfram/QuantumFramework Package Symbol"},
+    "PackageLink",
+    BaseStyle->"InlineFormula"], "[", 
    StyleBox["assoc", "TI"], "]"}]], "InlineFormula",ExpressionUUID->
-  "98ba8c0a-8377-4657-936a-e6837eb2cc12"],
+  "ea600e94-3406-4bea-b305-9c5fa7a5c6b6"],
  " ",
  "represents a job submitted to an IBM Quantum processing unit, carrying its \
 identifier, backend and the raw service responses, with curated accessors \
 layered on top.",
  "\n",
- Cell["   ", "ModInfo",ExpressionUUID->"36d7b713-6e28-4799-8542-ad788b765ef5"],
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"IBMJob", "[", 
-    StyleBox["assoc", "TI"], "]"}], 
-   "[", "\"\<\!\(\*StyleBox[\"prop\", \"TI\"]\)\>\"", "]"}]], "InlineFormula",
-  ExpressionUUID->"351bd936-5da9-4c37-bb34-b8aabb5b349a"],
- " ",
- "gives the value of the property ",
- StyleBox["\"prop\"", "TI"],
- ", such as ",
- Cell[BoxData["\"\<Status\>\""], "InlineFormula",ExpressionUUID->
-  "469591f2-3b2e-49b5-9ce8-08c1cc1471c0"],
- ", ",
- Cell[BoxData["\"\<Counts\>\""], "InlineFormula",ExpressionUUID->
-  "70931fd5-3e3e-485b-a0a1-7e38ecd93506"],
- " or ",
- Cell[BoxData["\"\<QuantumSeconds\>\""], "InlineFormula",ExpressionUUID->
-  "04e7fe00-4cf2-461c-9e11-bf8406f82c49"],
- ".",
- "\n",
- Cell["   ", "ModInfo",ExpressionUUID->"e10105c1-bd6f-4466-afe3-cd3438e204ba"],
+ Cell["   ", "ModInfo",ExpressionUUID->"8970f20c-1d3f-46aa-9b5d-d61dabc5360d"],
  Cell[BoxData[
   RowBox[{
    RowBox[{"IBMJob", "[", 
     StyleBox["assoc", "TI"], "]"}], "[", "]"}]], "InlineFormula",
-  ExpressionUUID->"44fe7c34-fdf0-4bd6-a0f7-650433cbfb06"],
+  ExpressionUUID->"65319163-8ed8-4c19-b328-86d090ac0707"],
  " ",
  "gives the primary result: the ",
  Cell[BoxData[
-  ButtonBox["QuantumMeasurement",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement"]], 
-  "InlineFormula",ExpressionUUID->"22af686c-e18c-4cc8-aa68-ab55b471944c"],
+  TemplateBox[{
+    Cell[
+     TextData["QuantumMeasurement"]], 
+    "paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "2cd34e65-a5ec-4aaf-8f6b-0c25b204d113"],
  " reconstructed from the hardware counts for a sampler job, or the \
 observable's expectation value for an estimator job."
-}], "Usage",ExpressionUUID->"aee0dc0a-5f57-4185-b6a9-7a0470a17440"],
+}], "Usage",ExpressionUUID->"84df8c64-d760-45fd-bb3e-56de63ff7c8f"],
 
 Cell[TextData[{
  "An ",
- Cell[BoxData[
- "IBMJob"], "InlineFormula",ExpressionUUID->
-  "6566d4ab-f958-4f60-9206-a503b9455b75"],
+ Cell[BoxData["IBMJob"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0d75299f-2637-42af-87e6-5f259c4bd921"],
  " is normally produced by ",
  Cell[BoxData[
-  ButtonBox["IBMJobSubmit",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit"]], 
-  "InlineFormula",ExpressionUUID->"94b42d22-52e9-4dfc-8702-45ada244020f"],
+  TemplateBox[{
+    Cell[
+     TextData["IBMJobSubmit"]], 
+    "paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "57093ba9-3ca6-4cf9-bbf5-0d03991ca480"],
  " or by the ",
  Cell[BoxData[
   RowBox[{
@@ -97,21 +87,23 @@ Cell[TextData[{
     RowBox[{"{", 
      RowBox[{"\"\<Qiskit\>\"", ",", " ", 
       RowBox[{"\"\<Provider\>\"", " ", "->", " ", "\"\<IBMProvider\>\""}], ",",
-       " ", "\[Ellipsis]"}], "}"}]}], "]"}]], "InlineFormula",ExpressionUUID->
-  "980ca824-5d53-4ede-aee1-55003a23af76"],
+       " ", "\[Ellipsis]"}], "}"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bea4b1ab-d308-4ecc-809a-ea3fc3286a18"],
  " hardware path, not constructed by hand."
-}], "Notes",ExpressionUUID->"a2b988c6-517f-4855-a505-d5dc8026a236"],
+}], "Notes",ExpressionUUID->"0f68db9c-5836-4d83-a84e-f94369437bfd"],
 
 Cell[TextData[{
  "The object is a ",
  StyleBox["lossless",
   FontWeight->"Bold"],
  " carrier: the raw service responses are kept verbatim under ",
- Cell[BoxData["\"\<Raw\>\""], "InlineFormula",ExpressionUUID->
-  "569e79c8-cb9a-4a10-89b1-2fa41c924992"],
+ Cell[BoxData["\"\<Raw\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9e755f1-c716-42af-a4b6-1a64d9e782f0"],
  ", and every accessor reads from there, so no field the service returns is \
 discarded."
-}], "Notes",ExpressionUUID->"9a9e05d1-02b9-4627-a699-a294313c9f29"],
+}], "Notes",ExpressionUUID->"7256eba8-2c03-46b1-9a08-1f7638ce0f76"],
 
 Cell[TextData[{
  "Accessors ",
@@ -121,65 +113,81 @@ Cell[TextData[{
 the service object. With no reachable connection an accessor gives ",
  Cell[BoxData[
   RowBox[{"Missing", "[", "\"\<NoConnection\>\"", "]"}]], "InlineFormula",
-  ExpressionUUID->"bcb6c09a-667c-460c-9d1f-8b0fc3b6d268"],
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eb9eee7a-dd27-4df8-8333-de868cbaad7f"],
  "; before the job is ",
- Cell[BoxData["\"\<Completed\>\""], "InlineFormula",ExpressionUUID->
-  "1ba1a3fa-de71-41c9-8379-70fc0c4ad666"],
+ Cell[BoxData["\"\<Completed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "73e6810d-aeea-4fb2-931e-3bb817e66d22"],
  " the result accessors give ",
  Cell[BoxData[
   RowBox[{"Missing", "[", 
-   RowBox[{"\"\<JobNotComplete\>\"", ","}]}]], "InlineFormula",ExpressionUUID->
-  "c8690381-9d21-4473-aca0-687b6756595c"],
+   RowBox[{"\"\<JobNotComplete\>\"", ","}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bbb19a17-767a-4e3f-be43-ce40111096ac"],
  StyleBox["status", "TI"],
- Cell[BoxData["]"], "InlineFormula",ExpressionUUID->
-  "65943adf-de28-4e6b-9390-21a0c1211c21"],
+ Cell[BoxData["]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e5f0f91-1d59-432d-ab23-958526fbae80"],
  "."
-}], "Notes",ExpressionUUID->"6c74774e-c312-4d51-9c0c-23ffaa188ca5"],
+}], "Notes",ExpressionUUID->"c73e10c4-1fe7-4677-824a-4b1ef846ab82"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<Status\>\""], "InlineFormula",ExpressionUUID->
-  "28ed76ab-72eb-4560-b249-5b60eab17172"],
+ Cell[BoxData["\"\<Status\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9820a845-47bc-47b1-bcd2-87f31d04a998"],
  " is one of ",
- Cell[BoxData["\"\<Queued\>\""], "InlineFormula",ExpressionUUID->
-  "436eee52-8f27-41e4-b8e6-556ef973268c"],
+ Cell[BoxData["\"\<Queued\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "df4131d5-a979-4dae-b0db-4fb17515d966"],
  ", ",
- Cell[BoxData["\"\<Validating\>\""], "InlineFormula",ExpressionUUID->
-  "fd91c357-6014-486a-8759-2d37d1e8cbc6"],
+ Cell[BoxData["\"\<Validating\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "09d21602-a23e-41db-980b-e3d4665f6ea9"],
  ", ",
- Cell[BoxData["\"\<Initializing\>\""], "InlineFormula",ExpressionUUID->
-  "443719d0-1589-464c-9e95-d242584ae85c"],
+ Cell[BoxData["\"\<Initializing\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8221a736-6a54-4f11-99a2-ee5e22421925"],
  ", ",
- Cell[BoxData["\"\<Running\>\""], "InlineFormula",ExpressionUUID->
-  "b4784e37-ef86-4095-9f57-fd46b40d196d"],
+ Cell[BoxData["\"\<Running\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "912e1faf-b6de-4096-811b-0bff08544e46"],
  ", ",
- Cell[BoxData["\"\<Completed\>\""], "InlineFormula",ExpressionUUID->
-  "eb93199e-6b00-4458-91fb-f19f476f2c0d"],
+ Cell[BoxData["\"\<Completed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9e9f1817-4637-462a-b484-3dc8ec54241f"],
  ", ",
- Cell[BoxData["\"\<Cancelled\>\""], "InlineFormula",ExpressionUUID->
-  "df05a4a7-8d35-4a67-bd36-3796f2bd1935"],
+ Cell[BoxData["\"\<Cancelled\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e6972323-8142-4726-b9e1-de82d5e53503"],
  " or ",
- Cell[BoxData["\"\<Failed\>\""], "InlineFormula",ExpressionUUID->
-  "f62b9c58-9774-4bcc-9cc9-36b45c4d3cc1"],
+ Cell[BoxData["\"\<Failed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dcb2321-e578-46ad-82e6-860c4e8ee45d"],
  "; the terminal statuses are ",
- Cell[BoxData["\"\<Completed\>\""], "InlineFormula",ExpressionUUID->
-  "9863f909-a3d5-4686-a6cf-3296c7a98116"],
+ Cell[BoxData["\"\<Completed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ae9160b9-eb96-4ac1-b108-0d44a024c628"],
  ", ",
- Cell[BoxData["\"\<Cancelled\>\""], "InlineFormula",ExpressionUUID->
-  "dfd68c2a-6ba9-4c5d-bca3-198ccb783851"],
+ Cell[BoxData["\"\<Cancelled\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f9befa4b-a215-463a-9fad-fdb23b1b1224"],
  " and ",
- Cell[BoxData["\"\<Failed\>\""], "InlineFormula",ExpressionUUID->
-  "a3866c77-cb53-45a3-8b23-562c16153504"],
+ Cell[BoxData["\"\<Failed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6c27a7d7-c914-48e9-8559-3ca6a448f998"],
  "."
-}], "Notes",ExpressionUUID->"65a07c1f-9c64-49ca-86e6-98a6ff91abca"],
+}], "Notes",ExpressionUUID->"dedc54f3-372e-4280-a444-dc55d9b45994"],
 
 Cell[TextData[{
  "The hardware counts decode into the Wolfram Language qubit order (ascending \
 qubit) using the ",
- Cell[BoxData["\"\<MeasuredQubits\>\""], "InlineFormula",ExpressionUUID->
-  "7d5e1251-d585-4280-81d1-bc35fdc441a8"],
+ Cell[BoxData["\"\<MeasuredQubits\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c1e0b231-1b26-49fe-83e9-0d839c4526cb"],
  " map (classical bit to original qubit) captured at submission time, so a \
 permuted or partial measurement and any backend layout decode correctly."
-}], "Notes",ExpressionUUID->"00d1e354-339a-48d6-8d8c-8175fe446b02"],
+}], "Notes",ExpressionUUID->"0c45c236-c85d-4bb5-b740-26db95f920f4"],
 
 Cell[TextData[{
  "The handle exposes two kinds of names. ",
@@ -187,455 +195,521 @@ Cell[TextData[{
   FontWeight->"Bold"],
  " (",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "b32db67e-55e6-467e-9cd6-1d054c2561c3"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8cc74364-b627-4867-8b1d-f000e74b6620"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
    RowBox[{"[", "\"\<Properties\>\"", "]"}]}]], "InlineFormula",
-  ExpressionUUID->"02c3b05d-320d-4bde-8146-a91043b13452"],
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f577b32a-97f6-4242-8d5e-86e525f20b7c"],
  ") are local accessors that read the cached snapshot and never touch the \
 network, so a bulk map over them is fast and has no side effects. ",
  StyleBox["Actions",
   FontWeight->"Bold"],
  " (",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "226bb51f-ee4b-4d58-86b6-60413ce58512"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "34fb73f2-ae22-44fe-ab1e-ac255adea045"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
-   RowBox[{"[", "\"\<Actions\>\"", "]"}]}]], "InlineFormula",ExpressionUUID->
-  "2f69b0cd-8ff4-4957-82ad-c959d32b7bac"],
+   RowBox[{"[", "\"\<Actions\>\"", "]"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e2d047f-40d8-4525-931f-6fff5e234455"],
  ") each require a live connection and are kept out of the property list, so \
 that map never re-queries, cancels or blocks on a remote fetch; each is still \
 callable by name. ",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "800b8efb-1cfb-463e-88de-5e73a8236461"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cbebe62f-1f66-4994-8142-3eaa7b08aa9f"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
-   RowBox[{"[", "\"\<Refresh\>\"", "]"}]}]], "InlineFormula",ExpressionUUID->
-  "b5e2798a-d843-4690-9860-7603be3a3ea4"],
+   RowBox[{"[", "\"\<Refresh\>\"", "]"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e8c5544-4a77-4d98-8e7f-4b24cbb4980b"],
  " re-queries the service and gives a ",
  StyleBox["new",
   FontWeight->"Bold"],
  " ",
- Cell[BoxData[
- "IBMJob"], "InlineFormula",ExpressionUUID->
-  "e049acb5-456e-434a-9b43-984b653a84e8"],
+ Cell[BoxData["IBMJob"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f7ffabb-f427-460b-8083-56f507682857"],
  " with an updated ",
- Cell[BoxData["\"\<Raw\>\""], "InlineFormula",ExpressionUUID->
-  "574aced9-77ba-425d-b80b-5a6d1cbf849b"],
+ Cell[BoxData["\"\<Raw\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ed6bd194-cc8c-4f87-bf8b-945ffb5b477e"],
  " snapshot (once ",
- Cell[BoxData["\"\<Completed\>\""], "InlineFormula",ExpressionUUID->
-  "cf73968d-1abe-4ca2-bd88-af44165340b5"],
+ Cell[BoxData["\"\<Completed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ec231d23-a184-4eb5-905b-036d0ad9a7f9"],
  " it also pulls the results and metrics, and for an estimator job caches the \
 qiskit-decoded expectation values); ",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "4e7b14d9-ec1f-4dc2-88a5-e60d0d3af83d"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "118e1b2e-43f5-4e9b-b98b-9a27caee5db6"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
-   RowBox[{"[", "\"\<Cancel\>\"", "]"}]}]], "InlineFormula",ExpressionUUID->
-  "a9430428-1a40-4531-9baf-0fd00e98821d"],
+   RowBox[{"[", "\"\<Cancel\>\"", "]"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5a312e40-dac8-48b4-b405-c90555730c44"],
  " requests cancellation; ",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "8a2d496f-8741-45e3-bc87-9275cacf64e0"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7643b88c-e237-4057-960d-6b24019de8ff"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
    RowBox[{"[", "\"\<ExecutedCircuit\>\"", "]"}]}]], "InlineFormula",
-  ExpressionUUID->"19deb692-49e5-45a4-92c1-f4a093a24449"],
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3055645d-4b3c-4e14-b01e-5d95fb204372"],
  " downloads the server-side transpiled circuit (see Possible Issues)."
-}], "Notes",ExpressionUUID->"a099d18c-b861-4e81-9587-c2ca0be4c8de"],
+}], "Notes",ExpressionUUID->"5d3cff0f-3eb6-4c98-9212-175f96328fed"],
 
 Cell[TextData[{
  "The result accessors are primitive-specific. For a ",
  StyleBox["sampler",
   FontWeight->"Bold"],
  " job the live accessors are ",
- Cell[BoxData["\"\<Counts\>\""], "InlineFormula",ExpressionUUID->
-  "77ff5e97-e8b7-47ba-8073-4df035cf6ff8"],
+ Cell[BoxData["\"\<Counts\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e82047a-17e5-4577-aa77-329d5d810d57"],
  ", ",
- Cell[BoxData["\"\<Measurement\>\""], "InlineFormula",ExpressionUUID->
-  "267a0f5a-d6bf-42a3-8c6c-5265da8bd243"],
+ Cell[BoxData["\"\<Measurement\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b916f31-c37b-46bf-9c39-3b2d9fc9fed6"],
  ", ",
- Cell[BoxData["\"\<Probabilities\>\""], "InlineFormula",ExpressionUUID->
-  "a1e69259-742f-4609-b3bb-4d02983b1405"],
+ Cell[BoxData["\"\<Probabilities\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7df80e2c-590a-4b57-af2a-470c513bd98b"],
  ", ",
- Cell[BoxData["\"\<Samples\>\""], "InlineFormula",ExpressionUUID->
-  "d47c0fac-1e0f-4c57-9b8a-38a88b67971b"],
+ Cell[BoxData["\"\<Samples\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8cc26b2b-22f4-4eab-9d70-6ebb87de4360"],
  ", ",
- Cell[BoxData["\"\<NumBits\>\""], "InlineFormula",ExpressionUUID->
-  "b591d539-119a-4ce2-8831-ae60efb6a6eb"],
+ Cell[BoxData["\"\<NumBits\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c9ceaf45-59ab-4168-a640-48efc589f6a7"],
  " and ",
- Cell[BoxData["\"\<Shots\>\""], "InlineFormula",ExpressionUUID->
-  "c80c3ee2-85b8-4c16-bc73-0255d8e82236"],
+ Cell[BoxData["\"\<Shots\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc397396-24ad-4fee-9cbd-eb3f81819397"],
  "; for an ",
  StyleBox["estimator",
   FontWeight->"Bold"],
  " job they are ",
- Cell[BoxData["\"\<ExpectationValue\>\""], "InlineFormula",ExpressionUUID->
-  "8b2578a8-347d-4137-b0ee-57848a6ea078"],
+ Cell[BoxData["\"\<ExpectationValue\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e37e94f-237f-4be6-9cba-230574dd8259"],
  ", ",
- Cell[BoxData["\"\<ExpectationValues\>\""], "InlineFormula",ExpressionUUID->
-  "a5598522-c4d4-45f7-82d4-2e4c4a022e40"],
+ Cell[BoxData["\"\<ExpectationValues\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9b6e18a1-1d53-41a1-bf1d-57a6ea794291"],
  " and ",
- Cell[BoxData["\"\<StandardErrors\>\""], "InlineFormula",ExpressionUUID->
-  "759071a8-11c3-47b4-9f71-63a522849740"],
+ Cell[BoxData["\"\<StandardErrors\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78db5d28-848d-499f-a8e2-d1dbb284b161"],
  ". An accessor that does not apply to the job's primitive gives ",
  Cell[BoxData[
   RowBox[{"Missing", "[", 
-   RowBox[{"\"\<NotApplicable\>\"", ","}]}]], "InlineFormula",ExpressionUUID->
-  "e6abbfcc-6d97-4ed5-b96f-fccec2262a4e"],
+   RowBox[{"\"\<NotApplicable\>\"", ","}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "618011b0-13af-4103-a393-d8af92e21af4"],
  StyleBox["primitive", "TI"],
- Cell[BoxData["]"], "InlineFormula",ExpressionUUID->
-  "ae142ca6-4f9a-4637-b006-d3589777599c"],
+ Cell[BoxData["]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "86de9e9b-df81-4989-abc6-485059cce4d4"],
  "."
-}], "Notes",ExpressionUUID->"95a043f0-d6f9-4873-a707-b08d5afcd517"],
+}], "Notes",ExpressionUUID->"be888f52-ea29-4e95-bdde-72b32358fdb5"],
 
 Cell[TextData[{
  "An unknown property name gives a ",
  Cell[BoxData[
-  ButtonBox["Failure",
-   BaseStyle->"Link",
-   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
-  "e7ea7a8a-edca-4c9e-9718-ae50d231be8b"],
+  TemplateBox[{
+    Cell[
+     TextData["Failure"]], "paclet:ref/Failure"},
+   "RefLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "d0346c46-40c5-47d5-9b94-57c1ebe93d53"],
  " listing the valid properties (see Possible Issues)."
-}], "Notes",ExpressionUUID->"89b6ef4c-8199-4f2d-9304-9853bc219421"],
+}], "Notes",ExpressionUUID->"d0b5472a-0fbf-461f-b31d-cb8486f892a7"],
 
 Cell[TextData[{
  "The summary box shows the status (with a colored indicator), the backend \
 and the job id; once ",
- Cell[BoxData["\"\<Completed\>\""], "InlineFormula",ExpressionUUID->
-  "ad383744-81c5-4420-a1bf-1000a9f10a71"],
+ Cell[BoxData["\"\<Completed\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25f6b9e7-e6c2-4b65-ba2d-d6e949ed1e0b"],
  " a sampler job also shows the qubit count, shot count and \
 quantum-processing time, and an estimator job shows the expectation value and \
 quantum-processing time."
-}], "Notes",ExpressionUUID->"543cc6c8-fe1c-4ecd-b25f-732198fa237e"],
+}], "Notes",ExpressionUUID->"d17de36a-d525-47c0-8615-5bdd563bde39"],
 
 Cell[TextData[{
  "The data properties (",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "207a19b9-91ec-44f6-812b-ee6420c26e69"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5982c9a4-c247-4a0e-85b1-226eb58b753b"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
    RowBox[{"[", "\"\<Properties\>\"", "]"}]}]], "InlineFormula",
-  ExpressionUUID->"13592f66-f242-4f72-9056-a02b23c33d2c"],
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "97d238ce-a41c-434b-9599-909956a69c87"],
  "), each read from the cached snapshot with no network access:"
-}], "Notes",ExpressionUUID->"78569628-a6a1-4454-bcc5-899ae12cb03a"],
+}], "Notes",ExpressionUUID->"40beae4f-ad30-4c3b-bfd3-248017c66dd1"],
 
 Cell[BoxData[GridBox[{
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "d360c07e-940c-4d9e-974a-e1535f9347ec"], Cell["Property", "TableText",
-     FontWeight->Bold,ExpressionUUID->"130455ba-66a6-4130-a071-f0c710870cee"],
+     "82a6b751-3fb4-4e3a-9106-a67bc2386320"], Cell["Property", "TableText",
+     FontWeight->Bold,ExpressionUUID->"c6d26680-0d2d-4432-8089-ac3fa9016241"],
      Cell["Result", "TableText",
-     FontWeight->Bold,ExpressionUUID->"a0450365-abf7-433b-8718-f58154d5e211"]},
+     FontWeight->Bold,ExpressionUUID->"5e62374d-c867-43dd-8233-982f2eff8a36"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "f614f17e-f9f8-480c-ac7c-701ecfea75ca"], Cell[TextData[Cell[
-    BoxData["\"\<ID\>\""], "InlineFormula",ExpressionUUID->
-     "ae125a80-68d3-4bbc-8e48-384f8b018c32"]], "TableText",ExpressionUUID->
-     "28f1f3da-6049-476b-8392-3e42d9940463"], Cell[
+     "10ccd3b8-b6c6-42de-8377-6ff433f326a2"], Cell[TextData[Cell[
+    BoxData["\"\<ID\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "e01c43e2-0d23-4378-ac22-fdc171496f31"]], "TableText",ExpressionUUID->
+     "8b5dc91a-9866-431d-abdc-e24d38aabbbd"], Cell[
     "the job identifier string", "TableText",ExpressionUUID->
-     "fbc4b2b8-742d-4c2f-bb64-609f20e35531"]},
+     "4447eae4-cb63-4260-9f73-4ff6958829b5"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "6171e3c9-6a01-441f-ba5a-7e43212119c2"], Cell[TextData[Cell[
-    BoxData["\"\<Backend\>\""], "InlineFormula",ExpressionUUID->
-     "0736cfa5-be10-46eb-9c92-425fd8c2fa23"]], "TableText",ExpressionUUID->
-     "4cb6ead6-56fa-4e4a-8cfe-cf10928df0c3"], Cell[
+     "f429d1e0-9295-4686-be85-39f0020529d0"], Cell[TextData[Cell[
+    BoxData["\"\<Backend\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "6f70999d-5548-4508-9a2c-f159acc67870"]], "TableText",ExpressionUUID->
+     "f981eb2e-96c1-4312-8bd8-8f7a717a7862"], Cell[
     "the backend name", "TableText",ExpressionUUID->
-     "5a822ad5-f713-44ef-a856-2847d10c1344"]},
+     "d4742df3-1d75-4853-822a-9801446b3b94"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "68286a82-8556-4ead-acbe-c1b0c21e4603"], Cell[TextData[Cell[
-    BoxData["\"\<ServiceObject\>\""], "InlineFormula",ExpressionUUID->
-     "8ac2b7ec-8d90-40f2-a81a-13ef5a108148"]], "TableText",ExpressionUUID->
-     "517e9b1b-37c8-47aa-968f-68b93b4f2193"], Cell[TextData[{
+     "8f9566b2-52b9-48f0-a52b-afa6252abe7b"], Cell[TextData[Cell[
+    BoxData["\"\<ServiceObject\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "68ca2e86-2512-4d92-8b9a-3cd6d2b11681"]], "TableText",ExpressionUUID->
+     "ff294452-ffc9-4913-bbbc-983a711da4cf"], Cell[TextData[{
      "the ",
-     Cell[BoxData[
-     "ServiceObject"], "InlineFormula",ExpressionUUID->
-      "8def74cb-9e2d-4f28-8959-0acb3bc663e2"],
+     Cell[BoxData["ServiceObject"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "4f8c5cdf-b50e-445d-8ffe-6c5a93731a25"],
      " the job is bound to"
-    }], "TableText",ExpressionUUID->"ab67e134-0455-4a02-9396-3141bd9878db"]},
+    }], "TableText",ExpressionUUID->"f8a1cdb8-5e03-4219-8aa7-31af0a7e6b7a"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "cddd56e1-dd54-4817-8076-8d8305a06729"], Cell[TextData[Cell[
-    BoxData["\"\<Status\>\""], "InlineFormula",ExpressionUUID->
-     "24d5e958-3322-4a82-9903-b7f6456e2d14"]], "TableText",ExpressionUUID->
-     "b83171e5-0b90-4239-995f-0b6e0d337fce"], Cell[
+     "25a8ea28-3b51-41cc-ad0a-d41ff6057a70"], Cell[TextData[Cell[
+    BoxData["\"\<Status\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "141dfd89-b869-4b24-ab29-6718463d3b93"]], "TableText",ExpressionUUID->
+     "b0cf3df4-0c56-41df-b29c-8fdd39dd56a3"], Cell[
     "the current job status", "TableText",ExpressionUUID->
-     "fe8bce18-d26f-4117-a5af-decf553c516b"]},
+     "0618dde5-0529-482f-a299-7e8549d9c7ab"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "be76b74b-70ac-4294-9b72-e2e38acc235b"], Cell[TextData[Cell[
-    BoxData["\"\<Primitive\>\""], "InlineFormula",ExpressionUUID->
-     "d7009df9-5707-482c-8b99-fba921644197"]], "TableText",ExpressionUUID->
-     "e87518ab-6d2a-4874-b320-6d3d67e7705f"], Cell[TextData[{
+     "32c48344-a31b-477d-8845-78d2ddd6a980"], Cell[TextData[Cell[
+    BoxData["\"\<Primitive\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "23dd1099-c61e-477f-b3d2-2dfe34b02171"]], "TableText",ExpressionUUID->
+     "45c55f8d-d55f-4a91-9068-056b57e8902d"], Cell[TextData[{
      "the IBM Runtime primitive the job was submitted with, ",
-     Cell[
-     BoxData["\"\<sampler\>\""], "InlineFormula",ExpressionUUID->
-      "29f27023-f024-4aab-b0ed-7227dbd8d4bb"],
+     Cell[BoxData["\"\<sampler\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "68cba3f5-f877-4653-9b2f-56f02f525ff0"],
      " or ",
-     Cell[
-     BoxData["\"\<estimator\>\""], "InlineFormula",ExpressionUUID->
-      "8f6ae110-93f0-42f1-a56d-244f2062a1f4"]
-    }], "TableText",ExpressionUUID->"3728e659-b781-4628-97ed-be80e1d8d842"]},
+     Cell[BoxData["\"\<estimator\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "cd4d2ead-0754-4b67-82c0-2e9e7b5472e2"]
+    }], "TableText",ExpressionUUID->"2a26c53f-e2e6-433a-bb03-abd92d7a2990"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "050883da-4a1c-430c-94b6-dd711755cc39"], Cell[TextData[Cell[
-    BoxData["\"\<UserID\>\""], "InlineFormula",ExpressionUUID->
-     "d6d669cc-509f-4d4c-943d-9a6ad2f7a111"]], "TableText",ExpressionUUID->
-     "34d47133-764a-4267-95a7-aa3af1623b75"], Cell[
+     "fe2e0fe7-5a0e-4469-92eb-6907c02cce32"], Cell[TextData[Cell[
+    BoxData["\"\<UserID\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "26c77eac-2820-4713-a6ec-d32272ec6bb1"]], "TableText",ExpressionUUID->
+     "f4944877-bf21-4311-ac51-6400f5bbc423"], Cell[
     "the submitting user id", "TableText",ExpressionUUID->
-     "fdf54257-a778-4de3-8941-edd38afed8ad"]},
+     "adc3e7bf-a969-40d7-9627-029bdd6cc371"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "97d73a4f-1ef1-496b-8c75-e02b99ef3a63"], Cell[TextData[Cell[
-    BoxData["\"\<ProgramID\>\""], "InlineFormula",ExpressionUUID->
-     "23b392d3-41ee-47ea-b0b7-2413ad7d761c"]], "TableText",ExpressionUUID->
-     "a2f019e1-8336-4871-8b2b-7cd263a4714d"], Cell[TextData[{
+     "ac257aa6-726e-4e03-b56d-28f20662d148"], Cell[TextData[Cell[
+    BoxData["\"\<ProgramID\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "23612763-bf8e-4321-970c-615b435e5271"]], "TableText",ExpressionUUID->
+     "40faf9b7-12af-4fe5-9aac-689b99c62507"], Cell[TextData[{
      "the primitive program, ",
-     Cell[
-     BoxData["\"\<sampler\>\""], "InlineFormula",ExpressionUUID->
-      "27bb4e61-cc3b-4c8d-9d71-17904cd3f69c"],
+     Cell[BoxData["\"\<sampler\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "ae315398-19bb-407a-b598-779bd309045e"],
      " or ",
-     Cell[
-     BoxData["\"\<estimator\>\""], "InlineFormula",ExpressionUUID->
-      "856cb291-306f-427b-b79c-75fb19622e20"]
-    }], "TableText",ExpressionUUID->"ad2c9150-0bf1-484d-9ae4-7172c465d1fc"]},
+     Cell[BoxData["\"\<estimator\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "a4f5fd32-196b-4d27-b469-3b1ef5804a78"]
+    }], "TableText",ExpressionUUID->"97d734c9-7021-429c-a408-80843a61a9ee"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "1a829028-0834-411a-b8e1-7fe31d21928f"], Cell[TextData[Cell[
-    BoxData["\"\<Cost\>\""], "InlineFormula",ExpressionUUID->
-     "d5eef26d-7bd4-4a5a-9715-a622206182ec"]], "TableText",ExpressionUUID->
-     "61fd6473-3e2e-4e1f-aa1e-0ac1159d1897"], Cell[
+     "b989324b-a9b0-4883-9d11-bc06385e0690"], Cell[TextData[Cell[
+    BoxData["\"\<Cost\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a77d8436-a8e9-4339-b254-3fa97f24c2be"]], "TableText",ExpressionUUID->
+     "02c8194b-50ed-4e78-8d58-bce05e89c26a"], Cell[
     "the reserved cost, in seconds", "TableText",ExpressionUUID->
-     "b66a520e-31d3-4a3c-9a7c-c455a1b5ea0e"]},
+     "0702642d-e2b4-487b-a686-d34b24c21bce"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "3c1c38a7-4bb2-4695-9b32-7ad688f09cf3"], Cell[TextData[Cell[
-    BoxData["\"\<EstimatedRunTime\>\""], "InlineFormula",ExpressionUUID->
-     "4335f1aa-8173-4c06-a7d0-e7436e95e2f2"]], "TableText",ExpressionUUID->
-     "d15e4dc9-28cd-4ec3-832b-467e892979fb"], Cell[
+     "78963844-92f4-48ca-b529-2d66179e1a6f"], Cell[TextData[Cell[
+    BoxData["\"\<EstimatedRunTime\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "00313152-2660-49d7-9930-11927b05a8e5"]], "TableText",ExpressionUUID->
+     "1f150d7d-78dd-4967-b3b3-ea405f206020"], Cell[
     "the estimated running time, in seconds", "TableText",ExpressionUUID->
-     "306dc3a8-933e-4ce4-81f9-da2aadec6a83"]},
+     "e8ce8246-b669-4e0f-84a2-2fc813c3fb90"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "2d8b90c4-4c9b-4d54-a582-9a91618144be"], Cell[TextData[Cell[
-    BoxData["\"\<QuantumSeconds\>\""], "InlineFormula",ExpressionUUID->
-     "ad339d51-6aef-4aab-9139-35b2755779ff"]], "TableText",ExpressionUUID->
-     "2184d9fd-f2ea-4dae-863a-f9ddfac62c1d"], Cell[
+     "da03de12-e042-4cd4-987c-590ce25f45e6"], Cell[TextData[Cell[
+    BoxData["\"\<QuantumSeconds\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "957c3fe7-4488-4ca8-b45d-522eef5808b9"]], "TableText",ExpressionUUID->
+     "0a66476d-9a4f-4613-814c-7114c2a7e0cb"], Cell[
     "the quantum-processing time used, in seconds", "TableText",
-     ExpressionUUID->"6eccc9ea-4274-45f6-9825-ed1626a358ec"]},
+     ExpressionUUID->"d07b0b9e-0ec8-4446-a490-609bd2a3d9aa"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "5a550516-00c0-4938-a957-6f8dd8f4b557"], Cell[TextData[Cell[
-    BoxData["\"\<SubmittedCircuit\>\""], "InlineFormula",ExpressionUUID->
-     "e48e0a4a-b4f5-44ad-93a2-e9e029085014"]], "TableText",ExpressionUUID->
-     "dc4476c9-9741-4cd6-9f5e-ff5b0badbed1"], Cell[TextData[{
+     "cb4dc0a6-f3b9-40ae-ae37-e25f611f1fd2"], Cell[TextData[Cell[
+    BoxData["\"\<SubmittedCircuit\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "cf72b0be-94c5-49b7-93e7-0bf867ba5af1"]], "TableText",ExpressionUUID->
+     "1ff3826b-381c-4ecb-9381-c0af2e1202df"], Cell[TextData[{
      "the submitted circuit, as stored in the job's ",
-     Cell[BoxData[
-     "params"], "InlineFormula",ExpressionUUID->
-      "923b756a-9a5b-4bc1-96a2-6e552f0936b1"]
-    }], "TableText",ExpressionUUID->"c43be4a2-f73a-4570-ae68-97f762972db7"]},
+     Cell[BoxData["params"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "b8dc81b6-444e-442d-a66e-5a1aa364f5cb"]
+    }], "TableText",ExpressionUUID->"3eaa1e15-f476-4411-a0a0-05f2d720fd79"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "cac3a0d7-64d0-40b9-a750-193ba0068548"], Cell[TextData[Cell[
-    BoxData["\"\<Options\>\""], "InlineFormula",ExpressionUUID->
-     "94591f58-72b5-4910-b973-c9a25ebefc56"]], "TableText",ExpressionUUID->
-     "89031f03-acca-4fc4-a34b-76f033a73de7"], Cell[TextData[{
+     "0b0d8fcf-7748-4ea4-8d23-f77aad92eb33"], Cell[TextData[Cell[
+    BoxData["\"\<Options\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "f5bb8084-214b-40a3-92fc-8d74cda999a5"]], "TableText",ExpressionUUID->
+     "3afe8b8a-32d1-48b3-8b4e-f8a579a9113b"], Cell[TextData[{
      "the ",
-     Cell[BoxData[
-      RowBox[{"params", ".", "options"}]], "InlineFormula",ExpressionUUID->
-      "8aa20a59-2ae4-4ed8-853a-94f02f7052da"],
+     Cell[
+     "params.options", "InlineCode",ExpressionUUID->
+      "2567d746-07d0-4b40-90e9-a02437cb64ea"],
      " block sent with the job"
-    }], "TableText",ExpressionUUID->"9c656d5f-8c44-475b-9334-93cebcd6201e"]},
+    }], "TableText",ExpressionUUID->"b4efb672-1033-4d0f-b2ae-b758b78bca77"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "19d133cf-4cba-4b8a-95f9-03d5eacc38fe"], Cell[TextData[Cell[
-    BoxData["\"\<Timestamps\>\""], "InlineFormula",ExpressionUUID->
-     "35a835dd-9cf9-40fc-84a7-66d51a3dc506"]], "TableText",ExpressionUUID->
-     "df36860b-199e-426c-b3e0-cffd444306a5"], Cell[TextData[{
+     "72c3ce93-7044-42cf-aa39-7304565fb8a6"], Cell[TextData[Cell[
+    BoxData["\"\<Timestamps\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "ec5a130c-927c-4476-9452-a58e38c5a743"]], "TableText",ExpressionUUID->
+     "9e1f058d-ed55-4ad0-86e2-45c4dad74c74"], Cell[TextData[{
      "an Association of lifecycle ",
-     Cell[BoxData[
-     "DateObject"], "InlineFormula",ExpressionUUID->
-      "a85109c1-d44e-4b68-bf11-3cfff4d33a8b"],
+     Cell[BoxData["DateObject"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "3d20ff4c-ffb5-41e2-acd9-024688617f4b"],
      "s"
-    }], "TableText",ExpressionUUID->"07141615-038d-4476-b106-7db6d72c65a9"]},
+    }], "TableText",ExpressionUUID->"9d6a8cc6-e3a5-449c-b9fe-71799ad158b1"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "c5446390-3cee-491c-a45a-692b8c08c4d0"], Cell[TextData[Cell[
-    BoxData["\"\<Duration\>\""], "InlineFormula",ExpressionUUID->
-     "4645bd7b-003a-46f8-b5b9-584fc0610150"]], "TableText",ExpressionUUID->
-     "a3a697e8-09eb-41d2-b70b-2df8c351128c"], Cell[
+     "c21a4754-f788-4dfe-90ee-776bd30a7ef0"], Cell[TextData[Cell[
+    BoxData["\"\<Duration\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "590fac17-7194-4d81-841b-db712acbd7d4"]], "TableText",ExpressionUUID->
+     "a5822690-34c4-42f4-bc94-8034a4134941"], Cell[
     "the running-to-finished wall-clock duration", "TableText",ExpressionUUID->
-     "47ddc488-65dc-4a19-a94a-b28da0fdd459"]},
+     "4688b0ee-6c82-4f5a-9b88-178566df5b86"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "c4c44f5a-0f19-47a4-8323-dc9c96c59c3d"], Cell[TextData[Cell[
-    BoxData["\"\<Samples\>\""], "InlineFormula",ExpressionUUID->
-     "6be91bc4-3920-4413-b0e5-2cf288125d00"]], "TableText",ExpressionUUID->
-     "214698dc-1380-4e1d-8111-27b0cc7acfda"], Cell["\<\
+     "9bcb6749-b10e-43bb-a372-53cae4d60091"], Cell[TextData[Cell[
+    BoxData["\"\<Samples\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "38816d68-b625-4273-83eb-b4773e024eec"]], "TableText",ExpressionUUID->
+     "b1e1af42-dcfb-470c-9045-2f8c9bd13a0a"], Cell["\<\
 the per-shot outcomes, each the integer value of the classical register for \
 that shot\
-\>", "TableText",ExpressionUUID->"bdd2b62d-df8e-4726-b42d-663b0ec71d7a"]},
+\>", "TableText",ExpressionUUID->"2eacb7cf-1ea8-406c-8c49-c11eac8a3ec3"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "a6b8ac53-5879-4194-ae75-43469955d9fb"], Cell[TextData[Cell[
-    BoxData["\"\<MeasuredQubits\>\""], "InlineFormula",ExpressionUUID->
-     "afcee8ee-7122-4080-a9a5-efab72273212"]], "TableText",ExpressionUUID->
-     "4e9fd47b-b505-4d8f-8079-5e8cdc07baab"], Cell[
+     "d95ab338-4161-49cf-815c-0a4ce49b8682"], Cell[TextData[Cell[
+    BoxData["\"\<MeasuredQubits\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "827bd618-0d3b-4d18-96a2-457873d17835"]], "TableText",ExpressionUUID->
+     "44aaa748-5129-4b87-8e7b-77cbfde1185e"], Cell[
     "the classical-bit to original-qubit decode map", "TableText",
-     ExpressionUUID->"eca4e0ba-c77d-4153-b374-21980f80c7f7"]},
+     ExpressionUUID->"95af42c7-83fa-4826-b7cd-797e14f7ca0c"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "a34c2944-6b68-458e-a0ff-e5540806a3cd"], Cell[TextData[{
-     Cell[
-     BoxData["\"\<NumBits\>\""], "InlineFormula",ExpressionUUID->
-      "dd7a61da-474f-4a38-b08e-9b32acea236e"],
+     "efe2b42c-4f4a-47a5-adea-8a7299bc3faf"], Cell[TextData[{
+     Cell[BoxData["\"\<NumBits\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "9cda26a1-4470-4d05-89e1-27a9aa63785d"],
      ", ",
-     Cell[
-     BoxData["\"\<Qubits\>\""], "InlineFormula",ExpressionUUID->
-      "39119807-c1ff-4260-be4d-645c5656376f"]
-    }], "TableText",ExpressionUUID->"82f6026b-848a-46f9-abab-2dd3d5f9b6a8"], 
+     Cell[BoxData["\"\<Qubits\>\""], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "eab40eba-d966-4187-9b5b-448e6adeaa17"]
+    }], "TableText",ExpressionUUID->"a1b1dd18-7353-45d2-a6eb-c8682f5c2a6f"], 
     Cell["the number of measured qubits", "TableText",ExpressionUUID->
-     "6db8141d-6f6a-40ed-8c5f-0aa873a079a3"]},
+     "3d659be3-cbeb-44f6-a729-78809c7efa25"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "33de15ce-0d59-4906-82de-1b638fb7fcb8"], Cell[TextData[Cell[
-    BoxData["\"\<Shots\>\""], "InlineFormula",ExpressionUUID->
-     "8cfcebc0-9127-4cd9-979f-9d4433c78dae"]], "TableText",ExpressionUUID->
-     "6482433f-de87-4670-af82-41e93e1009f7"], Cell[
+     "38d56899-e6b8-4f15-9311-3f695e02b4ef"], Cell[TextData[Cell[
+    BoxData["\"\<Shots\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "5f4e5190-3913-4bef-8797-5dbcc7f66d2c"]], "TableText",ExpressionUUID->
+     "8de0d60a-0514-4cb3-9d0d-57d4b5f0238c"], Cell[
     "the total number of shots", "TableText",ExpressionUUID->
-     "07725ed7-a323-46c8-bb55-de16a5186f52"]},
+     "99d816b2-d834-4bd1-a6fc-b0d71554f1b1"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "eae6c2b1-8570-48e5-879f-44f012b1a3fc"], Cell[TextData[Cell[
-    BoxData["\"\<Measurement\>\""], "InlineFormula",ExpressionUUID->
-     "f92bb3f3-3320-43df-b0a5-d7a28ebcb2e4"]], "TableText",ExpressionUUID->
-     "b3597b1b-9d24-457e-b2c8-404e1fd7a37e"], Cell[TextData[{
+     "eefb9b55-f972-4ea3-bb9a-4b3a26a0dbff"], Cell[TextData[Cell[
+    BoxData["\"\<Measurement\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "eb82865c-db7e-48b1-bf05-6770ca1ac70f"]], "TableText",ExpressionUUID->
+     "2cd5ea4d-3030-4d71-92e1-a8cf6928f37b"], Cell[TextData[{
      "the ",
      Cell[BoxData[
-      ButtonBox["QuantumMeasurement",
-       BaseStyle->"Link",
-       ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement"]],
-       "InlineFormula",ExpressionUUID->"cd18507c-ca6d-419c-9400-abe0a87b7cbe"],
+      TemplateBox[{
+        Cell[
+         TextData["QuantumMeasurement"]], 
+        "paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement", 
+        "Wolfram/QuantumFramework Package Symbol"},
+       "PackageLink",
+       BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+      "3a7da55d-1711-4ca8-9c35-e9a9d03c5de6"],
      " of the outcome (sampler)"
-    }], "TableText",ExpressionUUID->"964ca1a4-da7a-47df-860d-c4fa2013c11d"]},
+    }], "TableText",ExpressionUUID->"ce401a50-fa7b-419a-9413-35b968abe0d8"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "0f710010-e4c8-44e9-8e22-62379ba85e7e"], Cell[TextData[Cell[
-    BoxData["\"\<Counts\>\""], "InlineFormula",ExpressionUUID->
-     "24e31fd7-7f3e-4304-9222-a328a44774cf"]], "TableText",ExpressionUUID->
-     "7c14e3f6-3e2d-4f2e-84b0-1d7601eaddcc"], Cell[
+     "270596f0-7cb2-4ec2-9f85-70272c6bc649"], Cell[TextData[Cell[
+    BoxData["\"\<Counts\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "823fef17-b988-4cec-9b9f-41119ed2d467"]], "TableText",ExpressionUUID->
+     "9904ecd5-80ba-4e0a-9ae6-35d870a2e0e0"], Cell[
     "exact integer counts keyed by the bit-list outcome (sampler)", 
-     "TableText",ExpressionUUID->"ab797343-a9b5-4a8c-8433-df8dc094a39a"]},
+     "TableText",ExpressionUUID->"46009747-ba50-42b3-8fc4-b148d2fc095c"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "06586f99-4c86-405b-9741-ac871cdf33c0"], Cell[TextData[Cell[
-    BoxData["\"\<Probabilities\>\""], "InlineFormula",ExpressionUUID->
-     "84b3c70d-343e-4cda-b74d-fe1ea8f6abfb"]], "TableText",ExpressionUUID->
-     "ed5ee5b1-a55f-455a-9560-e0fb760626d4"], Cell[
+     "3c5d28b8-b8f7-4429-9072-f53411655486"], Cell[TextData[Cell[
+    BoxData["\"\<Probabilities\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "1a73d6c0-244f-463e-bad2-ba3e6210dd21"]], "TableText",ExpressionUUID->
+     "f9716037-2edb-486c-87c1-91362d79519e"], Cell[
     "the outcome probabilities (sampler)", "TableText",ExpressionUUID->
-     "d1bd4db1-0fc3-4811-aa5b-f8467a6e8956"]},
+     "4a859fcb-3ab8-4db2-84ed-6aaa1419cc01"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "83d22e18-3d76-4f04-8a13-cae1e1bf4db8"], Cell[TextData[Cell[
-    BoxData["\"\<ExpectationValue\>\""], "InlineFormula",ExpressionUUID->
-     "3d97468a-d199-4ca6-b24b-9804faedfaa4"]], "TableText",ExpressionUUID->
-     "47e23871-6b4c-4315-b3fb-d16d8ada1e16"], Cell["\<\
+     "1e6b0650-7f4e-4c17-9df1-eee835cd68e8"], Cell[TextData[Cell[
+    BoxData["\"\<ExpectationValue\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "adfc9b19-d627-41b2-a9f3-aac9f562ad65"]], "TableText",ExpressionUUID->
+     "25a6b5e5-9009-47b1-a9cf-4d981b429f78"], Cell["\<\
 the observable's expectation value (estimator); a single value for one \
 observable, else a list\
-\>", "TableText",ExpressionUUID->"95fbe875-9bc7-4d2a-8e97-48de4c2299e3"]},
+\>", "TableText",ExpressionUUID->"1e2f7d3c-28ad-4d2d-b47a-8e8f864da9db"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "29e47b9c-da7e-433a-a2d7-f893db404f48"], Cell[TextData[Cell[
-    BoxData["\"\<ExpectationValues\>\""], "InlineFormula",ExpressionUUID->
-     "4c606651-d593-4f09-9cdc-0be0ffe506b2"]], "TableText",ExpressionUUID->
-     "77000b08-cfdb-41d9-a4b4-50bebf292ab7"], Cell["\<\
+     "6b48a19c-ef0e-4e43-b3b4-44e242e85dec"], Cell[TextData[Cell[
+    BoxData["\"\<ExpectationValues\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a9828d9c-734b-4f0d-a87f-16f897f86606"]], "TableText",ExpressionUUID->
+     "cfa3c8fd-3fc7-4c61-9e8c-a395086165ab"], Cell["\<\
 the list of expectation values, one per observable (estimator)\
-\>", "TableText",ExpressionUUID->"156fece5-756d-4fbd-b1e4-1df0ed2cab68"]},
+\>", "TableText",ExpressionUUID->"56aea8cd-b79b-4c6c-b838-8f317bdd3c77"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "8a9980c3-64ca-419b-b9cd-15f719a05135"], Cell[TextData[Cell[
-    BoxData["\"\<StandardErrors\>\""], "InlineFormula",ExpressionUUID->
-     "d39d9cb1-da20-49b1-93fa-581d177ba69f"]], "TableText",ExpressionUUID->
-     "4521aa5b-90c4-4c8c-9a28-c9bd1116eb6c"], Cell["\<\
+     "58ef55f6-d023-4b98-9327-505a21b70a42"], Cell[TextData[Cell[
+    BoxData["\"\<StandardErrors\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a7a2bcff-4d09-4e77-ac87-2d4013597674"]], "TableText",ExpressionUUID->
+     "4ebc6911-4639-454d-badf-3d3e7e7f0358"], Cell["\<\
 the per-observable standard error of the expectation value (estimator)\
-\>", "TableText",ExpressionUUID->"b58d761b-a7db-4ade-9e3d-1b85f16044ab"]},
+\>", "TableText",ExpressionUUID->"47b5d3a9-4f64-4bf8-ad8e-bf3694b00b96"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "583ed8ad-b294-4287-ad0a-6d82f08d84b1"], Cell[TextData[Cell[
-    BoxData["\"\<ExecutionSpans\>\""], "InlineFormula",ExpressionUUID->
-     "1993b5c3-cbf6-468d-b9d6-6ca268697557"]], "TableText",ExpressionUUID->
-     "29e455eb-d11f-4655-a877-718d03dc1a76"], Cell[
+     "18787688-3791-4997-92d9-c7f1e87f81d5"], Cell[TextData[Cell[
+    BoxData["\"\<ExecutionSpans\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "17b37aae-2f31-443b-856d-a6cb686607d5"]], "TableText",ExpressionUUID->
+     "7d069800-6922-4fa3-8e70-feb5b471a6c2"], Cell[
     "the execution time spans reported by the service", "TableText",
-     ExpressionUUID->"5ad86fc5-ed76-480d-a260-a1188e47ddc8"]},
+     ExpressionUUID->"14b6f515-6052-4c7c-9db1-9122e668b1f5"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "a3d5edad-1ba4-4d85-9fde-4ff066da9f09"], Cell[TextData[Cell[
-    BoxData["\"\<Raw\>\""], "InlineFormula",ExpressionUUID->
-     "0bd8679d-a292-474e-a3c8-f82f30de17b0"]], "TableText",ExpressionUUID->
-     "ead98091-82e9-4da3-9b74-0732557fb1ee"], Cell[TextData[{
+     "f345fa83-990d-460f-b883-8f07799e0486"], Cell[TextData[Cell[
+    BoxData["\"\<Raw\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "dc6d9573-9cb2-4665-acc9-a5bd0d253869"]], "TableText",ExpressionUUID->
+     "dee3bf59-325e-4e3d-823d-91862a7bbdab"], Cell[TextData[{
      "the raw service responses; ",
      Cell[BoxData[
       RowBox[{"[", 
-       RowBox[{"\"\<Raw\>\"", ","}]}]], "InlineFormula",ExpressionUUID->
-      "f125f1ca-f7ef-4aaa-b0ef-35bb510fea24"],
+       RowBox[{"\"\<Raw\>\"", ","}]}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "63fa39be-dbc8-433e-a411-c9caa66753ad"],
      StyleBox["\"sect\"", "TI"],
-     Cell[BoxData[
-     "]"], "InlineFormula",ExpressionUUID->
-      "6f01d82e-3aa6-4922-b3e7-f62cb61f97a2"],
+     Cell[BoxData["]"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "ea7d4905-2a35-4ebc-9747-94102bbd7132"],
      " gives one section"
-    }], "TableText",ExpressionUUID->"96983607-6a4e-4569-949f-bb6e35ea2725"]},
+    }], "TableText",ExpressionUUID->"0239d243-aa3b-4d4f-8f69-f56d4af3ab08"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "dc62724d-3794-41a8-83b8-2ec342bd1a5a"], Cell[TextData[Cell[
-    BoxData["\"\<Properties\>\""], "InlineFormula",ExpressionUUID->
-     "437da748-d198-4788-b060-fe05cdd7e9b9"]], "TableText",ExpressionUUID->
-     "d1a43564-005c-4cfc-8d55-d12d135d1e13"], Cell[
+     "035d08d4-1753-4de0-a952-d541ce4f8a67"], Cell[TextData[Cell[
+    BoxData["\"\<Properties\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "aecb2695-6ee8-42bc-9fe9-7c8500dfe879"]], "TableText",ExpressionUUID->
+     "504ea31d-af31-4ae5-b258-d088ba6365ab"], Cell[
     "the list of data property names", "TableText",ExpressionUUID->
-     "c71da57b-0ef6-4c20-b143-a4b54aa41bb3"]},
+     "92593f7b-4ba9-4aa7-adbc-fedcb064681e"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "9f403287-11ad-4a30-80e4-8a51e17ccde3"], Cell[TextData[Cell[
-    BoxData["\"\<Actions\>\""], "InlineFormula",ExpressionUUID->
-     "956a9810-ff6b-4a6f-bdff-87c2718a6644"]], "TableText",ExpressionUUID->
-     "c51eec83-e232-4442-bfcc-59474bd6f112"], Cell[
+     "e35e8fa1-3985-4fa1-b9ef-f5a4b8a79c5a"], Cell[TextData[Cell[
+    BoxData["\"\<Actions\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "beebfd1e-5b17-419d-abd6-9a75844c1e2c"]], "TableText",ExpressionUUID->
+     "3744aa3a-db80-40ea-a73e-fa687cf2fa6a"], Cell[
     "the list of action names", "TableText",ExpressionUUID->
-     "babea87a-bb2e-4894-b309-9c6462d1dc93"]}
-  }]], "2ColumnTableMod",ExpressionUUID->"25a303c9-c1ee-4289-9e24-\
-ef4337435158"],
+     "5ec1e54c-7201-428b-b9d4-c0bb43d9aa10"]}
+  }]], "2ColumnTableMod",ExpressionUUID->"39b175d6-2d43-4d0a-b256-\
+93cb57c5bd7b"],
 
 Cell[TextData[{
  "The actions (",
  Cell[BoxData[
-  RowBox[{"IBMJob", "["}]], "InlineFormula",ExpressionUUID->
-  "56f39ab4-d8ce-41ab-bc25-e67075bd95c4"],
+  RowBox[{"IBMJob", "["}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3420e355-e515-4d63-b0fb-f6e42b483031"],
  StyleBox["assoc", "TI"],
  Cell[BoxData[
   RowBox[{"]", 
-   RowBox[{"[", "\"\<Actions\>\"", "]"}]}]], "InlineFormula",ExpressionUUID->
-  "84cce96b-db02-4897-a522-fff5527996d5"],
+   RowBox[{"[", "\"\<Actions\>\"", "]"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5adc378f-fcf1-4f43-b6ea-09da70bc114a"],
  "), each requiring a live connection and so kept out of ",
- Cell[BoxData["\"\<Properties\>\""], "InlineFormula",ExpressionUUID->
-  "24d33bd3-d541-4892-a406-ad45089168a5"],
+ Cell[BoxData["\"\<Properties\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ea2f1743-428c-4921-a2b0-4d1c3925f5fe"],
  ":"
-}], "Notes",ExpressionUUID->"59483de1-fdf3-4ae7-9352-591c53aa0f64"],
+}], "Notes",ExpressionUUID->"610f0a60-ba94-478a-98ec-c38c44a8863c"],
 
 Cell[BoxData[GridBox[{
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "cc6417a3-64ef-4e57-9c05-85d01ce5951f"], Cell["Action", "TableText",
-     FontWeight->Bold,ExpressionUUID->"0306b161-c45a-45b2-b9b1-7daf1395a4ed"],
+     "33be1b87-dbfe-4671-9a88-b0c925928ba7"], Cell["Action", "TableText",
+     FontWeight->Bold,ExpressionUUID->"03f95f96-6aeb-410d-8ada-1393426ff6be"],
      Cell["Result", "TableText",
-     FontWeight->Bold,ExpressionUUID->"a2f38fe0-2725-4ba8-a83f-c4d5734d8564"]},
+     FontWeight->Bold,ExpressionUUID->"5c680607-f2c6-41e1-9c57-e164eeee1f4b"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "62ce9e74-c340-4a72-8ec7-16172cc398a9"], Cell[TextData[Cell[
-    BoxData["\"\<Refresh\>\""], "InlineFormula",ExpressionUUID->
-     "6616ac7d-0be8-4d20-bd59-01854ff36019"]], "TableText",ExpressionUUID->
-     "7c8a38c5-2513-4f01-ac02-61dcc8afdc3f"], Cell[TextData[{
+     "10bfdf49-d384-429a-9a71-5ff092c067b1"], Cell[TextData[Cell[
+    BoxData["\"\<Refresh\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "5b53ed36-bcf6-4424-89dd-551fc3ccc4cb"]], "TableText",ExpressionUUID->
+     "63423695-dea3-4b7f-9e81-39531ed5af3f"], Cell[TextData[{
      "re-queries the service and gives a new ",
-     Cell[BoxData[
-     "IBMJob"], "InlineFormula",ExpressionUUID->
-      "cfcbdbb0-2dab-45b7-9d32-cf8c329305a6"],
+     Cell[BoxData["IBMJob"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "75afba73-7d09-4c98-8118-b02b102e5c87"],
      " with an updated snapshot"
-    }], "TableText",ExpressionUUID->"019b3343-2e7c-496c-a8da-98e946e684e5"]},
+    }], "TableText",ExpressionUUID->"ebaf21b7-2b46-426b-b54b-46b2b8a15bfc"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "d8ac87f1-8e58-4611-a84c-c92d90f35895"], Cell[TextData[Cell[
-    BoxData["\"\<Cancel\>\""], "InlineFormula",ExpressionUUID->
-     "b9163d95-19e2-4780-91bc-73717b13f71e"]], "TableText",ExpressionUUID->
-     "f0cb4b30-7bbb-41bd-9123-2fa650f76e35"], Cell[
+     "cfb79124-cd26-47d0-9247-a507279af4b1"], Cell[TextData[Cell[
+    BoxData["\"\<Cancel\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a72dc933-5157-4f42-85cd-6a492c8f2103"]], "TableText",ExpressionUUID->
+     "027848cb-0f32-427f-90cf-eb6350193424"], Cell[
     "requests cancellation of the job", "TableText",ExpressionUUID->
-     "80c5449c-35fb-402a-8a5e-768c1b2157e1"]},
+     "e2ac9528-c6a8-408f-ac48-85c57c82f5f6"]},
    {Cell["      ", "ModInfo",ExpressionUUID->
-     "2fb95f6e-4c6d-4f21-be59-2e76e9a14465"], Cell[TextData[Cell[
-    BoxData["\"\<ExecutedCircuit\>\""], "InlineFormula",ExpressionUUID->
-     "293a57d1-102e-48d6-9584-b53615a991c2"]], "TableText",ExpressionUUID->
-     "3251225b-b014-4b71-a53f-2cc38f25f063"], Cell["\<\
+     "52ec1211-d552-4c5d-9eb2-e6e876f3c81a"], Cell[TextData[Cell[
+    BoxData["\"\<ExecutedCircuit\>\""], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "4f6f8da9-6199-43f9-908f-b16f91e6b607"]], "TableText",ExpressionUUID->
+     "6f6c0ed0-c69f-439e-a2a1-555f8bf9f2c1"], Cell["\<\
 downloads the server-side transpiled circuit (see Possible Issues)\
-\>", "TableText",ExpressionUUID->"3e30725c-c6a0-4dff-b021-b50deee4b1f9"]}
-  }]], "2ColumnTableMod",ExpressionUUID->"9552e551-3f49-42a8-ac80-\
-540bc0fd056e"]
+\>", "TableText",ExpressionUUID->"eef513a1-162d-4580-b13e-b447d5d12b72"]}
+  }]], "2ColumnTableMod",ExpressionUUID->"67022c60-1e2f-4561-b922-\
+fc132d337653"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -657,29 +731,45 @@ Cell[TextData[{
 
 Cell[TextData[{
  Cell[BoxData[
-  ButtonBox["IBMJobSubmit",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit"]], 
-  "InlineFormula",ExpressionUUID->"b50b866c-6b8d-43bc-bf02-c8c01ec371b9"],
+  TemplateBox[{
+    Cell[
+     TextData["IBMJobSubmit"]], 
+    "paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "0b12003d-248a-4927-a43b-712a6758e93d"],
  " \[FilledVerySmallSquare] ",
  Cell[BoxData[
-  ButtonBox["QuantumMeasurement",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement"]], 
-  "InlineFormula",ExpressionUUID->"295ff625-a228-49fa-af60-995966c04dc5"],
+  TemplateBox[{
+    Cell[
+     TextData["QuantumMeasurement"]], 
+    "paclet:Wolfram/QuantumFramework/ref/QuantumMeasurement", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "1f6ea6b7-8d2e-49b7-a0e3-ae89b142337d"],
  " \[FilledVerySmallSquare] ",
  Cell[BoxData[
-  ButtonBox["QuantumCircuitOperator",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator"]],
-   "InlineFormula",ExpressionUUID->"1d9470c8-e48f-4d9b-8fd8-6739c6c4a777"],
+  TemplateBox[{
+    Cell[
+     TextData["QuantumCircuitOperator"]], 
+    "paclet:Wolfram/QuantumFramework/ref/QuantumCircuitOperator", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "481a85aa-77d6-4638-9652-8b5d6af3fad9"],
  " \[FilledVerySmallSquare] ",
  Cell[BoxData[
-  ButtonBox["QuantumQASM",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/QuantumQASM"]], 
-  "InlineFormula",ExpressionUUID->"e2f8608a-89a8-4118-be0b-af05b0c17e44"]
-}], "SeeAlso",ExpressionUUID->"3e1b754a-c8ba-4e02-891f-56625139048a"]
+  TemplateBox[{
+    Cell[
+     TextData["QuantumQASM"]], 
+    "paclet:Wolfram/QuantumFramework/ref/QuantumQASM", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "a23a288e-25ad-44b4-9b54-6e11a7226373"]
+}], "SeeAlso",ExpressionUUID->"93d67e1c-5fbc-4f8d-bec6-17deef027f0b"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -705,9 +795,9 @@ Cell[TextData[Cell[BoxData[
  ButtonBox["WolframQuantumComputationFramework",
   BaseStyle->"Link",
   ButtonData->
-   "paclet:guide/WolframQuantumComputationFramework"]], \
-"InlineFormula",ExpressionUUID->"0f1baef9-d0cc-4b7e-91b0-b182eca9cec0"]], \
-"MoreAbout",ExpressionUUID->"ca1bbd33-862e-4477-a313-9b478489e500"]
+   "paclet:Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework"]\
+], "InlineFormula",ExpressionUUID->"c11a310a-821b-4f6e-8eb7-9b4b9fb5c916"]], \
+"MoreAbout",ExpressionUUID->"e1751672-9b14-4ed4-949a-d646c978c3c1"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -749,8 +839,6 @@ Cell[BoxData[
  CellID->1969679695,ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502"]
 }, Open  ]],
 
-Cell[CellGroupData[{
-
 Cell[BoxData[
  InterpretationBox[GridBox[{
     {
@@ -768,12 +856,16 @@ Cell[BoxData[
 Cell[TextData[{
  "A handle returned by ",
  Cell[BoxData[
-  ButtonBox["IBMJobSubmit",
-   BaseStyle->"Link",
-   ButtonData->"paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit"]], 
-  "InlineFormula",ExpressionUUID->"b47e18d4-09e1-4135-8e62-a8ff0e48264f"],
+  TemplateBox[{
+    Cell[
+     TextData["IBMJobSubmit"]], 
+    "paclet:Wolfram/QuantumFramework/ref/IBMJobSubmit", 
+    "Wolfram/QuantumFramework Package Symbol"},
+   "PackageLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "2d87bd17-1d71-455d-9930-0fc5c540520c"],
  " displays as a status summary box:"
-}], "ExampleText",ExpressionUUID->"60a9dabf-5699-46a3-94f6-5e969516ded4"],
+}], "ExampleText",ExpressionUUID->"5080cec0-9389-4c2a-a424-25be2a8994ab"],
 
 Cell[BoxData[
  RowBox[{"job", " ", "=", " ", 
@@ -785,37 +877,30 @@ Cell[BoxData[
        RowBox[{"\"\<Fourier\>\"", "[", "3", "]"}], ",", " ", 
        RowBox[{"{", 
         RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}]}], "}"}], "]"}], ",",
-     " ", "\"\<ibm_fez\>\""}], "]"}]}]], "Input",ExpressionUUID->"86fa0af7-\
-add0-4e0a-a501-c8f57a6db147"],
+     " ", "\"\<ibm_fez\>\""}], "]"}]}]], "Input",ExpressionUUID->"059ad544-\
+d0ee-40d0-951b-07ee941ad384"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"da0c6392-10e8-4b25-8860-bacfdb66b813"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"6c3d3685-be83-4bb1-8b8a-6af9565e71b0"],
 
 Cell["Check the status, refreshing the snapshot from the service:", \
-"ExampleText",ExpressionUUID->"3ebe4fed-fb93-47c7-9b4e-b48668bc8443"],
+"ExampleText",ExpressionUUID->"067ab149-f4b9-4254-bc73-afe5430eecf5"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"job", " ", "=", " ", 
    RowBox[{"job", "[", "\"\<Refresh\>\"", "]"}]}], ";", " ", 
   RowBox[{"job", "[", "\"\<Status\>\"", "]"}]}]], "Input",ExpressionUUID->\
-"d585ca27-9716-48e5-8762-965a2c011d2f"]
-}, Open  ]],
+"31a1c027-d297-491c-8f12-39b7992d3654"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"c03af505-5f2e-405a-9ced-d7f9c692418e"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"60ad2124-e4df-46a9-a60f-1e21ad0ea874"],
 
 Cell["\<\
 The default output is the measurement reconstructed from the hardware counts:\
 \
-\>", "ExampleText",ExpressionUUID->"1f13d7c3-f391-43d1-9cdc-9504249d41f9"],
+\>", "ExampleText",ExpressionUUID->"dfce461a-2192-458f-a4e6-bdf5ce830823"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "]"}]], "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d"]
-}, Open  ]]
-}, Open  ]],
+ RowBox[{"job", "[", "]"}]], "Input",ExpressionUUID->"d76d5b90-d072-422b-b679-1db8bb497c64"],
 
 Cell[CellGroupData[{
 
@@ -843,90 +928,77 @@ Cell[BoxData[
   $Line = 0; Null]], "ExampleSection",
  CellID->1293636265,ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75"],
 
-Cell[CellGroupData[{
-
-Cell["Results", "ExampleSubsection",ExpressionUUID->"dadfd45e-c9ac-42e7-a00d-bc70e4f9cb35"],
+Cell["Results", "ExampleSubsection",ExpressionUUID->"c4702ca5-2338-4dc3-8506-722d16325cfc"],
 
 Cell["\<\
 The outcome probabilities, computed from the measured frequencies and aligned \
 to the Wolfram Language qubit order:\
-\>", "ExampleText",ExpressionUUID->"9a100318-fb87-46c5-a64d-80ecc1140dfa"],
+\>", "ExampleText",ExpressionUUID->"b8aadad1-89e3-41e8-9676-bfe36dcfbd07"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Probabilities\>\"", "]"}]], "Input",ExpressionUUID->"a19a5177-cce4-4085-b929-bb9687c91998"],
+ RowBox[{"job", "[", "\"\<Probabilities\>\"", "]"}]], "Input",ExpressionUUID->"e7d68294-c316-445f-925a-0c4531a355f4"],
 
-Cell[CellGroupData[{
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"1fa4a05f-0080-4302-b0bf-7f0bf1681f8c"],
 
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"87108ce8-bf0c-4f7b-b464-75bcb4469b9b"],
-
-Cell["Exact integer counts keyed by the bit-list outcome:", "ExampleText",ExpressionUUID->"68133ccc-12dd-455c-8b18-ae698c8bd7bf"],
+Cell["Exact integer counts keyed by the bit-list outcome:", "ExampleText",ExpressionUUID->"ec585aed-8ca9-47d3-9d17-311969922b70"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Counts\>\"", "]"}]], "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2"]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<Counts\>\"", "]"}]], "Input",ExpressionUUID->"a270cd62-31c8-4dfc-9500-02362141743d"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"b0573bbb-6713-4927-9f80-ce8e164821dc"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"fbf83d51-3476-4cb8-8bf7-ddb899c9a021"],
 
 Cell["The number of measured qubits and the total number of shots:", \
-"ExampleText",ExpressionUUID->"d0fa0241-6941-49ac-9833-73b86b9f5379"],
+"ExampleText",ExpressionUUID->"f7e83998-9a38-40df-afa3-5a6610eb43dc"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{
    RowBox[{"job", "[", "\"\<NumBits\>\"", "]"}], ",", " ", 
    RowBox[{"job", "[", "\"\<Shots\>\"", "]"}]}], "}"}]], "Input",ExpressionUUI\
-D->"ac0600ba-8f32-4807-ad64-1602796ea9d5"]
-}, Open  ]],
+D->"faad30dd-c725-4c63-bce3-2bdf2a4ac1fd"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"b9115ba6-940a-4320-9133-284c8f27a510"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"672830b3-d4e3-4756-aeff-f49b90f92073"],
 
 Cell["\<\
 The classical-bit to original-qubit map used to decode the samples into qubit \
 order:\
-\>", "ExampleText",ExpressionUUID->"09626ed0-0054-447b-be4d-d5b2abdd765a"],
+\>", "ExampleText",ExpressionUUID->"e586f985-3af4-4f0d-9bc9-3fa9cd2d136d"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<MeasuredQubits\>\"", "]"}]], "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f"]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<MeasuredQubits\>\"", "]"}]], "Input",ExpressionUUID->"c7279206-5404-460b-a78d-e8fe1c411877"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"f5b878bf-e8a4-4ea3-80bc-38eb17382c27"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"fcd97449-0237-4f55-a72d-9795556a811d"],
 
 Cell["\<\
 The raw per-shot outcomes, each the integer value of the classical register \
 for that shot:\
-\>", "ExampleText",ExpressionUUID->"cc4ae2ba-6dc8-455a-8926-5679eee00e5c"],
+\>", "ExampleText",ExpressionUUID->"f9aba365-0d47-429b-a0a4-73542ec3ae97"],
 
 Cell[BoxData[
  RowBox[{"Short", "[", 
   RowBox[{
    RowBox[{"job", "[", "\"\<Samples\>\"", "]"}], ",", " ", "2"}], 
-  "]"}]], "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5"]
-}, Open  ]]
-}, Open  ]],
+  "]"}]], "Input",ExpressionUUID->"27c8cc01-fbce-41de-b940-2566db02e962"],
 
-Cell[CellGroupData[{
-
-Cell["Estimator results", "ExampleSubsection",ExpressionUUID->"834fa20a-fa7b-4b9b-ad78-d68c7f67dc64"],
+Cell["Estimator results", "ExampleSubsection",ExpressionUUID->"6fa74c0a-9e9d-4131-a2a6-ed6881ca3a9e"],
 
 Cell[TextData[{
  "For a job submitted with ",
  Cell[BoxData[
   RowBox[{"\"\<Primitive\>\"", " ", "->", " ", "\"\<estimator\>\""}]], 
-  "InlineFormula",ExpressionUUID->"4bcdd78a-1cab-400c-9060-420de4667230"],
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2e056df8-441a-4336-a7e8-da21e8111583"],
  ", the result is the observable's expectation value and its standard error \
 rather than a measurement; the sampler accessors report ",
  Cell[BoxData[
   RowBox[{"Missing", "[", 
    RowBox[{"\"\<NotApplicable\>\"", ",", " ", "\"\<estimator\>\""}], "]"}]], 
-  "InlineFormula",ExpressionUUID->"c58fdab8-87ae-44ea-b987-5df9d13a7e59"],
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f8629ed3-965e-423f-8a40-b6caaed51acd"],
  ":"
-}], "ExampleText",ExpressionUUID->"fa5f22c0-e0fb-4977-bf96-ad882780518f"],
+}], "ExampleText",ExpressionUUID->"defd3904-9938-4c19-8c5f-d742351bd4ab"],
 
 Cell[BoxData[{
  RowBox[{
@@ -948,155 +1020,132 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{"estJob", "[", "\"\<ExpectationValue\>\"", "]"}], ",", " ", 
    RowBox[{"estJob", "[", "\"\<StandardErrors\>\"", "]"}]}], "}"}]}], "Input",\
-ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65"]
-}, Open  ]],
+ExpressionUUID->"d44b7e71-b249-4afe-bfdd-a1fa8263e8fb"],
 
-Cell[CellGroupData[{
+Cell["Job metadata", "ExampleSubsection",ExpressionUUID->"621d0f8a-c461-4b7d-91f9-7cf992b5dd16"],
 
-Cell["Job metadata", "ExampleSubsection",ExpressionUUID->"b8421cc9-4d70-45ff-9acc-2de1a5042bf4"],
-
-Cell["The job identifier and backend:", "ExampleText",ExpressionUUID->"31b09e4f-e671-46f4-82a9-78c34ca4866f"],
+Cell["The job identifier and backend:", "ExampleText",ExpressionUUID->"fb4f6fde-9e26-4a5b-a6a6-814d59cd42bf"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{
    RowBox[{"job", "[", "\"\<ID\>\"", "]"}], ",", " ", 
    RowBox[{"job", "[", "\"\<Backend\>\"", "]"}]}], "}"}]], "Input",ExpressionU\
-UID->"7541d19f-2f49-4a7a-bc3a-c6ad85a2af02"],
+UID->"278bee9e-c052-4b10-833d-bc4bc78f5ca9"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"9fa2fa94-c7b8-4d6b-a10d-530b7971c1f2"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"edaa7367-c4f5-4e3e-a3e5-10f3cf2c45ac"],
 
 Cell[TextData[{
  "The quantum-processing time consumed, as a ",
- Cell[BoxData[
- "Quantity"], "InlineFormula",ExpressionUUID->
-  "44b6f367-9601-4b7f-930a-4b00e4683e19"],
+ Cell[BoxData["Quantity"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cd5096ba-4c5f-4229-9f3c-3985fa0818f4"],
  " in seconds:"
-}], "ExampleText",ExpressionUUID->"e8eb7881-808f-478b-9694-4edb3d366ce4"],
+}], "ExampleText",ExpressionUUID->"e759381b-705c-4848-81c4-4fa1f9cbb381"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<QuantumSeconds\>\"", "]"}]], "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3"]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<QuantumSeconds\>\"", "]"}]], "Input",ExpressionUUID->"8748aa9b-6074-4f37-af64-488075bed955"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"3fcff46d-d873-4a01-ab2f-f50d9f876d40"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"04757197-ea32-462e-850b-aaa9575275bc"],
 
 Cell["\<\
 The lifecycle timestamps and the running-to-finished duration:\
-\>", "ExampleText",ExpressionUUID->"92bc33c0-9fa9-411d-b2ce-b97308ae24bd"],
+\>", "ExampleText",ExpressionUUID->"c1b01afc-f9ae-46a3-89e4-4e707f6b7dbc"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{
    RowBox[{"job", "[", "\"\<Timestamps\>\"", "]"}], ",", " ", 
    RowBox[{"job", "[", "\"\<Duration\>\"", "]"}]}], "}"}]], "Input",Expression\
-UUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1"]
-}, Open  ]],
+UUID->"e2c50b67-b785-40e0-9a55-8addd036562f"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"7b6341c6-bb9f-4b15-826b-0ab09b372e7a"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"2501a33c-a04d-4c93-b1d0-0256a1c6895c"],
 
 Cell[TextData[{
  "The submitted circuit, as stored in the job's ",
- Cell[BoxData[
- "params"], "InlineFormula",ExpressionUUID->
-  "8333d6c9-03a0-4899-8aee-e2e2f33a6f99"],
+ Cell[BoxData["params"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d31e52f6-0f98-457f-833c-4f8194c00f50"],
  " (qiskit serializes it before submission, so it is not OpenQASM text):"
-}], "ExampleText",ExpressionUUID->"8417cc59-782c-46eb-9d54-339d8e674dcd"],
+}], "ExampleText",ExpressionUUID->"aaabf69d-93e0-4a41-bd42-f10bab9cb68b"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<SubmittedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d"]
-}, Open  ]]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<SubmittedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"82b93f88-ab38-477a-8839-cf787dc40b55"],
 
-Cell[CellGroupData[{
-
-Cell["Lifecycle", "ExampleSubsection",ExpressionUUID->"d60f5ea6-0e3d-4891-a5c5-41065c60b4e7"],
+Cell["Lifecycle", "ExampleSubsection",ExpressionUUID->"02eb35be-1448-4e2b-8ef0-cf3f4b72aef6"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<Refresh\>\""], "InlineFormula",ExpressionUUID->
-  "df43ae90-b927-4458-a874-689f7bfca445"],
+ Cell[BoxData["\"\<Refresh\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6c1b8222-b64a-45f5-9248-20825357757d"],
  " re-queries the service and gives a new handle with an updated snapshot:"
-}], "ExampleText",ExpressionUUID->"397d4cdd-f8ee-4088-bc5b-0acb3b9d3c5b"],
+}], "ExampleText",ExpressionUUID->"eec227be-599e-4759-92cf-a0f40161a5d6"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"job", "[", "\"\<Refresh\>\"", "]"}], "[", "\"\<Status\>\"", 
-  "]"}]], "Input",ExpressionUUID->"82296f10-2ec8-41f1-8aa3-e807cd697748"],
+  "]"}]], "Input",ExpressionUUID->"75c124d8-602f-4fe5-87a2-1d75c10c65c5"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"2877dfcf-fa24-4ce5-a974-6c118b58b654"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"d5cd2c6d-a997-4ae7-927a-ac64637ad7df"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<Cancel\>\""], "InlineFormula",ExpressionUUID->
-  "a93456fe-4bc4-4739-b8c5-29565e15e868"],
+ Cell[BoxData["\"\<Cancel\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a32b1f45-0a3b-4d60-8a03-d3014bd1fdb1"],
  " requests cancellation of a queued or running job:"
-}], "ExampleText",ExpressionUUID->"8c963825-a5a1-4dce-abd6-768efea2b95d"],
+}], "ExampleText",ExpressionUUID->"6c56693f-4295-495d-885f-547abca5efa6"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Cancel\>\"", "]"}]], "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2"]
-}, Open  ]]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<Cancel\>\"", "]"}]], "Input",ExpressionUUID->"b87353f7-5522-4848-9295-7cf27ad631f1"],
 
-Cell[CellGroupData[{
-
-Cell["Properties and actions", "ExampleSubsection",ExpressionUUID->"9bab9e6c-15a4-457f-bfbb-031113a08fa3"],
+Cell["Properties and actions", "ExampleSubsection",ExpressionUUID->"b05fa599-2ca1-4447-ae9f-3b8f6d4c1b13"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<Properties\>\""], "InlineFormula",ExpressionUUID->
-  "e9081a1a-4de4-4a8e-af55-7e7009526ddb"],
+ Cell[BoxData["\"\<Properties\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e53a6cb2-f6fb-4c78-a908-cf94647bd41a"],
  " lists the local accessors; mapping over them reads only the cached \
 snapshot, with no network access:"
-}], "ExampleText",ExpressionUUID->"e4a56380-c17b-4172-a9b5-e8df9090fd86"],
+}], "ExampleText",ExpressionUUID->"1e700b48-29df-42d7-bcd5-dd5df80396ac"],
 
 Cell[BoxData[
  RowBox[{"AssociationMap", "[", 
   RowBox[{"job", ",", " ", 
    RowBox[{"job", "[", "\"\<Properties\>\"", "]"}]}], "]"}]], "Input",Expressi\
-onUUID->"47b8606c-2473-4b04-99e7-4ca58d3841da"],
+onUUID->"bf7bcb34-0ed1-41fb-9fbc-c9256a1f414c"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"8ba3cb44-1569-4414-8698-80fa34856857"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"851baaab-1c58-4fe4-adf3-e7578e1b1f37"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<Actions\>\""], "InlineFormula",ExpressionUUID->
-  "d1ef1a77-790b-4e5a-ba82-dfc1a3004304"],
+ Cell[BoxData["\"\<Actions\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "86cf0ad0-4668-4825-87a2-5363b3dc247d"],
  " lists the names that need a live connection, kept out of ",
- Cell[BoxData["\"\<Properties\>\""], "InlineFormula",ExpressionUUID->
-  "69982834-b3f3-4405-b878-0bc6c74de0c7"],
+ Cell[BoxData["\"\<Properties\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "45cc2919-1a41-4652-b43a-7c0df3bb4049"],
  " so a bulk map never re-queries, cancels or blocks on a remote fetch:"
-}], "ExampleText",ExpressionUUID->"ba3e4563-fbb4-4314-9979-77b548fe2ed9"],
+}], "ExampleText",ExpressionUUID->"75aa0783-d3b9-4409-aec3-b45d91d0a2e0"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Actions\>\"", "]"}]], "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd"]
-}, Open  ]]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<Actions\>\"", "]"}]], "Input",ExpressionUUID->"d83d517a-66b0-4781-8858-19d4073eb26a"],
 
-Cell[CellGroupData[{
-
-Cell["Raw responses", "ExampleSubsection",ExpressionUUID->"ee3b2404-bbc2-4d7f-b600-5d9105c4e01e"],
+Cell["Raw responses", "ExampleSubsection",ExpressionUUID->"344174c1-c02c-40fe-95e4-e8417405c270"],
 
 Cell["\<\
 The complete raw service responses are kept verbatim; ask for a single \
 section by name:\
-\>", "ExampleText",ExpressionUUID->"fa2512cb-c082-47a7-a1a8-b6e68b94cc32"],
+\>", "ExampleText",ExpressionUUID->"8ceae7ab-cb72-47e8-98af-fba6529d6071"],
 
 Cell[BoxData[
  RowBox[{"Keys", " ", "@", " ", 
   RowBox[{"job", "[", "\"\<Raw\>\"", "]"}]}]], "Input",ExpressionUUID->\
-"da64cb9d-bfc2-4ba7-a884-6d012d4666ad"],
+"c4dc5c94-ac07-4e4f-960f-daf87be70515"],
 
 Cell[BoxData[
  RowBox[{"job", "[", 
   RowBox[{"\"\<Raw\>\"", ",", " ", "\"\<Metrics\>\""}], "]"}]], "Input",Expres\
-sionUUID->"04ad4882-ba23-4e34-a85c-5c3982854e99"]
-}, Open  ]]
+sionUUID->"c02e1e16-0664-4f77-9c69-a77c362f08df"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -1111,61 +1160,61 @@ Cell[BoxData[
 Cell[TextData[{
  "An unknown property gives a ",
  Cell[BoxData[
-  ButtonBox["Failure",
-   BaseStyle->"Link",
-   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
-  "3888411b-434e-4654-8482-4456c8aabfb9"],
+  TemplateBox[{
+    Cell[
+     TextData["Failure"]], "paclet:ref/Failure"},
+   "RefLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "aa1b2300-7f3e-4ed3-9841-d2e0a7325230"],
  " listing the valid data properties and actions:"
-}], "ExampleText",ExpressionUUID->"04330d56-cb01-4f19-ab7a-5d2171cc7fae"],
+}], "ExampleText",ExpressionUUID->"91fe0adb-d3c2-40c9-ad9e-6fed2f4180ef"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<Frobnicate\>\"", "]"}]], "Input",ExpressionUUID->"61f3d740-949c-4f4b-bae6-9c5033613adc"],
+ RowBox[{"job", "[", "\"\<Frobnicate\>\"", "]"}]], "Input",ExpressionUUID->"ee4428be-4b9f-41ae-84f4-d8705aaafdfd"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"f472ba71-9493-405d-be3d-30294bdf65a3"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"b2d37202-c87f-40c3-940e-d55b00bc743d"],
 
 Cell[TextData[{
- Cell[BoxData["\"\<ExecutedCircuit\>\""], "InlineFormula",ExpressionUUID->
-  "4a1e1b95-a261-4eb8-b666-f33f881ee35d"],
+ Cell[BoxData["\"\<ExecutedCircuit\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "502198d6-2631-4ff9-a40c-ea4d67d6a53b"],
  " downloads the server-side transpiled circuit, which IBM stores only when \
 the Runtime transpiles server-side. A circuit submitted already in ISA form \
 to the V2 primitives stores none, so the request gives a ",
  Cell[BoxData[
-  ButtonBox["Failure",
-   BaseStyle->"Link",
-   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
-  "fc0e5673-cf49-4022-98b6-ffb899edf15b"],
+  TemplateBox[{
+    Cell[
+     TextData["Failure"]], "paclet:ref/Failure"},
+   "RefLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "959e0b6f-7968-412f-9cd0-6d50426dd178"],
  " rather than a circuit:"
-}], "ExampleText",ExpressionUUID->"6d9fc826-2ed3-49a7-9e26-e88080b0e52a"],
+}], "ExampleText",ExpressionUUID->"3f5021f1-3245-4da1-a1ec-361151e5e7e6"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3"]
-}, Open  ]],
+ RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"79056890-7327-40b6-b415-9911a866f4e0"],
 
-Cell[CellGroupData[{
-
-Cell["\t", "ExampleDelimiter",ExpressionUUID->"5c3fbd56-e032-4055-b3cb-df78afdd68c4"],
+Cell["\t", "ExampleDelimiter",ExpressionUUID->"39a5e8d2-6ab0-4a0a-ab81-8574e3dc73c2"],
 
 Cell[TextData[{
  "When the transpiled-circuit object does exist, IBM serves it from a Cloud \
 Object Storage direct endpoint (host starting ",
- Cell[BoxData[
-  RowBox[{"s3", ".", "direct"}]], "InlineFormula",ExpressionUUID->
-  "2ffd3b5e-8e9d-4362-902f-6df34ee583f5"],
+ Cell["s3.direct", "InlineCode",ExpressionUUID->
+  "ced2b729-b789-466e-87a8-ecdd64f7242c"],
  ") reachable only from inside IBM Cloud, so the download from elsewhere \
 gives a ",
  Cell[BoxData[
-  ButtonBox["Failure",
-   BaseStyle->"Link",
-   ButtonData->"paclet:ref/Failure"]], "InlineFormula",ExpressionUUID->
-  "7e11ac4c-93e2-4ed9-82c4-87ff8275a6ba"],
+  TemplateBox[{
+    Cell[
+     TextData["Failure"]], "paclet:ref/Failure"},
+   "RefLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",ExpressionUUID->
+  "54aac6d3-af59-494f-a1e1-162a39e85f34"],
  " instead of timing out silently:"
-}], "ExampleText",ExpressionUUID->"35b13b1e-8537-4a6c-a267-d2c5baeb83ca"],
+}], "ExampleText",ExpressionUUID->"1732a587-1872-43b1-a34d-a0428ea09b9b"],
 
 Cell[BoxData[
- RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"e4c3bfa0-dfe7-4147-a7b8-aedd06d64009"]
-}, Open  ]]
+ RowBox[{"job", "[", "\"\<ExecutedCircuit\>\"", "]"}]], "Input",ExpressionUUID->"b4132d1e-5615-4faf-bafd-6ab76c8240b1"]
 }, Open  ]]
 }, Open  ]],
 
@@ -1218,7 +1267,7 @@ Cell["Wolfram`QuantumFramework`", "Categorization",
  CellID->468444828,ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191"],
 
 Cell["Wolfram/QuantumFramework/ref/IBMJob", "Categorization",
- CellLabel->"URI",ExpressionUUID->"0029a932-58bd-4116-8780-7c1aad96de92"]
+ CellLabel->"URI",ExpressionUUID->"9766a35f-e4c8-462a-9ab4-5e9a9b1b9982"]
 }, Closed]],
 
 Cell["Keywords", "KeywordsSection",
@@ -1249,7 +1298,6 @@ Cell[BoxData[""], "Template",
 },
 WindowSize->{700, 770},
 WindowMargins->{{5, Automatic}, {Automatic, 0}},
-Visible->False,
 TaggingRules->{
  "Metadata" -> {
    "title" -> "IBMJob", "context" -> "Wolfram`QuantumFramework`", 
@@ -1273,14 +1321,14 @@ ExpressionUUID->"c207366e-060a-406b-a297-9e30e1628f43"
 (*CellTagsOutline
 CellTagsIndex->{
  "ExtendedExamples"->{
-  Cell[35358, 821, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+  Cell[37933, 906, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
    CellTags->"ExtendedExamples",
    CellID->533848431]}
  }
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"ExtendedExamples", 51275, 1274}
+ {"ExtendedExamples", 53612, 1322}
  }
 *)
 (*NotebookFileOutline
@@ -1288,265 +1336,146 @@ Notebook[{
 Cell[CellGroupData[{
 Cell[576, 22, 104, 1, 70, "ObjectName",ExpressionUUID->"8393d601-4014-44ba-afc9-60862df940ec",
  CellID->1224892054],
-Cell[683, 25, 2006, 50, 70, "Usage",ExpressionUUID->"aee0dc0a-5f57-4185-b6a9-7a0470a17440",
- CellID->1029672844],
-Cell[2692, 77, 944, 25, 70, "Notes",ExpressionUUID->"a2b988c6-517f-4855-a505-d5dc8026a236",
- CellID->1288261582],
-Cell[3639, 104, 410, 9, 70, "Notes",ExpressionUUID->"9a9e05d1-02b9-4627-a699-a294313c9f29",
- CellID->882279620],
-Cell[4052, 115, 908, 21, 70, "Notes",ExpressionUUID->"6c74774e-c312-4d51-9c0c-23ffaa188ca5",
- CellID->98990805],
-Cell[4963, 138, 1420, 34, 70, "Notes",ExpressionUUID->"65a07c1f-9c64-49ca-86e6-98a6ff91abca",
- CellID->1586116857],
-Cell[6386, 174, 451, 7, 70, "Notes",ExpressionUUID->"00d1e354-339a-48d6-8d8c-8175fe446b02",
- CellID->1151505388],
-Cell[6840, 183, 2723, 70, 70, "Notes",ExpressionUUID->"a099d18c-b861-4e81-9587-c2ca0be4c8de",
- CellID->228429352],
-Cell[9566, 255, 1736, 43, 70, "Notes",ExpressionUUID->"95a043f0-d6f9-4873-a707-b08d5afcd517",
- CellID->1658841875],
-Cell[11305, 300, 352, 8, 70, "Notes",ExpressionUUID->"89b6ef4c-8199-4f2d-9304-9853bc219421",
- CellID->1522687771],
-Cell[11660, 310, 464, 8, 70, "Notes",ExpressionUUID->"543cc6c8-fe1c-4ecd-b25f-732198fa237e",
- CellID->250745898],
-Cell[12127, 320, 474, 11, 70, "Notes",ExpressionUUID->"78569628-a6a1-4454-bcc5-899ae12cb03a",
- CellID->923392272],
-Cell[12604, 333, 14355, 254, 70, "2ColumnTableMod",ExpressionUUID->"25a303c9-c1ee-4289-9e24-ef4337435158",
- CellID->1737082282],
-Cell[26962, 589, 576, 14, 70, "Notes",ExpressionUUID->"59483de1-fdf3-4ae7-9352-591c53aa0f64",
- CellID->101732609],
-Cell[27541, 605, 1885, 32, 70, "2ColumnTableMod",ExpressionUUID->"9552e551-3f49-42a8-ac80-540bc0fd056e",
- CellID->422976451]
+Cell[683, 25, 1437, 36, 70, "Usage",ExpressionUUID->"84df8c64-d760-45fd-bb3e-56de63ff7c8f"],
+Cell[2123, 63, 1092, 30, 70, "Notes",ExpressionUUID->"0f68db9c-5836-4d83-a84e-f94369437bfd"],
+Cell[3218, 95, 437, 10, 70, "Notes",ExpressionUUID->"7256eba8-2c03-46b1-9a08-1f7638ce0f76"],
+Cell[3658, 107, 1016, 25, 70, "Notes",ExpressionUUID->"c73e10c4-1fe7-4677-824a-4b1ef846ab82"],
+Cell[4677, 134, 1717, 45, 70, "Notes",ExpressionUUID->"dedc54f3-372e-4280-a444-dc55d9b45994"],
+Cell[6397, 181, 478, 8, 70, "Notes",ExpressionUUID->"0c45c236-c85d-4bb5-b740-26db95f920f4"],
+Cell[6878, 191, 3072, 82, 70, "Notes",ExpressionUUID->"5d3cff0f-3eb6-4c98-9212-175f96328fed"],
+Cell[9953, 275, 2033, 54, 70, "Notes",ExpressionUUID->"be888f52-ea29-4e95-bdde-72b32358fdb5"],
+Cell[11989, 331, 391, 10, 70, "Notes",ExpressionUUID->"d0b5472a-0fbf-461f-b31d-cb8486f892a7"],
+Cell[12383, 343, 491, 9, 70, "Notes",ExpressionUUID->"d17de36a-d525-47c0-8615-5bdd563bde39"],
+Cell[12877, 354, 528, 13, 70, "Notes",ExpressionUUID->"40beae4f-ad30-4c3b-bfd3-248017c66dd1"],
+Cell[13408, 369, 15527, 286, 70, "2ColumnTableMod",ExpressionUUID->"39b175d6-2d43-4d0a-b256-93cb57c5bd7b"],
+Cell[28938, 657, 657, 17, 70, "Notes",ExpressionUUID->"610f0a60-ba94-478a-98ec-c38c44a8863c"],
+Cell[29598, 676, 2000, 35, 70, "2ColumnTableMod",ExpressionUUID->"67022c60-1e2f-4561-b922-fc132d337653"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[29463, 642, 459, 13, 70, "SeeAlsoSection",ExpressionUUID->"6019c63b-8124-433f-bd7e-253812d6da0e",
+Cell[31635, 716, 459, 13, 70, "SeeAlsoSection",ExpressionUUID->"6019c63b-8124-433f-bd7e-253812d6da0e",
  CellID->1559318232],
-Cell[29925, 657, 1047, 24, 70, "SeeAlso",ExpressionUUID->"3e1b754a-c8ba-4e02-891f-56625139048a",
- CellID->794340387]
+Cell[32097, 731, 1431, 40, 70, "SeeAlso",ExpressionUUID->"93d67e1c-5fbc-4f8d-bec6-17deef027f0b"]
 }, Open  ]],
-Cell[30987, 684, 435, 12, 70, "TechNotesSection",ExpressionUUID->"fc30b7bb-1c24-4df4-b93c-2a46876a3e74",
+Cell[33543, 774, 435, 12, 70, "TechNotesSection",ExpressionUUID->"fc30b7bb-1c24-4df4-b93c-2a46876a3e74",
  CellID->792424486],
 Cell[CellGroupData[{
-Cell[31447, 700, 116, 1, 70, "MoreAboutSection",ExpressionUUID->"090ecd4e-77ab-48e0-ba7a-1f9acccd0dd5",
+Cell[34003, 790, 116, 1, 70, "MoreAboutSection",ExpressionUUID->"090ecd4e-77ab-48e0-ba7a-1f9acccd0dd5",
  CellID->38303248],
-Cell[31566, 703, 314, 6, 70, "MoreAbout",ExpressionUUID->"ca1bbd33-862e-4477-a313-9b478489e500",
- CellID->1720534557]
+Cell[34122, 793, 339, 6, 70, "MoreAbout",ExpressionUUID->"e1751672-9b14-4ed4-949a-d646c978c3c1"]
 }, Open  ]],
-Cell[31895, 712, 471, 13, 70, "RelatedLinksSection",ExpressionUUID->"c8e1cebd-677a-4282-8b17-38a138b1b0ea",
+Cell[34476, 802, 471, 13, 70, "RelatedLinksSection",ExpressionUUID->"c8e1cebd-677a-4282-8b17-38a138b1b0ea",
  CellID->47113304],
 Cell[CellGroupData[{
-Cell[32391, 729, 531, 14, 70, "ExamplesInitializationSection",ExpressionUUID->"6961daab-c21b-4e4b-b6ac-a9a47f06ffa5",
+Cell[34972, 819, 531, 14, 70, "ExamplesInitializationSection",ExpressionUUID->"6961daab-c21b-4e4b-b6ac-a9a47f06ffa5",
  CellID->1718580883],
-Cell[32925, 745, 185, 3, 70, "ExampleInitialization",ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502",
+Cell[35506, 835, 185, 3, 70, "ExampleInitialization",ExpressionUUID->"7dcb178c-574f-4ea8-8531-ff0dec195502",
  CellID->1969679695]
 }, Open  ]],
-Cell[CellGroupData[{
-Cell[33147, 753, 442, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42",
+Cell[35706, 841, 442, 12, 70, "PrimaryExamplesSection",ExpressionUUID->"4d971e0b-a467-44b1-b908-78f8a7482a42",
  CellID->880084151],
-Cell[33592, 767, 363, 8, 70, "ExampleText",ExpressionUUID->"60a9dabf-5699-46a3-94f6-5e969516ded4",
- CellID->1156992644],
-Cell[33958, 777, 463, 11, 70, "Input",ExpressionUUID->"86fa0af7-add0-4e0a-a501-c8f57a6db147",
- CellID->110944123],
+Cell[36151, 855, 459, 12, 70, "ExampleText",ExpressionUUID->"5080cec0-9389-4c2a-a424-25be2a8994ab"],
+Cell[36613, 869, 463, 11, 70, "Input",ExpressionUUID->"059ad544-d0ee-40d0-951b-07ee941ad384"],
+Cell[37079, 882, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"6c3d3685-be83-4bb1-8b8a-6af9565e71b0"],
+Cell[37167, 884, 139, 1, 70, "ExampleText",ExpressionUUID->"067ab149-f4b9-4254-bc73-afe5430eecf5"],
+Cell[37309, 887, 234, 5, 70, "Input",ExpressionUUID->"31a1c027-d297-491c-8f12-39b7992d3654"],
+Cell[37546, 894, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"60ad2124-e4df-46a9-a60f-1e21ad0ea874"],
+Cell[37634, 896, 165, 3, 70, "ExampleText",ExpressionUUID->"dfce461a-2192-458f-a4e6-bdf5ce830823"],
+Cell[37802, 901, 106, 1, 70, "Input",ExpressionUUID->"d76d5b90-d072-422b-b679-1db8bb497c64"],
 Cell[CellGroupData[{
-Cell[34446, 792, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"da0c6392-10e8-4b25-8860-bacfdb66b813",
- CellID->622069665],
-Cell[34534, 794, 139, 1, 70, "ExampleText",ExpressionUUID->"3ebe4fed-fb93-47c7-9b4e-b48668bc8443",
- CellID->1174466059],
-Cell[34676, 797, 234, 5, 70, "Input",ExpressionUUID->"d585ca27-9716-48e5-8762-965a2c011d2f",
- CellID->1728854036]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[34947, 807, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"c03af505-5f2e-405a-9ced-d7f9c692418e",
- CellID->1396039142],
-Cell[35035, 809, 165, 3, 70, "ExampleText",ExpressionUUID->"1f13d7c3-f391-43d1-9cdc-9504249d41f9",
- CellID->1971016119],
-Cell[35203, 814, 106, 1, 70, "Input",ExpressionUUID->"4d4aa73f-d81e-4f69-9dd8-b27e794f527d",
- CellID->1932657058]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[35358, 821, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
+Cell[37933, 906, 487, 13, 70, "ExtendedExamplesSection",ExpressionUUID->"a6228140-1981-46f0-88fc-4d129033136d",
  CellTags->"ExtendedExamples",
  CellID->533848431],
 Cell[CellGroupData[{
-Cell[35870, 838, 242, 5, 70, "ExampleSection",ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75",
+Cell[38445, 923, 242, 5, 70, "ExampleSection",ExpressionUUID->"6d08f999-4c69-4709-9b28-82906be6ee75",
  CellID->1293636265],
-Cell[CellGroupData[{
-Cell[36137, 847, 91, 0, 70, "ExampleSubsection",ExpressionUUID->"dadfd45e-c9ac-42e7-a00d-bc70e4f9cb35",
- CellID->1477012931],
-Cell[36231, 849, 202, 3, 70, "ExampleText",ExpressionUUID->"9a100318-fb87-46c5-a64d-80ecc1140dfa",
- CellID->1392855644],
-Cell[36436, 854, 131, 1, 70, "Input",ExpressionUUID->"a19a5177-cce4-4085-b929-bb9687c91998",
- CellID->5572761],
-Cell[CellGroupData[{
-Cell[36592, 859, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"87108ce8-bf0c-4f7b-b464-75bcb4469b9b",
- CellID->1319597306],
-Cell[36680, 861, 129, 0, 70, "ExampleText",ExpressionUUID->"68133ccc-12dd-455c-8b18-ae698c8bd7bf",
- CellID->1408299373],
-Cell[36812, 863, 124, 1, 70, "Input",ExpressionUUID->"504eee66-8b9f-4ca6-8af6-ed7115fde1b2",
- CellID->1870288424]
+Cell[38690, 930, 91, 0, 70, "ExampleSubsection",ExpressionUUID->"c4702ca5-2338-4dc3-8506-722d16325cfc"],
+Cell[38784, 932, 202, 3, 70, "ExampleText",ExpressionUUID->"b8aadad1-89e3-41e8-9676-bfe36dcfbd07"],
+Cell[38989, 937, 131, 1, 70, "Input",ExpressionUUID->"e7d68294-c316-445f-925a-0c4531a355f4"],
+Cell[39123, 940, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"1fa4a05f-0080-4302-b0bf-7f0bf1681f8c"],
+Cell[39211, 942, 129, 0, 70, "ExampleText",ExpressionUUID->"ec585aed-8ca9-47d3-9d17-311969922b70"],
+Cell[39343, 944, 124, 1, 70, "Input",ExpressionUUID->"a270cd62-31c8-4dfc-9500-02362141743d"],
+Cell[39470, 947, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"fbf83d51-3476-4cb8-8bf7-ddb899c9a021"],
+Cell[39558, 949, 140, 1, 70, "ExampleText",ExpressionUUID->"f7e83998-9a38-40df-afa3-5a6610eb43dc"],
+Cell[39701, 952, 222, 5, 70, "Input",ExpressionUUID->"faad30dd-c725-4c63-bce3-2bdf2a4ac1fd"],
+Cell[39926, 959, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"672830b3-d4e3-4756-aeff-f49b90f92073"],
+Cell[40014, 961, 172, 3, 70, "ExampleText",ExpressionUUID->"e586f985-3af4-4f0d-9bc9-3fa9cd2d136d"],
+Cell[40189, 966, 132, 1, 70, "Input",ExpressionUUID->"c7279206-5404-460b-a78d-e8fe1c411877"],
+Cell[40324, 969, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"fcd97449-0237-4f55-a72d-9795556a811d"],
+Cell[40412, 971, 178, 3, 70, "ExampleText",ExpressionUUID->"f9aba365-0d47-429b-a0a4-73542ec3ae97"],
+Cell[40593, 976, 189, 4, 70, "Input",ExpressionUUID->"27c8cc01-fbce-41de-b940-2566db02e962"],
+Cell[40785, 982, 101, 0, 70, "ExampleSubsection",ExpressionUUID->"6fa74c0a-9e9d-4131-a2a6-ed6881ca3a9e"],
+Cell[40889, 984, 678, 16, 70, "ExampleText",ExpressionUUID->"defd3904-9938-4c19-8c5f-d742351bd4ab"],
+Cell[41570, 1002, 853, 20, 70, "Input",ExpressionUUID->"d44b7e71-b249-4afe-bfdd-a1fa8263e8fb"],
+Cell[42426, 1024, 96, 0, 70, "ExampleSubsection",ExpressionUUID->"621d0f8a-c461-4b7d-91f9-7cf992b5dd16"],
+Cell[42525, 1026, 109, 0, 70, "ExampleText",ExpressionUUID->"fb4f6fde-9e26-4a5b-a6a6-814d59cd42bf"],
+Cell[42637, 1028, 219, 5, 70, "Input",ExpressionUUID->"278bee9e-c052-4b10-833d-bc4bc78f5ca9"],
+Cell[42859, 1035, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"edaa7367-c4f5-4e3e-a3e5-10f3cf2c45ac"],
+Cell[42947, 1037, 283, 6, 70, "ExampleText",ExpressionUUID->"e759381b-705c-4848-81c4-4fa1f9cbb381"],
+Cell[43233, 1045, 132, 1, 70, "Input",ExpressionUUID->"8748aa9b-6074-4f37-af64-488075bed955"],
+Cell[43368, 1048, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"04757197-ea32-462e-850b-aaa9575275bc"],
+Cell[43456, 1050, 148, 2, 70, "ExampleText",ExpressionUUID->"c1b01afc-f9ae-46a3-89e4-4e707f6b7dbc"],
+Cell[43607, 1054, 228, 5, 70, "Input",ExpressionUUID->"e2c50b67-b785-40e0-9a55-8addd036562f"],
+Cell[43838, 1061, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"2501a33c-a04d-4c93-b1d0-0256a1c6895c"],
+Cell[43926, 1063, 342, 6, 70, "ExampleText",ExpressionUUID->"aaabf69d-93e0-4a41-bd42-f10bab9cb68b"],
+Cell[44271, 1071, 134, 1, 70, "Input",ExpressionUUID->"82b93f88-ab38-477a-8839-cf787dc40b55"],
+Cell[44408, 1074, 93, 0, 70, "ExampleSubsection",ExpressionUUID->"02eb35be-1448-4e2b-8ef0-cf3f4b72aef6"],
+Cell[44504, 1076, 302, 5, 70, "ExampleText",ExpressionUUID->"eec227be-599e-4759-92cf-a0f40161a5d6"],
+Cell[44809, 1083, 169, 3, 70, "Input",ExpressionUUID->"75c124d8-602f-4fe5-87a2-1d75c10c65c5"],
+Cell[44981, 1088, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"d5cd2c6d-a997-4ae7-927a-ac64637ad7df"],
+Cell[45069, 1090, 279, 5, 70, "ExampleText",ExpressionUUID->"6c56693f-4295-495d-885f-547abca5efa6"],
+Cell[45351, 1097, 124, 1, 70, "Input",ExpressionUUID->"b87353f7-5522-4848-9295-7cf27ad631f1"],
+Cell[45478, 1100, 106, 0, 70, "ExampleSubsection",ExpressionUUID->"b05fa599-2ca1-4447-ae9f-3b8f6d4c1b13"],
+Cell[45587, 1102, 336, 6, 70, "ExampleText",ExpressionUUID->"1e700b48-29df-42d7-bcd5-dd5df80396ac"],
+Cell[45926, 1110, 202, 4, 70, "Input",ExpressionUUID->"bf7bcb34-0ed1-41fb-9fbc-c9256a1f414c"],
+Cell[46131, 1116, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"851baaab-1c58-4fe4-adf3-e7578e1b1f37"],
+Cell[46219, 1118, 502, 9, 70, "ExampleText",ExpressionUUID->"75aa0783-d3b9-4409-aec3-b45d91d0a2e0"],
+Cell[46724, 1129, 125, 1, 70, "Input",ExpressionUUID->"d83d517a-66b0-4781-8858-19d4073eb26a"],
+Cell[46852, 1132, 97, 0, 70, "ExampleSubsection",ExpressionUUID->"344174c1-c02c-40fe-95e4-e8417405c270"],
+Cell[46952, 1134, 175, 3, 70, "ExampleText",ExpressionUUID->"8ceae7ab-cb72-47e8-98af-fba6529d6071"],
+Cell[47130, 1139, 159, 3, 70, "Input",ExpressionUUID->"c4dc5c94-ac07-4e4f-960f-daf87be70515"],
+Cell[47292, 1144, 165, 3, 70, "Input",ExpressionUUID->"c02e1e16-0664-4f77-9c69-a77c362f08df"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[36973, 869, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b0573bbb-6713-4927-9f80-ce8e164821dc",
- CellID->1219401029],
-Cell[37061, 871, 140, 1, 70, "ExampleText",ExpressionUUID->"d0fa0241-6941-49ac-9833-73b86b9f5379",
- CellID->1036651082],
-Cell[37204, 874, 222, 5, 70, "Input",ExpressionUUID->"ac0600ba-8f32-4807-ad64-1602796ea9d5",
- CellID->459907063]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[37463, 884, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b9115ba6-940a-4320-9133-284c8f27a510",
- CellID->864362288],
-Cell[37551, 886, 172, 3, 70, "ExampleText",ExpressionUUID->"09626ed0-0054-447b-be4d-d5b2abdd765a",
- CellID->1757586108],
-Cell[37726, 891, 132, 1, 70, "Input",ExpressionUUID->"1b86a827-19ed-42a4-8733-c4c743434f1f",
- CellID->1112152671]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[37895, 897, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f5b878bf-e8a4-4ea3-80bc-38eb17382c27",
- CellID->252278009],
-Cell[37983, 899, 178, 3, 70, "ExampleText",ExpressionUUID->"cc4ae2ba-6dc8-455a-8926-5679eee00e5c",
- CellID->903778085],
-Cell[38164, 904, 189, 4, 70, "Input",ExpressionUUID->"5f303373-e4c7-49f1-b5f7-fb11abcb7cb5",
- CellID->646439364]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[38402, 914, 101, 0, 70, "ExampleSubsection",ExpressionUUID->"834fa20a-fa7b-4b9b-ad78-d68c7f67dc64",
- CellID->586620575],
-Cell[38506, 916, 618, 12, 70, "ExampleText",ExpressionUUID->"fa5f22c0-e0fb-4977-bf96-ad882780518f",
- CellID->234580648],
-Cell[39127, 930, 853, 20, 70, "Input",ExpressionUUID->"b6c9c3c5-5257-4663-85d1-f37dc780fa65",
- CellID->1964458691]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[40017, 955, 96, 0, 70, "ExampleSubsection",ExpressionUUID->"b8421cc9-4d70-45ff-9acc-2de1a5042bf4",
- CellID->1243630659],
-Cell[40116, 957, 109, 0, 70, "ExampleText",ExpressionUUID->"31b09e4f-e671-46f4-82a9-78c34ca4866f",
- CellID->242149562],
-Cell[40228, 959, 219, 5, 70, "Input",ExpressionUUID->"7541d19f-2f49-4a7a-bc3a-c6ad85a2af02",
- CellID->1686454339],
-Cell[CellGroupData[{
-Cell[40472, 968, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"9fa2fa94-c7b8-4d6b-a10d-530b7971c1f2",
- CellID->1748902467],
-Cell[40560, 970, 258, 6, 70, "ExampleText",ExpressionUUID->"e8eb7881-808f-478b-9694-4edb3d366ce4",
- CellID->1195086380],
-Cell[40821, 978, 132, 1, 70, "Input",ExpressionUUID->"dd8a0c90-e7c8-4d21-9fed-215dba3d2fe3",
- CellID->402238269]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[40990, 984, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"3fcff46d-d873-4a01-ab2f-f50d9f876d40",
- CellID->140066327],
-Cell[41078, 986, 148, 2, 70, "ExampleText",ExpressionUUID->"92bc33c0-9fa9-411d-b2ce-b97308ae24bd",
- CellID->452680777],
-Cell[41229, 990, 228, 5, 70, "Input",ExpressionUUID->"77145c34-5805-4731-adf0-fc0ebd66c8c1",
- CellID->1818741365]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[41494, 1000, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"7b6341c6-bb9f-4b15-826b-0ab09b372e7a",
- CellID->303890157],
-Cell[41582, 1002, 317, 6, 70, "ExampleText",ExpressionUUID->"8417cc59-782c-46eb-9d54-339d8e674dcd",
- CellID->765756133],
-Cell[41902, 1010, 134, 1, 70, "Input",ExpressionUUID->"fc9a92c2-c85f-49fc-8ee6-d87948229c9d",
- CellID->193830860]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[42085, 1017, 93, 0, 70, "ExampleSubsection",ExpressionUUID->"d60f5ea6-0e3d-4891-a5c5-41065c60b4e7",
- CellID->2130055168],
-Cell[42181, 1019, 275, 4, 70, "ExampleText",ExpressionUUID->"397d4cdd-f8ee-4088-bc5b-0acb3b9d3c5b",
- CellID->1284813086],
-Cell[42459, 1025, 169, 3, 70, "Input",ExpressionUUID->"82296f10-2ec8-41f1-8aa3-e807cd697748",
- CellID->905465817],
-Cell[CellGroupData[{
-Cell[42653, 1032, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"2877dfcf-fa24-4ce5-a974-6c118b58b654",
- CellID->1094863677],
-Cell[42741, 1034, 252, 4, 70, "ExampleText",ExpressionUUID->"8c963825-a5a1-4dce-abd6-768efea2b95d",
- CellID->1733931843],
-Cell[42996, 1040, 124, 1, 70, "Input",ExpressionUUID->"6afcca4e-1a82-44f6-b2d1-88e7bce1eda2",
- CellID->839395511]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[43169, 1047, 106, 0, 70, "ExampleSubsection",ExpressionUUID->"9bab9e6c-15a4-457f-bfbb-031113a08fa3",
- CellID->900276234],
-Cell[43278, 1049, 309, 5, 70, "ExampleText",ExpressionUUID->"e4a56380-c17b-4172-a9b5-e8df9090fd86",
- CellID->1920371723],
-Cell[43590, 1056, 202, 4, 70, "Input",ExpressionUUID->"47b8606c-2473-4b04-99e7-4ca58d3841da",
- CellID->1155817698],
-Cell[CellGroupData[{
-Cell[43817, 1064, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"8ba3cb44-1569-4414-8698-80fa34856857",
- CellID->1838463171],
-Cell[43905, 1066, 448, 7, 70, "ExampleText",ExpressionUUID->"ba3e4563-fbb4-4314-9979-77b548fe2ed9",
- CellID->1055801961],
-Cell[44356, 1075, 125, 1, 70, "Input",ExpressionUUID->"72eec026-bfee-4c67-8ab3-7c637bd73ddd",
- CellID->206183366]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[44530, 1082, 97, 0, 70, "ExampleSubsection",ExpressionUUID->"ee3b2404-bbc2-4d7f-b600-5d9105c4e01e",
- CellID->1432709751],
-Cell[44630, 1084, 175, 3, 70, "ExampleText",ExpressionUUID->"fa2512cb-c082-47a7-a1a8-b6e68b94cc32",
- CellID->1966134893],
-Cell[44808, 1089, 159, 3, 70, "Input",ExpressionUUID->"da64cb9d-bfc2-4ba7-a884-6d012d4666ad",
- CellID->1498270262],
-Cell[44970, 1094, 165, 3, 70, "Input",ExpressionUUID->"04ad4882-ba23-4e34-a85c-5c3982854e99",
- CellID->35048712]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[45184, 1103, 252, 5, 70, "ExampleSection",ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f",
+Cell[47494, 1152, 252, 5, 70, "ExampleSection",ExpressionUUID->"9397dd0b-9de4-443a-9371-be2b75148f2f",
  CellID->1305812373],
-Cell[45439, 1110, 348, 8, 70, "ExampleText",ExpressionUUID->"04330d56-cb01-4f19-ab7a-5d2171cc7fae",
- CellID->653183306],
-Cell[45790, 1120, 128, 1, 70, "Input",ExpressionUUID->"61f3d740-949c-4f4b-bae6-9c5033613adc",
- CellID->115420478],
-Cell[CellGroupData[{
-Cell[45943, 1125, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"f472ba71-9493-405d-be3d-30294bdf65a3",
- CellID->694240505],
-Cell[46031, 1127, 625, 12, 70, "ExampleText",ExpressionUUID->"6d9fc826-2ed3-49a7-9e26-e88080b0e52a",
- CellID->821513384],
-Cell[46659, 1141, 133, 1, 70, "Input",ExpressionUUID->"dc3e663e-7202-4f95-aabe-21e4f4f8b1a3",
- CellID->1003078325]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[46829, 1147, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"5c3fbd56-e032-4055-b3cb-df78afdd68c4",
- CellID->990779325],
-Cell[46917, 1149, 638, 14, 70, "ExampleText",ExpressionUUID->"35b13b1e-8537-4a6c-a267-d2c5baeb83ca",
- CellID->439916437],
-Cell[47558, 1165, 133, 1, 70, "Input",ExpressionUUID->"e4c3bfa0-dfe7-4147-a7b8-aedd06d64009",
- CellID->2036843685]
-}, Open  ]]
+Cell[47749, 1159, 387, 10, 70, "ExampleText",ExpressionUUID->"91fe0adb-d3c2-40c9-ad9e-6fed2f4180ef"],
+Cell[48139, 1171, 128, 1, 70, "Input",ExpressionUUID->"ee4428be-4b9f-41ae-84f4-d8705aaafdfd"],
+Cell[48270, 1174, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"b2d37202-c87f-40c3-940e-d55b00bc743d"],
+Cell[48358, 1176, 691, 15, 70, "ExampleText",ExpressionUUID->"3f5021f1-3245-4da1-a1ec-361151e5e7e6"],
+Cell[49052, 1193, 133, 1, 70, "Input",ExpressionUUID->"79056890-7327-40b6-b415-9911a866f4e0"],
+Cell[49188, 1196, 85, 0, 70, "ExampleDelimiter",ExpressionUUID->"39a5e8d2-6ab0-4a0a-ab81-8574e3dc73c2"],
+Cell[49276, 1198, 644, 15, 70, "ExampleText",ExpressionUUID->"1732a587-1872-43b1-a34d-a0428ea09b9b"],
+Cell[49923, 1215, 133, 1, 70, "Input",ExpressionUUID->"b4132d1e-5615-4faf-bafd-6ab76c8240b1"]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[47752, 1173, 110, 1, 70, "MetadataSection",ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd",
+Cell[50105, 1222, 110, 1, 70, "MetadataSection",ExpressionUUID->"2b9a20c0-4684-4af0-ae90-008bcb3cd5bd",
  CellID->311882160],
-Cell[47865, 1176, 476, 12, 70, "History",ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046",
+Cell[50218, 1225, 476, 12, 70, "History",ExpressionUUID->"0647d953-178d-43da-935e-923bdb2c5046",
  CellID->341476719],
 Cell[CellGroupData[{
-Cell[48366, 1192, 485, 13, 70, "CategorizationSection",ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329",
+Cell[50719, 1241, 485, 13, 70, "CategorizationSection",ExpressionUUID->"a29a9a03-1747-4a1c-b242-c8059c9e5329",
  CellID->1755438392],
-Cell[48854, 1207, 134, 2, 70, "Categorization",ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a",
+Cell[51207, 1256, 134, 2, 70, "Categorization",ExpressionUUID->"d3672960-eef7-49f2-a47e-fce423fec36a",
  CellID->686433507],
-Cell[48991, 1211, 152, 2, 70, "Categorization",ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec",
+Cell[51344, 1260, 152, 2, 70, "Categorization",ExpressionUUID->"e9337bb6-80d8-4427-9444-53c8416845ec",
  CellID->605800465],
-Cell[49146, 1215, 149, 2, 70, "Categorization",ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191",
+Cell[51499, 1264, 149, 2, 70, "Categorization",ExpressionUUID->"a09e9c4d-8ab9-4ae7-b585-c517016e8191",
  CellID->468444828],
-Cell[49298, 1219, 135, 1, 70, "Categorization",ExpressionUUID->"0029a932-58bd-4116-8780-7c1aad96de92",
- CellID->194996968]
+Cell[51651, 1268, 135, 1, 70, "Categorization",ExpressionUUID->"9766a35f-e4c8-462a-9ab4-5e9a9b1b9982"]
 }, Closed]],
-Cell[49448, 1223, 110, 1, 70, "KeywordsSection",ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6",
+Cell[51801, 1272, 110, 1, 70, "KeywordsSection",ExpressionUUID->"ef06640c-42c9-4c00-9a6c-9b632e3752b6",
  CellID->477174294],
 Cell[CellGroupData[{
-Cell[49583, 1228, 120, 1, 70, "TemplatesSection",ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c",
+Cell[51936, 1277, 120, 1, 70, "TemplatesSection",ExpressionUUID->"119176c2-887f-409f-a0c9-b72561b7624c",
  CellID->1872225408],
-Cell[49706, 1231, 149, 2, 70, "Template",ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72",
+Cell[52059, 1280, 149, 2, 70, "Template",ExpressionUUID->"1b15e1f4-90c6-45fb-bbe0-ea52939f5d72",
  CellID->1562036412],
-Cell[49858, 1235, 137, 2, 70, "Template",ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec",
+Cell[52211, 1284, 137, 2, 70, "Template",ExpressionUUID->"9e18a772-50d9-48d2-8436-649cdc9f97ec",
  CellID->158391909],
-Cell[49998, 1239, 136, 2, 70, "Template",ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9",
+Cell[52351, 1288, 136, 2, 70, "Template",ExpressionUUID->"1e946dbb-3373-40d7-b302-c6d742eac1b9",
  CellID->1360575930],
-Cell[50137, 1243, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648",
+Cell[52490, 1292, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afcc-bcf11e35c648",
  CellID->793782254]
 }, Closed]]
 }, Open  ]]
@@ -1555,4 +1484,3 @@ Cell[50137, 1243, 137, 2, 70, "Template",ExpressionUUID->"aee0c783-3703-4eff-afc
 *)
 
 (* End of internal cache information *)
-

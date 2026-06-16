@@ -116,7 +116,11 @@ Options[IBMJobSubmit] = {
     "Shots" -> 4096,
     "Observable" -> "Z",
     "Wait" -> False,
-    "PrimitiveOptions" -> <||>
+    "PrimitiveOptions" -> <||>,
+    (* transpiler optimization level for the submitted circuit. Submission always transpiles
+       against the backend's own Target (per-instruction error + duration), so layout/routing
+       are error-aware; this controls how aggressively. Automatic = qiskit's preset default. *)
+    "OptimizationLevel" -> Automatic
 }
 
 IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automatic, opts : OptionsPattern[]] := Enclose @ Module[{
@@ -162,7 +166,7 @@ IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automat
        SamplerV2 / EstimatorV2; run() is not awaited, so a job handle returns immediately *)
     sub = qiskitPrimitiveSubmit[
         qco["Qiskit"], primitive, obsTerms, shots, ibmSnakeKeys[userOpts],
-        "Provider" -> "IBMProvider", "Backend" -> bk
+        "Provider" -> "IBMProvider", "Backend" -> bk, "OptimizationLevel" -> OptionValue["OptimizationLevel"]
     ];
     If[! AssociationQ[sub], Return @ sub];   (* surface the qiskit Failure verbatim *)
     id = Lookup[sub, "JobID", $Failed];

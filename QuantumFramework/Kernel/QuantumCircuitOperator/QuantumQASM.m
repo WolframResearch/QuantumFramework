@@ -37,7 +37,7 @@ qqasmTranspileBytes[bytes_ByteArray, opts_Association] := Enclose @ Block[{
         PythonEvaluate[Context[pythonBytes], "
 import pickle, inspect, qiskit
 from qiskit import transpile, QuantumCircuit
-from qiskit.transpiler import CouplingMap, Target
+from qiskit.transpiler import CouplingMap, Target, InstructionProperties
 from qiskit.circuit import Measure, Reset
 from wolframclient.language import wl
 
@@ -54,8 +54,13 @@ if unknown:
         'Accepted': accepted,
         'QiskitVersion': qiskit.__version__})
 else:
+    skipped_props = []
     def build_target(spec):
         spec = dict(spec)
+        # instruction_properties is a QiskitTarget-only key (the carrier for per-instruction
+        # error/duration); it is NOT a Target.from_configuration parameter, so remove it
+        # before from_configuration and apply it afterward via update_instruction_properties.
+        instr_props = spec.pop('instruction_properties', None)
         if spec.get('coupling_map') is not None and not isinstance(spec['coupling_map'], CouplingMap):
             spec['coupling_map'] = CouplingMap([tuple(e) for e in spec['coupling_map']])
         if not hasattr(Target, 'from_configuration'):
@@ -71,6 +76,27 @@ else:
                 t.add_instruction(Reset(), {(q,): None for q in range(nq)})
         except Exception:
             pass
+        # Per-instruction error/duration makes qiskit's layout and routing passes error-aware.
+        # update_instruction_properties is the stable API across qiskit 1.x/2.x. Apply only for
+        # instructions present in the Target, tolerate missing error/duration, and record any
+        # rows that cannot be applied (unknown gate / locus) instead of dropping them silently.
+        if instr_props and hasattr(t, 'update_instruction_properties'):
+            present = set(t.operation_names)
+            for row in instr_props:
+                name, qubits, props = row[0], tuple(row[1]), dict(row[2])
+                if name not in present:
+                    skipped_props.append([name, list(qubits)])
+                    continue
+                err = props.get('error', props.get('Error'))
+                dur = props.get('duration', props.get('Duration'))
+                try:
+                    t.update_instruction_properties(name, qubits, InstructionProperties(error=err, duration=dur))
+                except Exception:
+                    skipped_props.append([name, list(qubits)])
+        elif instr_props:
+            # qiskit too old for per-instruction properties: degrade to coupling-map-only
+            # routing rather than fail, and record that the error model was not applied.
+            skipped_props.append(['<all>', 'update_instruction_properties unavailable'])
         return t
     try:
         if kwargs.get('coupling_map') is not None and not isinstance(kwargs['coupling_map'], CouplingMap):
@@ -88,6 +114,10 @@ else:
             clean = QuantumCircuit(*out.qregs, *out.cregs)
             clean.compose(out, inplace=True)
             out = clean
+        if skipped_props:
+            md = dict(out.metadata) if out.metadata else {}
+            md['qualink_skipped_props'] = skipped_props
+            out.metadata = md
         result = wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(out))
     except Exception as e:
         result = wl.Failure('QuantumQASM', {
@@ -173,8 +203,11 @@ else:
             'MessageTemplate': 'qiskit Target.from_configuration is unavailable.'})
     else:
         accepted = sorted(inspect.signature(Target.from_configuration).parameters)
+        # instruction_properties is a QiskitTarget-only carrier key applied after the Target
+        # is built (via update_instruction_properties), not a from_configuration parameter.
+        reserved = {'instruction_properties'}
         spec = dict(<* pythonSpec *>)
-        unknown = sorted(k for k in spec if k not in accepted)
+        unknown = sorted(k for k in spec if k not in accepted and k not in reserved)
         if unknown:
             result = wl.Failure('QiskitTarget', {
                 'MessageTemplate': 'Unknown Target option(s): ' + ', '.join(unknown) + '. Accepted: ' + ', '.join(accepted) + '.',
@@ -204,6 +237,14 @@ QiskitTarget[data_Association]["CouplingMap"] /; KeyExistsQ[data, "$QiskitTarget
 QiskitTarget[data_Association]["OperationNames"] /; KeyExistsQ[data, "$QiskitTargetSpec"] :=
     Union[Lookup[data["$QiskitTargetSpec"], "basis_gates", {}], {"measure", "reset"}]
 
+(* The per-instruction error/duration rows that make transpilation error-aware:
+   {{gate, {qubits...}, <|"Error"->_, "Duration"->_|>}, ...}. Missing means none were supplied. *)
+QiskitTarget[data_Association]["InstructionProperties"] /; KeyExistsQ[data, "$QiskitTargetSpec"] :=
+    Lookup[data["$QiskitTargetSpec"], "instruction_properties", Missing["NotAvailable"]]
+
+(* QiskitTarget["FromBackend" -> name, "Provider" -> p] (the generic backend extractor) is
+   defined in Qiskit.m, next to qiskitInitBackend which it reuses. *)
+
 (* Summary-box icon: the monochrome Qiskit globe logo (Wikimedia Commons,
    File:Qiskit-Logo.svg, public domain), rasterized to a 45 px transparent-background image and
    decompressed once at load. *)
@@ -219,7 +260,9 @@ QiskitTarget /: MakeBoxes[qt : QiskitTarget[data_Association] /; KeyExistsQ[data
             {BoxForm`SummaryItem[{"Gates: ", qt["OperationNames"]}]}
         },
         {
-            {BoxForm`SummaryItem[{"Couplings: ", Replace[qt["CouplingMap"], {l_List :> Length[l], _ -> 0}]}]}
+            {BoxForm`SummaryItem[{"Couplings: ", Replace[qt["CouplingMap"], {l_List :> Length[l], _ -> 0}]}]},
+            {BoxForm`SummaryItem[{"Error-aware: ", Replace[qt["InstructionProperties"],
+                {l_List :> Row[{Length[l], " props"}], _ -> "no"}]}]}
         },
         fmt
     ]
@@ -323,6 +366,7 @@ QuantumQASM[qc_QiskitCircuit, basisGates : {___String} | Automatic : Automatic, 
        against a real backend, with the AWS-Braket OpenQASM conversion) handled by qiskitQASM *)
     If[ KeyExistsQ[normOpts, "provider"] || KeyExistsQ[normOpts, "backend"],
         Return @ qiskitQASM[qc, "Version" -> version,
+            "OptimizationLevel" -> Lookup[normOpts, "optimization_level", Automatic],
             "Provider" -> Lookup[normOpts, "provider", None],
             "Backend" -> Lookup[normOpts, "backend", Automatic]]
     ];
@@ -334,10 +378,16 @@ QuantumQASM[qc_QiskitCircuit, basisGates : {___String} | Automatic : Automatic, 
         normOpts = Prepend[normOpts, "basis_gates" -> basisGates]
     ];
     If[ KeyExistsQ[normOpts, "target"],
-        normOpts["target"] = Replace[normOpts["target"], {
-            tgt_QiskitTarget :> tgt["Spec"],
-            a_Association :> normalizeKeys[a]
-        }]
+        Switch[normOpts["target"],
+            _QiskitTarget, normOpts["target"] = normOpts["target"]["Spec"],
+            _Association,  normOpts["target"] = normalizeKeys @ normOpts["target"],
+            (* anything else (a failed QiskitTarget[spec], $Failed, a stray value) would
+               otherwise be serialized to Python and handed to transpile as target=, surfacing
+               as an opaque "object has no attribute build_coupling_map". Reject it here. *)
+            _, Return @ Failure["QuantumQASM", <|
+                "MessageTemplate" -> "The Target option must be a QiskitTarget or a device-spec Association; received a `1`.",
+                "MessageParameters" -> {Head[normOpts["target"]]}|>]
+        ]
     ];
     bytes = qc["Bytes"];
     If[ Length[normOpts] > 0,

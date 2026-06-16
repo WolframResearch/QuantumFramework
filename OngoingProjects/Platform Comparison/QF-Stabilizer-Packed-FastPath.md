@@ -5,6 +5,8 @@
 **Machine:** Apple M2 Pro, Mathematica 15.0.0
 **Scope:** `QuantumFramework/Kernel/Stabilizer/` Clifford gate updates (the hot path)
 
+> **This is the round-1 snapshot (historical).** Rounds 2 and 3 (the compiled bulk fold and packed measurement) superseded these per-gate numbers; see `QF-Stabilizer-Optimization-Report.md` for the shipped end state ($266$ to $1095\times$ over the original) and `QF-Stabilizer-Bottleneck-Audit.md` for the plan-vs-outcome board. The 2026-06-13/14 property-cache refactor (`dfc741dc`/`f9dc1cdc`) does not touch the stabilizer subsystem, so nothing here changed at the current HEAD `f9dc1cdc`.
+
 ## The physics, in one paragraph
 
 A stabilizer state on $n$ qubits is specified not by its $2^n$ amplitudes but by the
@@ -47,11 +49,11 @@ operations on length-$2n$ **packed arrays of machine integers**, which the kerne
 as vectorized Listable ops with no arbitrary-precision overhead.
 
 Key symbols (`Packed.m`):
-- `packChunks` / `unpackChunks` / `tableauFromPacked` ([Packed.m:71](../../QuantumFramework/Kernel/Stabilizer/Packed.m), :76, :81) — convert between the rank-3 array and chunk-major form.
-- `psPackedQ` ([Packed.m:79](../../QuantumFramework/Kernel/Stabilizer/Packed.m)), `psConcreteFastQ` ([Packed.m:86](../../QuantumFramework/Kernel/Stabilizer/Packed.m)) — the strict numeric predicate that gates the fast path (packed already, or concrete binary tableau with concrete $\pm 1$ signs). Symbolic-phase / `StabilizerFrame` states fail it and take the canonical path.
-- `psGetPacked` ([Packed.m:101](../../QuantumFramework/Kernel/Stabilizer/Packed.m)) / `psFromPacked` ([Packed.m:110](../../QuantumFramework/Kernel/Stabilizer/Packed.m)) — tuple `{n, packedX, packedZ, signs}` ⇄ object.
-- `ps["Tableau"]` lazy reconstruction handler ([Packed.m:116](../../QuantumFramework/Kernel/Stabilizer/Packed.m)) — so every downstream property (`State`, `Measure`, `Stabilizers`, formatting, ...) works unchanged on a packed object.
-- `packedGateH/S/Sdg/CNOT/SWAP/X/Y/Z` ([Packed.m:134](../../QuantumFramework/Kernel/Stabilizer/Packed.m)–:220) — the bitwise kernels, each mirroring its canonical AG rule bit-for-bit.
+- `packChunks` / `unpackChunks` / `tableauFromPacked` ([Packed.m:71](../../QuantumFramework/Kernel/Stabilizer/Packed.m), :76, :81): convert between the rank-3 array and chunk-major form.
+- `psPackedQ` ([Packed.m:79](../../QuantumFramework/Kernel/Stabilizer/Packed.m)), `psConcreteFastQ` ([Packed.m:86](../../QuantumFramework/Kernel/Stabilizer/Packed.m)): the strict numeric predicate that gates the fast path (packed already, or concrete binary tableau with concrete $\pm 1$ signs). Symbolic-phase / `StabilizerFrame` states fail it and take the canonical path.
+- `psGetPacked` ([Packed.m:101](../../QuantumFramework/Kernel/Stabilizer/Packed.m)) / `psFromPacked` ([Packed.m:110](../../QuantumFramework/Kernel/Stabilizer/Packed.m)): tuple `{n, packedX, packedZ, signs}` ⇄ object.
+- `ps["Tableau"]` lazy reconstruction handler ([Packed.m:116](../../QuantumFramework/Kernel/Stabilizer/Packed.m)): so every downstream property (`State`, `Measure`, `Stabilizers`, formatting, ...) works unchanged on a packed object.
+- `packedGateH/S/Sdg/CNOT/SWAP/X/Y/Z` ([Packed.m:134](../../QuantumFramework/Kernel/Stabilizer/Packed.m)-:220): the bitwise kernels, each mirroring its canonical AG rule bit-for-bit.
 
 ### `QuantumFramework/Kernel/Stabilizer/GateUpdates.m`
 
@@ -90,11 +92,11 @@ masked column as the per-row 0/1 indicator:
 | Gate | $X$ update | $Z$ update | sign flip where |
 |---|---|---|---|
 | $H_j$ | swap bit $j$ with $Z$ | swap bit $j$ with $X$ | $x_j = z_j = 1$ |
-| $S_j$ | — | $z_j \mathrel{\oplus}= x_j$ | $x_j = z_j = 1$ |
-| $S^\dagger_j$ | — | $z_j \mathrel{\oplus}= x_j$ | $x_j = 1,\ z_j = 0$ |
+| $S_j$ | - | $z_j \mathrel{\oplus}= x_j$ | $x_j = z_j = 1$ |
+| $S^\dagger_j$ | - | $z_j \mathrel{\oplus}= x_j$ | $x_j = 1,\ z_j = 0$ |
 | $\mathrm{CNOT}_{j\to k}$ | $x_k \mathrel{\oplus}= x_j$ | $z_j \mathrel{\oplus}= z_k$ | $x_j = z_k = 1 \ \wedge\ x_k = z_j$ |
 | $\mathrm{SWAP}_{jk}$ | exchange bits $j,k$ | exchange bits $j,k$ | (none) |
-| $X_j,Z_j,Y_j$ | — | — | $z_j{=}1$ / $x_j{=}1$ / $x_j \neq z_j$ |
+| $X_j,Z_j,Y_j$ | - | - | $z_j{=}1$ / $x_j{=}1$ / $x_j \neq z_j$ |
 
 The sign update is a single Listable multiply `s (1 - 2*flip)` over the length-$2n$ sign
 vector. This is the AG rule set; the two-parity-bit carry-save phase of the general Pauli
@@ -132,8 +134,8 @@ and QuantumClifford.jl. QF timed by `AbsoluteTiming`, min-of-3, `ClearSystemCach
   ms/gate): the residual growth is the length-$2n$ sign-vector multiply and the
   $\lceil n/62 \rceil$-element chunk-list `ReplacePart`, both small. Hence the speedup *grows*
   with system size: 9× at $n=100$, 32× at $n=500$, 51× at $n=1000$.
-- **Gap to Stim.** The factor over Stim collapsed from roughly $650$–$5600\times$ (before) to
-  $72$–$111\times$ (after). Because both now scale near-linearly per gate, this remaining gap is
+- **Gap to Stim.** The factor over Stim collapsed from roughly $650$-$5600\times$ (before) to
+  $72$-$111\times$ (after). Because both now scale near-linearly per gate, this remaining gap is
   an almost-constant factor, not a widening asymptotic one.
 - **Versus QuantumClifford.jl.** QC.jl uses the same chunked-UInt64 idea but in compiled Julia
   with SIMD. After packing, QF closes from $\sim\!570\times$ (before, $n{=}1000$) to $\sim\!11\times$
@@ -149,7 +151,7 @@ and QuantumClifford.jl. QF timed by `AbsoluteTiming`, min-of-3, `ClearSystemCach
   `Phase7-QMO-NonPauliBasis-Fallback-EmitsMessage`, `Conn5-qmoComputational-FallsBack`).
   **Zero regressions.**
 - The two external cross-validation suites are the anchor: `CrossPackage_Stim.wlt` (44/44)
-  and `CrossPackage_QuantumClifford.wlt` (15/15) both pass — the packed path reproduces the
+  and `CrossPackage_QuantumClifford.wlt` (15/15) both pass: the packed path reproduces the
   documented Stim and QuantumClifford.jl gate-conjugation rules exactly.
 - New TIER 9 equivalence tests (8/8) assert packed `===` canonical across single-chunk,
   chunk-boundary ($n=62,63$), and multi-chunk sizes under `SeedRandom`.

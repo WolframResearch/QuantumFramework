@@ -1,7 +1,7 @@
 # QuantumFramework vs the Quantum Software Landscape: A Verified, Benchmarked Comparison
 
-**Date:** 2026-06-12 (full revision: Section 3.2 stabilizer rows re-measured after the June 2026 optimization shipped; Section 12 rewritten as a plain-language account of that work, with before/after examples and run-it-yourself commands)
-**QuantumFramework version:** 2.0.0, repo working tree at HEAD `02cc92d9` (verified live, not the lagging installed paclet). Feature claims were verified at `77b9ccba`; the commits since then touch only the stabilizer subsystem and the Liouvillian basis convention, both re-verified here.
+**Date:** 2026-06-14 (revision: the property-cache refactor of 2026-06-13/14 shipped the apply-path "memo bookkeeping" fix that Section 12.2 had only prototyped, so the state-vector rows in Sections 0, 3.1, 10, and 12.2 are re-measured at the new HEAD; stabilizer rows re-confirmed unchanged; an error-aware-transpile note added to Section 4.2)
+**QuantumFramework version:** 2.0.0, repo working tree at HEAD `f9dc1cdc` (verified live, not the lagging installed paclet). The state-vector rows were measured here; the stabilizer subsystem is untouched by the post-`02cc92d9` commits and its rows reproduce within run-to-run noise. The cache refactor is four commits (`7e12e8f0`, `5b696969`, `dfc741dc`, `f9dc1cdc`); see Section 12.2 for the before/after.
 **Author's note:** This document merges and supersedes three earlier, now-stale comparison sources (see Section 11). Every capability claim about QuantumFramework here was re-verified against the live 2.0.0 kernel; every performance number was measured head-to-head on one machine. Nothing in this file is carried over from the prior documents without re-checking.
 
 ---
@@ -24,11 +24,11 @@ QuantumFramework is a **symbolic-first, object-algebra** quantum framework embed
 
 Three head-to-head benchmarks on identical tasks (Apple M2 Pro, single machine, Section 3):
 
-1. **State-vector simulation** of a fixed 105-gate, $n$-qubit circuit. QuantumFramework's default engine is **about $200\times$ to $400\times$ slower** than Qiskit Aer or Cirq (e.g. $n=16$: QF $3.4\,\mathrm{s}$ vs Aer $8.6\,\mathrm{ms}$). **[BENCH]**
+1. **State-vector simulation** of a fixed 105-gate, $n$-qubit circuit. QuantumFramework's default engine is **about $130\times$ slower than Qiskit Aer at $n=12$ and $\approx 320\times$ at $n=16$** ($n=12$: QF $283\,\mathrm{ms}$ vs Aer $2.1\,\mathrm{ms}$; $n=16$: QF $2.7\,\mathrm{s}$ vs Aer $8.6\,\mathrm{ms}$). The June 2026 property-cache refactor cut the $n=12$ figure from $800\,\mathrm{ms}$ to $283\,\mathrm{ms}$ ($2.8\times$); the remaining gap is dense-tensor contraction and per-apply network re-assembly, not the framework bookkeeping that used to dominate (Section 12.2). **[BENCH]**
 2. **Stabilizer simulation** of an identical Clifford gate stream. After the June 2026 rework of the stabilizer subsystem (Section 12.1), QuantumFramework is **within $2.5\times$ to $5.3\times$ of Stim** and **beats QuantumClifford.jl at $n=1000$** ($n=1000$, $2\times10^4$ gates: QF $58\,\mathrm{ms}$, QC.jl $108\,\mathrm{ms}$, Stim $11\,\mathrm{ms}$). The pre-rework implementation was $660\times$ to $5800\times$ slower than Stim on the same task; the cumulative speedup is $266\times$ to $1095\times$. QuantumFramework's stabilizer results are **numerically cross-validated against both Stim and QuantumClifford.jl** by its own test suite. **[BENCH]/[SRC]**
 3. **Open-system (Lindblad) dynamics** of a driven, damped qubit. Here QuantumFramework is only **about $9\times$ slower** than QuTiP ($17\,\mathrm{ms}$ vs $1.9\,\mathrm{ms}$) and the two agree on the physics to $4\times10^{-4}$. This is the regime where QuantumFramework is genuinely competitive, because it is doing the same thing QuTiP does (numerical ODE integration) on a small system. **[BENCH]**
 
-The shape after June 2026: QuantumFramework's value remains the symbolic object model (exact algebra, free parameters, qudits, ZX, second quantization, phase space, basis reconciliation) and seamless Wolfram-Language integration, but the performance story is no longer uniform. The **stabilizer engine is now genuinely competitive** with the dedicated tools (single-digit factors from Stim, ahead of QC.jl at large $n$). The **state-vector path remains two orders of magnitude behind** Aer/Cirq; a completed audit (Section 12.2) explains exactly why, has prototype-validated fixes that would close most of the gap, and gives user-side levers available today. Open-system work is competitive on small systems already.
+The shape after June 2026: QuantumFramework's value remains the symbolic object model (exact algebra, free parameters, qudits, ZX, second quantization, phase space, basis reconciliation) and seamless Wolfram-Language integration, but the performance story is no longer uniform. The **stabilizer engine is now genuinely competitive** with the dedicated tools (single-digit factors from Stim, ahead of QC.jl at large $n$). The **state-vector path is still behind Aer/Cirq** ($\sim 10^2\times$), but the gap narrowed materially in mid-June 2026: the property-cache refactor (Section 12.2) removed the per-access "memo bookkeeping tax" that had been the dominant cost, taking the warm 12-qubit apply from $836\,\mathrm{ms}$ to $273\,\mathrm{ms}$. What remains is genuine numeric work (dense contraction in sparse containers) plus per-apply re-assembly; the one large win still on the table, a packed numeric fold, is prototyped at $178\times$ but not yet shipped. Open-system work is competitive on small systems already.
 
 A second headline: **both prior comparison documents are substantially out of date.** The stabilizer audit (2026-04-30, against paclet 1.6.5) listed a set of "Tier 1 gaps" (Pauli-string measurement, Pauli expectation values, inner products, graph states, a test suite) that have **since all shipped** in the 2.0.0 stabilizer rewrite, and its Tier-3 performance items (packed representation, native kernel) shipped in June 2026. The Qiskit/QuTiP gap analysis (2026-02) predates the 2.0.0 transpilation, IBM-job, KAK-decomposition, and parametrized-layer surfaces. Section 11 lists the specific corrections.
 
@@ -91,16 +91,18 @@ All numbers measured on the machine and with the protocol in Section 1.3. Raw ou
 
 **Task.** Build the circuit (apply $H$ to every qubit; a CNOT chain $0\to1\to\cdots\to n{-}1$; then $R_Z(0.3)$ on every qubit), repeated for 3 layers. For $n=12$ this is 105 gates. Prepare $|0\rangle^{\otimes n}$, run, and read out the full statevector (all frameworks).
 
-> **Correction (2026-06-12).** The first edition of this table prepared the QF input as `QuantumState[Table[0,{n}],2]`, which the constructor parses as a length-$n$ state *vector* zero-padded into a 4-qubit, norm-0 state, not the $n$-qubit register $|0\rangle^{\otimes n}$; QF was therefore simulating the zero vector while Aer/Cirq simulated real states (see `QF-Apply-Path-Deep-Audit.md`, section 0.1, evidence script `scripts/apply00e_state.wls`). **[SRC]** The QF rows below are re-measured at repo SHA `02cc92d9` with the correct register `QuantumState["Register"[n]]` (input norm 1; output norm 1 with all $2^n$ amplitudes explicit) and a statevector readout, matching what Aer/Cirq read; the earlier density-matrix readout was free on the zero state but would be a dense $2^{16}\times2^{16}$ object on a real state. Script: `scripts/qf_bench4_register.wl`. **[BENCH]** The Aer/Cirq columns are unchanged: they were measured on real states.
+> **Revision (2026-06-14).** The QF rows are re-measured at HEAD `f9dc1cdc` after the property-cache refactor (Section 12.2): default TensorNetwork $n=12$ dropped $800 \to 283\,\mathrm{ms}$, $n=16$ dropped $3378 \to 2716\,\mathrm{ms}$, and the Schrödinger fold (which applies gates as objects, so it felt the cache fix most) dropped $14{,}298 \to 6564\,\mathrm{ms}$ at $n=12$ and $86{,}438 \to 62{,}545\,\mathrm{ms}$ at $n=16$. Same script (`scripts/qf_bench4_register.wl`), same machine. The Aer/Cirq columns are unchanged (no QF code in them).
+>
+> **Correction (2026-06-12, still in force).** The first edition of this table prepared the QF input as `QuantumState[Table[0,{n}],2]`, which the constructor parses as a length-$n$ state *vector* zero-padded into a 4-qubit, norm-0 state, not the $n$-qubit register $|0\rangle^{\otimes n}$; QF was therefore simulating the zero vector while Aer/Cirq simulated real states (see `QF-Apply-Path-Deep-Audit.md`, section 0.1, evidence script `scripts/apply00e_state.wls`). **[SRC]** All QF rows use the correct register `QuantumState["Register"[n]]` (input norm 1; output norm 1 with all $2^n$ amplitudes explicit) and a statevector readout, matching what Aer/Cirq read. As of `f9dc1cdc` the constructor also emits `QuantumState::padded` on the misparsed form, so the trap now warns. **[BENCH]**
 
 | $n$ | QF, default (TensorNetwork) | QF, `Method->"Schrodinger"` | Qiskit Aer (statevector) | Cirq |
 |---:|---:|---:|---:|---:|
-| 12 | $800\,\mathrm{ms}$ | $14{,}298\,\mathrm{ms}$ | $2.1\,\mathrm{ms}$ | $3.7\,\mathrm{ms}$ |
-| 16 | $3{,}378\,\mathrm{ms}$ | $86{,}438\,\mathrm{ms}$ | $8.6\,\mathrm{ms}$ | $12.1\,\mathrm{ms}$ |
+| 12 | $283\,\mathrm{ms}$ | $6{,}564\,\mathrm{ms}$ | $2.1\,\mathrm{ms}$ | $3.7\,\mathrm{ms}$ |
+| 16 | $2{,}716\,\mathrm{ms}$ | $62{,}545\,\mathrm{ms}$ | $8.6\,\mathrm{ms}$ | $12.1\,\mathrm{ms}$ |
 
 **Reading it.**
-- QuantumFramework's **default TensorNetwork engine is the one to quote** ($\approx 215\times$ to $395\times$ slower than Aer/Cirq), not the Schrödinger fold, which is another $18\times$ to $26\times$ slower still. Choice of `Method` is the single biggest QF performance lever; the default is the right one for this workload.
-- The $n$-scaling is genuine: $800\to3378\,\mathrm{ms}$ ($4.2\times$) for a $16\times$ larger Hilbert space, comparable in shape to Aer's $2.1\to8.6\,\mathrm{ms}$ ($\approx4\times$). The apply-path deep audit decomposes where the time goes: at $n=12$ the cost is dominated by per-gate framework overhead (property-dispatch machinery and per-apply network re-assembly; the tensor contraction itself is $\sim16\%$), while at $n=16$ the contraction dominates ($\sim2.2\,\mathrm{s}$, $\sim65\%$ to $70\%$), slowed $15\times$ to $29\times$ by fully dense amplitudes living in `SparseArray` containers instead of packed arrays. Section 12.2 explains this in plain language, with the user-side levers; `QF-Apply-Path-Deep-Audit.md` sections 2 to 3.4 carry the full decomposition. (The first edition claimed near-flat $n$-scaling and "contraction is 1% of the time"; both were artifacts of contracting the zero state.)
+- QuantumFramework's **default TensorNetwork engine is the one to quote** ($\approx 130\times$ slower than Aer at $n=12$, $\approx 320\times$ at $n=16$; $\approx 77\times$ to $225\times$ against the slower Cirq), not the Schrödinger fold, which is another $\sim23\times$ slower still. Choice of `Method` is a large QF performance lever; the default is the right one for this workload.
+- The $n$-scaling steepened after the cache fix, and that is the *expected* shape: the fix removed a per-gate framework cost that was roughly constant in Hilbert-space size, leaving the genuinely $2^n$-scaling contraction more exposed. $283 \to 2716\,\mathrm{ms}$ is $9.6\times$ for a $16\times$ larger space. The apply-path deep audit decomposes where the time now goes: at $n=12$ the warm cost is split between dense-tensor contraction and per-apply network re-assembly; at $n=16$ contraction dominates ($\sim 2.2\,\mathrm{s}$), slowed $15\times$ to $29\times$ by fully dense amplitudes living in `SparseArray` containers instead of packed arrays. Section 12.2 has the plain-language version and the user-side levers; `QF-Apply-Path-Deep-Audit.md` sections 2 to 3.4 carry the full decomposition (now annotated with which costs the June refactor removed).
 - Practical takeaway: for textbook and few-qubit symbolic work QuantumFramework is fine; past $\sim18$ to $20$ qubits, or for tight inner loops, use a dedicated simulator (including, from inside QF, the qiskit bridge or `Method->"QuEST"`).
 
 ### 3.2 Stabilizer / Clifford simulation
@@ -169,10 +171,12 @@ Legend: **QF** QuantumFramework 2.0.0, **QK** Qiskit, **QT** QuTiP, **PL** Penny
 | Error mitigation (ZNE, PEC, measurement) | No | Yes | No | Yes |
 | Dynamical decoupling / twirling | No | Yes | partial | partial |
 | Transpiler: routing / layout / optimization | via bridge (qiskit) $\Delta$ | Yes (native, L0 to L3) | n/a | Yes |
-| Hardware-aware target spec | Yes (`QiskitTarget`) $\Delta$ | Yes | n/a | Yes |
+| Hardware-aware target spec | Yes (`QiskitTarget`, incl. error-aware `"FromBackend"`) $\Delta$ | Yes | n/a | Yes |
 | Native gate-set transpile | via bridge (qiskit) $\Delta$ | Yes | n/a | Yes |
 
 Note on transpilation: QuantumFramework 2.0.0 has a real, current path to a device basis and topology, but it **delegates to qiskit** through the Python bridge (`QuantumQASM[circuit, gateSet | QiskitTarget | options]`, `IBMJobSubmit`). It has no native SABRE-style router. So the honest cell is "via bridge," which is a capability upgrade over the prior document's flat "No" but is not native-parity with Qiskit.
+
+*Working-tree refinement (uncommitted at `f9dc1cdc`, verified by source read only, **[SRC]**):* the bridge transpile is becoming **error-aware**. `IBMJobSubmit`, `qiskitQASM`, and `qiskitPrimitiveSubmit` gain an `"OptimizationLevel"` option and transpile against the backend's own qiskit `Target` (per-instruction error + duration, coupling map), so layout/routing are error-weighted; a new `QiskitTarget["FromBackend" -> name, "Provider" -> p]` reads any qiskit-ecosystem backend's populated `Target` into a QF `QiskitTarget`, and an offline `GenericV2` fake device (`GenericBackendV2`) exercises the whole path with no credentials or network. `QuantumQASM`'s `build_target` applies the per-instruction properties via `update_instruction_properties`. This is still bridge-based, not a native router, and is not yet committed.
 
 ### 4.3 Dynamics and open systems
 
@@ -237,7 +241,7 @@ These are capabilities the numeric specialists structurally do not have, verifie
 
 Confirmed absent in the current kernel (no matching source, verified by search across `Kernel/`):
 
-- **State-vector performance at scale.** Two orders of magnitude behind Aer/Cirq (Section 3.1). Single-threaded; no packed numeric fast path yet (prototyped and validated, Section 12.2, but not shipped); no GPU. The *stabilizer* workload no longer belongs on this list (Section 3.2).
+- **State-vector performance at scale.** Of order $10^2\times$ behind Aer/Cirq (Section 3.1), down from the larger gap of earlier editions after the June 2026 cache refactor. Single-threaded; no packed numeric fast path yet (prototyped and validated at $178\times$, Section 12.2, but not shipped); no GPU. The *stabilizer* workload no longer belongs on this list (Section 3.2).
 - **Error mitigation.** No ZNE, PEC, measurement-error mitigation, dynamical decoupling, or twirling.
 - **Native transpiler.** No native routing/layout/optimization passes; the device path is delegated to qiskit.
 - **Open-system breadth.** No Monte-Carlo trajectory solver, no steady-state solver, no Bloch-Redfield/Floquet/non-Markovian machinery (all QuTiP strengths).
@@ -329,7 +333,7 @@ Non-WL tools listed there "for reference": **QuantumOptics.jl**, **QuTiP** (used
 |---|---|
 | Machine | Apple M2 Pro, 12 cores, macOS (Darwin 23.2.0, arm64) |
 | Mathematica / WL | 15.0.0 (Feb 2026) |
-| QuantumFramework | 2.0.0, repo working tree @ HEAD `02cc92d9` (via `PacletDirectoryLoad`); feature matrix verified @ `77b9ccba`, Sections 3.1/3.2 measured @ `02cc92d9`/`6f953ad5` |
+| QuantumFramework | 2.0.0, repo working tree @ HEAD `f9dc1cdc` (via `PacletDirectoryLoad`); Section 3.1 measured @ `f9dc1cdc` (post cache refactor), Section 3.2 @ `6f953ad5` and re-confirmed @ `f9dc1cdc` |
 | Python | 3.13.1 (venv `/tmp/qcbench`) |
 | Qiskit / Aer / IBM-runtime | 2.4.1 / 0.17.2 / 0.47.0 |
 | Cirq | cirq-core 1.6.1 |
@@ -343,10 +347,10 @@ Non-WL tools listed there "for reference": **QuantumOptics.jl**, **QuTiP** (used
 
 ```
 # State vector (105-gate circuit at n=12), milliseconds
-# QF rows re-measured 2026-06-12 at SHA 02cc92d9 with the correct register
-# input QuantumState["Register"[n]] and statevector readout (Section 3.1)
-QF default (TensorNetwork)   n=12: 799.706     n=16: 3378.029
-QF Method->"Schrodinger"     n=12: 14298.303   n=16: 86437.715
+# QF rows re-measured 2026-06-14 at HEAD f9dc1cdc (post property-cache refactor),
+# correct register input QuantumState["Register"[n]], statevector readout (Section 3.1)
+QF default (TensorNetwork)   n=12: 282.983    n=16: 2715.576   (was 799.7 / 3378.0 @ 02cc92d9)
+QF Method->"Schrodinger"     n=12: 6563.516   n=16: 62544.701  (was 14298.3 / 86437.7 @ 02cc92d9)
 Qiskit Aer (statevector)     n=12: 2.137       n=16: 8.575
 Cirq                         n=12: 3.698       n=16: 12.061
 
@@ -366,10 +370,12 @@ ps["M", "Z..Z"] (string)     n=500:  42300 -> 58.7 (re-verified 50.3 @ 02cc92d9)
 ps["Stabilizers"] display    n=100:  128.6 -> 2.0  (re-verified 2.2 @ 02cc92d9)
 composition a[b]             n=100:  2577 -> 46.1  (re-verified 45.4 @ 02cc92d9)
 
-# Statevector apply-path levers, re-verified @ 02cc92d9 working tree (Section 12.2)
-qc[psi] cold (fresh kernel)          2956 ms
-qc[psi] warm                          836-839 ms
-warm + $QuantumFrameworkPropCache=False  232-237 ms  (max amplitude deviation 0.)
+# Statevector apply-path, before -> after the June 2026 cache refactor (Section 12.2)
+# "before" = 02cc92d9 (2026-06-12); "after" = f9dc1cdc (2026-06-14)
+qc[psi] cold (fresh kernel)              2956 -> 783 ms
+qc[psi] warm (re-applied)                836  -> 273 ms
+warm + $QuantumFrameworkPropCache=False  232  -> 222 ms  (lever now nearly moot; output bit-identical)
+op["Basis"] x 105 ops                    32   -> 2 ms
 
 # Lindblad (driven damped qubit)
 QF QuantumEvolve   time: 16.987 ms   final <n>(t=2): 0.818625
@@ -459,56 +465,50 @@ Verification status at HEAD: stabilizer suite **965/965**, full framework suite 
 
 **Caveats that remain.** `ApplyCircuit` returns the canonical (unpacked) object while single gates return packed ones; both are accepted everywhere, but compare states via `["Tableau"]`/`["Stabilizers"]`, not `SameQ` on raw objects. Non-Clifford gates ($T$, $P[\theta]$) still route to `StabilizerFrame` exactly as before (term count doubles per non-Clifford gate). Composition and circuit synthesis remain $O(n^3)$ algorithms (correct and now fast enough at these sizes).
 
-### 12.2 State-vector apply path: diagnosis complete, fixes validated, kernel untouched
+### 12.2 State-vector apply path: the dominant cost diagnosed, and then fixed in the kernel
 
-The first-pass profile in earlier editions of this section was wrong, and understanding *why* it was wrong is half the story. Nothing in this subsection changed the kernel; it is a measurement campaign with session-local prototypes (`QF-Apply-Path-Deep-Audit.md` has the full decomposition; scripts in `scripts/apply0*.wls`).
+This subsection has two layers now. The **diagnosis** (a measurement campaign, `QF-Apply-Path-Deep-Audit.md`) found that the warm apply was dominated not by physics but by *framework bookkeeping*. Between 2026-06-13 and 2026-06-14 the kernel team **acted on that diagnosis**: a four-commit property-cache refactor (`7e12e8f0`, `5b696969`, `dfc741dc`, `f9dc1cdc`) removed the bookkeeping tax, and the warm 12-qubit apply fell from $836\,\mathrm{ms}$ to $273\,\mathrm{ms}$. So the "memo bookkeeping" item below is now **shipped, not a recommendation**; the remaining items (dense-in-sparse contraction, per-apply re-assembly, the packed-fold fast path) are still open.
 
-**Correction 1: the old benchmark was simulating the zero vector.** The input state had been built as `QuantumState[Table[0, {12}], 2]`, on the assumption that this means "12 qubits in $\lvert 0\rangle$". It does not: the constructor reads a 12-component list as a *state vector* (amplitudes), zero-pads it to the nearest qubit dimension, and returns a 4-qubit state of norm $0$. Every "circuit application" was therefore propagating an empty array, amplitude arithmetic was free, and two first-pass conclusions ("contraction is 1% of the cost", "cost is flat in qubit number") were artifacts. See for yourself:
+**Correction 1: the old benchmark was simulating the zero vector.** The input state had been built as `QuantumState[Table[0, {12}], 2]`, on the assumption that this means "12 qubits in $\lvert 0\rangle$". It does not: the constructor reads a 12-component list as a *state vector* (amplitudes), zero-pads it to the nearest qubit dimension, and returns a 4-qubit state of norm $0$. Every "circuit application" was therefore propagating an empty array, amplitude arithmetic was free, and two first-pass conclusions ("contraction is 1% of the cost", "cost is flat in qubit number") were artifacts. See for yourself (the `QuantumState::padded` warning is now emitted, as of `f9dc1cdc`):
 
 ```wolfram
-psiWrong = QuantumState[Table[0, {12}], 2];
+psiWrong = QuantumState[Table[0, {12}], 2];   (* now also prints QuantumState::padded *)
 {psiWrong["Qudits"], psiWrong["Norm"]}      (* {4, 0}  : 4 qubits, norm 0 *)
 psiRight = QuantumState["Register"[12]];
 {psiRight["Qudits"], psiRight["Norm"]}      (* {12, 1} : the real |0...0> *)
 ```
 
-The corrected Section 3.1 numbers use the real register. The practical rule: **always build registers as `QuantumState["Register"[n]]`** (a warning guard for the misparse now exists in the working tree, uncommitted).
+The corrected Section 3.1 numbers use the real register. The practical rule: **always build registers as `QuantumState["Register"[n]]`**.
 
 **Correction 2: `H["Normal"]` never measured a normalization.** `"Normal"` is not an operator property; the call fails property lookup and falls through to "apply the operator as a circuit", returning a one-gate circuit after several milliseconds of message handling. The first-pass claim that normalization was half the apply cost timed this accident.
 
-**Where the time actually goes.** With the real register, applying the 105-gate benchmark circuit at $n=12$ costs $\sim 2.9\,\mathrm{s}$ the first time and $\sim 830\,\mathrm{ms}$ on every repeat. The repeat cost splits, by measurement and ablation, into three mechanisms:
+**Where the time went, and what the refactor removed.** With the real register, applying the 105-gate benchmark circuit at $n=12$ used to cost $\sim 2.9\,\mathrm{s}$ the first time and $\sim 830\,\mathrm{ms}$ on every repeat. The repeat cost split, by measurement and ablation, into three mechanisms:
 
 $$
-830\,\mathrm{ms} \;\approx\; \underbrace{580\,\mathrm{ms}}_{\text{memo bookkeeping}} \;+\; \underbrace{130\,\mathrm{ms}}_{\text{contraction in sparse containers}} \;+\; \underbrace{95\,\mathrm{ms}}_{\text{per-apply re-assembly}} .
+830\,\mathrm{ms} \;\approx\; \underbrace{580\,\mathrm{ms}}_{\text{memo bookkeeping (now fixed)}} \;+\; \underbrace{130\,\mathrm{ms}}_{\text{contraction in sparse containers}} \;+\; \underbrace{95\,\mathrm{ms}}_{\text{per-apply re-assembly}} .
 $$
 
-- *Memo bookkeeping (the dominant cost, and the surprise).* QF objects answer questions ("your matrix", "your qubit order") through a property system, and the answers are remembered so they are computed once. The remembered values are doing their job: with no memory at all the same apply costs $2.05\,\mathrm{s}$. But the bookkeeping that decides "should I remember this?" runs on **every** access, including the $\sim 66{,}000$ accesses per apply whose answer is already stored, and each such check costs $\sim 0.4\,\mathrm{ms}$ where the stored answer itself costs $1.6\,\mu\mathrm{s}$ to fetch. Disabling just the bookkeeping after a warm-up run (the stored values remain) gives the same state, byte-identical, $3.7\times$ faster. This also explains a superlinear growth with circuit depth: the bookkeeping keys grow with circuit size.
-- *Dense data in sparse containers.* By constructor contract every state and gate tensor lives in a `SparseArray`. After one layer of Hadamards the state is fully dense (all $2^n$ amplitudes nonzero), and contracting dense data held in sparse containers costs $15$ to $29\times$ the identical arithmetic on packed numeric arrays. At $n=12$ contraction is 16% of the apply; at $n=16$ it dominates ($\sim 70\%$).
-- *Per-apply re-assembly.* The tensor network is rebuilt from scratch on every application of the same circuit, even the thousandth.
+- *Memo bookkeeping (was the dominant cost; **fixed in `dfc741dc`/`f9dc1cdc`**).* QF objects answer questions ("your matrix", "your qubit order", "your basis") through a property system that remembers answers so they are computed once. The remembered values were doing their job (with no memory at all the apply cost $2.05\,\mathrm{s}$), but the *eligibility check* on every access read `qo["Basis"]["ParameterArity"]`, and `qo["Basis"]` had no direct rule, so it fell through $\sim 124$ property clauses to a generic delegation that recomputes `AllProperties` on both the operator and its state. That taxed every read at $\sim 0.4\,\mathrm{ms}$. The fix is two-part: (1) add a **direct `"Basis"` getter** (the basis lives in the wrapped state) on every head, and add the $O(1)$ structural getters (`Order`/`InputOrder`/`OutputOrder`/`State`/`Basis`) to the cache-exclusion list, so they skip the eligibility check entirely; (2) replace the store `Quiet[HeadProp[obj,prop,args] = result, Rule::rhs]` with a `cacheProperty` helper (and a Hash-keyed `Memoize`) that commits the cache entry only when the key is free of pattern symbols, eliminating a latent `Rule::rhs` over-match the `Quiet` had been masking. Measured effect: `op["Basis"]` over 105 operators $32 \to 2\,\mathrm{ms}$; warm apply $836 \to 273\,\mathrm{ms}$; cold apply $2956 \to 783\,\mathrm{ms}$; output bit-identical. The old `$QuantumFrameworkPropCache = False` lever (which used to give $3.7\times$) is now nearly moot: the default-on warm apply ($273\,\mathrm{ms}$) is within $\sim 1.2\times$ of the cache-off floor ($222\,\mathrm{ms}$).
+- *Dense data in sparse containers (still open).* By constructor contract every state and gate tensor lives in a `SparseArray`. After one layer of Hadamards the state is fully dense (all $2^n$ amplitudes nonzero), and contracting dense data held in sparse containers costs $15$ to $29\times$ the identical arithmetic on packed numeric arrays. At $n=16$ this contraction dominates the apply ($\sim 2.2\,\mathrm{s}$), which is why $n=16$ improved far less than $n=12$ from the cache fix.
+- *Per-apply re-assembly (still open).* The tensor network is rebuilt from scratch on every application of the same circuit, even the thousandth.
 
-**What you can do today, with no kernel change** (each verified, output identical):
+**What you can do today.** The biggest former lever (toggling the cache) is now done for you by default. The remaining user-side advice:
 
 ```wolfram
-(* 1. Repeated numeric application of a fixed circuit: warm up once,
-      then switch the memo bookkeeping off. 836 ms -> 232 ms here. *)
-qc[psi];   (* warm-up populates the stored values *)
-Wolfram`QuantumFramework`PackageScope`$QuantumFrameworkPropCache = False;
-qc[psi]    (* 3.7x faster, byte-identical state *)
+(* 1. Registers: always "Register"[n], never Table[0, {n}] (now warns if you slip). *)
 
-(* 2. Registers: always "Register"[n], never Table[0, {n}]. *)
-
-(* 3. Parameter sweeps: rebuilding the circuit at each value is ~4x faster
+(* 2. Parameter sweeps: rebuilding the circuit at each value is ~4x faster
       than the substitution idiom qcP[<|theta -> v|>][psi]. *)
 
-(* 4. Few qubits, many applications: compile once, reuse.
-      22x amortized at n = 8 (memory is 4^n, so small n only). *)
+(* 3. Few qubits, many applications: compile once, reuse.
+      ~22x amortized at n = 8 (materialized operator memory is 4^n, so small n only). *)
 qop = qc["QuantumOperator"];
 qop[psi]
 ```
 
-**What a kernel fix would buy** (prototyped and validated against the default path to $5\times10^{-17}$, but **not shipped**, per the decision to stop kernel changes): extracting each gate's numeric matrix once and folding it over a packed state vector runs the $n=12$ benchmark in $4.5\,\mathrm{ms}$, i.e. $178\times$ faster and inside Aer's measured $2$ to $9\,\mathrm{ms}$ envelope on this machine; the same prototype is $21$ to $25\times$ at $n=16$. Together with repairing the memo bookkeeping (cheap, $3.7\times$, fixes the depth scaling too) this is the prioritized plan in `QF-Apply-Path-Deep-Audit.md` Section 7. The point of the audit: the state-vector gap is **framework bookkeeping, not physics or algorithm**, and it is closable.
+**What a further kernel fix would buy** (prototyped and validated against the default path to $5\times10^{-17}$; **not shipped**): extracting each gate's numeric matrix once and folding it over a packed state vector runs the $n=12$ benchmark in $4.5\,\mathrm{ms}$, i.e. $178\times$ faster than the old warm path and inside Aer's measured $2$ to $9\,\mathrm{ms}$ envelope on this machine; the same prototype is $21$ to $25\times$ at $n=16$. This is the one large win left, now that the bookkeeping tax is gone; it is the prioritized item in `QF-Apply-Path-Deep-Audit.md` Section 7. The point stands: the state-vector gap is **framework cost, not physics or algorithm**, and it is closable.
 
-One more trap the audit ran into, worth knowing even though it is now guarded in the working tree: applying a state whose qudit count does not match the wires you assign it to (`{psi -> Range[12]}` with a 4-qubit `psi`) used to fire a silent "broadcast" rule that builds the tensor power of the state needed to cover the mismatch, here $16^{12} \approx 2.8\times10^{14}$ amplitudes, killing the kernel. With correctly-shaped states the rule never fires.
+**The OOM trap, now guarded in the shipped kernel.** Applying a state whose qudit count does not match the wires you assign it to (`{psi -> Range[12]}` with a 4-qubit `psi`) used to fire a silent "broadcast" rule that builds the tensor power of the state needed to cover the mismatch, here $16^{12} \approx 2.8\times10^{14}$ amplitudes, killing the kernel. As of `7e12e8f0` this is guarded: the rule refuses to materialize beyond `$QuantumOperatorBroadcastLimit` ($2^{24}$) and returns `$Failed` with a `QuantumOperator::broadcast` message naming the offending sizes. Verified live at `f9dc1cdc`.
 
 ### 12.3 Run it yourself
 
@@ -556,13 +556,14 @@ ps["Expectation", "ZZI"]          (* 1, the closed-form route to the same fact *
 QuantumState[Table[0, {12}], 2]["Norm"]    (* 0  : not a register! *)
 QuantumState["Register"[12]]["Norm"]       (* 1 *)
 
-(* the cache lever, end to end *)
+(* the apply path after the June 2026 cache refactor (HEAD f9dc1cdc) *)
 qc = QuantumCircuitOperator[Catenate @ Table[Join[Table["H" -> q, {q, 12}],
       Table["CNOT" -> {q, q + 1}, {q, 11}], Table["RZ"[0.3] -> q, {q, 12}]], {3}]];
 psi = QuantumState["Register"[12]];
-AbsoluteTiming[out1 = qc[psi];]   (* cold ~3 s, warm ~0.84 s on repeat *)
+AbsoluteTiming[out1 = qc[psi];]   (* cold ~0.78 s (was ~3 s), warm ~0.27 s (was ~0.84 s) *)
+(* the cache toggle is now nearly moot: default-on warm ~0.27 s is within ~1.2x of this *)
 Wolfram`QuantumFramework`PackageScope`$QuantumFrameworkPropCache = False;
-AbsoluteTiming[out2 = qc[psi];]   (* ~0.23 s *)
+AbsoluteTiming[out2 = qc[psi];]   (* ~0.22 s *)
 Max @ Abs[out1["AmplitudesList"] - out2["AmplitudesList"]]   (* 0. *)
 ```
 
