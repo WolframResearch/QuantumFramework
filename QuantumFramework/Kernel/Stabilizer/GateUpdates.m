@@ -179,11 +179,18 @@ ps_PauliStabilizer["PadLeft", n_]  := QuantumTensorProduct[PauliStabilizer[Max[n
 (* Clifford updates.                                                            *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase / 2]},
-    StabilizerFrame[{
-        {(1 + c) / 2, ps},
-        {(1 - c) / 2, ps["Z", j]}
-    }]
+ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase / 2], n = ps["Qubits"]},
+    StabilizerFrame[<|
+        "Components" -> {
+            {(1 + c) / 2, ps},
+            {(1 - c) / 2, ps["Z", j]}
+        },
+        (* Component 2 is Z_j applied to the reference component, coherently. *)
+        "Paulis" -> {
+            {ConstantArray[0, n], ConstantArray[0, n], 1},
+            {ConstantArray[0, n], UnitVector[n, j], 1}
+        }
+    |>]
 ]
 
 ps_PauliStabilizer["T", j_Integer] := ps["P"[Pi / 2], j]

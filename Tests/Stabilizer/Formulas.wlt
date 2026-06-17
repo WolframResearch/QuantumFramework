@@ -800,20 +800,25 @@ VerificationTest[
    ============================================================================ *)
 
 
-(* T |0⟩ = |0⟩ (eigenstate); StabilizerFrame round-trip is exact at amplitudes *)
+(* T |0⟩ = |0⟩ (eigenstate). Max[Abs[...]] (not Total[...]) is amplitude-wise:  *)
+(* Total of a difference vector is blind to an amplitude swap, so it cannot      *)
+(* certify the dense readout; Max[Abs[...]] does.                                *)
 VerificationTest[
-    Chop[
+    Chop[Max[Abs[N[
         Normal[PauliStabilizer[1]["T", 1]["StateVector"]] - {1, 0}
-    ] // Total // # == 0 &,
+    ]]]] == 0,
     True,
     TestID -> "S11-T-on-Zero-equals-Zero"
 ];
-(* T |+⟩ = (|0⟩ + e^{iπ/4} |1⟩)/√2 *)
+(* T |+⟩ = (|0⟩ + e^{iπ/4} |1⟩)/√2 : a NON-symmetric superposition, so an        *)
+(* amplitude swap (the materialization failure mode) shows up here. The strict   *)
+(* amplitude-wise Max[Abs[...]] check is what catches it; a Total[...] check     *)
+(* sums {a, -a} to 0 and passes a swapped state.                                 *)
 VerificationTest[
     Module[{frame = PauliStabilizer[1]["H", 1]["T", 1]},
-        Chop[
+        Chop[Max[Abs[N[
             Normal[frame["StateVector"]] - {1, Exp[I Pi/4]} / Sqrt[2]
-        ] // Total // # == 0 &
+        ]]]] == 0
     ],
     True,
     TestID -> "S11-T-on-Plus-equals-T-State"
@@ -833,12 +838,32 @@ VerificationTest[
 (* T† T = I  on any state *)
 VerificationTest[
     Module[{frame = PauliStabilizer[1]["H", 1]["T", 1][SuperDagger["T"], 1]},
-        Chop[
+        Chop[Max[Abs[N[
             Normal[frame["StateVector"]] - {1/Sqrt[2], 1/Sqrt[2]}
-        ] // Total // # == 0 &
+        ]]]] == 0
     ],
     True,
     TestID -> "S11-T-Tdag-equals-Identity"
+];
+(* Coherent multi-component materialization agrees with the dense state vector   *)
+(* (up to one global phase) for an entangled Clifford+T circuit that mixes a     *)
+(* post-T Clifford (S) with two T gates. This guards the relating-Pauli readout: *)
+(* reference component materialized once, the rest obtained by the Pauli         *)
+(* operators that relate them, so relative phases are physical.                  *)
+VerificationTest[
+    Module[{
+        specs = {"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2, "T" -> 2},
+        frameVec, denseVec, phase
+    },
+        frameVec = Normalize @ N @ Normal @
+            QuantumCircuitOperator[specs][Method -> "Stabilizer"]["StateVector"];
+        denseVec = Normalize @ N @ Normal @
+            QuantumCircuitOperator[specs][Method -> "Schrodinger"]["StateVector"];
+        phase = Conjugate[denseVec] . frameVec;
+        Chop[Max[Abs[frameVec - phase / Abs[phase] denseVec]]] == 0
+    ],
+    True,
+    TestID -> "S11-Frame-Materialization-Matches-Dense"
 ]
 
 
