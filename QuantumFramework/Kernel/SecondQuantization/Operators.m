@@ -19,10 +19,8 @@ PackageExport["BeamSplitterOperator"]
 PackageExport["PhaseShiftOperator"]
 
 
-AnnihilationOperator::usage = 
-"\!\(AnnihilationOperator[]\) Creates the bosonic annihilation operator \[AHat].
-\!\(AnnihilationOperator[size]\) Specifies the Fock space size (default: $FockSize).
-\!\(AnnihilationOperator[size, order]\) Specifies which subsystem (order) for multi-mode systems.";
+AnnihilationOperator::usage =
+"\!\(\*RowBox[{\"AnnihilationOperator\", \"[\", \"]\"}]\) gives the bosonic annihilation operator \[AHat].\n\!\(\*RowBox[{\"AnnihilationOperator\", \"[\", RowBox[{StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"AnnihilationOperator\", \"[\", RowBox[{StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the applied subsystem \!\(\*StyleBox[\"order\", \"TI\"]\) for multi-mode systems.";
 
 AnnihilationOperator[order_?orderQ]:= AnnihilationOperator[$FockSize, order]
 
@@ -32,10 +30,8 @@ AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= Annihilati
 	order, size]
 
 
-PhaseShiftOperator::usage = 
-"\!\(PhaseShiftOperator[\[Theta]]\) Creates the phase shift operator e^{i\[Theta]n}.
-\!\(PhaseShiftOperator[\[Theta], size]\) Specifies the Fock space size (default: $FockSize).
-\!\(PhaseShiftOperator[\[Theta], size, order]\) Specifies the subsystem order.";
+PhaseShiftOperator::usage =
+"\!\(\*RowBox[{\"PhaseShiftOperator\", \"[\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"]}], \"]\"}]\) gives the phase shift operator e^{i\[Theta]n}.\n\!\(\*RowBox[{\"PhaseShiftOperator\", \"[\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"PhaseShiftOperator\", \"[\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).";
 
 PhaseShiftOperator[\[Theta]_,order_?orderQ]:= PhaseShiftOperator[\[Theta], $FockSize, order]
 
@@ -43,12 +39,8 @@ PhaseShiftOperator[\[Theta]_,size_:$FockSize,Optional[order_?orderQ,{1}]]:=
 	QuantumOperator[SparseArray[Band[{1,1}]->Exp[I \[Theta] Range[0,size-1]],{size,size}],order,size]
 
 
-DisplacementOperator::usage = 
-"\!\(DisplacementOperator[\[Alpha]]\) Creates the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].
-\!\(DisplacementOperator[\[Alpha], size]\) Specifies the Fock space size (default: $FockSize).
-\!\(DisplacementOperator[\[Alpha], size, order]\) Specifies the subsystem order.
-\!\(DisplacementOperator[\[Ellipsis], \"Ordering\"\[Rule] ]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.
-\!\(DisplacementOperator[\[Alpha], \[Infinity], order]\) Returns a symbolic expression using field variables and non-commutative algebra.";
+DisplacementOperator::usage =
+"\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) gives the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering definition.\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) returns a symbolic expression for bosonic algebra calculations.";
 
 
 Options[DisplacementOperator] = {"Ordering" -> Automatic};
@@ -105,11 +97,8 @@ DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
 
 
 
-SqueezeOperator::usage = 
-"\!\(SqueezeOperator[\[Xi]]\) Creates the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].
-\!\(SqueezeOperator[\[Xi], size]\) Specifies the Fock space size (default: $FockSize).
-\!\(SqueezeOperator[\[Xi], size, order]\) Specifies the subsystem order.
-\!\(SqueezeOperator[\[Ellipsis], \"Ordering\" \[Rule]]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+SqueezeOperator::usage =
+"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
 
 Options[SqueezeOperator] = {"Ordering" -> "Normal"};
 
@@ -180,11 +169,8 @@ BeamsplitterMatrix[\[Theta]_,\[Phi]_,cutoff_]:= Block[{sqrt,ct,st,stconj,Z},
 	Z]
 
 
-BeamSplitterOperator::usage = 
-"\!\(BeamSplitterOperator[{\[Theta], \[Phi]}]\) Creates a two-mode beam splitter operator with mixing angle \[Theta] and phase \[Phi].
-\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size]\) Specifies the Fock space size (default: $FockSize).
-\!\(BeamSplitterOperator[{\[Theta], \[Phi]}, size, order]\) Specifies the mode ordering.
-\!\(BeamSplitterOperator[\[Ellipsis], Method \[Rule] ]\) Options: Method -> \"MatrixExp\" | \"Recurrence\".";
+BeamSplitterOperator::usage =
+"\!\(\*RowBox[{\"BeamSplitterOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"], \",\", StyleBox[\"\[Phi]\", \"TI\"]}], \"}\"}]}], \"]\"}]\) gives the two-mode beam splitter operator with mixing angle \[Theta] and phase \[Phi].\n\!\(\*RowBox[{\"BeamSplitterOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"], \",\", StyleBox[\"\[Phi]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"BeamSplitterOperator\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Theta]\", \"TI\"], \",\", StyleBox[\"\[Phi]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"BeamSplitterOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"Method->\", StyleBox[\"\", \"TI\"]}], \"]\"}]\) option: Method -> \"MatrixExp\" | \"Recurrence\".";
 
 Options[BeamSplitterOperator] = {Method -> "MatrixExp"};
 
@@ -217,10 +203,8 @@ BeamSplitterOperator[{\[Theta]_, \[CurlyPhi]_},size_Integer, order_?orderQ, Opti
 ]
 
 
-QuadratureOperators::usage = 
-"\!\(QuadratureOperators[]\) Returns {X, P} position and momentum quadrature operators.
-\!\(QuadratureOperators[size]\) Specifies the Fock space size (default: $FockSize).
-\!\(QuadratureOperators[size, order]\) Specifies the subsystem order.";
+QuadratureOperators::usage =
+"\!\(\*RowBox[{\"QuadratureOperators\", \"[\", \"]\"}]\) returns {X, P} position and momentum quadrature operators.\n\!\(\*RowBox[{\"QuadratureOperators\", \"[\", RowBox[{StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"QuadratureOperators\", \"[\", RowBox[{StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).";
 
 QuadratureOperators[order_?orderQ] := QuadratureOperators[$FockSize,order]
 

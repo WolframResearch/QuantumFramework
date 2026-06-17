@@ -14,9 +14,8 @@ PackageExport["HusimiQFunction"]
 
 
 (* ::Input::Initialization::Plain:: *)
-WignerRepresentation::usage = 
-"\!\(WignerRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Wigner quasi-probability distribution W(x,p). Returns an InterpolatingFunction over the specified phase space region.
-\!\(WignerRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\)(default), \"GridSize\" \[Rule] 100 (default).";
+WignerRepresentation::usage =
+"\!\(\*RowBox[{\"WignerRepresentation\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"xmin\",\"TI\"], \",\", StyleBox[\"xmax\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"pmin\", \"TI\"], \",\", StyleBox[\"pmax\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the numerical Wigner quasi-probability distribution W(x,p)for the single mode \!\(\*StyleBox[\"state\", \"TI\"]\). Returns an InterpolatingFunction over the specified x and p limits.\n\!\(\*RowBox[{\"WignerRepresentation\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", StyleBox[\"opts\", \"TI\"]}], \"]\"}]\) options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\)(default), \"GridSize\" \[Rule] 100 (default).";
 
 Options[WignerRepresentation]={
 "GaussianScaling"->Sqrt[2],
@@ -118,10 +117,8 @@ SetAttributes[{\[ScriptCapitalK]mn, \[ScriptCapitalK]mnWirt, \[ScriptCapitalK]mn
 
 
 
-WignerFunction::usage = 
-"\!\(WignerFunction[\[Rho], \[Alpha]]\) Computes W(\[Alpha]) using the complex amplitude directly.
-\!\(WignerFunction[\[Rho], {x,p}]\) Computes the Wigner quasi-probability distribution for quantum state \[Rho] using real quadrature variables x and p.
-\!\(WignerFunction[\[Ellipsis], SymbolicForm \[Rule] Automatic]\) 'Wirtinger' treats \[Alpha] and \[Alpha]\[Conjugate] as independent variables, 'LaguerreForm' holds Laguerre polynomials Inactive";
+WignerFunction::usage =
+"\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) gives the Wigner-function W(\[Alpha]) for the state \[Rho].\n\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"x\", \"TI\"], \",\", StyleBox[\"p\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Wigner quasi-probability distribution for quantum state \[Rho] using real quadrature variables x and p.\n\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"SymbolicForm->\", StyleBox[\"form\", \"TI\"]}], \"]\"}]\) \!\(\*StyleBox[\"'Wirtinger'\", \"TI\"]\) treats \[Alpha] and \[Alpha]\[Conjugate] as independent variables, \!\(\*StyleBox[\"'LaguerreForm'\", \"TI\"]\) holds Laguerre polynomials Inactive";
 
 
 WignerFunction::badopt = "Unknown SymbolicForm `1`. Use Automatic, \"Wirtinger\", or \"LaguerreForm\".";
@@ -165,9 +162,8 @@ WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[
   ]
 
 
-HusimiQFunction::usage = 
-"\!\(HusimiQFunction[\[Rho], \[Alpha]]\) Computes Q(\[Alpha]) for the state \[Rho] using the complex amplitude  \[Alpha] directly.
-\!\(HusimiQFunction[\[Rho], {x,p}]\) Computes the Husimi Q function for quantum state \[Rho] using real quadrature variables x and p."
+HusimiQFunction::usage =
+"\!\(\*RowBox[{\"HusimiQFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) computes Q(\[Alpha]) for the state \[Rho] using the complex amplitude \[Alpha].\n\!\(\*RowBox[{\"HusimiQFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"x\", \"TI\"], \",\", StyleBox[\"p\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Husimi Q function for quantum state \[Rho] using real quadrature variables x and p."
 
 HusimiQFunction[\[Rho]_QuantumState, {x_, p_}] := 
   1/2 ComplexExpand[HusimiQFunction[\[Rho], (x + I p)/Sqrt[2]]];
@@ -184,9 +180,8 @@ HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] :=
 
 
 (* ::Input::Initialization::Plain:: *)
-HusimiQRepresentation::usage = 
-"\!\(HusimiQRepresentation[state, {xmin, xmax}, {pmin, pmax}]\) Computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified phase space region.
-\!\(HusimiQRepresentation[\[Ellipsis], opts]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\) (default), \"GridSize\" -> 100 (default).";
+HusimiQRepresentation::usage =
+"\!\(\*RowBox[{\"HusimiQRepresentation\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"xmin\", \"TI\"], \",\", StyleBox[\"xmax\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"pmin\", \"TI\"], \",\", StyleBox[\"pmax\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified x and p limits.\n\!\(\*RowBox[{\"HusimiQRepresentation\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", StyleBox[\"opts\", \"TI\"]}], \"]\"}]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\) (default), \"GridSize\" -> 100 (default).";
 
 Options[HusimiQRepresentation]={
 "GaussianScaling"->Sqrt[2],

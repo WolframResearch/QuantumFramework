@@ -12,13 +12,13 @@ PackageExport["BosonicZassenhausTerms"]
 
 PackageExport["BosonicBCHExact"]
 
-PackageExport["BosonVEV"]
+PackageExport["BosonicVEV"]
 
 PackageExport["BosonicMatrixElement"]
 
 
 BosonicRelations::usage =
-"\!\(BosonicRelations[vars]\) Returns the list of bosonic commutation relations for the operators in vars.";
+"\!\(\*RowBox[{\"BosonicRelations\", \"[\", RowBox[{StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Returns the list of bosonic commutation relations for the operators in vars.";
 
 BosonicRelations[vars_List] :=
 Block[{pairs},
@@ -49,9 +49,7 @@ Block[{
 
 
 BosonicNormalOrder::usage =
-"\!\(BosonicNormalOrder[expr, vars]\) Brings expr into normal order using bosonic commutation relations.
-\!\(BosonicNormalOrder[expr, vars, Method -> m]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".
-\!\(BosonicNormalOrder[expr, vars, \"Scalars\" -> syms]\) Treats syms as commuting scalars during reduction.";
+"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
 
 BosonicNormalOrder::unknownMethod = "Unknown Method: `1`."
 
@@ -89,10 +87,9 @@ Block[{rels, scalars, alg},
 
 
 BosonicBCHTerms::usage =
-"\!\(BosonicBCHTerms[ops, n]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]), reduced using bosonic commutation relations.
-\!\(BosonicBCHTerms[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
+"\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"]\"}]\) Computes the nth-order term of the BCH series log(\!\(\*SuperscriptBox[\(e\), \(op1\)]\) \!\(\*SuperscriptBox[\(e\), \(op2\)]\)\[Ellipsis]), reduced using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicBCHTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"ncVars\", \"TI\"]}], \"]\"}]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
 
-BosonicBCHTerms[ops_List, n_Integer] := BosonicBCH[ops, n, ExtractNCVars[ops]]
+BosonicBCHTerms[ops_List, n_Integer] := BosonicBCHTerms[ops, n, ExtractNCVars[ops]]
 
 BosonicBCHTerms[ops_List, n_Integer, ncVars_List] :=
 Block[{bchTerm},
@@ -102,10 +99,9 @@ Block[{bchTerm},
 
 
 BosonicZassenhausTerms::usage =
-"\!\(BosonicZassenhausTerms[ops, n]\) Computes the nth term of the Zassenhaus formula and reduces the expression using bosonic commutation relations.
-\!\(BosonicZassenhausTerms[ops, n, ncVars]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
+"\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"]\"}]\) Computes the nth term of the Zassenhaus formula and reduces the expression using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicZassenhausTerms\", \"[\", RowBox[{StyleBox[\"ops\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"], \",\", StyleBox[\"ncVars\", \"TI\"]}], \"]\"}]\) Uses the explicitly supplied list of non-commutative variables ncVars.";
 
-BosonicZassenhausTerms[ops_List, n_Integer] := BosonicZassenhaus[ops, n, ExtractNCVars[ops]]
+BosonicZassenhausTerms[ops_List, n_Integer] := BosonicZassenhausTerms[ops, n, ExtractNCVars[ops]]
 
 BosonicZassenhausTerms[ops_List, n_Integer, ncVars_List] :=
 Block[{zassTerm},
@@ -117,8 +113,8 @@ Block[{zassTerm},
 $nonuls  = {0. -> 0, 0. I -> 0, Complex[0.,0.] -> 0, Complex[x_, 0.]->x,
           Complex[0.,y_] -> I y};
           
-BosonicBCHExact::usage = "\!\(BosonicBCHExact[expr, vars]\) Exactly evaluates a product of exponentials or an exponential conjugation when the algebra closes, using BCH and adjoint action identities.
-\!\(BosonicBCHExact[expr, vars, \"Scalars\" -> syms]\) Treats syms as commuting scalars.";
+BosonicBCHExact::usage =
+"\!\(\*RowBox[{\"BosonicBCHExact\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Exactly evaluates a product of exponentials or an exponential conjugation when the algebra closes, using BCH and adjoint action identities.\n\!\(\*RowBox[{\"BosonicBCHExact\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars.";
 
 Options[BosonicBCHExact] = {"Scalars" -> {}};
 
@@ -149,11 +145,11 @@ BosonicBCHExact[Exp[b1_] ** Exp[b2_], vars_List, opts : OptionsPattern[
     ]
 
 BosonicBCHExact[Exp[b1_] ** ops__ ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    b3 === -b1 && Length[{ops}] > 1 :=
+    Simplify[b3 + b1] === 0 && Length[{ops}] > 1 :=
     NonCommutativeMultiply @@ (BosonicBCHExact[Exp[b1] ** # ** Exp[b3], vars, opts] & /@ {ops})
 
 BosonicBCHExact[Exp[b1_] ** op_ ** Exp[b3_], vars_List, opts : OptionsPattern[
-    ]] /; b3 === -b1 :=
+    ]] /; Simplify[b3 + b1] === 0 :=
     Block[{scalars = OptionValue["Scalars"], cmt, cmt2, lam},
         cmt = Simplify @ BosonicNormalOrder[Commutator[b1, op], vars,
              "Scalars" -> scalars];
@@ -201,7 +197,7 @@ BosonicBCHExact[op_ ** Exp[b3_], vars_List, opts : OptionsPattern[]] :=
     ]
     
 BosonicBCHExact[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    b3 === -b1 :=
+    Simplify[b3 + b1] === 0 :=
 	Block[{scalars = OptionValue["Scalars"], newb2},
     newb2 = BosonicBCHExact[Exp[b1] ** b2 ** Exp[b3], vars, opts];
     If[FreeQ[newb2, BosonicBCHExact],
@@ -211,19 +207,17 @@ BosonicBCHExact[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPatte
 ]
 
 
-BosonVEV::usage =
-"\!\(BosonVEV[expr, vars]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] by normal-ordering expr and extracting the scalar (c-number) part.
-\!\(BosonVEV[expr]\) Auto-detects non-commutative variables from expr.
-\!\(BosonVEV[expr, vars, Method -> m]\) Passes method options to BosonicNormalOrder.";
+BosonicVEV::usage =
+"\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] by normal-ordering expr and extracting the scalar (c-number) part.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"]}], \"]\"}]\) Auto-detects non-commutative variables from expr.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Passes method options to BosonicNormalOrder.";
 
-Options[BosonVEV] = Options[BosonicNormalOrder];
+Options[BosonicVEV] = Options[BosonicNormalOrder];
 
-BosonVEV[expr_, opts : OptionsPattern[]] :=
+BosonicVEV[expr_, opts : OptionsPattern[]] :=
     Block[{vars = ExtractNCVars[{expr}]},
         BosonVEV[expr, vars, opts]
     ]
 
-BosonVEV[expr_, vars_List, opts : OptionsPattern[]] :=
+BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] :=
     Block[{normalOrdered, terms},
         normalOrdered = BosonicNormalOrder[expr, vars, opts];
         terms = If[Head[normalOrdered] === Plus, List @@ normalOrdered, {normalOrdered}];
@@ -232,8 +226,7 @@ BosonVEV[expr_, vars_List, opts : OptionsPattern[]] :=
 
 
 BosonicMatrixElement::usage =
-"\!\(BosonicMatrixElement[{m, n}, DisplacementOperator[\[Alpha]]]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.
-\!\(BosonicMatrixElement[{m, n}, SqueezeOperator[\[Xi]]]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).";
 
 SetAttributes[BosonicMatrixElement, HoldRest]
 

@@ -4,6 +4,8 @@ Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
 PackageImport["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`QuantumFramework`PackageScope`"]
+
 PackageExport["$FockSize"]
 
 PackageExport["SetFockSpaceSize"]
@@ -22,17 +24,19 @@ PackageExport["G2Coherence"]
 
 PackageExport["G1Correlation"]
 
+PackageExport["CovarianceMatrix"]
+
 
 $FockSize::usage = "Global variable holding the current Fock space truncation size (default 16).";
 
 
-SetFockSpaceSize::usage = "\!\(SetFockSpaceSize[size]\) Sets the global Fock space truncation size $FockSize. Default is 16.";
+SetFockSpaceSize::usage = "\!\(\*RowBox[{\"SetFockSpaceSize\", \"[\", RowBox[{StyleBox[\"size\", \"TI\"]}], \"]\"}]\) sets $FockSize to \!\(\*StyleBox[\"size\", \"TI\"]\). Default is 16.";
 
-SetFockSpaceSize[size:_Integer?Positive:16]:=$FockSize = size;
+SetFockSpaceSize[size:_Integer?Positive:16]:= $FockSize = size;
 
 
-OperatorVariance::usage = 
-"\!\(OperatorVariance[state, op]\) Computes the variance \[LeftAngleBracket]O^2\[RightAngleBracket] - \[LeftAngleBracket]O\[RightAngleBracket]^2 of operator op for the given state.";
+OperatorVariance::usage =
+"\!\(\*RowBox[{\"OperatorVariance\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", StyleBox[\"op\", \"TI\"]}], \"]\"}]\) computes \[LeftAngleBracket]\!\(\*SuperscriptBox[\"O\", \"2\"]\)\[RightAngleBracket] - \!\(\*SuperscriptBox[\"\[LeftAngleBracket]O\[RightAngleBracket]\", \"2\"]\) of \!\(\*StyleBox[\"op\", \"TI\"]\) in \!\(\*StyleBox[\"state\", \"TI\"]\).";
 
 OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
@@ -44,10 +48,7 @@ FormalSymbolQ[_]:=False;
 
 
 FieldVariables::usage =
-"\!\(FieldVariables[]\) Returns the default field variables {\[FormalA], \!\(\*SuperscriptBox[\(\[FormalA]\), \(\[Dagger]\)]\)}.
-\!\(FieldVariables[var]\) Returns {var, \!\(\*SuperscriptBox[\(var\), \(\[Dagger]\)]\)} for a formal symbol var.
-\!\(FieldVariables[labels]\) Returns field variables indexed by labels, using \[FormalA] as the base symbol.
-\!\(FieldVariables[var, labels]\) Returns {\!\(\*SubscriptBox[\(var\), \(L\)]\), \!\(\*SubsuperscriptBox[\(var\), \(L\), \(\[Dagger]\)]\)} for each label L in labels.";
+"\!\(\*RowBox[{\"FieldVariables\", \"[\", \"]\"}]\) returns the default field variables {\[FormalA], \!\(\*SuperscriptBox[\"\[FormalA]\", \"\[Dagger]\"])\)}.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"]}], \"]\"}]\) returns {var, \!\(\*SuperscriptBox[StyleBox[\"var\", \"TI\"], \"\[Dagger]\"]\)} for a formal symbol \!\(\*StyleBox[\"var\", \"TI\"]\).\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns field variables indexed by \!\(\*StyleBox[\"labels\", \"TI\"]\), using \[FormalA] as base.\n\!\(\*RowBox[{\"FieldVariables\", \"[\", RowBox[{StyleBox[\"var\", \"TI\"], \",\", StyleBox[\"labels\", \"TI\"]}], \"]\"}]\) returns {\!\(\*SubscriptBox[StyleBox[\"var\", \"TI\"], \"L\"]\), \!\(\*SubsuperscriptBox[StyleBox[\"var\", \"TI\"], \"L\", \"\[Dagger]\"]\)} for each label L in \!\(\*StyleBox[\"labels\", \"TI\"]\).";
 
 FieldVariables::notformal =
 "The variable `1` is not a strict Mathematica Formal symbol. Please use \\[Formal`1`] instead."
@@ -88,8 +89,8 @@ OrderVariables[vars_List] := Block[{annihilators, creators},
 ]
 
 
-G2Coherence::usage = 
-"\!\(G2Coherence[state]\) Computes the second-order coherence function g^2(0) for the given single mode state.";
+G2Coherence::usage =
+"\!\(\*RowBox[{\"G2Coherence\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"]}], \"]\"}]\) computes the second-order coherence function \!\(\*SuperscriptBox[\"g\", \"2\"]\)(0) for the given single-mode \!\(\*StyleBox[\"state\", \"TI\"]\).";
 
 G2Coherence[\[Psi]_QuantumState] := Block[{aOp, nOp, a2Op, numerator, denominator},
 
@@ -112,8 +113,8 @@ G2Coherence[\[Psi]_QuantumState] := Block[{aOp, nOp, a2Op, numerator, denominato
 ]
 
 
-G1Correlation::usage = 
-"\!\(G1Correlation[state,{{r1,t1},{r2,t2}}]\) Computes the first-order correlation function G^1(x1,x2) for the given single mode state for space-time coordinates r1,t1,r2,t2";
+G1Correlation::usage =
+"\!\(\*RowBox[{\"G1Correlation\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", \"{{\", StyleBox[\"r1\", \"TI\"], \",\", StyleBox[\"t1\", \"TI\"], \"},{\", StyleBox[\"r2\", \"TI\"], \",\", StyleBox[\"t2\", \"TI\"], \"}}\"}], \"]\"}]\) computes the first-order correlation function \!\(\*SuperscriptBox[\"G\", \"1\"]\)(x1,x2) for the given single-mode state at space-time coordinates \!\(\*StyleBox[\"r1\", \"TI\"]\), \!\(\*StyleBox[\"t1\", \"TI\"]\) and \!\(\*StyleBox[\"r2\", \"TI\"]\), \!\(\*StyleBox[\"t2\", \"TI\"]\).";
 
 
 G1Correlation[state_QuantumState, {{r1_, t1_}, {r2_, t2_}}] :=Block[{aOp, eMinus1, ePlus2},
@@ -131,6 +132,37 @@ G1Correlation[state_QuantumState, {{r1_, t1_}, {r2_, t2_}}] :=Block[{aOp, eMinus
         Tr[(eMinus1 @ ePlus2)@state["Operator"]]
     ]
 ]
+
+
+Options[CovarianceMatrix] = {"QuadratureScaling" -> 1/Sqrt[2]};
+
+CovarianceMatrix::usage =
+"\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"]}], \"]\"}]\) computes the 2\[Times]2 covariance matrix for the single-mode \!\(\*StyleBox[\"state\", \"TI\"]\) in the Serafini convention \!\(\*SubscriptBox[\(\[Sigma]\), \(vac\)]\) = 1/2 I.\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) computes the 2n\[Times]2n multi-mode covariance matrix for the n modes specified by \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"QuadratureScaling\\\"->\", StyleBox[\"s\", \"TI\"]}], \"]\"}]\) uses \!\(\*OverscriptBox[\"X\", \"^\"]\) = s(a+\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)), P = \[ImaginaryI] s(\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)-a). Default s = 1/\!\(\*SqrtBox[\"2\"]\) (Serafini). Use s = 1/2 for \[HBar]=1/2 or s = 1 for Simon convention.";
+
+CovarianceMatrix[state_QuantumState, opts : OptionsPattern[]] :=
+    CovarianceMatrix[state, {1}, opts]
+
+CovarianceMatrix[state_QuantumState, order_?orderQ, OptionsPattern[]] :=
+    Block[{s = OptionValue["QuadratureScaling"], size, R, n, psi, Rpsi, rhoOp, Qops, means, upper},
+        size = First[state["Dimensions"]];
+        R    = Catenate[(2s * QuadratureOperators[size, {#}]) & /@ order];
+        n    = Length[R];
+        If[state["PureStateQ"],
+            psi   = state["StateVector"];
+            Rpsi  = (# @ state)["StateVector"] & /@ R;
+            means = Re[Conjugate[Rpsi] . psi];
+            Re[Conjugate[Rpsi] . Transpose[Rpsi]] - Outer[Times, means, means],
+            rhoOp = state["Operator"];
+            Qops  = # @ rhoOp & /@ R;
+            means = Re[Tr /@ Qops];
+            upper = Table[
+                If[i <= j,
+                    Re[Tr[R[[j]] @ Qops[[i]]]] - means[[i]] means[[j]],
+                    0],
+                {i, n}, {j, n}];
+            upper + Transpose[upper] - DiagonalMatrix[Diagonal[upper]]
+        ]
+    ]
 
 
 SetFockSpaceSize[];
