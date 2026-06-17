@@ -1,0 +1,18 @@
+{
+  "name": "qf-skill",
+  "owner": {
+    "name": "Mads Bahrami",
+    "email": "40601981+mbahram@users.noreply.github.com"
+  },
+  "metadata": {
+    "description": "A single-plugin marketplace hosting the `qf` skill for the Wolfram QuantumFramework paclet.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "qf",
+      "source": "./",
+      "description": "Deep working skill for the Wolfram QuantumFramework paclet (pitfalls, idioms, function index, architecture)."
+    }
+  ]
+}
