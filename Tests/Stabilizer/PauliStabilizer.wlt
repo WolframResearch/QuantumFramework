@@ -2360,6 +2360,49 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 10b -- Multi-gate bracket forms ps[{specs}] (list) and ps[spec, ...]     *)
+(* (variadic). Both route to the same compiled engine as "ApplyCircuit"; cross-  *)
+(* check against the per-gate dispatch fold for random Clifford circuits.        *)
+(* ============================================================================ *)
+
+Do[
+    VerificationTest[
+        Module[{specs = Table[randCircSpec[n], {200}], viaList, folded},
+            viaList = PauliStabilizer[n][specs];
+            folded  = Fold[#1[#2] &, PauliStabilizer[n], specs];
+            viaList["Tableau"] === folded["Tableau"] && viaList["Signs"] === folded["Signs"]
+        ],
+        True,
+        TestID -> "Tier10b-ListForm-Matches-Fold-n" <> ToString[n]
+    ],
+    {n, {3, 8, 63, 130}}
+]
+
+(* variadic sugar (Sequence @@ specs) equals the list form *)
+VerificationTest[
+    With[{specs = Table[randCircSpec[8], {40}]},
+        PauliStabilizer[8][Sequence @@ specs]["Tableau"] === PauliStabilizer[8][specs]["Tableau"]
+    ],
+    True,
+    TestID -> "Tier10b-Variadic-Matches-List"
+]
+
+(* bare gate names default their targets and match the explicit-target list *)
+VerificationTest[
+    PauliStabilizer[2][{"H", "CNOT"}]["Tableau"] === PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["Tableau"],
+    True,
+    TestID -> "Tier10b-BareNames-DefaultTargets"
+]
+
+(* single-gate list ps[{"X"}] applies the gate (distinct from the string property) *)
+VerificationTest[
+    PauliStabilizer[2][{"X"}]["Tableau"] === PauliStabilizer[2]["X", 1]["Tableau"],
+    True,
+    TestID -> "Tier10b-SingleGateList"
+]
+
+
+(* ============================================================================ *)
 (* TIER 11 -- Packed AG measurement (Stabilizer/Measurement.m).                  *)
 (*                                                                              *)
 (* The packed Z-basis measurement is checked against an INDEPENDENT projective   *)

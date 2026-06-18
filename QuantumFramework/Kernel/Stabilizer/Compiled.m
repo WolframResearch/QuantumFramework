@@ -1,6 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageScope[$stabilizerGateCodes]
+PackageScope[$stabilizerCliffordNames]
+PackageScope[$stabilizerTwoQubitNames]
 PackageScope[$stabilizerCompileTarget]
 PackageScope[$bitsPerWord]
 PackageScope[compiledCliffordFold]
@@ -40,6 +42,20 @@ $stabilizerGateCodes = <|
     "H" -> 0, "S" -> 1, SuperDagger["S"] -> 2, "CNOT" -> 3,
     "SWAP" -> 4, "X" -> 5, "Y" -> 6, "Z" -> 7
 |>
+
+(* Gate-name catalogs for the multi-gate dispatch forms ps[{specs..}] / ps[spec, ..]    *)
+(* (Stabilizer/PauliStabilizer.m). These name what the top-level dispatch RECOGNIZES as  *)
+(* a gate token; they are deliberately distinct from the two sibling gate sets:          *)
+(*   - $stabilizerGateCodes (above): the gates the compiled C kernel encodes. "V"/"T"    *)
+(*     are absent ("V" decomposes to -Y/X strings in GateUpdates.m; "T" is non-Clifford  *)
+(*     and routes to a StabilizerFrame).                                                  *)
+(*   - sfGate1 / sfGate2 (Stabilizer/StabilizerFrame.m): the gates whose Pauli-          *)
+(*     conjugation tables the frame uses, keyed by normalized names ("Sdg", not          *)
+(*     SuperDagger["S"]).                                                                  *)
+(* A new gate must be added to whichever of the three its dispatch / engine / frame path *)
+(* actually supports; they are not interchangeable.                                       *)
+$stabilizerTwoQubitNames = {"CNOT", "CX", "CZ", "SWAP"};
+$stabilizerCliffordNames = Join[{"H", "S", "X", "Y", "Z", "V", "T"}, $stabilizerTwoQubitNames];
 
 $bitsPerWord = 62
 $packPowers := $packPowers = Developer`ToPackedArray[2^Range[0, $bitsPerWord - 1]]

@@ -6,6 +6,11 @@ PackageScope[PauliStabilizerApply]
 PackageScope[PauliStabilizerQ]
 PackageScope[ConcretePauliStabilizerQ]
 PackageScope[PauliTableauQ]
+PackageScope[stabilizerGateSpecQ]
+PackageScope[stabilizerGateSpecListQ]
+PackageScope[stabilizerGateSpecSeqQ]
+PackageScope[stabilizerDefaultTarget]
+PackageScope[stabilizerNormalizeSpec]
 
 
 
@@ -14,6 +19,8 @@ PackageScope[PauliTableauQ]
 (* ============================================================================ *)
 
 PauliStabilizer::nonclifford = "Gate `1` is not a Clifford operation; PauliStabilizer cannot update the tableau. Use Method -> \"TensorNetwork\" or \"Schrodinger\" for non-Clifford circuits."
+
+PauliStabilizer::badgate = "`1` is not a recognized stabilizer gate name."
 
 
 
@@ -113,6 +120,52 @@ ps_PauliStabilizer["Measure" | "M", qudits___Integer] := ps["M", {qudits}]
 ps_PauliStabilizer[qudits__Integer] := ps["M", {qudits}]
 ps_PauliStabilizer[qudits : {___Integer}] := ps["M", qudits]
 ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
+
+
+(* ============================================================================ *)
+(* Multi-gate application                                                       *)
+(*                                                                              *)
+(* ps[{spec, ...}] applies a whole circuit, routing to the compiled fast engine *)
+(* ps["ApplyCircuit", ...]; ps[spec, spec, ...] is a braceless variadic sugar    *)
+(* that forwards to the list form. A "spec" is an arrow rule (gate -> order), a  *)
+(* bare Clifford gate name that takes a default target (1-qubit gates -> qubit 1,*)
+(* two-qubit gates -> {1, 2}), or a gate call-form ("P"[theta], SuperDagger[..]).*)
+(*                                                                              *)
+(* These never shadow the existing forms: the list form is structurally distinct *)
+(* from the single-string property accessor (ps["X"]) and from the integer-list  *)
+(* measurement (ps[{1, 2}], which is the more specific {___Integer} rule above), *)
+(* and the variadic form's Length >= 2 + gate-membership guard rejects single    *)
+(* properties, ps[gate, target] single-gate calls, and measurement.              *)
+(* ============================================================================ *)
+
+stabilizerGateSpecQ[(lhs_ -> _)]                  := stabilizerGateSpecQ[lhs]
+stabilizerGateSpecQ[g_String]                     := MemberQ[$stabilizerCliffordNames, g]
+stabilizerGateSpecQ["P"[_]]                       := True
+stabilizerGateSpecQ[SuperDagger["S" | "V" | "T"]] := True
+stabilizerGateSpecQ[_]                            := False
+
+stabilizerGateSpecListQ[specs_List] := Length[specs] >= 1 && AllTrue[specs, stabilizerGateSpecQ]
+stabilizerGateSpecSeqQ[specs_List]  := Length[specs] >= 2 && AllTrue[specs, stabilizerGateSpecQ]
+
+(* Default target for a bare gate token: two-qubit gates span {1, 2}, all other *)
+(* (single-qubit) gates act on qubit 1.                                          *)
+stabilizerDefaultTarget[g_String] := If[MemberQ[$stabilizerTwoQubitNames, g], {1, 2}, 1]
+stabilizerDefaultTarget["P"[_]] := 1
+stabilizerDefaultTarget[SuperDagger["S" | "V" | "T"]] := 1
+stabilizerDefaultTarget[other_] := (Message[PauliStabilizer::badgate, other]; $Failed)
+
+(* Normalize a spec to the `gate -> order` shape the engine already accepts.      *)
+(* Arrow / legacy {op, q} / controlled "C"[...] specs pass through unchanged so   *)
+(* the compiled encoder (Stabilizer/Compiled.m) sees only shapes it handles.      *)
+stabilizerNormalizeSpec[g_String]        := g -> stabilizerDefaultTarget[g]
+stabilizerNormalizeSpec["P"[phase_]]     := "P"[phase] -> 1
+stabilizerNormalizeSpec[SuperDagger[g_]] := SuperDagger[g] -> 1
+stabilizerNormalizeSpec[other_]          := other
+
+ps_PauliStabilizer[specs_List] /; stabilizerGateSpecListQ[specs] :=
+    ps["ApplyCircuit", stabilizerNormalizeSpec /@ specs]
+
+ps_PauliStabilizer[specs__] /; stabilizerGateSpecSeqQ[{specs}] := ps[{specs}]
 
 
 (* ============================================================================ *)

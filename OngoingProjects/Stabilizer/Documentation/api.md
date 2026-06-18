@@ -265,6 +265,31 @@ ps[gate -> q]      (* same as ps[gate, q] *)
 ps[gate -> {c, t}] (* same as ps[gate, c, t] for two-qubit gates *)
 ```
 
+### Multi-gate application: `ps[{specs}]` and `ps[spec, ...]`
+
+A whole circuit can be applied in one bracket. The **list form** is the primary syntax and routes
+to the compiled bulk engine (`ps["ApplyCircuit", ...]`, [Compiled.m](../../../QuantumFramework/Kernel/Stabilizer/Compiled.m));
+the **braceless variadic** form is sugar that forwards to it.
+
+```wolfram
+ps[{"H" -> 1, "CNOT" -> {1, 2}}]   (* explicit targets *)
+ps[{"H", "CNOT"}]                  (* bare names: default targets, H on 1, CNOT on {1,2} *)
+ps[{"X"}]                          (* single-gate list = ps["X", 1] *)
+ps["H", "CNOT"]                    (* variadic sugar, forwards to ps[{"H", "CNOT"}] *)
+ps["H" -> 1, "CNOT" -> {1, 2}]     (* variadic, explicit targets *)
+```
+
+A "spec" is an arrow `gate -> order`, a bare Clifford gate name (`"H"`, `"S"`, `"X"`, `"Y"`, `"Z"`,
+`"V"`, `"T"`, `"CNOT"`, `"CX"`, `"CZ"`, `"SWAP"`), or a call-form `"P"[θ]` / `SuperDagger[...]`.
+Bare names take a default target: single-qubit gates act on qubit 1, two-qubit gates on `{1, 2}`.
+
+These forms add no ambiguity: the **list** `ps[{"X"}]` is distinct from the **string** property
+accessor `ps["X"]` (tableau `X` block); the integer list `ps[{1, 2}]` is still a measurement; and the
+variadic form requires two-or-more recognized gate specs, so `ps["X"]`, `ps["H", 1]`, and `ps[1, 2]`
+keep their existing meanings. The same two forms work on a `StabilizerFrame` (folded per gate, so the
+relating Paulis stay phase-coherent). `ps["ApplyCircuit", ...]` is retained as the explicit
+fast-engine method and is unchanged. Source: [PauliStabilizer.m](../../../QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m) (`stabilizerGateSpecListQ` / `stabilizerGateSpecSeqQ` / `stabilizerNormalizeSpec`).
+
 ## Methods (Measurement)
 
 ### Implicit measurement shortcuts

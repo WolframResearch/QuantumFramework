@@ -582,6 +582,111 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER 3b -- Multi-gate application: ps[{spec, ...}] list form + ps[spec, ...]  *)
+(* variadic sugar. The list form routes to the compiled engine (canonical out);  *)
+(* the chained single-gate form is packed; so compare by Sort@Stabilizers or by  *)
+(* explicit ===-of-Stabilizers, NOT raw === of the objects.                       *)
+(* ============================================================================ *)
+
+(* list form, bare names -> default targets (H on 1, CNOT on {1,2}) *)
+VerificationTest[
+    Sort @ PauliStabilizer[2][{"H", "CNOT"}]["Stabilizers"],
+    Sort @ {"XX", "ZZ"},
+    TestID -> "Audit-Multi-List-Bare"
+]
+
+(* list form, arrow specs *)
+VerificationTest[
+    Sort @ PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["Stabilizers"],
+    Sort @ {"XX", "ZZ"},
+    TestID -> "Audit-Multi-List-Arrow"
+]
+
+(* single-gate list ps[{"X"}] equals ps["X", 1]; the LIST is distinct from the    *)
+(* single-string property accessor ps["X"], so no collision.                      *)
+VerificationTest[
+    PauliStabilizer[2][{"X"}]["Stabilizers"] === PauliStabilizer[2]["X", 1]["Stabilizers"],
+    True,
+    TestID -> "Audit-Multi-List-SingleGate"
+]
+
+(* mixed bare + arrow specs in one list *)
+VerificationTest[
+    Sort @ PauliStabilizer[2][{"S", "H", "CNOT" -> {1, 2}}]["Stabilizers"],
+    Sort @ {"XX", "ZZ"},
+    TestID -> "Audit-Multi-List-Mixed"
+]
+
+(* variadic sugar (bare) forwards to the list form *)
+VerificationTest[
+    PauliStabilizer[2]["H", "CNOT"]["Stabilizers"] === PauliStabilizer[2][{"H", "CNOT"}]["Stabilizers"],
+    True,
+    TestID -> "Audit-Multi-Variadic-Bare"
+]
+
+(* variadic sugar (arrow) *)
+VerificationTest[
+    PauliStabilizer[2]["H" -> 1, "CNOT" -> {1, 2}]["Stabilizers"] === PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["Stabilizers"],
+    True,
+    TestID -> "Audit-Multi-Variadic-Arrow"
+]
+
+(* the list form routes to the same compiled engine as ApplyCircuit *)
+VerificationTest[
+    PauliStabilizer[2][{"H", "CNOT"}]["Stabilizers"] === PauliStabilizer[2]["ApplyCircuit", {"H" -> 1, "CNOT" -> {1, 2}}]["Stabilizers"],
+    True,
+    TestID -> "Audit-Multi-List-EqualsEngine"
+]
+
+(* REGRESSION: the integer-list measurement is unchanged (NOT captured as gates) *)
+VerificationTest[
+    AssociationQ @ PauliStabilizer[2][{1, 2}],
+    True,
+    TestID -> "Audit-Multi-IntList-StillMeasurement"
+]
+
+(* REGRESSION: the single-string property accessor is unchanged *)
+VerificationTest[
+    MatchQ[PauliStabilizer[2]["X"], {_List, _List}],
+    True,
+    TestID -> "Audit-Multi-StringX-StillProperty"
+]
+
+(* REGRESSION: a single bare gate string stays inert (needs >= 2 specs) *)
+VerificationTest[
+    MatchQ[PauliStabilizer[2]["H"], _PauliStabilizer["H"]],
+    True,
+    TestID -> "Audit-Multi-BareSingle-Inert"
+]
+
+(* REGRESSION: two non-gate strings stay inert (guard rejects) *)
+VerificationTest[
+    MatchQ[PauliStabilizer[2]["Wobble", "Splork"], _PauliStabilizer["Wobble", "Splork"]],
+    True,
+    TestID -> "Audit-Multi-NonGate-Inert"
+]
+
+(* Frame parity: list form on a frame folds coherently (relating Paulis tracked). *)
+VerificationTest[
+    With[{sf = PauliStabilizer[2]["T", 1]},
+        Chop[Norm[Normal[sf[{"H", "S" -> 2}]["StateVector"]] - Normal[sf["H", 1]["S", 2]["StateVector"]]]]
+    ],
+    0,
+    TestID -> "Audit-Multi-Frame-List-Coherent"
+]
+
+(* Frame parity: variadic form on a frame (exercises the :197 args-tighten so a   *)
+(* trailing gate name is no longer mis-read as a qubit index).                     *)
+VerificationTest[
+    With[{sf = PauliStabilizer[2]["T", 1]},
+        Chop[Norm[Normal[sf["H", "S" -> 2]["StateVector"]] - Normal[sf["H", 1]["S", 2]["StateVector"]]]]
+    ],
+    0,
+    TestID -> "Audit-Multi-Frame-Variadic-Coherent"
+]
+
+
+(* ============================================================================ *)
 (* TIER 4 -- Non-Clifford gates: P[\[Theta]] / T / T\[Dagger] return a frame.   *)
 (* ============================================================================ *)
 

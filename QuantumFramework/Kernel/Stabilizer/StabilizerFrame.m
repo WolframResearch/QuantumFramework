@@ -194,7 +194,11 @@ f_StabilizerFrame["State"] := QuantumState @ f["StateVector"]
 (* Gate updates: distribute over components                                     *)
 (* ============================================================================ *)
 
-f_StabilizerFrame[gate_String, args___] := With[{assoc = First[f]},
+(* args is restricted to integer targets so a trailing GATE name (e.g. f["H","S"]) *)
+(* is NOT captured here -- it falls through to the multi-gate variadic rule below.  *)
+(* Without this restriction sfConjugatePauli would receive a string as a qubit      *)
+(* index and corrupt the relating Paulis.                                           *)
+f_StabilizerFrame[gate_String, args : ___Integer] := With[{assoc = First[f]},
     If[ KeyExistsQ[assoc, "Paulis"],
         StabilizerFrame[<|
             "Components" -> ({#1, #2[gate, args]} & @@@ assoc["Components"]),
@@ -205,7 +209,7 @@ f_StabilizerFrame[gate_String, args___] := With[{assoc = First[f]},
 ]
 
 (* SuperDagger gates (S^\[Dagger], V^\[Dagger], T^\[Dagger]) *)
-f_StabilizerFrame[SuperDagger[gate_String], args___] := With[{assoc = First[f]},
+f_StabilizerFrame[SuperDagger[gate_String], args : ___Integer] := With[{assoc = First[f]},
     If[ KeyExistsQ[assoc, "Paulis"],
         StabilizerFrame[<|
             "Components" -> ({#1, #2[SuperDagger[gate], args]} & @@@ assoc["Components"]),
@@ -247,6 +251,19 @@ f_StabilizerFrame[SuperDagger["T"], q_Integer] := f["P"[- Pi / 2], q]
 
 (* op -> order rewrite *)
 f_StabilizerFrame[op_ -> order_] := f[op, Sequence @@ Flatten[{order}]]
+
+
+(* ============================================================================ *)
+(* Multi-gate application (mirrors PauliStabilizer's list / variadic forms).    *)
+(* A frame has no compiled engine, so fold per gate through the single-gate      *)
+(* handlers above; each step updates the relating Paulis coherently. Normalizing *)
+(* bare names routes them through the op -> order rewrite into f[gate, target].  *)
+(* ============================================================================ *)
+
+f_StabilizerFrame[specs_List] /; stabilizerGateSpecListQ[specs] :=
+    Fold[#1[stabilizerNormalizeSpec[#2]] &, f, specs]
+
+f_StabilizerFrame[specs__] /; stabilizerGateSpecSeqQ[{specs}] := f[{specs}]
 
 
 (* ============================================================================ *)

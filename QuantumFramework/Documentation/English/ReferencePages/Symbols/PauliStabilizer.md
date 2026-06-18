@@ -25,10 +25,6 @@ RelatedGuides: [WolframQuantumComputationFramework]
 
 <code>[PauliStabilizer]()[*qs*]</code> converts a [QuantumState](), [QuantumOperator](), or [QuantumCircuitOperator]() to a stabilizer state (Clifford only).
 
-<code>*ps*[*method*,…]</code> applies a dispatched gate, measurement, or property accessor.
-
-<code>*ps*[$ps_{2}$]</code> composes two stabilizer states (apply $\mathit{ps}_{2}$ first, then *ps*).
-
 ## Details & Options
 
 - A [PauliStabilizer]() encodes an *n*-qubit pure stabilizer state by a tableau of Pauli generators plus signs, requiring $O(n^{2})$ memory.
@@ -44,6 +40,8 @@ RelatedGuides: [WolframQuantumComputationFramework]
 - <code>[PauliStabilizer]()["Random", *n*]</code> uses the Bravyi-Maslov / Koenig-Smolin (arXiv:1406.2170) Mallows sampler for uniform sampling over the $n$-qubit Clifford group modulo Paulis.
 
 - A stabilizer state *ps* supports two access patterns: properties via <code>*ps*["Property"]</code> (e.g. `"Stabilizers"`, `"Tableau"`, `"State"`) and methods via <code>*ps*["Method",…]</code> (e.g. Clifford gates, measurement, `"InnerProduct"`). The full list of accepted strings is available via <code>*ps*["Properties"]</code>.
+
+- As an operator, a constructed *ps* is applied by string dispatch: <code>*ps*[*method*, …]</code> applies a Clifford gate, measurement, or property accessor, and <code>*ps*[$ps_{2}$]</code> composes two stabilizer states (apply $\mathit{ps}_{2}$ first, then *ps*).
 
 - Clifford gate updates run in $O(n^{2})$ time using the Aaronson-Gottesman tableau (arXiv:quant-ph/0406196). Single-qubit gates: `"H"`, `"S"`, $"S"^{\dagger }$, `"X"`, `"Y"`, `"Z"`, `"V"`. Two-qubit gates: `"CNOT"` (or `"CX"`), `"CZ"`, `"SWAP"`.
 
@@ -101,7 +99,7 @@ PauliStabilizer["5QubitCode"]
 Sample a random Clifford state via the Mallows sampler:
 
 ```wl
-Module[{}, SeedRandom[42]; PauliStabilizer["Random", 3]]
+BlockRandom[SeedRandom[42]; PauliStabilizer["Random", 3]]
 ```
 
 ---
@@ -223,7 +221,7 @@ Last[PauliStabilizer["5QubitCode1"]["Stabilizers"]]
 Sample a random 4-qubit Clifford state via the Mallows sampler:
 
 ```wl
-Module[{}, SeedRandom[42]; PauliStabilizer["Random", 4]]
+BlockRandom[SeedRandom[42]; PauliStabilizer["Random", 4]]
 ```
 
 ---
@@ -231,7 +229,7 @@ Module[{}, SeedRandom[42]; PauliStabilizer["Random", 4]]
 Read off the random stabilizers:
 
 ```wl
-Module[{}, SeedRandom[42]; PauliStabilizer["Random", 4]["Stabilizers"]]
+BlockRandom[SeedRandom[42]; PauliStabilizer["Random", 4]["Stabilizers"]]
 ```
 
 ---
@@ -321,6 +319,32 @@ SWAP via column permutation:
 ```wl
 PauliStabilizer[3]["X", 1]["SWAP", 1, 3]["Stabilizers"]
 ```
+
+### Applying a whole circuit
+
+Apply several gates in a single bracket by passing a list of specs. Bare gate names take default targets (single-qubit gates act on qubit 1, two-qubit gates on the first two qubits):
+
+```wl
+PauliStabilizer[2][{"H", "CNOT"}]["Stabilizers"]
+```
+
+---
+
+Specs may carry explicit targets, and bare names may be mixed with arrow rules:
+
+```wl
+PauliStabilizer[3][{"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}]["Stabilizers"]
+```
+
+---
+
+The braceless form is equivalent sugar for the list form:
+
+```wl
+PauliStabilizer[2]["H", "CNOT"]["Stabilizers"]
+```
+
+The list form routes through the same compiled engine as <code>[PauliStabilizer]()["ApplyCircuit", *specs*]</code>, which remains available and takes explicit-target specs.
 
 ### Permutation and padding
 
