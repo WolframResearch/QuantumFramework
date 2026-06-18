@@ -155,10 +155,10 @@ Indexed by function/topic.
 - **The right way**: Pin intermediate states as named symbols (`qs2 = qs /. v -> v2`) so the cache key changes; or set ``Wolfram`QuantumFramework`PackageScope`$QuantumFrameworkPropCache = False`` for the duration of the substitution-heavy code.
 - **Date**: 2026-04-29.
 
-### `qs["VonNeumannEntropy"]` and `qs["Purity"]` silently fail above 10 qubits
-- **The mistake**: Computing `qs["VonNeumannEntropy"]` or `qs["Purity"]` on a state with `Dimension >= 1024` (10+ qubits).
-- **Why**: `QuantumState/Properties.m:455, 475` — `ConfirmAssert[qs["Dimension"] < 2^10]` inside an `Enclose`. When the assertion fails, `Enclose` returns `Indeterminate` instead of erroring. **No warning emitted.**
-- **The right way**: Check `qs["Dimension"]` before calling. For larger states, reduce via `QuantumPartialTrace[qs, complement]` first (entropy of a small subsystem is fine), or route through `QuantumMPS`. As a purity proxy without the limit, `qs["TraceNorm"]` (`Properties.m:375`) computes `Total[SingularValueList[DensityMatrix]]`.
+### `qs["VonNeumannEntropy"]` and `qs["Purity"]` silently fail above 10 qubits, but only for MIXED states
+- **The mistake**: Computing `qs["VonNeumannEntropy"]` or `qs["Purity"]` on a **mixed** state with `Dimension >= 1024` (10+ qubits) and getting `Indeterminate` with no warning. A **pure** state of any size is fine (see below).
+- **Why**: `QuantumState/Properties.m:460, :480` — `ConfirmAssert[qs["Dimension"] < 2^10]` inside an `Enclose`, but on the **non-pure branch only**. Both handlers fast-path pure states first: entropy is `If[qs["PureStateQ"], 0, ConfirmAssert[…]; …]` and purity is `If[qs["StateType"] === "Vector", 1, ConfirmAssert[…]; …]`. So a pure state returns `0` / `1` regardless of size; only a mixed state of `Dimension >= 1024` trips the assert, and `Enclose` then returns `Indeterminate`. **No warning emitted.** Verified live: `QuantumState["GHZ"[10]]` gives entropy `0` / purity `1`; a mixed dimension-1024 state gives `Indeterminate`; a mixed 9-qubit (dimension-512) state computes normally.
+- **The right way**: This only bites mixed states `>= 10` qubits. Reduce via `QuantumPartialTrace[qs, complement]` first (entropy of a small subsystem is fine), or route through `QuantumMPS`. As a purity proxy without the limit, `qs["TraceNorm"]` (`Properties.m:375`) computes `Total[SingularValueList[DensityMatrix]]`.
 - **Date**: 2026-04-29.
 
 ### `qs["Eigenvalues"]` is NOT the same as the `eigenvalues` helper

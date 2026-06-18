@@ -10,6 +10,7 @@ ground truth. When an exact line matters, re-check it against the kernel you act
 | Version | `2.0.0` |
 | Verified against commit | `a601a187` (`WolframResearch/QuantumFramework`, 2026-06-17) |
 | Catalog counts (live) | `$QuantumOperatorNames` 108 · `$QuantumCircuitOperatorNames` 44 · `$PauliStabilizerNames` 9 |
+| Behavioral verification | 2026-06-17 against this anchor, see [VERIFICATION.md](VERIFICATION.md) |
 
 ## How to re-verify a cite on your install
 

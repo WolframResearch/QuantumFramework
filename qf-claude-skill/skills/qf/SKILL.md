@@ -35,6 +35,7 @@ relevant file(s) before answering a non-trivial QF question (no sampling):
 - [reference/architecture.md](reference/architecture.md): object map, property dispatch, dimension semantics
 - [reference/qf-tn-integration.md](reference/qf-tn-integration.md): the TensorNetworks bridge and the default circuit-application path
 - [reference/VERSION.md](reference/VERSION.md): the paclet version + commit the cites were verified against, and how to re-check them
+- [reference/VERIFICATION.md](reference/VERIFICATION.md): what was behaviorally re-verified against the live kernel, and the corrections it produced
 
 **The `file:line` cites are point-in-time** for the version in `reference/VERSION.md`. The
 paclet on the user's machine may differ, so when an exact cite matters, re-verify it against
@@ -105,30 +106,40 @@ If you do nothing else, internalize these. (Line numbers are point-in-time, see
   non-unitary; lowercase gate aliases are dead; `"Z"[d]` is the inverse clock convention
   relative to `"HeisenbergWeyl"`; `"Deutsch"` uses the half-angle convention.
 
-### 2.3 `qs["VonNeumannEntropy"]` and `qs["Purity"]` silently return `Indeterminate` for $\ge 10$ qubits
-- Hardcoded `ConfirmAssert[qs["Dimension"] < 2^10]` at `QuantumState/Properties.m:461, :481`.
-- For larger systems: bipartition first via `QuantumPartialTrace`, then compute on the
-  reduction; or use `qs["TraceNorm"]` (no dimension limit); or route through `QuantumMPS`.
+### 2.3 `qs["VonNeumannEntropy"]` and `qs["Purity"]` return `Indeterminate` for **mixed** states $\ge 10$ qubits
+- The guard `ConfirmAssert[qs["Dimension"] < 2^10]` (`QuantumState/Properties.m:460, :480`, inside
+  an `Enclose`) fires only on the **mixed-state** branch. A pure state hits a fast path first
+  (`If[qs["PureStateQ"], 0, …]` for entropy; `If[StateType === "Vector", 1, …]` for purity), so a
+  pure state of **any** size returns $0$ / $1$, never `Indeterminate`. Verified live:
+  `QuantumState["GHZ"[10]]` gives entropy $0$ / purity $1$; a mixed dimension-$1024$ state gives
+  `Indeterminate`; a mixed $9$-qubit state computes normally.
+- For a mixed system $\ge 10$ qubits: bipartition first via `QuantumPartialTrace`, then compute on
+  the reduction; or use `qs["TraceNorm"]` (no dimension limit); or route through `QuantumMPS`.
 
-### 2.4 `QuantumDistance` with no measure returns $1 - F$, not the fidelity $F$
-- `QuantumDistance.m:16`: default is $1 - \mathrm{Re}\,\mathrm{Tr}\,(\rho_1 \rho_2)^{1/2}$.
-- For raw fidelity call `QuantumDistance[qs1, qs2, "Fidelity"]`, or use `QuantumSimilarity`
-  (exported, defined at `QuantumDistance.m:63`).
+### 2.4 `QuantumDistance` is a distance, not a fidelity, and `"Fidelity"` **is** the default measure
+- `QuantumDistance[qs1, qs2]` calls `QuantumDistance[qs1, qs2, "Fidelity"]` (`QuantumDistance.m:13`),
+  which returns the **distance** $1 - \mathrm{Re}\,\mathrm{Tr}\,(\rho_1 \rho_2)^{1/2}$ (`:15-16`):
+  $0$ for identical states, $1$ for orthogonal, and $1 - |\langle a|b\rangle|$ for pure states. So
+  `"Fidelity"` does **not** return the fidelity, it is the default distance. Verified live:
+  `QuantumDistance[|0\rangle, |+\rangle, "Fidelity"]` $= 1 - 1/\sqrt{2}$.
+- For the fidelity-overlap value use `QuantumSimilarity[qs1, qs2, "Fidelity"]` $= 1 - d =
+  \mathrm{Re}\,\mathrm{Tr}\,(\rho_1\rho_2)^{1/2}$ ($= |\langle a|b\rangle|$ for pure states;
+  `QuantumDistance.m:63`). For the **squared** overlap $|\langle a|b\rangle|^2$ compute it directly.
 
 ### 2.5 `QuantumPartialTrace` densifies sparse density matrices
-- `MatrixPartialTrace` (`Utilities.m:135`) uses `ArrayReshape` + `TensorContract`, which always
+- `MatrixPartialTrace` (`Utilities.m:136`) uses `ArrayReshape` + `TensorContract`, which always
   materializes the dense $2^N \times 2^N$ tensor.
 - For large $N$: route through `QuantumMPS` (Experimental) or compute the reduced state from a
   bipartition directly.
 
 ### 2.6 `eigensystem` is generic: no Hermitian path
-- QF wraps `Eigensystem` with `Simplify` and `Chop` (`Utilities.m:154`), no
+- QF wraps `Eigensystem` with `Simplify` and `Chop` (`Utilities.m:155`), no
   `Method -> "Hermitian"`.
 - For pure-numeric Hermitian matrices, drop to
   `Eigensystem[qs["DensityMatrix"], Method -> "Hermitian"]` directly.
 
 ### 2.7 `Inverse` silently falls back to `PseudoInverse`
-- `MatrixInverse` (`Utilities.m:309-312`) wraps in `Quiet` + `Check`, then `PseudoInverse`.
+- `MatrixInverse` (`Utilities.m:310-313`) wraps in `Quiet` + `Check`, then `PseudoInverse`.
   **No warning.**
 - For potentially singular matrices, check `MatrixRank` first or call
   `Inverse[m, ZeroTest -> ...]` explicitly.
@@ -171,6 +182,12 @@ QuantumOperator["ZSpider" -> {1,2} -> {1,2,3}]  (* spider with explicit i/o legs
 
 Order: `{output, input}` (rows-then-columns) OR rule `{input} -> {output}`. The two are
 equivalent. Call-form arguments only; see mistake 2.1.
+
+The `"Hamiltonian"` / `"Liouvillian"` Lindblad forms wrap the Hamiltonian `H` automatically, but
+the **jump operators must already be `QuantumOperator`s**: bare matrices throw
+`QuantumOperator::dim` ("Hamiltonian and Lindblad operators must have the same dimensions"),
+because the dimension check calls `["OutputDimension"]` on the unwrapped jump ops
+(`NamedOperators.m:900-901`). Verified live. Pass raw matrices to `QuantumEvolve` instead.
 
 ### 3.3 Circuits (44 named circuits in `$QuantumCircuitOperatorNames`)
 
@@ -418,9 +435,9 @@ to find all copies.
 
 QF deliberately stays quiet in places where you'd want a message (see also §2.7):
 
-- `MatrixInverse` (`Utilities.m:309-312`): `Quiet[Check[Inverse[m], PseudoInverse[m]]]`.
+- `MatrixInverse` (`Utilities.m:310-313`): `Quiet[Check[Inverse[m], PseudoInverse[m]]]`.
   Singular matrices silently become pseudo-inverse.
-- `eigensystem` (`Utilities.m:154`): generic `Simplify` + `Chop` wrapper, no
+- `eigensystem` (`Utilities.m:155`): generic `Simplify` + `Chop` wrapper, no
   `Method -> "Hermitian"` path.
 - `quantumStateQ[___] := False` and friends: no `badform` message on a malformed
   `QuantumState[...]`; the only check is construction-time `ConfirmBy`.
@@ -453,8 +470,9 @@ QuantumMeasurementOperator[op][qs]["Mean"]                       (* measurement 
 
 ```
 (qc /* {ψ^†})[]["Norm"]^2                                        (* |⟨ψ|ψf⟩|² *)
-QuantumDistance[qs1, qs2, "Fidelity"]                            (* same as ⟨ψ1|ψ2⟩ for pure *)
+QuantumSimilarity[qs1, qs2, "Fidelity"]                          (* Re Tr(ρ1 ρ2)^(1/2) = |⟨ψ1|ψ2⟩| for pure *)
 ```
+`QuantumDistance[qs1, qs2, "Fidelity"]` is the *distance* `1 - |⟨ψ1|ψ2⟩|`, not the overlap (see §2.4).
 
 ### Lindblad master equation
 
