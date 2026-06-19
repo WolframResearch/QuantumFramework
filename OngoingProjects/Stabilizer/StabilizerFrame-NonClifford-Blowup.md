@@ -29,12 +29,16 @@ companion to the benchmark-backed
 
 **Provenance.** Every QF claim was run on the live working-tree paclet (loaded with
 `PacletDirectoryLoad`, not the lagging installed copy) and every number below was captured from that
-run. Kernel anchor: live repo HEAD `f370f568`. The QF audit set is synced to `f9dc1cdc` (3 commits
-back), but `git log f9dc1cdc..HEAD -- QuantumFramework/Kernel/Stabilizer/` is **empty**: the three
-intervening commits touch only `QuantumMeasurement.m` and docs, so every stabilizer `file:line`
-citation here is current against HEAD. Machine: Apple M2 Pro (Darwin 23.2.0), Wolfram Language 15.0.0.
-`ClearSystemCache[]` before every timing; no `Quiet`. Repro scripts: [`scripts/`](scripts/) (one per
-experiment, echoed inline in the appendix).
+run. Kernel anchor: live repo HEAD `a601a187`. The non-Clifford blow-up findings (Sections 1-3) were
+first run at `f370f568`; the Section 4 materialization fix landed in `61bc0e39`
+("Fix StabilizerFrame dense materialization to be phase-coherent"), which modified
+`Stabilizer/StabilizerFrame.m`, `Stabilizer/GateUpdates.m`, and `Tests/Stabilizer/Formulas.wlt`. All
+`file:line` cites below were re-verified against the live kernel at this HEAD: the `"P"`/distribute/
+materialization handlers in those two files shifted with the fix (so Section 5 cites them by rule name
+rather than line), while unchanged files (`PauliStabilizer.m`, `Conversions.m`, `InnerProduct.m`) keep
+their line numbers. Machine: Apple M2 Pro (Darwin 23.2.0), Wolfram Language 15.0.0. `ClearSystemCache[]`
+before every timing; no `Quiet`. Repro scripts: [`scripts/`](scripts/) (one per experiment, echoed
+inline in the appendix).
 
 ---
 
@@ -122,10 +126,11 @@ component count (`["Length"]`), wall time, and `ByteCount`:
 non-Clifford gate disables that path and forces the per-gate object fold.)
 
 (Storage/timing note. The numbers above predate the Section 4 materialization fix. Carrying one
-relating Pauli per component costs about $+21\%$ `ByteCount` and $+10\%$ build time, measured at the
-same $4$-qubit backbone: $k=12$ goes $9.31 \to 11.24$ MB and $146 \to 161$ ms, $k=14$ goes
-$37.25 \to 44.96$ MB and $530 \to 596$ ms. The $2^k$ component law and the exponential scaling are
-unchanged; the relating Pauli is a fixed $O(n)$ per-component overhead.)
+relating Pauli per component costs about $+15\%$ `ByteCount` and $+8$-$12\%$ build time, measured at
+the same $4$-qubit backbone against the fixed kernel: $k=12$ goes $9.31 \to 10.72$ MB and
+$145.6 \to 156.9$ ms, $k=14$ goes $37.25 \to 42.87$ MB and $530.1 \to 592.2$ ms. The $2^k$ component
+law and the exponential scaling are unchanged; the relating Pauli is a fixed $O(n)$ per-component
+overhead.)
 
 Readings:
 
@@ -381,9 +386,10 @@ dense readout for one state, not as a scalable magic-state simulator.
 
 ## 6. Caveats and provenance
 
-- **Anchor drift.** Live HEAD `f370f568`; audit anchor `f9dc1cdc` is 3 commits back but
-  `Kernel/Stabilizer/` is byte-identical between them (verified), so all stabilizer cites are current.
-  Re-verify against the live kernel if the repo moves (per the QF audit ritual).
+- **Anchor drift.** Live HEAD `a601a187` (Sections 1-3 first run at `f370f568`; the Section 4 fix is
+  `61bc0e39`, which changed `Stabilizer/StabilizerFrame.m` and `Stabilizer/GateUpdates.m`). Cites were
+  re-verified against the live kernel at this HEAD; re-verify again if the repo moves (per the QF audit
+  ritual).
 - **Timings** are single-run wall times on one M2 Pro after `ClearSystemCache[]`; treat them as
   order-of-magnitude. The qualitative law (components $= 2^k$ exactly; memory and time $\sim 2^k$) is
   exact and reproduced across $k$.

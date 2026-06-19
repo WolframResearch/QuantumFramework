@@ -67,7 +67,13 @@ We read off the operator that stabilizes it with the `"Stabilizers"` property:
 PauliStabilizer[1]["Stabilizers"]
 ```
 
-The answer is the single Pauli string `"Z"`, exactly as the chalkboard argument predicted. We can always materialize the underlying state vector to check ourselves, at the cost of the $2^n$ blow-up the formalism exists to avoid:
+The answer is the single Pauli string `"Z"`, exactly as the chalkboard argument predicted. The `"State"` property is the bridge back to the rest of the framework: it materializes the stabilizer object into a full `QuantumState`, at the cost of the $2^n$ blow-up the formalism exists to avoid.
+
+```wl
+PauliStabilizer[1]["State"]
+```
+
+What comes back is an ordinary `QuantumState` object, so a stabilizer state drops straight into the rest of the framework. Chaining `"StateVector"` on that object reads off the raw $2^n$ amplitudes, here the single column $\lvert 0 \rangle$:
 
 ```wl
 PauliStabilizer[1]["State"]["StateVector"] // Normal
@@ -84,6 +90,20 @@ The stabilizer flips from $Z$ to $X$, the signature of $\lvert + \rangle$. The s
 ```wl
 PauliStabilizer[1]["H", 1]["State"]["StateVector"] // Normal
 ```
+
+The same move with $X$ in place of $H$ carries $\lvert 0 \rangle$ to $\lvert 1 \rangle$, and here a sign appears for the first time: $\lvert 1 \rangle$ is the $+1$ eigenstate of $-Z$, not of $Z$.
+
+```wl
+PauliStabilizer[1]["X", 1]
+```
+
+Reading off the stabilizer makes the sign explicit:
+
+```wl
+PauliStabilizer[1]["X", 1]["Stabilizers"]
+```
+
+The answer is the signed string `"-Z"`, the operator that fixes $\lvert 1 \rangle$. The sign is part of the stabilizer data, which is exactly why the formalism can tell $\lvert 0 \rangle$ from $\lvert 1 \rangle$ even though the same unsigned $Z$ pins both.
 
 A short word of honesty that will matter later. The tableau tracks the stabilizer group, including the signs, but it is blind to the *overall* phase of the state. Reconstructing a state vector from a gate-updated tableau is therefore exact only up to a global phase. You can see this by acting with $Z$ on $\lvert + \rangle$: physically $Z\lvert+\rangle = \lvert-\rangle$, and the framework returns $\lvert - \rangle$ up to an overall sign.
 
@@ -102,7 +122,7 @@ Finally, "being a stabilizer state" is a decidable property of an object, not of
 Before moving on, the essentials so far:
 
 - A one-qubit stabilizer state is named by the single Pauli operator that fixes it: $Z$ for $\lvert 0\rangle$, $X$ for $\lvert+\rangle$, $-Z$ for $\lvert 1\rangle$.
-- `PauliStabilizer` carries that operator, not the amplitudes; `"State"` materializes the vector on demand.
+- `PauliStabilizer` carries that operator, not the amplitudes; the `"State"` property hands back a full `QuantumState` on demand, and `"StateVector"` on that object gives the raw $2^n$ amplitudes.
 - The reconstructed vector is exact up to a global phase, which never affects an observable.
 
 ## The tableau: $n$ generators instead of $2^n$ amplitudes
@@ -135,7 +155,89 @@ PauliStabilizer[2]["PauliStrings"]
 
 The first $n$ entries here are the stabilizers ($Z_1$, $Z_2$) and the last $n$ are their destabilizer partners ($X_1$, $X_2$), which anticommute with the matching stabilizer and commute with all the others.
 
+The header promised that these $n$ generators *are* the state, so the inverse map back to the $2^n$ amplitudes should be explicit, and it is. A stabilizer state is the simultaneous $+1$ eigenvector of its generators. Equivalently, the projector onto their joint $+1$ eigenspace,
+
+$$
+P \;=\; \prod_{i} \frac{\mathbb{1} + s_i\, g_i}{2},
+$$
+
+is rank one, $P = \lvert \psi \rangle\langle \psi \rvert$, so any nonzero column of $P$ is the state up to normalization. Here $g_i$ is the $i$-th stabilizer generator as a $2^n \times 2^n$ Pauli matrix and $s_i \in \{+1, -1\}$ its sign, both read off the tableau (the `"Stabilizers"` strings above). Building $P$ and taking its nonzero column reconstructs $\lvert 00 \rangle$ by hand:
+
+```wl
+genMatrix[s_String] := If[StringStartsQ[s, "-"], -1, 1] *
+   Fold[KroneckerProduct, Characters[StringDelete[s, "-"]] /.
+     {"I" -> PauliMatrix[0], "X" -> PauliMatrix[1], "Y" -> PauliMatrix[2], "Z" -> PauliMatrix[3]}];
+codeProjector = Dot @@ ((IdentityMatrix[4] + genMatrix[#]) / 2 & /@ PauliStabilizer[2]["Stabilizers"]);
+reconstructed = Normalize @ First @ Select[Transpose[codeProjector], AnyTrue[#, # != 0 &] &]
+```
+
+This is exactly the vector the `"State"` property returns, the $O(2^n)$ computation the cheap representation exists to postpone:
+
+```wl
+reconstructed === (PauliStabilizer[2]["State"]["StateVector"] // Normal)
+```
+
+The construction is not special to product states: the same lines turn the two generators $XX$ and $ZZ$ into the entangled Bell amplitudes $(1, 0, 0, 1)/\sqrt{2}$, the state the next section builds from gates.
+
+```wl
+Normalize @ First @ Select[
+   Transpose[Dot @@ ((IdentityMatrix[4] + genMatrix[#]) / 2 & /@ {"XX", "ZZ"})],
+   AnyTrue[#, # != 0 &] &
+]
+```
+
 Why is any of this fast? Because a Clifford gate, by definition, conjugates Pauli operators to Pauli operators. Updating the state therefore means updating each generator, $g \mapsto U g U^\dagger$, which is a fixed local rewrite of two bits and a sign per affected qubit. This is the content of the Gottesman-Knill theorem: a circuit of Clifford gates on a stabilizer input can be simulated in time polynomial in $n$, with $O(n)$ work per gate, rather than the $O(2^n)$ of dense state-vector evolution. The single-qubit gate methods (`"H"`, `"S"`, `"X"`, `"Y"`, `"Z"`, `"V"` for $\sqrt{X}$, and `SuperDagger["S"]`) and the two-qubit `"CNOT"`, `"CZ"`, `"SWAP"` each perform exactly that rewrite.
+
+## Two pictures of one circuit: Schrödinger and Heisenberg
+
+That rewrite is worth slowing down on, because it is the whole reason the formalism reproduces ordinary quantum mechanics on its domain. The standard task is concrete: given a circuit, produce the final state. There are two ways to do it. The *Schrödinger* way carries the state vector forward, $\lvert\psi\rangle \mapsto U\lvert\psi\rangle$, with $2^n$ amplitudes evolving under $2^n \times 2^n$ matrices. The *Heisenberg* way carries the generators forward and never forms the state at all. They return the same state, and watching them meet is the clearest way to see what the tableau computes.
+
+Fix a small Clifford circuit on three qubits, with an $S$ gate to make the result nontrivial.
+
+```wl
+cliffordCircuit = {"H" -> 1, "CNOT" -> {1, 2}, "S" -> 2, "CNOT" -> {2, 3}};
+```
+
+In the Schrödinger picture we propagate $\lvert 000 \rangle$ through the circuit and read off the amplitudes. This is the answer the formalism has to reproduce:
+
+```wl
+psiSchrodinger = QuantumCircuitOperator[cliffordCircuit][QuantumState["000"], Method -> "Schrodinger"]["StateVector"] // Normal
+```
+
+The state is $(\lvert 000 \rangle + i\,\lvert 111 \rangle)/\sqrt{2}$, a GHZ state carrying the relative phase the $S$ gate inserted.
+
+Now the Heisenberg picture. Instead of asking where the state goes, ask what fixes it. If $g$ stabilizes $\lvert\psi\rangle$, then after a gate $U$ the conjugated operator $U g U^\dagger$ stabilizes $U\lvert\psi\rangle$, because $g\lvert\psi\rangle = \lvert\psi\rangle$ gives $(U g U^\dagger)\,U\lvert\psi\rangle = U g \lvert\psi\rangle = U\lvert\psi\rangle$. The whole evolution of the state is therefore carried by the conjugation $g \mapsto U g U^\dagger$ of its generators, and the one fact that makes this cheap is that a Clifford sends a Pauli to a Pauli. Take the input generator $Z_1$, conjugate it by the circuit's unitary, and decompose the result into Paulis:
+
+```wl
+circuitU = QuantumCircuitOperator[cliffordCircuit]["QuantumOperator"]["Matrix"];
+QuantumOperator[circuitU . genMatrix["ZII"] . ConjugateTranspose[circuitU]]["PauliDecompose"]
+```
+
+The decomposition has a single term, $X_1 Y_2 X_3$: the operator never left the Pauli group. One generator went in, one came out. That closure is why the tableau update of the previous section is a fixed local rewrite of a few bits rather than a dense matrix multiply.
+
+Propagating all three input generators $Z_1, Z_2, Z_3$ this way is exactly what `"ApplyCircuit"` does, and the result is the stabilizer group of the final state. Its first generator is the $X_1 Y_2 X_3$ we just conjugated by hand:
+
+```wl
+PauliStabilizer[3]["ApplyCircuit", cliffordCircuit]["Stabilizers"]
+```
+
+The two pictures must describe the same physics, and they do. Materialize the state from the final generators (the formalism's `"State"`) and overlap it with the Schrödinger answer: the magnitude is one, so the states are equal up to the global phase the tableau drops.
+
+```wl
+psiStabilizer = PauliStabilizer[3]["ApplyCircuit", cliffordCircuit]["State"]["StateVector"] // Normal;
+Chop[Abs[Conjugate[psiSchrodinger] . psiStabilizer] - 1] == 0
+```
+
+This is the Gottesman-Knill theorem made concrete: a Clifford circuit on a stabilizer input is simulated by propagating $n$ generators at $O(n)$ work per gate, and the state it computes is exactly the one Schrödinger evolution would, with the $2^n$ vector never formed except, here, to check.
+
+The construction rests entirely on Clifford conjugation keeping a Pauli a Pauli, so it is also clear where it must break. A non-Clifford gate does not respect the Pauli group. The $T$ gate commutes with $Z$, but conjugating $X$ by it gives a sum:
+
+```wl
+Tgate = {{1, 0}, {0, Exp[I Pi/4]}};
+ExpToTrig @ QuantumOperator[Tgate . genMatrix["X"] . ConjugateTranspose[Tgate]]["PauliDecompose"]
+```
+
+Here $T X T^\dagger = (X + Y)/\sqrt{2}$ has two terms, not one. A single generator no longer maps to a single generator, the group stops being generated by $n$ Pauli strings, and the cheap representation fails. That failure is not an accident of implementation but the edge of the classically tractable world; the frontier section returns to how far one can push past it with stabilizer frames.
 
 ## Entanglement for free: Bell and GHZ
 
@@ -210,19 +312,37 @@ The single key tells us the $ZZ$ parity is certain. The same fact, as an expecta
 
 The parities $ZZ$ and $XX$ are certain ($+1$), while a single-qubit $Z$ is maximally uncertain ($0$), the hallmark of an entangled state whose marginals are maximally mixed.
 
-There is a more efficient way to handle many shots. Rather than branch the state at every random measurement and re-traverse the circuit per sample, the SymPhase technique of Fang and Ying carries the unresolved outcomes as fresh formal symbols in the signs, so one traversal serves all samples. A symbolic $Z$-measurement of Bell qubit 1 introduces a formal outcome symbol:
+There is a more efficient way to handle many shots, and it exposes something the branching picture hides. The Association `ps["M", q]` is the honest per-shot view, but it scales badly: a circuit with $r$ random measurements has a tree of up to $2^r$ outcome branches, so gathering statistics that way means either expanding the whole tree or re-traversing the circuit once per sample. The SymPhase technique of Fang and Ying replaces the branching with bookkeeping. The circuit is traversed *once*, and each unresolved random outcome is recorded as a fresh formal bit $s_k$ written into a sign, leaving the state a single `PauliStabilizer`. A symbolic $Z$-measurement of Bell qubit 1 introduces one such bit:
 
 ```wl
 sm = PauliStabilizer[2]["H", 1]["CNOT", 1, 2]["SymbolicMeasure", 1];
 sm["Stabilizers"]
 ```
 
-The sign of the first generator now carries the formal symbol $s_1$. Substituting a concrete outcome resolves the state, and the two substitutions give exactly the two branches we saw above:
+The sign of the first generator is now $1 - 2 s_1$, which is $+1$ at $s_1 = 0$ and $-1$ at $s_1 = 1$: the formal bit *is* the unmade measurement. Substituting a concrete value resolves it, and the two substitutions give exactly the two branches we saw above:
 
 ```wl
 {sm["SubstituteOutcomes", {\[FormalS][1] -> 0}]["Stabilizers"],
  sm["SubstituteOutcomes", {\[FormalS][1] -> 1}]["Stabilizers"]}
 ```
+
+The first reason to care is that the single symbolic traversal then serves arbitrarily many shots. The `"SampleOutcomes"` property draws samples by substituting random bits for the formal ones, never re-running the `H`-`CNOT` circuit; a thousand shots of the qubit-1 outcome come out a fair coin:
+
+```wl
+SeedRandom[7];
+Counts[(1 - #["StabilizerSigns"][[1]]) / 2 & /@ sm["SampleOutcomes", 1000]]
+```
+
+The second reason is that the formal bits thread through the *rest* of the circuit, so correlations between outcomes are carried into the samples rather than discarded with the branch structure. Measure all three qubits of the GHZ state symbolically, sample a thousand shots, and read off the bit-strings: every shot is $000$ or $111$, the perfect three-body correlation, reproduced from one traversal.
+
+```wl
+readBits[ps_] := IntegerDigits[FirstPosition[Normal[ps["State"]["StateVector"]], x_ /; x != 0][[1]] - 1, 2, ps["Qubits"]];
+smGHZ = ghz3["SymbolicMeasure", {1, 2, 3}];
+SeedRandom[7];
+Counts[readBits /@ smGHZ["SampleOutcomes", 1000]]
+```
+
+This is the payoff of carrying symbols instead of branching: the circuit traversal is paid for once, and any number of correlated shots then follow by cheap substitution. It is the in-language, exact-arithmetic cousin of the bulk Pauli-frame samplers the dedicated engines use for the same purpose, which the closing comparison returns to.
 
 ## Scaling up: random Cliffords and compiled circuits
 
@@ -232,6 +352,23 @@ Sampling a Clifford operation uniformly at random is a basic primitive for rando
 SeedRandom[42];
 AbsoluteTiming[StabilizerStateQ[PauliStabilizer["Random"[200]]]]
 ```
+
+That random state arrives as a bare tableau, with no circuit attached. The `"Circuit"` property hands one back: an explicit Clifford circuit that prepares the state from $\lvert 0 \ldots 0 \rangle$, by the Aaronson-Gottesman canonical decomposition. Unlike the membership test above, this direction has real cost: the synthesis is $O(n^3)$ gates and is *not* length-minimized, so it is a moderate-$n$ tool rather than a thousand-qubit one. On a ten-qubit random Clifford it is immediate, and the gate count stays polynomial:
+
+```wl
+SeedRandom[11];
+ps10 = PauliStabilizer["Random"[10]];
+prep = ps10["Circuit"];
+{Head[prep], Length @ QuantumShortcut[prep]}
+```
+
+The result is an ordinary `QuantumCircuitOperator`. It genuinely builds the state: applied to the all-zeros register it reproduces $\lvert \psi \rangle$ exactly, so the overlap with the original has unit magnitude (the one $2^n$ materialization here is only the check).
+
+```wl
+Chop[Abs[Conjugate[Normal @ prep[]["StateVector"]] . Normal @ ps10["State"]["StateVector"]] - 1]
+```
+
+This is the inverse of the gate-folding below, which goes from circuit to tableau, and it is the workhorse behind code encoders: a code state's preparation circuit is exactly its encoding circuit.
 
 For long Clifford circuits the framework folds the entire gate list through a single compiled (C) kernel that operates on a bit-packed, generator-major tableau, the same data layout the specialized simulators use. The method is `ps["ApplyCircuit", gates]`. Run a four-thousand-gate random Clifford stream on two hundred qubits and watch the wall-clock:
 

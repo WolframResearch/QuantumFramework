@@ -7,7 +7,7 @@ URI: Wolfram/QuantumFramework/ref/IBMJobSubmit
 Keywords: [IBM Quantum, QPU, job, sampler, estimator, SamplerV2, EstimatorV2, observable, ServiceConnect, hardware, asynchronous]
 SeeAlso: [IBMJob, QuantumQASM, QuantumCircuitOperator, QuantumMeasurement]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [SendingQueriesToIBMQPUs]
+RelatedTutorials: [QPUServiceConnect]
 ---
 
 ## Usage

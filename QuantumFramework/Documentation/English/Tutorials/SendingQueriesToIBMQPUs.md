@@ -5,14 +5,20 @@ Title: Sending Queries to IBM QPUs
 Context: Wolfram`QuantumFramework`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/SendingQueriesToIBMQPUs
-Keywords: [IBM Quantum, QPU, OpenQASM, Qiskit, ServiceConnect, sampler, transpile]
-RelatedGuides: [QuantumComputation]
-RelatedTutorials: [QPUServiceConnect]
+Keywords: [IBM Quantum, QPU, OpenQASM, Qiskit, ServiceConnect, IBMJobSubmit, IBMJob, sampler, SamplerV2, transpile, quantum hardware]
+RelatedGuides: [WolframQuantumComputationFramework]
+RelatedTutorials: [QPUServiceConnect, GettingStarted]
 ---
 
-This tutorial shows the recommended pipeline for running a Wolfram Language quantum circuit on a real IBM Quantum processing unit (QPU). You build and check a circuit symbolically, inspect it as OpenQASM with <code>[QuantumQASM]()</code>, run it on hardware, and compare the hardware counts against the exact result. IBM's cloud API changed substantially in 2025 (a new IBM Quantum Platform on IBM Cloud, with `qiskit-ibm-runtime` and the `SamplerV2` primitive); the steps below target that platform. For help, write to quantum@wolfram.com.
+In the [Wolfram Quantum Framework](https://www.wolfram.com/quantum-computation-framework/) a quantum circuit is a single symbolic object: you can simulate it exactly and send that same object to a real [IBM Quantum](https://www.ibm.com/quantum) processing unit (QPU). This tutorial walks the full path: connect to the IBM Quantum Platform, build and check a circuit, inspect it as [OpenQASM](https://openqasm.com/) (the portable text format QPUs read), submit it to hardware with <code>[IBMJobSubmit]()</code>, and hold the hardware counts up against the exact result.
 
-## Connecting to IBM Quantum
+Building and checking run locally with no account. The hardware cells need an IBM Quantum account and are marked so you can read the tutorial without running them. For help, write to quantum@wolfram.com.
+
+```wl
+<< Wolfram`QuantumFramework`
+```
+
+## Connecting to the IBM Quantum Platform
 
 Create an account at [quantum.cloud.ibm.com](https://quantum.cloud.ibm.com/). From the dashboard you need two things: an **IAM API key** (the long secret string shown once when you create the key, not the key's display name) and the **instance CRN** (a `crn:v1:…` string identifying your instance).
 
@@ -20,76 +26,92 @@ The API key is a secret and is stored in your encrypted system credential store.
 
 ```wl
 #| eval: false
-api = "XXX";                          (* your IAM API key secret *)
-LocalSymbol["ibm_crn"] = "XXX";       (* your instance CRN, as a string *)
+api = "XXX";
+LocalSymbol["ibm_crn"] = "XXX";
 ```
 
-Loading the Wolfram Quantum Framework registers the IBM Quantum Platform service connection automatically, so <code>[ServiceConnect]()</code> recognizes the `"IBMQuantumPlatform"` name directly: no separate package load and no <code>[Quiet]()</code> wrapper are needed.
+Loading the Wolfram Quantum Framework registers the IBM Quantum Platform service automatically, so [ServiceConnect]() recognizes the `"IBMQuantumPlatform"` name directly:
 
 ```wl
 #| eval: false
 ibm = ServiceConnect["IBMQuantumPlatform", "New", Authentication -> {"apikey" -> api}]
-<!-- => ServiceObject["IBMQuantumPlatform", …] -->
 ```
 
-A connected service object exposes three requests: list the available QPUs with `"Backends"`, submit a job with `"JobRun"`, and fetch results with `"JobResults"`:
+<!-- => ServiceObject["IBMQuantumPlatform", …] -->
+
+A connected service object lists the QPUs your account can reach through `"Backends"`. Submitting and retrieving jobs is handled for you by [IBMJobSubmit]() and the [IBMJob]() handle, shown below. List the available backends:
 
 ```wl
 #| eval: false
 ibm["Backends"]
-<!-- => {ibm_fez, ibm_marrakesh, ibm_kingston} -->
 ```
 
-The exact set of backends depends on which instances your account can reach.
+<!-- => {ibm_fez, ibm_marrakesh, ibm_kingston} -->
 
 ## Building and checking a circuit
 
-Build the circuit in the Wolfram Language first, so you have an exact reference to compare the hardware against. This example prepares a three-qubit GHZ state, applies a quantum Fourier transform, and measures all three qubits:
+Build the circuit in the Wolfram Language first, so you have an exact reference to compare the hardware against. This example prepares a three-qubit GHZ state $|\mathrm{GHZ}\rangle = \tfrac{1}{\sqrt{2}}(|000\rangle + |111\rangle)$, applies a quantum Fourier transform and measures all three qubits. The transform turns the GHZ entanglement into a definite interference pattern across the eight outcomes, and that structure is exactly what device noise erodes, which makes the circuit a sensitive benchmark:
 
 ```wl
 qc = QuantumCircuitOperator[{"GHZ", "Fourier"[3], {1, 2, 3}}];
 qc["Diagram"]
 ```
 
-Because the circuit is small, compute its exact output distribution symbolically. This is the noiseless ground truth that a QPU run approximates:
+Because the circuit is small, plot its exact output distribution: the noiseless ground truth a QPU run approximates, and the reference we overlay with the hardware counts:
 
 ```wl
-FullSimplify /@ qc[]["Probabilities"] // Dataset
-<!-- => <|{0,0,0}->1/4, {0,0,1}->(2+Sqrt[2])/16, {0,1,0}->1/8, {0,1,1}->(2-Sqrt[2])/16,
-          {1,0,0}->0, {1,0,1}->(2-Sqrt[2])/16, {1,1,0}->1/8, {1,1,1}->(2+Sqrt[2])/16|> -->
+qc[]["ProbabilityPlot"]
 ```
 
-Before spending QPU time, sample the circuit on a local noiseless simulator. <code>[QuantumCircuitOperator]()</code>'s `"Qiskit"` interface runs through a local Qiskit Aer simulator when no provider is given, returning a <code>[QuantumMeasurement]()</code> whose statistics converge to the exact distribution as the shot count grows:
+Before spending QPU time, you can sample the circuit on a local noiseless simulator. [QuantumCircuitOperator]()'s `"Qiskit"` interface runs through a local Qiskit Aer simulator when no provider is given, returning a [QuantumMeasurement]() whose statistics converge to the exact distribution as the shot count grows (this needs the Python Qiskit stack):
 
 ```wl
 #| eval: false
-qc["Qiskit"][Shots -> 4096]["ProbabilityPlot"]
+qc["Qiskit"]["Shots" -> 4096]["ProbabilityPlot"]
 ```
 
 ## Inspecting the circuit as OpenQASM
 
-<code>[QuantumQASM]()</code> is the single hub for OpenQASM. Called on a circuit with no extra arguments it emits OpenQASM **3.0** natively, in pure Wolfram Language with no Qiskit dependency, serializing the circuit exactly as built. Measurements become classical-bit assignments:
+A QPU does not read a Wolfram Language expression: the circuit is sent as OpenQASM. <code>[QuantumQASM]()</code> is the single hub for it. Called on a circuit with no extra arguments it emits OpenQASM **3.0** natively, in pure Wolfram Language with no external dependency, serializing the circuit exactly as built. Measurements become classical-bit assignments:
 
 ```wl
 QuantumQASM[qc]
+```
+
 <!-- =>
 OPENQASM 3.0;
 qubit[3] q;
 bit[3] c;
-U(1.5708, 0., 3.14159) q[0];
-ctrl(1) @ negctrl(0) @ U(3.14159, 0., 3.14159) q[0] q[1];
-…
+U(1.5707963267948966, 0., 3.141592653589793) q[0];
+ctrl(1) @ negctrl(0) @ U(3.141592653589793, 0., 3.141592653589793) q[0] q[1];
+ctrl(1) @ negctrl(0) @ U(3.141592653589793, 0., 3.141592653589793) q[1] q[2];
+U(1.5707963267948966, 0., 3.141592653589793) q[0];
+ctrl(1) @ negctrl(0) @ U(0., 0., 1.5707963267948966) q[1] q[0];
+ctrl(1) @ negctrl(0) @ U(0., 0., 0.7853981633974483) q[2] q[0];
+U(1.5707963267948966, 0., 3.141592653589793) q[1];
+ctrl(1) @ negctrl(0) @ U(0., 0., 1.5707963267948966) q[2] q[1];
+U(1.5707963267948966, 0., 3.141592653589793) q[2];
+swap q[0] q[2];
 c[0] = measure q[0];
 c[1] = measure q[1];
 c[2] = measure q[2];
 -->
+
+The hub is also an importer: handing OpenQASM source (or a `.qasm` file) back to [QuantumCircuitOperator]() reconstructs the circuit, again with no external dependency. The round trip recovers a circuit equal to the original:
+
+```wl
+QuantumCircuitOperator[QuantumQASM[qc]] == qc
 ```
 
-Pass `"Version" -> 2` to get OpenQASM 2.0 instead (this path uses Qiskit to render the legacy `qelib1.inc` gate set):
+<!-- => True -->
+
+OpenQASM 3.0 is the native and recommended target. For older toolchains that still require the legacy `qelib1.inc` gate set, pass `"Version" -> 2` to emit OpenQASM 2.0. This path renders through Qiskit, so it needs the Python Qiskit stack configured:
 
 ```wl
 #| eval: false
 QuantumQASM[qc, "Version" -> 2]
+```
+
 <!-- =>
 OPENQASM 2.0;
 include "qelib1.inc";
@@ -102,102 +124,63 @@ measure q[0] -> c[0];
 measure q[1] -> c[1];
 measure q[2] -> c[2];
 -->
-```
-
-The hub is also an importer: handing OpenQASM source (or a `.qasm` file) back to <code>[QuantumCircuitOperator]()</code> reconstructs the circuit, with no Qiskit needed for the import:
-
-```wl
-QuantumCircuitOperator[QuantumQASM[qc]] // Head
-<!-- => QuantumCircuitOperator -->
-```
 
 ## Running on hardware
 
-The simplest and most robust way to run on a QPU is to set the circuit's evaluation `Method` to Qiskit with an IBM provider and a backend. This transpiles the circuit to the backend's native gate set and connectivity, runs it through the `SamplerV2` primitive, and returns a <code>[QuantumMeasurement]()</code> with the qubit ordering already aligned to the Wolfram Language convention, so no manual bit-string bookkeeping is needed:
+With an active connection, [IBMJobSubmit]() is the one call that runs a circuit on a QPU. It transpiles the circuit against the backend's own error-aware `Target` (per-instruction error and duration), submits it through the `SamplerV2` primitive, and returns immediately with an asynchronous [IBMJob]() handle while the job sits in the queue. There is no manual OpenQASM, no raw request and no hex decoding of the classical register: the handle carries the per-bit to qubit map captured at transpile time, so results come back already in the Wolfram Language qubit order.
 
 ```wl
 #| eval: false
-result = qc[Method -> {"Qiskit", "Provider" -> "IBMProvider", "Backend" -> "ibm_fez"}]
-<!-- => QuantumMeasurement[…] -->
+job = IBMJobSubmit[qc, "ibm_fez"]
 ```
 
-This call blocks until the job finishes. To avoid tying up the kernel while the job sits in the queue, submit it asynchronously in a separate kernel with <code>[LocalSubmit]()</code> and store the result through a handler:
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: d8kcdur2d42s73ca1r40 |>] -->
+
+The handle reports the job's status. Poll it while the job is queued, or pass `"Wait" -> True` to [IBMJobSubmit]() to block until the job reaches a terminal status:
 
 ```wl
 #| eval: false
-LocalSubmit[
-    Needs["Wolfram`QuantumFramework`"];
-    qc = QuantumCircuitOperator[{"GHZ", "Fourier"[3], {1, 2, 3}}];
-    qc[Method -> {"Qiskit", "Provider" -> "IBMProvider", "Backend" -> "ibm_fez"}],
-    HandlerFunctions -> <|"TaskFinished" :> Function[result = #EvaluationResult]|>
-]
-<!-- => TaskObject[…] -->
+job["Status"]
 ```
 
-The probabilities are computed from the measured frequencies (here over 4096 shots):
+<!-- => "Queued" -->
+
+Refresh the handle to pull a fresh snapshot from the service. Once the status is `"Completed"`, applying the handle returns the measurement reconstructed from the hardware counts:
 
 ```wl
 #| eval: false
-result["Probabilities"]
-<!-- => <|{0,0,0}->0.255, {0,0,1}->0.197, {0,1,0}->0.149, {0,1,1}->0.054,
-          {1,0,0}->0.019, {1,0,1}->0.035, {1,1,0}->0.120, {1,1,1}->0.171|> -->
+qpu = job["Refresh"][]
 ```
 
-## Submitting OpenQASM directly
+<!-- => QuantumMeasurement[3 qubits, 4096 shots] -->
 
-For full control you can transpile and submit the OpenQASM yourself. IBM's sampler requires an ISA circuit (mapped to the backend's native gate set and qubit connectivity). Giving <code>[QuantumQASM]()</code> a `"Provider"` and a `"Backend"` transpiles the circuit against that backend and emits the ISA OpenQASM in a single call, entirely on the IBM provider:
+The same handle keeps every response IBM returns under `"Raw"` and exposes curated accessors on top, so the run's metadata is one query away. For example, the billed quantum runtime:
 
 ```wl
 #| eval: false
-qasm = QuantumQASM[qc, "Provider" -> "IBMProvider", "Backend" -> "ibm_fez", "Version" -> 2];
-<!-- =>
-OPENQASM 2.0;
-include "qelib1.inc";
-qreg q[156];
-creg c[3];
-rz(pi/2) q[142];
-… ISA gates rz / sx / cz, laid out on the ibm_fez 156-qubit device …
-measure q[…] -> c[…];
--->
+job["QuantumSeconds"]
 ```
 
-Submit the OpenQASM string as a `sampler` job and capture the returned job id:
-
-```wl
-#| eval: false
-job = ibm["JobRun", {"QASM" -> qasm, "ProgramID" -> "sampler", "Backend" -> "ibm_fez"}]
-<!-- => <|id -> d8jhf29e8nrc73bjk610, backend -> ibm_fez|> -->
-```
-
-Poll the job until it reports `Completed`, then retrieve the raw results:
-
-```wl
-#| eval: false
-ibm["RawJobDetails", "JobID" -> job["id"]]["state"]
-<!-- => <|status -> Completed|> -->
-```
-
-```wl
-#| eval: false
-raw = ibm["RawJobResults", "JobID" -> job["id"]];
-samples = raw[["results", 1, "data", "c", "samples"]];
-```
-
-The samples are hexadecimal readouts of the classical register. Going through the high-level `Method` path above avoids this manual decoding; if you do decode the raw register yourself, mind that IBM orders classical bits least-significant first, the reverse of the Wolfram Language convention.
+<!-- => Quantity[…, "Seconds"] -->
 
 ## Comparing exact and hardware results
 
-Putting the exact distribution next to the hardware run shows the structure surviving the device noise: the dominant `000`, `001`, and `111` outcomes and the near-zero `100` all come through, with the noise flattening the distribution. The hardware values below are the verified `ibm_fez` run from the previous section:
+`qpu` is the hardware measurement returned by the handle; the circuit `qc` gives the exact, noiseless reference. Take the corresponding Wolfram Language measurement:
 
 ```wl
-exact = N[Values[KeySort[FullSimplify /@ qc[]["Probabilities"]]]];
-hardware = Values @ KeySort @ <|
-    {0, 0, 0} -> 0.255, {0, 0, 1} -> 0.197, {0, 1, 0} -> 0.149, {0, 1, 1} -> 0.054,
-    {1, 0, 0} -> 0.019, {1, 0, 1} -> 0.035, {1, 1, 0} -> 0.120, {1, 1, 1} -> 0.171|>;
-BarChart[Transpose[{exact, hardware}],
-    ChartLegends -> {"Exact WL", "QPU ibm_fez"},
-    ChartLabels -> {Tuples[{0, 1}, 3], None},
-    Frame -> True, AspectRatio -> 1/2]
+#| eval: false
+wl = qc[];
 ```
+
+Putting the two distributions side by side shows how much of the interference pattern survives the hardware. Each [QuantumMeasurement]() exposes its outcome distribution through `"Probabilities"`; sorting both by outcome and overlaying them, the dominant `000`, `001` and `111` peaks and the all-but-forbidden `100` still come through, while decoherence erodes the contrast and pulls the rest toward a uniform distribution:
+
+```wl
+#| eval: false
+BarChart[Transpose[Values @* KeySort /@ {wl["Probabilities"], qpu["Probabilities"]}],
+    AspectRatio -> 1/2, Frame -> True, ChartLegends -> {"Exact WL", "QPU ibm_fez"},
+    PlotLabels -> Keys[wl["Probabilities"]]]
+```
+
+<!-- => (bar chart: exact-WL vs QPU probability per basis state) -->
 
 The differences are not in the queries but in device noise: each shot passes through a deep transpiled circuit on superconducting hardware, and the noise varies from job to job.

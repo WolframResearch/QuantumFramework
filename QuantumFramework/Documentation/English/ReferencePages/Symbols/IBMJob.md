@@ -7,7 +7,7 @@ URI: Wolfram/QuantumFramework/ref/IBMJob
 Keywords: [IBM Quantum, QPU, job, result, counts, measurement, expectation value, SamplerV2, EstimatorV2, quantum seconds, ServiceConnect, hardware]
 SeeAlso: [IBMJobSubmit, QuantumMeasurement, QuantumCircuitOperator, QuantumQASM]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [SendingQueriesToIBMQPUs]
+RelatedTutorials: [QPUServiceConnect]
 ---
 
 ## Usage
