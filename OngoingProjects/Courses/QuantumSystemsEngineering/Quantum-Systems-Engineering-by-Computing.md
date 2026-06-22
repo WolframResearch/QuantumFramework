@@ -1,17 +1,17 @@
 ---
-Template: TechNote
+Template: Default
 Name: QuantumSystemsEngineeringByComputing
-Title: Quantum Systems Engineering, by Computing
 Context: Wolfram`QuantumFramework`
 Keywords: [quantum systems engineering, qubit, Rabi flopping, quantum harmonic oscillator, Jaynes-Cummings, teleportation, Lindblad, decoherence, quantum sensing, Ramsey, particle in a box]
-RelatedTutorials: [SecondQuantization, QuantumComputation]
 ---
 
-*A Wolfram Language / QuantumFramework companion to the Quantum Systems Engineering unit.*
+# Quantum Systems Engineering, by Computing
 
-This document walks the entire arc of the unit, from Schrödinger's equation to quantum sensing, but it teaches every idea by **building it as a computation you can run, modify, and break**. The course is delivered in Python (Qiskit and QuTiP); here we do the same physics in the Wolfram QuantumFramework. The conviction is Feynman-flavored: if we cannot compute it, we have not really understood it. So every claim below is immediately followed by a cell that demonstrates or verifies it, and every number you see was produced by running the code, not asserted from a formula sheet.
+*A computation-first tour of quantum systems engineering in the Wolfram QuantumFramework.*
 
-We start where the course starts, with a particle trapped in a box, and use it to motivate the jump from messy calculus to clean linear algebra. We then build the engineer's two workhorses, the **qubit** and the **quantum harmonic oscillator**, drive them with fields, and watch them flop. We scale up to many qubits, gates, and circuits; send a state across a channel by teleportation; open the system to its environment and watch coherence decay; and finally turn that same fragility into a precision **sensor**. Four of these sections correspond directly to the four Python labs in the unit, and they are flagged as such.
+This document walks the entire arc of quantum systems engineering, from Schrödinger's equation to quantum sensing, and teaches every idea by **building it as a computation you can run, modify, and break**. The conviction is Feynman-flavored: if we cannot compute it, we have not really understood it. So every claim below is immediately followed by a cell that demonstrates or verifies it, and every number you see was produced by running the code, not asserted from a formula sheet.
+
+We start with a particle trapped in a box, and use it to motivate the jump from messy calculus to clean linear algebra. We then build the engineer's two workhorses, the **qubit** and the **quantum harmonic oscillator**, drive them with fields, and watch them flop. We scale up to many qubits, gates, and circuits; send a state across a channel by teleportation; open the system to its environment and watch coherence decay; and finally turn that same fragility into a precision **sensor**. A closing section works four of these threads into extended, self-contained examples.
 
 A practical note on how to read this. Evaluate the cells top to bottom, as if this were one long laboratory session. Each section is self-contained enough to start from, but variables defined earlier are reused. Change the numbers. Detune the drive, raise the noise, add a qubit. The framework will tell you what happens.
 
@@ -30,11 +30,9 @@ The three central objects are `QuantumState` (a ket or a density matrix), `Quant
 
 ---
 
-## Part 1 — From wave mechanics to a finite Hilbert space (Lab 1)
+## Part 1: From wave mechanics to a finite Hilbert space
 
-> **Course map:** Weeks 1 and 3. **This is Lab 1 (particle in a box, finite/infinite well).**
-
-The course opens with Schrödinger's equation and the infinite square well because it is the simplest place where energy quantization falls out of a boundary condition. A particle of mass $m$ confined to $0 \le x \le L$ with infinite walls has stationary states $\psi_n(x) = \sqrt{2/L}\,\sin(n\pi x/L)$ and energies $E_n = n^2\pi^2\hbar^2/(2mL^2)$. The physics worth keeping is the **scaling**: the $n$-th level sits at $n^2$ times the ground energy.
+We open with Schrödinger's equation and the infinite square well because it is the simplest place where energy quantization falls out of a boundary condition. A particle of mass $m$ confined to $0 \le x \le L$ with infinite walls has stationary states $\psi_n(x) = \sqrt{2/L}\,\sin(n\pi x/L)$ and energies $E_n = n^2\pi^2\hbar^2/(2mL^2)$. The physics worth keeping is the **scaling**: the $n$-th level sits at $n^2$ times the ground energy.
 
 We do not discretize this by hand. The Wolfram Language has a native quantum operator for exactly this problem: `SchrodingerPDEComponent` assembles the differential operator $-\tfrac{\hbar^2}{2m}\nabla^2 + V(x)$ from physical parameters, and `NDEigensystem` finds its eigenvalues and eigenstates under the boundary conditions we impose. The infinite walls are a `DirichletCondition` forcing $\psi = 0$ at the edges of the box. Set $\hbar = m = 1$, $V = 0$ inside, and solve on $[0,1]$:
 
@@ -66,13 +64,11 @@ ground["Norm"]
 
 `ground["Norm"]` is `1.`: a genuine normalized state, its amplitudes the half-sine $\sin(\pi x/L)$ peaked at the center of the box.
 
-This is the bridge for the whole unit. A continuous wave-mechanics problem was solved natively, and its ground state became a `QuantumState`. From here on we work in finite-dimensional Hilbert spaces, where the language is pure linear algebra. (The finite-well version, where the walls are a finite barrier, is **Lab 1** at the end.)
+This is the bridge for the whole document. A continuous wave-mechanics problem was solved natively, and its ground state became a `QuantumState`. From here on we work in finite-dimensional Hilbert spaces, where the language is pure linear algebra. (The finite-well version, where the walls are a finite barrier, is a worked example at the end.)
 
 ---
 
-## Part 2 — States, observables, and measurement
-
-> **Course map:** Weeks 2 and 3 (Dirac notation, Hilbert space, observables, the statistical interpretation, uncertainty).
+## Part 2: States, observables, and measurement
 
 A pure quantum state is a unit vector. The smallest interesting case is the qubit, a two-level system. In Dirac notation we write kets like $|0\rangle$ and $|1\rangle$ for the computational basis and $|+\rangle = (|0\rangle + |1\rangle)/\sqrt2$ for an equal superposition. Build a few and look at one:
 
@@ -143,9 +139,7 @@ Before moving on, the key results so far, all computed:
 
 ---
 
-## Part 3 — Dynamics and the three pictures
-
-> **Course map:** Week 3 (postulates; Schrödinger, Heisenberg, and interaction pictures).
+## Part 3: Dynamics and the three pictures
 
 A closed quantum system evolves by the Schrödinger equation $i\,\partial_t|\psi\rangle = H|\psi\rangle$, whose solution is $|\psi(t)\rangle = e^{-iHt}|\psi(0)\rangle$. `QuantumEvolve` solves this for us. Called with no time range, it returns a **closed-form symbolic** state, which is the cleanest thing to learn from. Evolve $|+\rangle$ under $H = Z$ (free precession of a spin in a field along $z$):
 
@@ -173,9 +167,7 @@ Both return $\cos(2t)$: the expectation of $X$ oscillates as the state precesses
 
 ---
 
-## Part 4 — The qubit and Rabi flopping (Lab 2)
-
-> **Course map:** Week 4 (two-level system driven by classical radiation, Pauli matrices, interaction picture, Rabi flopping, Bloch sphere). **This is Lab 2.**
+## Part 4: The qubit and Rabi flopping
 
 A two-level atom driven by a resonant classical field, viewed in the interaction picture, has the simple Hamiltonian $H = (\Omega/2)\,X$, where $\Omega$ is the Rabi frequency set by the drive strength. Starting in the ground state $|0\rangle$, the population sloshes coherently to the excited state and back. Evolve symbolically and read the amplitudes:
 
@@ -213,9 +205,9 @@ The result is $\{\sqrt3/2,\, 0,\, 1/2\}$, a unit vector tilted $60^\circ$ from t
 
 ---
 
-## Part 5 — The quantum harmonic oscillator
+## Part 5: The quantum harmonic oscillator
 
-> **Course map:** Week 5 (classical analogy, operator method, number states, quantised light, Jaynes-Cummings interaction). Uses the second-quantization sub-package loaded in Setup.
+> This part uses the second-quantization sub-package loaded in Setup.
 
 The harmonic oscillator is the other system every quantum engineer must own, because it models a mode of the electromagnetic field in a cavity and a mechanical resonator alike. Its algebra is built from the lowering operator $a$ and raising operator $a^\dagger$, with $[a, a^\dagger] = 1$. In a truncated Fock space of size $N$, `AnnihilationOperator[N]` is the matrix with $\sqrt{k}$ on the first super-diagonal:
 
@@ -267,7 +259,7 @@ gs = FockState[0, 6];
 
 This gives $\Delta X^2 = \Delta P^2 = 1/4$ and a product $1/16$, so $\Delta X\,\Delta P = 1/4 = \tfrac12|\langle[X,P]\rangle|$. The vacuum is as sharp as quantum mechanics allows in both quadratures at once, the saturated case the strict qubit inequality of Part 2 anticipated.
 
-Finally, the **Jaynes-Cummings model** couples one qubit to one field mode, the elementary model of light-matter interaction in a cavity (the extended topic of Week 5). On resonance and in the interaction picture, the coupling is $H = g(\sigma^+ a + \sigma^- a^\dagger)$, where $\sigma^\pm$ raise and lower the qubit and $a, a^\dagger$ destroy and create photons. Build it on a qubit-times-field space and watch a single excitation oscillate between atom and cavity:
+Finally, the **Jaynes-Cummings model** couples one qubit to one field mode, the elementary model of light-matter interaction in a cavity. On resonance and in the interaction picture, the coupling is $H = g(\sigma^+ a + \sigma^- a^\dagger)$, where $\sigma^\pm$ raise and lower the qubit and $a, a^\dagger$ destroy and create photons. Build it on a qubit-times-field space and watch a single excitation oscillate between atom and cavity:
 
 ```wolfram
 nF = 4; g = 1;
@@ -284,9 +276,7 @@ The excited-state population is `{1., 0.5, 0.}`, matching $P_e(t) = \cos^2(gt)$:
 
 ---
 
-## Part 6 — Many qubits: tensor products, gates, circuits
-
-> **Course map:** Week 6 (tensor product, multiple qubits, quantum gates, quantum circuits).
+## Part 6: Many qubits: tensor products, gates, circuits
 
 Two qubits live in the **tensor product** of their spaces, a four-dimensional Hilbert space. `QuantumTensorProduct` builds composite states and operators:
 
@@ -318,13 +308,11 @@ Circuits compose and scale. The three-qubit GHZ state, a maximally entangled "ca
 QuantumState["GHZ"[3]]["StateVector"] // Normal
 ```
 
-which is $\{1/\sqrt2,0,0,0,0,0,0,1/\sqrt2\}$, the state $(|000\rangle + |111\rangle)/\sqrt2$. Gates and circuits are the hardware-independent logical layer of quantum computing: the same `bell` circuit runs on any platform, exactly as the course frames it.
+which is $\{1/\sqrt2,0,0,0,0,0,0,1/\sqrt2\}$, the state $(|000\rangle + |111\rangle)/\sqrt2$. Gates and circuits are the hardware-independent logical layer of quantum computing: the same `bell` circuit runs on any platform.
 
 ---
 
-## Part 7 — Communication: entanglement, no-cloning, teleportation (Lab 3)
-
-> **Course map:** Week 8 (entanglement, Bell states, no-cloning, teleportation). **This is Lab 3.**
+## Part 7: Communication: entanglement, no-cloning, teleportation
 
 Quantum communication rests on **entanglement**, correlation stronger than anything classical. The Bell state $|\Phi^+\rangle$ is entangled, and the framework can certify it:
 
@@ -377,9 +365,7 @@ Every branch returns fidelity `1.`: regardless of which of the four random outco
 
 ---
 
-## Part 8 — Open systems: mixed states, channels, and decoherence (Lab 3 context)
-
-> **Course map:** Weeks 9 and 10 (pure vs mixed states, density operators, Lindblad master equation, noise types, Bloch sphere for mixed states, impact of noise).
+## Part 8: Open systems: mixed states, channels, and decoherence
 
 Every real device is open to its environment, and an open system is generally not in a pure state. The complete description is the **density operator** $\rho$, a positive operator of unit trace. A classical mixture of $|0\rangle$ and $|1\rangle$ is diagonal:
 
@@ -414,7 +400,7 @@ bx[tt_] := t2[<|t -> tt|>]["BlochVector"][[1]] // Chop;
 {bx[0], bx[0.5], bx[1.]}
 ```
 
-The transverse Bloch component `{1., 0.368, 0.135}` decays as $e^{-2\gamma t}$ while the populations (the $z$-component) stay put. On the Bloch sphere the arrow spirals inward toward the $z$-axis: the state is losing the phase coherence that lets it interfere, while its energy populations survive intact. This is the visual the course uses to make decoherence physical, and it is exactly the process the sensor of Part 9 must outrun.
+The transverse Bloch component `{1., 0.368, 0.135}` decays as $e^{-2\gamma t}$ while the populations (the $z$-component) stay put. On the Bloch sphere the arrow spirals inward toward the $z$-axis: the state is losing the phase coherence that lets it interfere, while its energy populations survive intact. That picture makes decoherence physical, and it is exactly the process the sensor of Part 9 must outrun.
 
 It is often cleaner to think of a noise process as a **channel**, a map that sends states to states in one shot, summarizing the environment without time-resolving it. The framework's `QuantumChannel` carries the standard qubit noise models. Each one moves the Bloch vector in a characteristic way:
 
@@ -431,9 +417,7 @@ Reading the four results: a bit-flip with probability $0.1$ leaves $|0\rangle$ a
 
 ---
 
-## Part 9 — Quantum sensing (Lab 4)
-
-> **Course map:** Week 11 (multi-level open systems as sensors, NV magnetometry, Rydberg electrometry) and **Lab 4 (magnetometry / impact of noise)**.
+## Part 9: Quantum sensing
 
 Quantum sensing turns the fragility of Part 8 into an asset. A qubit whose energy splitting depends on an external field is a field meter: let it accumulate phase, and read the field off the phase. The standard protocol is **Ramsey interferometry**. A $\pi/2$-pulse puts the qubit on the equator, the qubit then precesses for a time $\tau$ and accumulates a phase $\phi$ proportional to the field, and a second $\pi/2$-pulse converts that phase into a population we can measure.
 
@@ -455,7 +439,7 @@ D[P0, \[Phi]] // FullSimplify
 
 This is $-\tfrac12\sin\phi$, which is largest in magnitude at $\phi = \pi/2$. A well-designed magnetometer biases the interferometer to that steepest point, where a tiny change in field produces the largest change in signal.
 
-Decoherence is what ultimately limits the sensitivity, which is exactly why Lab 4 pairs magnetometry with noise. During the free-evolution time $\tau$, dephasing erodes the fringe **contrast**. Add a dephasing jump operator during the precession and track the transverse Bloch length, which is the contrast:
+Decoherence is what ultimately limits the sensitivity, which is why a realistic magnetometer must be analyzed together with its noise. During the free-evolution time $\tau$, dephasing erodes the fringe **contrast**. Add a dephasing jump operator during the precession and track the transverse Bloch length, which is the contrast:
 
 ```wolfram
 free = QuantumEvolve[(1/2) QuantumOperator["Z"], {QuantumOperator["Z"]} -> {0.3},
@@ -469,7 +453,7 @@ The contrast falls off as $e^{-2\gamma\tau}$, from $1$ at $\tau=0$ to about $0.0
 
 ## Where this leaves us
 
-We have rebuilt the spine of the unit as a sequence of computations. Along the way we constructed a reusable toolkit, all of it in one framework:
+We have rebuilt the spine of quantum systems engineering as a sequence of computations. Along the way we constructed a reusable toolkit, all of it in one framework:
 
 - **The object model.** Every quantity came from asking an object a question: `["HermitianQ"]`, `["UnitaryQ"]`, `["BlochVector"]`, `["Purity"]`, `["PureStateQ"]`, `["ProbabilitiesList"]`, plus `OperatorVariance`, `Commutator`, `G2Coherence`, and `QuantumEntanglementMonotone`. We built matrices only to *create* operators, never to interrogate them.
 - **States and observables.** `QuantumState` for kets and density matrices; `QuantumOperator` for observables, Hamiltonians, and gates; expectation values and overlaps from `(bra["Dagger"] @ ket)["Scalar"]`.
@@ -478,22 +462,22 @@ We have rebuilt the spine of the unit as a sequence of computations. Along the w
 - **Computing and communication.** Tensor products, gate circuits, Bell and GHZ entanglement, the no-cloning obstruction, and teleportation verified at unit fidelity.
 - **Open systems and sensing.** Mixed states and entropy; the Lindblad master equation for $T_1$ and $T_2$; the standard noise channels; and Ramsey magnetometry whose precision is bounded by the very decoherence we modeled.
 
-The hardware-independent intuition is the takeaway the unit promises: nothing above committed to a platform, yet everything is a faithful, runnable model of what superconducting qubits, trapped ions, photonic modes, and NV centers actually do. To go further, swap in real device parameters, push the circuits to more qubits, replace the idealized channels with measured noise spectra, or send a circuit to real hardware. The framework that drew the Bloch sphere will also talk to a quantum processor.
+The reward is hardware-independent intuition: nothing above committed to a platform, yet everything is a faithful, runnable model of what superconducting qubits, trapped ions, photonic modes, and NV centers actually do. To go further, swap in real device parameters, push the circuits to more qubits, replace the idealized channels with measured noise spectra, or send a circuit to real hardware. The framework that drew the Bloch sphere will also talk to a quantum processor.
 
 ---
 
-## The four labs, worked end to end
+## Four extended examples
 
-The unit's assessment includes four Python labs. Here is each one, built as a self-contained QuantumFramework computation you can run and extend. They draw on the parts above but stand on their own.
+These four examples weave several threads from above into self-contained computations you can run and modify. Each draws on the parts it extends but stands on its own.
 
-| Lab | Course topic | Section above |
-|---|---|---|
-| **Lab 1** | 1-D particle in a box (finite/infinite well) | Part 1 (infinite well) + below (finite well) |
-| **Lab 2** | Rabi flopping of an ideal qubit (resonant/non-resonant) | Part 4 |
-| **Lab 3** | Quantum teleportation / a simple circuit | Parts 6-7 (teleportation) + below (half-adder) |
-| **Lab 4** | Quantum magnetometry / impact of noise | Part 9 |
+| Example | Builds on |
+|---|---|
+| Finite vs infinite square well | Part 1 |
+| Rabi flopping, resonant and detuned | Part 4 |
+| The half-adder | Parts 6-7 |
+| Magnetometry and the impact of noise | Part 9 |
 
-### Lab 1 — Finite vs infinite square well
+### Finite vs infinite square well
 
 Part 1 used infinite walls. A real quantum dot has **finite** walls of height $V_0$, so the wavefunction leaks into the barrier and the particle is less tightly confined. We expect every bound level to drop below its infinite-well value, and, unlike the infinite well, only finitely many bound states to survive. Build the finite well as a piecewise potential and solve it natively, then compare the lowest four levels to the infinite well:
 
@@ -515,9 +499,9 @@ Plot[Evaluate[funsFinite], {x, -d, d}, PlotRange -> All,
    AxesLabel -> {"x", "\[Psi]"}, PlotLegends -> Range[4]]
 ```
 
-### Lab 2 — Rabi flopping, resonant and detuned
+### Rabi flopping, resonant and detuned
 
-The lab drives a qubit and watches the excited-state population oscillate. Resonant driving fully inverts the qubit; detuning $\delta$ speeds the oscillation but caps its amplitude at $1/(1+\delta^2)$. Read the population directly off the evolved state's amplitude (no formula assumed):
+This example drives a qubit and watches the excited-state population oscillate. Resonant driving fully inverts the qubit; detuning $\delta$ speeds the oscillation but caps its amplitude at $1/(1+\delta^2)$. Read the population directly off the evolved state's amplitude (no formula assumed):
 
 ```wolfram
 rabiP[\[Delta]_] := Abs[Normal[QuantumEvolve[
@@ -533,7 +517,7 @@ Plot[Evaluate[{rabiP[0], rabiP[1], rabiP[2]} /. \[FormalT] -> \[Tau]], {\[Tau], 
    AxesLabel -> {"t", "P\:2081"}, PlotLegends -> {"\[Delta]=0", "\[Delta]=1", "\[Delta]=2"}]
 ```
 
-### Lab 3 — A logic circuit: the half-adder
+### A logic circuit: the half-adder
 
 The simplest classical arithmetic circuit adds two bits: the **sum** is their XOR (two CNOTs onto a target wire) and the **carry** is their AND (a Toffoli). Build it on four wires and read off the truth table by feeding each input and inspecting the output basis state:
 
@@ -549,7 +533,7 @@ Grid[Prepend[
 
 The table reads `1 + 1 = 10` (sum $0$, carry $1$) and `1 + 0 = 01`: a correct half-adder. Because every gate is reversible, the same circuit run on a superposition of inputs computes all four sums at once, which is the seed of quantum parallelism.
 
-### Lab 4 — Magnetometry and the impact of noise
+### Magnetometry and the impact of noise
 
 A Ramsey sequence turns an unknown field into a measurable phase: $\pi/2$ pulse, free precession at rate $\omega \propto B$ for a time $\tau$, second $\pi/2$ pulse, then read $P_0$. Dephasing during the free evolution shrinks the fringe contrast, which is the whole challenge of real magnetometry. Build the sequence with the field and the dephasing rate as inputs:
 

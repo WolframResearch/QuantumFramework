@@ -4,6 +4,10 @@ BeginPackage["IBMQuantumPlatform`"]
 
 Begin["`Private`"]
 
+(* device error model + ErrorMap graphic (iIBM* helpers, pure built-in graphics).
+   Loaded here so the ProcessedRequests below can reference them. *)
+Get[FileNameJoin[{DirectoryName[$InputFileName], "ErrorMap.m"}]]
+
 
 IBMToken[key_] := Enclose[
     Block[{
@@ -232,7 +236,8 @@ params["RawRequests", "RawBackendProperties"] = {
     "HTTPSMethod"        -> "GET",
     "Headers"            -> $commonHeaders,
     "PathParameters"     -> {"BackendID"},
-    "RequiredParameters" -> {"BackendID"}
+    "RequiredParameters" -> {"BackendID"},
+    "HTTPResponseProcessing" -> Function[Enclose[SF`ImportResponse[Confirm[#]]]]
 }
 
 params["RawRequests", "RawBackendConfiguration"] = {
@@ -240,7 +245,8 @@ params["RawRequests", "RawBackendConfiguration"] = {
     "HTTPSMethod"        -> "GET",
     "Headers"            -> $commonHeaders,
     "PathParameters"     -> {"BackendID"},
-    "RequiredParameters" -> {"BackendID"}
+    "RequiredParameters" -> {"BackendID"},
+    "HTTPResponseProcessing" -> Function[Enclose[SF`ImportResponse[Confirm[#]]]]
 }
 
 params["RawRequests", "RawBackendStatus"] = {
@@ -369,6 +375,120 @@ params["ProcessedRequests", "JobResults"] = <|
         "JobID" -> ConfirmBy[Lookup[#, "JobID"], StringQ]
     |>]],
     "ExecuteResultProcessing" -> Function[Enclose[Lookup[#, "data"] & /@ ConfirmMatch[Lookup[ConfirmBy[#, AssociationQ], "results"], {__ ? AssociationQ}]]]
+|>
+
+(* ---- backend calibration: error map + device model + projection accessors ----
+   Properties of the connection object, e.g. conn["ErrorMap", "Backend" -> "ibm_fez"].
+   "Backend" defaults to the first available device, so conn["ErrorMap"] works bare.
+   Each reads the two free, read-only metadata endpoints (RawBackendConfiguration /
+   RawBackendProperties) through the connection's own auth: no circuit, no quantum
+   time. Drawing + parse live in ErrorMap.m (iIBM* helpers). For many projections
+   at once, conn["DeviceModel"] fetches once and carries every projection as a key.
+
+   Each request uses Identity preprocessing (like "Backends") and resolves the
+   backend inside the ExecuteFunction: the framework hands ExecuteFunction the raw
+   parameters (a list of rules) as its first argument, which iIBMBackendFromParams /
+   iIBMStyleRules read via Association. Every styling parameter is a STRING key. *)
+
+params["ProcessedRequests", "ErrorMap"] = <|
+    "ExecuteFunction" -> Function[iIBMErrorMap[iIBMFetchModel[iIBMBackendFromParams[#]], iIBMStyleRules[#]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {
+        "Backend"             -> Automatic,
+        "EdgeColorScheme"     -> "TemperatureMap",
+        "VertexColorScheme"   -> "AvocadoColors",
+        "VertexColorReversed" -> True,
+        "VertexSizeReversed"  -> True,
+        "EdgeThicknessMetric" -> "ZZ",
+        "EdgeThicknessRange"  -> {4., 12.},
+        "EdgeArrows"          -> True,
+        "ShowQubitLabels"     -> True,
+        "BackgroundColor"     -> Black
+    },
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "DeviceModel"] = <|
+    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "CouplingMap"] = <|
+    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]["CouplingMap"]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "CZErrors"] = <|
+    "ExecuteFunction" -> Function[iIBMCZErrors[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "ZZ"] = <|
+    "ExecuteFunction" -> Function[iIBMZZ[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "GateErrors"] = <|
+    "ExecuteFunction" -> Function[iIBMGateErrors[iIBMFetchModel[iIBMBackendFromParams[#]], Lookup[Association[#], "GateName", "cz"]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic, "GateName" -> "cz"},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "ReadoutErrors"] = <|
+    "ExecuteFunction" -> Function[iIBMReadoutErrors[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "Coherence"] = <|
+    "ExecuteFunction" -> Function[iIBMCoherence[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "Qubits"] = <|
+    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]["Qubits"]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
 |>
 
 End[]

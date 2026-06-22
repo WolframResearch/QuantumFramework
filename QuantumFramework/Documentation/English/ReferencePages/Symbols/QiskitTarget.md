@@ -7,6 +7,7 @@ URI: Wolfram/QuantumFramework/ref/QiskitTarget
 Keywords: [qiskit, Target, transpiler, device, coupling map, basis gates, backend, connectivity]
 SeeAlso: [QuantumQASM, QuantumCircuitOperator, QiskitCircuit]
 RelatedGuides: [WolframQuantumComputationFramework]
+RelatedTutorials: [IBMQuantumErrorMap]
 ---
 
 ## Usage
@@ -20,10 +21,10 @@ RelatedGuides: [WolframQuantumComputationFramework]
 - A `QiskitTarget` describes a device for transpilation: its native gate set, qubit connectivity, and (optionally) per-instruction errors and durations. It is the device argument of [QuantumQASM]()'s `"Target"` option.
 - *spec* is an Association whose keys are qiskit `Target.from_configuration` parameters: `"BasisGates"`, `"NumQubits"`, `"CouplingMap"`, `"InstructionDurations"`, `"ConcurrentMeasurements"`, `"Dt"`, `"TimingConstraints"`, `"CustomNameMapping"`. Keys are CamelCase and map to qiskit's snake_case names; the raw snake_case name is accepted too. The accepted key set is read from the installed qiskit, so it tracks the [qiskit Target.from_configuration documentation](https://docs.quantum.ibm.com/api/qiskit/qiskit.transpiler.Target#from_configuration) of whichever version is installed.
 - Each value takes qiskit's own form: `"NumQubits"` an integer; `"CouplingMap"` a list of directed integer pairs `{{c, t}, …}`; `"Dt"` a number of seconds; `"InstructionDurations"`, `"ConcurrentMeasurements"`, `"TimingConstraints"` and `"CustomNameMapping"` the structures qiskit's `Target.from_configuration` expects.
-- `"BasisGates"` is a list of qiskit *standard gate names* — the names are defined by the installed qiskit, not by `QiskitTarget`, and vary by version. In the bundled qiskit 2.4.1 there are 54, including the single-qubit `"x"`, `"y"`, `"z"`, `"h"`, `"s"`, `"sx"`, `"t"`, `"rx"`, `"ry"`, `"rz"`, `"p"`, `"u"`, `"u3"`, the two-qubit `"cx"`, `"cz"`, `"cy"`, `"ch"`, `"swap"`, `"iswap"`, `"ecr"`, `"rzz"`, `"rxx"`, and the three-qubit `"ccx"`, `"ccz"`, `"cswap"`. The names listed here are those of qiskit 2.4.1; a different qiskit version may add, rename, or remove gate names, so the list could differ from what is shown. The complete, version-correct list is qiskit's standard gate-name mapping, obtainable with `qiskit.circuit.library.get_standard_gate_name_mapping` or from qiskit's [circuit-library documentation](https://docs.quantum.ibm.com/api/qiskit/circuit_library). A name outside that set must be supplied through `"CustomNameMapping"`.
+- `"BasisGates"` is a list of qiskit *standard gate names*. The names are defined by the installed qiskit, not by `QiskitTarget`, and vary by version. In the bundled qiskit 2.4.1 there are 54, including the single-qubit `"x"`, `"y"`, `"z"`, `"h"`, `"s"`, `"sx"`, `"t"`, `"rx"`, `"ry"`, `"rz"`, `"p"`, `"u"`, `"u3"`, the two-qubit `"cx"`, `"cz"`, `"cy"`, `"ch"`, `"swap"`, `"iswap"`, `"ecr"`, `"rzz"`, `"rxx"`, and the three-qubit `"ccx"`, `"ccz"`, `"cswap"`. The names listed here are those of qiskit 2.4.1; a different qiskit version may add, rename, or remove gate names, so the list could differ from what is shown. The complete, version-correct list is qiskit's standard gate-name mapping, obtainable with `qiskit.circuit.library.get_standard_gate_name_mapping` or from qiskit's [circuit-library documentation](https://docs.quantum.ibm.com/api/qiskit/circuit_library). A name outside that set must be supplied through `"CustomNameMapping"`.
 - The keys are validated against the installed qiskit at call time, so an unknown key gives a [Failure]() (see Possible Issues) and any current or future qiskit `Target` parameter is accepted without a change to `QiskitTarget`.
 - `QiskitTarget` stores the validated specification rather than a serialized qiskit `Target`; the live target is rebuilt from the spec when it is used (inside [QuantumQASM]()), so the same object works across qiskit sessions and versions.
-- `measure` and `reset` are added on every qubit automatically — they are universal but `Target.from_configuration` omits them for a bare unitary basis — so a target built from `{"x", "sx", "rz", "cz"}` still transpiles circuits that contain measurements.
+- `measure` and `reset` are added on every qubit automatically (they are universal but `Target.from_configuration` omits them for a bare unitary basis), so a target built from `{"x", "sx", "rz", "cz"}` still transpiles circuits that contain measurements.
 - `"InstructionProperties"` is a reserved spec key that makes transpilation **error-aware**: a list of rows `{*gate*, {*qubits*…}, <|"Error" -> *e*, "Duration" -> *d*|>}` (either field may be omitted). After the target is built, each row is applied with qiskit's `Target.update_instruction_properties`, so `optimization_level` 1 and above bias layout and routing toward low-error qubits and pairs. A row whose gate or qubits are not in the target is skipped (recorded on the transpiled circuit's metadata, surfaced by `QuantumQASM::skippedProps`), never applied blindly; an `error` of `measure` rows also steers the layout away from high-readout-error qubits.
 - `[QiskitTarget]()["FromBackend" -> *name*, …]` reads `*name*`'s populated `Target` and emits exactly this `"InstructionProperties"` spec, so a circuit transpiled against the result lands on the device's lowest-error qubits. The same spec can be produced for non-qiskit devices (for example by `QUALink`'s `QUAConnect[…]["TargetSpec"]` for the IQCC `arbel` QPU), so one error-aware-target mechanism serves every backend.
 - A `QiskitTarget` displays as a summary panel showing its qubit count, native gate names, number of coupling edges, and whether it carries per-instruction error data.
@@ -45,7 +46,7 @@ A device target from a native gate set, a qubit count, and a coupling map:
 QiskitTarget[<|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 4, "CouplingMap" -> {{1, 0}, {1, 3}, {2, 0}, {2, 3}}|>]
 ```
 
-<!-- => QiskitTarget summary panel — Qubits: 4, Gates: {cz, measure, reset, rz, sx, x}, Couplings: 4 -->
+<!-- => QiskitTarget summary panel, Qubits: 4, Gates: {cz, measure, reset, rz, sx, x}, Couplings: 4 -->
 
 ---
 
@@ -55,11 +56,11 @@ A larger, linearly connected device:
 QiskitTarget[<|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 5, "CouplingMap" -> {{0, 1}, {1, 2}, {2, 3}, {3, 4}}|>]
 ```
 
-<!-- => QiskitTarget summary panel — Qubits: 5, Gates: {cz, measure, reset, rz, sx, x}, Couplings: 4 -->
+<!-- => QiskitTarget summary panel, Qubits: 5, Gates: {cz, measure, reset, rz, sx, x}, Couplings: 4 -->
 
 ---
 
-Once built, query a property — here the qubit count:
+Once built, query a property, here the qubit count:
 
 ```wl
 QiskitTarget[<|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 4, "CouplingMap" -> {{1, 0}, {1, 3}, {2, 0}, {2, 3}}|>]["NumQubits"]
@@ -239,7 +240,7 @@ The emitted QASM is ordinary native, physical-qubit OpenQASM 3, so the rest of t
 
 ## Properties and Relations
 
-Passing a `QiskitTarget` is equivalent to passing its specification Association inline to [QuantumQASM]()'s `"Target"` option — the object simply validates and carries the spec:
+Passing a `QiskitTarget` is equivalent to passing its specification Association inline to [QuantumQASM]()'s `"Target"` option. The object simply validates and carries the spec:
 
 ```wl
 With[{circ = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1}, {2}}], spec = <|"BasisGates" -> {"x", "sx", "rz", "cz"}, "NumQubits" -> 4, "CouplingMap" -> {{1, 0}, {1, 3}, {2, 0}, {2, 3}}|>},

@@ -7,7 +7,7 @@ URI: Wolfram/QuantumFramework/ref/IBMJobSubmit
 Keywords: [IBM Quantum, QPU, job, sampler, estimator, SamplerV2, EstimatorV2, observable, ServiceConnect, hardware, asynchronous]
 SeeAlso: [IBMJob, QuantumQASM, QuantumCircuitOperator, QuantumMeasurement]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [QPUServiceConnect]
+RelatedTutorials: [QPUServiceConnect, IBMQuantumErrorMap]
 ---
 
 ## Usage
@@ -24,7 +24,7 @@ RelatedTutorials: [QPUServiceConnect]
 - `IBMJobSubmit` requires an **active** service connection: it consults <code>ServiceFramework`GetDefaultServiceObject["IBMQuantumPlatform"]</code> and never creates a connection or prompts for credentials. Run <code>[ServiceConnect]()["IBMQuantumPlatform"]</code> first (see the [Sending Queries to IBM QPUs]() tech note). With no active connection it returns a [Failure]() and never submits.
 - `IBMJobSubmit` returns immediately with an asynchronous [IBMJob]() handle whose `"Status"` is whatever the service reports (typically `"Queued"`). Query the handle later, or pass `"Wait" -> True` to block until the job reaches a terminal status (`"Completed"`, `"Cancelled"` or `"Failed"`).
 - For a sampler job the submission carries the per-classical-bit to original-qubit map captured at transpile time into the [IBMJob]() as `"MeasuredQubits"`, so the returned samples decode into ascending-qubit order regardless of how the backend lays out and routes the circuit.
-- *backend* defaults to `Automatic`, the first backend in `so["Backends"]` for the active connection *so*; give a string such as `"ibm_fez"` to target a specific QPU.
+- *backend* defaults to `Automatic`, the first backend in `so["Backends"]` for the active connection *so*; give a string such as `"ibm_fez"` to target a specific QPU. To decide which device to target, inspect each backend's live calibration first with the connection's `"ErrorMap"` property (and the `"DeviceModel"` data behind it); see the [IBM error map](paclet:Wolfram/QuantumFramework/tutorial/IBMQuantumErrorMap) tech note.
 - For the `"estimator"` primitive the `"Observable"` is built into a qiskit `SparsePauliOp` and mapped onto the transpiled circuit's layout, which both reorders and **widens** it to the backend's physical register. Submitting the bare logical-width observable is what an IBM Runtime estimator rejects (error 1501, "the number of qubits of the circuit does not match the number of qubits of the observable").
 - The `"PrimitiveOptions"` tree is applied onto the qiskit primitive's own options object over the defaults `default_shots -> shots` and `dynamical_decoupling.enable -> True`, so qiskit validates the option schema. Keys are written in CamelCase and converted to qiskit's snake_case attributes recursively (`"DynamicalDecoupling"` to `dynamical_decoupling`), so the whole options schema is reachable without a curated key list.
 
@@ -35,7 +35,7 @@ RelatedTutorials: [QPUServiceConnect]
 | `"Observable"` | `"Z"` | the estimator observable: a Pauli string (`"ZZZ"`), a list of Pauli strings, or a list of `{pauliString, coefficient}` pairs; used only when `"Primitive"` is `"estimator"` |
 | `"Wait"` | False | whether to block until the job reaches a terminal status |
 | `"PrimitiveOptions"` | `<\|\|>` | an Association of IBM Runtime primitive options, applied onto the qiskit primitive's options object over the defaults |
-| `"OptimizationLevel"` | Automatic | the transpiler optimization level (0–3) for the submitted circuit. Submission always transpiles against the backend's own `Target` (per-instruction error and duration), so layout and routing are error-aware; this controls how aggressively. Automatic uses qiskit's preset default. |
+| `"OptimizationLevel"` | Automatic | the transpiler optimization level (0-3) for the submitted circuit. Submission always transpiles against the backend's own `Target` (per-instruction error and duration), so layout and routing are error-aware; this controls how aggressively. Automatic uses qiskit's preset default. |
 
 ## Basic Examples
 
@@ -262,7 +262,7 @@ job["ProgramID"]
 
 ### "OptimizationLevel"
 
-Submission always transpiles the circuit against the backend's own `Target`, which carries per-instruction error and duration, so layout and routing are **error-aware**: the circuit is placed on the backend's lowest-error qubits and pairs automatically. `"OptimizationLevel"` (0–3) controls how hard the transpiler works at that; `Automatic` uses qiskit's preset default. Raise it for a deeper search on a noisy device:
+Submission always transpiles the circuit against the backend's own `Target`, which carries per-instruction error and duration, so layout and routing are **error-aware**: the circuit is placed on the backend's lowest-error qubits and pairs automatically. `"OptimizationLevel"` (0-3) controls how hard the transpiler works at that; `Automatic` uses qiskit's preset default. Raise it for a deeper search on a noisy device:
 
 ```wl
 #| eval: false

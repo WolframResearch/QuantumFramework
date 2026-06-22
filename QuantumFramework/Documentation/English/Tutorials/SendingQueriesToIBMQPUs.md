@@ -7,7 +7,7 @@ Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/SendingQueriesToIBMQPUs
 Keywords: [IBM Quantum, QPU, OpenQASM, Qiskit, ServiceConnect, IBMJobSubmit, IBMJob, sampler, SamplerV2, transpile, quantum hardware]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [QPUServiceConnect, GettingStarted]
+RelatedTutorials: [IBMQuantumErrorMap, QPUServiceConnect, GettingStarted]
 ---
 
 In the [Wolfram Quantum Framework](https://www.wolfram.com/quantum-computation-framework/) a quantum circuit is a single symbolic object: you can simulate it exactly and send that same object to a real [IBM Quantum](https://www.ibm.com/quantum) processing unit (QPU). This tutorial walks the full path: connect to the IBM Quantum Platform, build and check a circuit, inspect it as [OpenQASM](https://openqasm.com/) (the portable text format QPUs read), submit it to hardware with <code>[IBMJobSubmit]()</code>, and hold the hardware counts up against the exact result.
@@ -47,6 +47,8 @@ ibm["Backends"]
 ```
 
 <!-- => {ibm_fez, ibm_marrakesh, ibm_kingston} -->
+
+Before spending QPU time, you can inspect a backend's live calibration as an error map with `ibm["ErrorMap", "Backend" -> "ibm_fez"]` (and read the numbers through `ibm["DeviceModel", …]`); see [the IBM error map tutorial](paclet:Wolfram/QuantumFramework/tutorial/IBMQuantumErrorMap).
 
 ## Building and checking a circuit
 

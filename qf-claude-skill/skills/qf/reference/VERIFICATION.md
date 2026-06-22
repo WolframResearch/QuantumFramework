@@ -6,10 +6,37 @@ corrected.
 
 | Field | Value |
 |---|---|
-| Date | 2026-06-17 |
+| Date | 2026-06-19 (delta below); 2026-06-17 (base record) |
 | Paclet | `Wolfram/QuantumFramework 2.0.0` |
-| Kernel | working tree at commit `a601a187` (loaded via `PacletDirectoryLoad`) |
+| Kernel | working tree at commit `b4fcdb31` (loaded via `PacletDirectoryLoad`); base record was `a601a187` |
 | Method | fresh `wolframscript` batteries (no `Quiet` hiding results), direct reads of the cited `Kernel/*.m` source, and a cross-check of this `reference/` set against the maintainer's `audit/` source |
+
+## 2026-06-19 delta: multi-gate bracket dispatch (kernel `a601a187` → `b4fcdb31`)
+
+One kernel-touching commit landed since the base record, `c3f21a43` (multi-gate bracket forms on
+`PauliStabilizer` / `StabilizerFrame`; `Stabilizer/PauliStabilizer.m`, `Stabilizer/StabilizerFrame.m`,
+`Stabilizer/Compiled.m`). No `PacletInfo` `Symbols` change. The new claims were re-derived against the
+working-tree kernel and the cites read from source:
+
+- **List = variadic = per-gate fold.** `PauliStabilizer[2][{"H","CNOT"}]`, `PauliStabilizer[2]["H","CNOT"]`,
+  and `Fold[#1[#2]&, PauliStabilizer[2], {"H"->1,"CNOT"->{1,2}}]` give identical `"Tableau"` and `"Signs"`.
+- **Bare-name default targets** (one-qubit → qubit 1, two-qubit → `{1,2}`) equal the explicit-target list.
+- **`ps[{"X"}]` applies X; `ps["X"]` is the property accessor** (`{_List,_List}`); `ps[{1,2}]` stays a
+  measurement (`AssociationQ` True); a single bare `ps["H"]` stays inert; an unrecognized two-token call
+  (`ps["Wobble","Splork"]`) is rejected with **no** message (`PauliStabilizer::badgate` is unreachable
+  from the public path).
+- **Catalogs** `$stabilizerCliffordNames` = `{H,S,X,Y,Z,V,T,CNOT,CX,CZ,SWAP}`,
+  `$stabilizerTwoQubitNames` = `{CNOT,CX,CZ,SWAP}` (`Compiled.m:57-58`).
+- **Frame parity + the `args : ___Integer` fix.** `PauliStabilizer[2]["T",1]` is a `StabilizerFrame`;
+  both `sf[{"H","S"->2}]` and `sf["H","S"->2]` reproduce `sf["H",1]["S",2]["StateVector"]` to amplitude 0.
+  The single-gate rules at `StabilizerFrame.m:201, 212` carry `args : ___Integer` (a trailing gate name is
+  no longer mis-read as a qubit index); helpers at `PauliStabilizer.m:141-168`, frame multi-gate at `:263-266`.
+- **Test suites** re-run on the working tree: `Tests/Stabilizer/AuditMatrix.wlt` **216/216**,
+  `Tests/Stabilizer/PauliStabilizer.wlt` **336/336**, all green. A fresh adversarial reviewer reproduced
+  all of the above and the file:line cites in a clean kernel: **OPEN ISSUES: 0**.
+
+The base 2026-06-17 record (everything below) is unchanged and still applies; the line numbers it cites are
+point-in-time for `a601a187` (only the stabilizer files above moved).
 
 ## Method
 

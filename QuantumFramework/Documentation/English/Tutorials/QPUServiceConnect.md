@@ -7,7 +7,7 @@ Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/QPUServiceConnect
 Keywords: [OpenQASM, QPU, IBM Quantum, Amazon Braket, AWS, Qiskit, ServiceConnect, quantum hardware, sampler]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [GettingStarted, Tutorial]
+RelatedTutorials: [IBMQuantumErrorMap, GettingStarted, Tutorial]
 ---
 
 The [Wolfram Quantum Framework](https://www.wolfram.com/quantum-computation-framework/) lets you build, simulate and analyze quantum circuits symbolically and numerically. The same circuit object can also be sent to real quantum processing units (QPUs) hosted in the cloud. This tutorial covers the three pieces you need for that: [OpenQASM](https://openqasm.com/), the portable text format that QPUs speak; the [IBM Quantum](https://www.ibm.com/quantum) platform; and [Amazon Braket](https://aws.amazon.com/braket/), which exposes several hardware vendors through a single service.
@@ -113,6 +113,17 @@ ibm["Backends"]
 ```
 
 <!-- => {ibm_fez, ibm_marrakesh, ibm_kingston} -->
+
+### Inspecting a backend
+
+Before committing a circuit to a device, you can see its live calibration as an error map: the qubit lattice with the `cz` gate error, the static $ZZ$ crosstalk, the relaxation time $T_1$, and the readout error painted on at once. This reads only the free metadata endpoints, so it runs no circuit and spends no quantum time.
+
+```wl
+#| eval: false
+ibm["ErrorMap", "Backend" -> "ibm_fez"]
+```
+
+The same calibration is available as data through `ibm["DeviceModel", "Backend" -> "ibm_fez"]` and its per-pair and per-qubit projections (`"CouplingMap"`, `"CZErrors"`, `"ZZ"`, `"ReadoutErrors"`, `"Coherence"`, and the rest), which is how you compare devices before choosing one for [IBMJobSubmit](). For the full picture see [the IBM error map tutorial](paclet:Wolfram/QuantumFramework/tutorial/IBMQuantumErrorMap).
 
 ### Building and checking a circuit
 

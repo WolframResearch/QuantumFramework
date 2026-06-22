@@ -218,6 +218,16 @@ Apply: `qc[QuantumState["00"]]`, or `qc[]` to apply to the default register stat
 Clifford circuits is `ps["ApplyCircuit", qc]` / `PauliStabilizerApply` (compiled generator-major
 gate fold; orders of magnitude faster than gate-by-gate application).
 
+Since `c3f21a43` a whole circuit can also be applied with bracket sugar: the list form
+`ps[{"H", "CNOT"}]` and the braceless variadic `ps["H", "CNOT"]` both route to that same
+`"ApplyCircuit"` engine. A spec is an arrow `gate -> order`, a bare Clifford name (one-qubit gate
+defaults to qubit 1, two-qubit to `{1, 2}`), or a call-form (`"P"[θ]`, `SuperDagger["S"|"V"|"T"]`).
+Mind the disambiguation: the *list* `ps[{"X"}]` **applies** X, whereas the bare *string*
+`ps["X"]` is the property accessor (the tableau X-block), and `ps[{1, 2}]` stays a **measurement**;
+a single bare gate `ps["H"]` is inert (the variadic form needs `Length >= 2`). The same
+`f[{spec, ...}]` / `f[spec, ...]` forms work on a `StabilizerFrame` (e.g. after a `"T"`), folding
+per gate while keeping the relating Paulis phase-coherent.
+
 ## 4. Circuit application paths: TensorNetwork is the default
 
 Circuit application routes through a tensor-network contraction by default
