@@ -1,7 +1,7 @@
 ---
-Title: Beyond SymPhase: can symbolic algebra compress magic (T-gate) branching?
+Title: 'Beyond SymPhase: can symbolic algebra compress magic (T-gate) branching?'
 Author: investigation in the Wolfram QuantumFramework
-Description: A self-contained, computation-first study of whether the stabilizer-simulation idea of carrying randomness as algebra extends from measurement branching to non-Clifford (T-gate) branching. States the complexity wall precisely, maps the literature of algebraic representations of Clifford+T (path sums, F_2 Gauss sums, LIMDD, exact rings, ZX, stabilizer rank/extent), and builds a working symbolic path-sum simulator in Wolfram Language whose rewriting folds Clifford branching to a closed form and isolates the irreducible magic. Every equation is re-derived and every claim verified against exact amplitudes.
+Description: 'A self-contained, computation-first study of whether the stabilizer-simulation idea of carrying randomness as algebra extends from measurement branching to non-Clifford (T-gate) branching. States the complexity wall precisely, maps the literature of algebraic representations of Clifford+T (path sums, F_2 Gauss sums, LIMDD, exact rings, ZX, stabilizer rank/extent), and builds a working symbolic path-sum simulator in Wolfram Language whose rewriting folds Clifford branching to a closed form and isolates the irreducible magic. Every equation is re-derived and every claim verified against exact amplitudes.'
 ---
 
 # Beyond SymPhase: symbolic algebra for magic branching
@@ -119,17 +119,21 @@ Each qubit's value is an $\mathbb{F}_2$ multilinear polynomial in Hadamard branc
 - $CNOT$: the linear update $e_b := e_a \oplus e_b$.
 
 The amplitude is the Gauss sum
+
 $$
 \langle y \lvert C \rvert 0\cdots0\rangle = 2^{-h/2}\sum_{v\,:\,E(v)=y}\omega^{\varphi(v)},
 $$
-$h$ the number of Hadamards, $E(v)$ the vector of final qubit values. For $H\,T\,H$ on $\lvert 0\rangle$ the phase is $\varphi = x_1 + 4 x_1 x_2$ and the amplitudes are $(1 \pm \omega)/2$, matching the dense result. The builder was checked against `Method -> "Schrodinger"` on a one-qubit interleaved circuit, a two-qubit `CNOT` circuit, a diagonal circuit, and a `CCZ` gadget: **all amplitudes match**, and an independent reviewer reproduced the match on three further circuits to one part in $10^{17}$.
+
+with $h$ the number of Hadamards and $E(v)$ the vector of final qubit values. For $H\,T\,H$ on $\lvert 0\rangle$ the phase is $\varphi = x_1 + 4 x_1 x_2$ and the amplitudes are $(1 \pm \omega)/2$, matching the dense result. The builder was checked against `Method -> "Schrodinger"` on a one-qubit interleaved circuit, a two-qubit `CNOT` circuit, a diagonal circuit, and a `CCZ` gadget: **all amplitudes match**, and an independent reviewer reproduced the match on three further circuits to one part in $10^{17}$.
 
 ### 4b. Elimination: Clifford branching folds to a closed form, magic does not
 
 The Hadamard-elimination rule (the [HH] rule of Amy, arXiv:1805.06908) is the place where branching becomes algebra. Write the phase as $\varphi = v\, C_v + \varphi_0$, splitting off the cofactor $C_v = \varphi\rvert_{v=1} - \varphi\rvert_{v=0}$ of an *internal* variable $v$ (one absent from the output). The sum over $v$ is
+
 $$
 \sum_{v \in \{0,1\}} \omega^{v C_v + \varphi_0} = \omega^{\varphi_0}\bigl(1 + \omega^{C_v}\bigr).
 $$
+
 When $C_v = 4Q$ is a pure sign with $Q$ a linear Boolean form, this is $2\,\omega^{\varphi_0}[Q = 0]$: the variable is summed away in closed form, leaving the linear constraint $Q = 0$, with **no enumeration**. A $T$ gate makes the cofactor $\mathbb{Z}_8$-valued instead of a sign, so $1 + \omega^{C_v}$ does not collapse and the variable **survives**. Reducing to a fixed point and checking the residual amplitude against the dense result:
 
 | circuit | branch variables before | after elimination | matches exact? |

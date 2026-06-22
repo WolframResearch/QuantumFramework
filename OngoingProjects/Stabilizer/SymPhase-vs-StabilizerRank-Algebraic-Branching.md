@@ -1,7 +1,7 @@
 ---
-Title: SymPhase versus stabilizer rank: when does "branching becomes algebra" transfer from measurement to the T gate?
+Title: 'SymPhase versus stabilizer rank: when does "branching becomes algebra" transfer from measurement to the T gate?'
 Author: investigation in the Wolfram QuantumFramework
-Description: A computation-first study of whether the SymPhase symbolic-sign trick (Fang and Ying, arXiv:2311.03906) that replaces measurement branching with an algebraic bit-polynomial transfers to non-Clifford (T-gate) branching in a StabilizerFrame, and where it fundamentally cannot. Every claim is verified with wolframscript against the working-tree paclet.
+Description: 'A computation-first study of whether the SymPhase symbolic-sign trick (Fang and Ying, arXiv:2311.03906) that replaces measurement branching with an algebraic bit-polynomial transfers to non-Clifford (T-gate) branching in a StabilizerFrame, and where it fundamentally cannot. Every claim is verified with wolframscript against the working-tree paclet.'
 ---
 
 # SymPhase versus stabilizer rank: algebraic branching for measurement and for the T gate
@@ -92,10 +92,12 @@ This is the structure that the question proposes to reuse: **a single frozen tab
 
 ## 2. The $T$ gate: same tableau, but a coherent complex sum, not a disjunction
 
-The framework's `"T"` and `"P"[\[Theta]]` (`Stabilizer/GateUpdates.m`) turn a `PauliStabilizer` into a `StabilizerFrame` of two components,
+The framework's `"T"` and `"P"[\[Theta]]` (`Stabilizer/GateUpdates.m`) turn a `PauliStabilizer` into a `StabilizerFrame` of two components:
+
 $$
 T\lvert s\rangle = \tfrac{1 + e^{i\pi/4}}{2}\,\lvert s\rangle \;+\; \tfrac{1 - e^{i\pi/4}}{2}\,Z_q\lvert s\rangle ,
 $$
+
 with the second component built by applying $Z_q$ to the first. Build $T\lvert+\rangle$ and inspect it:
 
 ```wl
@@ -164,9 +166,11 @@ $\big(e^{i\pi/4}X\big)^2 = iI \ne I$, and its eigenvalues are $\pm e^{i\pi/4}$, 
 ## 3. The one genuine transfer: diagonal Clifford+$T$ is a $\mathbb{Z}_8$ phase polynomial, rank $1$
 
 There is a regime where the reader's intuition is exactly right and the magic does become algebra. Restrict to **diagonal** gates: $T$, $S$, $Z$, $CZ$, $CCZ$, that is, Clifford+$T$ with no Hadamard. Acting on $\lvert+\rangle^{\otimes n}$, a diagonal gate multiplies each computational-basis amplitude by a phase, and the phases compose into a single **phase polynomial** $\varphi: \mathbb{F}_2^n \to \mathbb{Z}_8$:
+
 $$
 U\lvert+\rangle^{\otimes n} \;=\; \frac{1}{\sqrt{2^n}}\sum_{x \in \mathbb{F}_2^n} \omega^{\varphi(x)}\,\lvert x\rangle, \qquad \omega = e^{i\pi/4},
 $$
+
 where $\varphi$ has **degree at most $3$** over $\mathbb{F}_2$ (the CNOT-dihedral normal form: $T_j$ contributes a linear term $x_j$, $CZ_{ij}$ a quadratic term $4 x_i x_j$, $CCZ_{ijk}$ a cubic term $4 x_i x_j x_k$). Take $U = T_1\,T_2\,CZ_{12}$, for which $\varphi(x) = x_1 + x_2 + 4 x_1 x_2 \pmod 8$:
 
 ```wl
@@ -222,10 +226,12 @@ Table[{k, stabRank[interleaved[k]]}, {k, 0, 8}]
 
 returns $\{1, 2, 4, 8, 16, 32, 64, 128, 256\}$: exactly $2^k$.
 
-What happened to the algebra? It did not vanish; it moved into the **contraction**. An interior Hadamard introduces a summed $\mathbb{F}_2$ variable: $H\lvert x\rangle = \tfrac{1}{\sqrt2}\sum_a (-1)^{ax}\lvert a\rangle$. So the amplitude of $H\,T\,H\lvert0\rangle$ is an internal Gauss sum,
+What happened to the algebra? It did not vanish; it moved into the **contraction**. An interior Hadamard introduces a summed $\mathbb{F}_2$ variable: $H\lvert x\rangle = \tfrac{1}{\sqrt2}\sum_a (-1)^{ax}\lvert a\rangle$. So the amplitude of $H\,T\,H\lvert0\rangle$ is an internal Gauss sum:
+
 $$
 \langle x \lvert H T H \rvert 0\rangle = \frac{1}{2}\sum_{a \in \mathbb{F}_2} \omega^{a}\,(-1)^{ax},
 $$
+
 which we can confirm term by term:
 
 ```wl
