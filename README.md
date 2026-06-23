@@ -24,7 +24,7 @@ Create a quantum circuit composed of Pauli-X on qubits 1 and 2, Hadamard on qubi
 qc = QuantumCircuitOperator[{"X" -> {1, 2}, "H", "CNOT", "RZ"[\[Phi]],"RZ"[\[Theta]] -> 2, "H" -> {1, 2}, {1}, {2}}];
  qc["Diagram"]
 ```
-<img width="360" height="128" alt="image1" src="https://github.com/user-attachments/assets/2d425739-b4e9-4f23-a7f0-f1c22ea0a893" />
+<img width="360" alt="Example 1 circuit diagram" src="README-assets/example1-circuit.png" />
 
 Generate the multivariate distribution of measurement results based on the assumption that the angles are real:
 
@@ -61,7 +61,7 @@ qc2 = qc[[;; -3]]/*{QuantumChannel["BitFlip"[p], {2}]};
  qc2["Diagram"]
 ```
 
-<img width="360" height="110" alt="image2" src="https://github.com/user-attachments/assets/226d2bef-f5b0-43b3-9351-ae6314210fbd" />
+<img width="360" alt="Example 1 circuit with a bit-flip channel on qubit 2" src="README-assets/example1-circuit-bitflip.png" />
 
 Calculate the corresponding density matrix of the final quantum state of this circuit:
 
@@ -70,18 +70,25 @@ FullSimplify[Normal[qc2[]["DensityMatrix"]], 0 < p < 1] // MatrixForm
 ```
 which returns:
 
-<img width="820" height="93" alt="image3" src="https://github.com/user-attachments/assets/6fff3aee-f5ca-4336-b808-283ef30f3b4b" />
+$$
+\rho = \begin{pmatrix}
+ \frac{1}{4} ((2 p-1) \cos (\theta -\phi )+1) & \frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & -\frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & \frac{1}{4} ((1-2 p) \cos (\theta -\phi )-1) \\
+ -\frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & \frac{1}{4} ((1-2 p) \cos (\theta -\phi )+1) & \frac{1}{4} ((2 p-1) \cos (\theta -\phi )-1) & \frac{1}{4} i (2 p-1) \sin (\theta -\phi ) \\
+ \frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & \frac{1}{4} ((2 p-1) \cos (\theta -\phi )-1) & \frac{1}{4} ((1-2 p) \cos (\theta -\phi )+1) & -\frac{1}{4} i (2 p-1) \sin (\theta -\phi ) \\
+ \frac{1}{4} ((1-2 p) \cos (\theta -\phi )-1) & -\frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & \frac{1}{4} i (2 p-1) \sin (\theta -\phi ) & \frac{1}{4} ((2 p-1) \cos (\theta -\phi )+1)
+\end{pmatrix}
+$$
 
 
 #### Example 2
 Create the quantum phase estimation circuit for a phase operator with a given angle and a given number of qubits:
 
 ```wl
-qc = QuantumCircuitOperator["PhaseEstimation"[QuantumOperator[{"Phase", 2 \[Pi]/5}], 4]];
+qc = QuantumCircuitOperator["PhaseEstimation"[QuantumOperator["Phase"[2 \[Pi]/5]], 4]];
  qc["Diagram"]
 ```
 
-<img width="860" height="246" alt="image4" src="https://github.com/user-attachments/assets/9918297b-700a-4722-93a2-b10f2f01b0b5" />
+<img width="860" alt="Quantum phase estimation circuit" src="README-assets/example2-phase-estimation-circuit.png" />
 
 Calculate the outcome of circuit:
 
@@ -95,7 +102,7 @@ Calculate the corresponding probabilities:
 measurement["ProbabilityPlot", AspectRatio -> 1/6, PlotRange -> {Automatic, 1}, GridLines -> Automatic]
 ```
 
-<img width="631" height="128" alt="image5" src="https://github.com/user-attachments/assets/88f694e6-5b20-4272-890d-f35a33788d8b" />
+<img width="631" alt="Phase-estimation outcome probabilities" src="README-assets/example2-probability-plot.png" />
 
 
 #### Example 3
@@ -107,7 +114,7 @@ Set time and other variables of a Hamiltonian (Rabi drive and detuning):
  Plot[{\[CapitalOmega], \[CapitalDelta]}, {t, 0, 3}, PlotLegends -> {"\[CapitalOmega] (Rabi)", "\[CapitalDelta] (Detuning)"},AspectRatio -> 1/2, AxesLabel -> {"Time"}]
 ```
 
-<img width="476" height="163" alt="image6" src="https://github.com/user-attachments/assets/d31a055c-17ce-448c-8664-28c1a337d0c0" />
+<img width="476" alt="Rabi drive and detuning vs time" src="README-assets/example3-rabi-detuning.png" />
 
 Create a Hamiltonian operator as $\frac{\Omega }{2}\sigma _x-\frac{\Delta }{2}\left(I+\sigma _z\right)$
 ```wl
@@ -138,7 +145,7 @@ Row[{Plot[Evaluate@Normal@\[Psi]["ProbabilitiesList"], {t, 0, 3.},
    AxesLabel -> {"Time", "Population"}]}, Frame -> All]
 ```
 
-<img width="900" height="178" alt="image7" src="https://github.com/user-attachments/assets/01986fe2-a0b0-4e56-9b21-19eb858ebc6d" />
+<img width="900" alt="Measurement probabilities in the Z, X, and Y bases vs time" src="README-assets/example3-populations-xyz.png" />
 
 Plot the Bloch vector evolution:
 
@@ -146,7 +153,7 @@ Plot the Bloch vector evolution:
 Show[QuantumState["UniformMixture"]["BlochPlot"], ParametricPlot3D[\[Psi]["BlochVector"], {t, 0, 3}]]
 ```
 
-<img width="360" height="363" alt="image8" src="https://github.com/user-attachments/assets/83d78273-d016-43fd-9a43-4d2b37270d08" />
+<img width="360" alt="Bloch-vector evolution under the Hamiltonian" src="README-assets/example3-bloch-hamiltonian.png" />
 
 Define Lindblad operators (inducing jump from 1 to 0, and vice versa) with given rates:
 ```wl
@@ -166,7 +173,7 @@ Plot the measurement probabilities in the computational basis:
 Plot[Evaluate@Normal@\[Rho]["ProbabilitiesList"], {t, 0, 3.}, PlotLabel -> "Population vs time", PlotLegends -> {Ket[{"0"}], Ket[{"1"}]}, AspectRatio -> 1/2, PlotRange -> {0, 1}, GridLines -> Automatic]
 ```
 
-<img width="422" height="209" alt="image9" src="https://github.com/user-attachments/assets/4c7fd47e-c96b-48e1-87ee-3ba4e32529b6" />
+<img width="422" alt="Lindblad population dynamics vs time" src="README-assets/example3-lindblad-populations.png" />
 
 Plot the Bloch vector evolution vs the Hamiltonian one:
 
@@ -174,4 +181,4 @@ Plot the Bloch vector evolution vs the Hamiltonian one:
 Show[QuantumState["UniformMixture"]["BlochPlot"], ParametricPlot3D[{\[Rho]["BlochVector"], \[Psi]["BlochVector"]}, {t, 0, 3}, PlotLegends -> {"Lindbladian", "Hamiltonian"}]]
 ```
 
-<img width="471" height="363" alt="image10" src="https://github.com/user-attachments/assets/3657ac10-8b65-4140-80d3-529437587fcc" />
+<img width="471" alt="Bloch-vector evolution: Lindbladian vs Hamiltonian" src="README-assets/example3-bloch-lindblad-vs-hamiltonian.png" />
