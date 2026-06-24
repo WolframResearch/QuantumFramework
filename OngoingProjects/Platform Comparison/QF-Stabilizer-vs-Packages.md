@@ -7,7 +7,7 @@ and **Cirq** (`CliffordSimulator`). The emphasis is on *what QF offers that the 
 the speed trade honestly stated and measured rather than recalled.
 
 **This document is the deep, benchmark-backed companion** to the tutorial
-[`OngoingProjects/Stabilizer/Stabilizer-Formalism-By-Computation.md`](../Stabilizer/Stabilizer-Formalism-By-Computation.md)
+[`OngoingProjects/Stabilizer/Stabilizer-Formalism-By-Computation.md`](../Stabilizer/tutorial/Stabilizer-Formalism-By-Computation.md)
 (which has a short "honest comparison" section). It does not duplicate that section; it expands it
 with the full feature matrix, a re-measured cross-package benchmark, per-advantage verified code, and
 the complete gap list.
@@ -25,7 +25,7 @@ the QF audit set is synced to. Machine: Apple M2 Pro (Darwin 23.2.0), Wolfram La
 Legend: **Yes** native; **partial** present but limited or indirect; **No** absent; **bridge** reached
 by delegating to an external tool through QF's Python interop. QF cells are verified live against the
 2.0.0 working tree (citations in the notes); competitor cells are from the package audits
-([`external-packages-audit.md`](../Stabilizer/external-packages-audit.md)) and their documentation.
+([`external-packages-audit.md`](../Stabilizer/kernel-subsystem/external-packages-audit.md)) and their documentation.
 
 | Capability | QF `PauliStabilizer` | Stim | QuantumClifford.jl | Qiskit `Clifford`/`StabilizerState` | Cirq `CliffordSimulator` |
 |---|:--:|:--:|:--:|:--:|:--:|
@@ -416,7 +416,7 @@ Underlying detail: the stabilizer kernel lives in
 [`QuantumFramework/Kernel/Stabilizer/`](../../QuantumFramework/Kernel/Stabilizer/) (20 files); the
 performance story is in [`QF-Stabilizer-Optimization-Report.md`](QF-Stabilizer-Optimization-Report.md)
 and [`QF-Stabilizer-Bottleneck-Audit.md`](QF-Stabilizer-Bottleneck-Audit.md); the cross-package design
-analysis is in [`external-packages-audit.md`](../Stabilizer/external-packages-audit.md); the broader
+analysis is in [`external-packages-audit.md`](../Stabilizer/kernel-subsystem/external-packages-audit.md); the broader
 platform context is [`QF-Master-Platform-Comparison.md`](QF-Master-Platform-Comparison.md).
 
 ---

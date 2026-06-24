@@ -407,7 +407,7 @@ This master file supersedes three sources. The substantive corrections:
 - Adiabatic evolution: `QuantumAdiabaticEvolve` now exists.
 - Still accurate: no GPU, no ZNE/PEC/measurement mitigation, no GRAPE/CRAB, no QAOA routine, no autodiff/ML-bridge, no Monte-Carlo trajectories, no steady-state solver, no thermal-relaxation named channel. Its phased roadmap remains a reasonable wish-list for these.
 
-**B. `OngoingProjects/Stabilizer/external-packages-audit.md` (2026-04-30, against v1.6.5):**
+**B. `OngoingProjects/Stabilizer/kernel-subsystem/external-packages-audit.md` (2026-04-30, against v1.6.5):**
 - Its "Tier 1 functional gaps blocking real use" (Pauli-string measurement, expectation values, inner product, graph states, a test suite) have **shipped** in the 2.0.0 stabilizer rewrite (Section 7.2). The design analysis (Section 7.1) and the performance gap (Section 3.2, Section 7.3) remain accurate.
 - Its line-number citations (`PauliStabilizer.m:NNN`) are against the deleted 494-line monolith; the code now lives in `Kernel/Stabilizer/*.m`.
 
