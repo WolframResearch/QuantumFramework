@@ -748,15 +748,60 @@ Its two amplitudes have equal magnitude $1/\sqrt2$, but the second carries the p
 Tmagic["StateVector"] // Normal // FullSimplify
 ```
 
-The entry $\tfrac{1}{2} + \tfrac{i}{2}$ is exactly $e^{i\pi/4}/\sqrt2$. Measuring $\lvert T \rangle$ in the $X$ basis then gives a Born probability no stabilizer state can produce, since a Pauli measurement on a stabilizer state yields only $0$, $\tfrac{1}{2}$, or $1$:
+The entry $\tfrac{1}{2} + \tfrac{i}{2}$ is exactly $e^{i\pi/4}/\sqrt2$. Measuring $\lvert T \rangle$ in the $X$ basis then gives a Born probability no stabilizer state can produce, since a Pauli measurement on a stabilizer state yields only $0$, $\tfrac{1}{2}$, or $1$. The frame computes that expectation *natively*, by the same closed-form Pauli sandwich the bare tableau uses, one term per pair of components, never forming the $2^n$ vector. Read $\langle X\rangle$ straight from the frame:
 
 ```wl
-Abs[Normalize[{1, 1}] . Normal[Tmagic["StateVector"]]]^2 // FullSimplify
+Tmagic["Expectation", "X"] // FullSimplify
 ```
 
-The result is $(2 + \sqrt2)/4 \approx 0.854$, an irrational probability that is the fingerprint of genuine magic: the frame has carried the computation across the Clifford boundary that the tableau alone cannot cross.
+The answer is $1/\sqrt2$, so the Born probability of the $+1$ outcome is $(1 + \langle X\rangle)/2$:
 
-Two honest limitations remain, both under active work. First, the frame does not yet *compress*: the true stabilizer rank of $t$ magic states grows like $2^{\alpha t}$ with $\alpha \approx 0.4$, far below the naive $2^t$, but the framework keeps every term, so it is exact for a handful of $T$ gates rather than a scalable magic-state simulator, and reaching that bound by merging terms is the Bravyi-Gosset program. Second, the frame is today closer to a representation than a calculator: it exposes its components and its exact state, but it carries no native Pauli-expectation or measurement method, and its inner product reconstructs the dense $2^n$ vector rather than summing the closed-form per-component overlaps. That is why the probability above is read off the exact state rather than from the rank decomposition directly. Giving the frame component-wise observables, at a cost set by the rank rather than by $2^n$, is ongoing work.
+```wl
+(1 + Tmagic["Expectation", "X"]) / 2 // FullSimplify
+```
+
+The result is $(2 + \sqrt2)/4 \approx 0.854$, the irrational probability that is the fingerprint of genuine magic, the same value the dense state vector gives but now obtained without ever materializing it:
+
+```wl
+(1 + Tmagic["Expectation", "X"]) / 2 == Abs[Normalize[{1, 1}] . Normal[Tmagic["StateVector"]]]^2 // FullSimplify
+```
+
+The frame has carried the computation across the Clifford boundary that the tableau alone cannot cross, and answered an observable there at a cost set by the rank, not by $2^n$.
+
+That same rank decomposition is where the cost lives, and the frame can prune it. Each $T$ doubles the term count, but the component vectors span a space of dimension at most $2^n$, so a frame routinely carries far more terms than it needs. The `"Compress"` method collapses it onto a maximal linearly independent subset, re-expressing the *exact same state* on fewer components. Four $T$ gates on $\lvert + \rangle$ build a sixteen-term frame whose span is only two:
+
+```wl
+overMagic = PauliStabilizer[1][Join[{"H"}, Table["T", 4]]];
+{overMagic["Length"], overMagic["Compress"]["Length"]}
+```
+
+Sixteen terms collapse to two, the whole reach a single qubit ever had, and the state is unchanged:
+
+```wl
+overMagic["Compress"]["State"] == overMagic["State"]
+```
+
+This is a span-dimension cap: exact, bounded by $2^n$, and free. It is *not* the optimal stabilizer rank, the Bravyi-Gosset $2^{\alpha t}$ with $\alpha \approx 0.4$ that merges terms no basis can separate; reaching that bound is the harder, still-open target. But the purely redundant blow-up is gone.
+
+For one important family the closed form is sharper still. A circuit of $T$, $S$, $Z$, and controlled-$Z$ gates with *no Hadamard*, the diagonal or CNOT-dihedral fragment, acting on $\lvert + \rangle^{\otimes n}$ keeps every qubit value a linear function of the inputs and folds all the magic into a single phase polynomial valued in the eighth roots of unity. The state is then rank one: any amplitude is one closed-form term, $\langle y \,\rvert\, U \,\lvert + \rangle^{\otimes n} = 2^{-n/2}\, \omega^{\varphi(y)}$ with $\omega = e^{i\pi/4}$, computed by a single $\mathbb{F}_2$ linear solve, *flat in $n$*. The stabilizer backend builds this representation on request, with the option `"Compress" -> "PhasePolynomial"`. Build a diagonal magic circuit on twenty qubits, a $T$ on every wire, a ladder of controlled-$Z$ gates, and one doubly-controlled $Z$ (written `"C"["Z" -> 3, {1, 2}]`, a three-qubit diagonal gate the term-by-term frame cannot even represent):
+
+```wl
+diagMagic = QuantumCircuitOperator[Join[
+   Table["T" -> q, {q, 20}],
+   Table["CZ" -> {q, q + 1}, {q, 1, 19}],
+   {"C"["Z" -> 3, {1, 2}]}]];
+pp = diagMagic[Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}]
+```
+
+What comes back is a rank-one phase-polynomial frame, not a list of $2^{20}$ amplitudes. A single amplitude of this twenty-qubit magic state, where the dense vector would need over a million entries, returns exactly and essentially instantly:
+
+```wl
+AbsoluteTiming[pp["Amplitude", PadRight[{1}, 20]]]
+```
+
+The amplitude is $e^{i\pi/4}/1024$: magnitude $2^{-n/2} = 2^{-10}$ like every amplitude of a flat superposition, carrying the very eighth root of unity $e^{i\pi/4}$ we met in $\lvert T \rangle$, the signature the diagonal magic wrote into it. The cost is one linear solve, independent of $n$, so the same call answers at fifty or a hundred qubits where no dense method runs. The fragment is narrow: an interior Hadamard takes the circuit out of it, and the backend then *silently* falls back to the ordinary stabilizer path, which evolves $\lvert 0 \rangle^{\otimes n}$ rather than the $\lvert + \rangle^{\otimes n}$ the phase polynomial assumes. So `"Compress" -> "PhasePolynomial"` is a deliberate opt-in for diagonal circuits, not a universal method; inside the fragment, the magic is free.
+
+The honest boundary has moved. The frame is now a *calculator*, not only a record: it answers Pauli expectations and amplitudes from its components at a cost set by the rank, compresses away redundant terms, and on the diagonal fragment collapses to a rank-one closed form flat in $n$. Two limitations remain, both under active work. First, `"Compress"` caps the *span* dimension, not the true stabilizer rank; the Bravyi-Gosset $2^{\alpha t}$ compression that merges terms no basis can separate is still the harder, open target, so the frame is exact for a moderate number of $T$ gates rather than a scalable magic simulator. Second, a single gate-built frame's state and observables are exact up to one global phase, but the *relative* phase between two separately built frames is fixed only up to a gauge, so an inner product across distinct gauges recovers the magnitude exactly and the phase up to that ambiguity. Within those bounds the frame crosses the Clifford boundary and computes there, which is exactly what the bare tableau cannot do.
 
 ### Clifford channels
 
