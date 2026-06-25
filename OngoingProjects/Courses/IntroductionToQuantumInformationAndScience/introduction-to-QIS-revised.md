@@ -155,7 +155,7 @@ The state vector of a single qubit can be written as $\{\alpha ,\beta \}$ with $
 
 ### Bra–Ket Notation and Inner Products
 
-In the quantum mechanics literature, a state vector is usually denoted by a ket. For example, $|\psi \rangle $ can represent a generic pure state such as $|\psi \rangle =\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$. The Hermitian conjugate (complex conjugate transpose) of a ket is denoted by a bra. For the state above, the corresponding bra is $\langle \psi |=\{Cos[\theta /2],e^{-i\, \phi }Sin[\theta /2]\}$. The inner product of two states $|\psi_{1}\rangle $ and $|\psi_{2}\rangle $ is written as $\langle \psi_{1}|\psi_{2}\rangle $, which means the dot product of the bra $\langle \psi_{1}|$ with the ket |ψ₂⟩.
+In the quantum mechanics literature, a state vector is usually denoted by a ket. For example, $|\psi \rangle $ can represent a generic pure state such as $|\psi \rangle =\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$. The Hermitian conjugate (complex conjugate transpose) of a ket is denoted by a bra. For the state above, the corresponding bra is $\langle \psi |=\{Cos[\theta /2],e^{-i\, \phi }Sin[\theta /2]\}$. The inner product of two states $|\psi_{1}\rangle $ and $|\psi_{2}\rangle $ is written as $\langle \psi_{1}|\psi_{2}\rangle $, which means the dot product of the bra $\langle \psi_{1}|$ with the ket $|\psi_{2}\rangle$.
 
 Define $|\psi_{1}\rangle $ and $|\psi_{2}\rangle $:
 

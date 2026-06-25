@@ -106,3 +106,101 @@ depth/KAK/decompose (F3/F5/F6), and many-wire circuit protocols (K3, K10-K12). A
 (Pauli vector, blochVector, densityMatrix; reduceA/reduceB/partialT/vne) is defined once and reused.
 Full manual re-extracted and run top-to-bottom against the working tree: 84/84 cells, exit 0, empty
 stderr. Per-part rewrite harnesses at `verify/rw-A.wls`..`rw-LM.wls`. Now ~1613 lines.
+
+**v4 (curriculum question-list revision, adversarial-draft Revise track):** the user raised concerns
+about the *list of questions* itself and asked, as a professor wanting students to learn finite-dim
+quantum in WL at BSc+MSc level, to revise it for complete topic coverage. Extracted all 80 questions
+to a new sibling artifact `Question-List.md`, then ran the adversarial-draft loop on the curriculum.
+Decisions (AskUserQuestion): drop the bosonic Part M (it is infinite-dimensional, violating the one
+hard constraint; spin coherent states + discrete Wigner are the finite-dim analogs); target a
+comprehensive ~130-160 set; tag every item [BSc]/[MSc]; quantum-review rigor lens. Rebuilt as **171
+questions across 21 parts (71 BSc / 100 MSc)** with a coverage table. Two fresh-context review rounds:
+round 1 found 38 issues (8 physics mis-statements: HHL inverts not applies, Gleason needs d>=3,
+five-qubit code is non-CSS / saturates the quantum Hamming bound, Mermin-Peres = state-INDEPENDENT KS
+contextuality, Berry phase as discrete Bargmann invariant, bound entanglement needs 3x3/2x4, CKW =
+tangle, Stern-Gerlach = spin-projection; plus redundancies, 8 canonical gaps now filled: perturbation
+theory both kinds, variational principle, interaction picture + optical Bloch, symmetry/conservation
+block-diagonalization, identical-particle exchange symmetry, magic-state distillation, decoherence/
+pointer basis, even-d Wigner, KS uncolorable ray set; replaced a bad Holevo-vs-measurement-problem
+item with PBR; split TP/Stinespring and parameter-shift/barren-plateau; PPT re-tagged MSc; Part 8
+reordered BSc-first). Round 2 found only 2 (Fermi golden rule needs the dense-band limit, not a finite
+level set; minor adiabatic shorthand), both fixed. Converged.
+
+**v4b (quantum-review clarity + granularity pass):** audited all questions for clarity/
+unambiguousness (quantum-review skill). 12 IMPRECISE prompts disambiguated (1.3 "which system's
+density matrix", 9.2 "read the Bloch ball", 10.7 "the quantities above" + which capacity, 15.6
+"T gate leaves the Clifford class", 16.5/16.8 vague verbs, 21.9 PBR made computational, etc.; no
+physics errors). Then, per user policy "split distinct-concept pairs list-wide" (keep single-thread
+bundles like the inner-product chain, instances like the four noise channels, and build-and-verify
+pairs), split 8 genuinely fused questions: 1.1 (state rep | Born rule), 1.2 (normalization | global
+phase), 2.11 (PT series | avoided crossing), 4.3 (driven Rabi | free Larmor), 14.2 (SUM gate |
+qudit Fourier), 16.6 (code distance | logical operators), 19.6 (amplitude amplification |
+estimation), 21.1 (no-cloning | no-deleting). Renumbered all affected parts. **Now 179 questions /
+21 parts / 76 BSc / 103 MSc** + coverage table; sequential numbering verified, no dashes. (My rough
+"~200-210" split estimate was high; most multi-output questions are single concepts the policy
+keeps, so the principled count is 179.)
+
+**v4c (completeness + dependency-ordering audit, adversarial-draft + fresh reviewer):** user required
+(1) concept completeness and (2) a valid prerequisite chain (no question needs a concept introduced
+by a LATER question). Fresh-context audit found 10 forward-reference violations (the keystone:
+density operator defined in old Part 9 but used from Part 1; same for tensor product, multi-qubit
+gates, projective measurement, commutator, vN/Shannon entropy, channels-before-info) and 12
+completeness gaps. Restructured into a dependency-correct **25-part** order: hoisted density operators
+(new Part 3), tensor product + partial trace (Part 4), elementary circuits (Part 10) to the front;
+moved the commutator into Part 2; basic projective measurement (Part 5) before spin; channels (Part
+13) before quantum-information/entropy (Part 14). Added the 12 missing concepts (pure-vs-mixed test,
+maximally mixed state, convexity/extreme points, ensemble ambiguity, Gibbs state, Uhlmann fidelity,
+no-broadcasting, Zeno, time-energy/Mandelstam-Tamm, three-picture equivalence, quantum trajectories,
+Hilbert-Schmidt inner product). **Now 194 questions / 25 parts / 83 BSc / 111 MSc** + dependency-
+ordered coverage table. Self-run fresh dependency re-read (Agent tool was down) caught one
+reorder-induced forward reference: the Zeno effect needs unitary evolution (Part 7), so moved it from
+Part 5 to 7.15; confirmed variational/perturbation items (2.11-2.13) only need H as a Hermitian
+operator (Part 2), not dynamics. Numbering verified sequential 1..N in all 25 parts, no dashes.
+
+NOTE: the worked-answer manual
+`Quantum-in-Discrete-Space-QF-Comprehensive-Exam.md` still reflects the OLD 84-cell A-M set; if it is
+rebuilt to the new curriculum, Part M must be dropped and the ~90 new finite-dim items authored.
+
+**v5 (two-answer WL+QF manual, NEW deliverable):** user asked for a NEW md giving each Question-List
+question TWO worked answers, (1) native-WL only and (2) QuantumFramework, no hardcoding, QF answers
+using property downvalues. Read the two reference notebooks fully (introduction-to-QIS-revised twin =
+native-WL idiom; Introduction-to-quantum-computing twin via NotebookToMarkdown = QF idiom) + qf skill.
+Deliverable `Quantum-in-Finite-Dimensions-WL-and-QF-Answers.md`. **Part 1 pilot (9 Q x 2 answers)
+DONE + verified**: extract-run 20/20 cells exit 0 zero messages, WL===QF on every item, and
+/wl-verify wl-verifier OPEN ISSUES 0 (one round, converged). Reusable QF idioms confirmed live:
+qs["StateVector"]//Normal, ["ProbabilitiesList"], ["Norm"], ["Normalize"], (bra["Dagger"]@ket)
+["Scalar"] for inner product, ["Formula"] (Dirac sum, Head RawBoxes), ["BlochVector"]/
+["BlochSphericalCoordinates"], ["Dimension"] to drive dof. TRAP reconfirmed: QuantumDistance
+[.,.,"Fidelity"] is the DISTANCE 1-Sqrt[F] (0 for global-phase-equal states), NOT fidelity; pilot
+avoids it.
+
+**Settled answer-style rules (apply to all parts), after user feedback:** (1) SYMBOLIC wherever
+possible: general amplitudes {\[Alpha],\[Beta]}, angles {\[Theta],\[Phi]} (the symbolic input also
+makes every operation "bite" in full generality, satisfying the earlier pick-a-non-degenerate-example
+rule). (2) NO helper functions: write the computation inline (e.g. the explicit Bloch formula
+{2 Re[Conjugate[a]b], 2 Im[Conjugate[a]b], Abs[a]^2-Abs[b]^2}) because the code IS the explanation.
+(3) Prefer WL BUILT-INS that shorten the answer: ToSphericalCoordinates (= CoordinateTransform but
+shorter) for Cartesian->spherical. (4) Avoid hardcoding even minor cases: Normalize@ConstantArray[1,d]
+not ConstantArray[1,d]/Sqrt[d]. (5) Use QF NAMED/built-in features over manual reconstruction:
+QuantumState["UniformSuperposition",d] not ConstantArray normalized. (6) COMPUTE FROM THE
+DEFINITION, do not write a derived closed-form and call it the definition: e.g. the Bloch vector is
+DEFINED as the Pauli expectation values <psi|sigma_j|psi> (compute Table[Conjugate[psi].PauliMatrix[j]
+.psi,{j,3}]); the component triple {2Re[Conj[a]b],2Im[Conj[a]b],Abs[a]^2-Abs[b]^2} is the RESULT of
+that evaluation, shown in prose, never presented as the definition. (User caught this on 1.8.) Verified-live QF symbolic facts:
+QuantumState[{a,b}] accepts symbolic; ["ProbabilitiesList"] auto-normalizes (match with
+Abs[Normalize[{a,b}]]^2 on the WL side); ["Norm"]/["Normalize"] symbolic; == returns True symbolically
+for global-phase-equal states (=== False); (bra@ket)["Scalar"] gives the RAW (unnormalized) inner
+product a2 Conj[a1]+b2 Conj[b1]; ["BlochVector"] & ["BlochSphericalCoordinates"] FullSimplify (with
+0<theta<Pi && -Pi<phi<Pi) to {Sin t Cos p,...} and {1,theta,phi}. Part 1 rewritten symbolic, /wl-verify
+OPEN ISSUES 0 (3 verifier rounds total across the pilot's revisions). FORMAT SETTLED. Next: Parts 2-25
+(~185 questions x 2) on these rules.
+
+**v3 (blind-exam pass, user request "drop outputs"):** the file already had no fenced output
+blocks; the user meant the result-revealing prose. Stripped the explicit computed values (numbers,
+matrices, True/False) from every interpretation paragraph across all 13 parts, and trimmed the
+"-> value" result annotations in code comments to operation-describing ones. KEPT as physics:
+definitions/setups (normalization, the chosen hidden string s=101, the Tsirelson target bound, the
+GHZ-paradox explanation, the g^(2) bunching/Poissonian/antibunching classifications) and all
+qualitative interpretation. Now reads as a true blind exam: question + concept + runnable code +
+physics interpretation, with the numeric answer found only by running the cell. Re-run clean 84/84,
+exit 0, zero messages.

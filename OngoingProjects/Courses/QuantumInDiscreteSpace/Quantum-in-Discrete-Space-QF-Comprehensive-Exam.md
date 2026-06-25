@@ -64,8 +64,8 @@ state from its amplitudes and ask for both the vector and the probabilities.
 Abs[\[Psi]]^2
 ```
 
-The amplitudes are $\tfrac{\sqrt3}{2}$ and $\tfrac12 e^{i\pi/4}$; squaring their moduli gives
-$p_0 = \tfrac34$, $p_1 = \tfrac14$, exactly the Born rule, and they sum to one.
+Squaring the moduli of the two amplitudes gives the computational-basis probabilities, exactly the
+Born rule, and they sum to one.
 
 #### A2. How do I check normalization, and confirm that a global phase is physically invisible?
 
@@ -80,7 +80,7 @@ FullSimplify[Abs[{\[Alpha], \[Beta]}]^2 == Abs[Exp[I \[CurlyPhi]] {\[Alpha], \[B
   \[CurlyPhi] \[Element] Reals]
 ```
 
-The norm is one; `Normalize` rescales any nonzero vector to unit length; and the squared
+The norm check confirms unit length, `Normalize` rescales any nonzero vector, and the squared
 amplitudes, hence every Born probability, are identical for $\{\alpha,\beta\}$ and
 $e^{i\varphi}\{\alpha,\beta\}$. Relative phases between amplitudes are physical, but the overall
 phase is pure gauge.
@@ -111,9 +111,9 @@ FullSimplify[blochVector[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}],
   {\[Theta], \[Phi]} \[Element] Reals]
 ```
 
-The Bloch vector comes out as $(\sin\theta\cos\varphi, \sin\theta\sin\varphi, \cos\theta)$: the
-ket's parameters $\theta, \varphi$ are exactly the spherical-coordinate angles on the Bloch
-sphere, which is why the half-angle $\theta/2$ appears in the amplitude.
+The Bloch vector comes out as the spherical unit vector with polar angle $\theta$ and azimuth
+$\varphi$: the ket's parameters are exactly the spherical-coordinate angles on the Bloch sphere,
+which is why the half-angle $\theta/2$ appears in the amplitude.
 
 #### A5. How do I compute an overlap $\langle\phi|\psi\rangle$ and the transition probability?
 
@@ -126,8 +126,8 @@ amp = Conjugate[{1, 0}] . ({1, 1}/Sqrt[2])
 Abs[amp]^2
 ```
 
-The overlap $\langle 0|+\rangle = 1/\sqrt2$ gives a transition probability of $\tfrac12$: a state
-prepared as $|+\rangle$ and measured in the computational basis yields $0$ half the time.
+The overlap $\langle 0|+\rangle$ is nonzero, and its squared modulus is the probability that a
+state prepared as $|+\rangle$ yields outcome $0$ when measured in the computational basis.
 
 #### A6. How do I prepare a qudit and a uniform superposition?
 
@@ -177,17 +177,17 @@ Outer[Commutator[#1, #2, Dot] &, \[Sigma], \[Sigma], 1] ==
   2 I TensorContract[TensorProduct[LeviCivitaTensor[3], \[Sigma]], {{3, 4}}]
 ```
 
-Both return `True`. The product rule's antisymmetric part is the commutator
-$[\sigma_i,\sigma_j] = 2i\,\epsilon_{ijk}\sigma_k$ (the $SU(2)$ structure, $X^2=I$ on the diagonal,
-$XY=iZ$ off it), its symmetric part the anticommutator $\{\sigma_i,\sigma_j\} = 2\delta_{ij}I$.
-The Levi-Civita tensor is the cross-product table, so the qubit algebra is literally 3D geometry.
+The product rule's antisymmetric part is the commutator $[\sigma_i,\sigma_j] = 2i\,\epsilon_{ijk}
+\sigma_k$ (the $SU(2)$ structure, $X^2=I$ on the diagonal, $XY=iZ$ off it), its symmetric part the
+anticommutator $\{\sigma_i,\sigma_j\} = 2\delta_{ij}I$. The Levi-Civita tensor is the cross-product
+table, so the qubit algebra is literally 3D geometry.
 
 #### B2. How do I compute an expectation value $\langle\psi|A|\psi\rangle$, two ways?
 
 The expectation value of an observable $A$ in state $|\psi\rangle$ is
 $\langle A\rangle = \langle\psi|A|\psi\rangle = \mathrm{Tr}(A\rho)$ with $\rho = |\psi\rangle\langle\psi|$.
 Take $|\psi\rangle = \tfrac{\sqrt3}{2}|0\rangle + \tfrac12|1\rangle$, for which $\langle X\rangle$
-should be $2\,\mathrm{Re}(\alpha^*\beta) = \tfrac{\sqrt3}{2}$.
+is $2\,\mathrm{Re}(\alpha^*\beta)$.
 
 ```wolfram
 \[Psi] = {Sqrt[3]/2, 1/2};
@@ -196,26 +196,24 @@ Tr[PauliMatrix[1] . TensorProduct[\[Psi], Conjugate@\[Psi]]]
 blochVector[\[Psi]]
 ```
 
-Both forms give $\langle X\rangle = \tfrac{\sqrt3}{2}$: the bra-operator-ket contraction
-$\langle\psi|X|\psi\rangle$ and the trace against the density matrix $|\psi\rangle\langle\psi|$.
-And it is exactly the first component of the Bloch vector $(\tfrac{\sqrt3}{2}, 0, \tfrac12)$: for a
-qubit, $\langle\sigma_j\rangle = r_j$. The Bloch vector is just the triple of Pauli expectations.
+Both forms agree, the bra-operator-ket contraction $\langle\psi|X|\psi\rangle$ and the trace
+against the density matrix $|\psi\rangle\langle\psi|$. And the value is exactly the first component
+of the Bloch vector: for a qubit, $\langle\sigma_j\rangle = r_j$. The Bloch vector is just the
+triple of Pauli expectations.
 
 #### B3. How do I get the eigenvalues of an observable and the outcome probabilities?
 
 Measuring $A$ projects onto its eigenbasis; the outcomes are the eigenvalues and their
-probabilities are the squared overlaps with the eigenvectors. For $Y$ the eigenvalues are
-$\pm1$, and on $|0\rangle$ each occurs with probability $\tfrac12$ (since $|0\rangle$ is an equal
-superposition of the $Y$ eigenstates).
+probabilities are the squared overlaps with the eigenvectors. Read off the $Y$ eigenvalues and the
+outcome probabilities on $|0\rangle$ (which is an equal superposition of the $Y$ eigenstates).
 
 ```wolfram
 Eigenvalues[PauliMatrix[2]]
 Abs[Conjugate[Normalize[#]] . {1, 0}]^2 & /@ Eigenvectors[PauliMatrix[2]]
 ```
 
-The eigenvalues are $\{-1, 1\}$ and the outcome distribution on $|0\rangle$, the squared overlaps
-$|\langle y_\pm|0\rangle|^2$, is flat: the hallmark of measuring in a basis mutually unbiased to
-the one you prepared in.
+The outcome distribution on $|0\rangle$, the squared overlaps $|\langle y_\pm|0\rangle|^2$, comes
+out flat: the hallmark of measuring in a basis mutually unbiased to the one you prepared in.
 
 #### B4. How do I build single-qubit rotations and the closed-form exponential?
 
@@ -250,8 +248,8 @@ FullSimplify[ry . ConjugateTranspose[ry] == IdentityMatrix[2], \[Theta] \[Elemen
 HermitianMatrixQ[PauliMatrix[1]]
 ```
 
-The naive `UnitaryMatrixQ` says `False` on the symbolic $R_y(\theta)$, but the proper check, with
-$\theta\in\mathbb{R}$, confirms unitarity; and $X$ is correctly Hermitian. The lesson is to supply
+The naive `UnitaryMatrixQ` misfires on the symbolic $R_y(\theta)$, but the proper check, with
+$\theta\in\mathbb{R}$, confirms unitarity, and $X$ is correctly Hermitian. The lesson is to supply
 reality assumptions when verifying symbolic operators.
 
 #### B6. How do I decompose a single-qubit unitary into Euler ($Z$-$Y$-$Z$) angles?
@@ -270,7 +268,7 @@ FullSimplify[
   MatrixExp[-I (\[Pi]/3)/2 {Cos[\[Pi]/8], Sin[\[Pi]/8], 0} . \[Sigma]]]
 ```
 
-The middle angle $\beta = \pi/3$ is the rotation angle, and the $Z$-$Y$-$Z$ product of half-angle
+The middle Euler angle is the rotation angle itself, and the $Z$-$Y$-$Z$ product of half-angle
 exponentials equals the axis-angle unitary exactly. This is how an arbitrary gate is compiled into
 the fixed-axis pulses that hardware can actually perform.
 
@@ -287,9 +285,9 @@ var[A_] := Conjugate[\[Psi]] . A . A . \[Psi] - (Conjugate[\[Psi]] . A . \[Psi])
 {Sqrt[var[PauliMatrix[1]] var[PauliMatrix[2]]], Abs[Conjugate[\[Psi]] . PauliMatrix[3] . \[Psi]]}
 ```
 
-The commutator is $2iZ$, and on $|0\rangle$ the product of spreads $\Delta X\,\Delta Y = 1$ exactly
-meets the bound $\tfrac12|\langle[X,Y]\rangle| = |\langle Z\rangle| = 1$: the uncertainty relation
-is saturated. Incompatible observables cannot both be sharp.
+The commutator is $2iZ$, and on $|0\rangle$ the product of spreads $\Delta X\,\Delta Y$ exactly
+meets the Robertson bound $\tfrac12|\langle[X,Y]\rangle| = |\langle Z\rangle|$: the uncertainty
+relation is saturated. Incompatible observables cannot both be sharp.
 
 **Summary of Part B.** Observables are Hermitian, gates are unitary, and on one qubit both are
 combinations of Paulis. We encoded the whole algebra in one Levi-Civita product rule, computed
@@ -320,9 +318,9 @@ Eigenvalues[PauliMatrix[3]]                                  (* the outcomes \[P
 Tr[PauliMatrix[3] . \[Rho]]                                  (* mean = <Z> *)
 ```
 
-Measuring $Z$ on $|+\rangle$ gives $\pm1$ each with probability $\tfrac12$ and mean zero, exactly
-$\langle +|Z|+\rangle = 0$. The probabilities come cleanly as a list; the eigenvalues come from
-the observable.
+Measuring $Z$ on $|+\rangle$ gives the two eigenvalues with equal probability, and the mean is
+$\langle +|Z|+\rangle$. The probabilities come cleanly as a list; the eigenvalues come from the
+observable.
 
 #### C2. How do I measure in a basis other than the computational one?
 
@@ -349,9 +347,9 @@ P0 = TensorProduct[{1, 0}, {1, 0}]; P1 = TensorProduct[{0, 1}, {0, 1}];
 {P0 . \[Psi], P1 . \[Psi]}
 ```
 
-The two branches are $|0\rangle$ and $|1\rangle$, each carrying weight $1/\sqrt2$ so that
-$\||{\cdot}\rangle\|^2 = \tfrac12$ reproduces the Born probability. Measuring $Z$ on $|+\rangle$
-collapses it to a computational eigenstate, as expected.
+The two branches are the computational eigenstates, each carrying the weight whose squared norm
+reproduces its Born probability. Measuring $Z$ on $|+\rangle$ collapses it to a computational
+eigenstate, as expected.
 
 #### C4. How do I build and apply a POVM (a SIC measurement)?
 
@@ -365,7 +363,7 @@ verts = {{1, 1, 1}, {1, -1, -1}, {-1, 1, -1}, {-1, -1, 1}}/Sqrt[3];
 effects = (1/4) (IdentityMatrix[2] + # . \[Sigma]) & /@ verts;
 And @@ (AllTrue[Eigenvalues[#], # >= 0 &] & /@ effects)   (* each effect PSD *)
 Total[effects] == IdentityMatrix[2]                        (* completeness *)
-Simplify@Total[Tr[# . densityMatrix[{0, 0, 1}]] & /@ effects]   (* probabilities sum to 1 *)
+Simplify@Total[Tr[# . densityMatrix[{0, 0, 1}]] & /@ effects]   (* total probability *)
 ```
 
 The four tetrahedral effects are positive semidefinite, sum to the identity, and give a normalized
@@ -376,7 +374,7 @@ many copies, determines the full qubit density matrix, something no projective s
 
 Real measurements are finite samples from the Born distribution. `RandomChoice` with the Born
 weights draws $n$ shots; with $2000$ shots the empirical frequencies should hug the theoretical
-$\{\tfrac12,\tfrac12\}$.
+distribution.
 
 ```wolfram
 SeedRandom[42];
@@ -384,8 +382,8 @@ Counts@RandomChoice[{1/2, 1/2} -> {0, 1}, 2000]
 N@{1/2, 1/2}
 ```
 
-The $2000$ shots split close to $1000{:}1000$, within the $\sqrt{N}$ fluctuation of the exact
-distribution. This is the law of large numbers turning amplitudes into observed frequencies.
+The empirical counts sit close to the exact distribution, within the $\sqrt{N}$ sampling
+fluctuation. This is the law of large numbers turning amplitudes into observed frequencies.
 
 #### C6. How do I measure an entangled pair and see the correlations?
 
@@ -397,8 +395,8 @@ bell = {1, 0, 0, 1}/Sqrt[2];
 Abs[bell]^2
 ```
 
-The joint distribution puts weight only on $00$ and $11$, each $\tfrac12$: the two qubits are
-random individually but perfectly correlated together. This is the raw material of the EPR
+The joint distribution puts weight only on the correlated outcomes $00$ and $11$: the two qubits
+are random individually but perfectly correlated together. This is the raw material of the EPR
 argument and of every entanglement-based protocol to come.
 
 **Summary of Part C.** A measurement is the trace rule $\mathrm{Tr}(E_k\rho)$ against projectors
@@ -466,8 +464,8 @@ the reduction is maximally mixed: locally, each half looks completely random.
 reduceA[\[Rho]bell]
 ```
 
-The reduction is $\tfrac12 I$: one qubit of a Bell pair (and likewise one qubit of a GHZ triple)
-carries no local information. The information lives entirely in the correlations.
+The reduction is maximally mixed: one qubit of a Bell pair (and likewise one qubit of a GHZ
+triple) carries no local information. The information lives entirely in the correlations.
 
 #### D4. How do I test whether a state is entangled?
 
@@ -477,12 +475,12 @@ positive-partial-transpose test of E3.)
 
 ```wolfram
 schmidtRank[\[Psi]_, {dA_, dB_}] := Length@Select[SingularValueList[ArrayReshape[\[Psi], {dA, dB}]], # > 10^-10 &];
-schmidtRank[bell, {2, 2}]                                 (* 2 -> entangled *)
-schmidtRank[Flatten@KroneckerProduct[{1, 0}, {0, 1}], {2, 2}]   (* 1 -> product *)
+schmidtRank[bell, {2, 2}]                                 (* Bell state *)
+schmidtRank[Flatten@KroneckerProduct[{1, 0}, {0, 1}], {2, 2}]   (* product state *)
 ```
 
-The Bell state has Schmidt rank two (entangled), the product state $|01\rangle$ rank one
-(separable). The rank counts how many product terms the state genuinely needs.
+The Bell state comes out entangled and the product state $|01\rangle$ separable. The rank counts
+how many product terms the state genuinely needs.
 
 #### D5. How do I quantify entanglement (entropy, concurrence, negativity)?
 
@@ -498,9 +496,8 @@ concurrence[\[Psi]_] := Abs[Conjugate[\[Psi]] . KroneckerProduct[PauliMatrix[2],
 -Total@Select[Re@Eigenvalues@partialT[\[Rho]bell], # < 0 &]   (* negativity *)
 ```
 
-The Bell state carries one bit of entanglement entropy, concurrence $1$, negativity $\tfrac12$
-(all maximal); the product state has concurrence $0$. These numbers are the currency in which
-entanglement is spent and measured.
+The Bell state's three monotones all come out maximal, while the product state's all vanish. These
+quantities are the currency in which entanglement is spent and measured.
 
 #### D6. How do I compute the Schmidt decomposition and Schmidt rank?
 
@@ -513,9 +510,9 @@ coefficients are the singular values of the reshaped amplitude matrix.
 SingularValueList[ArrayReshape[bell, {2, 2}]]
 ```
 
-Two equal Schmidt coefficients $\tfrac{1}{\sqrt2}$: the Bell state has Schmidt rank two and is
-maximally entangled, since the entanglement entropy is the Shannon entropy of the squared
-coefficients, $-\sum_i \lambda_i^2 \log_2 \lambda_i^2 = 1$ bit.
+The two equal Schmidt coefficients show the Bell state is maximally entangled, since the
+entanglement entropy is the Shannon entropy of the squared coefficients,
+$-\sum_i \lambda_i^2 \log_2 \lambda_i^2$.
 
 #### D7. How do I verify no-signalling through reduced states?
 
@@ -528,8 +525,8 @@ XI = KroneckerProduct[PauliMatrix[1], IdentityMatrix[2]];
 reduceB[\[Rho]bell] == reduceB[XI . \[Rho]bell . ConjugateTranspose[XI]]
 ```
 
-Qubit $2$'s reduced state is $\tfrac12 I$ both before and after the flip on qubit $1$: the local
-density matrix is invariant under remote operations. Entanglement correlates but does not signal.
+Qubit $2$'s reduced state is unchanged before and after the flip on qubit $1$: the local density
+matrix is invariant under remote operations. Entanglement correlates but does not signal.
 
 **Summary of Part D.** Composite systems multiply dimensions through the tensor product; the
 non-factoring states are entangled. We built the Bell, GHZ, and W states, reduced them by partial
@@ -555,13 +552,13 @@ measure of how mixed a state is.
 \[Rho] = 1/2 densityMatrix[{0, 0, 1}] + 1/2 densityMatrix[{1, 0, 0}];  (* 1/2|0><0| + 1/2|+><+| *)
 \[Rho]
 Tr[\[Rho] . \[Rho]]                                    (* purity *)
-Tr[densityMatrix[{0, 0, 1}] . densityMatrix[{0, 0, 1}]]   (* pure -> 1 *)
-Tr[(IdentityMatrix[2]/2) . (IdentityMatrix[2]/2)]      (* maximally mixed -> 1/2 *)
+Tr[densityMatrix[{0, 0, 1}] . densityMatrix[{0, 0, 1}]]   (* a pure state *)
+Tr[(IdentityMatrix[2]/2) . (IdentityMatrix[2]/2)]      (* the maximally mixed state *)
 ```
 
-The equal mixture of $|0\rangle$ and $|+\rangle$ has purity $\tfrac34$, between the pure value
-$1$ and the maximally mixed qubit value $\tfrac12$. Purity $\mathrm{Tr}(\rho^2) = \tfrac12(1+r^2)$
-is a one-number summary of mixedness through the Bloch radius $r$.
+The equal mixture of $|0\rangle$ and $|+\rangle$ has purity between the pure value and the
+maximally mixed qubit value. Purity $\mathrm{Tr}(\rho^2) = \tfrac12(1+r^2)$ is a one-number
+summary of mixedness through the Bloch radius $r$.
 
 #### E2. How do I compute the von Neumann entropy (and handle the large-system limit)?
 
@@ -570,14 +567,15 @@ maximal ($\log_2 d$) for the maximally mixed state. It is also the entanglement 
 bipartite state through its reductions.
 
 ```wolfram
-vne[densityMatrix[{0, 0, 1}]]      (* pure -> 0 *)
-vne[IdentityMatrix[2]/2]           (* maximally mixed -> 1 bit *)
-vne[reduceA[\[Rho]bell]]           (* Bell reduction -> 1 bit of entanglement entropy *)
+vne[densityMatrix[{0, 0, 1}]]      (* a pure state *)
+vne[IdentityMatrix[2]/2]           (* the maximally mixed state *)
+vne[reduceA[\[Rho]bell]]           (* the Bell reduction (entanglement entropy) *)
 ```
 
-A pure state has zero entropy, a maximally mixed qubit one bit, and the Bell reduction one bit of
-entanglement entropy. The eigenvalue formula $S = -\sum_k \lambda_k \log_2 \lambda_k$ has no size
-limit; for very large systems, reduce to a small subsystem first so the eigensolve stays cheap.
+A pure state has zero entropy, a maximally mixed qubit the maximal value, and the Bell reduction
+equals its entanglement entropy. The eigenvalue formula $S = -\sum_k \lambda_k \log_2 \lambda_k$
+has no size limit; for very large systems, reduce to a small subsystem first so the eigensolve
+stays cheap.
 
 #### E3. How do I build a Werner state and find its entanglement threshold?
 
@@ -588,14 +586,13 @@ locate the boundary where entanglement disappears.
 ```wolfram
 singlet = {0, 1, -1, 0}/Sqrt[2];
 werner[q_] := q KroneckerProduct[singlet, singlet] + (1 - q) IdentityMatrix[4]/4;
-Eigenvalues[partialT[werner[q]]] // Simplify       (* one eigenvalue is (1 - 3 q)/4 *)
-Reduce[(1 - 3 q)/4 < 0 && 0 <= q <= 1, q]           (* entangled iff q > 1/3 *)
+Eigenvalues[partialT[werner[q]]] // Simplify       (* partial-transpose spectrum *)
+Reduce[(1 - 3 q)/4 < 0 && 0 <= q <= 1, q]           (* solve for the entanglement threshold *)
 ```
 
-The partial transpose has eigenvalues $\{(1-3q)/4, (1+q)/4, (1+q)/4, (1+q)/4\}$; the first turns
-negative exactly at $q = 1/3$. So the Werner state is entangled precisely for $q > 1/3$, the
-Peres-Horodecki threshold, and separable below it: a sharp boundary between quantum and merely
-classical correlations.
+The partial transpose has one eigenvalue that turns negative past a critical mixing fraction. So
+the Werner state is entangled above that Peres-Horodecki threshold and separable below it: a sharp
+boundary between quantum and merely classical correlations.
 
 #### E4. How do I compare two states by fidelity and trace distance?
 
@@ -611,9 +608,8 @@ overlap = Conjugate[\[Psi]0] . \[Psi]p;
 1/2 Total@Abs@Eigenvalues[\[Rho]0 - \[Rho]p]          (* trace distance *)
 ```
 
-The root fidelity $|\langle 0|+\rangle|$ is $\tfrac{1}{\sqrt2}$, the fidelity $F$ is $\tfrac12$,
-and the trace distance is $\tfrac{1}{\sqrt2} = \sqrt{1-F}$. Fidelity and distance are two readings
-of the same closeness.
+The root fidelity, the fidelity $F$, and the trace distance come out tied by $T = \sqrt{1-F}$.
+Fidelity and distance are two readings of the same closeness.
 
 #### E5. How do I purify a mixed state?
 
@@ -629,14 +625,14 @@ purify[IdentityMatrix[2]/2]
 reduceA[KroneckerProduct[purify[IdentityMatrix[2]/2], purify[IdentityMatrix[2]/2]]]
 ```
 
-The maximally mixed qubit purifies to the Bell state $|\Phi^+\rangle$, whose reduction is again
-$\tfrac12 I$. Mixedness of a part is entanglement with the whole: the two descriptions are the
-same physics.
+The maximally mixed qubit purifies to the Bell state $|\Phi^+\rangle$, whose reduction returns the
+original mixed state. Mixedness of a part is entanglement with the whole: the two descriptions are
+the same physics.
 
 **Summary of Part E.** The density matrix unifies superposition and ignorance. We mixed ensembles
 and measured purity, computed von Neumann entropy with no size limit, found the entanglement
-threshold of a Werner family at $q = 1/3$, tied fidelity to trace distance, and purified a mixed
-state into a Bell pair. Mixedness of a part is entanglement with the whole.
+threshold of a Werner family, tied fidelity to trace distance, and purified a mixed state into a
+Bell pair. Mixedness of a part is entanglement with the whole.
 
 ---
 
@@ -696,8 +692,9 @@ qc["Depth"]
 Length[qc["Layers"]]
 ```
 
-The four gates compress into three layers because the final $H$ on qubit $1$ and $X$ on qubit $2$
-act on different wires and share a layer. Depth, not gate count, is the relevant cost.
+The four gates compress into fewer layers than their count, because the final $H$ on qubit $1$ and
+$X$ on qubit $2$ act on different wires and share a layer. Depth, not gate count, is the relevant
+cost.
 
 #### F4. How do I get the overall unitary of a circuit?
 
@@ -726,10 +723,10 @@ Tally[Replace[#["Label"],
    kak["Operators"]]
 ```
 
-The decomposition is a circuit of single-qubit $U$ gates and a global phase wrapped around two
-controlled-$X$ gates: even CNOT is re-expressed in the canonical local-plus-entangler form (this
-build emits two entanglers, within the KAK budget of three). Every two-qubit gate reduces to this
-template of local rotations separated by controlled-$X$s.
+The decomposition is a circuit of single-qubit $U$ gates and a global phase wrapped around a few
+controlled-$X$ entanglers: even CNOT is re-expressed in the canonical local-plus-entangler form,
+within the KAK budget of three CNOTs. Every two-qubit gate reduces to this template of local
+rotations separated by controlled-$X$s.
 
 #### F6. How do I confirm universality by decomposing an arbitrary unitary?
 
@@ -744,9 +741,9 @@ dec = u["Decompose"];
 Norm[(u["MatrixRepresentation"] // Normal) - (dec["MatrixRepresentation"] // Normal), "Frobenius"] // Chop
 ```
 
-The recomposed circuit matches the original to machine zero: an arbitrary two-qubit unitary is
-exactly the elementary gates QF emitted. This is universality made executable, and it scales to
-any number of qubits.
+The recomposed circuit matches the original exactly: an arbitrary two-qubit unitary is exactly the
+elementary gates QF emitted. This is universality made executable, and it scales to any number of
+qubits.
 
 **Summary of Part F.** Circuits are unitaries assembled from one- and two-qubit gates. We built
 the standard gates and saw their basis action, composed and measured the depth of circuits,
@@ -811,8 +808,9 @@ Commutator[Jx, Jy, Dot] == I Jz
 Jx . Jx + Jy . Jy + Jz . Jz
 ```
 
-The spin-one $J_z$ spectrum is $\{-1, 0, 1\}$, the algebra $[J_x, J_y] = i J_z$ holds, and the
-Casimir $J^2 = j(j+1) I = 2 I$. A discrete three-level system carries the full $SU(2)$ structure.
+The spin-one $J_z$ spectrum is the integer ladder, the algebra $[J_x, J_y] = i J_z$ holds, and the
+Casimir comes out $J^2 = j(j+1) I$. A discrete three-level system carries the full $SU(2)$
+structure.
 
 #### G4. How do I build mutually unbiased bases (the qudit Fourier basis)?
 
@@ -827,16 +825,16 @@ Table[Simplify[Abs[F[[1, k]]]^2], {k, 1, 3}]
 Simplify[ConjugateTranspose[F] . F] == IdentityMatrix[3]
 ```
 
-Every computational state has probability exactly $1/3$ in each Fourier outcome: the bases are
-mutually unbiased, and $F$ is unitary. Mutual unbiasedness is the resource behind quantum key
-distribution and optimal state tomography.
+Every computational state has equal probability in each Fourier outcome: the bases are mutually
+unbiased, and $F$ is unitary. Mutual unbiasedness is the resource behind quantum key distribution
+and optimal state tomography.
 
 #### G5. How do I exhibit quantum contextuality (the KCBS qutrit inequality)?
 
 Contextuality is the impossibility of assigning outcomes to all measurements independently of which
 compatible set they are measured with. The KCBS inequality bounds a sum of five projector
-expectations by $2$ for any noncontextual model, but a qutrit reaches $\sqrt5 > 2$. Build the five
-pentagon vectors and the optimal state.
+expectations for any noncontextual model, but a qutrit exceeds that bound. Build the five pentagon
+vectors and the optimal state.
 
 ```wolfram
 ct2 = Cos[Pi/5]/(1 + Cos[Pi/5]); ct = Sqrt[ct2]; st = Sqrt[1 - ct2];
@@ -847,8 +845,8 @@ FullSimplify[Sum[Abs[Conjugate[psi] . lvec[k]]^2, {k, 0, 4}]]
 ```
 
 Consecutive pentagon vectors are orthogonal (jointly measurable), yet the sum of the five
-expectations is $\sqrt5 \approx 2.236$, above the noncontextual bound $2$. A single qutrit already
-defeats any noncontextual hidden-variable account.
+expectations comes out above the noncontextual bound. A single qutrit already defeats any
+noncontextual hidden-variable account.
 
 **Summary of Part G.** Discrete space extends past the qubit. We built the clock and shift and
 their Weyl relation, the qutrit SUM gate, the spin-one angular-momentum algebra with its Casimir,
@@ -877,8 +875,8 @@ channel[\[Rho]_, kr_] := Sum[k . \[Rho] . ConjugateTranspose[k], {k, kr}];
 channel[{{0, 0}, {0, 1}}, {K0, K1}]    (* apply to |1><1| *)
 ```
 
-The excited population $\rho_{11}$ drops from $1$ to $1 - \gamma = 0.7$ while $0.3$ leaks into the
-ground state: the channel models spontaneous emission with decay probability $\gamma$.
+The excited population $\rho_{11}$ drops by the decay fraction $\gamma$ while the rest leaks into
+the ground state: the channel models spontaneous emission with decay probability $\gamma$.
 
 #### H2. How do I get the Choi matrix and check complete positivity?
 
@@ -909,9 +907,9 @@ channel[{{1, 0}, {0, 0}}, bitflip[1/4]]          (* bit flip on |0> *)
 channel[densityMatrix[{1, 0, 0}], depol[1/2]]    (* depolarize |+> *)
 ```
 
-The bit-flip channel moves weight $\tfrac14$ from $|0\rangle$ to $|1\rangle$; the depolarizing
-channel shrinks the Bloch vector of $|+\rangle$ toward the maximally mixed state. These are the
-elementary error models for quantum hardware.
+The bit-flip channel moves weight from $|0\rangle$ to $|1\rangle$; the depolarizing channel shrinks
+the Bloch vector of $|+\rangle$ toward the maximally mixed state. These are the elementary error
+models for quantum hardware.
 
 #### H4. How do I verify trace preservation and get the Stinespring dilation?
 
@@ -921,7 +919,7 @@ operators vertically gives that dilation isometry.
 
 ```wolfram
 Simplify[ConjugateTranspose[K0] . K0 + ConjugateTranspose[K1] . K1]   (* = I, trace preserving *)
-stinespring = ArrayFlatten[{{K0}, {K1}}];          (* stack Kraus -> 4x2 isometry V *)
+stinespring = ArrayFlatten[{{K0}, {K1}}];          (* stack Kraus into an isometry V *)
 Simplify[ConjugateTranspose[stinespring] . stinespring == IdentityMatrix[2]]
 ```
 
@@ -946,9 +944,9 @@ diss[m_] := L . m . ConjugateTranspose[L] -
    \[Rho][t] \[Element] Matrices[{2, 2}], t]
 ```
 
-The solution is $\rho(t) = \mathrm{diag}(1 - e^{-t},\, e^{-t})$: the excited population decays as
-$e^{-t}$, reaching $e^{-1} = 0.368$ after one lifetime. This is the hallmark exponential $T_1$
-decay, with the jump operator $|0\rangle\langle1|$ as spontaneous emission in continuous time.
+The closed-form solution shows the excited population decaying exponentially, reaching $e^{-1}$ of
+its initial value after one lifetime. This is the hallmark exponential $T_1$ decay, with the jump
+operator $|0\rangle\langle1|$ as spontaneous emission in continuous time.
 
 #### H6. How do I find the steady state of an open system?
 
@@ -960,9 +958,9 @@ solution.
 Limit[\[Rho]t, t -> Infinity]
 ```
 
-The limit is $\mathrm{diag}(1, 0) = |0\rangle\langle0|$: the system relaxes entirely to its ground
-state, the unique steady state of amplitude damping. Dissipation, not unitary dynamics, sets where
-an open system ends up.
+The long-time limit is the ground state $|0\rangle\langle0|$: the system relaxes entirely, the
+unique steady state of amplitude damping. Dissipation, not unitary dynamics, sets where an open
+system ends up.
 
 #### H7. How does noise destroy entanglement, and can it die at finite time?
 
@@ -981,9 +979,9 @@ Table[neg[{Sqrt[1/5], 0, 0, Sqrt[4/5]}, gg], {gg, {0, 0.3, 0.5, 0.6}}]
 ```
 
 The balanced state $|\Phi^+\rangle$ keeps a positive negativity until $\gamma \to 1$. The asymmetric
-state $\sqrt{1/5}\,|00\rangle + \sqrt{4/5}\,|11\rangle$ instead loses all entanglement at finite
-$\gamma = \tfrac12$ and stays dead: entanglement sudden death, a finite-time end with no analogue
-in the decay of any single amplitude.
+state $\sqrt{1/5}\,|00\rangle + \sqrt{4/5}\,|11\rangle$ instead loses all entanglement at a finite
+damping and stays dead: entanglement sudden death, a finite-time end with no analogue in the decay
+of any single amplitude.
 
 **Summary of Part H.** Open systems evolve by completely positive channels. We built channels from
 Kraus operators, certified complete positivity through the Choi matrix, applied named noise,
@@ -1011,9 +1009,9 @@ ps = PauliStabilizer[2];
 ps["Stabilizers"]
 ```
 
-The two-qubit register $|00\rangle$ is stabilized by $Z_1$ and $Z_2$ (the strings $ZI$ and $IZ$):
-these two operators fix the state uniquely. An $n$-qubit stabilizer state needs only $n$ such
-generators, an exponential compression over the $2^n$ amplitudes.
+The two-qubit register $|00\rangle$ is stabilized by $Z_1$ and $Z_2$: these two operators fix the
+state uniquely. An $n$-qubit stabilizer state needs only $n$ such generators, an exponential
+compression over the $2^n$ amplitudes.
 
 #### I2. How do I apply Clifford gates and watch the generators transform?
 
@@ -1027,9 +1025,9 @@ psBell["Stabilizers"]
 psBell["QuantumState"]["StateVector"]
 ```
 
-The Bell state $|\Phi^+\rangle$ is stabilized by $XX$ and $ZZ$, and materializing the tableau
-recovers the familiar amplitudes. The entire evolution happened on two Pauli strings, never on the
-state vector.
+The Bell state $|\Phi^+\rangle$ acquires the entangling two-qubit stabilizers, and materializing
+the tableau recovers the familiar amplitudes. The entire evolution happened on two Pauli strings,
+never on the state vector.
 
 #### I3. How do I simulate a large Clifford circuit efficiently?
 
@@ -1060,15 +1058,15 @@ gcirc = {"H" -> 1, "H" -> 2, "H" -> 3, "CZ" -> {1, 2}, "CZ" -> {2, 3}};
 PauliStabilizer[3][gcirc]["Stabilizers"]
 ```
 
-The generators are $X_1 Z_2$, $Z_1 X_2 Z_3$, $Z_2 X_3$: each vertex carries an $X$ dressed by $Z$
-on its neighbors, exactly the graph-state stabilizer rule. Cluster states are the substrate of
-measurement-based quantum computation.
+Each generator carries an $X$ on a vertex dressed by $Z$ on its neighbors, exactly the graph-state
+stabilizer rule $K_i = X_i\prod_{j\sim i}Z_j$. Cluster states are the substrate of measurement-based
+quantum computation.
 
 #### I5. How do I encode the three-qubit code and detect an error by syndrome?
 
 The three-qubit bit-flip code stores one logical qubit as $|0_L\rangle = |000\rangle$,
 $|1_L\rangle = |111\rangle$. The stabilizers $Z_1 Z_2$ and $Z_2 Z_3$ check parities without
-disturbing the logical state; a flipped qubit shows up as a syndrome of $-1$ values.
+disturbing the logical state; a flipped qubit shows up as a nontrivial syndrome.
 
 ```wolfram
 enc = QuantumCircuitOperator[{"CNOT" -> {1, 2}, "CNOT" -> {1, 3}}];
@@ -1077,9 +1075,9 @@ QuantumMeasurementOperator[QuantumOperator["ZZI"]][errored]["Mean"]
 QuantumMeasurementOperator[QuantumOperator["IZZ"]][errored]["Mean"]
 ```
 
-The encoded $|1_L\rangle = |111\rangle$ suffers an $X$ on qubit $2$, and both parity checks read
-$-1$. The syndrome $(-1, -1)$ points uniquely to qubit $2$, which is then corrected, all without
-measuring the logical information.
+The encoded $|1_L\rangle$ suffers an $X$ on qubit $2$, and both parity checks flip sign. The
+syndrome points uniquely to qubit $2$, which is then corrected, all without measuring the logical
+information.
 
 #### I6. How do I work with the five-qubit code stabilizers?
 
@@ -1111,8 +1109,8 @@ Length[(PauliStabilizer[1]["T", 1])["Components"]]
 ```
 
 The state $|+\rangle$ is a stabilizer state, but $T|+\rangle$ is not, and the $T$ gate splits the
-tableau into two stabilizer components. This magic, the departure from the Clifford class, is the
-resource that makes quantum computation classically hard and is consumed by magic-state
+tableau into more than one stabilizer component. This magic, the departure from the Clifford class,
+is the resource that makes quantum computation classically hard and is consumed by magic-state
 distillation.
 
 **Summary of Part I.** The stabilizer formalism tracks Pauli generators instead of amplitudes,
@@ -1156,9 +1154,9 @@ strange["PhaseSpace"]
 Min[strange["PhaseSpace"] // Normal]
 ```
 
-The Wigner function dips to $-\tfrac13$: the strange state is genuinely non-classical. This
-negativity, impossible for any stabilizer state, is what a quantum computer must supply beyond the
-efficiently simulable Clifford part.
+The Wigner function dips negative: the strange state is genuinely non-classical. This negativity,
+impossible for any stabilizer state, is what a quantum computer must supply beyond the efficiently
+simulable Clifford part.
 
 #### J3. How do I compute the mana (a magic monotone)?
 
@@ -1171,9 +1169,8 @@ FullSimplify[mana[strange]]
 FullSimplify[mana[QuantumState["0", 3]]]
 ```
 
-The strange state has mana $\log\tfrac53 \approx 0.511$, while the stabilizer state has mana zero.
-Mana is additive and non-increasing under stabilizer operations, making it a genuine resource
-measure of magic.
+The strange state has positive mana, while the stabilizer state has mana zero. Mana is additive and
+non-increasing under stabilizer operations, making it a genuine resource measure of magic.
 
 **Summary of Part J.** The discrete Wigner function maps finite-dimensional states onto a
 quasi-probability grid. We computed it for a stabilizer qutrit (non-negative), exhibited the
@@ -1200,13 +1197,12 @@ Here the balanced oracle for $f(x) = x_1$ is a single $Z$.
 ket[bits__] := Fold[Flatten@KroneckerProduct[#1, #2] &, UnitVector[2, # + 1] & /@ {bits}];
 H = {{1, 1}, {1, -1}}/Sqrt[2]; H3 = KroneckerProduct[H, H, H];
 dj[oracle_] := H3 . oracle . H3 . ket[0, 0, 0];
-Abs[dj[IdentityMatrix[8]][[1]]]^2     (* constant f -> 1 *)
-Abs[dj[KroneckerProduct[PauliMatrix[3], IdentityMatrix[2], IdentityMatrix[2]]][[1]]]^2   (* balanced -> 0 *)
+Abs[dj[IdentityMatrix[8]][[1]]]^2     (* constant f *)
+Abs[dj[KroneckerProduct[PauliMatrix[3], IdentityMatrix[2], IdentityMatrix[2]]][[1]]]^2   (* balanced f *)
 ```
 
-The constant function returns the all-zeros string with probability $1$; the balanced function
-returns it with probability $0$. One query reads a global property of $f$ that no single classical
-evaluation can.
+The constant function returns the all-zeros string with certainty; the balanced function never
+does. One query reads a global property of $f$ that no single classical evaluation can.
 
 #### K2. Bernstein-Vazirani: how do I recover a hidden string in one query?
 
@@ -1219,24 +1215,24 @@ bvOracle = KroneckerProduct[PauliMatrix[3], IdentityMatrix[2], PauliMatrix[3]]; 
 H3 . bvOracle . H3 . ket[0, 0, 0] // Chop
 ```
 
-The output is the basis state $|101\rangle$ (index $6$): the hidden string $s = 101$ is read off
-directly. Interference concentrates the entire amplitude on the answer.
+The output is the basis state encoding the hidden string $s$, read off directly. Interference
+concentrates the entire amplitude on the answer.
 
 #### K3. Simon: how do I find a hidden period?
 
 Simon's problem (find $s$ with $f(x) = f(x \oplus s)$) is the first with an exponential quantum
 speedup, and the ancestor of Shor's. Each run measures a string $y$ orthogonal to $s$; a handful
 of runs determine $s$ by linear algebra over $\mathbb{F}_2$. For $f(x) = x_1 \oplus x_2$ the hidden
-period is $s = 11$, so the input register must yield only $y \in \{00, 11\}$.
+period is $s = 11$, so the input register must yield only strings $y$ with $y\cdot s = 0$.
 
 ```wolfram
 simon = QuantumCircuitOperator[{"H" -> 1, "H" -> 2, "CNOT" -> {1, 3}, "CNOT" -> {2, 3}, "H" -> 1, "H" -> 2}];
 QuantumPartialTrace[simon[QuantumState["000"]], {3}]["ProbabilitiesList"] // Chop
 ```
 
-The input register is supported only on $00$ and $11$, exactly the strings $y$ with $y \cdot s = 0$
-for $s = 11$. Collecting such $y$ and solving the linear system recovers the period in a polynomial
-number of runs.
+The input register is supported only on the strings $y$ orthogonal to the hidden period,
+$y \cdot s = 0$. Collecting such $y$ and solving the linear system recovers the period in a
+polynomial number of runs.
 
 #### K4. Grover: how do I amplify a marked item?
 
@@ -1254,9 +1250,9 @@ grov = Nest[diffuser . oracle . # &, s, 2];
 Abs[grov[[tgt]]]^2
 ```
 
-After two iterations the marked state $|101\rangle$ carries probability $\tfrac{121}{128} \approx
-0.945$, matching the exact amplitude $\sin^2(5\arcsin(1/\sqrt8))$. Amplitude amplification rotates
-the state toward the target far faster than any classical scan.
+After two iterations the marked state $|101\rangle$ carries nearly all the probability, matching the
+exact amplitude $\sin^2(5\arcsin(1/\sqrt8))$. Amplitude amplification rotates the state toward the
+target far faster than any classical scan.
 
 #### K5. Quantum Fourier transform: how do I build and verify it?
 
@@ -1285,9 +1281,9 @@ kicked = Table[Exp[2 Pi I phi k], {k, 0, 7}]/Sqrt[8];
 Abs[ConjugateTranspose[FourierMatrix[8]] . kicked]^2 // Chop   (* inverse QFT *)
 ```
 
-The inverse QFT concentrates all probability on index $3$, the binary fraction $0.011 = 3/8 =
-\varphi$. The controlled-unitary ladder of full phase estimation exists only to prepare this kicked
-register, which the inverse QFT then decodes.
+The inverse QFT concentrates all probability on the single index whose binary fraction equals
+$\varphi$. The controlled-unitary ladder of full phase estimation exists only to prepare this
+kicked register, which the inverse QFT then decodes.
 
 #### K7. HHL: how do I apply a matrix to a vector coherently?
 
@@ -1303,16 +1299,16 @@ c
 Sum[c[[j + 1]] PauliMatrix[j] . xvec, {j, 0, 3}]                 (* recombine -> A.xvec *)
 ```
 
-The decomposition is $A = I + \tfrac12 X$, and recombining the Pauli terms reproduces
-$A x = (1, \tfrac{11}{10})$. On hardware an ancilla-controlled multiplexer applies this weighted sum
-coherently; QuantumFramework's `QuantumLinearSolve` packages the full variational solver around this
+The Pauli coefficients express $A$ as a short sum of Paulis, and recombining the terms reproduces
+$A x$. On hardware an ancilla-controlled multiplexer applies this weighted sum coherently;
+QuantumFramework's `QuantumLinearSolve` packages the full variational solver around this
 block-encoding.
 
 #### K8. VQE: how do I find a ground-state energy variationally?
 
 The variational quantum eigensolver minimizes $\langle\psi(\theta)|H|\psi(\theta)\rangle$ over a
 parametrized state to approximate the ground energy, the workhorse of near-term quantum chemistry.
-For $H = Z$ with an $R_y(\theta)$ ansatz the minimum is the lowest eigenvalue $-1$.
+For $H = Z$ with an $R_y(\theta)$ ansatz the minimum is the lowest eigenvalue of $Z$.
 
 ```wolfram
 ClearAll[ry];                (* ry held the B5 matrix above; free it to define the ansatz *)
@@ -1321,16 +1317,16 @@ cost[\[Theta]_] := Re[Conjugate[#] . PauliMatrix[3] . #] &[ry[\[Theta]] . {1, 0}
 NMinimize[{cost[\[Theta]], -\[Pi] <= \[Theta] <= \[Pi]}, \[Theta]][[1]]
 ```
 
-The optimizer drives the energy to $-1$, the ground state $|1\rangle$ of $Z$. Use `NMinimize`
-rather than a local method: variational landscapes have barren plateaus that defeat gradient
-descent.
+The optimizer drives the energy down to the ground value, the lowest eigenstate $|1\rangle$ of $Z$.
+Use `NMinimize` rather than a local method: variational landscapes have barren plateaus that defeat
+gradient descent.
 
 #### K9. QAOA: how do I solve Max-Cut?
 
 The quantum approximate optimization algorithm encodes a combinatorial problem in a cost
 Hamiltonian and alternates cost and mixer layers. For Max-Cut the cost is
 $H_C = \sum_{(i,j)\in E} \tfrac12(I - Z_i Z_j)$, whose largest eigenvalue is the size of the maximum
-cut. On a triangle that maximum is two.
+cut, read off here for a triangle.
 
 ```wolfram
 Zat[positions_, n_] := KroneckerProduct @@ Table[If[MemberQ[positions, k], PauliMatrix[3], IdentityMatrix[2]], {k, n}];
@@ -1338,9 +1334,9 @@ Hc = Total[1/2 (IdentityMatrix[8] - Zat[#, 3]) & /@ {{1, 2}, {2, 3}, {1, 3}}];
 Max[Eigenvalues[Hc]]
 ```
 
-The cost Hamiltonian's top eigenvalue is $2$: any cut of the triangle separates at most two of its
-three edges. QAOA prepares a state concentrated on the optimizing bit strings by tuning the
-layer angles toward this maximum.
+The cost Hamiltonian's top eigenvalue is the maximum cut size, the most edges any bipartition of
+the triangle can separate. QAOA prepares a state concentrated on the optimizing bit strings by
+tuning the layer angles toward this maximum.
 
 #### K10. Teleportation: how do I teleport a qubit?
 
@@ -1357,7 +1353,7 @@ N@QuantumSimilarity[q3, psiIn]
 N@q3["Purity"]
 ```
 
-The output qubit matches the input with fidelity $1$ and is pure: the unknown amplitudes have moved
+The output qubit matches the input with unit fidelity and is pure: the unknown amplitudes have moved
 from qubit $1$ to qubit $3$ with no copy left behind, consistent with no-cloning. Entanglement plus
 classical communication transmits a quantum state.
 
@@ -1389,9 +1385,9 @@ branch = QuantumMeasurementOperator[{2, 3}][bm]["States"][[1]]["Normalized"];
 N@QuantumEntanglementMonotone[QuantumPartialTrace[branch, {2, 3}], {1}, "Concurrence"]
 ```
 
-Qubits $1$ and $4$ start with concurrence $0$ (independent pairs) and, after the Bell measurement
-on $(2,3)$, reach concurrence $1$, maximally entangled. The measurement projected the swap, an
-entanglement created without any interaction between $1$ and $4$.
+Qubits $1$ and $4$ start unentangled (independent pairs) and, after the Bell measurement on
+$(2,3)$, become maximally entangled. The measurement projected the swap, an entanglement created
+without any interaction between $1$ and $4$.
 
 **Summary of Part K.** Algorithms turn superposition, interference, and entanglement into
 computational and communication advantage. We ran the Deutsch-Jozsa, Bernstein-Vazirani, and Simon
@@ -1421,7 +1417,7 @@ ov = Conjugate[{1, 0}] . ({1, 1}/Sqrt[2]);   (* <0|+> *)
 {ov, ov^2, ov == ov^2}
 ```
 
-The overlap $\tfrac1{\sqrt2}$ does not equal its square $\tfrac12$, so no unitary can clone both
+The overlap does not equal its square (it is neither $0$ nor $1$), so no unitary can clone both
 $|0\rangle$ and $|+\rangle$. No-cloning is what makes quantum money and quantum key distribution
 secure, and what keeps teleportation honest.
 
@@ -1439,9 +1435,9 @@ B0 = (pZ + pX)/Sqrt[2]; B1 = (pZ - pX)/Sqrt[2];
 Edir[pZ, B0] + Edir[pZ, B1] + Edir[pX, B0] - Edir[pX, B1] // FullSimplify
 ```
 
-The magnitude $2\sqrt2 \approx 2.83$ exceeds the classical bound $2$: no local hidden-variable model
-can reproduce the singlet's correlations. The violation is the experimental signature that nature
-is not locally real.
+The magnitude exceeds the classical bound: no local hidden-variable model can reproduce the
+singlet's correlations. The violation is the experimental signature that nature is not locally
+real.
 
 #### L3. Holevo: how much classical information fits in a qubit?
 
@@ -1455,9 +1451,9 @@ rhoEns = 1/2 densityMatrix[{0, 0, 1}] + 1/2 densityMatrix[{1, 0, 0}];   (* 1/2|0
 N@vne[rhoEns]
 ```
 
-The ensemble $\{|0\rangle, |+\rangle\}$ carries Holevo information $\approx 0.60$ bits, below the
-one-bit ceiling because the two states are non-orthogonal and hence not perfectly distinguishable.
-A qubit holds one qubit of quantum state but at most one bit of retrievable classical message.
+The ensemble $\{|0\rangle, |+\rangle\}$ carries Holevo information below the one-bit ceiling,
+because the two states are non-orthogonal and hence not perfectly distinguishable. A qubit holds
+one qubit of quantum state but at most one bit of retrievable classical message.
 
 #### L4. The GHZ paradox: how do three qubits refute local realism with certainty?
 
@@ -1472,14 +1468,14 @@ ev[ops_] := Re[Conjugate[ghz] . KroneckerProduct @@ ops . ghz];
 {ev[{X, X, X}], ev[{X, Y, Y}], ev[{Y, X, Y}], ev[{Y, Y, X}]}
 ```
 
-The three mixed correlators are $-1$ and would force $XXX = -1$ in any local-realistic account, yet
-$XXX = +1$. The contradiction is deterministic, needing no inequality and no statistics: local
-realism fails outright.
+The three mixed correlators come out at the signs that would force one value of $XXX$ in any
+local-realistic account, yet quantum mechanics gives the opposite. The contradiction is
+deterministic, needing no inequality and no statistics: local realism fails outright.
 
 **Summary of Part L.** Quantum information has hard edges. We proved no-cloning from overlap
-preservation, measured the $2\sqrt2$ Tsirelson violation of CHSH, bounded retrievable information by
-Holevo, and exhibited the all-or-nothing GHZ refutation of local realism. The impossibilities and
-the excesses are two sides of the same non-classical structure.
+preservation, measured the Tsirelson violation of CHSH, bounded retrievable information by Holevo,
+and exhibited the all-or-nothing GHZ refutation of local realism. The impossibilities and the
+excesses are two sides of the same non-classical structure.
 
 ---
 
@@ -1509,8 +1505,9 @@ Chop[a . fock[2] - Sqrt[2] fock[1]]                       (* a|2> = Sqrt[2] |1> 
 Chop[(ConjugateTranspose[a] . a) . fock[3] - 3 fock[3]]   (* N|3> = 3|3> *)
 ```
 
-The ladder lowers $|2\rangle$ to $\sqrt2\,|1\rangle$ and the number operator returns the eigenvalue
-$3$ on $|3\rangle$. These two relations generate the entire oscillator algebra.
+The ladder lowers each Fock state with the expected $\sqrt n$ factor, and the number operator
+returns the photon count as its eigenvalue. These two relations generate the entire oscillator
+algebra.
 
 #### M2. How do I build a coherent state and check it is an eigenstate of $a$?
 
@@ -1527,8 +1524,8 @@ Chop[Re[Conjugate[coh] . (ConjugateTranspose[a] . a) . coh]]   (* mean photon |a
 ```
 
 Annihilation returns $\alpha$ times the state (zero difference on the low components, up to
-truncation), and the mean photon number is $1.44 = (1.2)^2 = |\alpha|^2$. The coherent state stays
-coherent under photon loss, which is why a laser beam is coherent.
+truncation), and the mean photon number equals $|\alpha|^2$. The coherent state stays coherent
+under photon loss, which is why a laser beam is coherent.
 
 #### M3. How do I show the coherent-state photon distribution is Poissonian?
 
@@ -1555,19 +1552,19 @@ vacuum floor at the expense of the other.
 squeeze[\[Xi]_] := MatrixExp[1/2 (Conjugate[\[Xi]] a . a - \[Xi] ConjugateTranspose[a] . ConjugateTranspose[a])];
 quadX = (a + ConjugateTranspose[a])/Sqrt[2];
 var[\[Psi]_, op_] := Re[Conjugate[\[Psi]] . op . op . \[Psi] - (Conjugate[\[Psi]] . op . \[Psi])^2];
-var[fock[0], quadX]                  (* vacuum variance 1/2 *)
-var[squeeze[1.0] . fock[0], quadX]   (* squeezed < 1/2 *)
+var[fock[0], quadX]                  (* vacuum quadrature variance *)
+var[squeeze[1.0] . fock[0], quadX]   (* squeezed quadrature variance *)
 ```
 
-The vacuum quadrature variance is $1/2$; squeezing drops it to $0.26$, well below the vacuum level.
+The vacuum quadrature variance sets the baseline; squeezing drops it well below that vacuum level.
 Sub-vacuum noise in one quadrature is a genuinely non-classical resource, used to push
 interferometers like gravitational-wave detectors past the standard quantum limit.
 
 #### M5. How do I distinguish light by its photon statistics ($g^{(2)}(0)$)?
 
 The second-order coherence $g^{(2)}(0) = \langle a^\dagger a^\dagger a a\rangle /
-\langle a^\dagger a\rangle^2$ classifies light: thermal light bunches ($g^{(2)} = 2$), coherent
-light is Poissonian ($g^{(2)} = 1$), and a single photon antibunches ($g^{(2)} = 0$), which no
+\langle a^\dagger a\rangle^2$ classifies light: thermal light bunches ($g^{(2)} > 1$), coherent
+light is Poissonian ($g^{(2)} = 1$), and a single photon antibunches ($g^{(2)} < 1$), which no
 classical field can do.
 
 ```wolfram
@@ -1578,9 +1575,9 @@ thermal = With[{x = 0.5}, (1 - x) DiagonalMatrix[x^Range[0, n - 1]]]; thermal = 
 {g2[thermal], g2[proj[coh]], g2[proj[fock[1]]]}
 ```
 
-Thermal light gives $g^{(2)} \approx 2$ (photon bunching), the coherent state gives $1$ (Poissonian),
-and the single-photon Fock state gives $0$ (perfect antibunching). The value $g^{(2)}(0) < 1$ is the
-operational definition of non-classical light and the standard test of a single-photon source.
+Thermal light comes out bunched, the coherent state Poissonian, and the single-photon Fock state
+antibunched. The value $g^{(2)}(0) < 1$ is the operational definition of non-classical light and the
+standard test of a single-photon source.
 
 **Summary of Part M.** Letting the dimension grow yields the harmonic oscillator, a discrete Fock
 basis with new structure. We built the ladder operators, the coherent state and its Poisson

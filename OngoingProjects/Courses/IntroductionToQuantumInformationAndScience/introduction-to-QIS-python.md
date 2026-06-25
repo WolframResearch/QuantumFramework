@@ -113,7 +113,7 @@ def wlshow(code, name):
 
 The simplest quantum system we usually consider in quantum mechanics is one whose states live in a two-dimensional Hilbert space, what we call a single qubit. A Hilbert space is a complex vector space equipped with an inner product, and it is complete with respect to the norm induced by that inner product. In such a two-dimensional Hilbert space, the state of the system may be represented in two equivalent-looking but conceptually distinct ways: for an isolated system in a definite pure state, we use a normalized state vector (a two component complex vector); more generally—especially when describing classical uncertainty about preparation, entanglement with an environment, or partial information, we use a density operator/matrix (a 2×2 matrix), which acts on the same Hilbert space and provides the most general description of a qubit’s state. Whether we represent the qubit by a state vector or by a density matrix, the underlying objects are built from complex numbers.
 
-A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=z$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
+A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=\lvert z\rvert$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
 
 Compute the complex conjugate of $3+2i$:
 
@@ -139,11 +139,11 @@ As said, the complex number $3+2i$ has two degrees of freedom: $\{3,2\}$. Using 
 wl(r'''ToPolarCoordinates[{3, 2}]''')
 ```
 
-Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $z^{2}$. Given the polar form, one can write $z^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lVert z\rVert =z=r$.
+Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $\lvert z\rvert ^{2}$. Given the polar form, one can write $\lvert z\rvert ^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lvert z\rvert =r$.
 
 #### State Vectors and Normalization (Norms, Global Phase, Degrees of Freedom)
 
-For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $||\vec{v}||=\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{v_{0}^{2}+v_{1}^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
+For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $\lVert \vec{v}\rVert =\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{\lvert v_{0}\rvert ^{2}+\lvert v_{1}\rvert ^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
 
 Calculate the complex conjugate of $\{1/2,i\sqrt{3}/2\}$:
 
@@ -196,7 +196,7 @@ wl(r'''Norm@Normalize[{\[Alpha], \[Beta]}] // FullSimplify''')
 
 As mentioned before, for a qubit, the state vector is represented by a two-component complex-valued vector, for example $\{c_{1},\, c_{2}\}\in \mathbb{C}^{2}$. The numbers $c_{1}$ and $c_{2}$ are called (probability) amplitudes. They are the coefficients of the basis states in the linear combination that describes the quantum superposition.
 
-Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $c_{j}^{2}$) are unchanged by a global phase.
+Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $\lvert c_{j}\rvert ^{2}$) are unchanged by a global phase.
 
 Compute probabilities and verify two states $\{\alpha ,\beta \}$ and $e^{i\varphi }\{\alpha ,\beta \}$ are physically the same:
 
@@ -217,7 +217,7 @@ The state vector of a single qubit can be written as $\{\alpha ,\beta \}$ with $
 
 #### Bra–Ket Notation and Inner Products
 
-In the quantum mechanics literature, a state vector is usually denoted by a ket. For example, $|\psi \rangle$ can represent a generic pure state such as $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$. The Hermitian conjugate (complex conjugate transpose) of a ket is denoted by a bra. For the state above, the corresponding bra is $\langle \psi |=\{Cos[\theta /2],e^{-i\, \phi }Sin[\theta /2]\}$. The inner product of two states $|\psi _{1}\rangle$ and $|\psi _{2}\rangle$ is written as $\langle \psi _{1}|\psi _{2}\rangle $, which means the dot product of the bra $\langle \psi _{1}|$ with the ket |ψ₂⟩.
+In the quantum mechanics literature, a state vector is usually denoted by a ket. For example, $|\psi \rangle$ can represent a generic pure state such as $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$. The Hermitian conjugate (complex conjugate transpose) of a ket is denoted by a bra. For the state above, the corresponding bra is $\langle \psi |=\{Cos[\theta /2],e^{-i\, \phi }Sin[\theta /2]\}$. The inner product of two states $|\psi _{1}\rangle$ and $|\psi _{2}\rangle$ is written as $\langle \psi _{1}|\psi _{2}\rangle $, which means the dot product of the bra $\langle \psi _{1}|$ with the ket $|\psi _{2}\rangle$.
 
 Define $|\psi _{1}\rangle$ and $|\psi _{2}\rangle$:
 
@@ -287,7 +287,7 @@ wl(r'''{{1, 0}, {0, 1}} == IdentityMatrix[2]''')
 
 #### The Bloch Vector Map: Turning a Qubit into Geometry
 
-Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $\alpha ^{2}+\beta ^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha ^{*}\, \beta ],2Im[\alpha ^{*}\, \beta ],\alpha ^{2}-\beta ^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
+Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $\lvert \alpha \rvert ^{2}+\lvert \beta \rvert ^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha ^{*}\, \beta ],2Im[\alpha ^{*}\, \beta ],\lvert \alpha \rvert ^{2}-\lvert \beta \rvert ^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
 
 Define a function that takes $\{\alpha ,\beta \}$ and returns the Bloch vector:
 
@@ -889,7 +889,7 @@ wl(r'''\[Psi] == newStateVector . {v1, v2} == newStateVectorX . {plus, minus}'''
 
 What is the main motivation for expressing a state in different bases? Besides mathematical advantages that may simplify calculations, an especially important reason comes from quantum measurement. Experimental data are obtained as probabilities for different measurement outcomes, and these probabilities can be read directly from the coefficients in the expansion of the state in a chosen basis.
 
-According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle=\sum _{j}c_{j}|v_{j}\rangle$, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle$ is given by the absolute square of the coefficient: $P_{j}=c_{j}^{2}$.
+According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle=\sum _{j}c_{j}|v_{j}\rangle$, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle$ is given by the absolute square of the coefficient: $P_{j}=\lvert c_{j}\rvert ^{2}$.
 
 Given the state ψ defined above, calculate the probability of obtaining $|x_{\pm }\rangle$ if measuring Pauli-X:
 
@@ -915,7 +915,7 @@ AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"y\", \"+\"]},\
 
 #### Expectation Values: Two Equivalent Computations
 
-Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle$ is $\langle \psi |A|\psi \rangle$, which can be also written as $\langle \psi |A|\psi \rangle=\langle A\rangle =\sum _{j}a_{j}\, P_{j}=\sum _{j}a_{j}\, c_{j}^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
+Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle$ is $\langle \psi |A|\psi \rangle$, which can be also written as $\langle \psi |A|\psi \rangle=\langle A\rangle =\sum _{j}a_{j}\, P_{j}=\sum _{j}a_{j}\, \lvert c_{j}\rvert ^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
 
 Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle$:
 
@@ -923,7 +923,7 @@ Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle$
 wl(r'''Conjugate[\[Psi]] . PauliMatrix[1] . \[Psi] // Chop''')
 ```
 
-Compute the expectation value of Pauli-X using $\, \sum _{j}a_{j}\, c_{j}^{2}$:
+Compute the expectation value of Pauli-X using $\, \sum _{j}a_{j}\, \lvert c_{j}\rvert ^{2}$:
 
 ```python
 wl(r'''{1, -1} . Abs[newStateVectorX]^2''')
@@ -935,7 +935,7 @@ Compute the expectation value of Pauli-Y using $\, \langle \psi |Y|\psi \rangle$
 wl(r'''Conjugate[\[Psi]] . PauliMatrix[2] . \[Psi] // Chop''')
 ```
 
-Compute the expectation value of Pauli-Y using $\, \sum _{j}a_{j}\, c_{j}^{2}$:
+Compute the expectation value of Pauli-Y using $\, \sum _{j}a_{j}\, \lvert c_{j}\rvert ^{2}$:
 
 ```python
 wl(r'''{1, -1} . Abs[newStateVectorY]^2''')
@@ -951,7 +951,7 @@ Before we move on to the next topic, let us summarize the most important points 
 
 - Any normalized pure qubit state can be also represented as a point in three-dimensional space on the unit sphere, called the Bloch sphere. The corresponding Bloch vector is $\{Sin[\theta ]Cos[\phi ],Sin[\theta ]Sin[\phi ],Cos[\theta ]\}$.
 
-- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle=\sum _{j}c_{j}|v_{j}\rangle$ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle$ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle$) is given by the absolute square of the amplitude: $P_{j}=c_{j}^{2}$.
+- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle=\sum _{j}c_{j}|v_{j}\rangle$ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle$ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle$) is given by the absolute square of the amplitude: $P_{j}=\lvert c_{j}\rvert ^{2}$.
 
 - There are infinitely many ways to choose a basis, and the choice depends on many factors, often computational convenience. In practice, eigenbases of observables are among the most commonly used bases.
 
@@ -1591,7 +1591,7 @@ Now that we can represent states geometrically, let’s focus on their movement:
 
 #### Unitaries and SU(2): The Home of Single-Qubit Dynamics
 
-Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U\, ^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $a^{2}+b^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
+Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U\, ^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $\lvert a\rvert ^{2}+\lvert b\rvert ^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
 
 Define a function that generates random special unitary matrices (elements of SU(2)) sampled from the Haar measure:
 
@@ -3556,7 +3556,7 @@ Now let’s focus on the stochastic Schrödinger equation. We take a qubit with 
 
 Now we idealize the noise: we think of $\xi (t)$ as the limit of a very fast, very jagged random signal (correlation time approaches 0). Mathematically, this limit is described using a Wiener process $W_{t}$ (Brownian motion), whose increment over a small time step is $dW_{t}=W_{t+dt}-W_{t}$. The increment $dW_{t}$ is a random variable with mean zero and variance $dt$: $\mathbb{E}(dW_{t})=0$ and $\mathbb{E}(dW_{t}^{2})=dt$. This means the typical size of $dW_{t}$ is of order$\sqrt{dt}$. Symbolically you can think $dW_{t}~\sqrt{dt}$ and $dW_{t}^{2}~dt$
 
-If we want to keep the rules of ordinary differential equation, then the corresponding dynamical equation is called Stratonovich stochastic differential equation. In Stratonovich form the stochastic Schrödinger equation is written as: $d|\psi (t)\rangle=-i/2\omega _{x}\sigma _{x}|\psi _{t}\rangledt-i\sqrt{\gamma }\sigma _{z}\, |\psi _{t}\rangle\circ dW_{t}$ where $\circ dW_{t}$ is called Stratonovich differential. It encodes the fact that, in the underlying discrete picture, the noise term is evaluated in a symmetric (midpoint) way inside each short time interval, which is exactly what you get if you start from a smooth noisy Hamiltonian and then let the correlation time of the noise go to zero. With this interpretation, we can formally use the usual rules of calculus (chain rule, change of variables). This is why physicists often like Stratonovich form: it “feels” like ordinary differential equations with a noisy input. There is another, closely related formulation of stochastic differential equations, called the Itô form, which uses a slightly different convention and leads to extra drift terms when we rewrite the equation; we will comment on that later. So in short, when we deal with stochastic differential equations (SDE), one has to always pay attention if SDE is written in Stratonovich or Itô form. We shall start with Stratonovich form and show how the usual algebraic and chain rules of ODE is also applicable here. Later, we will discuss Itô form and you will see much more care needed for, e.g., variable changes.
+If we want to keep the rules of ordinary differential equation, then the corresponding dynamical equation is called Stratonovich stochastic differential equation. In Stratonovich form the stochastic Schrödinger equation is written as: $d|\psi (t)\rangle=-i/2\omega _{x}\sigma _{x}|\psi _{t}\rangle dt-i\sqrt{\gamma }\sigma _{z}\, |\psi _{t}\rangle\circ dW_{t}$ where $\circ dW_{t}$ is called Stratonovich differential. It encodes the fact that, in the underlying discrete picture, the noise term is evaluated in a symmetric (midpoint) way inside each short time interval, which is exactly what you get if you start from a smooth noisy Hamiltonian and then let the correlation time of the noise go to zero. With this interpretation, we can formally use the usual rules of calculus (chain rule, change of variables). This is why physicists often like Stratonovich form: it “feels” like ordinary differential equations with a noisy input. There is another, closely related formulation of stochastic differential equations, called the Itô form, which uses a slightly different convention and leads to extra drift terms when we rewrite the equation; we will comment on that later. So in short, when we deal with stochastic differential equations (SDE), one has to always pay attention if SDE is written in Stratonovich or Itô form. We shall start with Stratonovich form and show how the usual algebraic and chain rules of ODE is also applicable here. Later, we will discuss Itô form and you will see much more care needed for, e.g., variable changes.
 
 Since we can use the usual algebra and calculus of ODE in Stratonovich form, we can write the SDE for the density matrix given the random Hamiltonian above as: $d\rho =-i/2\omega _{x}[\sigma _{x},\rho ]dt-i\sqrt{\gamma }[\sigma _{z},\rho ]$∘d$W_{t}$. Let’s write the density matrix as $\rho =1/2(\mathbb{I}+\vec{v}.\vec{\sigma })$ with $\vec{v}$ the Bloch vector $r\{Cos[\phi ]Sin[\theta ],Sin[\phi ]Sin[\theta ],Cos[\theta ]\}$ and find the stochastic dynamical equation of $\{r,\theta ,\phi \}$ in Stratonovich form. As said before, we can use the usual rules of ODE for variable changes.
 
