@@ -1847,9 +1847,11 @@ VerificationTest[
     TestID -> "S28-F2-StateVector-Matches-Dense"
 ];
 
-(* H-guard: a circuit with an interior Hadamard must NOT build a phase-poly backend *)
-(* (it falls back to the ordinary stabilizer/frame path), and the fallback state is *)
-(* still correct (matches dense up to a global phase, the bare-stabilizer contract).*)
+(* H-guard: a circuit with an interior Hadamard must NOT build a phase-poly backend.*)
+(* Because the opt-in was explicit, the fallback is informative: it emits            *)
+(* PauliStabilizer::nophasepoly, then evolves the default |0...0> register on the     *)
+(* ordinary path, so the fallback state is the correct U|0...0> (matches dense up to  *)
+(* a global phase, the bare-stabilizer contract).                                     *)
 VerificationTest[
     Module[{specs = {"H" -> 1, "T" -> 1, "H" -> 1}, fb, fbv, dv},
         fb = QuantumCircuitOperator[specs][Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}];
@@ -1858,6 +1860,7 @@ VerificationTest[
         {ppPolyBackendQ[fb], Chop[Abs[N[Conjugate[fbv] . dv]] - 1]}
     ],
     {False, 0},
+    {PauliStabilizer::nophasepoly},
     TestID -> "S28-F3-Interior-Hadamard-Falls-Back"
 ];
 
@@ -1954,6 +1957,36 @@ VerificationTest[
     $Failed,
     {PauliStabilizer::expectationdim},
     TestID -> "S28-F8b-Amplitude-WrongLength-CleanFail"
+];
+
+(* Silent success: a genuinely diagonal (no-Hadamard) circuit under the explicit     *)
+(* "Compress" -> "PhasePolynomial" opt-in emits NO message and returns the rank-1     *)
+(* phase-poly backend. The empty expected-message list makes ANY message fail the     *)
+(* test, so this is the silent-path complement of S28-F3's informative fallback.      *)
+VerificationTest[
+    Module[{pp = ppBuild[{"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}]}]},
+        {ppPolyBackendQ[pp], pp["Qubits"]}
+    ],
+    {True, 2},
+    {},
+    TestID -> "S28-F9-Diagonal-Builds-PhasePoly-Silently"
+];
+
+(* The other fallback trigger: even a genuinely diagonal circuit cannot use the       *)
+(* phase-poly carrier when an explicit input state is supplied (the carrier only      *)
+(* represents the implicit |+...+> form). The explicit opt-in then emits the same     *)
+(* PauliStabilizer::nophasepoly message and evolves the supplied |00> on the ordinary *)
+(* path, giving the correct U|00> (matches dense up to a global phase).               *)
+VerificationTest[
+    Module[{specs = {"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}]}, fb, fbv, dv},
+        fb = QuantumCircuitOperator[specs][QuantumState["00"], Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}];
+        fbv = Normal[fb["StateVector"]];
+        dv = Normal[QuantumCircuitOperator[specs][QuantumState["00"], Method -> "Schrodinger"]["StateVector"]];
+        {ppPolyBackendQ[fb], Chop[Abs[N[Conjugate[fbv] . dv]] - 1]}
+    ],
+    {False, 0},
+    {PauliStabilizer::nophasepoly},
+    TestID -> "S28-F10-NonDefault-State-Falls-Back"
 ]
 
 

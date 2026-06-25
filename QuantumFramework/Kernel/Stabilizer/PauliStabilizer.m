@@ -22,6 +22,8 @@ PauliStabilizer::nonclifford = "Gate `1` is not a Clifford operation; PauliStabi
 
 PauliStabilizer::badgate = "`1` is not a recognized stabilizer gate name."
 
+PauliStabilizer::nophasepoly = "`1`, so \"Compress\" -> \"PhasePolynomial\" cannot apply; falling back to the ordinary stabilizer path, which `2`."
+
 
 
 (* ============================================================================ *)
@@ -182,10 +184,24 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
     (* phase-poly backend of U|+...+> directly (the |+...+> H-layer is prepended    *)
     (* internally), never materializing the 2^t frame. sfPhasePolyFromCircuit       *)
     (* returns a Failure for anything outside the fragment, so we fall back to the  *)
-    (* ordinary stabilizer trichotomy below with no error.                          *)
-    With[{ppFrame = If[OptionValue[PauliStabilizerApply, {opts}, "Compress"] === "PhasePolynomial" && qs === Automatic,
+    (* ordinary stabilizer trichotomy below. Because the opt-in was explicit, the    *)
+    (* fallback names why first (the ordinary path evolves |0...0>, not |+...+>).     *)
+    With[{compress = OptionValue[PauliStabilizerApply, {opts}, "Compress"]},
+    With[{ppFrame = If[compress === "PhasePolynomial" && qs === Automatic,
         sfPhasePolyFromCircuit[qco], $Failed]},
     If[StabilizerFrameQ[ppFrame], ppFrame,
+    (* Explicit "Compress" -> "PhasePolynomial" that did not produce a phase-poly     *)
+    (* backend (interior Hadamard / non-diagonal gate, or a non-default input state): *)
+    (* state why exactly once, then fall through to the ordinary path. The default    *)
+    (* Method -> "Stabilizer" (compress =!= "PhasePolynomial") stays silent.          *)
+    (If[compress === "PhasePolynomial",
+        If[qs === Automatic,
+            Message[PauliStabilizer::nophasepoly,
+                "The circuit is not in the diagonal (no-Hadamard) fragment",
+                "evolves |0...0> rather than the |+...+> the phase polynomial assumes"],
+            Message[PauliStabilizer::nophasepoly,
+                "An explicit input state was supplied",
+                "evolves that state directly, not the |+...+> the phase polynomial assumes"]]];
     With[{
         (* Register size must cover the highest wire INDEX, not the wire count:    *)
         (* a circuit like {"H" -> 2} has Arity 1 but acts on wire 2, and an        *)
@@ -234,4 +250,6 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
             ]
         ]
     ]
+    )
     ]]
+    ]
