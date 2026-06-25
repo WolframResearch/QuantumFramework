@@ -41,7 +41,7 @@ Let’s start!
 
 The simplest quantum system we usually consider in quantum mechanics is one whose states live in a two-dimensional Hilbert space, what we call a single qubit. A Hilbert space is a complex vector space equipped with an inner product, and it is complete with respect to the norm induced by that inner product. In such a two-dimensional Hilbert space, the state of the system may be represented in two equivalent-looking but conceptually distinct ways: for an isolated system in a definite pure state, we use a normalized state vector (a two component complex vector); more generally—especially when describing classical uncertainty about preparation, entanglement with an environment, or partial information, we use a density operator/matrix (a 2×2 matrix), which acts on the same Hilbert space and provides the most general description of a qubit’s state. Whether we represent the qubit by a state vector or by a density matrix, the underlying objects are built from complex numbers.
 
-A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=|z|$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
+A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=\lvert z\rvert$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
 
 Compute the complex conjugate of $3+2i$:
 
@@ -67,11 +67,11 @@ As said, the complex number $3+2i$ has two degrees of freedom: $\{3,2\}$. Using 
 ToPolarCoordinates[{3, 2}]
 ```
 
-Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $|z|^{2}$. Given the polar form, one can write $|z|^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lVert z\rVert =|z|=r$.
+Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $\lvert z\rvert^{2}$. Given the polar form, one can write $\lvert z\rvert^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lvert z\rvert=r$.
 
 #### State Vectors and Normalization (Norms, Global Phase, Degrees of Freedom)
 
-For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $||\vec{v}||=\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{|v_{0}|^{2}+|v_{1}|^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
+For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $\lVert\vec{v}\rVert=\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{\lvert v_{0}\rvert^{2}+\lvert v_{1}\rvert^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
 
 Calculate the complex conjugate of $\{1/2,i\sqrt{3}/2\}$:
 
@@ -124,7 +124,7 @@ Norm@Normalize[{\[Alpha], \[Beta]}] // FullSimplify
 
 As mentioned before, for a qubit, the state vector is represented by a two-component complex-valued vector, for example $\{c_{1},\, c_{2}\}\in \mathbb{C}^{2}$. The numbers $c_{1}$ and $c_{2}$ are called (probability) amplitudes. They are the coefficients of the basis states in the linear combination that describes the quantum superposition.
 
-Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $|c_{j}|^{2}$) are unchanged by a global phase.
+Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $\lvert c_{j}\rvert^{2}$) are unchanged by a global phase.
 
 Compute probabilities and verify two states $\{\alpha ,\beta \}$ and $e^{i\varphi }\{\alpha ,\beta \}$ are physically the same:
 
@@ -215,7 +215,7 @@ Verify that stacking the computational basis vectors as the rows of a matrix yie
 
 #### The Bloch Vector Map: Turning a Qubit into Geometry
 
-Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $|\alpha |^{2}+|\beta |^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha^{*}\, \beta ],2Im[\alpha^{*}\, \beta ],|\alpha |^{2}-|\beta |^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
+Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $\lvert \alpha \rvert^{2}+\lvert \beta \rvert^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha^{*}\, \beta ],2Im[\alpha^{*}\, \beta ],\lvert \alpha \rvert^{2}-\lvert \beta \rvert^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
 
 Define a function that takes $\{\alpha ,\beta \}$ and returns the Bloch vector:
 
@@ -817,7 +817,7 @@ Verify $|\psi \rangle =c_{1}|v_{1}\rangle +c_{2}|v_{2}\rangle =k_{+}|x_{+}\rangl
 
 What is the main motivation for expressing a state in different bases? Besides mathematical advantages that may simplify calculations, an especially important reason comes from quantum measurement. Experimental data are obtained as probabilities for different measurement outcomes, and these probabilities can be read directly from the coefficients in the expansion of the state in a chosen basis.
 
-According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle $ is given by the absolute square of the coefficient: $P_{j}=|c_{j}|^{2}$.
+According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle $ is given by the absolute square of the coefficient: $P_{j}=\lvert c_{j}\rvert^{2}$.
 
 Given the state ψ defined above, calculate the probability of obtaining $|x_{\pm }\rangle $ if measuring Pauli-X:
 
@@ -843,7 +843,7 @@ AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"y\", \"+\"]},\
 
 #### Expectation Values: Two Equivalent Computations
 
-Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle $ is $\langle \psi |A|\psi \rangle $, which can be also written as $\langle \psi |A|\psi \rangle =\langle A\rangle =\sum_{j}a_{j}\, P_{j}=\sum_{j}a_{j}\, |c_{j}|^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
+Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle $ is $\langle \psi |A|\psi \rangle $, which can be also written as $\langle \psi |A|\psi \rangle =\langle A\rangle =\sum_{j}a_{j}\, P_{j}=\sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
 
 Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle $:
 
@@ -851,7 +851,7 @@ Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle 
 Conjugate[\[Psi]] . PauliMatrix[1] . \[Psi] // Chop
 ```
 
-Compute the expectation value of Pauli-X using $\, \sum_{j}a_{j}\, |c_{j}|^{2}$:
+Compute the expectation value of Pauli-X using $\, \sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$:
 
 ```wl
 {1, -1} . Abs[newStateVectorX]^2
@@ -863,7 +863,7 @@ Compute the expectation value of Pauli-Y using $\, \langle \psi |Y|\psi \rangle 
 Conjugate[\[Psi]] . PauliMatrix[2] . \[Psi] // Chop
 ```
 
-Compute the expectation value of Pauli-Y using $\, \sum_{j}a_{j}\, |c_{j}|^{2}$:
+Compute the expectation value of Pauli-Y using $\, \sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$:
 
 ```wl
 {1, -1} . Abs[newStateVectorY]^2
@@ -879,7 +879,7 @@ Before we move on to the next topic, let us summarize the most important points 
 
 - Any normalized pure qubit state can be also represented as a point in three-dimensional space on the unit sphere, called the Bloch sphere. The corresponding Bloch vector is $\{Sin[\theta ]Cos[\phi ],Sin[\theta ]Sin[\phi ],Cos[\theta ]\}$.
 
-- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle $ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle $) is given by the absolute square of the amplitude: $P_{j}=|c_{j}|^{2}$.
+- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle $ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle $) is given by the absolute square of the amplitude: $P_{j}=\lvert c_{j}\rvert^{2}$.
 
 - There are infinitely many ways to choose a basis, and the choice depends on many factors, often computational convenience. In practice, eigenbases of observables are among the most commonly used bases.
 
@@ -1519,7 +1519,7 @@ Now that we can represent states geometrically, let’s focus on their movement:
 
 #### Unitaries and SU(2): The Home of Single-Qubit Dynamics
 
-Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $|a|^{2}+|b|^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
+Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $\lvert a\rvert^{2}+\lvert b\rvert^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
 
 Define a function that generates random special unitary matrices (elements of SU(2)) sampled from the Haar measure:
 
@@ -2091,7 +2091,7 @@ Commutator[RotationMatrix[\[Pi]/3, {1, 0, 0}],
   RotationMatrix[\[Pi], {0, 1, 0}], Dot] != {{0, 0}, {0, 0}}
 ```
 
-Assume the initial qubit state is represented by the Bloch vector $\vec{r}_{1}$. We now seek a rotation that maps $\vec{r}_{1}\to \vec{r}_{2}$. Geometrically, this is a rigid rotation in the plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$, through the angle between the two vectors. The plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$ is also fully specified by the the vector cross product $\vec{r}_{1}$ and $\vec{r}_{2}$. In short, the rotation is given by $\mathcal{R}_{\vec{n}_{1}\times \vec{n}_{2}}(ArcCos[\vec{n}_{1}.\vec{n}_{2}])$ with unit vectors $\vec{n}_{j}=\vec{r}_{j}/|\vec{r}_{j}|$.
+Assume the initial qubit state is represented by the Bloch vector $\vec{r}_{1}$. We now seek a rotation that maps $\vec{r}_{1}\to \vec{r}_{2}$. Geometrically, this is a rigid rotation in the plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$, through the angle between the two vectors. The plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$ is also fully specified by the the vector cross product $\vec{r}_{1}$ and $\vec{r}_{2}$. In short, the rotation is given by $\mathcal{R}_{\vec{n}_{1}\times \vec{n}_{2}}(ArcCos[\vec{n}_{1}.\vec{n}_{2}])$ with unit vectors $\vec{n}_{j}=\vec{r}_{j}/\lvert \vec{r}_{j}\rvert$.
 
 For two Bloch vectors, visualize the plane spanned by them and also the perpendicular vector defining it:
 
@@ -2146,7 +2146,7 @@ Verify that above rotation transform $\vec{r}_{1}$ into $\vec{r}_{2}$:
 RotationMatrix[VectorAngle[r1, r2], Cross[r1, r2]] . r1 == r2
 ```
 
-Perform the same transformation in SU(2) and verify that $\rho_{2}=U.\rho_{1}.U^{\dagger }$ with $\rho_{j}=1/2(\mathbb{I}+\vec{r}_{j}.\vec{\sigma })$ and $U=e^{-i\, \theta \, \vec{n}.\vec{\sigma }}$ where $\theta $ is the angle between $\vec{r}_{1}$ and $\vec{r}_{2}$ and $\vec{n}=\vec{r}_{1}\times \vec{r}_{2}/|\vec{r}_{1}\times \vec{r}_{2}|$:
+Perform the same transformation in SU(2) and verify that $\rho_{2}=U.\rho_{1}.U^{\dagger }$ with $\rho_{j}=1/2(\mathbb{I}+\vec{r}_{j}.\vec{\sigma })$ and $U=e^{-i\, \theta \, \vec{n}.\vec{\sigma }}$ where $\theta $ is the angle between $\vec{r}_{1}$ and $\vec{r}_{2}$ and $\vec{n}=\vec{r}_{1}\times \vec{r}_{2}/\lvert \vec{r}_{1}\times \vec{r}_{2}\rvert$:
 
 ```wl
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[Theta] = 
@@ -2919,7 +2919,7 @@ With[{\[Sigma] =
    Cross[\[Omega], r]] // FullSimplify
 ```
 
-Equivalently, the Liouville–von Neumann equation can be rewritten as an equation of motion for the Bloch vector alone: $d\vec{r}/dt=\vec{\omega }\times \vec{r}$, i.e., the Bloch vector precesses about the effective field $\vec{\omega }$. Note that $d|\vec{r}|^{2}/dt=d(\vec{r}.\vec{r})/dt=d\vec{r}/dt.\vec{r}+\vec{r}.d\vec{r}/dt=2\vec{r}.d\vec{r}/dt=2\vec{r}.(\vec{\omega }\times \vec{r})=0$ because $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$. So the motion preserves $|\vec{r}|$ which is what we expected from a unitary transformation, or in the language of SO(3), it’s the signature of a rotation. In other words, pure precession is the “cleanest” kind of qubit motion: the Bloch vector behaves like a rigid arrow on a sphere, rotating around a fixed (or prescribed) axis with no shrinkage and no drift toward equilibrium.
+Equivalently, the Liouville–von Neumann equation can be rewritten as an equation of motion for the Bloch vector alone: $d\vec{r}/dt=\vec{\omega }\times \vec{r}$, i.e., the Bloch vector precesses about the effective field $\vec{\omega }$. Note that $d\lvert \vec{r}\rvert^{2}/dt=d(\vec{r}.\vec{r})/dt=d\vec{r}/dt.\vec{r}+\vec{r}.d\vec{r}/dt=2\vec{r}.d\vec{r}/dt=2\vec{r}.(\vec{\omega }\times \vec{r})=0$ because $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$. So the motion preserves $\lvert \vec{r}\rvert$ which is what we expected from a unitary transformation, or in the language of SO(3), it’s the signature of a rotation. In other words, pure precession is the “cleanest” kind of qubit motion: the Bloch vector behaves like a rigid arrow on a sphere, rotating around a fixed (or prescribed) axis with no shrinkage and no drift toward equilibrium.
 
 Since $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$, it means that $d\vec{r}/dt$ is always perpendicular to $\vec{r}$, implying that $\vec{r}$ is undergoing a steady rotation with angular velocity $\vec{\omega }$. If $\vec{r}$ starts pointing somewhere, its tip will move in a circle (or on a cone) around the axis given by $\vec{\omega }$. This is the standard form of a precession: when a vector’s direction in space slowly rotates around some axis, even though its length stays the same. We shall illustrate with an example.
 

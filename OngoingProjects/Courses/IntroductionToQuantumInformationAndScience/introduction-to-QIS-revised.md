@@ -51,7 +51,7 @@ Let’s start!
 
 The simplest quantum system we usually consider in quantum mechanics is one whose states live in a two-dimensional Hilbert space, what we call a single qubit. A Hilbert space is a complex vector space equipped with an inner product, and it is complete with respect to the norm induced by that inner product. In such a two-dimensional Hilbert space, the state of the system may be represented in two equivalent-looking but conceptually distinct ways: for an isolated system in a definite pure state, we use a normalized state vector (a two component complex vector); more generally—especially when describing classical uncertainty about preparation, entanglement with an environment, or partial information, we use a density operator/matrix (a 2×2 matrix), which acts on the same Hilbert space and provides the most general description of a qubit’s state. Whether we represent the qubit by a state vector or by a density matrix, the underlying objects are built from complex numbers.
 
-A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=|z|$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
+A complex number can be written as $z=x+i\, y$, where $x$ and $y$ are real numbers and i is the imaginary unit, defined by $i^{2}=-1$. The same number can also be written in polar form as $z=r\, e^{i\, \varphi }$, where $r=\lvert z\rvert$ is the absolute value (modulus) of $z$, and φ is its argument (angle). The complex conjugate of $z$, denoted by $z^{*}$, is given by $z^{*}=x-i\, y$, or equivalently $z=r\, e^{-i\, \varphi }$ in polar form. In short, a complex number contains two real degrees of freedom.
 
 Compute the complex conjugate of $3+2i$:
 
@@ -77,11 +77,11 @@ As said, the complex number $3+2i$ has two degrees of freedom: $\{3,2\}$. Using 
 ToPolarCoordinates[{3, 2}]
 ```
 
-Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $|z|^{2}$. Given the polar form, one can write $|z|^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lVert z\rVert =|z|=r$.
+Multiplication of a complex number by its complex conjugate is always a non-negative real number. This product is written as $z^{*}z$ or $z\, z^{*}$, and is usually denoted by the absolute square $\lvert z\rvert^{2}$. Given the polar form, one can write $\lvert z\rvert^{2}=r^{2}$. The usual norm of $z$ (also called the modulus) is $\lvert z\rvert=r$.
 
 ### State Vectors and Normalization (Norms, Global Phase, Degrees of Freedom)
 
-For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $||\vec{v}||=\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{|v_{0}|^{2}+|v_{1}|^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
+For a two-level quantum system (qubit), a pure state is represented (up to an overall complex phase such as $e^{i\, \varphi }$) by a two-component complex vector, usually called the state vector. For example, the vector $\{1/2,i\sqrt{3}/2\}$ represents a pure quantum state. We will assume that all state vectors are normalized, meaning that their norm is equal to 1. For a vector $\vec{v}$ with components $v_{0}$ and $v_{1}$, i.e. $\vec{v}=\{v_{0},v_{1}\}$ , the norm is defined as $\lVert\vec{v}\rVert=\sqrt{\vec{v}^{*}.\vec{v}}=\sqrt{\lvert v_{0}\rvert^{2}+\lvert v_{1}\rvert^{2}}$, where * denotes the complex conjugate and “·” denotes the usual dot product. The complex conjugate of a vector is obtained by taking the complex conjugate of each of its components.
 
 Calculate the complex conjugate of $\{1/2,i\sqrt{3}/2\}$:
 
@@ -134,7 +134,7 @@ Norm@Normalize[{\[Alpha], \[Beta]}] // FullSimplify
 
 As mentioned before, for a qubit, the state vector is represented by a two-component complex-valued vector, for example $\{c_{1},\, c_{2}\}\in \mathbb{C}^{2}$. The numbers $c_{1}$ and $c_{2}$ are called (probability) amplitudes. They are the coefficients of the basis states in the linear combination that describes the quantum superposition.
 
-Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $|c_{j}|^{2}$) are unchanged by a global phase.
+Multiplying a state vector by an overall complex phase factor $e^{i\varphi }$ does not change the physical quantum state it represents, because all physical predictions (for example, measurement probabilities, which depend on absolute squares of amplitudes $\lvert c_{j}\rvert^{2}$) are unchanged by a global phase.
 
 Compute probabilities and verify two states $\{\alpha ,\beta \}$ and $e^{i\varphi }\{\alpha ,\beta \}$ are physically the same:
 
@@ -225,7 +225,7 @@ Verify that stacking the computational basis vectors as the rows of a matrix yie
 
 ### The Bloch Vector Map: Turning a Qubit into Geometry
 
-Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $|\alpha |^{2}+|\beta |^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha^{*}\, \beta ],2Im[\alpha^{*}\, \beta ],|\alpha |^{2}-|\beta |^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
+Let’s focus on a generic qubit state vector $\{\alpha ,\beta \}$ with $\alpha ,\beta \in \mathbb{C}$, assumed to be normalized $\lvert \alpha \rvert^{2}+\lvert \beta \rvert^{2}=1$. Define a three-component real vector as $\vec{n}=\{2Re[\alpha^{*}\, \beta ],2Im[\alpha^{*}\, \beta ],\lvert \alpha \rvert^{2}-\lvert \beta \rvert^{2}\}$. This vector $\vec{n}$ is called the Bloch vector associated with the state vector $\{\alpha ,\, \beta \}$.
 
 Define a function that takes $\{\alpha ,\beta \}$ and returns the Bloch vector:
 
@@ -252,21 +252,7 @@ Therefore, the norm of the Bloch vector for a normalized pure state is always 1.
 Visualize the Bloch sphere:
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small]
+ResourceFunction["BlochSpherePlot"][ImageSize -> Small]
 ```
 
 As you can see, the axes are labeled in a particular way. These labels correspond to kets that represent eigenstates of the Pauli matrices. We shall discuss them in more detail later.
@@ -276,21 +262,7 @@ There are, of course, different conventions for denoting these kets. For example
 Visualize the Bloch sphere using labels from Optics:
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small, "Labels" -> "Optics"]
+ResourceFunction["BlochSpherePlot"][ImageSize -> Small, "Labels" -> "Optics"]
 ```
 
 ### The Bloch Vector: Cartesian and Spherical Coordinates
@@ -333,21 +305,7 @@ So this is a very interesting analogy. The quantum state vector $\{Cos[\theta /2
 Let’s look at the Bloch sphere again.
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small]
+ResourceFunction["BlochSpherePlot"][ImageSize -> Small]
 ```
 
 As mentioned, the axis labels correspond to kets that represent eigenstates of the Pauli matrices.
@@ -406,7 +364,7 @@ With[{vec = {-1, 1}}, PauliMatrix[1] . vec == -vec]
 
 If we multiply an eigenstate by a nonzero constant, it is still an eigenstate of the same operator with the same eigenvalue.
 
-Show that $-1/\sqrt{2}\{-1,1\}=1/\sqrt{2}\{1,-1\}$ is eigenstate of Pauli-X with the eigenvalue $-1$:
+Show that $1/\sqrt{2}\{1,-1\}$ is eigenstate of Pauli-X with the eigenvalue $-1$:
 
 ```wl
 With[{vec = 1/Sqrt[2] {1, -1}}, PauliMatrix[1] . vec == -vec]
@@ -421,21 +379,7 @@ With[{vec = 1/Sqrt[2] {1, 1}}, PauliMatrix[1] . vec == vec]
 Let’s plot normalized eigenstates of Pauli-X operator in the Bloch sphere.
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[1]], 
+ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[1]], 
  ImageSize -> Small]
 ```
 
@@ -464,21 +408,7 @@ AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"y\", \"+\"]},\
 Plot eigenstates of Pauli-Y in the Bloch sphere:
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[2]], 
+ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[2]], 
  ImageSize -> Small]
 ```
 
@@ -487,21 +417,7 @@ The eigenstates of Pauli-Y are also denoted by $|R\rangle =|y_{+}\rangle $ and $
 Plot eigenstates of Pauli-Y in the Bloch sphere using optics labels:
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[2]], 
+ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[2]], 
  ImageSize -> Small, "Labels" -> "Optics"]
 ```
 
@@ -510,21 +426,7 @@ The computational basis corresponds to the eigenstates of Pauli-Z and is aligned
 Plot eigenstates of Pauli-Z in the Bloch sphere:
 
 ```wl
-ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[3]], 
+ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[3]], 
  ImageSize -> Small]
 ```
 
@@ -540,21 +442,7 @@ AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"z\", \"+\"]},\
 The most generic pure qubit state, $|\psi \rangle =\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$, is given by the Bloch vector $\{Cos[\phi ]\, Sin[\theta ],Sin[\theta ]\, Sin[\phi ],Cos[\theta ]\}$ with θ and ϕ spherical-coordinate angles. Let’s visualize it.
 
 ```wl
-Manipulate[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][{Cos[\[Phi]] Sin[\[Theta]], 
+Manipulate[ResourceFunction["BlochSpherePlot"][{Cos[\[Phi]] Sin[\[Theta]], 
    Sin[\[Theta]] Sin[\[Phi]], Cos[\[Theta]]}, ImageSize -> 270, 
   "NumberOfGreatCircles" -> 4, 
   "NumberOfSmallCircles" -> 3], {{\[Theta], \[Pi]/3, 
@@ -827,7 +715,7 @@ Verify $|\psi \rangle =c_{1}|v_{1}\rangle +c_{2}|v_{2}\rangle =k_{+}|x_{+}\rangl
 
 What is the main motivation for expressing a state in different bases? Besides mathematical advantages that may simplify calculations, an especially important reason comes from quantum measurement. Experimental data are obtained as probabilities for different measurement outcomes, and these probabilities can be read directly from the coefficients in the expansion of the state in a chosen basis.
 
-According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle $ is given by the absolute square of the coefficient: $P_{j}=|c_{j}|^{2}$.
+According to the Born rule, if a quantum state is written in the orthonormal eigenbasis of an observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $, then the probability of obtaining the eigenvalue corresponding to the eigenstate $|v_{j}\rangle $ is given by the absolute square of the coefficient: $P_{j}=\lvert c_{j}\rvert^{2}$.
 
 Given the state ψ defined above, calculate the probability of obtaining $|x_{\pm }\rangle $ if measuring Pauli-X:
 
@@ -853,7 +741,7 @@ AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"y\", \"+\"]},\
 
 ### Expectation Values: Two Equivalent Computations
 
-Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle $ is $\langle \psi |A|\psi \rangle $, which can be also written as $\langle \psi |A|\psi \rangle =\langle A\rangle =\sum_{j}a_{j}\, P_{j}=\sum_{j}a_{j}\, |c_{j}|^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
+Additionally, one can compute the expectation (mean) value of an observable. Given an operator $A$, the expectation value in a normalized state $|\psi \rangle $ is $\langle \psi |A|\psi \rangle $, which can be also written as $\langle \psi |A|\psi \rangle =\langle A\rangle =\sum_{j}a_{j}\, P_{j}=\sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$ with $a_{j}$ the eigenvalues and $P_{j}$ the corresponding probability.
 
 Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle $:
 
@@ -861,7 +749,7 @@ Compute the expectation value of Pauli-X using $\, \langle \psi |X|\psi \rangle 
 Conjugate[\[Psi]] . PauliMatrix[1] . \[Psi] // Chop
 ```
 
-Compute the expectation value of Pauli-X using $\, \sum_{j}a_{j}\, |c_{j}|^{2}$:
+Compute the expectation value of Pauli-X using $\, \sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$:
 
 ```wl
 {1, -1} . Abs[newStateVectorX]^2
@@ -873,7 +761,7 @@ Compute the expectation value of Pauli-Y using $\, \langle \psi |Y|\psi \rangle 
 Conjugate[\[Psi]] . PauliMatrix[2] . \[Psi] // Chop
 ```
 
-Compute the expectation value of Pauli-Y using $\, \sum_{j}a_{j}\, |c_{j}|^{2}$:
+Compute the expectation value of Pauli-Y using $\, \sum_{j}a_{j}\, \lvert c_{j}\rvert^{2}$:
 
 ```wl
 {1, -1} . Abs[newStateVectorY]^2
@@ -889,7 +777,7 @@ Before we move on to the next topic, let us summarize the most important points 
 
 - Any normalized pure qubit state can be also represented as a point in three-dimensional space on the unit sphere, called the Bloch sphere. The corresponding Bloch vector is $\{Sin[\theta ]Cos[\phi ],Sin[\theta ]Sin[\phi ],Cos[\theta ]\}$.
 
-- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle $ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle $) is given by the absolute square of the amplitude: $P_{j}=|c_{j}|^{2}$.
+- When an observable is measured, you should write the quantum state in the eigenbasis of that observable as $|\psi \rangle =\sum_{j}c_{j}|v_{j}\rangle $ where the index $j$ runs over the eigenvalues, and $|v_{j}\rangle $ is the corresponding normalized eigenstate. Then the probability of obtaining outcome $a_{j}$ (i.e., the eigenvalue associated with $|v_{j}\rangle $) is given by the absolute square of the amplitude: $P_{j}=\lvert c_{j}\rvert^{2}$.
 
 - There are infinitely many ways to choose a basis, and the choice depends on many factors, often computational convenience. In practice, eigenbases of observables are among the most commonly used bases.
 
@@ -1531,7 +1419,7 @@ Now that we can represent states geometrically, let’s focus on their movement:
 
 ### Unitaries and SU(2): The Home of Single-Qubit Dynamics
 
-Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $|a|^{2}+|b|^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
+Let’s focus more on unitary operators for qubits. SU(2) is the mathematical home of all physically distinct single-qubit unitary operations. For all $2\times 2$ unitaries we have $U(2)=\{U\in \mathbb{C}^{2\times 2}|U^{\dagger }\, U=\mathbb{I}\}$. SU(2) group has unitaries with determinant 1: $SU(2)=\{U\in U(2)|det(U)=1\}$. For any element in SU(2), a very handy characterization is: $U=\begin{pmatrix}a & b \\ -b^{*} & a^{*}\end{pmatrix}$ with $\lvert a\rvert^{2}+\lvert b\rvert^{2}=1$. This shows SU(2) has 3 real degrees of freedom (like a 3D rotation). SU(2) describes all “qubit rotations” (up to an overall phase).
 
 Define a function that generates random special unitary matrices (elements of SU(2)) sampled from the Haar measure:
 
@@ -1997,19 +1885,7 @@ RotationMatrix[\[Pi]/2, {0, 0, 1}] . {1, 0, 0}
 Visualize the transformation of $\{1,0,0\}$ by $\mathcal{R}_{z}(\theta )$ for different values of θ:
 
 ```wl
-Manipulate[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{1, 0, 0}, 
+Manipulate[Show[ResourceFunction["BlochSpherePlot"][{{1, 0, 0}, 
     RotationMatrix[\[Theta], {0, 0, 1}] . {1, 0, 0}}, 
    ImageSize -> 270, 
    PlotLabel -> "Rotation around z-axis by angle \[Theta]\n"], 
@@ -2026,19 +1902,7 @@ In several experimental settings especially nuclear magnetic resonance (NMR) and
 Visualize how $X_{\pi /2}$, $X_{\pi }$, $Y_{\pi /2}$, and $Y_{\pi }$ pulses transform $|0\rangle $:
 
 ```wl
-Manipulate[Legended[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+Manipulate[Legended[ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
     pulse . {0, 0, 1}}, ImageSize -> 150], 
   SwatchLegend[{ColorData[97][1], 
     ColorData[97][2]}, {"\!\(\*TemplateBox[{\"0\"},\n\"Ket\"]\)", 
@@ -2059,35 +1923,11 @@ Visualize how a sequence of pulses as first $X_{\pi /3}$ followed $Y_{\pi }$ tra
 ```wl
 With[{y = RotationMatrix[\[Pi], {0, 1, 0}], 
   x = RotationMatrix[\[Pi]/3, {1, 0, 0}]},
- Row[{ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+ Row[{ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
      y . x . {0, 0, 1}}, ImageSize -> 150, 
     PlotLabel -> 
      "First \!\(\*SubscriptBox[\(X\), \(\[Pi]/2\)]\), then \
-\!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\)\n"], "  ", ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+\!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\)\n"], "  ", ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
      x . y . {0, 0, 1}}, ImageSize -> 150, 
     PlotLabel -> 
      "First \!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\), then \
@@ -2103,7 +1943,7 @@ Commutator[RotationMatrix[\[Pi]/3, {1, 0, 0}],
   RotationMatrix[\[Pi], {0, 1, 0}], Dot] != {{0, 0}, {0, 0}}
 ```
 
-Assume the initial qubit state is represented by the Bloch vector $\vec{r}_{1}$. We now seek a rotation that maps $\vec{r}_{1}\to \vec{r}_{2}$. Geometrically, this is a rigid rotation in the plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$, through the angle between the two vectors. The plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$ is also fully specified by the the vector cross product $\vec{r}_{1}$ and $\vec{r}_{2}$. In short, the rotation is given by $\mathcal{R}_{\vec{n}_{1}\times \vec{n}_{2}}(ArcCos[\vec{n}_{1}.\vec{n}_{2}])$ with unit vectors $\vec{n}_{j}=\vec{r}_{j}/|\vec{r}_{j}|$.
+Assume the initial qubit state is represented by the Bloch vector $\vec{r}_{1}$. We now seek a rotation that maps $\vec{r}_{1}\to \vec{r}_{2}$. Geometrically, this is a rigid rotation in the plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$, through the angle between the two vectors. The plane spanned by $\vec{r}_{1}$ and $\vec{r}_{2}$ is also fully specified by the the vector cross product $\vec{r}_{1}$ and $\vec{r}_{2}$. In short, the rotation is given by $\mathcal{R}_{\vec{n}_{1}\times \vec{n}_{2}}(ArcCos[\vec{n}_{1}.\vec{n}_{2}])$ with unit vectors $\vec{n}_{j}=\vec{r}_{j}/\lvert \vec{r}_{j}\rvert$.
 
 For two Bloch vectors, visualize the plane spanned by them and also the perpendicular vector defining it:
 
@@ -2115,19 +1955,7 @@ With[{\[Theta] = VectorAngle[r1, r2], n = Cross[r1, r2]}, {
     n . {x, y, z} == 0 && x^2 + y^2 + z^2 <= 1/2 && 
      Cross[r1, {x, y, z}] . n >= 0 && 
      Cross[{x, y, z}, r2] . n >= 0, {x, y, z}]},
- Legended[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{r1, r2, n}], 
+ Legended[Show[ResourceFunction["BlochSpherePlot"][{r1, r2, n}], 
    Region@\[ScriptCapitalR], 
    Graphics3D[{{Opacity[.5], InfinitePlane[{0, 0, 0}, {r1, r2} ]}}], 
    PlotRange -> {{-1, 1}, {-1, 1}, {-1, 1}}, Boxed -> False], 
@@ -2158,7 +1986,7 @@ Verify that above rotation transform $\vec{r}_{1}$ into $\vec{r}_{2}$:
 RotationMatrix[VectorAngle[r1, r2], Cross[r1, r2]] . r1 == r2
 ```
 
-Perform the same transformation in SU(2) and verify that $\rho_{2}=U.\rho_{1}.U^{\dagger }$ with $\rho_{j}=1/2(\mathbb{I}+\vec{r}_{j}.\vec{\sigma })$ and $U=e^{-i\, \theta \, \vec{n}.\vec{\sigma }}$ where $\theta $ is the angle between $\vec{r}_{1}$ and $\vec{r}_{2}$ and $\vec{n}=\vec{r}_{1}\times \vec{r}_{2}/|\vec{r}_{1}\times \vec{r}_{2}|$:
+Perform the same transformation in SU(2) and verify that $\rho_{2}=U.\rho_{1}.U^{\dagger }$ with $\rho_{j}=1/2(\mathbb{I}+\vec{r}_{j}.\vec{\sigma })$ and $U=e^{-i\, \theta \, \vec{n}.\vec{\sigma }}$ where $\theta $ is the angle between $\vec{r}_{1}$ and $\vec{r}_{2}$ and $\vec{n}=\vec{r}_{1}\times \vec{r}_{2}/\lvert \vec{r}_{1}\times \vec{r}_{2}\rvert$:
 
 ```wl
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[Theta] = 
@@ -2621,19 +2449,7 @@ So the unsharp X-measurement preserves the measured component $(r_{x}$) but shri
 Visualize the change in the available space in the Bloch sphere due to unsharp X-measurement:
 
 ```wl
-With[{\[Eta] = .75}, Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+With[{\[Eta] = .75}, Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[{Cos[\[Phi]] Sin[\[Theta]], 
     Sin[\[Phi]] Sin[\[Theta]] Sqrt[1 - \[Eta]^2], 
     Cos[\[Theta]] Sqrt[1 - \[Eta]^2]}, {\[Theta], 0, \[Pi]}, {\[Phi], 
@@ -2696,19 +2512,7 @@ With[{m =
 Visualize the change in the available space in the Bloch sphere due to unsharp X-measurement:
 
 ```wl
-Legended[With[{\[Eta] = .75}, Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+Legended[With[{\[Eta] = .75}, Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[{Cos[\[Phi]] Sin[\[Theta]], 
      Sin[\[Phi]] Sin[\[Theta]] Sqrt[1 - \[Eta]^2], 
      Cos[\[Theta]] Sqrt[1 - \[Eta]^2]}, {\[Theta], 0, \[Pi]}, {\[Phi],
@@ -2820,19 +2624,7 @@ Visualize the Bloch-vector trajectory for $H=1/2\omega_{x}\sigma_{x}$ and $|\psi
 
 ```wl
 Manipulate[
- Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{0, -Sin[t], 
+ Show[ResourceFunction["BlochSpherePlot"][{0, -Sin[t], 
     Cos[t ]}, 
    PlotLabel -> 
     "Rotation angle is Subscript[\[Omega], x] t = " <> 
@@ -2933,7 +2725,7 @@ With[{\[Sigma] =
    Cross[\[Omega], r]] // FullSimplify
 ```
 
-Equivalently, the Liouville–von Neumann equation can be rewritten as an equation of motion for the Bloch vector alone: $d\vec{r}/dt=\vec{\omega }\times \vec{r}$, i.e., the Bloch vector precesses about the effective field $\vec{\omega }$. Note that $d|\vec{r}|^{2}/dt=d(\vec{r}.\vec{r})/dt=d\vec{r}/dt.\vec{r}+\vec{r}.d\vec{r}/dt=2\vec{r}.d\vec{r}/dt=2\vec{r}.(\vec{\omega }\times \vec{r})=0$ because $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$. So the motion preserves $|\vec{r}|$ which is what we expected from a unitary transformation, or in the language of SO(3), it’s the signature of a rotation. In other words, pure precession is the “cleanest” kind of qubit motion: the Bloch vector behaves like a rigid arrow on a sphere, rotating around a fixed (or prescribed) axis with no shrinkage and no drift toward equilibrium.
+Equivalently, the Liouville–von Neumann equation can be rewritten as an equation of motion for the Bloch vector alone: $d\vec{r}/dt=\vec{\omega }\times \vec{r}$, i.e., the Bloch vector precesses about the effective field $\vec{\omega }$. Note that $d\lvert \vec{r}\rvert^{2}/dt=d(\vec{r}.\vec{r})/dt=d\vec{r}/dt.\vec{r}+\vec{r}.d\vec{r}/dt=2\vec{r}.d\vec{r}/dt=2\vec{r}.(\vec{\omega }\times \vec{r})=0$ because $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$. So the motion preserves $\lvert \vec{r}\rvert$ which is what we expected from a unitary transformation, or in the language of SO(3), it’s the signature of a rotation. In other words, pure precession is the “cleanest” kind of qubit motion: the Bloch vector behaves like a rigid arrow on a sphere, rotating around a fixed (or prescribed) axis with no shrinkage and no drift toward equilibrium.
 
 Since $\vec{\omega }\times \vec{r}$ is perpendicular to both $\vec{\omega }$ and $\vec{r}$, it means that $d\vec{r}/dt$ is always perpendicular to $\vec{r}$, implying that $\vec{r}$ is undergoing a steady rotation with angular velocity $\vec{\omega }$. If $\vec{r}$ starts pointing somewhere, its tip will move in a circle (or on a cone) around the axis given by $\vec{\omega }$. This is the standard form of a precession: when a vector’s direction in space slowly rotates around some axis, even though its length stays the same. We shall illustrate with an example.
 
@@ -2972,19 +2764,7 @@ In fact, the Bloch-vector motion admits a clean geometric picture. The trajector
 ```wl
 Manipulate[
  With[{initial = FromSphericalCoordinates[{1, \[Pi]/4, 0}]},
-  Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][
+  Show[ResourceFunction["BlochSpherePlot"][
     RotationMatrix[
       Sqrt[\[Omega]x^2 + \[Omega]z^2] tf, {\[Omega]x, 0, \[Omega]z}/
       Sqrt[\[Omega]x^2 + \[Omega]z^2]] . initial, 
@@ -3596,19 +3376,7 @@ Legended[
 Visualize Bloch vector for two realizations of random trajectory on the Bloch sphere:
 
 ```wl
-Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][], 
+Show[ResourceFunction["BlochSpherePlot"][], 
  ListLinePlot3D[blochVectorTrajectories[[;; 2]]], 
  PlotLabel -> 
   "Two realization of random dynamics with\n \
@@ -3645,19 +3413,7 @@ TraditionalForm]\)"}]
 Visualize the noise-averaged trajectory in the Bloch sphere:
 
 ```wl
-Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
   ListLinePlot3D[Mean@blochVectorTrajectories, PlotRange -> All], 
  PlotLabel -> "Ensemble-averaged qubit state\n on the Bloch sphere"]
 ```
@@ -3748,19 +3504,7 @@ Plot[Evaluate@Re@Table[Tr[\[Rho]t[t] . PauliMatrix[j]], {j, 3}], {t,
 As you can see, this agrees with the result we found earlier by numerically averaging over 1,000 noise realizations, up to the small discrepancies expected from numerical error and the finite number of samples.
 
 ```wl
-Legended[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 200],
+Legended[Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 200],
    ParametricPlot3D[Re@BlochVector[\[Rho]t[t]], {t, 0, 10}, 
    PlotRange -> All, 
    PlotStyle -> Directive[Opacity[.6], ColorData[97][1]]], 
@@ -3791,19 +3535,7 @@ d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve",
    1/2 (IdentityMatrix[2] + 
       FromSphericalCoordinates[{1, \[Pi]/4, 0}] . 
        Table[PauliMatrix[j], {j, 3}]), {t, 0, 10}];
- Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+ Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[
    Re@Table[Tr[state[t] . PauliMatrix[j]], {j, 3}], {t, 0, 10}, 
    PlotRange -> All], 
@@ -4031,19 +3763,7 @@ As expected, once the evolution time is of the order $1/\gamma $ or more, the fr
 In that strong-measurement regime, the Hamiltonian $H=1/2\omega_{x}\sigma_{x}$ does not disappear, but it is Zeno-suppressed: instead of smoothly driving Rabi oscillations, it mostly produces rare transitions between the two collapsed poles. The qualitative picture is “stick near $|0\rangle $ or $|1\rangle $, then occasionally switch,” and the switching becomes much rarer as γ increases.
 
 ```wl
-stickSwitch = With[{bs = ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-         "ShortName" -> "BlochSpherePlot", 
-         "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-         "ResourceType" -> "Function", "Version" -> "1.0.0", 
-         "Description" -> "Plot the Bloch sphere", 
-         "RepositoryLocation" -> URL[
-          "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-         "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-         "FunctionLocation" -> CloudObject[
-          "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][]}, 
+stickSwitch = With[{bs = ResourceFunction["BlochSpherePlot"][]}, 
    Show[bs, 
       Graphics3D[
        Table[{ColorData[97][j], 
