@@ -1554,6 +1554,410 @@ VerificationTest[
 
 
 (* ============================================================================
+   §26 — Frame observables: Pauli expectation / amplitude without densifying
+   ----------------------------------------------------------------------------
+   `f["Expectation", P]` computes <psi|P|psi> from a gate-built StabilizerFrame
+   as a poly(n) Pauli sandwich over the relating Paulis (frameSandwich), never a
+   2^n state vector. These tests push the physics, not just code paths: the magic
+   off-diagonal expectations are nonzero ONLY when the relative phase between
+   frame components is physical, so they double as the relating-Pauli phase canary.
+   ============================================================================ *)
+
+(* The T-state |A> = T|+> sits on the Bloch equator at 45 degrees: <X>=<Y>=1/Sqrt2,
+   <Z>=0, exactly. <Y> in particular is carried entirely by the e^{i pi/4} relative
+   phase between the two components, so it certifies phase-correct expectation. *)
+VerificationTest[
+    Module[{a = PauliStabilizer[1]["H", 1]["T", 1]},
+        RootReduce[{a["Expectation", "X"], a["Expectation", "Y"], a["Expectation", "Z"]}
+                   - {1/Sqrt[2], 1/Sqrt[2], 0}]
+    ],
+    {0, 0, 0},
+    TestID -> "S26-F1-Tstate-Bloch-Equator-EXACT"
+];
+
+(* Entangled magic state (|00> + e^{i pi/4}|11>)/Sqrt2 from {H1, CNOT12, T1}:
+   <XX> = 1/Sqrt2, <YY> = -1/Sqrt2, <ZZ> = 1, exactly (cross-component interference). *)
+VerificationTest[
+    Module[{a = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1}][Method -> "Stabilizer"]},
+        RootReduce[{a["Expectation", "XX"], a["Expectation", "YY"], a["Expectation", "ZZ"]}
+                   - {1/Sqrt[2], -1/Sqrt[2], 1}]
+    ],
+    {0, 0, 0},
+    TestID -> "S26-F2-EntangledMagic-XX-YY-ZZ-EXACT"
+];
+
+(* Differential battery: <P> from the frame equals <P> from the dense Schrodinger
+   state for EVERY Pauli string P, across Clifford+T circuits of 1-3 qubits with
+   interior Cliffords mixed between T gates. <P> is global-phase invariant, so the
+   match must be exact (machine precision), not up-to-phase. *)
+VerificationTest[
+    Module[{cases, worst},
+        cases = {
+            {{"H" -> 1, "T" -> 1}, 1},
+            {{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "T" -> 2}, 2},
+            {{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2, "T" -> 2}, 2},
+            {{"H" -> 1, "H" -> 2, "H" -> 3, "T" -> 1, "CNOT" -> {1, 2}, "T" -> 2,
+              "CNOT" -> {2, 3}, "T" -> 3}, 3}
+        };
+        worst = Max @ Map[
+            Function[case,
+                Module[{circ = case[[1]], n = case[[2]], frame, dense, paulis},
+                    frame = QuantumCircuitOperator[circ][Method -> "Stabilizer"];
+                    dense = N @ Normal @
+                        QuantumCircuitOperator[circ][Method -> "Schrodinger"]["StateVector"];
+                    paulis = StringJoin /@ Tuples[{"I", "X", "Y", "Z"}, n];
+                    Max[Table[
+                        Abs[N[frame["Expectation", P]] - Conjugate[dense] . (pauliString[P] . dense)],
+                        {P, paulis}]]
+                ]],
+            cases];
+        worst < 10.^-12
+    ],
+    True,
+    TestID -> "S26-F3-Expectation-vs-Dense-AllPaulis-Battery"
+];
+
+(* <P> is real for a Hermitian Pauli P on any frame state (physical observable). *)
+VerificationTest[
+    Module[{a = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2, "T" -> 2}][
+            Method -> "Stabilizer"], paulis},
+        paulis = StringJoin /@ Tuples[{"I", "X", "Y", "Z"}, 2];
+        Max[Abs[Im[N[Table[a["Expectation", P], {P, paulis}]]]]] < 10.^-13
+    ],
+    True,
+    TestID -> "S26-F4-Expectation-Real-for-Hermitian"
+];
+
+(* Born normalization: <psi|I...I|psi> = <psi|psi> = 1 for circuit-built frames. *)
+VerificationTest[
+    Module[{a = QuantumCircuitOperator[{"H" -> 1, "H" -> 2, "H" -> 3, "T" -> 1,
+            "CNOT" -> {1, 2}, "T" -> 2, "CNOT" -> {2, 3}, "T" -> 3}][Method -> "Stabilizer"]},
+        Chop[N[a["Expectation", "III"]] - 1] == 0 && Chop[N[a["InnerProduct", a]] - 1] == 0
+    ],
+    True,
+    TestID -> "S26-F5-Born-Normalization"
+];
+
+(* <y|psi> for every computational label reconstructs the materialized state
+   vector, amplitude by amplitude (the strict, swap-sensitive check). *)
+VerificationTest[
+    Module[{a = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2, "T" -> 2}][
+            Method -> "Stabilizer"], sv, recon},
+        sv = N @ Normal @ a["StateVector"];
+        recon = N @ Table[a["Amplitude", IntegerDigits[k, 2, 2]], {k, 0, 3}];
+        Chop[Max[Abs[sv - recon]]] == 0
+    ],
+    True,
+    TestID -> "S26-F6-Amplitude-Reconstructs-StateVector-STRICT"
+];
+
+(* Shared-reference inner product (poly path) equals dense; self-overlap is 1. *)
+VerificationTest[
+    Module[{ref = PauliStabilizer[1]["H", 1], fA, fB},
+        fA = PauliStabilizer[1]["H", 1]["T", 1];
+        fB = StabilizerFrame[<|
+            "Components" -> {{1, ref}, {0, fA["Components"][[2, 2]]}},
+            "Paulis" -> First[fA]["Paulis"]|>];
+        Chop[N[fA["InnerProduct", fB]] - (Conjugate[Normal @ fA["StateVector"]] . Normal @ fB["StateVector"])] == 0
+    ],
+    True,
+    TestID -> "S26-F7-InnerProduct-SharedRef-Matches-Dense"
+];
+
+(* "Compress" caps a frame to the linear span of its component vectors u_i =     *)
+(* P_i|ref> (dimension <= 2^n), discarding linearly dependent components and      *)
+(* recomputing coefficients exactly, so the represented state is UNCHANGED. Five  *)
+(* T-gates (H,T,T,Tdg,Tdg) build 2^5/2 = 16 components whose vectors span only    *)
+(* {|+>, |->} (the two cancel to |+>): Compress must collapse 16 -> 2 with the    *)
+(* same state vector. *)
+VerificationTest[
+    Module[{r = PauliStabilizer[1]["H", 1]["T", 1]["T", 1][SuperDagger["T"], 1][SuperDagger["T"], 1], c},
+        c = r["Compress"];
+        {r["Length"], c["Length"], Chop[Max[Abs[N @ Normal @ r["StateVector"] - N @ Normal @ c["StateVector"]]]]}
+    ],
+    {16, 2, 0},
+    TestID -> "S26-F8-Compress-Preserves-State-Caps-Span"
+];
+
+(* Compress is exact and consistent: it changes neither the state vector (checked  *)
+(* amplitude-wise) nor a Pauli expectation (checked exactly via RootReduce), it     *)
+(* genuinely reduces the component count (16 -> span dimension), the result is      *)
+(* bounded by 2^n, and compressing again is a STRUCTURAL fixed point               *)
+(* (Compress[Compress] === Compress): the reduced coefficients are canonicalized    *)
+(* (Simplify) so a second pass stores byte-identical components, not merely an       *)
+(* equal-but-unreduced algebraic form. *)
+VerificationTest[
+    Module[{specs = {"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1, "T" -> 2, SuperDagger["T"] -> 1, "T" -> 1},
+            r, c},
+        r = QuantumCircuitOperator[specs][Method -> "Stabilizer"];
+        c = r["Compress"];
+        {
+            Chop[Max[Abs[N[Normal @ c["StateVector"] - Normal @ r["StateVector"]]]]],
+            RootReduce[c["Expectation", "XX"] - r["Expectation", "XX"]],
+            c["Length"] < r["Length"] && c["Length"] <= 2^2,
+            c["Compress"] === c
+        }
+    ],
+    {0, 0, True, True},
+    TestID -> "S26-F9-Compress-Exact-Idempotent-Bounded"
+];
+
+(* Structural idempotency on a single-qubit T/S chain whose LinearSolve coefficient  *)
+(* lands on a reducible fraction ((4 + 4(-1)^(3/4))/8): without the Simplify         *)
+(* canonicalization in Compress the second pass stored the reduced form and          *)
+(* Compress[Compress] === Compress was False. This guards that regression. *)
+VerificationTest[
+    Module[{c = PauliStabilizer[1]["H", 1]["T", 1]["S", 1]["T", 1]["S", 1]["T", 1]["Compress"]},
+        {c["Length"], c["Compress"] === c, Chop[Max[Abs[N[Normal @ c["Compress"]["StateVector"] - Normal @ c["StateVector"]]]]]}
+    ],
+    {2, True, 0},
+    TestID -> "S26-F9b-Compress-Structural-Idempotent"
+];
+
+(* A Pauli string whose length does not match the frame fails cleanly with the    *)
+(* dimension message (no Thread/Dot/recursion cascade), mirroring the bare         *)
+(* PauliStabilizer expectation guard. The messages argument asserts that ONLY      *)
+(* that message is emitted. *)
+VerificationTest[
+    QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 1}][Method -> "Stabilizer"]["Expectation", "X"],
+    $Failed,
+    {PauliStabilizer::expectationdim},
+    TestID -> "S26-F10-Expectation-WrongLength-CleanFail"
+];
+
+(* A computational label of the wrong length on Amplitude fails the same way. *)
+VerificationTest[
+    PauliStabilizer[1]["H", 1]["T", 1]["Amplitude", {0, 1}],
+    $Failed,
+    {PauliStabilizer::expectationdim},
+    TestID -> "S26-F11-Amplitude-WrongLength-CleanFail"
+]
+
+
+(* ============================================================================
+   §27 — Phase-gate convention and symbolic angles
+   ----------------------------------------------------------------------------
+   P[theta] is the true phase gate diag(1, e^{I theta}) (full angle). T = P[Pi/4].
+   With the correct convention, a free angle theta flows through the frame
+   observables as exact symbolic arithmetic, giving parametric expectation values
+   and their analytic gradients (the basis for variational/QAOA cost functions).
+   ============================================================================ *)
+
+(* P[theta] is full-angle: P[Pi/3]|+> = (|0> + e^{I Pi/3}|1>)/Sqrt2, NOT the      *)
+(* half-angle e^{I Pi/6}; and T is unchanged: T|+> = (|0> + e^{I Pi/4}|1>)/Sqrt2. *)
+VerificationTest[
+    {
+        Chop[Max[Abs[N[Normal @ PauliStabilizer[1]["H", 1]["P"[Pi/3], 1]["StateVector"]
+            - {1, Exp[I Pi/3]}/Sqrt[2]]]]],
+        Chop[Max[Abs[N[Normal @ PauliStabilizer[1]["H", 1]["T", 1]["StateVector"]
+            - {1, Exp[I Pi/4]}/Sqrt[2]]]]],
+        PauliStabilizer[1]["H", 1]["T", 1] === PauliStabilizer[1]["H", 1]["P"[Pi/4], 1]
+    },
+    {0, 0, True},
+    TestID -> "S27-F1-PhaseGate-FullAngle-Convention"
+];
+
+(* Symbolic angle: on H.P[theta].H|0> the frame returns <Z> = cos(theta) exactly, *)
+(* with analytic gradient d/dtheta <Z> = -sin(theta). ComplexExpand treats theta   *)
+(* as real (the standard QF cost-function idiom). *)
+VerificationTest[
+    Module[{fz = PauliStabilizer[1]["H", 1]["P"[\[Theta]], 1]["H", 1]["Expectation", "Z"]},
+        {
+            Simplify[ComplexExpand[fz] - Cos[\[Theta]]],
+            Simplify[ComplexExpand[D[fz, \[Theta]]] + Sin[\[Theta]]]
+        }
+    ],
+    {0, 0},
+    TestID -> "S27-F2-Symbolic-Expectation-And-Gradient"
+];
+
+(* P[theta]|+> traces the Bloch equator: <X> = cos(theta), <Y> = sin(theta),      *)
+(* <Z> = 0, all exact in the free angle theta. *)
+VerificationTest[
+    Module[{f = PauliStabilizer[1]["H", 1]["P"[\[Theta]], 1]},
+        Simplify[ComplexExpand[{f["Expectation", "X"], f["Expectation", "Y"], f["Expectation", "Z"]}]
+            - {Cos[\[Theta]], Sin[\[Theta]], 0}]
+    ],
+    {0, 0, 0},
+    TestID -> "S27-F3-Symbolic-Bloch-Equator"
+];
+
+
+(* ============================================================================
+   §28 — Phase-polynomial diagonal backend
+   ----------------------------------------------------------------------------
+   A circuit over the diagonal gate set {T, Tdg, S, Sdg, Z, CZ, CCZ, CNOT}
+   (no Hadamard) acting on |+...+> keeps every qubit value a linear F_2 form, so
+   the output map is a linear bijection and the accumulated phase is a single Z_8
+   polynomial. The state is then rank one: any amplitude is one closed-form term
+
+       <y | U | +...+> = 2^{-n/2} omega^{phi(M^{-1} y)},   omega = e^{i pi/4},
+
+   computed by ONE F_2 solve plus one substitution (flat in n), where the dense
+   state vector grows as 2^n. The backend is built via
+       qc[Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}]
+   which prepends the |+...+> H-layer internally and never materializes the 2^t
+   stabilizer frame. A circuit with an interior Hadamard or any non-diagonal gate
+   falls back to the ordinary stabilizer/frame path.
+   ============================================================================ *)
+
+(* |+...+> H-layer, and the exact dense state vector of (H-layer ++ diagonal      *)
+(* gates) via Method -> "Schrodinger": the differential oracle for the backend.   *)
+ppHLayer[m_] := Table["H" -> q, {q, m}];
+ppDenseVec[n_, specs_] := Normal @
+    QuantumCircuitOperator[Join[ppHLayer[n], specs]][Method -> "Schrodinger"]["StateVector"];
+ppBuild[specs_] := QuantumCircuitOperator[specs][Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}];
+ppPolyBackendQ[f_] := AssociationQ[First[f]] && KeyExistsQ[First[f], "PhasePolynomial"];
+
+(* Differential: for a battery of diagonal (no-Hadamard) CNOT-dihedral circuits     *)
+(* including T / S / Z / CZ / CCZ / Tdg / Sdg, the phase-poly amplitude for EVERY y *)
+(* is exactly (RootReduce) the dense Schrodinger amplitude of the H-prepended       *)
+(* circuit. Exact eighth-roots-of-unity arithmetic, no floating point. *)
+VerificationTest[
+    Module[{circuits, ok},
+        circuits = {
+            {2, {"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}]}},
+            {2, {"C"["NOT" -> 2, {1}], "T" -> 2, "Z" -> 1}},
+            {3, {"C"["Z" -> 3, {1, 2}], "T" -> 1, "S" -> 3, "C"["NOT" -> 2, {1}]}},
+            {3, {SuperDagger["T"] -> 1, SuperDagger["S"] -> 2, "Z" -> 3,
+                 "C"["NOT" -> 3, {1}], "C"["Z" -> 2, {3}]}}
+        };
+        ok = Table[
+            With[{n = c[[1]], specs = c[[2]]},
+                With[{pp = ppBuild[specs], dv = ppDenseVec[c[[1]], c[[2]]]},
+                    AllTrue[Range[0, 2 ^ n - 1],
+                        RootReduce[pp["Amplitude", IntegerDigits[#, 2, n]] - dv[[# + 1]]] === 0 &]
+                ]
+            ],
+            {c, circuits}
+        ];
+        ok
+    ],
+    {True, True, True, True},
+    TestID -> "S28-F1-Amplitude-Differential-Vs-Dense-Schrodinger"
+];
+
+(* The phase-poly StateVector reproduces the full dense (Schrodinger) state vector  *)
+(* exactly, for a CNOT-dihedral circuit with a CCZ. *)
+VerificationTest[
+    With[{n = 3, specs = {"C"["Z" -> 3, {1, 2}], "T" -> 1, "S" -> 2, "C"["NOT" -> 2, {1}]}},
+        Chop[Max[Abs[N[Normal[ppBuild[specs]["StateVector"]] - ppDenseVec[n, specs]]]]]
+    ],
+    0,
+    TestID -> "S28-F2-StateVector-Matches-Dense"
+];
+
+(* H-guard: a circuit with an interior Hadamard must NOT build a phase-poly backend *)
+(* (it falls back to the ordinary stabilizer/frame path), and the fallback state is *)
+(* still correct (matches dense up to a global phase, the bare-stabilizer contract).*)
+VerificationTest[
+    Module[{specs = {"H" -> 1, "T" -> 1, "H" -> 1}, fb, fbv, dv},
+        fb = QuantumCircuitOperator[specs][Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}];
+        fbv = Normal[fb["StateVector"]];
+        dv = Normal[QuantumCircuitOperator[specs][QuantumState["Register"[1]], Method -> "Schrodinger"]["StateVector"]];
+        {ppPolyBackendQ[fb], Chop[Abs[N[Conjugate[fbv] . dv]] - 1]}
+    ],
+    {False, 0},
+    TestID -> "S28-F3-Interior-Hadamard-Falls-Back"
+];
+
+(* Equivalence: for a CCZ-free diagonal circuit (which the ordinary frame path can  *)
+(* also represent), the phase-poly StateVector equals the component-backend         *)
+(* StateVector of the same H-prepended circuit, up to one global phase. *)
+VerificationTest[
+    Module[{n = 3, specs = {"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}], "C"["NOT" -> 3, {1}], "Z" -> 3},
+        pp, comp, ppv, cv},
+        pp = ppBuild[specs];
+        comp = QuantumCircuitOperator[Join[ppHLayer[n], specs]][Method -> "Stabilizer"];
+        ppv = Normal[pp["StateVector"]];
+        cv = Normal[comp["StateVector"]];
+        {ppPolyBackendQ[pp], Head[comp], Chop[Abs[N[Conjugate[ppv] . cv]] - 1]}
+    ],
+    {True, StabilizerFrame, 0},
+    TestID -> "S28-F4-PhasePoly-Equals-Component-UpToGlobalPhase"
+];
+
+(* The phase-poly backend handles CCZ exactly, a diagonal gate the ordinary frame   *)
+(* path cannot represent (CCZ is non-Clifford and not in the frame's gate set, so   *)
+(* the ordinary "Stabilizer" path errors with ::nonclifford on it). All amplitudes  *)
+(* of a CCZ-containing diagonal circuit match dense exactly. *)
+VerificationTest[
+    With[{n = 3, specs = {"C"["Z" -> 3, {1, 2}], SuperDagger["T"] -> 2, "S" -> 1}},
+        With[{pp = ppBuild[specs], dv = ppDenseVec[n, specs]},
+            AllTrue[Range[0, 2 ^ n - 1],
+                RootReduce[pp["Amplitude", IntegerDigits[#, 2, n]] - dv[[# + 1]]] === 0 &]
+        ]
+    ],
+    True,
+    TestID -> "S28-F5-CCZ-Differential-Exact"
+];
+
+(* Backend invariants: a phase-poly frame is a rank-1 StabilizerFrame, so "Compress"*)
+(* (the span-dimension cap) returns it unchanged, and a single-state expectation /  *)
+(* self inner product read consistently (<I..I> = <psi|psi> = 1, the state is       *)
+(* normalized; <Z..Z>-type reads route through the dense fallback). *)
+VerificationTest[
+    With[{n = 3, specs = {"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}], "C"["NOT" -> 3, {1}]}},
+        With[{pp = ppBuild[specs]},
+            {
+                pp === pp["Compress"],
+                pp["Qubits"],
+                Chop[N[pp["Expectation", "III"]] - 1],
+                Chop[N[pp["InnerProduct", pp]] - 1]
+            }
+        ]
+    ],
+    {True, 3, 0, 0},
+    TestID -> "S28-F6-RankOne-Compress-And-Norm"
+];
+
+(* Flat in n: a single amplitude is computable at n = 20 (where the dense 2^20      *)
+(* state vector is infeasible), with the exact magnitude 2^{-n/2} every amplitude   *)
+(* of a diagonal-fragment state carries; and the amplitude time at n = 16 stays      *)
+(* within a small constant factor of n = 4 (dense would grow ~2^12). Benchmarked     *)
+(* with ClearSystemCache on packed inputs. Measured (M-series): the single-amplitude *)
+(* cost is ~0.07 ms at n = 4 and ~0.37 ms at n = 20 (essentially flat), while the    *)
+(* dense Method -> "Schrodinger" state vector grows ~2.4 s (n=4) -> 41 s (n=12) and   *)
+(* is infeasible past that. *)
+VerificationTest[
+    Module[{mkChain, ampTime, ampVal, t4, t16},
+        mkChain[m_] := QuantumCircuitOperator[Join[
+            Table["T" -> q, {q, m}], Table["C"["NOT" -> q + 1, {q}], {q, m - 1}], Table["S" -> q, {q, m}]]];
+        ampTime[m_] := Module[{pp = mkChain[m][Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}]},
+            ClearSystemCache[];
+            First @ AbsoluteTiming[pp["Amplitude", Developer`ToPackedArray[ConstantArray[1, m]]]]
+        ];
+        ampVal = mkChain[20][Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}]["Amplitude", ConstantArray[1, 20]];
+        t4 = ampTime[4]; t16 = ampTime[16];
+        {
+            Chop[Abs[N[ampVal]] - 1 / Sqrt[2] ^ 20],
+            t16 < 50 t4 + 1
+        }
+    ],
+    {0, True},
+    TestID -> "S28-F7-Amplitude-Flat-In-N"
+];
+
+(* No messages on correctly-sized usage. Every amplitude of an n=2 diagonal-fragment*)
+(* state has magnitude 2^{-1} = 1/2, and the call emits no messages (the test has no *)
+(* expected-message argument, so any message would fail it). *)
+VerificationTest[
+    With[{pp = ppBuild[{"T" -> 1, "S" -> 2, "C"["Z" -> 2, {1}]}]},
+        Chop[Table[Abs[N[pp["Amplitude", IntegerDigits[k, 2, 2]]]], {k, 0, 3}] - 1 / 2]
+    ],
+    {0, 0, 0, 0},
+    TestID -> "S28-F8-Amplitude-CleanUsage"
+];
+
+VerificationTest[
+    ppBuild[{"T" -> 1, "S" -> 2}]["Amplitude", {0, 1, 1}],
+    $Failed,
+    {PauliStabilizer::expectationdim},
+    TestID -> "S28-F8b-Amplitude-WrongLength-CleanFail"
+]
+
+
+(* ============================================================================
    Test execution & summary
    ============================================================================ *)
 

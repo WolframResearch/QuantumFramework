@@ -107,12 +107,27 @@ stabilizerInnerProduct[psi_PauliStabilizer ? PauliStabilizerQ, phi_PauliStabiliz
 ]
 
 
-(* StabilizerFrame inner product: Sum_ij conj(c_i) c_j <psi_i | psi_j> *)
+(* StabilizerFrame inner product: Sum_ij conj(c_i) c_j <psi_i | psi_j>. When     *)
+(* both frames are gate-built (carry the "Paulis" key) and share the reference    *)
+(* component, the overlap is the same poly(n) Pauli sandwich as the expectation   *)
+(* (frameSandwich with the identity observable), exact and with no 2^n vector.    *)
+(* Otherwise (hand-built / Plus-combined, distinct references, or a phase-poly     *)
+(* backend, which has no "Paulis" key) fall back to dense materialization through  *)
+(* each frame's own "StateVector" handler, which is always correct. *)
 stabilizerInnerProduct[fA_StabilizerFrame, fB_StabilizerFrame] /;
-    fA["Qubits"] == fB["Qubits"] := Module[{vA, vB},
-    vA = fA["StateVector"];
-    vB = fB["StateVector"];
-    Conjugate[vA] . vB
+    fA["Qubits"] == fB["Qubits"] := If[
+    KeyExistsQ[First[fA], "Paulis"] && KeyExistsQ[First[fB], "Paulis"] && sfSameReferenceQ[fA, fB],
+    frameSandwich[fA, StringRepeat["I", fA["Qubits"]], fB],
+    Module[{vA = fA["StateVector"], vB = fB["StateVector"]}, Conjugate[vA] . vB]
+]
+
+(* Two gate-built frames share a reference state when their reference components  *)
+(* are the same stabilizer state. Compared as an unordered set of signed Pauli    *)
+(* strings so generator ordering is irrelevant; a conservative False simply       *)
+(* routes to the always-correct dense fallback. *)
+sfSameReferenceQ[fA_StabilizerFrame, fB_StabilizerFrame] := With[{
+    rA = fA["Components"][[1, 2]], rB = fB["Components"][[1, 2]]},
+    Sort[rA["Stabilizers"]] === Sort[rB["Stabilizers"]]
 ]
 
 

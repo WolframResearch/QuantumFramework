@@ -747,9 +747,9 @@ VerificationTest[
     TestID -> "Fail-PReturnsStabilizerFrame-Phase4"
 ]
 
-(* T is alias for P[Pi/2] *)
+(* T is alias for P[Pi/4]: P[theta] = diag(1, e^{I theta}), so T = diag(1, e^{I Pi/4}) = P[Pi/4]. *)
 VerificationTest[
-    $psBellLit["T", 1] === $psBellLit["P"[Pi/2], 1],
+    $psBellLit["T", 1] === $psBellLit["P"[Pi/4], 1],
     True,
     TestID -> "Fail-TIsP"
 ]
@@ -1494,7 +1494,7 @@ VerificationTest[
 ]
 
 (* P[\[Theta]] for symbolic theta: returns a 2-component StabilizerFrame with correct
-   coefficients (1 + Exp[I theta / 2]) / 2 and (1 - Exp[I theta / 2]) / 2 *)
+   coefficients (1 + Exp[I theta]) / 2 and (1 - Exp[I theta]) / 2 *)
 VerificationTest[
     With[{ps = PauliStabilizer[1]},
         With[{result = ps["P"[\[FormalTheta]], 1]},

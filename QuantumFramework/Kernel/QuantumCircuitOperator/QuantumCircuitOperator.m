@@ -107,6 +107,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsP
         "QuEST" :> QuESTApply[qco, qs],
         "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
         "Stabilizer" :> PauliStabilizerApply[qco, qs],
+        {"Stabilizer", subOpts___} :> PauliStabilizerApply[qco, qs, subOpts],
         _ -> $Failed
     }
 ]
@@ -136,10 +137,13 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         opts
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[]] := Switch[
-    OptionValue[quantumCircuitApply, {opts}, Method],
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[]] := With[
+    {method = OptionValue[quantumCircuitApply, {opts}, Method]},
+    Switch[method,
     "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
+    {"Stabilizer", ___},
+    PauliStabilizerApply[qco, Automatic, Sequence @@ Rest[method]],
     "QuEST",
     QuESTApply[qco, QuantumState["Register"[qco["InputDimensions"]]]],
     _,
@@ -149,6 +153,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
             Map[QuantumState["Register", 2, "Label" -> Ket[{"0"}]] -> {#1} &, Complement[qco["FreeOrder"], qco["InputOrder"]]]
         ]
     ] /* qco)[QuantumState[1, 1], opts]
+]
 ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=

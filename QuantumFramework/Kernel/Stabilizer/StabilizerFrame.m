@@ -2,6 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport[StabilizerFrame]
 PackageScope[StabilizerFrameQ]
+PackageScope[frameSandwich]
 
 
 
@@ -40,6 +41,13 @@ StabilizerFrameQ[StabilizerFrame[KeyValuePattern[{
     "Components" -> components_List
 }]]] /; AllTrue[components, MatchQ[#, {_, _PauliStabilizer}] &] := True
 
+(* Compressed phase-polynomial backend (the diagonal-fragment closed form). It    *)
+(* carries no "Components" list; the master reads dispatch on which key is present.*)
+StabilizerFrameQ[StabilizerFrame[KeyValuePattern[{
+    "PhasePolynomial" -> _, "Variables" -> _List, "Qubits" -> _Integer,
+    "LinearMap" -> _, "InverseMap" -> _, "Scale" -> _
+}]]] := True
+
 StabilizerFrameQ[_] := False
 
 
@@ -47,7 +55,8 @@ StabilizerFrameQ[_] := False
 _StabilizerFrame["Properties"] = {
     "Components", "Coefficients", "Stabilizers",
     "Length", "Qubits", "GeneratorCount",
-    "StateVector", "State", "InnerProduct"
+    "StateVector", "State", "InnerProduct",
+    "Expectation", "Amplitude", "Compress"
 }
 
 
@@ -159,6 +168,11 @@ sfApplyPauli[{xb_, zb_, coeff_}, v_, n_] := Module[{
 
 StabilizerFrame[assoc_Association][prop_String] /; KeyExistsQ[assoc, prop] := assoc[prop]
 
+(* Phase-poly backend: "Qubits" is a stored key (direct lookup above); the         *)
+(* conditioned rules keep the component-only "Qubits"/"Qudits" rules (which read    *)
+(* f["Components"]) from ever firing on a phase-poly frame.                         *)
+f_StabilizerFrame["Qubits" | "Qudits"] /; KeyExistsQ[First[f], "PhasePolynomial"] := First[f]["Qubits"]
+
 f_StabilizerFrame["Coefficients"] := f["Components"][[All, 1]]
 f_StabilizerFrame["Stabilizers"] := f["Components"][[All, 2]]
 f_StabilizerFrame["Length"] := Length[f["Components"]]
@@ -172,7 +186,14 @@ f_StabilizerFrame["GeneratorCount"] := f["Components"][[1, 2]]["GeneratorCount"]
 (* ============================================================================ *)
 
 f_StabilizerFrame["StateVector"] := With[{assoc = First[f]},
-    If[ KeyExistsQ[assoc, "Paulis"],
+    Which[
+        KeyExistsQ[assoc, "PhasePolynomial"],
+        (* Phase-poly backend: each amplitude is one closed-form term (flat in n).  *)
+        (* The full vector is built only for cross-checking / small-n materialization.*)
+        With[{n = assoc["Qubits"]},
+            SparseArray[Table[phasePolyAmplitude[assoc, IntegerDigits[k, 2, n]], {k, 0, 2 ^ n - 1}], 2 ^ n]
+        ],
+        KeyExistsQ[assoc, "Paulis"],
         (* Coherent: materialize the reference once, relate the rest by Paulis. *)
         Module[{ref = assoc["Components"][[1, 2]], n, v1},
             n = ref["Qubits"];
@@ -182,12 +203,181 @@ f_StabilizerFrame["StateVector"] := With[{assoc = First[f]},
                 {assoc["Components"], assoc["Paulis"]}
             ]
         ],
+        True,
         (* No relating Paulis: materialize each component independently. *)
         Total[#1 * #2["State"]["StateVector"] & @@@ assoc["Components"]]
     ]
 ]
 
 f_StabilizerFrame["State"] := QuantumState @ f["StateVector"]
+
+
+(* ============================================================================ *)
+(* Phase-polynomial backend: closed-form computational amplitude.               *)
+(*                                                                              *)
+(* <y | U | +...+> = Scale * omega^{phi(M^{-1} y)}, omega = e^{i pi/4}, where M  *)
+(* is the F_2 output linear map (qubit q value = Sum_i M[q,i] x[i]) and phi the  *)
+(* Z_8 phase polynomial. The preimage x* = M^{-1} y is the unique F_2 solution   *)
+(* of M x = y, so the amplitude is one F_2 solve plus one substitution -- no 2^n *)
+(* enumeration. For an integer phi the result is an exact eighth root of unity   *)
+(* times Scale; a (would-be) symbolic phase falls back to Exp[I pi/4 phi].       *)
+(* ============================================================================ *)
+
+phasePolyAmplitude[assoc_Association, y : {(0 | 1) ..}] := With[{
+    ph = assoc["PhasePolynomial"] /. Thread[assoc["Variables"] -> LinearSolve[assoc["LinearMap"], y, Modulus -> 2]],
+    scale = assoc["Scale"]
+},
+    scale * If[IntegerQ[ph], Exp[I Pi / 4] ^ Mod[ph, 8], Exp[I (Pi / 4) ph]]
+]
+
+
+(* ============================================================================ *)
+(* Observables: Pauli expectation and amplitudes without densifying the frame.   *)
+(*                                                                              *)
+(* A gate-built frame is |psi> = Sum_i c_i P_i |ref>, with P_i the relating      *)
+(* Pauli of component i and |ref> the reference component (component 1). For a    *)
+(* Hermitian Pauli observable P,                                                 *)
+(*   <psi|P|psi> = Sum_ij conj(c_i) c_j <ref| P_i^dagger P P_j |ref>,            *)
+(* and P_i^dagger P P_j is a single Pauli times a scalar in {1,i,-1,-i}; the     *)
+(* surviving <ref| Pauli |ref> is exactly stabilizerExpectation on the one       *)
+(* reference state (a value in {0,+1,-1}). The cost is the number of component    *)
+(* pairs times a poly(n) stabilizer expectation, never a 2^n state vector.       *)
+(*                                                                              *)
+(* The symplectic-Pauli kernel below encodes an operator as {x, z, s}, meaning    *)
+(* s X^x Z^z with s a scalar and x, z length-n bit lists. A relating Pauli       *)
+(* {xb, zb, coeff} is the operator coeff I^(xb.zb) X^xb Z^zb; a Hermitian Pauli   *)
+(* string (e.g. "XYZ", optional leading "-") is i^(x.z) X^x Z^z.                 *)
+(* ============================================================================ *)
+
+sfPauliMul[{x1_, z1_, s1_}, {x2_, z2_, s2_}] :=
+    {BitXor[x1, x2], BitXor[z1, z2], s1 s2 (-1) ^ (z1 . x2)}
+
+sfPauliDag[{x_, z_, s_}] := {x, z, Conjugate[s] (-1) ^ (x . z)}
+
+sfRelatingToSymp[{xb_, zb_, coeff_}] := {xb, zb, coeff I ^ (xb . zb)}
+
+sfStringToSymp[str_String] := With[{
+    sign = If[StringStartsQ[str, "-"], -1, 1],
+    chars = Characters[StringDelete[str, StartOfString ~~ "-"]]
+},
+    With[{
+        x = Replace[chars, {"I" -> 0, "X" -> 1, "Y" -> 1, "Z" -> 0}, {1}],
+        z = Replace[chars, {"I" -> 0, "X" -> 0, "Y" -> 1, "Z" -> 1}, {1}]
+    },
+        {x, z, sign I ^ (x . z)}
+    ]
+]
+
+sfUnsignedString[x_, z_] := StringJoin @ MapThread[
+    Replace[{#1, #2}, {{0, 0} -> "I", {1, 0} -> "X", {1, 1} -> "Y", {0, 1} -> "Z"}] &, {x, z}]
+
+(* <ref| (s X^x Z^z) |ref> = s i^(-(x.z)) <ref|Phat|ref>, last factor in {0,+-1}. *)
+sfSympExpectation[{x_, z_, s_}, ref_] :=
+    s I ^ (- (x . z)) stabilizerExpectation[ref, sfUnsignedString[x, z]]
+
+(* <psiA|P|psiB> for two frames that share the reference component (component 1). *)
+frameSandwich[fA_StabilizerFrame, P_String, fB_StabilizerFrame] := With[{
+    a = fA["Coefficients"], pa = First[fA]["Paulis"],
+    b = fB["Coefficients"], pb = First[fB]["Paulis"],
+    ref = fA["Components"][[1, 2]], pg = sfStringToSymp[P]
+},
+    Total @ Flatten @ Table[
+        Conjugate[a[[i]]] b[[j]] sfSympExpectation[
+            sfPauliMul[sfPauliDag[sfRelatingToSymp[pa[[i]]]], sfPauliMul[pg, sfRelatingToSymp[pb[[j]]]]],
+            ref],
+        {i, Length[a]}, {j, Length[b]}]
+]
+
+(* Dense Pauli-string matrix, used only by the hand-built (no relating Paulis)   *)
+(* expectation fallback; the gate-built path never forms a 2^n matrix.           *)
+sfPauliStringMatrix[str_String] := With[{
+    sign = If[StringStartsQ[str, "-"], -1, 1],
+    mats = Replace[Characters[StringDelete[str, StartOfString ~~ "-"]],
+        {"I" -> PauliMatrix[0], "X" -> PauliMatrix[1], "Y" -> PauliMatrix[2], "Z" -> PauliMatrix[3]}, {1}]
+},
+    sign If[Length[mats] == 1, First[mats], KroneckerProduct @@ mats]
+]
+
+(* <psi|P|psi>. Gate-built frame: poly(n) Pauli sandwich. Hand-built frame: *)
+(* dense fallback through the materialized state vector. A wrong-length Pauli      *)
+(* string fails cleanly with the same dimension message as the bare stabilizer    *)
+(* path (InnerProduct.m), rather than cascading into Thread/Dot errors. *)
+f_StabilizerFrame["Expectation", P_String] /; StringMatchQ[P, RegularExpression["^-?[IXYZ]+$"]] :=
+    With[{n = StringLength[StringDelete[P, StartOfString ~~ "-"]]},
+        Which[
+            n != f["Qubits"],
+                Message[PauliStabilizer::expectationdim, n, f["Qubits"]]; $Failed,
+            KeyExistsQ[First[f], "Paulis"],
+                frameSandwich[f, P, f],
+            True,
+                With[{v = Normal @ f["StateVector"]}, Conjugate[v] . (sfPauliStringMatrix[P] . v)]
+        ]
+    ]
+
+(* <y|psi> for a computational basis label y (qubit 1 = most significant). The   *)
+(* reference is materialized once (O(2^n)); each amplitude is then a chi-term     *)
+(* relating-Pauli sum. A label of the wrong length fails cleanly. *)
+f_StabilizerFrame["Amplitude", y : {(0 | 1) ..}] /; KeyExistsQ[First[f], "Paulis"] :=
+    If[ Length[y] != f["Qubits"],
+        Message[PauliStabilizer::expectationdim, Length[y], f["Qubits"]]; $Failed,
+        With[{a = f["Coefficients"], pa = First[f]["Paulis"], ref = f["Components"][[1, 2]]},
+            With[{vref = Normal @ ref["State"]["StateVector"]},
+                Total @ Table[
+                    With[{xb = pa[[i, 1]], zb = pa[[i, 2]], coeff = pa[[i, 3]]},
+                        a[[i]] coeff I ^ (xb . zb) (-1) ^ (zb . BitXor[y, xb]) vref[[FromDigits[BitXor[y, xb], 2] + 1]]
+                    ],
+                    {i, Length[a]}]
+            ]
+        ]
+    ]
+
+(* Phase-poly backend: <y|psi> is the closed-form term, flat in n (one F_2 solve  *)
+(* + one substitution), the headline of this backend. A wrong-length label fails   *)
+(* cleanly with the same dimension message as the component path. *)
+f_StabilizerFrame["Amplitude", y : {(0 | 1) ..}] /; KeyExistsQ[First[f], "PhasePolynomial"] :=
+    If[ Length[y] != f["Qubits"],
+        Message[PauliStabilizer::expectationdim, Length[y], f["Qubits"]]; $Failed,
+        phasePolyAmplitude[First[f], y]
+    ]
+
+
+(* "Compress": span-dimension rank cap. The component vectors u_i = P_i|ref>     *)
+(* span a space of dimension <= 2^n, but a gate-built frame can carry many more   *)
+(* components than that (each non-Clifford gate doubles the count). Compress       *)
+(* returns an equivalent frame on a maximal linearly independent subset of        *)
+(* components, with exactly-recomputed coefficients, so |psi> is unchanged. The    *)
+(* Gram matrix G_ij = <u_i|u_j> is the same poly(n) sandwich (identity            *)
+(* observable); its pivot columns are a maximal independent subset of the u_i     *)
+(* (for a Gram G = U^dagger U, column dependencies of G equal those of U), and    *)
+(* the kept coefficients solve G_BB d = G_B. c exactly. Rank is taken exactly via *)
+(* RowReduce, never numeric MatrixRank. A hand-built frame is returned unchanged. *)
+sfGramMatrix[f_StabilizerFrame] := With[{pa = First[f]["Paulis"], ref = f["Components"][[1, 2]]},
+    Table[
+        sfSympExpectation[sfPauliMul[sfPauliDag[sfRelatingToSymp[pa[[i]]]], sfRelatingToSymp[pa[[j]]]], ref],
+        {i, Length[pa]}, {j, Length[pa]}]
+]
+
+(* Pivot column of each row of the reduced echelon form (the index of its leading *)
+(* nonzero); zero rows yield the sentinel 0, which is then dropped. *)
+sfPivotColumns[m_] := DeleteCases[
+    Function[row, SelectFirst[Range[Length[row]], ! PossibleZeroQ[row[[#]]] &, 0]] /@ RowReduce[m],
+    0]
+
+f_StabilizerFrame["Compress"] := If[! KeyExistsQ[First[f], "Paulis"], f,
+    Module[{g = sfGramMatrix[f], c = f["Coefficients"], pivots, d},
+        pivots = sfPivotColumns[g];
+        (* Simplify canonicalizes the reduced coefficients: LinearSolve returns them *)
+        (* in an unreduced algebraic form that depends on how many pivots it sees     *)
+        (* (e.g. (4 + 4 (-1)^(3/4))/8 on a first pass vs the equal (1 + (-1)^(3/4))/2 *)
+        (* once already minimal), which would break structural idempotency            *)
+        (* (Compress[Compress[f]] === Compress[f]) and the Components-based Equal.     *)
+        d = Simplify @ LinearSolve[g[[pivots, pivots]], g[[pivots, All]] . c];
+        StabilizerFrame[<|
+            "Components" -> Thread[{d, f["Stabilizers"][[pivots]]}],
+            "Paulis" -> First[f]["Paulis"][[pivots]]
+        |>]
+    ]
+]
 
 
 (* ============================================================================ *)
@@ -224,11 +414,10 @@ f_StabilizerFrame[SuperDagger[gate_String], args : ___Integer] := With[{assoc = 
 (* Non-Clifford gate: P[\[Theta]] doubles the frame size                        *)
 (*                                                                              *)
 (* P[\[Theta]] = diag(1, exp(I \[Theta])). Acting on a stabilizer state |s>:    *)
-(*   P[\[Theta]] |s> = ((1 + e^{i\[Theta]/2})/2) |s> + ((1 - e^{i\[Theta]/2})/2) Z_q |s>     *)
-(*  (up to a global phase factor).                                              *)
+(*   P[\[Theta]] |s> = ((1 + e^{i\[Theta]})/2) |s> + ((1 - e^{i\[Theta]})/2) Z_q |s>.          *)
 (* ============================================================================ *)
 
-f_StabilizerFrame["P"[phase_], q_Integer] := With[{c = Exp[I phase / 2], assoc = First[f]},
+f_StabilizerFrame["P"[phase_], q_Integer] := With[{c = Exp[I phase], assoc = First[f]},
     If[ KeyExistsQ[assoc, "Paulis"],
         StabilizerFrame[<|
             "Components" -> Flatten[
@@ -245,8 +434,8 @@ f_StabilizerFrame["P"[phase_], q_Integer] := With[{c = Exp[I phase / 2], assoc =
     ]
 ]
 
-f_StabilizerFrame["T", q_Integer] := f["P"[Pi / 2], q]
-f_StabilizerFrame[SuperDagger["T"], q_Integer] := f["P"[- Pi / 2], q]
+f_StabilizerFrame["T", q_Integer] := f["P"[Pi / 4], q]
+f_StabilizerFrame[SuperDagger["T"], q_Integer] := f["P"[- Pi / 4], q]
 
 
 (* op -> order rewrite *)
@@ -291,7 +480,7 @@ StabilizerFrame /: Times[c_, f_StabilizerFrame] /; FreeQ[c, _StabilizerFrame] :=
 (* Formatting                                                                   *)
 (* ============================================================================ *)
 
-MakeBoxes[f_StabilizerFrame ? StabilizerFrameQ, form_] ^:= With[{nComp = f["Length"]},
+MakeBoxes[f : StabilizerFrame[KeyValuePattern["Components" -> _]] ? StabilizerFrameQ, form_] ^:= With[{nComp = f["Length"]},
     BoxForm`ArrangeSummaryBox["StabilizerFrame",
         f,
         Framed["\[ScriptCapitalF]"],
@@ -301,3 +490,16 @@ MakeBoxes[f_StabilizerFrame ? StabilizerFrameQ, form_] ^:= With[{nComp = f["Leng
         form
     ]
 ]
+
+(* Phase-polynomial backend: a rank-1 compressed frame (one F_2 linear map + one   *)
+(* Z_8 phase polynomial). The summary reports the backend, the qubit count, and    *)
+(* the phase polynomial rather than a component list.                              *)
+MakeBoxes[f : StabilizerFrame[KeyValuePattern["PhasePolynomial" -> _]] ? StabilizerFrameQ, form_] ^:=
+    BoxForm`ArrangeSummaryBox["StabilizerFrame",
+        f,
+        Framed["\[ScriptCapitalF]"],
+        {{BoxForm`SummaryItem[{"Backend: ", "PhasePolynomial"}]},
+         {BoxForm`SummaryItem[{"Qubits: ", f["Qubits"]}]}},
+        {{BoxForm`SummaryItem[{"Phase polynomial: ", f["PhasePolynomial"]}]}},
+        form
+    ]

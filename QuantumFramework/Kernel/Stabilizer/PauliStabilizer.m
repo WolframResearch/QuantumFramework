@@ -173,7 +173,19 @@ ps_PauliStabilizer[specs__] /; stabilizerGateSpecSeqQ[{specs}] := ps[{specs}]
 (* (preserves Method -> "Stabilizer" wire compatibility for QuantumCircuitOperator)  *)
 (* ============================================================================ *)
 
-PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic] :=
+Options[PauliStabilizerApply] = {"Compress" -> None};
+
+PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic, opts : OptionsPattern[]] :=
+    (* Opt-in phase-polynomial fast build (Method -> {"Stabilizer", "Compress" ->  *)
+    (* "PhasePolynomial"}): for the default |0...0> register and a diagonal circuit *)
+    (* (no interior Hadamard, gates in {T,Tdg,S,Sdg,Z,CZ,CCZ,CNOT}) build the rank-1*)
+    (* phase-poly backend of U|+...+> directly (the |+...+> H-layer is prepended    *)
+    (* internally), never materializing the 2^t frame. sfPhasePolyFromCircuit       *)
+    (* returns a Failure for anything outside the fragment, so we fall back to the  *)
+    (* ordinary stabilizer trichotomy below with no error.                          *)
+    With[{ppFrame = If[OptionValue[PauliStabilizerApply, {opts}, "Compress"] === "PhasePolynomial" && qs === Automatic,
+        sfPhasePolyFromCircuit[qco], $Failed]},
+    If[StabilizerFrameQ[ppFrame], ppFrame,
     With[{
         (* Register size must cover the highest wire INDEX, not the wire count:    *)
         (* a circuit like {"H" -> 2} has Arity 1 but acts on wire 2, and an        *)
@@ -222,3 +234,4 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
             ]
         ]
     ]
+    ]]
