@@ -15,7 +15,7 @@ Mads Bahrami (last updated: Feb 19, 2026)
 <!-- #| style: Affiliation -->
 Wolfram Research Inc, USA
 
-![](introduction-to-QIS-fig-1.png)
+![](introduction-to-QIS-fig-1-v2.png)
 
 #### Setting the Stage: How This Notebook Flows
 
@@ -3614,10 +3614,7 @@ ListLinePlot[Transpose@Mean@blochVectorTrajectories,
  PlotLabel -> 
   "The ensemble-averaged Cartesian components of\n the Bloch vector 
 \!\(\*OverscriptBox[\(r\), \
-\(\[RightVector]\)]\)={\[LeftAngleBracket]Subscript[\[Sigma], 
-    x]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   y]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   z]\[RightAngleBracket]}", GridLines -> Automatic, Frame -> True, 
+\(\[RightVector]\)]\)={\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(y\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\)\[RightAngleBracket]}", GridLines -> Automatic, Frame -> True, 
  FrameLabel -> {"Time", 
    "\!\(\*FormBox[\(\[LeftAngleBracket]\*SubscriptBox[\(\[Sigma]\), \
 \(j\)]\[RightAngleBracket]\),
@@ -3718,10 +3715,7 @@ Plot[Evaluate@Re@Table[Tr[\[Rho]t[t] . PauliMatrix[j]], {j, 3}], {t,
  PlotLabel -> 
   "Lindblad DE for Cartesian components of\n the Bloch vector 
 \!\(\*OverscriptBox[\(r\), \
-\(\[RightVector]\)]\)={\[LeftAngleBracket]Subscript[\[Sigma], 
-    x]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   y]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   z]\[RightAngleBracket]}", Frame -> True, 
+\(\[RightVector]\)]\)={\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(y\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\)\[RightAngleBracket]}", Frame -> True, 
  FrameLabel -> {"Time", 
    "\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(j\)]\)\[RightAngleBracket]"},
   GridLines -> Automatic, PlotRange -> {-1, 1}]

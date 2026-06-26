@@ -1,0 +1,12 @@
+u[x_] := 2 k^(3/2) x Exp[-k x];
+phi[x_] := Exp[I q x] u[x];
+ovl = Integrate[Conjugate[phi[x]] u[x], {x, 0, Infinity}, Assumptions -> k > 0 && q \[Element] Reals];
+WriteString[$Output, "1.4 overlap => ", ToString[Simplify[ovl, k > 0 && q \[Element] Reals], InputForm], "\n"];
+WriteString[$Output, "1.4 {mod,sq} => ", ToString[Simplify[{Abs[ovl], Abs[ovl]^2}, k > 0 && q \[Element] Reals], InputForm], "\n"];
+ps[x_] := Sech[x]/Sqrt[2];
+pT = FullSimplify[FourierTransform[ps[x], x, p, FourierParameters -> {0, -1}]];
+WriteString[$Output, "2.6 psiT => ", ToString[pT, InputForm], "\n"];
+WriteString[$Output, "2.6 {norm,p2} => ", ToString[{Integrate[Abs[pT]^2, {p, -Infinity, Infinity}], Integrate[p^2 Abs[pT]^2, {p, -Infinity, Infinity}]}, InputForm], "\n"];
+sechprod = Sqrt[Integrate[x^2 Abs[ps[x]]^2, {x, -Infinity, Infinity}]] Sqrt[Integrate[Abs[D[ps[x], x]]^2, {x, -Infinity, Infinity}]];
+WriteString[$Output, "2.7 sech product => ", ToString[Simplify[sechprod], InputForm], "\n"];
+WriteString[$Output, "DONE\n"];
