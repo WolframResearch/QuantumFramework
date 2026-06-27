@@ -4134,7 +4134,7 @@ wlshow(r'''Manipulate[
  Show[ResourceFunction["BlochSpherePlot"][{0, -Sin[t], 
     Cos[t ]}, 
    PlotLabel -> 
-    "Rotation angle is Subscript[\[Omega], x] t = " <> 
+    "Rotation angle is \!\(\*SubscriptBox[\(\[Omega]\), \(x\)]\) t = " <> 
      ToString[t/\[Pi]] <> "\[Pi]", ImageSize -> 200], 
   Graphics3D[{Opacity[.5], ColorData[97][2], 
     Polygon[{{0, 0, 0}, {0, 0, 1}/2, 
@@ -4344,8 +4344,8 @@ wlshow(r'''Manipulate[
       Sqrt[\[Omega]x^2 + \[Omega]z^2]] . initial, {t, 0, tf}, 
     PlotStyle -> Red], PlotRange -> {{-1, 1}, {-1, 1}, {-1, 1}}]], 
  Item["Bloch-vector trajectory with Hamiltonian 1/
-   2 (Subscript[\[Omega], x] Subscript[\[Sigma], x] + 
-     Subscript[\[Omega], z] Subscript[\[Sigma], z])", 
+   2 (\!\(\*SubscriptBox[\(\[Omega]\), \(x\)]\) \!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\) + 
+     \!\(\*SubscriptBox[\(\[Omega]\), \(z\)]\) \!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\))", 
   Alignment -> Center], {{\[Omega]x, 1, 
    "Rabi rate \!\(\*SubscriptBox[\(\[Omega]\), \(x\)]\)"}, 0, 
   2 \[Pi]}, {{\[Omega]z, .5, 
@@ -5177,10 +5177,7 @@ wlshow(r'''ListLinePlot[Transpose@Mean@blochVectorTrajectories,
  PlotLabel -> 
   "The ensemble-averaged Cartesian components of\n the Bloch vector 
 \!\(\*OverscriptBox[\(r\), \
-\(\[RightVector]\)]\)={\[LeftAngleBracket]Subscript[\[Sigma], 
-    x]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   y]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   z]\[RightAngleBracket]}", GridLines -> Automatic, Frame -> True, 
+\(\[RightVector]\)]\)={\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(y\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\)\[RightAngleBracket]}", GridLines -> Automatic, Frame -> True, 
  FrameLabel -> {"Time", 
    "\!\(\*FormBox[\(\[LeftAngleBracket]\*SubscriptBox[\(\[Sigma]\), \
 \(j\)]\[RightAngleBracket]\),
@@ -5295,10 +5292,7 @@ wlshow(r'''Plot[Evaluate@Re@Table[Tr[\[Rho]t[t] . PauliMatrix[j]], {j, 3}], {t,
  PlotLabel -> 
   "Lindblad DE for Cartesian components of\n the Bloch vector 
 \!\(\*OverscriptBox[\(r\), \
-\(\[RightVector]\)]\)={\[LeftAngleBracket]Subscript[\[Sigma], 
-    x]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   y]\[RightAngleBracket],\[LeftAngleBracket]Subscript[\[Sigma], 
-   z]\[RightAngleBracket]}", Frame -> True, 
+\(\[RightVector]\)]\)={\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(y\)]\)\[RightAngleBracket],\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\)\[RightAngleBracket]}", Frame -> True, 
  FrameLabel -> {"Time", 
    "\[LeftAngleBracket]\!\(\*SubscriptBox[\(\[Sigma]\), \(j\)]\)\[RightAngleBracket]"},
   GridLines -> Automatic, PlotRange -> {-1, 1}]''', "fig-090")
@@ -5340,8 +5334,8 @@ wlshow(r'''Manipulate[state = ResourceFunction["LindbladSolve"][
    PlotRange -> All], 
   PlotLabel -> 
    "Lindbladian Evolution with H = 
-    1/2 Subscript[\[Omega], x] Subscript[\[Sigma], x]\n and L = 
-    Sqrt[\[Gamma]] Subscript[\[Sigma], z]
+    1/2 \!\(\*SubscriptBox[\(\[Omega]\), \(x\)]\) \!\(\*SubscriptBox[\(\[Sigma]\), \(x\)]\)\n and L = 
+    Sqrt[\[Gamma]] \!\(\*SubscriptBox[\(\[Sigma]\), \(z\)]\)
       for a fixed time duration"], {{\[Omega]x, 2, 
    "Coherent drive \!\(\*SubscriptBox[\(\[Omega]\), \(x\)]\)"}, 1, 
   10}, {{\[Gamma], .2, "Jump rate \[Gamma]"}, 0, 1}]''', "fig-092")
