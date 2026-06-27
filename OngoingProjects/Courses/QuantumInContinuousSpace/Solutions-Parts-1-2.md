@@ -268,25 +268,28 @@ uncertainty relation at work.
 
 ### 2.4 [BSc] How do I show that $\hat p$ is Hermitian by integration by parts, and see that the boundary terms vanish for an $L^2$ state?
 
-Hermiticity of $\hat p$ is $\langle\phi|\hat p\psi\rangle=\langle\hat p\phi|\psi\rangle$, which
-integration by parts turns into a bulk equality plus the boundary term
-$-i\,[\phi^*\psi]_{-\infty}^{\infty}$. For $L^2$ states it vanishes. We use two smooth solitons.
+Hermiticity of $\hat p$ is $\langle\phi|\hat p\chi\rangle=\langle\hat p\phi|\chi\rangle$, which
+integration by parts turns into the boundary term $-i\,[\phi^*\chi]_{-\infty}^{\infty}$: the
+matrix-element difference *equals* that surface term. We take two smooth solitons; their momentum
+matrix elements have no elementary closed form, so we read off the surface term symbolically and
+confirm the equality by quadrature.
 
 ```wl
 \[Phi][x_] := Sech[x]/Sqrt[2];
 \[Chi][x_] := Sech[x - 1] Exp[I x]/Sqrt[2];
-Integrate[Conjugate[\[Phi][x]] (-I D[\[Chi][x], x]), {x, -Infinity, Infinity}] -
-  Integrate[Conjugate[-I D[\[Phi][x], x]] \[Chi][x], {x, -Infinity, Infinity}]
-```
-
-```wl
 Limit[-I Conjugate[\[Phi][x]] \[Chi][x], x -> Infinity] -
   Limit[-I Conjugate[\[Phi][x]] \[Chi][x], x -> -Infinity]
 ```
 
-Both cells return $0$: the two matrix elements agree and the boundary term dies because the
-solitons decay at infinity. Hermiticity of $\hat p$ is exactly the vanishing of that surface
-term, a point that turns subtle on a finite domain (2.9).
+```wl
+Chop[NIntegrate[Conjugate[\[Phi][x]] (-I D[\[Chi][x], x]), {x, -Infinity, Infinity}, WorkingPrecision -> 30] -
+     NIntegrate[Conjugate[-I D[\[Phi][x], x]] \[Chi][x], {x, -Infinity, Infinity}, WorkingPrecision -> 30]]
+```
+
+The boundary term is $0$ (the solitons decay at infinity), and the high-precision quadrature
+returns numerical zero, so the two matrix elements agree. Because the difference *is* that surface
+term, Hermiticity of $\hat p$ is exactly its vanishing, a point that turns subtle on a finite
+domain (2.9).
 
 ### 2.5 [BSc] How do I write the momentum eigenfunctions $e^{ipx}$, see that they are not square-integrable, and normalize them to a Dirac delta?
 

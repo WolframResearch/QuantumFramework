@@ -10,17 +10,17 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[    120572,       3481]
-NotebookOptionsPosition[    111296,       3375]
-NotebookOutlinePosition[    111638,       3390]
-CellTagsIndexPosition[    111595,       3387]
+NotebookDataLength[    120844,       3484]
+NotebookOptionsPosition[    111566,       3378]
+NotebookOutlinePosition[    111908,       3393]
+CellTagsIndexPosition[    111865,       3390]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
 Cell["\<\
 Quantum in Continuous Space: Worked Solutions (Parts 1 and 2)\
-\>", "Title",ExpressionUUID->"9a391948-6dff-411a-b6eb-5a5ed54390f1"],
+\>", "Title",ExpressionUUID->"99907f72-627f-4c53-9b54-15d30520dbbb"],
 
 Cell[TextData[{
  "Worked, pure Wolfram Language answers to the questions in ",
@@ -31,33 +31,33 @@ Cell[TextData[{
    BaseStyle->"Hyperlink",
    ButtonData->{
      URL["Question-List.md"], None}]], "InlineFormula",ExpressionUUID->
-  "2c72f8a0-5e77-40e4-8b1e-13a021dcec95"],
+  "eecb5e4c-0e4e-4d09-a4cc-29f59e4c215a"],
  ", Part 1 (the wavefunction and the state space ",
  Cell[BoxData[
   StyleBox[
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "be7635e7-47d5-4dd3-8af7-de6701f460cc"],
+  "961c956b-6832-4ad1-87a0-0cfcf29155af"],
  ") and Part 2 (operators, position and momentum, and the Fourier bridge). No \
 quantum package is used: everything is ",
  Cell[BoxData["Integrate"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9ffb3583-9e55-4edf-99c7-44761364cea8"],
+  "f05324da-70f6-4038-b4fb-bd6828ae59e2"],
  ", ",
  Cell[BoxData["D"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "57bfbcc2-9f37-4316-b0b8-8b437a42dc26"],
+  "fc939bb7-118f-409c-9f73-85f594117998"],
  ", ",
  Cell[BoxData["FourierTransform"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d8b13968-b642-4031-a180-dc1a02fa5c81"],
+  "2d1d3ca0-28c5-4507-a50a-0cb0aa1ea231"],
  ", ",
  Cell[BoxData["Simplify"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b01e49c1-732b-4f41-a2fc-6355cda33b09"],
+  "e404d672-1e87-43e8-b421-bcbaece053b9"],
  ", and elementary algebra."
-}], "Text",ExpressionUUID->"34e2a41c-881e-4115-b9af-fdb3d0dbcc7f"],
+}], "Text",ExpressionUUID->"90afb1e4-0970-41dc-b570-292435e7169c"],
 
 Cell[TextData[{
  StyleBox["The states are chosen to be physically real, not the \
@@ -70,7 +70,7 @@ saturation question (2.7), where it is the punchline. Everywhere else it \
 makes the machinery look trivial (its Fourier transform is itself, its \
 current is featureless). So the solutions run on states that actually occur \
 in physics, each picked so its symbolic answer is interesting:"
-}], "Text",ExpressionUUID->"a9c42919-947f-4244-bfd1-9a3562acf337"],
+}], "Text",ExpressionUUID->"d36615a3-5bdb-4fba-95c3-602a919d28d4"],
 
 Cell[TextData[{
  "the ",
@@ -91,7 +91,7 @@ Cell[TextData[{
       "\[RightBracketingBar]"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "68735d43-33f7-40b3-9ded-1eeae28666f4"],
+  "71e7625a-5694-47ef-afaf-8dabd4002395"],
  ", the exact bound state of the attractive Dirac-delta potential and the \
 one-dimensional analog of the hydrogen ",
  Cell[BoxData[
@@ -99,9 +99,9 @@ one-dimensional analog of the hydrogen ",
    RowBox[{"1", "\|01d460"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "20ed8487-bfc8-4031-b901-6edf90ba3b07"],
+  "fbe64948-1c18-46fb-9fd6-d75f5e43d1a8"],
  " orbital (Part 3); its momentum distribution is a heavy-tailed Lorentzian;"
-}], "Item",ExpressionUUID->"659d5962-3d55-42be-b3ac-fdf2d4fd710a"],
+}], "Item",ExpressionUUID->"4a5fc194-8a24-4bdf-b7a1-7d17f8f3ce54"],
 
 Cell[TextData[{
  "the ",
@@ -125,11 +125,11 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fc3a3396-ab5f-42f5-a85b-fa0ea086a9cf"],
+  "42799f07-6c4a-4661-b78d-0e9a74dbdd6f"],
  ", the bright soliton of the nonlinear Schrodinger equation and the ground \
 state of the Poschl-Teller well (Parts 8, 21); its Fourier transform is again \
 a sech, and it is nearly (but not exactly) minimum uncertainty;"
-}], "Item",ExpressionUUID->"e38f9900-d5a7-4f78-9425-e61b1e7f6fcd"],
+}], "Item",ExpressionUUID->"a0ea5085-01d4-4ab0-88ca-7b3af454ec15"],
 
 Cell[TextData[{
  "the ",
@@ -140,7 +140,7 @@ Cell[TextData[{
    RowBox[{"1", "\|01d460"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,
-  FontWeight->"Bold",ExpressionUUID->"e2bf2110-1242-4797-85f6-87412df3d3c1"],
+  FontWeight->"Bold",ExpressionUUID->"5d68d856-3c4d-4ac1-84b7-2ae3fc6c28a4"],
  StyleBox[" reduced radial",
   FontWeight->"Bold"],
  " ",
@@ -157,16 +157,16 @@ Cell[TextData[{
      RowBox[{"-", "\|01d705", "\|01d465"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7087f758-9112-4770-b352-2b31434ad8aa"],
+  "98d56069-0660-4489-a357-2e03451bc96e"],
  " on the half-line (Part 12), which gives a clean complex recoil amplitude;"
-}], "Item",ExpressionUUID->"c1c8c99d-b276-44ac-8975-0ed347fcc876"],
+}], "Item",ExpressionUUID->"8300a6bf-a66e-4932-a3c8-b71e5ae6e767"],
 
 Cell[TextData[{
  "the ",
  StyleBox["Gaussian",
   FontWeight->"Bold"],
  ", used once, in 2.7, as the state that saturates the uncertainty bound."
-}], "Item",ExpressionUUID->"f38f49b8-afbb-4542-bed9-6dbef7c523c2"],
+}], "Item",ExpressionUUID->"af4ea7cc-0f41-46fb-95a6-0fb5e1183810"],
 
 Cell[TextData[{
  "Each is used here as a given function: the computation needs only calculus, \
@@ -177,29 +177,29 @@ so introducing the state before its home Part is motivation, not a dependency \
    RowBox[{"\[HBar]", "=", "\|01d45a", "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ec8add14-00b1-4499-bc35-fb33601c332e"],
+  "0023a27b-6ec2-4665-85c6-74efa94bf328"],
  " throughout; ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d705", ">", "0"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a8c65f09-f0fd-448c-8f0e-29f1c14e37d9"],
+  "fcde76cf-1365-4ebe-af99-42f1e6d7fc37"],
  " is an inverse length, ",
  Cell[BoxData[
   StyleBox["\|01d458",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "73e4ca16-1b96-494d-a08f-ecfac4c4244e"],
+  "740c22b6-34d6-4625-b6dd-a78513eb733b"],
  " a wavenumber, ",
  Cell[BoxData[
   StyleBox[
    SubscriptBox["\|01d465", "0"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "75f93efd-2164-41a0-be17-880c0bdd9cfb"],
+  "e5560d66-0cb0-4f93-88b7-52a6d2b468d2"],
  " a position."
-}], "Text",ExpressionUUID->"3916f8c3-9a73-4db9-a340-cc619e38207c"],
+}], "Text",ExpressionUUID->"c42c9dbb-4535-4b7e-8d89-2d28710cf9e9"],
 
 Cell[TextData[{
  StyleBox["How each answer is checked.",
@@ -215,30 +215,30 @@ companion script ",
    BaseStyle->"Hyperlink",
    ButtonData->{
      URL["verify/part12b.wls"], None}]], "InlineFormula",ExpressionUUID->
-  "4ae75fd3-e823-4bc7-a12b-fc4b369ca900"],
+  "3e1a7536-5f9f-4b34-adbd-e1a9f5d9a5bf"],
  " reproduces every stated result with a ",
  Cell[BoxData["PASS"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "20b2239c-1243-4233-a8d6-1797fb0daa28"],
+  "9129e631-5e08-4026-8ef3-b41e68256af0"],
  "/",
  Cell[BoxData["FAIL"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "03d71f3c-d112-49bf-a408-eca2709a60f0"],
+  "bce74ad0-7487-4c57-8f03-389ce7722bef"],
  "."
-}], "Text",ExpressionUUID->"c4309750-ff2c-497d-876f-276e885d1278"],
+}], "Text",ExpressionUUID->"872f5740-4236-41e9-b080-4a3f864d168e"],
 
 Cell[TextData[{
  "A note on one convention trap. Wolfram's ",
  Cell[BoxData["FourierTransform"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4591beaf-9cac-49c1-8960-7ec42b2cfeee"],
+  "00da8457-6df6-4e6c-ad97-bba36e161ced"],
  " defaults to ",
  Cell[BoxData[
   RowBox[{"FourierParameters", " ", "->", " ", 
    RowBox[{"{", 
     RowBox[{"0", ",", " ", "1"}], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "cc6fba92-24bf-49a8-be8f-94f4af03c00f"],
+  "66ea9963-fcfc-4ab6-8454-d02ccf5e7e4d"],
  ", the kernel ",
  Cell[BoxData[
   StyleBox[
@@ -257,7 +257,7 @@ Cell[TextData[{
     "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "00c029ab-eef5-4e6b-9fa6-b0e30e4bfd0c"],
+  "d0e603e8-82f5-4d64-84e5-1d97e8553f84"],
  ". The quantum-mechanics forward transform carries the opposite sign, ",
  Cell[BoxData[
   StyleBox[
@@ -281,7 +281,7 @@ Cell[TextData[{
     "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4848c796-4117-48f6-8b26-6e4a6bb8d1c4"],
+  "ad012625-0160-4227-a008-b81338479fa1"],
  ", the choice that makes ",
  Cell[BoxData[
   StyleBox[
@@ -290,14 +290,14 @@ Cell[TextData[{
      "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b2c50e08-3945-4cfa-8292-44246dde3f13"],
+  "d194fd9f-09ae-4bcf-af72-2bce25e8e9de"],
  " act as multiplication by ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"+", "\|01d45d"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0e92fb89-07c0-4276-ab7c-af0d4dc6a100"],
+  "285f2832-5edb-4cbd-82eb-c0f63f73f7f2"],
  ". So the momentum transforms below use ",
  Cell[BoxData[
   RowBox[{"FourierParameters", " ", "->", " ", 
@@ -305,7 +305,7 @@ Cell[TextData[{
     RowBox[{"0", ",", " ", 
      RowBox[{"-", "1"}]}], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "59c4f299-3810-4fd3-925e-aee3c31b4f56"],
+  "8351ad02-6cbd-4b10-9475-577060b5e636"],
  ", cross-checked against the position-space ",
  Cell[BoxData[
   StyleBox[
@@ -317,9 +317,9 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bc713d70-0d37-4eb3-978d-471bd38c37bb"],
+  "8ab874bd-8f6a-43b5-8803-95cc1500fa9e"],
  "."
-}], "Text",ExpressionUUID->"d0f48a16-13fc-4745-aedf-ea06fb1d09b6"],
+}], "Text",ExpressionUUID->"a2ba7f91-c7a6-4ad4-afa3-4f17494e0488"],
 
 Cell[TextData[{
  "Part 1. The wavefunction and the state space ",
@@ -328,8 +328,8 @@ Cell[TextData[{
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5eec9b2a-5557-4430-8392-65397ae4e35d"]
-}], "Section",ExpressionUUID->"ecee9463-a6df-465e-84ac-4cc686b5a106"],
+  "ba183883-92e8-47f7-9d6c-97918d3369b4"]
+}], "Section",ExpressionUUID->"269392e2-a452-42c1-8db1-7e5687286642"],
 
 Cell[TextData[{
  "1.1 [BSc] How do I represent a one-dimensional wavefunction ",
@@ -342,7 +342,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ae57df94-f9ab-4984-b756-44f2cecc8cce"],
+  "026deae2-57cb-4ea6-823e-4461f2d9a38d"],
  " as a Wolfram Language function and plot its probability density ",
  Cell[BoxData[
   StyleBox[
@@ -355,9 +355,9 @@ Cell[TextData[{
        SpanMaxSize->1]}], "\[RightBracketingBar]"}], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ef67d803-115e-4132-b72a-26db8dbfcb91"],
+  "a7bf8d63-4519-4645-ad6e-27e16db63d9e"],
  "?"
-}], "Subsection",ExpressionUUID->"df5b4f37-1cab-42f2-b176-d93302218d67"],
+}], "Subsection",ExpressionUUID->"085e5a0b-f8e2-44b2-bda3-134277909982"],
 
 Cell[TextData[{
  "A state on the line is a complex function ",
@@ -370,7 +370,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "67b40bed-e42a-4488-8a08-4f7f8f65adf4"],
+  "b7973fc3-836f-4a81-afe6-3d3297a61ca5"],
  " whose observable content is the density ",
  Cell[BoxData[
   StyleBox[
@@ -383,7 +383,7 @@ Cell[TextData[{
        SpanMaxSize->1]}], "\[RightBracketingBar]"}], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "24fe3bf7-0b4e-41bd-8970-2fadb0bd37ac"],
+  "18243616-fdc1-4d37-bad4-1fa4d1615e94"],
  ". We take the bound state of the attractive contact potential ",
  Cell[BoxData[
   StyleBox[
@@ -398,16 +398,16 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "00b1a1c1-d5fb-47f5-8447-250067c426fe"],
+  "2460c318-ea48-4716-83df-9f4077d49f49"],
  ": a cusped exponential, the one-dimensional cousin of the hydrogen ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"1", "\|01d460"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9b800047-e019-42a4-b8e5-c411ac2bcb52"],
+  "4aba07ca-636d-461d-8328-481798947fa6"],
  " orbital."
-}], "Text",ExpressionUUID->"07f928c0-84a8-4b58-abe1-890160d5d21f"],
+}], "Text",ExpressionUUID->"efc1b6ec-6a53-4be9-9464-b0bf536d1704"],
 
 Cell[BoxData[{
  RowBox[{
@@ -427,7 +427,7 @@ Cell[BoxData[{
     RowBox[{
      RowBox[{"\[Kappa]", " ", ">", " ", "0"}], " ", "&&", " ", 
      RowBox[{"x", " ", "\[Element]", " ", "Reals"}]}]}], "]"}]}]}], "Input",
- CellLabel->"In[1]:= ",ExpressionUUID->"1e1dbb2a-e1fa-42d3-9bf7-060cf06f21b9"],
+ CellLabel->"In[1]:= ",ExpressionUUID->"2ca358b9-6f53-49dd-baff-574a99bdef0f"],
 
 Cell[BoxData[
  RowBox[{"Plot", "[", 
@@ -442,7 +442,7 @@ Cell[BoxData[
     RowBox[{"{", 
      RowBox[{"\"\<x\>\"", ",", " ", "\"\<|\[Psi]|^2\>\""}], "}"}]}]}], 
   "]"}]], "Input",
- CellLabel->"In[2]:= ",ExpressionUUID->"6ba8515e-e33c-4a28-a21e-e094065b7d85"],
+ CellLabel->"In[2]:= ",ExpressionUUID->"8711d51b-9205-4d7f-875f-953de40639cb"],
 
 Cell[TextData[{
  "The density is ",
@@ -462,11 +462,11 @@ Cell[TextData[{
       "\[VeryThinSpace]", "\[RightBracketingBar]"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fb30c305-51f5-4d2f-a4e7-42aafe10f513"],
+  "cfbad400-0ebc-4e7e-9233-6a53787e6ac9"],
  ", with a sharp cusp at the origin where the delta potential sits. Nothing \
 about it is Gaussian: the exponential decay and the kink are the signature of \
 binding by a point interaction."
-}], "Text",ExpressionUUID->"9a6047a7-d3ce-41b0-8fc9-20fe711d7406"],
+}], "Text",ExpressionUUID->"dac1cd2d-0af1-4216-b009-58209cd5242f"],
 
 Cell[TextData[{
  "1.2 [BSc] How do I normalize a wavefunction with ",
@@ -482,9 +482,9 @@ Cell[TextData[{
       "\[RightBracketingBar]"}], "2"], " ", "\|01d451", "\|01d465", "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "74e23f25-8999-4350-9087-868b03398790"],
+  "be4c7db3-36cf-462f-b42c-58e85cbd495f"],
  ", and recognize a state that cannot be normalized?"
-}], "Subsection",ExpressionUUID->"44d46785-ec0d-4cfc-9166-caa53e46de9a"],
+}], "Subsection",ExpressionUUID->"00791091-8016-44a8-af9b-9a1ee10577ab"],
 
 Cell[TextData[{
  "Normalizing divides by the square root of the total probability; a state is \
@@ -495,7 +495,7 @@ admissible only if that integral is finite (",
     SuperscriptBox["\|01d43f", "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0845fe2f-228c-451f-8c2c-efc46bca770a"],
+  "80554a0a-e517-4243-94ce-063f62999a43"],
  "). We normalize the soliton profile ",
  Cell[BoxData[
   StyleBox[
@@ -508,9 +508,9 @@ admissible only if that integral is finite (",
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fcc6285d-2feb-413b-8596-2bbf0e9c4e38"],
+  "d5c8bd02-c4de-4d4f-bf5d-3d133ec20ded"],
  "."
-}], "Text",ExpressionUUID->"9b573cf9-fbcd-4ebc-997f-67afada28c38"],
+}], "Text",ExpressionUUID->"38311be5-2574-49d0-9737-a8316b3e7fe5"],
 
 Cell[BoxData[{
  RowBox[{
@@ -538,7 +538,7 @@ Cell[BoxData[{
     RowBox[{"x", ",", " ", 
      RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], 
   "]"}]}], "Input",
- CellLabel->"In[3]:= ",ExpressionUUID->"eaf28756-f5a4-47e8-9515-8a6c7a15208a"],
+ CellLabel->"In[3]:= ",ExpressionUUID->"8f10c392-0c5c-4361-a0f9-86e4e372e23d"],
 
 Cell[BoxData[
  RowBox[{"Integrate", "[", 
@@ -556,7 +556,7 @@ Cell[BoxData[
       RowBox[{"{", 
        RowBox[{"k", ",", " ", "x"}], "}"}], ",", " ", "Reals"}], "]"}]}]}], 
   "]"}]], "Input",
- CellLabel->"In[4]:= ",ExpressionUUID->"754d2a97-3854-41d1-928a-387fa6d25853"],
+ CellLabel->"In[4]:= ",ExpressionUUID->"5de5a853-a24a-46ce-a4c8-c8198767657b"],
 
 Cell[TextData[{
  "Since ",
@@ -571,7 +571,7 @@ Cell[TextData[{
      "2"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c96fdec5-a1d9-44d2-b7ea-fd7584880b6f"],
+  "76256a26-9dc4-45ce-9b7a-c14bf02f8f88"],
  ", the normalized soliton is ",
  Cell[BoxData[
   StyleBox[
@@ -590,13 +590,13 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2a4a1511-5c72-4f46-a4da-3acb09a54663"],
+  "f236e80f-2b3f-4cad-b4da-2c29761b664e"],
  ", which integrates to ",
  Cell[BoxData[
   StyleBox["1",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6bc5bb61-c8d0-44e3-9795-13a6f3604570"],
+  "d3762217-fe68-421b-82f7-75ab39f6791a"],
  ". The plane wave ",
  Cell[BoxData[
   StyleBox[
@@ -604,7 +604,7 @@ Cell[TextData[{
     RowBox[{"\|01d456", "\|01d458", "\|01d465"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "04933845-4763-4a17-b73e-442c1433846c"],
+  "cedc4135-a606-4322-876f-64c700c741c4"],
  " instead has ",
  Cell[BoxData[
   StyleBox[
@@ -615,20 +615,20 @@ Cell[TextData[{
       "\[RightBracketingBar]"}], "2"], "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "81eac732-92c7-4082-839f-cef296216dd4"],
+  "f4b9884b-c6b3-4226-a343-3d03e881bbb9"],
  " everywhere and a divergent integral (",
  Cell[BoxData["Infinity"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bc5a7c30-3abc-4a43-b968-c6ed2dd58fbe"],
+  "c483fa54-a4ca-43f6-badf-5a8b36562d20"],
  "): a momentum eigenstate lives outside ",
  Cell[BoxData[
   StyleBox[
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e7637021-242a-47a5-a465-1c5dd8f6e4c5"],
+  "e6eac1d7-080f-41c7-8475-0105c94bc4dc"],
  " and must be delta-normalized (see 2.5)."
-}], "Text",ExpressionUUID->"02a47afa-564a-4ecf-b046-30bd48b08ed4"],
+}], "Text",ExpressionUUID->"b876ee19-fb37-43f1-a607-481cef24f45a"],
 
 Cell[TextData[{
  "1.3 [BSc] How do I compute the Born-rule probability ",
@@ -643,9 +643,9 @@ Cell[TextData[{
       "\[RightBracketingBar]"}], "2"], " ", "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "80f973e7-dc77-4fa9-912a-a1dc6742c76e"],
+  "1505f807-0863-4f7d-b817-f495c7e18b86"],
  " of finding the particle in a region?"
-}], "Subsection",ExpressionUUID->"c06bbfb7-93eb-4fe8-9a5f-7551366504de"],
+}], "Subsection",ExpressionUUID->"daa0e1ee-a196-400d-bd11-10aa45759952"],
 
 Cell[TextData[{
  "The probability of finding the particle in a window is the integral of the \
@@ -661,9 +661,9 @@ density over it. For the soliton, the symmetric window ",
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bf505288-7a4b-46f6-b375-a7032d8d6dea"],
+  "1fa9c73e-c1fc-4e83-be51-ef244d702c6f"],
  " gives a strikingly simple answer."
-}], "Text",ExpressionUUID->"01e9989d-5045-475f-b050-6f1ff865af0c"],
+}], "Text",ExpressionUUID->"a9174898-24c5-4a82-9b0c-c9521971e43f"],
 
 Cell[BoxData[{
  RowBox[{
@@ -682,7 +682,7 @@ Cell[BoxData[{
      RowBox[{"-", "a"}], ",", " ", "a"}], "}"}], ",", " ", 
    RowBox[{"Assumptions", " ", "->", " ", 
     RowBox[{"a", " ", ">", " ", "0"}]}]}], "]"}]}], "Input",
- CellLabel->"In[5]:= ",ExpressionUUID->"4ec14215-5309-4660-bc39-77e991295376"],
+ CellLabel->"In[5]:= ",ExpressionUUID->"ad9b9709-fef1-4503-84fa-9777740a1f47"],
 
 Cell[TextData[{
  "The probability is exactly ",
@@ -697,42 +697,42 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2a417473-548d-40ad-9e89-9e1aef416883"],
+  "8107fff7-c849-4f3a-862c-a7de215ce659"],
  ": it climbs from ",
  Cell[BoxData[
   StyleBox["0",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "55dd0118-d356-4261-b649-30ba5093d8f0"],
+  "1ad3a240-5318-4802-9f32-806f5aaf34ac"],
  " and saturates at ",
  Cell[BoxData[
   StyleBox["1",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "50b38142-18e4-4c8d-bb24-5b802674467a"],
+  "1935065d-271e-4430-8912-ec81817a4284"],
  " as ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d44e", "\[Rule]", "\[Infinity]"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d8794b53-4a02-41e1-9ea1-9f7fa3d066cb"],
+  "68dea951-07b3-4169-a0dd-8649fb565dce"],
  ", with ",
  Cell[BoxData[
   StyleBox["tanh",
    FontFamily->"Latin Modern Math",
    FontSlant->"Plain"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1438caa6-604d-433f-b4ba-aa0536a22825"],
+  "a10348e7-162e-40b2-ab3b-100bc85ae869"],
  " measuring how much of the soliton sits within ",
  Cell[BoxData[
   StyleBox["\|01d44e",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ba4152ae-51c2-4b08-a39d-67256c883e2b"],
+  "06cc3a7f-0c3d-447b-a7f9-8e4fa92a1e00"],
  " of its center. The soliton's width is order one, so a window of a few \
 units already captures nearly all of it."
-}], "Text",ExpressionUUID->"7dc094f2-fdfb-4f56-a0c7-f0c9622f46b5"],
+}], "Text",ExpressionUUID->"fae024bc-49ab-4f4e-919d-a47bfd83a216"],
 
 Cell[TextData[{
  "1.4 [BSc] How do I compute the inner product ",
@@ -748,7 +748,7 @@ Cell[TextData[{
     SuperscriptBox["\[Phi]", "*"], "\|01d713", "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8583eec2-c320-4ed0-b793-c59be43a9f2c"],
+  "d0c37124-dfdd-441c-b436-8d822cc66394"],
  ", its modulus, and the transition probability ",
  Cell[BoxData[
   StyleBox[
@@ -764,9 +764,9 @@ Cell[TextData[{
       SpanMinSize->1.9]}], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f215b18a-fdc5-4327-8475-a84577e83946"],
+  "6720ef80-078c-4b5e-9dfb-c434d88193c2"],
  "?"
-}], "Subsection",ExpressionUUID->"1f02ba99-e7ff-4e5a-8491-faa11c83998c"],
+}], "Subsection",ExpressionUUID->"64986a28-0d60-4ebb-9b8a-19dcdbc42f9e"],
 
 Cell[TextData[{
  "The overlap of two states is ",
@@ -778,32 +778,32 @@ Cell[TextData[{
     SuperscriptBox["\[Phi]", "*"], "\|01d713", " ", "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "df0aab6a-f3c5-4b95-b986-bcdf15c8e525"],
+  "0400185e-3a35-4e89-9484-f96046d2585e"],
  "; its squared modulus is the probability that a system prepared as ",
  Cell[BoxData[
   StyleBox["\|01d713",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2ece1c1a-3181-4a78-a7a9-7f274b4798d3"],
+  "49948455-03ec-4393-9d8d-1bae5771e8c7"],
  " is found in ",
  Cell[BoxData[
   StyleBox["\[Phi]",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7d9611c5-5d15-481d-85ad-26929e89007f"],
+  "e4d95ee3-3513-4227-8621-e1ffd70a66e5"],
  ". We take the hydrogen ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"1", "\|01d460"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "451d56a8-628a-4b95-92b7-832403b316ae"],
+  "3da21fa3-056b-48cb-be08-d57d4f785aeb"],
  " radial state ",
  Cell[BoxData[
   StyleBox["\|01d462",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f9bf6a4e-146d-4828-874e-6db1b10df678"],
+  "6a2bac72-cd49-464f-8b26-cb9cb897222b"],
  " and the ",
  StyleBox["same", "TI"],
  " state after a sudden momentum kick ",
@@ -811,7 +811,7 @@ Cell[TextData[{
   StyleBox["\|01d45e",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "821ea3d7-5832-4b7e-821c-e98ef3dea5ea"],
+  "c2401a25-ac66-4d7f-8be0-af54c57b1250"],
  ", ",
  Cell[BoxData[
   StyleBox[
@@ -820,9 +820,9 @@ Cell[TextData[{
      RowBox[{"\|01d456", "\|01d45e", "\|01d465"}]], "\|01d462"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d299e4cf-9e3e-4a2b-84b9-1b498fabb621"],
+  "bf6bce64-94ed-4704-8505-35a9f686093e"],
  " (the survival amplitude in the sudden approximation)."
-}], "Text",ExpressionUUID->"0ea4d8cc-b679-4254-b6f0-7bee1516b457"],
+}], "Text",ExpressionUUID->"a2bc3975-763d-4dc2-8e21-0bab522e91a8"],
 
 Cell[BoxData[{
  RowBox[{
@@ -865,7 +865,7 @@ Cell[BoxData[{
    RowBox[{
     RowBox[{"\[Kappa]", " ", ">", " ", "0"}], " ", "&&", " ", 
     RowBox[{"q", " ", "\[Element]", " ", "Reals"}]}]}], "]"}]}], "Input",
- CellLabel->"In[6]:= ",ExpressionUUID->"6016f40a-db1a-450c-b0aa-a923006eba15"],
+ CellLabel->"In[6]:= ",ExpressionUUID->"5378f3d9-494c-4571-aae2-956e0f92cf4f"],
 
 Cell[TextData[{
  "The overlap is ",
@@ -886,7 +886,7 @@ Cell[TextData[{
        SpanMaxSize->1]}], "3"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0e645200-5926-4c24-a732-0a8bf5bb466c"],
+  "9e98be65-59c1-4303-8a26-066718778e0e"],
  ", genuinely complex: the phase records the momentum kick. Using ",
  Cell[BoxData[
   StyleBox[
@@ -899,7 +899,7 @@ Cell[TextData[{
       SuperscriptBox["\|01d45e", "2"]}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a61b7efa-cdaf-4347-89dd-5d7c61369cfd"],
+  "81c4cc14-173e-4875-bba3-c7b7a2f48d5f"],
  ", its modulus is ",
  Cell[BoxData[
   StyleBox[
@@ -917,7 +917,7 @@ Cell[TextData[{
      RowBox[{"3", "/", "2"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c3e375f0-5556-4d42-8935-92a353293d04"],
+  "520a1698-6b0a-47d8-a9ef-1b0183dc65bd"],
  " and the survival probability is ",
  Cell[BoxData[
   StyleBox[
@@ -934,21 +934,21 @@ Cell[TextData[{
        SpanMaxSize->1]}], "3"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "cdab159d-24aa-4de8-af5b-6fbc9a79ff1a"],
+  "63ccfa50-8750-4ec9-a3e9-ff3acf3a792f"],
  ", both falling off as the kick ",
  Cell[BoxData[
   StyleBox["\|01d45e",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7fa99c31-6f0a-41bc-b804-05e008df06ce"],
+  "ce9c7db2-d354-4865-9138-bfa9bd40c357"],
  " grows past the orbital's momentum scale ",
  Cell[BoxData[
   StyleBox["\|01d705",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5d1e43f3-5783-4d7c-8c49-34bcfb5413e7"],
+  "301ee6d0-112b-4fa6-88d4-7e5d6899a42a"],
  ". This is the recoil form factor probed when an atom is struck suddenly."
-}], "Text",ExpressionUUID->"336f6a8d-4c92-472a-bcdc-102b75e5c4f5"],
+}], "Text",ExpressionUUID->"81664cb1-9ec1-4e26-b35d-92734017600f"],
 
 Cell[TextData[{
  "1.5 [BSc] How do I compute the position expectation ",
@@ -961,7 +961,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e172c0cb-e049-4b3e-a47c-d711724c01d3"],
+  "968392a5-1a5a-4eab-9b55-f896c6c028fb"],
  " and the spread ",
  Cell[BoxData[
   StyleBox[
@@ -981,9 +981,9 @@ Cell[TextData[{
          SpanMaxSize->1]}], "2"]}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6abfc540-49b7-4bf8-bb5e-3dc14065c914"],
+  "d0d26fad-4367-4ada-ba01-d87bdb5742bb"],
  "?"
-}], "Subsection",ExpressionUUID->"0350d75b-0571-49fe-968e-387d57c1f639"],
+}], "Subsection",ExpressionUUID->"ec519506-c962-453d-8f19-03ee1def88a8"],
 
 Cell[TextData[{
  "The mean position is ",
@@ -998,7 +998,7 @@ Cell[TextData[{
       "\[RightBracketingBar]"}], "2"], " ", "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e4473982-d758-4e97-8411-06651981bf7d"],
+  "d09ab2c3-5793-4dd9-a8b1-c849f41ca6e0"],
  " and the spread is the root-variance of that distribution. We place the \
 soliton at ",
  Cell[BoxData[
@@ -1006,9 +1006,9 @@ soliton at ",
    SubscriptBox["\|01d465", "0"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ac068d6c-8e06-4c6c-bbf4-78c634c57d61"],
+  "b275a665-a076-4ce3-a19e-53ba05aa57b7"],
  "."
-}], "Text",ExpressionUUID->"b70c23b5-a568-4bf4-884c-1f3fd8c1f193"],
+}], "Text",ExpressionUUID->"37cd8061-50a6-4df5-bb8f-c6834085ccaa"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1054,7 +1054,7 @@ Cell[BoxData[{
        RowBox[{"mx", "^", "2"}]}], "]"}], ",", " ", 
      RowBox[{"x0", " ", "\[Element]", " ", "Reals"}]}], "]"}]}], 
   "}"}]}], "Input",
- CellLabel->"In[7]:= ",ExpressionUUID->"a8b020b4-cc45-4152-b99d-350fcba2e6ea"],
+ CellLabel->"In[7]:= ",ExpressionUUID->"7643293b-9144-4363-883c-9a251ecb7362"],
 
 Cell[TextData[{
  "The soliton sits at ",
@@ -1068,7 +1068,7 @@ Cell[TextData[{
     SubscriptBox["\|01d465", "0"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d32a7907-12c7-4971-a6cc-36dd908e4ab1"],
+  "470da268-4cd0-4a23-b7e2-d89f5209dddd"],
  " with spread ",
  Cell[BoxData[
   StyleBox[
@@ -1081,7 +1081,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7545583d-75f8-4dc6-b54f-d11a977a9cb5"],
+  "dca44f90-6750-4787-bd3e-7f0b503d8823"],
  ", a pure number fixed by the ",
  Cell[BoxData[
   StyleBox[
@@ -1090,13 +1090,13 @@ Cell[TextData[{
      FontSlant->"Plain"], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "338aa6c1-8058-469b-a9e1-a454ec6eb9e1"],
+  "a0c23e73-fc4c-4d42-8a44-ab997aedda51"],
  " profile (the ",
  Cell[BoxData[
   StyleBox["\[Pi]",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7b31c7c0-f511-473a-a72b-6f407fbbdb53"],
+  "7e2cbd9c-070a-4570-a41b-5719b6fddd43"],
  " comes from ",
  Cell[BoxData[
   StyleBox[
@@ -1110,16 +1110,16 @@ Cell[TextData[{
     SuperscriptBox["\[Pi]", "2"], "/", "6"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5cb60b6c-08ff-4786-835f-89e07a7e4665"],
+  "7d5c17ea-52f1-4c86-8b3c-62409739729b"],
  "). This ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\[CapitalDelta]", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "eb97aaf1-2d4d-4e10-8aec-e414f7088b6e"],
+  "57a12a6c-daf8-4013-9e10-303b20940a50"],
  " is what enters the uncertainty product of 2.7."
-}], "Text",ExpressionUUID->"85063583-26d4-497e-93e1-76f7c00819a5"],
+}], "Text",ExpressionUUID->"e012af24-cde1-4e11-85ed-06a732060237"],
 
 Cell[TextData[{
  "1.6 [BSc] How do I compute the probability current density ",
@@ -1133,7 +1133,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7957a87a-fc6d-48ec-8bbf-ca549ff5286f"],
+  "98f78f88-bfc0-45c3-817a-968394d694e9"],
  " and verify the continuity equation ",
  Cell[BoxData[
   StyleBox[
@@ -1146,9 +1146,9 @@ Cell[TextData[{
     SubscriptBox["\[PartialD]", "\|01d465"], "\|01d457", "=", "0"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9b0213d1-f89d-4d60-b85d-7cd9713c64fd"],
+  "144d92fe-44bd-4d7b-b56b-2d9f379625de"],
  "?"
-}], "Subsection",ExpressionUUID->"3a34517c-1597-400b-9540-c0b4ff74c05a"],
+}], "Subsection",ExpressionUUID->"4fd517c3-acaa-4264-a64b-32d8fa0d0875"],
 
 Cell[TextData[{
  "Probability is locally conserved: the density's rate of change is minus the \
@@ -1169,34 +1169,34 @@ divergence of the current ",
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "cd0d8ab7-d679-4315-ad2a-630b61adc3a7"],
+  "a6115a6c-df97-45b1-bf03-c8625dc5e12b"],
  " (with ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\[HBar]", "=", "\|01d45a", "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c36a1ea7-71f3-497c-b41f-873c35de256a"],
+  "b410c6da-30a0-4ed7-b6d3-b33eacf7e083"],
  "). To check continuity in full generality we treat ",
  Cell[BoxData[
   StyleBox["\|01d713",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9c2d98ac-ca04-4466-bde2-3e9751c87541"],
+  "69185948-1210-4cf1-b911-6752f8727403"],
  " and ",
  Cell[BoxData[
   StyleBox[
    SuperscriptBox["\|01d713", "*"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "18adc6c1-3941-4b59-827f-8bdc99822e57"],
+  "e39133e6-c297-4062-9785-159ef3079677"],
  " as independent functions ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d453", ",", "\|01d454"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "536b1988-993b-4ea4-9574-cfd5fe5a2481"],
+  "0f3c6fa6-0247-4819-82ed-cef8323de644"],
  " and impose the free Schrodinger equation ",
  Cell[BoxData[
   StyleBox[
@@ -1206,9 +1206,9 @@ divergence of the current ",
     SubsuperscriptBox["\[PartialD]", "\|01d465", "2"], "\|01d453"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bd48f7d7-5bf4-42e0-9496-53140080dd64"],
+  "90bfe7bf-9e0f-440f-9fd5-da6d4c0ef452"],
  " and its conjugate."
-}], "Text",ExpressionUUID->"9ddf345a-689d-44bb-af2a-4583a5969d96"],
+}], "Text",ExpressionUUID->"be36b862-438a-42b6-9ba9-419dd0d6a7d3"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1285,7 +1285,7 @@ Cell[BoxData[{
            RowBox[{"x", ",", " ", "2"}], "}"}]}], "]"}]}]}]}], "}"}]}]}], 
   ";"}], "\n", 
  RowBox[{"Simplify", "[", "cont", "]"}]}], "Input",
- CellLabel->"In[8]:= ",ExpressionUUID->"018844ca-c76e-4827-8d1a-0108fc41f7f6"],
+ CellLabel->"In[8]:= ",ExpressionUUID->"87d72919-b315-4465-9154-54c05eb5cbd2"],
 
 Cell[TextData[{
  "The residual is exactly ",
@@ -1293,7 +1293,7 @@ Cell[TextData[{
   StyleBox["0",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "05acbd60-7340-4a69-8008-91078eb35a5d"],
+  "913c081e-bdb8-490d-9226-33c6053b6b15"],
  ": density and current satisfy ",
  Cell[BoxData[
   StyleBox[
@@ -1306,13 +1306,13 @@ Cell[TextData[{
     SubscriptBox["\[PartialD]", "\|01d465"], "\|01d457", "=", "0"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "80b1ed29-103d-4340-a55f-58cef4bd5f98"],
+  "b8831171-ee74-4979-b31f-bf9495bdd5ad"],
  " for ",
  StyleBox["any", "TI"],
  " solution of the free Schrodinger equation. The argument used only the \
 equation of motion, so it holds for every state, the soliton and the cusp \
 state included."
-}], "Text",ExpressionUUID->"3814d3af-6e99-4495-be36-45bf3dc2c800"],
+}], "Text",ExpressionUUID->"7c413d5b-cf7f-4f97-b3c4-f8e59e0d7a80"],
 
 Cell[TextData[{
  "1.7 [BSc] How do I represent a state on a discrete spatial grid so that \
@@ -1322,9 +1322,9 @@ integrals become sums, building the bridge from ",
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c0ca389f-64fd-4d77-8d64-d329535716ab"],
+  "d65412a3-0f83-40e9-a947-3dd9b52ea315"],
  " to the finite vector a computer can hold?"
-}], "Subsection",ExpressionUUID->"932ad34f-aebe-4fcb-a6dd-4f06909491c6"],
+}], "Subsection",ExpressionUUID->"c34a7b0e-15ae-4c68-aae0-955f1461bf01"],
 
 Cell[TextData[{
  "Every numerical method replaces ",
@@ -1337,7 +1337,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "57f9ab4c-ac04-4fdb-954f-8418baf7814c"],
+  "b2c43e73-bf65-4614-86af-f6cf3d3aa8b4"],
  " by its samples and every integral by a Riemann sum ",
  Cell[BoxData[
   StyleBox[
@@ -1356,10 +1356,10 @@ Cell[TextData[{
      "\[CapitalDelta]", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2ba5f411-50b4-4321-9dde-a80b26038b3c"],
+  "ef6710f3-dcd9-4a5e-a60f-6b08ae26185b"],
  ". We test it on the cusp state, whose kink at the origin is exactly the \
 feature a grid must resolve."
-}], "Text",ExpressionUUID->"7c6bcbf1-345c-4f6f-b57f-746d59af65a6"],
+}], "Text",ExpressionUUID->"ad9a7707-d7ef-493d-8973-610dbb140833"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1394,7 +1394,7 @@ Cell[BoxData[{
          RowBox[{"\[Psi]", "[", "#", "]"}], " ", "/.", " ", 
          RowBox[{"\[Kappa]", " ", "->", " ", "1."}]}], ")"}], " ", "&"}], " ",
        "/@", " ", "grid"}], "]"}], "^", "2"}], "]"}], " ", "dx"}]}], "Input",
- CellLabel->"In[9]:= ",ExpressionUUID->"b7a7e268-c3d3-4126-a819-d9c65855adef"],
+ CellLabel->"In[9]:= ",ExpressionUUID->"1df9ebff-521b-41d4-8088-2f3bd35fc584"],
 
 Cell[TextData[{
  "The sum returns ",
@@ -1403,7 +1403,7 @@ Cell[TextData[{
    RowBox[{"1.0000", "\[Ellipsis]"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5556bef2-f480-483b-9d88-6ac06bc341d9"],
+  "8c46e2f2-6e96-4521-9465-6797bcc9aef4"],
  ", converging to the exact norm as the grid is refined. The cusp costs a \
 little accuracy near ",
  Cell[BoxData[
@@ -1411,15 +1411,15 @@ little accuracy near ",
    RowBox[{"\|01d465", "=", "0"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a03a8ece-64a2-419f-9ca8-79e5da2a2019"],
+  "a3deff3c-3613-4266-ada4-b7dbdf19afd3"],
  " (the density is not smooth there), which is why a state with a \
 point-interaction kink is a more honest numerical test than a smooth \
 Gaussian. Every later numerical Part (eigenvalues by ",
  Cell[BoxData["NDEigensystem"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "60cad431-fbf3-4191-8e2f-a35f277e8ee4"],
+  "36777249-3875-4b3a-82e6-14d7c269395a"],
  ", propagation by split-step) rests on this sampling."
-}], "Text",ExpressionUUID->"c6aca269-2e55-4167-9d00-062e91bad04a"],
+}], "Text",ExpressionUUID->"8365f402-1c8e-43fb-8212-f0b4cebcf757"],
 
 Cell[TextData[{
  "1.8 [BSc] How do I show that an overall constant phase is unobservable, \
@@ -1432,9 +1432,9 @@ while the local phase gradient ",
      FontSlant->"Plain"], "\[ThinSpace]", "\|01d713"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a979ce79-e5ef-47d5-82d7-6d048730f686"],
+  "768926d1-1437-4b07-bc0b-4404dc0dead5"],
  " carries the current (the velocity field)?"
-}], "Subsection",ExpressionUUID->"b9876854-d362-45bc-9d5f-9f79514c943e"],
+}], "Subsection",ExpressionUUID->"0e9ebbe3-3b3e-4d2c-9a1d-d122c237171f"],
 
 Cell[TextData[{
  "A global phase ",
@@ -1444,7 +1444,7 @@ Cell[TextData[{
     RowBox[{"\|01d456", "\|01d6fc"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aeeb18e5-f84c-46ce-ae0d-1908958950dc"],
+  "96d89e60-c5c4-4c3e-acc9-866d1c079e64"],
  " cancels in ",
  Cell[BoxData[
   StyleBox[
@@ -1454,7 +1454,7 @@ Cell[TextData[{
      "\[RightBracketingBar]"}], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "67387ee1-e4fd-4c01-ae01-95502d11ef0b"],
+  "94b61786-1940-4225-b16e-07789cb53224"],
  " and every expectation value, so it is pure gauge. A ",
  StyleBox["position-dependent", "TI"],
  " phase is physical: its gradient is the local velocity ",
@@ -1467,7 +1467,7 @@ Cell[TextData[{
       "\[RightBracketingBar]"}], "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f8d1c746-0bfa-49f0-8b66-a7bedadb1fcb"],
+  "1db61f90-3392-4797-89a7-acffc2c3aa8c"],
  ". We take a chirped soliton ",
  Cell[BoxData[
   StyleBox[
@@ -1485,7 +1485,7 @@ Cell[TextData[{
       SuperscriptBox["\|01d465", "2"]}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f0a51805-1f84-4332-9783-736300234232"],
+  "4fc0dc41-aa6e-4965-9af5-900516d456ad"],
  ", whose phase ",
  Cell[BoxData[
   StyleBox[
@@ -1497,9 +1497,9 @@ Cell[TextData[{
     SuperscriptBox["\|01d465", "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "35554094-7a28-4e0c-85b2-6739e06f9a0e"],
+  "affd2907-5adf-4d05-8ecb-bce08a98e3da"],
  " varies across the packet."
-}], "Text",ExpressionUUID->"fc47f3ed-600e-4d4b-8739-df5170450277"],
+}], "Text",ExpressionUUID->"dacd5633-ace9-480f-a498-17c9dfa5f678"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1542,7 +1542,7 @@ Cell[BoxData[{
       RowBox[{"\[Alpha]", ",", " ", "\[Beta]", ",", " ", "x"}], "}"}], ",", 
      " ", "Reals"}], "]"}]}], "]"}]}], "Input",
  CellLabel->
-  "In[10]:= ",ExpressionUUID->"e4f691bb-ee8c-4709-86bc-e175ea33309e"],
+  "In[10]:= ",ExpressionUUID->"585d5690-19b8-41db-9318-393858c801ab"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1584,7 +1584,7 @@ Cell[BoxData[{
       RowBox[{"\[Beta]", ",", " ", "x"}], "}"}], ",", " ", "Reals"}], "]"}]}],
    "]"}]}], "Input",
  CellLabel->
-  "In[11]:= ",ExpressionUUID->"ee2f41e4-48b3-4ed0-b92e-a8c3ad2965b7"],
+  "In[11]:= ",ExpressionUUID->"ac1af5b9-5bbd-4caf-b61c-83d046024cf6"],
 
 Cell[TextData[{
  "The first cell returns ",
@@ -1592,7 +1592,7 @@ Cell[TextData[{
   StyleBox["0",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a5a1622c-a336-42aa-b4ae-9131bb4120de"],
+  "e2971ff3-95ba-4c82-8a63-498863097e73"],
  ": the global phase changes nothing. The velocity field is ",
  Cell[BoxData[
   StyleBox[
@@ -1615,23 +1615,23 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "111dd480-cd59-43f1-812e-03edd4e23c45"],
+  "fae90928-9027-4249-a8c7-5a63f6c2adb7"],
  ", the slope of the local phase. Unlike a plain plane-wave phase ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d458", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e72c704a-efa9-4973-8243-0643759d1c38"],
+  "2a066c7b-f264-45fc-8549-bb4e9daa08ee"],
  " (uniform flow), the chirp gives a position-dependent velocity, an outflow \
 that grows linearly with ",
  Cell[BoxData[
   StyleBox["\|01d465",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bdcc90e6-1e1e-4da1-ae46-b43b42e175d6"],
+  "bb5f8694-17bb-468e-b206-c4299bb90be3"],
  ": this is exactly the phase profile that makes a free packet spread."
-}], "Text",ExpressionUUID->"82f7a806-48e8-4a63-bf61-49b6ce354040"],
+}], "Text",ExpressionUUID->"20c8a45d-7471-4e30-8dcc-61ffcc1cd6ce"],
 
 Cell[TextData[{
  "1.9 [BSc] How does a Galilean boost transform a wave packet (the boost \
@@ -1647,9 +1647,9 @@ phase factor), and why is ",
        SpanMaxSize->1]}], "\[RightBracketingBar]"}], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b675ab34-f36f-47f0-afdc-377fa56edb98"],
+  "c1d6a711-31aa-40cf-bf0e-27a2af9cfcf0"],
  " unchanged in shape?"
-}], "Subsection",ExpressionUUID->"9271c24f-2c61-49f9-b2e6-90545651bcca"],
+}], "Subsection",ExpressionUUID->"eefa374f-075c-4837-a2ab-4eee1503c2dc"],
 
 Cell[TextData[{
  "Viewing a state from a frame moving at velocity ",
@@ -1657,7 +1657,7 @@ Cell[TextData[{
   StyleBox["\|01d463",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b63da202-866a-4edb-8c2d-e2090a5ac1f7"],
+  "0e3ccdc0-bdc4-49a7-9a3e-60c5dd952f2c"],
  " multiplies it by the boost phase ",
  Cell[BoxData[
   StyleBox[
@@ -1671,14 +1671,14 @@ Cell[TextData[{
       SpanMaxSize->1]}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0f4841dd-722e-4d6e-9e0e-dcfcc2139669"],
+  "fecd1799-c641-4db3-8f8d-35146dc40bc9"],
  " (with ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d45a", "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7698be12-ed47-4352-9c06-1332d02453dd"],
+  "b0215d25-6a9c-4404-acbd-03ccbaed3fee"],
  ") and translates its argument: ",
  Cell[BoxData[
   StyleBox[
@@ -1705,9 +1705,9 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6b925cbc-47b2-41e3-a57c-7fdc41ba265b"],
+  "ce32c2b5-9d7b-44b4-95d1-537de2d05007"],
  ". We apply it to the soliton."
-}], "Text",ExpressionUUID->"2a0c517f-e7dc-42c1-bfac-69d06370b33e"],
+}], "Text",ExpressionUUID->"415bc5b0-3e61-4801-a567-c28571852bf0"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1730,7 +1730,7 @@ Cell[BoxData[{
       RowBox[{"v", ",", " ", "x", ",", " ", "t"}], "}"}], ",", " ", "Reals"}],
      "]"}]}], "]"}]}], "Input",
  CellLabel->
-  "In[12]:= ",ExpressionUUID->"fe2c6233-3431-4b3e-828f-566e8d194a8e"],
+  "In[12]:= ",ExpressionUUID->"aa546c94-0664-4c93-b6de-e6f07f6facc7"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1759,7 +1759,7 @@ Cell[BoxData[{
       RowBox[{"v", ",", " ", "x", ",", " ", "t"}], "}"}], ",", " ", "Reals"}],
      "]"}]}], "]"}]}], "Input",
  CellLabel->
-  "In[13]:= ",ExpressionUUID->"5334547c-d0b8-418e-80be-774a2105c37b"],
+  "In[13]:= ",ExpressionUUID->"b14facb4-2721-417a-b1d1-0ce5490cc51c"],
 
 Cell[TextData[{
  "The boost factor has unit modulus, so ",
@@ -1787,13 +1787,13 @@ Cell[TextData[{
         SpanMaxSize->1]}], "\[RightBracketingBar]"}], "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ea0aff21-a439-4f3e-b023-9cb34971c4f0"],
+  "10c0d4b1-8915-4cc1-ad62-5bb2b1bdf3fb"],
  ": the soliton is carried along rigidly at speed ",
  Cell[BoxData[
   StyleBox["\|01d463",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b11024a7-cad0-4f2f-b0d9-77910a5ba849"],
+  "f5805b35-0003-4c8e-8666-bf1e36596989"],
  ", its ",
  Cell[BoxData[
   StyleBox[
@@ -1802,21 +1802,21 @@ Cell[TextData[{
      FontSlant->"Plain"], "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "24eee318-63fc-4067-95c3-588f215034c0"],
+  "62ba6efe-51d1-4bc3-b897-92ba398e88f5"],
  " shape untouched. The boost lives entirely in the phase, invisible to a \
 position measurement yet adding ",
  Cell[BoxData[
   StyleBox["\|01d463",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aeeadada-6d61-4ae4-8b58-98ecbd4cf541"],
+  "57ae0ce3-7443-4278-8538-1ae059ade47d"],
  " to every momentum component, the hallmark of a soliton that translates \
 without distortion."
-}], "Text",ExpressionUUID->"8010f43e-a05d-49ff-b605-c44711645ced"],
+}], "Text",ExpressionUUID->"9578c6bc-3e4f-4900-b06c-7e519e0c308c"],
 
 Cell["\<\
 Part 2. Operators, position and momentum, and the Fourier bridge\
-\>", "Section",ExpressionUUID->"575f7684-9053-4388-86f0-a8ca92461327"],
+\>", "Section",ExpressionUUID->"1079afb3-93d8-489f-ad66-2e53e38c0f03"],
 
 Cell[TextData[{
  "2.1 [BSc] How do I represent the position operator ",
@@ -1825,7 +1825,7 @@ Cell[TextData[{
    OverscriptBox["\|01d465", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5b9c5e47-2c5c-4b2d-9936-1419d4db876e"],
+  "07199707-90d6-44ae-9917-ace8a98a8cc8"],
  " as multiplication and the momentum operator ",
  Cell[BoxData[
   StyleBox[
@@ -1834,9 +1834,9 @@ Cell[TextData[{
      "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "813fe4cf-36c5-4a79-969c-620c2ddc9140"],
+  "3ea15a87-13fa-45fe-bed2-0341ef95be93"],
  " as differentiation, acting on a test function?"
-}], "Subsection",ExpressionUUID->"a2b7628f-4303-4466-a194-53a7589ba71b"],
+}], "Subsection",ExpressionUUID->"4201dc61-2a7e-4120-82a0-e22735555919"],
 
 Cell[TextData[{
  "In the position representation ",
@@ -1845,23 +1845,23 @@ Cell[TextData[{
    OverscriptBox["\|01d465", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3f8dbfc9-1d0e-4d76-807d-0fc7f8f021b7"],
+  "663ac320-69ad-4c5e-8798-cc62029c92eb"],
  " multiplies by ",
  Cell[BoxData[
   StyleBox["\|01d465",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "24e782bf-f16a-4c99-b232-e126c423b6bc"],
+  "bcf99903-dd7f-4831-8fbe-e45014673ccc"],
  " and ",
  Cell[BoxData[
   StyleBox[
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e5f1de17-40c7-4663-bff3-ee69b202fe74"],
+  "22b631d4-9b63-4dd3-845e-ac6080cec552"],
  " differentiates. We define them as operations and apply them to a plane \
 wave."
-}], "Text",ExpressionUUID->"4dfb9f0b-c9f9-41e2-9f71-d05d2324942a"],
+}], "Text",ExpressionUUID->"79ec590c-afca-49d0-bafe-923c1a360cb9"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1884,7 +1884,7 @@ Cell[BoxData[{
     RowBox[{"Exp", "[", 
      RowBox[{"I", " ", "k", " ", "x"}], "]"}], "]"}]}], "}"}]}], "Input",
  CellLabel->
-  "In[14]:= ",ExpressionUUID->"f99a6d12-6fc7-4b96-ab41-0dc51ea31953"],
+  "In[14]:= ",ExpressionUUID->"fbdec02e-da11-4717-a51b-62ca8c207b2b"],
 
 Cell[TextData[{
  Cell[BoxData[
@@ -1892,7 +1892,7 @@ Cell[TextData[{
    OverscriptBox["\|01d465", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "490bcb66-6c0c-46d1-99c6-b40e6fef749b"],
+  "0364de4b-2377-48be-8468-505a0232031b"],
  " returns ",
  Cell[BoxData[
   StyleBox[
@@ -1901,14 +1901,14 @@ Cell[TextData[{
      RowBox[{"\|01d456", "\|01d458", "\|01d465"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f2aa5ab2-c6a5-4ab7-a7a0-01b04ee90201"],
+  "6c11ef6b-41ff-4718-ae28-ec99103ddf58"],
  " and ",
  Cell[BoxData[
   StyleBox[
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3bf387b5-5c85-4b7a-a06d-2ae5d9a8d215"],
+  "0a0891fc-6eab-49a2-b959-9b135917d7c6"],
  " returns ",
  Cell[BoxData[
   StyleBox[
@@ -1917,13 +1917,13 @@ Cell[TextData[{
      RowBox[{"\|01d456", "\|01d458", "\|01d465"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "03e16cbf-1845-48be-b1c1-5f1f4dafcfdf"],
+  "64047e27-dfb8-4934-96d4-4450d49a5e26"],
  ": the plane wave is an eigenfunction of momentum with eigenvalue ",
  Cell[BoxData[
   StyleBox["\|01d458",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "364900eb-bc09-4540-b9f9-cfb48df224b6"],
+  "58ec3949-33b0-49c7-ab1f-0d33b5e1b776"],
  ". That is the precise sense in which ",
  Cell[BoxData[
   StyleBox[
@@ -1931,15 +1931,15 @@ Cell[TextData[{
     RowBox[{"\|01d456", "\|01d458", "\|01d465"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7a73dd29-92f1-4ef2-8f6e-645bdf2af71f"],
+  "00e2bd1f-06e2-4e29-9713-2afffc49acd5"],
  " carries momentum ",
  Cell[BoxData[
   StyleBox["\|01d458",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6c513782-81d2-4479-a00a-0f9c1523c0dc"],
+  "46704403-0ae2-43f6-81ed-ec80eeac1c50"],
  "."
-}], "Text",ExpressionUUID->"fe372637-9f32-4a0b-9791-1a7cb4c76c01"],
+}], "Text",ExpressionUUID->"1b60fe34-a38c-4937-a32e-6402212f320c"],
 
 Cell[TextData[{
  "2.2 [BSc] How do I verify the canonical commutator ",
@@ -1955,9 +1955,9 @@ Cell[TextData[{
      SpanMaxSize->1], "=", "\|01d456"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "83cd43d0-c234-49ff-8afb-6a75213d069b"],
+  "6ab521bd-6828-463d-bfbf-03bbd8802449"],
  " by letting it act on an arbitrary function?"
-}], "Subsection",ExpressionUUID->"aed51635-f72f-45a3-ac44-5c569c350ae8"],
+}], "Subsection",ExpressionUUID->"c0a4104b-c1c1-45e5-b662-1d8a6c857a78"],
 
 Cell[TextData[{
  "The defining relation ",
@@ -1973,7 +1973,7 @@ Cell[TextData[{
      SpanMaxSize->1], "=", "\|01d456"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "22b0da88-ce34-4446-9d86-9b720e8a02b8"],
+  "677511db-ed84-4594-a2c4-bfcb108bbd03"],
  " is an operator identity, so we check it on a generic test function ",
  Cell[BoxData[
   StyleBox[
@@ -1984,9 +1984,9 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5d0aebb4-4362-489a-b404-a5d8bf9c9cfe"],
+  "39820464-81f6-470b-a7a3-b21dc8ef40df"],
  "."
-}], "Text",ExpressionUUID->"6bd3e6d2-4a93-497b-b1a2-ce8b0fbe2a3f"],
+}], "Text",ExpressionUUID->"cbc9b1a2-085a-4f5f-8f25-1056ed9518d8"],
 
 Cell[BoxData[
  RowBox[{"Simplify", "[", 
@@ -1998,7 +1998,7 @@ Cell[BoxData[
     RowBox[{"xop", "[", 
      RowBox[{"f", "[", "x", "]"}], "]"}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[15]:= ",ExpressionUUID->"845cf897-cbc1-4f69-8509-7c6cc342aa44"],
+  "In[15]:= ",ExpressionUUID->"8749d31a-2d65-4078-ba26-32de979ce7f7"],
 
 Cell[TextData[{
  "The result is ",
@@ -2011,13 +2011,13 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "85c6a52b-5730-4adf-ac6c-5f12f8208e9b"],
+  "e5bbd398-fa86-45e7-a8c6-aacf1789083d"],
  " for arbitrary ",
  Cell[BoxData[
   StyleBox["\|01d453",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "652c7e48-9703-47c4-b14f-3c0f1dffa20e"],
+  "fcd92826-aa95-48b9-bb94-d83b27f9e34e"],
  ", i.e. ",
  Cell[BoxData[
   StyleBox[
@@ -2031,16 +2031,16 @@ Cell[TextData[{
      SpanMaxSize->1], "=", "\|01d456"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bb8709ed-a16a-4b20-afb9-2eae552ce08e"],
+  "27056330-6bd6-47fe-9ab5-b24e4e00cd8e"],
  ". The surviving term comes from differentiating the product ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d465", "\|01d453"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "112961a0-2ed3-4ea5-bc5b-1c6805faf770"],
+  "90f8f565-9f02-4dd9-8740-14ddfc7d180a"],
  ": position and momentum fail to commute by exactly one unit."
-}], "Text",ExpressionUUID->"4026a38c-1ce2-4000-9d82-4968521a36ce"],
+}], "Text",ExpressionUUID->"9c422a5f-ff5d-44ed-ba69-1f5db3724869"],
 
 Cell[TextData[{
  "2.3 [BSc] How do I compute the momentum expectation ",
@@ -2053,16 +2053,16 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e216133e-ef7c-4853-8841-83af0c72c57b"],
+  "11ca5a7b-a7b4-429a-b1da-2706309b8b53"],
  " and spread ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\[CapitalDelta]", "\|01d45d"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0a2aa13d-cecb-47f1-8924-bd0a6e38189a"],
+  "d78a0415-d8d1-4f0b-b45a-d03392ac5712"],
  " in the position representation?"
-}], "Subsection",ExpressionUUID->"67962e24-1f6f-4b2b-8e53-976ef1887137"],
+}], "Subsection",ExpressionUUID->"45678ee7-ebbf-428d-9c43-6352b24cb861"],
 
 Cell[TextData[{
  "Without leaving position space, ",
@@ -2084,7 +2084,7 @@ Cell[TextData[{
      SpanMaxSize->1], "\|01d713", " ", "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "77511914-a0ce-4c4f-9377-c112ce55c63a"],
+  "c233d02c-b627-4359-9804-adf64184d8e4"],
  ". For ",
  Cell[BoxData[
   StyleBox[
@@ -2096,7 +2096,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d6789405-bc73-4c9a-8128-a43c37f3dc11"],
+  "1bc7e950-5644-4057-ad46-ca977e9d2713"],
  " we use the manifestly positive, boundary-term-free form ",
  Cell[BoxData[
   StyleBox[
@@ -2123,14 +2123,14 @@ Cell[TextData[{
     "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "be4d54bf-8dd1-4db3-8000-2de81d72a664"],
+  "382c257e-8bbf-432d-bd70-9aeba03d996c"],
  " (equal because ",
  Cell[BoxData[
   StyleBox[
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3008342e-6828-41ab-aeef-f2eac050ea69"],
+  "94129765-1a43-44c3-9c2b-a2ac72845e5e"],
  " is Hermitian), which sidesteps the delta that the cusp would put into ",
  Cell[BoxData[
   StyleBox[
@@ -2138,7 +2138,7 @@ Cell[TextData[{
     SubsuperscriptBox["\[PartialD]", "\|01d465", "2"], "\|01d713"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a5b018d3-03d4-4168-afa1-fd19b18d594e"],
+  "f2836f52-fb26-4603-bd62-bab6ea237b10"],
  ". We take the moving cusp state ",
  Cell[BoxData[
   StyleBox[
@@ -2152,9 +2152,9 @@ Cell[TextData[{
      RowBox[{"\|01d456", "\|01d458", "\|01d465"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "32c9d935-7912-424b-8605-1139727985aa"],
+  "6c2b0e75-4945-46fd-9879-0dd236b8f7d8"],
  "."
-}], "Text",ExpressionUUID->"ec447f3a-ce36-45a1-9bd8-afd5edcc9c10"],
+}], "Text",ExpressionUUID->"5f0ae488-a665-4590-b02c-7117a8cac6f9"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2223,7 +2223,7 @@ Cell[BoxData[{
       RowBox[{"k", " ", "\[Element]", " ", "Reals"}]}]}], "]"}]}], 
   "}"}]}], "Input",
  CellLabel->
-  "In[16]:= ",ExpressionUUID->"ec3b26bf-74c9-4134-92cc-5bfb98b1e72d"],
+  "In[16]:= ",ExpressionUUID->"79a2ad54-890b-4196-a932-404565b615e6"],
 
 Cell[TextData[{
  "The mean momentum is ",
@@ -2236,7 +2236,7 @@ Cell[TextData[{
      SpanMaxSize->1], "=", "\|01d458"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "38cd7aed-54ac-48f3-95ae-77521e6244dd"],
+  "0b0b68ee-ebb0-4c5a-ac7e-524c81de7b80"],
  " (the drift stamped into the phase), while ",
  Cell[BoxData[
   StyleBox[
@@ -2250,22 +2250,22 @@ Cell[TextData[{
     SuperscriptBox["\|01d705", "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "58976f8d-a6b6-4925-b401-1df010d50b13"],
+  "84b0e581-c5d3-4eee-863c-b839c5d2e72a"],
  ", so the intrinsic spread is ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\[CapitalDelta]", "\|01d45d", "=", "\|01d705"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "695d53a2-581f-4452-af66-4a0a0a7f4de2"],
+  "88c02a1e-50b0-4c85-98d7-8c3c23b4a0d9"],
  ". The cusp sets the momentum width: a more sharply bound state (larger ",
  Cell[BoxData[
   StyleBox["\|01d705",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6b27e92d-bad6-411f-a10c-5e03640235a3"],
+  "f8fc8b87-8c7a-4e78-992d-4e94f2a69ad8"],
  ") is broader in momentum, the uncertainty relation at work."
-}], "Text",ExpressionUUID->"40e92b06-fe4c-4204-a2cb-326faa7479c3"],
+}], "Text",ExpressionUUID->"d8f8563a-7802-445a-8c82-a082e9454407"],
 
 Cell[TextData[{
  "2.4 [BSc] How do I show that ",
@@ -2274,7 +2274,7 @@ Cell[TextData[{
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "54efd505-6df1-40e4-8dca-15fa1a044f47"],
+  "84d41ceb-1498-4ff2-97d5-b95304478f51"],
  " is Hermitian by integration by parts, and see that the boundary terms \
 vanish for an ",
  Cell[BoxData[
@@ -2282,9 +2282,9 @@ vanish for an ",
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f7c0383e-9705-481e-82be-8a62784cdfd8"],
+  "954cbde5-5887-4d90-9e06-3c07faca5384"],
  " state?"
-}], "Subsection",ExpressionUUID->"8f85a96c-72f0-4758-83c9-42b287724831"],
+}], "Subsection",ExpressionUUID->"52fef10e-edd4-4a04-aa76-985252332cd0"],
 
 Cell[TextData[{
  "Hermiticity of ",
@@ -2293,7 +2293,7 @@ Cell[TextData[{
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8766ed17-ea0d-4b71-8e00-8a6868117554"],
+  "38eeb15d-8dcb-48c2-bf65-6c9462ea8306"],
  " is ",
  Cell[BoxData[
   StyleBox[
@@ -2303,20 +2303,19 @@ Cell[TextData[{
       RowBox[{
         OverscriptBox[
          StyleBox["\|01d45d"], "^"], 
-        StyleBox["\|01d713"]}]},
+        StyleBox["\|01d712"]}]},
      "BraKet"], "=", 
     TemplateBox[{
       RowBox[{
         OverscriptBox[
          StyleBox["\|01d45d"], "^"], 
         StyleBox["\[Phi]"]}], 
-      StyleBox["\|01d713"]},
+      StyleBox["\|01d712"]},
      "BraKet"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "506fc8d7-5493-4d42-a853-a69679a224c7"],
- ", which integration by parts turns into a bulk equality plus the boundary \
-term ",
+  "8c8dc318-1e27-4535-8259-449993482881"],
+ ", which integration by parts turns into the boundary term ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"-", "\|01d456", 
@@ -2324,16 +2323,13 @@ term ",
      RowBox[{"-", "\[Infinity]"}], "\[Infinity]"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f3f2a10c-17a2-409c-a08d-953cffdd750b"],
- ". For ",
- Cell[BoxData[
-  StyleBox[
-   SuperscriptBox["\|01d43f", "2"],
-   FontFamily->"Latin Modern Math"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "e7078f64-f156-48a6-93b7-e25b83efa5c3"],
- " states it vanishes. We use two smooth solitons."
-}], "Text",ExpressionUUID->"20370c3e-037d-4d6a-ac54-b57ffc45f927"],
+  "937979aa-fc54-46bd-932d-212071b81c5b"],
+ ": the matrix-element difference ",
+ StyleBox["equals", "TI"],
+ " that surface term. We take two smooth solitons; their momentum matrix \
+elements have no elementary closed form, so we read off the surface term \
+symbolically and confirm the equality by quadrature."
+}], "Text",ExpressionUUID->"939670ce-fa3e-4caa-9e39-547a29f27d82"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2353,41 +2349,6 @@ Cell[BoxData[{
       RowBox[{"I", " ", "x"}], "]"}], "/", 
      RowBox[{"Sqrt", "[", "2", "]"}]}]}]}], ";"}], "\n", 
  RowBox[{
-  RowBox[{"Integrate", "[", 
-   RowBox[{
-    RowBox[{
-     RowBox[{"Conjugate", "[", 
-      RowBox[{"\[Phi]", "[", "x", "]"}], "]"}], " ", 
-     RowBox[{"(", 
-      RowBox[{
-       RowBox[{"-", "I"}], " ", 
-       RowBox[{"D", "[", 
-        RowBox[{
-         RowBox[{"\[Chi]", "[", "x", "]"}], ",", " ", "x"}], "]"}]}], ")"}]}],
-     ",", " ", 
-    RowBox[{"{", 
-     RowBox[{"x", ",", " ", 
-      RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "]"}], " ", 
-  "-", "\n", "  ", 
-  RowBox[{"Integrate", "[", 
-   RowBox[{
-    RowBox[{
-     RowBox[{"Conjugate", "[", 
-      RowBox[{
-       RowBox[{"-", "I"}], " ", 
-       RowBox[{"D", "[", 
-        RowBox[{
-         RowBox[{"\[Phi]", "[", "x", "]"}], ",", " ", "x"}], "]"}]}], "]"}], " ", 
-     RowBox[{"\[Chi]", "[", "x", "]"}]}], ",", " ", 
-    RowBox[{"{", 
-     RowBox[{"x", ",", " ", 
-      RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], 
-   "]"}]}]}], "Input",
- CellLabel->
-  "In[17]:= ",ExpressionUUID->"6584e13f-3b78-4537-bb54-400e9ce2097e"],
-
-Cell[BoxData[
- RowBox[{
   RowBox[{"Limit", "[", 
    RowBox[{
     RowBox[{
@@ -2405,28 +2366,70 @@ Cell[BoxData[
       RowBox[{"\[Phi]", "[", "x", "]"}], "]"}], " ", 
      RowBox[{"\[Chi]", "[", "x", "]"}]}], ",", " ", 
     RowBox[{"x", " ", "->", " ", 
-     RowBox[{"-", "Infinity"}]}]}], "]"}]}]], "Input",
+     RowBox[{"-", "Infinity"}]}]}], "]"}]}]}], "Input",
  CellLabel->
-  "In[18]:= ",ExpressionUUID->"f26cf46b-c9e6-4ff1-9b71-7ad1c4f8037b"],
+  "In[17]:= ",ExpressionUUID->"f7044712-1a22-4ed7-848a-da02f46c8fd1"],
+
+Cell[BoxData[
+ RowBox[{"Chop", "[", 
+  RowBox[{
+   RowBox[{"NIntegrate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Conjugate", "[", 
+       RowBox[{"\[Phi]", "[", "x", "]"}], "]"}], " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"-", "I"}], " ", 
+        RowBox[{"D", "[", 
+         RowBox[{
+          RowBox[{"\[Chi]", "[", "x", "]"}], ",", " ", "x"}], "]"}]}], 
+       ")"}]}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", " ", 
+       RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}], ",", " ", 
+     RowBox[{"WorkingPrecision", " ", "->", " ", "30"}]}], "]"}], " ", "-", 
+   "\n", "     ", 
+   RowBox[{"NIntegrate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Conjugate", "[", 
+       RowBox[{
+        RowBox[{"-", "I"}], " ", 
+        RowBox[{"D", "[", 
+         RowBox[{
+          RowBox[{"\[Phi]", "[", "x", "]"}], ",", " ", "x"}], "]"}]}], "]"}], 
+      " ", 
+      RowBox[{"\[Chi]", "[", "x", "]"}]}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", " ", 
+       RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}], ",", " ", 
+     RowBox[{"WorkingPrecision", " ", "->", " ", "30"}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"f622a7c0-6cc4-4549-b941-159c2c70aef7"],
 
 Cell[TextData[{
- "Both cells return ",
+ "The boundary term is ",
  Cell[BoxData[
   StyleBox["0",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6bf8974c-98d0-4ab0-a815-e2b31adad58f"],
- ": the two matrix elements agree and the boundary term dies because the \
-solitons decay at infinity. Hermiticity of ",
+  "6d0ab7df-10ba-4fa8-a967-c8f6535bb660"],
+ " (the solitons decay at infinity), and the high-precision quadrature \
+returns numerical zero, so the two matrix elements agree. Because the \
+difference ",
+ StyleBox["is", "TI"],
+ " that surface term, Hermiticity of ",
  Cell[BoxData[
   StyleBox[
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ea67552f-b512-4d9f-b9cf-99d13eda9a67"],
- " is exactly the vanishing of that surface term, a point that turns subtle \
-on a finite domain (2.9)."
-}], "Text",ExpressionUUID->"00f6d20e-b632-4683-b454-ef1f48e4acfb"],
+  "47a7ae95-f6bf-471c-88c9-ec3279b649f9"],
+ " is exactly its vanishing, a point that turns subtle on a finite domain \
+(2.9)."
+}], "Text",ExpressionUUID->"10c53397-59ca-4236-8c13-59281cddc568"],
 
 Cell[TextData[{
  "2.5 [BSc] How do I write the momentum eigenfunctions ",
@@ -2436,10 +2439,10 @@ Cell[TextData[{
     RowBox[{"\|01d456", "\|01d45d", "\|01d465"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "08b0be6d-eea1-4869-8088-9693c8153e13"],
+  "b3980509-256d-49a2-82ff-0f78cd8e7aa3"],
  ", see that they are not square-integrable, and normalize them to a Dirac \
 delta?"
-}], "Subsection",ExpressionUUID->"292b32d6-361e-4321-b8b0-79cdda25a077"],
+}], "Subsection",ExpressionUUID->"69bc3532-5012-439c-b4af-13afd91744ff"],
 
 Cell[TextData[{
  "The momentum eigenfunctions ",
@@ -2449,20 +2452,20 @@ Cell[TextData[{
     RowBox[{"\|01d456", "\|01d45d", "\|01d465"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "30aefeb2-6d27-4dd0-ba20-9d2a7f826815"],
+  "affa62ad-f025-4c91-a89e-7f694a643932"],
  " are not in ",
  Cell[BoxData[
   StyleBox[
    SuperscriptBox["\|01d43f", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "97b7dbba-5b69-45c2-81e0-f276bdb8b293"],
+  "c88caca1-da33-49df-9a15-7b4a59e92244"],
  " (1.2), so they cannot be normalized to ",
  Cell[BoxData[
   StyleBox["1",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5d68d085-ec25-4d9d-a088-b233d177c122"],
+  "fcf4dda8-2791-458d-a3d8-f941d3441614"],
  "; instead ",
  Cell[BoxData[
   StyleBox[
@@ -2479,7 +2482,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8c6d6b80-bc2d-4ad8-a982-9f20c54bc031"],
+  "65c485bf-3615-4701-bc90-5748d526f843"],
  " for ",
  Cell[BoxData[
   StyleBox[
@@ -2496,22 +2499,22 @@ Cell[TextData[{
      RowBox[{"\|01d456", "\|01d45d", "\|01d465"}]]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "57907e2a-3606-4027-bb48-457171c6f766"],
+  "86f170e2-b636-4d28-aefe-4398d677b101"],
  ". The ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"2", "\[Pi]"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "86caf63a-1917-4cc6-ab1f-002fa7342434"],
+  "5b8285b9-531e-4171-b5ac-204cc5f2f5dc"],
  " that makes this work is the Fourier integral of a constant."
-}], "Text",ExpressionUUID->"36666457-c5ca-493a-9357-bf0df5e34003"],
+}], "Text",ExpressionUUID->"784cf581-e5e8-4505-9868-5559f9a2d2bc"],
 
 Cell[BoxData[
  RowBox[{"FourierTransform", "[", 
   RowBox[{"1", ",", " ", "x", ",", " ", "q"}], "]"}]], "Input",
  CellLabel->
-  "In[19]:= ",ExpressionUUID->"60372bec-4778-425c-96c8-0353fc52925c"],
+  "In[19]:= ",ExpressionUUID->"c376f2b4-8dbf-43ba-b290-35aaaeedc183"],
 
 Cell[BoxData[
  RowBox[{"FourierTransform", "[", 
@@ -2528,7 +2531,7 @@ Cell[BoxData[
      RowBox[{"0", ",", " ", 
       RowBox[{"-", "1"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[20]:= ",ExpressionUUID->"a54947c3-7377-484a-97d5-38851c79fda7"],
+  "In[20]:= ",ExpressionUUID->"ceab8680-7a56-4f8d-b5d1-2050e5da54c5"],
 
 Cell[TextData[{
  "The first cell gives ",
@@ -2543,7 +2546,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aecaa2c7-4605-4bc7-8389-5d9b805d3bfe"],
+  "676960e9-f85a-4095-985b-b70474541de5"],
  ", i.e. ",
  Cell[BoxData[
   StyleBox[
@@ -2559,14 +2562,14 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ca4d1353-6254-418f-837e-9b5730af25fb"],
+  "3a84404f-4689-4032-b781-627c990f3a6c"],
  ". The second transforms the normalized eigenstate ",
  Cell[BoxData[
   StyleBox[
    SubscriptBox["\|01d462", "\|01d45d"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "07cf8837-7ab6-4125-8ef3-2d2a0d58dde4"],
+  "195db457-f825-4ccc-ae6d-c98f60f6b0af"],
  " into momentum space and returns exactly ",
  Cell[BoxData[
   StyleBox[
@@ -2579,10 +2582,10 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bb7a0280-092f-4335-8183-3fd6a06b9501"],
+  "6cf44670-57ef-403e-b68f-ba170169c0dd"],
  ": a sharp momentum state is a delta spike at its eigenvalue, the continuum \
 analog of an orthonormal basis vector."
-}], "Text",ExpressionUUID->"d5eb989f-de89-4763-bf8b-0db02508c88f"],
+}], "Text",ExpressionUUID->"ae43f353-69cd-4764-b2f6-9c37623b886f"],
 
 Cell[TextData[{
  "2.6 [BSc] How do I obtain the momentum-space wavefunction ",
@@ -2596,7 +2599,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7a653a93-8345-44b1-8257-f894956d599e"],
+  "9735d981-25e4-4917-8730-846e196ce1f4"],
  " by Fourier transform and compute ",
  Cell[BoxData[
   StyleBox[
@@ -2608,15 +2611,15 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "db15d113-3ba0-487a-9fa5-cc9f94401472"],
+  "74d008f9-1ea2-4e28-a48b-627408edcff6"],
  " as a moment in ",
  Cell[BoxData[
   StyleBox["\|01d45d",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "23124fa4-dc17-4417-8426-05f2bfbce9b2"],
+  "f777f461-2d3a-45db-92e3-e60c7f2282f7"],
  "?"
-}], "Subsection",ExpressionUUID->"59c8401e-385e-45cb-b2f4-7ff732c311ec"],
+}], "Subsection",ExpressionUUID->"78919765-2be5-47a9-9ca4-e1a16ae3d57a"],
 
 Cell[TextData[{
  "The momentum-space wavefunction is ",
@@ -2642,7 +2645,7 @@ Cell[TextData[{
     "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4ca4c6ac-1760-4787-a20d-5acd06240981"],
+  "55bd76e4-1d70-4991-8aa8-9bc5f2f9cb7f"],
  " (",
  Cell[BoxData[
   RowBox[{"FourierParameters", " ", "->", " ", 
@@ -2650,7 +2653,7 @@ Cell[TextData[{
     RowBox[{"0", ",", " ", 
      RowBox[{"-", "1"}]}], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e2826239-a23f-41a7-9d0a-31b61caff5fd"],
+  "789bb24a-c807-4205-a3b8-f6b12c44733f"],
  "), after which ",
  Cell[BoxData[
   StyleBox[
@@ -2674,9 +2677,9 @@ Cell[TextData[{
     "\|01d45d"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "66c14e50-44e6-4f59-8d08-babfd4a1f662"],
+  "64390e49-a562-40eb-8d7d-f64cf1b12a5c"],
  " is an ordinary moment. We transform the soliton."
-}], "Text",ExpressionUUID->"0529923d-07a6-42aa-a40e-501b045be970"],
+}], "Text",ExpressionUUID->"58bd80bf-5c8f-45ab-be5a-d949597ffc5f"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2696,7 +2699,7 @@ Cell[BoxData[{
        RowBox[{"0", ",", " ", 
         RowBox[{"-", "1"}]}], "}"}]}]}], "]"}], "]"}]}]}], "Input",
  CellLabel->
-  "In[21]:= ",ExpressionUUID->"ff0b025f-8abf-465a-a95d-76bfd971c077"],
+  "In[21]:= ",ExpressionUUID->"fb24848e-7210-45fe-a857-7b87b99a4135"],
 
 Cell[BoxData[
  RowBox[{"{", 
@@ -2720,7 +2723,7 @@ Cell[BoxData[
        RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "]"}]}], 
   "}"}]], "Input",
  CellLabel->
-  "In[22]:= ",ExpressionUUID->"8a5930e7-c60d-451c-b8ba-0d58f5310ef5"],
+  "In[22]:= ",ExpressionUUID->"f5a062b7-db97-4602-9e97-63443a82da02"],
 
 Cell[TextData[{
  "The transform is ",
@@ -2744,14 +2747,14 @@ Cell[TextData[{
      FontSize->1.2 Inherited]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "36697238-75a9-4617-b52d-cd6ba81e5f81"],
+  "20fe2b6c-1105-469e-b902-4e75fc90ac6f"],
  ": the Fourier transform of a sech is again a sech, a self-similarity \
 special to this profile. Its norm is ",
  Cell[BoxData[
   StyleBox["1",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8dde064f-ea1d-4e79-9ba5-139c1c8f4f4c"],
+  "db4ea179-a8ea-4e11-ae8f-344868f6ea66"],
  " and ",
  Cell[BoxData[
   StyleBox[
@@ -2764,7 +2767,7 @@ special to this profile. Its norm is ",
     FractionBox["1", "3"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2a0e789e-fcab-4d53-b0c9-36a40ab0d910"],
+  "4f3895f6-8aaf-4439-abce-fb9a4ac64f8c"],
  ", matching the position-space value ",
  Cell[BoxData[
   StyleBox[
@@ -2779,7 +2782,7 @@ special to this profile. Its norm is ",
     "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0aef3ca8-9236-4839-b2d7-189c3f1964fb"],
+  "95074bc7-7948-423b-a2f4-9c08d6b15d47"],
  ". (A boost ",
  Cell[BoxData[
   StyleBox[
@@ -2787,15 +2790,15 @@ special to this profile. Its norm is ",
     RowBox[{"\|01d456", "\|01d458", "\|01d465"}]],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8b453619-2ff0-4ed6-8cca-9789124acc5e"],
+  "5387d33d-5279-4182-9d41-b21b60371c3d"],
  " would shift the whole momentum profile to center ",
  Cell[BoxData[
   StyleBox["\|01d458",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "135d8a03-948e-4039-898b-0d5643809ec3"],
+  "3e847a3b-0ac8-42d0-9bfe-2315c16336b3"],
  " without changing its width.)"
-}], "Text",ExpressionUUID->"a40cbb65-ba54-4e08-bdea-abbd480f1089"],
+}], "Text",ExpressionUUID->"df955837-c85f-4aa8-aa83-c2d482823931"],
 
 Cell[TextData[{
  "2.7 [BSc] How do I verify the position-momentum uncertainty relation ",
@@ -2806,9 +2809,9 @@ Cell[TextData[{
      "1", "/", "2"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2a73d72e-ea8a-4ee1-9c86-c7cdd26178fc"],
+  "7edfbc36-4ffb-42e3-a9ef-3e7a31815897"],
  " and show that a Gaussian saturates it?"
-}], "Subsection",ExpressionUUID->"5076ec97-4b56-46b9-a38e-b20851b9de8a"],
+}], "Subsection",ExpressionUUID->"1a6f8a42-3481-4fde-8b43-60cbb4d5b67a"],
 
 Cell[TextData[{
  "Here the Gaussian earns its keep. The bound ",
@@ -2819,17 +2822,17 @@ Cell[TextData[{
     FractionBox["1", "2"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e49d229d-3f15-4e02-bbea-d658b04945bf"],
+  "2640fec2-fa62-41c6-89d4-40a8f3239014"],
  " (with ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\[HBar]", "=", "1"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "97a1d3fd-17a1-48ef-abbb-305a64be7ab3"],
+  "ecf34b9d-1b05-46e8-948b-ebbabdc5fbd7"],
  ") is saturated by a Gaussian and by nothing else. We compute the product \
 for the soliton, then for the Gaussian, side by side."
-}], "Text",ExpressionUUID->"a8ec2207-ad50-4080-925d-f52248ea3135"],
+}], "Text",ExpressionUUID->"95edc319-a919-4c86-8f1b-fbbddefde924"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2870,7 +2873,7 @@ Cell[BoxData[{
     "]"}]}], ";"}], "\n", 
  RowBox[{"dxSol", " ", "dpSol"}]}], "Input",
  CellLabel->
-  "In[23]:= ",ExpressionUUID->"8521a682-ae8d-4c10-83dc-b48a192151ae"],
+  "In[23]:= ",ExpressionUUID->"4a7afc53-3ee7-4234-a53b-a92825caade1"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2928,7 +2931,7 @@ Cell[BoxData[{
    RowBox[{"dxG", " ", "dpG"}], ",", " ", 
    RowBox[{"\[Sigma]", " ", ">", " ", "0"}]}], "]"}]}], "Input",
  CellLabel->
-  "In[24]:= ",ExpressionUUID->"9859665d-c94e-4003-99be-38a7f45ce653"],
+  "In[24]:= ",ExpressionUUID->"4565eb4c-ae91-4fa6-a13d-f617a5015730"],
 
 Cell[TextData[{
  "The soliton gives ",
@@ -2939,7 +2942,7 @@ Cell[TextData[{
     "\[Pi]", "/", "6", "\[TildeTilde]", "0.524"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "af72d753-a990-49ef-8dc0-07fe2e90a2cf"],
+  "1587b894-7095-467f-90ba-139a936e017b"],
  ", just above the floor: a state can be beautifully localized and still not \
 minimal. The Gaussian gives exactly ",
  Cell[BoxData[
@@ -2947,17 +2950,17 @@ minimal. The Gaussian gives exactly ",
    FractionBox["1", "2"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2e54c4e0-3de6-49ac-8b37-e57466e63666"],
+  "36f3bf8a-702e-4a8d-af5a-e4ca35578dc9"],
  " for every width ",
  Cell[BoxData[
   StyleBox["\|01d70e",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "87229cd9-72bb-4e95-ba08-61a636bd9e94"],
+  "ca2a02d9-bf9c-4f10-b9ce-dd06a2a4e1f9"],
  ", sitting right on the boundary. Squeezing it in position inflates it in \
 momentum and vice versa, tracing the edge of the allowed region; every \
 non-Gaussian state, the soliton included, lies strictly above."
-}], "Text",ExpressionUUID->"5fb8a249-0c9e-4ab4-bc76-cf4d5c0971f8"],
+}], "Text",ExpressionUUID->"aa190907-57b5-49d7-82a7-f21f8a557458"],
 
 Cell[TextData[{
  "2.8 [MSc] How do I build a function ",
@@ -2973,10 +2976,10 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "eac8f570-dca9-4b4f-9b36-a4d8a6135054"],
+  "35acc94c-adb9-4004-afe7-2ec32265bcaa"],
  " of noncommuting operators, and resolve the ordering ambiguity by Weyl \
 symmetric ordering?"
-}], "Subsection",ExpressionUUID->"8187a343-5b78-4608-bea2-8d44dc3c95ea"],
+}], "Subsection",ExpressionUUID->"1b9327ec-c344-4b65-bdde-ced0139f6d4f"],
 
 Cell[TextData[{
  "Because ",
@@ -2985,21 +2988,21 @@ Cell[TextData[{
    OverscriptBox["\|01d465", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "003a2a1a-5fcf-4f7b-bb8a-ed9f91739514"],
+  "29301608-a47d-4808-97ff-6910fa7814da"],
  " and ",
  Cell[BoxData[
   StyleBox[
    OverscriptBox["\|01d45d", "^"],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "588564b4-38bb-4fd8-8b2a-6d6cfa6ddd8a"],
+  "f9db8be6-0c88-43a4-9379-6691f2020595"],
  " do not commute, the classical product ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"\|01d465", "\|01d45d"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fbe5a7b3-b433-4c0c-b023-b692f6e5c4e4"],
+  "e24a90bd-e6ed-4b48-8827-046a4479cf1a"],
  " has several inequivalent quantizations. The Weyl (symmetric) prescription, \
 ",
  Cell[BoxData[
@@ -3017,9 +3020,9 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a311baa8-bcbc-4fb3-9abd-bd4c894fecc4"],
+  "c2c8c77f-ad18-4b64-aaba-a7a948ea330e"],
  ", is the unique Hermitian choice."
-}], "Text",ExpressionUUID->"6f3210ee-42ff-47b1-92ce-3f40244582a8"],
+}], "Text",ExpressionUUID->"73ae81a8-2fc3-4dee-a1aa-0fb7e87c8d5b"],
 
 Cell[BoxData[{
  RowBox[{
@@ -3036,7 +3039,7 @@ Cell[BoxData[{
   RowBox[{"sym", "[", 
    RowBox[{"h", "[", "x", "]"}], "]"}], "]"}]}], "Input",
  CellLabel->
-  "In[25]:= ",ExpressionUUID->"479dfb14-cc20-4d43-9b69-9059df135fec"],
+  "In[25]:= ",ExpressionUUID->"c0bda954-c9cf-41fd-9266-7c766248213d"],
 
 Cell[BoxData[{
  RowBox[{
@@ -3122,7 +3125,7 @@ Cell[BoxData[{
         RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "]"}]}]}],
    "}"}]}], "Input",
  CellLabel->
-  "In[26]:= ",ExpressionUUID->"1af06fa2-17f2-4862-977b-89f3b6c934a5"],
+  "In[26]:= ",ExpressionUUID->"eb2ba346-b240-4cad-90c4-83d9fae13e73"],
 
 Cell[TextData[{
  "The symmetric operator acts as ",
@@ -3137,13 +3140,13 @@ Cell[TextData[{
      FontSize->1.2 Inherited]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ab445740-3b88-45b2-b82a-c4323520cdae"],
+  "8e4dd1a5-4e57-4b0f-8639-02e7809ca287"],
  ", and its matrix-element difference is ",
  Cell[BoxData[
   StyleBox["0",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2a21d90a-76e0-4f41-8f3d-75dbf2610f27"],
+  "5b2882e6-2f11-454f-946f-f47b8b8878ec"],
  " while the naive ordering ",
  Cell[BoxData[
   StyleBox[
@@ -3152,7 +3155,7 @@ Cell[TextData[{
     OverscriptBox["\|01d45d", "^"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e94ea18-06ee-45cb-83ce-e9817400ae39"],
+  "ac67c8a9-7d25-4862-a4e1-dd068a1c1263"],
  " gives a nonzero difference. Only ",
  Cell[BoxData[
   StyleBox[
@@ -3169,7 +3172,7 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "47c9c79a-713b-4c16-99fc-eda4017e1652"],
+  "9d0edae5-847e-4c73-8a5c-edaeeed5b808"],
  " is Hermitian, so only it can represent an observable; the ambiguity ",
  Cell[BoxData[
   StyleBox[
@@ -3178,7 +3181,7 @@ Cell[TextData[{
     OverscriptBox["\|01d45d", "^"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fdf5d49f-6705-4ee5-9f5c-264071562418"],
+  "6aa51696-fd4b-4b9f-8fd0-d4f6718926a3"],
  " versus ",
  Cell[BoxData[
   StyleBox[
@@ -3187,7 +3190,7 @@ Cell[TextData[{
     OverscriptBox["\|01d465", "^"]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "80de5243-ce93-40b1-a663-e3b27762f73c"],
+  "ee4703af-075e-4260-a1e8-e552aec8042b"],
  " is the commutator ",
  Cell[BoxData[
   StyleBox[
@@ -3201,16 +3204,16 @@ Cell[TextData[{
      SpanMaxSize->1], "=", "\|01d456"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "542eded6-aac4-4585-bdef-0341f5d8bb18"],
+  "230cfe39-38e9-4c39-a810-6ac153ca711d"],
  " of 2.2. (The two probe states here are displaced Gaussians, used only as \
 convenient smooth test functions, not as the object of study.)"
-}], "Text",ExpressionUUID->"fcf76b3e-d728-4e09-b316-b1c3eb667667"],
+}], "Text",ExpressionUUID->"af114a1d-1bc8-4972-b2cd-20e260bfcb9d"],
 
 Cell["\<\
 2.9 [MSc] How do I distinguish self-adjointness from formal Hermiticity \
 through the operator domain and boundary conditions (the box versus the \
 half-line)?\
-\>", "Subsection",ExpressionUUID->"4686dd18-e9f9-40dc-aa93-04c2156ebf92"],
+\>", "Subsection",ExpressionUUID->"636538b9-d7a4-475d-8e84-c89c1ab035bd"],
 
 Cell[TextData[{
  "Formal Hermiticity is the bulk identity of 2.4; self-adjointness \
@@ -3226,16 +3229,16 @@ additionally needs the boundary term ",
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e98a6d1d-1dfa-46db-9977-478373a6289b"],
+  "43be49c2-0d53-4b20-9a01-b1b1cbb1d086"],
  " to vanish on a domain the operator preserves. On a box this is achievable; \
 on the half-line (the natural home of the radial state ",
  Cell[BoxData[
   StyleBox["\|01d462",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e30f0926-48f3-42aa-a5d1-025bf51ef51b"],
+  "099c30af-17a2-40fd-8b59-b482b87a6a2b"],
  " of 1.4) it is not."
-}], "Text",ExpressionUUID->"fb267662-6f7c-49ec-8678-ded13caad995"],
+}], "Text",ExpressionUUID->"b119cf38-29ff-4e46-addd-432fb08c00fa"],
 
 Cell[BoxData[
  RowBox[{
@@ -3279,7 +3282,7 @@ Cell[BoxData[
      RowBox[{"\[Theta]", " ", "\[Element]", " ", "Reals"}]}], 
     "]"}]}]}]], "Input",
  CellLabel->
-  "In[27]:= ",ExpressionUUID->"9fb8d736-1067-4128-bfee-7e89630ff2ea"],
+  "In[27]:= ",ExpressionUUID->"6fe54b65-d620-4ac8-a8ca-369e667e0142"],
 
 Cell[BoxData[
  RowBox[{
@@ -3302,7 +3305,7 @@ Cell[BoxData[
       RowBox[{"Conjugate", "[", "p0", "]"}], " ", "s0"}]}], 
     ")"}]}]}]], "Input",
  CellLabel->
-  "In[28]:= ",ExpressionUUID->"1aa7eb5a-85dc-4c39-9933-9fdd69b428e9"],
+  "In[28]:= ",ExpressionUUID->"ec2353b6-b829-4b42-adfe-2d9ab63a17ca"],
 
 Cell[TextData[{
  "On the box the twisted condition ",
@@ -3321,19 +3324,19 @@ Cell[TextData[{
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7ac825a2-8a4f-4054-be04-dcbe5b98f09a"],
+  "a9b39224-8148-4b1f-b8ed-a1f5d04c5f4b"],
  " makes the surface term vanish for every real ",
  Cell[BoxData[
   StyleBox["\|01d703",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2537f117-bbce-4294-86bf-186ccfd2b4b2"],
+  "78226bce-ef65-472f-81e4-43fc341c0a67"],
  ", so each ",
  Cell[BoxData[
   StyleBox["\|01d703",
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0fd6660f-4e21-4a96-b959-549c07f7a745"],
+  "e2ddd1df-0d76-41d1-a9bc-bc3c820ef84e"],
  " defines a genuine self-adjoint momentum operator (a one-parameter family \
 of extensions). On the half-line the term reduces to ",
  Cell[BoxData[
@@ -3350,7 +3353,7 @@ of extensions). On the half-line the term reduces to ",
      SpanMaxSize->1]}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c9c32eb9-171f-47d2-82fa-e7032179ad7d"],
+  "2fae78c5-cd7e-4beb-a209-fb2e42b54d97"],
  ", which cannot vanish for all admissible states: ",
  Cell[BoxData[
   StyleBox[
@@ -3359,24 +3362,24 @@ of extensions). On the half-line the term reduces to ",
      "\|01d451", "\|01d465"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7cae1d88-a496-43ec-ab76-9377e2287b17"],
+  "9edbbc95-7eea-4236-88cb-09d1827df996"],
  " on ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"[", "0", ",", "\[Infinity]", ")"}],
    FontFamily->"Latin Modern Math"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "48e4d8d1-21d8-42b2-8f4f-77e7727af75e"],
+  "c1fdbebb-1b72-4eef-a931-b6a959fcb1e9"],
  " is Hermitian but has ",
  StyleBox["no", "TI"],
  " self-adjoint extension. Hermiticity is a property of a formula; \
 self-adjointness is a property of a formula together with its domain."
-}], "Text",ExpressionUUID->"cef56573-cf26-46bc-ba4c-d12f1703426a"]
+}], "Text",ExpressionUUID->"758cbc58-1c76-407c-9888-13d05895fe8f"]
 },
 CreateCellID->True,
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"f8cb0a33-b0e5-4a17-8545-d3dd3e05da2c"
+ExpressionUUID->"7a84550b-1394-45b1-a0fe-d40c5739ac70"
 ]
 (* End of Notebook Content *)
 
@@ -3389,100 +3392,100 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[554, 20, 141, 2, 70, "Title",ExpressionUUID->"9a391948-6dff-411a-b6eb-5a5ed54390f1"],
-Cell[698, 24, 1346, 35, 70, "Text",ExpressionUUID->"34e2a41c-881e-4115-b9af-fdb3d0dbcc7f"],
-Cell[2047, 61, 622, 11, 70, "Text",ExpressionUUID->"a9c42919-947f-4244-bfd1-9a3562acf337"],
-Cell[2672, 74, 1021, 29, 70, "Item",ExpressionUUID->"659d5962-3d55-42be-b3ac-fdf2d4fd710a"],
-Cell[3696, 105, 846, 26, 70, "Item",ExpressionUUID->"e38f9900-d5a7-4f78-9425-e61b1e7f6fcd"],
-Cell[4545, 133, 946, 28, 70, "Item",ExpressionUUID->"c1c8c99d-b276-44ac-8975-0ed347fcc876"],
-Cell[5494, 163, 211, 5, 70, "Item",ExpressionUUID->"f38f49b8-afbb-4542-bed9-6dbef7c523c2"],
-Cell[5708, 170, 1205, 31, 70, "Text",ExpressionUUID->"3916f8c3-9a73-4db9-a340-cc619e38207c"],
-Cell[6916, 203, 962, 24, 70, "Text",ExpressionUUID->"c4309750-ff2c-497d-876f-276e885d1278"],
-Cell[7881, 229, 3061, 92, 70, "Text",ExpressionUUID->"d0f48a16-13fc-4745-aedf-ea06fb1d09b6"],
-Cell[10945, 323, 338, 8, 70, "Section",ExpressionUUID->"ecee9463-a6df-465e-84ac-4cc686b5a106"],
-Cell[11286, 333, 901, 26, 70, "Subsection",ExpressionUUID->"df5b4f37-1cab-42f2-b176-d93302218d67"],
-Cell[12190, 361, 1618, 48, 70, "Text",ExpressionUUID->"07f928c0-84a8-4b58-abe1-890160d5d21f"],
-Cell[13811, 411, 687, 18, 70, "Input",ExpressionUUID->"1e1dbb2a-e1fa-42d3-9bf7-060cf06f21b9"],
-Cell[14501, 431, 536, 13, 70, "Input",ExpressionUUID->"6ba8515e-e33c-4a28-a21e-e094065b7d85"],
-Cell[15040, 446, 887, 22, 70, "Text",ExpressionUUID->"9a6047a7-d3ce-41b0-8fc9-20fe711d7406"],
-Cell[15930, 470, 674, 16, 70, "Subsection",ExpressionUUID->"44d46785-ec0d-4cfc-9166-caa53e46de9a"],
-Cell[16607, 488, 823, 24, 70, "Text",ExpressionUUID->"9b573cf9-fbcd-4ebc-997f-67afada28c38"],
-Cell[17433, 514, 926, 26, 70, "Input",ExpressionUUID->"eaf28756-f5a4-47e8-9515-8a6c7a15208a"],
-Cell[18362, 542, 593, 16, 70, "Input",ExpressionUUID->"754d2a97-3854-41d1-928a-387fa6d25853"],
-Cell[18958, 560, 2257, 70, 70, "Text",ExpressionUUID->"02a47afa-564a-4ecf-b046-30bd48b08ed4"],
-Cell[21218, 632, 628, 15, 70, "Subsection",ExpressionUUID->"c06bbfb7-93eb-4fe8-9a5f-7551366504de"],
-Cell[21849, 649, 585, 16, 70, "Text",ExpressionUUID->"01e9989d-5045-475f-b050-6f1ff865af0c"],
-Cell[22437, 667, 635, 17, 70, "Input",ExpressionUUID->"4ec14215-5309-4660-bc39-77e991295376"],
-Cell[23075, 686, 1628, 48, 70, "Text",ExpressionUUID->"7dc094f2-fdfb-4f56-a0c7-f0c9622f46b5"],
-Cell[24706, 736, 1034, 32, 70, "Subsection",ExpressionUUID->"1f02ba99-e7ff-4e5a-8491-faa11c83998c"],
-Cell[25743, 770, 1921, 54, 70, "Text",ExpressionUUID->"0ea4d8cc-b679-4254-b6f0-7bee1516b457"],
-Cell[27667, 826, 1485, 41, 70, "Input",ExpressionUUID->"6016f40a-db1a-450c-b0aa-a923006eba15"],
-Cell[29155, 869, 2675, 81, 70, "Text",ExpressionUUID->"336f6a8d-4c92-472a-bcdc-102b75e5c4f5"],
-Cell[31833, 952, 1135, 33, 70, "Subsection",ExpressionUUID->"0350d75b-0571-49fe-968e-387d57c1f639"],
-Cell[32971, 987, 828, 23, 70, "Text",ExpressionUUID->"b70c23b5-a568-4bf4-884c-1f3fd8c1f193"],
-Cell[33802, 1012, 1590, 44, 70, "Input",ExpressionUUID->"a8b020b4-cc45-4152-b99d-350fcba2e6ea"],
-Cell[35395, 1058, 2059, 63, 70, "Text",ExpressionUUID->"85063583-26d4-497e-93e1-76f7c00819a5"],
-Cell[37457, 1123, 953, 27, 70, "Subsection",ExpressionUUID->"3a34517c-1597-400b-9540-c0b4ff74c05a"],
-Cell[38413, 1152, 2086, 58, 70, "Text",ExpressionUUID->"9ddf345a-689d-44bb-af2a-4583a5969d96"],
-Cell[40502, 1212, 2437, 75, 70, "Input",ExpressionUUID->"018844ca-c76e-4827-8d1a-0108fc41f7f6"],
-Cell[42942, 1289, 956, 25, 70, "Text",ExpressionUUID->"3814d3af-6e99-4495-be36-45bf3dc2c800"],
-Cell[43901, 1316, 465, 10, 70, "Subsection",ExpressionUUID->"932ad34f-aebe-4fcb-a6dd-4f06909491c6"],
-Cell[44369, 1328, 1243, 33, 70, "Text",ExpressionUUID->"7c6bcbf1-345c-4f6f-b57f-746d59af65a6"],
-Cell[45615, 1363, 1110, 33, 70, "Input",ExpressionUUID->"b7a7e268-c3d3-4126-a819-d9c65855adef"],
-Cell[46728, 1398, 998, 23, 70, "Text",ExpressionUUID->"c6aca269-2e55-4167-9d00-062e91bad04a"],
-Cell[47729, 1423, 546, 13, 70, "Subsection",ExpressionUUID->"b9876854-d362-45bc-9d5f-9f79514c943e"],
-Cell[48278, 1438, 2089, 63, 70, "Text",ExpressionUUID->"fc47f3ed-600e-4d4b-8739-df5170450277"],
-Cell[50370, 1503, 1321, 41, 70, "Input",ExpressionUUID->"e4f691bb-ee8c-4709-86bc-e175ea33309e"],
-Cell[51694, 1546, 1264, 40, 70, "Input",ExpressionUUID->"ee2f41e4-48b3-4ed0-b92e-a8c3ad2965b7"],
-Cell[52961, 1588, 1660, 45, 70, "Text",ExpressionUUID->"82f7a806-48e8-4a63-bf61-49b6ce354040"],
-Cell[54624, 1635, 602, 16, 70, "Subsection",ExpressionUUID->"9271c24f-2c61-49f9-b2e6-90545651bcca"],
-Cell[55229, 1653, 1859, 56, 70, "Text",ExpressionUUID->"2a0c517f-e7dc-42c1-bfac-69d06370b33e"],
-Cell[57091, 1711, 679, 21, 70, "Input",ExpressionUUID->"fe2c6233-3431-4b3e-828f-566e8d194a8e"],
-Cell[57773, 1734, 909, 27, 70, "Input",ExpressionUUID->"5334547c-d0b8-418e-80be-774a2105c37b"],
-Cell[58685, 1763, 1793, 51, 70, "Text",ExpressionUUID->"8010f43e-a05d-49ff-b605-c44711645ced"],
-Cell[60481, 1816, 146, 2, 70, "Section",ExpressionUUID->"575f7684-9053-4388-86f0-a8ca92461327"],
-Cell[60630, 1820, 739, 18, 70, "Subsection",ExpressionUUID->"a2b7628f-4303-4466-a194-53a7589ba71b"],
-Cell[61372, 1840, 816, 23, 70, "Text",ExpressionUUID->"4dfb9f0b-c9f9-41e2-9f71-d05d2324942a"],
-Cell[62191, 1865, 677, 21, 70, "Input",ExpressionUUID->"f99a6d12-6fc7-4b96-ab41-0dc51ea31953"],
-Cell[62871, 1888, 1840, 53, 70, "Text",ExpressionUUID->"fe372637-9f32-4a0b-9791-1a7cb4c76c01"],
-Cell[64714, 1943, 568, 16, 70, "Subsection",ExpressionUUID->"aed51635-f72f-45a3-ac44-5c569c350ae8"],
-Cell[65285, 1961, 850, 27, 70, "Text",ExpressionUUID->"6bd3e6d2-4a93-497b-b1a2-ce8b0fbe2a3f"],
-Cell[66138, 1990, 365, 10, 70, "Input",ExpressionUUID->"845cf897-cbc1-4f69-8509-7c6cc342aa44"],
-Cell[66506, 2002, 1326, 40, 70, "Text",ExpressionUUID->"4026a38c-1ce2-4000-9d82-4968521a36ce"],
-Cell[67835, 2044, 742, 20, 70, "Subsection",ExpressionUUID->"67962e24-1f6f-4b2b-8e53-976ef1887137"],
-Cell[68580, 2066, 3146, 90, 70, "Text",ExpressionUUID->"ec447f3a-ce36-45a1-9bd8-afd5edcc9c10"],
-Cell[71729, 2158, 2366, 67, 70, "Input",ExpressionUUID->"ec3b26bf-74c9-4134-92cc-5bfb98b1e72d"],
-Cell[74098, 2227, 1510, 40, 70, "Text",ExpressionUUID->"40e92b06-fe4c-4204-a2cb-326faa7479c3"],
-Cell[75611, 2269, 632, 17, 70, "Subsection",ExpressionUUID->"8f85a96c-72f0-4758-83c9-42b287724831"],
-Cell[76246, 2288, 1473, 47, 70, "Text",ExpressionUUID->"20370c3e-037d-4d6a-ac54-b57ffc45f927"],
-Cell[77722, 2337, 1544, 49, 70, "Input",ExpressionUUID->"6584e13f-3b78-4537-bb54-400e9ce2097e"],
-Cell[79269, 2388, 717, 21, 70, "Input",ExpressionUUID->"f26cf46b-c9e6-4ff1-9b71-7ad1c4f8037b"],
-Cell[79989, 2411, 706, 17, 70, "Text",ExpressionUUID->"00f6d20e-b632-4683-b454-ef1f48e4acfb"],
-Cell[80698, 2430, 481, 11, 70, "Subsection",ExpressionUUID->"292b32d6-361e-4321-b8b0-79cdda25a077"],
-Cell[81182, 2443, 2046, 64, 70, "Text",ExpressionUUID->"36666457-c5ca-493a-9357-bf0df5e34003"],
-Cell[83231, 2509, 195, 4, 70, "Input",ExpressionUUID->"60372bec-4778-425c-96c8-0353fc52925c"],
-Cell[83429, 2515, 523, 15, 70, "Input",ExpressionUUID->"a54947c3-7377-484a-97d5-38851c79fda7"],
-Cell[83955, 2532, 1728, 52, 70, "Text",ExpressionUUID->"d5eb989f-de89-4763-bf8b-0db02508c88f"],
-Cell[85686, 2586, 1052, 32, 70, "Subsection",ExpressionUUID->"59c8401e-385e-45cb-b2f4-7ff732c311ec"],
-Cell[86741, 2620, 1869, 58, 70, "Text",ExpressionUUID->"0529923d-07a6-42aa-a40e-501b045be970"],
-Cell[88613, 2680, 659, 18, 70, "Input",ExpressionUUID->"ff0b025f-8abf-465a-a95d-76bfd971c077"],
-Cell[89275, 2700, 714, 22, 70, "Input",ExpressionUUID->"8a5930e7-c60d-451c-b8ba-0d58f5310ef5"],
-Cell[89992, 2724, 2411, 73, 70, "Text",ExpressionUUID->"a40cbb65-ba54-4e08-bdea-abbd480f1089"],
-Cell[92406, 2799, 496, 11, 70, "Subsection",ExpressionUUID->"5076ec97-4b56-46b9-a38e-b20851b9de8a"],
-Cell[92905, 2812, 776, 19, 70, "Text",ExpressionUUID->"a8ec2207-ad50-4080-925d-f52248ea3135"],
-Cell[93684, 2833, 1252, 39, 70, "Input",ExpressionUUID->"8521a682-ae8d-4c10-83dc-b48a192151ae"],
-Cell[94939, 2874, 1895, 56, 70, "Input",ExpressionUUID->"9859665d-c94e-4003-99be-38a7f45ce653"],
-Cell[96837, 2932, 1139, 27, 70, "Text",ExpressionUUID->"5fb8a249-0c9e-4ab4-bc76-cf4d5c0971f8"],
-Cell[97979, 2961, 596, 17, 70, "Subsection",ExpressionUUID->"8187a343-5b78-4608-bea2-8d44dc3c95ea"],
-Cell[98578, 2980, 1343, 41, 70, "Text",ExpressionUUID->"6f3210ee-42ff-47b1-92ce-3f40244582a8"],
-Cell[99924, 3023, 522, 15, 70, "Input",ExpressionUUID->"479dfb14-cc20-4d43-9b69-9059df135fec"],
-Cell[100449, 3040, 2628, 84, 70, "Input",ExpressionUUID->"1af06fa2-17f2-4862-977b-89f3b6c934a5"],
-Cell[103080, 3126, 2661, 80, 70, "Text",ExpressionUUID->"fcf76b3e-d728-4e09-b316-b1c3eb667667"],
-Cell[105744, 3208, 244, 4, 70, "Subsection",ExpressionUUID->"4686dd18-e9f9-40dc-aa93-04c2156ebf92"],
-Cell[105991, 3214, 875, 23, 70, "Text",ExpressionUUID->"fb267662-6f7c-49ec-8678-ded13caad995"],
-Cell[106869, 3239, 1403, 42, 70, "Input",ExpressionUUID->"9fb8d736-1067-4128-bfee-7e89630ff2ea"],
-Cell[108275, 3283, 692, 21, 70, "Input",ExpressionUUID->"1aa7eb5a-85dc-4c39-9933-9fdd69b428e9"],
-Cell[108970, 3306, 2322, 67, 70, "Text",ExpressionUUID->"cef56573-cf26-46bc-ba4c-d12f1703426a"]
+Cell[554, 20, 141, 2, 70, "Title",ExpressionUUID->"99907f72-627f-4c53-9b54-15d30520dbbb"],
+Cell[698, 24, 1346, 35, 70, "Text",ExpressionUUID->"90afb1e4-0970-41dc-b570-292435e7169c"],
+Cell[2047, 61, 622, 11, 70, "Text",ExpressionUUID->"d36615a3-5bdb-4fba-95c3-602a919d28d4"],
+Cell[2672, 74, 1021, 29, 70, "Item",ExpressionUUID->"4a5fc194-8a24-4bdf-b7a1-7d17f8f3ce54"],
+Cell[3696, 105, 846, 26, 70, "Item",ExpressionUUID->"a0ea5085-01d4-4ab0-88ca-7b3af454ec15"],
+Cell[4545, 133, 946, 28, 70, "Item",ExpressionUUID->"8300a6bf-a66e-4932-a3c8-b71e5ae6e767"],
+Cell[5494, 163, 211, 5, 70, "Item",ExpressionUUID->"af4ea7cc-0f41-46fb-95a6-0fb5e1183810"],
+Cell[5708, 170, 1205, 31, 70, "Text",ExpressionUUID->"c42c9dbb-4535-4b7e-8d89-2d28710cf9e9"],
+Cell[6916, 203, 962, 24, 70, "Text",ExpressionUUID->"872f5740-4236-41e9-b080-4a3f864d168e"],
+Cell[7881, 229, 3061, 92, 70, "Text",ExpressionUUID->"a2ba7f91-c7a6-4ad4-afa3-4f17494e0488"],
+Cell[10945, 323, 338, 8, 70, "Section",ExpressionUUID->"269392e2-a452-42c1-8db1-7e5687286642"],
+Cell[11286, 333, 901, 26, 70, "Subsection",ExpressionUUID->"085e5a0b-f8e2-44b2-bda3-134277909982"],
+Cell[12190, 361, 1618, 48, 70, "Text",ExpressionUUID->"efc1b6ec-6a53-4be9-9464-b0bf536d1704"],
+Cell[13811, 411, 687, 18, 70, "Input",ExpressionUUID->"2ca358b9-6f53-49dd-baff-574a99bdef0f"],
+Cell[14501, 431, 536, 13, 70, "Input",ExpressionUUID->"8711d51b-9205-4d7f-875f-953de40639cb"],
+Cell[15040, 446, 887, 22, 70, "Text",ExpressionUUID->"dac1cd2d-0af1-4216-b009-58209cd5242f"],
+Cell[15930, 470, 674, 16, 70, "Subsection",ExpressionUUID->"00791091-8016-44a8-af9b-9a1ee10577ab"],
+Cell[16607, 488, 823, 24, 70, "Text",ExpressionUUID->"38311be5-2574-49d0-9737-a8316b3e7fe5"],
+Cell[17433, 514, 926, 26, 70, "Input",ExpressionUUID->"8f10c392-0c5c-4361-a0f9-86e4e372e23d"],
+Cell[18362, 542, 593, 16, 70, "Input",ExpressionUUID->"5de5a853-a24a-46ce-a4c8-c8198767657b"],
+Cell[18958, 560, 2257, 70, 70, "Text",ExpressionUUID->"b876ee19-fb37-43f1-a607-481cef24f45a"],
+Cell[21218, 632, 628, 15, 70, "Subsection",ExpressionUUID->"daa0e1ee-a196-400d-bd11-10aa45759952"],
+Cell[21849, 649, 585, 16, 70, "Text",ExpressionUUID->"a9174898-24c5-4a82-9b0c-c9521971e43f"],
+Cell[22437, 667, 635, 17, 70, "Input",ExpressionUUID->"ad9b9709-fef1-4503-84fa-9777740a1f47"],
+Cell[23075, 686, 1628, 48, 70, "Text",ExpressionUUID->"fae024bc-49ab-4f4e-919d-a47bfd83a216"],
+Cell[24706, 736, 1034, 32, 70, "Subsection",ExpressionUUID->"64986a28-0d60-4ebb-9b8a-19dcdbc42f9e"],
+Cell[25743, 770, 1921, 54, 70, "Text",ExpressionUUID->"a2bc3975-763d-4dc2-8e21-0bab522e91a8"],
+Cell[27667, 826, 1485, 41, 70, "Input",ExpressionUUID->"5378f3d9-494c-4571-aae2-956e0f92cf4f"],
+Cell[29155, 869, 2675, 81, 70, "Text",ExpressionUUID->"81664cb1-9ec1-4e26-b35d-92734017600f"],
+Cell[31833, 952, 1135, 33, 70, "Subsection",ExpressionUUID->"ec519506-c962-453d-8f19-03ee1def88a8"],
+Cell[32971, 987, 828, 23, 70, "Text",ExpressionUUID->"37cd8061-50a6-4df5-bb8f-c6834085ccaa"],
+Cell[33802, 1012, 1590, 44, 70, "Input",ExpressionUUID->"7643293b-9144-4363-883c-9a251ecb7362"],
+Cell[35395, 1058, 2059, 63, 70, "Text",ExpressionUUID->"e012af24-cde1-4e11-85ed-06a732060237"],
+Cell[37457, 1123, 953, 27, 70, "Subsection",ExpressionUUID->"4fd517c3-acaa-4264-a64b-32d8fa0d0875"],
+Cell[38413, 1152, 2086, 58, 70, "Text",ExpressionUUID->"be36b862-438a-42b6-9ba9-419dd0d6a7d3"],
+Cell[40502, 1212, 2437, 75, 70, "Input",ExpressionUUID->"87d72919-b315-4465-9154-54c05eb5cbd2"],
+Cell[42942, 1289, 956, 25, 70, "Text",ExpressionUUID->"7c413d5b-cf7f-4f97-b3c4-f8e59e0d7a80"],
+Cell[43901, 1316, 465, 10, 70, "Subsection",ExpressionUUID->"c34a7b0e-15ae-4c68-aae0-955f1461bf01"],
+Cell[44369, 1328, 1243, 33, 70, "Text",ExpressionUUID->"ad9a7707-d7ef-493d-8973-610dbb140833"],
+Cell[45615, 1363, 1110, 33, 70, "Input",ExpressionUUID->"1df9ebff-521b-41d4-8088-2f3bd35fc584"],
+Cell[46728, 1398, 998, 23, 70, "Text",ExpressionUUID->"8365f402-1c8e-43fb-8212-f0b4cebcf757"],
+Cell[47729, 1423, 546, 13, 70, "Subsection",ExpressionUUID->"0e9ebbe3-3b3e-4d2c-9a1d-d122c237171f"],
+Cell[48278, 1438, 2089, 63, 70, "Text",ExpressionUUID->"dacd5633-ace9-480f-a498-17c9dfa5f678"],
+Cell[50370, 1503, 1321, 41, 70, "Input",ExpressionUUID->"585d5690-19b8-41db-9318-393858c801ab"],
+Cell[51694, 1546, 1264, 40, 70, "Input",ExpressionUUID->"ac1af5b9-5bbd-4caf-b61c-83d046024cf6"],
+Cell[52961, 1588, 1660, 45, 70, "Text",ExpressionUUID->"20c8a45d-7471-4e30-8dcc-61ffcc1cd6ce"],
+Cell[54624, 1635, 602, 16, 70, "Subsection",ExpressionUUID->"eefa374f-075c-4837-a2ab-4eee1503c2dc"],
+Cell[55229, 1653, 1859, 56, 70, "Text",ExpressionUUID->"415bc5b0-3e61-4801-a567-c28571852bf0"],
+Cell[57091, 1711, 679, 21, 70, "Input",ExpressionUUID->"aa546c94-0664-4c93-b6de-e6f07f6facc7"],
+Cell[57773, 1734, 909, 27, 70, "Input",ExpressionUUID->"b14facb4-2721-417a-b1d1-0ce5490cc51c"],
+Cell[58685, 1763, 1793, 51, 70, "Text",ExpressionUUID->"9578c6bc-3e4f-4900-b06c-7e519e0c308c"],
+Cell[60481, 1816, 146, 2, 70, "Section",ExpressionUUID->"1079afb3-93d8-489f-ad66-2e53e38c0f03"],
+Cell[60630, 1820, 739, 18, 70, "Subsection",ExpressionUUID->"4201dc61-2a7e-4120-82a0-e22735555919"],
+Cell[61372, 1840, 816, 23, 70, "Text",ExpressionUUID->"79ec590c-afca-49d0-bafe-923c1a360cb9"],
+Cell[62191, 1865, 677, 21, 70, "Input",ExpressionUUID->"fbdec02e-da11-4717-a51b-62ca8c207b2b"],
+Cell[62871, 1888, 1840, 53, 70, "Text",ExpressionUUID->"1b60fe34-a38c-4937-a32e-6402212f320c"],
+Cell[64714, 1943, 568, 16, 70, "Subsection",ExpressionUUID->"c0a4104b-c1c1-45e5-b662-1d8a6c857a78"],
+Cell[65285, 1961, 850, 27, 70, "Text",ExpressionUUID->"cbc9b1a2-085a-4f5f-8f25-1056ed9518d8"],
+Cell[66138, 1990, 365, 10, 70, "Input",ExpressionUUID->"8749d31a-2d65-4078-ba26-32de979ce7f7"],
+Cell[66506, 2002, 1326, 40, 70, "Text",ExpressionUUID->"9c422a5f-ff5d-44ed-ba69-1f5db3724869"],
+Cell[67835, 2044, 742, 20, 70, "Subsection",ExpressionUUID->"45678ee7-ebbf-428d-9c43-6352b24cb861"],
+Cell[68580, 2066, 3146, 90, 70, "Text",ExpressionUUID->"5f0ae488-a665-4590-b02c-7117a8cac6f9"],
+Cell[71729, 2158, 2366, 67, 70, "Input",ExpressionUUID->"79a2ad54-890b-4196-a932-404565b615e6"],
+Cell[74098, 2227, 1510, 40, 70, "Text",ExpressionUUID->"d8f8563a-7802-445a-8c82-a082e9454407"],
+Cell[75611, 2269, 632, 17, 70, "Subsection",ExpressionUUID->"52fef10e-edd4-4a04-aa76-985252332cd0"],
+Cell[76246, 2288, 1451, 43, 70, "Text",ExpressionUUID->"939670ce-fa3e-4caa-9e39-547a29f27d82"],
+Cell[77700, 2333, 1215, 37, 70, "Input",ExpressionUUID->"f7044712-1a22-4ed7-848a-da02f46c8fd1"],
+Cell[78918, 2372, 1255, 37, 70, "Input",ExpressionUUID->"f622a7c0-6cc4-4549-b941-159c2c70aef7"],
+Cell[80176, 2411, 789, 20, 70, "Text",ExpressionUUID->"10c53397-59ca-4236-8c13-59281cddc568"],
+Cell[80968, 2433, 481, 11, 70, "Subsection",ExpressionUUID->"69bc3532-5012-439c-b4af-13afd91744ff"],
+Cell[81452, 2446, 2046, 64, 70, "Text",ExpressionUUID->"784cf581-e5e8-4505-9868-5559f9a2d2bc"],
+Cell[83501, 2512, 195, 4, 70, "Input",ExpressionUUID->"c376f2b4-8dbf-43ba-b290-35aaaeedc183"],
+Cell[83699, 2518, 523, 15, 70, "Input",ExpressionUUID->"ceab8680-7a56-4f8d-b5d1-2050e5da54c5"],
+Cell[84225, 2535, 1728, 52, 70, "Text",ExpressionUUID->"ae43f353-69cd-4764-b2f6-9c37623b886f"],
+Cell[85956, 2589, 1052, 32, 70, "Subsection",ExpressionUUID->"78919765-2be5-47a9-9ca4-e1a16ae3d57a"],
+Cell[87011, 2623, 1869, 58, 70, "Text",ExpressionUUID->"58bd80bf-5c8f-45ab-be5a-d949597ffc5f"],
+Cell[88883, 2683, 659, 18, 70, "Input",ExpressionUUID->"fb24848e-7210-45fe-a857-7b87b99a4135"],
+Cell[89545, 2703, 714, 22, 70, "Input",ExpressionUUID->"f5a062b7-db97-4602-9e97-63443a82da02"],
+Cell[90262, 2727, 2411, 73, 70, "Text",ExpressionUUID->"df955837-c85f-4aa8-aa83-c2d482823931"],
+Cell[92676, 2802, 496, 11, 70, "Subsection",ExpressionUUID->"1a6f8a42-3481-4fde-8b43-60cbb4d5b67a"],
+Cell[93175, 2815, 776, 19, 70, "Text",ExpressionUUID->"95edc319-a919-4c86-8f1b-fbbddefde924"],
+Cell[93954, 2836, 1252, 39, 70, "Input",ExpressionUUID->"4a7afc53-3ee7-4234-a53b-a92825caade1"],
+Cell[95209, 2877, 1895, 56, 70, "Input",ExpressionUUID->"4565eb4c-ae91-4fa6-a13d-f617a5015730"],
+Cell[97107, 2935, 1139, 27, 70, "Text",ExpressionUUID->"aa190907-57b5-49d7-82a7-f21f8a557458"],
+Cell[98249, 2964, 596, 17, 70, "Subsection",ExpressionUUID->"1b9327ec-c344-4b65-bdde-ced0139f6d4f"],
+Cell[98848, 2983, 1343, 41, 70, "Text",ExpressionUUID->"73ae81a8-2fc3-4dee-a1aa-0fb7e87c8d5b"],
+Cell[100194, 3026, 522, 15, 70, "Input",ExpressionUUID->"c0bda954-c9cf-41fd-9266-7c766248213d"],
+Cell[100719, 3043, 2628, 84, 70, "Input",ExpressionUUID->"eb2ba346-b240-4cad-90c4-83d9fae13e73"],
+Cell[103350, 3129, 2661, 80, 70, "Text",ExpressionUUID->"af114a1d-1bc8-4972-b2cd-20e260bfcb9d"],
+Cell[106014, 3211, 244, 4, 70, "Subsection",ExpressionUUID->"636538b9-d7a4-475d-8e84-c89c1ab035bd"],
+Cell[106261, 3217, 875, 23, 70, "Text",ExpressionUUID->"b119cf38-29ff-4e46-addd-432fb08c00fa"],
+Cell[107139, 3242, 1403, 42, 70, "Input",ExpressionUUID->"6fe54b65-d620-4ac8-a8ca-369e667e0142"],
+Cell[108545, 3286, 692, 21, 70, "Input",ExpressionUUID->"ec2353b6-b829-4b42-adfe-2d9ab63a17ca"],
+Cell[109240, 3309, 2322, 67, 70, "Text",ExpressionUUID->"758cbc58-1c76-407c-9888-13d05895fe8f"]
 }
 ]
 *)

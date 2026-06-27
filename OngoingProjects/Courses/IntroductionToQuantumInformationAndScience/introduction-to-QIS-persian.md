@@ -1796,19 +1796,7 @@ With[{n = {Cos[\[Phi]] Sin[\[Theta]], Sin[\[Phi]] Sin[\[Theta]],
 ```wl
 ClearAll[A, B];
 Grid[Table[{Subscript["\[ScriptCapitalW]", n], 
-   TraditionalForm@ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-        "ShortName" -> "ZassenhausTerms", 
-        "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-        "ResourceType" -> "Function", "Version" -> "1.1.0", 
-        "Description" -> "Generate terms in the Zassenhaus formula", 
-        "RepositoryLocation" -> URL[
-         "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-        "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-        "FunctionLocation" -> CloudObject[
-         "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, ResourceSystemBase -> Automatic]][{ A, B}, n, 
+   TraditionalForm@ResourceFunction["ZassenhausTerms"][{ A, B}, n, 
      "CommutatorForm" -> True]}, {n, 2, 4}], Frame -> All, 
  Alignment -> Left]
 ```
@@ -1820,20 +1808,7 @@ f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms",
 ```wl
 ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 3])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 3])/
       2 PauliMatrix[3], (-I Subscript[\[Theta], 2])/2 PauliMatrix[2]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]
 ```
@@ -1843,20 +1818,7 @@ f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms",
 ```wl
 ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 2])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 2])/
       2 PauliMatrix[2], (-I Subscript[\[Theta], 3])/2 PauliMatrix[3]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]
 ```
@@ -2884,7 +2846,7 @@ Plot[Erf[x], {x, -5, 5}, AspectRatio -> 1/3, GridLines -> Automatic,
  PlotLabel -> "Error function"]
 ```
 
-تحمیلِ شرطِ $t\gg \mu \gg \tau$ تضمین می‌کند که تابع‌های خطا در پاسخِ دقیق اشباع شوند: $Erf[t-\mu /\sqrt{2}\tau ]\to 1$ و $Erf[\mu /\sqrt{2}\tau ]\to 1$. در این حد، پالسِ گاوسی عملاً به‌طورِ کامل درونِ پنجرهٔ زمانیِ $[0,t]$ جای می‌گیرد، و دینامیک کلِ پالس را «می‌بیند». بنابراین، پاسخِ بالا را می‌توان با $(\, \begin{matrix}cos(\sqrt{\pi /2}\, \tau \, \omega_{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega_{x})\end{matrix}\, )$ تقریب زد. با استفاده از این واقعیت که مساحتِ زیرِ پوشینهٔ گاوسی $\sqrt{2\pi }\tau$ است، یکانیِ تولیدشده توسطِ پالس را می‌توان به‌صورتِ $e^{-i/2\int_{0}^{t}\omega_{x}(s)ds\, \sigma_{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega_{x}/2\, \sigma_{x}}$ تقریب زد که همان نتیجه را بازتولید می‌کند. پس در این رژیم، پالسِ گاوسی همانندِ یک پالسِ X رفتار می‌کند که زاویه‌اش با مساحتِ مؤثرِ پالس، یعنی $\sqrt{2\pi }\tau \, \omega_{x}$، تعیین می‌شود.
+تحمیلِ شرطِ $t\gg \mu \gg \tau$ تضمین می‌کند که تابع‌های خطا در پاسخِ دقیق اشباع شوند: $Erf[t-\mu /\sqrt{2}\tau ]\to 1$ و $Erf[\mu /\sqrt{2}\tau ]\to 1$. در این حد، پالسِ گاوسی عملاً به‌طورِ کامل درونِ پنجرهٔ زمانیِ $[0,t]$ جای می‌گیرد، و دینامیک کلِ پالس را «می‌بیند». بنابراین، پاسخِ بالا را می‌توان با $\begin{pmatrix}cos(\sqrt{\pi /2}\, \tau \, \omega_{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega_{x})\end{pmatrix}$ تقریب زد. با استفاده از این واقعیت که مساحتِ زیرِ پوشینهٔ گاوسی $\sqrt{2\pi }\tau$ است، یکانیِ تولیدشده توسطِ پالس را می‌توان به‌صورتِ $e^{-i/2\int_{0}^{t}\omega_{x}(s)ds\, \sigma_{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega_{x}/2\, \sigma_{x}}$ تقریب زد که همان نتیجه را بازتولید می‌کند. پس در این رژیم، پالسِ گاوسی همانندِ یک پالسِ X رفتار می‌کند که زاویه‌اش با مساحتِ مؤثرِ پالس، یعنی $\sqrt{2\pi }\tau \, \omega_{x}$، تعیین می‌شود.
 
 
 ## بخشِ چهارم: سامانه‌های باز و اندازه‌گیریِ پیوسته
@@ -3479,19 +3441,7 @@ FullSimplify[
 برای مقدارهای $\omega_{x}$ و $\gamma$ که در شبیه‌سازی‌های بالا به کار بردیم، معادلهٔ لیندبلاد را به‌صورتِ عددی حل کنید:
 
 ```wl
-\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    DensityMatrix[FromSphericalCoordinates[{1, \[Pi]/4, 0}]], {t, 0, 
     10}]]
@@ -3528,19 +3478,7 @@ Legended[Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 200],
 دینامیکِ بردار بلاخ را برای مقدارهای گوناگونِ $\omega_{x}$ و $\gamma$ تصویر کنید:
 
 ```wl
-Manipulate[state = ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+Manipulate[state = ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    1/2 (IdentityMatrix[2] + 
       FromSphericalCoordinates[{1, \[Pi]/4, 0}] . 
@@ -3613,7 +3551,7 @@ randomTermsCollapseSDE =
 randomTermsCollapseSDE // MatrixForm
 ```
 
-بنابراین، مؤلفه‌های بردار بلاخ در مختصاتِ دکارتی از SDE ایتوی $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=(\, \begin{matrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega_{x} \\ y\, \omega_{x}\end{matrix}\, )dt+\sqrt{\gamma }(\, \begin{matrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{matrix}\, )dW_{t}$ پیروی می‌کنند، که در آن روِش زوال جبری و چرخشِ هامیلتونی را در بر می‌گیرد، و جملهٔ نوفه پس‌کنشِ اندازه‌گیری را همچون یک پخشِ وابسته‌به‌حالت روی گویِ بلاخ رمزگذاری می‌کند. برای کارِ عددی، مختصاتِ دکارتی اغلب بدرفتارند: گسسته‌سازی می‌تواند مسیر را به بیرونِ کرهٔ بلاخ هل دهد و بردارهای بلاخ با طولِ بزرگ‌تر از یک، و در نتیجه ماتریس‌های چگالیِ ناغیرفیزیکی، تولید کند. برای سرکوبِ این مصنوع‌ها، بهتر است به یک سامانهٔ مختصات (مانندِ مختصاتِ کروی) سوییچ کنیم که متغیرهایش به‌طورِ مستقیم‌تر قیدهای هندسیِ فضای حالت را رعایت می‌کنند. گامِ فنیِ کلیدی آنگاه تبدیلِ این SDE ایتو از $\{x,y,z\}$ به $\{r,\theta ,\phi \}$ است، با این توجه که قاعده‌های زنجیره‌ایِ معمولی در حسابِ ایتو کاربرد ندارند و تبدیل باید با لمِ ایتو، که شاملِ جمله‌های تصحیحیِ مرتبهٔ دومِ تولیدشده توسطِ نوفه است، انجام شود. برای این کار، به هر دوی ماتریسِ [ژاکوبی](https://mathworld.wolfram.com/Jacobian.html) و تانسورِ [هِسی](https://mathworld.wolfram.com/Hessian.html) نیاز داریم. ژاکوبی را پیش‌تر محاسبه کردیم، اما این بار بیایید آن را با رویکردی متفاوت بازاستخراج کنیم.
+بنابراین، مؤلفه‌های بردار بلاخ در مختصاتِ دکارتی از SDE ایتوی $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=\begin{pmatrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega_{x} \\ y\, \omega_{x}\end{pmatrix}dt+\sqrt{\gamma }\begin{pmatrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{pmatrix}dW_{t}$ پیروی می‌کنند، که در آن روِش زوال جبری و چرخشِ هامیلتونی را در بر می‌گیرد، و جملهٔ نوفه پس‌کنشِ اندازه‌گیری را همچون یک پخشِ وابسته‌به‌حالت روی گویِ بلاخ رمزگذاری می‌کند. برای کارِ عددی، مختصاتِ دکارتی اغلب بدرفتارند: گسسته‌سازی می‌تواند مسیر را به بیرونِ کرهٔ بلاخ هل دهد و بردارهای بلاخ با طولِ بزرگ‌تر از یک، و در نتیجه ماتریس‌های چگالیِ ناغیرفیزیکی، تولید کند. برای سرکوبِ این مصنوع‌ها، بهتر است به یک سامانهٔ مختصات (مانندِ مختصاتِ کروی) سوییچ کنیم که متغیرهایش به‌طورِ مستقیم‌تر قیدهای هندسیِ فضای حالت را رعایت می‌کنند. گامِ فنیِ کلیدی آنگاه تبدیلِ این SDE ایتو از $\{x,y,z\}$ به $\{r,\theta ,\phi \}$ است، با این توجه که قاعده‌های زنجیره‌ایِ معمولی در حسابِ ایتو کاربرد ندارند و تبدیل باید با لمِ ایتو، که شاملِ جمله‌های تصحیحیِ مرتبهٔ دومِ تولیدشده توسطِ نوفه است، انجام شود. برای این کار، به هر دوی ماتریسِ [ژاکوبی](https://mathworld.wolfram.com/Jacobian.html) و تانسورِ [هِسی](https://mathworld.wolfram.com/Hessian.html) نیاز داریم. ژاکوبی را پیش‌تر محاسبه کردیم، اما این بار بیایید آن را با رویکردی متفاوت بازاستخراج کنیم.
 
 ژاکوبیِ $\mathcal{J}=\partial (r,\theta ,\phi )/\partial (x,y,z)$ را محاسبه کنید:
 
@@ -3678,7 +3616,7 @@ newABForIto =
 \[Rho]CollapseSDESpherical // ProcessParameterQ
 ```
 
-بنابراین، SDE شکلِ ایتو برای مختصاتِ کروی چنین است: $(\, \begin{matrix}dr \\ d\theta \\ d\phi \end{matrix}\, )=(\, \begin{matrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega_{x}\, sin(\phi ) \\ -\omega_{x}\, cot(\theta )\, cos(\phi )\end{matrix}\, )dt+(\, \begin{matrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{matrix}\, )dW_{t}$. در این SDE، گاما تعیین می‌کند که اطلاعات دربارهٔ مقدارِ ویژهٔ پاؤلی-Z چقدر سریع کسب می‌شود، و $\omega_{x}$ تعیین می‌کند که هامیلتونی چقدر سریع می‌کوشد جمعیت را از پایهٔ ویژهٔ پاؤلی-Z بیرون بچرخاند. این رقابت تقریباً به‌طورِ کامل با نسبتِ بی‌بعدِ $\omega_{x}/\gamma$ کنترل می‌شود. وقتی $\gamma$ چیره است ($\gamma \gg \omega_{x}$)، اندازه‌گیری به‌سرعت حالت را خالص و جای‌گزیده می‌کند. این پیشاپیش مستقیماً در معادلهٔ $dr$ دیده می‌شود، زیرا هر جمله در $r^{2}-1$ ضرب شده: وقتی $r=1$ شعاع منجمد است (حالت‌های خالص خالص می‌مانند)، حال آنکه برای $r<1$ دینامیک $r$ را در یک مقیاسِ زمانیِ تعیین‌شده با $1/\gamma$ به‌سوی $1$ بالا می‌راند. در همان حال، دینامیکِ زاویه‌ای $\theta$ را به‌سوی $0$ یا $\pi$ هل می‌دهد، یعنی حالت نزدیکِ حالت‌های ویژهٔ اندازه‌گیری $z\approx +1$ یا $z\approx -1$ جای‌گزیده می‌شود. همین‌که نزدیکِ یک قطب است، جملهٔ تصادفی در $d\theta$ ضعیف می‌شود زیرا متناسب با $sin(\theta )$ است، پس قطب‌ها عملاً نقطه‌های پایانیِ پایدارند: این همان چیزی است که «فروریزش» در مسیرهای منفرد به نظر می‌رسد، فلات‌های بلندِ نزدیکِ $z=\pm 1$ پس از یک گذرای کوتاه.
+بنابراین، SDE شکلِ ایتو برای مختصاتِ کروی چنین است: $\begin{pmatrix}dr \\ d\theta \\ d\phi \end{pmatrix}=\begin{pmatrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega_{x}\, sin(\phi ) \\ -\omega_{x}\, cot(\theta )\, cos(\phi )\end{pmatrix}dt+\begin{pmatrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{pmatrix}dW_{t}$. در این SDE، گاما تعیین می‌کند که اطلاعات دربارهٔ مقدارِ ویژهٔ پاؤلی-Z چقدر سریع کسب می‌شود، و $\omega_{x}$ تعیین می‌کند که هامیلتونی چقدر سریع می‌کوشد جمعیت را از پایهٔ ویژهٔ پاؤلی-Z بیرون بچرخاند. این رقابت تقریباً به‌طورِ کامل با نسبتِ بی‌بعدِ $\omega_{x}/\gamma$ کنترل می‌شود. وقتی $\gamma$ چیره است ($\gamma \gg \omega_{x}$)، اندازه‌گیری به‌سرعت حالت را خالص و جای‌گزیده می‌کند. این پیشاپیش مستقیماً در معادلهٔ $dr$ دیده می‌شود، زیرا هر جمله در $r^{2}-1$ ضرب شده: وقتی $r=1$ شعاع منجمد است (حالت‌های خالص خالص می‌مانند)، حال آنکه برای $r<1$ دینامیک $r$ را در یک مقیاسِ زمانیِ تعیین‌شده با $1/\gamma$ به‌سوی $1$ بالا می‌راند. در همان حال، دینامیکِ زاویه‌ای $\theta$ را به‌سوی $0$ یا $\pi$ هل می‌دهد، یعنی حالت نزدیکِ حالت‌های ویژهٔ اندازه‌گیری $z\approx +1$ یا $z\approx -1$ جای‌گزیده می‌شود. همین‌که نزدیکِ یک قطب است، جملهٔ تصادفی در $d\theta$ ضعیف می‌شود زیرا متناسب با $sin(\theta )$ است، پس قطب‌ها عملاً نقطه‌های پایانیِ پایدارند: این همان چیزی است که «فروریزش» در مسیرهای منفرد به نظر می‌رسد، فلات‌های بلندِ نزدیکِ $z=\pm 1$ پس از یک گذرای کوتاه.
 
 پارامترهای فرایندِ تصادفی را در رژیمِ اندازه‌گیریِ قوی ($\gamma \gg \omega_{x}$) تعیین کنید:
 

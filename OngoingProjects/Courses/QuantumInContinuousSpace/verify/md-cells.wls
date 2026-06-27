@@ -60,11 +60,11 @@ p2 = Integrate[Abs[D[\[Psi][x], x]]^2, {x, -Infinity, Infinity}, Assumptions -> 
 WriteString[$Output,"=== 2.4 ===\n"];
 \[Phi][x_] := Sech[x]/Sqrt[2];
 \[Chi][x_] := Sech[x - 1] Exp[I x]/Sqrt[2];
-Integrate[Conjugate[\[Phi][x]] (-I D[\[Chi][x], x]), {x, -Infinity, Infinity}] -
-  Integrate[Conjugate[-I D[\[Phi][x], x]] \[Chi][x], {x, -Infinity, Infinity}]
-WriteString[$Output,"=== 2.4 ===\n"];
 Limit[-I Conjugate[\[Phi][x]] \[Chi][x], x -> Infinity] -
   Limit[-I Conjugate[\[Phi][x]] \[Chi][x], x -> -Infinity]
+WriteString[$Output,"=== 2.4 ===\n"];
+Chop[NIntegrate[Conjugate[\[Phi][x]] (-I D[\[Chi][x], x]), {x, -Infinity, Infinity}, WorkingPrecision -> 30] -
+     NIntegrate[Conjugate[-I D[\[Phi][x], x]] \[Chi][x], {x, -Infinity, Infinity}, WorkingPrecision -> 30]]
 WriteString[$Output,"=== 2.5 ===\n"];
 FourierTransform[1, x, q]
 WriteString[$Output,"=== 2.5 ===\n"];

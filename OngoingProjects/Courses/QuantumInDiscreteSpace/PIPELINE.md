@@ -1,7 +1,85 @@
 # Pipeline & Brief: "Quantum in Discrete Space" QF comprehensive-exam manual
 
-This file is the reusable brief and the build tracker. The deliverable is
-`Quantum-in-Discrete-Space-QF-Comprehensive-Exam.md`.
+This file is the reusable brief and the build tracker. Original deliverable:
+`Quantum-in-Discrete-Space-QF-Comprehensive-Exam.md`. Spun-off deliverables in this folder:
+`Question-List.md` (the curriculum) and `Quantum-in-Finite-Dimensions-WL-and-QF-Answers.md`(+`.nb`)
+(the two-answer key). The section just below distills the DNA the latter is built on.
+
+## Answer-key design DNA (foundational principles, dialectically distilled; govern Parts 3-25 and future WL teaching-docs)
+
+Distilled by a two-agent dialectic (one agent boiled each session directive to an example-independent
+principle, the other generalized it, named its failure mode, and transferred it to later Parts). The
+through-line is **faithfulness + generality + transparency + verification**. Each rule is stated
+*independently of the example that produced it* so it carries to any Part or topic; that carrying is
+itself the last principle. **Format premise:** every question gets a native-WL answer and a QF answer,
+agreeing by *exact* equality (WL===QF), proven in-kernel, so the bare linear algebra and the object
+model stand side by side. Each principle below names the failure mode it prevents.
+
+**Content and pedagogy**
+1. **Reader computes, never reads the conclusion.** Withhold the worded result; the learner runs or
+   derives it. Test: *could the reader have written this sentence before evaluating the cell?* If yes,
+   it is a spoiler, cut it. (Failure: spoiler prose, the key answers itself.)
+2. **Derive from definitions; never restate the result as the premise.** The definition is the
+   starting point; the formula/value is the computed conclusion. (Failure: question-begging, premise = conclusion.)
+3. **Maximize generality: symbolic over numeric** wherever the kernel allows ($\alpha,\beta,\theta,\phi$,
+   a generic Hermitian $\{\{a_1,a_2+ia_3\},\dots\}$); a number is an incidental instance of the general
+   case. (Failure: premature numerics, a fact stated too narrowly to generalize.)
+4. **Discriminating examples only.** An example is valid iff *toggling the operation under study
+   changes the rendered output*; otherwise it is degenerate (complex amplitudes so conjugation bites,
+   unequal weights so the Born rule discriminates, off-axis states, non-commuting operators).
+   (Failure: degenerate witness, the example is a silent no-op.)
+5. **Atomicity: one concept per question, one computation per cell.** A single mathematical object (a
+   vector, a distribution, one boolean, a tight derivation chain like ip/|ip|/|ip|^2) stays whole; a
+   list of *independent* computations splits into separate captioned cells. (Failure: concept bundling, a miss cannot be localized.)
+6. **Physicist register.** Open with the physics (what the operator *does* to the state); gloss or
+   banish software-engineering jargon. (Failure: register mismatch.)
+
+**Code and tool craft (trust the object)**
+7. **Minimal idiomatic tool** = the lightest construct whose *own representation still exhibits the
+   property under study*; escalate to a heavier abstraction only when it is itself the minimal faithful
+   form (a `QuantumChannel` for a channel, but a plain `QuantumOperator`, not a channel, for a unitary).
+   (Failure: abstraction inflation, ceremony obscures the physics.)
+8. **Code is the explanation: explicit and inline, no hidden helper definitions.** If a step matters it
+   is visible at the call site. (Failure: off-screen magic, the load-bearing step is invisible.)
+9. **Let the abstraction do its work.** Compute from the object's own properties/behavior, never a
+   hand-rolled proxy or hardcoded literal (`Normalize` not `/Sqrt[d]`; named states; `state == state`
+   not a `ProbabilitiesList` comparison; `EigenvalueDecomposition`/`PauliDecompose`). (Failure: proxy drift, the stand-in and the object diverge unnoticed.)
+10. **Show the object, not a matrix of it.** Render the object (assign without `;` so the summary box
+    displays); a matrix/amplitude-vector is one view read from it. Stay operator-level (`==`, `@`,
+    `Commutator`). (Failure: flattening, the rich structure that is the point is thrown away.)
+11. **Well-posed and precisely named.** Unambiguous referents ("the partial trace over $B$"); name a
+    property in prose as `"X"` or `obj["X"]`, NEVER a bare bracket `["X"]` (strict, qf skill 0.5).
+    (Failure: ambiguous referent.)
+12. **Valid delimited TeX, no em/en dash (build correctness, not style).** Malformed `$...$` fails to
+    render; Unicode math in prose is wrong by policy. (Failure: render rot, the published artifact silently breaks.)
+
+**The Output Boundary** (reconciles 1 with 8/10): withhold the *worded answer*; render the *object the
+code produces*. The summary box, tableau, plot, or entropy value is the computation the reader is meant
+to obtain, not a spoiler of it. "Drop outputs" means drop worded answers, never rendered objects.
+
+**Curriculum (the question list)**
+13. **Complete and dependency-ordered.** Cover the whole declared scope; every prerequisite precedes
+    its first use (no forward reference); one concept per question; tag [BSc]/[MSc]. (Failure: scope hole or forward-reference.)
+
+**Verification and process**
+14. **Run the user's literal first; verify, don't recall.** Test the exact supplied token/value before
+    "correcting" it; never overwrite supplied ground truth from memory; aim the first check at the
+    load-bearing premise, before asserting. (Failure: confabulated correction, e.g. AntiCommutator over the real Anticommutator.)
+15. **Fix the cause, not the symptom.** When something was missed or wrong, diagnose the gap-generating
+    cause so it cannot recur. (Failure: whack-a-mole patching.)
+16. **Fresh-context adversarial review before "done."** Hand finished WL work to a clean-context
+    reviewer that reproduces every claim in a kernel (`wl-verifier` / `/wl-verify` / `quantum-review`).
+    (Failure: self-certification, the author who erred grades the work.)
+17. **Single source, standard pipeline.** The literate `.md` (with a `Template:` key, here `Default`)
+    is canonical; regenerate the `.nb` via `MarkdownToNotebook[src,out,"Evaluate"->False]` (md2nb),
+    never hand-edit it; read it back to confirm structure and clean re-evaluation. (Failure: source desync.)
+18. **Spin off out-of-scope work; don't gold-plate inline.** A kernel bug or adjacent topic surfaced
+    mid-Part becomes a separate task, not a detour. (Failure: scope creep.)
+
+**Carrier**
+19. **Principles transfer, instances don't.** Apply every rule above list-wide and to later Parts
+    without being re-prompted; a one-off correction is a standing policy in disguise. This rule
+    transports 1-18 to Parts 3-25 untouched. (Failure: instance myopia, re-litigating the same rule per item.)
 
 ## DRAFT BRIEF
 
@@ -192,8 +270,115 @@ Abs[Normalize[{a,b}]]^2 on the WL side); ["Norm"]/["Normalize"] symbolic; == ret
 for global-phase-equal states (=== False); (bra@ket)["Scalar"] gives the RAW (unnormalized) inner
 product a2 Conj[a1]+b2 Conj[b1]; ["BlochVector"] & ["BlochSphericalCoordinates"] FullSimplify (with
 0<theta<Pi && -Pi<phi<Pi) to {Sin t Cos p,...} and {1,theta,phi}. Part 1 rewritten symbolic, /wl-verify
-OPEN ISSUES 0 (3 verifier rounds total across the pilot's revisions). FORMAT SETTLED. Next: Parts 2-25
-(~185 questions x 2) on these rules.
+OPEN ISSUES 0 (3 verifier rounds total across the pilot's revisions). FORMAT SETTLED.
+
+**Part 2 (Observables, spectra, approximation; 13 Q x 2 answers) DONE.** Applied all Part-1 lessons.
+Verified-live QF operator API: operator algebra `a @ b` = product, `+/-` combine, `["Matrix"]//Normal`;
+symbolic QuantumOperator accepted; `["HermitianQ"]`, `["Eigenvalues"]`, `["Eigenvectors"]`,
+`["Eigensystem"]`, `["PauliDecompose"]` (assoc); NO `"Variance"` measurement prop (compute <A^2>-<A>^2);
+multi-qubit operator = `QuantumTensorProduct[qoA, qoB]` (the `\[CircleTimes]`/`QuantumOperator[{"X","X"}]`
+forms do NOT work). Answers: 2.1 commutator/anticommutator (explicit a.b-b.a, QF @ algebra); 2.2 Levi-
+Civita Outer (user's idiom); 2.3 HermitianQ + real-spectrum proof; 2.4 spectral decomp reconstruction;
+2.5 functional calculus FROM the spectral definition + ==MatrixFunction check; 2.6 <sigma_z>=cos th,
+Var=sin^2 th; 2.7 resolution of identity; 2.8 XX/ZZ commute, Bell simultaneous eigenbasis; 2.9 Z(x)I,
+I(x)Z CSCO joint spectrum; 2.10 Hilbert-Schmidt c_j=Tr[sigma_j A]/2 vs QF PauliDecompose; 2.11 Rayleigh-
+Ritz (Minimize reaches E0=-Sqrt2); 2.12 RS-PT 1st {w,-w} + 2nd order; 2.13 avoided crossing gap
+2 Sqrt[Delta^2+lambda^2]. Full file (Parts 1+2) extract-run = 46 cells exit 0 ZERO messages, WL===QF on
+all. psmallmatrix->pmatrix for GitHub KaTeX. 2.1 also shows the built-ins {Commutator[a,b,Dot],
+Anticommutator[a,b,Dot]} per user; NOTE the System symbol is **Anticommutator** (lowercase c) and
+Commutator; **AntiCommutator (capital C) does NOT exist** (I wrongly "corrected" the user's correct
+lowercase spelling from memory -> verify-don't-recall failure; the kernel and Names["*ommutator*"] settled
+it). wl-verifier (fresh-context adversarial) OPEN ISSUES 0 (confirmed all 13 WL===QF, the Anticommutator
+built-in, the physics, no helpers/hardcoding/Fidelity, Part 1 unregressed). PARTS 1+2 DONE & VERIFIED.
+
+**Style rule (6b), QF results are OBJECTS not matrices (user feedback on 2.1):** a QF answer should
+return/keep the rich object (QuantumOperator, QuantumState), NOT collapse it to `["Matrix"]//Normal`
+as the deliverable. Show a matrix/vector only as ONE representation and say the object is richer (it
+acts on a target state, carries its qubit Order, answers ["HermitianQ"]/["Eigenvalues"]/["Dagger"],
+changes basis, composes). 2.1 QF rewritten to return {Commutator[a,b], a@b+b@a} (two QuantumOperators)
++ a richness cell (c=[X,Y]=2iZ: c[|0>]=2i|0>, HermitianQ False, Eigenvalues {2i,-2i} = anti-Hermitian,
+Matrix=2i sigma_z shown LAST). Intro updated with the principle. 2.8/2.9 commute test changed from
+matrix extraction to operator equality `a @ b == b @ a`.
+**Verified-live QF operator facts:** `Commutator[qoA,qoB]` REDUCES to a QuantumOperator (QF teaches the
+System `Commutator` its operator product); `Anticommutator[qoA,qoB]` does NOT reduce (Head Plus, stays
+`qo**qo+qo**qo` with NonCommutativeMultiply which QF never defines) -> write the anticommutator as
+`a @ b + b @ a`. QF operator `==` is a meaningful exact equality: `a@b==b@a` is True for commuting,
+False otherwise (use it for commute tests, not matrix compares). QF Dot (`.`) is NOT defined for
+operators (stays symbolic); use `@` for the operator product. 47-cell full-file extract-run exit 0 zero
+messages; wl-verifier OPEN ISSUES 0 (confirmed the object-returns, the Commutator/Anticommutator
+asymmetry, operator==, no regression).
+
+**Style rule (7), DERIVE the answer, never HARDCODE the thing the question asks you to find (user
+flagged 2.8).** 2.8 asks to FIND the simultaneous eigenbasis; the old answer hardcoded the Bell basis
+(bell={{1,0,0,1},...}) and just checked it. Fixed: since X(x)X and Z(x)Z are each degenerate (eigs +-1
+doubled), DIAGONALIZE a generic non-degenerate combination `Eigenvectors[a + Pi b]` -> the eigenvectors
+ARE the simultaneous eigenbasis (the Bell states fall out, derived not assumed). QF object-native check:
+each found QuantumState v satisfies `a[v] == v` (state == is up-to-phase, valid here because eigs +-1
+are unit-modulus; returns False for a non-eigenstate, so it discriminates). 2.2 QF also switched to the
+user's fully operator-level form: With[{sigma=...},{com=Outer[Commutator[#1,#2]&,sigma,sigma,1]},
+Table[com[[i,j]]==2 I Sum[LeviCivita[[i,j,k]] sigma[[k]],{k,3}],...]] -> 3x3 all True, no ["Matrix"].
+(3-arg With sets a global `com` via inner Set; harmless, only used in that cell.) wl-verifier OPEN
+ISSUES 0 (no hardcoded bell in code; eigenstate test has teeth; no regression).
+**2.4 now uses EigenvalueDecomposition (user suggestion, doc read + kernel-verified).** EVD facts
+(verified live, not recalled): `EigenvalueDecomposition[m]` yields `{S, D}` for a diagonalizable square
+matrix, eigenvectors as COLUMNS of S, eigenvalues on Diagonal[D], and `m == S . D . Inverse[S]` (uses
+Inverse[S], NOT S-dagger: it does not normalize eigenvectors, so S is a general similarity, not unitary;
+for Hermitian m, normalizing S to unitary U gives the spectral/projector form U D U-dagger = sum a|a><a|).
+EVD does NOT accept a QuantumOperator (errors `::matsq` "not a square matrix") -> QF side stays object-
+native: qo["Eigenvalues"], qo["Eigenvectors"], qo["Diagonalize"] (the latter returns a QuantumOperator
+= the operator in its own eigenbasis, diagonal with eigenvalues on it = the spectral form as an OBJECT).
+WL EVD eigenvalues === QF Eigenvalues (as a set). wl-verifier OPEN ISSUES 0; 47-cell file clean.
+**NB build (md2nb):** built `Quantum-in-Finite-Dimensions-WL-and-QF-Answers.nb` from the .md twin via
+`MarkdownToNotebook[src, out, "Evaluate" -> False]` (local function at GitHub/MarkdownToNotebook).
+**Template = Default** (user switched from TechNote). Default builder (`defaultNotebook`) maps
+`$headingStyleMap = <|1->Title, 2->Section, 3->Subsection, 4->Subsubsection|>`, takes the Title from an
+H1 `#` in the BODY (NOT frontmatter Title, unlike TechNote), and adds NO template slots (no
+MoreAbout/Keywords/Metadata/Categorization ceremony) -> `StyleDefinitions -> Default.nb`. So for Default
+the source needs frontmatter `Template: Default` + a restored H1 title (TechNote took Title from
+frontmatter and had no level-1). Rebuilt: 145 KB; 1 Title (from H1), 3 Sections, 22 Subsections, 47
+Input, 93 Text, 187 InlineFormula, FormalA 3/3. Evaluate->False = Input cells only (no Output), which matches the source design (reader
+runs cells) and dodges released-vs-working-tree eval. Built nb 150 KB; structure verified by reading it
+back: 1 Title, 3 Sections (Setup, Part 1, Part 2 = the 3 `##`), 22 Subsections (the 22 `###` questions),
+47 Input, 93 Text, 187 InlineFormula (the `$...$` math), 0 empty `\[Null]` mathboxes (no dropped LaTeX).
+FormalA preserved 3/3 (raw-nb grep == source). The 47 reparsed Input cells from the BUILT nb run clean
+top-to-bottom against the working tree (exit 0, zero msgs) = md2nb code-parse is faithful. md2nb GOTCHA
+noted: NotebookToMarkdown renders `\[FormalA]` as its display glyph `a` and `$A$` as the math-italic
+char in the twin (cosmetic round-trip rendering; the .nb itself preserves `\[FormalA]`). Rebuild the nb
+whenever the .md changes (it is a build output, not hand-edited).
+**One-computation-per-cell + narrative + show-objects pass (user).** Split every bundled-independent-
+computation list into separate ```wl cells, each preceded by a concise narrative; kept single objects
+whole (Bloch vector, prob dist, single boolean, the inner-product triple ip/|ip|/|ip|^2, an Assoc of
+coeffs, a Table). QF objects SHOWN (assign w/o `;` so the summary box displays, then extract). 1.2 got
+`// FullSimplify` (worded precisely: it reduces to a single ratio with alpha Conjugate[alpha] in the
+numerator, not literal Abs^2). Answer file now **93 cells** (was 50). **Strict QF prose rule added to
+the qf SKILL.md (section 0.5):** in prose never write a property as a bare attached bracket
+`["StateVector"]`; use the quoted name `"StateVector"` or a full object call `qs["StateVector"]`. Fixed
+the one doc violation (1.1 prose). Full audit via quantum-review + a fresh-context reviewer (4 axes:
+correctness / one-per-cell / narrative-before-each / no-bare-property-prose): A1=2 (both in 2.8, now
+split), A2=0, A3=0, A4=0; physics re-derived clean. Source extract-run 93 cells exit 0 zero msgs; nb
+rebuilt (Default template, Evaluate->False) Input=93/Section=3/Subsection=22/Title=1, FormalA preserved,
+all 93 reparsed cells re-eval clean. (TRAP noted: don't name a check-script var `t` while evaluating the
+answer cells, 2.6/2.11 use `t` as the trial angle -> Minimize::ivar collision; false alarm, not a cell bug.)
+**Part 3 (States as density operators, 3.1-3.8) BUILT to the DNA + 3-adversary loop.** Also folded the
+external dof report (`/private/tmp/qubit-dof-two-variables.md`) into 1.5: replaced the hardcoded
+`2d-2` assertion with the report's **Jacobian-rank** computation (rank 3 with global phase, 2 without
+= the qubit's 2 physical dof); same idiom reused in 3.5 (qubit Hermitian-unit-trace rank 3 = d^2-1).
+Verified-live QF density-operator facts (probe-first, per DNA 14): ensemble mixture = **sum of
+`["DensityMatrix"]`** (a weighted sum of QuantumStateS is a coherent SUPERPOSITION, not a mixture, no
+named/assoc mixture ctor exists); `["Purity"]`, `["PureStateQ"]`, `["BlochVector"]` (works on mixed),
+`["VonNeumannEntropy"]` (Quantity in Bits); expectation on a mixed state = `QuantumMeasurementOperator[
+QuantumOperator["Z"]][state]["Mean"]` (the OPERATOR, not the string "Z" which gives a different value;
+no `["Variance"]` -> use <Z^2>-<Z>^2; symbolic Bloch needs `Simplify[...,-1<=rz<=1]` since Mean goes via
+Born probs). Bloch map is AFFINE (convexity). 3 adversaries run in parallel: pipeline-enforcer (4: 3.7
+WL/QF were DIFFERENT mixtures so WL===QF was coincidental -> made WL use the same |0>,|R> pair; 3.2 and
+3.7 bundled independent computations -> split; 3.4 QF object suppressed with `;` -> shown), minimal-code
+(5 verified: `Through[{Re,Im}]&/@` -> built-in `ReIm`; `Table[PauliMatrix[j],{j,3}]` -> Listable
+`PauliMatrix[{1,2,3}]`), quantum-correctness wl-verifier (1: 3.1 prose falsely said summing the
+{|0>,|+>} kets gives |+> -> reworded). All applied. Source extract-run **126 cells exit 0 zero msgs**,
+WL===QF on all Part 3 (3.7 now genuine 7/9=7/9). nb regenerated (Default, Evaluate->False) Input=126
+Section=4 Subsection=30; nb-cell re-eval confirmed clean (background; Part 3 symbolic QMO/FullSimplify
+is slow, ~exceeds 2min foreground).
+Next: Parts 4-25 (same probe-first + 3-adversary loop, one part per turn).
 
 **v3 (blind-exam pass, user request "drop outputs"):** the file already had no fenced output
 blocks; the user meant the result-revealing prose. Stripped the explicit computed values (numbers,
