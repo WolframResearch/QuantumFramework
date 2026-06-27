@@ -23,7 +23,7 @@ This notebook is a computation-first tour of the single qubit, how a two-dimensi
 
 In other words, I’ve tried to build a catalogue of computational experiments on single qubits, tools and examples that help you run experiments computationally and learn directly from what you observe. I strongly believe in a computation-first narrative for learning: in a sense, if I cannot compute it, I cannot claim to understand it. This echoes a very [Feynman-y idea](https://digital.archives.caltech.edu/collections/Images/1.10-29/): real understanding shows up when you can do the thing, derive it, predict it, simulate it, estimate it, rather than just repeat/read words.
 
-Before we start, pay attention to a few things. The environment you see is a [Wolfram (Mathematica) notebook](https://www.wolfram.com/notebooks/). Wolfram notebooks consist of [sequences of cells](https://reference.wolfram.com/language/tutorial/WorkingWithCells.html). Look at the right side of this notebook and you can see cell brakets. This notebook is written so that you should evaluate the cells from top to bottom. Although I did my best to make the input cells independent, there are still variables that are defined in earlier cells and used later, meaning some cells depend on previous ones. You should be mindful of these dependencies when evaluating the notebook.
+Before we start, pay attention to a few things. The environment you see is a [Wolfram (Mathematica) notebook](https://www.wolfram.com/notebooks/). This book is published as a ready-to-run notebook in the Wolfram Cloud at [wolfr.am/QIS-Book](https://wolfr.am/QIS-Book), where you can open it, evaluate it in your browser, or make your own copy. Wolfram notebooks consist of [sequences of cells](https://reference.wolfram.com/language/tutorial/WorkingWithCells.html). Look at the right side of this notebook and you can see cell brakets. This notebook is written so that you should evaluate the cells from top to bottom. Although I did my best to make the input cells independent, there are still variables that are defined in earlier cells and used later, meaning some cells depend on previous ones. You should be mindful of these dependencies when evaluating the notebook.
 
 Additionally, the story is presented as a continuous sequence, like a movie. I have added a few headings to help with transitions from one topic to another, but I have avoided breaking the narrative into rigid sections. Sometimes a feature or property is introduced and used before we explain why it applies or unpack the underlying mathematical details. This is intentional, because in this notebook the ability to apply an idea often matters more than following an abstract proof first. Overall, the rhythm is: concept → computation → interpretation.
 
@@ -1789,19 +1789,7 @@ Show a few terms in the Zassenhaus formula for $e^{A+B}=e^{A}e^{B}\prod _{k=2}e^
 ```wl
 ClearAll[A, B];
 Grid[Table[{Subscript["\[ScriptCapitalW]", n], 
-   TraditionalForm@ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-        "ShortName" -> "ZassenhausTerms", 
-        "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-        "ResourceType" -> "Function", "Version" -> "1.1.0", 
-        "Description" -> "Generate terms in the Zassenhaus formula", 
-        "RepositoryLocation" -> URL[
-         "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-        "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-        "FunctionLocation" -> CloudObject[
-         "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, ResourceSystemBase -> Automatic]][{ A, B}, n, 
+   TraditionalForm@ResourceFunction["ZassenhausTerms"][{ A, B}, n, 
      "CommutatorForm" -> True]}, {n, 2, 4}], Frame -> All, 
  Alignment -> Left]
 ```
@@ -1813,20 +1801,7 @@ Verify that $e^{-i/2(\theta_{3}\, \sigma_{3}+\theta_{2}\sigma_{2})}\approx e^{-i
 ```wl
 ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 3])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 3])/
       2 PauliMatrix[3], (-I Subscript[\[Theta], 2])/2 PauliMatrix[2]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]
 ```
@@ -1836,20 +1811,7 @@ Verify that $e^{-i/2(\theta_{3}\, \sigma_{3}+\theta_{2}\sigma_{2})}\approx e^{-i
 ```wl
 ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 2])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 2])/
       2 PauliMatrix[2], (-I Subscript[\[Theta], 3])/2 PauliMatrix[3]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]
 ```
@@ -2872,7 +2834,7 @@ Plot[Erf[x], {x, -5, 5}, AspectRatio -> 1/3, GridLines -> Automatic,
  PlotLabel -> "Error function"]
 ```
 
-Imposing the condition $t\gg \mu \gg \tau $ ensures that the error functions in the exact solution saturate: $Erf[t-\mu /\sqrt{2}\tau ]\to 1$ and $Erf[\mu /\sqrt{2}\tau ]\to 1$. In this limit, the Gaussian pulse is effectively fully-contained in the time window $[0,t]$, and the dynamics “sees” the entire pulse. Therefore, the above solution as be approximated by: $(\, \begin{matrix}cos(\sqrt{\pi /2}\, \tau \, \omega_{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega_{x})\end{matrix}\, )$. Using the fact that the area under the Gaussian envelope is $\sqrt{2\pi }\tau $, the unitary generated by the pulse can be approximated as $e^{-i/2\int_{0}^{t}\omega_{x}(s)ds\, \sigma_{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega_{x}/2\, \sigma_{x}}$ which reproduce the same result. So, in this regime, the Gaussian pulse behaves like an $X$-pulse whose angle is set by the effective pulse area as $\sqrt{2\pi }\tau \, \omega_{x}$ .
+Imposing the condition $t\gg \mu \gg \tau $ ensures that the error functions in the exact solution saturate: $Erf[t-\mu /\sqrt{2}\tau ]\to 1$ and $Erf[\mu /\sqrt{2}\tau ]\to 1$. In this limit, the Gaussian pulse is effectively fully-contained in the time window $[0,t]$, and the dynamics “sees” the entire pulse. Therefore, the above solution as be approximated by: $\begin{pmatrix}cos(\sqrt{\pi /2}\, \tau \, \omega_{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega_{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega_{x})\end{pmatrix}$. Using the fact that the area under the Gaussian envelope is $\sqrt{2\pi }\tau $, the unitary generated by the pulse can be approximated as $e^{-i/2\int_{0}^{t}\omega_{x}(s)ds\, \sigma_{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega_{x}/2\, \sigma_{x}}$ which reproduce the same result. So, in this regime, the Gaussian pulse behaves like an $X$-pulse whose angle is set by the effective pulse area as $\sqrt{2\pi }\tau \, \omega_{x}$ .
 
 ## Part IV: Open Systems and Continuous Measurement
 
@@ -3284,7 +3246,7 @@ Now we idealize the noise: we think of $\xi (t)$ as the limit of a very fast, ve
 
 If we want to keep the rules of ordinary differential equation, then the corresponding dynamical equation is called Stratonovich stochastic differential equation. In Stratonovich form the stochastic Schrödinger equation is written as: $d|\psi (t)\rangle =-i/2\omega_{x}\sigma_{x}|\psi_{t}\rangle dt-i\sqrt{\gamma }\sigma_{z}\, |\psi_{t}\rangle \circ dW_{t}$ where $\circ dW_{t}$ is called Stratonovich differential. It encodes the fact that, in the underlying discrete picture, the noise term is evaluated in a symmetric (midpoint) way inside each short time interval, which is exactly what you get if you start from a smooth noisy Hamiltonian and then let the correlation time of the noise go to zero. With this interpretation, we can formally use the usual rules of calculus (chain rule, change of variables). This is why physicists often like Stratonovich form: it “feels” like ordinary differential equations with a noisy input. There is another, closely related formulation of stochastic differential equations, called the Itô form, which uses a slightly different convention and leads to extra drift terms when we rewrite the equation; we will comment on that later. So in short, when we deal with stochastic differential equations (SDE), one has to always pay attention if SDE is written in Stratonovich or Itô form. We shall start with Stratonovich form and show how the usual algebraic and chain rules of ODE is also applicable here. Later, we will discuss Itô form and you will see much more care needed for, e.g., variable changes.
 
-Since we can use the usual algebra and calculus of ODE in Stratonovich form, we can write the SDE for the density matrix given the random Hamiltonian above as: $d\rho =-i/2\omega_{x}[\sigma_{x},\rho ]dt-i\sqrt{\gamma }[\sigma_{z},\rho ]$∘d$W_{t}$. Let’s write the density matrix as $\rho =1/2(\mathbb{I}+\vec{v}.\vec{\sigma })$ with $\vec{v}$ the Bloch vector $r\{Cos[\phi ]Sin[\theta ],Sin[\phi ]Sin[\theta ],Cos[\theta ]\}$ and find the stochastic dynamical equation of $\{r,\theta ,\phi \}$ in Stratonovich form. As said before, we can use the usual rules of ODE for variable changes.
+Since we can use the usual algebra and calculus of ODE in Stratonovich form, we can write the SDE for the density matrix given the random Hamiltonian above as: $d\rho =-i/2\omega_{x}[\sigma_{x},\rho ]dt-i\sqrt{\gamma }[\sigma_{z},\rho ]\circ dW_{t}$. Let’s write the density matrix as $\rho =1/2(\mathbb{I}+\vec{v}.\vec{\sigma })$ with $\vec{v}$ the Bloch vector $r\{Cos[\phi ]Sin[\theta ],Sin[\phi ]Sin[\theta ],Cos[\theta ]\}$ and find the stochastic dynamical equation of $\{r,\theta ,\phi \}$ in Stratonovich form. As said before, we can use the usual rules of ODE for variable changes.
 
 Calculate the Jacobian matrix $\partial (r,\theta ,\phi )/\partial (x,y,z)$ for the mapping from Cartesian to Spherical coordinate for the Bloch vector:
 
@@ -3463,19 +3425,7 @@ If there is more than one Lindblad (jump) operator, the dissipative part of the 
 For values of $\omega_{x}$ and γ we used in above simulations, solve the Lindblad equation numerically:
 
 ```wl
-\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    DensityMatrix[FromSphericalCoordinates[{1, \[Pi]/4, 0}]], {t, 0, 
     10}]]
@@ -3512,19 +3462,7 @@ Legended[Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 200],
 Visualize Bloch vector dynamics for different values of $\omega_{x}$ and γ:
 
 ```wl
-Manipulate[state = ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+Manipulate[state = ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    1/2 (IdentityMatrix[2] + 
       FromSphericalCoordinates[{1, \[Pi]/4, 0}] . 
@@ -3596,7 +3534,7 @@ randomTermsCollapseSDE =
 randomTermsCollapseSDE // MatrixForm
 ```
 
-Therefore, the Bloch-vector components in Cartesian coordinates obey the Itô SDE: $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=(\, \begin{matrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega_{x} \\ y\, \omega_{x}\end{matrix}\, )dt+\sqrt{\gamma }(\, \begin{matrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{matrix}\, )dW_{t}$ where the drift captures the deterministic decay and Hamiltonian rotation, and the noise term encodes measurement backaction as a state-dependent diffusion on the Bloch ball. For numerical work, Cartesian coordinates are often poorly behaved: discretization can push the trajectory outside the Bloch sphere, producing Bloch vectors with length greater than one and hence unphysical density matrices. To suppress these artifacts, it is preferable to switch to a coordinate system (such as spherical coordinates) whose variables more directly respect the geometric constraints of state space. The key technical step is then to transform this Itô SDE from $\{x,y,z\}$ to $\{r,\theta ,\phi \}$, noting that ordinary chain rules do not apply in Itô calculus and the transformation must be carried out using Itô’s lemma, which includes the second-order correction terms generated by the noise. For this task, we will need both the [Jacobian](https://mathworld.wolfram.com/Jacobian.html) matrix and the [Hessian](https://mathworld.wolfram.com/Hessian.html) tensor. We already computed the Jacobian earlier, but this time let’s rederive it using a different approach.
+Therefore, the Bloch-vector components in Cartesian coordinates obey the Itô SDE: $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=\begin{pmatrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega_{x} \\ y\, \omega_{x}\end{pmatrix}dt+\sqrt{\gamma }\begin{pmatrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{pmatrix}dW_{t}$ where the drift captures the deterministic decay and Hamiltonian rotation, and the noise term encodes measurement backaction as a state-dependent diffusion on the Bloch ball. For numerical work, Cartesian coordinates are often poorly behaved: discretization can push the trajectory outside the Bloch sphere, producing Bloch vectors with length greater than one and hence unphysical density matrices. To suppress these artifacts, it is preferable to switch to a coordinate system (such as spherical coordinates) whose variables more directly respect the geometric constraints of state space. The key technical step is then to transform this Itô SDE from $\{x,y,z\}$ to $\{r,\theta ,\phi \}$, noting that ordinary chain rules do not apply in Itô calculus and the transformation must be carried out using Itô’s lemma, which includes the second-order correction terms generated by the noise. For this task, we will need both the [Jacobian](https://mathworld.wolfram.com/Jacobian.html) matrix and the [Hessian](https://mathworld.wolfram.com/Hessian.html) tensor. We already computed the Jacobian earlier, but this time let’s rederive it using a different approach.
 
 Compute Jacobian $\mathcal{J}=\partial (r,\theta ,\phi )/\partial (x,y,z)$:
 
@@ -3661,7 +3599,7 @@ Check if the new process is a valid random process:
 \[Rho]CollapseSDESpherical // ProcessParameterQ
 ```
 
-Therefore, the Itô-form SDE for the spherical coordinates reads as:  $(\, \begin{matrix}dr \\ d\theta \\ d\phi \end{matrix}\, )=(\, \begin{matrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega_{x}\, sin(\phi ) \\ -\omega_{x}\, cot(\theta )\, cos(\phi )\end{matrix}\, )dt+(\, \begin{matrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{matrix}\, )dW_{t}$. In this SDE, gamma sets how fast information about the Pauli-Z eigenvalue is acquired, and $\omega_{x}$ sets how fast the Hamiltonian tries to rotate population out of the Pauli-Z eigenbasis. The competition is controlled almost entirely by the dimensionless ratio $\omega_{x}/\gamma $. When γ dominates ($\gamma \gg \omega_{x}$), the measurement rapidly purifies and localizes the state. This is already visible directly in $dr$ equation because every term is multiplied by $r^{2}-1$: when $r=1$ the radius is frozen (pure states stay pure), while for $r<1$ the dynamics drives $r$ upward toward 1 on a timescale set by $1/\gamma $. At the same time, the angular dynamics pushes theta toward 0 or π, meaning the state localizes near the measurement eigenstates $z\approx +1$ or $z\approx -1$. Once it is near a pole, the stochastic term in $d\theta $ becomes weak because it is proportional to $sin(\theta )$, so the poles are effectively stable endpoints: that is what “collapse” looks like in single trajectories, long plateaus near $z=\pm 1$ after a short transient.
+Therefore, the Itô-form SDE for the spherical coordinates reads as:  $\begin{pmatrix}dr \\ d\theta \\ d\phi \end{pmatrix}=\begin{pmatrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega_{x}\, sin(\phi ) \\ -\omega_{x}\, cot(\theta )\, cos(\phi )\end{pmatrix}dt+\begin{pmatrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{pmatrix}dW_{t}$. In this SDE, gamma sets how fast information about the Pauli-Z eigenvalue is acquired, and $\omega_{x}$ sets how fast the Hamiltonian tries to rotate population out of the Pauli-Z eigenbasis. The competition is controlled almost entirely by the dimensionless ratio $\omega_{x}/\gamma $. When γ dominates ($\gamma \gg \omega_{x}$), the measurement rapidly purifies and localizes the state. This is already visible directly in $dr$ equation because every term is multiplied by $r^{2}-1$: when $r=1$ the radius is frozen (pure states stay pure), while for $r<1$ the dynamics drives $r$ upward toward 1 on a timescale set by $1/\gamma $. At the same time, the angular dynamics pushes theta toward 0 or π, meaning the state localizes near the measurement eigenstates $z\approx +1$ or $z\approx -1$. Once it is near a pole, the stochastic term in $d\theta $ becomes weak because it is proportional to $sin(\theta )$, so the poles are effectively stable endpoints: that is what “collapse” looks like in single trajectories, long plateaus near $z=\pm 1$ after a short transient.
 
 Set the parameters for the random process in the strong-measurement regime ($\gamma \gg \omega_{x}$):
 
