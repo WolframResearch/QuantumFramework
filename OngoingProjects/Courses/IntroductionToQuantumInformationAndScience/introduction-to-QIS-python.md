@@ -503,21 +503,7 @@ Therefore, the norm of the Bloch vector for a normalized pure state is always 1.
 Visualize the Bloch sphere:
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small]''', "fig-003")
+wlshow(r'''ResourceFunction["BlochSpherePlot"][ImageSize -> Small]''', "fig-003")
 ```
 
 ![fig-003](qis-figs/fig-003.png)
@@ -531,21 +517,7 @@ There are, of course, different conventions for denoting these kets. For example
 Visualize the Bloch sphere using labels from Optics:
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small, "Labels" -> "Optics"]''', "fig-004")
+wlshow(r'''ResourceFunction["BlochSpherePlot"][ImageSize -> Small, "Labels" -> "Optics"]''', "fig-004")
 ```
 
 ![fig-004](qis-figs/fig-004.png)
@@ -613,21 +585,7 @@ So this is a very interesting analogy. The quantum state vector $\{Cos[\theta /2
 Let’s look at the Bloch sphere again.
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][ImageSize -> Small]''', "fig-005")
+wlshow(r'''ResourceFunction["BlochSpherePlot"][ImageSize -> Small]''', "fig-005")
 ```
 
 ![fig-005](qis-figs/fig-005.png)
@@ -762,21 +720,7 @@ True
 Let’s plot normalized eigenstates of Pauli-X operator in the Bloch sphere.
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[1]], 
+wlshow(r'''ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[1]], 
  ImageSize -> Small]''', "fig-008")
 ```
 
@@ -817,21 +761,7 @@ wlshow(r'''AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"y\", \"+\"]},
 Plot eigenstates of Pauli-Y in the Bloch sphere:
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[2]], 
+wlshow(r'''ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[2]], 
  ImageSize -> Small]''', "fig-011")
 ```
 
@@ -844,21 +774,7 @@ The eigenstates of Pauli-Y are also denoted by $|R\rangle=|y_{+}\rangle$ and $|L
 Plot eigenstates of Pauli-Y in the Bloch sphere using optics labels:
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[2]], 
+wlshow(r'''ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[2]], 
  ImageSize -> Small, "Labels" -> "Optics"]''', "fig-012")
 ```
 
@@ -871,21 +787,7 @@ The computational basis corresponds to the eigenstates of Pauli-Z and is aligned
 Plot eigenstates of Pauli-Z in the Bloch sphere:
 
 ```python
-wlshow(r'''ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-    "ShortName" -> "BlochSpherePlot", 
-    "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-    "ResourceType" -> "Function", "Version" -> "1.0.0", 
-    "Description" -> "Plot the Bloch sphere", 
-    "RepositoryLocation" -> URL[
-     "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-    "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-    "FunctionLocation" -> CloudObject[
-     "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][Normalize /@ Eigenvectors[PauliMatrix[3]], 
+wlshow(r'''ResourceFunction["BlochSpherePlot"][Normalize /@ Eigenvectors[PauliMatrix[3]], 
  ImageSize -> Small]''', "fig-013")
 ```
 
@@ -909,21 +811,7 @@ wlshow(r'''AssociationThread[{"\!\(\*TemplateBox[{\nSubscriptBox[\"z\", \"+\"]},
 The most generic pure qubit state, $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$, is given by the Bloch vector $\{Cos[\phi ]\, Sin[\theta ],Sin[\theta ]\, Sin[\phi ],Cos[\theta ]\}$ with θ and ϕ spherical-coordinate angles. Let’s visualize it.
 
 ```python
-wlshow(r'''Manipulate[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, \
-{ResourceSystemBase -> "https://www.wolframcloud.com/obj/\
-resourcesystem/api/1.0"}]][{Cos[\[Phi]] Sin[\[Theta]], 
+wlshow(r'''Manipulate[ResourceFunction["BlochSpherePlot"][{Cos[\[Phi]] Sin[\[Theta]], 
    Sin[\[Theta]] Sin[\[Phi]], Cos[\[Theta]]}, ImageSize -> 270, 
   "NumberOfGreatCircles" -> 4, 
   "NumberOfSmallCircles" -> 3], {{\[Theta], \[Pi]/3, 
@@ -2061,7 +1949,7 @@ Cos[ϕ]*Sin[θ]
 ```
 
 
-Compute the expectation value of Pauli-X for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as <code>[Tr]()[ρ.$\sigma _{x}$]</code>:
+Compute the expectation value of Pauli-X for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as $\mathrm{Tr}[\rho .\sigma_{x}]$:
 
 ```python
 wl(r'''With[{\[Psi] = {Cos[\[Theta]/2], 
@@ -2078,7 +1966,7 @@ Cos[ϕ]*Sin[θ]
 ```
 
 
-Compute the expectation value of Pauli-Y for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as <code>[Tr]()[ρ.$\sigma _{y}$]</code>:
+Compute the expectation value of Pauli-Y for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as $\mathrm{Tr}[\rho .\sigma_{y}]$:
 
 ```python
 wl(r'''With[{\[Psi] = {Cos[\[Theta]/2], 
@@ -2095,7 +1983,7 @@ Sin[θ]*Sin[ϕ]
 ```
 
 
-Compute the expectation value of Pauli-Z for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as <code>[Tr]()[ρ.$\sigma _{z}$]</code>:
+Compute the expectation value of Pauli-Z for the generic pure state $|\psi \rangle=\{Cos[\theta /2],e^{i\, \phi }Sin[\theta /2]\}$ as $\mathrm{Tr}[\rho .\sigma_{z}]$:
 
 ```python
 wl(r'''With[{\[Psi] = {Cos[\[Theta]/2], 
@@ -2422,7 +2310,7 @@ wl(r'''Det[gram]''')
 ```
 
 
-Note that the above Gram matrix is proportional to the identity, i.e. $\mathcal{G}=2\mathbb{I}$. Recall that the identity matrix has elements $\mathbb{I}_{ij}=\delta _{ij}$. So the set $\{\sigma _{0},\sigma _{1},\sigma _{2},\sigma _{3}\}$ is Hilbert-Schmidt orthogonal, i.e. $\mathcal{G}_{\mu \nu }\propto \delta _{\mu \nu }$. Note that <code>[Tr]()[$A^{\dagger }$B]</code> is called the Hilbert–Schmidt inner product (also denoted as $\langle A,B\rangle $). Since all Pauli matrices and identify matrix are Hermitian ($\sigma _{\mu }^{\dagger }=\sigma _{\mu }$), Hilbert-Schmidt orthogonal for them can be also written as $Tr[\sigma _{\mu }.\sigma _{\nu }]=\mathcal{G}_{\mu \nu }=2\delta _{\mu \nu }$.
+Note that the above Gram matrix is proportional to the identity, i.e. $\mathcal{G}=2\mathbb{I}$. Recall that the identity matrix has elements $\mathbb{I}_{ij}=\delta _{ij}$. So the set $\{\sigma _{0},\sigma _{1},\sigma _{2},\sigma _{3}\}$ is Hilbert-Schmidt orthogonal, i.e. $\mathcal{G}_{\mu \nu }\propto \delta _{\mu \nu }$. Note that $\mathrm{Tr}[A^{\dagger }B]$ is called the Hilbert–Schmidt inner product (also denoted as $\langle A,B\rangle $). Since all Pauli matrices and identify matrix are Hermitian ($\sigma _{\mu }^{\dagger }=\sigma _{\mu }$), Hilbert-Schmidt orthogonal for them can be also written as $Tr[\sigma _{\mu }.\sigma _{\nu }]=\mathcal{G}_{\mu \nu }=2\delta _{\mu \nu }$.
 
 ### How Density Matrices Transform Under Basis Change
 
@@ -2633,7 +2521,7 @@ True
 ```
 
 
-Note that the equation $(\vec{a}\times \vec{b})_{i}=\sum _{j,k}\varepsilon _{ijk}a_{j}b_{k}$ is written only for $i$-th element of 3-component vector $\vec{a}\times \vec{b}$. n the code above, the left-hand side is represented as <code>[Cross]()[v1,v2]</code>. On the right-hand side, we first form the tensor product of the Levi–Civita symbol $\varepsilon _{ijk}$, $\vec{a}$, and $\vec{b}$ by <code>[TensorProduct]()[[LeviCivitaTensor]()[3],v1,v2]</code>. This produces a tensor with five indices: the first three indices correspond to $\varepsilon _{ijk}$, the fourth index corresponds to the components of $\vec{a}$, and the fifth index corresponds to the components of $\vec{b}$. The summation over $j$ is then implemented by contracting the second and fourth indices, and the summation over $k$ is implemented by contracting the third and fifth indices.
+Note that the equation $(\vec{a}\times \vec{b})_{i}=\sum _{j,k}\varepsilon _{ijk}a_{j}b_{k}$ is written only for $i$-th element of 3-component vector $\vec{a}\times \vec{b}$. n the code above, the left-hand side is represented as $\mathrm{Cross}[v1,v2]$. On the right-hand side, we first form the tensor product of the Levi–Civita symbol $\varepsilon _{ijk}$, $\vec{a}$, and $\vec{b}$ by $\mathrm{TensorProduct}[LeviCivitaTensor[3],v1,v2]$. This produces a tensor with five indices: the first three indices correspond to $\varepsilon _{ijk}$, the fourth index corresponds to the components of $\vec{a}$, and the fifth index corresponds to the components of $\vec{b}$. The summation over $j$ is then implemented by contracting the second and fourth indices, and the summation over $k$ is implemented by contracting the third and fifth indices.
 
 The triple product is where the geometry application of $\varepsilon _{ijk}$ becomes obvious: $\vec{a}.(\vec{b}\times \vec{c})=\sum _{i,j,k}\varepsilon _{ijk}a_{i}b_{j}c_{k}$. This equals the signed volume of the parallelepiped formed by $\{\vec{a},\vec{b},\vec{c}\}$. The signed volume is positive if $\{\vec{a},\vec{b},\vec{c}\}$ is right-handed, it is negative if left-handed, and zero if they’re coplanar.
 
@@ -3080,19 +2968,7 @@ Show a few terms in the Zassenhaus formula for $e^{A+B}=e^{A}e^{B}\prod _{k=2}e^
 ```python
 wlshow(r'''ClearAll[A, B];
 Grid[Table[{Subscript["\[ScriptCapitalW]", n], 
-   TraditionalForm@ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-        "ShortName" -> "ZassenhausTerms", 
-        "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-        "ResourceType" -> "Function", "Version" -> "1.1.0", 
-        "Description" -> "Generate terms in the Zassenhaus formula", 
-        "RepositoryLocation" -> URL[
-         "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-        "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-        "FunctionLocation" -> CloudObject[
-         "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, ResourceSystemBase -> Automatic]][{ A, B}, n, 
+   TraditionalForm@ResourceFunction["ZassenhausTerms"][{ A, B}, n, 
      "CommutatorForm" -> True]}, {n, 2, 4}], Frame -> All, 
  Alignment -> Left]''', "fig-046")
 ```
@@ -3108,20 +2984,7 @@ Verify that $e^{-i/2(\theta _{3}\, \sigma _{3}+\theta _{2}\sigma _{2})}\approx e
 ```python
 wl(r'''ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 3])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 3])/
       2 PauliMatrix[3], (-I Subscript[\[Theta], 2])/2 PauliMatrix[2]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]''')
 ```
@@ -3138,20 +3001,7 @@ Verify that $e^{-i/2(\theta _{3}\, \sigma _{3}+\theta _{2}\sigma _{2})}\approx e
 ```python
 wl(r'''ClearAll[\[Theta]];
 With[{\[Sigma] = Table[PauliMatrix[j], {j, 3}], \[ScriptCapitalW] = 
-   ResourceFunction[
-ResourceObject[<|"Name" -> "ZassenhausTerms", 
-       "ShortName" -> "ZassenhausTerms", 
-       "UUID" -> "2f3af1fe-2038-454d-928f-8f9a68dfdbfc", 
-       "ResourceType" -> "Function", "Version" -> "1.1.0", 
-       "Description" -> "Generate terms in the Zassenhaus formula", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-f824943f857d4d28a1db4ee6b8cc9d97`ZassenhausTerms", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/9a598a1b-b5bb-4f2f-8405-\
-2e5b258da354"]|>, 
-      ResourceSystemBase -> Automatic]][{(-I Subscript[\[Theta], 2])/
+   ResourceFunction["ZassenhausTerms"][{(-I Subscript[\[Theta], 2])/
       2 PauliMatrix[2], (-I Subscript[\[Theta], 3])/2 PauliMatrix[3]},
      2, Dot]}, Tr[\[ScriptCapitalW] . #] & /@ \[Sigma]/2]''')
 ```
@@ -3212,19 +3062,7 @@ wl(r'''RotationMatrix[\[Pi]/2, {0, 0, 1}] . {1, 0, 0}''')
 Visualize the transformation of $\{1,0,0\}$ by $\mathcal{R}_{z}(\theta )$ for different values of θ:
 
 ```python
-wlshow(r'''Manipulate[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{1, 0, 0}, 
+wlshow(r'''Manipulate[Show[ResourceFunction["BlochSpherePlot"][{{1, 0, 0}, 
     RotationMatrix[\[Theta], {0, 0, 1}] . {1, 0, 0}}, 
    ImageSize -> 270, 
    PlotLabel -> "Rotation around z-axis by angle \[Theta]\n"], 
@@ -3245,19 +3083,7 @@ In several experimental settings especially nuclear magnetic resonance (NMR) and
 Visualize how $X_{\pi /2}$, $X_{\pi }$, $Y_{\pi /2}$, and $Y_{\pi }$ pulses transform $|0\rangle$:
 
 ```python
-wlshow(r'''Manipulate[Legended[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+wlshow(r'''Manipulate[Legended[ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
     pulse . {0, 0, 1}}, ImageSize -> 150], 
   SwatchLegend[{ColorData[97][1], 
     ColorData[97][2]}, {"\!\(\*TemplateBox[{\"0\"},\n\"Ket\"]\)", 
@@ -3282,35 +3108,11 @@ Visualize how a sequence of pulses as first $X_{\pi /3}$ followed $Y_{\pi }$ tra
 ```python
 wlshow(r'''With[{y = RotationMatrix[\[Pi], {0, 1, 0}], 
   x = RotationMatrix[\[Pi]/3, {1, 0, 0}]},
- Row[{ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+ Row[{ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
      y . x . {0, 0, 1}}, ImageSize -> 150, 
     PlotLabel -> 
      "First \!\(\*SubscriptBox[\(X\), \(\[Pi]/2\)]\), then \
-\!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\)\n"], "  ", ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{{0, 0, 1}, 
+\!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\)\n"], "  ", ResourceFunction["BlochSpherePlot"][{{0, 0, 1}, 
      x . y . {0, 0, 1}}, ImageSize -> 150, 
     PlotLabel -> 
      "First \!\(\*SubscriptBox[\(Y\), \(\[Pi]/2\)]\), then \
@@ -3349,19 +3151,7 @@ With[{\[Theta] = VectorAngle[r1, r2], n = Cross[r1, r2]}, {
     n . {x, y, z} == 0 && x^2 + y^2 + z^2 <= 1/2 && 
      Cross[r1, {x, y, z}] . n >= 0 && 
      Cross[{x, y, z}, r2] . n >= 0, {x, y, z}]},
- Legended[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{r1, r2, n}], 
+ Legended[Show[ResourceFunction["BlochSpherePlot"][{r1, r2, n}], 
    Region@\[ScriptCapitalR], 
    Graphics3D[{{Opacity[.5], InfinitePlane[{0, 0, 0}, {r1, r2} ]}}], 
    PlotRange -> {{-1, 1}, {-1, 1}, {-1, 1}}, Boxed -> False], 
@@ -4090,19 +3880,7 @@ So the unsharp X-measurement preserves the measured component $(r_{x}$) but shri
 Visualize the change in the available space in the Bloch sphere due to unsharp X-measurement:
 
 ```python
-wlshow(r'''With[{\[Eta] = .75}, Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+wlshow(r'''With[{\[Eta] = .75}, Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[{Cos[\[Phi]] Sin[\[Theta]], 
     Sin[\[Phi]] Sin[\[Theta]] Sqrt[1 - \[Eta]^2], 
     Cos[\[Theta]] Sqrt[1 - \[Eta]^2]}, {\[Theta], 0, \[Pi]}, {\[Phi], 
@@ -4187,19 +3965,7 @@ wl(r'''With[{m =
 Visualize the change in the available space in the Bloch sphere due to unsharp X-measurement:
 
 ```python
-wlshow(r'''Legended[With[{\[Eta] = .75}, Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+wlshow(r'''Legended[With[{\[Eta] = .75}, Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[{Cos[\[Phi]] Sin[\[Theta]], 
      Sin[\[Phi]] Sin[\[Theta]] Sqrt[1 - \[Eta]^2], 
      Cos[\[Theta]] Sqrt[1 - \[Eta]^2]}, {\[Theta], 0, \[Pi]}, {\[Phi],
@@ -4365,19 +4131,7 @@ Visualize the Bloch-vector trajectory for $H=1/2\omega _{x}\sigma _{x}$ and $|\p
 
 ```python
 wlshow(r'''Manipulate[
- Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][{0, -Sin[t], 
+ Show[ResourceFunction["BlochSpherePlot"][{0, -Sin[t], 
     Cos[t ]}, 
    PlotLabel -> 
     "Rotation angle is Subscript[\[Omega], x] t = " <> 
@@ -4567,19 +4321,7 @@ In fact, the Bloch-vector motion admits a clean geometric picture. The trajector
 ```python
 wlshow(r'''Manipulate[
  With[{initial = FromSphericalCoordinates[{1, \[Pi]/4, 0}]},
-  Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-       "ShortName" -> "BlochSpherePlot", 
-       "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-       "ResourceType" -> "Function", "Version" -> "1.0.0", 
-       "Description" -> "Plot the Bloch sphere", 
-       "RepositoryLocation" -> URL[
-        "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-       "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-       "FunctionLocation" -> CloudObject[
-        "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][
+  Show[ResourceFunction["BlochSpherePlot"][
     RotationMatrix[
       Sqrt[\[Omega]x^2 + \[Omega]z^2] tf, {\[Omega]x, 0, \[Omega]z}/
       Sqrt[\[Omega]x^2 + \[Omega]z^2]] . initial, 
@@ -4713,7 +4455,7 @@ True
 
 So in simple terms, the pulse area (the time-integral of the drive envelope) is what sets the rotation angle: two pulses with the same area implement the same rotation, regardless of their shape.
 
-As one can see below, the error function <code>[Erf]()[x]</code> is $-1$ when $x\ll 0$ and it is $+1$ for $x\gg 0$.
+As one can see below, the error function $\mathrm{Erf}[x]$ is $-1$ when $x\ll 0$ and it is $+1$ for $x\gg 0$.
 
 ```python
 wlshow(r'''Plot[Erf[x], {x, -5, 5}, AspectRatio -> 1/3, GridLines -> Automatic, 
@@ -4724,7 +4466,7 @@ wlshow(r'''Plot[Erf[x], {x, -5, 5}, AspectRatio -> 1/3, GridLines -> Automatic,
 *fig-069*
 
 
-Imposing the condition $t\gg \mu \gg \tau $ ensures that the error functions in the exact solution saturate: $Erf[t-\mu /\sqrt{2}\tau ]->1$ and $Erf[\mu /\sqrt{2}\tau ]->1$. In this limit, the Gaussian pulse is effectively fully-contained in the time window $[0,t]$, and the dynamics “sees” the entire pulse. Therefore, the above solution as be approximated by: $(\, \begin{matrix}cos(\sqrt{\pi /2}\, \tau \, \omega _{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega _{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega _{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega _{x})\end{matrix}\, )$. Using the fact that the area under the Gaussian envelope is $\sqrt{2\pi }\tau $, the unitary generated by the pulse can be approximated as $e^{-i/2\int _{0}^{t}\omega _{x}(s)ds\, \sigma _{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega _{x}/2\, \sigma _{x}}$ which reproduce the same result. So, in this regime, the Gaussian pulse behaves like an $X$-pulse whose angle is set by the effective pulse area as $\sqrt{2\pi }\tau \, \omega _{x}$ .
+Imposing the condition $t\gg \mu \gg \tau $ ensures that the error functions in the exact solution saturate: $Erf[t-\mu /\sqrt{2}\tau ]->1$ and $Erf[\mu /\sqrt{2}\tau ]->1$. In this limit, the Gaussian pulse is effectively fully-contained in the time window $[0,t]$, and the dynamics “sees” the entire pulse. Therefore, the above solution as be approximated by: $\begin{pmatrix}cos(\sqrt{\pi /2}\, \tau \, \omega _{x}) & -i\, sin(\sqrt{\pi /2}\, \tau \, \omega _{x}) \\ -i\, sin(\sqrt{\pi /2}\, \tau \, \omega _{x}) & cos(\sqrt{\pi /2}\, \tau \, \omega _{x})\end{pmatrix}$. Using the fact that the area under the Gaussian envelope is $\sqrt{2\pi }\tau $, the unitary generated by the pulse can be approximated as $e^{-i/2\int _{0}^{t}\omega _{x}(s)ds\, \sigma _{x}}\approx e^{-i\sqrt{2\pi }\tau \, \omega _{x}/2\, \sigma _{x}}$ which reproduce the same result. So, in this regime, the Gaussian pulse behaves like an $X$-pulse whose angle is set by the effective pulse area as $\sqrt{2\pi }\tau \, \omega _{x}$ .
 
 ## Part IV: Open Systems and Continuous Measurement
 
@@ -4844,7 +4586,7 @@ wlshow(r'''With[{Wt = WienerProcess[]},
 *fig-072*
 
 
-This means that $W_{t}$ is normally distributed with mean zero and standard deviation $\sqrt{t}$. <code>[]()[…]</code> means expected value. It’s the operator that takes a random variable and returns its average/mean value in the long run (the “probability-weighted average” of all outcomes).
+This means that $W_{t}$ is normally distributed with mean zero and standard deviation $\sqrt{t}$. $\mathbb{E}[\ldots ]$ means expected value. It’s the operator that takes a random variable and returns its average/mean value in the long run (the “probability-weighted average” of all outcomes).
 
 Calculate the mean value of $W_{t}$ using probability theory:
 
@@ -5021,7 +4763,7 @@ In the real world, a laser is never perfectly clean. It is driven by noisy elect
 
 We model the random phase $\phi _{t}$ of the laser as a one-dimensional Brownian motion: $d\phi _{t}=\sqrt{2\kappa }dW_{t}$ where κ is the diffusion constant for phase: it tells you how fast the laser’s phase wanders, and is directly connected to the laser’s linewidth. This stochastic dynamical equation implies that $\phi _{t}$ is a Wiener process with zero mean and variance $2\kappa \, t$, which can be written as $\phi (t)=\phi (0)+\sqrt{2\kappa }W_{t}$.
 
-Generate the real part electric field, <code>[Cos]()[$\omega _{0}$t+ϕ(t)]</code> with $\omega _{0}=1$, where the phase follows a one-dimensional Brownian motion:
+Generate the real part electric field, $\mathrm{Cos}[\omega_{0}t+\phi (t)]$ with $\omega _{0}=1$, where the phase follows a one-dimensional Brownian motion:
 
 ```python
 wl(r'''ClearAll[electricField]''')
@@ -5162,7 +4904,7 @@ wlshow(r'''Manipulate[
 
 Please note that for any general case, the spectral density should be calculated from two-point correlation functions $\langle E(t)E(t+\tau )\rangle =\mathbb{E}(Cos[\omega 0\, (t+\tau )+\Phi 2]\, Cos[\omega 0\, t+\Phi 1])$ with $\Phi _{1,2}$ random phases. For a two-time correlation you care about a random quantity at one time and the same quantity at another time, and how those two are linked. The covariance matrix is just the compact way to encode that link.  For two times, it has three essential pieces of information: how much the variable fluctuates at the first time, how much it fluctuates at the second time, and how much of those fluctuations are shared between the two times. The shared part is the covariance: if it is large and positive, knowing the value at the first time strongly constrains the likely value at the second time; if it is zero, the two times are effectively independent.  When you compute a two-time correlation function, you are averaging a product that depends on the variable at both times. That average is entirely determined by the joint statistics of the pair, and for a Gaussian process those joint statistics are fully fixed by the covariance matrix. So in practice: the diagonal entries set the “strength” of fluctuations at each time, and the off-diagonal entry encodes the memory between them; together they determine how big the two-time correlation is and how it decays with the time difference.
 
-Calculate the covariance matrix $\phi _{t}$ and $\phi _{t+\tau }$ which is $\Sigma =\begin{pmatrix}Cov[\phi _{t},\phi _{t}] & Cov[\phi _{t},\phi _{t+\tau }] \\ Cov[\phi _{t+\tau },\phi _{t}] & Cov[\phi _{t+\tau },\phi _{t+\tau }]\end{pmatrix}$ with <code>[Cov]()[…]</code> the covariance function:
+Calculate the covariance matrix $\phi _{t}$ and $\phi _{t+\tau }$ which is $\Sigma =\begin{pmatrix}Cov[\phi _{t},\phi _{t}] & Cov[\phi _{t},\phi _{t+\tau }] \\ Cov[\phi _{t+\tau },\phi _{t}] & Cov[\phi _{t+\tau },\phi _{t+\tau }]\end{pmatrix}$ with $\mathrm{Cov}[\ldots ]$ the covariance function:
 
 ```python
 wl(r'''\[CapitalSigma] = 
@@ -5272,7 +5014,7 @@ Now we idealize the noise: we think of $\xi (t)$ as the limit of a very fast, ve
 
 If we want to keep the rules of ordinary differential equation, then the corresponding dynamical equation is called Stratonovich stochastic differential equation. In Stratonovich form the stochastic Schrödinger equation is written as: $d|\psi (t)\rangle=-i/2\omega _{x}\sigma _{x}|\psi _{t}\rangle dt-i\sqrt{\gamma }\sigma _{z}\, |\psi _{t}\rangle\circ dW_{t}$ where $\circ dW_{t}$ is called Stratonovich differential. It encodes the fact that, in the underlying discrete picture, the noise term is evaluated in a symmetric (midpoint) way inside each short time interval, which is exactly what you get if you start from a smooth noisy Hamiltonian and then let the correlation time of the noise go to zero. With this interpretation, we can formally use the usual rules of calculus (chain rule, change of variables). This is why physicists often like Stratonovich form: it “feels” like ordinary differential equations with a noisy input. There is another, closely related formulation of stochastic differential equations, called the Itô form, which uses a slightly different convention and leads to extra drift terms when we rewrite the equation; we will comment on that later. So in short, when we deal with stochastic differential equations (SDE), one has to always pay attention if SDE is written in Stratonovich or Itô form. We shall start with Stratonovich form and show how the usual algebraic and chain rules of ODE is also applicable here. Later, we will discuss Itô form and you will see much more care needed for, e.g., variable changes.
 
-Since we can use the usual algebra and calculus of ODE in Stratonovich form, we can write the SDE for the density matrix given the random Hamiltonian above as: $d\rho =-i/2\omega _{x}[\sigma _{x},\rho ]dt-i\sqrt{\gamma }[\sigma _{z},\rho ]$∘d$W_{t}$. Let’s write the density matrix as $\rho =1/2(\mathbb{I}+\vec{v}.\vec{\sigma })$ with $\vec{v}$ the Bloch vector $r\{Cos[\phi ]Sin[\theta ],Sin[\phi ]Sin[\theta ],Cos[\theta ]\}$ and find the stochastic dynamical equation of $\{r,\theta ,\phi \}$ in Stratonovich form. As said before, we can use the usual rules of ODE for variable changes.
+Since we can use the usual algebra and calculus of ODE in Stratonovich form, we can write the SDE for the density matrix given the random Hamiltonian above as: $d\rho =-i/2\omega _{x}[\sigma _{x},\rho ]dt-i\sqrt{\gamma }[\sigma _{z},\rho ]\circ dW_{t}$. Let’s write the density matrix as $\rho =1/2(\mathbb{I}+\vec{v}.\vec{\sigma })$ with $\vec{v}$ the Bloch vector $r\{Cos[\phi ]Sin[\theta ],Sin[\phi ]Sin[\theta ],Cos[\theta ]\}$ and find the stochastic dynamical equation of $\{r,\theta ,\phi \}$ in Stratonovich form. As said before, we can use the usual rules of ODE for variable changes.
 
 Calculate the Jacobian matrix $\partial (r,\theta ,\phi )/\partial (x,y,z)$ for the mapping from Cartesian to Spherical coordinate for the Bloch vector:
 
@@ -5407,19 +5149,7 @@ wlshow(r'''Legended[
 Visualize Bloch vector for two realizations of random trajectory on the Bloch sphere:
 
 ```python
-wlshow(r'''Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][], 
+wlshow(r'''Show[ResourceFunction["BlochSpherePlot"][], 
  ListLinePlot3D[blochVectorTrajectories[[;; 2]]], 
  PlotLabel -> 
   "Two realization of random dynamics with\n \
@@ -5464,19 +5194,7 @@ TraditionalForm]\)"}]''', "fig-086")
 Visualize the noise-averaged trajectory in the Bloch sphere:
 
 ```python
-wlshow(r'''Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-     "ShortName" -> "BlochSpherePlot", 
-     "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-     "ResourceType" -> "Function", "Version" -> "1.0.0", 
-     "Description" -> "Plot the Bloch sphere", 
-     "RepositoryLocation" -> URL[
-      "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-     "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-     "FunctionLocation" -> CloudObject[
-      "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+wlshow(r'''Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
   ListLinePlot3D[Mean@blochVectorTrajectories, PlotRange -> All], 
  PlotLabel -> "Ensemble-averaged qubit state\n on the Bloch sphere"]''', "fig-087")
 ```
@@ -5506,7 +5224,7 @@ ItoProcess[{{-2*γ*x[t], -2*γ*y[t] - ωx*z[t], ωx*y[t]}, {{-2*Sqrt[γ]*y[t]}, 
 ```
 
 
-In Mathematica, an Itô process is written in the generic form <code>[ItoProcess]()[{a,b,$r_{t}$},{r,$r_{0}$},t]</code> where $a$ collects the deterministic (non-random) terms, $b$ collects the stochastic (noise) terms, and $r$ denotes the variables of the process. In our example, $r$ is the Bloch vector. In continuous-time notation, this corresponds to a stochastic differential equation of the form $dr_{i}(t)=\, a_{i}(t,r(t))dt+b_{i}(t,r(t))dw(t)$. When we perform a stochastic (noise) average, the random increment $dW_{t}$ has zero mean, so the contribution from the noise term averages to zero. As a result, the evolution of the noise-averaged quantity is governed solely by the drift part $a$: after averaging, only the deterministic drift survives in the equation for the mean.
+In Mathematica, an Itô process is written in the generic form $\mathrm{ItoProcess}[\{a,b,r_{t}\},\{r,r_{0}\},t]$ where $a$ collects the deterministic (non-random) terms, $b$ collects the stochastic (noise) terms, and $r$ denotes the variables of the process. In our example, $r$ is the Bloch vector. In continuous-time notation, this corresponds to a stochastic differential equation of the form $dr_{i}(t)=\, a_{i}(t,r(t))dt+b_{i}(t,r(t))dw(t)$. When we perform a stochastic (noise) average, the random increment $dW_{t}$ has zero mean, so the contribution from the noise term averages to zero. As a result, the evolution of the noise-averaged quantity is governed solely by the drift part $a$: after averaging, only the deterministic drift survives in the equation for the mean.
 
 Show $a$ (the drift) in $dr_{i}(t)=\, a_{i}(t,r(t))dt+b_{i}(t,r(t))dw(t)$ in the case we studied above:
 
@@ -5555,19 +5273,7 @@ If there is more than one Lindblad (jump) operator, the dissipative part of the 
 For values of $\omega _{x}$ and γ we used in above simulations, solve the Lindblad equation numerically:
 
 ```python
-wl(r'''\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+wl(r'''\[Rho]t = With[{\[Omega]x = 2, \[Gamma] = .2}, ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    DensityMatrix[FromSphericalCoordinates[{1, \[Pi]/4, 0}]], {t, 0, 
     10}]]''')
@@ -5605,19 +5311,7 @@ wlshow(r'''Plot[Evaluate@Re@Table[Tr[\[Rho]t[t] . PauliMatrix[j]], {j, 3}], {t,
 As you can see, this agrees with the result we found earlier by numerically averaging over 1,000 noise realizations, up to the small discrepancies expected from numerical error and the finite number of samples.
 
 ```python
-wlshow(r'''Legended[Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 200],
+wlshow(r'''Legended[Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 200],
    ParametricPlot3D[Re@BlochVector[\[Rho]t[t]], {t, 0, 10}, 
    PlotRange -> All, 
    PlotStyle -> Directive[Opacity[.6], ColorData[97][1]]], 
@@ -5635,36 +5329,12 @@ c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 200],
 Visualize Bloch vector dynamics for different values of $\omega _{x}$ and γ:
 
 ```python
-wlshow(r'''Manipulate[state = ResourceFunction[
-ResourceObject[<|"Name" -> "LindbladSolve", 
-      "ShortName" -> "LindbladSolve", 
-      "UUID" -> "2fb9b1f8-48b5-4683-8965-99b71d387bf2", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Solve the Lindblad master equation", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-d7deeb19fe0d4b10a065b53823858cf0`LindbladSolve", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/d69ea1bb-70ba-41dd-a54f-\
-17256089991f"]|>, ResourceSystemBase -> Automatic]][
+wlshow(r'''Manipulate[state = ResourceFunction["LindbladSolve"][
    1/2 \[Omega]x PauliMatrix[1], {Sqrt[\[Gamma]] PauliMatrix[3]}, 
    1/2 (IdentityMatrix[2] + 
       FromSphericalCoordinates[{1, \[Pi]/4, 0}] . 
        Table[PauliMatrix[j], {j, 3}]), {t, 0, 10}];
- Show[ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-      "ShortName" -> "BlochSpherePlot", 
-      "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-      "ResourceType" -> "Function", "Version" -> "1.0.0", 
-      "Description" -> "Plot the Bloch sphere", 
-      "RepositoryLocation" -> URL[
-       "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-      "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-      "FunctionLocation" -> CloudObject[
-       "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][ImageSize -> 250],
+ Show[ResourceFunction["BlochSpherePlot"][ImageSize -> 250],
    ParametricPlot3D[
    Re@Table[Tr[state[t] . PauliMatrix[j]], {j, 3}], {t, 0, 10}, 
    PlotRange -> All], 
@@ -5747,7 +5417,7 @@ randomTermsCollapseSDE // MatrixForm''', "fig-095")
 *fig-095*
 
 
-Therefore, the Bloch-vector components in Cartesian coordinates obey the Itô SDE: $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=(\, \begin{matrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega _{x} \\ y\, \omega _{x}\end{matrix}\, )dt+\sqrt{\gamma }(\, \begin{matrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{matrix}\, )dW_{t}$ where the drift captures the deterministic decay and Hamiltonian rotation, and the noise term encodes measurement backaction as a state-dependent diffusion on the Bloch ball. For numerical work, Cartesian coordinates are often poorly behaved: discretization can push the trajectory outside the Bloch sphere, producing Bloch vectors with length greater than one and hence unphysical density matrices. To suppress these artifacts, it is preferable to switch to a coordinate system (such as spherical coordinates) whose variables more directly respect the geometric constraints of state space. The key technical step is then to transform this Itô SDE from $\{x,y,z\}$ to $\{r,\theta ,\phi \}$, noting that ordinary chain rules do not apply in Itô calculus and the transformation must be carried out using Itô’s lemma, which includes the second-order correction terms generated by the noise. For this task, we will need both the [Jacobian](https://mathworld.wolfram.com/Jacobian.html) matrix and the [Hessian](https://mathworld.wolfram.com/Hessian.html) tensor. We already computed the Jacobian earlier, but this time let’s rederive it using a different approach.
+Therefore, the Bloch-vector components in Cartesian coordinates obey the Itô SDE: $d\begin{pmatrix}x \\ y \\ z\end{pmatrix}=\begin{pmatrix}-2\, x\, \gamma \\ -2\, y\, \gamma -z\, \omega _{x} \\ y\, \omega _{x}\end{pmatrix}dt+\sqrt{\gamma }\begin{pmatrix}-2\, x\, z\, \\ -2\, y\, z\, \\ 2\, (1-z^{2})\, \end{pmatrix}dW_{t}$ where the drift captures the deterministic decay and Hamiltonian rotation, and the noise term encodes measurement backaction as a state-dependent diffusion on the Bloch ball. For numerical work, Cartesian coordinates are often poorly behaved: discretization can push the trajectory outside the Bloch sphere, producing Bloch vectors with length greater than one and hence unphysical density matrices. To suppress these artifacts, it is preferable to switch to a coordinate system (such as spherical coordinates) whose variables more directly respect the geometric constraints of state space. The key technical step is then to transform this Itô SDE from $\{x,y,z\}$ to $\{r,\theta ,\phi \}$, noting that ordinary chain rules do not apply in Itô calculus and the transformation must be carried out using Itô’s lemma, which includes the second-order correction terms generated by the noise. For this task, we will need both the [Jacobian](https://mathworld.wolfram.com/Jacobian.html) matrix and the [Hessian](https://mathworld.wolfram.com/Hessian.html) tensor. We already computed the Jacobian earlier, but this time let’s rederive it using a different approach.
 
 Compute Jacobian $\mathcal{J}=\partial (r,\theta ,\phi )/\partial (x,y,z)$:
 
@@ -5844,7 +5514,7 @@ True
 ```
 
 
-Therefore, the Itô-form SDE for the spherical coordinates reads as:  $(\, \begin{matrix}dr \\ d\theta \\ d\phi \end{matrix}\, )=(\, \begin{matrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega _{x}\, sin(\phi ) \\ -\omega _{x}\, cot(\theta )\, cos(\phi )\end{matrix}\, )dt+(\, \begin{matrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{matrix}\, )dW_{t}$. In this SDE, gamma sets how fast information about the Pauli-Z eigenvalue is acquired, and $\omega _{x}$ sets how fast the Hamiltonian tries to rotate population out of the Pauli-Z eigenbasis. The competition is controlled almost entirely by the dimensionless ratio $\omega _{x}/\gamma $. When γ dominates ($\gamma \gg \omega _{x}$), the measurement rapidly purifies and localizes the state. This is already visible directly in $dr$ equation because every term is multiplied by $r^{2}-1$: when $r=1$ the radius is frozen (pure states stay pure), while for $r<1$ the dynamics drives $r$ upward toward 1 on a timescale set by $1/\gamma $. At the same time, the angular dynamics pushes theta toward 0 or π, meaning the state localizes near the measurement eigenstates $z\approx +1$ or $z\approx -1$. Once it is near a pole, the stochastic term in $d\theta $ becomes weak because it is proportional to $sin(\theta )$, so the poles are effectively stable endpoints: that is what “collapse” looks like in single trajectories, long plateaus near $z=\pm 1$ after a short transient.
+Therefore, the Itô-form SDE for the spherical coordinates reads as:  $\begin{pmatrix}dr \\ d\theta \\ d\phi \end{pmatrix}=\begin{pmatrix}-2\, \gamma \, (r^{2}-1)\, sin^{2}(\theta )/r \\ \gamma \, (2/r^{2}-3)\, sin(2\, \theta )-\omega _{x}\, sin(\phi ) \\ -\omega _{x}\, cot(\theta )\, cos(\phi )\end{pmatrix}dt+\begin{pmatrix}-2\, \sqrt{\gamma }\, (r^{2}-1)\, cos(\theta ) \\ -2\, \sqrt{\gamma }\, sin(\theta )/r \\ 0\end{pmatrix}dW_{t}$. In this SDE, gamma sets how fast information about the Pauli-Z eigenvalue is acquired, and $\omega _{x}$ sets how fast the Hamiltonian tries to rotate population out of the Pauli-Z eigenbasis. The competition is controlled almost entirely by the dimensionless ratio $\omega _{x}/\gamma $. When γ dominates ($\gamma \gg \omega _{x}$), the measurement rapidly purifies and localizes the state. This is already visible directly in $dr$ equation because every term is multiplied by $r^{2}-1$: when $r=1$ the radius is frozen (pure states stay pure), while for $r<1$ the dynamics drives $r$ upward toward 1 on a timescale set by $1/\gamma $. At the same time, the angular dynamics pushes theta toward 0 or π, meaning the state localizes near the measurement eigenstates $z\approx +1$ or $z\approx -1$. Once it is near a pole, the stochastic term in $d\theta $ becomes weak because it is proportional to $sin(\theta )$, so the poles are effectively stable endpoints: that is what “collapse” looks like in single trajectories, long plateaus near $z=\pm 1$ after a short transient.
 
 Set the parameters for the random process in the strong-measurement regime ($\gamma \gg \omega _{x}$):
 
@@ -5966,19 +5636,7 @@ As expected, once the evolution time is of the order $1/\gamma $ or more, the fr
 In that strong-measurement regime, the Hamiltonian $H=1/2\omega _{x}\sigma _{x}$ does not disappear, but it is Zeno-suppressed: instead of smoothly driving Rabi oscillations, it mostly produces rare transitions between the two collapsed poles. The qualitative picture is “stick near $|0\rangle$ or $|1\rangle$, then occasionally switch,” and the switching becomes much rarer as γ increases.
 
 ```python
-wl(r'''stickSwitch = With[{bs = ResourceFunction[
-ResourceObject[<|"Name" -> "BlochSpherePlot", 
-         "ShortName" -> "BlochSpherePlot", 
-         "UUID" -> "fcb3b840-6ae5-4883-a256-1573cc958ffc", 
-         "ResourceType" -> "Function", "Version" -> "1.0.0", 
-         "Description" -> "Plot the Bloch sphere", 
-         "RepositoryLocation" -> URL[
-          "https://www.wolframcloud.com/obj/resourcesystem/api/1.0"], 
-         "SymbolName" -> "FunctionRepository`$\
-260e867144764f229d14c35cdf9d34d9`BlochSpherePlot", 
-         "FunctionLocation" -> CloudObject[
-          "https://www.wolframcloud.com/obj/858bce1b-d11f-4b5c-8673-\
-c3107cef60fb"]|>, ResourceSystemBase -> Automatic]][]}, 
+wl(r'''stickSwitch = With[{bs = ResourceFunction["BlochSpherePlot"][]}, 
    Show[bs, 
       Graphics3D[
        Table[{ColorData[97][j], 
