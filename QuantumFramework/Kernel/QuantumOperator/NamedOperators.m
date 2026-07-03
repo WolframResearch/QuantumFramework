@@ -932,11 +932,15 @@ QuantumOperator[chain_String /; StringLength[chain] > 1, opts___] := With[{chars
 
 $upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 
-QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
-    QuantumOperator[$upperCasesOperatorNames[name], opts]
+(* Case-insensitive alias: a spelling that carries a lowercase letter, is not
+   itself a registered name, but whose uppercasing matches one, dispatches to the
+   registered spelling. The MemberQ guard keeps mixed-case registered names (e.g.
+   "Fourier") on their own rules instead of looping back through this one. *)
+QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && ! MemberQ[$QuantumOperatorNames, name] && KeyExistsQ[$upperCasesOperatorNames, ToUpperCase[name]] :=
+    QuantumOperator[$upperCasesOperatorNames[ToUpperCase[name]], opts]
 
-QuantumOperator[name_String[params___], opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
-    QuantumOperator[$upperCasesOperatorNames[name][params], opts]
+QuantumOperator[name_String[params___], opts___] /; ToUpperCase[name] =!= name && ! MemberQ[$QuantumOperatorNames, name] && KeyExistsQ[$upperCasesOperatorNames, ToUpperCase[name]] :=
+    QuantumOperator[$upperCasesOperatorNames[ToUpperCase[name]][params], opts]
 
 QuantumOperator[name_String, opts___] /; MemberQ[$QuantumOperatorNames, name] :=
     QuantumOperator[name[], opts]
