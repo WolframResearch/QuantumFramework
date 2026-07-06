@@ -622,3 +622,52 @@ With[{
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - operator placement"]
+
+(* An operator rule `op -> order` must mean the same whether written bare or
+   inside the operator list. For a permutation (a swap, whose output and input
+   orders differ) the two forms used to diverge: the bare rule reordered the
+   circuit correctly while the list form collapsed the swap to the identity. *)
+
+VerificationTest[
+    QuantumCircuitOperator[QuantumOperator["Permutation" -> {2, 1}] -> {2, 3}] ==
+        QuantumCircuitOperator[{QuantumOperator["Permutation" -> {2, 1}] -> {2, 3}}],
+    True,
+    TestID -> "Placement-rule-vs-list-permutation"
+]
+
+VerificationTest[
+    QuantumCircuitOperator[QuantumOperator["CNOT"] -> {2, 3}] ==
+        QuantumCircuitOperator[{QuantumOperator["CNOT"] -> {2, 3}}],
+    True,
+    TestID -> "Placement-rule-vs-list-CNOT"
+]
+
+(* The placed permutation is a genuine SWAP on the target qudits, not identity. *)
+VerificationTest[
+    Normal @ QuantumCircuitOperator[{QuantumOperator["Permutation" -> {2, 1}] -> {2, 3}}][
+            "CircuitOperator"]["OrderedMatrixRepresentation"],
+    {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}},
+    TestID -> "Placement-permutation-is-SWAP"
+]
+
+(* Acting on |0,1,0>, a swap on qudits {2, 3} yields |0,0,1> for both forms. *)
+With[{
+    in = QuantumTensorProduct[QuantumState["0"], QuantumState["1"], QuantumState["0"]],
+    out = QuantumTensorProduct[QuantumState["0"], QuantumState["0"], QuantumState["1"]]
+},
+    VerificationTest[
+        QuantumCircuitOperator[QuantumOperator["Permutation" -> {2, 1}] -> {2, 3}][in] == out,
+        True,
+        TestID -> "Placement-swap-action-rule"
+    ];
+    VerificationTest[
+        QuantumCircuitOperator[{QuantumOperator["Permutation" -> {2, 1}] -> {2, 3}}][in] == out,
+        True,
+        TestID -> "Placement-swap-action-list"
+    ]
+]
+
+EndTestSection[]

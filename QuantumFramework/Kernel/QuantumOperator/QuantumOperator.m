@@ -242,6 +242,12 @@ QuantumOperator[arg_, order1 : _ ? orderQ -> order2 : _ ? orderQ, opts___] :=
 
 (* Mutation *)
 
+QuantumOperator[qo_ ? QuantumOperatorQ, order_ ? orderQ] /;
+    Length[order] == Length[Union[qo["FullOutputOrder"], qo["FullInputOrder"]]] :=
+    With[{repl = Thread[Union[qo["FullOutputOrder"], qo["FullInputOrder"]] -> order]},
+        QuantumOperator[qo, {qo["FullOutputOrder"] /. repl, qo["FullInputOrder"] /. repl}]
+    ]
+
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
     QuantumOperator[qo, {order, order}]
 

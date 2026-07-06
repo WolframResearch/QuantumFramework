@@ -282,6 +282,169 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QuantumOperator - reorder"]
+
+(* A single flat order is a *placement*: it relabels the operator's qudit
+   footprint consistently, so an operator whose output and input orders differ
+   (a permutation / swap) keeps its action. A two-element {out, in} order is the
+   low-level *positional* form and may intentionally rewire the legs. *)
+
+ordPair[o_] := {o["OutputOrder"], o["InputOrder"]}
+orderedMat[o_] := Normal[o["OrderedMatrixRepresentation"]]
+$swap = {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}
+
+(* "Permutation" -> {2, 1} is a SWAP encoded as output order {2, 1} vs input
+   order {1, 2}: the swap lives in the order mismatch, not the raw tensor. *)
+VerificationTest[
+    ordPair[QuantumOperator["Permutation" -> {2, 1}]],
+    {{2, 1}, {1, 2}},
+    TestID -> "Reorder-permutation-native-orders"
+]
+
+(* Placement onto {2, 3} must preserve the swap (regression: it used to collapse
+   to the identity because both orders were clobbered to the same list). *)
+With[{perm = QuantumOperator["Permutation" -> {2, 1}]},
+    VerificationTest[
+        ordPair[QuantumOperator[perm, {2, 3}]],
+        {{3, 2}, {2, 3}},
+        TestID -> "Reorder-placement-permutation-orders"
+    ];
+    VerificationTest[
+        orderedMat[QuantumOperator[perm, {2, 3}]],
+        $swap,
+        TestID -> "Reorder-placement-permutation-keeps-SWAP"
+    ];
+    (* non-adjacent target qudits *)
+    VerificationTest[
+        orderedMat[QuantumOperator[perm, {5, 9}]],
+        $swap,
+        TestID -> "Reorder-placement-permutation-nonadjacent"
+    ];
+    (* placement onto its own footprint is a no-op *)
+    VerificationTest[
+        ordPair[QuantumOperator[perm, {1, 2}]],
+        {{2, 1}, {1, 2}},
+        TestID -> "Reorder-placement-identity-noop"
+    ];
+    (* round-trip: place away then back preserves the matrix *)
+    VerificationTest[
+        orderedMat[QuantumOperator[QuantumOperator[perm, {5, 9}], {1, 2}]],
+        $swap,
+        TestID -> "Reorder-placement-roundtrip-SWAP"
+    ]
+]
+
+(* A 3-qudit cyclic permutation relabels its whole footprint and keeps its
+   matrix. *)
+With[{p3 = QuantumOperator["Permutation" -> {2, 3, 1}]},
+    VerificationTest[
+        ordPair[QuantumOperator[p3, {5, 6, 7}]],
+        {{6, 7, 5}, {5, 6, 7}},
+        TestID -> "Reorder-placement-3cycle-orders"
+    ];
+    VerificationTest[
+        orderedMat[QuantumOperator[p3, {5, 6, 7}]] === orderedMat[p3],
+        True,
+        TestID -> "Reorder-placement-3cycle-keeps-matrix"
+    ]
+]
+
+(* Ordinary operators (output order == input order) are unaffected: placement is
+   an ordinary relabel and matches the historical {order, order} behavior. *)
+VerificationTest[
+    ordPair[QuantumOperator[QuantumOperator["X"], {3}]],
+    {{3}, {3}},
+    TestID -> "Reorder-placement-single-qubit"
+]
+
+With[{cnot = QuantumOperator["CNOT"]},
+    VerificationTest[
+        ordPair[QuantumOperator[cnot, {2, 3}]],
+        {{2, 3}, {2, 3}},
+        TestID -> "Reorder-placement-CNOT-orders"
+    ];
+    VerificationTest[
+        orderedMat[QuantumOperator[cnot, {2, 3}]] === orderedMat[cnot],
+        True,
+        TestID -> "Reorder-placement-CNOT-keeps-matrix"
+    ]
+]
+
+(* Explicit two-element {out, in} order is positional/low-level: literally
+   setting output order == input order == {2, 3} rewires the swap into the
+   identity. This is intentional and distinct from single-order placement. *)
+With[{perm = QuantumOperator["Permutation" -> {2, 1}]},
+    VerificationTest[
+        ordPair[QuantumOperator[perm, {{2, 3}, {2, 3}}]],
+        {{2, 3}, {2, 3}},
+        TestID -> "Reorder-explicit-positional-orders"
+    ];
+    VerificationTest[
+        orderedMat[QuantumOperator[perm, {{2, 3}, {2, 3}}]],
+        IdentityMatrix[4],
+        TestID -> "Reorder-explicit-positional-identity"
+    ]
+]
+
+(* Output and input orders set independently. *)
+VerificationTest[
+    ordPair[QuantumOperator[QuantumOperator["X"], {{2}, {3}}]],
+    {{2}, {3}},
+    TestID -> "Reorder-explicit-out-in"
+]
+
+(* Arrow form order1 -> order2 sets {output -> order2, input -> order1}. *)
+VerificationTest[
+    ordPair[QuantumOperator[QuantumOperator["X"], {2} -> {3}]],
+    {{3}, {2}},
+    TestID -> "Reorder-arrow-swaps-out-in"
+]
+
+(* "Reorder" property: a bare order changes only the output order. *)
+With[{cnot = QuantumOperator["CNOT"]},
+    VerificationTest[
+        ordPair[cnot["Reorder", {2, 3}]],
+        {{2, 3}, {1, 2}},
+        TestID -> "Reorder-property-output-only"
+    ];
+    VerificationTest[
+        ordPair[cnot["Reorder", {{2, 3}, Automatic}]],
+        {{2, 3}, {1, 2}},
+        TestID -> "Reorder-property-Automatic-input"
+    ]
+]
+
+(* "Shift" adds a constant to every qudit index and preserves the matrix. *)
+VerificationTest[
+    ordPair[QuantumOperator["CNOT"]["Shift", 5]],
+    {{6, 7}, {6, 7}},
+    TestID -> "Reorder-shift-CNOT"
+]
+
+With[{perm = QuantumOperator["Permutation" -> {2, 1}]},
+    VerificationTest[
+        ordPair[perm["Shift", 1]],
+        {{3, 2}, {2, 3}},
+        TestID -> "Reorder-shift-permutation-orders"
+    ];
+    VerificationTest[
+        orderedMat[perm["Shift", 1]],
+        $swap,
+        TestID -> "Reorder-shift-permutation-keeps-SWAP"
+    ]
+]
+
+(* An order longer than the footprint is a broadcast, not a placement: the guard
+   on the single-order rule lets it fall through to the multiplicity path. *)
+VerificationTest[
+    QuantumOperator[QuantumOperator["X"], {1, 2, 3}]["Dimensions"],
+    {2, 2, 2, 2, 2, 2},
+    TestID -> "Reorder-longer-order-broadcasts"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumOperator - failure"]
 
 VerificationTest[
