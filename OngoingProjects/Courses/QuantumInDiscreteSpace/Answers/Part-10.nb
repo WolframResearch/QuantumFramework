@@ -1,0 +1,757 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     28564,        748]
+NotebookOptionsPosition[     24667,        697]
+NotebookOutlinePosition[     25009,        712]
+CellTagsIndexPosition[     24966,        709]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 10)\
+\
+\>", "Title",ExpressionUUID->"ae9c64cf-627b-4230-b514-50b3272bfffa"],
+
+Cell[TextData[{
+ "A companion answer key to ",
+ Cell["Question-List.md", "InlineCode",ExpressionUUID->
+  "f79b6396-7e95-4093-a0b8-8a4cbce062f9"],
+ ". For each question it gives ",
+ StyleBox["two",
+  FontWeight->"Bold"],
+ " worked answers:"
+}], "Text",ExpressionUUID->"91e7c9a8-9323-40bd-99d7-8f75b5b16c4c"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : native Wolfram Language only (plain vectors and matrices, ",
+ Cell[BoxData["PauliMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ccf1552-6008-4f59-8ce1-4c752de6663a"],
+ ", ",
+ Cell[BoxData["KroneckerProduct"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "50b1ca9a-dc1d-42e7-8c2f-89579ff64a6a"],
+ ", ",
+ Cell[BoxData["HadamardMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d70672a4-de03-4d48-9a0b-e0f980475f21"],
+ ", and friends). Nothing beyond the built-in language."
+}], "ItemNumbered",ExpressionUUID->"5e86c457-25c1-431d-836e-5285ade93c4a"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same task done through the ",
+ StyleBox["QuantumFramework",
+  FontWeight->"Bold"],
+ " paclet, leaning on its objects and property downvalues (",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QuantumCircuitOperator", "[", "...", "]"}], "[", "\"\<...\>\"", 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f5053fdf-4e61-465a-ab42-d8d382905235"],
+ ") rather than rebuilding matrices by hand. A QF result is a rich object, a \
+gate or a circuit, not a bare array: it can act on a target, compose with \
+others, report its overall unitary, its depth and its layer structure, and \
+more. The answers keep results as objects and treat a matrix as just one of \
+the object's many representations, not the thing itself."
+}], "ItemNumbered",ExpressionUUID->"2621b360-9999-4309-a014-cd3e7d9702f1"],
+
+Cell[TextData[{
+ "Two habits run through the answers. They write the computation ",
+ StyleBox["explicitly",
+  FontWeight->"Bold"],
+ " rather than hiding it in a helper function, because the code is itself \
+part of the explanation: a controlled gate is built from its definition ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], 
+    RowBox[{
+     TemplateBox[{"0"},
+      "Bra"], "\[CircleTimes]", 
+     StyleBox["I", "TI"]}]}], "+", 
+   RowBox[{
+    TemplateBox[{"1"},
+     "Ket"], 
+    RowBox[{
+     TemplateBox[{"1"},
+      "Bra"], "\[CircleTimes]", 
+     StyleBox["U", "TI"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b91be8d-3704-4c42-a4da-7f208c6f91b1"],
+ ", not pasted in as a fixed matrix. And they prefer ",
+ StyleBox["built-in features",
+  FontWeight->"Bold"],
+ " (a named gate, a circuit's own ",
+ Cell[BoxData["\"\<Depth\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc366e23-ba92-4203-ac84-f8f8ca62e3f0"],
+ ") over hand-rolled constructions. Each cell does ",
+ StyleBox["one",
+  FontWeight->"Bold"],
+ " thing and is preceded by a sentence saying what. Run the WL answers in a \
+bare kernel; the QF answers need the paclet loaded once."
+}], "Text",ExpressionUUID->"53a1d83a-0fda-417f-9fcd-e40b16524d8d"],
+
+Cell["Setup", "Section",ExpressionUUID->"f2935dac-2b25-4677-be9d-f64fe9daea61"],
+
+Cell["The QF answers load the paclet once:", "Text",ExpressionUUID->"ff8c1dad-c129-4297-9888-bd542b11302c"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"a0abe1f4-b3da-41f0-80a1-aad7fd814bb0"],
+
+Cell["Part 10. Elementary multi-qubit gates and circuits", "Section",ExpressionUUID->"3823983f-c7de-4c78-bbbc-bdda871742c3"],
+
+Cell[TextData[{
+ "10.1 [BSc] How do I build the standard multi-qubit gates (CNOT, CZ, SWAP, \
+Toffoli, controlled-",
+ Cell[BoxData[
+  StyleBox["U", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f6cc4ce4-120f-4135-a38d-dcbef671c7cb"],
+ ")?"
+}], "Subsection",ExpressionUUID->"eae4a8aa-1ee5-4b98-a82c-b8881944a8f9"],
+
+Cell[TextData[{
+ "The standard entangling gates are controlled operations: CNOT and CZ apply ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b10697a8-57a2-432b-8fbf-4e3d0dbb33f4"],
+ " or ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ef9c19c9-e529-48f5-b3d5-c50e435c5ab0"],
+ " to a target when the control is ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1696fe60-5d7c-4606-bcb9-816c25add9c0"],
+ ", SWAP exchanges two qubits, Toffoli is a doubly-controlled ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7671f22d-525b-4e97-bd73-0c3fc5372786"],
+ ", and the general controlled-",
+ Cell[BoxData[
+  StyleBox["U", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "188d21cf-8f2c-4ffb-9dd7-fb3219babda0"],
+ " is ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], 
+    RowBox[{
+     TemplateBox[{"0"},
+      "Bra"], "\[CircleTimes]", 
+     StyleBox["I", "TI"]}]}], "+", 
+   RowBox[{
+    TemplateBox[{"1"},
+     "Ket"], 
+    RowBox[{
+     TemplateBox[{"1"},
+      "Bra"], "\[CircleTimes]", 
+     StyleBox["U", "TI"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e2fe2a4-0bdf-4d4b-a42d-9c92a7b72616"],
+ ". Every controlled gate has this projector form, which is its definition."
+}], "Text",ExpressionUUID->"a3de7e41-e40c-432f-a54f-aaadc52640db"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : each controlled gate is a sum of projector-tensor-target terms; SWAP is \
+the permutation matrix. Here is the general controlled-",
+ Cell[BoxData[
+  StyleBox["U", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9cc80d31-749e-4df6-ac26-0ff501a0b93f"],
+ " with an arbitrary single-qubit ",
+ Cell[BoxData[
+  StyleBox["U", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2af8d095-090d-424d-838a-d890d7c391ee"],
+ ", the pattern all the others follow."
+}], "Text",ExpressionUUID->"edc5ddf1-3e39-43c5-aa24-f58fcafa9b52"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"p0", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"p1", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "1"}], "}"}]}], "}"}]}]}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{"p0", ",", " ", 
+      RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", "+", " ", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{"p1", ",", " ", "u"}], "]"}]}]}], "]"}]], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"6bdb4969-79e5-4192-ad80-c185f1a3376a"],
+
+Cell[TextData[{
+ "The named gates are this pattern with ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["U", "TI"], "=", 
+    StyleBox["X", "TI"]}], ",", 
+   StyleBox["Z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9398a47a-360b-493e-a26f-becd1e708094"],
+ ", plus the two permutation gates SWAP and Toffoli."
+}], "Text",ExpressionUUID->"d44de32b-a74a-4f0c-9e3b-0f544cbefb5b"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"p0", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"p1", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "1"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"p11", " ", "=", " ", 
+      RowBox[{"DiagonalMatrix", "[", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "0", ",", " ", "0", ",", " ", "1"}], "}"}], 
+       "]"}]}]}], "}"}], ",", " ", 
+   RowBox[{"<|", 
+    RowBox[{
+     RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+      RowBox[{
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{"p0", ",", " ", 
+         RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", "+", " ", 
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{"p1", ",", " ", 
+         RowBox[{"PauliMatrix", "[", "1", "]"}]}], "]"}]}]}], ",", " ", 
+     RowBox[{"\"\<CZ\>\"", " ", "->", " ", 
+      RowBox[{
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{"p0", ",", " ", 
+         RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", "+", " ", 
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{"p1", ",", " ", 
+         RowBox[{"PauliMatrix", "[", "3", "]"}]}], "]"}]}]}], ",", " ", 
+     RowBox[{"\"\<SWAP\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+         " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0", ",", " ", "1", ",", " ", "0"}], "}"}], ",",
+         " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+         " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "0", ",", " ", "0", ",", " ", "1"}], "}"}]}], 
+       "}"}]}], ",", " ", 
+     RowBox[{"\"\<Toffoli\>\"", " ", "->", " ", 
+      RowBox[{
+       RowBox[{"IdentityMatrix", "[", "8", "]"}], " ", "+", " ", 
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{"p11", ",", " ", 
+         RowBox[{
+          RowBox[{"PauliMatrix", "[", "1", "]"}], " ", "-", " ", 
+          RowBox[{"IdentityMatrix", "[", "2", "]"}]}]}], "]"}]}]}]}], 
+    "|>"}]}], "]"}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"f58af4c0-2981-423b-98c2-2c52ef23e459"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : these are named ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d8f69dd0-1593-4636-81ce-004760e40aa7"],
+ "s; read their matrices off the objects."
+}], "Text",ExpressionUUID->"5600d65d-066a-446b-82ae-05ee82a7969f"],
+
+Cell[BoxData[
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Normal", "[", 
+     RowBox[{
+      RowBox[{"QuantumOperator", "[", "#", "]"}], "[", "\"\<Matrix\>\"", 
+      "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<CNOT\>\"", ",", " ", "\"\<CZ\>\"", ",", " ", "\"\<SWAP\>\"", 
+     ",", " ", "\"\<Toffoli\>\""}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"13548f2c-7bd8-48f3-88a2-800b6bce2e5f"],
+
+Cell[TextData[{
+ "Both give the same gates: CNOT and CZ flip ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56cc0153-858d-4c93-9b67-408126ff8071"],
+ " or phase ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "00b444a7-cd36-4a74-bffb-c691fb58e691"],
+ " on the target when the control is set, SWAP permutes the two qubits, and \
+Toffoli flips its target only when both controls are ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b7e805de-a5c7-49bc-a835-e2b53651afbd"],
+ ". The QF names carry the object's structure (arity, control and target \
+wires, unitarity), so they drop straight into a circuit; the projector form \
+on the WL side shows ",
+ StyleBox["why", "TI"],
+ " each is the gate it is."
+}], "Text",ExpressionUUID->"49617865-488c-4257-a3d3-5dd8b1a7991b"],
+
+Cell["\<\
+10.2a [BSc] How do I compose a circuit from gates and apply it to an input \
+state?\
+\>", "Subsection",ExpressionUUID->"8aea62c4-033c-43a0-8be7-669fbc97b674"],
+
+Cell[TextData[{
+ "A circuit is an ordered list of gates on named wires; applying it evolves \
+an input state through them in order. Compose the two-gate Bell circuit, ",
+ Cell[BoxData[
+  StyleBox["H", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f6f7fbf-0ff8-451d-b1a6-195119d8b841"],
+ " on qubit 1 then CNOT from 1 to 2, and apply it to ",
+ Cell[BoxData[
+  TemplateBox[{"00"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a2704459-6582-40dc-a82d-4e95ee4937f8"],
+ "."
+}], "Text",ExpressionUUID->"5a094930-2772-4bdc-b9f8-9267aec1e996"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the circuit's action is the ordered matrix product acting on the input \
+vector, CNOT after ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["H", "TI"], "\[CircleTimes]", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc830d54-e7a8-4534-93b2-b3e4f157b9dd"],
+ "."
+}], "Text",ExpressionUUID->"e90d2023-92e3-49b6-bd0f-0a8d69ec45cb"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"cnot", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "0", ",", " ", "0", ",", " ", "1"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "0", ",", " ", "1", ",", " ", "0"}], "}"}]}], 
+      "}"}]}], "}"}], ",", " ", 
+   RowBox[{"cnot", " ", ".", " ", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{
+      RowBox[{"HadamardMatrix", "[", "2", "]"}], ",", " ", 
+      RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", ".", " ", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"2b361b0d-f396-4f22-91d2-438ccb6b34a8"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : a ",
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d13de9d-797a-406f-a4ec-0569f9cc0189"],
+ " built from the gate list applies to the ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b441087-4c09-4d52-b460-0591eb6bf2ad"],
+ " directly."
+}], "Text",ExpressionUUID->"8b7a21ce-1ccc-403b-9d0f-fcc00c43cb4a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+     RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "2"}], "}"}]}]}], "}"}], "]"}], "[", 
+  RowBox[{"QuantumState", "[", "\"\<00\>\"", "]"}], "]"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"2dadcf34-cb0b-4b83-a3bd-9cafa1dae7eb"],
+
+Cell[TextData[{
+ "Both produce the Bell state ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     SuperscriptBox["\[CapitalPhi]", "+"]},
+    "Ket"], "=", 
+   RowBox[{
+    FractionBox["1", 
+     SqrtBox["2"]], 
+    RowBox[{"(", 
+     RowBox[{
+      TemplateBox[{"00"},
+       "Ket"], "+", 
+      TemplateBox[{"11"},
+       "Ket"]}], ")"}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e2f91f0-fe72-4677-b6d1-7dcc851e1abd"],
+ ": the Hadamard makes a superposition on the control, and the CNOT \
+correlates the target with it, so a product input comes out entangled. The QF \
+circuit is a reusable object that also knows its wires and its overall \
+unitary (10.2b)."
+}], "Text",ExpressionUUID->"e9d27104-6762-4698-b6c3-e32c84523588"],
+
+Cell["\<\
+10.2b [BSc] How do I read off the overall unitary of a composed circuit?\
+\>", "Subsection",ExpressionUUID->"37bfaa5a-1648-4ba0-8c90-967138c7f463"],
+
+Cell["\<\
+The whole circuit is itself one unitary, the ordered product of its gate \
+matrices; reading it off lets you treat a subcircuit as a single black-box \
+gate. Take the same Bell circuit.\
+\>", "Text",ExpressionUUID->"fb90d9f7-b89e-4a56-ac2b-005ae3ecfafa"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : multiply the gate matrices in circuit order (with each embedded on its \
+wires), CNOT after ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["H", "TI"], "\[CircleTimes]", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dd72e55e-065a-4753-98d0-b1cbf56def27"],
+ "."
+}], "Text",ExpressionUUID->"c0c03550-5191-4996-9347-c63e20ccefe2"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"cnot", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "0", ",", " ", "0", ",", " ", "1"}], "}"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "0", ",", " ", "1", ",", " ", "0"}], "}"}]}], 
+      "}"}]}], "}"}], ",", " ", 
+   RowBox[{"cnot", " ", ".", " ", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{
+      RowBox[{"HadamardMatrix", "[", "2", "]"}], ",", " ", 
+      RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}]}]}], "]"}]], "Input",\
+
+ CellLabel->"In[7]:= ",ExpressionUUID->"2087f12b-d92e-4cb1-96b4-fde371a6b1f7"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the circuit collapses to a single ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3fb5c8a2-9fd3-493a-8314-4c6bd8962925"],
+ " via ",
+ Cell[BoxData["\"\<QuantumOperator\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e81d9f4d-4b84-45d9-9c18-29078f4356a6"],
+ "; here is its matrix."
+}], "Text",ExpressionUUID->"62badef0-7984-4980-92d9-4934c1a54206"],
+
+Cell[BoxData[
+ RowBox[{"Normal", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"QuantumCircuitOperator", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+       RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2"}], "}"}]}]}], "}"}], "]"}], 
+    "[", "\"\<QuantumOperator\>\"", "]"}], "[", "\"\<Matrix\>\"", "]"}], 
+  "]"}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"225fbf26-667b-48b4-a68f-cb37c231f48b"],
+
+Cell[TextData[{
+ "Both give the same ",
+ Cell[BoxData[
+  RowBox[{"4", "\[Times]", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5079e85b-8b82-45cc-b225-4ebd5c904d43"],
+ " Bell-preparation unitary, whose first column is ",
+ Cell[BoxData[
+  TemplateBox[{
+    SuperscriptBox["\[CapitalPhi]", "+"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "02134c73-45b4-45ee-8af9-415732ee44a2"],
+ " (its action on ",
+ Cell[BoxData[
+  TemplateBox[{"00"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0fed5e2e-0cc4-4b2d-8a42-bd0ffc779ec7"],
+ ", as in 10.2a). Compressing a circuit to its overall unitary is how a \
+multi-gate block is reused as a named subroutine, at the cost of hiding the \
+internal parallelism that 10.3 exposes."
+}], "Text",ExpressionUUID->"cbd52bad-4f98-4174-8192-47e031969bfb"],
+
+Cell["\<\
+10.3 [BSc] How do I compute the depth and the parallel layers of a circuit?\
+\>", "Subsection",ExpressionUUID->"b9bc814c-b2fb-44bd-b301-9c92f1996c66"],
+
+Cell[TextData[{
+ "The depth of a circuit is the number of layers when gates are packed as \
+early as possible: two gates share a layer only if they act on disjoint \
+qubits, so depth measures the longest chain of gates that must run in \
+sequence, the circuit's runtime on parallel hardware. Take ",
+ Cell[BoxData[
+  StyleBox["H", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "233f3ccf-99b4-4482-b08a-963b79e86b52"],
+ " on qubit 1, ",
+ Cell[BoxData[
+  StyleBox["H", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f434273-aef7-41e9-b9f8-d7f7342163cd"],
+ " on qubit 2, CNOT from 1 to 2, then ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74b5f01d-ee91-4eae-bb40-b1f736c08378"],
+ " on qubit 1."
+}], "Text",ExpressionUUID->"92103128-f2b3-4cad-b6ad-1a49ac6313b9"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : schedule each gate into the earliest layer its qubits allow (one past \
+the latest layer any of its qubits is currently used), tracking a per-qubit \
+clock; the depth is the maximum over qubits."
+}], "Text",ExpressionUUID->"adb59150-5a2c-4f89-bfa8-0a717a99c849"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"gates", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", "1", "}"}], ",", " ", 
+       RowBox[{"{", "2", "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}], ",", " ", 
+       RowBox[{"{", "1", "}"}]}], "}"}]}], "}"}], ",", " ", 
+   RowBox[{"Max", "[", 
+    RowBox[{"Fold", "[", 
+     RowBox[{
+      RowBox[{"Function", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"clock", ",", " ", "g"}], "}"}], ",", " ", 
+        RowBox[{"ReplacePart", "[", 
+         RowBox[{"clock", ",", " ", 
+          RowBox[{"Thread", "[", 
+           RowBox[{"g", " ", "->", " ", 
+            RowBox[{
+             RowBox[{"Max", "[", 
+              RowBox[{"clock", "[", 
+               RowBox[{"[", "g", "]"}], "]"}], "]"}], " ", "+", " ", "1"}]}], 
+           "]"}]}], "]"}]}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", "0"}], "}"}], ",", " ", "gates"}], "]"}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"37c0facb-c851-408b-b12b-67f59ed06d8e"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : a ",
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4982b24a-faa9-4a68-b48e-cb4ac6e28e5f"],
+ " reports its ",
+ Cell[BoxData["\"\<Depth\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "13aaea5b-c975-46e8-80d6-539955405bca"],
+ " and its ",
+ Cell[BoxData["\"\<Layers\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a8d6d605-f90b-4c04-b40a-170bbc54db93"],
+ " (the list of parallel slices) directly."
+}], "Text",ExpressionUUID->"c4da1c0d-569f-4c0d-b541-c6dc13e1ae2b"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"qc", " ", "=", " ", 
+     RowBox[{"QuantumCircuitOperator", "[", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\"\<H\>\"", " ", "->", " ", "1"}], ",", " ", 
+        RowBox[{"\"\<H\>\"", " ", "->", " ", "2"}], ",", " ", 
+        RowBox[{"\"\<CNOT\>\"", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "2"}], "}"}]}], ",", " ", 
+        RowBox[{"\"\<X\>\"", " ", "->", " ", "1"}]}], "}"}], "]"}]}], "}"}], ",",
+    " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"qc", "[", "\"\<Depth\>\"", "]"}], ",", " ", 
+     RowBox[{"Length", "[", 
+      RowBox[{"qc", "[", "\"\<Layers\>\"", "]"}], "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"614ca6d8-280e-435d-8992-dc0ff3e037ce"],
+
+Cell[TextData[{
+ "Both give depth ",
+ Cell[BoxData["3"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ae390a53-c4e2-487b-b624-db37b7ef5879"],
+ ": the two Hadamards run together in layer 1 (disjoint qubits), the CNOT \
+waits for both in layer 2, and the final ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b45cf40c-91f4-4c18-ad47-025d4b8cd301"],
+ " waits for qubit 1 in layer 3. Depth, not gate count, sets how long a \
+circuit takes on hardware that can fire disjoint gates simultaneously, so \
+scheduling into layers is the first step in estimating a circuit's real \
+cost."
+}], "Text",ExpressionUUID->"25d12a0c-3ddc-4da1-9886-f4a8d5f249e2"]
+},
+CreateCellID->True,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"8f152568-13cc-469e-bf3e-65bcf907621c"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 159, 3, 70, "Title",ExpressionUUID->"ae9c64cf-627b-4230-b514-50b3272bfffa"],
+Cell[716, 25, 306, 8, 70, "Text",ExpressionUUID->"91e7c9a8-9323-40bd-99d7-8f75b5b16c4c"],
+Cell[1025, 35, 673, 16, 70, "ItemNumbered",ExpressionUUID->"5e86c457-25c1-431d-836e-5285ade93c4a"],
+Cell[1701, 53, 868, 18, 70, "ItemNumbered",ExpressionUUID->"2621b360-9999-4309-a014-cd3e7d9702f1"],
+Cell[2572, 73, 1296, 36, 70, "Text",ExpressionUUID->"53a1d83a-0fda-417f-9fcd-e40b16524d8d"],
+Cell[3871, 111, 79, 0, 70, "Section",ExpressionUUID->"f2935dac-2b25-4677-be9d-f64fe9daea61"],
+Cell[3953, 113, 107, 0, 70, "Text",ExpressionUUID->"ff8c1dad-c129-4297-9888-bd542b11302c"],
+Cell[4063, 115, 169, 2, 70, "Input",ExpressionUUID->"a0abe1f4-b3da-41f0-80a1-aad7fd814bb0"],
+Cell[4235, 119, 124, 0, 70, "Section",ExpressionUUID->"3823983f-c7de-4c78-bbbc-bdda871742c3"],
+Cell[4362, 121, 337, 8, 70, "Subsection",ExpressionUUID->"eae4a8aa-1ee5-4b98-a82c-b8881944a8f9"],
+Cell[4702, 131, 1549, 47, 70, "Text",ExpressionUUID->"a3de7e41-e40c-432f-a54f-aaadc52640db"],
+Cell[6254, 180, 619, 15, 70, "Text",ExpressionUUID->"edc5ddf1-3e39-43c5-aa24-f58fcafa9b52"],
+Cell[6876, 197, 901, 25, 70, "Input",ExpressionUUID->"6bdb4969-79e5-4192-ad80-c185f1a3376a"],
+Cell[7780, 224, 411, 11, 70, "Text",ExpressionUUID->"d44de32b-a74a-4f0c-9e3b-0f544cbefb5b"],
+Cell[8194, 237, 2545, 66, 70, "Input",ExpressionUUID->"f58af4c0-2981-423b-98c2-2c52ef23e459"],
+Cell[10742, 305, 325, 8, 70, "Text",ExpressionUUID->"5600d65d-066a-446b-82ae-05ee82a7969f"],
+Cell[11070, 315, 465, 11, 70, "Input",ExpressionUUID->"13548f2c-7bd8-48f3-88a2-800b6bce2e5f"],
+Cell[11538, 328, 943, 23, 70, "Text",ExpressionUUID->"49617865-488c-4257-a3d3-5dd8b1a7991b"],
+Cell[12484, 353, 168, 3, 70, "Subsection",ExpressionUUID->"8aea62c4-033c-43a0-8be7-669fbc97b674"],
+Cell[12655, 358, 591, 14, 70, "Text",ExpressionUUID->"5a094930-2772-4bdc-b9f8-9267aec1e996"],
+Cell[13249, 374, 425, 12, 70, "Text",ExpressionUUID->"e90d2023-92e3-49b6-bd0f-0a8d69ec45cb"],
+Cell[13677, 388, 1025, 27, 70, "Input",ExpressionUUID->"2b361b0d-f396-4f22-91d2-438ccb6b34a8"],
+Cell[14705, 417, 469, 12, 70, "Text",ExpressionUUID->"8b7a21ce-1ccc-403b-9d0f-fcc00c43cb4a"],
+Cell[15177, 431, 437, 10, 70, "Input",ExpressionUUID->"2dadcf34-cb0b-4b83-a3bd-9cafa1dae7eb"],
+Cell[15617, 443, 753, 22, 70, "Text",ExpressionUUID->"e9d27104-6762-4698-b6c3-e32c84523588"],
+Cell[16373, 467, 157, 2, 70, "Subsection",ExpressionUUID->"37bfaa5a-1648-4ba0-8c90-967138c7f463"],
+Cell[16533, 471, 264, 4, 70, "Text",ExpressionUUID->"fb90d9f7-b89e-4a56-ac2b-005ae3ecfafa"],
+Cell[16800, 477, 425, 12, 70, "Text",ExpressionUUID->"c0c03550-5191-4996-9347-c63e20ccefe2"],
+Cell[17228, 491, 918, 25, 70, "Input",ExpressionUUID->"2087f12b-d92e-4cb1-96b4-fde371a6b1f7"],
+Cell[18149, 518, 480, 12, 70, "Text",ExpressionUUID->"62badef0-7984-4980-92d9-4934c1a54206"],
+Cell[18632, 532, 508, 13, 70, "Input",ExpressionUUID->"225fbf26-667b-48b4-a68f-cb37c231f48b"],
+Cell[19143, 547, 868, 22, 70, "Text",ExpressionUUID->"cbd52bad-4f98-4174-8192-47e031969bfb"],
+Cell[20014, 571, 160, 2, 70, "Subsection",ExpressionUUID->"b9bc814c-b2fb-44bd-b301-9c92f1996c66"],
+Cell[20177, 575, 867, 20, 70, "Text",ExpressionUUID->"92103128-f2b3-4cad-b6ad-1a49ac6313b9"],
+Cell[21047, 597, 322, 6, 70, "Text",ExpressionUUID->"adb59150-5a2c-4f89-bfa8-0a717a99c849"],
+Cell[21372, 605, 1123, 31, 70, "Input",ExpressionUUID->"37c0facb-c851-408b-b12b-67f59ed06d8e"],
+Cell[22498, 638, 622, 16, 70, "Text",ExpressionUUID->"c4da1c0d-569f-4c0d-b541-c6dc13e1ae2b"],
+Cell[23123, 656, 818, 22, 70, "Input",ExpressionUUID->"614ca6d8-280e-435d-8992-dc0ff3e037ce"],
+Cell[23944, 680, 719, 15, 70, "Text",ExpressionUUID->"25d12a0c-3ddc-4da1-9886-f4a8d5f249e2"]
+}
+]
+*)
+
+(* End of internal cache information *)

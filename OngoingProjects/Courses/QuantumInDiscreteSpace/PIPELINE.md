@@ -30,7 +30,16 @@ model stand side by side. Each principle below names the failure mode it prevent
    (Failure: degenerate witness, the example is a silent no-op.)
 5. **Atomicity: one concept per question, one computation per cell.** A single mathematical object (a
    vector, a distribution, one boolean, a tight derivation chain like ip/|ip|/|ip|^2) stays whole; a
-   list of *independent* computations splits into separate captioned cells. (Failure: concept bundling, a miss cannot be localized.)
+   list of *independent* computations splits into separate captioned cells. The same test governs the
+   QUESTION, not just its cells: one fundamental concept per question. A coherent skill-chain or natural
+   pair stays whole (commutator & anticommutator; eigenvalues -> eigenvectors -> spectral decomposition;
+   mean & variance; build rho then read one scalar off it). SPLIT only a genuine bundle of two DISTINCT
+   concepts, a computational procedure yoked to a separate conceptual theorem (test Hermiticity | *why*
+   observables must be Hermitian), or two unrelated constructions (Hilbert-Schmidt inner product | Pauli
+   expansion), into `N.Ma`/`N.Mb`; the discriminator is *would each half stand as its own question with
+   its own answer?* Sub-letter to avoid renumbering an answered or synced part; renumber a genuine
+   insertion in an unanswered part to keep dependency order. (Failure: concept bundling, a miss cannot be
+   localized and the reader is taught two things at once.)
 6. **Physicist register.** Open with the physics (what the operator *does* to the state); gloss or
    banish software-engineering jargon. (Failure: register mismatch.)
 
@@ -50,8 +59,9 @@ model stand side by side. Each principle below names the failure mode it prevent
 11. **Well-posed and precisely named.** Unambiguous referents ("the partial trace over $B$"); name a
     property in prose as `"X"` or `obj["X"]`, NEVER a bare bracket `["X"]` (strict, qf skill 0.5).
     (Failure: ambiguous referent.)
-12. **Valid delimited TeX, no em/en dash (build correctness, not style).** Malformed `$...$` fails to
-    render; Unicode math in prose is wrong by policy. (Failure: render rot, the published artifact silently breaks.)
+12. **Valid delimited TeX, no em/en dash; complex conjugate as `^*` not overline (build correctness, not style).** Malformed `$...$` fails to render; Unicode math in prose is wrong by policy. A scalar
+    complex conjugate is written `\alpha^*` (user rule), NEVER `\bar\alpha`/`\overline{...}`; an
+    operator conjugate-transpose stays `A^\dagger`. (Failure: render rot / notation drift.)
 
 **The Output Boundary** (reconciles 1 with 8/10): withhold the *worded answer*; render the *object the
 code produces*. The summary box, tableau, plot, or entropy value is the computation the reader is meant
@@ -59,7 +69,11 @@ to obtain, not a spoiler of it. "Drop outputs" means drop worded answers, never 
 
 **Curriculum (the question list)**
 13. **Complete and dependency-ordered.** Cover the whole declared scope; every prerequisite precedes
-    its first use (no forward reference); one concept per question; tag [BSc]/[MSc]. (Failure: scope hole or forward-reference.)
+    its first use (no forward reference); one concept per question; tag [BSc]/[MSc]. Keep any coverage
+    map's per-part and total counts (and the BSc/MSc split) reconciled with the body after every edit,
+    and fix every cross-reference a split/renumber/reword touches. When a curriculum list and an answer
+    key coexist, a change in the answered parts propagates to BOTH so they never desync. (Failure: scope
+    hole, forward-reference, stale count, or dangling cross-reference.)
 
 **Verification and process**
 14. **Run the user's literal first; verify, don't recall.** Test the exact supplied token/value before
@@ -67,19 +81,63 @@ to obtain, not a spoiler of it. "Drop outputs" means drop worded answers, never 
     load-bearing premise, before asserting. (Failure: confabulated correction, e.g. AntiCommutator over the real Anticommutator.)
 15. **Fix the cause, not the symptom.** When something was missed or wrong, diagnose the gap-generating
     cause so it cannot recur. (Failure: whack-a-mole patching.)
-16. **Fresh-context adversarial review before "done."** Hand finished WL work to a clean-context
-    reviewer that reproduces every claim in a kernel (`wl-verifier` / `/wl-verify` / `quantum-review`).
-    (Failure: self-certification, the author who erred grades the work.)
+16. **Fresh-context adversarial review before "done", in roles.** Hand finished WL work to a
+    clean-context reviewer that reproduces every claim in a kernel (`wl-verifier` / `/wl-verify` /
+    `quantum-review`). Run it as ROLES, not one pass: a clarity reader, a one-concept/rewrite editor, a
+    repetition/coverage auditor, and a closing formula-verifier that re-derives (or numerically checks)
+    every formula in the QUESTION prose, not only the code, since a wrong formula hides in a stated bound
+    as readily as in a cell (a spurious factor in a Helstrom probability survived until the closing
+    re-derivation). (Failure: self-certification, or an unchecked prose-formula the code never exercised.)
 17. **Single source, standard pipeline.** The literate `.md` (with a `Template:` key, here `Default`)
     is canonical; regenerate the `.nb` via `MarkdownToNotebook[src,out,"Evaluate"->False]` (md2nb),
     never hand-edit it; read it back to confirm structure and clean re-evaluation. (Failure: source desync.)
 18. **Spin off out-of-scope work; don't gold-plate inline.** A kernel bug or adjacent topic surfaced
     mid-Part becomes a separate task, not a detour. (Failure: scope creep.)
 
+**Answer independence and question clarity (list-wide)**
+
+- **Answers are independent; no cross-answer leak.** Each question's two answers build their own states
+  and operators locally; no variable defined in one answer is used by another (a one-time package load
+  is shared setup and fine; a shared `rho` is a leak). Verify by running each question's cells in a fresh
+  context (isolated) and confirming every output equals the connected top-to-bottom run. (Failure:
+  cross-answer leak, an answer silently depends on a neighbor and breaks when reused or reordered.)
+- **The question states the expectation, not just a name.** A prompt that names a technique carries its
+  defining formula or a plain gloss, so the reader knows exactly what to compute: "the Holevo bound
+  $\chi = S(\sum_i p_i\rho_i) - \sum_i p_i S(\rho_i)$", not merely "the Holevo bound"; "bound the
+  ground-state energy from above with the Rayleigh quotient $\langle\psi|H|\psi\rangle/\langle\psi|\psi\rangle \ge E_0$",
+  not merely "a Rayleigh-Ritz variational bound". (Failure: jargon prompt, the target hides behind a
+  named technique the reader may not know.)
+- **Default to the most general state the concept admits; write $\vec\sigma$ as a vector.** Unless the
+  question names a specific state or the concept is intrinsically about purity, the default qubit is the
+  generic *mixed* state in Bloch form, $\rho = \tfrac12(I + \vec r\cdot\vec\sigma)$, $|\vec r|\le1$
+  (`rho = 1/2 (IdentityMatrix[2] + {rx, ry, rz} . PauliMatrix[{1, 2, 3}])`); prefer it over the
+  matrix-entry $\{\{a,c\},\{c^*,1-a\}\}$ (manifestly Hermitian and unit-trace, physicality is
+  $|\vec r|\le1$, and the populations $\tfrac{1\pm r_z}2$ and coherences $r_x,r_y$ read off directly).
+  Drop to the generic *pure* state $\{\cos\tfrac\theta2, e^{i\varphi}\sin\tfrac\theta2\}$ only when the
+  fact needs purity: amplitude / Born-from-amplitude, global or relative phase, the pure-state boundary
+  $|\vec r|=1$, uncertainty-bound *saturation*, Schmidt / pure-state entanglement, a variational trial
+  ket. Test before generalizing: does the closed form survive a mixed state? A $Z$ measurement does
+  (probabilities $\tfrac{1\pm r_z}2$, mean $r_z$), but Robertson / Maassen-Uffink saturation does not
+  (`Reduce[gap == 0 && |r| < 1]` returns `False`). Never compute a mixed-state mean as the sandwich
+  $\langle\psi|A|\psi\rangle$ (valid only for a state vector); use $\mathrm{Tr}[A\rho]$. Write the Pauli
+  vector as `PauliMatrix[{1, 2, 3}]` in every $\vec r\cdot\vec\sigma$ or $\hat n\cdot\vec\sigma$ dot
+  product; keep a bare `PauliMatrix[k]` for a single named observable and `KroneckerProduct[...]` for
+  composites. (Failure: pure-state restriction of an all-states fact; a mixed mean via bra-ket; a
+  matrix-entry state where Bloch is clearer.)
+
+- **No process narration; state the physics, not the pedagogy.** Reader-facing text never contrasts the
+  answer with a rejected authoring alternative: no "derived rather than assumed", "rather than name the
+  answer", "do not guess a state", "not on a lucky example", "measured rather than assumed". Such sentences
+  document the design DNA and prior drafts, which the reader never saw (the prose analog of the
+  no-migration-narration rule for code comments); follow the rules silently and let the construction speak.
+  Genuine physics contrasts stay (sesquilinear rather than bilinear, biased coin rather than fair, object
+  rather than bare array). (Failure: authoring-history leak, the text reads as a changelog of the writer's
+  choices.)
+
 **Carrier**
 19. **Principles transfer, instances don't.** Apply every rule above list-wide and to later Parts
     without being re-prompted; a one-off correction is a standing policy in disguise. This rule
-    transports 1-18 to Parts 3-25 untouched. (Failure: instance myopia, re-litigating the same rule per item.)
+    transports every principle above to any Part, question, or future teaching-doc, untouched. (Failure: instance myopia, re-litigating the same rule per item.)
 
 ## DRAFT BRIEF
 
@@ -389,3 +447,126 @@ GHZ-paradox explanation, the g^(2) bunching/Poissonian/antibunching classificati
 qualitative interpretation. Now reads as a true blind exam: question + concept + runnable code +
 physics interpretation, with the numeric answer found only by running the cell. Re-run clean 84/84,
 exit 0, zero messages.
+
+**v6 (list-wide one-concept + independence + clarity pass; both files):** driven by user directives
+that hardened into the DNA above (principle 5 question-level split test + `N.Ma/N.Mb`, principle 13
+coverage/cross-ref maintenance, principle 16 role-based review, and the two new list-wide principles:
+answer independence and question-states-the-formula). *Answer key (Parts 1-3):* replaced
+`QuantumTensorProduct[QuantumOperator["A"],QuantumOperator["B"]]` with the string operator
+`QuantumOperator["AB"]` (object-`==`-equal; but `["Matrix"]` is a SparseArray so `=!=` the dense
+`KroneckerProduct`, and `QuantumOperator["ZI"]["Dimension"]` is 16, the operator dim, NOT the Hilbert
+dim = matrix length; read joint spectra off diagonals, compare those, not `===`). Split 1.9/2.3/2.9/
+2.10/3.1 into a/b. Rewrote 2.9a to actually CONSTRUCT a CSCO and TEST completeness (a degenerate single
+observable is incomplete; adjoin commuting observables until #distinct joint-eigenvalue tuples = Hilbert
+dim). Gave 2.11/2.12 their formulas (Rayleigh quotient; `H=H0+lambda V` order-by-order expansion). Made
+3.1b/3.2/3.6 self-contained (each builds its own `rho`/`rhoB` locally, following 3.4's `rhoB=...;`
+pattern) so no answer leaks a variable. Added 3.9 valid-density-operator test (WL `{HermitianMatrixQ,
+Tr==1, PositiveSemidefiniteMatrixQ}` vs QF `"PhysicalQ"`, verified to agree). Verified: 139-cell
+top-to-bottom run 0 msgs, connected-vs-isolated independence run 0 leaks, nb rebuilt 139 Input / 36
+Subsection. *Question-List.md (adversarial-draft, 3 roles + closing reviewer):* clarity role flagged 26
+named-technique prompts, rewrite role finalized them with physics fixes (Berry-phase sign+closure,
+amplitude-amplification `Q=-A S0 A^dagger S_chi`, CP-divisibility as the real Markovianity criterion) and
+found only 3 genuine bundles to split (11.12, 12.8, 20.9); coverage role kept the deliberate pure-vs-mixed
+/ concrete-vs-general ladders (cross-reference, do not delete) and surfaced one real gap; closing
+formula-verifier RE-DERIVED every prose formula and caught a physics bug (Helstrom `P_err` had a spurious
+inner 1/2). Relevelled 6.1/6.2/23.13 -> MSc; kept 11.7 MSc (concurrence + negativity both graduate).
+Added the four coverage items (Jordan-Wigner map, classical linear code before CSS, non-selective Lueders
+channel, valid-density-operator test). **Now 206 questions / 25 parts / 85 BSc / 121 MSc**, coverage map
+reconciled to the body, Parts 20/22 renumbered gap-free, all four additions fresh-reviewed clean.
+
+**v7 (Parts 5-6 clarity + state-genericity, then per-part split; answer key):** Two adversarial-draft
+passes, each 3 agents x 2 rounds with genuine cross-agent reconciliation and a kernel verifier. *Clarity
+pass:* 6.5 real witness -> complex off-axis `{Cos[Pi/6], Exp[I 2 Pi/5] Sin[Pi/6]}` plus a computed
+`c = max|<a|b>| = 1/Sqrt[2]` so the `-Log2[c^2] = 1` bound is derived not asserted; 6.4 hardcoded MUB
+matrices -> built from the solved phases via `Prepend[mub /@ {0, Pi/2}, IdentityMatrix[2]]`; defined
+`sigma_A = Sqrt[<A^2>-<A>^2]` in 6.1; tied 2.13's 2x2 diagonalization to degenerate PT; expanded "MUBs" at
+first use; synced Question-List 3.3 title to the answer. *State-genericity pass (new list-wide DNA:
+default to the generic Bloch mixed state unless the concept is intrinsically pure; write sigma as
+`PauliMatrix[{1,2,3}]`):* 5.1 pure -> generic mixed (probs `(1+-rz)/2`, mean `rz`), 5.4 matrix-entry ->
+Bloch, 2.6 kept pure with a cross-ref to 3.4 (its `Tr[A rho]` mixed twin; `<psi|A|psi>` is invalid on a
+mixed state). Agents kernel-PROVED 6.2/6.6 saturation is strictly pure (`Reduce[gap==0 && |r|<1]` -> False)
+and 1.8's unit-sphere is pure. Fresh `/wl-verify` OPEN ISSUES 0; 49 Q / 181 cells / 0 leaks / 0 dashes.
+*Structure:* split the monolith into per-part source files `Answers/Part-0N.md` (+ built `.nb`), each
+self-contained (its own `## Setup` Needs), cross-refs part-qualified ("Part 3, 3.4"); monolith moved to
+`_archive/`. Reusable driver `Answers/_check.sh` (+ `_check-one.wls`): per part it runs every cell in a
+fresh kernel (flags any error/message) then rebuilds the sibling `.nb` via md2nb. DEFERRED, pre-verified
+in-kernel but not applied: 3.5 matrix->Bloch (optional).
+
+**v7e (6.5 generic observable pair; user challenged the bare X,Z choice):** the pair is now reduced WLOG in
+the question prose (shifts/scales drop as 6.1; a global rotation changes no entropy/overlap) to B = Z,
+A = n_gamma.sigma, n_gamma = (Sin g, 0, Cos g), with gamma in [0, Pi/2] the single unitary invariant
+(n -> -n relabels outcomes). Cells: (1) all four cross-overlaps at once via the rank-1 projector identity
+|<a|b>|^2 = Tr[Pa Pb], P± = (I ± A)/2, FullSimplify with 0<=g<=Pi/2 -> {{Cos[g/2]^2, Sin[g/2]^2}, ...}
+(eigenvector route is SINGULAR at g=0, cot/csc; projector route has no branch); (2)
+Maximize[-Log2[Cos[g/2]^2]] -> {1, g -> Pi/2}: the MUB pair carries the strongest bound, THE justification
+for X,Z in 6.6; (3) hsum(theta,phi,gamma) from p± = (1 ± <A>)/2 with ev = Simplify@ComplexExpand[sandwich]
+(same ev idiom as 6.2; build BOTH WL and QF sides from the means so they are ===-identical; the WL
+projector-sandwich and QF ProbabilitiesList routes give equal VALUES but different FORMS, === False); (4)
+NMinimize[{hsum + Log2[Cos[g/2]^2], 0<=g<=Pi/2}, 3 vars] -> ~3e-16 at g=Pi/2 (message-free; slack stayed
+positive, no negative-roundoff snag); (5) NMinimize[hsum /. g -> Pi/2] -> 1. attained; (6) QF sandwich
+objective === hsum -> True. QF TRAP: QuantumMeasurementOperator[projector-list] "ProbabilitiesList" with 3
+symbolic angles returns Cot/Csc[Conjugate[g]/2] debris that no Simplify/ComplexExpand clears ->
+NMinimize::nrnum; the ev-sandwich route is the symbolic-parameter path. 6.6 prose tied to the Maximize
+result; its hsum narrative no longer says "as in 6.5" (different construction, equal values). `_check.sh
+Part-06.md`: 31 cells errored/messaged={}, nb rebuilt (Input=31, Subsection=7).
+
+**v7c (Part 6 rest generalized/derived, user requests):** 6.2 generic pair (same `FromSphericalCoordinates`
+n1/n2 re-Set locally): raw 6-angle gap via `ev = Simplify@ComplexExpand[sandwich]` (0.5 s; do NOT
+FullSimplify the raw gap, that costs 17 min and mangles), identity gap == (n1.n2-(m.n1)(m.n2))^2 by
+`Expand@TrigExpand[diff]` -> 0 (0.01 s; FullSimplify-equality costs 42 s), saturation condition Reduce'd
+for X,Z (0.04 s, message-free; Reduce on the substituted general gap emits ztest + ArcTan mangle), QF gap
+`===` WL. 6.4: unbiased-form DERIVED (polar Reduce -> ra==rb==1/Sqrt[2], phases free; user: don't assume
+the answer), beta=3Pi/2 glossed as the same basis reordered, MAXIMALITY PROVED (fourth-phase Reduce ->
+False), "maximal" defined in question. 6.4b: question stated precisely (every cross-overlap = 1/d), test =
+`Union@Flatten[overlaps]` -> {1/2} collapse. 6.5: c defined with eigenstate families a_j/b_k (user: c,a,b
+were unclear), special state REPLACED by global verification `NMinimize[hsum] -> 1.` over the pure sphere
+(mixed argument in prose); WL probabilities via `Simplify@ComplexExpand[Abs[...]^2]` (raw Abs^2 objective
+leaks complex -> Max::nord); QF side MUST use "ProbabilitiesList" + entropy definition ("Entropy" symbolic
+sum keeps Conjugate[theta] through Simplify/ComplexExpand/"Parameters" and breaks NMinimize::nrnum;
+{"BlochVector",{rx,ry,rz}} symbolic hits $IterationLimit). 6.6: |0> guess replaced by DERIVATION: guarded
+hsum landscape Plot3D (floor 1), sharp states from point-mass Reduce (Z: theta=0,Pi; X: theta=Pi/2,
+phi=0,Pi; needs Simplify@ComplexExpand inside, raw Abs form is Reduce::nsmet), exact {1,1,1,1} via
+FullSimplify[..., phi el Reals] (else Im[phi] husk), QF four named states {"0","1","Plus","Minus"} ->
+{1,1,1,1}. Question-List 6.4/6.4b/6.5/6.6 synced verbatim-in-spirit. `_check.sh Part-06.md`: 29 cells
+errored/messaged={}, nb rebuilt (Input=29, Subsection=7).
+
+**v7b (6.1 generalized to the fully generic observable pair; user request):** 6.1 now takes
+`A = n1 . PauliMatrix[{1,2,3}]`, `B = n2 . PauliMatrix[{1,2,3}]` with
+`{n1, n2} = FromSphericalCoordinates /@ {{1, \[Theta]1, \[Phi]1}, {1, \[Theta]2, \[Phi]2}}` (the user's
+construction; the unit norm is built in, so no Assumptions clutter) on the generic Bloch mixed state.
+Question prose justifies why unit directions ARE fully general (identity shift drops out of variance/
+covariance/commutator; the two scales multiply both sides equally). WL cell 1 computes the slack
+(FullSimplify factors out the mixedness `1-|r|^2` on its own); WL cell 2 CONFIRMS THE INEQUALITY itself
+(user caught its absence): `Reduce[slack < 0 && rx^2+ry^2+rz^2 <= 1, {rx,ry,rz,angles}, Reals]` -> False,
+the violating set is empty for every state and pair (FullSimplify[slack >= 0, assumptions] does NOT
+resolve; the Reduce refutation form does, 0.4 s); WL cell 3 tests
+`slack == Cross[n1,n2].Cross[n1,n2] (1 - r.r)` -> True (motivated by `[n1.s, n2.s] = 2I (n1 x n2).s`);
+QF mirrors with symbolic-matrix `QuantumOperator`s + `Commutator` and returns the `===`-identical
+expression (WL===QF exact). X,Z is recovered as the `|n1 x n2| = 1` special case with slack `1-|r|^2`;
+saturation = pure state OR commuting pair. Verified: `_check.sh Part-06.md` 22 cells errored/messaged={},
+nb rebuilt (Input=22, Subsection=7); TrigExpand zero-test of the factorization identity is exactly 0.
+
+**v8 (Parts 7-10 authored, adversarial-draft + qf skill + /wl-verify):** ran the adversarial-draft loop;
+two user forks (AskUserQuestion): apply the `Question-List-Audit.md` splits (not just follow the frozen
+list), and keep heavy MSc items symbolic-where-it-holds / concrete-where-it-doesn't. Synced `Question-List.md`:
+split 7.1/7.5/7.9/7.10, 9.1, 10.2 into a/b (sub-letter, dependency-order preserved), coverage map reconciled
+**207 -> 213 (89 BSc / 124 MSc)**. Authored `Answers/Part-07.md` (unitary dynamics, 20 Q / 45 cells),
+`Part-08.md` (spin, 7 Q / 15), `Part-09.md` (SU(2), 7 Q / 16), `Part-10.md` (circuits, 4 Q / 10); each
+`_check.sh errored/messaged={}`, nb rebuilt. **/wl-verify OPEN ISSUES 0 (one round)**: fresh verifier
+reproduced all 86 cells (zero messages), confirmed every agreement cell returns literal True, re-derived all
+prose physics. **Verified-live QF dynamics idioms (probe-first, per DNA 14):** unitary state evolution is
+`QuantumEvolve[QuantumOperator[H], psi0, t]` with a BARE symbolic `t` (braced `{t}` / symbolic-bound `{t,0,T}`
+/ no-state propagator forms HANG on DSolve); the propagator operator is `QuantumOperator[MatrixExp[-I H t]]`;
+Heisenberg `U["Dagger"] @ A @ U`; `Commutator[qoA,qoB]` reduces to a QuantumOperator. `DSolveValue` needs the
+vector ODE in COMPONENT form `{a'[t],b'[t]}` (implicit `psi[t]` vector fails). Symbolic unitarity: QF
+`"UnitaryQ"` returns False on a symbolic angle -> verify via `FullSimplify[Normal[(u["Dagger"]@u)["Matrix"]]==I,
+angle in Reals]`. `qo["Decompose"]` = single-qubit ZYZ/U3; `qc["QuantumOperator"]`/`"Depth"`/`"Layers"` for
+circuits. `WignerD` built-in uses the OPPOSITE (active, e^{+iJ}) convention -> equals the e^{-iJ} construction
+with NEGATED Euler angles. Solovay-Kitaev brute-force MUST be numeric (`N` on gates+target) or `MinimalBy`
+can't order symbolic errors. Fermi golden rule Gamma=2pi|Vfi|^2 rho needs the constant-coupling per-state
+prob |Vfi|^2 t^2 sinc^2 (NO /4; the cos-perturbation /4 of 7.9a is a factor-4 different convention). GOTCHA:
+a stray `}` inside a nested `With` passes _check.sh's `Check` as "ok" per the message harness but fails
+`ToExpression` with a phantom-column `sntx` -- brace-balance every authored cell. **KERNEL BUG spun off
+(DNA 18):** `QuantumOperator["JX"[j]]`/`["JY"[j]]` return the diagonal `Jz` matrix (`NamedOperators.m:847`
+`jMatrix` is axis-blind, used for all three); Part 8 builds spin operators from the ladder relation instead.
+Next: Parts 11-25.

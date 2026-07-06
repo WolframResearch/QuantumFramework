@@ -1,0 +1,2785 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     95781,       2776]
+NotebookOptionsPosition[     90006,       2706]
+NotebookOutlinePosition[     90348,       2721]
+CellTagsIndexPosition[     90305,       2718]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 8)\
+\>", "Title",ExpressionUUID->"0ebefc9f-ebb1-41bd-a1b5-b4552d7f749e"],
+
+Cell[TextData[{
+ "A companion answer key to ",
+ Cell["Question-List.md", "InlineCode",ExpressionUUID->
+  "d35aed6e-052c-4f9c-a4d5-cf2b722a539a"],
+ ". For each question it gives ",
+ StyleBox["two",
+  FontWeight->"Bold"],
+ " worked answers:"
+}], "Text",ExpressionUUID->"8971f3c0-3d1b-44df-842d-8ad5c3937fa0"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : native Wolfram Language only (plain vectors and matrices, ",
+ Cell[BoxData["PauliMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d339760-365a-4be7-b24c-9e369a7dd61e"],
+ ", ",
+ Cell[BoxData["MatrixExp"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9b618dfa-4911-4a5d-9ad8-b5f42a622a2e"],
+ ", ",
+ Cell[BoxData["WignerD"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f0c193f3-1e8e-4fad-b21f-ed296b0d7737"],
+ ", ",
+ Cell[BoxData["ClebschGordan"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e66bb075-e997-4f94-b1f7-e738b55da3fa"],
+ ", ",
+ Cell[BoxData["Eigensystem"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bab527c4-b07d-49ad-ba3b-e41174a897cc"],
+ ", and friends). Nothing beyond the built-in language."
+}], "ItemNumbered",ExpressionUUID->"bf311eb2-fb5b-45e7-8b15-a3c45e152e94"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same task done through the ",
+ StyleBox["QuantumFramework",
+  FontWeight->"Bold"],
+ " paclet, leaning on its objects and property downvalues (",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QuantumState", "[", "...", "]"}], "[", "\"\<...\>\"", "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10bb1758-4640-43e7-8752-51473094245b"],
+ ") rather than rebuilding matrices by hand. A QF result is a rich object, a \
+state or an operator, not a bare array: it can act on a target, compose with \
+others, report its spectrum, change basis, and more. The answers keep results \
+as objects and treat a matrix or amplitude vector as just one of the object's \
+many representations, not the thing itself."
+}], "ItemNumbered",ExpressionUUID->"f5df040c-4705-4f34-9358-11e7362a1ea2"],
+
+Cell[TextData[{
+ "Three habits run through the answers. They stay ",
+ StyleBox["symbolic",
+  FontWeight->"Bold"],
+ " wherever possible (general angles ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], ",", 
+   StyleBox["\[Phi]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b49c5d4e-b389-46f1-8ee6-7eb37661a90b"],
+ "), so each operation is exercised in full generality rather than on a lucky \
+special case. They write the computation ",
+ StyleBox["explicitly",
+  FontWeight->"Bold"],
+ " rather than hiding it in a helper function, because the code is itself \
+part of the explanation: the spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c877c1d9-6b77-4d49-8252-b80ed304d726"],
+ " operators are built in place from the ladder relation ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], "\[PlusMinus]"], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], ",", 
+        StyleBox["m", "TI"]}]},
+     "Ket"]}], "=", 
+   RowBox[{
+    SqrtBox[
+     RowBox[{
+      StyleBox["j", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["j", "TI"], "+", "1"}], 
+      StyleBox[")",
+       SpanMaxSize->1], "-", 
+      StyleBox["m", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["m", "TI"], "\[PlusMinus]", "1"}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], ",", 
+        StyleBox["m", "TI"], "\[PlusMinus]", "1"}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ba8e3079-b583-4738-b175-a3575e4124c5"],
+ ", never pasted in as fixed matrices. And they prefer ",
+ StyleBox["built-in features",
+  FontWeight->"Bold"],
+ " (a ",
+ Cell[BoxData["WignerD"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "287d0a70-b333-4a0b-a292-0c06af01649b"],
+ ", a ",
+ Cell[BoxData["ClebschGordan"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8601e565-d232-40b4-9b71-cbc535399931"],
+ ") over hand-rolled constructions. Each cell does ",
+ StyleBox["one",
+  FontWeight->"Bold"],
+ " thing and is preceded by a sentence saying what. We use the physicist's \
+convention ",
+ Cell[BoxData[
+  RowBox[{"\[HBar]", "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3a28cb60-b712-491a-bd85-2b1b93346484"],
+ ", so a spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c2792c44-197d-465d-af0a-9b1841d87b43"],
+ " has ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["J", "TI"], "2"], "=", 
+   StyleBox["j", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["j", "TI"], "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bf83d3d7-693e-4af1-a97d-69d84eaec92d"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["J", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b7830dc3-106d-4d0c-b3c9-dc186895802f"],
+ " eigenvalues ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["m", "TI"], "=", "-", 
+    StyleBox["j", "TI"]}], ",", "\[Ellipsis]", ",", 
+   StyleBox["j", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a237cc91-77ef-4def-9379-55d71dfb4e87"],
+ ". Run the WL answers in a bare kernel; the QF answers need the paclet \
+loaded once."
+}], "Text",ExpressionUUID->"fbafe58d-f88b-47f0-96fd-d7f64c53d288"],
+
+Cell["Setup", "Section",ExpressionUUID->"4cf49eaf-fa7c-4b54-b120-15ab28665a36"],
+
+Cell["The QF answers load the paclet once:", "Text",ExpressionUUID->"c96acf02-0bb9-47ec-8ae4-66bbe40aab94"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"42c83bb3-198f-407a-90c8-bde27b39ffbf"],
+
+Cell["Part 8. Spin and angular momentum", "Section",ExpressionUUID->"28b518be-f4f6-4325-97a8-0f706e1aa411"],
+
+Cell["\<\
+8.1 [BSc] How do I model a spin-1/2 in a magnetic field and reproduce the \
+Stern-Gerlach spin-projection outcomes?\
+\>", "Subsection",ExpressionUUID->"5269ed4b-a19c-4fd1-9cc0-f34af8fe9894"],
+
+Cell[TextData[{
+ "A spin-1/2 in a field along ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2de97915-6246-419a-9d5b-fee1b657b1f3"],
+ " has ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["H", "TI"], "^"], "=", "-", 
+   StyleBox["\[Gamma]", "TI"], 
+   StyleBox["B", "TI"], " ", 
+   SubscriptBox[
+    StyleBox["S", "TI"], 
+    StyleBox["z", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52f0ed1d-3396-4541-ad11-a68b5a5efeca"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["S", "TI"], 
+    StyleBox["z", "TI"]], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["Z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56234be4-bfb5-4a10-b1ca-d27e898aac22"],
+ ". A Stern-Gerlach apparatus measures ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["S", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f27b270-65d9-442c-8a45-654b7736f488"],
+ ", which has just two eigenvalues ",
+ Cell[BoxData[
+  RowBox[{"\[PlusMinus]", 
+   FractionBox["1", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a9b21bca-6710-423c-8dc3-40a171f68786"],
+ ": the beam splits in two, never a continuum. Prepare a spin pointing along \
+a general direction ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["n", "TI"], "^"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["\[Theta]", "TI"], ",", "\[CurlyPhi]"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9a89b1d3-eeea-4a1d-bf98-7a537c092c39"],
+ ", the state ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["cos",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    FractionBox[
+     StyleBox["\[Theta]", "TI"], "2"]}], ",", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{
+      StyleBox["i", "TI"], "\[CurlyPhi]"}]], 
+    StyleBox["sin",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    FractionBox[
+     StyleBox["\[Theta]", "TI"], "2"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43fa7369-0aa7-4a3d-a8bf-10739cb74c61"],
+ ", and find the two deflection outcomes and their Born weights."
+}], "Text",ExpressionUUID->"2a353b92-0f58-42cf-b7ed-af669389af84"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the outcomes are the eigenvalues of ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["S", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d4b2c6f4-fcb7-4586-ad50-4e1a993c60ab"],
+ ", and the weights are the squared amplitudes in the ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["S", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0d2b4f70-28e7-4b7a-a3d8-44a083ef0418"],
+ " eigenbasis."
+}], "Text",ExpressionUUID->"365ee170-36af-4ff8-8f45-a9a89bb573fc"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"sz", " ", "=", " ", 
+      RowBox[{
+       RowBox[{"PauliMatrix", "[", "3", "]"}], "/", "2"}]}], ",", " ", 
+     RowBox[{"\[Psi]", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Cos", "[", 
+         RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+        RowBox[{
+         RowBox[{"Exp", "[", 
+          RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+         RowBox[{"Sin", "[", 
+          RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}]}], "}"}], ",", 
+   " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Eigenvalues", "[", "sz", "]"}], ",", " ", 
+     RowBox[{"ComplexExpand", "[", 
+      RowBox[{
+       RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}], "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"53c5b965-9d9f-4d35-8b2b-4442267bf3a1"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a513fdc2-c9a9-4f48-99f4-10cf3df7d7ed"],
+ " for ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["S", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4fc7bb0b-0279-4c86-b9f5-ebc3e9a99581"],
+ " measures the state and reports its outcomes (the eigenvalues) with their \
+probabilities."
+}], "Text",ExpressionUUID->"b3130b0d-6416-489e-9a09-1610e787a4f6"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"QuantumOperator", "[", 
+     RowBox[{
+      RowBox[{"PauliMatrix", "[", "3", "]"}], "/", "2"}], "]"}], 
+    "[", "\"\<Eigenvalues\>\"", "]"}], ",", " ", 
+   RowBox[{"ComplexExpand", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumMeasurementOperator", "[", 
+       RowBox[{"QuantumOperator", "[", 
+        RowBox[{
+         RowBox[{"PauliMatrix", "[", "3", "]"}], "/", "2"}], "]"}], "]"}], "[", 
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"Cos", "[", 
+          RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+         RowBox[{
+          RowBox[{"Exp", "[", 
+           RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+          RowBox[{"Sin", "[", 
+           RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], "]"}], "]"}], 
+     "[", "\"\<ProbabilitiesList\>\"", "]"}], "]"}]}], "}"}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"5abaaf28-ea18-470e-bd59-0efb766fa1c6"],
+
+Cell[TextData[{
+ "Both give the two spin projections ",
+ Cell[BoxData[
+  RowBox[{"\[PlusMinus]", 
+   FractionBox["1", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b43d145-7c87-4b6a-a7fc-de327a307940"],
+ " with probabilities ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    SuperscriptBox[
+     StyleBox["cos",
+      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+    FractionBox[
+     StyleBox["\[Theta]", "TI"], "2"]}], ",", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["sin",
+      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+    FractionBox[
+     StyleBox["\[Theta]", "TI"], "2"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fb842253-78a0-4c15-9748-11c61ae9e89b"],
+ ": the apparatus reveals the discreteness of angular momentum (only two \
+beams for a spin-1/2), and a spin tilted at angle ",
+ Cell[BoxData[
+  StyleBox["\[Theta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e87480ef-9070-439d-92d3-8c91854ea58b"],
+ " from the field lands in the upper beam with probability ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["cos",
+     FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+   FractionBox[
+    StyleBox["\[Theta]", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c2376a8b-3293-4cab-be64-24e861a9b0b5"],
+ ", the quantitative Stern-Gerlach result."
+}], "Text",ExpressionUUID->"e8ca1580-fc45-4949-9b3b-59e30b7a14b5"],
+
+Cell[TextData[{
+ "8.2 [BSc] How do I build the spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e43bd997-a859-4b9a-bbe7-4ac1a3e950ca"],
+ " angular-momentum operators and verify ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], 
+     StyleBox["x", "TI"]], ",", 
+    SubscriptBox[
+     StyleBox["J", "TI"], 
+     StyleBox["y", "TI"]]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", 
+   StyleBox["i", "TI"], 
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["z", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07e08319-f5c9-44c8-a866-0e4a79e47883"],
+ " and the Casimir?"
+}], "Subsection",ExpressionUUID->"a1902227-b0b5-49cd-bf51-fb036f0a43e2"],
+
+Cell[TextData[{
+ "The angular-momentum operators are defined by their algebra: the raising \
+and lowering operators ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], "\[PlusMinus]"], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], ",", 
+        StyleBox["m", "TI"]}]},
+     "Ket"]}], "=", 
+   RowBox[{
+    SqrtBox[
+     RowBox[{
+      StyleBox["j", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["j", "TI"], "+", "1"}], 
+      StyleBox[")",
+       SpanMaxSize->1], "-", 
+      StyleBox["m", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["m", "TI"], "\[PlusMinus]", "1"}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], ",", 
+        StyleBox["m", "TI"], "\[PlusMinus]", "1"}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "df164a83-89f7-4d12-9148-6f85c6ee5a70"],
+ " build ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["x", "TI"]], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], "+"], "+", 
+    SubscriptBox[
+     StyleBox["J", "TI"], "-"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f44fc5a-c02f-4d5c-9154-aad37589c355"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["y", "TI"]], "=", 
+   FractionBox["1", 
+    RowBox[{"2", 
+     StyleBox["i", "TI"]}]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], "+"], "-", 
+    SubscriptBox[
+     StyleBox["J", "TI"], "-"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4a3c1798-34a0-4701-9d2d-e0ff0ff86e67"],
+ ", and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["J", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dbcb9c58-a80e-4de4-b2d6-01131f63adf0"],
+ " is diagonal with entries ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bb669fbe-6635-43b7-b0df-13dae9586e71"],
+ ". They satisfy ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["J", "TI"], 
+     StyleBox["x", "TI"]], ",", 
+    SubscriptBox[
+     StyleBox["J", "TI"], 
+     StyleBox["y", "TI"]]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", 
+   StyleBox["i", "TI"], 
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["z", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "df861baf-0548-4de7-82db-6af1ff70d84f"],
+ " and the Casimir ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["J", "TI"], "2"], "=", 
+   SubsuperscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["x", "TI"], "2"], "+", 
+   SubsuperscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["y", "TI"], "2"], "+", 
+   SubsuperscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["z", "TI"], "2"], "=", 
+   StyleBox["j", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["j", "TI"], "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1], " ", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5db72067-1d87-40bd-8fe3-c84172a54f37"],
+ ". Build them for spin ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ffaceb9a-c877-45da-a338-b030149a9e49"],
+ " (a qutrit) from the ladder relation."
+}], "Text",ExpressionUUID->"31e5fe1d-df8f-480e-b2ef-b1874b035060"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : construct ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["J", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3a5ce425-b73b-4f7e-86eb-547d3d17d4a3"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["J", "TI"], "+"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1a2c5d9a-984c-4ea2-b6e9-7a3c156fdbb4"],
+ " from the definition, then ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["x", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["y", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b9654c4-a13b-4bad-9e34-bde8aed367bc"],
+ ", and check both identities."
+}], "Text",ExpressionUUID->"dae0c097-cd8e-4f66-a8b5-1f5af6c94817"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "+", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}]}], ",",
+            " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "-", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+             RowBox[{"(", 
+              RowBox[{"2", " ", "I"}], ")"}]}]}]}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"jx", " ", ".", " ", "jy"}], " ", "-", " ", 
+             RowBox[{"jy", " ", ".", " ", "jx"}]}], " ", "==", " ", 
+            RowBox[{"I", " ", "jz"}]}], ",", " ", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"jx", " ", ".", " ", "jx"}], " ", "+", " ", 
+             RowBox[{"jy", " ", ".", " ", "jy"}], " ", "+", " ", 
+             RowBox[{"jz", " ", ".", " ", "jz"}]}], " ", "==", " ", 
+            RowBox[{"j", " ", 
+             RowBox[{"(", 
+              RowBox[{"j", " ", "+", " ", "1"}], ")"}], " ", 
+             RowBox[{"IdentityMatrix", "[", "n", "]"}]}]}]}], "}"}]}], 
+        "]"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"e9e2af2e-7c83-4693-8a7c-e40eb3c23493"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : keep the three components as ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8bf532c8-eade-4baa-9b91-f65167fd9c58"],
+ "s and verify the algebra with ",
+ Cell[BoxData["Commutator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9d3942ac-555a-416a-9c24-74d378f39b52"],
+ " and the operator product ",
+ Cell[BoxData["@"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c929cc74-9f47-4dcd-8b4a-f5761cc18e69"],
+ ", at the operator level."
+}], "Text",ExpressionUUID->"fc55d781-3c9e-4198-9973-7c00c98e2232"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{"QuantumOperator", "[", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"jp", " ", "+", " ", 
+                RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}], 
+             "]"}]}], ",", " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{"QuantumOperator", "[", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"jp", " ", "-", " ", 
+                RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+              RowBox[{"(", 
+               RowBox[{"2", " ", "I"}], ")"}]}], "]"}]}], ",", " ", 
+           RowBox[{"jzo", " ", "=", " ", 
+            RowBox[{"QuantumOperator", "[", "jz", "]"}]}]}], "}"}], ",", " ", 
+         
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Commutator", "[", 
+             RowBox[{"jx", ",", " ", "jy"}], "]"}], " ", "==", " ", 
+            RowBox[{"I", " ", "jzo"}]}], ",", " ", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"jx", " ", "@", " ", "jx"}], " ", "+", " ", 
+             RowBox[{"jy", " ", "@", " ", "jy"}], " ", "+", " ", 
+             RowBox[{"jzo", " ", "@", " ", "jzo"}]}], " ", "==", " ", 
+            RowBox[{"j", " ", 
+             RowBox[{"(", 
+              RowBox[{"j", " ", "+", " ", "1"}], ")"}], " ", 
+             RowBox[{"QuantumOperator", "[", 
+              RowBox[{"IdentityMatrix", "[", "n", "]"}], "]"}]}]}]}], "}"}]}],
+         "]"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"c4fc436d-6956-4f32-af46-f6807398bcde"],
+
+Cell[TextData[{
+ "Both return ",
+ Cell[BoxData["{"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d4a8cd55-5968-4d10-b743-dc9f99a8d721"],
+ "True, True",
+ Cell[BoxData["}"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bf723dc9-4acb-450b-b9c4-fdfd89ebfad3"],
+ ": the spin-1 operators close under the ",
+ Cell[BoxData[
+  RowBox[{"\|01d530", "\|01d532", 
+   StyleBox["(",
+    SpanMaxSize->1], "2", 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c546c3e-1297-4c3b-a42e-162da0482ed2"],
+ " commutator and their Casimir is the scalar ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["j", "TI"], "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "793aefcb-bb64-4647-aeb2-f3f16ebe1608"],
+ ", the defining features of an angular momentum. The same construction gives \
+any spin ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f0fef4f0-a86c-4d2a-8f5a-3beaf0e9a67a"],
+ " by changing the one number."
+}], "Text",ExpressionUUID->"b1ff612a-5810-44b3-aed5-5e12ed394e5b"],
+
+Cell["\<\
+8.3 [BSc] How do I rotate a spin state and read the rotation off the \
+expectation values?\
+\>", "Subsection",ExpressionUUID->"fc7d24a7-ff27-4096-bd11-52c12b462a44"],
+
+Cell[TextData[{
+ "A spatial rotation of a spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e859d199-7171-4afa-9f63-06d3c9cc53ad"],
+ " acts by ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["R", "TI"], 
+    OverscriptBox[
+     StyleBox["n", "TI"], "^"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Beta]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["\[Beta]", "TI"], " ", 
+     OverscriptBox[
+      StyleBox["n", "TI"], "^"], "\[CenterDot]", 
+     OverscriptBox[
+      StyleBox["J", "TI"], "\[RightVector]"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dc69361b-61cc-4808-b438-b472721c3579"],
+ ". Rotating the highest-weight state ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["j", "TI"], ",", 
+      StyleBox["j", "TI"]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "923396e3-d86c-4d07-8ed3-468fb4057d24"],
+ " (which points along ",
+ Cell[BoxData[
+  RowBox[{"+", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d255fed0-b768-4e29-9c2f-9ec7508ff1c0"],
+ ", with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    StyleBox["J", "TI"], 
+    StyleBox["z", "TI"]], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["j", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c16069a8-cec4-459d-aea4-04ab9dcf5939"],
+ ") about the ",
+ Cell[BoxData[
+  StyleBox["y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "85238252-c1eb-4fdd-852e-21a58e71e1c0"],
+ " axis by ",
+ Cell[BoxData[
+  StyleBox["\[Beta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ea3836b7-d0c3-4f36-978b-bf1269697b37"],
+ " tilts the spin into the ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d991d45b-b308-4dc2-801a-b0d88512f208"],
+ "-",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "927571f8-1274-4c2b-8cd0-2e293ac86109"],
+ " plane: the expectation vector becomes ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["J", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["j", "TI"], " ", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Beta]", "TI"]}], ",", "0", ",", 
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Beta]", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c0448f8-0deb-4ca7-b4a2-cf7dca2fb2cb"],
+ ". Show this for spin ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "88fa73ae-aa61-4381-b81c-636b2d580bc0"],
+ "."
+}], "Text",ExpressionUUID->"766d2c3b-f413-4fb8-84da-c8cd5b91d728"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : rotate ",
+ Cell[BoxData[
+  TemplateBox[{"1,1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b5cadddd-cb7f-411f-9fa3-cd89a97420af"],
+ " by ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"-", 
+    StyleBox["i", "TI"], 
+    StyleBox["\[Beta]", "TI"], 
+    SubscriptBox[
+     StyleBox["J", "TI"], 
+     StyleBox["y", "TI"]]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1029d4bd-a595-4469-a54c-ca4be2a224d1"],
+ " and read the three expectation values."
+}], "Text",ExpressionUUID->"218b457c-886f-4b97-85f3-f7ec6356be0b"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "+", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}]}], ",",
+            " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "-", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+             RowBox[{"(", 
+              RowBox[{"2", " ", "I"}], ")"}]}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"\[Psi]", " ", "=", " ", 
+             RowBox[{
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Beta]", " ", "jy"}], "]"}], " ", ".",
+               " ", 
+              RowBox[{"UnitVector", "[", 
+               RowBox[{"n", ",", " ", "1"}], "]"}]}]}], "}"}], ",", " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{"ComplexExpand", "[", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "\[Psi]", "]"}], " ", ".", " ", 
+                 "jx", " ", ".", " ", "\[Psi]"}], ",", " ", 
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "\[Psi]", "]"}], " ", ".", " ", 
+                 "jy", " ", ".", " ", "\[Psi]"}], ",", " ", 
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "\[Psi]", "]"}], " ", ".", " ", 
+                 "jz", " ", ".", " ", "\[Psi]"}]}], "}"}], "]"}], ",", " ", 
+             RowBox[{"\[Beta]", " ", "\[Element]", " ", "Reals"}]}], "]"}]}], 
+          "]"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"50eb0986-74ff-4750-9cd8-77d767795268"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the rotation is a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "73879ced-4d31-414b-a869-ab84d849ce7d"],
+ " exponential acting on the state; the expectations come from the operator \
+sandwich on the rotated ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dbfab9b8-0692-49fa-a03c-77b33a46a1c4"],
+ "."
+}], "Text",ExpressionUUID->"2654c4a4-98a8-476e-9e8f-8eadc5096de6"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "+", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}]}], ",",
+            " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "-", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+             RowBox[{"(", 
+              RowBox[{"2", " ", "I"}], ")"}]}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"\[Psi]", " ", "=", " ", 
+             RowBox[{"QuantumState", "[", 
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{
+                 RowBox[{"-", "I"}], " ", "\[Beta]", " ", "jy"}], ",", " ", 
+                RowBox[{"UnitVector", "[", 
+                 RowBox[{"n", ",", " ", "1"}], "]"}]}], "]"}], "]"}]}], "}"}],
+            ",", " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{"ComplexExpand", "[", 
+              RowBox[{"Table", "[", 
+               RowBox[{
+                RowBox[{
+                 RowBox[{"(", 
+                  RowBox[{
+                   RowBox[{"\[Psi]", "[", "\"\<Dagger\>\"", "]"}], " ", "@", 
+                   " ", 
+                   RowBox[{
+                    RowBox[{"QuantumOperator", "[", "op", "]"}], " ", "@", 
+                    " ", "\[Psi]"}]}], ")"}], "[", "\"\<Scalar\>\"", "]"}], ",",
+                 " ", 
+                RowBox[{"{", 
+                 RowBox[{"op", ",", " ", 
+                  RowBox[{"{", 
+                   RowBox[{"jx", ",", " ", "jy", ",", " ", "jz"}], "}"}]}], 
+                 "}"}]}], "]"}], "]"}], ",", " ", 
+             RowBox[{"\[Beta]", " ", "\[Element]", " ", "Reals"}]}], "]"}]}], 
+          "]"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"2d371fa3-fdc6-42f6-9787-193287a30b8c"],
+
+Cell[TextData[{
+ "Both return ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["J", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Beta]", "TI"]}], ",", "0", ",", 
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Beta]", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "96c42887-f5e9-435e-86b7-076594d0a375"],
+ ": the quantum expectation vector rotates exactly as a classical arrow \
+would, so a spin measurement tracks the geometric rotation, the content of \
+the vector (adjoint) representation of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["S", "TI"], 
+   StyleBox["U", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], "2", 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f2bff9bf-e975-4574-9c7d-41372f9097dc"],
+ " on angular momentum."
+}], "Text",ExpressionUUID->"a18e349e-46ea-47c7-b94a-2b9a60694293"],
+
+Cell[TextData[{
+ "8.4 [MSc] How do I construct the Wigner ",
+ Cell[BoxData[
+  StyleBox["D", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78370cd5-d445-4d5e-ab84-7b80aa251545"],
+ "-matrix element ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubsuperscriptBox[
+     StyleBox["D", "TI"], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["m", "TI"], "\[Prime]"], 
+      StyleBox["m", "TI"]}], 
+     StyleBox["j", "TI"]], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      StyleBox["\[Alpha]", "TI"], ",", 
+      StyleBox["\[Beta]", "TI"], ",", 
+      StyleBox["\[Gamma]", "TI"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], 
+        SuperscriptBox[
+         StyleBox["m", "TI"], "\[Prime]"]}]},
+     "Bra"], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Alpha]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["z", "TI"]]}]], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Beta]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["y", "TI"]]}]], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Gamma]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["z", "TI"]]}]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], 
+        StyleBox["m", "TI"]}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35ceaf67-504b-44a5-85ab-3e0ebd7828cd"],
+ " for a spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "89b9df19-5146-4eb7-af2c-dc625da891c8"],
+ " rotation?"
+}], "Subsection",ExpressionUUID->"24a307e8-1656-42c4-86f3-ce742aea2a5c"],
+
+Cell[TextData[{
+ "The Wigner ",
+ Cell[BoxData[
+  StyleBox["D", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0bf94d31-9f2a-4fff-b37c-99ba2fd42096"],
+ "-matrix is the spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ddd97ef-8e3e-4669-9ecf-244b9c263432"],
+ " representation of a rotation parametrized by Euler angles, ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubsuperscriptBox[
+     StyleBox["D", "TI"], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["m", "TI"], "\[Prime]"], 
+      StyleBox["m", "TI"]}], 
+     StyleBox["j", "TI"]], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      StyleBox["\[Alpha]", "TI"], ",", 
+      StyleBox["\[Beta]", "TI"], ",", 
+      StyleBox["\[Gamma]", "TI"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], 
+        SuperscriptBox[
+         StyleBox["m", "TI"], "\[Prime]"]}]},
+     "Bra"], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Alpha]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["z", "TI"]]}]], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Beta]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["y", "TI"]]}]], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Gamma]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["z", "TI"]]}]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], 
+        StyleBox["m", "TI"]}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c2627d1a-3b90-471d-8330-bec1e7456827"],
+ ". Build the full rotation for spin ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74dcb726-7b39-417e-b621-beac19ed73ef"],
+ " from the ladder operators and read off its matrix; compare it to the \
+built-in ",
+ Cell[BoxData["WignerD"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "962461e5-7162-4d39-91f1-b91ae47a47b4"],
+ "."
+}], "Text",ExpressionUUID->"927465a3-ef21-4744-a8e2-f3727cedc199"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : assemble ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["\[Alpha]", "TI"], 
+     SubscriptBox[
+      StyleBox["J", "TI"], 
+      StyleBox["z", "TI"]]}]], 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["\[Beta]", "TI"], 
+     SubscriptBox[
+      StyleBox["J", "TI"], 
+      StyleBox["y", "TI"]]}]], 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["\[Gamma]", "TI"], 
+     SubscriptBox[
+      StyleBox["J", "TI"], 
+      StyleBox["z", "TI"]]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dd9990ec-5e54-4a12-b9f4-40d3f12ff47f"],
+ " from the spin-1 operators, and check its entries against the built-in ",
+ Cell[BoxData["WignerD"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7cc35fa3-ca9c-4d1c-b014-9055c30726aa"],
+ " (index order ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["j", "TI"]}], ",", 
+   SuperscriptBox[
+    StyleBox["m", "TI"], "\[Prime]"], ",", 
+   RowBox[{
+    StyleBox["m", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c3fbdaf5-0e17-48d6-b30b-64e29188a492"],
+ "). The built-in uses the opposite (active, ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"+", 
+    StyleBox["i", "TI"], 
+    StyleBox["J", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e4a6e2c3-497a-4302-9fd3-cbee58961f60"],
+ ") sign convention, so its Euler angles are negated relative to the passive ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"-", 
+    StyleBox["i", "TI"], 
+    StyleBox["J", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7a46d118-9159-47d4-9e07-f0300c6167b2"],
+ " formula stated here."
+}], "Text",ExpressionUUID->"938b7750-8a58-4c71-a6d3-0108585d1d43"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"jy", " ", "=", " ", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"jp", " ", "-", " ", 
+              RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+            RowBox[{"(", 
+             RowBox[{"2", " ", "I"}], ")"}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"d", " ", "=", " ", 
+             RowBox[{
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Alpha]", " ", "jz"}], "]"}], " ", 
+              ".", " ", 
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Beta]", " ", "jy"}], "]"}], " ", ".",
+               " ", 
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Gamma]", " ", "jz"}], "]"}]}]}], 
+            "}"}], ",", " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{"d", " ", "==", " ", 
+              RowBox[{"Table", "[", 
+               RowBox[{
+                RowBox[{"WignerD", "[", 
+                 RowBox[{
+                  RowBox[{"{", 
+                   RowBox[{"j", ",", " ", "mp", ",", " ", "mm"}], "}"}], ",", 
+                  " ", 
+                  RowBox[{"-", "\[Alpha]"}], ",", " ", 
+                  RowBox[{"-", "\[Beta]"}], ",", " ", 
+                  RowBox[{"-", "\[Gamma]"}]}], "]"}], ",", " ", 
+                RowBox[{"{", 
+                 RowBox[{"mp", ",", " ", "j", ",", " ", 
+                  RowBox[{"-", "j"}], ",", " ", 
+                  RowBox[{"-", "1"}]}], "}"}], ",", " ", 
+                RowBox[{"{", 
+                 RowBox[{"mm", ",", " ", "j", ",", " ", 
+                  RowBox[{"-", "j"}], ",", " ", 
+                  RowBox[{"-", "1"}]}], "}"}]}], "]"}]}], ",", " ", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{
+               "\[Alpha]", ",", " ", "\[Beta]", ",", " ", "\[Gamma]"}], "}"}],
+               " ", "\[Element]", " ", "Reals"}]}], "]"}]}], "]"}]}], "]"}]}],
+       "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"03fdc9bd-1f41-485a-a623-ce0349119978"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same rotation as a product of ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "620b6b7e-505e-459a-92b4-7ad50691e021"],
+ " exponentials; its matrix is the ",
+ Cell[BoxData[
+  StyleBox["D", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e118cd0-1c78-4a66-9932-61e0b1adfa19"],
+ "-matrix."
+}], "Text",ExpressionUUID->"21417784-ce04-420a-b138-eb06f939a121"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"jy", " ", "=", " ", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"jp", " ", "-", " ", 
+              RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+            RowBox[{"(", 
+             RowBox[{"2", " ", "I"}], ")"}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"d", " ", "=", " ", 
+             RowBox[{
+              RowBox[{"QuantumOperator", "[", 
+               RowBox[{"MatrixExp", "[", 
+                RowBox[{
+                 RowBox[{"-", "I"}], " ", "\[Alpha]", " ", "jz"}], "]"}], 
+               "]"}], " ", "@", " ", 
+              RowBox[{
+               RowBox[{"QuantumOperator", "[", 
+                RowBox[{"MatrixExp", "[", 
+                 RowBox[{
+                  RowBox[{"-", "I"}], " ", "\[Beta]", " ", "jy"}], "]"}], 
+                "]"}], " ", "@", " ", 
+               RowBox[{"QuantumOperator", "[", 
+                RowBox[{"MatrixExp", "[", 
+                 RowBox[{
+                  RowBox[{"-", "I"}], " ", "\[Gamma]", " ", "jz"}], "]"}], 
+                "]"}]}]}]}], "}"}], ",", " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"Normal", "[", 
+               RowBox[{"d", "[", "\"\<Matrix\>\"", "]"}], "]"}], " ", "==", 
+              " ", 
+              RowBox[{"Table", "[", 
+               RowBox[{
+                RowBox[{"WignerD", "[", 
+                 RowBox[{
+                  RowBox[{"{", 
+                   RowBox[{"j", ",", " ", "mp", ",", " ", "mm"}], "}"}], ",", 
+                  " ", 
+                  RowBox[{"-", "\[Alpha]"}], ",", " ", 
+                  RowBox[{"-", "\[Beta]"}], ",", " ", 
+                  RowBox[{"-", "\[Gamma]"}]}], "]"}], ",", " ", 
+                RowBox[{"{", 
+                 RowBox[{"mp", ",", " ", "j", ",", " ", 
+                  RowBox[{"-", "j"}], ",", " ", 
+                  RowBox[{"-", "1"}]}], "}"}], ",", " ", 
+                RowBox[{"{", 
+                 RowBox[{"mm", ",", " ", "j", ",", " ", 
+                  RowBox[{"-", "j"}], ",", " ", 
+                  RowBox[{"-", "1"}]}], "}"}]}], "]"}]}], ",", " ", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{
+               "\[Alpha]", ",", " ", "\[Beta]", ",", " ", "\[Gamma]"}], "}"}],
+               " ", "\[Element]", " ", "Reals"}]}], "]"}]}], "]"}]}], "]"}]}],
+       "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"d579104d-e901-4e17-afd3-3d61cff926dd"],
+
+Cell[TextData[{
+ "Both confirm the constructed rotation equals the built-in ",
+ Cell[BoxData["WignerD"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "93bc8eb0-5302-4646-b413-7d3369bd66fb"],
+ " table entry by entry: the ",
+ Cell[BoxData[
+  StyleBox["D", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ad9dd27-bdfb-4a46-98f0-066e2d1d9db0"],
+ "-matrix is nothing more than the explicit representation of the abstract \
+rotation on the ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"2", 
+    StyleBox["j", "TI"], "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2e116dd7-7fd0-4fba-8739-911269651d19"],
+ "-dimensional spin space, and building it from the ladder operators \
+reproduces the tabulated special functions exactly."
+}], "Text",ExpressionUUID->"4d128422-7f4e-49e8-a860-20306082c278"],
+
+Cell["\<\
+8.5 [MSc] How do I add two angular momenta and compute the Clebsch-Gordan \
+coefficients?\
+\>", "Subsection",ExpressionUUID->"0eb3692e-4a78-4c35-a182-2616f5862514"],
+
+Cell[TextData[{
+ "Coupling two spins combines their spaces, ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", "2"], "\[CircleTimes]", 
+   FractionBox["1", "2"], "=", "0", "\[CirclePlus]", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "632773c8-73ab-4eb5-afce-74a49e603e6f"],
+ ": the product basis ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     SubscriptBox[
+      StyleBox["m", "TI"], "1"]},
+    "Ket"], 
+   TemplateBox[{
+     SubscriptBox[
+      StyleBox["m", "TI"], "2"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "963ab5b9-b102-41ed-9f35-21e53dd19f8d"],
+ " recombines into total-spin eigenstates ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["J", "TI"], ",", 
+      StyleBox["M", "TI"]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e4e64916-632e-44a5-a1c7-0a8497fc7826"],
+ ", and the overlaps ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      SubscriptBox[
+       StyleBox["m", "TI"], "1"], 
+      SubscriptBox[
+       StyleBox["m", "TI"], "2"]}], 
+    RowBox[{
+      StyleBox["J", "TI"], ",", 
+      StyleBox["M", "TI"]}]},
+   "BraKet"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31f7fa10-640a-454b-af9e-3f8ada9fa3a7"],
+ " are the Clebsch-Gordan coefficients. Build the coupled basis for two \
+spin-1/2 and read the coefficients."
+}], "Text",ExpressionUUID->"caf1f37b-d113-4b3c-af16-c72c9af9572d"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the coupled states are assembled from the product basis with the \
+built-in ",
+ Cell[BoxData["ClebschGordan"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b87d9861-8820-40af-bd15-d1af4d68c105"],
+ " coefficients; here is ",
+ Cell[BoxData[
+  TemplateBox[{"1,0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "36497308-5900-4fec-a4fa-c434270d113f"],
+ ", the symmetric ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["M", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6778ea6e-38c1-47e4-b498-bb779f4f4a82"],
+ " triplet state."
+}], "Text",ExpressionUUID->"fe397b81-dcc1-405d-b604-95b3a3a58c0d"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"basis", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"1", "/", "2"}], ",", " ", 
+         RowBox[{"1", "/", "2"}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"1", "/", "2"}], ",", " ", 
+         RowBox[{
+          RowBox[{"-", "1"}], "/", "2"}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"-", "1"}], "/", "2"}], ",", " ", 
+         RowBox[{"1", "/", "2"}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"-", "1"}], "/", "2"}], ",", " ", 
+         RowBox[{
+          RowBox[{"-", "1"}], "/", "2"}]}], "}"}]}], "}"}]}], "}"}], ",", " ", 
+   RowBox[{"Sum", "[", 
+    RowBox[{
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Total", "[", 
+         RowBox[{"basis", "[", 
+          RowBox[{"[", "k", "]"}], "]"}], "]"}], " ", "==", " ", "0"}], ",", 
+       " ", 
+       RowBox[{
+        RowBox[{"ClebschGordan", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"1", "/", "2"}], ",", " ", 
+            RowBox[{"basis", "[", 
+             RowBox[{"[", 
+              RowBox[{"k", ",", " ", "1"}], "]"}], "]"}]}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"1", "/", "2"}], ",", " ", 
+            RowBox[{"basis", "[", 
+             RowBox[{"[", 
+              RowBox[{"k", ",", " ", "2"}], "]"}], "]"}]}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "0"}], "}"}]}], "]"}], " ", 
+        RowBox[{"UnitVector", "[", 
+         RowBox[{"4", ",", " ", "k"}], "]"}]}], ",", " ", "0"}], "]"}], ",", 
+     " ", 
+     RowBox[{"{", 
+      RowBox[{"k", ",", " ", "4"}], "}"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"6c794f6b-f5ea-4c8f-9c56-c4261d2b98cb"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the coupled basis is the eigenbasis of the total spin ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["S", "TI"], "\[RightVector]"], "=", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["S", "TI"], "\[RightVector]"], "1"], "+", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["S", "TI"], "\[RightVector]"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4a26be7-3067-4216-b107-f057a0f9c77c"],
+ "; diagonalize ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["S", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4cc9b1e2-7673-4b8d-bc0a-cfd6aa61c12a"],
+ " and its overlaps with the product basis ",
+ StyleBox["are", "TI"],
+ " the Clebsch-Gordan coefficients. The ",
+ Cell[BoxData[
+  TemplateBox[{"1,0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f9d8dfbd-fd5e-4567-8c37-4baedbf707f2"],
+ " state is the ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["M", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2be0be86-7b26-4108-8a92-dbc16c587cd4"],
+ " (",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["S", "TI"], 
+    StyleBox["z", "TI"], 
+    StyleBox["tot",
+     FontSlant->"Plain"]], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aa48f8a9-3444-479d-89e1-9d90746eb43e"],
+ ") eigenvector inside the ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e7298e88-1666-4d25-9d4f-e9275964cbd2"],
+ " (triplet) block."
+}], "Text",ExpressionUUID->"56e1c676-2349-4add-8b7d-84e6f434d995"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"stot", " ", "=", " ", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"KroneckerProduct", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}], ",", " ", 
+          RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", "+", " ", 
+        RowBox[{"KroneckerProduct", "[", 
+         RowBox[{
+          RowBox[{"IdentityMatrix", "[", "2", "]"}], ",", " ", 
+          RowBox[{
+           RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}]}], "]"}]}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"s2", " ", "=", " ", 
+        RowBox[{"Sum", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"stot", "[", 
+            RowBox[{"[", "k", "]"}], "]"}], " ", ".", " ", 
+           RowBox[{"stot", "[", 
+            RowBox[{"[", "k", "]"}], "]"}]}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}], ",", " ", 
+       RowBox[{"sz", " ", "=", " ", 
+        RowBox[{"stot", "[", 
+         RowBox[{"[", "3", "]"}], "]"}]}]}], "}"}], ",", " ", 
+     RowBox[{"Select", "[", 
+      RowBox[{
+       RowBox[{"Normalize", " ", "/@", " ", 
+        RowBox[{"(", 
+         RowBox[{"Normal", " ", "/@", " ", 
+          RowBox[{
+           RowBox[{"QuantumOperator", "[", "s2", "]"}], 
+           "[", "\"\<Eigenvectors\>\"", "]"}]}], ")"}]}], ",", " ", 
+       RowBox[{
+        RowBox[{"Simplify", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"#", " ", ".", " ", "s2", " ", ".", " ", "#"}], " ", "==", 
+           " ", "2"}], " ", "&&", " ", 
+          RowBox[{
+           RowBox[{"#", " ", ".", " ", "sz", " ", ".", " ", "#"}], " ", "==", 
+           " ", "0"}]}], "]"}], " ", "&"}]}], "]"}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"a9febdaa-b108-46c5-bc0d-5837b80dc3dc"],
+
+Cell[TextData[{
+ "Both single out ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"1,0"},
+    "Ket"], "=", 
+   RowBox[{
+    FractionBox["1", 
+     SqrtBox["2"]], 
+    RowBox[{"(", 
+     RowBox[{
+      TemplateBox[{
+        RowBox[{"\[UpArrow]", "\[DownArrow]"}]},
+       "Ket"], "+", 
+      TemplateBox[{
+        RowBox[{"\[DownArrow]", "\[UpArrow]"}]},
+       "Ket"]}], ")"}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10d95018-ac6d-4308-ad1f-6bad014af7d1"],
+ ", its Clebsch-Gordan coefficients ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0"}], ",", 
+   FractionBox["1", 
+    SqrtBox["2"]], ",", 
+   FractionBox["1", 
+    SqrtBox["2"]], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f08b7954-49a0-4009-8310-31bd5a14a862"],
+ ": adding two spins is a change of basis from the product basis to the \
+total-spin basis, and the change-of-basis matrix is the table of \
+Clebsch-Gordan coefficients, recoverable either from the built-in or by \
+diagonalizing ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["S", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ba47267-5884-474e-99a4-a213d31be7b0"],
+ "."
+}], "Text",ExpressionUUID->"422d81b0-7ebe-4028-941f-7733e994d0a6"],
+
+Cell["\<\
+8.6 [MSc] How do I build the singlet and triplet states and identify them by \
+total spin?\
+\>", "Subsection",ExpressionUUID->"d0ecc8a6-611e-4b42-8db6-714d68f89dba"],
+
+Cell[TextData[{
+ "Two spin-1/2 combine into one singlet (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["S", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12e18d36-3405-47e4-8fb1-5146c0db15dc"],
+ ", antisymmetric) and three triplet states (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["S", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0e5a5776-5a8a-4b7b-be13-f9554c944e01"],
+ ", symmetric). They are told apart by the total-spin Casimir ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["S", "TI"], "\[RightVector]"], "1"], "+", 
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["S", "TI"], "\[RightVector]"], "2"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "70362c35-6d81-45b3-a7dd-9b6d17225c73"],
+ ", whose eigenvalue is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["S", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["S", "TI"], "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "164bcf34-f97e-40ef-a74b-e5fb1e466ab9"],
+ ": ",
+ Cell[BoxData["0"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9ba151b-de26-4598-b8f3-f6c022a6497d"],
+ " for the singlet, ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "105b1f7f-3341-41ec-8771-44be06a9b6cb"],
+ " for the triplet. Build the four states and read their ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["S", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "41c143ba-487d-4ed8-ad0e-080b00096ca1"],
+ "."
+}], "Text",ExpressionUUID->"de3a5900-cbcf-4cc3-86c2-9801b8564e95"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : form ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["S", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9c493bd6-ea7e-4cd2-89d9-ba525aec6859"],
+ " from the two spins, and evaluate it on the singlet and on a triplet \
+representative."
+}], "Text",ExpressionUUID->"5c931c3c-91d2-41db-a11e-4f1e6e46a744"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"singlet", " ", "=", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "1", ",", " ", 
+         RowBox[{"-", "1"}], ",", " ", "0"}], "}"}], "/", 
+       RowBox[{"Sqrt", "[", "2", "]"}]}]}], ",", " ", 
+     RowBox[{"triplet", " ", "=", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", "1", ",", " ", "1", ",", " ", "0"}], "}"}], "/", 
+       RowBox[{"Sqrt", "[", "2", "]"}]}]}]}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"stot", " ", "=", " ", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"KroneckerProduct", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}], ",", " ", 
+            RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}], " ", "+", " ", 
+          RowBox[{"KroneckerProduct", "[", 
+           RowBox[{
+            RowBox[{"IdentityMatrix", "[", "2", "]"}], ",", " ", 
+            RowBox[{
+             RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}]}], "]"}]}], ",",
+          " ", 
+         RowBox[{"{", 
+          RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"s2", " ", "=", " ", 
+         RowBox[{"Sum", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"stot", "[", 
+             RowBox[{"[", "k", "]"}], "]"}], " ", ".", " ", 
+            RowBox[{"stot", "[", 
+             RowBox[{"[", "k", "]"}], "]"}]}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"Conjugate", "[", "singlet", "]"}], " ", ".", " ", "s2", 
+          " ", ".", " ", "singlet"}], ",", " ", 
+         RowBox[{
+          RowBox[{"Conjugate", "[", "triplet", "]"}], " ", ".", " ", "s2", 
+          " ", ".", " ", "triplet"}]}], "}"}]}], "]"}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"184ea659-7c6f-4cda-9f5a-423b4458a851"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["S", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ab7754ea-38e0-4e0e-9417-652ae08d5da0"],
+ " as a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8a3dc1a8-a946-4993-8d54-bc8983da9316"],
+ "; its spectrum on the whole space shows the multiplicities directly, one ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56bdd039-7fb6-4fc2-bb75-7b8e3fb2669f"],
+ " level and three ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c71f5d5e-1022-4012-8e83-7821f1828e2a"],
+ " levels."
+}], "Text",ExpressionUUID->"e282b755-7304-4065-8fb3-2ca4405f365f"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"stot", " ", "=", " ", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"QuantumTensorProduct", "[", 
+         RowBox[{
+          RowBox[{"QuantumOperator", "[", 
+           RowBox[{
+            RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}], "]"}], ",", 
+          " ", 
+          RowBox[{"QuantumOperator", "[", "\"\<I\>\"", "]"}]}], "]"}], " ", "+",
+         " ", 
+        RowBox[{"QuantumTensorProduct", "[", 
+         RowBox[{
+          RowBox[{"QuantumOperator", "[", "\"\<I\>\"", "]"}], ",", " ", 
+          RowBox[{"QuantumOperator", "[", 
+           RowBox[{
+            RowBox[{"PauliMatrix", "[", "k", "]"}], "/", "2"}], "]"}]}], 
+         "]"}]}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}], "}"}], ",", " ", 
+   RowBox[{"Sort", "[", 
+    RowBox[{
+     RowBox[{"Sum", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"stot", "[", 
+         RowBox[{"[", "k", "]"}], "]"}], " ", "@", " ", 
+        RowBox[{"stot", "[", 
+         RowBox[{"[", "k", "]"}], "]"}]}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}], 
+     "[", "\"\<Eigenvalues\>\"", "]"}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"42922973-b25f-40aa-a737-46db1a047cd6"],
+
+Cell[TextData[{
+ "The singlet returns ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76d95bcb-6d18-4803-a6b0-a8a1cf20c604"],
+ " and every triplet state returns ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["S", "TI"], "2"], "=", "2", "=", "1", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", "+", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d416450b-f4fb-4098-8cde-fb3556bfea5a"],
+ "; the QF spectrum is ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0"}], ",", 
+   RowBox[{"2", ",", "2"}], ",", 
+   RowBox[{"2", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bc596bfa-ac1a-4990-90b7-f3c1bb73a80c"],
+ ", exactly the ",
+ Cell[BoxData[
+  RowBox[{"1", "\[CirclePlus]", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a0858fa3-bc75-42a9-be2f-5e640004dc36"],
+ " multiplicity of ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", "2"], "\[CircleTimes]", 
+   FractionBox["1", "2"], "=", "0", "\[CirclePlus]", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d18e723a-6b39-4e0b-8b0a-678f48fe7a53"],
+ ". Total spin is the conserved label that block-diagonalizes any \
+rotationally invariant two-spin interaction (as in Part 7, 7.10)."
+}], "Text",ExpressionUUID->"574505c0-6e57-42f8-ae91-c8cd176af7a3"],
+
+Cell["\<\
+8.7 [MSc] How do I construct a spin coherent state and place it on the \
+generalized Bloch sphere?\
+\>", "Subsection",ExpressionUUID->"60b57d0c-bd1d-40ad-8d22-5ee55efbd8e7"],
+
+Cell[TextData[{
+ "A spin coherent state is the most classical state of a spin-",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "129bddea-014c-4486-8751-eb490a339d6b"],
+ ": the highest-weight state ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["j", "TI"], ",", 
+      StyleBox["j", "TI"]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1baeb1a4-249a-4797-8851-2cfe0ecde4ee"],
+ " rotated to point along a direction ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["n", "TI"], "^"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["\[Theta]", "TI"], ",", "\[CurlyPhi]"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ed69cc36-ce9e-447b-9de1-4e5e0c140b07"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     RowBox[{
+       StyleBox["j", "TI"], ",", 
+       OverscriptBox[
+        StyleBox["n", "TI"], "^"]}]},
+    "Ket"], "=", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], "\[CurlyPhi]", 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["z", "TI"]]}]], 
+    SuperscriptBox[
+     StyleBox["e", "TI"], 
+     RowBox[{"-", 
+      StyleBox["i", "TI"], 
+      StyleBox["\[Theta]", "TI"], 
+      SubscriptBox[
+       StyleBox["J", "TI"], 
+       StyleBox["y", "TI"]]}]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["j", "TI"], ",", 
+        StyleBox["j", "TI"]}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "51f2cc13-9662-463d-8c50-7262a9ecb435"],
+ ". Its expectation vector is fully polarized, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["J", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["j", "TI"], " ", 
+   OverscriptBox[
+    StyleBox["n", "TI"], "^"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d6bbac5a-ce0e-4939-8886-3e697b80efca"],
+ ", so it sits on the sphere of radius ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "643bc45f-2a4a-4964-824c-b5f8a54559a7"],
+ ", the generalized Bloch sphere. Build it for spin ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b933b55-30a7-4400-8a54-90db034842bb"],
+ "."
+}], "Text",ExpressionUUID->"5970cfbb-6cf8-4188-a702-484b93cb1eda"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : rotate the highest-weight state and confirm ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["J", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["j", "TI"], " ", 
+   OverscriptBox[
+    StyleBox["n", "TI"], "^"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e1e9d744-4c7c-4e54-889f-c8f0cb0c7e04"],
+ "."
+}], "Text",ExpressionUUID->"b7ee3c45-4c21-4624-9312-3a2cb03440af"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "+", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}]}], ",",
+            " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "-", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+             RowBox[{"(", 
+              RowBox[{"2", " ", "I"}], ")"}]}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"coh", " ", "=", " ", 
+             RowBox[{
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Phi]", " ", "jz"}], "]"}], " ", ".",
+               " ", 
+              RowBox[{"MatrixExp", "[", 
+               RowBox[{
+                RowBox[{"-", "I"}], " ", "\[Theta]", " ", "jy"}], "]"}], " ", 
+              ".", " ", 
+              RowBox[{"UnitVector", "[", 
+               RowBox[{"n", ",", " ", "1"}], "]"}]}]}], "}"}], ",", " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{"ComplexExpand", "[", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "coh", "]"}], " ", ".", " ", "jx", 
+                 " ", ".", " ", "coh"}], ",", " ", 
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "coh", "]"}], " ", ".", " ", "jy", 
+                 " ", ".", " ", "coh"}], ",", " ", 
+                RowBox[{
+                 RowBox[{"Conjugate", "[", "coh", "]"}], " ", ".", " ", "jz", 
+                 " ", ".", " ", "coh"}]}], "}"}], "]"}], ",", " ", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}], " ", "\[Element]",
+               " ", "Reals"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"f2412e99-c553-4e33-afcb-00525d55ecfb"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same coherent state as a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f571f1b5-2943-4134-bcf3-27862d7d58d9"],
+ "; its polarization vector, the three spin expectations, points along ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["n", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "63ebdcc5-6b65-4f06-a95c-47b8594c46a3"],
+ " with length ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56861902-595a-4056-9273-f8ae02c177c3"],
+ "."
+}], "Text",ExpressionUUID->"a75e9c4a-85a8-431c-bdb4-e62fd224d941"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"j", " ", "=", " ", "1"}], "}"}], ",", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"j", ",", " ", 
+          RowBox[{"-", "j"}], ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"2", " ", "j"}], " ", "+", " ", "1"}]}]}], "}"}], ",", " ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"jz", " ", "=", " ", 
+          RowBox[{"DiagonalMatrix", "[", 
+           RowBox[{"Range", "[", 
+            RowBox[{"j", ",", " ", 
+             RowBox[{"-", "j"}], ",", " ", 
+             RowBox[{"-", "1"}]}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"jp", " ", "=", " ", 
+          RowBox[{"SparseArray", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"r_", ",", " ", "c_"}], "}"}], " ", "/;", " ", 
+              RowBox[{"r", " ", "==", " ", 
+               RowBox[{"c", " ", "-", " ", "1"}]}]}], " ", ":>", " ", 
+             RowBox[{"Sqrt", "[", 
+              RowBox[{
+               RowBox[{"j", " ", 
+                RowBox[{"(", 
+                 RowBox[{"j", " ", "+", " ", "1"}], ")"}]}], " ", "-", " ", 
+               RowBox[{
+                RowBox[{"m", "[", 
+                 RowBox[{"[", "c", "]"}], "]"}], " ", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"m", "[", 
+                   RowBox[{"[", "c", "]"}], "]"}], " ", "+", " ", "1"}], 
+                 ")"}]}]}], "]"}]}], ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"n", ",", " ", "n"}], "}"}]}], "]"}]}]}], "}"}], ",", 
+       " ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"jx", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "+", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", "2"}]}], ",",
+            " ", 
+           RowBox[{"jy", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"jp", " ", "-", " ", 
+               RowBox[{"Transpose", "[", "jp", "]"}]}], ")"}], "/", 
+             RowBox[{"(", 
+              RowBox[{"2", " ", "I"}], ")"}]}]}]}], "}"}], ",", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"coh", " ", "=", " ", 
+             RowBox[{"QuantumState", "[", 
+              RowBox[{
+               RowBox[{"MatrixExp", "[", 
+                RowBox[{
+                 RowBox[{"-", "I"}], " ", "\[Phi]", " ", "jz"}], "]"}], " ", ".",
+                " ", 
+               RowBox[{"MatrixExp", "[", 
+                RowBox[{
+                 RowBox[{"-", "I"}], " ", "\[Theta]", " ", "jy"}], "]"}], " ",
+                ".", " ", 
+               RowBox[{"UnitVector", "[", 
+                RowBox[{"n", ",", " ", "1"}], "]"}]}], "]"}]}], "}"}], ",", 
+           " ", 
+           RowBox[{"Simplify", "[", 
+            RowBox[{
+             RowBox[{"ComplexExpand", "[", 
+              RowBox[{"Table", "[", 
+               RowBox[{
+                RowBox[{
+                 RowBox[{"(", 
+                  RowBox[{
+                   RowBox[{"coh", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+                   RowBox[{
+                    RowBox[{"QuantumOperator", "[", "op", "]"}], " ", "@", 
+                    " ", "coh"}]}], ")"}], "[", "\"\<Scalar\>\"", "]"}], ",", 
+                " ", 
+                RowBox[{"{", 
+                 RowBox[{"op", ",", " ", 
+                  RowBox[{"{", 
+                   RowBox[{"jx", ",", " ", "jy", ",", " ", "jz"}], "}"}]}], 
+                 "}"}]}], "]"}], "]"}], ",", " ", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}], " ", "\[Element]",
+               " ", "Reals"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"c71d3663-c462-43f0-b885-b3f13395d721"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["J", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"], 
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", "\[CurlyPhi]"}], ",", 
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"], 
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", "\[CurlyPhi]"}], ",", 
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e486a245-4a68-4b51-ae64-2edf5651c8e8"],
+ ", exactly ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], " ", 
+   OverscriptBox[
+    StyleBox["n", "TI"], "^"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fe4d831b-762d-4b01-8349-434be536ad51"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["j", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31832d0b-cf99-40ff-99f9-64b5b53bf331"],
+ ": the spin coherent state points as definitely as a spin can in the \
+direction ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["n", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e2c6456d-b251-4a65-a54e-dee926ef6c89"],
+ ", saturating the angular-momentum uncertainty and serving as the \
+finite-dimensional stand-in for the (infinite-dimensional) coherent state of \
+light."
+}], "Text",ExpressionUUID->"6056f957-e148-4733-9363-064b7acd9c88"]
+},
+CreateCellID->True,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"636be234-9910-4410-af84-f6f890ae43d3"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 156, 2, 70, "Title",ExpressionUUID->"0ebefc9f-ebb1-41bd-a1b5-b4552d7f749e"],
+Cell[713, 24, 306, 8, 70, "Text",ExpressionUUID->"8971f3c0-3d1b-44df-842d-8ad5c3937fa0"],
+Cell[1022, 34, 941, 24, 70, "ItemNumbered",ExpressionUUID->"bf311eb2-fb5b-45e7-8b15-a3c45e152e94"],
+Cell[1966, 60, 852, 18, 70, "ItemNumbered",ExpressionUUID->"f5df040c-4705-4f34-9358-11e7362a1ea2"],
+Cell[2821, 80, 3571, 113, 70, "Text",ExpressionUUID->"fbafe58d-f88b-47f0-96fd-d7f64c53d288"],
+Cell[6395, 195, 79, 0, 70, "Section",ExpressionUUID->"4cf49eaf-fa7c-4b54-b120-15ab28665a36"],
+Cell[6477, 197, 107, 0, 70, "Text",ExpressionUUID->"c96acf02-0bb9-47ec-8ae4-66bbe40aab94"],
+Cell[6587, 199, 169, 2, 70, "Input",ExpressionUUID->"42c83bb3-198f-407a-90c8-bde27b39ffbf"],
+Cell[6759, 203, 107, 0, 70, "Section",ExpressionUUID->"28b518be-f4f6-4325-97a8-0f706e1aa411"],
+Cell[6869, 205, 200, 3, 70, "Subsection",ExpressionUUID->"5269ed4b-a19c-4fd1-9cc0-f34af8fe9894"],
+Cell[7072, 210, 2330, 75, 70, "Text",ExpressionUUID->"2a353b92-0f58-42cf-b7ed-af669389af84"],
+Cell[9405, 287, 608, 18, 70, "Text",ExpressionUUID->"365ee170-36af-4ff8-8f45-a9a89bb573fc"],
+Cell[10016, 307, 889, 26, 70, "Input",ExpressionUUID->"53c5b965-9d9f-4d35-8b2b-4442267bf3a1"],
+Cell[10908, 335, 568, 16, 70, "Text",ExpressionUUID->"b3130b0d-6416-489e-9a09-1610e787a4f6"],
+Cell[11479, 353, 992, 26, 70, "Input",ExpressionUUID->"5abaaf28-ea18-470e-bd59-0efb766fa1c6"],
+Cell[12474, 381, 1448, 41, 70, "Text",ExpressionUUID->"e8ca1580-fc45-4949-9b3b-59e30b7a14b5"],
+Cell[13925, 424, 808, 27, 70, "Subsection",ExpressionUUID->"a1902227-b0b5-49cd-bf51-fb036f0a43e2"],
+Cell[14736, 453, 3726, 138, 70, "Text",ExpressionUUID->"31e5fe1d-df8f-480e-b2ef-b1874b035060"],
+Cell[18465, 593, 839, 28, 70, "Text",ExpressionUUID->"dae0c097-cd8e-4f66-a8b5-1f5af6c94817"],
+Cell[19307, 623, 3306, 86, 70, "Input",ExpressionUUID->"e9e2af2e-7c83-4693-8a7c-e40eb3c23493"],
+Cell[22616, 711, 644, 16, 70, "Text",ExpressionUUID->"fc55d781-3c9e-4198-9973-7c00c98e2232"],
+Cell[23263, 729, 3554, 91, 70, "Input",ExpressionUUID->"c4fc436d-6956-4f32-af46-f6807398bcde"],
+Cell[26820, 822, 1251, 37, 70, "Text",ExpressionUUID->"b1ff612a-5810-44b3-aed5-5e12ed394e5b"],
+Cell[28074, 861, 175, 3, 70, "Subsection",ExpressionUUID->"fc7d24a7-ff27-4096-bd11-52c12b462a44"],
+Cell[28252, 866, 3248, 109, 70, "Text",ExpressionUUID->"766d2c3b-f413-4fb8-84da-c8cd5b91d728"],
+Cell[31503, 977, 653, 22, 70, "Text",ExpressionUUID->"218b457c-886f-4b97-85f3-f7ec6356be0b"],
+Cell[32159, 1001, 3776, 96, 70, "Input",ExpressionUUID->"50eb0986-74ff-4750-9cd8-77d767795268"],
+Cell[35938, 1099, 528, 13, 70, "Text",ExpressionUUID->"2654c4a4-98a8-476e-9e8f-8eadc5096de6"],
+Cell[36469, 1114, 3959, 102, 70, "Input",ExpressionUUID->"2d371fa3-fdc6-42f6-9787-193287a30b8c"],
+Cell[40431, 1218, 1228, 39, 70, "Text",ExpressionUUID->"a18e349e-46ea-47c7-b94a-2b9a60694293"],
+Cell[41662, 1259, 1938, 70, 70, "Subsection",ExpressionUUID->"24a307e8-1656-42c4-86f3-ce742aea2a5c"],
+Cell[43603, 1331, 2367, 81, 70, "Text",ExpressionUUID->"927465a3-ef21-4744-a8e2-f3727cedc199"],
+Cell[45973, 1414, 2009, 66, 70, "Text",ExpressionUUID->"938b7750-8a58-4c71-a6d3-0108585d1d43"],
+Cell[47985, 1482, 4151, 106, 70, "Input",ExpressionUUID->"03fdc9bd-1f41-485a-a623-ce0349119978"],
+Cell[52139, 1590, 492, 13, 70, "Text",ExpressionUUID->"21417784-ce04-420a-b138-eb06f939a121"],
+Cell[52634, 1605, 4476, 113, 70, "Input",ExpressionUUID->"d579104d-e901-4e17-afd3-3d61cff926dd"],
+Cell[57113, 1720, 932, 24, 70, "Text",ExpressionUUID->"4d128422-7f4e-49e8-a860-20306082c278"],
+Cell[58048, 1746, 174, 3, 70, "Subsection",ExpressionUUID->"0eb3692e-4a78-4c35-a182-2616f5862514"],
+Cell[58225, 1751, 1438, 46, 70, "Text",ExpressionUUID->"caf1f37b-d113-4b3c-af16-c72c9af9572d"],
+Cell[59666, 1799, 727, 21, 70, "Text",ExpressionUUID->"fe397b81-dcc1-405d-b604-95b3a3a58c0d"],
+Cell[60396, 1822, 1974, 59, 70, "Input",ExpressionUUID->"6c794f6b-f5ea-4c8f-9c56-c4261d2b98cb"],
+Cell[62373, 1883, 1713, 54, 70, "Text",ExpressionUUID->"56e1c676-2349-4add-8b7d-84e6f434d995"],
+Cell[64089, 1939, 2074, 57, 70, "Input",ExpressionUUID->"a9febdaa-b108-46c5-bc0d-5837b80dc3dc"],
+Cell[66166, 1998, 1268, 40, 70, "Text",ExpressionUUID->"422d81b0-7ebe-4028-941f-7733e994d0a6"],
+Cell[67437, 2040, 175, 3, 70, "Subsection",ExpressionUUID->"d0ecc8a6-611e-4b42-8db6-714d68f89dba"],
+Cell[67615, 2045, 1918, 60, 70, "Text",ExpressionUUID->"de3a5900-cbcf-4cc3-86c2-9801b8564e95"],
+Cell[69536, 2107, 391, 11, 70, "Text",ExpressionUUID->"5c931c3c-91d2-41db-a11e-4f1e6e46a744"],
+Cell[69930, 2120, 2188, 59, 70, "Input",ExpressionUUID->"184ea659-7c6f-4cda-9f5a-423b4458a851"],
+Cell[72121, 2181, 949, 28, 70, "Text",ExpressionUUID->"e282b755-7304-4065-8fb3-2ca4405f365f"],
+Cell[73073, 2211, 1364, 38, 70, "Input",ExpressionUUID->"42922973-b25f-40aa-a737-46db1a047cd6"],
+Cell[74440, 2251, 1459, 42, 70, "Text",ExpressionUUID->"574505c0-6e57-42f8-ae91-c8cd176af7a3"],
+Cell[75902, 2295, 183, 3, 70, "Subsection",ExpressionUUID->"60b57d0c-bd1d-40ad-8d22-5ee55efbd8e7"],
+Cell[76088, 2300, 2575, 86, 70, "Text",ExpressionUUID->"5970cfbb-6cf8-4188-a702-484b93cb1eda"],
+Cell[78666, 2388, 572, 18, 70, "Text",ExpressionUUID->"b7ee3c45-4c21-4624-9312-3a2cb03440af"],
+Cell[79241, 2408, 4016, 104, 70, "Input",ExpressionUUID->"f2412e99-c553-4e33-afcb-00525d55ecfb"],
+Cell[83260, 2514, 697, 19, 70, "Text",ExpressionUUID->"a75e9c4a-85a8-431c-bdb4-e62fd224d941"],
+Cell[83960, 2535, 4214, 110, 70, "Input",ExpressionUUID->"c71d3663-c462-43f0-b885-b3f13395d721"],
+Cell[88177, 2647, 1825, 57, 70, "Text",ExpressionUUID->"6056f957-e148-4733-9363-064b7acd9c88"]
+}
+]
+*)
+
+(* End of internal cache information *)

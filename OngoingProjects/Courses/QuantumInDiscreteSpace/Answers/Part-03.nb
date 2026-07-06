@@ -1,0 +1,2275 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     77804,       2266]
+NotebookOptionsPosition[     66482,       2137]
+NotebookOutlinePosition[     66824,       2152]
+CellTagsIndexPosition[     66781,       2149]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 3)\
+\>", "Title",ExpressionUUID->"8336e7fc-c649-4c83-89c4-d33bf72cf896"],
+
+Cell[TextData[{
+ "A companion answer key to ",
+ Cell["Question-List.md", "InlineCode",ExpressionUUID->
+  "f5ff9bb0-6a9a-442f-8466-60fa4e14e754"],
+ ". For each question it gives ",
+ StyleBox["two",
+  FontWeight->"Bold"],
+ " worked answers:"
+}], "Text",ExpressionUUID->"aa90d66c-200f-4916-b7a5-07f03c56da0c"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : native Wolfram Language only (plain vectors and matrices, ",
+ Cell[BoxData["PauliMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "89728943-5885-4cd1-9652-a4a60b6eb6df"],
+ ", ",
+ Cell[BoxData["Conjugate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fbecc638-698b-4a5f-ad75-a3632df0c7c0"],
+ ", ",
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0dd00bc9-0ef7-4b59-aa16-e18abbec36ef"],
+ ", ",
+ Cell[BoxData["Eigenvectors"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2dd299c1-59af-4f13-93c4-7e25710f2634"],
+ ", ",
+ Cell[BoxData["MatrixExp"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b2dc63b2-6587-4029-8b7c-742c9888402b"],
+ ", and friends). Nothing beyond the built-in language."
+}], "ItemNumbered",ExpressionUUID->"766a5fe4-763f-4777-bf46-ef4901a716e8"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same task done through the ",
+ StyleBox["QuantumFramework",
+  FontWeight->"Bold"],
+ " paclet, leaning on its objects and property downvalues (",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QuantumState", "[", "...", "]"}], "[", "\"\<...\>\"", "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d181331-831f-4479-ae20-b78267db0c98"],
+ ") rather than rebuilding matrices by hand. A QF result is a rich object, a \
+state or an operator, not a bare array: it can act on a target, compose with \
+others, report its spectrum, change basis, and more. The answers keep results \
+as objects and treat a matrix or amplitude vector as just one of the object's \
+many representations, not the thing itself."
+}], "ItemNumbered",ExpressionUUID->"17a60c52-9702-49f0-8b4f-67063da4d8fc"],
+
+Cell[TextData[{
+ "Three habits run through the answers. They stay ",
+ StyleBox["symbolic",
+  FontWeight->"Bold"],
+ " wherever possible (general amplitudes ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], ",", 
+   StyleBox["\[Beta]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e51373ff-d530-45b0-a4cf-e366586229ac"],
+ ", general angles ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], ",", 
+   StyleBox["\[Phi]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77ef2a63-4652-4e08-83df-37412677e7d3"],
+ "), so each operation is exercised in full generality rather than on a lucky \
+special case. They write the computation ",
+ StyleBox["explicitly",
+  FontWeight->"Bold"],
+ " rather than hiding it in a helper function, because the code is itself \
+part of the explanation. And they prefer ",
+ StyleBox["built-in features",
+  FontWeight->"Bold"],
+ " (a ",
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7cdd6cb3-b04b-4fd1-8ac3-b0249759fc82"],
+ ", a named state) over hand-rolled constructions, so nothing is hardcoded: \
+every cell computes its result. Each cell does ",
+ StyleBox["one",
+  FontWeight->"Bold"],
+ " thing and is preceded by a sentence saying what, so the notebook reads as \
+a sequence of single, captioned computations. Run the WL answers in a bare \
+kernel; the QF answers need the paclet loaded once."
+}], "Text",ExpressionUUID->"048c37d1-5527-41cd-bb3d-d4d7fbdaf8dc"],
+
+Cell["Setup", "Section",ExpressionUUID->"1914199c-5c71-4bcb-b7a5-b570189d92f3"],
+
+Cell["The QF answers load the paclet once:", "Text",ExpressionUUID->"a07b09a8-7d5d-4439-ad62-dfcfc3ad8c55"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"3b30c9b7-5235-4071-9314-e663714b049e"],
+
+Cell["Part 3. States as density operators", "Section",ExpressionUUID->"902fc871-5e1f-4486-8f3d-27ef18fd2c44"],
+
+Cell["\<\
+3.1a [BSc] How do I build a density matrix from a classical ensemble?\
+\>", "Subsection",ExpressionUUID->"21535d98-7622-4d6d-8351-486846ec8b90"],
+
+Cell[TextData[{
+ "A classical mixture of pure states, each ",
+ Cell[BoxData[
+  TemplateBox[{
+    SubscriptBox[
+     StyleBox["\[Psi]", "TI"], 
+     StyleBox["i", "TI"]]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f8e622b9-50ac-4522-92a5-fa033bb8e017"],
+ " prepared with probability ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["p", "TI"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "887098b7-eac3-43bf-89d3-46ec2a60be80"],
+ ", is the density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     StyleBox["i", "TI"],
+     LimitsPositioning->False], 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["p", "TI"], 
+      StyleBox["i", "TI"]], 
+     TemplateBox[{
+       SubscriptBox[
+        StyleBox["\[Psi]", "TI"], 
+        StyleBox["i", "TI"]]},
+      "Ket"], 
+     TemplateBox[{
+       SubscriptBox[
+        StyleBox["\[Psi]", "TI"], 
+        StyleBox["i", "TI"]]},
+      "Bra"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eb4f9401-aa06-43a7-89c9-d4deb614d457"],
+ "."
+}], "Text",ExpressionUUID->"1e7471d0-a45a-4a74-9d4a-4e8684a678b1"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : sum the weighted projectors, each ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    TemplateBox[{
+      SubscriptBox[
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["i", "TI"]]},
+     "Ket"], 
+    TemplateBox[{
+      SubscriptBox[
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["i", "TI"]]},
+     "Bra"]}], "="}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "21a4120f-2911-4a58-929f-5420138752d0"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"KroneckerProduct", "[", 
+   RowBox[{"psi", ",", " ", 
+    RowBox[{"Conjugate", "[", "psi", "]"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "135b77d4-6f2e-4da2-a1fa-a40b4bb8beae"],
+ "."
+}], "Text",ExpressionUUID->"e2bfec1f-c937-4857-97dd-01cdbe929c15"],
+
+Cell[BoxData[
+ RowBox[{"rho", " ", "=", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"3", "/", "4"}], " ", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"Conjugate", "[", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0"}], "}"}], "]"}]}], "]"}]}], " ", "+", "\n",
+    "   ", 
+   RowBox[{
+    RowBox[{"1", "/", "4"}], " ", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+       RowBox[{"Sqrt", "[", "2", "]"}]}], ",", " ", 
+      RowBox[{"Conjugate", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+        RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}]}], "]"}]}]}]}]], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"2c307d3a-8a32-4231-b338-29fd92acb836"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : a classical mixture is the sum of the component density matrices (NOT a \
+sum of the state vectors, which would build a coherent superposition); wrap \
+that matrix as a state object."
+}], "Text",ExpressionUUID->"70e999e3-4808-474a-bc38-22d8809bfe4c"],
+
+Cell[BoxData[
+ RowBox[{"rhoQF", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"3", "/", "4"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], 
+      "[", "\"\<DensityMatrix\>\"", "]"}]}], " ", "+", "\n", "    ", 
+    RowBox[{
+     RowBox[{"1", "/", "4"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+        RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], "[", "\"\<DensityMatrix\>\"",
+       "]"}]}]}], "]"}]}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"1d73e680-70e0-46a3-9aca-11ae6df4d915"],
+
+Cell[TextData[{
+ "Both build the same ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4fc50f5f-649a-4c03-8848-8d0f0265f69b"],
+ ". Summing the ",
+ StyleBox["state vectors", "TI"],
+ " instead would have built a coherent superposition, a pure state, a \
+physically different object from this classical mixture."
+}], "Text",ExpressionUUID->"a00e077f-4af4-4c0f-bc1b-f475c5925dbc"],
+
+Cell[TextData[{
+ "3.1b [BSc] How do I compute the purity ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3210dfcd-4d13-4f9a-83d4-d72296f040f4"],
+ " of a density matrix?"
+}], "Subsection",ExpressionUUID->"7de50972-31e2-4efa-bfda-5f6c6dcc0831"],
+
+Cell[TextData[{
+ "The purity ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b4cdb4f-42fb-4ff4-83e8-d12695ddc636"],
+ " measures how mixed a state is: it runs from ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4cf345c3-426c-4fe8-a668-45949d4aeede"],
+ " (maximally mixed) up to ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f88c909a-beb2-49b0-809a-eed3c2a7af40"],
+ " (pure), the value ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a8b266d4-0df1-4ae8-89b4-73b4e434bae6"],
+ " reached only when ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "183788bc-d3c1-4ee2-a280-97da93040c5f"],
+ " is a single projector."
+}], "Text",ExpressionUUID->"14f9b901-8fad-4848-9fd1-ed40bc298a1a"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : form the ensemble density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    FractionBox["3", "4"], 
+    TemplateBox[{"0"},
+     "Ket"], 
+    TemplateBox[{"0"},
+     "Bra"]}], "+", 
+   RowBox[{
+    FractionBox["1", "4"], 
+    TemplateBox[{"+"},
+     "Ket"], 
+    TemplateBox[{"+"},
+     "Bra"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a9b90bd7-d6c6-4b2a-8818-8dca1bc945a5"],
+ " and read its purity ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "45955e68-d2c0-4328-98ee-b76be1874303"],
+ "."
+}], "Text",ExpressionUUID->"2ff3ed0e-f9c7-4bae-8cee-f2038009d113"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"rho", " ", "=", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"3", "/", "4"}], " ", 
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+         RowBox[{"Conjugate", "[", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "0"}], "}"}], "]"}]}], "]"}]}], " ", "+", 
+      " ", 
+      RowBox[{
+       RowBox[{"1", "/", "4"}], " ", 
+       RowBox[{"KroneckerProduct", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+          RowBox[{"Sqrt", "[", "2", "]"}]}], ",", " ", 
+         RowBox[{"Conjugate", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+           RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}]}], "]"}]}]}]}], "}"}], ",",
+    "\n", " ", 
+   RowBox[{"Tr", "[", 
+    RowBox[{"rho", " ", ".", " ", "rho"}], "]"}]}], "]"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"f761a985-8668-459b-9497-4670230e274c"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : ",
+ Cell[BoxData["\"\<Purity\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e2004943-21d2-430c-abcf-4e6437edf7b9"],
+ " reads ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9f43e5e8-4079-4fc3-9787-a3d27f49b880"],
+ " off the state object."
+}], "Text",ExpressionUUID->"32ad2c1e-9768-4ff5-9d2f-97d92542dcbc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"3", "/", "4"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], 
+      "[", "\"\<DensityMatrix\>\"", "]"}]}], " ", "+", " ", 
+    RowBox[{
+     RowBox[{"1", "/", "4"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+        RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], "[", "\"\<DensityMatrix\>\"",
+       "]"}]}]}], "]"}], "[", "\"\<Purity\>\"", "]"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"47fde6e5-9ede-4ce7-a6ee-a340b0f4b1d9"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", "13", "/", "16", "<", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ef0dc4d1-9da9-41d9-9dc4-32cd540e748f"],
+ ": the ensemble state is mixed, below the pure-state value ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b463fc50-7ffe-4a54-85e2-d94720400123"],
+ " and above the qubit floor ",
+ Cell[BoxData[
+  RowBox[{"1", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d328ff15-58d4-4584-b4ae-2608483d7afb"],
+ "."
+}], "Text",ExpressionUUID->"b94446fe-ef94-462a-af87-16405f70328a"],
+
+Cell["3.2 [BSc] How do I test whether a state is pure or mixed?", "Subsection",ExpressionUUID->"36862258-352f-4f7b-bbae-0b08f74474e0"],
+
+Cell[TextData[{
+ "A state is pure iff any one of three equivalent conditions holds: ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0930013f-d45e-45da-beb7-4d8629f4a450"],
+ ", ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "adced2ea-7f11-4b21-a6c4-6ce39f4984d3"],
+ " has rank one, or ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1311bc1d-c5a9-4c6b-bd8b-a900ab0ca27e"],
+ " is idempotent (",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], "=", 
+   StyleBox["\[Rho]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "36d955e2-1941-40cc-977c-251771c033d4"],
+ ", a projector)."
+}], "Text",ExpressionUUID->"649682d2-d4bf-488b-875c-71227995bb30"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : build a mixed state to test, the classical ensemble ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    FractionBox["3", "4"], 
+    TemplateBox[{"0"},
+     "Ket"], 
+    TemplateBox[{"0"},
+     "Bra"]}], "+", 
+   RowBox[{
+    FractionBox["1", "4"], 
+    TemplateBox[{"+"},
+     "Ket"], 
+    TemplateBox[{"+"},
+     "Bra"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c89cb8d2-9585-41a9-94b6-27cc7dc0aacc"],
+ "."
+}], "Text",ExpressionUUID->"08b84dc5-e850-4b30-b3a6-714e79d63d8d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rho", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"3", "/", "4"}], " ", 
+     RowBox[{"KroneckerProduct", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+       RowBox[{"Conjugate", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], "]"}]}], "]"}]}], " ", "+", " ", 
+    RowBox[{
+     RowBox[{"1", "/", "4"}], " ", 
+     RowBox[{"KroneckerProduct", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+        RowBox[{"Sqrt", "[", "2", "]"}]}], ",", " ", 
+       RowBox[{"Conjugate", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+         RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}]}], "]"}]}]}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"60a5646b-3e00-437c-a9bf-ad0a1582a98c"],
+
+Cell["Purity equals one only for a pure state.", "Text",ExpressionUUID->"b54df6f6-f899-4338-8317-421916a2937a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Tr", "[", 
+   RowBox[{"rho", " ", ".", " ", "rho"}], "]"}], " ", "==", " ", 
+  "1"}]], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"95809d3b-9076-445a-9238-586fbc6ec515"],
+
+Cell["A pure state's density matrix has rank one.", "Text",ExpressionUUID->"17a58489-f28d-4821-baaa-d89ed439902e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"MatrixRank", "[", "rho", "]"}], " ", "==", " ", "1"}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"6923e108-5a42-4993-b4fa-f3ff82542146"],
+
+Cell[TextData[{
+ "A pure state is idempotent, a projector ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], "=", 
+   StyleBox["\[Rho]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a8323d55-08fa-4e52-b8ac-6f3ca032abde"],
+ "."
+}], "Text",ExpressionUUID->"8de8f3e1-9bc0-4da3-85b6-ea92098ffd16"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rho", " ", ".", " ", "rho"}], " ", "==", " ", "rho"}]], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"844cecd5-357c-4fb7-9227-d3f7fea822fe"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : build the same mixture as a state object; it answers directly with ",
+ Cell[BoxData["\"\<PureStateQ\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b34b81a6-2eb4-46bb-8801-f6a151977ad8"],
+ "."
+}], "Text",ExpressionUUID->"ad8fe21e-5630-4bea-82ce-9d1697a9513f"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rhoQF", " ", "=", " ", 
+   RowBox[{"QuantumState", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"3", "/", "4"}], " ", 
+      RowBox[{
+       RowBox[{"QuantumState", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], 
+       "[", "\"\<DensityMatrix\>\"", "]"}]}], " ", "+", " ", 
+     RowBox[{
+      RowBox[{"1", "/", "4"}], " ", 
+      RowBox[{
+       RowBox[{"QuantumState", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "1"}], "}"}], "/", 
+         RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], 
+       "[", "\"\<DensityMatrix\>\"", "]"}]}]}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"3addd394-458a-4985-a434-882eaf7b8add"],
+
+Cell["The mixed state is not pure.", "Text",ExpressionUUID->"e47c3b50-78df-453c-86d8-39de6251cb32"],
+
+Cell[BoxData[
+ RowBox[{"rhoQF", "[", "\"\<PureStateQ\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"da1dcb23-78c1-4ee1-9836-0b0b0d16263f"],
+
+Cell[TextData[{
+ "Contrast a genuine pure state, which returns ",
+ Cell[BoxData["True"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ec20e611-6c7f-4f2f-b134-ad7de58362a4"],
+ "."
+}], "Text",ExpressionUUID->"d9335ca1-4e0e-45cb-b83d-f70e2a7c60ad"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"1", ",", " ", "I"}], "}"}], "/", 
+    RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], "[", "\"\<PureStateQ\>\"", 
+  "]"}]], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"30b65cad-53dc-4ef8-8cbb-930709ae7868"],
+
+Cell[TextData[{
+ "The mixed state fails all three criteria (each cell returns ",
+ Cell[BoxData["False"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "17db4833-41fd-44b0-8d3b-0198cbb1c7df"],
+ ", the rank is ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52d1fda7-8fea-468f-a408-dba3f45abbfe"],
+ "); the pure state passes. The three tests are equivalent characterizations \
+of the same rank-one property."
+}], "Text",ExpressionUUID->"89228278-7f25-4d10-89c4-8a206516c1eb"],
+
+Cell[TextData[{
+ "3.3 [BSc] How do I build the maximally mixed state ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["I", "TI"], "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07799ef3-2b1e-4fa0-a970-8f716a9a1c74"],
+ " and read its purity?"
+}], "Subsection",ExpressionUUID->"72505938-8a39-4c92-bf2b-77148ff04c2c"],
+
+Cell[TextData[{
+ "The maximally mixed state ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["I", "TI"], "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "efeee0f9-d130-484d-96bf-e9a302ff4870"],
+ " is the unique state of maximal entropy; its purity is the floor ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c6c22b7a-e674-4291-9804-bc1d860f51a3"],
+ "."
+}], "Text",ExpressionUUID->"e6ca2a18-5fc5-4595-a3e4-7cad5ff622e9"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the normalized identity, and its purity."
+}], "Text",ExpressionUUID->"4f66949b-b71b-4a68-b06b-93a55dd79bb2"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", "3"}], "}"}], ",", " ", 
+   RowBox[{"Tr", "[", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"IdentityMatrix", "[", "d", "]"}], "/", "d"}], ")"}], " ", ".",
+      " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"IdentityMatrix", "[", "d", "]"}], "/", "d"}], ")"}]}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"c20aa162-ce20-4887-b7ca-a33f4ad99f55"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same state as an object, shown as its summary box."
+}], "Text",ExpressionUUID->"7895f475-468c-485b-8c2c-630a4f3c5882"],
+
+Cell[BoxData[
+ RowBox[{"QuantumState", "[", 
+  RowBox[{
+   RowBox[{"IdentityMatrix", "[", "3", "]"}], "/", "3"}], "]"}]], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"e502f67a-2f40-4c18-9f4f-b91d3bf7c31f"],
+
+Cell[TextData[{
+ "Its ",
+ Cell[BoxData["\"\<Purity\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a613babf-de4e-47ae-b32b-8d20e4545305"],
+ " is the floor ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5cd12b73-5629-43a5-8b9a-de3ebd110700"],
+ "."
+}], "Text",ExpressionUUID->"d2aed799-8465-4415-a438-9b06648f9445"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"IdentityMatrix", "[", "3", "]"}], "/", "3"}], "]"}], 
+  "[", "\"\<Purity\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"764748be-0646-4390-b8cb-ae378e5d4847"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{"1", "/", "3", "=", "1", "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "03424dcb-9748-4118-a1a5-c8c42188e5d2"],
+ ", the minimum purity in dimension ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "=", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d6bf7b7f-babb-4d6d-a954-588b8a076216"],
+ ": no state is less pure than ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["I", "TI"], "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d7082b37-d1d5-4432-a5f2-f1b52fd5f136"],
+ "."
+}], "Text",ExpressionUUID->"90d378e4-f803-436f-944e-f2319f5e0635"],
+
+Cell[TextData[{
+ "3.4 [BSc] How do I compute an expectation value and a variance of an \
+observable on a general (mixed) state as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    OverscriptBox[
+     StyleBox["A", "TI"], "^"], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fd22b53a-4d9a-4bb5-8a3e-d5799d58cf20"],
+ "?"
+}], "Subsection",ExpressionUUID->"2535107e-ea43-409b-9816-c525e2c46413"],
+
+Cell[TextData[{
+ "For any state, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   StyleBox["A", "TI"], "\[VeryThinSpace]", 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   StyleBox[
+    RowBox[{"A", "\[Rho]"}], "TI"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "26067818-ae3d-4f6a-9b25-ea751c35a73f"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Var",
+    FontSlant->"Plain"], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["A", "TI"], "2"], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "-", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["[",
+      SpanMaxSize->1], 
+     StyleBox[
+      RowBox[{"A", "\[Rho]"}], "TI"], 
+     StyleBox["]",
+      SpanMaxSize->1]}], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "86bd0149-d5a1-4f42-af24-36b1d85d0ed3"],
+ ". Writing a general qubit state in Bloch form ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["I", "TI"], "+", 
+    OverscriptBox[
+     StyleBox["r", "TI"], "\[RightVector]"], "\[CenterDot]", 
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6389ead3-6cd2-434f-9e37-7165cb2b6958"],
+ " makes the result transparent."
+}], "Text",ExpressionUUID->"bcabf22e-08af-4984-bd29-e78096a31ddb"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : build the general Bloch state and bind it (",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "\[RightVector]"], "="}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7f9d81ab-36ce-4d50-aca6-35da3918d13f"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"PauliMatrix", "[", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e776d80-4876-423c-8da6-0c4f6a27a710"],
+ ")."
+}], "Text",ExpressionUUID->"46d44ec5-7b7d-4713-ad1d-6be8da2172a2"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rhoB", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"1", "/", "2"}], " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"IdentityMatrix", "[", "2", "]"}], " ", "+", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"rx", ",", " ", "ry", ",", " ", "rz"}], "}"}], " ", ".", " ", 
+       
+       RowBox[{"PauliMatrix", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], "]"}]}]}], 
+     ")"}]}]}], ";"}]], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"eced635e-0e9a-4b87-9520-2840f97c621d"],
+
+Cell[TextData[{
+ "The mean of ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Sigma]", "TI"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "076bd13e-2aa3-43a4-ac12-a00345122a52"],
+ " is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Sigma]", "TI"], 
+     StyleBox["z", "TI"]], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "61230252-3c00-4064-827b-88eab0d1e0e7"],
+ "."
+}], "Text",ExpressionUUID->"21ecd24f-d98c-4614-98db-5b777f707b32"],
+
+Cell[BoxData[
+ RowBox[{"Tr", "[", 
+  RowBox[{
+   RowBox[{"PauliMatrix", "[", "3", "]"}], " ", ".", " ", "rhoB"}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"3bf90116-4d31-4c42-856f-c641a1f52ce9"],
+
+Cell[TextData[{
+ "The variance reuses ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["\[Sigma]", "TI"], 
+    StyleBox["z", "TI"], "2"], "=", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4684e96-6087-40d0-b2ce-18dae7bfe934"],
+ "."
+}], "Text",ExpressionUUID->"3201db92-6789-4731-b311-ed8c457107fe"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Tr", "[", 
+   RowBox[{
+    RowBox[{"PauliMatrix", "[", "3", "]"}], " ", ".", " ", 
+    RowBox[{"PauliMatrix", "[", "3", "]"}], " ", ".", " ", "rhoB"}], "]"}], 
+  " ", "-", " ", 
+  RowBox[{
+   RowBox[{"Tr", "[", 
+    RowBox[{
+     RowBox[{"PauliMatrix", "[", "3", "]"}], " ", ".", " ", "rhoB"}], "]"}], "^",
+    "2"}]}]], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"e07c394f-3e7f-4e67-8db3-ead1850c6d42"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same general state as an object, shown as its summary box."
+}], "Text",ExpressionUUID->"e77d1318-1ff5-4cba-92bb-2622a5dfdc26"],
+
+Cell[BoxData[
+ RowBox[{"rhoBQF", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"1", "/", "2"}], " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"IdentityMatrix", "[", "2", "]"}], " ", "+", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"rx", ",", " ", "ry", ",", " ", "rz"}], "}"}], " ", ".", " ", 
+       
+       RowBox[{"PauliMatrix", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], "]"}]}]}], 
+     ")"}]}], "]"}]}]], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"6790e0fb-11ab-41dc-9261-d9dd18baa99f"],
+
+Cell[TextData[{
+ "The mean, as a measurement-operator expectation on the state. The ",
+ Cell[BoxData["\"\<Mean\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f9d4a877-12df-4e2a-a38f-58f02d9df5b0"],
+ " runs through Born probabilities ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", "\[PlusMinus]", 
+    SubscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["z", "TI"]]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "71c891c7-8c2e-4fa5-8d0c-c0d9da4f6c2e"],
+ ", so it is simplified under the physicality assumption ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      SubscriptBox[
+       StyleBox["r", "TI"], 
+       StyleBox["z", "TI"]]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c040816e-291d-44b1-94b5-d634bb3cb859"],
+ "."
+}], "Text",ExpressionUUID->"c145fdd1-678b-4049-b885-b16e77620570"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumMeasurementOperator", "[", 
+      RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}], "]"}], "[", 
+     "rhoBQF", "]"}], "[", "\"\<Mean\>\"", "]"}], ",", " ", 
+   RowBox[{
+    RowBox[{"-", "1"}], " ", "<=", " ", "rz", " ", "<=", " ", "1"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"ccdf82e5-ea59-4b72-90a1-4e2e13267766"],
+
+Cell[TextData[{
+ "The variance, from ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SubsuperscriptBox[
+    StyleBox["\[Sigma]", "TI"], 
+    StyleBox["z", "TI"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "-", 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SubscriptBox[
+      StyleBox["\[Sigma]", "TI"], 
+      StyleBox["z", "TI"]], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7714798c-99f2-4f2c-9b16-7724dcec5c91"],
+ ", under the same assumption."
+}], "Text",ExpressionUUID->"6881df11-0b13-4782-b7d3-61b54b799967"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumMeasurementOperator", "[", 
+       RowBox[{
+        RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}], " ", "@", " ", 
+        RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}]}], "]"}], "[", 
+      "rhoBQF", "]"}], "[", "\"\<Mean\>\"", "]"}], " ", "-", "\n", "  ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"QuantumMeasurementOperator", "[", 
+        RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}], "]"}], "[", 
+       "rhoBQF", "]"}], "[", "\"\<Mean\>\"", "]"}], "^", "2"}]}], ",", " ", 
+   RowBox[{
+    RowBox[{"-", "1"}], " ", "<=", " ", "rz", " ", "<=", " ", "1"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"f772cbee-dddb-445f-8bbb-a004b2a726e8"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    StyleBox["\[Sigma]", "TI"], 
+    StyleBox["z", "TI"]], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["z", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "956dc74d-f268-43cf-b1e3-a19443c82cef"],
+ " (the expectation of a Pauli is its Bloch component) and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Var",
+    FontSlant->"Plain"], "=", "1", "-", 
+   SubsuperscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["z", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d22c5a8e-fd08-4466-b811-598680952719"],
+ ": the spin is sharp (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Var",
+    FontSlant->"Plain"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b8359d4-0808-44ac-a0b1-1daec4e8ae21"],
+ ") only at the poles ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["z", "TI"]], "=", "\[PlusMinus]", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "082df64f-73d5-4c71-aaec-4c37ce195c2e"],
+ ". (The WL trace ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Sigma]", "TI"], 
+     StyleBox["z", "TI"]], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["z", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d292525b-9108-4b9d-be3c-b03941763e16"],
+ " holds for any ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0967ca3c-e6d6-47ce-8024-d8d549375251"],
+ "; the QF measurement form needs ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c1ad89a-09fe-45a5-8605-1979905b706e"],
+ " to be a physical state, which is the ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      SubscriptBox[
+       StyleBox["r", "TI"], 
+       StyleBox["z", "TI"]]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0ebce6d4-347c-4688-82ce-c0117acf6d20"],
+ " assumption.)"
+}], "Text",ExpressionUUID->"5662062c-f0a1-4382-a6fd-5eee45804308"],
+
+Cell[TextData[{
+ "3.5 [BSc] How do I count the real parameters of a ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f223eb25-fb48-4658-9e61-7a261c809cc6"],
+ "-dimensional mixed state (density matrix)?"
+}], "Subsection",ExpressionUUID->"7f5a86d1-66c5-49da-8fe5-262c82111920"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "\[Times]", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aed5ab59-6a99-41b4-bea2-7caeab8111e9"],
+ " density matrix is Hermitian (",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["d", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "93b5ac13-6249-4008-a29b-8b7f66cb51ce"],
+ " real parameters) with unit trace (one constraint), leaving ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["d", "TI"], "2"], "-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "392acd20-dec5-446c-835f-bfdc7444d25a"],
+ ". As in Part 1, 1.5, the rigorous count is a Jacobian rank."
+}], "Text",ExpressionUUID->"d17d799c-2867-47ad-9ad1-1a25c0762c9f"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the general Hermitian unit-trace qubit ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "{", 
+    StyleBox["a", "TI"]}], ",", 
+   RowBox[{
+    StyleBox["b", "TI"], "+", 
+    StyleBox["i", "TI"], 
+    StyleBox["c", "TI"], "}"}], ",", 
+   RowBox[{"{", 
+    StyleBox["b", "TI"], "-", 
+    StyleBox["i", "TI"], 
+    StyleBox["c", "TI"]}], ",", 
+   RowBox[{"1", "-", 
+    StyleBox["a", "TI"], "}", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d062749b-774e-42a6-a40b-566cced9bde3"],
+ " has three real parameters; its real-coordinate embedding has Jacobian rank \
+",
+ Cell[BoxData[
+  RowBox[{"3", "=", 
+   SuperscriptBox["2", "2"], "-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c898760-308b-4580-a43d-f61de8b48bfa"],
+ "."
+}], "Text",ExpressionUUID->"2466a5c2-a938-4141-b0fc-fe055d041d76"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"rho", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"a", ",", " ", 
+         RowBox[{"b", " ", "+", " ", 
+          RowBox[{"I", " ", "c"}]}]}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"b", " ", "-", " ", 
+          RowBox[{"I", " ", "c"}]}], ",", " ", 
+         RowBox[{"1", " ", "-", " ", "a"}]}], "}"}]}], "}"}]}], "}"}], ",", 
+   "\n", " ", 
+   RowBox[{"MatrixRank", "[", 
+    RowBox[{"D", "[", 
+     RowBox[{
+      RowBox[{"Flatten", "[", 
+       RowBox[{"ReIm", "[", 
+        RowBox[{"Flatten", "[", "rho", "]"}], "]"}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"{", 
+        RowBox[{"a", ",", " ", "b", ",", " ", "c"}], "}"}], "}"}]}], "]"}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[22]:= ",ExpressionUUID->"2626ec00-da1b-4b8a-bbaf-ab2676e6ae34"],
+
+Cell[TextData[{
+ "The general count for dimension ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "83b0226b-4660-403e-bc95-edb13d7b5b75"],
+ " is ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["d", "TI"], "2"], "-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c7447585-949c-46d0-acad-a7db0a67068e"],
+ "."
+}], "Text",ExpressionUUID->"a7482541-c9e6-4a8b-a029-3f1be2376cbd"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"d", "^", "2"}], " ", "-", " ", "1"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"d", ",", " ", "2", ",", " ", "4"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[23]:= ",ExpressionUUID->"2ddfba9e-843a-4a60-884b-69a2caac3526"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : drive the general count from the object's own dimension."
+}], "Text",ExpressionUUID->"4566253e-85fa-41d4-a45b-7e0349324568"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"\"\<0\>\"", ",", " ", "d"}], "]"}], "[", "\"\<Dimension\>\"", 
+      "]"}], "^", "2"}], " ", "-", " ", "1"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"d", ",", " ", "2", ",", " ", "4"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[24]:= ",ExpressionUUID->"e312c794-7ad0-42bb-92c6-c8d7256d46db"],
+
+Cell[TextData[{
+ "The qubit rank is ",
+ Cell[BoxData[
+  RowBox[{"3", "=", 
+   SuperscriptBox["2", "2"], "-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ca5c36f-88fb-4ed0-bfb0-9029d4d68aba"],
+ "; the general count is ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "3"}], ",", "8", ",", 
+   RowBox[{"15", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ce62dfb-f97b-4f7e-99ee-ee34d43559ed"],
+ " for ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["d", "TI"], "=", "2"}], ",", 
+   RowBox[{"3", ",", "4"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8c3f10db-04a8-44ed-993b-e7cf9a356da3"],
+ ". (The pure-state count ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"], "-", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d3b78857-6a47-4905-a386-097812eaaab1"],
+ " of 1.5 is smaller: a pure state is a measure-zero boundary of the full \
+state space.)"
+}], "Text",ExpressionUUID->"eb823f46-6232-434a-a9f5-fb72dc1bb41b"],
+
+Cell["\<\
+3.6 [BSc] How do I map a qubit density matrix to its Bloch vector and read \
+positivity and the pure-state boundary?\
+\>", "Subsection",ExpressionUUID->"861bc7ba-06b8-45bc-903d-b3407def2e07"],
+
+Cell[TextData[{
+ "For a qubit, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["I", "TI"], "+", 
+    OverscriptBox[
+     StyleBox["r", "TI"], "\[RightVector]"], "\[CenterDot]", 
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5b22d3d1-4f1e-4ef8-8b7e-36fb59f3b622"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["j", "TI"]], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Sigma]", "TI"], 
+     StyleBox["j", "TI"]], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b004c4b1-50e9-4df1-a76f-0aed8a6a1055"],
+ "; positivity forces ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f39d4d35-b8ea-4e32-a485-1c4dbb68e0bb"],
+ ", and ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f248553-3fb9-4531-ada4-2574dad90832"],
+ " exactly on the pure states."
+}], "Text",ExpressionUUID->"fb83d76c-4e5b-45b0-a095-c77cb7f67cb9"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : build the general qubit state in Bloch form (",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "\[RightVector]"], "="}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1638f88c-de40-4eac-bc79-5eca91131034"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"PauliMatrix", "[", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "60df0871-926f-484f-8a14-709843b9e2b1"],
+ ")."
+}], "Text",ExpressionUUID->"984541f2-4b36-4aec-b01d-a811fef8e6a7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"rhoB", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"1", "/", "2"}], " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"IdentityMatrix", "[", "2", "]"}], " ", "+", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"rx", ",", " ", "ry", ",", " ", "rz"}], "}"}], " ", ".", " ", 
+       
+       RowBox[{"PauliMatrix", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], "]"}]}]}], 
+     ")"}]}]}], ";"}]], "Input",
+ CellLabel->
+  "In[25]:= ",ExpressionUUID->"00c31ce4-5426-437e-a69a-3789f45b3f34"],
+
+Cell[TextData[{
+ "Recover the Bloch vector as the Pauli expectations ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["r", "TI"], 
+    StyleBox["j", "TI"]], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Sigma]", "TI"], 
+     StyleBox["j", "TI"]], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7277b6c3-7375-4858-bcce-7ee93c1b2341"],
+ "."
+}], "Text",ExpressionUUID->"6f02c711-fd6c-40fd-b046-158efc234aca"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"Tr", "[", 
+    RowBox[{
+     RowBox[{"PauliMatrix", "[", "j", "]"}], " ", ".", " ", "rhoB"}], "]"}], ",",
+    " ", 
+   RowBox[{"{", 
+    RowBox[{"j", ",", " ", "3"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[26]:= ",ExpressionUUID->"35d3fb6a-9f7b-4a7f-aaaf-264f6f164268"],
+
+Cell[TextData[{
+ "Purity and radius are tied by ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", "+", 
+    SuperscriptBox[GridBox[{
+       {
+        OverscriptBox[
+         StyleBox["r", "TI"], "\[RightVector]"]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "89628af5-3c21-4a8c-a94a-d09e587c3bde"],
+ ", so ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "caed3d6d-b8c3-42f8-a399-54ee0e202731"],
+ " iff the state is pure."
+}], "Text",ExpressionUUID->"1f6b97c8-3bb1-413c-bca5-0fb6408f4cb2"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{"Tr", "[", 
+   RowBox[{"rhoB", " ", ".", " ", "rhoB"}], "]"}], "]"}]], "Input",
+ CellLabel->
+  "In[27]:= ",ExpressionUUID->"041356e2-306b-4dc7-9b4b-14f885224c82"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the object computes the Bloch vector directly from the same ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d7222979-9eb5-46d1-8c7b-17a77b2d6b7e"],
+ "."
+}], "Text",ExpressionUUID->"6dc9a68e-e1b2-41ce-bff6-902418e115eb"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", "rhoB", "]"}], "[", "\"\<BlochVector\>\"", 
+  "]"}]], "Input",
+ CellLabel->
+  "In[28]:= ",ExpressionUUID->"f907f947-ef84-43bc-ab42-6e8c01910dbd"],
+
+Cell[TextData[{
+ "Both recover ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["r", "TI"], "\[RightVector]"], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["x", "TI"]], ",", 
+    SubscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["y", "TI"]], ",", 
+    SubscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["z", "TI"]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d349976-2eb2-44a5-a344-23c5fcaabc50"],
+ ", and the purity is ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", "+", 
+    SubsuperscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["x", "TI"], "2"], "+", 
+    SubsuperscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["y", "TI"], "2"], "+", 
+    SubsuperscriptBox[
+     StyleBox["r", "TI"], 
+     StyleBox["z", "TI"], "2"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bd93b96-6869-4d4d-b5ba-b92163f78b06"],
+ ": positivity (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[SucceedsEqual]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d9db591-f5b7-44ec-85a1-cf8e3c150a40"],
+ ") is exactly ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "01061273-caf4-4d7d-a934-aeeb5e189ded"],
+ " (the Bloch ball), and the pure states are its surface ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e372f750-cea4-4b95-8b9e-d71e7411d1a7"],
+ "."
+}], "Text",ExpressionUUID->"003012bc-24e9-4894-bc5a-e39dab53e952"],
+
+Cell["\<\
+3.7 [MSc] How do I show that the state space is convex, with pure states as \
+its extreme points?\
+\>", "Subsection",ExpressionUUID->"164c9014-0f3e-4244-bdcc-02b5fb25acbc"],
+
+Cell[TextData[{
+ "The density operators form a convex set: any mixture ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["p", "TI"], 
+   SubscriptBox[
+    StyleBox["\[Rho]", "TI"], "1"], "+", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", "-", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    StyleBox["\[Rho]", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a74f5d49-5ba3-4982-af04-7ea4baa5911d"],
+ " is again a state. The pure states are its extreme points, which for a \
+qubit is the surface of the Bloch ball."
+}], "Text",ExpressionUUID->"be35fe90-acc7-4e0f-b2a8-3389c01e7ac0"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : every pure qubit sits on the sphere (",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      OverscriptBox[
+       StyleBox["r", "TI"], "\[RightVector]"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "34fc3266-8fc4-4dd1-922d-024702cca331"],
+ "), so pure states are extreme."
+}], "Text",ExpressionUUID->"bc87359c-7563-4510-bf27-870faff98fc9"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"Norm", "[", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"Tr", "[", 
+         RowBox[{
+          RowBox[{"PauliMatrix", "[", "j", "]"}], " ", ".", " ", 
+          RowBox[{"KroneckerProduct", "[", 
+           RowBox[{"#", ",", " ", 
+            RowBox[{"Conjugate", "[", "#", "]"}]}], "]"}]}], "]"}], ",", " ", 
+        
+        RowBox[{"{", 
+         RowBox[{"j", ",", " ", "3"}], "}"}]}], "]"}], "]"}], " ", "&"}], " ",
+     "@", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+      RowBox[{
+       RowBox[{"Exp", "[", 
+        RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+       RowBox[{"Sin", "[", 
+        RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], ",", "\n", " ", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}], " ", "\[Element]", " ", 
+    "Reals"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[29]:= ",ExpressionUUID->"0965bc7f-ae21-4359-b33d-f91131a12cbd"],
+
+Cell[TextData[{
+ "A nontrivial mixture of two distinct pure states (here ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cd2c37ec-23d7-4106-b964-08f7b47e7c3e"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["R", "TI"]},
+    "Ket"], "=", "{", "1", ",", 
+   StyleBox["i", "TI"], "}", "/", 
+   SqrtBox["2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "55edeabe-f3cf-4cfc-8f7b-fc9d9be17fd7"],
+ ", the same pair used by the QF cells below) lands strictly inside (purity \
+",
+ Cell[BoxData[
+  RowBox[{"<", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e43850b8-121d-4add-b80c-d9af4f0426ad"],
+ ")."
+}], "Text",ExpressionUUID->"0ee6b330-5a8e-42f9-9414-897a6e8763b2"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"p", " ", "=", " ", 
+     RowBox[{"1", "/", "3"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Tr", "[", 
+      RowBox[{"#", ".", "#"}], "]"}], " ", "&"}], "[", 
+    RowBox[{
+     RowBox[{"p", " ", 
+      RowBox[{"KroneckerProduct", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"Conjugate", "[", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "0"}], "}"}], "]"}]}], "]"}]}], " ", "+", 
+     " ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"1", " ", "-", " ", "p"}], ")"}], " ", 
+      RowBox[{"KroneckerProduct", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "I"}], "}"}], "/", 
+         RowBox[{"Sqrt", "[", "2", "]"}]}], ",", " ", 
+        RowBox[{"Conjugate", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"1", ",", " ", "I"}], "}"}], "/", 
+          RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}]}], "]"}]}]}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[30]:= ",ExpressionUUID->"5d66c492-063b-4999-8efd-bd0de4c0d4c4"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : build the same mixture as an object."
+}], "Text",ExpressionUUID->"0dcd9425-19a4-4d74-8cfb-9e7013db84b1"],
+
+Cell[BoxData[
+ RowBox[{"mix", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"1", "/", "3"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], 
+      "[", "\"\<DensityMatrix\>\"", "]"}]}], " ", "+", " ", 
+    RowBox[{
+     RowBox[{"2", "/", "3"}], " ", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "I"}], "}"}], "/", 
+        RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], "[", "\"\<DensityMatrix\>\"",
+       "]"}]}]}], "]"}]}]], "Input",
+ CellLabel->
+  "In[31]:= ",ExpressionUUID->"ca3d7611-f0cf-413a-9a15-0fa2c1dd0d83"],
+
+Cell["Its purity is below one.", "Text",ExpressionUUID->"f5b7d42a-d45f-47da-a064-ab36c8e26e69"],
+
+Cell[BoxData[
+ RowBox[{"mix", "[", "\"\<Purity\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[32]:= ",ExpressionUUID->"4276a37f-d835-4be6-9022-205b2927620d"],
+
+Cell["\<\
+Its Bloch radius is below one, so it lies in the interior of the ball.\
+\>", "Text",ExpressionUUID->"deb2e51c-d475-4772-b442-98fa8450b6e5"],
+
+Cell[BoxData[
+ RowBox[{"Norm", "[", 
+  RowBox[{"mix", "[", "\"\<BlochVector\>\"", "]"}], "]"}]], "Input",
+ CellLabel->
+  "In[33]:= ",ExpressionUUID->"f278a7c0-3332-40ca-a81c-93a85b4aad49"],
+
+Cell["\<\
+The Bloch map is affine: the mixture's Bloch vector is the convex combination \
+of the components'.\
+\>", "Text",ExpressionUUID->"2da14587-69b8-4376-84c0-99cb115e1a3a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"mix", "[", "\"\<BlochVector\>\"", "]"}], " ", "==", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"1", "/", "3"}], " ", 
+    RowBox[{
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], "]"}], "[", "\"\<BlochVector\>\"",
+      "]"}]}], " ", "+", " ", 
+   RowBox[{
+    RowBox[{"2", "/", "3"}], " ", 
+    RowBox[{
+     RowBox[{"QuantumState", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "I"}], "}"}], "/", 
+       RowBox[{"Sqrt", "[", "2", "]"}]}], "]"}], "[", "\"\<BlochVector\>\"", 
+     "]"}]}]}]}]], "Input",
+ CellLabel->
+  "In[34]:= ",ExpressionUUID->"844c3b94-3ab9-4ad3-9c70-af2e8a79ca78"],
+
+Cell[TextData[{
+ "Pure states have radius ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "528c21cd-0938-4e4f-8cd0-2720fb73cf66"],
+ " (extreme points, not expressible as a nontrivial mixture); every mixture \
+has radius and purity below ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5764420c-d60b-45f9-8a2b-e33cca96bf67"],
+ " and lies in the interior; and because the Bloch map is affine, mixing \
+states maps to mixing their Bloch vectors. That is the convex geometry of the \
+Bloch ball."
+}], "Text",ExpressionUUID->"3e845129-0034-46dc-9868-3229e22f85f7"],
+
+Cell["\<\
+3.8 [BSc] How do I compute the von Neumann entropy of a density matrix?\
+\>", "Subsection",ExpressionUUID->"eb979ce4-8168-4fa5-a02c-66b467f9311a"],
+
+Cell[TextData[{
+ "The von Neumann entropy ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["S", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", "-", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["\[Rho]", "TI"], 
+    StyleBox["log",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", "-", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["k", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["\[Lambda]", "TI"], 
+    StyleBox["k", "TI"]], 
+   StyleBox["log",
+    FontSlant->"Plain"], "\[ThinSpace]", 
+   SubscriptBox[
+    StyleBox["\[Lambda]", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "20e68e4b-15bb-45c6-a075-ce56c1997d0b"],
+ " is the Shannon entropy of the eigenvalue spectrum: ",
+ Cell[BoxData["0"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b8fb520a-e8af-4880-966c-b251e1852fbb"],
+ " for a pure state, ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["log",
+     FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04308d55-9b6b-43cc-b8be-701728f5582e"],
+ " for the maximally mixed."
+}], "Text",ExpressionUUID->"c8f3ecfa-e1cb-4909-867e-9af098480655"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the Shannon entropy of the eigenvalues, in bits."
+}], "Text",ExpressionUUID->"3557c964-7a41-409f-82cb-d3c04d21aad3"],
+
+Cell[BoxData[
+ RowBox[{"-", 
+  RowBox[{"Total", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"#", " ", 
+      RowBox[{"Log2", "[", "#", "]"}]}], " ", "&"}], " ", "/@", " ", 
+    RowBox[{"Eigenvalues", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"3", "/", "4"}], ",", " ", "0"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", 
+         RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}], "]"}]}], "]"}]}]], "Input",\
+
+ CellLabel->
+  "In[35]:= ",ExpressionUUID->"9329c6d2-6e22-4026-a926-dc71156e11fd"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the object reports it directly (as a ",
+ Cell[BoxData["Quantity"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "735c4efd-e986-4bf0-85a4-c7276a4672d8"],
+ " in bits)."
+}], "Text",ExpressionUUID->"13d8ba8f-09d8-4d58-a213-193c546c701b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"3", "/", "4"}], ",", " ", "0"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", " ", 
+       RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}], "]"}], 
+  "[", "\"\<VonNeumannEntropy\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[36]:= ",ExpressionUUID->"bec61136-2fb8-4ec9-928f-3cd01f1a9813"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   FractionBox["3", "4"], 
+   SubscriptBox[
+    StyleBox["log",
+     FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+   FractionBox["3", "4"], "-", 
+   FractionBox["1", "4"], 
+   SubscriptBox[
+    StyleBox["log",
+     FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+   FractionBox["1", "4"], "\[TildeTilde]", "0.811"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54d41d8d-bfb7-497f-8d8c-2a437e4075ef"],
+ " bits: the entropy is the classical uncertainty of the eigenvalue \
+distribution, vanishing on a pure state and reaching ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["log",
+     FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9fcaa1bc-2349-471d-bbba-2c99afa5f0e0"],
+ " on the maximally mixed state."
+}], "Text",ExpressionUUID->"b929d2c3-140e-4f46-a1d6-d9ca60882ed2"],
+
+Cell["\<\
+3.9 [BSc] How do I test whether a matrix is a valid density operator?\
+\>", "Subsection",ExpressionUUID->"f68eada3-4e59-49c2-9a91-22e9037fa6d9"],
+
+Cell[TextData[{
+ "A density operator must satisfy three conditions: Hermiticity (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "104595ab-398e-44f6-87c6-cf6262441134"],
+ "), unit trace (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], " ", 
+   StyleBox["\[Rho]", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "befff0e4-fb61-4d9c-a96f-31499e103e8f"],
+ "), and positive semidefiniteness (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[SucceedsEqual]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31b180db-3a03-4b97-9c90-4f84cb44ec22"],
+ ", no negative eigenvalue). Together they are exactly what makes ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0052902f-79d7-4910-870c-833b5877c03b"],
+ " a legitimate state."
+}], "Text",ExpressionUUID->"92a3a7b3-0dff-4454-9edc-388a88b97452"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : check the three conditions on a candidate matrix."
+}], "Text",ExpressionUUID->"35de849e-f26e-4af2-891c-a583b6564aaf"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"rho", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"3", "/", "4"}], ",", " ", "0"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", " ", 
+         RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"HermitianMatrixQ", "[", "rho", "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{"Tr", "[", "rho", "]"}], " ", "==", " ", "1"}], ",", " ", 
+     RowBox[{"PositiveSemidefiniteMatrixQ", "[", "rho", "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[37]:= ",ExpressionUUID->"c9f4561f-8a84-46cb-a7d7-a64a46ca51cf"],
+
+Cell["\<\
+A Hermitian, unit-trace matrix that fails positivity is not a state.\
+\>", "Text",ExpressionUUID->"1169265b-3f7b-4230-997c-21048ae463ad"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"rho", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"3", "/", "4"}], ",", " ", "1"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", 
+         RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"HermitianMatrixQ", "[", "rho", "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{"Tr", "[", "rho", "]"}], " ", "==", " ", "1"}], ",", " ", 
+     RowBox[{"PositiveSemidefiniteMatrixQ", "[", "rho", "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[38]:= ",ExpressionUUID->"218d75f2-7650-4bb6-91f0-2b2559f58022"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the object folds all three conditions into the single property ",
+ Cell[BoxData["\"\<PhysicalQ\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a21c32ce-b52c-4ef6-a77a-8c6e01ade0e1"],
+ "."
+}], "Text",ExpressionUUID->"30df1833-2987-4f8d-9f32-b443f2b9b710"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"3", "/", "4"}], ",", " ", "0"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", " ", 
+       RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}], "]"}], 
+  "[", "\"\<PhysicalQ\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[39]:= ",ExpressionUUID->"92f1e17a-3043-43fe-8199-67ad47dc0428"],
+
+Cell["The invalid matrix fails it.", "Text",ExpressionUUID->"1b78ee4a-6cc8-42a9-9d0b-85c0b8048ad0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"3", "/", "4"}], ",", " ", "1"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", 
+       RowBox[{"1", "/", "4"}]}], "}"}]}], "}"}], "]"}], 
+  "[", "\"\<PhysicalQ\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[40]:= ",ExpressionUUID->"67279171-4364-48a0-8d19-0db8a59d612c"],
+
+Cell[TextData[{
+ "Both agree: the first matrix is a valid density operator (the three \
+conditions all hold and ",
+ Cell[BoxData["\"\<PhysicalQ\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "89f22c52-1be8-46e9-96ba-fe86f31a66b0"],
+ " is ",
+ Cell[BoxData["True"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac30a04a-4a05-4b0e-8773-0586ca28b6a0"],
+ "); the second is Hermitian and unit-trace but not positive (one eigenvalue \
+is negative), so it is not a physical state."
+}], "Text",ExpressionUUID->"b773e8d1-b73e-41dd-850f-0d73f10b5a44"]
+},
+CreateCellID->True,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"8e0e03d2-22c8-4e46-a647-3c7588fc53eb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 156, 2, 70, "Title",ExpressionUUID->"8336e7fc-c649-4c83-89c4-d33bf72cf896"],
+Cell[713, 24, 306, 8, 70, "Text",ExpressionUUID->"aa90d66c-200f-4916-b7a5-07f03c56da0c"],
+Cell[1022, 34, 940, 24, 70, "ItemNumbered",ExpressionUUID->"766a5fe4-763f-4777-bf46-ef4901a716e8"],
+Cell[1965, 60, 852, 18, 70, "ItemNumbered",ExpressionUUID->"17a60c52-9702-49f0-8b4f-67063da4d8fc"],
+Cell[2820, 80, 1505, 37, 70, "Text",ExpressionUUID->"048c37d1-5527-41cd-bb3d-d4d7fbdaf8dc"],
+Cell[4328, 119, 79, 0, 70, "Section",ExpressionUUID->"1914199c-5c71-4bcb-b7a5-b570189d92f3"],
+Cell[4410, 121, 107, 0, 70, "Text",ExpressionUUID->"a07b09a8-7d5d-4439-ad62-dfcfc3ad8c55"],
+Cell[4520, 123, 169, 2, 70, "Input",ExpressionUUID->"3b30c9b7-5235-4071-9314-e663714b049e"],
+Cell[4692, 127, 109, 0, 70, "Section",ExpressionUUID->"902fc871-5e1f-4486-8f3d-27ef18fd2c44"],
+Cell[4804, 129, 154, 2, 70, "Subsection",ExpressionUUID->"21535d98-7622-4d6d-8351-486846ec8b90"],
+Cell[4961, 133, 1205, 42, 70, "Text",ExpressionUUID->"1e7471d0-a45a-4a74-9d4a-4e8684a678b1"],
+Cell[6169, 177, 793, 27, 70, "Text",ExpressionUUID->"e2bfec1f-c937-4857-97dd-01cdbe929c15"],
+Cell[6965, 206, 891, 26, 70, "Input",ExpressionUUID->"2c307d3a-8a32-4231-b338-29fd92acb836"],
+Cell[7859, 234, 310, 6, 70, "Text",ExpressionUUID->"70e999e3-4808-474a-bc38-22d8809bfe4c"],
+Cell[8172, 242, 719, 20, 70, "Input",ExpressionUUID->"1d73e680-70e0-46a3-9aca-11ae6df4d915"],
+Cell[8894, 264, 437, 10, 70, "Text",ExpressionUUID->"a00e077f-4af4-4c0f-bc1b-f475c5925dbc"],
+Cell[9334, 276, 466, 15, 70, "Subsection",ExpressionUUID->"7de50972-31e2-4efa-bfda-5f6c6dcc0831"],
+Cell[9803, 293, 1121, 34, 70, "Text",ExpressionUUID->"14f9b901-8fad-4848-9fd1-ed40bc298a1a"],
+Cell[10927, 329, 870, 34, 70, "Text",ExpressionUUID->"2ff3ed0e-f9c7-4bae-8cee-f2038009d113"],
+Cell[11800, 365, 1119, 32, 70, "Input",ExpressionUUID->"f761a985-8668-459b-9497-4670230e274c"],
+Cell[12922, 399, 612, 21, 70, "Text",ExpressionUUID->"32ad2c1e-9768-4ff5-9d2f-97d92542dcbc"],
+Cell[13537, 422, 714, 20, 70, "Input",ExpressionUUID->"47fde6e5-9ede-4ce7-a6ee-a340b0f4b1d9"],
+Cell[14254, 444, 807, 24, 70, "Text",ExpressionUUID->"b94446fe-ef94-462a-af87-16405f70328a"],
+Cell[15064, 470, 134, 0, 70, "Subsection",ExpressionUUID->"36862258-352f-4f7b-bbae-0b08f74474e0"],
+Cell[15201, 472, 1058, 33, 70, "Text",ExpressionUUID->"649682d2-d4bf-488b-875c-71227995bb30"],
+Cell[16262, 507, 554, 21, 70, "Text",ExpressionUUID->"08b84dc5-e850-4b30-b3a6-714e79d63d8d"],
+Cell[16819, 530, 923, 27, 70, "Input",ExpressionUUID->"60a5646b-3e00-437c-a9bf-ad0a1582a98c"],
+Cell[17745, 559, 111, 0, 70, "Text",ExpressionUUID->"b54df6f6-f899-4338-8317-421916a2937a"],
+Cell[17859, 561, 209, 5, 70, "Input",ExpressionUUID->"95809d3b-9076-445a-9238-586fbc6ec515"],
+Cell[18071, 568, 114, 0, 70, "Text",ExpressionUUID->"17a58489-f28d-4821-baaa-d89ed439902e"],
+Cell[18188, 570, 178, 3, 70, "Input",ExpressionUUID->"6923e108-5a42-4993-b4fa-f3ff82542146"],
+Cell[18369, 575, 354, 10, 70, "Text",ExpressionUUID->"8de8f3e1-9bc0-4da3-85b6-ea92098ffd16"],
+Cell[18726, 587, 178, 3, 70, "Input",ExpressionUUID->"844cecd5-357c-4fb7-9227-d3f7fea822fe"],
+Cell[18907, 592, 341, 8, 70, "Text",ExpressionUUID->"ad8fe21e-5630-4bea-82ce-9d1697a9513f"],
+Cell[19251, 602, 750, 22, 70, "Input",ExpressionUUID->"3addd394-458a-4985-a434-882eaf7b8add"],
+Cell[20004, 626, 99, 0, 70, "Text",ExpressionUUID->"e47c3b50-78df-453c-86d8-39de6251cb32"],
+Cell[20106, 628, 158, 3, 70, "Input",ExpressionUUID->"da1dcb23-78c1-4ee1-9836-0b0b0d16263f"],
+Cell[20267, 633, 263, 6, 70, "Text",ExpressionUUID->"d9335ca1-4e0e-45cb-b83d-f70e2a7c60ad"],
+Cell[20533, 641, 309, 9, 70, "Input",ExpressionUUID->"30b65cad-53dc-4ef8-8cbb-930709ae7868"],
+Cell[20845, 652, 527, 11, 70, "Text",ExpressionUUID->"89228278-7f25-4d10-89c4-8a206516c1eb"],
+Cell[21375, 665, 355, 9, 70, "Subsection",ExpressionUUID->"72505938-8a39-4c92-bf2b-77148ff04c2c"],
+Cell[21733, 676, 540, 15, 70, "Text",ExpressionUUID->"e6ca2a18-5fc5-4595-a3e4-7cad5ff622e9"],
+Cell[22276, 693, 168, 4, 70, "Text",ExpressionUUID->"4f66949b-b71b-4a68-b06b-93a55dd79bb2"],
+Cell[22447, 699, 501, 16, 70, "Input",ExpressionUUID->"c20aa162-ce20-4887-b7ca-a33f4ad99f55"],
+Cell[22951, 717, 182, 4, 70, "Text",ExpressionUUID->"7895f475-468c-485b-8c2c-630a4f3c5882"],
+Cell[23136, 723, 213, 5, 70, "Input",ExpressionUUID->"e502f67a-2f40-4c18-9f4f-b91d3bf7c31f"],
+Cell[23352, 730, 417, 12, 70, "Text",ExpressionUUID->"d2aed799-8465-4415-a438-9b06648f9445"],
+Cell[23772, 744, 259, 7, 70, "Input",ExpressionUUID->"764748be-0646-4390-b8cb-ae378e5d4847"],
+Cell[24034, 753, 713, 21, 70, "Text",ExpressionUUID->"90d378e4-f803-436f-944e-f2319f5e0635"],
+Cell[24750, 776, 560, 18, 70, "Subsection",ExpressionUUID->"2535107e-ea43-409b-9816-c525e2c46413"],
+Cell[25313, 796, 1764, 64, 70, "Text",ExpressionUUID->"bcabf22e-08af-4984-bd29-e78096a31ddb"],
+Cell[27080, 862, 623, 19, 70, "Text",ExpressionUUID->"46d44ec5-7b7d-4713-ad1d-6be8da2172a2"],
+Cell[27706, 883, 571, 17, 70, "Input",ExpressionUUID->"eced635e-0e9a-4b87-9520-2840f97c621d"],
+Cell[28280, 902, 683, 25, 70, "Text",ExpressionUUID->"21ecd24f-d98c-4614-98db-5b777f707b32"],
+Cell[28966, 929, 216, 6, 70, "Input",ExpressionUUID->"3bf90116-4d31-4c42-856f-c641a1f52ce9"],
+Cell[29185, 937, 360, 11, 70, "Text",ExpressionUUID->"3201db92-6789-4731-b311-ed8c457107fe"],
+Cell[29548, 950, 447, 13, 70, "Input",ExpressionUUID->"e07c394f-3e7f-4e67-8db3-ead1850c6d42"],
+Cell[29998, 965, 190, 4, 70, "Text",ExpressionUUID->"e77d1318-1ff5-4cba-92bb-2622a5dfdc26"],
+Cell[30191, 971, 594, 17, 70, "Input",ExpressionUUID->"6790e0fb-11ab-41dc-9261-d9dd18baa99f"],
+Cell[30788, 990, 1085, 32, 70, "Text",ExpressionUUID->"c145fdd1-678b-4049-b885-b16e77620570"],
+Cell[31876, 1024, 443, 12, 70, "Input",ExpressionUUID->"ccdf82e5-ea59-4b72-90a1-4e2e13267766"],
+Cell[32322, 1038, 722, 23, 70, "Text",ExpressionUUID->"6881df11-0b13-4782-b7d3-61b54b799967"],
+Cell[33047, 1063, 821, 21, 70, "Input",ExpressionUUID->"f772cbee-dddb-445f-8bbb-a004b2a726e8"],
+Cell[33871, 1086, 2545, 84, 70, "Text",ExpressionUUID->"5662062c-f0a1-4382-a6fd-5eee45804308"],
+Cell[36419, 1172, 331, 7, 70, "Subsection",ExpressionUUID->"7f5a86d1-66c5-49da-8fe5-262c82111920"],
+Cell[36753, 1181, 804, 22, 70, "Text",ExpressionUUID->"d17d799c-2867-47ad-9ad1-1a25c0762c9f"],
+Cell[37560, 1205, 897, 28, 70, "Text",ExpressionUUID->"2466a5c2-a938-4141-b0fc-fe055d041d76"],
+Cell[38460, 1235, 927, 28, 70, "Input",ExpressionUUID->"2626ec00-da1b-4b8a-bbaf-ab2676e6ae34"],
+Cell[39390, 1265, 467, 14, 70, "Text",ExpressionUUID->"a7482541-c9e6-4a8b-a029-3f1be2376cbd"],
+Cell[39860, 1281, 297, 8, 70, "Input",ExpressionUUID->"2ddfba9e-843a-4a60-884b-69a2caac3526"],
+Cell[40160, 1291, 184, 4, 70, "Text",ExpressionUUID->"4566253e-85fa-41d4-a45b-7e0349324568"],
+Cell[40347, 1297, 435, 12, 70, "Input",ExpressionUUID->"e312c794-7ad0-42bb-92c6-c8d7256d46db"],
+Cell[40785, 1311, 1025, 30, 70, "Text",ExpressionUUID->"eb823f46-6232-434a-a9f5-fb72dc1bb41b"],
+Cell[41813, 1343, 201, 3, 70, "Subsection",ExpressionUUID->"861bc7ba-06b8-45bc-903d-b3407def2e07"],
+Cell[42017, 1348, 1803, 61, 70, "Text",ExpressionUUID->"fb83d76c-4e5b-45b0-a095-c77cb7f67cb9"],
+Cell[43823, 1411, 625, 19, 70, "Text",ExpressionUUID->"984541f2-4b36-4aec-b01d-a811fef8e6a7"],
+Cell[44451, 1432, 571, 17, 70, "Input",ExpressionUUID->"00c31ce4-5426-437e-a69a-3789f45b3f34"],
+Cell[45025, 1451, 596, 21, 70, "Text",ExpressionUUID->"6f02c711-fd6c-40fd-b046-158efc234aca"],
+Cell[45624, 1474, 336, 10, 70, "Input",ExpressionUUID->"35d3fb6a-9f7b-4a7f-aaaf-264f6f164268"],
+Cell[45963, 1486, 1182, 39, 70, "Text",ExpressionUUID->"1f6b97c8-3bb1-413c-bca5-0fb6408f4cb2"],
+Cell[47148, 1527, 217, 5, 70, "Input",ExpressionUUID->"041356e2-306b-4dc7-9b4b-14f885224c82"],
+Cell[47368, 1534, 341, 9, 70, "Text",ExpressionUUID->"6dc9a68e-e1b2-41ce-bff6-902418e115eb"],
+Cell[47712, 1545, 200, 5, 70, "Input",ExpressionUUID->"f907f947-ef84-43bc-ab42-6e8c01910dbd"],
+Cell[47915, 1552, 2154, 72, 70, "Text",ExpressionUUID->"003012bc-24e9-4894-bc5a-e39dab53e952"],
+Cell[50072, 1626, 182, 3, 70, "Subsection",ExpressionUUID->"164c9014-0f3e-4244-bdcc-02b5fb25acbc"],
+Cell[50257, 1631, 653, 19, 70, "Text",ExpressionUUID->"be35fe90-acc7-4e0f-b2a8-3389c01e7ac0"],
+Cell[50913, 1652, 544, 15, 70, "Text",ExpressionUUID->"bc87359c-7563-4510-bf27-870faff98fc9"],
+Cell[51460, 1669, 1100, 32, 70, "Input",ExpressionUUID->"0965bc7f-ae21-4359-b33d-f91131a12cbd"],
+Cell[52563, 1703, 792, 24, 70, "Text",ExpressionUUID->"0ee6b330-5a8e-42f9-9414-897a6e8763b2"],
+Cell[53358, 1729, 1177, 36, 70, "Input",ExpressionUUID->"5d66c492-063b-4999-8efd-bd0de4c0d4c4"],
+Cell[54538, 1767, 164, 4, 70, "Text",ExpressionUUID->"0dcd9425-19a4-4d74-8cfb-9e7013db84b1"],
+Cell[54705, 1773, 712, 21, 70, "Input",ExpressionUUID->"ca3d7611-f0cf-413a-9a15-0fa2c1dd0d83"],
+Cell[55420, 1796, 95, 0, 70, "Text",ExpressionUUID->"f5b7d42a-d45f-47da-a064-ab36c8e26e69"],
+Cell[55518, 1798, 152, 3, 70, "Input",ExpressionUUID->"4276a37f-d835-4be6-9022-205b2927620d"],
+Cell[55673, 1803, 149, 2, 70, "Text",ExpressionUUID->"deb2e51c-d475-4772-b442-98fa8450b6e5"],
+Cell[55825, 1807, 188, 4, 70, "Input",ExpressionUUID->"f278a7c0-3332-40ca-a81c-93a85b4aad49"],
+Cell[56016, 1813, 178, 3, 70, "Text",ExpressionUUID->"2da14587-69b8-4376-84c0-99cb115e1a3a"],
+Cell[56197, 1818, 699, 21, 70, "Input",ExpressionUUID->"844c3b94-3ab9-4ad3-9c70-af2e8a79ca78"],
+Cell[56899, 1841, 634, 13, 70, "Text",ExpressionUUID->"3e845129-0034-46dc-9868-3229e22f85f7"],
+Cell[57536, 1856, 156, 2, 70, "Subsection",ExpressionUUID->"eb979ce4-8168-4fa5-a02c-66b467f9311a"],
+Cell[57695, 1860, 1434, 48, 70, "Text",ExpressionUUID->"c8f3ecfa-e1cb-4909-867e-9af098480655"],
+Cell[59132, 1910, 176, 4, 70, "Text",ExpressionUUID->"3557c964-7a41-409f-82cb-d3c04d21aad3"],
+Cell[59311, 1916, 564, 18, 70, "Input",ExpressionUUID->"9329c6d2-6e22-4026-a926-dc71156e11fd"],
+Cell[59878, 1936, 310, 8, 70, "Text",ExpressionUUID->"13d8ba8f-09d8-4d58-a213-193c546c701b"],
+Cell[60191, 1946, 429, 13, 70, "Input",ExpressionUUID->"bec61136-2fb8-4ec9-928f-3cd01f1a9813"],
+Cell[60623, 1961, 946, 27, 70, "Text",ExpressionUUID->"b929d2c3-140e-4f46-a1d6-d9ca60882ed2"],
+Cell[61572, 1990, 154, 2, 70, "Subsection",ExpressionUUID->"f68eada3-4e59-49c2-9a91-22e9037fa6d9"],
+Cell[61729, 1994, 1085, 29, 70, "Text",ExpressionUUID->"92a3a7b3-0dff-4454-9edc-388a88b97452"],
+Cell[62817, 2025, 177, 4, 70, "Text",ExpressionUUID->"35de849e-f26e-4af2-891c-a583b6564aaf"],
+Cell[62997, 2031, 728, 21, 70, "Input",ExpressionUUID->"c9f4561f-8a84-46cb-a7d7-a64a46ca51cf"],
+Cell[63728, 2054, 147, 2, 70, "Text",ExpressionUUID->"1169265b-3f7b-4230-997c-21048ae463ad"],
+Cell[63878, 2058, 728, 21, 70, "Input",ExpressionUUID->"218d75f2-7650-4bb6-91f0-2b2559f58022"],
+Cell[64609, 2081, 336, 8, 70, "Text",ExpressionUUID->"30df1833-2987-4f8d-9f32-b443f2b9b710"],
+Cell[64948, 2091, 421, 13, 70, "Input",ExpressionUUID->"92f1e17a-3043-43fe-8199-67ad47dc0428"],
+Cell[65372, 2106, 99, 0, 70, "Text",ExpressionUUID->"1b78ee4a-6cc8-42a9-9d0b-85c0b8048ad0"],
+Cell[65474, 2108, 421, 13, 70, "Input",ExpressionUUID->"67279171-4364-48a0-8d19-0db8a59d612c"],
+Cell[65898, 2123, 580, 12, 70, "Text",ExpressionUUID->"b773e8d1-b73e-41dd-850f-0d73f10b5a44"]
+}
+]
+*)
+
+(* End of internal cache information *)

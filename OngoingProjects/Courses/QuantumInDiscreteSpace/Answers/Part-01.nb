@@ -1,0 +1,2004 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     71658,       1995]
+NotebookOptionsPosition[     61482,       1878]
+NotebookOutlinePosition[     61824,       1893]
+CellTagsIndexPosition[     61781,       1890]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 1)\
+\>", "Title",ExpressionUUID->"686f5631-5a60-495a-8da5-aa90e6d58eaf"],
+
+Cell[TextData[{
+ "A companion answer key to ",
+ Cell["Question-List.md", "InlineCode",ExpressionUUID->
+  "b04aa4a3-1ad9-44d9-839f-d44eb0e834be"],
+ ". For each question it gives ",
+ StyleBox["two",
+  FontWeight->"Bold"],
+ " worked answers:"
+}], "Text",ExpressionUUID->"9662acad-6ee4-45b7-8e8c-f53e8894a87d"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : native Wolfram Language only (plain vectors and matrices, ",
+ Cell[BoxData["PauliMatrix"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ac2d92d-b917-42e7-80a7-5027f1103110"],
+ ", ",
+ Cell[BoxData["Conjugate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5cde63f1-3192-4e84-a6d5-2e52be48ae34"],
+ ", ",
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35f1d564-857d-41e5-93b9-4c4df9988e5c"],
+ ", ",
+ Cell[BoxData["Eigenvectors"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4da987c-f137-4f2f-8cf2-bedb2a66ec5a"],
+ ", ",
+ Cell[BoxData["MatrixExp"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "81dad786-747e-4358-abaa-54d9f9e00c15"],
+ ", and friends). Nothing beyond the built-in language."
+}], "ItemNumbered",ExpressionUUID->"c8508e33-ba96-4c41-8769-0e6a71d07312"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the same task done through the ",
+ StyleBox["QuantumFramework",
+  FontWeight->"Bold"],
+ " paclet, leaning on its objects and property downvalues (",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QuantumState", "[", "...", "]"}], "[", "\"\<...\>\"", "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3dead3ca-7576-4784-b6cb-836bbf4594c8"],
+ ") rather than rebuilding matrices by hand. A QF result is a rich object, a \
+state or an operator, not a bare array: it can act on a target, compose with \
+others, report its spectrum, change basis, and more. The answers keep results \
+as objects and treat a matrix or amplitude vector as just one of the object's \
+many representations, not the thing itself."
+}], "ItemNumbered",ExpressionUUID->"aae9cb6d-e183-489b-bd9e-d7ba7d428002"],
+
+Cell[TextData[{
+ "Three habits run through the answers. They stay ",
+ StyleBox["symbolic",
+  FontWeight->"Bold"],
+ " wherever possible (general amplitudes ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], ",", 
+   StyleBox["\[Beta]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "224f37ae-6d27-4183-b193-2a9736f813a4"],
+ ", general angles ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], ",", 
+   StyleBox["\[Phi]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f1741e40-32db-412a-8feb-6665180a983d"],
+ "), so each operation is exercised in full generality rather than on a lucky \
+special case. They write the computation ",
+ StyleBox["explicitly",
+  FontWeight->"Bold"],
+ " rather than hiding it in a helper function, because the code is itself \
+part of the explanation. And they prefer ",
+ StyleBox["built-in features",
+  FontWeight->"Bold"],
+ " (a ",
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5428a2bc-81cd-468e-a466-40c41f33787f"],
+ ", a named state) over hand-rolled constructions, so nothing is hardcoded: \
+every cell computes its result. Each cell does ",
+ StyleBox["one",
+  FontWeight->"Bold"],
+ " thing and is preceded by a sentence saying what, so the notebook reads as \
+a sequence of single, captioned computations. Run the WL answers in a bare \
+kernel; the QF answers need the paclet loaded once."
+}], "Text",ExpressionUUID->"434e6e9f-1569-4dab-b90b-45d6753506b4"],
+
+Cell["Setup", "Section",ExpressionUUID->"d7753872-c9a3-4096-abda-ef0fa9a6fe0f"],
+
+Cell["The QF answers load the paclet once:", "Text",ExpressionUUID->"98eacc29-fa18-4261-9e27-772c479056d2"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"26930ef4-6d38-4626-8a50-be4892142ea1"],
+
+Cell["Part 1. Pure states and the Born rule", "Section",ExpressionUUID->"5eeb12d2-8184-44a9-a40a-9109692e9c19"],
+
+Cell[TextData[{
+ "1.1 [BSc] How do I represent a qubit as a state vector ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["\[Alpha]", "TI"]}], ",", 
+   RowBox[{
+    StyleBox["\[Beta]", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "705c047e-fe03-4aa0-a738-40e06641c9f6"],
+ " in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ca4384f-83a8-46c5-badd-12b9871c703c"],
+ "?"
+}], "Subsection",ExpressionUUID->"edd37568-51a4-49cf-8985-a5b1ba8a55d4"],
+
+Cell[TextData[{
+ "A pure qubit is a two-component complex vector ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"], "=", 
+   RowBox[{
+    RowBox[{
+     StyleBox["\[Alpha]", "TI"], 
+     TemplateBox[{"0"},
+      "Ket"]}], "+", 
+    RowBox[{
+     StyleBox["\[Beta]", "TI"], 
+     TemplateBox[{"1"},
+      "Ket"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b993fb9-b750-426e-a9da-2f5ff9c24e43"],
+ "."
+}], "Text",ExpressionUUID->"edf2445b-e136-476e-a9b3-ffd59d285c7c"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : a qubit is literally a length-2 complex list, kept fully general."
+}], "Text",ExpressionUUID->"3585d17d-b291-47a4-9f13-e6095aec0ff1"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}]], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"715b5013-7593-4988-b15b-9d17f44faaac"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : wrap the amplitudes in ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "825f45ea-1003-4def-a12f-9cea3b2dabac"],
+ ". Evaluated without a trailing semicolon, the construction displays as its ",
+ StyleBox["summary box",
+  FontWeight->"Bold"],
+ ": a compact panel that ",
+ StyleBox["is", "TI"],
+ " the live object, showing its type, dimension, and basis, not a printout of \
+a matrix. Properties are read off that object on demand."
+}], "Text",ExpressionUUID->"c4c885ee-1f62-46a8-bab8-717be94a444b"],
+
+Cell[BoxData[
+ RowBox[{"qs", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}]}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"4ce3e82b-2a59-4450-97c9-b62b9b9858a3"],
+
+Cell[TextData[{
+ "Then ",
+ Cell[BoxData["\"\<StateVector\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "71f26cca-96f2-454d-a280-0d313a22c2b8"],
+ " reads one representation, the amplitudes, back out:"
+}], "Text",ExpressionUUID->"e61af595-39bf-44ae-ac41-56f35a551abc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"qs", "[", "\"\<StateVector\>\"", "]"}], " ", "//", " ", 
+  "Normal"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"1c7defa0-8ba3-49e8-add9-7ee6a17ea0ba"],
+
+Cell[TextData[{
+ "Both hold the amplitudes ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["\[Alpha]", "TI"]}], ",", 
+   RowBox[{
+    StyleBox["\[Beta]", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3ea68235-1e2f-447f-850a-973b490c0c65"],
+ "; the QF object additionally knows it is a single qubit in the \
+computational basis, and the summary box is that object itself, with the \
+amplitude vector just one field read from it."
+}], "Text",ExpressionUUID->"f91951fd-c4ec-42ed-8845-9c139732aa21"],
+
+Cell["\<\
+1.2 [BSc] How do I read the Born-rule probabilities of a state?\
+\>", "Subsection",ExpressionUUID->"bb34b39f-cef5-4a99-a80b-759c512d402d"],
+
+Cell[TextData[{
+ "The probability of outcome ",
+ Cell[BoxData[
+  StyleBox["i", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30e1e90f-4f45-4b58-b367-533110c2c983"],
+ " is ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      TemplateBox[{
+        StyleBox["i", "TI"], 
+        StyleBox["\[Psi]", "TI"]},
+       "BraKet"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3c3736a5-faaa-47ca-915f-976cc32dca15"],
+ ", i.e. the squared modulus of the amplitude (divided by the norm if the \
+state is not yet normalized)."
+}], "Text",ExpressionUUID->"1b74af6b-57ac-4223-8f3a-c04b2bc22406"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : square the moduli of the normalized amplitudes; ",
+ Cell[BoxData["FullSimplify"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e840ac79-1f9e-4580-9fab-a25a02048ee8"],
+ " reduces the nested modulus to a single ratio (the numerator ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], " ", 
+   SuperscriptBox[
+    StyleBox["\[Alpha]", "TI"], "*"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aed2223c-49b4-4f33-a027-5dc54397d4ea"],
+ " is ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      StyleBox["\[Alpha]", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac2f74b8-2a57-4928-8b4d-6a95ce67a97f"],
+ ")."
+}], "Text",ExpressionUUID->"8af3b797-65df-49ec-a525-d46926deb832"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"Abs", "[", 
+    RowBox[{"Normalize", "[", 
+     RowBox[{"{", 
+      RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], "]"}], "^", 
+   "2"}], " ", "//", " ", "FullSimplify"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"f0b34dd8-765d-41c8-b3ce-cd1ddff689e9"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : ask the state for its probabilities; ",
+ Cell[BoxData["\"\<ProbabilitiesList\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c85b3919-ea31-463c-8aaa-656435236644"],
+ " normalizes internally and returns them in basis order."
+}], "Text",ExpressionUUID->"d452c207-6259-4f13-935f-8b7b9b3b71cd"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], 
+  "[", "\"\<ProbabilitiesList\>\"", "]"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"9bd5de1c-1fa4-4683-a946-666463373761"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      StyleBox["{",
+       FontSize->1.2 Inherited], 
+      SuperscriptBox[GridBox[{
+         {
+          StyleBox["\[Alpha]", "TI"]}
+        },
+        GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+        GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}], ",", " ", 
+     SuperscriptBox[GridBox[{
+        {
+         StyleBox["\[Beta]", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}], 
+    StyleBox["}",
+     FontSize->1.2 Inherited]}], "/", 
+   RowBox[{
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SuperscriptBox[GridBox[{
+        {
+         StyleBox["\[Alpha]", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "+", 
+     SuperscriptBox[GridBox[{
+        {
+         StyleBox["\[Beta]", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "24b76824-84a0-407b-8a04-e59673333fb0"],
+ ": the Born rule weights the outcomes by the squared amplitudes, unequally \
+in general, and the weights sum to one."
+}], "Text",ExpressionUUID->"5895a7ac-a947-4d93-9615-83841fdfc34c"],
+
+Cell["\<\
+1.3 [BSc] How do I check that a state is normalized, and normalize one that \
+is not?\
+\>", "Subsection",ExpressionUUID->"3ad8a477-0847-4816-bd82-cd5178d35baf"],
+
+Cell[TextData[{
+ "A physical state vector must have unit norm, ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"], 
+     StyleBox["\[Psi]", "TI"]},
+    "BraKet"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "749a6a53-e370-4e49-a062-4e0a245a54a8"],
+ "."
+}], "Text",ExpressionUUID->"f9981e7f-247e-475d-894b-170f873cb9d8"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : ",
+ Cell[BoxData["Norm"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "45b8d7de-6651-430d-ba68-ea4cb27baf27"],
+ " measures the length of the raw amplitude vector."
+}], "Text",ExpressionUUID->"96fbabca-e84b-47c0-a824-ca2cc113c3c8"],
+
+Cell[BoxData[
+ RowBox[{"Norm", "[", 
+  RowBox[{"{", 
+   RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}]], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"43f5fdb1-423d-4242-b02a-fa8fd8775fd1"],
+
+Cell[TextData[{
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "93304a0b-9d2f-492b-a946-975b7d096212"],
+ " rescales it to unit length, so the norm of the normalized vector is ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8af98eb9-7f1a-4aa0-ba03-887c22c610a6"],
+ "."
+}], "Text",ExpressionUUID->"292facdf-948b-4dbd-80d1-519880ee6ad6"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{"Norm", " ", "@", " ", 
+   RowBox[{"Normalize", "[", 
+    RowBox[{"{", 
+     RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"cdaea60d-9eab-4b09-9331-163450484952"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the ",
+ Cell[BoxData["\"\<Norm\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f47dedd-81c5-4c0a-b974-0079c292f3c1"],
+ " property reports the same raw length."
+}], "Text",ExpressionUUID->"d6ae8483-e0b9-4a81-9b9e-c22d3d0ca8ec"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], 
+  "[", "\"\<Norm\>\"", "]"}]], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"a99aa81c-7ab3-4291-96fd-3f89a930008c"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<Normalize\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9a36c7f5-47e2-4c3e-b45b-cde9ab019c82"],
+ " returns a new, unit-norm state object, whose ",
+ Cell[BoxData["\"\<Norm\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "057af825-97e6-41c3-8ba9-e3e3596aca29"],
+ " is then ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac888ec1-aea8-4d4e-b399-58b3a5cb062e"],
+ "."
+}], "Text",ExpressionUUID->"169857a8-1586-4dc6-ad90-7050110d488b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"QuantumState", "[", 
+    RowBox[{"{", 
+     RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], 
+   "[", "\"\<Normalize\>\"", "]"}], "[", "\"\<Norm\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"0e676445-1a65-42ee-875e-9589ac60e299"],
+
+Cell[TextData[{
+ "Both report the raw norm ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{
+    SuperscriptBox[GridBox[{
+       {
+        StyleBox["\[Alpha]", "TI"]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "+", 
+    SuperscriptBox[GridBox[{
+       {
+        StyleBox["\[Beta]", "TI"]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5a9125d6-4ef7-4f6a-ba64-e5f1271f5f5e"],
+ " and confirm the normalized state has norm ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ca56bc9-d459-4f87-b387-d48e7a5a3311"],
+ "."
+}], "Text",ExpressionUUID->"217931a3-4733-4df9-9b9a-ce638842cea1"],
+
+Cell["\<\
+1.4 [BSc] How do I show that a global phase is physically unobservable?\
+\>", "Subsection",ExpressionUUID->"34b518db-0229-4b44-88fb-9ab51c591e29"],
+
+Cell[TextData[{
+ "Multiplying ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["\[Psi]", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b3cb6d5-80ac-4102-ab91-b130546e56d9"],
+ " by ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{
+    StyleBox["i", "TI"], "\[CurlyPhi]"}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "101f0d4d-0fac-4b33-9549-04874bb464e2"],
+ " changes no measurable prediction, because every probability depends only \
+on ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      SubscriptBox[
+       StyleBox["c", "TI"], 
+       StyleBox["i", "TI"]]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9510e74a-10be-4f50-9196-19e6fc2b8d1c"],
+ "."
+}], "Text",ExpressionUUID->"61297302-e9a5-4061-96ba-53cc66925946"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : compare the two probability vectors symbolically for all real phases."
+}], "Text",ExpressionUUID->"6b43a229-1a3c-4272-b890-01ca86dab58a"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"Abs", "[", 
+      RowBox[{"{", 
+       RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], "^", "2"}], 
+    " ", "==", " ", 
+    RowBox[{
+     RowBox[{"Abs", "[", 
+      RowBox[{
+       RowBox[{"Exp", "[", 
+        RowBox[{"I", " ", "\[CurlyPhi]"}], "]"}], " ", 
+       RowBox[{"{", 
+        RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}]}], "]"}], "^", 
+     "2"}]}], ",", "\n", " ", 
+   RowBox[{"\[CurlyPhi]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",\
+
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"c5f090ab-e611-4d77-a538-e516699b19c5"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : compare the two state objects directly. QuantumFramework's ",
+ Cell[BoxData["=="], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b0a6dc8-87cc-44bc-ac32-761ebc42bb70"],
+ " is a ",
+ StyleBox["physical", "TI"],
+ " comparison: it equates states that differ only by a global phase (it uses \
+an inner-product oracle, not the raw amplitudes, so ",
+ Cell[BoxData["==="], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ea8e9630-f0ff-444a-87a7-63cc98982062"],
+ " would still see them as distinct)."
+}], "Text",ExpressionUUID->"271852c7-827b-4c68-9816-c04dc2fff4ec"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], " ", "==", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"Exp", "[", 
+     RowBox[{"I", " ", "\[CurlyPhi]"}], "]"}], " ", 
+    RowBox[{"{", 
+     RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"ffcea152-f72d-49c5-acc2-5306689f7151"],
+
+Cell[TextData[{
+ "Both return ",
+ Cell[BoxData["True"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "251c520f-651b-4059-95ea-43416abd8147"],
+ ", symbolically, for every phase ",
+ Cell[BoxData["\[CurlyPhi]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "19404161-0422-4991-8ac8-cc875da4a64d"],
+ ": the WL test shows the Born probabilities are phase-independent, and \
+QuantumFramework declares the two state objects ",
+ StyleBox["equal", "TI"],
+ ". The phase labels no physical degree of freedom."
+}], "Text",ExpressionUUID->"0b169724-ac7e-432b-b752-99b775c47363"],
+
+Cell[TextData[{
+ "1.5 [BSc] How do I count the real parameters of a pure qubit and a pure \
+qudit in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "faee051e-2568-4efc-a19a-d88bdb583917"],
+ "?"
+}], "Subsection",ExpressionUUID->"bf67e78f-fdef-450a-ba47-59c7569cce15"],
+
+Cell[TextData[{
+ "A pure state in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7510a9c0-c1a8-41da-928c-cbad200b7042"],
+ " has ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1da995a1-6c05-4360-b0a8-68dad6df5c8c"],
+ " real amplitude components; normalization removes one and the global phase \
+another, so the naive count is ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"], "-", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bb5e1b16-bd12-46e5-9263-03ccb72571b9"],
+ ". But that bookkeeping ",
+ StyleBox["assumes", "TI"],
+ " each constraint removes exactly one independent direction. To ",
+ StyleBox["measure",
+  FontWeight->"Bold"],
+ " the count instead of assuming it, note what \"degrees of freedom\" means \
+geometrically: the states sweep out a surface, and the number of free real \
+parameters is the ",
+ StyleBox["dimension", "TI"],
+ " of that surface. The dimension of a parametrized surface is the generic ",
+ StyleBox["rank of its Jacobian",
+  FontWeight->"Bold"],
+ ", the matrix of derivatives ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"\[PartialD]", 
+    TemplateBox[{
+      StyleBox["\[Psi]", "TI"]},
+     "Ket"]}], "/", 
+   RowBox[{"\[PartialD]", 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     StyleBox["parameter",
+      FontSlant->"Plain"], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b06ab739-a8a9-4e69-875b-d977432c2c01"],
+ ": the rank is how many linearly independent directions the state actually \
+moves in as the parameters vary, and a redundant parameter (whose motion \
+duplicates another's) does not raise it. That is why the Jacobian rank is the \
+rigorous count, and why it exposes the global phase as a genuine redundancy."
+}], "Text",ExpressionUUID->"92b85db6-e14b-47eb-8a96-be6c65f750fc"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : embed the qubit family (the two Bloch angles plus the global phase ",
+ Cell[BoxData[
+  StyleBox["g", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "faf07429-976e-4b72-ae73-dc36aa5b464c"],
+ ") into ",
+ Cell[BoxData[
+  SuperscriptBox["\:211d", "4"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ba3227f-bab0-4e01-aa16-13fd76b5d912"],
+ " as real and imaginary parts, and count its independent tangent directions. \
+With the phase kept, the rank is ",
+ Cell[BoxData["3"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d3c5673-348e-4f98-954a-596d261a3b81"],
+ ": the normalized states fill a 3-sphere."
+}], "Text",ExpressionUUID->"54f5128d-444f-46ec-acef-04b27499897d"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"psi", " ", "=", " ", 
+     RowBox[{
+      RowBox[{"Exp", "[", 
+       RowBox[{"I", " ", "g"}], "]"}], " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Cos", "[", 
+         RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+        RowBox[{
+         RowBox[{"Exp", "[", 
+          RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+         RowBox[{"Sin", "[", 
+          RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}]}], "}"}], ",", 
+   "\n", " ", 
+   RowBox[{"MatrixRank", "[", 
+    RowBox[{"D", "[", 
+     RowBox[{
+      RowBox[{"Flatten", "[", 
+       RowBox[{"ReIm", "[", 
+        RowBox[{"ComplexExpand", "[", "psi", "]"}], "]"}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"{", 
+        RowBox[{"\[Theta]", ",", " ", "\[Phi]", ",", " ", "g"}], "}"}], 
+       "}"}]}], "]"}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"f3b71080-8e42-4987-b929-2ca995e7cd61"],
+
+Cell[TextData[{
+ "Drop the phase ",
+ Cell[BoxData[
+  StyleBox["g", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "01e5f8d1-9a69-43ce-9768-f20383430d5a"],
+ " and the rank falls to ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e4988134-3849-448c-a778-c95bf6d17faa"],
+ ", the physical state space. The drop of exactly one direction is the global \
+phase, a single redundancy."
+}], "Text",ExpressionUUID->"8f97e64c-2915-4aa3-84f6-77117e68354a"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"psi", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"Cos", "[", 
+        RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{"Exp", "[", 
+         RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+        RowBox[{"Sin", "[", 
+         RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], "}"}], ",", "\n",
+    " ", 
+   RowBox[{"MatrixRank", "[", 
+    RowBox[{"D", "[", 
+     RowBox[{
+      RowBox[{"Flatten", "[", 
+       RowBox[{"ReIm", "[", 
+        RowBox[{"ComplexExpand", "[", "psi", "]"}], "]"}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"{", 
+        RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}], "}"}]}], "]"}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"40712685-1874-45a5-b354-74e6bb643bc3"],
+
+Cell[TextData[{
+ "For a general qudit, drop the hand-built chart and differentiate the one \
+object that ",
+ StyleBox["already", "TI"],
+ " has both redundancies removed: the density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   RowBox[{
+    TemplateBox[{
+      StyleBox["\[Psi]", "TI"]},
+     "Ket"], 
+    RowBox[{
+     TemplateBox[{
+       StyleBox["\[Psi]", "TI"]},
+      "Bra"], "/", 
+     TemplateBox[{
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["\[Psi]", "TI"]},
+      "BraKet"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5ae9152f-b056-4d5e-82df-cd4b1565e16c"],
+ ". Build it from a raw, unnormalized vector ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], "\[Element]", 
+   SuperscriptBox["\:2102", 
+    StyleBox["d", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "331140c0-0713-45c8-ae42-37bee8020ccd"],
+ " and take the ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "16fe9f8a-6117-482a-9cd6-5767f34e8455"],
+ " real and imaginary components of ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3c412306-c9a8-43e2-9d34-69321cceea90"],
+ " as the parameters. Because ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5d0220bc-c1a0-470e-9a40-cdbc6ce2a7f1"],
+ " is unchanged by ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], "\[Rule]", 
+   StyleBox["\[Lambda]", "TI"], 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ae808693-3c63-48bd-924b-4921a2bdca70"],
+ " for any complex ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4cc5cd65-fa89-41f4-a8f4-f4a8fe1f7be7"],
+ ", it discards the normalization ",
+ StyleBox["and", "TI"],
+ " the global phase at a single stroke, so its Jacobian rank is the physical \
+parameter count for any ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8814b5a3-bb03-465b-a514-6c3955645a85"],
+ "."
+}], "Text",ExpressionUUID->"d98d4132-e10b-4ca6-a288-095166b9a090"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : form the projector ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], 
+   SuperscriptBox[
+    StyleBox["z", "TI"], "\[Dagger]"], "/", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["z", "TI"], "\[Dagger]"], 
+    StyleBox["z", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "347f8361-7a92-4fdc-ad37-b68363243c50"],
+ " by hand and rank its Jacobian for ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["d", "TI"], "=", "2"}], ",", 
+   RowBox[{"3", ",", "4"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25bf2230-1614-4f2e-8811-1851622369c3"],
+ "."
+}], "Text",ExpressionUUID->"6651a429-5b2e-4bf4-a8e5-0b537d1d0794"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"z", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"Array", "[", 
+         RowBox[{"a", ",", " ", "d"}], "]"}], " ", "+", " ", 
+        RowBox[{"I", " ", 
+         RowBox[{"Array", "[", 
+          RowBox[{"b", ",", " ", "d"}], "]"}]}]}]}], "}"}], ",", "\n", "  ", 
+     RowBox[{"MatrixRank", "[", 
+      RowBox[{"D", "[", "\n", "    ", 
+       RowBox[{
+        RowBox[{"Flatten", "[", 
+         RowBox[{"ReIm", "[", 
+          RowBox[{"ComplexExpand", "[", "\n", "      ", 
+           RowBox[{"Flatten", "[", 
+            RowBox[{
+             RowBox[{"Outer", "[", 
+              RowBox[{"Times", ",", " ", "z", ",", " ", 
+               RowBox[{"Conjugate", "[", "z", "]"}]}], "]"}], "/", 
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"Conjugate", "[", "z", "]"}], " ", ".", " ", "z"}], 
+              ")"}]}], "]"}], "]"}], "]"}], "]"}], ",", "\n", "    ", 
+        RowBox[{"{", 
+         RowBox[{"Join", "[", 
+          RowBox[{
+           RowBox[{"Array", "[", 
+            RowBox[{"a", ",", " ", "d"}], "]"}], ",", " ", 
+           RowBox[{"Array", "[", 
+            RowBox[{"b", ",", " ", "d"}], "]"}]}], "]"}], "}"}]}], "]"}], 
+      "]"}]}], "]"}], ",", "\n", " ", 
+   RowBox[{"{", 
+    RowBox[{"d", ",", " ", "2", ",", " ", "4"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"85fdbc33-292a-419d-beef-972a774f23df"],
+
+Cell[TextData[{
+ "The ranks ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "2"}], ",", "4", ",", 
+   RowBox[{"6", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c09c5df2-0b35-4014-ad5d-c0b451cab908"],
+ " are exactly ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"], "-", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d002e5e-0cb2-4870-87d8-6554bd407a66"],
+ ": each added Hilbert-space dimension contributes two new real parameters."
+}], "Text",ExpressionUUID->"de0bc134-8464-49a3-a43f-b2d13bbe3ff2"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "202dde8c-70e9-489b-b208-9d0ced0d341a"],
+ " carries the same density matrix, so take it from the object instead of \
+building it. QF leaves a ",
+ StyleBox["symbolic", "TI"],
+ " input unnormalized (its ",
+ Cell[BoxData["\"\<DensityMatrix\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac2266fc-b437-4247-b83e-a7e53c071a7c"],
+ " is the bare ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], 
+   SuperscriptBox[
+    StyleBox["z", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ad1dfa23-c52f-4dc4-8d88-3031046f4d32"],
+ ", of trace ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["\[Psi]", "TI"], 
+    StyleBox["\[Psi]", "TI"]},
+   "BraKet"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e51b886-c4b0-4ed7-80e3-f52ce410278c"],
+ "), so divide by the trace and rank the identical map."
+}], "Text",ExpressionUUID->"5c079f6e-b8b7-43d8-84f0-1110afddd823"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"dm", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"QuantumState", "[", 
+         RowBox[{
+          RowBox[{"Array", "[", 
+           RowBox[{"a", ",", " ", "d"}], "]"}], " ", "+", " ", 
+          RowBox[{"I", " ", 
+           RowBox[{"Array", "[", 
+            RowBox[{"b", ",", " ", "d"}], "]"}]}]}], "]"}], 
+        "[", "\"\<DensityMatrix\>\"", "]"}]}], "}"}], ",", "\n", "  ", 
+     RowBox[{"MatrixRank", "[", 
+      RowBox[{"D", "[", "\n", "    ", 
+       RowBox[{
+        RowBox[{"Flatten", "[", 
+         RowBox[{"ReIm", "[", 
+          RowBox[{"ComplexExpand", "[", 
+           RowBox[{"Flatten", "[", 
+            RowBox[{"dm", "/", 
+             RowBox[{"Tr", "[", "dm", "]"}]}], "]"}], "]"}], "]"}], "]"}], ",",
+         "\n", "    ", 
+        RowBox[{"{", 
+         RowBox[{"Join", "[", 
+          RowBox[{
+           RowBox[{"Array", "[", 
+            RowBox[{"a", ",", " ", "d"}], "]"}], ",", " ", 
+           RowBox[{"Array", "[", 
+            RowBox[{"b", ",", " ", "d"}], "]"}]}], "]"}], "}"}]}], "]"}], 
+      "]"}]}], "]"}], ",", "\n", " ", 
+   RowBox[{"{", 
+    RowBox[{"d", ",", " ", "2", ",", " ", "4"}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"888f8b46-0065-464d-a5f1-2b5214c76ce3"],
+
+Cell[TextData[{
+ "So a qubit has exactly two real parameters, the two Bloch angles: the rank \
+falls from ",
+ Cell[BoxData["3"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e5294e48-5e6a-4ec6-8879-e33c387441d7"],
+ " (the normalized vectors, a 3-sphere in ",
+ Cell[BoxData[
+  SuperscriptBox["\:211d", "4"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1cae7e91-01f6-4be2-a2e0-b92618366881"],
+ ") to ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6aed3dd1-a538-45e9-80a9-e680ffab4c4a"],
+ " (the physical states) precisely when the global phase is removed. For any \
+qudit the gauge freedom ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], "\[Rule]", 
+   StyleBox["\[Lambda]", "TI"], 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d0cff375-cc45-40ef-9a79-f0ccf8dc07bf"],
+ " is always two real dimensions, one scale and one phase, so the \
+density-matrix rank is ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["d", "TI"], "-", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ef9e1dcc-f685-4afa-ac60-9b8718f67d6d"],
+ " for every ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fdea0370-544a-480b-9e32-62ebc19a466d"],
+ ". The measured ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "2"}], ",", "4", ",", 
+   RowBox[{"6", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "893fae28-f32b-4e9d-a2f5-7836f8ba60b8"],
+ " confirm it, extending to ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "2"}], ",", 
+   RowBox[{"4", ",", "6", ",", "8", ",", "10"}], ",", 
+   RowBox[{"\[Ellipsis]", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9dcbaf71-7c18-4ff4-969f-774879568e22"],
+ " for ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["d", "TI"], "=", "2"}], ",", 
+   RowBox[{"3", ",", "4", ",", "5", ",", "6"}], ",", "\[Ellipsis]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d8147a3-44f7-47c7-8c3b-413d96b32234"],
+ "."
+}], "Text",ExpressionUUID->"20916a89-13ee-4a94-8ea2-63672df71e14"],
+
+Cell[TextData[{
+ "1.6 [BSc] How do I compute an inner product ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["\[Phi]", "TI"], 
+    StyleBox["\[Psi]", "TI"]},
+   "BraKet"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9bfa889b-5357-45f3-b2b9-a299992dfcc4"],
+ ", its modulus, and the transition probability ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      TemplateBox[{
+        StyleBox["\[Phi]", "TI"], 
+        StyleBox["\[Psi]", "TI"]},
+       "BraKet"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c441c8bb-c3d1-4bc3-8cc0-84f83346daad"],
+ "?"
+}], "Subsection",ExpressionUUID->"be1d499e-2788-4e31-8780-6fba0115575d"],
+
+Cell["\<\
+The overlap of two states, its absolute value, and its absolute square give \
+the amplitude and the probability to find one state in the other.\
+\>", "Text",ExpressionUUID->"d7d75990-7c25-45ef-89d9-f7738492c0e5"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the inner product is the ",
+ StyleBox["conjugated", "TI"],
+ " dot product; the conjugation acts on the bra ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["\[Phi]", "TI"]},
+   "Bra"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7dd1fc3e-8879-4cde-a124-2de1c4bad952"],
+ ", which is why ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Alpha]", "TI"], "1"], ",", 
+   SubscriptBox[
+    StyleBox["\[Beta]", "TI"], "1"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "55687536-f88e-4277-8375-8e984da44803"],
+ " appear conjugated. The cell returns the overlap, its modulus, and its \
+transition probability as a labeled Association, one inner product read three \
+ways."
+}], "Text",ExpressionUUID->"2773be24-6387-4a9b-8cae-2163a2ac6e06"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"phi", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{"\[Alpha]1", ",", " ", "\[Beta]1"}], "}"}]}], ",", " ", 
+     RowBox[{"psi", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{"\[Alpha]2", ",", " ", "\[Beta]2"}], "}"}]}]}], "}"}], ",", 
+   "\n", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"ip", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"Conjugate", "[", "phi", "]"}], " ", ".", " ", "psi"}]}], 
+      "}"}], ",", "\n", "  ", 
+     RowBox[{"AssociationThread", "[", "\n", "   ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]\>\"",
+          ",", "\n", 
+         "    ", "\"\<|\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]|\>\
+\"", ",", "\n", 
+         "    ", "\"\<|\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]\!\
+\(\*SuperscriptBox[\(|\), \(2\)]\)\>\""}], "}"}], ",", "\n", "   ", 
+       RowBox[{"{", 
+        RowBox[{"ip", ",", " ", 
+         RowBox[{"Abs", "[", "ip", "]"}], ",", " ", 
+         RowBox[{
+          RowBox[{"Abs", "[", "ip", "]"}], "^", "2"}]}], "}"}]}], "]"}]}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"6ae9c70e-8c2f-4582-b8b8-037f41e189bb"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : build the bra with ",
+ Cell[BoxData["\"\<Dagger\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "784fc774-119e-46e2-89b4-a1c5e07f38e2"],
+ ", compose with the ket, and read the same three quantities off the scalar, \
+under the same labels."
+}], "Text",ExpressionUUID->"c5f6def1-4a20-4f71-97c0-56b62c9f8df9"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"bra", " ", "=", " ", 
+      RowBox[{
+       RowBox[{"QuantumState", "[", 
+        RowBox[{"{", 
+         RowBox[{"\[Alpha]1", ",", " ", "\[Beta]1"}], "}"}], "]"}], 
+       "[", "\"\<Dagger\>\"", "]"}]}], ",", " ", 
+     RowBox[{"ket", " ", "=", " ", 
+      RowBox[{"QuantumState", "[", 
+       RowBox[{"{", 
+        RowBox[{"\[Alpha]2", ",", " ", "\[Beta]2"}], "}"}], "]"}]}]}], "}"}], 
+   ",", "\n", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"ip", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"bra", " ", "@", " ", "ket"}], ")"}], "[", "\"\<Scalar\>\"", 
+        "]"}]}], "}"}], ",", "\n", "  ", 
+     RowBox[{"AssociationThread", "[", "\n", "   ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\"\<\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]\>\"",
+          ",", "\n", 
+         "    ", "\"\<|\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]|\>\
+\"", ",", "\n", 
+         "    ", "\"\<|\[LeftAngleBracket]\[Phi]|\[Psi]\[RightAngleBracket]\!\
+\(\*SuperscriptBox[\(|\), \(2\)]\)\>\""}], "}"}], ",", "\n", "   ", 
+       RowBox[{"{", 
+        RowBox[{"ip", ",", " ", 
+         RowBox[{"Abs", "[", "ip", "]"}], ",", " ", 
+         RowBox[{
+          RowBox[{"Abs", "[", "ip", "]"}], "^", "2"}]}], "}"}]}], "]"}]}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"65194bec-2c7d-4f24-89ad-0e9353375fe8"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Phi]", "TI"], 
+     StyleBox["\[Psi]", "TI"]},
+    "BraKet"], "=", 
+   SubscriptBox[
+    StyleBox["\[Alpha]", "TI"], "2"], 
+   SubsuperscriptBox[
+    StyleBox["\[Alpha]", "TI"], "1", "*"], "+", 
+   SubscriptBox[
+    StyleBox["\[Beta]", "TI"], "2"], 
+   SubsuperscriptBox[
+    StyleBox["\[Beta]", "TI"], "1", "*"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fca438d6-ebb4-497b-ad93-5f90d8105b38"],
+ ", with its modulus and its square. The conjugation on the bra is what makes \
+this a sesquilinear inner product rather than a plain bilinear dot product."
+}], "Text",ExpressionUUID->"16938c1e-a7f0-4b5b-ad90-83150cf85942"],
+
+Cell[TextData[{
+ "1.7 [BSc] How do I write a state both as a column vector of amplitudes and \
+as a Dirac superposition ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["i", "TI"],
+    LimitsPositioning->False], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["c", "TI"], 
+     StyleBox["i", "TI"]], 
+    TemplateBox[{
+      StyleBox["i", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30c7e3ea-1d70-4417-be51-5b669f0225cd"],
+ "?"
+}], "Subsection",ExpressionUUID->"26305ed0-4a42-41b0-8a13-4b6293e3d15d"],
+
+Cell["\<\
+The amplitude list and the ket-superposition are two views of one object.\
+\>", "Text",ExpressionUUID->"28b2a219-0c95-4d0d-a3b1-8211ecb0e1a6"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the amplitude vector is the list itself."
+}], "Text",ExpressionUUID->"8021b35f-b1bd-4d38-a874-84fda6a599e6"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}]], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"08ea7846-8fc6-42de-aeb7-7cc2df611be9"],
+
+Cell["\<\
+The Dirac form is the same numbers against the computational basis; the \
+identity confirms the expansion.\
+\>", "Text",ExpressionUUID->"2a20b9ba-3b4d-4cfe-94e1-caa39913b495"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], " ", "==", " ", 
+  RowBox[{
+   RowBox[{"\[Alpha]", " ", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", " ", "0"}], "}"}]}], " ", "+", " ", 
+   RowBox[{"\[Beta]", " ", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", " ", "1"}], "}"}]}]}]}]], "Input",
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"d2d22df7-2a16-4569-91d8-ebc39a4a4fe3"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the state object, shown first as its summary box."
+}], "Text",ExpressionUUID->"e5a3ba22-a649-4dc2-b875-6ad83a3765b7"],
+
+Cell[BoxData[
+ RowBox[{"qs", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}]}]], "Input",
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"cd0553ee-a084-4b10-982f-64e4a982713c"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<StateVector\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "70c1227b-7154-463c-93b0-0eaffd0db871"],
+ " reads the amplitudes:"
+}], "Text",ExpressionUUID->"7c4df02a-8238-42e7-a1da-2b47924b9866"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"qs", "[", "\"\<StateVector\>\"", "]"}], " ", "//", " ", 
+  "Normal"}]], "Input",
+ CellLabel->
+  "In[22]:= ",ExpressionUUID->"03bc774d-9de6-4da7-80e5-29cbb9d30fca"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<Formula\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ab49ff6e-4343-4f9c-8409-c03083840b5b"],
+ " typesets the same object as the Dirac superposition ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["i", "TI"],
+    LimitsPositioning->False], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["c", "TI"], 
+     StyleBox["i", "TI"]], 
+    TemplateBox[{
+      StyleBox["i", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "37ce4e9f-7f42-461a-8a97-c54556e280b5"],
+ ":"
+}], "Text",ExpressionUUID->"37af4250-cf1f-4c12-8247-07e8cfbc8818"],
+
+Cell[BoxData[
+ RowBox[{"qs", "[", "\"\<Formula\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[23]:= ",ExpressionUUID->"3372993b-0f19-4843-b7f0-3997975830fc"],
+
+Cell[TextData[{
+ "The amplitude vector and the superposition ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["\[Alpha]", "TI"], 
+    TemplateBox[{"0"},
+     "Ket"]}], "+", 
+   RowBox[{
+    StyleBox["\[Beta]", "TI"], 
+    TemplateBox[{"1"},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3d91087b-6e12-4d2f-bfd3-0472ca22187e"],
+ " carry identical information; both are representations read from the one \
+object whose summary box is shown above."
+}], "Text",ExpressionUUID->"ddfdf8e9-89a4-4013-ab69-3bce0068d934"],
+
+Cell["\<\
+1.8 [BSc] How do I get the Bloch vector of a qubit, and the Bloch-sphere \
+angles?\
+\>", "Subsection",ExpressionUUID->"ef76d051-e4f1-467d-bda2-7cb38e571b1d"],
+
+Cell[TextData[{
+ "The Bloch vector ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["r", "TI"], "\[RightVector]"], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SubscriptBox[
+      StyleBox["\[Sigma]", "TI"], 
+      StyleBox["x", "TI"]], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], ",", 
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SubscriptBox[
+      StyleBox["\[Sigma]", "TI"], 
+      StyleBox["y", "TI"]], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], ",", 
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SubscriptBox[
+      StyleBox["\[Sigma]", "TI"], 
+      StyleBox["z", "TI"]], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b9dc1f8c-4107-45c0-bbe2-4e02af8e4162"],
+ " places a pure qubit on the unit sphere, with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["\[Theta]", "TI"], ",", 
+    StyleBox["\[Phi]", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6eb7ed1b-86a2-4969-bc4d-f56a806b36a3"],
+ " its spherical angles."
+}], "Text",ExpressionUUID->"3a6b4238-a182-4e67-b568-3721e6131533"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the Bloch vector is, ",
+ StyleBox["by definition", "TI"],
+ ", the triple of Pauli expectation values ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Bra"], 
+   SubscriptBox[
+    StyleBox["\[Sigma]", "TI"], 
+    StyleBox["j", "TI"]], 
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "79cf5bb6-9eea-4ec6-8618-f9c48bb725b4"],
+ ". Evaluate that definition for a general ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["\[Alpha]", "TI"]}], ",", 
+   RowBox[{
+    StyleBox["\[Beta]", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "53a19e30-6271-4728-bea7-42199891e763"],
+ " to get the familiar component formula."
+}], "Text",ExpressionUUID->"4b1429e4-3465-49b6-a40b-a943e0764342"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", " ", "@", " ", 
+  RowBox[{"Table", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Conjugate", "[", 
+      RowBox[{"{", 
+       RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}], "]"}], " ", ".", " ", 
+     RowBox[{"PauliMatrix", "[", "j", "]"}], " ", ".", " ", 
+     RowBox[{"{", 
+      RowBox[{"\[Alpha]", ",", " ", "\[Beta]"}], "}"}]}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"j", ",", " ", "3"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->
+  "In[24]:= ",ExpressionUUID->"edbbf4ff-529c-444e-8709-523cde32cb2f"],
+
+Cell["\<\
+For the angle-parametrized state the same definition gives the geometric \
+vector on the sphere.\
+\>", "Text",ExpressionUUID->"d56e62c8-1536-4706-9f46-661a065a47bb"],
+
+Cell[BoxData[
+ RowBox[{"rvec", " ", "=", " ", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"\[Psi]", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Cos", "[", 
+         RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+        RowBox[{
+         RowBox[{"Exp", "[", 
+          RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+         RowBox[{"Sin", "[", 
+          RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}]}], "}"}], ",", 
+    "\n", "  ", 
+    RowBox[{"FullSimplify", "[", 
+     RowBox[{
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Conjugate", "[", "\[Psi]", "]"}], " ", ".", " ", 
+         RowBox[{"PauliMatrix", "[", "j", "]"}], " ", ".", " ", "\[Psi]"}], ",",
+         " ", 
+        RowBox[{"{", 
+         RowBox[{"j", ",", " ", "3"}], "}"}]}], "]"}], ",", " ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}], " ", "\[Element]", 
+       " ", "Reals"}]}], "]"}]}], "]"}]}]], "Input",
+ CellLabel->
+  "In[25]:= ",ExpressionUUID->"722925a5-c213-4f2c-94b4-bb9fb4556208"],
+
+Cell["\<\
+A built-in coordinate transform turns that Cartesian vector into spherical \
+angles.\
+\>", "Text",ExpressionUUID->"ef340fae-18ce-4c51-8c81-aa006e547155"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{
+   RowBox[{"ToSphericalCoordinates", "[", "rvec", "]"}], ",", " ", 
+   RowBox[{
+    RowBox[{"0", " ", "<", " ", "\[Theta]", " ", "<", " ", "Pi"}], " ", "&&", 
+    " ", 
+    RowBox[{
+     RowBox[{"-", "Pi"}], " ", "<", " ", "\[Phi]", " ", "<", " ", "Pi"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[26]:= ",ExpressionUUID->"3f06208e-9455-40c4-a0d6-f86c3df7f637"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the state object, shown as its summary box."
+}], "Text",ExpressionUUID->"2f77af35-e786-49d0-9190-eab73ea178f7"],
+
+Cell[BoxData[
+ RowBox[{"qs", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Cos", "[", 
+      RowBox[{"\[Theta]", "/", "2"}], "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{"Exp", "[", 
+       RowBox[{"I", " ", "\[Phi]"}], "]"}], " ", 
+      RowBox[{"Sin", "[", 
+       RowBox[{"\[Theta]", "/", "2"}], "]"}]}]}], "}"}], "]"}]}]], "Input",
+ CellLabel->
+  "In[27]:= ",ExpressionUUID->"bbd66625-cd19-464d-90f9-7760abf4fea5"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<BlochVector\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "277b7042-f744-4050-875d-528f6816cb3a"],
+ " computes the same Pauli expectation values internally (as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["\[Rho]", "TI"], " ", 
+    SubscriptBox[
+     StyleBox["\[Sigma]", "TI"], 
+     StyleBox["j", "TI"]]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cb70891e-29b7-4de1-9b59-3c25b0588643"],
+ ")."
+}], "Text",ExpressionUUID->"d6a55f77-4518-4186-aee2-f0f38e8265aa"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{
+   RowBox[{"qs", "[", "\"\<BlochVector\>\"", "]"}], ",", " ", 
+   RowBox[{
+    RowBox[{"0", " ", "<", " ", "\[Theta]", " ", "<", " ", "Pi"}], " ", "&&", 
+    " ", 
+    RowBox[{
+     RowBox[{"-", "Pi"}], " ", "<", " ", "\[Phi]", " ", "<", " ", "Pi"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[28]:= ",ExpressionUUID->"1983aca0-d194-4b5b-9612-520fc113d5ab"],
+
+Cell[TextData[{
+ Cell[BoxData["\"\<BlochSphericalCoordinates\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "53502efd-c2b5-41a4-9892-2cb84db7dc2b"],
+ " gives the polar and azimuthal angles."
+}], "Text",ExpressionUUID->"250078e0-d0fa-4076-9d62-3c076b966460"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", 
+  RowBox[{
+   RowBox[{"qs", "[", "\"\<BlochSphericalCoordinates\>\"", "]"}], ",", " ", 
+   RowBox[{
+    RowBox[{"0", " ", "<", " ", "\[Theta]", " ", "<", " ", "Pi"}], " ", "&&", 
+    " ", 
+    RowBox[{
+     RowBox[{"-", "Pi"}], " ", "<", " ", "\[Phi]", " ", "<", " ", "Pi"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[29]:= ",ExpressionUUID->"f8c6743f-ee0b-492c-80db-407b7f391ebc"],
+
+Cell[TextData[{
+ "Evaluating the definition returns ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", "2", " ", 
+     StyleBox["Re",
+      FontSlant->"Plain"], " ", 
+     SuperscriptBox[
+      StyleBox["\[Alpha]", "TI"], "*"], 
+     StyleBox["\[Beta]", "TI"]}], ",", " ", 
+    RowBox[{"2", " ", 
+     StyleBox["Im",
+      FontSlant->"Plain"], " ", 
+     SuperscriptBox[
+      StyleBox["\[Alpha]", "TI"], "*"], 
+     StyleBox["\[Beta]", "TI"]}], ",", " ", 
+    RowBox[{
+     SuperscriptBox[GridBox[{
+        {
+         StyleBox["\[Alpha]", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "-", 
+     SuperscriptBox[GridBox[{
+        {
+         StyleBox["\[Beta]", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}]}], "}"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac1d890d-3937-47be-9cd0-f321fd0af150"],
+ " for a general state and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"], 
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Phi]", "TI"]}], ",", " ", 
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"], 
+     StyleBox["sin",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Phi]", "TI"]}], ",", " ", 
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], "\[ThinSpace]", 
+     StyleBox["\[Theta]", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4dfbf855-fc27-4a6e-85c2-c5d5b0b49b37"],
+ " for the parametrized one, with spherical coordinates ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    StyleBox["\[Theta]", "TI"], ",", 
+    StyleBox["\[Phi]", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43f9bcdb-65a3-4584-9a7b-9f42a29f940d"],
+ ". So the component formula is a ",
+ StyleBox["result", "TI"],
+ " of evaluating the Pauli expectation values, not the definition itself, and \
+the parametrization angles are exactly the polar and azimuthal angles on the \
+Bloch sphere."
+}], "Text",ExpressionUUID->"c99594fb-fa63-4aeb-80f7-ef606257a934"],
+
+Cell[TextData[{
+ "1.9a [BSc] How do I prepare a qudit in the computational basis state ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "194676dd-9a34-41b6-9c95-0923223c7dec"],
+ "?"
+}], "Subsection",ExpressionUUID->"7b6a2635-2b29-4a25-90eb-70d974d8508d"],
+
+Cell[TextData[{
+ "A qudit lives in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1a1873ea-bd22-403c-8ed3-3e81bb716812"],
+ "; its simplest preparation is the computational basis state ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "266aade6-7c34-43ce-8744-8601eb5028f4"],
+ ", the unit vector along the first axis."
+}], "Text",ExpressionUUID->"adf9c48c-3ffa-47af-b46b-212328697f77"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f6354e8f-9750-4816-84c2-11243aeb25be"],
+ " is a unit vector in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "27a26203-a643-4ecc-aa5b-32aab1cc166b"],
+ "."
+}], "Text",ExpressionUUID->"4f73b734-c23f-4faa-b9fe-36c743103af2"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", "3"}], "}"}], ",", " ", 
+   RowBox[{"UnitVector", "[", 
+    RowBox[{"d", ",", " ", "1"}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[30]:= ",ExpressionUUID->"ace4ee00-f1e9-4363-bae2-6dcd9bd1155a"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : name the basis state with its dimension."
+}], "Text",ExpressionUUID->"d4324a81-6fc8-4c06-9599-d0077bb64a77"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", "3"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"\"\<0\>\"", ",", " ", "d"}], "]"}], "[", "\"\<StateVector\>\"",
+      "]"}], " ", "//", " ", "Normal"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[31]:= ",ExpressionUUID->"bec4388d-1b0a-4c2e-87df-8f70a506d972"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"0"},
+    "Ket"], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", "0", ",", "0"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35790dce-7f8e-493d-9c0a-d388e456a471"],
+ " in ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "=", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bd79bbee-f721-430e-a65a-dbb6e4a1b37d"],
+ "; written in ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ce3b286e-2a32-4899-884d-d2f8f1bd7fcb"],
+ ", the preparation works for any dimension."
+}], "Text",ExpressionUUID->"13bcb98e-153f-4dd5-9f86-9d96e11234dd"],
+
+Cell[TextData[{
+ "1.9b [BSc] How do I prepare a uniform superposition ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", 
+    SqrtBox[
+     StyleBox["d", "TI"]]], 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     StyleBox["k", "TI"],
+     LimitsPositioning->False], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6bb04390-040b-4c18-bc7e-d1ecd240ead1"],
+ " in ",
+ Cell[BoxData[
+  SuperscriptBox["\:2102", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ad5d2a2a-8968-4bf4-997c-8a113b4e1e87"],
+ "?"
+}], "Subsection",ExpressionUUID->"5b408ea8-baaf-42fd-8ecc-a32b9d43608b"],
+
+Cell[TextData[{
+ "The equal-weight superposition ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", 
+    SqrtBox[
+     StyleBox["d", "TI"]]], 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     StyleBox["k", "TI"],
+     LimitsPositioning->False], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3d216737-06a0-4624-b1d4-215f5bd5a887"],
+ " puts the same amplitude on every basis state; it is the flat starting \
+state of many algorithms."
+}], "Text",ExpressionUUID->"26e813b9-125d-4e4d-8c66-32b64ed918c6"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : a constant vector handed to ",
+ Cell[BoxData["Normalize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f2b76930-09c3-4532-a87f-ee528722aa52"],
+ " (no hardcoded ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   SqrtBox[
+    StyleBox["d", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0d59716a-e87b-49b3-a9f9-da3b240a2d97"],
+ ")."
+}], "Text",ExpressionUUID->"8091666a-4a40-41cb-80b6-8be50bb3f8e7"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", "3"}], "}"}], ",", " ", 
+   RowBox[{"Normalize", " ", "@", " ", 
+    RowBox[{"ConstantArray", "[", 
+     RowBox[{"1", ",", " ", "d"}], "]"}]}]}], "]"}]], "Input",
+ CellLabel->
+  "In[32]:= ",ExpressionUUID->"8e8b5800-8b24-4e11-ae82-c880cd244325"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : use the built-in ",
+ Cell[BoxData["\"\<UniformSuperposition\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4eda9821-2e1a-47f0-aa8f-7bee11b60fad"],
+ " state rather than building it by hand."
+}], "Text",ExpressionUUID->"70771a48-df71-41e1-886b-9023671a4129"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"d", " ", "=", " ", "3"}], "}"}], ",", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"\"\<UniformSuperposition\>\"", ",", " ", "d"}], "]"}], 
+     "[", "\"\<StateVector\>\"", "]"}], " ", "//", " ", "Normal"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[33]:= ",ExpressionUUID->"53577b8d-4d58-4584-af30-a584f9933dbe"],
+
+Cell[TextData[{
+ "Both give the uniform qutrit ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", 
+    SqrtBox["3"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", "1", ",", "1"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c98161e-be3e-4edd-b1b4-10c3eb94a979"],
+ "; written in ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8c0a8831-2e2b-412a-8402-a384dcb76e49"],
+ ", it works for any dimension."
+}], "Text",ExpressionUUID->"27fbdbb1-d20a-4e32-b187-e028f1c3e99e"]
+},
+CreateCellID->True,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"87da4c2b-686d-4eab-b4c1-e06bbbed519d"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 156, 2, 70, "Title",ExpressionUUID->"686f5631-5a60-495a-8da5-aa90e6d58eaf"],
+Cell[713, 24, 306, 8, 70, "Text",ExpressionUUID->"9662acad-6ee4-45b7-8e8c-f53e8894a87d"],
+Cell[1022, 34, 940, 24, 70, "ItemNumbered",ExpressionUUID->"c8508e33-ba96-4c41-8769-0e6a71d07312"],
+Cell[1965, 60, 852, 18, 70, "ItemNumbered",ExpressionUUID->"aae9cb6d-e183-489b-bd9e-d7ba7d428002"],
+Cell[2820, 80, 1505, 37, 70, "Text",ExpressionUUID->"434e6e9f-1569-4dab-b90b-45d6753506b4"],
+Cell[4328, 119, 79, 0, 70, "Section",ExpressionUUID->"d7753872-c9a3-4096-abda-ef0fa9a6fe0f"],
+Cell[4410, 121, 107, 0, 70, "Text",ExpressionUUID->"98eacc29-fa18-4261-9e27-772c479056d2"],
+Cell[4520, 123, 169, 2, 70, "Input",ExpressionUUID->"26930ef4-6d38-4626-8a50-be4892142ea1"],
+Cell[4692, 127, 111, 0, 70, "Section",ExpressionUUID->"5eeb12d2-8184-44a9-a40a-9109692e9c19"],
+Cell[4806, 129, 553, 16, 70, "Subsection",ExpressionUUID->"edd37568-51a4-49cf-8985-a5b1ba8a55d4"],
+Cell[5362, 147, 531, 19, 70, "Text",ExpressionUUID->"edf2445b-e136-476e-a9b3-ffd59d285c7c"],
+Cell[5896, 168, 193, 4, 70, "Text",ExpressionUUID->"3585d17d-b291-47a4-9f13-e6095aec0ff1"],
+Cell[6092, 174, 169, 3, 70, "Input",ExpressionUUID->"715b5013-7593-4988-b15b-9d17f44faaac"],
+Cell[6264, 179, 603, 14, 70, "Text",ExpressionUUID->"c4c885ee-1f62-46a8-bab8-717be94a444b"],
+Cell[6870, 195, 245, 5, 70, "Input",ExpressionUUID->"4ce3e82b-2a59-4450-97c9-b62b9b9858a3"],
+Cell[7118, 202, 289, 6, 70, "Text",ExpressionUUID->"e61af595-39bf-44ae-ac41-56f35a551abc"],
+Cell[7410, 210, 194, 4, 70, "Input",ExpressionUUID->"1c7defa0-8ba3-49e8-add9-7ee6a17ea0ba"],
+Cell[7607, 216, 540, 13, 70, "Text",ExpressionUUID->"f91951fd-c4ec-42ed-8845-9c139732aa21"],
+Cell[8150, 231, 148, 2, 70, "Subsection",ExpressionUUID->"bb34b39f-cef5-4a99-a80b-759c512d402d"],
+Cell[8301, 235, 752, 21, 70, "Text",ExpressionUUID->"1b74af6b-57ac-4223-8f3a-c04b2bc22406"],
+Cell[9056, 258, 929, 26, 70, "Text",ExpressionUUID->"8af3b797-65df-49ec-a525-d46926deb832"],
+Cell[9988, 286, 317, 8, 70, "Input",ExpressionUUID->"f0b34dd8-765d-41c8-b3ce-cd1ddff689e9"],
+Cell[10308, 296, 372, 8, 70, "Text",ExpressionUUID->"d452c207-6259-4f13-935f-8b7b9b3b71cd"],
+Cell[10683, 306, 266, 6, 70, "Input",ExpressionUUID->"9bd5de1c-1fa4-4683-a946-666463373761"],
+Cell[10952, 314, 1475, 45, 70, "Text",ExpressionUUID->"5895a7ac-a947-4d93-9615-83841fdfc34c"],
+Cell[12430, 361, 170, 3, 70, "Subsection",ExpressionUUID->"3ad8a477-0847-4816-bd82-cd5178d35baf"],
+Cell[12603, 366, 375, 11, 70, "Text",ExpressionUUID->"f9981e7f-247e-475d-894b-170f873cb9d8"],
+Cell[12981, 379, 308, 8, 70, "Text",ExpressionUUID->"96fbabca-e84b-47c0-a824-ca2cc113c3c8"],
+Cell[13292, 389, 201, 4, 70, "Input",ExpressionUUID->"43f5fdb1-423d-4242-b02a-fa8fd8775fd1"],
+Cell[13496, 395, 415, 9, 70, "Text",ExpressionUUID->"292facdf-948b-4dbd-80d1-519880ee6ad6"],
+Cell[13914, 406, 285, 7, 70, "Input",ExpressionUUID->"cdaea60d-9eab-4b09-9331-163450484952"],
+Cell[14202, 415, 309, 8, 70, "Text",ExpressionUUID->"d6ae8483-e0b9-4a81-9b9e-c22d3d0ca8ec"],
+Cell[14514, 425, 253, 6, 70, "Input",ExpressionUUID->"a99aa81c-7ab3-4291-96fd-3f89a930008c"],
+Cell[14770, 433, 548, 13, 70, "Text",ExpressionUUID->"169857a8-1586-4dc6-ad90-7050110d488b"],
+Cell[15321, 448, 305, 8, 70, "Input",ExpressionUUID->"0e676445-1a65-42ee-875e-9589ac60e299"],
+Cell[15629, 458, 846, 24, 70, "Text",ExpressionUUID->"217931a3-4733-4df9-9b9a-ce638842cea1"],
+Cell[16478, 484, 156, 2, 70, "Subsection",ExpressionUUID->"34b518db-0229-4b44-88fb-9ab51c591e29"],
+Cell[16637, 488, 946, 30, 70, "Text",ExpressionUUID->"61297302-e9a5-4061-96ba-53cc66925946"],
+Cell[17586, 520, 197, 4, 70, "Text",ExpressionUUID->"6b43a229-1a3c-4272-b890-01ca86dab58a"],
+Cell[17786, 526, 663, 20, 70, "Input",ExpressionUUID->"c5f090ab-e611-4d77-a538-e516699b19c5"],
+Cell[18452, 548, 650, 15, 70, "Text",ExpressionUUID->"271852c7-827b-4c68-9816-c04dc2fff4ec"],
+Cell[19105, 565, 449, 12, 70, "Input",ExpressionUUID->"ffcea152-f72d-49c5-acc2-5306689f7151"],
+Cell[19557, 579, 599, 13, 70, "Text",ExpressionUUID->"0b169724-ac7e-432b-b752-99b775c47363"],
+Cell[20159, 594, 353, 9, 70, "Subsection",ExpressionUUID->"bf67e78f-fdef-450a-ba47-59c7569cce15"],
+Cell[20515, 605, 1998, 53, 70, "Text",ExpressionUUID->"92b85db6-e14b-47eb-8a96-be6c65f750fc"],
+Cell[22516, 660, 785, 19, 70, "Text",ExpressionUUID->"54f5128d-444f-46ec-acef-04b27499897d"],
+Cell[23304, 681, 982, 29, 70, "Input",ExpressionUUID->"f3b71080-8e42-4987-b929-2ca995e7cd61"],
+Cell[24289, 712, 504, 12, 70, "Text",ExpressionUUID->"8f97e64c-2915-4aa3-84f6-77117e68354a"],
+Cell[24796, 726, 867, 26, 70, "Input",ExpressionUUID->"40712685-1874-45a5-b354-74e6bb643bc3"],
+Cell[25666, 754, 2244, 68, 70, "Text",ExpressionUUID->"d98d4132-e10b-4ca6-a288-095166b9a090"],
+Cell[27913, 824, 807, 28, 70, "Text",ExpressionUUID->"6651a429-5b2e-4bf4-a8e5-0b537d1d0794"],
+Cell[28723, 854, 1510, 39, 70, "Input",ExpressionUUID->"85fdbc33-292a-419d-beef-972a774f23df"],
+Cell[30236, 895, 557, 15, 70, "Text",ExpressionUUID->"de0bc134-8464-49a3-a43f-b2d13bbe3ff2"],
+Cell[30796, 912, 1088, 31, 70, "Text",ExpressionUUID->"5c079f6e-b8b7-43d8-84f0-1110afddd823"],
+Cell[31887, 945, 1371, 37, 70, "Input",ExpressionUUID->"888f8b46-0065-464d-a5f1-2b5214c76ce3"],
+Cell[33261, 984, 2149, 61, 70, "Text",ExpressionUUID->"20916a89-13ee-4a94-8ea2-63672df71e14"],
+Cell[35413, 1047, 789, 23, 70, "Subsection",ExpressionUUID->"be1d499e-2788-4e31-8780-6fba0115575d"],
+Cell[36205, 1072, 222, 3, 70, "Text",ExpressionUUID->"d7d75990-7c25-45ef-89d9-f7738492c0e5"],
+Cell[36430, 1077, 842, 24, 70, "Text",ExpressionUUID->"2773be24-6387-4a9b-8cae-2163a2ac6e06"],
+Cell[37275, 1103, 1317, 35, 70, "Input",ExpressionUUID->"6ae9c70e-8c2f-4582-b8b8-037f41e189bb"],
+Cell[38595, 1140, 387, 9, 70, "Text",ExpressionUUID->"c5f6def1-4a20-4f71-97c0-56b62c9f8df9"],
+Cell[38985, 1151, 1500, 40, 70, "Input",ExpressionUUID->"65194bec-2c7d-4f24-89ad-0e9353375fe8"],
+Cell[40488, 1193, 734, 20, 70, "Text",ExpressionUUID->"16938c1e-a7f0-4b5b-ad90-83150cf85942"],
+Cell[41225, 1215, 564, 18, 70, "Subsection",ExpressionUUID->"26305ed0-4a42-41b0-8a13-4b6293e3d15d"],
+Cell[41792, 1235, 152, 2, 70, "Text",ExpressionUUID->"28b2a219-0c95-4d0d-a3b1-8211ecb0e1a6"],
+Cell[41947, 1239, 168, 4, 70, "Text",ExpressionUUID->"8021b35f-b1bd-4d38-a874-84fda6a599e6"],
+Cell[42118, 1245, 173, 4, 70, "Input",ExpressionUUID->"08ea7846-8fc6-42de-aeb7-7cc2df611be9"],
+Cell[42294, 1251, 185, 3, 70, "Text",ExpressionUUID->"2a20b9ba-3b4d-4cfe-94e1-caa39913b495"],
+Cell[42482, 1256, 414, 12, 70, "Input",ExpressionUUID->"d2d22df7-2a16-4569-91d8-ebc39a4a4fe3"],
+Cell[42899, 1270, 177, 4, 70, "Text",ExpressionUUID->"e5a3ba22-a649-4dc2-b875-6ad83a3765b7"],
+Cell[43079, 1276, 249, 6, 70, "Input",ExpressionUUID->"cd0553ee-a084-4b10-982f-64e4a982713c"],
+Cell[43331, 1284, 249, 5, 70, "Text",ExpressionUUID->"7c4df02a-8238-42e7-a1da-2b47924b9866"],
+Cell[43583, 1291, 198, 5, 70, "Input",ExpressionUUID->"03bc774d-9de6-4da7-80e5-29cbb9d30fca"],
+Cell[43784, 1298, 646, 20, 70, "Text",ExpressionUUID->"37af4250-cf1f-4c12-8247-07e8cfbc8818"],
+Cell[44433, 1320, 152, 3, 70, "Input",ExpressionUUID->"3372993b-0f19-4843-b7f0-3997975830fc"],
+Cell[44588, 1325, 552, 16, 70, "Text",ExpressionUUID->"ddfdf8e9-89a4-4013-ab69-3bce0068d934"],
+Cell[45143, 1343, 167, 3, 70, "Subsection",ExpressionUUID->"ef76d051-e4f1-467d-bda2-7cb38e571b1d"],
+Cell[45313, 1348, 1437, 50, 70, "Text",ExpressionUUID->"3a6b4238-a182-4e67-b568-3721e6131533"],
+Cell[46753, 1400, 890, 29, 70, "Text",ExpressionUUID->"4b1429e4-3465-49b6-a40b-a943e0764342"],
+Cell[47646, 1431, 549, 14, 70, "Input",ExpressionUUID->"edbbf4ff-529c-444e-8709-523cde32cb2f"],
+Cell[48198, 1447, 175, 3, 70, "Text",ExpressionUUID->"d56e62c8-1536-4706-9f46-661a065a47bb"],
+Cell[48376, 1452, 1096, 31, 70, "Input",ExpressionUUID->"722925a5-c213-4f2c-94b4-bb9fb4556208"],
+Cell[49475, 1485, 163, 3, 70, "Text",ExpressionUUID->"ef340fae-18ce-4c51-8c81-aa006e547155"],
+Cell[49641, 1490, 418, 11, 70, "Input",ExpressionUUID->"3f06208e-9455-40c4-a0d6-f86c3df7f637"],
+Cell[50062, 1503, 171, 4, 70, "Text",ExpressionUUID->"2f77af35-e786-49d0-9190-eab73ea178f7"],
+Cell[50236, 1509, 465, 13, 70, "Input",ExpressionUUID->"bbd66625-cd19-464d-90f9-7760abf4fea5"],
+Cell[50704, 1524, 676, 21, 70, "Text",ExpressionUUID->"d6a55f77-4518-4186-aee2-f0f38e8265aa"],
+Cell[51383, 1547, 413, 11, 70, "Input",ExpressionUUID->"1983aca0-d194-4b5b-9612-520fc113d5ab"],
+Cell[51799, 1560, 279, 5, 70, "Text",ExpressionUUID->"250078e0-d0fa-4076-9d62-3c076b966460"],
+Cell[52081, 1567, 427, 11, 70, "Input",ExpressionUUID->"f8c6743f-ee0b-492c-80db-407b7f391ebc"],
+Cell[52511, 1580, 2494, 78, 70, "Text",ExpressionUUID->"c99594fb-fa63-4aeb-80f7-ef606257a934"],
+Cell[55008, 1660, 318, 8, 70, "Subsection",ExpressionUUID->"7b6a2635-2b29-4a25-90eb-70d974d8508d"],
+Cell[55329, 1670, 535, 14, 70, "Text",ExpressionUUID->"adf9c48c-3ffa-47af-b46b-212328697f77"],
+Cell[55867, 1686, 483, 16, 70, "Text",ExpressionUUID->"4f73b734-c23f-4faa-b9fe-36c743103af2"],
+Cell[56353, 1704, 295, 8, 70, "Input",ExpressionUUID->"ace4ee00-f1e9-4363-bae2-6dcd9bd1155a"],
+Cell[56651, 1714, 168, 4, 70, "Text",ExpressionUUID->"d4324a81-6fc8-4c06-9599-d0077bb64a77"],
+Cell[56822, 1720, 403, 11, 70, "Input",ExpressionUUID->"bec4388d-1b0a-4c2e-87df-8f70a506d972"],
+Cell[57228, 1733, 766, 25, 70, "Text",ExpressionUUID->"13bcb98e-153f-4dd5-9f86-9d96e11234dd"],
+Cell[57997, 1760, 688, 23, 70, "Subsection",ExpressionUUID->"5b408ea8-baaf-42fd-8ecc-a32b9d43608b"],
+Cell[58688, 1785, 577, 18, 70, "Text",ExpressionUUID->"26e813b9-125d-4e4d-8c66-32b64ed918c6"],
+Cell[59268, 1805, 494, 15, 70, "Text",ExpressionUUID->"8091666a-4a40-41cb-80b6-8be50bb3f8e7"],
+Cell[59765, 1822, 342, 9, 70, "Input",ExpressionUUID->"8e8b5800-8b24-4e11-ae82-c880cd244325"],
+Cell[60110, 1833, 339, 8, 70, "Text",ExpressionUUID->"70771a48-df71-41e1-886b-9023671a4129"],
+Cell[60452, 1843, 425, 12, 70, "Input",ExpressionUUID->"53577b8d-4d58-4584-af30-a584f9933dbe"],
+Cell[60880, 1857, 598, 19, 70, "Text",ExpressionUUID->"27fbdbb1-d20a-4e32-b187-e028f1c3e99e"]
+}
+]
+*)
+
+(* End of internal cache information *)
