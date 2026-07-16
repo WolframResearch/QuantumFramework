@@ -205,8 +205,17 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoO
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_QuantumState, args___] :=
-    If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> qmo["POVM"]["Label"]], #] & @ QuantumCircuitOperator[qmo][qs, args]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_QuantumState, args___] := With[{
+    op = If[ qmo["FullInputOrder"] === {} || ContainsAll[Range[qs["OutputQudits"]], qmo["FullInputOrder"]],
+        qmo,
+        (* a directly applied measurement has no circuit context: wire labels that do not fit
+           the state are meaningless (and would pad phantom qubit wires), so re-seat the
+           measurement onto the state's qudits, preserving its relative wire layout *)
+        qmo["Shift", 1 - Min[qmo["FullInputOrder"]]]
+    ]
+},
+    If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> op["POVM"]["Label"]], #] & @ QuantumCircuitOperator[op][qs, args]
+]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement, args___] :=
     If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> qmo["POVM"]["Label"]], #] & @ QuantumCircuitOperator[{qm, qmo}][args]

@@ -338,3 +338,72 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurementOperator - degenerate observable eigenbasis"]
+
+(* A rank-1 projector on a qutrit has a degenerate 0-eigenspace; at arbitrary precision
+   Eigensystem returns non-orthonormal eigenvectors there, and projectors built from the
+   skewed basis silently corrupted the outcome probabilities for some KCBS pentagon
+   projectors (k = 2, 3) while others were fine. All five expectation values are exactly
+   Cos[alpha]^2 = 1/Sqrt[5] by symmetry. *)
+VerificationTest[
+    Block[{sol, alpha, v, P, qs},
+        sol = Solve[Cos[a]^2 + Sin[a]^2 Cos[4 Pi/5] == 0 && 0 < a < Pi/2, a];
+        alpha = a /. First[sol];
+        v[k_] := N[{Cos[alpha], Sin[alpha] Cos[4 Pi k/5], Sin[alpha] Sin[4 Pi k/5]}, 16];
+        P[k_] := Outer[Times, v[k], v[k]];
+        qs = QuantumState[{1, 0, 0}, {3}];
+        Max @ Abs[N @ Table[QuantumMeasurementOperator[P[k]][qs]["Mean"], {k, 0, 4}] - N[1/Sqrt[5]]] < 1*^-10
+    ],
+    True,
+    TestID -> "DegenerateEigenbasis-KCBS-arbitrary-precision"
+]
+
+(* same pentagon at machine precision *)
+VerificationTest[
+    Block[{sol, alpha, v, P, qs},
+        sol = Solve[Cos[a]^2 + Sin[a]^2 Cos[4 Pi/5] == 0 && 0 < a < Pi/2, a];
+        alpha = a /. First[sol];
+        v[k_] := N @ {Cos[alpha], Sin[alpha] Cos[4 Pi k/5], Sin[alpha] Sin[4 Pi k/5]};
+        P[k_] := Outer[Times, v[k], v[k]];
+        qs = QuantumState[{1, 0, 0}, {3}];
+        Max @ Abs[Table[QuantumMeasurementOperator[P[k]][qs]["Mean"], {k, 0, 4}] - N[1/Sqrt[5]]] < 1*^-8
+    ],
+    True,
+    TestID -> "DegenerateEigenbasis-KCBS-machine-precision"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurementOperator - order re-seating on direct state application"]
+
+(* A tensor-product observable whose factors were built with off-1 wire labels (output
+   wire {3} each, renumbered to {3, 4} by the tensor product) failed with
+   QuantumCircuitOperator::dim when applied directly to a two-qutrit state: phantom
+   wires 1-2 were padded at qubit dimension 2. A directly applied measurement has no
+   circuit context, so wire labels that do not fit the state are re-seated onto the
+   state's qudits. *)
+VerificationTest[
+    Block[{P0, opAB, qmo, w, qs},
+        P0 = Outer[Times, {1., 0., 0.}, {1., 0., 0.}];
+        opAB = QuantumTensorProduct[QuantumOperator[P0, {3}, {1}], QuantumOperator[P0, {3}, {2}]];
+        qmo = QuantumMeasurementOperator[opAB];
+        w = Normalize[{1., 2., 0.}];
+        qs = QuantumState[Flatten[Outer[Times, w, w]], {3, 3}];
+        {Head[qmo[qs]], Abs[N @ qmo[qs]["Mean"] - 1/25] < 1*^-8}
+    ],
+    {QuantumMeasurement, True},
+    TestID -> "OrderReseat-tensor-product-observable"
+]
+
+(* a measurement whose order fits inside a larger state is untouched by the re-seat *)
+VerificationTest[
+    Round[N @ Values @ QuantumMeasurementOperator["Z", {2}][
+        QuantumCircuitOperator[{"X" -> 2}][QuantumState["000"]]]["Probabilities"], 0.001],
+    {0., 1.},
+    TestID -> "OrderReseat-preserves-targeted-measurement"
+]
+
+EndTestSection[]

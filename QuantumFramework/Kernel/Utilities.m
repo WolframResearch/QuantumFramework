@@ -150,7 +150,7 @@ blockDiagonalMatrix[ms : {__ ? MatrixQ}] := MyBlockDiagonalMatrix[DeleteCases[ms
 
 
 
-Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
+Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, "Orthogonalize" -> False, Chop -> False}
 
 eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
     {values, vectors} = Chop @ Simplify @ Enclose[
@@ -183,6 +183,12 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         ]
     ];
     If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize[If[NumericQ[First[#]] && First[#] != 0, # / First[#], #]] & /@ vectors];
+    (* Eigensystem returns an arbitrary (generally non-orthonormal) basis within a degenerate
+       eigenspace, so the eigenvectors need not resolve the identity. Gram-Schmidt in the
+       (sorted) eigenvalue order repairs each degenerate block; distinct-eigenvalue vectors of
+       a Hermitian matrix are already orthogonal, so it leaves a well-conditioned basis
+       essentially unchanged. Numeric bases only. *)
+    If[ TrueQ[OptionValue["Orthogonalize"]] && ArrayQ[vectors, 2, NumericQ], vectors = Orthogonalize[vectors]];
 
     {values, vectors}
 ]

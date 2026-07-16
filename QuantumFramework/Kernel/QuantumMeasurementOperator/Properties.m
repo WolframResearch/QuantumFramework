@@ -221,7 +221,10 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
 
         tracedOperator = Chop @ Simplify @ QuantumPartialTrace[qmo, trace];
 
-        {eigenvalues, eigenvectors} = profile["Eigensystem"] @ Simplify @ tracedOperator["Eigensystem", "Sort" -> True];
+        (* "Orthogonalize" repairs the degenerate-eigenspace basis Eigensystem returns:
+           without it the eigen-projectors do not resolve the identity and the outcome
+           probabilities of a degenerate observable are silently wrong. *)
+        {eigenvalues, eigenvectors} = profile["Eigensystem"] @ Simplify @ tracedOperator["Eigensystem", "Sort" -> True, "Orthogonalize" -> True];
         eigenvalues = PadRight[Replace[defaultEigenvalues, Automatic -> eigenvalues], Length[eigenvectors], 0];
         projectors = projector /@ eigenvectors;
 
@@ -282,7 +285,7 @@ QuantumMeasurementOperatorProp[qmo_, "POVM", args___] := QuantumMeasurementOpera
 QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTemplate["c[``] = measure q[``];"][First[#2] - 1, #1 - 1] &, qmo["Target"]], "\n"]
 
 
-QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer ? NonNegative : 1] :=
+QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer : 1] :=
     QuantumMeasurementOperator[QuantumOperator[qmo]["Reorder", qmo["Order"] /. k_Integer ? Positive :> k + n], qmo["Target"] + n]
 
 QuantumMeasurementOperatorProp[qmo_, "Bend", autoShift : _Integer ? Positive : Automatic] := With[{
