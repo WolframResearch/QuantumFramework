@@ -9,6 +9,12 @@
 #   measure1     projective Z measurement on qubit 1 of the evolved state.
 #
 # The JSON parse happens outside all timed regions, as on every engine.
+#
+# Estimator: every phase row is min over 7 evaluations (samples=7 evals=1), a
+# budget pinned across all three engines (bench_phases_qf.wls,
+# bench_phases_stim.py): the min estimator is downward-biased by sample count,
+# so BenchmarkTools' auto-tuned sample budget would give this engine a lower
+# floor on sub-ms phases for reasons unrelated to the engine.
 using QuantumClifford, BenchmarkTools, JSON
 
 function build(ops)
@@ -40,9 +46,9 @@ for (n, m) in ((100, 2000), (500, 10000), (1000, 20000))
     gates = build(ops)
     s = runsim(n, gates)  # warm compile + evolved state for materialize/measure
 
-    pr("ingest", n, k, 1000 * @belapsed build($ops))
-    pr("simulate", n, k, 1000 * @belapsed runsim($n, $gates))
-    pr("materialize", n, k, 1000 * @belapsed (stab_to_gf2(stabilizerview($s)), phases(stabilizerview($s))))
-    pr("measure1", n, k, 1000 * @belapsed projectZ!(copy($s), 1))
+    pr("ingest", n, k, 1000 * @belapsed build($ops) samples=7 evals=1)
+    pr("simulate", n, k, 1000 * @belapsed runsim($n, $gates) samples=7 evals=1)
+    pr("materialize", n, k, 1000 * @belapsed (stab_to_gf2(stabilizerview($s)), phases(stabilizerview($s))) samples=7 evals=1)
+    pr("measure1", n, k, 1000 * @belapsed projectZ!(copy($s), 1) samples=7 evals=1)
 end
 println("DONE|qcjl")

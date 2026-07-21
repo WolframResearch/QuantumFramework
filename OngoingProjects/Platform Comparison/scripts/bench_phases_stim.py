@@ -18,6 +18,11 @@ Phases (each timed separately):
                analogue returns both outcome branches, which is more work).
 
 The neutral JSON op list is parsed outside all timed regions, as on every engine.
+
+Estimator: every phase row is min over 7 evaluations, a budget pinned across all
+three engines (bench_phases_qf.wls, bench_phases_qc.jl): the min estimator is
+downward-biased by sample count, so asymmetric rep budgets would bias sub-ms
+cross-engine ratios for reasons unrelated to the engines.
 """
 import json, os, time, stim
 from stim._detect_machine_architecture import _UNSTABLE_detect_march
@@ -60,8 +65,8 @@ for n in (100, 500, 1000):
     pr("simulate", n, k, timeit(lambda: stim.TableauSimulator().do(circuit)))
 
     s = stim.TableauSimulator(); s.do(circuit)
-    pr("materialize", n, k, timeit(lambda: s.current_inverse_tableau().to_numpy(), reps=3))
-    pr("mat_forward", n, k, timeit(lambda: s.canonical_stabilizers(), reps=3))
+    pr("materialize", n, k, timeit(lambda: s.current_inverse_tableau().to_numpy()))
+    pr("mat_forward", n, k, timeit(lambda: s.canonical_stabilizers()))
 
     # single measurement on the evolved (entangled) state: rebuild each rep so the
     # collapse is never measured on an already-collapsed tableau
@@ -69,5 +74,5 @@ for n in (100, 500, 1000):
         sm = stim.TableauSimulator(); sm.do(circuit)
         t0 = time.perf_counter(); sm.measure(0)
         return (time.perf_counter() - t0) * 1000
-    pr("measure1", n, k, min(measure_once() for _ in range(5)))
+    pr("measure1", n, k, min(measure_once() for _ in range(7)))
 print("DONE|stim")
