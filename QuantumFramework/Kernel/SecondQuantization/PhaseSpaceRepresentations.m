@@ -17,14 +17,17 @@ PackageExport["HusimiQFunction"]
 WignerRepresentation::usage =
 "\!\(\*RowBox[{\"WignerRepresentation\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"xmin\",\"TI\"], \",\", StyleBox[\"xmax\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"pmin\", \"TI\"], \",\", StyleBox[\"pmax\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the numerical Wigner quasi-probability distribution W(x,p)for the single mode \!\(\*StyleBox[\"state\", \"TI\"]\). Returns an InterpolatingFunction over the specified x and p limits.\n\!\(\*RowBox[{\"WignerRepresentation\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", StyleBox[\"opts\", \"TI\"]}], \"]\"}]\) options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\)(default), \"GridSize\" \[Rule] 100 (default).";
 
+WignerRepresentation::multimode = "WignerRepresentation is only defined for single-mode states. The provided state has `1` mode(s).";
+
 Options[WignerRepresentation]={
 "GaussianScaling"->Sqrt[2],
 "GridSize"->100
 };
 
-WignerRepresentation[psi_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPattern[]] := Module[{rho, M, X, Y, A2, B, w0, diag,
- 
-    g, xvec, pvec},
+WignerRepresentation[psi_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPattern[]] := Module[
+    {rho, M, X, Y, A2, B, w0, diag, g, xvec, pvec},
+
+    If[psi["Qudits"] =!= 1, Message[WignerRepresentation::multimode, psi["Qudits"]]; Return[$Failed]];
 
     rho = psi["DensityMatrix"];
 
@@ -121,20 +124,25 @@ WignerFunction::usage =
 "\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) gives the Wigner-function W(\[Alpha]) for the state \[Rho].\n\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"x\", \"TI\"], \",\", StyleBox[\"p\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Wigner quasi-probability distribution for quantum state \[Rho] using real quadrature variables x and p.\n\!\(\*RowBox[{\"WignerFunction\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"SymbolicForm->\", StyleBox[\"form\", \"TI\"]}], \"]\"}]\) \!\(\*StyleBox[\"'Wirtinger'\", \"TI\"]\) treats \[Alpha] and \[Alpha]\[Conjugate] as independent variables, \!\(\*StyleBox[\"'LaguerreForm'\", \"TI\"]\) holds Laguerre polynomials Inactive";
 
 
+WignerFunction::multimode = "WignerFunction is only defined for single-mode states. The provided state has `1` mode(s).";
+
 WignerFunction::badopt = "Unknown SymbolicForm `1`. Use Automatic, \"Wirtinger\", or \"LaguerreForm\".";
 
 Options[WignerFunction] = {SymbolicForm -> Automatic};
 
-WignerFunction[\[Rho]_QuantumState, {x_, p_}, opts:OptionsPattern[]] := 
-  1/2 ComplexExpand[ WignerFunction[\[Rho], (x + I p)/Sqrt[2], opts] ];
+WignerFunction[\[Rho]_QuantumState, {x_, p_}, opts:OptionsPattern[]] :=
+  If[\[Rho]["Qudits"] =!= 1,
+    (Message[WignerFunction::multimode, \[Rho]["Qudits"]]; $Failed),
+    1/2 ComplexExpand[WignerFunction[\[Rho], (x + I p)/Sqrt[2], opts]]];
 
-WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[\[Alpha]] := 
+WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[\[Alpha]] :=
   Block[{
     mat = \[Rho]["DensityMatrix"],
     form = OptionValue[SymbolicForm],
     pos,
     vals
   },
+    If[\[Rho]["Qudits"] =!= 1, Message[WignerFunction::multimode, \[Rho]["Qudits"]]; Return[$Failed]];
     pos = mat["ExplicitPositions"];
     vals = mat["ExplicitValues"];
     Which[
@@ -165,16 +173,21 @@ WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[
 HusimiQFunction::usage =
 "\!\(\*RowBox[{\"HusimiQFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) computes Q(\[Alpha]) for the state \[Rho] using the complex amplitude \[Alpha].\n\!\(\*RowBox[{\"HusimiQFunction\", \"[\", RowBox[{StyleBox[\"\[Rho]\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"x\", \"TI\"], \",\", StyleBox[\"p\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Husimi Q function for quantum state \[Rho] using real quadrature variables x and p."
 
-HusimiQFunction[\[Rho]_QuantumState, {x_, p_}] := 
-  1/2 ComplexExpand[HusimiQFunction[\[Rho], (x + I p)/Sqrt[2]]];
+HusimiQFunction::multimode = "HusimiQFunction is only defined for single-mode states. The provided state has `1` mode(s).";
 
-HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] := 
+HusimiQFunction[\[Rho]_QuantumState, {x_, p_}] :=
+  If[\[Rho]["Qudits"] =!= 1,
+    (Message[HusimiQFunction::multimode, \[Rho]["Qudits"]]; $Failed),
+    1/2 ComplexExpand[HusimiQFunction[\[Rho], (x + I p)/Sqrt[2]]]];
+
+HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] :=
  Block[{
    mat = \[Rho]["DensityMatrix"],
    pos,
    val},
+   If[\[Rho]["Qudits"] =!= 1, Message[HusimiQFunction::multimode, \[Rho]["Qudits"]]; Return[$Failed]];
    pos = mat["ExplicitPositions"];
-   val = mat["ExplicitValues"]; 
+   val = mat["ExplicitValues"];
    1/\[Pi] Dot[val, \[ScriptCapitalK]HusimiMN[\[Alpha], pos[[All,2]] - 1, pos[[All,1]] - 1]]
    ]
 
@@ -182,6 +195,8 @@ HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] :=
 (* ::Input::Initialization::Plain:: *)
 HusimiQRepresentation::usage =
 "\!\(\*RowBox[{\"HusimiQRepresentation\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"xmin\", \"TI\"], \",\", StyleBox[\"xmax\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{StyleBox[\"pmin\", \"TI\"], \",\", StyleBox[\"pmax\", \"TI\"]}], \"}\"}]}], \"]\"}]\) computes the Husimi Q quasi-probability distribution Q(x,p). Returns an InterpolatingFunction over the specified x and p limits.\n\!\(\*RowBox[{\"HusimiQRepresentation\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", StyleBox[\"opts\", \"TI\"]}], \"]\"}]\) Options: \"GaussianScaling\" \[Rule] \!\(\*SqrtBox[\(2\)]\) (default), \"GridSize\" -> 100 (default).";
+
+HusimiQRepresentation::multimode = "HusimiQRepresentation is only defined for single-mode states. The provided state has `1` mode(s).";
 
 Options[HusimiQRepresentation]={
 "GaussianScaling"->Sqrt[2],
@@ -191,6 +206,9 @@ Options[HusimiQRepresentation]={
 HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
      OptionsPattern[]] :=
     Module[{X, Y, amat, qmat, vals, vecs, g, xvec, pvec, outerList},
+        
+        If[\[Psi]["Qudits"] =!= 1, Message[HusimiQRepresentation::multimode, \[Psi]["Qudits"]]; Return[$Failed]];
+        
         g = OptionValue["GaussianScaling"];
 
         xvec = Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
