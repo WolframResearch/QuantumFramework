@@ -476,9 +476,10 @@ something the numeric engines structurally lack:
   methods, tomography, or the rest of the Wolfram Language without leaving the object model.
 
   On raw Clifford throughput QF is a *real option*, not a toy: $2\times10^4$ gates on $1000$ qubits in
-  $67.7\,\mathrm{ms}$, ahead of QuantumClifford.jl at $n=1000$, cross-validated against both
-  (`Tests/Stabilizer/CrossPackage_Stim.wlt`, `CrossPackage_QuantumClifford.wlt`). It is $\sim\!50$ to
-  $85\times$ off Stim, so "competitive with Stim on throughput" is not a claim this document makes.
+  $58.6\,\mathrm{ms}$, ahead of QuantumClifford.jl at $n=1000$, cross-validated against both
+  (`Tests/Stabilizer/CrossPackage_Stim.wlt`, `CrossPackage_QuantumClifford.wlt`). It is $11$ to
+  $16\times$ off Stim end to end ($4$ to $7\times$ kernel to kernel), so "competitive with Stim on
+  throughput" is not a claim this document makes.
 
 **Use Stim or QuantumClifford.jl when** the task is *high-volume fault-tolerance Monte Carlo and
 decoding*:
