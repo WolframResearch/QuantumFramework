@@ -252,11 +252,10 @@ BeginTestSection["AngularMomentum - eigenstate expectations"]
 (* The basis-aware round trip that a content check cannot see: the k-th element
    of the named eigenbasis carries m = -j + k - 1, so the expectation of the
    matching operator on that eigenstate must return exactly that eigenvalue.
-   Includes the degenerate m = 0 eigenstate. The trace form runs for all three
-   components; the bra-op-ket form is additionally pinned for JX and JZ, whose
-   eigenbases are real (the Dagger/Scalar contraction mishandles a complex dual
-   basis, a defect in the bra route itself, reproduced on non-J operators too,
-   so JY is asserted through the trace form only). *)
+   Includes the degenerate m = 0 eigenstate. Both the trace form and the
+   bra-op-ket form run for all three components; JY's complex eigenbasis makes
+   the bra form exercise the conjugation of a complex dual basis, which the
+   real JX and JZ eigenbases cannot see. *)
 expectJ[name_, j_, k_] := With[{op = QuantumOperator[name[j]], st = QuantumState[UnitVector[2 j + 1, k], name[j]]},
     Simplify[Tr[Normal[op["MatrixRepresentation"]] . Normal[QuantumState[st, QuantumBasis[2 j + 1]]["DensityMatrix"]]]]
 ]
@@ -271,15 +270,14 @@ Do[
 
 Do[
     VerificationTest[braketJ[name, j, k], -j + k - 1, TestID -> "Braket-" <> name <> "-" <> ToString[j] <> "-m" <> ToString[-j + k - 1]],
-    {name, {"JX", "JZ"}}, {j, {1/2, 1, 3/2}}, {k, 2 j + 1}
+    {name, {"JX", "JY", "JZ"}}, {j, {1/2, 1, 3/2}}, {k, 2 j + 1}
 ]
 
-(* CHARACTERIZATION (present behavior, not an endorsement): the Dagger/Scalar
-   contraction drops the bra conjugation when the state's basis has complex
-   elements, so the bra route returns the wrong value on the JY eigenbasis
-   (the trace-form tier above carries the actual physics). This test flips and
-   announces the change if the bra route learns complex dual bases. *)
-VerificationTest[braketJ["JY", 1, 3] =!= 1, True, TestID -> "Braket-JY-complex-dual-characterization"]
+(* The complex-dual pin: the bra route must conjugate the dual JY eigenbasis,
+   so the m = +1 eigenstate returns its eigenvalue through Dagger/Scalar just
+   as it does through the trace form. An unconjugated contraction returns 0
+   here while leaving every real-eigenbasis braket above untouched. *)
+VerificationTest[braketJ["JY", 1, 3], 1, TestID -> "Braket-JY-complex-dual"]
 
 EndTestSection[]
 

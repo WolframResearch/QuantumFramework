@@ -233,8 +233,14 @@ QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
 QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["OutputQudits"]], Range[qb["InputQudits"]]]
 
 
+(* A dual-flagged leg contracts through the inverse of the elements it stores
+   (MatrixInverse[ReducedMatrix] on the input side, and symmetrically on the
+   output side), so for a unitary basis E a transposed leg stores Conjugate[E]
+   (its inverse is Transpose[E]) while a daggered leg stores E itself (its
+   inverse is ConjugateTranspose[E]). *)
+
 QuantumBasisProp[qb_, "Transpose"] := simplifyLabel @ QuantumBasis[qb,
-    "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
+    "Input" -> qb["Output"]["Dual"]["Conjugate"], "Output" -> qb["Input"]["Dual"]["Conjugate"],
     "Label" -> Superscript[qb["Label"], "T"]
 ]
 
@@ -285,8 +291,11 @@ QuantumBasisProp[qb_, "SplitDual", n_Integer ? Negative] := qb["SplitDual", Mod[
 QuantumBasisProp[qb_, "SplitDual", _] := qb["SplitDual", qb["Qudits"]]
 
 
+(* Dual flags only: a daggered leg keeps the original elements so that the
+   inverse-based dual contraction pairs each bra with its own ket (see the
+   "Transpose" note above). *)
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumBasis[qb,
-    "Input" -> qb["Output"]["Dual"]["Conjugate"], "Output" -> qb["Input"]["Dual"]["Conjugate"],
+    "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
     "Label" -> SuperDagger[qb["Label"]]
 ]
 
