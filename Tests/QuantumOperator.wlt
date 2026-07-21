@@ -623,6 +623,18 @@ VerificationTest[
     TestID -> "PartialTranspose-operator-PauliY-pair2"
 ]
 
+(* CHARACTERIZATION (contract boundary, not an endorsement): the conjugation
+   convention makes transposition frame-faithful for orthonormal frames, where
+   Inverse[Conjugate[E]] equals Transpose[E]. A non-orthonormal frame is
+   outside the contract; this test flips if that boundary moves. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Y"], QuantumBasis[QuditBasis[{{1, I}, {1, 2}}]]]},
+        Simplify[Normal[op["Transpose"]["MatrixRepresentation"]] - Transpose[Normal[op["MatrixRepresentation"]]]] === {{0, 0}, {0, 0}}
+    ],
+    False,
+    TestID -> "Transpose-nonorthonormal-out-of-contract"
+]
+
 (* Bending a ket leg into an operator input transposes that leg: the
    computational matrix of the bent operator is the reshape of the
    computational vector. *)

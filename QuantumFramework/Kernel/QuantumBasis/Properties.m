@@ -243,10 +243,20 @@ QuantumBasisProp[qb_, "Inverse"] := simplifyLabel @ QuantumBasis[qb,
     "Label" -> Superscript[qb["Label"], "-1"]
 ]
 
-QuantumBasisProp[qb_, "Permute", perm_Cycles] :=
-    QuantumBasis @@ Thread[{"Output", "Input"} -> QuantumTensorProduct[qb["Output"], qb["Input"]["Dual"]]["Permute", perm][
-        "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
-    ]]
+(* A leg carried across the output/input divide is transposed: it contracts
+   through the inverse of the elements it stores, so the moved legs, and only
+   those, get their elements conjugated. The contract is frame-faithful for
+   orthonormal legs, where Inverse[Conjugate[E]] is Transpose[E]; a
+   non-orthonormal leg is outside it. *)
+QuantumBasisProp[qb_, "Permute", perm_Cycles] := With[{
+    moved = Pick[Range[qb["Qudits"]], toggleSwap[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]]
+},
+    QuantumBasis @@ Thread[{"Output", "Input"} ->
+        QuantumTensorProduct[qb["Output"], qb["Input"]["Dual"]]["Permute", perm]["Conjugate", moved][
+            "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
+        ]
+    ]
+]
 
 QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
     "Output" -> qb["Output"]["Reverse"], "Input" -> qb["Input"]["Reverse"],
@@ -256,12 +266,16 @@ QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
 QuantumBasisProp[qb_, "Split", n_Integer] :=
     QuantumBasis["Output" -> #1, "Input" -> #2, qb["Options"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
 
+(* Re-seating a leg on the other side of the divide transposes it: the moved
+   legs get the Dual flag toggled and their elements conjugated, so the
+   computational representation of the re-seated object is the reshape of the
+   original one. *)
 QuantumBasisProp[qb_, "SplitDual", n_Integer] /; 0 <= n <= qb["Qudits"] :=
     Which[
         qb["OutputQudits"] < n,
-        QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]] & @@ #1["Split", qb["OutputQudits"]]), "Input" -> #2, qb["Options"]],
+        QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]["Conjugate"]] & @@ #1["Split", qb["OutputQudits"]]), "Input" -> #2, qb["Options"]],
         qb["OutputQudits"] > n,
-        QuantumBasis["Output" -> #1, "Input" -> (QuantumTensorProduct[#1["Dual"], #2] & @@ #2["Split", qb["OutputQudits"] - n]), qb["Options"]],
+        QuantumBasis["Output" -> #1, "Input" -> (QuantumTensorProduct[#1["Dual"]["Conjugate"], #2] & @@ #2["Split", qb["OutputQudits"] - n]), qb["Options"]],
         True,
         QuantumBasis["Output" -> #1, "Input" -> #2, qb["Options"]]
     ] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]

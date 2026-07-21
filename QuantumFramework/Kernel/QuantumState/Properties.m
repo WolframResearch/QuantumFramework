@@ -771,12 +771,20 @@ QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
     QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixDimensions"]]], qb]
 ]
 
-QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := QuantumState[
-    ArrayReshape[
-        Transpose[ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]], Cycles[{#, # + qs["Qudits"]} & /@ qudits]],
-        qs["MatrixDimensions"]
-    ],
-    qs["Basis"]
+(* Partial transpose swaps the ket and bra legs of the chosen qudits, so those
+   qudits' basis elements are conjugated (dual contraction convention, see
+   QuantumBasis "Transpose"); the other qudits keep their elements. *)
+QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := With[{out = qs["Basis"]["OutputQudits"]},
+    QuantumState[
+        ArrayReshape[
+            Transpose[ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]], Cycles[{#, # + qs["Qudits"]} & /@ qudits]],
+            qs["MatrixDimensions"]
+        ],
+        QuantumBasis[qs["Basis"],
+            "Output" -> qs["Output"]["Conjugate", Select[qudits, # <= out &]],
+            "Input" -> qs["Input"]["Conjugate", Select[qudits, # > out &] - out]
+        ]
+    ]
 ]
 
 QuantumStateProp[qs_, "ReverseOutput"] := qs["PermuteOutput", FindPermutation[Reverse @ Range @ qs["OutputQudits"]]]
