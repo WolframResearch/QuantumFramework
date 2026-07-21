@@ -147,6 +147,15 @@ QuantumState[qs_ ? QuantumStateQ, args : PatternSequence[Except[_ ? QuantumBasis
 
 (* change of basis *)
 
+(* row-side transform of a doubled (density-matrix) state: the flattened (output, input)
+   index transforms as Out (x) (In^-1)^T, the vec image of Out . S . In^-1, so a dual
+   input leg enters through the inverse transpose (conjugated for a unitary frame);
+   with no input legs this is the basis ReducedMatrix itself *)
+doubledReducedMatrix[qb_] := If[ qb["InputDimension"] === 1,
+    qb["ReducedMatrix"],
+    KroneckerProduct[qb["Output"]["ReducedMatrix"], Transpose[MatrixInverse[qb["Input"]["ReducedMatrix"]]]]
+]
+
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["SortedQ"] := QuantumState[qs, newBasis["Sort"]]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis || qs["ComputationalQ"] && newBasis["ComputationalQ"] := QuantumState[qs["State"], newBasis]
@@ -169,17 +178,19 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
             newBasis
         ],
         qs["MatrixQ"],
-        QuantumState[
-            (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
-            ConfirmQuiet[
-                Dot[
-                    MatrixInverse[newBasis["ReducedMatrix"]],
-                    qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . MatrixInverse[qs["Basis"]["ReducedMatrix"]],
-                    newBasis["ReducedMatrix"]
+        With[{oldMatrix = doubledReducedMatrix[qs["Basis"]], newMatrix = doubledReducedMatrix[newBasis]},
+            QuantumState[
+                (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
+                ConfirmQuiet[
+                    Dot[
+                        MatrixInverse[newMatrix],
+                        oldMatrix . qs["DensityMatrix"] . MatrixInverse[oldMatrix],
+                        newMatrix
+                    ],
+                    Dot::dotsh
                 ],
-                Dot::dotsh
-            ],
-            newBasis
+                newBasis
+            ]
         ],
         True,
         $Failed

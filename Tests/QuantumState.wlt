@@ -399,3 +399,79 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumState - matrix-route change of basis"]
+
+(* Shared fixtures: CNOT dressed in the PauliY (x) PauliY frame is the canonical
+   operator-shaped state whose INPUT basis has complex elements; the PauliX twin
+   is the real-frame control; the qutrit clock in the Fourier[3] frame covers
+   d > 2. For a pure operator-shaped state the vector route (StateVector) and the
+   matrix route (MatrixState -> DensityMatrix) must land on the same computational
+   object: rho_comp === w . w^dagger exactly. *)
+yyCnot = QuantumOperator[QuantumOperator["CNOT"], QuantumBasis[{"PauliY", "PauliY"}]]["State"];
+xxCnot = QuantumOperator[QuantumOperator["CNOT"], QuantumBasis[{"PauliX", "PauliX"}]]["State"];
+fourierClock = QuantumOperator[QuantumOperator["Z"[3]], QuantumBasis["Fourier"[3]]]["State"];
+
+(* The vector route is the ground truth: rebasing must not change the abstract
+   operator, so the computational statevector is vec(CNOT) exactly. *)
+VerificationTest[
+    Simplify[Normal @ yyCnot["Computational"]["StateVector"] - Flatten[Normal @ QuantumOperator["CNOT"]["Matrix"]]],
+    ConstantArray[0, 16],
+    TestID -> "MatrixRoute-VectorRouteGroundTruth-YY"
+]
+
+(* Cross-route agreement on a complex input frame: the dual input leg of the
+   doubled object must enter conjugated, matching vec(Out . S . In^-1). *)
+VerificationTest[
+    With[{w = Normal @ yyCnot["Computational"]["StateVector"]},
+        Simplify[Normal @ yyCnot["MatrixState"]["Computational"]["DensityMatrix"] - KroneckerProduct[w, Conjugate[w]]]
+    ],
+    ConstantArray[0, {16, 16}],
+    TestID -> "MatrixRoute-CrossRouteAgreement-YY"
+]
+
+(* Same law on a qutrit with a complex Fourier input frame. *)
+VerificationTest[
+    With[{w = Normal @ fourierClock["Computational"]["StateVector"]},
+        Simplify[Normal @ fourierClock["MatrixState"]["Computational"]["DensityMatrix"] - KroneckerProduct[w, Conjugate[w]]]
+    ],
+    ConstantArray[0, {9, 9}],
+    TestID -> "MatrixRoute-CrossRouteAgreement-Fourier3"
+]
+
+(* Real input frames are blind to the dual conjugation; the PauliX twin pins the
+   already-correct behavior. *)
+VerificationTest[
+    With[{w = Normal @ xxCnot["Computational"]["StateVector"]},
+        Simplify[Normal @ xxCnot["MatrixState"]["Computational"]["DensityMatrix"] - KroneckerProduct[w, Conjugate[w]]]
+    ],
+    ConstantArray[0, {16, 16}],
+    TestID -> "MatrixRoute-RealFrameRegression-XX"
+]
+
+(* Round trip: computational and back into the tagged frame must reproduce the
+   stored density matrix, so both directions of the transform stay inverse to
+   each other. *)
+VerificationTest[
+    With[{ms = yyCnot["MatrixState"]},
+        Simplify[Normal @ QuantumState[ms["Computational"], ms["Basis"]]["DensityMatrix"] - Normal @ ms["DensityMatrix"]]
+    ],
+    ConstantArray[0, {16, 16}],
+    TestID -> "MatrixRoute-RoundTrip-YY"
+]
+
+(* Input-rank-0 mixed states have no dual leg: a frame-diagonal mixture reads
+   computationally as the same mixture of the frame's own projectors. *)
+VerificationTest[
+    With[{
+        m = Normal @ QuantumState[DiagonalMatrix[{1/3, 2/3}], QuantumBasis["PauliY"]]["Computational"]["DensityMatrix"],
+        els = Normal /@ QuantumBasis["PauliY"]["Output"]["Elements"]
+    },
+        Simplify[m - (KroneckerProduct[els[[1]], Conjugate[els[[1]]]]/3 + 2 KroneckerProduct[els[[2]], Conjugate[els[[2]]]]/3)]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "MatrixRoute-MixedInputRankZero-YFrame"
+]
+
+EndTestSection[]
