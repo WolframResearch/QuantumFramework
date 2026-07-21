@@ -73,12 +73,16 @@ $stabilizerCompileTarget := $stabilizerCompileTarget = (
 (* ---- generator-major pack / unpack (vectorized, packed-array fast) ---- *)
 
 (* {rows, len}-bit matrix -> {rows, #words} machine-int words.                   *)
-(* The word values reach 2^62, so the Dot result comes back UNPACKED; force it    *)
-(* back to a packed Int64 array, otherwise the compiled kernel silently falls     *)
-(* back to interpreted evaluation on an unpacked argument.                        *)
+(* Normal first: Developer`ToPackedArray is a NO-OP on a SparseArray (it stays    *)
+(* sparse), and a sparse word matrix makes the compiled kernel reject its         *)
+(* argument (CompiledFunction::cfta) and run interpreted; Normal on an already-   *)
+(* dense list returns it unchanged, so the dense path pays nothing. The word      *)
+(* values reach 2^62, so the Dot result comes back UNPACKED; force it back to a   *)
+(* packed Int64 array, otherwise the compiled kernel silently falls back to       *)
+(* interpreted evaluation on an unpacked argument.                                *)
 packGenRows[bm_, nw_] := Developer`ToPackedArray @ Dot[
     ArrayReshape[
-        PadRight[Developer`ToPackedArray[bm], {Length[bm], nw $bitsPerWord}],
+        PadRight[Developer`ToPackedArray[Normal @ bm], {Length[bm], nw $bitsPerWord}],
         {Length[bm], nw, $bitsPerWord}
     ],
     $packPowers

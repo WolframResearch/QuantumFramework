@@ -2332,6 +2332,49 @@ VerificationTest[
     TestID -> "Tier10-IntegerCtor-ClosedForm"
 ]
 
+(* The register tableau members must be packed dense at every size. Above       *)
+(* ~10^6 entries (q > 1000) IdentityMatrix's default TargetStructure ->          *)
+(* Automatic switches to a structured array, whose PadRight is a SparseArray;    *)
+(* a SparseArray member cannot be packed (Developer`ToPackedArray is a no-op     *)
+(* on it), the compiled fold rejects the argument (CompiledFunction::cfta),      *)
+(* and ApplyCircuit silently runs interpreted at ~10^3x the per-gate cost.      *)
+(* Result-comparison tests cannot catch that fallback: only the storage form    *)
+(* can.                                                                          *)
+VerificationTest[
+    Developer`PackedArrayQ /@ PauliStabilizer[1024]["Tableau"],
+    {True, True},
+    TestID -> "Tier10-IntegerCtor-PackedDenseAboveThreshold"
+]
+
+(* End-to-end above the threshold: compiled fold === per-gate fold at n=1024,   *)
+(* and message-free (a CompiledFunction::cfta fallback fails this test even      *)
+(* though the fallback result would still be correct).                           *)
+VerificationTest[
+    Module[{specs = Table[randCircSpec[1024], {100}], compiled, folded},
+        compiled = PauliStabilizer[1024]["ApplyCircuit", specs];
+        folded = Fold[#1[#2] &, PauliStabilizer[1024], specs];
+        compiled["Tableau"] === folded["Tableau"] && compiled["Signs"] === folded["Signs"]
+    ],
+    True,
+    TestID -> "Tier10-CompiledFold-AboveThreshold-n1024"
+]
+
+(* Tableau members supplied as SparseArray (association constructor) must still *)
+(* reach the compiled fold: packGenRows densifies before packing, message-free,  *)
+(* and the result matches the packed-dense register bit-for-bit.                 *)
+VerificationTest[
+    Module[{n = 63, specs, dense, sparse, a, b},
+        specs = Table[randCircSpec[n], {100}];
+        dense = PauliStabilizer[n];
+        sparse = PauliStabilizer[<|"Signs" -> dense["Signs"], "Tableau" -> SparseArray /@ dense["Tableau"]|>];
+        a = dense["ApplyCircuit", specs];
+        b = sparse["ApplyCircuit", specs];
+        Normal[a["Tableau"]] === Normal[b["Tableau"]] && a["Signs"] === b["Signs"]
+    ],
+    True,
+    TestID -> "Tier10-SparseTableauMembers-CompiledFold"
+]
+
 VerificationTest[
     PauliStabilizer[2]["H", 1]["H", 2]["ApplyCircuit", {"CZ" -> {1, 2}}]["Stabilizers"],
     PauliStabilizer[2]["H", 1]["H", 2]["ApplyCircuit", {"CZ" -> {2, 1}}]["Stabilizers"],
