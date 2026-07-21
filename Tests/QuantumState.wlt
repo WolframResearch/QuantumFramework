@@ -350,6 +350,33 @@ VerificationTest[
     TestID -> "CrossBasis-MixedNonComputationalRest"
 ]
 
+(* An unnormalized input passes through faithfully: the rebase must not
+   silently renormalize. *)
+VerificationTest[
+    xFrameDiag[QuantumState[{2, 0}]]["Norm"],
+    2,
+    TestID -> "CrossBasis-UnnormalizedFaithful"
+]
+
+(* The fast path agrees with the general operator route on stored data, frame
+   tag, and computational read (concrete and symbolic phase). *)
+VerificationTest[
+    With[{
+        fastC = xFrameDiag[QuantumState[{1, 0}]],
+        genC = (QuantumOperator[xFrameDiag] @ QuantumOperator[QuantumState[{1, 0}]])["Sort"]["State"],
+        fastS = QuantumOperator[DiagonalMatrix[{1, Exp[I \[FormalTheta]]}], QuantumBasis["PauliX"]]["State"][QuantumState[{1, 0}]],
+        genS = (QuantumOperator[QuantumOperator[DiagonalMatrix[{1, Exp[I \[FormalTheta]]}], QuantumBasis["PauliX"]]["State"]] @ QuantumOperator[QuantumState[{1, 0}]])["Sort"]["State"]
+    },
+        {
+            Normal @ fastC["State"] === Normal @ genC["State"],
+            fastC["Output"]["ComputationalQ"] === genC["Output"]["ComputationalQ"] === False,
+            FullSimplify[Normal @ fastS["Computational"]["StateVector"] - Normal @ genS["Computational"]["StateVector"]]
+        }
+    ],
+    {True, True, {0, 0}},
+    TestID -> "CrossBasis-FastMatchesGeneralRoute"
+]
+
 (* Independent numeric reference for the composition law. *)
 VerificationTest[
     N @ Normal @ QuantumOperator[DiagonalMatrix[{1, Exp[I 0.7]}], QuantumBasis["PauliX"]]["State"][QuantumState[{1, 0}]]["Computational"]["StateVector"],
