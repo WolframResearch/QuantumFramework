@@ -40,6 +40,10 @@ def bench_statevector(n, reps_layers=3):
 
 # ---- Benchmark C(stim part): stabilizer sim, m random Clifford gates on n qubits ----
 def bench_stim(n, m, seed=1):
+    # The stream is compiled into one stim.Circuit and applied with a single sim.do(),
+    # so the gate loop runs inside C++. One Python call per gate instead measures the
+    # pybind11 boundary (~0.5 us/gate, flat in n) rather than the tableau engine, which
+    # is O(n) per gate and so cannot be flat. Circuit build stays outside the timing.
     import stim
     rng=np.random.default_rng(seed)
     ops=[]
@@ -50,12 +54,10 @@ def bench_stim(n, m, seed=1):
             a,b=rng.integers(n),rng.integers(n)
             while b==a: b=rng.integers(n)
             ops.append(('CNOT', int(a), int(b)))
-    def run():
-        s=stim.TableauSimulator()
-        for op in ops:
-            if op[0]=='H': s.h(op[1])
-            else: s.cnot(op[1],op[2])
-    return timeit(run), ops
+    circuit=stim.Circuit()
+    for op in ops:
+        circuit.append('CNOT',[op[1],op[2]]) if op[0]=='CNOT' else circuit.append('H',[op[1]])
+    return timeit(lambda: stim.TableauSimulator().do(circuit)), ops
 
 # ---- Benchmark B: amplitude-damped qubit, QuTiP mesolve; return final excited-state pop + time ----
 def bench_qutip_lindblad():

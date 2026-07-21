@@ -5,7 +5,7 @@ When QF offers multiple paths to the same answer, this records which is correct,
 
 ## Stabilizer simulation: complexity map (`Kernel/Stabilizer/`, updated through `02cc92d9`)
 
-For Clifford / stabilizer circuits, the `PauliStabilizer` tableau path is exponentially cheaper than the dense state vector, **but only as long as you stay in the tableau**. The moment you materialize, you pay O(2ⁿ) or O(4ⁿ). **Perf note (June 2026 rework):** the hot paths now run on a packed machine-word representation (`Packed.m`, 62 tableau bits/word) and, for whole circuits, a `Compile`-to-C bulk fold (`Compiled.m`). Asymptotics below are unchanged; the constants dropped by 1-3 orders of magnitude, putting QF at 2.5-5.3× of Stim and ahead of QuantumClifford.jl at $n=1000$ (full benchmarks: `OngoingProjects/Platform Comparison/QF-Stabilizer-Optimization-Report.md`).
+For Clifford / stabilizer circuits, the `PauliStabilizer` tableau path is exponentially cheaper than the dense state vector, **but only as long as you stay in the tableau**. The moment you materialize, you pay O(2ⁿ) or O(4ⁿ). **Perf note (June 2026 rework):** the hot paths now run on a packed machine-word representation (`Packed.m`, 62 tableau bits/word) and, for whole circuits, a `Compile`-to-C bulk fold (`Compiled.m`). Asymptotics below are unchanged; the constants dropped by 1-3 orders of magnitude, putting QF ahead of QuantumClifford.jl at $n=1000$; vs Stim the compiled kernel is within 4-7× (scalar build) and the end-to-end path 11-16× with fast I/O, boundary-dependent (phase-resolved 2026-07-20 in `OngoingProjects/Platform Comparison/QF-Stabilizer-vs-Packages.md` §2, after two opposite-direction single-ratio errors).
 
 | Operation | Cost | Where | Note |
 |---|---|---|---|

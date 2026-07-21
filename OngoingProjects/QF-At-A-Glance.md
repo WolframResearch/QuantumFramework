@@ -48,13 +48,16 @@ cleanly in three head-to-head benchmarks on identical tasks.
 | Regime | Task | QF vs the specialist | Verdict |
 |---|---|---|---|
 | State vector | $105$-gate circuit, full readout | $\approx 130\times$ slower than Qiskit Aer at $n=12$ ($283\,\mathrm{ms}$ vs $2.1\,\mathrm{ms}$), $\approx 320\times$ at $n=16$ | behind by $\sim 10^2\times$ |
-| Stabilizer | identical Clifford stream | within $2.5\times$ to $5.3\times$ of Stim; **beats** QuantumClifford.jl at $n=1000$ ($58$ vs $108\,\mathrm{ms}$) | genuinely competitive |
+| Stabilizer | identical Clifford stream | kernel within $4$-$7\times$ of scalar Stim ($4.45$ vs $1.01\,\mathrm{ms}$ at $n=1000$); end-to-end $11$-$16\times$ with fast I/O (boundary-dependent); **beats** QuantumClifford.jl at $n=1000$ ($59$ vs $110\,\mathrm{ms}$) | competitive kernel, boundary-dominated totals |
 | Open system | driven, damped qubit (Lindblad) | $\approx 9\times$ slower than QuTiP ($17$ vs $1.9\,\mathrm{ms}$); physics agrees to $4\times10^{-4}$ | competitive at small $n$ |
 
 Two of these moved a lot in June 2026. The **stabilizer engine** was rewritten (bit-packed tableau
 words plus a compile-to-C bulk gate fold, `ps["ApplyCircuit"]`), a cumulative speedup of $266\times$
-to $1095\times$ over the old path, taking it from $\sim 1000\times$ slower than Stim into single-digit
-factors. The **state-vector path** got a property-cache refactor that cut the warm $n=12$ apply from
+to $1095\times$ over the old path, taking a thousand-qubit, $2\times10^4$-gate stream from about a minute
+to under $60\,\mathrm{ms}$. Phase-resolved against Stim (2026-07-20, after two opposite-direction
+benchmark errors): the compiled kernel is within $4$-$7\times$ of the scalar Stim build; the
+end-to-end factor is $11$-$16\times$ and is dominated by object boundaries (encode, pack,
+canonical materialization), not by the engine. The **state-vector path** got a property-cache refactor that cut the warm $n=12$ apply from
 $836\,\mathrm{ms}$ to $273\,\mathrm{ms}$; the residual gap to Aer is now genuine numeric work (dense
 amplitudes held in sparse containers) plus per-application network re-assembly, not framework
 bookkeeping. A packed numeric fold prototyped at $178\times$ (into Aer's envelope) is the one large

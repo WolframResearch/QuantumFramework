@@ -26,18 +26,20 @@ implementation, from the master comparison):
 
 | $n$ (gates) | QF original | QF round 1 (per-gate packed) | **QF round 2 (`ApplyCircuit`)** | Stim | QuantumClifford.jl |
 |---:|---:|---:|---:|---:|---:|
-| 100 (2 000) | 681 | 69.2 | **2.56** | 1.03 | 1.08 |
-| 500 (10 000) | 15 836 | 412 | **26.2** | 5.14 | 23.1 |
-| 1000 (20 000) | 63 469 | 951 | **58.0** | 10.9 | 108.4 |
+| 100 (2 000) | 681 | 69.2 | **2.56** | 0.047 | 1.08 |
+| 500 (10 000) | 15 836 | 412 | **26.2** | 0.330 | 23.1 |
+| 1000 (20 000) | 63 469 | 951 | **58.0** | 0.953 | 108.4 |
+
+> **Correction (2026-07-20).** Stim column restated: the harness had been issuing one Python call per gate, which times the pybind11 boundary rather than the tableau engine (per-gate cost flat at ~0.5 us across all $n$, where an $O(n)$ update cannot be flat). Batched through one `sim.do(circuit)`: 23.6/33.0/47.6 ns per gate. QF and QC.jl columns are unaffected and reproduce.
 
 - **Cumulative speedup vs the original implementation: $266\times$ / $606\times$ / $1095\times$.**
-- **Gap to Stim: $2.5\times$ / $5.1\times$ / $5.3\times$** (was $650$-$5600\times$ originally, $60$-$90\times$ after round 1).
+- **Gap to Stim: quote phases, not one number** (2026-07-20 re-measurement, `scripts/bench_phases_*`, after two opposite-direction single-ratio errors). Compiled kernel vs Stim engine call: $7.3$/$5.4$/$4.4\times$ at $n=100$/$500$/$1000$ (narrowing with $n$; both builds scalar). End-to-end vs Stim fast-I/O pipeline: $11$-$16\times$, dominated by QF's encode/pack/materialize boundaries. The pre-2026-07-20 "$2.5$/$5.1$/$5.3\times$" mixed boundaries over a Stim harness timing Python call overhead.
 - **QF beats QuantumClifford.jl at $n = 1000$** (58.0 vs 108.4 ms, $1.9\times$ faster) and roughly matches it at $n = 500$.
 - Per-gate cost: 1.3-2.9 $\mu\text{s}$/gate (was $\sim 340$-$3170\,\mu\text{s}$ originally).
 - The round-2 numbers are stable across the post-ship fixes: the 2026-06-11 measurements (2.63 / 26.3 / 58.6 ms) reproduce within noise at HEAD.
 
 The compiled kernel alone (state already packed, circuit already encoded) runs at
-0.22-0.27 $\mu\text{s}$/gate, flat in $n$: Stim's own regime. The remaining wall-clock is
+0.22-0.27 $\mu\text{s}$/gate. (Earlier editions called this "Stim's own regime"; it is not, Stim runs the same stream end to end at 0.024-0.048 $\mu\text{s}$/gate.) The remaining wall-clock is
 circuit encoding ($\sim 0.7\,\mu\text{s}$/gate) and the pack/unpack boundary (one-time per
 circuit).
 

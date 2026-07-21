@@ -115,17 +115,25 @@ and QuantumClifford.jl. QF timed by `AbsoluteTiming`, min-of-3, `ClearSystemCach
 
 | $n$ | gates | **QF before** | **QF after** | **speedup** | Stim 1.16.0 | QuantumClifford.jl 0.11 |
 |---:|---:|---:|---:|---:|---:|---:|
-| 100  | 2 000  | 681.2   | **74.6**  | **9.1×**  | 1.04  | 1.18   |
-| 500  | 10 000 | 15 836  | **489.1** | **32.4×** | 5.51  | 23.76  |
-| 1000 | 20 000 | 63 469  | **1 254.8** | **50.6×** | 11.33 | 110.78 |
+| 100  | 2 000  | 681.2   | **74.6**  | **9.1×**  | 0.047  | 1.18   |
+| 500  | 10 000 | 15 836  | **489.1** | **32.4×** | 0.330  | 23.76  |
+| 1000 | 20 000 | 63 469  | **1 254.8** | **50.6×** | 0.953 | 110.78 |
+
+> **Correction (2026-07-20).** Stim column restated. The harness drove Stim one gate per Python
+> call, timing the pybind11 boundary rather than the tableau engine. The per-gate table below shows
+> the defect in its clearest form: Stim's cost per gate was measured as $0.00052$/$0.00055$/$0.00057$
+> ms, essentially **flat** while $n$ grew tenfold. A tableau update is $O(n)$ per gate, so a flat
+> per-gate cost is not a possible result for the engine, only for a fixed per-call overhead. Batched
+> through one `sim.do(circuit)`, Stim's per-gate cost is $0.0000236$/$0.0000330$/$0.0000476$ ms and
+> does rise with $n$. QF and QC.jl columns are unaffected.
 
 ### Per-gate (ms/gate)
 
 | $n$ | QF before | QF after | Stim | QC.jl |
 |---:|---:|---:|---:|---:|
-| 100  | 0.341 | 0.037 | 0.00052 | 0.00059 |
-| 500  | 1.584 | 0.049 | 0.00055 | 0.00238 |
-| 1000 | 3.173 | 0.063 | 0.00057 | 0.00554 |
+| 100  | 0.341 | 0.037 | 0.0000236 | 0.00059 |
+| 500  | 1.584 | 0.049 | 0.0000330 | 0.00238 |
+| 1000 | 3.173 | 0.063 | 0.0000476 | 0.00554 |
 
 ### Reading the numbers
 
@@ -134,9 +142,13 @@ and QuantumClifford.jl. QF timed by `AbsoluteTiming`, min-of-3, `ClearSystemCach
   ms/gate): the residual growth is the length-$2n$ sign-vector multiply and the
   $\lceil n/62 \rceil$-element chunk-list `ReplacePart`, both small. Hence the speedup *grows*
   with system size: 9× at $n=100$, 32× at $n=500$, 51× at $n=1000$.
-- **Gap to Stim.** The factor over Stim collapsed from roughly $650$-$5600\times$ (before) to
-  $72$-$111\times$ (after). Because both now scale near-linearly per gate, this remaining gap is
-  an almost-constant factor, not a widening asymptotic one.
+- **Gap to Stim.** Single ratios from this era mixed measurement boundaries and should not be
+  quoted; the durable statement (phase-resolved 2026-07-20, see the optimization report and
+  `QF-Stabilizer-vs-Packages.md` §2) is that round 1's per-gate packed route still paid interpreter
+  dispatch per gate, round 2's compiled fold then brought the kernel to within $4$-$7\times$ of the
+  scalar Stim engine call, and the end-to-end path sits $11$-$16\times$ behind Stim's fast-I/O
+  pipeline with the excess in encode/pack/materialize boundaries. Because both engines scale
+  near-linearly per gate, the gap is an almost-constant factor, not a widening asymptotic one.
 - **Versus QuantumClifford.jl.** QC.jl uses the same chunked-UInt64 idea but in compiled Julia
   with SIMD. After packing, QF closes from $\sim\!570\times$ (before, $n{=}1000$) to $\sim\!11\times$
   QC.jl at $n=1000$.
@@ -195,8 +207,8 @@ exercise measurement), but are not yet bit-packed:
 # QF (before = stash the kernel change; after = working tree):
 wolframscript -file /tmp/qf_bench_full.wl          # n = 100, 500, 1000
 
-# Stim (venv with `pip install stim`):
-/tmp/qcbench/bin/python /tmp/bench_stim_full.py
+# Stim (any python with `pip install stim`):
+python3 scripts/bench_stim_all.py
 
 # QuantumClifford.jl:
 JULIA_DEPOT_PATH=/tmp/qc_depot julia /tmp/bench_qc_full.jl

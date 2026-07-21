@@ -831,15 +831,17 @@ These heads, together with `PauliStabilizer` and `StabilizerFrame`, let one stay
 
 The stabilizer simulators built for raw throughput are Stim, a C++ engine, and QuantumClifford.jl, a Julia package; both are excellent and both are narrower in scope than a general quantum framework. The fair question is two-sided: how close is the framework on the task they specialize in, and what does it offer that they do not.
 
-On gate-folding throughput the gap is now a small constant factor. The figures here are the measured wall-clock for an identical Clifford stream on an Apple M2 Pro, measured June 2026 from the framework's own bottleneck audit, with Stim for reference; treat them as a dated snapshot, not a guarantee:
+On gate-folding throughput the honest comparison has to name its boundaries, because the two tools do different amounts of work per call. The framework's `ApplyCircuit` encodes the gate list, packs the tableau into machine words, runs a compiled kernel, and hands back a fully materialized canonical tableau object; Stim's engine call applies a pre-built circuit to its internal state and returns nothing. Timing those two as if they were the same job misled two earlier editions of this section, once in each direction. The phase-resolved figures (one Apple M2 Pro, 2026-07-20, single thread, the Stim build scalar with no vector unit engaged; a dated snapshot, not a guarantee) at a thousand qubits and twenty thousand gates, in milliseconds:
 
-| qubits (gates) | QuantumFramework | Stim | ratio |
-|---|---|---|---|
-| 100 (2k) | 2.6 ms | 1.03 ms | 2.5x |
-| 500 (10k) | 26.2 ms | 5.14 ms | 5.1x |
-| 1000 (20k) | 58.0 ms | 10.9 ms | 5.3x |
+| phase | QuantumFramework | Stim |
+|---|---|---|
+| encode the circuit | 14.4 | 0.74 (text parse) |
+| construct and pack the state | 10.5 | internal, negligible |
+| run the tableau kernel | 4.45 | 1.01 |
+| materialize dense output | 22.3 | 3.75 |
+| end to end | 58.6 | about 5.5 |
 
-At a thousand qubits the framework also runs ahead of QuantumClifford.jl on the same stream (58.0 ms against 108.4 ms). The remaining gap to Stim is SIMD lane width, Stim packs 256-bit vector lanes against the framework's 62-bit machine words, plus a small per-gate circuit-encoding pass; it is a constant factor, not an algorithmic deficit. Getting there took compiling the gate fold to a single C kernel: the gate-by-gate interpreted path is 15 to 30 times slower, around 74, 402, and 955 ms at 100, 500, and 1000 qubits.
+Read it in layers. Kernel against kernel, the framework is a factor of $4$ to $7$ behind scalar Stim across $n = 100$ to $1000$, and the factor shrinks as $n$ grows. End to end with fast input and output on both sides it is $11$ to $16$ times behind. And if a pipeline drives Stim gate by gate from Python, each `append` call costs tens of microseconds and the framework comes out about $27$ times *faster*. Only $7.6\%$ of the framework's end-to-end time is tableau algebra; the rest is the object boundaries, which a caller who stays inside the tableau pays once rather than per circuit. At a thousand qubits the framework also runs ahead of QuantumClifford.jl on the same stream (both end to end, 58.6 against about 110 ms, and kernel against gate loop, 4.45 against 106.5 ms). Getting there took compiling the gate fold to a single C kernel: the gate-by-gate interpreted path is 15 to 30 times slower, around 74, 402, and 955 ms at 100, 500, and 1000 qubits.
 
 What the framework offers that the dedicated engines do not:
 
@@ -850,7 +852,7 @@ What the framework offers that the dedicated engines do not:
 
 Where the framework genuinely trails, stated plainly:
 
-- It is a constant factor (roughly $2.5$ to $5.3\times$) behind Stim on pure gate throughput, because Stim packs wider SIMD lanes.
+- Its compiled kernel is a factor of $3.5$ to $7$ behind scalar Stim (verified out to $n = 4000$), and its end-to-end circuit call $11$ to $16$ times behind Stim's fast-I/O pipeline at $n \leq 1000$, with most of that spent materializing the canonical object rather than simulating; that boundary charge grows with the tableau area, so it dominates ever harder at large $n$.
 - It has no constant-cost bulk Pauli-frame sampler, the trick that makes Stim's shot-by-shot sampling so cheap.
 - Constructing a `QuantumCircuitOperator` with $10^4$ or more gates carries host-framework overhead; for long streams one should hand the gate-spec list to `ps[gates]` directly.
 - Reconstructing an exact state vector from a gate-updated tableau, or from a gate-built stabilizer frame, is correct up to a single global phase, which is never observable; only the relative phase between two separately-built objects is gauge-limited.

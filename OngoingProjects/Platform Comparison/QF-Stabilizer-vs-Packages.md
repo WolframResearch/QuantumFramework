@@ -18,6 +18,10 @@ this document was run and its real output captured. Anchor: repo HEAD `f9dc1cdc`
 the QF audit set is synced to. Machine: Apple M2 Pro (Darwin 23.2.0), Wolfram Language 15.0.0, Stim
 1.16.0, QuantumClifford.jl 0.11.5 (Julia 1.12), Qiskit 2.4.1, Cirq 1.6.1.
 
+Section 2 was rewritten on 2026-07-20 (Stim 1.15.0 `march=polyfill`, Python 3.14, same machine)
+after two successive measurement errors were found and fixed; the section explains both and now
+reports phase-resolved timings instead of a single ratio.
+
 ---
 
 ## 1. Feature matrix
@@ -77,45 +81,101 @@ constant-cost frame sampling).
 
 ---
 
-## 2. Performance: re-measured at HEAD, apples to apples
+## 2. Performance: phase-resolved, apples to apples
 
-**Task.** An identical deterministic stream of single- and two-qubit Cliffords
-(a fixed $H$/$S$/CNOT pattern; $2000$/$10000$/$20000$ gates at $n=100$/$500$/$1000$) starting from
-$|0\rangle^{\otimes n}$. The **same op list** drives all three tableau engines: a shared JSON file
-read by Stim and QuantumClifford.jl, and the identical pattern in WL. Total wall-clock including the
-constructor, minimum of repetitions, cache cleared per repetition. (Qiskit and Cirq are omitted from the
-timing table: their stabilizer paths are Python-loop simulators not built for this throughput regime,
-and the audits place them with QF's interpreted per-gate route, not the compiled route.)
+**Measurement history, stated plainly.** These numbers are the third generation. The first (June
+2026) drove Stim one gate per Python call, timing the pybind11 boundary as if it were the tableau
+engine; that understated Stim by roughly $10\times$ (the tell: per-gate cost flat in $n$ where a
+tableau update is $O(n)$). The first correction (2026-07-20) batched Stim into one `sim.do(circuit)`
+but compared QF's simulate-plus-materialize total against Stim's simulate-only call, overstating the
+gap in the opposite direction (it claimed $50$ to $85\times$). Both errors share one root: a single
+ratio whose work boundaries were implicit. The fix is to time the phases separately on every engine
+so any ratio must name its boundaries. The originally published "$2.4$ to $6.2\times$" happened to
+sit inside the defensible band only because the two errors partially cancelled.
 
-Scripts: `scripts/qf_final_all.wl`, `scripts/bench_stim_all.py`, `scripts/bench_qc_full.jl`. Streams:
-`scripts/stab_ops_{100,500,1000}.json`.
+**Task.** The identical deterministic $H$/$S$/CNOT streams (`scripts/stab_ops_{100,500,1000}.json`;
+$2000/10000/20000$ gates at $n=100/500/1000$) from $|0\rangle^{\otimes n}$, driving all three
+engines. Scripts: `scripts/bench_phases_qf.wls`, `scripts/bench_phases_stim.py`,
+`scripts/bench_phases_qc.jl` (one shared output schema); the older totals-only harnesses remain for
+continuity. The neutral JSON parse is outside every timed region on every engine.
 
-| $n$ / gates | QF `ps["ApplyCircuit"]` | Stim `TableauSimulator` | QuantumClifford.jl `MixedDestabilizer` | QF / Stim | QF / QC.jl |
-|---|---:|---:|---:|---:|---:|
-| 100 / 2000 | $2.46\,\mathrm{ms}$ | $1.01\,\mathrm{ms}$ | $1.10\,\mathrm{ms}$ | $2.4\times$ | $2.2\times$ |
-| 500 / 10000 | $28.2\,\mathrm{ms}$ | $5.31\,\mathrm{ms}$ | $24.4\,\mathrm{ms}$ | $5.3\times$ | $1.2\times$ |
-| 1000 / 20000 | $67.7\,\mathrm{ms}$ | $10.9\,\mathrm{ms}$ | $112.9\,\mathrm{ms}$ | $6.2\times$ | $\mathbf{0.6\times}$ |
+**Phases.** *ingest*: the engine's native in-memory circuit description into its internal encoded
+form (QF: rule list through `encodeStabilizerGates`; Stim: C++ text parse, with the per-gate Python
+`append` route reported separately; QC.jl: typed gate vector). *simulate*: the pre-encoded circuit
+applied to the internal state; this is the only phase that is tableau algebra. *materialize*: the
+internal state out to dense arrays (QF: packed words to the canonical $\{2,n,2n\}$ object; Stim:
+`to_numpy` bit arrays, with forward-stabilizer extraction via Gaussian elimination reported
+separately; QC.jl: `stab_to_gf2`).
 
-**Reading it.**
-- QF is within a small constant factor of Stim, $2.4\times$ to $6.2\times$ on this run (the
-  optimization report's $6\mathrm{f}953\mathrm{ad}5$ measurement was $2.5$ to $5.3\times$; the spread is
-  run-to-run noise plus the fact that $n=1000$ rides the high end). **Do not quote the stale "660-3000x"
-  numbers**: those predate the June 2026 rework.
-- QF **beats QuantumClifford.jl at $n=1000$** ($67.7$ vs $112.9\,\mathrm{ms}$, $1.7\times$ faster) and is
-  in the same regime at $n=500$. QC.jl is faster at $n=100$.
-- The route is the whole story. The same stream applied **one gate at a time** through the property
-  interface (`ps["H",1]["CNOT",1,2]...`) is far slower because each gate pays object wrap/unwrap and
-  interpreter dispatch:
+$n=1000$, $20000$ gates, ms, min of repetitions, single thread, Apple M2 Pro. The Stim build is the
+scalar `polyfill` wheel (no AVX2 and no NEON; on x86 with SIMD its simulate row would improve):
 
-| $n$ / gates | QF per-gate fold | QF `ApplyCircuit` | speedup of the bulk route |
+| phase | QF | Stim | QuantumClifford.jl |
 |---|---:|---:|---:|
-| 100 / 2000 | $73.3\,\mathrm{ms}$ | $2.46\,\mathrm{ms}$ | $30\times$ |
-| 500 / 10000 | $428.0\,\mathrm{ms}$ | $28.2\,\mathrm{ms}$ | $15\times$ |
-| 1000 / 20000 | $1012.3\,\mathrm{ms}$ | $67.7\,\mathrm{ms}$ | $15\times$ |
+| ingest | $14.4$ | $0.74$ text parse / $1562$ per-gate Python appends | $3.0$ |
+| constructor + pack | $10.5$ | internal, $\sim 0.01$ | in simulate |
+| **simulate** | $4.45$ | $1.01$ | $106.5$ |
+| materialize | $22.3$ | $3.75$ native bits / $20.1$ forward stabilizers (RREF) | $0.80$ |
+| end-to-end (measured user path) | $58.6$ | $\approx 5.5$ | $\approx 110$ |
+| one qubit measurement on the evolved state | $24.9$ (returns both branches) | $0.66$ | $0.012$ |
 
-  The compiled kernel itself runs at $\sim 0.22$ to $0.27\,\mu\mathrm{s}$/gate, flat in $n$ (Stim's own
-  regime); the residual wall-clock is the $\sim 0.7\,\mu\mathrm{s}$/gate encode pass plus the
-  pack/unpack boundary (`Compiled.m:180,192`).
+QF's end-to-end is the measured `PauliStabilizer[n]["ApplyCircuit", specs]["Signs"]` including the
+constructor; the $\sim 7$ ms residual over its phase sum is property dispatch and validation.
+Simulate rows at the smaller sizes: QF $0.37/1.77/4.45$, Stim $0.050/0.33/1.01$, QC.jl
+$0.82/19.5/106.5$ ms.
+
+**Ratios, each answering a different question ($n=1000$).**
+- *Engine core against engine core* (simulate row): QF is $4.4\times$ slower than Stim
+  ($7.3\times$ at $n=100$, $5.4\times$ at $n=500$: the factor narrows as $n$ grows, because
+  Stim's scalar per-gate cost rises $25 \to 50$ ns while QF's compiled kernel stays flat at
+  $\sim 0.19$-$0.22\,\mu\mathrm{s}$/gate, the figure the bottleneck audit always quoted for it).
+  QF's kernel is $24\times$ faster than QC.jl's per-gate `apply!` loop.
+- *Whole job against whole job*, fast ingest and native dense output on both sides: QF is
+  $11$-$16\times$ slower than Stim across the three sizes, and $1.9\times$ faster than QC.jl at
+  $n=1000$.
+- If the pipeline needs *forward stabilizers* out of Stim (Gaussian elimination, more work than
+  QF's unpack does): $\approx 2.7\times$.
+- If the pipeline drives Stim *gate by gate from Python* (each `Circuit.append` costs
+  $\sim\!78\,\mu\mathrm{s}$ on the mixed stream in this wheel; a bare-integer-target `H` append
+  alone measured as low as $32\,\mu\mathrm{s}$ on an idle machine): QF is $\approx 27\times$
+  **faster** end to end.
+
+So "how much slower than Stim" has no single honest answer: moving boundaries that a one-number
+comparison never states spans from $27\times$ faster to $16\times$ slower. Quote the phase rows.
+
+**Where QF's time actually goes** ($n=1000$): $38\%$ materializing the canonical object, $25\%$
+encoding rule specs, $18\%$ constructor plus packing, $12\%$ dispatch residual, and $7.6\%$
+simulating. The tableau engine is not the bottleneck; the object boundaries are. That is an
+engineering observation, not an indictment: the canonical object is exactly what makes the result
+composable with the rest of the framework (Section 3), and a caller who keeps the state inside the
+tableau pays the boundary once, not per circuit.
+
+**Measurement is a different regime.** One collapse on the entangled $n=1000$ state costs Stim
+$0.66$ ms against $47$ ns per gate: the point (Fig. 7 of
+[arXiv:2103.02202](https://arxiv.org/abs/2103.02202)) that Stim's random-circuit benchmark is
+measurement-dominated, so gate throughput cannot be read off it. QC.jl's SIMD projection does the
+collapse in $12\,\mu\mathrm{s}$. QF's $24.9$ ms is not the same operation: `ps["M", 1]` returns
+*both* outcome branches as first-class states, a heavier contract than a sampled collapse.
+
+**Beyond $n=1000$: the former cliff, now fixed.** Until kernel commit `253afdfb` (2026-07-20) the
+fresh register's tableau matrices went `SparseArray` above $n=1000$ (`IdentityMatrix`'s default
+`TargetStructure` turns structured past $\sim\!10^6$ entries and `PadRight` propagated it);
+`packGenRows` then fed the compiled kernel an unpackable argument, `CompiledFunction::cfta` fired,
+and the fold silently ran interpreted at $163$-$459\,\mu\mathrm{s}$/gate, roughly $10^3\times$ the
+kernel. The fix (`TargetStructure -> "Dense"` in the register constructor plus a defensive
+densify in `packGenRows`, with fail-before-verified regression tests) opens the regime, measured on
+$20000$-gate streams of the same deterministic pattern (`scripts/stab_ops_{1024,2000,4000}.json`):
+
+| $n$ ($k=20000$) | QF simulate | Stim simulate | kernel ratio | QF e2e |
+|---:|---:|---:|---:|---:|
+| 1024 | $4.47$ ms ($224$ ns/gate) | $0.95$ ms ($48$) | $4.7\times$ | $59.3$ ms |
+| 2000 | $5.46$ ms ($273$ ns/gate) | $1.53$ ms ($77$) | $3.5\times$ | $163.9$ ms |
+| 4000 | $10.1$ ms ($504$ ns/gate) | $2.78$ ms ($139$) | $3.6\times$ | $723$ ms |
+
+Both kernels grow $O(n)$ per gate and the kernel-vs-kernel factor settles near $3.5$-$4\times$. The
+e2e column grows much faster than the kernel because the boundary charge (canonical materialization,
+packing) scales with the $n \times 2n$ tableau area, i.e. $O(n^2)$: at $n=4000$ the kernel is
+$1.4\%$ of the end-to-end time. The phase decomposition, not the engine, sets the large-$n$ story.
 
 **Hot-path operations** (this run, HEAD `f9dc1cdc`; consistent with the bottleneck audit's HEAD
 re-verification):
@@ -124,14 +184,41 @@ re-verification):
 |---|---:|---:|---:|---|
 | Register constructor `PauliStabilizer[n]` | $0.13\,\mathrm{ms}$ | $1.46\,\mathrm{ms}$ | $5.35\,\mathrm{ms}$ | `Constructors.m:259` |
 | Single-qubit measure `ps["M",1]` | $0.12\,\mathrm{ms}$ | $0.19\,\mathrm{ms}$ | | `Measurement.m:94` |
+
+> **Caveat on the constructor and composition rows (2026-07-20).** These predate the harness's
+> deep-scramble rework and do not reproduce from the current `qf_final_all.wl`: the constructor
+> re-measures at $0.067$/$1.17$/$4.3\,\mathrm{ms}$ (about half the tabled values), and composition
+> `a[b]` at $n=100$ re-measures at $\sim\!925\,\mathrm{ms}$ on the deeply scrambled reference
+> states the harness now builds ($26\,\mathrm{ms}$ on fresh registers; the tabled $54.2$ matches
+> neither, being a shallow-scramble figure). The $O(n^3)$ scaling statement below is unaffected;
+> the composition constant on generic states is $\sim\!0.9\,\mathrm{s}$ at $n=100$, not tens of ms.
+>
+> **Caveat on the measurement rows (2026-07-20).** The reference state these were taken on is only
+> depth $\sim\!3$, shallow enough that at $n=100$ the measured qubit still has a *deterministic*
+> outcome (the $O(n)$ fast path) while at $n=500$ it does not (the random-outcome rowsum branch).
+> The row therefore reads as clean scaling while silently switching algorithm between columns, and
+> which side of that boundary $n=100$ lands on is an accident of the seed. Measured on a properly
+> scrambled state ($20n$ gates, both columns on the random branch) the same operation costs
+> $2.3$ and $34.8\,\mathrm{ms}$. `scripts/qf_final_all.wl` now scrambles deeply and prints the
+> branch it landed on; the numbers in this row predate that and are not comparable across $n$.
 | Pauli-string measure `ps["M","Z..Z"]` | $4.20\,\mathrm{ms}$ | $51.7\,\mathrm{ms}$ | | `PauliMeasure.m:44` |
 | Pauli-form display `ps["Stabilizers"]` | $2.0\,\mathrm{ms}$ | $31.1\,\mathrm{ms}$ | | `Formatting.m:33` |
 | Composition `a[b]` | $54.2\,\mathrm{ms}$ | | | `Compose.m:28` |
 
-The remaining gap to Stim is **SIMD lane width** (Stim packs 256-bit vector lanes; QF packs 62-bit
-machine words, `Packed.m:53`, `Compiled.m:44`) plus the per-gate encode pass, not an algorithmic deficit.
-Composition and AG circuit synthesis remain $O(n^3)$ (`Compose.m:24`, `Conversions.m:91`): correct and
-fast enough at these sizes, but not the place to push $n$.
+**On SIMD lane width.** The Stim wheel measured here reports `march=polyfill`, its scalar build
+(the `sse2`/`avx2` binaries are x86-only, and no NEON path ships for arm64), so both engines run
+word-parallel bit algebra at essentially the same width: the kernel-vs-kernel factor of $4$-$7\times$
+is measured with the lanes switched off on both sides. At that magnitude, code-generation quality
+(WL `Compile` C output against Stim's hand-tuned loops and memory layout) is a sufficient
+explanation, and on x86 with AVX2 active Stim's simulate row would pull further ahead. The old story
+that lane width explained the whole gap was wrong twice over: the artifact gap it was invented for
+($2.4$-$6.2\times$) never existed, and the phases show most of QF's end-to-end time is not in the
+kernel at all. Composition and AG circuit synthesis remain $O(n^3)$ (`Compose.m:24`, `Conversions.m:91`):
+correct and fast enough at these sizes, but not the place to push $n$.
+
+**Gate throughput is not what Stim's own benchmark measures**: see the measurement paragraph in
+§2. One collapse is worth $\sim\!10^4$ gates at $n=1000$, so any comparison must state which of the
+two it is timing.
 
 ---
 
@@ -325,9 +412,16 @@ and QuantumClifford.jl exist.
   estimation, and $\Lambda$ (logical-error-suppression) campaigns at distance $\gtrsim 7$ are out of
   reach in QF.** `StabilizerFrame` represents *mixtures* and supports `"SampleOutcomes"`, but that is not
   the same primitive.
-- **SIMD lane-width gap to Stim.** QF packs 62 tableau bits per machine word (`Packed.m:53`,
-  `Compiled.m:44`) to stay inside Int64; Stim uses 256-bit vector lanes. This is most of the residual
-  $2.4$ to $6.2\times$ factor in §2 and is a constant, not an algorithmic, deficit.
+- **Boundary costs dominate long-circuit runs (§2).** QF's tableau kernel is within $4$-$7\times$
+  of scalar Stim, but the user path pays a per-call charge (encode + pack + canonical materialization
+  + constructor, $\sim\!54$ of $59$ ms at $n=1000$) that Stim's in-engine workflow does not, making
+  the end-to-end factor $11$-$16\times$ with fast I/O on both sides. A caller who stays inside the
+  tableau amortizes that charge; one who materializes per circuit pays it every time.
+- **~~The compiled path silently dies above $n=1000$~~: fixed at `253afdfb` (2026-07-20).** The
+  sparse-tableau fallback is gone; the compiled fold now runs to at least $n=4000$ at
+  $0.22$-$0.50\,\mu\mathrm{s}$/gate (§2 continuation table). What remains true at large $n$ is
+  that the $O(n^2)$ boundary charge dominates ever harder: kernel work is $1.4\%$ of e2e at
+  $n=4000$.
 - **`QuantumCircuitOperator` construction overhead for $10^4$-gate circuits.** Building a circuit *object*
   out of $10^4$ individual gates is slow in the host framework (minutes), independent of the stabilizer
   kernel. Feed `ps["ApplyCircuit", specs]` (or `PauliStabilizerApply`) a gate-spec list directly.
@@ -381,9 +475,10 @@ something the numeric engines structurally lack:
 - a stabilizer subroutine that must hand its state to dense simulation, Lindblad evolution, phase-space
   methods, tomography, or the rest of the Wolfram Language without leaving the object model.
 
-  On raw Clifford throughput QF is now a *real option*, not a toy: $2.4$ to $6.2\times$ Stim and ahead of
-  QuantumClifford.jl at $n=1000$, cross-validated against both (`Tests/Stabilizer/CrossPackage_Stim.wlt`,
-  `CrossPackage_QuantumClifford.wlt`).
+  On raw Clifford throughput QF is a *real option*, not a toy: $2\times10^4$ gates on $1000$ qubits in
+  $67.7\,\mathrm{ms}$, ahead of QuantumClifford.jl at $n=1000$, cross-validated against both
+  (`Tests/Stabilizer/CrossPackage_Stim.wlt`, `CrossPackage_QuantumClifford.wlt`). It is $\sim\!50$ to
+  $85\times$ off Stim, so "competitive with Stim on throughput" is not a claim this document makes.
 
 **Use Stim or QuantumClifford.jl when** the task is *high-volume fault-tolerance Monte Carlo and
 decoding*:
@@ -392,9 +487,10 @@ decoding*:
 - threshold and $\Lambda$ campaigns, decoder benchmarking (Stim + sinter/pymatching; QC.jl's `QECCore`
   and decoder extensions).
 
-These are not the same job. The dedicated engines are a few times faster on pure gate throughput and own
-the QEC-sampling-and-decoding pipeline outright; QF buys symbolic, exact, frame, channel, graph-state, and
-whole-framework interoperability for a small constant in speed. For a research group that already lives in
+These are not the same job. Stim is one to two orders of magnitude faster on pure gate throughput
+(QC.jl is not, at $n=1000$), and the dedicated engines own the QEC-sampling-and-decoding pipeline
+outright; QF buys symbolic, exact, frame, channel, graph-state, and
+whole-framework interoperability for that constant in speed. For a research group that already lives in
 Wolfram Language, QF removes the round-trip to an external tool for everything *except* large-scale QEC
 sampling, where the right move is to call Stim or QuantumClifford.jl and bring the results back.
 
@@ -403,14 +499,26 @@ sampling, where the right move is to call Stim or QuantumClifford.jl and bring t
 ## Reproduce
 
 ```
-# Shared op streams (already in scripts/; stage to /tmp):
+# Shared op streams (already in scripts/; the QF and Julia harnesses read them from /tmp):
 cp "OngoingProjects/Platform Comparison/scripts/"stab_ops_*.json /tmp/
 
+# Phase-resolved (the section 2 numbers; shared RESULT|engine|phase|... schema):
+# QF:                         wolframscript -file "OngoingProjects/Platform Comparison/scripts/bench_phases_qf.wls"
+# Stim:                       python3 "OngoingProjects/Platform Comparison/scripts/bench_phases_stim.py"
+# QuantumClifford.jl:         julia "OngoingProjects/Platform Comparison/scripts/bench_phases_qc.jl"
+
+# Totals-only harnesses (end-to-end rows and the per-gate-loop control):
 # QF (repo working tree):     wolframscript -file "OngoingProjects/Platform Comparison/scripts/qf_final_all.wl"
-# Stim (venv):                /tmp/qcbench/bin/python "OngoingProjects/Platform Comparison/scripts/bench_stim_all.py"
+# Stim (any python w/ stim):  python3 "OngoingProjects/Platform Comparison/scripts/bench_stim_all.py"
 # QuantumClifford.jl:         julia "OngoingProjects/Platform Comparison/scripts/bench_qc_full.jl"
 # Advantage + trap snippets:  wolframscript -file "OngoingProjects/Platform Comparison/scripts/qf_stab_verify.wls"
 ```
+
+`bench_stim_all.py` reads the streams from its own directory (no `/tmp` staging needed) and prints
+**two** rows per size: `stim_n*` is the batched single-`do(circuit)` engine measurement, and
+`stim_pergate_n*` is the one-call-per-gate control. If the two are ever quoted interchangeably the
+$\sim\!10\times$ error this section corrects comes straight back; the control exists so the
+difference stays visible. A per-gate cost that is flat in $n$ is the signature of the mistake.
 
 Underlying detail: the stabilizer kernel lives in
 [`QuantumFramework/Kernel/Stabilizer/`](../../QuantumFramework/Kernel/Stabilizer/) (20 files); the
@@ -429,10 +537,13 @@ tableau and the whole simulation stays polynomial. The question this document an
 implementation of that idea stacks up against the two engines built for it, Stim (C++) and
 QuantumClifford.jl (Julia), and against the stabilizer corners of Qiskit and Cirq.
 
-The finding is a clean division of labor. On the one task the dedicated engines optimize, folding a long
-Clifford circuit, QF is now within a small constant of Stim (a factor of a few, measured here at $2.4$ to
-$6.2\times$ on an identical gate stream) and actually faster than QuantumClifford.jl at a thousand qubits;
-the residual gap is hardware vector width (256-bit lanes versus 62-bit machine words), not the algorithm.
+The finding is a clean division of labor. On the one task the dedicated engines optimize, folding a
+long Clifford circuit, QF's compiled tableau kernel runs within a factor of $4$-$7$ of scalar Stim
+and $24\times$ ahead of QuantumClifford.jl, while the full user path (which also encodes the circuit
+and materializes a canonical tableau object) lands $11$-$16\times$ behind Stim's fast-I/O pipeline
+and $1.9\times$ ahead of QC.jl at a thousand qubits. "How much slower than Stim" has no honest
+one-number answer: moving boundaries the old comparisons never stated spans from QF $27\times$
+faster (per-gate Python-driven Stim) to $16\times$ slower.
 What QF adds that none of them have is everything *around* the tableau: measurement outcomes carried as
 formal symbols and substituted later (SymPhase), exact rational arithmetic with bit-reproducible seeded
 randomness, closed-form entanglement entropy at any size, a stabilizer-frame object that exposes the

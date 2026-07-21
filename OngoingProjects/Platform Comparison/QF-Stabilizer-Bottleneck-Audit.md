@@ -1,13 +1,13 @@
 # QF stabilizer subsystem: performance bottleneck audit, with resolution status
 
-**Original audit:** 2026-06-11, written after round 1 (the packed gate fast path, `QF-Stabilizer-Packed-FastPath.md`), when QF was still ~70-110x Stim on gate-heavy Clifford simulation. The audit found *why* and ranked the fixes.
+**Original audit:** 2026-06-11, written after round 1 (the packed gate fast path, `QF-Stabilizer-Packed-FastPath.md`), when QF was still ~1000-1500x Stim on gate-heavy Clifford simulation (stated at the time as ~70-110x, from a harness later found to time Python call overhead rather than Stim; see the correction at §5). The audit found *why* and ranked the fixes.
 **This revision:** 2026-06-12, at repo HEAD `02cc92d9`. The audit's recommendations have since shipped as rounds 2 and 3 (`e37b7fad`, `730abcec`; see `QF-Stabilizer-Optimization-Report.md`), so this document now carries a **status marker on every item** and compares each projection against the measured outcome. The analysis sections are kept intact: they explain *why* the kernel is built the way it now is. Numbers re-verified at HEAD on the revision date are marked as such. **Machine:** Apple M2 Pro, Mathematica 15.0.0. **Scope:** `QuantumFramework/Kernel/Stabilizer/` (now 20 files, including the round-2 additions `Packed.m` and `Compiled.m`).
 
 ## TL;DR (as resolved)
 
 The audit's diagnosis: round-1 packing removed the **algorithmic** $O(n^2)$-per-gate cost, and what remained was a **constant-factor interpreter tax**, every gate being ~12 separate vectorized calls plus object wrap/unwrap, each call costing ~1 µs of Wolfram-kernel dispatch *regardless of array length*.
 
-The audit's one recommendation that mattered: **compile the gate fold** into a single native (C) routine. That shipped as `Compiled.m` / `ps["ApplyCircuit"]` and performed *better* than projected: the compiled kernel runs at $0.22$ to $0.27\,\mu\mathrm{s}$/gate (projection said $1.2$), and end-to-end QF landed at $2.5$ to $5.3\times$ Stim (projection said $3$ to $8\times$). The secondary items (formatting, measurement, composition crash, property reconstruction) also shipped, except the full packed-composition rewrite, which was deliberately dropped (status board below).
+The audit's one recommendation that mattered: **compile the gate fold** into a single native (C) routine. That shipped as `Compiled.m` / `ps["ApplyCircuit"]` and performed *better* than projected: the compiled kernel runs at $0.22$ to $0.27\,\mu\mathrm{s}$/gate (projection said $1.2$), and end-to-end QF landed at 2.6/26.2/58.0 ms, beating the projected 3-5/20-40/50-90 ms. Against Stim, quote phase against phase (the 2026-07-20 phase-resolved re-measurement, after two opposite-direction single-ratio errors): the compiled kernel is within $4$-$7\times$ of the scalar Stim build's engine call, and the end-to-end path is $11$-$16\times$ behind Stim's fast-I/O pipeline, with the difference living in encode/pack/materialize boundaries rather than the kernel. The "$2.5$ to $5.3\times$" this audit originally reported mixed those boundaries over a Stim harness that timed Python call overhead. The secondary items (formatting, measurement, composition crash, property reconstruction) also shipped, except the full packed-composition rewrite, which was deliberately dropped (status board below).
 
 ## Status board (2026-06-12, HEAD `02cc92d9`)
 
@@ -84,11 +84,13 @@ Projected vs actual end-to-end (total wall-clock ms, identical op stream; actual
 
 | n (gates) | QF at audit time | QF projected | **QF actual** | Stim |
 |---:|---:|---:|---:|---:|
-| 100 (2k) | 75 ms | ~3-5 ms | **2.6 ms** | 1.03 ms |
-| 500 (10k) | 489 ms | ~20-40 ms | **26.2 ms** | 5.14 ms |
-| 1000 (20k) | 1255 ms | ~50-90 ms | **58.0 ms** | 10.9 ms |
+| 100 (2k) | 75 ms | ~3-5 ms | **2.6 ms** | 0.047 ms |
+| 500 (10k) | 489 ms | ~20-40 ms | **26.2 ms** | 0.330 ms |
+| 1000 (20k) | 1255 ms | ~50-90 ms | **58.0 ms** | 0.953 ms |
 
-i.e. the projection "from ~70-110x Stim down to ~3-8x Stim" resolved to **2.5-5.3x Stim**, and ahead of QuantumClifford.jl at $n=1000$ ($58.0$ vs $108.4\,\mathrm{ms}$). The remaining gap to Stim is SIMD lane width (256-bit lanes vs 62-bit words) and circuit-encoding overhead, not algorithm. LibraryLink (the §11 option of the original kernel audit) would close part of the last factor and remains unimplemented and not currently needed.
+> **Correction (2026-07-20).** The Stim column is restated. `scripts/bench_stim_all.py` had been driving Stim one gate per Python call, timing the pybind11 boundary rather than the tableau engine (the tell: per-gate cost flat at ~0.5 us across $n=100$-$1000$, where an $O(n)$ tableau update cannot be flat). Batched via one `sim.do(circuit)` the engine runs at 23.6/33.0/47.6 ns per gate. The QF columns are unaffected and reproduce.
+
+The QF-side projection was met and beaten: the compiled fold landed at 2.6/26.2/58.0 ms against a projected 3-5/20-40/50-90 ms, and ahead of QuantumClifford.jl at $n=1000$ ($58.0$ vs $108.4\,\mathrm{ms}$). Ratios to Stim from this era should not be quoted at all: they mixed QF's end-to-end total against Stim's engine call, over a Stim harness that timed Python call overhead. The 2026-07-20 phase-resolved decomposition gives the durable statement: kernel within $4$-$7\times$ of scalar Stim, end-to-end $11$-$16\times$ with fast I/O on both sides, and the end-to-end excess is encode ($\sim\!14$ ms), pack + constructor ($\sim\!11$ ms), and canonical materialization ($\sim\!22$ ms) at $n=1000$, not the kernel ($4.45$ ms). LibraryLink (the §11 option of the original kernel audit) would attack the boundary costs, not the kernel, and remains unimplemented.
 
 ## 3. Secondary bottlenecks (ranked); statuses in the board above
 
@@ -119,7 +121,7 @@ The priority order the audit set, with resolutions:
 
 ### What remains open (the honest residue, 2026-06-12)
 
-- **Gap to Stim ($2.5$ to $5.3\times$):** SIMD lane width and the ~0.7 µs/gate circuit-encoding pass. A LibraryLink kernel could close part of it; not currently justified.
+- **Gap to Stim (phase-resolved 2026-07-20):** kernel $4$-$7\times$; end-to-end $11$-$16\times$, dominated by the ~0.7 µs/gate encode pass and the pack/materialize boundaries. The highest-leverage engineering items are boundary items (lazy canonical materialization, faster encode), not kernel items. The formerly open sparse-tableau fallback above $n=1000$ was fixed at `253afdfb` (2026-07-21); the compiled fold is verified to $n=4000$ at $0.22$-$0.50\,\mu\mathrm{s}$/gate.
 - **Constant-cost Pauli-frame bulk sampling** (the master comparison's Section 3.2 gap): out of this audit's scope, still absent.
 - **Packed composition phase rewrite** (3b): would need a verified mapping to `phaseLookup` semantics first.
 - **WVM fallback path:** implemented but untested end-to-end (no compiler-free machine at hand).
