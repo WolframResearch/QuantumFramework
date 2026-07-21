@@ -832,23 +832,22 @@ jUp[j_] := Table[Sqrt[(j - m1) (j + m1 + 1)] KroneckerDelta[m1 + 1, m2], {m2, -j
 
 jDown[j_] := Table[Sqrt[(j + m1) (j - m1 + 1)] KroneckerDelta[m1 - 1, m2], {m2, -j, j}, {m1, -j, j}]
 
-jX[j_] := 1 / 2 (jUp[j] + jDown[j])
-
-jY[j_] := 1 / (2 I) (jDown[j] - jUp[j])
-
-jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
-
 jQ[j_] := j >= 0 && IntegerQ[2 j]
 
 QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, {a_, b_, c_}], opts___] := QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
 
 QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, b_ : 0], opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
 
-QuantumOperator[("JX" | "AngularMomentumX")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jX[j], "JX"[j]], opts, "Label" -> "JX"]
+(* Each Cartesian component is stored in its own eigenbasis ("JX"[j] etc., elements
+   ordered by ascending m), where its matrix is the diagonal of eigenvalues; the
+   computational-frame matrices come from the basis change ("MatrixRepresentation"). *)
+jMatrix[j_] := DiagonalMatrix[Range[- j, j], TargetStructure -> "Sparse"]
 
-QuantumOperator[("JY" | "AngularMomentumY")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jY[j], "JY"[j]], opts, "Label" -> "JY"]
+QuantumOperator[("JX" | "AngularMomentumX")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JX"[j]], opts, "Label" -> "JX"]
 
-QuantumOperator[("JZ" | "AngularMomentumZ")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jZ[j], "JZ"[j]], opts, "Label" -> "JZ"]
+QuantumOperator[("JY" | "AngularMomentumY")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JY"[j]], opts, "Label" -> "JY"]
+
+QuantumOperator[("JZ" | "AngularMomentumZ")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JZ"[j]], opts, "Label" -> "JZ"]
 
 QuantumOperator[(name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jUp[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 

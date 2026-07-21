@@ -19,8 +19,8 @@ ClearAll[t, th, ph, lam];
 PX = {{0, 1}, {1, 0}};
 PY = {{0, -I}, {I, 0}};
 PZ = {{1, 0}, {0, -1}};
-jZ[j_] := Normal[QuantumOperator["JZ"[j]]["Matrix"]];
-jY[j_] := Normal[QuantumOperator["JY"[j]]["Matrix"]];
+jZ[j_] := Normal[QuantumOperator["JZ"[j]]["MatrixRepresentation"]];
+jY[j_] := Normal[QuantumOperator["JY"[j]]["MatrixRepresentation"]];
 
 
 BeginTestSection["Rotations - generator and angle convention (symbolic)"]
