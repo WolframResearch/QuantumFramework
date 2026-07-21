@@ -326,7 +326,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     kMin = Min[qs1["InputQudits"], qs2["OutputQudits"]],
     inDim = qs2["InputDimension"],
     restOut, restOutDim, restIn, restInDim,
-    q1, q2, q1Mat, q1ConjMat, liftedQ1, liftedQ1Dag, q2Mat, liftedQ2, state, outBasis, inBasis
+    q1, q2, q1Mat, q1ConjMat, liftedQ1, liftedQ1Dag, q2Mat, liftedQ2, state, outBasis, inBasis, resBasis
 },
     restOut = qs2["Output"]["Decompose"][[kMin + 1 ;;]];
     restOutDim = Times @@ Drop[qs2["OutputDimensions"], kMin];
@@ -369,11 +369,20 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
                 restIn === {}, qs2["Input"],
                 True, QuantumTensorProduct @ Join[qs2["Input"]["Decompose"], restIn]
             ];
-            QuantumState[state,
-                QuantumBasis[
-                    "Output" -> outBasis, "Input" -> inBasis,
-                    "Label" -> qs1["Label"] @* qs2["Label"],
-                    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+            resBasis = QuantumBasis[
+                "Output" -> outBasis, "Input" -> inBasis,
+                "Label" -> qs1["Label"] @* qs2["Label"],
+                "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
+            ];
+            If[ resBasis["ComputationalQ"],
+                QuantumState[state, resBasis],
+                (* the product data is computational; rebase it into the tagged frame *)
+                QuantumState[
+                    QuantumState[state,
+                        "Output" -> QuditBasis[resBasis["OutputDimensions"]],
+                        "Input" -> QuditBasis[resBasis["InputDimensions"]]
+                    ],
+                    resBasis
                 ]
             ],
         True,
