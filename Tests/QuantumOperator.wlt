@@ -464,3 +464,177 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - cross-basis composition"]
+
+(* Composition is composition of physical operators: whatever basis frame each
+   operand carries, rep(A @ B) = rep(A) . rep(B) in the computational frame.
+   The direct contraction fast path glues A's input wires to B's output wires,
+   which is faithful only when both sides carry the same basis on every shared
+   wire; a mismatched frame must rebase (via the circuit route) instead of
+   contracting raw tensors. The tagged diagonals below are sigma_x and sigma_z,
+   so their product is sigma_x . sigma_z = -I sigma_y. *)
+
+With[{
+    xp = QuantumOperator[DiagonalMatrix[{1, -1}], QuantumBasis["PauliX"]],
+    zp = QuantumOperator[DiagonalMatrix[{1, -1}], QuantumBasis["PauliZ"]]
+},
+    VerificationTest[
+        Normal @ Simplify @ xp[zp]["MatrixRepresentation"],
+        {{0, -1}, {1, 0}},
+        TestID -> "CrossBasis-PauliXZ-product"
+    ];
+    VerificationTest[
+        Normal @ Simplify @ zp[xp]["MatrixRepresentation"],
+        Simplify[Normal[zp["MatrixRepresentation"]] . Normal[xp["MatrixRepresentation"]]],
+        TestID -> "CrossBasis-PauliZX-product"
+    ];
+    (* symbolic angle: the contract is basis-independent for parametric operators *)
+    With[{rxp = QuantumOperator[QuantumOperator["RX"[\[Theta]]]["Matrix"], QuantumBasis["PauliX"]]},
+        VerificationTest[
+            Simplify[Normal[rxp[zp]["MatrixRepresentation"]] - Normal[rxp["MatrixRepresentation"]] . Normal[zp["MatrixRepresentation"]]],
+            {{0, 0}, {0, 0}},
+            TestID -> "CrossBasis-symbolic-RX"
+        ]
+    ];
+    (* same-basis composition stays exact and keeps its frame (the fast path) *)
+    With[{xflip = QuantumOperator[{{0, 1}, {1, 0}}, QuantumBasis["PauliX"]]},
+        VerificationTest[
+            Normal @ Simplify @ xp[xflip]["MatrixRepresentation"],
+            Simplify[Normal[xp["MatrixRepresentation"]] . Normal[xflip["MatrixRepresentation"]]],
+            TestID -> "CrossBasis-same-frame-faithful"
+        ];
+        VerificationTest[
+            xp[xflip]["Output"]["ComputationalQ"],
+            False,
+            TestID -> "CrossBasis-same-frame-preserved"
+        ]
+    ];
+    (* partial wire overlap: a 2-qubit X-frame operator glued to a 1-qubit Z-frame
+       operator on wire 2 only *)
+    With[{
+        a = QuantumOperator[KroneckerProduct[DiagonalMatrix[{1, -1}], DiagonalMatrix[{1, 1}]], {1, 2}, QuantumBasis[{"PauliX", "PauliX"}]],
+        b = QuantumOperator[DiagonalMatrix[{1, -1}], {2}, QuantumBasis["PauliZ"]]
+    },
+        VerificationTest[
+            Normal @ Simplify @ a[b]["Sort"]["MatrixRepresentation"],
+            Simplify[Normal[a["MatrixRepresentation"]] . KroneckerProduct[IdentityMatrix[2], Normal[b["MatrixRepresentation"]]]],
+            TestID -> "CrossBasis-partial-overlap"
+        ]
+    ];
+    (* matrix-form operand: composing then applying equals sequential application *)
+    With[{
+        m = QuantumOperator[QuantumState[{{2, 0, 0, 1 + I}, {0, 1, 0, 0}, {0, 0, 1, 0}, {1 - I, 0, 0, 2}}, QuantumBasis[QuditBasis["PauliX"], QuditBasis["PauliX"]]]],
+        psi = QuantumState[{3, 4 I}/5]
+    },
+        VerificationTest[
+            Simplify[Normal[m[zp][psi]["DensityMatrix"]] - Normal[m[zp[psi]]["DensityMatrix"]]],
+            {{0, 0}, {0, 0}},
+            TestID -> "CrossBasis-matrix-form-sequential"
+        ]
+    ];
+    (* disjoint wires: no glue, plain tensor product of the two frames *)
+    With[{
+        c1 = QuantumOperator[DiagonalMatrix[{1, -1}], {1}, QuantumBasis["PauliX"]],
+        c2 = QuantumOperator[DiagonalMatrix[{1, -1}], {2}, QuantumBasis["PauliZ"]]
+    },
+        VerificationTest[
+            Normal @ Simplify @ c1[c2]["Sort"]["MatrixRepresentation"],
+            Simplify[KroneckerProduct[Normal[c1["MatrixRepresentation"]], Normal[c2["MatrixRepresentation"]]]],
+            TestID -> "CrossBasis-disjoint-tensor"
+        ]
+    ]
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - transpose with complex-element bases"]
+
+(* comp(op^T) must equal Transpose[comp(op)] in any frame; complex eigenbases
+   (PauliY, Fourier) are the discriminating cases, a real frame cannot see a
+   dropped conjugation. *)
+
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Y"], QuantumBasis["PauliY"]]},
+        Simplify[Normal[op["Transpose"]["MatrixRepresentation"]] - Transpose[Normal[op["MatrixRepresentation"]]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Transpose-PauliY-frame-faithful"
+]
+
+(* Closed form: Y^T = -Y in every faithful frame. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Y"], QuantumBasis["PauliY"]]},
+        Simplify[Normal[op["Transpose"]["MatrixRepresentation"]]]
+    ],
+    {{0, I}, {-I, 0}},
+    TestID -> "Transpose-PauliY-YT-is-minus-Y"
+]
+
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Z"[3]], QuantumBasis["Fourier"[3]]]},
+        Simplify[Normal[op["Transpose"]["MatrixRepresentation"]] - Transpose[Normal[op["MatrixRepresentation"]]]]
+    ],
+    ConstantArray[0, {3, 3}],
+    TestID -> "Transpose-Fourier3-frame-faithful"
+]
+
+(* Transpose is an involution. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Y"], QuantumBasis["PauliY"]]},
+        Simplify[Normal[op["Transpose"]["Transpose"]["MatrixRepresentation"]] - Normal[op["MatrixRepresentation"]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Transpose-involution-PauliY"
+]
+
+(* Conjugate after Transpose is the dagger, elementwise in the computational
+   frame. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["Y"], QuantumBasis["PauliY"]]},
+        Simplify[Normal[op["Transpose"]["Conjugate"]["MatrixRepresentation"]] - ConjugateTranspose[Normal[op["MatrixRepresentation"]]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Transpose-Conjugate-is-dagger-PauliY"
+]
+
+(* Real frame: transposition needs no conjugation there, a regression guard. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["X"], QuantumBasis["PauliX"]]},
+        Simplify[Normal[op["Transpose"]["MatrixRepresentation"]] - Transpose[Normal[op["MatrixRepresentation"]]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Transpose-real-frame-regression"
+]
+
+(* Pair-form partial transpose of a two-qubit operator on the second pair. *)
+VerificationTest[
+    With[{op = QuantumOperator[QuantumOperator["CNOT"], QuantumBasis[{"PauliY", "PauliY"}]]},
+        With[{
+            m = Normal[op["MatrixRepresentation"]],
+            mt = Normal[op["Transpose", {{2, 2}}]["MatrixRepresentation"]]
+        },
+            Simplify[mt - ArrayReshape[Transpose[ArrayReshape[m, {2, 2, 2, 2}], {1, 4, 3, 2}], {4, 4}]]
+        ]
+    ],
+    ConstantArray[0, {4, 4}],
+    TestID -> "PartialTranspose-operator-PauliY-pair2"
+]
+
+(* Bending a ket leg into an operator input transposes that leg: the
+   computational matrix of the bent operator is the reshape of the
+   computational vector. *)
+VerificationTest[
+    With[{qs = QuantumState[Normalize[{1, 2 I, 3, 4 I}], QuantumBasis[{"PauliY", "PauliY"}]]},
+        Simplify[
+            Normal[QuantumOperator[qs, {{1}, {1}}]["MatrixRepresentation"]] -
+            ArrayReshape[Normal[QuantumState[qs, QuantumBasis[4]]["StateVector"]], {2, 2}]
+        ]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "SplitDual-bend-reshape-contract-PauliY"
+]
+
+EndTestSection[]

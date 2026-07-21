@@ -95,17 +95,40 @@ VerificationTest[
     TestID -> "Square-JX-object-1"
 ]
 
-(* CHARACTERIZATION (present behavior, not an endorsement): cross-basis
-   composition qo1[qo2] with two different tagged bases does not reconcile
-   frames, on any operator family, so the object product of two different
-   components is NOT the matrix product of their computational representations.
-   Algebra between components is therefore asserted on the matrix layer above.
-   This test flips and announces the change if composition ever learns frames. *)
+(* Cross-basis composition reconciles frames: qo1[qo2] with two different
+   tagged bases rebases through the computational frame, so the object product
+   of two different components IS the matrix product of their computational
+   representations and su(2) holds at the object level, not only on the matrix
+   layer above. *)
 VerificationTest[
-    Simplify[Normal[(QuantumOperator["JX"[1]] @ QuantumOperator["JY"[1]])["MatrixRepresentation"]]] =!=
-        Simplify[compMat["JX", 1] . compMat["JY", 1]],
-    True,
+    Simplify[
+        Normal[(QuantumOperator["JX"[1]] @ QuantumOperator["JY"[1]])["MatrixRepresentation"]] -
+        compMat["JX", 1] . compMat["JY", 1]
+    ],
+    zeroMat[1],
     TestID -> "CrossBasis-product-characterization"
+]
+
+VerificationTest[
+    Simplify[
+        Normal[(QuantumOperator["JY"[1]] @ QuantumOperator["JX"[1]])["MatrixRepresentation"]] -
+        compMat["JY", 1] . compMat["JX", 1]
+    ],
+    zeroMat[1],
+    TestID -> "CrossBasis-product-JYJX-1"
+]
+
+Do[
+    VerificationTest[
+        Simplify[
+            Normal[(QuantumOperator["JX"[j]] @ QuantumOperator["JY"[j]])["MatrixRepresentation"]] -
+            Normal[(QuantumOperator["JY"[j]] @ QuantumOperator["JX"[j]])["MatrixRepresentation"]] -
+            I compMat["JZ", j]
+        ],
+        zeroMat[j],
+        TestID -> "CrossBasis-object-commutator-" <> ToString[j]
+    ],
+    {j, {1/2, 1}}
 ]
 
 EndTestSection[]

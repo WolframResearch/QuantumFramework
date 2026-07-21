@@ -364,10 +364,29 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ, opts___] := QuantumCircuitOperator[qo][qs, opts]
 
+(* The direct contraction rules below glue qo1's input wires to qo2's output wires with an
+   identity factor, which is faithful only when both sides carry the same basis (a dual flag
+   apart) on every shared wire. A mismatched frame falls through to the circuit route, which
+   rebases through the computational frame, so rep(qo1 @ qo2) = rep(qo1) . rep(qo2) always. *)
+composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], qo2["OutputOrder"]]},
+    shared === {} ||
+        (* fully-aligned wires compare as whole bases, skipping the per-qudit walk *)
+        qo1["InputOrder"] === shared === qo2["OutputOrder"] &&
+            With[{in = qo1["Input"], out = qo2["Output"]}, in === out || in["Dual"] === out] ||
+        And @@ MapThread[
+            #1 === #2 || #1["Dual"] === #2 &,
+            {
+                qo1["Input"]["Decompose"][[Lookup[AssociationThread[qo1["InputOrder"], Range[Length[qo1["InputOrder"]]]], shared]]],
+                qo2["Output"]["Decompose"][[Lookup[AssociationThread[qo2["OutputOrder"], Range[Length[qo2["OutputOrder"]]]], shared]]]
+            }
+        ]
+]
+
 (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_QuantumOperator ? QuantumOperatorQ] /; (
     (qo1["MatrixQ"] || qo2["MatrixQ"]) && qo1["Picture"] === qo2["Picture"] &&
     Intersection[qo1["OutputOrder"], Complement[qo2["OutputOrder"], qo1["InputOrder"]]] === {} &&
-    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {}
+    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {} &&
+    composableBasesQ[qo1, qo2]
 ) := With[{shift = Max[qo1["Order"], qo2["Order"]] + 1},
     qo1["Bend", shift][qo2["Bend", shift]]["Unbend"]
 ]
@@ -376,7 +395,8 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_QuantumOperator ? QuantumOperatorQ] /; (
     qo1["VectorQ"] && qo2["VectorQ"] && qo1["Picture"] === qo2["Picture"] &&
     Intersection[qo1["OutputOrder"], Complement[qo2["OutputOrder"], qo1["InputOrder"]]] === {} &&
-    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {}
+    Intersection[Complement[qo1["InputOrder"], qo2["OutputOrder"]], qo2["InputOrder"]] === {} &&
+    composableBasesQ[qo1, qo2]
 ) := Module[{
     s1, s2, q1OutOrder, q1InOrder, q2OutOrder, q2InOrder,
     q1OutQ, q1InQ, q2OutQ, q2InQ,
