@@ -16,6 +16,8 @@ PackageExport["FieldVariables"]
 
 PackageExport["OrderVariables"]
 
+PackageExport["ToBosonicOperator"]
+
 PackageScope["ExtractNCVars"]
 
 PackageScope["FormalSymbolQ"]
@@ -87,6 +89,37 @@ OrderVariables[vars_List] := Block[{annihilators, creators},
     
     Join[Sort[creators],Sort[annihilators]]
 ]
+
+
+ToBosonicOperator::usage =
+"\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"]}], \"]\"}]\) realizes a symbolic expression expr built from field variables (see FieldVariables) as a truncated \!\(\*RowBox[{\"QuantumOperator\", \"[\", \"]\"}]\), replacing each annihilation variable with \!\(\*RowBox[{\"AnnihilationOperator\", \"[\", \"]\"}]\) and each \!\(\*SuperscriptBox[\"\[Dagger]\", \"\"]\)-decorated variable with its adjoint, and realizing \[FormalCapitalX]**\[FormalCapitalY] as operator composition.\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) uses vars as the ordered list of annihilation-type field variables, assigning mode k to vars[[k]].\n\!\(\*RowBox[{\"ToBosonicOperator\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) truncates each mode to Fock space dimension size (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).";
+
+SetAttributes[ToBosonicOperator, HoldFirst];
+
+ToBosonicOperator[expr_, vars_List : Automatic, size : _Integer?Positive : $FockSize] :=
+    Block[{annihilators, rules, resolved},
+        resolved = ReleaseHold[Hold[expr] /. HoldPattern[Exp[x_]] :> boseExpHold[x]];
+        annihilators = If[vars === Automatic,
+            DeleteDuplicates[
+                Cases[resolved, (v : (_ ? FormalSymbolQ | SuperDagger[_ ? FormalSymbolQ])) :> v, {0, Infinity}] /.
+                    SuperDagger[v_] :> v
+            ],
+            vars
+        ];
+        rules = Flatten @ MapIndexed[
+            With[{op = AnnihilationOperator[size, {First[#2]}]},
+                {#1 -> op, SuperDagger[#1] -> op["Dagger"]}
+            ] &,
+            annihilators
+        ];
+        (resolved /. {
+            GeneralizedPower[NonCommutativeMultiply, b_, n_Integer] :> Power[b, n],
+            Power[base_, x_] /; FreeQ[base, Alternatives @@ annihilators] && !FreeQ[x, Alternatives @@ annihilators] :>
+                MatrixExp[Log[base] x]
+        } /. rules //.
+            NonCommutativeMultiply[a_, b__] :> Fold[#1 @ #2 &, a, {b}]) /.
+            boseExpHold[qo_QuantumOperator] :> Exp[qo]
+    ]
 
 
 G2Coherence::usage =

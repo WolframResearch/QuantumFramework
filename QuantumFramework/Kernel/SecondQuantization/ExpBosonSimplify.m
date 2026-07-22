@@ -2,7 +2,7 @@
 
 Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
-PackageExport["ExpBosonNormalOrder"]
+PackageExport["ExpBosonOrder"]
 PackageExport["NormalOrdered"]
 
 
@@ -17,74 +17,74 @@ getNCPower[GeneralizedPower[NonCommutativeMultiply, var_, n_], var_] := n;
 getNCPower[_, _] := 0;
 
 
-thm44RHS[L_, R_, \[Lambda]_, v_] :=
+thm44RHS[L_, R_, lambda_, v_] :=
     With[{e = L + R - 1},
         With[{adagE = If[e == 1,
                 SuperDagger[v],
                 GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], e]
             ]},
-            (1 - e \[Lambda] adagE)^(-(R/e)) **
-                Exp[((1 - e \[Lambda] adagE)^(-1/e) - 1) ** SuperDagger[v] ** v]
+            (1 - e lambda adagE)^(-(R/e)) **
+                Exp[((1 - e lambda adagE)^(-1/e) - 1) ** SuperDagger[v] ** v]
         ]
     ]
 
 
 rulesNO = {
-    Exp[\[Alpha]_ SuperDagger[v_?FormalSymbolQ] + \[Beta]_ v_?FormalSymbolQ] :>
-        Exp[(\[Alpha] \[Beta])/2] Exp[\[Alpha] SuperDagger[v]] ** Exp[\[Beta] v],
+    Exp[alpha_ SuperDagger[v_?FormalSymbolQ] + beta_ v_?FormalSymbolQ] :>
+        Exp[(alpha beta)/2] Exp[alpha SuperDagger[v]] ** Exp[beta v],
 
-    Exp[\[Alpha]_ v_?FormalSymbolQ] ** Exp[\[Beta]_ SuperDagger[v_?FormalSymbolQ]] :>
-        Exp[\[Alpha] \[Beta]] Exp[\[Beta] SuperDagger[v]] ** Exp[\[Alpha] v],
+    Exp[alpha_ v_?FormalSymbolQ] ** Exp[beta_ SuperDagger[v_?FormalSymbolQ]] :>
+        Exp[alpha beta] Exp[beta SuperDagger[v]] ** Exp[alpha v],
 
-    Exp[\[Lambda]_ SuperDagger[v_?FormalSymbolQ] ** v_?FormalSymbolQ] :>
-        NormalOrdered[Exp[(E^\[Lambda] - 1) SuperDagger[v] ** v]],
+    Exp[lambda_ SuperDagger[v_?FormalSymbolQ] ** v_?FormalSymbolQ] :>
+        NormalOrdered[Exp[(E^lambda - 1) SuperDagger[v] ** v]],
 
-    Exp[\[Lambda]_ v_?FormalSymbolQ ** SuperDagger[v_?FormalSymbolQ]] :>
-        E^\[Lambda] NormalOrdered[Exp[(E^\[Lambda] - 1) SuperDagger[v] ** v]],
+    Exp[lambda_ v_?FormalSymbolQ ** SuperDagger[v_?FormalSymbolQ]] :>
+        E^lambda NormalOrdered[Exp[(E^lambda - 1) SuperDagger[v] ** v]],
 
-    Exp[\[Alpha]_ (v_?FormalSymbolQ ** v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, 2])] **
-            Exp[\[Beta]_ (SuperDagger[v_?FormalSymbolQ] ** SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], 2])] :>
-        Exp[(\[Beta] GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/(1 - 4 \[Alpha] \[Beta])] **
-            Exp[-Log[1 - 4 \[Alpha] \[Beta]] SuperDagger[v] ** v] **
-            Exp[(\[Alpha] GeneralizedPower[NonCommutativeMultiply, v, 2])/(1 - 4 \[Alpha] \[Beta])] / Sqrt[1 - 4 \[Alpha] \[Beta]],
+    Exp[alpha_ (v_?FormalSymbolQ ** v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, 2])] **
+            Exp[beta_ (SuperDagger[v_?FormalSymbolQ] ** SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], 2])] :>
+        Exp[(beta GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/(1 - 4 alpha beta)] **
+            Exp[-Log[1 - 4 alpha beta] SuperDagger[v] ** v] **
+            Exp[(alpha GeneralizedPower[NonCommutativeMultiply, v, 2])/(1 - 4 alpha beta)] / Sqrt[1 - 4 alpha beta],
 
-    Exp[\[Alpha]_ (v_?FormalSymbolQ ** v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, 2]) +
-            \[Beta]_ (SuperDagger[v_?FormalSymbolQ] ** SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], 2])] :>
-        With[{\[Omega] = 2 Sqrt[\[Alpha] \[Beta]]},
-            Exp[((\[Beta] Tan[\[Omega]]) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/\[Omega]] **
-                Sqrt[Sec[\[Omega]]] Exp[Log[Sec[\[Omega]]] SuperDagger[v] ** v] **
-                Exp[((\[Alpha] Tan[\[Omega]]) GeneralizedPower[NonCommutativeMultiply, v, 2])/\[Omega]]
+    Exp[alpha_ (v_?FormalSymbolQ ** v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, 2]) +
+            beta_ (SuperDagger[v_?FormalSymbolQ] ** SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], 2])] :>
+        With[{omega = 2 Sqrt[alpha beta]},
+            Exp[((beta Tan[omega]) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/omega] **
+                Sqrt[Sec[omega]] Exp[Log[Sec[omega]] SuperDagger[v] ** v] **
+                Exp[((alpha Tan[omega]) GeneralizedPower[NonCommutativeMultiply, v, 2])/omega]
         ],
 
-    Exp[\[Alpha]_ v_?FormalSymbolQ] ** expr_ /; NonCommutativePolynomialQ[expr, algAdag[v]] :>
-        NonCommutativeExpand[expr /. {SuperDagger[v] -> SuperDagger[v] + \[Alpha]}, algAdag[v]] ** Exp[\[Alpha] v],
+    Exp[alpha_ v_?FormalSymbolQ] ** expr_ /; NonCommutativePolynomialQ[expr, algAdag[v]] :>
+        NonCommutativeExpand[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, algAdag[v]] ** Exp[alpha v],
 
-    expr_ ** Exp[\[Beta]_ SuperDagger[v_?FormalSymbolQ]] /; NonCommutativePolynomialQ[expr, v, algA[v]] :>
-        Exp[\[Beta] SuperDagger[v]] ** NonCommutativeExpand[expr /. {v -> v + \[Beta]}, algA[v]],
+    expr_ ** Exp[beta_ SuperDagger[v_?FormalSymbolQ]] /; NonCommutativePolynomialQ[expr, v, algA[v]] :>
+        Exp[beta SuperDagger[v]] ** NonCommutativeExpand[expr /. {v -> v + beta}, algA[v]],
 
-    Exp[\[Lambda]_*(adagL : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])) **
+    Exp[lambda_*(adagL : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])) **
             v_?FormalSymbolQ ** (adagR : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _]))] :>
-        NormalOrdered @ thm44RHS[getNCPower[adagL, SuperDagger[v]], getNCPower[adagR, SuperDagger[v]], \[Lambda], v],
+        NormalOrdered @ thm44RHS[getNCPower[adagL, SuperDagger[v]], getNCPower[adagR, SuperDagger[v]], lambda, v],
 
-    Exp[\[Lambda]_*v_?FormalSymbolQ ** (adagR : GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])] :>
-        NormalOrdered @ thm44RHS[0, getNCPower[adagR, SuperDagger[v]], \[Lambda], v],
+    Exp[lambda_*v_?FormalSymbolQ ** (adagR : GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])] :>
+        NormalOrdered @ thm44RHS[0, getNCPower[adagR, SuperDagger[v]], lambda, v],
 
-    Exp[\[Lambda]_*(adagL : GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _]) ** v_?FormalSymbolQ] :>
-        NormalOrdered @ thm44RHS[getNCPower[adagL, SuperDagger[v]], 0, \[Lambda], v],
+    Exp[lambda_*(adagL : GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _]) ** v_?FormalSymbolQ] :>
+        NormalOrdered @ thm44RHS[getNCPower[adagL, SuperDagger[v]], 0, lambda, v],
 
-    Exp[\[Alpha]_ SuperDagger[v1_?FormalSymbolQ] ** v2_?FormalSymbolQ + \[Beta]_ v1_?FormalSymbolQ ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
-        With[{\[CapitalOmega] = Sqrt[\[Alpha] \[Beta]]},
-            Exp[(\[Alpha] Tanh[\[CapitalOmega]]/\[CapitalOmega]) SuperDagger[v1] ** v2] **
-                Exp[-Log[Cosh[\[CapitalOmega]]] SuperDagger[v1] ** v1] **
-                Exp[Log[Cosh[\[CapitalOmega]]] SuperDagger[v2] ** v2] **
-                Exp[(\[Beta] Tanh[\[CapitalOmega]]/\[CapitalOmega]) v1 ** SuperDagger[v2]]
+    Exp[alpha_ SuperDagger[v1_?FormalSymbolQ] ** v2_?FormalSymbolQ + beta_ v1_?FormalSymbolQ ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
+        With[{Omega = Sqrt[alpha beta]},
+            Exp[(alpha Tanh[Omega]/Omega) SuperDagger[v1] ** v2] **
+                Exp[-Log[Cosh[Omega]] SuperDagger[v1] ** v1] **
+                Exp[Log[Cosh[Omega]] SuperDagger[v2] ** v2] **
+                Exp[(beta Tanh[Omega]/Omega) v1 ** SuperDagger[v2]]
         ],
 
-    Exp[\[Alpha]_ v1_?FormalSymbolQ ** v2_?FormalSymbolQ + \[Beta]_ SuperDagger[v1_?FormalSymbolQ] ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
-        With[{\[CapitalOmega] = Sqrt[\[Alpha] \[Beta]]},
-            Exp[(\[Beta] Tan[\[CapitalOmega]]/\[CapitalOmega]) SuperDagger[v1] ** SuperDagger[v2]] **
-                Sec[\[CapitalOmega]] Exp[Log[Sec[\[CapitalOmega]]] (SuperDagger[v1] ** v1 + SuperDagger[v2] ** v2)] **
-                Exp[(\[Alpha] Tan[\[CapitalOmega]]/\[CapitalOmega]) v1 ** v2]
+    Exp[alpha_ v1_?FormalSymbolQ ** v2_?FormalSymbolQ + beta_ SuperDagger[v1_?FormalSymbolQ] ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
+        With[{Omega = Sqrt[alpha beta]},
+            Exp[(beta Tan[Omega]/Omega) SuperDagger[v1] ** SuperDagger[v2]] **
+                Sec[Omega] Exp[Log[Sec[Omega]] (SuperDagger[v1] ** v1 + SuperDagger[v2] ** v2)] **
+                Exp[(alpha Tan[Omega]/Omega) v1 ** v2]
         ]
 };
 
@@ -99,14 +99,11 @@ canonicalizeModeOrder[expr_] :=
         NonCommutativeMultiply[a, y, x, b]
 
 
-NormalOrdered[pref_. Exp[\[Mu]_ SuperDagger[v_?FormalSymbolQ] ** v_?FormalSymbolQ]]["Series"] :=
-    With[{k = Symbol["Global`k"]},
-        HoldForm[pref Sum[
-            (\[Mu]^k/k!) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], k] **
+NormalOrdered[expr_]["Series"] := expr /. {Exp[l_ SuperDagger[v_] ** v_] :> With[{k = Global`k}, Inactivate[Sum[
+            (l^k/k!) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], k] **
                 GeneralizedPower[NonCommutativeMultiply, v, k],
             {k, 0, Infinity}
-        ]]
-    ]
+        ], Sum]] }
 
 
 expApplyRules[expr_, assum_] :=
@@ -117,17 +114,17 @@ expApplyRules[expr_, assum_] :=
     ]
 
 
-ExpBosonNormalOrder::usage =
+ExpBosonOrder::usage =
 "\!\(\*RowBox[{\"ExpBosonNormalOrder\", \"[\", StyleBox[\"expr\", \"TI\"], \"]\"}]\) brings an expression built from exponentials of a formal field variable (e.g. \[FormalA]) and its \!\(\*RowBox[{StyleBox[\"var\", \"TI\"], SuperscriptBox[\"\[Dagger]\", \"\"]}]\) into normal order, using the boson disentangling identities.\n\!\(\*RowBox[{\"ExpBosonNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"assum\", \"TI\"]}], \"]\"}]\) uses \!\(\*StyleBox[\"assum\", \"TI\"]\) as additional simplifying assumptions.\n\!\(\*RowBox[{\"ExpBosonNormalOrder\", \"[\", RowBox[{\[Ellipsis], \",\", \"TimeConstraint->\", StyleBox[\"t\", \"TI\"]}], \"]\"}]\) limits simplification to \!\(\*StyleBox[\"t\", \"TI\"]\) seconds (default 30).";
 
-Options[ExpBosonNormalOrder] = {
+Options[ExpBosonOrder] = {
     TimeConstraint -> 30,
     Assumptions -> $Assumptions
 };
 
-ExpBosonNormalOrder[expr_, opts : OptionsPattern[]] := ExpBosonNormalOrder[expr, True, opts]
+ExpBosonOrder[expr_, opts : OptionsPattern[]] := ExpBosonOrder[expr, True, opts]
 
-ExpBosonNormalOrder[expr_, assum_, opts : OptionsPattern[]] :=
+ExpBosonOrder[expr_, assum_, opts : OptionsPattern[]] :=
     Block[{tmax = OptionValue[TimeConstraint], fullAssum},
         fullAssum = Union[Flatten[{assum}], Flatten[{OptionValue[Assumptions]}]];
         TimeConstrained[expApplyRules[expr, fullAssum], tmax, expr]
