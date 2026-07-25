@@ -45,25 +45,36 @@ the nine kernel-probed solver verdicts the plans cite.
 every entry heading matches its question in `../Question-List.md` verbatim including the
 `[BSc]`/`[MSc]` tag, no em or en dashes anywhere, no leftover scaffolding sections.
 
-**Critique: 2 of 20 parts.** The adversarial pass was interrupted by an account spend limit that
-terminated the remaining reviewer agents mid-run. What completed:
+**Critique: 7 of 20 parts** (4, 5, 6, 12, 14, 17, 22), all graded by fresh-context reviewers and all
+findings repaired. Every closed form the reviewers hand-derived was correct; the failures were one
+level above the algebra, in signs, conventions, and the transfer of probe evidence into prose, and
+they were systematically invisible to the checks the entries proposed for themselves.
 
-- Part 4: `OPEN ISSUES: 0`. The reviewer hand-derived every closed form in the plan (ladder
-  normalization, the truncated commutator defect and its tracelessness, the truncated top eigenvalue
-  $N/2$, the displacement splitting, the squeezed quadrature variance, the oscillator-length lab
-  scales) and confirmed each.
-- Part 6: `OPEN ISSUES: 1`, since fixed. The closing limit of 6.5 claimed $S\to\mathbb{1}$ as
-  $V_0\to0$; on this document's own convention, with reflection on the diagonal, free space gives
-  $S\to\sigma_x$, and $\mathbb{1}$ would describe a hard wall. Two minor items were fixed with it
-  (the antisymmetric $S$ eigenvalue is $r-t$, and one entry defined its state by cross-reference).
+The four that would have inverted the physics:
 
-**The other 18 plans are drafted but ungraded.** Their physics is stated but unverified by a fresh
-context, so treat their formulas as claims to check at authoring time rather than as settled. The
-Part 6 finding is the calibration: a wrong closing limit survived drafting and was caught only by
-the adversarial read.
+- Part 17 wrote the two-mode squeeze generator with the sign that anti-squeezes the pair the entry
+  claims to squeeze, turning the Duan criterion from a violation into no violation at any squeezing.
+  Both of that entry's own checks are provably sign-blind.
+- Part 14 paired a positive-charge kinetic term with a negative-charge Zeeman term, mirroring the
+  Landau degeneracy labels; and quoted a purity floor of $\tfrac12$ for a state whose branch norms
+  pin the populations at $\tfrac34$ and $\tfrac14$ for every separation, so equal weights are
+  unreachable and the floor is $\tfrac58$.
+- Part 6 claimed $S\to\mathbb{1}$ for free space, where its own convention gives $\sigma_x$;
+  $\mathbb{1}$ would describe a hard wall.
 
-**Route revisions taken: none.** No completed critique refuted a `Route-Table.md` verdict, so its
-revision log is empty and every plan cites the routes as originally probed.
+**The other 13 plans are drafted but ungraded** (7, 8, 9, 10, 11, 13, 15, 16, 18, 19, 20, 21, 23).
+Their physics is stated but unverified by a fresh context, so treat their formulas as claims to check
+at authoring time rather than as settled. The graded parts averaged about five findings each, with a
+physics-inverting error in three of the five in the first batch, which is the calibration for how
+much to trust an ungraded one.
+
+**Route revisions taken: one.** `Route-Table.md` revision R1 corrects the C8 (Dirac hydrogen)
+verdict: the recorded degeneracy $\kappa\to-\kappa-1$ is the $\kappa\!\leftrightarrow\!l$ dictionary
+misread as a degeneracy, mapping $2p_{1/2}$ onto the state the fine structure splits from it. The
+correct map is $\kappa\to-\kappa$, since the energy depends on $\kappa$ only through $|\kappa|$. The
+shooting boundary condition was likewise the $\kappa=-1$ instance quoted as general. Both were
+claims the verdict wrote around its probes rather than probe outputs, which is the useful signal:
+what the kernel measured held up, what got written around the measurements did not.
 
 **Concerns raised by drafters** (recorded in the entries, each needing an authoring decision):
 

@@ -194,90 +194,111 @@ expectation values obey Ehrenfest's relations $\frac{d\langle x\rangle}{dt}=\lan
 $\frac{d\langle p\rangle}{dt}=-\langle V'(x)\rangle$, which reduce to classical mechanics only
 when $\langle V'(x)\rangle=V'(\langle x\rangle)$.
 
-The eight C3 entries share the certified contract of the C3 verdict in `Route-Table.md`: primary
-`NDSolveValue` with `Method -> {"MethodOfLines", "SpatialDiscretization" ->
-{"TensorProductGrid", "DifferenceOrder" -> "Pseudospectral"}}`, periodic identification
-$\psi(t,L_1)=\psi(t,L_2)$, and `AccuracyGoal -> 10, PrecisionGoal -> 10` (tight goals are
-load-bearing: defaults are silently wrong at the $0.25\%$ level with no message, and grid
-refinement at default goals is non-monotone); independent cross-check by a hand-built Strang
+The solver contract below is authoring guidance for this plan, not material for the Part opening.
+Seven of the eight C3 entries, all but 5.5, share the certified contract of the C3 verdict in
+`Route-Table.md`: primary `NDSolveValue` with `Method -> {"MethodOfLines",
+"SpatialDiscretization" -> {"TensorProductGrid", "MinPoints" -> n, "MaxPoints" -> n,
+"DifferenceOrder" -> "Pseudospectral"}}`, periodic identification $\psi(t,L_1)=\psi(t,L_2)$, and
+`AccuracyGoal -> 10, PrecisionGoal -> 10`. Pinning `MinPoints` and `MaxPoints` to the same $n$ is
+what makes $n$ the swept knob rather than a solver choice, and every resolution sweep below moves
+that one number over the verdict's measured ladder $n=65,129,257,513$; the tight goals are
+load-bearing, since defaults are silently wrong at the $0.25\%$ level with no message and
+refinement at default goals is non-monotone. Cross-check independently with a hand-built Strang
 split-step Fourier propagator on `Fourier`/`InverseFourier` (`FourierParameters -> {1,-1}`,
-packed arrays); a box sized so the exact tail at the edge is negligible, edge
-$\gtrsim k_0T+8\sigma_T$, because norm conservation does not detect wall reflection; and moments
-or probabilities taken as $dx$-weighted grid sums, never `NIntegrate` on an interpolant.
+packed arrays). Size the box from the state's own energy content and hold it fixed across every
+sweep, because norm conservation does not detect wall reflection. Take moments and probabilities
+as $dx$-weighted grid sums, never `NIntegrate` on an interpolant. Entry 5.5 leaves this contract
+and states its own discretization.
 
 #### 5.1 [BSc] How do I show that a stationary state evolves only by the phase $e^{-iEt}$, while a superposition acquires genuine time dependence?
 
-Work in the Poschl-Teller well $V=-3\operatorname{sech}^2x$, whose two bound states
-$\psi_0\propto\operatorname{sech}^2x$ at $E_0=-2$ and $\psi_1\propto\operatorname{sech}x\tanh x$
-at $E_1=-\tfrac12$ are closed forms in a non-box system (the infinite well is reserved for 5.5).
-This is C0 machinery per the `Route-Table.md` C0 row: earn both levels first with `D` +
-`FullSimplify` residuals $\hat H\psi_n-E_n\psi_n\to0$, then form $e^{-iE_0t}\psi_0$ and the
-equal-weight superposition and reduce both densities with `ComplexExpand` under
-`Element[{x, t}, Reals]`: the stationary density is $t$-free identically, while the superposition
-beats as $\cos(\tfrac32 t)$ at $\Delta E=\tfrac32$. Refute or confirm with a numeric spot value
-of the density at one $(x,t)$ against the period $4\pi/3$. Close on the edge that defines
-"genuine": a superposition of degenerate levels would still have a static density, so time
-dependence lives in energy differences, not in superposition itself.
+Work in the Poschl-Teller family $V=-\tfrac{\lambda(\lambda+1)}{2}\operatorname{sech}^2x$, whose
+bound levels are $E_n=-\tfrac{(\lambda-n)^2}{2}$, and specialize to $\lambda=2$, that is
+$V=-3\operatorname{sech}^2x$ with exactly two states, $\psi_0\propto\operatorname{sech}^2x$ at
+$E_0=-2$ and $\psi_1\propto\operatorname{sech}x\tanh x$ at $E_1=-\tfrac12$: a finite spectrum
+makes the beat a single closed-form frequency with no truncation question. This is C0 machinery
+per the `Route-Table.md` C0 row: earn both levels with `D` + `FullSimplify` residuals
+$\hat H\psi_n-E_n\psi_n\to0$, then reduce the densities of $e^{-iE_0t}\psi_0$ and of the
+equal-weight superposition with `ComplexExpand` under `Element[{x, t}, Reals]`. The stationary
+density is $t$-free identically; the superposition carries a cross term $\cos(\Delta E\,t)$ with
+$\Delta E=\lambda-\tfrac12$, so the whole family beats, and $\lambda=2$ gives $\Delta E=\tfrac32$
+with period $4\pi/3$, refutable by a numeric spot value of the density at one $(x,t)$. Close by
+taking `Limit` of that same cross term as $\Delta E\to0$: the density goes static, so genuine
+time dependence lives in energy differences, not in superposition itself.
 
 #### 5.2 [BSc] How do I integrate the time-dependent Schrodinger equation directly as a PDE with `NDSolve` for a given initial $\psi(x,0)$?
 
 Release the cusp packet $\psi_0\propto e^{-|x-x_0|}$, $x_0=3$, in the harmonic trap $V=x^2/2$:
 its momentum amplitude falls only as $(1+k^2)^{-1}$, a genuine grid stress a smooth default
-packet would never apply. Integrate under the shared C3 contract (running a default-goals twin
-alongside exhibits the silent-error trap live), with the box beyond the classical turning point
-of the highest resolved momentum and the split-step propagator as cross-check. The trap makes
-the run refutable through exact anchors that reuse $\psi_0$: the density at $t=\pi$ must equal
-$\rho_0(-x)$ (mirror), the recurrence overlap $|\langle\psi_0|\psi(2\pi)\rangle|$ must return to
-1, and the grid-sum drift of $\langle H\rangle$ checks independently. Close with the convergence
-law under grid doubling, tail-limited by the cusp, against the spectral convergence a smooth
-packet would show.
+packet would never apply. Integrate under the shared C3 contract, with a default-goals twin run
+alongside to exhibit the silent-error trap live. Size the box from the state's own energy, edge
+$\gtrsim\sqrt{2(\langle H\rangle+4\sigma_H)}$ plus several cusp decay lengths (the tail falls as
+$e^{-|x-x_0|}$, so a handful of units suffices), and hold that box fixed while $n$ doubles, so
+the convergence law is measured on one geometry rather than on a box that moves with the grid.
+The trap supplies exact anchors that reuse $\psi_0$: the density at $t=\pi$ must equal
+$\rho_0(-x)$, the recurrence overlap $|\langle\psi_0|\psi(2\pi)\rangle|$ must return to 1, and
+the grid-sum drift of $\langle H\rangle$ refutes independently, with the split-step propagator as
+the cross-check. Close with the measured convergence law in $n$, tail-limited by the cusp, set
+against the spectral convergence a smooth packet would show.
 
 #### 5.3 [BSc] How do I follow a free Gaussian wave packet's spreading and group velocity, both analytically and by `NDSolve`?
 
-Take the question's own carrier, the free Gaussian with symbolic width $\sigma_0$ and drift
-$k_0$ (named-trivial policy), and get the closed form analytically first: `DSolve` on the free
-IVP, cross-derived by the `FourierTransform` route, both certified in the C3 verdict; this
-closed form is the class's permanent benchmark. Then run the shared C3 contract with box edge
-$\gtrsim k_0T+8\sigma_T$ and compare pointwise, plus the moment-law residuals
-$\langle x\rangle(t)-k_0t$ and $\sigma^2(t)-[\sigma_0^2+t^2/(4\sigma_0^2)]$ from grid sums, and
-exhibit the norm-blind boundary trap deliberately: an undersized box reflects at norm 1. The
-discriminating contrast is a same-width sech packet, whose rescaled density fails to collapse
-onto its initial shape: self-similar spreading is a Gaussian privilege, not a free-particle law.
-Close with the ballistic limit $\sigma(t)\to t/(2\sigma_0)$.
+The question names the free Gaussian, so it is the carrier, with width $\sigma_0$ and drift $k_0$
+kept symbolic. Get the closed form analytically first: the C3 verdict certifies `DSolve` on the
+free IVP only for the fixed packet whose $t=0$ form is $e^{-x^2/4}e^{2ix}$ ($\sigma_0=1$,
+$k_0=2$), so try symbolic-parameter `DSolve` and tag it (verify at authoring), with the transform
+route as the named fallback: `FourierTransform` of $\psi_0$, multiply by $e^{-ik^2t/2}$,
+transform back under `Assumptions -> {sigma0 > 0, Element[{x, t}, Reals]}`, then residual-verify
+the resulting closed form against the TDSE. Run the shared C3 contract with box edge
+$\gtrsim k_0T+8\sigma_T$, compare pointwise, and check the moment laws $\langle x\rangle(t)=k_0t$
+and $\sigma^2(t)=\sigma_0^2+t^2/(4\sigma_0^2)$ from grid sums; then exhibit the norm-blind
+boundary trap deliberately, an undersized box reflecting at norm 1. The discriminating contrast
+is a same-width sech packet whose rescaled density fails to collapse onto its initial shape:
+self-similar spreading is a Gaussian privilege, not a free-particle law. Close with the ballistic
+limit $\sigma(t)\to t/(2\sigma_0)$.
 
 #### 5.4 [MSc] How do I implement the split-step Fourier propagator from scratch and benchmark it against `NDSolve`?
 
 Build the Strang map $e^{-iV\,dt/2}e^{-iK\,dt}e^{-iV\,dt/2}$ from scratch on
-`Fourier`/`InverseFourier` (`FourierParameters -> {1,-1}`, packed arrays, the $k$-grid
-convention checked before use) and benchmark it against the shared `NDSolveValue` contract on a
-packet oscillating in the symmetric quartic double well $V=(x^2-a^2)^2/2$: a
-local-harmonic-width Gaussian displaced off the left minimum, $a$ fixed at authoring so
-inter-well leakage is visible on the run time. This question is the C3 verdict's own certified
-cross-check pair, and the tunneling tail is where phase errors make the two integrators
-measurably disagree. Verify that the pointwise disagreement shrinks under $dt$ halving and goal
-tightening, and measure the Strang order in a coarse-$dt$ window, since the verdict flags the
-order ratio as contaminated at the $10^{-13}$ floor; the discriminator is the per-step norm,
-split-step holding $|\,\lVert\psi\rVert^2-1|$ near $10^{-13}$ while `NDSolveValue` drifts near
-$10^{-5}$. Close with the $V\to0$ limit, which must reproduce the free-Gaussian closed form.
+`Fourier`/`InverseFourier` (`FourierParameters -> {1,-1}`, packed arrays, the $k$-grid convention
+checked before use) and benchmark it against the shared `NDSolveValue` contract on a packet in
+the symmetric quartic double well $V=(x^2-a^2)^2/2$, started as a local-harmonic-width Gaussian
+displaced onto the left minimum. Pin $a=1.5$, where the barrier $a^4/2\approx2.5$ is comparable
+to the local zero-point energy $\omega/2=a=1.5$: the doublet splitting is then of order $10^{-1}$
+and the tunneling period $\pi/\Delta E$ of order $10^2$, inside reach of the integrator, whereas
+the C2-measured deep cases $a=2$ (splitting $7.58\times10^{-4}$, period about $8\times10^3$) and
+$a=2.2$ ($2.9\times10^{-5}$, about $2\times10^5$) sit three to five orders beyond the probed
+windows and would be dominated by drift. Confirm the splitting with a quick eigenvalue check (the
+C2 recipe) before committing run time. Verify that the pointwise disagreement between the two
+integrators shrinks under $dt$ halving and goal tightening at fixed $n$, and measure the Strang
+order in a coarse-$dt$ window, since the verdict flags the order ratio as contaminated at the
+$10^{-13}$ floor. The discriminator is per-step norm, measured for this run rather than
+transplanted: the verdict's $10^{-13}$ split-step and $10^{-5}$ `NDSolveValue` drifts are
+free-packet references at $T\lesssim6$, not predictions for a longer double-well run. Close with
+the $V\to0$ limit, which must reproduce the free-Gaussian closed form.
 
 #### 5.5 [MSc] How do I evolve a state by expanding it in energy eigenstates and propagating term by term, and observe wave-packet revivals?
 
 Expand the off-center triangular packet peaked at $x_0=L/3$ in the infinite well of width $L$:
-the kink populates many modes with $c_n$ decaying only as $1/n^2$, and the quadratic spectrum
-$E_n=n^2\pi^2/(2L^2)$ makes the revival exact, $E_nT_{\mathrm{rev}}=2\pi n^2$ at
-$T_{\mathrm{rev}}=4L^2/\pi$. The primary is the exact eigenbasis per the `Route-Table.md`
-cross-class hand-off (5.5 leans on the box's exact spectrum): $c_n$ by `Integrate` in closed
-form with `Assumptions -> Element[n, Integers]`, then a truncated `Sum` bounded by the tail mass
-$\sum_{n>N}|c_n|^2$. The revival is exact by construction there, so the refutable content sits
-in the mirror identity $\psi(x,T_{\mathrm{rev}}/2)=-\psi_0(L-x)$, compared pointwise between the
-truncated series and the reflected initial function, and in an independent `NDSolveValue`
-evolution whose overlap $|\langle\psi_0|\psi(T_{\mathrm{rev}})\rangle|$ must return to 1; that
-run takes explicit Dirichlet conditions $\psi(t,0)=\psi(t,L)=0$ at tight goals rather than the
-periodic-pseudospectral primary, because the walls are physical and the C3 verdict certifies
-only the evolution cross-check for this member. As a long-time member it inherits the flagged
-risks: default-goal drift grows with integration length and pseudospectral cost above $n=513$ is
-unprobed, so the numeric leg carries a goal-and-resolution sweep. Close with the quarter-revival
-two-image cat at $T_{\mathrm{rev}}/4$.
+the kink populates many modes with $c_n$ decaying only as $1/n^2$. Certify the spectrum before
+leaning on it, since the whole revival argument needs $E_n$ exactly quadratic in $n$: substitute
+$\psi_n=\sqrt{2/L}\sin(n\pi x/L)$ with symbolic $n$ into the stationary equation, `FullSimplify`
+the residual to $0$ under `Element[n, Integers]`, and check $\psi_n(0)=\psi_n(L)=0$; then
+$E_n=n^2\pi^2/(2L^2)$ gives $E_nT_{\mathrm{rev}}=2\pi n^2$ at $T_{\mathrm{rev}}=4L^2/\pi$. The
+primary is the exact eigenbasis per the `Route-Table.md` cross-class hand-off: $c_n$ by
+`Integrate` in closed form with `Assumptions -> Element[n, Integers]`, a truncated `Sum` bounded
+by the tail mass $\sum_{n>N}|c_n|^2$. The revival is then exact by construction, so the refutable
+content is the mirror identity $\psi(x,T_{\mathrm{rev}}/2)=-\psi_0(L-x)$, compared pointwise
+between the truncated series and the reflected initial function, plus an independent numeric
+evolution whose overlap $|\langle\psi_0|\psi(T_{\mathrm{rev}})\rangle|$ must return to 1. That
+run leaves the periodic-pseudospectral primary because these walls are physical, and the
+verdict's only Dirichlet evidence is a free packet striking an artificial wall, which does not
+transfer; pseudospectral on a non-periodic grid with Dirichlet conditions is gated in no verdict,
+so take `"DifferenceOrder" -> 4` with `MinPoints` and `MaxPoints` pinned and swept, and tag a
+pseudospectral variant (verify at authoring) if the kink's high modes demand it. As a long-time
+member it inherits the flagged risks, default-goal drift growing with integration length and
+pseudospectral cost above $n=513$ unprobed, so the numeric leg carries a goal-and-resolution
+sweep. Close with the quarter-revival two-image cat at $T_{\mathrm{rev}}/4$.
 
 #### 5.6 [MSc] How does an oscillator coherent state evolve, so that $\langle x\rangle(t)$ traces the classical oscillation while the packet stays minimal and does not spread?
 
@@ -298,19 +319,25 @@ state, noting the edge that a strong squeeze under-resolves the narrow phase of 
 #### 5.7 [MSc] How do I watch a wave packet scatter off a barrier in real time and see tunneling and reflection split the packet?
 
 Boost the compact-support raised-cosine packet
-$\psi_0\propto\left(1+\cos\frac{\pi(x-x_c)}{w}\right)e^{ik_0x}$ on $|x-x_c|<w$ at the Eckart
-barrier $V_0\operatorname{sech}^2(x/a)$: the initial barrier overlap is exactly zero, so the
-reflected and transmitted fragments are unambiguous, and the barrier carries the exact anchor
+$\psi_0\propto\left(1+\cos\frac{\pi(x-x_c)}{w}\right)e^{ik_0x}$ on $|x-x_c|<w$, with $x_c=-20$,
+$w=5$, $k_0=2$, at the Eckart barrier $V_0\operatorname{sech}^2(x/a)$ with $V_0=2$ and $a=1$.
+That places the mean energy $E_0=k_0^2/2=2$ mid-ramp on the exact anchor
 $T(E)=\sinh^2(\pi ka)\,/\,[\sinh^2(\pi ka)+\cosh^2(\tfrac\pi2\sqrt{8V_0a^2-1})]$ with
-$k=\sqrt{2E}$, valid for $8V_0a^2>1$. Run the shared C3 contract with box edge
-$\gtrsim k_0T+8\sigma_T$ on both sides (both fragments travel) and the split-step cross-check.
-The refuting check: the late-time transmitted mass (grid sum beyond the barrier) against the
-momentum-resolved prediction $\int T(k)\,|\tilde\psi_0(k)|^2\,dk$ built from the same $\psi_0$
-via `FourierTransform`, with $R+T=1$ from the same sums. The C3 verdict flags 5.7's ringing as
-its unmeasured open risk: the smooth Eckart barrier retires the potential-side Gibbs ringing
-while keeping an exact anchor, but the packet's $C^1$ support seams still seed high-$k$ content,
-so a resolution sweep of the seam ringing is mandatory at authoring. Close with $T\to1$ at
-$E\gg V_0$ set against the deep-tunneling suppression.
+$k=\sqrt{2E}$, valid for $8V_0a^2>1$: here $\sinh^2(2\pi)=7.17\times10^4$ against
+$\cosh^2(\tfrac\pi2\sqrt{15})=4.83\times10^4$, so $T=0.60$ and both fragments are large enough to
+see and to weigh. The barrier vanishes nowhere, so compact support does not give zero initial
+overlap; it gives a quantitatively negligible one, $V/V_0=\operatorname{sech}^2(d/a)\approx
+4e^{-2d/a}=3.7\times10^{-13}$ at the nearest support edge $d=15$, an energy shift far below
+tolerance, while the real payoff is an unambiguous late-time mass split and a clean initial
+momentum amplitude. Run the shared C3 contract with box edge $\gtrsim k_0T+8\sigma_T$ on both
+sides, since both fragments travel, and the split-step cross-check. The refuting check is the
+late-time transmitted mass (grid sum beyond the barrier) against
+$\int T(k)\,|\tilde\psi_0(k)|^2\,dk$ built from the same $\psi_0$ via `FourierTransform`, with
+$R+T=1$ from the same sums. The C3 verdict flags 5.7's ringing as its unmeasured open risk: the
+smooth Eckart barrier retires the potential-side Gibbs ringing while keeping the exact anchor,
+but the packet's $C^1$ support seams still seed high-$k$ content, so a resolution sweep in $n$ of
+the seam ringing is mandatory at authoring. Close with $T\to1$ at $E\gg V_0$ set against the
+deep-tunneling suppression.
 
 #### 5.8 [MSc] How do I construct the propagator (kernel) $K(x,t;x',0)$ for the free particle and for the oscillator (the Mehler kernel)?
 
@@ -318,53 +345,60 @@ Construct the free kernel $K_0=(2\pi it)^{-1/2}e^{i(x-x')^2/(2t)}$ from the mome
 $\frac{1}{2\pi}\int e^{ik(x-x')-ik^2t/2}\,dk$ by `Integrate` with a $t\to t-i\epsilon$ regulator
 and `Limit`, and the Mehler kernel
 $K_{\mathrm{osc}}=(2\pi i\sin t)^{-1/2}\exp\!\left\{\tfrac{i}{2\sin t}\left[(x^2+x'^2)\cos t-2xx'\right]\right\}$
-by summing the Wick-rotated eigen-sum $\sum_n e^{-(n+1/2)\tau}\psi_n(x)\psi_n(x')$ (`HermiteH`)
-into its closed Gaussian form and continuing $\tau\to it$; at real $t$ the eigen-sum oscillates
-without converging pointwise, so the Wick-rotated comparison is the honest second
-representation (C0 per the `Route-Table.md` C0 row). Each kernel earns its name three ways, any
-failure refuting it: the TDSE residual in $(x,t)$ is identically $0$ under `D` + `FullSimplify`;
-the composition law $\int K(x,t_1;x'')\,K(x'',t_2;x')\,dx''=K(x,t_1{+}t_2;x')$ closes; and the
-$t\to0^+$ action on a test packet returns the packet, the $\delta(x-x')$ limit taken through a
-test function, never as a bare limit. Then let the free kernel act on the Berry-Balazs Airy beam
-(`AiryAi`, transformation-object reuse allowed by the ledger) and land on the accelerating form
-$\operatorname{Ai}(x-t^2/4)\,e^{it(x-t^2/6)/2}$. Close at the caustics $t=n\pi$, where the
-Mehler prefactor diverges and the kernel degenerates to mirrored delta transport, with the
-$\sin t\to t$ free-kernel limit as the bridge between the two.
+by closing the Wick-rotated eigen-sum $\sum_n e^{-(n+1/2)\tau}\psi_n(x)\psi_n(x')$ with `Sum`
+(`HermiteH`) and continuing $\tau\to it$; if `Sum` refuses the bilinear Hermite series, posit the
+closed form and certify it instead by the imaginary-time residual
+$\partial_\tau K=\tfrac12\partial_{xx}K-\tfrac12x^2K$ and the $\tau\to0^+$ delta limit. At real
+$t$ the eigen-sum oscillates without converging pointwise, which is why the comparison runs
+through imaginary time (C0 per the `Route-Table.md` C0 row). Each kernel earns its name three
+ways, any failure refuting it: the TDSE residual in $(x,t)$ is identically $0$ under `D` +
+`FullSimplify`; the composition law $\int K(x,t_1;x'')\,K(x'',t_2;x')\,dx''=K(x,t_1{+}t_2;x')$
+closes; and the $t\to0^+$ action on a test packet returns the packet, the $\delta(x-x')$ limit
+taken through a test function, never as a bare limit. Add a numeric leg: propagate one packet by
+explicit kernel quadrature at fixed $t$ and compare against a locally rebuilt split-step Fourier
+map. Then let the free kernel act on the Berry-Balazs Airy beam (`AiryAi`), which propagates as
+$\operatorname{Ai}(x-t^2/4)\,e^{it(x-t^2/6)/2}$, an accelerating profile out of a free kernel.
+Close at the caustics $t=n\pi$, where the Mehler prefactor diverges and the kernel degenerates to
+mirrored delta transport, with the $\sin t\to t$ free-kernel limit as the bridge between the two.
 
 #### 5.9 [BSc] How do I verify Ehrenfest's theorem numerically, that $\langle x\rangle$ and $\langle p\rangle$ obey the classical equations of motion?
 
 Evolve the asymmetric two-lobe packet, the normalized unequal-weight sum
-$e^{-(x-1.2)^2}+\tfrac12 e^{-(x+0.6)^2}$, in the quartic well $V=x^4/4$ (the ledger pins
-"packet in the quartic well"; this skewed specification sits inside that class): its skewness
-makes $\langle x^3\rangle-\langle x\rangle^3$ order one from $t=0$, so Ehrenfest's actual
-content, $\frac{d\langle p\rangle}{dt}=-\langle V'(x)\rangle=-\langle x^3\rangle$ against the
-classical $-V'(\langle x\rangle)=-\langle x\rangle^3$, is the largest feature on the plot rather
-than a subtlety. Run the shared C3 contract with the box beyond the packet's classical turning
-points, moments as $dx$-weighted grid sums and $\langle p\rangle$ from the spectral derivative
-on the split-step $k$-grid. The machinery's refuter is the harmonic control: the same packet in
-$V=x^2/2$, where quadratic $V$ closes Ehrenfest on $\langle x\rangle$ exactly, so any gap there
-is an error. On the quartic run both residuals $\frac{d\langle x\rangle}{dt}-\langle p\rangle$
-and $\frac{d\langle p\rangle}{dt}+\langle x^3\rangle$ must vanish to tolerance (the $d/dt$ of a
-sampled moment series has a finite-difference noise floor, stated as such) while the classical
-curve departs. Close with the narrow-packet limit shrinking the gap: classicality is a property
-of the state's spread, not of the theorem.
+$e^{-(x-1.2)^2}+\tfrac12 e^{-(x+0.6)^2}$, in the quartic well $V=x^4/4$, where Ehrenfest's actual
+content is the difference between $\frac{d\langle p\rangle}{dt}=-\langle V'(x)\rangle=
+-\langle x^3\rangle$ and the classical $-V'(\langle x\rangle)=-\langle x\rangle^3$. That gap is
+$\langle x^3\rangle-\langle x\rangle^3=3\langle x\rangle\operatorname{Var}(x)+\mu_3$, so what the
+example must supply is a large variance at nonzero $\langle x\rangle$ together with a nonzero
+third central moment $\mu_3$; skewness alone is not the mechanism, and even a symmetric packet
+displaced off the origin already opens the first term. Run the shared C3 contract with the box
+beyond the packet's classical turning points, moments as $dx$-weighted grid sums and
+$\langle p\rangle$ from the spectral derivative on the $k$-grid. The machinery's refuter is the
+harmonic control, the same packet in $V=x^2/2$, where quadratic $V$ closes Ehrenfest on
+$\langle x\rangle$ exactly, so any gap there is an error. On the quartic run both residuals
+$\frac{d\langle x\rangle}{dt}-\langle p\rangle$ and
+$\frac{d\langle p\rangle}{dt}+\langle x^3\rangle$ must vanish to tolerance, allowing for the
+finite-difference noise floor of $d/dt$ on a sampled moment series, while the classical curve
+departs. Close with the narrow-packet limit shrinking both terms of the gap: classicality is a
+property of the state's spread, not of the theorem.
 
 #### 5.10 [BSc] How do I confirm that norm and probability current are conserved along an `NDSolve` evolution (a numerical-fidelity check)?
 
-Launch the boosted supergaussian $\psi_0\propto e^{-(x-x_0)^4}e^{ik_0x}$ from $x_0=-8$ across
-the reflectionless well $V=-\operatorname{sech}^2x$, the $\lambda=1$ Poschl-Teller well with the
-single bound state $E_0=-\tfrac12$: $|t(k)|=1$ for every momentum component, so any reflected
-lobe above tolerance is guaranteed spurious and the fidelity checks ride a striking exact
-property. Derive the current symbolically before the run, from the TDSE for generic $\psi$ and
-real $V$, writing $\rho=\psi\bar\psi$ (never differentiate $|\psi|^2$ literally: `D[Abs[..]]`
-yields no delta, a C3-cited trap) to get $\partial_t\rho+\partial_x j=0$ with
+Launch the boosted supergaussian $\psi_0\propto e^{-(x-x_0)^4}e^{ik_0x}$ from $x_0=-8$ across the
+reflectionless well $V=-\operatorname{sech}^2x$, the $\lambda=1$ Poschl-Teller well with the
+single bound state $\psi_b=\operatorname{sech}(x)/\sqrt2$ at $E_b=-\tfrac12$: $|t(k)|=1$ for
+every momentum component, so any reflected lobe above tolerance is guaranteed spurious. Derive
+the current symbolically before the run, from the TDSE for generic $\psi$ and real $V$, writing
+$\rho=\psi\bar\psi$ (never differentiate $|\psi|^2$ literally, since `D[Abs[..]]` yields no
+delta, a C3-cited trap) to get $\partial_t\rho+\partial_x j=0$ with
 $j=\operatorname{Im}(\bar\psi\,\partial_x\psi)$. Run the shared C3 contract with box edge
-$\gtrsim k_0T+8\sigma_T$ and grade three checks of increasing strength on the same run: the
-norm grid-sum drift; the continuity residual on the grid, shrinking under refinement; and
-station-flux bookkeeping, $\int_0^T j(x_s,t)\,dt$ equal to the probability mass transferred past
-$x_s$, with the transmitted mass $\to1$ as the reflectionless anchor. Exhibit the norm-blindness
-lesson live, an undersized box reflecting at norm 1, so norm alone certifies nothing about
-walls. Close on that ranking: a fidelity check that cannot fail teaches nothing.
+$\gtrsim k_0T+8\sigma_T$ and grade three checks of increasing strength on the same run: the norm
+grid-sum drift; the continuity residual on the grid, shrinking under refinement in $n$; and
+station-flux bookkeeping, $\int_0^T j(x_s,t)\,dt$ against the probability mass transferred past
+$x_s$. Reflectionless does not mean everything transmits: the well captures its bound component
+permanently, so predict $T=1-|\langle\psi_b|\psi_0\rangle|^2$ by `Integrate` from the same
+definitions, a truthful and strictly stronger anchor than $T\to1$. Exhibit the norm-blindness
+lesson live, an undersized box reflecting at norm 1, so norm alone certifies nothing about walls.
+Close on that ranking: a fidelity check that cannot fail teaches nothing.
 
 ## Part 6 Plan: Scattering in one dimension
 
@@ -1235,14 +1269,21 @@ equation $-\tfrac12 u''+(\tfrac{l(l+1)}{2r^2}-\tfrac1r)u=E\,u$ with symbolic $E$
 general solution arrives as WhittakerM and WhittakerW in under a second; never hand DSolve both
 decay boundary conditions, it hangs with no message. Quantization is the manual termination
 read-off: the normalizable branch terminates exactly when $1/\sqrt{-2E}=n$ with $n$ a positive
-integer, and Solve turns that into $E_n=-1/(2n^2)$, tabulated for $n=1..4$. Assemble
+integer, and Solve turns that into $E_n=-1/(2n^2)$, tabulated for $n=1..4$. Convert the complex
+Whittaker form to the real Laguerre form through the explicit branch substitution
+$en\to-\kappa^2/2$ with $\kappa>0$, made per level rather than left to automatic simplification
+(the C1 verdict flags this bookkeeping as an open risk), assemble
 $u_{nl}=r^{l+1}e^{-r/n}L_{n-l-1}^{2l+1}(2r/n)$ with LaguerreL, close the residual to 0 with
 FullSimplify under the integer and positivity assumptions ($n,l$ integers, $n\ge l+1$, $l\ge0$,
 $r>0$), and take exact Integrate norms. Cross-check on independent machinery: NDEigenvalues with
 explicit DirichletCondition at both ends and Arnoldi Shift below the ground state, since the
-unshifted call silently returns only near-zero values and misses every bound level. Close with the
-Rydberg accumulation $E_n\to0^-$: infinitely many levels crowd under the continuum, the structural
-fact any truncated numeric box must answer for.
+unshifted call silently returns only near-zero values and misses every bound level; take the
+domain literally at $r=0$, which C2 probe p2 measured as best, because an origin cutoff installs
+an error floor $\Delta E\approx2\varepsilon$ that mesh refinement cannot pass (C1 probe 7:
+$1.8\times10^{-2}$, $2.0\times10^{-4}$, $2.0\times10^{-6}$ at $\varepsilon=10^{-2},10^{-4},10^{-6}$)
+and is actively harmful once $l\ge1$. Close with the Rydberg accumulation $E_n\to0^-$: infinitely
+many levels crowd under the continuum, the structural fact any truncated numeric box must answer
+for.
 
 #### 12.2 [BSc] How do I build the radial wavefunctions from the associated Laguerre polynomials and normalize them?
 
@@ -1252,11 +1293,14 @@ in prose first, then build it with LaguerreL. The symbolic-$(n,l)$ closed-form n
 risk in the C1 verdict while fixed-$(n,l)$ exact norms are certified: attempt
 $\int_0^\infty R_{nl}^2\,r^2\,dr=1$ with Integrate under the integer and positivity assumptions,
 and whatever the general integral returns, certify the normalization at fixed pairs, at least
-$(3,1)$, $(2,0)$, $(4,2)$. Verification that can refute: the radial-equation residual of the
-defined $R_{31}$ FullSimplifies to 0 under the same assumptions, and the orthogonality
-$\int_0^\infty R_{21}R_{31}\,r^2\,dr=0$ reuses both definitions against the same measure. Close by
-reading the node count $n-l-1$ off the Laguerre degree and locating the $R_{31}$ node exactly at
-$r=6$ from $L_1^{3}(2r/3)=0$.
+$(3,1)$, $(2,0)$, $(4,2)$, with an NIntegrate spot-check of the $(3,1)$ norm reusing the same
+defined $R_{31}$ as the independent numeric reference. Verification that can refute: the
+radial-equation residual of the defined $R_{31}$ FullSimplifies to 0 under the same assumptions,
+and the orthogonality $\int_0^\infty R_{21}R_{31}\,r^2\,dr=0$ reuses both definitions against the
+same measure. The limiting regime is the origin: Series or Limit on $u_{nl}=rR_{nl}$ as $r\to0$
+must give the centrifugal suppression $u_{nl}\sim r^{l+1}$, so the $l=1$ carrier vanishes
+quadratically where an $s$ state vanishes only linearly. Close by reading the node count $n-l-1$
+off the Laguerre degree and locating the $R_{31}$ node exactly at $r=6$ from $L_1^{3}(2r/3)=0$.
 
 #### 12.3 [BSc] How do I assemble the full $\psi_{nlm}$, plot probability densities and the radial distribution, and compute $\langle r\rangle$?
 
@@ -1276,8 +1320,9 @@ $P(r)$ is skewed outward.
 #### 12.4 [BSc] How do I find the bound states of a spherical square well numerically?
 
 Spherical finite well $V=-V_0$ for $r<a$, zero beyond, at $V_0=10$, $a=1$: deep enough to bind one
-level each for $l=0$ and $l=1$, since an $s$ level needs $\sqrt{2V_0}\,a>\pi/2$ and a $p$ level
-needs $\sqrt{2V_0}\,a>\pi$, and $\sqrt{20}\approx4.47$. Numeric side per the C2 recipe:
+level each for $l=0$ and $l=1$, since the first $s$ level appears at $\sqrt{2V_0}\,a=\pi/2$ and
+the first $p$ level at $\sqrt{2V_0}\,a=\pi$, while $\sqrt{20}\approx4.47$ clears both. Numeric
+side per the C2 recipe:
 NDEigenvalues on the reduced $u$ with explicit DirichletCondition at both ends, Arnoldi Shift
 below $-V_0$ then Sort, MaxCellMeasure 0.01, the domain taken literally at $r=0$ (an $\epsilon$
 cutoff is actively harmful for $l\ge1$), and the truncation radius fixed by an $R$-doubling sweep.
@@ -1285,23 +1330,34 @@ Benchmark side: exact matching, region by region because DSolve silently echoes 
 potential: with $k=\sqrt{2(E+V_0)}$ and $\kappa=\sqrt{-2E}$, the $l=0$ condition is
 $k\cot ka=-\kappa$, and $l=1$ matches the log-derivative of $r\,j_1(kr)$ (SphericalBesselJ) to the
 elementary decaying exterior $e^{-\kappa r}(1+1/(\kappa r))$, FindRoot solving each condition.
-Verification: the FEM levels against the FindRoot roots, independent machinery on both sides, so
-any disagreement beyond the mesh floor refutes one route. Close by sweeping $V_0$ downward until
-the $l=1$ level crosses zero at $\sqrt{2V_0}\,a=\pi$: a shallow 3D well holds no bound state at
-all, the sharpest contrast with one dimension, where any attractive well binds.
+Certify the closed forms before comparing them: substitute each region's expression back into the
+reduced radial equation and Simplify the residual to 0 under $k,\kappa,r>0$, so a mismatch cannot
+be blamed on a mistyped Bessel form. Verification: the FEM levels against the FindRoot roots,
+independent machinery on both sides, so any disagreement beyond the mesh floor refutes one route.
+Close by sweeping $V_0$ downward through the two thresholds: at $\sqrt{2V_0}\,a=\pi$ the $l=1$
+level is expelled, and only below $\sqrt{2V_0}\,a=\pi/2$ does the well hold no bound state at all,
+the sharpest contrast with one dimension, where any attractive well binds.
 
 #### 12.5 [MSc] How do I solve the three-dimensional isotropic oscillator and reconcile its Cartesian and spherical degeneracy counts?
 
-The $N=2$ shell of the 3D isotropic oscillator at $E=\tfrac72$: six Cartesian products
-$h_{n_x}(x)\,h_{n_y}(y)\,h_{n_z}(z)$ with $n_x+n_y+n_z=2$ (HermiteH times Gaussian) against the
-spherical set $R_{n_r l}\,Y_{lm}$ with $R_{n_r l}\propto r^{l}e^{-r^2/2}L_{n_r}^{l+1/2}(r^2)$: the
-five-state $l=2$ multiplet ($n_r=0$) plus the single $l=0$ radial excitation ($n_r=1$), so $6=5+1$.
-The explicit map: rewrite each spherical state as polynomial times Gaussian in Cartesian
-coordinates and compute the $6\times6$ overlap matrix by exact Integrate; verification that can
-refute: the matrix must be exactly unitary and both bases must give residual
-$\hat H\psi=\tfrac72\psi$ under Simplify, either failure exposing a wrong radial or angular factor.
-Degeneracy is reconciled by shell projector or multiplicities, never by individual FEM
-eigenfunctions: inside a degenerate shell an eigensolver returns an arbitrarily mixed basis
+The carrier is the $N=2$ shell of the 3D isotropic oscillator at $E=\tfrac72$, but the count is
+earned before the shell is inspected. The separation is the route, per C7's primary: substitute
+$\psi=X(x)Y(y)Z(z)$ into $\hat H\psi=E\psi$, divide by $\psi$, Expand, and certify the additive
+split with a per-term FreeQ test (the 3D mechanics are probed in C7 probe1), leaving three Hermite
+problems and $E=n_x+n_y+n_z+\tfrac32$; the spherical substitution $\psi=\tfrac{u(r)}{r}Y_{lm}$
+reduces the same operator to the radial equation whose solutions
+$R_{n_r l}\propto r^{l}e^{-r^2/2}L_{n_r}^{l+1/2}(r^2)$ give $E=2n_r+l+\tfrac32$. Equating the two
+labelings turns the degeneracy into an identity rather than an observation: the Cartesian shell
+$n_x+n_y+n_z=N$ holds $(N+1)(N+2)/2$ states, the spherical shell runs $l=N,N-2,\dots$ down to 0 or
+1 with $n_r=(N-l)/2$, and $\sum_{l=N,N-2,\dots}(2l+1)=(N+1)(N+2)/2$ must hold for every $N$, closed
+symbolically with Sum and exhibited at $N=2$ ($6=5+1$) and $N=3$ ($10=7+3$), the odd shell being
+the one where a single $l$ cannot carry the count. The explicit map at $N=2$: rewrite each
+spherical state as polynomial times Gaussian in Cartesian coordinates and compute the $6\times6$
+overlap matrix by exact Integrate; verification that can refute: the matrix must be exactly
+unitary and both bases must give residual $\hat H\psi=\tfrac72\psi$ under Simplify, either failure
+exposing a wrong radial or angular factor. Degeneracy is reconciled by shell projector or
+multiplicities, never by individual FEM eigenfunctions: inside a degenerate shell an eigensolver
+returns an arbitrarily mixed basis
 (largest single overlap 0.958 in the C7 verdict's 2D shell probe) while the shell projector is
 reproduced. Any 3D NDEigensystem confirmation is authoring-gated, since 3D FEM cost is unprobed
 in the C7 verdict: gate it with its own mesh sweep, or let the multiplicity count $\{5,1\}$ at the
@@ -1333,8 +1389,10 @@ C2 representative, gates cited verbatim from the Route-Table C2 verdict. Hydroge
 equation on $(0,R)$, benchmark $E_n=-1/(2n^2)$, with all four load-bearing elements of the recipe:
 explicit `DirichletCondition[u[r]==0, True]` at both ends (omitting BCs silently yields a ground
 level 24 percent wrong, no message); `Method -> {"Eigensystem" -> {"Arnoldi", "Shift" -> -0.6}}`
-then Sort (unshifted, NDEigenvalues returns six values in $(-0.030,0.046)$, every bound level
-silently absent); MaxCellMeasure 0.01; the domain taken literally at $r=0$, since an $\epsilon$
+then Sort (unshifted, NDEigenvalues on this exact problem returns
+$\{-0.0111, 0.0157, -0.0306, 0.0501, -0.0555, 0.0916\}$, a near-zero Rydberg tail plus box
+continuum spanning $(-0.0555, 0.0916)$, the ground state absent with no message, C2 probe
+p1-hydrogen-l0.wls); MaxCellMeasure 0.01; the domain taken literally at $r=0$, since an $\epsilon$
 cutoff is actively harmful for $l\ge1$ ($r_{\min}=0$ reaches $5.5\times10^{-13}$ on $n=2$ where
 $\epsilon=0.1$ costs $5.4\times10^{-5}$). Truncation is the teaching exhibit: failure invades from
 the top as the Rydberg accumulation outgrows the box ($R=20$ puts $0.133$ on $n=5$; $R=160$ holds
@@ -1350,19 +1408,27 @@ detector (Shift plus Sort, explicit Dirichlet, $R$-doubling).
 #### 12.8 [MSc] How do I compute the quantum defect of an alkali-like screened-Coulomb potential?
 
 Sodium-like screened Coulomb $V(r)=-\tfrac1r\left(1+(Z-1)e^{-r/a}\right)$ with $Z=11$ and $a$
-tuned at authoring so the $s$ defect lands near sodium's $\delta_0\approx1.35$. Levels $E_{nl}$
-for $l=0,1,2$ and several $n$ by the C2 recipe (explicit DirichletCondition at both ends, Arnoldi
-Shift below the deepest level then Sort, MaxCellMeasure 0.01, domain literally at $r=0$); high-$n$
-levels sit near the Rydberg accumulation point, so the $R$-doubling sweep is mandatory per level,
-with $R$ well beyond $2n^2$ of the highest wanted state ($R=160$ for $n=5$ at floor accuracy).
-Extract $\delta_l=n-1/\sqrt{-2E_{nl}}$ from eigenvalues alone: eigenfunction normalization is
-unprobed in the C2 verdict, and the eigenvalue-only extraction avoids it entirely (any
-wavefunction-based matrix element would have to check its norm explicitly first). Verification
-that can refute: turn the screening off, $(Z-1)\to0$ on the same grid, and every extracted
-$\delta_l$ must collapse to zero with the levels back on $-1/(2n^2)$; the Rydberg-formula content
-is the near-constancy of $\delta_l$ across $n$, displayed as a table rather than presumed by a
-fit. Close with the hierarchy $\delta_0>\delta_1>\delta_2\approx0$: only penetrating orbits see
-the unscreened core, which is the physics the defect measures.
+tuned at authoring so the valence $s$ defect lands near sodium's $\delta_0\approx1.35$. Levels per
+$l$ channel by the C2 recipe (explicit DirichletCondition at both ends, Arnoldi Shift below the
+deepest level then Sort, MaxCellMeasure 0.01, domain literally at $r=0$); high-$n$ levels sit near
+the Rydberg accumulation point, so the $R$-doubling sweep is mandatory per level, with $R$ well
+beyond $2n^2$ of the highest wanted state ($R=160$ for $n=5$ at floor accuracy). The sorted output
+is the channel spectrum counted from its bottom, so the principal quantum number is assigned, not
+assumed: the $k$-th state of the sorted $l$ channel ($k$ from 0) carries $k$ radial nodes, hence
+$n=k+l+1$. At $Z=11$ the bottom of each channel is a deeply bound core level near $-Z^2/2$, which
+is not a perturbed Coulomb state at all, so the defect table covers only the valence series (in
+this model $n\ge3$ in all three channels, the boundary located by where the levels rejoin the
+Rydberg pattern) and the core levels stand beside it as the contrast. Extract
+$\delta_l=n-1/\sqrt{-2E_{nl}}$ from eigenvalues alone: eigenfunction normalization is unprobed in
+the C2 verdict, and the eigenvalue-only extraction avoids it entirely (any wavefunction-based
+matrix element would have to check its norm explicitly first). Verification that can refute: turn
+the screening off, $(Z-1)\to0$ on the same grid, and every extracted $\delta_l$ must collapse to
+zero with the levels back on $-1/(2n^2)$; the Rydberg-formula content is the near-constancy of
+$\delta_l$ across the valence $n$, shown both as the per-level table and as a one-parameter
+FindFit of those same levels to $-1/(2(n-\delta_l)^2)$, whose residual measures the leftover
+$n$-dependence the single-parameter formula cannot absorb. Close with the hierarchy
+$\delta_0>\delta_1>\delta_2\approx0$ and with why the core levels sit outside the table: only
+penetrating orbits see the unscreened core, and a state bound inside it is no longer Rydberg-like.
 
 #### 12.9 [MSc] How do I apply WKB to the radial equation with the Langer correction $l(l+1)\to(l+\tfrac12)^2$ and recover the Coulomb and oscillator spectra?
 
@@ -1516,48 +1582,60 @@ spin-orbit coupling into $j$-dependent numbers; the Clebsch-Gordan change of bas
 $\vert j,m_j\rangle=\sum_{m_l,m_s}C^{j m_j}_{l m_l; s m_s}\vert l,m_l\rangle\vert s,m_s\rangle$;
 and the Pauli Hamiltonian $H=\tfrac12(\hat p-A)^2-\tfrac{g}{2}\vec B\cdot\vec S$ with $g=2$, whose
 gradient-field limit is Stern-Gerlach and whose uniform-field spectrum is Landau plus Zeeman. The
-C0 row's kernel facts bind throughout (`E` is Euler's number, so energies and field strengths need
-other names; `Integrate` and `Simplify` need explicit reality and positivity assumptions to close
-norms and residuals); 14.4 evolves a PDE and cites the C3 route, 14.5 cites the C1 route.
+Zeeman sign is fixed by the family convention of a unit positive charge (`Shared-Brief.md`,
+"Charge and sign conventions"): writing the kinetic term as $(\hat p-A)$ forces
+$-\tfrac{g}{2}\vec B\cdot\vec S$. The C0 row's kernel facts bind throughout (`E` is Euler's number,
+so energies and field strengths need other names; `Integrate` and `Simplify` need explicit reality
+and positivity assumptions to close norms and residuals); 14.4 evolves a PDE and cites the C3
+route, 14.5 cites the C1 route.
 
 #### 14.1 [MSc] How do I build a two-component spinor wavefunction $\psi_\sigma(x)$ by tensoring a spin-1/2 with the spatial state?
 
-Build the pinned entangled spinor
-$\Psi=N[\operatorname{sech}(x-a)\vert\uparrow\rangle+\operatorname{sech}(x+a)\tanh(x+a)\vert\downarrow\rangle]$,
-the Poschl-Teller ground-state shape riding spin up at $+a$ and its nodal first-excited shape
-riding spin down at $-a$, as an explicit two-component vector; every spin observable then follows
-from the overlap integrals $(\rho_s)_{\sigma\sigma'}=\int\psi_\sigma\overline{\psi_{\sigma'}}\,dx$
-by `Integrate` under `Assumptions -> {a > 0, Element[x, Reals]}`. Normalize, assemble $\rho_s$ from
-the branch weights $p_\sigma$ and the cross overlap $c$, and compute the purity
-$\operatorname{Tr}\rho_s^2=p_\uparrow^2+p_\downarrow^2+2\vert c\vert^2<1$, keeping $a$ symbolic as
-far as `Integrate` closes the overlaps (closed form in $a$: verify at authoring). The contrast is
-the product state $\phi(x)(\alpha\vert\uparrow\rangle+\beta\vert\downarrow\rangle)$: the identical
-pipeline must return purity exactly 1 there, the check that could refute the entanglement claim,
-with $\operatorname{Tr}\rho_s=1$ as the standing sanity on both and an `NIntegrate` spot check of
-$c$ at $a=1$ reusing the definitions. Read off two regimes: as $a\to\infty$ the purity falls to
-$p_\uparrow^2+p_\downarrow^2$ (the $\tfrac12$ floor at equal weights), while even at $a=0$ the
-cross overlap vanishes by parity (odd integrand), so the spin stays mixed at zero displacement:
-entanglement tracks spatial distinguishability, not distance. Close on the measurement reading: an
-apparatus probing spin alone sees the mixed $\rho_s$, and the missing purity is exactly the
-which-branch information stored in position.
+Build the pinned entangled spinor as a one-parameter family: normalize each branch on its own,
+$\hat\psi_\uparrow=\operatorname{sech}(x-a)/\sqrt2$ (an even nodeless profile, the single bound
+state of $V=-\operatorname{sech}^2x$) and
+$\hat\psi_\downarrow=\sqrt{3/2}\,\operatorname{sech}(x+a)\tanh(x+a)$ (an odd one-node profile, the
+excited state of the deeper well $V=-3\operatorname{sech}^2x$), then mix them with a symbolic angle,
+$\Psi=\cos\theta\,\hat\psi_\uparrow\vert\uparrow\rangle+\sin\theta\,\hat\psi_\downarrow\vert\downarrow\rangle$,
+whose $\theta=\pi/6$ member is the ledger's pinned state. Every spin observable follows from
+`Integrate` under `Assumptions -> {a > 0, Element[x, Reals]}`: the populations are
+$p_\uparrow=\cos^2\theta$, $p_\downarrow=\sin^2\theta$ with no $a$ dependence at all (both
+$\int\operatorname{sech}^2u\,du=2$ and $\int\operatorname{sech}^2u\tanh^2u\,du=2/3$ are
+translation invariant), so the whole geometry sits in the single real overlap
+$s(a)=\int\hat\psi_\uparrow\hat\psi_\downarrow\,dx$ (closed form in $a$: verify that `Integrate`
+closes it) and the purity is
+$\operatorname{Tr}\rho_s^2=1-\tfrac12\sin^2(2\theta)\,[1-s(a)^2]$. The refuting contrast is the
+product state $\phi(x)(\alpha\vert\uparrow\rangle+\beta\vert\downarrow\rangle)$, where the identical
+pipeline must return purity exactly 1, with $\operatorname{Tr}\rho_s=1$ standing on both and an
+`NIntegrate` spot check of $s$ at $a=1$ reusing the definitions. Two limits carry the physics:
+$s$ vanishes both at $a=0$ (odd integrand, exact parity zero) and as $a\to\infty$ (disjoint
+supports), so the entanglement is maximal at zero displacement and at infinite displacement alike
+and is weakest in between, and the floor is $\tfrac12$ only at $\theta=\pi/4$, while the pinned
+$\theta=\pi/6$ member floors at $\tfrac58$. Close on the measurement reading: an apparatus probing
+spin alone sees the mixed $\rho_s$, and the missing purity is exactly the which-branch information
+stored in position, which parity can supply as completely as distance does.
 
 #### 14.2 [MSc] How do I add the spin-orbit term $\propto \vec L\cdot\vec S$ and compute the hydrogen fine structure?
 
 Assemble the pinned hydrogen $2p$ fine structure from its radial and angular factors. Radially,
-define $R_{21}(r)=r\,e^{-r/2}/\sqrt{24}$ in atomic units, earn its norm, and compute
-$\langle 1/r^3\rangle_{2p}$ by `Integrate` with the $r^2$ measure, expecting $\tfrac1{24}$ (verify
-at authoring), cross-checked against the general
-$\langle 1/r^3\rangle_{nl}=1/[n^3\,l(l+\tfrac12)(l+1)]$ at $(n,l)=(2,1)$ (verify at authoring), a
-pairing that would expose a wrong radial function. Angularly, build the $6\times6$
+define $R_{nl}(r)$ from `LaguerreL` (the associated-Laguerre argument convention and the resulting
+normalization constant: verify at authoring) and earn the norms by `Integrate` with the $r^2$
+measure; then compute $\langle r^{-3}\rangle_{nl}$ from those same definitions over the family
+$(n,l)\in\{(2,1),(3,1),(3,2),(4,1)\}$ and check that all four reproduce
+$1/[n^3\,l(l+\tfrac12)(l+1)]$, a definition-reusing test that exposes a wrong radial function or a
+wrong normalization at once and hands over the $n^{-3}$ scaling of the whole fine structure;
+$(2,1)$ gives $\langle r^{-3}\rangle_{2p}=\tfrac1{24}$. Angularly, build the $6\times6$
 $\vec L\cdot\vec S=\tfrac12(J^2-L^2-S^2)$ from `KroneckerProduct` of the $l=1$ matrices and
 `PauliMatrix[i]/2`, and let `Eigenvalues` return $\tfrac12$ four times and $-1$ twice, matching
-$\tfrac12[j(j+1)-l(l+1)-s(s+1)]$ at $j=\tfrac32,\tfrac12$ with multiplicities $2j+1$: matrix
-assembly and operator identity refute each other if either is off, and the degeneracy-weighted
-mean $4\cdot\tfrac12+2\cdot(-1)=0$ (the trace rule) is a further refutable identity. With
-$\xi(r)=\alpha^2/(2r^3)$ the splitting comes out
-$\tfrac32\cdot\tfrac{\alpha^2}{2}\langle1/r^3\rangle_{2p}=\alpha^2/32$ hartree (verify at
-authoring). Close in the lab: that is about $10.9\,\mathrm{GHz}$, the measured fine-structure
-doubling of the Lyman-$\alpha$ line.
+$\tfrac12[j(j+1)-l(l+1)-s(s+1)]$ at $j=\tfrac32,\tfrac12$ with multiplicities $2j+1$; the two
+trace identities $\operatorname{Tr}(\vec L\cdot\vec S)=0$ and
+$\operatorname{Tr}[(\vec L\cdot\vec S)^2]=3$ pin the assembly independently of the eigensolver.
+With $\xi(r)=\alpha^2/(2r^3)$ the splitting is
+$\tfrac32\cdot\tfrac{\alpha^2}{2}\langle r^{-3}\rangle_{2p}=\alpha^2/32$ hartree. Note the edge the
+family exposes: at $l=0$ the radial factor diverges while $\langle\vec L\cdot\vec S\rangle$
+vanishes, so the product is indeterminate and the $2s$ shift is carried by the Darwin term, not by
+spin-orbit. Close in the lab: $\alpha^2/32$ hartree is about $10.9\,\mathrm{GHz}$, the measured
+fine-structure doubling of the Lyman-$\alpha$ line.
 
 #### 14.3 [MSc] How do I form the total angular momentum $\vec J=\vec L+\vec S$ and change to the coupled basis?
 
@@ -1568,78 +1646,102 @@ zero matrix. Then form the $6\times6$ change-of-basis matrix $U$ whose rows are
 `ClebschGordan[{1, ml}, {1/2, ms}, {j, mj}]` coefficients (argument order and Condon-Shortley
 phase: verify at authoring) and let exact linear algebra deliver the payoff: $U.U^\dagger=\mathbb 1$,
 and $U.J^2.U^\dagger$, $U.J_z.U^\dagger$ exactly diagonal, symbolically, with entries $\tfrac{15}4$
-four times and $\tfrac34$ twice beside the matching $m_j$, every off-diagonal an exact 0. The
-refuting cross-check builds the same basis with independent machinery: start from the stretched
-state $\vert\tfrac32,\tfrac32\rangle=\vert1,1\rangle\vert\uparrow\rangle$, ladder down with $J_-$
-(normalizing each step), take the orthogonal complement within each $m_j$ block for the
-$j=\tfrac12$ pair, and compare row by row against the `ClebschGordan` output; a phase-convention
-slip appears as a sign mismatch. Close with the forward pointer: these coupled columns are the
-weak-field eigenvectors 14.6 recovers, and their multiplet structure is what 14.2's eigenvalue
-count already displayed.
+four times and $\tfrac34$ twice beside the matching $m_j$, every off-diagonal an exact 0. Two
+independent refutations: build the same basis by ladder algebra, starting from the stretched state
+$\vert\tfrac32,\tfrac32\rangle=\vert1,1\rangle\vert\uparrow\rangle$, stepping down with $J_-$ and
+renormalizing, then taking the orthogonal complement inside each $m_j$ block for the $j=\tfrac12$
+pair, and compare row by row (a phase-convention slip shows up as a sign mismatch); and check the
+general $s=\tfrac12$ closed form
+$\vert l\pm\tfrac12,m_j\rangle=\pm\sqrt{\tfrac{l\pm m_j+1/2}{2l+1}}\vert m_j-\tfrac12\rangle\vert\uparrow\rangle+\sqrt{\tfrac{l\mp m_j+1/2}{2l+1}}\vert m_j+\tfrac12\rangle\vert\downarrow\rangle$
+(overall sign convention: verify at authoring) against `ClebschGordan` over a `Table` of
+$l\in\{1,2,3\}$ and every $m_j$, since `ClebschGordan` at symbolic $l,m_j$ may simply not evaluate.
+Close with the forward pointer: these coupled columns are the weak-field eigenvectors 14.6
+recovers, and their multiplet structure is what 14.2's eigenvalue count already displayed.
 
 #### 14.4 [MSc] How do I model Stern-Gerlach as a spin-dependent spatial deflection of a spinor wave packet in a field gradient?
 
-Evolve the pinned two-component sech packet
-$\Psi(x,0)=\tfrac{1}{\sqrt2}\,\psi_0(x)\,(1,1)$ with $\psi_0$ a normalized $\operatorname{sech}$,
-under $i\partial_t\Psi=[-\tfrac12\partial_x^2+\lambda x\,\sigma_z]\Psi$ with $\lambda=0.2$, the
-value the C3 spinor gate probed; this class's certified spec applies verbatim: `NDSolveValue` on
-the coupled pair with
-`Method -> {"MethodOfLines", "SpatialDiscretization" -> {"TensorProductGrid", "DifferenceOrder" -> "Pseudospectral"}}`,
-periodic boundary identification, and `AccuracyGoal -> 10, PrecisionGoal -> 10` (tight goals are
-load-bearing: defaults are silently wrong at the $10^{-3}$ level and refinement at default goals is
-non-monotone), with the box sized so the split packets never reach the walls over the run (centers
-at $\mp\lambda t^2/2$ plus the dispersive width; walls reflect at norm 1, so norm conservation
-cannot detect the contamination). The refuting anchor is the probed $\Omega=0$ limit, which here is
-the model itself: each component sees a linear potential where Ehrenfest is exact, so the computed
-$\langle x\rangle_\sigma(t)$ must track $\mp\lambda t^2/2$ (the probe reproduced
-$\langle x\rangle_\uparrow(2)=-0.4$ to $9\times10^{-6}$ with total norm drift $5\times10^{-8}$),
-with all moments and overlaps taken as $dx$-weighted grid sums, never `NIntegrate` on oscillatory
-interpolants (C3 trap). The deliverable is the measurement record: the coherence
-$c(t)=\int\psi_\uparrow\overline{\psi_\downarrow}\,dx$ decays as the packets separate, the reduced
-spin purity falls from 1 toward $\tfrac12$ while both populations hold at $\tfrac12$. Close on
-measurement as dynamics: once $\vert c\vert$ is negligible the beams are which-path records and no
-downstream spin rotation revives the interference, the projection postulate emerging from unitary
-evolution plus a traced-out position.
+Evolve the pinned two-component sech packet $\Psi(x,0)=\tfrac{1}{\sqrt2}\psi_0(x)(1,1)$, with
+$\psi_0=\operatorname{sech}(x)/\sqrt2$, under
+$i\partial_t\Psi=[-\tfrac12\partial_x^2+\lambda x\,\sigma_z]\Psi$ at the probed gradient
+$\lambda=0.2$ to $T=8$, using the C3 spec in full: `NDSolveValue` on the coupled pair with
+`Method -> {"MethodOfLines", "SpatialDiscretization" -> {"TensorProductGrid", "MinPoints" -> n, "MaxPoints" -> n, "DifferenceOrder" -> "Pseudospectral"}}`
+and `AccuracyGoal -> 10, PrecisionGoal -> 10`, the point pins giving a fixed $dx$ for the
+$dx$-weighted grid sums that must replace `NIntegrate` on oscillatory interpolants, and tight goals
+being load-bearing (defaults are silently wrong at the $10^{-3}$ level and refinement at default
+goals is non-monotone). Size the box in both position and momentum: on $[-40,40]$ with $n=513$ the
+walls sit far beyond the deflected centers $\mp\lambda t^2/2=\mp6.4$ plus the dispersive spread,
+while $k_{\max}=\pi/dx\approx20$ clears the momentum the tilt pumps in, $\vert\langle p\rangle_\sigma\vert=\lambda T=1.6$,
+plus several $k$-widths of $\tilde\psi_0\propto\operatorname{sech}(\pi k/2)$; the linear potential
+is not periodic, so the periodic identification is honest only while $\psi$ is negligible at both
+walls, and the C3 wrap-around contamination is structural and invisible to norm conservation, so
+carry an $n$-doubling and $T$-lengthening sweep (the probe evidence reaches only $t\le2$ at this
+$\lambda$). The deliverable is the measurement record, the coherence
+$c(t)=\int\psi_\uparrow\overline{\psi_\downarrow}\,dx$ and the spin purity falling from 1 while
+both populations hold at $\tfrac12$, so the check must bite on shape, not on centroids: the tilt is
+a momentum translation, giving the exact momentum-space form
+$c(t)=\int\tilde\psi_0(k-\lambda t)\overline{\tilde\psi_0(k+\lambda t)}\,e^{ik\lambda t^2}\,dk$
+(closed form for the sech pair: verify that `Integrate` closes it), and the C3 cross-check route,
+a hand-built split-step Fourier evolution of the same coupled pair, must reproduce $\vert c(t)\vert$
+itself. The probed $\Omega=0$ Ehrenfest anchor
+($\langle x\rangle_\uparrow(2)=-0.39999$ against the exact $-0.4$, total norm drift
+$5\times10^{-8}$) stays as a cheap standing sanity, but it is exact for any initial packet in a
+linear potential and therefore cannot see a wrong width, wrong dispersion, or an aliased tail.
+Close on measurement as dynamics: the coherence dies mainly through momentum separation, so once
+$\vert c\vert$ is negligible the beams are which-path records and no downstream spin rotation
+revives the interference, the projection postulate emerging from unitary evolution plus a
+traced-out position.
 
 #### 14.5 [MSc] How do I solve the Pauli equation for a nonrelativistic spin in an electromagnetic field?
 
 Take uniform $\vec B=B\hat z$ in the Landau gauge $A=(0,Bx,0)$, where the Pauli Hamiltonian
-$H=\tfrac12(\hat p-A)^2+\tfrac{g}{2}B S_z$ (sign set by the charge convention: verify at authoring
-so the pinned coincidence lands as stated) is diagonal in $S_z$: split into the two spin blocks and
-translate along $y$ with the ansatz $e^{iky}f(x)$. Per the C1 verdict this member is covered only
-after the hand reduction: complete the square to a shifted oscillator of frequency $B$ centered at
-$x_0=k/B$ as hand algebra, certify the reduction with a `Simplify` residual on the operator
-identity, and only then hand the oscillator to the C1 route (`DSolve` with symbolic energy, the
-manual termination read-off, `HermiteH` eigenfunctions with a `FullSimplify` residual of zero; the
-whole-line `DEigensystem` domain form is the probed free exact confirmation). The spectrum
-$E_{n,m_s}=B(n+\tfrac12)+B g\,m_s/2$ at $g=2$ exhibits the pinned coincidence: `Simplify` of
-$E_{n,+1/2}-E_{n+1,-1/2}$ to 0 symbolically in $B$ and $n$, with the discriminating refutation that
-`Solve` on $E_{n,+1/2}=E_{n+1,-1/2}$ for $g$ returns exactly $g=2$, so the doubled ladder splits
-the moment $g$ moves: the degeneracy is a property of $g=2$, not of magnetism. The infinite
-per-level Landau degeneracy was not probed and its flux counting belongs to 13.2; here only the $k$
+$H=\tfrac12(\hat p-A)^2-\tfrac{g}{2}BS_z$ (the family sign convention for a unit positive charge)
+is diagonal in $S_z$: split into the two spin blocks and translate along $y$ with the ansatz
+$e^{iky}f(x)$. Per the C1 verdict this member is covered only after the hand reduction: complete the
+square to a shifted oscillator of frequency $B$ centered at $x_0=k/B$ as hand algebra, certify the
+reduction with a `Simplify` residual on the operator identity, and only then hand the oscillator to
+the C1 route, `DSolve` with symbolic energy followed by the manual series-termination read-off and
+`HermiteH` eigenfunctions with a `FullSimplify` residual of zero; the read-off is not a stylistic
+choice, `DSolve` handed the full decay conditions hangs silently rather than failing (the C1 gate
+timed out at 60 s with no message), and the whole-line `DEigensystem` domain form is a free exact
+confirmation only if it accepts a symbolic $B$ (the gate probed it at numeric coefficients: verify
+at authoring). The spectrum $E_{n,m_s}=B(n+\tfrac12)-\tfrac{g}{2}Bm_s$ becomes at $g=2$ the two
+interleaved ladders $E_{n,\uparrow}=Bn$ and $E_{n,\downarrow}=B(n+1)$, so `Simplify` of
+$E_{n,\downarrow}-E_{n+1,\uparrow}$ is 0 symbolically in $B$ and $n$, and the discriminating
+refutation is that `Solve` on $E_{n,\downarrow}=E_{n+1,\uparrow}$ for $g$ returns exactly $g=2$:
+the coincidence is a property of the gyromagnetic ratio, not of magnetism. Add one numeric
+confirmation at $B=1$, an `NDEigenvalues` run per spin block on a truncated box with explicit
+`DirichletCondition` (omitting boundary conditions is a silent Neumann-zero answer, wrong at the
+percent level on a ground state, per the probed gates), whose sorted merge is
+$\{0,1,1,2,2,\dots\}$: the coincidence appears as numerical degeneracy. The infinite per-level
+Landau degeneracy was not probed and its flux counting belongs to 13.2; here only the $k$
 independence of $E_{n,m_s}$, read directly off the closed form, records it. Close at the bottom of
-the ladder: at $g=2$ the state $(n=0,m_s=-\tfrac12)$ sits at exactly zero energy, zero-point cost
-cancelled by Zeeman gain, the nonrelativistic shadow of the Dirac value of $g$ that 22.3 derives.
+the ladder: at $g=2$ the state $(n=0,m_s=+\tfrac12)$ sits at exactly zero energy, the zero-point
+cost cancelled by the Zeeman gain, the nonrelativistic shadow of the Dirac value of $g$ that 22.3
+derives.
 
 #### 14.6 [MSc] How do I compute the anomalous Zeeman effect and the Paschen-Back crossover, where spin-orbit and the magnetic field compete?
 
 On the hydrogen $2p$ manifold build the exact $6\times6$
 $H=\xi\,\vec L\cdot\vec S+\tfrac{B}{2}(L_z+2S_z)$ from `KroneckerProduct` with $\xi$ and $B$
 symbolic (rebuild the $l=1$ and Pauli matrices in-entry; the answer stays self-contained). Certify
-the block structure first, `Simplify` of $[H,J_z]$ to the zero matrix, so $H$ splits into $m_j$
-blocks of sizes 1, 2, 2, 1 and `Eigenvalues` returns closed forms in $\xi,B$, the $2\times2$
-blocks giving Breit-Rabi-style square roots. The two limits are the refuting checks because they
-rest on independent physics: `Series` in $B$ at fixed $\xi$ must reproduce the anomalous pattern
-$E_{j,m_j}\approx E_j+g_j m_j B/2$ with Lande factors $g_{3/2}=\tfrac43$, $g_{1/2}=\tfrac23$
-(verify at authoring), matching the coupled-basis diagonal elements of $(L_z+2S_z)/2$; the
-opposite `Series` in $\xi$ at fixed $B$ must land on the Paschen-Back pattern $B(m_l+2m_s)/2$ with
-its characteristic degeneracies; and the eigenvalue sum must equal `Tr` of $H$ exactly, symbolic
-in both couplings. `Plot` the six branches against $B$ at fixed $\xi$ to exhibit the crossover
-near $B\sim\xi$: branches of different $m_j$ cross freely while the paired same-$m_j$ branches
-avoid crossing, two-level repulsion inside each block. Close in the spectroscope: weak-field lines
-splitting by $g_j$ rather than by 1 is the historical anomalous Zeeman effect, and the field where
-the pattern reorganizes, Zeeman energy comparable to the $\alpha^2/32$ splitting of 14.2, is of
-order one tesla for hydrogen (verify at authoring).
+the block structure first, `Simplify` of $[H,J_z]$ to the zero matrix, then make the blocks explicit
+rather than hoping the eigensolver finds them: order the uncoupled basis by $m_j=m_l+m_s$ with
+`Ordering` (or conjugate by the coupled-basis matrix of 14.3) so $H$ becomes block diagonal with
+sizes 1, 2, 2, 1, and take `Eigenvalues` on the $1\times1$ and $2\times2$ blocks, where the
+Breit-Rabi square roots are guaranteed closed forms in $\xi$ and $B$; a direct `Eigenvalues` on the
+full two-parameter $6\times6$ may return `Root` objects instead (verify at authoring). The two
+limits are the refuting checks because they rest on independent physics: `Series` in $B$ at fixed
+$\xi$ must reproduce the anomalous pattern $E_{j,m_j}\approx E_j+g_j m_j B/2$ with Lande factors
+$g_{3/2}=\tfrac43$ and $g_{1/2}=\tfrac23$, matching the coupled-basis diagonal elements of
+$(L_z+2S_z)/2$, while the opposite `Series` in $\xi$ at fixed $B$ must land on the Paschen-Back
+pattern $B(m_l+2m_s)/2$ with its characteristic degeneracies; and the coupling-resolved identity
+$\operatorname{Tr}(H^2)=3\xi^2+\tfrac52B^2$, exact and symbolic in both, catches an assembly error
+that a traceless sum rule would let through. `Plot` the six branches against $B$ at fixed $\xi$ to
+exhibit the crossover near $B\sim\xi$: branches of different $m_j$ cross freely while the paired
+same-$m_j$ branches avoid crossing, two-level repulsion inside each block. Close in the
+spectroscope: weak-field lines splitting by $g_j$ rather than by 1 is the historical anomalous
+Zeeman effect, and the field where the pattern reorganizes, Zeeman energy comparable to the
+$\alpha^2/32$ splitting of 14.2, is about $0.8\,\mathrm{T}$ for hydrogen.
 
 ## Part 15 Plan: Identical particles in continuous space
 
@@ -1908,86 +2010,107 @@ Seven questions, all MSc. Class census per `Route-Table.md`: C0: 17.1, 17.2, 17.
 (truncated-basis ODE-IVP: `MatrixExp` action form primary, route agreement provably blind to
 truncation, $N$-sweep mandatory).
 
-Everything in this part lives on one or two bosonic modes with $[a,a^\dagger]=1$ and the
-quadratures $X=(a+a^\dagger)/\sqrt2$, $P=-i(a-a^\dagger)/\sqrt2$, obeying $[X,P]=i$ with vacuum
-variances $\tfrac12$ each; the Gaussian unitaries are the displacement
-$D(\alpha)=e^{\alpha a^\dagger-\alpha^*a}$ and the squeeze
-$S(\xi)=e^{(\xi^*a^2-\xi a^{\dagger2})/2}$, with their two-mode kin, the beam splitter
-$e^{\theta(a^\dagger b-ab^\dagger)}$ and the two-mode squeezer $e^{r(ab-a^\dagger b^\dagger)}$
-(each phase and sign convention: verify at authoring); phase space carries the Wigner function
-$W(x,p)$ and the Husimi $Q(\alpha)=\langle\alpha\vert\rho\vert\alpha\rangle/\pi$. The working
-representation throughout is truncated Fock: `SparseArray` ladder matrices, `KroneckerProduct` for
-two modes, `MatrixExp` for the unitaries, with the truncation edge exhibited and checked rather
-than hidden. The C0 kernel facts bind (in code `E` is Euler's number, so energies and fields need
-other names; `Simplify` and `Integrate` need explicit reality and positivity assumptions such as
-$r>0$ to close Gaussian moments).
+This part lives on one or two bosonic modes, and in 17.6 on one mode times a two-level atom, with
+$[a,a^\dagger]=1$ and the quadratures $X=(a+a^\dagger)/\sqrt2$, $P=-i(a-a^\dagger)/\sqrt2$ obeying
+$[X,P]=i$ with vacuum variances $\tfrac12$ each, the rotated one being
+$X_\theta=(ae^{-i\theta}+a^\dagger e^{i\theta})/\sqrt2$. The Gaussian unitaries are the
+displacement $D(\alpha)=e^{\alpha a^\dagger-\alpha^*a}$; the squeeze
+$S(\xi)=e^{(\xi^*a^2-\xi a^{\dagger2})/2}$, the convention pinned by 4.7, under which $S(r)$ with
+$r>0$ squeezes $X$ to $\langle X^2\rangle=e^{-2r}/2$ and stretches $P$; the beam splitter
+$B(\theta)=e^{\theta(a^\dagger b-ab^\dagger)}$; and the two-mode squeezer
+$S_2(r)=e^{r(a^\dagger b^\dagger-ab)}$, written creation-minus-annihilation, the opposite overall
+sign from the single-mode pattern, which is exactly what makes $X_1-X_2$ and $P_1+P_2$ the
+squeezed pair (each scaling by $e^{-r}$) rather than the anti-squeezed one. Where the
+beam-splitter phase sits is a genuine convention (verify at authoring): the coincidence null does
+not depend on it, the relative sign between $\vert2,0\rangle$ and $\vert0,2\rangle$ does. The atom
+enters through the Jaynes-Cummings Hamiltonian
+$H=\omega_c a^\dagger a+\tfrac{\omega_a}{2}\sigma_z+g(a\sigma_++a^\dagger\sigma_-)$ with detuning
+$\Delta=\omega_a-\omega_c$; in the frame rotating at $\omega_c$ for both mode and atom this becomes
+$\tfrac{\Delta}{2}\sigma_z+g(a\sigma_++a^\dagger\sigma_-)$, where the exact two-amplitude solutions
+below are read. Phase space carries the Wigner function $W(x,p)$ and the Husimi
+$Q(\alpha)=\vert\langle\alpha\vert\psi\rangle\vert^2/\pi$. The working representation throughout is
+truncated Fock: `SparseArray` ladder matrices, `KroneckerProduct` for two modes or mode times atom,
+`MatrixExp` for the unitaries, with the truncation edge exhibited and swept rather than hidden. The
+C0 kernel facts bind (in code `E` is Euler's number, so energies and fields need other names;
+`Simplify` and `Integrate` need explicit reality and positivity assumptions such as $r>0$ to close
+Gaussian moments).
 
 #### 17.1 [MSc] How do I define the quadrature operators and the optical phase space of a single mode?
 
 Build the ladder matrix $a$ as a `SparseArray` with superdiagonal $\sqrt1,\dots,\sqrt N$ at $N=12$,
-form $X=(a+a^\dagger)/\sqrt2$ and $P=-i(a-a^\dagger)/\sqrt2$ with `ConjugateTranspose`, and compute
-the commutator honestly: it equals $i\,\mathbb 1$ everywhere except the corner,
-$[X,P]=i(\mathbb 1-(N{+}1)\vert N\rangle\langle N\vert)$, the truncation defect Part 4 establishes
-for $\hat x,\hat p$ (4.4), acknowledged here as the price of a finite matrix while every interior
-element is exact. Vacuum variances $\langle X^2\rangle=\langle P^2\rangle=\tfrac12$ by `Dot` on the
-vacuum unit vector; the refuting cross-check runs on machinery the matrices never touch:
-`Integrate` of $x^2\vert\psi_0\vert^2$ for the position-space vacuum
-$\psi_0(x)=\pi^{-1/4}e^{-x^2/2}$ must return the same $\tfrac12$, and a wrong $\sqrt2$ convention
-in either construction breaks the agreement. Close operationally: the product saturates at
-$\Delta X\,\Delta P=\tfrac12$, the vacuum's footprint in the $(x,p)$ plane is the uncertainty disk
-of radius $\sqrt{1/2}$, and the variance $\tfrac12$ is the shot-noise floor a balanced detector
-reads on an empty port.
+form $X=(a+a^\dagger)/\sqrt2$ and $P=-i(a-a^\dagger)/\sqrt2$ with `ConjugateTranspose`, and read the
+optical phase space off them: $[X,P]=i$ follows from $[a,a^\dagger]=1$ alone, the vacuum unit vector
+gives $\langle X\rangle=\langle P\rangle=0$ and $\langle X^2\rangle=\langle P^2\rangle=\tfrac12$ by
+`Dot`, so the vacuum saturates $\Delta X\,\Delta P=\tfrac12$ and occupies a disk of radius
+$\sqrt{1/2}$ in the $(x,p)$ plane, and a `Table` of $\langle X_\theta^2\rangle$ over $\theta$ comes
+out flat at $\tfrac12$: the vacuum is isotropic, which is what makes $\tfrac12$ one shot-noise
+floor rather than a phase-dependent one. On truncated matrices the commutator carries the corner
+defect $[X,P]=i(\mathbb 1-(N{+}1)\vert N\rangle\langle N\vert)$, exact in the interior, the same
+edge 4.4 exhibits for $\hat x,\hat p$. The refuting cross-check runs on machinery the matrices never
+touch: `Integrate` of $x^2\vert\psi_0\vert^2$ for $\psi_0(x)=\pi^{-1/4}e^{-x^2/2}$, and of
+$p^2\vert\tilde\psi_0\vert^2$ after `FourierTransform`, must both return $\tfrac12$, where a
+misplaced $\sqrt2$ in either quadrature definition would land on $1$ or $\tfrac14$ instead. Close
+operationally: $\tfrac12$ is the noise power a balanced detector reads with nothing in the signal
+port, and every Gaussian state in this part is this one disk translated, rotated, or deformed at
+fixed area.
 
 #### 17.2 [MSc] How do I revisit the displacement and squeeze operators of Part 4 as phase-space transformations and read off their action on the quadratures?
 
-Carry Part 4's parameters $\alpha=2e^{i\pi/3}$ and $\xi=re^{i\pi/3}$ so both phases are live, and
-conjugate by BCH: for $D(\alpha)$ the commutator series terminates after one step (the commutator
-of $X$ with $\alpha a^\dagger-\alpha^*a$ is a c-number), giving
+Carry Part 4's parameters $\alpha=2e^{i\pi/3}$ and $\xi=re^{i\pi/3}$ so both phases stay live, and
+conjugate by BCH: for $D(\alpha)$ the commutator series terminates after one step, since the
+commutator of $X$ with $\alpha a^\dagger-\alpha^*a$ is a c-number, giving
 $D^\dagger(\alpha)XD(\alpha)=X+\sqrt2\operatorname{Re}\alpha$ and $P$ shifted by
 $\sqrt2\operatorname{Im}\alpha$; for $S(\xi)$ the nested commutators resum to hyperbolic mixing,
 the quadratures along the squeeze axes scaling as $e^{\mp r}$ and mixing $X$ with $P$ whenever
-$\phi\neq0$ (squeeze sign convention: verify at authoring). Verify twice, on pictures that must
-agree: conjugate the truncated matrices of the 17.1 construction by `MatrixExp` of the truncated
-generators and compare interior matrix elements to the closed forms (the corner rows are the known
-truncation edge, not evidence); and transform the vacuum Wigner Gaussian, letting `Integrate` under
-reality assumptions show the ellipse center lands at
-$(\sqrt2\operatorname{Re}\alpha,\sqrt2\operatorname{Im}\alpha)$ and the principal variances scale
-by $e^{\mp2r}$ at fixed area. Close with the shared picture: Gaussian unitaries act affinely on
-phase space, displacement translates the vacuum disk, squeezing deforms it area-preservingly.
+$\phi\neq0$, with the overall sign fixed by 4.7's convention rather than left open ($S(r)$ shrinks
+$X$). Verify twice, on pictures that must agree: conjugate the truncated matrices of the 17.1
+construction by `MatrixExp` of the truncated generators at $N=40$ and compare the leading
+$20\times20$ block against the closed forms, demanding `Max@Abs` of the difference below $10^{-8}$
+and raising $N$ until it is, with the deviation climbing toward the corner as the diagnostic rather
+than a failure; and transform the vacuum Wigner Gaussian, letting `Integrate` under reality
+assumptions put the ellipse center at
+$(\sqrt2\operatorname{Re}\alpha,\sqrt2\operatorname{Im}\alpha)$ and scale the principal variances by
+$e^{\mp2r}$ at fixed area. Close with the shared picture: Gaussian unitaries act affinely on phase
+space, displacement translating the vacuum disk, squeezing deforming it at constant area, which is
+why neither can produce Wigner negativity.
 
 #### 17.3 [MSc] How do I model a beam splitter on two modes and exhibit Hong-Ou-Mandel interference?
 
-The beam splitter is $B(\theta)=e^{\theta(a^\dagger b-ab^\dagger)}$ (phase convention: verify at
-authoring), realized by `MatrixExp` on the `KroneckerProduct` two-mode Fock space truncated at two
-photons per mode; the generator conserves total photon number, so the two-photon sector
-$\{\vert2,0\rangle,\vert1,1\rangle,\vert0,2\rangle\}$ closes exactly and the truncation is not an
-approximation here. At the balanced point $\theta=\pi/4$ act on $\vert1,1\rangle$: the output is
-$(\vert2,0\rangle+\vert0,2\rangle)/\sqrt2$ up to a convention-dependent relative sign, with
-coincidence amplitude exactly zero. The refuting cross-check derives the null on different
-machinery: transform the creation operators symbolically,
-$a^\dagger\to(a^\dagger+b^\dagger)/\sqrt2$, $b^\dagger\to(b^\dagger-a^\dagger)/\sqrt2$, expand
-$a^\dagger b^\dagger\vert0,0\rangle$, and watch the $\vert1,1\rangle$ terms cancel bosonically,
-with unitarity of $B$ and output probabilities summing to 1 as structural gates. Then the pinned
-distinguishability sweep, the point of the example: give the second photon overlap $s\in[0,1]$
-with the first by splitting its mode into parallel and orthogonal components, derive the closed
-form $P_{\mathrm{coinc}}(s)=\tfrac12(1-s^2)$, and validate the endpoints against a four-mode (two
-spatial times two internal) matrix computation; the dip visibility $s^2$ interpolates from the
-distinguishable plateau $\tfrac12$ down to the null. Close in the laboratory: the HOM dip is the
-standard meter of single-photon indistinguishability, and classical fields cap the dip at half the
-plateau, so a deeper dip certifies quantum interference.
+The beam splitter is $B(\theta)=e^{\theta(a^\dagger b-ab^\dagger)}$, realized by `MatrixExp` on the
+`KroneckerProduct` two-mode Fock space truncated at two photons per mode; the generator conserves
+total photon number, so the two-photon sector
+$\{\vert2,0\rangle,\vert1,1\rangle,\vert0,2\rangle\}$ closes exactly and truncation is not an
+approximation here. At the balanced point $\theta=\pi/4$ act on $\vert1,1\rangle$: the substitution
+this convention produces, $a^\dagger\to(a^\dagger+b^\dagger)/\sqrt2$ and
+$b^\dagger\to(b^\dagger-a^\dagger)/\sqrt2$ in $a^\dagger b^\dagger\vert0,0\rangle$, gives
+$(\vert0,2\rangle-\vert2,0\rangle)/\sqrt2$ with the $\vert1,1\rangle$ terms cancelling bosonically,
+so the coincidence amplitude is exactly zero; the matrix route returns the same state up to an
+overall sign, a global phase carrying no physics, so the comparison is on the coincidence weight and
+the relative sign, never the global one. Unitarity of $B$ and output probabilities summing to 1 are
+the structural gates. Then the pinned distinguishability sweep, the point of the example: give the
+second photon the internal mode $s\,e_1+\sqrt{1-s^2}\,e_2$ on a four-mode (two spatial times two
+internal) space, derive the closed form $P_{\mathrm{coinc}}(s)=\tfrac12(1-s^2)$, and evaluate the
+four-mode matrix computation at intermediate $s$, notably $s=1/\sqrt2$, where the rival forms
+$(1-s)/2$, $(1-s^3)/2$ and $(1-s^2)^2/2$ that agree with it at both endpoints separate from it by
+tens of percent: the endpoints alone certify nothing. Close in the laboratory: the dip visibility
+$s^2$ is the standard meter of single-photon indistinguishability, and a classical field caps the
+dip at half the distinguishable plateau, so a deeper dip certifies quantum interference.
 
 #### 17.4 [MSc] How do I build the two-mode squeezed vacuum and exhibit its EPR (position-momentum) correlations?
 
 Apply `MatrixExp` in its action form to the two-mode vacuum with the generator
-$r(ab-a^\dagger b^\dagger)$ (sign convention: verify at authoring) on a `KroneckerProduct` space
-at $N=24$ per mode, keeping $r$ symbolic in the closed forms and $r=1$ for numbers. The state must
-be the Schmidt-diagonal $\sqrt{1-\lambda^2}\sum_n\lambda^n\vert n,n\rangle$ with
-$\lambda=\tanh r$: `ArrayReshape` the output into its coefficient matrix $c$ and let
-`SingularValueList` return a geometric sequence of ratio $\tanh r$, while the reduced state
-$cc^\dagger$ is thermal with $\bar n=\sinh^2 r$, the first quantification of the entanglement; the
-second is the EPR pair of variances $\Delta(X_1-X_2)^2=e^{-2r}$ and $\Delta(P_1+P_2)^2=e^{-2r}$,
-computed with per-mode quadrature matrices on the same state. Truncation is checked by an
-$N$-sweep with its tail predicted in advance: the missing weight is
+$r(a^\dagger b^\dagger-ab)$ on a `KroneckerProduct` space at $N=24$ per mode, keeping $r$ symbolic
+in the closed forms and $r=1$ for numbers. The state must be the Schmidt-diagonal
+$\sqrt{1-\lambda^2}\sum_n\lambda^n\vert n,n\rangle$ with $\lambda=\tanh r$: `ArrayReshape` the
+output into its coefficient matrix $c$ and let `SingularValueList` return a geometric sequence of
+ratio $\tanh r$, while the reduced state $cc^\dagger$ is thermal with $\bar n=\sinh^2r$, the first
+quantification of the entanglement; the second is the EPR pair
+$\Delta(X_1-X_2)^2=\Delta(P_1+P_2)^2=e^{-2r}$ against the vacuum value 1, computed with per-mode
+quadrature matrices on the same state. That variance identity is also the sign discriminator, and
+the only check here that is one: `SingularValueList` cannot see a sign (the flipped generator gives
+$(-\lambda)^n$, the same singular values) and neither can the truncation tail, whereas the flipped
+generator sends $\Delta(X_1-X_2)^2$ to $e^{+2r}$ and squeezes $X_1+X_2$ instead. Truncation is
+checked by an $N$-sweep with its tail predicted in advance, the missing weight
 $\lambda^{2(N+1)}\approx10^{-6}$ at $r=1$, $N=24$, and pushing $r$ up at fixed $N$ must visibly
 break the variance identity, the honest failure edge. Close on the limit: as $r\to\infty$ the pair
 approaches the ideal EPR state, the correlations sharpening without bound while each mode alone
@@ -1997,58 +2120,77 @@ heats toward a featureless thermal state.
 
 Evaluate the Duan combination $\Delta(X_1-X_2)^2+\Delta(P_1+P_2)^2$, bounded below by 2 for every
 separable state in the $[X,P]=i$ normalization (bound normalization: verify at authoring). On the
-two-mode squeezed vacuum, rebuilt inside the entry from the $r(ab-a^\dagger b^\dagger)$ generator
-so the answer stays self-contained, the Bogoliubov action sends both combinations to $e^{-r}$
-times themselves, so the sum is $2e^{-2r}$, below the bound for every $r>0$; on the coherent
-product $D(\alpha)\otimes D(\beta)\vert0,0\rangle$ with $\alpha,\beta$ kept symbolic,
+two-mode squeezed vacuum, rebuilt inside the entry from the $r(a^\dagger b^\dagger-ab)$ generator
+at $N=24$ so the answer stays self-contained, the Bogoliubov action sends both combinations to
+$e^{-r}$ times themselves, so the sum is $2e^{-2r}$, below the bound for every $r>0$; on the
+coherent product $D(\alpha)\otimes D(\beta)\vert0,0\rangle$ with $\alpha,\beta$ kept symbolic,
 displacement moves means and not variances, so the sum is exactly 2 for all $\alpha,\beta$: one
 violating state and one boundary state, both in closed form. The truncated-matrix evaluation must
 reproduce both numbers, the $r\to0$ limit of the squeezed sum must land exactly on the
-coherent-product value 2 (gluing the two computations together), and a sign slip in the squeeze
-generator would squeeze the wrong combinations and push the sum above 2, so the check
-discriminates conventions as well as states. Close on tightness: a product state sitting exactly
-on the boundary shows the constant 2 cannot be improved, and this same combination is the witness
-measured on twin beams in the laboratory.
+coherent-product value 2, gluing the two computations together, and a sign slip in the two-mode
+generator would squeeze the complementary combinations and push the sum to $2e^{+2r}>2$, reporting
+no violation at any $r$, so the check discriminates conventions as sharply as it discriminates
+states. Close on tightness: a product state sitting exactly on the boundary shows the constant 2
+cannot be improved, and this same combination is the witness measured on twin beams in the
+laboratory.
 
 #### 17.6 [MSc] How do I solve the Jaynes-Cummings model (one mode plus a two-level atom, truncated Fock) and exhibit vacuum Rabi oscillations?
 
 C5 per `Route-Table.md`. On resonance the initial state $\vert e,0\rangle$ closes into the
 two-dimensional block $\{\vert e,0\rangle,\vert g,1\rangle\}$, and `DSolveValue` on the
 two-amplitude system returns the exact pair $\{\cos gt,\,-i\sin gt\}$ (the probed C5 gate), so
-$P_e(t)=\cos^2 gt$: vacuum Rabi oscillation at frequency $2g$ out of a field containing zero
-photons. Generalize with detuning $\Delta$ through the same `DSolveValue`: oscillation at
-$\sqrt{4g^2+\Delta^2}$ with transfer amplitude $4g^2/(4g^2+\Delta^2)$, swept over $\Delta$. The
-certified numeric route is the C5 primary: assemble the full truncated JC Hamiltonian with
-`SparseArray` and `KroneckerProduct` (mode times atom) and evolve with the `MatrixExp` action
-form; check truncation with the mandatory $N$-sweep, because per the C5 verdict route agreement is
-provably blind to truncation (two routes agreed to $10^{-7}$ while both were wrong by $10^{-3}$).
-Here the sweep also teaches: the rotating-wave Hamiltonian conserves excitation number, so from
-$\vert e,0\rangle$ the $N$-sweep must come out exactly flat, and any $N$-dependence refutes the
-Hamiltonian assembly itself. Close in the cavity: the $2g$ oscillation is the single-atom vacuum
-Rabi frequency of cavity QED, and the dispersive limit $\Delta\gg g$ shrinks the transfer to
-$4g^2/\Delta^2$, the regime qubit readout lives in.
+$P_e(t)=\cos^2gt$: vacuum Rabi oscillation at frequency $2g$ out of a field containing zero
+photons. Generalize with detuning through the same `DSolveValue`,
+$P_e(t)=1-\frac{4g^2}{4g^2+\Delta^2}\sin^2(\tfrac12\sqrt{4g^2+\Delta^2}\,t)$, oscillating at
+$\sqrt{4g^2+\Delta^2}$ with peak transfer probability $4g^2/(4g^2+\Delta^2)$, swept over $\Delta$.
+The certified numeric route is the C5 primary: assemble the full truncated Jaynes-Cummings
+Hamiltonian with `SparseArray` and `KroneckerProduct` (mode times atom) and evolve with the
+`MatrixExp` action form. From $\vert e,0\rangle$ the rotating-wave coupling conserves excitation
+number, so the state never leaves the one-excitation manifold, the truncated ladder is never asked
+for $a^\dagger\vert N\rangle$, and the $N$-sweep is exactly flat: keep it, but label it the
+assembly check it actually is, since all it can detect is an excitation-non-conserving error. The
+truncation trap is exercised by a second run that does leave that manifold, an initial coherent
+field $\vert g,\alpha\rangle$ with $\vert\alpha\vert^2\approx9$ showing collapse and revival near
+$t\approx2\pi\sqrt{\bar n}/g$, where $N$ must exceed $\vert\alpha\vert^2$ plus several
+$\vert\alpha\vert$ and the sweep genuinely moves; per the C5 verdict route agreement never
+certifies truncation (two routes agreed to $1.1\times10^{-7}$ while both were wrong by
+$5.6\times10^{-3}$, a blindness factor $5.1\times10^4$), so only the sweep or an exact benchmark
+can. Close in the cavity: the $2g$ oscillation is the single-atom vacuum Rabi frequency of cavity
+QED, the revivals are the discreteness of the photon number made visible in an atomic signal, and
+the dispersive limit $\Delta\gg g$ shrinks the transfer to $4g^2/\Delta^2$, the regime qubit
+readout lives in.
 
 #### 17.7 [MSc] How do I model balanced homodyne and heterodyne detection, measuring a quadrature and reconstructing the Husimi-$Q$ distribution operationally?
 
-Take the squeezed vacuum at $r=1$ and derive by `Integrate` (assumptions $r>0$, $\theta$ real) the
-closed-form marginal of its Wigner Gaussian along the rotated quadrature
-$X_\theta=X\cos\theta+P\sin\theta$: a Gaussian of variance
-$\sigma_\theta^2=\tfrac12(e^{-2r}\cos^2\theta+e^{2r}\sin^2\theta)$. Homodyne is sampling this
-marginal at LO phase $\theta$: draw $10^5$ samples per phase with `RandomVariate` on
-`NormalDistribution` of standard deviation $\sigma_\theta$, `Histogram` them against the closed
-density, and trace the sample `Variance` around the $\sigma_\theta^2$ curve, sub-vacuum at
-$\theta=0$ and anti-squeezed at $\theta=\pi/2$. Heterodyne samples the Husimi
-$Q(\alpha)=\vert\langle\alpha\vert\psi\rangle\vert^2/\pi$ instead: realize it operationally by
-adding an independent vacuum draw of variance $\tfrac12$ per quadrature to a draw from the state's
-(here positive) Wigner Gaussian, exhibiting the convolution $Q=W\ast W_{\mathrm{vac}}$ with
-covariances $\sigma_\theta^2+\tfrac12$. The refuting check runs twice: sampled variances must
-match the closed forms within the $\sqrt{2/n}$ relative statistical tolerance, and the marginal's
-variance must equal the operator variance $\langle X_\theta^2\rangle$ computed on truncated
-quadrature matrices built as in 17.1, an independent route through the operators. Close on the
-contrast the question asks for: the operational reconstruction (histograms of detector clicks)
-converges to the formal objects (the Wigner marginal, the $Q$ function), heterodyne pays exactly
-half a vacuum unit per quadrature, the 3 dB penalty for reading both knobs at once, and the
-$\theta$-resolved homodyne variances are the raw data of quantum state tomography.
+Take the squeezed vacuum $S(r)\vert0\rangle$ at $r=1$ on a signal mode truncated at $N_a=40$, where
+the neglected weight sits near $10^{-4}$; at $N=12$ it is concentrated at high $n$ and the
+anti-squeezed variance falls about 4 percent short of $e^{2r}/2$, ten times the statistical
+tolerance quoted below. Derive by `Integrate` (assumptions $r>0$, $\theta$ real) the closed-form
+marginal of the state's Wigner Gaussian along $X_\theta$, variance
+$\sigma_\theta^2=\tfrac12(e^{-2r}\cos^2\theta+e^{2r}\sin^2\theta)$, sub-vacuum at $\theta=0$ under
+4.7's convention, where a flipped squeeze sign would show up loudly as $\langle X^2\rangle=e^{2r}/2$
+instead; that marginal is the benchmark, never the sampler. Homodyne is built as apparatus: put a
+local oscillator in the coherent state $\beta=\vert\beta\vert e^{i\theta}$ on mode $b$, combine it
+with the signal on 17.3's $B(\pi/4)$ by `MatrixExp` in action form, and detect photon number in
+both output ports; the difference $n_c-n_d$ pulled back through the splitter is
+$n_-=a^\dagger b+ab^\dagger$, whose scaled version $n_-/(\sqrt2\vert\beta\vert)$ tends to $X_\theta$
+as the local oscillator grows classical. Sampling is then genuinely operational, `RandomChoice` on
+the output Fock weights $\vert\Psi_{\mathrm{out}}\vert^2$ followed by binning
+$(n_c-n_d)/(\sqrt2\vert\beta\vert)$, with no appeal to the answer. The refuting check is
+quantitative and exact: the scaled variance is $\sigma_\theta^2+\sinh^2r/(2\vert\beta\vert^2)$, so
+a sweep over $\vert\beta\vert\in\{2,4,8\}$ (sizing $N_b$ beyond $\vert\beta\vert^2$ plus several
+$\vert\beta\vert$, and $N_a$ beyond the $\vert\beta\vert^2/2$ photons each output port then carries)
+must show the excess falling as $1/\vert\beta\vert^2$ with that coefficient while the histogram
+converges onto the closed marginal, and an independent $N$-sweep at $\theta=\pi/2$, where
+truncation bites hardest, must leave the anti-squeezed variance stationary. Heterodyne adds the
+vacuum port: splitting the signal against vacuum and reading both quadratures samples
+$Q=W\ast W_{\mathrm{vac}}$ with covariance $\sigma_\theta^2+\tfrac12$, cross-checked against
+$Q(\alpha)=\vert\langle\alpha\vert\psi\rangle\vert^2/\pi$ evaluated directly from the truncated Fock
+amplitudes. Close on the contrast the question asks for: histograms of detector clicks converge to
+the formal objects (the Wigner marginal, the $Q$ function), heterodyne adds one full vacuum unit of
+variance per quadrature ($\tfrac12$ in these units, half a photon per mode) and so doubles the
+vacuum noise, the 3 dB penalty for reading both knobs at once, and the $\theta$-resolved homodyne
+variances are the raw data of quantum state tomography.
 
 ## Part 18 Plan: Open quantum systems in continuous space
 
@@ -2561,28 +2703,35 @@ ansatz cannot carry.
 
 Questions: 5 (22.1 through 22.5). Class census per `Route-Table.md`: C0 (no differential
 equation) for 22.1, 22.2, 22.3; C8 (coupled singular radial system, sole member) for 22.4, per
-the full C8 verdict; C4 (fixed-energy scattering BVP) for 22.5, per the C4 verdict and its
-members-sanity note.
+the full C8 verdict as amended by revision R1 in its log; C4 (fixed-energy scattering BVP) for
+22.5, per the C4 verdict and its members-sanity note.
 
 ### Common ground
 
 The part works in $\hbar=c=1$ with the mass $m$ kept explicit, because the rest energy $m$ is the
 protagonist: every pathology and every limit in these five questions happens on the scale
-$E\sim m$ (WL code writes energies as `en`, since `E` is Euler's number). The Klein-Gordon
-equation $(\partial_t^2-\partial_x^2+m^2)\phi=0$ quantizes the relativistic dispersion
-$E^2=k^2+m^2$, so both roots $E=\pm\sqrt{k^2+m^2}$ solve it, and its conserved density
-$\rho=\tfrac{i}{2m}(\bar\phi\,\partial_t\phi-\phi\,\partial_t\bar\phi)$ is not sign-definite. The
-Dirac equation $(i\gamma^\mu\partial_\mu-m)\psi=0$ rests on the Clifford algebra
-$\{\gamma^\mu,\gamma^\nu\}=2\eta^{\mu\nu}$ with $\eta=\operatorname{diag}(1,-1,-1,-1)$; it buys
-the positive density $\rho=\psi^\dagger\psi$ and current $j^\mu=\bar\psi\gamma^\mu\psi$
-($\bar\psi=\psi^\dagger\gamma^0$) at the price of keeping the negative-energy branch, which
-returns as the Klein paradox and zitterbewegung. Its exact hydrogen spectrum $E_{nj}$, a function
-of $n$ and $j$ only, is the fine structure that 14.2 obtains perturbatively. Standing kernel
-facts binding all five entries (Route-Table.md, C0 row and C8 verdict): densities and currents
-are written as explicit $\phi\bar\phi$ products before differentiation, never through Abs;
-FullSimplify closes residuals only under explicit assumptions ($m>0$, reality of $x,t,k$,
-$0<Z\alpha<1$); and every DSolve on a coupled or piecewise system is time-boxed, because the
-failure modes in this part are silent hangs and silent echoes, not messages.
+$E\sim m$. The Klein-Gordon equation $(\partial_t^2-\partial_x^2+m^2)\phi=0$ quantizes the
+relativistic dispersion $E^2=k^2+m^2$, so both roots $E=\pm\sqrt{k^2+m^2}$ solve it, and its
+conserved density $\rho=\tfrac{i}{2m}(\bar\phi\,\partial_t\phi-\phi\,\partial_t\bar\phi)$ is not
+sign-definite. The Dirac equation $(i\gamma^\mu\partial_\mu-m)\psi=0$ rests on the Clifford
+algebra $\{\gamma^\mu,\gamma^\nu\}=2\eta^{\mu\nu}$ with
+$\eta=\operatorname{diag}(1,-1,-1,-1)$; it buys the positive density $\rho=\psi^\dagger\psi$ and
+current $j^\mu=\bar\psi\gamma^\mu\psi$ ($\bar\psi=\psi^\dagger\gamma^0$) at the price of keeping
+the negative-energy branch, which returns as the Klein paradox and zitterbewegung. Its exact
+hydrogen spectrum $E_{nj}$ is the fine structure that 14.2 obtains perturbatively. The notation
+is crowded, so code names carry the distinctions the TeX cannot: the gamma matrices are
+`gmat[mu]` with `alphaD` and `betaD` for the $1+1$ pair, while the fine-structure combination is
+`zalpha` ($Z\alpha$) and the Dirac-Coulomb exponent is `gam` ($\gamma$); energies are `en`
+(`E` is Euler's number); the step potential is `HeavisideTheta` while 22.1's mixing angle is
+`th`. Standing kernel facts binding all five entries (Route-Table.md, C0 row and C8 verdict):
+densities and currents are written as explicit $\phi\bar\phi$ products before differentiation,
+never through Abs; FullSimplify closes residuals only under explicit assumptions ($m>0$, reality
+of $x,t,k$, $0<Z\alpha<1$); and every DSolve on a coupled or piecewise system is time-boxed,
+because the failure modes in this part are silent hangs and silent echoes, not messages.
+Concern: PIPELINE fixes $\hbar=m=1$, and this part departs from it, keeping $\hbar=c=1$ with $m$
+symbolic, because $m=1$ would erase the rest energy that every question here measures against
+($V_0>2m$, $g=2$, $E_{nj}\to m$, the $1/(2m)$ tremor); the departure is deliberate and part-wide,
+and the coordinator should confirm it before authoring.
 
 ### Per-question entries
 
@@ -2591,18 +2740,23 @@ failure modes in this part are silent hangs and silent echoes, not messages.
 Write both branches $\phi_{\pm}=e^{i(kx\mp\omega t)}$ with $\omega=\sqrt{k^2+m^2}$ and earn them
 twice: the residual of $(\partial_t^2-\partial_x^2+m^2)\phi_{\pm}$ FullSimplifies to 0, and Solve
 on the dispersion polynomial returns both roots $\pm\omega$, the negative branch arriving
-uninvited. The pinned example is a packet with negative-energy admixture, a rest mode plus a
-moving negative-energy mode, $\phi=\cos\theta\,e^{-imt}+\sin\theta\,e^{i(\sqrt3\,mx+2mt)}$ at
-$\theta=\pi/6$. Build $\rho=\tfrac{i}{2m}(\bar\phi\,\partial_t\phi-\phi\,\partial_t\bar\phi)$ and
+uninvited. The pinned example is a two-mode superposition with negative-energy admixture, a
+positive-energy rest mode plus a negative-energy moving mode,
+$\phi=\cos\theta\,e^{-imt}+\sin\theta\,e^{i(\sqrt3\,mx+2mt)}$ at $\theta=\pi/6$. Build
+$\rho=\tfrac{i}{2m}(\bar\phi\,\partial_t\phi-\phi\,\partial_t\bar\phi)$ and
 $j=\tfrac{1}{2im}(\bar\phi\,\partial_x\phi-\phi\,\partial_x\bar\phi)$ with the conjugate written
 out and reduced by ComplexExpand under reality of $x,t,\theta$ and $m>0$ (never differentiate an
 Abs square), then FullSimplify the continuity $\partial_t\rho+\partial_x j$ to 0, a check any
 sign slip refutes. Compute the indefiniteness instead of narrating it: $\rho$ reduces to
-$\cos^2\theta-2\sin^2\theta-\sin\theta\cos\theta\,\cos\Theta$ with a travelling interference
-phase $\Theta(x,t)$, and Minimize over one period (or Reduce on $\rho<0$) exhibits the
-closed-form minimum $(1-\sqrt3)/4<0$, while each branch alone gives the constant $\pm\omega/m$:
-positivity is exactly what the admixture destroys. Anchor with the nonrelativistic limit:
-substitute $\phi=e^{-imt}\psi(x,t)$ with generic $\psi$ and Series in $1/m$ to recover
+$\cos^2\theta-2\sin^2\theta-\sin\theta\cos\theta\,\cos\Theta$ with travelling phase
+$\Theta=3mt+\sqrt3\,mx$, so Minimize over one period gives the closed-form minimum
+$(1-\sqrt3)/4<0$ at the pinned angle, and one Solve of
+$\cos^2\theta-2\sin^2\theta-\sin\theta\cos\theta=0$ widens that single case into the general
+threshold $\tan\theta_c=\tfrac12$, above which $\rho$ goes negative somewhere, while each branch
+alone gives the constant $\pm\omega/m$. Two plane waves are not square integrable, so this is a
+pointwise statement; the normalizable version, worth one Integrate on a mixed-branch $L^2$
+profile, is that the total $\int\rho\,dx$ itself can be negative. Anchor with the nonrelativistic
+limit: substitute $\phi=e^{-imt}\psi(x,t)$ with generic $\psi$ and Series in $1/m$ to recover
 $\rho=|\psi|^2+O(1/m)$, the Schrodinger density. Close on the reinterpretation: $\rho$ survives
 as a charge density, and the sign it refuses to fix belongs to the antiparticle.
 
@@ -2623,6 +2777,12 @@ residuals $(\gamma^\mu p_\mu-m)u_{\pm}=0$ and $(\gamma^\mu p_\mu+m)v_{\pm}=0$ by
 the normalizations $\bar uu=2m$ and $\bar vv=-2m$ with $\bar u=u^\dagger\gamma^0$ via
 ConjugateTranspose, and helicity $\vec\Sigma\cdot\hat p\,u_{\pm}=\pm u_{\pm}$ with
 $\Sigma_i=\mathbb 1\otimes\sigma_i$; each equation fails under any wrong sign or normalization.
+Take both limits with Series on those same expressions: at $p\ll m$, $u_{\pm}\to\sqrt{2m}
+(\chi_{\pm},0)^T$ with the lower block $O(p/m)$, which is precisely the small component 22.3
+eliminates, and at $m\to0$ the normalization $\bar uu=2m$ degenerates to 0 while
+$\vec\Sigma\cdot\hat p$ and $\gamma^5$ agree on $u_{\pm}$, helicity collapsing onto chirality.
+The genuine edge is $p\to0$ exactly, where $\hat p$ is undefined and with it the helicity
+spinors: at rest only the spin projection survives, and the $\pm$ labels stop meaning anything.
 Close with completeness: $\sum_s u_s\bar u_s-(\gamma^\mu p_\mu+m)$ FullSimplifies to the zero
 matrix, tying the spinors back to the algebra that built them.
 
@@ -2633,17 +2793,24 @@ $\vec A(x,y,z)$ and scalar $\Phi$, charge-sign convention tagged (verify at auth
 every operator act on a generic two-spinor test function $f$ through D, so the noncommutativity
 of $\vec p$ and $\vec A$ is handled by differentiation, never by symbol shuffling. First earn the
 key identity on generic $f$: $(\vec\sigma\cdot\vec\pi)^2f-(\vec\pi^2-q\,\vec\sigma\cdot\vec B)f$
-FullSimplifies to $\{0,0\}$ with $\vec B=$ Curl of $\vec A$ and PauliMatrix carrying the algebra;
-this identity is where $g=2$ lives, and a $g=1$ guess fails it. Then reduce: split
-$\psi=e^{-imt}(\varphi,\chi)^T$, stripping the rest phase before any expansion (Series in $1/m$
-chokes on the oscillatory factor otherwise), solve the lower component as
+FullSimplifies to $\{0,0\}$ with $\vec B=$ Curl of $\vec A$ and PauliMatrix carrying the algebra.
+The identity fixes the coefficient of $\vec\sigma\cdot\vec B$, nothing more; $g$ enters one step
+later, when $-\tfrac{q}{2m}\vec\sigma\cdot\vec B$ is read against $-\vec\mu\cdot\vec B$ with
+$\vec\mu=g\,\tfrac{q}{2m}\vec S$ and $\vec S=\tfrac12\vec\sigma$, giving $g=2$. Then reduce:
+split $\psi=e^{-imt}(\varphi,\chi)^T$, stripping the rest phase before any expansion (Series in
+$1/m$ chokes on the oscillatory factor otherwise), solve the lower component as
 $\chi=\tfrac{\vec\sigma\cdot\vec\pi}{2m}\varphi+O(1/m^2)$, substitute into the upper equation,
-and a Series at $m\to\infty$ lands on the Pauli equation
-$i\partial_t\varphi=[\tfrac{\vec\pi^2}{2m}-\tfrac{q}{2m}\vec\sigma\cdot\vec B+q\Phi]\varphi$. The
-refuting check is Coefficient on the expansion, reusing the same definitions: the
-$\vec\sigma\cdot\vec B$ coefficient must equal $-q/(2m)$, the value the identity fixes, which is
-the moment $g\,\tfrac{q}{2m}\vec S$ with $g=2$ exactly. Close in the lab: the measured electron
-value 2.00232 sits a tenth of a percent above the Dirac prediction, and that excess belongs to
+and a Series at $m\to\infty$ lands on
+$i\partial_t\varphi=[\tfrac{\vec\pi^2}{2m}-\tfrac{q}{2m}\vec\sigma\cdot\vec B+q\Phi]\varphi$.
+Coefficient on that expansion confirms the $\vec\sigma\cdot\vec B$ term, but it and the identity
+share the elimination $\chi=\tfrac{\vec\sigma\cdot\vec\pi}{2m}\varphi$, so a factor-of-2 slip
+there moves $g$ and both readings still pass; the independent refuter is the exact Dirac Landau
+spectrum in uniform $\vec B=B\hat z$, obtained by squaring the Dirac operator with the same
+$\vec A$ and Solve, $E^2=m^2+p_z^2+qB(2n+1-\sigma)$ with $\sigma=\pm1$, whose Series at
+$m\to\infty$ returns $E\approx m+\tfrac{p_z^2}{2m}+\tfrac{qB}{2m}(2n+1-\sigma)$ with no
+elimination assumed anywhere, and whose $(n,\sigma=+1)$ and $(n+1,\sigma=-1)$ coincidence (the
+degeneracy 14.5 exhibits) happens only at $g=2$. Close in the lab: the measured electron value
+2.00232 sits a tenth of a percent above the Dirac prediction, and that excess belongs to
 radiative corrections outside this equation.
 
 #### 22.4 [MSc] How do I obtain the Dirac fine-structure spectrum of hydrogen?
@@ -2652,11 +2819,15 @@ State the coupled radial system $F'=-\tfrac{\kappa}{r}F+(E+m+\tfrac{Z\alpha}{r})
 $G'=\tfrac{\kappa}{r}G-(E-m+\tfrac{Z\alpha}{r})F$ (the convention the C8 probes
 residual-verified) and never hand it to DSolve: the coupled system hangs even without boundary
 conditions, and naive elimination returns only DifferentialRoot (C8 gates; time-box any DSolve at
-authoring). The probed backbone is the squared Biedenharn route: DSolve the effective Coulomb ODE
+authoring). Fix the quantum-number dictionary first, because it carries the structure of the
+answer: $\kappa=-(l+1)$ for $j=l+\tfrac12$ and $\kappa=+l$ for $j=l-\tfrac12$, hence
+$|\kappa|=j+\tfrac12$ and $\gamma=\sqrt{(j+\tfrac12)^2-(Z\alpha)^2}$ (code `gam`, `zalpha`), the
+identity from which the spectrum's independence of $l$ follows rather than being asserted. The
+probed backbone is the squared Biedenharn route: DSolve the effective Coulomb ODE
 $-u''+(\tfrac{s(s+1)}{r^2}-\tfrac{2EZ\alpha}{r})u=(E^2-m^2)u$ with non-integer
-$s\in\{\gamma-1,\gamma\}$, $\gamma=\sqrt{\kappa^2-Z^2\alpha^2}$, which returns WhittakerM with
-symbolic energy (`en`, and $0<Z\alpha<1$, $m>0$ explicit in every Simplify); quantization is the
-manual termination read-off $EZ\alpha/\sqrt{m^2-E^2}=n_r+s+1$, and Solve gives the exact
+$s\in\{\gamma-1,\gamma\}$, which returns WhittakerM with symbolic energy (`en`, and
+$0<Z\alpha<1$, $m>0$ explicit in every Simplify); quantization is the manual termination
+read-off $EZ\alpha/\sqrt{m^2-E^2}=n_r+s+1$, and Solve gives the exact
 $E_{nj}=m\,[1+(\tfrac{Z\alpha}{n_r+\gamma})^2]^{-1/2}$ with $n=n_r+|\kappa|$, the $s=\gamma-1$
 and $s=\gamma$ branches paired by hand and $n_r=0$ existing only for $\kappa<0$. Certify every
 exhibited state by substituting the assembled $(F,G)$ into the first-order system and
@@ -2665,35 +2836,62 @@ the ground state, so the residual runs per state), and assert the normalization
 $\int_0^\infty(F^2+G^2)\,dr=1$ by Gamma integrals. Cross-check against 14.2's perturbative fine
 structure: Series of $E_{nj}$ in $Z\alpha$ reproduces
 $m\,[1-\tfrac{(Z\alpha)^2}{2n^2}-\tfrac{(Z\alpha)^4}{2n^4}(\tfrac{n}{j+1/2}-\tfrac34)]$ exactly,
-remainder scaling as $(Z\alpha)^6$ (probed); the numeric refuter is 32-digit NDSolve shooting on
+remainder scaling as $(Z\alpha)^6$ (probed). The numeric refuter is 32-digit NDSolve shooting on
 the coupled system from $r_0=10^{-8}$ with the $E$-independent indicial ratio
-$G/F=(\gamma-1)/(Z\alpha)$, where a $10^{-2}$ energy error blows the far tail up by a factor near
-$10^7$ (probed). Exhibit the $\kappa\to-\kappa-1$ degeneracy: $2s_{1/2}$ and $2p_{1/2}$ coincide
-exactly because $E_{nj}$ depends only on $n$ and $j$, and close there: the splitting the Dirac
-equation refuses to produce is the Lamb shift, the exit toward field theory.
+$G/F=(\gamma+\kappa)/(Z\alpha)$, the balance of the $r^{\gamma-1}$ terms, which reduces to the
+probed $(\gamma-1)/(Z\alpha)$ only at $\kappa=-1$; seeding a $\kappa=+1$ state with that special
+value picks the irregular branch and silently disarms the discriminator, whereas the general
+seed blows the far tail up by a factor near $10^7$ for a $10^{-2}$ energy error (probed), with
+node counting and $r_{\max}\sim1/\sqrt{m^2-E^2}$ for excited states. Exhibit the degeneracy at
+fixed $n$ as $\kappa\to-\kappa$: $2s_{1/2}$ ($\kappa=-1$) and $2p_{1/2}$ ($\kappa=+1$) coincide
+exactly, since $E_{nj}$ sees $\kappa$ only through $|\kappa|=j+\tfrac12$, while $2p_{3/2}$
+($\kappa=-2$) stays split off by $\alpha^4m/32$ in the same Series. The edges are where the
+formula ends: as $Z\alpha\to|\kappa|^{-}$ the exponent $\gamma\to0$ and Limit on
+$E_{1,1/2}=m\gamma$ sends the ground level to 0 with divergent slope near $Z\approx137$, the fall
+to the center; and at the origin the components go as $r^\gamma$ with $\gamma<1$, finite in
+amplitude but with divergent derivative, still normalizable since $2\gamma>-1$, against the
+Schrodinger $1s$ reduced radial that leaves the origin linearly as $r$. Close on that cusp and
+its missing partner: the relativistic origin behavior is qualitative, and the splitting the
+Dirac equation refuses to produce, $2s_{1/2}$ against $2p_{1/2}$, is the Lamb shift.
 
 #### 22.5 [MSc] How do I exhibit the Klein paradox and zitterbewegung numerically?
 
-Work in the 1+1 Dirac representation $\alpha=\sigma_1$, $\beta=\sigma_3$ (representation choice
-verify at authoring), so spinors are two-component. Klein step: the pinned supercritical step
-$V=V_0\,\theta(x)$ with $V_0>E+m$ (hence $V_0>2m$), matched region by region because DSolve on a
-Piecewise coefficient silently echoes (C4 verdict; the probes covered the Schrodinger case only,
-so time-box the Dirac matching at authoring): the equation is first order, so only $\psi$ itself
-is continuous at $x=0$, a two-component Solve, and the transmitted momentum
-$q=\sqrt{(E-V_0)^2-m^2}$, real again in the Klein zone, has its sign fixed by the group-velocity
-direction (verify at authoring). Transmission comes from the current ratio
-$j=\psi^\dagger\alpha\psi$, never from $|t|^2$ (the C4 members-sanity note); FullSimplify
-$R+T-1$ to 0 from the currents, and Limit as $V_0\to\infty$ leaves $T$ finite and positive, the
-paradox itself, against the Schrodinger step where the same limit kills transmission.
-Zitterbewegung is a C0-style mode sum, no PDE solver: boost a $\operatorname{sech}^2x$ profile to
-$k_0=\tfrac12$ (in units of $m$), decompose it on a symmetric momentum grid (Subdivide), split
-every mode into the $\pm E_k$ branches with the projectors
-$\Lambda_{\pm}(k)=\tfrac12(\mathbb 1\pm H(k)/E_k)$, $H(k)=\alpha k+\beta m$, rebuild $\psi(x,t)$
-by Total over the grid, and take $\langle x\rangle(t)$ as a $dx$-weighted grid sum: a drift with
-a superposed tremor. Two refuters reuse the same definitions: the tremor period must match
-$\pi/E_{k_0}$ (interference at $2E_k\approx2m$), and rerunning the identical sum on the
-$\Lambda_{+}$-projected data must kill the tremor while keeping the drift. Close where the two
-computations meet: both effects are $\pm E$ interference, and both dissolve only in the
+Work in the $1+1$ Dirac representation $\alpha=\sigma_1$, $\beta=\sigma_3$ (code `alphaD`,
+`betaD`; representation choice verify at authoring), so spinors are two-component. Klein step:
+the pinned supercritical step $V=V_0\,$HeavisideTheta$(x)$ with $V_0>E+m$ (hence $V_0>2m$),
+matched region by region because DSolve on a Piecewise coefficient silently echoes (C4 verdict;
+the probes covered the Schrodinger case only, so time-box the Dirac matching at authoring): the
+equation is first order, so only $\psi$ itself is continuous at $x=0$, a two-component Solve, and
+the transmitted momentum $q=\sqrt{(E-V_0)^2-m^2}$, real again in the Klein zone, has its sign
+fixed by the group velocity $dE/dq$ (verify at authoring). Transmission comes from the current
+ratio $j=\psi^\dagger\alpha\psi$, never from $|t|^2$ (the C4 members-sanity note); FullSimplify
+$R+T-1$ to 0 from the currents, then sweep $T(V_0)$ at fixed $E$ across all three windows:
+ordinary transmission for $V_0<E-m$, a closed window of width exactly $2m$ for
+$E-m<V_0<E+m$ where $q$ is imaginary and $T=0$, and the Klein zone $V_0>E+m$ where $T$ reopens
+and stays finite however high the step is raised. The same sweep on the Schrodinger step decays
+monotonically and never reopens, so the discriminator is the reopening itself, and the closed
+window being exactly $2m$ wide is the pair-creation threshold in disguise. Zitterbewegung is a
+C0 mode sum (Route-Table C0 row), no PDE solver: pin
+$\psi_0(x)=\operatorname{sech}^2(x/a)\,e^{ik_0x}\,(1,0)^T$ with $k_0=m/2$ and $a=4/m$, the flat
+spinor chosen because it is not a $\pm$ eigenvector, and report $\|\Lambda_{-}(k_0)\psi_0\|^2$
+as the number that sets the tremor amplitude (of order $1/(2m)$, half the Compton wavelength);
+starting from $u_{+}(k_0)$ instead would send it to zero and leave the checks with nothing to
+measure. The momentum amplitudes stay symbolic through
+$\int\operatorname{sech}^2(x)e^{-ikx}dx=\pi k/\sinh(\pi k/2)$ by Integrate, rescaled for width
+$a$, so the only discretization is the $k$-quadrature (Subdivide); split each mode with the
+projectors $\Lambda_{\pm}(k)=\tfrac12(\mathbb 1\pm H(k)/E_k)$, $H(k)=\alpha k+\beta m$, rebuild
+$\psi(x,t)$ by Total over the grid, and take $\langle x\rangle(t)$ as a $dx$-weighted grid sum:
+a drift with a superposed tremor. Three refuters reuse those same definitions: reconstructing
+$\psi(x,0)$ from the discrete mode sum must reproduce the pinned profile and keep improving
+under a $k$-grid doubling, or the quadrature is inventing the signal; the tremor period must
+match $\pi/E_{k_0}=2.81/m$; and rerunning the identical sum on $\Lambda_{+}$-projected data must
+flatten the tremor while leaving the drift. State the validity window with the period check,
+since it is the reason $a$ is pinned wide: $a=4/m$ gives $\Delta k\approx m/4$, hence
+$\Delta(2E_k)\approx0.22m$ and dephasing near $4.5/m$, about one and a half clean oscillations
+(and $a=8/m$ doubles that), while at the literal Compton width $a=1/m$ the tremor dephases in
+$1.1/m$ and the period is unmeasurable; the drift over one period, $\approx1.26/m$ at
+$k_0=m/2$, stays comparable to the tremor amplitude, so both live on one plot. Close where the
+two computations meet: both effects are $\pm E$ interference, and both dissolve only in the
 many-particle reinterpretation the supercritical step forces.
 
 ## Part 23 Plan: From one particle to fields: the second-quantization bridge
