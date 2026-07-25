@@ -291,18 +291,26 @@ QuditBasis["HoggarSIC"[]] := Enclose @ With[{basis = Simplify @ GramDual[Confirm
 ]
 
 
-(* The letters a multi-character string may be decoded into, one qudit each. Shared
-   by the two decoding rules and by the invalidName guard below, which has to admit
-   exactly what they accept: a guard admitting more leaves the call unevaluated and
-   silent, a guard admitting less rejects a valid name. *)
+(* Which strings decode into one qudit per letter. One predicate, not a repeated
+   condition, because three sites have to agree on it: the two decoding rules just
+   below and the invalidName guard further down, which has to admit exactly what
+   they accept. A guard admitting more leaves the call unevaluated and silent, the
+   defect that guard exists to remove; admitting less rejects a valid name. *)
 $pauliBasisLetters = {"I", "X", "Y", "Z"}
 
+pauliBasisStringQ[s_String] := With[{chars = Characters[s]},
+    Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
+]
+
+pauliBasisStringQ[___] := False
+
+
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
-    QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
+    QuditBasis[chars] /; pauliBasisStringQ[pauliString]
 ]
 
 QuditBasis[pauliString_String[dimension_Integer ? Positive]] := With[{chars = Characters[pauliString]},
-    QuditBasis[Through[chars[dimension]]] /; Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
+    QuditBasis[Through[chars[dimension]]] /; pauliBasisStringQ[pauliString]
 ]
 
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
@@ -312,26 +320,19 @@ QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringConta
 QuditBasis[name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[name[], opts]
 
 
-(* A multi-character Pauli string is a basis without appearing in $QuditBasisNames.
-   Its own rule above is a one-argument form, so it outranks the guard by itself,
-   but the guard's open tail matches the multiplicity arity directly, ahead of the
-   multiplicity rule, and would reject QuditBasis["XYZ", 2] before it got there.
-   Names containing "Basis" need no exemption of their own, their rewrite rule
-   sorting ahead of the guard at every arity, but that rule re-enters dispatch with
-   the name stripped: QuditBasis["XYZBasis", 2] arrives back here as "XYZ" and
-   relies on this exemption too. *)
-pauliBasisStringQ[s_String] := With[{chars = Characters[s]},
-    Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
-]
-
-pauliBasisStringQ[___] := False
-
-
 QuditBasis[name_String[args___], ___] /; ! MemberQ[$QuditBasisNames, name] := (
     Message[QuditBasis::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
 
+(* A decodable Pauli string is a basis without appearing in $QuditBasisNames. Its
+   own rule above is a one-argument form, so it outranks this guard by itself, but
+   the guard's open tail matches the multiplicity arity directly, ahead of the
+   multiplicity rule, and would reject QuditBasis["XYZ", 2] before it got there.
+   Names containing "Basis" need no exemption of their own, their rewrite rule
+   sorting ahead of this guard at every arity, but that rule re-enters dispatch
+   with the name stripped: QuditBasis["XYZBasis", 2] arrives back here as "XYZ"
+   and relies on the exemption too. *)
 QuditBasis[name_String, ___] /; ! MemberQ[$QuditBasisNames, name] && ! pauliBasisStringQ[name] := (
     Message[QuditBasis::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {name}|>]
