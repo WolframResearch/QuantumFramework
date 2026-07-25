@@ -215,13 +215,18 @@ QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] :
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
 
-(* Last-resort arm for a bare string that names nothing. It sits behind every
-   string rule above it: the literal shorthands ("", "+", "L", "-i", ...) and
-   QuantumState["Properties"] sort ahead of it because a literal left-hand side
-   outranks a pattern one, and the digit and letter-sequence rules sort ahead
-   because a pattern-level condition outranks a rule-level one. Without this
-   arm an unrecognized name reached the scalar-amplitude rule in QuantumState.m
-   and became a one-element amplitude vector holding the string itself. *)
+(* Last-resort arm for a bare string that names nothing. Without it an
+   unrecognized name reached the scalar-amplitude rule in QuantumState.m and
+   became a one-element amplitude vector holding the string itself.
+
+   THIS ARM MUST STAY LAST among the string rules. Only the purely literal
+   left-hand sides are safe from it on their own: "", "+", "-", "L", "R" here
+   and QuantumState["Properties"] in Properties.m stay reachable whatever the
+   load order, because a literal is hoisted above a pattern. Nothing orders two
+   conditioned rules against each other, so the digit-string rule, the
+   letter-sequence rule and the "+i"/"-i" aliases are reachable only by sitting
+   earlier in this file; moving this arm above them silently breaks
+   QuantumState["0101"]. *)
 QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {name}|>]

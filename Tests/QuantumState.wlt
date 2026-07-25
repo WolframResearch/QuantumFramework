@@ -392,8 +392,9 @@ VerificationTest[
 (* The string forms that bypass $QuantumStateNames must survive the guard: the
    zero-qudit empty state, basis-element digit strings (in any qudit dimension),
    computational and Pauli-eigenstate letter sequences, and the "+i"/"-i"
-   aliases, none of which appear in the registry. These are one-argument forms,
-   so a literal left-hand side sorts them ahead of the guard on its own. *)
+   aliases, none of which appear in the registry. Only "" is a bare literal and
+   so ordered ahead of the guard on its own; the rest are conditioned or
+   patterned rules that stay reachable only by preceding it in NamedStates.m. *)
 VerificationTest[
     {
         QuantumState[""]["Dimension"],
@@ -409,9 +410,9 @@ VerificationTest[
 ]
 
 (* The digit and letter-sequence rules take an argument tail, so they compete
-   with the invalidName arm at the same arity. Their pattern-level condition
-   outranks the arm's rule-level one, which is what keeps them reachable; these
-   pin that ordering, since nothing else in the suite exercises a tail. *)
+   with the invalidName arm at the same arity, and neither pattern outranks the
+   other: they win only by preceding it in NamedStates.m. These pin that file
+   order, since nothing else in the suite exercises a tail on them. *)
 VerificationTest[
     {
         QuantumState["0101", QuantumBasis[16]]["Qudits"],
