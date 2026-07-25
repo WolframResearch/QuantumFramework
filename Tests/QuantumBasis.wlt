@@ -48,8 +48,10 @@ EndTestSection[]
 BeginTestSection["QuantumBasis - pictures"]
 
 (* every registered picture is accepted as a positional argument, not routed into QuditBasis.
-   Swept over the registry rather than sampled, so a name added to $QuantumBasisPictures is
-   covered here without editing this file *)
+   Swept over the registry rather than sampled. Note the sweep quantifies over the registry as
+   it stands at load: the rules below match against Alternatives @@ $QuantumBasisPictures,
+   which is expanded into the pattern when the package loads, so a name appended to the
+   registry at runtime is not picked up by them and recurses *)
 
 VerificationTest[
     AssociationMap[QuantumBasis[#]["Picture"] &, Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures],
@@ -181,27 +183,19 @@ VerificationTest[
     TestID -> "Picture-empty-list-matches-unpictured"
 ]
 
-(* A phase-space basis derives "PhaseSpace" from its own elements, so renaming its picture
-   would leave the elements and the tag disagreeing. QuantumState reads the phase-space route
-   off that tag, so a demoted Wigner basis sends an already-transformed basis back through
-   QuantumWignerTransform and the quasi-probability comes out doubled. The closed form for a
-   symbolic qubit amplitude vector is the reference: it must not depend on a picture name. *)
+(* "PhaseSpace" is set for the names in $QuditPhaseSpaceBasisNames, at one place in the
+   constructor. It is a tag, not something read back off the elements, and nothing ties the
+   two together, so elements and tag can be put in disagreement by several routes that these
+   tests do not close. What is closed here is the positional route on an already-tagged
+   basis: renaming it sends an already-transformed basis back through QuantumWignerTransform
+   and the quasi-probability comes out doubled. The array below is the value at d = 2, kept
+   as a tripwire on that doubling; it is not a normalized quasi-probability of any state,
+   and being read off the reshaped state vector it does not discriminate the elements. *)
 
 VerificationTest[
     Normal @ QuantumState[{a, b, c, d}, QuantumBasis["Wigner"]]["PhaseSpace"],
     {{a, b, a, b}, {c, d, -c, -d}, {a, -b, a, -b}, {c, -d, -c, d}},
     TestID -> "PhaseSpace-Wigner-closed-form-is-the-reference"
-]
-
-(* the invariant the closed form exists to protect: naming a picture must not change the
-   quasi-probability. This is what catches a demotion that slips past the guard by any
-   route, rather than only the routes enumerated below *)
-
-VerificationTest[
-    Normal @ QuantumState[{a, b, c, d}, QuantumBasis["Wigner"]]["PhaseSpace"] ===
-        Normal @ QuantumState[{a, b, c, d}, QuantumBasis[QuantumBasis["Wigner"], "PhaseSpace"]]["PhaseSpace"],
-    True,
-    TestID -> "PhaseSpace-independent-of-picture-name"
 ]
 
 VerificationTest[

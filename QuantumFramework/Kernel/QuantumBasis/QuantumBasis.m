@@ -87,12 +87,15 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 
 QuantumBasis[qb_QuantumBasis] := qb
 
-(* a basis whose elements put it in phase space carries "PhaseSpace" because of those
-   elements, not as a label, and QuantumState reads the phase-space route off it. Renaming
-   the picture would leave the elements and the tag disagreeing, and the state route then
-   transforms an already-transformed basis. The option form is deliberately not guarded:
-   QuantumWeylTransform demotes through it (QuantumWignerTransform.m:81) once it has
-   actually undone the transform *)
+(* "PhaseSpace" is a tag, set below from $QuditPhaseSpaceBasisNames, and nothing ties it to
+   the elements; QuantumState nonetheless routes on it. Renaming it therefore leaves the
+   elements and the route disagreeing, and the state transforms an already-transformed
+   basis. This closes the positional route on an already-tagged basis only. Other routes
+   still put the two out of step (a "Picture" option, QuditBasis-built and list-built
+   phase-space bases, QuantumTensorProduct, partial trace); closing those needs the tag
+   derived from the elements rather than guarded here. The option form is deliberately
+   left open: QuantumWeylTransform demotes through it (QuantumWignerTransform.m:81) once
+   it has actually undone the transform *)
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] /;
     data["Picture"] === "PhaseSpace" && picture =!= "PhaseSpace" :=
     (Message[QuantumBasis::phaseSpacePicture, picture]; $Failed)
@@ -223,11 +226,10 @@ QuantumBasis[
 (* qb's picture travels through the guarded positional form, not inside qb["Options"];
    passing the whole option list would carry a picture straight into the option rule and
    around the phase-space guard above *)
-QuantumBasis[qb_QuantumBasis, args__] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
-    ConfirmBy[
-        QuantumBasis[QuantumBasis[basis, FilterRules[qb["Options"], Except["Picture"]]], qb["Picture"]],
-        QuantumBasisQ
-    ]
+QuantumBasis[qb_QuantumBasis, args__] := Enclose @ Fold[
+    ConfirmBy[QuantumBasis[#1, #2], QuantumBasisQ] &,
+    ConfirmBy[QuantumBasis[args], QuantumBasisQ],
+    Append[FilterRules[qb["Options"], Except["Picture"]], qb["Picture"]]
 ]
 
 QuantumBasis[qs_QuantumState] := qs["Basis"]
