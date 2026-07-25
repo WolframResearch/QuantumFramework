@@ -33,6 +33,125 @@ VerificationTest[QuantumState[{1/Sqrt[2], 1/Sqrt[2]}]["Dimension"], 2, TestID ->
 EndTestSection[]
 
 
+BeginTestSection["QuantumState - named states with a basis or option tail"]
+
+(* The fixed-vector named states take the same tail as every other constructor
+   here: a basis specification followed by options, applied to the state the
+   name builds. The amplitudes are the ones the bare name produces, tagged with
+   the requested basis, so a dimension-preserving tail leaves the state alone. *)
+
+VerificationTest[Normal @ QuantumState["0", QuantumBasis[2]]["StateVector"], {1, 0}, {}, TestID -> "NamedTail-0"]
+
+VerificationTest[Normal @ QuantumState["1", QuantumBasis[2]]["StateVector"], {0, 1}, {}, TestID -> "NamedTail-1"]
+
+VerificationTest[Normal @ QuantumState["Plus", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], 1/Sqrt[2]}, {}, TestID -> "NamedTail-Plus"]
+
+VerificationTest[Normal @ QuantumState["Minus", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], -1/Sqrt[2]}, {}, TestID -> "NamedTail-Minus"]
+
+VerificationTest[Normal @ QuantumState["Left", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], -I/Sqrt[2]}, {}, TestID -> "NamedTail-Left"]
+
+VerificationTest[Normal @ QuantumState["Right", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], I/Sqrt[2]}, {}, TestID -> "NamedTail-Right"]
+
+VerificationTest[Normal @ QuantumState["PhiPlus", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], 0, 0, 1/Sqrt[2]}, {}, TestID -> "NamedTail-PhiPlus"]
+
+VerificationTest[Normal @ QuantumState["PhiMinus", QuantumBasis[2]]["StateVector"], {1/Sqrt[2], 0, 0, -1/Sqrt[2]}, {}, TestID -> "NamedTail-PhiMinus"]
+
+VerificationTest[Normal @ QuantumState["PsiPlus", QuantumBasis[2]]["StateVector"], {0, 1/Sqrt[2], 1/Sqrt[2], 0}, {}, TestID -> "NamedTail-PsiPlus"]
+
+VerificationTest[Normal @ QuantumState["PsiMinus", QuantumBasis[2]]["StateVector"], {0, 1/Sqrt[2], -1/Sqrt[2], 0}, {}, TestID -> "NamedTail-PsiMinus"]
+
+(* A basis name is as good a tail as a QuantumBasis, and the empty call form is
+   the literal shape the name dispatcher forwards to. *)
+VerificationTest[
+    Normal @ QuantumState["Plus", "PauliBasis"]["StateVector"],
+    {1/Sqrt[2], 1/Sqrt[2], 0, 0},
+    {},
+    TestID -> "NamedTail-Plus-PauliBasis"
+]
+
+VerificationTest[
+    Normal @ QuantumState["Plus"[], QuantumBasis[2]]["StateVector"],
+    {1/Sqrt[2], 1/Sqrt[2]},
+    {},
+    TestID -> "NamedTail-Plus-empty-call-form"
+]
+
+(* Whatever the tail, the state stays a unit vector. *)
+VerificationTest[
+    Union @ Flatten @ Outer[
+        QuantumState[#1, #2]["Norm"] &,
+        {"0", "1", "Plus", "Minus", "Left", "Right", "PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"},
+        {QuantumBasis[2], "PauliBasis", QuantumBasis[2, 2]}
+    ],
+    {1},
+    {},
+    TestID -> "NamedTail-normalization"
+]
+
+(* The name's own label is a default the tail can override, so the state stays
+   recognizable through a change of basis but an explicit option still wins. *)
+VerificationTest[
+    Union @ Map[
+        QuantumState[#, QuantumBasis[2]]["Label"] === QuantumState[#]["Label"] &,
+        {"0", "1", "Plus", "Minus", "Left", "Right", "PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"}
+    ],
+    {True},
+    {},
+    TestID -> "NamedTail-label-survives"
+]
+
+VerificationTest[QuantumState["Plus", QuantumBasis[2], "Label" -> "q"]["Label"], "q", {}, TestID -> "NamedTail-label-overridable"]
+
+(* "0" and "1" reach the digit string rule, their aliases reach the name
+   dispatcher. The two routes have to land on the same object. *)
+VerificationTest[QuantumState["Zero", QuantumBasis[2]] === QuantumState["0", QuantumBasis[2]], True, {}, TestID -> "NamedTail-Zero-matches-digit-route"]
+
+VerificationTest[QuantumState["Zero", "PauliBasis"] === QuantumState["0", "PauliBasis"], True, {}, TestID -> "NamedTail-Zero-matches-digit-route-Pauli"]
+
+VerificationTest[QuantumState["Up", QuantumBasis[2]] === QuantumState["0", QuantumBasis[2]], True, {}, TestID -> "NamedTail-Up-matches-digit-route"]
+
+VerificationTest[QuantumState["One", QuantumBasis[2]] === QuantumState["1", QuantumBasis[2]], True, {}, TestID -> "NamedTail-One-matches-digit-route"]
+
+(* The bare forms are what they were before the tail was accepted. *)
+VerificationTest[
+    Normal[QuantumState[#]["StateVector"]] & /@
+        {"0", "1", "Plus", "Minus", "Left", "Right", "PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"},
+    {{1, 0}, {0, 1}, {1/Sqrt[2], 1/Sqrt[2]}, {1/Sqrt[2], -1/Sqrt[2]}, {1/Sqrt[2], -I/Sqrt[2]}, {1/Sqrt[2], I/Sqrt[2]},
+     {1/Sqrt[2], 0, 0, 1/Sqrt[2]}, {1/Sqrt[2], 0, 0, -1/Sqrt[2]}, {0, 1/Sqrt[2], 1/Sqrt[2], 0}, {0, 1/Sqrt[2], -1/Sqrt[2], 0}},
+    {},
+    TestID -> "NamedTail-bare-forms-unchanged"
+]
+
+(* A trailing integer is a qudit dimension, like everywhere else in this file.
+   The qudit count lives inside the name instead, as "Plus"[n], and that form
+   is unaffected by the tail the base rules now accept. *)
+VerificationTest[Normal @ QuantumState["Plus"[2]]["StateVector"], {1/2, 1/2, 1/2, 1/2}, {}, TestID -> "NamedTail-Plus-2-unchanged"]
+
+VerificationTest[QuantumState["Plus"[3]]["Dimension"], 8, {}, TestID -> "NamedTail-Plus-3-unchanged"]
+
+VerificationTest[Normal @ QuantumState["Left"[2]]["StateVector"], {1/2, -I/2, -I/2, -1/2}, {}, TestID -> "NamedTail-Left-2-unchanged"]
+
+VerificationTest[QuantumState["PhiPlus"[2]]["Dimension"], 16, {}, TestID -> "NamedTail-PhiPlus-2-unchanged"]
+
+VerificationTest[QuantumState["Plus", 2]["Dimension"], 2, {}, TestID -> "NamedTail-trailing-integer-is-a-dimension"]
+
+VerificationTest[QuantumState["Plus"[2], QuantumBasis[2]] === QuantumState["Plus"[2]], True, {}, TestID -> "NamedTail-Plus-2-accepts-tail"]
+
+(* Names that carry their own arguments already threaded the tail; they still do. *)
+VerificationTest[QuantumState["GHZ", QuantumBasis[2]]["Dimension"], 8, {}, TestID -> "NamedTail-GHZ-still-threads"]
+
+(* Accepting a tail must not turn an unmatched call shape into a silent success. *)
+VerificationTest[
+    QuantumState["Plus"["bad-arg"]],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-bad-call-shape-still-fails"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumState - properties"]
 
 VerificationTest[QuantumState["Bell"]["Qudits"], 2, TestID -> "Bell-Qudits"]
@@ -305,25 +424,30 @@ VerificationTest[
     TestID -> "Shorthand-strings-with-a-tail"
 ]
 
-(* The "+i"/"-i" aliases forward their tail to the named state. They used to be
-   one-argument rules, so a tail slipped past them into the scalar-amplitude
-   rule and QuantumState["+i", QuantumBasis[2]]["Norm"] came back Abs["+i"] with
-   no message: the same pathology as an unrecognized name. The invalidArgs here
-   is the separate gap where a registered name rejects any tail; what this pins
-   is that the string can no longer become an amplitude. *)
+(* The "+i"/"-i" aliases forward their tail to the named state, so the tail
+   reaches the basis instead of slipping past into the scalar-amplitude rule,
+   where the string itself would become the amplitude and the norm would come
+   back as Abs["+i"] with no message. The norm pins that: a leak cannot be 1. *)
 VerificationTest[
-    QuantumState["+i", QuantumBasis[2]],
-    Failure["InvalidArguments", _],
-    {QuantumState::invalidArgs},
-    SameTest -> MatchQ,
+    {
+        QuantumState["+i", QuantumBasis[2]] === QuantumState["Right", QuantumBasis[2]],
+        QuantumState["+i", QuantumBasis[2]]["Norm"]
+    },
+    {True, 1},
+    {},
     TestID -> "Alias-with-tail-forwards-not-leaks"
 ]
 
+(* A two-level named state given a qutrit basis embeds on the first two levels,
+   silently, the way any short amplitude prefix does. *)
 VerificationTest[
-    QuantumState["-i", 3],
-    Failure["InvalidArguments", _],
-    {QuantumState::invalidArgs},
-    SameTest -> MatchQ,
+    {
+        QuantumState["-i", 3] === QuantumState["Left", 3],
+        Normal @ QuantumState["-i", 3]["StateVector"],
+        QuantumState["-i", 3]["Norm"]
+    },
+    {True, {1/Sqrt[2], -I/Sqrt[2], 0}, 1},
+    {},
     TestID -> "Alias-with-tail-forwards-not-leaks-qutrit"
 ]
 

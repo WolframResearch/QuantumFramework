@@ -38,33 +38,40 @@ QuantumState[("Zero" | "Up")[args___], opts___] := QuantumState["0"[args], opts]
 
 QuantumState[("One" | "Down")[args___], opts___] := QuantumState["1"[args], opts]
 
-QuantumState["0"[]] := QuantumState[Normalize @ {1, 0}, "Label" -> "0"]
+(* The tail of a fixed-vector named state is a basis specification followed by
+   options, applied to the state built here, so QuantumState["Plus", basis] is
+   the plus state expressed in basis. A trailing integer is therefore a qudit
+   dimension, not a qudit count: the count goes inside the name, as "Plus"[n].
+   The trailing "Label" is a default that an explicit one in opts overrides,
+   which keeps these agreeing with the digit string rule above. *)
 
-QuantumState["1"[]] := QuantumState[Normalize @ {0, 1}, "Label" -> "1"]
+QuantumState["0"[], opts___] := QuantumState[Normalize @ {1, 0}, opts, "Label" -> "0"]
+
+QuantumState["1"[], opts___] := QuantumState[Normalize @ {0, 1}, opts, "Label" -> "1"]
 
 
-QuantumState["Plus"[]] := QuantumState[Normalize @ {1, 1}, "Label" -> "+"]
+QuantumState["Plus"[], opts___] := QuantumState[Normalize @ {1, 1}, opts, "Label" -> "+"]
 QuantumState["+"] := QuantumState["Plus"]
 
-QuantumState["Minus"[]] := QuantumState[Normalize @ {1, -1}, "Label" -> "-"]
+QuantumState["Minus"[], opts___] := QuantumState[Normalize @ {1, -1}, opts, "Label" -> "-"]
 QuantumState["-"] := QuantumState["Minus"]
 
-QuantumState["Left"[]] := QuantumState[Normalize @ {1, -I}, "Label" -> "L"]
+QuantumState["Left"[], opts___] := QuantumState[Normalize @ {1, -I}, opts, "Label" -> "L"]
 QuantumState["L"] := QuantumState["Left"]
 QuantumState["-i", args___] := QuantumState["Left", args]
 
-QuantumState["Right"[]] := QuantumState[Normalize @ {1, I}, "Label" -> "R"]
+QuantumState["Right"[], opts___] := QuantumState[Normalize @ {1, I}, opts, "Label" -> "R"]
 QuantumState["R"] := QuantumState["Right"]
 QuantumState["+i", args___] := QuantumState["Right", args]
 
 
-QuantumState["PhiPlus"[]] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
+QuantumState["PhiPlus"[], opts___] := QuantumState[Normalize @ {1, 0, 0, 1}, opts, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
 
-QuantumState["PhiMinus"[]] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
+QuantumState["PhiMinus"[], opts___] := QuantumState[Normalize @ {1, 0, 0, -1}, opts, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
 
-QuantumState["PsiPlus"[]] := QuantumState[Normalize @ {0, 1, 1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]"]
+QuantumState["PsiPlus"[], opts___] := QuantumState[Normalize @ {0, 1, 1, 0}, opts, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]"]
 
-QuantumState["PsiMinus"[]] := QuantumState[Normalize @ {0, 1, -1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]"]
+QuantumState["PsiMinus"[], opts___] := QuantumState[Normalize @ {0, 1, -1, 0}, opts, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]"]
 
 QuantumState[(name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus")[n_Integer ? Positive], args___] :=
     QuantumTensorProduct @ Table[QuantumState[name, args], n]
