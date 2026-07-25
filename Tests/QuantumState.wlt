@@ -76,16 +76,102 @@ VerificationTest[
     TestID -> "NamedTail-Plus-empty-call-form"
 ]
 
-(* Whatever the tail, the state stays a unit vector. *)
+(* A basis that can hold the amplitudes leaves the state a unit vector, whether
+   it matches the dimension, raises it, or is a frame other than the
+   computational one. *)
 VerificationTest[
     Union @ Flatten @ Outer[
         QuantumState[#1, #2]["Norm"] &,
         {"0", "1", "Plus", "Minus", "Left", "Right", "PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"},
-        {QuantumBasis[2], "PauliBasis", QuantumBasis[2, 2]}
+        {QuantumBasis[2], "PauliBasis", QuantumBasis[2, 2], QuantumBasis["PauliX"]}
     ],
     {1},
     {},
     TestID -> "NamedTail-normalization"
+]
+
+(* The tail says what the amplitudes are coefficients of; it does not rotate
+   them into the frame. In a dimension-matched frame that distinction is
+   visible, where a larger basis would hide it behind zero-padding: the name
+   keeps its coefficient pattern, so QuantumState["Plus", PauliX] carries
+   {1,1}/Sqrt[2] against the PauliX elements rather than the {1,0} a change of
+   basis would give. The digit string rule reads its tail the same way, which
+   is what makes the two routes into "0" agree on a well-formed tail; they part
+   company on a malformed one, where each rejects in its own way. *)
+VerificationTest[
+    {
+        Normal @ QuantumState["Plus", QuantumBasis["PauliX"]]["StateVector"],
+        Normal @ QuantumState["0", QuantumBasis["PauliX"]]["StateVector"],
+        QuantumState["Zero", QuantumBasis["PauliX"]] === QuantumState["0", QuantumBasis["PauliX"]]
+    },
+    {{1/Sqrt[2], 1/Sqrt[2]}, {1, 0}, True},
+    {},
+    TestID -> "NamedTail-tags-coefficients-not-a-change-of-basis"
+]
+
+(* These names denote kets of at least two levels. A basis with fewer levels
+   would be filled by dropping amplitudes, returning an unnormalized state, and
+   a basis carrying an input leg would return an operator shaped object; both
+   are rejected. One test per rejected tail, because several copies of one
+   message in a single test trip General::stop. *)
+VerificationTest[
+    QuantumState["Plus", 1],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-one-level-basis-rejected"
+]
+
+VerificationTest[
+    QuantumState["Plus", 0],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-zero-level-basis-rejected"
+]
+
+VerificationTest[
+    QuantumState["PsiMinus", QuantumBasis[1]],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-one-level-basis-rejected-two-qubit-name"
+]
+
+(* Without this the state comes back with a dual leg and dimension 6. *)
+VerificationTest[
+    QuantumState["Plus", QuantumBasis[QuditBasis[2], QuditBasis[3]]],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-input-leg-rejected"
+]
+
+(* A tail that is no basis at all reports the same way, rather than surfacing
+   the internal predicate that turned it down. *)
+VerificationTest[
+    QuantumState["Plus", QuantumState["Bell"]],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-non-basis-tail-rejected"
+]
+
+VerificationTest[
+    QuantumState["Minus", 3/2],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "NamedTail-non-integer-tail-rejected"
+]
+
+(* A basis with room to spare embeds rather than truncating, so the norm holds
+   even when the dimension is not a power of the qudit dimension. *)
+VerificationTest[
+    {QuantumState["Plus", 3]["Norm"], Normal @ QuantumState["Plus", 3]["StateVector"]},
+    {1, {1/Sqrt[2], 1/Sqrt[2], 0}},
+    {},
+    TestID -> "NamedTail-larger-basis-embeds"
 ]
 
 (* The name's own label is a default the tail can override, so the state stays

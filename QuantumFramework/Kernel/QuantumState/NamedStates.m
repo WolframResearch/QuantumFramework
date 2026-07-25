@@ -38,16 +38,43 @@ QuantumState[("Zero" | "Up")[args___], opts___] := QuantumState["0"[args], opts]
 
 QuantumState[("One" | "Down")[args___], opts___] := QuantumState["1"[args], opts]
 
-(* The tail of a fixed-vector named state is a basis specification followed by
-   options, applied to the state built here, so QuantumState["Plus", basis] is
-   the plus state expressed in basis. A trailing integer is therefore a qudit
-   dimension, not a qudit count: the count goes inside the name, as "Plus"[n].
-   The trailing "Label" is a default that an explicit one in opts overrides,
-   which keeps these agreeing with the digit string rule above. *)
+(* A fixed-vector name takes a basis specification followed by options. The
+   name's amplitudes become the coefficients in that basis, zero-padded when it
+   holds more levels; the tail says what the coefficients are coefficients of
+   and does not rotate them into a new frame, which is the reading the digit
+   string rule above already gives QuantumState["0", basis]. A trailing integer
+   is therefore a qudit dimension and not a qudit count, the count staying
+   inside the name as "Plus"[n]. These names denote kets of at least two levels,
+   so a tail reaching here that is not a basis, or is one carrying an input leg
+   or fewer than two levels, is rejected the way an unmatched call shape is:
+   otherwise it would be taken quietly, turning the ket into an operator shaped
+   object or dropping amplitudes to fit and leaving the state unnormalized. The
+   bare strings "0" and "1" carry their tail to the digit string rule above
+   instead of here, and keep that rule's handling of a malformed one. The
+   trailing "Label" is a default that an explicit one in the tail overrides. *)
 
-QuantumState["0"[], opts___] := QuantumState[Normalize @ {1, 0}, opts, "Label" -> "0"]
+namedStateTailRejected[name_] := (
+    Message[QuantumState::invalidArgs, Defer[name[]]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumState::invalidArgs, "MessageParameters" :> {Defer[name[]]}|>]
+)
 
-QuantumState["1"[], opts___] := QuantumState[Normalize @ {0, 1}, opts, "Label" -> "1"]
+namedStateTail[name_, vec_, label_, opts___] := With[{
+    basis = QuantumBasis[opts]
+},
+    If[ ! QuantumBasisQ[basis] || basis["InputQudits"] =!= 0 || basis["Dimension"] < 2,
+        namedStateTailRejected[name],
+
+        With[{state = QuantumState[vec, opts, "Label" -> label]},
+            If[QuantumStateQ[state], state, namedStateTailRejected[name]]
+        ]
+    ]
+]
+
+QuantumState["0"[]] := QuantumState[Normalize @ {1, 0}, "Label" -> "0"]
+QuantumState["0"[], opts__] := namedStateTail["0", Normalize @ {1, 0}, "0", opts]
+
+QuantumState["1"[]] := QuantumState[Normalize @ {0, 1}, "Label" -> "1"]
+QuantumState["1"[], opts__] := namedStateTail["1", Normalize @ {0, 1}, "1", opts]
 
 
 (* The one-character aliases must stay arity-1 literals. That is what hoists them
@@ -57,28 +84,36 @@ QuantumState["1"[], opts___] := QuantumState[Normalize @ {0, 1}, opts, "Label" -
    QuantumState["+"] hits $RecursionLimit. "+i" and "-i" are two characters, match
    no other rule, and do take a tail. *)
 
-QuantumState["Plus"[], opts___] := QuantumState[Normalize @ {1, 1}, opts, "Label" -> "+"]
+QuantumState["Plus"[]] := QuantumState[Normalize @ {1, 1}, "Label" -> "+"]
+QuantumState["Plus"[], opts__] := namedStateTail["Plus", Normalize @ {1, 1}, "+", opts]
 QuantumState["+"] := QuantumState["Plus"]
 
-QuantumState["Minus"[], opts___] := QuantumState[Normalize @ {1, -1}, opts, "Label" -> "-"]
+QuantumState["Minus"[]] := QuantumState[Normalize @ {1, -1}, "Label" -> "-"]
+QuantumState["Minus"[], opts__] := namedStateTail["Minus", Normalize @ {1, -1}, "-", opts]
 QuantumState["-"] := QuantumState["Minus"]
 
-QuantumState["Left"[], opts___] := QuantumState[Normalize @ {1, -I}, opts, "Label" -> "L"]
+QuantumState["Left"[]] := QuantumState[Normalize @ {1, -I}, "Label" -> "L"]
+QuantumState["Left"[], opts__] := namedStateTail["Left", Normalize @ {1, -I}, "L", opts]
 QuantumState["L"] := QuantumState["Left"]
 QuantumState["-i", args___] := QuantumState["Left", args]
 
-QuantumState["Right"[], opts___] := QuantumState[Normalize @ {1, I}, opts, "Label" -> "R"]
+QuantumState["Right"[]] := QuantumState[Normalize @ {1, I}, "Label" -> "R"]
+QuantumState["Right"[], opts__] := namedStateTail["Right", Normalize @ {1, I}, "R", opts]
 QuantumState["R"] := QuantumState["Right"]
 QuantumState["+i", args___] := QuantumState["Right", args]
 
 
-QuantumState["PhiPlus"[], opts___] := QuantumState[Normalize @ {1, 0, 0, 1}, opts, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
+QuantumState["PhiPlus"[]] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
+QuantumState["PhiPlus"[], opts__] := namedStateTail["PhiPlus", Normalize @ {1, 0, 0, 1}, "\*SubscriptBox[\[CapitalPhi], \(+\)]", opts]
 
-QuantumState["PhiMinus"[], opts___] := QuantumState[Normalize @ {1, 0, 0, -1}, opts, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
+QuantumState["PhiMinus"[]] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
+QuantumState["PhiMinus"[], opts__] := namedStateTail["PhiMinus", Normalize @ {1, 0, 0, -1}, "\*SubscriptBox[\[CapitalPhi], \(-\)]", opts]
 
-QuantumState["PsiPlus"[], opts___] := QuantumState[Normalize @ {0, 1, 1, 0}, opts, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]"]
+QuantumState["PsiPlus"[]] := QuantumState[Normalize @ {0, 1, 1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]"]
+QuantumState["PsiPlus"[], opts__] := namedStateTail["PsiPlus", Normalize @ {0, 1, 1, 0}, "\*SubscriptBox[\[CapitalPsi], \(+\)]", opts]
 
-QuantumState["PsiMinus"[], opts___] := QuantumState[Normalize @ {0, 1, -1, 0}, opts, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]"]
+QuantumState["PsiMinus"[]] := QuantumState[Normalize @ {0, 1, -1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]"]
+QuantumState["PsiMinus"[], opts__] := namedStateTail["PsiMinus", Normalize @ {0, 1, -1, 0}, "\*SubscriptBox[\[CapitalPsi], \(-\)]", opts]
 
 QuantumState[(name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus")[n_Integer ? Positive], args___] :=
     QuantumTensorProduct @ Table[QuantumState[name, args], n]
