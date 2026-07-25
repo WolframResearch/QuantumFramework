@@ -35,6 +35,8 @@ QuantumBasis::inconsistentElements = "elements should have the same dimensions";
 
 QuantumBasis::dependentElements = "elements should be linearly independent";
 
+QuantumBasis::invalidSpec = "`` is not a valid basis specification";
+
 
 
 $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
@@ -184,14 +186,23 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
     QuantumBasis["Computational", args, "Label" -> None]
 
 (* a picture leading an actual basis specification applies to the basis that specification
-   builds, so QuantumBasis["Heisenberg", "PauliX"] is the PauliX basis in that picture. The
-   tail starts with neither a rule (that is the rule above) nor a non-negative Integer (that
-   is the multiplicity rule above, where QuantumBasis["Heisenberg", 3] means 3 qudits) *)
+   builds, so QuantumBasis["Heisenberg", "PauliX"] is the PauliX basis in that picture. A
+   tail starting with a non-negative Integer is left to the multiplicity rule above, where
+   QuantumBasis["Heisenberg", 3] means 3 qudits rather than dimension 3. A tail starting
+   with a rule is left to the rule above, which also claims a tail of further picture
+   strings; that overlap is harmless because both paths apply the leading picture last, the
+   option path by folding over Reverse @ {args} *)
 QuantumBasis[
     picture : Alternatives @@ $QuantumBasisPictures,
     args : PatternSequence[Except[_Rule | _RuleDelayed | _Integer ? NonNegative], ___]
 ] :=
-    Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], picture]
+    Enclose @ With[{basis = QuantumBasis[args]},
+        QuantumBasis[
+            (* a spec that failed loudly has already said why; only name one that went quiet *)
+            ConfirmBy[basis, QuantumBasisQ, If[! FailureQ[basis], Message[QuantumBasis::invalidSpec, {args}]]],
+            picture
+        ]
+    ]
 
 QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Options"]]
 

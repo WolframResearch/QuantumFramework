@@ -116,19 +116,31 @@ VerificationTest[QuantumBasis[{"X"}, {2}, "Heisenberg"]["Picture"], "Heisenberg"
 
 VerificationTest[QuantumBasis[QuditBasis[2], "Heisenberg"]["Picture"], "Heisenberg", TestID -> "Picture-trailing-after-QuditBasis"]
 
-(* whichever picture is written last wins, so an explicit option beats a picture before it
-   and loses to one after it *)
+(* whichever picture is written FIRST wins, positional or option alike: the arguments are
+   folded over Reverse @ {args}, so the earliest one is applied last *)
 
 VerificationTest[
     QuantumBasis["Picture" -> "Interaction", "Heisenberg"]["Picture"],
     "Interaction",
-    TestID -> "Picture-option-before-positional-wins"
+    TestID -> "Picture-first-wins-option-then-positional"
 ]
 
 VerificationTest[
     QuantumBasis["Heisenberg", "Picture" -> "Interaction"]["Picture"],
     "Heisenberg",
-    TestID -> "Picture-positional-before-option-wins"
+    TestID -> "Picture-first-wins-positional-then-option"
+]
+
+VerificationTest[
+    QuantumBasis["Heisenberg", "Interaction"]["Picture"],
+    "Heisenberg",
+    TestID -> "Picture-first-wins-two-positionals"
+]
+
+VerificationTest[
+    QuantumBasis["Picture" -> "PhaseSpace", "Picture" -> "Heisenberg"]["Picture"],
+    "PhaseSpace",
+    TestID -> "Picture-first-wins-two-options"
 ]
 
 (* an Integer tail is still a multiplicity, not a dimension *)
@@ -142,6 +154,25 @@ VerificationTest[
     True,
     {QuditBasis::invalidArgs},
     TestID -> "Picture-negative-integer-tail-fails"
+]
+
+(* a trailing picture must not change what the empty list returns. QuantumBasis[{}] answers
+   with a QuditBasis rather than a QuantumBasis, which is its own pre-existing defect; what
+   is pinned here is only that adding a picture does not move it *)
+
+VerificationTest[
+    Head @ QuantumBasis[{}, "Heisenberg"],
+    Head @ QuantumBasis[{}],
+    TestID -> "Picture-empty-list-matches-unpictured"
+]
+
+(* a tail that specifies no basis at all fails by name rather than silently *)
+
+VerificationTest[
+    FailureQ @ QuantumBasis["Heisenberg", Sqrt[2]],
+    True,
+    {QuantumBasis::invalidSpec},
+    TestID -> "Picture-uninterpretable-tail-names-itself"
 ]
 
 (* the two-name rule the picture guard sits on must keep reading its second argument as an input basis *)
