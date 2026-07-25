@@ -306,9 +306,27 @@ QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringConta
 QuditBasis[name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[name[], opts]
 
 
+(* A multi-character Pauli string is a basis without appearing in $QuditBasisNames.
+   Its own rule above is a one-argument form, so it outranks the guard by itself,
+   but under a multiplicity it is the multiplicity rule that does the work and the
+   guard would otherwise reject QuditBasis["XYZ", 2] before reaching it. Names
+   containing "Basis" need no exemption: their rewrite rule takes an argument tail
+   and already sorts ahead of the guard at every arity. *)
+pauliBasisStringQ[s_String] := With[{chars = Characters[s]},
+    Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
+
+pauliBasisStringQ[___] := False
+
+
 QuditBasis[name_String[args___], ___] /; ! MemberQ[$QuditBasisNames, name] := (
     Message[QuditBasis::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+
+QuditBasis[name_String, ___] /; ! MemberQ[$QuditBasisNames, name] && ! pauliBasisStringQ[name] := (
+    Message[QuditBasis::invalidName, name];
+    Failure["InvalidName", <|"MessageTemplate" :> QuditBasis::invalidName, "MessageParameters" :> {name}|>]
 )
 
 QuditBasis[name_String[args___], ___] /; MemberQ[$QuditBasisNames, name] := (

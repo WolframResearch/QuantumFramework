@@ -75,17 +75,64 @@ EndTestSection[]
 BeginTestSection["QuantumMeasurementOperator - failure"]
 
 VerificationTest[
-    Quiet @ QuantumMeasurementOperator["NotAMeasurement"[2]],
+    QuantumMeasurementOperator["NotAMeasurement"[2]],
     Failure["InvalidName", _],
+    {QuantumMeasurementOperator::invalidName},
     SameTest -> MatchQ,
     TestID -> "InvalidName-call-form"
 ]
 
 VerificationTest[
-    Quiet @ QuantumMeasurementOperator["HesseSICPOVM"["bad-arg"]],
+    QuantumMeasurementOperator["HesseSICPOVM"["bad-arg"]],
     Failure["InvalidArguments", _],
+    {QuantumMeasurementOperator::invalidArgs},
     SameTest -> MatchQ,
     TestID -> "InvalidArgs-HesseSICPOVM"
+]
+
+(* A bare string here is a BASIS specification, not a measurement name: anything
+   QuantumBasis accepts measures in that basis. So the unrecognized bare name is
+   adjudicated by QuditBasis, which owns the basis-name registry, and the message
+   is QuditBasis::invalidName rather than a second copy of the registry here. *)
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["NotAMeasurement"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-bare-form"
+]
+
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["NotAMeasurement", {2}],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-bare-form-with-target"
+]
+
+(* Which is why bare basis names must keep building measurements: a guard that
+   rejected every string outside $QuantumMeasurementOperatorNames would break all
+   of these. Pauli strings and "Basis" suffixes reach here through QuditBasis too. *)
+VerificationTest[
+    {
+        QuantumMeasurementOperator["PauliZ"]["Dimension"],
+        QuantumMeasurementOperator["X"]["Dimension"],
+        QuantumMeasurementOperator["Bell"]["Dimension"],
+        QuantumMeasurementOperator["XYZ"]["Target"],
+        QuantumMeasurementOperator["PauliBasis"]["Dimension"]
+    },
+    {8, 8, 64, {1, 2, 3}, 64},
+    {},
+    TestID -> "BasisName-bare-form-still-measures"
+]
+
+(* Registered measurement names are unaffected. *)
+VerificationTest[
+    {
+        QuantumMeasurementOperator["M"]["Dimension"],
+        QuantumMeasurementOperator["TetrahedronSICPOVM"]["Dimension"]
+    },
+    {8, 16},
+    {},
+    TestID -> "ValidName-registered-measurements-unaffected"
 ]
 
 EndTestSection[]

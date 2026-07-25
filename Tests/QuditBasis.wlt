@@ -62,17 +62,169 @@ BeginTestSection["QuditBasis - failure"]
 (* The cache wrapper turns InvalidName into a ConfirmationFailed wrapping
    the InvalidName, so check for either. *)
 VerificationTest[
-    Quiet @ QuditBasis["NotAnActualName"["bar"]],
+    QuditBasis["NotAnActualName"["bar"]],
     Failure["InvalidName" | "ConfirmationFailed", _],
+    {QuditBasis::invalidName},
     SameTest -> MatchQ,
     TestID -> "InvalidName-call-form"
 ]
 
+(* A bare unrecognized name used to fall through every rule and stay unevaluated,
+   so QuditBasis["NotAnActualName"] had head QuditBasis and ["Dimension"] returned
+   the unevaluated property lookup, with no message at all. It has to fail the same
+   way the call form does. *)
 VerificationTest[
-    Quiet @ QuditBasis["Fourier"["bad-arg"]],
-    Failure["InvalidArguments" | "ConfirmationFailed", _],
+    QuditBasis["NotAnActualName"],
+    Failure["InvalidName" | "ConfirmationFailed", _],
+    {QuditBasis::invalidName},
     SameTest -> MatchQ,
-    TestID -> "InvalidArgs-Fourier"
+    TestID -> "InvalidName-bare-form"
+]
+
+(* Nothing unevaluated may reach a numeric property. *)
+VerificationTest[
+    NumericQ @ QuditBasis["NotAnActualName"]["Dimension"],
+    False,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-no-numeric-dimension"
+]
+
+(* The multiplicity form routes through the bare form, so it fails too. *)
+VerificationTest[
+    FailureQ @ QuditBasis["NotAnActualName", 2],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-bare-form-with-multiplicity"
+]
+
+(* Near misses are what a user actually types: a truncation, a wrong case, and a
+   name belonging to a sibling constructor. One test each, because three copies of
+   the same message in a single test trips General::stop. *)
+VerificationTest[
+    FailureQ @ QuditBasis["Paul"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-truncated"
+]
+
+VerificationTest[
+    FailureQ @ QuditBasis["pauli"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-wrong-case"
+]
+
+VerificationTest[
+    FailureQ @ QuditBasis["Hadamard"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-belongs-to-sibling"
+]
+
+(* Two letters that are not all Pauli letters are not a Pauli string, and the empty
+   string names no basis: neither may slip past the guard as a shorthand. *)
+VerificationTest[
+    FailureQ @ QuditBasis["AB"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-non-Pauli-letters"
+]
+
+VerificationTest[
+    FailureQ @ QuditBasis[""],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-empty-string"
+]
+
+(* A "Basis" suffix is stripped before the guard runs, so an unknown name still
+   fails; the message names the stripped form. *)
+VerificationTest[
+    FailureQ @ QuditBasis["NoSuchBasis"],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "InvalidName-unknown-Basis-suffix"
+]
+
+(* A nested basis specification is diagnosed by name: every "Fourier"[___] call form
+   is claimed by the recursive rule, so it is the inner "bad-arg" that is rejected,
+   not the Fourier arity. *)
+VerificationTest[
+    QuditBasis["Fourier"["bad-arg"]],
+    Failure["InvalidName" | "ConfirmationFailed", _],
+    {QuditBasis::invalidName},
+    SameTest -> MatchQ,
+    TestID -> "InvalidName-nested-basis-arg"
+]
+
+(* A registered name whose call form matches no rule is a different failure: the
+   arity is wrong, the name is not. *)
+VerificationTest[
+    QuditBasis["Bell"[3]],
+    Failure["InvalidArguments" | "ConfirmationFailed", _],
+    {QuditBasis::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "InvalidArgs-Bell-call-form"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuditBasis - names the invalidName guard must not swallow"]
+
+(* Multi-character Pauli strings are split into one qudit per letter by a rule that
+   never consults $QuditBasisNames, in both the bare and the dimensioned call form,
+   and under multiplicity. *)
+VerificationTest[
+    {
+        QuditBasis["XYZ"]["Dimension"],
+        QuditBasis["XX"]["Dimension"],
+        QuditBasis["IIZ"]["Qudits"],
+        QuditBasis["XYZ"[3]]["Dimension"],
+        QuditBasis["XY", 2]["Dimension"]
+    },
+    {8, 4, 3, 27, 16},
+    {},
+    TestID -> "Shorthand-Pauli-strings-not-swallowed"
+]
+
+(* Names containing "Basis" are rewritten by deleting it, which also never consults
+   $QuditBasisNames. "XYZBasis" exercises both rewrites in sequence. The guard holds
+   no exemption for these: the rewrite rule outranks it, so this is what detects a
+   reordering that puts the guard first. The multiplicity form matters most, being
+   the arity at which the Pauli rule alone would not have sufficed. *)
+VerificationTest[
+    {
+        QuditBasis["PauliBasis"]["Dimension"],
+        QuditBasis["ComputationalBasis"]["Dimension"],
+        QuditBasis["BellBasis"]["Dimension"],
+        QuditBasis["FourierBasis"[3]]["Dimension"],
+        QuditBasis["XYZBasis"]["Dimension"],
+        QuditBasis["PauliBasis", 2]["Dimension"]
+    },
+    {4, 2, 4, 3, 8, 16},
+    {},
+    TestID -> "Shorthand-Basis-suffix-not-swallowed"
+]
+
+(* "Properties" is a query on the symbol itself, not a basis name. *)
+VerificationTest[
+    MemberQ[QuditBasis["Properties"], "Elements"],
+    True,
+    {},
+    TestID -> "Properties-query-not-a-name"
+]
+
+(* Every registered name still builds a valid basis in its bare form. Reading the
+   registry rather than a copy of it keeps this honest as names are added. *)
+VerificationTest[
+    AllTrue[
+        Wolfram`QuantumFramework`PackageScope`$QuditBasisNames,
+        Wolfram`QuantumFramework`PackageScope`QuditBasisQ[QuditBasis[#]] &
+    ],
+    True,
+    {},
+    TestID -> "ValidName-every-registered-name-builds"
 ]
 
 EndTestSection[]
