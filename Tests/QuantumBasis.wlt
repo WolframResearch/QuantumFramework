@@ -47,15 +47,27 @@ EndTestSection[]
 
 BeginTestSection["QuantumBasis - pictures"]
 
-(* each picture name is accepted as a positional argument, not routed into QuditBasis *)
+(* every registered picture is accepted as a positional argument, not routed into QuditBasis.
+   Swept over the registry rather than sampled, so a name added to $QuantumBasisPictures is
+   covered here without editing this file *)
 
-VerificationTest[QuantumBasis["Schrodinger"]["Picture"], "Schrodinger", TestID -> "Picture-bare-Schrodinger"]
+VerificationTest[
+    AssociationMap[QuantumBasis[#]["Picture"] &, Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures],
+    AssociationThread[
+        Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures ->
+            Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures
+    ],
+    TestID -> "Picture-bare-every-registered-picture"
+]
 
-VerificationTest[QuantumBasis["Heisenberg"]["Picture"], "Heisenberg", TestID -> "Picture-bare-Heisenberg"]
-
-VerificationTest[QuantumBasis["Interaction"]["Picture"], "Interaction", TestID -> "Picture-bare-Interaction"]
-
-VerificationTest[QuantumBasis["PhaseSpace"]["Picture"], "PhaseSpace", TestID -> "Picture-bare-PhaseSpace"]
+VerificationTest[
+    AssociationMap[QuantumBasis["Computational", #]["Picture"] &, Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures],
+    AssociationThread[
+        Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures ->
+            Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures
+    ],
+    TestID -> "Picture-after-Computational-every-registered-picture"
+]
 
 (* a bare picture says nothing about the basis, so the basis stays at the default *)
 
@@ -167,6 +179,42 @@ VerificationTest[
     Head @ QuantumBasis[{}, "Heisenberg"],
     Head @ QuantumBasis[{}],
     TestID -> "Picture-empty-list-matches-unpictured"
+]
+
+(* A phase-space basis derives "PhaseSpace" from its own elements, so renaming its picture
+   would leave the elements and the tag disagreeing. QuantumState reads the phase-space route
+   off that tag, so a demoted Wigner basis sends an already-transformed basis back through
+   QuantumWignerTransform and the quasi-probability comes out doubled. The closed form for a
+   symbolic qubit amplitude vector is the reference: it must not depend on a picture name. *)
+
+VerificationTest[
+    Normal @ QuantumState[{a, b, c, d}, QuantumBasis["Wigner"]]["PhaseSpace"],
+    {{a, b, a, b}, {c, d, -c, -d}, {a, -b, a, -b}, {c, -d, -c, d}},
+    TestID -> "PhaseSpace-Wigner-closed-form-is-the-reference"
+]
+
+VerificationTest[
+    FailureQ @ QuantumBasis["Wigner", "Heisenberg"],
+    True,
+    {QuantumBasis::phaseSpacePicture},
+    TestID -> "PhaseSpace-basis-refuses-demotion-trailing"
+]
+
+VerificationTest[
+    FailureQ @ QuantumBasis["Heisenberg", "Wigner"],
+    True,
+    {QuantumBasis::phaseSpacePicture},
+    TestID -> "PhaseSpace-basis-refuses-demotion-leading"
+]
+
+(* swept over the whole phase-space registry, not sampled: PhaseSpace on a phase-space basis
+   stays a no-op. The refusing direction is pinned one message at a time above, because a
+   sweep of it would emit one message per name and trip General::stop *)
+
+VerificationTest[
+    Union[QuantumBasis[#, "PhaseSpace"]["Picture"] & /@ Wolfram`QuantumFramework`PackageScope`$QuditPhaseSpaceBasisNames],
+    {"PhaseSpace"},
+    TestID -> "PhaseSpace-registry-accepts-its-own-picture"
 ]
 
 (* a Failure handed in as the specification reports once, not twice *)

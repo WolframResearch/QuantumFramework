@@ -37,6 +37,8 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 QuantumBasis::invalidSpec = "`` is not a valid basis specification";
 
+QuantumBasis::phaseSpacePicture = "a phase space basis is already a phase space representation and cannot be renamed to the picture ``";
+
 
 
 $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
@@ -84,6 +86,16 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 (* mutation *)
 
 QuantumBasis[qb_QuantumBasis] := qb
+
+(* a basis whose elements put it in phase space carries "PhaseSpace" because of those
+   elements, not as a label, and QuantumState reads the phase-space route off it. Renaming
+   the picture would leave the elements and the tag disagreeing, and the state route then
+   transforms an already-transformed basis. The option form is deliberately not guarded:
+   QuantumWeylTransform demotes through it (QuantumWignerTransform.m:81) once it has
+   actually undone the transform *)
+QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] /;
+    data["Picture"] === "PhaseSpace" && picture =!= "PhaseSpace" :=
+    (Message[QuantumBasis::phaseSpacePicture, picture]; $Failed)
 
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
