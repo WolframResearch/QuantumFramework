@@ -412,7 +412,7 @@ VerificationTest[
 (* The digit and letter-sequence rules take an argument tail, so they compete
    with the invalidName arm at the same arity, and neither pattern outranks the
    other: they win only by preceding it in NamedStates.m. These pin that file
-   order, since nothing else in the suite exercises a tail on them. *)
+   order; the letter-sequence tail is exercised nowhere else in the suite. *)
 VerificationTest[
     {
         QuantumState["0101", QuantumBasis[16]]["Qudits"],

@@ -216,17 +216,18 @@ QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] :
 )
 
 (* Last-resort arm for a bare string that names nothing. Without it an
-   unrecognized name reached the scalar-amplitude rule in QuantumState.m and
-   became a one-element amplitude vector holding the string itself.
+   unrecognized name reached the scalar-amplitude rule in QuantumState.m, which
+   wraps its argument as {name} and pads that to the default qubit basis, so
+   QuantumState["NoSuchState"]["Norm"] came back Abs["NoSuchState"].
 
-   THIS ARM MUST STAY LAST among the string rules. Only the purely literal
-   left-hand sides are safe from it on their own: "", "+", "-", "L", "R" here
-   and QuantumState["Properties"] in Properties.m stay reachable whatever the
-   load order, because a literal is hoisted above a pattern. Nothing orders two
-   conditioned rules against each other, so the digit-string rule, the
-   letter-sequence rule and the "+i"/"-i" aliases are reachable only by sitting
-   earlier in this file; moving this arm above them silently breaks
-   QuantumState["0101"]. *)
+   THIS ARM MUST STAY AFTER THE STRING RULES ABOVE IT. A purely literal
+   left-hand side is hoisted above a pattern one whatever the load order, so the
+   "", "+", "-", "L" and "R" rules here and the QuantumState["Properties"] query
+   defined in Properties.m are safe on their own, at arity 1. Nothing ranks the
+   digit-string rule, the letter-sequence rule or the "+i"/"-i" aliases against
+   this arm's conditioned left-hand side, so those are reachable only by sitting
+   earlier in this file: move the arm above them and QuantumState["0101"],
+   QuantumState["+0L"] and both aliases start reporting an invalid name. *)
 QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {name}|>]
