@@ -89,7 +89,8 @@ VerificationTest[
     TestID -> "InvalidName-no-numeric-dimension"
 ]
 
-(* The multiplicity form routes through the bare form, so it fails too. *)
+(* The guard's open tail matches the multiplicity arity directly, ahead of the
+   multiplicity rule, so that form fails too. *)
 VerificationTest[
     FailureQ @ QuditBasis["NotAnActualName", 2],
     True,

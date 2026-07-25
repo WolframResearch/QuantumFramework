@@ -297,7 +297,7 @@ Indexed by function/topic.
 
 ### `QuditBasis["XYZ"]` string-chain accepts only `{I, X, Y, Z}` — narrower than QuantumOperator's
 - **The mistake**: Trying `QuditBasis["XH"]` or `QuditBasis["IS"]` and getting unexpected results.
-- **Why**: `QuditBasis/NamedBases.m:302-308` — string decoding gates on `ContainsOnly[chars, {"I", "X", "Y", "Z"}]`. **Strictly stricter** than `QuantumOperator`'s 9-char alphabet (`I, X, Y, Z, H, S, T, V, P`). `QuditBasis["XH"]` falls through to single-name dispatch, doesn't decode as a chain.
+- **Why**: `QuditBasis/NamedBases.m` — string decoding gates on `ContainsOnly[chars, $pauliBasisLetters]`, that is `{"I", "X", "Y", "Z"}`. **Strictly stricter** than `QuantumOperator`'s 9-char alphabet (`I, X, Y, Z, H, S, T, V, P`). `QuditBasis["XH"]` does not decode as a chain, and since it names no basis either it is now rejected by the `invalidName` guard: it messages `QuditBasis::invalidName` and returns a `Failure`, where before it fell through every rule and came back unevaluated and silent.
 - **The right way**: For Pauli-only chains as a basis, the shortcut works. For mixed-gate chains, build with `QuantumTensorProduct[QuditBasis["X"], QuditBasis[QuantumOperator["H"]["Output"]], ...]` or build operators directly.
 - **Date**: 2026-04-29.
 

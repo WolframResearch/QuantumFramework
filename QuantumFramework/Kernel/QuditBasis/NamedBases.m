@@ -291,12 +291,18 @@ QuditBasis["HoggarSIC"[]] := Enclose @ With[{basis = Simplify @ GramDual[Confirm
 ]
 
 
+(* The letters a multi-character string may be decoded into, one qudit each. Shared
+   by the two decoding rules and by the invalidName guard below, which has to admit
+   exactly what they accept: a guard admitting more leaves the call unevaluated and
+   silent, a guard admitting less rejects a valid name. *)
+$pauliBasisLetters = {"I", "X", "Y", "Z"}
+
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
-    QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+    QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
 ]
 
 QuditBasis[pauliString_String[dimension_Integer ? Positive]] := With[{chars = Characters[pauliString]},
-    QuditBasis[Through[chars[dimension]]] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+    QuditBasis[Through[chars[dimension]]] /; Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
 ]
 
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
@@ -308,15 +314,14 @@ QuditBasis[name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasi
 
 (* A multi-character Pauli string is a basis without appearing in $QuditBasisNames.
    Its own rule above is a one-argument form, so it outranks the guard by itself,
-   but under a multiplicity it is the multiplicity rule that does the work and the
-   guard would otherwise reject QuditBasis["XYZ", 2] before reaching it. Names
-   containing "Basis" need no exemption of their own, their rewrite rule sorting
-   ahead of the guard at every arity, but that rule re-enters dispatch with the
-   name stripped: QuditBasis["XYZBasis", 2] arrives back here as "XYZ" and relies
-   on this exemption too. The alphabet below has to track the Pauli-string rules
-   above, since a disagreement would silently reject a valid name. *)
+   but the guard's open tail matches the multiplicity arity directly, ahead of the
+   multiplicity rule, and would reject QuditBasis["XYZ", 2] before it got there.
+   Names containing "Basis" need no exemption of their own, their rewrite rule
+   sorting ahead of the guard at every arity, but that rule re-enters dispatch with
+   the name stripped: QuditBasis["XYZBasis", 2] arrives back here as "XYZ" and
+   relies on this exemption too. *)
 pauliBasisStringQ[s_String] := With[{chars = Characters[s]},
-    Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+    Length[chars] > 1 && ContainsOnly[chars, $pauliBasisLetters]
 ]
 
 pauliBasisStringQ[___] := False
