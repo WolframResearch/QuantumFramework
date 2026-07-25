@@ -14,6 +14,10 @@ $QuantumBasisPictures = {
     "Schrodinger", "Heisenberg", "Interaction", "PhaseSpace"
 };
 
+(* a picture string names a picture, never a basis, so it must not be swallowed by an
+   output/input slot that would hand it to QuditBasis; same exclusion QuantumState makes *)
+basisNameQ[name_] := nameQ[name] && ! MemberQ[$QuantumBasisPictures, name]
+
 
 (* Messages *)
 
@@ -79,8 +83,6 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 
 QuantumBasis[qb_QuantumBasis] := qb
 
-QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["Computational", picture]
-
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
 QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] :=
@@ -98,7 +100,7 @@ QuantumBasis[elements : (a_ /; ArrayQ[a, d_ /; d > 1, NumericQ]) | _Association 
 
 QuantumBasis[names : {Except[_Integer] ...}, elements_ ? ArrayQ] /; Length[names] == Length[elements] && ArrayDepth[elements] > 1 := QuantumBasis[AssociationThread[names, Normal @ elements]]
 
-QuantumBasis[output : _ ? nameQ | _QuditBasis | _List, input : _ ? nameQ | _QuditBasis | _List, args___] :=
+QuantumBasis[output : _ ? basisNameQ | _QuditBasis | _List, input : _ ? basisNameQ | _QuditBasis | _List, args___] :=
     Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"], args]
 
 QuantumBasis[output_QuditBasis ? QuditBasisQ, args___] := QuantumBasis["Output" -> output, args]
@@ -163,10 +165,10 @@ QuantumBasis[arg_, multiplicity_Integer ? NonNegative, args___] := Enclose @ Wit
     ]
 ]
 
-QuantumBasis[output : _ ? nameQ | _Integer, input  : _ ? nameQ | _Integer, args___] :=
+QuantumBasis[output : _ ? basisNameQ | _Integer, input  : _ ? basisNameQ | _Integer, args___] :=
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"]|>, args]
 
-QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
+QuantumBasis[output : _ ? basisNameQ | _Integer, args___] :=
     Enclose @ QuantumBasis[<|
         "Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ],
         "Label" -> Replace[output, {name_String[___] | name_String :> name, 2 -> "I", i_Integer :> "I"[i]}],
@@ -175,8 +177,16 @@ QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
         args
     ]
 
-QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
-    QuantumBasis["Computational", args, "Label" -> None]
+QuantumBasis[args : OptionsPattern[]] := QuantumBasis["Computational", args, "Label" -> None]
+
+(* a leading picture applies to whatever basis the remaining arguments build, so that
+   QuantumBasis["Heisenberg"] is the default basis in that picture; a lone Integer tail is
+   left to the multiplicity rule above, where QuantumBasis["Heisenberg", 3] means 3 qudits *)
+QuantumBasis[
+    picture : Alternatives @@ $QuantumBasisPictures,
+    args : PatternSequence[] | PatternSequence[Except[_Integer], ___]
+] :=
+    Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], picture]
 
 QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Options"]]
 
