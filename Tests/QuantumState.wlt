@@ -884,6 +884,105 @@ VerificationTest[
     TestID -> "Shorthand-strings-with-a-tail"
 ]
 
+(* A digit names a level of the basis the tail builds, so whether a digit is
+   legal is a question about that basis and never about the digit alone. Level 2
+   is a genuine qutrit level and no level at all of a qubit, so these two agree
+   on the string and disagree on the state. This is the pair that a check written
+   against a constant instead of against the basis gets wrong in one direction or
+   the other. *)
+VerificationTest[
+    {Normal @ QuantumState["2", 3]["StateVector"], FailureQ[QuantumState["2", 3]]},
+    {{0, 0, 1}, False},
+    {},
+    TestID -> "Digit-range-level-two-is-a-qutrit-level"
+]
+
+VerificationTest[
+    QuantumState["2"],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-level-two-is-no-qubit-level"
+]
+
+(* Out of range used to be clamped into range rather than refused, so a digit
+   naming a level the basis does not hold quietly became the nearest one it did:
+   QuantumState["9"] was the ONE state of a qubit and QuantumState["99", 3] was
+   |22>, neither of them saying so. One test per refusal, since a fourth copy of
+   one message in a single test trips General::stop. *)
+VerificationTest[
+    QuantumState["9"],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-single-digit-out-of-range-refused"
+]
+
+VerificationTest[
+    QuantumState["3", 3],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-out-of-range-with-a-dimension-refused"
+]
+
+(* The clamp acted per digit, so a sequence in range everywhere but one place was
+   wrong in that place alone and right elsewhere, which is the reading hardest to
+   catch by eye. *)
+VerificationTest[
+    QuantumState["99", 3],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-multi-digit-out-of-range-refused"
+]
+
+(* The refusal names the string the caller wrote. "9"[] is a different call, one
+   the invalidName arm turns down as an unrecognized NAME, so reporting that form
+   here would point at the wrong fault. *)
+VerificationTest[
+    QuantumState["9"]["MessageParameters"],
+    {"9"},
+    {QuantumState::invalidArgs},
+    TestID -> "Digit-range-refusal-names-the-string"
+]
+
+(* The whole contract in one statement, rather than the handful of literals
+   above: over every digit and every qudit dimension from two up, a state comes
+   back exactly when the digit is a level that dimension holds. Dimension one is
+   left out because a one-level basis carries zero qudits, on which "BasisState"
+   divides by the qudit count; that is a separate defect this rule does not
+   reach, and folding it in here would hide it. Select rather than Union so a
+   failure names the pair that broke. *)
+VerificationTest[
+    Select[
+        Tuples[{Range[0, 9], Range[2, 10]}],
+        FailureQ[QuantumState[ToString[First[#]], Last[#]]] =!= (First[#] >= Last[#]) &
+    ],
+    {},
+    {QuantumState::invalidArgs, QuantumState::invalidArgs, QuantumState::invalidArgs, General::stop},
+    TestID -> "Digit-range-sweep-admits-exactly-the-levels-the-basis-holds"
+]
+
+(* In range, nothing moved. The amplitude each digit string names is read back
+   independently, FromDigits placing the string in the qudit dimension rather
+   than trusting the constructor to agree with itself, so a clamp still firing
+   anywhere here would show up as a shifted unit amplitude. *)
+VerificationTest[
+    Select[
+        {{"0"}, {"101"}, {"100"}, {"0101"}, {"2", 3}, {"12", 3}, {"0", 3}, {"0101", QuantumBasis[16]}},
+        With[{state = QuantumState @@ #},
+            Normal[state["StateVector"]] =!= Normal @ SparseArray[
+                {FromDigits[First[#], First[state["Dimensions"]]] + 1} -> 1,
+                state["Dimension"]
+            ]
+        ] &
+    ],
+    {},
+    {},
+    TestID -> "Digit-range-in-range-strings-keep-their-basis-element"
+]
+
 (* Any sequence over the eigenstate letters is one qudit per character, so a
    two-letter mix is a two-qubit product state and not a near-miss name. It is the
    tensor product of its characters as a state; the two differ only in label,

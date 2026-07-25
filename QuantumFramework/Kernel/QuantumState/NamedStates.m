@@ -31,10 +31,30 @@ QuantumState["", opts : OptionsPattern[]] := QuantumState[{}, QuantumBasis[1], o
 QuantumState["", args__] := namedStateTailRejected[""]
 
 
+(* Each digit names a level, so it has to be a level the basis actually holds.
+   Clipping into range instead made QuantumState["9"] the ONE state of a qubit
+   and QuantumState["99", 3] the state |22>, a digit the basis cannot carry
+   silently becoming the nearest one it can. The bound is the dimension of the
+   basis the tail builds, never a constant: level 2 is a real qutrit level, so
+   QuantumState["2", 3] stands where QuantumState["2"] has nowhere to go.
+   Refusing over exactly the interval the clamp mapped into leaves every string
+   that passed through it untouched, and the alphabet is DigitCharacter, so no
+   digit can undershoot that interval and only its upper end is worth testing.
+   The two tests ahead of the range test are what make the condition decide one
+   way or the other: an unresolved basis answers "Dimension" with a Missing, and
+   a comparison against that is neither True nor False, which would leave the If
+   itself unevaluated and hand back neither a state nor a failure. They also put
+   a tail that is no basis at all through this same refusal, rather than letting
+   it reach "BasisState" and report as an unmatched internal call shape. *)
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
-    basis = QuantumBasis[args, "Label" -> s]
+    basis = QuantumBasis[args, "Label" -> s],
+    levels = Interpreter[DelimitedSequence["Digit", ""]] @ s
 },
-    QuantumState["BasisState"[Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, basis["Dimension"] - 1}]], basis]
+    If[ QuantumBasisQ[basis] && VectorQ[levels, IntegerQ] && AllTrue[levels, # < basis["Dimension"] &],
+        QuantumState["BasisState"[levels], basis],
+
+        namedStateRejected[s]
+    ]
 ]
 
 (* One qudit per character, so this rule only speaks for genuine sequences. A
@@ -66,10 +86,19 @@ QuantumState[("One" | "Down")[args___], opts___] := QuantumState["1"[args], opts
    since TrueQ sends it to the reject branch. The trailing "Label" is a default
    that an explicit one in the tail overrides. *)
 
-namedStateTailRejected[name_] := (
-    Message[QuantumState::invalidArgs, Defer[name[]]];
-    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumState::invalidArgs, "MessageParameters" :> {Defer[name[]]}|>]
+(* One report for every argument this file turns down, and the same one the
+   catch-all arm at the foot of the file makes: QuantumState::invalidArgs
+   carrying a Failure that repeats it. Only the named spec differs. A named state
+   names itself in call form, the tail being the part it could not carry, while a
+   digit string names the string itself, because "9"[] is a different call that
+   the invalidName arm turns down for a different reason and pointing at it would
+   send the reader to the wrong fault. *)
+namedStateRejected[spec_] := (
+    Message[QuantumState::invalidArgs, spec];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumState::invalidArgs, "MessageParameters" :> {spec}|>]
 )
+
+namedStateTailRejected[name_] := namedStateRejected[Defer[name[]]]
 
 namedStateTail[name_, vec_, label_, opts___] := With[{
     basis = QuantumBasis[opts]
