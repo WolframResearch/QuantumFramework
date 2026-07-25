@@ -245,11 +245,12 @@ VerificationTest[
     TestID -> "InvalidName-belongs-to-sibling"
 ]
 
-(* Nothing symbolic may reach a numeric property: the old failure mode was a
-   normalization of Abs["..."] rather than a Failure. *)
+(* Nothing symbolic may reach a numeric property. Asserting NumericQ is False
+   would not discriminate, since Abs["NotAnActualName"] is not numeric either;
+   the property has to come back Missing, which only a Failure produces. *)
 VerificationTest[
-    NumericQ @ QuantumState["NotAnActualName"]["Norm"],
-    False,
+    MatchQ[QuantumState["NotAnActualName"]["Norm"], _Missing],
+    True,
     {QuantumState::invalidName},
     TestID -> "InvalidName-no-symbolic-norm"
 ]
@@ -272,7 +273,8 @@ VerificationTest[
 (* The string forms that bypass $QuantumStateNames must survive the guard: the
    zero-qudit empty state, basis-element digit strings (in any qudit dimension),
    computational and Pauli-eigenstate letter sequences, and the "+i"/"-i"
-   aliases, none of which appear in the registry. *)
+   aliases, none of which appear in the registry. These are one-argument forms,
+   so a literal left-hand side sorts them ahead of the guard on its own. *)
 VerificationTest[
     {
         QuantumState[""]["Dimension"],
@@ -285,6 +287,54 @@ VerificationTest[
     {1, 4, {0, 0, 1}, 3, {1/Sqrt[2], -I/Sqrt[2]}, {1/Sqrt[2], I/Sqrt[2]}},
     {},
     TestID -> "Shorthand-strings-not-swallowed"
+]
+
+(* The digit and letter-sequence rules take an argument tail, so they compete
+   with the invalidName arm at the same arity. Their pattern-level condition
+   outranks the arm's rule-level one, which is what keeps them reachable; these
+   pin that ordering, since nothing else in the suite exercises a tail. *)
+VerificationTest[
+    {
+        QuantumState["0101", QuantumBasis[16]]["Qudits"],
+        QuantumState["2", 3]["AmplitudesList"],
+        QuantumState["12", 3]["Qudits"],
+        QuantumState["+", QuantumBasis[2]]["Norm"]
+    },
+    {4, {0, 0, 1}, 2, 1},
+    {},
+    TestID -> "Shorthand-strings-with-a-tail"
+]
+
+(* The "+i"/"-i" aliases forward their tail to the named state. They used to be
+   one-argument rules, so a tail slipped past them into the scalar-amplitude
+   rule and QuantumState["+i", QuantumBasis[2]]["Norm"] came back Abs["+i"] with
+   no message: the same pathology as an unrecognized name. The invalidArgs here
+   is the separate gap where a registered name rejects any tail; what this pins
+   is that the string can no longer become an amplitude. *)
+VerificationTest[
+    QuantumState["+i", QuantumBasis[2]],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Alias-with-tail-forwards-not-leaks"
+]
+
+VerificationTest[
+    QuantumState["-i", 3],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Alias-with-tail-forwards-not-leaks-qutrit"
+]
+
+(* The empty state is a zero-qudit form and takes no basis, so with a tail it is
+   as unrecognized as any other string rather than an Abs[""] amplitude. *)
+VerificationTest[
+    QuantumState["", QuantumBasis[2]],
+    Failure["InvalidName", _],
+    {QuantumState::invalidName},
+    SameTest -> MatchQ,
+    TestID -> "Empty-state-with-tail-is-unrecognized"
 ]
 
 (* "Properties" is a query on the symbol itself, not a state name. *)

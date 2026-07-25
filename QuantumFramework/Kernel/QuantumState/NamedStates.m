@@ -51,11 +51,11 @@ QuantumState["-"] := QuantumState["Minus"]
 
 QuantumState["Left"[]] := QuantumState[Normalize @ {1, -I}, "Label" -> "L"]
 QuantumState["L"] := QuantumState["Left"]
-QuantumState["-i"] := QuantumState["Left"]
+QuantumState["-i", args___] := QuantumState["Left", args]
 
 QuantumState["Right"[]] := QuantumState[Normalize @ {1, I}, "Label" -> "R"]
 QuantumState["R"] := QuantumState["Right"]
-QuantumState["+i"] := QuantumState["Right"]
+QuantumState["+i", args___] := QuantumState["Right", args]
 
 
 QuantumState["PhiPlus"[]] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
@@ -203,25 +203,19 @@ QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
 QuantumState[name_String, opts___] /; MemberQ[$QuantumStateNames, name] := QuantumState[name[], opts]
 
 
-(* String state specifications that the shorthand rules at the top of this file
-   accept without going through $QuantumStateNames: the zero-qudit empty state,
-   basis-element digit strings, and letter sequences of computational and Pauli
-   eigenstates. The invalidName guard below has to let these through. *)
-shorthandStateStringQ[s_String] :=
-    s === "" ||
-    MemberQ[{"-i", "+i"}, s] ||
-    StringMatchQ[s, DigitCharacter ..] ||
-    StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..]
-
-shorthandStateStringQ[___] := False
-
-
 QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
 )
 
-QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] && ! shorthandStateStringQ[name] := (
+(* Last-resort arm for a bare string that names nothing. It sits behind every
+   string rule above it: the literal shorthands ("", "+", "L", "-i", ...) and
+   QuantumState["Properties"] sort ahead of it because a literal left-hand side
+   outranks a pattern one, and the digit and letter-sequence rules sort ahead
+   because a pattern-level condition outranks a rule-level one. Without this
+   arm an unrecognized name reached the scalar-amplitude rule in QuantumState.m
+   and became a one-element amplitude vector holding the string itself. *)
+QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {name}|>]
 )
