@@ -156,14 +156,26 @@ VerificationTest[
     TestID -> "Picture-negative-integer-tail-fails"
 ]
 
-(* a trailing picture must not change what the empty list returns. QuantumBasis[{}] answers
-   with a QuditBasis rather than a QuantumBasis, which is its own pre-existing defect; what
-   is pinned here is only that adding a picture does not move it *)
+(* QuantumBasis[{}] answers with a QuditBasis rather than a QuantumBasis, which is its own
+   pre-existing defect. QuantumBasis[{}, picture] used to be a Failure instead, because the
+   picture reached QuditBasis as a name; excluding it here sends the pair to the list rule,
+   so the pictured form now agrees with the unpictured one. That agreement is what is pinned,
+   not that either head is right. Restricting the list rule to a non-empty list would fix
+   the head, and breaks 19 tests elsewhere that rely on the empty-list route *)
 
 VerificationTest[
     Head @ QuantumBasis[{}, "Heisenberg"],
     Head @ QuantumBasis[{}],
     TestID -> "Picture-empty-list-matches-unpictured"
+]
+
+(* a Failure handed in as the specification reports once, not twice *)
+
+VerificationTest[
+    FailureQ @ QuantumBasis["Heisenberg", QuditBasis["NoSuchThing"]],
+    True,
+    {QuditBasis::invalidName},
+    TestID -> "Picture-failed-spec-reports-once"
 ]
 
 (* a tail that specifies no basis at all fails by name rather than silently *)

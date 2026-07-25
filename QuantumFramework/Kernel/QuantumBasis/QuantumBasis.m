@@ -198,8 +198,12 @@ QuantumBasis[
 ] :=
     Enclose @ With[{basis = QuantumBasis[args]},
         QuantumBasis[
-            (* a spec that failed loudly has already said why; only name one that went quiet *)
-            ConfirmBy[basis, QuantumBasisQ, If[! FailureQ[basis], Message[QuantumBasis::invalidSpec, {args}]]],
+            (* a spec that failed loudly has already said why; only name one that went quiet.
+               A Failure among the arguments leaves QuantumBasis[args] inert rather than
+               failed, so test the arguments too, not just the result *)
+            ConfirmBy[basis, QuantumBasisQ,
+                If[FreeQ[{basis, args}, _Failure], Message[QuantumBasis::invalidSpec, {args}]]
+            ],
             picture
         ]
     ]
