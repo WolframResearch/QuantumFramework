@@ -21,11 +21,13 @@ $QuantumStateNames = {
 
 QuantumState[] := QuantumState["0"]
 
-(* The zero-qudit state holds an empty amplitude list, which is why its norm is 0
-   where "Register"[0] is also zero qudits but holds {1} and so is normalized. It
-   carries no levels for a basis to describe, so a tail is a bad argument to a
-   good name rather than a bad name. *)
+(* The zero-qudit state is built from an empty amplitude list and so stores a lone
+   zero, which is why its norm is 0 where "Register"[0] is also zero qudits but is
+   built from {1} and is normalized. Options describe it as well as any other
+   state, but it carries no levels for a basis to speak about, so a basis tail is
+   a bad argument to a good name rather than a bad name. *)
 QuantumState[""] := QuantumState[{}, QuantumBasis[1]]
+QuantumState["", opts : OptionsPattern[]] := QuantumState[{}, QuantumBasis[1], opts]
 QuantumState["", args__] := namedStateTailRejected[""]
 
 
@@ -40,7 +42,7 @@ QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
    would otherwise be unreachable at arity 1 and, with a tail, would hand the
    state this route's basis label rather than the state's own. *)
 QuantumState[s_String /; StringLength[s] > 1 && StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..], args___] :=
-    QuantumState[QuantumTensorProduct[QuantumState /@ Characters[s]], args]
+    QuantumState[QuantumTensorProduct[QuantumState /@ Characters[s]], args, "Label" -> s]
 
 
 QuantumState[("Zero" | "Up")[args___], opts___] := QuantumState["0"[args], opts]
@@ -212,7 +214,9 @@ wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
         QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // Simplify, qb]
     ]
 
-QuantumState["Werner"[p_ : .5, param_ : 2], args___] /; ! QuditBasisQ[param] :=
+(* The mixing parameter defaults exactly, so the default Werner state stays a
+   symbolic density matrix rather than a machine-precision one. *)
+QuantumState["Werner"[p_ : 1/2, param_ : 2], args___] /; ! QuditBasisQ[param] :=
     Enclose @ QuantumState["Werner"[p, ConfirmBy[QuditBasis[param], QuditBasisQ]], args]
 
 QuantumState["Werner"[p_, qb_ ? QuditBasisQ], args___] := With[{
@@ -254,13 +258,15 @@ QuantumState["Dicke"[k_List], args___] /; VectorQ[k, IntegerQ[#] && NonNegative[
 ]
 
 
-(* Confirm the inner state before daggering it: a name this route cannot resolve
-   would otherwise return the Missing from a property query on a Failure. The
-   handler hands back the inner failure itself, so the dagger of an unrecognized
-   name carries the same tag and message as the name alone rather than a
-   ConfirmationFailed wrapper around a shortened form of it. *)
-QuantumState[SuperDagger[arg_], opts___] :=
-    Enclose[Confirm[QuantumState[arg, opts]]["Dagger"], #["Expression"] &]
+(* Check the inner state before daggering it: a name this route cannot resolve
+   would otherwise return the Missing from a property query on a Failure. Passing
+   the failure straight through keeps whatever tag and message the name itself
+   produced. An Enclose/Confirm pair cannot do this job here, because Confirm
+   rethrows an already-ConfirmationFailed inner failure unwrapped, and the
+   handler then sees the asserted condition rather than a failure object. *)
+QuantumState[SuperDagger[arg_], opts___] := With[{state = QuantumState[arg, opts]},
+    If[FailureQ[state], state, state["Dagger"]]
+]
 
 
 QuantumState[name_String, opts___] /; MemberQ[$QuantumStateNames, name] := QuantumState[name[], opts]
@@ -276,14 +282,14 @@ QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] :
    wraps its argument as {name} and pads that to the default qubit basis, so
    QuantumState["NoSuchState"]["Norm"] came back Abs["NoSuchState"].
 
-   THIS ARM MUST STAY AFTER THE STRING RULES ABOVE IT. A purely literal
-   left-hand side is hoisted above a pattern one whatever the load order, so the
-   "", "+", "-", "L" and "R" rules here and the QuantumState["Properties"] query
-   defined in Properties.m are safe on their own, at arity 1. Nothing ranks the
-   digit-string rule, the letter-sequence rule or the "+i"/"-i" aliases against
-   this arm's conditioned left-hand side, so those are reachable only by sitting
-   earlier in this file: move the arm above them and QuantumState["0101"],
-   QuantumState["+0L"] and both aliases start reporting an invalid name. *)
+   THIS ARM MUST STAY AFTER THE STRING RULES ABOVE IT. Only a bare arity-1
+   left-hand side outranks this arm's conditioned one whatever the load order,
+   which covers the "" rule here and the QuantumState["Properties"] query defined
+   in Properties.m. Nothing ranks the digit-string rule, the letter-sequence rule
+   or any of the six aliases against it, all of which carry an argument tail, so
+   they are reachable only by sitting earlier in this file: move the arm above
+   them and QuantumState["0101"], QuantumState["+0L"], QuantumState["+"] and
+   QuantumState["+i"] all start reporting an invalid name. *)
 QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, name];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {name}|>]

@@ -389,6 +389,9 @@ EndTestSection[]
 
 BeginTestSection["QuantumState - failure"]
 
+(* The registry the invalidName guard tests names against. *)
+stateNames = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames;
+
 VerificationTest[
     QuantumState["NotAnActualName"["bar"]],
     Failure["InvalidName", _],
@@ -456,14 +459,10 @@ VerificationTest[
     TestID -> "InvalidName-no-symbolic-norm"
 ]
 
-(* Registered names stay untouched, and stay silent. *)
-VerificationTest[
-    QuantumState["Plus"]["Norm"],
-    1,
-    {},
-    TestID -> "ValidName-unaffected-Plus"
-]
-
+(* Registered names stay untouched, and stay silent. The norm of a single name is
+   left to the registry sweeps below, which subsume it: a Failure's ["Norm"] is
+   Missing and so would show up there. What those sweeps do not see is the shape
+   of the state, so that is what this pins. *)
 VerificationTest[
     {QuantumState["Bell"]["Dimension"], QuantumState["Register"[3]]["Qudits"]},
     {4, 3},
@@ -474,7 +473,7 @@ VerificationTest[
 (* Every registered name builds a state rather than reaching the guard. Select
    rather than Union so a failure names the offender. *)
 VerificationTest[
-    Select[Wolfram`QuantumFramework`PackageScope`$QuantumStateNames, FailureQ @ QuantumState[#] &],
+    Select[stateNames, FailureQ @ QuantumState[#] &],
     {},
     {},
     TestID -> "ValidName-sweep-registry-none-fail"
@@ -491,7 +490,7 @@ VerificationTest[
             Cases[DownValues[QuantumState], HoldPattern[QuantumState[h_[___], ___]] :> HoldForm[h], Infinity],
             _String, Infinity
         ],
-        registered = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames
+        registered = stateNames
     },
         {Complement[implemented, registered], Complement[registered, implemented]}
     ],
@@ -500,41 +499,97 @@ VerificationTest[
     TestID -> "ValidName-implemented-and-registered-agree"
 ]
 
-(* And each name builds a unit vector, not merely a non-Failure. Three are
-   inexact: the two Random* names carry machine-precision randoms, and "Werner"
-   is deterministic but takes a p_ : .5 float default, so exactness here is a
-   property of the defaults rather than of randomness. Naming them keeps a name
-   that silently goes numeric visible. *)
+(* And each name builds a unit vector exactly, not merely a non-Failure. The only
+   two exceptions are irreducible: both Random* names draw machine-precision
+   numbers, so no exact answer exists to compare against. Naming them keeps a
+   third name that silently goes numeric visible. *)
 VerificationTest[
-    Select[Wolfram`QuantumFramework`PackageScope`$QuantumStateNames, QuantumState[#]["Norm"] =!= 1 &],
-    {"RandomPure", "RandomMixed", "Werner"},
+    Select[stateNames, QuantumState[#]["Norm"] =!= 1 &],
+    {"RandomPure", "RandomMixed"},
     {},
     TestID -> "ValidName-sweep-registry-exactly-normalized"
 ]
 
-(* The three inexact ones are still normalized numerically, and "Werner" becomes
-   exact the moment p is given exactly. *)
+(* The two random ones are still normalized to machine precision. *)
 VerificationTest[
-    {
-        Max @ Abs[(QuantumState[#]["Norm"] & /@ {"RandomPure", "RandomMixed", "Werner"}) - 1] < 10^-15,
-        QuantumState["Werner"[1/2]]["Norm"]
-    },
-    {True, 1},
+    Max @ Abs[(QuantumState[#]["Norm"] & /@ {"RandomPure", "RandomMixed"}) - 1] < 10^-15,
+    True,
     {},
-    TestID -> "ValidName-inexact-names-are-float-not-wrong"
+    TestID -> "ValidName-random-names-are-float-not-wrong"
+]
+
+(* The Werner state is the one registry entry that is a family rather than a
+   single state, so it is where the constructor can be held symbolically: p stays
+   free and the density matrix stays exact. Trace is 1 for every p, and
+   Hermiticity holds exactly when p is real, as a mixing weight must be. The
+   purity is the closed form 1 - 2p + 4p^2/3, whose three landmarks pin the
+   family: 1 at p = 0, the pure singlet; its minimum 1/4 = 1/d at p = 3/4, the
+   maximally mixed state; and 1/3 at p = 1. *)
+VerificationTest[
+    With[{rho = Normal @ QuantumState["Werner"[\[FormalP]]]["DensityMatrix"]},
+        {
+            Simplify @ Tr[rho],
+            Assuming[\[FormalP] \[Element] Reals, Simplify[rho - ConjugateTranspose[rho]]],
+            Simplify @ Tr[rho . rho],
+            Simplify[Tr[rho . rho] /. \[FormalP] -> {0, 3/4, 1}],
+            Minimize[{1 - 2 \[FormalP] + 4 \[FormalP]^2/3, 0 <= \[FormalP] <= 1}, \[FormalP]]
+        }
+    ],
+    {
+        1,
+        ConstantArray[0, {4, 4}],
+        1 - 2 \[FormalP] + 4 \[FormalP]^2/3,
+        {1, 1/4, 1/3},
+        {1/4, {\[FormalP] -> 3/4}}
+    },
+    {},
+    TestID -> "ValidName-Werner-is-symbolic-in-p"
+]
+
+(* The endpoints as objects, not just as purities. *)
+VerificationTest[
+    {QuantumState["Werner"[0]]["PureStateQ"], QuantumState["Werner"[1]]["PureStateQ"]},
+    {True, False},
+    {},
+    TestID -> "ValidName-Werner-endpoints"
 ]
 
 (* An independent reading of the same invariant: "Norm" is the constructor's own
-   property, so on its own it cannot catch a wrong "Norm". Total probability is
-   computed down a different path and has to agree. *)
+   property, so on its own it cannot catch a wrong "Norm". Total probability is no
+   use as the second reading, being normalized by construction and so identically
+   1 whatever the state (QuantumState[{3,4}] has norm 5 and total probability 1).
+   The stored data is the honest cross-check: the Euclidean length of the state
+   vector for a ket, the trace of the density matrix for a mixture. *)
 VerificationTest[
     Max @ Map[
-        Function[name, With[{q = QuantumState[name]}, Abs[q["Norm"] - Sqrt[Total[Values[q["Probabilities"]]]]]]],
-        Wolfram`QuantumFramework`PackageScope`$QuantumStateNames
+        Function[name,
+            With[{q = QuantumState[name]},
+                Abs[q["Norm"] - If[q["PureStateQ"],
+                    Norm @ Flatten @ Normal @ q["StateVector"],
+                    Sqrt @ Tr @ Normal @ q["DensityMatrix"]
+                ]]
+            ]
+        ],
+        stateNames
     ] < 10^-15,
     True,
     {},
-    TestID -> "ValidName-norm-agrees-with-total-probability"
+    TestID -> "ValidName-norm-agrees-with-stored-data"
+]
+
+(* The mixtures in the registry are density matrices, so normalization is only one
+   of their invariants: each must also be Hermitian and positive semidefinite with
+   unit trace, or it is not a state at all. *)
+VerificationTest[
+    Select[
+        Select[stateNames, ! QuantumState[#]["PureStateQ"] &],
+        With[{m = Normal @ QuantumState[#]["DensityMatrix"]},
+            ! (HermitianMatrixQ[m] && PositiveSemidefiniteMatrixQ[m] && Chop[Tr[m] - 1] === 0)
+        ] &
+    ],
+    {},
+    {},
+    TestID -> "ValidName-mixtures-are-density-matrices"
 ]
 
 (* Names x argument tails, the two-dimensional space the guard actually ranges
@@ -543,7 +598,7 @@ VerificationTest[
 VerificationTest[
     Select[
         Tuples[{
-            Wolfram`QuantumFramework`PackageScope`$QuantumStateNames,
+            stateNames,
             {{}, {QuantumBasis[2]}, {"PauliBasis"}, {QuantumBasis[2], "Label" -> "z"}}
         }],
         FailureQ @ QuantumState[First[#], Sequence @@ Last[#]] &
@@ -558,15 +613,16 @@ VerificationTest[
    TRUNCATED, not padded, and silently: the 3-qubit Dicke state carries 3
    amplitudes of 1/Sqrt[3] across 8 components, only the two in positions 2 and 3
    survive into the 4-dimensional Pauli basis, and the norm drops to Sqrt[2/3]
-   with no message. The two names whose dimension a tail can change at all are
-   exactly "Dicke" and "Graph". *)
+   with no message. Against this particular 4-dimensional tail only "Dicke" and
+   "Graph" change dimension at all; the count is a property of the tail, not of
+   the registry, and the qutrit case below shows it moving. *)
 VerificationTest[
     {
         Normal @ QuantumState["Dicke"]["StateVector"],
         Normal @ QuantumState["Dicke", "PauliBasis"]["StateVector"],
         QuantumState["Dicke", "PauliBasis"]["Norm"],
         Select[
-            Wolfram`QuantumFramework`PackageScope`$QuantumStateNames,
+            stateNames,
             QuantumState[#, QuantumBasis[2]]["Dimension"] =!= QuantumState[#]["Dimension"] &
         ]
     },
@@ -578,6 +634,18 @@ VerificationTest[
     },
     {},
     TestID -> "ValidName-tail-truncation-is-not-norm-preserving"
+]
+
+(* The sweeps above range over qubit tails, where a name's own dimension is a
+   power of the basis dimension. A qutrit tail breaks that: the four two-qubit
+   Bell names hold 4 amplitudes, which no power of 3 matches, so they are padded
+   out to 9 and cease to be the state they name. QuantumState::padded says so,
+   which is why these cannot join the silent sweeps. *)
+VerificationTest[
+    Select[stateNames, Check[QuantumState[#, 3]; False, True] &],
+    {"PsiPlus", "PsiMinus", "PhiPlus", "PhiMinus"},
+    {QuantumState::padded, QuantumState::padded, QuantumState::padded, General::stop},
+    TestID -> "ValidName-qutrit-tail-pads-the-two-qubit-names"
 ]
 
 (* The zero-subsystem boundary of the same dispatch: an empty register is the
@@ -673,11 +741,20 @@ VerificationTest[
 ]
 
 (* Any sequence over the eigenstate letters is one qudit per character, so a
-   two-letter mix is a two-qubit product state and not a near-miss name. *)
+   two-letter mix is a two-qubit product state and not a near-miss name. It is the
+   tensor product of its characters as a state; the two differ only in label,
+   since the sequence names itself where the tensor product spells out its
+   factors. *)
 VerificationTest[
-    {QuantumState["L+"]["Qudits"], QuantumState["L+"]["Norm"],
-     QuantumState["L+"] === QuantumTensorProduct[QuantumState["L"], QuantumState["+"]]},
-    {2, 1, True},
+    {
+        QuantumState["L+"]["Qudits"],
+        QuantumState["L+"]["Norm"],
+        Normal @ QuantumState["L+"]["StateVector"],
+        Normal @ QuantumState["L+"]["StateVector"] ===
+            Normal @ QuantumTensorProduct[QuantumState["L"], QuantumState["+"]]["StateVector"],
+        QuantumState["L+"]["Label"]
+    },
+    {2, 1, {1/2, 1/2, -I/2, -I/2}, True, "L+"},
     {},
     TestID -> "Shorthand-mixed-letter-pair-is-a-product-state"
 ]
@@ -698,12 +775,11 @@ VerificationTest[
    company: they reached the letter-sequence rule and came back labelled "I", the
    identity, so QuantumState["+", QuantumBasis[2]] was the plus state wearing the
    wrong name. Gating that rule on a length above one makes every spelling the
-   same object, label included. One pass over the pairs, since building each state
-   twice per assertion is what made this three Maps. *)
+   same object, label included. *)
 VerificationTest[
-    Select[
+    Cases[
         Map[QuantumState[#, QuantumBasis[2]] &, aliasSpellings, {2}],
-        Not[#1 === #2 && #1["Norm"] === 1] & @@ # &
+        {a_, b_} /; a =!= b || a["Norm"] =!= 1
     ],
     {},
     {},
@@ -717,6 +793,21 @@ VerificationTest[
     {"+", "-", "L", "R", "R", "L"},
     {},
     TestID -> "Shorthand-alias-keeps-the-state-label-under-a-tail"
+]
+
+(* A genuine sequence keeps its own name under a tail for the same reason, the
+   rule now passing the string down as a default label the way the digit rule
+   two lines above it always did. Untailed it was already right; with a basis it
+   used to come back as that basis's label. *)
+VerificationTest[
+    {
+        QuantumState["+0L", QuantumBasis[8]]["Label"],
+        QuantumState["0101", QuantumBasis[16]]["Label"],
+        QuantumState["+0L", QuantumBasis[8]]["Norm"]
+    },
+    {"+0L", "0101", 1},
+    {},
+    TestID -> "Shorthand-sequence-keeps-its-label-under-a-tail"
 ]
 
 (* The "+i"/"-i" aliases forward their tail to the named state, so the tail
