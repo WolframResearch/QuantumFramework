@@ -50,6 +50,13 @@ QuantumState["0"[], opts___] := QuantumState[Normalize @ {1, 0}, opts, "Label" -
 QuantumState["1"[], opts___] := QuantumState[Normalize @ {0, 1}, opts, "Label" -> "1"]
 
 
+(* The one-character aliases must stay arity-1 literals. That is what hoists them
+   above the letter-sequence rule, which decomposes a string into one qudit per
+   character and so calls back with each character on its own: give "+" an
+   argument tail and it loses the hoisting, the letter rule re-enters itself and
+   QuantumState["+"] hits $RecursionLimit. "+i" and "-i" are two characters, match
+   no other rule, and do take a tail. *)
+
 QuantumState["Plus"[], opts___] := QuantumState[Normalize @ {1, 1}, opts, "Label" -> "+"]
 QuantumState["+"] := QuantumState["Plus"]
 
@@ -204,7 +211,10 @@ QuantumState["Dicke"[k_List], args___] /; VectorQ[k, IntegerQ[#] && NonNegative[
 ]
 
 
-QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
+(* Confirm the inner state before daggering it: a name this route cannot resolve
+   would otherwise return the Missing from a property query on a Failure, so the
+   dagger of an unrecognized name has to fail the way the name itself does. *)
+QuantumState[SuperDagger[arg_], opts___] := Enclose @ Confirm[QuantumState[arg, opts]]["Dagger"]
 
 
 QuantumState[name_String, opts___] /; MemberQ[$QuantumStateNames, name] := QuantumState[name[], opts]

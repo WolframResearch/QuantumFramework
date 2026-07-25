@@ -319,10 +319,11 @@ VerificationTest[
     TestID -> "InvalidArgs-GHZ"
 ]
 
-(* A bare unrecognized name used to fall through to the scalar-amplitude rule
-   and build the 1-dimensional state {"NotAnActualName"}, so that ["Norm"]
-   returned Abs["NotAnActualName"] with no message at all. It has to fail the
-   same way the call form does. *)
+(* A bare unrecognized name used to fall through to the scalar-amplitude rule,
+   which wrapped it as a single amplitude and let the default qubit basis pad it,
+   giving the two-dimensional state {"NotAnActualName", 0} whose ["Norm"] was
+   Abs["NotAnActualName"], with no message at all. It has to fail the same way
+   the call form does. *)
 VerificationTest[
     QuantumState["NotAnActualName"],
     Failure["InvalidName", _],
@@ -340,28 +341,20 @@ VerificationTest[
     TestID -> "InvalidName-bare-form-with-basis"
 ]
 
-(* Near misses are what a user actually types: a truncation, a wrong case, and
-   a name belonging to a sibling constructor. One test each, because three
-   copies of the same message in a single test trips General::stop. *)
+(* Near misses are what a user actually types: truncations, wrong case, names
+   belonging to a sibling constructor, a property name, and strings that look
+   like the shorthands without being one. Repeating one message symbol past the
+   third occurrence appends General::stop, so the expected list names it once. *)
 VerificationTest[
-    FailureQ @ QuantumState["Bel"],
-    True,
-    {QuantumState::invalidName},
-    TestID -> "InvalidName-truncated"
-]
-
-VerificationTest[
-    FailureQ @ QuantumState["ghz"],
-    True,
-    {QuantumState::invalidName},
-    TestID -> "InvalidName-wrong-case"
-]
-
-VerificationTest[
-    FailureQ @ QuantumState["Hadamard"],
-    True,
-    {QuantumState::invalidName},
-    TestID -> "InvalidName-belongs-to-sibling"
+    Union[FailureQ @ QuantumState[#] & /@ {
+        "Bel", "GHZZ", "ghz", "plus", "bell",
+        "Hadamard", "Fourier", "PauliBasis",
+        "VonNeumannEntropy", "AllProperties",
+        "3.5", "0x", "+-i", "-I", "2i", " GHZ", "Left ", "l", "r"
+    }],
+    {True},
+    {QuantumState::invalidName, QuantumState::invalidName, QuantumState::invalidName, General::stop},
+    TestID -> "InvalidName-near-misses"
 ]
 
 (* Nothing symbolic may reach a numeric property. Asserting NumericQ is False
@@ -389,12 +382,80 @@ VerificationTest[
     TestID -> "ValidName-unaffected-Bell-Register"
 ]
 
-(* The string forms that bypass $QuantumStateNames must survive the guard: the
-   zero-qudit empty state, basis-element digit strings (in any qudit dimension),
-   computational and Pauli-eigenstate letter sequences, and the "+i"/"-i"
-   aliases, none of which appear in the registry. Only "" is a bare literal and
-   so ordered ahead of the guard on its own; the rest are conditioned or
-   patterned rules that stay reachable only by preceding it in NamedStates.m. *)
+(* The guard quantifies over every string, so the registry has to be swept rather
+   than sampled: adding a 28th name that the guard swallows must not leave a green
+   suite. $QuantumStateNames is the same binding the guard tests against. *)
+VerificationTest[
+    Union[FailureQ @ QuantumState[#] & /@ Wolfram`QuantumFramework`PackageScope`$QuantumStateNames],
+    {False},
+    {},
+    TestID -> "ValidName-sweep-registry-none-fail"
+]
+
+(* And each one is a state, not merely a non-Failure. "RandomMixed" and
+   "RandomPure" build from machine-precision randoms, so this is the one place a
+   tolerance is needed rather than exact 1. *)
+VerificationTest[
+    Max @ Abs[(QuantumState[#]["Norm"] & /@ Wolfram`QuantumFramework`PackageScope`$QuantumStateNames) - 1] < 10^-10,
+    True,
+    {},
+    TestID -> "ValidName-sweep-registry-normalized"
+]
+
+(* A tail is NOT norm-preserving in general, so the sweep above must not be read
+   as a claim about arbitrary tails. A name of fixed dimension meeting a basis of
+   another dimension is zero-padded rather than renormalized: the 3-qudit Dicke
+   state has 3 of its 4 amplitudes survive into the 4-dimensional Pauli basis,
+   leaving norm Sqrt[2/3]. *)
+VerificationTest[
+    QuantumState["Dicke", "PauliBasis"]["Norm"],
+    Sqrt[2/3],
+    {},
+    TestID -> "ValidName-tail-padding-is-not-norm-preserving"
+]
+
+(* The zero-subsystem boundary of the same dispatch: an empty register is the
+   one-dimensional trivial state, and the arm must not intercept it. *)
+VerificationTest[
+    {#["Dimension"], #["Norm"]} & /@ {
+        QuantumState["Register"[0]], QuantumState["GHZ"[0]], QuantumState["W"[0]],
+        QuantumState["RandomPure"[0]], QuantumState["UniformSuperposition"[0]],
+        QuantumState["RandomMixed"[0]], QuantumState["UniformMixture"[0]]
+    },
+    ConstantArray[{1, 1}, 7],
+    {},
+    TestID -> "ValidName-zero-subsystem-boundary"
+]
+
+(* An unrecognized name is unrecognized through the dagger route too, which sits
+   above the arm and re-enters dispatch: without a Confirm it returned the
+   Missing from a property query on the Failure instead of the Failure. *)
+VerificationTest[
+    {FailureQ @ QuantumState[SuperDagger["NotAnActualName"]], QuantumState[SuperDagger["Plus"]]["Norm"]},
+    {True, 1},
+    {QuantumState::invalidName},
+    TestID -> "InvalidName-through-SuperDagger"
+]
+
+(* The independent reference for the family claim: the constructors that own an
+   invalidName message all report an unknown bare name with it. QuditBasis and
+   QuantumMeasurementOperator wrap theirs in a ConfirmationFailed from the basis
+   they build, so the message, not the Failure tag, is what they share. *)
+VerificationTest[
+    Union @ Map[
+        Function[head, ! FreeQ[VerificationTest[head["NotAnActualName"], Null, {}]["ActualMessages"], "NotAnActualName"]],
+        {QuantumState, QuantumOperator, QuantumChannel, QuantumCircuitOperator, QuditBasis}
+    ],
+    {True},
+    {},
+    TestID -> "InvalidName-family-agreement"
+]
+
+(* The string forms that reach a state without appearing in $QuantumStateNames:
+   the zero-qudit empty state, basis-element digit strings (in any qudit
+   dimension), computational and Pauli-eigenstate letter sequences, and the
+   "+i"/"-i" aliases. The arm-last file order asserted in NamedStates.m is what
+   keeps all but "" reachable. *)
 VerificationTest[
     {
         QuantumState[""]["Dimension"],
@@ -409,20 +470,71 @@ VerificationTest[
     TestID -> "Shorthand-strings-not-swallowed"
 ]
 
-(* The digit and letter-sequence rules take an argument tail, so they compete
-   with the invalidName arm at the same arity, and neither pattern outranks the
-   other: they win only by preceding it in NamedStates.m. These pin that file
-   order; the letter-sequence tail is exercised nowhere else in the suite. *)
+(* The empty state is the sole constructor result that is neither a Failure nor a
+   unit vector: zero qudits carry no amplitude to normalize. Pinned so it reads as
+   intended rather than as a gap in the sweep above. *)
+VerificationTest[
+    {QuantumState[""]["Norm"], QuantumState[""]["Qudits"], Normal @ QuantumState[""]["StateVector"]},
+    {0, 0, {0}},
+    {},
+    TestID -> "Shorthand-empty-state-has-zero-norm"
+]
+
+(* Same forms carrying an argument tail, which is where they compete with the arm
+   at equal arity. Nothing else in the suite gives the letter-sequence rule a
+   tail. *)
 VerificationTest[
     {
         QuantumState["0101", QuantumBasis[16]]["Qudits"],
-        QuantumState["2", 3]["AmplitudesList"],
         QuantumState["12", 3]["Qudits"],
-        QuantumState["+", QuantumBasis[2]]["Norm"]
+        QuantumState["+0L", QuantumBasis[8]]["Norm"]
     },
-    {4, {0, 0, 1}, 2, 1},
+    {4, 2, 1},
     {},
     TestID -> "Shorthand-strings-with-a-tail"
+]
+
+(* Any sequence over the eigenstate letters is one qudit per character, so a
+   two-letter mix is a two-qubit product state and not a near-miss name. *)
+VerificationTest[
+    {QuantumState["L+"]["Qudits"], QuantumState["L+"]["Norm"],
+     QuantumState["L+"] === QuantumTensorProduct[QuantumState["L"], QuantumState["+"]]},
+    {2, 1, True},
+    {},
+    TestID -> "Shorthand-mixed-letter-pair-is-a-product-state"
+]
+
+(* Each one-character or "+i"/"-i" spelling and the name it stands for. *)
+aliasSpellings = {{"+", "Plus"}, {"-", "Minus"}, {"L", "Left"}, {"R", "Right"}, {"+i", "Right"}, {"-i", "Left"}};
+
+(* Bare, every alias is the same object as the name it spells. *)
+VerificationTest[
+    Union @ Map[QuantumState[First[#]] === QuantumState[Last[#]] &, aliasSpellings],
+    {True},
+    {},
+    TestID -> "Shorthand-alias-agrees-with-name-bare"
+]
+
+(* With a tail the physics still agrees, every spelling giving the same unit
+   vector, but only the two-character aliases remain the same OBJECT. "+", "-",
+   "L" and "R" must stay arity-1 literals to keep the letter-sequence rule from
+   recursing (see NamedStates.m), so with a tail they route through that rule and
+   carry its basis label instead of the state's own. The asymmetry is pinned here
+   rather than asserted away. *)
+VerificationTest[
+    {
+        Map[Normal[QuantumState[First[#], QuantumBasis[2]]["StateVector"]] ===
+            Normal[QuantumState[Last[#], QuantumBasis[2]]["StateVector"]] &, aliasSpellings],
+        Map[QuantumState[First[#], QuantumBasis[2]]["Norm"] &, aliasSpellings],
+        Map[QuantumState[First[#], QuantumBasis[2]] === QuantumState[Last[#], QuantumBasis[2]] &, aliasSpellings]
+    },
+    {
+        ConstantArray[True, 6],
+        ConstantArray[1, 6],
+        {False, False, False, False, True, True}
+    },
+    {},
+    TestID -> "Shorthand-alias-under-a-tail-agrees-on-the-state-not-the-label"
 ]
 
 (* The "+i"/"-i" aliases forward their tail to the named state, so the tail
