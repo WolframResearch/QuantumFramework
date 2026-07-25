@@ -21,7 +21,12 @@ $QuantumStateNames = {
 
 QuantumState[] := QuantumState["0"]
 
+(* The zero-qudit state holds an empty amplitude list, which is why its norm is 0
+   where "Register"[0] is also zero qudits but holds {1} and so is normalized. It
+   carries no levels for a basis to describe, so a tail is a bad argument to a
+   good name rather than a bad name. *)
 QuantumState[""] := QuantumState[{}, QuantumBasis[1]]
+QuantumState["", args__] := namedStateTailRejected[""]
 
 
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
@@ -30,7 +35,11 @@ QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
     QuantumState["BasisState"[Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, basis["Dimension"] - 1}]], basis]
 ]
 
-QuantumState[s_String /; StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..], args___] :=
+(* One qudit per character, so this rule only speaks for genuine sequences. A
+   single character is the business of the alias rule that names it below, which
+   would otherwise be unreachable at arity 1 and, with a tail, would hand the
+   state this route's basis label rather than the state's own. *)
+QuantumState[s_String /; StringLength[s] > 1 && StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..], args___] :=
     QuantumState[QuantumTensorProduct[QuantumState /@ Characters[s]], args]
 
 
@@ -77,29 +86,28 @@ QuantumState["1"[]] := QuantumState[Normalize @ {0, 1}, "Label" -> "1"]
 QuantumState["1"[], opts__] := namedStateTail["1", Normalize @ {0, 1}, "1", opts]
 
 
-(* The one-character aliases must stay arity-1 literals. That is what hoists them
-   above the letter-sequence rule, which decomposes a string into one qudit per
-   character and so calls back with each character on its own: give "+" an
-   argument tail and it loses the hoisting, the letter rule re-enters itself and
-   QuantumState["+"] hits $RecursionLimit. "+i" and "-i" are two characters, match
-   no other rule, and do take a tail. *)
+(* Every alias forwards its tail to the name it spells, so the two spellings of
+   one state are the same object at any arity. This works only because the
+   letter-sequence rule above declines single characters: that rule decomposes a
+   string into one qudit per character and calls back with each character alone,
+   so an alias that did not outrank it would re-enter it and hit $RecursionLimit. *)
 
 QuantumState["Plus"[]] := QuantumState[Normalize @ {1, 1}, "Label" -> "+"]
 QuantumState["Plus"[], opts__] := namedStateTail["Plus", Normalize @ {1, 1}, "+", opts]
-QuantumState["+"] := QuantumState["Plus"]
+QuantumState["+", args___] := QuantumState["Plus", args]
 
 QuantumState["Minus"[]] := QuantumState[Normalize @ {1, -1}, "Label" -> "-"]
 QuantumState["Minus"[], opts__] := namedStateTail["Minus", Normalize @ {1, -1}, "-", opts]
-QuantumState["-"] := QuantumState["Minus"]
+QuantumState["-", args___] := QuantumState["Minus", args]
 
 QuantumState["Left"[]] := QuantumState[Normalize @ {1, -I}, "Label" -> "L"]
 QuantumState["Left"[], opts__] := namedStateTail["Left", Normalize @ {1, -I}, "L", opts]
-QuantumState["L"] := QuantumState["Left"]
+QuantumState["L", args___] := QuantumState["Left", args]
 QuantumState["-i", args___] := QuantumState["Left", args]
 
 QuantumState["Right"[]] := QuantumState[Normalize @ {1, I}, "Label" -> "R"]
 QuantumState["Right"[], opts__] := namedStateTail["Right", Normalize @ {1, I}, "R", opts]
-QuantumState["R"] := QuantumState["Right"]
+QuantumState["R", args___] := QuantumState["Right", args]
 QuantumState["+i", args___] := QuantumState["Right", args]
 
 
@@ -247,9 +255,12 @@ QuantumState["Dicke"[k_List], args___] /; VectorQ[k, IntegerQ[#] && NonNegative[
 
 
 (* Confirm the inner state before daggering it: a name this route cannot resolve
-   would otherwise return the Missing from a property query on a Failure, so the
-   dagger of an unrecognized name has to fail the way the name itself does. *)
-QuantumState[SuperDagger[arg_], opts___] := Enclose @ Confirm[QuantumState[arg, opts]]["Dagger"]
+   would otherwise return the Missing from a property query on a Failure. The
+   handler hands back the inner failure itself, so the dagger of an unrecognized
+   name carries the same tag and message as the name alone rather than a
+   ConfirmationFailed wrapper around a shortened form of it. *)
+QuantumState[SuperDagger[arg_], opts___] :=
+    Enclose[Confirm[QuantumState[arg, opts]]["Dagger"], #["Expression"] &]
 
 
 QuantumState[name_String, opts___] /; MemberQ[$QuantumStateNames, name] := QuantumState[name[], opts]
