@@ -172,8 +172,8 @@ VerificationTest[
    pre-existing defect. QuantumBasis[{}, picture] used to be a Failure instead, because the
    picture reached QuditBasis as a name; excluding it here sends the pair to the list rule,
    so the pictured form now agrees with the unpictured one. That agreement is what is pinned,
-   not that either head is right. Restricting the list rule to a non-empty list would fix
-   the head, and breaks 19 tests elsewhere that rely on the empty-list route *)
+   not that either head is right. Restricting the list rule to a non-empty list would fix the
+   head and does break other suites, so the head is left where it was *)
 
 VerificationTest[
     Head @ QuantumBasis[{}, "Heisenberg"],
@@ -191,6 +191,33 @@ VerificationTest[
     Normal @ QuantumState[{a, b, c, d}, QuantumBasis["Wigner"]]["PhaseSpace"],
     {{a, b, a, b}, {c, d, -c, -d}, {a, -b, a, -b}, {c, -d, -c, d}},
     TestID -> "PhaseSpace-Wigner-closed-form-is-the-reference"
+]
+
+(* the invariant the closed form exists to protect: naming a picture must not change the
+   quasi-probability. This is what catches a demotion that slips past the guard by any
+   route, rather than only the routes enumerated below *)
+
+VerificationTest[
+    Normal @ QuantumState[{a, b, c, d}, QuantumBasis["Wigner"]]["PhaseSpace"] ===
+        Normal @ QuantumState[{a, b, c, d}, QuantumBasis[QuantumBasis["Wigner"], "PhaseSpace"]]["PhaseSpace"],
+    True,
+    TestID -> "PhaseSpace-independent-of-picture-name"
+]
+
+VerificationTest[
+    FailureQ @ QuantumBasis[QuantumBasis["Heisenberg"], "Wigner"],
+    True,
+    {QuantumBasis::phaseSpacePicture},
+    TestID -> "PhaseSpace-basis-refuses-demotion-through-a-merged-basis"
+]
+
+(* the qubit grid is 2d x 2d because d is even; an odd d is the d x d case, and it is the
+   one that shows the 4x4 above is a doubled grid rather than a d^2 reshape *)
+
+VerificationTest[
+    Dimensions @ QuantumState[Array[x, 9], QuantumBasis["Wigner"[3]]]["PhaseSpace"],
+    {3, 3},
+    TestID -> "PhaseSpace-odd-dimension-grid-is-d-by-d"
 ]
 
 VerificationTest[

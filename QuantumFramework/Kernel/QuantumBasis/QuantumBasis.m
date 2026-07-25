@@ -220,7 +220,15 @@ QuantumBasis[
         ]
     ]
 
-QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Options"]]
+(* qb's picture travels through the guarded positional form, not inside qb["Options"];
+   passing the whole option list would carry a picture straight into the option rule and
+   around the phase-space guard above *)
+QuantumBasis[qb_QuantumBasis, args__] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
+    ConfirmBy[
+        QuantumBasis[QuantumBasis[basis, FilterRules[qb["Options"], Except["Picture"]]], qb["Picture"]],
+        QuantumBasisQ
+    ]
+]
 
 QuantumBasis[qs_QuantumState] := qs["Basis"]
 
