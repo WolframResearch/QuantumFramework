@@ -185,17 +185,114 @@ EndTestSection[]
 BeginTestSection["QuantumState - failure"]
 
 VerificationTest[
-    Quiet @ QuantumState["NotAnActualName"["bar"]],
+    QuantumState["NotAnActualName"["bar"]],
     Failure["InvalidName", _],
+    {QuantumState::invalidName},
     SameTest -> MatchQ,
     TestID -> "InvalidName-call-form"
 ]
 
 VerificationTest[
-    Quiet @ QuantumState["GHZ"["bad-arg"]],
+    QuantumState["GHZ"["bad-arg"]],
     Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
     SameTest -> MatchQ,
     TestID -> "InvalidArgs-GHZ"
+]
+
+(* A bare unrecognized name used to fall through to the scalar-amplitude rule
+   and build the 1-dimensional state {"NotAnActualName"}, so that ["Norm"]
+   returned Abs["NotAnActualName"] with no message at all. It has to fail the
+   same way the call form does. *)
+VerificationTest[
+    QuantumState["NotAnActualName"],
+    Failure["InvalidName", _],
+    {QuantumState::invalidName},
+    SameTest -> MatchQ,
+    TestID -> "InvalidName-bare-form"
+]
+
+(* The name is unrecognized whatever the argument tail says. *)
+VerificationTest[
+    QuantumState["NotAnActualName", QuantumBasis[2]],
+    Failure["InvalidName", _],
+    {QuantumState::invalidName},
+    SameTest -> MatchQ,
+    TestID -> "InvalidName-bare-form-with-basis"
+]
+
+(* Near misses are what a user actually types: a truncation, a wrong case, and
+   a name belonging to a sibling constructor. One test each, because three
+   copies of the same message in a single test trips General::stop. *)
+VerificationTest[
+    FailureQ @ QuantumState["Bel"],
+    True,
+    {QuantumState::invalidName},
+    TestID -> "InvalidName-truncated"
+]
+
+VerificationTest[
+    FailureQ @ QuantumState["ghz"],
+    True,
+    {QuantumState::invalidName},
+    TestID -> "InvalidName-wrong-case"
+]
+
+VerificationTest[
+    FailureQ @ QuantumState["Hadamard"],
+    True,
+    {QuantumState::invalidName},
+    TestID -> "InvalidName-belongs-to-sibling"
+]
+
+(* Nothing symbolic may reach a numeric property: the old failure mode was a
+   normalization of Abs["..."] rather than a Failure. *)
+VerificationTest[
+    NumericQ @ QuantumState["NotAnActualName"]["Norm"],
+    False,
+    {QuantumState::invalidName},
+    TestID -> "InvalidName-no-symbolic-norm"
+]
+
+(* Registered names stay untouched, and stay silent. *)
+VerificationTest[
+    QuantumState["Plus"]["Norm"],
+    1,
+    {},
+    TestID -> "ValidName-unaffected-Plus"
+]
+
+VerificationTest[
+    {QuantumState["Bell"]["Dimension"], QuantumState["Register"[3]]["Qudits"]},
+    {4, 3},
+    {},
+    TestID -> "ValidName-unaffected-Bell-Register"
+]
+
+(* The string forms that bypass $QuantumStateNames must survive the guard: the
+   zero-qudit empty state, basis-element digit strings (in any qudit dimension),
+   computational and Pauli-eigenstate letter sequences, and the "+i"/"-i"
+   aliases, none of which appear in the registry. *)
+VerificationTest[
+    {
+        QuantumState[""]["Dimension"],
+        QuantumState["0101"]["Qudits"],
+        QuantumState["2", 3]["AmplitudesList"],
+        QuantumState["+0L"]["Qudits"],
+        QuantumState["-i"]["AmplitudesList"],
+        QuantumState["+i"]["AmplitudesList"]
+    },
+    {1, 4, {0, 0, 1}, 3, {1/Sqrt[2], -I/Sqrt[2]}, {1/Sqrt[2], I/Sqrt[2]}},
+    {},
+    TestID -> "Shorthand-strings-not-swallowed"
+]
+
+(* "Properties" is a query on the symbol itself, not a state name. *)
+VerificationTest[
+    MemberQ[QuantumState["Properties"], "VonNeumannEntropy"],
+    True,
+    {},
+    TestID -> "Properties-query-not-a-name"
 ]
 
 EndTestSection[]

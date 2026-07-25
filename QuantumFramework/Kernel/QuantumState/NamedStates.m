@@ -203,9 +203,27 @@ QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
 QuantumState[name_String, opts___] /; MemberQ[$QuantumStateNames, name] := QuantumState[name[], opts]
 
 
+(* String state specifications that the shorthand rules at the top of this file
+   accept without going through $QuantumStateNames: the zero-qudit empty state,
+   basis-element digit strings, and letter sequences of computational and Pauli
+   eigenstates. The invalidName guard below has to let these through. *)
+shorthandStateStringQ[s_String] :=
+    s === "" ||
+    MemberQ[{"-i", "+i"}, s] ||
+    StringMatchQ[s, DigitCharacter ..] ||
+    StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..]
+
+shorthandStateStringQ[___] := False
+
+
 QuantumState[name_String[args___], ___] /; ! MemberQ[$QuantumStateNames, name] := (
     Message[QuantumState::invalidName, Defer[name[args]]];
     Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {Defer[name[args]]}|>]
+)
+
+QuantumState[name_String, ___] /; ! MemberQ[$QuantumStateNames, name] && ! shorthandStateStringQ[name] := (
+    Message[QuantumState::invalidName, name];
+    Failure["InvalidName", <|"MessageTemplate" :> QuantumState::invalidName, "MessageParameters" :> {name}|>]
 )
 
 QuantumState[name_String[args___], ___] /; MemberQ[$QuantumStateNames, name] := (
