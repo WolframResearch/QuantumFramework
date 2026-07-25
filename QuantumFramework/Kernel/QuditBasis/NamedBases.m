@@ -310,8 +310,11 @@ QuditBasis[name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasi
    Its own rule above is a one-argument form, so it outranks the guard by itself,
    but under a multiplicity it is the multiplicity rule that does the work and the
    guard would otherwise reject QuditBasis["XYZ", 2] before reaching it. Names
-   containing "Basis" need no exemption: their rewrite rule takes an argument tail
-   and already sorts ahead of the guard at every arity. *)
+   containing "Basis" need no exemption of their own, their rewrite rule sorting
+   ahead of the guard at every arity, but that rule re-enters dispatch with the
+   name stripped: QuditBasis["XYZBasis", 2] arrives back here as "XYZ" and relies
+   on this exemption too. The alphabet below has to track the Pauli-string rules
+   above, since a disagreement would silently reject a valid name. *)
 pauliBasisStringQ[s_String] := With[{chars = Characters[s]},
     Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
 ]

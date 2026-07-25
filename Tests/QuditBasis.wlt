@@ -189,20 +189,22 @@ VerificationTest[
 ]
 
 (* Names containing "Basis" are rewritten by deleting it, which also never consults
-   $QuditBasisNames. "XYZBasis" exercises both rewrites in sequence. The guard holds
-   no exemption for these: the rewrite rule outranks it, so this is what detects a
-   reordering that puts the guard first. The multiplicity form matters most, being
-   the arity at which the Pauli rule alone would not have sufficed. *)
+   $QuditBasisNames. The guard holds no exemption for them, the rewrite rule
+   outranking it, so "PauliBasis" and "PauliBasis", 2 are what detect a reordering
+   that puts the guard first. "XYZBasis" is the composite case: the rewrite hands
+   the stripped name back into dispatch, so it arrives as the Pauli string "XYZ",
+   and at multiplicity arity it is the Pauli exemption that carries it. *)
 VerificationTest[
     {
         QuditBasis["PauliBasis"]["Dimension"],
         QuditBasis["ComputationalBasis"]["Dimension"],
         QuditBasis["BellBasis"]["Dimension"],
         QuditBasis["FourierBasis"[3]]["Dimension"],
+        QuditBasis["PauliBasis", 2]["Dimension"],
         QuditBasis["XYZBasis"]["Dimension"],
-        QuditBasis["PauliBasis", 2]["Dimension"]
+        QuditBasis["XYZBasis", 2]["Dimension"]
     },
-    {4, 2, 4, 3, 8, 16},
+    {4, 2, 4, 3, 16, 8, 64},
     {},
     TestID -> "Shorthand-Basis-suffix-not-swallowed"
 ]
