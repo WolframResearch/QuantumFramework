@@ -61,8 +61,10 @@ QuantumState[("One" | "Down")[args___], opts___] := QuantumState["1"[args], opts
    otherwise it would be taken quietly, turning the ket into an operator shaped
    object or dropping amplitudes to fit and leaving the state unnormalized. The
    bare strings "0" and "1" carry their tail to the digit string rule above
-   instead of here, and keep that rule's handling of a malformed one. The
-   trailing "Label" is a default that an explicit one in the tail overrides. *)
+   instead of here, and keep that rule's handling of a malformed one. A
+   dimension that does not resolve to a number is turned down by the same arm,
+   since TrueQ sends it to the reject branch. The trailing "Label" is a default
+   that an explicit one in the tail overrides. *)
 
 namedStateTailRejected[name_] := (
     Message[QuantumState::invalidArgs, Defer[name[]]];
@@ -72,7 +74,7 @@ namedStateTailRejected[name_] := (
 namedStateTail[name_, vec_, label_, opts___] := With[{
     basis = QuantumBasis[opts]
 },
-    If[ ! QuantumBasisQ[basis] || basis["InputQudits"] =!= 0 || basis["Dimension"] < 2,
+    If[ ! QuantumBasisQ[basis] || basis["InputQudits"] =!= 0 || ! TrueQ[basis["Dimension"] >= 2],
         namedStateTailRejected[name],
 
         With[{state = QuantumState[vec, opts, "Label" -> label]},

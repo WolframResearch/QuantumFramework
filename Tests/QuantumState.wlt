@@ -235,6 +235,150 @@ VerificationTest[
     TestID -> "NamedTail-bad-call-shape-still-fails"
 ]
 
+(* The coefficients above are the ones handed in, so they read the same under
+   either convention. What discriminates them is the state those coefficients
+   describe: read computationally, (|+> + |->)/Sqrt[2] is |0>, which points
+   along +z where the bare name points along +x. So the name survives the tail
+   as a coefficient pattern, not as a physical state, and a caller who wants
+   |+> written in the X frame wants QuantumState[QuantumState["Plus"], basis]
+   instead, which is the other branch of the ambiguity and gives {1, 0}. *)
+VerificationTest[
+    {
+        Normal @ QuantumState["Plus", QuantumBasis["PauliX"]]["Computational"]["StateVector"],
+        QuantumState["Plus", QuantumBasis["PauliX"]]["BlochCartesianCoordinates"],
+        QuantumState["Plus"]["BlochCartesianCoordinates"],
+        Normal @ QuantumState[QuantumState["Plus"], QuantumBasis["PauliX"]]["StateVector"]
+    },
+    {{1, 0}, {0, 0, 1}, {1, 0, 0}, {1, 0}},
+    {},
+    TestID -> "NamedTail-tagged-state-is-not-the-named-eigenvector"
+]
+
+(* A tail that keeps the two-qubit structure keeps the entanglement the Bell
+   names are named for: one bit across the cut. A tail that does not is where
+   the name stops describing the state, so the same read on a mixed-dimension
+   basis returns a product state. *)
+VerificationTest[
+    QuantumPartialTrace[QuantumState["PhiPlus", QuantumBasis[2]], {1}]["VonNeumannEntropy"],
+    Quantity[1, "Bits"],
+    {},
+    TestID -> "NamedTail-Bell-name-keeps-one-bit-across-the-cut"
+]
+
+VerificationTest[
+    {
+        QuantumState["PhiPlus", QuantumBasis[{2, 3}]]["Qudits"],
+        QuantumPartialTrace[QuantumState["PhiPlus", QuantumBasis[{2, 3}]], {1}]["VonNeumannEntropy"],
+        QuantumState["PhiPlus", QuantumBasis[4]]["Qudits"]
+    },
+    {2, Quantity[0, "Bits"], 1},
+    {},
+    TestID -> "NamedTail-Bell-name-loses-entanglement-off-two-qubits"
+]
+
+(* The guard reads a dimension rather than assuming a qubit, so the one-qudit
+   names embed into any d >= 2 with the norm intact. Checked away from d = 2,
+   and against a non-computational qutrit frame, because the qubit tails are the
+   ones that stay quiet. "Fourier"[3] is the qutrit frame; QuantumBasis levels a
+   trailing integer at three Fourier qubits instead. *)
+VerificationTest[
+    Union @ Flatten @ Outer[
+        QuantumState[#1, #2]["Norm"] &,
+        {"0", "1", "Plus", "Minus", "Left", "Right"},
+        {3, 4, 5, QuantumBasis["Fourier"[3]], QuantumBasis["Fourier"[5]]}
+    ],
+    {1},
+    {},
+    TestID -> "NamedTail-qudit-dimensions-normalized"
+]
+
+(* Four amplitudes against d levels is a trichotomy in how d divides 4, and it
+   is the structure a caller has to know before reading a Bell name's tail. For
+   d = 2 the four amplitudes fill two qubits, which is the only branch where the
+   name still describes the state. For d dividing 4 above that, and for every
+   d > 4, they fill a single qudit, so there is no cut to be entangled across.
+   d = 3 is the odd one, since 3 divides neither 4 nor any power of 2 below it:
+   the four amplitudes grow to d^2 = 9 across two qutrits and the rest is padded,
+   which warns. It is pinned separately below so this table stays silent. *)
+VerificationTest[
+    Table[{QuantumState["PhiPlus", d]["Qudits"], QuantumState["PhiPlus", d]["Dimension"]}, {d, {2, 4, 5, 6, 7}}],
+    {{2, 4}, {1, 4}, {1, 5}, {1, 6}, {1, 7}},
+    {},
+    TestID -> "NamedTail-four-amplitudes-against-d-levels"
+]
+
+VerificationTest[
+    Union @ Flatten @ Table[QuantumState[n, d]["Norm"], {n, {"PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"}}, {d, {2, 4, 5, 6, 7}}],
+    {1},
+    {},
+    TestID -> "NamedTail-Bell-names-normalized-across-d"
+]
+
+(* The third branch: three levels hold four amplitudes only by taking two
+   qutrits and padding the other five slots, which is the one accepted tail that
+   warns. The amplitudes land in the two-qutrit corner, so the state is
+   (|00> + |11>)/Sqrt[2] read in d = 3, not a qutrit Bell state. *)
+VerificationTest[
+    With[{q = QuantumState["PhiPlus", 3]}, {q["Qudits"], q["Dimension"], Normal @ q["StateVector"]}],
+    {2, 9, {1/Sqrt[2], 0, 0, 1/Sqrt[2], 0, 0, 0, 0, 0}},
+    {QuantumState::padded},
+    TestID -> "NamedTail-four-amplitudes-against-three-levels"
+]
+
+(* A counted tail widens the basis one qudit per count, and the label widens
+   with it, so the name is worn by every factor while the amplitudes fill only
+   the first. Pinned because it is silent, normalized and a ket, and so invisible
+   to every other check here. *)
+VerificationTest[
+    With[{q = QuantumState["Plus", 2, 3]},
+        {q["Label"], Normal @ q["StateVector"], q == QuantumState["Plus"[3]]}],
+    {"+"^CircleTimes[3], {1/Sqrt[2], 1/Sqrt[2], 0, 0, 0, 0, 0, 0}, False},
+    {},
+    TestID -> "NamedTail-counted-tail-widens-the-label-not-the-amplitudes"
+]
+
+(* Each one-qudit name is an eigenvector of a Pauli axis, and each Bell name is
+   maximally entangled; a tail that preserves the structure preserves both. Only
+   "Plus" and "PhiPlus" were spot-checked elsewhere. *)
+VerificationTest[
+    QuantumState[#, QuantumBasis[2]]["BlochCartesianCoordinates"] & /@ {"0", "1", "Plus", "Minus", "Left", "Right"},
+    {{0, 0, 1}, {0, 0, -1}, {1, 0, 0}, {-1, 0, 0}, {0, -1, 0}, {0, 1, 0}},
+    {},
+    TestID -> "NamedTail-one-qudit-names-keep-their-axis"
+]
+
+VerificationTest[
+    QuantumPartialTrace[QuantumState[#, QuantumBasis[2]], {1}]["VonNeumannEntropy"] & /@
+        {"PhiPlus", "PhiMinus", "PsiPlus", "PsiMinus"},
+    ConstantArray[Quantity[1, "Bits"], 4],
+    {},
+    TestID -> "NamedTail-all-four-Bell-names-keep-one-bit"
+]
+
+(* The two routes into "0" agree on a well-formed tail whatever its dimension,
+   which is the property worth pinning; they are not interchangeable on a
+   malformed one, since only the spelled-out name reaches the guard. *)
+VerificationTest[
+    Union @ Map[
+        QuantumState["Zero", #] === QuantumState["0", #] &,
+        {QuantumBasis[2], "PauliBasis", 2, 3, 4, QuantumBasis[2, 2], QuantumBasis["PauliX"], QuantumBasis["Fourier", 3]}
+    ],
+    {True},
+    {},
+    TestID -> "NamedTail-routes-agree-across-dimensions"
+]
+
+VerificationTest[
+    {
+        MatchQ[QuantumState["Zero", QuantumBasis[QuditBasis[2], QuditBasis[3]]], _Failure],
+        QuantumState["0", QuantumBasis[QuditBasis[2], QuditBasis[3]]]["InputQudits"],
+        QuantumState["Zero", QuantumBasis[3]]["Dimension"]
+    },
+    {True, 1, 3},
+    {QuantumState::invalidArgs},
+    TestID -> "NamedTail-routes-diverge-on-a-malformed-tail"
+]
+
 EndTestSection[]
 
 
