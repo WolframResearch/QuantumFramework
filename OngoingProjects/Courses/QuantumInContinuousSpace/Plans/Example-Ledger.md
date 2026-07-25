@@ -150,7 +150,7 @@ transforms, truncated linear algebra).
 | 14.2 | MSc | hydrogen $2p$ fine structure: $\xi(r)\vec L\cdot\vec S$ with $\langle1/r^3\rangle$ closed form; $j=3/2,1/2$ splitting | fine structure | full radial-angular assembly, a real number out | C0 |
 | 14.3 | MSc | $l=1\otimes s=\tfrac12\to j=\tfrac32,\tfrac12$ via CG; $J^2,J_z$ verified diagonal | recoupling | the basis change later parts reuse | C0 |
 | 14.4 | MSc | Stern-Gerlach: two-component sech packet in a field gradient; spatial split entangles with spin; overlap decay as measurement | Stern-Gerlach | measurement as dynamics, not postulate | C3 |
-| 14.5 | MSc | Pauli equation in uniform $B$: Landau levels plus Zeeman with $g=2$; the $(n,\uparrow)$ and $(n{+}1,\downarrow)$ degeneracy coincidence | Pauli theory | the accidental degeneracy is the exhibit | C1 |
+| 14.5 | MSc | Pauli equation in uniform $B$: Landau levels plus Zeeman with $g=2$; the $(n,\downarrow)$ and $(n{+}1,\uparrow)$ degeneracy coincidence, with $(0,\uparrow)$ at exactly zero energy | Pauli theory | the accidental degeneracy is the exhibit | C1 |
 | 14.6 | MSc | hydrogen $2p$ with spin-orbit and $B$: $6\times6$ diagonalization; weak and strong limits; Paschen-Back crossover | anomalous Zeeman | the full crossover with both limits recovered | C0 |
 
 ## Part 15. Identical particles in continuous space

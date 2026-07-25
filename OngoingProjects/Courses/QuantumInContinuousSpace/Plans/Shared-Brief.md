@@ -55,6 +55,21 @@ probability currents, recover the over-barrier resonances by the continuation $\
 product. Close with the opaque limit $T\sim e^{-2\kappa L}$.
 ```
 
+## Charge and sign conventions (family-wide)
+
+Minimal coupling is written for a unit positive charge, $i\partial_t\psi=[\tfrac12(\hat p-A)^2+\phi]\psi$,
+so the Pauli term that follows from $\tfrac12[\vec\sigma\cdot(\hat p-A)]^2$ is $-\tfrac{g}{2}\vec B\cdot\vec S$,
+negative. Any entry writing a magnetic Hamiltonian uses this sign; an entry that wants the opposite
+charge says so and carries the consequence through its stated spectrum and degeneracy labels.
+
+## Cross-references between entries
+
+A plan entry may name a sibling entry to divide labour ("4.4 owns the truncated matrices") or to
+place a result in the Part. That is planning coordination and is allowed here. It is not prose to
+carry into the authored answer: PIPELINE section 5 requires each finished answer to define the state
+or operator it uses and to be readable alone, so an authored answer never points at another answer.
+Treat every such pointer in these plans as a note to the author, to be spent and dropped.
+
 ## Per-plan structure (lean)
 
 1. Header: part title, question count, class census with a Route-Table cite (two lines).

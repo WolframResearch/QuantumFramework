@@ -30,14 +30,21 @@ equation $-\tfrac12 u''+(\tfrac{l(l+1)}{2r^2}-\tfrac1r)u=E\,u$ with symbolic $E$
 general solution arrives as WhittakerM and WhittakerW in under a second; never hand DSolve both
 decay boundary conditions, it hangs with no message. Quantization is the manual termination
 read-off: the normalizable branch terminates exactly when $1/\sqrt{-2E}=n$ with $n$ a positive
-integer, and Solve turns that into $E_n=-1/(2n^2)$, tabulated for $n=1..4$. Assemble
+integer, and Solve turns that into $E_n=-1/(2n^2)$, tabulated for $n=1..4$. Convert the complex
+Whittaker form to the real Laguerre form through the explicit branch substitution
+$en\to-\kappa^2/2$ with $\kappa>0$, made per level rather than left to automatic simplification
+(the C1 verdict flags this bookkeeping as an open risk), assemble
 $u_{nl}=r^{l+1}e^{-r/n}L_{n-l-1}^{2l+1}(2r/n)$ with LaguerreL, close the residual to 0 with
 FullSimplify under the integer and positivity assumptions ($n,l$ integers, $n\ge l+1$, $l\ge0$,
 $r>0$), and take exact Integrate norms. Cross-check on independent machinery: NDEigenvalues with
 explicit DirichletCondition at both ends and Arnoldi Shift below the ground state, since the
-unshifted call silently returns only near-zero values and misses every bound level. Close with the
-Rydberg accumulation $E_n\to0^-$: infinitely many levels crowd under the continuum, the structural
-fact any truncated numeric box must answer for.
+unshifted call silently returns only near-zero values and misses every bound level; take the
+domain literally at $r=0$, which C2 probe p2 measured as best, because an origin cutoff installs
+an error floor $\Delta E\approx2\varepsilon$ that mesh refinement cannot pass (C1 probe 7:
+$1.8\times10^{-2}$, $2.0\times10^{-4}$, $2.0\times10^{-6}$ at $\varepsilon=10^{-2},10^{-4},10^{-6}$)
+and is actively harmful once $l\ge1$. Close with the Rydberg accumulation $E_n\to0^-$: infinitely
+many levels crowd under the continuum, the structural fact any truncated numeric box must answer
+for.
 
 ### 12.2 [BSc] How do I build the radial wavefunctions from the associated Laguerre polynomials and normalize them?
 
@@ -47,11 +54,14 @@ in prose first, then build it with LaguerreL. The symbolic-$(n,l)$ closed-form n
 risk in the C1 verdict while fixed-$(n,l)$ exact norms are certified: attempt
 $\int_0^\infty R_{nl}^2\,r^2\,dr=1$ with Integrate under the integer and positivity assumptions,
 and whatever the general integral returns, certify the normalization at fixed pairs, at least
-$(3,1)$, $(2,0)$, $(4,2)$. Verification that can refute: the radial-equation residual of the
-defined $R_{31}$ FullSimplifies to 0 under the same assumptions, and the orthogonality
-$\int_0^\infty R_{21}R_{31}\,r^2\,dr=0$ reuses both definitions against the same measure. Close by
-reading the node count $n-l-1$ off the Laguerre degree and locating the $R_{31}$ node exactly at
-$r=6$ from $L_1^{3}(2r/3)=0$.
+$(3,1)$, $(2,0)$, $(4,2)$, with an NIntegrate spot-check of the $(3,1)$ norm reusing the same
+defined $R_{31}$ as the independent numeric reference. Verification that can refute: the
+radial-equation residual of the defined $R_{31}$ FullSimplifies to 0 under the same assumptions,
+and the orthogonality $\int_0^\infty R_{21}R_{31}\,r^2\,dr=0$ reuses both definitions against the
+same measure. The limiting regime is the origin: Series or Limit on $u_{nl}=rR_{nl}$ as $r\to0$
+must give the centrifugal suppression $u_{nl}\sim r^{l+1}$, so the $l=1$ carrier vanishes
+quadratically where an $s$ state vanishes only linearly. Close by reading the node count $n-l-1$
+off the Laguerre degree and locating the $R_{31}$ node exactly at $r=6$ from $L_1^{3}(2r/3)=0$.
 
 ### 12.3 [BSc] How do I assemble the full $\psi_{nlm}$, plot probability densities and the radial distribution, and compute $\langle r\rangle$?
 
@@ -71,8 +81,9 @@ $P(r)$ is skewed outward.
 ### 12.4 [BSc] How do I find the bound states of a spherical square well numerically?
 
 Spherical finite well $V=-V_0$ for $r<a$, zero beyond, at $V_0=10$, $a=1$: deep enough to bind one
-level each for $l=0$ and $l=1$, since an $s$ level needs $\sqrt{2V_0}\,a>\pi/2$ and a $p$ level
-needs $\sqrt{2V_0}\,a>\pi$, and $\sqrt{20}\approx4.47$. Numeric side per the C2 recipe:
+level each for $l=0$ and $l=1$, since the first $s$ level appears at $\sqrt{2V_0}\,a=\pi/2$ and
+the first $p$ level at $\sqrt{2V_0}\,a=\pi$, while $\sqrt{20}\approx4.47$ clears both. Numeric
+side per the C2 recipe:
 NDEigenvalues on the reduced $u$ with explicit DirichletCondition at both ends, Arnoldi Shift
 below $-V_0$ then Sort, MaxCellMeasure 0.01, the domain taken literally at $r=0$ (an $\epsilon$
 cutoff is actively harmful for $l\ge1$), and the truncation radius fixed by an $R$-doubling sweep.
@@ -80,23 +91,34 @@ Benchmark side: exact matching, region by region because DSolve silently echoes 
 potential: with $k=\sqrt{2(E+V_0)}$ and $\kappa=\sqrt{-2E}$, the $l=0$ condition is
 $k\cot ka=-\kappa$, and $l=1$ matches the log-derivative of $r\,j_1(kr)$ (SphericalBesselJ) to the
 elementary decaying exterior $e^{-\kappa r}(1+1/(\kappa r))$, FindRoot solving each condition.
-Verification: the FEM levels against the FindRoot roots, independent machinery on both sides, so
-any disagreement beyond the mesh floor refutes one route. Close by sweeping $V_0$ downward until
-the $l=1$ level crosses zero at $\sqrt{2V_0}\,a=\pi$: a shallow 3D well holds no bound state at
-all, the sharpest contrast with one dimension, where any attractive well binds.
+Certify the closed forms before comparing them: substitute each region's expression back into the
+reduced radial equation and Simplify the residual to 0 under $k,\kappa,r>0$, so a mismatch cannot
+be blamed on a mistyped Bessel form. Verification: the FEM levels against the FindRoot roots,
+independent machinery on both sides, so any disagreement beyond the mesh floor refutes one route.
+Close by sweeping $V_0$ downward through the two thresholds: at $\sqrt{2V_0}\,a=\pi$ the $l=1$
+level is expelled, and only below $\sqrt{2V_0}\,a=\pi/2$ does the well hold no bound state at all,
+the sharpest contrast with one dimension, where any attractive well binds.
 
 ### 12.5 [MSc] How do I solve the three-dimensional isotropic oscillator and reconcile its Cartesian and spherical degeneracy counts?
 
-The $N=2$ shell of the 3D isotropic oscillator at $E=\tfrac72$: six Cartesian products
-$h_{n_x}(x)\,h_{n_y}(y)\,h_{n_z}(z)$ with $n_x+n_y+n_z=2$ (HermiteH times Gaussian) against the
-spherical set $R_{n_r l}\,Y_{lm}$ with $R_{n_r l}\propto r^{l}e^{-r^2/2}L_{n_r}^{l+1/2}(r^2)$: the
-five-state $l=2$ multiplet ($n_r=0$) plus the single $l=0$ radial excitation ($n_r=1$), so $6=5+1$.
-The explicit map: rewrite each spherical state as polynomial times Gaussian in Cartesian
-coordinates and compute the $6\times6$ overlap matrix by exact Integrate; verification that can
-refute: the matrix must be exactly unitary and both bases must give residual
-$\hat H\psi=\tfrac72\psi$ under Simplify, either failure exposing a wrong radial or angular factor.
-Degeneracy is reconciled by shell projector or multiplicities, never by individual FEM
-eigenfunctions: inside a degenerate shell an eigensolver returns an arbitrarily mixed basis
+The carrier is the $N=2$ shell of the 3D isotropic oscillator at $E=\tfrac72$, but the count is
+earned before the shell is inspected. The separation is the route, per C7's primary: substitute
+$\psi=X(x)Y(y)Z(z)$ into $\hat H\psi=E\psi$, divide by $\psi$, Expand, and certify the additive
+split with a per-term FreeQ test (the 3D mechanics are probed in C7 probe1), leaving three Hermite
+problems and $E=n_x+n_y+n_z+\tfrac32$; the spherical substitution $\psi=\tfrac{u(r)}{r}Y_{lm}$
+reduces the same operator to the radial equation whose solutions
+$R_{n_r l}\propto r^{l}e^{-r^2/2}L_{n_r}^{l+1/2}(r^2)$ give $E=2n_r+l+\tfrac32$. Equating the two
+labelings turns the degeneracy into an identity rather than an observation: the Cartesian shell
+$n_x+n_y+n_z=N$ holds $(N+1)(N+2)/2$ states, the spherical shell runs $l=N,N-2,\dots$ down to 0 or
+1 with $n_r=(N-l)/2$, and $\sum_{l=N,N-2,\dots}(2l+1)=(N+1)(N+2)/2$ must hold for every $N$, closed
+symbolically with Sum and exhibited at $N=2$ ($6=5+1$) and $N=3$ ($10=7+3$), the odd shell being
+the one where a single $l$ cannot carry the count. The explicit map at $N=2$: rewrite each
+spherical state as polynomial times Gaussian in Cartesian coordinates and compute the $6\times6$
+overlap matrix by exact Integrate; verification that can refute: the matrix must be exactly
+unitary and both bases must give residual $\hat H\psi=\tfrac72\psi$ under Simplify, either failure
+exposing a wrong radial or angular factor. Degeneracy is reconciled by shell projector or
+multiplicities, never by individual FEM eigenfunctions: inside a degenerate shell an eigensolver
+returns an arbitrarily mixed basis
 (largest single overlap 0.958 in the C7 verdict's 2D shell probe) while the shell projector is
 reproduced. Any 3D NDEigensystem confirmation is authoring-gated, since 3D FEM cost is unprobed
 in the C7 verdict: gate it with its own mesh sweep, or let the multiplicity count $\{5,1\}$ at the
@@ -128,8 +150,10 @@ C2 representative, gates cited verbatim from the Route-Table C2 verdict. Hydroge
 equation on $(0,R)$, benchmark $E_n=-1/(2n^2)$, with all four load-bearing elements of the recipe:
 explicit `DirichletCondition[u[r]==0, True]` at both ends (omitting BCs silently yields a ground
 level 24 percent wrong, no message); `Method -> {"Eigensystem" -> {"Arnoldi", "Shift" -> -0.6}}`
-then Sort (unshifted, NDEigenvalues returns six values in $(-0.030,0.046)$, every bound level
-silently absent); MaxCellMeasure 0.01; the domain taken literally at $r=0$, since an $\epsilon$
+then Sort (unshifted, NDEigenvalues on this exact problem returns
+$\{-0.0111, 0.0157, -0.0306, 0.0501, -0.0555, 0.0916\}$, a near-zero Rydberg tail plus box
+continuum spanning $(-0.0555, 0.0916)$, the ground state absent with no message, C2 probe
+p1-hydrogen-l0.wls); MaxCellMeasure 0.01; the domain taken literally at $r=0$, since an $\epsilon$
 cutoff is actively harmful for $l\ge1$ ($r_{\min}=0$ reaches $5.5\times10^{-13}$ on $n=2$ where
 $\epsilon=0.1$ costs $5.4\times10^{-5}$). Truncation is the teaching exhibit: failure invades from
 the top as the Rydberg accumulation outgrows the box ($R=20$ puts $0.133$ on $n=5$; $R=160$ holds
@@ -145,19 +169,27 @@ detector (Shift plus Sort, explicit Dirichlet, $R$-doubling).
 ### 12.8 [MSc] How do I compute the quantum defect of an alkali-like screened-Coulomb potential?
 
 Sodium-like screened Coulomb $V(r)=-\tfrac1r\left(1+(Z-1)e^{-r/a}\right)$ with $Z=11$ and $a$
-tuned at authoring so the $s$ defect lands near sodium's $\delta_0\approx1.35$. Levels $E_{nl}$
-for $l=0,1,2$ and several $n$ by the C2 recipe (explicit DirichletCondition at both ends, Arnoldi
-Shift below the deepest level then Sort, MaxCellMeasure 0.01, domain literally at $r=0$); high-$n$
-levels sit near the Rydberg accumulation point, so the $R$-doubling sweep is mandatory per level,
-with $R$ well beyond $2n^2$ of the highest wanted state ($R=160$ for $n=5$ at floor accuracy).
-Extract $\delta_l=n-1/\sqrt{-2E_{nl}}$ from eigenvalues alone: eigenfunction normalization is
-unprobed in the C2 verdict, and the eigenvalue-only extraction avoids it entirely (any
-wavefunction-based matrix element would have to check its norm explicitly first). Verification
-that can refute: turn the screening off, $(Z-1)\to0$ on the same grid, and every extracted
-$\delta_l$ must collapse to zero with the levels back on $-1/(2n^2)$; the Rydberg-formula content
-is the near-constancy of $\delta_l$ across $n$, displayed as a table rather than presumed by a
-fit. Close with the hierarchy $\delta_0>\delta_1>\delta_2\approx0$: only penetrating orbits see
-the unscreened core, which is the physics the defect measures.
+tuned at authoring so the valence $s$ defect lands near sodium's $\delta_0\approx1.35$. Levels per
+$l$ channel by the C2 recipe (explicit DirichletCondition at both ends, Arnoldi Shift below the
+deepest level then Sort, MaxCellMeasure 0.01, domain literally at $r=0$); high-$n$ levels sit near
+the Rydberg accumulation point, so the $R$-doubling sweep is mandatory per level, with $R$ well
+beyond $2n^2$ of the highest wanted state ($R=160$ for $n=5$ at floor accuracy). The sorted output
+is the channel spectrum counted from its bottom, so the principal quantum number is assigned, not
+assumed: the $k$-th state of the sorted $l$ channel ($k$ from 0) carries $k$ radial nodes, hence
+$n=k+l+1$. At $Z=11$ the bottom of each channel is a deeply bound core level near $-Z^2/2$, which
+is not a perturbed Coulomb state at all, so the defect table covers only the valence series (in
+this model $n\ge3$ in all three channels, the boundary located by where the levels rejoin the
+Rydberg pattern) and the core levels stand beside it as the contrast. Extract
+$\delta_l=n-1/\sqrt{-2E_{nl}}$ from eigenvalues alone: eigenfunction normalization is unprobed in
+the C2 verdict, and the eigenvalue-only extraction avoids it entirely (any wavefunction-based
+matrix element would have to check its norm explicitly first). Verification that can refute: turn
+the screening off, $(Z-1)\to0$ on the same grid, and every extracted $\delta_l$ must collapse to
+zero with the levels back on $-1/(2n^2)$; the Rydberg-formula content is the near-constancy of
+$\delta_l$ across the valence $n$, shown both as the per-level table and as a one-parameter
+FindFit of those same levels to $-1/(2(n-\delta_l)^2)$, whose residual measures the leftover
+$n$-dependence the single-parameter formula cannot absorb. Close with the hierarchy
+$\delta_0>\delta_1>\delta_2\approx0$ and with why the core levels sit outside the table: only
+penetrating orbits see the unscreened core, and a state bound inside it is no longer Rydberg-like.
 
 ### 12.9 [MSc] How do I apply WKB to the radial equation with the Langer correction $l(l+1)\to(l+\tfrac12)^2$ and recover the Coulomb and oscillator spectra?
 

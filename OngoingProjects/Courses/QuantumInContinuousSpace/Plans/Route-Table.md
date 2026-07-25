@@ -49,6 +49,28 @@ explicit positivity/reality/integer assumptions to close residuals and norms.
 
 (append-only; one kernel-evidenced revision per class maximum)
 
+**R1, class C8, 2026-07-23.** Two corrections to the C8 members-sanity and cross-check text, both
+raised by the Part 22 outline critique and both settled by derivation rather than by re-probing,
+since neither claim was ever a probe output: the probes ran the $\kappa=-1$ ground state only, and
+these are statements the verdict wrote around them.
+
+1. The recorded degeneracy map $\kappa\to-\kappa-1$ was wrong. With $\kappa=-(l+1)$ for
+   $j=l+\tfrac12$ and $\kappa=+l$ for $j=l-\tfrac12$, the pair $2s_{1/2}$ and $2p_{1/2}$ is
+   $\kappa=-1$ and $\kappa=+1$, so the map is $\kappa\to-\kappa$. Applied literally the old map sent
+   $\kappa=-1$ to $0$, which is not a legal $\kappa$, and sent $2p_{1/2}$ to $\kappa=-2$, which is
+   $2p_{3/2}$: a state the Dirac formula splits from it by the fine structure. The expression
+   $-\kappa-1$ is the $\kappa<0$ half of the $\kappa\!\leftrightarrow\!l$ dictionary, not a
+   degeneracy. Added the identity $|\kappa|=j+\tfrac12$, hence
+   $\gamma=\sqrt{(j+\tfrac12)^2-(Z\alpha)^2}$, which is what derives that $E_{nj}$ depends on $n$ and
+   $j$ alone instead of asserting it.
+2. The shooting initial condition $G/F=(\gamma-1)/(Z\alpha)$ was the $\kappa=-1$ instance quoted as
+   general. Balancing the $r^{\gamma-1}$ terms of the radial system with $F\sim f r^\gamma$,
+   $G\sim g r^\gamma$ gives $f(\gamma+\kappa)=Z\alpha\,g$, so $G/F=(\gamma+\kappa)/(Z\alpha)$. Using
+   the $\kappa=-1$ form for any other $\kappa$ seeds the irregular branch, which would silently
+   disarm the cross-check's $10^7$ blow-up discriminator for exactly the excited states 22.4 exhibits.
+
+Propagated to: Part-22-Plan.md (entry 22.4). No other part cites either statement.
+
 ---
 
 # Class verdicts (verbatim from the probe runs)
@@ -266,7 +288,7 @@ ROUTES ENUMERATED:
 - R3 transforms / R6 SchrodingerPDEComponent: BLOCKED (R6 is nonrelativistic-only physics).
 CRITERION: exactness > falsifiability > independence > inspectability > cost (stated before scoring).
 PRIMARY ROUTE: R1c+R1d: `DSolve` the squared effective Coulomb ODE (symbolic $E$, $m$, $Z\alpha$, $s$) to get `WhittakerM`, read off quantization by series termination manually, assemble the two-component solution, then certify with `FullSimplify` residual $\{0,0\}$ of the first-order system and `Series` agreement with the Pauli fine-structure expansion.
-CROSS-CHECK ROUTE: R5: `NDSolve` (`WorkingPrecision -> 32`) shooting on the coupled system from $r_0=10^{-8}$ with the $E$-independent indicial IC; decay at exact $E_{nj}$ vs blow-up at perturbed $E$.
+CROSS-CHECK ROUTE: R5: `NDSolve` (`WorkingPrecision -> 32`) shooting on the coupled system from $r_0=10^{-8}$ with the $E$-independent indicial IC $G/F=(\gamma+\kappa)/(Z\alpha)$, which is $(\gamma-1)/(Z\alpha)$ at the probed $\kappa=-1$ and must be recomputed for any other $\kappa$ or the run seeds the irregular branch; decay at exact $E_{nj}$ vs blow-up at perturbed $E$. (Revision R1, see log.)
 GATES PROBED (route-probes/C8/):
 - G-system-DSolve: p1-dsolve-system.wls -> WL 15.0.0; `TIMEOUT-35s` for BOTH symbolic $\kappa$ and $\kappa=-1$, with NO boundary conditions (stronger than the C1 sibling verdict, which hung only with decay BCs).
 - G-decoupled-DSolve: p2-decoupled.wls -> naive elimination: `{DifferentialRoot}` only (leaf 129-156); squared form: `C[1] WhittakerM[(en za)/Sqrt[-en^2+m^2], (1+2s)/2, 2 Sqrt[-en^2+m^2] r] + C[2] WhittakerW[...]`.
@@ -275,7 +297,7 @@ GATES PROBED (route-probes/C8/):
 - G-shooting: p5-shooting.wls -> $|F(25)|$: $6.05\times10^{-5}$ at exact $E$ vs $354.9$ at $E{+}0.01$ and $895.6$ at $E{-}0.01$; blow-up ratios $5.9\times10^{6}$ and $1.5\times10^{7}$.
 TRAPS: (i) DSolve hangs on the coupled system even WITHOUT BCs (p1; time-box every DSolve in authoring); (ii) naive elimination yields `DifferentialRoot`, mechanism = apparent singularity at $r=-Z\alpha/(E+m)$; decouple via the squared form, never by raw elimination; (iii) `E` is Euler's number in WL, use `en` (all probes); (iv) cited without re-probing, not load-bearing: (a), (b), (c), (d), (e).
 JUSTIFICATION: every fully automatic symbolic route is closed (system DSolve hangs; naive decoupling is implicit), but the squared-equation route reduces C8 to the already-verdicted single-Coulomb pattern with $\ell\to s$ non-integer, and Whittaker termination hands over the exact $E_{nj}$, certified by two machine-checkable exact facts: zero residual of the system and the symbolic fine-structure series. The shooting cross-check is independent machinery and loudly falsifiable at the $10^7$ level for a $10^{-2}$ energy error.
-MEMBERS SANITY: sole member 22.4. Textbook sign/component conventions differ; fix the convention in the answer and let the residual check certify it (the stated one is verified). Exact degeneracy in $\kappa\to-\kappa-1$ at fixed $(n,j)$ ($2s_{1/2}$ vs $2p_{1/2}$): the formula depends only on $n,j$, worth exhibiting. The $n_r=0$ branch exists only for $\kappa<0$; the $s=\gamma-1$ vs $s=\gamma$ SUSY pairing of the two squared equations must be matched by hand. Components behave as $r^\gamma$ with $\gamma<1$: finite but with divergent derivative at the origin, still normalizable ($2\gamma>-1$).
+MEMBERS SANITY: sole member 22.4. Textbook sign/component conventions differ; fix the convention in the answer and let the residual check certify it (the stated one is verified). Exact degeneracy in $\kappa\to-\kappa$ at fixed $n$ ($2s_{1/2}$ has $\kappa=-1$, $2p_{1/2}$ has $\kappa=+1$): with $\kappa=-(l+1)$ for $j=l+\tfrac12$ and $\kappa=+l$ for $j=l-\tfrac12$, so $|\kappa|=j+\tfrac12$ and $\gamma=\sqrt{(j+\tfrac12)^2-(Z\alpha)^2}$, the energy depends on $\kappa$ only through $|\kappa|$, which is what makes $E_{nj}$ a function of $n$ and $j$ alone. Worth exhibiting. (Revision R1, see log.) The $n_r=0$ branch exists only for $\kappa<0$; the $s=\gamma-1$ vs $s=\gamma$ SUSY pairing of the two squared equations must be matched by hand. Components behave as $r^\gamma$ with $\gamma<1$: finite but with divergent derivative at the origin, still normalizable ($2\gamma>-1$).
 OPEN RISKS: general-$n$ two-component closed forms (Laguerre-type) substitution-certified only for the ground state; authoring must run the residual check per exhibited state. Spinor normalization $\int_0^\infty(F^2+G^2)dr=1$ unprobed (elementary Gamma integrals, low risk, but assert it). Shooting for excited states needs node counting and $r_{\max}$ scaled by $1/\sqrt{m^2-E^2}$. The $Z\alpha\to|\kappa|$ edge ($\gamma\to0$, fall to center) breaks the formula; keep $Z\alpha<1$ assumptions explicit in every `Simplify`.
 
 ## C9 verdict
