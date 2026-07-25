@@ -12,12 +12,12 @@ RelatedTutorials: ["[Wolfram Quantum Framework Tutorial](Tutorial)"]
 
 <!--
 Faithful md source for Documentation/English/ReferencePages/Symbols/QuantumBasis.nb,
-recovered with NotebookToMarkdown and re-verified against the repo kernel at cb40c1e4
+recovered with NotebookToMarkdown and re-verified against the repo kernel at ebc91a15
 (2026-07-24). Deliberate deviations from the .nb, each verified against the live kernel:
   1. New picture coverage: the Details bullets and picture-name table, the options
      table, the Basic Examples unit on the picture, and the whole "Options" example
      section. The .nb documented no picture at all, though every QuantumBasis carries
-     one; the forms shown here were fixed across 3a830e06, 669173d2 and cb40c1e4, and
+     one; the forms shown here were fixed across 3a830e06, 669173d2, cb40c1e4 and ebc91a15, and
      are pinned by the "QuantumBasis - pictures" section of Tests/QuantumBasis.wlt.
      First-picture-wins precedence is documented from that section's measurement, not
      from the argument order it might suggest.
@@ -28,9 +28,26 @@ recovered with NotebookToMarkdown and re-verified against the repo kernel at cb4
   3. Two example captions ended with a stray double quote instead of a colon
      ("Transform the state into the Wootters basis"") and are corrected; a caption must
      end in ":" or CheckDefinitionNotebook flags ExampleTextLastCharacter.
+  4. Seven cells referred back with % and %%, which only resolve in an interactive
+     session; on a rebuild they came back as Out[0][...]. Each now binds its
+     intermediate to a name, which also makes those units self-contained.
+  5. RandomSeed[0] was replaced by SeedRandom[0] in three places. RandomSeed is a bare
+     System symbol with no down-values: it returns unevaluated and never seeded, so
+     those examples were not reproducible. The affected output hints were re-taken
+     from the reseeded run.
+  6. Three pre-existing example defects, each refuted by the kernel and by the cell
+     following it: QuantumBasis[{3,2}] was captioned as having 2-dimensional input
+     and 3-dimensional output, but it is two OUTPUT qudits and no input
+     ({"OutputQudits","InputQudits"} is {2,0}); basis["Split",2] was a no-op on a
+     basis that already had 2 output qudits, and is now Split,1, which does move one
+     to the input; and the purely-symbolic basis reused the symbol w, still bound
+     from the Wootters cell, so a whole QuantumState was appearing inside it, and its
+     free symbols are now Greek.
 Note "HasseSIC" in the informationally-complete table is carried over unchanged and is
 a pre-existing defect: the kernel's $QuditPhaseSpaceBasisNames spells it "HesseSIC".
-That is tracked separately and deliberately not touched here.
+So are the two N::meprec messages under Scope, which come from
+PositiveSemidefiniteMatrixQ on the exact Tetrahedron POVM elements and would need
+Quiet to hide. Both are tracked separately and deliberately not touched here.
 -->
 
 ## Usage
@@ -112,21 +129,22 @@ That is tracked separately and deliberately not touched here.
 | `"Schrodinger"` | states carry the time dependence and operators are fixed; the default |
 | `"Heisenberg"` | operators carry the time dependence and states are fixed |
 | `"Interaction"` | the time dependence is divided between states and operators |
-| `"PhaseSpace"` | the basis is a phase-space frame, so a state expanded in it is a quasi-probability distribution rather than an amplitude vector |
+| `"PhaseSpace"` | the tag a phase-space basis carries; a basis whose *elements* form a phase-space frame sets it for itself, and a state expanded in such a basis is a quasi-probability distribution rather than an amplitude vector |
 
 - A picture may be named positionally, on either side of the basis specification, or given as the `"Picture"` option, and the three forms agree. So <code>[QuantumBasis]()["Heisenberg"]</code> is the default basis in the Heisenberg picture, and <code>[QuantumBasis]()["Schrodinger"]</code> is <code>[QuantumBasis]()[]</code>. A picture may also trail a two-sided specification, as in <code>[QuantumBasis]()["X", "Y", "Heisenberg"]</code>.
 - When more than one picture is written, the one written **first** wins, positional and option alike: the arguments are folded in reverse, so the earliest is applied last. <code>[QuantumBasis]()["Heisenberg", "Picture" -> "Interaction"]</code> is in the Heisenberg picture.
 - A trailing integer is read as a multiplicity rather than a dimension, so <code>[QuantumBasis]()["Heisenberg", 3]</code> is three qubits in the Heisenberg picture.
 - A phase-space basis name sets `"PhaseSpace"` on its own, so a picture normally only needs naming for `"Heisenberg"` and `"Interaction"`.
+- Such a basis will not be renamed to another picture positionally: its elements, not a label, are what put it in phase space, so <code>[QuantumBasis]()["Wigner", "Heisenberg"]</code> is rejected with `QuantumBasis::phaseSpacePicture`. The `"Picture"` option is deliberately left open for code that has actually undone the transform.
 - The picture travels with the basis into whatever is built on it, so <code>[QuantumState]()[*spec*, "Heisenberg"]</code> and <code>[QuantumOperator]()[*spec*, "Heisenberg"]</code> both land in the Heisenberg picture.
-- Any picture outside the four above is rejected with a `QuantumBasis::picture` message, and a picture followed by a tail that specifies no basis at all is rejected with `QuantumBasis::invalidSpec` naming that tail.
+- Any picture outside the four above is rejected with `QuantumBasis::picture`. A picture followed by a tail that is not a basis specification at all, such as a bare symbol or a non-integer number, is rejected with `QuantumBasis::invalidSpec` naming that tail; a tail that fails on its own terms reports its own reason instead, so an unrecognized basis *name* gives `QuditBasis::invalidName` and a negative integer gives `QuditBasis::invalidArgs`.
 
 - Options for [QuantumBasis]() are:
 
 | option | default | effect |
 |---|---|---|
 | <code>"Picture"</code> | <code>"Schrodinger"</code> | the picture the basis is written in, one of the four names above |
-| <code>"Label"</code> | <code>None</code> | the label the basis displays under; a named or dimensioned basis fills this in for itself, so <code>[QuantumBasis]()["PauliX"]</code> is labelled `"PauliX"` |
+| <code>"Label"</code> | <code>None</code> | the label the basis displays under; a named basis, or one given a single dimension, fills this in for itself, so <code>[QuantumBasis]()["PauliX"]</code> is labelled `"PauliX"` and <code>[QuantumBasis]()[3]</code> is labelled `"I"[3]`, while a list of dimensions or an explicit [QuditBasis]() leaves it `None` |
 | <code>"ParameterSpec"</code> | <code>{}</code> | symbolic parameters the basis depends on, given as `{p, min, max}` triples; `"Parameter"` and `"Parameters"` are accepted as spellings of the same option, and a bare symbol is completed to a unit range |
 
 ## Basic Examples
@@ -363,7 +381,7 @@ For qudits, particularly qutrits, the POVM elements can be constructed using the
 Generate a random mixed state in 3D Hilbert space:
 
 ```wl
-RandomSeed[0];
+SeedRandom[0];
 r = QuantumState["RandomMixed", {d = 3}]
 ```
 
@@ -392,7 +410,7 @@ traces/amplitudes
 Create a random pure state:
 
 ```wl
-RandomSeed[0];
+SeedRandom[0];
 \[Rho] = QuantumState["RandomPure"]
 ```
 
@@ -482,7 +500,7 @@ basis = QuantumBasis[\[ScriptCapitalG] . \[ScriptCapitalM][
 Create a random mixed state:
 
 ```wl
-RandomSeed[0];
+SeedRandom[0];
 \[Rho] = QuantumState["RandomMixed"];
 ```
 
@@ -498,14 +516,14 @@ Find the phase space representation of the state in the given basis and return i
 ```wl
 ps = QuantumPhaseSpaceTransform[\[Rho], basis]["Amplitudes"]
 ```
-<!-- => <|Wolfram`QuantumFramework`QuditName[0, "Dual" -> False] -> 0.2379385683182614`, Wolfram`QuantumFramework`QuditName[1, "Dual" -> False] -> 0.36464781588706197`, Wolfram`QuantumFramework`QuditName[2, "Dual" -> False] -> 0.05528976717799462`, Wolfram`QuantumFramework`QuditName[3, "Dual" -> False] -> 0.3421238486166821`|> -->
+<!-- => values {0.392528, 0.300255, 0.114132, 0.193084} keyed by QuditName[0..3] -->
 
 Double the state (analogous to vectorizing a density matrix) and transform it into the new basis:
 
 ```wl
 db = QuantumState[\[Rho]["Double"], basis]["Amplitudes"]
 ```
-<!-- => <|Wolfram`QuantumFramework`QuditName[0, "Dual" -> False] -> 0.2379385683182614`, Wolfram`QuantumFramework`QuditName[1, "Dual" -> False] -> 0.36464781588706197`, Wolfram`QuantumFramework`QuditName[2, "Dual" -> False] -> 0.05528976717799462`, Wolfram`QuantumFramework`QuditName[3, "Dual" -> False] -> 0.3421238486166821`|> -->
+<!-- => values {0.392528, 0.300255, 0.114132, 0.193084} keyed by QuditName[0..3] -->
 
 Calculate probabilities using the geometric relationship between the Tetrahedron corners and the Bloch vector:
 
@@ -513,7 +531,7 @@ Calculate probabilities using the geometric relationship between the Tetrahedron
 mn = (\[Rho]["BlochVector"] . Normalize[#] + 1)/4 & /@ 
   PolyhedronCoordinates@Tetrahedron[]
 ```
-<!-- => {0.23793856831826138`, 0.36464781588706197`, 0.05528976717799461`, \ 0.34212384861668205`} -->
+<!-- => {0.392528, 0.300255, 0.114132, 0.193084} -->
 
 Check the amplitudes are the same:
 
@@ -531,7 +549,7 @@ QuantumWeylTransform[QuantumState[\[Rho]["Double"], basis]] == \[Rho]
 
 ## Generalizations and Extensions
 
-Create a basis with 2-dimensional input and 3-dimensional output:
+Create a composite basis of a qutrit and a qubit, both of them output qudits:
 
 ```wl
 basis = QuantumBasis[{3, 2}]
@@ -547,21 +565,21 @@ Normal /@ basis["ElementAssociation"]
 ```
 <!-- => {2, 0} -->
 
-Set the number of output qudits:
+Set the number of output qudits, which sends the remaining ones to the input:
 
 ```wl
-basis2 = basis["Split", 2]
+basis2 = basis["Split", 1]
 ```
 
 ```wl
 {basis2["OutputQudits"], basis2["InputQudits"]}
 ```
-<!-- => {2, 0} -->
+<!-- => {1, 1} -->
 
-Input or output can be empty (consisting of only 1-dimensional qudits):
+Input or output can be empty (consisting of only 1-dimensional qudits), as the input of the unsplit basis is:
 
 ```wl
-basis2["Input"]
+basis["Input"]
 ```
 
 ## Options
@@ -715,7 +733,7 @@ state = QuantumState[{1/Sqrt[2], -1/Sqrt[2]}, "Z"]
 ```wl
 state["Formula"]
 ```
-<!-- => 1/Sqrt[2] Wolfram`QuantumFramework`QuditName[ Subscript["\[ScriptZ]", Interpretation["+", 1]], "Dual" -> False] -(1/Sqrt[  2]) Wolfram`QuantumFramework`QuditName[ Subscript["\[ScriptZ]", Interpretation["\[Minus]", -1]], "Dual" -> False] -->
+<!-- => the typeset formula (1/Sqrt[2])|z+> - (1/Sqrt[2])|z->; "Formula" returns RawBoxes, so there is no literal value to compare against -->
 
 Change the basis into the Pauli-X basis:
 
@@ -726,15 +744,15 @@ newState = QuantumState[state, "X"]
 ```wl
 newState["Formula"]
 ```
-<!-- => Ket[{ \!\(\*SubscriptBox[\("\<\[ScriptX]\>"\), InterpretationBox["\"\<\[Minus]\>\"", -1]]\)}] -->
+<!-- => the typeset formula |x->; "Formula" returns RawBoxes, so there is no literal value to compare against -->
 
 ---
 
 [QuantumBasis]() objects can be constructed purely symbolically (without explicit vector or matrix elements):
 
 ```wl
-basis = QuantumBasis[<|"\[UpArrow]" -> {x, y}, 
-   "\[DownArrow]" -> {z, w}|>]
+basis = QuantumBasis[<|"\[UpArrow]" -> {\[Alpha], \[Beta]}, 
+   "\[DownArrow]" -> {\[Gamma], \[Delta]}|>]
 ```
 
 Represent a collection of 2 qudits:
