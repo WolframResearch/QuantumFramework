@@ -177,14 +177,19 @@ QuantumBasis[output : _ ? basisNameQ | _Integer, args___] :=
         args
     ]
 
-QuantumBasis[args : OptionsPattern[]] := QuantumBasis["Computational", args, "Label" -> None]
+(* a picture may sit anywhere among the option rules, including the rules the construction
+   routes above emit: QuantumBasis["X", "Y", "Heisenberg"] arrives back here as
+   QuantumBasis["Output" -> ..., "Input" -> ..., "Heisenberg"] *)
+QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
+    QuantumBasis["Computational", args, "Label" -> None]
 
-(* a leading picture applies to whatever basis the remaining arguments build, so that
-   QuantumBasis["Heisenberg"] is the default basis in that picture; a lone Integer tail is
-   left to the multiplicity rule above, where QuantumBasis["Heisenberg", 3] means 3 qudits *)
+(* a picture leading an actual basis specification applies to the basis that specification
+   builds, so QuantumBasis["Heisenberg", "PauliX"] is the PauliX basis in that picture. The
+   tail starts with neither a rule (that is the rule above) nor a non-negative Integer (that
+   is the multiplicity rule above, where QuantumBasis["Heisenberg", 3] means 3 qudits) *)
 QuantumBasis[
     picture : Alternatives @@ $QuantumBasisPictures,
-    args : PatternSequence[] | PatternSequence[Except[_Integer], ___]
+    args : PatternSequence[Except[_Rule | _RuleDelayed | _Integer ? NonNegative], ___]
 ] :=
     Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], picture]
 

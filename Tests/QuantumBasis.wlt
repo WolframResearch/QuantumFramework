@@ -99,9 +99,50 @@ VerificationTest[
 
 VerificationTest[QuantumBasis["Heisenberg", "Label" -> "x"]["Label"], "x", TestID -> "Picture-with-option-tail"]
 
+(* a picture also survives at the tail of the forms that reach the option rule as
+   QuantumBasis["Output" -> ..., "Input" -> ..., picture] rather than as a bare name *)
+
+VerificationTest[QuantumBasis["X", "Y", "Heisenberg"]["Picture"], "Heisenberg", TestID -> "Picture-trailing-after-two-names"]
+
+VerificationTest[QuantumBasis["X", "Y", "Heisenberg"]["Dimensions"], {2, 2}, TestID -> "Picture-trailing-keeps-both-qudits"]
+
+VerificationTest[
+    QuantumBasis[QuditBasis[2], QuditBasis[3], "Heisenberg"]["Dimensions"],
+    {2, 3},
+    TestID -> "Picture-trailing-after-QuditBasis-pair"
+]
+
+VerificationTest[QuantumBasis[{"X"}, {2}, "Heisenberg"]["Picture"], "Heisenberg", TestID -> "Picture-trailing-after-list-forms"]
+
+VerificationTest[QuantumBasis[QuditBasis[2], "Heisenberg"]["Picture"], "Heisenberg", TestID -> "Picture-trailing-after-QuditBasis"]
+
+(* whichever picture is written last wins, so an explicit option beats a picture before it
+   and loses to one after it *)
+
+VerificationTest[
+    QuantumBasis["Picture" -> "Interaction", "Heisenberg"]["Picture"],
+    "Interaction",
+    TestID -> "Picture-option-before-positional-wins"
+]
+
+VerificationTest[
+    QuantumBasis["Heisenberg", "Picture" -> "Interaction"]["Picture"],
+    "Heisenberg",
+    TestID -> "Picture-positional-before-option-wins"
+]
+
 (* an Integer tail is still a multiplicity, not a dimension *)
 
 VerificationTest[QuantumBasis["Heisenberg", 3]["Dimensions"], {2, 2, 2}, TestID -> "Picture-integer-tail-is-multiplicity"]
+
+(* a negative tail is not a multiplicity, and fails exactly as it does without a picture *)
+
+VerificationTest[
+    FailureQ @ QuantumBasis["Heisenberg", -1],
+    True,
+    {QuditBasis::invalidArgs},
+    TestID -> "Picture-negative-integer-tail-fails"
+]
 
 (* the two-name rule the picture guard sits on must keep reading its second argument as an input basis *)
 
