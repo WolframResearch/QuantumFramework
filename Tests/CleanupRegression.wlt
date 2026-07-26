@@ -12,6 +12,41 @@
    Each test uses fully-qualified context names to bypass the wolframscript
    shadowing of bare symbols against any system-installed paclet. *)
 
+(* Fixture paths anchor on the loaded paclet, not on the invoking script.
+   Under TestReport[file] the kernel leaves $InputFileName pointing at the
+   runner, so DirectoryName[$InputFileName] names whatever directory the
+   runner happens to occupy rather than this file's own. Rebinding it is not
+   an escape either: $InputFileName is a special symbol and Set on it raises
+   Set::specset. The paclet location is the same wherever the run starts from,
+   and it is the copy whose symbols these tests exercise. *)
+$qfPacletDirectory = Replace[
+  PacletObject["Wolfram/QuantumFramework"],
+  {
+    paclet_PacletObject :> paclet["Location"],
+    _ :> Replace[
+      FindFile["Wolfram`QuantumFramework`"],
+      {init_String :> DirectoryName[init, 2], _ :> $Failed}
+    ]
+  }
+];
+
+qfPacletFile[parts__String] := FileNameJoin[{$qfPacletDirectory, parts}];
+qfGuidePage[name_String] := qfPacletFile["Documentation", "English", "Guides", name];
+qfSymbolPage[name_String] :=
+  qfPacletFile["Documentation", "English", "ReferencePages", "Symbols", name];
+
+(* The anchor itself is a test: everything below silently mis-resolves if the
+   paclet cannot be located, and a mis-resolved fixture path fails as an
+   Import error rather than as a statement about the documentation. *)
+VerificationTest[
+  DirectoryQ[$qfPacletDirectory]
+  ,
+  True
+  ,
+  TestID -> "A0-PacletDirectory-Resolves"
+];
+
+
 BeginTestSection["A.2 - QuantumPartialTranspose (renamed file)"]
 
 (* The exported symbol must resolve in the framework context after the file
@@ -75,11 +110,7 @@ BeginTestSection["A.3 - ExampleRepository retirement; migration to QuantumOptimi
 
 (* The deleted file's path must NOT resolve any more. *)
 VerificationTest[
-  FileExistsQ[
-    FileNameJoin[{
-      DirectoryName[$InputFileName],
-      "..", "QuantumFramework", "Kernel", "ExampleRepository.m"
-    }]]
+  FileExistsQ[qfPacletFile["Kernel", "ExampleRepository.m"]]
   ,
   False
   ,
@@ -202,14 +233,7 @@ BeginTestSection["A.4 - Guide page integrity"]
 
 (* The Guide notebook must parse as a valid Notebook. *)
 VerificationTest[
-  Head[Import[
-    FileNameJoin[{
-      DirectoryName[$InputFileName],
-      "..", "QuantumFramework", "Documentation", "English", "Guides",
-      "WolframQuantumComputationFramework.nb"
-    }],
-    "Notebook"
-  ]]
+  Head[Import[qfGuidePage["WolframQuantumComputationFramework.nb"], "Notebook"]]
   ,
   Notebook
   ,
@@ -219,14 +243,7 @@ VerificationTest[
 (* The 3 broken symbol references must be gone from the Guide. *)
 VerificationTest[
   With[{
-    txt = Import[
-      FileNameJoin[{
-        DirectoryName[$InputFileName],
-        "..", "QuantumFramework", "Documentation", "English", "Guides",
-        "WolframQuantumComputationFramework.nb"
-      }],
-      "Text"
-    ]
+    txt = Import[qfGuidePage["WolframQuantumComputationFramework.nb"], "Text"]
   },
     {
       StringContainsQ[txt, "QuantumSchmidtDecomposition"],
@@ -243,14 +260,7 @@ VerificationTest[
 (* The Guide must NOT have XXXX placeholders any more. *)
 VerificationTest[
   StringCount[
-    Import[
-      FileNameJoin[{
-        DirectoryName[$InputFileName],
-        "..", "QuantumFramework", "Documentation", "English", "Guides",
-        "WolframQuantumComputationFramework.nb"
-      }],
-      "Text"
-    ],
+    Import[qfGuidePage["WolframQuantumComputationFramework.nb"], "Text"],
     "XXXX"
   ]
   ,
@@ -278,14 +288,7 @@ VerificationTest[
 
 (* The QuantumSimilarity reference page must exist and parse. *)
 VerificationTest[
-  Head[Import[
-    FileNameJoin[{
-      DirectoryName[$InputFileName],
-      "..", "QuantumFramework", "Documentation", "English", "ReferencePages",
-      "Symbols", "QuantumSimilarity.nb"
-    }],
-    "Notebook"
-  ]]
+  Head[Import[qfSymbolPage["QuantumSimilarity.nb"], "Notebook"]]
   ,
   Notebook
   ,
@@ -414,13 +417,7 @@ BeginTestSection["B.2 - Reference page bulk fills"]
 VerificationTest[
   AllTrue[
     {"QuantumState.nb", "QuantumChannel.nb", "QuantumCircuitOperator.nb"},
-    Head[Import[
-      FileNameJoin[{
-        DirectoryName[$InputFileName], "..", "QuantumFramework",
-        "Documentation", "English", "ReferencePages", "Symbols", #
-      }],
-      "Notebook"
-    ]] === Notebook &
+    Head[Import[qfSymbolPage[#], "Notebook"]] === Notebook &
   ]
   ,
   True
@@ -436,14 +433,7 @@ VerificationTest[
 VerificationTest[
   With[{
     keywords = FirstCase[
-      Import[
-        FileNameJoin[{
-          DirectoryName[$InputFileName], "..", "QuantumFramework",
-          "Documentation", "English", "ReferencePages", "Symbols",
-          "QuantumState.nb"
-        }],
-        "Notebook"
-      ],
+      Import[qfSymbolPage["QuantumState.nb"], "Notebook"],
       Cell[s_String, "Keywords", ___] :> s,
       "",
       Infinity
@@ -463,14 +453,7 @@ VerificationTest[
    pages. *)
 VerificationTest[
   StringContainsQ[
-    Import[
-      FileNameJoin[{
-        DirectoryName[$InputFileName], "..", "QuantumFramework",
-        "Documentation", "English", "ReferencePages", "Symbols",
-        "QuantumOperator.nb"
-      }],
-      "Text"
-    ],
+    Import[qfSymbolPage["QuantumOperator.nb"], "Text"],
     "paclet:Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework"
   ]
   ,

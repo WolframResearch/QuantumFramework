@@ -2,16 +2,16 @@
    Tests/CrossPackage_QuantumClifford.wlt -- cross-validation against the
    QuantumClifford.jl Julia package (Krastanov / QuantumSavory).
 
-   Source repo: External Packages/QuantumClifford.jl/
+   Source repo: QuantumSavory/QuantumClifford.jl. A local copy, when the
+   machine has one, is located by the resolver at the bottom of this file.
 
    This file extracts canonical results from QC.jl's published test suite
    (test/test_paulis.jl, test/test_ecc_syndromes.jl) and verifies our
    PauliStabilizer + QuantumOperator subsystem produces the same outputs.
 
-   Note: Julia / QuantumClifford.jl is not installed in the test environment,
-   so we cannot run live JC.jl comparison fixtures. The expected values below
-   are HARD-CODED FROM QC.jl's TEST FILES with explicit citations to source
-   lines, making the tests reproducible without Julia.
+   Note: no tier here runs Julia. The expected values below are HARD-CODED
+   FROM QC.jl's TEST FILES with explicit citations to source lines, so every
+   tier reproduces on a machine with no Julia at all.
 
    To add live-runtime QC.jl fixtures later, write a Julia script analogous to
    Tests/fixtures/generate_stim_fixtures.py that dumps stabilizer outputs to
@@ -286,32 +286,57 @@ VerificationTest[
 (* cross-references resolve.                                                    *)
 (* ============================================================================ *)
 
-(* Resolve the QC.jl source path with the same robustness as the Stim fixture *)
-(* finder above (works under TestReport / wolframscript -file / direct eval).  *)
-qcSourceCandidates = DeleteDuplicates @ DeleteCases[{
-    (* In Tests/Stabilizer/, walk two levels up to repo root. *)
-    If[StringQ[$InputFileName] && $InputFileName =!= "",
-        FileNameJoin[{
-            DirectoryName[$InputFileName], "..", "..",
-            "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"
-        }],
-        Nothing
-    ],
-    (* Pre-move location (Tests/), one level up. *)
-    If[StringQ[$InputFileName] && $InputFileName =!= "",
-        FileNameJoin[{
-            DirectoryName[$InputFileName], "..",
-            "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"
-        }],
-        Nothing
-    ],
-    FileNameJoin[{Directory[], "OngoingProjects", "Stabilizer", "External Packages", "QuantumClifford.jl"}],
-    "/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/Stabilizer/External Packages/QuantumClifford.jl"
-}, _Missing | None | Null];
+(* QC.jl is an external Julia package, not a repo artifact, so where it lives *)
+(* is a fact about the machine. Three places are searched, in order:          *)
+(*                                                                             *)
+(*   1. QUANTUMCLIFFORD_JL_DIR, for a checkout kept anywhere at all;          *)
+(*   2. a tree vendored under OngoingProjects/Stabilizer/External Packages/,  *)
+(*      located from the loaded paclet rather than from the invoking script,  *)
+(*      since $InputFileName names the runner under TestReport[file];          *)
+(*   3. the Julia depot, <depot>/packages/QuantumClifford/<slug>/, where the   *)
+(*      depots are JULIA_DEPOT_PATH when it is set and ~/.julia when not.      *)
+(*                                                                             *)
+(* Finding none of them is a legitimate machine state, not a defect, so the   *)
+(* on-disk check below is simply not emitted in that case.                     *)
 
-VerificationTest[
-    AnyTrue[qcSourceCandidates, DirectoryQ],
-    True,
-    {},
-    TestID -> "QC-PackageSource-OnDisk"
+qcRepoRoot = Replace[
+    PacletObject["Wolfram/QuantumFramework"],
+    {paclet_PacletObject :> ParentDirectory[paclet["Location"]], _ :> $Failed}
+];
+
+qcJuliaDepots = Replace[
+    Environment["JULIA_DEPOT_PATH"],
+    {
+        depots_String :> StringSplit[depots, ":"],
+        _ :> {FileNameJoin[{$HomeDirectory, ".julia"}]}
+    }
+];
+
+qcSourceCandidates = DeleteDuplicates @ DeleteCases[
+    Flatten @ {
+        Environment["QUANTUMCLIFFORD_JL_DIR"],
+        If[StringQ[qcRepoRoot],
+            FileNameJoin[{
+                qcRepoRoot, "OngoingProjects", "Stabilizer",
+                "External Packages", "QuantumClifford.jl"
+            }],
+            Nothing
+        ],
+        FileNames["*", FileNameJoin[{#, "packages", "QuantumClifford"}]] & /@ qcJuliaDepots
+    },
+    Except[_String]
+];
+
+qcSourcePath = SelectFirst[qcSourceCandidates, DirectoryQ, None];
+
+(* With a copy in reach it must carry the two test files whose line numbers   *)
+(* the tiers above cite, which is what "audit cross-references resolve" means.*)
+If[qcSourcePath =!= None,
+    VerificationTest[
+        FileExistsQ[FileNameJoin[{qcSourcePath, "test", #}]] & /@
+            {"test_paulis.jl", "test_ecc_syndromes.jl"},
+        {True, True},
+        {},
+        TestID -> "QC-PackageSource-OnDisk"
+    ]
 ]
