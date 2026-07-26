@@ -40,18 +40,31 @@ QuantumState["", args__] := namedStateTailRejected[""]
    Refusing over exactly the interval the clamp mapped into leaves every string
    that passed through it untouched, and the alphabet is DigitCharacter, so no
    digit can undershoot that interval and only its upper end is worth testing.
-   The two tests ahead of the range test are what make the condition decide one
-   way or the other: an unresolved basis answers "Dimension" with a Missing, and
-   a comparison against that is neither True nor False, which would leave the If
+   The tests ahead of the range test are what make the condition decide one way
+   or the other: an unresolved basis answers "Dimension" with a Missing, and a
+   comparison against that is neither True nor False, which would leave the If
    itself unevaluated and hand back neither a state nor a failure. They also put
    a tail that is no basis at all through this same refusal, rather than letting
-   it reach "BasisState" and report as an unmatched internal call shape. *)
+   it reach "BasisState" and report as an unmatched internal call shape, and they
+   keep a one-level tail away from "BasisState" too, that basis carrying no
+   qudits to divide the string among and so reaching a 1/0.
+
+   A digit in range is still no promise that the string as a whole names an
+   element. "BasisState" tiles the basis to cover the digits and reads them in
+   the first qudit's dimension, so a tuple can overrun the space its own digits
+   each fit in: "55" over three qubits asks for element 16 of 8. That came back
+   as a bare ConfirmationFailed carrying this file's private symbol names and no
+   message at all, so the last word goes to whether a state was actually built,
+   which is the one test that cannot drift out of step with "BasisState". *)
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
     basis = QuantumBasis[args, "Label" -> s],
     levels = Interpreter[DelimitedSequence["Digit", ""]] @ s
 },
-    If[ QuantumBasisQ[basis] && VectorQ[levels, IntegerQ] && AllTrue[levels, # < basis["Dimension"] &],
-        QuantumState["BasisState"[levels], basis],
+    If[ QuantumBasisQ[basis] && basis["Qudits"] > 0 && VectorQ[levels, IntegerQ] && Max[levels] < basis["Dimension"],
+        Replace[
+            QuantumState["BasisState"[levels], basis],
+            Except[_ ? QuantumStateQ] :> namedStateRejected[s]
+        ],
 
         namedStateRejected[s]
     ]

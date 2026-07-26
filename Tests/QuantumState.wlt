@@ -950,10 +950,8 @@ VerificationTest[
 (* The whole contract in one statement, rather than the handful of literals
    above: over every digit and every qudit dimension from two up, a state comes
    back exactly when the digit is a level that dimension holds. Dimension one is
-   left out because a one-level basis carries zero qudits, on which "BasisState"
-   divides by the qudit count; that is a separate defect this rule does not
-   reach, and folding it in here would hide it. Select rather than Union so a
-   failure names the pair that broke. *)
+   its own test below, being refused for a different reason than range. Select
+   rather than Union so a failure names the pair that broke. *)
 VerificationTest[
     Select[
         Tuples[{Range[0, 9], Range[2, 10]}],
@@ -962,6 +960,59 @@ VerificationTest[
     {},
     {QuantumState::invalidArgs, QuantumState::invalidArgs, QuantumState::invalidArgs, General::stop},
     TestID -> "Digit-range-sweep-admits-exactly-the-levels-the-basis-holds"
+]
+
+(* A one-level basis carries no qudits at all, so there is nothing for a digit to
+   be a level OF, whatever the digit. Reaching "BasisState" with one divided the
+   string among zero qudits and returned an assertion failure trailing a 1/0. *)
+VerificationTest[
+    QuantumState["0", 1],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-one-level-basis-has-no-levels-to-name"
+]
+
+(* Digits in range one by one still do not make the string a basis element.
+   "BasisState" tiles the basis over the digits and reads them in the first
+   qudit's dimension, so "55" asks three qubits for element 16 of 8: each digit
+   is under the dimension and the pair they spell is not. This used to come back
+   a bare ConfirmationFailed carrying the kernel's private symbol names, and
+   carrying no message at all, which is the same silence the clamp had. *)
+VerificationTest[
+    QuantumState["55", {2, 2, 2}],
+    Failure["InvalidArguments", _],
+    {QuantumState::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Digit-range-in-range-digits-can-still-overrun-the-space"
+]
+
+(* Whatever it is handed, the rule ends in one of exactly two places: the basis
+   element the string names, or its own refusal naming that string. Nothing in
+   between escapes, no internal failure tag and no unevaluated If. The accepted
+   half is held to a normalized ket and not merely to the QuantumState head, so a
+   half-built one would count as an escape. QuantumStateQ would say that in one
+   word but is PackageScope, and a test file reading it gets an inert
+   Global`QuantumStateQ instead, under which this Select can select nothing. *)
+VerificationTest[
+    Select[
+        {
+            {"0"}, {"101"}, {"2", 3}, {"12", 3}, {"0101", QuantumBasis[16]}, {"5", {2, 2, 2}},
+            {"9"}, {"2"}, {"3", 3}, {"99", 3}, {"55", {2, 2, 2}}, {"77", {2, 2, 2}},
+            {"23", QuantumBasis[{2, 3}]}, {"0", 1}, {"0", QuantumBasis[1]},
+            {"0", "NotABasis"}, {"0", QuantumState["Bell"]}, {"0", 3/2}
+        },
+        With[{result = QuantumState @@ #},
+            ! (
+                MatchQ[result, _QuantumState] && TrueQ[result["Norm"] == 1] ||
+                MatchQ[result, Failure["InvalidArguments", _]]
+            )
+        ] &
+    ],
+    {},
+    {QuantumState::invalidArgs, QuantumState::invalidArgs, QuantumState::invalidArgs, General::stop,
+     QuditBasis::invalidName},
+    TestID -> "Digit-range-rule-is-total-state-or-its-own-refusal"
 ]
 
 (* In range, nothing moved. The amplitude each digit string names is read back
