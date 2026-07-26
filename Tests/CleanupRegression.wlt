@@ -108,11 +108,15 @@ EndTestSection[]
 
 BeginTestSection["A.3 - ExampleRepository retirement; migration to QuantumOptimization"]
 
-(* The deleted file's path must NOT resolve any more. *)
+(* The deleted file's path must NOT resolve any more. The StringQ guard stops
+   this from certifying a deletion it never looked for: with the anchor
+   unresolved, qfPacletFile returns an unevaluated FileNameJoin and
+   FileExistsQ of that is False for the wrong reason. *)
 VerificationTest[
-  FileExistsQ[qfPacletFile["Kernel", "ExampleRepository.m"]]
+  StringQ[$qfPacletDirectory] &&
+    ! FileExistsQ[qfPacletFile["Kernel", "ExampleRepository.m"]]
   ,
-  False
+  True
   ,
   TestID -> "A3-File-Deleted"
 ];

@@ -293,8 +293,10 @@ VerificationTest[
 (*   2. a tree vendored under OngoingProjects/Stabilizer/External Packages/,  *)
 (*      located from the loaded paclet rather than from the invoking script,  *)
 (*      since $InputFileName names the runner under TestReport[file];          *)
-(*   3. the Julia depot, <depot>/packages/QuantumClifford/<slug>/, where the   *)
-(*      depots are JULIA_DEPOT_PATH when it is set and ~/.julia when not.      *)
+(*   3. the Julia depot, <depot>/packages/QuantumClifford/<slug>/. The depots  *)
+(*      come from JULIA_DEPOT_PATH when it is set and from ~/.julia when it    *)
+(*      is not, and an empty entry inside it stands for ~/.julia, which is     *)
+(*      how Julia itself reads one.                                            *)
 (*                                                                             *)
 (* Finding none of them is a legitimate machine state, not a defect, so the   *)
 (* on-disk check below is simply not emitted in that case.                     *)
@@ -307,7 +309,11 @@ qcRepoRoot = Replace[
 qcJuliaDepots = Replace[
     Environment["JULIA_DEPOT_PATH"],
     {
-        depots_String :> StringSplit[depots, ":"],
+        depots_String :> Replace[
+            StringSplit[depots, ":", All],
+            "" -> FileNameJoin[{$HomeDirectory, ".julia"}],
+            {1}
+        ],
         _ :> {FileNameJoin[{$HomeDirectory, ".julia"}]}
     }
 ];
