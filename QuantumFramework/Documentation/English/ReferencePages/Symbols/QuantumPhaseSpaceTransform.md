@@ -58,6 +58,23 @@ recovered with NotebookToMarkdown and re-verified against the repo kernel at d0c
      while its .md names none; the same was confirmed on the notebook built from this file.
   7. Output hints are written on one line. The recovery hard-wrapped the longer ones with
      backslash continuations inside the comment, which is only an annotation artefact.
+  8. The "GellMannMIC"[d] row described a "GellMann basis", naming a different basis that
+     this same table documents separately. The two are not one object: "GellMann"[d] is
+     the identity prepended to the Gell-Mann matrices (NamedBases.m:189), while
+     "GellMannMIC"[d] is the Gram dual of the GellMann MIC POVM (NamedBases.m:194,
+     MIC.m:113). Their traces separate them exactly, {d, 0, ...} against {1, 1, ...},
+     and at d = 3 the element lists were run and are unequal. The row now names
+     GellMannMIC, the basis it is about, as the parallel WignerMIC row above it does.
+  9. The table documented "QBismSIC"[d] but not the bare "QBismSIC", which three of the
+     page's own examples use. The bare form is the d = 2 default of that same definition
+     (NamedBases.m:274, over QBismSICPOVM[d : _Integer : 2] at MIC.m:156), and its
+     elements were confirmed identical to "QBismSIC"[2]: four 2 x 2 elements, Dimension
+     4. A bare row is added ahead of the parameterized one, worded as the other
+     bare/parameterized pairs here are, so the examples run on a documented form.
+ 10. Two typographic repairs, neither of which changes what the page claims. A caption
+     under Basic Examples read "returns the same stat as the one in the Hilbert space"
+     and now reads "state". Two rows read "Information-ally Complete", the residue of a
+     hyphenated line break in the notebook, and now read "Informationally Complete".
 Three further differences are the forward path's doing, not this file's, and were measured
 by converting the old and the new .nb with nb-reader and diffing:
   a. The Keywords cell is not emitted. The keywords survive in the frontmatter above and
@@ -91,15 +108,16 @@ by converting the old and the new .nb with nb-reader and diffing:
 | `"Wigner"[d]` | *d*-dimensional basis of the Wigner phase space operators with respect to the computational basis |
 | `"Wootters"` | 2-dimensional phase space basis |
 | `"Wootters"[p]` | *p*-dimensional phase space basis where *p* is a prime number |
-| `"WignerMIC"` | Phase space basis corresponding to the WignerMICPOVM measurement (Minimal Information-ally Complete) |
+| `"WignerMIC"` | Phase space basis corresponding to the WignerMICPOVM measurement (Minimal Informationally Complete) |
 | `"WignerMIC"[d]` | WignerMIC basis in the *d*-dimension |
 | `"Bloch"` | Phase space basis of generalized Bloch coordinates |
 | `"GellMannMIC"` | Phase space basis corresponding to the GellMannMICPOVM (generalized Pauli) measurements |
-| `"GellMannMIC"[d]` | GellMann basis in *d*-dimension |
-| `"Tetrahedron"` | Phase space basis corresponding to the TetrahedronSICPOVM measurements (Symmetric Information-ally Complete), which eigenstates form vertices of a [Tetrahedron]() |
+| `"GellMannMIC"[d]` | GellMannMIC basis in *d*-dimension |
+| `"Tetrahedron"` | Phase space basis corresponding to the TetrahedronSICPOVM measurements (Symmetric Informationally Complete), which eigenstates form vertices of a [Tetrahedron]() |
 | `"Tetrahedron"[a,b,c]` | A tetrahedron rotated by <code>"U"[*a*,*b*,*c*]</code> gate |
 | `"HesseSIC"` | 3-dimensional [Hesse](https://arxiv.org/abs/1609.03075) basis corresponding to the HesseSICPOVM |
 | `"HoggarSIC"` | 8-dimensional [Hoggar](https://arxiv.org/abs/1609.03075) basis corresponding to the HoggarSICPOVM |
+| `"QBismSIC"` | 2-dimensional numeric SIC from [QBism](https://github.com/heyredhat/qbism/tree/master/qbism/sic_povms) research program |
 | `"QBismSIC"[d]` | numeric SIC from [QBism](https://github.com/heyredhat/qbism/tree/master/qbism/sic_povms) research program up-to dimension $d=151$ |
 | `"RandomMIC"` | A random MIC basis based on Haar method |
 | `"RandomMIC"[Method->"Bloch"]` | A MIC basis based on random Bloch sphere affine transformation |
@@ -169,7 +187,7 @@ QuantumPhaseSpaceTransform[\[Rho], "QBismSIC"]["AmplitudesList"]
 ```
 <!-- => {0.39233282167545186, 0.27224439271969564, 0.09614688168225288, 0.23927590392259973} -->
 
-Check that the transformation in the phase space returns the same stat as the one in the Hilbert space:
+Check that the transformation in the phase space returns the same state as the one in the Hilbert space:
 
 ```wl
 QuantumWeylTransform@
