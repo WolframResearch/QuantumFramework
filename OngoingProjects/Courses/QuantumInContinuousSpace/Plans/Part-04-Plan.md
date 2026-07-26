@@ -29,24 +29,64 @@ generic = DSolveValue[h[u[x]] == en u[x], u, x]
 Returns a `Function` with body
 `C[2] ParabolicCylinderD[(-1-2 en)/2, I Sqrt[2] x] + C[1] ParabolicCylinderD[(-1+2 en)/2, Sqrt[2] x]`:
 two constants, every energy still admitted, nothing quantized yet. Do not attach decay conditions at
-$\pm\infty$ to force the issue, since `DSolve` then returns `{}` after roughly half a minute and
-`DSolveValue` returns unevaluated (C1 verdict, probe 3). Quantization arrives instead from the
-eigensolver, whose domain restricts the solution set, and it arrives as a return value:
+$\pm\infty$ to force the issue; ask what happens rather than assuming a hang:
+
+```wl
+AbsoluteTiming[DSolve[{h[u[x]] == en u[x], u[-Infinity] == 0, u[Infinity] == 0}, u, x]]
+```
+
+Returns `{27.8, {}}`, an empty solution set rather than a hang, with `DSolveValue` on the same system
+returning unevaluated; the cost is paid once per kernel and `ClearSystemCache[]` restores it. (The
+hang recorded in the C1 verdict belongs to the Coulomb radial problem, a different equation.) Decay
+has to enter through the eigensolver's domain instead, and quantization arrives there as a return
+value:
 
 ```wl
 {energies, eigenfunctions} = DEigensystem[h[u[x]], u[x], {x, -Infinity, Infinity}, 8]
 ```
 
-Returns `{1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2}` with $H_n(x)e^{-x^2/2}$. Now confront the two
-families so the reduction is computed rather than chosen: locate the free constants with
-`DeleteDuplicates@Cases[generic[x], C[_], Infinity]` (returns `{C[2], C[1]}`, traversal order, and
-the names depend on the `GeneratedParameters -> C` default), then match generic against admissible at
-$x=0$ in value and slope with a `Table` of `Solve` over the eight levels. Every level returns
-`C[2] -> 0` with $C_1=2^{(j-1)/2}$: the branch growing like $e^{+x^2/2}$ dies by admissibility, and
-"select the decaying branch" becomes an output instead of an instruction. Then the spectrum as a law,
-`FindSequenceFunction[energies, n]` returning `(-1 + 2 n)/2`, with the offset stated in the same
-breath since the Wolfram index is the quantum number plus one, giving $E_n=n+\tfrac12$ for
-$n=0,1,2,\dots$
+Returns `{1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2}` with $H_n(x)e^{-x^2/2}$. With no boundary
+condition supplied the eigensolver imposes Neumann-zero on the domain boundary, harmless on the whole
+line but not the same as decay, so this phrasing does not transfer to a finite interval without an
+explicit condition. Locate the free constants rather than counting them:
+
+```wl
+constants = DeleteDuplicates@Cases[generic[x], C[_], Infinity]
+```
+
+Returns `{C[2], C[1]}`, traversal order rather than naming order, and the names follow the
+`GeneratedParameters -> C` default. Now confront the two families so the reduction is computed rather
+than chosen. Note the two evaluation idioms inside one equation: `generic` is a `Function` so it
+takes `generic[0]`, while each eigenfunction is an expression so it takes `/. x -> 0`, and the energy
+must be substituted before solving:
+
+```wl
+matchingRules = Table[
+   Solve[{(generic[0] /. en -> energies[[j]]) == (eigenfunctions[[j]] /. x -> 0),
+          (D[generic[x], x] /. {x -> 0, en -> energies[[j]]}) ==
+            (D[eigenfunctions[[j]], x] /. x -> 0)},
+     constants],
+   {j, Length[energies]}]
+```
+
+Returns one solution per level, `{{C[2] -> 0, C[1] -> 1}}`, `{{C[2] -> 0, C[1] -> Sqrt[2]}}`,
+`{{C[2] -> 0, C[1] -> 2}}`, on through `{{C[2] -> 0, C[1] -> 8 Sqrt[2]}}`, so $C_1=2^{(j-1)/2}$ and
+`C[2] -> 0` at every level: the branch growing like $e^{+x^2/2}$ dies by admissibility, and "select
+the decaying branch" becomes an output instead of an instruction. Two things this does not show, both
+worth denying explicitly. The surviving $C_1$ is not a normalization, since the eigensolver does not
+normalize; confirm that rather than take it on trust with
+`Table[Integrate[eigenfunctions[[j]]^2, {x, -Infinity, Infinity}], {j, 8}]`, which returns
+`{Sqrt[Pi], 2 Sqrt[Pi], 8 Sqrt[Pi], 48 Sqrt[Pi], ...}`, that is $\|f_n\|^2=2^n n!\sqrt\pi$, so $C_1$
+is matching an arbitrary scale. And because the energies were substituted in before solving, this
+cell cannot return discreteness; it returns branch death at energies already quantized one cell
+earlier. Then the spectrum as a law:
+
+```wl
+FindSequenceFunction[energies, n]
+```
+
+Returns `(-1 + 2 n)/2`. State the offset in the same breath, since the Wolfram index is the quantum
+number plus one: $E_n=n+\tfrac12$ for $n=0,1,2,\dots$
 
 Refute on a carrier that is not the ground state. For $\psi_3\propto(2x^3-3x)e^{-x^2/2}$ (three
 nodes, at $0$ and $\pm\sqrt{3/2}$; the vibrational ladder),
@@ -56,7 +96,7 @@ work since the raw difference is a nonzero three-term expression. Pair it with
 `-I E^(x^2/2)/(Sqrt[2] x)`, which is why admissibility killed `C[2]`; prefer `Asymptotic` to
 `Series`, whose raw output hides the growth factor inside `SeriesData` until `Normal` is applied.
 Close on the count: level $n$ carries exactly $n$ nodes, and the returned spectrum is uniformly
-spaced by 1. Full worked chain with every quoted return in `ENTRY-DNA.md`.
+spaced by 1.
 
 ### 4.2 [BSc] How do I build the ladder operators $a=(\hat x+i\hat p)/\sqrt2$ and $a^\dagger$ as differential operators and verify $[a,a^\dagger]=1$?
 
