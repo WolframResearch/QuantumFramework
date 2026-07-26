@@ -18,34 +18,95 @@ coherent and squeezed states of 4.6 through 4.8 are measured.
 
 ### 4.1 [BSc] How do I solve the oscillator's stationary equation and obtain the Hermite-function eigenstates with energies $E_n=n+\tfrac12$?
 
-Solve the stationary ODE $-\tfrac12\psi''+\tfrac12x^2\psi=E\psi$ with DSolve at symbolic $E$ (C1
-per `Route-Table.md`), getting the general solution in ParabolicCylinderD/HermiteH form; never
-attach decay conditions at $\pm\infty$ (DSolve hangs), instead select the decaying branch by hand
-and read the quantization off as the manual termination condition, Solve giving $E_n=n+\tfrac12$.
-Take the $n=3$ state $\psi_3\propto(2x^3-3x)\,e^{-x^2/2}$ (three nodes, at $0$ and
-$\pm\sqrt{3/2}$; vibrational spectra) off the general solution, close the residual
-$\hat H\psi_3-\tfrac72\psi_3\to0$ with FullSimplify under integer and positivity assumptions, and
-show the nonterminating branch at generic $E$ grows like $e^{+x^2/2}$ (Series at large $x$): the
-check that refutes "any $E$ is allowed" and is itself the physics of quantization. Cross-check
-with independent machinery twice, per the C1 verdict: the exact DEigensystem domain form
-$\{x,-\infty,\infty\}$ returning $\{\tfrac12,\tfrac32,\tfrac52,\tfrac72\}$ with Hermite-Gaussians,
-and shifted NDEigenvalues with a mesh sweep (shift below $\tfrac12$ per class discipline, benign
-here since the spectrum is positive). Close by reading the node count off the carrier: level $n$
-carries exactly $n$ nodes.
+Bind the Hamiltonian as an operator on an expression, then solve at symbolic energy so the general
+solution still carries its constants:
+
+```wl
+h[f_] := -D[f, {x, 2}]/2 + x^2 f/2;
+generic = DSolveValue[h[u[x]] == en u[x], u, x]
+```
+
+Returns a `Function` with body
+`C[2] ParabolicCylinderD[(-1-2 en)/2, I Sqrt[2] x] + C[1] ParabolicCylinderD[(-1+2 en)/2, Sqrt[2] x]`:
+two constants, every energy still admitted, nothing quantized yet. Do not attach decay conditions at
+$\pm\infty$ to force the issue, since `DSolve` then returns `{}` after roughly half a minute and
+`DSolveValue` returns unevaluated (C1 verdict, probe 3). Quantization arrives instead from the
+eigensolver, whose domain restricts the solution set, and it arrives as a return value:
+
+```wl
+{energies, eigenfunctions} = DEigensystem[h[u[x]], u[x], {x, -Infinity, Infinity}, 8]
+```
+
+Returns `{1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2}` with $H_n(x)e^{-x^2/2}$. Now confront the two
+families so the reduction is computed rather than chosen: locate the free constants with
+`DeleteDuplicates@Cases[generic[x], C[_], Infinity]` (returns `{C[2], C[1]}`, traversal order, and
+the names depend on the `GeneratedParameters -> C` default), then match generic against admissible at
+$x=0$ in value and slope with a `Table` of `Solve` over the eight levels. Every level returns
+`C[2] -> 0` with $C_1=2^{(j-1)/2}$: the branch growing like $e^{+x^2/2}$ dies by admissibility, and
+"select the decaying branch" becomes an output instead of an instruction. Then the spectrum as a law,
+`FindSequenceFunction[energies, n]` returning `(-1 + 2 n)/2`, with the offset stated in the same
+breath since the Wolfram index is the quantum number plus one, giving $E_n=n+\tfrac12$ for
+$n=0,1,2,\dots$
+
+Refute on a carrier that is not the ground state. For $\psi_3\propto(2x^3-3x)e^{-x^2/2}$ (three
+nodes, at $0$ and $\pm\sqrt{3/2}$; the vibrational ladder),
+`FullSimplify[h[psi3] - (7/2) psi3]` returns the exact integer `0`, with `FullSimplify` doing real
+work since the raw difference is a nonzero three-term expression. Pair it with
+`Asymptotic[ParabolicCylinderD[-1, I Sqrt[2] x], x -> Infinity]`, returning
+`-I E^(x^2/2)/(Sqrt[2] x)`, which is why admissibility killed `C[2]`; prefer `Asymptotic` to
+`Series`, whose raw output hides the growth factor inside `SeriesData` until `Normal` is applied.
+Close on the count: level $n$ carries exactly $n$ nodes, and the returned spectrum is uniformly
+spaced by 1. Full worked chain with every quoted return in `ENTRY-DNA.md`.
 
 ### 4.2 [BSc] How do I build the ladder operators $a=(\hat x+i\hat p)/\sqrt2$ and $a^\dagger$ as differential operators and verify $[a,a^\dagger]=1$?
 
-Define the ladder pair as differential operators, $af=(xf+f')/\sqrt2$ and
-$a^\dagger f=(xf-f')/\sqrt2$, as pure functions built on D, and close $[a,a^\dagger]f=f$ with
-Simplify on a generic unassigned $f[x]$ (PIPELINE section 7): the generic-function proof is the
-check that refutes a sign error in $\hat p=-i\,d/dx$. Then act on the nodal $n=2$ carrier
-$\psi_2=(2x^2-1)\,e^{-x^2/2}/\sqrt{2\sqrt\pi}$ (ladder algebra) and earn the factors
-$a\psi_2=\sqrt2\,\psi_1$ and $a^\dagger\psi_2=\sqrt3\,\psi_3$ against the normalized HermiteH
-states with Integrate and FullSimplify, spot-checking $\langle\psi_1,a\psi_2\rangle=\sqrt2$ with
-NIntegrate reusing the same definitions. Keep this a generic-function proof rather than a matrix
-identity, since 4.4 owns the truncated matrices. Close with the general law the concrete action
-instantiates: $\sqrt n$ down, $\sqrt{n+1}$ up, an identity no finite matrix representation can
-hold exactly, the tension 4.4 exhibits.
+Bind the pair as operators on an expression, with $\hat p=-i\,d/dx$ making $a=(x+\partial_x)/\sqrt2$
+and $a^\dagger=(x-\partial_x)/\sqrt2$:
+
+```wl
+a[f_]  := (x f + D[f, x])/Sqrt[2];
+ad[f_] := (x f - D[f, x])/Sqrt[2];
+```
+
+A commutator is a statement about operators, so verify it on an unassigned function and never on a
+state:
+
+```wl
+Simplify[a[ad[f[x]]] - ad[a[f[x]]]]
+```
+
+Returns `f[x]`. That one return is the entire content of $[a,a^\dagger]=1$, and it refutes a sign
+slip in $\hat p$, which would return $-f[x]$ or an $x$-dependent expression instead. The same
+generic-$f$ move ties the algebra to the Hamiltonian rather than asserting the connection: with
+`h[f_] := -D[f, {x, 2}]/2 + x^2 f/2;`, `Simplify[ad[a[f[x]]] - (h[f[x]] - f[x]/2)]` returns `0`, so
+$\hat n=a^\dagger a=\hat H-\tfrac12$ holds as an operator identity, on any function at all.
+
+Now the ladder factors, at arbitrary level rather than one carrier. With
+`psi[n_, xx_] := HermiteH[n, xx] Exp[-xx^2/2]/Sqrt[2^n n! Sqrt[Pi]]`:
+
+```wl
+FullSimplify[a[psi[n, x]] - Sqrt[n] psi[n - 1, x],
+  Assumptions -> n > 0 && Element[n, Integers]]
+FullSimplify[ad[psi[n, x]] - Sqrt[n + 1] psi[n + 1, x],
+  Assumptions -> n >= 0 && Element[n, Integers]]
+```
+
+Both return `0`, and `ad[a[psi[n, x]]] - n psi[n, x]` does too. The $\sqrt n$ down and $\sqrt{n+1}$
+up are therefore a closed result at symbolic $n$, so nothing is generalized by hand and no law is
+asserted; the ledger's nodal carrier $\psi_2=(2x^2-1)e^{-x^2/2}/\sqrt{2\sqrt\pi}$ is then read off as
+the instance $a\psi_2=\sqrt2\,\psi_1$, $a^\dagger\psi_2=\sqrt3\,\psi_3$. Do not reach for
+`FindSequenceFunction` on the ratios here: on the surd sequence $\{1,\sqrt2,\sqrt3,2,\dots\}$ it
+returns unevaluated, so symbolic $n$ is what replaces inference in this entry.
+
+Two closing returns. The edge that bounds the ladder below: `Simplify[a[psi[0, x]]]` is exactly `0`
+while `ad[psi[0, x]] - psi[1, x]` is also `0`, so the ladder terminates downward and not upward, and
+that asymmetry is the whole reason a lowest state exists. Then a normalization discriminator that
+comes free from the eigensolver: hand `DEigensystem`'s own eigenfunctions to the same operators and
+the ratios return `2 Sqrt[2]` and `3 Sqrt[2]`, not $\sqrt2$ and $\sqrt3$, because that output is
+unnormalized with $\|f_n\|^2=2^n n!\sqrt\pi$. The $\sqrt n$ law is a statement about normalized
+states, and the mismatch is what says so rather than a warning in prose. Keep this a
+generic-function argument throughout; 4.4 owns the truncated matrices and the corner defect that no
+finite representation can avoid.
 
 ### 4.3 [BSc] How do I generate the whole spectrum algebraically from $a|0\rangle=0$ and the number operator $\hat n=a^\dagger a$?
 
