@@ -17,12 +17,36 @@
      FILE    <tab> file <tab> succeeded <tab> total
      OUTCOME <tab> outcome <tab> count
      TOTAL   <tab> succeeded <tab> total
+     ALERT   <tab> reason <tab> count
+     STATUS  <tab> GREEN or RED
+
+   STATUS carries the verdict, and it is not implied by the rest: a load-time
+   message, a message raised outside the tests, or a paclet resolved outside
+   this repository each leave every TEST and TOTAL line looking perfect while
+   the run is not to be believed. Diff TEST lines to see what moved; read
+   STATUS to see whether the run counts at all.
 
    Everything else is indented prose for a human reader. To compare a run
    against another commit:
 
      wolframscript -file Tests/RunTests.wls | grep '^TEST' | sort > after.tsv
      diff before.tsv after.tsv
+
+   A completed run always emits a TOTAL line and a STATUS line. That is the
+   contract, and a caller that cares should check it:
+
+     out=$(wolframscript -file Tests/RunTests.wls) || exit 1
+     grep -q '^TOTAL' <<<"$out" || exit 1
+
+   An abort inside a test file is caught and charged to that file, but Exit[]
+   inside one cannot be: it takes the kernel down where it stands, before any
+   total is written, and the shell then sees status 0. The absent TOTAL line is
+   the only evidence left. Running one kernel per test file is the robust cure,
+   at the price of paying a multi-second paclet load 32 times over.
+
+   Helper names here (emit, row, flat, clip, shown) share the Global` context
+   with every .wlt the runner reads, so a test file that assigns one of them
+   would rewrite the report rather than fail. None of the current 32 do.
 
    TestIDs are written in InputForm, which is load bearing rather than
    decorative. An ID built as "Dim-JX-" <> ToString[j] with half-integer j
@@ -51,7 +75,12 @@ clip[s_String] := If[StringLength[s] <= 800, s,
     StringTake[s, 800] <> "... (" <> ToString[StringLength[s]] <> " chars total)"
 ];
 
-row[tag_String, fields__String] := emit[StringRiffle[{tag, fields}, "\t"]];
+(* Fields are strings today.  Converting anything else rather than pattern
+   matching on String keeps a stray non-string from dropping a whole row in
+   silence, which would leave the TEST lines disagreeing with TOTAL. *)
+field[s_String] := s;
+field[e_] := flat[e];
+row[tag_String, fields___] := emit[StringRiffle[field /@ {tag, fields}, "\t"]];
 
 $rule = StringRepeat["-", 71];
 $heavyRule = StringRepeat["=", 71];
@@ -60,12 +89,30 @@ $heavyRule = StringRepeat["=", 71];
    HoldForm would re-issue the message. *)
 messageTag[m_] := StringTrim[flat[m], "HoldForm[" | "]"];
 
+(* Test outputs arrive held, and a mismatch is unreadable as HoldForm[1] against
+   HoldForm[999].  Safe here because these are already evaluated values; the same
+   move on a message would re-issue it, so ActualMessages keeps its wrapper. *)
+shown[expr_] := clip[flat[Replace[expr, HoldForm[x_] :> x]]];
+
 (* ------------------------------------------------------------------------ *)
 (* Paclet                                                                     *)
 (* ------------------------------------------------------------------------ *)
 
 $rootDir = AbsoluteFileName[DirectoryName[$InputFileName]];
-$pacletDir = AbsoluteFileName[FileNameJoin[{ParentDirectory[$rootDir], "QuantumFramework"}]];
+$pacletCandidate = FileNameJoin[{ParentDirectory[$rootDir], "QuantumFramework"}];
+
+(* Asked before AbsoluteFileName rather than after, so the path that is missing
+   can be named.  AbsoluteFileName answers $Failed and raises its own message,
+   and $Failed is not a String, so emit and row would then decline to print the
+   header and PACLET lines at all instead of reporting anything. *)
+If[! DirectoryQ[$pacletCandidate],
+    emit["  ERROR: no QuantumFramework directory beside " <> $rootDir];
+    emit["    looked for: " <> $pacletCandidate];
+    row["STATUS", "RED"];
+    Exit[1]
+];
+
+$pacletDir = AbsoluteFileName[$pacletCandidate];
 
 (* A directory added with PacletDirectoryLoad outranks an installed paclet of
    the same name, so the working tree is tested without touching whatever the
@@ -77,14 +124,19 @@ Needs["Wolfram`QuantumFramework`"];
    not be able to produce an all-green run. *)
 $loadMessages = $MessageList;
 
+(* On a path boundary, so that a sibling directory named QuantumFramework-old is
+   not read as living inside QuantumFramework. *)
+insideRepo[p_String] := p === $pacletDir || StringStartsQ[p, $pacletDir <> $PathnameSeparator];
+insideRepo[_] := False;
+
 (* Ground truth for which copy won, rather than an assumption about priority. *)
 $loadedFile = FindFile["Wolfram`QuantumFramework`"];
-$wrongCopy = ! (StringQ[$loadedFile] && StringStartsQ[$loadedFile, $pacletDir]);
+$wrongCopy = ! insideRepo[$loadedFile];
 
 $shadowing = Select[
     Cases[PacletFind["Wolfram/QuantumFramework"],
         p_ /; StringQ[p["Location"]] :> AbsoluteFileName[p["Location"]]],
-    ! StringStartsQ[#, $pacletDir] &
+    ! insideRepo[#] &
 ];
 
 (* ------------------------------------------------------------------------ *)
@@ -155,9 +207,12 @@ If[Length[$testFiles] == 0,
 emitResult[name_String, r_] := (
     row["TEST", name, flat[r["TestID"]], r["Outcome"]];
     If[r["Outcome"] =!= "Success",
-        emit["      expected: " <> clip[flat[r["ExpectedOutput"]]]];
-        emit["      actual:   " <> clip[flat[r["ActualOutput"]]]];
-        If[r["ExpectedMessages"] =!= {} || r["ActualMessages"] =!= {},
+        emit["      expected: " <> shown[r["ExpectedOutput"]]];
+        emit["      actual:   " <> shown[r["ActualOutput"]]];
+        (* ExpectedMessages comes back as HoldForm[{}] rather than {}, so testing
+           it against {} alone would tack an empty messages line onto every
+           ordinary wrong-result failure. *)
+        If[r["ActualMessages"] =!= {} || ! MatchQ[r["ExpectedMessages"], {} | HoldForm[{}]],
             emit["      messages: " <> clip[flat[r["ActualMessages"]]]]
         ];
     ]
@@ -172,13 +227,21 @@ runFile[file_] := With[{name = relative[file]},
     emit["  " <> name];
     emit[$rule];
     Enclose[
-        With[{report = ConfirmMatch[TestReport[file], _TestReportObject, "no report"]},
+        (* CheckAbort, because an Abort[] inside a test file stops TestReport from
+           ever returning: without it the run ends mid-file with no summary, no
+           totals and a status of 0.  Enclose alone does not catch an abort. *)
+        With[{report = ConfirmMatch[CheckAbort[TestReport[file], $Aborted],
+                _TestReportObject, "aborted, unreadable, or missing"]},
             With[{results = Values[report["TestResults"]]},
                 Scan[emitResult[name, #] &, results];
                 With[{census = Counts[#["Outcome"] & /@ results],
                       aborted = TrueQ[report["Aborted"]],
                       skipped = Length[report["TestsNotEvaluatedKeys"]]},
                     With[{total = Length[results], success = Lookup[census, "Success", 0]},
+                        (* TestReport hands back a report even for a file that is
+                           empty, unparseable, or absent, so a silent 0/0 is the
+                           shape a broken file takes.  It is not a pass. *)
+                        ConfirmAssert[total > 0, "file produced no tests"];
                         row["FILE", name, ToString[success], ToString[total]];
                         emit["  " <> ToString[success] <> "/" <> ToString[total] <> " succeeded"];
                         KeyValueMap[
@@ -196,9 +259,13 @@ runFile[file_] := With[{name = relative[file]},
         (* A file that cannot even be turned into a report counts as one
            failure of its own, so it can never pass by being unreadable. *)
         Function[failure,
-            emit["  RUNNER ERROR: " <> clip[flat[failure]]];
+            emit["  RUNNER ERROR: " <>
+                clip[Replace[failure["MessageTemplate"], Except[_String] :> flat[failure]]]];
             row["FILE", name, "0", "1"];
-            <|"File" -> name, "Census" -> <|"RunnerError" -> 1|>, "Aborted" -> True,
+            (* Not flagged as aborted: an abort is only one of the ways to land
+               here, alongside an empty or unparseable file, and the RunnerError
+               in the census is already what makes the run red. *)
+            <|"File" -> name, "Census" -> <|"RunnerError" -> 1|>, "Aborted" -> False,
               "Skipped" -> 0|>
         ]
     ]
@@ -247,14 +314,25 @@ If[$lateMessages =!= {},
     Scan[emit["    " <> messageTag[#]] &, $lateMessages];
 ];
 
+(* A green run means every test succeeded AND every test actually ran AND the
+   paclet under test is the one in this repository AND nothing said anything on
+   the way.  A test that never evaluated is not a test that passed. *)
+$alerts = Join[
+    If[$totalOther > 0, {{"NonSuccess", $totalOther}}, {}],
+    If[$wrongCopy, {{"PacletOutsideRepo", 1}}, {}],
+    If[$loadMessages =!= {}, {{"LoadMessages", Length[$loadMessages]}}, {}],
+    If[$lateMessages =!= {}, {{"MessagesOutsideTests", Length[$lateMessages]}}, {}],
+    With[{n = Count[$summaries, s_ /; s["Aborted"]]}, If[n > 0, {{"AbortedFiles", n}}, {}]],
+    With[{n = Total[#["Skipped"] & /@ $summaries]}, If[n > 0, {{"NotEvaluated", n}}, {}]]
+];
+
+(* The verdict has to reach the machine-readable stream too.  Every reason a run
+   is not to be believed other than a failing test leaves the TEST and TOTAL
+   lines looking perfect, so a diff of those alone would call a red run green. *)
 KeyValueMap[row["OUTCOME", #1, ToString[#2]] &, $census];
 row["TOTAL", ToString[$totalSuccess], ToString[$totalTests]];
+Scan[row["ALERT", First[#], ToString[Last[#]]] &, $alerts];
+row["STATUS", If[$alerts === {}, "GREEN", "RED"]];
 emit[$heavyRule];
 
-(* A green run means every test succeeded AND the paclet under test is the one
-   in this repository AND nothing said anything on the way. *)
-Exit[If[
-    $totalOther > 0 || $wrongCopy || $loadMessages =!= {} || $lateMessages =!= {} ||
-        AnyTrue[$summaries, #["Aborted"] &],
-    1, 0
-]]
+Exit[If[$alerts === {}, 0, 1]]
