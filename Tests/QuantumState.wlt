@@ -1015,6 +1015,77 @@ VerificationTest[
     TestID -> "Digit-range-rule-is-total-state-or-its-own-refusal"
 ]
 
+(* A level's place value is the size of everything to its right, so the levels of
+   a register whose qudits differ in size are read in a mixed radix. Reading them
+   all in the first qudit's dimension names a different element as soon as two
+   qudits disagree: |1,2> over dimensions {2, 3} landed on element 4, which is
+   |1,1>, and said nothing. The element a digit string names is the tensor
+   product of its single-qudit factors, which is the reading that does not go
+   through FromDigits at all and so cannot agree with the constructor by
+   construction. Select rather than Union so a failure names the case. *)
+mixedRadixCases[shapes_] := Flatten[
+    Map[Function[dims, Table[{d, dims}, {d, Tuples[Range[0, # - 1] & /@ dims]}]], shapes],
+    1
+];
+
+(* Prefix @ binds tighter than @@, so the tensor product must be bracketed:
+   vec @ QuantumTensorProduct @@ list would apply vec to the head instead. *)
+namedElement[digits_, dims_] :=
+    Normal[QuantumState[StringJoin[ToString /@ digits], QuantumBasis[dims]]["StateVector"]];
+
+productElement[digits_, dims_] := With[{
+    state = QuantumTensorProduct @@ MapThread[QuantumState[ToString[#1], #2] &, {digits, dims}]
+},
+    Normal[state["StateVector"]]
+];
+
+VerificationTest[
+    Select[
+        mixedRadixCases[{{2, 3}, {3, 2}, {2, 5}, {5, 2}, {3, 4}, {2, 3, 2}, {3, 2, 4}, {2, 2, 3}}],
+        namedElement @@ # =!= productElement @@ # &
+    ],
+    {},
+    {},
+    TestID -> "BasisState-mixed-dimension-register-uses-a-mixed-radix"
+]
+
+(* Equal-sized qudits are the case where one radix is every radix, so this half
+   must not have moved. *)
+VerificationTest[
+    Select[
+        mixedRadixCases[{{2, 2}, {3, 3}, {4, 4}, {2, 2, 2}, {3, 3, 3}, {2, 2, 2, 2}}],
+        namedElement @@ # =!= productElement @@ # &
+    ],
+    {},
+    {},
+    TestID -> "BasisState-uniform-register-unchanged-by-the-mixed-radix"
+]
+
+(* The single case the defect was found on, spelled out rather than swept. *)
+VerificationTest[
+    Normal @ QuantumState["12", QuantumBasis[{2, 3}]]["StateVector"],
+    Normal @ QuantumTensorProduct[QuantumState["1"], QuantumState["2", 3]]["StateVector"],
+    {},
+    TestID -> "BasisState-mixed-radix-names-the-element-it-spells"
+]
+
+(* A string shorter than the register still indexes the whole space, which is
+   what QuantumState["0", QuantumBasis[2, n]] asks for and what the padding
+   preserves. A single digit is its own value in any radix, so this reading and
+   the per-qudit one only ever meet here. *)
+VerificationTest[
+    {
+        Table[
+            Normal[QuantumState["0", QuantumBasis[2, n]]["StateVector"]] === Normal @ SparseArray[{1} -> 1, 2 ^ n],
+            {n, 1, 5}
+        ],
+        Normal[QuantumState["5", {2, 2, 2}]["StateVector"]] === Normal[QuantumState["101"]["StateVector"]]
+    },
+    {ConstantArray[True, 5], True},
+    {},
+    TestID -> "BasisState-short-string-still-indexes-the-whole-register"
+]
+
 (* In range, nothing moved. The amplitude each digit string names is read back
    independently, FromDigits placing the string in the qudit dimension rather
    than trusting the constructor to agree with itself, so a clamp still firing

@@ -173,11 +173,20 @@ QuantumState[(name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus
     QuantumTensorProduct @ Table[QuantumState[name, args], n]
 
 
+(* The place value of a level is the size of everything to its right, so the
+   levels are read in the basis's own mixed radix. Reading them all in the first
+   qudit's dimension agrees with that exactly when the qudits are the same size,
+   and silently names a different element when they are not: |1,2> over
+   dimensions {2, 3} landed on element 4, which is |1,1>. Padding on the left
+   keeps a string shorter than the register reading as a flat index into the
+   whole space, which is what QuantumState["0", QuantumBasis[2, n]] asks for, and
+   never truncates, the tiling above having already grown the basis to cover the
+   levels it was handed. *)
 QuantumState["BasisState"[basisElement_List : {1}], args___] := Enclose @ Block[{basis, dimension, elementPosition},
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
     basis = QuantumBasis[basis, Ceiling[Length[basisElement] / basis["Qudits"]]];
     dimension = basis["Dimension"];
-    elementPosition = FromDigits[basisElement, First[basis["Dimensions"]]] + 1;
+    elementPosition = FromDigits[PadLeft[basisElement, basis["Qudits"]], MixedRadix[basis["Dimensions"]]] + 1;
     ConfirmAssert[1 <= elementPosition <= dimension];
     QuantumState[SparseArray[{elementPosition} -> 1, dimension], basis]
 ]
