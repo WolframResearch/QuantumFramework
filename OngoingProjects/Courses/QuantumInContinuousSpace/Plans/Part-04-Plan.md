@@ -18,47 +18,37 @@ coherent and squeezed states of 4.6 through 4.8 are measured.
 
 ### 4.1 [BSc] How do I solve the oscillator's stationary equation and obtain the Hermite-function eigenstates with energies $E_n=n+\tfrac12$?
 
-Bind the Hamiltonian as an operator on an expression, then solve at symbolic energy so the general
-solution still carries its constants:
+The Hamiltonian as an operator, solved at symbolic energy:
 
 ```wl
 h[f_] := -D[f, {x, 2}]/2 + x^2 f/2;
 generic = DSolveValue[h[u[x]] == en u[x], u, x]
 ```
 
-Returns a `Function` with body
-`C[2] ParabolicCylinderD[(-1-2 en)/2, I Sqrt[2] x] + C[1] ParabolicCylinderD[(-1+2 en)/2, Sqrt[2] x]`:
-two constants, every energy still admitted, nothing quantized yet. Do not attach decay conditions at
-$\pm\infty$ to force the issue; ask what happens rather than assuming a hang:
+`Function[{x}, C[2] ParabolicCylinderD[(-1-2 en)/2, I Sqrt[2] x] + C[1] ParabolicCylinderD[(-1+2 en)/2, Sqrt[2] x]]`.
+It is a `Function`, not an expression, which is why later cells write `generic[0]` and `generic[x]`;
+two constants, every energy still allowed.
+
+The admissible pairs, where the domain does the quantizing. `Method -> "Normalize"` is load-bearing,
+without it the eigenfunctions come back scaled by $\sqrt{2^n n!\sqrt\pi}$:
 
 ```wl
-AbsoluteTiming[DSolve[{h[u[x]] == en u[x], u[-Infinity] == 0, u[Infinity] == 0}, u, x]]
+{energies, eigenfunctions} =
+  DEigensystem[h[u[x]], u[x], {x, -Infinity, Infinity}, 8, Method -> "Normalize"]
 ```
 
-Returns `{27.8, {}}`, an empty solution set rather than a hang, with `DSolveValue` on the same system
-returning unevaluated; the cost is paid once per kernel and `ClearSystemCache[]` restores it. (The
-hang recorded in the C1 verdict belongs to the Coulomb radial problem, a different equation.) Decay
-has to enter through the eigensolver's domain instead, and quantization arrives there as a return
-value:
+`{1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2}`, with $\psi_0=\pi^{-1/4}e^{-x^2/2}$ and its Hermite
+ladder.
 
-```wl
-{energies, eigenfunctions} = DEigensystem[h[u[x]], u[x], {x, -Infinity, Infinity}, 8]
-```
-
-Returns `{1/2, 3/2, 5/2, 7/2, 9/2, 11/2, 13/2, 15/2}` with $H_n(x)e^{-x^2/2}$. With no boundary
-condition supplied the eigensolver imposes Neumann-zero on the domain boundary, harmless on the whole
-line but not the same as decay, so this phrasing does not transfer to a finite interval without an
-explicit condition. Locate the free constants rather than counting them:
+The free parameters, found rather than counted:
 
 ```wl
 constants = DeleteDuplicates@Cases[generic[x], C[_], Infinity]
 ```
 
-Returns `{C[2], C[1]}`, traversal order rather than naming order, and the names follow the
-`GeneratedParameters -> C` default. Now confront the two families so the reduction is computed rather
-than chosen. Note the two evaluation idioms inside one equation: `generic` is a `Function` so it
-takes `generic[0]`, while each eigenfunction is an expression so it takes `/. x -> 0`, and the energy
-must be substituted before solving:
+`{C[2], C[1]}`, in traversal order.
+
+Match generic to admissible at $x=0$ in value and slope, and let `Solve` report what survives:
 
 ```wl
 matchingRules = Table[
@@ -69,34 +59,47 @@ matchingRules = Table[
    {j, Length[energies]}]
 ```
 
-Returns one solution per level, `{{C[2] -> 0, C[1] -> 1}}`, `{{C[2] -> 0, C[1] -> Sqrt[2]}}`,
-`{{C[2] -> 0, C[1] -> 2}}`, on through `{{C[2] -> 0, C[1] -> 8 Sqrt[2]}}`, so $C_1=2^{(j-1)/2}$ and
-`C[2] -> 0` at every level: the branch growing like $e^{+x^2/2}$ dies by admissibility, and "select
-the decaying branch" becomes an output instead of an instruction. Two things this does not show, both
-worth denying explicitly. The surviving $C_1$ is not a normalization, since the eigensolver does not
-normalize; confirm that rather than take it on trust with
-`Table[Integrate[eigenfunctions[[j]]^2, {x, -Infinity, Infinity}], {j, 8}]`, which returns
-`{Sqrt[Pi], 2 Sqrt[Pi], 8 Sqrt[Pi], 48 Sqrt[Pi], ...}`, that is $\|f_n\|^2=2^n n!\sqrt\pi$, so $C_1$
-is matching an arbitrary scale. And because the energies were substituted in before solving, this
-cell cannot return discreteness; it returns branch death at energies already quantized one cell
-earlier. Then the spectrum as a law:
+`{{C[2] -> 0, C[1] -> Pi^(-1/4)}}`, `{{C[2] -> 0, C[1] -> Pi^(-1/4)}}`,
+`{{C[2] -> 0, C[1] -> 1/(Sqrt[2] Pi^(1/4))}}`, and on. `C[2] -> 0` at every level, and the surviving `C[1]` is the
+normalization constant, $1/\sqrt{n!\sqrt\pi}$. The normalization is inherited from
+`Method -> "Normalize"` on the right-hand side rather than derived here: drop that option and the
+same `Solve` returns `C[1] -> 2^{n/2}`, that is `{1, Sqrt[2], 2, 2 Sqrt[2], 4, ...}`, since the
+eigensolver's raw output is $H_n e^{-x^2/2}$ while the branch carries
+$D_n(\sqrt2 x)=2^{-n/2}H_n e^{-x^2/2}$; only $n=0$ gives 1. An unrecognized `Method` string is ignored
+silently with no message, so a typo degrades to the unnormalized reading without warning.
+
+The spectrum as a law:
 
 ```wl
 FindSequenceFunction[energies, n]
 ```
 
-Returns `(-1 + 2 n)/2`. State the offset in the same breath, since the Wolfram index is the quantum
-number plus one: $E_n=n+\tfrac12$ for $n=0,1,2,\dots$
+`(-1 + 2 n)/2`, on a one-indexed list, so $E_n=n+\tfrac12$ for $n=0,1,2,\dots$
 
-Refute on a carrier that is not the ground state. For $\psi_3\propto(2x^3-3x)e^{-x^2/2}$ (three
-nodes, at $0$ and $\pm\sqrt{3/2}$; the vibrational ladder),
-`FullSimplify[h[psi3] - (7/2) psi3]` returns the exact integer `0`, with `FullSimplify` doing real
-work since the raw difference is a nonzero three-term expression. Pair it with
-`Asymptotic[ParabolicCylinderD[-1, I Sqrt[2] x], x -> Infinity]`, returning
-`-I E^(x^2/2)/(Sqrt[2] x)`, which is why admissibility killed `C[2]`; prefer `Asymptotic` to
-`Series`, whose raw output hides the growth factor inside `SeriesData` until `Normal` is applied.
-Close on the count: level $n$ carries exactly $n$ nodes, and the returned spectrum is uniformly
-spaced by 1.
+Why no other energy survives. Test the surviving branch at both ends, not one:
+
+```wl
+br = ParabolicCylinderD[(-1 + 2 en)/2, Sqrt[2] x];
+Table[Limit[br /. en -> e, x -> s Infinity], {e, {1/2, 7/2, 7/10}}, {s, {1, -1}}]
+```
+
+`{{0, 0}, {0, 0}, {0, -Infinity}}`. This branch decays at $+\infty$ for every energy, so quantization
+is enforced at $-\infty$ alone; testing only $+\infty$ would pass the inadmissible $E=7/10$. The
+other branch is excluded too, but do not lean on `Limit` to show it. At $E=1/2$,
+`Limit[ParabolicCylinderD[(-1 - 2 en)/2, I Sqrt[2] x] /. en -> 1/2, x -> #] & /@ {Infinity, -Infinity}`
+returns `{DirectedInfinity[-I], DirectedInfinity[I]}`; at $E=7/2$ the same call returns `0` although
+$|D_{-4}(i\sqrt2 x)|$ is $1.4\times10^{17}$ at $x=10$, and at $E=3/2$ and $5/2$ it returns
+unevaluated. Read the exclusion off the asymptotic
+$D_\nu(i\sqrt2 x)\sim(i\sqrt2 x)^\nu e^{x^2/2}$, which is what `C[2] -> 0` was enforcing.
+
+Residual on a carrier that is not the ground state:
+
+```wl
+psi3 = (2 x^3 - 3 x) Exp[-x^2/2];
+FullSimplify[h[psi3] - (7/2) psi3]
+```
+
+`0`, and the proportionality constant is irrelevant since the equation is linear.
 
 ### 4.2 [BSc] How do I build the ladder operators $a=(\hat x+i\hat p)/\sqrt2$ and $a^\dagger$ as differential operators and verify $[a,a^\dagger]=1$?
 
