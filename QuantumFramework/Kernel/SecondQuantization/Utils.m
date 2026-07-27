@@ -20,6 +20,8 @@ PackageExport["ToBosonicOperator"]
 
 PackageScope["ExtractNCVars"]
 
+PackageScope["LiftNCScalars"]
+
 PackageScope["FormalSymbolQ"]
 
 PackageExport["G2Coherence"]
@@ -80,14 +82,29 @@ ExtractNCVars[ops_List] :=
     DeleteDuplicates @ Cases[ops, (v : (_? FormalSymbolQ | SuperDagger[_? FormalSymbolQ])) :> v, {0, Infinity}]
 
 
-(* Working order for default behavior of NCA in version 15 *)
-OrderVariables[vars_List] := Block[{annihilators, creators},
+(* lift commuting coefficients out of generalized powers and ** products, so that the
+   remaining non-commutative factors are bare ladder operators *)
+LiftNCScalars[expr_, vars_List] := expr //. {
+    GeneralizedPower[NonCommutativeMultiply, Times[c_, op_], n_Integer ? Positive] /;
+        FreeQ[c, Alternatives @@ vars] :>
+            c^n GeneralizedPower[NonCommutativeMultiply, op, n],
+    NonCommutativeMultiply[x___, Times[c_, y__], z___] /;
+        FreeQ[c, Alternatives @@ vars] :>
+            c NonCommutativeMultiply[x, y, z]
+}
+
+
+(* Working order for default behavior of NCA in version 15. *)
+OrderVariables[vars_List, direction_String : "Normal"] := Block[{annihilators, creators},
 
     annihilators = Select[vars, FreeQ[#, SuperDagger] &];
-    
+
     creators     = Select[vars, !FreeQ[#, SuperDagger] &];
-    
-    Join[Sort[creators],Sort[annihilators]]
+
+    If[ direction === "AntiNormal",
+        Join[Sort[annihilators],Sort[creators]],
+        Join[Sort[creators],Sort[annihilators]]
+    ]
 ]
 
 

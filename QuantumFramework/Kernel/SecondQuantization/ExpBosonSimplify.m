@@ -6,8 +6,7 @@ PackageExport["ExpBosonOrder"]
 PackageExport["NormalOrdered"]
 
 
-algA[v_]    := algA[v]    = NonCommutativeAlgebra[<|"Generators" -> {v}|>];
-algAdag[v_] := algAdag[v] = NonCommutativeAlgebra[<|"Generators" -> {SuperDagger[v]}|>];
+algA[v_]    := algA[v]    = NonCommutativeAlgebra[<|"Generators" -> {v, SuperDagger[v]}|>];
 
 
 getNCPower[var_, var_] := 1;
@@ -52,15 +51,15 @@ rulesNO = {
             beta_ (SuperDagger[v_?FormalSymbolQ] ** SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], 2])] :>
         With[{omega = 2 Sqrt[alpha beta]},
             Exp[((beta Tan[omega]) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/omega] **
-                Sqrt[Sec[omega]] Exp[Log[Sec[omega]] SuperDagger[v] ** v] **
+                Exp[Log[Sec[omega]] (1/2 + SuperDagger[v] ** v)] **
                 Exp[((alpha Tan[omega]) GeneralizedPower[NonCommutativeMultiply, v, 2])/omega]
         ],
 
-    Exp[alpha_ v_?FormalSymbolQ] ** expr_ /; NonCommutativePolynomialQ[expr, algAdag[v]] :>
-        NonCommutativeExpand[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, algAdag[v]] ** Exp[alpha v],
+    Exp[alpha_ v_?FormalSymbolQ] ** expr_ /; NonCommutativePolynomialQ[expr, algA[v]] :>
+        BosonicNormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, {v, SuperDagger[v]}] ** Exp[alpha v],    
 
-    expr_ ** Exp[beta_ SuperDagger[v_?FormalSymbolQ]] /; NonCommutativePolynomialQ[expr, v, algA[v]] :>
-        Exp[beta SuperDagger[v]] ** NonCommutativeExpand[expr /. {v -> v + beta}, algA[v]],
+    expr_ ** Exp[beta_ SuperDagger[v_?FormalSymbolQ]] /; NonCommutativePolynomialQ[expr, algA[v]] :>
+        Exp[beta SuperDagger[v]] ** BosonicNormalOrder[expr /. {SuperDagger[v]-> SuperDagger[v], v -> v + beta}, {v, SuperDagger[v]}],
 
     Exp[lambda_*(adagL : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])) **
             v_?FormalSymbolQ ** (adagR : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _]))] :>
@@ -99,11 +98,80 @@ canonicalizeModeOrder[expr_] :=
         NonCommutativeMultiply[a, y, x, b]
 
 
-NormalOrdered[expr_]["Series"] := expr /. {Exp[l_ SuperDagger[v_] ** v_] :> With[{k = Global`k}, Inactivate[Sum[
-            (l^k/k!) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], k] **
-                GeneralizedPower[NonCommutativeMultiply, v, k],
-            {k, 0, Infinity}
-        ], Sum]] }
+
+
+ladderPower[op_, 0] := 1
+ladderPower[op_, p_] := GeneralizedPower[NonCommutativeMultiply, op, p]
+
+ladderMonomial[adag_, 0, a_, 0] := 1
+ladderMonomial[adag_, m_, a_, 0] := ladderPower[adag, m]
+ladderMonomial[adag_, 0, a_, k_] := ladderPower[a, k]
+ladderMonomial[adag_, m_, a_, k_] := ladderPower[adag, m] ** ladderPower[a, k]
+
+expNSeriesTerm[coeff_, v_] := With[{k = If[FreeQ[coeff, Global`k], Global`k, K[1]]},
+    Inactivate[Sum[
+        (coeff^k/k!) ladderMonomial[SuperDagger[v], k, v, k],
+        {k, 0, Infinity}
+    ], Sum]
+]
+
+
+
+NormalOrdered /: Times[c_, NormalOrdered[expr_]] /; FreeQ[c, _?FormalSymbolQ] := NormalOrdered[c expr]
+
+
+NormalOrdered[expr_]["Series"] := expr /. {
+    Exp[c_. + coeff_ SuperDagger[v_] ** v_] /; FreeQ[c, _?FormalSymbolQ] :>
+        Exp[c] expNSeriesTerm[coeff, v]
+}
+
+
+dequantizeLadder[expr_, v_, x_, y_] := expr /. {
+    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
+    SuperDagger[v] -> x,
+    v -> y,
+    NonCommutativeMultiply -> Times
+}
+
+
+NormalOrdered[expr_]["Series", lambda_Symbol] := Module[{v, x, y, n, coefN},
+    v = First[Cases[expr, SuperDagger[w_] :> w, Infinity], None];
+    If[v === None, Return[$Failed]];
+    n = If[lambda =!= Global`n && FreeQ[expr, Global`n], Global`n, K[1]];
+    coefN = SeriesCoefficient[dequantizeLadder[expr, v, x, y], {lambda, 0, n}];
+    
+    coefN = coefN /. Piecewise[{{val_, _}}, _] :> val;
+    NormalOrdered @ Inactivate[
+        Sum[lambda^n (coefN /. {x -> SuperDagger[v], y -> v}), {n, 0, Infinity}],
+        Sum
+    ]
+]
+
+
+NormalOrdered[expr_]["Series", lambda_Symbol, order_Integer] := Module[{v, x, y},
+    v = First[Cases[expr, SuperDagger[w_] :> w, Infinity], None];
+    If[v === None, Return[$Failed]];
+    NormalOrdered[
+        Normal @ Series[dequantizeLadder[expr, v, x, y], {lambda, 0, order}] /.
+            {x -> SuperDagger[v], y -> v}
+    ]
+]
+
+
+
+ncMonomials[expr_, v_] := Module[{x, y},
+    Total[
+        (#[[2]] ladderMonomial[SuperDagger[v], #[[1, 1]], v, #[[1, 2]]]) & /@
+        CoefficientRules[Expand[dequantizeLadder[expr, v, x, y]], {x, y}]
+    ]
+]
+
+
+NormalOrdered[expr_] /; Module[{v, x, y},
+        v = First[Cases[expr, SuperDagger[w_] :> w, Infinity], None];
+        v =!= None && PolynomialQ[dequantizeLadder[expr, v, x, y], {x, y}]
+    ] :=
+    ncMonomials[expr, First[Cases[expr, SuperDagger[w_] :> w, Infinity]]]
 
 
 expApplyRules[expr_, assum_] :=

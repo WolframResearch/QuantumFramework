@@ -6,6 +6,8 @@ PackageExport["BosonicRelations"]
 
 PackageExport["BosonicNormalOrder"]
 
+PackageExport["BosonicAntiNormalOrder"]
+
 PackageExport["BosonicBCHTerms"]
 
 PackageExport["BosonicZassenhausTerms"]
@@ -33,9 +35,9 @@ Block[{pairs},
 ]
 
 
-grobnerNormalOrder[expr_, vars_List, scalars_List] :=
+grobnerNormalOrder[expr_, vars_List, scalars_List, direction_String : "Normal"] :=
 Block[{
-    orderedVars = OrderVariables[vars],
+    orderedVars = OrderVariables[vars, direction],
     rels,
     alg
 },
@@ -43,7 +45,7 @@ Block[{
     If[ Length[scalars] > 0,
         alg = NonCommutativeAlgebra["ScalarVariables" -> scalars];
         NonCommutativePolynomialReduce[expr, rels, orderedVars, alg][[2]],
-        NonCommutativePolynomialReduce[expr, rels, orderedVars][[2]]
+        NonCommutativePolynomialReduce[expr, rels, NonCommutativeAlgebra[<|"Generators"-> orderedVars|>]][[2]]
     ]
 ]
 
@@ -70,6 +72,54 @@ Block[{
     If[ method === "Blasiak",      Return[MultiModeBlasiakOrder[expr, vars, scalars]] ];
     Message[BosonicNormalOrder::unknownMethod, method];
     $Failed
+]
+
+
+(* a -> a\[Dagger], a\[Dagger] -> -a is an automorphism ([a\[Dagger], -a] = 1) carrying a normal-ordered
+   monomial to an anti-ordered one, so conjugating by it turns any normal-ordering
+   method into an anti-normal one.  "Inverse" maps the result back. *)
+ladderSwap[expr_, vars_List, direction_String : "Forward"] :=
+Block[{
+    swap = Catenate @ Map[
+        If[ direction === "Inverse",
+            {SuperDagger[#] -> #, # -> -SuperDagger[#]} &,
+            {SuperDagger[#] -> -#, # -> SuperDagger[#]} &
+        ],
+        Select[vars, FreeQ[#, SuperDagger] &]
+    ]
+},
+    LiftNCScalars[expr /. swap, vars]
+]
+
+
+BosonicAntiNormalOrder::usage =
+"\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+
+BosonicAntiNormalOrder::unknownMethod = "Unknown Method: `1`."
+
+Options[BosonicAntiNormalOrder] = Options[BosonicNormalOrder]
+
+BosonicAntiNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
+With[{
+    method = OptionValue[Method],
+    scalars = OptionValue["Scalars"]
+},
+    If[ MatchQ[expr, _Plus],
+        Return[Total[ParallelMap[
+            BosonicAntiNormalOrder[#, vars, "Scalars" -> scalars, Method -> method] &,
+            List @@ expr
+        ]]]
+    ];
+    Replace[method, {
+        "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "AntiNormal"],
+        (* normal-order the swapped monomial, then swap back *)
+        "Blasiak" :> ladderSwap[
+            MultiModeBlasiakOrder[ladderSwap[expr, vars], vars, scalars],
+            vars,
+            "Inverse"
+        ],
+        _ :> (Message[BosonicAntiNormalOrder::unknownMethod, method]; $Failed)
+    }]
 ]
 
 

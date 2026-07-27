@@ -94,7 +94,7 @@ ParseBlasiakMonomial[expr_, var_] :=
           {"unknown", 0}
       ];
       If[typ === "unknown",
-        Message[ParseBlasiakMonomial::badfactor, pow];
+        Message[ParseBlasiakMonomial::badfactor, f];
         Return[$Failed]
       ];
       If[Length[blocks] > 0 && blocks[[-1, 1]] === typ,
@@ -129,8 +129,15 @@ MultiModeBlasiakOrder[exprIn_, vars_List, scalars_List] :=
       NonCommutativeMultiply[a___, NonCommutativeMultiply[b__], c___] :>
           NonCommutativeMultiply[a, b, c]
     };
-     
-    factors = If[MatchQ[expr, _NonCommutativeMultiply], List @@ expr, {expr}];
+
+    (* a coefficient is not part of a ladder monomial: ParseBlasiakMonomial must see
+       bare ladder factors, and the coefficient is restored at the end *)
+    expr = LiftNCScalars[expr, vars];
+
+    factors = Catenate @ Map[
+      Replace[{ncm_NonCommutativeMultiply :> List @@ ncm, f_ :> {f}}],
+      Replace[expr, {p : (_Times | _NonCommutativeMultiply) :> List @@ p, e_ :> {e}}]
+    ];
 
     With[{altVars = Alternatives @@ vars},
         scalarFactors = Select[factors, FreeQ[#, altVars] &];
