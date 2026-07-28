@@ -10,7 +10,7 @@ qiskitOK = TrueQ @ Quiet @ Check[Head[QuantumCircuitOperator["Bell"]["Qiskit"]] 
 SetAttributes[qtest, HoldAll];
 qtest[actual_, expected_, id_] := VerificationTest[If[qiskitOK, actual, "skip"], If[qiskitOK, expected, "skip"], TestID -> id];
 
-pe = Wolfram`QuantumFramework`PackageScope`PythonEvaluate;
+pe = PythonEvaluate;
 
 qc    = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1}, {2}}];   (* Bell + measure *)
 qcU   = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}];             (* unitary, no measure *)
@@ -304,7 +304,7 @@ qtest[StringStartsQ[QuantumQASM[qc, "Backend" -> 5, "Provider" -> "GenericV2", "
    submission time. These are pure-WL checks (no qiskit / no credentials needed) so they run
    in CI and lock the decode against silent mis-ordering. *)
 
-reorder = Wolfram`QuantumFramework`PackageScope`qiskitReorderByQubit;
+reorder = qiskitReorderByQubit;
 
 VerificationTest[reorder[{1, 0, 1}, {0, 1, 2}], {1, 0, 1}, TestID -> "reorder-identity"]
 VerificationTest[reorder[{1, 1, 0}, {2, 0, 1}], {1, 0, 1}, TestID -> "reorder-permuted"]
@@ -619,7 +619,7 @@ BeginTestSection["IBMJobSubmitOptionValidation"]
    cross-primitive hint) with StringContainsQ; the trailing "Valid options here: ..." list is
    checked only for representative entries, since qiskit may add option fields between versions. *)
 
-iv = Wolfram`QuantumFramework`PackageScope`ibmValidatePrimitiveOptions;
+iv = ibmValidatePrimitiveOptions;
 ivMsg[prim_String, o_Association] := Replace[iv[prim, o], f_?FailureQ :> f[[2]]["MessageParameters"][[1]]];
 
 (* a key valid only on the OTHER primitive (resilience_level is estimator-only) gets the full

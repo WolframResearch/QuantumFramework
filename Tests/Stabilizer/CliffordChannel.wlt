@@ -19,13 +19,13 @@ Needs["Wolfram`QuantumFramework`"];
 (* ============================================================================ *)
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`CliffordChannelQ @ CliffordChannel["Identity", 1],
+    CliffordChannelQ @ CliffordChannel["Identity", 1],
     True,
     TestID -> "Phase8.1-CliffordChannelQ-Identity-1"
 ]
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`CliffordChannelQ @ CliffordChannel["Identity", 3],
+    CliffordChannelQ @ CliffordChannel["Identity", 3],
     True,
     TestID -> "Phase8.1-CliffordChannelQ-Identity-3"
 ]
@@ -93,7 +93,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`CliffordChannelQ @ CliffordChannel[PauliStabilizer["5QubitCode"]],
+    CliffordChannelQ @ CliffordChannel[PauliStabilizer["5QubitCode"]],
     True,
     TestID -> "Phase8.1-PSStateAsChannel-5QCode-Valid"
 ]
@@ -151,7 +151,7 @@ VerificationTest[
    composition's Choi tableau should still encode the identity channel. *)
 VerificationTest[
     Module[{cc = CliffordChannel["Identity", 1] @ CliffordChannel["Identity", 1]},
-        Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc] &&
+        CliffordChannelQ[cc] &&
         cc["InputQubits"] == 1 && cc["OutputQubits"] == 1
     ],
     True,
@@ -299,8 +299,8 @@ VerificationTest[
 (* result on second call (consistent dispatch).                                 *)
 VerificationTest[
     Module[{cc = CliffordChannel[PauliStabilizer[1]], q1, q2},
-        q1 = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc];
-        q2 = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc];
+        q1 = CliffordChannelQ[cc];
+        q2 = CliffordChannelQ[cc];
         q1 === q2 === True
     ],
     True,
@@ -474,7 +474,7 @@ VerificationTest[
                     cc1 = CliffordChannel["Identity", 3];
                     cc2 = CliffordChannel[ps];
                     composed = cc1 @ cc2;
-                    Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[composed] &&
+                    CliffordChannelQ[composed] &&
                     composed["Rank"] == 3
                 ],
                 {6}
@@ -500,7 +500,7 @@ VerificationTest[
 
 (* Single-row selection has no XORs => phase 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 0}, {0, 1}}, {1, 0}, 1
     ],
     0,
@@ -510,7 +510,7 @@ VerificationTest[
 
 (* X then Z: X*Z = -iY, phase = 3 mod 4. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 0}, {0, 1}}, {1, 1}, 1
     ],
     3,
@@ -523,7 +523,7 @@ VerificationTest[
    For Z then X selection order, we'd swap: but the helper uses the order of
    ROWS in the input matrix (which we use [Z, X] explicitly here). *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{0, 1}, {1, 0}}, {1, 1}, 1
     ],
     1,
@@ -533,7 +533,7 @@ VerificationTest[
 
 (* Y then Z: Y*Z = iX, phase = 1 mod 4. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 1}, {0, 1}}, {1, 1}, 1
     ],
     1,
@@ -543,7 +543,7 @@ VerificationTest[
 
 (* Z then Y: Z*Y = -iX, phase = 3 mod 4. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{0, 1}, {1, 1}}, {1, 1}, 1
     ],
     3,
@@ -554,7 +554,7 @@ VerificationTest[
 (* X*X = I, phase = 0. (Same Pauli twice, F2 sum = 0, phase 0 since
    agPhase(1,0,1,0) = z(2x-1) = 0(2-1) = 0.) *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 0}, {1, 0}}, {1, 1}, 1
     ],
     0,
@@ -564,7 +564,7 @@ VerificationTest[
 
 (* Y*Y = I, phase: agPhase(1,1,1,1) = z-x = 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 1}, {1, 1}}, {1, 1}, 1
     ],
     0,
@@ -574,7 +574,7 @@ VerificationTest[
 
 (* Empty selection => phase 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 0}, {0, 1}}, {0, 0}, 1
     ],
     0,
@@ -616,7 +616,7 @@ VerificationTest[
    This is associativity violation? No, matrix multiplication is associative.
    Let me recompute carefully. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerRowSumAGPhase[
+    stabilizerRowSumAGPhase[
         {{1, 0}, {0, 1}, {1, 0}}, {1, 1, 1}, 1
     ],
     2,   (* X * Z = phase 3, then (X*Z) * X = phase 3+3=6 mod 4 = 2. *)
@@ -631,7 +631,7 @@ VerificationTest[
 
 (* Combined u_B = I (zeros) -> contraction phase = 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{0, 0}, 1],
+    stabilizerContractionPhase[{0, 0}, 1],
     0,
     {},
     TestID -> "Phase8.3-ContractionPhase-Identity"
@@ -639,7 +639,7 @@ VerificationTest[
 
 (* Combined u_B = X (a=1, b=0) -> a*b=0 -> phase = 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 0}, 1],
+    stabilizerContractionPhase[{1, 0}, 1],
     0,
     {},
     TestID -> "Phase8.3-ContractionPhase-X"
@@ -647,7 +647,7 @@ VerificationTest[
 
 (* Combined u_B = Z (a=0, b=1) -> a*b=0 -> phase = 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{0, 1}, 1],
+    stabilizerContractionPhase[{0, 1}, 1],
     0,
     {},
     TestID -> "Phase8.3-ContractionPhase-Z"
@@ -655,7 +655,7 @@ VerificationTest[
 
 (* Combined u_B = Y (a=1, b=1) -> a*b=1 -> phase = 2 (= -1 sign). *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 1}, 1],
+    stabilizerContractionPhase[{1, 1}, 1],
     2,
     {},
     TestID -> "Phase8.3-ContractionPhase-Y"
@@ -664,7 +664,7 @@ VerificationTest[
 (* Multi-qubit YY: a1*b1 + a2*b2 = 1+1 = 2; phase = 2 * 2 = 4 mod 4 = 0 (the
    two Y signs cancel: (-1)^(1+1) = +1). *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 1, 1, 1}, 2],
+    stabilizerContractionPhase[{1, 1, 1, 1}, 2],
     0,
     {},
     TestID -> "Phase8.3-ContractionPhase-YY-DoubleSignCancel"
@@ -672,7 +672,7 @@ VerificationTest[
 
 (* YI (Y on q1, I on q2): a1*b1 + a2*b2 = 1+0 = 1; phase = 2 mod 4. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 0, 1, 0}, 2],
+    stabilizerContractionPhase[{1, 0, 1, 0}, 2],
     2,
     {},
     TestID -> "Phase8.3-ContractionPhase-YI"
@@ -680,7 +680,7 @@ VerificationTest[
 
 (* Multi-qubit XX (a=(1,1), b=(0,0)): no Y bits -> phase = 0. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 1, 0, 0}, 2],
+    stabilizerContractionPhase[{1, 1, 0, 0}, 2],
     0,
     {},
     TestID -> "Phase8.3-ContractionPhase-XX"
@@ -691,7 +691,7 @@ VerificationTest[
    (Y on qubit 1) and a2=0, b2=1 (Z on qubit 2). a1*b1 = 1, a2*b2 = 0. sum=1.
    phase = 2. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerContractionPhase[{1, 0, 1, 1}, 2],
+    stabilizerContractionPhase[{1, 0, 1, 1}, 2],
     2,
     {},
     TestID -> "Phase8.3-ContractionPhase-YZ"
@@ -717,7 +717,7 @@ ccX = CliffordChannel[<|"UA" -> {{1, 0}, {0, 1}}, "UB" -> {{1, 0}, {0, 1}}, "c" 
    the tableau encodes the identity channel. *)
 VerificationTest[
     Module[{cc4 = ccS[ccS[ccS[ccS]]]},
-        Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc4] &&
+        CliffordChannelQ[cc4] &&
         cc4["Rank"] == 2 && cc4["InputQubits"] == 1 && cc4["OutputQubits"] == 1
     ],
     True,
@@ -728,7 +728,7 @@ VerificationTest[
 (* H^2 = identity. *)
 VerificationTest[
     Module[{cc2 = ccH[ccH]},
-        Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc2] &&
+        CliffordChannelQ[cc2] &&
         cc2["Rank"] == 2
     ],
     True,
@@ -739,7 +739,7 @@ VerificationTest[
 (* X^2 = identity. The simple Pauli channel cc_X squared should give identity. *)
 VerificationTest[
     Module[{cc2 = ccX[ccX]},
-        Wolfram`QuantumFramework`PackageScope`CliffordChannelQ[cc2] && cc2["Rank"] == 2
+        CliffordChannelQ[cc2] && cc2["Rank"] == 2
     ],
     True,
     {},

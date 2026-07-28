@@ -534,7 +534,7 @@ EndTestSection[]
 BeginTestSection["QuantumState - failure"]
 
 (* The registry the invalidName guard tests names against. *)
-stateNames = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames;
+stateNames = $QuantumStateNames;
 
 VerificationTest[
     QuantumState["NotAnActualName"["bar"]],

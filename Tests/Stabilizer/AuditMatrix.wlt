@@ -30,8 +30,8 @@ Needs["Wolfram`QuantumFramework`"];
 
 (* Local helpers. psValidQ is the package-scoped predicate. matEqQO compares two
    QuantumOperators by exact matrix equality (no global-phase tolerance). *)
-psValidQ = Wolfram`QuantumFramework`PackageScope`PauliStabilizerQ;
-ccValidQ = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ;
+psValidQ = PauliStabilizerQ;
+ccValidQ = CliffordChannelQ;
 
 matEqQO[a_, b_] := SameQ @@ (Normal @ #["Matrix"] & /@ {a, b})
 
@@ -895,13 +895,13 @@ VerificationTest[
 (* ============================================================================ *)
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`StabilizerFrameQ @ StabilizerFrame[PauliStabilizer[1]],
+    StabilizerFrameQ @ StabilizerFrame[PauliStabilizer[1]],
     True,
     TestID -> "Audit-Frame-Construct-FromPS"
 ]
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`StabilizerFrameQ @ StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}],
+    StabilizerFrameQ @ StabilizerFrame[{{1, PauliStabilizer[1]}, {1, PauliStabilizer[1]["H", 1]}}],
     True,
     TestID -> "Audit-Frame-Construct-FromPairs"
 ]
@@ -979,7 +979,7 @@ VerificationTest[
 (* ============================================================================ *)
 
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`GraphStateQ @
+    GraphStateQ @
         GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]],
     True,
     TestID -> "Audit-Graph-Construct-FromGraph"
@@ -1158,7 +1158,7 @@ VerificationTest[
 
 (* Phase 7.4 matrix-iteration detector. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]], {1, 2}],
     "XZ",
     TestID -> "Audit-Hybrid-Phase7.4-MatrixDetector-XZ"
@@ -1284,7 +1284,7 @@ If[StringQ[$stimFixturePath],
 VerificationTest[
     Mod[
         Total @ MapThread[
-            Wolfram`QuantumFramework`PackageScope`agPhase,
+            agPhase,
             {{0, 0, 0}, {1, 1, 1}, {1, 1, 1}, {0, 0, 0}}
         ],
         4

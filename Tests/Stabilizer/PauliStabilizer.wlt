@@ -699,14 +699,14 @@ VerificationTest[
 
 (* Phase 1 cleanup: $PauliStabilizerNames duplicate "SteaneCode" (was 10 entries) deduped to 9. *)
 VerificationTest[
-    Length[Wolfram`QuantumFramework`PackageScope`$PauliStabilizerNames],
+    Length[$PauliStabilizerNames],
     9,
     TestID -> "Edge-NamesListLength-Deduped"
 ]
 
 (* The deduped catalog must still contain both SteaneCode and SteaneCode1 *)
 VerificationTest[
-    SubsetQ[Wolfram`QuantumFramework`PackageScope`$PauliStabilizerNames,
+    SubsetQ[$PauliStabilizerNames,
         {"5QubitCode", "SteaneCode", "SteaneCode1", "9QubitCode", "Random"}
     ],
     True,
@@ -756,7 +756,7 @@ VerificationTest[
 
 (* P composition closes under further Clifford -- the result is a StabilizerFrame *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`StabilizerFrameQ @ $psBellLit["P"[Pi/3], 1],
+    StabilizerFrameQ @ $psBellLit["P"[Pi/3], 1],
     True,
     TestID -> "Fail-PStaysAsStabilizerFrame-Phase4"
 ]
@@ -1609,7 +1609,7 @@ VerificationTest[
 
 (* PauliStabilizerApply called explicitly with Automatic state *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
+    PauliStabilizerApply[
         QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}],
         Automatic
     ]["Stabilizers"],
@@ -1645,7 +1645,7 @@ VerificationTest[
    resolution short-circuits unknown names with QuantumOperator::invalidName
    before PauliStabilizerApply ever runs. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
+    PauliStabilizerApply[
         QuantumCircuitOperator[{"H" -> 1, "RX"[0.3] -> 1}],
         Automatic
     ],
@@ -1657,7 +1657,7 @@ VerificationTest[
 (* Frame-decomposable non-Clifford boundary: T doubles the frame instead of
    failing; no message. *)
 VerificationTest[
-    Head @ Wolfram`QuantumFramework`PackageScope`PauliStabilizerApply[
+    Head @ PauliStabilizerApply[
         QuantumCircuitOperator[{"H" -> 1, "T" -> 1}],
         Automatic
     ],
@@ -1848,7 +1848,7 @@ VerificationTest[
 (* Loosened PauliStabilizerQ accepts symbolic signs (via qualified name to avoid
    wolframscript context shadow on bare `PauliStabilizerQ`) *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`PauliStabilizerQ @
+    PauliStabilizerQ @
         PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1],
     True,
     TestID -> "Phase3-PauliStabilizerQ-AcceptsSymbolic"
@@ -1856,7 +1856,7 @@ VerificationTest[
 
 (* ConcretePauliStabilizerQ rejects symbolic signs (the strict version) *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`ConcretePauliStabilizerQ @
+    ConcretePauliStabilizerQ @
         PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1],
     False,
     TestID -> "Phase3-ConcretePauliStabilizerQ-RejectsSymbolic"
@@ -1864,7 +1864,7 @@ VerificationTest[
 
 (* ConcretePauliStabilizerQ accepts pre-Phase-3 baseline *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`ConcretePauliStabilizerQ @ PauliStabilizer["5QubitCode"],
+    ConcretePauliStabilizerQ @ PauliStabilizer["5QubitCode"],
     True,
     TestID -> "Phase3-ConcretePauliStabilizerQ-AcceptsConcrete"
 ]
@@ -1944,7 +1944,7 @@ VerificationTest[
 (* StabilizerFrame data type *)
 VerificationTest[
     With[{f = StabilizerFrame[{{1, PauliStabilizer[1]}, {I, PauliStabilizer[1]["H", 1]}}]},
-        Wolfram`QuantumFramework`PackageScope`StabilizerFrameQ[f]
+        StabilizerFrameQ[f]
     ],
     True,
     TestID -> "Phase4-StabilizerFrame-Predicate"
@@ -2125,7 +2125,7 @@ VerificationTest[
 
 (* GraphState predicate + basic structure *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`GraphStateQ @ GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]],
+    GraphStateQ @ GraphState[Graph[Range[3], {1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]],
     True,
     TestID -> "Phase5-GraphState-Predicate"
 ]
@@ -2615,8 +2615,8 @@ SeedRandom[20260612];
 packedCanonicalMatchQ[n_Integer, measureSpec_] := Module[{ps, packed, canonical},
     ps = Fold[#1[#2] &, PauliStabilizer[n], Table[randCircSpec[n], {4 n}]];
     packed = ps["M", measureSpec];
-    canonical = Block[{Wolfram`QuantumFramework`PackageScope`psConcreteFastQ},
-        Wolfram`QuantumFramework`PackageScope`psConcreteFastQ[_] := False;
+    canonical = Block[{psConcreteFastQ},
+        psConcreteFastQ[_] := False;
         ps["M", measureSpec]
     ];
     Keys[packed] === Keys[canonical] &&
