@@ -114,18 +114,41 @@ QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "Unkn
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
+(* Reading a lazy container costs a materialization, and the property cascade
+   asks for the same one over and over: "Type" alone is consulted by
+   PureStateQ, MixedStateQ, DegenerateStateQ and every guard branching on
+   those, and each of those reads the state again. Once caches the result
+   against the container expression, so a net or a deferred contraction is
+   computed once per distinct state rather than once per question.
+
+   Keying on the container rather than on the whole QuantumState is what makes
+   it worth doing: states that differ only in basis share the entry, and two
+   equal containers share it as well. This is sound because a container is an
+   immutable expression - the same amplitudes always give the same array.
+
+   A compute-native container skips the cache entirely rather than being stored
+   in it. ArrayComputable hands a SparseArray straight back, so there is nothing
+   to save; going through Once anyway would make the common path pay a hash of
+   the whole array on every property read and then keep a second reference to it
+   for the rest of the session. The cache is for containers that actually cost
+   something to read. *)
+
+computableState[qs_] := With[{state = qs["State"]},
+    If[ ArrayComputeNativeQ[state],
+        state,
+        Once[ArrayComputable[state]]
+    ]
+]
+
 (* These three predicates answer False for a lazy or symbolic container by
    contract, since they inspect elements and a lazy container has none to
    inspect. That is the right contract for them and the wrong question to ask
    here: a state backed by a net holds numbers, and one whose amplitudes all
-   evaluate to zero is degenerate, whichever container carries them. Asking
-   through ArrayComputable settles it - a compute-native container such as a
-   SparseArray is passed through untouched, so the fast paths are unchanged,
-   and only a lazy one pays a materialization. *)
+   evaluate to zero is degenerate, whichever container carries them. *)
 
-QuantumStateProp[qs_, "NumericQ"] := ArrayNumericQ[ArrayComputable @ qs["State"]]
+QuantumStateProp[qs_, "NumericQ"] := ArrayNumericQ[computableState[qs]]
 
-QuantumStateProp[qs_, "NumberQ"] := ArrayNumberQ[ArrayComputable @ qs["State"]]
+QuantumStateProp[qs_, "NumberQ"] := ArrayNumberQ[computableState[qs]]
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
@@ -161,7 +184,7 @@ QuantumStateProp[qs_, "Amplitude"] := Block[{s = qs["Pure"], v, pos, order},
 QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result = Enclose @ Which[
         qs["StateType"] === "Vector",
-        ArrayComputable @ qs["State"],
+        computableState[qs],
         qs["PureStateQ"],
         Module[{eigenvalues = Chop[qs["Eigenvalues"]], pick},
             pick = ConfirmBy[Map[# =!= 0 &, eigenvalues], Apply[Or]];
@@ -179,7 +202,7 @@ QuantumStateProp[qs_, "AmplitudeList"] := Values @ qs["Amplitude"]
 
 QuantumStateProp[qs_, "AmplitudesList"] := Normal @ qs["StateVector"]
 
-QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[ArrayComputable @ qs["State"]]]
+QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[computableState[qs]]]
 
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
@@ -397,7 +420,7 @@ QuantumStateProp[qs_, "GraphRule"] := Block[{v = qs["Pure"]["StateVector"], pos}
    as a single expression, so they are mapped over its elements. *)
 
 QuantumStateProp[qs_, prop : "Chop" | "ComplexExpand", args___] :=
-    QuantumState[Symbol[prop][ArrayComputable @ qs["State"], args], qs["Basis"][prop]]
+    QuantumState[Symbol[prop][computableState[qs], args], qs["Basis"][prop]]
 
 QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify", args___] :=
     QuantumState[ArrayMap[Symbol[prop][#, args] &, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"][prop]]
@@ -412,7 +435,7 @@ QuantumStateProp[qs_, "TraceNorm"] := Total @ SingularValueList @ qs["DensityMat
 
 QuantumStateProp[qs_, "NormalizedQ"] := qs["Norm"] == 1
 
-QuantumStateProp[qs_, "NormalizedState"] := With[{state = ArrayComputable @ qs["State"]},
+QuantumStateProp[qs_, "NormalizedState"] := With[{state = computableState[qs]},
     QuantumState[
         Switch[qs["StateType"], "Vector", Normalize[state], "Matrix", normalizeMatrix[state], _, state],
         qs["Basis"]
@@ -452,7 +475,7 @@ QuantumStateProp[qs_, "Table"] := TableForm[
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
     With[{state = qs["StateVector"]}, KroneckerProduct[state, Conjugate[state]]]
 
-QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := ArrayComputable @ qs["State"]
+QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := computableState[qs]
 
 QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 
@@ -518,7 +541,7 @@ QuantumStateProp[qs_, "Purity"] := Enclose[
 QuantumStateProp[qs_, "Type"] := Which[
     qs["Dimension"] == 0,
     "Empty",
-    ArrayAllZeroQ[ArrayComputable @ qs["State"]],
+    ArrayAllZeroQ[computableState[qs]],
     (* TrueQ[qs["Purity"] == Indeterminate], *)
     "Degenerate",
     qs["VectorQ"] || PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]] && TrueQ[qs["Purity"] == 1],
