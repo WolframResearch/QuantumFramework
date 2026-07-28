@@ -222,8 +222,8 @@ VerificationTest[
    registry rather than a copy of it keeps this honest as names are added. *)
 VerificationTest[
     AllTrue[
-        Wolfram`QuantumFramework`PackageScope`$QuditBasisNames,
-        Wolfram`QuantumFramework`PackageScope`QuditBasisQ[QuditBasis[#]] &
+        $QuditBasisNames,
+        QuditBasisQ[QuditBasis[#]] &
     ],
     True,
     {},

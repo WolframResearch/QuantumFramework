@@ -36,9 +36,9 @@
 
 Needs["Wolfram`QuantumFramework`"];
 
-psValidQ = Wolfram`QuantumFramework`PackageScope`PauliStabilizerQ;
-sfValidQ = Wolfram`QuantumFramework`PackageScope`StabilizerFrameQ;
-ccValidQ = Wolfram`QuantumFramework`PackageScope`CliffordChannelQ;
+psValidQ = PauliStabilizerQ;
+sfValidQ = StabilizerFrameQ;
+ccValidQ = CliffordChannelQ;
 
 matEqQO[a_, b_] := SameQ @@ (Normal @ #["Matrix"] & /@ {a, b})
 matEqQS[a_, b_] := SameQ @@ (Normal @ #["StateVector"] & /@ {a, b})

@@ -161,6 +161,13 @@ $pacletDir = AbsoluteFileName[$pacletCandidate];
 PacletDirectoryLoad[$pacletDir];
 Needs["Wolfram`QuantumFramework`"];
 
+(* The paclet's loader registers PackageScope as a package, so it can be put on
+   the context path here and the tests can name internal symbols directly rather
+   than spelling the full context at each use.  Wolfram`Arrays` joins it: the
+   array-container contract is part of what the tests assert about. *)
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+Needs["Wolfram`Arrays`"];
+
 (* Anything the load itself said.  A paclet that failed to load cleanly must
    not be able to produce an all-green run. *)
 $loadMessages = $MessageList;

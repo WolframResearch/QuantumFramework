@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport["QuantumState"]
 
 PackageScope["quantumStateQ"]
@@ -12,7 +14,10 @@ QuantumState::invalidArgs = "QuantumState constructor `1` did not match any rule
 QuantumState::padded = "state of length `1` is zero-padded to dimension `2` (`3` qudits); use a length that is a power of the qudit dimension, or \"Register\"[n] for an n-qudit register"
 
 
-quantumStateQ[QuantumState[state_SparseArray ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := Length[state] === qb["Dimension"]
+(* Validity is a shape contract, not a container contract: the amplitudes may
+   be held in any array container whose leading dimension matches the basis. *)
+
+quantumStateQ[QuantumState[state_ ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := First[ArrayDimensions[state]] === qb["Dimension"]
 
 quantumStateQ[___] := False
 
@@ -27,21 +32,21 @@ qs_QuantumState /; System`Private`HoldNotValidQ[qs] && quantumStateQ[Unevaluated
 
 (* basis argument input *)
 
-QuantumState[state_ ? stateQ] := QuantumState[state, QuantumBasis[primeFactors[Length[state]]]]
+QuantumState[state_ ? stateQ] := QuantumState[state, QuantumBasis[primeFactors[First @ ArrayDimensions[state]]]]
 
 QuantumState[state_ ? stateQ, basisArgs__] /; ! QuantumBasisQ[basisArgs] := Enclose @ Block[{
-    basis, multiplicity
+    basis, multiplicity, dim = First @ ArrayDimensions[state]
 },
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ];
-    multiplicity = basisMultiplicity[Length[state], basis["Dimension"]];
+    multiplicity = basisMultiplicity[dim, basis["Dimension"]];
     basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
     (* a multi-qudit pad means the qudit count was inferred by rounding up,
        not given exactly; the single-qudit amplitude-prefix pad stays silent *)
-    If[ multiplicity > 1 && Length[state] =!= basis["Dimension"],
-        Message[QuantumState::padded, Length[state], basis["Dimension"], basis["Qudits"]]
+    If[ multiplicity > 1 && dim =!= basis["Dimension"],
+        Message[QuantumState::padded, dim, basis["Dimension"], basis["Qudits"]]
     ];
     QuantumState[
-        PadRight[state, Table[basis["Dimension"], TensorRank[state]]],
+        If[dim === basis["Dimension"], state, padState[state, basis["Dimension"]]],
         basis
     ]
 ]
@@ -121,21 +126,31 @@ QuantumState[state : Except[_ ? QuantumStateQ], args : Except[_ ? QuantumBasisQ]
 
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
     state,
-    QuantumTensorProduct[basis, QuantumBasis[Max[2, Length[state] - basis["Dimension"]]]]
-] /; Length[state] > basis["Dimension"] > 0
+    QuantumTensorProduct[basis, QuantumBasis[Max[2, First @ ArrayDimensions[state] - basis["Dimension"]]]]
+] /; First[ArrayDimensions[state]] > basis["Dimension"] > 0
 
 
 (* pad state *)
 
+(* Zero-padding to the basis dimension is defined only where the zeros can be
+   written: a lazy or symbolic container has no elements to pad, so an
+   under-dimensioned one is left for validity to reject rather than being
+   grown into something whose amplitudes do not exist. *)
+
+padState[state_ ? ArrayExplicitQ, dim_Integer] := PadRight[state, Table[dim, ArrayRank[state]]]
+
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
-    PadRight[state, Table[basis["Dimension"], TensorRank[state]]],
+    padState[state, basis["Dimension"]],
     basis
-] /; Length[state] < basis["Dimension"]
+] /; ArrayExplicitQ[state] && First[ArrayDimensions[state]] < basis["Dimension"]
 
 
 (* Mutation *)
 
-QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /; !SparseArrayQ[state] && state =!= {} :=
+(* A list of amplitudes is normalized to a SparseArray on intake; any other
+   container is stored as it arrived. *)
+
+QuantumState[state_List ? stateQ, basis_ ? QuantumBasisQ] /; state =!= {} :=
     Enclose @ QuantumState[ConfirmBy[SparseArray[state, Length[state]], SparseArrayQ], basis]
 
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ | _Integer]]] :=
@@ -167,7 +182,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         qs["VectorQ"],
         QuantumState[
             (* TODO: ConfirmQuiet hides Dot::dotsh from shape mismatches; precompute shapes via Dimensions and assert before Dot *)
-            SparseArrayFlatten @ ConfirmQuiet[
+            ArrayVector @ ConfirmQuiet[
                 Dot[
                     MatrixInverse[newBasis["Output"]["ReducedMatrix"]],
                     qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . MatrixInverse[qs["Input"]["ReducedMatrix"]],
@@ -217,7 +232,7 @@ QuantumState /: Equal[qs__QuantumState] :=
         And @@ (#["VectorStateQ"] & /@ {qs}),
         Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs})],
         And @@ (#["MatrixStateQ"] & /@ {qs}),
-        Thread[Equal @@ (Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs})],
+        Thread[Equal @@ (Chop @ SetPrecisionNumeric[ArrayVector @ #["NormalizedMatrixRepresentation"]] & /@ {qs})],
         True,
         Thread[Equal @@ Through[{qs}["MatrixState"]]]
     ]
@@ -307,7 +322,7 @@ QuantumState[qs_QuantumState ? QuantumStateQ] := qs
 
 QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     If[ And @@ (#["PureStateQ"] & /@ {qs}),
-        SparseArrayFlatten[blockDiagonalMatrix[#["StateMatrix"] & /@ {qs}]],
+        ArrayVector[blockDiagonalMatrix[#["StateMatrix"] & /@ {qs}]],
         blockDiagonalMatrix[#["DensityMatrix"] & /@ {qs}]
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
@@ -360,7 +375,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
             state = If[TrueQ[q2["VectorQ"]],
                 q2Mat = q2["Matrix"];
                 liftedQ2 = If[restInDim == 1, q2Mat, KroneckerProduct[q2Mat, IdentityMatrix[restInDim, SparseArray]]];
-                SparseArrayFlatten[liftedQ1 . liftedQ2],
+                ArrayVector[liftedQ1 . liftedQ2],
                 q1ConjMat = ConjugateTranspose[q1Mat];
                 liftedQ1Dag = If[restOutDim == 1, q1ConjMat, KroneckerProduct[q1ConjMat, IdentityMatrix[restOutDim, SparseArray]]];
                 If[inDim == 1,
@@ -422,9 +437,13 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (qs_QuantumState ? QuantumStateQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumState["Properties"], p] && Length[{ps}] <= qs["ParameterArity"] :=
     qs[AssociationThread[Take[qs["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
+(* Substitution goes through the container rather than over its elements: a
+   lazy container binds all its parameters in one whole-array evaluation, where
+   an element-wise map would call the underlying function once per amplitude. *)
+
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
     QuantumState[
-        Map[ReplaceAll[rules], qs["State"], {If[qs["VectorQ"], 1, 2]}],
+        ArrayReplaceAll[qs["State"], Normal[rules]],
         qs["Basis"][rules]
     ]
 

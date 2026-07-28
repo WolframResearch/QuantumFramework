@@ -277,12 +277,39 @@ Scan[
 (qb_QuantumBasis ? QuantumBasisQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumBasis["Properties"], p] && Length[{ps}] <= qb["ParameterArity"] :=
     qb[AssociationThread[Take[qb["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
-(qb_QuantumBasis ? QuantumBasisQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qb["Parameters"]] :=
-    QuantumBasis[
-        "Output" -> KeyMap[ReplaceAll[rules]] @ Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Output"]["Representations"]],
-        "Input" -> KeyMap[ReplaceAll[rules]] @ Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Input"]["Representations"]],
-        "Label" -> qb["Label"] /. rules,
-        "Picture" -> qb["Picture"],
-        "ParameterSpec" -> DeleteCases[qb["ParameterSpec"], {Alternatives @@ Keys[rules], __}]
+substituteRepresentations[qb_, rules_] :=
+    KeyMap[ReplaceAll[rules]] @ Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Representations"]]
+
+(* A basis declares its parameters in ParameterSpec whether or not its elements
+   depend on them: QuantumEvolve records the evolution parameter on the basis
+   while the amplitudes alone carry it.  Substituting such a parameter changes
+   nothing in the basis, and rebuilding it from its representations to discover
+   that costs two orders of magnitude more than the substitution - the
+   constructor is ~1540us of the ~1560us, flat in dimension, so it is fixed
+   reconstruction overhead rather than work on the data.  When the substitution
+   turns out to have been a no-op, the basis data is kept and only the spent
+   parameter is dropped from the spec. *)
+
+(qb : QuantumBasis[data_Association] ? QuantumBasisQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qb["Parameters"]] :=
+    Block[{
+        output = substituteRepresentations[qb["Output"], rules],
+        input = substituteRepresentations[qb["Input"], rules],
+        label = data["Label"] /. rules,
+        spec = DeleteCases[data["ParameterSpec"], {Alternatives @@ Keys[rules], __}]
+    },
+        If[ output === qb["Output"]["Representations"] &&
+                input === qb["Input"]["Representations"] &&
+                label === data["Label"],
+
+            QuantumBasis[<|data, "ParameterSpec" -> spec|>],
+
+            QuantumBasis[
+                "Output" -> output,
+                "Input" -> input,
+                "Label" -> label,
+                "Picture" -> data["Picture"],
+                "ParameterSpec" -> spec
+            ]
+        ]
     ]
 

@@ -16,7 +16,7 @@ Needs["Wolfram`QuantumFramework`"];
 
 (* Local validity helper: re-export the package-scoped predicate so tests can
    assert on the receiver's structure. *)
-psValidQ = Wolfram`QuantumFramework`PackageScope`PauliStabilizerQ;
+psValidQ = PauliStabilizerQ;
 
 
 (* ============================================================================ *)
@@ -432,7 +432,7 @@ VerificationTest[
 
 (* Detector recognizes -Superscript[X, CircleTimes[2]] as "-XX". *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[-"XX"], {1, 2}],
     "-XX",
     {},
@@ -441,7 +441,7 @@ VerificationTest[
 
 (* Detector recognizes Superscript[Z, CircleTimes[3]] as "ZZZ". *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator["ZZZ"], {1, 2, 3}],
     "ZZZ",
     {},
@@ -480,7 +480,7 @@ VerificationTest[
 (* "PauliX", not a Pauli string or Superscript form). It falls through to the *)
 (* legacy fallback path with the nonpaulibasis info message. Document that.   *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumBasis["PauliX"], {1}],
     Missing["NonPauliBasis"],
     {},
@@ -499,7 +499,7 @@ VerificationTest[
 
 (* Detector recognizes single-qubit X matrix as "X". *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[PauliMatrix[1]], {1}],
     "X",
     {},
@@ -508,7 +508,7 @@ VerificationTest[
 
 (* Detector recognizes single-qubit Y matrix as "Y" (complex matrix). *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[PauliMatrix[2]], {1}],
     "Y",
     {},
@@ -517,7 +517,7 @@ VerificationTest[
 
 (* Detector recognizes -Z matrix with sign. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[-PauliMatrix[3]], {1}],
     "-Z",
     {},
@@ -526,7 +526,7 @@ VerificationTest[
 
 (* Detector recognizes a 2-qubit Pauli tensor product matrix. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]], {1, 2}],
     "XZ",
     {},
@@ -535,7 +535,7 @@ VerificationTest[
 
 (* 2-qubit -YY: complex multi-qubit Pauli with sign. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[-KroneckerProduct[PauliMatrix[2], PauliMatrix[2]]], {1, 2}],
     "-YY",
     {},
@@ -544,7 +544,7 @@ VerificationTest[
 
 (* 3-qubit XYZ. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[
             QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]]],
             {1, 2, 3}
@@ -556,7 +556,7 @@ VerificationTest[
 
 (* Identity matrix recognized as I^n. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[IdentityMatrix[4]], {1, 2}],
     "II",
     {},
@@ -567,7 +567,7 @@ VerificationTest[
    is NOT a Pauli matrix (it's Clifford but acts as a basis change, not as a
    Pauli generator). *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[(1/Sqrt[2]) {{1, 1}, {1, -1}}], {1}],
     Missing["NonPauliBasis"],
     {},
@@ -576,7 +576,7 @@ VerificationTest[
 
 (* Off-diagonal non-Hermitian matrix (rank-1 projector |0><1|) returns Missing. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliLabelFromQMO @
+    stabilizerPauliLabelFromQMO @
         QuantumMeasurementOperator[QuantumOperator[{{0, 1}, {0, 0}}], {1}],
     Missing["NonPauliBasis"],
     {},
@@ -647,8 +647,8 @@ VerificationTest[
 (* Cap test: bumping the search cap allows n = 5 detection.                  *)
 (* Wrap in Block to scope the override. *)
 VerificationTest[
-    Block[{Wolfram`QuantumFramework`PackageScope`$stabilizerPauliMatrixSearchMaxQubits = 5},
-        Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+    Block[{$stabilizerPauliMatrixSearchMaxQubits = 5},
+        stabilizerPauliFromMatrix[
             KroneckerProduct[PauliMatrix[1], PauliMatrix[2], PauliMatrix[3], PauliMatrix[1], PauliMatrix[2]],
             5
         ]
@@ -660,7 +660,7 @@ VerificationTest[
 
 (* Default cap rejects n = 5 with TooManyQubits. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+    stabilizerPauliFromMatrix[
         KroneckerProduct @@ ConstantArray[PauliMatrix[1], 5],
         5
     ],
@@ -700,7 +700,7 @@ VerificationTest[
 (* Phase 7.4 detector handles single-qubit Pauli matrices correctly. ROADMAP A.11
    bug (KroneckerProduct on single element) is worked around in the helper. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[PauliMatrix[1], 1],
+    stabilizerPauliFromMatrix[PauliMatrix[1], 1],
     "X",
     {},
     TestID -> "Phase7.4-Detector-SingleQubit-Workaround"
@@ -708,7 +708,7 @@ VerificationTest[
 
 (* Detector returns DimMismatch on a non-square matrix. *)
 VerificationTest[
-    Wolfram`QuantumFramework`PackageScope`stabilizerPauliFromMatrix[
+    stabilizerPauliFromMatrix[
         {{1, 0}, {0, 0}, {0, 0}, {0, 1}}, 1
     ],
     Missing["DimMismatch"],

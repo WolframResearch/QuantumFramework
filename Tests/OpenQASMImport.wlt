@@ -337,15 +337,15 @@ VerificationTest[
 
 VerificationTest[
     {
-        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[qutritCircuit],
-        Wolfram`QuantumFramework`PackageScope`qasmQubitsQ[bell]
+        qasmQubitsQ[qutritCircuit],
+        qasmQubitsQ[bell]
     },
     {False, True},
     TestID -> "qasmQubitsQ-shared-and-defined"
 ]
 
 VerificationTest[
-    MatchQ[Wolfram`QuantumFramework`PackageScope`qasmNonQubitFailure[qutritCircuit], Failure["QuantumQASM", _Association]],
+    MatchQ[qasmNonQubitFailure[qutritCircuit], Failure["QuantumQASM", _Association]],
     True,
     TestID -> "qasmNonQubitFailure-shared-and-defined"
 ]

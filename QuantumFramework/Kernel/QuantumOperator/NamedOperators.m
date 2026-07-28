@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageScope["$QuantumOperatorNames"]
 PackageScope["pauliZGate"]
 PackageScope["controlledZGate"]
@@ -125,12 +127,12 @@ QuantumOperator[("Identity" | "I")[], order : {outOrder : _ ? orderQ | Automatic
     QuantumOperator["Identity"[Table[2, If[outOrder === Automatic, 1, Length[outOrder]]], Table[2, If[inOrder === Automatic, 1, Length[inOrder]]]], order, opts]
 
 QuantumOperator[("Identity" | "I")[dims : {_Integer ? Positive ...}], opts___] := QuantumOperator[
-    QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]]],
+    QuantumOperator[QuantumState[ArrayVector @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]]],
     opts
 ]
 
 QuantumOperator[("Identity" | "I")[outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}], opts___] := QuantumOperator[
-    QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]]],
+    QuantumOperator[QuantumState[ArrayVector @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]]],
     opts
 ]
 
@@ -644,7 +646,7 @@ QuantumOperator["Permutation"[dim : _Integer ? Positive, perm_Cycles : Cycles[{}
 QuantumOperator["Permutation"[dims : {_Integer ? Positive..}, perm_Cycles : Cycles[{}]], opts___] :=
     Enclose @ QuantumOperator[
         QuantumState[
-            SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
+            ArrayVector @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
             QuantumBasis[QuditBasis[ConfirmBy[Permute[dims, perm], ListQ]], QuditBasis[dims], "Label" -> "\[Pi]" @@ PermutationList[perm, Length[dims]]]
         ],
         opts
@@ -659,7 +661,7 @@ QuantumOperator[(name : "Curry" | "Uncurry")[args__ : 2], opts___] := With[{basi
 QuantumOperator[(name : "Curry" | "Uncurry")[args_List], opts___] := With[{bases = QuditBasis /@ args},
     QuantumOperator[
         QuantumState[
-            SparseArrayFlatten @ identityMatrix[Times @@ Through[bases["Dimension"]]],
+            ArrayVector @ identityMatrix[Times @@ Through[bases["Dimension"]]],
             If[ name === "Curry",
                 QuantumBasis[QuditBasis[Tuples[Through[bases["Names"]]]], QuantumTensorProduct[bases]],
                 QuantumBasis[QuantumTensorProduct[bases], QuditBasis[Tuples[Through[bases["Names"]]]]]
@@ -697,7 +699,7 @@ QuantumOperator["Spider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := Enclos
         Confirm @ QuantumState[
             If[ dim <= 1,
                 {Exp[I First[phases, 0]]},
-                SparseArrayFlatten @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
+                ArrayVector @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
             ],
             basis
         ],
@@ -716,7 +718,7 @@ QuantumOperator["SimpleSpider"[basis_ ? QuantumBasisQ, phase_ : 0], opts___] := 
         Confirm @ QuantumState[
             If[ dim <= 1,
                 {Exp[I First[phases, 0]]},
-                SparseArrayFlatten @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
+                ArrayVector @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
             ],
             basis
         ],
@@ -729,7 +731,7 @@ QuantumOperator["WSpider"[n_Integer : 2, dim_Integer : 2], opts___] := QuantumOp
     QuantumState[
         If[ dim <= 1,
             {1},
-            SparseArrayFlatten @ SparseArray[Thread[
+            ArrayVector @ SparseArray[Thread[
                 Prepend[ConstantArray[1, n + 1]] @
                     Catenate @ Table[Prepend[i] @ ReplacePart[ConstantArray[1, n], j -> i], {i, 2, dim}, {j, n}] -> 1],
                 Table[dim, n + 1]

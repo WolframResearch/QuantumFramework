@@ -2,6 +2,7 @@
 Template: Symbol
 Name: QuantumCircuitOperator
 Context: Wolfram`QuantumFramework`
+ContextPath: [Wolfram`TensorNetworks`]
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/ref/QuantumCircuitOperator
 Keywords: [quantum circuit, gate sequence, circuit operator, quantum gate, circuit composition, Qiskit, QASM]

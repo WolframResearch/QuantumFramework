@@ -12,8 +12,17 @@ If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.4"],
    separate Needs["IBMQuantumPlatform`"] from the user. *)
 Needs["IBMQuantumPlatform`"]
 
-If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "1.0.5"],
-    PacletInstall["https://www.wolframcloud.com/obj/wolframquantumframework/TensorNetworks.paclet"]
+(* Both are published, so they install from the repository by name.  The
+   version floors are not cosmetic: the "NetGraph" contraction method needs
+   TensorNetworks 1.0.10, and below it a phase-space contraction fails with
+   FindPermutation::norel rather than producing a net. *)
+
+If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "1.0.10"],
+    PacletInstall["Wolfram/TensorNetworks"]
+]
+
+If[ ! pacletInstalledQ["Wolfram/Arrays", "1.2.1"],
+    PacletInstall["Wolfram/Arrays"]
 ]
 
 $ContextAliases["H`"] = "WolframInstitute`Hypergraph`"
