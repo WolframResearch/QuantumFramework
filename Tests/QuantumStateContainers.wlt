@@ -209,4 +209,59 @@ VerificationTest[
     TestID -> "Shape-constructor-name-rejected"
 ]
 
+
+(* Classifying a state asks whether its amplitudes are all zero and whether they
+   are numbers. ArrayAllZeroQ and ArrayNumericQ answer False for a lazy
+   container by contract - it has no elements to inspect - so asking them
+   directly classified an all-zero net as a pure state, and "Formula" then
+   rendered an empty box instead of 0. That is what
+   QuantumState[NetInitialize[NetArrayLayer["Output" -> 3]]]["Formula"] hit,
+   NetInitialize leaving a bare array layer at zero. The zeros are set
+   explicitly here so the test does not rest on that default. *)
+
+zeroNet = NetReplacePart[NetArrayLayer["Output" -> 3], "Array" -> {0., 0., 0.}];
+
+liveNet = NetReplacePart[NetArrayLayer["Output" -> 3], "Array" -> {0.6, 0., 0.8}];
+
+VerificationTest[
+    QuantumState[zeroNet]["Formula"],
+    RawBoxes[0],
+    TestID -> "Container-lazy-zero-formula-is-zero"
+]
+
+VerificationTest[
+    {QuantumState[zeroNet]["Type"], QuantumState[SparseArray[{0., 0., 0.}]]["Type"]},
+    {"Degenerate", "Degenerate"},
+    TestID -> "Container-lazy-zero-classifies-as-degenerate"
+]
+
+VerificationTest[
+    QuantumState[zeroNet]["PureStateQ"],
+    False,
+    TestID -> "Container-lazy-zero-is-not-pure"
+]
+
+(* A net holds Real32 numbers, so the state is numeric whichever container
+   carries it. *)
+VerificationTest[
+    {QuantumState[liveNet]["NumericQ"], QuantumState[liveNet]["NumberQ"]},
+    {True, True},
+    TestID -> "Container-lazy-numeric-state-is-numeric"
+]
+
+(* A non-zero lazy container still renders its terms rather than collapsing. *)
+VerificationTest[
+    MatchQ[QuantumState[liveNet]["Formula"], RawBoxes[RowBox[{_, _}]]],
+    True,
+    TestID -> "Container-lazy-nonzero-formula-keeps-its-terms"
+]
+
+(* The contract itself is unchanged: a symbolic container cannot be shown to be
+   numeric, and must not be materialized into claiming otherwise. *)
+VerificationTest[
+    QuantumState[{\[FormalA], \[FormalB]}]["NumericQ"],
+    False,
+    TestID -> "Container-symbolic-is-not-numeric"
+]
+
 EndTestSection[]

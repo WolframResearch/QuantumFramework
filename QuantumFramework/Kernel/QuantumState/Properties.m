@@ -114,9 +114,18 @@ QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "Unkn
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
-QuantumStateProp[qs_, "NumericQ"] := ArrayNumericQ[qs["State"]]
+(* These three predicates answer False for a lazy or symbolic container by
+   contract, since they inspect elements and a lazy container has none to
+   inspect. That is the right contract for them and the wrong question to ask
+   here: a state backed by a net holds numbers, and one whose amplitudes all
+   evaluate to zero is degenerate, whichever container carries them. Asking
+   through ArrayComputable settles it - a compute-native container such as a
+   SparseArray is passed through untouched, so the fast paths are unchanged,
+   and only a lazy one pays a materialization. *)
 
-QuantumStateProp[qs_, "NumberQ"] := ArrayNumberQ[qs["State"]]
+QuantumStateProp[qs_, "NumericQ"] := ArrayNumericQ[ArrayComputable @ qs["State"]]
+
+QuantumStateProp[qs_, "NumberQ"] := ArrayNumberQ[ArrayComputable @ qs["State"]]
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
@@ -509,7 +518,7 @@ QuantumStateProp[qs_, "Purity"] := Enclose[
 QuantumStateProp[qs_, "Type"] := Which[
     qs["Dimension"] == 0,
     "Empty",
-    ArrayAllZeroQ[qs["State"]],
+    ArrayAllZeroQ[ArrayComputable @ qs["State"]],
     (* TrueQ[qs["Purity"] == Indeterminate], *)
     "Degenerate",
     qs["VectorQ"] || PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]] && TrueQ[qs["Purity"] == 1],
