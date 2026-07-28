@@ -54,19 +54,19 @@ BeginTestSection["QuantumBasis - pictures"]
    registry at runtime is not picked up by them and recurses *)
 
 VerificationTest[
-    AssociationMap[QuantumBasis[#]["Picture"] &, Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures],
+    AssociationMap[QuantumBasis[#]["Picture"] &, $QuantumBasisPictures],
     AssociationThread[
-        Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures ->
-            Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures
+        $QuantumBasisPictures ->
+            $QuantumBasisPictures
     ],
     TestID -> "Picture-bare-every-registered-picture"
 ]
 
 VerificationTest[
-    AssociationMap[QuantumBasis["Computational", #]["Picture"] &, Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures],
+    AssociationMap[QuantumBasis["Computational", #]["Picture"] &, $QuantumBasisPictures],
     AssociationThread[
-        Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures ->
-            Wolfram`QuantumFramework`PackageScope`$QuantumBasisPictures
+        $QuantumBasisPictures ->
+            $QuantumBasisPictures
     ],
     TestID -> "Picture-after-Computational-every-registered-picture"
 ]
@@ -233,7 +233,7 @@ VerificationTest[
    sweep of it would emit one message per name and trip General::stop *)
 
 VerificationTest[
-    Union[QuantumBasis[#, "PhaseSpace"]["Picture"] & /@ Wolfram`QuantumFramework`PackageScope`$QuditPhaseSpaceBasisNames],
+    Union[QuantumBasis[#, "PhaseSpace"]["Picture"] & /@ $QuditPhaseSpaceBasisNames],
     {"PhaseSpace"},
     TestID -> "PhaseSpace-registry-accepts-its-own-picture"
 ]
@@ -281,6 +281,87 @@ VerificationTest[
     True,
     {QuditBasis::invalidName},
     TestID -> "Picture-unknown-name-after-picture-fails"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumBasis - parameter substitution"]
+
+(* Substituting a parameter used to rebuild the basis from its representations
+   unconditionally.  A basis declares its parameters in ParameterSpec whether or
+   not its elements depend on them, so the common case rebuilt a basis identical
+   to the one it started from.  The rebuild is now skipped when the substitution
+   turns out to have changed nothing; these tests pin both branches. *)
+
+(* Elements that genuinely depend on the parameter must still substitute. *)
+
+$rotationBasis := QuantumBasis[
+    QuditBasis[<|
+        QuditName["a"] -> {Cos[\[FormalX]], Sin[\[FormalX]]},
+        QuditName["b"] -> {-Sin[\[FormalX]], Cos[\[FormalX]]}
+    |>],
+    "ParameterSpec" -> {{\[FormalX], 0, 1}}
+]
+
+VerificationTest[
+    Normal /@ Values @ $rotationBasis[<|\[FormalX] -> 0|>]["Output"]["Representations"],
+    {{1, 0}, {0, 1}},
+    TestID -> "ParameterSubstitution-rotates-elements-at-zero"
+]
+
+VerificationTest[
+    Normal /@ Values @ $rotationBasis[<|\[FormalX] -> Pi / 2|>]["Output"]["Representations"],
+    {{0, 1}, {-1, 0}},
+    TestID -> "ParameterSubstitution-rotates-elements-at-quarter-turn"
+]
+
+(* Substituting spends the parameter either way. *)
+VerificationTest[
+    $rotationBasis[<|\[FormalX] -> 0|>]["ParameterArity"],
+    0,
+    TestID -> "ParameterSubstitution-spends-the-parameter"
+]
+
+(* A basis that declares a parameter its elements do not use takes the fast
+   path, and must give exactly what the rebuild gave: the same elements, the
+   same picture and label, one fewer parameter. *)
+
+$declaredOnly := QuantumBasis[QuditBasis[2], "ParameterSpec" -> {{\[FormalX], 0, 1}}]
+
+VerificationTest[
+    Block[{qb = $declaredOnly, sub},
+        sub = qb[<|\[FormalX] -> 0.5|>];
+        {
+            sub["Output"]["Representations"] === qb["Output"]["Representations"],
+            sub["Input"]["Representations"] === qb["Input"]["Representations"],
+            sub["Picture"] === qb["Picture"],
+            sub["Label"] === qb["Label"],
+            sub["ParameterArity"]
+        }
+    ],
+    {True, True, True, True, 0},
+    TestID -> "ParameterSubstitution-unused-parameter-keeps-the-basis"
+]
+
+(* An evolved state carries its parameter on the basis while the amplitudes
+   alone depend on it, so binding it must leave the basis untouched. *)
+VerificationTest[
+    Block[{psi, bound},
+        psi = QuantumEvolve[
+            QuantumOperator["PauliX"], {} -> {},
+            QuantumState["0"],
+            {\[FormalT], 0, 1}
+        ];
+        bound = psi[0.5];
+        {
+            bound["Basis"]["Output"]["Representations"] === psi["Basis"]["Output"]["Representations"],
+            bound["Basis"]["ParameterArity"],
+            psi["Basis"]["ParameterArity"]
+        }
+    ],
+    {True, 0, 1},
+    TestID -> "ParameterSubstitution-evolved-state-keeps-its-basis"
 ]
 
 EndTestSection[]

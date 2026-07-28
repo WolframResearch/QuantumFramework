@@ -77,6 +77,18 @@ QuantumStateProp[QuantumState[state_, _], "State"] := state
 
 QuantumStateProp[QuantumState[_, basis_], "Basis"] := basis
 
+(* Direct parameter getters: the parameter spec lives in the basis. Without these,
+   qs["Parameters"] falls through every QuantumStateProp clause to the generic basis
+   delegation at the end of this file, whose guard rebuilds both property lists and
+   intersects them on each call. The parameterization rule reads these three times per
+   qs[t0] - twice in its two-stage dispatch, once in its guard - so that fall-through was
+   most of what substituting a parameter cost outside the basis rebuild itself. *)
+
+QuantumStateProp[QuantumState[_, basis_], "ParameterSpec"] := basis["ParameterSpec"]
+
+QuantumStateProp[QuantumState[_, basis_], "Parameters"] := basis["Parameters"]
+
+QuantumStateProp[QuantumState[_, basis_], "ParameterArity"] := basis["ParameterArity"]
 
 
 (* two types of states *)
