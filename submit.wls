@@ -50,7 +50,16 @@ If[ MemberQ[issues[[All, "Level"]], "Error"],
     Exit[1]
 ]
 
-result = UsingFrontEnd @ Block[{nb, r},
+(* Warnings, unlike errors, do not block a submission - the repository asks the
+   submitter to acknowledge them, through a dialog that cannot open in a
+   headless kernel (DialogInput::ninit, and the submission then reports
+   $Failed against an expected True | $Canceled).  The acknowledgement is
+   answered here instead, which is the same answer a submitter clicking through
+   would give: the errors have already been checked for above and are fatal, so
+   what reaches this point is warnings and suggestions only. *)
+
+result = UsingFrontEnd @ Block[
+    {nb, r, DefinitionNotebookClient`ConfirmIssuesDialog = (True &)},
     nb = NotebookOpen[nbFile, Visible -> False];
     r = DefinitionNotebookClient`SubmitRepository[nb];
     NotebookClose[nb];
