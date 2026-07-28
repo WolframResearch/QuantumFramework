@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageScope["ToList"]
 PackageScope["SymbolicQ"]
 PackageScope["basisMultiplicity"]
@@ -43,7 +45,6 @@ PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
 PackageScope["alignDimensions"]
 
-PackageScope["SparseArrayFlatten"]
 PackageScope["MatrixInverse"]
 PackageScope["matrixFunction"]
 PackageScope["SetPrecisionNumeric"]
@@ -81,7 +82,13 @@ propQ[prop_] := MatchQ[prop, _String | {_String, ___}]
 
 propName[prop_] := Replace[prop, name_String | {name_String, ___} :> name]
 
-stateQ[state_] := VectorQ[state] && Length[state] >= 0 || SquareMatrixQ[state]
+(* The rank contract for a state's amplitude container: a vector of amplitudes
+   or a square density matrix.  The shape comes from the container rather than
+   from VectorQ and SquareMatrixQ, which answer for an explicit array only and
+   would reject a lazy or symbolic one that knows its own shape perfectly
+   well. *)
+
+stateQ[state_] := MatchQ[ArrayDimensions[state], {_Integer} | {d_Integer, d_}]
 
 orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
 
@@ -284,34 +291,6 @@ GramDual[x_] := GramMatrix[x] . x
 
 
 (* optimization *)
-
-SparseArrayFlatten[sa_SparseArray] := With[{dims = sa["Dimensions"]},
-	With[{
-        (* if all dimensions are equal don't fold *)
-		cs = If[Equal @@ dims, dims ^ Range[Length[dims] - 1, 0, -1], Reverse @ FoldList[Times, 1, dims[[-1 ;; 2 ;; -1]]]],
-		ps = Catenate @ MapThread[ConstantArray, {Range[0, dims[[1]] - 1], Differences @ sa["RowPointers"]}]
-	},
-		SparseArray[
-            Automatic,
-            {Times @@ dims},
-            sa["ImplicitValue"],
-            {
-                1,
-                {
-                    {0, sa["ExplicitLength"]},
-                    (* List /@ (1 + First[cs] * ps + Total[(sa["ColumnIndices"] - 1) * Threaded[Rest @ cs], {2}]) *)
-                    List /@ (1 + First[cs] * ps + Total[Thread[Rest[cs] #] & /@ (sa["ColumnIndices"] - 1), {2}])
-                },
-                sa["ExplicitValues"]
-            }
-        ]
-    ] /; Length[dims] > 11
-]
-
-SparseArrayFlatten[x_ ? NumericQ] := x
-
-SparseArrayFlatten[array_] := Flatten[array]
-
 
 MatrixInverse[matrix_] := If[
     SquareMatrixQ[matrix],

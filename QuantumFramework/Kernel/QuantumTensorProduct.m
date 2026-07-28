@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport["QuantumTensorProduct"]
 
 
@@ -49,7 +51,7 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["MatrixQ"] || qs
 
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2["Input"] && qs1["Output"] == qs2["Output"] := Enclose[
     profile["Kronecker"] @ QuantumState[
-        SparseArrayFlatten @ KroneckerProduct[
+        ArrayVector @ KroneckerProduct[
             qs1["StateMatrix"],
             qs2["StateMatrix"]
         ],
@@ -59,7 +61,7 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2[
 
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     QuantumState[QuantumState[
-        SparseArrayFlatten @ KroneckerProduct[
+        ArrayVector @ KroneckerProduct[
             qs1["Computational"]["StateMatrix"],
             qs2["Computational"]["StateMatrix"]
         ],

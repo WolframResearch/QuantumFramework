@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport[QuantumEvolve]
 PackageExport[HamiltonianTransitionRate]
 PackageExport[LindbladTransitionRates]
@@ -9,7 +11,7 @@ PackageExport[LindbladTransitionRates]
 QuantumEvolve::error = "Differential Solver failed to find a solution"
 
 Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
-    {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "ReturnSolution" -> False, "MergeInterpolatingFunctions" -> True},
+    {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "ReturnSolution" -> False, "MergeInterpolatingFunctions" -> True, "Expand" -> False},
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
@@ -177,15 +179,24 @@ QuantumEvolve[
         ]
     ];
     If[ TrueQ[OptionValue["ReturnSolution"]], Return[solution]];
+    (* The solver returns one array-valued InterpolatingFunction.  Applied to
+       the parameter it is already a lazy array container, so it is stored
+       whole: expanding it into one scalar interpolation per amplitude
+       duplicates the time grid d^2 times and turns each later read into d^2
+       separate interpolation calls.  "Expand" -> True restores that form. *)
     If[ MatchQ[solution, _InterpolatingFunction],
-        solution = ExpandInterpolatingFunction[solution, parameter]
+        solution = If[
+            TrueQ[OptionValue["Expand"]],
+            ExpandInterpolatingFunction[solution, parameter],
+            solution[parameter]
+        ]
     ];
     Which[
-        state === None && SquareMatrixQ[solution],
+        state === None && MatchQ[ArrayDimensions[solution], {d_, d_}],
         QuantumOperator[
-            If[ Dimensions[solution] == hamiltonian["MatrixNameDimensions"] ^ 2,
-                QuantumState[Flatten @ solution, hamiltonian["Basis"]["Double"]]["Undouble"],
-                QuantumState[Flatten @ solution, hamiltonian["Basis"]]
+            If[ ArrayDimensions[solution] == hamiltonian["MatrixNameDimensions"] ^ 2,
+                QuantumState[ArrayVector @ solution, hamiltonian["Basis"]["Double"]]["Undouble"],
+                QuantumState[ArrayVector @ solution, hamiltonian["Basis"]]
             ],
             hamiltonian["Order"],
             "ParameterSpec" -> DeleteDuplicatesBy[Append[hamiltonian["ParameterSpec"], parameterSpec], First]

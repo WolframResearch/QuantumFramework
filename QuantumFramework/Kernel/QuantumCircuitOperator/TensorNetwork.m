@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageImport["Wolfram`TensorNetworks`"]
 
 PackageExport["TensorNetworkQuantumCircuit"]
@@ -215,7 +217,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     res = Confirm @ TensorNetworkContract[net, OptionValue["Path"], FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
-            SparseArrayFlatten[res],
+            ArrayVector[res],
             If[computationalQ, QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]], basis]
         ]
     ];

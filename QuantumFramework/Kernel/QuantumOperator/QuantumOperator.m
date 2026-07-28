@@ -2,6 +2,8 @@
 
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageImport["Wolfram`QuantumFramework`Gates`"]
 
 
@@ -450,7 +452,7 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
 
     QuantumOperator[
         QuantumState[
-            SparseArrayFlatten @ resultTensor,
+            ArrayVector @ resultTensor,
             QuantumBasis[
                 "Output" -> If[resultOutDecompose === {}, QuditBasis[], QuantumTensorProduct @@ resultOutDecompose],
                 "Input"  -> If[resultInDecompose === {}, QuditBasis[], QuantumTensorProduct @@ resultInDecompose],
@@ -627,7 +629,7 @@ QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator["Mult
 (* equality *)
 
 QuantumOperator /: Equal[qo__QuantumOperator] :=
-    Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@
+    Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ ArrayVector @ #["Sort"]["MatrixRepresentation"] & /@
         If[Or @@ Through[{qo}["MatrixQ"]], Through[{qo}["ToMatrix"]], {qo}])]
 
 QuantumOperator /: Unequal[qo__QuantumOperator] := ! Equal[qo]

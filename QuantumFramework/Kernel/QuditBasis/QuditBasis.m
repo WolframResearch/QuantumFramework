@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageExport["QuditBasis"]
 PackageExport["QuditName"]
 
@@ -98,7 +100,7 @@ QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
 (* equality *)
 
 QuditBasis /: Equal[qb__QuditBasis] :=
-    Thread[Equal @@ (Chop @ SetPrecision[SparseArrayFlatten @ Values @ #["Canonical"]["Sort"]["Representations"], $MachinePrecision - 2] & /@ {qb})]
+    Thread[Equal @@ (Chop @ SetPrecision[ArrayVector @ Values @ #["Canonical"]["Sort"]["Representations"], $MachinePrecision - 2] & /@ {qb})]
 
 QuditBasis /: Unequal[qb__QuditBasis] := ! Equal[qb]
 
@@ -106,7 +108,7 @@ QuditBasis /: Unequal[qb__QuditBasis] := ! Equal[qb]
 (* addition *)
 
 QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
-    repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]], SparseArrayFlatten @ #2, First[i]} &, b["Representations"]], {qb}],
+    repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]], ArrayVector @ #2, First[i]} &, b["Representations"]], {qb}],
     dims = #["Shape"] & /@ {qb},
     maxRank
 },

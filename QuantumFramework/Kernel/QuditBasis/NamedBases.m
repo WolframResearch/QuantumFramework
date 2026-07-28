@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 PackageScope["$QuditBasisNames"]
 PackageScope["$QuditPhaseSpaceBasisNames"]
 
@@ -102,7 +104,7 @@ QuditBasis[(name : "JX" | "JY" | "JZ" | "J" | "JI")[j_ : 1 / 2], args___] /; Int
 
 QuditBasis["Fourier"[]] := QuditBasis["Fourier"[2]]
 
-QuditBasis["Fourier"[qb_ ? QuditBasisQ], args___] := With[{dimension = qb["Dimension"], elements = SparseArrayFlatten /@ qb["Elements"]},
+QuditBasis["Fourier"[qb_ ? QuditBasisQ], args___] := With[{dimension = qb["Dimension"], elements = ArrayVector /@ qb["Elements"]},
     QuditBasis[
         AssociationThread[
             Subscript["F", #] & /@ Range[dimension],

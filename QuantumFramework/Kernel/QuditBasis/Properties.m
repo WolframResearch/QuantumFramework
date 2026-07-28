@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Wolfram`Arrays`"]
+
 
 
 QuditBasis["Properties"] = {
@@ -123,7 +125,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Size"] > 0 && qb["ElementDimension"] >
         Transpose[
             Outer[Times,
                 Sequence @@ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-                    SparseArrayFlatten /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
+                    ArrayVector /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
@@ -138,7 +140,7 @@ QuditBasisProp[qb_, "ReducedElements"] := If[qb["Size"] > 0 && qb["ElementDimens
         Transpose[
             Outer[Times,
                 Sequence @@ Map[If[MatrixQ[#] && ! SquareMatrixQ[#], SparseArray[# . PseudoInverse[RowReduce[#]]], #] &] @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-                    SparseArrayFlatten /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
+                    ArrayVector /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
