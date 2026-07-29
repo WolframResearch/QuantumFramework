@@ -1,24 +1,26 @@
 # What Makes Wolfram QuantumFramework Unique: A Verified Showcase
 
-Wolfram QuantumFramework is a quantum laboratory built into the Wolfram Language. The objects of quantum theory, states, operators, channels, measurements, circuits, are exact symbolic expressions: they carry free parameters, compose with one another in closed form, and answer questions about themselves through one uniform interface. A computation here typically ends in a formula, the propagator $U(t)$ of a time-dependent Hamiltonian, an optimization landscape you can differentiate, an entanglement entropy $S(t)$ you can solve, rather than a table of numbers. The same objects run in any finite dimension, qubits, qutrits, spin-$j$ multiplets, $N$-level systems, and they reach outward as well, to OpenQASM, to device transpilation, to real quantum hardware. Its natural habitat is the computation whose deliverable is insight: a closed form, an exact threshold, a verified physical statement. These are not estimates that tighten with more shots or a finer grid; they are *exact*, so where a numeric run or a finite measurement returns a value, QF returns the closed form, the exact integer, or the algebraic root that the value only approximates.
+Wolfram QuantumFramework is a quantum laboratory built into the Wolfram Language. The objects of quantum theory, states, operators, channels, measurements, circuits, are exact symbolic or numeric expressions: they can carry free parameters, compose with one another in closed form, and answer questions about themselves through one uniform interface. A computation here typically ends in a formula, the propagator $U(t)$ of a time-dependent Hamiltonian, an optimization landscape you can differentiate, an entanglement entropy $S(t)$ you can solve, rather than a table of numbers, though a fully numeric workflow is equally supported. The same objects run in any finite dimension, qubits, qutrits, spin-$j$ multiplets, $N$-level systems, and they reach outward as well, to OpenQASM, to device transpilation, to real quantum hardware. It is most useful when the goal is insight rather than a number: a closed form, an exact threshold, a verified physical statement. These are not estimates that tighten with more shots or a finer grid; they are exact, so where a numeric run or a finite measurement returns a value, QF returns the closed form, the exact integer, or the algebraic root that the value only approximates.
 
 This document makes that concrete as seven claims, each developed through worked examples:
 
 1. **Symbolic-first, exact algebra by default.** Time-dependent Hamiltonians solved to closed-form propagators, an exact QAOA landscape, a many-body entanglement entropy as a formula in time.
-2. **One object model spans all of quantum theory.** Channels, POVMs, bosonic Fock space, and phase-space quasi-probabilities are the same kind of object as a gate; a master equation solves symbolically for every state and every rate at once; a basis rides on every object; the model runs in any finite dimension, from a spin-1 qutrit to a five-site ring; and it closes with a full state-tomography loop.
-3. **Measurement records are quantum wires.** A measurement appends a pointer qudit instead of collapsing the state, so feedforward is a controlled gate on a record: teleportation runs without a classical channel, a coherent error is digitized and corrected at codeword fidelity exactly $1$, and a measurement can even be run backwards.
-4. **One object model, three computational engines.** The same circuit runs as exact state-vector algebra, as a steered tensor-network contraction, or as a compiled stabilizer tableau that carries a thousand qubits with ease, and the representations convert into one another exactly.
-5. **A quantum object is an ordinary Wolfram Language expression.** Native functions operate *on* the object: `Exp` exponentiates a generator into a propagator, `D` differentiates a gate into another operator, `Plus` and `Commutator` build a Hamiltonian, and the closed forms they yield flow on into solvers.
+2. **One object model spans all of quantum theory.** Channels, POVMs, bosonic Fock space, and phase-space quasi-probabilities are the same kind of object as a gate; a master equation solves symbolically for every state and every rate at once; every object carries its own basis; the model runs in any finite dimension, from a spin-1 qutrit to a five-site ring; and it closes with a full state-tomography loop.
+3. **Measurement records are quantum wires.** A measurement appends a pointer qudit instead of collapsing the state, so feedforward is a controlled gate on a record: teleportation carries its classical channel as a quantum wire, a coherent error is digitized and corrected at codeword fidelity exactly $1$, and a measurement can be run in reverse.
+4. **One object model, three computational engines.** The same circuit runs as exact state-vector algebra, as a steered tensor-network contraction, or as a compiled stabilizer tableau that represents a thousand-qubit state, and the representations convert into one another exactly.
+5. **A quantum object is an ordinary Wolfram Language expression.** Native functions operate on the object: `Exp` exponentiates a generator into a propagator, `D` differentiates a gate into another operator, `Plus` and `Commutator` build a Hamiltonian, and the closed forms they yield pass directly into solvers.
 6. **Every object draws itself.** Bloch spheres, amplitude charts that carry the phases, measurement histograms, circuit diagrams, and the tensor network behind a circuit, each a one-call property of the object it depicts.
 7. **An interoperability hub, down to real hardware.** OpenQASM in and out natively; transpilation to a device target; submission to a real QPU, with IBM as the worked example.
 
-The claims build on one another, symbolic objects at the base and real hardware at the summit, so we begin with the algebra everything else inherits.
+The claims build on one another, from symbolic objects to real hardware, so we begin with the symbolic algebra that the others rely on.
 
 ---
 
 ## Claim 1: Symbolic-first, exact algebra by default
 
-**Key feature:** symbolic algebra pervades the *whole* object model, not one function. The building blocks you reach for, a **state** (`QuantumState`), a **Hamiltonian** (`QuantumOperator`), its **time evolution** (`QuantumEvolve`), and a **circuit** (`QuantumCircuitOperator`), are each fully symbolic, and they compose into exact closed-form results. We take them in that order, starting with the simplest: a state whose amplitudes are symbols.
+**Key feature:** symbolic algebra runs through the entire object model, not a single function. The basic objects, a state (`QuantumState`), a Hamiltonian (`QuantumOperator`), its time evolution (`QuantumEvolve`), and a circuit (`QuantumCircuitOperator`), are each fully symbolic and compose into exact closed-form results. They are treated here in that order, beginning with the simplest: a state whose amplitudes are symbols.
+
+**Closest competitor.** An actively-maintained third-party symbolic-quantum Mathematica package matches the symbolic gate algebra, the symbolic Lindblad master equation, and the symbolic entropy shown here. What remains distinctive is the closed-form time-ordered propagator returned from a Hamiltonian object, expressed through parabolic-cylinder and Kummer functions that SymPy and every Julia package cannot represent at all.
 
 ### A symbolic state
 A `QuantumState` can carry free symbols. The object to build is the general qubit $|\psi\rangle = \cos\alpha\,|0\rangle + e^{i\beta}\sin\alpha\,|1\rangle$: not one state but the whole two-parameter family at once. Build it:
@@ -38,24 +40,24 @@ psi["BlochVector"] // ComplexExpand // FullSimplify
 The Bloch vector returns exactly as $\bigl(\sin 2\alpha\,\cos\beta,\ \sin 2\alpha\,\sin\beta,\ \cos 2\alpha\bigr)$: the full geometry as functions of $\alpha$ and $\beta$, without committing to numbers.
 
 ### A time-dependent symbolic Hamiltonian
-Hamiltonians need not be static. The following is a spin-$\tfrac12$ in a magnetic field that **rotates** in the $xy$-plane at frequency $\omega$, on top of a static $z$-field, the standard model of magnetic resonance and of a driven qubit:
+Hamiltonians need not be static. The following is a spin-$\tfrac12$ in a magnetic field that rotates in the $xy$-plane at frequency $\omega$, on top of a static $z$-field, the standard model of magnetic resonance and of a driven qubit:
 $$
 H(t) = \frac{\omega_0}{2}\,Z + \frac{\Omega}{2}\big(\cos\omega t\,X + \sin\omega t\,Y\big)
 $$
-It is **explicitly time-dependent**, built as a function `h[t]` whose operator carries the time `t`:
+It is explicitly time-dependent, built as a function `h[t]` whose operator carries the time `t`:
 ```wolfram
 ClearAll[h]
 h[t_] := \[Omega]0/2 QuantumOperator["Z"] +
    \[CapitalOmega]/2 (Cos[\[Omega] t] QuantumOperator["X"] + Sin[\[Omega] t] QuantumOperator["Y"])
 ```
-Because the field direction turns, $H$ does **not commute with itself at different times**, so the propagator is not simply $e^{-i\int H\,dt}$; it needs genuine time-ordering. Check the non-commutativity directly, letting the kernel's `Commutator` act on the two operator objects $h(t_1)$ and $h(t_2)$ themselves:
+Because the field direction rotates, $H$ does not commute with itself at different times, so the propagator is not simply $e^{-i\int H\,dt}$; it requires genuine time-ordering. Check the non-commutativity directly, applying `Commutator` to the two operator objects $h(t_1)$ and $h(t_2)$:
 ```wolfram
 Commutator[h[t1], h[t2]]["Matrix"] // Normal // FullSimplify
 ```
-The commutator is nonzero, its diagonal carrying $\mp\tfrac{i}{2}\Omega^2\sin[(t_1-t_2)\omega]$: this is the genuinely hard, time-ordered case, not a disguised static problem.
+The commutator is nonzero, with diagonal $\mp\tfrac{i}{2}\Omega^2\sin\!\big[(t_1-t_2)\omega\big]$: the evolution genuinely requires time-ordering and does not reduce to a static problem.
 
 ### Its propagator, in closed form
-`QuantumEvolve` is QF's one entry point for time evolution: it evolves a state forward or returns the propagator itself, under closed-system (Schrodinger) or open-system (Lindblad) dynamics, numerically or, when the inputs carry symbols, in closed form. Hand it the Hamiltonian `h[t]`, `None` in place of an initial state, and the time variable `t`, and it returns the *propagator* $U(t)$ solving $i\,\partial_t U = H(t)\,U$. (Verified here: $U(0)=I$ and $i\,U'(t)-H(t)\,U(t)=0$ exactly.)
+`QuantumEvolve` is QF's single entry point for time evolution: it propagates a state forward or returns the propagator itself, under closed-system (Schrodinger) or open-system (Lindblad) dynamics, numerically or, when the inputs carry symbols, in closed form. Given the Hamiltonian `h[t]`, `None` in place of an initial state, and the time variable `t`, it returns the propagator $U(t)$ solving $i\,\partial_t U = H(t)\,U$. (Verified here: $U(0)=I$ and $i\,U'(t)-H(t)\,U(t)=0$ exactly.)
 ```wolfram
 urot = QuantumEvolve[h[t], None, t]
 ```
@@ -71,7 +73,7 @@ e^{-i\omega t/2}\!\left(\cos\dfrac{\Omega_R t}{2} + i\dfrac{\delta}{\Omega_R}\si
 -\,i\,e^{i\omega t/2}\,\dfrac{\Omega}{\Omega_R}\sin\dfrac{\Omega_R t}{2} & e^{i\omega t/2}\!\left(\cos\dfrac{\Omega_R t}{2} - i\dfrac{\delta}{\Omega_R}\sin\dfrac{\Omega_R t}{2}\right)
 \end{pmatrix}
 $$
-The $e^{\mp i\omega t/2}$ factors are the rotating-frame phases; the $\cos$ and $\sin$ of $\Omega_R t/2$ are the dressed-state oscillations. The physically meaningful readout is the transition probability $|\langle 1|U(t)|0\rangle|^2$. Pull the lower-left matrix entry, the $0\to1$ amplitude:
+The $e^{\mp i\omega t/2}$ factors are the rotating-frame phases, and $\cos$ and $\sin$ of $\Omega_R t/2$ are the dressed-state oscillations. The quantity of physical interest is the transition probability $|\langle 1|U(t)|0\rangle|^2$. Take the lower-left matrix entry, the $0\to1$ amplitude:
 ```wolfram
 amp = Normal[urot["Matrix"]][[2, 1]];
 ```
@@ -83,7 +85,7 @@ Assuming[{\[Omega] \[Element] Reals, \[Omega]0 \[Element] Reals, \[CapitalOmega]
 The result is the textbook Rabi formula, $P_{0\to1}(t) = \frac{\Omega^2}{\Omega^2 + \delta^2}\,\sin^2\!\big(\tfrac{t}{2}\sqrt{\Omega^2 + \delta^2}\big)$. On resonance ($\omega=\omega_0$, so $\delta=0$) this is $\sin^2(\Omega t/2)$: complete Rabi flopping between $|0\rangle$ and $|1\rangle$. The oscillation rate $\sqrt{\Omega^2+\delta^2}$ is the generalized Rabi frequency, the dressed-state gap in the rotating frame, here recovered as a closed-form function of the drive detuning and strength.
 
 ### When the closed form needs special functions: Landau-Zener
-The rotating-field propagator was elementary, but symbolic evolution is not confined to elementary functions. Sweep the energy bias *linearly* through an avoided crossing at rate $v$ with a constant gap $\Delta$, the Landau-Zener model $H(t) = \tfrac{v t}{2}\,Z + \tfrac{\Delta}{2}\,X$, the universal question of whether a system dragged through a level crossing stays in its energy branch or jumps the gap, again time-dependent and non-commuting:
+The rotating-field propagator was elementary, but symbolic evolution is not limited to elementary functions. Sweep the energy bias linearly through an avoided crossing at rate $v$ with a constant gap $\Delta$: the Landau-Zener model $H(t) = \tfrac{v t}{2}\,Z + \tfrac{\Delta}{2}\,X$, which asks whether a system swept through a level crossing stays in its energy branch or crosses the gap. It is again time-dependent and non-commuting:
 ```wolfram
 hlz = v t/2 QuantumOperator["Z"] + \[CapitalDelta]/2 QuantumOperator["X"]
 ```
@@ -95,9 +97,9 @@ Then simplify its full matrix:
 ```wolfram
 lzmat = FullSimplify[Normal[ulz["Matrix"]]]
 ```
-The matrix returns as a genuinely special-function object. Its first entry alone reads $e^{-i v t^2/4}\,{}_1F_1\!\big(\tfrac{i\Delta^2}{8v};\ \tfrac12;\ \tfrac{i}{2}\,v t^2\big)$, and across the four entries Kummer ${}_1F_1$, fractional-order Hermite, and parabolic cylinder functions $D_\nu$ appear side by side, glued by $\Gamma$-function coefficients, the single dimensionless ratio $\Delta^2/v$ controlling every index and phase. They are one family written several ways: every piece solves the same Weber equation, here in the raw form the symbolic solver found it. The matrix checks out as a genuine propagator (numerically $U(0)=I$, solves the Schrodinger equation, unitary), and in the long-time limit its asymptotics collapse to the famous Landau-Zener transition probability $P = e^{-\pi\Delta^2/2v}$: symbolic evolution reaching past elementary functions to the special-function solution the physics demands.
+The matrix is a genuine special-function object. Its first entry alone reads $e^{-i v t^2/4}\,{}_1F_1\!\big(\tfrac{i\Delta^2}{8v};\ \tfrac12;\ \tfrac{i}{2}\,v t^2\big)$, and across the four entries the Kummer function ${}_1F_1$, fractional-order Hermite functions, and parabolic cylinder functions $D_\nu$ appear together, with $\Gamma$-function coefficients, the single dimensionless ratio $\Delta^2/v$ setting every index and phase. These are one family in several forms: each solves the same Weber equation, shown here as the symbolic solver returned it. The matrix is a valid propagator (numerically $U(0)=I$, it solves the Schrodinger equation, and it is unitary), and at long times its asymptotics reduce to the Landau-Zener transition probability $P = e^{-\pi\Delta^2/2v}$. Symbolic evolution here reaches beyond elementary functions to the special-function solution the physics requires.
 
-The payoff of having the *whole* propagator, not just its asymptote, is sharpest as a picture. First freeze the special-function matrix into a numeric parametric operator: fix $v = 1$ and $\Delta = \sqrt{g}$ so a single dimensionless knob $g = \Delta^2/v$ tunes the adiabaticity, and declare $g$ and the time $t$ as parameters:
+Having the whole propagator, not just its asymptote, is clearest in a plot. First convert the special-function matrix into a numeric parametric operator: fix $v = 1$ and $\Delta = \sqrt{g}$, so a single dimensionless parameter $g = \Delta^2/v$ sets the adiabaticity, and declare $g$ and the time $t$ as parameters:
 ```wolfram
 op = N@QuantumOperator[lzmat /. {v -> 1., \[CapitalDelta] -> Sqrt[g]},
    "Parameters" -> {g, t}]
@@ -110,7 +112,7 @@ ClearAll[survival];
 survival[g_, t_] = With[{c = op[g, -10]["Dagger"][]},
    Abs[(QuantumState["0"]["Dagger"]@op[g, t][c])["Scalar"]]^2];
 ```
-`survival[g, t]` is now a closed-form function of adiabaticity and time, assembled entirely by composing QF objects, with no differential solver in the loop.
+`survival[g, t]` is now a closed-form function of adiabaticity and time, assembled entirely by composing QF objects, without a differential solver.
 
 Take three regimes: a fast (diabatic) sweep, an intermediate one, and a slow (adiabatic) sweep, set by the single ratio $\Delta^2/v$:
 ```wolfram
@@ -127,10 +129,10 @@ Plot[Evaluate@Table[survival[g, t], {g, ratios}], {t, -10, 10},
     Epilog -> {Gray, Dashed, Sequence @@ (Line[{{-10, Exp[-Pi #/2]}, {10, Exp[-Pi #/2]}}] & /@ ratios)},
     GridLines -> {{0}, None}]
 ```
-The dashed lines are the textbook scalar; the solid curves are the exact survival from the special-function propagator. Each plunges through the crossing at $t = 0$ and then *rings* around its asymptote with a slowly decaying envelope, the Landau-Zener-Stückelberg oscillations that the parabolic cylinder functions carry and the bare formula cannot show. The asymptotic result is nothing but the long-time average of the exact answer, and the single ratio $\Delta^2/v$ orders the whole family: a fast (diabatic) sweep barely dips and stays in its branch, a slow (adiabatic) sweep transfers almost completely. The closed form is the entire time-resolved crossing, ringing and all, where the textbook gives only the final number.
+The dashed lines are the textbook asymptotic value; the solid curves are the exact survival from the special-function propagator. Each drops through the crossing at $t = 0$ and then oscillates about its asymptote with a slowly decaying envelope, the Landau-Zener-Stückelberg oscillations carried by the parabolic cylinder functions, which the asymptotic formula does not show. The asymptotic result is the long-time average of the exact answer, and the single ratio $\Delta^2/v$ orders the whole family: a fast (diabatic) sweep barely dips and stays in its branch, a slow (adiabatic) sweep transfers almost completely. The closed form gives the entire time-resolved crossing, oscillations included, where the asymptotic formula gives only the final number.
 
 ### A parametric circuit: QAOA, built entirely from a graph
-QAOA is the canonical parametric circuit for optimization: one layer alternates a cost unitary $e^{-i\gamma H_C}$ with a mixer $e^{-i\theta B}$, and we tune the two angles to maximize a classical objective. The objective here is MaxCut: color the vertices of a graph with two colors $s_i = \pm1$ so that as many edges as possible join different colors, $\max_{s\,\in\,\{\pm1\}^n} \sum_{(i,j)\in E} \tfrac{1 - s_i s_j}{2}$. Everything below is *derived from the problem graph*, so nothing is hardcoded. Take the complete graph on four vertices, $K_4$, a frustrated instance where you cannot cut all six edges:
+QAOA is the canonical parametric circuit for optimization: one layer alternates a cost unitary $e^{-i\gamma H_C}$ with a mixer $e^{-i\theta B}$, and the two angles are tuned to maximize a classical objective. The objective here is MaxCut: color the vertices of a graph with two colors $s_i = \pm1$ so that as many edges as possible join different colors, $\max_{s\,\in\,\{\pm1\}^n} \sum_{(i,j)\in E} \tfrac{1 - s_i s_j}{2}$. Everything below is derived from the problem graph, so nothing is hardcoded. Take the complete graph on four vertices, $K_4$, a frustrated instance in which not all six edges can be cut:
 ```wolfram
 graph = CompleteGraph[4]
 ```
@@ -166,9 +168,9 @@ Compose the three into one parametric layer:
 ```wolfram
 oneLayer = QuantumCircuitOperator[{stateprep, qcost, mixer}, "Parameters" -> {\[Theta], \[Gamma]}]
 ```
-Not a single qubit index was written by hand.
+No qubit index was written by hand.
 
-The cost landscape is the expectation $\langle\psi|H_C|\psi\rangle$, and here QF leans on a feature worth naming: **a `QuantumCircuitOperator` can hold states as elements**. Composing the prep circuit (the ket), the operator $H_C$, and the prep circuit's `["Dagger"]` (the bra) builds $\langle\psi|H_C|\psi\rangle$ as a *single object*:
+The cost landscape is the expectation $\langle\psi|H_C|\psi\rangle$, and here QF uses a feature worth stating explicitly: a `QuantumCircuitOperator` can hold states as elements. Composing the prep circuit (the ket), the operator $H_C$, and the prep circuit's `["Dagger"]` (the bra) builds $\langle\psi|H_C|\psi\rangle$ as a single object:
 ```wolfram
 meanvalue = (oneLayer /* hcost /* oneLayer["Dagger"])
 ```
@@ -176,7 +178,7 @@ That object draws itself:
 ```wolfram
 meanvalue["Diagram"]
 ```
-The diagram shows the bra-ket sandwich block by block, the labeled `Prep`/`Cost`/`Mixer` layer, the `Hamiltonian` in the middle, and the daggered layer mirrored on the right: the expectation value as a picture. Calling the same object with `[]["Scalar"]` reads off the number, no manual inner product:
+The diagram shows the bra-ket structure block by block: the labeled `Prep`/`Cost`/`Mixer` layer, the `Hamiltonian` in the middle, and the daggered layer mirrored on the right. Calling the same object with `[]["Scalar"]` returns the number, with no manual inner product:
 ```wolfram
 landscape = FullSimplify[meanvalue[]["Scalar"], Element[{\[Gamma], \[Theta]}, Reals]]
 ```
@@ -190,14 +192,14 @@ Plot3D[landscape, {\[Gamma], 0, 2 \[Pi]}, {\[Theta], 0, 2 \[Pi]},
   ColorFunction -> "TemperatureMap",
   PlotPoints -> 50]
 ```
-The surface is the variational problem in full view: smooth, with period $\pi$ in $\theta$ but $2\pi$ in $\gamma$ (the cost angle enters through $\sin\gamma$, not only $4\gamma$, so $\gamma$ needs a full $2\pi$ to repeat), and flat at the value $3$ along the line $\gamma = 0$, where the cost layer is off and the equal superposition cuts $3$ of the $6$ edges on average. What an experiment estimates point by point, with shot noise on every sample, is here one exact surface, and its peaks are not read off a grid but certified algebraically. Take the maximum exactly:
+The surface is the entire variational problem: smooth, with period $\pi$ in $\theta$ but $2\pi$ in $\gamma$ (the cost angle enters through $\sin\gamma$, not only $4\gamma$, so $\gamma$ needs a full $2\pi$ to repeat), and flat at the value $3$ along the line $\gamma = 0$, where the cost layer is inactive and the equal superposition cuts $3$ of the $6$ edges on average. What an experiment estimates point by point, with shot noise on every sample, is here a single exact surface, and its peaks are not read from a grid but certified algebraically. Take the maximum exactly:
 ```wolfram
 Maximize[landscape, {\[Theta], \[Gamma]}]
 ```
-The maximum returns as a closed-form algebraic number, a root of a cubic equal to $\langle H_C\rangle_{\max}$, with the optimal angles likewise exact `Root` expressions. The lesson is the honest one: a single QAOA layer does *not* reach the true cut of $4$, and the exact landscape certifies that ceiling as a cubic root rather than an estimate. Falling short is the generic behavior of one layer; an instance where $p=1$ happens to saturate the cut is the lucky special case, and climbing the rest of the way to $4$ is what deeper QAOA, more layers, buys. What survives is the showcase point: the variational optimum is an exact symbolic quantity, a root of a cubic with closed-form angles, not a number sampled near the answer.
+The maximum returns as a closed-form algebraic number, a root of a cubic equal to $\langle H_C\rangle_{\max}$, with the optimal angles likewise exact `Root` expressions. A single QAOA layer does not reach the true cut of $4$, and the exact landscape certifies that ceiling as a cubic root rather than an estimate. Falling short is the generic behavior of one layer; a case where $p=1$ happens to saturate the cut is exceptional, and reaching $4$ requires deeper QAOA with more layers. The point stands: the variational optimum is an exact symbolic quantity, a root of a cubic with closed-form angles, not a number sampled near the answer.
 
-### The payoff: a full many-body computation in closed form
-The same machinery scales to a genuine many-body computation. Build the 2-qubit Heisenberg Hamiltonian $H = J\,(XX + YY + ZZ)$ symbolically (Hamiltonian simulation, the workhorse application of a quantum computer):
+### A full many-body computation in closed form
+The same construction extends to a genuine many-body computation. Build the 2-qubit Heisenberg Hamiltonian $H = J\,(XX + YY + ZZ)$ symbolically (Hamiltonian simulation, a central application of a quantum computer):
 ```wolfram
 hheis = J (QuantumOperator["XX"] + QuantumOperator["YY"] + QuantumOperator["ZZ"])
 ```
@@ -209,11 +211,11 @@ Display the evolved state at time $t$:
 ```wolfram
 FullSimplify[psit] // TraditionalForm
 ```
-The evolved ket displays in closed form: the excitation oscillates coherently between $|01\rangle$ and $|10\rangle$ at angular frequency $2J$, inside an overall phase $e^{iJt}$. Now read off the **entanglement entropy of one qubit as a function of time**, $S(t) = -\operatorname{Tr}\big[\rho_1\log_2\rho_1\big]$ with $\rho_1 = \operatorname{Tr}_2\,|\psi(t)\rangle\langle\psi(t)|$, the standard measure of how entangled the two spins have become, and a derived, nonlinear quantity:
+The evolved ket displays in closed form: the excitation oscillates coherently between $|01\rangle$ and $|10\rangle$ at angular frequency $2J$, within an overall phase $e^{iJt}$. Now read off the entanglement entropy of one qubit as a function of time, $S(t) = -\operatorname{Tr}\big[\rho_1\log_2\rho_1\big]$ with $\rho_1 = \operatorname{Tr}_2\,|\psi(t)\rangle\langle\psi(t)|$, the standard measure of how entangled the two spins have become and a derived, nonlinear quantity:
 ```wolfram
 s = FullSimplify[QuantumPartialTrace[psit, {2}]["VonNeumannEntropy"], t J \[Element] Reals]
 ```
-QF returns the **entire curve as a formula in $t$ and $J$**: the binary entropy of the two oscillating populations, zero whenever the state is a product, a full bit at the Bell points, periodic with the exchange oscillation. Because it is a formula, it can be differentiated, expanded, or solved in closed form, and the same approach extends to larger symbolic spin chains.
+QF returns the entire curve as a formula in $t$ and $J$: the binary entropy of the two oscillating populations, zero whenever the state is a product, a full bit at the Bell points, periodic with the exchange oscillation. Because it is a formula, it can be differentiated, expanded, or solved in closed form, and the same approach extends to larger symbolic spin chains.
 
 Plot it (at $J = 1$):
 ```wolfram
@@ -225,7 +227,7 @@ Plot[s /. {J -> 1}, {t, 0, Pi},
 
 ## Claim 2: One object model spans all of quantum theory
 
-**Key feature:** if Claim 1 went *deep* on one object's symbolic dynamics, this claim goes *wide*. QF gives you whole *categories* of object beyond unitary gates: open systems, generalized measurements, continuous-variable optics, phase space, and state estimation. Two generalities run underneath the whole model: every object carries its basis, and every object lives in any finite dimension, qutrits and $N$-level systems as readily as qubits. The point is *scope*, the range of quantum theory QF represents as objects you compute with directly.
+**Key feature:** Claim 1 developed the symbolic dynamics of one object in depth; this claim shows the breadth of the object model. QF provides whole categories of object beyond unitary gates: open systems, generalized measurements, continuous-variable optics, phase space, and state estimation. Two properties hold throughout the model: every object carries its basis, and every object is defined in any finite dimension, qutrits and $N$-level systems as readily as qubits. The subject here is scope, the range of quantum theory that QF represents as objects one computes with directly.
 
 ### An open-system object: a quantum channel
 A noise process is its own object, a `QuantumChannel`, not a gate. Take a generic pure qubit on the Bloch sphere, polar angle $\theta$ and azimuth $\phi$, and confirm it is pure through the purity $\operatorname{Tr}[\rho^2]$, which equals $1$ exactly for a pure state and drops below $1$ for a mixed one. Build the state:
@@ -246,7 +248,7 @@ FullSimplify[psi["Purity"] - QuantumChannel["AmplitudeDamping"[\[Gamma]]][psi]["
 The purity loss returns exactly as $2\,\gamma(1-\gamma)\,\sin^4\tfrac{\theta}{2}$. The pure input has become mixed: irreversible, non-unitary dynamics captured directly as a channel object. The loss depends only on $\gamma$ and the excited-state weight $\sin^2(\theta/2)$, never on the azimuth $\phi$, and it vanishes at $\gamma=0$ (no damping), at $\gamma=1$ (fully relaxed to the pure ground state), and at $\theta=0$ ($|0\rangle$, which damping leaves untouched).
 
 ### The master equation, solved once for every state and every rate
-A channel is one snapshot of decoherence; the full dynamics is the Lindblad master equation, $\dot\rho = -i[H,\rho] + \sum_i \gamma_i \big(L_i\rho L_i^\dagger - \tfrac12\{L_i^\dagger L_i,\rho\}\big)$, and `QuantumEvolve` solves it *symbolically*. Hand it a density matrix whose four entries are symbols and rates that stay symbols, and one solve answers for every qubit experiment at once. Set the physical region: positive rates, a real level splitting, and forward time:
+A channel is a single instance of decoherence; the full dynamics is the Lindblad master equation, $\dot\rho = -i[H,\rho] + \sum_i \gamma_i \big(L_i\rho L_i^\dagger - \tfrac12\{L_i^\dagger L_i,\rho\}\big)$, and `QuantumEvolve` solves it symbolically. Given a density matrix whose four entries are symbols and rates that remain symbols, a single solution covers every qubit experiment at once. Set the physical region: positive rates, a real level splitting, and forward time:
 ```wolfram
 $Assumptions = \[Gamma]1 > 0 && \[Gamma]\[Phi] >= 0 && \[CapitalOmega] \[Element] Reals && t >= 0;
 ```
@@ -274,14 +276,14 @@ $$
 \rho_{21}\, e^{-\left(\frac{\gamma_1}{2} + 2\gamma_\phi - i\Omega\right) t} & \rho_{22}\, e^{-\gamma_1 t}
 \end{pmatrix}
 $$
-The excited population empties at $\gamma_1$, the lost weight lands on the ground state, and the coherence precesses at $\Omega$ while decaying at $\Gamma_2 = \tfrac{\gamma_1}{2} + 2\gamma_\phi$: every experiment on every qubit, in one matrix. With $T_1 = 1/\gamma_1$ and $T_2 = 1/\Gamma_2$ read off the exponents, the textbook bound between the two times is now a theorem about this solution:
+The excited population decays at $\gamma_1$, the lost population moves to the ground state, and the coherence precesses at $\Omega$ while decaying at $\Gamma_2 = \tfrac{\gamma_1}{2} + 2\gamma_\phi$: every experiment on every qubit, in one matrix. With $T_1 = 1/\gamma_1$ and $T_2 = 1/\Gamma_2$ read from the exponents, the textbook bound between the two times is a theorem about this solution:
 ```wolfram
 Reduce[ForAll[{\[Gamma]1, \[Gamma]\[Phi]}, \[Gamma]1 > 0 && \[Gamma]\[Phi] >= 0, 1/(\[Gamma]1/2 + 2 \[Gamma]\[Phi]) <= 2/\[Gamma]1]]
 ```
-The reduction returns `True`: $T_2 \le 2T_1$ holds for every admissible rate pair, handed over by the computation rather than quoted from a textbook, and the same `Reduce` asked for equality returns $\gamma_\phi = 0$ (verified): the famous factor of two is saturated exactly when dephasing vanishes.
+The reduction returns `True`: $T_2 \le 2T_1$ holds for every admissible rate pair, obtained from the computation rather than quoted from a textbook, and reducing the corresponding equality for the dephasing rate, `Reduce[1/(\[Gamma]1/2 + 2 \[Gamma]\[Phi]) == 2/\[Gamma]1, \[Gamma]\[Phi]]`, returns $\gamma_\phi = 0$ (for $\gamma_1 \ne 0$): the factor of two is saturated exactly when dephasing vanishes.
 
 ### A generalized measurement: a POVM
-Real detectors are not always projective. A POVM is a set of positive effects $\{E_i\}$ summing to the identity, $\sum_i E_i = I$, with outcome probabilities given by the Born rule $p_i = \operatorname{Tr}[\rho\,E_i]$; build one from your own effects with `QuantumMeasurementOperator[{E1, E2, ...}]`. A *symmetric informationally complete* POVM is the maximally symmetric case: $d^2$ rank-one effects $E_i = \tfrac1d|\psi_i\rangle\langle\psi_i|$ with equal pairwise overlaps $|\langle\psi_i|\psi_j\rangle|^2 = \tfrac{1}{d+1}$, four outcomes on a two-level system, pointing along the vertices of a tetrahedron in the Bloch ball. Measure a generic Bloch qubit $\psi(\theta,\phi)$, the Born rule applied symbolically to all four effects. Build the state:
+Real detectors are not always projective. A POVM is a set of positive effects $\{E_i\}$ summing to the identity, $\sum_i E_i = I$, with outcome probabilities given by the Born rule $p_i = \operatorname{Tr}[\rho\,E_i]$; one is built from a list of effects with `QuantumMeasurementOperator[{E1, E2, ...}]`. A *symmetric informationally complete* POVM is the maximally symmetric case: $d^2$ rank-one effects $E_i = \tfrac1d|\psi_i\rangle\langle\psi_i|$ with equal pairwise overlaps $|\langle\psi_i|\psi_j\rangle|^2 = \tfrac{1}{d+1}$, four outcomes on a two-level system, pointing along the vertices of a tetrahedron in the Bloch ball. Measure a generic Bloch qubit $\psi(\theta,\phi)$, applying the Born rule symbolically to all four effects. Build the state:
 ```wolfram
 psi = QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}]
 ```
@@ -297,9 +299,9 @@ The four probabilities return exactly as $p_i = \tfrac14\big(1 + \hat r \cdot \h
 ```wolfram
 probs /. \[Theta] -> 0
 ```
-The distribution collapses to simple rationals: $|0\rangle$ puts a half on the tetrahedron vertex nearest the pole and a sixth on each of the other three. And because the SIC is *informationally complete*, these four probabilities are not merely statistics of the state, they **are** the state: $\theta$ and $\phi$ can be solved back from them, which is what makes SIC measurements the natural alphabet of tomography.
+The distribution collapses to simple rationals: $|0\rangle$ assigns probability one half to the tetrahedron vertex nearest the pole and one sixth to each of the other three. Because the SIC is informationally complete, these four probabilities are not merely statistics of the state; they determine the state: $\theta$ and $\phi$ can be recovered from them, which is what makes SIC measurements a natural basis for tomography.
 
-The SIC is not only a symbolic Born-rule calculation; it is a measurement you drop straight into a circuit, alongside the gates, on whichever wire you choose. Place the tetrahedron SIC as a measurement on the first qubit:
+The SIC is not only a symbolic Born-rule calculation; it is a measurement that drops directly into a circuit, alongside the gates, on any chosen wire. Place the tetrahedron SIC as a measurement on the first qubit:
 ```wolfram
 sicQubit1 = QuantumMeasurementOperator["TetrahedronSICPOVM", {1}]
 ```
@@ -316,10 +318,10 @@ The diagram shows the four-outcome POVM sitting at the end of the first wire lik
 ```wolfram
 circ[]["ProbabilitiesPlot"]
 ```
-Four bars summing to one, one tetrahedron outcome suppressed and another enhanced: the SIC reading qubit $1$. The twist is that qubit $1$ is *entangled* with qubit $2$, so its reduced state is mixed, its Bloch vector pulled inside the ball (length less than $1$), and the four probabilities are correspondingly drawn in from the pure-state extremes toward the uniform $\tfrac14$. The same informationally complete alphabet reports a mixed, entangled qubit as faithfully as a pure one, which is exactly what tomography of a real, noisy qubit demands.
+Four bars summing to one, one tetrahedron outcome suppressed and another enhanced: the SIC measurement of qubit $1$. Here qubit $1$ is entangled with qubit $2$, so its reduced state is mixed, its Bloch vector lies inside the ball (length less than $1$), and the four probabilities are correspondingly drawn in from the pure-state extremes toward the uniform value $\tfrac14$. The same informationally complete measurement reports a mixed, entangled qubit as faithfully as a pure one, which is what tomography of a real, noisy qubit requires.
 
 ### Continuous-variable quantum optics
-Bosonic Fock space, not qubits. The state of an ideal laser mode is the coherent state $|\alpha\rangle = e^{-|\alpha|^2/2}\sum_{n=0}^{\infty}\tfrac{\alpha^n}{\sqrt{n!}}\,|n\rangle$, defined as the eigenstate of the photon annihilation operator, $\hat a\,|\alpha\rangle = \alpha\,|\alpha\rangle$, with a *complex* eigenvalue $\alpha$ because $\hat a$ is not Hermitian. QF builds these objects directly in a truncated Fock space (sixteen levels by default). Check the eigenvalue equation with $\alpha$ fully symbolic. Build the annihilation operator:
+Bosonic Fock space, not qubits. The state of an ideal laser mode is the coherent state $|\alpha\rangle = e^{-|\alpha|^2/2}\sum_{n=0}^{\infty}\tfrac{\alpha^n}{\sqrt{n!}}\,|n\rangle$, defined as the eigenstate of the photon annihilation operator, $\hat a\,|\alpha\rangle = \alpha\,|\alpha\rangle$, with a complex eigenvalue $\alpha$ because $\hat a$ is not Hermitian. QF builds these objects directly in a truncated Fock space (sixteen levels by default). Check the eigenvalue equation with $\alpha$ fully symbolic. Build the annihilation operator:
 ```wolfram
 aOp = AnnihilationOperator[]
 ```
@@ -333,7 +335,7 @@ Simplify[Most[(aOp[alphaKet] - \[FormalAlpha] alphaKet)["AmplitudesList"]]]
 ```
 Every amplitude of $\hat a|\alpha\rangle - \alpha|\alpha\rangle$ returns identically zero in the symbolic $\alpha$ (the truncation-edge amplitude excluded): the defining equation, verified for the whole family of coherent states at once.
 
-The property that earns these states the title "most classical states of light" is dynamical: under the oscillator Hamiltonian $H = \omega\,(\hat a^\dagger\hat a + \tfrac12)$ a coherent state *stays* a coherent state, $e^{-iHt}\,|\alpha\rangle = e^{-i\omega t/2}\,|\alpha\,e^{-i\omega t}\rangle$, its label circling the phase-space origin exactly like a classical oscillator amplitude, with only the vacuum phase out front. Ask `QuantumEvolve` for the oscillator propagator, symbolically:
+The property that earns these states the name "most classical states of light" is dynamical: under the oscillator Hamiltonian $H = \omega\,(\hat a^\dagger\hat a + \tfrac12)$ a coherent state remains a coherent state, $e^{-iHt}\,|\alpha\rangle = e^{-i\omega t/2}\,|\alpha\,e^{-i\omega t}\rangle$, its label $\alpha$ rotating about the origin of phase space at frequency $\omega$, like a classical oscillator amplitude, up to the overall phase $e^{-i\omega t/2}$. Compute the oscillator propagator with `QuantumEvolve`, symbolically:
 ```wolfram
 uosc = QuantumEvolve[\[Omega] (aOp["Dagger"] @ aOp + 1/2), None, t]
 ```
@@ -341,32 +343,32 @@ Then check the coherent-state identity it implies, with $\alpha$, $\omega$, and 
 ```wolfram
 uosc @ CoherentState[] == E^(-I \[Omega] t/2) CoherentState[][\[FormalAlpha] E^(-I \[Omega] t)]
 ```
-`True`, with $\alpha$, $\omega$, and $t$ all symbols: one evolution settles the dynamics of every coherent state at every frequency, an exact statement about the family rather than a simulation of one member.
+`True`, with $\alpha$, $\omega$, and $t$ all symbols: one evolution determines the dynamics of every coherent state at every frequency, an exact statement about the family rather than a simulation of one member. (QF's state `==` compares up to global phase, so this fixes the label $\alpha \to \alpha\,e^{-i\omega t}$; the vacuum phase $e^{-i\omega t/2}$ is exact but lies in the global phase that `==` ignores, and appears only in an amplitude-level comparison.)
 
-What still separates this most-classical light from its neighbors is photon statistics. The second-order coherence at zero delay, $g^{(2)}(0) = \dfrac{\langle a^\dagger a^\dagger a\, a\rangle}{\langle a^\dagger a\rangle^2} = \dfrac{\langle n(n-1)\rangle}{\langle n\rangle^2}$, is the normalized chance of detecting two photons at once; it sorts light by photon statistics, antibunched ($<1$, nonclassical), coherent ($=1$), and bunched thermal ($>1$).
+What distinguishes this most-classical light from other states is photon statistics. The second-order coherence at zero delay, $g^{(2)}(0) = \dfrac{\langle a^\dagger a^\dagger a\, a\rangle}{\langle a^\dagger a\rangle^2} = \dfrac{\langle n(n-1)\rangle}{\langle n\rangle^2}$, is the normalized probability of detecting two photons at once; it classifies light by photon statistics: antibunched ($<1$, nonclassical), coherent ($=1$), and bunched thermal ($>1$).
 ```wolfram
 g2s = <|"Fock" -> G2Coherence[FockState[1]], "Coherent" -> G2Coherence[CoherentState[20][1.5]],
   "Thermal" -> G2Coherence[ThermalState[1.0, 20]]|>
 ```
-Each class lands where the formula predicts: zero for the single photon, one for the laser, two for thermal light. The three values chart directly:
+Each class takes the value the formula predicts: zero for the single photon, one for the laser, two for thermal light. The three values chart directly:
 ```wolfram
 BarChart[g2s, ChartLabels -> {"Fock |1\[RightAngleBracket]", "Coherent", "Thermal"},
   PlotLabel -> "Second-order coherence g2(0)", Frame -> True, PlotRange -> {0, 2.2}]
 ```
-The ordering on the chart, antibunched below $1$, coherent at $1$, bunched above, is the photon-statistics fingerprint that tells these light sources apart where a single intensity measurement cannot.
+The ordering on the chart, antibunched below $1$, coherent at $1$, bunched above, is the photon-statistics signature that distinguishes these light sources where a single intensity measurement cannot.
 
 ### Phase-space quasi-probabilities: Wigner and Husimi
-The Wigner function is the phase-space quasi-probability $W(x,p) = \dfrac{1}{\pi}\displaystyle\int \langle x - y\,|\,\rho\,|\,x + y\rangle\, e^{2ipy}\,dy$. It integrates to $1$ like a probability density but, unlike one, can go **negative**, and that negativity is a signature of nonclassicality with no classical analogue. The sharpest specimen is a Schrodinger cat state, the even superposition $(|\alpha\rangle + |{-\alpha}\rangle)/\mathcal{N}$ of two coherent states of opposite phase, here with $\alpha = 2$. Build its Wigner function on a phase-space window:
+The Wigner function is the phase-space quasi-probability $W(x,p) = \dfrac{1}{\pi}\displaystyle\int \langle x - y\,|\,\rho\,|\,x + y\rangle\, e^{2ipy}\,dy$. It integrates to $1$ like a probability density but, unlike one, can take negative values, and that negativity is a signature of nonclassicality with no classical analogue. A clear example is the Schrodinger cat state, the even superposition $(|\alpha\rangle + |{-\alpha}\rangle)/\mathcal{N}$ of two coherent states of opposite phase, here with $\alpha = 2$. Build its Wigner function on a phase-space window:
 ```wolfram
 wigner = WignerRepresentation[CatState[][2, 0], {-6, 6}, {-2, 2}, "GridSize" -> 90]
 ```
-Read it at two telling points, the origin and half a fringe up in momentum:
+Read it at two representative points, the origin and half a fringe away in momentum:
 ```wolfram
 {wigner[0, 0], wigner[0, 1/2]}
 ```
-The first value is positive, the second negative. The first is the identification that matters: the midpoint between the two coherent components, where a classical mixture of them would put essentially nothing, instead carries the strongest feature of the entire function, an interference peak approaching the ceiling $1/\pi$ that no Wigner function can exceed; and the neighboring fringe is firmly negative.
+The first value is positive, the second negative. The first is the important one: at the midpoint between the two coherent components, where a classical mixture of them would place almost no weight, the Wigner function instead has its strongest feature, an interference peak that reaches the ceiling $1/\pi$ that no Wigner function can exceed. The even cat is a parity eigenstate, so $W(0,0) = 1/\pi$ exactly (here up to the Fock truncation), not merely close to it; the neighboring fringe is firmly negative.
 
-The Wigner function is one of a family of phase-space quasi-probabilities, and its smoothed sibling makes that negativity vanish. The Husimi-$Q$ function $Q(x,p) = \tfrac1\pi\langle\alpha|\rho|\alpha\rangle$, with $\alpha = (x+ip)/\sqrt2$, is the Wigner function convolved with a coherent-state Gaussian; that smoothing forces it non-negative everywhere, at the cost of blurring away the very nonclassicality the Wigner reveals. Build it over the same window, a touch taller in $p$ since the Husimi spreads wider:
+The Wigner function is one of a family of phase-space quasi-probabilities, and its smoothed counterpart removes the negativity. The Husimi-$Q$ function $Q(x,p) = \tfrac1\pi\langle\alpha|\rho|\alpha\rangle$, with $\alpha = (x+ip)/\sqrt2$, is the Wigner function convolved with a coherent-state Gaussian; that smoothing makes it non-negative everywhere, at the cost of removing the nonclassicality the Wigner reveals. Build it over the same window, slightly taller in $p$ since the Husimi is wider:
 ```wolfram
 husimi = HusimiQRepresentation[CatState[][2, 0], {-6, 6}, {-3, 3}, "GridSize" -> 90]
 ```
@@ -374,7 +376,7 @@ Read it at the origin where the Wigner peaked:
 ```wolfram
 husimi[0, 0]
 ```
-The Husimi returns next to nothing there, against the Wigner's sharp peak: the Gaussian average has cancelled the oscillating fringes. Plot the two surfaces side by side:
+The Husimi is close to zero there, in contrast to the Wigner's sharp peak: the Gaussian average has cancelled the oscillating fringes. Plot the two surfaces side by side:
 ```wolfram
 Row[{
    Plot3D[wigner[x, p], {x, -6, 6}, {p, -2, 2}, PlotRange -> All, Mesh -> None,
@@ -384,10 +386,10 @@ Row[{
      PlotPoints -> 50, ColorFunction -> "SunsetColors",
      AxesLabel -> {"x", "p", "Q"}, PlotLabel -> "Husimi Q(x,p)", ImageSize -> Small]}]
 ```
-The same cat state, two quasi-probabilities. The Wigner on the left carries the two Gaussian lobes at $x = \pm 2\sqrt2$, the coherent components, *plus* the interference ridge oscillating above and below zero between them; that negativity is the signature of the superposition. The Husimi on the right keeps only the two smooth, strictly non-negative lobes, each near $1/2\pi$, the fringes smoothed flat. Both integrate to $1$, but only the Wigner can go negative, which is exactly why Wigner negativity, and not the always-positive Husimi, is the witness of nonclassicality. Decoherence erases the Wigner fringes and leaves the lobes, collapsing the left picture toward the right.
+The same cat state, two quasi-probabilities. The Wigner on the left has the two Gaussian lobes at $x = \pm 2\sqrt2$, the coherent components, together with the interference ridge oscillating above and below zero between them; that negativity is the signature of the superposition. The Husimi on the right keeps only the two smooth, non-negative lobes, each near $1/2\pi$, with the fringes smoothed flat. Both are properly normalized quasi-probabilities, the Wigner integrating to $1$ over $dx\,dp$ and the Husimi to $1$ over $d^2\alpha = dx\,dp/2$ (equivalently, to $2$ over $dx\,dp$), but only the Wigner can take negative values, which is why Wigner negativity, and not the always-positive Husimi, is the witness of nonclassicality. Decoherence erases the Wigner fringes and leaves the lobes, moving the left picture toward the right.
 
 ### Every object carries its basis
-The scope extends inward too: every state, operator, and measurement above is stored *together with the basis it is written in*. A basis is a stored matrix $B$ whose rows are the basis vectors in computational coordinates, a change of basis is the similarity $A_{\mathcal B} = B^{-1} A B$, and objects written in different bases reconcile automatically through the computational frame. About three dozen named bases ship (Bell, Fourier, Schwinger, Dirac, Gell-Mann, Wigner, MUB, SIC), and the same engine lowers non-computational measurements for OpenQASM export and supplies the Bell-derived basis that two-qubit KAK gate compilation runs in. Watch the representation move while the physics stays put: take the qubit $|+\rangle$, the spread-out superposition $(|0\rangle+|1\rangle)/\sqrt2$ in the computational basis, and write it in the $X$ basis instead:
+The scope extends inward as well: every state, operator, and measurement above is stored together with the basis it is written in. A basis is a stored matrix $B$ whose rows are the basis vectors in computational coordinates, a change of basis is the similarity transformation $A_{\mathcal B} = B^{-1} A B$, and objects written in different bases reconcile automatically through the computational frame. About three dozen named bases are provided (Bell, Fourier, Schwinger, Dirac, Gell-Mann, Wigner, MUB, SIC), and the same mechanism converts non-computational measurements for OpenQASM export and supplies the Bell-derived basis used in two-qubit KAK gate compilation. The representation changes while the physics does not: take the qubit $|+\rangle$, the superposition $(|0\rangle+|1\rangle)/\sqrt2$ in the computational basis, and write it in the $X$ basis instead:
 ```wolfram
 QuantumState[QuantumState["+"], "X"] // TraditionalForm
 ```
@@ -409,7 +411,7 @@ Display it again:
 ```wolfram
 mxZ // TraditionalForm
 ```
-The same state spreads into a three-term superposition over the $J_z$ levels: one ket in its own basis, a sum in the other. The named operator $J_x$ is itself stored in its *own* eigenbasis, so the expectation $\langle J_x\rangle = \langle\psi|J_x|\psi\rangle$ mixes three declared bases at once; compute it from both representations of the state:
+The same state spreads into a three-term superposition over the $J_z$ levels: one ket in its own basis, a sum in the other. The named operator $J_x$ is itself stored in its own eigenbasis, so the expectation $\langle J_x\rangle = \langle\psi|J_x|\psi\rangle$ involves three declared bases at once; compute it from both representations of the state:
 ```wolfram
 <|"JX basis" -> mx["Dagger"][QuantumOperator["JX"[1]][mx]]["Scalar"],
   "Computational basis" -> mxZ["Dagger"][QuantumOperator["JX"[1]][mxZ]]["Scalar"]|>
@@ -417,7 +419,7 @@ The same state spreads into a three-term superposition over the $J_z$ levels: on
 Both entries return as $\langle J_x\rangle = 1$: the state in either coordinate system, the operator in a third, and QF reconciled them all; the invariant survives every change of coordinates.
 
 ### Any finite dimension: a spin-1 qutrit and a five-site ring
-The same spin-1 system carries honest three-level *dynamics*, not just a change of basis, and the representation extends to any dimension at all. Its zero-field-splitting Hamiltonian $H = 2d\,J_z^2 + e\,(J_x^2 - J_y^2)$, the model of an NV-center defect, is built from QF's native spin-1 operators with both couplings left symbolic. First the three spin-1 operators:
+The same spin-1 system supports genuine three-level dynamics, not just a change of basis, and the representation extends to any dimension. Its zero-field-splitting Hamiltonian $H = 2d\,J_z^2 + e\,(J_x^2 - J_y^2)$, the model of an NV-center defect, is built from QF's native spin-1 operators with both couplings left symbolic. First the three spin-1 operators:
 ```wolfram
 {jx, jy, jz} = QuantumOperator /@ {"JX"[1], "JY"[1], "JZ"[1]}
 ```
@@ -429,13 +431,13 @@ Display its matrix:
 ```wolfram
 hzfs["Matrix"] // MatrixForm
 ```
-The operator returns fully symbolic, and its matrix displays in the basis the algebra carried along, the $J_x$ eigenbasis: the couplings stay symbols, and the coordinates stay attached to the object.
+The operator is fully symbolic, and its matrix is displayed in the basis the algebra carried with it, the $J_x$ eigenbasis: the couplings remain symbols, and the coordinates remain attached to the object.
 
-A Hamiltonian is simplest in its energy eigenbasis, and the operator hands over its own eigenvectors. Build a basis from them and read $H$ there:
+A Hamiltonian is simplest in its energy eigenbasis, and the operator provides its own eigenvectors. Build a basis from them and read $H$ there:
 ```wolfram
 QuantumOperator[hzfs, QuantumBasis[hzfs["Eigenvectors"]]]["Matrix"] // Normal // FullSimplify
 ```
-The matrix returns exactly as $\operatorname{diag}\big(0,\ 2d - e,\ 2d + e\big)$: the zero-field-split spectrum in closed form, symbols intact. Building a basis from an object's own eigenvectors works in any dimension, and the spin-$j$ operators ship natively for every $j$.
+The matrix returns exactly as $\operatorname{diag}\big(0,\ 2d - e,\ 2d + e\big)$: the zero-field-split spectrum in closed form, symbols intact. Building a basis from an object's own eigenvectors works in any dimension, and the spin-$j$ operators are provided natively for every $j$.
 
 Dimension need not be a power of two either. A particle hopping on an $N$-site ring lives in an $N$-dimensional Hilbert space, here $N = 5$, with the tight-binding Hamiltonian $H = -\sum_{j=1}^{N}\big(|j\rangle\langle j{+}1| + |j{+}1\rangle\langle j|\big)$, site $N{+}1$ identified with site $1$. Fix the ring size:
 ```wolfram
@@ -450,7 +452,7 @@ Look at it in the site basis:
 ```wolfram
 ring // MatrixForm
 ```
-The matrix displays as a circulant: $-1$ on the two neighbor diagonals and in the far corners, the bond that closes the chain into a ring, and zero everywhere else. In the site basis the physics is local hopping; by Bloch's theorem the same operator should be *diagonal* in the momentum (Fourier) basis. Rewrite it there and read the diagonal:
+The matrix displays as a circulant: $-1$ on the two neighbor diagonals and in the far corners, the bond that closes the chain into a ring, and zero everywhere else. In the site basis the physics is local hopping; by Bloch's theorem the same operator should be diagonal in the momentum (Fourier) basis. Rewrite it there and read the diagonal:
 ```wolfram
 Normal @ Chop @
   N @ Diagonal[
@@ -460,7 +462,7 @@ Normal @ Chop @
 The diagonal returns exactly the tight-binding dispersion $E(k) = -2\cos(2\pi k / N)$ at the five Bloch momenta, and the off-diagonal terms vanish: a five-level system, diagonalized by a named basis the same way a qubit would be.
 
 ### State estimation: tomography from measured counts
-Tomography is the inverse of measurement: recover an unknown state from the statistics of measurements in several bases, and it is part of the same object model. The three qubit Pauli bases $X, Y, Z$ are mutually unbiased and together informationally complete: their outcome frequencies estimate the three expectations that pin down the density matrix through $\rho = \tfrac12\big(I + \langle X\rangle X + \langle Y\rangle Y + \langle Z\rangle Z\big)$. QF runs the whole loop. First, pick an unknown state to reconstruct:
+Tomography is the inverse of measurement: recover an unknown state from the statistics of measurements in several bases, and it is part of the same object model. The three qubit Pauli bases $X, Y, Z$ are mutually unbiased and together informationally complete: their outcome frequencies estimate the three expectations that pin down the density matrix through $\rho = \tfrac12\big(I + \langle X\rangle X + \langle Y\rangle Y + \langle Z\rangle Z\big)$. QF performs the entire procedure. First, pick an unknown state to reconstruct:
 ```wolfram
 true = QuantumState[N @ {Cos[Pi/6], Sin[Pi/6] Exp[I Pi/4]}]
 ```
@@ -475,7 +477,7 @@ Values[data]
 ```
 Three pairs of counts return, one per basis: multinomially sampled tallies scattered around the Born-rule proportions, different on every fresh sample, and all a real experiment ever sees.
 
-Now hand the counts to the estimator, which does linear inversion followed by maximum-likelihood:
+Now pass the counts to the estimator, which performs linear inversion followed by maximum-likelihood:
 ```wolfram
 est = QuantumStateEstimate[data]
 ```
@@ -483,20 +485,22 @@ Read the reconstructed density matrix:
 ```wolfram
 est["MaximumLikelihoodState"]["DensityMatrix"] // Normal // Chop
 ```
-The recovered matrix sits on top of the true one, whose exact entries are $\rho_{11} = \tfrac34$ and $\rho_{12} = \tfrac{\sqrt{3}}{4}\,e^{-i\pi/4}$, with entry-wise residuals at the scale shot noise sets, $\sim 1/\sqrt{2000}$; which entries deviate, and by how much, changes with every fresh sample. To score the reconstruction in one number, compute its fidelity $F(\rho,\sigma) = \operatorname{Tr}\sqrt{\sqrt{\rho}\,\sigma\,\sqrt{\rho}}$ to the state we started from, equal to $1$ exactly when the two states coincide:
+The recovered matrix agrees closely with the true one, whose exact entries are $\rho_{11} = \tfrac34$ and $\rho_{12} = \tfrac{\sqrt{3}}{4}\,e^{-i\pi/4}$, with entry-wise residuals at the scale shot noise sets, $\sim 1/\sqrt{2000}$; which entries deviate, and by how much, changes with every fresh sample. To summarize the reconstruction in one number, compute its fidelity $F(\rho,\sigma) = \operatorname{Tr}\sqrt{\sqrt{\rho}\,\sigma\,\sqrt{\rho}}$ to the original state, equal to $1$ exactly when the two states coincide:
 ```wolfram
 QuantumSimilarity[true, est["MaximumLikelihoodState"]]
 ```
-The fidelity returns very close to unity: the unknown state recovered from finite, noisy synthetic data, using nothing but counts in three bases. Past these unitary measurement bases the same basis engine continues into the over-complete operator frames, where $B^{-1}$ becomes a dual frame and a state turns into a probability vector, the mechanism behind the SIC measurement above.
+The fidelity is close to $1$, its deviation set by the shot noise, of order $1/\sqrt{2000}$: the unknown state recovered from finite, noisy synthetic data, using only counts in three bases. Beyond these unitary measurement bases, the same basis mechanism continues into the over-complete operator frames, where $B^{-1}$ becomes a dual frame and a state becomes a probability vector, the mechanism behind the SIC measurement above.
 
 ---
 
 ## Claim 3: Measurement records are quantum wires, and feedforward is a controlled gate
 
-**Key feature:** Claim 2 used measurement to *estimate* a state; here measurement itself comes apart. QF implements a projective measurement as von Neumann's measurement *interaction*, not as a collapse: it appends a pointer qudit and entangles it with the system, $V\,|\psi\rangle = \sum_k \big(P_k|\psi\rangle\big)\otimes|k\rangle$. The record of the measurement is therefore itself a quantum wire, numbered $0, -1, -2, \dots$ alongside the system wires, every branch stays in the state, and *feedforward*, acting on the system conditioned on an earlier outcome, is nothing but a gate controlled on a record wire. Protocols that mix measurement with conditioned gates, teleportation, error correction, measurement-based computing, stay inside one coherent symbolic object.
+**Key feature:** Claim 2 used measurement to estimate a state; here measurement itself is decomposed. QF implements a projective measurement as von Neumann's measurement interaction, not as a collapse: it appends a pointer qudit and entangles it with the system, $V\,|\psi\rangle = \sum_k \big(P_k|\psi\rangle\big)\otimes|k\rangle$. The record of the measurement is therefore itself a quantum wire, numbered $0, -1, -2, \dots$ alongside the system wires; every branch remains in the state, and feedforward, acting on the system conditioned on an earlier outcome, is simply a gate controlled on a record wire. Protocols that combine measurement with conditioned gates, teleportation, error correction, measurement-based computing, remain inside one symbolic object.
 
-### Teleportation without a classical channel
-The cleanest place to see records-as-wires earn their keep is teleportation. In the textbook protocol Alice measures her two qubits in the Bell basis and phones the two bits to Bob, who applies $X^{m_2} Z^{m_1}$ to his half of an entangled pair. The deferred-measurement principle says the phone call is physically optional: condition the corrections on the records themselves. Build exactly that, qubit $1$ carrying the unknown state, qubits $2$ and $3$ in a Bell pair:
+**Closest competitor.** Cirq and PennyLane both ship a `defer_measurements` transform that turns mid-circuit measurement into exactly this controlled-on-a-record mechanism; QF's edge is generality, not kind: arbitrary observables, degenerate rank-$k$ projectors, POVM and Naimark dilations, qudits, and a record that can be read jointly and inverted, not just a deferred computational-basis bit.
+
+### Teleportation: the classical channel as a quantum wire
+Teleportation is the clearest illustration of a measurement record used as a wire. In the textbook protocol Alice measures her two qubits in the Bell basis and sends the two classical bits to Bob, who applies $X^{m_2} Z^{m_1}$ to his half of an entangled pair. The deferred-measurement principle states that this classical communication is not required: the corrections can be conditioned on the records themselves. Build exactly that, qubit $1$ carrying the unknown state, qubits $2$ and $3$ in a Bell pair:
 ```wolfram
 tele = QuantumCircuitOperator[{
     "H" -> 2, "CNOT" -> {2, 3},
@@ -509,7 +513,7 @@ Draw the protocol:
 ```wolfram
 tele["Diagram"]
 ```
-The diagram is the whole protocol. The two measurements, written as the bare qubit lists `{1}` and `{2}`, drop their outcomes onto the record wires the intro described, numbered $0$ and $-1$ below the system wires. The corrections then reach back from those record wires: `"CNOT" -> {-1, 3}` is an $X$ on Bob's qubit controlled by the second record, and `"CZ" -> {0, 3}` a $Z$ controlled by the first, both ordinary controlled gates with a record wire in the control slot. No classical bit ever leaves the object; the phone call has become two wires.
+The diagram is the whole protocol. The two measurements, written as the bare qubit lists `{1}` and `{2}`, place their outcomes on the record wires described in the introduction, numbered $0$ and $-1$ below the system wires. The corrections then act from those record wires: `"CNOT" -> {-1, 3}` is an $X$ on Bob's qubit controlled by the second record, and `"CZ" -> {0, 3}` a $Z$ controlled by the first, both ordinary controlled gates with a record wire in the control position. No classical bit ever leaves the object; the classical channel has become two record wires, promoted to a coherent quantum resource rather than removed (a record wire is a more expensive resource than a classical bit, not a free one).
 
 Teleport a generic Bloch qubit $\psi(\theta,\phi) = \cos\tfrac\theta2\,|0\rangle + e^{i\phi}\sin\tfrac\theta2\,|1\rangle$. The protocol succeeds if Bob ends up holding exactly the input, $\rho_{\text{Bob}} = |\psi\rangle\langle\psi|$, which for a qubit means the two Bloch vectors coincide. First build the input state:
 ```wolfram
@@ -527,12 +531,12 @@ Read Bob's Bloch vector, the partial trace discarding Alice's two qubits and the
 ```wolfram
 FullSimplify[QuantumPartialTrace[out, {1, 2, 3, 4}]["BlochVector"], {\[Theta] \[Element] Reals, \[Phi] \[Element] Reals}]
 ```
-Bob's Bloch vector returns as the *same* $\big(\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta\big)$, identically in $\theta$ and $\phi$: every pure state teleports exactly, the recovered state *is* the input, with no classical channel anywhere in the computation.
+Bob's Bloch vector returns as the same $\big(\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta\big)$, identically in $\theta$ and $\phi$: every pure state teleports exactly, the recovered state equals the input, with the classical channel carried as record wires inside the object rather than eliminated.
 
 ### A coherent error, digitized and corrected
-The three-qubit repetition code encodes $\alpha|0\rangle + \beta|1\rangle$ as $\alpha|000\rangle + \beta|111\rangle$ and protects it against bit flips. The classic subtlety is that real errors are not discrete flips; here the error will be a *coherent* rotation $R_X(2\theta)$ on the middle qubit, partway between nothing ($\theta = 0$) and a full flip ($\theta = \pi/2$). The founding theorem of error correction says that measuring the syndrome *digitizes* this continuous error into those two discrete cases. Watch it happen symbolically.
+The three-qubit repetition code encodes $\alpha|0\rangle + \beta|1\rangle$ as $\alpha|000\rangle + \beta|111\rangle$ and protects it against bit flips. The subtlety is that real errors are not discrete flips; here the error is a coherent rotation $R_X(2\theta)$ on the middle qubit, between no error ($\theta = 0$) and a full flip ($\theta = \pi/2$). The founding theorem of error correction states that measuring the syndrome digitizes this continuous error into those two discrete cases, shown here symbolically.
 
-First the syndrome measurement. The parity $Z_1 Z_2$ must be measured without learning anything else about the state: a *degenerate* projective measurement with two rank-two projectors $P_\pm = (I \pm Z \otimes Z)/2$, which is precisely what `QuantumMeasurementOperator` accepts as a list of projectors. First the single-qubit identity:
+First the syndrome measurement. The parity $Z_1 Z_2$ must be measured without learning anything else about the state: a degenerate projective measurement with two rank-two projectors $P_\pm = (I \pm Z \otimes Z)/2$, which is precisely what `QuantumMeasurementOperator` accepts as a list of projectors. First the single-qubit identity:
 ```wolfram
 id2 = IdentityMatrix[2];
 ```
@@ -564,7 +568,7 @@ Draw it:
 ```wolfram
 qec["Diagram"]
 ```
-The diagram lays out the whole code on five wires: the labeled `Encode` block spreading the data qubit across the three code qubits, the $R_X(2\theta)$ error on qubit $2$, the two parity measurements dropping their syndromes onto record wires $0$ and $-1$, and the three corrections reaching back from those records, each an $X$ controlled on one record and anti-controlled on the other. Run it on a fully symbolic data qubit:
+The diagram lays out the whole code on five wires: the labeled `Encode` block spreading the data qubit across the three code qubits, the $R_X(2\theta)$ error on qubit $2$, the two parity measurements placing their syndromes on record wires $0$ and $-1$, and the three corrections acting from those records, each an $X$ controlled on one record and anti-controlled on the other. Run it on a fully symbolic data qubit:
 ```wolfram
 coded = qec[QuantumTensorProduct[QuantumState[{\[Alpha], \[Beta]}], QuantumState["00"]]]
 ```
@@ -573,18 +577,18 @@ Read the joint distribution of the two syndrome records, the diagonal of their r
 Assuming[{\[Theta] \[Element] Reals, \[Alpha] \[Element] Reals, \[Beta] \[Element] Reals, \[Alpha]^2 + \[Beta]^2 == 1},
   FullSimplify[ComplexExpand[Diagonal[Normal[QuantumPartialTrace[coded, {3, 4, 5}]["DensityMatrix"]]]]]]
 ```
-The four syndrome weights return as $\{\cos^2\theta,\ 0,\ 0,\ \sin^2\theta\}$: the continuous rotation has been *digitized*. The code never sees a partial error; it sees "no error" with probability $\cos^2\theta$ or "qubit $2$ flipped" with probability $\sin^2\theta$, and the weights are independent of $\alpha$ and $\beta$, which is exactly what "measuring the syndrome without learning the state" means.
+The four syndrome weights return as $\{\cos^2\theta,\ 0,\ 0,\ \sin^2\theta\}$: the continuous rotation has been digitized. The code never sees a partial error; it sees "no error" with probability $\cos^2\theta$ or "qubit $2$ flipped" with probability $\sin^2\theta$, and the weights are independent of $\alpha$ and $\beta$, which is what "measuring the syndrome without learning the state" means.
 
-The feedforward gates then act inside each branch. The theorem to check: the corrected state matches the ideal codeword $\alpha|000\rangle + \beta|111\rangle$ at fidelity $F = 1$, for *every* input and *every* error angle. Compute $F$ symbolically:
+The feedforward gates then act inside each branch. The claim to check: the corrected state matches the ideal codeword $\alpha|000\rangle + \beta|111\rangle$ at fidelity $F = 1$, for every input and every error angle. Compute $F$ symbolically:
 ```wolfram
 Assuming[{\[Theta] \[Element] Reals, \[Alpha] \[Element] Reals, \[Beta] \[Element] Reals, \[Alpha]^2 + \[Beta]^2 == 1},
   FullSimplify[ComplexExpand[QuantumSimilarity[QuantumPartialTrace[coded, {1, 2}],
     enc[QuantumTensorProduct[QuantumState[{\[Alpha], \[Beta]}], QuantumState["00"]]], "Fidelity"]]]]
 ```
-The fidelity returns as exactly $1$, for every input $(\alpha, \beta)$ and every error angle $\theta$: not a high number for one sampled case, but the digitization-of-errors theorem itself, handed over by the computation.
+The fidelity returns as exactly $1$, for every input $(\alpha, \beta)$ and every error angle $\theta$: not a high number for one sampled case, but the digitization-of-errors theorem itself, obtained from the computation. (The cell fixes real amplitudes so the symbolic fidelity closes cleanly; the result is in fact independent of $\alpha, \beta$ and remains $1$ for complex amplitudes as well.)
 
 ### Run the measurement backwards
-Because no branch was discarded, the measurement is a *reversible* interaction, and reversible in the laboratory, not only on paper. That a measurement can be undone while its record stays coherent, before it irreversibly decoheres, is an experimental fact: the reversal, or 'uncollapsing', of a partial (weak) measurement has been demonstrated on superconducting qubits, returning the qubit to its pre-measurement state. QF exposes its underlying dilation as `m["SuperOperator"]`: the isometry $V$ that carries out the measurement by appending the pointer qudit, $V\,|\psi\rangle = \sum_k \big(P_k|\psi\rangle\big)\otimes|k\rangle$, mapping the qubit's two-dimensional space into the $2\times2$ system-and-pointer space. Because $V$ is an isometry it satisfies $V^\dagger V = I$, so it has a left inverse $V^\dagger$ that un-appends the pointer and undoes the measurement. Wrap that inverse as a labeled operator and run the two back to back, measure then un-measure. Build the input state:
+Because no branch was discarded, the measurement is a reversible interaction, and reversible in the laboratory, not only on paper. That a partial measurement can be undone while its record stays coherent, before it irreversibly decoheres, is an experimental fact: the probabilistic reversal, or 'uncollapsing', of a weak measurement has been demonstrated on a superconducting phase qubit (Katz et al., *Phys. Rev. Lett.*, 2008), returning the qubit to its pre-measurement state on a heralded subset of runs. The cell below is the deterministic idealization of that result: the exact left inverse $V^\dagger$ of a projective measurement's dilation, which undoes the interaction with certainty rather than on a selected outcome. QF provides the underlying dilation as `m["SuperOperator"]`: the isometry $V$ that carries out the measurement by appending the pointer qudit, $V\,|\psi\rangle = \sum_k \big(P_k|\psi\rangle\big)\otimes|k\rangle$, mapping the qubit's two-dimensional space into the $2\times2$ system-and-pointer space. Because $V$ is an isometry it satisfies $V^\dagger V = I$, so it has a left inverse $V^\dagger$ that removes the pointer and undoes the measurement. Define that inverse as a labeled operator and apply the two in sequence, measure then un-measure. Build the input state:
 ```wolfram
 psi = QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}]
 ```
@@ -604,22 +608,24 @@ Draw it:
 ```wolfram
 backward["Diagram"]
 ```
-The diagram is two boxes on one wire: the measurement dropping its outcome onto the pointer record, then the labeled `Un-measure` block reaching back to absorb it. Apply the whole circuit to the input and read the state that comes out:
+The diagram is two boxes on one wire: the measurement placing its outcome on the pointer record, then the labeled `Un-measure` block removing it. Apply the whole circuit to the input and read the resulting state:
 ```wolfram
 FullSimplify[ComplexExpand[Normal[backward[psi]["StateVector"]]], {\[Theta] \[Element] Reals, \[Phi] \[Element] Reals}]
 ```
-The state returns as exactly $\{\cos\tfrac\theta2,\ e^{i\phi}\sin\tfrac\theta2\}$, the input recovered phase and all: the measurement is undone exactly. A projective measurement is irreversible only once its record is discarded; while the record stays a wire, it is reversible physics, $V^\dagger V = I$ exactly as von Neumann wrote it down.
+The state returns as exactly $\{\cos\tfrac\theta2,\ e^{i\phi}\sin\tfrac\theta2\}$, the input recovered including its phase: the measurement is undone exactly. A projective measurement is irreversible only once its record is discarded; while the record remains a wire, the interaction is reversible, $V^\dagger V = I$ exactly as von Neumann wrote it.
 
-A record, then, is a wire you can condition gates on, trace out, read jointly with the system, or undo. The cost is equally explicit: each measurement appends a pointer qudit, so a circuit with $k$ measurements on $n$ qubits evolves a state of dimension $2^{n+k}$. That growth is not overhead; it is the price of keeping every branch alive, and it is precisely what the teleportation identity, the digitization theorem, and the un-measurement above are made of. Keeping every branch alive is, of course, one computational strategy among several, which raises the next claim: QF has three.
+A record, then, is a wire that gates can be conditioned on, that can be traced out, read jointly with the system, or undone. The cost is equally explicit: each measurement appends a pointer qudit, so a circuit with $k$ measurements on $n$ qubits evolves a state of dimension $2^{n+k}$. That growth is not overhead; it is the cost of retaining every branch, and it is what the teleportation identity, the digitization theorem, and the un-measurement above rely on. Retaining every branch is one computational strategy among several, which leads to the next claim: QF has three.
 
 ---
 
 ## Claim 4: One object model, three computational engines
 
-**Key feature:** the objects of Claims 1 through 3 never specified *how* they are computed. Underneath a circuit application sit three interchangeable engines: exact state-vector algebra (`Method -> "Schrodinger"`), tensor-network contraction (the default), and a compiled stabilizer tableau (`Method -> "Stabilizer"`), each suited to a different regime of symbols, structure, and scale. The exact state-vector path is the dense baseline, a literal $2^n$ matrix-vector product available on demand; the two engines that genuinely change the *representation*, and so repay a closer look, are the tensor-network default and the stabilizer tableau, which we take in turn. Because all three share one object model, their representations then convert into one another exactly.
+**Key feature:** the objects of Claims 1 through 3 never specified how they are computed. Underneath a circuit application are three interchangeable engines: exact state-vector algebra (`Method -> "Schrodinger"`), tensor-network contraction (the default), and a compiled stabilizer tableau (`Method -> "Stabilizer"`), each suited to a different regime of symbols, structure, and scale. The exact state-vector path is the dense baseline, a literal $2^n$ matrix-vector product available on demand; the two engines that genuinely change the representation, and so deserve a closer look, are the tensor-network default and the stabilizer tableau, taken in turn. Because all three share one object model, their representations then convert into one another exactly.
+
+**Closest competitor.** Qiskit Aer exposes the same multi-engine idea through its `method=` switch across nine backends with automatic selection; what QF adds beyond the switch is that all three representations are one symbolic object that interconverts exactly, plus `StabilizerFrame`, an exact stabilizer-rank object that falls back automatically at the first non-Clifford gate and carries symbolic parameters through the tableau.
 
 ### The default engine: a steered tensor-network contraction
-Applying a circuit is, by default, a tensor-network contraction, and the *order* of the pairwise contractions decides the cost: every step produces an intermediate tensor, the expense is set by the largest intermediate the order ever creates (in matrix-product language, the bond dimension it forces you to carry), and a poor order can be exponentially more expensive than a good one on the very same network. QF exposes that choice as a `Method` sub-option, `"Path" -> "Greedy"` or `"Optimal"`, or an explicit list you compute and inspect yourself with `GreedyContractionPath` / `OptimalContractionPath`. Run a recognizable algorithm through it: Grover's search for the single input a Boolean oracle accepts among $N = 2^8 = 256$ candidates. The named `"GroverPhase"` circuit is *one* Grover iteration $G = D\,O$, the diffusion $D$ after the phase oracle $O$; stack the peak number of them, $k = \big\lfloor\tfrac{\pi}{4}\sqrt N\big\rceil = 12$, on the uniform superposition and contract the whole search through a greedily chosen path. The search register size:
+Applying a circuit is, by default, a tensor-network contraction, and the order of the pairwise contractions determines the cost: every step produces an intermediate tensor, the expense is set by the largest intermediate the order creates (in matrix-product language, the bond dimension it requires), and a poor order can be exponentially more expensive than a good one on the same network. QF provides that choice as a `Method` sub-option, `"Path" -> "Greedy"` or `"Optimal"`, or an explicit list computed and inspected with `GreedyContractionPath` / `OptimalContractionPath`. Take a familiar algorithm: Grover's search for the single input a Boolean oracle accepts among $N = 2^8 = 256$ candidates. The named `"GroverPhase"` circuit is one Grover iteration $G = D\,O$, the diffusion $D$ after the phase oracle $O$; stack the peak number of them, $k = \big\lfloor\tfrac{\pi}{4}\sqrt N\big\rfloor = 12$, on the uniform superposition and contract the whole search through a greedily chosen path. The search register size:
 ```wolfram
 n = 8;
 ```
@@ -635,7 +641,7 @@ One Grover iteration $G = D\,O$, the diffusion after the phase oracle:
 ```wolfram
 step = QuantumCircuitOperator["GroverPhase"[oracle]]
 ```
-The peak iteration count $k = \big\lfloor\tfrac{\pi}{4}\sqrt N\big\rceil$:
+The peak iteration count from the exact rotation angle, $k = \operatorname{round}\!\big(\tfrac{\pi}{4\theta} - \tfrac12\big)$ with $\theta = \arcsin\!\sqrt{1/N}$ (which is $12$ here, where the coarser $\lfloor\tfrac{\pi}{4}\sqrt N\rfloor$ agrees):
 ```wolfram
 kopt = Round[Pi/(4 ArcSin[Sqrt[1/2^n]]) - 1/2];
 ```
@@ -659,9 +665,9 @@ Because the contraction stayed exact, the probability comes back as an exact rat
 ```wolfram
 % // N
 ```
-The success probability is all but certain, sitting on the analytic Grover peak $\sin^2\!\big((2k+1)\arcsin\sqrt{1/N}\big)$ that the iteration count $k = 12$ is chosen to hit; the most probable bitstring is the marked input itself, $200 = 11001000$ (verified). A search of a few hundred gates, contracted in one steered pass.
+The success probability is very close to $1$, at the analytic Grover peak $\sin^2\!\big((2k+1)\arcsin\sqrt{1/N}\big)$ that the iteration count $k = 12$ is chosen to reach; the most probable bitstring is the marked input itself, $200 = 11001000$ (verified). A search of a few hundred gates, contracted in one steered pass.
 
-The contraction plan is itself an inspectable object. Pull the circuit's tensor network:
+The contraction plan is itself an inspectable object. Extract the circuit's tensor network:
 ```wolfram
 net = grover["TensorNetwork"]
 ```
@@ -672,10 +678,10 @@ ContractionTree[
  TreeElementLabel -> (All -> None), 
  TreeElementShapeFunction -> (All -> None)]
 ```
-The tree is the engine's execution plan: the leaves are the circuit's gate and state tensors, every internal node is one pairwise contraction, and the branching structure is the schedule the greedy path chose, which contractions nest inside which. The depth and balance of that tree are what the path tunes to keep each intermediate tensor small.
+The tree is the contraction schedule: the leaves are the circuit's gate and state tensors, every internal node is one pairwise contraction, and the branching structure is the order the greedy path chose, showing which contractions are nested. The depth and balance of that tree are what the path adjusts to keep each intermediate tensor small.
 
 ### The stabilizer engine: the state as its symmetry group
-For Clifford circuits there is a representation that never touches amplitudes at all: store the state as the group of Pauli operators that fix it, $\{P : P\,|\psi\rangle = +|\psi\rangle\}$, whose $n$ commuting generators determine the $n$-qubit state uniquely and fit in a binary symplectic tableau. This is the Gottesman-Knill representation, in which a Clifford gate is a constant-size rewrite of the tableau rather than a $2^n \times 2^n$ matrix product. The engine is one option away. Build a five-qubit linear cluster state, the entangled resource behind measurement-based computing, as a layer of Hadamards followed by nearest-neighbor controlled-$Z$ gates:
+For Clifford circuits there is a representation that does not use amplitudes: store the state as the group of Pauli operators that fix it, $\{P : P\,|\psi\rangle = +|\psi\rangle\}$, whose $n$ commuting generators determine the $n$-qubit state uniquely and fit in a binary symplectic tableau. This is the Gottesman-Knill representation, in which a Clifford gate is a constant-size rewrite of the tableau rather than a $2^n \times 2^n$ matrix product. The engine is selected by one option. Build a five-qubit linear cluster state, the entangled resource behind measurement-based computing, as a layer of Hadamards followed by nearest-neighbor controlled-$Z$ gates:
 ```wolfram
 cluster5 = QuantumCircuitOperator[
    Join[Thread["H" -> Range[5]],
@@ -705,7 +711,7 @@ Pauli expectations are closed-form algebra on the generators, with no state vect
 ```
 The two generators $K_1$ and $K_3$ return deterministically $+1$, while $XX$ on the first two sites, which anticommutes with $K_1 = X_1 Z_2$, is exactly unbiased, all read off by $\mathbb{F}_2$ phase tracking.
 
-The payoff of the representation is scale. Stream twenty thousand random Clifford gates onto a thousand qubits, a state whose amplitude vector would need $2^{1000}$ entries. The qubit count:
+The advantage of the representation is scale. Apply twenty thousand random Clifford gates to a thousand qubits, a state whose amplitude vector would need $2^{1000}$ entries. The qubit count:
 ```wolfram
 n = 1000;
 ```
@@ -718,14 +724,14 @@ Apply them to the $n$-qubit stabilizer state and time the evolution:
 ```wolfram
 First @ AbsoluteTiming[big = PauliStabilizer[n]["ApplyCircuit", gates];]
 ```
-The whole gate stream folds almost instantly: `ApplyCircuit` runs the tableau updates through one compiled kernel, so the per-gate cost is small and independent of the $2^n$ that never gets built. The bipartite entanglement entropy across the half-chain cut is then a closed form, $S(A) = \operatorname{rank}_{\mathbb{F}_2}(\text{generators restricted to } A) - |A|$, exact at any qubit count:
+The whole gate stream folds in a fraction of a second: `ApplyCircuit` runs the tableau updates through one compiled kernel whose per-gate cost is flat in $n$ and independent of the $2^n$ that never gets built. The cross-engine comparison is boundary-dependent rather than a single ratio: a dedicated C++ tableau (Stim) is roughly $4\times$ faster at the engine core and $11$-$16\times$ faster end to end, while a Python-driven gate-by-gate pipeline around that same C++ engine is about $27\times$ slower than this one compiled call (measurements in the companion `QF-Stabilizer-vs-Packages.md`). The bipartite entanglement entropy across the half-chain cut is then a closed form, $S(A) = \operatorname{rank}_{\mathbb{F}_2}(\text{generators restricted to } A) - |A|$, exact at any qubit count:
 ```wolfram
 big["Entropy", Range[n/2]]
 ```
-The entropy returns just shy of its half-chain maximum: the random circuit has driven the chain to near-maximal, Page-like entanglement, and whatever gate sequence the sampler draws, the value is an exact integer from an $\mathbb{F}_2$ rank, not an estimate. The formalism's boundary is first-class too: a non-Clifford gate ($T$, or a general phase) steps outside the stabilizer group, and QF answers with a `StabilizerFrame`, a superposition of stabilizer states, rather than a wrong answer.
+The entropy returns just below its half-chain maximum: the random circuit has driven the chain to near-maximal, Page-like entanglement, and whatever gate sequence the sampler draws, the value is an exact integer from an $\mathbb{F}_2$ rank, not an estimate. The boundary of the formalism is handled directly as well: a non-Clifford gate ($T$, or a general phase) steps outside the stabilizer group, and QF returns a `StabilizerFrame`, a superposition of stabilizer states, rather than a wrong answer.
 
 ### The representations convert exactly
-The engines are not silos; one object model means the representations interconvert. Start from an ordinary three-qubit linear cluster circuit, a Hadamard on every wire followed by two nearest-neighbor $CZ$ bonds:
+The engines are not separate; one object model means the representations interconvert. Start from an ordinary three-qubit linear cluster circuit, a Hadamard on every wire followed by two nearest-neighbor $CZ$ bonds:
 ```wolfram
 cluster3 = QuantumCircuitOperator[{"H" -> Range[3], "CZ", "CZ" -> {2, 3}}]
 ```
@@ -733,7 +739,7 @@ Draw it:
 ```wolfram
 cluster3["Diagram"]
 ```
-The bare `"CZ"` rides on the default first pair and `"CZ" -> {2, 3}` on the next, so the diagram shows the bond chain $1\!-\!2\!-\!3$: nothing here is stabilizer-specific, just gates.
+The bare `"CZ"` acts on the default first pair and `"CZ" -> {2, 3}` on the next, so the diagram shows the bond chain $1\!-\!2\!-\!3$: nothing here is stabilizer-specific, only gates.
 
 Apply that same circuit through the stabilizer engine, which stores the state as its symmetry group rather than its amplitudes:
 ```wolfram
@@ -747,7 +753,7 @@ The ket returns as $\tfrac{1}{\sqrt8}\sum_{x}(-1)^{x_1 x_2 + x_2 x_3}\,|x_1 x_2 
 ```wolfram
 QuantumState[stab3]["StateVector"] === cluster3[]["StateVector"]
 ```
-`True`: the two engines produced the *same exact expression*, global phase included.
+`True`: the two engines produced the same exact expression, global phase included.
 
 The conversion also runs back to circuits: the tableau synthesizes a Clifford circuit that prepares it.
 ```wolfram
@@ -759,17 +765,17 @@ A five-gate Clifford circuit returns, interleaved Hadamards and controlled-NOTs,
 
 ## Claim 5: A quantum object is an ordinary Wolfram Language expression
 
-**Key feature:** this is the substrate under everything above, the reason Claim 1's algebra came out symbolic and Claim 4's three engines share one model: a QF object is a symbolic expression like any other in the language, so the kernel's own functions operate *on* the object and hand back another object. `Exp` exponentiates a generator into a propagator, `D` differentiates a parametrized gate into another operator, `Plus` and `Commutator` build a Hamiltonian from named Paulis, and the closed-form scalars these objects yield flow on into solvers like `Maximize` and `Reduce`. Nothing is converted, extracted, or exported first: the same `Exp`, `D`, `Plus` you would call on a number-matrix act unchanged on a `QuantumOperator` and return a `QuantumOperator`. The overload set is real but finite, `Exp` (and `MatrixExp`), `D`, `Plus`, `Times`, `Power`, `Tr`, `Commutator` and the analytic functions act on operators; for `Eigenvalues` or `Det` you still reach through `obj["Matrix"]`.
+**Key feature:** this is what underlies everything above, the reason Claim 1's algebra is symbolic and Claim 4's three engines share one model: a QF object is a symbolic expression like any other in the language, so the kernel's own functions operate on the object and return another object. `Exp` exponentiates a generator into a propagator, `D` differentiates a parametrized gate into another operator, `Plus` and `Commutator` build a Hamiltonian from named Paulis, and the closed-form scalars these objects yield pass into solvers like `Maximize` and `Reduce`. Nothing is converted, extracted, or exported first: the same `Exp`, `D`, `Plus` one would call on a number-matrix act unchanged on a `QuantumOperator` and return a `QuantumOperator`. The overload set is real but finite, `Exp` (and `MatrixExp`), `D`, `Plus`, `Times`, `Power`, `Tr`, `Commutator` and the analytic functions act on operators; for `Eigenvalues` or `Det` one still reaches through `obj["Matrix"]`.
 
 ### Superposition by native arithmetic
-Write a state the way a physicist writes it, a sum of kets scaled by amplitudes, and check it against the named one:
+Write a state as a sum of kets scaled by amplitudes, and check it against the named one:
 ```wolfram
 (QuantumState["0"] + QuantumState["1"])/Sqrt[2] == QuantumState["+"]
 ```
-The comparison returns `True`: `Plus` and the scalar division act on the state objects, assembling $(|0\rangle+|1\rangle)/\sqrt2$ as a genuine `QuantumState`, and QF's overloaded `==` confirms it is $|+\rangle$. No amplitudes were pulled out by hand, and the same arithmetic scales up to the heavier overloads below.
+The comparison returns `True`: `Plus` and the scalar division act on the state objects, assembling $(|0\rangle+|1\rangle)/\sqrt2$ as a genuine `QuantumState`, and QF's overloaded `==` confirms it is $|+\rangle$. No amplitudes were extracted by hand, and the same arithmetic extends to the more substantial overloads below.
 
 ### The exponential map: a generator becomes a propagator
-The propagator of a Hamiltonian $H$ is the matrix exponential $e^{-iHt}$. Write it exactly the way a physicist does, with the kernel's `Exp` acting directly on the generator object:
+The propagator of a Hamiltonian $H$ is the matrix exponential $e^{-iHt}$. Write it directly, with the kernel's `Exp` acting on the generator object:
 ```wolfram
 uexp = Exp[(-I t) QuantumOperator["X"]]
 ```
@@ -778,10 +784,10 @@ Read its label and its matrix (trig-simplified):
 {uexp["Label"], 
  MatrixForm@FullSimplify @ ExpToTrig @ Normal @ uexp["Matrix"]}
 ```
-The result is a new `QuantumOperator` whose label reads $e^{-iXt}$ and whose matrix is the $X$-rotation $\cos t\,I - i\sin t\,X = \bigl(\begin{smallmatrix}\cos t & -i\sin t\\ -i\sin t & \cos t\end{smallmatrix}\bigr)$. `Exp` performed a genuine matrix exponential on the operator, mixing the two levels through the off-diagonal $-i\sin t$ rather than exponentiating entries one by one, and the generator was never lowered to a number-matrix first. (`MatrixExp[...]` returns the identical operator.)
+The result is a new `QuantumOperator` whose label reads $e^{-iXt}$ and whose matrix is the $X$-rotation $\cos t\,I - i\sin t\,X = \bigl(\begin{smallmatrix}\cos t & -i\sin t\\ -i\sin t & \cos t\end{smallmatrix}\bigr)$. `Exp` performed a genuine matrix exponential on the operator, mixing the two levels through the off-diagonal $-i\sin t$ rather than exponentiating entries one by one, and the generator was never reduced to a number-matrix first. (`MatrixExp[...]` returns the identical operator.)
 
 ### Operator algebra in one line
-Ordinary `Plus` and scalar multiplication assemble a Hamiltonian on the object, and the Pauli decomposition reads the coefficients straight back out:
+Ordinary `Plus` and scalar multiplication assemble a Hamiltonian on the object, and the Pauli decomposition reads the coefficients back out:
 ```wolfram
 hab = a QuantumOperator["X"] + b QuantumOperator["Z"]
 ```
@@ -789,18 +795,18 @@ Read its label and its Pauli decomposition:
 ```wolfram
 {hab["Label"], hab["PauliDecompose"]}
 ```
-The operator carries the human-readable label $a\,X + b\,Z$, and `hab["PauliDecompose"]` returns `<|X -> a, Z -> b|>`: a round-trip through the algebra, coefficients in by arithmetic and back out by decomposition, on a symbolic operator rather than a numeric lookup table. The algebra runs deeper than arithmetic. The kernel's `Commutator` delivers the $su(2)$ relation as an operator identity:
+The operator carries the label $a\,X + b\,Z$, and `hab["PauliDecompose"]` returns `<|X -> a, Z -> b|>`: a round-trip through the algebra, coefficients in by arithmetic and back out by decomposition, on a symbolic operator rather than a numeric lookup table. The algebra goes beyond arithmetic. The kernel's `Commutator` gives the $su(2)$ relation as an operator identity:
 ```wolfram
 Commutator[QuantumOperator["X"], QuantumOperator["Y"]] == 2 I QuantumOperator["Z"]
 ```
-`True`: $[X, Y] = 2iZ$, computed on the operators and machine-checked against $2iZ$.
+`True`: $[X, Y] = 2iZ$, computed on the operators and verified against $2iZ$.
 
 ### Operator calculus: recover $H(t)$ from a target $U(t)$
-Claim 1 solved Hamiltonians forward into their propagators; the inverse is pure operator calculus. Choose a unitary trajectory $U(t)$, and the Hamiltonian that drives it is $H(t) = i\,\dot U(t)\,U^\dagger(t)$, the engine behind counterdiabatic driving and shortcuts to adiabaticity. Compose the target $U(t) = R_Z(t^2)\,R_X(t)$ from named gates:
+Claim 1 solved Hamiltonians forward into their propagators; the inverse is pure operator calculus. Choose a unitary trajectory $U(t)$, and the Hamiltonian that drives it is $H(t) = i\,\dot U(t)\,U^\dagger(t)$, the basis of counterdiabatic driving and shortcuts to adiabaticity. Compose the target $U(t) = R_Z(t^2)\,R_X(t)$ from named gates:
 ```wolfram
 utgt = QuantumOperator["RZ"[t^2]] @ QuantumOperator["RX"[t]]
 ```
-Differentiate it *as an operator* with the kernel's `D` and close it with the operator's own `Dagger`, forming $H = i\,\dot U\,U^\dagger$:
+Differentiate it as an operator with the kernel's `D` and close it with the operator's own `Dagger`, forming $H = i\,\dot U\,U^\dagger$:
 ```wolfram
 hdrive = I D[utgt, t] @ utgt["Dagger"]
 ```
@@ -808,7 +814,7 @@ Read the control field off each axis:
 ```wolfram
 FullSimplify[ComplexExpand[#]] & /@ hdrive["PauliDecompose"]
 ```
-The controls return axis by axis as the drive $H(t) = t\,Z + \tfrac12\big(\cos t^2\, X + \sin t^2\, Y\big)$, with a vanishing identity component, traceless as a control should be. `D` operated on the `QuantumOperator` and returned a `QuantumOperator` (not a bare matrix), and composition `@`, `Dagger`, and the Pauli readout chained on the same object; the defining identity $i\,\dot U = H\,U$ holds identically. The textbook inverse-design formula runs on the operator itself, with no differential solver involved.
+The controls return axis by axis as the drive $H(t) = t\,Z + \tfrac12\big(\cos t^2\, X + \sin t^2\, Y\big)$, with a vanishing identity component, traceless as a control should be. `D` operated on the `QuantumOperator` and returned a `QuantumOperator` (not a bare matrix), and composition `@`, `Dagger`, and the Pauli decomposition all act on the same object; the defining identity $i\,\dot U = H\,U$ holds identically. The textbook inverse-design formula runs on the operator itself, with no differential solver involved.
 
 ### Calculus on states too
 The derivative overload is not operator-only. Take a state whose amplitudes are functions of time. Build it:
@@ -822,7 +828,7 @@ Simplify[D[psi, {t, 2}]["StateVector"] + psi["StateVector"]] // Normal
 The sum collapses to the zero vector: the object satisfies the harmonic identity $|\psi''\rangle = -|\psi\rangle$ through WL's own calculus, the second derivative taken on the `QuantumState` directly.
 
 ### The scalars flow into solvers
-When a QF object yields a symbolic scalar, the language's solvers carry on from there. The expectation of $X + Z$ in the trial state $R_Y(\theta)|0\rangle$ is a closed form. Build the trial state:
+When a QF object yields a symbolic scalar, the language's solvers take over. The expectation of $X + Z$ in the trial state $R_Y(\theta)|0\rangle$ is a closed form. Build the trial state:
 ```wolfram
 psi = QuantumOperator["RY"[\[Theta]]][QuantumState["0"]]
 ```
@@ -830,11 +836,11 @@ Form the energy $\langle\psi|(X+Z)|\psi\rangle$:
 ```wolfram
 energy = Simplify[Conjugate[psi["StateVector"]] . ((QuantumOperator["X"] + QuantumOperator["Z"])[psi])["StateVector"], \[Theta] \[Element] Reals];
 ```
-Hand it to `Maximize`:
+Pass it to `Maximize`:
 ```wolfram
 Assuming[\[Theta] \[Element] Reals, Maximize[{energy, 0 <= \[Theta] <= 2 Pi}, \[Theta]] // FullSimplify]
 ```
-The energy is $\cos\theta + \sin\theta$, and `Maximize` returns $\sqrt2$ at $\theta = \pi/4$: the exact extremal value, recognizable as the operator norm of $X + Z$, a complete variational eigenvalue calculation done by composing objects with native arithmetic and optimization. The same flow certifies a physical threshold. The Werner state's realignment criterion, a quantity positive exactly when it witnesses entanglement, is a symbolic function of the mixing $p$:
+The energy is $\cos\theta + \sin\theta$, and `Maximize` returns $\sqrt2$ at $\theta = \pi/4$: the exact extremal value, recognizable as the operator norm of $X + Z$, a complete variational eigenvalue calculation done by composing objects with native arithmetic and optimization. The same approach certifies a physical threshold. The Werner state's realignment criterion, a quantity positive exactly when it witnesses entanglement, is a symbolic function of the mixing $p$:
 ```wolfram
 crit = Simplify[QuantumEntanglementMonotone[QuantumState["Werner"[p, 2]], "Realignment"], 0 < p < 1];
 ```
@@ -842,13 +848,13 @@ Turn the criterion into the exact entanglement threshold:
 ```wolfram
 Reduce[crit > 0 && 0 < p < 1, p]
 ```
-The criterion is $\tfrac{|3-4p|-1}{2}$, and `Reduce` turns it into the exact threshold: the Werner state is entangled precisely for $0 < p < \tfrac{1}{2}$, a physical fact certified by handing a QF-derived expression to a native solver.
+The criterion is $\tfrac{|3-4p|-1}{2}$, and `Reduce` turns it into the exact threshold: the Werner state is entangled precisely for $0 < p < \tfrac{1}{2}$, a physical fact certified by passing a QF-derived expression to a native solver.
 
 ---
 
 ## Claim 6: Every object draws itself
 
-**Key feature:** Claim 5 let the kernel's functions read an object; here the object draws *itself*. Visualization is property dispatch, not a separate plotting library: each object exposes plot properties that render through the Wolfram Language graphics stack and forward its options, so a publication figure is one call on the object it depicts. The catalog is wide. States draw as Bloch vectors, amplitude and probability charts, and qudit pie and sector wheels; measurements as outcome histograms; stabilizer states as their binary symplectic tableau; circuits as gate diagrams, tensor-network graphs, and multiway and causal views. Adiabatic evolutions add spectrum, gap, and coupling plots (in the `QuantumOptimization` sub-package), the underlying `TensorNetwork` renders as a hypergraph through the TensorNetworks paclet, and the phase-space objects of Claim 2 plot as Wigner surfaces. Below, one example per object kind.
+**Key feature:** Claim 5 let the kernel's functions read an object; here the object draws itself. Visualization is property dispatch, not a separate plotting library: each object provides plot properties that render through the Wolfram Language graphics system and forward its options, so a publication figure is one call on the object it depicts. The set of views is wide. States draw as Bloch vectors, amplitude and probability charts, and qudit pie and sector wheels; measurements as outcome histograms; stabilizer states as their binary symplectic tableau; circuits as gate diagrams, tensor-network graphs, and multiway and causal views. Adiabatic evolutions add spectrum, gap, and coupling plots (in the `QuantumOptimization` sub-package), the underlying `TensorNetwork` renders as a hypergraph through the TensorNetworks paclet, and the phase-space objects of Claim 2 plot as Wigner surfaces. Below, one example per object kind.
 
 ### A state on the Bloch sphere
 A single qubit draws its own Bloch vector:
@@ -858,7 +864,7 @@ QuantumState[{Cos[Pi/5], Sin[Pi/5] Exp[I Pi/3]}]["BlochPlot"]
 The output is a `Graphics3D` of the sphere with the state's arrow at polar angle $2\pi/5$ and azimuth $\pi/3$: the geometry of the state, drawn by the state.
 
 ### Amplitudes that keep their phases
-A bar chart of probabilities discards the phases; `AmplitudesChart` draws the complex amplitudes $\psi_x = \langle x|\psi\rangle$ themselves, heights for the magnitudes $|\psi_x|$ and colors for the phases $\arg\psi_x$. Feed a quantum Fourier transform the two-term superposition $\tfrac{1}{\sqrt2}(|000\rangle + |101\rangle)$, which the transform spreads into a phase-rich pattern across all eight basis states:
+A bar chart of probabilities discards the phases; `AmplitudesChart` draws the complex amplitudes $\psi_x = \langle x|\psi\rangle$ themselves, heights for the magnitudes $|\psi_x|$ and colors for the phases $\arg\psi_x$. Apply a quantum Fourier transform to the two-term superposition $\tfrac{1}{\sqrt2}(|000\rangle + |101\rangle)$, which the transform spreads into a phase-rich pattern across all eight basis states:
 ```wolfram
 QuantumCircuitOperator["Fourier"[3]][
   QuantumState[Normalize[{1, 0, 0, 0, 0, 1, 0, 0}]]]["AmplitudesChart", 
@@ -874,14 +880,14 @@ QuantumCircuitOperator[
    "BernsteinVazirani"[{1, 0, 1, 1}]][]["ProbabilitiesPlot", 
  "LabelsAngle" -> 90 Degree, AspectRatio -> 1/3]
 ```
-The histogram collapses to a single bar of height $1$ at $1011$, every other outcome exactly zero: one query has pulled the entire hidden string out of the Born statistics, the deterministic signature of the algorithm. The hardware result in Claim 7 is the same kind of object, which is why simulated and measured statistics compare so directly there.
+The histogram collapses to a single bar of height $1$ at $1011$, every other outcome exactly zero: one query has extracted the entire hidden string from the Born statistics, the deterministic signature of the algorithm. The hardware result in Claim 7 is the same kind of object, which is why simulated and measured statistics compare so directly there.
 
 ### A stabilizer state shows its tableau
 The stabilizer states of Claim 4 have a native picture of their own: the binary symplectic tableau, the actual data structure the formalism computes on. Feed the five-cycle graph $C_5$ straight into `PauliStabilizer` to build its ring cluster state, and draw the tableau:
 ```wolfram
 PauliStabilizer[QuantumCircuitOperator["Graph"[CycleGraph[5]]]]["TableauForm"]
 ```
-The display is the sign column beside a ten-by-ten binary grid, dividers separating the $x$ bits from the $z$ bits and the destabilizer rows from the stabilizer rows; the stabilizer rows are the five ring generators $K_v = X_v \prod_{w \sim v} Z_w$, so the $z$ block is literally the adjacency matrix of the cycle while the $x$ block is the identity. This view *is* the algebra: the entanglement geometry of the ring is drawn in the binary pattern, and a Clifford gate acts by rewriting a few columns of precisely this grid.
+The display is the sign column beside a ten-by-ten binary grid, dividers separating the $x$ bits from the $z$ bits and the destabilizer rows from the stabilizer rows; the stabilizer rows are the five ring generators $K_v = X_v \prod_{w \sim v} Z_w$, so the $z$ block is literally the adjacency matrix of the cycle while the $x$ block is the identity. This view is the algebra itself: the entanglement geometry of the ring is drawn in the binary pattern, and a Clifford gate acts by rewriting a few columns of this grid.
 
 ### The circuit, and the network behind it
 A circuit draws itself as a gate diagram. Take quantum phase estimation, the subroutine inside Shor's factoring and the HHL linear solver, on three counting qubits:
@@ -892,7 +898,7 @@ Draw it as a gate diagram:
 ```wolfram
 qpe["Diagram"]
 ```
-The wire-and-gate picture lays out the algorithm: Hadamards on the counting register, the controlled powers of the unitary, and the inverse Fourier transform that reads the phase back. The same object also draws its computational anatomy, the tensor network the engine contracts:
+The wire-and-gate picture lays out the algorithm: Hadamards on the counting register, the controlled powers of the unitary, and the inverse Fourier transform that reads the phase back. The same object also draws its internal structure, the tensor network that the engine contracts:
 ```wolfram
 qpe["TensorNetworkGraph"]
 ```
@@ -908,17 +914,19 @@ The result is a `Hypergraph` with one hyperedge per tensor of the phase-estimati
 
 ## Claim 7: An interoperability hub, down to real hardware
 
-**Key feature:** the objects so far stayed inside QF; this claim sends them out. A QF object can *leave* QF for the rest of the quantum ecosystem, and foreign circuits can *enter* it; `QuantumQASM` is the single OpenQASM door, and it runs in pure Wolfram Language with no external account. The door opens wider at each step below: text export, foreign import, device-aware transpilation, and finally a physical quantum processor.
+**Key feature:** the objects so far stayed inside QF; this claim sends them out. A QF object can leave QF for the rest of the quantum ecosystem, and foreign circuits can enter it; `QuantumQASM` is the single OpenQASM interface, and it runs in pure Wolfram Language with no external account. Each step below extends the interface: text export, foreign import, device-aware transpilation, and finally a physical quantum processor.
+
+**Closest competitor.** Posting OpenQASM to a hardware provider is not itself unusual, MATLAB has submitted circuits to IBM Python-free since R2023b; the defensible part here is that device-native ISA transpilation runs in Wolfram Language and the same symbolic objects leave and re-enter the framework unchanged.
 
 ### Export to OpenQASM 3.0 (native, no Python)
 `QuantumQASM` turns a circuit into the standard text format read by Qiskit, Cirq, and most hardware stacks.
 ```wolfram
 QuantumQASM[QuantumCircuitOperator["Toffoli"]]
 ```
-The output is a complete OpenQASM 3.0 program for the three-qubit Toffoli gate: rather than a black-box `ccx`, the emitter writes the standard Clifford+$T$ decomposition, six CNOTs (each a `ctrl @ U`) interleaved with the non-Clifford $T$ and $T^\dagger$ phases and a pair of Hadamards bracketing the target, every gate a concrete `U` rotation. The native emitter writes OpenQASM 3.0, and the importer below reads OpenQASM 2.0 or 3.0 alike. A 2.0 *dump* is one option away through the qiskit path, `QuantumQASM[circuit, "Version" -> 2]` (that route needs Python; the 3.0 export and all imports do not). Export needs concrete angles: a circuit with a symbolic parameter returns a `Failure` rather than a QASM string, so resolve parameters to numbers at this boundary while keeping them symbolic everywhere else in QF (Claims 1 and 5).
+The output is a complete OpenQASM 3.0 program for the three-qubit Toffoli gate: rather than a single `ccx` instruction, the emitter writes the standard Clifford+$T$ decomposition, six CNOTs (each a `ctrl @ U`) interleaved with the non-Clifford $T$ and $T^\dagger$ phases and a pair of Hadamards bracketing the target, every gate a concrete `U` rotation. The native emitter writes OpenQASM 3.0, and the importer below reads OpenQASM 2.0 or 3.0 alike. A 2.0 export is available through the qiskit path, `QuantumQASM[circuit, "Version" -> 2]` (that route needs Python; the 3.0 export and all imports do not). Export needs concrete angles: a circuit with a symbolic parameter returns a `Failure` rather than a QASM string, so resolve parameters to numbers at this boundary while keeping them symbolic everywhere else in QF (Claims 1 and 5).
 
 ### Import foreign OpenQASM and compute with it (native, no Python)
-The same door runs the other way: hand `QuantumCircuitOperator` an OpenQASM string authored anywhere and get back a QF circuit, parsed in pure WL, `reset`, controlled gates, mid-circuit `measure` and all. The importer reads each gate's angle as a Wolfram Language expression, so the angles can stay *symbolic*: write `Pi/2` and `Pi`, the exact constant, in place of their decimal expansions, and the imported circuit is exact rather than a floating-point copy. Import a four-qubit circuit that runs the optimal quantum strategy for the CHSH game:
+The same interface runs the other way: give `QuantumCircuitOperator` an OpenQASM string authored anywhere and get back a QF circuit, parsed in pure WL, including `reset`, controlled gates, and mid-circuit `measure`. The importer reads each gate's angle as a Wolfram Language expression, so the angles can stay symbolic: write `Pi/2` and `Pi`, the exact constant, in place of their decimal expansions, and the imported circuit is exact rather than a floating-point copy. Import a four-qubit circuit that runs the optimal quantum strategy for the CHSH game:
 ```wolfram
 chsh = QuantumCircuitOperator["OPENQASM 3.0;
 qubit[4] q;
@@ -951,7 +959,7 @@ In the CHSH game the players win when their answers satisfy $x \wedge y = a \opl
 ```wolfram
 Probability[BitAnd[x, y] == BitXor[a, b], {a, x, y, b} \[Distributed] chsh[]["MultivariateDistribution"]] // FullSimplify
 ```
-Because the angles never left exact arithmetic, the winning probability returns as a closed form, $\tfrac{2+\sqrt2}{4} = \cos^2(\pi/8)$, exactly the **Tsirelson bound**, the quantum maximum for CHSH and the algebraic number a sampled estimate only converges toward. A circuit authored in another tool became an exact probability we read off with native WL statistics.
+Because the angles never left exact arithmetic, the winning probability returns as a closed form, $\tfrac{2+\sqrt2}{4} = \cos^2(\pi/8)$, exactly the Tsirelson bound, the quantum maximum for CHSH and the algebraic number a sampled estimate only converges toward. A circuit authored in another tool became an exact probability read off with native WL statistics.
 
 ### A hardware-aware transpilation target
 `QiskitTarget` carries a device spec (qubit count, native gate set, connectivity), validated at construction against qiskit's own `Target` schema through the Python bridge. Build a 5-qubit linear-chain device:
@@ -963,11 +971,11 @@ Read its coupling map back:
 ```wolfram
 target["CouplingMap"]
 ```
-Hand the target to `QuantumQASM` as an option, and the circuit is transpiled to that backend's native gates and connectivity:
+Pass the target to `QuantumQASM` as an option, and the circuit is transpiled to that backend's native gates and connectivity:
 ```wolfram
 QuantumQASM[QuantumCircuitOperator["Fourier"[3]], "Target" -> target]
 ```
-The QFT comes back rewritten for the device: its controlled-phase rotations decomposed into the native `rz`/`sx`/`x` set, the entangling steps as `cx` on physical qubits, every two-qubit gate routed along an edge the coupling map allows. Transpiling a Fourier transform, with its all-to-all controlled phases, is the realistic version of this task, where decomposition and routing both have real work to do.
+The QFT comes back rewritten for the device: its controlled-phase rotations decomposed into the native `rz`/`sx`/`x` set, the entangling steps as `cx` on physical qubits, every two-qubit gate routed along an edge the coupling map allows. Transpiling a Fourier transform, with its all-to-all controlled phases, is a realistic instance of this task, where both decomposition and routing are non-trivial.
 
 ### Submit to a real IBM QPU, and compare to the exact result
 An IBM account connects through `ServiceConnect["IBMQuantumPlatform"]`, after which `IBMJobSubmit` sends a circuit to the hardware asynchronously and returns an `IBMJob` handle. Create an API key and copy your instance's cloud resource name (CRN) from your IBM Quantum Platform account, then connect, the placeholder `"xxx"` values standing in for your own:
@@ -976,7 +984,7 @@ api = "xxx";
 LocalSymbol["ibm_crn"] = "xxx";
 ServiceConnect["IBMQuantumPlatform", "New", Authentication -> {"apikey" -> api}]
 ```
-The call returns a `ServiceObject` connection handle. A QPU job needs a circuit that *ends in a measurement*; in QF a list of qubit indices placed in the circuit is exactly that, so `{1, 2, 3}` measures all three qubits. Build the measured GHZ circuit:
+The call returns a `ServiceObject` connection handle. A QPU job needs a circuit that ends in a measurement; in QF a list of qubit indices placed in the circuit is exactly that, so `{1, 2, 3}` measures all three qubits. Build the measured GHZ circuit:
 ```wolfram
 ghz = QuantumCircuitOperator[{"GHZ"[3], {1, 2, 3}}]
 ```
@@ -988,29 +996,39 @@ Check the status:
 ```wolfram
 job["Status"]
 ```
-The handle returns immediately with status `"Queued"` while the job waits in line on the device. The same circuit runs exactly in the Wolfram Language by just applying it:
+The handle returns immediately with status `"Queued"` while the job waits in the device queue. The same circuit runs exactly in the Wolfram Language by applying it:
 ```wolfram
 wl = ghz[]
 ```
-The result is a `QuantumMeasurement` with probabilities $\tfrac12$ at $000$ and $\tfrac12$ at $111$. Once the job completes, the hardware outcome comes back as the **same kind of `QuantumMeasurement` object**, decoded into the same qubit order:
+The result is a `QuantumMeasurement` with probabilities $\tfrac12$ at $000$ and $\tfrac12$ at $111$. Once the job completes, the hardware outcome comes back as the same kind of `QuantumMeasurement` object, decoded into the same qubit order:
 ```wolfram
 qpu = job["Refresh"][]
 ```
-This run returned $4096$ shots from `ibm_fez`. Because the two results are the same kind of object, hardware noise is one chart away, the exact and measured probabilities paired per basis state:
+This run returned $4096$ shots from `ibm_fez`. Because the two results are the same kind of object, hardware noise can be shown in one chart, the exact and measured probabilities paired per basis state:
 ```wolfram
 BarChart[Transpose[Values @* KeySort /@ {wl["Probabilities"], qpu["Probabilities"]}],
   AspectRatio -> 1/2, Frame -> True, ChartLegends -> {"Exact WL", "QPU"},
   PlotLabels -> Keys[wl["Probabilities"]]]
 ```
-The exact bars are $\tfrac12$ at $000$ and $111$ and zero elsewhere; the device's two tall bars land visibly short of $\tfrac12$, with the missing weight spread thinly over the six bitstrings the exact state forbids. That gap, read bar by bar off one figure, *is* the device noise.
+The exact bars are $\tfrac12$ at $000$ and $111$ and zero elsewhere; the device's two tall bars fall visibly short of $\tfrac12$, with the missing weight spread thinly over the six bitstrings the exact state forbids. That gap, read bar by bar from one figure, is the device noise.
+
+---
+
+## Where This Stops
+
+Every closed form in this document rests on one fact, and so does its limit: a symbolic result exists exactly as far as the underlying spectrum is solvable in radicals. The eigenvalues of a matrix up to $4\times4$ are closed-form (radicals reach through the quartic); at $5\times5$ and beyond they are generically `Root` objects with no elementary form, by Abel-Ruffini. That algebraic boundary, not the qubit count, is where the symbolic path ends.
+
+Two of the results above sit at this boundary. The many-body entanglement entropy of Claim 1 is $-\operatorname{Tr}[\rho_1\log_2\rho_1]$, a function of the eigenvalues of the reduced density matrix; it stays a formula while $\rho_1$ is at most $4\times4$, and once a larger block is traced out those eigenvalues become quintic roots and the entropy loses its closed form. The master equation of Claim 2 solves symbolically only when the Liouvillian's spectrum is solvable: the structured relaxation there returns a closed form at once, but a generically driven open system, whose secular determinant is a high-degree or unstructured polynomial, returns an unwieldy radical expression or nothing in workable time.
+
+So the scope is narrow and exact. QF carries a computation to closed form precisely when the physics has a closed-form spectrum, and it indicates the limit by returning a `Root` object the moment that fails, rather than a wrong answer or a silent truncation. The symbolic path is deep, not wide: it runs as far as the algebra allows and stops at the boundary set by Abel and Ruffini. Beyond that boundary the same objects still compute, now numerically, which is why every claim above also has a purely numeric reading.
 
 ---
 
 ## Where This Leaves Us
 
-Seven claims, each cashed out in executed code. Symbolic algebra carried dynamics to closed form: the Rabi propagator of a rotating drive, a Landau-Zener sweep expressed in parabolic cylinder functions, a QAOA landscape whose exact maximum is a closed-form cubic root, the entanglement entropy of a quench as a function of time. One object model held the rest of the theory: channels, POVMs, Fock space, and phase space; a master equation solved once for every initial state and every rate, with $T_2 \le 2T_1$ arriving as a theorem rather than a remembered rule; a basis and a dimension on every object, a spin-1 Hamiltonian and a five-site ring each diagonalized by its own named basis; a state reconstructed from measured counts at a fidelity a hair below unity. Measurement stayed inside the physics: records became quantum wires, teleportation ran without a classical channel, a coherent error was digitized and corrected at codeword fidelity exactly $1$, and a measurement ran backwards. Underneath, three engines computed the same objects: exact state-vector algebra, a steered tensor-network contraction, and a stabilizer tableau that carried a thousand qubits to near-maximal half-chain entanglement computed exactly, the representations converting into one another exactly. Because these objects are ordinary Wolfram Language expressions, the kernel's own functions transformed them directly, exponentiating a generator into its propagator and differentiating a gate to recover the Hamiltonian that drives it, and each of them drew itself. And the same objects left the system: out to OpenQASM and back, through a transpiler to a device's native gates, and onto a physical quantum processor, whose $4096$-shot histogram stands in this document next to the exact distribution it approximates.
+Seven claims, each demonstrated in executed code. Symbolic algebra carried dynamics to closed form: the Rabi propagator of a rotating drive, a Landau-Zener sweep expressed in parabolic cylinder functions, a QAOA landscape whose exact maximum is a closed-form cubic root, the entanglement entropy of a quench as a function of time. One object model held the rest of the theory: channels, POVMs, Fock space, and phase space; a master equation solved once for every initial state and every rate, with $T_2 \le 2T_1$ arriving as a theorem rather than a remembered rule; a basis and a dimension on every object, a spin-1 Hamiltonian and a five-site ring each diagonalized by its own named basis; a state reconstructed from measured counts at a fidelity close to $1$. Measurement stayed inside the physics: records became quantum wires, teleportation carried its classical channel as a quantum wire, a coherent error was digitized and corrected at codeword fidelity exactly $1$, and a measurement ran backwards. Underneath, three engines computed the same objects: exact state-vector algebra, a steered tensor-network contraction, and a stabilizer tableau that carried a thousand qubits to near-maximal half-chain entanglement computed exactly, the representations converting into one another exactly. Because these objects are ordinary Wolfram Language expressions, the kernel's own functions transformed them directly, exponentiating a generator into its propagator and differentiating a gate to recover the Hamiltonian that drives it, and each of them drew itself. And the same objects left the system: out to OpenQASM and back, through a transpiler to a device's native gates, and onto a physical quantum processor, whose $4096$-shot histogram stands in this document next to the exact distribution it approximates.
 
-Behind all seven claims is one mechanism: quantum objects that are exact symbolic expressions compose, with each other and with the entire language. One consequence ran through every example: the deliverable was *exact*, the algebraic QAOA optimum, the closed-form relaxation law, the integer stabilizer entropy, the exactly-recovered teleported state, never a value sampled near the answer but the ground truth such a sample converges toward. That is the quiet numerical claim under the symbolic one: where a numeric simulation or a finite measurement hands you an estimate, QF hands you the exact object it estimates. The distance from writing a Hamiltonian to reading its closed form, or to running it on hardware, is a handful of composable calls. A result that is a formula can be differentiated, reduced, or pushed to a limit; a result that is a circuit is already in the format the rest of the quantum ecosystem speaks.
+Behind all seven claims is one mechanism: quantum objects that are exact symbolic expressions compose, with each other and with the entire language. One consequence ran through every example: the result was exact, the algebraic QAOA optimum, the closed-form relaxation law, the integer stabilizer entropy, the exactly-recovered teleported state, never a value sampled near the answer but the exact quantity such a sample converges toward. That is the numerical claim underlying the symbolic one: where a numeric simulation or a finite measurement returns an estimate, QF returns the exact object it estimates. The distance from writing a Hamiltonian to reading its closed form, or to running it on hardware, is a few composable calls. A result that is a formula can be differentiated, reduced, or taken to a limit; a result that is a circuit is already in the format the rest of the quantum ecosystem uses.
 
 The next steps are the reader's: change the graph under the QAOA section, raise the spin past $1$, swap damping for dephasing, tilt the repetition code's coherent error off the $X$ axis, point the last section at a different backend. The document re-derives itself.
 

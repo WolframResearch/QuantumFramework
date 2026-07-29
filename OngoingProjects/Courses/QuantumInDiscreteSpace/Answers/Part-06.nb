@@ -10,127 +10,20 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[    125411,       3650]
-NotebookOptionsPosition[    116365,       3546]
-NotebookOutlinePosition[    116707,       3561]
-CellTagsIndexPosition[    116664,       3558]
+NotebookDataLength[    120502,       3534]
+NotebookOptionsPosition[    112223,       3438]
+NotebookOutlinePosition[    112565,       3453]
+CellTagsIndexPosition[    112522,       3450]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
-Cell["\<\
-Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 6)\
-\>", "Title",ExpressionUUID->"8f1bb8d0-5feb-485d-bbe0-0ef35cebb7e5"],
-
-Cell[TextData[{
- "A companion answer key to ",
- Cell["Question-List.md", "InlineCode",ExpressionUUID->
-  "6aa5da8a-668a-4106-b46a-a195e72c2fc6"],
- ". For each question it gives ",
- StyleBox["two",
-  FontWeight->"Bold"],
- " worked answers:"
-}], "Text",ExpressionUUID->"f5b02209-3111-462c-b9df-51dba854c9bd"],
-
-Cell[TextData[{
- StyleBox["WL",
-  FontWeight->"Bold"],
- " : native Wolfram Language only (plain vectors and matrices, ",
- Cell[BoxData["PauliMatrix"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "f20c6c15-cb73-481a-8354-91074246c856"],
- ", ",
- Cell[BoxData["Conjugate"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "900c4a75-1b56-4008-b41f-40bd8f89e08c"],
- ", ",
- Cell[BoxData["Normalize"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "5ec1ca80-56a6-4e15-9208-571f8d7dec32"],
- ", ",
- Cell[BoxData["Eigenvectors"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "24d71a16-b65c-48ae-9741-cf442212a044"],
- ", ",
- Cell[BoxData["MatrixExp"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "18bbc7c5-0e7b-462f-ad53-9a6762b693a7"],
- ", and friends). Nothing beyond the built-in language."
-}], "ItemNumbered",ExpressionUUID->"883e5d73-7259-48c9-8989-d176434cc9ae"],
-
-Cell[TextData[{
- StyleBox["QF",
-  FontWeight->"Bold"],
- " : the same task done through the ",
- StyleBox["QuantumFramework",
-  FontWeight->"Bold"],
- " paclet, leaning on its objects and property downvalues (",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"QuantumState", "[", "...", "]"}], "[", "\"\<...\>\"", "]"}]], 
-  "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "ad2585df-71a8-4a3e-a5ec-d93f3bbd7e71"],
- ") rather than rebuilding matrices by hand. A QF result is a rich object, a \
-state or an operator, not a bare array: it can act on a target, compose with \
-others, report its spectrum, change basis, and more. The answers keep results \
-as objects and treat a matrix or amplitude vector as just one of the object's \
-many representations, not the thing itself."
-}], "ItemNumbered",ExpressionUUID->"ec3aae97-d9dc-4097-88d2-6a57e9ee0ff7"],
-
-Cell[TextData[{
- "Three habits run through the answers. They stay ",
- StyleBox["symbolic",
-  FontWeight->"Bold"],
- " wherever possible (general amplitudes ",
- Cell[BoxData[
-  RowBox[{
-   StyleBox["\[Alpha]", "TI"], ",", 
-   StyleBox["\[Beta]", "TI"]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "b8082237-b6e7-416c-b680-5a3f79fbf4a3"],
- ", general angles ",
- Cell[BoxData[
-  RowBox[{
-   StyleBox["\[Theta]", "TI"], ",", 
-   StyleBox["\[Phi]", "TI"]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "7fb3ef40-69e3-4fc2-9303-07a93e98c193"],
- "), so each operation is exercised in full generality rather than on a lucky \
-special case. They write the computation ",
- StyleBox["explicitly",
-  FontWeight->"Bold"],
- " rather than hiding it in a helper function, because the code is itself \
-part of the explanation. And they prefer ",
- StyleBox["built-in features",
-  FontWeight->"Bold"],
- " (a ",
- Cell[BoxData["Normalize"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "53427723-95bd-445f-8e9a-efe282279f59"],
- ", a named state) over hand-rolled constructions, so nothing is hardcoded: \
-every cell computes its result. Each cell does ",
- StyleBox["one",
-  FontWeight->"Bold"],
- " thing and is preceded by a sentence saying what, so the notebook reads as \
-a sequence of single, captioned computations. Run the WL answers in a bare \
-kernel; the QF answers need the paclet loaded once."
-}], "Text",ExpressionUUID->"5dbe81ec-dc92-4098-8e31-06375ea51bc2"],
-
-Cell["Setup", "Section",ExpressionUUID->"189b6654-55e3-4058-a170-78c4d9d24d86"],
-
-Cell["The QF answers load the paclet once:", "Text",ExpressionUUID->"3af4d521-f9fe-4055-acca-68ef957e5975"],
-
-Cell[BoxData[
- RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
- CellLabel->"In[1]:= ",ExpressionUUID->"368c5e05-2602-4bd1-9d43-d350b27e6c7b"],
-
-Cell["Part 6. Uncertainty and incompatibility", "Section",ExpressionUUID->"8cbf6c44-193a-4d3c-8a6b-70acc5cf1ad9"],
+Cell["Part 6. Uncertainty and incompatibility", "Section",ExpressionUUID->"36fcf418-33de-42bf-b8e7-ff1217556bdd"],
 
 Cell["\<\
 6.1 [MSc] How do I verify the Robertson-Schrodinger uncertainty relation for \
 a given state?\
-\>", "Subsection",ExpressionUUID->"1259b8a5-e4a6-4d4d-8477-757106a2dbc7"],
+\>", "Subsection",ExpressionUUID->"4d46cc55-e132-4973-86b5-61e862869c51"],
 
 Cell[TextData[{
  "For observables ",
@@ -139,14 +32,14 @@ Cell[TextData[{
    StyleBox["A", "TI"], ",", 
    StyleBox["B", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0ff872a6-8ec4-47e3-b7bd-e656e0f8ae52"],
+  "82497fd6-80bb-40ad-a4be-b6349ed455be"],
  " on ",
  StyleBox["any", "TI"],
  " state ",
  Cell[BoxData[
   StyleBox["\[Rho]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e675a94d-e6b2-495d-9e6f-cca357fb7447"],
+  "83d6e6cc-32e9-4bd0-8a38-7533571e9d93"],
  " (pure or mixed), with standard deviations ",
  Cell[BoxData[
   RowBox[{
@@ -169,17 +62,17 @@ Cell[TextData[{
        StyleBox["\[RightAngleBracket]",
         SpanMaxSize->1]}], "2"]}]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bd00ac95-6a87-41f0-99bb-45d9cb784a71"],
+  "d32c1145-212f-4b81-849a-ad86c69bed27"],
  " and ",
  Cell[BoxData[
   SubscriptBox[
    StyleBox["\[Sigma]", "TI"], 
    StyleBox["B", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "228cd216-cb28-484c-ba21-c292651f2654"],
+  "c4aaf55e-8574-4ee2-825e-047deb277f72"],
  " likewise, the Robertson-Schrodinger relation bounds the product of \
 variances,"
-}], "Text",ExpressionUUID->"27e754e0-222a-4fd9-a778-83d5078b0847"],
+}], "Text",ExpressionUUID->"7ad1786e-1aa1-47f8-bb38-72d8bd916acc"],
 
 Cell[BoxData[
  PaneBox[
@@ -238,8 +131,8 @@ Cell[BoxData[
      StyleBox[")",
       FontSize->1.8 Inherited], "2"]}], ","}],
   Alignment->Center,
-  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"7b719d76-0e0a-4045-\
-888b-ba39700632c7"],
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"3ded7b36-0643-4cc0-\
+b81c-dfeedaa4ee71"],
 
 Cell[TextData[{
  "the first term a covariance, the second the Robertson (commutator) piece, \
@@ -259,7 +152,7 @@ with ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4a98a3c6-1f14-4358-8a09-fa41c093ea3b"],
+  "46e9edb7-a929-4ddf-96c0-1e356f405c9f"],
  ". Every qubit observable is ",
  Cell[BoxData[
   RowBox[{
@@ -272,7 +165,7 @@ with ",
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bbfd6415-b5d9-4b52-9d3e-8e9f9135fc75"],
+  "09712f06-65f9-43ba-87da-f843fe6af782"],
  "; the identity shift drops out of every variance, covariance, and \
 commutator, and the two scales multiply both sides of the relation equally, \
 so the fully general pair is a pair of unit directions, ",
@@ -285,7 +178,7 @@ so the fully general pair is a pair of unit directions, ",
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "cc42f05e-7e81-4d95-8c02-905de9b3a9b1"],
+  "576b2caa-1e70-4b0e-9adc-d389945ad7bd"],
  " and ",
  Cell[BoxData[
   RowBox[{
@@ -296,7 +189,7 @@ so the fully general pair is a pair of unit directions, ",
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "acbd973a-3514-48b9-b312-c217cc42afac"],
+  "c2c4fc2a-c45c-4696-b03c-17f2c54aa56c"],
  ", each built from its spherical angles, on the general qubit ",
  Cell[BoxData[
   RowBox[{
@@ -313,7 +206,7 @@ so the fully general pair is a pair of unit directions, ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c0b5a39b-7afa-4b67-9593-278a7c36550d"],
+  "25ce208e-bd97-4bbe-8506-bb4b7e52fdaa"],
  ", ",
  Cell[BoxData[
   RowBox[{GridBox[{
@@ -325,9 +218,9 @@ so the fully general pair is a pair of unit directions, ",
     GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
   "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "33ff2ef1-1610-4eae-ab41-08691f4b02a1"],
+  "a4bb780b-9ebe-47e6-8d59-531e58591383"],
  ". The telling quantity is the slack, how far the state sits above the bound."
-}], "Text",ExpressionUUID->"ab3f9265-1a5b-455a-ae1f-23d5f7a3ad18"],
+}], "Text",ExpressionUUID->"1cbcdf2b-36c4-44e6-a9f4-c0365c1a0771"],
 
 Cell[TextData[{
  StyleBox["WL",
@@ -335,7 +228,7 @@ Cell[TextData[{
  " : build the two directions with ",
  Cell[BoxData["FromSphericalCoordinates"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4a0979e5-85b0-4a9f-ba10-1f4eb8aecd0c"],
+  "598c97ca-618f-44b9-a425-5389b23a66b0"],
  ", then, with ",
  Cell[BoxData[
   RowBox[{
@@ -344,14 +237,14 @@ Cell[TextData[{
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dfdc35ea-5d71-4c35-81a3-048031a56f73"],
+  "867d81a6-a2bd-4a6d-b21f-dc46898935c8"],
  " the trace against ",
  Cell[BoxData[
   StyleBox["\[Rho]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8e4675b0-0cb7-4e4a-8c6b-7950cff6b485"],
+  "ec6d1daa-d773-4859-9245-406414b7fed0"],
  ", compute the left side minus the right side."
-}], "Text",ExpressionUUID->"a4b8dbc4-3271-4983-b0ad-a245dc4605ae"],
+}], "Text",ExpressionUUID->"60e01a68-21b4-4e52-b96a-71f15963c624"],
 
 Cell[BoxData[{
  RowBox[{
@@ -448,7 +341,7 @@ Cell[BoxData[{
              RowBox[{"(", 
               RowBox[{"2", " ", "I"}], ")"}]}], ")"}], "^", "2"}]}], ")"}]}], 
        "]"}]}], "]"}]}], "]"}]}]}], "Input",
- CellLabel->"In[2]:= ",ExpressionUUID->"2c2b8084-5067-4a41-ab98-e8f4ff7a0353"],
+ CellLabel->"In[1]:= ",ExpressionUUID->"55230a73-c7f8-4d24-95b5-d7fe7577adaa"],
 
 Cell[TextData[{
  "The relation itself is the claim that this slack is never negative. So \
@@ -464,9 +357,9 @@ confirm the inequality first: ask the kernel for any physical Bloch vector \
     GridBoxSpacings->{"Columns" -> {{0.15}}}], "\[LessEqual]", "1"}]], 
   "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "83494e3a-2716-4b05-9463-a4f4c1579e58"],
+  "709f4c59-a901-45cb-a5c4-707d808661d1"],
  ") and any pair of directions that violate it."
-}], "Text",ExpressionUUID->"e3e27cbd-160f-40be-a294-1c4f7bfcbac4"],
+}], "Text",ExpressionUUID->"24e6c8c3-8961-405d-a66e-7edb3ce0b39c"],
 
 Cell[BoxData[
  RowBox[{"Reduce", "[", 
@@ -483,7 +376,7 @@ Cell[BoxData[
     "rx", ",", " ", "ry", ",", " ", "rz", ",", " ", "\[Theta]1", ",", " ", 
      "\[Phi]1", ",", " ", "\[Theta]2", ",", " ", "\[Phi]2"}], "}"}], ",", " ",
     "Reals"}], "]"}]], "Input",
- CellLabel->"In[3]:= ",ExpressionUUID->"f780fc36-1104-457c-b01f-43abbbe4b0ac"],
+ CellLabel->"In[2]:= ",ExpressionUUID->"327756dc-2100-4690-b61f-83d792a2210c"],
 
 Cell[TextData[{
  "The violating set is empty, so the relation holds for every qubit state and \
@@ -499,7 +392,7 @@ factor is the mixedness ",
      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ea9143b0-c283-42e7-999f-5f918ece7b39"],
+  "c1aad01c-ef33-4532-8972-fbdf8ad75ab5"],
  ", the other is trigonometric in the four angles. Since the qubit commutator \
 is geometric, ",
  Cell[BoxData[
@@ -536,9 +429,9 @@ is geometric, ",
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "118c7f33-8775-48e5-ac5a-75c458efc835"],
+  "647f775e-76e2-4b8c-b89d-21e5c495fb8e"],
  ", test whether that factor is the squared cross product."
-}], "Text",ExpressionUUID->"367dfcc7-2e47-4f43-b853-1e121139ea1d"],
+}], "Text",ExpressionUUID->"2908d90d-3783-48d8-a56d-8a237f90e2c1"],
 
 Cell[BoxData[
  RowBox[{"FullSimplify", "[", 
@@ -558,7 +451,7 @@ Cell[BoxData[
        RowBox[{"{", 
         RowBox[{"rx", ",", " ", "ry", ",", " ", "rz"}], "}"}]}]}], ")"}]}]}], 
   "]"}]], "Input",
- CellLabel->"In[4]:= ",ExpressionUUID->"fe53f31f-8525-40af-93cd-327a954c3d59"],
+ CellLabel->"In[3]:= ",ExpressionUUID->"b4db3f9e-dc80-473d-89df-7c3dc08caa04"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -566,17 +459,17 @@ Cell[TextData[{
  " : the same slack, the general state as a ",
  Cell[BoxData["QuantumState"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8be1e30a-a879-49c0-a9e7-d11c21e2c2c2"],
+  "678ba73a-9f6b-405a-b820-9d29addc9fb4"],
  " and its density matrix, the observables as ",
  Cell[BoxData["QuantumOperator"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "612d6f9c-e3a1-45da-b716-ea4fdddde592"],
+  "749c05bf-7316-49e6-951d-31ec316e377e"],
  "s built from the same spherical directions, the commutator via ",
  Cell[BoxData["Commutator"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c6d003a-f28a-4245-8de8-202b290b57c9"],
+  "b119af3b-56e0-4f14-930c-cb12c8ae70c2"],
  "."
-}], "Text",ExpressionUUID->"a739f9a0-ace9-48ae-a36d-e9b2d52d519a"],
+}], "Text",ExpressionUUID->"440cac77-6579-4c8a-81e0-1867a2f43080"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -673,7 +566,7 @@ Cell[BoxData[
             RowBox[{"(", 
              RowBox[{"2", " ", "I"}], ")"}]}], ")"}], "^", "2"}]}], ")"}]}], 
       "]"}]}], "]"}]}], "]"}]], "Input",
- CellLabel->"In[5]:= ",ExpressionUUID->"4230a828-c30e-48af-8d04-5f7ed3b4def9"],
+ CellLabel->"In[4]:= ",ExpressionUUID->"e86a93ad-ae8b-45dc-bcd5-29ecff563f83"],
 
 Cell[TextData[{
  "Both compute the identical factored slack; the violation search returns \
@@ -705,7 +598,7 @@ False and the equality test returns True: the slack is exactly ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "89980b37-e5ac-4140-88a8-32c09e43485c"],
+  "104a58ab-03f6-4493-941f-c997678cd44f"],
  ", the observables' incompatibility (",
  Cell[BoxData[
   RowBox[{
@@ -726,12 +619,12 @@ False and the equality test returns True: the slack is exactly ",
      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
    StyleBox["\[Gamma]", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f2ad2030-7c00-4c9d-b4de-8bb5f17a77f1"],
+  "6beda118-d38e-4ff6-a14b-7fc6c45a102a"],
  ", with ",
  Cell[BoxData[
   StyleBox["\[Gamma]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "31d02317-5fc2-4e52-9f0f-e472550dd214"],
+  "0aac7a2d-74d4-4ad7-9c46-7a4e565e0125"],
  " the angle between the two directions) times the state's mixedness (",
  Cell[BoxData[
   RowBox[{"1", "-", 
@@ -756,7 +649,7 @@ False and the equality test returns True: the slack is exactly ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3eddbc8c-151d-4bc2-82f6-f76c7d7e52df"],
+  "03853850-bb39-4c3e-9f25-8083251f6d59"],
  "). A product of two non-negative factors, which is the structural reason no \
 violation exists, and it saturates exactly when a factor vanishes: a pure \
 state (",
@@ -769,7 +662,7 @@ state (",
     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
     GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0577db7c-459a-41f2-8b1a-52fc3fa7c013"],
+  "c973f04a-290e-4782-a9f2-5453cd17cbd7"],
  ") or a commuting pair (",
  Cell[BoxData[
   RowBox[{
@@ -780,21 +673,21 @@ state (",
     OverscriptBox[
      StyleBox["n", "TI"], "^"], "2"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0d21c9ac-192d-49cb-bf61-409dae060fe7"],
+  "2f879047-f1f7-48a7-847e-c1952d9462ea"],
  ", the directions parallel or antiparallel). The perpendicular choice ",
  Cell[BoxData[
   RowBox[{
    StyleBox["A", "TI"], "=", 
    StyleBox["X", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b362fc77-28ce-4f65-8407-bcc06f2425a8"],
+  "51536548-d7b5-4ee8-a3de-8b373fceafb7"],
  ", ",
  Cell[BoxData[
   RowBox[{
    StyleBox["B", "TI"], "=", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f486adb5-4008-4f9e-a328-1041511b7e11"],
+  "8dbf08af-1ce3-445d-8b7d-f67a19d51339"],
  " has ",
  Cell[BoxData[
   RowBox[{GridBox[{
@@ -810,7 +703,7 @@ state (",
     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
     GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "73e93383-b79d-4f8e-94f1-403cf21e934f"],
+  "59670641-c900-488f-9a82-e9bc4daef254"],
  ", so its slack is the mixedness alone. The commutator term alone is the \
 weaker Robertson relation ",
  Cell[BoxData[
@@ -838,14 +731,14 @@ weaker Robertson relation ",
     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
     GridBoxSpacings->{"Columns" -> {{0.15}}}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "964d0a4f-118d-422e-93d3-5b1e6d6db01a"],
+  "21130628-2ca9-4442-97f5-eda749052271"],
  "; Schrodinger's covariance term is what tightens it."
-}], "Text",ExpressionUUID->"cc0b2688-d3a4-430b-9852-34ae4f0af694"],
+}], "Text",ExpressionUUID->"41aa1710-dcac-4e1d-8c37-80d136a98c93"],
 
 Cell["\<\
 6.2 [MSc] How do I find a minimum-uncertainty state that saturates the \
 Robertson bound?\
-\>", "Subsection",ExpressionUUID->"1d6c8387-11d4-462d-ace9-ef12c8ecc9bd"],
+\>", "Subsection",ExpressionUUID->"986a5d0a-5927-46bc-8094-e16c19c4a597"],
 
 Cell[TextData[{
  "The Robertson bound ",
@@ -874,7 +767,7 @@ Cell[TextData[{
     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
     GridBoxSpacings->{"Columns" -> {{0.15}}}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a6818e59-eeb2-4e9b-b4d4-d89566b4aed0"],
+  "4720a5e4-02f5-44cc-ba90-1c30307c903f"],
  " is saturated exactly where the ",
  StyleBox["Robertson gap", "TI"],
  " ",
@@ -908,7 +801,7 @@ Cell[TextData[{
     StyleBox[")",
      FontSize->1.2 Inherited], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aa68dac8-a659-44bd-8a45-b7347c06a4d4"],
+  "d93c106c-9f43-4932-b7ea-dbd5603de4d5"],
  " vanishes. Take the generic observable pair of 6.1, ",
  Cell[BoxData[
   RowBox[{
@@ -919,7 +812,7 @@ Cell[TextData[{
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c6ff7ea2-e438-4954-94a9-f4592dcc7700"],
+  "305714bb-e902-4735-b5b9-6fc5da5b7c6e"],
  " and ",
  Cell[BoxData[
   RowBox[{
@@ -930,12 +823,12 @@ Cell[TextData[{
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bdd7eff8-7f7b-45df-a7a3-516f2f6fa36c"],
+  "d4bff49f-5484-4b6b-b80b-d6133687b0f0"],
  ", compute ",
  Cell[BoxData[
   StyleBox["g", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f7aee6af-2765-4b23-927c-a306f09aa9cc"],
+  "d45e2fb4-e606-45b2-9d2f-fb4fea085508"],
  " over the whole pure-qubit family ",
  Cell[BoxData[
   RowBox[{
@@ -954,13 +847,13 @@ Cell[TextData[{
     FractionBox[
      StyleBox["\[Theta]", "TI"], "2"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "40f40e42-2520-4152-b1e8-d48cc7571dbc"],
+  "df8c83d3-bae6-4925-8c53-e2262bd712d3"],
  ", and solve ",
  Cell[BoxData[
   RowBox[{
    StyleBox["g", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "012f3393-7bf3-4a4d-8505-1a602298f4c9"],
+  "bb22971a-b05d-4352-b378-4d214bd93833"],
  ". Purity is no restriction here: by 6.1 the slack of the full relation is \
 ",
  Cell[BoxData[
@@ -990,11 +883,11 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7d8d1d67-3e77-4369-b305-521188652a9c"],
+  "32aba894-6cde-44df-914f-2d700d540f3d"],
  ", so for a non-commuting pair a mixed state sits strictly above even the \
 stronger Robertson-Schrodinger bound, and every Robertson-saturating state \
 must be pure."
-}], "Text",ExpressionUUID->"f8aee224-18c7-45c8-af95-750583b6149b"],
+}], "Text",ExpressionUUID->"6703a7f4-3ff0-4e90-9866-8ac7e66523c2"],
 
 Cell[TextData[{
  StyleBox["WL",
@@ -1010,13 +903,13 @@ is the sandwich ",
      StyleBox["\[Psi]", "TI"]},
     "Ket"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c0ed78cb-a6c7-41eb-9513-721cfea3edb9"],
+  "be5e1055-3188-4569-9c34-147835baf475"],
  ", and ",
  Cell[BoxData["ComplexExpand"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b242dc2f-8da0-449d-8a0c-7c301c0b73bf"],
+  "cad5c3ab-a493-4374-9099-4e167e0494dd"],
  " keeps it explicitly real (all angles are real)."
-}], "Text",ExpressionUUID->"b8e81cb1-cd5c-4006-bbf1-227e0c2e1a1a"],
+}], "Text",ExpressionUUID->"8c914a81-ed2a-4abc-9eb9-9b416103fef4"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1095,7 +988,7 @@ Cell[BoxData[{
           RowBox[{"(", 
            RowBox[{"2", " ", "I"}], ")"}]}], ")"}], "^", "2"}]}]}], "]"}]}], 
    "]"}]}]}], "Input",
- CellLabel->"In[6]:= ",ExpressionUUID->"df0d63b0-d92f-4f3f-8df9-217a640fe49c"],
+ CellLabel->"In[5]:= ",ExpressionUUID->"aa0dd7ca-0195-4a74-b140-c69546917d94"],
 
 Cell[TextData[{
  "The raw gap is a tangle of trigonometry in six angles; identify it. For a \
@@ -1105,7 +998,7 @@ be exactly the squared covariance: with ",
   OverscriptBox[
    StyleBox["m", "TI"], "^"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "84ce675f-6a2f-4253-9e73-ea47102c2675"],
+  "f2d9f7b2-ed59-4938-aa05-c85051cec460"],
  " the state's Bloch vector, ",
  Cell[BoxData[
   RowBox[{
@@ -1156,9 +1049,9 @@ be exactly the squared covariance: with ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4b8922c3-58fd-4e43-8779-937a71dc441e"],
+  "8a3b17d8-e34d-4c86-886b-fa21dc0f4351"],
  ". Test the identity: the difference should expand to exactly zero."
-}], "Text",ExpressionUUID->"6cb99236-43b3-486e-8df4-3fa673015f14"],
+}], "Text",ExpressionUUID->"1e7a836e-4bcc-4e54-b40a-12678c66b130"],
 
 Cell[BoxData[
  RowBox[{"Expand", "[", 
@@ -1182,7 +1075,7 @@ Cell[BoxData[
           RowBox[{"(", 
            RowBox[{"m", " ", ".", " ", "n2"}], ")"}]}]}], ")"}], "^", "2"}]}],
       "]"}]}], "]"}], "]"}]], "Input",
- CellLabel->"In[7]:= ",ExpressionUUID->"67edd7db-70f2-4440-a557-ed21a9685aca"],
+ CellLabel->"In[6]:= ",ExpressionUUID->"460c1e41-824c-4784-9d0f-e4da2f4b457b"],
 
 Cell[TextData[{
  "So ",
@@ -1221,7 +1114,7 @@ Cell[TextData[{
     StyleBox[")",
      FontSize->1.2 Inherited], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "72ebc564-24a6-4551-9a5d-d7efa06f7038"],
+  "7a78d4cf-aad9-4478-a96a-92578a148958"],
  ", and the minimum-uncertainty states are the zero-covariance states, the \
 solutions of ",
  Cell[BoxData[
@@ -1253,7 +1146,7 @@ solutions of ",
     OverscriptBox[
      StyleBox["n", "TI"], "^"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dcd48843-40c0-44fe-a657-c110b4fc1ac7"],
+  "36bf7c81-c9e3-42ed-97a9-1a6e69533646"],
  ". The eigenstates ",
  Cell[BoxData[
   RowBox[{
@@ -1268,7 +1161,7 @@ solutions of ",
      OverscriptBox[
       StyleBox["n", "TI"], "^"], "2"]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9d55ab5d-8385-4657-88f7-6e84b617a21b"],
+  "04b63008-5ea9-4963-b6f4-1b48f3b8fb4a"],
  " always solve it (the two signs cancel and one variance vanishes). For the \
 mutually unbiased pair ",
  Cell[BoxData[
@@ -1276,14 +1169,14 @@ mutually unbiased pair ",
    StyleBox["A", "TI"], "=", 
    StyleBox["X", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6d331901-b7b7-4113-b1f6-1f62481d695e"],
+  "2f7d1c2c-424f-4e28-b493-cc9d263977f7"],
  ", ",
  Cell[BoxData[
   RowBox[{
    StyleBox["B", "TI"], "=", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "46cee9fc-d5a6-4627-8d21-8071a6e2fb9f"],
+  "f97522b8-8b74-4003-9fec-711b588e7a24"],
  " (",
  Cell[BoxData[
   RowBox[{
@@ -1294,9 +1187,9 @@ mutually unbiased pair ",
     OverscriptBox[
      StyleBox["n", "TI"], "^"], "2"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "28956133-90e4-48c8-acf8-7fdd70049c24"],
+  "24896510-3fba-4705-baa4-9411245cec9a"],
  "), solve the condition on the sphere."
-}], "Text",ExpressionUUID->"4ed857a9-57ba-4d9b-a1c6-bde471264720"],
+}], "Text",ExpressionUUID->"38fd43dd-b842-4639-82dd-65ea8d35d14f"],
 
 Cell[BoxData[
  RowBox[{"Reduce", "[", 
@@ -1333,7 +1226,7 @@ Cell[BoxData[
     " ", 
    RowBox[{"{", 
     RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}]}], "]"}]], "Input",
- CellLabel->"In[8]:= ",ExpressionUUID->"4aef8234-8ec0-4e08-a6f5-795130899ff3"],
+ CellLabel->"In[7]:= ",ExpressionUUID->"0496e063-f59e-40f0-8555-39a0c2a1775e"],
 
 Cell[TextData[{
  "One such state sits where the two solution branches cross, ",
@@ -1343,9 +1236,9 @@ Cell[TextData[{
    StyleBox["\[Phi]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9bedf9ac-8d5c-41de-a4b1-0af9188bebfc"],
+  "152f87c6-0123-4dc7-8326-56a912e500aa"],
  "."
-}], "Text",ExpressionUUID->"ad47e434-5513-4c19-ba15-a8ed1723bd50"],
+}], "Text",ExpressionUUID->"8090f704-f262-43c5-80e9-9bdbd9fbe1a7"],
 
 Cell[BoxData[
  RowBox[{
@@ -1366,7 +1259,7 @@ Cell[BoxData[
      RowBox[{"\[Phi]", " ", "->", " ", 
       RowBox[{"Pi", "/", "2"}]}]}], "}"}]}], " ", "//", " ", 
   "FullSimplify"}]], "Input",
- CellLabel->"In[9]:= ",ExpressionUUID->"406bf3d8-ae08-4e9e-937f-dbb41f754641"],
+ CellLabel->"In[8]:= ",ExpressionUUID->"98362a31-8419-4f28-bcee-989e479a7a0e"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -1374,13 +1267,13 @@ Cell[TextData[{
  " : the same gap through the paclet's objects (state, operators, ",
  Cell[BoxData["Commutator"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b3517542-cf98-4fb9-9557-82f8d7af918d"],
+  "8125e582-97d2-497b-820c-cb4955207dba"],
  "); it is the ",
  Cell[BoxData["==="], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e951b762-1123-4c82-8d86-9fe9bf333ad6"],
+  "36cb1470-59f9-4881-89a8-55206dc6ace3"],
  "-identical expression."
-}], "Text",ExpressionUUID->"69f143ff-54f5-4128-8d72-d51656b3ece0"],
+}], "Text",ExpressionUUID->"7ccea0a6-16e4-4214-bbc4-747294e1680d"],
 
 Cell[BoxData[
  RowBox[{
@@ -1460,8 +1353,7 @@ Cell[BoxData[
           RowBox[{"(", 
            RowBox[{"2", " ", "I"}], ")"}]}], ")"}], "^", "2"}]}]}], "]"}]}], 
    "]"}], " ", "===", " ", "gap"}]], "Input",
- CellLabel->
-  "In[10]:= ",ExpressionUUID->"8dbb92d0-7732-414e-a708-8b70d95b5530"],
+ CellLabel->"In[9]:= ",ExpressionUUID->"0e402747-5c69-4f85-a57e-c93b6896ba30"],
 
 Cell[TextData[{
  "For a qubit, then, ",
@@ -1474,14 +1366,14 @@ zero-covariance set. For ",
    StyleBox["X", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ca79dbb6-1d96-4fdc-a7ae-05b1353d41c5"],
+  "a6dcde50-d3ff-4153-9b30-57af9d7855d2"],
  " the solve returns that set as the equator ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Theta]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1876a2f7-e7f2-409b-8ee4-f79e0c15bc31"],
+  "dbaf695a-71c7-475b-b97e-617d0ec7fca0"],
  " (",
  Cell[BoxData[
   RowBox[{
@@ -1491,14 +1383,14 @@ zero-covariance set. For ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ce93db51-d316-4079-b4be-c8cd40a1ebff"],
+  "e4a27010-2c9b-4bbe-95db-95424efb0d9c"],
  ") and the meridians ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Phi]", "TI"], "=", "\[PlusMinus]", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "15af42b3-8656-4547-9184-aa53552d347a"],
+  "df9f9b45-6fa6-4ef9-b50e-53fd3d42b55a"],
  " (",
  Cell[BoxData[
   RowBox[{
@@ -1508,12 +1400,12 @@ zero-covariance set. For ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3ebf620b-3346-40ac-9aba-49d37e497bf8"],
+  "2e6b6390-71eb-44d0-a60a-16989af5b3e5"],
  "); at their crossing both means vanish and the state is the ",
  Cell[BoxData[
   StyleBox["Y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2e523f6e-078f-4657-8744-ec8d81708ea8"],
+  "351f2313-cd26-4221-b00a-6fe749cc2fe4"],
  " eigenstate ",
  Cell[BoxData[
   RowBox[{
@@ -1522,9 +1414,9 @@ zero-covariance set. For ",
     StyleBox["i", "TI"], "}", "/", 
     SqrtBox["2"]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dfda0cf6-0755-45f2-bebc-b74ef7480ddc"],
+  "d9e2a710-5d21-42c9-b121-cbe6ee8e168c"],
  ", the most symmetric minimum-uncertainty state."
-}], "Text",ExpressionUUID->"77e10e5a-b540-42c2-aec2-3bb1d8a125a2"],
+}], "Text",ExpressionUUID->"877a8093-b513-4767-8abe-273a2aa29ac7"],
 
 Cell[TextData[{
  "6.3 [BSc] How do I compute the classical Shannon entropy ",
@@ -1549,9 +1441,9 @@ Cell[TextData[{
     StyleBox["p", "TI"], 
     StyleBox["i", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9c1f71d8-52b6-4313-9702-0056901013ca"],
+  "2df48282-39f2-4fe2-82e0-75bfcf560ed7"],
  " of a measurement distribution?"
-}], "Subsection",ExpressionUUID->"2fe51ea9-f125-4454-a95f-3a28a91bfa64"],
+}], "Subsection",ExpressionUUID->"1e18e20e-1678-4a9b-9f96-caf958930646"],
 
 Cell[TextData[{
  "A measurement yields a probability distribution; its Shannon entropy ",
@@ -1576,12 +1468,12 @@ Cell[TextData[{
     StyleBox["p", "TI"], 
     StyleBox["i", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "436065c9-6399-40f8-acfc-18d0161e648c"],
+  "cdb405ab-9438-441d-bdcd-a9669ec00ca8"],
  " (in bits) measures the outcome uncertainty. Take the ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "51eef999-709a-4c08-8fd9-07cf0e8d604d"],
+  "2609f30f-415f-4cab-b701-c25b22e6050c"],
  " distribution of a state with populations ",
  Cell[BoxData[
   RowBox[{
@@ -1590,9 +1482,9 @@ Cell[TextData[{
    RowBox[{
     FractionBox["1", "4"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "885d0128-bca4-462b-9308-ed22dede3034"],
+  "3b1e44aa-891a-4eea-b9e8-11d910e17c8f"],
  "."
-}], "Text",ExpressionUUID->"00c97d46-16ed-4c9b-acde-8d7ad46f94de"],
+}], "Text",ExpressionUUID->"5b739b18-1943-4624-8a0d-9e621a786d8a"],
 
 Cell[TextData[{
  StyleBox["WL",
@@ -1603,9 +1495,9 @@ Cell[TextData[{
    StyleBox["log",
     FontSlant->"Plain"], "2"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "58cced8d-6bb6-45ee-9672-dd2cbd0910de"],
+  "98d0c161-60fc-4c88-9627-ad715608a6f8"],
  " probabilities."
-}], "Text",ExpressionUUID->"55e406f6-2072-49c3-8f18-b751434354d0"],
+}], "Text",ExpressionUUID->"967250d7-00c2-4162-88ea-b2e3aa7c2458"],
 
 Cell[BoxData[
  RowBox[{"-", 
@@ -1619,7 +1511,7 @@ Cell[BoxData[
       RowBox[{"3", "/", "4"}], ",", " ", 
       RowBox[{"1", "/", "4"}]}], "}"}]}], "]"}]}]], "Input",
  CellLabel->
-  "In[11]:= ",ExpressionUUID->"eee899ac-67e1-47e4-93d8-17204c240353"],
+  "In[10]:= ",ExpressionUUID->"64d2b87d-82a9-4df1-9a9d-20484037ec5d"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -1627,17 +1519,17 @@ Cell[TextData[{
  " : a ",
  Cell[BoxData["QuantumMeasurement"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b8e78ca8-ba3e-44e9-857e-b7239289baf1"],
+  "5fb3811f-89cd-4c1d-bf8d-dc4e0c077d0a"],
  " reports its ",
  Cell[BoxData["\"\<Entropy\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b8aad571-0bea-4ae1-b5a7-2368dccc2c42"],
+  "c45c5af3-96c9-466f-b1af-aaa9382349aa"],
  " directly, as a ",
  Cell[BoxData["Quantity"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e2d136be-dab6-4a87-834c-48539a9f9937"],
+  "490aa918-0346-4d19-92a5-368ebaf6a9da"],
  " in bits."
-}], "Text",ExpressionUUID->"a52db8b1-e54d-4178-8d02-349f55a46310"],
+}], "Text",ExpressionUUID->"63af7da1-950f-4db5-985b-267dbf07964c"],
 
 Cell[BoxData[
  RowBox[{
@@ -1652,7 +1544,7 @@ Cell[BoxData[
       RowBox[{"1", "/", "2"}]}], "}"}], "]"}], "]"}], "[", "\"\<Entropy\>\"", 
   "]"}]], "Input",
  CellLabel->
-  "In[12]:= ",ExpressionUUID->"1acc4e78-e440-40e2-8f8b-bab6dcb8049e"],
+  "In[11]:= ",ExpressionUUID->"401f9d0f-8695-4289-a369-0800551b8344"],
 
 Cell[TextData[{
  "Both give ",
@@ -1669,7 +1561,7 @@ Cell[TextData[{
      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
    FractionBox["1", "4"], "\[TildeTilde]", "0.811"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "11419f58-4ed6-475c-a54b-3867f2cbad33"],
+  "6451e3b8-32f5-43aa-94d7-fec11237bd33"],
  " bits: a biased two-outcome distribution carries less than one bit, \
 reaching exactly one bit only for the uniform ",
  Cell[BoxData[
@@ -1679,14 +1571,14 @@ reaching exactly one bit only for the uniform ",
    RowBox[{
     FractionBox["1", "2"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5a8f1f0d-0446-4895-b17b-11b3ca7996b1"],
+  "c35ee0b6-01e1-454a-8178-0224fe20b9ff"],
  "."
-}], "Text",ExpressionUUID->"cc7933ca-e642-4b0f-8326-ee0a57ea40d2"],
+}], "Text",ExpressionUUID->"57c392af-1282-492d-89f0-32f9bedb25d2"],
 
 Cell["\<\
 6.4 [MSc] How do I construct a maximal set of mutually unbiased bases for a \
 qubit?\
-\>", "Subsection",ExpressionUUID->"dceabcb6-54e6-4350-92a8-f2df15daf12f"],
+\>", "Subsection",ExpressionUUID->"afd7d197-4be4-4c89-a51c-332264554ee9"],
 
 Cell[TextData[{
  "Two bases are mutually unbiased when every cross-overlap is flat, ",
@@ -1703,7 +1595,7 @@ Cell[TextData[{
      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "=", "1", "/", 
    StyleBox["d", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ec991d6a-1e2e-4c0e-82cf-158826fd1052"],
+  "cf9a8f9c-cd5e-4bf8-8911-c174cc9b12cc"],
  ": a definite state in one is maximally uncertain in the other. A set of \
 bases is mutually unbiased when every pair in it is, and ",
  StyleBox["maximal", "TI"],
@@ -1711,7 +1603,7 @@ bases is mutually unbiased when every pair in it is, and ",
 The construction has three steps: derive the form of a basis unbiased to the \
 computational one, solve for the phase separation that makes two such \
 families mutually unbiased, then show the set cannot be extended."
-}], "Text",ExpressionUUID->"cc932b5c-01d2-4aed-b6ad-22ec3483d998"],
+}], "Text",ExpressionUUID->"97a690e9-efbc-4bfa-9772-d40034cd7e0e"],
 
 Cell[TextData[{
  StyleBox["WL",
@@ -1725,7 +1617,7 @@ Cell[TextData[{
     SubscriptBox[
      StyleBox["u", "TI"], "\[Perpendicular]"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c9d9170-04df-49a9-a8dd-e837d21e5606"],
+  "c4f9f168-c372-4d05-99d4-df9710c80416"],
  " is unbiased to the computational one when ",
  Cell[BoxData[
   RowBox[{
@@ -1747,7 +1639,7 @@ Cell[TextData[{
      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "=", 
    FractionBox["1", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1eea3aca-de0e-43b0-9d96-2508f87bf45f"],
+  "b1616bba-4663-4938-961d-5ac98827c864"],
  ". Write the candidate amplitudes in polar form, ",
  Cell[BoxData[
   RowBox[{
@@ -1775,9 +1667,9 @@ Cell[TextData[{
        StyleBox["\[Delta]", "TI"], 
        StyleBox["b", "TI"]]}]], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "98e1a6f0-f0c8-43ce-84b6-6cdb17380ee2"],
+  "230bc1fe-5821-4f0b-8d4e-35a17ccd8f7b"],
  ", and solve the two conditions."
-}], "Text",ExpressionUUID->"002c67a6-1fda-4997-a3d2-bb05ceba3bff"],
+}], "Text",ExpressionUUID->"349e5b51-756a-4912-9367-85c292c437aa"],
 
 Cell[BoxData[
  RowBox[{"Reduce", "[", 
@@ -1806,7 +1698,7 @@ Cell[BoxData[
     "ra", ",", " ", "rb", ",", " ", "\[Delta]a", ",", " ", "\[Delta]b"}], 
     "}"}], ",", " ", "Reals"}], "]"}]], "Input",
  CellLabel->
-  "In[13]:= ",ExpressionUUID->"4e94d96d-357c-4860-8d3e-9c25171e589d"],
+  "In[12]:= ",ExpressionUUID->"05d73642-aed3-429e-a8d8-f29bc5876c49"],
 
 Cell[TextData[{
  "Both moduli are forced to ",
@@ -1814,7 +1706,7 @@ Cell[TextData[{
   FractionBox["1", 
    SqrtBox["2"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2d646c28-b017-417d-bece-4e38a90120b8"],
+  "0f0467dc-2076-4b20-9327-5acf74788e9d"],
  " and neither phase is constrained. Discarding the physically irrelevant \
 global phase (Part 1) leaves the one-parameter family ",
  Cell[BoxData[
@@ -1828,7 +1720,7 @@ global phase (Part 1) leaves the one-parameter family ",
       RowBox[{"i", "\[Alpha]"}], "TI"]], "}", "/", 
     SqrtBox["2"]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a67d0811-7ce4-4bb6-9b4e-1772d99ce47f"],
+  "956cd9f6-fa0e-4dfd-a277-12e7701f4b0b"],
  ", and orthogonality then fixes its partner to ",
  Cell[BoxData[
   RowBox[{
@@ -1842,31 +1734,31 @@ global phase (Part 1) leaves the one-parameter family ",
       RowBox[{"i", "\[Alpha]"}], "TI"]], "}", "/", 
     SqrtBox["2"]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4ccb232e-ab51-46c5-9987-7308eae9e61b"],
+  "1dbc322a-7f05-4e67-84d7-70476e78da6a"],
  " up to phase. Two such families ",
  Cell[BoxData[
   StyleBox["\[Alpha]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d4df9a1b-62e1-4227-8678-b7e0b80be336"],
+  "eb4de904-b937-48ad-9fe7-718a3d69e09d"],
  " and ",
  Cell[BoxData[
   StyleBox["\[Beta]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a89f0ea9-be40-4f9f-a090-a84f553a532b"],
+  "fd22c25c-8f4a-45b6-bdd8-c2328023b23f"],
  " are themselves mutually unbiased only at a special separation; only the \
 difference matters, so fix ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "eb39e81f-3ce0-4c49-b50d-d5424b4f7105"],
+  "3f16f621-086d-450f-b1f4-5b8d44586aab"],
  " and solve for ",
  Cell[BoxData[
   StyleBox["\[Beta]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dcbb7646-17f2-4732-badc-870f746ad452"],
+  "afaf0b9a-254e-40ca-91e9-a3ffbe568590"],
  "."
-}], "Text",ExpressionUUID->"ffd8fac4-04b3-4f83-a229-f1b74058a25e"],
+}], "Text",ExpressionUUID->"e316a414-cc83-4e8a-895f-d2ce55ddf274"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -1902,7 +1794,7 @@ Cell[BoxData[
        RowBox[{"2", " ", "Pi"}]}]}], ",", " ", "\[Beta]"}], "]"}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[14]:= ",ExpressionUUID->"10301d82-5ff9-4efe-9ccc-2012cfd81c3e"],
+  "In[13]:= ",ExpressionUUID->"80dac57f-3188-4843-96fc-8559716cacac"],
 
 Cell[TextData[{
  "The two solutions ",
@@ -1911,13 +1803,13 @@ Cell[TextData[{
    StyleBox["\[Beta]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c0ec10e6-ae53-446d-8e20-1ac02ebc6d8c"],
+  "de1a5c39-e608-4cbe-94be-154d25326fc7"],
  " and ",
  Cell[BoxData[
   FractionBox[
    RowBox[{"3", "\[Pi]"}], "2"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0f2d8239-c961-4c78-8921-5d0d17f272f4"],
+  "2e049a3c-e932-4c92-b197-cc23be51fa78"],
  " are one and the same basis with its two vectors exchanged (",
  Cell[BoxData[
   RowBox[{
@@ -1930,48 +1822,48 @@ Cell[TextData[{
     RowBox[{
      StyleBox["i", "TI"], "\[Pi]", "/", "2"}]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9aec4e35-b350-46e1-97f2-28431eccf011"],
+  "75fa1d89-f46b-485b-a9fb-f643a20a108d"],
  "), so exactly one new basis appears and the set holds three: computational, \
 ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e9251d6c-9aa0-462c-9088-7d58b438bbb9"],
+  "c42c9485-9857-41a0-b548-1f9c9e591a1b"],
  ", ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c12313f1-ff94-4cde-806f-ec72d5e9c74e"],
+  "600b9846-68c1-41c5-801a-f2cb0b32894f"],
  ". Maximality is the claim that no fourth basis can join. A fourth basis \
 would again be unbiased to the computational one, hence of the same family \
 form at some phase ",
  Cell[BoxData[
   StyleBox["\[Gamma]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "df5ce19d-afeb-4e79-a020-b60cd09011bd"],
+  "89e5e5a1-5721-4fd3-a45d-494d7abfe562"],
  ", and simultaneously unbiased to both the ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c8e2cc0d-260a-4738-9ae3-788b7a99c630"],
+  "b0aaddea-b204-46b9-9aa2-3b3d94368b45"],
  " and ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "679ca869-82d0-418e-9093-3a4a90d1be22"],
+  "dce60ce5-26b4-4be3-9809-8a4c58a2be6e"],
  " families; solve for ",
  Cell[BoxData[
   StyleBox["\[Gamma]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ce067bdb-0c8d-4bdb-9e7e-b1a4ad82261a"],
+  "627487cf-00bb-40bc-8af5-5dad96e279b3"],
  "."
-}], "Text",ExpressionUUID->"31ffa6af-ce8c-4fb0-9e44-ea98128058f6"],
+}], "Text",ExpressionUUID->"fb623aa5-36db-44f1-9d15-0c15d3be1d72"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -2019,12 +1911,12 @@ Cell[BoxData[
        RowBox[{"2", " ", "Pi"}]}]}], ",", " ", "\[Gamma]"}], "]"}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[15]:= ",ExpressionUUID->"4071780e-04bf-4ae3-8414-9864b36434a2"],
+  "In[14]:= ",ExpressionUUID->"b057e44f-e2f6-4f4c-8164-e8554f7650da"],
 
 Cell["\<\
 No phase survives both conditions: the three bases cannot be extended, and \
 the set is maximal. Assemble it.\
-\>", "Text",ExpressionUUID->"d874a0b0-58d3-4c1a-a75f-3904afd1fe3a"],
+\>", "Text",ExpressionUUID->"2d9af2f9-afae-4b3f-ae6a-417be6c96b62"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -2054,7 +1946,7 @@ Cell[BoxData[
         RowBox[{"Pi", "/", "2"}]}], "}"}]}], ",", " ", 
      RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[16]:= ",ExpressionUUID->"99122a2b-4ee2-4106-b0ca-08d7bd14085f"],
+  "In[15]:= ",ExpressionUUID->"f4af9d84-a023-4af8-92b7-21ac8a06344d"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -2066,9 +1958,9 @@ Cell[TextData[{
    StyleBox["X", "TI"], ",", 
    StyleBox["Y", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "746fabb1-1596-42f1-acf4-9dd81faa869b"],
+  "09ea53e7-6b57-4f10-88d3-0d20ab360f76"],
  "; read them off the operators."
-}], "Text",ExpressionUUID->"1900252b-36ed-48bf-b62e-0e8c95220df8"],
+}], "Text",ExpressionUUID->"1284a031-b587-4e1f-bf9d-c058db9fac8a"],
 
 Cell[BoxData[
  RowBox[{
@@ -2082,7 +1974,7 @@ Cell[BoxData[
    RowBox[{"\"\<Z\>\"", ",", " ", "\"\<X\>\"", ",", " ", "\"\<Y\>\""}], 
    "}"}]}]], "Input",
  CellLabel->
-  "In[17]:= ",ExpressionUUID->"9ee4ff00-71b9-4aef-8f07-0be10454d4bc"],
+  "In[16]:= ",ExpressionUUID->"f730efa4-8777-4d29-8db6-a9028e79ef2c"],
 
 Cell[TextData[{
  "Solving the unbiasedness conditions delivers three bases and proves no \
@@ -2091,36 +1983,36 @@ fourth exists: the maximal count for a qubit is ",
   RowBox[{
    StyleBox["d", "TI"], "+", "1", "=", "3"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0b42f367-0245-4a3b-95c0-505607cff191"],
+  "6002ecf7-62f9-4ac4-9c1d-58a261bd27e8"],
  " (the qubit case of the general prime-power-dimension result), and the \
 bases are the computational (",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0828df4f-83dd-4ff3-bf94-c44a1b7715c3"],
+  "8632410a-a34a-41b7-acd1-e79867535102"],
  ") basis and the phase families at ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Alpha]", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e4555269-75aa-4ae7-8298-0a8b4d8c1fa6"],
+  "6f4be29e-1b64-450f-9e18-41c7c2655648"],
  " and ",
  Cell[BoxData[
   FractionBox["\[Pi]", "2"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "27495511-7b44-4695-b868-85f5e9e109bf"],
+  "5e3eb583-7eb8-4dbf-bcda-196ddb14b2d0"],
  ", which are the ",
  Cell[BoxData[
   StyleBox["X", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "bfb6f5c9-dd98-42db-b425-01f9684aee8e"],
+  "f99e289d-de13-4389-b6e1-d84436e05e8c"],
  " and ",
  Cell[BoxData[
   StyleBox["Y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "02dc6f93-c596-4793-b614-e3d11136fbad"],
+  "594b3bc1-47b0-46b7-8b17-d05fe513be63"],
  " eigenbases."
-}], "Text",ExpressionUUID->"168dcaf2-0788-4980-a9cf-53cab7a6b414"],
+}], "Text",ExpressionUUID->"f1f42cd0-c5cb-42d1-8445-ef25cb2c9fb2"],
 
 Cell[TextData[{
  "6.4b [BSc] How do I verify that given bases are pairwise mutually unbiased, \
@@ -2142,9 +2034,9 @@ i.e. every cross-overlap satisfies ",
      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "=", "1", "/", 
    StyleBox["d", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "858853e2-2716-4650-8be7-24d4c18a5655"],
+  "fc2fa528-a137-4787-8f2d-fb03ee3f9b0e"],
  "?"
-}], "Subsection",ExpressionUUID->"8f6e0371-886f-48b5-94d6-a2610d54f2cc"],
+}], "Subsection",ExpressionUUID->"86c3bcb8-d86e-4aa1-9e9a-cac949c47162"],
 
 Cell[TextData[{
  "Given candidate bases ",
@@ -2156,7 +2048,7 @@ Cell[TextData[{
       StyleBox["i", "TI"]]},
     "Ket"], "}"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4fcbf260-ddd6-4bfc-bc85-4882e4f3f6a9"],
+  "a261a1b0-1328-4f22-bd42-af28f406237b"],
  ", ",
  Cell[BoxData[
   RowBox[{
@@ -2167,7 +2059,7 @@ Cell[TextData[{
        StyleBox["j", "TI"]]},
      "Ket"], "}"}], ",", "\[Ellipsis]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2369eba8-8018-4001-8478-8d5f132facf2"],
+  "334f2333-db63-4a94-a1bf-0a1533cf74aa"],
  ", the test is the definition itself: for every pair of ",
  StyleBox["different", "TI"],
  " bases, ",
@@ -2190,7 +2082,7 @@ Cell[TextData[{
      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "=", "1", "/", 
    StyleBox["d", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ba8b28a3-b103-4ae9-bf2e-115057c6e49b"],
+  "5944cf8d-b4bd-499c-a10f-db8545c2cfea"],
  "; a single deviating entry disqualifies the set. Run the test on the three \
 bases constructed in 6.4 in their operator form, the eigenbases of ",
  Cell[BoxData[
@@ -2199,27 +2091,27 @@ bases constructed in 6.4 in their operator form, the eigenbases of ",
    StyleBox["Y", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8d950f1a-eb8a-4729-9893-63f4337c9cfb"],
+  "c48282c3-b3f3-49f2-9902-0fff135baec8"],
  " (here ",
  Cell[BoxData[
   RowBox[{
    StyleBox["d", "TI"], "=", "2"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6e0c1930-69e5-4de8-884f-a743f0b4fbc8"],
+  "f298ee8e-6b77-4734-9958-f3c01d331db3"],
  ", so the target value is ",
  Cell[BoxData[
   FractionBox["1", "2"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "25415e55-8fe1-48ca-af9b-bbdd26b1a1cf"],
+  "2b8c5a59-78e1-4d6b-baa5-0b98b02beb66"],
  ")."
-}], "Text",ExpressionUUID->"7af00624-ceb8-4b94-b339-0b912e7a3024"],
+}], "Text",ExpressionUUID->"3a3523bf-2744-4f41-9487-7380b799fbb8"],
 
 Cell[TextData[{
  StyleBox["WL",
   FontWeight->"Bold"],
  " : form the three eigenbases and compute the full overlap matrix for each \
 of the three pairs."
-}], "Text",ExpressionUUID->"442dbf62-a8d4-429d-af49-a8b10e51c7ef"],
+}], "Text",ExpressionUUID->"44954478-b2d5-47bc-bbff-dc5e2bd6d4d3"],
 
 Cell[BoxData[
  RowBox[{"ovs", " ", "=", " ", 
@@ -2265,7 +2157,7 @@ Cell[BoxData[
         RowBox[{"by", ",", " ", "bz"}], "}"}]}], "}"}]}]}], "]"}]}]], "Input",\
 
  CellLabel->
-  "In[18]:= ",ExpressionUUID->"21444ad6-8708-4a10-80c7-ba8e4ffb2e3c"],
+  "In[17]:= ",ExpressionUUID->"1eb629f4-bf95-4203-b3ab-e1445332a312"],
 
 Cell[TextData[{
  "The verdict collapses all twelve cross-overlaps to their set of distinct \
@@ -2274,15 +2166,15 @@ values; the test passes exactly when that set is ",
   RowBox[{"{", "1", "/", 
    StyleBox["d", "TI"], "}"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4ce00f81-97f2-4231-8404-be7c6282ed7c"],
+  "04f662bc-51dc-4736-90a0-8f51b2ac82d4"],
  "."
-}], "Text",ExpressionUUID->"a19d8a19-6594-484a-a4d2-52362283b4f4"],
+}], "Text",ExpressionUUID->"24f18975-db3e-411a-853e-5c4e6cc52031"],
 
 Cell[BoxData[
  RowBox[{"Union", "[", 
   RowBox[{"Flatten", "[", "ovs", "]"}], "]"}]], "Input",
  CellLabel->
-  "In[19]:= ",ExpressionUUID->"bf0d9965-3061-4735-af16-d51ff2327902"],
+  "In[18]:= ",ExpressionUUID->"3fa4bab4-cafa-49a0-9d93-a0dc0ae70800"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -2290,9 +2182,9 @@ Cell[TextData[{
  " : the same test from the operators' ",
  Cell[BoxData["\"\<Eigenvectors\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "268b8a47-a3c2-40a8-bad0-c0732fd22973"],
+  "135fb9da-5a59-40de-8b0b-e69b97fb79ef"],
  ", over all pairs at once."
-}], "Text",ExpressionUUID->"cce033e3-22c4-4c74-b2fd-6ab4bf82caf2"],
+}], "Text",ExpressionUUID->"b6931b53-4aac-4e23-b3b7-504077f44264"],
 
 Cell[BoxData[
  RowBox[{"Union", " ", "@", " ", 
@@ -2330,7 +2222,7 @@ Cell[BoxData[
        RowBox[{"b", ",", " ", 
         RowBox[{"{", "2", "}"}]}], "]"}]}]}], "]"}]}]}]], "Input",
  CellLabel->
-  "In[20]:= ",ExpressionUUID->"d60a3b5a-efe8-4aff-8876-3419129acaed"],
+  "In[19]:= ",ExpressionUUID->"a469b080-8f5a-4073-88e0-35c18e5a816c"],
 
 Cell[TextData[{
  "Every cross-overlap between different bases collapses to the single value \
@@ -2340,7 +2232,7 @@ Cell[TextData[{
    FractionBox["1", "2"], "=", "1", "/", 
    StyleBox["d", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fc3edeb8-391b-405f-8939-594cdc805f63"],
+  "cb600f9e-ce1c-4db7-9832-87a260937b94"],
  ": the ",
  Cell[BoxData[
   RowBox[{
@@ -2348,11 +2240,11 @@ Cell[TextData[{
    StyleBox["Y", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4e2b2b4e-353b-4080-b246-dca8a294cb3c"],
+  "c5f6c31c-fb67-4279-852d-069b0be7e4ce"],
  " eigenbases are pairwise mutually unbiased, confirming they are the three \
 MUBs of a qubit. The collapse to a one-element set is what gives the test \
 teeth: any deviating overlap would survive as a second element."
-}], "Text",ExpressionUUID->"dc1d3739-1d21-4f17-b841-d20d3617d6c3"],
+}], "Text",ExpressionUUID->"43352407-e04e-4389-9901-57b3cc8addbf"],
 
 Cell[TextData[{
  "6.5 [MSc] How do I verify the Maassen-Uffink entropic uncertainty relation ",
@@ -2376,24 +2268,24 @@ Cell[TextData[{
    SuperscriptBox[
     StyleBox["c", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3574b8c0-11a4-487d-922e-d0226ddd899c"],
+  "88b36295-cc1c-47b1-b236-cb63cf30c097"],
  ", with ",
  Cell[BoxData[
   StyleBox["c", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7d37870a-1dc2-48bd-b0e7-175d1c4d1f68"],
+  "4159f03e-e2fb-4715-9fd1-c6cdc82f1c2a"],
  " the largest overlap between eigenstates of ",
  Cell[BoxData[
   StyleBox["A", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3cbaedfa-0cdf-4e84-8e67-e3a68c1f4f10"],
+  "e7b5d462-9eef-4de7-bf3b-a69faea99420"],
  " and ",
  Cell[BoxData[
   StyleBox["B", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1596107a-42df-40fe-bfe4-103407e27c76"],
+  "d15da7c1-e9ea-4e9d-9278-3981dd26ffc0"],
  "?"
-}], "Subsection",ExpressionUUID->"18275b3e-8ac4-4535-aece-3789e55ac295"],
+}], "Subsection",ExpressionUUID->"f510b946-ca7d-410e-81ae-612569c604f2"],
 
 Cell[TextData[{
  "Let ",
@@ -2406,13 +2298,13 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "164a325e-2626-4071-b80e-f4c68b5b9d96"],
+  "fe03cd80-7b6b-42da-bc18-3e0642742047"],
  " denote the Shannon entropy (6.3) of the outcome distribution of measuring \
 the observable ",
  Cell[BoxData[
   StyleBox["A", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9f4f7709-065d-4f30-a375-c9383bb39dcc"],
+  "1f148dbc-c71f-43e7-a571-06b7c7b84af9"],
  ", and let ",
  Cell[BoxData[
   RowBox[{"{", 
@@ -2422,7 +2314,7 @@ the observable ",
       StyleBox["j", "TI"]]},
     "Ket"], "}"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "580447c7-1ab7-4310-8186-141a61fcc171"],
+  "f8cf0409-357b-4f24-b860-97ff6892357d"],
  " and ",
  Cell[BoxData[
   RowBox[{"{", 
@@ -2432,17 +2324,17 @@ the observable ",
       StyleBox["k", "TI"]]},
     "Ket"], "}"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4806f7bc-b313-420a-9b0a-8d63a86841a8"],
+  "b25fd38e-3493-441d-a5cb-7466185a17b4"],
  " be the eigenstates of ",
  Cell[BoxData[
   StyleBox["A", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "679f6eed-996c-4dcf-8db7-ba2090c6ed2b"],
+  "f26cc59b-9e8e-4dc2-99fe-b088304d7865"],
  " and of ",
  Cell[BoxData[
   StyleBox["B", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "41cb60f4-8ca3-4e73-aab0-7def063c4f52"],
+  "3ddfc2a0-7910-4bf9-a7ec-6390b9a801d0"],
  ". The Maassen-Uffink relation bounds the summed entropies for ",
  StyleBox["every", "TI"],
  " state, ",
@@ -2466,7 +2358,7 @@ the observable ",
    SuperscriptBox[
     StyleBox["c", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aba3e0f0-cfab-44d3-ba0b-16c3931b9c93"],
+  "0e676ec6-4fb6-4825-b959-8e0175520755"],
  ", where ",
  Cell[BoxData[
   RowBox[{
@@ -2491,7 +2383,7 @@ the observable ",
     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
     GridBoxSpacings->{"Columns" -> {{0.15}}}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "983e2cd6-becf-4fe0-bd07-b9ccb8cd99ce"],
+  "a76ff6cd-e309-4bcf-920f-9d341da590d6"],
  " is the largest overlap between the two eigenbases; the bound involves only \
 the observables, not the state. The pair of observables is itself kept \
 general: as in 6.1, identity shifts and scales drop out, and a global \
@@ -2502,7 +2394,7 @@ to ",
    StyleBox["B", "TI"], "=", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "77a2758c-8fbf-4bb1-b7f8-700816af9eef"],
+  "cda2ab16-27b8-4558-af90-c28afaa7bba8"],
  " and ",
  Cell[BoxData[
   RowBox[{
@@ -2514,7 +2406,7 @@ to ",
    OverscriptBox[
     StyleBox["\[Sigma]", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0f43bd4f-2e89-4c53-aa5c-07b822723be8"],
+  "fbd2ae62-9670-4f5d-aa55-280fb3683484"],
  " with ",
  Cell[BoxData[
   RowBox[{
@@ -2536,12 +2428,12 @@ to ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7cdd0463-e897-47f2-b2ce-3ae4bbaf3710"],
+  "7dcb0835-1da1-48c4-9234-f0054e755570"],
  "; the one genuine invariant is the angle ",
  Cell[BoxData[
   StyleBox["\[Gamma]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3bd8a91e-68a3-4f1c-8a3f-2423653b6fc9"],
+  "8b7210d4-df1f-4405-9bad-fef798f47af2"],
  " between the two Bloch axes, folded into ",
  Cell[BoxData[
   RowBox[{
@@ -2552,7 +2444,7 @@ to ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "79a51132-cdd1-4f31-806f-d1a18e160222"],
+  "b0d6d6d5-a0ea-44b1-9c85-4f7242069196"],
  " since ",
  Cell[BoxData[
   RowBox[{
@@ -2561,7 +2453,7 @@ to ",
    OverscriptBox[
     StyleBox["n", "TI"], "^"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "29ba084e-7670-42f8-9aa5-9babf3cab5c4"],
+  "6b7d3ace-58e5-46c1-b702-2e99621d8d71"],
  " only relabels outcomes. Verify the relation for every pair and every state \
 at once: derive ",
  Cell[BoxData[
@@ -2573,17 +2465,17 @@ at once: derive ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7ba6f2d3-2f11-48cb-82f4-93114d1dbbb7"],
+  "d83207fa-9721-4893-b29e-8ab31ec76f68"],
  " and the bound, find which ",
  Cell[BoxData[
   StyleBox["\[Gamma]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2e4e8488-6aa1-49d1-b171-6a1f782019e5"],
+  "712b6fc8-ea17-4f60-8ad2-b2203e117598"],
  " carries the strongest bound, then minimize the entropy sum minus the bound \
 over the state and the pair together. The minimum over mixed states lies on \
 the pure sphere: scaling a Bloch vector out to the sphere grows the \
 projection on both axes at once, lowering both entropies."
-}], "Text",ExpressionUUID->"e29b3026-fd5b-41e5-a2d3-2b6335c2282b"],
+}], "Text",ExpressionUUID->"c3a33234-8dfe-4110-b293-641b902d8541"],
 
 Cell[TextData[{
  StyleBox["WL",
@@ -2621,7 +2513,7 @@ rank-one projector identity ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "03f2028e-861e-45de-b88f-274af1ba4444"],
+  "2a055dc9-afd3-40f5-9237-107f0b6b352a"],
  ", with ",
  Cell[BoxData[
   RowBox[{
@@ -2636,14 +2528,14 @@ rank-one projector identity ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ab6ea41e-c287-4677-a6b2-ba25366bb35a"],
+  "f481f15a-b11b-4415-b461-af8ae6be561d"],
  " the spectral projectors of a ",
  Cell[BoxData[
   RowBox[{"\[PlusMinus]", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e9813221-a98d-4bd9-a7fe-f9f5738875f7"],
+  "ed52873b-2d0c-4854-a77f-40e9692e5185"],
  " observable."
-}], "Text",ExpressionUUID->"7e9c4f58-b7b7-4402-965a-3aae5d3d188b"],
+}], "Text",ExpressionUUID->"596c3cda-8d36-4e02-a674-c759579416fe"],
 
 Cell[BoxData[
  RowBox[{"FullSimplify", "[", 
@@ -2689,7 +2581,7 @@ Cell[BoxData[
    RowBox[{"0", " ", "<=", " ", "\[Gamma]", " ", "<=", " ", 
     RowBox[{"Pi", "/", "2"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[21]:= ",ExpressionUUID->"f2103e93-9009-41fb-95a1-d56b6c0bcb9a"],
+  "In[20]:= ",ExpressionUUID->"1035a62d-a145-429a-bfea-3d889a67d79f"],
 
 Cell[TextData[{
  "The four overlaps are ",
@@ -2701,7 +2593,7 @@ Cell[TextData[{
    FractionBox[
     StyleBox["\[Gamma]", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e288865-977d-4444-b63a-0e49e208f2e7"],
+  "1d8f95d7-294c-4d7b-82d7-65c2a4f2a22b"],
  " and ",
  Cell[BoxData[
   RowBox[{
@@ -2711,7 +2603,7 @@ Cell[TextData[{
    FractionBox[
     StyleBox["\[Gamma]", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e0b93fdd-d353-4e8d-9a2c-7fc0e8897a02"],
+  "6d3eb44e-3af7-4702-bd42-0e56b2eff46d"],
  "; on ",
  Cell[BoxData[
   RowBox[{
@@ -2722,7 +2614,7 @@ Cell[TextData[{
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e99e7c2f-992a-4da2-98a2-e78508091dbd"],
+  "23df2c3b-8ad2-4453-9c50-dadd181a1240"],
  " the largest is ",
  Cell[BoxData[
   RowBox[{
@@ -2734,7 +2626,7 @@ Cell[TextData[{
    FractionBox[
     StyleBox["\[Gamma]", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3699df3b-13dc-402f-9910-102e90fd42d8"],
+  "354ae6a5-be8d-41df-a63e-5ee4806ac437"],
  ", so the bound is ",
  Cell[BoxData[
   RowBox[{"-", 
@@ -2747,9 +2639,9 @@ Cell[TextData[{
    FractionBox[
     StyleBox["\[Gamma]", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8a4bbca7-ee6e-458d-a04d-3a58528b9400"],
+  "9f4a414c-20a5-4e8d-aede-359fd307693a"],
  ". Ask which pair carries the strongest bound."
-}], "Text",ExpressionUUID->"2f49a107-63f4-411b-9c60-263970fa38fc"],
+}], "Text",ExpressionUUID->"01fa48f6-1d14-4c39-ab02-3a672a6591f3"],
 
 Cell[BoxData[
  RowBox[{"Maximize", "[", 
@@ -2765,7 +2657,7 @@ Cell[BoxData[
       RowBox[{"Pi", "/", "2"}]}]}], "}"}], ",", " ", "\[Gamma]"}], 
   "]"}]], "Input",
  CellLabel->
-  "In[22]:= ",ExpressionUUID->"b7c76abf-9a34-4848-a8ee-eb7b1a61b37f"],
+  "In[21]:= ",ExpressionUUID->"e73b74c3-3b2b-439b-843a-3dd899729af8"],
 
 Cell[TextData[{
  "The bound is strongest, one full bit, exactly at ",
@@ -2774,36 +2666,36 @@ Cell[TextData[{
    StyleBox["\[Gamma]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ee70b66c-03e1-4da4-b7af-066eefd7395e"],
+  "9b865c3e-1fd9-466f-8367-106ca728848c"],
  ": the mutually unbiased pair of 6.4b, which is ",
  Cell[BoxData[
   RowBox[{
    StyleBox["X", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e2951015-69fd-46c2-afca-1fa2b5e3b1f1"],
+  "e690018c-f2be-40dd-84db-7e562b7b7483"],
  " up to rotation. A commuting pair (",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Gamma]", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c9180c7c-ecc1-4e64-b227-dfd3d0dda8fc"],
+  "1c705ef8-1a67-4b9a-9eeb-a95358dc2cc3"],
  ") has ",
  Cell[BoxData[
   RowBox[{
    StyleBox["c", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d0b111e0-2bf5-41fd-8b8e-8a82f62e070d"],
+  "a075d488-e9ee-43f7-8d6d-854f2b71c78d"],
  " and bound ",
  Cell[BoxData["0"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0c52ceb2-2d2b-4643-b252-f56439c9d839"],
+  "c0c7a7dc-f65a-4aa6-9975-931e1559fbc4"],
  ", a vacuous statement. Now build the entropy sum for the generic pair over \
 the whole pure family: the Born weights of a ",
  Cell[BoxData[
   RowBox[{"\[PlusMinus]", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5ddcebd7-9289-4757-928d-675696e45805"],
+  "ca089ea3-ff95-4860-9b94-d68a3716ec31"],
  " observable are ",
  Cell[BoxData[
   RowBox[{
@@ -2821,15 +2713,15 @@ the whole pure family: the Born weights of a ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "63ea0800-8eac-4198-8b63-d37f1f363d11"],
+  "909a412a-4d56-4a26-9dba-31da9dc237b6"],
  ", ",
  Cell[BoxData["ComplexExpand"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8c1fd5df-7a6d-49ba-a51e-6532fb8a9e7f"],
+  "1965f6a2-8d0d-470b-b528-c1b8743e8127"],
  " renders each mean as a manifestly real function of the angles, and the ",
  Cell[BoxData["If"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "288b3877-e20c-45b9-85c5-4a51b92fb393"],
+  "c7baf77e-b1c1-4851-bf14-d453ae26bd8e"],
  " keeps the convention ",
  Cell[BoxData[
   RowBox[{"0", 
@@ -2838,9 +2730,9 @@ the whole pure family: the Born weights of a ",
      FontSlant->"Plain"], "2"], "\[ThinSpace]", "0", "=", "0"}]], 
   "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ff3391da-4d97-44b0-aeb9-9497a1c16203"],
+  "0ad7f306-b692-4cdf-a9ed-7664b249afca"],
  " explicit."
-}], "Text",ExpressionUUID->"9fbb3385-c8da-4678-93a4-8978b8e5bff1"],
+}], "Text",ExpressionUUID->"6dcab1be-8f7c-48da-b279-e0b8e9b6e4e2"],
 
 Cell[BoxData[
  RowBox[{"hsum", " ", "=", " ", 
@@ -2922,12 +2814,12 @@ Cell[BoxData[
              RowBox[{"ev", "[", "z", "]"}]}], ")"}], "/", "2"}]}], "}"}], 
         "]"}]}]}], "]"}]}], "]"}]}]], "Input",
  CellLabel->
-  "In[23]:= ",ExpressionUUID->"3e1326ec-d35b-4f64-8eb9-4f4ffd12f90a"],
+  "In[22]:= ",ExpressionUUID->"5ef79b17-1fcb-40f5-b034-d2f6314c16c0"],
 
 Cell["\<\
 Minimize the slack, the entropy sum minus the bound, over the state and the \
 pair together.\
-\>", "Text",ExpressionUUID->"896d4fdb-4372-46fc-80c7-3c249df37977"],
+\>", "Text",ExpressionUUID->"97d0f51b-a64f-4d74-a76e-a3ab8f943376"],
 
 Cell[BoxData[
  RowBox[{"NMinimize", "[", 
@@ -2945,20 +2837,20 @@ Cell[BoxData[
     RowBox[{"\[Theta]", ",", " ", "\[Phi]", ",", " ", "\[Gamma]"}], "}"}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[24]:= ",ExpressionUUID->"bad5e6a4-a04a-46a4-b563-7da985664c6e"],
+  "In[23]:= ",ExpressionUUID->"5e7a3f64-17b0-4404-8697-0d64adba3252"],
 
 Cell[TextData[{
  "The slack never drops below zero (the minimum is ",
  Cell[BoxData["0"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b714b7d6-6487-43ca-9c3b-ff46a4ca9230"],
+  "5c65a673-54ad-47e9-8a8e-3f2c39b43575"],
  " to machine precision, ",
  Cell[BoxData[
   RowBox[{"\[Tilde]", "3", "\[Times]", 
    SuperscriptBox["10", 
     RowBox[{"-", "16"}]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5118bf51-b673-4125-b828-a8fffaef9cff"],
+  "08fbfe86-bab9-4420-8b63-3c55d56d9621"],
  "): Maassen-Uffink holds for every qubit pair and every state at once. The \
 minimizer sits at ",
  Cell[BoxData[
@@ -2966,10 +2858,10 @@ minimizer sits at ",
    StyleBox["\[Gamma]", "TI"], "=", 
    FractionBox["\[Pi]", "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7343cf89-c082-4ff2-9d54-5602f63cde80"],
+  "effcabcf-e691-4abb-a305-e507e14c4781"],
  ", so park there, the strongest-bound pair, and minimize the entropy sum \
 itself."
-}], "Text",ExpressionUUID->"76065ca3-bd9c-42cd-8394-29555601381e"],
+}], "Text",ExpressionUUID->"0d13e0fa-0902-40fa-b345-0a87b65af3d2"],
 
 Cell[BoxData[
  RowBox[{"NMinimize", "[", 
@@ -2980,7 +2872,7 @@ Cell[BoxData[
    RowBox[{"{", 
     RowBox[{"\[Theta]", ",", " ", "\[Phi]"}], "}"}]}], "]"}]], "Input",
  CellLabel->
-  "In[25]:= ",ExpressionUUID->"7b9dc8be-03ed-4632-a80c-22e8578aca5f"],
+  "In[24]:= ",ExpressionUUID->"0781e345-9dfc-4889-ac5b-635f271d2dc6"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -2995,13 +2887,13 @@ object sandwich ",
      RowBox[{"op", " ", "@", " ", "psi"}]}], ")"}], "[", "\"\<Scalar\>\"", 
    "]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "49697e74-5b82-4690-adeb-da5a404e1388"],
+  "9ec6b5f2-9e61-4481-8374-fb4d36968b51"],
  "; it is the ",
  Cell[BoxData["==="], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7a5ec69e-a7a7-42d8-9344-819bbd4e7593"],
+  "b61e8666-5fbe-4790-84f1-ad25270b3022"],
  "-identical expression, so both scans above apply to it verbatim."
-}], "Text",ExpressionUUID->"8f8abdf2-cb9f-4557-9c02-03d840eba0a7"],
+}], "Text",ExpressionUUID->"56ef5771-de96-42dc-aabe-d7908f74e7fb"],
 
 Cell[BoxData[
  RowBox[{
@@ -3090,7 +2982,7 @@ Cell[BoxData[
              RowBox[{"ev", "[", "z", "]"}]}], ")"}], "/", "2"}]}], "}"}], 
         "]"}]}]}], "]"}]}], "]"}], " ", "===", " ", "hsum"}]], "Input",
  CellLabel->
-  "In[26]:= ",ExpressionUUID->"1ff50573-d8b6-493c-850f-afb4f75b5546"],
+  "In[25]:= ",ExpressionUUID->"9e080d78-0205-45d5-9e91-5e316a481ebb"],
 
 Cell[TextData[{
  "At the maximally incompatible pair the minimum of ",
@@ -3109,32 +3001,32 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e5f72eca-10d4-4202-bab8-a58a7f5eaae2"],
+  "daee549c-fa4b-42de-ae45-29a190f4c79f"],
  " is exactly the computed bound, ",
  Cell[BoxData["1"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8a194008-c3bc-4510-a779-6fe846a72a50"],
+  "0ab67ebb-058b-492f-a4dc-2654f97b7783"],
  " bit, attained at ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Theta]", "TI"], "\[TildeTilde]", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "63060011-3b0a-4d95-812e-2e3578ed5081"],
+  "6e918eec-d8bc-491e-a804-047296a6a3be"],
  ", a ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "75261546-dd35-4d0e-badc-d7af3c23274d"],
+  "2d8447e2-029a-4651-8556-e5edafb62992"],
  " eigenstate: no qubit state is sharp in both ",
  Cell[BoxData[
   StyleBox["X", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6590bbf1-21e1-47bb-a87c-74931408d36d"],
+  "56b94319-ae1c-4599-9104-029b27f41288"],
  " and ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "b9943373-95ff-4f99-870e-201a32a27c36"],
+  "63827d59-816b-4955-8998-9d075763adc8"],
  ", and the total uncertainty of a mutually unbiased pair can never drop \
 below one full bit. The ",
  Cell[BoxData[
@@ -3142,13 +3034,13 @@ below one full bit. The ",
    StyleBox["X", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "73fc31cd-d40a-492b-8792-3403b4836166"],
+  "bb22ce62-5232-4d8a-9a3e-58d916977661"],
  " of 6.6 is therefore not a convenience choice but the extremal pair the ",
  Cell[BoxData["Maximize"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "14d797f1-4343-4ed6-884d-d3e735bf93d6"],
+  "b841ae61-722d-4a2c-8775-9710565ee12f"],
  " step singled out; which states attain its bound is 6.6's question."
-}], "Text",ExpressionUUID->"f266592c-c965-4c0a-88b6-ae8e7c6e94f2"],
+}], "Text",ExpressionUUID->"09b62c4b-899c-49b4-b1fc-f73c15a8fb29"],
 
 Cell[TextData[{
  "6.6 [MSc] How do I find the states that saturate the Maassen-Uffink \
@@ -3168,16 +3060,16 @@ entropic bound ",
    StyleBox[")",
     SpanMaxSize->1], "\[GreaterEqual]", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "da98d3f6-e766-4e9c-b89e-70998df4c57c"],
+  "146bc93e-629d-4a69-8dc2-71fe7a882c5d"],
  " bit for the complementary ",
  Cell[BoxData[
   RowBox[{
    StyleBox["X", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "64da160d-8ab2-4bdc-bdc7-a3aaf4b6ab33"],
+  "83d51144-0a37-4e4d-96c1-9ffeca864db0"],
  " (maximal complementarity)?"
-}], "Subsection",ExpressionUUID->"ba044529-bcc3-43c0-b701-e81a52e19ee6"],
+}], "Subsection",ExpressionUUID->"aca9a414-f566-4231-bfde-ac532a45a9a9"],
 
 Cell[TextData[{
  "The bound of 6.5, ",
@@ -3196,32 +3088,32 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1], "\[GreaterEqual]", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "91007b9a-7b70-4b01-a182-68ba31092080"],
+  "2a8dddf9-b85b-4478-b291-54e097de5510"],
  " bit for the mutually unbiased ",
  Cell[BoxData[
   RowBox[{
    StyleBox["X", "TI"], ",", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "947701bb-3018-41f7-89bb-fbb436e8cf19"],
+  "1b0cd9c6-6cee-41ab-b855-622fd3c7f769"],
  " (the extremal pair 6.5's ",
  Cell[BoxData["Maximize"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "041df69c-1677-448d-aa90-a8601a1c6833"],
+  "08cdef29-642c-4383-aa98-d8c3c10afaee"],
  " singled out), is attained: 6.5's minimization bottomed out exactly there. \
 Find ",
  StyleBox["which", "TI"],
  " states attain it. Work on the pure sphere (by 6.5's argument the minimum \
 lives there): locate the candidates from the definition of the entropy, then \
 check saturation exactly."
-}], "Text",ExpressionUUID->"337fed7c-7203-4df8-87dc-e7fab5f4ecec"],
+}], "Text",ExpressionUUID->"5105610f-2853-4f9f-8a79-6edee2ab020e"],
 
 Cell[TextData[{
  StyleBox["WL",
   FontWeight->"Bold"],
  " : the summed entropy over the whole pure family, the two Born \
 distributions read from the eigenbases (6.4b)."
-}], "Text",ExpressionUUID->"e2f3c7e8-ad1a-43d3-8d05-94d72d8c4c8f"],
+}], "Text",ExpressionUUID->"c2d25a7d-3f12-4047-a80f-622f07a56bd8"],
 
 Cell[BoxData[
  RowBox[{"hsum", " ", "=", " ", 
@@ -3286,12 +3178,12 @@ Cell[BoxData[
           RowBox[{"PauliMatrix", "[", "3", "]"}], "]"}]}], ")"}]}], "]"}]}]}],
     "]"}]}]], "Input",
  CellLabel->
-  "In[27]:= ",ExpressionUUID->"73c91259-caab-41d3-9a7e-64d2c0885950"],
+  "In[26]:= ",ExpressionUUID->"16105b58-d747-4c21-a7c1-ee3bd614704c"],
 
 Cell["\<\
 The landscape over the sphere shows a floor at one bit, touched only at \
 isolated states.\
-\>", "Text",ExpressionUUID->"a0cf6e9e-fcb6-4c1f-a6fd-e1ad689f0a19"],
+\>", "Text",ExpressionUUID->"7590a50d-ba5d-475b-a913-6e4f8312e843"],
 
 Cell[BoxData[
  RowBox[{"Plot3D", "[", 
@@ -3307,7 +3199,7 @@ Cell[BoxData[
      RowBox[{"\"\<\[Theta]\>\"", ",", " ", "\"\<\[Phi]\>\"", ",", 
       " ", "\"\<H(X)+H(Z)\>\""}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[28]:= ",ExpressionUUID->"4c344a87-cb3d-4496-8707-7ccf32052b24"],
+  "In[27]:= ",ExpressionUUID->"7709879f-83f3-429b-aef2-0355b3c48063"],
 
 Cell[TextData[{
  "Locate those states exactly. A Shannon entropy vanishes only on a \
@@ -3327,7 +3219,7 @@ point-mass distribution (",
     StyleBox["p", "TI"], 
     StyleBox["i", "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "265aa1c3-d393-4763-880b-d3d271acd7d1"],
+  "b497bc4c-52d5-4770-83ab-50430bcaeefd"],
  " forces every ",
  Cell[BoxData[
   RowBox[{
@@ -3337,22 +3229,22 @@ point-mass distribution (",
      StyleBox["i", "TI"]], "\[Element]", "{", "0"}], ",", 
    RowBox[{"1", "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "46fb031a-241e-4f32-bf3a-913a41facb5e"],
+  "0eaf0515-0bba-4e72-9e6b-a72d5f26d88e"],
  "), so the candidates are the states ",
  StyleBox["sharp", "TI"],
  " in ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aa98f697-8be9-4351-b3fe-45c0f362507c"],
+  "4b78eed3-a2c9-427a-b5ed-85e70c2038af"],
  " or in ",
  Cell[BoxData[
   StyleBox["X", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "532f7513-c926-4b14-8130-b540f37006cd"],
+  "5eb7b813-e4a2-4b5b-9cf3-86f0962e60a0"],
  ": for each observable, solve for where the product of its two outcome \
 probabilities vanishes."
-}], "Text",ExpressionUUID->"b0cc820e-0c37-4389-abeb-c61ce84139b3"],
+}], "Text",ExpressionUUID->"46d74f72-5977-4180-af3e-431be77e56f8"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -3404,40 +3296,40 @@ Cell[BoxData[
     RowBox[{"{", 
      RowBox[{"3", ",", " ", "1"}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[29]:= ",ExpressionUUID->"7d819d8c-c836-46e0-b95f-ad3051fabb41"],
+  "In[28]:= ",ExpressionUUID->"38095843-e411-4855-8491-d0b29ed8b40e"],
 
 Cell[TextData[{
  "The sharp states are the ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ed29b761-89d9-4f63-a239-895dad5d8e96"],
+  "331cdfbd-1385-4fe7-ae7b-a111aaa270be"],
  " eigenstates (the poles ",
  Cell[BoxData[
   RowBox[{
    RowBox[{
     StyleBox["\[Theta]", "TI"], "=", "0"}], ",", "\[Pi]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "fcaaf2ce-5ccc-4422-926f-9b07c329da1b"],
+  "e0afb560-1ecf-4052-9e31-dabe3502998a"],
  ", where ",
  Cell[BoxData[
   StyleBox["\[Phi]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "51d291f1-11b6-4d7b-9464-2d9c9d6cad8c"],
+  "1620457e-265a-4928-bcbb-afba8dedc7bf"],
  " is a redundant coordinate) and the ",
  Cell[BoxData[
   StyleBox["X", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "edc88962-e3b9-49c4-9cb6-2ad05ad3cfdc"],
+  "bb0c11c6-184b-4cb7-9d91-6bb5af7f6e8c"],
  " eigenstates (on the equator at ",
  Cell[BoxData[
   RowBox[{
    RowBox[{
     StyleBox["\[Phi]", "TI"], "=", "0"}], ",", "\[Pi]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "42f64db8-3e83-427c-b4cf-57c95c2925af"],
+  "b3f52aed-ac87-4476-8d00-aa51dc76190c"],
  "). Check saturation exactly at all of them."
-}], "Text",ExpressionUUID->"344d44b6-6f23-4ba2-ac29-10e4cf303b4f"],
+}], "Text",ExpressionUUID->"92c3384a-4fc8-4ab5-88ba-c35023be341c"],
 
 Cell[BoxData[
  RowBox[{"FullSimplify", "[", 
@@ -3463,7 +3355,7 @@ Cell[BoxData[
    " ", 
    RowBox[{"\[Phi]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
  CellLabel->
-  "In[30]:= ",ExpressionUUID->"c5eec386-6d3b-4aca-a204-f2ca616457cf"],
+  "In[29]:= ",ExpressionUUID->"b59e0f8b-b36d-440e-8cf3-26c0d15acbe2"],
 
 Cell[TextData[{
  StyleBox["QF",
@@ -3471,9 +3363,9 @@ Cell[TextData[{
  " : the same four states by name; each measurement reports its ",
  Cell[BoxData["\"\<Entropy\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c5a2b30f-7b86-4c5a-b65c-4a5f62f4b21a"],
+  "82675a3c-a9cc-49a0-9a7e-7ea02e79cb8e"],
  " (as in 6.3), and each sum lands exactly on the bound."
-}], "Text",ExpressionUUID->"b68f5234-9e07-4265-9850-33f33bb1521b"],
+}], "Text",ExpressionUUID->"778d6713-a922-42a8-95b4-ad4902b1cc4c"],
 
 Cell[BoxData[
  RowBox[{"With", "[", 
@@ -3503,7 +3395,7 @@ Cell[BoxData[
        RowBox[{"\"\<0\>\"", ",", " ", "\"\<1\>\"", ",", " ", "\"\<Plus\>\"", ",",
          " ", "\"\<Minus\>\""}], "}"}]}], ")"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[31]:= ",ExpressionUUID->"6224fe6a-534c-4fa1-aaef-be9df24c8a25"],
+  "In[30]:= ",ExpressionUUID->"dbbd2f27-3f36-405d-91c6-be5259b95708"],
 
 Cell[TextData[{
  "The saturating states are exactly the eigenstates of one of the two \
@@ -3511,12 +3403,12 @@ observables: sharp in ",
  Cell[BoxData[
   StyleBox["Z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e59de410-8bba-43eb-a094-66ebc2fc4468"],
+  "80fb55b0-a64b-4f5f-82cc-e964a00d7cb7"],
  " at the cost of total ignorance of ",
  Cell[BoxData[
   StyleBox["X", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0cb519da-923c-430a-911f-37244cd7988d"],
+  "6ec429de-a928-45c3-b990-0b3782a7c820"],
  " (",
  Cell[BoxData[
   RowBox[{
@@ -3527,7 +3419,7 @@ observables: sharp in ",
    StyleBox[")",
     SpanMaxSize->1], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c8bc1887-48b8-4c7c-a18e-6a541b46606e"],
+  "2c8db7f2-d2db-4790-97d7-06df08264802"],
  ", ",
  Cell[BoxData[
   RowBox[{
@@ -3538,16 +3430,16 @@ observables: sharp in ",
    StyleBox[")",
     SpanMaxSize->1], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8b55dceb-a217-4930-a277-3f03882ada1a"],
+  "456f062d-d12b-4cda-ba11-47243a8624a3"],
  "), or the reverse. Mutually unbiased bases realize maximal complementarity, \
 and the entropic bound is met with equality only there; every other state \
 pays strictly more total uncertainty, as the landscape shows."
-}], "Text",ExpressionUUID->"b39d83b1-224e-42a6-a7f3-20859ef4747e"]
+}], "Text",ExpressionUUID->"ced56814-bdda-4469-855e-39a808f69f63"]
 },
 CreateCellID->True,
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"cb0f407c-3281-4da9-b822-8b722b5118f9"
+ExpressionUUID->"e87e7e57-c2b7-473f-8985-5c8d8593a5f8"
 ]
 (* End of Notebook Content *)
 
@@ -3560,98 +3452,90 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[554, 20, 156, 2, 70, "Title",ExpressionUUID->"8f1bb8d0-5feb-485d-bbe0-0ef35cebb7e5"],
-Cell[713, 24, 306, 8, 70, "Text",ExpressionUUID->"f5b02209-3111-462c-b9df-51dba854c9bd"],
-Cell[1022, 34, 940, 24, 70, "ItemNumbered",ExpressionUUID->"883e5d73-7259-48c9-8989-d176434cc9ae"],
-Cell[1965, 60, 852, 18, 70, "ItemNumbered",ExpressionUUID->"ec3aae97-d9dc-4097-88d2-6a57e9ee0ff7"],
-Cell[2820, 80, 1505, 37, 70, "Text",ExpressionUUID->"5dbe81ec-dc92-4098-8e31-06375ea51bc2"],
-Cell[4328, 119, 79, 0, 70, "Section",ExpressionUUID->"189b6654-55e3-4058-a170-78c4d9d24d86"],
-Cell[4410, 121, 107, 0, 70, "Text",ExpressionUUID->"3af4d521-f9fe-4055-acca-68ef957e5975"],
-Cell[4520, 123, 169, 2, 70, "Input",ExpressionUUID->"368c5e05-2602-4bd1-9d43-d350b27e6c7b"],
-Cell[4692, 127, 113, 0, 70, "Section",ExpressionUUID->"8cbf6c44-193a-4d3c-8a6b-70acc5cf1ad9"],
-Cell[4808, 129, 178, 3, 70, "Subsection",ExpressionUUID->"1259b8a5-e4a6-4d4d-8477-757106a2dbc7"],
-Cell[4989, 134, 1463, 47, 70, "Text",ExpressionUUID->"27e754e0-222a-4fd9-a778-83d5078b0847"],
-Cell[6455, 183, 1644, 58, 70, "DisplayFormula",ExpressionUUID->"7b719d76-0e0a-4045-888b-ba39700632c7"],
-Cell[8102, 243, 2893, 86, 70, "Text",ExpressionUUID->"ab3f9265-1a5b-455a-ae1f-23d5f7a3ad18"],
-Cell[10998, 331, 825, 22, 70, "Text",ExpressionUUID->"a4b8dbc4-3271-4983-b0ad-a245dc4605ae"],
-Cell[11826, 355, 3368, 95, 70, "Input",ExpressionUUID->"2c2b8084-5067-4a41-ab98-e8f4ff7a0353"],
-Cell[15197, 452, 645, 16, 70, "Text",ExpressionUUID->"e3e27cbd-160f-40be-a294-1c4f7bfcbac4"],
-Cell[15845, 470, 610, 15, 70, "Input",ExpressionUUID->"f780fc36-1104-457c-b01f-43abbbe4b0ac"],
-Cell[16458, 487, 1782, 53, 70, "Text",ExpressionUUID->"367dfcc7-2e47-4f43-b853-1e121139ea1d"],
-Cell[18243, 542, 648, 18, 70, "Input",ExpressionUUID->"fe53f31f-8525-40af-93cd-327a954c3d59"],
-Cell[18894, 562, 693, 16, 70, "Text",ExpressionUUID->"a739f9a0-ace9-48ae-a36d-e9b2d52d519a"],
-Cell[19590, 580, 3464, 95, 70, "Input",ExpressionUUID->"4230a828-c30e-48af-8d04-5f7ed3b4def9"],
-Cell[23057, 677, 5366, 165, 70, "Text",ExpressionUUID->"cc0b2688-d3a4-430b-9852-34ae4f0af694"],
-Cell[28426, 844, 174, 3, 70, "Subsection",ExpressionUUID->"1d6c8387-11d4-462d-ace9-ef12c8ecc9bd"],
-Cell[28603, 849, 4474, 147, 70, "Text",ExpressionUUID->"f8aee224-18c7-45c8-af95-750583b6149b"],
-Cell[33080, 998, 689, 20, 70, "Text",ExpressionUUID->"b8e81cb1-cd5c-4006-bbf1-227e0c2e1a1a"],
-Cell[33772, 1020, 2690, 77, 70, "Input",ExpressionUUID->"df0d63b0-d92f-4f3f-8df9-217a640fe49c"],
-Cell[36465, 1099, 1913, 61, 70, "Text",ExpressionUUID->"6cb99236-43b3-486e-8df4-3fa673015f14"],
-Cell[38381, 1162, 820, 22, 70, "Input",ExpressionUUID->"67edd7db-70f2-4440-a557-ed21a9685aca"],
-Cell[39204, 1186, 3163, 112, 70, "Text",ExpressionUUID->"4ed857a9-57ba-4d9b-a1c6-bde471264720"],
-Cell[42370, 1300, 1324, 35, 70, "Input",ExpressionUUID->"4aef8234-8ec0-4e08-a6f5-795130899ff3"],
-Cell[43697, 1337, 385, 10, 70, "Text",ExpressionUUID->"ad47e434-5513-4c19-ba15-a8ed1723bd50"],
-Cell[44085, 1349, 666, 19, 70, "Input",ExpressionUUID->"406bf3d8-ae08-4e9e-937f-dbb41f754641"],
-Cell[44754, 1370, 491, 12, 70, "Text",ExpressionUUID->"69f143ff-54f5-4128-8d72-d51656b3ece0"],
-Cell[45248, 1384, 2854, 79, 70, "Input",ExpressionUUID->"8dbb92d0-7732-414e-a708-8b70d95b5530"],
-Cell[48105, 1465, 2097, 61, 70, "Text",ExpressionUUID->"77e10e5a-b540-42c2-aec2-3bb1d8a125a2"],
-Cell[50205, 1528, 766, 25, 70, "Subsection",ExpressionUUID->"2fe51ea9-f125-4454-a95f-3a28a91bfa64"],
-Cell[50974, 1555, 1220, 39, 70, "Text",ExpressionUUID->"00c97d46-16ed-4c9b-acde-8d7ad46f94de"],
-Cell[52197, 1596, 377, 11, 70, "Text",ExpressionUUID->"55e406f6-2072-49c3-8f18-b751434354d0"],
-Cell[52577, 1609, 390, 12, 70, "Input",ExpressionUUID->"eee899ac-67e1-47e4-93d8-17204c240353"],
-Cell[52970, 1623, 590, 16, 70, "Text",ExpressionUUID->"a52db8b1-e54d-4178-8d02-349f55a46310"],
-Cell[53563, 1641, 474, 13, 70, "Input",ExpressionUUID->"1acc4e78-e440-40e2-8f8b-bab6dcb8049e"],
-Cell[54040, 1656, 900, 27, 70, "Text",ExpressionUUID->"cc7933ca-e642-4b0f-8326-ee0a57ea40d2"],
-Cell[54943, 1685, 169, 3, 70, "Subsection",ExpressionUUID->"dceabcb6-54e6-4350-92a8-f2df15daf12f"],
-Cell[55115, 1690, 1049, 23, 70, "Text",ExpressionUUID->"cc932b5c-01d2-4aed-b6ad-22ec3483d998"],
-Cell[56167, 1715, 1901, 64, 70, "Text",ExpressionUUID->"002c67a6-1fda-4997-a3d2-bb05ceba3bff"],
-Cell[58071, 1781, 914, 27, 70, "Input",ExpressionUUID->"4e94d96d-357c-4860-8d3e-9c25171e589d"],
-Cell[58988, 1810, 1972, 58, 70, "Text",ExpressionUUID->"ffd8fac4-04b3-4f83-a229-f1b74058a25e"],
-Cell[60963, 1870, 1200, 34, 70, "Input",ExpressionUUID->"10301d82-5ff9-4efe-9ccc-2012cfd81c3e"],
-Cell[62166, 1906, 2300, 67, 70, "Text",ExpressionUUID->"31ffa6af-ce8c-4fb0-9e44-ea98128058f6"],
-Cell[64469, 1975, 1615, 46, 70, "Input",ExpressionUUID->"4071780e-04bf-4ae3-8414-9864b36434a2"],
-Cell[66087, 2023, 188, 3, 70, "Text",ExpressionUUID->"d874a0b0-58d3-4c1a-a75f-3904afd1fe3a"],
-Cell[66278, 2028, 986, 28, 70, "Input",ExpressionUUID->"99122a2b-4ee2-4106-b0ca-08d7bd14085f"],
-Cell[67267, 2058, 445, 12, 70, "Text",ExpressionUUID->"1900252b-36ed-48bf-b62e-0e8c95220df8"],
-Cell[67715, 2072, 446, 12, 70, "Input",ExpressionUUID->"9ee4ff00-71b9-4aef-8f07-0be10454d4bc"],
-Cell[68164, 2086, 1334, 36, 70, "Text",ExpressionUUID->"168dcaf2-0788-4980-a9cf-53cab7a6b414"],
-Cell[69501, 2124, 762, 22, 70, "Subsection",ExpressionUUID->"8f6e0371-886f-48b5-94d6-a2610d54f2cc"],
-Cell[70266, 2148, 2105, 66, 70, "Text",ExpressionUUID->"7af00624-ceb8-4b94-b339-0b912e7a3024"],
-Cell[72374, 2216, 220, 5, 70, "Text",ExpressionUUID->"442dbf62-a8d4-429d-af49-a8b10e51c7ef"],
-Cell[72597, 2223, 1573, 44, 70, "Input",ExpressionUUID->"21444ad6-8708-4a10-80c7-ba8e4ffb2e3c"],
-Cell[74173, 2269, 392, 9, 70, "Text",ExpressionUUID->"a19d8a19-6594-484a-a4d2-52362283b4f4"],
-Cell[74568, 2280, 177, 4, 70, "Input",ExpressionUUID->"bf0d9965-3061-4735-af16-d51ff2327902"],
-Cell[74748, 2286, 334, 8, 70, "Text",ExpressionUUID->"cce033e3-22c4-4c74-b2fd-6ab4bf82caf2"],
-Cell[75085, 2296, 1323, 36, 70, "Input",ExpressionUUID->"d60a3b5a-efe8-4aff-8876-3419129acaed"],
-Cell[76411, 2334, 807, 20, 70, "Text",ExpressionUUID->"dc1d3739-1d21-4f17-b841-d20d3617d6c3"],
-Cell[77221, 2356, 1223, 39, 70, "Subsection",ExpressionUUID->"18275b3e-8ac4-4535-aece-3789e55ac295"],
-Cell[78447, 2397, 5818, 188, 70, "Text",ExpressionUUID->"e29b3026-fd5b-41e5-a2d3-2b6335c2282b"],
-Cell[84268, 2587, 1684, 58, 70, "Text",ExpressionUUID->"7e9c4f58-b7b7-4402-965a-3aae5d3d188b"],
-Cell[85955, 2647, 1584, 44, 70, "Input",ExpressionUUID->"f2103e93-9009-41fb-95a1-d56b6c0bcb9a"],
-Cell[87542, 2693, 1730, 58, 70, "Text",ExpressionUUID->"2f49a107-63f4-411b-9c60-263970fa38fc"],
-Cell[89275, 2753, 486, 14, 70, "Input",ExpressionUUID->"b7c76abf-9a34-4848-a8ee-eb7b1a61b37f"],
-Cell[89764, 2769, 2527, 73, 70, "Text",ExpressionUUID->"9fbb3385-c8da-4678-93a4-8978b8e5bff1"],
-Cell[92294, 2844, 2859, 80, 70, "Input",ExpressionUUID->"3e1326ec-d35b-4f64-8eb9-4f4ffd12f90a"],
-Cell[95156, 2926, 171, 3, 70, "Text",ExpressionUUID->"896d4fdb-4372-46fc-80c7-3c249df37977"],
-Cell[95330, 2931, 586, 16, 70, "Input",ExpressionUUID->"bad5e6a4-a04a-46a4-b563-7da985664c6e"],
-Cell[95919, 2949, 882, 22, 70, "Text",ExpressionUUID->"76065ca3-bd9c-42cd-8394-29555601381e"],
-Cell[96804, 2973, 347, 9, 70, "Input",ExpressionUUID->"7b9dc8be-03ed-4632-a80c-22e8578aca5f"],
-Cell[97154, 2984, 737, 19, 70, "Text",ExpressionUUID->"8f8abdf2-cb9f-4557-9c02-03d840eba0a7"],
-Cell[97894, 3005, 3126, 87, 70, "Input",ExpressionUUID->"1ff50573-d8b6-493c-850f-afb4f75b5546"],
-Cell[101023, 3094, 1958, 56, 70, "Text",ExpressionUUID->"f266592c-c965-4c0a-88b6-ae8e7c6e94f2"],
-Cell[102984, 3152, 843, 27, 70, "Subsection",ExpressionUUID->"ba044529-bcc3-43c0-b701-e81a52e19ee6"],
-Cell[103830, 3181, 1201, 35, 70, "Text",ExpressionUUID->"337fed7c-7203-4df8-87dc-e7fab5f4ecec"],
-Cell[105034, 3218, 236, 5, 70, "Text",ExpressionUUID->"e2f3c7e8-ad1a-43d3-8d05-94d72d8c4c8f"],
-Cell[105273, 3225, 2260, 63, 70, "Input",ExpressionUUID->"73c91259-caab-41d3-9a7e-64d2c0885950"],
-Cell[107536, 3290, 169, 3, 70, "Text",ExpressionUUID->"a0cf6e9e-fcb6-4c1f-a6fd-e1ad689f0a19"],
-Cell[107708, 3295, 602, 14, 70, "Input",ExpressionUUID->"4c344a87-cb3d-4496-8707-7ccf32052b24"],
-Cell[108313, 3311, 1399, 43, 70, "Text",ExpressionUUID->"b0cc820e-0c37-4389-abeb-c61ce84139b3"],
-Cell[109715, 3356, 1834, 50, 70, "Input",ExpressionUUID->"7d819d8c-c836-46e0-b95f-ad3051fabb41"],
-Cell[111552, 3408, 1112, 31, 70, "Text",ExpressionUUID->"344d44b6-6f23-4ba2-ac29-10e4cf303b4f"],
-Cell[112667, 3441, 934, 24, 70, "Input",ExpressionUUID->"c5eec386-6d3b-4aca-a204-f2ca616457cf"],
-Cell[113604, 3467, 383, 8, 70, "Text",ExpressionUUID->"b68f5234-9e07-4265-9850-33f33bb1521b"],
-Cell[113990, 3477, 1094, 28, 70, "Input",ExpressionUUID->"6224fe6a-534c-4fa1-aaef-be9df24c8a25"],
-Cell[115087, 3507, 1274, 37, 70, "Text",ExpressionUUID->"b39d83b1-224e-42a6-a7f3-20859ef4747e"]
+Cell[554, 20, 113, 0, 70, "Section",ExpressionUUID->"36fcf418-33de-42bf-b8e7-ff1217556bdd"],
+Cell[670, 22, 178, 3, 70, "Subsection",ExpressionUUID->"4d46cc55-e132-4973-86b5-61e862869c51"],
+Cell[851, 27, 1463, 47, 70, "Text",ExpressionUUID->"7ad1786e-1aa1-47f8-bb38-72d8bd916acc"],
+Cell[2317, 76, 1644, 58, 70, "DisplayFormula",ExpressionUUID->"3ded7b36-0643-4cc0-b81c-dfeedaa4ee71"],
+Cell[3964, 136, 2893, 86, 70, "Text",ExpressionUUID->"1cbcdf2b-36c4-44e6-a9f4-c0365c1a0771"],
+Cell[6860, 224, 825, 22, 70, "Text",ExpressionUUID->"60e01a68-21b4-4e52-b96a-71f15963c624"],
+Cell[7688, 248, 3368, 95, 70, "Input",ExpressionUUID->"55230a73-c7f8-4d24-95b5-d7fe7577adaa"],
+Cell[11059, 345, 645, 16, 70, "Text",ExpressionUUID->"24e6c8c3-8961-405d-a66e-7edb3ce0b39c"],
+Cell[11707, 363, 610, 15, 70, "Input",ExpressionUUID->"327756dc-2100-4690-b61f-83d792a2210c"],
+Cell[12320, 380, 1782, 53, 70, "Text",ExpressionUUID->"2908d90d-3783-48d8-a56d-8a237f90e2c1"],
+Cell[14105, 435, 648, 18, 70, "Input",ExpressionUUID->"b4db3f9e-dc80-473d-89df-7c3dc08caa04"],
+Cell[14756, 455, 693, 16, 70, "Text",ExpressionUUID->"440cac77-6579-4c8a-81e0-1867a2f43080"],
+Cell[15452, 473, 3464, 95, 70, "Input",ExpressionUUID->"e86a93ad-ae8b-45dc-bcd5-29ecff563f83"],
+Cell[18919, 570, 5366, 165, 70, "Text",ExpressionUUID->"41aa1710-dcac-4e1d-8c37-80d136a98c93"],
+Cell[24288, 737, 174, 3, 70, "Subsection",ExpressionUUID->"986a5d0a-5927-46bc-8094-e16c19c4a597"],
+Cell[24465, 742, 4474, 147, 70, "Text",ExpressionUUID->"6703a7f4-3ff0-4e90-9866-8ac7e66523c2"],
+Cell[28942, 891, 689, 20, 70, "Text",ExpressionUUID->"8c914a81-ed2a-4abc-9eb9-9b416103fef4"],
+Cell[29634, 913, 2690, 77, 70, "Input",ExpressionUUID->"aa0dd7ca-0195-4a74-b140-c69546917d94"],
+Cell[32327, 992, 1913, 61, 70, "Text",ExpressionUUID->"1e7a836e-4bcc-4e54-b40a-12678c66b130"],
+Cell[34243, 1055, 820, 22, 70, "Input",ExpressionUUID->"460c1e41-824c-4784-9d0f-e4da2f4b457b"],
+Cell[35066, 1079, 3163, 112, 70, "Text",ExpressionUUID->"38fd43dd-b842-4639-82dd-65ea8d35d14f"],
+Cell[38232, 1193, 1324, 35, 70, "Input",ExpressionUUID->"0496e063-f59e-40f0-8555-39a0c2a1775e"],
+Cell[39559, 1230, 385, 10, 70, "Text",ExpressionUUID->"8090f704-f262-43c5-80e9-9bdbd9fbe1a7"],
+Cell[39947, 1242, 666, 19, 70, "Input",ExpressionUUID->"98362a31-8419-4f28-bcee-989e479a7a0e"],
+Cell[40616, 1263, 491, 12, 70, "Text",ExpressionUUID->"7ccea0a6-16e4-4214-bbc4-747294e1680d"],
+Cell[41110, 1277, 2850, 78, 70, "Input",ExpressionUUID->"0e402747-5c69-4f85-a57e-c93b6896ba30"],
+Cell[43963, 1357, 2097, 61, 70, "Text",ExpressionUUID->"877a8093-b513-4767-8abe-273a2aa29ac7"],
+Cell[46063, 1420, 766, 25, 70, "Subsection",ExpressionUUID->"1e18e20e-1678-4a9b-9f96-caf958930646"],
+Cell[46832, 1447, 1220, 39, 70, "Text",ExpressionUUID->"5b739b18-1943-4624-8a0d-9e621a786d8a"],
+Cell[48055, 1488, 377, 11, 70, "Text",ExpressionUUID->"967250d7-00c2-4162-88ea-b2e3aa7c2458"],
+Cell[48435, 1501, 390, 12, 70, "Input",ExpressionUUID->"64d2b87d-82a9-4df1-9a9d-20484037ec5d"],
+Cell[48828, 1515, 590, 16, 70, "Text",ExpressionUUID->"63af7da1-950f-4db5-985b-267dbf07964c"],
+Cell[49421, 1533, 474, 13, 70, "Input",ExpressionUUID->"401f9d0f-8695-4289-a369-0800551b8344"],
+Cell[49898, 1548, 900, 27, 70, "Text",ExpressionUUID->"57c392af-1282-492d-89f0-32f9bedb25d2"],
+Cell[50801, 1577, 169, 3, 70, "Subsection",ExpressionUUID->"afd7d197-4be4-4c89-a51c-332264554ee9"],
+Cell[50973, 1582, 1049, 23, 70, "Text",ExpressionUUID->"97a690e9-efbc-4bfa-9772-d40034cd7e0e"],
+Cell[52025, 1607, 1901, 64, 70, "Text",ExpressionUUID->"349e5b51-756a-4912-9367-85c292c437aa"],
+Cell[53929, 1673, 914, 27, 70, "Input",ExpressionUUID->"05d73642-aed3-429e-a8d8-f29bc5876c49"],
+Cell[54846, 1702, 1972, 58, 70, "Text",ExpressionUUID->"e316a414-cc83-4e8a-895f-d2ce55ddf274"],
+Cell[56821, 1762, 1200, 34, 70, "Input",ExpressionUUID->"80dac57f-3188-4843-96fc-8559716cacac"],
+Cell[58024, 1798, 2300, 67, 70, "Text",ExpressionUUID->"fb623aa5-36db-44f1-9d15-0c15d3be1d72"],
+Cell[60327, 1867, 1615, 46, 70, "Input",ExpressionUUID->"b057e44f-e2f6-4f4c-8164-e8554f7650da"],
+Cell[61945, 1915, 188, 3, 70, "Text",ExpressionUUID->"2d9af2f9-afae-4b3f-ae6a-417be6c96b62"],
+Cell[62136, 1920, 986, 28, 70, "Input",ExpressionUUID->"f4af9d84-a023-4af8-92b7-21ac8a06344d"],
+Cell[63125, 1950, 445, 12, 70, "Text",ExpressionUUID->"1284a031-b587-4e1f-bf9d-c058db9fac8a"],
+Cell[63573, 1964, 446, 12, 70, "Input",ExpressionUUID->"f730efa4-8777-4d29-8db6-a9028e79ef2c"],
+Cell[64022, 1978, 1334, 36, 70, "Text",ExpressionUUID->"f1f42cd0-c5cb-42d1-8445-ef25cb2c9fb2"],
+Cell[65359, 2016, 762, 22, 70, "Subsection",ExpressionUUID->"86c3bcb8-d86e-4aa1-9e9a-cac949c47162"],
+Cell[66124, 2040, 2105, 66, 70, "Text",ExpressionUUID->"3a3523bf-2744-4f41-9487-7380b799fbb8"],
+Cell[68232, 2108, 220, 5, 70, "Text",ExpressionUUID->"44954478-b2d5-47bc-bbff-dc5e2bd6d4d3"],
+Cell[68455, 2115, 1573, 44, 70, "Input",ExpressionUUID->"1eb629f4-bf95-4203-b3ab-e1445332a312"],
+Cell[70031, 2161, 392, 9, 70, "Text",ExpressionUUID->"24f18975-db3e-411a-853e-5c4e6cc52031"],
+Cell[70426, 2172, 177, 4, 70, "Input",ExpressionUUID->"3fa4bab4-cafa-49a0-9d93-a0dc0ae70800"],
+Cell[70606, 2178, 334, 8, 70, "Text",ExpressionUUID->"b6931b53-4aac-4e23-b3b7-504077f44264"],
+Cell[70943, 2188, 1323, 36, 70, "Input",ExpressionUUID->"a469b080-8f5a-4073-88e0-35c18e5a816c"],
+Cell[72269, 2226, 807, 20, 70, "Text",ExpressionUUID->"43352407-e04e-4389-9901-57b3cc8addbf"],
+Cell[73079, 2248, 1223, 39, 70, "Subsection",ExpressionUUID->"f510b946-ca7d-410e-81ae-612569c604f2"],
+Cell[74305, 2289, 5818, 188, 70, "Text",ExpressionUUID->"c3a33234-8dfe-4110-b293-641b902d8541"],
+Cell[80126, 2479, 1684, 58, 70, "Text",ExpressionUUID->"596c3cda-8d36-4e02-a674-c759579416fe"],
+Cell[81813, 2539, 1584, 44, 70, "Input",ExpressionUUID->"1035a62d-a145-429a-bfea-3d889a67d79f"],
+Cell[83400, 2585, 1730, 58, 70, "Text",ExpressionUUID->"01fa48f6-1d14-4c39-ab02-3a672a6591f3"],
+Cell[85133, 2645, 486, 14, 70, "Input",ExpressionUUID->"e73b74c3-3b2b-439b-843a-3dd899729af8"],
+Cell[85622, 2661, 2527, 73, 70, "Text",ExpressionUUID->"6dcab1be-8f7c-48da-b279-e0b8e9b6e4e2"],
+Cell[88152, 2736, 2859, 80, 70, "Input",ExpressionUUID->"5ef79b17-1fcb-40f5-b034-d2f6314c16c0"],
+Cell[91014, 2818, 171, 3, 70, "Text",ExpressionUUID->"97d0f51b-a64f-4d74-a76e-a3ab8f943376"],
+Cell[91188, 2823, 586, 16, 70, "Input",ExpressionUUID->"5e7a3f64-17b0-4404-8697-0d64adba3252"],
+Cell[91777, 2841, 882, 22, 70, "Text",ExpressionUUID->"0d13e0fa-0902-40fa-b345-0a87b65af3d2"],
+Cell[92662, 2865, 347, 9, 70, "Input",ExpressionUUID->"0781e345-9dfc-4889-ac5b-635f271d2dc6"],
+Cell[93012, 2876, 737, 19, 70, "Text",ExpressionUUID->"56ef5771-de96-42dc-aabe-d7908f74e7fb"],
+Cell[93752, 2897, 3126, 87, 70, "Input",ExpressionUUID->"9e080d78-0205-45d5-9e91-5e316a481ebb"],
+Cell[96881, 2986, 1958, 56, 70, "Text",ExpressionUUID->"09b62c4b-899c-49b4-b1fc-f73c15a8fb29"],
+Cell[98842, 3044, 843, 27, 70, "Subsection",ExpressionUUID->"aca9a414-f566-4231-bfde-ac532a45a9a9"],
+Cell[99688, 3073, 1201, 35, 70, "Text",ExpressionUUID->"5105610f-2853-4f9f-8a79-6edee2ab020e"],
+Cell[100892, 3110, 236, 5, 70, "Text",ExpressionUUID->"c2d25a7d-3f12-4047-a80f-622f07a56bd8"],
+Cell[101131, 3117, 2260, 63, 70, "Input",ExpressionUUID->"16105b58-d747-4c21-a7c1-ee3bd614704c"],
+Cell[103394, 3182, 169, 3, 70, "Text",ExpressionUUID->"7590a50d-ba5d-475b-a913-6e4f8312e843"],
+Cell[103566, 3187, 602, 14, 70, "Input",ExpressionUUID->"7709879f-83f3-429b-aef2-0355b3c48063"],
+Cell[104171, 3203, 1399, 43, 70, "Text",ExpressionUUID->"46d74f72-5977-4180-af3e-431be77e56f8"],
+Cell[105573, 3248, 1834, 50, 70, "Input",ExpressionUUID->"38095843-e411-4855-8491-d0b29ed8b40e"],
+Cell[107410, 3300, 1112, 31, 70, "Text",ExpressionUUID->"92c3384a-4fc8-4ab5-88ba-c35023be341c"],
+Cell[108525, 3333, 934, 24, 70, "Input",ExpressionUUID->"b59e0f8b-b36d-440e-8cf3-26c0d15acbe2"],
+Cell[109462, 3359, 383, 8, 70, "Text",ExpressionUUID->"778d6713-a922-42a8-95b4-ad4902b1cc4c"],
+Cell[109848, 3369, 1094, 28, 70, "Input",ExpressionUUID->"dbbd2f27-3f36-405d-91c6-be5259b95708"],
+Cell[110945, 3399, 1274, 37, 70, "Text",ExpressionUUID->"ced56814-bdda-4469-855e-39a808f69f63"]
 }
 ]
 *)

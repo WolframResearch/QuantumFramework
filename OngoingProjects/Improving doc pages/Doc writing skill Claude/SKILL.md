@@ -106,7 +106,7 @@ Before writing any markdown, produce a short outline appropriate to the page typ
 - Usage lines — one per calling pattern. EVERY public calling pattern must appear as a separate line. This is the most visible part of the page and cannot be abbreviated.
 - Details and Options bullet points
 - Example plan: 2–3 basic examples, scope subsections (input forms, distinctive features, workflow context), application ideas
-- See Also — both paclet symbols and system symbols. Resolve a system symbol's context with `Context[...]` in `wolframscript` (or the read-only `mcp__Wolfram__WolframContext` lookup, which CLAUDE.md permits).
+- See Also: both paclet symbols and system symbols. Resolve a system symbol's context with `Context[...]` in `wolframscript`. Never the Wolfram MCP, read-only lookups included.
 - Related Guides and Tech Notes
 
 **WFR:**

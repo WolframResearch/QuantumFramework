@@ -1,39 +1,3 @@
----
-Template: Default
----
-
-# Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 2)
-
-A companion answer key to `Question-List.md`. For each question it gives **two** worked answers:
-
-1. **WL** : native Wolfram Language only (plain vectors and matrices, `PauliMatrix`, `Conjugate`,
-   `Normalize`, `Eigenvectors`, `MatrixExp`, and friends). Nothing beyond the built-in language.
-2. **QF** : the same task done through the **QuantumFramework** paclet, leaning on its objects and
-   property downvalues (`QuantumState[...]["..."]`) rather than rebuilding matrices by hand. A QF
-   result is a rich object, a state or an operator, not a bare array: it can act on a target, compose
-   with others, report its spectrum, change basis, and more. The answers keep results as objects and
-   treat a matrix or amplitude vector as just one of the object's many representations, not the thing
-   itself.
-
-Three habits run through the answers. They stay **symbolic** wherever possible (general amplitudes
-$\alpha,\beta$, general angles $\theta,\phi$), so each operation is exercised in full generality
-rather than on a lucky special case. They write the computation **explicitly** rather than hiding it
-in a helper function, because the code is itself part of the explanation. And they prefer **built-in
-features** (a `Normalize`, a named state) over hand-rolled constructions, so nothing is hardcoded:
-every cell computes its result. Each cell does **one** thing and is preceded by a sentence saying
-what, so the notebook reads as a sequence of single, captioned computations. Run the WL answers in a
-bare kernel; the QF answers need the paclet loaded once.
-
-## Setup
-
-The QF answers load the paclet once:
-
-```wl
-Needs["Wolfram`QuantumFramework`"]
-```
-
----
-
 ## Part 2. Observables, spectra, and approximation
 
 ### 2.1 [BSc] How do I compute a commutator and an anticommutator of two operators?

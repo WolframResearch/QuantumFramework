@@ -570,3 +570,131 @@ a stray `}` inside a nested `With` passes _check.sh's `Check` as "ok" per the me
 (DNA 18):** `QuantumOperator["JX"[j]]`/`["JY"[j]]` return the diagonal `Jz` matrix (`NamedOperators.m:847`
 `jMatrix` is axis-blind, used for all three); Part 8 builds spin operators from the ladder relation instead.
 Next: Parts 11-25.
+
+**v9 (per-answer revision pass on Parts 1/7/8/9/10, user-driven; the recurring corrections harden into
+these standing rules, transfer them to every Part).**
+
+*CORRECTION to the v8 "kernel bug" note above:* `QuantumOperator["JX"[j]]`/`["JY"[j]]`/`["JZ"[j]]` are NOT
+broken. Each is stored in its OWN eigenbasis, so its raw `["Matrix"]` looks diagonal `diag(-j..j)` (a
+display gotcha, not axis-blindness), but `Commutator`/`@`/`==` reconcile the frames, so
+`Commutator[QuantumOperator["JX"[j]], QuantumOperator["JY"[j]]] == I QuantumOperator["JZ"[j]]`, the Casimir
+`jx@jx+jy@jy+jz@jz == j(j+1) I`, and a named op sandwiched with a computational-basis `QuantumState` all
+give the right answer. Part 8's QF side now USES the named operators. (The J-family was fixed after v8;
+verify claims against the live kernel, do not trust a stale "broken" note.)
+
+*New / sharpened DNA (each names the failure it prevents):*
+- **A. Deliver the FULL scope the question asks; a correct PARTIAL answer is still wrong.** 8.5 asked for
+  the Clebsch-Gordan coefficients (the whole table) and showed one coupled state; 8.6 asked for the singlet
+  AND triplet states (all four) and showed two plus a bare spectrum. "How do I find X" demands the finding
+  procedure and the complete X, never a spot-check of a pre-written value (7.10a, 10.2b). (Failure:
+  under-delivery, the answer exhibits an instance where the question asked for the whole object.)
+- **B. Generate enumerable structures from their physical range; never type them out.** Product basis
+  `Tuples[Range[1/2,-1/2,-1],2]` not `{{1/2,1/2},...}`; the coupled `(J,M)` list from
+  `Flatten@Table[{J,M},{J,j1+j2,Abs[j1-j2],-1},{M,J,-J,-1}]`; the four coupled states from the `S-` ladder
+  and `NullSpace[S^2]`, not typed vectors. Sharpens "derive not hardcode": it binds BASES and INDEX SETS,
+  not only the headline answer. (Failure: hardcoded enumeration.)
+- **C. Prefer QF's own named operators / object properties; read `NamedOperators.m` before hand-building.**
+  `"JX"[j]`/`"JY"[j]`/`"JZ"[j]`, `"WignerD"[j,{a,b,c}]`, the outcome-keyed `["Probabilities"]` are the
+  QF-native forms; use them instead of rebuilding a matrix. Read the KERNEL SOURCE for the exact signature
+  (WignerD takes the three Euler angles as a LIST, default spin 1/2), never guess a call form. (Failure:
+  reinventing what QF already names; a guessed signature that stays unevaluated.)
+- **D. Read a built-in's doc page FULLY before ruling it irrelevant.** I twice dismissed
+  `ClebschGordan`/`ThreeJSymbol` for building spin operators; they DO build them, because $\vec J$ is a
+  rank-1 spherical tensor and Wigner-Eckart makes its matrix elements CG coefficients. `SixJSymbol` genuinely
+  does not apply (recoupling of three momenta); `WignerD` is finite rotations (8.4), not generators. Fetch
+  the page via `nb-reader` (`doc2md.py`) and TEST before concluding. (Failure: premature dismissal.)
+- **E. Generalize a one-line check to the full law when a general form exists.** `[Jx,Jy]=iJz` is one of
+  nine; `Table[[Ja,Jb]] == I LeviCivitaTensor[3] . jvec` checks the whole $\mathfrak{su}(2)$ algebra via the
+  structure constants at once. (Failure: a special case standing in for the general identity.)
+- **F. The prose must describe what the cell ACTUALLY runs, and pairings must be verified not assumed.** 9.3
+  prose named `"UnitaryQ"` the cell never called; 8.1 asserted a pairing the cell returned reversed. QF
+  `operator["Eigenvalues"]` is ASCENDING while `["ProbabilitiesList"]` is basis-order, so they run OPPOSITE:
+  pair with the outcome-keyed `["Probabilities"]` association (intrinsic), or `Reverse` deliberately, never
+  positional side-by-side. (Failure: prose-code mismatch, silent mispairing.)
+- **G. learning-by-computing at the NOTEBOOK level, and it overrides strict answer-independence when the
+  user asks.** One computation per cell, a bridge sentence before each; hoist a shared physical object to a
+  global-definition cell and REUSE it across questions (`sz` once in 8.1; the spin-1 generators built in 8.2
+  and recalled in 8.3/8.4/8.7; `S^2` in 8.5 reused in 8.6), with a `ClearAll[...]` cell at the Part top. This
+  is the CONTINUOUS-notebook ("one movie", evaluated top-to-bottom) model, which the user chose over the
+  earlier per-question-independence rule for Part 8; verify the WHOLE Part runs in sequence (extract every
+  ```wl block in order into one kernel), not each question isolated. (Failure: repeating a five-line
+  construction in every question; or, conversely, assuming isolation when the Part is meant as a movie.)
+- **H. Tool discipline (meta, user was firm).** Doc pages: `nb-reader` skill, NEVER the Wolfram MCP.
+  Evaluation: `wolframscript -file`, never an MCP evaluator. A QF symbol's exact signature/behavior: read
+  the kernel source or test in `wolframscript`, never recall. (Failure: wrong-tool reflex, and a guessed
+  signature shipped unverified.)
+
+*Verified-live idioms (this session; reuse verbatim):*
+- Outcome->prob, pairing intrinsic: `Simplify@*ComplexExpand /@ QuantumMeasurementOperator[QuantumOperator[
+  sz]][QuantumState[psi]]["Probabilities"]` (assoc keyed by eigenvalue). Diagonal-observable outcomes:
+  `Thread[Diagonal[sz] -> ComplexExpand[Abs[psi]^2]]`.
+- Named spin ops: `{jxq,jyq,jzq} = QuantumOperator[#[j]] & /@ {"JX","JY","JZ"}` (spin arg REQUIRED, bare
+  defaults to 1/2). Full su(2), matrix route: `Table[jvec[[a]].jvec[[b]]-jvec[[b]].jvec[[a]],{a,3},{b,3}] ==
+  I LeviCivitaTensor[3] . jvec`. QF route: `LeviCivitaTensor[3] . jq` does NOT reduce on a list of
+  QuantumOperators, use `And @@ Flatten[Table[Commutator[jq[[a]],jq[[b]]] == I Sum[LeviCivitaTensor[3][[a,b,
+  c]] jq[[c]],{c,3}],{a,3},{b,3}]]`.
+- Generators from Clebsch-Gordan (Wigner-Eckart), all j: `L[mu_]:=Table[If[m'==m+mu, Sqrt[j(j+1)]
+  ClebschGordan[{j,m},{1,mu},{j,m'}], 0], ...]`, then `Jx=(L[-1]-L[1])/Sqrt[2], Jy=I(L[-1]+L[1])/Sqrt[2],
+  Jz=L[0]` equals the ladder ops.
+- QF WignerD: `QuantumOperator["WignerD"[j,{a,b,c}]]` (angles as a LIST) `= Table[WignerD[{j,m1,m2},a,b,c],
+  {m1,-j,j},{m2,-j,j}]` (ascending m, ACTIVE convention); operator-`==` equals the passive
+  `e^{-iaJz}e^{-ibJy}e^{-icJz}` construction (QF reconciles the ordering). Signature `NamedOperators.m:837`.
+- Full CG change-of-basis table: `Outer[If[#2[[1]]+#2[[2]]==#1[[2]], ClebschGordan[{j1,#2[[1]]},{j2,#2[[2]]},
+  #1], 0] &, coupled, prodBasis, 1]` (the `If` guard suppresses the `M != m1+m2` message). It IS the
+  total-spin eigenbasis: `w=QuantumOperator[cg,{1,2}]; w @ QuantumOperator[S2] @ w["Dagger"]` = `diag(S(S+1))`,
+  same for Sz `= diag(M)`.
+- Build coupled states from operators: triplet by lowering `sMinus=stot[[1]]-I stot[[2]]` from a `UnitVector`
+  top state; singlet `= Normalize[First[NullSpace[S2]]]` (fixed only up to a global sign, a state is a ray).
+- **SparseArray vs dense equality:** `jx=(jp+Transpose[jp])/2` is a SparseArray; `===` a dense matrix is
+  False, but `==` (Equal) reduces to True. Compare cross-representation with `==`, never `===`.
+- Clean display: `% // MatrixForm`, `%["Matrix"] // MatrixForm` follow-up cells; `FullSimplify /@ expr` maps
+  over list elements so each lands on its recognizable closed form (1.2 Born weights).
+- When the answer must sharpen a vague/under-specified question (8.5 -> named the concrete case + "full
+  table"), edit BOTH the answer heading AND `Question-List.md` so they never desync.
+
+Applies within: all Part-08 answers verified by extracting every ```wl block in notebook order into one
+kernel (44 cells, top-to-bottom, zero messages, every agreement cell True). md edited only; `.nb` rebuilt
+via md2nb `Evaluate->False` on request.
+
+**v10 (per-answer self-containment + minimality, user-driven; RETIRES v9's continuous-notebook model).**
+The user reversed the v9 "continuous notebook, shared globals across questions" model (v9 principle G) back
+to strict per-answer independence, and set four authoring rules for a Part. These reaffirm the original
+list-wide DNA ("answers are independent; no cross-answer leak"; "let the abstraction do its work"; "one
+concept per question") and now GOVERN by default; v9's shared-globals exception is retired (no `ClearAll`
+header, no cross-question reuse of `sz`/`jvec`/`s2`, no forward references).
+
+1. **Every answer is self-contained.** It builds every operator and state it uses from scratch; it borrows
+   NO symbol defined in another answer. Repeating a five-line spin-operator build across questions is CORRECT
+   here: independence beats DRY. Verify by running each question's cells in a fresh context (`ClearAll` all
+   Global symbols between questions, sparing only the test harness); every check must pass in isolation, not
+   only in the connected top-to-bottom run. (Failure: cross-answer leak.)
+2. **Do not reference other questions unless truly needed.** No "reuse from 8.2", no "seeds 8.6". If a genuine
+   physics tie-in helps (a backward pointer like "as in Part 7, 7.10"), keep it minimal and backward-only,
+   never forward. (Failure: forward reference / cross-question coupling.)
+3. **Minimal, concise, built-in-first; no Python-shaped code, no hardcoding.** Prefer the shortest idiomatic
+   form: `Total[#.# & /@ jvec]` for a Casimir, `LeviCivitaTensor[3] . jvec` for the whole algebra,
+   `NestList[Normalize[sMinus . #] &, top, 2]` for a lowering chain, `Tuples`/`Outer` for bases and tables,
+   `SparseArray` ladders. On the WL side reach for WL built-ins (`WignerD`, `ClebschGordan`, `FourierMatrix`,
+   `KroneckerProduct`); on the QF side reach for QF's OWN features (named `"JX/JY/JZ"[j]`, `"WignerD"[j,{..}]`,
+   `Exp[QuantumOperator]` rotations, `QuantumTensorProduct`, outcome-keyed `["Probabilities"]`), never plain
+   matrices wrapped in `QuantumOperator` as a QF veneer. Choosing `j=1` as the example spin is a parameter
+   choice, not hardcoding; typing out a basis or an answer matrix IS. Minimal means concise CODE, NOT fewer
+   cells: it never overrides principle 5 (one computation per cell). An important object, a state, an
+   operator or table being examined, a `D`-matrix, still gets its OWN assignment cell, with the computation
+   that consumes it in the NEXT cell (as on the QF side of 8.3, `psiq` then the expectation). Do not fuse a
+   construction with its use to save a line; compute a shared object (`cg`) ONCE and reuse it, rather than
+   inlining it twice. (Failure: verbose Python-style code; fake-QF matrix wrapping; hardcoded enumerations;
+   AND, the opposite over-correction, fusing an object's construction with its use to look "minimal".)
+4. **Focused on the question; every extra earns its place.** Compute what the question asks and stop. Any
+   additional construction or check must be genuinely insightful, not padding: 8.2 keeps the Clebsch-Gordan
+   (Wigner-Eckart) build alongside the ladder because "$\vec J$ is a rank-1 spherical tensor" is a real second
+   viewpoint; it would drop a third redundant route. (Failure: deviation, unjustified extras.)
+
+Applied: Part 8 rewritten from the v9 continuous-notebook form (shared spin-1 globals, `ClearAll` header,
+forward "reuse in 8.N" references) to seven self-contained answers, each building its own operators; 51 cells
+down to 35; every question verified in a fresh `ClearAll` context AND top-to-bottom. FOLLOW-UP correction
+(user): the minimality pass had over-fused important-object construction with its use (e.g. 8.3 WL built the
+rotated state and read its expectations in one cell, unlike the QF side); re-split so every state / `D`-matrix
+/ `cg` table / change-of-basis `w` gets its own cell before the computation on it, and `cg` is computed once
+and shared WL->QF. 35 cells up to 43. Lesson now folded into principle 3 above: minimal is concise CODE, not
+fewer cells; principle 5 (one computation per cell, show the object) is never traded away for line count.

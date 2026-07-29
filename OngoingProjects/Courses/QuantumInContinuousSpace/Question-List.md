@@ -63,7 +63,7 @@ distinct concepts are separate questions.
 - 1.3 [BSc] How do I compute the Born-rule probability $\int_a^b|\psi|^2\,dx$ of finding the particle in a region?
 - 1.4 [BSc] How do I compute the inner product $\langle\phi|\psi\rangle=\int\phi^*\psi\,dx$, its modulus, and the transition probability $|\langle\phi|\psi\rangle|^2$?
 - 1.5 [BSc] How do I compute the position expectation $\langle x\rangle$ and the spread $\Delta x=\sqrt{\langle x^2\rangle-\langle x\rangle^2}$?
-- 1.6 [BSc] How do I compute the probability current density $j(x,t)$ and verify the continuity equation $\partial_t|\psi|^2+\partial_x j=0$?
+- 1.6 [BSc] How do I compute the probability current density $j(x,t)=\tfrac{1}{2i}\left(\psi^*\partial_x\psi-\psi\,\partial_x\psi^*\right)$ and verify the continuity equation $\partial_t|\psi|^2+\partial_x j=0$?
 - 1.7 [BSc] How do I represent a state on a discrete spatial grid so that integrals become sums, building the bridge from $L^2$ to the finite vector a computer can hold?
 - 1.8 [BSc] How do I show that an overall constant phase is unobservable, while the local phase gradient $\partial_x\arg\psi$ carries the current (the velocity field)?
 - 1.9 [BSc] How does a Galilean boost transform a wave packet (the boost phase factor), and why is $|\psi|^2$ unchanged in shape?

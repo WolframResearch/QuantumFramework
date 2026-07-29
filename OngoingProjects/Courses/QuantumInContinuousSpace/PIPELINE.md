@@ -1,193 +1,340 @@
-# Pipeline & Brief: "Quantum in Continuous Space" question list
+# PIPELINE: Authoring DNA for "Quantum in Continuous Space" Worked Solutions
 
-The continuous-space (wave-mechanics) companion to
-`../QuantumInDiscreteSpace/Question-List.md`. Deliverable so far: `Question-List.md` (the
-curriculum). This file is the reusable brief and the build tracker.
+This file is the standard every answer in the solution set is held to, and the shape each answer
+takes. It was distilled from the finished Part 1 (nine answers, refined through direct feedback and
+two adversarial review loops) and is meant to govern Parts 2 through 23 without further re-derivation.
 
-## DRAFT BRIEF (adversarial-draft, Compose track, research-rigor mode)
+The source of truth is the literate-Markdown file (`Solutions-*.md`). The notebook (`.nb`) is a build
+output produced by md2nb with `"Evaluate" -> False`, so the reader runs the cells. Conventions are
+pure Wolfram Language (no QuantumFramework) and natural units $\hbar=m=1$.
 
-- **Goal:** A dependency-ordered question list that teaches continuous-space quantum mechanics
-  by *computing* each item in pure Wolfram Language; a reader works straight down and builds or
-  solves each task. The Schrodinger equation read two ways: as an ODE eigenvalue problem (the
-  time-independent spectrum) and as a PDE (time-dependent propagation).
-- **Reader:** Advanced BSc / early MSc physicist; strong calculus, linear algebra, ODE/PDE,
-  Fourier analysis; wants "how do I compute X", not a proof course.
-- **Claim (spine):** Every concept of single/few-particle quantum mechanics in $L^2$ has a
-  short executable WL realization, either a closed form via special functions or a convergent
-  numerical scheme.
-- **Genre/length:** One Markdown file, curriculum-as-questions, tagged `[BSc]`/`[MSc]`, with a
-  coverage map. Target ~150-200 items; landed at **158 across 23 parts (54 BSc / 104 MSc).**
+Throughout this file: no em dashes; every formula is valid TeX; subscripts and superscripts braced.
 
-## Decisions (AskUserQuestion)
+---
 
-1. **Scope ceiling = comprehensive + relativistic/QFT bridge.** 1D potentials, the harmonic
-   oscillator, the TDSE/PDE, 1D and 3D scattering, approximation methods, periodic potentials,
-   3D/central/hydrogen, angular momentum, EM coupling, spin coupled to space, identical
-   particles, density operators/Wigner, CV quantum optics, open systems, path integrals,
-   nonlinear/mean-field, the Klein-Gordon and Dirac equations, and a second-quantization
-   bridge. OUT: full interacting QFT, lattice gauge theory, hardware.
-2. **Tooling = strictly pure Wolfram Language, no QuantumFramework anywhere.** `DSolve`,
-   `NDEigensystem`, `NDSolve`, `FourierTransform`/`Fourier`, `NIntegrate`, `FindRoot`, and
-   hand-built schemes (Numerov, split-step Fourier, transfer matrix, imaginary-time descent).
-   Continuous objects that must become finite arrays (truncated number basis, spatial grid) are
-   truncated explicitly with a convergence check.
-3. **Units = natural, $\hbar=m=1$** (and $\omega=1$ where natural). A few items restore
-   constants to show a physical scale (oscillator length, Bohr radius).
-4. **Size = comparable to the companion** (~150-200; companion is 194/25/83-111).
+## 0. The governing principle
 
-## The structural difference from the finite-dimensional companion (the disanalogy, named)
+**Earn every claim with a visible computation, using the actual defining object of the problem, in
+the smallest honest step, on a nontrivial and diverse example, inside a narrative that teaches by
+computing.**
 
-The discrete list could settle a claim by *exact* equality of two finite arrays
-(`WL===QF`). Continuous space cannot: there is no exact finite matrix in general, the spectrum
-can be continuous, an eigenstate can be non-normalizable (delta-normalized). So the
-verification idiom shifts to, in order of preference: (1) a closed form when the special
-function exists (Hermite, Laguerre, Airy, spherical harmonics, parabolic-cylinder, Coulomb
-wave functions), checked by back-substitution into the differential equation; (2) agreement
-between two independent methods on the same quantity (analytic spectrum vs `NDEigensystem`,
-`DSolve` propagation vs split-step Fourier); (3) numerical convergence under grid/basis
-refinement. The representation and discretization machinery is therefore early *content* (1.7
-grid discretization, 2.5 delta-normalization, 4.4 honest truncation), not a footnote. This is
-stated in the file's intro so the metaphor "companion volume" never papers over it.
+Every rule below is a corollary of this one. The recurring failure mode is settling for what
+"technically answers the question" or the path of least resistance (an inherited file, a hand-typed
+consequence, a repeated state) instead of this deeper standard. Guard against it by gating each
+answer on the deeper standard, not the minimal pass.
 
-## Pressure-test (skeptic's pass, with resolutions baked into the list)
+When the reader asks "why did you do X" or "why not Y", the expected response is to **opine honestly
+on the root cause first, then resolve**, never to defend.
 
-- *Weakest assumption:* "everything is computable in finite closed form." False; resolved by
-  making the toolkit early content and shifting verification to method-agreement (above).
-- *Strongest objection:* "this is just a Mathematica tutorial on `NDEigensystem`." Answer: each
-  item leads with a physics question; continuous QM has genuine conceptual content with no
-  finite-dim analog (continuous spectra, non-normalizable states, self-adjointness vs
-  Hermiticity, boundary conditions) that is the real subject.
-- *Dependency hazards specific to wave mechanics:* Fourier/momentum rep before momentum-space
-  work; the harmonic oscillator before anything CV (Wigner, optics, Fock, second quantization);
-  angular momentum and central potentials before 3D scattering; spin and EM coupling before the
-  Dirac equation; the density operator before reduced states and Wigner; the propagator before
-  path integrals. Enforced in the ordering.
+---
 
-## Dependency-ordering rule (hard constraint, mirrors companion DNA 13)
+## 1. Physics content and honesty
 
-No question may need a concept introduced by a later-numbered question. Tag every item
-`[BSc]`/`[MSc]`. One concept per question; inseparable facets stay together.
+- **Pure Wolfram Language, no QuantumFramework; $\hbar=m=1$** throughout.
+- **Scope matches the question's declared scope.** Part 1 is one-dimensional because the questions
+  are; do not reach into higher dimensions, spin, or many-body content that later Parts own. Read the
+  Part title and the question text, and answer exactly that.
+- **Never assert physics.** Every physical claim about a state (that it *is* the bound state of some
+  potential, that its energy is $E$, that it is normalized, that it solves the evolution equation) is
+  either derived from its defining differential equation or verified in a cell. Part 1 examples:
+  1.4 earns "this is the hydrogen $1s$ reduced radial" from the $l=0$ Coulomb radial equation; 1.6
+  earns "solves the free time-dependent Schrodinger equation" from a zero residual.
+- **The defining object must enter a computation and do real work.** If a physical mechanism is the
+  point of the question, compute *with* it, do not smuggle in its consequence. In 1.1 the contact
+  potential $V=-g\,\delta(x)$ enters as its own energy $\langle V\rangle=-g\int\delta(x)|\psi|^2\,dx$
+  via an actual `Integrate`; the decay rate and binding energy then fall out of minimizing
+  $\langle H\rangle(\kappa)$, rather than a jump condition typed in by hand.
+- **Cash the abstraction out into the lab where you can.** End an answer by saying what an experiment
+  would see (1.9: "a position measurement sees nothing; a momentum measurement sees the entire
+  boost"). Name physical scales (Bohr radius, beat frequency, recoil form factor).
 
-## Review (adversarial-draft Step 6: two fresh-context reviewers, parallel)
+---
 
-Reviewer A (physics correctness + completeness, quantum-review lens) and Reviewer B (strict
-forward-reference audit) ran in parallel on the draft.
+## 2. The explicit example (the state)
 
-- **Reviewer B: 1 genuine forward-reference** = old 4.8 (coherent-state *time evolution*) sat in
-  Part 4 but needed time evolution, first introduced in Part 5. **Fixed:** moved to Part 5 as
-  5.6 (next to wave-packet revivals, the eigenstate-expansion dynamics); Part 4 keeps only the
-  static coherent/squeezed-state construction. Confirmed no `[BSc]`-on-`[MSc]` dependency.
-- **Reviewer A findings, applied:** (1) virial typeset $\langle x\cdot\nabla V\rangle\to
-  \langle \vec r\cdot\nabla V\rangle$ (8.1); (2) displacement/squeeze operators were named
-  formally only at 17.2 but used at 4.6/4.7: self-contained 4.6/4.7 by writing the operators
-  inline ($e^{\alpha a^\dagger-\alpha^* a}$, $e^{\frac12(\xi^* a^2-\xi a^{\dagger2})}$) and
-  reworded 17.2 to "revisit ... as phase-space transformations"; (3) added the two-body
-  center-of-mass / reduced-mass separation (new 10.4, a real BSc gap before hydrogen); (4)
-  added homodyne/heterodyne detection (new 17.7, the missing CV-measurement item, motivates the
-  Husimi-$Q$ operationally); (5) added the radial-WKB Langer correction (new 12.9); (6)
-  generalized 11.6 Clebsch-Gordan beyond the orbital Gaunt instance so 14.3 ($\vec J=\vec
-  L+\vec S$) has an in-list foundation; (7) disambiguated 13.4 to the *normal* (orbital) Zeeman
-  effect and added the anomalous Zeeman / Paschen-Back item (new 14.6), removing the latent
-  spin forward-reference.
-- **Soft edges judged non-violations (kept, not "fixed"):** 1.9 Galilean boost uses a c-number
-  velocity, not the $\hat p$ operator; 7.7 Fermi-golden-rule density of states is the
-  free/scattering continuum (from plane-wave delta-normalization, 2.5), distinct from the band
-  DOS at 9.4; 11.5 "Wigner $D$-matrix" is the rotation matrix, not the Wigner quasi-probability
-  (16.3).
+- **Never a Gaussian as a shortcut. Never the trivial base case**: not the ground state alone, not a
+  single stationary level with zero current, not $\theta=0$, not a fixed quantum number standing in
+  for the general one.
+- **Every state is nontrivial and drawn from a recognizable physical field**, and **diverse across
+  answers**: no state reused as a crutch. Track what has been used (Appendix A) and pick something new.
+- **Choose the state to expose structure the trivial case cannot**: a node, a complex overlap, a
+  cusp, a heavy $1/x$ tail, non-normalizability, a genuinely time-dependent current. Prefer a state
+  that is a *harder, more honest test* than the smooth default (1.7 uses a kinked tent function
+  precisely because "a piecewise-linear trial state is a more honest grid test than a smooth bell
+  curve").
+- **Ladder recognizable to consequential.** When the richest example needs heavy caveats (the
+  non-normalizable Airy beam in 1.6), lead with a simple recognizable normalizable one (the sloshing
+  two-level well) and let the exotic case escalate from it. Give both when both teach.
+- **Generalize rather than assert a general law.** If a formula holds for all $n$, widen from the
+  single case to the family and read the pattern off (1.5 goes from the displaced $n=1$ state to the
+  whole Hermite ladder $\{\tfrac12,\tfrac32,\tfrac52,\tfrac72\}$).
+- **Discriminate, do not merely illustrate.** Contrast the chosen state with its neighbors so the
+  example distinguishes the concept: 1.8 sets the chirp's position-dependent velocity against a plane
+  wave's uniform flow; 1.3 sets the sinc's slow $1/x$ tail against exponential decay.
 
-Post-edit checks: per-part item counts match the coverage table; numbering sequential 1..n in
-all 23 parts; tag totals 54 BSc / 104 MSc / 158 total; no em or en dashes; all math in
-delimited TeX.
+Aim, per answer, to touch these five regimes (from the quality loop):
 
-## Status
+| regime | what it means here |
+|---|---|
+| general symbolic | parameters ($\kappa,a,L,q,\dots$) kept symbolic, closed forms |
+| exactly solvable | a special case with a known answer to anchor against |
+| asymptotic or limiting | a `Limit` or `Series` (weak coupling, large kick, wide well) |
+| numerical reference | an independent `NIntegrate` or grid spot-check |
+| failure or edge | the boundary where it breaks (non-normalizable, point measure, wall) |
 
-| Stage | State |
-|-------|-------|
-| Curriculum question list (`Question-List.md`) | DONE, 158 items / 23 parts, two-reviewer pass applied |
-| Worked solutions, Parts 1-2 (`Solutions-Parts-1-2.md`) | DONE, 18 Q, pure WL, kernel-verified + /wl-verify 0 |
-| Notebook build (`Solutions-Parts-1-2.nb`, md2nb) | DONE, Template Default, Evaluate->False, 115 KB, structure + code-fidelity verified |
-| Worked solutions, Parts 3-23 | NOT STARTED |
+Not every answer fills every row, but a shallow answer usually fills only the first.
 
-## Solutions work log
+---
 
-**Parts 1-2 worked solutions (`Solutions-Parts-1-2.md`), pure WL, hbar=m=1.** Per the user's
-recommended order: first fetched the WL doc pages (`wl-docs/`, 17 functions: NDSolve(+Value),
-DSolve(+Value), Solve, DEigensystem(+values), NDEigensystem(+values), FourierTransform, Fourier,
-Integrate, NIntegrate, FindRoot, Resolve, Reduce, SchrodingerPDEComponent) via the nb-reader
-`doc2md.py`; read the Parts 1-2 relevant ones (Integrate definite/generalized-function sections,
-FourierTransform in full). The ODE/PDE/eigensystem pages are fetched and will be read when Parts
-3+ use them.
+## 3. Symbolic-first, and cross-checked
 
-**Key correctness point (from the FourierTransform doc):** WL's default
-`FourierParameters -> {0, 1}` is the kernel $\frac{1}{\sqrt{2\pi}}\int f\,e^{+i\omega t}dt$, the
-OPPOSITE sign from the QM forward transform $\tilde\psi(p)=\frac{1}{\sqrt{2\pi}}\int\psi\,e^{-ipx}dx$.
-Using the default would silently flip the sign of $\langle p\rangle$. So 2.6 uses
-`FourierParameters -> {0, -1}` and cross-checks $\langle p\rangle=k$ against the position-space
-value of 2.3 (both $+k$). Verified independently by the wl-verifier.
+- **Full closed form wherever the kernel allows.** Fall to numeric only after checking that symbolic
+  genuinely fails, and say so. Keep every parameter symbolic; pin a number only for a plot.
+- **Cross-check every nontrivial closed form independently, and the check must be able to refute it.**
+  A numeric spot-check that **reuses the definitions** (never a re-typed literal, per the quality
+  loop), and/or a limit or asymptotic. In Part 1, 1.2/1.3/1.4/1.5 each pair a closed form with an
+  independent `NIntegrate` at one point; 1.3 adds boundary limits, 1.4 adds a large-$q$ `Series`.
+- **Two representations must agree.** Symbolic versus numeric; a quantity computed two ways; a general
+  proof beside a concrete instance (1.6 proves continuity for arbitrary $f,g$, then for the Airy beam).
+- **Probe the kernel, do not recall it** (the `pde-route` discipline). Test a symbol's behavior in a
+  live kernel before relying on it. Hard-won this session, all reusable:
+  - `D[Abs[x], {x, 2}]` yields **no** `DiracDelta` in current WL (the `Abs` to delta chain is closed);
+    put the delta in through an `Integrate`, not a derivative.
+  - `NIntegrate` silently misses a Dirac point measure (returns `0.`); `Integrate` is exact. So a
+    numeric cross-check is the wrong tool for a delta and the right tool everywhere else.
+  - `ComplexExpand` is needed to reduce `Abs[complex]` or `Abs[sum]^2` to real trigonometric form (the
+    density of a superposition, 1.6).
+  - The norm of a time-dependent state needs `t \[Element] Reals` in the assumptions, or `Abs` keeps
+    an `Im[t]` factor.
+  - `Minimize` returns a `Piecewise` on the sign of a parameter; for a clean variational condition use
+    `Solve[D[E, \[Kappa]] == 0, \[Kappa]]` and confirm the second derivative is positive.
+  - `Series[f, {q, Infinity, n}]` for large-argument falloff; `Limit` for boundary behavior.
+  - Always give `Integrate`/`Simplify` the positivity and reality assumptions ($\kappa>0$,
+    `Element[{x,t}, Reals]`) that produce a clean closed form.
 
-**Verification.** Harness `verify/part12.wls` (22/22 PASS) plus a full extract-and-run of the
-exact `.md` cells (zero error messages, runs to completion). Caught and fixed: (a) 2.5 plane-wave
-delta-normalization is best shown via `FourierTransform[1,x,q] = Sqrt[2Pi] DiracDelta[q]` and the
-momentum-eigenstate image `DiracDelta[p-pp]` (the bare `Integrate[e^{i(p-pp)x},...]` does not
-converge in this version); (b) a real cell-ordering defect: cells 1.8 and 2.3 had assigned
-`\[Psi] = ...` as a bare OwnValue (a product), after which the later `\[Psi][x_] :=` definitions in
-2.4/2.6/2.7 failed with `SetDelayed::write Tag Times` (the symbol head was a product). Fixed by
-using the function form `\[Psi][x_] :=` consistently. Minimal-code adversary removed 3 inert
-`Simplify`/`ComplexExpand`/`FullSimplify` wrappers (cells 1.1, 1.4, 2.6). `/wl-verify` fresh-context
-verifier: **OPEN ISSUES 0**, all 18 items reproduced, Fourier convention judged consistent.
+---
 
-**Notebook build (md2nb).** Built `Solutions-Parts-1-2.nb` from the `.md` twin via
-`MarkdownToNotebook["Solutions-Parts-1-2.md", "Solutions-Parts-1-2.nb", "Evaluate" -> False]`
-(load `Get["/Users/mohammadb/Documents/GitHub/MarkdownToNotebook/MarkdownToNotebook.wl"]` first;
-the local `wolframscript` is the standard one, so `-file`/`-code` work, NOT the M2N-sandbox
-custom-wrapper flags). `Template: Default` -> StyleDefinitions Default.nb; Title from the body H1.
-`Evaluate -> False` keeps Input cells only (no Output), matching the reader-runs-cells design.
-Verified by reading back with `Get` (build scripts `verify/build-nb.wls`, `verify/check-nb.wls`,
-`verify/check-nb-inputs.wls`): 1 Title, 2 Sections, 18 Subsections, 27 Input, 40 Text, 195
-InlineFormula; **0 empty/dropped mathboxes**; `\hbar` rendered to the `\[HBar]` glyph (6x, the M2N
-WolframParser path knows it; only the ImportString fallback drops it), `\tfrac`/`\frac` -> 14
-FractionBoxes, `\operatorname{erf}` -> visible "erf"; and **all 27 Input cells reparse + run clean**
-from the built nb (no `ToExpression::sntx`, no `SetDelayed::write Tag Times`), so md2nb did not
-mangle the WL (the `_\[Name]` blank-head trap was avoided by using `\[Psi][x_]` form). Rebuild the
-nb whenever the `.md` changes (it is a build output, never hand-edited).
+## 4. Cell rhythm (learning by computing)
 
-**Non-trivial-states revision (user feedback: "you went with the most trivial answers e.g.
-Gaussian; that is not good").** Reworked Parts 1-2 to run on physically important non-Gaussian
-states, each chosen so its symbolic answer is interesting, rather than defaulting to the Gaussian
-(which is degenerate: it self-Fourier-transforms, saturates uncertainty, has a featureless
-current). States and their verified results (`verify/part12b.wls`, all PASS):
-- **Cusp state** $\sqrt{\kappa}e^{-\kappa|x|}$ (Dirac-delta-potential bound state / 1D hydrogen 1s):
-  density $\kappa e^{-2\kappa|x|}$ (1.1), grid sum resolves the cusp (1.7), moving-state
-  $\langle p\rangle=k$, $\langle p^2\rangle=k^2+\kappa^2$, $\Delta p=\kappa$ via the boundary-term-free
-  $\int|\partial_x\psi|^2$ form (2.3, sidesteps the cusp's $\delta$ in $\psi''$); Lorentzian
-  momentum wavefunction $\sqrt{2/\pi}\kappa^{3/2}/(\kappa^2+p^2)$.
-- **Sech soliton** $\tfrac{1}{\sqrt2}\operatorname{sech}(x)$ (NLS bright soliton / Poschl-Teller
-  ground): $\int\operatorname{sech}^2=2$ (1.2), $P(|x|<a)=\tanh a$ (1.3), displaced $\Delta x=\pi/(2\sqrt3)$
-  (1.5), Hermiticity probes (2.4), FT is a sech $\tfrac{\sqrt\pi}{2}\operatorname{sech}(\pi p/2)$ with
-  $\langle p^2\rangle=1/3$ (2.6), and the uncertainty contrast $\Delta x\Delta p=\pi/6\approx0.524>1/2$
-  (2.7, vs the Gaussian's exact $1/2$).
-- **Hydrogen 1s reduced radial** $2\kappa^{3/2}x e^{-\kappa x}$ on $[0,\infty)$: complex recoil/survival
-  amplitude $8\kappa^3/(2\kappa+iq)^3$ (1.4); motivates the half-line in 2.9.
-- **Chirped soliton** $\operatorname{sech}(x)e^{i\beta x^2}/\sqrt2$: position-dependent velocity field
-  $v(x)=2\beta x$ (1.8).
-- **Gaussian**: kept ONLY in 2.7 as the unique saturating state (the punchline).
-Caveat: these states live in later Parts (delta potential P3, soliton/PT P8/P21, hydrogen P12);
-used here as GIVEN functions (the computation needs only calculus), with a one-line physical-origin
-note, so no dependency violation (textbook habit of meeting a non-trivial state early). Full
-extract-run of the 28 rewritten cells: zero error messages, reached end. TRAP: the shifted+boosted
-sech Hermiticity integral in 2.4 is SLOW (~2 min) but correct.
+- **One displayed result per cell.** The cell culminates in a single unsuppressed output (its last
+  line, no `;`). Supporting definitions and intermediate assignments above it end in `;`. A result you
+  will reuse is captured as `name = expr` with **no** trailing `;`, so it both displays and binds. Two
+  independently interesting results are two cells. A numeric-comparison cell may bundle setup lines and
+  end in a single displayed pair (1.7).
+- **A bridge sentence before every cell, ending in a colon, naming the object symbolically**: "Compute
+  $\langle V\rangle$:", "Verify continuity $\partial_t\rho+\partial_x j=0$:". No orphan cells.
+- **State the closed-form formula in the prose before the code**, then compute it. The reader should
+  know what to expect before the cell runs.
+- **Drop the trailing `;` when the outcome is interesting** so the value shows. Keep `;` only on pure
+  definitions and intermediate assignments.
+- **After the cell, interpret the meaning woven into a sentence**, not the raw output token, and let it
+  raise the next step. A bare verification ($0$, $1$, `True`) may stand silently; anything else earns
+  a sentence about what it means physically.
+- **Reuse names across cells** (`ovl`, `dens`, `j`, `T`, `Vexp`); never re-type a wavefunction literal.
+- **Idiomatic functional WL, no loops.** Vectorize (1.7 sums a Born probability with
+  `Total[Abs[\[Psi][grid]]^2] dx` over `Subdivide`, relying on listability), use `Table` for a family,
+  replacement rules for a general proof. No `Do`, `For`, `While`, `AppendTo`.
 
-**Solution-style settled (apply to Parts 3-23):** symbolic inputs where the kernel allows; no helper
-functions beyond operator defs (code is the explanation); compute from the definition; result stated
-inline in prose as TeX; each cell verified by closed-form / two-method-agreement / numerical
-convergence. Always use the function form `name[x_] :=` for states (never bare `name = ...`, which
-collides with later `name[x_] :=`). Operators `xop`/`pop` defined once (2.1), reused.
+---
 
-## Next (if the worked manual is wanted)
+## 5. Prose voice and structure
 
-Author a sibling deliverable giving each question a worked **pure-WL** answer (no QF), to the
-companion's answer-style DNA: symbolic wherever the solver allows, no helper functions (code is
-the explanation), compute from the definition, honest truncation/convergence caveats stated.
-Verification per the three-way idiom above (closed form / two-method agreement / convergence),
-then `/wl-verify` for any `.wls` harness. Build the `.nb` from the `.md` twin via
-`MarkdownToNotebook[src, out, "Evaluate" -> False]` only if a notebook is requested.
+- **No process or workflow narration in teaching text.** No "we derived rather than assumed", no
+  contrast with a rejected draft, no meta about the method used to get here.
+- **No out-of-context labels.** Do not call a calculus object a "soliton". Every physical name must fit
+  the setting of the question.
+- **Self-contained.** Each answer defines the state or operator it uses, computes from that definition,
+  and can be read or run on its own. No cross-references to other answers, no reliance on a symbol set
+  elsewhere.
+- **No em dashes anywhere; all math is valid TeX.** Use colons, commas, parentheses, periods,
+  semicolons. Unicode math and raw `x^2`-in-prose are not allowed; wrap in `$...$`.
+- **Discuss a result as a sentence with its closed form inline.** Reserve display math ($$...$$) for
+  matrices or multi-line derivations, always bridged and interpreted, never a bare `$$label=formula$$`.
+- **The section heading is the question verbatim, with its `[BSc]`/`[MSc]` tag.** The tag sets depth:
+  BSc answers are foundational and clean; MSc answers go further (operator domains, ordering, deeper
+  limits).
+- **Part openings give concise, precise common ground.** One paragraph after the Part heading that
+  represents the core foundations the Part's questions rest on, each with its defining expression
+  (for Part 1: inner product, Born rule, expectation value, current and continuity, phase), very
+  concise, not a table of contents.
+
+### 5a. Prose sentences are claims, and are held to the same standard as cells
+
+The earn-it rule of §1 applies to *framing* sentences too, not only to claims a cell can check. A
+framing sentence is the most load-bearing thing in an answer, because it is what a reader carries
+away after forgetting the algebra. Two tests, both cheap:
+
+- **The stranger test.** Every sentence must survive being read by someone who never saw a previous
+  draft and does not know the author exists. "It is not chosen by hand", "rather than assert that",
+  "where the delta earns its keep", "not a convenience but a necessity" all fail instantly. A
+  correction received must change the physics silently, never appear in the text as self-defense.
+- **The motivation-first test.** Before any computation, the reader must already know what it is for
+  and why *this* form of it. A cell that arrives before its motivation is a defect even when its
+  output is correct. State the strategy ("build $\langle H\rangle(\kappa)$ and minimize"), then compute
+  the pieces.
+
+Conflations that repeatedly produced false sentences, all of them worth checking by name:
+
+- the **state** (a ray, fixed only up to a global phase) vs an observable's **spectrum** (the possible
+  results) vs the **Born probability** of those results vs the **state update** on measurement vs the
+  **ensemble** reading (one run returns one number; a density is what many runs reproduce). Never call
+  $|\psi|^2$ "the observable content": it is the outcome distribution of one observable, and the phase
+  it discards carries the momentum, the current, and the energy.
+- **Hermitian vs self-adjoint.** Hermiticity is necessary, not sufficient; an observable must be
+  self-adjoint, and the difference is a statement about domains.
+- **Binding energy vs eigenvalue.** The eigenvalue is $-g^2/2$; the binding energy is $+g^2/2$.
+- **Representation bias.** $|\tilde\psi(p)|^2$ is as much "the physics" as $|\psi(x)|^2$; say so or
+  do not privilege position silently.
+- **Unstated hypotheses.** Continuity needs $V$ real; $L^2$ membership does not imply pointwise decay;
+  an operator identity needs a domain on which both orderings are defined; a named effect ("form
+  factor", "Wannier function of a flat band", "Breit-Wigner in position") must be the right object,
+  not a near neighbour.
+
+---
+
+## 6. Routing a differential equation (pde-route)
+
+For any question that solves, routes, or chooses a method for a differential equation, eigenproblem,
+or evolution, follow the `pde-route` procedure rather than reaching for a remembered solver:
+
+1. **Classify** (ODE/PDE/DAE; order; linear; elliptic/parabolic/hyperbolic; does superposition hold).
+2. **Enumerate** all admissible routes (exact `DSolve`; symbolic eigenproblem `DEigensystem`;
+   transform; numeric eigenproblem `NDEigensystem`; numeric evolution `NDSolve`; assemble-then-solve).
+3. **Gate by probing**, not recall. Known traps: `NDEigensystem` returns smallest in magnitude, not
+   most negative (wrong physics silently for a negative spectrum, fix with a spectral shift);
+   `DEigensystem` needs homogeneous boundary conditions and the domain form at $\pm\infty$;
+   `NIntegrate` misses point measures.
+4. **State the criterion before scoring**: exactness, then falsifiability, then independence, then
+   inspectability, then cost.
+5. **Pick a primary route plus an independent cross-check** (different machinery, so shared errors
+   cannot hide).
+6. **Verify** with a refinement sweep and a benchmark. A limit every candidate satisfies is not a
+   check. Compare $|\psi|^2$, absolute overlaps, or projectors, never raw eigenvector components
+   (the phase is arbitrary).
+
+---
+
+## 7. Self-containment mechanics
+
+Answers run in one kernel in document order for verification, yet each must also run alone. Both
+work if symbols are managed carefully:
+
+- **Each answer redefines its own state.** A same-arity redefinition (`\[Psi][x_] := ...`) cleanly
+  overwrites the previous one, so `\[Psi]` can be the state in every answer.
+- **A different arity does not overwrite, it coexists and can pollute.** If a symbol is used with one
+  arity in some answers, do not introduce it with a different arity elsewhere: the well eigenfunctions
+  in 1.6 are named `\[Chi][n_, x_]` precisely because `\[Phi]` is a single-argument overlap partner in
+  1.2 and 1.4.
+- **Do not assign the reserved free symbols** used as generic unknowns (for example a free ODE unknown,
+  or generic test functions `f,g` in a proof). Keep them symbolic.
+- **Verify the whole document runs in order.** Extract the code cells and run them end to end; the run
+  must reach the end with no error before an answer set is declared done.
+
+---
+
+## 8. Verification and build workflow
+
+- **Do not self-certify.** After writing or changing an answer, run the two adversarial loops:
+  `/wl-verify` for correctness (a fresh kernel reproduces every claim and worked example) and
+  `/wl-quality` for depth and idiom (a fresh critic grades doc-grounding, functional style, physics
+  invariants, non-triviality, symbolic-first, and the five regimes). Apply the **deeper** fix, not the
+  cheap one: extend to the nontrivial case, redo the derivation symbolically, or cover the missing
+  regime. Earn `OPEN ISSUES: 0` from a genuine critic pass before recording it.
+- **Run a third loop, aimed at the prose, not the cells.** Both loops above grade code, so both will
+  pass a document whose code is right and whose physics sentences are wrong. Part 1 passed a
+  three-round `/wl-quality` and `/wl-verify` with zero issues while carrying roughly ten conceptual
+  physics errors: a false rigid-transport claim, a survival probability described as an ejection
+  probability, two different potentials given the same name, an incorrect self-adjointness argument,
+  a continuity proof silently assuming $V=0$ and real, a mis-attributed form factor, a wrong Wannier
+  band, and a binding energy with the wrong sign. Point a fresh critic at the **framing and
+  foundational prose** with an explicit mandate: claims that are false, overreaching,
+  representation-biased, resting on unstated hypotheses, or contradicted by the document's own later
+  content. Have it cross-read the parts against each other, since the sharpest disproof of a Part 1
+  sentence was sitting in Part 1 itself.
+- **Run the extract-and-run harness** on the whole document (all cells, document order) and confirm it
+  finishes cleanly. Any changed answer invalidates a prior quality pass on that Part.
+- **Build the notebook with md2nb**, `"Evaluate" -> False`, from the Markdown source. Rebuild after any
+  content change so the `.nb` stays in sync. Do not hand-edit the `.nb`.
+
+---
+
+## 9. Per-answer template
+
+```
+### N.k [BSc|MSc] <the question, verbatim>
+
+<Concept in 2 to 4 sentences: define the quantity and its meaning. Name the chosen state, its
+physical field, and one sentence on why it is nontrivial and what structure it exposes.>
+
+<Bridge sentence naming the object symbolically, ending in a colon:>
+
+```wl
+<definition ending in ;>
+<one computation, displayed (no ; if it is the interesting result), or captured as name = expr>
+```
+
+<Interpret the result as physics, in a sentence. If a physical claim was made, the cell just earned
+it. Forward-reference the next step.>
+
+<... repeat: bridge, cell, interpret ...>
+
+<Close by cashing the result into a limit, an experiment, or a contrast with a neighbor.>
+```
+
+---
+
+## 10. Pre-ship checklist
+
+- [ ] State is nontrivial, field-grounded, and not previously used (Appendix A updated).
+- [ ] Every physical claim about the state is derived from its equation or verified in a cell.
+- [ ] The defining object of the problem actually appears in a computation.
+- [ ] Closed form wherever possible; each nontrivial one cross-checked by an independent route that
+      reuses the definitions.
+- [ ] At least a limit or an asymptotic where one is meaningful; the five regimes considered.
+- [ ] One displayed result per cell; a bridge sentence with a colon before each; formula in prose
+      first; `;` dropped on interesting outputs; output interpreted, not echoed.
+- [ ] Functional WL, no loops; assumptions supplied for clean closed forms.
+- [ ] Self-contained: own definitions, no leaks, non-colliding names.
+- [ ] No process narration, no out-of-context labels, no em dashes, valid TeX.
+- [ ] Whole document runs in order (clean exit); `/wl-verify` and `/wl-quality` run; notebook rebuilt.
+
+---
+
+## Appendix A. Used-states ledger (extend, never repeat)
+
+Track the primary state or system of each answer so later answers do not reuse it. A transformation
+question (a boost, a Fourier transform) may take a known packet as its *object*; that is not a reuse
+of the *concept*.
+
+Part 1:
+
+| answer | state / system | field |
+|---|---|---|
+| 1.1 | Morse oscillator ground state $z^{\lambda-1/2}e^{-z/2}$, $z=2\lambda e^{-ax}$ | molecular vibration |
+| 1.2 | Lorentzian $1/(x^2+a^2)$; plane wave | Breit-Wigner resonance; continuum |
+| 1.3 | sinc $\sin x/(x\sqrt\pi)$ | flat-band Wannier / single-slit diffraction |
+| 1.4 | hydrogen $1s$ reduced radial $2\kappa^{3/2}x\,e^{-\kappa x}$ | atomic |
+| 1.5 | displaced Hermite $n=1$ | harmonic oscillator first excited |
+| 1.6 | infinite-well two-level superposition; Berry-Balazs Airy beam | particle in a box; accelerating beam |
+| 1.7 | tent / Rayleigh-Ritz trial state | finite-element building block |
+| 1.8 | chirped sech $\operatorname{sech}(x)\,e^{i\beta x^2}$ | position-dependent phase |
+| 1.9 | boosted Hermite $n=1$ | Galilean boost of a known packet |
+
+Part 2 (only answers where the state is the object; the operator-identity answers 2.1, 2.2, 2.4, 2.5,
+2.8, 2.9 use generic or convenient test functions, exempt):
+
+| answer | state / system | field |
+|---|---|---|
+| 2.3 | boosted first-excited $\operatorname{sech}(x)\tanh(x)\,e^{ikx}$ | Poschl-Teller well excited state (node) |
+| 2.6 | infinite-well ground state $\sqrt{2/L}\sin(\pi x/L)$ | particle in a box |
+| 2.7 | $\operatorname{sech}(x)/\sqrt2$ vs Gaussian | minimum-uncertainty contrast |
+
+Part 3 and beyond: append rows here as answers are written.
+
+---
+
+## Appendix B. Reference exemplar
+
+The finished Part 1 in `Solutions-Parts-1-3.md` is the worked reference for every rule above. When a
+rule is ambiguous for a new answer, match the corresponding Part 1 answer: its cell rhythm, its
+earn-the-claim structure, its cross-checks, and its closing move.

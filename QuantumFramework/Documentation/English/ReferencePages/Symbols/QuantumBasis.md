@@ -43,11 +43,43 @@ recovered with NotebookToMarkdown and re-verified against the repo kernel at ebc
      to the input; and the purely-symbolic basis reused the symbol w, still bound
      from the Wootters cell, so a whole QuantumState was appearing inside it, and its
      free symbols are now Greek.
-Note "HasseSIC" in the informationally-complete table is carried over unchanged and is
-a pre-existing defect: the kernel's $QuditPhaseSpaceBasisNames spells it "HesseSIC".
-So are the two N::meprec messages under Scope, which come from
-PositiveSemidefiniteMatrixQ on the exact Tetrahedron POVM elements and would need
-Quiet to hide. Both are tracked separately and deliberately not touched here.
+  7. The informationally-complete table named a "HasseSIC" basis, a "Hasse" basis link
+     and a HasseSICPOVM measurement. None of the three exists: both
+     QuantumBasis["HasseSIC"] and QuantumMeasurementOperator["HasseSICPOVM"] fail with
+     QuditBasis::invalidName. The kernel spells the basis "HesseSIC"
+     ($QuditPhaseSpaceBasisNames, NamedBases.m:22) and the measurement "HesseSICPOVM"
+     ($QuantumMeasurementOperatorNames, NamedMeasurementOperators.m:7), after the Hesse
+     configuration behind the exceptional d=3 SIC; the fiducial is {0,1,-1}/Sqrt[2]
+     (MIC.m:168). The linked paper spells it Hesse throughout and Hasse nowhere.
+  8. The Scope check that the Tetrahedron POVM elements are positive semidefinite and
+     sum to the identity now routes both lines through ComplexExpand, and the sum is
+     exact rather than N // Chop. The elements are stored as roots of unity over a
+     common algebraic denominator, entries of the form
+     ((-1)^(2/3)/(9 Sqrt[2]) + ...)/(7/9 + (-1)^(1/6) ... ).
+     On that form PositiveSemidefiniteMatrixQ falls back to evaluating a Log
+     numerically, runs past $MaxExtraPrecision and emits N::meprec twice. ComplexExpand
+     rewrites the roots of unity into explicit radical form (several entries come back
+     plain rational), after which no Power[-1, _Rational] survives; both lines then
+     stay exact, the check keeps its True, the sum is exactly {{1,0},{0,1}}, and no
+     Quiet is needed. The rewrite is value preserving: no inexact atoms, and RootReduce
+     of Normal[ComplexExpand[els]] - Normal[els] is the zero array (the Normal matters:
+     RootReduce threads over the outer list but does not descend into an atomic
+     SparseArray, and it is not Listable, Attributes[RootReduce] is {Protected}).
+     Everything here was measured in one fresh kernel per candidate, since evaluating
+     these algebraic numbers once caches the result and makes every later candidate look
+     message-free. Raising $MaxExtraPrecision does NOT converge: 500 and 1000 still emit
+     twice, only the number quoted in the message changes. The stored elements are
+     SparseArray, which is atomic, so Simplify, RootReduce, FullSimplify, Expand and
+     FunctionExpand are inert on them; ComplexExpand and Together are the two that
+     descend. Applied to Normal of the elements, Simplify and RootReduce silence it too,
+     while Expand and Together still emit twice even though HermitianMatrixQ certifies
+     all four of those matrices. The trigger is therefore the algebraic form of the
+     entries, not Hermiticity. ComplexExpand is the one used because it descends through
+     the SparseArray directly, so the positivity line needs no Normal; the sum line keeps
+     one only so the result prints as a matrix instead of a SparseArray object, since
+     ComplexExpand[Total[els]] is the identity but still stored sparse. Simplify and
+     RootReduce would serve equally on the Normal'd matrices: ComplexExpand is sufficient
+     here, not necessary, and the raw check is not wrong either, it is just noisy.
 -->
 
 ## Usage
@@ -96,7 +128,7 @@ Quiet to hide. Both are tracked separately and deliberately not touched here.
 | `"GellMannMIC"[d]` | GellMann basis in *d*-dimension |
 | `"Tetrahedron"` | Phase space basis corresponding to the TetrahedronSICPOVM measurements (Symmetric Information-ally Complete), which eigenstates form vertices of a [Tetrahedron]() |
 | `"Tetrahedron"[a,b,c]` | A tetrahedron rotated by <code>"U"[*a*,*b*,*c*]</code> gate |
-| `"HasseSIC"` | 3-dimensional [Hasse](https://arxiv.org/abs/1609.03075) basis corresponding to the HasseSICPOVM |
+| `"HesseSIC"` | 3-dimensional [Hesse](https://arxiv.org/abs/1609.03075) basis corresponding to the HesseSICPOVM |
 | `"HoggarSIC"` | 8-dimensional [Hoggar](https://arxiv.org/abs/1609.03075) basis corresponding to the HoggarSICPOVM |
 | `"QBismSIC"[d]` | numeric SIC from [QBism](https://github.com/heyredhat/qbism/tree/master/qbism/sic_povms) research program up-to dimension $d=151$ |
 | `"RandomHaarMIC"` | A random MIC basis based on Haar method |
@@ -464,16 +496,16 @@ Every POVM corresponds to a basis of the doubled state representation. Consider 
 \[ScriptCapitalM] = QuantumMeasurementOperator["TetrahedronSICPOVM"]
 ```
 
-Check POVM elements are explicitly positive semidefinite, and sum up to identity:
+Check POVM elements are explicitly positive semidefinite, and sum up to identity. [ComplexExpand]() rewrites the stored roots of unity as explicit radicals, which keeps the positivity test in exact arithmetic and collapses the sum to the identity:
 
 ```wl
-And @@ (PositiveSemidefiniteMatrixQ /@ \[ScriptCapitalM][
-    "POVMElements"])
-Total[\[ScriptCapitalM]["POVMElements"]] // Normal // N // Chop
+And @@ (PositiveSemidefiniteMatrixQ /@ 
+   ComplexExpand[\[ScriptCapitalM]["POVMElements"]])
+Total[\[ScriptCapitalM]["POVMElements"]] // Normal // ComplexExpand
 ```
 <!-- => True -->
 
-<!-- => {{1.`, 0}, {0, 1.`}} -->
+<!-- => {{1, 0}, {0, 1}} -->
 
 Gram matrix is used to transform between basis and its corresponding POVM:
 

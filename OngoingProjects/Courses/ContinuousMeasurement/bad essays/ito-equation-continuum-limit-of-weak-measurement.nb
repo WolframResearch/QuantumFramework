@@ -1,0 +1,3970 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    136967,       3961]
+NotebookOptionsPosition[    121338,       3791]
+NotebookOutlinePosition[    121676,       3806]
+CellTagsIndexPosition[    121633,       3803]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["The It\[OHat] Equation: The Continuum Limit of Weak Measurement", \
+"Title",ExpressionUUID->"237d061a-9920-4ff4-91d8-96126b125dbe"],
+
+Cell["\<\
+We derive the continuous equations for the measured position record and for \
+the quantum state conditioned on that record. I want each nontrivial \
+algebraic or probabilistic claim to be reproducible, so each one is followed \
+by a focused Wolfram Language computation.\
+\>", "Text",ExpressionUUID->"5626c109-5aa1-4e67-9ba0-1952d67595bf"],
+
+Cell["\<\
+The detector is ideal and efficient: all measurement backaction is associated \
+with its observed output, so a conditioned pure state remains pure. It is \
+also memoryless: once the state at the beginning of a time bin is known from \
+the outputs already observed, the next output is governed by the same \
+measurement rule.\
+\>", "Text",ExpressionUUID->"376efdc7-d394-42b1-82a3-b5f6e7846ea9"],
+
+Cell["Let", "Text",ExpressionUUID->"e1c54b50-3dce-4ff8-ad50-e40e05ad70dd"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["t", "TI"], 
+     StyleBox["k", "TI"]], "=", 
+    RowBox[{
+     StyleBox["k", "TI"], "\[CapitalDelta]", 
+     StyleBox["t", "TI"]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    TemplateBox[{
+      SubscriptBox[
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["k", "TI"]]},
+     "Ket"], "=", 
+    RowBox[{
+     TemplateBox[{
+       RowBox[{
+         StyleBox["\[Psi]", "TI"], 
+         StyleBox["(", SpanMaxSize -> 1], 
+         SubscriptBox[
+          StyleBox["t", "TI"], 
+          StyleBox["k", "TI"]], 
+         StyleBox[")", SpanMaxSize -> 1]}]},
+      "Ket"], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"ad1c721d-a3b8-4420-\
+aab8-250d5f87a0e8"],
+
+Cell[TextData[{
+ "During the bin ",
+ Cell[BoxData[
+  RowBox[{"[", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["k", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    RowBox[{
+     StyleBox["k", "TI"], "+", "1"}]], ")"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "16d2389c-4465-4172-9e73-f2f874d75f39"],
+ ", the detector measures one real number ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "785db132-c581-4e16-9e84-54df5b06fe2a"],
+ ". This is the only newly observed random quantity in the derivation. The \
+sequence ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], 
+    StyleBox["k", "TI"]], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e3597d82-e25d-4ee1-affc-69c798956ff4"],
+ " is the finite-resolution position record."
+}], "Text",ExpressionUUID->"22019ecf-522a-453e-9507-192189738ffc"],
+
+Cell["\<\
+The code uses descriptive names for the symbols in the equations:\
+\>", "Text",ExpressionUUID->"0af339ea-186f-4059-857c-8021f8202f60"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"ClearAll", "[", "\n", "    ", 
+    RowBox[{
+    "strength", ",", "\n", "    ", "binWidth", ",", "\n", "    ", "position", 
+     ",", "\n", "    ", "reading", ",", "\n", "    ", "meanPosition", ",", 
+     "\n", "    ", "positionVariance", ",", "\n", "    ", "responsePDF", ",", 
+     "\n", "    ", "conditionalReadingDistribution", ",", "\n", "    ", 
+     "conditionalRecordMoments", ",", "\n", "    ", "bornMomentRules", ",", 
+     "\n", "    ", "recordMoments", ",", "\n", "    ", 
+     "leadingAccumulatedVariance", ",", "\n", "    ", 
+     "recordIncrementMoments", ",", "\n", "    ", "centeredValue", ",", "\n", 
+     "    ", "conditionalCenteredDistribution", ",", "\n", "    ", 
+     "standardizedConditionalDistribution", ",", "\n", "    ", 
+     "bimodalAssumptions", ",", "\n", "    ", "separation", ",", "\n", "    ",
+      "stateWidth", ",", "\n", "    ", "bimodalPositionDistribution", ",", 
+     "\n", "    ", "bimodalReadingDensity", ",", "\n", "    ", 
+     "bimodalReadingDistribution", ",", "\n", "    ", 
+     "bimodalStandardizedDistribution", ",", "\n", "    ", "scale", ",", "\n",
+      "    ", "power", ",", "\n", "    ", "totalTime", ",", "\n", "    ", 
+     "maximumPositionVariance", ",", "\n", "    ", "standardWiener", ",", 
+     "\n", "    ", "w", ",", "\n", "    ", "t", ",", "\n", "    ", 
+     "centeredOperator", ",", "\n", "    ", "centeredMean", ",", "\n", "    ",
+      "centeredSecondMoment", ",", "\n", "    ", "hamiltonian", ",", "\n", 
+     "    ", "hbar", ",", "\n", "    ", "measurementExponent", ",", "\n", 
+     "    ", "measurementFactor", ",", "\n", "    ", "normChange", ",", "\n", 
+     "    ", "normExpectation", ",", "\n", "    ", "unitaryFactor", ",", "\n",
+      "    ", "itoRules"}], "\n", "]"}], ";"}], "\n"}], "\n", 
+ RowBox[{"assumptions", " ", "=", " ", 
+  RowBox[{"And", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{"strength", " ", ">", " ", "0"}], ",", "\n", "    ", 
+    RowBox[{"binWidth", " ", ">", " ", "0"}], ",", "\n", "    ", 
+    RowBox[{"positionVariance", " ", ">=", " ", "0"}], ",", "\n", "    ", 
+    RowBox[{"maximumPositionVariance", " ", ">=", " ", "0"}], ",", "\n", 
+    "    ", 
+    RowBox[{"totalTime", " ", ">", " ", "0"}], ",", "\n", "    ", 
+    RowBox[{"hbar", " ", ">", " ", "0"}], ",", "\n", "    ", 
+    RowBox[{"Element", "[", "\n", "        ", 
+     RowBox[{
+      RowBox[{"{", "\n", "            ", 
+       RowBox[{
+       "position", ",", "\n", "            ", "reading", ",", "\n", 
+        "            ", "meanPosition", ",", "\n", "            ", 
+        "centeredValue", ",", "\n", "            ", "scale", ",", "\n", 
+        "            ", "positionVariance", ",", "\n", "            ", 
+        "maximumPositionVariance", ",", "\n", "            ", "totalTime", ",",
+         "\n", "            ", "hbar"}], "\n", "        ", "}"}], ",", "\n", 
+      "        ", "Reals"}], "\n", "    ", "]"}]}], "\n", "]"}]}]}], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"c0645e46-8384-4670-9f71-499a2b774b27"],
+
+Cell[TextData[{
+ "Thus ",
+ Cell[BoxData["strength"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a98ecf43-ea8d-46d8-be32-007fa4952299"],
+ ", ",
+ Cell[BoxData["binWidth"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ba04947-1693-4c87-a347-28f6adfc574b"],
+ ", ",
+ Cell[BoxData["reading"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a326f37e-dbbe-431d-87c7-c2e6fee730d6"],
+ ", and ",
+ Cell[BoxData["meanPosition"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eb19b7cf-03f0-42d8-bbcc-84c8f68041c5"],
+ " represent ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b41b59b9-3dec-4778-9cd4-e472a9db8e95"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e7f5a9e3-88db-44f3-82da-a55577cdab53"],
+ ", ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31ca43b8-4683-4088-93d2-e40f4831aa8f"],
+ ", and ",
+ Cell[BoxData[
+  SubscriptBox[
+   RowBox[{
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1]}], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e8ab293e-ff6e-4b23-91bc-ca151cd6d98a"],
+ ", respectively."
+}], "Text",ExpressionUUID->"db3f08a0-b65f-4c1b-b470-e79a87d32689"],
+
+Cell["One weak position reading", "Section",ExpressionUUID->"b3a39f55-a67e-4c81-a545-d57c72a1c411"],
+
+Cell[TextData[{
+ "The measurement operator associated with the observed value ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7efba8aa-c62f-440c-99e3-ed1217d007d0"],
+ " is"
+}], "Text",ExpressionUUID->"6781c8d9-1fc0-4d3a-b37e-9b74a7bc84c7"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["M", "TI"], "^"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    SuperscriptBox[
+     RowBox[{"(", 
+      FractionBox[
+       RowBox[{"2", 
+        StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+        StyleBox["t", "TI"]}], "\[Pi]"], ")"}], 
+     RowBox[{"1", "/", "4"}]], 
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "[", 
+    RowBox[{"-", 
+     StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+     StyleBox["t", "TI"], 
+     SuperscriptBox[
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        OverscriptBox[
+         StyleBox["x", "TI"], "^"], "-", 
+        SubscriptBox[
+         OverscriptBox[
+          StyleBox["x", "TI"], "_"], 
+         StyleBox["k", "TI"]]}], 
+       StyleBox[")",
+        SpanMaxSize->1]}], "2"]}], "]"}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    StyleBox["\[Lambda]", "TI"], ">", 
+    RowBox[{"0", "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"f4c3748f-4c65-40e9-\
+80e5-6723f2e23038"],
+
+Cell[TextData[{
+ "The limit is taken with ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e4a0983f-6ae6-4549-ba2a-4e02fea00b11"],
+ " fixed, so ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+   StyleBox["t", "TI"], "\[Rule]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c76bbf10-b2ef-4a7b-a003-10341d8f3bd2"],
+ ". Each measurement becomes weak, but the measurement strength per unit time \
+remains finite."
+}], "Text",ExpressionUUID->"b19f6255-9a1d-45d1-8ca7-d37116b125a1"],
+
+Cell[TextData[{
+ "To check the normalization, work in the position basis, where ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], 
+    TemplateBox[{
+      StyleBox["x", "TI"]},
+     "Ket"]}], "=", 
+   RowBox[{
+    StyleBox["x", "TI"], 
+    TemplateBox[{
+      StyleBox["x", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "60ed587a-9619-400f-9a69-16b9e8cccb2a"],
+ ". The diagonal element of ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["M", "TI"], "^"], "\[Dagger]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], 
+    StyleBox["k", "TI"]], 
+   StyleBox[")",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["M", "TI"], "^"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], 
+    StyleBox["k", "TI"]], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e910e467-1210-4937-b794-3c910e4e5697"],
+ " is the Gaussian response"
+}], "Text",ExpressionUUID->"d514c6c0-33cd-4743-9dc0-2caca4e470e2"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["g", "TI"], 
+     RowBox[{"\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox[
+       StyleBox["x", "TI"], "_"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     StyleBox["x", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    SqrtBox[
+     FractionBox[
+      RowBox[{"2", 
+       StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}], "\[Pi]"]], 
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "[", 
+    RowBox[{"-", "2", 
+     StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+     StyleBox["t", "TI"], 
+     SuperscriptBox[
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox[
+          StyleBox["x", "TI"], "_"], 
+         StyleBox["k", "TI"]], "-", 
+        StyleBox["x", "TI"]}], 
+       StyleBox[")",
+        SpanMaxSize->1]}], "2"]}], "]"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"65c68cd4-240c-4eef-\
+ac2d-57844bbda80b"],
+
+Cell["\<\
+Its normalization, center, and variance follow from one integral:\
+\>", "Text",ExpressionUUID->"2d3329aa-fb56-4fe8-8d66-2360a64971df"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"responsePDF", "[", 
+     RowBox[{"reading_", ",", " ", "position_"}], "]"}], " ", ":=", " ", 
+    RowBox[{
+     RowBox[{"Sqrt", "[", 
+      RowBox[{"2", " ", "strength", " ", 
+       RowBox[{"binWidth", " ", "/", " ", "Pi"}]}], "]"}], " ", 
+     RowBox[{"Exp", "[", "\n", "    ", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "strength", " ", "binWidth", " ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"reading", " ", "-", " ", "position"}], ")"}], "^", "2"}]}], 
+      "\n", "]"}]}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Integrate", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "reading", ",", " ", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"reading", " ", "-", " ", "position"}], ")"}], "^", "2"}]}],
+        "}"}], " ", 
+      RowBox[{"responsePDF", "[", 
+       RowBox[{"reading", ",", " ", "position"}], "]"}]}], ",", "\n", 
+     "        ", 
+     RowBox[{"{", 
+      RowBox[{"reading", ",", " ", 
+       RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "\n", 
+    "    ", "]"}], ",", "\n", "    ", "assumptions"}], "\n", "]"}]}], "Input",\
+
+ CellLabel->"In[2]:= ",ExpressionUUID->"3028ffb4-86dc-4ce4-b676-7b948ba4849f"],
+
+Cell["The result is", "Text",ExpressionUUID->"01bd4bd4-c388-42be-a2cd-c496afbfe821"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", 
+     StyleBox["x", "TI"], ",", " ", 
+     FractionBox["1", 
+      RowBox[{"4", 
+       StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]}], "}"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"3465ed99-c196-4632-\
+9e34-3ddce378d6c6"],
+
+Cell["The first entry proves", "Text",ExpressionUUID->"9b695680-39fa-405f-8a3a-4053c058716f"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    UnderoverscriptBox["\[Integral]", 
+     RowBox[{"-", "\[Infinity]"}], "\[Infinity]",
+     LimitsPositioning->False], 
+    SuperscriptBox[
+     OverscriptBox[
+      StyleBox["M", "TI"], "^"], "\[Dagger]"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], 
+    StyleBox[")",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["M", "TI"], "^"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], 
+    StyleBox[")",
+     SpanMaxSize->1], " ", 
+    StyleBox["d", "TI"], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "=", 
+    OverscriptBox[
+     StyleBox["I", "TI"], "^"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"8649553d-7e9b-4300-\
+9533-04d1f5ef2a23"],
+
+Cell["\<\
+The same response can be represented directly as a Wolfram Language \
+distribution:\
+\>", "Text",ExpressionUUID->"9710a65e-5e54-491a-8155-659fdbac78d2"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"conditionalReadingDistribution", "[", "position_", "]"}], " ", ":=",
+     " ", 
+    RowBox[{"NormalDistribution", "[", "\n", "    ", 
+     RowBox[{"position", ",", "\n", "    ", 
+      RowBox[{"1", " ", "/", " ", 
+       RowBox[{"(", 
+        RowBox[{"2", " ", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{"strength", " ", "binWidth"}], "]"}]}], ")"}]}]}], "\n", 
+     "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"{", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PDF", "[", 
+       RowBox[{
+        RowBox[{"conditionalReadingDistribution", "[", "position", "]"}], ",",
+         " ", "reading"}], "]"}], " ", "==", " ", 
+      RowBox[{"responsePDF", "[", 
+       RowBox[{"reading", ",", " ", "position"}], "]"}]}], ",", "\n", 
+     "        ", 
+     RowBox[{"Mean", "[", 
+      RowBox[{"conditionalReadingDistribution", "[", "position", "]"}], "]"}],
+      ",", "\n", "        ", 
+     RowBox[{"StandardDeviation", "[", 
+      RowBox[{"conditionalReadingDistribution", "[", "position", "]"}], "]"}],
+      ",", "\n", "        ", 
+     RowBox[{"Variance", "[", 
+      RowBox[{"conditionalReadingDistribution", "[", "position", "]"}], 
+      "]"}]}], "\n", "    ", "}"}], ",", "\n", "    ", "assumptions"}], "\n", 
+  "]"}]}], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"da5c19e1-5672-4b61-be44-a25100a7b637"],
+
+Cell[TextData[{
+ "The returned list confirms the same density, mean ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ac094bb-3167-47ef-a529-13d600f10249"],
+ ", standard deviation ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"2", 
+    SqrtBox[
+     RowBox[{
+      StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "362635bb-0e2b-4ab5-a1ad-87042358abfa"],
+ ", and variance ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"4", 
+    StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5b41b623-440b-4a35-9f06-7db8a0d40b7e"],
+ ". In both the mathematics and Wolfram Language, ",
+ Cell[BoxData[
+  RowBox[{"\|01d4a9", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["m", "TI"], ",", 
+    StyleBox["s", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9204ce33-674e-4ae3-b29e-beced23a825e"],
+ " or ",
+ Cell[BoxData[
+  RowBox[{"NormalDistribution", "[", 
+   RowBox[{"m", ",", "s"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bda5b59c-4520-4708-a86b-6987255765ee"],
+ " means a normal Gaussian distribution with mean ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a23807d2-4f57-4ada-9144-dfbaafc25663"],
+ " and standard deviation ",
+ Cell[BoxData[
+  StyleBox["s", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fe50fef6-b3b8-459f-87d8-5c88e935512b"],
+ ", not variance ",
+ Cell[BoxData[
+  StyleBox["s", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "82f675d0-91f9-4f33-b7be-0ef1576a19ba"],
+ "."
+}], "Text",ExpressionUUID->"6222f785-2061-475a-b57a-811d470726b0"],
+
+Cell["The probability density for the actual detector output is", "Text",ExpressionUUID->"bbbc338c-6ce5-4d43-939c-a480e086c8f8"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["p", "TI"], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["x", "TI"], "_"], 
+       StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+      SubscriptBox[
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    SuperscriptBox[GridBox[{
+       {GridBox[{
+          {
+           RowBox[{
+            OverscriptBox[
+             StyleBox["M", "TI"], "^"], 
+            RowBox[{
+             StyleBox["(",
+              SpanMaxSize->1], 
+             SubscriptBox[
+              OverscriptBox[
+               StyleBox["x", "TI"], "_"], 
+              StyleBox["k", "TI"]], 
+             StyleBox[")",
+              SpanMaxSize->1]}], 
+            TemplateBox[{
+              SubscriptBox[
+               StyleBox["\[Psi]", "TI"], 
+               StyleBox["k", "TI"]]},
+             "Ket"]}]}
+         },
+         GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+         GridBoxSpacings->{"Columns" -> {{0.15}}}]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.22}}}], "2"], "=", 
+    RowBox[{
+     UnderoverscriptBox["\[Integral]", 
+      RowBox[{"-", "\[Infinity]"}], "\[Infinity]",
+      LimitsPositioning->False], 
+     RowBox[{
+      SuperscriptBox[GridBox[{
+         {
+          RowBox[{
+           SubscriptBox[
+            StyleBox["\[Psi]", "TI"], 
+            StyleBox["k", "TI"]], 
+           StyleBox["(",
+            SpanMaxSize->1], 
+           StyleBox["x", "TI"], 
+           StyleBox[")",
+            SpanMaxSize->1]}]}
+        },
+        GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+        GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], 
+      SubscriptBox[
+       StyleBox["g", "TI"], 
+       RowBox[{"\[CapitalDelta]", 
+        StyleBox["t", "TI"]}]], 
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        SubscriptBox[
+         OverscriptBox[
+          StyleBox["x", "TI"], "_"], 
+         StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+        StyleBox["x", "TI"]}], 
+       StyleBox[")",
+        SpanMaxSize->1]}], 
+      StyleBox["d", "TI"], 
+      RowBox[{
+       StyleBox["x", "TI"], "."}]}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"12d5faf4-c002-4083-\
+9533-4def24eb9eab"],
+
+Cell[TextData[{
+ "Here ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f76ae735-ca41-43ae-9f83-558e2ecc75f8"],
+ " is only the integration variable labeling position eigenvalues. It is not \
+a second measured value and it is not a hidden particle position. The formula \
+says that the detector reading is a position measurement broadened by the \
+Gaussian response ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["g", "TI"], 
+   RowBox[{"\[CapitalDelta]", 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0bd35f10-ae8a-4d9b-bcd9-bcdf35ee5883"],
+ "."
+}], "Text",ExpressionUUID->"afffe9fe-ef26-4a39-9ec9-351798c89fc4"],
+
+Cell[TextData[{
+ "Once ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], "0"], ",", "\[Ellipsis]", ",", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], 
+    RowBox[{
+     StyleBox["k", "TI"], "-", "1"}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "84387c63-a4e9-4b7f-8129-afa933e9376b"],
+ " have been observed, they determine ",
+ Cell[BoxData[
+  TemplateBox[{
+    SubscriptBox[
+     StyleBox["\[Psi]", "TI"], 
+     StyleBox["k", "TI"]]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cf1f5a4c-39ab-4de0-a157-78d382c041df"],
+ ". The density above then gives the probabilities for the next, not yet \
+observed value ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "471942b8-c08f-4ba6-b862-4a261868eac1"],
+ "."
+}], "Text",ExpressionUUID->"175f2eb0-bdae-406b-b1e1-13dc7b24f6a9"],
+
+Cell["\<\
+The inner Gaussian averages needed for the first two moments are:\
+\>", "Text",ExpressionUUID->"e8108e91-37af-403c-9d8c-bcf3747ddea6"],
+
+Cell[BoxData[
+ RowBox[{"conditionalRecordMoments", " ", "=", " ", 
+  RowBox[{"FullSimplify", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{"Integrate", "[", "\n", "        ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"{", "\n", "            ", 
+        RowBox[{"reading", ",", "\n", "            ", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"reading", " ", "-", " ", "meanPosition"}], ")"}], "^", 
+          "2"}]}], "\n", "        ", "}"}], " ", 
+       RowBox[{"responsePDF", "[", 
+        RowBox[{"reading", ",", " ", "position"}], "]"}]}], ",", "\n", 
+      "        ", 
+      RowBox[{"{", 
+       RowBox[{"reading", ",", " ", 
+        RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "\n", 
+     "    ", "]"}], ",", "\n", "    ", "assumptions"}], "\n", 
+   "]"}]}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"3daf84c1-14d4-404c-a04a-076d12237c54"],
+
+Cell["The result is", "Text",ExpressionUUID->"ef8dd3f4-de4b-4f89-99d2-9638c88e7982"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     StyleBox["x", "TI"], ",", " ", 
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         StyleBox["x", "TI"], "-", 
+         SubscriptBox[
+          RowBox[{
+           StyleBox["\[LeftAngleBracket]",
+            SpanMaxSize->1], 
+           OverscriptBox[
+            StyleBox["x", "TI"], "^"], 
+           StyleBox["\[RightAngleBracket]",
+            SpanMaxSize->1]}], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], "+", 
+      FractionBox["1", 
+       RowBox[{"4", 
+        StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+        StyleBox["t", "TI"]}]]}]}], "}"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"50b78c9a-9031-4b65-\
+bb9d-f3a05c556a4e"],
+
+Cell[TextData[{
+ "The outer Born average needs only normalization, ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     StyleBox["x", "TI"], "\[VeryThinSpace]", 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], 
+    StyleBox["k", "TI"]], "=", 
+   SubscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     OverscriptBox[
+      StyleBox["x", "TI"], "^"], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d634dab-437a-4b9e-8ef0-9fa50d53ce81"],
+ ", and ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SuperscriptBox[
+      StyleBox["x", "TI"], "2"], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], 
+    StyleBox["k", "TI"]], "=", 
+   SubscriptBox[
+    StyleBox["Var",
+     FontSlant->"Plain"], 
+    SubscriptBox[
+     StyleBox["\[Psi]", "TI"], 
+     StyleBox["k", "TI"]]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["x", "TI"], "^"], 
+   StyleBox[")",
+    SpanMaxSize->1], "+", 
+   SubsuperscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     OverscriptBox[
+      StyleBox["x", "TI"], "^"], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], 
+    StyleBox["k", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "580d9fb5-6943-4de1-9dde-58379ccfe600"],
+ ". Because the two inner moments are at most quadratic in ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ddb0c574-5061-4b37-b2d2-4c2b576e2143"],
+ ", these three identities complete the average without assuming a shape for ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      RowBox[{
+       SubscriptBox[
+        StyleBox["\[Psi]", "TI"], 
+        StyleBox["k", "TI"]], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["x", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "67b59d9a-e813-4a9e-b489-c1dd00a3d9e0"],
+ ":"
+}], "Text",ExpressionUUID->"de6186d8-d87d-486c-95b5-559ca3f66969"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"bornMomentRules", " ", "=", " ", 
+    RowBox[{"{", "\n", "    ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"position", "^", "2"}], " ", "->", " ", 
+       RowBox[{"positionVariance", " ", "+", " ", 
+        RowBox[{"meanPosition", "^", "2"}]}]}], ",", "\n", "    ", 
+      RowBox[{"position", " ", "->", " ", "meanPosition"}]}], "\n", "}"}]}], 
+   ";"}], "\n"}], "\n", 
+ RowBox[{"recordMoments", " ", "=", " ", 
+  RowBox[{"FullSimplify", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Expand", "[", "conditionalRecordMoments", "]"}], " ", "/.", " ",
+      "bornMomentRules"}], ",", "\n", "    ", "assumptions"}], "\n", 
+   "]"}]}]}], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"d639575d-20d9-4b20-b6b1-122a7404521b"],
+
+Cell["\<\
+The constant terms are unchanged because the Born density integrates to one. \
+The returned pair gives\
+\>", "Text",ExpressionUUID->"3f7f6d0b-6152-477b-bac3-a540274046e4"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\|01d53c", 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox[
+       StyleBox["x", "TI"], "_"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox["]",
+     SpanMaxSize->1], "=", 
+    StyleBox["\[Integral]",
+     FontSize->1.4 Inherited], 
+    StyleBox["x", "TI"], 
+    SuperscriptBox[GridBox[{
+       {
+        RowBox[{
+         SubscriptBox[
+          StyleBox["\[Psi]", "TI"], 
+          StyleBox["k", "TI"]], 
+         StyleBox["(",
+          SpanMaxSize->1], 
+         StyleBox["x", "TI"], 
+         StyleBox[")",
+          SpanMaxSize->1]}]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], 
+    StyleBox["d", "TI"], 
+    StyleBox["x", "TI"], "=", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"3d385844-4f70-4710-\
+95bf-d43a1d6a784b"],
+
+Cell["and", "Text",ExpressionUUID->"05f7ca7f-4ab1-4316-b5ef-7b7c855dc0fe"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Var",
+     FontSlant->"Plain"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SubscriptBox[
+      OverscriptBox[
+       StyleBox["x", "TI"], "_"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    SubscriptBox[
+     RowBox[{"\[LeftAngleBracket]", 
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], "-", 
+         SubscriptBox[
+          RowBox[{
+           StyleBox["\[LeftAngleBracket]",
+            SpanMaxSize->1], 
+           OverscriptBox[
+            StyleBox["x", "TI"], "^"], 
+           StyleBox["\[RightAngleBracket]",
+            SpanMaxSize->1]}], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], "\[RightAngleBracket]"}], 
+     StyleBox["k", "TI"]], "+", 
+    FractionBox["1", 
+     RowBox[{"4", 
+      StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"9893679e-17c7-4b75-\
+8d16-ff54459e84f8"],
+
+Cell[TextData[{
+ "No probability distribution for the state position has been assumed beyond \
+the Born density ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      RowBox[{
+       SubscriptBox[
+        StyleBox["\[Psi]", "TI"], 
+        StyleBox["k", "TI"]], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["x", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3a2e7434-b3b9-495b-b6b3-48163bb2653d"],
+ "."
+}], "Text",ExpressionUUID->"8405bb4e-cc9c-4197-8c43-fdc4266ca14d"],
+
+Cell[TextData[{
+ "Given the observed ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f5538bdd-e26d-4d72-9206-7fb47dc0a8f4"],
+ ", the normalized state update is"
+}], "Text",ExpressionUUID->"f5c3010f-2e80-4d0a-b99f-733fbb046994"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    TemplateBox[{
+      SubscriptBox[
+       StyleBox["\[Psi]", "TI"], 
+       RowBox[{
+         StyleBox["k", "TI"], "+", "1"}]]},
+     "Ket"], "=", 
+    FractionBox[
+     RowBox[{
+      OverscriptBox[
+       StyleBox["U", "TI"], "^"], 
+      OverscriptBox[
+       StyleBox["M", "TI"], "^"], 
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       SubscriptBox[
+        OverscriptBox[
+         StyleBox["x", "TI"], "_"], 
+        StyleBox["k", "TI"]], 
+       StyleBox[")",
+        SpanMaxSize->1]}], 
+      TemplateBox[{
+        SubscriptBox[
+         StyleBox["\[Psi]", "TI"], 
+         StyleBox["k", "TI"]]},
+       "Ket"]}], GridBox[{
+       {GridBox[{
+          {
+           RowBox[{
+            OverscriptBox[
+             StyleBox["U", "TI"], "^"], 
+            OverscriptBox[
+             StyleBox["M", "TI"], "^"], 
+            RowBox[{
+             StyleBox["(",
+              SpanMaxSize->1], 
+             SubscriptBox[
+              OverscriptBox[
+               StyleBox["x", "TI"], "_"], 
+              StyleBox["k", "TI"]], 
+             StyleBox[")",
+              SpanMaxSize->1]}], 
+            TemplateBox[{
+              SubscriptBox[
+               StyleBox["\[Psi]", "TI"], 
+               StyleBox["k", "TI"]]},
+             "Ket"]}]}
+         },
+         GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+         GridBoxSpacings->{"Columns" -> {{0.15}}}]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.22}}}]]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    OverscriptBox[
+     StyleBox["U", "TI"], "^"], "=", 
+    RowBox[{
+     StyleBox["exp",
+      FontSlant->"Plain"], 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"-", 
+        FractionBox[
+         StyleBox["i", "TI"], "\[HBar]"]}], 
+       OverscriptBox[
+        StyleBox["H", "TI"], "^"], "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}], ")"}]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    OverscriptBox[
+     StyleBox["H", "TI"], "^"], "=", 
+    RowBox[{
+     SuperscriptBox[
+      OverscriptBox[
+       StyleBox["H", "TI"], "^"], "\[Dagger]"], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"606bdb79-8508-40e0-\
+8979-e844b140d915"],
+
+Cell["The record variable that has a continuous limit", "Section",ExpressionUUID->"3fc4093d-7fd7-4fe4-adf9-81f9bc9738bb"],
+
+Cell[TextData[{
+ "The variance of ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f5934596-80a8-42a2-abde-72fe29fb7fa8"],
+ " diverges like ",
+ Cell[BoxData[
+  RowBox[{"1", "/", "\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "389bf3c1-e0d3-4ed4-891e-00d03bbdac67"],
+ ", so the individual readings do not approach finite values as ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"], "\[Rule]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5449cada-304c-4178-81f8-e29181c87048"],
+ ". We therefore seek a scaled increment whose variance is proportional to ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "33d643ce-e96f-4755-bc7e-4feb08a5b82c"],
+ ". Such increments vanish individually but accumulate a finite variance over \
+a fixed duration."
+}], "Text",ExpressionUUID->"62384b9c-2c33-4443-9d22-1009ad75e14b"],
+
+Cell[TextData[{
+ "The power of ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b871bb56-fcef-488e-b133-8dbb566bf393"],
+ " is fixed by this requirement. Keeping only the leading detector variance, \
+scaling each reading by ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SuperscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["\[Alpha]", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bf983971-4706-44c2-90ab-fc2f5a5e7f9d"],
+ " gives accumulated variance"
+}], "Text",ExpressionUUID->"2797e60f-9a1a-4a11-b078-3985dfdcdbd9"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     StyleBox["T", "TI"], 
+     RowBox[{"\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]], "\[Times]", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SuperscriptBox[
+       StyleBox["t", "TI"], 
+       RowBox[{"2", 
+        StyleBox["\[Alpha]", "TI"]}]]}], 
+     RowBox[{"4", 
+      StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]], "=", 
+    FractionBox[
+     StyleBox["T", "TI"], 
+     RowBox[{"4", 
+      StyleBox["\[Lambda]", "TI"]}]], "\[CapitalDelta]", 
+    SuperscriptBox[
+     StyleBox["t", "TI"], 
+     RowBox[{"2", 
+      StyleBox["\[Alpha]", "TI"], "-", "2"}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"7a610af8-a487-49dc-\
+a722-ee55a436d202"],
+
+Cell["The three relevant cases are computed directly:", "Text",ExpressionUUID->"373d349f-c5a6-4d81-b31a-7d2bf2e78e69"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"leadingAccumulatedVariance", "[", "power_", "]"}], " ", ":=", 
+    " ", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"totalTime", " ", "/", " ", "binWidth"}], ")"}], " ", 
+     RowBox[{
+      RowBox[{"binWidth", "^", 
+       RowBox[{"(", 
+        RowBox[{"2", " ", "power"}], ")"}]}], " ", "/", " ", 
+      RowBox[{"(", 
+       RowBox[{"4", " ", "strength", " ", "binWidth"}], ")"}]}]}]}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"{", "\n", "        ", 
+    RowBox[{
+     RowBox[{"Limit", "[", "\n", "            ", 
+      RowBox[{
+       RowBox[{"leadingAccumulatedVariance", "[", 
+        RowBox[{"1", " ", "/", " ", "2"}], "]"}], ",", "\n", "            ", 
+       RowBox[{"binWidth", " ", "->", " ", "0"}], ",", "\n", "            ", 
+       RowBox[{"Direction", " ", "->", " ", "\"\<FromAbove\>\""}]}], "\n", 
+      "        ", "]"}], ",", "\n", "        ", 
+     RowBox[{"leadingAccumulatedVariance", "[", "1", "]"}], ",", "\n", 
+     "        ", 
+     RowBox[{"Limit", "[", "\n", "            ", 
+      RowBox[{
+       RowBox[{"leadingAccumulatedVariance", "[", 
+        RowBox[{"3", " ", "/", " ", "2"}], "]"}], ",", "\n", "            ", 
+       RowBox[{"binWidth", " ", "->", " ", "0"}], ",", "\n", "            ", 
+       RowBox[{"Direction", " ", "->", " ", "\"\<FromAbove\>\""}]}], "\n", 
+      "        ", "]"}]}], "\n", "    ", "}"}], ",", "\n", "    ", 
+   "assumptions"}], "\n", "]"}]}], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"4ef1865d-ad01-45f3-8928-8d436524e9e3"],
+
+Cell[TextData[{
+ "The result is ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "\[Infinity]"}], ",", 
+   RowBox[{
+    StyleBox["T", "TI"], "/", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"4", 
+     StyleBox["\[Lambda]", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58545fae-6470-43a8-b035-6ffd9dbec2fe"],
+ ". A smaller power makes the accumulated variance diverge, a larger power \
+removes the noise, and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "05c88525-8829-4e25-a6c1-cc44aae43e0f"],
+ " is the unique finite nonzero choice."
+}], "Text",ExpressionUUID->"db8051eb-15f7-473c-a41f-6d01757e388d"],
+
+Cell[TextData[{
+ "The remaining positive scale factor is chosen so that the leading variance \
+over time ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d0627ba1-2f81-41d0-882d-773883aa3c80"],
+ " is exactly ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "80660841-bdf6-4652-829e-f0f27fa4a00a"],
+ ":"
+}], "Text",ExpressionUUID->"92322fe0-dfb2-4c43-b8a8-091fb78d54d8"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Solve", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        RowBox[{"scale", "^", "2"}], " ", "/", " ", 
+        RowBox[{"(", 
+         RowBox[{"4", " ", "strength"}], ")"}]}], " ", "==", " ", "1"}], " ", 
+      "&&", " ", 
+      RowBox[{"scale", " ", ">", " ", "0"}]}], ",", "\n", "        ", "scale",
+      ",", "\n", "        ", "Reals"}], "\n", "    ", "]"}], ",", "\n", 
+   "    ", "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"866c5166-5f28-45ee-a913-93b7645b4c17"],
+
+Cell[TextData[{
+ "The result is ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   SqrtBox[
+    StyleBox["\[Lambda]", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7305fcf4-4620-40b8-bef5-4be4a00a3c2c"],
+ ". This motivates defining the accumulated record ",
+ Cell[BoxData[
+  StyleBox["Y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "282a2356-d001-4afd-82b8-5ab359c02071"],
+ " by"
+}], "Text",ExpressionUUID->"72556e39-85a2-43c6-8f41-370bd0d0f55e"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\[CapitalDelta]", 
+    SubscriptBox[
+     StyleBox["Y", "TI"], 
+     StyleBox["k", "TI"]], "\[Congruent]", 
+    SubscriptBox[
+     StyleBox["Y", "TI"], 
+     SubscriptBox[
+      StyleBox["t", "TI"], 
+      RowBox[{
+       StyleBox["k", "TI"], "+", "1"}]]], "-", 
+    SubscriptBox[
+     StyleBox["Y", "TI"], 
+     SubscriptBox[
+      StyleBox["t", "TI"], 
+      StyleBox["k", "TI"]]], "=", "2", 
+    SqrtBox[
+     StyleBox["\[Lambda]", "TI"]], " ", 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "\[CapitalDelta]", 
+    StyleBox["t", "TI"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["Y", "TI"], "0"], "=", 
+    RowBox[{"0", "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"c5e000c0-57a4-4df2-\
+9486-a0acf548aefa"],
+
+Cell[TextData[{
+ "Only ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d53bb8ba-c7cd-4f3f-b2e3-14d0d7c8ac18"],
+ " is measured. ",
+ Cell[BoxData[
+  StyleBox["Y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "08cce066-e8d7-4cc1-80f0-3f1e911ff0b8"],
+ " is calculated from the measured readings, and the calculation is exactly \
+invertible:"
+}], "Text",ExpressionUUID->"e292fa26-6dab-4389-954e-458118d39646"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "=", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["Y", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"f3b1520b-639e-43df-\
+9176-6cd36de6d41b"],
+
+Cell[TextData[{
+ "The mean and variance of one record increment follow from the moments of ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7405323d-9340-465d-80cc-222c2ca4dd64"],
+ ":"
+}], "Text",ExpressionUUID->"de56ab31-895c-4006-b19c-0ce7569dd43d"],
+
+Cell[BoxData[
+ RowBox[{"recordIncrementMoments", " ", "=", " ", 
+  RowBox[{"FullSimplify", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{"{", "\n", "        ", 
+     RowBox[{
+      RowBox[{"2", " ", 
+       RowBox[{"Sqrt", "[", "strength", "]"}], " ", "binWidth", " ", 
+       RowBox[{"recordMoments", "[", 
+        RowBox[{"[", "1", "]"}], "]"}]}], ",", "\n", "        ", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"2", " ", 
+          RowBox[{"Sqrt", "[", "strength", "]"}], " ", "binWidth"}], ")"}], "^",
+         "2"}], " ", 
+       RowBox[{"recordMoments", "[", 
+        RowBox[{"[", "2", "]"}], "]"}]}]}], "\n", "    ", "}"}], ",", "\n", 
+    "    ", "assumptions"}], "\n", "]"}]}]], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"50d61743-0c24-4837-b66e-0f591613353d"],
+
+Cell["Thus", "Text",ExpressionUUID->"cd306948-2503-4cee-9aa7-5f440e226f4b"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\|01d53c", 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     SubscriptBox[
+      StyleBox["Y", "TI"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox["]",
+     SpanMaxSize->1], "=", "2", 
+    SqrtBox[
+     StyleBox["\[Lambda]", "TI"]], " ", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "\[CapitalDelta]", 
+    StyleBox["t", "TI"]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"20826323-8dcd-42c9-\
+b17d-cacee6d229cb"],
+
+Cell["and", "Text",ExpressionUUID->"5ebfe5e6-ab59-4b8f-8af2-6881d071fb98"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Var",
+     FontSlant->"Plain"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     SubscriptBox[
+      StyleBox["Y", "TI"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", "\[CapitalDelta]", 
+    StyleBox["t", "TI"], "+", "4", 
+    StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+    SuperscriptBox[
+     StyleBox["t", "TI"], "2"], 
+    SubscriptBox[
+     RowBox[{"\[LeftAngleBracket]", 
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], "-", 
+         SubscriptBox[
+          RowBox[{
+           StyleBox["\[LeftAngleBracket]",
+            SpanMaxSize->1], 
+           OverscriptBox[
+            StyleBox["x", "TI"], "^"], 
+           StyleBox["\[RightAngleBracket]",
+            SpanMaxSize->1]}], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], "\[RightAngleBracket]"}], 
+     StyleBox["k", "TI"]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"43d801c3-c966-4e22-\
+9391-60d70e61a3c4"],
+
+Cell["The centered record fluctuation", "Section",ExpressionUUID->"9c769fb9-2b2c-4aed-82da-410ee00a1eb8"],
+
+Cell[TextData[{
+ "The deterministic part of ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["Y", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bd97ee8d-6d96-42a2-a648-6677e9539735"],
+ " is its conditional mean. Subtracting it isolates the unpredictable part of \
+the same measured record:"
+}], "Text",ExpressionUUID->"b268c85f-b9e2-4b55-bc50-b96169167c83"],
+
+Cell[BoxData[
+ PaneBox[GridBox[{
+    {
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     RowBox[{"\[Congruent]", "\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["Y", "TI"], 
+       StyleBox["k", "TI"]], "-", "2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", 
+      SubscriptBox[
+       RowBox[{
+        StyleBox["\[LeftAngleBracket]",
+         SpanMaxSize->1], 
+        OverscriptBox[
+         StyleBox["x", "TI"], "^"], 
+        StyleBox["\[RightAngleBracket]",
+         SpanMaxSize->1]}], 
+       StyleBox["k", "TI"]], "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]},
+    {"", 
+     RowBox[{"=", 
+      RowBox[{"2", 
+       SqrtBox[
+        StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+       StyleBox["t", "TI"], 
+       StyleBox["(",
+        FontSize->1.2 Inherited], 
+       SubscriptBox[
+        OverscriptBox[
+         StyleBox["x", "TI"], "_"], 
+        StyleBox["k", "TI"]], "-", 
+       SubscriptBox[
+        RowBox[{
+         StyleBox["\[LeftAngleBracket]",
+          SpanMaxSize->1], 
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], 
+         StyleBox["\[RightAngleBracket]",
+          SpanMaxSize->1]}], 
+        StyleBox["k", "TI"]], 
+       StyleBox[")",
+        FontSize->1.2 Inherited]}], "."}]}
+   },
+   GridBoxAlignment->{"Columns" -> {Right, {Left}}, "Rows" -> {{Baseline}}}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"5cbee110-a682-4f19-\
+afb7-f76bb44ae72d"],
+
+Cell[TextData[{
+ "This is a definition, not a new measurement and not an independent noise \
+added afterward. After ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc33374f-bc8c-41bd-8cc2-dd0738904af6"],
+ " is observed, ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30516721-fc5d-47d7-ace2-0558ff9ad86e"],
+ " is calculated from it. Before the reading occurs, the definition is a \
+one-to-one change of random variable:"
+}], "Text",ExpressionUUID->"30db3b9c-7c1b-4194-b9ae-a3e48b6c5d86"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "=", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "+", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"821f4437-106e-4262-\
+b111-23cfe3ef4403"],
+
+Cell[TextData[{
+ "At fixed position eigenvalue ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f3b1306-c4d5-4ec1-819d-1a95c90f267c"],
+ ", ",
+ Cell[BoxData["TransformedDistribution"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5d562b84-418f-40fe-924b-07d12a348559"],
+ " performs precisely this change of variable:"
+}], "Text",ExpressionUUID->"2bf34402-a117-468a-b3f3-7f1ad5126582"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"conditionalCenteredDistribution", "[", "position_", "]"}], " ", ":=",
+     " ", 
+    RowBox[{"TransformedDistribution", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"2", " ", 
+       RowBox[{"Sqrt", "[", "strength", "]"}], " ", "binWidth", " ", 
+       RowBox[{"(", 
+        RowBox[{"reading", " ", "-", " ", "meanPosition"}], ")"}]}], ",", 
+      "\n", "    ", 
+      RowBox[{"Distributed", "[", "\n", "        ", 
+       RowBox[{"reading", ",", "\n", "        ", 
+        RowBox[{"conditionalReadingDistribution", "[", "position", "]"}]}], 
+       "\n", "    ", "]"}], ",", "\n", "    ", 
+      RowBox[{"Assumptions", " ", "->", " ", "assumptions"}]}], "\n", "]"}]}],
+    ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"conditionalCenteredDistribution", "[", "position", "]"}], ",", 
+   "\n", "    ", "assumptions"}], "\n", "]"}]}], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"506e8e7f-a91d-4f41-a49a-6a89d6887f1b"],
+
+Cell["It returns", "Text",ExpressionUUID->"f2095640-cfe3-41e3-a677-b5dcdcf9204f"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\|01d4a9", "\[NegativeThinSpace]", "(", 
+    RowBox[{
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["x", "TI"], "-", 
+       SubscriptBox[
+        RowBox[{
+         StyleBox["\[LeftAngleBracket]",
+          SpanMaxSize->1], 
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], 
+         StyleBox["\[RightAngleBracket]",
+          SpanMaxSize->1]}], 
+        StyleBox["k", "TI"]]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}], ",", 
+     SqrtBox[
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]}], ")"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"d38ff6cb-3f2d-4f9d-\
+85c9-84833f0febd5"],
+
+Cell["Equivalently, the inverse map has Jacobian", "Text",ExpressionUUID->"0f246c15-fb9d-4690-9b65-9d219fabdadf"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{GridBox[{
+      {
+       FractionBox[
+        RowBox[{
+         StyleBox["d", "TI"], 
+         SubscriptBox[
+          OverscriptBox[
+           StyleBox["x", "TI"], "_"], 
+          StyleBox["k", "TI"]]}], 
+        RowBox[{
+         StyleBox["d", "TI"], 
+         StyleBox["(",
+          SpanMaxSize->1], 
+         RowBox[{"\[CapitalDelta]", 
+          SubscriptBox[
+           StyleBox["W", "TI"], 
+           StyleBox["k", "TI"]]}], 
+         StyleBox[")",
+          SpanMaxSize->1]}]]}
+     },
+     GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+     GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", 
+    FractionBox["1", 
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"b1e033fc-ade0-4118-\
+853b-11ae505c2cc0"],
+
+Cell["The transformed conditional density is computed by:", "Text",ExpressionUUID->"46e6dde7-88cc-411d-8a79-5c63033d0a7a"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"PDF", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{"conditionalCenteredDistribution", "[", "position", "]"}], ",", 
+     "\n", "        ", "centeredValue"}], "\n", "    ", "]"}], ",", "\n", 
+   "    ", "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"0871a7b3-abd7-4f3a-8bc8-c0261db60009"],
+
+Cell[TextData[{
+ "Writing the returned expression with ",
+ Cell[BoxData[
+  StyleBox["w", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3cc833c8-83f5-47c7-b1c2-1526d962f825"],
+ " for a possible value of ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dd337951-08ee-4f14-9ea0-a1aaab7fa096"],
+ " gives"
+}], "Text",ExpressionUUID->"bad10326-9526-4527-b6f9-d35cc9cb12d0"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox["1", 
+     SqrtBox[
+      RowBox[{"2", "\[Pi]", "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]], 
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "[", 
+    RowBox[{"-", 
+     FractionBox[
+      RowBox[{
+       StyleBox["(",
+        FontSize->1.2 Inherited], 
+       StyleBox["w", "TI"], "-", "2", 
+       SqrtBox[
+        StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+       StyleBox["t", "TI"], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        StyleBox["x", "TI"], "-", 
+        SubscriptBox[
+         RowBox[{
+          StyleBox["\[LeftAngleBracket]",
+           SpanMaxSize->1], 
+          OverscriptBox[
+           StyleBox["x", "TI"], "^"], 
+          StyleBox["\[RightAngleBracket]",
+           SpanMaxSize->1]}], 
+         StyleBox["k", "TI"]]}], 
+       StyleBox[")",
+        SpanMaxSize->1], 
+       SuperscriptBox[
+        StyleBox[")",
+         FontSize->1.2 Inherited], "2"]}], 
+      RowBox[{"2", "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]}], "]"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"1bc7d3bc-8fef-4506-\
+9d82-3fd93bdd2acf"],
+
+Cell["\<\
+Averaging this conditional density with the Born density gives the exact \
+finite-bin distribution\
+\>", "Text",ExpressionUUID->"c01c2f5a-f268-4629-8eaf-5c7eaa9def8b"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["p", "TI"], 
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}]], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["w", "TI"], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    FractionBox["1", 
+     SqrtBox[
+      RowBox[{"2", "\[Pi]", "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]], 
+    UnderoverscriptBox["\[Integral]", 
+     RowBox[{"-", "\[Infinity]"}], "\[Infinity]",
+     LimitsPositioning->False], 
+    SuperscriptBox[GridBox[{
+       {
+        RowBox[{
+         SubscriptBox[
+          StyleBox["\[Psi]", "TI"], 
+          StyleBox["k", "TI"]], 
+         StyleBox["(",
+          SpanMaxSize->1], 
+         StyleBox["x", "TI"], 
+         StyleBox[")",
+          SpanMaxSize->1]}]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], 
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "[", 
+    RowBox[{"-", 
+     FractionBox[
+      RowBox[{
+       StyleBox["(",
+        FontSize->1.2 Inherited], 
+       StyleBox["w", "TI"], "-", "2", 
+       SqrtBox[
+        StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+       StyleBox["t", "TI"], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        StyleBox["x", "TI"], "-", 
+        SubscriptBox[
+         RowBox[{
+          StyleBox["\[LeftAngleBracket]",
+           SpanMaxSize->1], 
+          OverscriptBox[
+           StyleBox["x", "TI"], "^"], 
+          StyleBox["\[RightAngleBracket]",
+           SpanMaxSize->1]}], 
+         StyleBox["k", "TI"]]}], 
+       StyleBox[")",
+        SpanMaxSize->1], 
+       SuperscriptBox[
+        StyleBox[")",
+         FontSize->1.2 Inherited], "2"]}], 
+      RowBox[{"2", "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]}], "]", 
+    StyleBox["d", "TI"], 
+    StyleBox["x", "TI"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"bfb14bc3-5cde-41b9-\
+b106-914225a9cc36"],
+
+Cell[TextData[{
+ "To see its limiting form, divide ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9f5f46e-558c-4eef-8a05-04664bb6eb63"],
+ " by ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{"\[CapitalDelta]", 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e4e8d11-9c03-4948-83e5-53517c80cd37"],
+ ". The conditional distribution at fixed ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ed04e44f-5c91-42e9-acb2-3de0875463a4"],
+ " becomes:"
+}], "Text",ExpressionUUID->"13330011-7e82-4a61-9ae4-611908c3857b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"standardizedConditionalDistribution", "[", "position_", "]"}], 
+    " ", ":=", " ", 
+    RowBox[{"TransformedDistribution", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"centeredValue", " ", "/", " ", 
+       RowBox[{"Sqrt", "[", "binWidth", "]"}]}], ",", "\n", "    ", 
+      RowBox[{"Distributed", "[", "\n", "        ", 
+       RowBox[{"centeredValue", ",", "\n", "        ", 
+        RowBox[{"conditionalCenteredDistribution", "[", "position", "]"}]}], 
+       "\n", "    ", "]"}], ",", "\n", "    ", 
+      RowBox[{"Assumptions", " ", "->", " ", "assumptions"}]}], "\n", "]"}]}],
+    ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"{", "\n", "        ", 
+    RowBox[{
+     RowBox[{"standardizedConditionalDistribution", "[", "position", "]"}], ",",
+      "\n", "        ", 
+     RowBox[{"Limit", "[", "\n", "            ", 
+      RowBox[{
+       RowBox[{
+       "4", " ", "strength", " ", "binWidth", " ", "positionVariance"}], ",", 
+       "\n", "            ", 
+       RowBox[{"binWidth", " ", "->", " ", "0"}], ",", "\n", "            ", 
+       RowBox[{"Direction", " ", "->", " ", "\"\<FromAbove\>\""}]}], "\n", 
+      "        ", "]"}]}], "\n", "    ", "}"}], ",", "\n", "    ", 
+   "assumptions"}], "\n", "]"}]}], "Input",
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"8168ad9c-369e-4bab-9bf0-bde40729c248"],
+
+Cell["The first result is", "Text",ExpressionUUID->"dbe0d705-f4d2-4f3f-822d-7def333816f8"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\|01d4a9", "\[NegativeThinSpace]", "(", 
+    RowBox[{
+     RowBox[{"2", 
+      SqrtBox[
+       RowBox[{
+        StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+        StyleBox["t", "TI"]}]], " ", 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["x", "TI"], "-", 
+       SubscriptBox[
+        RowBox[{
+         StyleBox["\[LeftAngleBracket]",
+          SpanMaxSize->1], 
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], 
+         StyleBox["\[RightAngleBracket]",
+          SpanMaxSize->1]}], 
+        StyleBox["k", "TI"]]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}], ",", "1"}], ")"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"98011694-94df-4bb6-\
+9d5d-cb0f90448572"],
+
+Cell["The mean-square size of its state-dependent center is", "Text",ExpressionUUID->"e2beb307-ddbe-4134-8b99-4b7dacab454c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"4", 
+    StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], 
+    SubscriptBox[
+     RowBox[{"\[LeftAngleBracket]", 
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], "-", 
+         SubscriptBox[
+          RowBox[{
+           StyleBox["\[LeftAngleBracket]",
+            SpanMaxSize->1], 
+           OverscriptBox[
+            StyleBox["x", "TI"], "^"], 
+           StyleBox["\[RightAngleBracket]",
+            SpanMaxSize->1]}], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], "\[RightAngleBracket]"}], 
+     StyleBox["k", "TI"]]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"41183f2e-4abb-4537-\
+a82a-f738491ec28b"],
+
+Cell["\<\
+and the second result confirms that it tends to zero when the position \
+variance remains finite. Therefore\
+\>", "Text",ExpressionUUID->"90abce69-effc-4a83-90e0-bda2dc1134ca"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     SqrtBox[
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]], "\[Tilde]", "\|01d4a9", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"0", ",", "1"}], 
+    StyleBox[")",
+     SpanMaxSize->1], "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]", 
+    StyleBox[
+     RowBox[{
+     "to", "\[NonBreakingSpace]", "leading", "\[NonBreakingSpace]", "order"}],
+     
+     FontSlant->"Plain"]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"16f014ea-5378-45f6-\
+891e-22b3de8a2039"],
+
+Cell[TextData[{
+ "where ",
+ Cell[BoxData["\[Tilde]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "80b600e6-df41-4c7e-8217-3f86a0d4fd74"],
+ " means \"is distributed as.\""
+}], "Text",ExpressionUUID->"4d7b94a0-1d8a-4e27-9c68-6af3c9b4f56b"],
+
+Cell["\<\
+The exact first two finite-bin moments use the previously computed record \
+moments:\
+\>", "Text",ExpressionUUID->"884b5c68-577f-4d06-b34e-523e4135f409"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"{", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"recordIncrementMoments", "[", 
+       RowBox[{"[", "1", "]"}], "]"}], " ", "-", " ", 
+      RowBox[{"2", " ", 
+       RowBox[{"Sqrt", "[", "strength", "]"}], " ", "binWidth", " ", 
+       "meanPosition"}]}], ",", "\n", "        ", 
+     RowBox[{"recordIncrementMoments", "[", 
+      RowBox[{"[", "2", "]"}], "]"}]}], "\n", "    ", "}"}], ",", "\n", 
+   "    ", "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"5fd9a5e7-95d4-434a-b342-639c09a9ade1"],
+
+Cell["Thus", "Text",ExpressionUUID->"35494ae4-3d6b-40a9-b4c3-326420d2ac7d"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\|01d53c", 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+     SubscriptBox[
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["k", "TI"]]}], 
+    StyleBox["]",
+     SpanMaxSize->1], "=", "0"}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    RowBox[{
+     StyleBox["Var",
+      FontSlant->"Plain"], 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{"\[CapitalDelta]", 
+       SubscriptBox[
+        StyleBox["W", "TI"], 
+        StyleBox["k", "TI"]], "\[VerticalSeparator]", 
+       SubscriptBox[
+        StyleBox["\[Psi]", "TI"], 
+        StyleBox["k", "TI"]]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]}], "=", 
+    RowBox[{
+     RowBox[{"\[CapitalDelta]", 
+      StyleBox["t", "TI"]}], "+", 
+     RowBox[{"4", 
+      StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+      SuperscriptBox[
+       StyleBox["t", "TI"], "2"], 
+      RowBox[{
+       SubscriptBox[
+        RowBox[{"\[LeftAngleBracket]", 
+         SuperscriptBox[
+          RowBox[{
+           StyleBox["(",
+            SpanMaxSize->1], 
+           RowBox[{
+            OverscriptBox[
+             StyleBox["x", "TI"], "^"], "-", 
+            SubscriptBox[
+             RowBox[{
+              StyleBox["\[LeftAngleBracket]",
+               SpanMaxSize->1], 
+              OverscriptBox[
+               StyleBox["x", "TI"], "^"], 
+              StyleBox["\[RightAngleBracket]",
+               SpanMaxSize->1]}], 
+             StyleBox["k", "TI"]]}], 
+           StyleBox[")",
+            SpanMaxSize->1]}], "2"], "\[RightAngleBracket]"}], 
+        StyleBox["k", "TI"]], "."}]}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"f5d6bee0-725c-43d7-\
+b836-bf49a6f5c75a"],
+
+Cell[TextData[{
+ "The derivation did not assume a Gaussian quantum state. To test that point, \
+take a symmetric bimodal Born density, the equal mixture of ",
+ Cell[BoxData[
+  RowBox[{"\|01d4a9", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{"-", 
+     StyleBox["a", "TI"]}], ",", 
+    StyleBox["s", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a6cb6ec0-c343-4783-9dc5-2abac69485e1"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"\|01d4a9", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["a", "TI"], ",", 
+    StyleBox["s", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7564fba2-058c-4ed0-9cdd-f3fce13b34b6"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["a", "TI"], ",", 
+   RowBox[{
+    StyleBox["s", "TI"], ">", "0"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "576c99e5-4e27-45c5-9e31-b4913bbcfa45"],
+ ". It has mean zero and variance ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["a", "TI"], "2"], "+", 
+   SuperscriptBox[
+    StyleBox["s", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f26d6c9-7cef-4573-b2af-b3868a1b96d1"],
+ ", but it is not Gaussian."
+}], "Text",ExpressionUUID->"21cc974b-0008-4b35-9bd3-f4e43da733fc"],
+
+Cell[TextData[{
+ "The next cell integrates this Born density against the detector response. \
+It then verifies the resulting measured-output density, transforms the \
+measured reading to ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]], "/", 
+   SqrtBox[
+    RowBox[{"\[CapitalDelta]", 
+     StyleBox["t", "TI"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "756ed093-3822-4548-9d4e-fed479d6e31e"],
+ ", and computes its variance and excess kurtosis:"
+}], "Text",ExpressionUUID->"68af7435-49ca-4b42-ad54-25671921b705"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"bimodalAssumptions", " ", "=", " ", 
+    RowBox[{"And", "[", "\n", "    ", 
+     RowBox[{"assumptions", ",", "\n", "    ", 
+      RowBox[{"separation", " ", ">", " ", "0"}], ",", "\n", "    ", 
+      RowBox[{"stateWidth", " ", ">", " ", "0"}], ",", "\n", "    ", 
+      RowBox[{"Element", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"separation", ",", " ", "stateWidth"}], "}"}], ",", " ", 
+        "Reals"}], "]"}]}], "\n", "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bimodalPositionDistribution", " ", "=", " ", 
+    RowBox[{"MixtureDistribution", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"1", " ", "/", " ", "2"}], ",", " ", 
+        RowBox[{"1", " ", "/", " ", "2"}]}], "}"}], ",", "\n", "    ", 
+      RowBox[{"{", "\n", "        ", 
+       RowBox[{
+        RowBox[{"NormalDistribution", "[", 
+         RowBox[{
+          RowBox[{"-", "separation"}], ",", " ", "stateWidth"}], "]"}], ",", 
+        "\n", "        ", 
+        RowBox[{"NormalDistribution", "[", 
+         RowBox[{"separation", ",", " ", "stateWidth"}], "]"}]}], "\n", 
+       "    ", "}"}]}], "\n", "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bimodalReadingDensity", " ", "=", " ", 
+    RowBox[{"FullSimplify", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"Integrate", "[", "\n", "        ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"PDF", "[", 
+          RowBox[{"bimodalPositionDistribution", ",", " ", "position"}], 
+          "]"}], " ", 
+         RowBox[{"responsePDF", "[", 
+          RowBox[{"reading", ",", " ", "position"}], "]"}]}], ",", "\n", 
+        "        ", 
+        RowBox[{"{", 
+         RowBox[{"position", ",", " ", 
+          RowBox[{"-", "Infinity"}], ",", " ", "Infinity"}], "}"}]}], "\n", 
+       "    ", "]"}], ",", "\n", "    ", "bimodalAssumptions"}], "\n", 
+     "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bimodalReadingDistribution", " ", "=", " ", 
+    RowBox[{"MixtureDistribution", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"1", " ", "/", " ", "2"}], ",", " ", 
+        RowBox[{"1", " ", "/", " ", "2"}]}], "}"}], ",", "\n", "    ", 
+      RowBox[{"{", "\n", "        ", 
+       RowBox[{
+        RowBox[{"NormalDistribution", "[", "\n", "            ", 
+         RowBox[{
+          RowBox[{"-", "separation"}], ",", "\n", "            ", 
+          RowBox[{"Sqrt", "[", 
+           RowBox[{
+            RowBox[{"stateWidth", "^", "2"}], " ", "+", " ", 
+            RowBox[{"1", " ", "/", " ", 
+             RowBox[{"(", 
+              RowBox[{"4", " ", "strength", " ", "binWidth"}], ")"}]}]}], 
+           "]"}]}], "\n", "        ", "]"}], ",", "\n", "        ", 
+        RowBox[{"NormalDistribution", "[", "\n", "            ", 
+         RowBox[{"separation", ",", "\n", "            ", 
+          RowBox[{"Sqrt", "[", 
+           RowBox[{
+            RowBox[{"stateWidth", "^", "2"}], " ", "+", " ", 
+            RowBox[{"1", " ", "/", " ", 
+             RowBox[{"(", 
+              RowBox[{"4", " ", "strength", " ", "binWidth"}], ")"}]}]}], 
+           "]"}]}], "\n", "        ", "]"}]}], "\n", "    ", "}"}]}], "\n", 
+     "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bimodalStandardizedDistribution", " ", "=", " ", 
+    RowBox[{"TransformedDistribution", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"2", " ", 
+       RowBox[{"Sqrt", "[", 
+        RowBox[{"strength", " ", "binWidth"}], "]"}], " ", "reading"}], ",", 
+      "\n", "    ", 
+      RowBox[{"Distributed", "[", 
+       RowBox[{"reading", ",", " ", "bimodalReadingDistribution"}], "]"}], ",",
+       "\n", "    ", 
+      RowBox[{"Assumptions", " ", "->", " ", "bimodalAssumptions"}]}], "\n", 
+     "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"{", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PDF", "[", 
+       RowBox[{"bimodalReadingDistribution", ",", " ", "reading"}], "]"}], 
+      " ", "==", " ", "bimodalReadingDensity"}], ",", "\n", "        ", 
+     RowBox[{"Variance", "[", "bimodalStandardizedDistribution", "]"}], ",", 
+     "\n", "        ", 
+     RowBox[{
+      RowBox[{"Kurtosis", "[", "bimodalStandardizedDistribution", "]"}], " ", 
+      "-", " ", "3"}], ",", "\n", "        ", 
+     RowBox[{"Limit", "[", "\n", "            ", 
+      RowBox[{
+       RowBox[{"Kurtosis", "[", "bimodalStandardizedDistribution", "]"}], ",",
+        "\n", "            ", 
+       RowBox[{"binWidth", " ", "->", " ", "0"}], ",", "\n", "            ", 
+       RowBox[{"Direction", " ", "->", " ", "\"\<FromAbove\>\""}]}], "\n", 
+      "        ", "]"}]}], "\n", "    ", "}"}], ",", "\n", "    ", 
+   "bimodalAssumptions"}], "\n", "]"}]}], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"7bc4b1cb-a9d2-43db-9e22-d2efc4075306"],
+
+Cell[TextData[{
+ "The first result is ",
+ Cell[BoxData["True"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112f01d0-7645-43b9-8322-2931f72bb542"],
+ ". The other results are"
+}], "Text",ExpressionUUID->"d50a07ef-a49a-4f5a-af99-33f99db66e3f"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Var",
+     FontSlant->"Plain"], "\[NegativeThinSpace]", "(", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     SqrtBox[
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]], ")", "=", "1", "+", "4", 
+    StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SuperscriptBox[
+      StyleBox["a", "TI"], "2"], "+", 
+     SuperscriptBox[
+      StyleBox["s", "TI"], "2"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"37a89ac2-319a-4855-\
+8dd6-5b60c81c4721"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Kurt",
+     FontSlant->"Plain"], "\[NegativeThinSpace]", "(", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     SqrtBox[
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]], ")", "-", "3", "=", "-", 
+    FractionBox[
+     RowBox[{"32", 
+      SuperscriptBox[
+       StyleBox["\[Lambda]", "TI"], "2"], "\[CapitalDelta]", 
+      SuperscriptBox[
+       StyleBox["t", "TI"], "2"], 
+      SuperscriptBox[
+       StyleBox["a", "TI"], "4"]}], 
+     SuperscriptBox[
+      RowBox[{"[", 
+       RowBox[{"1", "+", "4", 
+        StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+        StyleBox["t", "TI"], 
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         SuperscriptBox[
+          StyleBox["a", "TI"], "2"], "+", 
+         SuperscriptBox[
+          StyleBox["s", "TI"], "2"]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "]"}], "2"]]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    RowBox[{
+     UnderscriptBox[
+      StyleBox["lim",
+       FontSlant->"Plain"], 
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"], "\[Rule]", "0"}],
+      LimitsPositioning->False], "\[ThinSpace]", 
+     StyleBox["Kurt",
+      FontSlant->"Plain"]}], "=", 
+    RowBox[{"3", "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"9b0bf64d-685a-457a-\
+8f2f-fdac714a00d2"],
+
+Cell["\<\
+The nonzero excess kurtosis shows that the exact finite-bin record need not \
+be Gaussian. Its vanishing limit agrees with the general Wiener limit.\
+\>", "Text",ExpressionUUID->"45297a3d-c2b3-4f3e-a330-feea308d9f7d"],
+
+Cell[TextData[{
+ "A numerical check should start from simulated detector readings, not from \
+the target normal distribution. Here the first returned row contains the \
+sampled mean, variance, and kurtosis of ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]], "/", 
+   SqrtBox[
+    RowBox[{"\[CapitalDelta]", 
+     StyleBox["t", "TI"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ebc5adb-e914-474a-a102-1d2b44f3f1fd"],
+ " for ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f2073d4e-b951-44f8-a1d0-b9ae37891d25"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"], "=", "1", "/", "10"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d16c6a50-da1d-49b1-873b-af95fafa5a13"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["a", "TI"], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "259e8cab-7650-4f99-a0c0-dc0ad2982e8c"],
+ ", and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["s", "TI"], "=", "1", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e5dcf073-0bd3-401f-8cf6-fe81a44c1d6f"],
+ ". The second row contains their exact values:"
+}], "Text",ExpressionUUID->"7735937f-ef78-43c6-a624-f947ffee807d"],
+
+Cell[BoxData[
+ RowBox[{"BlockRandom", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"SeedRandom", "[", "20260727", "]"}], ";", "\n", "    ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", "\n", "        ", 
+      RowBox[{"parameters", " ", "=", " ", 
+       RowBox[{"{", "\n", "            ", 
+        RowBox[{
+         RowBox[{"strength", " ", "->", " ", "1"}], ",", "\n", "            ", 
+         RowBox[{"binWidth", " ", "->", " ", 
+          RowBox[{"1", " ", "/", " ", "10"}]}], ",", "\n", "            ", 
+         RowBox[{"separation", " ", "->", " ", "2"}], ",", "\n", 
+         "            ", 
+         RowBox[{"stateWidth", " ", "->", " ", 
+          RowBox[{"1", " ", "/", " ", "2"}]}]}], "\n", "        ", "}"}]}], 
+      "\n", "    ", "}"}], ",", "\n", "        ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", "\n", "            ", 
+        RowBox[{"measuredReadings", " ", "=", " ", 
+         RowBox[{"RandomVariate", "[", "\n", "                ", 
+          RowBox[{
+           RowBox[{
+           "bimodalReadingDistribution", " ", "/.", " ", "parameters"}], ",", 
+           "\n", "                ", "50000"}], "\n", "            ", "]"}]}],
+         "\n", "        ", "}"}], ",", "\n", "            ", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", "\n", "                ", 
+          RowBox[{"standardizedRecord", " ", "=", " ", 
+           RowBox[{"2", " ", 
+            RowBox[{"Sqrt", "[", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"strength", " ", "binWidth"}], ")"}], " ", "/.", " ", 
+              "parameters"}], "]"}], " ", "measuredReadings"}]}], "\n", 
+          "            ", "}"}], ",", "\n", "                ", 
+         RowBox[{"N", " ", "@", " ", 
+          RowBox[{"{", "\n", "                    ", 
+           RowBox[{
+            RowBox[{"{", "\n", "                        ", 
+             RowBox[{
+              RowBox[{"Mean", "[", "standardizedRecord", "]"}], ",", "\n", 
+              "                        ", 
+              RowBox[{"Variance", "[", "standardizedRecord", "]"}], ",", "\n",
+               "                        ", 
+              RowBox[{"Kurtosis", "[", "standardizedRecord", "]"}]}], "\n", 
+             "                    ", "}"}], ",", "\n", "                    ", 
+            RowBox[{"{", 
+             RowBox[{"0", ",", " ", 
+              RowBox[{"27", " ", "/", " ", "10"}], ",", " ", 
+              RowBox[{"1675", " ", "/", " ", "729"}]}], "}"}]}], "\n", 
+           "                ", "}"}]}]}], "\n", "            ", "]"}]}], "\n",
+       "        ", "]"}]}], "\n", "    ", "]"}]}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"25876569-d8b5-4674-ae3e-222ffd81ffb8"],
+
+Cell[TextData[{
+ "The sampled row is approximately ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0.00078"}], ",", "2.7229", ",", 
+   RowBox[{"2.2967", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ec72d58-ce86-49ab-9d68-c2967ab6ea45"],
+ ", close to the exact row ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0"}], ",", "2.7", ",", 
+   RowBox[{"2.2977", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "28ccf09d-dbdd-4a49-83ed-c002631fa9eb"],
+ ". This checks the path from measured readings to the centered record; it is \
+not used in the derivation."
+}], "Text",ExpressionUUID->"33eebb22-aaf3-4151-af82-2229b1fb6a30"],
+
+Cell["From finite-bin fluctuations to a Wiener process", "Section",ExpressionUUID->"3653f70f-f21a-437e-bc05-c9e949a3d179"],
+
+Cell["\<\
+Define the accumulated centered record at finite resolution by\
+\>", "Text",ExpressionUUID->"bd075e50-dfd1-4f92-b505-0c24dfe89bfb"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubsuperscriptBox[
+     StyleBox["W", "TI"], 
+     SubscriptBox[
+      StyleBox["t", "TI"], 
+      StyleBox["n", "TI"]], 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]], "\[Congruent]", 
+    UnderoverscriptBox["\[Sum]", 
+     RowBox[{
+      StyleBox["k", "TI"], "=", "0"}], 
+     RowBox[{
+      StyleBox["n", "TI"], "-", "1"}],
+     LimitsPositioning->False], "\[CapitalDelta]", 
+    SubscriptBox[
+     StyleBox["W", "TI"], 
+     StyleBox["k", "TI"]], "=", 
+    SubscriptBox[
+     StyleBox["Y", "TI"], 
+     SubscriptBox[
+      StyleBox["t", "TI"], 
+      StyleBox["n", "TI"]]], "-", "2", 
+    SqrtBox[
+     StyleBox["\[Lambda]", "TI"]], 
+    UnderoverscriptBox["\[Sum]", 
+     RowBox[{
+      StyleBox["k", "TI"], "=", "0"}], 
+     RowBox[{
+      StyleBox["n", "TI"], "-", "1"}],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "\[CapitalDelta]", 
+    StyleBox["t", "TI"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"f3b1d00c-bc7f-4f6e-\
+bcb2-7428f1a7a9f4"],
+
+Cell[TextData[{
+ "Between grid points, take ",
+ Cell[BoxData[
+  SubsuperscriptBox[
+   StyleBox["W", "TI"], 
+   StyleBox["t", "TI"], 
+   RowBox[{
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     StyleBox["t", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3655f6fd-3c74-415e-b3c7-740f9c9f9eb8"],
+ " to remain constant until the next detector reading. This makes ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["W", "TI"], 
+   RowBox[{
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     StyleBox["t", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "baab9a9d-8c38-444a-aba6-5ebb2c3ac998"],
+ " a defined finite-resolution process, not only a list of increments."
+}], "Text",ExpressionUUID->"267ad129-c708-4515-8aa1-e6a49c054139"],
+
+Cell[TextData[{
+ "At bin ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fec633ac-9c10-42f2-a353-57778eaaaba5"],
+ ", the previously observed readings determine ",
+ Cell[BoxData[
+  TemplateBox[{
+    SubscriptBox[
+     StyleBox["\[Psi]", "TI"], 
+     StyleBox["k", "TI"]]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "87f531e8-097b-41d9-92d0-07e0ac2f159d"],
+ ", and the next increment has conditional mean zero. The increments need not \
+be independent at finite ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5707ff80-d412-4a26-8769-9a23fd2d95e3"],
+ " because each new reading changes the state used in the next bin."
+}], "Text",ExpressionUUID->"cce818b0-73fa-42fb-ac19-32248dc99580"],
+
+Cell[TextData[{
+ "Over a fixed interval ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["T", "TI"], "=", 
+   StyleBox["n", "TI"], "\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "145a3f52-76c0-43da-acab-afc8e9f92bea"],
+ ", the leading conditional variances sum to ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3aa350cb-8753-4d11-9444-3f9994fce9f8"],
+ ". If the position variance is bounded above by ",
+ Cell[BoxData["maximumPositionVariance"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f850aa8-b34b-4144-ab93-39f5e460afed"],
+ " on that interval, the correction is bounded by"
+}], "Text",ExpressionUUID->"6446ec68-695a-4acb-9937-bd61e40f2a2e"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"4", 
+    StyleBox["\[Lambda]", "TI"], 
+    StyleBox["T", "TI"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], " ", 
+    StyleBox["maximumPositionVariance",
+     FontSlant->"Plain"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"2c442ea8-b84b-450c-\
+815c-3ede1ee8868d"],
+
+Cell["Its limit is:", "Text",ExpressionUUID->"f2404bda-e12f-416a-8671-d079dd92f5b7"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Limit", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+     "4", " ", "strength", " ", "totalTime", " ", "binWidth", "\n", 
+      "            ", "maximumPositionVariance"}], ",", "\n", "        ", 
+     RowBox[{"binWidth", " ", "->", " ", "0"}], ",", "\n", "        ", 
+     RowBox[{"Direction", " ", "->", " ", "\"\<FromAbove\>\""}]}], "\n", 
+    "    ", "]"}], ",", "\n", "    ", "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"ace8bfef-e179-4874-b2aa-f06fdeb3c149"],
+
+Cell[TextData[{
+ "The result is zero. To control rare large increments as well, assume that \
+the conditional position moments of some order ",
+ Cell[BoxData[
+  RowBox[{"2", "+", 
+   StyleBox["\[CurlyEpsilon]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "21d20f49-95ea-492e-b374-f805675de71e"],
+ " remain uniformly bounded on every finite time interval, for some ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[CurlyEpsilon]", "TI"], ">", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ed7f716-6000-4a74-8d04-14a3bd10c242"],
+ ". The martingale functional central-limit theorem then gives"
+}], "Text",ExpressionUUID->"ae819c17-a6e2-4e64-ad81-55b351070265"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["W", "TI"], 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{"\[CapitalDelta]", 
+       StyleBox["t", "TI"]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]], "\[DoubleLongRightArrow]", 
+    StyleBox["W", "TI"], "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     StyleBox["t", "TI"], "\[Rule]", "0"}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"7c863748-db54-424c-\
+9538-c293acecd294"],
+
+Cell[TextData[{
+ "where the arrow denotes convergence in distribution of the accumulated \
+process and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["W", "TI"], 
+   StyleBox["t", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11e6ba06-aa4a-4f4a-affe-e0f91361ad73"],
+ " is a standard Wiener process. This theorem is the one probabilistic limit \
+used here; Wolfram Language checks the finite-bin inputs and the properties \
+of the limiting process, not the theorem itself."
+}], "Text",ExpressionUUID->"fbf6b1f8-a840-4041-9184-39b451b46919"],
+
+Cell[TextData[{
+ "For comparison, the built-in standard Wiener process gives the distribution \
+of an increment of duration ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ede217b-9dd5-408a-87ce-69ed62101cc4"],
+ " directly:"
+}], "Text",ExpressionUUID->"5e7dc0c7-4805-43eb-8087-4c46b68958aa"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"standardWiener", " ", "=", " ", 
+    RowBox[{"WienerProcess", "[", "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"TransformedDistribution", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"w", "[", 
+       RowBox[{"t", " ", "+", " ", "binWidth"}], "]"}], " ", "-", " ", 
+      RowBox[{"w", "[", "t", "]"}]}], ",", "\n", "        ", 
+     RowBox[{"Distributed", "[", 
+      RowBox[{"w", ",", " ", "standardWiener"}], "]"}], ",", "\n", "        ", 
+     RowBox[{"Assumptions", " ", "->", " ", 
+      RowBox[{
+       RowBox[{"t", " ", ">=", " ", "0"}], " ", "&&", " ", 
+       RowBox[{"binWidth", " ", ">", " ", "0"}]}]}]}], "\n", "    ", "]"}], ",",
+    "\n", "    ", 
+   RowBox[{"assumptions", " ", "&&", " ", 
+    RowBox[{"t", " ", ">=", " ", "0"}]}]}], "\n", "]"}]}], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"223735ca-8ab4-42ac-9981-4782ab80df63"],
+
+Cell[TextData[{
+ "Inside this cell, ",
+ Cell[BoxData["w"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "17e4c1e7-1ae2-41b5-be92-83e91a108af5"],
+ " is only the local process symbol required by ",
+ Cell[BoxData["Distributed"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4387d277-441d-4ef2-86a6-f2a5adaca8e8"],
+ ". The result is ",
+ Cell[BoxData[
+  RowBox[{"NormalDistribution", "[", 
+   RowBox[{"0", ",", 
+    RowBox[{"Sqrt", "[", "binWidth", "]"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f297c0b-f51a-44a3-931e-cb505a4b5aab"],
+ ", exactly the limiting distribution ",
+ Cell[BoxData[
+  RowBox[{"\|01d4a9", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"0", ",", 
+    SqrtBox[
+     RowBox[{"\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ac963a06-2d57-4d67-8c92-2b2a1c9f989b"],
+ "."
+}], "Text",ExpressionUUID->"5c6eb1f2-9dfc-4134-bb7b-9b60e553fcfd"],
+
+Cell["\<\
+We now make the single notational transition from finite bins to \
+differentials:\
+\>", "Text",ExpressionUUID->"55fc1546-de58-40ff-9fdb-5884cbd111bc"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"\[CapitalDelta]", 
+    StyleBox["t", "TI"], "\[LongRightArrow]", 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{"\[CapitalDelta]", 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["Y", "TI"], 
+      StyleBox["k", "TI"]], "\[LongRightArrow]", 
+     StyleBox["d", "TI"]}], 
+    SubscriptBox[
+     StyleBox["Y", "TI"], 
+     StyleBox["t", "TI"]]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{"\[CapitalDelta]", 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["k", "TI"]], "\[LongRightArrow]", 
+     StyleBox["d", "TI"]}], 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["t", "TI"]], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"ab67718d-517f-46d5-\
+a5ff-320f0b966c54"],
+
+Cell[TextData[{
+ "Because ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["W", "TI"], 
+   StyleBox["t", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b943743b-8e74-462e-9faa-3fdbca21eeb8"],
+ " is a Wiener process, its It\[OHat] increments satisfy"
+}], "Text",ExpressionUUID->"97135ade-ea59-4f5d-91ea-9ab45c3c137c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SuperscriptBox[
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       StyleBox["d", "TI"], 
+       SubscriptBox[
+        StyleBox["W", "TI"], 
+        StyleBox["t", "TI"]]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}], "2"], "=", 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    RowBox[{
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], " ", 
+     StyleBox["d", "TI"], 
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["t", "TI"]]}], "=", "0"}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    RowBox[{
+     StyleBox["d", "TI"], 
+     SuperscriptBox[
+      StyleBox["t", "TI"], "2"]}], "=", 
+    RowBox[{"0", "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"7f625cc9-8136-4ad2-\
+a6f6-b9ce914801bb"],
+
+Cell[TextData[{
+ "These rules specify the It\[OHat] convention. No Stratonovich equation is \
+being used. The exact finite-bin definition of ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "59754a4d-dbc7-4edd-8957-8984a46481a1"],
+ " now becomes the record SDE"
+}], "Text",ExpressionUUID->"8dbc323c-abcf-4078-b20e-4ee04d8d051c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   FrameBox[
+    RowBox[{
+     StyleBox["d", "TI"], 
+     SubscriptBox[
+      StyleBox["Y", "TI"], 
+      StyleBox["t", "TI"]], "=", "2", 
+     SqrtBox[
+      StyleBox["\[Lambda]", "TI"]], " ", 
+     SubscriptBox[
+      RowBox[{
+       StyleBox["\[LeftAngleBracket]",
+        SpanMaxSize->1], 
+       OverscriptBox[
+        StyleBox["x", "TI"], "^"], 
+       StyleBox["\[RightAngleBracket]",
+        SpanMaxSize->1]}], 
+      StyleBox["t", "TI"]], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], "+", 
+     StyleBox["d", "TI"], 
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["t", "TI"]]}]], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"0f4e5cb5-ee76-47a7-\
+a35d-c9434f318d43"],
+
+Cell["\<\
+The measured finite-bin values are still recovered from the accumulated \
+record by\
+\>", "Text",ExpressionUUID->"5fdcf67c-ab22-4831-a5d9-aec323c1b69c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "=", 
+    FractionBox[
+     RowBox[{
+      SubscriptBox[
+       StyleBox["Y", "TI"], 
+       SubscriptBox[
+        StyleBox["t", "TI"], 
+        RowBox[{
+         StyleBox["k", "TI"], "+", "1"}]]], "-", 
+      SubscriptBox[
+       StyleBox["Y", "TI"], 
+       SubscriptBox[
+        StyleBox["t", "TI"], 
+        StyleBox["k", "TI"]]]}], 
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"3d38d16c-d6e9-4dd1-\
+ab68-d38a4e8a5d61"],
+
+Cell[TextData[{
+ "Thus the experiment measures the sequence ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "_"], 
+    StyleBox["k", "TI"]], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d066d1fa-acf5-4d47-8cbc-738e8e8ea5c6"],
+ ", ",
+ Cell[BoxData[
+  StyleBox["Y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8eaecb58-e62b-435f-b565-5c3235195b63"],
+ " is the same data in the scaling that has a continuous limit, and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["t", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "90e44591-3901-4815-a479-ab64fdda5b16"],
+ " is the centered random part of that limiting record."
+}], "Text",ExpressionUUID->"5338af09-e013-46fc-868f-72ca04ea5a4f"],
+
+Cell["The conditioned state equation", "Section",ExpressionUUID->"589d1fda-fb58-49bf-9684-8aaae09940d9"],
+
+Cell[TextData[{
+ "For the operator expansions below, assume that the states considered lie in \
+a common invariant analytic domain for ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["H", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "84ab60e6-b9a1-4697-9b8e-7e742269ee36"],
+ " and ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["x", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e2808c9-662e-4f6c-ab00-7a6b2d33fba3"],
+ ". This is the regularity needed to interpret the uppercase-",
+ Cell[BoxData[
+  StyleBox["O", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56eb7a0d-71f1-4245-9806-87e6d7c26097"],
+ " remainders when these operators are unbounded."
+}], "Text",ExpressionUUID->"365153af-efb3-448b-b31c-36174aa70c25"],
+
+Cell["Return to the exact state update and substitute", "Text",ExpressionUUID->"05977509-76ab-4015-87c3-6c45fcba8152"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["x", "TI"], "_"], 
+     StyleBox["k", "TI"]], "=", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "+", 
+    FractionBox[
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     RowBox[{"2", 
+      SqrtBox[
+       StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+      StyleBox["t", "TI"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"368a33c9-0f3b-4408-\
+a113-42cc9acfd279"],
+
+Cell["Define", "Text",ExpressionUUID->"436564a7-9652-48da-aa21-d88571e9f84c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["A", "TI"], "^"], 
+     StyleBox["k", "TI"]], "\[Congruent]", 
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], "-", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      OverscriptBox[
+       StyleBox["x", "TI"], "^"], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"4660a90c-bbee-4137-\
+be1e-061f674a8564"],
+
+Cell["The measurement exponent becomes", "Text",ExpressionUUID->"a20c9618-e8b7-465b-8bf7-5a72fc17fcb0"],
+
+Cell[BoxData[
+ PaneBox[GridBox[{
+    {
+     RowBox[{"-", 
+      StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+      StyleBox["t", "TI"], 
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], "-", 
+         SubscriptBox[
+          OverscriptBox[
+           StyleBox["x", "TI"], "_"], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"]}], 
+     RowBox[{"=", 
+      RowBox[{"-", 
+       StyleBox["\[Lambda]", "TI"], "\[CapitalDelta]", 
+       StyleBox["t", "TI"], 
+       SuperscriptBox[
+        RowBox[{"(", 
+         RowBox[{
+          SubscriptBox[
+           OverscriptBox[
+            StyleBox["A", "TI"], "^"], 
+           StyleBox["k", "TI"]], "-", 
+          FractionBox[
+           RowBox[{"\[CapitalDelta]", 
+            SubscriptBox[
+             StyleBox["W", "TI"], 
+             StyleBox["k", "TI"]]}], 
+           RowBox[{"2", 
+            SqrtBox[
+             StyleBox["\[Lambda]", "TI"]], " ", "\[CapitalDelta]", 
+            StyleBox["t", "TI"]}]]}], ")"}], "2"]}]}]},
+    {"", 
+     RowBox[{"=", 
+      RowBox[{
+       SqrtBox[
+        StyleBox["\[Lambda]", "TI"]], " ", 
+       SubscriptBox[
+        OverscriptBox[
+         StyleBox["A", "TI"], "^"], 
+        StyleBox["k", "TI"]], "\[CapitalDelta]", 
+       SubscriptBox[
+        StyleBox["W", "TI"], 
+        StyleBox["k", "TI"]], "-", 
+       StyleBox["\[Lambda]", "TI"], 
+       SubsuperscriptBox[
+        OverscriptBox[
+         StyleBox["A", "TI"], "^"], 
+        StyleBox["k", "TI"], "2"], "\[CapitalDelta]", 
+       StyleBox["t", "TI"], "-", 
+       FractionBox[
+        SuperscriptBox[
+         RowBox[{
+          StyleBox["(",
+           SpanMaxSize->1], 
+          RowBox[{"\[CapitalDelta]", 
+           SubscriptBox[
+            StyleBox["W", "TI"], 
+            StyleBox["k", "TI"]]}], 
+          StyleBox[")",
+           SpanMaxSize->1]}], "2"], 
+        RowBox[{"4", "\[CapitalDelta]", 
+         StyleBox["t", "TI"]}]]}], "."}]}
+   },
+   GridBoxAlignment->{"Columns" -> {Right, {Left}}, "Rows" -> {{Baseline}}}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"77439bfc-1e18-4869-\
+a27b-02d05084125d"],
+
+Cell[TextData[{
+ "The identity is purely algebraic. Using ",
+ Cell[BoxData["centeredOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cca3ae77-bcda-4f2f-9d08-fa6586dc0178"],
+ " for ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["A", "TI"], "^"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b104fb68-6dcc-4217-9402-a5d2ed7127f5"],
+ " and ",
+ Cell[BoxData["centeredValue"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bd67620-6051-4b8d-b763-af9624904014"],
+ " for ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57c7e891-ab22-4c54-81ab-deb616289514"],
+ ", Wolfram Language verifies it exactly:"
+}], "Text",ExpressionUUID->"227aaeea-ff0b-46eb-9408-fe4caf9add51"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "strength"}], " ", "binWidth", " ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"centeredOperator", " ", "-", " ", 
+        RowBox[{"centeredValue", " ", "/", " ", 
+         RowBox[{"(", 
+          RowBox[{"2", " ", 
+           RowBox[{"Sqrt", "[", "strength", "]"}], " ", "binWidth"}], 
+          ")"}]}]}], ")"}], "^", "2"}]}], " ", "==", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Sqrt", "[", "strength", "]"}], " ", "centeredOperator", " ", 
+      "centeredValue"}], " ", "-", " ", 
+     RowBox[{"strength", " ", 
+      RowBox[{"centeredOperator", "^", "2"}], " ", "binWidth"}], " ", "-", 
+     " ", 
+     RowBox[{
+      RowBox[{"centeredValue", "^", "2"}], " ", "/", " ", 
+      RowBox[{"(", 
+       RowBox[{"4", " ", "binWidth"}], ")"}]}]}]}], ",", "\n", "    ", 
+   "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"08c02b7f-dc02-4e99-8116-cac337c8dd1e"],
+
+Cell[TextData[{
+ "The result is ",
+ Cell[BoxData["True"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c568370d-484c-4f8b-8b72-2b0c8d566654"],
+ ". The last term is a scalar, so it multiplies the whole unnormalized state \
+by the positive number"
+}], "Text",ExpressionUUID->"f18564a1-474f-4ec3-8791-601420253baf"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "[", 
+    RowBox[{"-", 
+     FractionBox[
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{"\[CapitalDelta]", 
+         SubscriptBox[
+          StyleBox["W", "TI"], 
+          StyleBox["k", "TI"]]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], 
+      RowBox[{"4", "\[CapitalDelta]", 
+       StyleBox["t", "TI"]}]]}], "]"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"606a6b61-c38e-4bf0-\
+87a7-2d6f26bbc021"],
+
+Cell["\<\
+The same factor appears in the norm and cancels exactly. The scalar ratio is:\
+\
+\>", "Text",ExpressionUUID->"ed7b5d43-6815-409b-8841-68e9397f7292"],
+
+Cell[BoxData[
+ RowBox[{"FullSimplify", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Exp", "[", 
+     RowBox[{
+      RowBox[{"-", 
+       RowBox[{"centeredValue", "^", "2"}]}], " ", "/", " ", 
+      RowBox[{"(", 
+       RowBox[{"4", " ", "binWidth"}], ")"}]}], "]"}], " ", "/", " ", 
+    RowBox[{"Sqrt", "[", 
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{"centeredValue", "^", "2"}]}], " ", "/", " ", 
+       RowBox[{"(", 
+        RowBox[{"2", " ", "binWidth"}], ")"}]}], "]"}], "]"}]}], ",", "\n", 
+   "    ", "assumptions"}], "\n", "]"}]], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"3308355b-f50c-4f8b-98cc-15fb247b5ae7"],
+
+Cell[TextData[{
+ "The result is ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4329a66d-a159-4214-ade0-32d390b048fe"],
+ ". Therefore the state-changing part of the measurement operator is"
+}], "Text",ExpressionUUID->"c1268cf3-e405-4fe6-b46e-fa6ba0f2b948"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["exp",
+     FontSlant->"Plain"], "\[ThinSpace]", "\[NegativeThinSpace]", "(", 
+    RowBox[{
+     SqrtBox[
+      StyleBox["\[Lambda]", "TI"]], " ", 
+     SubscriptBox[
+      OverscriptBox[
+       StyleBox["A", "TI"], "^"], 
+      StyleBox["k", "TI"]], "\[CapitalDelta]", 
+     SubscriptBox[
+      StyleBox["W", "TI"], 
+      StyleBox["k", "TI"]], "-", 
+     StyleBox["\[Lambda]", "TI"], 
+     SubsuperscriptBox[
+      OverscriptBox[
+       StyleBox["A", "TI"], "^"], 
+      StyleBox["k", "TI"], "2"], "\[CapitalDelta]", 
+     StyleBox["t", "TI"]}], ")"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"3d24a66b-c567-4918-\
+a5ab-a483ac9e2552"],
+
+Cell[TextData[{
+ "Since ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9ce98304-4e12-4db6-89d6-8c6a49050fc3"],
+ " is of order ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{"\[CapitalDelta]", 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8b19887f-f3fc-4829-9555-3c45d342e079"],
+ ", its square contributes at order ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3d055ac0-f841-49d7-abe2-8040b9b7bbab"],
+ ". Expand the exponential through second order and then apply the \
+It\[OHat]-order rules:"
+}], "Text",ExpressionUUID->"135bdea9-2d43-4107-8df1-0c30cfd16d77"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"measurementExponent", " ", "=", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Sqrt", "[", "strength", "]"}], " ", "centeredOperator", " ", 
+      "centeredValue"}], " ", "-", " ", 
+     RowBox[{"strength", " ", 
+      RowBox[{"centeredOperator", "^", "2"}], " ", "binWidth"}]}]}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"itoRules", " ", "=", " ", 
+    RowBox[{"{", "\n", "    ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"centeredValue", "^", "2"}], " ", "->", " ", "binWidth"}], ",",
+       "\n", "    ", 
+      RowBox[{
+       RowBox[{"centeredValue", " ", "binWidth"}], " ", "->", " ", "0"}], ",",
+       "\n", "    ", 
+      RowBox[{
+       RowBox[{"binWidth", "^", "2"}], " ", "->", " ", "0"}]}], "\n", "}"}]}],
+    ";"}], "\n"}], "\n", 
+ RowBox[{"measurementFactor", " ", "=", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Expand", "[", "\n", "    ", 
+     RowBox[{"Total", "[", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "measurementExponent", ",", " ", 
+        RowBox[{
+         RowBox[{"measurementExponent", "^", "2"}], " ", "/", " ", "2"}]}], 
+       "}"}], "]"}], "\n", "]"}], " ", "/.", " ", "itoRules"}], " ", "//", 
+   " ", "Expand"}]}]}], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"a3d02cf9-899e-46b7-9849-ca7c5abefe67"],
+
+Cell["The returned factor is", "Text",ExpressionUUID->"5a181b45-269f-489f-866a-b74f99a8bfa2"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"1", "+", 
+    SqrtBox[
+     StyleBox["\[Lambda]", "TI"]], " ", 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["A", "TI"], "^"], 
+     StyleBox["k", "TI"]], "\[CapitalDelta]", 
+    SubscriptBox[
+     StyleBox["W", "TI"], 
+     StyleBox["k", "TI"]], "-", 
+    FractionBox[
+     StyleBox["\[Lambda]", "TI"], "2"], 
+    SubsuperscriptBox[
+     OverscriptBox[
+      StyleBox["A", "TI"], "^"], 
+     StyleBox["k", "TI"], "2"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"5d97d148-591d-434a-\
+a2f8-4526bdfef5db"],
+
+Cell[TextData[{
+ "The coefficient ",
+ Cell[BoxData[
+  RowBox[{"-", "1", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "949a031c-da69-4865-b0b5-14673cc6170f"],
+ " comes from combining the explicit term ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   StyleBox["\[Lambda]", "TI"], 
+   SubsuperscriptBox[
+    OverscriptBox[
+     StyleBox["A", "TI"], "^"], 
+    StyleBox["k", "TI"], "2"], "\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f63dd8b5-6691-4975-9c9b-0600416974e5"],
+ " with the quadratic contribution ",
+ Cell[BoxData[
+  RowBox[{"+", 
+   StyleBox["\[Lambda]", "TI"], 
+   SubsuperscriptBox[
+    OverscriptBox[
+     StyleBox["A", "TI"], "^"], 
+    StyleBox["k", "TI"], "2"], 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"], "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46cf59ae-de2a-4628-b5e7-66b7720f1d9e"],
+ " and then using ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{"\[CapitalDelta]", 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox["k", "TI"]]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"], "=", "\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1c1686ae-28dc-43b8-91a5-0193003b2a27"],
+ " at It\[OHat] order."
+}], "Text",ExpressionUUID->"0cfc480b-68d5-4f40-a648-4d95cfe1363d"],
+
+Cell[TextData[{
+ "This factor preserves the norm to the same order. Squaring it, applying the \
+It\[OHat] rules, and then replacing powers of ",
+ Cell[BoxData["centeredOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "622b6569-e1fd-424c-af00-825393d1977e"],
+ " by their state expectations gives:"
+}], "Text",ExpressionUUID->"632c4ecf-c69f-4184-be5a-705269487a5f"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"normChange", " ", "=", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Expand", "[", 
+       RowBox[{
+        RowBox[{"measurementFactor", "^", "2"}], " ", "-", " ", "1"}], "]"}], 
+      " ", "/.", " ", "itoRules"}], " ", "//", " ", "Expand"}]}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"normExpectation", " ", "=", " ", 
+    RowBox[{"normChange", " ", "/.", " ", 
+     RowBox[{"{", "\n", "    ", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"centeredOperator", "^", "2"}], " ", "->", " ", 
+        "centeredSecondMoment"}], ",", "\n", "    ", 
+       RowBox[{"centeredOperator", " ", "->", " ", "centeredMean"}]}], "\n", 
+      "}"}]}]}], ";"}], "\n"}], "\n", 
+ RowBox[{"{", "\n", "    ", 
+  RowBox[{"normExpectation", ",", "\n", "    ", 
+   RowBox[{"normExpectation", " ", "/.", " ", 
+    RowBox[{"centeredMean", " ", "->", " ", "0"}]}]}], "\n", "}"}]}], "Input",\
+
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"95ce34e2-a60f-4033-9602-e53f3d45cad5"],
+
+Cell[TextData[{
+ "The first expression is ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   SqrtBox[
+    StyleBox["\[Lambda]", "TI"]], " ", 
+   SubscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SubscriptBox[
+      OverscriptBox[
+       StyleBox["A", "TI"], "^"], 
+      StyleBox["k", "TI"]], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], 
+    StyleBox["k", "TI"]], "\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["k", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e7d4c87-987f-43a8-a5a8-4ebb59800a67"],
+ ", and the second is zero because"
+}], "Text",ExpressionUUID->"ca4b8299-dbad-41bf-9f21-3efb757d4803"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["A", "TI"], "^"], 
+       StyleBox["k", "TI"]], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "=", 
+    SubscriptBox[
+     RowBox[{
+      StyleBox["\[LeftAngleBracket]",
+       SpanMaxSize->1], 
+      RowBox[{
+       OverscriptBox[
+        StyleBox["x", "TI"], "^"], "-", 
+       SubscriptBox[
+        RowBox[{
+         StyleBox["\[LeftAngleBracket]",
+          SpanMaxSize->1], 
+         OverscriptBox[
+          StyleBox["x", "TI"], "^"], 
+         StyleBox["\[RightAngleBracket]",
+          SpanMaxSize->1]}], 
+        StyleBox["k", "TI"]]}], 
+      StyleBox["\[RightAngleBracket]",
+       SpanMaxSize->1]}], 
+     StyleBox["k", "TI"]], "=", "0"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"8c433ff4-0a7e-4e73-\
+a66a-ed292c3dc3b5"],
+
+Cell["The unitary factor is", "Text",ExpressionUUID->"72ce6c3b-75dc-483d-b43d-7c86ba8daa80"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["U", "TI"], "^"], "=", 
+    OverscriptBox[
+     StyleBox["I", "TI"], "^"], "-", 
+    FractionBox[
+     StyleBox["i", "TI"], "\[HBar]"], 
+    OverscriptBox[
+     StyleBox["H", "TI"], "^"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], "+", 
+    StyleBox["O", "TI"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[CapitalDelta]", 
+     SuperscriptBox[
+      StyleBox["t", "TI"], "2"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"c54926ce-2efc-414b-\
+b13a-db3b6d165f0f"],
+
+Cell[TextData[{
+ "Products of its order-",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "28b0839c-a3ff-42e4-89ab-37f9a9d9595c"],
+ " term with the order-",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{"\[CapitalDelta]", 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d7eb5f41-989b-4f6d-9571-16dc7e67edfb"],
+ " measurement term are ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["O", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"\[CapitalDelta]", 
+    SuperscriptBox[
+     StyleBox["t", "TI"], 
+     RowBox[{"3", "/", "2"}]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f104080-1e4d-483f-b4ab-3106707169a4"],
+ " and do not survive. The complete retained factor is computed by:"
+}], "Text",ExpressionUUID->"427e5ee3-9a61-4988-9247-3c9deaf58987"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"unitaryFactor", " ", "=", " ", 
+    RowBox[{"1", " ", "-", " ", 
+     RowBox[{"I", " ", "hamiltonian", " ", 
+      RowBox[{"binWidth", " ", "/", " ", "hbar"}]}]}]}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Expand", "[", "\n", "    ", 
+    RowBox[{"unitaryFactor", " ", "measurementFactor"}], "\n", "]"}], " ", "/.",
+    " ", "itoRules"}], " ", "//", " ", "Expand"}]}], "Input",
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"d6261674-71da-4ae8-8950-f3ab81282975"],
+
+Cell["The result is", "Text",ExpressionUUID->"012f2e47-dff1-445a-a820-9f3fecba9aed"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["I", "TI"], "^"], "-", 
+    FractionBox[
+     StyleBox["i", "TI"], "\[HBar]"], 
+    OverscriptBox[
+     StyleBox["H", "TI"], "^"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], "-", 
+    FractionBox[
+     StyleBox["\[Lambda]", "TI"], "2"], 
+    SubsuperscriptBox[
+     OverscriptBox[
+      StyleBox["A", "TI"], "^"], 
+     StyleBox["k", "TI"], "2"], "\[CapitalDelta]", 
+    StyleBox["t", "TI"], "+", 
+    SqrtBox[
+     StyleBox["\[Lambda]", "TI"]], " ", 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["A", "TI"], "^"], 
+     StyleBox["k", "TI"]], "\[CapitalDelta]", 
+    SubscriptBox[
+     StyleBox["W", "TI"], 
+     StyleBox["k", "TI"]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"747b479d-e188-468b-\
+a8f0-039e09e9fe4b"],
+
+Cell["\<\
+Replacing the finite increments by the differentials already defined gives \
+the conditioned state SDE:\
+\>", "Text",ExpressionUUID->"53470374-144b-451d-a1ca-8bdcfeedcfa9"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   FrameBox[
+    RowBox[{
+     RowBox[{
+      StyleBox["d", "TI"], 
+      TemplateBox[{
+        SubscriptBox[
+         StyleBox["\[Psi]", "TI"], 
+         StyleBox["t", "TI"]]},
+       "Ket"]}], "=", 
+     RowBox[{
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"-", 
+          FractionBox[
+           StyleBox["i", "TI"], "\[HBar]"]}], 
+         OverscriptBox[
+          StyleBox["H", "TI"], "^"], 
+         StyleBox["d", "TI"], 
+         StyleBox["t", "TI"]}], "-", 
+        RowBox[{
+         FractionBox[
+          StyleBox["\[Lambda]", "TI"], "2"], 
+         SuperscriptBox[
+          RowBox[{
+           StyleBox["(",
+            FontSize->1.2 Inherited], 
+           RowBox[{
+            OverscriptBox[
+             StyleBox["x", "TI"], "^"], "-", 
+            SubscriptBox[
+             RowBox[{
+              StyleBox["\[LeftAngleBracket]",
+               SpanMaxSize->1], 
+              OverscriptBox[
+               StyleBox["x", "TI"], "^"], 
+              StyleBox["\[RightAngleBracket]",
+               SpanMaxSize->1]}], 
+             StyleBox["t", "TI"]]}], 
+           StyleBox[")",
+            FontSize->1.2 Inherited]}], "2"], 
+         StyleBox["d", "TI"], 
+         StyleBox["t", "TI"]}], "+", 
+        RowBox[{
+         SqrtBox[
+          StyleBox["\[Lambda]", "TI"]], 
+         RowBox[{
+          StyleBox["(",
+           FontSize->1.2 Inherited], 
+          RowBox[{
+           OverscriptBox[
+            StyleBox["x", "TI"], "^"], "-", 
+           SubscriptBox[
+            RowBox[{
+             StyleBox["\[LeftAngleBracket]",
+              SpanMaxSize->1], 
+             OverscriptBox[
+              StyleBox["x", "TI"], "^"], 
+             StyleBox["\[RightAngleBracket]",
+              SpanMaxSize->1]}], 
+            StyleBox["t", "TI"]]}], 
+          StyleBox[")",
+           FontSize->1.2 Inherited]}], 
+         StyleBox["d", "TI"], 
+         SubscriptBox[
+          StyleBox["W", "TI"], 
+          StyleBox["t", "TI"]]}]}], "]"}], 
+      TemplateBox[{
+        SubscriptBox[
+         StyleBox["\[Psi]", "TI"], 
+         StyleBox["t", "TI"]]},
+       "Ket"]}]}]], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"e4d1e36e-31c8-4a52-\
+beeb-e05c54e9d5ff"],
+
+Cell[TextData[{
+ "The same ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    StyleBox["t", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "885f1d8e-7dbb-4713-b56d-2d6a9e835535"],
+ " appears in both boxed equations because both are derived from the same \
+observed reading ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "05644ac0-a3e8-42d2-a69e-8a72c632549b"],
+ ". The record equation describes what the detector data become in the \
+continuous limit. The state equation describes how that same data condition \
+the quantum state."
+}], "Text",ExpressionUUID->"f404f4cb-fbca-4857-80a2-ee6401df3881"]
+},
+CreateCellID->True,
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 22, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"be989a55-7e37-4411-a3b6-136da759636b"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 137, 1, 70, "Title",ExpressionUUID->"237d061a-9920-4ff4-91d8-96126b125dbe"],
+Cell[694, 23, 349, 5, 70, "Text",ExpressionUUID->"5626c109-5aa1-4e67-9ba0-1952d67595bf"],
+Cell[1046, 30, 403, 6, 70, "Text",ExpressionUUID->"376efdc7-d394-42b1-82a3-b5f6e7846ea9"],
+Cell[1452, 38, 74, 0, 70, "Text",ExpressionUUID->"e1c54b50-3dce-4ff8-ad50-e40e05ad70dd"],
+Cell[1529, 40, 840, 30, 70, "DisplayFormula",ExpressionUUID->"ad1c721d-a3b8-4420-aab8-250d5f87a0e8"],
+Cell[2372, 72, 1041, 32, 70, "Text",ExpressionUUID->"22019ecf-522a-453e-9507-192189738ffc"],
+Cell[3416, 106, 144, 2, 70, "Text",ExpressionUUID->"0af339ea-186f-4059-857c-8021f8202f60"],
+Cell[3563, 110, 3047, 50, 70, "Input",ExpressionUUID->"c0645e46-8384-4670-9f71-499a2b774b27"],
+Cell[6613, 162, 1580, 50, 70, "Text",ExpressionUUID->"db3f08a0-b65f-4c1b-b470-e79a87d32689"],
+Cell[8196, 214, 99, 0, 70, "Section",ExpressionUUID->"b3a39f55-a67e-4c81-a545-d57c72a1c411"],
+Cell[8298, 216, 364, 10, 70, "Text",ExpressionUUID->"6781c8d9-1fc0-4d3a-b37e-9b74a7bc84c7"],
+Cell[8665, 228, 1326, 46, 70, "DisplayFormula",ExpressionUUID->"f4c3748f-4c65-40e9-80e5-6723f2e23038"],
+Cell[9994, 276, 598, 15, 70, "Text",ExpressionUUID->"b19f6255-9a1d-45d1-8ca7-d37116b125a1"],
+Cell[10595, 293, 1185, 44, 70, "Text",ExpressionUUID->"d514c6c0-33cd-4743-9dc0-2caca4e470e2"],
+Cell[11783, 339, 1196, 42, 70, "DisplayFormula",ExpressionUUID->"65c68cd4-240c-4eef-ac2d-57844bbda80b"],
+Cell[12982, 383, 144, 2, 70, "Text",ExpressionUUID->"2d3329aa-fb56-4fe8-8d66-2360a64971df"],
+Cell[13129, 387, 1341, 36, 70, "Input",ExpressionUUID->"3028ffb4-86dc-4ce4-b676-7b948ba4849f"],
+Cell[14473, 425, 84, 0, 70, "Text",ExpressionUUID->"01bd4bd4-c388-42be-a2cd-c496afbfe821"],
+Cell[14560, 427, 379, 12, 70, "DisplayFormula",ExpressionUUID->"3465ed99-c196-4632-9e34-3ddce378d6c6"],
+Cell[14942, 441, 93, 0, 70, "Text",ExpressionUUID->"9b695680-39fa-405f-8a3a-4053c058716f"],
+Cell[15038, 443, 985, 37, 70, "DisplayFormula",ExpressionUUID->"8649553d-7e9b-4300-9533-04d1f5ef2a23"],
+Cell[16026, 482, 162, 3, 70, "Text",ExpressionUUID->"9710a65e-5e54-491a-8155-659fdbac78d2"],
+Cell[16191, 487, 1447, 36, 70, "Input",ExpressionUUID->"da5c19e1-5672-4b61-be44-a25100a7b637"],
+Cell[17641, 525, 2072, 66, 70, "Text",ExpressionUUID->"6222f785-2061-475a-b57a-811d470726b0"],
+Cell[19716, 593, 128, 0, 70, "Text",ExpressionUUID->"bbbc338c-6ce5-4d43-939c-a480e086c8f8"],
+Cell[19847, 595, 2486, 84, 70, "DisplayFormula",ExpressionUUID->"12d5faf4-c002-4083-9533-4def24eb9eab"],
+Cell[22336, 681, 714, 18, 70, "Text",ExpressionUUID->"afffe9fe-ef26-4a39-9ec9-351798c89fc4"],
+Cell[23053, 701, 1018, 33, 70, "Text",ExpressionUUID->"175f2eb0-bdae-406b-b1e1-13dc7b24f6a9"],
+Cell[24074, 736, 144, 2, 70, "Text",ExpressionUUID->"e8108e91-37af-403c-9d8c-bcf3747ddea6"],
+Cell[24221, 740, 891, 21, 70, "Input",ExpressionUUID->"3daf84c1-14d4-404c-a04a-076d12237c54"],
+Cell[25115, 763, 84, 0, 70, "Text",ExpressionUUID->"ef8dd3f4-de4b-4f89-99d2-9638c88e7982"],
+Cell[25202, 765, 878, 30, 70, "DisplayFormula",ExpressionUUID->"50b78c9a-9031-4b65-bb9d-f3a05c556a4e"],
+Cell[26083, 797, 2435, 82, 70, "Text",ExpressionUUID->"de6186d8-d87d-486c-95b5-559ca3f66969"],
+Cell[28521, 881, 784, 19, 70, "Input",ExpressionUUID->"d639575d-20d9-4b20-b6b1-122a7404521b"],
+Cell[29308, 902, 181, 3, 70, "Text",ExpressionUUID->"3f7f6d0b-6152-477b-bac3-a540274046e4"],
+Cell[29492, 907, 1295, 46, 70, "DisplayFormula",ExpressionUUID->"3d385844-4f70-4710-95bf-d43a1d6a784b"],
+Cell[30790, 955, 74, 0, 70, "Text",ExpressionUUID->"05f7ca7f-4ab1-4316-b5ef-7b7c855dc0fe"],
+Cell[30867, 957, 1290, 45, 70, "DisplayFormula",ExpressionUUID->"9893679e-17c7-4b75-8d16-ff54459e84f8"],
+Cell[32160, 1004, 689, 21, 70, "Text",ExpressionUUID->"8405bb4e-cc9c-4197-8c43-fdc4266ca14d"],
+Cell[32852, 1027, 352, 10, 70, "Text",ExpressionUUID->"f5c3010f-2e80-4d0a-b99f-733fbb046994"],
+Cell[33207, 1039, 2434, 84, 70, "DisplayFormula",ExpressionUUID->"606bdb79-8508-40e0-8979-e844b140d915"],
+Cell[35644, 1125, 121, 0, 70, "Section",ExpressionUUID->"3fc4093d-7fd7-4fe4-adf9-81f9bc9738bb"],
+Cell[35768, 1127, 1128, 29, 70, "Text",ExpressionUUID->"62384b9c-2c33-4443-9d22-1009ad75e14b"],
+Cell[36899, 1158, 641, 17, 70, "Text",ExpressionUUID->"2797e60f-9a1a-4a11-b078-3985dfdcdbd9"],
+Cell[37543, 1177, 800, 27, 70, "DisplayFormula",ExpressionUUID->"7a610af8-a487-49dc-a722-ee55a436d202"],
+Cell[38346, 1206, 118, 0, 70, "Text",ExpressionUUID->"373d349f-c5a6-4d81-b31a-7d2bf2e78e69"],
+Cell[38467, 1208, 1607, 37, 70, "Input",ExpressionUUID->"4ef1865d-ad01-45f3-8928-8d436524e9e3"],
+Cell[40077, 1247, 799, 24, 70, "Text",ExpressionUUID->"db8051eb-15f7-473c-a41f-6d01757e388d"],
+Cell[40879, 1273, 480, 13, 70, "Text",ExpressionUUID->"92322fe0-dfb2-4c43-b8a8-091fb78d54d8"],
+Cell[41362, 1288, 625, 15, 70, "Input",ExpressionUUID->"866c5166-5f28-45ee-a913-93b7645b4c17"],
+Cell[41990, 1305, 487, 14, 70, "Text",ExpressionUUID->"72556e39-85a2-43c6-8f41-370bd0d0f55e"],
+Cell[42480, 1321, 946, 33, 70, "DisplayFormula",ExpressionUUID->"c5e000c0-57a4-4df2-9486-a0acf548aefa"],
+Cell[43429, 1356, 554, 16, 70, "Text",ExpressionUUID->"e292fa26-6dab-4389-954e-458118d39646"],
+Cell[43986, 1374, 534, 19, 70, "DisplayFormula",ExpressionUUID->"f3b1520b-639e-43df-9176-6cd36de6d41b"],
+Cell[44523, 1395, 375, 10, 70, "Text",ExpressionUUID->"de56ab31-895c-4006-b19c-0ce7569dd43d"],
+Cell[44901, 1407, 803, 19, 70, "Input",ExpressionUUID->"50d61743-0c24-4837-b66e-0f591613353d"],
+Cell[45707, 1428, 75, 0, 70, "Text",ExpressionUUID->"cd306948-2503-4cee-9aa7-5f440e226f4b"],
+Cell[45785, 1430, 834, 29, 70, "DisplayFormula",ExpressionUUID->"20826323-8dcd-42c9-b17d-cacee6d229cb"],
+Cell[46622, 1461, 74, 0, 70, "Text",ExpressionUUID->"5ebfe5e6-ab59-4b8f-8af2-6881d071fb98"],
+Cell[46699, 1463, 1310, 44, 70, "DisplayFormula",ExpressionUUID->"43d801c3-c966-4e22-9391-60d70e61a3c4"],
+Cell[48012, 1509, 105, 0, 70, "Section",ExpressionUUID->"9c769fb9-2b2c-4aed-82da-410ee00a1eb8"],
+Cell[48120, 1511, 440, 11, 70, "Text",ExpressionUUID->"b268c85f-b9e2-4b55-bc50-b96169167c83"],
+Cell[48563, 1524, 1527, 50, 70, "DisplayFormula",ExpressionUUID->"5cbee110-a682-4f19-afb7-f76bb44ae72d"],
+Cell[50093, 1576, 748, 20, 70, "Text",ExpressionUUID->"30db3b9c-7c1b-4194-b9ae-a3e48b6c5d86"],
+Cell[50844, 1598, 784, 28, 70, "DisplayFormula",ExpressionUUID->"821f4437-106e-4262-b111-23cfe3ef4403"],
+Cell[51631, 1628, 458, 11, 70, "Text",ExpressionUUID->"2bf34402-a117-468a-b3f3-7f1ad5126582"],
+Cell[52092, 1641, 1028, 23, 70, "Input",ExpressionUUID->"506e8e7f-a91d-4f41-a49a-6a89d6887f1b"],
+Cell[53123, 1666, 81, 0, 70, "Text",ExpressionUUID->"f2095640-cfe3-41e3-a677-b5dcdcf9204f"],
+Cell[53207, 1668, 856, 29, 70, "DisplayFormula",ExpressionUUID->"d38ff6cb-3f2d-4f9d-85c9-84833f0febd5"],
+Cell[54066, 1699, 113, 0, 70, "Text",ExpressionUUID->"0f246c15-fb9d-4690-9b65-9d219fabdadf"],
+Cell[54182, 1701, 936, 32, 70, "DisplayFormula",ExpressionUUID->"b1e033fc-ade0-4118-853b-11ae505c2cc0"],
+Cell[55121, 1735, 122, 0, 70, "Text",ExpressionUUID->"46e6dde7-88cc-411d-8a79-5c63033d0a7a"],
+Cell[55246, 1737, 411, 9, 70, "Input",ExpressionUUID->"0871a7b3-abd7-4f3a-8bc8-c0261db60009"],
+Cell[55660, 1748, 526, 15, 70, "Text",ExpressionUUID->"bad10326-9526-4527-b6f9-d35cc9cb12d0"],
+Cell[56189, 1765, 1229, 41, 70, "DisplayFormula",ExpressionUUID->"1bc7d3bc-8fef-4506-9d82-3fd93bdd2acf"],
+Cell[57421, 1808, 177, 3, 70, "Text",ExpressionUUID->"c01c2f5a-f268-4629-8eaf-5c7eaa9def8b"],
+Cell[57601, 1813, 2210, 75, 70, "DisplayFormula",ExpressionUUID->"bfb14bc3-5cde-41b9-b106-914225a9cc36"],
+Cell[59814, 1890, 738, 22, 70, "Text",ExpressionUUID->"13330011-7e82-4a61-9ae4-611908c3857b"],
+Cell[60555, 1914, 1423, 32, 70, "Input",ExpressionUUID->"8168ad9c-369e-4bab-9bf0-bde40729c248"],
+Cell[61981, 1948, 90, 0, 70, "Text",ExpressionUUID->"dbe0d705-f4d2-4f3f-822d-7def333816f8"],
+Cell[62074, 1950, 802, 27, 70, "DisplayFormula",ExpressionUUID->"98011694-94df-4bb6-9d5d-cb0f90448572"],
+Cell[62879, 1979, 124, 0, 70, "Text",ExpressionUUID->"e2beb307-ddbe-4134-8b99-4b7dacab454c"],
+Cell[63006, 1981, 884, 29, 70, "DisplayFormula",ExpressionUUID->"41183f2e-4abb-4537-a82a-f738491ec28b"],
+Cell[63893, 2012, 186, 3, 70, "Text",ExpressionUUID->"90abce69-effc-4a83-90e0-bda2dc1134ca"],
+Cell[64082, 2017, 739, 24, 70, "DisplayFormula",ExpressionUUID->"16f014ea-5378-45f6-891e-22b3de8a2039"],
+Cell[64824, 2043, 256, 6, 70, "Text",ExpressionUUID->"4d7b94a0-1d8a-4e27-9c68-6af3c9b4f56b"],
+Cell[65083, 2051, 163, 3, 70, "Text",ExpressionUUID->"884b5c68-577f-4d06-b34e-523e4135f409"],
+Cell[65249, 2056, 630, 15, 70, "Input",ExpressionUUID->"5fd9a5e7-95d4-434a-b342-639c09a9ade1"],
+Cell[65882, 2073, 75, 0, 70, "Text",ExpressionUUID->"35494ae4-3d6b-40a9-b4c3-326420d2ac7d"],
+Cell[65960, 2075, 1924, 64, 70, "DisplayFormula",ExpressionUUID->"f5d6bee0-725c-43d7-b836-bf49a6f5c75a"],
+Cell[67887, 2141, 1366, 45, 70, "Text",ExpressionUUID->"21cc974b-0008-4b35-9bd3-f4e43da733fc"],
+Cell[69256, 2188, 607, 15, 70, "Text",ExpressionUUID->"68af7435-49ca-4b42-ad54-25671921b705"],
+Cell[69866, 2205, 4917, 117, 70, "Input",ExpressionUUID->"7bc4b1cb-a9d2-43db-9e22-d2efc4075306"],
+Cell[74786, 2324, 260, 6, 70, "Text",ExpressionUUID->"d50a07ef-a49a-4f5a-af99-33f99db66e3f"],
+Cell[75049, 2332, 775, 27, 70, "DisplayFormula",ExpressionUUID->"37a89ac2-319a-4855-8dd6-5b60c81c4721"],
+Cell[75827, 2361, 1542, 51, 70, "DisplayFormula",ExpressionUUID->"9b0bf64d-685a-457a-8f2f-fdac714a00d2"],
+Cell[77372, 2414, 227, 3, 70, "Text",ExpressionUUID->"45297a3d-c2b3-4f3e-a330-feea308d9f7d"],
+Cell[77602, 2419, 1373, 39, 70, "Text",ExpressionUUID->"7735937f-ef78-43c6-a624-f947ffee807d"],
+Cell[78978, 2460, 2755, 57, 70, "Input",ExpressionUUID->"25876569-d8b5-4674-ae3e-222ffd81ffb8"],
+Cell[81736, 2519, 670, 17, 70, "Text",ExpressionUUID->"33eebb22-aaf3-4151-af82-2229b1fb6a30"],
+Cell[82409, 2538, 122, 0, 70, "Section",ExpressionUUID->"3653f70f-f21a-437e-bc05-c9e949a3d179"],
+Cell[82534, 2540, 141, 2, 70, "Text",ExpressionUUID->"bd075e50-dfd1-4f92-b505-0c24dfe89bfb"],
+Cell[82678, 2544, 1401, 50, 70, "DisplayFormula",ExpressionUUID->"f3b1d00c-bc7f-4f6e-bcb2-7428f1a7a9f4"],
+Cell[84082, 2596, 920, 29, 70, "Text",ExpressionUUID->"267ad129-c708-4515-8aa1-e6a49c054139"],
+Cell[85005, 2627, 862, 23, 70, "Text",ExpressionUUID->"cce818b0-73fa-42fb-ac19-32248dc99580"],
+Cell[85870, 2652, 777, 19, 70, "Text",ExpressionUUID->"6446ec68-695a-4acb-9937-bd61e40f2a2e"],
+Cell[86650, 2673, 353, 11, 70, "DisplayFormula",ExpressionUUID->"2c442ea8-b84b-450c-815c-3ede1ee8868d"],
+Cell[87006, 2686, 84, 0, 70, "Text",ExpressionUUID->"f2404bda-e12f-416a-8671-d079dd92f5b7"],
+Cell[87093, 2688, 591, 12, 70, "Input",ExpressionUUID->"ace8bfef-e179-4874-b2aa-f06fdeb3c149"],
+Cell[87687, 2702, 705, 15, 70, "Text",ExpressionUUID->"ae819c17-a6e2-4e64-ad81-55b351070265"],
+Cell[88395, 2719, 682, 22, 70, "DisplayFormula",ExpressionUUID->"7c863748-db54-424c-9538-c293acecd294"],
+Cell[89080, 2743, 564, 12, 70, "Text",ExpressionUUID->"fbf6b1f8-a840-4041-9184-39b451b46919"],
+Cell[89647, 2757, 382, 9, 70, "Text",ExpressionUUID->"5e7dc0c7-4805-43eb-8087-4c46b68958aa"],
+Cell[90032, 2768, 977, 23, 70, "Input",ExpressionUUID->"223735ca-8ab4-42ac-9981-4782ab80df63"],
+Cell[91012, 2793, 1033, 30, 70, "Text",ExpressionUUID->"5c6eb1f2-9dfc-4134-bb7b-9b60e553fcfd"],
+Cell[92048, 2825, 160, 3, 70, "Text",ExpressionUUID->"55fc1546-de58-40ff-9fdb-5884cbd111bc"],
+Cell[92211, 2830, 979, 32, 70, "DisplayFormula",ExpressionUUID->"ab67718d-517f-46d5-a5ff-320f0b966c54"],
+Cell[93193, 2864, 338, 9, 70, "Text",ExpressionUUID->"97135ade-ea59-4f5d-91ea-9ab45c3c137c"],
+Cell[93534, 2875, 1007, 37, 70, "DisplayFormula",ExpressionUUID->"7f625cc9-8136-4ad2-a6f6-b9ce914801bb"],
+Cell[94544, 2914, 461, 11, 70, "Text",ExpressionUUID->"8dbc323c-abcf-4078-b20e-4ee04d8d051c"],
+Cell[95008, 2927, 776, 28, 70, "DisplayFormula",ExpressionUUID->"0f4e5cb5-ee76-47a7-a35d-c9434f318d43"],
+Cell[95787, 2957, 162, 3, 70, "Text",ExpressionUUID->"5fdcf67c-ab22-4831-a5d9-aec323c1b69c"],
+Cell[95952, 2962, 735, 27, 70, "DisplayFormula",ExpressionUUID->"3d38d16c-d6e9-4dd1-ab68-d38a4e8a5d61"],
+Cell[96690, 2991, 869, 25, 70, "Text",ExpressionUUID->"5338af09-e013-46fc-868f-72ca04ea5a4f"],
+Cell[97562, 3018, 104, 0, 70, "Section",ExpressionUUID->"589d1fda-fb58-49bf-9684-8aaae09940d9"],
+Cell[97669, 3020, 803, 20, 70, "Text",ExpressionUUID->"365153af-efb3-448b-b31c-36174aa70c25"],
+Cell[98475, 3042, 118, 0, 70, "Text",ExpressionUUID->"05977509-76ab-4015-87c3-6c45fcba8152"],
+Cell[98596, 3044, 784, 28, 70, "DisplayFormula",ExpressionUUID->"368a33c9-0f3b-4408-a113-42cc9acfd279"],
+Cell[99383, 3074, 77, 0, 70, "Text",ExpressionUUID->"436564a7-9652-48da-aa21-d88571e9f84c"],
+Cell[99463, 3076, 589, 21, 70, "DisplayFormula",ExpressionUUID->"4660a90c-bbee-4137-be1e-061f674a8564"],
+Cell[100055, 3099, 103, 0, 70, "Text",ExpressionUUID->"a20c9618-e8b7-465b-8bf7-5a72fc17fcb0"],
+Cell[100161, 3101, 2267, 74, 70, "DisplayFormula",ExpressionUUID->"77439bfc-1e18-4869-a27b-02d05084125d"],
+Cell[102431, 3177, 903, 26, 70, "Text",ExpressionUUID->"227aaeea-ff0b-46eb-9408-fe4caf9add51"],
+Cell[103337, 3205, 1019, 27, 70, "Input",ExpressionUUID->"08c02b7f-dc02-4e99-8116-cac337c8dd1e"],
+Cell[104359, 3234, 330, 7, 70, "Text",ExpressionUUID->"f18564a1-474f-4ec3-8791-601420253baf"],
+Cell[104692, 3243, 647, 22, 70, "DisplayFormula",ExpressionUUID->"606a6b61-c38e-4bf0-87a7-2d6f26bbc021"],
+Cell[105342, 3267, 158, 3, 70, "Text",ExpressionUUID->"ed7b5d43-6815-409b-8841-68e9397f7292"],
+Cell[105503, 3272, 676, 19, 70, "Input",ExpressionUUID->"3308355b-f50c-4f8b-98cc-15fb247b5ae7"],
+Cell[106182, 3293, 294, 6, 70, "Text",ExpressionUUID->"c1268cf3-e405-4fe6-b46e-fa6ba0f2b948"],
+Cell[106479, 3301, 738, 24, 70, "DisplayFormula",ExpressionUUID->"3d24a66b-c567-4918-a5ab-a483ac9e2552"],
+Cell[107220, 3327, 827, 24, 70, "Text",ExpressionUUID->"135bdea9-2d43-4107-8df1-0c30cfd16d77"],
+Cell[108050, 3353, 1322, 37, 70, "Input",ExpressionUUID->"a3d02cf9-899e-46b7-9849-ca7c5abefe67"],
+Cell[109375, 3392, 93, 0, 70, "Text",ExpressionUUID->"5a181b45-269f-489f-866a-b74f99a8bfa2"],
+Cell[109471, 3394, 645, 22, 70, "DisplayFormula",ExpressionUUID->"5d97d148-591d-434a-a2f8-4526bdfef5db"],
+Cell[110119, 3418, 1646, 54, 70, "Text",ExpressionUUID->"0cfc480b-68d5-4f40-a648-4d95cfe1363d"],
+Cell[111768, 3474, 388, 7, 70, "Text",ExpressionUUID->"632c4ecf-c69f-4184-be5a-705269487a5f"],
+Cell[112159, 3483, 1018, 28, 70, "Input",ExpressionUUID->"95ce34e2-a60f-4033-9602-e53f3d45cad5"],
+Cell[113180, 3513, 710, 23, 70, "Text",ExpressionUUID->"ca4b8299-dbad-41bf-9f21-3efb757d4803"],
+Cell[113893, 3538, 1024, 36, 70, "DisplayFormula",ExpressionUUID->"8c433ff4-0a7e-4e73-a66a-ed292c3dc3b5"],
+Cell[114920, 3576, 92, 0, 70, "Text",ExpressionUUID->"72ce6c3b-75dc-483d-b43d-7c86ba8daa80"],
+Cell[115015, 3578, 640, 23, 70, "DisplayFormula",ExpressionUUID->"c54926ce-2efc-414b-b13a-db3b6d165f0f"],
+Cell[115658, 3603, 941, 29, 70, "Text",ExpressionUUID->"427e5ee3-9a61-4988-9247-3c9deaf58987"],
+Cell[116602, 3634, 526, 14, 70, "Input",ExpressionUUID->"d6261674-71da-4ae8-8950-f3ab81282975"],
+Cell[117131, 3650, 84, 0, 70, "Text",ExpressionUUID->"012f2e47-dff1-445a-a820-9f3fecba9aed"],
+Cell[117218, 3652, 850, 29, 70, "DisplayFormula",ExpressionUUID->"747b479d-e188-468b-a8f0-039e09e9fe4b"],
+Cell[118071, 3683, 182, 3, 70, "Text",ExpressionUUID->"53470374-144b-451d-a1ca-8bdcfeedcfa9"],
+Cell[118256, 3688, 2276, 77, 70, "DisplayFormula",ExpressionUUID->"e4d1e36e-31c8-4a52-beeb-e05c54e9d5ff"],
+Cell[120535, 3767, 799, 22, 70, "Text",ExpressionUUID->"f404f4cb-fbca-4857-80a2-ee6401df3881"]
+}
+]
+*)
+
+(* End of internal cache information *)

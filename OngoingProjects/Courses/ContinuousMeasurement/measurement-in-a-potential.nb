@@ -1,0 +1,3314 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    124556,       3305]
+NotebookOptionsPosition[    116778,       3214]
+NotebookOutlinePosition[    117120,       3229]
+CellTagsIndexPosition[    117077,       3226]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Continuous Measurement in a Potential", "Title",ExpressionUUID->"5bc37c7f-396a-4e0f-b761-172df3878ace"],
+
+Cell[TextData[{
+ StyleBox["Generalizing the stochastic Schr\[ODoubleDot]dinger equation of \
+continuous position measurement from the free particle to an arbitrary \
+one-dimensional Hamiltonian ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["H", "TI"], "^"], "=", 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], "2"], "/", "2", 
+   StyleBox["m", "TI"], "+", 
+   StyleBox["V", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["x", "TI"], "^"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"44407662-e98f-48d4-a330-b0572fa63147"],
+ StyleBox[". The only measurement-independent piece of the split-operator \
+scheme is the unitary evolution, so a symmetric (Strang) split-operator step \
+carries any potential, and the free particle is the ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"0c3a01e3-bdd6-4a06-9106-3c255fdc4535"],
+ StyleBox[" special case, recovered exactly. Two potentials mark the range. \
+In the harmonic trap the conditional state stays Gaussian: the measurement \
+squeezes its position below the zero-point value, and the five-number moment \
+filter still closes and agrees with the grid. In the double well the moment \
+hierarchy does not close, only the grid split-operator applies, and \
+continuous position monitoring localizes the particle in one well and \
+suppresses coherent tunneling by the quantum Zeno effect. Throughout, the \
+measurement backaction heats the momentum at the state-independent rate ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"a6dac8d6-2812-4396-81a8-5d9bca53e2a3"],
+ StyleBox[", which drives both the trapped oscillator's unbounded heating \
+and, in the double well, the anti-Zeno escape over the barrier that competes \
+with the Zeno suppression.",
+  FontWeight->"Bold"]
+}], "Text",ExpressionUUID->"9f3743ae-b777-4eba-ad8e-5680cca49954"],
+
+Cell["Mads Bahrami (last updated: July 28, 2026)", "Text",ExpressionUUID->"fdbe470e-d7ad-4ae0-ace6-dc56c2b1c234"],
+
+Cell["Setting the Stage", "Subsection",ExpressionUUID->"a825920d-1185-44d7-bba5-56accdd546f0"],
+
+Cell[TextData[{
+ "This continues ",
+ StyleBox["Trajectories, the Record, and the Master Equation", "TI"],
+ ", which simulates the stochastic Schr\[ODoubleDot]dinger equation (SSE) of \
+a free particle under continuous weak position measurement. That document \
+ends by flagging one extension: add a potential to ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["H", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dcac1770-b115-4804-bdfe-26eaae35ba1a"],
+ " and study the same record-conditioned dynamics in a trap, the setting of \
+cavity and levitated optomechanics. This is that extension."
+}], "Text",ExpressionUUID->"84e1c580-8e23-412b-ae87-ea0763c25266"],
+
+Cell[TextData[{
+ "The observation that makes it a small change is that the measurement is \
+independent of the Hamiltonian. Over one time step the conditional state is \
+acted on by the Kraus operator ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["M", "TI"], "^"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["x", "TI"], "_"], 
+   StyleBox[")",
+    SpanMaxSize->1], "\[Proportional]", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["\[Lambda]", "TI"], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], " ", 
+     SuperscriptBox[
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        OverscriptBox[
+         StyleBox["x", "TI"], "^"], "-", 
+        OverscriptBox[
+         StyleBox["x", "TI"], "_"]}], 
+       StyleBox[")",
+        SpanMaxSize->1]}], "2"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cd95904-55f7-4e6e-9bd3-d21755061ba0"],
+ ", drawn and renormalized, and then evolved unitarily under ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["H", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "70b5fa99-89c5-433d-836e-2b37f400fc46"],
+ " for ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "t"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "09b1bae0-9993-437f-a2ff-2e47ef48c2ff"],
+ ". Only the second factor knows about ",
+ Cell[BoxData[
+  StyleBox["V", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4716d068-a57f-4aa1-a5bd-a0624465ea9e"],
+ ". So generalizing the simulation means generalizing one function, the \
+unitary step, and leaving the measurement machinery untouched. Everything \
+else, the outcome distribution, the renormalization, the \
+conditional-unconditional split, the backaction, transfers verbatim."
+}], "Text",ExpressionUUID->"1586100e-6221-4e34-bb21-16691c1790ca"],
+
+Cell[TextData[{
+ "Every number below is produced by a cell you can rerun and change; evaluate \
+top to bottom and vary the potential, the measurement strength ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "50f1717a-d886-4070-ae8c-5e3ed656d2aa"],
+ ", and the initial state. As before ",
+ Cell[BoxData["\[HBar]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ff0a9622-5e81-4d8a-bfd2-3ba55f1dbedd"],
+ ", the mass ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "98803a8e-c399-412b-8fee-26d64902dbba"],
+ ", and ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "86118bf9-0b17-48b6-898e-6391ef17838c"],
+ " stay symbolic wherever the algebra is symbolic, and take numerical values \
+(",
+ Cell[BoxData["hbar"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "22d7e484-19c5-4cbc-a242-1021c17c804b"],
+ ", ",
+ Cell[BoxData["mass"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3e6a398d-b27a-431c-b52d-997d6a94aa56"],
+ ") only in simulation."
+}], "Text",ExpressionUUID->"402b2bfd-73ae-4e7e-a222-6d00164945f9"],
+
+Cell["Part I: One Function Carries the Potential", "Section",ExpressionUUID->"9fbd5540-7ff9-418d-960f-a68b33169db6"],
+
+Cell[TextData[{
+ "We reuse the free-particle machinery. Fix units ",
+ Cell[BoxData[
+  RowBox[{"\[HBar]", "=", 
+   StyleBox["m", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fb7ee962-df7a-4838-9a6c-0610582cb531"],
+ ", build the position grid with its wrapped momenta, a Gaussian packet, the \
+free (spectral) unitary step, the two conditional moments, the exact outcome \
+draw, and the Kraus update:"
+}], "Text",ExpressionUUID->"ca559e18-d1a5-4551-a74d-41c1be57de91"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"hbar", " ", "=", " ", "1."}], ";", " ", 
+  RowBox[{"mass", " ", "=", " ", "1."}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"grid", "[", 
+    RowBox[{"n_", ",", " ", "ll_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"dx", " ", "=", " ", 
+       RowBox[{"ll", "/", "n"}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"<|", 
+      RowBox[{
+       RowBox[{"\"\<n\>\"", " ", "->", " ", "n"}], ",", " ", 
+       RowBox[{"\"\<dx\>\"", " ", "->", " ", "dx"}], ",", " ", 
+       RowBox[{"\"\<x\>\"", " ", "->", " ", 
+        RowBox[{"dx", " ", 
+         RowBox[{"Range", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"-", "n"}], "/", "2"}], ",", " ", 
+           RowBox[{
+            RowBox[{"n", "/", "2"}], " ", "-", " ", "1"}]}], "]"}]}]}], ",", 
+       "\n", "     ", 
+       RowBox[{"\"\<p\>\"", " ", "->", " ", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"2", " ", "Pi", " ", 
+           RowBox[{"hbar", "/", "ll"}]}], ")"}], " ", 
+         RowBox[{"RotateLeft", "[", 
+          RowBox[{
+           RowBox[{"Range", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"-", "n"}], "/", "2"}], ",", " ", 
+             RowBox[{
+              RowBox[{"n", "/", "2"}], " ", "-", " ", "1"}]}], "]"}], ",", 
+           " ", 
+           RowBox[{"n", "/", "2"}]}], "]"}]}]}]}], "|>"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"gaussian", "[", 
+    RowBox[{"g_", ",", " ", "x0_", ",", " ", "p0_", ",", " ", "s_"}], "]"}], 
+   " ", ":=", " ", 
+   RowBox[{"Normalize", "[", 
+    RowBox[{"Exp", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{"g", "[", "\"\<x\>\"", "]"}], " ", "-", " ", "x0"}], ")"}],
+          "^", "2"}]}], "/", 
+       RowBox[{"(", 
+        RowBox[{"4", " ", 
+         RowBox[{"s", "^", "2"}]}], ")"}]}], " ", "+", " ", 
+      RowBox[{"I", " ", "p0", " ", 
+       RowBox[{
+        RowBox[{"g", "[", "\"\<x\>\"", "]"}], "/", "hbar"}]}]}], "]"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"unitaryStep", "[", 
+     RowBox[{"g_", ",", " ", "dt_"}], "]"}], "[", "\[Psi]_", "]"}], " ", ":=",
+    " ", 
+   RowBox[{"InverseFourier", "[", "\n", "   ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Exp", "[", 
+       RowBox[{
+        RowBox[{"-", "I"}], " ", 
+        RowBox[{
+         RowBox[{"g", "[", "\"\<p\>\"", "]"}], "^", "2"}], " ", 
+        RowBox[{"dt", "/", 
+         RowBox[{"(", 
+          RowBox[{"2", " ", "mass", " ", "hbar"}], ")"}]}]}], "]"}], " ", 
+      RowBox[{"Fourier", "[", 
+       RowBox[{"\[Psi]", ",", " ", 
+        RowBox[{"FourierParameters", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"0", ",", " ", 
+           RowBox[{"-", "1"}]}], "}"}]}]}], "]"}]}], ",", "\n", "   ", 
+     RowBox[{"FourierParameters", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", 
+        RowBox[{"-", "1"}]}], "}"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"xMean", "[", 
+    RowBox[{"g_", ",", " ", "\[Psi]_"}], "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"g", "[", "\"\<x\>\"", "]"}], " ", ".", " ", 
+    RowBox[{
+     RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"xVar", "[", 
+    RowBox[{"g_", ",", " ", "\[Psi]_"}], "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"g", "[", "\"\<x\>\"", "]"}], "^", "2"}], " ", ".", " ", 
+     RowBox[{
+      RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}]}], " ", "-", " ", 
+    RowBox[{
+     RowBox[{"xMean", "[", 
+      RowBox[{"g", ",", " ", "\[Psi]"}], "]"}], "^", "2"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"drawExact", "[", 
+     RowBox[{"g_", ",", " ", "\[Lambda]_", ",", " ", "dt_"}], "]"}], "[", 
+    "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"RandomChoice", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}], " ", "->", " ", 
+      RowBox[{"g", "[", "\"\<x\>\"", "]"}]}], "]"}], " ", "+", "\n", "   ", 
+    RowBox[{"RandomVariate", "[", 
+     RowBox[{"NormalDistribution", "[", 
+      RowBox[{"0", ",", " ", 
+       RowBox[{"1", "/", 
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"4", " ", "\[Lambda]", " ", "dt"}], "]"}]}]}], "]"}], 
+     "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"measUpdate", "[", 
+     RowBox[{"g_", ",", " ", "\[Lambda]_", ",", " ", "dt_", ",", " ", "xb_"}],
+      "]"}], "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{"Normalize", "[", 
+    RowBox[{
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{"-", "\[Lambda]"}], " ", "dt", " ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"g", "[", "\"\<x\>\"", "]"}], " ", "-", " ", "xb"}], ")"}], 
+        "^", "2"}]}], "]"}], " ", "\[Psi]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"normError", "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{"Abs", "[", 
+    RowBox[{
+     RowBox[{"\[Psi]", " ", ".", " ", 
+      RowBox[{"Conjugate", "[", "\[Psi]", "]"}]}], " ", "-", " ", "1"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"projector", "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{"Outer", "[", 
+    RowBox[{"Times", ",", " ", "\[Psi]", ",", " ", 
+     RowBox[{"Conjugate", "@", "\[Psi]"}]}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"27ef2af6-60c7-4f2b-a26b-46158f03b323"],
+
+Cell[TextData[{
+ "For ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    StyleBox["H", "TI"], "^"], "=", 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], "2"], "/", "2", 
+   StyleBox["m", "TI"], "+", 
+   StyleBox["V", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["x", "TI"], "^"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "167d7197-0276-4991-a39a-88b4189bb879"],
+ " the potential is diagonal in position, so its propagator ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"-", 
+    StyleBox["i", "TI"], 
+    StyleBox["V", "TI"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], 
+    StyleBox[")",
+     SpanMaxSize->1], " ", 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"], "/", "\[HBar]"}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "536ccffc-17de-4b81-8aff-12b87424419b"],
+ " is a pointwise phase. Splitting the exponential symmetrically, ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     OverscriptBox[
+      StyleBox["H", "TI"], "^"], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], "/", "\[HBar]"}]], "\[TildeTilde]", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["V", "TI"], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], "/", "2", "\[HBar]"}]], " ", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     OverscriptBox[
+      StyleBox["T", "TI"], "^"], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], "/", "\[HBar]"}]], " ", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["V", "TI"], " ", 
+     StyleBox["d", "TI"], 
+     StyleBox["t", "TI"], "/", "2", "\[HBar]"}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cd1e0aff-9f15-4211-867a-18b45f63ced7"],
+ ", gives a second-order (Strang) step: a half phase kick, a full free \
+(kinetic) step, another half phase kick. The half kick is one line, and the \
+full evolution is the composition, with the free ",
+ Cell[BoxData["unitaryStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3f0dbfda-434d-4329-afa0-9f0bc335708a"],
+ " reused unchanged as the kinetic factor:"
+}], "Text",ExpressionUUID->"9c19ad43-5502-419f-85a5-900b18be89f2"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"potentialStep", "[", 
+     RowBox[{"g_", ",", " ", "Vfun_", ",", " ", "dt_"}], "]"}], "[", 
+    "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"Exp", "[", 
+     RowBox[{
+      RowBox[{"-", "I"}], " ", 
+      RowBox[{"Vfun", "[", 
+       RowBox[{"g", "[", "\"\<x\>\"", "]"}], "]"}], " ", 
+      RowBox[{"dt", "/", 
+       RowBox[{"(", 
+        RowBox[{"2", " ", "hbar"}], ")"}]}]}], "]"}], " ", "\[Psi]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"evolveStep", "[", 
+    RowBox[{"g_", ",", " ", "Vfun_", ",", " ", "dt_"}], "]"}], " ", ":=", 
+   "\n", "   ", 
+   RowBox[{
+    RowBox[{"potentialStep", "[", 
+     RowBox[{"g", ",", " ", "Vfun", ",", " ", "dt"}], "]"}], " ", "@*", " ", 
+    RowBox[{"unitaryStep", "[", 
+     RowBox[{"g", ",", " ", "dt"}], "]"}], " ", "@*", " ", 
+    RowBox[{"potentialStep", "[", 
+     RowBox[{"g", ",", " ", "Vfun", ",", " ", "dt"}], "]"}]}]}], 
+  ";"}]}], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"5f906873-fa61-448b-abc0-38e70a160ee3"],
+
+Cell[TextData[{
+ "The conditional step is measurement then evolution, exactly as before, but \
+with ",
+ Cell[BoxData["evolveStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ad29fdb9-b79b-4b6a-8d0d-bae6c7fdda6f"],
+ " in place of ",
+ Cell[BoxData["unitaryStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5cc89f72-dcce-4f51-b957-d7251ea96521"],
+ ", and one run reaps the record while nesting the trajectory:"
+}], "Text",ExpressionUUID->"b6cc9b5a-db25-44d7-ba98-e444e76a8edc"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"stepV", "[", 
+     RowBox[{
+     "g_", ",", " ", "Vfun_", ",", " ", "\[Lambda]_", ",", " ", "dt_", ",", 
+      " ", "xb_"}], "]"}], "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"evolveStep", "[", 
+     RowBox[{"g", ",", " ", "Vfun", ",", " ", "dt"}], "]"}], "[", 
+    RowBox[{
+     RowBox[{"measUpdate", "[", 
+      RowBox[{"g", ",", " ", "\[Lambda]", ",", " ", "dt", ",", " ", "xb"}], 
+      "]"}], "[", "\[Psi]", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"trajectory", "[", 
+     RowBox[{
+     "g_", ",", " ", "Vfun_", ",", " ", "\[Lambda]_", ",", " ", "dt_", ",", 
+      " ", "nt_"}], "]"}], "[", "\[Psi]0_", "]"}], " ", ":=", "\n", "   ", 
+   RowBox[{"NestList", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"stepV", "[", 
+        RowBox[{
+        "g", ",", " ", "Vfun", ",", " ", "\[Lambda]", ",", " ", "dt", ",", 
+         " ", 
+         RowBox[{
+          RowBox[{"drawExact", "[", 
+           RowBox[{"g", ",", " ", "\[Lambda]", ",", " ", "dt"}], "]"}], "[", 
+          "#", "]"}]}], "]"}], "[", "#", "]"}], " ", "&"}], ",", " ", 
+     "\[Psi]0", ",", " ", "nt"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"exptV", "[", 
+     RowBox[{
+     "g_", ",", " ", "Vfun_", ",", " ", "\[Lambda]_", ",", " ", "dt_", ",", 
+      " ", "nt_"}], "]"}], "[", "\[Psi]0_", "]"}], " ", ":=", " ", 
+   RowBox[{"Reap", "[", "\n", "   ", 
+    RowBox[{"NestList", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{
+        RowBox[{"stepV", "[", 
+         RowBox[{
+         "g", ",", " ", "Vfun", ",", " ", "\[Lambda]", ",", " ", "dt", ",", 
+          " ", 
+          RowBox[{"Sow", "@", 
+           RowBox[{
+            RowBox[{"drawExact", "[", 
+             RowBox[{"g", ",", " ", "\[Lambda]", ",", " ", "dt"}], "]"}], "[",
+             "#", "]"}]}]}], "]"}], "[", "#", "]"}], " ", "&"}], ",", " ", 
+      "\[Psi]0", ",", " ", "nt"}], "]"}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"4111e30f-58da-4186-ab6b-a4b67c8dc01a"],
+
+Cell[TextData[{
+ "The potential step is a pure phase, ",
+ Cell[BoxData[
+  RowBox[{GridBox[{
+     {
+      SuperscriptBox[
+       StyleBox["e", "TI"], 
+       RowBox[{"-", 
+        StyleBox["i", "TI"], 
+        StyleBox["V", "TI"], " ", 
+        StyleBox["d", "TI"], 
+        StyleBox["t", "TI"], "/", "2", "\[HBar]"}]]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5cd7c56e-e58c-4803-9b2f-6f0df3c27c48"],
+ ", so it preserves the norm exactly regardless of how large or stiff ",
+ Cell[BoxData[
+  StyleBox["V", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d7db6b0c-ac3d-4c97-a4b3-24dfb0728441"],
+ " is; the whole ",
+ Cell[BoxData["evolveStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8c877581-d586-4d32-aa2d-8a98644411f8"],
+ " is unitary to machine precision on any potential. The consistency check is \
+the zero potential: with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "\[Congruent]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "26e0c37c-a2e0-43ca-859f-dd0642127638"],
+ " each phase kick is the identity and ",
+ Cell[BoxData["evolveStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5abb6d17-27f7-4a94-b258-140a36f907dc"],
+ " must reduce to the free ",
+ Cell[BoxData["unitaryStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f392894b-8219-4638-9629-a6960301f788"],
+ " bit for bit."
+}], "Text",ExpressionUUID->"8ed76d95-f471-4fe6-8e59-5412a5b52760"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gChk", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"128", ",", " ", "40."}], "]"}]}], ";", " ", 
+  RowBox[{"\[Psi]Chk", " ", "=", " ", 
+   RowBox[{"gaussian", "[", 
+    RowBox[{"gChk", ",", " ", "1.5", ",", " ", "0.7", ",", " ", "1.3"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<max |evolveStep(V=0) - unitaryStep|\>\"", " ", "->", " ", 
+    RowBox[{"Max", "@", 
+     RowBox[{"Abs", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"evolveStep", "[", 
+         RowBox[{"gChk", ",", " ", 
+          RowBox[{"0", " ", "&"}], ",", " ", "0.01"}], "]"}], "[", 
+        "\[Psi]Chk", "]"}], " ", "-", " ", 
+       RowBox[{
+        RowBox[{"unitaryStep", "[", 
+         RowBox[{"gChk", ",", " ", "0.01"}], "]"}], "[", "\[Psi]Chk", "]"}]}],
+       "]"}]}]}], ",", "\n", " ", 
+   RowBox[{"\"\<identical expression\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"evolveStep", "[", 
+        RowBox[{"gChk", ",", " ", 
+         RowBox[{"0", " ", "&"}], ",", " ", "0.01"}], "]"}], "[", "\[Psi]Chk",
+        "]"}], " ", "===", " ", 
+      RowBox[{
+       RowBox[{"unitaryStep", "[", 
+        RowBox[{"gChk", ",", " ", "0.01"}], "]"}], "[", "\[Psi]Chk", "]"}]}], 
+     ")"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<\:2016evolveStep(V=3x\.b2)\[Psi]\:2016 error\>\"", " ", "->", 
+    " ", 
+    RowBox[{"normError", "[", 
+     RowBox[{
+      RowBox[{"evolveStep", "[", 
+       RowBox[{"gChk", ",", " ", 
+        RowBox[{
+         RowBox[{"3", " ", 
+          RowBox[{"#", "^", "2"}]}], " ", "&"}], ",", " ", "0.02"}], "]"}], "[",
+       "\[Psi]Chk", "]"}], "]"}]}]}], "}"}]}], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"80385b74-c674-4f61-be86-2ff23521a859"],
+
+Cell[TextData[{
+ "The difference is zero and the two are identical expressions: the free \
+particle is the ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dd127e38-33d6-4f29-bbe4-56f97c192675"],
+ " special case, recovered without approximation. The third entry checks the \
+general claim, that ",
+ Cell[BoxData["evolveStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1820882b-181c-42d0-977b-de746a6f26ee"],
+ " is unitary for any potential: the potential factor is a pure phase, so the \
+norm is preserved to machine precision even on a stiff ",
+ Cell[BoxData[
+  StyleBox["V", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bf222e35-79ca-4718-bc4e-c981f67fc1f7"],
+ ". So every result the free-particle document established survives verbatim \
+when we pass ",
+ Cell[BoxData[
+  RowBox[{"0", " ", "&"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a28c96ca-c062-45ff-819a-dd0994fcf661"],
+ " for the potential, and the generalization is safe to build on."
+}], "Text",ExpressionUUID->"6381acdb-f861-468b-a353-0558ff630746"],
+
+Cell["Part II: The Free Particle Survives the Generalization", "Section",ExpressionUUID->"b795a4f5-e2f9-4ca6-8ba7-c685a3e9d25a"],
+
+Cell[TextData[{
+ "Rerun the headline free-particle results through the generalized code, \
+passing the zero potential. A broad packet under measurement localizes to the \
+steady conditional width ",
+ Cell[BoxData[
+  SuperscriptBox[
+   RowBox[{
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[HBar]", "/", "4", 
+     StyleBox["\[Lambda]", "TI"], 
+     StyleBox["m", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], 
+   RowBox[{"1", "/", "4"}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "842deb91-74ce-4022-836b-ea5a57967d52"],
+ ", and the split-operator holds its norm at one to machine precision:"
+}], "Text",ExpressionUUID->"6babfd0f-734a-4cdb-b9ab-d36ce71e39e6"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gF", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"256", ",", " ", "50."}], "]"}]}], ";", " ", 
+  RowBox[{"\[Lambda]R", " ", "=", " ", "1."}], ";", " ", 
+  RowBox[{"dt", " ", "=", " ", "0.005"}], ";", " ", 
+  RowBox[{"nt", " ", "=", " ", "600"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"statesF", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "11", "]"}], ";", " ", 
+     RowBox[{"First", "@", 
+      RowBox[{
+       RowBox[{"exptV", "[", 
+        RowBox[{"gF", ",", " ", 
+         RowBox[{"0", " ", "&"}], ",", " ", "\[Lambda]R", ",", " ", "dt", ",",
+          " ", "nt"}], "]"}], "[", 
+       RowBox[{"gaussian", "[", 
+        RowBox[{"gF", ",", " ", "0.", ",", " ", "0.", ",", " ", "2."}], "]"}],
+        "]"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"widthsF", " ", "=", " ", 
+   RowBox[{"Sqrt", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"xVar", "[", 
+       RowBox[{"gF", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+     "statesF"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"AssociationThread", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"\"\<\!\(\*SqrtBox[\\\"Vx\\\"]\): start -> end\>\"", ",", 
+     " ", "\"\<predicted steady\>\"", ",", 
+     " ", "\"\<final \:2016\[Psi]\:2016 error\>\""}], "}"}], ",", "\n", "  ", 
+   
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"First", "@", "widthsF"}], ",", " ", 
+       RowBox[{"Last", "@", "widthsF"}]}], "}"}], ",", " ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"hbar", "/", 
+        RowBox[{"(", 
+         RowBox[{"4", " ", "\[Lambda]R", " ", "mass"}], ")"}]}], ")"}], "^", 
+      RowBox[{"(", 
+       RowBox[{"1", "/", "4"}], ")"}]}], ",", " ", 
+     RowBox[{"normError", "[", 
+      RowBox[{"Last", "@", "statesF"}], "]"}]}], "}"}]}], "]"}]}], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"93716090-9d64-42e2-b1e5-b9bac6e624d7"],
+
+Cell[TextData[{
+ "The conditional width relaxes from ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fb3e6139-914c-441d-8ebc-0ce25b2399c3"],
+ " to ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "0.71"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ba0785a-6b96-426d-b1d8-dea4454f9bbc"],
+ ", the fourth root ",
+ Cell[BoxData[
+  SuperscriptBox[
+   RowBox[{
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{"\[HBar]", "/", "4", 
+     StyleBox["\[Lambda]", "TI"], 
+     StyleBox["m", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], 
+   RowBox[{"1", "/", "4"}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "043fbcf2-4b73-4dd9-a741-f70fa803cb00"],
+ ". At unit detection efficiency the conditional state is pure, which is what \
+lets us carry it as a single state vector; the split-operator's substantive \
+guarantee, which a general integrator does not give, is that the norm stays \
+one, here to ",
+ Cell[BoxData[
+  RowBox[{"\[Tilde]", 
+   SuperscriptBox["10", 
+    RowBox[{"-", "16"}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f101ffb2-2492-4463-842c-604805436ebd"],
+ ". The state mixes only in the ensemble average of Part IV. Backaction \
+heating is also unchanged: on the position grid the unconditional (Lindblad) \
+state integrates by the same operator split, the double-commutator dissipator \
+damping each density-matrix element ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[
+    RowBox[{"i", "j"}], "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "363fc8f8-fe30-4e34-b66a-c303316ec8b7"],
+ " by ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"-", 
+    FractionBox[
+     StyleBox["\[Lambda]", "TI"], "2"], 
+    SuperscriptBox[
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       SubscriptBox[
+        StyleBox["x", "TI"], 
+        StyleBox["i", "TI"]], "-", 
+       SubscriptBox[
+        StyleBox["x", "TI"], 
+        StyleBox["j", "TI"]]}], 
+      StyleBox[")",
+       SpanMaxSize->1]}], "2"], 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f2093457-ba8b-4ec3-a05f-0345c9929a9e"],
+ " and the Hamiltonian acting through ",
+ Cell[BoxData["evolveStep"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "db1f5cc4-77c6-4369-a709-5a6d62590ced"],
+ " assembled as a matrix. Build the pieces once, as reusable helpers, since \
+the trap and the well will need them too:"
+}], "Text",ExpressionUUID->"48b6381e-af07-4b32-9581-c8033c70d019"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"decohereMat", "[", 
+    RowBox[{"g_", ",", " ", "\[Lambda]_", ",", " ", "dt_"}], "]"}], " ", ":=",
+    " ", 
+   RowBox[{"Exp", "[", 
+    RowBox[{
+     RowBox[{"-", 
+      RowBox[{"(", 
+       RowBox[{"\[Lambda]", "/", "2"}], ")"}]}], " ", 
+     RowBox[{"Outer", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"#1", " ", "-", " ", "#2"}], ")"}], "^", "2"}], " ", "&"}], 
+       ",", " ", 
+       RowBox[{"g", "[", "\"\<x\>\"", "]"}], ",", " ", 
+       RowBox[{"g", "[", "\"\<x\>\"", "]"}]}], "]"}], " ", "dt"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"uniMat", "[", 
+    RowBox[{"g_", ",", " ", "Vfun_", ",", " ", "dt_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"Transpose", "[", 
+    RowBox[{
+     RowBox[{"evolveStep", "[", 
+      RowBox[{"g", ",", " ", "Vfun", ",", " ", "dt"}], "]"}], " ", "/@", " ", 
+     
+     RowBox[{"IdentityMatrix", "[", 
+      RowBox[{"g", "[", "\"\<n\>\"", "]"}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"lindblad", "[", 
+    RowBox[{
+    "g_", ",", " ", "Vfun_", ",", " ", "\[Lambda]_", ",", " ", "dt_"}], "]"}],
+    " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"u", " ", "=", " ", 
+        RowBox[{"uniMat", "[", 
+         RowBox[{"g", ",", " ", "Vfun", ",", " ", "dt"}], "]"}]}], ",", " ", 
+       RowBox[{"dec", " ", "=", " ", 
+        RowBox[{"decohereMat", "[", 
+         RowBox[{"g", ",", " ", "\[Lambda]", ",", " ", "dt"}], "]"}]}]}], 
+      "}"}], ",", "\n", "   ", 
+     RowBox[{"Function", "[", 
+      RowBox[{"\[Rho]", ",", " ", 
+       RowBox[{"u", " ", ".", " ", 
+        RowBox[{"(", 
+         RowBox[{"\[Rho]", " ", "dec"}], ")"}], " ", ".", " ", 
+        RowBox[{"ConjugateTranspose", "[", "u", "]"}]}]}], "]"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"p2Op", "[", "g_", "]"}], " ", ":=", " ", 
+   RowBox[{"Transpose", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"InverseFourier", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"g", "[", "\"\<p\>\"", "]"}], "^", "2"}], " ", 
+         RowBox[{"Fourier", "[", 
+          RowBox[{"#", ",", " ", 
+           RowBox[{"FourierParameters", " ", "->", " ", 
+            RowBox[{"{", 
+             RowBox[{"0", ",", " ", 
+              RowBox[{"-", "1"}]}], "}"}]}]}], "]"}]}], ",", "\n", "      ", 
+        RowBox[{"FourierParameters", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"0", ",", " ", 
+           RowBox[{"-", "1"}]}], "}"}]}]}], "]"}], " ", "&"}], " ", "/@", " ", 
+     RowBox[{"IdentityMatrix", "[", 
+      RowBox[{"g", "[", "\"\<n\>\"", "]"}], "]"}]}], "]"}]}], ";"}]}], "Input",\
+
+ CellLabel->"In[6]:= ",ExpressionUUID->"bde04b72-d2f2-488a-9927-dd3178115844"],
+
+Cell[TextData[{
+ "Propagate the free master equation from a pure packet and read the momentum \
+variance, which the moments predict to grow linearly as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    RowBox[{
+     StyleBox["\[LeftAngleBracket]",
+      SpanMaxSize->1], 
+     SuperscriptBox[
+      OverscriptBox[
+       StyleBox["p", "TI"], "^"], "2"], 
+     StyleBox["\[RightAngleBracket]",
+      SpanMaxSize->1]}], "0"], "+", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], 
+   StyleBox["t", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e23e45a-2cd9-464c-b1c5-d4f2f42c69d6"],
+ ":"
+}], "Text",ExpressionUUID->"4e10ab7f-e370-47ee-be56-782c6c6b8400"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gS", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"32", ",", " ", "16."}], "]"}]}], ";", " ", 
+  RowBox[{"dtS", " ", "=", " ", "0.0005"}], ";", " ", 
+  RowBox[{"tf", " ", "=", " ", "0.4"}], ";", " ", 
+  RowBox[{"ntS", " ", "=", " ", 
+   RowBox[{"Round", "[", 
+    RowBox[{"tf", "/", "dtS"}], "]"}]}], ";", " ", 
+  RowBox[{"\[Psi]0", " ", "=", " ", 
+   RowBox[{"gaussian", "[", 
+    RowBox[{"gS", ",", " ", "0.", ",", " ", "0.", ",", " ", "1."}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[Rho]free", " ", "=", " ", 
+   RowBox[{"Nest", "[", 
+    RowBox[{
+     RowBox[{"lindblad", "[", 
+      RowBox[{"gS", ",", " ", 
+       RowBox[{"0", " ", "&"}], ",", " ", "\[Lambda]R", ",", " ", "dtS"}], 
+      "]"}], ",", " ", 
+     RowBox[{"projector", "[", "\[Psi]0", "]"}], ",", " ", "ntS"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<\:27e8p\.b2\:27e9(0)\>\"", " ", "->", " ", 
+    RowBox[{"Re", "[", 
+     RowBox[{
+      RowBox[{"Conjugate", "[", "\[Psi]0", "]"}], " ", ".", " ", 
+      RowBox[{"p2Op", "[", "gS", "]"}], " ", ".", " ", "\[Psi]0"}], "]"}]}], ",",
+    " ", 
+   RowBox[{"\"\<\:27e8p\.b2\:27e9(tf) master\>\"", " ", "->", " ", 
+    RowBox[{"Re", "@", 
+     RowBox[{"Tr", "[", 
+      RowBox[{"\[Rho]free", " ", ".", " ", 
+       RowBox[{"p2Op", "[", "gS", "]"}]}], "]"}]}]}], ",", "\n", " ", 
+   RowBox[{"\"\<\:27e8p\.b2\:27e9(0) + \[Lambda]\[HBar]\.b2tf\>\"", " ", "->",
+     " ", 
+    RowBox[{
+     RowBox[{"Re", "[", 
+      RowBox[{
+       RowBox[{"Conjugate", "[", "\[Psi]0", "]"}], " ", ".", " ", 
+       RowBox[{"p2Op", "[", "gS", "]"}], " ", ".", " ", "\[Psi]0"}], "]"}], 
+     " ", "+", " ", 
+     RowBox[{"\[Lambda]R", " ", 
+      RowBox[{"hbar", "^", "2"}], " ", "tf"}]}]}]}], "}"}]}], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"121b96fa-25e8-4a09-b86d-c59acd05b4aa"],
+
+Cell[TextData[{
+ "The momentum variance rises from ",
+ Cell[BoxData["0.25"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d6f2c8b9-67f5-4ea4-b517-28915489ee92"],
+ " to ",
+ Cell[BoxData[
+  RowBox[{"0.65", "=", "0.25", "+", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["f", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a1873253-819f-4d69-b7f2-9a531052dc7a"],
+ ": continuous position measurement heats the momentum at the constant rate \
+",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "68af2ce1-b0b4-4eae-89c2-c6a7b96cc3f6"],
+ ", independent of the state and the Hamiltonian. This rate is the one piece \
+of physics common to every case below."
+}], "Text",ExpressionUUID->"f8a37df1-bf30-40f3-9d74-37d8e92bd304"],
+
+Cell[TextData[{
+ "The generalized code also accepts any initial wavefunction, not just a \
+Gaussian. Take a two-packet superposition, a cat state delocalized over ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], "=", "\[PlusMinus]", "6"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1a21b0d1-7c29-47b6-a79b-d571911e5063"],
+ ", and watch continuous position measurement collapse it:"
+}], "Text",ExpressionUUID->"41b7aa32-7cd6-449d-ae15-9e11f29f847a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gC", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"256", ",", " ", "50."}], "]"}]}], ";", " ", 
+  RowBox[{"\[Psi]Cat", " ", "=", " ", 
+   RowBox[{"Normalize", "[", 
+    RowBox[{
+     RowBox[{"gaussian", "[", 
+      RowBox[{"gC", ",", " ", 
+       RowBox[{"-", "6."}], ",", " ", "0.", ",", " ", "1."}], "]"}], " ", "+",
+      " ", 
+     RowBox[{"gaussian", "[", 
+      RowBox[{"gC", ",", " ", "6.", ",", " ", "0.", ",", " ", "1."}], "]"}]}],
+     "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"statesC", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "5", "]"}], ";", " ", 
+     RowBox[{"First", "@", 
+      RowBox[{
+       RowBox[{"exptV", "[", 
+        RowBox[{"gC", ",", " ", 
+         RowBox[{"0", " ", "&"}], ",", " ", "1.", ",", " ", "0.005", ",", " ",
+          "600"}], "]"}], "[", "\[Psi]Cat", "]"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<initial Vx\>\"", " ", "->", " ", 
+    RowBox[{"xVar", "[", 
+     RowBox[{"gC", ",", " ", "\[Psi]Cat"}], "]"}]}], ",", " ", 
+   RowBox[{"\"\<final Vx\>\"", " ", "->", " ", 
+    RowBox[{"xVar", "[", 
+     RowBox[{"gC", ",", " ", 
+      RowBox[{"Last", "@", "statesC"}]}], "]"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<final \:2016\[Psi]\:2016 error\>\"", " ", "->", " ", 
+    RowBox[{"normError", "[", 
+     RowBox[{"Last", "@", "statesC"}], "]"}]}]}], "}"}]}], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"3ff639b9-6382-45d9-9946-91ac1865185b"],
+
+Cell[TextData[{
+ "The initial variance is ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "37"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ae45bde-41a1-417a-820e-d921e9c2a92b"],
+ ", dominated by the ",
+ Cell[BoxData[
+  RowBox[{"\[PlusMinus]", "6"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ae79720b-120e-4689-8df6-55f2d5dbcbe5"],
+ " separation of the two lobes; the final variance is ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "0.5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "690b4e7d-d2ef-4178-82d9-f835754d65df"],
+ ", the single-packet steady value, with the norm preserved. Continuous \
+position measurement resolves which lobe the particle is in and localizes it \
+there. Displaying the conditional density ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        StyleBox["x", "TI"], ",", 
+        StyleBox["t", "TI"]}], 
+       StyleBox[")",
+        SpanMaxSize->1]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "18d49214-5bd9-420d-857b-6abd2bbf2062"],
+ " against time makes the collapse visible: the two ridges of the initial cat \
+compete, and one wins."
+}], "Text",ExpressionUUID->"e98b7314-bfca-43f9-bcf2-b9f4cd3f246b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"band", " ", "=", " ", 
+   RowBox[{"Flatten", "@", 
+    RowBox[{"Position", "[", 
+     RowBox[{
+      RowBox[{"UnitStep", "[", 
+       RowBox[{"10", " ", "-", " ", 
+        RowBox[{"Abs", "[", 
+         RowBox[{"gC", "[", "\"\<x\>\"", "]"}], "]"}]}], "]"}], ",", " ", 
+      "1"}], "]"}]}]}], ";"}], "\n", 
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{
+   RowBox[{"Reverse", "[", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Abs", "[", "statesC", "]"}], "^", "2"}], ")"}], "[", 
+     RowBox[{"[", 
+      RowBox[{"All", ",", " ", "band"}], "]"}], "]"}], "]"}], ",", "\n", " ", 
+   
+   RowBox[{"DataRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"gC", "[", "\"\<x\>\"", "]"}], "[", 
+       RowBox[{"[", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"First", "@", "band"}], ",", " ", 
+          RowBox[{"Last", "@", "band"}]}], "}"}], "]"}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", 
+        RowBox[{"600", " ", "dt"}]}], "}"}]}], "}"}]}], ",", " ", 
+   RowBox[{"ColorFunction", " ", "->", " ", "\"\<SunsetColors\>\""}], ",", 
+   "\n", " ", 
+   RowBox[{"AspectRatio", " ", "->", " ", "1.3"}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "300"}], ",", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<x\>\"", ",", " ", "\"\<t\>\""}], "}"}]}], ",", "\n", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<A cat state collapses to one packet\>\""}]}], "]"}]}], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"fd85f504-7cb9-4bba-9fa1-3f7bb02f5ccc"],
+
+Cell["Part III: A Trap That Closes, the Harmonic Oscillator", "Section",ExpressionUUID->"dd892570-2391-46cc-b8b6-5d3368921361"],
+
+Cell[TextData[{
+ "The harmonic oscillator ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["x", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   FractionBox["1", "2"], 
+   StyleBox["m", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Omega]", "TI"], "2"], 
+   SuperscriptBox[
+    StyleBox["x", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d89a0550-1bc7-44e6-932e-b87a738509f1"],
+ " is the exact setting of cavity and levitated optomechanics, where the \
+position of a mechanical mode is monitored by scattered or cavity light. \
+Because ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["H", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e92ffaf8-3387-4edd-8021-b52a6cb3b92b"],
+ " is quadratic, a Gaussian conditional state stays Gaussian under both the \
+measurement and the evolution, so its five moments close among themselves. \
+The conditional covariances obey a deterministic matrix Riccati flow, the \
+free-particle equations of the companion document plus the trap terms ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   StyleBox["m", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Omega]", "TI"], "2"], 
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "44b2f557-0cf7-4320-af58-c7c52a7cc075"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"-", "2", 
+   StyleBox["m", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Omega]", "TI"], "2"], 
+   StyleBox["C", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "95fcfe35-dffd-4ba6-8137-1123187ceb6a"],
+ ":"
+}], "Text",ExpressionUUID->"b89ceef5-1084-4851-a4e3-9449f97cf73c"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{
+   "Vx", ",", " ", "Cc", ",", " ", "Vp", ",", " ", "\[Lambda]", ",", " ", 
+    "\[Omega]", ",", " ", "m", ",", " ", "\[HBar]"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"riccati", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"2", " ", 
+       RowBox[{"Cc", "/", "m"}]}], " ", "-", " ", 
+      RowBox[{"4", " ", "\[Lambda]", " ", 
+       RowBox[{"Vx", "^", "2"}]}]}], ",", " ", 
+     RowBox[{
+      RowBox[{"Vp", "/", "m"}], " ", "-", " ", 
+      RowBox[{"m", " ", 
+       RowBox[{"\[Omega]", "^", "2"}], " ", "Vx"}], " ", "-", " ", 
+      RowBox[{"4", " ", "\[Lambda]", " ", "Vx", " ", "Cc"}]}], ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "m", " ", 
+       RowBox[{"\[Omega]", "^", "2"}], " ", "Cc"}], " ", "+", " ", 
+      RowBox[{"\[Lambda]", " ", 
+       RowBox[{"\[HBar]", "^", "2"}]}], " ", "-", " ", 
+      RowBox[{"4", " ", "\[Lambda]", " ", 
+       RowBox[{"Cc", "^", "2"}]}]}]}], "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"steady", " ", "=", " ", 
+   RowBox[{"Solve", "[", 
+    RowBox[{
+     RowBox[{"Thread", "[", 
+      RowBox[{"riccati", " ", "==", " ", "0"}], "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"Vx", ",", " ", "Cc", ",", " ", "Vp"}], "}"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"posRoot", "[", "rule_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"v", " ", "=", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"Vx", ",", " ", "Cc", ",", " ", "Vp"}], "}"}], " ", "/.", 
+         " ", "rule"}], " ", "/.", " ", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\[Lambda]", " ", "->", " ", "1."}], ",", " ", 
+          RowBox[{"\[Omega]", " ", "->", " ", "1."}], ",", " ", 
+          RowBox[{"m", " ", "->", " ", "1."}], ",", " ", 
+          RowBox[{"\[HBar]", " ", "->", " ", "1."}]}], "}"}]}]}], "}"}], ",", 
+     "\n", "   ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Max", "@", 
+        RowBox[{"Abs", "@", 
+         RowBox[{"Im", "[", "v", "]"}]}]}], " ", "<", " ", 
+       RowBox[{"10", "^", 
+        RowBox[{"-", "10"}]}]}], " ", "&&", " ", 
+      RowBox[{
+       RowBox[{"Re", "[", 
+        RowBox[{"v", "[", 
+         RowBox[{"[", "1", "]"}], "]"}], "]"}], " ", ">", " ", "0"}], " ", "&&",
+       " ", 
+      RowBox[{
+       RowBox[{"Re", "[", 
+        RowBox[{"v", "[", 
+         RowBox[{"[", "3", "]"}], "]"}], "]"}], " ", ">", " ", "0"}]}]}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"VxSS", ",", " ", "CcSS", ",", " ", "VpSS"}], "}"}], " ", "=", 
+   " ", 
+   RowBox[{"Simplify", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"Vx", ",", " ", "Cc", ",", " ", "Vp"}], "}"}], " ", "/.", " ", 
+      
+      RowBox[{"First", "@", 
+       RowBox[{"Select", "[", 
+        RowBox[{"steady", ",", " ", "posRoot"}], "]"}]}]}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\[Lambda]", " ", ">", " ", "0"}], ",", " ", 
+       RowBox[{"\[Omega]", " ", ">", " ", "0"}], ",", " ", 
+       RowBox[{"m", " ", ">", " ", "0"}], ",", " ", 
+       RowBox[{"\[HBar]", " ", ">", " ", "0"}]}], "}"}]}], "]"}]}], 
+  ";"}], "\n", "VxSS"}], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"9b2654d5-b85a-47b7-9629-9fe0b65f4baa"],
+
+Cell[TextData[{
+ "The steady conditional position variance is ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"], 
+    StyleBox[
+     RowBox[{"s", "s"}], "TI"]], "=", 
+   FractionBox["1", 
+    RowBox[{"2", 
+     SqrtBox["2"]}]], 
+   SqrtBox[
+    FractionBox[
+     RowBox[{"-", 
+      StyleBox["m", "TI"], 
+      SuperscriptBox[
+       StyleBox["\[Omega]", "TI"], "2"], "+", 
+      SqrtBox[
+       RowBox[{"4", 
+        SuperscriptBox["\[HBar]", "2"], 
+        SuperscriptBox[
+         StyleBox["\[Lambda]", "TI"], "2"], "+", 
+        SuperscriptBox[
+         StyleBox["m", "TI"], "2"], 
+        SuperscriptBox[
+         StyleBox["\[Omega]", "TI"], "4"]}]]}], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["\[Lambda]", "TI"], "2"], 
+      StyleBox["m", "TI"]}]]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e99fa01-a1f7-4512-bb03-af3a6a0bf000"],
+ ". Two limits check it. The steady conditional state is pure, so its \
+covariances saturate the uncertainty product, and the free particle is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Omega]", "TI"], "\[Rule]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7994d087-365d-4974-a8ed-84aaaae13e70"],
+ ":"
+}], "Text",ExpressionUUID->"43ccf08a-f54b-4cc4-a3c9-7dd8bc0f9146"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<purity Vx Vp - C\.b2 (expect \[HBar]\.b2/4)\>\"", " ", "->", 
+    " ", 
+    RowBox[{"Simplify", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"VxSS", " ", "VpSS"}], " ", "-", " ", 
+       RowBox[{"CcSS", "^", "2"}]}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\[Lambda]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[Omega]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"m", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[HBar]", " ", ">", " ", "0"}]}], "}"}]}], "]"}]}], ",", 
+   "\n", " ", 
+   RowBox[{"\"\<\[Omega]\[RightArrow]0 (expect free \
+Sqrt[\[HBar]/4\[Lambda]m])\>\"", " ", "->", " ", 
+    RowBox[{"Simplify", "[", 
+     RowBox[{
+      RowBox[{"Limit", "[", 
+       RowBox[{"VxSS", ",", " ", 
+        RowBox[{"\[Omega]", " ", "->", " ", "0"}]}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\[Lambda]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"m", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[HBar]", " ", ">", " ", "0"}]}], "}"}]}], "]"}]}]}], 
+  "}"}]], "Input",
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"d0367430-2722-46cb-a19c-a2fb5ea345e8"],
+
+Cell[TextData[{
+ "The conditional purity invariant ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"]], 
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["p", "TI"]], "-", 
+   SuperscriptBox[
+    StyleBox["C", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "196944a9-eddd-4866-a396-d4084a636546"],
+ " equals ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox["\[HBar]", "2"], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57011f81-16e0-4822-82fb-3a47d97903f3"],
+ " exactly, so the steady conditional state is a pure Gaussian, and as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Omega]", "TI"], "\[Rule]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "27324e4e-b5a1-4a5b-8efc-5e48dc8061ae"],
+ " the steady variance returns to the free-particle ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{"\[HBar]", "/", "4", 
+    StyleBox["\[Lambda]", "TI"], 
+    StyleBox["m", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "227bec26-9473-4f26-b562-1ec13d6f9092"],
+ ". Now compare it to the ground-state zero-point variance ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"], 
+    StyleBox[
+     RowBox[{"z", "p"}], "TI"]], "=", "\[HBar]", "/", "2", 
+   StyleBox["m", "TI"], 
+   StyleBox["\[Omega]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2730caea-a705-495d-8137-45ecd79ee792"],
+ ". In the single dimensionless measurement strength ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Mu]", "TI"], "=", "2", "\[HBar]", 
+   StyleBox["\[Lambda]", "TI"], "/", 
+   StyleBox["m", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Omega]", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4138c2b4-9190-499e-b12d-6a72bee9ac4d"],
+ " the ratio collapses to a clean form, below ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5c0b4358-08d5-4b1f-991b-ed0f3beee9d8"],
+ " for every ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Mu]", "TI"], ">", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "05a1a544-8661-4044-ae07-dab94ade706e"],
+ ":"
+}], "Text",ExpressionUUID->"95008b8b-ce4f-4356-b776-952f41d53cfb"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Mu]", " ", "=", " ", 
+   RowBox[{"2", " ", "\[HBar]", " ", 
+    RowBox[{"\[Lambda]", "/", 
+     RowBox[{"(", 
+      RowBox[{"m", " ", 
+       RowBox[{"\[Omega]", "^", "2"}]}], ")"}]}]}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<Vx_ss / Vx_zp\>\"", " ", "->", " ", 
+    RowBox[{"Simplify", "[", 
+     RowBox[{
+      RowBox[{"VxSS", "/", 
+       RowBox[{"(", 
+        RowBox[{"\[HBar]", "/", 
+         RowBox[{"(", 
+          RowBox[{"2", " ", "m", " ", "\[Omega]"}], ")"}]}], ")"}]}], ",", 
+      " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\[Lambda]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[Omega]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"m", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[HBar]", " ", ">", " ", "0"}]}], "}"}]}], "]"}]}], ",", 
+   "\n", " ", 
+   RowBox[{"\"\<closed form Sqrt[2(Sqrt[1+\[Mu]\.b2]-1)]/\[Mu]\>\"", " ", "->",
+     " ", 
+    RowBox[{"Simplify", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"VxSS", "/", 
+        RowBox[{"(", 
+         RowBox[{"\[HBar]", "/", 
+          RowBox[{"(", 
+           RowBox[{"2", " ", "m", " ", "\[Omega]"}], ")"}]}], ")"}]}], " ", "==",
+        " ", 
+       RowBox[{
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"2", " ", 
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"Sqrt", "[", 
+             RowBox[{"1", " ", "+", " ", 
+              RowBox[{"\[Mu]", "^", "2"}]}], "]"}], " ", "-", " ", "1"}], 
+           ")"}]}], "]"}], "/", "\[Mu]"}]}], ",", "\n", "    ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"\[Lambda]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[Omega]", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"m", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"\[HBar]", " ", ">", " ", "0"}]}], "}"}]}], "]"}]}]}], 
+  "}"}]}], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"2ef214a0-df68-4a1d-b67d-75d0daccbfea"],
+
+Cell[TextData[{
+ "The ratio matches the closed form ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    RowBox[{"2", 
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      SqrtBox[
+       RowBox[{"1", "+", 
+        SuperscriptBox[
+         StyleBox["\[Mu]", "TI"], "2"]}]], "-", "1"}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]], "/", 
+   StyleBox["\[Mu]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0cc2a157-fb65-4a26-8e83-b429546bd1b4"],
+ ", and its two regimes follow by expanding it:"
+}], "Text",ExpressionUUID->"06af8342-275e-48fc-a63b-e28ac2075116"],
+
+Cell[BoxData[
+ RowBox[{"Block", "[", 
+  RowBox[{
+   RowBox[{"{", "q", "}"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\"\<weak, \[Mu]\[RightArrow]0: ratio \[RightArrow]\>\"", " ", "->",
+       " ", 
+      RowBox[{"Simplify", "[", 
+       RowBox[{
+        RowBox[{"Normal", "@", 
+         RowBox[{"Series", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Sqrt", "[", 
+             RowBox[{"2", " ", 
+              RowBox[{"(", 
+               RowBox[{
+                RowBox[{"Sqrt", "[", 
+                 RowBox[{"1", " ", "+", " ", 
+                  RowBox[{"q", "^", "2"}]}], "]"}], " ", "-", " ", "1"}], 
+               ")"}]}], "]"}], "/", "q"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"q", ",", " ", "0", ",", " ", "2"}], "}"}]}], "]"}]}], ",",
+         " ", 
+        RowBox[{"q", " ", ">", " ", "0"}]}], "]"}]}], ",", "\n", "   ", 
+     RowBox[{"\"\<strong, \[Mu]\[RightArrow]\[Infinity]: ratio\[CenterDot]\
+\[Sqrt]\[Mu] \[RightArrow]\>\"", " ", "->", " ", 
+      RowBox[{"Limit", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Sqrt", "[", "q", "]"}], " ", 
+         RowBox[{
+          RowBox[{"Sqrt", "[", 
+           RowBox[{"2", " ", 
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"Sqrt", "[", 
+               RowBox[{"1", " ", "+", " ", 
+                RowBox[{"q", "^", "2"}]}], "]"}], " ", "-", " ", "1"}], 
+             ")"}]}], "]"}], "/", "q"}]}], ",", " ", 
+        RowBox[{"q", " ", "->", " ", "Infinity"}]}], "]"}]}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"dd693d0e-7b08-42c4-84c1-9e1ac9f271d5"],
+
+Cell[TextData[{
+ "So the conditional variance dips just below the zero-point value for weak \
+measurement, ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"], 
+    StyleBox[
+     RowBox[{"s", "s"}], "TI"]], "/", 
+   SubsuperscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"], 
+    StyleBox[
+     RowBox[{"z", "p"}], "TI"]], "\[TildeTilde]", "1", "-", 
+   SuperscriptBox[
+    StyleBox["\[Mu]", "TI"], "2"], "/", "8"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "edf94fc6-b656-4be5-a859-097a80fdbff5"],
+ ", and falls off as ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{"2", "/", 
+    StyleBox["\[Mu]", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "79ef7121-d9ae-450c-8524-e6a12032b50b"],
+ " for strong. Continuous position measurement squeezes the conditional \
+position variance below the ground-state zero-point value at ",
+ StyleBox["any", "TI"],
+ " nonzero strength, deepening monotonically with ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2a0a8148-62f4-448a-a760-44f4453fba20"],
+ ": the measurement extracts position information continuously, and the \
+conditional state is a pure squeezed state, narrower in position than the \
+vacuum. Fix numbers in a strong regime and read the squeezing off the closed \
+form:"
+}], "Text",ExpressionUUID->"743d5023-0b81-4e63-8585-388eddb2c95b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Omega]R", " ", "=", " ", "1."}], ";", " ", 
+  RowBox[{"\[Lambda]R", " ", "=", " ", "2."}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"VxZP", " ", "=", " ", 
+   RowBox[{"hbar", "/", 
+    RowBox[{"(", 
+     RowBox[{"2", " ", "mass", " ", "\[Omega]R"}], ")"}]}]}], ";", " ", 
+  RowBox[{"VpZP", " ", "=", " ", 
+   RowBox[{"hbar", " ", "mass", " ", 
+    RowBox[{"\[Omega]R", "/", "2"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"harmNum", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\[HBar]", " ", "->", " ", "hbar"}], ",", " ", 
+     RowBox[{"m", " ", "->", " ", "mass"}], ",", " ", 
+     RowBox[{"\[Omega]", " ", "->", " ", "\[Omega]R"}], ",", " ", 
+     RowBox[{"\[Lambda]", " ", "->", " ", "\[Lambda]R"}]}], "}"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<Vx_zp\>\"", " ", "->", " ", "VxZP"}], ",", " ", 
+   RowBox[{"\"\<Vx_ss\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{"VxSS", " ", "/.", " ", "harmNum"}], ")"}]}], ",", " ", 
+   RowBox[{"\"\<Vx_ss/Vx_zp\>\"", " ", "->", " ", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"VxSS", " ", "/.", " ", "harmNum"}], ")"}], "/", "VxZP"}]}], ",",
+    "\n", " ", 
+   RowBox[{"\"\<Vp_ss/Vp_zp (anti-squeezed)\>\"", " ", "->", " ", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"VpSS", " ", "/.", " ", "harmNum"}], ")"}], "/", "VpZP"}]}], ",",
+    " ", 
+   RowBox[{"\"\<\[Mu]\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{"\[Mu]", " ", "/.", " ", "harmNum"}], ")"}]}]}], "}"}]}], "Input",\
+
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"2840d757-56ca-468c-98a4-d166f658c905"],
+
+Cell[TextData[{
+ "At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Mu]", "TI"], "=", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7a561b6d-3696-40bd-a3d6-899000d2a5dd"],
+ " the conditional position is squeezed to ",
+ Cell[BoxData["0.625"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ead1d29d-1cce-4979-9584-78839b7753cf"],
+ " of the zero-point variance, and the momentum is anti-squeezed to ",
+ Cell[BoxData["2.58"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c18f490c-5ab3-4b28-bdcc-fcfd67caf70d"],
+ " times its zero-point value, the backaction paid for the position \
+information. The grid split-operator scheme reproduces this without assuming \
+Gaussianity. Evolve one trajectory from the ground state under measurement in \
+the trap and track the conditional variance:"
+}], "Text",ExpressionUUID->"1ebb3242-50df-4455-8c28-80eb608babd5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Vharm", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"0.5", " ", "mass", " ", 
+     RowBox[{"\[Omega]R", "^", "2"}], " ", 
+     RowBox[{"#", "^", "2"}]}], " ", "&"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"gH", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"256", ",", " ", "24."}], "]"}]}], ";", " ", 
+  RowBox[{"dtH", " ", "=", " ", "0.002"}], ";", " ", 
+  RowBox[{"tfH", " ", "=", " ", "8."}], ";", " ", 
+  RowBox[{"ntH", " ", "=", " ", 
+   RowBox[{"Round", "[", 
+    RowBox[{"tfH", "/", "dtH"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"runH", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "11", "]"}], ";", " ", 
+     RowBox[{
+      RowBox[{"trajectory", "[", 
+       RowBox[{
+       "gH", ",", " ", "Vharm", ",", " ", "\[Lambda]R", ",", " ", "dtH", ",", 
+        " ", "ntH"}], "]"}], "[", 
+      RowBox[{"gaussian", "[", 
+       RowBox[{"gH", ",", " ", "0.", ",", " ", "0.", ",", " ", 
+        RowBox[{"Sqrt", "[", "VxZP", "]"}]}], "]"}], "]"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"vxH", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"xVar", "[", 
+      RowBox[{"gH", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+    "runH"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<grid Vx (late-time mean)\>\"", " ", "->", " ", 
+    RowBox[{"Mean", "[", 
+     RowBox[{"vxH", "[", 
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"Round", "[", 
+         RowBox[{"0.6", " ", "ntH"}], "]"}], " ", ";;"}], "]"}], "]"}], 
+     "]"}]}], ",", " ", 
+   RowBox[{"\"\<Riccati Vx_ss\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{"VxSS", " ", "/.", " ", "harmNum"}], ")"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<Vx_zp\>\"", " ", "->", " ", "VxZP"}], ",", " ", 
+   RowBox[{"\"\<final \:2016\[Psi]\:2016 error\>\"", " ", "->", " ", 
+    RowBox[{"normError", "[", 
+     RowBox[{"Last", "@", "runH"}], "]"}]}]}], "}"}]}], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"04f9bb1e-c6c4-4ccc-9838-82dd00888576"],
+
+Cell[TextData[{
+ "The grid conditional variance relaxes to ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "0.313"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9662393a-774d-4b1a-98f1-ce36a1a0ea29"],
+ ", matching the Riccati steady value to grid resolution and sitting well \
+below the zero-point ",
+ Cell[BoxData["0.5"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b74b976-7bd7-4fc0-9943-c3bfe9888634"],
+ ", with the norm held to machine precision. The relaxation is the same in \
+every run, because the conditional variance obeys a deterministic (noiseless) \
+equation while only the mean is driven by the record:"
+}], "Text",ExpressionUUID->"23d0d71c-d960-462b-8a0f-129f2ce3c87a"],
+
+Cell[BoxData[
+ RowBox[{"ListLinePlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"Transpose", "[", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"dtH", " ", 
+        RowBox[{"Range", "[", 
+         RowBox[{"0", ",", " ", "ntH"}], "]"}]}], ",", " ", "vxH"}], "}"}], 
+     "]"}], "}"}], ",", "\n", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "500"}], ",", " ", 
+   RowBox[{"AspectRatio", " ", "->", " ", 
+    RowBox[{"1", "/", "2"}]}], ",", " ", 
+   RowBox[{"PlotRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", " ", "0.55"}], "}"}]}], ",", "\n", " ", 
+   RowBox[{"GridLines", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"None", ",", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"VxZP", ",", " ", 
+          RowBox[{"Directive", "[", 
+           RowBox[{"Gray", ",", " ", "Dashed"}], "]"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"VxSS", " ", "/.", " ", "harmNum"}], ",", " ", 
+          RowBox[{"Directive", "[", 
+           RowBox[{"Red", ",", " ", "Dashed"}], "]"}]}], "}"}]}], "}"}]}], 
+     "}"}]}], ",", "\n", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<time t\>\"", ",", " ", "\"\<conditional variance Vx\>\""}], 
+     "}"}]}], ",", "\n", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<Measurement squeezes Vx below the zero-point line (gray) to the \
+Riccati value (red)\>\""}]}], "]"}]], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"faa38318-08ff-416c-840a-e7bb37a88549"],
+
+Cell[TextData[{
+ "Because the moments close, the same conditional dynamics is captured by \
+five real numbers instead of a grid: the means ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1]}], ",", 
+   RowBox[{
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ddfe6391-9103-4397-b9d1-c362e5d82108"],
+ ", driven by the record, and the covariances ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"]], ",", 
+   StyleBox["C", "TI"], ",", 
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["p", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b056b42f-d1bf-4352-b233-f1808f4a19fb"],
+ ", following the deterministic Riccati flow. This is the continuous quantum \
+Kalman-Bucy filter, the identical algorithm the optomechanics experiments run \
+on a field-programmable gate array to reconstruct the mechanical state in \
+real time. Hand it to the built-in stochastic integrator with the harmonic \
+drifts in place:"
+}], "Text",ExpressionUUID->"4b9b8551-3620-4f65-b459-a3cf9326d7bd"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{
+   "mx", ",", " ", "mp", ",", " ", "vx", ",", " ", "vc", ",", " ", "vp"}], 
+   "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"momentProc", " ", "=", " ", 
+   RowBox[{"ItoProcess", "[", "\n", "   ", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"mp", "[", "t", "]"}], "/", "mass"}], ",", " ", 
+         RowBox[{
+          RowBox[{"-", "mass"}], " ", 
+          RowBox[{"\[Omega]R", "^", "2"}], " ", 
+          RowBox[{"mx", "[", "t", "]"}]}], ",", " ", 
+         RowBox[{
+          RowBox[{"2", " ", 
+           RowBox[{
+            RowBox[{"vc", "[", "t", "]"}], "/", "mass"}]}], " ", "-", " ", 
+          RowBox[{"4", " ", "\[Lambda]R", " ", 
+           RowBox[{
+            RowBox[{"vx", "[", "t", "]"}], "^", "2"}]}]}], ",", "\n", "     ", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"vp", "[", "t", "]"}], "/", "mass"}], " ", "-", " ", 
+          RowBox[{"mass", " ", 
+           RowBox[{"\[Omega]R", "^", "2"}], " ", 
+           RowBox[{"vx", "[", "t", "]"}]}], " ", "-", " ", 
+          RowBox[{"4", " ", "\[Lambda]R", " ", 
+           RowBox[{"vx", "[", "t", "]"}], " ", 
+           RowBox[{"vc", "[", "t", "]"}]}]}], ",", " ", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"-", "2"}], " ", "mass", " ", 
+           RowBox[{"\[Omega]R", "^", "2"}], " ", 
+           RowBox[{"vc", "[", "t", "]"}]}], " ", "+", " ", 
+          RowBox[{"\[Lambda]R", " ", 
+           RowBox[{"hbar", "^", "2"}]}], " ", "-", " ", 
+          RowBox[{"4", " ", "\[Lambda]R", " ", 
+           RowBox[{
+            RowBox[{"vc", "[", "t", "]"}], "^", "2"}]}]}]}], "}"}], ",", "\n",
+        "    ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"2", " ", 
+           RowBox[{"Sqrt", "[", "\[Lambda]R", "]"}], " ", 
+           RowBox[{"vx", "[", "t", "]"}]}], "}"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"2", " ", 
+           RowBox[{"Sqrt", "[", "\[Lambda]R", "]"}], " ", 
+           RowBox[{"vc", "[", "t", "]"}]}], "}"}], ",", " ", 
+         RowBox[{"{", "0", "}"}], ",", " ", 
+         RowBox[{"{", "0", "}"}], ",", " ", 
+         RowBox[{"{", "0", "}"}]}], "}"}], ",", "\n", "    ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"mx", "[", "t", "]"}], ",", " ", 
+         RowBox[{"mp", "[", "t", "]"}], ",", " ", 
+         RowBox[{"vx", "[", "t", "]"}], ",", " ", 
+         RowBox[{"vc", "[", "t", "]"}], ",", " ", 
+         RowBox[{"vp", "[", "t", "]"}]}], "}"}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+        "mx", ",", " ", "mp", ",", " ", "vx", ",", " ", "vc", ",", " ", 
+         "vp"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{
+        "0.", ",", " ", "0.", ",", " ", "VxZP", ",", " ", "0.", ",", " ", 
+         "VpZP"}], "}"}]}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", " ", "0"}], "}"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"tdM", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "7", "]"}], ";", " ", 
+     RowBox[{"RandomFunction", "[", 
+      RowBox[{"momentProc", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"0.", ",", " ", "tfH", ",", " ", "0.01"}], "}"}], ",", " ", 
+       "300", ",", "\n", "    ", 
+       RowBox[{
+       "Method", " ", "->", 
+        " ", "\"\<StochasticRungeKuttaScalarNoise\>\""}]}], "]"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"finM", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"tdM", "[", "\"\<ValueList\>\"", "]"}], "[", 
+    RowBox[{"[", 
+     RowBox[{"All", ",", " ", 
+      RowBox[{"-", "1"}]}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<moment-filter Vx(tf) mean\>\"", " ", "->", " ", 
+    RowBox[{"Mean", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"[", "3", "]"}], "]"}], " ", "&"}], " ", "/@", " ", "finM"}], 
+     "]"}]}], ",", " ", 
+   RowBox[{"\"\<Vx spread across runs\>\"", " ", "->", " ", 
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"[", "3", "]"}], "]"}], " ", "&"}], " ", "/@", " ", "finM"}], 
+     "]"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<\:27e8x\:27e9 spread across runs\>\"", " ", "->", " ", 
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"[", "1", "]"}], "]"}], " ", "&"}], " ", "/@", " ", "finM"}], 
+     "]"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<grid Vx (late)\>\"", " ", "->", " ", 
+    RowBox[{"Mean", "[", 
+     RowBox[{"vxH", "[", 
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"Round", "[", 
+         RowBox[{"0.6", " ", "ntH"}], "]"}], " ", ";;"}], "]"}], "]"}], 
+     "]"}]}], ",", " ", 
+   RowBox[{"\"\<Riccati Vx_ss\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{"VxSS", " ", "/.", " ", "harmNum"}], ")"}]}]}], "}"}]}], "Input",\
+
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"8b83bd4d-525a-47ad-b842-e5f243508cef"],
+
+Cell[TextData[{
+ "The moment filter returns the same steady conditional variance as the grid, \
+and its spread across realizations is exactly zero: the covariance is \
+deterministic. The conditional mean, by contrast, spreads by several units \
+across runs, so the filter's stochasticity lives entirely in the means, which \
+the record drives through the gains ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   SqrtBox[
+    StyleBox["\[Lambda]", "TI"]], 
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a2fad35e-3641-4770-90ad-2560a035f8b8"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   SqrtBox[
+    StyleBox["\[Lambda]", "TI"]], 
+   StyleBox["C", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d48cfe7-c72d-4e62-8d27-70c9685210a2"],
+ ". The five-number filter and the 256-point grid describe the same \
+conditional state, because for a quadratic Hamiltonian the Gaussian \
+description is exact. This is the experimental correspondence made \
+quantitative: the conditional position uncertainty a levitated nanoparticle \
+experiment reconstructs by Kalman filtering is the same ",
+ Cell[BoxData[
+  SqrtBox[
+   SubscriptBox[
+    StyleBox["V", "TI"], 
+    StyleBox["x", "TI"]]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cccbad3-f09a-42de-becb-46b42cd85c17"],
+ " computed here, its scale set through ",
+ Cell[BoxData[
+  StyleBox["\[Mu]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "93855651-0f7a-4fe9-a246-1f166514a393"],
+ " by the ratio of the measurement rate to the mechanical frequency. At the \
+unit efficiency assumed here the steady value sits below the zero-point; the \
+above-zero-point figure a real experiment reports (Magrini et al., ",
+ Cell[BoxData["1.3"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "376a2712-7ea7-40ce-8c91-596bfd90681b"],
+ " times zero-point) reflects its finite detection efficiency ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Eta]", "TI"], "<", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "edcf4434-c6ee-447e-8417-d2adf881c176"],
+ ", which mixes the conditional state and lifts its uncertainty, and is the \
+extension deferred to the close."
+}], "Text",ExpressionUUID->"303d8ec9-2c57-4527-9ebf-158606ccea6d"],
+
+Cell["Part IV: Backaction in the Trap Heats Without Bound", "Section",ExpressionUUID->"a107ab2b-351e-425c-a18b-0da0cf430d8c"],
+
+Cell["\<\
+The conditional state reaches a steady squeezed pure state. The unconditional \
+state, averaged over the record, does not reach any steady state at all. The \
+trap has no way to remove the energy the measurement injects, so the closed \
+oscillator heats indefinitely. The unconditional second moments close on \
+their own, and their energy has a constant source:\
+\>", "Text",ExpressionUUID->"d6860e55-25d1-4554-b0a1-4fa890ef5a3a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"XX", ",", " ", "SS", ",", " ", "PP"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"usol", " ", "=", " ", 
+   RowBox[{"First", "@", 
+    RowBox[{"DSolve", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"XX", "'"}], "[", "t", "]"}], " ", "==", " ", 
+         RowBox[{"2", " ", 
+          RowBox[{
+           RowBox[{"SS", "[", "t", "]"}], "/", "m"}]}]}], ",", " ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"SS", "'"}], "[", "t", "]"}], " ", "==", " ", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"PP", "[", "t", "]"}], "/", "m"}], " ", "-", " ", 
+          RowBox[{"m", " ", 
+           RowBox[{"\[Omega]", "^", "2"}], " ", 
+           RowBox[{"XX", "[", "t", "]"}]}]}]}], ",", "\n", "    ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"PP", "'"}], "[", "t", "]"}], " ", "==", " ", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"-", "2"}], " ", "m", " ", 
+           RowBox[{"\[Omega]", "^", "2"}], " ", 
+           RowBox[{"SS", "[", "t", "]"}]}], " ", "+", " ", 
+          RowBox[{"\[Lambda]", " ", 
+           RowBox[{"\[HBar]", "^", "2"}]}]}]}], ",", " ", 
+        RowBox[{
+         RowBox[{"XX", "[", "0", "]"}], " ", "==", " ", "x0"}], ",", " ", 
+        RowBox[{
+         RowBox[{"SS", "[", "0", "]"}], " ", "==", " ", "0"}], ",", " ", 
+        RowBox[{
+         RowBox[{"PP", "[", "0", "]"}], " ", "==", " ", "p0"}]}], "}"}], ",", 
+      " ", 
+      RowBox[{"{", 
+       RowBox[{"XX", ",", " ", "SS", ",", " ", "PP"}], "}"}], ",", " ", "t"}],
+      "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"energy", " ", "=", " ", 
+   RowBox[{"Simplify", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"PP", "[", "t", "]"}], "/", 
+       RowBox[{"(", 
+        RowBox[{"2", " ", "m"}], ")"}]}], " ", "+", " ", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"1", "/", "2"}], ")"}], " ", "m", " ", 
+       RowBox[{"\[Omega]", "^", "2"}], " ", 
+       RowBox[{"XX", "[", "t", "]"}]}]}], " ", "/.", " ", "usol"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<E(t)\>\"", " ", "->", " ", "energy"}], ",", " ", 
+   RowBox[{"\"\<dE/dt\>\"", " ", "->", " ", 
+    RowBox[{"Simplify", "[", 
+     RowBox[{"D", "[", 
+      RowBox[{"energy", ",", " ", "t"}], "]"}], "]"}]}]}], "}"}]}], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"8973be19-ccf5-4009-a7ab-507d00cf60c5"],
+
+Cell[TextData[{
+ "The energy is exactly linear in time, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["E", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    StyleBox["E", "TI"], "0"], "+", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], 
+   StyleBox["t", "TI"], "/", "2", 
+   StyleBox["m", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc4f761d-2c90-470b-ab39-92d497518512"],
+ ", with no oscillatory part: the breathing of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35099094-3df8-4938-bbff-f3fd91aa39f0"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "53dbcd0c-14c2-4fd2-814a-c95a5380bb43"],
+ " against each other cancels in the sum, leaving only the steady heating ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   StyleBox["E", "TI"], "/", 
+   StyleBox["d", "TI"], 
+   StyleBox["t", "TI"], "=", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], "/", "2", 
+   StyleBox["m", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9a95a3fc-2762-4bff-b404-a1131647df5d"],
+ ". In oscillator quanta this is a mean occupation rising at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   StyleBox["n", "TI"], "/", 
+   StyleBox["d", "TI"], 
+   StyleBox["t", "TI"], "=", 
+   StyleBox["\[Lambda]", "TI"], "\[HBar]", "/", "2", 
+   StyleBox["m", "TI"], 
+   StyleBox["\[Omega]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3cafcafb-ecab-4bf8-b777-4fe7448e7971"],
+ ", a thermal-like mixed Gaussian of ever-increasing temperature. The grid \
+master equation confirms it and shows the individual moments growing:"
+}], "Text",ExpressionUUID->"9937b04d-fe66-4e54-8a01-f70c956602ad"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gHL", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"96", ",", " ", "24."}], "]"}]}], ";", " ", 
+  RowBox[{"dtHL", " ", "=", " ", "0.002"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"stepHL", " ", "=", " ", 
+   RowBox[{"lindblad", "[", 
+    RowBox[{
+    "gHL", ",", " ", "Vharm", ",", " ", "\[Lambda]R", ",", " ", "dtHL"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[Rho]0HL", " ", "=", " ", 
+   RowBox[{"projector", "[", 
+    RowBox[{"gaussian", "[", 
+     RowBox[{"gHL", ",", " ", "0.", ",", " ", "0.", ",", " ", 
+      RowBox[{"Sqrt", "[", "VxZP", "]"}]}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"x2Mean", "[", 
+    RowBox[{"g_", ",", " ", "\[Rho]_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"Re", "[", 
+    RowBox[{
+     RowBox[{"Diagonal", "[", "\[Rho]", "]"}], " ", ".", " ", 
+     RowBox[{
+      RowBox[{"g", "[", "\"\<x\>\"", "]"}], "^", "2"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Emeas", "[", "\[Rho]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Re", "@", 
+      RowBox[{"Tr", "[", 
+       RowBox[{"\[Rho]", " ", ".", " ", 
+        RowBox[{"p2Op", "[", "gHL", "]"}]}], "]"}]}], "/", 
+     RowBox[{"(", 
+      RowBox[{"2", " ", "mass"}], ")"}]}], " ", "+", " ", 
+    RowBox[{"0.5", " ", "mass", " ", 
+     RowBox[{"\[Omega]R", "^", "2"}], " ", 
+     RowBox[{"x2Mean", "[", 
+      RowBox[{"gHL", ",", " ", "\[Rho]"}], "]"}]}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"tsHL", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "0.", ",", " ", "0.5", ",", " ", "1.", ",", " ", "1.5", ",", " ", "2."}], 
+    "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[Rho]sHL", " ", "=", " ", 
+   RowBox[{"FoldList", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Nest", "[", 
+       RowBox[{"stepHL", ",", " ", "#1", ",", " ", 
+        RowBox[{"Round", "[", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"#2", "[", 
+             RowBox[{"[", "2", "]"}], "]"}], " ", "-", " ", 
+            RowBox[{"#2", "[", 
+             RowBox[{"[", "1", "]"}], "]"}]}], ")"}], "/", "dtHL"}], "]"}]}], 
+       "]"}], " ", "&"}], ",", " ", "\[Rho]0HL", ",", " ", 
+     RowBox[{"Partition", "[", 
+      RowBox[{"tsHL", ",", " ", "2", ",", " ", "1"}], "]"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"TableForm", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Emeas", " ", "/@", " ", "\[Rho]sHL"}], ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"x2Mean", "[", 
+        RowBox[{"gHL", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+      "\[Rho]sHL"}], ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Re", "@", 
+        RowBox[{"Tr", "[", 
+         RowBox[{"#", ".", 
+          RowBox[{"p2Op", "[", "gHL", "]"}]}], "]"}]}], " ", "&"}], " ", "/@",
+       " ", "\[Rho]sHL"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Re", "@", 
+        RowBox[{"Tr", "[", 
+         RowBox[{"#", ".", "#"}], "]"}]}], " ", "&"}], " ", "/@", " ", 
+      "\[Rho]sHL"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"TableHeadings", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"\"\<E\>\"", ",", " ", "\"\<\:27e8x\.b2\:27e9\>\"", ",", 
+        " ", "\"\<\:27e8p\.b2\:27e9\>\"", ",", " ", "\"\<purity\>\""}], "}"}],
+       ",", " ", "tsHL"}], "}"}]}]}], "]"}]}], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"5e6336a6-b6b6-4899-af7f-287ca1a53816"],
+
+Cell[TextData[{
+ "The energy climbs in equal steps, ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0.5"}], ",", "1", ",", "1.5", ",", "2", ",", 
+   RowBox[{"2.5", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5646ebf5-373f-4528-96af-c8ecb37a40e8"],
+ " over ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["t", "TI"], "\[Element]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e2ff449b-c7eb-415d-885c-1afebeec1b3b"],
+ ", a slope of exactly ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], "/", "2", 
+   StyleBox["m", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ee04fffe-3c49-4566-b608-bb27ffb98e75"],
+ "; ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1e52ea14-7fe3-4d35-ae12-d177c16640f7"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["p", "TI"], "^"], "2"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f12a5a1a-4caa-4414-bfb6-065262888871"],
+ " both grow, and the purity falls from ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57abc216-d169-4273-8fa8-174640946e29"],
+ " as the unconditional state mixes. There is no steady state to plot. The \
+contrast with the conditional state is starker in the trap than for the free \
+particle: one realization sits in a fixed pure squeezed packet whose variance \
+never moves, while the average over realizations heats without bound."
+}], "Text",ExpressionUUID->"04ae6ac4-2f57-46c3-afe5-eec725dae77e"],
+
+Cell[BoxData[
+ RowBox[{"ListLinePlot", "[", 
+  RowBox[{
+   RowBox[{"Transpose", "[", 
+    RowBox[{"{", 
+     RowBox[{"tsHL", ",", " ", 
+      RowBox[{"Emeas", " ", "/@", " ", "\[Rho]sHL"}]}], "}"}], "]"}], ",", 
+   "\n", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "460"}], ",", " ", 
+   RowBox[{"AspectRatio", " ", "->", " ", 
+    RowBox[{"1", "/", "2"}]}], ",", " ", 
+   RowBox[{"PlotRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", " ", "All"}], "}"}]}], ",", " ", 
+   RowBox[{"Mesh", " ", "->", " ", "All"}], ",", "\n", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<time t\>\"", ",", 
+      " ", "\"\<unconditional energy E(t)\>\""}], "}"}]}], ",", "\n", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<The trapped unconditional state heats linearly: dE/dt = \
+\[Lambda]\[HBar]\.b2/2m\>\""}]}], "]"}]], "Input",
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"d3e5752d-dfbd-40b0-a533-849856637367"],
+
+Cell[TextData[{
+ "A genuine thermal ",
+ StyleBox["steady", "TI"],
+ " state requires an added mechanical damping channel to balance the heating; \
+that is exactly why the optomechanics experiments cool with feedback rather \
+than watching the bare measurement, whose only effect on the unconditional \
+state is to heat it. Restoring damping is a one-line addition to the master \
+equation and is the natural next extension."
+}], "Text",ExpressionUUID->"5174dab3-4919-4800-8e0c-a9edbd938d00"],
+
+Cell["Part V: A Trap That Does Not Close, the Double Well", "Section",ExpressionUUID->"8637eeef-9cca-4f3b-8894-796fc0717749"],
+
+Cell[TextData[{
+ "Introduce a quartic potential and the Gaussian description fails. For a \
+double well ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["x", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   StyleBox["b", "TI"], 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["x", "TI"], "2"], "-", 
+      SuperscriptBox[
+       StyleBox["a", "TI"], "2"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c3bc00c6-1b60-4db0-9c8d-de6416fe9d3e"],
+ " the force is cubic, so the equation for the mean momentum needs the third \
+moment, which for a non-Gaussian state is not fixed by the mean and the \
+variance:"
+}], "Text",ExpressionUUID->"00aa1d91-65da-47a9-83ba-a4cd4a131228"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"x", ",", " ", "a", ",", " ", "b"}], "]"}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<V'(x)\>\"", " ", "->", " ", 
+    RowBox[{"D", "[", 
+     RowBox[{
+      RowBox[{"b", " ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"x", "^", "2"}], " ", "-", " ", 
+          RowBox[{"a", "^", "2"}]}], ")"}], "^", "2"}]}], ",", " ", "x"}], 
+     "]"}]}], ",", " ", 
+   RowBox[{"\"\<so d\:27e8p\:27e9/dt = -\:27e8V'\:27e9 = \
+-4b(\:27e8x\.b3\:27e9 - a\.b2\:27e8x\:27e9) needs \:27e8x\.b3\:27e9\>\"", " ",
+     "->", " ", "True"}], ",", "\n", " ", 
+   RowBox[{"\"\<harmonic contrast: V'=\>\"", " ", "->", " ", 
+    RowBox[{"D", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{"1", "/", "2"}], ")"}], " ", "m", " ", 
+       RowBox[{"\[Omega]", "^", "2"}], " ", 
+       RowBox[{"x", "^", "2"}]}], ",", " ", "x"}], "]"}]}]}], "}"}]}], "Input",\
+
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"663e6762-7f6d-4c9d-901c-6f2732e14a75"],
+
+Cell[TextData[{
+ "Where the harmonic force ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["m", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Omega]", "TI"], "2"], 
+   StyleBox["x", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1e9e2b0b-1ceb-4aad-a0e3-b9502bdf5449"],
+ " closes the hierarchy at the first moment, the cubic force ",
+ Cell[BoxData[
+  RowBox[{"4", 
+   StyleBox["b", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["x", "TI"], "3"], "-", 
+    SuperscriptBox[
+     StyleBox["a", "TI"], "2"], 
+    StyleBox["x", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b92f2b85-2a35-412e-992d-9f5a7bda82f1"],
+ " pulls in ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], "3"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e1ab5811-63bf-48a0-875e-5479af760dc9"],
+ ", that pulls in ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["x", "TI"], "^"], "4"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0aa07c6f-4830-410f-a99d-f80db3888bef"],
+ ", and no finite set of moments closes. Only the grid split-operator scheme, \
+which never assumes a shape for the conditional state, applies. Build the \
+well ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "=", 
+   StyleBox["b", "TI"], 
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["x", "TI"], "2"], "-", 
+      SuperscriptBox[
+       StyleBox["a", "TI"], "2"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bffc06d5-8d0b-4554-aa87-a2f246601530"],
+ ", with two minima at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], "=", "\[PlusMinus]", 
+   StyleBox["a", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3f121012-542e-49cd-8871-80efcf7df43c"],
+ " separated by a barrier, and a helper that diagonalizes it on any grid to \
+return the symmetric and antisymmetric doublet and the one-well combination:"
+}], "Text",ExpressionUUID->"6419e6e8-d210-42c7-9959-c3e5e3d360b7"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"aa", " ", "=", " ", "1.2"}], ";", " ", 
+  RowBox[{"bb", " ", "=", " ", "1.0"}], ";", " ", 
+  RowBox[{"Vdw", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"bb", " ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"#", "^", "2"}], " ", "-", " ", 
+        RowBox[{"aa", "^", "2"}]}], ")"}], "^", "2"}]}], " ", "&"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"leftMask", "[", "g_", "]"}], " ", ":=", " ", 
+   RowBox[{"Boole", "[", 
+    RowBox[{"Negative", "[", 
+     RowBox[{"g", "[", "\"\<x\>\"", "]"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"wellDoublet", "[", "g_", "]"}], " ", ":=", " ", 
+   RowBox[{"Block", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+      "ham", ",", " ", "ev", ",", " ", "vec", ",", " ", "ord", ",", " ", 
+       "sym", ",", " ", "anti"}], "}"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{"ham", " ", "=", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"p2Op", "[", "g", "]"}], "/", 
+         RowBox[{"(", 
+          RowBox[{"2", " ", "mass"}], ")"}]}], " ", "+", " ", 
+        RowBox[{"DiagonalMatrix", "[", 
+         RowBox[{"Vdw", "[", 
+          RowBox[{"g", "[", "\"\<x\>\"", "]"}], "]"}], "]"}]}]}], ";", "\n", 
+      "   ", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"ev", ",", " ", "vec"}], "}"}], " ", "=", " ", 
+       RowBox[{"Eigensystem", "[", "ham", "]"}]}], ";", " ", 
+      RowBox[{"ord", " ", "=", " ", 
+       RowBox[{"Ordering", "[", 
+        RowBox[{"Re", "@", "ev"}], "]"}]}], ";", "\n", "   ", 
+      RowBox[{"sym", " ", "=", " ", 
+       RowBox[{"Normalize", "[", 
+        RowBox[{"vec", "[", 
+         RowBox[{"[", 
+          RowBox[{"ord", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}], "]"}]}], ";", " ", 
+      RowBox[{"anti", " ", "=", " ", 
+       RowBox[{"Normalize", "[", 
+        RowBox[{"vec", "[", 
+         RowBox[{"[", 
+          RowBox[{"ord", "[", 
+           RowBox[{"[", "2", "]"}], "]"}], "]"}], "]"}], "]"}]}], ";", "\n", 
+      "   ", 
+      RowBox[{"<|", 
+       RowBox[{
+        RowBox[{"\"\<H\>\"", " ", "->", " ", "ham"}], ",", " ", 
+        RowBox[{"\"\<E\>\"", " ", "->", " ", 
+         RowBox[{"Re", "@", 
+          RowBox[{"ev", "[", 
+           RowBox[{"[", 
+            RowBox[{"ord", "[", 
+             RowBox[{"[", 
+              RowBox[{"1", " ", ";;", " ", "2"}], "]"}], "]"}], "]"}], 
+           "]"}]}]}], ",", " ", 
+        RowBox[{"\"\<sym\>\"", " ", "->", " ", "sym"}], ",", " ", 
+        RowBox[{"\"\<anti\>\"", " ", "->", " ", "anti"}], ",", "\n", "     ", 
+        
+        RowBox[{"\"\<left\>\"", " ", "->", " ", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"plus", " ", "=", " ", 
+              RowBox[{"Normalize", "[", 
+               RowBox[{"sym", " ", "+", " ", "anti"}], "]"}]}], ",", " ", 
+             RowBox[{"minus", " ", "=", " ", 
+              RowBox[{"Normalize", "[", 
+               RowBox[{"sym", " ", "-", " ", "anti"}], "]"}]}]}], "}"}], ",", 
+           "\n", "        ", 
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{
+               RowBox[{"leftMask", "[", "g", "]"}], " ", ".", " ", 
+               RowBox[{
+                RowBox[{"Abs", "[", "plus", "]"}], "^", "2"}]}], " ", ">=", 
+              " ", "0.5"}], ",", " ", "plus", ",", " ", "minus"}], "]"}]}], 
+          "]"}]}]}], "|>"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"gD", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"256", ",", " ", "14."}], "]"}]}], ";", " ", 
+  RowBox[{"dw", " ", "=", " ", 
+   RowBox[{"wellDoublet", "[", "gD", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[Psi]Sym", " ", "=", " ", 
+   RowBox[{"dw", "[", "\"\<sym\>\"", "]"}]}], ";", " ", 
+  RowBox[{"\[Psi]Anti", " ", "=", " ", 
+   RowBox[{"dw", "[", "\"\<anti\>\"", "]"}]}], ";", " ", 
+  RowBox[{"Ttun", " ", "=", " ", 
+   RowBox[{"2", " ", "Pi", " ", 
+    RowBox[{"hbar", "/", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"dw", "[", "\"\<E\>\"", "]"}], "[", 
+        RowBox[{"[", "2", "]"}], "]"}], " ", "-", " ", 
+       RowBox[{
+        RowBox[{"dw", "[", "\"\<E\>\"", "]"}], "[", 
+        RowBox[{"[", "1", "]"}], "]"}]}], ")"}]}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"leftP", "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"leftMask", "[", "gD", "]"}], " ", ".", " ", 
+    RowBox[{
+     RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}]}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<E0, E1\>\"", " ", "->", " ", 
+    RowBox[{"dw", "[", "\"\<E\>\"", "]"}]}], ",", " ", 
+   RowBox[{"\"\<barrier\>\"", " ", "->", " ", 
+    RowBox[{"bb", " ", 
+     RowBox[{"aa", "^", "4"}]}]}], ",", " ", 
+   RowBox[{"\"\<tunneling period Ttun\>\"", " ", "->", " ", "Ttun"}], ",", 
+   "\n", " ", 
+   RowBox[{"\"\<Hermiticity |H - H\[Dagger]|\>\"", " ", "->", " ", 
+    RowBox[{"Max", "@", 
+     RowBox[{"Abs", "[", 
+      RowBox[{
+       RowBox[{"dw", "[", "\"\<H\>\"", "]"}], " ", "-", " ", 
+       RowBox[{"ConjugateTranspose", "[", 
+        RowBox[{"dw", "[", "\"\<H\>\"", "]"}], "]"}]}], "]"}]}]}]}], 
+  "}"}]}], "Input",
+ CellLabel->
+  "In[22]:= ",ExpressionUUID->"c9ab4239-d57c-45de-8382-cfdda4e97218"],
+
+Cell[TextData[{
+ "The two lowest states form a doublet split by ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", "=", 
+   SubscriptBox[
+    StyleBox["E", "TI"], "1"], "-", 
+   SubscriptBox[
+    StyleBox["E", "TI"], "0"], "\[TildeTilde]", "0.40"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f9e46729-512c-4efc-8d99-6f59dbbe67f4"],
+ ", below the barrier ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "2.07"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a5851ad4-a6a8-49d2-9c46-cbc2ac9fc99f"],
+ "; their symmetric and antisymmetric combinations are the states localized \
+in the left and right wells, and a particle prepared in one well tunnels to \
+the other with period ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["T", "TI"], 
+    StyleBox[
+     RowBox[{"t", "u", "n"}], "TI"]], "=", "2", "\[Pi]", "\[HBar]", "/", 
+   "\[CapitalDelta]", "\[TildeTilde]", "15.8"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "281c8d4b-9f48-46ab-8e6e-32264d32934c"],
+ ". The Hamiltonian is Hermitian to machine precision, so the spectrum is \
+real and the ",
+ Cell[BoxData["Re"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "495841a0-3aee-4d52-9b23-6dc761deafbc"],
+ " above only strips rounding. First confirm that the conditional state under \
+measurement is genuinely non-Gaussian, which is what forecloses the moment \
+filter. Track the skewness and excess kurtosis of ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["x", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "705b1e2c-a86b-4b26-a24a-ae285c5467f4"],
+ " along a measured trajectory started in one well:"
+}], "Text",ExpressionUUID->"6d3fa7cc-4256-4b97-81e4-ed364102b18b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"central", "[", 
+    RowBox[{"\[Psi]_", ",", " ", "k_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"d", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"Abs", "[", "\[Psi]", "]"}], "^", "2"}]}], ",", " ", 
+       RowBox[{"mu", " ", "=", " ", 
+        RowBox[{"xMean", "[", 
+         RowBox[{"gD", ",", " ", "\[Psi]"}], "]"}]}]}], "}"}], ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"gD", "[", "\"\<x\>\"", "]"}], " ", "-", " ", "mu"}], ")"}], 
+       "^", "k"}], " ", ".", " ", "d"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"skew", "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"central", "[", 
+     RowBox[{"\[Psi]", ",", " ", "3"}], "]"}], "/", 
+    RowBox[{
+     RowBox[{"xVar", "[", 
+      RowBox[{"gD", ",", " ", "\[Psi]"}], "]"}], "^", 
+     RowBox[{"(", 
+      RowBox[{"3", "/", "2"}], ")"}]}]}]}], ";", " ", 
+  RowBox[{
+   RowBox[{"exkurt", "[", "\[Psi]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"central", "[", 
+      RowBox[{"\[Psi]", ",", " ", "4"}], "]"}], "/", 
+     RowBox[{
+      RowBox[{"xVar", "[", 
+       RowBox[{"gD", ",", " ", "\[Psi]"}], "]"}], "^", "2"}]}], " ", "-", " ",
+     "3"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"trajDW", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "3", "]"}], ";", " ", 
+     RowBox[{
+      RowBox[{"trajectory", "[", 
+       RowBox[{
+       "gD", ",", " ", "Vdw", ",", " ", "2.", ",", " ", "0.002", ",", " ", 
+        "1500"}], "]"}], "[", 
+      RowBox[{"gaussian", "[", 
+       RowBox[{"gD", ",", " ", 
+        RowBox[{"-", "aa"}], ",", " ", "0.", ",", " ", "0.45"}], "]"}], 
+      "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<max |skewness|\>\"", " ", "->", " ", 
+    RowBox[{"Max", "@", 
+     RowBox[{"Abs", "[", 
+      RowBox[{"skew", " ", "/@", " ", 
+       RowBox[{"trajDW", "[", 
+        RowBox[{"[", 
+         RowBox[{"1", " ", ";;", " ", ";;", " ", "100"}], "]"}], "]"}]}], 
+      "]"}]}]}], ",", "\n", " ", 
+   RowBox[{"\"\<max |excess kurtosis|\>\"", " ", "->", " ", 
+    RowBox[{"Max", "@", 
+     RowBox[{"Abs", "[", 
+      RowBox[{"exkurt", " ", "/@", " ", 
+       RowBox[{"trajDW", "[", 
+        RowBox[{"[", 
+         RowBox[{"1", " ", ";;", " ", ";;", " ", "100"}], "]"}], "]"}]}], 
+      "]"}]}]}]}], "}"}]}], "Input",
+ CellLabel->
+  "In[23]:= ",ExpressionUUID->"2b778125-ee2a-4cc7-b1ac-b2e3f7663fb0"],
+
+Cell["\<\
+Both run to order one, far from the Gaussian value of zero: a five-number \
+filter forcing skewness and kurtosis to zero cannot track this state, and \
+only the grid survives. Now the two physical effects of watching a particle \
+in a double well. First, measurement-induced localization. Prepare the \
+symmetric eigenstate, delocalized equally over both wells, and monitor it: \
+each run collapses into one well, chosen at random, and stays pure.\
+\>", "Text",ExpressionUUID->"5dd22451-5651-4a78-bbf6-ba2f61598b4d"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"locRuns", " ", "=", " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "10", "]"}], ";", " ", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"Last", "@", 
+        RowBox[{
+         RowBox[{"trajectory", "[", 
+          RowBox[{
+          "gD", ",", " ", "Vdw", ",", " ", "8.", ",", " ", "0.002", ",", " ", 
+           "1500"}], "]"}], "[", "\[Psi]Sym", "]"}]}], ",", " ", 
+       RowBox[{"{", "8", "}"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<start P_left (symmetric)\>\"", " ", "->", " ", 
+    RowBox[{"leftP", "[", "\[Psi]Sym", "]"}]}], ",", " ", 
+   RowBox[{"\"\<P_left of 8 runs\>\"", " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{"leftP", " ", "/@", " ", "locRuns"}], ")"}]}], ",", "\n", " ", 
+   RowBox[{"\"\<max \:2016\[Psi]\:2016 error over runs\>\"", " ", "->", " ", 
+    RowBox[{"Max", "[", 
+     RowBox[{"normError", " ", "/@", " ", "locRuns"}], "]"}]}]}], 
+  "}"}]}], "Input",
+ CellLabel->
+  "In[24]:= ",ExpressionUUID->"f0503841-7b01-4e95-ba41-304c348a03b5"],
+
+Cell[TextData[{
+ "The symmetric state starts balanced at ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["P", "TI"], 
+    StyleBox[
+     RowBox[{"l", "e", "f", "t"}], "TI"]], "=", "0.5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0e96e9c2-8505-415b-9c1a-08609ba3c076"],
+ "; after measurement each run has collapsed toward ",
+ Cell[BoxData["0"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "92ecc22f-201c-49c1-a7ff-441fd31ffbb3"],
+ " or ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74ee6a0f-8f01-454f-9c77-85668ae08af3"],
+ ", localized in the right or left well, and every conditional state stays a \
+normalized pure state (only the ensemble average, as in Part IV, is mixed). \
+Different records send the particle to different wells, and the ensemble of \
+outcomes is the position measurement resolving a delocalized state into a \
+definite, if random, location. Two runs side by side show the density \
+collapsing to opposite wells:"
+}], "Text",ExpressionUUID->"c5543753-aa71-42fd-b02c-5fb5cdf68f4c"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"bandD", " ", "=", " ", 
+   RowBox[{"Flatten", "@", 
+    RowBox[{"Position", "[", 
+     RowBox[{
+      RowBox[{"UnitStep", "[", 
+       RowBox[{"3.5", " ", "-", " ", 
+        RowBox[{"Abs", "[", 
+         RowBox[{"gD", "[", "\"\<x\>\"", "]"}], "]"}]}], "]"}], ",", " ", 
+      "1"}], "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"showRun", "[", "seed_", "]"}], " ", ":=", " ", 
+   RowBox[{"ArrayPlot", "[", 
+    RowBox[{
+     RowBox[{"Reverse", "[", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"Abs", "[", "#", "]"}], "^", "2"}], " ", "&"}], " ", "/@", 
+         " ", 
+         RowBox[{"BlockRandom", "[", 
+          RowBox[{
+           RowBox[{"SeedRandom", "[", "seed", "]"}], ";", "\n", "       ", 
+           RowBox[{
+            RowBox[{"trajectory", "[", 
+             RowBox[{
+             "gD", ",", " ", "Vdw", ",", " ", "8.", ",", " ", "0.002", ",", 
+              " ", "1500"}], "]"}], "[", "\[Psi]Sym", "]"}]}], "]"}]}], ")"}],
+        "[", 
+       RowBox[{"[", 
+        RowBox[{"All", ",", " ", "bandD"}], "]"}], "]"}], "]"}], ",", "\n", 
+     "   ", 
+     RowBox[{"DataRange", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"gD", "[", "\"\<x\>\"", "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"First", "@", "bandD"}], ",", " ", 
+            RowBox[{"Last", "@", "bandD"}]}], "}"}], "]"}], "]"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "3"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"ColorFunction", " ", "->", " ", "\"\<SunsetColors\>\""}], ",", 
+     "\n", "   ", 
+     RowBox[{"AspectRatio", " ", "->", " ", "1.3"}], ",", " ", 
+     RowBox[{"ImageSize", " ", "->", " ", "230"}], ",", " ", 
+     RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+     RowBox[{"FrameLabel", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<x\>\"", ",", " ", "\"\<t\>\""}], "}"}]}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"GraphicsRow", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"showRun", "[", "4", "]"}], ",", " ", 
+     RowBox[{"showRun", "[", "1", "]"}]}], "}"}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "500"}]}], "]"}]}], "Input",
+ CellLabel->
+  "In[25]:= ",ExpressionUUID->"79427d87-8106-45a5-af49-2d69efed6886"],
+
+Cell[TextData[{
+ "Second, the quantum Zeno effect. Watching the particle suppresses the \
+coherent tunneling between wells. The cleanest way to see it is the \
+unconditional (Lindblad) population, which is deterministic: the measurement \
+dephases the left-right coherence at rate ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox[
+    StyleBox["a", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "64048ae2-b47b-4cc0-bc2f-21831c1c6766"],
+ ", converting coherent oscillation into slow incoherent equilibration. On a \
+coarser grid the dense master equation can afford, take the same one-well \
+state from the doublet helper and propagate it at a few measurement \
+strengths, reading the left-well population over one tunneling period:"
+}], "Text",ExpressionUUID->"6e51ee6c-098e-44ea-8ef5-720d73d50c64"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gDL", " ", "=", " ", 
+   RowBox[{"grid", "[", 
+    RowBox[{"128", ",", " ", "12."}], "]"}]}], ";", " ", 
+  RowBox[{"dtDL", " ", "=", " ", "0.005"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"\[Psi]Lwell", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"wellDoublet", "[", "gDL", "]"}], "[", "\"\<left\>\"", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"leftPL", "[", "\[Rho]_", "]"}], " ", ":=", " ", 
+   RowBox[{"Re", "[", 
+    RowBox[{
+     RowBox[{"Diagonal", "[", "\[Rho]", "]"}], " ", ".", " ", 
+     RowBox[{"leftMask", "[", "gDL", "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"EmeasL", "[", "\[Rho]_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Re", "@", 
+      RowBox[{"Tr", "[", 
+       RowBox[{"\[Rho]", " ", ".", " ", 
+        RowBox[{"p2Op", "[", "gDL", "]"}]}], "]"}]}], "/", 
+     RowBox[{"(", 
+      RowBox[{"2", " ", "mass"}], ")"}]}], " ", "+", " ", 
+    RowBox[{"Re", "[", 
+     RowBox[{
+      RowBox[{"Diagonal", "[", "\[Rho]", "]"}], " ", ".", " ", 
+      RowBox[{"Vdw", "[", 
+       RowBox[{"gDL", "[", "\"\<x\>\"", "]"}], "]"}]}], "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"smp", " ", "=", " ", 
+   RowBox[{"Round", "[", 
+    RowBox[{
+     RowBox[{"Ttun", "/", "dtDL"}], "/", "8"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"zenoStates", "[", "\[Lambda]_", "]"}], " ", ":=", " ", 
+   RowBox[{"NestList", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Nest", "[", 
+       RowBox[{
+        RowBox[{"lindblad", "[", 
+         RowBox[{
+         "gDL", ",", " ", "Vdw", ",", " ", "\[Lambda]", ",", " ", "dtDL"}], 
+         "]"}], ",", " ", "#", ",", " ", "smp"}], "]"}], " ", "&"}], ",", " ", 
+     RowBox[{"projector", "[", "\[Psi]Lwell", "]"}], ",", " ", "8"}], "]"}]}],
+   ";"}], "\n", 
+ RowBox[{
+  RowBox[{"zTimes", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"Range", "[", 
+     RowBox[{"0", ",", " ", "8"}], "]"}], " ", "smp", " ", "dtDL"}]}], ";", 
+  " ", 
+  RowBox[{"zStates", " ", "=", " ", 
+   RowBox[{"zenoStates", " ", "/@", " ", 
+    RowBox[{"{", 
+     RowBox[{"0.", ",", " ", "0.5", ",", " ", "4."}], "}"}]}]}], 
+  ";"}], "\n", 
+ RowBox[{"TableForm", "[", 
+  RowBox[{
+   RowBox[{"Transpose", "[", 
+    RowBox[{"Prepend", "[", 
+     RowBox[{
+      RowBox[{"Map", "[", 
+       RowBox[{"leftPL", ",", " ", "zStates", ",", " ", 
+        RowBox[{"{", "2", "}"}]}], "]"}], ",", " ", "zTimes"}], "]"}], "]"}], 
+   ",", "\n", " ", 
+   RowBox[{"TableHeadings", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"None", ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<time t\>\"", ",", " ", "\"\<P_left, \[Lambda]=0\>\"", ",",
+         " ", "\"\<\[Lambda]=0.5\>\"", ",", " ", "\"\<\[Lambda]=4\>\""}], 
+       "}"}]}], "}"}]}]}], "]"}]}], "Input",
+ CellLabel->
+  "In[26]:= ",ExpressionUUID->"8ded88ba-bcfe-463a-911a-c1254dbfb383"],
+
+Cell[TextData[{
+ "Without measurement the left-well population oscillates coherently, ",
+ Cell[BoxData[
+  RowBox[{"0.96", "\[Rule]", "0.03"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c85a51bb-92d2-42be-a81b-11a22ccbb71d"],
+ " at the half period, where the particle has fully tunneled to the other \
+well, and back. At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0.5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112f60be-77da-4cdb-9a6a-15fd9e8ef888"],
+ " that coherent oscillation is gone: the measurement dephases the left-right \
+superposition, so the population no longer swings across and returns but \
+relaxes monotonically toward equipartition at ",
+ Cell[BoxData["0.5"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78adff2f-0cfa-4613-9a65-93943f594425"],
+ ". The coherent tunneling transfer is suppressed. This is the quantum Zeno \
+signature of a continuous position measurement: watching the particle \
+destroys the phase coherence the tunneling needs."
+}], "Text",ExpressionUUID->"32156a7d-31e7-49a6-959b-6c194b93ec71"],
+
+Cell[TextData[{
+ "The backaction is the other half of the story. The same ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e165c53e-5a79-4d3e-b5f5-4f66d54e02d7"],
+ " heating that has no steady state in the harmonic trap is present here too, \
+and over one tunneling period it carries the particle over the barrier at \
+every strength shown:"
+}], "Text",ExpressionUUID->"63bc1e22-9d89-4274-9f77-f6dc21e6c884"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"\"\<barrier height\>\"", " ", "->", " ", 
+    RowBox[{"bb", " ", 
+     RowBox[{"aa", "^", "4"}]}]}], ",", " ", 
+   RowBox[{"\"\<energy at one tunneling period, \[Lambda] = 0, 0.5, 4\>\"", 
+    " ", "->", " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"EmeasL", "[", 
+        RowBox[{"Last", "@", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+      "zStates"}], ")"}]}]}], "}"}]], "Input",
+ CellLabel->
+  "In[27]:= ",ExpressionUUID->"f57f823c-299f-4818-b737-6ad993d1103f"],
+
+Cell[TextData[{
+ "By one period the energy has already passed the barrier (",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "2.07"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "da293a16-8234-402e-8fae-58d7aa3f7962"],
+ ") at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0.5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f43b490c-67b5-44da-b727-abb8e4a20b1e"],
+ " (",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "5.4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9eee2248-f03d-4587-a82a-bb1d757aa310"],
+ "), and reaches ",
+ Cell[BoxData[
+  RowBox[{"\[TildeTilde]", "33"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eee6a5ae-2b80-45c8-84fe-3bf220983adc"],
+ " at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d36b5c54-a3e7-4d06-ae33-cfd37713b7a2"],
+ "; the stronger the measurement, the faster the population equilibrates over \
+the top rather than through the barrier. So watching does two things at once, \
+both growing with ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b25dd5e8-8310-4b9c-a1fb-2fb23666d9bb"],
+ ": it dephases the wells, killing the coherent oscillation, and it heats the \
+particle, eventually over the barrier."
+}], "Text",ExpressionUUID->"59d34f8d-75a2-4ead-9fb2-883f966cbb77"],
+
+Cell[BoxData[
+ RowBox[{"ListLinePlot", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{"Transpose", "[", 
+      RowBox[{"{", 
+       RowBox[{"zTimes", ",", " ", 
+        RowBox[{"leftPL", " ", "/@", " ", "#"}]}], "}"}], "]"}], " ", "&"}], 
+    " ", "/@", " ", "zStates"}], ",", "\n", " ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<\[Lambda]=0 (unwatched)\>\"", ",", 
+      " ", "\"\<\[Lambda]=0.5 (dephased)\>\"", ",", 
+      " ", "\"\<\[Lambda]=4 (heated over barrier)\>\""}], "}"}]}], ",", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "500"}], ",", "\n", " ", 
+   RowBox[{"AspectRatio", " ", "->", " ", 
+    RowBox[{"1", "/", "2"}]}], ",", " ", 
+   RowBox[{"PlotRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", " ", "1"}], "}"}]}], ",", " ", 
+   RowBox[{"PlotMarkers", " ", "->", " ", "Automatic"}], ",", "\n", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<time t\>\"", ",", " ", "\"\<left-well population\>\""}], 
+     "}"}]}], ",", "\n", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<Watching kills the coherent oscillation (\[Lambda]=0.5) and, \
+harder still, heats over the barrier (\[Lambda]=4)\>\""}]}], "]"}]], "Input",
+ CellLabel->
+  "In[28]:= ",ExpressionUUID->"de767552-c3a8-4c67-a11a-98c68d31cbd1"],
+
+Cell["\<\
+Holding the particle in one well would take the dephasing without the \
+heating, and unit-efficiency position measurement cannot separate them: the \
+one coupling delivers both. This is the honest reach of the Zeno effect under \
+continuous position measurement, and the reason a real experiment steers with \
+feedback rather than relying on the measurement alone.\
+\>", "Text",ExpressionUUID->"a85b1b3c-d2dc-4a37-a4a7-f83771155eac"],
+
+Cell["Part VI: The Division of Labor", "Section",ExpressionUUID->"0e21ea5b-a3f1-4ee1-a9b7-51eceb9ff214"],
+
+Cell["\<\
+The generalization draws a clean line between the two ways to simulate a \
+monitored quantum system. When the conditional state lives in a small closed \
+parametrization, the built-in stochastic integrator suffices and the geometry \
+keeps the state physical on its own: a qubit is three Bloch numbers confined \
+to the ball, and a linear (Gaussian) system, the free particle or the \
+harmonic trap, is five moments whose covariance flow has an attracting \
+pure-state fixed point. Both close because the Hamiltonian is at most \
+quadratic, and for both the Kalman-Bucy moment filter is exact and is \
+literally the algorithm the optomechanics experiments run.\
+\>", "Text",ExpressionUUID->"e8d6803a-e750-4afa-a2a0-9739f0eac1e0"],
+
+Cell[TextData[{
+ "Otherwise, hand-write the step whose structure you can exploit. A potential \
+that is anything beyond quadratic breaks the moment closure, the conditional \
+state is no longer Gaussian, and only the grid split-operator scheme applies: \
+the measurement as an exact Kraus operator with its renormalization, \
+independent of ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["H", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "785b920d-f812-46ea-96f0-c5dd5694345a"],
+ ", and the Hamiltonian as a Strang split whose kinetic factor is spectral \
+and whose potential factor is a pointwise phase. The double well is the \
+smallest example that forces this choice, and it rewards it with physics the \
+moment filter cannot represent, the non-Gaussian conditional state, the \
+collapse into one well, and the Zeno suppression of coherent tunneling set \
+against the backaction heating that drives the particle over the barrier."
+}], "Text",ExpressionUUID->"1a1798bc-d8c5-4411-8759-d1765b6615e4"],
+
+Cell["Where This Leaves Us", "Subsection",ExpressionUUID->"3a331fb5-b95b-4b1d-8a97-658bcaaa0576"],
+
+Cell[TextData[{
+ "The measurement is the same in every case; only the unitary changes, and \
+one Strang step carries any one-dimensional potential. The free particle is \
+recovered exactly at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1e7b0ed6-8130-4ef0-9353-f282bfdca525"],
+ ". In the harmonic trap the conditional state is a pure squeezed Gaussian, \
+its position driven below the zero-point value by the measurement, while the \
+unconditional state heats without bound at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   StyleBox["E", "TI"], "/", 
+   StyleBox["d", "TI"], 
+   StyleBox["t", "TI"], "=", 
+   StyleBox["\[Lambda]", "TI"], 
+   SuperscriptBox["\[HBar]", "2"], "/", "2", 
+   StyleBox["m", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dae4ae7-e0b0-4a4b-851c-16822ac7437b"],
+ ", the same backaction rate throughout. In the double well the conditional \
+state goes non-Gaussian, localizes into one well, and has its coherent \
+tunneling suppressed by observation, while the same backaction heats it over \
+the barrier. The natural extensions are to reduce the detection efficiency \
+below unity, so a single record no longer purifies the conditional state, or \
+to add mechanical damping, so the trapped unconditional state reaches the \
+thermal steady state the bare measurement never does."
+}], "Text",ExpressionUUID->"bd5537c3-1540-4170-922d-02d085b5b156"]
+},
+CreateCellID->True,
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"9921e651-7ba0-41be-96c1-7bcc64a78674"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 109, 0, 70, "Title",ExpressionUUID->"5bc37c7f-396a-4e0f-b761-172df3878ace"],
+Cell[666, 22, 2232, 50, 70, "Text",ExpressionUUID->"9f3743ae-b777-4eba-ad8e-5680cca49954"],
+Cell[2901, 74, 113, 0, 70, "Text",ExpressionUUID->"fdbe470e-d7ad-4ae0-ace6-dc56c2b1c234"],
+Cell[3017, 76, 94, 0, 70, "Subsection",ExpressionUUID->"a825920d-1185-44d7-bba5-56accdd546f0"],
+Cell[3114, 78, 686, 13, 70, "Text",ExpressionUUID->"84e1c580-8e23-412b-ae87-ea0763c25266"],
+Cell[3803, 93, 1908, 54, 70, "Text",ExpressionUUID->"1586100e-6221-4e34-bb21-16691c1790ca"],
+Cell[5714, 149, 1233, 31, 70, "Text",ExpressionUUID->"402b2bfd-73ae-4e7e-a222-6d00164945f9"],
+Cell[6950, 182, 116, 0, 70, "Section",ExpressionUUID->"9fbd5540-7ff9-418d-960f-a68b33169db6"],
+Cell[7069, 184, 504, 10, 70, "Text",ExpressionUUID->"ca559e18-d1a5-4551-a74d-41c1be57de91"],
+Cell[7576, 196, 5530, 160, 70, "Input",ExpressionUUID->"27ef2af6-60c7-4f2b-a26b-46158f03b323"],
+Cell[13109, 358, 2501, 78, 70, "Text",ExpressionUUID->"9c19ad43-5502-419f-85a5-900b18be89f2"],
+Cell[15613, 438, 1059, 30, 70, "Input",ExpressionUUID->"5f906873-fa61-448b-abc0-38e70a160ee3"],
+Cell[16675, 470, 516, 11, 70, "Text",ExpressionUUID->"b6cc9b5a-db25-44d7-ba98-e444e76a8edc"],
+Cell[17194, 483, 2093, 57, 70, "Input",ExpressionUUID->"4111e30f-58da-4186-ab6b-a4b67c8dc01a"],
+Cell[19290, 542, 1625, 42, 70, "Text",ExpressionUUID->"8ed76d95-f471-4fe6-8e59-5412a5b52760"],
+Cell[20918, 586, 1757, 46, 70, "Input",ExpressionUUID->"80385b74-c674-4f61-be86-2ff23521a859"],
+Cell[22678, 634, 1164, 26, 70, "Text",ExpressionUUID->"6381acdb-f861-468b-a353-0558ff630746"],
+Cell[23845, 662, 128, 0, 70, "Section",ExpressionUUID->"b795a4f5-e2f9-4ca6-8ba7-c685a3e9d25a"],
+Cell[23976, 664, 697, 18, 70, "Text",ExpressionUUID->"6babfd0f-734a-4cdb-b9ab-d36ce71e39e6"],
+Cell[24676, 684, 1931, 52, 70, "Input",ExpressionUUID->"93716090-9d64-42e2-b1e5-b9bac6e624d7"],
+Cell[26610, 738, 2634, 75, 70, "Text",ExpressionUUID->"48b6381e-af07-4b32-9581-c8033c70d019"],
+Cell[29247, 815, 2821, 80, 70, "Input",ExpressionUUID->"bde04b72-d2f2-488a-9927-dd3178115844"],
+Cell[32071, 897, 1000, 32, 70, "Text",ExpressionUUID->"4e10ab7f-e370-47ee-be56-782c6c6b8400"],
+Cell[33074, 931, 1864, 47, 70, "Input",ExpressionUUID->"121b96fa-25e8-4a09-b86d-c59acd05b4aa"],
+Cell[34941, 980, 951, 25, 70, "Text",ExpressionUUID->"f8a37df1-bf30-40f3-9d74-37d8e92bd304"],
+Cell[35895, 1007, 474, 9, 70, "Text",ExpressionUUID->"41b7aa32-7cd6-449d-ae15-9e11f29f847a"],
+Cell[36372, 1018, 1508, 38, 70, "Input",ExpressionUUID->"3ff639b9-6382-45d9-9946-91ac1865185b"],
+Cell[37883, 1058, 1459, 38, 70, "Text",ExpressionUUID->"e98b7314-bfca-43f9-bcf2-b9f4cd3f246b"],
+Cell[39345, 1098, 1678, 45, 70, "Input",ExpressionUUID->"fd85f504-7cb9-4bba-9fa1-3f7bb02f5ccc"],
+Cell[41026, 1145, 127, 0, 70, "Section",ExpressionUUID->"dd892570-2391-46cc-b8b6-5d3368921361"],
+Cell[41156, 1147, 1720, 50, 70, "Text",ExpressionUUID->"b89ceef5-1084-4851-a4e3-9449f97cf73c"],
+Cell[42879, 1199, 3364, 95, 70, "Input",ExpressionUUID->"9b2654d5-b85a-47b7-9629-9fe0b65f4baa"],
+Cell[46246, 1296, 1322, 41, 70, "Text",ExpressionUUID->"43ccf08a-f54b-4cc4-a3c9-7dd8bc0f9146"],
+Cell[47571, 1339, 1199, 31, 70, "Input",ExpressionUUID->"d0367430-2722-46cb-a19c-a2fb5ea345e8"],
+Cell[48773, 1372, 2289, 67, 70, "Text",ExpressionUUID->"95008b8b-ce4f-4356-b776-952f41d53cfb"],
+Cell[51065, 1441, 1936, 54, 70, "Input",ExpressionUUID->"2ef214a0-df68-4a1d-b67d-75d0daccbfea"],
+Cell[53004, 1497, 589, 19, 70, "Text",ExpressionUUID->"06af8342-275e-48fc-a63b-e28ac2075116"],
+Cell[53596, 1518, 1635, 44, 70, "Input",ExpressionUUID->"dd693d0e-7b08-42c4-84c1-9e1ac9f271d5"],
+Cell[55234, 1564, 1457, 38, 70, "Text",ExpressionUUID->"743d5023-0b81-4e63-8585-388eddb2c95b"],
+Cell[56694, 1604, 1592, 41, 70, "Input",ExpressionUUID->"2840d757-56ca-468c-98a4-d166f658c905"],
+Cell[58289, 1647, 905, 19, 70, "Text",ExpressionUUID->"1ebb3242-50df-4455-8c28-80eb608babd5"],
+Cell[59197, 1668, 2031, 55, 70, "Input",ExpressionUUID->"04f9bb1e-c6c4-4ccc-9838-82dd00888576"],
+Cell[61231, 1725, 722, 14, 70, "Text",ExpressionUUID->"23d0d71c-d960-462b-8a0f-129f2ce3c87a"],
+Cell[61956, 1741, 1602, 42, 70, "Input",ExpressionUUID->"faa38318-08ff-416c-840a-e7bb37a88549"],
+Cell[63561, 1785, 1399, 38, 70, "Text",ExpressionUUID->"4b9b8551-3620-4f65-b459-a3cf9326d7bd"],
+Cell[64963, 1825, 5057, 136, 70, "Input",ExpressionUUID->"8b83bd4d-525a-47ad-b842-e5f243508cef"],
+Cell[70023, 1963, 2336, 54, 70, "Text",ExpressionUUID->"303d8ec9-2c57-4527-9ebf-158606ccea6d"],
+Cell[72362, 2019, 125, 0, 70, "Section",ExpressionUUID->"a107ab2b-351e-425c-a18b-0da0cf430d8c"],
+Cell[72490, 2021, 441, 6, 70, "Text",ExpressionUUID->"d6860e55-25d1-4554-b0a1-4fa890ef5a3a"],
+Cell[72934, 2029, 2473, 69, 70, "Input",ExpressionUUID->"8973be19-ccf5-4009-a7ab-507d00cf60c5"],
+Cell[75410, 2100, 2264, 68, 70, "Text",ExpressionUUID->"9937b04d-fe66-4e54-8a01-f70c956602ad"],
+Cell[77677, 2170, 3429, 98, 70, "Input",ExpressionUUID->"5e6336a6-b6b6-4899-af7f-287ca1a53816"],
+Cell[81109, 2270, 1929, 54, 70, "Text",ExpressionUUID->"04ae6ac4-2f57-46c3-afe5-eec725dae77e"],
+Cell[83041, 2326, 1024, 25, 70, "Input",ExpressionUUID->"d3e5752d-dfbd-40b0-a533-849856637367"],
+Cell[84068, 2353, 490, 8, 70, "Text",ExpressionUUID->"5174dab3-4919-4800-8e0c-a9edbd938d00"],
+Cell[84561, 2363, 125, 0, 70, "Section",ExpressionUUID->"8637eeef-9cca-4f3b-8894-796fc0717749"],
+Cell[84689, 2365, 887, 28, 70, "Text",ExpressionUUID->"00aa1d91-65da-47a9-83ba-a4cd4a131228"],
+Cell[85579, 2395, 1044, 29, 70, "Input",ExpressionUUID->"663e6762-7f6d-4c9d-901c-6f2732e14a75"],
+Cell[86626, 2426, 2482, 79, 70, "Text",ExpressionUUID->"6419e6e8-d210-42c7-9959-c3e5e3d360b7"],
+Cell[89111, 2507, 5280, 141, 70, "Input",ExpressionUUID->"c9ab4239-d57c-45de-8382-cfdda4e97218"],
+Cell[94394, 2650, 2017, 51, 70, "Text",ExpressionUUID->"6d3fa7cc-4256-4b97-81e4-ed364102b18b"],
+Cell[96414, 2703, 2576, 75, 70, "Input",ExpressionUUID->"2b778125-ee2a-4cc7-b1ac-b2e3f7663fb0"],
+Cell[98993, 2780, 526, 7, 70, "Text",ExpressionUUID->"5dd22451-5651-4a78-bbf6-ba2f61598b4d"],
+Cell[99522, 2789, 1091, 27, 70, "Input",ExpressionUUID->"f0503841-7b01-4e95-ba41-304c348a03b5"],
+Cell[100616, 2818, 1094, 24, 70, "Text",ExpressionUUID->"c5543753-aa71-42fd-b02c-5fb5cdf68f4c"],
+Cell[101713, 2844, 2390, 65, 70, "Input",ExpressionUUID->"79427d87-8106-45a5-af49-2d69efed6886"],
+Cell[104106, 2911, 867, 16, 70, "Text",ExpressionUUID->"6e51ee6c-098e-44ea-8ef5-720d73d50c64"],
+Cell[104976, 2929, 2839, 81, 70, "Input",ExpressionUUID->"8ded88ba-bcfe-463a-911a-c1254dbfb383"],
+Cell[107818, 3012, 1117, 22, 70, "Text",ExpressionUUID->"32156a7d-31e7-49a6-959b-6c194b93ec71"],
+Cell[108938, 3036, 522, 11, 70, "Text",ExpressionUUID->"63bc1e22-9d89-4274-9f77-f6dc21e6c884"],
+Cell[109463, 3049, 541, 15, 70, "Input",ExpressionUUID->"f57f823c-299f-4818-b737-6ad993d1103f"],
+Cell[110007, 3066, 1456, 37, 70, "Text",ExpressionUUID->"59d34f8d-75a2-4ead-9fb2-883f966cbb77"],
+Cell[111466, 3105, 1383, 32, 70, "Input",ExpressionUUID->"de767552-c3a8-4c67-a11a-98c68d31cbd1"],
+Cell[112852, 3139, 443, 6, 70, "Text",ExpressionUUID->"a85b1b3c-d2dc-4a37-a4a7-f83771155eac"],
+Cell[113298, 3147, 104, 0, 70, "Section",ExpressionUUID->"0e21ea5b-a3f1-4ee1-a9b7-51eceb9ff214"],
+Cell[113405, 3149, 739, 10, 70, "Text",ExpressionUUID->"e8d6803a-e750-4afa-a2a0-9739f0eac1e0"],
+Cell[114147, 3161, 1032, 17, 70, "Text",ExpressionUUID->"1a1798bc-d8c5-4411-8759-d1765b6615e4"],
+Cell[115182, 3180, 97, 0, 70, "Subsection",ExpressionUUID->"3a331fb5-b95b-4b1d-8a97-658bcaaa0576"],
+Cell[115282, 3182, 1492, 30, 70, "Text",ExpressionUUID->"bd5537c3-1540-4170-922d-02d085b5b156"]
+}
+]
+*)
+
+(* End of internal cache information *)

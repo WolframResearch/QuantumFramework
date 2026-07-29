@@ -251,7 +251,7 @@ absent.
 
 ---
 
-## 10. Physicist summary
+## 10. A dynamical framework, not a change of basis
 
 QF carries a complete finite-dimensional discrete phase-space toolkit, and the central correction
 in this revision is that it is a working *dynamical* framework, not merely a static change of

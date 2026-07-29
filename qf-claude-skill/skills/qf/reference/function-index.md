@@ -808,7 +808,7 @@ Mixed-format strings combine: `QuantumState["+0L"]` = `+ ⊗ 0 ⊗ L`.
 
 `Documentation/.../Symbols/QuantumBasis.nb:31-72`:
 - Hilbert: `"I"`/`"Computational"[d]`, `"Bell"`, `"Pauli"`, `"X"[d]` / `"Y"[d]` / `"Z"[d]` (generalized Pauli), `"PauliX"`/`"PauliY"`/`"PauliZ"`, `"JX"[j]` / `"JY"[j]` / `"JZ"[j]` (spin), `"Fourier"[d]`, `"Schwinger"[d]`, `"Dirac"`.
-- IC phase space: `"WignerMIC"[d]`, `"GellMannMIC"[d]`, `"Tetrahedron"` / `"Tetrahedron"[a,b,c]`, `"HasseSIC"`, `"HoggarSIC"` (8-dim), `"QBismSIC"[d]` (numeric SIC up to `d=151`, **downloads from GitHub**), `"RandomHaarMIC"`, `"RandomBlochMIC"`.
+- IC phase space: `"WignerMIC"[d]`, `"GellMannMIC"[d]`, `"Tetrahedron"` / `"Tetrahedron"[a,b,c]`, `"HesseSIC"`, `"HoggarSIC"` (8-dim), `"QBismSIC"[d]` (numeric SIC up to `d=151`, **downloads from GitHub**), `"RandomHaarMIC"`, `"RandomBlochMIC"`.
 - Non-IC phase space: `"GellMann"[d]`, `"Wigner"[d]`, `"Wootters"[p]` (`p` prime), `"Bloch"`.
 
 ### Doc-confirmed named circuits (`QuantumCircuitOperator["name"]`)

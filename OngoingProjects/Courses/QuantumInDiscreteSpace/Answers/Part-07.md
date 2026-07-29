@@ -1,44 +1,3 @@
----
-Template: Default
----
-
-# Quantum in Finite Dimensions: Answers in WL and in QuantumFramework (Part 7)
-
-A companion answer key to `Question-List.md`. For each question it gives **two** worked answers:
-
-1. **WL** : native Wolfram Language only (plain vectors and matrices, `PauliMatrix`, `MatrixExp`,
-   `DSolveValue`, `Eigensystem`, and friends). Nothing beyond the built-in language.
-2. **QF** : the same task done through the **QuantumFramework** paclet, leaning on its objects and
-   property downvalues (`QuantumState[...]["..."]`) rather than rebuilding matrices by hand. A QF
-   result is a rich object, a state or an operator, not a bare array: it can act on a target, compose
-   with others, report its spectrum, change basis, and more. The answers keep results as objects and
-   treat a matrix or amplitude vector as just one of the object's many representations, not the thing
-   itself.
-
-Three habits run through the answers. They stay **symbolic** wherever possible (general amplitudes
-$\alpha,\beta$, general angles $\theta,\phi$), so each operation is exercised in full generality
-rather than on a lucky special case. They write the computation **explicitly** rather than hiding it
-in a helper function, because the code is itself part of the explanation. And they prefer **built-in
-features** (a `MatrixExp`, a named state, `QuantumEvolve`) over hand-rolled constructions, so nothing
-is hardcoded: every cell computes its result. Each cell does **one** thing and is preceded by a
-sentence saying what, so the notebook reads as a sequence of single, captioned computations. A few
-graduate items (Fermi's golden rule in the dense-band limit, the adiabatic sweep, Berry's geometric
-phase) resist a closed symbolic form; there the answer drops to a concrete, discriminating instance
-and says so. Run the WL answers in a bare kernel; the QF answers need the paclet loaded once.
-
-Throughout Part 7 we work in units where $\hbar = 1$, so the time-evolution operator is
-$U(t) = e^{-i\hat H t}$ and the Schrodinger equation is $i\,\partial_t|\psi\rangle = \hat H|\psi\rangle$.
-
-## Setup
-
-The QF answers load the paclet once:
-
-```wl
-Needs["Wolfram`QuantumFramework`"]
-```
-
----
-
 ## Part 7. Unitary dynamics and pictures
 
 ### 7.1a [BSc] How do I build the time-evolution operator $U(t)=e^{-i\hat H t}$ (working in units where $\hbar=1$)?
@@ -110,14 +69,14 @@ sch = DSolveValue[{I D[vec[t], t] == (\[Omega]/2) FromSphericalCoordinates[{1, \
 evolved `QuantumState` as a function of $t$; read its amplitudes.
 
 ```wl
-QuantumEvolve[QuantumOperator[(\[Omega]/2) FromSphericalCoordinates[{1, \[Theta]H, \[Phi]H}] . PauliMatrix[{1, 2, 3}]], QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}], t]["StateVector"] // Normal
+psitQF = QuantumEvolve[QuantumOperator[(\[Omega]/2) FromSphericalCoordinates[{1, \[Theta]H, \[Phi]H}] . PauliMatrix[{1, 2, 3}]], QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}], t]["StateVector"] // Normal // FullSimplify
 ```
 
 The direct propagator, the ODE integration, and the QF evolution are the same state; confirm all three
 agree.
 
 ```wl
-FullSimplify[psit == sch == (QuantumEvolve[QuantumOperator[(\[Omega]/2) FromSphericalCoordinates[{1, \[Theta]H, \[Phi]H}] . PauliMatrix[{1, 2, 3}]], QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}], t]["StateVector"] // Normal)]
+FullSimplify[psit == sch == psitQF]
 ```
 
 All three return the same evolved state $|\psi(t)\rangle = e^{-i\hat H t}|\psi_0\rangle$, which precesses the
@@ -140,16 +99,17 @@ time-dependent phase factor.
 With[{es = Eigensystem[a PauliMatrix[3] + b PauliMatrix[1]]}, With[{en = es[[1, 1]], v = Normalize[es[[2, 1]]]}, Simplify[MatrixExp[-I (a PauliMatrix[3] + b PauliMatrix[1]) t] . v, {a, b, t} \[Element] Reals]]]
 ```
 
-**QF** : `QuantumEvolve` on the same eigenstate returns the state with an overall $e^{-iEt}$; the
-outcome probabilities never move.
+**QF** : `QuantumEvolve` on each of the two eigenstates returns that same eigenvector times a single
+phase $e^{-iEt}$, one phase per energy level.
 
 ```wl
-With[{es = QuantumOperator[a PauliMatrix[3] + b PauliMatrix[1]]["Eigensystem"]}, Simplify[QuantumEvolve[QuantumOperator[a PauliMatrix[3] + b PauliMatrix[1]], QuantumState[Normalize[es[[2, 1]]]], t]["ProbabilitiesList"], {a, b, t} \[Element] Reals]]
+With[{es = QuantumOperator[a PauliMatrix[3] + b PauliMatrix[1]]["Eigensystem"]}, Simplify[Table[Normal@QuantumEvolve[QuantumOperator[a PauliMatrix[3] + b PauliMatrix[1]], QuantumState[Normalize[es[[2, j]]]], t]["StateVector"], {j, 2}], {a, b, t} \[Element] Reals]]
 ```
 
-The WL evolution multiplies the whole eigenvector by a single phase, and the QF probabilities come out
-constant: a stationary state is stationary precisely because the only thing that changes, a global
-phase, is the one thing no measurement can see (Part 1, 1.4).
+Each evolution multiplies the eigenvector by a single overall phase $e^{-iEt}$ fixed by its energy
+$E = \pm\sqrt{a^2+b^2}$, so the amplitudes' moduli, and hence every outcome probability, never move: a
+stationary state is stationary precisely because the only thing that changes, a global phase, is the one
+thing no measurement can see (Part 1, 1.4).
 
 ### 7.3 [BSc] How do I compute Rabi oscillations of a two-level system under a resonant classical drive?
 
@@ -170,7 +130,7 @@ With[{\[Psi] = MatrixExp[-I (\[CapitalOmega]/2) PauliMatrix[1] t] . {1, 0}}, Sim
 $\{P_0, P_1\}$.
 
 ```wl
-Simplify[QuantumEvolve[QuantumOperator[(\[CapitalOmega]/2) PauliMatrix[1]], QuantumState["0"], t]["ProbabilitiesList"], {\[CapitalOmega], t} \[Element] Reals]
+Simplify[QuantumEvolve[(\[CapitalOmega]/2) QuantumOperator["X"], QuantumState["0"], t]["ProbabilitiesList"], {\[CapitalOmega], t} \[Element] Reals]
 ```
 
 Both give $\{\cos^2\tfrac{\Omega t}2, \sin^2\tfrac{\Omega t}2\}$: the qubit oscillates fully between the
@@ -183,7 +143,8 @@ $|+\rangle$ keeps $\langle Z\rangle = 0$ while its transverse Bloch components r
 = \cos\omega t$, $\langle Y\rangle = \sin\omega t$. The Bloch vector precesses about the field at the
 Larmor frequency $\omega$.
 
-**WL** : evolve $|+\rangle$, form the density matrix, and read the three Pauli expectation values.
+**WL** : evolve $|+\rangle$, form the density matrix, and read the three Pauli expectation values
+$\langle X\rangle,\langle Y\rangle,\langle Z\rangle$, the Cartesian components of the Bloch vector.
 
 ```wl
 With[{\[Psi] = MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t, {1, 1}/Sqrt[2]]}, Simplify[ComplexExpand[Table[Conjugate[\[Psi]] . PauliMatrix[k] . \[Psi], {k, 3}]], {\[Omega], t} \[Element] Reals]]
@@ -208,49 +169,57 @@ combination of $X$ and $Y$: $X_H(t) = \cos(\omega t)\,X - \sin(\omega t)\,Y$.
 **WL** : conjugate the matrix of $X$ by the propagator.
 
 ```wl
-With[{u = MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t]}, Simplify[ComplexExpand[ConjugateTranspose[u] . PauliMatrix[1] . u], {\[Omega], t} \[Element] Reals]]
+With[{u = MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t]}, Simplify[ConjugateTranspose[u] . PauliMatrix[1] . u, {\[Omega], t} \[Element] Reals]]
 ```
 
-**QF** : the same conjugation at the operator level, $U^\dagger \,X\, U$, keeping $U$ and $X$ as
-`QuantumOperator`s and composing with `@`.
+**QF** : `QuantumEvolve` evolves the *observable* directly in the Heisenberg picture: give it the
+Hamiltonian $\tfrac\omega2 Z$ and the operator $X$, and it returns the Heisenberg operator
+$A_H(t) = U^\dagger X U$, whose matrix we read off.
 
 ```wl
-With[{u = QuantumOperator[MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t]]}, Simplify[ComplexExpand[Normal[(u["Dagger"] @ QuantumOperator["X"] @ u)["Matrix"]]], {\[Omega], t} \[Element] Reals]]
+Simplify[Normal@QuantumEvolve[(\[Omega]/2) QuantumOperator["Z"], QuantumOperator["X"], t]["Matrix"], {t, \[Omega]} \[Element] Reals]
 ```
 
 Both return the matrix of $\cos(\omega t)\,X - \sin(\omega t)\,Y$: the Heisenberg observable precesses
 in the opposite sense to the Larmor state (7.4), which is why the Schrodinger and Heisenberg pictures
 agree on every expectation value.
 
-### 7.5b [BSc] How do I check Ehrenfest's theorem, $\tfrac{d}{dt}\langle A\rangle=i\langle[\hat H,A]\rangle$, for a time-independent observable?
+### 7.5b [BSc] How do I verify Ehrenfest's theorem $\tfrac{d}{dt}\langle A\rangle = \tfrac{i}{\hbar}\langle[\hat H(t),A]\rangle$ for a general time-dependent $SU(2)$ Hamiltonian, without solving the dynamics?
 
 Ehrenfest's theorem is the equation of motion for expectation values: for an observable $A$ with no
-explicit time dependence, $\tfrac{d}{dt}\langle A\rangle = i\langle[\hat H, A]\rangle$. Verify it on a
-general pure qubit evolving under $\hat H = \tfrac\omega2 Z$, with $A = X$.
+explicit time dependence, $\tfrac{d}{dt}\langle A\rangle = \tfrac{i}{\hbar}\langle[\hat H(t), A]\rangle$. It
+follows directly from the Schrodinger equation, not from any particular solution, so it holds for a *fully
+time-dependent* Hamiltonian, where no closed-form propagator exists, and can be checked without ever
+integrating the dynamics. Take the general driven qubit $\hat H(t) = \tfrac{\hbar\,\Omega(t)}2\,\hat n(t)\cdot
+\vec\sigma$ whose Bloch axis $\hat n(t) = (\sin\theta(t)\cos\phi(t),\,\sin\theta(t)\sin\phi(t),\,\cos\theta(t))$
+swings in time, together with a fixed observable $A = \tfrac a2\,\hat m\cdot\vec\sigma$ along the constant
+axis $\hat m = (\sin\theta_A\cos\phi_A,\,\sin\theta_A\sin\phi_A,\,\cos\theta_A)$.
 
-**WL** : evolve $\{\cos\tfrac\theta2, e^{i\varphi}\sin\tfrac\theta2\}$, then compare the time derivative
-of $\langle X\rangle$ with the expectation of $i[\hat H, X]$.
-
-```wl
-With[{h = (\[Omega]/2) PauliMatrix[3], \[Psi] = MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t] . {Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}}, With[{ev = Simplify[ComplexExpand[Conjugate[\[Psi]] . # . \[Psi]], {\[Omega], t, \[Theta], \[Phi]} \[Element] Reals] &}, {D[ev[PauliMatrix[1]], t], ev[I (h . PauliMatrix[1] - PauliMatrix[1] . h)]}]]
-```
-
-The two entries should be equal; confirm.
-
-```wl
-With[{h = (\[Omega]/2) PauliMatrix[3], \[Psi] = MatrixExp[-I (\[Omega]/2) PauliMatrix[3] t] . {Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}}, With[{ev = Simplify[ComplexExpand[Conjugate[\[Psi]] . # . \[Psi]], {\[Omega], t, \[Theta], \[Phi]} \[Element] Reals] &}, Simplify[D[ev[PauliMatrix[1]], t] == ev[I (h . PauliMatrix[1] - PauliMatrix[1] . h)]]]]
-```
-
-**QF** : the right-hand side through the paclet's `Commutator`, which reduces the operator product
-$[\hat H, X]$ to a single `QuantumOperator`; its expectation matches the derivative.
+**WL** : leave the state *unsolved*. Write $|\psi\rangle = \{c_1(t), c_2(t)\}$ as abstract amplitudes and
+$\langle\psi|$ as their conjugate $\{\bar c_1(t), \bar c_2(t)\}$, and feed in the Schrodinger equation and its
+Hermitian conjugate only as the first derivatives $\dot\psi = -\tfrac{i}{\hbar}\hat H(t)\,\psi$ and
+$\dot{\bar\psi} = +\tfrac{i}{\hbar}\hat H(t)^{\top}\bar\psi$ (with $\hat H^{*} = \hat H^{\top}$ because
+$\hat H$ is Hermitian). The residual $\tfrac{d}{dt}\langle A\rangle - \tfrac{i}{\hbar}\langle[\hat H(t),A]\rangle$
+then collapses to zero.
 
 ```wl
-With[{h = QuantumOperator[(\[Omega]/2) PauliMatrix[3]], qs = QuantumEvolve[QuantumOperator[(\[Omega]/2) PauliMatrix[3]], QuantumState[{Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}], t]}, Simplify[ComplexExpand[QuantumMeasurementOperator[I Commutator[h, QuantumOperator["X"]]][qs]["Mean"]], {\[Omega], t, \[Theta], \[Phi]} \[Element] Reals]]
+With[{H = (\[HBar] \[CapitalOmega][t]/2) {{Cos[\[Theta][t]], Exp[-I \[Phi][t]] Sin[\[Theta][t]]}, {Exp[I \[Phi][t]] Sin[\[Theta][t]], -Cos[\[Theta][t]]}}, A = (a/2) {{Cos[\[Theta]A], Exp[-I \[Phi]A] Sin[\[Theta]A]}, {Exp[I \[Phi]A] Sin[\[Theta]A], -Cos[\[Theta]A]}}, \[Psi] = {c1[t], c2[t]}, \[Psi]c = {cc1[t], cc2[t]}}, Simplify[(I/\[HBar] Transpose[H] . \[Psi]c) . A . \[Psi] + \[Psi]c . A . (-I/\[HBar] H . \[Psi]) - I/\[HBar] \[Psi]c . (H . A - A . H) . \[Psi], {\[CapitalOmega][t], \[Theta][t], \[Phi][t], a, \[Theta]A, \[Phi]A, \[HBar]} \[Element] Reals]]
 ```
 
-The derivative of $\langle X\rangle$ equals $i\langle[\hat H, X]\rangle = -\omega\langle Y\rangle$: the
-transverse components chase each other exactly as classical precession would, the content of Ehrenfest's
-theorem for a spin.
+**QF** : the same identity, with the commutator $[\hat H(t), A]$ formed by the paclet's `Commutator` acting
+on the two time-dependent `QuantumOperator`s; the residual again vanishes.
+
+```wl
+With[{H = QuantumOperator[(\[HBar] \[CapitalOmega][t]/2) {{Cos[\[Theta][t]], Exp[-I \[Phi][t]] Sin[\[Theta][t]]}, {Exp[I \[Phi][t]] Sin[\[Theta][t]], -Cos[\[Theta][t]]}}], A = QuantumOperator[(a/2) {{Cos[\[Theta]A], Exp[-I \[Phi]A] Sin[\[Theta]A]}, {Exp[I \[Phi]A] Sin[\[Theta]A], -Cos[\[Theta]A]}}], \[Psi] = {c1[t], c2[t]}, \[Psi]c = {cc1[t], cc2[t]}}, With[{h = Normal[H["Matrix"]], amat = Normal[A["Matrix"]], comm = Normal[Commutator[H, A]["Matrix"]]}, Simplify[(I/\[HBar] Transpose[h] . \[Psi]c) . amat . \[Psi] + \[Psi]c . amat . (-I/\[HBar] h . \[Psi]) - I/\[HBar] \[Psi]c . comm . \[Psi], {\[CapitalOmega][t], \[Theta][t], \[Phi][t], a, \[Theta]A, \[Phi]A, \[HBar]} \[Element] Reals]]]
+```
+
+Both return $0$: the gap between $\tfrac{d}{dt}\langle A\rangle$ and $\tfrac{i}{\hbar}\langle[\hat H(t),A]\rangle$
+is identically zero for *any* time-dependent axis $\hat n(t)$, drive $\Omega(t)$, and fixed observable $A$,
+with the state never solved for. Ehrenfest's theorem is an operator identity forced by the Schrodinger
+equation alone, not a property of a particular trajectory, which is why it survives the
+time-ordered-exponential dynamics of a driven qubit that has no closed-form propagator. The one term that
+could spoil it, $\langle\partial_t A\rangle$, is absent precisely because $A$ carries no explicit time
+dependence.
 
 ### 7.6 [MSc] How do I transform between the Schrodinger, Heisenberg, and interaction pictures and show they agree on expectation values?
 
@@ -279,31 +248,45 @@ The WL cell returns the *same* number three times, and the QF Schrodinger expect
 picture is a bookkeeping choice for where the clock sits, never a physical one, because
 $\langle\psi_0|U^\dagger A U|\psi_0\rangle$ is one expression however you group the factors.
 
-### 7.7 [MSc] How do I derive the Mandelstam-Tamm quantum speed limit $t\geq\tfrac{\arccos|\langle\psi_0|\psi_t\rangle|}{\Delta E}$ from the time-energy uncertainty relation?
+### 7.7 [MSc] How do I verify the Mandelstam-Tamm speed limit for a general time-dependent $SU(2)$ Hamiltonian, whose local rate is $\tfrac{ds_{FS}}{dt}=\tfrac{\Delta E(t)}{\hbar}$, without solving the dynamics?
 
-The Mandelstam-Tamm bound sets a minimum time for a state to reach a given fidelity with its start: the
-Bures angle $\arccos|\langle\psi_0|\psi_t\rangle|$ cannot grow faster than the energy spread $\Delta E =
-\sqrt{\langle\hat H^2\rangle - \langle\hat H\rangle^2}$, so $t \ge \arccos|\langle\psi_0|\psi_t\rangle|/
-\Delta E$ (with $\hbar=1$). Test it on $|+\rangle$ under $\hat H = \tfrac\omega2 Z$, where $\Delta E =
-\tfrac\omega2$ and the overlap is $|\cos\tfrac{\omega t}2|$.
+The Mandelstam-Tamm bound sets a minimum time for a state to move a given distance in Hilbert space: the
+Bures angle $\arccos|\langle\psi_0|\psi_t\rangle|$ (the Fubini-Study geodesic distance from the start) cannot
+exceed the length of the path actually traced, $\arccos|\langle\psi_0|\psi_t\rangle| \le \tfrac1\hbar\int_0^t
+\Delta E(t')\,dt'$ with $\Delta E(t') = \sqrt{\langle\hat H(t')^2\rangle - \langle\hat H(t')\rangle^2}$. This
+*integral* form is the general statement, valid for a fully time-dependent $\hat H(t)$. Only when $\hat H$ is
+time-independent is $\Delta E$ a conserved constant, and the integral collapses to $\Delta E\,t$, giving the
+familiar $t \ge \hbar\,\arccos|\langle\psi_0|\psi_t\rangle|/\Delta E$. The engine underneath is a local
+*equality*: the speed at which the state sweeps through projective Hilbert space, in the Fubini-Study metric,
+equals the instantaneous energy uncertainty, $\tfrac{ds_{FS}}{dt} = \tfrac{\Delta E(t)}\hbar$
+(Anandan-Aharonov). Like Ehrenfest (7.5b) it follows from the Schrodinger equation alone, so for a general
+driven qubit $\hat H(t) = \tfrac{\hbar\,\Omega(t)}2\,\hat n(t)\cdot\vec\sigma$ it can be checked without ever
+solving for the state.
 
-**WL** : evolve $|+\rangle$, form the overlap with the start, and build the bound's right-hand side; on
-the first quarter-period it equals the elapsed time.
+**WL** : leave the state *unsolved* as $|\psi\rangle = \{c_1(t), c_2(t)\}$ with conjugate $\langle\psi|$,
+substitute $\dot\psi = -\tfrac{i}\hbar\hat H(t)\,\psi$ and its Hermitian conjugate, and compare the squared
+Fubini-Study speed $\langle\dot\psi|\dot\psi\rangle - |\langle\psi|\dot\psi\rangle|^2$ with $\Delta E(t)^2/
+\hbar^2$; the difference collapses to zero.
 
 ```wl
-With[{\[Psi]0 = {1, 1}/Sqrt[2], h = (\[Omega]/2) PauliMatrix[3]}, With[{\[Psi]t = MatrixExp[-I h t, {1, 1}/Sqrt[2]], \[CapitalDelta]E = Sqrt[Conjugate[{1, 1}/Sqrt[2]] . h . h . ({1, 1}/Sqrt[2]) - (Conjugate[{1, 1}/Sqrt[2]] . h . ({1, 1}/Sqrt[2]))^2]}, With[{ov = Simplify[ComplexExpand[Conjugate[\[Psi]0] . \[Psi]t]]}, Simplify[ArcCos[Abs[ov]]/\[CapitalDelta]E, 0 < \[Omega] t < Pi && \[Omega] > 0]]]]
+With[{H = (\[HBar] \[CapitalOmega][t]/2) {{Cos[\[Theta][t]], Exp[-I \[Phi][t]] Sin[\[Theta][t]]}, {Exp[I \[Phi][t]] Sin[\[Theta][t]], -Cos[\[Theta][t]]}}, \[Psi] = {c1[t], c2[t]}, \[Psi]c = {cc1[t], cc2[t]}}, With[{\[Psi]d = -I/\[HBar] H . \[Psi], \[Psi]cd = I/\[HBar] Transpose[H] . \[Psi]c}, Simplify[(\[Psi]cd . \[Psi]d - (\[Psi]c . \[Psi]d) (\[Psi]cd . \[Psi])) - (\[Psi]c . H . H . \[Psi] - (\[Psi]c . H . \[Psi])^2)/\[HBar]^2, {\[CapitalOmega][t], \[Theta][t], \[Phi][t], \[HBar]} \[Element] Reals]]]
 ```
 
-**QF** : the same overlap from the evolved `QuantumState` and the paclet's `QuantumDistance`
-`"Fidelity"`; the Bures angle is $\arccos\sqrt{F}$.
+**QF** : the same identity, with the energy square $\langle\hat H(t)^2\rangle$ taken from the operator
+product $\hat H^2$ formed by composing the time-dependent `QuantumOperator` with itself (`H @ H`); the
+residual again vanishes.
 
 ```wl
-With[{h = QuantumOperator[(\[Omega]/2) PauliMatrix[3]], qs0 = QuantumState["Plus"]}, With[{qst = QuantumEvolve[QuantumOperator[(\[Omega]/2) PauliMatrix[3]], QuantumState["Plus"], t], \[CapitalDelta]E = Sqrt[QuantumMeasurementOperator[QuantumOperator[(\[Omega]/2) PauliMatrix[3]] @ QuantumOperator[(\[Omega]/2) PauliMatrix[3]]][QuantumState["Plus"]]["Mean"] - QuantumMeasurementOperator[QuantumOperator[(\[Omega]/2) PauliMatrix[3]]][QuantumState["Plus"]]["Mean"]^2]}, With[{ov = Simplify[ComplexExpand[(qs0["Dagger"] @ qst)["Scalar"]]]}, Simplify[ArcCos[Abs[ov]]/\[CapitalDelta]E, 0 < \[Omega] t < Pi && \[Omega] > 0]]]]
+With[{H = QuantumOperator[(\[HBar] \[CapitalOmega][t]/2) {{Cos[\[Theta][t]], Exp[-I \[Phi][t]] Sin[\[Theta][t]]}, {Exp[I \[Phi][t]] Sin[\[Theta][t]], -Cos[\[Theta][t]]}}], \[Psi] = {c1[t], c2[t]}, \[Psi]c = {cc1[t], cc2[t]}}, With[{h = Normal[H["Matrix"]], h2 = Normal[(H @ H)["Matrix"]]}, With[{\[Psi]d = -I/\[HBar] h . \[Psi], \[Psi]cd = I/\[HBar] Transpose[h] . \[Psi]c}, Simplify[(\[Psi]cd . \[Psi]d - (\[Psi]c . \[Psi]d) (\[Psi]cd . \[Psi])) - (\[Psi]c . h2 . \[Psi] - (\[Psi]c . h . \[Psi])^2)/\[HBar]^2, {\[CapitalOmega][t], \[Theta][t], \[Phi][t], \[HBar]} \[Element] Reals]]]]
 ```
 
-Both collapse the right-hand side to exactly $t$ on the first quarter-period: this state saturates the
-Mandelstam-Tamm bound, evolving as fast as its energy uncertainty allows, so the "speed limit" is
-attained, not merely respected.
+Both return $0$: the state's rate of travel through Hilbert space is exactly $\Delta E(t)/\hbar$ at every
+instant, for any drive $\Omega(t)$ and any swinging axis $\hat n(t)$, with the state never solved for. The
+Mandelstam-Tamm bound is then pure geometry, geodesic $\le$ path length: no evolution can reach a Bures angle
+larger than the accumulated $\tfrac1\hbar\int_0^t\Delta E\,dt'$. A state saturates it (moves at the speed
+limit) when its trajectory is a Fubini-Study geodesic, as the time-independent $\tfrac\omega2 Z$ evolution of
+$|+\rangle$ does on its first quarter-period; a general time-dependent drive respects the bound but need not
+saturate it.
 
 ### 7.8 [MSc] How do I solve a classically driven two-level system in the rotating frame (the Rabi problem)?
 
@@ -313,18 +296,30 @@ fast counter-rotating terms (the rotating-wave approximation) turns this into th
 $\hat H_{\mathrm{rot}} = \tfrac\Delta2 Z + \tfrac\Omega2 X$ with detuning $\Delta = \omega_0 - \omega_d$.
 On resonance ($\Delta = 0$) it is the Rabi drive of 7.3.
 
-**WL** : form the rotating-frame Hamiltonian $R\hat H R^\dagger - \tfrac{\omega_d}2 Z$, expand the
-trigonometry, and keep the slow (non-oscillating) part.
+**WL** : form the rotating-frame Hamiltonian $R\hat H R^\dagger - \tfrac{\omega_d}2 Z$ with $R =
+e^{i\omega_d t\,Z/2}$, and expand the trigonometry with `TrigReduce`. The result is a *static* part
+$\tfrac\Delta2 Z + \tfrac\Omega2 X$ (detuning $\Delta = \omega_0 - \omega_d$) plus *counter-rotating* terms
+carrying $\cos(2\omega_d t)$ and $\sin(2\omega_d t)$, which oscillate at twice the drive frequency.
 
 ```wl
-With[{r = MatrixExp[I \[Omega]d t PauliMatrix[3]/2], hdrive = (\[Omega]0/2) PauliMatrix[3] + \[CapitalOmega] Cos[\[Omega]d t] PauliMatrix[1]}, TrigReduce[ComplexExpand[r . hdrive . ConjugateTranspose[r] - (\[Omega]d/2) PauliMatrix[3]]] /. {Cos[2 t \[Omega]d] -> 0, Sin[2 t \[Omega]d] -> 0}]
+hrot = With[{r = MatrixExp[I \[Omega]d t PauliMatrix[3]/2], hdrive = (\[Omega]0/2) PauliMatrix[3] + \[CapitalOmega] Cos[\[Omega]d t] PauliMatrix[1]}, TrigReduce[ComplexExpand[r . hdrive . ConjugateTranspose[r] - (\[Omega]d/2) PauliMatrix[3]]]]
+```
+
+Those two oscillating pieces swing at $2\omega_d$, far faster than the slow Rabi dynamics set by
+$\Omega \ll \omega_d$, so over any timescale on which the qubit actually evolves they average to zero. The
+rotating-wave approximation discards them: the replacement rule $\{\cos(2\omega_d t)\to 0,\ \sin(2\omega_d
+t)\to 0\}$ sets exactly those two fast oscillations to zero, collapsing the counter-rotating terms and
+leaving the static Hamiltonian $\tfrac\Delta2 Z + \tfrac\Omega2 X$.
+
+```wl
+hrot /. {Cos[2 t \[Omega]d] -> 0, Sin[2 t \[Omega]d] -> 0}
 ```
 
 **QF** : the resonant ($\omega_d = \omega_0$, so $\Delta = 0$) rotating-frame problem is the static drive
 $\tfrac\Omega2 X$; evolve $|0\rangle$ under it and recover the Rabi population.
 
 ```wl
-Simplify[QuantumEvolve[QuantumOperator[(\[CapitalOmega]/2) PauliMatrix[1]], QuantumState["0"], t]["ProbabilitiesList"], {\[CapitalOmega], t} \[Element] Reals]
+Simplify[QuantumEvolve[(\[CapitalOmega]/2) QuantumOperator["X"], t]["ProbabilitiesList"], {\[CapitalOmega], t} \[Element] Reals]
 ```
 
 Averaging away the $2\omega_d$ terms leaves $\tfrac\Delta2 Z + \tfrac\Omega2 X$: the drive dresses the
@@ -344,14 +339,14 @@ sharply peaked at the resonance $\omega = \omega_{fi}$.
 probability near resonance.
 
 ```wl
-With[{\[CapitalDelta] = \[Omega]fi - \[Omega], amp = Integrate[Exp[I (\[Omega]fi - \[Omega]) t2]/2, {t2, 0, t}]}, FullSimplify[Abs[Vfi]^2 ComplexExpand[amp Conjugate[amp]] == Abs[Vfi]^2 (t^2/4) Sinc[\[CapitalDelta] t/2]^2, {\[CapitalDelta], t} \[Element] Reals]]
+With[{\[CapitalDelta] = \[Omega]fi - \[Omega], amp = Integrate[Exp[I (\[Omega]fi - \[Omega]) t2]/2, {t2, 0, t}]}, Abs[Vfi]^2 FullSimplify[ComplexExpand[amp Conjugate[amp]], {\[CapitalDelta], t} \[Element] Reals]]
 ```
 
 **QF** : the matrix element $V_{fi} = \langle f|V|i\rangle$ that sets the strength, here for a
 $\hat V = v\,X$ coupling between the two levels $|0\rangle, |1\rangle$, via the object sandwich.
 
 ```wl
-(QuantumState["1"]["Dagger"] @ QuantumOperator[v PauliMatrix[1]] @ QuantumState["0"])["Scalar"]
+(QuantumState["1"]["Dagger"] @ QuantumOperator[v "X"] @ QuantumState["0"])["Scalar"]
 ```
 
 The probability grows as $|V_{fi}|^2\,\tfrac{t^2}4$ exactly on resonance and is throttled off it by the
@@ -391,50 +386,67 @@ constant-rate decay that a single level (7.9a) could never show.
 
 A symmetry is a unitary $S$ with $[S, \hat H] = 0$. Then $S$ and $\hat H$ share eigenstates, $S$ is a
 constant of the motion ($\tfrac{d}{dt}\langle S\rangle = i\langle[\hat H, S]\rangle = 0$), and its
-eigenvalue labels states by a conserved quantum number. Take the two-spin Heisenberg exchange
-$\hat H = J(X\otimes X + Y\otimes Y + Z\otimes Z)$; the swap $S = \mathrm{SWAP}$ that exchanges the two
-spins commutes with it.
+eigenvalue labels states by a conserved quantum number. To *find* the symmetries of a given $\hat H$, solve
+the linear condition $[\hat H, S] = 0$ for the unknown operator $S$: the commuting operators are exactly the
+null space of the linear map $S \mapsto [\hat H, S]$, the *commutant* of $\hat H$. Take the two-spin
+Heisenberg exchange $\hat H = J(X\otimes X + Y\otimes Y + Z\otimes Z)$.
 
-**WL** : build $\hat H$ and $S$ as Kronecker products and test that their commutator vanishes.
-
-```wl
-With[{h = j (KroneckerProduct[PauliMatrix[1], PauliMatrix[1]] + KroneckerProduct[PauliMatrix[2], PauliMatrix[2]] + KroneckerProduct[PauliMatrix[3], PauliMatrix[3]]), s = {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}}, h . s - s . h == 0 IdentityMatrix[4]]
-```
-
-**QF** : the same test at the operator level, $[\hat H, \mathrm{SWAP}] = 0$, with `Commutator` and the
-named `"SWAP"` gate.
+**WL** : vectorize the commutator map as the matrix $\hat H\otimes I - I\otimes\hat H^\top$ and take its
+null space; each null vector, reshaped to $4\times4$, is an operator commuting with $\hat H$. Count the
+independent symmetries found and confirm they all commute.
 
 ```wl
-With[{h = j QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["X"]] + j QuantumTensorProduct[QuantumOperator["Y"], QuantumOperator["Y"]] + j QuantumTensorProduct[QuantumOperator["Z"], QuantumOperator["Z"]]}, Commutator[h, QuantumOperator["SWAP"]] == 0 QuantumOperator[IdentityMatrix[4], {1, 2}]]
+With[{h = j (KroneckerProduct[PauliMatrix[1], PauliMatrix[1]] + KroneckerProduct[PauliMatrix[2], PauliMatrix[2]] + KroneckerProduct[PauliMatrix[3], PauliMatrix[3]])}, With[{comm = ArrayReshape[#, {4, 4}] & /@ NullSpace[KroneckerProduct[h, IdentityMatrix[4]] - KroneckerProduct[IdentityMatrix[4], Transpose[h]]]}, {Length[comm], AllTrue[comm, h . # == # . h &]}]]
 ```
 
-Both confirm $[\hat H, \mathrm{SWAP}] = 0$: exchange symmetry is exact for the Heisenberg coupling, so the
-swap parity (symmetric versus antisymmetric under exchange) is conserved and every eigenstate of $\hat H$
-can be labelled by it, which is exactly what block-diagonalizes $\hat H$ into symmetry sectors.
+**QF** : the commutant always contains functions of $\hat H$; the natural $\pm1$-valued one, got by rescaling
+$\hat H$'s two energy levels $\{+J, -3J\}$ to $\{+1, -1\}$, is $S = \tfrac{1}{2J}(\hat H + J\,I)$. Build it
+from $\hat H$ as a `QuantumOperator`: it turns out to be exactly the exchange gate `"SWAP"`, and its
+eigenvalues are the conserved parity.
+
+```wl
+With[{h = j QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["X"]] + j QuantumTensorProduct[QuantumOperator["Y"], QuantumOperator["Y"]] + j QuantumTensorProduct[QuantumOperator["Z"], QuantumOperator["Z"]]}, With[{s = (h + j QuantumOperator[IdentityMatrix[4], {1, 2}])/(2 j)}, {s == QuantumOperator["SWAP"], s["Eigenvalues"]}]]
+```
+
+The null space is 10-dimensional: the isotropic Heisenberg coupling has a large symmetry algebra, because
+its $+J$ level is threefold degenerate (the triplet) and *any* operator acting within that degenerate space
+commutes with $\hat H$. The physically distinguished member is the exchange operator $S = \tfrac{1}{2J}
+(\hat H + J\,I) = \mathrm{SWAP}$, found here as a function of $\hat H$ rather than guessed; its eigenvalue
+$\pm1$ (symmetric triplet versus antisymmetric singlet) is the conserved exchange parity, exactly what
+block-diagonalizes $\hat H$ into symmetry sectors (7.10b).
 
 ### 7.10b [MSc] How do I block-diagonalize $\hat H$ into symmetry sectors using the eigenspaces of a commuting symmetry $S$?
 
-When $[S, \hat H] = 0$, the eigenspaces of $S$ are invariant under $\hat H$: in a basis sorted by $S$'s
-eigenvalue, $\hat H$ is block-diagonal, one block per symmetry sector, and each block can be diagonalized
-on its own. Continue with the Heisenberg dimer and $S = \mathrm{SWAP}$ of 7.10a, whose eigenvalues are
-$+1$ (the symmetric triplet, threefold) and $-1$ (the antisymmetric singlet).
+When $[S, \hat H] = 0$, the eigenspaces of $S$ are invariant under $\hat H$: in a basis that diagonalizes
+$S$, $\hat H$ is block-diagonal, one block per eigenvalue of $S$. Two matrix decompositions produce that
+basis from $S$. `EigenvalueDecomposition[S]` gives it *exactly* and symbolically (the similarity matrix whose
+columns are $S$'s eigenvectors, grouped by eigenvalue), keeping $J$ a symbol; `OrderedSchurDecomposition[S]`
+(new in 15.0) gives it *numerically* but as a genuine unitary $Q$, and sorts the basis by the eigenvalue of
+$S$ so the sectors come out grouped. Either way, changing $\hat H$ into that basis block-diagonalizes it.
+Continue with the Heisenberg dimer and its exchange symmetry $S = \tfrac1{2J}(\hat H + J I) = \mathrm{SWAP}$
+from 7.10a (eigenvalue $-1$ for the antisymmetric singlet, $+1$ for the symmetric triplet).
 
-**WL** : change to the eigenbasis of $S$ (its eigenvectors as rows) and conjugate $\hat H$ into it; the
-result is block-diagonal.
-
-```wl
-With[{h = j (KroneckerProduct[PauliMatrix[1], PauliMatrix[1]] + KroneckerProduct[PauliMatrix[2], PauliMatrix[2]] + KroneckerProduct[PauliMatrix[3], PauliMatrix[3]]), w = Orthogonalize[Eigenvectors[{{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}]]}, Simplify[w . h . Transpose[w]]]
-```
-
-**QF** : the same conjugation with `QuantumOperator`s, the sector-sorting change of basis $W\hat H W^\dagger$.
+**WL** : the *exact* route. Derive $S$ from $\hat H$ as in 7.10a, take the eigenbasis similarity matrix from
+`EigenvalueDecomposition[S]`, and change $\hat H$ into it; the block-diagonal form stays symbolic in $J$.
 
 ```wl
-With[{h = j QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["X"]] + j QuantumTensorProduct[QuantumOperator["Y"], QuantumOperator["Y"]] + j QuantumTensorProduct[QuantumOperator["Z"], QuantumOperator["Z"]], w = QuantumOperator[Orthogonalize[Eigenvectors[QuantumOperator["SWAP"]["Matrix"] // Normal]], {1, 2}]}, Simplify[Normal[(w @ h @ w["Dagger"])["Matrix"]]]]
+With[{h = j (KroneckerProduct[PauliMatrix[1], PauliMatrix[1]] + KroneckerProduct[PauliMatrix[2], PauliMatrix[2]] + KroneckerProduct[PauliMatrix[3], PauliMatrix[3]])}, With[{s = Simplify[(h + j IdentityMatrix[4])/(2 j)]}, With[{sm = First[EigenvalueDecomposition[s]]}, Simplify[Inverse[sm] . h . sm]]]]
 ```
 
-In the swap-sorted basis $\hat H$ splits into a $3\times3$ triplet block (all with energy $+J$) and a
-$1\times1$ singlet block (energy $-3J$): a $4\times4$ diagonalization has become two independent, smaller
-ones, which is why exploiting symmetry is the first move in any serious many-body calculation.
+**QF** : the *numeric* route at the operator level. Take the ordered Schur basis $Q$ of $S$ (sorted by
+increasing eigenvalue, singlet first), wrap it as a `QuantumOperator` $W$, and conjugate; $W\hat H W^\dagger$
+reproduces the exact block-diagonal to machine precision.
+
+```wl
+With[{h = j QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["X"]] + j QuantumTensorProduct[QuantumOperator["Y"], QuantumOperator["Y"]] + j QuantumTensorProduct[QuantumOperator["Z"], QuantumOperator["Z"]]}, With[{s = Simplify[(h + j QuantumOperator[IdentityMatrix[4], {1, 2}])/(2 j)]}, With[{w = QuantumOperator[ConjugateTranspose[First[OrderedSchurDecomposition[N[Normal[s["Matrix"]]], "IncreasingRe", TargetStructure -> "Dense"]]], {1, 2}]}, Chop[Normal[(w @ h @ w["Dagger"])["Matrix"]]]]]]
+```
+
+Both give the same block-diagonal $\hat H$: a $1\times1$ singlet block at energy $-3J$ and a $3\times3$
+triplet block at $+J$, so a $4\times4$ diagonalization has become two independent, smaller ones. The exact
+`EigenvalueDecomposition` keeps $J$ symbolic; the numeric `OrderedSchurDecomposition` reproduces it to machine
+precision but adds the guarantees of a *unitary* basis and a built-in sector sort. Either way the
+sector-grouped basis comes straight from the symmetry, with no by-hand eigenvector bookkeeping, which is why
+exploiting symmetry is the first move in any serious many-body calculation.
 
 ### 7.11 [MSc] How do I implement a Trotter-Suzuki decomposition to simulate $e^{-i\hat H t}$ for a sum of noncommuting terms?
 
@@ -567,26 +579,54 @@ increasingly frequent measurement the survival climbs toward $1$, because each s
 $\cos^2\tfrac{\Omega\tau}2 = 1 - O(\tau^2)$ and $n$ such factors with $\tau = t/n$ tend to $1$: continuous
 observation pins the state in place.
 
-### 7.16 [BSc] How do I encode each quantum postulate as a one-line WL operation (state, observable, evolution, measurement, composite)?
+### 7.16 [BSc] How do I encode each quantum postulate as a one-line operation (state, observable, evolution, measurement, composite)?
 
-The postulates of quantum mechanics each have a one-line finite-dimensional realization: a **state** is a
-unit vector (or density operator); an **observable** is a Hermitian matrix; **evolution** is a unitary; a
-**measurement** returns outcome $k$ with the Born probability $\langle\psi|P_k|\psi\rangle$; a
-**composite** system is a tensor product. Here they are, each in one line.
+The five postulates of quantum mechanics each have a compact finite-dimensional realization. Each is stated
+precisely below and then paired with its computational counterpart: a two-element list $\{$bare Wolfram
+Language, matching QuantumFramework object$\}$, whose entries return the same content.
 
-**WL** : the five postulates as five native operations, collected in an association keyed by name.
-
-```wl
-<|"State" -> Normalize[{3, 4 I}], "Observable" -> HermitianMatrixQ[PauliMatrix[2]], "Evolution" -> UnitaryMatrixQ[MatrixExp[-I PauliMatrix[1] t /. t -> 0.7]], "Measurement" -> With[{\[Psi] = Normalize[{3, 4 I}]}, Conjugate[\[Psi]] . ({{1, 0}, {0, 0}} . \[Psi])], "Composite" -> Flatten[KroneckerProduct[{1, 0}, {0, 1}]]|>
-```
-
-**QF** : the same five, each carried by the matching QF object, one property call apiece.
+**1. States.** The state of an isolated system is a unit vector $|\psi\rangle \in \mathcal H$ in a complex
+Hilbert space, fixed only up to a global phase (equivalently a density operator $\rho \geq 0$ with
+$\operatorname{Tr}\rho = 1$). Normalize a raw amplitude vector.
 
 ```wl
-<|"State" -> Normal[QuantumState[{3, 4 I}]["Normalized"]["StateVector"]], "Observable" -> QuantumOperator["Y"]["HermitianQ"], "Evolution" -> QuantumOperator["X"]["UnitaryQ"], "Measurement" -> First[QuantumMeasurementOperator["Computational"][QuantumState[{3, 4 I}]]["ProbabilitiesList"]], "Composite" -> Normal[QuantumTensorProduct[QuantumState["0"], QuantumState["1"]]["StateVector"]]|>
+{Normalize[{3, 4 I}], Normal[QuantumState[{3, 4 I}]["Normalized"]["StateVector"]]}
 ```
 
-Each postulate is a single constructor or property: unit vector, Hermitian test, unitary test, Born
-probability, tensor product. The QF column reads the same facts off objects that also know their own
-dimension, basis, and order, so the one-liners scale to qudits and many-body systems without rewriting,
-which is the throughline of this whole manual.
+**2. Observables.** Every observable is a self-adjoint operator $\hat A = \hat A^\dagger$ on $\mathcal H$;
+its real eigenvalues are the possible outcomes and its eigenvectors the states of definite value. Test
+self-adjointness.
+
+```wl
+{HermitianMatrixQ[PauliMatrix[2]], QuantumOperator["Y"]["HermitianQ"]}
+```
+
+**3. Evolution.** Between measurements a closed system evolves unitarily, $|\psi(t)\rangle = U(t)|\psi_0
+\rangle$ with $U(t) = e^{-i\hat H t/\hbar}$ and $U^\dagger U = I$, the integrated form of the Schrodinger
+equation $i\hbar\,\partial_t|\psi\rangle = \hat H|\psi\rangle$. Test that the propagator is unitary.
+
+```wl
+{UnitaryMatrixQ[MatrixExp[-I 0.7 PauliMatrix[1]]], QuantumOperator[MatrixExp[-I 0.7 PauliMatrix[1]]]["UnitaryQ"]}
+```
+
+**4. Measurement (Born rule).** Measuring $\hat A = \sum_k a_k P_k$ in state $|\psi\rangle$ returns outcome
+$a_k$ with probability $p_k = \langle\psi|P_k|\psi\rangle$, whereupon the state collapses to $P_k|\psi\rangle/
+\sqrt{p_k}$. Read the Born probability of outcome $0$.
+
+```wl
+{With[{\[Psi] = Normalize[{3, 4 I}]}, Conjugate[\[Psi]] . {{1, 0}, {0, 0}} . \[Psi]], First[QuantumMeasurementOperator["Computational"][QuantumState[{3, 4 I}]]["ProbabilitiesList"]]}
+```
+
+**5. Composite systems.** The state space of a composite system is the tensor product $\mathcal H_1 \otimes
+\cdots \otimes \mathcal H_n$ of its parts' spaces; independently prepared parts form the product state
+$|\psi_1\rangle \otimes \cdots \otimes |\psi_n\rangle$. Build $|0\rangle \otimes |1\rangle$.
+
+```wl
+{Flatten[KroneckerProduct[{1, 0}, {0, 1}]], Normal[QuantumTensorProduct[QuantumState["0"], QuantumState["1"]]["StateVector"]]}
+```
+
+Each postulate is a single constructor or property, and the two entries of every pair agree: a unit vector,
+a self-adjointness test, a unitarity test, a Born probability, a tensor product. The bare-WL entry shows the
+raw linear algebra; the QuantumFramework entry reads the same fact off an object that also carries its own
+dimension, basis, and subsystem order, so the one-liners lift unchanged from qubits to qudits and many-body
+systems, the throughline of this whole manual.

@@ -51,6 +51,7 @@ its place. Every driven system uses a classical c-number field, never a quantize
 - 2.11 [BSc] How do I bound the ground-state energy from above using a trial state (the Rayleigh-Ritz variational method)?
 - 2.12 [MSc] How do I compute first- and second-order energy shifts by non-degenerate time-independent perturbation theory?
 - 2.13 [MSc] How do I resolve an avoided crossing by degenerate perturbation theory, obtaining the split levels $E_\pm=\bar E\pm\sqrt{\delta^2+|V|^2}$ (level repulsion)?
+- 2.14 [MSc] How do I derive an effective low-energy Hamiltonian by the Schrieffer-Wolff transformation, choosing an anti-Hermitian generator $S$ that removes an off-diagonal coupling $V$ to first order ($[H_0,S]=-V$) so that $H_{\mathrm{eff}}=P\big(H_0+\tfrac12[S,V]\big)P$ is the block-diagonal projection of $H=H_0+V$ onto the low-energy sector $P$ to second order, and checking its spectrum against the exact low-lying levels in the large-gap (dispersive) limit?
 
 ## Part 3. States as density operators
 - 3.1a [BSc] How do I build a density matrix from a classical ensemble?
@@ -104,20 +105,25 @@ its place. Every driven system uses a classical c-number field, never a quantize
 - 7.14 [MSc] How do I simulate a quantum quench and compute the Loschmidt echo?
 - 7.15 [MSc] How do I exhibit the quantum Zeno effect, freezing evolution under a Hamiltonian by frequent projective measurement?
 - 7.16 [BSc] How do I encode each quantum postulate as a one-line WL operation (state $=$ unit vector or density operator, observable $=$ Hermitian matrix, evolution $=$ unitary, measurement $=$ projector and Born rule, composite $=$ tensor product)?
+- 7.17 [MSc] How do I make the rotating-wave approximation for a classically driven two-level atom $H(t)=\tfrac{\omega_0}{2}\sigma_z+\Omega\cos(\omega t)\,\sigma_x$, moving to the frame rotating at the drive frequency and dropping the counter-rotating terms that oscillate at $\pm2\omega$ (the approximation underlying the rotating-frame solution of 7.8), and measuring the error against the exact evolution as it shrinks with the ratio $\Omega/\omega$?
+- 7.18 [MSc] How do I compute the Bloch-Siegert shift, the leading correction to the resonance condition beyond the rotating-wave approximation, by locating the drive frequency of maximal population transfer and matching its upward offset from $\omega_0$ to $\Delta\omega_{\mathrm{BS}}\approx+\Omega^2/(4\omega_0)$?
+- 7.19 [MSc] How do I compute the non-adiabatic transition probability for a two-level system swept through an avoided crossing $H(t)=\tfrac12 v t\,\sigma_z+\tfrac12\Delta\,\sigma_x$, and verify the Landau-Zener formula $P_{\mathrm{dia}}=e^{-\pi\Delta^2/(2v)}$ for the probability of failing to follow the instantaneous ground state (the fast-sweep counterpart to the adiabatic theorem of 7.12)?
+- 7.20 [MSc] How do I apply the sudden approximation for an abrupt Hamiltonian change $H_0\to H_1$, computing the post-quench transition probabilities $P_{0\to n}=|\langle\phi^{(1)}_n|\psi_0\rangle|^2$ onto the new eigenstates $|\phi^{(1)}_n\rangle$ while the state itself is frozen, and confirming its validity when the switching time is short compared to $\hbar/\Delta E$?
+- 7.21 [MSc] How do I approximate the time-ordered propagator of a time-dependent Hamiltonian by the Magnus expansion $U(t)=e^{\Omega_1+\Omega_2+\cdots}$, with $\Omega_1=-i\int_0^t H(t_1)\,dt_1$ and $\Omega_2=-\tfrac12\int_0^t\!\!\int_0^{t_1}[H(t_1),H(t_2)]\,dt_2\,dt_1$, and check the first two terms against the exact evolution (the truncated expansion staying unitary at every order, unlike a truncated Dyson series)?
 
 ## Part 8. Spin and angular momentum
 - 8.1 [BSc] How do I model a spin-1/2 in a magnetic field and reproduce the Stern-Gerlach spin-projection outcomes?
 - 8.2 [BSc] How do I build the spin-$j$ angular-momentum operators and verify $[J_x,J_y]=iJ_z$ and the Casimir?
 - 8.3 [BSc] How do I rotate a spin state and read the rotation off the expectation values?
 - 8.4 [MSc] How do I construct the Wigner $D$-matrix element $D^j_{m'm}(\alpha,\beta,\gamma)=\langle j\,m'|e^{-i\alpha J_z}e^{-i\beta J_y}e^{-i\gamma J_z}|j\,m\rangle$ for a spin-$j$ rotation?
-- 8.5 [MSc] How do I add two angular momenta and compute the Clebsch-Gordan coefficients?
+- 8.5 [MSc] How do I add two spin-1/2 and read off the full table of Clebsch-Gordan coefficients (the change of basis to the total-spin basis)?
 - 8.6 [MSc] How do I build the singlet and triplet states and identify them by total spin?
 - 8.7 [MSc] How do I construct a spin coherent state and place it on the generalized Bloch sphere?
 
 ## Part 9. Single-qubit operations and SU(2)
 - 9.1a [BSc] How do I build the standard named single-qubit gates $X, Y, Z, H, S, T$?
 - 9.1b [BSc] How do I build the axis-angle rotation gates $R_{\hat n}(\theta)=e^{-i\theta\,\hat n\cdot\vec\sigma/2}$?
-- 9.2 [BSc] How do I derive the closed-form axis-angle exponential $\cos(\alpha/2)I - i\sin(\alpha/2)\,\hat n\cdot\vec\sigma$?
+- 9.2 [BSc] How do I derive the closed-form axis-angle exponential $e^{-i\alpha\,\hat n\cdot\vec\sigma/2} = \cos(\alpha/2)I - i\sin(\alpha/2)\,\hat n\cdot\vec\sigma$?
 - 9.3 [BSc] How do I verify the unitarity and unit-determinant conditions that define SU(2)?
 - 9.4 [BSc] How do I decompose an arbitrary single-qubit unitary into Euler ($Z$-$Y$-$Z$) angles?
 - 9.5 [MSc] How do I show that SU(2) double-covers SO(3) and that a $2\pi$ rotation is not the identity?
@@ -173,6 +179,7 @@ its place. Every driven system uses a classical c-number field, never a quantize
 - 13.14 [MSc] How does local noise destroy entanglement, and can it die at finite time (sudden death)?
 - 13.15 [MSc] How do I bound the distinguishability of two channels by the diamond norm $\|\mathcal{N}_1-\mathcal{N}_2\|_\diamond=\sup_\rho\|(\mathcal{N}_1\otimes\mathrm{id})(\rho)-(\mathcal{N}_2\otimes\mathrm{id})(\rho)\|_1$?
 - 13.16 [MSc] How does a dephasing channel select a pointer basis and suppress off-diagonal coherences (decoherence and einselection)?
+- 13.17 [MSc] How do I derive the Born-Markov (weak-coupling, memoryless) Lindblad generator for a system weakly coupled to a finite bath, apply the secular approximation that drops the fast-oscillating cross terms, and validate the resulting master equation against the exact reduced dynamics obtained by tracing the bath out of the full system-plus-bath unitary evolution, seeing the agreement improve as the coupling weakens?
 
 ## Part 14. Quantum information and entropy
 - 14.1 [MSc] How do I compute and compare the Shannon and von Neumann entropies?
@@ -246,6 +253,7 @@ its place. Every driven system uses a classical c-number field, never a quantize
 - 22.5 [MSc] How do I compute the entanglement entropy of a block and observe area-law scaling?
 - 22.6 [MSc] How do I write a small state as a matrix product state and read its bond dimension?
 - 22.7 [MSc] How do I evolve a spin chain and observe a Lieb-Robinson light cone?
+- 22.8 [MSc] How do I solve the transverse-field Ising chain in mean-field theory, decoupling $\sigma_i^z\sigma_j^z\to\langle\sigma^z\rangle(\sigma_i^z+\sigma_j^z)-\langle\sigma^z\rangle^2$ and solving the self-consistency equation $m=\langle\sigma^z\rangle$ for the order parameter, and compare the mean-field critical field $h_c^{\mathrm{MF}}=zJ$ (with $z$ the coordination number) to the exact $h_c=J$ from the Jordan-Wigner solution of 22.2?
 
 ## Part 23. Quantum algorithms
 - 23.1 [BSc] Deutsch: how do I decide a one-bit function's type in a single query?
@@ -292,18 +300,18 @@ its place. Every driven system uses a classical c-number field, never a quantize
 | Part | Theme | Items | BSc | MSc |
 |------|-------|-------|-----|-----|
 | 1 | Pure states and the Born rule | 10 | 10 | 0 |
-| 2 | Observables, spectra, approximation | 16 | 10 | 6 |
+| 2 | Observables, spectra, approximation | 17 | 10 | 7 |
 | 3 | States as density operators | 10 | 9 | 1 |
 | 4 | Composite systems: tensor product, partial trace | 2 | 2 | 0 |
 | 5 | Projective measurement | 4 | 4 | 0 |
 | 6 | Uncertainty and incompatibility | 7 | 2 | 5 |
-| 7 | Unitary dynamics and pictures | 20 | 8 | 12 |
+| 7 | Unitary dynamics and pictures | 25 | 8 | 17 |
 | 8 | Spin and angular momentum | 7 | 3 | 4 |
 | 9 | Single-qubit operations, SU(2) | 7 | 5 | 2 |
 | 10 | Elementary multi-qubit gates and circuits | 4 | 4 | 0 |
 | 11 | Composite systems and entanglement | 14 | 5 | 9 |
 | 12 | Mixed states: distinguishability, thermal | 9 | 4 | 5 |
-| 13 | Channels and open systems | 16 | 6 | 10 |
+| 13 | Channels and open systems | 17 | 6 | 11 |
 | 14 | Quantum information and entropy | 8 | 0 | 8 |
 | 15 | Two-qubit decomposition, universality | 3 | 0 | 3 |
 | 16 | Generalized measurement and dilations | 4 | 0 | 4 |
@@ -312,13 +320,13 @@ its place. Every driven system uses a classical c-number field, never a quantize
 | 19 | Stabilizer formalism | 6 | 0 | 6 |
 | 20 | Error correction | 11 | 1 | 10 |
 | 21 | Discrete phase space, magic | 6 | 0 | 6 |
-| 22 | Finite many-body | 7 | 0 | 7 |
+| 22 | Finite many-body | 8 | 0 | 8 |
 | 23 | Algorithms | 16 | 5 | 11 |
 | 24 | Communication | 5 | 3 | 2 |
 | 25 | Foundations | 11 | 4 | 7 |
-| **Total** | | **213** | **89** | **124** |
+| **Total** | | **221** | **89** | **132** |
 
 A two-semester reading worked strictly in order. The 89 [BSc] items form a self-contained first
 course in finite-dimensional quantum theory and quantum information, each answerable from earlier
-items; the 124 [MSc] items extend it to a graduate course covering open systems, error correction,
+items; the 132 [MSc] items extend it to a graduate course covering open systems, error correction,
 many-body, resource theories, and the foundations.
