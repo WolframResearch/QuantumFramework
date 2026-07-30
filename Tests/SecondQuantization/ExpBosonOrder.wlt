@@ -2,10 +2,6 @@
 Needs["Wolfram`QuantumFramework`"]
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
-(* Ported from TestsExpSimplify.nb.  Ladder operators are the formal symbols
-   \[FormalA], \[FormalB], \[FormalC]; SuperDagger marks a creator, ** is the
-   non-commutative product, and GeneralizedPower[NonCommutativeMultiply, op, n]
-   is op ** ... ** op repeated n times. *)
 
 
 BeginTestSection["ExpBosonOrder - number-operator exponentials"]

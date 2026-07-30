@@ -1,5 +1,4 @@
-(* BosonicAntiNormalOrder: annihilators to the left of creators.
-   The sub-context is not on $ContextPath after loading the main paclet. *)
+
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 (* Shared scaffolding: a battery of monomials/polynomials to check invariants over, and a
@@ -178,7 +177,7 @@ VerificationTest[
     TestID -> "AntiNormal-BlasiakCoefficientCarried"
 ]
 
-(* Unrecognized methods report and fail rather than silently defaulting *)
+
 VerificationTest[
     BosonicAntiNormalOrder[SuperDagger[\[FormalA]] ** \[FormalA], $antiVars, Method -> "NoSuchMethod"],
     $Failed,
