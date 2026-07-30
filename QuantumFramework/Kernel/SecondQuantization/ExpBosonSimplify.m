@@ -6,7 +6,7 @@ PackageExport["ExpBosonOrder"]
 PackageExport["NormalOrdered"]
 
 
-algA[v_]    := algA[v]    = NonCommutativeAlgebra[<|"Generators" -> {v, SuperDagger[v]}|>];
+algA[v_]   := algA[v] = NonCommutativeAlgebra[<|"Generators" -> {v, SuperDagger[v]}|>];
 
 
 getNCPower[var_, var_] := 1;
@@ -74,8 +74,8 @@ rulesNO = {
     Exp[alpha_ SuperDagger[v1_?FormalSymbolQ] ** v2_?FormalSymbolQ + beta_ v1_?FormalSymbolQ ** SuperDagger[v2_?FormalSymbolQ]] /; v1 =!= v2 :>
         With[{Omega = Sqrt[alpha beta]},
             Exp[(alpha Tanh[Omega]/Omega) SuperDagger[v1] ** v2] **
-                Exp[-Log[Cosh[Omega]] SuperDagger[v1] ** v1] **
-                Exp[Log[Cosh[Omega]] SuperDagger[v2] ** v2] **
+                (Exp[-Log[Cosh[Omega]] SuperDagger[v1] ** v1] 
+                Exp[Log[Cosh[Omega]] SuperDagger[v2] ** v2]) **
                 Exp[(beta Tanh[Omega]/Omega) v1 ** SuperDagger[v2]]
         ],
 
