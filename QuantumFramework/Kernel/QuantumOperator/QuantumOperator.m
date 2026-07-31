@@ -14,6 +14,17 @@ PackageScope["StackQuantumOperators"]
 PackageScope["$QuantumOperatorBroadcastLimit"]
 
 
+(* What the matrix constructors below accept: a rank-2 array container of any
+   tier.  MatrixQ was the test, and it is narrower than the constructors need -
+   it is False for a NumericArray, for a MatrixSymbol and for a deferred
+   contraction, all of which are perfectly good operator matrices.  Anything it
+   rejected fell through to the Diagonal catch-all at the foot of this file,
+   which reads a non-atomic argument as a SCALAR eigenvalue: an entire matrix
+   became HoldForm[m] * IdentityMatrix, silently. *)
+
+matrixContainerQ[m_] := ArrayContainerQ[m] && MatchQ[ArrayDimensions[m], {_Integer, _Integer}]
+
+
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
@@ -160,7 +171,7 @@ QuantumOperator[assoc_Association, order : (_ ? orderQ) : {1}, args___, opts : O
 QuantumOperator::invalidState = "invalid state specification";
 
 
-QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : OptionsPattern[]] := Enclose @ Module[{
+QuantumOperator[matrix_ ? matrixContainerQ, order : _ ? autoOrderQ, args___, opts : OptionsPattern[]] := Enclose @ Module[{
     op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ],
     newOutputOrder, newInputOrder
 },
@@ -173,14 +184,14 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
     QuantumOperator[op["State"]["Split", Length[newOutputOrder]], {newOutputOrder, newInputOrder}, opts]
 ]
 
-QuantumOperator[matrix_ ? MatrixQ, opts : OptionsPattern[]] := QuantumOperator[matrix, QuantumBasis[primeFactors[#1], primeFactors[#2]] & @@ Dimensions[matrix], opts]
+QuantumOperator[matrix_ ? matrixContainerQ, opts : OptionsPattern[]] := QuantumOperator[matrix, QuantumBasis[primeFactors[#1], primeFactors[#2]] & @@ ArrayDimensions[matrix], opts]
 
-QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
+QuantumOperator[matrix_ ? matrixContainerQ, args__, opts : OptionsPattern[]] := Block[{
     outMultiplicity, inMultiplicity, result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
         basis, newOutputQuditBasis, newInputQuditBasis, state},
-        {outputs, inputs} = Dimensions[newMatrix];
+        {outputs, inputs} = ArrayDimensions[newMatrix];
         basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ, "Invalid basis"];
         If[ basis["Dimension"] =!= outputs * inputs,
             If[ basis["InputDimension"] == 1,
@@ -215,7 +226,7 @@ QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Block[{
         ];
         state = ConfirmBy[
             QuantumState[
-                Flatten[newMatrix],
+                ArrayVector[newMatrix],
                 basis
             ],
             QuantumStateQ,
@@ -305,18 +316,6 @@ QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, op
 QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["QuantumOperator"], opts]
 
 QuantumOperator[q : _ ? QuantumChannelQ | _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ, opts___] := QuantumOperator[q["Operator"], opts]
-
-(* A square array container of any tier is a MATRIX, not a scalar: the Diagonal
-   catch-all below turned QuantumOperator[MatrixSymbol["M", {2, 2}]] into
-   HoldForm[M] * IdentityMatrix - the whole matrix broadcast as one scalar
-   eigenvalue, silently.  It goes through a QuantumState of the container
-   instead, which stores it as it arrived, exactly as the MatrixQ clause does
-   for an explicit matrix. *)
-QuantumOperator[m_ ? ArrayContainerQ, args___] /; MatchQ[ArrayDimensions[m], {d_, d_}] && ! MatrixQ[m] :=
-    Enclose @ QuantumOperator[
-        ConfirmBy[QuantumState[ArrayVector[m], QuantumBasis[Sqrt[Times @@ ArrayDimensions[m]]]["Bend"]], QuantumStateQ]["SplitDual", 1],
-        args
-    ]
 
 QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ | _ ? QuantumGateQ], args___] := Enclose @
     ConfirmBy[QuantumOperator["Diagonal"[If[AtomQ[x], x, HoldForm[x]]], args], QuantumOperatorQ]

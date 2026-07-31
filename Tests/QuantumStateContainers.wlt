@@ -374,3 +374,65 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+(* The matrix constructors take a rank-2 array container of ANY tier. MatrixQ
+   was the test and is narrower than they need - False for a NumericArray, a
+   MatrixSymbol and a deferred contraction alike - so each of those fell to the
+   Diagonal catch-all, which reads a non-atomic argument as a scalar eigenvalue
+   and built HoldForm[m] * IdentityMatrix. *)
+
+BeginTestSection["TierMixing-operator-construction"]
+
+VerificationTest[
+    {
+        Normal @ QuantumOperator[{{1., 2.}, {3., 4.}}]["Matrix"],
+        Normal @ QuantumOperator[SparseArray[{{1., 2.}, {3., 4.}}]]["Matrix"],
+        Normal @ QuantumOperator[NumericArray[{{1., 2.}, {3., 4.}}]]["Matrix"],
+        ArrayMaterialize @ ArrayReplaceAll[
+            QuantumOperator[MatrixSymbol["cm", {2, 2}]]["Matrix"],
+            MatrixSymbol["cm", {2, 2}] -> {{1., 2.}, {3., 4.}}
+        ]
+    },
+    ConstantArray[{{1., 2.}, {3., 4.}}, 4],
+    TestID -> "Mixing-operator-from-a-matrix-of-any-tier"
+]
+
+(* A deferred operator matrix contracts and applies exactly. *)
+VerificationTest[
+    With[{op = QuantumOperator[Inactive[Dot][
+            SparseArray[{{0., 1.}, {1., 0.}}], SparseArray[{{1., 0.}, {0., -1.}}]]]},
+        {
+            Normal @ ArrayMaterialize @ op["Matrix"],
+            Chop @ Normal @ ArrayMaterialize @ op[QuantumState[SparseArray[{1., 0.}]]]["State"]
+        }
+    ],
+    {{{0., -1.}, {1., 0.}}, {0, 1.}},
+    TestID -> "Mixing-deferred-operator-matrix-applies"
+]
+
+(* Widening the guard must not swallow what the Diagonal catch-all is for: a
+   scalar, or a bare symbol, is still a diagonal operator and not a matrix. *)
+VerificationTest[
+    {Normal @ QuantumOperator[2]["Matrix"], Normal @ QuantumOperator[\[FormalZ]]["Matrix"]},
+    {{{1, 0}, {0, I}}, {{\[FormalZ], 0}, {0, \[FormalZ]}}},
+    TestID -> "Mixing-scalar-still-builds-a-diagonal-operator"
+]
+
+(* Rectangular and multi-qudit matrices keep their shapes. *)
+VerificationTest[
+    {
+        Dimensions @ Normal @ QuantumOperator[ConstantArray[1., {2, 4}]]["Matrix"],
+        QuantumOperator[SparseArray[IdentityMatrix[4]]]["Dimensions"]
+    },
+    {{2, 4}, {2, 2, 2, 2}},
+    TestID -> "Mixing-rectangular-and-multiqudit-matrices-unchanged"
+]
+
+(* Conjugating a deferred state is an Arrays-level fix (ArrayConjugate had no
+   deferred clause once deferred trees left the symbolic tier), so it is pinned
+   in Arrays/Tests/Regressions.wlt: this suite loads only the QuantumFramework
+   working tree and takes Arrays from the installed paclet, which cannot carry
+   an unreleased fix. *)
+
+EndTestSection[]
