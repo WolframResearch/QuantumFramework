@@ -327,3 +327,50 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+(* Measurement and time evolution across tiers: an evolved state is a LAZY
+   container (the solver's InterpolatingFunction), so a gate applied before
+   binding the time takes the composition fold, and must agree with binding
+   the time first. *)
+
+BeginTestSection["TierMixing-evolution-measurement"]
+
+$evolved = QuantumEvolve[QuantumOperator["PauliX"], QuantumState["0"], {\[FormalT], 0, 2 Pi}]
+
+VerificationTest[
+    ArrayLazyQ[$evolved["State"]],
+    True,
+    TestID -> "Mixing-evolved-state-is-lazy"
+]
+
+VerificationTest[
+    Chop[QuantumMeasurement[QuantumMeasurementOperator["Z"][$evolved[1.]]]["ProbabilitiesList"] -
+        {0.2919266077143294, 0.7080733922856707}, 1*^-6],
+    {0, 0},
+    TestID -> "Mixing-measure-evolved-at-a-time"
+]
+
+(* Gate before binding time versus after: the fold reinterpolates, so the two
+   agree to interpolation accuracy rather than machine precision. *)
+VerificationTest[
+    With[{before = QuantumOperator["H"][$evolved]},
+        Max @ Abs @ Chop[
+            N @ Normal @ before[1.]["StateVector"] -
+            N @ Normal @ QuantumOperator["H"][$evolved[1.]]["StateVector"], 1*^-4]
+    ],
+    0,
+    TestID -> "Mixing-gate-commutes-with-time-binding"
+]
+
+(* A measurement of a symbolic state builds without the container corruption:
+   no unevaluated expression posing as an amplitude. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[VectorSymbol["mv", 2]]]},
+        {Head[qm], FreeQ[qm["State"]["State"], _ArrayVector | Wolfram`Arrays`ArrayVector]}
+    ],
+    {QuantumMeasurement, True},
+    TestID -> "Mixing-measure-symbolic-state-builds-clean"
+]
+
+EndTestSection[]
