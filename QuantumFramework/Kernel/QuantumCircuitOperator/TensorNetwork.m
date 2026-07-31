@@ -250,6 +250,22 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
 
 Options[TensorNetworkApply] = Options[TensorNetworkCompile]
 
+(* A state whose container is not explicit - a VectorSymbol, a deferred
+   contraction, a net - cannot go through the tensor-network contraction: the
+   network's einsum treats a symbolic tensor as a SCALAR and multiplies, and
+   the unevaluated result reads downstream as one amplitude of a state with
+   the right dimension and wrong contents.  Such a state is folded through
+   direct operator composition instead, which contracts through the
+   ArrayContract mixing point and keeps the container's tier. *)
+TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; (
+    qs["Qudits"] > 0 && ! ArrayExplicitQ[qs["State"]] &&
+    AllTrue[qco["Flatten"]["NormalOperators"], QuantumOperatorQ[#] && #["VectorQ"] &]
+) := Fold[
+    #2[#1] &,
+    QuantumOperator[qs, {qco["Sort"]["FullInputOrder"]}],
+    qco["Flatten"]["NormalOperators"]
+]["State"]
+
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] := Block[{
     circuit = qco["Sort"], res
 },

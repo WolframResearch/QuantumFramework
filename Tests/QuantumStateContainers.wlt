@@ -265,3 +265,65 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+(* === tier mixing through operations ===
+
+   Applying an operator or a circuit contracts the state tensor against the
+   gate tensors, and raw TensorProduct treats a non-explicit container as a
+   SCALAR: the unevaluated product then reads downstream as one amplitude of a
+   state with the right dimension and wrong contents. Non-explicit operands now
+   go through the ArrayContract mixing point, and a non-explicit state folds
+   through direct operator composition rather than the tensor network. *)
+
+BeginTestSection["TierMixing"]
+
+$symState = QuantumState[VectorSymbol["mixv", 2]]
+
+VerificationTest[
+    With[{r = QuantumOperator["H"][$symState]},
+        {
+            ArraySymbolicQ[r["State"]],
+            ArrayDimensions[r["State"]],
+            Chop[N[Normal[ArrayMaterialize[ArrayReplaceAll[r["State"], VectorSymbol["mixv", 2] -> {1., 0.}]]]]] ==
+                Chop[N[Normal[QuantumOperator["H"][QuantumState[{1., 0.}]]["StateVector"]]]]
+        }
+    ],
+    {True, {2}, True},
+    TestID -> "Mixing-symbolic-state-through-an-operator"
+]
+
+VerificationTest[
+    With[{r = QuantumCircuitOperator[{"H", "X"}][$symState]},
+        {
+            ArraySymbolicQ[r["State"]],
+            Chop[N[Normal[ArrayMaterialize[ArrayReplaceAll[r["State"], VectorSymbol["mixv", 2] -> {1., 0.}]]]]] ==
+                Chop[N[Normal[QuantumCircuitOperator[{"H", "X"}][QuantumState[{1., 0.}]]["StateVector"]]]]
+        }
+    ],
+    {True, True},
+    TestID -> "Mixing-symbolic-state-through-a-circuit"
+]
+
+(* A deferred contraction has values, so applying a gate may compute them; what
+   matters is that the values are the contraction's, not an expression taken
+   for an amplitude. *)
+VerificationTest[
+    With[{d = QuantumState[Inactive[Dot][SparseArray[{{0., 1.}, {1., 0.}}], SparseArray[{1., 0.}]], QuantumBasis[2]]},
+        Chop[N[Normal[ArrayMaterialize[QuantumOperator["H"][d]["State"]]]]] ==
+            Chop[N[Normal[QuantumOperator["H"][QuantumState[{0., 1.}]]["StateVector"]]]]
+    ],
+    True,
+    TestID -> "Mixing-deferred-state-through-an-operator"
+]
+
+(* The mixing route is only for non-explicit CONTAINERS: a scalar state tensor -
+   the identity of an empty circuit - is not one, and sending it there made
+   PauliStabilizer[QuantumOperator["I"]] round-trip to a projector. *)
+VerificationTest[
+    Normal[PauliStabilizer[QuantumOperator["I"]]["QuantumOperator"]["Matrix"]],
+    {{1, 0}, {0, 1}},
+    TestID -> "Mixing-scalar-operand-stays-on-the-explicit-path"
+]
+
+EndTestSection[]

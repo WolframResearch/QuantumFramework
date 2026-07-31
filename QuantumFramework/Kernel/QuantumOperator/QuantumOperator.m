@@ -422,9 +422,24 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
     keepQ2OutIdx = Complement[Range[q2OutQ], sharedQ2Idx];
 
     contractPairs = Transpose[{q1OutQ + sharedQ1Idx, q1OutQ + q1InQ + sharedQ2Idx}];
-    resultTensor = If[Length[contractPairs] == 0,
-        TensorProduct[s1["StateTensor"], s2["StateTensor"]],
-        TensorContract[TensorProduct[s1["StateTensor"], s2["StateTensor"]], contractPairs]
+    (* Explicit tensors contract through the raw TensorProduct, as they always
+       did.  Any other tier goes through the ArrayContract mixing point, which
+       joins the operand tiers: raw TensorProduct treats a symbolic or lazy
+       operand as a SCALAR and multiplies, and the unevaluated expression then
+       reads downstream as a single amplitude of a state with the right
+       dimension and wrong contents. *)
+    (* The mixing point is only for an operand that is a NON-EXPLICIT container.
+       Asking "are both explicit" instead sent a scalar state tensor - the
+       identity of an empty circuit - into the list form, which saw {tensor, 1}
+       as one ragged array. *)
+    resultTensor = With[{t1 = s1["StateTensor"], t2 = s2["StateTensor"]},
+        If[ (ArrayContainerQ[t1] && ! ArrayExplicitQ[t1]) || (ArrayContainerQ[t2] && ! ArrayExplicitQ[t2]),
+            ArrayContract[{t1, t2}, contractPairs],
+            If[Length[contractPairs] == 0,
+                TensorProduct[t1, t2],
+                TensorContract[TensorProduct[t1, t2], contractPairs]
+            ]
+        ]
     ];
 
     (* After contraction, surviving axes appear in tensor order:
@@ -435,7 +450,10 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
         n1Out = q1OutQ, n1In = Length[keepQ1InIdx],
         n2Out = Length[keepQ2OutIdx], n2In = q2InQ
     },
-        resultTensor = Transpose[resultTensor,
+        (* ArrayTranspose rather than Transpose, so a non-explicit result stays
+           a container: Transpose on a symbolic node reaches the expression
+           tree.  For an explicit tensor the two are identical. *)
+        resultTensor = ArrayTranspose[resultTensor,
             FindPermutation @ Join[
                 Range[n1Out],
                 Range[n1Out + n1In + 1, n1Out + n1In + n2Out],
