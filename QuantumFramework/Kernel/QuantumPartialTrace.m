@@ -41,7 +41,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
     QuantumState[
         If[ qs["VectorQ"],
             ArrayVector @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
-            ArrayReshape[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
+            ReshapeArray[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
         ],
         basis
     ]

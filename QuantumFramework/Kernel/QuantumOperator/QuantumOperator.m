@@ -306,6 +306,18 @@ QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["Q
 
 QuantumOperator[q : _ ? QuantumChannelQ | _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ, opts___] := QuantumOperator[q["Operator"], opts]
 
+(* A square array container of any tier is a MATRIX, not a scalar: the Diagonal
+   catch-all below turned QuantumOperator[MatrixSymbol["M", {2, 2}]] into
+   HoldForm[M] * IdentityMatrix - the whole matrix broadcast as one scalar
+   eigenvalue, silently.  It goes through a QuantumState of the container
+   instead, which stores it as it arrived, exactly as the MatrixQ clause does
+   for an explicit matrix. *)
+QuantumOperator[m_ ? ArrayContainerQ, args___] /; MatchQ[ArrayDimensions[m], {d_, d_}] && ! MatrixQ[m] :=
+    Enclose @ QuantumOperator[
+        ConfirmBy[QuantumState[ArrayVector[m], QuantumBasis[Sqrt[Times @@ ArrayDimensions[m]]]["Bend"]], QuantumStateQ]["SplitDual", 1],
+        args
+    ]
+
 QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ | _ ? QuantumGateQ], args___] := Enclose @
     ConfirmBy[QuantumOperator["Diagonal"[If[AtomQ[x], x, HoldForm[x]]], args], QuantumOperatorQ]
 
