@@ -82,8 +82,7 @@ ExtractNCVars[ops_List] :=
     DeleteDuplicates @ Cases[ops, (v : (_? FormalSymbolQ | SuperDagger[_? FormalSymbolQ])) :> v, {0, Infinity}]
 
 
-(* lift commuting coefficients out of generalized powers and ** products, so that the
-   remaining non-commutative factors are bare ladder operators *)
+
 LiftNCScalars[expr_, vars_List] := expr //. {
     GeneralizedPower[NonCommutativeMultiply, Times[c_, op_], n_Integer ? Positive] /;
         FreeQ[c, Alternatives @@ vars] :>
