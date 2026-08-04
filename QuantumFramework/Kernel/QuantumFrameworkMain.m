@@ -21,7 +21,7 @@ If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "1.0.10"],
     PacletInstall["Wolfram/TensorNetworks"]
 ]
 
-If[ ! pacletInstalledQ["Wolfram/Arrays", "1.3.0"],
+If[ ! pacletInstalledQ["Wolfram/Arrays", "1.3.2"],
     PacletInstall["Wolfram/Arrays"]
 ]
 
