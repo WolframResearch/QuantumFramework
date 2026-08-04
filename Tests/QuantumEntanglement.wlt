@@ -165,14 +165,147 @@ VerificationTest[
 (* ========== Higher dimensional (d > 2) ========== *)
 
 (* maximally-entangled qutrit pair, as a density matrix so it routes through ConcurrenceVector:
-   I-concurrence Sqrt[2 (d-1)/d] = 2/Sqrt[3] for d = 3 *)
+   I-concurrence Sqrt[2 (d-1)/d] = 2/Sqrt[3] for d = 3. The exact input is kept exact, so compare the
+   difference numerically (an exact-form difference need not be structurally zero). *)
 VerificationTest[
     Chop[
-        conc[QuantumState[QuantumState[Normalize[Flatten[IdentityMatrix[3]]], {3, 3}]["DensityMatrix"], {3, 3}]] -
-            2 / Sqrt[3]
+        N[conc[QuantumState[QuantumState[Normalize[Flatten[IdentityMatrix[3]]], {3, 3}]["DensityMatrix"], {3, 3}]] -
+            2 / Sqrt[3]]
     ],
     0,
     TestID -> "Concurrence-QutritMaxEntangled"
+]
+
+
+(* ========== Higher dimensional (d > 2) MIXED: I-concurrence semantics + conditioning guards ==========
+
+   For d > 2 the value is the Rungta-Buzek-Caves-Hillery-Milburn I-concurrence (PRA 64, 042315 (2001)):
+   exact = Sqrt[2 (1 - Tr rhoA^2)] for a pure state of any dimension, and a LOWER BOUND on the
+   convex-roof concurrence (which has no closed form) for a mixed state. The mixed d1 d2 > 4 path reads
+   the singular values off Eigenvalues of rho.rho-tilde, keeping native precision (exact input stays
+   exact); the retired operator square-root route leaked RowReduce::luc on ill-conditioned machine
+   reductions and blew up to unsimplified Root objects on exact input. *)
+
+(* I-concurrence of a normalized bipartite d x d vector via the reduced-state purity: an independent
+   reference that does not touch ConcurrenceVector, exact for pure states of any dimension. *)
+iConcurrence[v_, d_] := Sqrt[2 Max[0, Re[1 - Tr[MatrixPower[# . ConjugateTranspose[#] &[ArrayReshape[v, {d, d}]], 2]]]]];
+
+(* pure qutrit pair (not maximally entangled), handed in as a density matrix so it routes through the
+   mixed ConcurrenceVector path: C = Sqrt[2 (1 - Tr rhoA^2)] *)
+VerificationTest[
+    SeedRandom[314];
+    With[{psi = Normalize[RandomComplex[{-1 - I, 1 + I}, 9]]},
+        Abs[conc[QuantumState[QuantumState[psi, {3, 3}]["DensityMatrix"], {3, 3}]] - iConcurrence[psi, 3]] < 10^-6
+    ],
+    True,
+    TestID -> "Concurrence-QutritPure-IConcurrenceIdentity"
+]
+
+(* ill-conditioned d>2 mixed (seed 99, smallest reduced eigenvalue ~3*10^-3) used to leak RowReduce::luc
+   from the internal MatrixPower square root; Check returns $Failed if any message fires, so a re-leak
+   fails the test. The value must be a clean, real, non-negative number. *)
+VerificationTest[
+    SeedRandom[99];
+    Check[
+        With[{r = conc[QuantumState["RandomMixed", {3, 3}]]}, NumericQ[r] && r >= 0],
+        $Failed
+    ],
+    True,
+    TestID -> "Concurrence-QutritMixed-NoMessageLeak"
+]
+
+(* exact-rational isotropic state 1/2 |Omega><Omega| + 1/2 I/9: the retired operator square-root route
+   blew up into a huge unsimplified Root expression here (the exact matrix square roots never simplify),
+   while the eigenvalue route keeps it exact AND tractable, returning the closed form 2/(3 Sqrt[3]).
+   Assert it stays exact (Precision Infinity), equals the closed form, and computes without blowing up. *)
+VerificationTest[
+    With[{rho = 1/2 Outer[Times, #, Conjugate[#]] &[Normalize[{1, 0, 0, 0, 1, 0, 0, 0, 1}]] + IdentityMatrix[9] / 18},
+        With[{r = TimeConstrained[conc[QuantumState[rho, {3, 3}]], 20, $TimedOut]},
+            r =!= $TimedOut && Precision[r] === Infinity && Chop[N[r - 2 / (3 Sqrt[3])]] == 0
+        ]
+    ],
+    True,
+    TestID -> "Concurrence-QutritIsotropic-Exact"
+]
+
+(* lower-bound semantics: the I-concurrence never exceeds Sum p_i C_I(psi_i) of an explicit pure
+   decomposition (an upper bound on the convex roof), and is non-negative *)
+VerificationTest[
+    SeedRandom[2718];
+    Module[{ps = {2, 3, 5} / 10, psis, rho, cQF, bound},
+        psis = Table[Normalize[RandomComplex[{-1 - I, 1 + I}, 9]], {3}];
+        rho = Sum[ps[[i]] Outer[Times, psis[[i]], Conjugate[psis[[i]]]], {i, 3}];
+        cQF = conc[QuantumState[rho, {3, 3}]];
+        bound = Total[MapThread[#1 iConcurrence[#2, 3] &, {ps, psis}]];
+        0 <= cQF <= bound + 10^-6
+    ],
+    True,
+    TestID -> "Concurrence-QutritMixed-LowerBound"
+]
+
+(* the numeric d>2 eigenvalue route reproduces the operator-square-root (Wootters) route it replaced,
+   computed here through a message-free manual Hermitian square root: both are the same RBCHM lower
+   bound and must agree (this is the tight value guard the 2-qubit-only Wootters cross-check cannot give) *)
+VerificationTest[
+    SeedRandom[2];
+    Module[{rho = N @ Normal @ QuantumState["RandomMixed", {3, 3}]["DensityMatrix"], hSqrt, yGen, ref},
+        hSqrt[m_] := With[{es = Eigensystem[m]},
+            Transpose[es[[2]]] . DiagonalMatrix[Sqrt[Clip[Re[es[[1]]], {0, Infinity}]]] . Conjugate[es[[2]]]
+        ];
+        yGen[n_] := Catenate @ Table[SparseArray[{{j, k} -> -I, {k, j} -> I}, {n, n}], {k, 2, n}, {j, k - 1}];
+        ref = Norm @ Flatten @ Outer[
+            Function[{ya, yb},
+                With[{o = Normal @ KroneckerProduct[ya, yb]},
+                    With[{sv = SingularValueList[hSqrt[rho] . hSqrt[o . Conjugate[rho] . o]]},
+                        Max[0, 2 Max[sv] - Total[sv]]
+                    ]
+                ]
+            ],
+            yGen[3], yGen[3], 1
+        ];
+        Abs[conc[QuantumState[rho, {3, 3}]] - ref] < 10^-8
+    ],
+    True,
+    TestID -> "Concurrence-QutritMixed-MatchesOperatorSqrtRoute"
+]
+
+(* the d>2 mixed I-concurrence is FRAME-DEPENDENT: unlike the two-qubit Wootters concurrence it is NOT
+   invariant under local unitaries U1 (x) U2 (it rises or falls toward the true, LU-invariant convex-roof
+   value it bounds). It stays a valid lower bound in every local frame, so a local unitary never pushes
+   it above the decomposition bound Sum p_i C_I(psi_i) of the original pure ensemble. c0 > 0 keeps the
+   check non-vacuous (the base state is genuinely entangled). *)
+VerificationTest[
+    SeedRandom[2718];
+    Module[{ps = {2, 3, 5} / 10, psis, rho, bound, u, c0, c1},
+        psis = Table[Normalize[RandomComplex[{-1 - I, 1 + I}, 9]], {3}];
+        rho = Sum[ps[[i]] Outer[Times, psis[[i]], Conjugate[psis[[i]]]], {i, 3}];
+        bound = Total[MapThread[#1 iConcurrence[#2, 3] &, {ps, psis}]];
+        u = KroneckerProduct[
+            MatrixExp[I (# + ConjugateTranspose[#] &[RandomComplex[{-1 - I, 1 + I}, {3, 3}]])],
+            MatrixExp[I (# + ConjugateTranspose[#] &[RandomComplex[{-1 - I, 1 + I}, {3, 3}]])]
+        ];
+        c0 = conc[QuantumState[rho, {3, 3}]];
+        c1 = conc[QuantumState[u . rho . ConjugateTranspose[u], {3, 3}]];
+        (* c0 > 0: base state genuinely entangled; Abs[c0 - c1] > 0: the value actually moves under the
+           local unitary (frame-dependence, which an LU-invariant reimplementation would break); c1 <= bound:
+           it stays a valid lower bound on the LU-invariant convex roof in the rotated frame *)
+        c0 > 10^-3 && Abs[c0 - c1] > 10^-6 && 0 <= c1 <= bound + 10^-6
+    ],
+    True,
+    TestID -> "Concurrence-QutritMixed-FrameDependentLowerBound"
+]
+
+(* separable product d>2 mixed rhoA (x) rhoB => 0 *)
+VerificationTest[
+    SeedRandom[9];
+    With[{
+        rhoA = # / Tr[#] &[# . ConjugateTranspose[#] &[RandomComplex[{-1 - I, 1 + I}, {3, 3}]]],
+        rhoB = # / Tr[#] &[# . ConjugateTranspose[#] &[RandomComplex[{-1 - I, 1 + I}, {3, 3}]]]
+    },
+        Chop[conc[QuantumState[KroneckerProduct[rhoA, rhoB], {3, 3}]], 10^-6]
+    ],
+    0,
+    TestID -> "Concurrence-QutritProduct-Zero"
 ]
 
 

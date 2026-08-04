@@ -24,18 +24,45 @@ y[{j_Integer, k_Integer}, n_Integer] /; 1 <= j < k <= n := SparseArray[{{j, k} -
 
 Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
 
+(* Rungta-Buzek-Caves-Hillery-Milburn I-concurrence (PRA 64, 042315 (2001)): the concurrence-vector
+   components are the per-generator-pair Wootters combinations lambda1 - Sum[rest] of the singular
+   values of Sqrt[rho].Sqrt[rho-tilde], with the spin-flipped rho-tilde = o.Conjugate[rho].o built
+   from the su(d) generator pair o = yn (x) ym. Those singular values are the square roots of the
+   eigenvalues of rho.rho-tilde. Norm of the vector is exact for a pure state of any dimension
+   (= Sqrt[2 (1 - Tr[rhoA^2])]) and exact for two qubits (the textbook Wootters concurrence); for a
+   d1 d2 > 4 mixed state it is a lower bound on the convex-roof concurrence, which has no closed form,
+   and (unlike the two-qubit Wootters concurrence) it is frame-dependent: not invariant under local
+   unitaries, though it stays below the LU-invariant convex-roof value in every frame.
+
+   Two qubits (one generator pair, d1 d2 == 4) and any symbolic reduction keep the exact operator
+   square-root route. For d1 d2 > 4 on a numeric reduction, rho.rho-tilde is similar to the positive-
+   semidefinite Sqrt[rho].rho-tilde.Sqrt[rho], so its spectrum is real and non-negative: reading it off
+   Eigenvalues sidesteps the eigenvector inverse the operator square root Sqrt[rho] (MatrixPower) takes,
+   which leaks RowReduce::luc on an ill-conditioned machine reduction and blows up into huge unsimplified
+   Root objects on exact input. The eigenvalue route keeps native precision, so machine stays machine and
+   exact stays exact (and tractable, unlike the operator square root). *)
+
+wootterCombination[lambda_] := Max[0, 2 Max[lambda] - Total[lambda]] (* lambda1 - Sum[rest]: largest minus the rest, order-independent (the singular values are not guaranteed sorted for symbolic input) *)
+
 ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
-	rho = qs["Bipartition", biPartition]["Operator"], d1, d2, y1, y2
+	rho = qs["Bipartition", biPartition]["Operator"], component, d1, d2, y1, y2
 },
 	{d1, d2} = rho["OutputDimensions"];
 	y1 = Y[d1];
 	y2 = Y[d2];
-	Catenate @ Table[
-		With[{o = QuantumTensorProduct[QuantumOperator[yn, d1], QuantumOperator[ym, d2]]},
-			Max[0, (2 Max[#] - Total[#] &) @ SingularValueList[(Sqrt[rho] @ Sqrt[o @ rho["Conjugate"] @ o])["Matrix"]]] (* Wootters lambda1 - Sum[rest], as 2 Max - Total: largest minus the rest, independent of the order SingularValueList returns (guaranteed decreasing for numeric input, not for symbolic) *)
-		],
-		{yn, y1}, {ym, y2}
-	]
+	component = If[ d1 d2 > 4 && MatrixQ[rho["Matrix"], NumericQ],
+		With[{mat = Normal @ rho["Matrix"]}, With[{cmat = Conjugate[mat]},
+			Function[{ya, yb}, With[{omat = Normal @ KroneckerProduct[ya, yb]},
+				wootterCombination @ Sqrt @ Clip[Re @ Eigenvalues[mat . omat . cmat . omat], {0, Infinity}]
+			]]
+		]],
+		With[{sr = Sqrt[rho], rc = rho["Conjugate"]},
+			Function[{ya, yb}, With[{o = QuantumTensorProduct[QuantumOperator[ya, d1], QuantumOperator[yb, d2]]},
+				wootterCombination @ SingularValueList[(sr @ Sqrt[o @ rc @ o])["Matrix"]]
+			]]
+		]
+	];
+	Catenate @ Table[component[yn, ym], {yn, y1}, {ym, y2}]
 ]
 
 Concurrence[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Norm @ ConcurrenceVector[qs, biPartition]
