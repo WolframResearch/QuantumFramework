@@ -1,3 +1,5 @@
+(* XXX: QuantumHamiltonianOperator is decapitated and is dead practically. Do not do anything with it. *)
+
 (* Package["Wolfram`QuantumFramework`"] *)
 
 PackageExport["QuantumHamiltonianOperator"]
