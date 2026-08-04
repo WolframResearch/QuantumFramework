@@ -31,10 +31,10 @@ ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
 	y1 = Y[d1];
 	y2 = Y[d2];
 	Catenate @ Table[
-		With[{o = QuantumTensorProduct[QuantumOperator[y1[[n]], d1], QuantumOperator[y2[[m]], d2]]},
-			Max[0, Fold[Subtract] @ SingularValueList[(Sqrt[rho] @ Sqrt[o @ rho["Conjugate"] @ o])["Matrix"]]]
+		With[{o = QuantumTensorProduct[QuantumOperator[yn, d1], QuantumOperator[ym, d2]]},
+			Max[0, (2 Max[#] - Total[#] &) @ SingularValueList[(Sqrt[rho] @ Sqrt[o @ rho["Conjugate"] @ o])["Matrix"]]] (* Wootters lambda1 - Sum[rest], as 2 Max - Total: largest minus the rest, independent of the order SingularValueList returns (guaranteed decreasing for numeric input, not for symbolic) *)
 		],
-		{n, (d1 - 1) d1 / 2}, {m, (d2 - 1) d2 / 2}
+		{yn, y1}, {ym, y2}
 	]
 ]
 
