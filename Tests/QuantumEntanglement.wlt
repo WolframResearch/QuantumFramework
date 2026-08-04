@@ -339,4 +339,51 @@ VerificationTest[
 ]
 
 
+(* ========== EntanglementEntropy: SYMBOLIC pure states ========== *)
+
+
+ent = QuantityMagnitude @ QuantumEntanglementMonotone[#, "EntanglementEntropy"] &;
+
+(* the standard entangler: RY(2t) then CNOT carries |00> to Cos[t] |00> + Sin[t] |11> *)
+psiTheta = QuantumCircuitOperator[{"RY"[2 \[Theta]] -> 1, "CNOT" -> {1, 2}}][prod];
+
+psiQutrit = {Cos[\[Theta]], Sin[\[Theta]] Cos[\[Phi]], 
+   Sin[\[Theta]] Sin[\[Phi]]} . (QuantumState[#, {3, 3}] & /@ {"00", "11", "22"})
+
+(* cos^2 and sin^2 weights*)
+VerificationTest[
+ Simplify[
+  ent[psiTheta] - (-Cos[\[Theta]]^2 Log2[Cos[\[Theta]]^2] - 
+     Sin[\[Theta]]^2 Log2[Sin[\[Theta]]^2]), 
+  0 < \[Theta] < \[Pi]/2], 0, 
+ TestID -> "EntanglementEntropy-SymbolicPure-ClosedForm"]
+
+(* the same state as a density matrix takes the mixed branch, which was always right; the two must agree *)
+VerificationTest[
+ Simplify[
+  ent[QuantumState[
+     psiTheta[
+      "MatrixState"]]] - (-Cos[\[Theta]]^2 Log2[Cos[\[Theta]]^2] - 
+     Sin[\[Theta]]^2 Log2[Sin[\[Theta]]^2]), 
+  0 < \[Theta] < \[Pi]/2], 0, 
+ TestID -> "EntanglementEntropy-SymbolicVectorMatchesDensity"]
+
+(* not qubit-specific: three symbolic Schmidt weights on a qutrit pair *)
+VerificationTest[
+ Simplify[
+  ent[psiQutrit] - (-Cos[\[Theta]]^2 Log2[
+       Cos[\[Theta]]^2] - (Sin[\[Theta]] Cos[\[Phi]])^2 Log2[(Sin[\
+\[Theta]] Cos[\[Phi]])^2] - (Sin[\[Theta]] Sin[\[Phi]])^2 Log2[(Sin[\
+\[Theta]] Sin[\[Phi]])^2]),
+  0 < \[Theta] < Pi/2 && 0 < \[Phi] < 2 Pi], 0,
+ TestID -> "EntanglementEntropy-SymbolicQutritPure-ClosedForm"]
+
+(* the numeric side of the guard, on the same vector branch: weights 3/4 and 1/4. EntanglementEntropy-Bell
+   pins that branch only at the symmetric 1/2, 1/2 point, where an ordering or normalization slip cancels. *)
+psiUneven = QuantumCircuitOperator[{"RY"[Pi/3] -> 1, "CNOT" -> {1, 2}}][prod];
+
+VerificationTest[
+ Simplify[ent[psiUneven] - (2 - 3 Log2[3]/4)], 0,
+ TestID -> "EntanglementEntropy-ExactUnequalWeights"]
+
 EndTestSection[]
