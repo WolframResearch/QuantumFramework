@@ -143,6 +143,25 @@ VerificationTest[
     TestID -> "SQ-BosonicVEV-number-selection-rule"
 ]
 
+(* A c-number has no field operators, so it is its own vacuum expectation:
+   <0|c|0> = c. The single-argument auto-detect path finds an empty variable list
+   and must return the c-number rather than recurse to the recursion limit; the
+   explicit empty-list form BosonicVEV[c, {}] routes through the same rule. *)
+VerificationTest[
+    {BosonicVEV[7], BosonicVEV[\[Lambda]], BosonicVEV[7, {}]},
+    {7, \[Lambda], 7},
+    TestID -> "SQ-BosonicVEV-cnumber-is-itself"
+]
+
+(* Normal-ordering with no field variables is the identity on the c-number: with
+   nothing to reduce, the reducer is never invoked and the constant passes through
+   unchanged and message-free. *)
+VerificationTest[
+    {BosonicNormalOrder[7, {}], BosonicNormalOrder[\[Lambda], {}]},
+    {7, \[Lambda]},
+    TestID -> "SQ-BosonicNormalOrder-empty-vars-is-identity"
+]
+
 (* Phase-space functions at the origin alpha = 0. The closed-form kernels carry a
    base^(m - n) (Wigner) or base^n base^m (Husimi) factor; on the diagonal the
    exponent is 0, so the origin value is the limit base^0 = 1. W(0) = (2/pi) <parity>

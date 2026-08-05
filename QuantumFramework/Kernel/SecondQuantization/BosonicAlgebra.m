@@ -57,6 +57,10 @@ BosonicNormalOrder::unknownMethod = "Unknown Method: `1`."
 
 Options[BosonicNormalOrder] = {Method -> "GrobnerBasis", "Scalars" -> {}}
 
+(* With no field variables there is nothing to reduce: a c-number is already in
+   normal order, so return it unchanged. *)
+BosonicNormalOrder[expr_, {}, OptionsPattern[]] := expr
+
 BosonicNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
 Block[{
     method = OptionValue[Method],
@@ -264,7 +268,11 @@ Options[BosonicVEV] = Options[BosonicNormalOrder];
 
 BosonicVEV[expr_, opts : OptionsPattern[]] :=
     Block[{vars = ExtractNCVars[{expr}]},
-        BosonicVEV[expr, vars, opts]
+        (* A c-number carries no field variables; it is its own vacuum expectation.
+           Short-circuit before re-dispatching: BosonicVEV[expr, {}] would re-match
+           this same rule ({} is absorbed as empty options), so calling it here would
+           recurse without bound. *)
+        If[vars === {}, expr, BosonicVEV[expr, vars, opts]]
     ]
 
 BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] :=
