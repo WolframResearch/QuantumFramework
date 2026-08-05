@@ -293,6 +293,42 @@ VerificationTest[
     TestID -> "SQ-Husimi-coherent-grid-matches-closed-offorigin"
 ]
 
+(* The factor is 0.25 g^2 = (g/2)^2, not a bare 1/2: the two coincide only at the
+   default g = Sqrt[2]. At "GaussianScaling" -> 2 the pure vacuum grid must track
+   the analytic density (g^2/(4 pi)) Exp[-(g^2/4)(x^2 + p^2)], which at g = 2 is
+   (1/pi) Exp[-(x^2 + p^2)]; a hardcoded 1/2 would sit a factor 2 low here. *)
+VerificationTest[
+    Chop[HusimiQRepresentation[FockState[0, 12], {-3, 3}, {-3, 3},
+            "GaussianScaling" -> 2][1, 1] - (1/Pi) Exp[-(1^2 + 1^2)], 1.*^-4],
+    0,
+    TestID -> "SQ-Husimi-grid-nondefault-scaling-carries-g-squared"
+]
+
+(* A rank-2 mixed state (|0><0| + |2><2|)/2 exercises the mixed-state grid branch
+   directly, not only transitively through the shared closed-form oracle, pinning
+   the pure and mixed branches to the same normalization. *)
+VerificationTest[
+    With[{rho = QuantumState[SparseArray[{{1, 1} -> 1/2, {3, 3} -> 1/2}, {8, 8}], 8]},
+        Chop[HusimiQRepresentation[rho, {-3, 3}, {-3, 3}][1, 0] -
+            HusimiQFunction[rho, {1, 0}], 1.*^-4]],
+    0,
+    TestID -> "SQ-Husimi-mixed-grid-matches-closed"
+]
+
+(* The invariant the fix restores is a unit INTEGRAL over dx dp, not just a
+   pointwise value: before the fix the pure vacuum grid integrated to 2. A Riemann
+   sum over a box that captures essentially all the vacuum mass pins it directly.
+   Kept at the default scaling: at "GaussianScaling" -> 2 the missing factor is
+   exactly 1, so only the default g exposes the factor-2 error in the integral. *)
+VerificationTest[
+    With[{q = HusimiQRepresentation[FockState[0, 8], {-5, 5}, {-5, 5}]},
+        Round[
+            Total[Flatten[Table[q[x, p], {x, -5, 5, 0.1}, {p, -5, 5, 0.1}]]] 0.1^2,
+            0.01]],
+    1.,
+    TestID -> "SQ-Husimi-pure-grid-integrates-to-one"
+]
+
 (* Husimi vacuum keeps its Gaussian closed form Q(alpha) = (1/pi) e^{-|alpha|^2}. *)
 VerificationTest[
     Simplify[HusimiQFunction[FockState[0, 20], \[FormalAlpha]] - (1/Pi) Exp[-Abs[\[FormalAlpha]]^2]],
