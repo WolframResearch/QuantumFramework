@@ -61,4 +61,62 @@ VerificationTest[
     TestID -> "SQ-BosonicVEV-single-arg-auto-detects-variables"
 ]
 
+(* Phase-space functions at the origin alpha = 0. The closed-form kernels carry a
+   base^(m - n) (Wigner) or base^n base^m (Husimi) factor; on the diagonal the
+   exponent is 0, so the origin value is the limit base^0 = 1. W(0) = (2/pi) <parity>
+   and Q(0) = rho00/pi: the vacuum gives 2/pi and 1/pi, Fock |1> gives -2/pi (parity
+   -1) and 0. *)
+
+VerificationTest[
+    WignerFunction[FockState[0, 8], 0],
+    2/Pi,
+    TestID -> "SQ-Wigner-origin-vacuum-is-2overPi"
+]
+
+VerificationTest[
+    HusimiQFunction[FockState[0, 8], 0],
+    1/Pi,
+    TestID -> "SQ-Husimi-origin-vacuum-is-1overPi"
+]
+
+VerificationTest[
+    WignerFunction[FockState[1, 8], 0],
+    -2/Pi,
+    TestID -> "SQ-Wigner-origin-Fock1-is-negative-parity"
+]
+
+VerificationTest[
+    HusimiQFunction[FockState[1, 8], 0],
+    0,
+    TestID -> "SQ-Husimi-origin-Fock1-vanishes"
+]
+
+(* The {x, p} quadrature entry points route through the alpha form, so they too are
+   finite at the origin. *)
+VerificationTest[
+    WignerFunction[FockState[0, 8], {0, 0}],
+    1/Pi,
+    TestID -> "SQ-Wigner-origin-xp-entry"
+]
+
+VerificationTest[
+    HusimiQFunction[FockState[0, 8], {0, 0}],
+    1/(2 Pi),
+    TestID -> "SQ-Husimi-origin-xp-entry"
+]
+
+(* Away from the origin the closed forms are untouched: numeric agreement with the
+   Gaussian vacuum W(alpha) = (2/pi) e^{-2 |alpha|^2}, and the symbolic form itself. *)
+VerificationTest[
+    Chop[WignerFunction[FockState[0, 20], 0.5] - (2/Pi) Exp[-2 (0.5)^2], 1*^-10],
+    0,
+    TestID -> "SQ-Wigner-offorigin-numeric-preserved"
+]
+
+VerificationTest[
+    Simplify[WignerFunction[FockState[0, 20], \[FormalAlpha]] - (2/Pi) Exp[-2 Abs[\[FormalAlpha]]^2]],
+    0,
+    TestID -> "SQ-Wigner-symbolic-form-preserved"
+]
+
 EndTestSection[]

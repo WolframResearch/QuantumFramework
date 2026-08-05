@@ -95,10 +95,17 @@ WigLaguerreVal[L_, x_, c_] :=
 
 
 (* Phase space Kernels *)
+
+(* Power continued to the phase-space origin: base^0 = 1 (the m == n limit),
+   so a diagonal element contributes its parity / vacuum value at the origin
+   instead of raising 0^0. A positive exponent still gives 0 at base = 0. *)
+ZeroLimitPower[_, 0] := 1
+ZeroLimitPower[base_, exp_] := base ^ exp
+
 \[ScriptCapitalK]mn[\[Gamma]_, m_, n_] :=
  With[{\[Zeta] = 2 \[Gamma]},
   (-1)^n Exp[-(Abs[\[Zeta]]^2)/2] If[m >= n,
-   Sqrt[n!/m!] \[Zeta]^(m - n) LaguerreL[n, m - n, Abs[\[Zeta]]^2],
+   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] LaguerreL[n, m - n, Abs[\[Zeta]]^2],
    Sqrt[m!/n!] Conjugate[-\[Zeta]]^(n - m) LaguerreL[m, n - m, Abs[\[Zeta]]^2]]]
    
 \[ScriptCapitalK]mnWirt[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
@@ -113,8 +120,8 @@ WigLaguerreVal[L_, x_, c_] :=
    Sqrt[n!/m!] \[Zeta]^(m - n) Inactive[LaguerreL][n, m - n, \[Zeta] \[Zeta]Star],
    Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) Inactive[LaguerreL][m, n - m, \[Zeta] \[Zeta]Star]]]
    
-\[ScriptCapitalK]HusimiMN[\[Alpha]_, m_, n_] := 
- Exp[-Abs[\[Alpha]]^2] \[Alpha]^n Conjugate[\[Alpha]]^m / Sqrt[m! n!]
+\[ScriptCapitalK]HusimiMN[\[Alpha]_, m_, n_] :=
+ Exp[-Abs[\[Alpha]]^2] ZeroLimitPower[\[Alpha], n] ZeroLimitPower[Conjugate[\[Alpha]], m] / Sqrt[m! n!]
    
 SetAttributes[{\[ScriptCapitalK]mn, \[ScriptCapitalK]mnWirt, \[ScriptCapitalK]mnWirtInactive,\[ScriptCapitalK]HusimiMN}, Listable]
 
