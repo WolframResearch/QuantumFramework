@@ -233,8 +233,13 @@ HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
 
         qmat = ConstantArray[0, Dimensions[amat]];
 
+        (* HusimiPure returns Q(alpha) = (1/pi) |<alpha|psi>|^2, normalized to
+           unit integral over d^2 alpha. With alpha = (g/2)(x + I p), the
+           0.25 g^2 = |d^2 alpha / d(x,p)| Jacobian re-expresses it as a density
+           over dx dp, so it integrates to 1 and agrees with the {x,p} closed
+           form. The mixed branch below carries the same factor. *)
         If[\[Psi]["PureStateQ"],
-            qmat = HusimiPure[\[Psi], amat],
+            qmat = 0.25 g^2 HusimiPure[\[Psi], amat],
             {vals, vecs} = \[Psi]["Eigensystem"];
             {vals, vecs} =
                 With[{mask = Unitize[vals]},

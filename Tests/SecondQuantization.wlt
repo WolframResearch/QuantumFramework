@@ -272,6 +272,27 @@ VerificationTest[
     TestID -> "SQ-Wigner-origin-matches-grid-route"
 ]
 
+(* The numeric-grid Husimi route carries the same 0.25 g^2 = |d^2 alpha / d(x, p)|
+   Jacobian as the {x, p} closed form, so its pure-state branch is a density over
+   dx dp (unit integral), not over d^2 alpha. The pure branch had omitted it and
+   ran a uniform factor 2 high: Q_grid(0, 0) = 1/pi against the closed 1/(2 pi). *)
+VerificationTest[
+    Chop[HusimiQFunction[FockState[0, 8], {0, 0}] -
+        HusimiQRepresentation[FockState[0, 8], {-3, 3}, {-3, 3}][0, 0], 1.*^-4],
+    0,
+    TestID -> "SQ-Husimi-origin-matches-grid-route"
+]
+
+(* The Jacobian is uniform across phase space, so an off-origin pure coherent
+   state agrees point by point too, not only at the origin. *)
+VerificationTest[
+    With[{cs = CoherentState[12][4/5]},
+        Chop[HusimiQFunction[cs, {1, 1}] -
+            HusimiQRepresentation[cs, {-3, 3}, {-3, 3}][1, 1], 1.*^-4]],
+    0,
+    TestID -> "SQ-Husimi-coherent-grid-matches-closed-offorigin"
+]
+
 (* Husimi vacuum keeps its Gaussian closed form Q(alpha) = (1/pi) e^{-|alpha|^2}. *)
 VerificationTest[
     Simplify[HusimiQFunction[FockState[0, 20], \[FormalAlpha]] - (1/Pi) Exp[-Abs[\[FormalAlpha]]^2]],
