@@ -111,17 +111,20 @@ ZeroLimitPower[base_, exp_] := base ^ exp
 \[ScriptCapitalK]mnWirt[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
  With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
   (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
-   Sqrt[n!/m!] \[Zeta]^(m - n) LaguerreL[n, m - n, \[Zeta] \[Zeta]Star],
+   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] LaguerreL[n, m - n, \[Zeta] \[Zeta]Star],
    Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) LaguerreL[m, n - m, \[Zeta] \[Zeta]Star]]]
    
 \[ScriptCapitalK]mnWirtInactive[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
  With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
   (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
-   Sqrt[n!/m!] \[Zeta]^(m - n) Inactive[LaguerreL][n, m - n, \[Zeta] \[Zeta]Star],
+   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] Inactive[LaguerreL][n, m - n, \[Zeta] \[Zeta]Star],
    Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) Inactive[LaguerreL][m, n - m, \[Zeta] \[Zeta]Star]]]
    
+(* Husimi kernel for the density-matrix element <n|rho|m> at position {row=n+1, col=m+1}:
+   Q(alpha) = (1/pi) <alpha|rho|alpha> puts the bra amplitude Conjugate[alpha]^n on the
+   row index and the ket amplitude alpha^m on the column index. *)
 \[ScriptCapitalK]HusimiMN[\[Alpha]_, m_, n_] :=
- Exp[-Abs[\[Alpha]]^2] ZeroLimitPower[\[Alpha], n] ZeroLimitPower[Conjugate[\[Alpha]], m] / Sqrt[m! n!]
+ Exp[-Abs[\[Alpha]]^2] ZeroLimitPower[Conjugate[\[Alpha]], n] ZeroLimitPower[\[Alpha], m] / Sqrt[m! n!]
    
 SetAttributes[{\[ScriptCapitalK]mn, \[ScriptCapitalK]mnWirt, \[ScriptCapitalK]mnWirtInactive,\[ScriptCapitalK]HusimiMN}, Listable]
 
