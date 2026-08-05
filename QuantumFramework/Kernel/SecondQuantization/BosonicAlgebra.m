@@ -264,7 +264,7 @@ Options[BosonicVEV] = Options[BosonicNormalOrder];
 
 BosonicVEV[expr_, opts : OptionsPattern[]] :=
     Block[{vars = ExtractNCVars[{expr}]},
-        BosonVEV[expr, vars, opts]
+        BosonicVEV[expr, vars, opts]
     ]
 
 BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] :=

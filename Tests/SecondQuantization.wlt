@@ -46,4 +46,19 @@ VerificationTest[
     TestID -> "SQ-coherent-g2-is-one"
 ]
 
+(* BosonicVEV[expr] auto-detects the field variables and must agree with the
+   explicit two-argument form.  <0|a a^dag|0> = 1 because [a, a^dag] = 1, and
+   <0|a^dag a|0> = 0 because a annihilates the vacuum. *)
+VerificationTest[
+    With[{a = \[FormalA], ad = SuperDagger[\[FormalA]]},
+        {
+            BosonicVEV[a ** ad],
+            BosonicVEV[a ** ad] === BosonicVEV[a ** ad, {a, ad}],
+            BosonicVEV[ad ** a]
+        }
+    ],
+    {1, True, 0},
+    TestID -> "SQ-BosonicVEV-single-arg-auto-detects-variables"
+]
+
 EndTestSection[]
