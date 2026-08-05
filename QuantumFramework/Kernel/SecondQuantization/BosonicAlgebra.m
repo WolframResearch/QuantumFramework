@@ -103,6 +103,10 @@ BosonicAntiNormalOrder::unknownMethod = "Unknown Method: `1`."
 
 Options[BosonicAntiNormalOrder] = Options[BosonicNormalOrder]
 
+(* With no field variables there is nothing to reorder: a c-number is already in
+   anti-normal order, so return it unchanged. *)
+BosonicAntiNormalOrder[expr_, {}, OptionsPattern[]] := expr
+
 BosonicAntiNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
 With[{
     method = OptionValue[Method],
