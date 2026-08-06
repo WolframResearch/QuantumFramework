@@ -1,0 +1,326 @@
+
+
+
+%General
+\newcommand{\Checker}{\textcolor{red}{CHECK}}
+\newcommand{\CheckerEq}{\textcolor{red}{\text{CHECK}}}
+\newcommand{\pg}[1]{\textcolor{cyan(process)}{#1}}
+\newcommand\ov[2][22pt]{\sbox0{$#2$}%
+  \ensurestackMath{\stackengine{7.3pt}{#2}%
+    {\rule{0.7\wd0}{.4pt}}{O}{r}{F}{F}{L}}%
+}
+
+%General physics
+\newcommand{\Hamiltonian}{\hat{H}}
+\newcommand{\hamiltonian}{\hat{h}}
+\newcommand{\disphamiltonian}{\hat{h'}}
+\newcommand{\hamiltonianGaussian}{\hamiltonian_\text{G}}
+\newcommand{\hamiltonianNonGaussian}{\hamiltonian_\text{nG}}
+\newcommand{\hamiltonianNonGaussianG}{\hamiltonianNonGaussian'}
+\newcommand{\HamiltonianCorr}{\Hamiltonian_\text{c}}
+\newcommand{\HamiltonianInt}{\Hamiltonian_\text{i}}
+\newcommand{\Frequency}{\Omega}
+\newcommand{\LowFrequency}{\omega}
+\newcommand{\UnFreq}{\nu}
+\newcommand{\Time}{\tau}
+\newcommand{\WaveFunction}{\psi}
+\newcommand{\PosOp}{\hat{x}}
+\newcommand{\MomOp}{\hat{p}}
+\newcommand{\Pos}{x}
+\newcommand{\PosY}{y}
+\newcommand{\PosOpY}{\hat{y}}
+\newcommand{\PosZ}{z}
+\newcommand{\PosDim}{X}
+\newcommand{\PosYDim}{Y}
+\newcommand{\PosZDim}{Z}
+\newcommand{\Mom}{p}
+\newcommand{\MomDim}{P}
+\newcommand{\InControl}{a}
+\newcommand{\PosControl}{u}
+\newcommand{\NonLin}{\eta}
+\newcommand{\AnHarm}{\alpha}
+\newcommand{\TimeMax}{\Time_\text{max}}
+\newcommand{\DimTimeMax}{\DimTime_\text{max}}
+\newcommand{\DimPot}{v_0}
+\newcommand{\DimPotNon}{v}
+\newcommand{\Pot}{V}
+\newcommand{\DimPotTweez}{v_\text{tw}}
+\newcommand{\DimPotCos}{v_\text{FTT}}
+\newcommand{\Boltzmann}{k_{\text{B}}}
+\newcommand{\Temp}{T}
+\newcommand{\GKP}{\WaveFunction_\text{GKP}}
+\newcommand{\GroundState}{\WaveFunction_0}
+\newcommand{\FockStateOne}{\WaveFunction_1}
+\newcommand{\FockStateTwo}{\WaveFunction_2}
+\newcommand{\FockStateN}{\WaveFunction_n}
+\newcommand{\KetGroundState}{\ket{0}}
+\newcommand{\KetFockStateOne}{\ket{1}}
+\newcommand{\KetFockStateTwo}{\ket{2}}
+\newcommand{\KetFockStateN}{\ket{n}}
+\newcommand{\BraGroundState}{\ket{0}}
+\newcommand{\Squeeze}{r}
+\newcommand{\SqueezingOperator}{\hat{S}}
+\newcommand{\CoeffLoss}{\mathcal{C}^{\ExpandLetter}}
+\newcommand{\Normalization}{\mathcal{N}}
+\newcommand{\coeff}{c}
+\newcommand{\coeffs}{\mathbf{c}}
+\newcommand{\Disp}{d}
+\newcommand{\Disps}{\mathbf{d}}
+\newcommand{\Fidelity}{\mathcal{F}}
+\newcommand{\UnitaryLetter}{U}
+\newcommand{\Unitary}{\hat{\UnitaryLetter}}
+\newcommand{\GaussianUnitary}{\Unitary_\text{G}}
+\newcommand{\FidelityGate}{\mathcal{F}_{\Unitary}}
+\newcommand{\TargetUnitary}{\Unitary_\text{T}}
+\newcommand{\SigmaX}{\sigma_x}
+\newcommand{\SigmaZ}{\sigma_z}
+\newcommand{\SigmaY}{\sigma_y}
+\newcommand{\ZeroLog}{\ket{0}_\text{l}}
+\newcommand{\OneLog}{\ket{1}_\text{l}}
+\newcommand{\ZeroLeft}{\ket{0}_\text{L}}
+\newcommand{\ZeroRight}{\ket{0}_\text{R}}
+\newcommand{\ZeroBoth}{\WaveFunction_\text{L(R)}}
+\newcommand{\ZeroBothReverse}{\WaveFunction_\text{R(L)}}
+\newcommand{\LogEnc}{\ket{0/1}_\text{l}}
+\newcommand{\QSL}{\Time_\text{QSL}}
+\newcommand{\DimQSL}{\DimTime_\text{QSL}}
+\newcommand{\Fluct}{\xi}
+\newcommand{\DensityMatrix}{\hat{\rho}}
+\newcommand{\Noise}{\gamma}
+\newcommand{\DimNoise}{\Gamma}
+\newcommand{\MomKick}{k}
+\newcommand{\TwinZeroZero}{\ket{00}}
+\newcommand{\TwinZeroOne}{\ket{01}}
+\newcommand{\TwinOneZero}{\ket{10}}
+\newcommand{\TwinOneOne}{\ket{11}}
+\newcommand{\TargetState}{\WaveFunction_\text{T}}
+\newcommand{\RotatedTargetState}[1]{\WaveFunction_{\text{T},{#1}}}
+\newcommand{\SubSpaceSize}{n}
+\newcommand{\Trac}{\text{Tr}}
+\newcommand{\AuxM}{\hat{M}}
+\newcommand{\Projector}{\hat{P}}
+\newcommand{\RMSPointing}{U_\text{rms}}
+\newcommand{\RMSIntensity}{A_\text{rms}}
+\newcommand{\RMSPointingDimLess}{u_\text{rms}}
+\newcommand{\RMSIntensityDimLess}{a_\text{rms}}
+\newcommand{\FourLeggedCat}{\WaveFunction_\text{4LC}}
+\newcommand{\KerrCat}{\WaveFunction_\text{KC}}
+\newcommand{\Coh}{\varphi}
+\newcommand{\NormFourCat}{\mathcal{N}}
+\newcommand{\CohDis}{\beta}
+\newcommand{\CohDisLoop}{\alpha}
+\newcommand{\OscillatorLength}{\PosDim_0}
+\newcommand{\MomentumLength}{\MomDim_0}
+\newcommand{\Kerr}{\kappa}
+\newcommand{\OccupNumbers}{|c_n|^2}
+\newcommand{\AvN}{ \bar{n} }
+\newcommand{\WFL}{\WaveFunction_\text{loop}}
+\newcommand{\WFR}{\WaveFunction_\text{r}}
+\newcommand{\Annihilation}{ \hat{a} }
+\newcommand{\Creation}{ \hat{a}^\dagger }
+\newcommand{\Characteristic}{ \chi }
+\newcommand{\LiouvilleCharacteristic}{ \tilde{\Characteristic} }
+\newcommand{\KVec}{ \mathbf{k}}
+\newcommand{\MatrixEvo}{ A}
+\newcommand{\MatrixNoiseAux}{ B}
+\newcommand{\KX}{ k_{\Pos}}
+\newcommand{\KP}{ k_{\Mom}}
+\newcommand{\LKX}{ K_{\Pos}}
+\newcommand{\LKP}{ K_{\Mom}}
+\newcommand{\PauliX}{ \sigma_x}
+\newcommand{\PauliY}{ \sigma_y}
+\newcommand{\PauliZ}{ \sigma_z}
+\newcommand{\NoiseMatrix}{ \Xi}
+\newcommand{\DecoCoeff}{c_1}
+\newcommand{\DecoCoeffMain}{c}
+\newcommand{\ForceCoeff}{c_2}
+\newcommand{\HarmonicCoeff}{c_3}
+\newcommand{\CubicCoeff}{c_4}
+\newcommand{\ImagUnit}{ \text{i}}
+\newcommand{\KetCatState}{ \ket{\WaveFunction_{\text{cat}}}}
+
+%Tweezer
+\newcommand{\Mass}{m}
+\newcommand{\MomentumOperator}{\hat{P}}
+\newcommand{\PositionOperator}{\hat{X}}
+\newcommand{\TweezerDepth}{V_0}
+\newcommand{\TweezerWaist}{w_0}
+\newcommand{\TweezerSeparation}{s}
+\newcommand{\ControlPos}{U}
+\newcommand{\DimTime}{t}
+\newcommand{\AspectRatio}{\lambda}
+\newcommand{\FreqAxial}{\Frequency_\text{ax}}
+\newcommand{\FullAverage}[1]{ \langle {#1} \rangle_{\Time} }
+\newcommand{\Hamilton}{\hat{H}}
+\newcommand{\AvEnergy}{\left\langle E\right\rangle}
+\newcommand{\GroundEnergy}{E_0}
+\newcommand{\force}{f}
+\newcommand{\corrForce}{\delta f}
+\newcommand{\corrFreq}{\delta \LowFrequency}
+\newcommand{\CubNonlin}{ \lambda}
+\newcommand{\CubNonlinDim}{ \Lambda}
+\newcommand{\corrNonlin}{\delta \CubNonlin}
+\newcommand{\PositionOperatorInt}{\PositionOperator_{\text{i}}}
+
+%Lattice
+\newcommand{\WaveLength}{\lambda}
+
+
+
+%Transmon
+\newcommand{\Capacitance}{C}
+\newcommand{\ChargeEnergy}{E_C}
+\newcommand{\FundCharge}{e}
+\newcommand{\FluxQuantum}{\Phi_0}
+\newcommand{\JunctionAssymetry}{d}
+\newcommand{\ChargeNumberOperator}{\hat{n}}
+\newcommand{\ChargeOperator}{\hat{Q}}
+\newcommand{\PhaseDifferenceOperator}{\hat{\varphi}}
+\newcommand{\PhaseDifferenceOperatorUn}{\hat{\Phi}}
+\newcommand{\ExternalFlux}{\phi_\text{x}}
+\newcommand{\FluxFluct}{\phi_\text{rms}}
+\newcommand{\JosEnergyTot}{E_{\text{J}}}
+\newcommand{\JosOne}{E_{\text{J}1}}
+\newcommand{\JosTwo}{E_{\text{J}2}}
+\newcommand{\Josi}{E_{\text{J}i}}
+
+
+
+%FockLoop
+\newcommand{\WaveFunctionGaussian}{\WaveFunction_\text{G}}
+\newcommand{\Squeezing}{r}
+\newcommand{\Force}{f}
+\newcommand{\DimForce}{F}
+\newcommand{\LargeControl}{\PosControl_\text{p}}
+\newcommand{\SmallControl}{\PosControl_\text{c}}
+\newcommand{\TimeOrdered}{\mathcal{T}}
+\newcommand{\PosOpGaussian}{\PosOp'}
+\newcommand{\MomOpGaussian}{\MomOp'}
+\newcommand{\Sm}{S}
+\newcommand{\Sxx}{\Sm_{\Pos \Pos}}
+\newcommand{\Sxp}{\Sm_{\Pos \Mom}}
+\newcommand{\Spx}{\Sm_{\Mom \Pos}}
+\newcommand{\Spp}{\Sm_{\Mom \Mom}}
+\newcommand{\Smatrix}{\begin{pmatrix} \Sxx(\Time) & \Sxp(\Time) \\ \Spx(\Time) & \Spp(\Time) \end{pmatrix} }
+\newcommand{\Rt}{\begin{pmatrix} \PosOpGaussian(\Time) \\  \MomOpGaussian(\Time) \end{pmatrix} }
+\newcommand{\RZero}{\begin{pmatrix} \PosOp \\  \MomOp \end{pmatrix} }
+\newcommand{\ExpandFactor}{\sigma}
+\newcommand{\AngleExpand}{\varphi}
+\newcommand{\PosOpRot}{\PosOp_{\AngleExpand}}
+\newcommand{\Rm}{R}
+\newcommand{\Rmatrix}[1]{\begin{pmatrix}  \cos{#1} & \sin{#1} \\ -\sin{#1}& \cos{#1} \end{pmatrix} }
+\newcommand{\RandomAngle}{\phi}
+\newcommand{\ExpSymbol}{\text{e}}
+\newcommand{\TimeExpand}{\Time_\ExpSymbol}
+\newcommand{\DimTimeExpand}{\DimTime_\ExpSymbol}
+\newcommand{\TimePrep}{\Time_\text{s}}
+\newcommand{\TimeRot}{\Time_{\text{r}}}
+\newcommand{\FreqRatio}{\chi}
+\newcommand{\FreqRatioOne}{\FreqRatio_1}
+\newcommand{\FreqRatioTwo}{\FreqRatio_2}
+\newcommand{\SmFill}[4]{\begin{pmatrix} #1 & #2 \\ #3 & #4 \end{pmatrix} }
+\newcommand{\TimeInRot}{\Time'}
+\newcommand{\TimeInComp}{\Time''}
+\newcommand{\Transpose}[1]{{#1}^{\text{T}} }
+\newcommand{\MotionalSqueeze}{\mathcal{S}_0}
+\newcommand{\MotionalDeloc}{\mathcal{S}}
+\newcommand{\avg}[1]{\ensuremath{\langle #1 \rangle}}
+\newcommand{\FinalLetter}{\text{f}}
+\newcommand{\AngleFinal}{\RandomAngle_{\FinalLetter}}
+\newcommand{\UnitaryInHar}{\Unitary_\pm}
+\newcommand{\UnitaryIn}{\Unitary_-}
+\newcommand{\UnitaryHar}{\Unitary_+}
+\newcommand{\UnitaryShake}{\Unitary_\text{sh}}
+\newcommand{\ExpandLetter}{\text{e}}
+\newcommand{\CompressLetter}{\text{c}}
+\newcommand{\InitialLetter}{\text{i}}
+\newcommand{\LoopLetter}{\text{l}}
+\newcommand{\ProtocolLetter}{\text{prot}}
+\newcommand{\UnitaryExpand}{\Unitary_\ExpandLetter}
+\newcommand{\UnitaryCompress}{\Unitary_\text{c}}
+\newcommand{\UnitaryExpandTil}{\hat{\tilde{\UnitaryLetter}}_\ExpandLetter}
+\newcommand{\UnitaryCompressTil}{\hat{\tilde{\UnitaryLetter}}_\CompressLetter}
+\newcommand{\UnitaryExpandTilIn}{\hat{\tilde{\UnitaryLetter}}_\ExpandLetter^{-1}}
+\newcommand{\UnitaryCompressTilIn}{\hat{\tilde{\UnitaryLetter}}_\CompressLetter^{-1}}
+\newcommand{\UnitaryLoop}{\Unitary_\LoopLetter}
+\newcommand{\UnitaryExpandIn}{\Unitary_\ExpandLetter^{-1}}
+\newcommand{\UnitaryCompressIn}{\Unitary_\CompressLetter^{-1}}
+\newcommand{\rounds}[1]{\left( #1 \right)}
+\newcommand{\squares}[1]{\left[ #1 \right]}
+\newcommand{\curlies}[1]{\left\{ #1 \right\}}
+\newcommand{\straights}[1]{\left| #1 \right|}
+\newcommand{\WaveFunctionInitial}{\WaveFunction_\InitialLetter}
+\newcommand{\WaveFunctionFinal}{\WaveFunction_\FinalLetter}
+\newcommand{\WaveFunctionInitialLoop}{\tilde{\WaveFunction}_\InitialLetter}
+\newcommand{\WaveFunctionFinalLoop}{\tilde{\WaveFunction}_\FinalLetter}
+\newcommand{\SmInitial}{\Sm_\InitialLetter}
+\newcommand{\PosInit}{\Pos_\InitialLetter}
+\newcommand{\SmExpandTil}{\tilde{\Sm}_\ExpandLetter}
+\newcommand{\SmCompressTil}{\tilde{\Sm}_\CompressLetter}
+\newcommand{\RmExpand}{\Rm_\ExpandLetter}
+\newcommand{\RmCompress}{\Rm_\CompressLetter}
+\newcommand{\AngleExp}{\RandomAngle_\ExpandLetter}
+\newcommand{\AngleComp}{\RandomAngle_\CompressLetter}
+\newcommand{\SymplecInHar}{\Sm_\pm}
+\newcommand{\SymplecIn}{\Sm_-}
+\newcommand{\SymplecHar}{\Sm_+}
+\newcommand{\TimeShake}{\tilde{\Time}}
+\newcommand{\Params}{\alpha}
+\newcommand{\StaticLetter}{\text{s}}
+\newcommand{\DynamicLetter}{\text{d}}
+\newcommand{\PotStatic}{\DimPotNon_\StaticLetter}
+\newcommand{\PotDynamic}{\DimPotNon_\DynamicLetter}
+\newcommand{\StaticStrength}{A}
+\newcommand{\Displace}{\hat{T}}
+\newcommand{\CLetter}{\text{c}}
+\newcommand{\xC}{\Pos_\CLetter}
+\newcommand{\pC}{\Mom_\CLetter}
+\newcommand{\LabState}[1]{\ket{\phi \rounds{#1}} }
+\newcommand{\DispState}[1]{\ket{\phi' \rounds{#1}} }
+\newcommand{\State}[1]{\ket{\psi \rounds{#1}} }
+\newcommand{\StateNo}{\ket{\psi} }
+\newcommand{\StateNoNo}{\psi }
+\newcommand{\Cubi}{\kappa }
+\newcommand{\FullStateIn}[3]{\ket{#1,#2,#3} }
+\newcommand{\FullState}[1]{\ket{\Psi \rounds{#1}}  }
+\newcommand{\FullStateNo}{\ket{\Psi}  }
+\newcommand{\ShakeLetter}{\text{s} }
+\newcommand{\PosShake}{\Pos_\ShakeLetter}
+\newcommand{\MomShake}{\Mom_\ShakeLetter}
+\newcommand{\SmRA}[2]{\Sm_{{#1},{#2}} }
+\newcommand{\SmRATranspose}[2]{\Sm^\text{T}_{{#1},{#2}} }
+\newcommand{\PosOpRotAn}[1]{\PosOp_{#1}}
+\newcommand{\hamiltonianShake}{\hat{h}_\ShakeLetter}
+\newcommand{\RelPos}{\xi}
+\newcommand{\ConOne}{f_1}
+\newcommand{\ConTwo}{f_2}
+\newcommand{\ConThree}{f_3}
+\newcommand{\FreqControl}{\omega}
+\newcommand{\Rate}{\gamma}
+\newcommand{\GaussianRate}{\Rate_{\text{G}}}
+\newcommand{\NonGaussianRate}{\Rate_{\text{nG}}}
+\newcommand{\DecoRate}{\Rate_{\text{dec}}}
+\newcommand{\HamiltonianShake}{\Hamiltonian_\ShakeLetter}
+\newcommand{\HamiltonianExpand}{\Hamiltonian_\ExpandLetter}
+\newcommand{\PowScal}{\beta}
+\newcommand{\AvFidelity}{\bar{\Fidelity}}
+\newcommand{\NoRuns}{N_\text{r}}
+
+
+
+%FurtherFockLoop
+\newcommand{\Dissipator}{\mathcal{D}}
+\newcommand{\CollapseFock}{\hat{\mathcal{C}}}
+\newcommand{\CollapseFockCoeff}{\Gamma}
+\newcommand{\Var}{\text{Var}}
+% \newcommand{\Rate}{\gamma}
+\newcommand{\SepD}{R}
+\newcommand{\Charge}{Q}
+\newcommand{\UnFreqT}{\tilde{\UnFreq}}
+\newcommand{\IntG}{g}
+\newcommand{\TwoModeGroundState}{\ket{00}}
+\newcommand{\PhaseFunction}{A}
+\newcommand{\FrRatio}{\xi}
+\newcommand{\LibNonLin}{\kappa}
+\newcommand{\LibAngle}{\theta}
+\newcommand{\InertiaMoment}{I}

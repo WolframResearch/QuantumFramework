@@ -1,0 +1,198 @@
+\documentclass[%
+reprint,
+superscriptaddress,
+%groupedaddress,
+%unsortedaddress,
+%runinaddress,
+%frontmatterverbose, 
+%preprint,
+%preprintnumbers,
+%nofootinbib,
+%nobibnotes,
+%bibnotes,
+ prl,
+ amsmath,
+ amssymb,
+ aps,
+ longbibliography
+%pra,
+%prb,
+%rmp,
+%prstab,
+%prstper,
+%floatfix,
+]{revtex4-2}
+
+%\UseRawInputEncoding
+%\documentclass[pdflatex,sn-mathphys]{sn-jnl}
+
+\usepackage{cancel}
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{soul}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{lipsum}
+\usepackage[ISO]{diffcoeff}
+\usepackage{ragged2e}
+\usepackage{mathrsfs}
+%\usepackage[capitalise]{cleveref}
+\usepackage[normalem]{ulem}
+\usepackage{wrapfig}
+\usepackage{esvect} %for correct vectors using \vv
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{chngcntr}
+\usepackage{fontawesome5}
+\usepackage{mleftright}
+\usepackage[nodayofweek]{datetime}
+\usepackage{comment}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{bookmark}
+\usepackage{natbib,hyperref}
+\usepackage{gensymb}
+%\usepackage{authblk}
+\usepackage{textgreek}
+\usepackage{caption}
+% Deze hieronder zorgt dat plaatjes binnen section blijven
+\usepackage[section]{placeins}
+%\usepackage{ccaption}
+%\captionsetup[table]{position=below}
+%\usepackage[usenames,dvipsnames]{color}
+\usepackage{xcolor}
+\usepackage{dblfloatfix}
+\usepackage{caption}
+
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.8}
+
+
+\sisetup{
+    exponent-product = \cdot,
+    range-phrase = -,
+    range-units = single,
+    detect-weight = true,
+    detect-family = true,
+    detect-all = true}
+
+\captionsetup{justification=raggedright,singlelinecheck=false}
+
+%\jyear{2022}
+\raggedbottom
+\definecolor{firebrick}{HTML}{B22222}
+
+\hypersetup{
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=firebrick,          % color of internal linkshttps://www.overleaf.com/project/65dd05895a901323fe62bed3
+    citecolor=firebrick,        % color of links to bibliography
+    filecolor=firebrick,      % color of file links
+    urlcolor=firebrick           % color of external links
+}
+
+\definecolor{orcid-green}{RGB} {166, 206, 57}
+\newcommand{\MYhref}[3][blue]{\href{#2}{\color{#1}{#3}}}%
+
+\titleclass{\mysection}{straight}[\section]
+\titleformat{\mysection}[runin]
+  {\itshape}{\thesection}{}{}[.---]
+\titlespacing{\mysection}{1em}{1em}{0em}
+
+
+%\renewcommand{\thesection}{\Alph{section}}
+%\titleclass{\myappsection}{straight}[\section]
+%\titleformat{\myappsection}[hang]
+%  {\bfseries}{\refstepcounter{section}Appendix \thesection}{1em}{}
+%\titlespacing{\myappsection}{1em}{1em}{0em}
+
+
+\newcommand{\red}{\textcolor{red}}
+\newcommand{\blue}{\textcolor{blue}}
+\newcommand{\THO}[1]{{\textcolor{blue}{{[\bf THO: #1]}}}}
+\newcommand{\DU}[1]{{\textcolor{orange}{{[\bf DU: #1]}}}}
+\newcommand{\JWL}[1]{{\textcolor{cyan}{{[\bf JWL: #1]}}}}
+
+\newcommand{\kB}{k_\text{B}} %because it should be a text{B} and this is quicker to type
+
+\begin{document}
+
+%These two are usefull for the appendix
+\newcommand{\titleinfo}{\boldmath Picometer control of a levitating milligram gravity sensor}
+\newcommand{\authorinfo}{Dennis G.~Uitenbroek, Jurriaan Langendorff, and Tjerk H.~Oosterkamp}
+
+\title{\titleinfo}
+
+\author{Dennis G.~Uitenbroek\,\MYhref[orcid-green]{https://orcid.org/0009-0008-3425-6406}{\faOrcid}}
+\affiliation{Leiden Institute of Physics, Leiden University, P.O. Box 9504, 2300 RA Leiden, The Netherlands.}
+
+\author{Jurriaan Langendorff\,\MYhref[orcid-green]{https://orcid.org/}{\faOrcid}}
+\affiliation{Leiden Institute of Physics, Leiden University, P.O. Box 9504, 2300 RA Leiden, The Netherlands.}
+
+\author{Tjerk H.~Oosterkamp\,\MYhref[orcid-green]{https://orcid.org/0000-0001-6855-5190}{\faOrcid}}
+\affiliation{Leiden Institute of Physics, Leiden University, P.O. Box 9504, 2300 RA Leiden, The Netherlands.}
+
+
+
+\begin{abstract}
+\noindent
+Due to their exceptional isolation from the environment, magnetically levitated particles are explored as extremely sensitive mechanical sensors. For future gravity experiments on quantum superpositions, such systems need to be cooled close to their ground state. To demonstrate the combination of state of the art vibration isolation, milligram levitated high Q mechanical resonators and position detection with low noise, we present linear feedback cooling of a magnetically levitated gravity sensor to below 2 picometer amplitude and below 10 millikelvin mode temperature for two translational modes (the x- and y-mode) simultaneously. The sensor is a levitating permanent magnet in a type I superconducting trap, where its six resonance frequencies are measured with a superconducting coil coupled to a DC SQUID.  This signal is measured with a lock-in amplifier and a feedback signal is sent to a piezoelectric actuator, allowing the cooling of resonant modes  at \SI{50.6}{} and \SI{68.0}{Hz} simultaneously. These two translational modes have Q factors of \SI{3.8e6}{} and \SI{5.5e6}{} respectively. The experiment is mounted inside a dry dilution refrigerator where it is vibrationally attenuated with \SIrange{110}{130}{dB} at these frequencies. In this work, we discuss future improvements on the setup which may enable quantum ground state cooling on a magnetically levitated particle, that has previously been shown to be a gravitational sensor.
+\end{abstract}
+\maketitle
+
+%\section{Te bespreken} 
+%\begin{itemize}
+%    \item 
+%\end{itemize}
+
+\input{1-Introduction/Introduction.tex}
+\input{2-Setup/Setup.tex}
+\input{3-Results/Results.tex}
+\input{4-Conclusion/Conclusion.tex}
+
+
+
+
+%\backmatter
+
+%\bmhead{Data availability statement}
+%
+%The data and code that have been used to generate the results of this work are available on \href{https://doi.org/10.5281/zenodo.6897977}{Zenodo}.
+
+\acknowledgments
+The authors acknowledge the support in this work by the EU Horizon Europe EIC Pathfinder project QuCoM (10032223). Furthermore, by the coordination of the Dutch Einstein Telescope collaboration, a joint effort of LIOF in cooperation with the Ministry of Economic Affairs and Climate Policy, the Ministry of Education, Science and Culture, and Nikhef.
+We thank T.M. Fuchs, K. Heeck, B. Hensen, M. Camp and E.J. Visser for useful discussions and experimental help. We thank M.L. Mattana and B. Hensen for their careful reading of the manuscript.
+%This publication is part of the projects 175.010.2015.050, 680-91-123 and 2019.088 financed by the Dutch Research Council (NWO).
+
+\bibliography{main}
+
+
+%\begin{comment}
+
+\clearpage
+\onecolumngrid
+
+\begin{center}
+\large
+\maketitle
+\textbf{\textit{Supplementary Material:} \\ \titleinfo} \\
+\vspace{1.75ex}
+\authorinfo
+\vspace{2ex}
+\end{center}
+
+\twocolumngrid
+
+\appendix
+\input{5-Appendix/Appendix_mode_identification}
+\input{5-Appendix/Appendix_calibration}
+\input{5-Appendix/Appendix_mode_mixing_upconversion}
+
+%\end{comment}
+\end{document}

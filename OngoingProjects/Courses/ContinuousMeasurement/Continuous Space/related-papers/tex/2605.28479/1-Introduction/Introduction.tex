@@ -1,0 +1,39 @@
+\mysection{Introduction}\label{sec:introduction}
+
+%Over massa heel nauwkeurig meten, nog te lezen https://pubs.acs.org/doi/full/10.1021/acs.nanolett.9b00082
+\begin{comment}
+\DU{Suggestie van Bas: Als ik mijn persoonlijke favoriet mag geven van de onderdelen die al terugkomen in de paper zou ik zeggen dat de stertkste verhaallijn is:
+\begin{itemize}
+\item quantum experimenten met grote massas zijn belangrijk
+\item om een quantum experiment te doen moet je je mode nabij de quantum ground state koelen
+\item GS cooling kan met clamped resonators 
+\item maar ivm clamping lsoees  moeten we levitatie dien  (wat niet in je tekst staat, maar volgens mij ook cruciaal is op termijn: dynamische controle over de potentiaal. Misschien heb je dat expres weggelaten ivm het feit dat je dat bij jullie trap juist niet hebt.)
+\item optische systemen kunnen GS koelen, maar hebben te weinig massa en werken bij hoge frequencie
+\item Magnetishe levitatie is belangrijk want a) grotere massas mogenlijk en b) geen inernal heating door de trapping laser
+\item MAAAR a) dan gaan wel zeker je frequencites omlaag en word vibratie isilatie veel lastiger. b) dan wordt detectie ook moeilijker
+\\
+\item HERE: state of-the art vibratie isolaie in combinatie met zeer zwaar geleviteerd deeltje met hoge Q factor en low-noise readout. Om te benchmarken hoe goed dit allemaal al is doe je mode-cooling.  Misschien ook nadruk leggen dat het allemaal tegelijk goed moet zijn.
+\end{itemize}}
+\end{comment}
+Large mass quantum experiments are the key ingredient in closing the gap between microscopic quantum systems and macroscopic general relativity. By pushing the quantum effects to larger and heavier scales, an experiment combining these two theories could be enabled. Observing quantum mechanical effects in a mechanical system requires a crucial first step: cooling a particle close to the mechanical quantum ground state. This has been a goal within the physics community on various platforms using different cooling methods. Additionally, one would like to achieve this quantum regime in a mass regime where gravity becomes relevant.
+
+In early work, micromechanical membranes were shown to be cooled to the quantum ground state~\cite{Connell2010, Teufel2011, Chan2011, Safavi2012, Jockel2015}. These type of systems will inevitably suffer from clamping losses, due to the suspended nature of these experiments.
+% More recently a cat state in a similar system is shown, with an effective mass up to \SI{16}{ug} (nog checken of niet al meer) [ref Bild et al. misschien nog meer].
+
+In an effort to avoid clamping losses, levitated systems can be studied. Trapped ions were the first to be cooled to the mechanical groundstate, using laser sideband cooling~\cite{Diedrich1989, Monroe1995, Leibfried2003}. Although impressive results are accomplished in this field, these type of experiments are limited to very few atoms in scale.
+
+In optical levitation, groundstate cooling has been achieved~\cite{Delic2020, Tebbenjohanns2021, Magrini2021, piotrowski2023} since a couple of years. These experiments are performed at relatively high frequencies (\SI{10}{k\hertz} - \SI{1}{M\hertz}) compared to magnetic levitation. At these frequencies mechanical vibrations are less present and can be readily attenuated. This is a very promising platform for pushing the limits of quantum mechanical effects. However, these particles have a size around \SI{100}{nm} and a mass in the order of femtograms. This is already a large step in macroscopicity compared to ions, but still far from a macroscopic particle that would generate a measurable amount of gravity.
+
+A different levitation platform, magnetic levitation, makes use of magnetic forces. This platform is not limited in mass due to the magnetic forces and there is no internal heating of the particle as in the above-mentioned levitation systems. With the larger mass the frequencies will decrease (compared to optical levitation). At these lower frequencies dampening the mechanical vibrations is more challenging.
+
+Different types of magnetic levitation exist, we will only discuss superconducting levitation here, superconducting levitation can be divided in active~\cite{Bob, Gutierrez2020, Gutierrez2022, Hofer2023, Gutierrez2023, Schmidt2024, Paradkar2025, Hansen2026} and passive systems~\cite{Timberlake2019, Vinante2020, Vinante2022, Timberlake2024}. Active systems send a current through coils that levitate a piece of superconducting material by using the perfect diamagnetic properties of the superconductor. The passive systems use the same perfect diamagnetic property due to the Meissner effect and let the superconductor expel the magnetic field, coming from a permanent magnet. Both mechanisms are, in principle, scalable to sizes greater than \SI{1}{mm}. The advantage of a passive system is the absence of noise sources from the active components, e.g. the current noise in the coils.
+
+Passive magnetic levitation with a submillimeter particle of \SI{0.43}{mg} has already been demonstrated in a gravitational experiment~\cite{Gravity}. In this letter, a version of this setup with state-of-the-art vibration isolation, a massive levitated particle with high Q factors, and low noise readout are all together combined to reduce the motion of the particle to below two picometer of RMS amplitude. This achieved motion is a benchmark for the performance of the system, this can only be achieved if all necessary experimental conditions are fulfilled simultaneously. Performing ground state cooling on these type of systems is possible in theory, but experimentally very challenging. The zero point motion scales with $\sim 1/\sqrt{m \omega}$. In magnetic levitation the relatively large masses in combination with low frequencies result in a small zero point motion, \SI{0.7}{fm} for the setup used here.
+
+%In this letter, a version of this setup with larger detection sensitivity is used to measure the mode temperature of two of the six degrees of freedom. These two modes are cooled by means of applying linear feedback to a piezoelectric element attached to the superconducting trap. Performing ground state cooling on these type of systems is in theory possible, but experimentally very challenging. The zero point motion scales with $\sim 1/\sqrt{m \omega}$. In magnetic levitation the relatively large masses in combination with low frequencies result in a small zero point motion, \SI{0.7}{fm} for the setup used here. Sufficient damping of mechanical noise at the resonance frequencies (\SIrange{15}{200}{Hz}) is required in combination with the cryogenic environment. The experimental setup makes use of several vibration isolation systems, both passive and active. Despite these efforts, mechanical noise is still affecting the experiment, mainly through upconversion of vibrations.
+
+In this experiment a phonon number in the order of \SI{e6}{} is reached. The theoretical minimum phonon limit with current detection and force noise is in the order of \SI{e5}{} phonons. With improvements on vibration isolation, Q factors, detection coupling and SQUID noise, we think it would be possible to cool this system to the ground state. 
+Since this setup has already been used for gravitational measurements~\cite{Gravity}, combining this system with the feedback cooling presented in this paper, this experiment demonstrates to be a promising platform towards combining both gravitational interaction and quantum mechanical effects in a single experiment.
+
+%However, this experimental platform is a promising route to cool macroscopic particles to the quantum ground state.
+    

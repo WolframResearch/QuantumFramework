@@ -1,0 +1,484 @@
+\documentclass[twocolumn,preprintnumbers,superscriptaddress,amsmath,amssymb,aps,pra,10pt]{revtex4-1}
+\usepackage{physics}
+\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{multirow}
+
+
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{xr-hyper}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\hypersetup{
+    colorlinks,
+    linkcolor={blue},
+    citecolor={blue},
+    urlcolor={blue}
+}
+%\usepackage{siunitx}
+\usepackage{comment}
+\usepackage{bm}
+\usepackage{ulem,xpatch}
+\usepackage{lineno}
+\usepackage{indentfirst}
+\usepackage{bbold}
+\setlength {\marginparwidth }{2cm}
+\usepackage{todonotes}
+% \newcommand{\matlab}{{\sc Matlab} }
+\newcommand{\cvec}[1]{{\mathbf #1}}
+\newcommand{\rvec}[1]{\vec{\mathbf #1}}
+\newcommand{\ihat}{\hat{\textbf{\i}}}
+\newcommand{\jhat}{\hat{\textbf{\j}}}
+\newcommand{\khat}{\hat{\textbf{k}}}
+\newcommand{\minor}{{\rm minor}}
+%\newcommand{\trace}{{\rm trace}}
+\newcommand{\spn}{{\rm Span}}
+\newcommand{\rem}{{\rm rem}}
+\newcommand{\ran}{{\rm range}}
+\newcommand{\range}{{\rm range}}
+\newcommand{\mdiv}{{\rm div}}
+\newcommand{\proj}{{\rm proj}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\rr}{\mathbf{r}}
+\newcommand{\kk}{\mathbf{k}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\<}{\langle}
+\renewcommand{\>}{\rangle}
+
+%\newcommand{\dd}{\mathrm{d}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\VV}{\mathcal{V}}
+\newcommand{\kT}{k_\text{B}T}
+\newcommand{\keps}{{\mathbf{k} \varepsilon}}
+\newcommand{\vac}{\sqrt{\frac{\hbar \omega_\mathbf{k}}{2\varepsilon_0 \mathcal{V}}}}
+\newcommand{\therm}{\text{th}}
+\newcommand{\inn}{\mathrm{in}}
+\newcommand{\outt}{\mathrm{out}}
+\newcommand{\ext}{\mathrm{ext}}
+\newcommand{\nth}{\overline{n}_\mathrm{th}}
+\newcommand{\meas}{\mathrm{meas}}
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\bcanc}[1]{{\blue{\sout{#1}}}}
+\newcommand{\yellow}[1]{\textcolor{brown}{#1}}
+\newcommand{\ycanc}[1]{{\yellow{\sout{#1}}}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\rcanc}[1]{{\red{\sout{#1}}}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\gcanc}[1]{{\green{\sout{#1}}}}
+\newcommand{\magenta}[1]{\textcolor{magenta}{#1}}
+\newcommand{\mcanc}[1]{{\magenta{\sout{#1}}}}
+
+\newcommand{\imu}{\text{\rm i}}
+\newcommand{\expu}{\text{\rm e}}
+\newcommand{\Og}{\Omega}
+\newcommand{\Om}{\Omega_m}
+\newcommand{\Oz}{\Omega_z}
+\newcommand{\Gmeas}{\Gamma_\text{m}}
+\newcommand{\Gqba}{\Gamma_\text{q}}
+\newcommand{\Gth}{\Gamma_\text{th}}
+\newcommand{\Gtot}{\Gamma_\text{tot}}
+\newcommand{\etad}{\eta_\mathrm{d}}
+\newcommand{\chim}{\chi_m}
+\newcommand{\gm}{\gamma_m}
+\newcommand{\geff}{\gamma_\text{eff}}
+\newcommand{\ain}{a_\text{in}}
+\newcommand{\aout}{a_\text{out}}
+
+\newcommand{\xzpf}{x_\text{zpf}}
+\newcommand{\yzpf}{y_\text{zpf}}
+\newcommand{\zzpf}{z_\text{zpf}}
+\newcommand{\pzpf}{p_\text{zpf}}
+\newcommand{\bnth}{\overline{n}_\text{th}}
+\newcommand{\bneff}{\overline{n}_\text{eff}}
+\newcommand{\bnb}{\overline{n}_\text{b}}
+\newcommand{\kb}{k_\text{B}}
+%
+
+
+\renewcommand{\>}{\rangle}
+
+\newcommand{\vacc}{\sqrt{\frac{\hbar \omega}{16\pi^3\varepsilon_0}}}
+
+\newcommand{\intdk}{\int_{\mathbb{R}^3}\dd^3k\ }
+
+\newcommand{\affil}{Photonics Laboratory, ETH Zürich, CH-8093 Zürich, Switzerland}
+\newcommand{\affilQC}{Quantum Center, ETH Zurich, CH-8093 Zürich, Switzerland}
+\newcommand{\affilLeiden}{Leiden Institute of Physics, Leiden University, 2300RA Leiden, The Netherlands.}
+
+\begin{document}
+
+\title{Trap-to-trap free falls with an optically levitated nanoparticle}
+
+
+\author{M. Luisa Mattana}
+\altaffiliation{Present address: Leiden Institute of Physics, Leiden University, 2300 RA Leiden, The Netherlands}
+\affiliation{\affil}
+
+\author{Nicola Carlon Zambon}
+\altaffiliation{Present address: Università di Padova, Dipartimento di Fisica e Astronomia, 35134 Padova, Italy}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\author{Massimiliano Rossi}
+\altaffiliation{Present address: Kavli Institute of Nanoscience, Department of Quantum Nanoscience, Delft University of Technology, 2628CJ Delft, The Netherlands}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\author{Eric Bonvin}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\author{Louisiane Devaud}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\author{Martin Frimmer}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\author{Lukas Novotny}
+\affiliation{\affil}
+\affiliation{\affilQC}
+
+\begin{abstract}
+We perform free-fall experiments with a charge-neutral, optically levitated nanoparticle.
+%
+This is achieved using an optical tweezer that can be rapidly toggled on and off and vertically displaced, enabling the particle to be released and recaptured after each free fall. 
+%
+The particle is insensitive to electric fields due to its charge neutrality and, during free evolution, is not subject to photon recoil heating.
+%
+We achieve free-fall durations of up to $0.25~\mathrm{ms}$ and observe a nearly two hundred-fold increase in the particle's position uncertainty at recapture.
+%
+The current limit on the free-fall time arises from the performance of the initial cooling step.
+%
+By implementing linear feedback techniques and reducing the background pressure, we expect to perform millisecond-scale free-fall experiments in ultra-high vacuum, opening new opportunities for generating large delocalizations of levitated objects.
+\end{abstract}
+
+
+\maketitle
+
+\textit{Introduction} – In matter-wave experiments, objects such as atoms or molecules propagate freely through an interferometer \cite{kovachy2015quantum,Aveline2020,Fein2019}.
+%
+Free evolution increases the coherence length of the wavepacket over distances comparable to the slit separation, which is instrumental in the formation of an interference pattern \cite{Keith1991,Nairz2003}.
+%
+Typically, upon travelling through the interferometer, the object is either lost or destroyed during the detection process.
+%
+Repeating the experiment therefore relies on the ability to prepare indistinguishable copies of the object.
+%
+As we scale up to larger and more massive objects, such as nanoparticles, this indistinguishability becomes increasingly difficult to achieve \cite{Romero-Isart2011b}.
+%
+Overcoming this challenge requires repeated measurements without loss or physical destruction of the object \cite{Weiss2021,Roda-Llordes2024,Neumeier2024}.
+
+
+
+Techniques based on levitodynamics \cite{Gonzalez-Ballestero2021}, and in particular on optical tweezers, have gained prominence for their ability to measure and control both translational and rotational degrees of freedom of sub-micrometer-sized objects, enabling ground-state preparation \cite{Delic2020, magrini2021real, ours2021, dania2024high}.
+%
+However, the ground-state de Broglie wavelength is at the picometer scale, and in order to perform matter-wave interference experiments, the state must first be delocalized.
+%
+Despite recent progress in the development of state-expansion protocols for levitated objects in purely optical \cite{Rashid2016,Duchan2024} or hybrid traps \cite{Bonvin2024, Tomassi2025}, decoherence due to background gas, photon recoil heating, and electric field noise ultimately limits the spatial coherence to subatomic distances.
+%
+This is the main reason why—so far—only two works have demonstrated a twofold increase in coherence length beyond the zero-point motion \cite{Rossi2024,Kamba2025}.
+
+
+Most decoherence sources can be eliminated by allowing the particle to evolve freely in the absence of any applied potentials, under the sole influence of gravity in an Earth-based setup.
+%
+Such free-fall experiments have been demonstrated with electrically neutral particles for sensing \cite{Hebestreit2018b} and velocity measurements \cite{Kamba2023}.
+%
+However, they face a fundamental limitation: due to gravitational acceleration, the nanoparticle is displaced, eventually falls out of the trap, and is permanently lost.
+
+
+Our approach to overcoming this constraint is to implement a pair of optical tweezers with tunable vertical displacement that can be rapidly toggled on and off.
+%
+The nanoparticle, initially cooled in the upper trap, is released to undergo free fall and is subsequently recaptured by activating the lower trap after a chosen evolution time.
+%
+To complete the sequence, we raise the particle back to its initial location, thereby enabling repeated cycles of free fall and recapture.
+
+
+In this work, we implement such a dual optical trap.
+%
+Using a charge-neutral silica nanoparticle initialized to a cold thermal state, we perform thousands of free-fall experiments, with each lasting up to $0.25~\mathrm{ms}$.
+%
+To avoid particle loss, we optimize the recapture conditions by minimizing the particle’s energy in the lower tweezer.
+%
+During the free evolution, the particle’s position uncertainty increases.
+%
+We show that after $0.25~\mathrm{ms}$ of free fall, the state size is more than two orders of magnitude larger than the initial one.
+%
+The evolution time can be further extended by lowering the initial phonon occupation and suppressing dominant sources of decoherence.
+%
+With a ground-state-cooled nanoparticle in a UHV environment, this method is capable of generating nanometer-scale coherence lengths, paving the way for future matter-wave interference experiments in the macroscopic regime \cite{Romero-Isart2011b,Gonzalez-Ballestero2021,Neumeier2024}.
+
+
+
+\textit{Experiment} - A dielectric nanoparticle illuminated by a tightly focused laser experiences a restoring optical force \cite{Romero-Isart2011a}.
+%
+For small displacements, the center-of-mass (COM) of the nanoparticle undergoes harmonic evolution in three dimensions.
+%
+An essential feature of this trapping mechanism is that the optically defined spring constant (trap stiffness) can be arbitrarily tuned—or even switched off—by adjusting the laser power \cite{Millen2020}.
+%
+In this work, a silica nanoparticle with a nominal diameter of $120~\mathrm{nm}$ is optically levitated in a room-temperature vacuum chamber at a base pressure of $3\times 10^{-6}\mathrm{mBar}$.
+%
+In these conditions, the dominant decoherence mechanism is due to the background gas.
+%
+Figure~\ref{fig: setup}(a) shows the essential elements of the setup.
+%
+A laser beam (polarized along the horizontal $x$ direction, power $130~\mathrm{mW}$, wavelength $1064~\mathrm{nm}$) is focused by an aspheric lens (numerical aperture 0.75). 
+%
+The measured trap frequencies are $(\Omega_x,\Omega_y,\Omega_z)/2\pi\approx (116,141,41)~\text{kHz}$, where $y$ and $z$ denote the vertical direction (antiparallel to gravity) and the optical axis, respectively.
+%
+An acousto-optic modulator (AOM) controls both the tweezer power and the vertical deflection of the beam via the frequency $f$ of the RF driving tone.
+%
+Tilting the beam incident on the back focal plane of the lens results in a vertical displacement of the tweezer focus.
+%
+By feeding a dual-channel solid-state switch with two detuned RF frequencies, $(f_1 - f_2) = \Delta f$, we simultaneously control the tweezer status (on/off) and the tweezer position on a timescale of $300~\mathrm{ns}$.
+
+
+
+The particle motion imprints a position-dependent phase onto the inelastically scattered laser photons.
+%
+We collect the forward-scattered light using a second collimating lens (numerical aperture 0.6) and read out the particle motion interferometrically using a quadrant photodetector (QPD).
+%
+The QPD signal is recorded by a data acquisition card (DAQ) and processed in parallel by phase-locked loops (PLLs) to track the particle's oscillation frequencies.
+%
+The PLL outputs are used to generate a parametric feedback-cooling (PFC) signal by modulating the beam intensity with an electro-optical modulator (EOM) \cite{Gieseler2012,Jain2016}.
+%
+We electrically discharge the particle using the protocol outlined in Ref.~\cite{frimmer2017controlling}.
+
+
+A single realization of the free fall experiment consists of four phases.
+%
+First (Initialize): the AOM is driven at a fixed frequency $f_1$ while the nanoparticle's motion is cooled using PFC. The average COM effective temperature is reduced to $T_\text{0}^j=[12.9(2),34.1(6),42(1)]~\mathrm{mK}$ along the $j=\lbrace x,y,z\rbrace$ axes, respectively \cite{supplemental}. 
+%
+Second (Free-fall): the tweezer is switched off for a time $\tau$, during which the particle is accelerated by gravity.
+%
+Third (Measure): the tweezer is switched back on to recapture the particle after the free fall. Tuning the AOM drive frequency ($f_2$) allows overlapping the tweezer focus with the average particle position at time $\tau$. The QPD signal is recorded for $100~\mathrm{ms}$ in absence of PFC.
+%
+Fourth (Reset): the particle motion is cooled down while the AOM drive frequency is ramped back from $f_2$ to $f_1$ in $\approx1~\mathrm{s}$, thereby completing the cycle. 
+
+
+\begin{figure}[t]
+		\centering
+		\includegraphics[trim=0cm 0cm 0cm 0cm, width=86mm]{./imgs/Fig1_MLmod.pdf}
+		\caption{(a) Schematic illustration of the setup. A $1064~\mathrm{nm}$ laser enters the trapping lens at an angle controlled by the drive frequency of an acousto-optic modulator (AOM), enabling vertical displacement of the optical tweezer focus. Light forward-scattered by the nanoparticle (NP) is collected onto a quadrant photodetector (QPD) for interferometric readout of the NP position. HV, high voltage source; DAQ, data acquisition card; PFC, parametric feedback cooling electronics; EOM, electro-optical modulator. (b) Raw QPD signal (gray) from a single realization of the free fall experiment. The blue (red) line is the filtered signal before (after) a $0.25~\mathrm{ms}$ free fall showing the NP motion along the gravity axis ($y$). For clarity, signals at $t\leq 0$ have been multiplied by a factor of 20.}
+		\label{fig: setup}
+\end{figure}
+%
+Figure~\ref{fig: setup}(b) shows a representative raw QPD time trace (gray line) recorded during the first three phases of the experiment for $\tau=0.25~\mathrm{ms}$. 
+%
+The signal before (after) the free fall is post-processed offline with a band-pass filter, applied forward (backward) in time.
+%
+The filter is centered on the particle's oscillation frequency and has $2~\mathrm{kHz}$ bandwidth.
+%
+See Refs.~\cite{Wiseman2009,Meng2020} for general background, and the Supplementary Materials~\cite{supplemental} for details on the filtering procedure and the filter transfer function.
+%
+The filter output provides an estimate of the particle's position $q$ and momentum $p$ along the three axes, while minimizing intrinsic measurement noise. 
+%
+We calibrate the output from voltage to displacement units following the procedure outlined in \cite{Hebestreit2018a,supplemental}.
+%
+In Fig.~\ref{fig: setup}(b) the inferred particle $y$-motion before (after) the free fall is traced with a solid blue (red) line.
+%
+In this realization of the experiment we observe a hundred-fold increase of the particle oscillation amplitude following the free evolution. 
+%
+\begin{figure}[t]
+		\centering
+		\includegraphics[trim=0cm 0cm 0cm 0cm, width=86mm]{./imgs/Fig2_NP78.pdf}
+		\caption{(a–c) Average particle center-of-mass position versus free-fall time $\tau$ along $x$ (diamonds), $y$ (circles), and $z$ (squares), respectively. Color indicates the AOM detuning value $\Delta f$ [see legend in (c)]. Solid lines are parabolic fits. (d) Energy stored in the particle motion along $y$, normalized to $k_\mathrm{B} T_0$, versus tweezer displacement. Solid lines are a joint fit to the data using Eq.~\ref{eq: recapture_energy}. In all panels, each point represents 100 experimental realizations; error bars denote $2\sigma$ confidence intervals.}
+		\label{fig: ParticleEnergetics}
+\end{figure}
+
+\textit{Results} - Figure~\ref{fig: ParticleEnergetics} presents data obtained from free-fall experiments performed with varying durations $\tau$. 
+%
+Each data point is the average over one hundred realizations of the experiment.
+%
+Points in different colors correspond to different values of $\Delta f$, which determines the vertical displacement between the initialization and recapturing tweezer.
+%
+Figure~\ref{fig: ParticleEnergetics}(a-c) shows the average particle displacement $\langle q \rangle$ at recapture as a function of $\tau$ along the $x$, $y$, and $z$ axis, respectively.
+%
+The error-bars correspond to $2\sigma$ confidence intervals.
+%
+The data points representing the average displacement along $x$ and $z$ scatter around $\langle q \rangle=0$, in Figs.~\ref{fig: ParticleEnergetics}(a) and (c), while we see a clear quadratic trend along the gravitational axis $y$, in panel (b). 
+%
+Fitting a model of the uniformly accelerated motion, we estimate the acceleration $a_j$ the particle is subject to along each axis $j\in\lbrace x,y,z \rbrace$.
+%
+We obtain $a_{x}=0.0\pm 0.1~\mathrm{m/s^2}$, $a_{y}=-10.9 \pm 0.4~\mathrm{m/s^2}$ and $a_{z}=0.03\pm 0.03~\mathrm{m/s^2}$. 
+%
+Both $a_x$ and $a_z$ vanish within the error, as expected for the horizontal directions, while the small discrepancy between $a_y$ and the expected gravitational acceleration $g=9.806~\mathrm{m/s^2}$ may be ascribed to systematic errors in the volt-to-meter calibration procedure \cite{supplemental}. 
+%
+Overall, these results indicate that the particle solely evolves under the action of gravity.
+
+
+Hereafter we focus on the $y$ motional degree of freedom.
+%
+We denote the normalized position and momentum of the particle along the $y$ axis by $\tilde{p}=p/p_0$ and $\tilde{q}=q/q_0$, where $q_0$ and $p_0$ are their initial root-mean-squared (rms) values under PFC.
+%
+In order to minimize the likelihood of particle loss, one needs to determine the optimal recapture conditions.
+%
+Since the depth of the optical trap is finite, reducing the loss probability is equivalent to minimizing the energy stored in the oscillator at recapture.
+%
+Figure~\ref{fig: ParticleEnergetics}(d) shows the measured average energy at recapture associated with the $y$ particle motion $\langle H_y \rangle  = \kb T_0 (\langle\tilde{p}^2\rangle+\langle\tilde{q}^2\rangle)/2$ versus the free-fall time $\tau$.
+%
+For each dataset, corresponding to three different trap-to-trap distances $d=c_\text{f}\Delta f$ ($c_\text{f}$ is a calibration factor), the energy at recapture shows a clear minimum. 
+%
+Indeed, while the kinetic energy monotonically increases with free-fall time, the potential energy can be minimized by aligning the trap center with the expectation value of the COM position at recapture, which yields the optimal trap displacement $d= g\tau^2/2$.
+%
+This explains why with increasing $d$ the minimum of $\langle H_y \rangle$ shifts towards larger free-fall times.
+%
+We jointly fit all data in Fig.~\ref{fig: ParticleEnergetics} to the model \cite{supplemental}
+%
+\begin{equation}\label{eq: recapture_energy}
+	\frac{\langle H_y \rangle}{\kb T_0}=\frac{1}{2}+\frac{g^2\tau^2}{2\Omega_y^2 q_\text{0}^2} + U_0\left(1-\frac{w}{\tilde{w}}\right)\exp(-\frac{2\Delta y^2}{\tilde{w}^2}),
+\end{equation}
+%
+where $\Delta y= d-g\tau^2/2=0$, $\tilde{w}^2=2 w^2+ 4 q_0^2(1+\Omega_y^2\tau^2)$, $w=0.6~\mathrm{\mu m}$ is the tweezer waist, $q_0=0.58(6)~\mathrm{nm}$ is the initial state rms motion, and $U_0$ is the potential depth in units of $\kb T_0$.
+%
+The first term in Eq.~\eqref{eq: recapture_energy} represents the particle's initial kinetic energy. 
+%
+The second term is associated with the average momentum gained during free-fall ($\langle p \rangle=-gm\tau$), and becomes comparable to the trap depth only at long times $\tau\approx 54~\mathrm{ms}$.
+%
+The third term accounts both for potential energy contributions associated with the particle-trap alignment (via $\Delta y$) and for the energy gain due to the increase in position variance resulting from free evolution (via $\tilde{w}$).
+%
+From the fit we obtain $U_0=5.4(2)\cdot 10^5$ and the
+and the calibration factor $c_\text{f}=95(2)~\mathrm{nm/MHz}$ for turning an AOM detuning $\Delta f$ to a trap displacement $d$.
+%
+The fit parameters are within $10\%$ of independent estimates based on the nominal parameters of the lens system, of optical power, and of the particle properties.
+%
+Overall, we observe fair agreement of model and data, thus supporting our understanding of the particle energetics and demonstrating a systematic approach to minimizing particle loss in trap-to-trap free-fall experiments.
+
+
+Next, we turn our attention to the evolution of the position and momentum variances.
+%
+For each dataset of Fig.~\ref{fig: ParticleEnergetics}, and for an additional dataset corresponding to $\tau = 0.25~\mathrm{ms}$ recorded with a different particle, we use the ensemble of trajectories to infer the state covariance matrix at recapture.
+%
+Due to the finite sampling rate of the DAQ ($0.95~\mathrm{MHz}$), the state-space ellipse associated with the inferred covariance matrix is rotated by a small angle $\delta\theta$ relative to that at the exact recapture instant.
+%
+As a result, estimates of the position and momentum marginals derived from the inferred covariance matrix may be biased.
+%
+However, since we are primarily interested in the evolution of the principal axes of the state-space ellipse (independent of $\delta\theta$) we compute the maximum (minimum) eigenvalue of the covariance matrix as $\sigma^2_q$ ($\sigma^2_p$), and define the state expansion (compression) as $\xi_q = \sigma_q / q_0$ ($\xi_p = \sigma_p / p_0$).
+%
+Introducing the mechanical damping rate due to the background gas, $\gamma = 2\pi \times 2.8(3)~\mathrm{mHz}$ at base pressure \cite{supplemental}, yields for $\gamma \tau \ll 1$
+%
+\begin{equation}\label{eq: expFac}
+	\xi_q^2 \approx 1+\Omega^2_y\tau^2+\frac{2}{3}\Gamma\Omega_y^2\tau^3.
+\end{equation}
+%
+Here, $\Gamma = \gamma (T_\text{env}/T_0)$, where $T_\text{env}=300~\mathrm{K}$ is the temperature of the background gas and $T_0=34~\mathrm{mK}$ is the effective temperature of the mode under PFC.
+%
+The three terms in Eq.~\eqref{eq: expFac} account for the initial rms motion $q_0$, for the growth of $\sigma_q$ at a rate proportional to $p_0$ (initial momentum is conserved in the particle’s frame), and for reheating due to the background gas, respectively.
+%
+\begin{figure}[t]
+    \centering
+	\includegraphics[trim=0cm 0cm 0cm 0cm, width=86mm]{./imgs/Fig3_NP78_MLmod.pdf}
+    \caption{(a) Measured state expansion $\xi_q$ along $y$ as a function of free fall time $\tau$. Error bars correspond to $2\sigma$ standard confidence intervals. (b) Sampling of the phase-space distribution prior to the free fall (blue), at recapture (black) and after $4.8~\mathrm{\mu s}$ of evolution in the optical trap (gray) for $\tau=0.25~\mathrm{ms}$.}
+    \label{fig: expansion_factor}
+\end{figure}
+%
+
+Figure~\ref{fig: expansion_factor}(a) shows the measured state expansion $\xi_q$ as a function of the free-fall time $\tau$ for the $y$ degree of freedom. 
+%
+Additional datasets for the motion along $x$ and $z$ can be found in \cite{supplemental}.
+%
+Error bars correspond to $2\sigma$ confidence intervals.
+%
+The solid line represents the prediction from Eq.~\ref{eq: expFac}, using $\Omega_y/2\pi = 141.2~\mathrm{kHz}$—the average eigenfrequency during state initialization—and $\Gamma/2\pi = 24(3)\mathrm{Hz}$, obtained from the inferred mechanical damping rate $\gamma$ and initial temperature $T_0$.
+%
+For $\tau=0.25~\mathrm{ms}$, the measured state expansion is $\xi_q = 189(18)$, corresponding to a position standard deviation $\sigma_q=110(15)~\mathrm{nm}$.
+%
+Overall, we observe fair agreement between the data and the model, except at the longest free-fall duration.
+%
+This deviation can be attributed to sub-linear transduction in the interferometric readout of the particle displacement, which becomes significant for oscillation amplitudes comparable to a quarter of the laser wavelength.  
+
+
+
+Figure~\ref{fig: expansion_factor}(b) shows the reconstructed phase-space distributions: before the free fall (blue points), at recapture (black points), and $4.8~\mathrm{\mu s}$ later (gray points).
+%
+Position and momentum are expressed in units of the initial state uncertainties $q_0$ and $p_0$.
+%
+The phase-space distribution at recapture is strongly elongated, forming an uncertainty ellipse with semi-axes $\xi_q=189(18)$ and $\xi_p=8(4)$.
+%
+The fact that $\xi_q\xi_p>1$ is consistent with reheating due to interactions with the background gas during free-fall.
+%
+%, which tends to drive the system toward a thermal state, characterized by $\xi_q\xi_p=(T_\text{env}/T_0)^2 \approx 7.8\cdot 10^7$.
+%
+Note that after expansion, the position uncertainty $\sigma_q=110(15)~\mathrm{nm}$ becomes sufficiently large, such that Duffing nonlinearities in the optical potential can no longer be ignored.
+%
+The nonlinearity gives rise to a displacement-dependent rotation rate of the phase-space distribution, as confirmed by measurements shown in Fig.~\ref{fig: expansion_factor}(b) (gray data points).
+%
+In our current implementation, the free-fall duration is limited to $0.25~\mathrm{ms}$, beyond which we observed an increased probability of particle loss.
+%
+This is due to the fact that larger expansions result in more frequent occurrences where Duffing nonlinearities push the particle’s oscillation frequency outside the $10~\mathrm{kHz}$ bandwidth of the phase-locked loops used for PFC, see \cite{supplemental}.
+%
+As a result, the feedback loop becomes increasingly unstable and eventually fails, leading to particle loss.
+%
+Future implementations could avoid this limitation by improving the cooling performance during the initialization phase, thereby reducing the position uncertainty for a given target state expansion $\xi_q$. 
+%
+\begin{figure}[t]
+		\centering
+		\includegraphics[trim=0cm 0cm 0cm 0cm, width=86mm]{./imgs/Fig4.pdf}
+		\caption{(a) Calculated particle loss probability ($P_L$) at the optimal recapture conditions versus  free fall time ($\tau$) and initial state occupation ($n_0$), assuming the same trap depth as in the present experiment, a base pressure of $10^{-12}~\mathrm{mbar}$ in a cryogenic environment at $5~\text{K}$. The star marks the parameter regime of the current work. Orange lines indicate the state purity $\mathcal{P}$.}
+		\label{fig: FF_perspective}
+\end{figure}
+
+In the following, we discuss the capabilities of trap-to-trap free-fall protocols for generating a large quantum delocalization of the COM wavefunction, perquisite for matter–wave experiments with nanoparticles \cite{Neumeier2024}.
+%
+The key figure of merit is the coherence length $\ell=\sqrt{8}\mathcal{P}\sigma_q$, proportional to the state purity $\mathcal{P}$ and position uncertainty $\sigma_q$.
+%
+In this work, the particle was initialized in a cold, yet highly mixed thermal state.
+%
+However, ground state cooling ($n_0<1$) of a charge-neutral object can be achieved both via coherent scattering  \cite{Delic2020,Piotrowski2023} or using all-optical active feedback techniques \cite{kamba2022optical}. 
+%
+This allows preparing a high-purity initial state [with purity given by $\mathcal{P}=(2n_0+1)^{-1}$].
+%
+Preserving the state purity during free-fall, requires suppressing decoherence channels, such as those arising from interactions with background gas or black-body radiation \cite{Neumeier2024}.
+%
+This can be achieved by operating in a cryogenic ultra-high vacuum (UHV) environment \cite{Tebbenjohanns2019}.
+%
+Finally, it is necessary to reach large state expansions ($\sigma_q=\xi_q q_0$) while minimizing the particle loss probability $P_L$.
+
+Figure~\ref{fig: FF_perspective} shows the calculated particle loss probability $P_L$ at the optimal recapture conditions as a function of the free fall time $\tau$ and initial occupation $n_0$.
+%
+We assume that the experiment is performed in a cryogenic (temperature $5~\mathrm{K}$) UHV environment reaching a base pressure $10^{-12}~\mathrm{mbar}$.
+%
+For large free fall times, particle loss occurs predominantly due to the particle position uncertainty becoming comparable with the tweezer waist $w \approx 2q_0\xi_q$. 
+%
+Due to the scaling of $q_0\propto \sqrt{n_0+1/2}$, and the expansion being linear in time for $\tau \gg \Omega^{-1}$, it is evident that low values of $n_0$ allow reaching large expansions $\xi_q$ while avoiding particle loss.
+%
+Assuming reheating during the free fall is gas dominated, we compute the state purity versus $n_0$ and $\tau$.
+%
+The result is shown in Fig.~\ref{fig: FF_perspective} using orange contour lines.
+%
+In order to retain a state purity $\mathcal{P}>0.1$ starting from $n_0=1$, the maximum free fall time is bounded to $\tau\approx 1.9~\text{ms}$.
+%
+During this time, the particle displaces due to gravity by $\langle q_y \rangle\approx 18~\mathrm{\mu m}$, which is still compatible with the geometric constraints of our trapping system.
+%
+A free evolution of this scale provides state expansion of $\xi_q\approx 1680$, and a coherence length $\ell=4.7~\mathrm{nm}$, an improvement of more than two orders of magnitude over the current state-of-the-art \cite{Rossi2024,Kamba2025}.
+
+
+\textit{Conclusion} - In summary, we have demonstrated a method to recapture a nanoparticle after a free-fall experiment and recycle it for subsequent trials.
+%
+We demonstrate free fall lasting up to  $0.25~\mathrm{ms}$, corresponding to a 200-fold increase in position uncertainty ($\sigma_q=110(15)~\mathrm{nm}$), beyond which the particle loss probability increases significantly.
+%
+Longer free-fall times, thus state expansion, will become accessible by improving the cooling performance during the initialization phase, for instance, through the use of optical cold damping \cite{kamba2022optical} and better vacuum conditions.
+%
+Notably, our approach does not rely on charged particles, making it inherently robust against noise from electric fields.\\
+%should we say something like no charge, no light --> no Ef noise no QBA? I feel we are missing a good final sentence here-
+
+\textbf{Acknowledgments} We thank the Q-Xtreme synergy group and our colleagues at the ETH Photonics Laboratory for fruitful discussions. M.L.M. thanks Dr. Olivier Faist for his valuable insights in the configuration of the Zurich Instruments hardware. This research has been supported by the European Research Council (ERC) under the grant agreement No. [951234] (Q-Xtreme ERC-2020-SyG), the Swiss SERI Quantum Initiative (grant no. UeM019-2) and the Swiss National Science Foundation (grant no. 51NF40-160591). N.C.Z. thanks for support through an ETH Fellowship (grant no. 222-1 FEL-30). L.D. thanks for support through a SNSF grant (no. 217122).
+
+
+
+
+
+
+
+\bibliographystyle{apsrev4-1}
+\bibliography{biblioFF.bib} 
+
+\end{document}

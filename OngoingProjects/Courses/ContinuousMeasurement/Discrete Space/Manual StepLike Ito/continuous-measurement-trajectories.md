@@ -4,748 +4,940 @@ Template: Default
 
 # Watching a Qubit: Continuous Measurement and Quantum Trajectories
 
-**A live, computation-first walk through the diffusive stochastic master equation of a continuously monitored qubit in the Wolfram Language: the deterministic Lindblad equation describes the ensemble that ignores the detector, while conditioning the state on a homodyne readout unravels it into individual stochastic quantum trajectories; a positivity-preserving integrator, built from plain matrices, turns each detector record into a trajectory; and averaging the trajectories over the measurement noise recovers the Lindblad state, with measurement-induced dephasing, spontaneous-emission diffusion, a two-point correlation of the readout current, inefficient detection, and a qutrit all read off cells you can rerun.**
+**A computation-first guide to continuous measurement with plain matrices and the Wolfram Language. We separate detector data, state estimates, and simulations at every step.**
 
-Mads Bahrami. Last updated July 29, 2026.
+Mads Bahrami. Last updated August 4, 2026.
 
-### Setting the Stage: How This Notebook Flows
+### Setting the Stage: What This Notebook Does
 
-This notebook tells one story as a continuous sequence: what it means to watch a quantum system weakly and continuously, how that watching turns the deterministic Lindblad master equation into a stochastic master equation (SME) for the state conditioned on the detector's record, how a single positivity-preserving update rule integrates the SME from plain matrices, and how the same map, run over and over, reproduces measurement-induced dephasing, spontaneous-emission diffusion, the two-point statistics of the homodyne current, and, once the map is dimension-general and efficiency-aware, inefficient detection and a qutrit.
+This notebook builds two tools. `inferTrajectory` updates a state estimate from a supplied detector record. `simulateTrajectory` generates a synthetic record and a matching state path from a model and random noise.
 
-I strongly believe in a computation-first narrative for learning: in a sense, if I cannot compute it, I cannot claim to understand it. So almost nothing here is asserted without a cell that computes it on the spot, and almost every claim is checked against an independent calculation, an ensemble average against a master-equation solution, or a positivity test against the scheme's promise.
+Computation has three roles here: infer a state from data, illustrate a model with simulation, and check code against a separate calculation.
 
-This is a live Wolfram notebook, not a static paper. Evaluate the cells top to bottom; each cell holds one computation and depends on symbols defined earlier, so a fresh kernel wants a fresh top-to-bottom pass. Read it as a movie rather than a reference: each cell sets up the next question, and the prose between cells is the connective tissue, not decoration. My suggestion is to focus on each output and its meaning before worrying about every detail of the input. And remember that the code is yours: change the measurement strength, the drive, the initial state, the number of trajectories, rerun, and see what moves.
+Keep these distinctions fixed:
 
-The integrator, the object this notebook is really about, is a short function over plain complex matrices with no dependency on the QuantumFramework paclet. Two convenience pieces come from the Wolfram Function Repository: `ResourceFunction["LindbladSolve"]` integrates the unconditional master equation we check the trajectories against, and `ResourceFunction["BlochSpherePlot"]` draws the sphere. Both install automatically the first time you evaluate them, so the first run needs a network connection. Prerequisites are light: basic quantum mechanics (states, density matrices, the Pauli operators) and enough Wolfram Language to read a one-line function. No stochastic calculus is needed beyond one fact, stated when we first use it: over a step of length $dt$ the Wiener increment $dW$ is a zero-mean Gaussian of variance $dt$. Throughout we work in natural units with $\hbar = 1$, so Hamiltonians are measured in frequency and rates and times are reciprocal.
+| Object | Source | Status |
+|---|---|---|
+| Detector current from an experiment | Detector electronics | Observed data |
+| State path computed from an experimental record | Record, model, and initial state | Inferred, not directly observed |
+| Synthetic current and state path | Model and random numbers | Simulated, useful for insight but not experimental evidence |
+| Average of simulations compared with a master-equation solver | Two calculations of the same model | Numerical code check, not an experimental test |
 
-Let's start!
+Evaluate the cells from top to bottom. The code uses only built-in Wolfram Language functions. We set $\hbar=1$, so Hamiltonians have units of inverse time.
 
-## Part I: Two Descriptions of a Monitored Qubit
+## Part I: The Equation and the Detector Record
 
-Start with the object every open-system calculation begins from. A quantum system coupled to an environment, and left unobserved, has a state $\rho$ (a density matrix) that obeys the Lindblad master equation
-
-$$
-\frac{d\rho}{dt} = -i[H,\rho] + \sum_k \mathcal{D}[c_k]\rho , \qquad \mathcal{D}[c]\rho = c\,\rho\,c^\dagger - \tfrac12\{c^\dagger c,\rho\} ,
-$$
-
-where $H$ is the Hamiltonian, the $c_k$ are the jump (Lindblad) operators through which the environment acts, and $\mathcal{D}[c]$ is the dissipator (the superoperator that carries irreversible loss; the anticommutator $\{c^\dagger c,\rho\}$ keeps the trace fixed). In words: this is the equation for the state of a system whose environment is there but not being watched, and it is deterministic and smooth. Its solution is the *unconditional* state, the average over everything the environment could have done.
-
-Now change one thing: put a detector on one of those channels. Suppose an experimenter monitors the system through a jump operator $L$, for instance by collecting the light it scatters and mixing it with a local oscillator (homodyne detection). The detector returns a continuous, noisy signal, and the state of the system, given that signal, is no longer the smooth unconditional $\rho$. It is a *conditional* state that jitters with the record. Splitting the jump operators into monitored ones $L_r$ (with detector efficiency $\eta_r$) and unmonitored ones $V_j$ (environment we cannot see), the conditional state obeys the diffusive **stochastic master equation**
+When environmental effects have no relevant memory, the state $\rho$ obeys the Lindblad master equation
 
 $$
-d\rho = -i[H,\rho]\,dt + \sum_j \mathcal{D}[V_j]\rho\,dt + \sum_r \mathcal{D}[L_r]\rho\,dt + \sum_r \sqrt{\eta_r}\;\mathcal{H}[L_r]\rho\;dW_r ,
+\frac{d\rho}{dt}=-i[H,\rho]+\sum_k\mathcal D[c_k]\rho,
+\qquad
+\mathcal D[c]\rho=c\rho c^\dagger-\frac12\{c^\dagger c,\rho\}.
 $$
 
-with the measurement superoperator (the innovation term) $\mathcal{H}[c]\rho = c\rho + \rho c^\dagger - \mathrm{Tr}[(c+c^\dagger)\rho]\,\rho$, and each detector emitting a readout increment
+This equation gives the state averaged over all possible detector records when no record is used. It has no random term.
+
+Now monitor some channels $L_r$ with efficiencies $0\leq\eta_r\leq1$. Leave the other channels $V_j$ unmonitored. The state estimate based on the detector record obeys
 
 $$
-dR_r = \sqrt{\eta_r}\,\mathrm{Tr}[(L_r + L_r^\dagger)\rho]\,dt + dW_r .
+d\rho_c=-i[H,\rho_c]dt
++\sum_j\mathcal D[V_j]\rho_c\,dt
++\sum_r\mathcal D[L_r]\rho_c\,dt
++\sum_r\sqrt{\eta_r}\,\mathcal H[L_r]\rho_c\,dW_r,
 $$
 
-In other words, the SME is the master equation plus one stochastic term per monitored channel: $\mathcal{H}[L_r]$ nudges the state toward agreement with the reading, weighted by the Wiener increment $dW_r$, which is the detector's shot noise. That same $dW_r$ appears in the record $dR_r$, so the record is signal (the mean $\mathrm{Tr}[(L+L^\dagger)\rho]$) buried in noise, and the state can be reconstructed from the record. The rates are folded into the operators throughout, $L_r \leftarrow \sqrt{\gamma_r}\,L_r$, so a monitored channel of rate $\gamma$ and unit coupling is passed as $\sqrt{\gamma}\,L$; this is the convention the code below expects.
-
-Two limits are worth naming before we compute. If no channel is monitored, every $\sqrt{\eta_r}\to 0$ and the SME collapses back to the Lindblad master equation: the unwatched state. And if we run the SME for many independent noise realizations and average, the $dW_r$ terms average to zero (a Wiener increment has zero mean), so the mean conditional state obeys the master equation again. This is the single most important fact in the subject, and we will verify it directly: **one trajectory is stochastic and, at unit efficiency, pure; the average of many trajectories is the deterministic, generally mixed, master-equation state.** We will return to the readout $dR_r$ in Part VI, where it becomes the object of study.
-
-One subtlety underlies everything that follows, so state it plainly. The only thing a detector *directly* produces is the record $R_t$: one real, noisy number per time step. The conditional state $\rho_c(t)$, and therefore its Bloch vector, its purity, and every $\langle A\rangle=\mathrm{Tr}[\rho_c A]$ we will plot from a single run, is not itself measured but *inferred*, and the SME is exactly the optimal filter that does the inferring: it is the quantum analogue of a Kalman filter, turning the record into the observer's best estimate of the state. So when a plot below shows $\langle Z\rangle(t)$ for one trajectory, read it as a quantity an experimenter reconstructs by feeding a recorded current through this same equation, not as a raw meter reading. **The record is the observable; the state, and everything computed from it, is what you infer from the record.** That is why Part VI, which analyzes the record directly, is where the essay finally touches measured data, and why the menu of things one can do with a record (estimate the state, its spectrum, the system's parameters, or a feedback signal) is worth laying out once we have one in hand.
-
-## Part II: A Positivity-Preserving Update
-
-A naive Euler step of the SME can push $\rho$ to a matrix with a negative eigenvalue, an unphysical state, especially at large $dt$. The scheme we use avoids this by construction. Over one step it forms an *unnormalized* conditional state $\tilde\rho_{n+1}$ and divides it by its own trace,
+where
 
 $$
-\rho_{n+1} = \frac{\tilde\rho_{n+1}}{\mathrm{Tr}[\tilde\rho_{n+1}]} ,
+\mathcal H[c]\rho=c\rho+\rho c^\dagger
+-\operatorname{Tr}[(c+c^\dagger)\rho]\rho.
+$$
+
+The detector supplies a real readout increment
+
+$$
+dR_r=\sqrt{\eta_r}\,\operatorname{Tr}[(L_r+L_r^\dagger)\rho_c]dt+dW_r.
+$$
+
+Each $dW_r$ is a zero-mean Gaussian increment with variance $dt$. The measured current over one discrete step is $I_r=dR_r/dt$.
+
+The equation updates a state estimate after each detector reading. That estimate depends on the record, the model, and the initial state. It is not another detector output.
+
+Rates are included in the operators. A channel with rate $\gamma$ and dimensionless operator $A$ is passed as $\sqrt\gamma A$.
+
+Two limits provide checks. If every $\eta_r=0$, the record carries no state information and the state follows the master equation. In the continuous-time equation, a pure record-based state remains pure when every loss or noise channel is monitored at unit efficiency. The mean over many simulated records returns the master-equation state in the same limit. A finite-step calculation also has time-step error.
+
+## Part II: A State Update That Preserves Positivity
+
+A direct Euler step can produce a negative eigenvalue. We instead use the update of Rouchon and Ralph ([arXiv:1410.5345](https://arxiv.org/abs/1410.5345)):
+
+$$
+\rho_{n+1}=\frac{\widetilde\rho_{n+1}}
+{\operatorname{Tr}\widetilde\rho_{n+1}},
 $$
 
 $$
-\tilde\rho_{n+1} = M\,\rho_n\,M^\dagger + dt\sum_j V_j\,\rho_n\,V_j^\dagger + dt\sum_r (1-\eta_r)\,L_r\,\rho_n\,L_r^\dagger ,
+\widetilde\rho_{n+1}=M\rho_nM^\dagger
++dt\sum_jV_j\rho_nV_j^\dagger
++dt\sum_r(1-\eta_r)L_r\rho_nL_r^\dagger,
 $$
 
 $$
-M = 1 - \Bigl(iH + \tfrac12\textstyle\sum_r L_r^\dagger L_r + \tfrac12\sum_j V_j^\dagger V_j\Bigr)dt \;+\; \sum_r \sqrt{\eta_r}\,L_r\,dy_r \;+\; \tfrac12\sum_{r,s}\sqrt{\eta_r\eta_s}\,L_r L_s\,(dy_r dy_s - \delta_{rs}\,dt) ,
+M=1-\left(iH+\frac12\sum_rL_r^\dagger L_r
++\frac12\sum_jV_j^\dagger V_j\right)dt
++\sum_r\sqrt{\eta_r}L_r\,dR_r
++\frac12\sum_{r,s}\sqrt{\eta_r\eta_s}L_rL_s
+(dR_r dR_s-\delta_{rs}dt).
 $$
 
-with $dy_r = \sqrt{\eta_r}\,\mathrm{Tr}[(L_r+L_r^\dagger)\rho_n]\,dt + dW_r$. This positivity-preserving update is based on a paper of Rouchon and Ralph, [arXiv:1410.5345](https://arxiv.org/abs/1410.5345). In words: $\tilde\rho_{n+1}$ is a sum of terms of the form $A\,\rho_n\,A^\dagger$, and any such sum is positive semidefinite whenever $\rho_n$ is, so $\tilde\rho_{n+1}$ is a valid unnormalized state at *any* step size, and dividing by its trace $\mathrm{Tr}[\tilde\rho_{n+1}]$ restores unit trace. The unmonitored channels and the unmonitored fraction $(1-\eta_r)$ of each detector re-enter as ordinary dissipators, the light that leaks away unrecorded.
+Every term in $\widetilde\rho_{n+1}$ has the form $A\rho A^\dagger$ with a nonnegative coefficient. Therefore a valid input state stays positive when $dt\geq0$, $0\leq\eta_r\leq1$, and the normalization is nonzero.
 
-The paper keeps that double sum $\tfrac12\sum_{r,s}\sqrt{\eta_r\eta_s}\,L_r L_s\,(dy_r dy_s - \delta_{rs}\,dt)$; the code groups it into a single square. Writing $S = \sum_r \sqrt{\eta_r}\,L_r\,dy_r$, the scalar increments $dy_r$ factor out, so $\sum_{r,s}\sqrt{\eta_r\eta_s}\,L_r L_s\,dy_r dy_s = S^2$ identically (the operator order $L_r L_s$ is preserved), while the $\delta_{rs}$ diagonal contributes $-\tfrac12 dt\sum_r \eta_r L_r^2$. The double sum is therefore exactly $\tfrac12 S^2 - \tfrac12 dt\sum_r \eta_r L_r^2$, an algebraic identity valid for any number of monitored operators, not an approximation, so
+This is a statement about physical validity, not numerical accuracy. A large step can still give a poor approximation to the continuous equation. We must check convergence as $dt$ decreases.
+
+The double sum can be computed without building all operator pairs. Define
 
 $$
-M = H_{\rm eff} + S + \tfrac12 S^2 - L_{\rm corr}, \quad H_{\rm eff} = 1 - \Bigl(iH + \tfrac12\textstyle\sum_r L_r^\dagger L_r + \tfrac12\sum_j V_j^\dagger V_j\Bigr)dt, \quad L_{\rm corr} = \tfrac12 dt\sum_r \eta_r L_r^2 ,
+S=\sum_r\sqrt{\eta_r}L_r dR_r.
 $$
 
-and $L_{\rm corr}$ is the Ito correction. This grouped form is algebraically identical to the double-sum $M$ above, and it is the form the code builds. Everything that does not change from step to step ($H_{\rm eff}$, $L_{\rm corr}$) is computed once, and the per-step work is one readout, one contraction $S$, and one $M\rho M^\dagger$.
+Then
 
-Begin with the readout increments of one step, the vector $dy$ with one entry per monitored operator. This is $\mathcal{R}$: it takes the current state, the monitored operators, the step, the Wiener draws $dw$, and the efficiencies, and returns $dy_r = \sqrt{\eta_r}\,\mathrm{Tr}[(L_r+L_r^\dagger)\rho]\,dt + dW_r$:
+$$
+\frac12\sum_{r,s}\sqrt{\eta_r\eta_s}L_rL_s
+(dR_r dR_s-\delta_{rs}dt)
+=\frac12S^2-\frac{dt}{2}\sum_r\eta_rL_r^2.
+$$
+
+This is an exact algebraic identity. The order $L_rL_s$ is unchanged.
+
+First define input checks and prepare the fixed parts of the model:
 
 ```wl
-ClearAll[\[ScriptCapitalR], \[ScriptCapitalT]];
-\[ScriptCapitalR][ρ_, Ls_, dt_, dw_, η_] :=
-   MapThread[Sqrt[#3] Tr[(#1 + ConjugateTranspose[#1]) . ρ] dt + #2 &, {Ls, dw, η}];
+ClearAll[realNumberQ, numericSquareMatrixQ, hermitianMatrixQ,
+  densityMatrixQ, prepareModel];
+
+realNumberQ[x_] := NumericQ[x] && TrueQ[Im@N[x] == 0];
+
+numericSquareMatrixQ[m_] := MatrixQ[m, NumericQ] &&
+  With[{dims = Dimensions[m]},
+   Length[dims] == 2 && First[dims] == Last[dims] && First[dims] > 0];
+
+hermitianMatrixQ[m_, tolerance_ : 10^-10] :=
+  numericSquareMatrixQ[m] &&
+   Max[Abs[N[m] - ConjugateTranspose[N[m]]]] <= tolerance;
+
+densityMatrixQ[m_, tolerance_ : 10^-10] :=
+  hermitianMatrixQ[m, tolerance] &&
+   Abs[Tr[N[m]] - 1] <= tolerance &&
+   Min[Eigenvalues[(N[m] + ConjugateTranspose[N[m]])/2]] >= -tolerance;
+
+prepareModel[initialState_, hamiltonian_, measuredOperators_, efficiencies_,
+   unmonitoredOperators_] := Module[
+  {state = N[initialState], ham = N[hamiltonian],
+   measured = N[measuredOperators], unmonitored = N[unmonitoredOperators],
+   eta, dimension, operators},
+
+  If[!densityMatrixQ[state],
+   Return@Failure["InvalidInitialState",
+     <|"MessageTemplate" -> "The initial state must be a positive, unit-trace density matrix."|>]];
+
+  dimension = Length[state];
+  If[!ListQ[measured] || !ListQ[unmonitored] ||
+    (efficiencies =!= Automatic && !ListQ[efficiencies]),
+   Return@Failure["InvalidOptions",
+     <|"MessageTemplate" -> "Measured operators, efficiencies, and unmonitored operators must be lists."|>]];
+  eta = N@If[efficiencies === Automatic,
+     ConstantArray[1, Length[measured]], efficiencies];
+  If[!AllTrue[Join[measured, unmonitored], numericSquareMatrixQ],
+   Return@Failure["InvalidChannel",
+     <|"MessageTemplate" -> "Every channel operator must be a numerical square matrix."|>]];
+  operators = Join[{ham}, measured, unmonitored];
+
+  If[!hermitianMatrixQ[ham],
+   Return@Failure["InvalidHamiltonian",
+     <|"MessageTemplate" -> "The Hamiltonian must be a numerical Hermitian matrix."|>]];
+  If[!AllTrue[operators, Dimensions[#] == {dimension, dimension} &],
+   Return@Failure["DimensionMismatch",
+     <|"MessageTemplate" -> "The state, Hamiltonian, and all channel operators must have the same dimension."|>]];
+  If[Length[eta] != Length[measured] ||
+    !VectorQ[eta, realNumberQ] || !AllTrue[eta, 0 <= # <= 1 &],
+   Return@Failure["InvalidEfficiency",
+     <|"MessageTemplate" -> "Provide one real efficiency between 0 and 1 for each measured channel."|>]];
+
+  <|"InitialState" -> state, "Hamiltonian" -> ham,
+   "MeasuredOperators" -> measured, "Efficiencies" -> eta,
+   "UnmonitoredOperators" -> unmonitored,
+   "Identity" -> IdentityMatrix[dimension],
+   "DriftRate" -> I ham +
+     Total[ConjugateTranspose[#] . # & /@ Join[measured, unmonitored]]/2,
+   "CorrectionRate" ->
+     Total[MapThread[#1 (#2 . #2) &, {eta, measured}]]/2|>
+  ];
 ```
 
-Now the trajectory map itself. This is $\mathcal{T}$: given an initial density matrix `ρ0`, a Hamiltonian `H`, a list of monitored operators `Ls` (already scaled by $\sqrt{\gamma}$), optional efficiencies `η` and unmonitored operators `V`, a step `dt`, and a final time `tf`, it returns the list of conditioned density matrices, one per time point, and `Sow`s the readout vector $dy$ at every step so a `Reap` around the call recovers the record. Read it as the collapsed scheme above: precompute `heff` and `lcorr`, draw all the noise at once, and fold the per-step update `step` over the noise with `FoldList`:
+Now build one state step from the fixed model. The input `stepData` is `{stepSize, readoutIncrements}`:
 
 ```wl
-\[ScriptCapitalT][ρ0_?MatrixQ, H_?MatrixQ, Ls_List, η : (None | _List) : None,
-   V : (None | _List) : None, dt_?NumericQ, tf_?NumericQ] :=
-  Module[
-   {d = Length[ρ0], r0 = N[ρ0], Hn = N[H], Lsn = N[Ls], dtn = N[dt],
-    ηv, Vsn, heff, lcorr, nsteps, dw, step},
-   ηv = N[If[η === None, ConstantArray[1, Length[Ls]], η]];
-   Vsn = If[V === None, {}, N[V]];
-   heff = IdentityMatrix[d] - dtn (I Hn
-       + (1/2) Total[ConjugateTranspose[#] . # & /@ Lsn]
-       + (1/2) Total[ConjugateTranspose[#] . # & /@ Vsn]);
-   lcorr = (dtn/2) Total[MapThread[#1 (#2 . #2) &, {ηv, Lsn}]];
-   nsteps = Floor[tf/dt];
-   dw = Transpose[RandomVariate[NormalDistribution[0, Sqrt[dtn]], {Length[Lsn], nsteps}]];
-   step[ρ_, dwv_] := Module[{dy, s, m, num},
-      dy = Sow[\[ScriptCapitalR][ρ, Lsn, dtn, dwv, ηv]];
-      s = Total[MapThread[#1 Sqrt[#2] #3 &, {dy, ηv, Lsn}]];
-      m = heff + s + (1/2) s . s - lcorr;
-      num = m . ρ . ConjugateTranspose[m]
-          + dtn Total[(# . ρ . ConjugateTranspose[#]) & /@ Vsn]
-          + dtn Total[MapThread[(1 - #2) (#1 . ρ . ConjugateTranspose[#1]) &, {Lsn, ηv}]];
-      num/Tr[num]];
-   FoldList[step, r0, dw]];
+ClearAll[makeStateStep, trajectoryFailureTag];
+
+makeStateStep[model_Association] := With[
+  {identity = model["Identity"], driftRate = model["DriftRate"],
+   correctionRate = model["CorrectionRate"],
+   measured = model["MeasuredOperators"], eta = model["Efficiencies"],
+   unmonitored = model["UnmonitoredOperators"]},
+  Function[{state, stepData},
+   Module[{stepSize = First[stepData], readout = Last[stepData],
+     signalStep, measurementMatrix, numerator, normalization},
+    signalStep = Total@Join[{0 identity},
+      MapThread[#1 Sqrt[#2] #3 &, {readout, eta, measured}]];
+    measurementMatrix = identity - stepSize driftRate + signalStep +
+      signalStep . signalStep/2 - stepSize correctionRate;
+    numerator = measurementMatrix . state .
+       ConjugateTranspose[measurementMatrix] +
+      stepSize Total[# . state . ConjugateTranspose[#] & /@ unmonitored] +
+      stepSize Total[
+        MapThread[(1 - #2) (#1 . state . ConjugateTranspose[#1]) &,
+         {measured, eta}]];
+    normalization = Re@Tr[numerator];
+    If[!TrueQ[normalization > 10^-14],
+     Throw[Failure["ZeroNormalization",
+       <|"MessageTemplate" -> "This step has zero numerical weight. Reduce the step size or check the record."|>],
+      trajectoryFailureTag]];
+    numerator/normalization
+    ]]
+  ];
 ```
 
-A few design choices are worth reading off the code. The inputs are numericalized once up front (`N[ρ0]`, `N[H]`, `N[Ls]`), so passing exact matrices like $|+\rangle\langle+|$ costs nothing and the hot loop runs on packed numeric arrays. Nothing in the body refers to any external paclet: `ρ`, `H`, and the operators are ordinary dense complex matrices. The dimension `d` is read from the state, so the same function runs a qubit, a qutrit, or two qubits without change, which is the freedom Part VII spends. And the pattern guards (`_?MatrixQ`, `_List`, `(None | _List)`) let the two middle arguments be optional while keeping the call unambiguous, so `\[ScriptCapitalT][ρ0, H, Ls, dt, tf]` and `\[ScriptCapitalT][ρ0, H, Ls, η, V, dt, tf]` both parse correctly.
-
-Next the primitives everything is built from. Define the Pauli matrices and the identity:
+The next function uses supplied readout increments. This is the function to use with calibrated experimental data:
 
 ```wl
-X = PauliMatrix[1]; Y = PauliMatrix[2]; Z = PauliMatrix[3]; Id = IdentityMatrix[2];
+ClearAll[inferTrajectory, currentFromIncrements];
+
+Options[inferTrajectory] = {"Efficiencies" -> Automatic,
+   "UnmonitoredOperators" -> {}};
+
+currentFromIncrements[increments_, stepSizes_] :=
+  MapThread[#1/#2 &, {increments, stepSizes}];
+
+inferTrajectory[initialState_, hamiltonian_,
+   measuredOperators_, recordIncrements_, stepSizes_,
+   OptionsPattern[]] := Module[{model, steps = N[stepSizes], records = N[recordIncrements],
+   stateStep, states, times, channelCount},
+
+  model = prepareModel[initialState, hamiltonian, measuredOperators,
+    OptionValue["Efficiencies"], OptionValue["UnmonitoredOperators"]];
+  If[FailureQ[model], Return[model]];
+  channelCount = Length[model["MeasuredOperators"]];
+
+  If[!ListQ[records] || !ListQ[steps] || Length[records] != Length[steps] ||
+    !AllTrue[steps, realNumberQ[#] && # > 0 &] ||
+    !AllTrue[records, VectorQ[#, realNumberQ] && Length[#] == channelCount &],
+   Return@Failure["InvalidRecord",
+     <|"MessageTemplate" -> "Use one positive step size and one readout vector per time step."|>]];
+
+  stateStep = makeStateStep[model];
+  states = Catch[
+    FoldList[stateStep, model["InitialState"], Transpose[{steps, records}]],
+    trajectoryFailureTag];
+  If[FailureQ[states], Return[states]];
+  times = Accumulate@Join[{0.}, steps];
+
+  <|"Times" -> times, "States" -> states,
+   "RecordIncrements" -> records,
+   "Current" -> currentFromIncrements[records, steps]|>
+  ];
 ```
 
-The qubit lowering operator is $J_- = (X - iY)/2$. Define it:
+The simulator draws Gaussian noise and generates a synthetic record. It also returns the state path used to generate that record:
 
 ```wl
-Jminus = (X - I Y)/2;
+ClearAll[makeStepSizes, readoutIncrement, simulateTrajectory];
+
+Options[simulateTrajectory] = Options[inferTrajectory];
+
+makeStepSizes[dt_, finalTime_] := Module[
+  {step = N[dt], stop = N[finalTime], count, remainder, tolerance},
+  If[!realNumberQ[step] || !realNumberQ[stop] || step <= 0 || stop < 0,
+   Return@Failure["InvalidTime",
+     <|"MessageTemplate" -> "The step size must be positive and the final time must be nonnegative."|>]];
+  tolerance = 100 $MachineEpsilon Max[1., step, stop];
+  count = Floor[stop/step];
+  remainder = stop - count step;
+  If[count > 0 && remainder < tolerance, remainder = 0.];
+  If[step - remainder < tolerance, count += 1; remainder = 0.];
+  Join[ConstantArray[step, count], If[remainder > 0, {remainder}, {}]]
+  ];
+
+readoutIncrement[state_, measuredOperators_, efficiencies_, stepSize_, noise_] :=
+  MapThread[
+   Sqrt[#3] Re@Tr[(#1 + ConjugateTranspose[#1]) . state] stepSize + #2 &,
+   {measuredOperators, noise, efficiencies}];
+
+simulateTrajectory[initialState_, hamiltonian_,
+   measuredOperators_, dt_, finalTime_,
+   OptionsPattern[]] := Module[
+  {model, steps, noise, stateStep, simulationStep, states, recordBag, records, times},
+
+  model = prepareModel[initialState, hamiltonian, measuredOperators,
+    OptionValue["Efficiencies"], OptionValue["UnmonitoredOperators"]];
+  If[FailureQ[model], Return[model]];
+  steps = makeStepSizes[dt, finalTime];
+  If[FailureQ[steps], Return[steps]];
+
+  noise = RandomVariate[NormalDistribution[0, Sqrt[#]],
+      Length[model["MeasuredOperators"]]] & /@ steps;
+  stateStep = makeStateStep[model];
+  simulationStep = Function[{state, stepData},
+    Module[{stepSize = First[stepData], noiseVector = Last[stepData], readout},
+     readout = readoutIncrement[state, model["MeasuredOperators"],
+       model["Efficiencies"], stepSize, noiseVector];
+     Sow[readout, "record"];
+     stateStep[state, {stepSize, readout}]
+     ]];
+
+  {states, recordBag} = Reap[
+    Catch[FoldList[simulationStep, model["InitialState"],
+      Transpose[{steps, noise}]], trajectoryFailureTag], "record"];
+  If[FailureQ[states], Return[states]];
+  records = If[recordBag === {}, {}, First[recordBag]];
+  times = Accumulate@Join[{0.}, steps];
+
+  <|"Times" -> times, "States" -> states,
+   "RecordIncrements" -> records,
+   "Current" -> currentFromIncrements[records, steps]|>
+  ];
 ```
 
-See what it does: display $J_-$ as a matrix and its action on the two basis states:
+`inferTrajectory` contains no random-number generator. Its state path is inferred from its input record. `simulateTrajectory` does use random numbers. Its outputs are synthetic.
+
+Define the qubit matrices:
 
 ```wl
-Column[{
-   Row[{Subscript["J", "-"], " = ", MatrixForm[Jminus]}],
-   Row[{Subscript["J", "-"], "|0\[RightAngleBracket] = ", Jminus . {1, 0}}],
-   Row[{Subscript["J", "-"], "|1\[RightAngleBracket] = ", Jminus . {0, 1}}]}]
+ClearAll[X, Y, Z, identity2, jMinus, densityMatrix, blochVector, purity];
+X = PauliMatrix[1]; Y = PauliMatrix[2]; Z = PauliMatrix[3];
+identity2 = IdentityMatrix[2];
+jMinus = (X - I Y)/2;
+densityMatrix[stateVector_] := Outer[Times, stateVector, Conjugate[stateVector]];
+blochVector[state_] := Re[Tr[state . #] & /@ {X, Y, Z}];
+purity[state_] := Re@Tr[state . state];
 ```
 
-As one can see, $J_- = \left(\begin{smallmatrix}0&0\\1&0\end{smallmatrix}\right)$ sends $|0\rangle\to|1\rangle$ and annihilates $|1\rangle$. Note the convention this fixes: here $|0\rangle$ is the *upper* state that decays and $|1\rangle$ is the ground (dark) state, so spontaneous emission through $J_-$ drives the qubit toward $|1\rangle$. Some literature labels these the other way; we will keep $|0\rangle$ excited throughout.
+`blochVector[state]` returns the three averages of $X$, $Y$, and $Z$. `purity[state]` returns $\operatorname{Tr}(\rho^2)$; it equals one for a pure state. When the state is inferred, both quantities are inferred too. They are not detector readings.
 
-A density matrix is the outer product $|\psi\rangle\langle\psi|$ of a state vector with its conjugate. Define that map:
+With our basis convention,
 
-```wl
-dm[ψ_] := Outer[Times, ψ, Conjugate[ψ]];
-```
+$$
+J_-=\begin{pmatrix}0&0\\1&0\end{pmatrix}.
+$$
 
-Name the three basis states we will start from, the excited state, the ground state, and the equatorial superposition:
+It sends $|0\rangle$ to $|1\rangle$. Thus $|0\rangle$ is the excited state and $|1\rangle$ is the ground state in this notebook.
+
+Define three pure states:
 
 ```wl
 ket0 = {1, 0}; ket1 = {0, 1}; ketPlus = {1, 1}/Sqrt[2];
 ```
 
-Show the density matrices of $|0\rangle$ and $|+\rangle$:
+Only a pure-state density matrix has the form $|\psi\rangle\langle\psi|$. A general density matrix can be mixed.
+
+Check the lowering operator and the north-pole Bloch vector:
 
 ```wl
-Column[{
-   Row[{"|0\[RightAngleBracket]\[LeftAngleBracket]0| = ", MatrixForm[dm[ket0]]}],
-   Row[{"|+\[RightAngleBracket]\[LeftAngleBracket]+| = ", MatrixForm[dm[ketPlus]]}]}]
+{MatrixForm[jMinus], jMinus . ket0, jMinus . ket1,
+ blochVector[densityMatrix[ket0]]}
 ```
 
-Finally, the geometry. A qubit state $\rho$ is fully described by its Bloch vector $(\langle X\rangle, \langle Y\rangle, \langle Z\rangle)$ with $\langle A\rangle = \mathrm{Tr}[\rho A]$, real because $\rho$ and the Paulis are Hermitian. Define the Bloch-vector extractor:
+Check one rejected input:
 
 ```wl
-blochVector[ρ_] := Re[Tr[ρ . #] & /@ {X, Y, Z}];
+simulateTrajectory[densityMatrix[ket0], 0. identity2, {jMinus}, 0.01, 0.1,
+ "Efficiencies" -> {1.2}]
 ```
 
-Check that $|0\rangle$ sits at the north pole $(0,0,1)$:
+The call returns a `Failure` before any random path is generated. An efficiency above one is not physical.
+
+Check two boundary cases together: no recorded channel and a final step shorter than `dt`:
 
 ```wl
-blochVector[dm[ket0]]
+boundaryExample = simulateTrajectory[densityMatrix[ket0], 0. identity2, {},
+  0.007, 0.023, "UnmonitoredOperators" -> {Sqrt[0.2] jMinus}];
+
+<|"step sizes" -> Differences[boundaryExample["Times"]],
+ "record dimensions" -> Dimensions[boundaryExample["RecordIncrements"]],
+ "state dimensions" -> Dimensions[boundaryExample["States"]],
+ "ends at requested time" ->
+   Chop[Last[boundaryExample["Times"]] - 0.023] == 0|>
 ```
 
-For the sphere itself we use the Function Repository resource `ResourceFunction["BlochSpherePlot"]`: called with no argument, `ResourceFunction["BlochSpherePlot"][]` draws an empty Bloch sphere, onto which we overlay each run's full Bloch trajectory as a curve with `Show`. That is the entire toolkit: the map $\mathcal{T}$, the readout $\mathcal{R}$, the primitives, the Bloch vector, and the sphere plotter. Everything below is these with a different Hamiltonian, jump operator, or efficiency.
+The result has four state updates, no recorded values, and a last step of `0.002`. The unmonitored channel still changes the state.
 
-## Part III: The Lindblad Limit: One Noisy Run and the Average of Many
+## Part III: One Synthetic Path and the Mean over Many Paths
 
-Recall the central claim of Part I: one trajectory is stochastic, but the average of many is the deterministic master-equation state. This Part checks it directly, on the simplest interesting case, a driven qubit whose $Z$ is continuously measured, with the Hamiltonian a Rabi drive about $x$ and the monitored operator $Z$ at a rate large compared with the drive. Fix the drive, the monitored operator, the initial state, the step, and the horizon:
+Use a driven qubit whose $Z$ component is monitored. This section checks code. It does not analyze experimental data.
 
 ```wl
-Ω = 1.0; H = Ω X; γ = 2.0; Ls = {Sqrt[γ] Z}; ρ0 = dm[ket0]; δt = 0.005; tf = 20.0;
+omega = 1.0; gamma = 0.4;
+hamiltonian = omega X;
+measuredOperators = {Sqrt[gamma] Z};
+initialState = densityMatrix[ket0];
+dt = 0.005; finalTime = 10.0;
 ```
 
-To have something to compare the ensemble against, we need the unconditional (Lindblad) solution. The Function Repository's `LindbladSolve` integrates the master equation from the Hamiltonian, the jump operators, and the initial state, returning $\rho(t)$ as an interpolating function. Solve it for this scenario:
+Define an independent solver for the master equation:
 
 ```wl
-lind = ResourceFunction["LindbladSolve"][H, Ls, ρ0, {t, 0, tf}];
+ClearAll[dissipator, masterEquationSolution];
+
+dissipator[channel_, state_] :=
+  channel . state . ConjugateTranspose[channel] -
+   (ConjugateTranspose[channel] . channel . state +
+      state . ConjugateTranspose[channel] . channel)/2;
+
+masterEquationSolution[initialState_, hamiltonian_, channels_,
+   {time_, start_, stop_}] := Module[{state},
+  NDSolveValue[{
+    state'[time] == -I (hamiltonian . state[time] - state[time] . hamiltonian) +
+      Total[dissipator[#, state[time]] & /@ channels],
+    state[start] == initialState}, state, {time, start, stop}]
+  ];
 ```
 
-Set the time grid the trajectories will use:
+Generate one synthetic record and state path:
 
 ```wl
-tgrid = δt Range[0, Floor[tf/δt]];
+oneSimulation = BlockRandom[SeedRandom[1];
+  simulateTrajectory[initialState, hamiltonian, measuredOperators, dt, finalTime]];
 ```
 
-Read the Lindblad Bloch trajectory off the interpolating solution:
+Check unit trace, equality to the conjugate transpose, and positivity along this path:
 
 ```wl
-lindBloch = blochVector[lind[#]] & /@ tgrid;
+oneStates = oneSimulation["States"];
+<|"largest trace error" -> Max[Abs[Tr[#] - 1] & /@ oneStates],
+ "largest Hermiticity error" ->
+   Max[Max[Abs[# - ConjugateTranspose[#]]] & /@ oneStates],
+ "smallest eigenvalue" ->
+   Min[Flatten[Eigenvalues[(# + ConjugateTranspose[#])/2] & /@ oneStates]]|>
 ```
 
-Now one conditioned run. Generate one trajectory on a fixed seed so the picture is reproducible:
+The errors should be at numerical roundoff. Positivity is preserved, but accuracy still depends on `dt`.
+
+Feed the synthetic record into the separate inference function:
 
 ```wl
-oneRun = BlockRandom[SeedRandom[1]; \[ScriptCapitalT][ρ0, H, Ls, δt, tf]];
+reconstructed = inferTrajectory[initialState, hamiltonian, measuredOperators,
+  oneSimulation["RecordIncrements"], Differences[oneSimulation["Times"]]];
+Max[Norm[#1 - #2, "Frobenius"] & @@@
+  Transpose[{oneSimulation["States"], reconstructed["States"]}]]
 ```
 
-Extract its Bloch trajectory:
+The two state paths agree because they use the same record and the same update rule. This checks the separation between simulation and inference. It is not an experimental validation.
+
+Compare one state estimate from a synthetic record with the smooth master-equation result:
 
 ```wl
-oneBloch = blochVector /@ oneRun;
+timeGrid = oneSimulation["Times"];
+masterSolution = masterEquationSolution[initialState, hamiltonian,
+  measuredOperators, {time, 0, finalTime}];
+masterStates = masterSolution /@ timeGrid;
+
+ListLinePlot[{
+  Transpose[{timeGrid, blochVector[#][[3]] & /@ oneStates}],
+  Transpose[{timeGrid, blochVector[#][[3]] & /@ masterStates}]},
+ PlotStyle -> {Directive[Opacity[0.65], ColorData[97, 1]], Directive[Thick, Red]},
+ PlotLegends -> {"state inferred from one synthetic record", "master-equation mean"},
+ Frame -> True, FrameLabel -> {"time", "<Z>"}, GridLines -> Automatic,
+ PlotRange -> {-1.05, 1.05}, ImageSize -> 540, AspectRatio -> 1/2]
 ```
 
-Before plotting, cash in the promise of the scheme: every state in the run should be a legitimate density matrix. Check that all of them are positive semidefinite:
+Check time-step convergence without random scatter by setting the efficiency to zero. The channel still acts, but every run gives the same state:
 
 ```wl
-Tally[PositiveSemidefiniteMatrixQ /@ oneRun]
+timeStepValues = {0.08, 0.04, 0.02, 0.01};
+timeStepErrors = AssociationThread[timeStepValues,
+  Norm[Last[simulateTrajectory[initialState, hamiltonian, measuredOperators, #,
+        finalTime, "Efficiencies" -> {0.0}]["States"]] -
+      masterSolution[finalTime], "Frobenius"] & /@ timeStepValues]
 ```
 
-Every state passes, which is the scheme's positivity guarantee made concrete: the numerator is a sum of $A\rho A^\dagger$ terms, so positivity never fails, here or at any step size. Now overlay the single conditioned $\langle Z\rangle$ on the smooth Lindblad $\langle Z\rangle$:
+The error decreases as the step is halved. Positivity alone would not show this accuracy check.
+
+Now average 150 independent simulations:
 
 ```wl
-ListLinePlot[{Transpose[{tgrid, oneBloch[[All, 3]]}], Transpose[{tgrid, lindBloch[[All, 3]]}]},
- PlotStyle -> {Directive[Opacity[0.6], ColorData[97, 1]], Directive[Thick, Red]},
- PlotLegends -> {"one trajectory ⟨Z⟩", "Lindblad ⟨Z⟩"}, Frame -> True, ImageSize -> 540,
- AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> {-1, 1.05},
- FrameLabel -> {"time t", "⟨Z⟩"},
- PlotLabel -> "One monitored run jitters around the smooth master-equation curve"]
+simulationCount = 150;
+simulatedStateSets = BlockRandom[SeedRandom[42];
+  Table[simulateTrajectory[initialState, hamiltonian, measuredOperators, dt,
+     finalTime]["States"], {simulationCount}]];
+meanStates = Mean[simulatedStateSets];
 ```
 
-As one can see, the single trajectory fluctuates continuously while the Lindblad curve slides smoothly downward. The strong $Z$ measurement pins the qubit near a $Z$ eigenstate and only slowly lets the drive tip it over, so both curves decay gently rather than oscillating (we will contrast this with the weak-measurement regime in Part IV). The trajectory is one realization of the detector's noise; the Lindblad curve is what remains when the noise is averaged away. To make that precise, average many trajectories. Run an ensemble of 200 conditioned trajectories on a fixed seed:
+Compare the full mean density matrix with the master-equation solution at every time:
 
 ```wl
-ensemble = BlockRandom[SeedRandom[42]; Table[\[ScriptCapitalT][ρ0, H, Ls, δt, tf], {200}]];
+Max[Norm[#1 - #2, "Frobenius"] & @@@ Transpose[{meanStates, masterStates}]]
 ```
 
-Average them into the mean state at each time:
+Plot one component:
 
 ```wl
-meanStates = Mean[ensemble];
-```
-
-Read its Bloch trajectory:
-
-```wl
-meanBloch = blochVector /@ meanStates;
-```
-
-Compare the ensemble mean of $\langle Z\rangle$ against the Lindblad prediction:
-
-```wl
-ListLinePlot[{Transpose[{tgrid, meanBloch[[All, 3]]}], Transpose[{tgrid, lindBloch[[All, 3]]}]},
+ListLinePlot[{
+  Transpose[{timeGrid, blochVector[#][[3]] & /@ meanStates}],
+  Transpose[{timeGrid, blochVector[#][[3]] & /@ masterStates}]},
  PlotStyle -> {Directive[Thick, ColorData[97, 1]], Directive[Dashed, Red]},
- PlotLegends -> {"mean of 200 trajectories ⟨Z⟩", "Lindblad ⟨Z⟩"}, Frame -> True,
- ImageSize -> 540, AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> {-1, 1.05},
- FrameLabel -> {"time t", "⟨Z⟩"}, PlotLabel -> "200 trajectories average to the master equation"]
+ PlotLegends -> {"mean of 150 simulations", "master-equation solution"},
+ Frame -> True, FrameLabel -> {"time", "<Z>"}, GridLines -> Automatic,
+ PlotRange -> {-1.05, 1.05}, ImageSize -> 540, AspectRatio -> 1/2]
 ```
 
-Report the largest discrepancy across the whole trajectory:
+Small differences remain because only 150 paths were used. Agreement checks that the random update has the correct mean. Both curves come from the same model, so this is a code check, not a measurement.
+
+## Part IV: Strong and Weak Monitoring
+
+For $H=\Omega X$ and a monitored operator $\sqrt\gamma Z$, the value $z=\langle Z\rangle$ averaged over all possible records satisfies
+
+$$
+\ddot z+2\gamma\dot z+4\Omega^2z=0,
+\qquad z(0)=1,
+\qquad \dot z(0)=0.
+$$
+
+The two exponents are
+
+$$
+-\gamma\pm\sqrt{\gamma^2-4\Omega^2}.
+$$
+
+Strong monitoring means $\gamma\gg\Omega$. The slow rate is then
+
+$$
+\gamma-\sqrt{\gamma^2-4\Omega^2}\simeq\frac{2\Omega^2}{\gamma}.
+$$
+
+Thus stronger monitoring slows the change of $Z$. This slowing is called the quantum Zeno effect.
+
+Define the exact solution for the two noncritical cases:
 
 ```wl
-Max@Abs[meanBloch[[All, 3]] - lindBloch[[All, 3]]]
+ClearAll[zDephasing];
+zDephasing[t_, omega_, gamma_] := With[{q = gamma^2 - 4 omega^2},
+  Which[
+   q > 0, Exp[-gamma t] (Cosh[Sqrt[q] t] + gamma Sinh[Sqrt[q] t]/Sqrt[q]),
+   q < 0, Exp[-gamma t] (Cos[Sqrt[-q] t] + gamma Sin[Sqrt[-q] t]/Sqrt[-q]),
+   True, Exp[-gamma t] (1 + gamma t)]];
 ```
 
-The mean tracks the Lindblad curve, and the residual sits at the Monte-Carlo scale $1/\sqrt{K}\approx 0.07$ for $K=200$ realizations; push $K$ higher and it shrinks as $1/\sqrt{K}$. This is the trajectory unravelling of the master equation made numerical: the smooth, deterministic Lindblad state is nothing but the average over these jittering conditioned runs, each of which is a state an experimenter could actually infer from a detector record. The next question is what the individual runs look like when the drive, not the measurement, dominates.
-
-## Part IV: Fast versus Slow Monitoring: Measurement-Induced Dephasing
-
-The comparison that makes continuous measurement vivid is strong versus weak monitoring of the same driven qubit. Recall the Bloch equations for $H=\Omega X$ with $Z$ measured: the drive rotates $\langle Y\rangle$ and $\langle Z\rangle$ into each other at frequency $2\Omega$, while the $Z$ dissipator damps $\langle X\rangle$ and $\langle Y\rangle$ at rate $2\gamma$. The ratio $\gamma/\Omega$ decides which wins. Keep the drive fixed and take two rates, one well above and one well below it:
+Check the equation, initial values, and strong-monitoring rate without choosing numerical values:
 
 ```wl
-Ωd = 1.0; Hd = Ωd X; ρ0d = dm[ket0]; δtd = 0.005; tfd = 20.0; γFast = 2.0; γSlow = 0.1;
+ClearAll[symbolicTime, symbolicOmega, symbolicGamma, symbolicZ];
+
+symbolicZ = Exp[-symbolicGamma symbolicTime] (
+   Cosh[Sqrt[symbolicGamma^2 - 4 symbolicOmega^2] symbolicTime] +
+    symbolicGamma Sinh[Sqrt[symbolicGamma^2 - 4 symbolicOmega^2] symbolicTime]/
+     Sqrt[symbolicGamma^2 - 4 symbolicOmega^2]);
+
+FullSimplify[{
+  D[symbolicZ, {symbolicTime, 2}] +
+   2 symbolicGamma D[symbolicZ, symbolicTime] +
+   4 symbolicOmega^2 symbolicZ,
+  symbolicZ /. symbolicTime -> 0,
+  D[symbolicZ, symbolicTime] /. symbolicTime -> 0,
+  Limit[symbolicGamma (symbolicGamma -
+      Sqrt[symbolicGamma^2 - 4 symbolicOmega^2]),
+    symbolicGamma -> Infinity]},
+ Assumptions -> symbolicGamma > 2 symbolicOmega > 0]
 ```
 
-Set the shared time grid:
+The result is `{0, 1, 0, 2 symbolicOmega^2}`. It verifies the equation, both initial values, and the coefficient in the slow rate.
+
+Choose rates that are clearly separated:
 
 ```wl
-tgridd = δtd Range[0, Floor[tfd/δtd]];
+omegaD = 1.0; gammaStrong = 20.0; gammaWeak = 0.1;
+dtD = 0.0025; finalTimeD = 8.0;
+timeGridD = Range[0., finalTimeD, dtD];
 ```
 
-First the master-equation view, which is deterministic and needs no averaging. Solve Lindblad at the fast rate:
+Plot the exact mean curves:
 
 ```wl
-lindFast = ResourceFunction["LindbladSolve"][Hd, {Sqrt[γFast] Z}, ρ0d, {t, 0, tfd}];
-```
-
-Read its $\langle Z\rangle$ on the grid:
-
-```wl
-zFast = blochVector[lindFast[#]][[3]] & /@ tgridd;
-```
-
-Solve Lindblad at the slow rate:
-
-```wl
-lindSlow = ResourceFunction["LindbladSolve"][Hd, {Sqrt[γSlow] Z}, ρ0d, {t, 0, tfd}];
-```
-
-Read its $\langle Z\rangle$:
-
-```wl
-zSlow = blochVector[lindSlow[#]][[3]] & /@ tgridd;
-```
-
-Plot the two unconditional curves together:
-
-```wl
-ListLinePlot[{Transpose[{tgridd, zFast}], Transpose[{tgridd, zSlow}]},
+ListLinePlot[{
+  Transpose[{timeGridD, zDephasing[timeGridD, omegaD, gammaStrong]}],
+  Transpose[{timeGridD, zDephasing[timeGridD, omegaD, gammaWeak]}]},
  PlotStyle -> {Directive[Thick, ColorData[97, 1]], Directive[Thick, ColorData[97, 2]]},
- PlotLegends -> {"γ = 2 ≫ Ω (frozen)", "γ = 0.1 ≪ Ω (Rabi)"}, Frame -> True, ImageSize -> 540,
- AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> {-1.05, 1.05},
- FrameLabel -> {"time t", "⟨Z⟩"},
- PlotLabel -> "Strong measurement freezes the qubit; weak measurement lets it oscillate"]
+ PlotLegends -> {"gamma = 20: slow change", "gamma = 0.1: oscillation"},
+ Frame -> True, FrameLabel -> {"time", "<Z>"}, GridLines -> Automatic,
+ PlotRange -> {-1.05, 1.05}, ImageSize -> 540, AspectRatio -> 1/2]
 ```
 
-As one can see, the two regimes could hardly look more different. At $\gamma\gg\Omega$ the qubit is nearly frozen: strong $Z$ monitoring keeps collapsing it back toward a $Z$ eigenstate faster than the drive can rotate it away, so $\langle Z\rangle$ decays slowly and monotonically at the Zeno rate $\sim\Omega^2/\gamma$. This is the quantum Zeno effect: watching a system in a basis suppresses the coherent evolution out of that basis. At $\gamma\ll\Omega$ the drive wins and $\langle Z\rangle$ executes Rabi oscillations at $2\Omega$, their envelope slowly eroded by the weak dephasing at rate $\sim\gamma$.
-
-The trajectory view shows the same physics one record at a time. Take one conditioned run at the fast rate:
+Check the master-equation solver against the exact result:
 
 ```wl
-runFast = BlockRandom[SeedRandom[7]; \[ScriptCapitalT][ρ0d, Hd, {Sqrt[γFast] Z}, δtd, tfd]];
+strongMaster = masterEquationSolution[densityMatrix[ket0], omegaD X,
+  {Sqrt[gammaStrong] Z}, {time, 0, finalTimeD}];
+weakMaster = masterEquationSolution[densityMatrix[ket0], omegaD X,
+  {Sqrt[gammaWeak] Z}, {time, 0, finalTimeD}];
+
+<|"strong-rate error" ->
+   Max[Abs[(blochVector[strongMaster[#]][[3]] & /@ timeGridD) -
+      zDephasing[timeGridD, omegaD, gammaStrong]]],
+ "weak-rate error" ->
+   Max[Abs[(blochVector[weakMaster[#]][[3]] & /@ timeGridD) -
+      zDephasing[timeGridD, omegaD, gammaWeak]]]|>
 ```
 
-And one at the slow rate, on the same seed:
+One synthetic path in each regime gives intuition about individual records:
 
 ```wl
-runSlow = BlockRandom[SeedRandom[7]; \[ScriptCapitalT][ρ0d, Hd, {Sqrt[γSlow] Z}, δtd, tfd]];
+strongSimulation = BlockRandom[SeedRandom[7];
+  simulateTrajectory[densityMatrix[ket0], omegaD X,
+    {Sqrt[gammaStrong] Z}, dtD, finalTimeD]];
+weakSimulation = BlockRandom[SeedRandom[7];
+  simulateTrajectory[densityMatrix[ket0], omegaD X,
+    {Sqrt[gammaWeak] Z}, dtD, finalTimeD]];
+
+ListLinePlot[{
+  Transpose[{strongSimulation["Times"],
+    blochVector[#][[3]] & /@ strongSimulation["States"]}],
+  Transpose[{weakSimulation["Times"],
+    blochVector[#][[3]] & /@ weakSimulation["States"]}]},
+ PlotStyle -> {ColorData[97, 1], ColorData[97, 2]},
+ PlotLegends -> {"strong monitoring: one simulation", "weak monitoring: one simulation"},
+ Frame -> True, FrameLabel -> {"time", "inferred <Z>"}, GridLines -> Automatic,
+ PlotRange -> {-1.05, 1.05}, ImageSize -> 540, AspectRatio -> 1/2]
 ```
 
-Overlay their $\langle Z\rangle$:
+The strong case stays near a $Z$ eigenstate for long intervals. The weak case follows the drive more freely. These paths illustrate the model. Only a detector record from an experiment could support a claim about a real device.
+
+## Part V: Monitored Spontaneous Emission
+
+Now monitor emission through $J_-$. In homodyne detection, the instrument records one real component of the emitted field. With a complete unit-efficiency record and a pure initial state, the inferred state remains pure.
 
 ```wl
-ListLinePlot[{Transpose[{tgridd, blochVector[#][[3]] & /@ runFast}],
-   Transpose[{tgridd, blochVector[#][[3]] & /@ runSlow}]},
- PlotStyle -> {Directive[Opacity[0.7], ColorData[97, 1]], Directive[Opacity[0.7], ColorData[97, 2]]},
- PlotLegends -> {"γ = 2 trajectory", "γ = 0.1 trajectory"}, Frame -> True, ImageSize -> 540,
- AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> {-1.05, 1.05},
- FrameLabel -> {"time t", "⟨Z⟩"}, PlotLabel -> "One record apiece: frozen near ±1, or noisily oscillating"]
+omegaS = 2.0; detuningS = 1.0;
+hamiltonianS = (omegaS X + detuningS Z)/2;
+gammaS = 0.2; measuredS = {Sqrt[gammaS] jMinus};
+initialStateS = densityMatrix[ketPlus];
+dtS = 0.01; finalTimeS = 10.0;
 ```
 
-The strongly measured run clings near $\pm 1$, taking rare, quick excursions as the drive occasionally flips it: the record is telling the experimenter, most of the time, which $Z$ eigenstate the qubit is in. The weakly measured run instead follows the Rabi oscillation, dressed in noise, because each weak reading barely perturbs the coherent motion. Same drive, same detector, opposite behavior, set entirely by how hard we look.
-
-## Part V: Spontaneous Emission: Diffusion on the Bloch Sphere
-
-Now let the monitored channel be spontaneous emission rather than dephasing, so the jump operator is the lowering operator $J_-$. Homodyne detection of the emitted field gives a diffusive unravelling, and the conditioned state wanders continuously over the Bloch sphere instead of jumping. Take a driven, detuned qubit emitting at a modest rate, started on the equator:
+Generate five synthetic paths:
 
 ```wl
-Ωs = 2.0; Δs = 1.0; Hs = (Ωs X + Δs Z)/2; γs = 0.2; Lse = {Sqrt[γs] Jminus}; ρ0s = dm[ketPlus]; δts = 0.01; tfs = 10.0;
+emissionSimulations = BlockRandom[SeedRandom[3];
+  Table[simulateTrajectory[initialStateS, hamiltonianS, measuredS, dtS,
+    finalTimeS], {5}]];
+emissionBlochPaths = (blochVector /@ #["States"]) & /@ emissionSimulations;
 ```
 
-Set the time grid:
+Draw a simple Bloch sphere and overlay the paths:
 
 ```wl
-tgrids = δts Range[0, Floor[tfs/δts]];
+blochSphere = Graphics3D[{
+    {Opacity[0.12], LightBlue, Sphere[]},
+    {Gray, Line[{{-1.1, 0, 0}, {1.1, 0, 0}}],
+     Line[{{0, -1.1, 0}, {0, 1.1, 0}}],
+     Line[{{0, 0, -1.1}, {0, 0, 1.1}}]}},
+   Boxed -> False, PlotRange -> 1.15, ImageSize -> 420];
+
+Show[blochSphere,
+ Graphics3D[{Thick,
+   MapIndexed[{ColorData[97, First@#2], Line@#1} &, emissionBlochPaths]}]]
 ```
 
-The unconditional state decays toward the ground state $|1\rangle$ while the drive stirs it. Solve its master equation:
+Each curve is a possible inferred state path for a possible synthetic record. The plot shows model behavior, not observed motion.
+
+Check the mean of many simulations against the master equation:
 
 ```wl
-lindS = ResourceFunction["LindbladSolve"][Hs, Lse, ρ0s, {t, 0, tfs}];
+emissionTimeGrid = emissionSimulations[[1]]["Times"];
+emissionMaster = masterEquationSolution[initialStateS, hamiltonianS, measuredS,
+  {time, 0, finalTimeS}];
+emissionMasterStates = emissionMaster /@ emissionTimeGrid;
+emissionStateSets = BlockRandom[SeedRandom[11];
+  Table[simulateTrajectory[initialStateS, hamiltonianS, measuredS, dtS,
+    finalTimeS]["States"], {150}]];
+emissionMeanStates = Mean[emissionStateSets];
+
+Max[Norm[#1 - #2, "Frobenius"] & @@@
+  Transpose[{emissionMeanStates, emissionMasterStates}]]
 ```
 
-Read its Bloch trajectory:
+This extends the numerical mean-state check from $Z$ monitoring to emission. It still tests the implementation, not a laboratory system.
+
+## Part VI: What a Detector Record Can Show
+
+An experimental detector directly supplies a current. From that record we can compute its mean, how readings separated in time vary together, and how power is spread across frequency. The standard names for the last two quantities are autocovariance and power spectrum.
+
+The record below is synthetic. The analysis is the same analysis one can apply to calibrated experimental data, but its result is only a prediction of the chosen model.
 
 ```wl
-lindBlochS = blochVector[lindS[#]] & /@ tgrids;
+omegaC = 3.5; gammaC = 0.7;
+hamiltonianC = omegaC Y/2;
+measuredC = {Sqrt[gammaC] jMinus};
+dtC = 0.01; finalTimeC = 1200.0;
+
+longSimulation = BlockRandom[SeedRandom[1];
+  simulateTrajectory[densityMatrix[ket0], hamiltonianC, measuredC, dtC,
+    finalTimeC]];
+simulatedCurrent = Re@longSimulation["Current"][[All, 1]];
 ```
 
-Individual trajectories show the diffusion directly. Generate a handful of conditioned runs and take their full Bloch trajectories:
+Check the current's sample mean and standard deviation:
 
 ```wl
-fewRuns = BlockRandom[SeedRandom[3]; Table[blochVector /@ \[ScriptCapitalT][ρ0s, Hs, Lse, δts, tfs], {5}]];
+{Length[simulatedCurrent], Mean[simulatedCurrent],
+ StandardDeviation[simulatedCurrent], 1/Sqrt[dtC]}
 ```
 
-Draw the sphere with `BlochSpherePlot[]` and overlay each run's full trajectory as a curve:
+The white-noise part of the current has standard deviation $1/\sqrt{dt}$. A single sample is therefore noisy. Correlations across time can reveal repeated motion.
+
+The autocovariance measures how readings separated by a chosen delay vary together. Compute it with a fast Fourier transform. Each delay is divided by its own number of data pairs:
 
 ```wl
-Show[ResourceFunction["BlochSpherePlot"][],
- Graphics3D[{Thick, MapIndexed[{ColorData[97, First@#2], Line@#1} &, fewRuns]}],
- ImageSize -> 420]
+ClearAll[autocovariance];
+
+autocovariance[data_, maximumLag_Integer, dt_, stride_Integer : 1] := Module[
+  {centered, count = Length[data], paddedLength,
+   sums, lags},
+  If[!VectorQ[data, realNumberQ] || Length[data] < 2 || maximumLag < 0 ||
+    !realNumberQ[dt] || dt <= 0 || stride <= 0,
+   Return@Failure["InvalidData",
+     <|"MessageTemplate" -> "Use a numerical record, a nonnegative maximum lag, a positive step, and a positive stride."|>]];
+  centered = N[data - Mean[data]];
+  lags = Range[0, Min[maximumLag, count - 1], stride];
+  paddedLength = 2^Ceiling[Log[2, 2 count - 1]];
+  sums = Re@InverseFourier[
+     Abs[Fourier[PadRight[centered, paddedLength],
+        FourierParameters -> {1, -1}]]^2,
+     FourierParameters -> {1, -1}];
+  Transpose[{dt lags, sums[[lags + 1]]/(count - lags)}]
+  ];
 ```
 
-As one can see, each conditioned run traces its own wandering curve over the sphere, drifting in from the equatorial start toward the ground-state pole as the qubit emits, and no two curves coincide because each is driven by its own detector noise. This is measurement-induced diffusion: the homodyne record continuously reshapes the state, and the spread of the curves is the spread of possible records. Now average many of them and confirm the mean returns the master equation. Run an ensemble of 200 trajectories:
+Skip the zero-lag point in the plot because it contains the large white-noise variance:
 
 ```wl
-ensembleS = BlockRandom[SeedRandom[11]; Table[\[ScriptCapitalT][ρ0s, Hs, Lse, δts, tfs], {200}]];
-```
+currentCovariance = Rest@autocovariance[simulatedCurrent, Floor[8/dtC], dtC, 4];
 
-Read the mean Bloch trajectory:
-
-```wl
-meanBlochS = blochVector /@ Mean[ensembleS];
-```
-
-Plot the three ensemble-mean components against the Lindblad prediction:
-
-```wl
-Show[
- ListLinePlot[Transpose[{tgrids, #}] & /@ Transpose[meanBlochS],
-  PlotStyle -> {ColorData[97, 1], ColorData[97, 2], ColorData[97, 3]}],
- ListLinePlot[Transpose[{tgrids, #}] & /@ Transpose[lindBlochS], PlotStyle -> Directive[Dashed, Black]],
- Frame -> True, ImageSize -> 540, AspectRatio -> 1/2, GridLines -> Automatic,
- PlotRange -> All, FrameLabel -> {"time t", "Bloch components"},
- PlotLegends -> SwatchLegend[{ColorData[97, 1], ColorData[97, 2], ColorData[97, 3], Black},
-   {"⟨X⟩ mean", "⟨Y⟩ mean", "⟨Z⟩ mean", "Lindblad (all three)"}],
- PlotLabel -> "200 emission trajectories average to the master equation, all three components"]
-```
-
-The three ensemble means fall on the three dashed Lindblad curves to Monte-Carlo scatter: the diffusing pure trajectories, averaged, reconstruct the decaying mixed state exactly as in Part III, now for an amplitude-damping channel rather than dephasing.
-
-### Reproducing Wiseman and Milburn, Figure 4.6
-
-A classic picture of a single homodyne trajectory plots its angles on the sphere: the azimuth $\varphi = \arctan(\langle Y\rangle, \langle X\rangle)$ and $\cos\theta = \langle Z\rangle$. Take the resonant, undetuned drive of the textbook figure and its emission channel:
-
-```wl
-Ωw = 3.0; Hw = Ωw Y/2; γw = 1.0; Lw = {Sqrt[γw] Jminus}; ρ0w = dm[ketPlus]; δtw = 0.01; tfw = 10.0;
-```
-
-Generate one trajectory's Bloch record:
-
-```wl
-trajW = BlockRandom[SeedRandom[1]; blochVector /@ \[ScriptCapitalT][ρ0w, Hw, Lw, δtw, tfw]];
-```
-
-Plot its azimuth $\varphi$ and $\cos\theta$:
-
-```wl
-ListLinePlot[Transpose[{ArcTan[#1, #2], #3} & @@@ trajW],
- PlotLegends -> {"φ = arctan(⟨Y⟩,⟨X⟩)", "cos θ = ⟨Z⟩"}, Frame -> True, ImageSize -> 540,
- AspectRatio -> 1/2, GridLines -> Automatic, FrameLabel -> {"step", "angle"},
- PlotLabel -> "A single homodyne trajectory: azimuth φ and polar cos θ"]
-```
-
-The measurement phase is itself a knob: mixing the emitted field with a local oscillator shifted by $\pi/2$ multiplies the monitored operator by $e^{i\pi/2}=i$, so a different quadrature of the field is recorded. Rotate the measured quadrature:
-
-```wl
-Lw2 = {Exp[I π/2] Sqrt[γw] Jminus};
-```
-
-Rerun with the same seed:
-
-```wl
-trajW2 = BlockRandom[SeedRandom[1]; blochVector /@ \[ScriptCapitalT][ρ0w, Hw, Lw2, δtw, tfw]];
-```
-
-Plot its angles:
-
-```wl
-ListLinePlot[Transpose[{ArcTan[#1, #2], #3} & @@@ trajW2],
- PlotLegends -> {"φ", "cos θ"}, Frame -> True, ImageSize -> 540, AspectRatio -> 1/2,
- GridLines -> Automatic, FrameLabel -> {"step", "angle"},
- PlotLabel -> "Rotating the measured quadrature by π/2 changes the trajectory"]
-```
-
-Same qubit, same drive, same seed, but the recorded quadrature is different, and so is the path the state takes: the trajectory is a property of the measurement as much as of the system.
-
-## Part VI: The Measurement Record
-
-So far we have read the conditioned *state* off each run. But Part I was blunt about what an experiment directly records: only the *current*, the readout increment $dR = \sqrt{\eta}\,\mathrm{Tr}[(L+L^\dagger)\rho]\,dt + dW$, which $\mathcal{T}$ has been `Sow`-ing all along. The Bloch vectors and purities of Parts III through V were never measured; they were inferred from a record by the SME. This Part works with the record itself: first its two-point correlation, then its power spectrum, then the honest question the framing forces, whether the inferred single-run trajectories were ever real. That analysis needs a long record, so set a resonantly driven, emitting qubit and a long horizon:
-
-```wl
-Ωc = 3.5; Hc = Ωc Y/2; γc = 0.7; Lc = {Sqrt[γc] Jminus}; ρ0c = dm[ket0]; δtc = 0.01; tfc = 4000.0;
-```
-
-Generate the trajectory and reap the readout it sows:
-
-```wl
-{trajC, {records}} = BlockRandom[SeedRandom[1]; Reap@\[ScriptCapitalT][ρ0c, Hc, Lc, δtc, tfc]];
-```
-
-There is only one monitored operator, so there is one current. Pull out its time series:
-
-```wl
-current = Re@Transpose[records][[1]];
-```
-
-Check its length:
-
-```wl
-Length[current]
-```
-
-### A Two-Point Correlation of the Raw Record
-
-One step of the record is signal plus noise, $dR = \sqrt{\eta}\,\mathrm{Tr}[(L+L^\dagger)\rho]\,dt + dW$: the signal is of order $dt$, while the shot noise $dW$ has standard deviation $\sqrt{dt}$, so at $dt = 0.01$ each sample is about ten parts noise to one part signal. Confirm the record is noise-dominated sample by sample:
-
-```wl
-{Mean[current], StandardDeviation[current], Sqrt[δtc]}
-```
-
-The standard deviation is essentially $\sqrt{dt} = 0.1$, so one reading tells you almost nothing. The two-point correlation asks a different question, whether the reading at time $t$ is statistically related to the reading a lag $\tau$ later, $C(\tau) = \langle dR(t)\,dR(t+\tau)\rangle - \langle dR\rangle^2$. It is worth computing for a modest reason: coherent dynamics leave a fingerprint in $C(\tau)$ that survives the shot noise, and $C(\tau)$ is the step toward the power spectrum a laboratory actually reports. It is one statistic among several, not the whole record: being second order and phase-insensitive, it reveals the frequency and decay of the coherent motion but not the state, and it discards everything in the record's higher moments. Define an estimator that, for each lag, correlates the record with a shifted copy of itself and subtracts the squared mean:
-
-```wl
-twoPointCorrelation[data_, hmax_, dt_ : None, steps_ : 1] :=
-  Module[{n = Length[data], ave = Mean[data], vec1, mm, corr},
-   vec1 = data[[1 ;; n - hmax]];
-   mm = Table[data[[1 + i ;; n - hmax + i]], {i, 1, hmax, steps}];
-   corr = (1/n) (mm . vec1 - ave^2);
-   If[dt === None, corr, {dt Range[1, hmax, steps], corr}]];
-```
-
-One detail of the estimator governs everything below: its lags are `dt Range[1, hmax, steps]`, starting at one step, $\tau = dt$, and never reaching $\tau = 0$. The shot noise is *white*, so its autocovariance is concentrated at exactly $\tau = 0$ and vanishes at every other lag. Since $\tau = 0$ is never plotted, the shot noise contributes nothing to the estimate, and the raw correlation shows the signal's own structure with no filtering at all. Correlate the raw current out to a lag of eight time units:
-
-```wl
-corrRaw = twoPointCorrelation[current, Floor[8/δtc], δtc, 4];
-```
-
-Plot it against the lag $\tau$:
-
-```wl
-ListLinePlot[Transpose[corrRaw], Frame -> True, ImageSize -> 540, AspectRatio -> 1/2,
- GridLines -> Automatic, PlotRange -> All, FrameLabel -> {"lag τ", "two-point correlation C(τ)"},
- PlotLabel -> "The raw current's correlation oscillates at the Rabi frequency"]
-```
-
-The correlation falls from its largest plotted value at $\tau = dt$ and oscillates as $\cos(\Omega_c\tau)$: the first trough sits near $\tau \approx 0.9$ and the first peak near $\tau \approx 1.8$, which is the Rabi period $2\pi/\Omega_c \approx 1.8$. There is no spike at the origin, precisely because the estimator skips $\tau = 0$ where the white shot noise lives. The oscillation amplitude decays on the scale of the emission time $1/\gamma_c \approx 1.4$, and past $\tau \approx 2.5$ the later cycles sink into the estimator's statistical scatter, a few $\times 10^{-5}$ over a finite record. So the raw record already carries the coherent dynamics, but the time-domain correlation fixes the frequency only roughly. The clean read is the spectrum, below.
-
-### Low-Pass Filtering a Shot-Noise Record
-
-A natural next instinct is to denoise the current with a low-pass filter, and it is worth seeing what that does to a shot-noise-dominated record, because the result is easy to misread. Shot noise is *white*: its power is flat in frequency out to the sampling limit. A low-pass of cutoff $\omega_c$ keeps only the frequencies below $\omega_c$, discarding most of the noise power, but it also *colors* what survives, giving the filtered noise a correlation time of order $1/\omega_c$. The zero-lag spike is then no longer a spike: it is smeared into a bump a few $\times 1/\omega_c$ wide. Define a zero-phase Butterworth low-pass (forward then reversed, averaged, so features are not shifted in time):
-
-```wl
-butterworthFilter[data_, ωc_, dt_ : 1, order_ : 2] :=
-  Module[{model, f, b},
-   model = ToDiscreteTimeModel[ButterworthFilterModel[{"Lowpass", order, ωc}], dt];
-   f = RecurrenceFilter[model, data];
-   b = RecurrenceFilter[model, Reverse[data]];
-   (f + Reverse[b])/2];
-```
-
-Correlate the filtered current the same way, at cutoff $\omega_c = 50$, so the filter's correlation time is $1/\omega_c = 0.02$, two steps:
-
-```wl
-corrSmooth = twoPointCorrelation[butterworthFilter[current, 50, δtc], Floor[8/δtc], δtc, 4];
-```
-
-Measure the small-lag values against the raw correlation's largest:
-
-```wl
-{corrRaw[[2, 1]], corrSmooth[[2, 1]], corrSmooth[[2, 1]]/Max[corrRaw[[2]]]}
-```
-
-The filtered correlation starts near $9 \times 10^{-4}$, about nine times the largest value the raw correlation ever reaches, and it falls back to the oscillation's amplitude within a few lags (below a tenth of its height by $\tau \approx 0.13$). That short-lag feature, a bump a few $\times 1/\omega_c$ wide, is why a plot of `corrSmooth` with `PlotRange -> All` is dominated by the origin and buries the oscillation. It is not the Rabi signal. The test is to run the identical filter on a pure Wiener record of the same length with no qubit at all:
-
-```wl
-pureNoise = BlockRandom[SeedRandom[2]; RandomVariate[NormalDistribution[0, Sqrt[δtc]], Length[current]]];
-corrNoise = twoPointCorrelation[butterworthFilter[pureNoise, 50, δtc], Floor[8/δtc], δtc, 4];
-ListLinePlot[Transpose /@ {corrSmooth, corrNoise}, Frame -> True, ImageSize -> 540,
+ListLinePlot[currentCovariance, Frame -> True, ImageSize -> 540,
  AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> All,
- PlotLegends -> {"filtered current", "filtered pure noise"},
- FrameLabel -> {"lag τ", "two-point correlation C(τ)"},
- PlotLabel -> "The small-lag bump is the filter acting on shot noise, not the qubit"]
+ FrameLabel -> {"lag", "current autocovariance"},
+ PlotLabel -> "A synthetic current retains the driven oscillation"]
 ```
 
-The two bumps coincide: filtering pure noise reproduces almost all of the feature (about ninety percent of its height), and the pure-noise curve is flat past it, while only the current keeps an oscillation at larger $\tau$. The bump is the filter, not the qubit. To see what the filter does to the actual signal, plot both correlations again with the bump excluded, restricting the lag to $\tau \geq 0.2$:
+For ideal white noise, the expected covariance is zero at every nonzero lag. A finite record still has random scatter there. The same noise also changes the future state, so it is incorrect to say that shot noise contributes nothing away from zero lag.
+
+The power spectrum shows signal strength against frequency. To reduce random scatter, divide the record into separate segments, subtract each segment's mean, and average the resulting estimates:
 
 ```wl
-pastBump = Select[Transpose[#], First[#] >= 0.2 &] & /@ {corrRaw, corrSmooth};
-ListLinePlot[pastBump, PlotLegends -> {"raw current", "Butterworth-filtered"}, Frame -> True,
- ImageSize -> 540, AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> All,
- FrameLabel -> {"lag τ", "two-point correlation C(τ)"},
- PlotLabel -> "Past the bump the filter tracks the same oscillation, more smoothly"]
+ClearAll[averagedPeriodogram];
+
+averagedPeriodogram[data_, dt_, segmentLength_Integer] := Module[
+  {segments, twoSided, meanSpectrum, indices, frequencies},
+  If[!VectorQ[data, realNumberQ] || !realNumberQ[dt] || dt <= 0 ||
+    segmentLength < 3 || segmentLength > Length[data],
+   Return@Failure["InvalidData",
+     <|"MessageTemplate" -> "Use a numerical record, a positive step, and a segment length between 3 and the record length."|>]];
+  segments = Partition[N[data], segmentLength, segmentLength];
+  twoSided = (dt/segmentLength) Abs[
+        Fourier[# - Mean[#], FourierParameters -> {1, -1}]]^2 & /@ segments;
+  meanSpectrum = Mean[twoSided];
+  indices = Range[2, Ceiling[segmentLength/2]];
+  frequencies = 2 Pi Range[1, Length[indices]]/(segmentLength dt);
+  Transpose[{frequencies, 2 meanSpectrum[[indices]]}]
+  ];
 ```
 
-Past the bump the filtered correlation traces the same $\cos(\Omega_c\tau)$ as the raw one, with the high-frequency scatter removed, so the first Rabi cycle reads more cleanly. That is the honest accounting: the low-pass suppresses jitter at $\tau \gtrsim 0.2$ at the price of a spurious bump at $\tau \lesssim 0.13$, and it does *not* strip the noise and leave the signal clean. The raw correlation needed none of this, since the estimator already skips the lag where the shot noise sits. A low-pass earns its place when the *current itself* must be smoothed, for a display or a feedback loop, not as a way to read the correlation.
-
-### The Power Spectrum: What the Experiment Reports
-
-The frequency-domain view is the clean one. By the Wiener-Khinchin theorem the power spectrum of the current is the Fourier transform of its two-point correlation, and it separates signal from noise where the time-domain correlation cannot: white shot noise, flat in frequency, becomes a constant floor, while the coherent oscillation becomes a peak on top of it, at the Rabi frequency and with a width set by the emission rate. Estimate it by Welch's method, averaging the periodograms of many segments of the record so the floor comes out smooth:
+Compute the spectrum of the current, not the increments. Under this one-sided convention, ideal unit white noise has a flat level of $2$:
 
 ```wl
-powerSpectrum[data_, dt_, nseg_] := Module[{seglen, segs, half, psd, freqs},
-   seglen = Floor[Length[data]/nseg]; segs = Partition[data, seglen]; half = Floor[seglen/2];
-   psd = (dt/seglen) Mean[Abs[Fourier[# - Mean[#], FourierParameters -> {-1, 1}]]^2 & /@ segs];
-   freqs = 2 Pi Range[0, seglen - 1]/(seglen dt);
-   Transpose[{freqs[[2 ;; half]], psd[[2 ;; half]]}]];
+spectrum = Select[averagedPeriodogram[simulatedCurrent, dtC, 4096],
+   First[#] <= 8 &];
+oscillationFrequency = Sqrt[omegaC^2 - gammaC^2/16];
+
+ListLinePlot[spectrum, Frame -> True, ImageSize -> 540, AspectRatio -> 1/2,
+ PlotRange -> All, GridLines -> {{oscillationFrequency}, {2}},
+ FrameLabel -> {"angular frequency", "one-sided power spectrum"},
+ PlotLabel -> "Synthetic homodyne spectrum: a peak above the white-noise level"]
 ```
 
-Compute it and plot over a band that brackets the drive, marking $\Omega_c$ with a gridline:
+Read the largest peak in the driven band:
 
 ```wl
-spectrum = Select[powerSpectrum[current, δtc, 120], #[[1]] <= 8 &];
-ListLinePlot[spectrum, Frame -> True, PlotRange -> All, GridLines -> {{Ωc}, None},
- ImageSize -> 540, AspectRatio -> 1/2, FrameLabel -> {"frequency ω", "power spectrum S(ω)"},
- PlotLabel -> "The homodyne spectrum peaks at the Rabi frequency"]
+MaximalBy[Select[spectrum, 2 <= First[#] <= 5 &], Last][[1]]
 ```
 
-The spectrum is flat at the shot-noise floor away from the drive and rises to a peak right at the gridline, about a factor of two above the floor here, modest because the measurement is weak and sharper the harder one drives or the longer one averages. Three numbers come straight off it: the peak *position* is the Rabi frequency $\Omega_c$, the peak *width* is the emission rate, and the *floor* is the detector's shot noise. Read the peak position off the data, with no knowledge of the Hamiltonian that produced it:
+For this driven, emitting qubit, the equations for the mean Bloch vector oscillate at
+
+$$
+\omega_{\mathrm{osc}}=\sqrt{\Omega_C^2-\gamma_C^2/16}
+$$
+
+and decay at rate $3\gamma_C/4$. The spectrum should show a peak near $\omega_{\mathrm{osc}}$. Its detailed shape depends on the full model. A decay rate must be obtained from a fit with stated assumptions; it is not simply the width read by eye.
+
+### What Is Observable, and What Is a Test?
+
+Given an experimental current, its mean, autocovariance, and spectrum are calculated directly from observed data. A spectral peak is therefore an observed feature of that record. Identifying the peak with a system parameter still requires a model.
+
+A state path is different. It is inferred by applying `inferTrajectory` to the record. Its Bloch vector, purity, and expectation values are properties of the estimate, not raw detector readings.
+
+Using the same record both to construct the state estimate and to compare its mean signal with that record is a consistency check, not an independent test. Stronger tests use data that were not used in the inference: a later measurement, a separate detector channel, repeated final-state measurements, or a prediction made before more data arrive.
+
+Experiments have used continuous records to estimate mechanical quantum states in real time and have tested those estimates with later or separate measurements: [Magrini et al., Nature 595, 373-377 (2021)](https://www.nature.com/articles/s41586-021-03602-3) and [Rossi et al., Physical Review Letters 123, 163601 (2019)](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.123.163601). Those results support the method in those systems. A synthetic trajectory in this notebook does not inherit that status.
+
+## Part VII: Efficiency and Dimension
+
+Detection efficiency changes the record-based state estimate. It does not change the master equation obtained after averaging over all records.
+
+For the continuous-time equation, monitoring every loss or noise channel at unit efficiency guarantees that a pure record-based state remains pure. Special unmonitored channels or states can also preserve purity, but that requires a separate check.
+
+The finite-step update used here preserves purity exactly when the unmonitored-operator list is empty and every measured channel has unit efficiency. Otherwise the update can mix the state. With an unmonitored operator, small time-step mixing can appear even when the continuous equation would not predict it; that error vanishes as `dt` decreases.
 
 ```wl
-MaximalBy[Select[spectrum, 2 <= #[[1]] <= 5 &], Last][[1, 1]]
+omegaE = 2.0; gammaE = 1.0;
+hamiltonianE = omegaE X/2;
+measuredE = {Sqrt[gammaE] jMinus};
+initialStateE = densityMatrix[ketPlus];
+dtE = 0.01; finalTimeE = 6.0;
 ```
 
-which returns $\Omega_c = 3.5$ to the frequency resolution of the estimate, about $0.19$ here. Fitting the peak's width instead gives the emission rate, which is continuous-measurement spectroscopy, and the point is that the coherent motion the earlier Bloch plots showed is present here too, now read from the record alone, which is all an experiment ever has.
-
-### Are the Earlier Trajectories Real, or Is Only the Record?
-
-This is the question Part I set up and Part VI has to answer. Only the record is measured. The conditional state $\rho_c(t)$, and every $\langle Z\rangle$, purity, and Bloch vector plotted from a single run in Parts III through V, was *inferred* from a record, never read off a meter. So were those single-run plots a fiction?
-
-No, and it is worth being precise about why. The conditional state is the observer's best estimate of the system given the record, and the SME is exactly the machine that computes it, the optimal quantum filter, the quantum analogue of a Kalman filter. An estimate is not a fiction, and this one is tied to measurable quantities three ways.
-
-First, the inferred state predicts the record's own measurable statistics. The mean current is an observable, a number you get by averaging the readout; the inferred trajectory predicts it as $dt$ times the conditional signal $\mathrm{Tr}[(L+L^\dagger)\rho_c]$ averaged along the run. Compare the two:
+Compare one synthetic path at full and half efficiency:
 
 ```wl
-Column[{
-   Row[{"mean current, measured off the record:    ", Mean[current]}],
-   Row[{"δt × mean inferred signal Tr[(L+L†)ρc]:   ",
-      δtc Mean[Re[Tr[(Lc[[1]] + ConjugateTranspose[Lc[[1]]]) . #]] & /@ Most[trajC]]}]}]
+fullEfficiency = BlockRandom[SeedRandom[5];
+  simulateTrajectory[initialStateE, hamiltonianE, measuredE, dtE, finalTimeE,
+   "Efficiencies" -> {1.0}]];
+halfEfficiency = BlockRandom[SeedRandom[5];
+  simulateTrajectory[initialStateE, hamiltonianE, measuredE, dtE, finalTimeE,
+   "Efficiencies" -> {0.5}]];
+
+<|"largest purity error at eta = 1" ->
+   Max[Abs[purity[#] - 1] & /@ fullEfficiency["States"]],
+ "mean purity at eta = 0.5" -> Mean[purity /@ halfEfficiency["States"]]|>
 ```
 
-They agree to the shot-noise floor: the current the detector produced is, on average, exactly what the inferred trajectory says it should be, and the spectral peak above is the same statement in frequency, the record's coherent frequency sitting where the inferred state oscillates. Part VI reproducing these record statistics *is* a test of the inferred trajectory, and it passes.
+The full-efficiency path remains pure in this example. The half-efficiency path is mixed because some information is lost.
 
-Second, averaging the inferred conditional quantities over many runs gives the unconditional master-equation state, and *that* is directly measurable, by repeating the experiment and averaging: $\langle Z\rangle(t)$ averaged over runs equals $\mathrm{Tr}[\rho(t)Z]$. Parts III and V computed exactly this, the mean of two hundred conditioned trajectories falling on the independent `LindbladSolve` curve to the Monte-Carlo scale $1/\sqrt{K}$. That agreement tests the inference against a quantity an experiment measures without ever reconstructing a single trajectory.
-
-Third, laboratories reconstruct *and verify* the single conditional trajectory. Continuous-measurement optomechanics runs this same filter on the photocurrent in real time: a levitated nanoparticle (Magrini et al., Nature 595, 373 (2021)) and a soft-clamped membrane (Rossi et al., with the companion "Observing and verifying the quantum trajectory of a mechanical resonator", Phys. Rev. Lett. 123, 163601 (2019)) each reconstruct the conditional state from the record by a real-time Kalman filter and check its predictions against the measured data.
-
-So the single-run conditional quantities are not fake. They are inferences, testable through the record statistics they predict and through the ensemble averages that are directly measurable, and they are reconstructed and verified in the laboratory. What they are not is a raw meter reading: they are the best estimate conditioned on one record, and when detection is inefficient (Part VII) even the best estimate is mixed.
-
-### What Else a Record Gives You
-
-The state, the spectrum, and the mean current are a few uses of a record, not all of them. With the whole record in hand, the *future* readings also constrain the state at an earlier time, and combining past and future gives a strictly sharper estimate, the quantum *smoother*. The record, or the state filtered from it, can drive the Hamiltonian in real time to stabilize, cool, or error-correct the qubit, which is quantum feedback, the setting the positivity-preserving scheme was built for, since a filter that returned a non-state would feed the controller nonsense. And the correlation and spectrum are only second order: the higher moments, the full distribution of a time-integrated current, and, for a photon-counting rather than homodyne record, waiting-time distributions and antibunching all come from the same stream. The filter itself is a free choice matched to the question, the Butterworth low-pass above merely denoising, a *matched* filter tuned to detect a specific feature, a *lock-in* pulling out one quadrature at the drive frequency, and a *Wiener* or *Kalman* filter giving the statistically optimal estimate. The record is the raw observable; the state, its spectrum, the system's parameters, and a feedback signal are all things one computes from it.
-
-## Part VII: What the Dimension-General Map Unlocks
-
-The map $\mathcal{T}$ takes plain matrices of any size and carries the detector efficiency honestly, and both facts open doors a qubit-only, unit-efficiency version cannot. Take efficiency first. Real detectors lose some of the signal, $\eta < 1$, so part of the emitted information escapes unrecorded. The conditioned state then no longer purifies: it is a genuine mixture, its Bloch vector shrinks inside the sphere, yet the *ensemble* average is unchanged, because the unconditional master equation never knew there was a detector. Set a driven, emitting qubit:
+Check the mean over many records at three efficiencies:
 
 ```wl
-Ωe = 2.0; He = Ωe X/2; γe = 1.0; Le = {Sqrt[γe] Jminus}; ρ0e = dm[ketPlus]; δte = 0.01; tfe = 8.0;
+efficiencyValues = {1.0, 0.5, 0.0};
+efficiencyMaster = masterEquationSolution[initialStateE, hamiltonianE, measuredE,
+  {time, 0, finalTimeE}];
+efficiencyCount = 100;
+efficiencySeeds = {101, 102, 103};
+
+efficiencyErrors = AssociationThread[efficiencyValues,
+  MapThread[
+   Function[{efficiency, seed},
+    With[{finalMean = Mean@BlockRandom[SeedRandom[seed];
+        Table[simulateTrajectory[initialStateE, hamiltonianE, measuredE, dtE,
+           finalTimeE, "Efficiencies" -> {efficiency}]["States"][[-1]],
+         {efficiencyCount}]]},
+     Norm[finalMean - efficiencyMaster[finalTimeE], "Frobenius"]]],
+   {efficiencyValues, efficiencySeeds}]]
 ```
 
-Run one trajectory at unit efficiency:
+At efficiencies $1$ and $0.5$, the error includes scatter from using a finite number of paths and error from the time step. At efficiency $0$, every run is identical, so the remaining error comes mainly from the time step. All three approach the same master-equation state within those numerical errors.
+
+Exercise two measured channels and one unmonitored channel in the same call:
 
 ```wl
-runFull = BlockRandom[SeedRandom[5]; \[ScriptCapitalT][ρ0e, He, Le, δte, tfe]];
+multiMeasured = {Sqrt[0.2] X, Sqrt[0.3] Z};
+multiUnmonitored = {Sqrt[0.1] jMinus};
+multiHamiltonian = 0.3 Y;
+multiInitial = densityMatrix[ketPlus];
+multiExample = BlockRandom[SeedRandom[31];
+  simulateTrajectory[multiInitial, multiHamiltonian, multiMeasured, 0.005, 2.0,
+   "Efficiencies" -> {0.8, 0.5},
+   "UnmonitoredOperators" -> multiUnmonitored]];
+multiMaster = masterEquationSolution[multiInitial, multiHamiltonian,
+  Join[multiMeasured, multiUnmonitored], {time, 0, 2.0}];
+multiMeanFinal = Mean@BlockRandom[SeedRandom[32];
+   Table[simulateTrajectory[multiInitial, multiHamiltonian, multiMeasured, 0.005,
+      2.0, "Efficiencies" -> {0.8, 0.5},
+      "UnmonitoredOperators" -> multiUnmonitored]["States"][[-1]], {120}]];
+
+<|"recorded channels per step" -> Length[First@multiExample["RecordIncrements"]],
+ "smallest eigenvalue" ->
+   Min[Flatten[Eigenvalues[(# + ConjugateTranspose[#])/2] & /@ multiExample["States"]]],
+ "final mean-state error" ->
+   Norm[multiMeanFinal - multiMaster[2.0], "Frobenius"]|>
 ```
 
-Run one at half efficiency, on the same seed:
+The example checks the multi-channel and unmonitored-channel branches. Its records and states remain synthetic.
+
+The same code also works above dimension two. Use the standard spin-one operator $J_x=(J_-+J_+)/2$:
 
 ```wl
-runHalf = BlockRandom[SeedRandom[5]; \[ScriptCapitalT][ρ0e, He, Le, {0.5}, δte, tfe]];
+jMinus3 = {{0, 0, 0}, {Sqrt[2], 0, 0}, {0, Sqrt[2], 0}};
+jX3 = (jMinus3 + ConjugateTranspose[jMinus3])/2;
+hamiltonian3 = 1.5 jX3;
+measured3 = {Sqrt[0.6] jMinus3};
+initialState3 = densityMatrix[{1, 0, 0}];
+dt3 = 0.01; finalTime3 = 8.0;
 ```
 
-Define the purity $\mathrm{Tr}(\rho^2)$:
+Run one qutrit simulation at efficiency $0.4$:
 
 ```wl
-purity[ρ_] := Re@Tr[ρ . ρ];
+qutritSimulation = BlockRandom[SeedRandom[2];
+  simulateTrajectory[initialState3, hamiltonian3, measured3, dt3, finalTime3,
+   "Efficiencies" -> {0.4}]];
+
+<|"state dimension" -> Dimensions[First@qutritSimulation["States"]],
+ "smallest eigenvalue" ->
+   Min[Flatten[Eigenvalues[(# + ConjugateTranspose[#])/2] & /@
+      qutritSimulation["States"]]]|>
 ```
 
-Compare the mean purity of the two runs:
+Compare the full qutrit mean state with the master equation:
 
 ```wl
-Column[{
-   Row[{"mean purity at η = 1:   ", Mean[purity /@ runFull]}],
-   Row[{"mean purity at η = 0.5: ", Mean[purity /@ runHalf]}]}]
+qutritMaster = masterEquationSolution[initialState3, hamiltonian3, measured3,
+  {time, 0, finalTime3}];
+qutritCount = 120;
+qutritMean = Mean@BlockRandom[SeedRandom[9];
+   Table[simulateTrajectory[initialState3, hamiltonian3, measured3, dt3, finalTime3,
+      "Efficiencies" -> {0.4}]["States"], {qutritCount}]];
+qutritTimes = Range[0., finalTime3, dt3];
+qutritMasterStates = qutritMaster /@ qutritTimes;
+
+Max[Norm[#1 - #2, "Frobenius"] & @@@
+  Transpose[{qutritMean, qutritMasterStates}]]
 ```
 
-At unit efficiency the conditioned states stay essentially pure (purity near $1$): a perfect record leaves the observer certain of the state. At $\eta = 0.5$ the mean purity drops well below $1$, because half the information leaks away and the best inferred state is mixed. See it geometrically: draw the sphere with `BlochSpherePlot[]` and overlay both full trajectories, the unit-efficiency run and the half-efficiency run:
+This tests the full density matrix, not only its populations.
 
-```wl
-Show[ResourceFunction["BlochSpherePlot"][],
- Graphics3D[{Thick, ColorData[97, 1], Line[blochVector /@ runFull],
-   ColorData[97, 2], Line[blochVector /@ runHalf]}], ImageSize -> 420]
-```
+### Coverage by Case
 
-The full-efficiency curve rides on the surface of the ball; the half-efficiency curve stays inside it, its shrunken radius the visible signature of unrecorded information. Yet both, averaged over many runs, return the same Lindblad state, since the ensemble average is independent of $\eta$. That $\eta$-independence of the average, together with the correct handling of the Ito correction $L_{\rm corr} = \tfrac12 dt\sum_r\eta_r L_r^2$, is exactly the content the efficiency factor carries.
+| Case | Evidence in this notebook |
+|---|---|
+| One recorded $Z$ channel | One path is reconstructed from its record; the simulated mean is compared with the master equation. |
+| General driven $Z$ model | Symbolic calculation checks the equation, initial values, and strong-monitoring rate. |
+| Finite weak and strong examples | The numerical master solver is compared with the exact $Z$ solution. |
+| No recorded channel and a short final step | The boundary cell checks record shape, step sizes, and final time. |
+| Two recorded channels plus one unmonitored channel | Positivity and the final mean state are checked. |
+| Three-state system | Positivity and the full mean density matrix are checked. |
+| Invalid input | The code returns a named `Failure` before drawing random numbers. |
 
-Now dimension. Nothing in $\mathcal{T}$ mentions the number $2$, so a qutrit runs by the same call. Build the spin-1 lowering operator, a soft drive from it, and its emission channel, with the excited $|m=1\rangle$ as the initial state:
+Before closing, collect the verified distinctions:
 
-```wl
-Jm3 = {{0, 0, 0}, {Sqrt[2], 0, 0}, {0, Sqrt[2], 0}}; Sx3 = (Jm3 + ConjugateTranspose[Jm3])/Sqrt[2]; H3 = 1.5 Sx3; L3 = {Sqrt[0.6] Jm3}; ρ03 = dm[{1, 0, 0}]; δt3 = 0.01; tf3 = 8.0;
-```
+- An experimental current is observed data.
+- A state path computed from that current is inferred and model-dependent.
+- A state path and current generated by `simulateTrajectory` are synthetic.
+- Record statistics can expose a mean, delayed correlations, and spectral peaks.
+- A simulation can reveal model behavior and test code, but it cannot validate a device.
+- Positivity does not remove time-step error; convergence still must be checked.
+- In the continuous-time equation, monitoring every loss or noise channel at unit efficiency guarantees preserved purity for a pure initial state.
+- Agreement of the simulated mean with the master equation checks the implementation in two and three dimensions.
 
-Run one qutrit trajectory at $\eta = 0.4$:
+### Where This Leaves Us
 
-```wl
-run3 = BlockRandom[SeedRandom[2]; \[ScriptCapitalT][ρ03, H3, L3, {0.4}, δt3, tf3]];
-```
-
-Confirm the states are $3\times 3$ and every one is positive semidefinite:
-
-```wl
-Column[{
-   Row[{"state dimension: ", Dimensions[First@run3]}],
-   Row[{"all physical? ", Tally[PositiveSemidefiniteMatrixQ /@ run3]}]}]
-```
-
-The states are $3\times 3$ and physical: the same positivity guarantee holds in any dimension. Confirm the physics too, that the ensemble mean reproduces the $d=3$ master equation. Set the grid:
-
-```wl
-tgrid3 = δt3 Range[0, Floor[tf3/δt3]];
-```
-
-Solve the $d=3$ master equation with the same `LindbladSolve`:
-
-```wl
-lind3 = ResourceFunction["LindbladSolve"][H3, L3, ρ03, {t, 0, tf3}];
-```
-
-Run 200 qutrit trajectories:
-
-```wl
-ens3 = BlockRandom[SeedRandom[9]; Table[\[ScriptCapitalT][ρ03, H3, L3, {0.4}, δt3, tf3], {200}]];
-```
-
-Read the three level populations off a state:
-
-```wl
-pop3[ρ_] := Re@Diagonal[ρ];
-```
-
-Collect the ensemble-mean populations over time:
-
-```wl
-meanPops = Transpose[pop3 /@ Mean[ens3]];
-```
-
-Collect the master-equation populations over time:
-
-```wl
-lindPops = Transpose[pop3[lind3[#]] & /@ tgrid3];
-```
-
-Plot the ensemble means (solid) against the master equation (dashed):
-
-```wl
-ListLinePlot[
- Join[Transpose[{tgrid3, #}] & /@ meanPops, Transpose[{tgrid3, #}] & /@ lindPops],
- PlotStyle -> Join[{ColorData[97, 1], ColorData[97, 2], ColorData[97, 3]},
-   ConstantArray[Directive[Dashed, Black], 3]],
- Frame -> True, ImageSize -> 540, AspectRatio -> 1/2, GridLines -> Automatic, PlotRange -> All,
- PlotLegends -> SwatchLegend[{ColorData[97, 1], ColorData[97, 2], ColorData[97, 3], Black},
-   {"|1⟩ mean", "|0⟩ mean", "|-1⟩ mean", "Lindblad (all three)"}],
- FrameLabel -> {"time t", "level populations"},
- PlotLabel -> "A qutrit at η = 0.4: 200 trajectories average to the d = 3 master equation"]
-```
-
-The three level populations of the ensemble mean land on the three master-equation curves. This is the payoff of building the integrator on plain, dimension-general matrices with an explicit efficiency: inefficient detection and higher-dimensional systems are the same function call, not a rewrite, and both stay physical and correct in the mean.
-
-Before we close, let us summarize the most important points we have computed and checked:
-
-- The stochastic master equation is the Lindblad master equation plus one innovation term $\sqrt{\eta_r}\,\mathcal{H}[L_r]\rho\,dW_r$ per monitored channel, and the detector emits $dR_r = \sqrt{\eta_r}\,\mathrm{Tr}[(L_r+L_r^\dagger)\rho]\,dt + dW_r$.
-- The positivity-preserving update writes $\rho_{n+1}$ as a normalized sum of $A\rho A^\dagger$ terms, so every conditioned state is positive semidefinite at any step size, which we confirmed with `PositiveSemidefiniteMatrixQ` in $d=2$ and $d=3$.
-- Averaging many trajectories reproduces the master equation to the Monte-Carlo scale $1/\sqrt{K}$, for $Z$ dephasing, for $J_-$ emission, and for the qutrit.
-- Strong $Z$ monitoring freezes the qubit (the quantum Zeno effect, decay at $\sim\Omega^2/\gamma$), while weak monitoring lets Rabi oscillations survive with a slow $\sim\gamma$ decay.
-- Only the record is directly measured; the conditional state and every Bloch vector or purity plotted from a single run is inferred from it, the SME acting as the optimal filter.
-- The power spectrum of the homodyne current is flat at the shot-noise floor and peaks at the Rabi frequency (its width the emission rate), which is how the coherent dynamics are read from the record; the small-lag bump in the Butterworth-filtered time-domain correlation is filtered shot noise, not signal, as filtering pure noise confirms.
-- A record supports more than a spectrum: state filtering (what the Bloch plots are), parameter estimation, smoothing, and feedback, with the choice of filter set by the question.
-- At $\eta<1$ the conditioned state is mixed and its Bloch vector sits inside the sphere, while the ensemble average stays $\eta$-independent and equal to the master-equation state.
-
-### Where This Leaves Us (and What Comes Next)
-
-You now have a complete, computation-first toolkit for continuously measured quantum systems: the stochastic master equation and its readout, a positivity-preserving map $\mathcal{T}$ over plain matrices of any dimension, the Function Repository's `LindbladSolve` as the master-equation reference and `BlochSpherePlot` for the sphere, exercised on dephasing, spontaneous emission, the homodyne current's spectrum, inefficient detection, and a qutrit. The single most consequential parameter is the ratio of measurement rate to internal dynamics: turn it up and the record pins the state and freezes coherent motion; turn it down and the state follows its Hamiltonian, barely disturbed. The natural continuations are quantum feedback, using the conditioned state or the record to drive the Hamiltonian in real time (the setting the scheme was built for), and larger monitored systems, two qubits and beyond, where the same dimension-general call runs unchanged and the trajectories carry entanglement conditioned on a shared record.
+The notebook now has separate tools for inference and simulation. That separation fixes the status of every plot: detector statistics are observable when the input is experimental, state quantities computed from a record are inferred, and every detector record generated here is synthetic. No plot contains experimental data. The next step for an experiment is to replace the synthetic readout with calibrated detector increments and reserve part of the data for an independent test.
 
 ### Acknowledgment
 
-The qubit examples follow the continuous-measurement lectures of Gabriel T. Landi and the homodyne-trajectory pictures of Wiseman and Milburn's *Quantum Measurement and Control*; the integrator implements the positivity-preserving scheme cited in Part II. The framing throughout, one conditioned run against the average of many, is the trajectory unravelling that makes an abstract master equation into something an experiment records.
+The state update follows the positivity-preserving scheme of Rouchon and Ralph. The examples use standard models of monitored $Z$ noise and emitted-light detection.

@@ -1,0 +1,141 @@
+%apsrev4-2.bst 2019-01-14 (MD) hand-edited version of apsrev4-1.bst
+%Control: key (0)
+%Control: author (8) initials jnrlst
+%Control: editor formatted (1) identically to author
+%Control: production of article title (0) allowed
+%Control: page (0) single
+%Control: year (1) truncated
+%Control: production of eprint (0) enabled
+\begin{thebibliography}{29}%
+\makeatletter
+\providecommand \@ifxundefined [1]{%
+ \@ifx{#1\undefined}
+}%
+\providecommand \@ifnum [1]{%
+ \ifnum #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \@ifx [1]{%
+ \ifx #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \natexlab [1]{#1}%
+\providecommand \enquote  [1]{``#1''}%
+\providecommand \bibnamefont  [1]{#1}%
+\providecommand \bibfnamefont [1]{#1}%
+\providecommand \citenamefont [1]{#1}%
+\providecommand \href@noop [0]{\@secondoftwo}%
+\providecommand \href [0]{\begingroup \@sanitize@url \@href}%
+\providecommand \@href[1]{\@@startlink{#1}\@@href}%
+\providecommand \@@href[1]{\endgroup#1\@@endlink}%
+\providecommand \@sanitize@url [0]{\catcode `\\12\catcode `\$12\catcode `\&12\catcode `\#12\catcode `\^12\catcode `\_12\catcode `\%12\relax}%
+\providecommand \@@startlink[1]{}%
+\providecommand \@@endlink[0]{}%
+\providecommand \url  [0]{\begingroup\@sanitize@url \@url }%
+\providecommand \@url [1]{\endgroup\@href {#1}{\urlprefix }}%
+\providecommand \urlprefix  [0]{URL }%
+\providecommand \Eprint [0]{\href }%
+\providecommand \doibase [0]{https://doi.org/}%
+\providecommand \selectlanguage [0]{\@gobble}%
+\providecommand \bibinfo  [0]{\@secondoftwo}%
+\providecommand \bibfield  [0]{\@secondoftwo}%
+\providecommand \translation [1]{[#1]}%
+\providecommand \BibitemOpen [0]{}%
+\providecommand \bibitemStop [0]{}%
+\providecommand \bibitemNoStop [0]{.\EOS\space}%
+\providecommand \EOS [0]{\spacefactor3000\relax}%
+\providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
+\let\auto@bib@innerbib\@empty
+%</preamble>
+\bibitem [{\citenamefont {Bassi}\ and\ \citenamefont {Ghirardi}(2003)}]{bassi2003dynamical}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}}\ and\ \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Ghirardi}},\ }\bibfield  {title} {\bibinfo {title} {Dynamical reduction models},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physics Reports}\ }\textbf {\bibinfo {volume} {379}},\ \bibinfo {pages} {257} (\bibinfo {year} {2003})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Bassi}\ \emph {et~al.}(2013)\citenamefont {Bassi}, \citenamefont {Lochan}, \citenamefont {Satin}, \citenamefont {Singh},\ and\ \citenamefont {Ulbricht}}]{bassi2013models}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Lochan}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Satin}}, \bibinfo {author} {\bibfnamefont {T.~P.}\ \bibnamefont {Singh}},\ and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Ulbricht}},\ }\bibfield  {title} {\bibinfo {title} {Models of wave-function collapse, underlying theories, and experimental tests},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Reviews of Modern Physics}\ }\textbf {\bibinfo {volume} {85}},\ \bibinfo {pages} {471} (\bibinfo {year} {2013})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Carlesso}\ \emph {et~al.}(2022)\citenamefont {Carlesso}, \citenamefont {Donadi}, \citenamefont {Ferialdi}, \citenamefont {Paternostro}, \citenamefont {Ulbricht},\ and\ \citenamefont {Bassi}}]{carlesso2022present}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Donadi}}, \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Ferialdi}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Paternostro}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Ulbricht}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Present status and future challenges of non-interferometric tests of collapse models},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Nature Physics}\ }\textbf {\bibinfo {volume} {18}},\ \bibinfo {pages} {243} (\bibinfo {year} {2022})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Ghirardi}\ \emph {et~al.}(1990)\citenamefont {Ghirardi}, \citenamefont {Pearle},\ and\ \citenamefont {Rimini}}]{ghirardi1990markov}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.~C.}\ \bibnamefont {Ghirardi}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Pearle}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Rimini}},\ }\bibfield  {title} {\bibinfo {title} {Markov processes in hilbert space and continuous spontaneous localization of systems of identical particles},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review A}\ }\textbf {\bibinfo {volume} {42}},\ \bibinfo {pages} {78} (\bibinfo {year} {1990})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Pearle}(1976)}]{pearle1976reduction}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Pearle}},\ }\bibfield  {title} {\bibinfo {title} {Reduction of the state vector by a nonlinear schr{\"o}dinger equation},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review D}\ }\textbf {\bibinfo {volume} {13}},\ \bibinfo {pages} {857} (\bibinfo {year} {1976})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Pearle}(1989)}]{pearle1989combining}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Pearle}},\ }\bibfield  {title} {\bibinfo {title} {Combining stochastic dynamical state-vector reduction with spontaneous localization},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review A}\ }\textbf {\bibinfo {volume} {39}},\ \bibinfo {pages} {2277} (\bibinfo {year} {1989})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Ghirardi}\ \emph {et~al.}(1986)\citenamefont {Ghirardi}, \citenamefont {Rimini},\ and\ \citenamefont {Weber}}]{ghirardi1986unified}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.~C.}\ \bibnamefont {Ghirardi}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Rimini}},\ and\ \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Weber}},\ }\bibfield  {title} {\bibinfo {title} {Unified dynamics for microscopic and macroscopic systems},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review D}\ }\textbf {\bibinfo {volume} {34}},\ \bibinfo {pages} {470} (\bibinfo {year} {1986})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Adler}(2007)}]{adler2007lower}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.~L.}\ \bibnamefont {Adler}},\ }\bibfield  {title} {\bibinfo {title} {Lower and upper bounds on csl parameters from latent image formation and igm heating},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Journal of Physics A: Mathematical and Theoretical}\ }\textbf {\bibinfo {volume} {40}},\ \bibinfo {pages} {2935} (\bibinfo {year} {2007})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Bahrami}\ \emph {et~al.}(2014)\citenamefont {Bahrami}, \citenamefont {Paternostro}, \citenamefont {Bassi},\ and\ \citenamefont {Ulbricht}}]{bahrami2014proposal}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Bahrami}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Paternostro}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Ulbricht}},\ }\bibfield  {title} {\bibinfo {title} {Proposal for a noninterferometric test of collapse models in optomechanical systems},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review Letters}\ }\textbf {\bibinfo {volume} {112}},\ \bibinfo {pages} {210404} (\bibinfo {year} {2014})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Nimmrichter}\ \emph {et~al.}(2014)\citenamefont {Nimmrichter}, \citenamefont {Hornberger},\ and\ \citenamefont {Hammerer}}]{nimmrichter2014optomechanical}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Nimmrichter}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Hornberger}},\ and\ \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Hammerer}},\ }\bibfield  {title} {\bibinfo {title} {Optomechanical sensing of spontaneous wave-function collapse},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {113}},\ \bibinfo {pages} {020405} (\bibinfo {year} {2014})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Di{\'o}si}(2015)}]{diosi2015testing}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Di{\'o}si}},\ }\bibfield  {title} {\bibinfo {title} {Testing spontaneous wave-function collapse models on classical mechanical oscillators},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {114}},\ \bibinfo {pages} {050403} (\bibinfo {year} {2015})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Donadi}\ \emph {et~al.}(2023)\citenamefont {Donadi}, \citenamefont {Ferialdi},\ and\ \citenamefont {Bassi}}]{donadi2023collapse}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Donadi}}, \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Ferialdi}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Collapse dynamics are diffusive},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review Letters}\ }\textbf {\bibinfo {volume} {130}},\ \bibinfo {pages} {230202} (\bibinfo {year} {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Carlesso}\ \emph {et~al.}(2016)\citenamefont {Carlesso}, \citenamefont {Bassi}, \citenamefont {Falferi},\ and\ \citenamefont {Vinante}}]{carlesso2016experimental}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Falferi}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}},\ }\bibfield  {title} {\bibinfo {title} {Experimental bounds on collapse models from gravitational wave detectors},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review D}\ }\textbf {\bibinfo {volume} {94}},\ \bibinfo {pages} {124036} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Carlesso}\ \emph {et~al.}(2018{\natexlab{a}})\citenamefont {Carlesso}, \citenamefont {Paternostro}, \citenamefont {Ulbricht}, \citenamefont {Vinante},\ and\ \citenamefont {Bassi}}]{carlesso2018non}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Paternostro}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Ulbricht}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Non-interferometric test of the continuous spontaneous localization model based on rotational optomechanics},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {New Journal of Physics}\ }\textbf {\bibinfo {volume} {20}},\ \bibinfo {pages} {083022} (\bibinfo {year} {2018}{\natexlab{a}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Armano}\ \emph {et~al.}(2024{\natexlab{a}})\citenamefont {Armano}, \citenamefont {Audley}, \citenamefont {Baird}, \citenamefont {Bassan}, \citenamefont {Binetruy}, \citenamefont {Born}, \citenamefont {Bortoluzzi}, \citenamefont {Castelli}, \citenamefont {Cavalleri}, \citenamefont {Cesarini} \emph {et~al.}}]{armano2024nano}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Armano}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Audley}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Baird}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Bassan}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Binetruy}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Born}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Bortoluzzi}}, \bibinfo {author} {\bibfnamefont {E.}~\bibnamefont {Castelli}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cavalleri}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cesarini}}, \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {Nano-newton electrostatic force actuators for femto-newton-sensitive measurements: System performance test in the lisa pathfinder mission},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review D}\ }\textbf {\bibinfo {volume} {109}},\ \bibinfo {pages} {102009} (\bibinfo {year}
+  {2024}{\natexlab{a}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Fu}(1997)}]{fu1997spontaneous}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {Q.}~\bibnamefont {Fu}},\ }\bibfield  {title} {\bibinfo {title} {Spontaneous radiation of free electrons in a nonrelativistic collapse model},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review A}\ }\textbf {\bibinfo {volume} {56}},\ \bibinfo {pages} {1806} (\bibinfo {year} {1997})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Altamura}\ \emph {et~al.}(2024)\citenamefont {Altamura}, \citenamefont {Carlesso}, \citenamefont {Donadi},\ and\ \citenamefont {Bassi}}]{PhysRevA.109.062212}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {D.~G.~A.}\ \bibnamefont {Altamura}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Donadi}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Noninterferometric rotational test of the continuous spontaneous localization model: Enhancement of the collapse noise through shape optimization},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume} {109}},\ \bibinfo {pages} {062212} (\bibinfo {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Carlesso}\ \emph {et~al.}(2018{\natexlab{b}})\citenamefont {Carlesso}, \citenamefont {Vinante},\ and\ \citenamefont {Bassi}}]{carlesso2018multilayer}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Multilayer test masses to enhance the collapse noise},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review A}\ }\textbf {\bibinfo {volume} {98}},\ \bibinfo {pages} {022122} (\bibinfo {year} {2018}{\natexlab{b}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Helou}\ \emph {et~al.}(2017)\citenamefont {Helou}, \citenamefont {Slagmolen}, \citenamefont {McClelland},\ and\ \citenamefont {Chen}}]{helou2017lisa}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Helou}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Slagmolen}}, \bibinfo {author} {\bibfnamefont {D.~E.}\ \bibnamefont {McClelland}},\ and\ \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont {Chen}},\ }\bibfield  {title} {\bibinfo {title} {Lisa pathfinder appreciably constrains collapse models},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review D}\ }\textbf {\bibinfo {volume} {95}},\ \bibinfo {pages} {084054} (\bibinfo {year} {2017})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Arnquist}\ \emph {et~al.}(2022)\citenamefont {Arnquist}, \citenamefont {Avignone~III}, \citenamefont {Barabash}, \citenamefont {Barton}, \citenamefont {Bhimani}, \citenamefont {Blalock}, \citenamefont {Bos}, \citenamefont {Busch}, \citenamefont {Buuck}, \citenamefont {Caldwell} \emph {et~al.}}]{arnquist2022search}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {I.}~\bibnamefont {Arnquist}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Avignone~III}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Barabash}}, \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {Barton}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Bhimani}}, \bibinfo {author} {\bibfnamefont {E.}~\bibnamefont {Blalock}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Bos}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Busch}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Buuck}}, \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Caldwell}}, \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {Search for spontaneous radiation from wave function collapse in the majorana demonstrator},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review Letters}\ }\textbf {\bibinfo {volume} {129}},\ \bibinfo {pages} {080401} (\bibinfo {year} {2022})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Toro{\v{s}}}\ \emph {et~al.}(2017)\citenamefont {Toro{\v{s}}}, \citenamefont {Gasbarri},\ and\ \citenamefont {Bassi}}]{torovs2017colored}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Toro{\v{s}}}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Gasbarri}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Colored and dissipative continuous spontaneous localization model and bounds from matter-wave interferometry},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physics Letters A}\ }\textbf {\bibinfo {volume} {381}},\ \bibinfo {pages} {3921} (\bibinfo {year} {2017})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Armano}\ \emph {et~al.}(2016)\citenamefont {Armano}, \citenamefont {Audley}, \citenamefont {Auger}, \citenamefont {Baird}, \citenamefont {Bassan}, \citenamefont {Binetruy}, \citenamefont {Born}, \citenamefont {Bortoluzzi}, \citenamefont {Brandt}, \citenamefont {Caleno} \emph {et~al.}}]{armano2016sub}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Armano}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Audley}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Auger}}, \bibinfo {author} {\bibfnamefont {J.~T.}\ \bibnamefont {Baird}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Bassan}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Binetruy}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Born}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Bortoluzzi}}, \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Brandt}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Caleno}}, \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {Sub-femto-g free fall for space-based gravitational wave observatories: Lisa pathfinder results},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {116}},\ \bibinfo {pages} {231101} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Cavalleri}\ \emph {et~al.}(2010)\citenamefont {Cavalleri}, \citenamefont {Ciani}, \citenamefont {Dolesi}, \citenamefont {Hueller}, \citenamefont {Nicolodi}, \citenamefont {Tombolato}, \citenamefont {Vitale}, \citenamefont {Wass},\ and\ \citenamefont {Weber}}]{cavalleri2010gas}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cavalleri}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Ciani}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Dolesi}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Hueller}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Nicolodi}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Tombolato}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Vitale}}, \bibinfo {author} {\bibfnamefont {P.~J.}\ \bibnamefont {Wass}},\ and\ \bibinfo {author} {\bibfnamefont {W.~J.}\ \bibnamefont {Weber}},\ }\bibfield  {title} {\bibinfo {title} {Gas damping force noise on a macroscopic test body in an infinite gas reservoir},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physics Letters A}\ }\textbf {\bibinfo {volume} {374}},\ \bibinfo {pages} {3365} (\bibinfo {year} {2010})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Cavalleri}\ \emph {et~al.}(2009)\citenamefont {Cavalleri}, \citenamefont {Ciani}, \citenamefont {Dolesi}, \citenamefont {Heptonstall}, \citenamefont {Hueller}, \citenamefont {Nicolodi}, \citenamefont {Rowan}, \citenamefont {Tombolato}, \citenamefont {Vitale}, \citenamefont {Wass} \emph {et~al.}}]{cavalleri2009increased}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cavalleri}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Ciani}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Dolesi}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Heptonstall}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Hueller}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Nicolodi}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Rowan}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Tombolato}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Vitale}}, \bibinfo {author} {\bibfnamefont {P.~J.}\ \bibnamefont {Wass}}, \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {Increased brownian force noise from molecular impacts in a constrained volume},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {103}},\ \bibinfo {pages} {140601} (\bibinfo {year} {2009})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Armano}\ \emph {et~al.}(2024{\natexlab{b}})\citenamefont {Armano}, \citenamefont {Audley}, \citenamefont {Baird}, \citenamefont {Binetruy}, \citenamefont {Born}, \citenamefont {Bortoluzzi}, \citenamefont {Castelli}, \citenamefont {Cavalleri}, \citenamefont {Cesarini}, \citenamefont {Chiavegato} \emph {et~al.}}]{armano2024depth}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Armano}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Audley}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Baird}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Binetruy}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Born}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Bortoluzzi}}, \bibinfo {author} {\bibfnamefont {E.}~\bibnamefont {Castelli}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cavalleri}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cesarini}}, \bibinfo {author} {\bibfnamefont {V.}~\bibnamefont {Chiavegato}}, \emph {et~al.},\ }\bibfield  {title} {\bibinfo {title} {In-depth analysis of lisa pathfinder performance results: Time evolution, noise projection, physical models, and implications for lisa},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review D}\ }\textbf {\bibinfo {volume} {110}},\ \bibinfo {pages} {042004} (\bibinfo {year}
+  {2024}{\natexlab{b}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Dai}\ \emph {et~al.}(2024)\citenamefont {Dai}, \citenamefont {Miao},\ and\ \citenamefont {Ma}}]{dai2024updatingconstraintquantumcollapse}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {Q.}~\bibnamefont {Dai}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Miao}},\ and\ \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont {Ma}},\ }\bibfield  {title} {\bibinfo {title} {Updating the constraint on the quantum collapse models via kilogram masses},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {arXiv preprint arXiv:2411.17588}\ } (\bibinfo {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Vinante}\ \emph {et~al.}(2016)\citenamefont {Vinante}, \citenamefont {Bahrami}, \citenamefont {Bassi}, \citenamefont {Usenko}, \citenamefont {Wijts},\ and\ \citenamefont {Oosterkamp}}]{vinante2016upper}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Bahrami}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}}, \bibinfo {author} {\bibfnamefont {O.}~\bibnamefont {Usenko}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Wijts}},\ and\ \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Oosterkamp}},\ }\bibfield  {title} {\bibinfo {title} {Upper bounds on spontaneous wave-function collapse models using millikelvin-cooled nanocantilevers},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {116}},\ \bibinfo {pages} {090402} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Vinante}\ \emph {et~al.}(2017)\citenamefont {Vinante}, \citenamefont {Mezzena}, \citenamefont {Falferi}, \citenamefont {Carlesso},\ and\ \citenamefont {Bassi}}]{vinante2017improved}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Mezzena}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Falferi}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}},\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}},\ }\bibfield  {title} {\bibinfo {title} {Improved noninterferometric test of collapse models using ultracold cantilevers},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical review letters}\ }\textbf {\bibinfo {volume} {119}},\ \bibinfo {pages} {110401} (\bibinfo {year} {2017})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Vinante}\ \emph {et~al.}(2020)\citenamefont {Vinante}, \citenamefont {Carlesso}, \citenamefont {Bassi}, \citenamefont {Chiasera}, \citenamefont {Varas}, \citenamefont {Falferi}, \citenamefont {Margesin}, \citenamefont {Mezzena},\ and\ \citenamefont {Ulbricht}}]{Vinante_2020}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Vinante}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Carlesso}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Bassi}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Chiasera}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Varas}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Falferi}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Margesin}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Mezzena}},\ and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Ulbricht}},\ }\bibfield  {title} {\bibinfo {title} {Narrowing the parameter space of collapse models with ultracold layered force sensors},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Physical Review Letters}\ }\textbf {\bibinfo {volume} {125}} (\bibinfo {year} {2020})}\BibitemShut {NoStop}%
+\end{thebibliography}%

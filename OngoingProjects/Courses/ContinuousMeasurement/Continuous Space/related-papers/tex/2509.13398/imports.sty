@@ -1,0 +1,31 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{siunitx}
+\sisetup{
+    parse-numbers = true,
+    per-mode = symbol,
+    separate-uncertainty = true, % easier to handle units and 
+    multi-part-units = single,
+    range-phrase = \text{--},
+    range-units = single,
+    range-exponents = combine,
+}
+
+\usepackage{pifont} % circled numbers
+\newcommand{\circled}[1]{%
+    \ifcase#1
+    \or\ding{172}% ①
+    \or\ding{173}% ②
+    \or\ding{174}% ③
+    \or\ding{175}% ④
+    \or\ding{176}% ⑤
+    \or\ding{177}% ⑥
+    \or\ding{178}% ⑦
+    \or\ding{179}% ⑧
+    \or\ding{180}% ⑨
+    \or\ding{181}% ⑩
+    \else #1% fallback: just print the number
+\fi
+}
