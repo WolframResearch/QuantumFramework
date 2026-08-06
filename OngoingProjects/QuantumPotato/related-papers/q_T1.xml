@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/RZKNAH4IQLNNthON2DoIdUlumYM</id>
+  <title>arXiv Query: search_query=all:"informationally complete" AND all:factorization&amp;id_list=&amp;start=0&amp;max_results=12</title>
+  <updated>2026-08-05T20:09:01Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:%22informationally+complete%22+AND+all:factorization&amp;start=0&amp;max_results=12&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>12</opensearch:itemsPerPage>
+  <opensearch:totalResults>6</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/quant-ph/0507104v2</id>
+    <title>Informationally complete measurements on bipartite quantum systems: comparing local with global measurements</title>
+    <updated>2005-07-12T16:01:59Z</updated>
+    <link href="https://arxiv.org/abs/quant-ph/0507104v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/quant-ph/0507104v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>  Informationally complete measurements allow the estimation of expectation values of any operator on a quantum system, by changing only the data-processing of the measurement outcomes. In particular, an informationally complete measurement can be used to perform quantum tomography, namely to estimate the density matrix of the quantum state. The data-processing is generally nonunique, and can be optimized according to a given criterion. In this paper we provide the solution of the optimization problem which minimizes the variance in the estimation. We then consider informationally complete measurements performed over bipartite quantum systems focusing attention on universally covariant measurements, and compare their statistical efficiency when performed either locally or globally on the two systems. Among global measurements we consider the special case of Bell measurements, which allow to estimate the expectation of a restricted class of operators. We compare the variance in the three cases: local, Bell, and unrestricted global--and derive conditions for the operators to be estimated such that one type of measurement is more efficient than the other. In particular, we find that for factorized operators and Bell projectors the Bell measurement always performs better than the unrestricted global measurement, which in turn outperforms the local one. For estimation of the matrix elements of the density operator, the relative performances depend on the basis on which the state is represented, and on the matrix element being diagonal or off-diagonal, however, with the global unrestricted measurement generally performing better than the local one.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2005-07-11T17:49:49Z</published>
+    <arxiv:comment>8 pages, no figures</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <arxiv:journal_ref>Phys. Rev. A 72 042108 (2005)</arxiv:journal_ref>
+    <author>
+      <name>G. M. D'Ariano</name>
+    </author>
+    <author>
+      <name>P. Perinotti</name>
+    </author>
+    <author>
+      <name>M. F. Sacchi</name>
+    </author>
+    <arxiv:doi>10.1103/PhysRevA.72.042108</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1103/PhysRevA.72.042108" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1109.5478v3</id>
+    <title>Quantum Tomography under Prior Information</title>
+    <updated>2018-04-15T14:07:41Z</updated>
+    <link href="https://arxiv.org/abs/1109.5478v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1109.5478v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We provide a detailed analysis of the question: how many measurement settings or outcomes are needed in order to identify a quantum system which is constrained by prior information? We show that if the prior information restricts the system to a set of lower dimensionality, then topological obstructions can increase the required number of outcomes by a factor of two over the number of real parameters needed to characterize the system. Conversely, we show that almost every measurement becomes informationally complete with respect to the constrained set if the number of outcomes exceeds twice the Minkowski dimension of the set. We apply the obtained results to determine the minimal number of outcomes of measurements which are informationally complete with respect to states with rank constraints. In particular, we show that 4d-4 measurement outcomes (POVM elements) is enough in order to identify all pure states in a d-dimensional Hilbert space, and that the minimal number is at most 2 log_2(d) smaller than this upper bound.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2011-09-26T08:25:30Z</published>
+    <arxiv:comment>v3: There was a mistake in the derived finer upper bound in Theorem 3. The corrected upper bound is +1 to the earlier version</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <arxiv:journal_ref>Comm. Math. Phys. 318, 355--374 (2013)</arxiv:journal_ref>
+    <author>
+      <name>Teiko Heinosaari</name>
+    </author>
+    <author>
+      <name>Luca Mazzarella</name>
+    </author>
+    <author>
+      <name>Michael M. Wolf</name>
+    </author>
+    <arxiv:doi>10.1007/s00220-013-1671-8</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1007/s00220-013-1671-8" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1306.1214v2</id>
+    <title>Determination of all pure quantum states from a minimal number of observables</title>
+    <updated>2015-07-05T21:01:05Z</updated>
+    <link href="https://arxiv.org/abs/1306.1214v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1306.1214v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We show that for any positive integer $n$, the maps $x \in \mathbb{C}^n \mapsto \{\left|\langle x, z_i \rangle \right|^2\}_{i=1}^{4n} \in \mathbb{R}^{4n}$, where $z_i$ are the columns of four $n\times n$ unitary matrices, are generically injective modulo multiplication by a global phase factor, yielding a family of embeddings of $\mathbb{C}P^{n-1}$ into $\mathbb{R}^{4n-4}$. In particular, this implies that distribution measurements about a pure state with four generic full-rank observables are informationally complete, which is sharp for $n \geq 6$. To complement this information-theoretic study, we establish in a companion paper that the PhaseLift algorithm yields efficient phase retrieval from quadratic measurements with $O(1)$ unitary matrices, with high probability, where the unitaries are iid according to Haar measure.</summary>
+    <category term="math-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.AG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.DG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2013-06-05T19:38:23Z</published>
+    <arxiv:primary_category term="math-ph"/>
+    <author>
+      <name>Damien Mondragon</name>
+    </author>
+    <author>
+      <name>Vladislav Voroninski</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1507.05323v3</id>
+    <title>Quantum Conical Designs</title>
+    <updated>2016-08-29T14:07:54Z</updated>
+    <link href="https://arxiv.org/abs/1507.05323v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1507.05323v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Complex projective t-designs, particularly SICs and full sets of MUBs, play an important role in quantum information. We introduce a generalization which we call conical t-designs. They include arbitrary rank symmetric informationally complete measurements (SIMs) and full sets of arbitrary rank mutually unbiased measurements (MUMs). They are deeply implicated in the description of entanglement (as we show in a subsequent paper). Viewed in one way a conical 2-design is a symmetric decomposition of a separable Werner state (up to a normalization factor). Viewed in another way it is a certain kind of polytope in the Bloch body. In the Bloch body picture SIMs and full sets of MUMs form highly symmetric polytopes (a single regular simplex in the one case; the convex hull of a set of orthogonal regular simplices in the other). We give the necessary and sufficient conditions for an arbitrary polytope to be what we call a homogeneous conical 2-design. This suggests a way to search for new kinds of projective 2-design.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2015-07-19T19:11:46Z</published>
+    <arxiv:comment>12 pages. v3: additional references; title changed to match published version</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <arxiv:journal_ref>J. Phys. A: Math. Theor. 49 (2016) 085301</arxiv:journal_ref>
+    <author>
+      <name>Matthew A. Graydon</name>
+    </author>
+    <author>
+      <name>D. M. Appleby</name>
+    </author>
+    <arxiv:doi>10.1088/1751-8113/49/8/085301</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1088/1751-8113/49/8/085301" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1812.06693v1</id>
+    <title>Adaptive Quantum State Tomography with Neural Networks</title>
+    <updated>2018-12-17T10:59:16Z</updated>
+    <link href="https://arxiv.org/abs/1812.06693v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1812.06693v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Quantum State Tomography is the task of determining an unknown quantum state by making measurements on identical copies of the state. Current algorithms are costly both on the experimental front -- requiring vast numbers of measurements -- as well as in terms of the computational time to analyze those measurements. In this paper, we address the problem of analysis speed and flexibility, introducing \textit{Neural Adaptive Quantum State Tomography} (NA-QST), a machine learning based algorithm for quantum state tomography that adapts measurements and provides orders of magnitude faster processing while retaining state-of-the-art reconstruction accuracy. Our algorithm is inspired by particle swarm optimization and Bayesian particle-filter based adaptive methods, which we extend and enhance using neural networks. The resampling step, in which a bank of candidate solutions -- particles -- is refined, is in our case learned directly from data, removing the computational bottleneck of standard methods. We successfully replace the Bayesian calculation that requires computational time of $O(\mathrm{poly}(n))$ with a learned heuristic whose time complexity empirically scales as $O(\log(n))$ with the number of copies measured $n$, while retaining the same reconstruction accuracy. This corresponds to a factor of a million speedup for $10^7$ copies measured. We demonstrate that our algorithm learns to work with basis, symmetric informationally complete (SIC), as well as other types of POVMs. We discuss the value of measurement adaptivity for each POVM type, demonstrating that its effect is significant only for basis POVMs. Our algorithm can be retrained within hours on a single laptop for a two-qubit situation, which suggests a feasible time-cost when extended to larger systems. It can also adapt to a subset of possible states, a choice of the type of measurement, and other experimental details.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2018-12-17T10:59:16Z</published>
+    <arxiv:comment>First two authors (Yihui Quek and Stanislav Fort) contributed equally. 13 pages, 10 figures</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <author>
+      <name>Yihui Quek</name>
+    </author>
+    <author>
+      <name>Stanislav Fort</name>
+    </author>
+    <author>
+      <name>Hui Khoon Ng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2404.19011v2</id>
+    <title>Synthesizing the Born rule with reinforcement learning</title>
+    <updated>2024-08-05T20:23:50Z</updated>
+    <link href="https://arxiv.org/abs/2404.19011v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2404.19011v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>According to the subjective Bayesian interpretation of quantum theory (QBism), quantum mechanics is a tool that an agent would be wise to use when making bets about natural phenomena. In particular, the Born rule is understood to be a decision-making norm, an ideal which one should strive to meet even if usually falling short in practice. What is required for an agent to make decisions that conform to quantum mechanics? Here we investigate how a realistic (hence non-ideal) agent might deviate from the Born rule in its decisions. To do so we simulate a simple agent as a reinforcement-learning algorithm that makes `bets' on the outputs of a symmetric informationally-complete measurement (SIC) and adjusts its decisions in order to maximize its expected return. We quantify how far the algorithm's decision-making behavior departs from the ideal form of the Born rule and investigate the limiting factors. We propose an experimental implementation of the scenario using heralded single photons.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-04-29T18:00:12Z</published>
+    <arxiv:comment>10 pages, 5 figures</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <author>
+      <name>Rodrigo S. Piera</name>
+    </author>
+    <author>
+      <name>John B. DeBrota</name>
+    </author>
+    <author>
+      <name>Matthew B. Weiss</name>
+    </author>
+    <author>
+      <name>Gabriela B. Lemos</name>
+    </author>
+    <author>
+      <name>Jailson Sales Araújo</name>
+    </author>
+    <author>
+      <name>Gabriel H. Aguilar</name>
+    </author>
+    <author>
+      <name>Jacques L. Pienaar</name>
+    </author>
+  </entry>
+</feed>
