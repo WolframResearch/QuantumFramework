@@ -1,5 +1,7 @@
 # The quantum potato chip: a formal question chain
 
+*This chain compiles the 2024 source paper (arXiv:2411.01082; `main.tex` in `quantum_potato_chip.zip`) into pinned definitions, lemmas, and problems, in the paper's own conventions. The sibling chain [quantum-potato-chip-question-chain.md](quantum-potato-chip-question-chain.md) formalizes the two-coins concept of [quantum-potato-chip-concept-draft.md](quantum-potato-chip-concept-draft.md).*
+
 ## Preamble
 
 This document compiles the quantum-potato-chip idea into named definitions, certified lemmas, and problems whose inputs are entirely contained below. Every formal item uses only the declared primitives and earlier chain items; every convention that changes the object is named. The problems contain no solutions: the central derivation must be executable from this file alone.

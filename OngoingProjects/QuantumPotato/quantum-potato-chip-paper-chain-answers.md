@@ -1,4 +1,6 @@
-# Quantum potato chips: foundational questions and closed-form derivation
+# Quantum potato chips: closed-form answer sheet
+
+*Answer sheet for [quantum-potato-chip-paper-question-chain.md](quantum-potato-chip-paper-question-chain.md): the closed forms of P1, the P2 reconstruction, P3's diagnostic $\phi$, and the chip-preserving noise families of P4. Everything here uses that chain's conventions (the pinned D2 tetrahedron, row coin $p=\tfrac12(1-z/\sqrt{3})$); [quantum-potato-chip-derivation-pra.md](quantum-potato-chip-derivation-pra.md) uses the sign-pattern convention $p=\tfrac12(1+z/\sqrt{3})$, so matching formulas differ by signs.*
 
 ## What is the answer in one line?
 
