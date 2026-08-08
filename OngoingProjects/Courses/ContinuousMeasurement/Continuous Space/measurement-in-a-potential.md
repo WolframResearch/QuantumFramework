@@ -4,8 +4,6 @@ Template: Default
 
 # Continuous Quantum Measurement, from Bayes' Rule to the Quantum Kalman Filter
 
-![Continuous weak measurement localizes a quantum wave packet while filtering extracts its trajectory from noisy observations](measurement-in-a-potential-hero.png)
-
 <!-- #| style: Abstract -->
 In this computational essay, we explore a quantum particle whose position is monitored continuously. This is what is usually called continuous weak measurement. It starts from the stochastic Schrödinger equation (the SDE that drives a state while it is being measured), turns the measurement step into ordinary Bayesian updating, and runs the whole thing on a position grid with a Trotter-Suzuki splitting scheme. We focus on two examples in particular. A free particle, where the measurement narrows a spread-out state to a packet of finite steady width and the noisy measurement record alone tells you where it settled. And a harmonic trap, where continuous measurement squeezes the position variance below the ground state's, and the quantum Kalman filter that levitated-nanoparticle and membrane experiments actually run rebuilds the conditional mean position from the noisy signal.
 
@@ -134,11 +132,10 @@ measUpdate[g_, λ_, dt_, xb_][ψ_] := Normalize[Exp[-λ dt (g["x"] - xb)^2] ψ];
 Is this really Bayes' rule? It should be: the updated density $|\psi_{\rm post}(x)|^2$ ought to equal the prior $|\psi(x)|^2$ times the likelihood $e^{-2\lambda\,dt\,(x-\bar x)^2}$, normalized. Confirm the two constructions agree, for a test state and outcome:
 
 ```wl
-With[{gDemo = grid[512, 40.], λ = .75, dt = .01, xb = -.5},
- With[{ψt = gaussian[gDemo, 1., 0.5, 2.]},
-  With[{post = Abs[measUpdate[gDemo, λ, dt, xb][ψt]]^2,
-    bayes = Normalize[Exp[-2 λ dt (gDemo["x"] - xb)^2] Abs[ψt]^2, Total]},
-   Max@Abs[post - bayes]]]]
+With[{gDemo = grid[512, 40.], λ = .75, dt = .01, xb = -.5}, {ψt = gaussian[gDemo, 1., 0.5, 2.]},
+  {post = Abs[measUpdate[gDemo, λ, dt, xb][ψt]]^2,
+   bayes = Normalize[Exp[-2 λ dt (gDemo["x"] - xb)^2] Abs[ψt]^2, Total]},
+  Max@Abs[post - bayes]]
 ```
 
 The difference is at machine level, so `measUpdate` is exactly the Bayesian posterior; the operator form and the "likelihood times prior" form are two representations of the same update.
@@ -537,7 +534,7 @@ Define a function, and the strength beside it:
 
 ```wl
 sqRatio[u_] := Sqrt[2 (Sqrt[1 + u^2] - 1)]/u;
-μ = 2 ℏ λ/(m ω^2)
+μ = 2 ℏ λ/(m ω^2);
 ```
 
 And confirm the two forms agree:
@@ -591,7 +588,7 @@ harmNum = {ℏ -> hbar, m -> mass, ω -> ωR, λ -> λH};
 Read the steady position variance in units of the vacuum, the grid-substituted expression beside its exact closed form at $\mu=4$; both land on the same number, and both fall below one:
 
 ```wl
-<|"grid-substituted" -> (ΣxSS /. harmNum)/ΣxZP, "exact closed form" -> sqRatio[4]|>
+{(ΣxSS /. harmNum)/ΣxZP, sqRatio[4]}
 ```
 
 It is below $1$: sharper in position than the ground state. For momentum the opposite happens, anti-squeezed above its own zero-point value:
@@ -755,9 +752,9 @@ The plot overlays two curves for the average position over time, and as with the
 
 ### The Price of an Imperfect Detector
 
-The perfect detector was a fiction, in two ways. The overlay a page ago only checked the model against itself, not against nature; a laboratory earns its model separately, by testing the filter's leftover noise for hidden structure and calibrating against an independent out-of-loop measurement. And a real detector catches only a fraction $\eta$ of the light the particle scatters, its *detection efficiency* ($\eta=1$ is perfect, a separate dial from the rate $\lambda$). It is this second gap that separates the essay's below-the-vacuum result from the laboratory: with the same five-number filter inside a fuller noise model, a levitated nanoparticle has been tracked to [about $1.3$ times its zero-point motion](https://arxiv.org/abs/2012.15188), a spread *above* the vacuum, not below (a ratio of standard deviations, about $1.7$ in the variance our $\Sigma$'s track). The rest of this section shows why missing light lands you there, and it takes no new equations.
+The perfect detector was a fiction. A real one catches only a fraction $\eta$ of the light the particle scatters ($\eta=1$ is perfect, and it is a separate knob from the watching rate $\lambda$). This is the one gap between the below-the-vacuum result above and the laboratory: with this same machinery inside a fuller noise model, a levitated nanoparticle has been [tracked to about 1.3 times its zero-point motion](https://arxiv.org/abs/2012.15188), wider than the vacuum rather than narrower. This section asks two plain questions and answers both. How much does the missing light blur the state, and what does that blur do to how tightly the position can be pinned.
 
-Light the detector misses still kicks the particle, but the information it carried is gone for good. So the record moves the state less than a perfect one would, while the kick it delivers stays full: in the covariance equations, every term that comes from watching picks up a factor $\eta$, and the disturbance term keeps its bare $\lambda$,
+Light that escapes detection still disturbs the particle (it gives it a kick) but carries away position information that you never get to see. So imperfect detection reduces the strength of the information you gain by a factor of $\eta$, while the physical backaction remains at the full measurement strength $\lambda$:
 
 $$
 \dot\Sigma_x=\frac{2C}{m}-4\eta\lambda\,\Sigma_x^{2},\qquad
@@ -765,69 +762,63 @@ $$
 \dot\Sigma_p=-2m\omega^2C+\lambda\hbar^2-4\eta\lambda\,C^{2}.
 $$
 
-which is just the ideal system with two numbers rescaled, $\lambda\to\eta\lambda$ and $\hbar\to\hbar/\sqrt{\eta}$. The rescaling is built for exactly this: it leaves the disturbance term untouched, $(\eta\lambda)(\hbar/\sqrt{\eta})^2=\lambda\hbar^2$, while every watching term picks up the $\eta$. Because the rescaling turns the ideal equations into these, it also turns the ideal steady state into the one we need, with no re-solving:
+This is the earlier system with two numbers rescaled, $\lambda\to\eta\lambda$ and $\hbar\to\hbar/\sqrt{\eta}$, so the steady state we need comes straight from the one we already have:
 
 ```wl
 {ΣxSSη, CcSSη, ΣpSSη} = {ΣxSS, CcSS, ΣpSS} /. {λ -> η λ, ℏ -> ℏ/Sqrt[η]};
 ```
 
-The first cost is purity. A perfect measurement held the state exactly at the uncertainty limit; a lossy one holds it above that limit, by exactly the missing fraction:
+**How much the missing light blurs the state.** The Robertson-Schrödinger relation sets a smallest joint spread in position and momentum: $\Sigma_x\Sigma_p-C^2\ge\hbar^2/4$. That product is the position spread times the momentum spread less their correlation, and a perfect measurement holds it right at the floor. Read it on the lossy state:
 
 ```wl
 Simplify[ΣxSSη ΣpSSη - CcSSη^2, {λ > 0, ω > 0, m > 0, ℏ > 0, 0 < η <= 1}]
 ```
 
-The combination comes out $\hbar^2/4\eta$, above the floor of $\hbar^2/4$: the conditional state is now mixed, because part of what the environment took never reached you. The squeezing ratio carries over just as cleanly,
+It comes out $\hbar^2/4\eta$, larger than the floor by $1/\eta$, with $\lambda$, $\omega$ and $m$ all gone: only the efficiency is left.
 
-$$
-\frac{\Sigma_x^{ss}(\eta)}{\Sigma_x^{zp}}=\frac{\sqrt{2(\sqrt{1+\eta\mu^{2}}-1)}}{\eta\,\mu},
-$$
-
-the perfect-detector ratio read at the weakened strength $\sqrt{\eta}\,\mu$ and divided by $\sqrt{\eta}$:
+For a Gaussian state, the purity $\mathrm{Tr}(\rho^2)$ is $\frac{\hbar}{2\sqrt{\Sigma_x\Sigma_p-C^2}}$. For the stationary state above, it becomes:
 
 ```wl
-Simplify[ΣxSSη/(ℏ/(2 m ω)) == sqRatio[Sqrt[η] μ]/Sqrt[η], {λ > 0, ω > 0, m > 0, ℏ > 0, 0 < η <= 1}]
+Simplify[ℏ/(2 Sqrt[ΣxSSη ΣpSSη - CcSSη^2]), {ℏ > 0, 0 < η <= 1}]
 ```
 
-The second cost is the headline. At $\eta=1$ the ratio stayed below one at every strength; at $\eta<1$ it starts *above* one for weak watching (the $\sqrt{\eta}$ in the denominator wins) and dips below the vacuum only past a finite threshold strength:
+So the purity of the stationary state is the square root of the fraction of light you catch, and nothing else. For example, miss a tenth of it and you keep $\sqrt{0.9}$ of the purity, whatever the trap, whatever the particle, however hard you watch.
+
+Let's compare the steady position spread with the ground state's (i.e. zero-point motion). Recall that $\mu$ is the measurement strength $\lambda$ of the SDE made dimensionless by the trap, $\mu=2\hbar\lambda/m\omega^2$, and that `sqRatio` gives the perfect-detector position spread in ground-state units. At efficiency $\eta$ that ratio is $\Sigma_x^{ss}(\eta)/\Sigma_x^{zp}=$ `sqRatio[Sqrt[η] μ]/Sqrt[η]`: it drops below $1$, tighter than the ground state, only past a threshold watching strength. Solving the ratio $=1$ for that strength:
 
 ```wl
-SolveValues[sqRatio[Sqrt[η] u]/Sqrt[η] == 1 && u > 0 && 0 < η < 1, u, Reals]
+Simplify@Reduce[sqRatio[Sqrt[η] u]/Sqrt[η] <= 1 && u > 0 && 0 < η < 1, u, Reals]
 ```
 
-So beating the vacuum survives any efficiency, but only beyond $\mu^*=2\sqrt{1-\eta}/\eta^{3/2}$: inefficiency raises the price, it never forbids it. A perfect detector pays nothing: at $\eta=1$ the extra threshold strength collapses to zero.
+that threshold being $\mu^*=2\sqrt{1-\eta}/\eta^{3/2}$. A perfect detector pays nothing,
 
 ```wl
 Limit[2 Sqrt[1 - η]/η^(3/2), η -> 1]
 ```
 
-A failing detector pays without bound: as the efficiency falls toward zero the threshold strength diverges as $2/\eta^{3/2}$.
+and a failing one pays without bound,
 
 ```wl
 Asymptotic[2 Sqrt[1 - η]/η^(3/2), {η, 0, 1}, Assumptions -> 0 < η < 1]
 ```
 
-and the curve between the two ends prices every detector:
+So however inefficient the detector, as long as it catches some light you can still push the conditional position spread below the ground state's zero-point motion (narrower than the ground state) by watching hard enough; the worse it is, the larger the strength you need, growing without bound as $\eta\to0$.
 
-```wl
-Plot[2 Sqrt[1 - η]/η^(3/2), {η, 0.1, 1}, Frame -> True, PlotRange -> {0, 60},
- FrameLabel -> {"efficiency η", "threshold strength μ*"},
- PlotLabel -> "The price of inefficiency: the strength needed to beat the vacuum"]
-```
-
-Now read the two numbers separately at the experiment's efficiency $\eta=0.34$ and the strength $\mu=4$ we ran. First the steady position variance in vacuum units, which now sits above one: at this efficiency the state is broader than the vacuum, not sharper.
+Plug the numbers we used and calculate the position spread:
 
 ```wl
 sqRatio[Sqrt[η] μ]/Sqrt[η] /. harmNum /. η -> 0.34
 ```
 
-Then the threshold strength that would be needed to reach the vacuum at this efficiency, which lands far above the $\mu=4$ we actually ran.
+As one can see, it is more than one, wider than the vacuum rather than narrower.
+
+Compute the strength it would have needed to reach the vacuum:
 
 ```wl
 2 Sqrt[1 - η]/η^(3/2) /. η -> 0.34
 ```
 
-At that efficiency and that strength the conditional variance sits above the vacuum, and the threshold is far beyond our $\mu$: the same detector, made to watch harder, would push the state back under. That, not efficiency by itself, is what sets where an experiment lands, and the real figure carries thermal force noise and damping this model leaves out besides. What survives all of it is the shape of the answer: five numbers, driven by the record, running in the laboratory's real-time loop.
+The threshold lands far above the strength we used, so the state sits above the vacuum because we watched below it, not because inefficiency forbids going under. A real experiment also carries thermal force noise and damping this model leaves out.
 
 ## Part V: Averaging Over Runs: A Trapped State That Never Settles
 
