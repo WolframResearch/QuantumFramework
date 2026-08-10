@@ -1,0 +1,3322 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    124487,       3315]
+NotebookOptionsPosition[    113406,       3190]
+NotebookOutlinePosition[    113728,       3204]
+CellTagsIndexPosition[    113685,       3201]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Handing NDSolve the explicit Stratonovich SDE: the state and the readout of a \
+monitored qubit\
+\>", "Title",ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell[TextData[{
+ StyleBox["A companion to ",
+  FontWeight->"Bold"],
+ StyleBox["Watching a Qubit: Continuous Measurement and Quantum Trajectories",
+   "TI",
+  FontWeight->"Bold"],
+ StyleBox[" and a direct sequel to ",
+  FontWeight->"Bold"],
+ StyleBox["Regularizing the Noise so NDSolve Can Integrate It", "TI",
+  FontWeight->"Bold"],
+ StyleBox[". There we smoothed the white noise so ",
+  FontWeight->"Bold"],
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+ StyleBox[" could integrate the trajectory, then spent the document deriving \
+the single drift term that separates the It\[OHat] and Stratonovich readings, \
+so we could subtract it before handing the equation over. Here we drop that \
+bookkeeping: the trajectory has an explicit Stratonovich form whose drift \
+already carries the correction, so we write the drift and the diffusion out \
+as they stand and feed ",
+  FontWeight->"Bold"],
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+ StyleBox[" the equation directly. And we integrate all four components, the \
+three Bloch numbers together with the readout ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+ StyleBox[" the detector accumulates, so a sample record rides alongside the \
+state that produced it. What it buys is checked, not asserted: the built-in \
+Stratonovich-to-It\[OHat] conversion certifies the explicit drift \
+symbolically, the ensemble mean lands on the exact Lindblad master equation, \
+and the ensemble spread lands on an independent native ",
+  FontWeight->"Bold"],
+ Cell[BoxData["StratonovichProcess"], "InlineFormula",
+  FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"25a568a6-87a2-527f-535a-810032572145"],
+ StyleBox[" run, for every component of the Bloch vector, not just the \
+monitored one.",
+  FontWeight->"Bold"]
+}], "Text",ExpressionUUID->"00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+
+Cell["Mads Bahrami (last updated: August 9, 2026)", "Text",ExpressionUUID->"2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+
+Cell["\<\
+I strongly believe in a computation-first narrative: if I cannot compute it, \
+I cannot claim to understand it, so every claim below is turned into a short \
+cell you can run and change. The environment is a live Wolfram notebook; \
+evaluate the cells from top to bottom, since later ones use objects the \
+earlier ones define. Change a rate, reseed the noise, lengthen the window, \
+and watch what moves: my suggestion is to read each output and its meaning \
+first, before unpacking the input that produced it.\
+\>", "Text",ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
+
+Cell["Let's start!", "Text",ExpressionUUID->"56e0e12c-de7d-6135-7e9f-f889db08301f"],
+
+Cell["\<\
+The trajectory equations: the state and the readout in one SDE\
+\>", "Section",ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+
+Cell[TextData[{
+ "Continuous homodyne monitoring of a driven qubit produces two coupled \
+equations driven by the same noise: one for the observer's running estimate \
+of the Bloch vector ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["x", "TI"]}], ",", 
+   StyleBox["y", "TI"], ",", 
+   RowBox[{
+    StyleBox["z", "TI"], "}", "=", "{", 
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["\[Sigma]", "TI"], "^"], 
+     StyleBox["x", "TI"]], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1]}], ",", 
+   RowBox[{
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["\[Sigma]", "TI"], "^"], 
+     StyleBox["y", "TI"]], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1]}], ",", 
+   RowBox[{
+    StyleBox["\[LeftAngleBracket]",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["\[Sigma]", "TI"], "^"], 
+     StyleBox["z", "TI"]], 
+    StyleBox["\[RightAngleBracket]",
+     SpanMaxSize->1], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+ ", and one for the readout ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+ " the detector accumulates while measuring ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+ ". Stacking the readout as a fourth component, the pair is a single \
+scalar-noise It\[OHat] stochastic differential equation, a drift ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+ " times ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "t"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+ " plus a diffusion ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ec9a758-58be-624c-16f6-3f02594b3096"],
+ " times one Wiener increment ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "W"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+ ":"
+}], "Text",ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["d", "TI"], "(", GridBox[{
+      {
+       StyleBox["x", "TI"]},
+      {
+       StyleBox["y", "TI"]},
+      {
+       StyleBox["z", "TI"]},
+      {
+       StyleBox["Q", "TI"]}
+     }], ")", "=", 
+    UnderscriptBox[
+     UnderscriptBox[
+      RowBox[{"(", GridBox[{
+         {
+          RowBox[{"-", 
+           SubsuperscriptBox["\[CapitalGamma]", "2", 
+            StyleBox["eff",
+             FontSlant->"Plain"]], " ", 
+           StyleBox["x", "TI"]}]},
+         {
+          RowBox[{"-", 
+           SubsuperscriptBox["\[CapitalGamma]", "2", 
+            StyleBox["eff",
+             FontSlant->"Plain"]], " ", 
+           StyleBox["y", "TI"], "-", 
+           SubscriptBox["\[CapitalOmega]", 
+            StyleBox["x", "TI"]], " ", 
+           StyleBox["z", "TI"]}]},
+         {
+          RowBox[{
+           SubscriptBox[
+            StyleBox["\[Gamma]", "TI"], "1"], 
+           StyleBox["(",
+            SpanMaxSize->1], 
+           RowBox[{"1", "-", 
+            StyleBox["z", "TI"]}], 
+           StyleBox[")",
+            SpanMaxSize->1], "+", 
+           SubscriptBox["\[CapitalOmega]", 
+            StyleBox["x", "TI"]], " ", 
+           StyleBox["y", "TI"]}]},
+         {
+          RowBox[{
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"C", "I"}], "TI"]]], " ", 
+           StyleBox["z", "TI"]}]}
+        }], ")"}], "\[UnderBrace]"], 
+     OverscriptBox[
+      StyleBox["a", "TI"], "\[RightVector]"]], " ", 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"], "\[ThickSpace]", "+", "\[ThickSpace]", 
+    UnderscriptBox[
+     UnderscriptBox[
+      RowBox[{"(", GridBox[{
+         {
+          RowBox[{"-", 
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"C", "I"}], "TI"]]], " ", 
+           StyleBox["x", "TI"], 
+           StyleBox["z", "TI"], "-", 
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"B", "A"}], "TI"]]], " ", 
+           StyleBox["y", "TI"]}]},
+         {
+          RowBox[{"-", 
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"C", "I"}], "TI"]]], " ", 
+           StyleBox["y", "TI"], 
+           StyleBox["z", "TI"], "+", 
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"B", "A"}], "TI"]]], " ", 
+           StyleBox["x", "TI"]}]},
+         {
+          RowBox[{
+           SqrtBox[
+            SubscriptBox["\[CapitalGamma]", 
+             StyleBox[
+              RowBox[{"C", "I"}], "TI"]]], " ", 
+           StyleBox["(",
+            SpanMaxSize->1], 
+           RowBox[{"1", "-", 
+            SuperscriptBox[
+             StyleBox["z", "TI"], "2"]}], 
+           StyleBox[")",
+            SpanMaxSize->1]}]},
+         {"1"}
+        }], ")"}], "\[UnderBrace]"], 
+     OverscriptBox[
+      StyleBox["b", "TI"], "\[RightVector]"]], " ", 
+    StyleBox["d", "TI"], 
+    StyleBox["W", "TI"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"569e173f-6b36-b240-7ea5-8f790ec000aa"],
+
+Cell[TextData[{
+ "This is the target: the process whose mean we will check against the \
+Lindblad master equation and whose spread we will check against a native \
+integrator. The top three rows, the Bloch state, close on their own, nothing \
+in them depends on ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+ "; the fourth row is the record, an integral whose drift ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "779c57de-bb93-d239-1da4-4e983e27a103"],
+ " carries the ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2867ea9b-6e8d-517b-581c-03c50b382041"],
+ " signal and whose noise is the same ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "W"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+ " that kicks the state."
+}], "Text",ExpressionUUID->"0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+
+Cell[TextData[{
+ "Every parameter is a rate, in units where ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], "1"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+ ": ",
+ Cell[BoxData[
+  SubscriptBox["\[CapitalGamma]", 
+   StyleBox[
+    RowBox[{"C", "I"}], "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
+ " is the informative (coherent-information) rate, which sharpens the state \
+toward a ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], 
+   StyleBox["z", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ " eigenstate; ",
+ Cell[BoxData[
+  SubscriptBox["\[CapitalGamma]", 
+   StyleBox[
+    RowBox[{"B", "A"}], "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+ " is the backaction rate of the orthogonal quadrature, which only kicks the \
+phase; ",
+ Cell[BoxData[
+  SubscriptBox["\[CapitalGamma]", 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+ " is the measurement dephasing ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox["m", "TI"]], "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+ "; ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Gamma]", "TI"], 
+   StyleBox["\[Phi]", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+ " is the intrinsic pure dephasing; ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], "1"], "=", "1", "/", 
+   SubscriptBox[
+    StyleBox["T", "TI"], "1"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+ " is the relaxation rate; and ",
+ Cell[BoxData[
+  SubscriptBox["\[CapitalOmega]", 
+   StyleBox["x", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1cbde497-e826-5557-4442-fdd089d33fbd"],
+ " is the Rabi frequency. One combination recurs, the effective transverse \
+decay ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox["\[CapitalGamma]", "2", 
+    StyleBox["eff",
+     FontSlant->"Plain"]], "=", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], "1"], "/", "2", "+", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], 
+    StyleBox["\[Phi]", "TI"]], "+", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox["d", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+ ". Throughout, the code reads a rate vector positionally, ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["r", "TI"], "=", "{", 
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]}], ",", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], ",", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox["d", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], 
+    StyleBox["\[Phi]", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], "1"], ",", 
+   RowBox[{
+    SubscriptBox["\[CapitalOmega]", 
+     StyleBox["x", "TI"]], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+ ", so it lines up with these formulas."
+}], "Text",ExpressionUUID->"1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+
+Cell[TextData[{
+ "Now the same process written the other way. For a single scalar noise, the \
+It\[OHat] equation above is identical to a Stratonovich equation with the \
+same diffusion and a drift lowered by one exact term (the \
+It\[OHat]-Stratonovich conversion, unambiguous for scalar noise, with no L\
+\[EAcute]vy-area subtlety). We will not compute that term. Its effect is \
+already written into the explicit Stratonovich drift below, and that is the \
+drift we hand ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+ ":"
+}], "Text",ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["d", "TI"], "(", GridBox[{
+      {
+       StyleBox["x", "TI"]},
+      {
+       StyleBox["y", "TI"]},
+      {
+       StyleBox["z", "TI"]},
+      {
+       StyleBox["Q", "TI"]}
+     }], ")", "=", "(", GridBox[{
+      {
+       RowBox[{
+        StyleBox["(",
+         FontSize->1.2 Inherited], 
+        FractionBox[
+         RowBox[{
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"B", "A"}], "TI"]], "+", 
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"C", "I"}], "TI"]]}], "2"], "-", 
+        SubsuperscriptBox["\[CapitalGamma]", "2", 
+         StyleBox["eff",
+          FontSlant->"Plain"]], "-", 
+        SubscriptBox["\[CapitalGamma]", 
+         StyleBox[
+          RowBox[{"C", "I"}], "TI"]], " ", 
+        SuperscriptBox[
+         StyleBox["z", "TI"], "2"], 
+        StyleBox[")",
+         FontSize->1.2 Inherited], " ", 
+        StyleBox["x", "TI"], "-", 
+        SqrtBox[
+         RowBox[{
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"B", "A"}], "TI"]], 
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"C", "I"}], "TI"]]}]], " ", 
+        StyleBox["y", "TI"], 
+        StyleBox["z", "TI"]}]},
+      {
+       RowBox[{
+        StyleBox["(",
+         FontSize->1.2 Inherited], 
+        FractionBox[
+         RowBox[{
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"B", "A"}], "TI"]], "+", 
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"C", "I"}], "TI"]]}], "2"], "-", 
+        SubsuperscriptBox["\[CapitalGamma]", "2", 
+         StyleBox["eff",
+          FontSlant->"Plain"]], "-", 
+        SubscriptBox["\[CapitalGamma]", 
+         StyleBox[
+          RowBox[{"C", "I"}], "TI"]], " ", 
+        SuperscriptBox[
+         StyleBox["z", "TI"], "2"], 
+        StyleBox[")",
+         FontSize->1.2 Inherited], " ", 
+        StyleBox["y", "TI"], "+", 
+        SqrtBox[
+         RowBox[{
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"B", "A"}], "TI"]], 
+          SubscriptBox["\[CapitalGamma]", 
+           StyleBox[
+            RowBox[{"C", "I"}], "TI"]]}]], " ", 
+        StyleBox["x", "TI"], 
+        StyleBox["z", "TI"], "-", 
+        SubscriptBox["\[CapitalOmega]", 
+         StyleBox["x", "TI"]], " ", 
+        StyleBox["z", "TI"]}]},
+      {
+       RowBox[{
+        SubscriptBox[
+         StyleBox["\[Gamma]", "TI"], "1"], 
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{"1", "-", 
+         StyleBox["z", "TI"]}], 
+        StyleBox[")",
+         SpanMaxSize->1], "+", 
+        SubscriptBox["\[CapitalGamma]", 
+         StyleBox[
+          RowBox[{"C", "I"}], "TI"]], " ", 
+        StyleBox["z", "TI"], 
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{"1", "-", 
+         SuperscriptBox[
+          StyleBox["z", "TI"], "2"]}], 
+        StyleBox[")",
+         SpanMaxSize->1], "+", 
+        SubscriptBox["\[CapitalOmega]", 
+         StyleBox["x", "TI"]], " ", 
+        StyleBox["y", "TI"]}]},
+      {
+       RowBox[{
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"C", "I"}], "TI"]]], " ", 
+        StyleBox["z", "TI"]}]}
+     }], ")", 
+    StyleBox["d", "TI"], 
+    StyleBox["t", "TI"], "\[ThickSpace]", "+", "\[ThickSpace]", "(", 
+    GridBox[{
+      {
+       RowBox[{"-", 
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"C", "I"}], "TI"]]], " ", 
+        StyleBox["x", "TI"], 
+        StyleBox["z", "TI"], "-", 
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"B", "A"}], "TI"]]], " ", 
+        StyleBox["y", "TI"]}]},
+      {
+       RowBox[{"-", 
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"C", "I"}], "TI"]]], " ", 
+        StyleBox["y", "TI"], 
+        StyleBox["z", "TI"], "+", 
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"B", "A"}], "TI"]]], " ", 
+        StyleBox["x", "TI"]}]},
+      {
+       RowBox[{
+        SqrtBox[
+         SubscriptBox["\[CapitalGamma]", 
+          StyleBox[
+           RowBox[{"C", "I"}], "TI"]]], " ", 
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{"1", "-", 
+         SuperscriptBox[
+          StyleBox["z", "TI"], "2"]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}]},
+      {"1"}
+     }], ")", "\[SmallCircle]", 
+    StyleBox["d", "TI"], 
+    StyleBox["W", "TI"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"],
+
+Cell[TextData[{
+ "The reason this is the form to feed a smooth-noise solver is one sentence: \
+a white noise replaced by a differentiable curve of vanishing correlation \
+time integrates to the Stratonovich reading, not the It\[OHat] one, so ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ ", which sees only a smooth forcing, must be given the Stratonovich drift. \
+That is the entire design of this route, and it is why the correction never \
+has to be computed: the smoothing puts it back. The readout row is the same \
+in both forms, because its noise is additive, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   StyleBox["Q", "TI"], "=", 
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   StyleBox["z", "TI"], " ", 
+   StyleBox["d", "TI"], 
+   StyleBox["t", "TI"], "+", 
+   StyleBox["d", "TI"], 
+   StyleBox["W", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35077f55-9291-6519-633d-771f27244c63"],
+ ", with nothing to reinterpret."
+}], "Text",ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
+
+Cell["Encoding the Stratonovich vector field", "Section",ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+
+Cell[TextData[{
+ "Encode the Stratonovich drift, all four rows, reading the rate vector \
+positionally as ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]}], ",", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], ",", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox["d", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], 
+    StyleBox["\[Phi]", "TI"]], ",", 
+   SubscriptBox[
+    StyleBox["\[Gamma]", "TI"], "1"], ",", 
+   RowBox[{
+    SubscriptBox["\[CapitalOmega]", 
+     StyleBox["x", "TI"]], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+ " and folding the transverse rate ",
+ Cell[BoxData[
+  SubsuperscriptBox["\[CapitalGamma]", "2", 
+   StyleBox["eff",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+ " into a local name:"
+}], "Text",ExpressionUUID->"02f88238-86c8-66df-3287-2462337d4c25"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "driftStrat", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"driftStrat", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"x_", ",", " ", "y_", ",", " ", "z_", ",", " ", "q_"}], "}"}], ",",
+      " ", "r_"}], "]"}], " ", ":=", "\n", "  ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"\[CapitalGamma]2", " ", "=", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "5", "]"}], "]"}], "/", "2"}], " ", "+", " ", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "4", "]"}], "]"}], " ", "+", " ", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "3", "]"}], "]"}]}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"r", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], " ", "+", " ", 
+              RowBox[{"r", "[", 
+               RowBox[{"[", "1", "]"}], "]"}]}], ")"}], "/", "2"}], " ", "-", 
+           " ", "\[CapitalGamma]2", " ", "-", " ", 
+           RowBox[{
+            RowBox[{"r", "[", 
+             RowBox[{"[", "1", "]"}], "]"}], " ", 
+            RowBox[{"z", "^", "2"}]}]}], ")"}], " ", "x"}], " ", "-", " ", 
+        RowBox[{
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"r", "[", 
+            RowBox[{"[", "2", "]"}], "]"}], " ", 
+           RowBox[{"r", "[", 
+            RowBox[{"[", "1", "]"}], "]"}]}], "]"}], " ", "y", " ", "z"}]}], ",",
+        "\n", "    ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"r", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], " ", "+", " ", 
+              RowBox[{"r", "[", 
+               RowBox[{"[", "1", "]"}], "]"}]}], ")"}], "/", "2"}], " ", "-", 
+           " ", "\[CapitalGamma]2", " ", "-", " ", 
+           RowBox[{
+            RowBox[{"r", "[", 
+             RowBox[{"[", "1", "]"}], "]"}], " ", 
+            RowBox[{"z", "^", "2"}]}]}], ")"}], " ", "y"}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"r", "[", 
+            RowBox[{"[", "2", "]"}], "]"}], " ", 
+           RowBox[{"r", "[", 
+            RowBox[{"[", "1", "]"}], "]"}]}], "]"}], " ", "x", " ", "z"}], 
+        " ", "-", " ", 
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "6", "]"}], "]"}], " ", "z"}]}], ",", "\n", "    ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "5", "]"}], "]"}], " ", 
+         RowBox[{"(", 
+          RowBox[{"1", " ", "-", " ", "z"}], ")"}]}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], " ", "z", " ", 
+         RowBox[{"(", 
+          RowBox[{"1", " ", "-", " ", 
+           RowBox[{"z", "^", "2"}]}], ")"}]}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "6", "]"}], "]"}], " ", "y"}]}], ",", "\n", "    ", 
+       RowBox[{
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"r", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "]"}], " ", "z"}]}], "}"}]}], 
+    "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[1]:= ",ExpressionUUID->"034d641c-5834-e412-3173-7e4659c6cf78"],
+
+Cell[TextData[{
+ "Encode the Stratonovich diffusion, the same ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+ " as the It\[OHat] form, with the additive readout row equal to one:"
+}], "Text",ExpressionUUID->"5bfe104a-50de-a555-0985-8a1461680fbf"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "diffStrat", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"diffStrat", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"x_", ",", " ", "y_", ",", " ", "z_", ",", " ", "q_"}], "}"}], ",",
+      " ", "r_"}], "]"}], " ", ":=", "\n", "   ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"r", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "]"}]}], " ", "x", " ", "z"}], " ", 
+      "-", " ", 
+      RowBox[{
+       RowBox[{"Sqrt", "[", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "2", "]"}], "]"}], "]"}], " ", "y"}]}], ",", "\n", 
+     "    ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"r", "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "]"}]}], " ", "y", " ", "z"}], " ", 
+      "+", " ", 
+      RowBox[{
+       RowBox[{"Sqrt", "[", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "2", "]"}], "]"}], "]"}], " ", "x"}]}], ",", "\n", 
+     "    ", 
+     RowBox[{
+      RowBox[{"Sqrt", "[", 
+       RowBox[{"r", "[", 
+        RowBox[{"[", "1", "]"}], "]"}], "]"}], " ", 
+      RowBox[{"(", 
+       RowBox[{"1", " ", "-", " ", 
+        RowBox[{"z", "^", "2"}]}], ")"}]}], ",", "\n", "    ", "1"}], "}"}]}],
+   ";"}]}], "Input",
+ CellLabel->"In[2]:= ",ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc"],
+
+Cell[TextData[{
+ "To read these back as formulas, write the six rates as symbols, using \
+string subscripts so the labels stay ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"C", "I"}], "TI"]], ",", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], ",", "\[Ellipsis]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+ " and never collide with the Bloch ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e1c99a5-dcef-9c28-1623-100ed49be772"],
+ " or fuse into a ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["C", "TI"], "\[CenterDot]", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "608e87cc-8fce-afdf-10b5-1e962a78f525"],
+ " product:"
+}], "Text",ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ratesSym", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[CapitalGamma]", ",", " ", "\"\<CI\>\""}], "]"}], ",", " ", 
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[CapitalGamma]", ",", " ", "\"\<BA\>\""}], "]"}], ",", "\n", 
+     "   ", 
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[CapitalGamma]", ",", " ", "\"\<d\>\""}], "]"}], ",", " ", 
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[Gamma]", ",", " ", "\"\<\[Phi]\>\""}], "]"}], ",", "\n", 
+     "   ", 
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[Gamma]", ",", " ", "\"\<1\>\""}], "]"}], ",", " ", 
+     RowBox[{"Subscript", "[", 
+      RowBox[{"\[CapitalOmega]", ",", " ", "\"\<x\>\""}], "]"}]}], "}"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[3]:= ",ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+
+Cell["\<\
+Verify that the encoded drift is the Stratonovich drift written above, by \
+reading it back on the symbolic rates:\
+\>", "Text",ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"driftStrat", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "Q"}], "}"}], ",", 
+    " ", "ratesSym"}], "]"}], " ", "//", " ", "MatrixForm"}]], "Input",
+ CellLabel->"In[4]:= ",ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+
+Cell[TextData[{
+ "As one can see, the four rows are term for term the drift in the display \
+equation, with Wolfram ordering each sum its own way: the state rows carry \
+the ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"C", "I"}], "TI"]], 
+   SuperscriptBox[
+    StyleBox["z", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+ " sharpening and the ",
+ Cell[BoxData[
+  SqrtBox[
+   RowBox[{
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"B", "A"}], "TI"]], 
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ " cross term, and the readout row is the bare ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+ " signal. Confirm the diffusion the same way:"
+}], "Text",ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"diffStrat", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "Q"}], "}"}], ",", 
+    " ", "ratesSym"}], "]"}], " ", "//", " ", "MatrixForm"}]], "Input",
+ CellLabel->"In[5]:= ",ExpressionUUID->"7b6211f5-475c-1194-2911-88bf72e963fe"],
+
+Cell[TextData[{
+ "As expected, the three state rows are ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+ " and the readout row is the constant one, the additive noise that makes ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
+ " the same in both stochastic calculi. The code and the equations are one \
+object, so from here on we compute with the code."
+}], "Text",ExpressionUUID->"5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+
+Cell[TextData[{
+ "Fix a representative dispersive transmon, rescaled by ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Gamma]", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+ ", starting from the ground state with the readout zeroed, over a short \
+window. The initial condition is a four-vector, the three Bloch numbers \
+followed by the record ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ ":"
+}], "Text",ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ratesB", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "0.352", ",", " ", "0.", ",", " ", "0.176", ",", " ", "1.", ",", " ", 
+     "1.", ",", " ", "3."}], "}"}]}], ";", " ", 
+  RowBox[{"initB", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"0.", ",", " ", "0.", ",", " ", "1.", ",", " ", "0."}], "}"}]}], ";",
+   " ", 
+  RowBox[{"tfB", " ", "=", " ", "3."}], ";", " ", 
+  RowBox[{"nB", " ", "=", " ", "600"}], ";"}]], "Input",
+ CellLabel->"In[6]:= ",ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"],
+
+Cell[TextData[{
+ "The exact reference for the mean is the Lindblad master equation. Because \
+the It\[OHat] drift ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d359769-845f-cd94-44ca-0f332deb97fe"],
+ " is affine in ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["x", "TI"]}], ",", 
+   StyleBox["y", "TI"], ",", 
+   RowBox[{
+    StyleBox["z", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+ ", the ensemble mean obeys that drift as a closed linear ODE with no \
+integration error; solve it with ",
+ Cell[BoxData["DSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "64c30c0d-1857-1b13-0cf0-a65799e26679"],
+ " and return ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ ":"
+}], "Text",ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "lindbladBloch", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"lindbladBloch", "[", 
+    RowBox[{"r_", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"x0_", ",", " ", "y0_", ",", " ", "z0_"}], "}"}]}], "]"}], " ", 
+   ":=", "\n", "  ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\[CapitalGamma]2", " ", "=", " ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"r", "[", 
+           RowBox[{"[", "5", "]"}], "]"}], "/", "2"}], " ", "+", " ", 
+         RowBox[{"r", "[", 
+          RowBox[{"[", "4", "]"}], "]"}], " ", "+", " ", 
+         RowBox[{"r", "[", 
+          RowBox[{"[", "3", "]"}], "]"}]}]}], ",", " ", "sol", ",", " ", "xf",
+        ",", " ", "yf", ",", " ", "zf"}], "}"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{"sol", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"DSolve", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"xf", "'"}], "[", "t", "]"}], " ", "==", " ", 
+             RowBox[{
+              RowBox[{"-", "\[CapitalGamma]2"}], " ", 
+              RowBox[{"xf", "[", "t", "]"}]}]}], ",", " ", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"yf", "'"}], "[", "t", "]"}], " ", "==", " ", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "\[CapitalGamma]2"}], " ", 
+               RowBox[{"yf", "[", "t", "]"}]}], " ", "-", " ", 
+              RowBox[{
+               RowBox[{"r", "[", 
+                RowBox[{"[", "6", "]"}], "]"}], " ", 
+               RowBox[{"zf", "[", "t", "]"}]}]}]}], ",", "\n", "       ", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"zf", "'"}], "[", "t", "]"}], " ", "==", " ", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"r", "[", 
+                RowBox[{"[", "5", "]"}], "]"}], " ", 
+               RowBox[{"(", 
+                RowBox[{"1", " ", "-", " ", 
+                 RowBox[{"zf", "[", "t", "]"}]}], ")"}]}], " ", "+", " ", 
+              RowBox[{
+               RowBox[{"r", "[", 
+                RowBox[{"[", "6", "]"}], "]"}], " ", 
+               RowBox[{"yf", "[", "t", "]"}]}]}]}], ",", " ", 
+            RowBox[{
+             RowBox[{"xf", "[", "0", "]"}], " ", "==", " ", "x0"}], ",", " ", 
+            
+            RowBox[{
+             RowBox[{"yf", "[", "0", "]"}], " ", "==", " ", "y0"}], ",", " ", 
+            
+            RowBox[{
+             RowBox[{"zf", "[", "0", "]"}], " ", "==", " ", "z0"}]}], "}"}], ",",
+           "\n", "      ", 
+          RowBox[{"{", 
+           RowBox[{"xf", ",", " ", "yf", ",", " ", "zf"}], "}"}], ",", " ", 
+          "t"}], "]"}], " ", "//", " ", "First"}]}], ";", "\n", "   ", 
+      RowBox[{"Function", "[", 
+       RowBox[{"tt", ",", " ", 
+        RowBox[{"Re", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"xf", "[", "tt", "]"}], ",", " ", 
+            RowBox[{"yf", "[", "tt", "]"}], ",", " ", 
+            RowBox[{"zf", "[", "tt", "]"}]}], "}"}], " ", "/.", " ", "sol"}], 
+         "]"}]}], "]"}]}]}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[7]:= ",ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell[TextData[{
+ "Two time steps will drive every simulation below, and they should follow \
+the physics, not the trajectory count ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04786d0e-016a-d127-2c07-8568b01ca00d"],
+ ": a step size sets accuracy, ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+ " sets statistics, and they are independent axes. Fix them from the fastest \
+rate in each case. Let ",
+ Cell[BoxData["\[CapitalLambda]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+ " be the largest of the Rabi frequency, the transverse decay ",
+ Cell[BoxData[
+  SubsuperscriptBox["\[CapitalGamma]", "2", 
+   StyleBox["eff",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+ ", and the total measurement rate ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"C", "I"}], "TI"]], "+", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c67103-72a1-9427-0efe-696d0755ff0d"],
+ ":"
+}], "Text",ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "maxRate", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"maxRate", "[", "r_", "]"}], " ", ":=", " ", 
+   RowBox[{"Max", "[", 
+    RowBox[{
+     RowBox[{"r", "[", 
+      RowBox[{"[", "6", "]"}], "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"r", "[", 
+        RowBox[{"[", "5", "]"}], "]"}], "/", "2"}], " ", "+", " ", 
+      RowBox[{"r", "[", 
+       RowBox[{"[", "4", "]"}], "]"}], " ", "+", " ", 
+      RowBox[{"r", "[", 
+       RowBox[{"[", "3", "]"}], "]"}]}], ",", " ", 
+     RowBox[{
+      RowBox[{"r", "[", 
+       RowBox[{"[", "1", "]"}], "]"}], " ", "+", " ", 
+      RowBox[{"r", "[", 
+       RowBox[{"[", "2", "]"}], "]"}]}]}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[8]:= ",ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell[TextData[{
+ "Set the noise grid ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+ " to resolve that fastest timescale with forty knots, fine enough to sit in \
+the white-noise limit. Everything else follows: the ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+ " step is a quarter of it, and the native reference below runs on the same \
+grid:"
+}], "Text",ExpressionUUID->"3181a460-bc62-f1ee-67be-3e4a3514c334"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "dtGenOf", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dtGenOf", "[", "r_", "]"}], " ", ":=", " ", 
+   RowBox[{"1", "/", 
+    RowBox[{"(", 
+     RowBox[{"40", " ", 
+      RowBox[{"maxRate", "[", "r", "]"}]}], ")"}]}]}], ";"}]}], "Input",
+ CellLabel->"In[9]:= ",ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+
+Cell["Regularizing the noise: a Wiener path NDSolve can integrate", "Section",ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+
+Cell[TextData[{
+ "A white-noise increment ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "W"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e187950-8ca2-2ab2-0638-711a25577898"],
+ " is not a function of time, it is a distribution, and ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+ " cannot integrate a distribution. But if we draw the noise on a grid and \
+connect the dots into a smooth curve ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["W", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a9104d-5625-6af3-4356-8a1763d038d9"],
+ ", then ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ " is an ordinary function, and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], "=", 
+   OverscriptBox[
+    StyleBox["a", "TI"], "\[RightVector]"], " ", 
+   StyleBox["d", "TI"], 
+   StyleBox["t", "TI"], "+", 
+   OverscriptBox[
+    StyleBox["b", "TI"], "\[RightVector]"], " ", 
+   StyleBox["d", "TI"], 
+   StyleBox["W", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ " becomes the ordinary differential equation ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    OverscriptBox[
+     StyleBox["v", "TI"], "\[RightVector]"], "."], "=", 
+   OverscriptBox[
+    StyleBox["a", "TI"], "\[RightVector]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], 
+   StyleBox[")",
+    SpanMaxSize->1], "+", 
+   OverscriptBox[
+    StyleBox["b", "TI"], "\[RightVector]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], 
+   StyleBox[")",
+    SpanMaxSize->1], " ", 
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ ". In other words, we replace white noise by a smooth approximation with a \
+short but finite correlation time."
+}], "Text",ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+
+Cell[TextData[{
+ "Concretely: draw i.i.d. Gaussian increments of variance ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " on a grid of spacing ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+ ", accumulate them into a Wiener path, and interpolate with a cubic so ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["W", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ " is a continuous curve and its derivative ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07359582-e823-44a1-2eca-0cef89d62e8b"],
+ " an ordinary function of time, no longer the distribution that white noise \
+is:"
+}], "Text",ExpressionUUID->"7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "wienerFun", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"wienerFun", "[", 
+    RowBox[{"tf_", ",", " ", "dtGen_", ",", " ", "seed_"}], "]"}], " ", ":=", 
+   " ", 
+   RowBox[{"BlockRandom", "[", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", "seed", "]"}], ";", "\n", "   ", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"grid", " ", "=", " ", 
+          RowBox[{"Range", "[", 
+           RowBox[{"0.", ",", " ", "tf", ",", " ", "dtGen"}], "]"}]}], ",", 
+         " ", "incr"}], "}"}], ",", "\n", "    ", 
+       RowBox[{
+        RowBox[{"incr", " ", "=", " ", 
+         RowBox[{"RandomVariate", "[", 
+          RowBox[{
+           RowBox[{"NormalDistribution", "[", 
+            RowBox[{"0", ",", " ", 
+             RowBox[{"Sqrt", "[", "dtGen", "]"}]}], "]"}], ",", " ", 
+           RowBox[{
+            RowBox[{"Length", "[", "grid", "]"}], " ", "-", " ", "1"}]}], 
+          "]"}]}], ";", "\n", "    ", 
+        RowBox[{"Interpolation", "[", 
+         RowBox[{
+          RowBox[{"Transpose", "[", 
+           RowBox[{"{", 
+            RowBox[{"grid", ",", " ", 
+             RowBox[{"Prepend", "[", 
+              RowBox[{
+               RowBox[{"Accumulate", "[", "incr", "]"}], ",", " ", "0."}], 
+              "]"}]}], "}"}], "]"}], ",", " ", 
+          RowBox[{"InterpolationOrder", " ", "->", " ", "3"}]}], "]"}]}]}], 
+      "]"}]}], "]"}]}], ";"}]}], "Input",
+ CellLabel->
+  "In[10]:= ",ExpressionUUID->"68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+
+Cell["\<\
+Visualize one realization of the path and its derivative, the ordinary \
+function that stands in for white noise:\
+\>", "Text",ExpressionUUID->"6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"Wf", " ", "=", " ", 
+     RowBox[{"wienerFun", "[", 
+      RowBox[{"tfB", ",", " ", 
+       RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "11"}], "]"}]}], 
+    "}"}], ",", "\n", " ", 
+   RowBox[{"GraphicsRow", "[", 
+    RowBox[{
+     RowBox[{"{", "\n", "   ", 
+      RowBox[{
+       RowBox[{"Plot", "[", 
+        RowBox[{
+         RowBox[{"Wf", "[", "t", "]"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"t", ",", " ", "0", ",", " ", "tfB"}], "}"}], ",", " ", 
+         RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+         RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", "\n", 
+         "    ", 
+         RowBox[{
+         "PlotLabel", " ", "->", 
+          " ", "\"\<regularized Wiener path W(t)\>\""}], ",", " ", 
+         RowBox[{"FrameLabel", " ", "->", " ", 
+          RowBox[{"{", 
+           RowBox[{"\"\<t\>\"", ",", " ", "\"\<W\>\""}], "}"}]}]}], "]"}], ",",
+        "\n", "   ", 
+       RowBox[{"Plot", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"Wf", "'"}], "[", "t", "]"}], ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"t", ",", " ", "0", ",", " ", "tfB"}], "}"}], ",", " ", 
+         RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+         RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", "\n", 
+         "    ", 
+         RowBox[{
+         "PlotLabel", " ", "->", 
+          " ", "\"\<its derivative W'(t): the smooth noise\>\""}], ",", " ", 
+         RowBox[{"FrameLabel", " ", "->", " ", 
+          RowBox[{"{", 
+           RowBox[{"\"\<t\>\"", ",", " ", "\"\<W'\>\""}], "}"}]}]}], "]"}]}], 
+      "}"}], ",", "\n", "  ", 
+     RowBox[{"ImageSize", " ", "->", " ", "640"}]}], "]"}]}], "]"}]], "Input",\
+
+ CellLabel->
+  "In[11]:= ",ExpressionUUID->"4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+
+Cell[TextData[{
+ "As one can see, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["W", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+ " is a continuous random walk and ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+ " is a jagged but genuine function, varying on the scale ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
+ ". There are two time increments here, and they play different roles. The \
+first, ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
+ ", is the grid the Gaussian increments are drawn on: it sets the correlation \
+time of the smoothed noise, and it is the dial that fixes which stochastic \
+equation we actually solve, converging to the ideal white-noise SDE only as \
+",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]], "\[Rule]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+ ". The second, the ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
+ " step, carries no physics; it only has to resolve the smooth forcing ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "511b3347-8d7d-ab60-0738-ab212409f64a"],
+ " between noise knots, and we hold it below ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "36c19c85-764d-0b01-5efe-15ef03f8566b"],
+ " so the solver is guaranteed to see every wiggle. Which of the two actually \
+moves the answer is a question we put to the machine below."
+}], "Text",ExpressionUUID->"6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+
+Cell[TextData[{
+ "Assemble one trajectory. Build a smooth noise, form the random ODE ",
+ Cell[BoxData[
+  RowBox[{
+   OverscriptBox[
+    OverscriptBox[
+     StyleBox["v", "TI"], "\[RightVector]"], "."], "=", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["a", "TI"], "\[RightVector]"], 
+    StyleBox["Strat",
+     FontSlant->"Plain"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], 
+   StyleBox[")",
+    SpanMaxSize->1], "+", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["b", "TI"], "\[RightVector]"], 
+    StyleBox["Strat",
+     FontSlant->"Plain"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["v", "TI"], "\[RightVector]"], 
+   StyleBox[")",
+    SpanMaxSize->1], " ", 
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+ " for the full four-vector, and hand it to ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5900aac7-5263-773e-0f3f-43a167165a04"],
+ " with its step held below ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+ ":"
+}], "Text",ExpressionUUID->"12d95fcb-3316-2212-42e7-569546a37178"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "oneTraj", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"oneTraj", "[", 
+    RowBox[{
+    "r_", ",", " ", "init_", ",", " ", "tf_", ",", " ", "dtGen_", ",", " ", 
+     "seed_", ",", " ", "maxstep_"}], "]"}], " ", ":=", "\n", "  ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+      "Wf", ",", " ", "xx", ",", " ", "yy", ",", " ", "zz", ",", " ", "QQ", ",",
+        " ", "t", ",", " ", "rhs", ",", " ", "eqs"}], "}"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{"Wf", " ", "=", " ", 
+       RowBox[{"wienerFun", "[", 
+        RowBox[{"tf", ",", " ", "dtGen", ",", " ", "seed"}], "]"}]}], ";", 
+      "\n", "   ", 
+      RowBox[{"rhs", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"driftStrat", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"xx", "[", "t", "]"}], ",", " ", 
+            RowBox[{"yy", "[", "t", "]"}], ",", " ", 
+            RowBox[{"zz", "[", "t", "]"}], ",", " ", 
+            RowBox[{"QQ", "[", "t", "]"}]}], "}"}], ",", " ", "r"}], "]"}], 
+        " ", "+", "\n", "     ", 
+        RowBox[{
+         RowBox[{"diffStrat", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"xx", "[", "t", "]"}], ",", " ", 
+             RowBox[{"yy", "[", "t", "]"}], ",", " ", 
+             RowBox[{"zz", "[", "t", "]"}], ",", " ", 
+             RowBox[{"QQ", "[", "t", "]"}]}], "}"}], ",", " ", "r"}], "]"}], " ", 
+         RowBox[{
+          RowBox[{"Wf", "'"}], "[", "t", "]"}]}]}]}], ";", "\n", "   ", 
+      RowBox[{"eqs", " ", "=", " ", 
+       RowBox[{"Join", "[", 
+        RowBox[{
+         RowBox[{"MapThread", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"#1", "'"}], "[", "t", "]"}], " ", "==", " ", "#2"}], 
+            " ", "&"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"xx", ",", " ", "yy", ",", " ", "zz", ",", " ", "QQ"}], 
+              "}"}], ",", " ", "rhs"}], "}"}]}], "]"}], ",", "\n", "     ", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"xx", "[", "0", "]"}], " ", "==", " ", 
+            RowBox[{"init", "[", 
+             RowBox[{"[", "1", "]"}], "]"}]}], ",", " ", 
+           RowBox[{
+            RowBox[{"yy", "[", "0", "]"}], " ", "==", " ", 
+            RowBox[{"init", "[", 
+             RowBox[{"[", "2", "]"}], "]"}]}], ",", " ", 
+           RowBox[{
+            RowBox[{"zz", "[", "0", "]"}], " ", "==", " ", 
+            RowBox[{"init", "[", 
+             RowBox[{"[", "3", "]"}], "]"}]}], ",", " ", 
+           RowBox[{
+            RowBox[{"QQ", "[", "0", "]"}], " ", "==", " ", 
+            RowBox[{"init", "[", 
+             RowBox[{"[", "4", "]"}], "]"}]}]}], "}"}]}], "]"}]}], ";", "\n", 
+      "   ", 
+      RowBox[{"NDSolveValue", "[", 
+       RowBox[{"eqs", ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"xx", ",", " ", "yy", ",", " ", "zz", ",", " ", "QQ"}], 
+         "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "tf"}], "}"}], ",", " ", 
+        RowBox[{"MaxStepSize", " ", "->", " ", "maxstep"}]}], "]"}]}]}], 
+    "]"}]}], ";"}]}], "Input",
+ CellLabel->
+  "In[12]:= ",ExpressionUUID->"733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+
+Cell[TextData[{
+ "Show one trajectory two ways: the monitored component ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["z", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+ " against the exact Lindblad mean, and the readout ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Q", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b12ee74-9953-131d-1921-003e18e67e67"],
+ " it accumulates, both built from the single four-vector solution:"
+}], "Text",ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"traj", " ", "=", " ", 
+      RowBox[{"oneTraj", "[", 
+       RowBox[{"ratesB", ",", " ", "initB", ",", " ", "tfB", ",", " ", 
+        RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "7", ",", " ", 
+        RowBox[{
+         RowBox[{"dtGenOf", "[", "ratesB", "]"}], "/", "4"}]}], "]"}]}], ",", 
+     "\n", "   ", 
+     RowBox[{"lb", " ", "=", " ", 
+      RowBox[{"lindbladBloch", "[", 
+       RowBox[{"ratesB", ",", " ", 
+        RowBox[{"initB", "[", 
+         RowBox[{"[", 
+          RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}]}]}], 
+    "}"}], ",", "\n", " ", 
+   RowBox[{"Row", "[", 
+    RowBox[{"{", "\n", "   ", 
+     RowBox[{
+      RowBox[{"Plot", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"traj", "[", 
+            RowBox[{"[", "3", "]"}], "]"}], "[", "t", "]"}], ",", " ", 
+          RowBox[{
+           RowBox[{"lb", "[", "t", "]"}], "[", 
+           RowBox[{"[", "3", "]"}], "]"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "tfB"}], "}"}], ",", "\n", 
+        "    ", 
+        RowBox[{"PlotLegends", " ", "->", " ", 
+         RowBox[{"Placed", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            
+            RowBox[{"\"\<one trajectory z(t)\>\"", ",", 
+             " ", "\"\<Lindblad \[LeftAngleBracket]z\[RightAngleBracket](t)\>\
+\""}], "}"}], ",", " ", "Below"}], "]"}]}], ",", "\n", "    ", 
+        RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+        RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", " ", 
+        RowBox[{"FrameLabel", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"\"\<t\>\"", ",", " ", "\"\<z\>\""}], "}"}]}], ",", "\n", 
+        "    ", 
+        RowBox[{
+        "PlotLabel", " ", "->", 
+         " ", "\"\<state: the monitored component\>\""}], ",", " ", 
+        RowBox[{"ImageSize", " ", "->", " ", "Medium"}]}], "]"}], ",", 
+      " ", "\"\<   \>\"", ",", "\n", "   ", 
+      RowBox[{"Plot", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"traj", "[", 
+          RowBox[{"[", "4", "]"}], "]"}], "[", "t", "]"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "tfB"}], "}"}], ",", " ", 
+        RowBox[{"PlotStyle", " ", "->", " ", 
+         RowBox[{"ColorData", "[", 
+          RowBox[{"97", ",", " ", "2"}], "]"}]}], ",", "\n", "    ", 
+        RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+        RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", " ", 
+        RowBox[{"FrameLabel", " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"\"\<t\>\"", ",", " ", "\"\<Q\>\""}], "}"}]}], ",", "\n", 
+        "    ", 
+        RowBox[{
+        "PlotLabel", " ", "->", 
+         " ", "\"\<readout: the accumulated record Q(t)\>\""}], ",", " ", 
+        RowBox[{"ImageSize", " ", "->", " ", "Medium"}]}], "]"}]}], "}"}], 
+    "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[13]:= ",ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
+
+Cell[TextData[{
+ "As one can see, the state path fluctuates around the Lindblad mean, as a \
+single record must, while the readout ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78287f93-0f12-7c52-2828-76ddaaa746b8"],
+ " climbs steeply where ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "08285353-0e0e-39f8-3828-4b1dabb88bc2"],
+ " is near one and bends as ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+ " falls, its ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "187adc3d-3961-76c2-4819-d667b8145c28"],
+ " signal buried under noise. The two panels share one ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"d", "W"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "641c78eb-7f03-7846-0c24-71b57ab64aac"],
+ ", and that is the physical content of a measurement record: the noise \
+written into ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+ " is the same noise that kicked ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+ "."
+}], "Text",ExpressionUUID->"6121b9de-dddd-aca8-10de-309bd469f6f2"],
+
+Cell["The ensemble: matching the mean and the second moment", "Section",ExpressionUUID->"30209679-023a-ee91-61df-0823b7ccb4fb"],
+
+Cell[TextData[{
+ "A single path tells us little; the mean lives in the ensemble and the \
+second moment in how widely the paths spread. Rather than compare final \
+values, we keep the whole trajectory from each route, average many of them, \
+and watch the two ensemble means track the exact Lindblad curve across the \
+entire interval. The two routes are the built-in ",
+ Cell[BoxData["StratonovichProcess"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "29bc1606-c22d-409d-5f43-8863f7d812e7"],
+ " integrator and the regularized ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+ " route, both solving the same Stratonovich SDE, and the yardstick is a \
+single Lindblad solution from ",
+ Cell[BoxData["DSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3119d855-3ffd-7401-6726-d21fb9885f6b"],
+ "."
+}], "Text",ExpressionUUID->"62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+
+Cell[TextData[{
+ "The exact mean obeys the affine It\[OHat] drift ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
+ ", which is the Lindblad master equation, and ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "51fce014-dca1-0630-0783-fa51d5546d1a"],
+ " is also the target the built-in conversion should return from our \
+Stratonovich field. Encode it on the three state rows:"
+}], "Text",ExpressionUUID->"657c1c65-980e-511d-1303-964f19bb2067"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "driftIto", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"driftIto", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"x_", ",", " ", "y_", ",", " ", "z_"}], "}"}], ",", " ", "r_"}],
+     "]"}], " ", ":=", "\n", "  ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"\[CapitalGamma]2", " ", "=", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "5", "]"}], "]"}], "/", "2"}], " ", "+", " ", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "4", "]"}], "]"}], " ", "+", " ", 
+        RowBox[{"r", "[", 
+         RowBox[{"[", "3", "]"}], "]"}]}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "\[CapitalGamma]2"}], " ", "x"}], ",", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"-", "\[CapitalGamma]2"}], " ", "y"}], " ", "-", " ", 
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "6", "]"}], "]"}], " ", "z"}]}], ",", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "5", "]"}], "]"}], " ", 
+         RowBox[{"(", 
+          RowBox[{"1", " ", "-", " ", "z"}], ")"}]}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"r", "[", 
+          RowBox[{"[", "6", "]"}], "]"}], " ", "y"}]}]}], "}"}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellLabel->
+  "In[14]:= ",ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+
+Cell[TextData[{
+ "Before any simulation, the central claim can be settled exactly, by the \
+same built-in we are keeping. We never hand-compute the \
+It\[OHat]-Stratonovich correction, but the conversion ",
+ Cell[BoxData[
+  RowBox[{"ItoProcess", "[", 
+   RowBox[{"StratonovichProcess", "[", "...", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e9b7e66-629a-1114-26b9-7040172f607e"],
+ " applies it for us, rewriting our Stratonovich vector field in It\[OHat] \
+form. If the explicit Stratonovich drift truly carries the correction, its It\
+\[OHat] form must be the affine drift ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "585a51e6-774f-2dd2-087a-48c002fa7738"],
+ " on the three state rows, with the readout row untouched. Convert the full \
+four-component field and subtract that target, under the physical assumption \
+that the rates are nonnegative (needed only to fold ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"B", "A"}], "TI"]]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+ " into a single root):"
+}], "Text",ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
+
+Cell[BoxData[
+ RowBox[{"Assuming", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Subscript", "[", 
+       RowBox[{"\[CapitalGamma]", ",", " ", "\"\<CI\>\""}], "]"}], " ", ">=", 
+      " ", "0"}], ",", " ", 
+     RowBox[{
+      RowBox[{"Subscript", "[", 
+       RowBox[{"\[CapitalGamma]", ",", " ", "\"\<BA\>\""}], "]"}], " ", ">=", 
+      " ", "0"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"FullSimplify", "[", "\n", "  ", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"ItoProcess", "[", 
+         RowBox[{"StratonovichProcess", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"driftStrat", "[", 
+              RowBox[{
+               RowBox[{"{", 
+                RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "q"}], 
+                "}"}], ",", " ", "ratesSym"}], "]"}], ",", "\n", "        ", 
+             RowBox[{"List", " ", "/@", " ", 
+              RowBox[{"diffStrat", "[", 
+               RowBox[{
+                RowBox[{"{", 
+                 RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "q"}], 
+                 "}"}], ",", " ", "ratesSym"}], "]"}]}], ",", " ", 
+             RowBox[{"{", 
+              RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "q"}], 
+              "}"}]}], "}"}], ",", "\n", "       ", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "q"}], 
+              "}"}], ",", " ", 
+             RowBox[{"{", 
+              RowBox[{"x0", ",", " ", "y0", ",", " ", "z0", ",", " ", "q0"}], 
+              "}"}]}], "}"}], ",", " ", "t"}], "]"}], "]"}], 
+        "[", "\"\<Drift\>\"", "]"}], " ", "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"x", "[", "t", "]"}], " ", "->", " ", "x"}], ",", " ", 
+         RowBox[{
+          RowBox[{"y", "[", "t", "]"}], " ", "->", " ", "y"}], ",", " ", 
+         RowBox[{
+          RowBox[{"z", "[", "t", "]"}], " ", "->", " ", "z"}], ",", " ", 
+         RowBox[{
+          RowBox[{"q", "[", "t", "]"}], " ", "->", " ", "q"}]}], "}"}]}], 
+      ")"}], "\n", "   ", "-", " ", 
+     RowBox[{"Append", "[", 
+      RowBox[{
+       RowBox[{"driftIto", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", " ", "y", ",", " ", "z"}], "}"}], ",", " ", 
+         "ratesSym"}], "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{"Sqrt", "[", 
+         RowBox[{"Subscript", "[", 
+          RowBox[{"\[CapitalGamma]", ",", " ", "\"\<CI\>\""}], "]"}], "]"}], " ",
+         "z"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[15]:= ",ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001"],
+
+Cell[TextData[{
+ "A bare vector of zeros, one per row ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"], ",", 
+   StyleBox["Q", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7519012f-e657-215b-2326-988893e273a1"],
+ ": the It\[OHat] form of the Stratonovich SDE we hand ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "594776df-9e75-d16a-0f7d-6f991b01a3b0"],
+ " is exactly the affine drift on all three Bloch rows, and the readout row \
+is unchanged, so the correction is carried in full and ",
+ Cell[BoxData[
+  StyleBox["Q", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+ " is the same in both calculi. This settles the central claim at no \
+numerical cost and more decisively than any Monte-Carlo match; the ensemble \
+below only confirms what the algebra already proves."
+}], "Text",ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f"],
+
+Cell["Start the worker kernels:", "Text",ExpressionUUID->"48a3d607-c312-9dd3-7850-c860f6a4e739"],
+
+Cell[BoxData[
+ RowBox[{"LaunchKernels", "[", "]"}]], "Input",
+ CellLabel->
+  "In[16]:= ",ExpressionUUID->"539491e8-328f-8d7b-01ab-08b2473bd441"],
+
+Cell[TextData[{
+ "Share the definitions the regularized trajectory needs, so ",
+ Cell[BoxData["ParallelTable"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+ " can spread the paths across cores:"
+}], "Text",ExpressionUUID->"023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+
+Cell[BoxData[
+ RowBox[{"DistributeDefinitions", "[", 
+  RowBox[{
+  "driftStrat", ",", " ", "diffStrat", ",", " ", "wienerFun", ",", " ", 
+   "oneTraj"}], "]"}]], "Input",
+ CellLabel->
+  "In[17]:= ",ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c"],
+
+Cell[TextData[{
+ "Generate ",
+ Cell[BoxData["ntraj"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+ " full trajectories from the built-in ",
+ Cell[BoxData["StratonovichProcess"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+ " integrator, keeping every step of each path. Feed it the same Stratonovich \
+drift and diffusion the ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+ " route uses, its three state rows, and ask for the order-3/2 scalar-noise \
+method: the default is Euler-Maruyama, order 1/2, whose average drifts off \
+the exact curve at any finite step. The process variables are Wolfram's \
+formal symbols, unbound by construction, so they are safe placeholders (the \
+fourth slot, the readout, is a passive ",
+ Cell[BoxData["0"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
+ " since the state rows never use it):"
+}], "Text",ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "stratRun", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stratRun", "[", 
+    RowBox[{"r_", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"x0_", ",", " ", "y0_", ",", " ", "z0_"}], "}"}], ",", " ", 
+     "tf_", ",", " ", "dt_", ",", " ", "ntraj_", ",", " ", "seed_"}], "]"}], 
+   " ", ":=", "\n", "  ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"v", " ", "=", " ", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\[FormalX]", "[", "t", "]"}], ",", " ", 
+          RowBox[{"\[FormalY]", "[", "t", "]"}], ",", " ", 
+          RowBox[{"\[FormalZ]", "[", "t", "]"}], ",", " ", "0"}], "}"}]}], ",",
+        " ", "proc", ",", " ", "td"}], "}"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{"proc", " ", "=", " ", 
+       RowBox[{"StratonovichProcess", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"driftStrat", "[", 
+             RowBox[{"v", ",", " ", "r"}], "]"}], "[", 
+            RowBox[{"[", 
+             RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}], ",", " ", 
+           RowBox[{"List", " ", "/@", " ", 
+            RowBox[{
+             RowBox[{"diffStrat", "[", 
+              RowBox[{"v", ",", " ", "r"}], "]"}], "[", 
+             RowBox[{"[", 
+              RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], ",", "\n", 
+           "      ", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\[FormalX]", "[", "t", "]"}], ",", " ", 
+             RowBox[{"\[FormalY]", "[", "t", "]"}], ",", " ", 
+             RowBox[{"\[FormalZ]", "[", "t", "]"}]}], "}"}]}], "}"}], ",", 
+         "\n", "     ", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[FormalX]", ",", " ", "\[FormalY]", ",", " ", "\[FormalZ]"}], 
+            "}"}], ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"x0", ",", " ", "y0", ",", " ", "z0"}], "}"}]}], "}"}], ",",
+          " ", "t"}], "]"}]}], ";", "\n", "   ", 
+      RowBox[{"td", " ", "=", " ", 
+       RowBox[{"BlockRandom", "[", 
+        RowBox[{
+         RowBox[{"SeedRandom", "[", "seed", "]"}], ";", "\n", "     ", 
+         RowBox[{"RandomFunction", "[", 
+          RowBox[{"proc", ",", " ", 
+           RowBox[{"{", 
+            RowBox[{"0.", ",", " ", "tf", ",", " ", "dt"}], "}"}], ",", " ", 
+           "ntraj", ",", " ", 
+           RowBox[{
+           "Method", " ", "->", 
+            " ", "\"\<StochasticRungeKuttaScalarNoise\>\""}]}], "]"}]}], 
+        "]"}]}], ";", "\n", "   ", 
+      RowBox[{"td", "[", "\"\<ValueList\>\"", "]"}]}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellLabel->
+  "In[18]:= ",ExpressionUUID->"01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+
+Cell[TextData[{
+ "Generate the same count of regularized trajectories, each ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "107fa29c-d013-1000-4004-3bd9e1a6636a"],
+ " solution read off on a shared time grid. Two arguments carry defaults so \
+the one real relationship lives in one place: the integrator step is ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+ ", held a factor of four below the noise grid, and the read-off grid is the \
+noise grid itself:"
+}], "Text",ExpressionUUID->"49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "regRun", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"regRun", "[", 
+    RowBox[{
+    "r_", ",", " ", "init_", ",", " ", "tf_", ",", " ", "dtGen_", ",", " ", 
+     "ntraj_", ",", " ", "baseSeed_", ",", " ", 
+     RowBox[{"maxstep_", " ", ":", " ", "Automatic"}], ",", " ", 
+     RowBox[{"grid_", " ", ":", " ", "Automatic"}]}], "]"}], " ", ":=", "\n", 
+   "  ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"ms", " ", "=", " ", 
+        RowBox[{"maxstep", " ", "/.", " ", 
+         RowBox[{"Automatic", " ", "->", " ", 
+          RowBox[{"dtGen", "/", "4"}]}]}]}], ",", " ", 
+       RowBox[{"g", " ", "=", " ", 
+        RowBox[{"grid", " ", "/.", " ", 
+         RowBox[{"Automatic", " ", "->", " ", 
+          RowBox[{"Range", "[", 
+           RowBox[{"0.", ",", " ", "tf", ",", " ", "dtGen"}], "]"}]}]}]}]}], 
+      "}"}], ",", "\n", "   ", 
+     RowBox[{"ParallelTable", "[", "\n", "    ", 
+      RowBox[{
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"tr", " ", "=", " ", 
+           RowBox[{"oneTraj", "[", 
+            RowBox[{
+            "r", ",", " ", "init", ",", " ", "tf", ",", " ", "dtGen", ",", 
+             " ", 
+             RowBox[{"baseSeed", " ", "+", " ", "i"}], ",", " ", "ms"}], 
+            "]"}]}], "}"}], ",", "\n", "     ", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"tr", "[", 
+               RowBox[{"[", "1", "]"}], "]"}], "[", "s", "]"}], ",", " ", 
+             RowBox[{
+              RowBox[{"tr", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], "[", "s", "]"}], ",", " ", 
+             RowBox[{
+              RowBox[{"tr", "[", 
+               RowBox[{"[", "3", "]"}], "]"}], "[", "s", "]"}]}], "}"}], ",", 
+           " ", 
+           RowBox[{"{", 
+            RowBox[{"s", ",", " ", "g"}], "}"}]}], "]"}]}], "]"}], ",", "\n", 
+       "    ", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", " ", "ntraj"}], "}"}]}], "]"}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellLabel->
+  "In[19]:= ",ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+
+Cell["\<\
+For the harder regimes and the step-size study below we will want only the \
+final values, so reduce each generator to them. The native final Bloch \
+vectors:\
+\>", "Text",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "stratRef", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stratRef", "[", 
+    RowBox[{
+    "r_", ",", " ", "init_", ",", " ", "tf_", ",", " ", "dt_", ",", " ", 
+     "ntraj_", ",", " ", "seed_"}], "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"stratRun", "[", 
+     RowBox[{
+     "r", ",", " ", "init", ",", " ", "tf", ",", " ", "dt", ",", " ", "ntraj",
+       ",", " ", "seed"}], "]"}], "[", 
+    RowBox[{"[", 
+     RowBox[{"All", ",", " ", 
+      RowBox[{"-", "1"}]}], "]"}], "]"}]}], ";"}]}], "Input",
+ CellLabel->
+  "In[20]:= ",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"],
+
+Cell["\<\
+And the regularized finals paired with the largest Bloch radius each path \
+reached, its integrator step defaulting the same way:\
+\>", "Text",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "ensemble", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"ensemble", "[", 
+    RowBox[{
+    "r_", ",", " ", "init_", ",", " ", "tf_", ",", " ", "dtGen_", ",", " ", 
+     "ntraj_", ",", " ", "baseSeed_", ",", " ", 
+     RowBox[{"maxstep_", " ", ":", " ", "Automatic"}]}], "]"}], " ", ":=", 
+   "\n", "  ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"p", " ", "=", " ", 
+       RowBox[{"regRun", "[", 
+        RowBox[{
+        "r", ",", " ", "init", ",", " ", "tf", ",", " ", "dtGen", ",", " ", 
+         "ntraj", ",", " ", "baseSeed", ",", " ", "maxstep", ",", " ", 
+         RowBox[{"Subdivide", "[", 
+          RowBox[{"0.", ",", " ", "tf", ",", " ", "100"}], "]"}]}], "]"}]}], 
+      "}"}], ",", "\n", "   ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"p", "[", 
+        RowBox[{"[", 
+         RowBox[{"All", ",", " ", 
+          RowBox[{"-", "1"}]}], "]"}], "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Max", "[", 
+          RowBox[{"Norm", " ", "/@", " ", "#"}], "]"}], " ", "&"}], " ", "/@",
+         " ", "p"}]}], "}"}]}], "]"}]}], ";"}]}], "Input",
+ CellLabel->
+  "In[21]:= ",ExpressionUUID->"062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+
+Cell[TextData[{
+ "Run both on the representative case, on the shared grid set by ",
+ Cell[BoxData[
+  RowBox[{"dtGenOf", "[", "ratesB", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
+ ". First the native ensemble:"
+}], "Text",ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"stratRunB", " ", "=", " ", 
+   RowBox[{"stratRun", "[", 
+    RowBox[{"ratesB", ",", " ", 
+     RowBox[{"initB", "[", 
+      RowBox[{"[", 
+       RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}], ",", " ", "tfB", ",",
+      " ", 
+     RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
+     "2024"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[22]:= ",ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
+
+Cell["Then the regularized ensemble on the same grid:", "Text",ExpressionUUID->"26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"regRunB", " ", "=", " ", 
+   RowBox[{"regRun", "[", 
+    RowBox[{"ratesB", ",", " ", "initB", ",", " ", "tfB", ",", " ", 
+     RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
+     "9100"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[23]:= ",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+
+Cell[TextData[{
+ "Average each ensemble over its trajectories and compare the two mean paths \
+of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   StyleBox["z", "TI"], "\[VeryThinSpace]", 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+ " against the single exact Lindblad trajectory:"
+}], "Text",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"g", " ", "=", " ", 
+      RowBox[{"Range", "[", 
+       RowBox[{"0.", ",", " ", "tfB", ",", " ", 
+        RowBox[{"dtGenOf", "[", "ratesB", "]"}]}], "]"}]}], ",", " ", 
+     RowBox[{"lb", " ", "=", " ", 
+      RowBox[{"lindbladBloch", "[", 
+       RowBox[{"ratesB", ",", " ", 
+        RowBox[{"initB", "[", 
+         RowBox[{"[", 
+          RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}]}]}], 
+    "}"}], ",", "\n", " ", 
+   RowBox[{"ListLinePlot", "[", 
+    RowBox[{
+     RowBox[{"{", "\n", "    ", 
+      RowBox[{
+       RowBox[{"Transpose", "[", 
+        RowBox[{"{", 
+         RowBox[{"g", ",", " ", 
+          RowBox[{
+           RowBox[{"Mean", "[", "stratRunB", "]"}], "[", 
+           RowBox[{"[", 
+            RowBox[{"All", ",", " ", "3"}], "]"}], "]"}]}], "}"}], "]"}], ",",
+        "\n", "    ", 
+       RowBox[{"Transpose", "[", 
+        RowBox[{"{", 
+         RowBox[{"g", ",", " ", 
+          RowBox[{
+           RowBox[{"Mean", "[", "regRunB", "]"}], "[", 
+           RowBox[{"[", 
+            RowBox[{"All", ",", " ", "3"}], "]"}], "]"}]}], "}"}], "]"}], ",",
+        "\n", "    ", 
+       RowBox[{"Transpose", "[", 
+        RowBox[{"{", 
+         RowBox[{"g", ",", " ", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"lb", "[", "#", "]"}], "[", 
+             RowBox[{"[", "3", "]"}], "]"}], " ", "&"}], " ", "/@", " ", 
+           "g"}]}], "}"}], "]"}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"PlotStyle", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"ColorData", "[", 
+         RowBox[{"97", ",", " ", "1"}], "]"}], ",", " ", 
+        RowBox[{"Directive", "[", 
+         RowBox[{"Dashed", ",", " ", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"97", ",", " ", "2"}], "]"}]}], "]"}], ",", " ", 
+        RowBox[{"Directive", "[", 
+         RowBox[{"Thick", ",", " ", "Black"}], "]"}]}], "}"}]}], ",", "\n", 
+     "   ", 
+     RowBox[{"PlotLegends", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<StratonovichProcess mean\>\"", ",", 
+        " ", "\"\<regularized mean\>\"", ",", 
+        " ", "\"\<Lindblad \[LeftAngleBracket]z\[RightAngleBracket](t)\>\""}],
+        "}"}]}], ",", "\n", "   ", 
+     RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+     RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", " ", 
+     RowBox[{"FrameLabel", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<t\>\"", ",", 
+        " ", "\"\<\[LeftAngleBracket]z\[RightAngleBracket]\>\""}], "}"}]}], ",",
+      "\n", "   ", 
+     RowBox[{
+     "PlotLabel", " ", "->", 
+      " ", "\"\<averaging the trajectories rebuilds the master \
+equation\>\""}], ",", " ", 
+     RowBox[{"ImageSize", " ", "->", " ", "520"}]}], "]"}]}], "]"}]], "Input",\
+
+ CellLabel->
+  "In[24]:= ",ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802"],
+
+Cell[TextData[{
+ "As one can see, both ensemble means, the built-in ",
+ Cell[BoxData["StratonovichProcess"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e85e9ed-427b-8528-16ba-00b7770fec72"],
+ " integrator and the regularized route, lie on the exact Lindblad curve \
+across the whole interval, not only at the final time. Averaging over the \
+trajectories rebuilds the deterministic master equation, which is the sense \
+in which the smooth Lindblad flow was an average over jagged records all \
+along."
+}], "Text",ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5"],
+
+Cell[TextData[{
+ "The mean sees only the drift, so it is a weak test. The measurement \
+backaction lives in the second moment, the spread of the final Bloch vector, \
+rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31f4c073-8ff6-126f-678b-da3d298360b5"],
+ " and each row native Stratonovich then regularized:"
+}], "Text",ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a"],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{"stratRunB", "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", " ", 
+        RowBox[{"-", "1"}]}], "]"}], "]"}], "]"}], ",", " ", 
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{"regRunB", "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", " ", 
+        RowBox[{"-", "1"}]}], "]"}], "]"}], "]"}]}], "}"}], "]"}]], "Input",
+ CellLabel->
+  "In[25]:= ",ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b"],
+
+Cell[TextData[{
+ "As expected, the spreads agree component by component, so the regularized \
+route reproduces the noise, not just the drift. The ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
+ " row is flat zero: with the backaction quadrature off (",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+ ") and no initial ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "304452a4-201b-d64c-607c-4b0e51afbc96"],
+ "-coherence, nothing sources ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
+ ", and the substance sits in ",
+ Cell[BoxData[
+  StyleBox["y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b5b9263-9199-4e16-7978-144d202c157c"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+ "."
+}], "Text",ExpressionUUID->"2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
+
+Cell["\<\
+Read the largest Bloch radius any regularized path reached. The measurement \
+noise is tangent to the Bloch sphere, so the state never leaves the unit \
+ball, and the maximum should sit at one to within the small overshoot of an \
+unprojected scheme:\
+\>", "Text",ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66"],
+
+Cell[BoxData[
+ RowBox[{"Max", "[", 
+  RowBox[{"Map", "[", 
+   RowBox[{"Norm", ",", " ", "regRunB", ",", " ", 
+    RowBox[{"{", "2", "}"}]}], "]"}], "]"}]], "Input",
+ CellLabel->
+  "In[26]:= ",ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105"],
+
+Cell["\<\
+The radius sits at one to within a hair, and no projection step was needed to \
+hold it there.\
+\>", "Text",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53"],
+
+Cell["The two time steps: which one sets the answer", "Section",ExpressionUUID->"055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+
+Cell[TextData[{
+ "The route carries two time increments, and the section title is a real \
+question: which of them moves the answer? Put the integrator step to the test \
+first. Hold the noise grid fixed and read the final-",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b0fb60e-2211-365f-5934-286857a59ca5"],
+ " mean and spread with the ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "201a2509-bdd9-2fa1-5039-bd53346c758b"],
+ " step held far below ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7085d256-6adc-aa08-20ba-d4100f6ef952"],
+ ", then again with it pushed well above, each row ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox[
+     RowBox[{"mean", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"]}], ",", 
+   RowBox[{
+    StyleBox[
+     RowBox[{"\[NonBreakingSpace]", "spread", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f932952-49a5-d34f-05a0-c11c6851a195"],
+ ":"
+}], "Text",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
+
+Cell[BoxData[
+ RowBox[{"Map", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Mean", "[", 
+        RowBox[{"First", "[", "#", "]"}], "]"}], "[", 
+       RowBox[{"[", "3", "]"}], "]"}], ",", " ", 
+      RowBox[{
+       RowBox[{"StandardDeviation", "[", 
+        RowBox[{"First", "[", "#", "]"}], "]"}], "[", 
+       RowBox[{"[", "3", "]"}], "]"}]}], "}"}], " ", "&"}], ",", "\n", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"ensemble", "[", 
+      RowBox[{"ratesB", ",", " ", "initB", ",", " ", "tfB", ",", " ", 
+       RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
+       "9100", ",", " ", 
+       RowBox[{
+        RowBox[{"dtGenOf", "[", "ratesB", "]"}], "/", "4"}]}], "]"}], ",", 
+     "\n", "  ", 
+     RowBox[{"ensemble", "[", 
+      RowBox[{"ratesB", ",", " ", "initB", ",", " ", "tfB", ",", " ", 
+       RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
+       "9100", ",", " ", 
+       RowBox[{"10", " ", 
+        RowBox[{"dtGenOf", "[", "ratesB", "]"}]}]}], "]"}]}], "}"}]}], 
+  "]"}]], "Input",
+ CellLabel->
+  "In[27]:= ",ExpressionUUID->"10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+
+Cell[TextData[{
+ "As one can see, the two rows coincide to solver precision: ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+ "'s adaptive error control refines its own step wherever ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["W", "TI"], "\[Prime]"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+ " varies, so the integrator step, whether it sits below ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
+ " or ten times above, does not move the answer. We still cap it below ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0651775d-2bad-791b-2e6f-6f074e584861"],
+ " as a cheap guarantee, but it is not the binding dial."
+}], "Text",ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64"],
+
+Cell[TextData[{
+ "The binding dial is ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+ ". Read the native reference the shrinking grid should approach, the mean \
+and spread of the final ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c440104-ea8a-4285-747b-99618f3f10ef"],
+ ", as ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox[
+     RowBox[{"mean", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"]}], ",", 
+   RowBox[{
+    StyleBox[
+     RowBox[{"\[NonBreakingSpace]", "spread", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c9a615-af45-c085-0ef6-385ecaf192ef"],
+ ":"
+}], "Text",ExpressionUUID->"0513e607-0f4c-1e20-3320-f861aaf9650a"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Mean", "[", 
+    RowBox[{"stratRunB", "[", 
+     RowBox[{"[", 
+      RowBox[{"All", ",", " ", 
+       RowBox[{"-", "1"}], ",", " ", "3"}], "]"}], "]"}], "]"}], ",", " ", 
+   RowBox[{"StandardDeviation", "[", 
+    RowBox[{"stratRunB", "[", 
+     RowBox[{"[", 
+      RowBox[{"All", ",", " ", 
+       RowBox[{"-", "1"}], ",", " ", "3"}], "]"}], "]"}], "]"}]}], 
+  "}"}]], "Input",
+ CellLabel->
+  "In[28]:= ",ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+
+Cell[TextData[{
+ "Now sweep ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+ " from coarse to fine, the integrator step held below it, and tabulate the \
+regularized mean and spread of the final ",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
+ ", each row ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "\[CapitalDelta]", 
+    SubscriptBox[
+     StyleBox["t", "TI"], 
+     StyleBox["gen",
+      FontSlant->"Plain"]]}], ",", 
+   RowBox[{
+    StyleBox[
+     RowBox[{"\[NonBreakingSpace]", "mean", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"]}], ",", 
+   RowBox[{
+    StyleBox[
+     RowBox[{"\[NonBreakingSpace]", "spread", "\[NonBreakingSpace]"}],
+     FontSlant->"Plain"], 
+    StyleBox["z", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "128c7526-c883-085d-42b4-6c83e9365aa7"],
+ ":"
+}], "Text",ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2"],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"fin", " ", "=", " ", 
+       RowBox[{"First", "@", 
+        RowBox[{"ensemble", "[", 
+         RowBox[{"ratesB", ",", " ", "initB", ",", " ", "tfB", ",", " ", 
+          RowBox[{"tfB", "/", "k"}], ",", " ", "300", ",", " ", "6000"}], 
+         "]"}]}]}], "}"}], ",", "\n", "   ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"N", "[", 
+        RowBox[{"tfB", "/", "k"}], "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{"Mean", "[", "fin", "]"}], "[", 
+        RowBox[{"[", "3", "]"}], "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{"StandardDeviation", "[", "fin", "]"}], "[", 
+        RowBox[{"[", "3", "]"}], "]"}]}], "}"}]}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"k", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{
+      "6", ",", " ", "12", ",", " ", "25", ",", " ", "100", ",", " ", "400"}],
+       "}"}]}], "}"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[29]:= ",ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+
+Cell[TextData[{
+ "As one can see, the mean holds flat while the spread descends from an \
+inflated coarse value and flattens toward the native reference as ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
+ " shrinks. The mean is set by the affine drift and is blind to the noise \
+grid; the second moment is where the finite correlation time bites, and that \
+bias vanishes in the white-noise limit. So of the two increments it is ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["gen",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "63a48922-0fac-666c-115b-208caa594cb6"],
+ " that moves the answer, and the spread is what it moves."
+}], "Text",ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559"],
+
+Cell["Phase backaction: the x channel comes alive", "Section",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
+
+Cell[TextData[{
+ "So far the backaction quadrature has been off (",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "399d1ff3-4632-be92-6fa2-96bd73c404f8"],
+ "), which decoupled ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1170384d-2f38-2c50-470f-b2174acd76ba"],
+ " and left it trivial. Turn it on and the ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
+ " channel comes alive, but watch where: the affine It\[OHat] drift still \
+decouples ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+ "'s mean, so ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[LeftAngleBracket]",
+    SpanMaxSize->1], 
+   StyleBox["x", "TI"], "\[VeryThinSpace]", 
+   StyleBox["\[RightAngleBracket]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+ " decays on its own, while the diffusion's ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"B", "A"}], "TI"]]], " ", 
+   StyleBox["y", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74397683-04f4-1d4d-1dc7-6fedac816797"],
+ " term now feeds ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "735e49d5-32a1-4a48-2166-609f47541892"],
+ "'s fluctuations from ",
+ Cell[BoxData[
+  StyleBox["y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+ ". So the mean is the weak test of the coupling and the spread is the real \
+one. Fix a case with both quadratures on, from a tilted start:"
+}], "Text",ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ratesX", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "0.4", ",", " ", "0.4", ",", " ", "0.4", ",", " ", "0.", ",", " ", "1.", ",",
+      " ", "2."}], "}"}]}], ";", " ", 
+  RowBox[{"initX", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"0.3", ",", " ", "0.", ",", " ", "0.6", ",", " ", "0."}], "}"}]}],
+   ";", " ", 
+  RowBox[{"tfX", " ", "=", " ", "2."}], ";", " ", 
+  RowBox[{"nX", " ", "=", " ", "600"}], ";"}]], "Input",
+ CellLabel->
+  "In[30]:= ",ExpressionUUID->"045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+
+Cell["Run the native reference:", "Text",ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"stratX", " ", "=", " ", 
+   RowBox[{"stratRef", "[", 
+    RowBox[{"ratesX", ",", " ", 
+     RowBox[{"initX", "[", 
+      RowBox[{"[", 
+       RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}], ",", " ", "tfX", ",",
+      " ", 
+     RowBox[{"dtGenOf", "[", "ratesX", "]"}], ",", " ", "nX", ",", " ", 
+     "4040"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[31]:= ",ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
+
+Cell["Run the regularized ensemble:", "Text",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"regX", " ", "=", " ", 
+   RowBox[{"ensemble", "[", 
+    RowBox[{"ratesX", ",", " ", "initX", ",", " ", "tfX", ",", " ", 
+     RowBox[{"dtGenOf", "[", "ratesX", "]"}], ",", " ", "nX", ",", " ", 
+     "7100"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[32]:= ",ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
+
+Cell[TextData[{
+ "Compare the mean of the final Bloch vector, rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15eb24b6-b946-3a65-43e8-bdf038f0894f"],
+ " and each row exact Lindblad, native Stratonovich, regularized:"
+}], "Text",ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34"],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"lindbladBloch", "[", 
+      RowBox[{"ratesX", ",", " ", 
+       RowBox[{"initX", "[", 
+        RowBox[{"[", 
+         RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}], "[", 
+     "tfX", "]"}], ",", " ", 
+    RowBox[{"Mean", "[", "stratX", "]"}], ",", " ", 
+    RowBox[{"Mean", "[", 
+     RowBox[{"regX", "[", 
+      RowBox[{"[", "1", "]"}], "]"}], "]"}]}], "}"}], "]"}]], "Input",
+ CellLabel->
+  "In[33]:= ",ExpressionUUID->"285985c7-a1c8-13eb-5866-1ca0d07d6131"],
+
+Cell[TextData[{
+ "As one can see, the ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
+ " row is now genuinely nonzero and the three routes agree on it, its mean \
+decaying under the drift that decouples it. Now the spread, where the \
+backaction actually lives, rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
+ " and each row native Stratonovich then regularized:"
+}], "Text",ExpressionUUID->"1a1e4090-3303-05ed-4a26-59da46b66f37"],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"StandardDeviation", "[", "stratX", "]"}], ",", " ", 
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{"regX", "[", 
+      RowBox[{"[", "1", "]"}], "]"}], "]"}]}], "}"}], "]"}]], "Input",
+ CellLabel->
+  "In[34]:= ",ExpressionUUID->"10256af3-3972-af7a-41da-83bdb804f240"],
+
+Cell[TextData[{
+ "As expected, the ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "457602f1-d86e-ac86-730d-9bbad918f6ec"],
+ " spread is now substantial, fed by the backaction noise the ",
+ Cell[BoxData[
+  StyleBox["y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "499f95c1-a958-6c18-7fa4-0caac8ed3762"],
+ " channel injects, and the regularized route matches it. This is the \
+full-Bloch-vector check the representative case could not give: with the \
+coupling on, every component carries a nonzero second moment, and the \
+regularized Stratonovich route reproduces all three."
+}], "Text",ExpressionUUID->"0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
+
+Cell["A strong readout: the same route where the drift is large", "Section",ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e"],
+
+Cell[TextData[{
+ "The gap between the It\[OHat] and Stratonovich drifts scales with the \
+measurement rate, so a strong informative readout is the stringent test of \
+feeding ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f909018-5ea1-6a32-15af-0a425b543918"],
+ " the Stratonovich form. Fix a strong readout from a tilted start, again a \
+four-vector with the readout zeroed:"
+}], "Text",ExpressionUUID->"2f4595f3-090a-1216-557a-0cbda8bf617c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ratesS", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "8.", ",", " ", "0.", ",", " ", "4.", ",", " ", "1.", ",", " ", "1.", ",",
+      " ", "3."}], "}"}]}], ";", " ", 
+  RowBox[{"initS", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"0.6", ",", " ", "0.", ",", " ", "0.6", ",", " ", "0."}], "}"}]}],
+   ";", " ", 
+  RowBox[{"tfS", " ", "=", " ", "1.5"}], ";", " ", 
+  RowBox[{"nS", " ", "=", " ", "600"}], ";"}]], "Input",
+ CellLabel->
+  "In[35]:= ",ExpressionUUID->"06385f5e-e9d4-4e6c-2fd8-571b886114b6"],
+
+Cell["Run the native reference for the strong case:", "Text",ExpressionUUID->"25d2fb85-296f-82e5-53e1-f2ef481bd0cf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"stratS", " ", "=", " ", 
+   RowBox[{"stratRef", "[", 
+    RowBox[{"ratesS", ",", " ", 
+     RowBox[{"initS", "[", 
+      RowBox[{"[", 
+       RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}], ",", " ", "tfS", ",",
+      " ", 
+     RowBox[{"dtGenOf", "[", "ratesS", "]"}], ",", " ", "nS", ",", " ", 
+     "3030"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[36]:= ",ExpressionUUID->"3b9a140e-d97a-4136-69b9-8e6bd80f101c"],
+
+Cell["Run the regularized ensemble for the strong case:", "Text",ExpressionUUID->"4f9438da-b80f-a114-75ab-b18439bbf07e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"regS", " ", "=", " ", 
+   RowBox[{"ensemble", "[", 
+    RowBox[{"ratesS", ",", " ", "initS", ",", " ", "tfS", ",", " ", 
+     RowBox[{"dtGenOf", "[", "ratesS", "]"}], ",", " ", "nS", ",", " ", 
+     "5300"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[37]:= ",ExpressionUUID->"7281c19b-2602-dcd4-22be-d8c553b4a63e"],
+
+Cell[TextData[{
+ "Compare the mean of the final Bloch vector, rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3c8746fc-db76-c487-64bd-5fb9de00aeed"],
+ " and each row exact Lindblad, native Stratonovich, regularized:"
+}], "Text",ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317"],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"lindbladBloch", "[", 
+      RowBox[{"ratesS", ",", " ", 
+       RowBox[{"initS", "[", 
+        RowBox[{"[", 
+         RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}], "[", 
+     "tfS", "]"}], ",", " ", 
+    RowBox[{"Mean", "[", "stratS", "]"}], ",", " ", 
+    RowBox[{"Mean", "[", 
+     RowBox[{"regS", "[", 
+      RowBox[{"[", "1", "]"}], "]"}], "]"}]}], "}"}], "]"}]], "Input",
+ CellLabel->
+  "In[38]:= ",ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de"],
+
+Cell[TextData[{
+ "As one can see, the regularized mean still tracks the exact value in every \
+row where the correction is large; the ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12c4fc3b-e00c-2bba-42fb-f66491b97980"],
+ " row has decayed from its initial tilt toward zero, since with ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d7e6892-18cd-6f45-4b05-81dc997835af"],
+ " nothing rotates it back, and all three routes agree on the small residual. \
+Compare the spread, rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["x", "TI"], ",", 
+   StyleBox["y", "TI"], ",", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "325c8f47-cd85-89da-6263-2720e431db20"],
+ " and each row native Stratonovich then regularized:"
+}], "Text",ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c"],
+
+Cell[BoxData[
+ RowBox[{"Transpose", "[", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"StandardDeviation", "[", "stratS", "]"}], ",", " ", 
+    RowBox[{"StandardDeviation", "[", 
+     RowBox[{"regS", "[", 
+      RowBox[{"[", "1", "]"}], "]"}], "]"}]}], "}"}], "]"}]], "Input",
+ CellLabel->
+  "In[39]:= ",ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595"],
+
+Cell[TextData[{
+ "As expected, the spreads still agree row by row where the Stratonovich \
+correction is largest. See the whole distribution agree, the regularized \
+final-",
+ Cell[BoxData[
+  StyleBox["z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5add4728-e92e-eff1-0ae3-5f7588d8b5db"],
+ " histogram against the native Stratonovich reference:"
+}], "Text",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78"],
+
+Cell[BoxData[
+ RowBox[{"Histogram", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"regS", "[", 
+       RowBox[{"[", "1", "]"}], "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", " ", "3"}], "]"}], "]"}], ",", " ", 
+     RowBox[{"stratS", "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", " ", "3"}], "]"}], "]"}]}], "}"}], ",", " ", "24", 
+   ",", " ", "\"\<PDF\>\"", ",", "\n", " ", 
+   RowBox[{"ChartLegends", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<regularized\>\"", ",", " ", "\"\<Stratonovich ref\>\""}], 
+     "}"}]}], ",", "\n", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<final z\>\"", ",", " ", "\"\<density\>\""}], "}"}]}], ",", 
+   "\n", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<strong readout: the regularized route matches the Stratonovich \
+ensemble\>\""}], ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "520"}]}], "]"}]], "Input",
+ CellLabel->
+  "In[40]:= ",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed"],
+
+Cell["\<\
+As one can see, the regularized distribution sits on top of the native \
+Stratonovich reference, so the route reproduces the ensemble, not merely its \
+average, even where the drift correction is strong.\
+\>", "Text",ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742"],
+
+Cell["What is now true", "Section",ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d"],
+
+Cell[TextData[{
+ "The trajectory of a continuously monitored qubit is one four-component \
+stochastic differential equation: the three Bloch numbers and the readout the \
+detector accumulates, all driven by a single noise. Written in Stratonovich \
+form, its drift already carries the term that separates the two stochastic \
+calculi, which the built-in Stratonovich-to-It\[OHat] conversion confirms \
+exactly, so a smooth-noise integrator needs nothing added: replace the white \
+noise by a cubic-interpolated Wiener path, hand ",
+ Cell[BoxData["NDSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "494d6e39-7750-b6eb-7f72-806302ea1c31"],
+ " the Stratonovich drift and diffusion as they stand, and the solution is \
+the target It\[OHat] process. That target is what the two references pin \
+down, because the It\[OHat] drift is affine the ensemble mean is the Lindblad \
+master equation for every Bloch component, and because the diffusion is \
+exactly ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "39b01e29-d171-5c92-6f4f-9072e00426f8"],
+ " the ensemble spread is the native ",
+ Cell[BoxData["StratonovichProcess"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f6d713e-2461-11c8-7513-69784d146312"],
+ " spread. Integrating the readout beside the state costs one more equation \
+and buys a sample record that carries the ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox[
+      RowBox[{"C", "I"}], "TI"]]], " ", 
+   StyleBox["z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14ad582f-66ff-93eb-3c53-5189128be131"],
+ " signal under the same noise that kicked the state, which is the physical \
+content of a measurement: the record and the backaction are one draw. Once \
+the backaction quadrature is on, the coupled ",
+ Cell[BoxData[
+  StyleBox["x", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f7ea056-2d28-85ec-7505-3a1044c2ef36"],
+ " channel it feeds carries its own second moment, and the route reproduces \
+that too, so the full Bloch vector is matched, not just the monitored \
+component. Of the two time increments, only the noise-generation step sets \
+the answer, the dial that fixes which SDE is solved and is sent to zero, \
+while the integrator step is absorbed by the solver's own error control and \
+leaves the result unmoved."
+}], "Text",ExpressionUUID->"16b00368-b832-202d-3e4f-9b3239c77377"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 175, 3, 70, "Title",ExpressionUUID->"05feeeaf-4f58-f7b7-3385-07096ad2dd9d"],
+Cell[732, 25, 2180, 44, 70, "Text",ExpressionUUID->"583a98af-415b-100e-09d9-110970ee6354"],
+Cell[2915, 71, 114, 0, 70, "Text",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3"],
+Cell[3032, 73, 591, 8, 70, "Text",ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4"],
+Cell[3626, 83, 83, 0, 70, "Text",ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554"],
+Cell[3712, 85, 144, 2, 70, "Section",ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8"],
+Cell[3859, 89, 2573, 78, 70, "Text",ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc"],
+Cell[6435, 169, 3219, 107, 70, "DisplayFormula",ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f"],
+Cell[9657, 278, 1258, 34, 70, "Text",ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75"],
+Cell[10918, 314, 3572, 107, 70, "Text",ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b"],
+Cell[14493, 423, 677, 12, 70, "Text",ExpressionUUID->"5b23761c-2477-64e8-0ad1-68464d024e32"],
+Cell[15173, 437, 4774, 163, 70, "DisplayFormula",ExpressionUUID->"73216bcf-7cf1-61ac-22de-82a9748433f6"],
+Cell[19950, 602, 1183, 27, 70, "Text",ExpressionUUID->"69fa63e8-c0ca-4913-1f9a-7ab5f17f1879"],
+Cell[21136, 631, 112, 0, 70, "Section",ExpressionUUID->"409bca18-cbd6-e54d-70b8-ec45ee60cf97"],
+Cell[21251, 633, 1076, 32, 70, "Text",ExpressionUUID->"10b62b5f-1d3f-f012-404d-c31994cbc378"],
+Cell[22330, 667, 3406, 95, 70, "Input",ExpressionUUID->"79984792-c453-565a-2fb8-5edfede63ca0"],
+Cell[25739, 764, 381, 8, 70, "Text",ExpressionUUID->"1d45428e-8fa1-6801-4b7b-5be82a543b6b"],
+Cell[26123, 774, 1413, 44, 70, "Input",ExpressionUUID->"604bb87d-3174-a116-1048-32274006f07c"],
+Cell[27539, 820, 932, 26, 70, "Text",ExpressionUUID->"763191a2-6f8b-197a-1fce-080c0a3e6840"],
+Cell[28474, 848, 859, 20, 70, "Input",ExpressionUUID->"635fdfdb-2856-deda-1164-d68549e0a420"],
+Cell[29336, 870, 193, 3, 70, "Text",ExpressionUUID->"0f6eb37a-d9e9-6713-3515-2b27df9c4a79"],
+Cell[29532, 875, 312, 7, 70, "Input",ExpressionUUID->"5c8469dd-bfc7-2a7a-04bb-80873a727940"],
+Cell[29847, 884, 1216, 36, 70, "Text",ExpressionUUID->"182ee0c1-720e-fc83-49d5-f9ab07b8c6e9"],
+Cell[31066, 922, 311, 7, 70, "Input",ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc"],
+Cell[31380, 931, 651, 14, 70, "Text",ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c"],
+Cell[32034, 947, 635, 15, 70, "Text",ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21"],
+Cell[32672, 964, 543, 13, 70, "Input",ExpressionUUID->"77076ae4-09e5-8344-1d3c-83ceaf91d1ae"],
+Cell[33218, 979, 1307, 40, 70, "Text",ExpressionUUID->"4289b0c6-8043-1b93-72b6-29a031f669f9"],
+Cell[34528, 1021, 3263, 84, 70, "Input",ExpressionUUID->"070f3e08-556d-9d60-2d34-b0525c19e44a"],
+Cell[37794, 1107, 1382, 36, 70, "Text",ExpressionUUID->"6d593b15-c37a-9c59-1b66-b35ef60ce6a3"],
+Cell[39179, 1145, 819, 23, 70, "Input",ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c"],
+Cell[40001, 1170, 695, 17, 70, "Text",ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60"],
+Cell[40699, 1189, 378, 10, 70, "Input",ExpressionUUID->"16b44e14-0404-e868-3e4c-605eadb6bab2"],
+Cell[41080, 1201, 133, 0, 70, "Section",ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622"],
+Cell[41216, 1203, 2607, 84, 70, "Text",ExpressionUUID->"7e10bd94-ae42-3b4d-262f-34d1cbf48997"],
+Cell[43826, 1289, 1409, 44, 70, "Text",ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c"],
+Cell[45238, 1335, 1566, 41, 70, "Input",ExpressionUUID->"013c2307-fb8b-27c7-30c3-bb60fe3f8d2d"],
+Cell[46807, 1378, 192, 3, 70, "Text",ExpressionUUID->"4b734859-75e7-efa6-7901-62030393b58c"],
+Cell[47002, 1383, 1852, 47, 70, "Input",ExpressionUUID->"4ae31c17-eefa-a706-7a90-96508a8c0a6c"],
+Cell[48857, 1432, 2765, 82, 70, "Text",ExpressionUUID->"00844d77-2817-3ec6-30bc-653149a3842c"],
+Cell[51625, 1516, 1549, 52, 70, "Text",ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0"],
+Cell[53177, 1570, 3369, 86, 70, "Input",ExpressionUUID->"04469009-6b02-dcc3-2c7d-0a530eb4a629"],
+Cell[56549, 1658, 783, 24, 70, "Text",ExpressionUUID->"4e35d333-5bd5-ef26-77ca-cb7d5e61b20c"],
+Cell[57335, 1684, 3084, 76, 70, "Input",ExpressionUUID->"5547dfb6-0e84-e145-037c-d6f0ab36b3af"],
+Cell[60422, 1762, 1596, 45, 70, "Text",ExpressionUUID->"12b61bfc-9cd7-eca9-424d-92a61563b6f3"],
+Cell[62021, 1809, 127, 0, 70, "Section",ExpressionUUID->"451364b5-819d-fb99-7321-7dff3029c9e3"],
+Cell[62151, 1811, 985, 19, 70, "Text",ExpressionUUID->"13b49e24-0fb7-4441-414b-178eaa422eab"],
+Cell[63139, 1832, 670, 15, 70, "Text",ExpressionUUID->"445bf28f-7a5a-ecd1-6c78-ebe97fecb63b"],
+Cell[63812, 1849, 1461, 43, 70, "Input",ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69"],
+Cell[65276, 1894, 1432, 33, 70, "Text",ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd"],
+Cell[66711, 1929, 2728, 70, 70, "Input",ExpressionUUID->"0cdaad60-2181-5e26-34f9-454a5034250c"],
+Cell[69442, 2001, 1037, 23, 70, "Text",ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b"],
+Cell[70482, 2026, 96, 0, 70, "Text",ExpressionUUID->"00dd9d4d-f7ec-565f-30e2-151681993ca5"],
+Cell[70581, 2028, 144, 3, 70, "Input",ExpressionUUID->"0d66b502-775d-ec4c-3b1d-2d6c02e9b696"],
+Cell[70728, 2033, 320, 6, 70, "Text",ExpressionUUID->"3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891"],
+Cell[71051, 2041, 253, 6, 70, "Input",ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072"],
+Cell[71307, 2049, 1154, 23, 70, "Text",ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58"],
+Cell[72464, 2074, 2767, 71, 70, "Input",ExpressionUUID->"1d9e3d6f-99f1-7c1e-4ba5-b5491f844764"],
+Cell[75234, 2147, 774, 17, 70, "Text",ExpressionUUID->"710db4a8-d877-0db2-2732-2df5d9025798"],
+Cell[76011, 2166, 2221, 59, 70, "Input",ExpressionUUID->"71e12f72-3ad4-a92f-279e-c73cbf66f875"],
+Cell[78235, 2227, 237, 4, 70, "Text",ExpressionUUID->"06ea8612-dd18-b4f0-2ee9-185fd4921eda"],
+Cell[78475, 2233, 650, 18, 70, "Input",ExpressionUUID->"0b02f270-2101-5c3d-3931-f43a50b42707"],
+Cell[79128, 2253, 208, 3, 70, "Text",ExpressionUUID->"2d1868bf-f524-2aaf-5b27-81f8fcd178f5"],
+Cell[79339, 2258, 1258, 34, 70, "Input",ExpressionUUID->"669caa83-24d6-d7e9-0ea3-43ed4d60bd33"],
+Cell[80600, 2294, 344, 7, 70, "Text",ExpressionUUID->"5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e"],
+Cell[80947, 2303, 460, 12, 70, "Input",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4"],
+Cell[81410, 2317, 118, 0, 70, "Text",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169"],
+Cell[81531, 2319, 353, 8, 70, "Input",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8"],
+Cell[81887, 2329, 508, 13, 70, "Text",ExpressionUUID->"12c044c4-b778-74e1-42f0-5da1c20d5ecb"],
+Cell[82398, 2344, 2924, 77, 70, "Input",ExpressionUUID->"3d9aa029-60a8-273a-6bb9-3a7311428a00"],
+Cell[85325, 2423, 590, 10, 70, "Text",ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5"],
+Cell[85918, 2435, 512, 12, 70, "Text",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436"],
+Cell[86433, 2449, 537, 15, 70, "Input",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605"],
+Cell[86973, 2466, 1313, 36, 70, "Text",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089"],
+Cell[88289, 2504, 329, 5, 70, "Text",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3"],
+Cell[88621, 2511, 247, 6, 70, "Input",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d"],
+Cell[88871, 2519, 173, 3, 70, "Text",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1"],
+Cell[89047, 2524, 119, 0, 70, "Section",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554"],
+Cell[89169, 2526, 1345, 37, 70, "Text",ExpressionUUID->"10bcaec6-cc03-bcfd-4043-47a3e5b706c7"],
+Cell[90517, 2565, 1175, 31, 70, "Input",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc"],
+Cell[91695, 2598, 1302, 36, 70, "Text",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e"],
+Cell[93000, 2636, 1034, 32, 70, "Text",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12"],
+Cell[94037, 2670, 512, 15, 70, "Input",ExpressionUUID->"1318f44b-7a0d-b86f-4127-ee157fb90ab5"],
+Cell[94552, 2687, 1204, 37, 70, "Text",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09"],
+Cell[95759, 2726, 1060, 29, 70, "Input",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799"],
+Cell[96822, 2757, 996, 23, 70, "Text",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a"],
+Cell[97821, 2782, 117, 0, 70, "Section",ExpressionUUID->"2207e002-80f7-0285-523c-fa6c308250ef"],
+Cell[97941, 2784, 2033, 57, 70, "Text",ExpressionUUID->"440467ae-8db5-79b4-6c3c-7e0824404b9e"],
+Cell[99977, 2843, 546, 14, 70, "Input",ExpressionUUID->"141585f4-d1c1-5bbd-3c2a-1cb1e0742987"],
+Cell[100526, 2859, 96, 0, 70, "Text",ExpressionUUID->"3d27d006-86b8-9131-64dc-ca603332e01b"],
+Cell[100625, 2861, 457, 12, 70, "Input",ExpressionUUID->"3e44340b-ef5c-51d5-667b-ae548ae9233f"],
+Cell[101085, 2875, 100, 0, 70, "Text",ExpressionUUID->"321034f4-436e-dcec-622f-adbe7618a636"],
+Cell[101188, 2877, 352, 8, 70, "Input",ExpressionUUID->"1287d3f9-6500-de4e-42bc-caa30cbaa494"],
+Cell[101543, 2887, 419, 10, 70, "Text",ExpressionUUID->"3035d7f6-28ea-dcd5-61ca-ceb0489ca63f"],
+Cell[101965, 2899, 569, 16, 70, "Input",ExpressionUUID->"087f5f2f-6486-1b59-3805-56890d3369a3"],
+Cell[102537, 2917, 704, 17, 70, "Text",ExpressionUUID->"7ddf1aac-cdaa-cd7e-2be4-9309e45c9444"],
+Cell[103244, 2936, 355, 9, 70, "Input",ExpressionUUID->"2b41c4a9-15e8-1804-597e-ddf3a39d6b6e"],
+Cell[103602, 2947, 726, 15, 70, "Text",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81"],
+Cell[104331, 2964, 131, 0, 70, "Section",ExpressionUUID->"6724c974-bdf1-27a5-0edb-e13e3b858d8f"],
+Cell[104465, 2966, 489, 9, 70, "Text",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832"],
+Cell[104957, 2977, 544, 14, 70, "Input",ExpressionUUID->"53412643-5a68-df00-017e-b82d5f02a26a"],
+Cell[105504, 2993, 116, 0, 70, "Text",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c"],
+Cell[105623, 2995, 457, 12, 70, "Input",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6"],
+Cell[106083, 3009, 120, 0, 70, "Text",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99"],
+Cell[106206, 3011, 352, 8, 70, "Input",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2"],
+Cell[106561, 3021, 419, 10, 70, "Text",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79"],
+Cell[106983, 3033, 569, 16, 70, "Input",ExpressionUUID->"07a61755-6475-fbf7-2d5d-8f1f0d01c9dd"],
+Cell[107555, 3051, 1017, 25, 70, "Text",ExpressionUUID->"539b0e4e-9e5a-5525-01b8-a0281bef3c0f"],
+Cell[108575, 3078, 355, 9, 70, "Input",ExpressionUUID->"1cd82739-42e3-b7ed-44e7-bf6376971d37"],
+Cell[108933, 3089, 440, 9, 70, "Text",ExpressionUUID->"0971a20b-7913-467e-3f0e-445578a62d44"],
+Cell[109376, 3100, 1104, 29, 70, "Input",ExpressionUUID->"09df342d-d743-5809-3fe4-ae76e2f62b53"],
+Cell[110483, 3131, 282, 4, 70, "Text",ExpressionUUID->"0a0cc1e9-e2ca-26d9-3a33-d8b2977c8c23"],
+Cell[110768, 3137, 90, 0, 70, "Section",ExpressionUUID->"21fdaace-430e-f3f9-5782-43a876b8c1c3"],
+Cell[110861, 3139, 2541, 49, 70, "Text",ExpressionUUID->"1b4e2dea-4a49-bf2e-4975-c4b46ffd0274"]
+}
+]
+*)
+
+(* End of internal cache information *)
