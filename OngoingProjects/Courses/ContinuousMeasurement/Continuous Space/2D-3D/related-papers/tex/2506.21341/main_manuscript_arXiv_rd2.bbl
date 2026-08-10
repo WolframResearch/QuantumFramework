@@ -1,0 +1,862 @@
+%apsrev4-2.bst 2019-01-14 (MD) hand-edited version of apsrev4-1.bst
+%Control: key (0)
+%Control: author (8) initials jnrlst
+%Control: editor formatted (1) identically to author
+%Control: production of article title (0) allowed
+%Control: page (0) single
+%Control: year (1) truncated
+%Control: production of eprint (0) enabled
+\begin{thebibliography}{56}%
+\makeatletter
+\providecommand \@ifxundefined [1]{%
+ \@ifx{#1\undefined}
+}%
+\providecommand \@ifnum [1]{%
+ \ifnum #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \@ifx [1]{%
+ \ifx #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \natexlab [1]{#1}%
+\providecommand \enquote  [1]{``#1''}%
+\providecommand \bibnamefont  [1]{#1}%
+\providecommand \bibfnamefont [1]{#1}%
+\providecommand \citenamefont [1]{#1}%
+\providecommand \href@noop [0]{\@secondoftwo}%
+\providecommand \href [0]{\begingroup \@sanitize@url \@href}%
+\providecommand \@href[1]{\@@startlink{#1}\@@href}%
+\providecommand \@@href[1]{\endgroup#1\@@endlink}%
+\providecommand \@sanitize@url [0]{\catcode `\\12\catcode `\$12\catcode
+  `\&12\catcode `\#12\catcode `\^12\catcode `\_12\catcode `\%12\relax}%
+\providecommand \@@startlink[1]{}%
+\providecommand \@@endlink[0]{}%
+\providecommand \url  [0]{\begingroup\@sanitize@url \@url }%
+\providecommand \@url [1]{\endgroup\@href {#1}{\urlprefix }}%
+\providecommand \urlprefix  [0]{URL }%
+\providecommand \Eprint [0]{\href }%
+\providecommand \doibase [0]{https://doi.org/}%
+\providecommand \selectlanguage [0]{\@gobble}%
+\providecommand \bibinfo  [0]{\@secondoftwo}%
+\providecommand \bibfield  [0]{\@secondoftwo}%
+\providecommand \translation [1]{[#1]}%
+\providecommand \BibitemOpen [0]{}%
+\providecommand \bibitemStop [0]{}%
+\providecommand \bibitemNoStop [0]{.\EOS\space}%
+\providecommand \EOS [0]{\spacefactor3000\relax}%
+\providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
+\let\auto@bib@innerbib\@empty
+%</preamble>
+\bibitem [{\citenamefont {Fischer}\ \emph {et~al.}(2002)\citenamefont
+  {Fischer}, \citenamefont {Maunz}, \citenamefont {Pinkse}, \citenamefont
+  {Puppe},\ and\ \citenamefont {Rempe}}]{fischer2002feedback}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Fischer}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Maunz}},
+  \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Pinkse}}, \bibinfo
+  {author} {\bibfnamefont {T.}~\bibnamefont {Puppe}},\ and\ \bibinfo {author}
+  {\bibfnamefont {G.}~\bibnamefont {Rempe}},\ }\bibfield  {title} {\bibinfo
+  {title} {Feedback on the motion of a single atom in an optical cavity},\
+  }\href {https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.88.163002}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {88}},\ \bibinfo {pages} {163002} (\bibinfo {year}
+  {2002})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Steck}\ \emph {et~al.}(2004)\citenamefont {Steck},
+  \citenamefont {Jacobs}, \citenamefont {Mabuchi}, \citenamefont
+  {Bhattacharya},\ and\ \citenamefont {Habib}}]{steck2004quantum}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {D.~A.}\ \bibnamefont
+  {Steck}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Jacobs}},
+  \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Mabuchi}}, \bibinfo
+  {author} {\bibfnamefont {T.}~\bibnamefont {Bhattacharya}},\ and\ \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {Habib}},\ }\bibfield  {title}
+  {\bibinfo {title} {Quantum feedback control of atomic motion in an optical
+  cavity},\ }\href
+  {https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.92.223004}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {92}},\ \bibinfo {pages} {223004} (\bibinfo {year}
+  {2004})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Wang}\ \emph
+  {et~al.}(2023{\natexlab{a}})\citenamefont {Wang}, \citenamefont {Banniard},
+  \citenamefont {de~L\'epinay},\ and\ \citenamefont
+  {Sillanp\"a\"a}}]{Wang2023-fast-feedback-mechanical}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {Wang}}, \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Banniard}},
+  \bibinfo {author} {\bibfnamefont {L.~M.}\ \bibnamefont {de~L\'epinay}},\ and\
+  \bibinfo {author} {\bibfnamefont {M.~A.}\ \bibnamefont {Sillanp\"a\"a}},\
+  }\bibfield  {title} {\bibinfo {title} {Fast feedback control of mechanical
+  motion using circuit optomechanics},\ }\href
+  {https://doi.org/10.1103/PhysRevApplied.19.054091} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Appl.}\ }\textbf {\bibinfo {volume} {19}},\
+  \bibinfo {pages} {054091} (\bibinfo {year} {2023}{\natexlab{a}})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Wilson}\ \emph {et~al.}(2015)\citenamefont {Wilson},
+  \citenamefont {Sudhir}, \citenamefont {Piro}, \citenamefont {Schilling},
+  \citenamefont {Ghadimi},\ and\ \citenamefont
+  {Kippenberg}}]{Wilson2015-measurement-control-mechanical}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {D.~J.}\ \bibnamefont
+  {Wilson}}, \bibinfo {author} {\bibfnamefont {V.}~\bibnamefont {Sudhir}},
+  \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Piro}}, \bibinfo {author}
+  {\bibfnamefont {R.}~\bibnamefont {Schilling}}, \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {Ghadimi}},\ and\ \bibinfo {author}
+  {\bibfnamefont {T.~J.}\ \bibnamefont {Kippenberg}},\ }\bibfield  {title}
+  {\bibinfo {title} {Measurement-based control of a mechanical oscillator at
+  its thermal decoherence rate},\ }\href
+  {https://www.nature.com/articles/nature14672} {\bibfield  {journal} {\bibinfo
+   {journal} {Nature}\ }\textbf {\bibinfo {volume} {524}},\ \bibinfo {pages}
+  {325} (\bibinfo {year} {2015})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Poggio}\ \emph {et~al.}(2007)\citenamefont {Poggio},
+  \citenamefont {Degen}, \citenamefont {Mamin},\ and\ \citenamefont
+  {Rugar}}]{Poggio2007-feedack-cantilever-5mK}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Poggio}}, \bibinfo {author} {\bibfnamefont {C.~L.}\ \bibnamefont {Degen}},
+  \bibinfo {author} {\bibfnamefont {H.~J.}\ \bibnamefont {Mamin}},\ and\
+  \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Rugar}},\ }\bibfield
+  {title} {\bibinfo {title} {Feedback cooling of a cantilever's fundamental
+  mode below 5 mk},\ }\href {https://doi.org/10.1103/PhysRevLett.99.017201}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {99}},\ \bibinfo {pages} {017201} (\bibinfo {year}
+  {2007})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tewari}(2011)}]{Tewari2011-Control-aircraft-rockets}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Tewari}},\ }\href
+  {https://onlinelibrary.wiley.com/doi/book/10.1002/9781119971191} {\emph
+  {\bibinfo {title} {Advanced control of aircraft, spacecraft and rockets}}},\
+  Aerospace Series\ (\bibinfo  {publisher} {Wiley-Blackwell},\ \bibinfo
+  {address} {Hoboken, NJ},\ \bibinfo {year} {2011})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Guo}\ \emph {et~al.}(2023)\citenamefont {Guo},
+  \citenamefont {Chang}, \citenamefont {Yao},\ and\ \citenamefont
+  {Gr{\"o}blacher}}]{Guo2023-Active-feedback-resonator}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Guo}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Chang}}, \bibinfo
+  {author} {\bibfnamefont {X.}~\bibnamefont {Yao}},\ and\ \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {Gr{\"o}blacher}},\ }\bibfield  {title}
+  {\bibinfo {title} {Active-feedback quantum control of an integrated
+  low-frequency mechanical resonator},\ }\href
+  {https://www.nature.com/articles/s41467-023-40442-3} {\bibfield  {journal}
+  {\bibinfo  {journal} {Nat. Commun.}\ }\textbf {\bibinfo {volume} {14}},\
+  \bibinfo {pages} {4721} (\bibinfo {year} {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Rossi}\ \emph {et~al.}(2018)\citenamefont {Rossi},
+  \citenamefont {Mason}, \citenamefont {Chen}, \citenamefont {Tsaturyan},\ and\
+  \citenamefont {Schliesser}}]{Rossi2018-Measurement-based-ground-state}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Rossi}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Mason}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Chen}}, \bibinfo {author}
+  {\bibfnamefont {Y.}~\bibnamefont {Tsaturyan}},\ and\ \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {Schliesser}},\ }\bibfield  {title}
+  {\bibinfo {title} {Measurement-based quantum control of mechanical motion},\
+  }\href {https://www.nature.com/articles/s41586-018-0643-8} {\bibfield
+  {journal} {\bibinfo  {journal} {Nature}\ }\textbf {\bibinfo {volume} {563}},\
+  \bibinfo {pages} {53} (\bibinfo {year} {2018})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Wang}\ \emph
+  {et~al.}(2023{\natexlab{b}})\citenamefont {Wang}, \citenamefont {Banniard},
+  \citenamefont {de~L{\'e}pinay},\ and\ \citenamefont
+  {Sillanp{\"a}{\"a}}}]{wang2023fast}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {Wang}}, \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Banniard}},
+  \bibinfo {author} {\bibfnamefont {L.~M.}\ \bibnamefont {de~L{\'e}pinay}},\
+  and\ \bibinfo {author} {\bibfnamefont {M.~A.}\ \bibnamefont
+  {Sillanp{\"a}{\"a}}},\ }\bibfield  {title} {\bibinfo {title} {Fast feedback
+  control of mechanical motion using circuit optomechanics},\ }\href
+  {https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.19.054091}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Appl.}\ }\textbf
+  {\bibinfo {volume} {19}},\ \bibinfo {pages} {054091} (\bibinfo {year}
+  {2023}{\natexlab{b}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Purdy}\ \emph {et~al.}(2013)\citenamefont {Purdy},
+  \citenamefont {Peterson},\ and\ \citenamefont
+  {Regal}}]{Purdy2013-pressure-shot-noise-object}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.~P.}\ \bibnamefont
+  {Purdy}}, \bibinfo {author} {\bibfnamefont {R.~W.}\ \bibnamefont
+  {Peterson}},\ and\ \bibinfo {author} {\bibfnamefont {C.~A.}\ \bibnamefont
+  {Regal}},\ }\bibfield  {title} {\bibinfo {title} {Observation of radiation
+  pressure shot noise on a macroscopic object},\ }\href
+  {https://www.science.org/doi/10.1126/science.1231282} {\bibfield  {journal}
+  {\bibinfo  {journal} {Science}\ }\textbf {\bibinfo {volume} {339}},\ \bibinfo
+  {pages} {801} (\bibinfo {year} {2013})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Teufel}\ \emph {et~al.}(2016)\citenamefont {Teufel},
+  \citenamefont {Lecocq},\ and\ \citenamefont
+  {Simmonds}}]{Teufel2016-overwhelming-shot-noise}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.~D.}\ \bibnamefont
+  {Teufel}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Lecocq}},\
+  and\ \bibinfo {author} {\bibfnamefont {R.~W.}\ \bibnamefont {Simmonds}},\
+  }\bibfield  {title} {\bibinfo {title} {Overwhelming thermomechanical motion
+  with microwave radiation pressure shot noise},\ }\href
+  {https://doi.org/10.1103/PhysRevLett.116.013602} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf {\bibinfo {volume} {116}},\
+  \bibinfo {pages} {013602} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Genes}\ \emph {et~al.}(2008)\citenamefont {Genes},
+  \citenamefont {Vitali}, \citenamefont {Tombesi}, \citenamefont {Gigan},\ and\
+  \citenamefont
+  {Aspelmeyer}}]{Genes2008-comparing-cold-damping-cavity-assisted}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {Genes}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Vitali}},
+  \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Tombesi}}, \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {Gigan}},\ and\ \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Aspelmeyer}},\ }\bibfield  {title}
+  {\bibinfo {title} {Ground-state cooling of a micromechanical oscillator:
+  Comparing cold damping and cavity-assisted cooling schemes},\ }\href
+  {https://doi.org/10.1103/PhysRevA.77.033804} {\bibfield  {journal} {\bibinfo
+  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume} {77}},\ \bibinfo
+  {pages} {033804} (\bibinfo {year} {2008})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Lloyd}(2000)}]{Lloyd2000-coherent-quantum-feedback}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Lloyd}},\ }\bibfield  {title} {\bibinfo {title} {Coherent quantum
+  feedback},\ }\href {https://doi.org/10.1103/PhysRevA.62.022108} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume}
+  {62}},\ \bibinfo {pages} {022108} (\bibinfo {year} {2000})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Iida}\ \emph {et~al.}(2012)\citenamefont {Iida},
+  \citenamefont {Yukawa}, \citenamefont {Yonezawa}, \citenamefont {Yamamoto},\
+  and\ \citenamefont {Furusawa}}]{iida2012experimental}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Iida}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Yukawa}},
+  \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Yonezawa}}, \bibinfo
+  {author} {\bibfnamefont {N.}~\bibnamefont {Yamamoto}},\ and\ \bibinfo
+  {author} {\bibfnamefont {A.}~\bibnamefont {Furusawa}},\ }\bibfield  {title}
+  {\bibinfo {title} {Experimental demonstration of coherent feedback control on
+  optical field squeezing},\ }\href
+  {https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6189053} {\bibfield
+  {journal} {\bibinfo  {journal} {IEEE Trans. Autom. Control}\ }\textbf
+  {\bibinfo {volume} {57}},\ \bibinfo {pages} {2045} (\bibinfo {year}
+  {2012})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Nelson}\ \emph {et~al.}(2000)\citenamefont {Nelson},
+  \citenamefont {Weinstein}, \citenamefont {Cory},\ and\ \citenamefont
+  {Lloyd}}]{nelson2000experimental}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.~J.}\ \bibnamefont
+  {Nelson}}, \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont {Weinstein}},
+  \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Cory}},\ and\ \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {Lloyd}},\ }\bibfield  {title}
+  {\bibinfo {title} {Experimental demonstration of fully coherent quantum
+  feedback},\ }\href
+  {https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.85.3045}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {85}},\ \bibinfo {pages} {3045} (\bibinfo {year}
+  {2000})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Karg}\ \emph {et~al.}(2020)\citenamefont {Karg},
+  \citenamefont {Gouraud}, \citenamefont {Ngai}, \citenamefont {Schmid},
+  \citenamefont {Hammerer},\ and\ \citenamefont
+  {Treutlein}}]{Karg2020-Stron-coupling-membrane-atomic-spin}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.~M.}\ \bibnamefont
+  {Karg}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Gouraud}},
+  \bibinfo {author} {\bibfnamefont {C.~T.}\ \bibnamefont {Ngai}}, \bibinfo
+  {author} {\bibfnamefont {G.-L.}\ \bibnamefont {Schmid}}, \bibinfo {author}
+  {\bibfnamefont {K.}~\bibnamefont {Hammerer}},\ and\ \bibinfo {author}
+  {\bibfnamefont {P.}~\bibnamefont {Treutlein}},\ }\bibfield  {title} {\bibinfo
+  {title} {Light-mediated strong coupling between a mechanical oscillator and
+  atomic spins 1 meter apart},\ }\href
+  {https://doi.org/10.1126/science.abb0328} {\bibfield  {journal} {\bibinfo
+  {journal} {Science}\ }\textbf {\bibinfo {volume} {369}},\ \bibinfo {pages}
+  {174} (\bibinfo {year} {2020})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Schmid}\ \emph {et~al.}(2022)\citenamefont {Schmid},
+  \citenamefont {Ngai}, \citenamefont {Ernzer}, \citenamefont {Aguilera},
+  \citenamefont {Karg},\ and\ \citenamefont
+  {Treutlein}}]{Schmid2022-coherent-cooling-membrane-atomic-spin}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.-L.}\ \bibnamefont
+  {Schmid}}, \bibinfo {author} {\bibfnamefont {C.~T.}\ \bibnamefont {Ngai}},
+  \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Ernzer}}, \bibinfo
+  {author} {\bibfnamefont {M.~B.}\ \bibnamefont {Aguilera}}, \bibinfo {author}
+  {\bibfnamefont {T.~M.}\ \bibnamefont {Karg}},\ and\ \bibinfo {author}
+  {\bibfnamefont {P.}~\bibnamefont {Treutlein}},\ }\bibfield  {title} {\bibinfo
+  {title} {Coherent feedback cooling of a nanomechanical membrane with atomic
+  spins},\ }\href {https://doi.org/10.1103/PhysRevX.12.011020} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. X}\ }\textbf {\bibinfo {volume}
+  {12}},\ \bibinfo {pages} {011020} (\bibinfo {year} {2022})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Hirose}\ and\ \citenamefont
+  {Cappellaro}(2016)}]{Hirose2016-coherent-feedback-qubit-diamond}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Hirose}}\ and\ \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont
+  {Cappellaro}},\ }\bibfield  {title} {\bibinfo {title} {Coherent feedback
+  control of a single qubit in diamond},\ }\href
+  {https://www.nature.com/articles/nature17404} {\bibfield  {journal} {\bibinfo
+   {journal} {Nature}\ }\textbf {\bibinfo {volume} {532}},\ \bibinfo {pages}
+  {77} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Ernzer}\ \emph {et~al.}(2023)\citenamefont {Ernzer},
+  \citenamefont {Bosch~Aguilera}, \citenamefont {Brunelli}, \citenamefont
+  {Schmid}, \citenamefont {Karg}, \citenamefont {Bruder}, \citenamefont
+  {Potts},\ and\ \citenamefont
+  {Treutlein}}]{Ernzer2023-coherent-cooling-membrane}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Ernzer}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Bosch~Aguilera}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Brunelli}}, \bibinfo {author} {\bibfnamefont {G.-L.}\ \bibnamefont
+  {Schmid}}, \bibinfo {author} {\bibfnamefont {T.~M.}\ \bibnamefont {Karg}},
+  \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {Bruder}}, \bibinfo
+  {author} {\bibfnamefont {P.~P.}\ \bibnamefont {Potts}},\ and\ \bibinfo
+  {author} {\bibfnamefont {P.}~\bibnamefont {Treutlein}},\ }\bibfield  {title}
+  {\bibinfo {title} {Optical coherent feedback control of a mechanical
+  oscillator},\ }\href {https://doi.org/10.1103/PhysRevX.13.021023} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. X}\ }\textbf {\bibinfo {volume}
+  {13}},\ \bibinfo {pages} {021023} (\bibinfo {year} {2023})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Dania}\ \emph
+  {et~al.}(2024{\natexlab{a}})\citenamefont {Dania}, \citenamefont {Bykov},
+  \citenamefont {Goschin}, \citenamefont {Teller}, \citenamefont {Kassid},\
+  and\ \citenamefont {Northup}}]{Dania2024-ultrahigh-quality-levitated}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Dania}}, \bibinfo {author} {\bibfnamefont {D.~S.}\ \bibnamefont {Bykov}},
+  \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Goschin}}, \bibinfo
+  {author} {\bibfnamefont {M.}~\bibnamefont {Teller}}, \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {Kassid}},\ and\ \bibinfo {author}
+  {\bibfnamefont {T.~E.}\ \bibnamefont {Northup}},\ }\bibfield  {title}
+  {\bibinfo {title} {Ultrahigh quality factor of a levitated nanomechanical
+  oscillator},\ }\href {https://doi.org/10.1103/PhysRevLett.132.133602}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {132}},\ \bibinfo {pages} {133602} (\bibinfo {year}
+  {2024}{\natexlab{a}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Rondin}\ \emph {et~al.}(2017)\citenamefont {Rondin},
+  \citenamefont {Gieseler}, \citenamefont {Ricci}, \citenamefont {Quidant},
+  \citenamefont {Dellago},\ and\ \citenamefont {Novotny}}]{rondin2017direct}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Rondin}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Gieseler}},
+  \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Ricci}}, \bibinfo
+  {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}}, \bibinfo {author}
+  {\bibfnamefont {C.}~\bibnamefont {Dellago}},\ and\ \bibinfo {author}
+  {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title} {\bibinfo
+  {title} {Direct measurement of kramers turnover with a levitated
+  nanoparticle},\ }\href {https://www.nature.com/articles/nnano.2017.198}
+  {\bibfield  {journal} {\bibinfo  {journal} {Nat. Nanotechnol.}\ }\textbf
+  {\bibinfo {volume} {12}},\ \bibinfo {pages} {1130} (\bibinfo {year}
+  {2017})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Hebestreit}\ \emph {et~al.}(2018)\citenamefont
+  {Hebestreit}, \citenamefont {Frimmer}, \citenamefont {Reimann},\ and\
+  \citenamefont {Novotny}}]{hebestreit2018sensing}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {E.}~\bibnamefont
+  {Hebestreit}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Frimmer}},
+  \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Reimann}},\ and\ \bibinfo
+  {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title}
+  {\bibinfo {title} {Sensing static forces with free-falling nanoparticles},\
+  }\href {https://doi.org/10.1103/PhysRevLett.121.063602} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf {\bibinfo {volume} {121}},\
+  \bibinfo {pages} {063602} (\bibinfo {year} {2018})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Conangla}\ \emph {et~al.}(2020)\citenamefont
+  {Conangla}, \citenamefont {Rica},\ and\ \citenamefont
+  {Quidant}}]{conangla2020extending}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.~P.}\ \bibnamefont
+  {Conangla}}, \bibinfo {author} {\bibfnamefont {R.~A.}\ \bibnamefont {Rica}},\
+  and\ \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}},\
+  }\bibfield  {title} {\bibinfo {title} {Extending vacuum trapping to absorbing
+  objects with hybrid paul-optical traps},\ }\href
+  {https://doi.org/https://doi.org/10.1021/acs.nanolett.0c02025} {\bibfield
+  {journal} {\bibinfo  {journal} {Nano Lett.}\ }\textbf {\bibinfo {volume}
+  {20}},\ \bibinfo {pages} {6018} (\bibinfo {year} {2020})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Sun}\ \emph {et~al.}(2024)\citenamefont {Sun},
+  \citenamefont {Pi}, \citenamefont {Kiang}, \citenamefont {Georgescu},
+  \citenamefont {Ou}, \citenamefont {Ulbricht},\ and\ \citenamefont
+  {Yan}}]{sun2024tunable}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {Sun}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Pi}}, \bibinfo
+  {author} {\bibfnamefont {K.~S.}\ \bibnamefont {Kiang}}, \bibinfo {author}
+  {\bibfnamefont {T.~S.}\ \bibnamefont {Georgescu}}, \bibinfo {author}
+  {\bibfnamefont {J.-Y.}\ \bibnamefont {Ou}}, \bibinfo {author} {\bibfnamefont
+  {H.}~\bibnamefont {Ulbricht}},\ and\ \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {Yan}},\ }\bibfield  {title} {\bibinfo {title} {Tunable
+  on-chip optical traps for levitating particles based on single-layer
+  metasurface},\ }\href
+  {https://www.degruyterbrill.com/document/doi/10.1515/nanoph-2023-0873/html}
+  {\bibfield  {journal} {\bibinfo  {journal} {Nanophotonics}\ }\textbf
+  {\bibinfo {volume} {13}},\ \bibinfo {pages} {2791} (\bibinfo {year}
+  {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tomassi}\ \emph {et~al.}(2025)\citenamefont
+  {Tomassi}, \citenamefont {Veldhuizen}, \citenamefont {Melo}, \citenamefont
+  {Candoli}, \citenamefont {Riera-Campeny}, \citenamefont {Romero-Isart},
+  \citenamefont {Meyer},\ and\ \citenamefont
+  {Quidant}}]{Tomassi2025-inverted-potential}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.~F.~M.}\
+  \bibnamefont {Tomassi}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont
+  {Veldhuizen}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Melo}},
+  \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Candoli}}, \bibinfo
+  {author} {\bibfnamefont {A.}~\bibnamefont {Riera-Campeny}}, \bibinfo {author}
+  {\bibfnamefont {O.}~\bibnamefont {Romero-Isart}}, \bibinfo {author}
+  {\bibfnamefont {N.}~\bibnamefont {Meyer}},\ and\ \bibinfo {author}
+  {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ }\bibfield  {title} {\bibinfo
+  {title} {Accelerated state expansion of a nanoparticle in a dark inverted
+  potential},\ }\href@noop {} {\  (\bibinfo {year} {2025})},\ \Eprint
+  {https://arxiv.org/abs/2503.20707} {arXiv:2503.20707 [quant-ph]} \BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Magrini}\ \emph {et~al.}(2021)\citenamefont
+  {Magrini}, \citenamefont {Rosenzweig}, \citenamefont {Bach}, \citenamefont
+  {Deutschmann-Olek}, \citenamefont {Hofer}, \citenamefont {Hong},
+  \citenamefont {Kiesel}, \citenamefont {Kugi},\ and\ \citenamefont
+  {Aspelmeyer}}]{magrini2021real}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Magrini}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Rosenzweig}},
+  \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {Bach}}, \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {Deutschmann-Olek}}, \bibinfo {author}
+  {\bibfnamefont {S.~G.}\ \bibnamefont {Hofer}}, \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {Hong}}, \bibinfo {author} {\bibfnamefont
+  {N.}~\bibnamefont {Kiesel}}, \bibinfo {author} {\bibfnamefont
+  {A.}~\bibnamefont {Kugi}},\ and\ \bibinfo {author} {\bibfnamefont
+  {M.}~\bibnamefont {Aspelmeyer}},\ }\bibfield  {title} {\bibinfo {title}
+  {Real-time optimal quantum control of mechanical motion at room
+  temperature},\ }\href
+  {https://doi.org/https://doi.org/10.1038/s41586-021-03602-3} {\bibfield
+  {journal} {\bibinfo  {journal} {Nature}\ }\textbf {\bibinfo {volume} {595}},\
+  \bibinfo {pages} {373} (\bibinfo {year} {2021})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tebbenjohanns}\ \emph {et~al.}(2021)\citenamefont
+  {Tebbenjohanns}, \citenamefont {Mattana}, \citenamefont {Rossi},
+  \citenamefont {Frimmer},\ and\ \citenamefont
+  {Novotny}}]{tebbenjohanns2021quantum}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {F.}~\bibnamefont
+  {Tebbenjohanns}}, \bibinfo {author} {\bibfnamefont {M.~L.}\ \bibnamefont
+  {Mattana}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Rossi}},
+  \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Frimmer}},\ and\ \bibinfo
+  {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title}
+  {\bibinfo {title} {Quantum control of a nanoparticle optically levitated in
+  cryogenic free space},\ }\href
+  {https://doi.org/https://doi.org/10.1038/s41586-021-03617-w} {\bibfield
+  {journal} {\bibinfo  {journal} {Nature}\ }\textbf {\bibinfo {volume} {595}},\
+  \bibinfo {pages} {378} (\bibinfo {year} {2021})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Kamba}\ and\ \citenamefont
+  {Aikawa}(2023)}]{Kamba2023-revealing-velocity-uncertainty}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Kamba}}\ and\ \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Aikawa}},\
+  }\bibfield  {title} {\bibinfo {title} {Revealing the velocity uncertainties
+  of a levitated particle in the quantum ground state},\ }\href
+  {https://doi.org/10.1103/PhysRevLett.131.183602} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf {\bibinfo {volume} {131}},\
+  \bibinfo {pages} {183602} (\bibinfo {year} {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Deli{\'c}}\ \emph {et~al.}(2020)\citenamefont
+  {Deli{\'c}}, \citenamefont {Reisenbauer}, \citenamefont {Dare}, \citenamefont
+  {Grass}, \citenamefont {Vuleti{\'c}}, \citenamefont {Kiesel},\ and\
+  \citenamefont {Aspelmeyer}}]{delic2020cooling}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {U.}~\bibnamefont
+  {Deli{\'c}}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Reisenbauer}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Dare}},
+  \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Grass}}, \bibinfo
+  {author} {\bibfnamefont {V.}~\bibnamefont {Vuleti{\'c}}}, \bibinfo {author}
+  {\bibfnamefont {N.}~\bibnamefont {Kiesel}},\ and\ \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Aspelmeyer}},\ }\bibfield  {title}
+  {\bibinfo {title} {Cooling of a levitated nanoparticle to the motional
+  quantum ground state},\ }\href {https://doi.org/10.1126/science.aba3993}
+  {\bibfield  {journal} {\bibinfo  {journal} {Science}\ }\textbf {\bibinfo
+  {volume} {367}},\ \bibinfo {pages} {892} (\bibinfo {year}
+  {2020})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Piotrowski}\ \emph {et~al.}(2023)\citenamefont
+  {Piotrowski}, \citenamefont {Windey}, \citenamefont {Vijayan}, \citenamefont
+  {Gonzalez-Ballestero}, \citenamefont {de~los R{\'\i}os~Sommer}, \citenamefont
+  {Meyer}, \citenamefont {Quidant}, \citenamefont {Romero-Isart}, \citenamefont
+  {Reimann},\ and\ \citenamefont {Novotny}}]{piotrowski2022simultaneous}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Piotrowski}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {Windey}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Vijayan}}, \bibinfo
+  {author} {\bibfnamefont {C.}~\bibnamefont {Gonzalez-Ballestero}}, \bibinfo
+  {author} {\bibfnamefont {A.}~\bibnamefont {de~los R{\'\i}os~Sommer}},
+  \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Meyer}}, \bibinfo
+  {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}}, \bibinfo {author}
+  {\bibfnamefont {O.}~\bibnamefont {Romero-Isart}}, \bibinfo {author}
+  {\bibfnamefont {R.}~\bibnamefont {Reimann}},\ and\ \bibinfo {author}
+  {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title} {\bibinfo
+  {title} {Simultaneous ground-state cooling of two mechanical modes of a
+  levitated nanoparticle},\ }\href {https://doi.org/10.1038/s41567-023-01956-1}
+  {\bibfield  {journal} {\bibinfo  {journal} {Nat. Phys.}\ } (\bibinfo {year}
+  {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Ranfagni}\ \emph {et~al.}(2022)\citenamefont
+  {Ranfagni}, \citenamefont {B\o{}rkje}, \citenamefont {Marino},\ and\
+  \citenamefont {Marin}}]{Ranfagni2022-two-dimensional-quantum}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Ranfagni}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {B\o{}rkje}},
+  \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Marino}},\ and\ \bibinfo
+  {author} {\bibfnamefont {F.}~\bibnamefont {Marin}},\ }\bibfield  {title}
+  {\bibinfo {title} {Two-dimensional quantum motion of a levitated
+  nanosphere},\ }\href {https://doi.org/10.1103/PhysRevResearch.4.033051}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Res.}\ }\textbf
+  {\bibinfo {volume} {4}},\ \bibinfo {pages} {033051} (\bibinfo {year}
+  {2022})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Dania}\ \emph
+  {et~al.}(2024{\natexlab{b}})\citenamefont {Dania}, \citenamefont {Kremer},
+  \citenamefont {Piotrowski}, \citenamefont {Candoli}, \citenamefont {Vijayan},
+  \citenamefont {Romero-Isart}, \citenamefont {Gonzalez-Ballestero},
+  \citenamefont {Novotny},\ and\ \citenamefont {Frimmer}}]{dania2024high}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Dania}}, \bibinfo {author} {\bibfnamefont {O.~S.}\ \bibnamefont {Kremer}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Piotrowski}}, \bibinfo
+  {author} {\bibfnamefont {D.}~\bibnamefont {Candoli}}, \bibinfo {author}
+  {\bibfnamefont {J.}~\bibnamefont {Vijayan}}, \bibinfo {author} {\bibfnamefont
+  {O.}~\bibnamefont {Romero-Isart}}, \bibinfo {author} {\bibfnamefont
+  {C.}~\bibnamefont {Gonzalez-Ballestero}}, \bibinfo {author} {\bibfnamefont
+  {L.}~\bibnamefont {Novotny}},\ and\ \bibinfo {author} {\bibfnamefont
+  {M.}~\bibnamefont {Frimmer}},\ }\bibfield  {title} {\bibinfo {title}
+  {High-purity quantum optomechanics at room temperature},\ }\href@noop {} {\
+  (\bibinfo {year} {2024}{\natexlab{b}})},\ \Eprint
+  {https://arxiv.org/abs/2412.14117} {arXiv:2412.14117 [quant-ph]} \BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Conangla}\ \emph {et~al.}(2019)\citenamefont
+  {Conangla}, \citenamefont {Ricci}, \citenamefont {Cuairan}, \citenamefont
+  {Schell}, \citenamefont {Meyer},\ and\ \citenamefont
+  {Quidant}}]{conangla2019optimal}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.~P.}\ \bibnamefont
+  {Conangla}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Ricci}},
+  \bibinfo {author} {\bibfnamefont {M.~T.}\ \bibnamefont {Cuairan}}, \bibinfo
+  {author} {\bibfnamefont {A.~W.}\ \bibnamefont {Schell}}, \bibinfo {author}
+  {\bibfnamefont {N.}~\bibnamefont {Meyer}},\ and\ \bibinfo {author}
+  {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ }\bibfield  {title} {\bibinfo
+  {title} {Optimal feedback cooling of a charged levitated nanoparticle with
+  adaptive control},\ }\href {https://doi.org/10.1103/PhysRevLett.122.223602}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {122}},\ \bibinfo {pages} {223602} (\bibinfo {year}
+  {2019})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tebbenjohanns}\ \emph
+  {et~al.}(2019{\natexlab{a}})\citenamefont {Tebbenjohanns}, \citenamefont
+  {Frimmer}, \citenamefont {Militaru}, \citenamefont {Jain},\ and\
+  \citenamefont {Novotny}}]{tebbenjohanns2019cold}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {F.}~\bibnamefont
+  {Tebbenjohanns}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Frimmer}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Militaru}},
+  \bibinfo {author} {\bibfnamefont {V.}~\bibnamefont {Jain}},\ and\ \bibinfo
+  {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title}
+  {\bibinfo {title} {Cold damping of an optically levitated nanoparticle to
+  microkelvin temperatures},\ }\href
+  {https://doi.org/10.1103/PhysRevLett.122.223601} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf {\bibinfo {volume} {122}},\
+  \bibinfo {pages} {223601} (\bibinfo {year} {2019}{\natexlab{a}})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Vijayan}\ \emph {et~al.}(2023)\citenamefont
+  {Vijayan}, \citenamefont {Zhang}, \citenamefont {Piotrowski}, \citenamefont
+  {Windey}, \citenamefont {van~der Laan}, \citenamefont {Frimmer},\ and\
+  \citenamefont {Novotny}}]{Vijayan2023-all-optical-scalable-CD}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Vijayan}}, \bibinfo {author} {\bibfnamefont {Z.}~\bibnamefont {Zhang}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Piotrowski}}, \bibinfo
+  {author} {\bibfnamefont {D.}~\bibnamefont {Windey}}, \bibinfo {author}
+  {\bibfnamefont {F.}~\bibnamefont {van~der Laan}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Frimmer}},\ and\ \bibinfo {author}
+  {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title} {\bibinfo
+  {title} {Scalable all-optical cold damping of levitated nanoparticles},\
+  }\href {https://www.nature.com/articles/s41565-022-01254-6} {\bibfield
+  {journal} {\bibinfo  {journal} {Nat. Nanotechnol.}\ }\textbf {\bibinfo
+  {volume} {18}},\ \bibinfo {pages} {49} (\bibinfo {year} {2023})}\BibitemShut
+  {NoStop}%
+\bibitem [{SM()}]{SM}%
+  \BibitemOpen
+  \href@noop {} {\bibinfo {title} {See supplemental material for details on the
+  theoretical description of the coherent feedback mechanism, the experimental
+  setup and the data analysis.}}\BibitemShut {Stop}%
+\bibitem [{\citenamefont {Gieseler}\ \emph {et~al.}(2012)\citenamefont
+  {Gieseler}, \citenamefont {Deutsch}, \citenamefont {Quidant},\ and\
+  \citenamefont {Novotny}}]{gieseler2012subkelvin}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Gieseler}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Deutsch}},
+  \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ and\ \bibinfo
+  {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title}
+  {\bibinfo {title} {Subkelvin parametric feedback cooling of a laser-trapped
+  nanoparticle},\ }\href
+  {https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.109.103603}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {109}},\ \bibinfo {pages} {103603} (\bibinfo {year}
+  {2012})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Jain}\ \emph {et~al.}(2016)\citenamefont {Jain},
+  \citenamefont {Gieseler}, \citenamefont {Moritz}, \citenamefont {Dellago},
+  \citenamefont {Quidant},\ and\ \citenamefont {Novotny}}]{jain2016direct}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {V.}~\bibnamefont
+  {Jain}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Gieseler}},
+  \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {Moritz}}, \bibinfo
+  {author} {\bibfnamefont {C.}~\bibnamefont {Dellago}}, \bibinfo {author}
+  {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ and\ \bibinfo {author}
+  {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ }\bibfield  {title} {\bibinfo
+  {title} {Direct measurement of photon recoil from a levitated nanoparticle},\
+  }\href {https://doi.org/10.1103/PhysRevLett.116.243601} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf {\bibinfo {volume} {116}},\
+  \bibinfo {pages} {243601} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tebbenjohanns}\ \emph
+  {et~al.}(2019{\natexlab{b}})\citenamefont {Tebbenjohanns}, \citenamefont
+  {Frimmer},\ and\ \citenamefont {Novotny}}]{tebbenjohanns2019optimal}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {F.}~\bibnamefont
+  {Tebbenjohanns}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Frimmer}},\ and\ \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Novotny}},\ }\bibfield  {title} {\bibinfo {title} {Optimal position
+  detection of a dipolar scatterer in a focused field},\ }\href
+  {https://doi.org/10.1103/PhysRevA.100.043821} {\bibfield  {journal} {\bibinfo
+   {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume} {100}},\ \bibinfo
+  {pages} {043821} (\bibinfo {year} {2019}{\natexlab{b}})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Kamba}\ \emph {et~al.}(2021)\citenamefont {Kamba},
+  \citenamefont {Kiuchi}, \citenamefont {Yotsuya},\ and\ \citenamefont
+  {Aikawa}}]{kamba2021recoil}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Kamba}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Kiuchi}},
+  \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Yotsuya}},\ and\ \bibinfo
+  {author} {\bibfnamefont {K.}~\bibnamefont {Aikawa}},\ }\bibfield  {title}
+  {\bibinfo {title} {Recoil-limited feedback cooling of single nanoparticles
+  near the ground state in an optical lattice},\ }\href
+  {https://doi.org/10.1103/PhysRevA.103.L051701} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume} {103}},\
+  \bibinfo {pages} {L051701} (\bibinfo {year} {2021})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Lindner}\ \emph {et~al.}(2024)\citenamefont
+  {Lindner}, \citenamefont {Juschitz}, \citenamefont {Rieser}, \citenamefont
+  {Fein}, \citenamefont {Debiossac}, \citenamefont {Ciampini}, \citenamefont
+  {Aspelmeyer},\ and\ \citenamefont
+  {Kiesel}}]{Lindner2024-hollow-core-ultra-high-vacuum}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Lindner}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Juschitz}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Rieser}}, \bibinfo
+  {author} {\bibfnamefont {Y.~Y.}\ \bibnamefont {Fein}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Debiossac}}, \bibinfo {author}
+  {\bibfnamefont {M.~A.}\ \bibnamefont {Ciampini}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Aspelmeyer}},\ and\ \bibinfo {author}
+  {\bibfnamefont {N.}~\bibnamefont {Kiesel}},\ }\bibfield  {title} {\bibinfo
+  {title} {Hollow-core fiber loading of nanoparticles into ultra-high vacuum},\
+  }\href
+  {https://pubs.aip.org/aip/apl/article/124/14/143501/3280323/Hollow-core-fiber-loading-of-nanoparticles-into}
+  {\bibfield  {journal} {\bibinfo  {journal} {Appl. Phys. Lett.}\ }\textbf
+  {\bibinfo {volume} {124}} (\bibinfo {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Chao}\ \emph {et~al.}(2025)\citenamefont {Chao},
+  \citenamefont {Hua}, \citenamefont {Liang}, \citenamefont {Yue},
+  \citenamefont {Jia}, \citenamefont {You},\ and\ \citenamefont
+  {Tey}}]{chao2025robust}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {Y.-X.}\ \bibnamefont
+  {Chao}}, \bibinfo {author} {\bibfnamefont {Z.-X.}\ \bibnamefont {Hua}},
+  \bibinfo {author} {\bibfnamefont {X.-H.}\ \bibnamefont {Liang}}, \bibinfo
+  {author} {\bibfnamefont {Z.-P.}\ \bibnamefont {Yue}}, \bibinfo {author}
+  {\bibfnamefont {C.}~\bibnamefont {Jia}}, \bibinfo {author} {\bibfnamefont
+  {L.}~\bibnamefont {You}},\ and\ \bibinfo {author} {\bibfnamefont {M.~K.}\
+  \bibnamefont {Tey}},\ }\bibfield  {title} {\bibinfo {title} {Robust
+  suppression of high-frequency laser phase noise by adaptive pound-drever-hall
+  feedforward},\ }\href
+  {https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.23.L011005}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Appl.}\ }\textbf
+  {\bibinfo {volume} {23}},\ \bibinfo {pages} {L011005} (\bibinfo {year}
+  {2025})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Parniak}\ \emph {et~al.}(2021)\citenamefont
+  {Parniak}, \citenamefont {Galinskiy}, \citenamefont {Zwettler},\ and\
+  \citenamefont {Polzik}}]{parniak2021high}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Parniak}}, \bibinfo {author} {\bibfnamefont {I.}~\bibnamefont {Galinskiy}},
+  \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Zwettler}},\ and\
+  \bibinfo {author} {\bibfnamefont {E.~S.}\ \bibnamefont {Polzik}},\ }\bibfield
+   {title} {\bibinfo {title} {High-frequency broadband laser phase noise
+  cancellation using a delay line},\ }\href
+  {https://opg.optica.org/oe/fulltext.cfm?uri=oe-29-5-6935&id=447872}
+  {\bibfield  {journal} {\bibinfo  {journal} {Opt. Express}\ }\textbf {\bibinfo
+  {volume} {29}},\ \bibinfo {pages} {6935} (\bibinfo {year}
+  {2021})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Pontin}\ \emph {et~al.}(2023)\citenamefont {Pontin},
+  \citenamefont {Fu}, \citenamefont {Toro{\v{s}}}, \citenamefont {Monteiro},\
+  and\ \citenamefont {Barker}}]{pontin2023simultaneous}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Pontin}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Fu}}, \bibinfo
+  {author} {\bibfnamefont {M.}~\bibnamefont {Toro{\v{s}}}}, \bibinfo {author}
+  {\bibfnamefont {T.~S.}\ \bibnamefont {Monteiro}},\ and\ \bibinfo {author}
+  {\bibfnamefont {P.~F.}\ \bibnamefont {Barker}},\ }\bibfield  {title}
+  {\bibinfo {title} {Simultaneous cavity cooling of all six degrees of freedom
+  of a levitated nanoparticle},\ }\href
+  {https://www.nature.com/articles/s41567-023-02006-6} {\bibfield  {journal}
+  {\bibinfo  {journal} {Nat. Phys.}\ }\textbf {\bibinfo {volume} {19}},\
+  \bibinfo {pages} {1003} (\bibinfo {year} {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Gao}\ \emph {et~al.}(2024)\citenamefont {Gao},
+  \citenamefont {van~der Laan}, \citenamefont {Zieli{\'n}ska}, \citenamefont
+  {Militaru}, \citenamefont {Novotny},\ and\ \citenamefont
+  {Frimmer}}]{gao2024feedback}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Gao}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {van~der Laan}},
+  \bibinfo {author} {\bibfnamefont {J.~A.}\ \bibnamefont {Zieli{\'n}ska}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Militaru}}, \bibinfo
+  {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}},\ and\ \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {Frimmer}},\ }\bibfield  {title} {\bibinfo
+  {title} {Feedback cooling a levitated nanoparticle's libration to below 100
+  phonons},\ }\href
+  {https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.033009}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Res.}\ }\textbf
+  {\bibinfo {volume} {6}},\ \bibinfo {pages} {033009} (\bibinfo {year}
+  {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Bang}\ \emph {et~al.}(2020)\citenamefont {Bang},
+  \citenamefont {Seberson}, \citenamefont {Ju}, \citenamefont {Ahn},
+  \citenamefont {Xu}, \citenamefont {Gao}, \citenamefont {Robicheaux},\ and\
+  \citenamefont {Li}}]{bang2020five}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Bang}}, \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Seberson}},
+  \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Ju}}, \bibinfo {author}
+  {\bibfnamefont {J.}~\bibnamefont {Ahn}}, \bibinfo {author} {\bibfnamefont
+  {Z.}~\bibnamefont {Xu}}, \bibinfo {author} {\bibfnamefont {X.}~\bibnamefont
+  {Gao}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {Robicheaux}},\
+  and\ \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Li}},\ }\bibfield
+  {title} {\bibinfo {title} {Five-dimensional cooling and nonlinear dynamics of
+  an optically levitated nanodumbbell},\ }\href
+  {https://doi.org/https://doi.org/10.1103/PhysRevResearch.2.043054} {\bibfield
+   {journal} {\bibinfo  {journal} {Phys. Rev. Res.}\ }\textbf {\bibinfo
+  {volume} {2}},\ \bibinfo {pages} {043054} (\bibinfo {year}
+  {2020})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Lepeshov}\ \emph {et~al.}(2023)\citenamefont
+  {Lepeshov}, \citenamefont {Meyer}, \citenamefont {Maurer}, \citenamefont
+  {Romero-Isart},\ and\ \citenamefont {Quidant}}]{lepeshov2023levitated}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Lepeshov}}, \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Meyer}},
+  \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Maurer}}, \bibinfo
+  {author} {\bibfnamefont {O.}~\bibnamefont {Romero-Isart}},\ and\ \bibinfo
+  {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ }\bibfield  {title}
+  {\bibinfo {title} {Levitated optomechanics with meta-atoms},\ }\href
+  {https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.130.233601}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. Lett.}\ }\textbf
+  {\bibinfo {volume} {130}},\ \bibinfo {pages} {233601} (\bibinfo {year}
+  {2023})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Afridi}\ \emph {et~al.}(2025)\citenamefont {Afridi},
+  \citenamefont {Melo}, \citenamefont {Meyer},\ and\ \citenamefont
+  {Quidant}}]{afridi2025controlling}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Afridi}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Melo}},
+  \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Meyer}},\ and\ \bibinfo
+  {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ }\bibfield  {title}
+  {\bibinfo {title} {Controlling the sign of optical forces using metaoptics},\
+  }\href@noop {} {\  (\bibinfo {year} {2025})},\ \Eprint
+  {https://arxiv.org/abs/2504.18341} {arXiv:2504.18341 [physics]} \BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Lee}\ \emph {et~al.}(2025)\citenamefont {Lee},
+  \citenamefont {Stickler}, \citenamefont {Pertsch},\ and\ \citenamefont
+  {Hong}}]{lee2025inverse}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Lee}}, \bibinfo {author} {\bibfnamefont {B.~A.}\ \bibnamefont {Stickler}},
+  \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Pertsch}},\ and\ \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {Hong}},\ }\bibfield  {title}
+  {\bibinfo {title} {Inverse microparticle design for enhanced optical trapping
+  and detection efficiency in all six degrees of freedom},\ }\href@noop {} {\
+  (\bibinfo {year} {2025})},\ \Eprint {https://arxiv.org/abs/2506.01837}
+  {arXiv:2506.01837 [physics]} \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Dinter}\ \emph {et~al.}(2024)\citenamefont {Dinter},
+  \citenamefont {Roberts}, \citenamefont {Volz}, \citenamefont {Schmidt},\ and\
+  \citenamefont
+  {Laplane}}]{Dinter2024-3d-displacement-sensing-mode-decomposition}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Dinter}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Roberts}},
+  \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Volz}}, \bibinfo {author}
+  {\bibfnamefont {M.~K.}\ \bibnamefont {Schmidt}},\ and\ \bibinfo {author}
+  {\bibfnamefont {C.}~\bibnamefont {Laplane}},\ }\bibfield  {title} {\bibinfo
+  {title} {Three-dimensional and selective displacement sensing of a levitated
+  nanoparticle via spatial mode decomposition},\ }\href@noop {} {\  (\bibinfo
+  {year} {2024})},\ \Eprint {https://arxiv.org/abs/2409.08827}
+  {arXiv:2409.08827 [physics]} \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Melo}\ \emph {et~al.}(2024)\citenamefont {Melo},
+  \citenamefont {T~Cuairan}, \citenamefont {Tomassi}, \citenamefont {Meyer},\
+  and\ \citenamefont {Quidant}}]{Melo2024-levitation-on-chip}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {B.}~\bibnamefont
+  {Melo}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {T~Cuairan}},
+  \bibinfo {author} {\bibfnamefont {G.~F.~M.}\ \bibnamefont {Tomassi}},
+  \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Meyer}},\ and\ \bibinfo
+  {author} {\bibfnamefont {R.}~\bibnamefont {Quidant}},\ }\bibfield  {title}
+  {\bibinfo {title} {Vacuum levitation and motion control on chip},\ }\href
+  {https://www.nature.com/articles/s41565-024-01677-3} {\bibfield  {journal}
+  {\bibinfo  {journal} {Nat. Nanotechnol.}\ }\textbf {\bibinfo {volume} {19}},\
+  \bibinfo {pages} {1270} (\bibinfo {year} {2024})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Karg}\ \emph {et~al.}(2019)\citenamefont {Karg},
+  \citenamefont {Gouraud}, \citenamefont {Treutlein},\ and\ \citenamefont
+  {Hammerer}}]{Karg2019-remote-hamiltonian-mediated-light}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.~M.}\ \bibnamefont
+  {Karg}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {Gouraud}},
+  \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Treutlein}},\ and\
+  \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Hammerer}},\ }\bibfield
+  {title} {\bibinfo {title} {Remote hamiltonian interactions mediated by
+  light},\ }\href {https://doi.org/10.1103/PhysRevA.99.063829} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume}
+  {99}},\ \bibinfo {pages} {063829} (\bibinfo {year} {2019})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Metelmann}\ and\ \citenamefont
+  {Clerk}(2015)}]{metelmann2015nonreciprocal}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Metelmann}}\ and\ \bibinfo {author} {\bibfnamefont {A.~A.}\ \bibnamefont
+  {Clerk}},\ }\bibfield  {title} {\bibinfo {title} {Nonreciprocal photon
+  transmission and amplification via reservoir engineering},\ }\href
+  {https://journals.aps.org/prx/abstract/10.1103/PhysRevX.5.021025} {\bibfield
+  {journal} {\bibinfo  {journal} {Phys. Rev. X}\ }\textbf {\bibinfo {volume}
+  {5}},\ \bibinfo {pages} {021025} (\bibinfo {year} {2015})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Du}\ \emph {et~al.}(2025)\citenamefont {Du},
+  \citenamefont {Monsel}, \citenamefont {Wieczorek},\ and\ \citenamefont
+  {Splettstoesser}}]{du2025coherent}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Du}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Monsel}}, \bibinfo
+  {author} {\bibfnamefont {W.}~\bibnamefont {Wieczorek}},\ and\ \bibinfo
+  {author} {\bibfnamefont {J.}~\bibnamefont {Splettstoesser}},\ }\bibfield
+  {title} {\bibinfo {title} {Coherent feedback control for cavity
+  optomechanical systems with a frequency-dependent mirror},\ }\href
+  {https://journals.aps.org/pra/abstract/10.1103/PhysRevA.111.013506}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo
+  {volume} {111}},\ \bibinfo {pages} {013506} (\bibinfo {year}
+  {2025})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Li}\ \emph {et~al.}(2017)\citenamefont {Li},
+  \citenamefont {Li}, \citenamefont {Zippilli}, \citenamefont {Vitali},\ and\
+  \citenamefont {Zhang}}]{li2017enhanced}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Li}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Li}}, \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {Zippilli}}, \bibinfo {author}
+  {\bibfnamefont {D.}~\bibnamefont {Vitali}},\ and\ \bibinfo {author}
+  {\bibfnamefont {T.}~\bibnamefont {Zhang}},\ }\bibfield  {title} {\bibinfo
+  {title} {Enhanced entanglement of two different mechanical resonators via
+  coherent feedback},\ }\href
+  {https://journals.aps.org/pra/abstract/10.1103/PhysRevA.95.043819} {\bibfield
+   {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo {volume}
+  {95}},\ \bibinfo {pages} {043819} (\bibinfo {year} {2017})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Carlon~Zambon}\ \emph {et~al.}(2025)\citenamefont
+  {Carlon~Zambon}, \citenamefont {Rossi}, \citenamefont {Frimmer},
+  \citenamefont {Novotny}, \citenamefont {Gonzalez-Ballestero}, \citenamefont
+  {Romero-Isart},\ and\ \citenamefont
+  {Militaru}}]{Zambon2025-remote-entanglement-particles}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {N.}~\bibnamefont
+  {Carlon~Zambon}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Rossi}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Frimmer}},
+  \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Novotny}}, \bibinfo
+  {author} {\bibfnamefont {C.}~\bibnamefont {Gonzalez-Ballestero}}, \bibinfo
+  {author} {\bibfnamefont {O.}~\bibnamefont {Romero-Isart}},\ and\ \bibinfo
+  {author} {\bibfnamefont {A.}~\bibnamefont {Militaru}},\ }\bibfield  {title}
+  {\bibinfo {title} {Motional entanglement of remote optically levitated
+  nanoparticles},\ }\href {https://doi.org/10.1103/PhysRevA.111.013521}
+  {\bibfield  {journal} {\bibinfo  {journal} {Phys. Rev. A}\ }\textbf {\bibinfo
+  {volume} {111}},\ \bibinfo {pages} {013521} (\bibinfo {year}
+  {2025})}\BibitemShut {NoStop}%
+\end{thebibliography}%

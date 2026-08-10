@@ -1,0 +1,160 @@
+%auto-ignore
+\documentclass[./Main-revtex.tex]{subfiles}
+
+%%%%%%
+%% no preamble in this file: subfiles uses the main file's preamble
+%% --> so make sure you add your definitions there
+%%%%%%
+
+\begin{document}
+
+\ifSubfilesClassLoaded{% then branch
+    % commands executed only if this file is compiled by itself
+    \title{Modeling and data analysis}
+    \date{\today}
+    \maketitle
+}{% else branch
+    % commands executed only if compiled from the main file
+}
+
+\subsection{Preparing the measurement records}\label{sec:RecordPrep}
+
+The recorded data is normalised to the shot noise level and then demodulated at frequency $\Omega/2\pi$. The demodulation low-pass filter is a causal Butterworth filter, with 56.5 kHz 3-dB bandwidth and an impulse response that effectively vanishes after about $400\,\mu$s.
+
+The filter bandwidth is chosen with two considerations. First, it is significantly smaller than $\Omega/2\pi$ and significantly larger than $\gamma_\text{th}/2\pi\approx2.79$ kHz and $\gamma_\text{opt}/2\pi\approx363$ Hz, as needed by the simplified measurement model~\cite{doherty2012quantum}. Second, it filters out all the coloured noises (including the other mechanical modes measurement signals and the probe laser phase noise).
+
+Considering the filter impulse response, the first ten $400$-$\mu$s segments of the output currents are discarded. As such, we make sure that the remaining parts of the two currents are properly low-pass-filtered. These parts are then divided to the shorter records. To maximize the number of records, the record length is minimized while ensuring that the steady state of filtering and smoothing is captured or closely approached.
+
+\subsection{Analysing the records}\label{SME-ME-&Analysis}
+Given that $n_\text{th}\gg1$, $\kappa\gg \Omega,g$ (the fast-cavity limit, $g=g_0\sqrt{\nc}\,$) and $\Omega\gg\gamma_\text{th},\gamma_\text{opt}$, the effective interaction-frame stochastic master equation of the system is~\cite{doherty2012quantum,khademi2024optomechanical}
+\begin{equation}
+   \begin{array}{rll}
+         \dd{\rho}_\text{F}(t) & = & \Gamma(n_\text{th}+1)\;\dd t\,\mathcal{D}\!\left[\hat{b}\right]\!\rho_\text{F}(t)\;+ \\&&  \Gamma n_\text{th}\;\dd t\,\mathcal{D}\!\left[\hat{b}^\dagger\right]\!\rho_\text{F}(t)\;+ \\&&
+         \dfrac{1}{2}\,\Gamma \mathcal{C}\;\dd t\small\displaystyle\sum_{j=1}^{2}\mathcal{D}\!\left[\hat{X}_j\right]\!\rho_\text{F}(t)\;+ \\&& \sqrt{\dfrac{1}{2}\,\eta\Gamma \mathcal{C}\,}\;\small\displaystyle\sum_{j=1}^{2}\dd W_{\text{F},j}(t)\,\mathcal{H}\!\left[\hat{X}_j\right]\!\rho_\text{F}(t)
+    \end{array}
+\label{UWUQSME_RF_final} 
+\end{equation}
+where $\mathcal{D}[\bullet]$ and $\mathcal{H}[\bullet]$ are, respectively, the standard dissipative and diffusive measurement superoperator; $\hat{b}$ and $\hat{b}^\dagger$ are, respectively, the annihilation and creation operator of the resonator; $\hat{X}_1$ and $\hat{X}_2$ are (time-independent) interaction-frame quadrature operators and $\dd W_{\text{F},1}$ and $\dd W_{\text{F},2}$ are two independent Wiener increments, each given by the corresponding measurement record ($I_1(t)$ or $I_2(t)$):
+\begin{equation}
+         \dd W_{\text{F},j}(t) =\text{I}_{j}(t)\,\dd t - \sqrt{2\eta\Gamma \mathcal{C}}\;\text{Tr}\Big[\rho\fil(t)\,\hat{X}_j\Big]\,\dd t\,.
+    \label{DemodulatedCurrents}
+\end{equation}
+
+Using Eq.~\eqref{UWUQSME_RF_final}, we can set the matrices employed by Eqs.~\eqref{1stMomFiltering}, \eqref{2ndMomFiltering}, \eqref{1stmomentNREO} and \eqref{2ndmomentNREO} (with $\hat{\mathbf{x}}=(\hat{X}_1,\hat{X}_2)^\top$)~\cite{laverick2021linear}:
+\begin{equation}
+     \mathbf{A}=-\dfrac{\Gamma}{2}\,\mathbf{I},\;\mathbf{D}=
+    2\Gamma\,n_\text{tot}\,\mathbf{I},\;\mathbf{C}=\sqrt{2\eta\Gamma \mathcal{C}}\,\mathbf{I},\;\bm{\Gamma}=\mathbf{0}\,.
+\label{IPmatrices}
+\end{equation}
+The initial conditions for Eqs.~\eqref{1stMomFiltering} and \eqref{2ndMomFiltering} are now given by the unconditional state of the resonator. At dynamical equilibrium, as in the case of our experiment, the unconditional state is Gaussian with the moments $\langle \hat{\mathbf{x}} \rangle _\text{uncon} = \mathbf{0}$ and $\mathbf{V}_\text{uncon}=2n_\text{tot}\,\mathbf{I}$ --- The Markovian master equation of the system is recovered by removing the last term on the right hand side of Eq.~\eqref{UWUQSME_RF_final}. Solving for the filtered covariance matrix then gives $\mathbf{V}\fil(t)=v\fil(t)\,\mathbf{I}$ with
+\begin{equation}
+    \dot{v}\fil(t)\,=-\Gamma\,v\fil(t)+2\Gamma\,n_\text{tot}-2\Gamma\,(\eta\,\mathcal{C})\,v^2\fil(t)\,,
+    \label{NLODE}
+\end{equation}
+yielding
+\begin{widetext}
+\begin{equation}
+    v\fil(t)=\bigg[\,\Big(\,\dfrac{1}{2n_\text{tot}-v_F^{\rm ss}}+\dfrac{2\eta \mathcal{C}}{\sqrt{1+16\eta \mathcal{C} n_\text{tot}}}\,\Big)\,e^{\Gamma t \sqrt{1+16\eta \mathcal{C} n_\text{tot}} }-\dfrac{2\eta \mathcal{C}}{\sqrt{1+16\eta \mathcal{C} n_\text{tot}} }\,\bigg]^{-1}+v_F^{\rm ss}\,,
+    \label{VFT}
+\end{equation}
+\end{widetext}
+where
+\begin{equation}
+    v\fil^{\rm ss}=\lim_{t\to\infty}v\fil(t)=\dfrac{\sqrt{1+16\eta \mathcal{C} n_\text{tot}}-1}{4\eta \mathcal{C}}\,.
+     \label{VFSS}
+\end{equation}
+Having the covariance matrix, we solve
+\begin{equation}
+\begin{array}{rll}
+    \dd\langle \hat{X}_j \rangle\fil(t) & = & -\dfrac{\Gamma}{2}\,\langle\hat{X}_\text{j} \rangle\fil(t)\,\dd t\,+ \\ && \\&&\sqrt{2\eta\Gamma \mathcal{C}}\,v\fil(t)\,\dd W_{{\rm F},j}(t)\,,
+\end{array}
+\label{equ:rFT}
+\end{equation}
+to find the stochastic first moments of the filtered state, considering Eq.~\eqref{DemodulatedCurrents}.
+
+Solving Eq.~\eqref{2ndmomentNREO}, with an uninformative final condition, gives the covariance matrix of the effect operator as $\mathbf{V}_\text{R}(t)=v_\text{R}(t)\,\mathbf{I}$ with
+\begin{equation}
+\begin{array}{l}
+    v\rfil(t)=v\rfil^{\rm ss}\,+\\\\\bigg[\dfrac{2\eta \mathcal{C}}{\sqrt{1+16\eta \mathcal{C} n_\text{tot}}}\,\big(e^{-\Gamma\,(t-{\cal T})\,\sqrt{1+16\eta \mathcal{C} n_\text{tot}} }-1\big)\bigg]^{-1}
+\end{array}
+\label{VRT}
+\end{equation}
+where
+\begin{equation}
+    v\rfil^{\rm ss}=\lim_{{\cal T}\to\infty}v\rfil(t)=\dfrac{\sqrt{1+16\eta \mathcal{C} n_\text{tot}}+1}{4\eta \mathcal{C}}\,.
+    \label{VRSS}
+\end{equation}
+The first moments of the effect operator are then given by
+\begin{equation}
+    \langle \hat{X}_j \rangle\rfil(t) = v\rfil(t)\,Z_{{\rm R},j}(t)\,,\;\;\;j=1,2
+\label{equ:rRT}
+\end{equation}
+where $Z_{{\rm R},j}(t)$ is found by solving
+\begin{equation}
+\begin{array}{rll}
+    -\dd Z_{{\rm R},j}(t) & = & -\bigg(\,\dfrac{\Gamma}{2}+\dfrac{2\Gamma n_\text{tot}}{v\rfil(t)}\,\bigg)\,Z_{{\rm R},j}(t)\,\dd t\,+\\&&\\&&\sqrt{2\eta\Gamma \mathcal{C}}\;\text{I}_{j}(t)\,\dd t
+\end{array}
+\end{equation}
+which goes backwards in time from the final condition $Z_{{\rm R},j}({\cal T})=0$~\cite{laverick2021linear}.
+
+Given that the measurement records are sampled in time, the aforementioned techniques for finding the conditional mean values are accordingly adapted following the procedures explained in Ref.~\cite{stengel1994optimal}. The smoothing combination of the filtered and retro-filtered mean values is also accordingly adapted considering Ref.~\cite{Grewal2014Kalman}.
+
+ %The purity of the filtered and smoothed Gaussian states is given by~\cite{} $1/\sqrt{\mathbb{D}\mathrm{et}[\mathbf{V}_\text{C}]} = 1/v_\text{C}$.
+
+\subsection{Modelling the stabilizing feedback}\label{SecFeedbackModelling}
+
+To introduce the stabilizing feedback into our analysis, we consider three points. First, the feedback can be treated as effectively Markovian~\cite{wiseman2009quantum}: With the feedback bandwidth $\mathcal{B}/2\pi=9.7$ kHz, we have $1/\mathcal{B}\ll 1/\Gamma$, so the timescale of the feedback-induced autocorrelation is much shorter than that of the dynamical autocorrelation --- the additional loop delay is less than $1~\mu$s. Second, the peak frequency of the mechanical susceptibility is unaffected by the phase-tuned feedback (Extended Data FIG.~\ref{fig:methods_feedback}\textbf{b}). Third, the effective rotating-frame dynamics remain symmetric~\cite{doherty2012quantum}, since (i) $\Omega/\Gamma_\text{fb} > 10^4$, (ii) the feedback bandwidth is centered around $\Omega$, and (iii) $\mathcal{B}\ll \Omega$.
+
+With these considerations, the feedback can be incorporated into the (retro)filtering equations either formally or intuitively. In the formal approach, the $\mathbf{A}$, $\mathbf{D}$, and $\bm{\Gamma}$ matrices are updated by adding feedback terms, as in Ref.~\cite{wiseman2009quantum}. In the intuitive approach, one simply makes the substitutions $\Gamma\rightarrow\Gamma_\text{fb}$ and $n_\text{th}\rightarrow n_\text{th}\times\Gamma/\Gamma_\text{fb}$ in all equations. This intuitive approach performs similarly on our data because the feedback-induced correlation between the measurement noise and the process noises is negligible.
+%It is then straightforward to formally introduce the feedback to our Kalman-Bucy equations by updating the drift $(\mathbf{A})$, diffusion $(\mathbf{D})$ and correlation $(\bm{\Gamma})$ matrices as discussed in \cite{wiseman2009quantum}. However, a simpler approach works for us as well; that is, to take the model introduced in chapter \ref{Chap:RetroTheo} and make the replacements $\Gamma\rightarrow\Gamma_\text{fb}$ and $n_\text{th}\rightarrow n_\text{th}\times\Gamma/\Gamma_\text{fb}$ \footnote{Note that $\Gamma_\text{fb}\,n^\text{fb}_{th}\,/\Omega_\text{fb} = \Gamma n_\text{th}/\Omega$ and $\Gamma_\text{fb}\, C_\text{fb}/\Omega_\text{fb} = \Gamma C/\Omega$ are orders of magnitude smaller than one.}. These two approaches result in different drift terms, different unconditional and conditional variances and different Kalman gains. Nonetheless, all the differences are less than a percent for our data because the feedback gain is much smaller than the gain above which noise squashing happens.
+
+\subsection{Noise injection and analysis}\label{sec:NI_analysis}
+
+To perform the noise-injection experiment, we add white noise to the shot-noise-normalised data and then renormalise it to the new noise floor. The added noise is weighted such that the detection efficiency reduces from 0.38 to 0.10. The resulting noisier current is demodulated and the outputs, excluding the initial segments, are divided into 1-ms records. Longer records are required in this experiment as the reduced detection efficiency prolongs the transients.
+
+Each new measurement record is then processed by Eqs.~\eqref{equ:rFT} and \eqref{equ:rRT} to yield $\langle \hat{X}_j \rangle\fil^{\eta\downarrow}$ and $\langle \hat{X}_j \rangle\rfil^{\eta\downarrow}$, while $v\fil^{\eta\downarrow}$ and $v_\text{R}^{\eta\downarrow}$ are evaluated by Eqs.~\eqref{VFT} and \eqref{VRT} with the reduced detection efficiency. With $\rho\fil^{\eta\downarrow}$ in hand, the smoothed estimate of $\rho\fil^\text{LTL}$ is given by Eq.~\eqref{QSSforLTLfil} with $\langle \hat{\mathbf{x}} \rangle\fil=(\langle \hat{X}_1 \rangle\fil^{\eta\downarrow},\langle \hat{X}_2 \rangle\fil^{\eta\downarrow})^\text{T}$, $\langle \hat{\mathbf{x}} \rangle\rfil=(\langle \hat{X}_1 \rangle\rfil^{\eta\downarrow},\langle \hat{X}_2 \rangle\rfil^{\eta\downarrow})^\text{T}$, $\mathbf{V}\fil=v\fil^{\eta\downarrow}\mathbf{I}$, $\mathbf{V}\rfil=v\rfil^{\eta\downarrow}\mathbf{I}$ and $\mathbf{V}\fil^\text{ss}=v\fil^\text{ss}\mathbf{I}$. We note that, for the purpose of this analysis, $\mathbf{V}\fil^\text{ss}$ should not be replaced by $ v\fil^{\eta\downarrow,\text{ss}}\mathbf{I}$. When all $\mathbf{V}\fil^\text{ss}$ terms are instead replaced by $\mathbf{0}$, the new outputs of classical smoothing equations are obtained.
+
+\section{Full heterodyne unravelling}\label{SecFullHete}
+
+A full heterodyne unravelling of the resonator's master equation results in the conditional covariance matrix $\mathbf{V}_\text{T}(t)=v_\text{T}(t)\,\mathbf{I}$, where $v_\text{T}(t)$ is governed by an equation similar to Eq.~\eqref{NLODE} with the the last term in the right hand side (the measurement term) being updated:
+\begin{equation}
+     \dot{v}_\text{T}(t) = -\Gamma\,v_\text{T}(t)+2\Gamma\,n_\text{tot}-2 \Gamma\,(\mathcal{C}+n_\text{th})\,v^2_\text{T}(t)\,.
+\label{TrueRiccati}
+\end{equation}
+By putting $\dot{v}_\text{T}=0$, we find the steady state solution $v_\text{T}^\text{ss}=1$, yielding $\mathbf{V}_\text{T}^\text{ss}=\mathbf{I}$.
+
+To clarify the physical meaning of this full unravelling, and to validate its consistency with the assumptions underlying the resonator’s master equation, we rewrite Eq.~\eqref{TrueRiccati} as
+\begin{equation}
+\begin{array}{lcl}
+    \dot{v}_\text{T}(t) & = & \bigg[-\Gamma\,v_\text{T}(t)+\Gamma\,\bigg] + \\\\ && \bigg[-2 \Gamma\eta \mathcal{C}\,v^2_\text{T}(t)+2\Gamma\eta \mathcal{C}\,\bigg] + \\\\ && \bigg[ -2 \Gamma (1 - \eta) \mathcal{C}\,v^2_\text{T}(t)+2\Gamma (1 - \eta) \mathcal{C}\,\bigg] + \\\\ && \bigg[-2 \Gamma n_\text{th}\,v^2_\text{T}(t)+2\Gamma n_\text{th}\,\bigg]\;.
+    \end{array}
+\end{equation}
+The first bracket describes the resonator in contact with a zero-temperature thermal bath. Its first term arises from dynamical drift, while the $\Gamma$ term represents the minimum diffusion required by the fluctuation–dissipation relation~\cite{wiseman2009quantum}. The second and third brackets correspond to the observed and unobserved optical baths, respectively. In each case, the first term represents heterodyne detection via the bath, while the second term is the associated diffusion, which can be interpreted as the back-action of the detection. This interpretation is consistent with the terminology ``back-action heating", used in the literature to describe the contribution of $\mathcal{C}$ to the total phonon occupancy $n_\text{tot}$ of the resonator --- we note that the terminology holds no matter what proportion $(\eta)$ of the optical bath is observed. The fourth bracket describes heterodyne detection via the hot phononic bath and its diffusive back-action. Such a measurement does not disturb the dynamical symmetry, as the rate $\Gamma n_\text{th}$ is much smaller than $\Omega$. Therefore, the resonator’s master equation has been unravelled in a manner consistent with its underlying assumptions, and the resonator can be regarded as a harmonic oscillator heated from its ground state solely by measurement back-action.
+
+%Recall that in section \ref{BAHeat&PS}, I referred to the optical shot noise appearing in (\ref{BadCavityEOM}) as the measurement back-action noise and the consequent heating as back-action heating. This terminology makes sense because, in principle, we can have $\eta=\eta_{esc}=1$ and unravel the whole optical bath and therefore see this noise as the cost of our quantum measurement. Nonetheless, the noise has been introduced to the system by the optical bath, either we perform a measurement on the output probe or not. In the same sense, the thermal noise can be seen as the back-action noise of the leakage of information to the thermal bath, which could be used by a hypothetical observer. Having this in mind, I take a closer look at (\ref{NLODETrue}) to see if it is a reasonable choice for the dynamics of $v_\text{T}(t)$ or not. It can be re-written as ...
+%The first bracket describes our system in contact with a zero-temperature thermal bath; note that the term $\Gamma$ is the minimum diffusion that we need quantum mechanically\footnote{based on the fluctuation-dissipation relations \cite{wiseman2009quantum} briefly discussed in section \ref{ClassCounterpart}}. The second bracket can be seen as the hypothetical measurement on the hot phononic bath and its relevant back action. With the assumption, at the very start of this section, that $\Gamma\,n_\text{th}$ is sufficiently smaller than $\Omega$, this hypothetical measurement would also be ultra-weak. The third (fourth) bracket is the hypothetical (our) measurement on the unobserved (observed) optical bath and its relevant back action. Therefore, equation (\ref{NLODETrue}) is consistent with the other assumptions of this section.
+
+%\section{estimation cost functions}
+%I also evaluate the estimation cost function \eqref{TrDivSqCostFunc} which is optimised by the observed retrofiltered quantum state. It can be written as the sum of three terms:
+%\begin{equation}
+%    \text{Tr}\Big[(\rho_\text{F} - \rho_{est})^2\Big] = \text{Tr}\Big[\rho_\text{F}^2\Big] + \text{Tr}\Big[ \rho_{est}^2\Big] -2\,\text{Tr}\Big[\rho_\text{F}\,\rho_{est}\Big]\;.
+%\end{equation}
+%The first two terms are the purity of the two quantum states; they are deterministic and determined by the parameters of the system. The third term is stochastic, given by \cite{serafini2017quantum}
+%\begin{equation}
+%    \text{Tr}\Big[\rho_\text{F}\,\rho_{est}\Big] = \dfrac{2}{v_\text{F}+v_{est}}\,\exp\Bigg(-\displaystyle{\sum}_{\text{j}=1}^{2}\,\dfrac{(\langle\hat{r}_\text{j}\rangle_\text{F}-\langle\hat{r}_\text{j}\rangle_{est})^2}{2(v_\text{F}+v_{est})}\Bigg)\;.
+%\end{equation}
+%The expectation value of this cost function is shown in figure \ref{fig:TrDivSq}. There is a good agreement between the theoretical expectation and the averaged value over the ensemble of analysed measurement records. 
+
+%\section{Smoothness of the smoothed mean-value curves}
+%In our experiment, the classical smoothing curves are smooth to the first order because there is effectively no correlation between the measurement and process noises~\cite{}---the correlation induced by the weak stabilizing feedback is negligible.
+%The quantum smoothing curves have more fluctuations, and were theoretically expected to be non-smooth, because none of our target states is an eigenstate of both creation and annihilation operators of the resonator, the arguments of the two unravelling terms in the system's stochastic master equation~\cite{}.
+
+\ifSubfilesClassLoaded{% then branch
+    % commands executed only if this file is compiled by itself
+    \bibliographystyle{apsrev4-2}
+    \bibliography{sn-bibliography}% common bib file
+}{% else branch
+    % commands executed only if compiled from the main file
+}
+
+\end{document}

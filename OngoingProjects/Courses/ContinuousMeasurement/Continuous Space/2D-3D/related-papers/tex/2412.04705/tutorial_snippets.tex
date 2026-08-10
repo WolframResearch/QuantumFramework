@@ -1,0 +1,22 @@
+#this is not a compilable file,just a collection of snippets from the tutorials to import to the text
+
+def cos_t(t):
+    return np.cos(t)
+function_form = (n + (a + ad) * qutip.coefficient(cos_t))
+
+
+
+
+
+tlist = np.linspace(0, 10, 101)
+values = np.cos(tlist)
+
+array_form = (n + (a + ad) * qutip.coefficient(values, tlist=tlist))
+
+
+
+args = {"state": qutip.MESolver.StateFeedback(default=qutip.fock_dm(4, 2))}
+def print_args(t, state):
+    print(f"'state':\n{state}")
+    return t + state.norm()
+td_args = qutip.QobjEvo([Id, print_args], args=args)

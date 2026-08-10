@@ -1,0 +1,233 @@
+\documentclass[reprint,aps,prl,superscriptaddress]{revtex4-2}
+\usepackage{graphicx}
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage[usenames]{color}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\hypersetup{colorlinks,linkcolor=red,citecolor=blue,urlcolor=blue,final}
+\usepackage{amsmath, amsthm, amscd, amssymb} 
+
+\usepackage{comment}    
+\usepackage[mathlines]{lineno}
+%\linenumbers 
+
+\newcommand{\rvec}{{\bf r}}
+\newcommand{\Fz}{F_z}
+\newcommand{\Fr}{F_\rho}
+
+\newcommand{\Tint}{T_i}
+
+
+\begin{document}
+\title{Cooling of an optically levitated nanoparticle via measurement-free coherent feedback}
+\author{Bruno Melo}
+\affiliation{Nanophotonic Systems Laboratory, Department of Mechanical and Process Engineering, ETH Zurich, 8092 Zurich, Switzerland}
+\affiliation{Quantum Center, ETH Zurich, 8083 Zurich, Switzerland}
+
+\author{Dani{\"e}l Veldhuizen}
+\affiliation{Nanophotonic Systems Laboratory, Department of Mechanical and Process Engineering, ETH Zurich, 8092 Zurich, Switzerland}
+\affiliation{Quantum Center, ETH Zurich, 8083 Zurich, Switzerland}
+
+\author{Grégoire F. M. Tomassi}
+\affiliation{Nanophotonic Systems Laboratory, Department of Mechanical and Process Engineering, ETH Zurich, 8092 Zurich, Switzerland}
+\affiliation{Quantum Center, ETH Zurich, 8083 Zurich, Switzerland}
+
+\author{Nadine Meyer}
+\email{nmeyer@ethz.ch}
+\affiliation{Nanophotonic Systems Laboratory, Department of Mechanical and Process Engineering, ETH Zurich, 8092 Zurich, Switzerland}
+\affiliation{Quantum Center, ETH Zurich, 8083 Zurich, Switzerland}
+
+\author{Romain Quidant}
+\affiliation{Nanophotonic Systems Laboratory, Department of Mechanical and Process Engineering, ETH Zurich, 8092 Zurich, Switzerland}
+\affiliation{Quantum Center, ETH Zurich, 8083 Zurich, Switzerland}
+
+\date{\today}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract} 
+We demonstrate coherent, measurement-free optical feedback control of a levitated nanoparticle, achieving phonon occupations down to a few hundred phonons. Unlike measurement-based feedback, this all-optical scheme preserves the correlations between mechanical motion and the feedback signal. Adjustment of the feedback phase and delay provides precise and tunable control over the system dynamics. The ultimate cooling performance is currently limited by phase noise, which we analyze within a theoretical framework that outlines the constraints and prospects for reaching the motional ground state. Our results establish coherent feedback as a powerful tool for quantum control of levitated systems, extending beyond center-of-mass cooling.% and opening new avenues in quantum optomechanics with levitated particles.
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\maketitle
+
+% 1 INTRODUCTION ===========================================================
+Active feedback control is a cornerstone of modern experimental physics widely used to stabilize and manipulate a broad range of systems, ranging from atomic ensemble~\cite{fischer2002feedback,steck2004quantum}, over mechanical oscillators~\cite{Wang2023-fast-feedback-mechanical,  Wilson2015-measurement-control-mechanical,Poggio2007-feedack-cantilever-5mK} to space rockets~\cite{Tewari2011-Control-aircraft-rockets}. In quantum optomechanics, it has been crucial for cooling the motion of mechanical systems to their quantum ground state~\cite{Guo2023-Active-feedback-resonator, Rossi2018-Measurement-based-ground-state} and for state control~\cite{wang2023fast}. %Traditionally, this control is achieved through measurement-based feedback[], where information extracted via photodetection is processed electronically and used to generate corrective forces.
+Such measurement-based feedback extracts information via photodetection which is processed electronically and used to generate corrective forces. While effective, this approach introduces fundamental and technical limitations: measurement backaction disturbs the system~\cite{Purdy2013-pressure-shot-noise-object, Teufel2016-overwhelming-shot-noise}, and electronic noise is reintroduced through the feedback loop~\cite{Poggio2007-feedack-cantilever-5mK}, degrading quantum coherence~\cite{Genes2008-comparing-cold-damping-cavity-assisted}.\\
+Coherent feedback offers a fundamentally different approach — one that avoids measurement altogether~\cite{Lloyd2000-coherent-quantum-feedback}. Instead, a light field interacts with the system and is redirected through an optical feedback loop to produce control forces without photo-detection. This measurement-free scheme inherently preserves quantum correlations of light and motion, and avoids the introduction of classical noise through electronics, making it particularly attractive for quantum-limited control. Coherent feedback has already demonstrated promise in the control of light squeezing~\cite{iida2012experimental}, atomic spin systems~\cite{nelson2000experimental, Karg2020-Stron-coupling-membrane-atomic-spin, Schmid2022-coherent-cooling-membrane-atomic-spin}, solid state qubits~\cite{Hirose2016-coherent-feedback-qubit-diamond}, and membranes in optical cavities~\cite{Ernzer2023-coherent-cooling-membrane}, while maintaining quantum coherence.
+
+% 2 INTRODUCTION ===========================================================
+We explore the application of coherent feedback to a levitated nanoparticle system, a platform that combines excellent environmental isolation~\cite{Dania2024-ultrahigh-quality-levitated} with dynamic control over the potential landscape~\cite{rondin2017direct,hebestreit2018sensing,conangla2020extending,  sun2024tunable, Tomassi2025-inverted-potential}. Recent advances have demonstrated motional ground-state cooling through active, measurement-based feedback~\cite{magrini2021real,tebbenjohanns2021quantum,Kamba2023-revealing-velocity-uncertainty} and via passive optical cavities~\cite{delic2020cooling,piotrowski2022simultaneous,Ranfagni2022-two-dimensional-quantum,dania2024high}. In contrast, here we present the theoretical framework and the experimental realization of measurement-free, coherent feedback to manipulate the center of mass (CoM) motion of an optically trapped nanoparticle. %The all-optical feedback loop preserves the coherent properties that are usually lost in measurement based feedback. 
+Controlled CoM cooling is achieved by adjusting the feedback delay and phase via an optical fiber delay line.
+%Similar approaches based on the same principles proposed the realization of motional entanglement of mesoscopic particles~\cite{Zambon2025-remote-entanglement-particles} and promise dissipative and non-reciprocal dynamics~\cite{Karg2019-remote-hamiltonian-mediated-light,metelmann2015nonreciprocal}, highlighting the general potential of coherent feedback for advancing noise-resilient quantum technologies across diverse platforms.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]
+{Setup_simplified_green_v9.png}
+\caption{%\textbf{Schematic of the experiment.} 
+A particle is trapped at the focus of a laser beam (wavelength $\lambda=$\SI{1064}{\nano\meter}, NA=0.77, elliptical polarization). The forward scattered light is collected by lens 2 (L2, NA=0.55) to detect the  particle's motion along $x,y,z$ using balanced detection. The backward scattered light (arrows, dark green) is collected by the trapping lens (L1), separated from the trapping light by a polarizing beam splitter (PBS) and transmitted by an optical fiber of length $L\approx\SI{1.3}{\kilo\meter}$. After a time $\tau$ the scattered light exits the fiber (arrows, light green) and is focused back onto the particle using lens L2.  The interference of counter-propagating scattered and trapping light creates an optical potential (blue curve) with shifted equilibrium $z_\text{eq}(t)$. %If $\tau=\pi/2\Omega$, this creates a potential (blue curve) with an equilibrium position that depends on the speed of the particle. 
+The particle's position along $z_p(t)$ is detected via a heterodyne measurement using part of the back scattered light either in an out-loop measurement (before the delay line) or an in-loop measurement (after the delay line). Additional balanced forward detection of $x_p(t),y_p(t),z_p(t)$ is used to apply electrical cold damping.
+}
+\label{fig:Setup_simplified}
+\end{figure}
+% 3 IDEA BEHIND THE EXPERIMENT ================================================================
+\paragraph{General concept}
+To assess the relevance of coherent feedback in levitation optomechanics, we demonstrate CoM cooling via linear cold damping and study the limitations of this approach towards ground-state cooling. %, a mile stone achieved only in active measurement based feedback~\cite{magrini2021real, tebbenjohanns2021quantum, Kamba2023-revealing-velocity-uncertainty} or using passive optical resonators~\cite{delic2020cooling,piotrowski2022simultaneous, Ranfagni2022-two-dimensional-quantum, dania2024high}. 
+Figure \ref{fig:Setup_simplified} illustrates our coherent optical feedback loop for a dielectric particle trapped in a single-beam optical tweezer (solid beam). 
+
+
+The particle motion, $z_p(t)$, is imprinted on the phase of the scattered light $\phi_p(t)$. %The information of the particle motion $z_p(t)$ is imprinted on the phase of the scattered light $\phi(t)= \phi_p(t) + \phi_0$ where $\phi_p(t)$ is due to the particle motion and $\phi_0$ the phase accumulated in the feedback loop. 
+The back-scattered light (arrows) is partially collected and redirected through an optical feedback loop back onto the particle, counter-propagating to the trapping beam. This so-called feedback beam then interferes with the trapping light, %leading to a position dependent feedback force acting on the particle shifting the equilibrium position of the trapping potential. 
+creating an interference pattern determined by the relative phase between the counter-propagating beams $\phi(t) = \phi_p(t-\tau) + \phi_0$ where $\phi_0$ is the phase accumulated along the feedback loop. %and the position dependent phase variation of the scattered light $\phi_p$. %The relative phase $\phi_0$ is chosen such that the interference pattern contrast is maximized. 
+Such phase-dependent interference pattern shifts the equilibrium position, $z_\text{eq}(t)$, of the trapping potential, resulting in a position-dependent force on the particle. %The phase between the trapping light and the feedbacked scattered light field governs a stiffing or weakening of the total optical trapping potential. 
+The new equilibrium position, $z_\text{eq}(t)$, is now linked to the position of the particle in the past $z(t-\tau)$, with $\tau$ being the delay accumulated by light through the loop. Assuming the particle behaves as a harmonic oscillator, a delay $\tau=\pi/2\Omega$ generates a velocity-dependent force, $F(t) \propto v_z(t)$, which can be used to cool the particle's motion~\cite{conangla2019optimal,tebbenjohanns2019cold,Vijayan2023-all-optical-scalable-CD}.
+
+
+% Theory =======================
+\paragraph{Theory}
+%Here, we apply the coherent feedback to cool the CoM motion along the optical axis $z$. 
+The equation of motion of a particle trapped by the optical tweezer is
+
+\begin{align}\label{eq:eom}
+    \ddot{z}_p(t)+(\Gamma_0+\Gamma_c)\dot{z}_p(t)+\Omega ^2 z_p(t) = \frac{F(t)}{m}
+\end{align}
+where $z_p(t)$ is the particle's position at time $t$, $m$ its mass and $\Omega$ its mechanical eigenfrequency accounting for additional frequency shifts (see~\cite{SM}). The damping coefficient $\Gamma_0 = \Gamma_m + \Gamma_r+ \Gamma_d$ stems from the surrounding gas $\Gamma_m$~\cite{gieseler2012subkelvin}, the optical trapping field $\Gamma_r$~\cite{jain2016direct} and the electrical linear feedback $\Gamma_d$~\cite{conangla2019optimal}. The damping due to the coherent feedback $\Gamma_c=\beta\Omega\sin(\Omega\tau)$ depends on the linear coefficient $\beta$, relating the delayed particle position and the equilibrium position through $z_{eq}(t)=\beta z_p(t-\tau)$. The parameter $\beta$ depends on the feedback loop efficiency $\eta$, the relative power of the trapping and feedback beams, their polarization and spatial overlap and the numerical aperture of the lenses (see~\cite{SM}).
+
+The stochastic external force $F(t) = \sigma_m \chi_m(t) + \sigma_r \chi_r(t) +  %\sigma_d \dot{\chi}_d(t) + 
+\sigma_c \chi_c(t)$ relates to residual gas collisions with $\sigma_m=\sqrt{2m k_B T\Gamma_m}$~\cite{gieseler2012subkelvin}, photon recoil with $\sigma_r=\sqrt{(2/5+A^2)\hbar 2\pi P_\text{d}/( c\lambda)}$~\cite{tebbenjohanns2019optimal} %$\sigma_r=\sqrt{\hbar\omega P_\text{d}/5\pi c^2}$~\cite{jain2016direct} %, noise in the electrical feedback with $\sigma_d=m\Gamma_d\sigma_\xi$ introduced by the noise in the forward detection $\sigma_\xi\chi_d(t)$~\cite{conangla2019optimal} 
+and phase noise in the feedback beam with $\sigma_c=m\beta\Omega^2\sigma_\phi/B$ (see~\cite{SM}). The geometrical factor $A$ relates to the Gouy phase, $P_d$ to the scattered power, the phase factor $B$ to the phase of the collected light  and the particle's position through $\phi_p(t)=B z_p(t)$, while $\sigma_\phi^2$ relates to optical phase fluctuations. We assume $\chi_i(t)$ to have zero mean and their respective autocorrelation functions to be delta functions with amplitudes $\sigma_i^2$.
+
+From Eq.~\ref{eq:eom} we observe cooling (heating) of the particle motion for $\Gamma_c>0$ ($\Gamma_c<0$). The effect is the largest for maximum interference at $\phi_0=2\ell\pi$, with $\ell\in\mathbb{Z}$, where $\beta$ reaches its extreme values (for other cases see~\cite{SM}).
+
+
+The effective temperature of the CoM motion is given by the equipartition theorem $T_\text{eff}= m\Omega^2 \langle z_p(t)^2\rangle/ k_B$ where $k_B$ is the Boltzmann constant and  $\langle z_p(t)^2\rangle$ corresponds to the integral of the displacement power spectral density (PSD) $S_{zz}(\omega)$ given by 
+\begin{equation}
+    S_{zz}(\omega) = \frac{2(\sigma_m^2 + \sigma_r^2 + \sigma_c^2)}{m^2((\Omega^2 - \omega^2)^2 + \omega^2 (\Gamma_0+\Gamma_c)^2)}
+\end{equation}
+
+The effective temperature is given by 
+\begin{equation}\label{eq:Teff2}
+    T_\text{eff}= \frac{m\Omega^2}{2k_B} \left( \frac{\sigma_m^2 + \sigma_r^2}{m^2 \Omega^2(\Gamma_0 + \Gamma_c)} + \frac{\sigma_\phi^2\Omega^2}{B^2}\frac{\beta^2}{\Gamma_0 + \Gamma_c} \right).
+\end{equation}
+
+Hereafter, we need to distinguish two cooling scenarios: For weak cooling (small $\beta$), the second term in Eq.~\ref{eq:Teff2} is negligible, in contrast to strong cooling (large $\beta$) where both terms contribute similarly. For weak cooling with small $\beta$, Eq.~\ref{eq:Teff2} takes the well-known expression~\cite{gieseler2012subkelvin}
+
+\begin{equation}\label{eq:Teff_weak}
+       T_\text{eff} =  \frac{T_0 \Gamma_0}{\Gamma_0 + \Gamma_c}  = \frac{\sigma_m^2 + \sigma_r^2}{2k_B m (\Gamma_0 +\beta\Omega\sin(\Omega\tau))} 
+\end{equation}
+where $T_0$ is the temperature in the absence of coherent feedback ($\beta =0$ or $\Omega\tau= \pi)$. % and  $T_0\Gamma_0 = (\sigma_m^2 + \sigma_r^2)/(2k_B m) $ is a constant. 
+Eq.~\ref{eq:Teff_weak} suggests that the temperature decreases for increasing $\beta$ and is optimized for a delay $\tau= \pi/(2\Omega)$ corresponding to a quarter of the oscillation period.
+
+In contrast, for strong cooling with large $\beta$, the noise in the feedback force correlates with the particle motion, since the displacement of the equilibrium position $z_\text{eq}$ becomes dominated by phase noise. This effect is similar to measurement-based cold damping~\cite{conangla2019optimal}. 
+
+Since the two terms in Eq.~\ref{eq:Teff2} scale differently with $\beta$, there exists an optimal feedback strength $\beta_\text{opt}= \sqrt{\sigma_m^2 + \sigma_r^2} B/(m\Omega^2 \sigma_\phi)$
+%\begin{equation}
+ %   \beta_\text{opt} = \frac{B}{m\Omega^2}\sqrt{\frac{\sigma_m^2 + \sigma_r^2}{\sigma_\phi^2}}
+%\end{equation} 
+for which a minimum temperature 
+\begin{equation}\label{eq:Tmin}
+    T_\text{eff,min} = \frac{\sigma_\phi\Omega\sqrt{\sigma_m^2+\sigma_r^2}}{k_B B \sin(\Omega\tau)}
+\end{equation}is achieved where we assumed $\Gamma_0 \ll\Gamma_c$. 
+From Eq.~\ref{eq:Tmin}, we observe an increase in the minimal temperature with increasing noise $\sigma_\phi,\sigma_m$ and $\sigma_r$. 
+Increasing the parameter beyond $\beta_\text{opt}$ ultimately heats the particle and the detected PSD shows signatures of noise squashing (see~\cite{SM}). %The detected displacement noise at resonance equals $S_{zz,\text{IL}}(\Omega) \approx 2\sigma_{\phi}^2/B^2$ for $\beta_\text{opt}$ (dashed line).
+
+
+% 5 OVERVIEW OF THE EXPERIMENT/PLATFORM =====================================================
+\paragraph{Experimental implementation}
+To study the effect of coherent feedback, a charged silica nanoparticle of radius $R \approx \SI{97}{\nano\meter}$ and mass $m \approx \SI{7.07}{\femto\gram}$ is trapped by an optical tweezer along the optical axis $z$ (large green beam) of elliptically polarized light at wavelength $\lambda = \SI{1064}{\nano\meter}$, focused by lens 1 of numerical aperture $\text{NA}_1=0.77$ and the geometrical factor due to the Gouy-phase $A_1$= 0.83 as depicted in Fig.~\ref{fig:Setup_simplified}. At the power $P_t\approx\SI{300}{\milli\watt}$, the mechanical resonance frequencies of the particle are $(\Omega_x,\Omega_y,\Omega )/2\pi\approx(187, 162, 47)$ kHz. The light scattered forward by the particle is collected by lens 2 with numerical aperture $\text{NA}_2=0.55$ and used to detect the position of the particle in a balanced detection scheme~\cite{gieseler2012subkelvin}. This position measurement is used to stabilize the particle in 3D to a base temperature $T_0\ll \SI{300}{\kelvin}$ by means of linear electrical cold damping ($\Gamma_d>0$) ~\cite{conangla2019optimal,Tomassi2025-inverted-potential}. 
+
+The light scattered backwards by the particle (dark green arrows) is collected using lens 1 and separated from the trapping beam by a polarizing beam splitter (PBS). This feedback beam passes through a single-mode fiber of length $L\approx \SI{1.3}{\kilo\meter}$ and refractive index $n_\text{eff}\approx1.46$, causing a delay time $\tau = L n_\text{eff}/c\approx \SI{6.34}{\micro\second}$. The collected light (light green arrows) is focused on the particle by lens 2, closing the feedback loop with a total efficiency $\eta$. The accumulated phase $\phi_0$ along the feedback loop is controlled by changing the beam path length with a mirror placed on a piezo-electric element. For the coherent feedback, we use part of the feedback light in an additional heterodyne measurement~\cite{magrini2021real,tebbenjohanns2021quantum} to detect the particle motion along $z$ (see Fig.~\ref{fig:Setup_simplified}). The heterodyne detector is placed either in front of the delay line (out-of loop measurement, OL) or after (in-loop measurement, IL).  
+All data presented in this manuscript is acquired in backwards heterodyne detection. 
+
+
+% 5   (Fig 2) =========================================================
+To ensure the linear cooling regime described by Eq.~\ref{eq:Teff_weak}, the feedback beam is optically attenuated, reducing $|\beta|$. For a delay $\tau\Omega \approx \pi/2$, a velocity dependent force heats ($\Gamma_c <0$) or cools  ($\Gamma_c >0$) the particle motion, depending on $\phi_0$ as depicted in Fig.~\ref{fig:Heating_and_cooling}. In comparison to the motion in absence of coherent feedback  %at $p=1\times10^{-4}\SI{}{\milli\bar}$
+(dark green), the coherent feedback cools for $\phi_0=0$ with $\Gamma_c>0$ (light green, circle) and heats for $\phi_0 = \pi$ with $\Gamma_c<0$ (blue, square), represented by the decreasing or increasing area of the PSDs.
+The observed damping rate reaches $(\Gamma_0+\Gamma_c)/2\pi\approx\SI{1.92}{\kilo\hertz}$ at maximum cooling, corresponding to $\beta\approx4.10\times10^{-2}$, while the omnipresent damping rate equals $\Gamma_0/2\pi\approx\SI{78}{\hertz}$ (see~\cite{SM}). %Furthermore, the resonance frequency $\Omega$ increases (decreases) if the particle is cooled (heated) by approximately $\delta\Omega \approx \SI{0.8}{\kilo\hertz}$ ($\SI{0.6}{\kilo\hertz}$). This is the result of two effects. First, the interference between feedback and trapping beam alters also the trap stiffness, leading to positive or negative frequency shifts depending on $\phi_0$. Second, a delay mismatch $\Omega\tau\neq\pi/2$ leads to a position dependent force $\propto \beta\Omega^2\cos(\Omega\tau)$ (see~\cite{SM}). We attribute the asymmetry in the observed frequency shift to back reflections that interfere with the trapping beam, causing the resonance frequency to fluctuate.
+
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]
+{Figure_2.png}
+\caption{PSD of particle displacement with coherent feedback at $p=1\times10^{-4}\SI{}{\milli\bar}$.  Depending on the phase $\phi_0$, the coherent feedback cools (light green, circle) or heats (blue, square) the particle motion in comparison to the absence of feedback light (dark green). The individual particle displacements are offset to increase visibility. Inset: For $\phi_0 = 2n\pi$, the damping $\Gamma_c>0$ is maximal (light green circle), while for $\phi_0 = (2n+1)\pi$, $\Gamma_c<0$ is minimal (blue square). 
+}
+\label{fig:Heating_and_cooling}
+\end{figure}
+To demonstrate the effect of the resonance frequency $\Omega$ on the cooling efficiency, we measure the temperature $T_\text{eff}$ for varying $\Omega$ which corresponds to different $\Gamma_c\propto \Omega \sin(\Omega\tau)$. The resonance frequency $\Omega$ is varied by changing the optical tweezer power such that $\beta$ remains constant (see~\cite{SM}). We double the delay to $\tau'=2\tau$ by placing a retro-reflector at the end of the delay line followed by a circulator to route the feedback beam back to the particle (see Fig.~S6). Note that the phase $\phi_0$ remains now uncontrolled. Fig~\ref{fig:T_vs_fz}(a) and (b) display $T_\text{eff}(\Omega )$ in time for two  different $\Omega\tau$. We estimate $T_\text{eff}(\Omega )$ from the area of the PSD of the particle displacement %based on 200ms timetraces 
+(see~\cite{SM}).
+The fluctuations of $\phi_0$ govern if the particle motion is cooled or heated.  For a delay $\Omega\tau'>\pi$ at $\Omega/(2\pi)=\SI{48}{\kilo\hertz}$, as in Fig.~\ref{fig:T_vs_fz}(a), the lowest temperature and pronounced temperature variations are observed, suggesting strong coherent feedback ($\Gamma_c \gg \Gamma_0$). In contrast, for $\Omega\tau' \approx \pi$ at $\Omega/(2\pi)=\SI{39}{\kilo\hertz}$, as in Fig.~\ref{fig:T_vs_fz}(b), the particle motion remains mainly unaffected for all time as expected from a weak feedback strength ($\Gamma_c\approx  0$). 
+
+Fig.~\ref{fig:T_vs_fz}(c) depicts $T_\text{min}(\Omega )$ in dependence of the resonance frequency $\Omega$, where each data point corresponds to the median of all instances of $T_\text{eff}(\Omega )<T_0(\Omega) +2 \Sigma(T_0(\Omega))$ where $\Sigma$ is the standard deviation (blue shaded region). The green solid curve represents a fit to 
+\begin{equation}\label{eq:fit_Fig3}
+    \frac{1}{T_\text{eff}(\Omega )}-\frac{1}{T_0(\Omega )}=\frac{\beta}{\Gamma_0(\Omega)T_0(\Omega)}\Omega \sin{\Omega \tau'}
+\end{equation} 
+where the fitting parameters are $\beta/(\Gamma_0 T_0)$ and $\tau'$. The fitted value $\tau'=12.9 \pm \SI{0.04}{\micro\second}$ is in good agreement with the expected value $\tau' \approx \SI{12.7}{\micro\second}$. From the fit we extract $\beta\approx(6.18 \pm 0.4)\times10^{-4}$, corresponding to $\Gamma_c/2\pi\approx\SI{12}{\hertz}$ for $\Omega\tau' \approx 3\pi/4$ (Fig.~\ref{fig:T_vs_fz}(a))  and $\Gamma_c/2\pi\approx\SI{0.55}{\hertz}$ for $\Omega\tau' \approx \pi/2$ (Fig.~\ref{fig:T_vs_fz}(b)), where the feedback beam has been optically attenuated in comparison to  Fig~\ref{fig:Heating_and_cooling}. 
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]
+{Figure_3.pdf}
+\caption{\textbf{(a)-(b)} CoM temperature without phase lock  (free-running $\phi_0$) leading to random cooling and heating in time. \textbf{(a)} At the resonance frequency $\Omega/(2\pi) = \SI{48}{\kilo\hertz}$  with $\Omega\tau'>\pi$, strong coherent feedback manifests itself in high maximum and low minimum temperatures due to $\text{max}(|\Gamma_c|)\gg\Gamma_0$. \textbf{(b)} In contrast, the coherent feedback is ineffective for $\Omega/(2\pi)=\SI{39}{\kilo\hertz}$  with $\Omega\tau'\approx  \pi$ leading to a reduced variation in $T_\text{eff}$ due to $|\Gamma_c|\ll\Gamma_0$.
+\textbf{(c)} Minimum achieved temperature of the CoM $T_\text{min}$ for different resonance frequencies $\Omega$. For mismatched delays at $\Omega/(2\pi)\approx\SI{39}{\kilo\hertz}$ the cooling is inefficient ($\Omega\tau'\approx\pi$). For smaller and larger $\Omega$ the delay is more optimized and the coherent feedback cools efficiently to lower $T_\text{min}$. Each point is the average of 5 measurements of $T_\text{min}$, and the error bars represent their standard deviation. $T_\text{min}$ is the median of the blue shaded region in \textbf{(a)-(b)} corresponding to $T_\text{eff} < T_0(\Omega) +2 \Sigma(T_0(\Omega))$. The data is fitted to Eq.~\ref{eq:fit_Fig3} (green line) taking the fitting errors into account (green shaded area).}
+\label{fig:T_vs_fz}
+\end{figure}
+
+
+To estimate the minimum achievable temperature $T_\text{eff,min}$ in our system, the feedback phase is stabilized at $\phi_0\approx0$ and $\Gamma_c$ is adjusted by attenuating the power of the feedback beam, thereby emulating a variable feedback loop efficiency $\eta$, with $\Gamma_c \propto \sqrt{\eta}$ (see~\cite{SM}). Additionally, we maximize $\Omega$ to benefit from lower phase noise. Fig.~\ref{fig:T_vs_kd}(a) displays the linear decrease of $T_\text{eff}(\Omega )$ for increasing but small $\Gamma_c$ (blue circles) as expected from Eq.~\ref{eq:Teff_weak}. For large enough $\Gamma_c$, $T_\text{eff}(\Omega )$  starts leveling off despite increasing feedback gain. This effect is due to the fact that phase noise starts dominating over the phase imprinted by the particle motion $\phi_p(t)$, heating the particle motion as predicted by Eq.~\ref{eq:Teff2}. At $p\approx 3\times 10^{-7}\SI{}{\milli\bar}$, we measure a minimum temperature  $T_\text{eff,min}\approx 705 \pm \SI{133}{\micro\kelvin}$ at $\Gamma_c \approx 2\pi\times \SI{250}{\hertz}$, corresponding to $n = k_B T_\text{eff} /(\hbar\Omega) =344 \pm 55$ phonons. Note that $\Gamma_c\simeq 10 \Gamma_d$ and  therefore the particle motion is predominantly cooled by coherent feedback. For small $\Gamma_c$ the high temperature data points fulfilling $T_\text{eff}(\Omega )>\SI{1.5}{\milli\K}$ are fitted to Eq.~\ref{eq:Teff_weak} (dashed gray line), suggesting a monotonic decrease in $T_\text{eff}(\Omega )$. In contrast, the fit to  Eq.~\ref{eq:Teff2} (green solid curve) takes all dominating noise sources into account and captures the existence of a minimum temperature $T_\text{min}$. According to Eq.~\ref{eq:Tmin}, the minimum temperature (blue dotted line) equals $T_\text{min} = \SI{847}{\micro\kelvin}$, which is in good agreement with the experiment. 
+%We attribute the discrepancy to our measurements to instabilities in the phase lock controlling $\phi_0$, leading to non-optimal $\Gamma_c$. Additionally, we maximize $\Omega$ to benefit from lower phase noise. Consequently, $\Omega\tau> \pi/2$ such that $z(t-\tau)$ has a component $\propto z(t)$ in addition to the desired $\propto\dot{z}(t)$. Furthermore we neglected higher order products of $z(t)$ and $\dot{z}(t)$ in Eq.~\ref{eq:Tmin}. 
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]
+{Figure_4.pdf}
+\caption{
+\textbf{(a)}  $T_\text{eff}$ versus $\Gamma_c$ by varying the feedback power. The minimum temperature achieved is $T_\text{eff}\approx705 \pm 133$\SI{}{\micro\kelvin}, corresponding to $n =  k_B T_\text{eff} /(\hbar\Omega) = 344 \pm 55$ phonons. Data and errorbars represent the mean and standard deviation of 5 measurements. The data is fitted to Eq.~\ref{eq:Teff2} (green solid line)  with the corresponding fitting error (light green shaded region).
+For weak cooling below the optimal $\Gamma_c$, the hottest eight points are fitted to Eq.~\ref{eq:Teff_weak} (dashed line) neglecting the phase noise heating at high values of $\Gamma_c$. Eq.~\ref{eq:Tmin} (dotted line) predicts the minimum reachable temperature. \textbf{(b)} In-loop PSD of the particle displacement detected after the delay line. Without coherent feedback (CF) for $\Gamma_c =0$ (light green), the particle motion is clearly visible, while with CF for $\Gamma_c > 0$ (dark green), noise squashing indicates that the feedback is dominated by phase noise.  The displacement noise due to the phase noise (black dashed line) matches the data (see Eq.~S37 in~\cite{SM}). %The black dahsed line is a fit to the noise-floor. 
+\textbf{(c)} Out-of-loop PSD of the particle displacement in front of the delay line. When the CF is on ($\Gamma_c > 0$ (dark blue), the particle amplitude is reduced in comparison to $\Gamma_c =0$ (light blue) but clearly visible. The peak value of the PSD matches the displacement noise observed in the in-loop detector. %Therefore, reducing the phase noise after the delay line enables cooling to lower temperatures.
+}
+\label{fig:T_vs_kd}
+\end{figure}
+
+The main limitation of the minimal effective temperature $T_\text{eff,min}$ is the phase noise $\sigma_\phi$ introduced by the delay line. 
+We compare the PSD of the particle's displacement at the IL (Fig.~\ref{fig:T_vs_kd}(b)) and OL detector (Fig.~\ref{fig:T_vs_kd}(c)) with (dark points)  and without coherent feedback (light points). Here, $\Gamma_c$ equals the largest value used in Fig.~\ref{fig:T_vs_kd}(a). The IL detector shows noise squashing, a dip below the noise floor (dashed line), due to increased phase noise once coherent feedback is applied (dark green). %Note that noise squashing underestimates the effective temperature of the particle motion~\cite{Poggio2007-feedack-cantilever-5mK,conangla2019optimal}. 
+In contrast, the signal-to-noise ratio remains well above one at the OL detector even when the coherent feedback is applied (dark blue). Note that the particle is always exposed to the accumulated phase noise, since the delay line is required for cooling. %Hence the effective temperature remains unchanged for detectors.
+The displacement noise at $\Omega$ for $\beta_\text{opt}$ is extracted from a fit to the noise floor of the IL detector to $S_{zz,\text{IL}}(\Omega) \approx 2\sigma_{\phi}^2/B^2= 4\times10^{-24}\text{m}^2/\text{Hz}$ (dashed line), corresponding to the phase noise contribution (see Fig.~\ref{fig:T_vs_kd}(b)).
+%The detected displacement noise at resonance equals $S_{zz,\text{IL}}(\Omega) \approx 2\sigma_{\phi}^2/B^2$ for $\beta_\text{opt}$ (dashed line).
+
+\paragraph{Discussion} %=================================================
+With the aim of ground state cooling with coherent feedback, the minimum achievable temperature  described by Eq.~\ref{eq:Tmin} shows that lowering phase noise $\sigma_\phi$, residual gas collisions $\sigma_m$, and photon recoil $\sigma_r$ is beneficial. %Assuming phase noise that scales as $1/f^2$, 
+%Increasing the oscillation frequency $\Omega$ can further aid in reducing the effective temperature and reducing the phase noise due to the required shorter delay lines. 
+%The influence of $\Omega$ on $T_{\text{eff,min}}$ is more complex. An increase in $\Omega$ results in a reduction of the required delay line length $L$. Adopting the common assumption that $\sigma_\phi \propto L/\Omega$ suggests that ultimately  $T_{\text{eff,min}} \propto \Omega L/\Omega$  leading to an overall decrease in the minimum effective temperature.
+The influence of $\Omega$ on $T_{\text{eff,min}}$ is more complex. An increase in $\Omega$ results in a reduction of the required delay line length $L$. However, their effects on the minimum effective temperature tend to compensate, since $T_{\text{eff,min}} \propto \Omega / L$, under the assumption that $\sigma_\phi \propto L$. On the other hand, adopting the common assumption that $\sigma_\phi \propto 1/\Omega$ leads to an overall decrease in the minimum effective temperature.
+In a backaction-limited experiment, smaller particles are also advantageous due to $T_\text{min} \propto R^3$, and enhanced collection efficiency further contributes positively.
+%In our current setup, the dominant limitations arise from phase noise and residual gas pressure. Both of these factors 
+In current levitation experiments, phase noise~\cite{kamba2021recoil, dania2024high} and residual gas pressure~\cite{magrini2021real, Dania2024-ultrahigh-quality-levitated, Lindner2024-hollow-core-ultra-high-vacuum} have shown to be subject of significant improvements. Assuming a phase noise reduction by 30dB~\cite{chao2025robust,parniak2021high}, and a $2.5\times$ smaller particle promises at  $p=1\times 10^{-8}$ mbar~\cite{magrini2021real,Dania2024-ultrahigh-quality-levitated} a minimum phonon occupation of 0.9 phonons, reaching ground state.
+
+
+
+% 10 OUTLOOK AND CONCLUSION ===========================================================
+\paragraph{Outlook and conclusion}
+In summary, we have demonstrated the impact of measurement-free coherent feedback on the motion of a levitated particle. Our implementation employs an all-optical feedback loop that can preserve the correlations between the mechanical motion and the feedback signal. By tuning the feedback phase and its delay, we achieved full control over the system dynamics. Furthermore, we presented a theoretical framework that outlines the fundamental limitations to ground-state cooling in this configuration.
+Levitated nanoparticles are inherently low-frequency oscillators, which necessitates a longer feedback delay $\tau$ compared to other optomechanical systems~\cite{Ernzer2023-coherent-cooling-membrane}. This extended delay introduces increased phase noise, which scales with the delay line length. In many practical applications, phase noise may also be frequency dependent, often becoming more significant at lower frequencies. As a result, levitation may initially appear less suitable for coherent feedback cooling. However, levitation in high-frequency regimes — such as librational degrees of freedom~\cite{dania2024high,pontin2023simultaneous,gao2024feedback,bang2020five}, levitation in standing-wave optical traps~\cite{kamba2021recoil}, or using high-refractive-index materials~\cite{lepeshov2023levitated,afridi2025controlling,lee2025inverse} — offers more promising prospects.
+Additionally, unique three-dimensional cooling of levitated particles could be enabled through multidirectional detection schemes~\cite{Dinter2024-3d-displacement-sensing-mode-decomposition}, such as those implemented on integrated platforms~\cite{Melo2024-levitation-on-chip}.
+Importantly, coherent feedback has applications beyond cooling. It can be employed to engineer a variety of system interactions, including dissipative and nonreciprocal dynamics~\cite{Karg2019-remote-hamiltonian-mediated-light,metelmann2015nonreciprocal}, optomechanics with Fanoresonators~\cite{du2025coherent} and motional entanglement~\cite{Lloyd2000-coherent-quantum-feedback,li2017enhanced,Zambon2025-remote-entanglement-particles}. Some of these approaches may circumvent the need for long delay lines and thus avoid the associated phase noise, making coherent feedback a powerful tool for advancing quantum control of levitated particles.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Aknowledgments}
+We acknowledge valuable discussions with P. Treutlein and G.-L. Schmidt, and the QXtreme consortium. This research was supported by the European Research Council (ERC) under the grant Agreement No. [951234] (Q-Xtreme ERC-2020-SyG).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\bibliography{references}
+
+\end{document}

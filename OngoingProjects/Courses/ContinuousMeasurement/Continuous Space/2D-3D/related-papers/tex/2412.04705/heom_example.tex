@@ -1,0 +1,181 @@
+# ---IMPORT SECTION---
+from mpl_setup import BLUE, ORANGE, GREEN, PURPLE, GRAY, SKY_BLUE, VERMILLION
+from qutip import Qobj, sigmaz, sigmax, brmesolve, sigmay
+from qutip import sigmam, sigmap, mesolve, expect, basis
+import numpy as np
+from qutip.solver.heom import HEOMSolver, UnderDampedBath
+
+import matplotlib.pyplot as plt
+import mpmath as mp
+from qutip import OhmicEnvironment, UnderDampedEnvironment, BosonicEnvironment
+from qutip.core.environment import n_thermal
+
+colors = [BLUE, ORANGE, GREEN, PURPLE, GRAY, SKY_BLUE, VERMILLION]
+P11p = basis(2, 0) * basis(2, 0).dag()
+P12p = basis(2, 0) * basis(2, 1).dag()
+
+# -- FIRST EXAMPLE PARAMETERS ---
+
+lam = 0.5
+w0 = 1
+gamma = 0.1
+T = 0.5
+t = np.linspace(0, 40, 1000)
+rho0 = Qobj([[0, 0], [0, 1]])
+Hsys = sigmax()/2 + 3*sigmaz()/4
+Q = sigmaz()
+env = UnderDampedEnvironment(lam=lam, gamma=gamma, T=T, w0=w0) #Create environment
+bath = env.approximate("matsubara",Nk=5) #Approximate environment with Matsubara series
+
+# -- SIMULATION --
+
+# -- HEOM --
+solver = HEOMSolver(Hsys, (bath, Q), max_depth=9)
+result_h = solver.run(rho0, t)
+
+# -- Lindblad manual --
+all_energy, all_state = Hsys.eigenstates()
+Nmax = len(all_state)
+collapse_list = []
+for i in range(Nmax):
+    for j in range(Nmax):
+        delE = (all_energy[j] - all_energy[i])
+        if i!=j:
+            rate = env.power_spectrum(delE) * (
+                np.absolute(Q.matrix_element(all_state[i].dag(), all_state[j])) ** 2
+            )
+
+            if rate > 0:
+                collapse_list.append(np.sqrt(rate) * all_state[i] * all_state[j].dag())
+        else:
+            rate = 2*env.power_spectrum(delE) * (
+                np.absolute(Q.matrix_element(all_state[i].dag(), all_state[j])) ** 2
+            )
+
+            if rate > 0:
+                collapse_list.append(np.sqrt(rate) * all_state[i] * all_state[j].dag())
+
+result_lindblad = mesolve(Hsys, rho0, t, collapse_list)
+
+
+
+
+# -- BLOCH-REDFIELD --
+a_ops = [[Q, env]]
+resultBR = brmesolve(Hsys, rho0, t, a_ops=a_ops, sec_cutoff=-1)
+
+
+# -- DYNAMICS SIMULATION --
+fig, ax = plt.subplots(1, 2, figsize=(13.6, 4.54))
+ax[0].plot(lam*t, expect(P11p, result_h.states),
+           color=colors[0], label='HEOMSolver',zorder=3)
+ax[0].plot(lam*t, expect(P11p, result_lindblad.states),
+            color=colors[1], label='mesolve')
+ax[0].plot(lam*t, expect(P11p, resultBR.states),
+           color=colors[2],linestyle=(0, (1, 1)), label='brmesolve')
+ax[0].set_ylabel(r"$\rho_{11}$")
+ax[0].set_xlabel(r"$\lambda t$")
+ax[0].legend()
+ax[1].plot(lam*t, expect(sigmap(), result_h.states),
+           color=colors[0], label='HEOMSolver',zorder=3)
+ax[1].plot(lam*t, expect(sigmap(), result_lindblad.states),
+        color=colors[1], label='mesolve')
+ax[1].plot(lam*t, expect(sigmap(), resultBR.states),
+           color=colors[2],linestyle=(0, (1, 1)), label='brmesolve', markevery=10)
+
+ax[1].set_ylabel(r"$Re(\rho_{12})$")
+ax[1].set_xlabel(r"$\lambda t$")
+ax[1].legend()
+plt.savefig('./heom_qubit_underdamped.pdf')
+
+# -- SECOND EXAMPLE PARAMETERS --
+lam = 0.1
+gamma = 5
+T = 1
+
+oh = OhmicEnvironment(T=T, alpha=lam, wc=gamma, s=1)
+
+# -- FITTING PREDEFINED OHMIC CLASS--
+w = np.linspace(0, 100, 2000) #Fitting range in frequency-domain
+env_fs, _ = oh.approximate("sd",wlist=w, Nk=3, Nmax=3) #Fit spectral density
+
+
+t = np.linspace(0, 10, 1000) #Fitting range in time-domain
+env_fc, _ = oh.approximate("cf",tlist=t, Ni_max=5, Nr_max=4, 
+                            target_rmse=None, maxfev=int(1e9)) #Fit correlation functions
+
+
+# -- USING A USER DEFINED ENVIRONMENT --
+
+
+def J(w, lam=lam, gamma=gamma):
+    """ 
+    Ohmic spectral density
+    """
+    return lam*w*np.exp(-abs(w)/gamma)
+
+
+user_env = BosonicEnvironment.from_spectral_density(J, T=T, wMax=60)
+
+user_env_sd, _ = user_env.approximate("sd",wlist=w, Nk=3, Nmax=3)
+
+user_env_cf, _ = user_env.approximate("cf",tlist=t, Ni_max=5, Nr_max=4, target_rmse=None, maxfev=int(1e9))
+
+
+
+# -- SOLVING DYNAMICS --
+tlist = np.linspace(0, 10, 1000)
+HEOM_corr_fit = HEOMSolver(Hsys, (env_fc, Q), max_depth=5)
+result_corr = HEOM_corr_fit.run(rho0, tlist)
+
+HEOM_spec_fit = HEOMSolver(Hsys, (env_fs, Q), max_depth=5)
+result_spec = HEOM_spec_fit.run(rho0, tlist)
+
+
+HEOM_fos = HEOMSolver(Hsys, (user_env_sd, Q),
+                      max_depth=5)
+result_fos = HEOM_fos.run(rho0, tlist)
+
+HEOM_foc = HEOMSolver(Hsys, (user_env_cf, Q),
+                      max_depth=5)
+result_foc = HEOM_foc.run(rho0, tlist)
+
+# -- OHMIC BATH DYNAMICS --
+figfit, axfit = plt.subplots(1, 2, figsize=(13.6, 4.54))
+full = oh.spectral_density(w)
+axfit[0].plot(w, full, color=colors[0], label="Original")
+j = 1
+markers = ["-.", "--", "-."]
+for i in [1, 10, 15]:
+    bath_fs, fitinfo = oh.approximate("sd",wlist=w, Nmax=3, Nk=i)
+    print(fitinfo["summary"])
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    axfit[0].plot(w, bath_fs.spectral_density(
+        w), linestyle=markers[j-1], color=colors[j], label=f"$N_k$={i}")
+    axfit[1].plot(w, np.abs(full-bath_fs.spectral_density(w)),
+                  markers[j-1], color=colors[j], label=f"$N_k$={i}")
+    j += 1
+
+axfit[0].legend()
+axfit[1].legend()
+axfit[0].set_ylabel(r"$J(\omega)$")
+axfit[0].set_xlabel(r"$\omega$")
+axfit[1].set_ylabel(r"$|J(\omega)-J_{approx}(\omega)|$")
+axfit[1].set_xlabel(r"$\omega$")
+plt.savefig('./heom_spec_k.pdf')
+
+#figfit, axfit = plt.subplots(1, 2, figsize=(13.6, 4.54))
+full = env_fs.correlation_function(t)
+full_sd = env_fs.spectral_density(w)
+
+# EXAMPLE OF COMPUTING APPROX CORRELATION FUNCTION
+# -- FIRST EXAMPLE PARAMETERS ---
+
+lam = 0.5
+w0 = 1
+gamma = 0.1
+T = 0.5
+env = UnderDampedEnvironment(lam=lam, gamma=gamma, T=T, w0=w0) #Exact environment
+bath = env.approximate("matsubara",Nk=5) #Approximate environment
+C = env.correlation_function(t) #Exact environment correlation functions
+C2 = bath.correlation_function(t) #Approximate environment correlation functions

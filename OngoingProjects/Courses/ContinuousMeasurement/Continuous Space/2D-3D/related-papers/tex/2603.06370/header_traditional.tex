@@ -1,0 +1,78 @@
+
+\pdfminorversion=4 
+%\IEEEoverridecommandlockouts                             
+%\overrideIEEEmargins                                     
+
+\usepackage{amsfonts,amsmath,amssymb}
+\usepackage[english]{babel}
+\usepackage[normalem]{ulem}
+\usepackage{hyperref}
+\let\proof\relax 
+\let\endproof\relax
+\usepackage{amsthm}
+\usepackage{graphicx}
+%\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{subcaption,caption}
+\usepackage{epsfig}
+%\usepackage{dirtytalk}
+\usepackage{ulem}
+\usepackage{tikz}
+\usepackage{mathrsfs}
+\usepackage{bbold}             % This package was used to write the one with double bars 
+\usepackage{bm}
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{matrix}
+\usetikzlibrary{calc,patterns,angles,quotes,arrows,automata}
+\graphicspath{ {./imgs/}}
+
+\usepackage[linesnumbered,noend]{algorithm2e}
+\RestyleAlgo{ruled}
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+\SetKwInOut{Parameters}{Parameters}
+\SetKwIF{If}{ElseIf}{Else}{if}{:}{else if}{else}{endif}
+
+
+\providecommand{\examplesymbol}{}
+
+\theoremstyle{definition}
+\newtheorem{example}{Example}
+% The next line is used to show a black square box to conclude examples. Arxiv does not like this so it must be commented out.
+%\AtEndEnvironment{example}{\hfill\ensuremath\blacksquare}
+
+\usepackage{mathabx}
+\renewcommand{\check}{\widecheck}
+\renewcommand{\bar}{\overline}
+
+\newcommand{\bigequation}[1]{
+\begin{figure*}[!t]
+    \normalsize
+    #1
+    \hrulefill{}
+    \vspace*{4pt}
+\end{figure*}
+}
+
+\theoremstyle{theorem}
+\newtheorem{problem}{Problem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem*{assumption}{Assumptions}
+\theoremstyle{definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% \usepackage[backend=bibtex, style=ieee, sorting=none]{biblatex}
+% \addbibresource{ref.bib}
+
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{IEEEtran}
+
+
+%\input{commands}
+

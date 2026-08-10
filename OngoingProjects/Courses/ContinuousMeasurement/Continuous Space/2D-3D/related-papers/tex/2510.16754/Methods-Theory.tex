@@ -1,0 +1,204 @@
+%auto-ignore
+\documentclass[./Main-revtex.tex]{subfiles}
+
+%%%%%%
+%% no preamble in this file: subfiles uses the main file's preamble
+%% --> so make sure you add your definitions there
+%%%%%%
+
+\begin{document}
+
+\ifSubfilesClassLoaded{% then branch
+    % commands executed only if this file is compiled by itself
+    \title{Theoretical methods}
+    \date{\today}
+    \maketitle
+}{% else branch
+    % commands executed only if compiled from the main file
+}
+
+\section{Filtering and retrofiltering in linear Gaussian quantum systems}\label{sec:GeneralACDK}
+
+The problem of quantum filtering, retrofiltering and smoothing applies to Markovian open quantum systems, where the quantum state of the system is described by a Lindblad master equation
+\beq
+\hbar\frac{\dd}{\dd t}\rho = -i[\hat{H},\rho] + \cal{D}[\hat{\bf c}]\rho\,,
+\label{equ:LindbladMasEq}
+\eeq
+where $\hat{H}$ is the system Hamiltonian and $\hat{\bf c}$ is a vector of Lindblad operators.
+A linear Gaussian quantum (LGQ) system is an open $N$-mode bosonic system, with canonical position and momentum operators for the $n$th mode $\hat{q}_n$ and $\hat{p}_n$, satisfying the canonical commutation relations $[\hat{q}_k,\hat{p}_\ell] = i\hbar\delta_{k,\ell}$. In the Heisenberg picture, the operators evolve dynamically according to the linear Langevin equation \cite{DohJac99,wiseman2009quantum},
+\beq
+\dd \hat{\bf x}(t) = {\bf A}\bx(t) \dd t + {\bf E}\dd\hat{\bf v}_p(t)\,,
+\eeq
+where $\bx = (\hat{q}_1,\hat{p}_1,...,\hat{q}_N,\hat{p}_N)\tp$. $\dd\hat{\bf v}_p(t)$ is a set of external operators that influence the evolution due to interactions with a quantum environment (i.e., quantum noise), satisfying
+\beq\label{eq:WhtQNoise}
+\ex{\dd\hat{\bf v}_p(t)} = 0\,, \quad {\rm and} \quad \ex{\dd{{\bf v}_p\tp (t)\dd{\bf v}_p(t')}} = {\bf I}\delta(t - t')\dd t^2\,,
+\eeq 
+where ${\bf I}$ the identity matrix. The particular drift matrix ${\bf A}$ and the matrix ${\bf E}$ depend on the system Hamiltonian and Lindblad operators \cite{wiseman2009quantum}, and can in general be time-dependent without affecting any of the following. We will assume throughout that these are time-independent (as they are in our experiment).
+These systems arise when $\hat{H}$ is at most quadratic and $\hat{\bf c}$ is linear in the canonical operators, \eg, $\hat{H} = \bx\tp {\bf G} \bx\quad{\rm and} \quad \hat{\bf c} = {\bf B}\bx$, where ${\bf G}$ is Hermitian. 
+
+As for the ``Gaussian'' part, these dynamics are unique in that they preserve Gaussian states, meaning that if the system is initially in a Gaussian state (\eg, a coherent or thermal state), it will remain Gaussian over its entire evolution. This is extremely useful since Gaussian quantum states are completely described, in terms of their Wigner function, by the mean $\ex{\bx}$ and the (symmetrized) covariance matrix $V_{ij} = \frac{1}{2}\ex{\hat{x}_i \hat{x}_j + \hat{x}_j \hat{x}_i} - \ex{\hat{x}_i}\ex{\hat{x}_j}$. It is easy to show \cite{wiseman2009quantum} that the mean and covariance matrix evolve according to 
+\begin{align}
+&\dd \ex{\hat{\bf x}}(t) = {\bf A}\ex{\bx}(t) \dd t\,,\\
+&\frac{\dd}{\dd t}{\bf V} =  \mathbf{A}\mathbf{V} + \mathbf{V}\fil\mathbf{A}\tp + \mathbf{D}\,,
+\end{align}
+where ${\bf D} = {\bf E}{\bf E}\tp$.
+
+Currently, the LGQ systems we have been describing have not involved any measurements acting on the external environment to refine the description of the quantum system. In particular, as mentioned in the main text, we consider a continuous-in-time measurement of the environment, or some fraction thereof. %\jjs{one of its baths?}\ktl{That depends how you count the baths, if you do it physically then it may be more than one. That is why I left it a little bit more ambiguous because it is not necessary to make the distinction here.} 
+In order for the system to remain a LGQ system, it must be that the {\em conditional} dynamics are linear and preserve Gaussian states. This is the case \cite{DohJac99} if and only if %\jjs{if and only if?}\ktl{Are you asking whether the iff is correct or to just expand it. If the former, yes (although I might need to be a little careful about the scaling on the measurement noise, I can explain that though). If the latter, sure, but I was just trying to save a couple of words.} 
+the operator describing the measurement is linear in $\bx$, i.e.,
+\beq
+\hat{\bf y}(t) \dd t = {\bf C}\bx(t)\dd t + \dd\hat{\bf v}_m(t)\,,
+\eeq
+where $\dd \hat{\bf v}_m$ are noise operators affecting the measurement outcome, satisfying similar conditions to Eq.~(\ref{eq:WhtQNoise}). Note, in general, $\dd\hat{\bf v}_m(t)$ may be correlated with $\dd\hat{\bf v}_p(t)$, giving $\ex{{\bf E}\,\dd\hat{\bf v}_p(\dd\hat{\bf v}_m)\tp} = {\bf \Gamma}\dd t$. We will assume, as was the case with ${\bf A}$ and ${\bf E}$, that the measurement matrix ${\bf C}$ is time independent. Conditioning ({\em equiv.} Filtering) the system on each measurement outcome ${\bf y}_t$ from the initial time $t_0$ until the time $t$, causes the mean and covariance matrix to evolve according to \cite{DohJac99,wiseman2009quantum}
+\begin{align}
+    &\dd\ex{\bx}\fil(t) = {\bf A}\ex{\bx}\fil(t)\dd t + {\cal K}^{+}[{\bf V}\fil(t)]\dd \mathbf{w}\fil(t)\;,
+\label{1stMomFiltering}\\
+    &\dfrac{\dd}{\dd t}{\bf V}\fil = \mathbf{A}\mathbf{V}\fil + \mathbf{V}\fil\mathbf{A}\tp + \mathbf{D} - \mathcal{K}^{+}[\mathbf{V}\fil]\,\mathcal{K}^{+}[\mathbf{V}\fil]\tp\,.
+\label{2ndMomFiltering}
+\end{align}
+Here, the ``kick'' matrix ${\cal K}^{\pm}[{\bf V}] = {\bf V}{\bf C}\tp \pm {\bf \Gamma}\tp$ and the (filtered) vector of innovations is $\dd{\bf w}\fil(t) = {\bf y}(t)\dd t - {\bf C}\ex{\bx}\fil(t)\dd t$, with statistics identical to that of an infinitesimal Weiner increment \cite{wiseman2009quantum}. Note, these equations are identical to the classical Kalman-Bucy filtering equations \cite{KalBuc61}. 
+
+To describe the probability of the measurement outcomes that occurred from $t$ until the final time ${\cal T}$, one generally introduces a positive-valued operator measure (POVM) element $\hat{E}\rfil(t)$, more commonly called the retrofiltered effect. This operator encodes the probability of the measurement record $\overrightarrow{O}_t := \{{\bf y}(\tau):\tau\in[t,{\cal T}]\}$ occurring for any given state via $p(\overrightarrow{O};t|\rho) = {\rm Tr}[\hat{E}\rfil(t)\rho]$. Note, the ``past'' measurement record is denoted by $\past{O}_t:=\{{\bf y}(\tau):\tau\in[t_0,t)\}$ and the ``past-future'' record by $\both{O}:=\{{\bf y}(\tau):\tau\in[t_0,{\cal T}]\}$. In the LGQ regime, the (normalized) retrofiltered effect is also a Gaussian state, with mean and covariance described by \cite{ZhaMol17}
+\begin{align}
+    &-\dd\langle\hat{\mathbf{x}}\rangle\rfil(t) = -\mathbf{A}\langle\hat{\mathbf{x}}\rangle\rfil(t)\,\dd t+\mathcal{K}^{-}[\mathbf{V}\rfil(t)]\dd\mathbf{w}\rfil(t)\,,
+\label{1stmomentNREO}\\
+    &-\dfrac{\dd}{\dd t} \mathbf{V}\rfil= -\mathbf{A}\mathbf{V}\rfil - \mathbf{V}\rfil\mathbf{A}\tp + \mathbf{D} - \mathcal{K}^{-}[\mathbf{V}\rfil]\,\mathcal{K}^{-}[\mathbf{V}\rfil]\tp\,.
+\label{2ndmomentNREO}
+\end{align}
+Note, some care must be taken with the final conditions in this equation, since $\mathbf{V}\rfil({\cal T}) = \infty$ and the mean is strictly undefined. See Ref.~\cite{laverick2021quantum} for the details on how to deal with this. It should also be noted that these are backward-evolving equations, where $-\dd\ex{\bx}\rfil(t) = \ex{\bx}\rfil(t - \dd t) - \ex{\bx}\rfil(t)$ and similarly for $-\dd {\mathbf{V}}\rfil$.
+
+Naively applying classical smoothing to the Wigner functions~\cite{LCW25}, one obtains the classically smoothed Wigner function with mean and covariance
+\begin{align}
+\ex{\bx}\csm &= {\bf V}\csm\left[{\bf V}\fil\inv \ex{\bx}\fil + {\bf V}\rfil\inv \ex{\bx}\rfil\right],\\
+{\bf V}\csm &= \left[{\bf V}\fil\inv + {\bf V}\rfil\inv\right]\inv\,.
+\end{align}
+In general, these do not correspond to a physical state, with the covariance matrix violating the Sch\"odinger-Heisenberg uncertainty principle \cite{laverick2019quantum}
+\beq\label{SHUP}
+{\bf V} + \frac{i\hbar}{2}\Sigma \geq 0\,,
+\eeq
+where $\Sigma =\left[\begin{smallmatrix}
+0&1\\
+-1&0
+\end{smallmatrix}\right]$. Note, in our optomechanical system, the ground state has been normalized such that its covariance is ${\bf V} = {\bf I}$ ({\em equiv.} choosing units such that $\hbar = 2$). Furthermore, since all covariance matrices are diagonal, i.e., ${\bf V} = v{\bf I}$, \erf{SHUP} reduces to $v \geq 1$.
+
+\section{Adapting the quantum state smoothing formalism}\label{sec:QSSforLTL}
+%\jjs{Add?: `For a general quantum system, whether LGQ or not,' I was confused at first because it follows after the LGQ section}
+For a general quantum system, whether LGQ or not, the smoothed quantum state of Guevara and Wiseman \cite{guevara2015quantum,LWCW23} is defined as 
+\beq\label{eq:true-sm}
+\rho\sm(t) = \sum_{\rho\god} p(\rho\god;t|\both{O})\rho\god(t)\,,
+\eeq
+%\jjs{I don't think the symbol $\both{O}$ is defined, is it? I think this section could do in general with a consistency check on notation}\ktl{Sorry, I was in the mindset of trying too keep it short. I defined the Arrow on the y in the previous section, I was hoping that that would be enough, I can add the specific definition here again. The reason I defined it for the $U$ in this case was because it is actually a different definition, and I really should change the symbol to make that less confusing.}
+where the true quantum state $\rho\god$ was defined by introducing a secondary observer, Bob, who performed a continuous in time measurement on any part of the environment (or some subset thereof) that the observer's, Alice's, measurement missed (either due to only observing a portion of the environment or detector inefficiencies). The true quantum state is obtained by conditioning on both the past measurement record of Alice, $\past{O}_t$ and Bob, $\past{U}_t$. Note, this particular form of the smoothed quantum state does not explicitly appear in Ref.~\cite{guevara2015quantum}, but instead performs an equivalent average over Bob's past measurement records $\past{U}_t$. This smoothed quantum state has since been shown to be an optimal Bayesian estimator of the true quantum state \cite{CGLW21,LGW21} in terms of minimizing the trace-squared deviation (also known as the squared Hilbert-Schmidt distance) from the true state, among others. However, as shown in Ref.~\cite{LWCW23}, this optimality is entirely independent of how one defines the true state. So long as one has some ``target'' state that one is trying to estimate from a set of possible states ${\mathbb T}$, the optimal (in a Bayesian sense) smoothed estimate is given by
+\beq\label{eq:gen-sm}
+\rho\sm^{\rm tar}(t) = \sum_{\rho_{\rm tar}\in{\mathbb T}} p(\rho_{\rm tar};t|\both{O})\rho_{\rm tar}(t)\,,
+\eeq
+where the superscript is to emphasize that this is the smoothed estimate of a particular target state. 
+Note, depending on the particular set of target states chosen, it may be the case that the optimal real-time estimate, i.e., $\sum_{\rho\tar}p(\rho\tar;t|\past{O}_t)\rho\tar(t)$, may not equal the filtered quantum state that one obtains from conventional quantum filtering theory~\cite{Bel87,Bel92}. In the case of true state estimation~\cite{guevara2015quantum} and the LTL filtered state estimation (which will be elaborated shortly), this is not the case and the optimal real-time estimate and the conventional filtered state coincide.
+
+We exploit the generality of Eq.~\eqref{eq:gen-sm} to adapt quantum state smoothing to our experimental setting.
+In the case of our first experiment, the target state to estimate is the LTL filtered state. That is, let us consider the scenario where our system of interest has been monitored for a long-time prior to time $t_0$ by a single observer --- in the main text, we set $t_0 = 0$. For ease of discussion and comparison to the standard formulation of quantum state smoothing, we will refer to this observer as Bob. At time $t_0$ Bob stops his measurement, having obtained a measurement record $\past{U}_{t_0}:=\{{\bf y}(\tau):\tau \in [\tau_0,t_0)\,,\,\, \tau_0\ll t_0 \}$, and another observer, Alice, starts to measure the system until some final time $T$. Note, Alice and Bob do not necessarily need to perform the same measurement on the same portion of the environment, as is the case in our experiment, nor do they need to be physically distinct observers. However, it is necessary that (i) Alice knows Bob's measurement choice as well as what portion of the environment he is measuring and (ii) she is oblivious to $\past{U}_{t_0}$. With this knowledge, Alice knows that there exists a better description of the quantum system than what she can obtain with just her record $\past{O}_t = \{{\bf y}(\tau):\tau \in [t_0,t) \}$, i.e., the filtered quantum state obtained by making use of $\past{U}_{t_0}\cup\past{O}_t$. However, since Alice does not know $\past{U}_{t_0}$, the LTL filtered state could be any state in the set ${\mathbb T} = \{\rho_{\past{U}_{t_0}\cup\past{O}_t}, \forall \past{U}_{t_0}\}$. 
+%\jjs{Does $\{\cdot\}_{\past{U}_{t_0}}$ mean `for any possible $\past{U}_{t_0}$'? Not entirely clear to me}\ktl{Yes that is what it means, is this clearer $\{\rho_{\past{U}_{t_0}\cup\past{O}_t}, \forall\past{U}_{t_0}\}$?}. 
+With the target state defined, one can use similar %numerical \jjs{`or, in the case of LQG systems, analytical'? I guess that's the point of the next section.}\ktl{Yeah - happy to add it if you want though} 
+techniques to those used for the standard quantum state smoothing theory \cite{GueWis20} to compute $\rho\sm^{\rm LTL}(t)$. %\jjs{Refer back to Eq.~\eqref{eq:gen-sm}?}\ktl{I don't think it is necessary to refer back to the equation, the symbol should be enough for the reader to find it (and it should all be on the same page once the comments are removed).}
+
+%\jjs{I don't really follow this next section.}
+%\ktl{This should be clearer}
+All that remains is to determine Alice's initial condition for her filtered state in the LTL case. Since we are dealing with quantum unravellings of a Lindblad master equation, averaging over $\past{U}_{t_0}$ (or equivalently averaging over $\rho_{\rm LTL}(t)$) given $\past{O}_t$ for $t>t_0$, one obtains Alice's filtered state. Performing this average at $t = t_0$, where $\past{O}_{t_0} = \emptyset$, one instead obtains the unconditioned state. Since $\tau_0\ll t_0$, at $t_0$, Alice's best knowledge of the initial state of the system is the solution to the Lindblad master equation.
+
+\subsection{Quantum Smoothing for LGQ systems}\label{MT:LQG}
+The major novelty of this section is that we derive the quantum state smoothing equations in the LTL filtered state estimation for general linear Gaussian quantum systems. The derivation here largely follows that of the standard quantum state smoothing theory (i.e., true state estimation) in Ref.~\cite{laverick2019quantum}. For completeness, we will present the theory more generally for the Gaussian target state, described by mean $\ex{\bx}_{\tar}$ and covariance matrix ${\bf V}\tar$, being either the LTL filtered state or true state so that the reader understands the formulae for the two primary estimator we consider in this paper. Let us begin by defining the Wigner function \cite{wiseman2009quantum}, 
+\beq\label{eq:Wig}
+W_\rho({\bf x}) = (2\pi)^{-N} \int_{{\bf b} \in {\mathbb R}^{2N}} \dd^{2N} {\bf b}\, \Tr[\rho e^{i{\bf b}\tp (\bx - {\bf x})}]\,.
+\eeq
+Computing the Wigner function of $\rho\sm^{\rm tar}$ using Eq.~\eqref{eq:gen-sm} and noting the linearity of \eqref{eq:Wig}, we have that 
+\begin{align}
+W^{\rm tar}\sm({\bf x};t) &= \sum_{\rho_{\rm tar} \in {\mathbb T}}p(\rho_{\rm tar};t|\both{O}) W_{\rm tar}({\bf x};t)\,.
+\end{align}
+Using Bayes' theorem, we have $p(\rho_{\rm tar};t|\both{O}) \propto p(\fut{O}_t|\rho_{\rm tar},\past{O}_t)p(\rho_{\rm tar}|\past{O}_t) = p(\fut{O}_t|\rho_{\rm tar})p(\rho_{\rm tar}|\past{O}_t)$, with the equality resulting from the Markovianity of the system. Note, for simplicity of notation, we have omitted explicit dependencies on the time $t$ in the probability distributions since it is clear by the record which time it is. By definition of the retrofiltered effect, we know $p(\fut{O}_t|\rho_{\rm tar}) = \Tr[\hat{E}\rfil(t)\rho_{\rm tar}]$. Using the identity $\Tr[\rho\sigma] \propto \int\dd{\bf x} W_{\rho}({\bf x})W_{\sigma}({\bf x})$ and assuming an LGQ system, we have 
+\beq
+p(\fut{O}_t|\rho_{\rm tar}) = g(\ex{\bx}\tar;\ex{\bx}\rfil, {\bf V}\rfil + {\bf V}\tar)\,.
+\eeq
+
+All that remains is to compute the probability $p(\rho_{\rm tar}|\past{O}_t)\equiv p(\ex{\bx}_{\rm tar}|\past{O}_t)$, where the equivalence comes from the fact that, since the covariance is deterministic, the possible targets states are parametrized by solely by their mean $\ex{\bx}_{\rm tar}$. Since this has already been done explicitly for the true state case in Refs.~\cite{laverick2019quantum,laverick2021quantum}, we will focus only on the LTL case here and quote the results for the true state case. The mean and covariance of the LTL state satisfy  
+\begin{align}\label{eq:LTL_mean}
+&\dd \ex{\bx}_{\rm LTL}(t) = {\bf A} \ex{\bx}_{\rm LTL}(t) \dd t + {\cal K}^+[{\bf V}_{\rm LTL}] \dd{\bf w}_{\rm LTL}(t)\,,\\
+&\frac{\dd}{\dd t}{\bf V}_{\rm LTL} = {\bf A}\mathbf{V}_{\rm LTL} + \mathbf{V}_{\rm LTL}\mathbf{A}\tp + \mathbf{D} \nonumber\\
+&\hspace{10em}- \mathcal{K}^{+}[\mathbf{V}_{\rm LTL}]\,\mathcal{K}^{+}[\mathbf{V}_{\rm LTL}]\tp\,.\label{eq:LTL_Var}
+\end{align} 
+Importantly, we notice that Eq.~\eqref{eq:LTL_mean} is a classical linear Langevin equation with a classical linear measurement record ${\bf y}(t)\dd t = {\bf C}\ex{\bx}_{\rm LTL}(t)\dd t + \dd{\bf w}_{\rm LTL}(t)$. As such, we can apply classical filtering \cite{KalBuc61} to determine that $p(\ex{\bx}_{\rm LTL}|\past{O}_t) = g(\ex{\bx}_{\rm LTL};\ex{\halo{\bf x}}\fil, \halo{{\bf V}}\fil)$, where the mean $\ex{\halo{\bf x}}\fil$ and covariance $\halo{{\bf V}}\fil := \ex{(\ex{\bx}_{\rm LTL}\tp\ex{\bx}_{\rm LTL} - \ex{\bx}\fil\tp\ex{\bx}\fil)}$ satisfy
+\begin{align}
+&\dd\ex{\bx}\fil(t) = {\bf A}\ex{\bx}\fil(t)\dd t + \halo{\cal K}^{+}[\halo{\bf V}\fil(t)]\dd \mathbf{w}\fil(t)\,,\\
+&\frac{\dd}{\dd t}\halo{\bf V}\fil = {\bf A}\halo{\bf V}\fil + \halo{\bf V}\fil{\bf A}\tp + \nonumber\\
+&\hspace{4em}{\cal K}^+[{\bf V}_{\rm LTL}]\tp{\cal K}^+[{\bf V}_{\rm LTL}] -\halo{\cal K}^{+}[\halo{\bf V}\fil]\,\halo{\cal K}^{+}[\halo{\bf V}\fil]\tp\,,
+\end{align}
+where $\halo{\cal K}^{+}[\halo{\bf V}\fil] = \halo{\bf V}\fil {\bf C}\tp + {\cal K}^+[{\bf V}_{\rm LTL}]\tp$. It is easy to show, using Eqs.~\eqref{1stMomFiltering},~\eqref{2ndMomFiltering},~\eqref{eq:LTL_mean} and~\eqref{eq:LTL_Var}, that $\halo{{\bf V}}\fil = {\bf V}\fil - {\bf V}_{\rm LTL}$ and $\halo{\bf x}\fil = \ex{\bx}\fil$. In the case of true state filtering, the argument follows similarly \cite{laverick2019quantum}, with the true mean and covariance satisfying 
+\begin{align}
+&\dd \ex{\bx}\god(t) = {\bf A} \ex{\bx}\god(t) \dd t + {\cal K}_{O}^+[{\bf V}\god] \dd{\bf w}_{O}(t) \nonumber\\
+&\hspace{13em}+ {\cal K}_{U}^+[{\bf V}\god] \dd{\bf w}_{U}(t)\,,\\
+&\frac{\dd}{\dd t}{\bf V}\god = {\bf A}{\bf V}\god + {\bf V}\god{\bf A}\tp + {\bf D} \nonumber\\
+&\hspace{3em}- {\cal K}_O^{+}[{\bf V}\god]\,\mathcal{K}_O^{+}[{\bf V}\god]\tp - {\cal K}_U^{+}[{\bf V}\god]\,\mathcal{K}_U^{+}[{\bf V}\god]\tp\,.\label{eq:god_Var}
+\end{align}
+where Alice's (Bob's) measurement outcome is ${\bf y}_{O(U)}\dd t = {\bf C}_{O(U)}\ex{\bx}\god + \dd {\bf w}_{O(U)}(t)$, and the distribution is $p(\ex{\bx}\god|\past{O}_t) = g(\ex{\bx}\tar;\ex{{\bx}}\fil, {\bf V}\fil - {\bf V}\god)$. 
+
+Finally, we can obtain 
+\beq
+\begin{split}
+p(\ex{\bx}\tar|\both{O}) &\propto p(\fut{O}_t|\rho_{\rm tar})p(\rho_{\rm tar}|\past{O}_t)\\
+&= g(\ex{\bx}\tar;\ex{\bx}\sm, \halo{{\bf V}}\sm)\,,
+\end{split}\label{eq:sm_hal_prob}
+\eeq
+where 
+\begin{align}
+\ex{\bx}\sm &= \halo{{\bf V}}\sm\left[({\bf V}\fil - {\bf V}\tar)\inv \ex{\bx}\fil + ({\bf V}\rfil + {\bf V}\tar)\inv \ex{\bx}\rfil\right],\\
+\halo{{\bf V}}\sm\inv &= ({\bf V}\fil - {\bf V}\tar)\inv + ({\bf V}\rfil + {\bf V}\tar)\inv\,,
+\end{align}
+with $\halo{{\bf V}}\sm := \ex{(\ex{\bx}\tar\tp\ex{\bx}\tar - \ex{\bx}\sm\tp\ex{\bx}\sm)}$.
+This leaves us with 
+\beq
+\begin{split}
+W^{\rm tar}\sm({\bf x}) &\propto  \int\dd\ex{\hat{\bf x}}\tar  g(\ex{\bx}\tar;\ex{\bx}\sm, \halo{{\bf V}}\sm)g({\bf x};\ex{\bx}\tar,{\bf V}\tar) \\
+&= g({\bf x};\ex{\bx}\sm, \halo{{\bf V}}\sm + {\bf V}\tar)\,.
+\end{split}
+\eeq
+Thus, the mean and the covariance of the smoothed quantum state are %\ktl{I added the inverse I missed, was there a notation thing I wasn't aware of?}
+\begin{align}
+\ex{\bx}\sm &= ({\bf V}\sm - {\bf V}\tar)\left[({\bf V}\fil - {\bf V}\tar)\inv \ex{\bx}\fil \right.\nonumber\\
+&\hspace{9em}\left.+ ({\bf V}\rfil + {\bf V}\tar)\inv \ex{\bx}\rfil\right],\\
+{\bf V}\sm &= \left[({\bf V}\fil - {\bf V}\tar)\inv + ({\bf V}\rfil + {\bf V}\tar)\inv\right]\inv + {\bf V}\tar\,.
+\end{align}
+
+In the particular LTL case that we are considering, Bob has been performing the same measurement that Alice performs for a long time prior to Alice beginning her measurement. %\jjs{could comment that this is Bob's most informative choice of measurement (as it is for Alice)?}\ktl{Hmmm, what do we mean by most informative here? To say this is the most informative measurement, we would need to say that it minimizes the average entropy (or purity) for all possible measurement unravellings, which is not an easy thing to show (unless there is already a paper that shows this for this system). Or do you mean more informative in another sense?} 
+This means that the evolution of the LTL target's covariance, Eq.~\eqref{eq:LTL_Var}, will be identical to that of Alice's filtered state, Eq.~\eqref{2ndMomFiltering}, and will have reached its steady-state value by $t_0$. Thus, we take ${\bf V}_{\rm LTL}(t) = {\bf V}\fil^{\rm ss}$. In the case of true state smoothing, prior to Alice beginning her measurement, the environment is completely unobserved, and is thus perfectly monitored by Bob (the environment).
+This means, since by our assumption on the natural type of measurement unravelling for the environment (see Sec.~\ref{sec:methods_Nat_Unrav}) limits the measurement to a heterodyne measurement and the system is left unobserved for a long-time prior to Alice beginning her measurement, the true state at $t_0$ will be the steady state solution of Eq.~(\ref{eq:god_Var}) where ${\bf C}_{O} = {\bf \Gamma}_{O} = 0$ and ${\bf C}_{U}$ and ${\bf \Gamma}_U$ corresponding to a perfect heterodyne measurement. For our system, this gives the initial condition for the true covariance ${\bf V}(t_0) = v_{\rm GS}{\bf I}$, where $v_{\rm GS}$ is the ground state variance.
+
+\section{The desiderata for a naturally occurring unravelling}\label{sec:methods_Nat_Unrav}
+
+In order to perform true state smoothing, we make an assumption on how the environment would have naturally measured
+%and measured the information the system leaked into
+the unobserved baths. In particular, we consider two desiderata for such measurements.
+
+First, the resulting master equation should be invariant under the same transformations that leave the system's master equation invariant, as these are the natural symmetries the system and environment have. Master equation~\eqref{equ:LindbladMasEq} is invariant under the following transformations \cite{wiseman2009quantum}:
+\beq
+\hat{\bf c} \to {\bf U}\hat{\bf c}
+\label{sohet}
+\eeq
+and 
+\beq
+\hat{\bf c} \to \hat{\bf c} + {\bf a}\,,\quad\,\, \hat{H} \to \hat{H} -\frac{i}{2}({\bf a}^{\dagger}\hat{\bf c} - {\bf c}^{\dagger}{\bf a})\,, \label{sodyne}
+\eeq
+where ${\bf U}$ is an arbitrary unitary matrix and ${\bf a}$ is a vector of arbitrary complex numbers (${\bf a}^{\dagger}$ is its complex-conjugate transpose).
+
+The second desideratum is that the measurement performed by the larger environment should be Markovian, i.e., it should be non-adaptive. This is reasonable due to the validity of the Born--Markov approximation --- an adaptive measurement would require the environment to have a memory to store (at minimum) the last measurement outcome.
+
+Invariance under~\eqref{sodyne} limits the Markovian measurement to ``dyne''-type measurements~\cite{wiseman2009quantum}. Invariance under~\eqref{sohet} further limits this measurement to be phase-insensitive in regard to the particular Lindblad operator being detected. Heterodyne unravelling is then the unique natural one for our experimental system considering the form of its Lindblad master equation (given by Eq.~\eqref{UWUQSME_RF_final} in the limit $\eta\to0$).
+%Since, for the system we are considering, the Lindblad operator depends linearly, with equal weighting, on the quadrature operators, constraining the possible measurement the environment performs to yield information equally about both quadratures, i.e., a heterodyne detection.
+
+\ifSubfilesClassLoaded{% then branch
+    % commands executed only if this file is compiled by itself
+    \bibliographystyle{apsrev4-2}
+    \bibliography{sn-bibliography}% common bib file
+}{% else branch
+    % commands executed only if compiled from the main file
+}
+
+\end{document}

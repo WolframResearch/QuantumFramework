@@ -1,0 +1,23 @@
+import qutip as qt
+sz = qt.Qobj([[1, 0], [0, -1]]) 
+print(sz)
+?\pythonoutput?Quantum object: dims=[[2], [2]], shape=(2, 2), type='oper', dtype=Dense, isherm=True
+?\pythonoutput?Qobj data =
+?\pythonoutput?[[ 1.  0.]
+?\pythonoutput? [ 0. -1.]]
+
+sz = qt.Qobj([[1, 0], [0, -1]]) 
+sz2 = sz & sz
+print(sz2)
+?\pythonoutput?Quantum object: dims=[[2, 2], [2, 2]], shape=(4, 4), type='oper',
+?\pythonoutput?                dtype=Dense, isherm=True
+?\pythonoutput?Qobj data =
+?\pythonoutput?[[ 1.  0.  0.  0.]
+?\pythonoutput? [ 0. -1.  0. -0.]
+?\pythonoutput? [ 0.  0. -1. -0.]
+?\pythonoutput? [ 0. -0. -0.  1.]]
+
+print(sz.data)
+?\pythonoutput?Dense(shape=(2, 2), fortran=False)
+print(sz.to('CSR').data)
+?\pythonoutput?CSR(shape=(2, 2), nnz=2)
