@@ -24,7 +24,7 @@ $$
 
 This is the target: the process whose mean we will check against the Lindblad master equation and whose spread we will check against a native integrator. The top three rows, the Bloch state, close on their own, nothing in them depends on $Q$; the fourth row is the record, an integral whose drift $\sqrt{\Gamma_{CI}}\,z$ carries the $\hat\sigma_z$ signal and whose noise is the same $dW$ that kicks the state.
 
-Every parameter is a rate, in units where $\gamma_1=1$: $\Gamma_{CI}$ is the informative (coherent-information) rate, which sharpens the state toward a $\hat\sigma_z$ eigenstate; $\Gamma_{BA}$ is the backaction rate of the orthogonal quadrature, which only kicks the phase; $\Gamma_d$ is the measurement dephasing $\Gamma_m/2$; $\gamma_\phi$ is the intrinsic pure dephasing; $\gamma_1=1/T_1$ is the relaxation rate; and $\Omega_x$ is the Rabi frequency. One combination recurs, the effective transverse decay $\Gamma_2^{\mathrm{eff}}=\gamma_1/2+\gamma_\phi+\Gamma_d$. Throughout, the code reads a rate vector positionally, $r=\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$, so it lines up with these formulas.
+Every parameter is a rate, in units where $\gamma_1=1$: $\Gamma_{CI}$ is the informative (coherent-information) rate, which sharpens the state toward a $\hat\sigma_z$ eigenstate; $\Gamma_{BA}$ is the backaction rate of the orthogonal quadrature, which only kicks the phase; $\Gamma_d$ is the measurement dephasing $\Gamma_m/2$; $\gamma_\phi$ is the intrinsic pure dephasing; $\gamma_1=1/T_1$ is the relaxation rate; and $\Omega_x$ is the Rabi frequency. One combination recurs, the effective transverse decay $\Gamma_2^{\mathrm{eff}}=\gamma_1/2+\gamma_\phi+\Gamma_d$. Throughout, the code takes a rate vector $r=\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$ and names its entries, so each vector field below reads term for term like these formulas.
 
 Now the same process written the other way. For a single scalar noise, the Itô equation above is identical to a Stratonovich equation with the same diffusion and a drift lowered by one exact term (the Itô-Stratonovich conversion, unambiguous for scalar noise, with no Lévy-area subtlety). We will not compute that term. Its effect is already written into the explicit Stratonovich drift below, and that is the drift we hand `NDSolve`:
 
@@ -50,16 +50,18 @@ The reason this is the form to feed a smooth-noise solver is one sentence: a whi
 
 ## Encoding the Stratonovich vector field
 
-Encode the Stratonovich drift, all four rows, reading the rate vector positionally as $\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$ and folding the transverse rate $\Gamma_2^{\mathrm{eff}}$ into a local name:
+Encode the Stratonovich drift, all four rows. Name the entries of the rate vector $r=\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$ and fold the transverse rate $\Gamma_2^{\mathrm{eff}}$ into a local name, so each row reads term for term like the display equation:
 
 ```wl
 ClearAll[driftStrat];
 driftStrat[{x_, y_, z_, q_}, r_] :=
-  With[{\[CapitalGamma]2 = r[[5]]/2 + r[[4]] + r[[3]]},
-   {((r[[2]] + r[[1]])/2 - \[CapitalGamma]2 - r[[1]] z^2) x - Sqrt[r[[2]] r[[1]]] y z,
-    ((r[[2]] + r[[1]])/2 - \[CapitalGamma]2 - r[[1]] z^2) y + Sqrt[r[[2]] r[[1]]] x z - r[[6]] z,
-    r[[5]] (1 - z) + r[[1]] z (1 - z^2) + r[[6]] y,
-    Sqrt[r[[1]]] z}];
+  With[{\[CapitalGamma]CI = r[[1]], \[CapitalGamma]BA = r[[2]], \[CapitalGamma]d = r[[3]],
+    \[Gamma]\[Phi] = r[[4]], \[Gamma]1 = r[[5]], \[CapitalOmega]x = r[[6]]},
+   With[{\[CapitalGamma]2 = \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d},
+    {((\[CapitalGamma]BA + \[CapitalGamma]CI)/2 - \[CapitalGamma]2 - \[CapitalGamma]CI z^2) x - Sqrt[\[CapitalGamma]BA \[CapitalGamma]CI] y z,
+     ((\[CapitalGamma]BA + \[CapitalGamma]CI)/2 - \[CapitalGamma]2 - \[CapitalGamma]CI z^2) y + Sqrt[\[CapitalGamma]BA \[CapitalGamma]CI] x z - \[CapitalOmega]x z,
+     \[Gamma]1 (1 - z) + \[CapitalGamma]CI z (1 - z^2) + \[CapitalOmega]x y,
+     Sqrt[\[CapitalGamma]CI] z}]];
 ```
 
 Encode the Stratonovich diffusion, the same $\vec b$ as the Itô form, with the additive readout row equal to one:
@@ -67,10 +69,11 @@ Encode the Stratonovich diffusion, the same $\vec b$ as the Itô form, with the 
 ```wl
 ClearAll[diffStrat];
 diffStrat[{x_, y_, z_, q_}, r_] :=
-   {-Sqrt[r[[1]]] x z - Sqrt[r[[2]]] y,
-    -Sqrt[r[[1]]] y z + Sqrt[r[[2]]] x,
-    Sqrt[r[[1]]] (1 - z^2),
-    1};
+  With[{\[CapitalGamma]CI = r[[1]], \[CapitalGamma]BA = r[[2]]},
+   {-Sqrt[\[CapitalGamma]CI] x z - Sqrt[\[CapitalGamma]BA] y,
+    -Sqrt[\[CapitalGamma]CI] y z + Sqrt[\[CapitalGamma]BA] x,
+    Sqrt[\[CapitalGamma]CI] (1 - z^2),
+    1}];
 ```
 
 To read these back as formulas, write the six rates as symbols, using string subscripts so the labels stay $\Gamma_{CI},\Gamma_{BA},\dots$ and never collide with the Bloch $x$ or fuse into a $C\cdot I$ product:
@@ -101,23 +104,27 @@ Fix a representative dispersive transmon, rescaled by $\gamma_1$, starting from 
 ratesB = {0.352, 0., 0.176, 1., 1., 3.}; initB = {0., 0., 1., 0.}; tfB = 3.; nB = 600;
 ```
 
-The exact reference for the mean is the Lindblad master equation. Because the Itô drift $\vec a$ is affine in $\{x,y,z\}$, the ensemble mean obeys that drift as a closed linear ODE with no integration error; solve it with `DSolve` and return $\langle\vec v\rangle(t)$:
+The reference for the mean is the Lindblad master equation. Because the Itô drift $\vec a$ is affine in $\{x,y,z\}$, the ensemble mean obeys that drift as a closed linear ODE, which `DSolve` solves analytically, with no time-stepping error; return $\langle\vec v\rangle(t)$:
 
 ```wl
 ClearAll[lindbladBloch];
 lindbladBloch[r_, {x0_, y0_, z0_}] :=
-  Module[{\[CapitalGamma]2 = r[[5]]/2 + r[[4]] + r[[3]], sol, xf, yf, zf},
-   sol = DSolve[{xf'[t] == -\[CapitalGamma]2 xf[t], yf'[t] == -\[CapitalGamma]2 yf[t] - r[[6]] zf[t],
-       zf'[t] == r[[5]] (1 - zf[t]) + r[[6]] yf[t], xf[0] == x0, yf[0] == y0, zf[0] == z0},
-      {xf, yf, zf}, t] // First;
-   Function[tt, Re[{xf[tt], yf[tt], zf[tt]} /. sol]]];
+  With[{\[CapitalGamma]d = r[[3]], \[Gamma]\[Phi] = r[[4]], \[Gamma]1 = r[[5]], \[CapitalOmega]x = r[[6]]},
+   Module[{\[CapitalGamma]2 = \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d, sol, xf, yf, zf},
+    sol = DSolve[{xf'[t] == -\[CapitalGamma]2 xf[t], yf'[t] == -\[CapitalGamma]2 yf[t] - \[CapitalOmega]x zf[t],
+        zf'[t] == \[Gamma]1 (1 - zf[t]) + \[CapitalOmega]x yf[t], xf[0] == x0, yf[0] == y0, zf[0] == z0},
+       {xf, yf, zf}, t] // First;
+    Function[tt, Re[{xf[tt], yf[tt], zf[tt]} /. sol]]]];
 ```
 
 Two time steps will drive every simulation below, and they should follow the physics, not the trajectory count $n$: a step size sets accuracy, $n$ sets statistics, and they are independent axes. Fix them from the fastest rate in each case. Let $\Lambda$ be the largest of the Rabi frequency, the transverse decay $\Gamma_2^{\mathrm{eff}}$, and the total measurement rate $\Gamma_{CI}+\Gamma_{BA}$:
 
 ```wl
 ClearAll[maxRate];
-maxRate[r_] := Max[r[[6]], r[[5]]/2 + r[[4]] + r[[3]], r[[1]] + r[[2]]];
+maxRate[r_] :=
+  With[{\[CapitalGamma]CI = r[[1]], \[CapitalGamma]BA = r[[2]], \[CapitalGamma]d = r[[3]],
+    \[Gamma]\[Phi] = r[[4]], \[Gamma]1 = r[[5]], \[CapitalOmega]x = r[[6]]},
+   Max[\[CapitalOmega]x, \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d, \[CapitalGamma]CI + \[CapitalGamma]BA]];
 ```
 
 Set the noise grid $\Delta t_{\mathrm{gen}}$ to resolve that fastest timescale with forty knots, fine enough to sit in the white-noise limit. Everything else follows: the `NDSolve` step is a quarter of it, and the native reference below runs on the same grid:
@@ -136,8 +143,9 @@ Concretely: draw i.i.d. Gaussian increments of variance $\Delta t_{\mathrm{gen}}
 ```wl
 ClearAll[wienerFun];
 wienerFun[tf_, dtGen_, seed_] := BlockRandom[SeedRandom[seed];
-   Module[{grid = Range[0., tf, dtGen], incr},
-    incr = RandomVariate[NormalDistribution[0, Sqrt[dtGen]], Length[grid] - 1];
+   Module[{n = Max[1, Round[tf/dtGen]], grid, h, incr},
+    grid = Subdivide[0., tf, n]; h = tf/n;
+    incr = RandomVariate[NormalDistribution[0, Sqrt[h]], n];
     Interpolation[Transpose[{grid, Prepend[Accumulate[incr], 0.]}], InterpolationOrder -> 3]]];
 ```
 
@@ -195,8 +203,9 @@ The exact mean obeys the affine Itô drift $\vec a$, which is the Lindblad maste
 ```wl
 ClearAll[driftIto];
 driftIto[{x_, y_, z_}, r_] :=
-  With[{\[CapitalGamma]2 = r[[5]]/2 + r[[4]] + r[[3]]},
-   {-\[CapitalGamma]2 x, -\[CapitalGamma]2 y - r[[6]] z, r[[5]] (1 - z) + r[[6]] y}];
+  With[{\[CapitalGamma]d = r[[3]], \[Gamma]\[Phi] = r[[4]], \[Gamma]1 = r[[5]], \[CapitalOmega]x = r[[6]]},
+   With[{\[CapitalGamma]2 = \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d},
+    {-\[CapitalGamma]2 x, -\[CapitalGamma]2 y - \[CapitalOmega]x z, \[Gamma]1 (1 - z) + \[CapitalOmega]x y}]];
 ```
 
 Before any simulation, the central claim can be settled exactly, by the same built-in we are keeping. We never hand-compute the Itô-Stratonovich correction, but the conversion `ItoProcess[StratonovichProcess[...]]` applies it for us, rewriting our Stratonovich vector field in Itô form. If the explicit Stratonovich drift truly carries the correction, its Itô form must be the affine drift $\vec a$ on the three state rows, with the readout row untouched. Convert the full four-component field and subtract that target, under the physical assumption that the rates are nonnegative (needed only to fold $\sqrt{\Gamma_{CI}}\,\sqrt{\Gamma_{BA}}$ into a single root):
@@ -302,13 +311,67 @@ Transpose[{StandardDeviation[stratRunB[[All, -1]]], StandardDeviation[regRunB[[A
 
 As expected, the spreads agree component by component, so the regularized route reproduces the noise, not just the drift. The $x$ row is flat zero: with the backaction quadrature off ($\Gamma_{BA}=0$) and no initial $x$-coherence, nothing sources $x$, and the substance sits in $y$ and $z$.
 
-Read the largest Bloch radius any regularized path reached. The measurement noise is tangent to the Bloch sphere, so the state never leaves the unit ball, and the maximum should sit at one to within the small overshoot of an unprojected scheme:
+Read the largest Bloch radius any regularized path reached. The state stays inside the unit ball because the trajectory is a positivity-preserving unraveling of a Lindblad equation: for a physically admissible measurement, one whose informative and backaction rates stay within the decoherence the channels supply so the map is completely positive, the conditional state is a genuine density matrix at every step. The noise being tangent to the sphere, $(x,y,z)\cdot\vec b=\sqrt{\Gamma_{CI}}\,z\,(1-x^2-y^2-z^2)$, is part of that but not the whole of it, since the Itô term couples the drift to the noise. All three rate sets here are admissible, so the maximum should sit at one to within the small overshoot of an unprojected scheme:
 
 ```wl
 Max[Map[Norm, regRunB, {2}]]
 ```
 
-The radius sits at one to within a hair, and no projection step was needed to hold it there.
+The radius sits at one to within a hair, with no projection step. Read this as a spot-check of positivity, not a proof of it: it samples one ensemble on a fixed grid from a state that began on the surface. Push the measurement rates far past the decoherence budget, beyond the efficiency any real detector can have, and the equation stops being a valid unraveling: the trajectory runs off the ball and the integration diverges.
+
+## The readout: the average signal and the shared noise
+
+We carried the readout $Q$ beside the state through every run but have only looked at the state. Turn to the record itself. Taking the mean of $dQ=\sqrt{\Gamma_{CI}}\,z\,dt+dW$ and using $\langle dW\rangle=0$, the average record is the integrated signal,
+
+$$\langle Q(t)\rangle=\sqrt{\Gamma_{CI}}\int_0^t\langle z(s)\rangle\,ds,$$
+
+a closed prediction we already hold, since $\langle z\rangle$ is the Lindblad mean. Define a generator that keeps the readout $Q$ instead of dropping it, reading each full trajectory's record off the shared grid:
+
+```wl
+ClearAll[recRun];
+recRun[r_, init_, tf_, dtGen_, ntraj_, baseSeed_] :=
+  With[{g = Range[0., tf, dtGen], ms = dtGen/4},
+   ParallelTable[
+    With[{tr = oneTraj[r, init, tf, dtGen, baseSeed + i, ms]},
+     Table[tr[[4]][s], {s, g}]], {i, ntraj}]];
+```
+
+Run it on the representative case, on the same grid as before:
+
+```wl
+recQB = recRun[ratesB, initB, tfB, dtGenOf[ratesB], nB, 8200];
+```
+
+Overlay the ensemble-averaged record on the closed prediction $\sqrt{\Gamma_{CI}}\int_0^t\langle z\rangle\,ds$, integrating the Lindblad $\langle z\rangle$:
+
+```wl
+With[{g = Range[0., tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
+ Module[{u, t, qpred},
+  qpred = NDSolveValue[{u'[t] == Sqrt[ratesB[[1]]] lb[t][[3]], u[0] == 0.}, u, {t, 0, tfB}];
+  ListLinePlot[{Transpose[{g, Mean[recQB]}], Transpose[{g, qpred /@ g}]},
+   PlotStyle -> {ColorData[97, 2], Directive[Thick, Black]},
+   PlotLegends -> {"ensemble mean \[LeftAngleBracket]Q\[RightAngleBracket](t)", "\[Sqrt]\[CapitalGamma]CI \[Integral]\[LeftAngleBracket]z\[RightAngleBracket] dt"},
+   Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "\[LeftAngleBracket]Q\[RightAngleBracket]"},
+   PlotLabel -> "the average record is the integrated signal", ImageSize -> 520]]]
+```
+
+As one can see, the mean record climbs along the integrated $\langle z\rangle$, the two curves tracking with a residual wander that is the ensemble-averaged noise, of order $\sqrt{t/n_{\mathrm{traj}}}$ and not yet fully cancelled at this sample size. The signal is what survives averaging; the noise is what does not.
+
+The average removed the noise, but a single record still carries it, and carries a specific one. Since $dQ-\sqrt{\Gamma_{CI}}\,z\,dt=dW$ exactly, subtracting the integrated signal from one record must return the very Wiener path that drove the state. Build one trajectory, strip its signal, and overlay the remainder on its driving path $W(t)$:
+
+```wl
+With[{r = ratesB, dt = dtGenOf[ratesB], seed = 7},
+ With[{Wf = wienerFun[tfB, dt, seed], traj = oneTraj[r, initB, tfB, dt, seed, dt/4]},
+  Module[{u, t, zint},
+   zint = NDSolveValue[{u'[t] == traj[[3]][t], u[0] == 0.}, u, {t, 0, tfB}];
+   Plot[{traj[[4]][t] - Sqrt[r[[1]]] zint[t], Wf[t]}, {t, 0, tfB},
+    PlotStyle -> {Directive[Thick, ColorData[97, 2]], Directive[Dashed, Black]},
+    PlotLegends -> Placed[{"record minus signal: Q(t) - \[Sqrt]\[CapitalGamma]CI \[Integral]z dt", "driving path W(t)"}, Below],
+    Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "W"},
+    PlotLabel -> "stripping the signal from the record returns the driving noise", ImageSize -> 520]]]]
+```
+
+As one can see, the stripped record lands on the driving path to the width of the line. This is the physical content of a measurement made literal: the fluctuations in the record are not merely correlated with the noise that kicked the state, they are that noise. The observer reads $\sqrt{\Gamma_{CI}}\int z$ as signal; the remainder is the single innovation $dW$ the detector wrote into the record and the backaction at once.
 
 ## The two time steps: which one sets the answer
 
@@ -320,7 +383,7 @@ Map[{Mean[First[#]][[3]], StandardDeviation[First[#]][[3]]} &,
   ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, 10 dtGenOf[ratesB]]}]
 ```
 
-As one can see, the two rows coincide to solver precision: `NDSolve`'s adaptive error control refines its own step wherever $W'(t)$ varies, so the integrator step, whether it sits below $\Delta t_{\mathrm{gen}}$ or ten times above, does not move the answer. We still cap it below $\Delta t_{\mathrm{gen}}$ as a cheap guarantee, but it is not the binding dial.
+As one can see, with the same noise realizations under both, the two rows coincide to solver precision: for this parameter set and `NDSolve`'s default tolerances, its adaptive error control refines the step wherever $W'(t)$ varies, so relaxing `MaxStepSize` from a quarter of $\Delta t_{\mathrm{gen}}$ to ten times it leaves the observables unmoved. We still cap it below $\Delta t_{\mathrm{gen}}$ as a cheap guarantee, not because this run needs it, and it is not the binding dial.
 
 The binding dial is $\Delta t_{\mathrm{gen}}$. Read the native reference the shrinking grid should approach, the mean and spread of the final $z$, as $\{\text{mean } z,\text{ spread } z\}$:
 
@@ -328,14 +391,15 @@ The binding dial is $\Delta t_{\mathrm{gen}}$. Read the native reference the shr
 {Mean[stratRunB[[All, -1, 3]]], StandardDeviation[stratRunB[[All, -1, 3]]]}
 ```
 
-Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$, each row $\{\Delta t_{\mathrm{gen}},\text{ mean } z,\text{ spread } z\}$:
+Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$ with the standard error of the mean, each row $\{\Delta t_{\mathrm{gen}},\text{ mean } z,\text{ s.e. of mean},\text{ spread } z\}$:
 
 ```wl
-Table[With[{fin = First@ensemble[ratesB, initB, tfB, tfB/k, 300, 6000]},
-   {N[tfB/k], Mean[fin][[3]], StandardDeviation[fin][[3]]}], {k, {6, 12, 25, 100, 400}}]
+Table[With[{fz = First[ensemble[ratesB, initB, tfB, tfB/k, 300, 6000]][[All, 3]]},
+   {N[tfB/k], Mean[fz], StandardDeviation[fz]/Sqrt[Length[fz]], StandardDeviation[fz]}],
+  {k, {6, 12, 25, 100, 400}}]
 ```
 
-As one can see, the mean holds flat while the spread descends from an inflated coarse value and flattens toward the native reference as $\Delta t_{\mathrm{gen}}$ shrinks. The mean is set by the affine drift and is blind to the noise grid; the second moment is where the finite correlation time bites, and that bias vanishes in the white-noise limit. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that moves the answer, and the spread is what it moves.
+As one can see, the mean stays put within its standard error across the sweep while the spread descends from an inflated coarse value and flattens toward the native reference as $\Delta t_{\mathrm{gen}}$ shrinks. In the white-noise limit the affine drift fixes the mean exactly; at finite $\Delta t_{\mathrm{gen}}$ any regularization bias in the mean sits below the Monte-Carlo scatter here, while the bias in the second moment is large enough to watch converge out. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that sets the answer, and at this sampling accuracy the spread is where we can see it move.
 
 ## Phase backaction: the x channel comes alive
 
@@ -416,4 +480,4 @@ As one can see, the regularized distribution sits on top of the native Stratonov
 
 ## What is now true
 
-The trajectory of a continuously monitored qubit is one four-component stochastic differential equation: the three Bloch numbers and the readout the detector accumulates, all driven by a single noise. Written in Stratonovich form, its drift already carries the term that separates the two stochastic calculi, which the built-in Stratonovich-to-Itô conversion confirms exactly, so a smooth-noise integrator needs nothing added: replace the white noise by a cubic-interpolated Wiener path, hand `NDSolve` the Stratonovich drift and diffusion as they stand, and the solution is the target Itô process. That target is what the two references pin down, because the Itô drift is affine the ensemble mean is the Lindblad master equation for every Bloch component, and because the diffusion is exactly $\vec b$ the ensemble spread is the native `StratonovichProcess` spread. Integrating the readout beside the state costs one more equation and buys a sample record that carries the $\sqrt{\Gamma_{CI}}\,z$ signal under the same noise that kicked the state, which is the physical content of a measurement: the record and the backaction are one draw. Once the backaction quadrature is on, the coupled $x$ channel it feeds carries its own second moment, and the route reproduces that too, so the full Bloch vector is matched, not just the monitored component. Of the two time increments, only the noise-generation step sets the answer, the dial that fixes which SDE is solved and is sent to zero, while the integrator step is absorbed by the solver's own error control and leaves the result unmoved.
+The trajectory of a continuously monitored qubit is one four-component stochastic differential equation: the three Bloch numbers and the readout the detector accumulates, all driven by a single noise. Written in Stratonovich form, its drift already carries the term that separates the two stochastic calculi, which the built-in Stratonovich-to-Itô conversion confirms exactly, so a smooth-noise integrator needs nothing added: replace the white noise by a cubic-interpolated Wiener path, hand `NDSolve` the Stratonovich drift and diffusion as they stand, and the solution is the target Itô process. That target is what the two references pin down, because the Itô drift is affine the ensemble mean is the Lindblad master equation for every Bloch component, and because the diffusion is exactly $\vec b$ the ensemble spread is the native `StratonovichProcess` spread. Integrating the readout beside the state costs one more equation and buys a sample record: averaged over the ensemble it is the integrated signal $\sqrt{\Gamma_{CI}}\int\langle z\rangle$, and stripped of that signal a single record returns the very Wiener path that kicked the state, which is the physical content of a measurement, the record and the backaction are one draw. Once the backaction quadrature is on, the coupled $x$ channel it feeds carries its own second moment, and the route reproduces that too, so the full Bloch vector is matched, not just the monitored component. Of the two time increments, only the noise-generation step sets the answer, the dial that fixes which SDE is solved and is sent to zero, while the integrator step, for the tolerances used here, is absorbed by the solver's own error control.
