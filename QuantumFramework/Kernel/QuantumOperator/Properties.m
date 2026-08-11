@@ -34,14 +34,60 @@ $QuantumOperatorProperties = {
     "KAK", "Decompose",
     "CircuitDiagram",
     "OrderedFormula",
-    "Simplify", "FullSimplify", "Chop", "ComplexExpand"
+    "Simplify", "FullSimplify", "Chop", "ComplexExpand",
+    "Basis",
+    "Bend",
+    "ControlArity",
+    "ControlOrder0",
+    "ControlOrder1",
+    "Double",
+    "Eigenbasis",
+    "EigenvaluePlot",
+    "EulerAngles",
+    "EulerAnglesWithPhase",
+    "EvolutionOperator",
+    "Formula",
+    "InputOrderDimensions",
+    "MatrixQuantumState",
+    "NEvolutionOperator",
+    "Norm",
+    "Normalize",
+    "OrderInputExtra",
+    "OrderOutputExtra",
+    "OutputOrderDimensions",
+    "PermuteInput",
+    "PermuteOutput",
+    "PrimeBasis",
+    "QASM",
+    "Reorder",
+    "SetFullInputOrder",
+    "SetFullOrder",
+    "SetFullOutputOrder",
+    "SimpleQASM",
+    "SplitBasis",
+    "SquareQ",
+    "TargetDimensions",
+    "TargetOperator",
+    "TensorReverseInput",
+    "TensorReverseOutput",
+    "Tr",
+    "Trace",
+    "Unbend",
+    "Undouble",
+    "ZYZ"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]];
 
-QuantumOperatorProp[qo_, "Properties"] := Union @ $QuantumOperatorProperties
+(* An instance answers with the SAME surface the symbol advertises.  These
+   disagreed: the symbol joined the inherited QuantumState properties and the
+   instance returned only this file's list, so asking an operator what it
+   supports gave a shorter answer than asking QuantumOperator, and every
+   inherited property was missing from it.  "AllProperties" keeps its own
+   meaning - it adds the basis layer underneath the state. *)
+QuantumOperatorProp[qo_, "Properties"] := QuantumOperator["Properties"]
 
 QuantumOperatorProp[qo_, "AllProperties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["AllProperties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
