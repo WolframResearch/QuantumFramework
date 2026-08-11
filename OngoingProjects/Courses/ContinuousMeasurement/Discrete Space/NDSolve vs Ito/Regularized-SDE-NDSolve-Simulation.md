@@ -175,7 +175,7 @@ ClearAll[noiseGrid];
 noiseGrid[tf_, dt_] := Subdivide[0., tf, Max[3, Ceiling[tf/dt]]];
 ```
 
-Concretely: on that grid, draw i.i.d. Gaussian increments with variance the grid spacing, accumulate them into a Wiener path, and interpolate with a cubic so $W(t)$ is a continuous curve and its derivative $W'(t)$ an ordinary, piecewise-smooth function of time that jumps at the knots, no longer the distribution that white noise is:
+Concretely: on that grid, draw independent and identically distributed Gaussian increments with variance the grid spacing, accumulate them into a Wiener path, and interpolate with a cubic so $W(t)$ is a continuous curve and its derivative $W'(t)$ an ordinary, piecewise-smooth function of time that jumps at the knots, no longer the distribution that white noise is:
 
 ```wl
 ClearAll[wienerFun];
