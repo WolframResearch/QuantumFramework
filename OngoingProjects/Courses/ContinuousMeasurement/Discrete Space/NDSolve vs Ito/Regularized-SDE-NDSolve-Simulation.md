@@ -46,7 +46,7 @@ We use above form to feed a smooth-noise solver because a white noise replaced b
 
 ## Encoding the Stratonovich vector field
 
-Encode the Stratonovich drift, all four rows. Name the entries of the rate vector $r=\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$ and fold the transverse rate $\Gamma_2^{\mathrm{eff}}$ into a local name, so each row reads term for term like the display equation:
+Encode the Stratonovich drift, all four rows and name the entries of the rate vector $r=\{\Gamma_{CI},\Gamma_{BA},\Gamma_d,\gamma_\phi,\gamma_1,\Omega_x\}$:
 
 ```wl
 ClearAll[driftStrat];
