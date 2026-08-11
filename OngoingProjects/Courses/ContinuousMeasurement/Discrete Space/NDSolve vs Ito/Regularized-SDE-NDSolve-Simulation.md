@@ -319,10 +319,12 @@ Abs[Mean[regRunB[[All, -1, 3]]] - lindbladBloch[ratesB, initB[[1 ;; 3]]][tfB][[3
 
 This is a z-score, the mean-to-Lindblad gap in units of the Monte-Carlo standard error, so a value near one means the ensemble mean sits on the master-equation curve to within sampling noise.
 
-The mean sees only the drift, so it is a weak test. The measurement backaction lives in the second moment, the spread of the final Bloch vector, rows $x,y,z$ and each row native Stratonovich then regularized:
+The mean sees only the drift, so it is a weak test. The measurement backaction lives in the second moment, the spread of the final Bloch vector across the two routes:
 
 ```wl
-Transpose[{StandardDeviation[stratRunB[[All, -1]]], StandardDeviation[regRunB[[All, -1]]]}] // MatrixForm
+TableForm[
+ Transpose[{StandardDeviation[stratRunB[[All, -1]]], StandardDeviation[regRunB[[All, -1]]]}],
+ TableHeadings -> {{"x", "y", "z"}, {"Stratonovich", "regularized"}}]
 ```
 
 As expected, the spreads agree component by component, so the regularized route reproduces the noise, not just the drift. The $x$ row is flat zero: with the backaction quadrature off ($\Gamma_{BA}=0$) and no initial $x$-coherence, nothing sources $x$, and the substance sits in $y$ and $z$.
@@ -414,28 +416,39 @@ The gap sits at the integrator's own tolerance, so the record minus its signal i
 
 ## The two time steps: which one sets the answer
 
-The route carries two time increments, and the section title is a real question: which of them moves the answer? Put the integrator step to the test first. Hold the noise grid fixed and read the final-$z$ mean and spread with the `NDSolve` step held far below $\Delta t_{\mathrm{gen}}$, then again with it pushed well above, each row $\{\text{mean } z,\text{ spread } z\}$:
+The route carries two time increments, and the section title is a real question: which of them moves the answer? Put the integrator step to the test first. Hold the noise grid fixed and read the final-$z$ mean and spread with the `NDSolve` step held far below $\Delta t_{\mathrm{gen}}$, then again with it pushed well above:
 
 ```wl
-Map[{Mean[First[#]][[3]], StandardDeviation[First[#]][[3]]} &,
+TableForm[
+ Map[{Mean[First[#]][[3]], StandardDeviation[First[#]][[3]]} &,
   {ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, dtGenOf[ratesB]/4],
-   ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, 10 dtGenOf[ratesB]]}] // MatrixForm
+   ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, 10 dtGenOf[ratesB]]}],
+ TableHeadings -> {{"step \!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)/4",
+    "step 10 \!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)"}, {"mean z", "spread z"}}]
 ```
 
 As one can see, with the same noise realizations under both, the two rows coincide to solver precision: for this parameter set and `NDSolve`'s default tolerances, its adaptive error control refines the step wherever $W'(t)$ varies, so relaxing `MaxStepSize` from a quarter of $\Delta t_{\mathrm{gen}}$ to ten times it leaves the observables unmoved. We still cap it below $\Delta t_{\mathrm{gen}}$ as a cheap guarantee, not because this run needs it, and it is not the binding dial.
 
-The binding dial is $\Delta t_{\mathrm{gen}}$. Read the native reference the shrinking grid should approach, the mean and spread of the final $z$, as $\{\text{mean } z,\text{ spread } z\}$:
+The binding dial is $\Delta t_{\mathrm{gen}}$, and the native `StratonovichProcess` ensemble is the reference the shrinking grid should approach. Read its final-$z$ mean:
 
 ```wl
-{Mean[stratRunB[[All, -1, 3]]], StandardDeviation[stratRunB[[All, -1, 3]]]}
+Mean[stratRunB[[All, -1, 3]]]
 ```
 
-Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$, each row $\{\Delta t_{\mathrm{gen}},\text{ mean } z,\text{ spread } z\}$:
+and its final-$z$ spread, the second moment the regularized route must reproduce as the grid tightens:
 
 ```wl
-Table[With[{fz = First[ensemble[ratesB, initB, tfB, tfB/k, 300, 6000]][[All, 3]]},
-   {N[tfB/k], Mean[fz], StandardDeviation[fz]}],
-  {k, {6, 12, 25, 100, 400}}] // MatrixForm
+StandardDeviation[stratRunB[[All, -1, 3]]]
+```
+
+Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$ against the grid step:
+
+```wl
+TableForm[
+ Table[With[{fz = First[ensemble[ratesB, initB, tfB, tfB/k, 300, 6000]][[All, 3]]},
+    {N[tfB/k], Mean[fz], StandardDeviation[fz]}],
+   {k, {6, 12, 25, 100, 400}}],
+ TableHeadings -> {None, {"\!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)", "mean z", "spread z"}}]
 ```
 
 As one can see, the estimated means stay compatible with the Lindblad value at roughly the two-standard-error level (the standard error is the spread column over $\sqrt{300}$) while the spread descends from an inflated coarse value and flattens toward the native reference as $\Delta t_{\mathrm{gen}}$ shrinks. In the white-noise limit the affine drift fixes the mean exactly; at finite $\Delta t_{\mathrm{gen}}$ any regularization bias in the mean sits below the Monte-Carlo scatter here, while the bias in the second moment is large enough to watch converge out. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that sets the answer, and at this sampling accuracy the spread is where we can see it move.
@@ -460,16 +473,20 @@ Run the regularized ensemble:
 regX = ensemble[ratesX, initX, tfX, dtGenOf[ratesX], nX, 7100];
 ```
 
-Compare the mean of the final Bloch vector, rows $x,y,z$ and each row exact Lindblad, native Stratonovich, regularized:
+Compare the mean of the final Bloch vector across the three routes:
 
 ```wl
-Transpose[{lindbladBloch[ratesX, initX[[1 ;; 3]]][tfX], Mean[stratX], Mean[regX[[1]]]}] // MatrixForm
+TableForm[
+ Transpose[{lindbladBloch[ratesX, initX[[1 ;; 3]]][tfX], Mean[stratX], Mean[regX[[1]]]}],
+ TableHeadings -> {{"x", "y", "z"}, {"Lindblad", "Stratonovich", "regularized"}}]
 ```
 
-As one can see, the $x$ row is now genuinely nonzero and the three routes agree on it, its mean decaying under the drift that decouples it. Now the spread, where the backaction actually lives, rows $x,y,z$ and each row native Stratonovich then regularized:
+As one can see, the $x$ row is now genuinely nonzero and the three routes agree on it, its mean decaying under the drift that decouples it. Now the spread, where the backaction actually lives across the two routes:
 
 ```wl
-Transpose[{StandardDeviation[stratX], StandardDeviation[regX[[1]]]}] // MatrixForm
+TableForm[
+ Transpose[{StandardDeviation[stratX], StandardDeviation[regX[[1]]]}],
+ TableHeadings -> {{"x", "y", "z"}, {"Stratonovich", "regularized"}}]
 ```
 
 As expected, the $x$ spread is now substantial, fed by the backaction noise the $y$ channel injects, and the regularized route matches it. This is the full-Bloch-vector check the representative case could not give: with the coupling on, every component carries a nonzero second moment, and the regularized Stratonovich route reproduces all three.
@@ -494,16 +511,20 @@ Run the regularized ensemble for the strong case:
 regS = ensemble[ratesS, initS, tfS, dtGenOf[ratesS], nS, 5300];
 ```
 
-Compare the mean of the final Bloch vector, rows $x,y,z$ and each row exact Lindblad, native Stratonovich, regularized:
+Compare the mean of the final Bloch vector across the three routes:
 
 ```wl
-Transpose[{lindbladBloch[ratesS, initS[[1 ;; 3]]][tfS], Mean[stratS], Mean[regS[[1]]]}] // MatrixForm
+TableForm[
+ Transpose[{lindbladBloch[ratesS, initS[[1 ;; 3]]][tfS], Mean[stratS], Mean[regS[[1]]]}],
+ TableHeadings -> {{"x", "y", "z"}, {"Lindblad", "Stratonovich", "regularized"}}]
 ```
 
-As one can see, the regularized mean still tracks the exact value in every row where the correction is large; the $x$ row has decayed from its initial tilt toward zero, since with $\Gamma_{BA}=0$ nothing rotates it back, and all three routes agree on the small residual. Compare the spread, rows $x,y,z$ and each row native Stratonovich then regularized:
+As one can see, the regularized mean still tracks the exact value in every row where the correction is large; the $x$ row has decayed from its initial tilt toward zero, since with $\Gamma_{BA}=0$ nothing rotates it back, and all three routes agree on the small residual. Compare the spread across the two routes:
 
 ```wl
-Transpose[{StandardDeviation[stratS], StandardDeviation[regS[[1]]]}] // MatrixForm
+TableForm[
+ Transpose[{StandardDeviation[stratS], StandardDeviation[regS[[1]]]}],
+ TableHeadings -> {{"x", "y", "z"}, {"Stratonovich", "regularized"}}]
 ```
 
 As expected, the $y$ and $z$ spreads agree closely where the Stratonovich correction is largest; the $x$ spread differs relatively but is negligible in absolute size in both routes, since with $\Gamma_{BA}=0$ nothing sources it. See the final-$z$ marginal agree, the regularized histogram against the native Stratonovich reference:
