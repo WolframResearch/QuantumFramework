@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[   1631932,      30462]
-NotebookOptionsPosition[   1606584,      30116]
-NotebookOutlinePosition[   1606906,      30130]
-CellTagsIndexPosition[   1606863,      30127]
+NotebookDataLength[   1631178,      30456]
+NotebookOptionsPosition[   1606015,      30112]
+NotebookOutlinePosition[   1606337,      30126]
+CellTagsIndexPosition[   1606294,      30123]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -24,68 +24,64 @@ monitored qubit\
 \>", "Title",ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
 
 Cell[TextData[{
- StyleBox["A companion to ",
-  FontWeight->"Bold"],
- StyleBox["Watching a Qubit: Continuous Measurement and Quantum Trajectories",
-   "TI",
-  FontWeight->"Bold"],
- StyleBox[" and a direct sequel to ",
-  FontWeight->"Bold"],
- StyleBox["Regularizing the Noise so NDSolve Can Integrate It", "TI",
-  FontWeight->"Bold"],
- StyleBox[". There we smoothed the white noise so ",
+ StyleBox["The trajectory of a continuously monitored qubit, the three Bloch \
+components plus the readout the detector accumulates, is one stochastic \
+differential equation driven by a single noise. This document writes it in \
+the explicit Stratonovich form a smooth-noise solver requires and hands it to \
+",
   FontWeight->"Bold"],
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,
   FontWeight->"Bold",ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
- StyleBox[" could integrate the trajectory, then spent the document deriving \
-the single drift term that separates the It\[OHat] and Stratonovich readings, \
-so we could subtract it before handing the equation over. Here we drop that \
-bookkeeping: the trajectory has an explicit Stratonovich form whose drift \
-already carries the correction, so we write the drift and the diffusion out \
-as they stand and feed ",
+ StyleBox[" directly, the white noise replaced by a cubic-interpolated Wiener \
+path. Every step of the route is certified in place: the built-in \
+Stratonovich-to-It\[OHat] conversion recovers the Lindblad drift \
+symbolically, the ensemble mean lands on the exact ",
   FontWeight->"Bold"],
- Cell[BoxData["NDSolve"], "InlineFormula",
+ Cell[BoxData["DSolve"], "InlineFormula",
   FontSize->0.9 Inherited,
   FontWeight->"Bold",ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
- StyleBox[" the equation directly. And we integrate all four components, the \
-three Bloch numbers together with the readout ",
-  FontWeight->"Bold"],
- Cell[BoxData[
-  StyleBox["Q", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,
-  FontWeight->"Bold",ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
- StyleBox[" the detector accumulates, so a sample record rides alongside the \
-state that produced it. What it buys is checked, not asserted: the built-in \
-Stratonovich-to-It\[OHat] conversion certifies the explicit drift \
-symbolically, the ensemble mean lands on the exact Lindblad master equation, \
-and the ensemble spread lands on an independent native ",
+ StyleBox[" solution of the master equation, the ensemble spread lands on a \
+native ",
   FontWeight->"Bold"],
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,
+  FontWeight->"Bold",ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+ StyleBox[" reference that is itself step-refined, and the readout is held to \
+the same standard, its mean against a closed form, its spread against the \
+same native ensemble, its pathwise identity at solver error. Positivity is \
+the admissibility condition ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"C", "I"}], "TI"]], "+", 
+   SubscriptBox["\[CapitalGamma]", 
+    StyleBox[
+     RowBox[{"B", "A"}], "TI"]], "\[LessEqual]", "2", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox["\[CapitalGamma]", 
+     StyleBox["d", "TI"]], "+", 
+    SubscriptBox[
+     StyleBox["\[Gamma]", "TI"], 
+     StyleBox["\[Phi]", "TI"]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,
   FontWeight->"Bold",ExpressionUUID->"25a568a6-87a2-527f-535a-810032572145"],
- StyleBox[" run, for every component of the Bloch vector, not just the \
-monitored one.",
+ StyleBox[", derived from the flux through the Bloch sphere and exercised \
+inside, at, and beyond its boundary.",
   FontWeight->"Bold"]
 }], "Text",ExpressionUUID->"00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
 
 Cell["Mads Bahrami (last updated: August 11, 2026)", "Text",ExpressionUUID->"2f3e8453-9762-68ea-56c5-1e1d22173a30"],
 
 Cell["\<\
-I strongly believe in a computation-first narrative: if I cannot compute it, \
-I cannot claim to understand it, so every claim below is turned into a short \
-cell you can run and change. The environment is a live Wolfram notebook; \
-evaluate the cells from top to bottom, since later ones use objects the \
-earlier ones define. Change a rate, reseed the noise, lengthen the window, \
-and watch what moves: my suggestion is to read each output and its meaning \
-first, before unpacking the input that produced it.\
-\>", "Text",ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
-
-Cell["Let's start!", "Text",ExpressionUUID->"56e0e12c-de7d-6135-7e9f-f889db08301f"],
-
-Cell["\<\
 The trajectory equations: the state and the readout in one SDE\
-\>", "Section",ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+\>", "Section",ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
 
 Cell[TextData[{
  "Continuous homodyne monitoring of a driven qubit produces two coupled \
@@ -125,7 +121,7 @@ of the Bloch vector ",
     StyleBox["\[RightAngleBracket]",
      SpanMaxSize->1], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
  ", in the convention ",
  Cell[BoxData[
   RowBox[{
@@ -149,18 +145,18 @@ of the Bloch vector ",
        StyleBox["e", "TI"]},
       "Bra"]}]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+  "5708d032-2150-04f2-7d37-ca7c50e56ed8"],
  " that puts the ground state at ",
  Cell[BoxData[
   RowBox[{
    StyleBox["z", "TI"], "=", "+", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
  " (some literature uses the opposite sign), and one for the readout ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+  "166f8969-5e31-e8e5-3e14-21335bc5bacf"],
  " the detector accumulates while measuring ",
  Cell[BoxData[
   SubscriptBox[
@@ -168,34 +164,34 @@ of the Bloch vector ",
     StyleBox["\[Sigma]", "TI"], "^"], 
    StyleBox["z", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+  "234f1fb7-07c6-bba9-5174-96f1b27009f3"],
  ". Stacking the readout as a fourth component, the pair is a single \
 scalar-noise It\[OHat] stochastic differential equation, a drift ",
  Cell[BoxData[
   OverscriptBox[
    StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6ec9a758-58be-624c-16f6-3f02594b3096"],
+  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
  " times ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "t"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+  "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
  " plus a diffusion ",
  Cell[BoxData[
   OverscriptBox[
    StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6e84829b-9667-6594-16bb-1bc523124ffe"],
+  "6ec9a758-58be-624c-16f6-3f02594b3096"],
  " times one Wiener increment ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "W"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "569e173f-6b36-b240-7ea5-8f790ec000aa"],
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
  ":"
-}], "Text",ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+}], "Text",ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"],
 
 Cell[BoxData[
  PaneBox[
@@ -303,7 +299,7 @@ Cell[BoxData[
     StyleBox["d", "TI"], 
     StyleBox["W", "TI"]}], "."}],
   Alignment->Center,
-  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"569e173f-6b36-b240-7ea5-8f790ec000aa"],
 
 Cell[TextData[{
  "This is the target: the process whose mean we will check against the \
@@ -313,7 +309,7 @@ in them depends on ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2867ea9b-6e8d-517b-581c-03c50b382041"],
+  "15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
  "; the fourth row is the record, an integral whose drift ",
  Cell[BoxData[
   RowBox[{
@@ -323,7 +319,7 @@ in them depends on ",
       RowBox[{"C", "I"}], "TI"]]], " ", 
    StyleBox["z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+  "779c57de-bb93-d239-1da4-4e983e27a103"],
  " carries the ",
  Cell[BoxData[
   SubscriptBox[
@@ -331,15 +327,15 @@ in them depends on ",
     StyleBox["\[Sigma]", "TI"], "^"], 
    StyleBox["z", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+  "2867ea9b-6e8d-517b-581c-03c50b382041"],
  " signal and whose noise is the same ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "W"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
  " that kicks the state."
-}], "Text",ExpressionUUID->"741b091d-feb2-1a39-1c38-a146fb476903"],
+}], "Text",ExpressionUUID->"0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
 
 Cell[TextData[{
  "Every parameter is a rate, in units where ",
@@ -348,14 +344,14 @@ Cell[TextData[{
    SubscriptBox[
     StyleBox["\[Gamma]", "TI"], "1"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
  ": ",
  Cell[BoxData[
   SubscriptBox["\[CapitalGamma]", 
    StyleBox[
     RowBox[{"C", "I"}], "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
  " is the informative (coherent-information) rate, which sharpens the state \
 toward a ",
  Cell[BoxData[
@@ -364,21 +360,21 @@ toward a ",
     StyleBox["\[Sigma]", "TI"], "^"], 
    StyleBox["z", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
  " eigenstate; ",
  Cell[BoxData[
   SubscriptBox["\[CapitalGamma]", 
    StyleBox[
     RowBox[{"B", "A"}], "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+  "07964fa7-8d1e-ff14-2dae-660124a8c27e"],
  " is the backaction rate of the orthogonal quadrature, which only kicks the \
 phase; ",
  Cell[BoxData[
   SubscriptBox["\[CapitalGamma]", 
    StyleBox["d", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
  " is the measurement's contribution to the ensemble dephasing, the price in \
 coherence the readout pays; ",
  Cell[BoxData[
@@ -386,7 +382,7 @@ coherence the readout pays; ",
    StyleBox["\[Gamma]", "TI"], 
    StyleBox["\[Phi]", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
  " is the intrinsic pure dephasing; ",
  Cell[BoxData[
   RowBox[{
@@ -395,13 +391,13 @@ coherence the readout pays; ",
    SubscriptBox[
     StyleBox["T", "TI"], "1"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1cbde497-e826-5557-4442-fdd089d33fbd"],
+  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
  " is the relaxation rate; and ",
  Cell[BoxData[
   SubscriptBox["\[CapitalOmega]", 
    StyleBox["x", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
  " is the Rabi frequency. One combination recurs, the effective transverse \
 decay ",
  Cell[BoxData[
@@ -417,7 +413,7 @@ decay ",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+  "1cbde497-e826-5557-4442-fdd089d33fbd"],
  ". One dimensionless ratio matters too, the detector efficiency ",
  Cell[BoxData[
   RowBox[{
@@ -441,19 +437,19 @@ decay ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
  ", with ",
  Cell[BoxData[
   RowBox[{"0", "\[LessEqual]", 
    StyleBox["\[Eta]", "TI"], "\[LessEqual]", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+  "4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
  ": we fix it at its quantum limit ",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Eta]", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "110914de-bbdd-83a1-4736-8d983e69d18b"],
+  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
  " throughout, meaning no information is lost between the qubit and the \
 amplifier, while the homodyne phase is what divides that total between ",
  Cell[BoxData[
@@ -461,14 +457,14 @@ amplifier, while the homodyne phase is what divides that total between ",
    StyleBox[
     RowBox[{"C", "I"}], "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "76d004f9-29e5-6665-1eef-9da34f904d4f"],
+  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
  " and ",
  Cell[BoxData[
   SubscriptBox["\[CapitalGamma]", 
    StyleBox[
     RowBox[{"B", "A"}], "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+  "110914de-bbdd-83a1-4736-8d983e69d18b"],
  ". Throughout, the code takes a rate vector ",
  Cell[BoxData[
   RowBox[{
@@ -491,10 +487,10 @@ amplifier, while the homodyne phase is what divides that total between ",
     SubscriptBox["\[CapitalOmega]", 
      StyleBox["x", "TI"]], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "35077f55-9291-6519-633d-771f27244c63"],
+  "76d004f9-29e5-6665-1eef-9da34f904d4f"],
  " and names its entries, so each vector field below reads term for term like \
 these formulas."
-}], "Text",ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
+}], "Text",ExpressionUUID->"2c76c797-c249-79ca-540d-ded0f7fc4b10"],
 
 Cell[TextData[{
  "Now the same process written the other way. For a single scalar noise, the \
@@ -506,9 +502,9 @@ already written into the explicit Stratonovich drift below, and that is the \
 drift we hand ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+  "35077f55-9291-6519-633d-771f27244c63"],
  ":"
-}], "Text",ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+}], "Text",ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
 
 Cell[BoxData[
  PaneBox[
@@ -672,7 +668,7 @@ Cell[BoxData[
     StyleBox["d", "TI"], 
     StyleBox["W", "TI"]}], "."}],
   Alignment->Center,
-  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
 
 Cell[TextData[{
  "The reason this is the form to feed a smooth-noise solver is one sentence: \
@@ -680,7 +676,7 @@ a white noise replaced by a differentiable curve of vanishing correlation \
 time integrates to the Stratonovich reading, not the It\[OHat] one, so ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "02f88238-86c8-66df-3287-2462337d4c25"],
+  "7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
  ", which sees only a smooth forcing, must be given the Stratonovich drift. \
 That is the entire design of this route, and it is why the correction never \
 has to be computed: the smoothing puts it back. The readout row is the same \
@@ -699,35 +695,35 @@ in both forms, because its noise is additive, ",
    StyleBox["d", "TI"], 
    StyleBox["W", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "034d641c-5834-e412-3173-7e4659c6cf78"],
+  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
  ", with nothing to reinterpret. ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+  "02f88238-86c8-66df-3287-2462337d4c25"],
  " itself is dimensionless: it is the integrated homodyne current, scaled so \
 its shot noise accumulates as the standard Wiener process ",
  Cell[BoxData[
   StyleBox["W", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5bfe104a-50de-a555-0985-8a1461680fbf"],
+  "034d641c-5834-e412-3173-7e4659c6cf78"],
  ", whose increments have variance ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "t"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "134534fb-1061-d656-417a-ada5a115bcbc"],
+  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
  ", and clocked in the ",
  Cell[BoxData[
   RowBox[{"1", "/", 
    SubscriptBox[
     StyleBox["\[Gamma]", "TI"], "1"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+  "5bfe104a-50de-a555-0985-8a1461680fbf"],
  " time units used throughout."
-}], "Text",ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772"],
+}], "Text",ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc"],
 
-Cell["Encoding the Stratonovich vector field", "Section",ExpressionUUID->"608e87cc-8fce-afdf-10b5-1e962a78f525"],
+Cell["Encoding the Stratonovich vector field", "Section",ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
 
 Cell[TextData[{
  "Encode the Stratonovich drift, all four rows. Name the entries of the rate \
@@ -753,17 +749,17 @@ vector ",
     SubscriptBox["\[CapitalOmega]", 
      StyleBox["x", "TI"]], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+  "6e1c99a5-dcef-9c28-1623-100ed49be772"],
  " and fold the transverse rate ",
  Cell[BoxData[
   SubsuperscriptBox["\[CapitalGamma]", "2", 
    StyleBox["eff",
     FontSlant->"Plain"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+  "608e87cc-8fce-afdf-10b5-1e962a78f525"],
  " into a local name, so each row reads term for term like the display \
 equation:"
-}], "Text",ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+}], "Text",ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
 
 Cell[BoxData[{
  RowBox[{
@@ -851,7 +847,7 @@ Cell[BoxData[{
          RowBox[{
           RowBox[{"Sqrt", "[", "\[CapitalGamma]CI", "]"}], " ", "z"}]}], 
         "}"}]}], "]"}]}], "]"}]}], ";"}]}], "Input",
- CellLabel->"In[1]:= ",ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+ CellLabel->"In[1]:= ",ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f"],
 
 Cell[TextData[{
  "Encode the Stratonovich diffusion, the same ",
@@ -859,9 +855,9 @@ Cell[TextData[{
   OverscriptBox[
    StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+  "337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
  " as the It\[OHat] form, with the additive readout row equal to one:"
-}], "Text",ExpressionUUID->"2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+}], "Text",ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
 
 Cell[BoxData[{
  RowBox[{
@@ -907,7 +903,7 @@ Cell[BoxData[{
          RowBox[{"1", " ", "-", " ", 
           RowBox[{"z", "^", "2"}]}], ")"}]}], ",", "\n", "    ", "1"}], 
       "}"}]}], "]"}]}], ";"}]}], "Input",
- CellLabel->"In[2]:= ",ExpressionUUID->"6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+ CellLabel->"In[2]:= ",ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662"],
 
 Cell[TextData[{
  "To read these back as formulas, write the six rates as symbols, using \
@@ -921,19 +917,19 @@ string subscripts so the labels stay ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], ",", "\[Ellipsis]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
  " and never collide with the Bloch ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7b6211f5-475c-1194-2911-88bf72e963fe"],
+  "6801f052-da94-0b6f-183e-ea1fdf2159b5"],
  " or fuse into a ",
  Cell[BoxData[
   RowBox[{
    StyleBox["C", "TI"], "\[CenterDot]", 
    StyleBox["I", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+  "0daf8e98-7628-e40b-3b54-27c203c2cf51"],
  " product. The readbacks and the symbolic conversion below use ",
  Cell[BoxData[
   RowBox[{
@@ -944,15 +940,15 @@ string subscripts so the labels stay ",
    StyleBox["Q", "TI"], ",", 
    StyleBox["t", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
+  "7b6211f5-475c-1194-2911-88bf72e963fe"],
  ", a formal noise ",
  Cell[BoxData[
   StyleBox["w", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+  "7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
  ", the starting values, and the rate symbols themselves as unassigned \
 variables, so clear them first:"
-}], "Text",ExpressionUUID->"3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+}], "Text",ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
 
 Cell[BoxData[{
  RowBox[{
@@ -981,12 +977,12 @@ Cell[BoxData[{
      RowBox[{"Subscript", "[", 
       RowBox[{"\[CapitalOmega]", ",", " ", "\"\<x\>\""}], "]"}]}], "}"}]}], 
   ";"}]}], "Input",
- CellLabel->"In[3]:= ",ExpressionUUID->"6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ CellLabel->"In[3]:= ",ExpressionUUID->"5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
 
 Cell["\<\
 Verify that the encoded drift is the Stratonovich drift written above, by \
 reading it back on the symbolic rates:\
-\>", "Text",ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"],
+\>", "Text",ExpressionUUID->"3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
 
 Cell[CellGroupData[{
 
@@ -997,7 +993,7 @@ Cell[BoxData[
     RowBox[{"{", 
      RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "Q"}], "}"}], ",", 
     " ", "ratesSym"}], "]"}], " ", "//", " ", "MatrixForm"}]], "Input",
- CellLabel->"In[4]:= ",ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"],
+ CellLabel->"In[4]:= ",ExpressionUUID->"6cb5c01f-62f5-68e0-144a-da5916803aca"],
 
 Cell[BoxData[
  TagBox[
@@ -1083,7 +1079,7 @@ Cell[BoxData[
     Column], "\[NoBreak]", ")"}],
   Function[BoxForm`e$, 
    MatrixForm[BoxForm`e$]]]], "Output",
- CellLabel->"Out[4]= ",ExpressionUUID->"1d359769-845f-cd94-44ca-0f332deb97fe"]
+ CellLabel->"Out[4]= ",ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -1098,7 +1094,7 @@ the ",
    SuperscriptBox[
     StyleBox["z", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+  "4b6e5dad-9702-0c1f-7916-54f722b75765"],
  " sharpening and the ",
  Cell[BoxData[
   SqrtBox[
@@ -1110,7 +1106,7 @@ the ",
      StyleBox[
       RowBox[{"C", "I"}], "TI"]]}]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "64c30c0d-1857-1b13-0cf0-a65799e26679"],
+  "1d359769-845f-cd94-44ca-0f332deb97fe"],
  " cross term, and the readout row is the bare ",
  Cell[BoxData[
   RowBox[{
@@ -1120,9 +1116,9 @@ the ",
       RowBox[{"C", "I"}], "TI"]]], " ", 
    StyleBox["z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+  "2055bfee-d4b5-7aa2-506a-36cbdd404888"],
  " signal. Confirm the diffusion the same way:"
-}], "Text",ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306"],
+}], "Text",ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679"],
 
 Cell[CellGroupData[{
 
@@ -1133,7 +1129,7 @@ Cell[BoxData[
     RowBox[{"{", 
      RowBox[{"x", ",", " ", "y", ",", " ", "z", ",", " ", "Q"}], "}"}], ",", 
     " ", "ratesSym"}], "]"}], " ", "//", " ", "MatrixForm"}]], "Input",
- CellLabel->"In[5]:= ",ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+ CellLabel->"In[5]:= ",ExpressionUUID->"46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
 
 Cell[BoxData[
  TagBox[
@@ -1176,7 +1172,7 @@ Cell[BoxData[
     Column], "\[NoBreak]", ")"}],
   Function[BoxForm`e$, 
    MatrixForm[BoxForm`e$]]]], "Output",
- CellLabel->"Out[5]= ",ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"]
+ CellLabel->"Out[5]= ",ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -1185,15 +1181,15 @@ Cell[TextData[{
   OverscriptBox[
    StyleBox["b", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+  "25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
  " and the readout row is the constant one, the additive noise that makes ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+  "04786d0e-016a-d127-2c07-8568b01ca00d"],
  " the same in both stochastic calculi. The code and the equations are one \
 object, so from here on we compute with the code."
-}], "Text",ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+}], "Text",ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
 
 Cell[TextData[{
  "Fix the representative dispersive-transmon rate set, rescaled by ",
@@ -1201,14 +1197,14 @@ Cell[TextData[{
   SubscriptBox[
    StyleBox["\[Gamma]", "TI"], "1"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "66c67103-72a1-9427-0efe-696d0755ff0d"],
+  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
  ", starting from the ground state with the readout zeroed, over a short \
 window; its readout is quantum-limited (",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Eta]", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+  "14fd1512-f616-8834-3c82-8d5f83a0db1e"],
  "), ",
  Cell[BoxData[
   RowBox[{
@@ -1221,13 +1217,13 @@ window; its readout is quantum-limited (",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "58ee7ecb-1370-1005-0896-7795a605636f"],
+  "66c67103-72a1-9427-0efe-696d0755ff0d"],
  " exactly. The initial condition is a four-vector, the three Bloch numbers \
 followed by the record ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+  "48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
  ". For the trajectory to stay a density matrix, the measurement must fit \
 inside the total dephasing, ",
  Cell[BoxData[
@@ -1249,7 +1245,7 @@ inside the total dephasing, ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+  "58ee7ecb-1370-1005-0896-7795a605636f"],
  ", an admissibility condition we derive below, at the radius check. In terms \
 of the efficiency it reads ",
  Cell[BoxData[
@@ -1261,10 +1257,10 @@ of the efficiency it reads ",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
+  "11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
  ", so any real detector satisfies it; the check guards the numbers we type, \
 not the physics. The cell fixes the rates and confirms they pass:"
-}], "Text",ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+}], "Text",ExpressionUUID->"7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
 
 Cell[CellGroupData[{
 
@@ -1294,16 +1290,16 @@ Cell[BoxData[{
       RowBox[{"[", "3", "]"}], "]"}], " ", "+", " ", 
      RowBox[{"ratesB", "[", 
       RowBox[{"[", "4", "]"}], "]"}]}], ")"}]}]}]}], "Input",
- CellLabel->"In[6]:= ",ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+ CellLabel->"In[6]:= ",ExpressionUUID->"3181a460-bc62-f1ee-67be-3e4a3514c334"],
 
 Cell[BoxData["True"], "Output",
- CellLabel->"Out[6]= ",ExpressionUUID->"5e187950-8ca2-2ab2-0638-711a25577898"]
+ CellLabel->"Out[6]= ",ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"]
 }, Open  ]],
 
 Cell["\<\
 The quantum-limit claim is one division away; define the efficiency and read \
 this set's:\
-\>", "Text",ExpressionUUID->"250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+\>", "Text",ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
 
 Cell[CellGroupData[{
 
@@ -1325,13 +1321,13 @@ Cell[BoxData[{
       RowBox[{"r", "[", 
        RowBox[{"[", "3", "]"}], "]"}]}], ")"}]}]}], ";"}], "\n", 
  RowBox[{"efficiency", "[", "ratesB", "]"}]}], "Input",
- CellLabel->"In[7]:= ",ExpressionUUID->"15a9104d-5625-6af3-4356-8a1763d038d9"],
+ CellLabel->"In[7]:= ",ExpressionUUID->"5e187950-8ca2-2ab2-0638-711a25577898"],
 
 Cell[BoxData["1.`"], "Output",
- CellLabel->"Out[7]= ",ExpressionUUID->"58c17d8b-1b7e-6f79-08ff-74d59e0b3243"]
+ CellLabel->"Out[7]= ",ExpressionUUID->"250a2d7c-9b81-05b0-5309-c5261e346f9a"]
 }, Open  ]],
 
-Cell["The quantum limit exactly, by construction.", "Text",ExpressionUUID->"43821c38-6720-b4f9-71b1-966212da1ec3"],
+Cell["The quantum limit exactly, by construction.", "Text",ExpressionUUID->"15a9104d-5625-6af3-4356-8a1763d038d9"],
 
 Cell[TextData[{
  "The reference for the mean is the Lindblad master equation. Because the It\
@@ -1340,7 +1336,7 @@ Cell[TextData[{
   OverscriptBox[
    StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
  " is affine in ",
  Cell[BoxData[
   RowBox[{
@@ -1350,16 +1346,16 @@ Cell[TextData[{
    RowBox[{
     StyleBox["z", "TI"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
  ", the ensemble mean obeys that drift as a closed linear ODE. Encode ",
  Cell[BoxData[
   OverscriptBox[
    StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
  "'s three state rows once; the symbolic conversion check below must land on \
 this same object, so one encoding serves both:"
-}], "Text",ExpressionUUID->"6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+}], "Text",ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1408,7 +1404,7 @@ Cell[BoxData[{
             RowBox[{"1", " ", "-", " ", "z"}], ")"}]}], " ", "+", " ", 
           RowBox[{"\[CapitalOmega]x", " ", "y"}]}]}], "}"}]}], "]"}]}], 
     "]"}]}], ";"}]}], "Input",
- CellLabel->"In[8]:= ",ExpressionUUID->"5077c06e-c394-b43c-000c-da4bf6261f06"],
+ CellLabel->"In[8]:= ",ExpressionUUID->"0f449897-1a0e-51e7-357b-11d19fbb23cd"],
 
 Cell[TextData[{
  "Calling that encoding \"the Lindblad master equation\" is a claim, so \
@@ -1424,7 +1420,7 @@ not just carry the name. Build the generator itself, the drive ",
     StyleBox["\[Sigma]", "TI"], 
     StyleBox["x", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "07359582-e823-44a1-2eca-0cef89d62e8b"],
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
  " with relaxation ",
  Cell[BoxData[
   RowBox[{
@@ -1437,13 +1433,13 @@ not just carry the name. Build the generator itself, the drive ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
  " toward the ",
  Cell[BoxData[
   RowBox[{
    StyleBox["z", "TI"], "=", "+", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+  "07359582-e823-44a1-2eca-0cef89d62e8b"],
  " ground state and total dephasing ",
  Cell[BoxData[
   RowBox[{
@@ -1462,7 +1458,7 @@ not just carry the name. Build the generator itself, the drive ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
  ", where ",
  Cell[BoxData[
   RowBox[{"\|01d49f", 
@@ -1491,13 +1487,13 @@ not just carry the name. Build the generator itself, the drive ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
  "; project it onto the Pauli components and subtract ",
  Cell[BoxData["driftIto"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+  "6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
  ":"
-}], "Text",ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+}], "Text",ExpressionUUID->"4fd967ef-5008-0b29-75e7-7ec961bd5673"],
 
 Cell[CellGroupData[{
 
@@ -1592,12 +1588,12 @@ Cell[BoxData[
           RowBox[{"{", 
            RowBox[{"x", ",", " ", "y", ",", " ", "z"}], "}"}], ",", " ", 
           "ratesSym"}], "]"}]}], "]"}]}]}], "]"}]}], "]"}]], "Input",
- CellLabel->"In[9]:= ",ExpressionUUID->"30baa1c8-66ad-75e0-6059-389213585fca"],
+ CellLabel->"In[9]:= ",ExpressionUUID->"19bb1c5e-57ab-6e36-4f58-9618625e351c"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"0", ",", "0", ",", "0"}], "}"}]], "Output",
- CellLabel->"Out[9]= ",ExpressionUUID->"52535901-cb26-8b9c-0261-516aeed0d9e6"]
+ CellLabel->"Out[9]= ",ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -1608,24 +1604,24 @@ relaxation carries ",
   SubscriptBox[
    StyleBox["\[Gamma]", "TI"], "1"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
  ", and the ",
  Cell[BoxData[
   SubscriptBox[
    StyleBox["\[Sigma]", "TI"], 
    StyleBox["z", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
  " dissipator carries the intrinsic and the measurement dephasing together, \
 which is exactly the total the admissibility condition weighs against the \
 measurement. Solve that affine system exactly with ",
  Cell[BoxData["DSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "511b3347-8d7d-ab60-0738-ab212409f64a"],
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
  ", building the equations from ",
  Cell[BoxData["driftIto"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "36c19c85-764d-0b01-5efe-15ef03f8566b"],
+  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
  " itself so the reference and the certified drift stay one object, and \
 return ",
  Cell[BoxData[
@@ -1642,9 +1638,9 @@ return ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+  "511b3347-8d7d-ab60-0738-ab212409f64a"],
  ":"
-}], "Text",ExpressionUUID->"519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+}], "Text",ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1714,7 +1710,7 @@ Cell[BoxData[{
             RowBox[{"zf", "[", "tt", "]"}]}], "}"}], " ", "/.", " ", "sol"}], 
          "]"}]}], "]"}]}]}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[10]:= ",ExpressionUUID->"5900aac7-5263-773e-0f3f-43a167165a04"],
+  "In[10]:= ",ExpressionUUID->"6815cd54-0cd7-196f-182a-e51ea5626bb5"],
 
 Cell[TextData[{
  "Two time steps will drive every simulation below, and they should follow \
@@ -1722,24 +1718,24 @@ the physics, not the trajectory count ",
  Cell[BoxData[
   StyleBox["n", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+  "519775d4-d545-25f2-07ad-6c91dcf18fd8"],
  ": a step size sets accuracy, ",
  Cell[BoxData[
   StyleBox["n", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "12d95fcb-3316-2212-42e7-569546a37178"],
+  "5900aac7-5263-773e-0f3f-43a167165a04"],
  " sets statistics, and they are independent axes. Fix them from the fastest \
 rate in each case. Let ",
  Cell[BoxData["\[CapitalLambda]"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
  " be the largest of the Rabi frequency, the transverse decay ",
  Cell[BoxData[
   SubsuperscriptBox["\[CapitalGamma]", "2", 
    StyleBox["eff",
     FontSlant->"Plain"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+  "12d95fcb-3316-2212-42e7-569546a37178"],
  ", and the total measurement rate ",
  Cell[BoxData[
   RowBox[{
@@ -1750,9 +1746,9 @@ rate in each case. Let ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6b12ee74-9953-131d-1921-003e18e67e67"],
+  "733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
  ":"
-}], "Text",ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+}], "Text",ExpressionUUID->"4f8ab258-7e7f-0723-7589-34027b0a6a09"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1791,7 +1787,7 @@ Cell[BoxData[{
        RowBox[{"\[CapitalGamma]CI", " ", "+", " ", "\[CapitalGamma]BA"}]}], 
       "]"}]}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[11]:= ",ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
+  "In[11]:= ",ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67"],
 
 Cell[TextData[{
  "Set the noise grid ",
@@ -1802,16 +1798,16 @@ Cell[TextData[{
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "78287f93-0f12-7c52-2828-76ddaaa746b8"],
+  "65262d3c-fccc-1dc6-0cdd-c579f579672c"],
  " to resolve that fastest timescale with forty knots, a working resolution \
 the refinement sweep checks below for the representative case. Everything \
 else follows: ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "08285353-0e0e-39f8-3828-4b1dabb88bc2"],
+  "5e157ee2-48da-d240-062b-77cc696ca0aa"],
  "'s adaptive step is capped at a quarter of it, and the native reference \
 below runs on the same grid:"
-}], "Text",ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+}], "Text",ExpressionUUID->"78287f93-0f12-7c52-2828-76ddaaa746b8"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1824,9 +1820,9 @@ Cell[BoxData[{
      RowBox[{"40", " ", 
       RowBox[{"maxRate", "[", "r", "]"}]}], ")"}]}]}], ";"}]}], "Input",
  CellLabel->
-  "In[12]:= ",ExpressionUUID->"187adc3d-3961-76c2-4819-d667b8145c28"],
+  "In[12]:= ",ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2"],
 
-Cell["Regularizing the noise: a Wiener path NDSolve can integrate", "Section",ExpressionUUID->"641c78eb-7f03-7846-0c24-71b57ab64aac"],
+Cell["Regularizing the noise: a Wiener path NDSolve can integrate", "Section",ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
 
 Cell[TextData[{
  "A white-noise increment ",
@@ -1834,11 +1830,11 @@ Cell[TextData[{
   StyleBox[
    RowBox[{"d", "W"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+  "187adc3d-3961-76c2-4819-d667b8145c28"],
  " is not a function of time, it is a distribution, and ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+  "641c78eb-7f03-7846-0c24-71b57ab64aac"],
  " cannot integrate a distribution. But if we draw the noise on a grid and \
 connect the dots into a continuous curve ",
  Cell[BoxData[
@@ -1850,7 +1846,7 @@ connect the dots into a continuous curve ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6121b9de-dddd-aca8-10de-309bd469f6f2"],
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
  ", then ",
  Cell[BoxData[
   RowBox[{
@@ -1862,7 +1858,7 @@ connect the dots into a continuous curve ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "30209679-023a-ee91-61df-0823b7ccb4fb"],
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
  " is an ordinary function, and ",
  Cell[BoxData[
   RowBox[{
@@ -1878,7 +1874,7 @@ connect the dots into a continuous curve ",
    StyleBox["d", "TI"], 
    StyleBox["W", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "29bc1606-c22d-409d-5f43-8863f7d812e7"],
+  "6121b9de-dddd-aca8-10de-309bd469f6f2"],
  " becomes the ordinary differential equation ",
  Cell[BoxData[
   RowBox[{
@@ -1909,11 +1905,11 @@ connect the dots into a continuous curve ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+  "30209679-023a-ee91-61df-0823b7ccb4fb"],
  ". In other words, we replace white noise by a regularized noise with a \
 short but finite correlation time: smooth between the grid knots, its \
 derivative jumping at them."
-}], "Text",ExpressionUUID->"3119d855-3ffd-7401-6726-d21fb9885f6b"],
+}], "Text",ExpressionUUID->"29bc1606-c22d-409d-5f43-8863f7d812e7"],
 
 Cell[TextData[{
  "One grid carries both the noise and the read-off, so define it once, a \
@@ -1929,14 +1925,14 @@ uniform grid on ",
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+  "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
  " that lands exactly on ",
  Cell[BoxData[
   SubscriptBox[
    StyleBox["t", "TI"], 
    StyleBox["f", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
+  "3119d855-3ffd-7401-6726-d21fb9885f6b"],
  ", with about ",
  Cell[BoxData[
   RowBox[{
@@ -1948,9 +1944,9 @@ uniform grid on ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "51fce014-dca1-0630-0783-fa51d5546d1a"],
+  "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
  " intervals and never fewer than three (the cubic needs the points):"
-}], "Text",ExpressionUUID->"657c1c65-980e-511d-1303-964f19bb2067"],
+}], "Text",ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
 
 Cell[BoxData[{
  RowBox[{
@@ -1967,7 +1963,7 @@ Cell[BoxData[{
         RowBox[{"tf", "/", "dt"}], "]"}]}], "]"}]}], "]"}]}], ";"}]}], "Input",\
 
  CellLabel->
-  "In[13]:= ",ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+  "In[13]:= ",ExpressionUUID->"51fce014-dca1-0630-0783-fa51d5546d1a"],
 
 Cell[TextData[{
  "Concretely: on that grid, draw i.i.d. Gaussian increments with variance the \
@@ -1982,7 +1978,7 @@ cubic so ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e9b7e66-629a-1114-26b9-7040172f607e"],
+  "657c1c65-980e-511d-1303-964f19bb2067"],
  " is a continuous curve and its derivative ",
  Cell[BoxData[
   RowBox[{
@@ -1994,10 +1990,10 @@ cubic so ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "585a51e6-774f-2dd2-087a-48c002fa7738"],
+  "0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
  " an ordinary, piecewise-smooth function of time that jumps at the knots, no \
 longer the distribution that white noise is:"
-}], "Text",ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+}], "Text",ExpressionUUID->"7e9b7e66-629a-1114-26b9-7040172f607e"],
 
 Cell[BoxData[{
  RowBox[{
@@ -2047,12 +2043,12 @@ Cell[BoxData[{
            RowBox[{"InterpolationOrder", " ", "->", " ", "3"}]}], "]"}]}], 
         "]"}]}], "]"}]}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[14]:= ",ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
+  "In[14]:= ",ExpressionUUID->"585a51e6-774f-2dd2-087a-48c002fa7738"],
 
 Cell["\<\
 Visualize one realization of the path and its derivative, the ordinary \
 function that stands in for white noise:\
-\>", "Text",ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001"],
+\>", "Text",ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
 
 Cell[CellGroupData[{
 
@@ -2103,7 +2099,7 @@ Cell[BoxData[
      RowBox[{"ImageSize", " ", "->", " ", "640"}]}], "]"}]}], "]"}]], "Input",\
 
  CellLabel->
-  "In[15]:= ",ExpressionUUID->"7519012f-e657-215b-2326-988893e273a1"],
+  "In[15]:= ",ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
 
 Cell[BoxData[
  GraphicsBox[{{}, {InsetBox[
@@ -8616,7 +8612,7 @@ rO7sUOHIqP7sYyd19D8dAi4r
   PlotRange->{{0, 682.6666666666666}, {-248.85402273492164`, 0}},
   PlotRangePadding->Automatic]], "Output",
  CellLabel->
-  "Out[15]= ",ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0"]
+  "Out[15]= ",ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -8630,7 +8626,7 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+  "7519012f-e657-215b-2326-988893e273a1"],
  " is a continuous random walk and ",
  Cell[BoxData[
   RowBox[{
@@ -8642,7 +8638,7 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6878c7f8-419e-9db5-1807-dea27028e79f"],
+  "594776df-9e75-d16a-0f7d-6f991b01a3b0"],
  " is a jagged but genuine function, varying on the scale ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -8651,7 +8647,7 @@ Cell[TextData[{
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "48a3d607-c312-9dd3-7850-c860f6a4e739"],
+  "6405505f-4b92-3bd6-0c3b-4a196e24893c"],
  ". There are two time increments here, and they play different roles. The \
 first, ",
  Cell[BoxData[
@@ -8661,7 +8657,7 @@ first, ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "539491e8-328f-8d7b-01ab-08b2473bd441"],
+  "6878c7f8-419e-9db5-1807-dea27028e79f"],
  ", is the grid the Gaussian increments are drawn on: it sets the correlation \
 time of the smoothed noise, and it is the dial that fixes which stochastic \
 equation we actually solve, converging to the ideal white-noise SDE only as \
@@ -8673,11 +8669,11 @@ equation we actually solve, converging to the ideal white-noise SDE only as \
     StyleBox["gen",
      FontSlant->"Plain"]], "\[Rule]", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+  "48a3d607-c312-9dd3-7850-c860f6a4e739"],
  ". The second, the ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+  "539491e8-328f-8d7b-01ab-08b2473bd441"],
  " step, carries no physics; it only has to resolve the forcing ",
  Cell[BoxData[
   RowBox[{
@@ -8689,7 +8685,7 @@ equation we actually solve, converging to the ideal white-noise SDE only as \
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "21aa1c49-e16c-f406-57a9-9612901edf6c"],
+  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
  ", smooth between noise knots, and we cap it below ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -8698,12 +8694,12 @@ equation we actually solve, converging to the ideal white-noise SDE only as \
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+  "023f49e2-a747-9723-33c5-60cfd2f3fa09"],
  ", which forces several solver steps across each noise interval, keeps a \
 step from straddling many derivative jumps, and supplements the adaptive \
 error control. Which of the two actually moves the answer is a question we \
 put to the machine below."
-}], "Text",ExpressionUUID->"12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+}], "Text",ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c"],
 
 Cell[TextData[{
  "Assemble one trajectory. Build a smooth noise, form the random ODE ",
@@ -8742,15 +8738,15 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+  "289b85cd-827f-9a9c-58b8-1c97370be8e6"],
  " for the full four-vector, and hand it to ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
+  "12f3dbee-abc4-6375-4280-d2cbce714e5f"],
  " with its ",
  Cell[BoxData["MaxStepSize"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "362a4e41-4988-041f-5e2a-602b683d6f65"],
+  "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
  " capped below ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -8759,9 +8755,9 @@ Cell[TextData[{
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+  "2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
  ":"
-}], "Text",ExpressionUUID->"107fa29c-d013-1000-4004-3bd9e1a6636a"],
+}], "Text",ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65"],
 
 Cell[BoxData[{
  RowBox[{
@@ -8853,7 +8849,7 @@ Cell[BoxData[{
         RowBox[{"PrecisionGoal", " ", "->", " ", "goal"}]}], "]"}]}]}], 
     "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[16]:= ",ExpressionUUID->"6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+  "In[16]:= ",ExpressionUUID->"01ed6b92-5a5f-fa78-3792-82dc5febc942"],
 
 Cell[TextData[{
  "Show one trajectory two ways: the monitored component ",
@@ -8866,7 +8862,7 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+  "107fa29c-d013-1000-4004-3bd9e1a6636a"],
  " against the exact Lindblad mean, and the readout ",
  Cell[BoxData[
   RowBox[{
@@ -8877,9 +8873,9 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+  "6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
  " it accumulates, both built from the single four-vector solution:"
-}], "Text",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+}], "Text",ExpressionUUID->"49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
 
 Cell[CellGroupData[{
 
@@ -8959,7 +8955,7 @@ Cell[BoxData[
         RowBox[{"ImageSize", " ", "->", " ", "Medium"}]}], "]"}]}], "}"}], 
     "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[17]:= ",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"],
+  "In[17]:= ",ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
 
 Cell[BoxData[
  TemplateBox[{
@@ -16024,7 +16020,7 @@ LPmzuEjwrUj5afriMPwPJLslwA==
         Scaled[0.02]}}, Ticks -> {Automatic, Automatic}}]},
   "RowDefault"]], "Output",
  CellLabel->
-  "Out[17]= ",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9"]
+  "Out[17]= ",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -16033,17 +16029,17 @@ single record must, while the readout ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+  "52243646-2fbd-210e-03db-a8204a487054"],
  " climbs steeply where ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
+  "1acd7f4d-3da3-7753-4af3-7717b4565db9"],
  " is near one and bends as ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+  "062d91f0-6326-41c0-2fd2-08ba16d3132a"],
  " falls, its ",
  Cell[BoxData[
   RowBox[{
@@ -16053,28 +16049,28 @@ single record must, while the readout ",
       RowBox[{"C", "I"}], "TI"]]], " ", 
    StyleBox["z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
+  "1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
  " signal buried under noise. The two panels share one ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "W"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+  "6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
  ", and that is the physical content of a measurement record: the noise \
 written into ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+  "612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
  " is the same noise that kicked ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+  "26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
  "."
-}], "Text",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399"],
+}], "Text",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
 
-Cell["The ensemble: matching the mean and the spread", "Section",ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802"],
+Cell["The ensemble: matching the mean and the spread", "Section",ExpressionUUID->"6b853673-18d0-d9fa-19ba-a83d996aabc0"],
 
 Cell[TextData[{
  "A single path tells us little; the mean lives in the ensemble and the noise \
@@ -16084,12 +16080,12 @@ ensemble means track the exact Lindblad curve across the entire interval. The \
 two routes are the built-in ",
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6e85e9ed-427b-8528-16ba-00b7770fec72"],
+  "25b5b884-ef74-61b3-534a-31e18a013399"],
  " integrator, which discretizes the target Stratonovich SDE, and the \
 regularized ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "73b76025-96bb-3fff-214d-798f234f85c5"],
+  "574a2197-51ef-7938-7d49-b8d1679a4802"],
  " route, whose smooth ODE approaches that same SDE as ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -16098,13 +16094,13 @@ regularized ",
     StyleBox["gen",
      FontSlant->"Plain"]], "\[Rule]", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "31f4c073-8ff6-126f-678b-da3d298360b5"],
+  "6e85e9ed-427b-8528-16ba-00b7770fec72"],
  "; the yardstick is a single Lindblad solution from ",
  Cell[BoxData["DSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "72ff7667-e560-b2c0-2285-68408c1a002a"],
+  "73b76025-96bb-3fff-214d-798f234f85c5"],
  "."
-}], "Text",ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b"],
+}], "Text",ExpressionUUID->"31f4c073-8ff6-126f-678b-da3d298360b5"],
 
 Cell[TextData[{
  "Before any simulation, the central claim can be settled exactly, by the \
@@ -16114,7 +16110,7 @@ It\[OHat]-Stratonovich correction, but the conversion ",
   RowBox[{"ItoProcess", "[", 
    RowBox[{"StratonovichProcess", "[", "...", "]"}], "]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "106b7ad8-6378-599b-4069-7382160d2be1"],
+  "72ff7667-e560-b2c0-2285-68408c1a002a"],
  " applies it for us, rewriting our Stratonovich vector field in It\[OHat] \
 form. If the explicit Stratonovich drift truly carries the correction, its It\
 \[OHat] form must be the affine drift ",
@@ -16122,11 +16118,11 @@ form. If the explicit Stratonovich drift truly carries the correction, its It\
   OverscriptBox[
    StyleBox["a", "TI"], "\[RightVector]"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+  "7c9be80e-0554-61c1-24b8-0268ace1332b"],
  " we encoded as ",
  Cell[BoxData["driftIto"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "304452a4-201b-d64c-607c-4b0e51afbc96"],
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
  " for the Lindblad reference, with the readout row untouched. Convert the \
 full four-component field and subtract that target, under the physical \
 assumption that the rates are nonnegative (needed only to fold ",
@@ -16141,9 +16137,9 @@ assumption that the rates are nonnegative (needed only to fold ",
      StyleBox[
       RowBox[{"B", "A"}], "TI"]]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
+  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
  " into a single root):"
-}], "Text",ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c"],
+}], "Text",ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96"],
 
 Cell[CellGroupData[{
 
@@ -16217,13 +16213,13 @@ Cell[BoxData[
           RowBox[{"\[CapitalGamma]", ",", " ", "\"\<CI\>\""}], "]"}], "]"}], " ",
          "z"}]}], "]"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[18]:= ",ExpressionUUID->"475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+  "In[18]:= ",ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"0", ",", "0", ",", "0", ",", "0"}], "}"}]], "Output",
  CellLabel->
-  "Out[18]= ",ExpressionUUID->"2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"]
+  "Out[18]= ",ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -16231,19 +16227,19 @@ Cell[TextData[{
 SDE we hand ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3343f580-98d5-e31c-6170-ecea1961ce66"],
+  "475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
  " is exactly the affine drift on all three Bloch rows, and the readout row \
 is unchanged, so the correction is carried in full and ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "20a7420b-376a-b23f-505d-6455421c0105"],
+  "2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
  " is the same in both calculi. This settles the central claim at no \
 numerical cost and more decisively than any Monte-Carlo match; the ensemble \
 below only confirms what the algebra already proves. One corollary in one \
 line: switch the measurement off and the two calculi must coincide, because \
 only the measurement noise separates them:"
-}], "Text",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53"],
+}], "Text",ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66"],
 
 Cell[CellGroupData[{
 
@@ -16279,13 +16275,13 @@ Cell[BoxData[
        RowBox[{"[", "2", "]"}], "]"}], " ", "->", " ", "0"}]}], "}"}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[19]:= ",ExpressionUUID->"055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+  "In[19]:= ",ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"0", ",", "0", ",", "0", ",", "0"}], "}"}]], "Output",
  CellLabel->
-  "Out[19]= ",ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5"]
+  "Out[19]= ",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -16299,26 +16295,26 @@ Cell[TextData[{
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "201a2509-bdd9-2fa1-5039-bd53346c758b"],
+  "055bc2ad-6b92-a3be-3378-dbf70e24f184"],
  " the entire gap between the Stratonovich and It\[OHat] drifts closes: the \
 correction is measurement backaction and nothing else."
-}], "Text",ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952"],
+}], "Text",ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5"],
 
-Cell["Start the worker kernels:", "Text",ExpressionUUID->"5f932952-49a5-d34f-05a0-c11c6851a195"],
+Cell["Start the worker kernels:", "Text",ExpressionUUID->"201a2509-bdd9-2fa1-5039-bd53346c758b"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"LaunchKernels", "[", "]"}], ";"}]], "Input",
  CellLabel->
-  "In[20]:= ",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
+  "In[20]:= ",ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952"],
 
 Cell[TextData[{
  "Share the definitions the regularized trajectory needs, so ",
  Cell[BoxData["ParallelTable"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+  "5f932952-49a5-d34f-05a0-c11c6851a195"],
  " can spread the paths across cores:"
-}], "Text",ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+}], "Text",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
 
 Cell[BoxData[
  RowBox[{
@@ -16327,28 +16323,28 @@ Cell[BoxData[
    "driftStrat", ",", " ", "diffStrat", ",", " ", "wienerFun", ",", " ", 
     "oneTraj"}], "]"}], ";"}]], "Input",
  CellLabel->
-  "In[21]:= ",ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+  "In[21]:= ",ExpressionUUID->"10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
 
 Cell[TextData[{
  "Generate ",
  Cell[BoxData["ntraj"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
+  "3fdc991b-fead-14b0-65e3-1144fb587e9a"],
  " full trajectories from the built-in ",
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0651775d-2bad-791b-2e6f-6f074e584861"],
+  "3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
  " integrator, keeping every step of each path. Feed it the same Stratonovich \
 drift and diffusion the ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "63b9e3d6-2298-231e-1146-fa9057128e64"],
+  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
  " route uses, all four rows, and ask for the order-3/2 scalar-noise method \
 rather than the default Euler-Maruyama, whose average carries a bias \
 proportional to the step and so drifts off the exact curve at any finite \
 step. The process variables are Wolfram's formal symbols, unbound by \
 construction, so they are safe placeholders:"
-}], "Text",ExpressionUUID->"67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+}], "Text",ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861"],
 
 Cell[BoxData[{
  RowBox[{
@@ -16406,13 +16402,13 @@ Cell[BoxData[{
       RowBox[{"td", "[", "\"\<ValueList\>\"", "]"}]}]}], "]"}]}], 
   ";"}]}], "Input",
  CellLabel->
-  "In[22]:= ",ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef"],
+  "In[22]:= ",ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64"],
 
 Cell[TextData[{
  "Generate the same count of regularized trajectories, each ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "66c9a615-af45-c085-0ef6-385ecaf192ef"],
+  "67c13665-f813-2f11-0dfe-a84ef9a6727b"],
  " solution read off on a shared time grid, keeping all four components so \
 the record stays beside the state that produced it. Two arguments carry \
 defaults so the one real relationship lives in one place: the integrator step \
@@ -16424,10 +16420,10 @@ is ",
     StyleBox["gen",
      FontSlant->"Plain"]], "/", "4"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0513e607-0f4c-1e20-3320-f861aaf9650a"],
+  "4c440104-ea8a-4285-747b-99618f3f10ef"],
  ", held a factor of four below the noise grid, and the read-off grid is the \
 noise grid itself:"
-}], "Text",ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+}], "Text",ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef"],
 
 Cell[BoxData[{
  RowBox[{
@@ -16476,13 +16472,13 @@ Cell[BoxData[{
         RowBox[{"i", ",", " ", "ntraj"}], "}"}]}], "]"}]}], "]"}]}], 
   ";"}]}], "Input",
  CellLabel->
-  "In[23]:= ",ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+  "In[23]:= ",ExpressionUUID->"0513e607-0f4c-1e20-3320-f861aaf9650a"],
 
 Cell["\<\
 For the harder regimes and the step-size study below we will want only the \
 final values, so reduce each generator to them. The native final Bloch \
 vectors:\
-\>", "Text",ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
+\>", "Text",ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788"],
 
 Cell[BoxData[{
  RowBox[{
@@ -16503,7 +16499,7 @@ Cell[BoxData[{
       RowBox[{"-", "1"}], ",", " ", 
       RowBox[{"1", " ", ";;", " ", "3"}]}], "]"}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[24]:= ",ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"],
+  "In[24]:= ",ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
 
 Cell[TextData[{
  "And the regularized final Bloch vectors, read off at ",
@@ -16512,9 +16508,9 @@ Cell[TextData[{
    StyleBox["t", "TI"], 
    StyleBox["f", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3279c00f-c9e2-8758-6206-da68ef94eda2"],
+  "5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
  " alone, the integrator step defaulting the same way:"
-}], "Text",ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+}], "Text",ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"],
 
 Cell[BoxData[{
  RowBox[{
@@ -16538,16 +16534,16 @@ Cell[BoxData[{
       RowBox[{"-", "1"}], ",", " ", 
       RowBox[{"1", " ", ";;", " ", "3"}]}], "]"}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[25]:= ",ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
+  "In[25]:= ",ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2"],
 
 Cell[TextData[{
  "Run both on the representative case, on the shared grid set by ",
  Cell[BoxData[
   RowBox[{"dtGenOf", "[", "ratesB", "]"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "63a48922-0fac-666c-115b-208caa594cb6"],
+  "50b12ff8-e606-85f7-004e-c6a593b0efdd"],
  ". First the native ensemble:"
-}], "Text",ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559"],
+}], "Text",ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
 
 Cell[BoxData[
  RowBox[{
@@ -16557,9 +16553,9 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
      "2024"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[26]:= ",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
+  "In[26]:= ",ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6"],
 
-Cell["Then the regularized ensemble on the same grid:", "Text",ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8"],
+Cell["Then the regularized ensemble on the same grid:", "Text",ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559"],
 
 Cell[BoxData[
  RowBox[{
@@ -16569,7 +16565,7 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesB", "]"}], ",", " ", "nB", ",", " ", 
      "9100"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[27]:= ",ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba"],
+  "In[27]:= ",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
 
 Cell[TextData[{
  "Average each ensemble over its trajectories and compare the two mean paths \
@@ -16582,9 +16578,9 @@ of ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
+  "399d1ff3-4632-be92-6fa2-96bd73c404f8"],
  " against the single exact Lindblad trajectory:"
-}], "Text",ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+}], "Text",ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba"],
 
 Cell[CellGroupData[{
 
@@ -16665,7 +16661,7 @@ equation\>\""}], ",", " ",
      RowBox[{"ImageSize", " ", "->", " ", "520"}]}], "]"}]}], "]"}]], "Input",\
 
  CellLabel->
-  "In[28]:= ",ExpressionUUID->"6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+  "In[28]:= ",ExpressionUUID->"6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
 
 Cell[BoxData[
  TemplateBox[{
@@ -17916,20 +17912,20 @@ P4qP+bLJwxk+cx1plJdN7P45XC3q5KGXTXZ6yBaFNfLQyybHzYx3fJLx0Msm
        RowBox[{"Placed", "[", 
          RowBox[{#2, ",", "After"}], "]"}]}], "]"}]& )]], "Output",
  CellLabel->
-  "Out[28]= ",ExpressionUUID->"74397683-04f4-1d4d-1dc7-6fedac816797"]
+  "Out[28]= ",ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663"]
 }, Open  ]],
 
 Cell[TextData[{
  "Note that both ensemble means, the built-in ",
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "735e49d5-32a1-4a48-2166-609f47541892"],
+  "6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
  " integrator and the regularized route, lie on the exact Lindblad curve \
 across the whole interval, not only at the final time. Averaging over the \
 trajectories rebuilds the deterministic master equation, which is the sense \
 in which the smooth Lindblad flow was an average over jagged records all \
 along."
-}], "Text",ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+}], "Text",ExpressionUUID->"74397683-04f4-1d4d-1dc7-6fedac816797"],
 
 Cell[TextData[{
  "Quantify \"on the curve\" rather than eyeball it: the largest gap between \
@@ -17937,16 +17933,16 @@ the regularized mean of ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3bfbbd45-edb8-1b0b-6998-352e844d6651"],
+  "735e49d5-32a1-4a48-2166-609f47541892"],
  " and the Lindblad value anywhere on the grid, in Monte-Carlo standard \
 errors, skipping ",
  Cell[BoxData[
   RowBox[{
    StyleBox["t", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+  "335d55a2-cf9b-493d-6163-4c0fea2e1807"],
  " where all paths coincide and the standard error vanishes:"
-}], "Text",ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"],
+}], "Text",ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651"],
 
 Cell[CellGroupData[{
 
@@ -17991,11 +17987,11 @@ Cell[BoxData[
        RowBox[{"StandardDeviation", "[", "zc", "]"}], "/", 
        RowBox[{"Sqrt", "[", "nB", "]"}]}], ")"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[29]:= ",ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
+  "In[29]:= ",ExpressionUUID->"045023ab-c37d-b770-2c6f-baf4f6091a5a"],
 
 Cell[BoxData["2.8190826805882563`"], "Output",
  CellLabel->
-  "Out[29]= ",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93"]
+  "Out[29]= ",ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"]
 }, Open  ]],
 
 Cell["\<\
@@ -18004,13 +18000,13 @@ mean-to-Lindblad distance in units of the Monte-Carlo standard error; it \
 stays within the scatter a maximum over hundreds of correlated read-offs \
 produces by chance, so the mean sits on the master-equation curve everywhere, \
 not merely at the end.\
-\>", "Text",ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
+\>", "Text",ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
 
 Cell["\<\
 The mean sees only the drift, so it is a weak test. The measurement \
 backaction lives in the standard deviation of the final Bloch vector, its \
 spread across the ensemble, compared across the two routes:\
-\>", "Text",ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f"],
+\>", "Text",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93"],
 
 Cell[CellGroupData[{
 
@@ -18043,7 +18039,7 @@ Cell[BoxData[
        RowBox[{"\"\<Stratonovich\>\"", ",", " ", "\"\<regularized\>\""}], 
        "}"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[30]:= ",ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34"],
+  "In[30]:= ",ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
 
 Cell[BoxData[
  TagBox[
@@ -18083,7 +18079,7 @@ Cell[BoxData[
     TableHeadings -> {{"x", "y", "z"}, {
       "Stratonovich", "regularized"}}]]]], "Output",
  CellLabel->
-  "Out[30]= ",ExpressionUUID->"285985c7-a1c8-13eb-5866-1ca0d07d6131"]
+  "Out[30]= ",ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -18092,7 +18088,7 @@ regularized route reproduces the noise, not just the drift. The ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
+  "27d2a24c-1e84-19ee-4de1-44169b316b34"],
  " row is flat zero: with the backaction quadrature off (",
  Cell[BoxData[
   RowBox[{
@@ -18100,27 +18096,27 @@ regularized route reproduces the noise, not just the drift. The ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
+  "285985c7-a1c8-13eb-5866-1ca0d07d6131"],
  ") and no initial ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1a1e4090-3303-05ed-4a26-59da46b66f37"],
+  "57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
  "-coherence, nothing sources ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "10256af3-3972-af7a-41da-83bdb804f240"],
+  "0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
  ", and the substance sits in ",
  Cell[BoxData[
   StyleBox["y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "457602f1-d86e-ac86-730d-9bbad918f6ec"],
+  "1a1e4090-3303-05ed-4a26-59da46b66f37"],
  " and ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "499f95c1-a958-6c18-7fa4-0caac8ed3762"],
+  "10256af3-3972-af7a-41da-83bdb804f240"],
  ". That flat zero is exact, not numerical: at ",
  Cell[BoxData[
   RowBox[{
@@ -18128,20 +18124,20 @@ regularized route reproduces the noise, not just the drift. The ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
+  "457602f1-d86e-ac86-730d-9bbad918f6ec"],
  " the ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0c02104f-9807-e6c4-3431-8a2919b3cc2e"],
+  "499f95c1-a958-6c18-7fa4-0caac8ed3762"],
  " row of both the drift and the diffusion vanishes on the ",
  Cell[BoxData[
   RowBox[{
    StyleBox["x", "TI"], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6f909018-5ea1-6a32-15af-0a425b543918"],
+  "0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
  " plane, so the plane is invariant for every remaining rate:"
-}], "Text",ExpressionUUID->"2f4595f3-090a-1216-557a-0cbda8bf617c"],
+}], "Text",ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e"],
 
 Cell[CellGroupData[{
 
@@ -18169,13 +18165,13 @@ Cell[BoxData[
      RowBox[{"[", "2", "]"}], "]"}], " ", "->", " ", "0"}]}], "]"}]], "Input",\
 
  CellLabel->
-  "In[31]:= ",ExpressionUUID->"06385f5e-e9d4-4e6c-2fd8-571b886114b6"],
+  "In[31]:= ",ExpressionUUID->"6f909018-5ea1-6a32-15af-0a425b543918"],
 
 Cell[BoxData[
  RowBox[{"{", 
   RowBox[{"0", ",", "0"}], "}"}]], "Output",
  CellLabel->
-  "Out[31]= ",ExpressionUUID->"25d2fb85-296f-82e5-53e1-f2ef481bd0cf"]
+  "Out[31]= ",ExpressionUUID->"2f4595f3-090a-1216-557a-0cbda8bf617c"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -18202,13 +18198,13 @@ samples is itself uncertain, with standard error ",
     StyleBox[")",
      SpanMaxSize->1]}]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3b9a140e-d97a-4136-69b9-8e6bd80f101c"],
+  "06385f5e-e9d4-4e6c-2fd8-571b886114b6"],
  ", where ",
  Cell[BoxData[
   SubscriptBox[
    StyleBox["m", "TI"], "4"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4f9438da-b80f-a114-75ab-b18439bbf07e"],
+  "25d2fb85-296f-82e5-53e1-f2ef481bd0cf"],
  " is the sample's own fourth central moment (for near-Gaussian samples this \
 reduces to the familiar spread over ",
  Cell[BoxData[
@@ -18216,13 +18212,13 @@ reduces to the familiar spread over ",
    RowBox[{"2", 
     StyleBox["n", "TI"]}]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7281c19b-2602-dcd4-22be-d8c553b4a63e"],
+  "3b9a140e-d97a-4136-69b9-8e6bd80f101c"],
  "; taking it from the samples themselves costs nothing and assumes nothing \
 about their shape), and the gap between two such estimates is uncertain by \
 their errors in quadrature. In other words, a spread is itself a measurement \
 with an error bar, and two spreads disagree only when their gap outruns that \
 bar. Define that statistic once and read the two live components:"
-}], "Text",ExpressionUUID->"3c8746fc-db76-c487-64bd-5fb9de00aeed"],
+}], "Text",ExpressionUUID->"4f9438da-b80f-a114-75ab-b18439bbf07e"],
 
 Cell[CellGroupData[{
 
@@ -18287,7 +18283,7 @@ Cell[BoxData[{
       RowBox[{"\"\<y\>\"", ",", " ", "\"\<z\>\""}], "}"}], "}"}]}]}], 
   "]"}]}], "Input",
  CellLabel->
-  "In[32]:= ",ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317"],
+  "In[32]:= ",ExpressionUUID->"7281c19b-2602-dcd4-22be-d8c553b4a63e"],
 
 Cell[BoxData[
  TagBox[
@@ -18313,13 +18309,13 @@ Cell[BoxData[
   Function[BoxForm`e$, 
    TableForm[BoxForm`e$, TableHeadings -> {{"y", "z"}}]]]], "Output",
  CellLabel->
-  "Out[32]= ",ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de"]
+  "Out[32]= ",ExpressionUUID->"3c8746fc-db76-c487-64bd-5fb9de00aeed"]
 }, Open  ]],
 
 Cell["\<\
 Both gaps sit at the size sampling error alone allows, so at this ensemble \
 size the two routes' spreads are statistically indistinguishable.\
-\>", "Text",ExpressionUUID->"12c4fc3b-e00c-2bba-42fb-f66491b97980"],
+\>", "Text",ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317"],
 
 Cell[TextData[{
  "The state should stay inside the unit ball, because the trajectory is a \
@@ -18355,7 +18351,7 @@ the promised derivation. The radial component of the noise, ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1d7e6892-18cd-6f45-4b05-81dc997835af"],
+  "473164ce-b547-c1f4-6ecf-7da83cf393de"],
  ", vanishes on the unit sphere. Equivalently, the noise moves the state \
 along the sphere, never through it, so whether a path can cross is decided by \
 the It\[OHat] drift of ",
@@ -18370,7 +18366,7 @@ the It\[OHat] drift of ",
    SuperscriptBox[
     StyleBox["z", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "325c8f47-cd85-89da-6263-2720e431db20"],
+  "12c4fc3b-e00c-2bba-42fb-f66491b97980"],
  " there, which is ",
  Cell[BoxData[
   RowBox[{"2", " ", 
@@ -18389,16 +18385,16 @@ the It\[OHat] drift of ",
    OverscriptBox[
     StyleBox["b", "TI"], "\[RightVector]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "43fcea2e-12ab-c026-7183-0388a75f930c"],
+  "1d7e6892-18cd-6f45-4b05-81dc997835af"],
  " on the three state rows, the readout row playing no part in the radius, \
 evaluated at ",
  Cell[BoxData[
   RowBox[{
    StyleBox["r", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5b416c07-c3d3-bf4f-097e-8660f6670595"],
+  "325c8f47-cd85-89da-6263-2720e431db20"],
  " and with the closed form"
-}], "Text",ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db"],
+}], "Text",ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c"],
 
 Cell[BoxData[
  PaneBox[
@@ -18458,12 +18454,12 @@ Cell[BoxData[
       StyleBox[")",
        SpanMaxSize->1]}], "2"]}], "."}],
   Alignment->Center,
-  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78"],
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595"],
 
 Cell["\<\
 Verify that closed form, substituting a point on the sphere and subtracting \
 the claim:\
-\>", "Text",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed"],
+\>", "Text",ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db"],
 
 Cell[CellGroupData[{
 
@@ -18541,11 +18537,11 @@ Cell[BoxData[
           RowBox[{"1", " ", "-", " ", "z"}], ")"}], "^", "2"}]}]}], ")"}]}], 
     "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[33]:= ",ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742"],
+  "In[33]:= ",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78"],
 
 Cell[BoxData["0"], "Output",
  CellLabel->
-  "Out[33]= ",ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d"]
+  "Out[33]= ",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -18564,7 +18560,7 @@ the relaxation term ",
      StyleBox[")",
       SpanMaxSize->1]}], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "494d6e39-7750-b6eb-7f72-806302ea1c31"],
+  "7d3ffb2e-09a8-fc78-24c4-f288a842c742"],
  " always pulls inward but dies quadratically at the ground pole, while the \
 measurement bracket scales as ",
  Cell[BoxData[
@@ -18577,12 +18573,12 @@ measurement bracket scales as ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "39b01e29-d171-5c92-6f4f-9072e00426f8"],
+  "4139b36b-52b1-2977-70c6-2b356744785d"],
  " and survives there linearly, so the drift points inward for every ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4f6d713e-2461-11c8-7513-69784d146312"],
+  "494d6e39-7750-b6eb-7f72-806302ea1c31"],
  " precisely when ",
  Cell[BoxData[
   RowBox[{
@@ -18603,7 +18599,7 @@ measurement bracket scales as ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "14ad582f-66ff-93eb-3c53-5189128be131"],
+  "39b01e29-d171-5c92-6f4f-9072e00426f8"],
  ", the admissibility condition. Every rate set that drives an ensemble in \
 this document passes that test in the cell defining it; of the three \
 single-path sets below, one is a deliberate violation and the other two sit \
@@ -18611,7 +18607,7 @@ exactly on the admissibility boundary, each named as such where it appears. \
 So the largest Bloch radius any regularized path reached, over the stored \
 grid, should sit at one to within the small overshoot of an unprojected \
 scheme:"
-}], "Text",ExpressionUUID->"4f7ea056-2d28-85ec-7505-3a1044c2ef36"],
+}], "Text",ExpressionUUID->"4f6d713e-2461-11c8-7513-69784d146312"],
 
 Cell[CellGroupData[{
 
@@ -18625,11 +18621,11 @@ Cell[BoxData[
        RowBox[{"1", " ", ";;", " ", "3"}]}], "]"}], "]"}], ",", " ", 
     RowBox[{"{", "2", "}"}]}], "]"}], "]"}]], "Input",
  CellLabel->
-  "In[34]:= ",ExpressionUUID->"16b00368-b832-202d-3e4f-9b3239c77377"],
+  "In[34]:= ",ExpressionUUID->"14ad582f-66ff-93eb-3c53-5189128be131"],
 
 Cell[BoxData["1.`"], "Output",
  CellLabel->
-  "Out[34]= ",ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8"]
+  "Out[34]= ",ExpressionUUID->"4f7ea056-2d28-85ec-7505-3a1044c2ef36"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -18646,14 +18642,14 @@ admissibility condition, which for a detector means ",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "05feeeaf-4f58-f7b7-3385-07096ad2dd9d"],
+  "16b00368-b832-202d-3e4f-9b3239c77377"],
  ", more information extracted than the dephasing paid for, and the equation \
 stops being a valid unraveling: the trajectory can leave the ball, and its \
 coordinates no longer describe a density matrix. That failure is one cell \
 away. Fix rates that fail the check, twice the information the dephasing \
 supplies, start on the sphere away from the pole where the closed form above \
 makes the flux point outward, and read the largest radius one path reaches:"
-}], "Text",ExpressionUUID->"583a98af-415b-100e-09d9-110970ee6354"],
+}], "Text",ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8"],
 
 Cell[CellGroupData[{
 
@@ -18693,11 +18689,11 @@ Cell[BoxData[
            RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}]}], 
       "]"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[35]:= ",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3"],
+  "In[35]:= ",ExpressionUUID->"05feeeaf-4f58-f7b7-3385-07096ad2dd9d"],
 
 Cell[BoxData["1.0247271358992156`"], "Output",
  CellLabel->
-  "Out[35]= ",ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4"]
+  "Out[35]= ",ExpressionUUID->"583a98af-415b-100e-09d9-110970ee6354"]
 }, Open  ]],
 
 Cell["\<\
@@ -18705,7 +18701,7 @@ The radius runs past one: on this part of the sphere the drift itself points \
 outward, so the exit is deterministic, not a rare fluctuation. The equation \
 still integrates; what fails is its meaning, since no density matrix has a \
 Bloch vector outside the ball.\
-\>", "Text",ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554"],
+\>", "Text",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3"],
 
 Cell[TextData[{
  "The boundary is just as sharp from the inside. Saturate the condition with \
@@ -18718,7 +18714,7 @@ no relaxation and no intrinsic dephasing, ",
     StyleBox["\[Gamma]", "TI"], 
     StyleBox["\[Phi]", "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "40ea559d-da93-7842-70ea-4cc6df264aa8"],
+  "503c05d1-55e8-8c5e-01c3-9c9b6382d6a4"],
  " with both quadratures on and the drive on too, ",
  Cell[BoxData[
   RowBox[{
@@ -18731,11 +18727,11 @@ no relaxation and no intrinsic dephasing, ",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "23ccc6ee-92c0-e596-51f3-dfc8277acffc"],
+  "60049622-f570-0e0e-103b-0f8ffc055554"],
  " exactly, and the closed form above vanishes identically: the sphere itself \
 is invariant, so a pure state stays pure along every single trajectory, not \
 merely on average. Start a path on the sphere and read how far it ever leaves:"
-}], "Text",ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f"],
+}], "Text",ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8"],
 
 Cell[CellGroupData[{
 
@@ -18779,11 +18775,11 @@ Cell[BoxData[
              RowBox[{"1", " ", ";;", " ", "3"}], "]"}], "]"}]}], "]"}]}], " ",
          "-", " ", "1"}], "]"}], "]"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[36]:= ",ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75"],
+  "In[36]:= ",ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc"],
 
 Cell[BoxData["5.794197892816655`*^-6"], "Output",
  CellLabel->
-  "Out[36]= ",ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b"]
+  "Out[36]= ",ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f"]
 }, Open  ]],
 
 Cell["\<\
@@ -18791,16 +18787,16 @@ The radius sticks to the sphere at solver error, the sharpest test of the \
 diffusion's scale in the document: a noise term wrong by any factor would \
 walk the path off the sphere at once. On the boundary, positivity is not an \
 inequality respected but an equality enforced.\
-\>", "Text",ExpressionUUID->"5b23761c-2477-64e8-0ad1-68464d024e32"],
+\>", "Text",ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75"],
 
-Cell["The readout: the average signal and the shared noise", "Section",ExpressionUUID->"73216bcf-7cf1-61ac-22de-82a9748433f6"],
+Cell["The readout: the average signal and the shared noise", "Section",ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b"],
 
 Cell[TextData[{
  "We carried the readout ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "69fa63e8-c0ca-4913-1f9a-7ab5f17f1879"],
+  "5b23761c-2477-64e8-0ad1-68464d024e32"],
  " beside the state through every run but have only looked at the state. Turn \
 to the record itself. Taking the mean of ",
  Cell[BoxData[
@@ -18817,7 +18813,7 @@ to the record itself. Taking the mean of ",
    StyleBox["d", "TI"], 
    StyleBox["W", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "409bca18-cbd6-e54d-70b8-ec45ee60cf97"],
+  "73216bcf-7cf1-61ac-22de-82a9748433f6"],
  " and using ",
  Cell[BoxData[
   RowBox[{
@@ -18828,9 +18824,9 @@ to the record itself. Taking the mean of ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "10b62b5f-1d3f-f012-404d-c31994cbc378"],
+  "69fa63e8-c0ca-4913-1f9a-7ab5f17f1879"],
  ", the average record is the integrated signal,"
-}], "Text",ExpressionUUID->"79984792-c453-565a-2fb8-5edfede63ca0"],
+}], "Text",ExpressionUUID->"409bca18-cbd6-e54d-70b8-ec45ee60cf97"],
 
 Cell[BoxData[
  PaneBox[
@@ -18868,7 +18864,7 @@ Cell[BoxData[
     StyleBox["d", "TI"], 
     StyleBox["s", "TI"]}], ","}],
   Alignment->Center,
-  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"1d45428e-8fa1-6801-4b7b-5be82a543b6b"],
+  ImageSize->Full]], "DisplayFormula",ExpressionUUID->"10b62b5f-1d3f-f012-404d-c31994cbc378"],
 
 Cell[TextData[{
  "a closed prediction we already hold, since ",
@@ -18880,16 +18876,16 @@ Cell[TextData[{
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "604bb87d-3174-a116-1048-32274006f07c"],
+  "79984792-c453-565a-2fb8-5edfede63ca0"],
  " is the Lindblad mean. And the records are already in hand: every stored \
 trajectory carries ",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "763191a2-6f8b-197a-1fce-080c0a3e6840"],
+  "1d45428e-8fa1-6801-4b7b-5be82a543b6b"],
  " as its fourth component, so slice the record ensemble out of the same run \
 whose state we just averaged:"
-}], "Text",ExpressionUUID->"635fdfdb-2856-deda-1164-d68549e0a420"],
+}], "Text",ExpressionUUID->"604bb87d-3174-a116-1048-32274006f07c"],
 
 Cell[BoxData[
  RowBox[{
@@ -18899,7 +18895,7 @@ Cell[BoxData[
      RowBox[{"All", ",", " ", "All", ",", " ", "4"}], "]"}], "]"}]}], 
   ";"}]], "Input",
  CellLabel->
-  "In[37]:= ",ExpressionUUID->"0f6eb37a-d9e9-6713-3515-2b27df9c4a79"],
+  "In[37]:= ",ExpressionUUID->"763191a2-6f8b-197a-1fce-080c0a3e6840"],
 
 Cell[TextData[{
  "The prediction is itself a closed form, not a quadrature: append ",
@@ -18917,13 +18913,13 @@ Cell[TextData[{
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5c8469dd-bfc7-2a7a-04bb-80873a727940"],
+  "635fdfdb-2856-deda-1164-d68549e0a420"],
  " to the affine system and let ",
  Cell[BoxData["DSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "182ee0c1-720e-fc83-49d5-f9ab07b8c6e9"],
+  "0f6eb37a-d9e9-6713-3515-2b27df9c4a79"],
  " integrate it exactly:"
-}], "Text",ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc"],
+}], "Text",ExpressionUUID->"5c8469dd-bfc7-2a7a-04bb-80873a727940"],
 
 Cell[BoxData[{
  RowBox[{
@@ -18999,9 +18995,9 @@ Cell[BoxData[{
           RowBox[{"uf", "[", "tt", "]"}], " ", "/.", " ", "sol"}], "]"}]}], 
        "]"}]}]}], "]"}]}], ";"}]}], "Input",
  CellLabel->
-  "In[38]:= ",ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c"],
+  "In[38]:= ",ExpressionUUID->"182ee0c1-720e-fc83-49d5-f9ab07b8c6e9"],
 
-Cell["Overlay the ensemble-averaged record on that prediction:", "Text",ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21"],
+Cell["Overlay the ensemble-averaged record on that prediction:", "Text",ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc"],
 
 Cell[CellGroupData[{
 
@@ -19056,7 +19052,7 @@ Cell[BoxData[
      RowBox[{"ImageSize", " ", "->", " ", "520"}]}], "]"}]}], "]"}]], "Input",\
 
  CellLabel->
-  "In[39]:= ",ExpressionUUID->"77076ae4-09e5-8344-1d3c-83ceaf91d1ae"],
+  "In[39]:= ",ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c"],
 
 Cell[BoxData[
  TemplateBox[{
@@ -19967,7 +19963,7 @@ PPLb4etll9Kol0cu3ZhqcZVPvTzSFJEXdbmQenue96PJIaCSenlkreWTN55N
        RowBox[{"Placed", "[", 
          RowBox[{#2, ",", "After"}], "]"}]}], "]"}]& )]], "Output",
  CellLabel->
-  "Out[39]= ",ExpressionUUID->"4289b0c6-8043-1b93-72b6-29a031f669f9"]
+  "Out[39]= ",ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -19980,7 +19976,7 @@ Cell[TextData[{
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "070f3e08-556d-9d60-2d34-b0525c19e44a"],
+  "77076ae4-09e5-8344-1d3c-83ceaf91d1ae"],
  ", the two curves tracking with a residual wander that is the \
 ensemble-averaged noise, of order ",
  Cell[BoxData[
@@ -19992,16 +19988,16 @@ ensemble-averaged noise, of order ",
      StyleBox["traj",
       FontSlant->"Plain"]]}]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6d593b15-c37a-9c59-1b66-b35ef60ce6a3"],
+  "4289b0c6-8043-1b93-72b6-29a031f669f9"],
  " and not yet fully cancelled at this sample size. The signal is what \
 survives averaging; the noise is what does not."
-}], "Text",ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c"],
+}], "Text",ExpressionUUID->"070f3e08-556d-9d60-2d34-b0525c19e44a"],
 
 Cell["\<\
 Turn that visual match into a number: the largest gap between the mean record \
 and its prediction anywhere on the grid, in Monte-Carlo standard errors, \
 again skipping the start where the record is pinned at zero:\
-\>", "Text",ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60"],
+\>", "Text",ExpressionUUID->"6d593b15-c37a-9c59-1b66-b35ef60ce6a3"],
 
 Cell[CellGroupData[{
 
@@ -20034,11 +20030,11 @@ Cell[BoxData[
        RowBox[{"StandardDeviation", "[", "qc", "]"}], "/", 
        RowBox[{"Sqrt", "[", "nB", "]"}]}], ")"}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[40]:= ",ExpressionUUID->"16b44e14-0404-e868-3e4c-605eadb6bab2"],
+  "In[40]:= ",ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c"],
 
 Cell[BoxData["1.6626908417121813`"], "Output",
  CellLabel->
-  "Out[40]= ",ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622"]
+  "Out[40]= ",ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -20051,9 +20047,9 @@ everywhere on the grid, which is all the average can claim at finite ",
    StyleBox["traj",
     FontSlant->"Plain"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e10bd94-ae42-3b4d-262f-34d1cbf48997"],
+  "16b44e14-0404-e868-3e4c-605eadb6bab2"],
  "."
-}], "Text",ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c"],
+}], "Text",ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622"],
 
 Cell[TextData[{
  "The record's spread deserves the same two-route treatment as the state's, \
@@ -20062,9 +20058,9 @@ final-",
  Cell[BoxData[
   StyleBox["Q", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "013c2307-fb8b-27c7-30c3-bb60fe3f8d2d"],
+  "7e10bd94-ae42-3b4d-262f-34d1cbf48997"],
  " spread against the regularized ensemble's, in the same units as before:"
-}], "Text",ExpressionUUID->"4b734859-75e7-efa6-7901-62030393b58c"],
+}], "Text",ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c"],
 
 Cell[CellGroupData[{
 
@@ -20080,11 +20076,11 @@ Cell[BoxData[
      RowBox[{"All", ",", " ", 
       RowBox[{"-", "1"}]}], "]"}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[41]:= ",ExpressionUUID->"4ae31c17-eefa-a706-7a90-96508a8c0a6c"],
+  "In[41]:= ",ExpressionUUID->"013c2307-fb8b-27c7-30c3-bb60fe3f8d2d"],
 
 Cell[BoxData["0.9100112979132597`"], "Output",
  CellLabel->
-  "Out[41]= ",ExpressionUUID->"00844d77-2817-3ec6-30bc-653149a3842c"]
+  "Out[41]= ",ExpressionUUID->"4b734859-75e7-efa6-7901-62030393b58c"]
 }, Open  ]],
 
 Cell["\<\
@@ -20092,7 +20088,7 @@ The record's final spread agrees between the routes at the sampling scale \
 too: beyond its mean and its pathwise identity, the record's spread now has \
 an independent reference, so the fourth row is held to the same standard as \
 the state.\
-\>", "Text",ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0"],
+\>", "Text",ExpressionUUID->"4ae31c17-eefa-a706-7a90-96508a8c0a6c"],
 
 Cell[TextData[{
  "The average removed the noise, but a single record still carries it, and \
@@ -20111,7 +20107,7 @@ carries a specific one. Since ",
    StyleBox["d", "TI"], 
    StyleBox["W", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "04469009-6b02-dcc3-2c7d-0a530eb4a629"],
+  "00844d77-2817-3ec6-30bc-653149a3842c"],
  " exactly, subtracting the integrated signal from one record must return the \
 very Wiener path that drove the state. Build one trajectory, strip its \
 signal, and overlay the remainder on its driving path ",
@@ -20124,9 +20120,9 @@ signal, and overlay the remainder on its driving path ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4e35d333-5bd5-ef26-77ca-cb7d5e61b20c"],
+  "20b97f64-b973-0c8a-5047-774e380656d0"],
  ":"
-}], "Text",ExpressionUUID->"5547dfb6-0e84-e145-037c-d6f0ab36b3af"],
+}], "Text",ExpressionUUID->"04469009-6b02-dcc3-2c7d-0a530eb4a629"],
 
 Cell[CellGroupData[{
 
@@ -20224,7 +20220,7 @@ noise\>\""}], ",", " ",
           RowBox[{"ImageSize", " ", "->", " ", "520"}]}], "]"}]}]}], "]"}]}], 
     "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[42]:= ",ExpressionUUID->"12b61bfc-9cd7-eca9-424d-92a61563b6f3"],
+  "In[42]:= ",ExpressionUUID->"4e35d333-5bd5-ef26-77ca-cb7d5e61b20c"],
 
 Cell[BoxData[
  TemplateBox[{
@@ -26663,7 +26659,7 @@ noise\"", TraditionalForm],
        RowBox[{"Placed", "[", 
          RowBox[{#2, ",", "Below"}], "]"}]}], "]"}]& )]], "Output",
  CellLabel->
-  "Out[42]= ",ExpressionUUID->"451364b5-819d-fb99-7321-7dff3029c9e3"]
+  "Out[42]= ",ExpressionUUID->"5547dfb6-0e84-e145-037c-d6f0ab36b3af"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -26681,22 +26677,22 @@ kicked the state, they are that noise. The observer reads ",
     FontSize->1.15 Inherited], 
    StyleBox["z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "13b49e24-0fb7-4441-414b-178eaa422eab"],
+  "12b61bfc-9cd7-eca9-424d-92a61563b6f3"],
  " as signal; the remainder is the single innovation ",
  Cell[BoxData[
   StyleBox[
    RowBox[{"d", "W"}], "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "445bf28f-7a5a-ecd1-6c78-ebe97fecb63b"],
+  "451364b5-819d-fb99-7321-7dff3029c9e3"],
  " the detector wrote into the record and the backaction at once."
-}], "Text",ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69"],
+}], "Text",ExpressionUUID->"13b49e24-0fb7-4441-414b-178eaa422eab"],
 
 Cell["\<\
 Rather than trust the line width, put a number on it, the largest gap between \
 the stripped record and the driving path across the window; define the \
 residual once, its solver goals adjustable, and read it at the default \
 tolerance:\
-\>", "Text",ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd"],
+\>", "Text",ExpressionUUID->"445bf28f-7a5a-ecd1-6c78-ebe97fecb63b"],
 
 Cell[CellGroupData[{
 
@@ -26778,11 +26774,11 @@ Cell[BoxData[{
         "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
  RowBox[{"recordResidual", "[", "Automatic", "]"}]}], "Input",
  CellLabel->
-  "In[43]:= ",ExpressionUUID->"0cdaad60-2181-5e26-34f9-454a5034250c"],
+  "In[43]:= ",ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69"],
 
 Cell[BoxData["1.2859111055973926`*^-6"], "Output",
  CellLabel->
-  "Out[43]= ",ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b"]
+  "Out[43]= ",ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -26800,38 +26796,38 @@ defines ",
    SuperscriptBox[
     StyleBox["W", "TI"], "\[Prime]"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "00dd9d4d-f7ec-565f-30e2-151681993ca5"],
+  "0cdaad60-2181-5e26-34f9-454a5034250c"],
  ", so stripping the signal is a self-consistency check that the integrator \
 preserves the defining record identity, not an independent validation of the \
 route. If that reading is right, the residual must fall when the solver is \
 asked for more digits. Rerun the same trajectory with ",
  Cell[BoxData["AccuracyGoal"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0d66b502-775d-ec4c-3b1d-2d6c02e9b696"],
+  "542cff75-84e0-b601-7dd3-f73f2c9a1d6b"],
  " and ",
  Cell[BoxData["PrecisionGoal"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891"],
+  "00dd9d4d-f7ec-565f-30e2-151681993ca5"],
  " tightened:"
-}], "Text",ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072"],
+}], "Text",ExpressionUUID->"0d66b502-775d-ec4c-3b1d-2d6c02e9b696"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"recordResidual", "[", "10", "]"}]], "Input",
  CellLabel->
-  "In[44]:= ",ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58"],
+  "In[44]:= ",ExpressionUUID->"3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891"],
 
 Cell[BoxData["3.737804293857394`*^-8"], "Output",
  CellLabel->
-  "Out[44]= ",ExpressionUUID->"1d9e3d6f-99f1-7c1e-4ba5-b5491f844764"]
+  "Out[44]= ",ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072"]
 }, Open  ]],
 
 Cell["\<\
 The residual falls with the tolerance, confirming it is integration error and \
 nothing else: the record minus its signal is the driving noise as an \
 identity, at whatever precision the solver is asked to keep.\
-\>", "Text",ExpressionUUID->"710db4a8-d877-0db2-2732-2df5d9025798"],
+\>", "Text",ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58"],
 
 Cell[TextData[{
  "One regime makes the tie between the state and its record total. Switch off \
@@ -26843,21 +26839,21 @@ relaxation and drive, ",
    SubscriptBox["\[CapitalOmega]", 
     StyleBox["x", "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "71e12f72-3ad4-a92f-279e-c73cbf66f875"],
+  "1d9e3d6f-99f1-7c1e-4ba5-b5491f844764"],
  ", and leave everything else alone: backaction, dephasing, any efficiency. \
 Those only kick the phase, never the population, so dividing the Stratonovich \
 ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "06ea8612-dd18-b4f0-2ee9-185fd4921eda"],
+  "710db4a8-d877-0db2-2732-2df5d9025798"],
  " row by ",
  Cell[BoxData[
   RowBox[{"1", "-", 
    SuperscriptBox[
     StyleBox["z", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0b02f270-2101-5c3d-3931-f43a50b42707"],
+  "71e12f72-3ad4-a92f-279e-c73cbf66f875"],
  " turns the ordinary chain rule loose, ",
  Cell[BoxData[
   RowBox[{
@@ -26884,7 +26880,7 @@ Those only kick the phase, never the population, so dividing the Stratonovich \
    StyleBox["d", "TI"], 
    StyleBox["Q", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2d1868bf-f524-2aaf-5b27-81f8fcd178f5"],
+  "06ea8612-dd18-b4f0-2ee9-185fd4921eda"],
  ", and the monitored component becomes a closed function of its own \
 accumulated record, ",
  Cell[BoxData[
@@ -26917,16 +26913,16 @@ accumulated record, ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "669caa83-24d6-d7e9-0ea3-43ed4d60bd33"],
+  "0b02f270-2101-5c3d-3931-f43a50b42707"],
  ", exactly and pathwise. In other words, with nothing but measurement \
 acting, the record is a complete log of the state. First check the \
 differential identity on the whole symbolic flow, the formal ",
  Cell[BoxData[
   StyleBox["w", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e"],
+  "2d1868bf-f524-2aaf-5b27-81f8fcd178f5"],
  " standing in for the noise:"
-}], "Text",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4"],
+}], "Text",ExpressionUUID->"669caa83-24d6-d7e9-0ea3-43ed4d60bd33"],
 
 Cell[CellGroupData[{
 
@@ -26988,11 +26984,11 @@ Cell[BoxData[
           RowBox[{"[", "4", "]"}], "]"}], " ", "w"}]}], ")"}]}]}], "]"}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[45]:= ",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169"],
+  "In[45]:= ",ExpressionUUID->"5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e"],
 
 Cell[BoxData["0"], "Output",
  CellLabel->
-  "Out[45]= ",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8"]
+  "Out[45]= ",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27008,14 +27004,14 @@ Cell[TextData[{
     StyleBox["\[Gamma]", "TI"], 
     StyleBox["\[Phi]", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "12c044c4-b778-74e1-42f0-5da1c20d5ecb"],
+  "3e73fafe-05d0-7203-6600-f3b8ac654169"],
  " fully symbolic: reading the state off the record is filtering, and the \
 trajectory does it at any efficiency; only relaxation or a drive can decouple \
 ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3d9aa029-60a8-273a-6bb9-3a7311428a00"],
+  "7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8"],
  " from its own record. Now read the largest violation along one regularized \
 path, at a bare-measurement rate set that sits exactly on the admissibility \
 boundary, ",
@@ -27027,7 +27023,7 @@ boundary, ",
    SubscriptBox["\[CapitalGamma]", 
     StyleBox["d", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "64adc082-4122-deff-0c52-d9ec70d4a4c5"],
+  "12c044c4-b778-74e1-42f0-5da1c20d5ecb"],
  " with ",
  Cell[BoxData[
   RowBox[{
@@ -27035,10 +27031,10 @@ boundary, ",
     StyleBox["\[Gamma]", "TI"], 
     StyleBox["\[Phi]", "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7e451771-8a55-ceec-267a-8f3b2fe19436"],
+  "3d9aa029-60a8-273a-6bb9-3a7311428a00"],
  "; make the residual's solver goals adjustable, like the record residual \
 above:"
-}], "Text",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605"],
+}], "Text",ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5"],
 
 Cell[CellGroupData[{
 
@@ -27096,28 +27092,28 @@ Cell[BoxData[{
          "]"}], "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
  RowBox[{"tanhResidual", "[", "Automatic", "]"}]}], "Input",
  CellLabel->
-  "In[46]:= ",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089"],
+  "In[46]:= ",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436"],
 
 Cell[BoxData["1.1700755728205614`*^-6"], "Output",
  CellLabel->
-  "Out[46]= ",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3"]
+  "Out[46]= ",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605"]
 }, Open  ]],
 
 Cell["\<\
 Tighten the goals and the violation must follow the solver, not the noise \
 grid:\
-\>", "Text",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d"],
+\>", "Text",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"tanhResidual", "[", "10", "]"}]], "Input",
  CellLabel->
-  "In[47]:= ",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1"],
+  "In[47]:= ",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3"],
 
 Cell[BoxData["4.519738538988349`*^-8"], "Output",
  CellLabel->
-  "Out[47]= ",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554"]
+  "Out[47]= ",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27130,7 +27126,7 @@ is exact at any ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "10bcaec6-cc03-bcfd-4043-47a3e5b706c7"],
+  "737c509e-bc52-eefb-2104-49d835e4b4c1"],
  ", so nothing about this identity waits for the white-noise limit. Where the \
 general case shares one noise between state and record, this regime goes \
 further: the state is the record, read through a ",
@@ -27138,11 +27134,11 @@ further: the state is the record, read through a ",
   StyleBox["tanh",
    FontSlant->"Plain"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "25120901-cfbc-a8e6-5321-a16aea4efacc"],
+  "01a44b6b-c85f-9e0e-375c-6334e9ebe554"],
  "."
-}], "Text",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e"],
+}], "Text",ExpressionUUID->"10bcaec6-cc03-bcfd-4043-47a3e5b706c7"],
 
-Cell["The two time steps: which one sets the answer", "Section",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12"],
+Cell["The two time steps: which one sets the answer", "Section",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc"],
 
 Cell[TextData[{
  "The route carries two time increments, and the section title is a real \
@@ -27151,11 +27147,11 @@ first. Hold the noise grid fixed and read the final-",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1318f44b-7a0d-b86f-4127-ee157fb90ab5"],
+  "3ee7491f-72c3-8814-669d-61590777db7e"],
  " mean and spread with the ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "221ecbfd-1ed7-d323-5225-e2a79b63be09"],
+  "67860241-8011-89c8-0dbd-a42b31a5db12"],
  " step held far below ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -27164,10 +27160,10 @@ first. Hold the noise grid fixed and read the final-",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3f067a83-888f-4db3-653e-73ed293a1799"],
+  "1318f44b-7a0d-b86f-4127-ee157fb90ab5"],
  ", then again with it pushed well above; the first row reads the run already \
 stored, the second re-integrates the same noise with the cap relaxed:"
-}], "Text",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a"],
+}], "Text",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09"],
 
 Cell[CellGroupData[{
 
@@ -27212,7 +27208,7 @@ Cell[BoxData[
        RowBox[{"\"\<mean z\>\"", ",", " ", "\"\<spread z\>\""}], "}"}]}], 
      "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[48]:= ",ExpressionUUID->"2207e002-80f7-0285-523c-fa6c308250ef"],
+  "In[48]:= ",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799"],
 
 Cell[BoxData[
  TagBox[
@@ -27253,7 +27249,7 @@ Cell[BoxData[
        "step 10 \!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)"}, {
       "mean z", "spread z"}}]]]], "Output",
  CellLabel->
-  "Out[48]= ",ExpressionUUID->"440467ae-8db5-79b4-6c3c-7e0824404b9e"]
+  "Out[48]= ",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27261,7 +27257,7 @@ Cell[TextData[{
 coincide to solver precision: for this parameter set and ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "141585f4-d1c1-5bbd-3c2a-1cb1e0742987"],
+  "2207e002-80f7-0285-523c-fa6c308250ef"],
  "'s default tolerances, its adaptive error control refines the step wherever \
 ",
  Cell[BoxData[
@@ -27274,11 +27270,11 @@ coincide to solver precision: for this parameter set and ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3d27d006-86b8-9131-64dc-ca603332e01b"],
+  "440467ae-8db5-79b4-6c3c-7e0824404b9e"],
  " varies, so relaxing ",
  Cell[BoxData["MaxStepSize"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3e44340b-ef5c-51d5-667b-ae548ae9233f"],
+  "141585f4-d1c1-5bbd-3c2a-1cb1e0742987"],
  " from a quarter of ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -27287,7 +27283,7 @@ coincide to solver precision: for this parameter set and ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "321034f4-436e-dcec-622f-adbe7618a636"],
+  "3d27d006-86b8-9131-64dc-ca603332e01b"],
  " to ten times it leaves the observables unmoved. We still cap it below ",
  Cell[BoxData[
   RowBox[{"\[CapitalDelta]", 
@@ -27296,10 +27292,10 @@ coincide to solver precision: for this parameter set and ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1287d3f9-6500-de4e-42bc-caa30cbaa494"],
+  "3e44340b-ef5c-51d5-667b-ae548ae9233f"],
  " as a cheap guarantee, not because this run needs it, and it is not the \
 binding dial."
-}], "Text",ExpressionUUID->"3035d7f6-28ea-dcd5-61ca-ceb0489ca63f"],
+}], "Text",ExpressionUUID->"321034f4-436e-dcec-622f-adbe7618a636"],
 
 Cell[TextData[{
  "The binding dial is ",
@@ -27310,19 +27306,19 @@ Cell[TextData[{
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "087f5f2f-6486-1b59-3805-56890d3369a3"],
+  "1287d3f9-6500-de4e-42bc-caa30cbaa494"],
  ", and the native ",
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7ddf1aac-cdaa-cd7e-2be4-9309e45c9444"],
+  "3035d7f6-28ea-dcd5-61ca-ceb0489ca63f"],
  " ensemble is the reference the shrinking grid should approach. Read its \
 final-",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2b41c4a9-15e8-1804-597e-ddf3a39d6b6e"],
+  "087f5f2f-6486-1b59-3805-56890d3369a3"],
  " mean:"
-}], "Text",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81"],
+}], "Text",ExpressionUUID->"7ddf1aac-cdaa-cd7e-2be4-9309e45c9444"],
 
 Cell[CellGroupData[{
 
@@ -27333,11 +27329,11 @@ Cell[BoxData[
     RowBox[{"All", ",", " ", 
      RowBox[{"-", "1"}], ",", " ", "3"}], "]"}], "]"}], "]"}]], "Input",
  CellLabel->
-  "In[49]:= ",ExpressionUUID->"6724c974-bdf1-27a5-0edb-e13e3b858d8f"],
+  "In[49]:= ",ExpressionUUID->"2b41c4a9-15e8-1804-597e-ddf3a39d6b6e"],
 
 Cell[BoxData["0.1556727019890589`"], "Output",
  CellLabel->
-  "Out[49]= ",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832"]
+  "Out[49]= ",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27345,10 +27341,10 @@ Cell[TextData[{
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "53412643-5a68-df00-017e-b82d5f02a26a"],
+  "6724c974-bdf1-27a5-0edb-e13e3b858d8f"],
  " spread, the number the regularized route must reproduce as the grid \
 tightens:"
-}], "Text",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c"],
+}], "Text",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832"],
 
 Cell[CellGroupData[{
 
@@ -27359,11 +27355,11 @@ Cell[BoxData[
     RowBox[{"All", ",", " ", 
      RowBox[{"-", "1"}], ",", " ", "3"}], "]"}], "]"}], "]"}]], "Input",
  CellLabel->
-  "In[50]:= ",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6"],
+  "In[50]:= ",ExpressionUUID->"53412643-5a68-df00-017e-b82d5f02a26a"],
 
 Cell[BoxData["0.2707247051031512`"], "Output",
  CellLabel->
-  "Out[50]= ",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99"]
+  "Out[50]= ",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c"]
 }, Open  ]],
 
 Cell["\<\
@@ -27371,7 +27367,7 @@ A reference earns its role only if it is converged itself, so put the same \
 question to the native integrator. The first row is the working step, the \
 very ensemble serving as reference; below it the step is halved and halved \
 again, the spreads stored for the comparison that follows:\
-\>", "Text",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2"],
+\>", "Text",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6"],
 
 Cell[CellGroupData[{
 
@@ -27416,7 +27412,7 @@ Cell[BoxData[{
        RowBox[{"\"\<dt\>\"", ",", " ", "\"\<spread z\>\""}], "}"}]}], 
      "}"}]}]}], "]"}]}], "Input",
  CellLabel->
-  "In[51]:= ",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79"],
+  "In[51]:= ",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99"],
 
 Cell[BoxData[
  TagBox[
@@ -27445,13 +27441,13 @@ Cell[BoxData[
    TableForm[
    BoxForm`e$, TableHeadings -> {None, {"dt", "spread z"}}]]]], "Output",
  CellLabel->
-  "Out[51]= ",ExpressionUUID->"07a61755-6475-fbf7-2d5d-8f1f0d01c9dd"]
+  "Out[51]= ",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2"]
 }, Open  ]],
 
 Cell["\<\
 Read the two refined rows as distances from the working-step row, in units of \
 the estimates' sampling errors in quadrature:\
-\>", "Text",ExpressionUUID->"539b0e4e-9e5a-5525-01b8-a0281bef3c0f"],
+\>", "Text",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79"],
 
 Cell[CellGroupData[{
 
@@ -27471,7 +27467,7 @@ Cell[BoxData[
       RowBox[{"\"\<dt/2\>\"", ",", " ", "\"\<dt/4\>\""}], "}"}], "}"}]}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[52]:= ",ExpressionUUID->"1cd82739-42e3-b7ed-44e7-bf6376971d37"],
+  "In[52]:= ",ExpressionUUID->"07a61755-6475-fbf7-2d5d-8f1f0d01c9dd"],
 
 Cell[BoxData[
  TagBox[
@@ -27497,14 +27493,14 @@ Cell[BoxData[
   Function[BoxForm`e$, 
    TableForm[BoxForm`e$, TableHeadings -> {{"dt/2", "dt/4"}}]]]], "Output",
  CellLabel->
-  "Out[52]= ",ExpressionUUID->"0971a20b-7913-467e-3f0e-445578a62d44"]
+  "Out[52]= ",ExpressionUUID->"539b0e4e-9e5a-5525-01b8-a0281bef3c0f"]
 }, Open  ]],
 
 Cell["\<\
 Both refined steps sit at the sampling scale of the working step, with no \
 systematic trend, so at the working step the native ensemble is a converged \
 yardstick for the comparisons above and the sweep below.\
-\>", "Text",ExpressionUUID->"09df342d-d743-5809-3fe4-ae76e2f62b53"],
+\>", "Text",ExpressionUUID->"1cd82739-42e3-b7ed-44e7-bf6376971d37"],
 
 Cell[TextData[{
  "Now sweep ",
@@ -27515,15 +27511,15 @@ Cell[TextData[{
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0a0cc1e9-e2ca-26d9-3a33-d8b2977c8c23"],
+  "0971a20b-7913-467e-3f0e-445578a62d44"],
  " from coarse to fine, the integrator step held below it, and tabulate the \
 regularized mean and spread of the final ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "21fdaace-430e-f3f9-5782-43a876b8c1c3"],
+  "09df342d-d743-5809-3fe4-ae76e2f62b53"],
  " against the grid step:"
-}], "Text",ExpressionUUID->"1b4e2dea-4a49-bf2e-4975-c4b46ffd0274"],
+}], "Text",ExpressionUUID->"0a0cc1e9-e2ca-26d9-3a33-d8b2977c8c23"],
 
 Cell[CellGroupData[{
 
@@ -27569,7 +27565,7 @@ Cell[BoxData[{
         ",", " ", "\"\<mean z\>\"", ",", " ", "\"\<spread z\>\""}], "}"}]}], 
      "}"}]}]}], "]"}]}], "Input",
  CellLabel->
-  "In[53]:= ",ExpressionUUID->"10b057f0-cb39-4e6e-4040-4ebdeecc14b4"],
+  "In[53]:= ",ExpressionUUID->"21fdaace-430e-f3f9-5782-43a876b8c1c3"],
 
 Cell[BoxData[
  TagBox[
@@ -27606,7 +27602,7 @@ Cell[BoxData[
      None, {"\!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)", "mean z", 
        "spread z"}}]]]], "Output",
  CellLabel->
-  "Out[53]= ",ExpressionUUID->"41c6bfc6-0792-5005-77fd-36a0b227236f"]
+  "Out[53]= ",ExpressionUUID->"1b4e2dea-4a49-bf2e-4975-c4b46ffd0274"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27620,7 +27616,7 @@ coarse value and flattens toward the native reference as ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "62752e4e-571f-d961-120a-c02862aba84b"],
+  "10b057f0-cb39-4e6e-4040-4ebdeecc14b4"],
  " shrinks. In the white-noise limit the affine drift fixes the mean exactly; \
 at finite ",
  Cell[BoxData[
@@ -27630,12 +27626,12 @@ at finite ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "34ee5221-bb14-cc46-5c96-4b8b3ea696ac"],
+  "41c6bfc6-0792-5005-77fd-36a0b227236f"],
  " any regularization bias in the mean sits below the Monte-Carlo scatter \
 here, while the bias in the spread is large enough to watch converge out. Put \
 the mean column in its own units, each row's distance from the exact Lindblad \
 value in that row's standard error:"
-}], "Text",ExpressionUUID->"166277e1-e8de-815f-3e12-6eca8968d3a5"],
+}], "Text",ExpressionUUID->"62752e4e-571f-d961-120a-c02862aba84b"],
 
 Cell[CellGroupData[{
 
@@ -27675,7 +27671,7 @@ Cell[BoxData[
           "6", ",", " ", "12", ",", " ", "25", ",", " ", "100", ",", " ", 
            "400"}], "}"}]}], "]"}], "}"}]}]}], "]"}]}], "]"}]], "Input",
  CellLabel->
-  "In[54]:= ",ExpressionUUID->"0ae7a534-7379-468c-3a9c-3d7e060c2cd6"],
+  "In[54]:= ",ExpressionUUID->"34ee5221-bb14-cc46-5c96-4b8b3ea696ac"],
 
 Cell[BoxData[
  TagBox[
@@ -27712,7 +27708,7 @@ Cell[BoxData[
    BoxForm`e$, 
     TableHeadings -> {{0.5, 0.25, 0.12, 0.03, 0.0075}}]]]], "Output",
  CellLabel->
-  "Out[54]= ",ExpressionUUID->"34baef30-7963-b757-5c59-077a78171dbd"]
+  "Out[54]= ",ExpressionUUID->"166277e1-e8de-815f-3e12-6eca8968d3a5"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27727,12 +27723,12 @@ exactly what the algebra said it must. So of the two increments it is ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "15ce0314-20ee-2b64-43f5-9b5e509b764e"],
+  "0ae7a534-7379-468c-3a9c-3d7e060c2cd6"],
  " that sets the answer, and at this sampling accuracy the spread is where we \
 can see it move."
-}], "Text",ExpressionUUID->"38a9ac88-4644-6c0e-6856-45d273f13754"],
+}], "Text",ExpressionUUID->"34baef30-7963-b757-5c59-077a78171dbd"],
 
-Cell["Phase backaction: the x channel comes alive", "Section",ExpressionUUID->"64802aa2-b136-451c-0cbf-c30fc0c32c66"],
+Cell["Phase backaction: the x channel comes alive", "Section",ExpressionUUID->"15ce0314-20ee-2b64-43f5-9b5e509b764e"],
 
 Cell[TextData[{
  "So far the backaction quadrature has been off (",
@@ -27742,23 +27738,23 @@ Cell[TextData[{
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "67771ff6-ea2e-a98b-0d0c-96b38fd8fbd1"],
+  "38a9ac88-4644-6c0e-6856-45d273f13754"],
  "), which decoupled ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "233ecb8e-17f3-8d32-52c5-e2e8a187d418"],
+  "64802aa2-b136-451c-0cbf-c30fc0c32c66"],
  " and left it trivial. Turn it on and the ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7dd949a9-d8cf-50b3-2be7-60f2d97a2299"],
+  "67771ff6-ea2e-a98b-0d0c-96b38fd8fbd1"],
  " channel comes alive, but watch where: the affine It\[OHat] drift still \
 decouples ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4a74bc9f-39f4-5114-7a0b-35d9bf81207e"],
+  "233ecb8e-17f3-8d32-52c5-e2e8a187d418"],
  "'s mean, so ",
  Cell[BoxData[
   RowBox[{
@@ -27768,7 +27764,7 @@ decouples ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "598f41e5-f1df-a461-0fb5-58ce806b0f4b"],
+  "7dd949a9-d8cf-50b3-2be7-60f2d97a2299"],
  " decays on its own, while the diffusion's ",
  Cell[BoxData[
   RowBox[{
@@ -27778,17 +27774,17 @@ decouples ",
       RowBox[{"B", "A"}], "TI"]]], " ", 
    StyleBox["y", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1e0f0df5-2071-c96f-4634-a4bf51059bb5"],
+  "4a74bc9f-39f4-5114-7a0b-35d9bf81207e"],
  " term now feeds ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7f6e12d5-e3b9-0bb9-2515-8b9e964c5983"],
+  "598f41e5-f1df-a461-0fb5-58ce806b0f4b"],
  "'s fluctuations from ",
  Cell[BoxData[
   StyleBox["y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "41ecc127-3c02-05fa-7793-d881b5b76fc0"],
+  "1e0f0df5-2071-c96f-4634-a4bf51059bb5"],
  ". So the mean is the weak test of the coupling and the spread is the real \
 one. Fix a case with both quadratures on, from a tilted start. This set \
 satisfies the admissibility condition with equality, ",
@@ -27811,7 +27807,7 @@ satisfies the admissibility condition with equality, ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1190ff72-a9fe-60f8-47af-f73fcf8b32c2"],
+  "7f6e12d5-e3b9-0bb9-2515-8b9e964c5983"],
  " with ",
  Cell[BoxData[
   RowBox[{
@@ -27819,15 +27815,15 @@ satisfies the admissibility condition with equality, ",
     StyleBox["\[Gamma]", "TI"], 
     StyleBox["\[Phi]", "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "19c80315-d7de-7125-4ff7-9b5ee26b400f"],
+  "41ecc127-3c02-05fa-7793-d881b5b76fc0"],
  ": a quantum-limited detector (",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Eta]", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6fdf78a7-59a9-97d9-15e5-7101585dfd23"],
+  "1190ff72-a9fe-60f8-47af-f73fcf8b32c2"],
  ") and nothing else dephasing, so run the check as an equality:"
-}], "Text",ExpressionUUID->"7a87483f-bfa4-2eb6-2abd-62793a51749c"],
+}], "Text",ExpressionUUID->"19c80315-d7de-7125-4ff7-9b5ee26b400f"],
 
 Cell[CellGroupData[{
 
@@ -27858,28 +27854,28 @@ Cell[BoxData[{
      RowBox[{"ratesX", "[", 
       RowBox[{"[", "4", "]"}], "]"}]}], ")"}]}]}]}], "Input",
  CellLabel->
-  "In[55]:= ",ExpressionUUID->"09b26917-59e6-8729-3f41-81515f90ea73"],
+  "In[55]:= ",ExpressionUUID->"6fdf78a7-59a9-97d9-15e5-7101585dfd23"],
 
 Cell[BoxData["True"], "Output",
  CellLabel->
-  "Out[55]= ",ExpressionUUID->"521ad179-838d-ce9b-0239-c923363994e1"]
+  "Out[55]= ",ExpressionUUID->"7a87483f-bfa4-2eb6-2abd-62793a51749c"]
 }, Open  ]],
 
-Cell["Read its efficiency too:", "Text",ExpressionUUID->"136d7364-bcfb-8461-4113-6b4e348fef4b"],
+Cell["Read its efficiency too:", "Text",ExpressionUUID->"09b26917-59e6-8729-3f41-81515f90ea73"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"efficiency", "[", "ratesX", "]"}]], "Input",
  CellLabel->
-  "In[56]:= ",ExpressionUUID->"2b78534b-7a52-d624-5918-4b157fe4bd0e"],
+  "In[56]:= ",ExpressionUUID->"521ad179-838d-ce9b-0239-c923363994e1"],
 
 Cell[BoxData["1.`"], "Output",
  CellLabel->
-  "Out[56]= ",ExpressionUUID->"30c454b2-bdb8-e427-60fc-4dfc3432cf0d"]
+  "Out[56]= ",ExpressionUUID->"136d7364-bcfb-8461-4113-6b4e348fef4b"]
 }, Open  ]],
 
-Cell["Run the native reference:", "Text",ExpressionUUID->"6879dfe8-0276-0c7b-1806-d6b2b7035741"],
+Cell["Run the native reference:", "Text",ExpressionUUID->"2b78534b-7a52-d624-5918-4b157fe4bd0e"],
 
 Cell[BoxData[
  RowBox[{
@@ -27889,9 +27885,9 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesX", "]"}], ",", " ", "nX", ",", " ", 
      "4040"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[57]:= ",ExpressionUUID->"7cc522fa-6a93-e579-24fa-bba40f27cc43"],
+  "In[57]:= ",ExpressionUUID->"30c454b2-bdb8-e427-60fc-4dfc3432cf0d"],
 
-Cell["Run the regularized ensemble:", "Text",ExpressionUUID->"5b82e386-6ff5-c0ee-09b1-fae009819234"],
+Cell["Run the regularized ensemble:", "Text",ExpressionUUID->"6879dfe8-0276-0c7b-1806-d6b2b7035741"],
 
 Cell[BoxData[
  RowBox[{
@@ -27901,11 +27897,11 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesX", "]"}], ",", " ", "nX", ",", " ", 
      "7100"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[58]:= ",ExpressionUUID->"34a39a2f-b372-ffce-5c50-1388c604c514"],
+  "In[58]:= ",ExpressionUUID->"7cc522fa-6a93-e579-24fa-bba40f27cc43"],
 
 Cell["\<\
 Compare the mean of the final Bloch vector across the three routes:\
-\>", "Text",ExpressionUUID->"66ca9132-7812-8248-0ec9-097c79a4d092"],
+\>", "Text",ExpressionUUID->"5b82e386-6ff5-c0ee-09b1-fae009819234"],
 
 Cell[CellGroupData[{
 
@@ -27934,7 +27930,7 @@ Cell[BoxData[
        RowBox[{"\"\<Lindblad\>\"", ",", " ", "\"\<Stratonovich\>\"", ",", 
         " ", "\"\<regularized\>\""}], "}"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[59]:= ",ExpressionUUID->"023b1c4a-5b09-a8c9-33d8-96145ebdfa13"],
+  "In[59]:= ",ExpressionUUID->"34a39a2f-b372-ffce-5c50-1388c604c514"],
 
 Cell[BoxData[
  TagBox[
@@ -27981,7 +27977,7 @@ Cell[BoxData[
     TableHeadings -> {{"x", "y", "z"}, {
       "Lindblad", "Stratonovich", "regularized"}}]]]], "Output",
  CellLabel->
-  "Out[59]= ",ExpressionUUID->"29a4f364-fd74-7ca4-5f5b-eb41f401468e"]
+  "Out[59]= ",ExpressionUUID->"66ca9132-7812-8248-0ec9-097c79a4d092"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -27989,11 +27985,11 @@ Cell[TextData[{
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "47740231-7fc8-4299-6d0b-a47b7a7d10e3"],
+  "023b1c4a-5b09-a8c9-33d8-96145ebdfa13"],
  " row is now genuinely nonzero and the three routes agree on it, its mean \
 decaying under the drift that decouples it. Now the spread, where the \
 backaction actually lives across the two routes:"
-}], "Text",ExpressionUUID->"1af52337-5e42-c8c3-4a8a-bb715bf49a29"],
+}], "Text",ExpressionUUID->"29a4f364-fd74-7ca4-5f5b-eb41f401468e"],
 
 Cell[CellGroupData[{
 
@@ -28016,7 +28012,7 @@ Cell[BoxData[
        RowBox[{"\"\<Stratonovich\>\"", ",", " ", "\"\<regularized\>\""}], 
        "}"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[60]:= ",ExpressionUUID->"2fdb82dc-2353-e9b3-55f8-1b8656e7bb99"],
+  "In[60]:= ",ExpressionUUID->"47740231-7fc8-4299-6d0b-a47b7a7d10e3"],
 
 Cell[BoxData[
  TagBox[
@@ -28056,7 +28052,7 @@ Cell[BoxData[
     TableHeadings -> {{"x", "y", "z"}, {
       "Stratonovich", "regularized"}}]]]], "Output",
  CellLabel->
-  "Out[60]= ",ExpressionUUID->"5782d92f-a790-094a-7db1-d088d2255b90"]
+  "Out[60]= ",ExpressionUUID->"1af52337-5e42-c8c3-4a8a-bb715bf49a29"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -28064,15 +28060,15 @@ Cell[TextData[{
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "05d48452-325d-a277-33eb-1e1c47e9f15d"],
+  "2fdb82dc-2353-e9b3-55f8-1b8656e7bb99"],
  " spread is now substantial, fed by the backaction noise the ",
  Cell[BoxData[
   StyleBox["y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "087ffcf6-194e-431e-3804-f5b098fb2e64"],
+  "5782d92f-a790-094a-7db1-d088d2255b90"],
  " channel injects, and the regularized route matches it. Same scale test as \
 before, now with all three components alive:"
-}], "Text",ExpressionUUID->"615fadf7-df9a-5675-1764-44b0da2f3d5f"],
+}], "Text",ExpressionUUID->"05d48452-325d-a277-33eb-1e1c47e9f15d"],
 
 Cell[CellGroupData[{
 
@@ -28087,7 +28083,7 @@ Cell[BoxData[
       RowBox[{"\"\<x\>\"", ",", " ", "\"\<y\>\"", ",", " ", "\"\<z\>\""}], 
       "}"}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[61]:= ",ExpressionUUID->"5de452e3-5fd7-a751-0b9c-4bcd5a630dbb"],
+  "In[61]:= ",ExpressionUUID->"087ffcf6-194e-431e-3804-f5b098fb2e64"],
 
 Cell[BoxData[
  TagBox[
@@ -28116,7 +28112,7 @@ Cell[BoxData[
   Function[BoxForm`e$, 
    TableForm[BoxForm`e$, TableHeadings -> {{"x", "y", "z"}}]]]], "Output",
  CellLabel->
-  "Out[61]= ",ExpressionUUID->"2d0df906-1ebb-1081-5b32-f1609b4e62eb"]
+  "Out[61]= ",ExpressionUUID->"615fadf7-df9a-5675-1764-44b0da2f3d5f"]
 }, Open  ]],
 
 Cell["\<\
@@ -28125,9 +28121,9 @@ reproduced quantitatively, not just visibly. This is the full-Bloch-vector \
 check the representative case could not give: with the coupling on, every \
 component carries a nonzero spread, and the regularized Stratonovich route \
 reproduces all three.\
-\>", "Text",ExpressionUUID->"519a4e0d-3467-bfb9-07ba-6057bd130583"],
+\>", "Text",ExpressionUUID->"5de452e3-5fd7-a751-0b9c-4bcd5a630dbb"],
 
-Cell["A strong readout: the same route where the drift is large", "Section",ExpressionUUID->"3a891815-8c00-cf41-6ab6-925f25ba95ab"],
+Cell["A strong readout: the same route where the drift is large", "Section",ExpressionUUID->"2d0df906-1ebb-1081-5b32-f1609b4e62eb"],
 
 Cell[TextData[{
  "The gap between the It\[OHat] and Stratonovich drifts scales with the \
@@ -28135,17 +28131,17 @@ measurement rate, so a strong informative readout is the stringent test of \
 feeding ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0dbacffa-31b0-43f6-3b59-e6a4404511dc"],
+  "519a4e0d-3467-bfb9-07ba-6057bd130583"],
  " the Stratonovich form. Fix a strong readout from a tilted start, again a \
 four-vector with the readout zeroed; the rates are again quantum-limited (",
  Cell[BoxData[
   RowBox[{
    StyleBox["\[Eta]", "TI"], "=", "1"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "196a859c-b643-c1b3-4f69-1cd9c3f79399"],
+  "3a891815-8c00-cf41-6ab6-925f25ba95ab"],
  "), with the intrinsic dephasing supplying the slack in the admissibility \
 check:"
-}], "Text",ExpressionUUID->"48c8a383-1e42-ef31-78f7-3aed9bf4b21b"],
+}], "Text",ExpressionUUID->"0dbacffa-31b0-43f6-3b59-e6a4404511dc"],
 
 Cell[CellGroupData[{
 
@@ -28176,28 +28172,28 @@ Cell[BoxData[{
      RowBox[{"ratesS", "[", 
       RowBox[{"[", "4", "]"}], "]"}]}], ")"}]}]}]}], "Input",
  CellLabel->
-  "In[62]:= ",ExpressionUUID->"50735439-04fd-dee7-0001-4e63ac89a4cd"],
+  "In[62]:= ",ExpressionUUID->"196a859c-b643-c1b3-4f69-1cd9c3f79399"],
 
 Cell[BoxData["True"], "Output",
  CellLabel->
-  "Out[62]= ",ExpressionUUID->"3597ba8d-914b-928f-63ac-33d720ffe0d5"]
+  "Out[62]= ",ExpressionUUID->"48c8a383-1e42-ef31-78f7-3aed9bf4b21b"]
 }, Open  ]],
 
-Cell["Read its efficiency:", "Text",ExpressionUUID->"056fda38-a5bc-2884-3314-dc65cc497aee"],
+Cell["Read its efficiency:", "Text",ExpressionUUID->"50735439-04fd-dee7-0001-4e63ac89a4cd"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"efficiency", "[", "ratesS", "]"}]], "Input",
  CellLabel->
-  "In[63]:= ",ExpressionUUID->"383c4a9f-130c-f8c1-69c4-63d9a6beca2b"],
+  "In[63]:= ",ExpressionUUID->"3597ba8d-914b-928f-63ac-33d720ffe0d5"],
 
 Cell[BoxData["1.`"], "Output",
  CellLabel->
-  "Out[63]= ",ExpressionUUID->"7b649e79-a2e1-7610-291b-1022d6945d7a"]
+  "Out[63]= ",ExpressionUUID->"056fda38-a5bc-2884-3314-dc65cc497aee"]
 }, Open  ]],
 
-Cell["Run the native reference for the strong case:", "Text",ExpressionUUID->"09cb884c-5fc8-b209-3fc8-22165a620153"],
+Cell["Run the native reference for the strong case:", "Text",ExpressionUUID->"383c4a9f-130c-f8c1-69c4-63d9a6beca2b"],
 
 Cell[BoxData[
  RowBox[{
@@ -28207,9 +28203,9 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesS", "]"}], ",", " ", "nS", ",", " ", 
      "3030"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[64]:= ",ExpressionUUID->"376c6589-bcca-29e8-5d14-7cd3357f7b32"],
+  "In[64]:= ",ExpressionUUID->"7b649e79-a2e1-7610-291b-1022d6945d7a"],
 
-Cell["Run the regularized ensemble for the strong case:", "Text",ExpressionUUID->"667bb688-7420-22c7-0e18-2fd27dd5702d"],
+Cell["Run the regularized ensemble for the strong case:", "Text",ExpressionUUID->"09cb884c-5fc8-b209-3fc8-22165a620153"],
 
 Cell[BoxData[
  RowBox[{
@@ -28219,11 +28215,11 @@ Cell[BoxData[
      RowBox[{"dtGenOf", "[", "ratesS", "]"}], ",", " ", "nS", ",", " ", 
      "5300"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[65]:= ",ExpressionUUID->"72002252-da4c-5210-223f-c41fdff9217a"],
+  "In[65]:= ",ExpressionUUID->"376c6589-bcca-29e8-5d14-7cd3357f7b32"],
 
 Cell["\<\
 Compare the mean of the final Bloch vector across the three routes:\
-\>", "Text",ExpressionUUID->"084561a7-5440-aaee-387b-78015dfaf834"],
+\>", "Text",ExpressionUUID->"667bb688-7420-22c7-0e18-2fd27dd5702d"],
 
 Cell[CellGroupData[{
 
@@ -28252,7 +28248,7 @@ Cell[BoxData[
        RowBox[{"\"\<Lindblad\>\"", ",", " ", "\"\<Stratonovich\>\"", ",", 
         " ", "\"\<regularized\>\""}], "}"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[66]:= ",ExpressionUUID->"721e71e5-9ca7-ded5-2226-68cf1553a43f"],
+  "In[66]:= ",ExpressionUUID->"72002252-da4c-5210-223f-c41fdff9217a"],
 
 Cell[BoxData[
  TagBox[
@@ -28299,7 +28295,7 @@ Cell[BoxData[
     TableHeadings -> {{"x", "y", "z"}, {
       "Lindblad", "Stratonovich", "regularized"}}]]]], "Output",
  CellLabel->
-  "Out[66]= ",ExpressionUUID->"0a84e7eb-55e0-1894-3abb-feb563956afe"]
+  "Out[66]= ",ExpressionUUID->"084561a7-5440-aaee-387b-78015dfaf834"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -28308,7 +28304,7 @@ row where the correction is large; the ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "3261920b-7b77-02d6-621e-14557e02503c"],
+  "721e71e5-9ca7-ded5-2226-68cf1553a43f"],
  " row has decayed from its initial tilt toward zero, since with ",
  Cell[BoxData[
   RowBox[{
@@ -28316,10 +28312,10 @@ row where the correction is large; the ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4ebe3b2c-9c8f-bd2d-7645-b376153b0477"],
+  "0a84e7eb-55e0-1894-3abb-feb563956afe"],
  " nothing rotates it back, and all three routes agree on the small residual. \
 Compare the spread across the two routes:"
-}], "Text",ExpressionUUID->"7d6a0058-fb4a-caff-2b69-9a05fefc98c5"],
+}], "Text",ExpressionUUID->"3261920b-7b77-02d6-621e-14557e02503c"],
 
 Cell[CellGroupData[{
 
@@ -28342,7 +28338,7 @@ Cell[BoxData[
        RowBox[{"\"\<Stratonovich\>\"", ",", " ", "\"\<regularized\>\""}], 
        "}"}]}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[67]:= ",ExpressionUUID->"41d92934-9aba-8299-77e6-c17e1f4cd0e3"],
+  "In[67]:= ",ExpressionUUID->"4ebe3b2c-9c8f-bd2d-7645-b376153b0477"],
 
 Cell[BoxData[
  TagBox[
@@ -28382,7 +28378,7 @@ Cell[BoxData[
     TableHeadings -> {{"x", "y", "z"}, {
       "Stratonovich", "regularized"}}]]]], "Output",
  CellLabel->
-  "Out[67]= ",ExpressionUUID->"5cc23ff5-bf0f-f019-04f1-b6bf3abbc363"]
+  "Out[67]= ",ExpressionUUID->"7d6a0058-fb4a-caff-2b69-9a05fefc98c5"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -28390,17 +28386,17 @@ Cell[TextData[{
  Cell[BoxData[
   StyleBox["y", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "29880975-91f0-008f-5fb7-a13f278552d5"],
+  "41d92934-9aba-8299-77e6-c17e1f4cd0e3"],
  " and ",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "551c00cf-fc58-99c4-0323-99a8f5d2eb2e"],
+  "5cc23ff5-bf0f-f019-04f1-b6bf3abbc363"],
  " spreads agree closely where the Stratonovich correction is largest; the ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "22235db8-54be-42b7-53d1-54e25d4b109d"],
+  "29880975-91f0-008f-5fb7-a13f278552d5"],
  " spread differs relatively but is negligible in absolute size in both \
 routes, since with ",
  Cell[BoxData[
@@ -28409,10 +28405,10 @@ routes, since with ",
     StyleBox[
      RowBox[{"B", "A"}], "TI"]], "=", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0976d5ae-737d-f257-3f0d-cc080609c0bd"],
+  "551c00cf-fc58-99c4-0323-99a8f5d2eb2e"],
  " nothing sources it. Put the sampling scale on the two live components \
 again:"
-}], "Text",ExpressionUUID->"13e711b4-4d78-4d68-419c-88fe640d17b2"],
+}], "Text",ExpressionUUID->"22235db8-54be-42b7-53d1-54e25d4b109d"],
 
 Cell[CellGroupData[{
 
@@ -28435,7 +28431,7 @@ Cell[BoxData[
       RowBox[{"\"\<y\>\"", ",", " ", "\"\<z\>\""}], "}"}], "}"}]}]}], 
   "]"}]], "Input",
  CellLabel->
-  "In[68]:= ",ExpressionUUID->"3fd09d86-aea1-a602-65ef-14e3cb550d68"],
+  "In[68]:= ",ExpressionUUID->"0976d5ae-737d-f257-3f0d-cc080609c0bd"],
 
 Cell[BoxData[
  TagBox[
@@ -28461,7 +28457,7 @@ Cell[BoxData[
   Function[BoxForm`e$, 
    TableForm[BoxForm`e$, TableHeadings -> {{"y", "z"}}]]]], "Output",
  CellLabel->
-  "Out[68]= ",ExpressionUUID->"2f6c0922-6605-ed68-5513-a08c13b1b7b2"]
+  "Out[68]= ",ExpressionUUID->"13e711b4-4d78-4d68-419c-88fe640d17b2"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -28469,10 +28465,10 @@ Cell[TextData[{
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2caab86a-2af9-b1b1-54a9-32344e8d039b"],
+  "3fd09d86-aea1-a602-65ef-14e3cb550d68"],
  " marginal agree, the regularized histogram against the native Stratonovich \
 reference:"
-}], "Text",ExpressionUUID->"7f56169e-4783-4dbb-256d-8fd872361781"],
+}], "Text",ExpressionUUID->"2f6c0922-6605-ed68-5513-a08c13b1b7b2"],
 
 Cell[CellGroupData[{
 
@@ -28501,7 +28497,7 @@ Cell[BoxData[
      RowBox[{"\"\<Regularized route\>\"", ",", 
       " ", "\"\<Stratonovich ensemble\>\""}], "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[69]:= ",ExpressionUUID->"5b84d4d6-858d-5842-09bb-cd902c382aa8"],
+  "In[69]:= ",ExpressionUUID->"2caab86a-2af9-b1b1-54a9-32344e8d039b"],
 
 Cell[BoxData[
  TemplateBox[{
@@ -29825,7 +29821,7 @@ Cell[BoxData[
        RowBox[{"Placed", "[", 
          RowBox[{#2, ",", "After"}], "]"}]}], "]"}]& )]], "Output",
  CellLabel->
-  "Out[69]= ",ExpressionUUID->"67558936-e5eb-8680-0d6a-2173939fecea"]
+  "Out[69]= ",ExpressionUUID->"7f56169e-4783-4dbb-256d-8fd872361781"]
 }, Open  ]],
 
 Cell[TextData[{
@@ -29834,16 +29830,16 @@ Stratonovich reference: the route reproduces the final-",
  Cell[BoxData[
   StyleBox["z", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1072dc7c-f7d5-c74e-4001-d6398261ad94"],
+  "5b84d4d6-858d-5842-09bb-cd902c382aa8"],
  " marginal, not merely its mean, even where the drift correction is strong."
-}], "Text",ExpressionUUID->"3462f0a3-098c-f6b3-5c11-e90da83edc99"],
+}], "Text",ExpressionUUID->"67558936-e5eb-8680-0d6a-2173939fecea"],
 
 Cell["\<\
 The refinement sweep above checked forty knots per fastest rate only on the \
 representative case; the strong readout, where the drift correction is \
 largest, deserves its own. Tighten the noise grid toward the working value, \
 storing the spreads for the comparison that follows:\
-\>", "Text",ExpressionUUID->"04cac1af-436c-9192-2cc9-d809761ee3f8"],
+\>", "Text",ExpressionUUID->"1072dc7c-f7d5-c74e-4001-d6398261ad94"],
 
 Cell[CellGroupData[{
 
@@ -29883,7 +29879,7 @@ Cell[BoxData[{
        RowBox[{"\"\<\!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)\>\"", 
         ",", " ", "\"\<spread z\>\""}], "}"}]}], "}"}]}]}], "]"}]}], "Input",
  CellLabel->
-  "In[70]:= ",ExpressionUUID->"63be94f2-239e-9b81-1145-0dbc5628e9eb"],
+  "In[70]:= ",ExpressionUUID->"3462f0a3-098c-f6b3-5c11-e90da83edc99"],
 
 Cell[BoxData[
  TagBox[
@@ -29916,13 +29912,13 @@ Cell[BoxData[
      None, {"\!\(\*SubscriptBox[\(\[CapitalDelta]t\), \(gen\)]\)", 
        "spread z"}}]]]], "Output",
  CellLabel->
-  "Out[70]= ",ExpressionUUID->"5a3d7a71-218e-1995-0bc3-7c3b503b6bff"]
+  "Out[70]= ",ExpressionUUID->"04cac1af-436c-9192-2cc9-d809761ee3f8"]
 }, Open  ]],
 
 Cell["\<\
 Now read each row as a distance from the native strong-case spread, in units \
 of the two estimates' sampling errors in quadrature:\
-\>", "Text",ExpressionUUID->"3a0f2024-2f71-09ca-6a34-b98e4a045b10"],
+\>", "Text",ExpressionUUID->"63be94f2-239e-9b81-1145-0dbc5628e9eb"],
 
 Cell[CellGroupData[{
 
@@ -29945,7 +29941,7 @@ Cell[BoxData[
         RowBox[{"120", ",", " ", "240", ",", " ", "480"}], "}"}]}], "]"}], 
      "}"}]}]}], "]"}]], "Input",
  CellLabel->
-  "In[71]:= ",ExpressionUUID->"277956ac-4c9d-d338-4d07-4ff66529be02"],
+  "In[71]:= ",ExpressionUUID->"5a3d7a71-218e-1995-0bc3-7c3b503b6bff"],
 
 Cell[BoxData[
  TagBox[
@@ -29975,7 +29971,7 @@ Cell[BoxData[
    TableForm[
    BoxForm`e$, TableHeadings -> {{0.0125, 0.00625, 0.003125}}]]]], "Output",
  CellLabel->
-  "Out[71]= ",ExpressionUUID->"178a6a52-23e4-1142-3d89-8c1c559163a8"]
+  "Out[71]= ",ExpressionUUID->"3a0f2024-2f71-09ca-6a34-b98e4a045b10"]
 }, Open  ]],
 
 Cell["\<\
@@ -29983,9 +29979,9 @@ A resolvable regularization bias would grow steadily as the grid coarsens; \
 these distances show no such growth, so what the sweep measures is its own \
 sampling noise: forty knots per fastest rate carries margin where the \
 correction is strongest, not only where it is mild.\
-\>", "Text",ExpressionUUID->"52ddf811-e480-8137-02e2-f25a8d3ad01d"],
+\>", "Text",ExpressionUUID->"277956ac-4c9d-d338-4d07-4ff66529be02"],
 
-Cell["What is now true", "Section",ExpressionUUID->"719ae17a-c654-ed44-27b9-f927f3e6b7ae"],
+Cell["What is now true", "Section",ExpressionUUID->"178a6a52-23e4-1142-3d89-8c1c559163a8"],
 
 Cell[TextData[{
  "The trajectory of a continuously monitored qubit is one four-component \
@@ -29997,7 +29993,7 @@ exactly, so a smooth-noise integrator needs nothing added: replace the white \
 noise by a cubic-interpolated Wiener path, hand ",
  Cell[BoxData["NDSolve"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "62c8f42b-c628-388a-12f7-ee74f3c28ad0"],
+  "52ddf811-e480-8137-02e2-f25a8d3ad01d"],
  " the Stratonovich drift and diffusion as they stand, and the solution \
 approaches the target It\[OHat] process as ",
  Cell[BoxData[
@@ -30007,9 +30003,9 @@ approaches the target It\[OHat] process as ",
     StyleBox["gen",
      FontSlant->"Plain"]], "\[Rule]", "0"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "36e5ffeb-8179-694d-5e9a-f6b5300c3b97"],
+  "719ae17a-c654-ed44-27b9-f927f3e6b7ae"],
  "."
-}], "Text",ExpressionUUID->"7af061c8-c44a-ae8e-2a80-7895edfcf4d4"],
+}], "Text",ExpressionUUID->"62c8f42b-c628-388a-12f7-ee74f3c28ad0"],
 
 Cell[TextData[{
  "The numerical evidence is finite-resolution agreement against two \
@@ -30019,7 +30015,7 @@ component by component at the final time and along the whole window for the \
 monitored component; and the ensemble spread lands on the native ",
  Cell[BoxData["StratonovichProcess"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "0d437dad-8290-de9a-3b71-74f7372aa4e0"],
+  "36e5ffeb-8179-694d-5e9a-f6b5300c3b97"],
  " ensemble in both the representative and the strong-readout regime, a \
 reference itself checked stable under step refinement in the representative \
 case and, carried with all four rows, one that fixes the record's final \
@@ -30031,7 +30027,7 @@ spread as well. Once both solvers are converged, ",
     StyleBox["gen",
      FontSlant->"Plain"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7aafc905-908a-67da-2a54-e16f213f4d20"],
+  "7af061c8-c44a-ae8e-2a80-7895edfcf4d4"],
  " controls the remaining regularization bias, since it fixes which \
 stochastic equation is actually being solved, while ",
  Cell[BoxData[
@@ -30040,12 +30036,12 @@ stochastic equation is actually being solved, while ",
    StyleBox["traj",
     FontSlant->"Plain"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "62016b94-8ad8-fb56-123e-82de2f52c9bc"],
+  "0d437dad-8290-de9a-3b71-74f7372aa4e0"],
  " controls the statistical uncertainty of everything read from the ensemble; \
 the integrator's step cap is absorbed by its own error control at the \
 representative rates, while the record identity's residual, the one \
 tolerance-sensitive quantity, is integration error and shrinks on demand."
-}], "Text",ExpressionUUID->"0e7c794a-82c2-56e7-3604-711437773ccd"],
+}], "Text",ExpressionUUID->"7aafc905-908a-67da-2a54-e16f213f4d20"],
 
 Cell[TextData[{
  "Integrating the readout beside the state costs one more equation and buys \
@@ -30065,7 +30061,7 @@ is the integrated signal ",
    StyleBox["\[RightAngleBracket]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "30f601cf-5001-fb68-608d-98a961b5c9b2"],
+  "62016b94-8ad8-fb56-123e-82de2f52c9bc"],
  "; stripped of that signal, a single record returns the very Wiener path \
 that kicked the state, because the record and the backaction are one draw of \
 the same noise; and in the bare-measurement regime the tie is total, the \
@@ -30074,12 +30070,12 @@ state a closed function of its own record through a ",
   StyleBox["tanh",
    FontSlant->"Plain"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "04bc0f0b-f02f-243d-2c43-a75481db8f07"],
+  "0e7c794a-82c2-56e7-3604-711437773ccd"],
  ". And once the backaction quadrature is on, the ",
  Cell[BoxData[
   StyleBox["x", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1a24bdc2-598a-1b95-4bdb-34ac583f69ff"],
+  "30f601cf-5001-fb68-608d-98a961b5c9b2"],
  " channel it feeds carries its own spread, which the route reproduces along \
 with the rest, so the full Bloch vector is matched, not just the monitored \
 component. All of it holds inside the admissibility condition ",
@@ -30102,17 +30098,17 @@ component. All of it holds inside the admissibility condition ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "705e212e-f5a4-7717-2065-b88bfc515a7d"],
+  "04bc0f0b-f02f-243d-2c43-a75481db8f07"],
  " that keeps the unraveling a density matrix; outside it, the trajectory can \
 leave the Bloch ball and stops describing a quantum state. What the record \
 buys is the natural continuation: filtering the same four-component equation \
 into a running estimate of the state, feeding that estimate back, and \
 smoothing it after the fact."
-}], "Text",ExpressionUUID->"5c2f5325-a3f6-c048-05d5-4a8ed5809292"]
+}], "Text",ExpressionUUID->"1a24bdc2-598a-1b95-4bdb-34ac583f69ff"]
 },
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"211ecaf2-61ee-418f-5725-e3bc179b13d5"
+ExpressionUUID->"705e212e-f5a4-7717-2065-b88bfc515a7d"
 ]
 (* End of Notebook Content *)
 
@@ -30125,341 +30121,339 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[554, 20, 175, 3, 70, "Title",ExpressionUUID->"51e4dffc-d38f-5703-079b-d6b9e63a3a69"],
-Cell[732, 25, 2180, 44, 70, "Text",ExpressionUUID->"30e43b5d-74af-d0fb-609b-b3077d5ba2c1"],
-Cell[2915, 71, 115, 0, 70, "Text",ExpressionUUID->"44d9380c-2e05-8f35-6ce6-b2564bb1d21f"],
-Cell[3033, 73, 591, 8, 70, "Text",ExpressionUUID->"36758762-649a-f7b1-5e0a-1f4c0d2cdd9b"],
-Cell[3627, 83, 83, 0, 70, "Text",ExpressionUUID->"138e1639-4d05-8b97-41b5-886364b1d9fd"],
-Cell[3713, 85, 144, 2, 70, "Section",ExpressionUUID->"156728ce-0023-e03b-431c-c1a8b1d7b301"],
-Cell[3860, 89, 3386, 108, 70, "Text",ExpressionUUID->"7fc37353-2ed8-42c8-25f1-6b1d4b6d1012"],
-Cell[7249, 199, 3219, 107, 70, "DisplayFormula",ExpressionUUID->"26ff5c08-e081-ff27-4e85-56559135c20d"],
-Cell[10471, 308, 1258, 34, 70, "Text",ExpressionUUID->"07c988c4-3ef2-8066-2df6-21aeba84d34c"],
-Cell[11732, 344, 5130, 153, 70, "Text",ExpressionUUID->"4bc0a2f3-6150-447f-79ff-3bbd10e52f45"],
-Cell[16865, 499, 677, 12, 70, "Text",ExpressionUUID->"7ac66077-3bfa-1f18-2afe-7a31bd8f6262"],
-Cell[17545, 513, 4774, 163, 70, "DisplayFormula",ExpressionUUID->"3d863d84-94ab-5643-6bbd-b4ee1d5e3ca9"],
-Cell[22322, 678, 2063, 51, 70, "Text",ExpressionUUID->"7ab8b877-e011-189c-2a47-323091a46ae6"],
-Cell[24388, 731, 112, 0, 70, "Section",ExpressionUUID->"35eb0178-2238-e094-63e8-992257b2b2fe"],
-Cell[24503, 733, 1161, 34, 70, "Text",ExpressionUUID->"0da6433d-a7a4-ba24-3b5e-5b66d256090e"],
-Cell[25667, 769, 3494, 86, 70, "Input",ExpressionUUID->"462f64f6-435d-c7dd-6fd5-7db076e9ad27"],
-Cell[29164, 857, 381, 8, 70, "Text",ExpressionUUID->"4b06bf63-5f43-ed7c-793d-374d5af7b446"],
-Cell[29548, 867, 1586, 44, 70, "Input",ExpressionUUID->"0fd1c247-21a4-d962-35ee-e4215056a848"],
-Cell[31137, 913, 1562, 43, 70, "Text",ExpressionUUID->"09347675-9fce-c17b-38cc-683f1a789041"],
-Cell[32702, 958, 1191, 27, 70, "Input",ExpressionUUID->"2c597ed5-00d9-d535-5467-779fb16dbc1f"],
-Cell[33896, 987, 193, 3, 70, "Text",ExpressionUUID->"66c4d8d6-27c8-a0db-0efb-d1905262f221"],
+Cell[554, 20, 175, 3, 70, "Title",ExpressionUUID->"5c2f5325-a3f6-c048-05d5-4a8ed5809292"],
+Cell[732, 25, 2291, 52, 70, "Text",ExpressionUUID->"211ecaf2-61ee-418f-5725-e3bc179b13d5"],
+Cell[3026, 79, 115, 0, 70, "Text",ExpressionUUID->"51e4dffc-d38f-5703-079b-d6b9e63a3a69"],
+Cell[3144, 81, 144, 2, 70, "Section",ExpressionUUID->"30e43b5d-74af-d0fb-609b-b3077d5ba2c1"],
+Cell[3291, 85, 3386, 108, 70, "Text",ExpressionUUID->"44d9380c-2e05-8f35-6ce6-b2564bb1d21f"],
+Cell[6680, 195, 3219, 107, 70, "DisplayFormula",ExpressionUUID->"36758762-649a-f7b1-5e0a-1f4c0d2cdd9b"],
+Cell[9902, 304, 1258, 34, 70, "Text",ExpressionUUID->"138e1639-4d05-8b97-41b5-886364b1d9fd"],
+Cell[11163, 340, 5130, 153, 70, "Text",ExpressionUUID->"156728ce-0023-e03b-431c-c1a8b1d7b301"],
+Cell[16296, 495, 677, 12, 70, "Text",ExpressionUUID->"7fc37353-2ed8-42c8-25f1-6b1d4b6d1012"],
+Cell[16976, 509, 4774, 163, 70, "DisplayFormula",ExpressionUUID->"26ff5c08-e081-ff27-4e85-56559135c20d"],
+Cell[21753, 674, 2063, 51, 70, "Text",ExpressionUUID->"07c988c4-3ef2-8066-2df6-21aeba84d34c"],
+Cell[23819, 727, 112, 0, 70, "Section",ExpressionUUID->"4bc0a2f3-6150-447f-79ff-3bbd10e52f45"],
+Cell[23934, 729, 1161, 34, 70, "Text",ExpressionUUID->"7ac66077-3bfa-1f18-2afe-7a31bd8f6262"],
+Cell[25098, 765, 3494, 86, 70, "Input",ExpressionUUID->"3d863d84-94ab-5643-6bbd-b4ee1d5e3ca9"],
+Cell[28595, 853, 381, 8, 70, "Text",ExpressionUUID->"7ab8b877-e011-189c-2a47-323091a46ae6"],
+Cell[28979, 863, 1586, 44, 70, "Input",ExpressionUUID->"35eb0178-2238-e094-63e8-992257b2b2fe"],
+Cell[30568, 909, 1562, 43, 70, "Text",ExpressionUUID->"0da6433d-a7a4-ba24-3b5e-5b66d256090e"],
+Cell[32133, 954, 1191, 27, 70, "Input",ExpressionUUID->"462f64f6-435d-c7dd-6fd5-7db076e9ad27"],
+Cell[33327, 983, 193, 3, 70, "Text",ExpressionUUID->"4b06bf63-5f43-ed7c-793d-374d5af7b446"],
 Cell[CellGroupData[{
-Cell[34114, 994, 312, 7, 70, "Input",ExpressionUUID->"4d3801b6-8b23-0df3-74c7-98f02ed657d9"],
-Cell[34429, 1003, 3117, 84, 70, "Output",ExpressionUUID->"09816d05-11e9-fb6e-3fbe-856fa79dc9b4"]
+Cell[33545, 990, 312, 7, 70, "Input",ExpressionUUID->"0fd1c247-21a4-d962-35ee-e4215056a848"],
+Cell[33860, 999, 3117, 84, 70, "Output",ExpressionUUID->"09347675-9fce-c17b-38cc-683f1a789041"]
 }, Open  ]],
-Cell[37561, 1090, 1216, 36, 70, "Text",ExpressionUUID->"35ec423d-cde2-7917-6394-6466eb97487d"],
+Cell[36992, 1086, 1216, 36, 70, "Text",ExpressionUUID->"2c597ed5-00d9-d535-5467-779fb16dbc1f"],
 Cell[CellGroupData[{
-Cell[38802, 1130, 311, 7, 70, "Input",ExpressionUUID->"05e0e9bc-56b1-1bf2-339f-00e6634469d8"],
-Cell[39116, 1139, 1321, 41, 70, "Output",ExpressionUUID->"46408f14-a324-388b-6e7f-2751d6d68ad1"]
+Cell[38233, 1126, 311, 7, 70, "Input",ExpressionUUID->"66c4d8d6-27c8-a0db-0efb-d1905262f221"],
+Cell[38547, 1135, 1321, 41, 70, "Output",ExpressionUUID->"4d3801b6-8b23-0df3-74c7-98f02ed657d9"]
 }, Open  ]],
-Cell[40452, 1183, 651, 14, 70, "Text",ExpressionUUID->"40213c85-9219-7c2b-71de-b5ef27ac4771"],
-Cell[41106, 1199, 2516, 69, 70, "Text",ExpressionUUID->"678faed4-2cca-f411-0db4-479e457cdf7b"],
+Cell[39883, 1179, 651, 14, 70, "Text",ExpressionUUID->"09816d05-11e9-fb6e-3fbe-856fa79dc9b4"],
+Cell[40537, 1195, 2516, 69, 70, "Text",ExpressionUUID->"35ec423d-cde2-7917-6394-6466eb97487d"],
 Cell[CellGroupData[{
-Cell[43647, 1272, 948, 26, 70, "Input",ExpressionUUID->"3b3cac94-919f-f08d-6ac3-45de202bc2d7"],
-Cell[44598, 1300, 110, 1, 70, "Output",ExpressionUUID->"634a1270-2707-566e-1149-943a52b23cb4"]
+Cell[43078, 1268, 948, 26, 70, "Input",ExpressionUUID->"05e0e9bc-56b1-1bf2-339f-00e6634469d8"],
+Cell[44029, 1296, 110, 1, 70, "Output",ExpressionUUID->"46408f14-a324-388b-6e7f-2751d6d68ad1"]
 }, Open  ]],
-Cell[44723, 1304, 169, 3, 70, "Text",ExpressionUUID->"571f0194-b08e-3ab4-7d24-98d1c138889e"],
+Cell[44154, 1300, 169, 3, 70, "Text",ExpressionUUID->"40213c85-9219-7c2b-71de-b5ef27ac4771"],
 Cell[CellGroupData[{
-Cell[44917, 1311, 638, 18, 70, "Input",ExpressionUUID->"79764466-e076-5945-2f0e-5e4391032baf"],
-Cell[45558, 1331, 109, 1, 70, "Output",ExpressionUUID->"54e8dec7-14b1-519a-7c97-d7a19d4423e0"]
+Cell[44348, 1307, 638, 18, 70, "Input",ExpressionUUID->"678faed4-2cca-f411-0db4-479e457cdf7b"],
+Cell[44989, 1327, 109, 1, 70, "Output",ExpressionUUID->"3b3cac94-919f-f08d-6ac3-45de202bc2d7"]
 }, Open  ]],
-Cell[45682, 1335, 114, 0, 70, "Text",ExpressionUUID->"25f5c72f-3423-741a-538a-de89bdd65f60"],
-Cell[45799, 1337, 1010, 26, 70, "Text",ExpressionUUID->"6dbbd446-5835-e39a-1b58-ce2059c1b1e0"],
-Cell[46812, 1365, 1808, 47, 70, "Input",ExpressionUUID->"6d34e655-b983-17e8-14cb-f81f38367d32"],
-Cell[48623, 1414, 2679, 87, 70, "Text",ExpressionUUID->"5c435daa-0d1c-c5df-0471-54f4a4aeaf25"],
+Cell[45113, 1331, 114, 0, 70, "Text",ExpressionUUID->"634a1270-2707-566e-1149-943a52b23cb4"],
+Cell[45230, 1333, 1010, 26, 70, "Text",ExpressionUUID->"571f0194-b08e-3ab4-7d24-98d1c138889e"],
+Cell[46243, 1361, 1808, 47, 70, "Input",ExpressionUUID->"79764466-e076-5945-2f0e-5e4391032baf"],
+Cell[48054, 1410, 2679, 87, 70, "Text",ExpressionUUID->"54e8dec7-14b1-519a-7c97-d7a19d4423e0"],
 Cell[CellGroupData[{
-Cell[51327, 1505, 3490, 91, 70, "Input",ExpressionUUID->"21714cd0-c04e-e57a-570f-659df1f8cc40"],
-Cell[54820, 1598, 162, 3, 70, "Output",ExpressionUUID->"74ff421b-073b-c6d4-1c85-6445b2cfac3e"]
+Cell[50758, 1501, 3490, 91, 70, "Input",ExpressionUUID->"25f5c72f-3423-741a-538a-de89bdd65f60"],
+Cell[54251, 1594, 162, 3, 70, "Output",ExpressionUUID->"6dbbd446-5835-e39a-1b58-ce2059c1b1e0"]
 }, Open  ]],
-Cell[54997, 1604, 1636, 44, 70, "Text",ExpressionUUID->"3ebc3a74-dd7c-3fa6-6643-bc31d40e858c"],
-Cell[56636, 1650, 2552, 68, 70, "Input",ExpressionUUID->"7d5c93fe-a057-3a16-2b63-0abbd1e3897c"],
-Cell[59191, 1720, 1382, 36, 70, "Text",ExpressionUUID->"487dadd0-5ed6-7873-7802-449a5b634b59"],
-Cell[60576, 1758, 1506, 37, 70, "Input",ExpressionUUID->"5219761b-8a64-c9ff-0227-68452f169bc5"],
-Cell[62085, 1797, 753, 18, 70, "Text",ExpressionUUID->"69346765-6d1c-e9c9-18cc-7f4f04aebb13"],
-Cell[62841, 1817, 382, 11, 70, "Input",ExpressionUUID->"7c22b8c2-70f4-0562-25d1-31ac00816c48"],
-Cell[63226, 1830, 133, 0, 70, "Section",ExpressionUUID->"04fec585-b88c-469b-2c85-dcef39392ce1"],
-Cell[63362, 1832, 2673, 85, 70, "Text",ExpressionUUID->"7aa617d4-4041-969d-2a5d-8e9e71f5fce7"],
-Cell[66038, 1919, 1100, 35, 70, "Text",ExpressionUUID->"5e86e5c8-d785-1389-06bd-fc95e23061d3"],
-Cell[67141, 1956, 526, 15, 70, "Input",ExpressionUUID->"3582ea65-851b-2569-63b1-0c4f2caf8fb3"],
-Cell[67670, 1973, 973, 28, 70, "Text",ExpressionUUID->"5e81d752-d9a7-cf7a-06be-cf1fd8539240"],
-Cell[68646, 2003, 1835, 48, 70, "Input",ExpressionUUID->"6dc17641-57cc-3497-1bff-682b627e9efd"],
-Cell[70484, 2053, 192, 3, 70, "Text",ExpressionUUID->"647a9320-5a37-336f-0c19-0a8a5fc381b5"],
+Cell[54428, 1600, 1636, 44, 70, "Text",ExpressionUUID->"6d34e655-b983-17e8-14cb-f81f38367d32"],
+Cell[56067, 1646, 2552, 68, 70, "Input",ExpressionUUID->"5c435daa-0d1c-c5df-0471-54f4a4aeaf25"],
+Cell[58622, 1716, 1382, 36, 70, "Text",ExpressionUUID->"21714cd0-c04e-e57a-570f-659df1f8cc40"],
+Cell[60007, 1754, 1506, 37, 70, "Input",ExpressionUUID->"74ff421b-073b-c6d4-1c85-6445b2cfac3e"],
+Cell[61516, 1793, 753, 18, 70, "Text",ExpressionUUID->"3ebc3a74-dd7c-3fa6-6643-bc31d40e858c"],
+Cell[62272, 1813, 382, 11, 70, "Input",ExpressionUUID->"7d5c93fe-a057-3a16-2b63-0abbd1e3897c"],
+Cell[62657, 1826, 133, 0, 70, "Section",ExpressionUUID->"487dadd0-5ed6-7873-7802-449a5b634b59"],
+Cell[62793, 1828, 2673, 85, 70, "Text",ExpressionUUID->"5219761b-8a64-c9ff-0227-68452f169bc5"],
+Cell[65469, 1915, 1100, 35, 70, "Text",ExpressionUUID->"69346765-6d1c-e9c9-18cc-7f4f04aebb13"],
+Cell[66572, 1952, 526, 15, 70, "Input",ExpressionUUID->"7c22b8c2-70f4-0562-25d1-31ac00816c48"],
+Cell[67101, 1969, 973, 28, 70, "Text",ExpressionUUID->"04fec585-b88c-469b-2c85-dcef39392ce1"],
+Cell[68077, 1999, 1835, 48, 70, "Input",ExpressionUUID->"7aa617d4-4041-969d-2a5d-8e9e71f5fce7"],
+Cell[69915, 2049, 192, 3, 70, "Text",ExpressionUUID->"5e86e5c8-d785-1389-06bd-fc95e23061d3"],
 Cell[CellGroupData[{
-Cell[70701, 2060, 1852, 47, 70, "Input",ExpressionUUID->"57b40e76-1aa6-da65-7d4b-a0309f50a94f"],
-Cell[72556, 2109, 391850, 6511, 70, "Output",ExpressionUUID->"575b10e3-003a-b957-7d78-89cdb1cc0bbd"]
+Cell[70132, 2056, 1852, 47, 70, "Input",ExpressionUUID->"3582ea65-851b-2569-63b1-0c4f2caf8fb3"],
+Cell[71987, 2105, 391850, 6511, 70, "Output",ExpressionUUID->"5e81d752-d9a7-cf7a-06be-cf1fd8539240"]
 }, Open  ]],
-Cell[464421, 8623, 2879, 84, 70, "Text",ExpressionUUID->"7c7345dd-208f-a284-2401-5c87513bf0ee"],
-Cell[467303, 8709, 1685, 56, 70, "Text",ExpressionUUID->"0121a537-2575-8479-30de-3d714c01ef43"],
-Cell[468991, 8767, 3584, 90, 70, "Input",ExpressionUUID->"7f325126-465a-e19d-26c2-488073ecb3e7"],
-Cell[472578, 8859, 783, 24, 70, "Text",ExpressionUUID->"739af998-c5c1-31b3-21b9-f0c5ec758399"],
+Cell[463852, 8619, 2879, 84, 70, "Text",ExpressionUUID->"6dc17641-57cc-3497-1bff-682b627e9efd"],
+Cell[466734, 8705, 1685, 56, 70, "Text",ExpressionUUID->"647a9320-5a37-336f-0c19-0a8a5fc381b5"],
+Cell[468422, 8763, 3584, 90, 70, "Input",ExpressionUUID->"57b40e76-1aa6-da65-7d4b-a0309f50a94f"],
+Cell[472009, 8855, 783, 24, 70, "Text",ExpressionUUID->"575b10e3-003a-b957-7d78-89cdb1cc0bbd"],
 Cell[CellGroupData[{
-Cell[473386, 8887, 3084, 76, 70, "Input",ExpressionUUID->"003becda-d908-4451-31d8-0587d8bd2ebb"],
-Cell[476473, 8965, 423485, 7063, 70, "Output",ExpressionUUID->"7aeb468a-2cc6-59e2-2ae9-5fd445732bc8"]
+Cell[472817, 8883, 3084, 76, 70, "Input",ExpressionUUID->"7c7345dd-208f-a284-2401-5c87513bf0ee"],
+Cell[475904, 8961, 423485, 7063, 70, "Output",ExpressionUUID->"0121a537-2575-8479-30de-3d714c01ef43"]
 }, Open  ]],
-Cell[899973, 16031, 1596, 45, 70, "Text",ExpressionUUID->"3873a668-04d7-31ac-6800-3832ad6383f6"],
-Cell[901572, 16078, 120, 0, 70, "Section",ExpressionUUID->"4156c81a-8a68-59d7-776d-e2442f1d2b3d"],
-Cell[901695, 16080, 1290, 28, 70, "Text",ExpressionUUID->"569e7ab4-00f8-e339-7ea6-73feb172ce03"],
-Cell[902988, 16110, 1585, 37, 70, "Text",ExpressionUUID->"0b3ec616-de69-0141-3ac5-d853db1c53ab"],
+Cell[899404, 16027, 1596, 45, 70, "Text",ExpressionUUID->"7f325126-465a-e19d-26c2-488073ecb3e7"],
+Cell[901003, 16074, 120, 0, 70, "Section",ExpressionUUID->"739af998-c5c1-31b3-21b9-f0c5ec758399"],
+Cell[901126, 16076, 1290, 28, 70, "Text",ExpressionUUID->"003becda-d908-4451-31d8-0587d8bd2ebb"],
+Cell[902419, 16106, 1585, 37, 70, "Text",ExpressionUUID->"7aeb468a-2cc6-59e2-2ae9-5fd445732bc8"],
 Cell[CellGroupData[{
-Cell[904598, 16151, 2728, 70, 70, "Input",ExpressionUUID->"7c0d57bf-7ae8-3253-2433-4ef97e8280b9"],
-Cell[907329, 16223, 176, 4, 70, "Output",ExpressionUUID->"0aaecb0d-dff0-cd78-3a55-e356d98a9442"]
+Cell[904029, 16147, 2728, 70, 70, "Input",ExpressionUUID->"3873a668-04d7-31ac-6800-3832ad6383f6"],
+Cell[906760, 16219, 176, 4, 70, "Output",ExpressionUUID->"4156c81a-8a68-59d7-776d-e2442f1d2b3d"]
 }, Open  ]],
-Cell[907520, 16230, 930, 17, 70, "Text",ExpressionUUID->"4fe4a286-576e-fd11-759b-3be06218c47b"],
+Cell[906951, 16226, 930, 17, 70, "Text",ExpressionUUID->"569e7ab4-00f8-e339-7ea6-73feb172ce03"],
 Cell[CellGroupData[{
-Cell[908475, 16251, 1079, 32, 70, "Input",ExpressionUUID->"07179650-9fbb-2bc1-2d2c-081a1a4e792b"],
-Cell[909557, 16285, 176, 4, 70, "Output",ExpressionUUID->"7aecd320-e31f-2936-2a93-ca8d96aa781c"]
+Cell[907906, 16247, 1079, 32, 70, "Input",ExpressionUUID->"0b3ec616-de69-0141-3ac5-d853db1c53ab"],
+Cell[908988, 16281, 176, 4, 70, "Output",ExpressionUUID->"7c0d57bf-7ae8-3253-2433-4ef97e8280b9"]
 }, Open  ]],
-Cell[909748, 16292, 540, 14, 70, "Text",ExpressionUUID->"326b0854-5043-0b63-6268-a21e61f65649"],
-Cell[910291, 16308, 96, 0, 70, "Text",ExpressionUUID->"1d6edc53-4ce5-e0f2-4b15-d61d6491b2d8"],
-Cell[910390, 16310, 162, 4, 70, "Input",ExpressionUUID->"45f7e4e6-4e1c-a184-738c-fdc06baef3ee"],
-Cell[910555, 16316, 320, 6, 70, "Text",ExpressionUUID->"70e98525-204e-6ba4-2096-1c8f51fb398e"],
-Cell[910878, 16324, 274, 7, 70, "Input",ExpressionUUID->"704169dd-a4db-5005-207e-8086cd6e236f"],
-Cell[911155, 16333, 983, 19, 70, "Text",ExpressionUUID->"7b2d1c14-5aff-cd5f-2ad2-965e5e8b97a5"],
-Cell[912141, 16354, 2218, 56, 70, "Input",ExpressionUUID->"62ac11c1-6d0b-a8c0-1253-88ab04bffa2a"],
-Cell[914362, 16412, 861, 19, 70, "Text",ExpressionUUID->"2e7621e1-2fba-a33a-560d-b8cb4a4c0e00"],
-Cell[915226, 16433, 1777, 47, 70, "Input",ExpressionUUID->"15938457-0322-a4d9-43a0-1e11b6d40e23"],
-Cell[917006, 16482, 237, 4, 70, "Text",ExpressionUUID->"7f1ed2e3-b722-4b37-2525-cbccc2d7161d"],
-Cell[917246, 16488, 703, 19, 70, "Input",ExpressionUUID->"52e63e44-9d5c-26a1-029d-b02e14ee8c8b"],
-Cell[917952, 16509, 381, 9, 70, "Text",ExpressionUUID->"6e766a94-5ec6-6187-160d-83de5b7333ed"],
-Cell[918336, 16520, 856, 22, 70, "Input",ExpressionUUID->"2eead67c-41e5-1519-56e9-c82677907c63"],
-Cell[919195, 16544, 344, 7, 70, "Text",ExpressionUUID->"23a655ec-dad2-e192-515e-4cc9df64b3f8"],
-Cell[919542, 16553, 357, 8, 70, "Input",ExpressionUUID->"62ef85cc-c62f-39ac-1294-1ca9f3db8bf6"],
-Cell[919902, 16563, 118, 0, 70, "Text",ExpressionUUID->"7d6c313b-6800-4a9b-2b13-a96509b518e1"],
-Cell[920023, 16565, 353, 8, 70, "Input",ExpressionUUID->"75dfb56b-bb47-a02b-23e4-2d353ef3f371"],
-Cell[920379, 16575, 508, 13, 70, "Text",ExpressionUUID->"57533ce7-69d6-be0e-7d60-b5c108600554"],
+Cell[909179, 16288, 540, 14, 70, "Text",ExpressionUUID->"0aaecb0d-dff0-cd78-3a55-e356d98a9442"],
+Cell[909722, 16304, 96, 0, 70, "Text",ExpressionUUID->"4fe4a286-576e-fd11-759b-3be06218c47b"],
+Cell[909821, 16306, 162, 4, 70, "Input",ExpressionUUID->"07179650-9fbb-2bc1-2d2c-081a1a4e792b"],
+Cell[909986, 16312, 320, 6, 70, "Text",ExpressionUUID->"7aecd320-e31f-2936-2a93-ca8d96aa781c"],
+Cell[910309, 16320, 274, 7, 70, "Input",ExpressionUUID->"326b0854-5043-0b63-6268-a21e61f65649"],
+Cell[910586, 16329, 983, 19, 70, "Text",ExpressionUUID->"1d6edc53-4ce5-e0f2-4b15-d61d6491b2d8"],
+Cell[911572, 16350, 2218, 56, 70, "Input",ExpressionUUID->"45f7e4e6-4e1c-a184-738c-fdc06baef3ee"],
+Cell[913793, 16408, 861, 19, 70, "Text",ExpressionUUID->"70e98525-204e-6ba4-2096-1c8f51fb398e"],
+Cell[914657, 16429, 1777, 47, 70, "Input",ExpressionUUID->"704169dd-a4db-5005-207e-8086cd6e236f"],
+Cell[916437, 16478, 237, 4, 70, "Text",ExpressionUUID->"7b2d1c14-5aff-cd5f-2ad2-965e5e8b97a5"],
+Cell[916677, 16484, 703, 19, 70, "Input",ExpressionUUID->"62ac11c1-6d0b-a8c0-1253-88ab04bffa2a"],
+Cell[917383, 16505, 381, 9, 70, "Text",ExpressionUUID->"2e7621e1-2fba-a33a-560d-b8cb4a4c0e00"],
+Cell[917767, 16516, 856, 22, 70, "Input",ExpressionUUID->"15938457-0322-a4d9-43a0-1e11b6d40e23"],
+Cell[918626, 16540, 344, 7, 70, "Text",ExpressionUUID->"7f1ed2e3-b722-4b37-2525-cbccc2d7161d"],
+Cell[918973, 16549, 357, 8, 70, "Input",ExpressionUUID->"52e63e44-9d5c-26a1-029d-b02e14ee8c8b"],
+Cell[919333, 16559, 118, 0, 70, "Text",ExpressionUUID->"6e766a94-5ec6-6187-160d-83de5b7333ed"],
+Cell[919454, 16561, 353, 8, 70, "Input",ExpressionUUID->"2eead67c-41e5-1519-56e9-c82677907c63"],
+Cell[919810, 16571, 508, 13, 70, "Text",ExpressionUUID->"23a655ec-dad2-e192-515e-4cc9df64b3f8"],
 Cell[CellGroupData[{
-Cell[920912, 16592, 2912, 77, 70, "Input",ExpressionUUID->"27c3fefb-2ee6-8038-4df0-f7a54a90d302"],
-Cell[923827, 16671, 67848, 1249, 70, "Output",ExpressionUUID->"60d4995f-bb7f-b80c-10eb-11193e0b0b56"]
+Cell[920343, 16588, 2912, 77, 70, "Input",ExpressionUUID->"62ef85cc-c62f-39ac-1294-1ca9f3db8bf6"],
+Cell[923258, 16667, 67848, 1249, 70, "Output",ExpressionUUID->"7d6c313b-6800-4a9b-2b13-a96509b518e1"]
 }, Open  ]],
-Cell[991690, 17923, 584, 10, 70, "Text",ExpressionUUID->"64608bbe-760c-8af3-0c1f-22f803bed8d9"],
-Cell[992277, 17935, 651, 15, 70, "Text",ExpressionUUID->"09661063-a2cf-675e-3f1d-8a4cd77a4da4"],
+Cell[991121, 17919, 584, 10, 70, "Text",ExpressionUUID->"75dfb56b-bb47-a02b-23e4-2d353ef3f371"],
+Cell[991708, 17931, 651, 15, 70, "Text",ExpressionUUID->"57533ce7-69d6-be0e-7d60-b5c108600554"],
 Cell[CellGroupData[{
-Cell[992953, 17954, 1390, 41, 70, "Input",ExpressionUUID->"5561d787-26b0-8d0a-031e-cee1534ad450"],
-Cell[994346, 17997, 129, 2, 70, "Output",ExpressionUUID->"0fea91e8-e80e-a1ed-35e9-08b589b8f337"]
+Cell[992384, 17950, 1390, 41, 70, "Input",ExpressionUUID->"27c3fefb-2ee6-8038-4df0-f7a54a90d302"],
+Cell[993777, 17993, 129, 2, 70, "Output",ExpressionUUID->"60d4995f-bb7f-b80c-10eb-11193e0b0b56"]
 }, Open  ]],
-Cell[994490, 18002, 395, 6, 70, "Text",ExpressionUUID->"37725419-c8bf-c4cd-5d02-4e42e94bae17"],
-Cell[994888, 18010, 284, 4, 70, "Text",ExpressionUUID->"6eee5857-8f9d-bf63-1696-52112a290249"],
+Cell[993921, 17998, 395, 6, 70, "Text",ExpressionUUID->"64608bbe-760c-8af3-0c1f-22f803bed8d9"],
+Cell[994319, 18006, 284, 4, 70, "Text",ExpressionUUID->"09661063-a2cf-675e-3f1d-8a4cd77a4da4"],
 Cell[CellGroupData[{
-Cell[995197, 18018, 1077, 29, 70, "Input",ExpressionUUID->"2635f536-2fc9-ab3c-4fca-ed704a7df606"],
-Cell[996277, 18049, 1219, 38, 70, "Output",ExpressionUUID->"1b3760e9-4a32-92b2-4acd-79b36fc4e098"]
+Cell[994628, 18014, 1077, 29, 70, "Input",ExpressionUUID->"5561d787-26b0-8d0a-031e-cee1534ad450"],
+Cell[995708, 18045, 1219, 38, 70, "Output",ExpressionUUID->"0fea91e8-e80e-a1ed-35e9-08b589b8f337"]
 }, Open  ]],
-Cell[997511, 18090, 2029, 55, 70, "Text",ExpressionUUID->"14fe93a8-4ee9-5b9e-3c85-0af26a9c29e4"],
+Cell[996942, 18086, 2029, 55, 70, "Text",ExpressionUUID->"37725419-c8bf-c4cd-5d02-4e42e94bae17"],
 Cell[CellGroupData[{
-Cell[999565, 18149, 822, 24, 70, "Input",ExpressionUUID->"11cf5d11-52cc-ddbb-47f5-555b677ea781"],
-Cell[1000390, 18175, 156, 4, 70, "Output",ExpressionUUID->"7ba8138a-66ce-478c-2957-8ad4137b2dd6"]
+Cell[998996, 18145, 822, 24, 70, "Input",ExpressionUUID->"6eee5857-8f9d-bf63-1696-52112a290249"],
+Cell[999821, 18171, 156, 4, 70, "Output",ExpressionUUID->"2635f536-2fc9-ab3c-4fca-ed704a7df606"]
 }, Open  ]],
-Cell[1000561, 18182, 1613, 44, 70, "Text",ExpressionUUID->"35c9e6d4-f3c4-84c1-63f6-ff918676ee2b"],
+Cell[999992, 18178, 1613, 44, 70, "Text",ExpressionUUID->"1b3760e9-4a32-92b2-4acd-79b36fc4e098"],
 Cell[CellGroupData[{
-Cell[1002199, 18230, 2054, 61, 70, "Input",ExpressionUUID->"6fd66644-13e4-6fa7-15ee-782ea591358d"],
-Cell[1004256, 18293, 804, 24, 70, "Output",ExpressionUUID->"00abf1cf-696b-3507-30a8-e8a9081f9c6d"]
+Cell[1001630, 18226, 2054, 61, 70, "Input",ExpressionUUID->"14fe93a8-4ee9-5b9e-3c85-0af26a9c29e4"],
+Cell[1003687, 18289, 804, 24, 70, "Output",ExpressionUUID->"11cf5d11-52cc-ddbb-47f5-555b677ea781"]
 }, Open  ]],
-Cell[1005075, 18320, 221, 3, 70, "Text",ExpressionUUID->"03d898fe-d35a-9eef-31e7-11bbe6ece435"],
-Cell[1005299, 18325, 2555, 77, 70, "Text",ExpressionUUID->"03dda600-4b0b-c3af-31e2-386a6ebf91f5"],
-Cell[1007857, 18404, 1589, 59, 70, "DisplayFormula",ExpressionUUID->"4de38b79-ee67-8bee-7b90-23228b13d934"],
-Cell[1009449, 18465, 167, 3, 70, "Text",ExpressionUUID->"347cf1ed-0cc4-b4dc-5c03-e8b7a5761e26"],
+Cell[1004506, 18316, 221, 3, 70, "Text",ExpressionUUID->"7ba8138a-66ce-478c-2957-8ad4137b2dd6"],
+Cell[1004730, 18321, 2555, 77, 70, "Text",ExpressionUUID->"35c9e6d4-f3c4-84c1-63f6-ff918676ee2b"],
+Cell[1007288, 18400, 1589, 59, 70, "DisplayFormula",ExpressionUUID->"6fd66644-13e4-6fa7-15ee-782ea591358d"],
+Cell[1008880, 18461, 167, 3, 70, "Text",ExpressionUUID->"00abf1cf-696b-3507-30a8-e8a9081f9c6d"],
 Cell[CellGroupData[{
-Cell[1009641, 18472, 2590, 74, 70, "Input",ExpressionUUID->"7d81b9ce-3a4c-aa2a-2bbe-30a8bffef970"],
-Cell[1012234, 18548, 111, 2, 70, "Output",ExpressionUUID->"6bb9b374-9caf-337d-1946-2b3e155b9e47"]
+Cell[1009072, 18468, 2590, 74, 70, "Input",ExpressionUUID->"03d898fe-d35a-9eef-31e7-11bbe6ece435"],
+Cell[1011665, 18544, 111, 2, 70, "Output",ExpressionUUID->"03dda600-4b0b-c3af-31e2-386a6ebf91f5"]
 }, Open  ]],
-Cell[1012360, 18553, 2223, 63, 70, "Text",ExpressionUUID->"6c340229-13f4-0181-15cb-a473a58153eb"],
+Cell[1011791, 18549, 2223, 63, 70, "Text",ExpressionUUID->"4de38b79-ee67-8bee-7b90-23228b13d934"],
 Cell[CellGroupData[{
-Cell[1014608, 18620, 393, 10, 70, "Input",ExpressionUUID->"25dfa134-0866-9bb5-53e4-397ea910e99f"],
-Cell[1015004, 18632, 113, 2, 70, "Output",ExpressionUUID->"425139cc-45a5-cefb-726e-b0966c5194c1"]
+Cell[1014039, 18616, 393, 10, 70, "Input",ExpressionUUID->"347cf1ed-0cc4-b4dc-5c03-e8b7a5761e26"],
+Cell[1014435, 18628, 113, 2, 70, "Output",ExpressionUUID->"7d81b9ce-3a4c-aa2a-2bbe-30a8bffef970"]
 }, Open  ]],
-Cell[1015132, 18637, 1152, 21, 70, "Text",ExpressionUUID->"4d922994-f334-45bb-7ba1-c0d186c12f81"],
+Cell[1014563, 18633, 1152, 21, 70, "Text",ExpressionUUID->"6bb9b374-9caf-337d-1946-2b3e155b9e47"],
 Cell[CellGroupData[{
-Cell[1016309, 18662, 1352, 36, 70, "Input",ExpressionUUID->"06c25578-1780-b25e-2ef2-4d22a23a00a4"],
-Cell[1017664, 18700, 129, 2, 70, "Output",ExpressionUUID->"5f70617e-b140-9f95-0500-793bc0fae5ff"]
+Cell[1015740, 18658, 1352, 36, 70, "Input",ExpressionUUID->"6c340229-13f4-0181-15cb-a473a58153eb"],
+Cell[1017095, 18696, 129, 2, 70, "Output",ExpressionUUID->"25dfa134-0866-9bb5-53e4-397ea910e99f"]
 }, Open  ]],
-Cell[1017808, 18705, 343, 5, 70, "Text",ExpressionUUID->"79d0371a-30a6-04e5-2fef-af4441536ecf"],
-Cell[1018154, 18712, 1158, 28, 70, "Text",ExpressionUUID->"7d950d76-dd18-2b24-2baa-a533d4ad760e"],
+Cell[1017239, 18701, 343, 5, 70, "Text",ExpressionUUID->"425139cc-45a5-cefb-726e-b0966c5194c1"],
+Cell[1017585, 18708, 1158, 28, 70, "Text",ExpressionUUID->"4d922994-f334-45bb-7ba1-c0d186c12f81"],
 Cell[CellGroupData[{
-Cell[1019337, 18744, 1513, 40, 70, "Input",ExpressionUUID->"7234a9f4-3232-6781-23cb-40be47c74deb"],
-Cell[1020853, 18786, 132, 2, 70, "Output",ExpressionUUID->"42668d78-f434-72a4-721d-2525fdc1408e"]
+Cell[1018768, 18740, 1513, 40, 70, "Input",ExpressionUUID->"06c25578-1780-b25e-2ef2-4d22a23a00a4"],
+Cell[1020284, 18782, 132, 2, 70, "Output",ExpressionUUID->"5f70617e-b140-9f95-0500-793bc0fae5ff"]
 }, Open  ]],
-Cell[1021000, 18791, 355, 5, 70, "Text",ExpressionUUID->"0c7cc198-0ad8-2426-3403-d8c2af528f0c"],
-Cell[1021358, 18798, 126, 0, 70, "Section",ExpressionUUID->"69698b1d-3dc2-3628-1f16-2347b4749d72"],
-Cell[1021487, 18800, 1189, 35, 70, "Text",ExpressionUUID->"701e1eb7-eeba-61c8-2025-97f08b4f3312"],
-Cell[1022679, 18837, 988, 37, 70, "DisplayFormula",ExpressionUUID->"0e322415-281a-3695-37c1-be5f49ac9cff"],
-Cell[1023670, 18876, 772, 19, 70, "Text",ExpressionUUID->"61beb272-ef15-9663-1745-343f8aa1fd49"],
-Cell[1024445, 18897, 277, 8, 70, "Input",ExpressionUUID->"5e8a6a96-06b4-6465-0689-83d0b3414f4f"],
-Cell[1024725, 18907, 800, 22, 70, "Text",ExpressionUUID->"55951090-ef25-ccfd-03aa-89dd8ad196c7"],
-Cell[1025528, 18931, 2942, 74, 70, "Input",ExpressionUUID->"53a2ca13-da2c-324e-0151-ec5cdfde8094"],
-Cell[1028473, 19007, 127, 0, 70, "Text",ExpressionUUID->"5930221d-821b-4026-08cf-c44737ae130c"],
+Cell[1020431, 18787, 355, 5, 70, "Text",ExpressionUUID->"79d0371a-30a6-04e5-2fef-af4441536ecf"],
+Cell[1020789, 18794, 126, 0, 70, "Section",ExpressionUUID->"7d950d76-dd18-2b24-2baa-a533d4ad760e"],
+Cell[1020918, 18796, 1189, 35, 70, "Text",ExpressionUUID->"7234a9f4-3232-6781-23cb-40be47c74deb"],
+Cell[1022110, 18833, 988, 37, 70, "DisplayFormula",ExpressionUUID->"42668d78-f434-72a4-721d-2525fdc1408e"],
+Cell[1023101, 18872, 772, 19, 70, "Text",ExpressionUUID->"0c7cc198-0ad8-2426-3403-d8c2af528f0c"],
+Cell[1023876, 18893, 277, 8, 70, "Input",ExpressionUUID->"69698b1d-3dc2-3628-1f16-2347b4749d72"],
+Cell[1024156, 18903, 800, 22, 70, "Text",ExpressionUUID->"701e1eb7-eeba-61c8-2025-97f08b4f3312"],
+Cell[1024959, 18927, 2942, 74, 70, "Input",ExpressionUUID->"0e322415-281a-3695-37c1-be5f49ac9cff"],
+Cell[1027904, 19003, 127, 0, 70, "Text",ExpressionUUID->"61beb272-ef15-9663-1745-343f8aa1fd49"],
 Cell[CellGroupData[{
-Cell[1028625, 19011, 1906, 51, 70, "Input",ExpressionUUID->"76ba63e9-5df8-c241-1e5a-7ab3547290ab"],
-Cell[1030534, 19064, 47989, 909, 70, "Output",ExpressionUUID->"319e51f9-a9ce-1d21-67a6-48a2c87b640b"]
+Cell[1028056, 19007, 1906, 51, 70, "Input",ExpressionUUID->"5e8a6a96-06b4-6465-0689-83d0b3414f4f"],
+Cell[1029965, 19060, 47989, 909, 70, "Output",ExpressionUUID->"55951090-ef25-ccfd-03aa-89dd8ad196c7"]
 }, Open  ]],
-Cell[1078538, 19976, 930, 25, 70, "Text",ExpressionUUID->"26f4962c-805e-a216-4e8b-087631e8f17c"],
-Cell[1079471, 20003, 294, 4, 70, "Text",ExpressionUUID->"313d5a7b-7caf-7acc-60c3-5c25755a4816"],
+Cell[1077969, 19972, 930, 25, 70, "Text",ExpressionUUID->"53a2ca13-da2c-324e-0151-ec5cdfde8094"],
+Cell[1078902, 19999, 294, 4, 70, "Text",ExpressionUUID->"5930221d-821b-4026-08cf-c44737ae130c"],
 Cell[CellGroupData[{
-Cell[1079790, 20011, 976, 29, 70, "Input",ExpressionUUID->"2da78195-91be-94f0-5b5c-18df2048feda"],
-Cell[1080769, 20042, 129, 2, 70, "Output",ExpressionUUID->"39c6b7ab-78e0-e73c-6ffd-2ef5789aca06"]
+Cell[1079221, 20007, 976, 29, 70, "Input",ExpressionUUID->"76ba63e9-5df8-c241-1e5a-7ab3547290ab"],
+Cell[1080200, 20038, 129, 2, 70, "Output",ExpressionUUID->"319e51f9-a9ce-1d21-67a6-48a2c87b640b"]
 }, Open  ]],
-Cell[1080913, 20047, 518, 12, 70, "Text",ExpressionUUID->"3f7d0c35-7157-44bf-6502-a67f00e22e85"],
-Cell[1081434, 20061, 466, 9, 70, "Text",ExpressionUUID->"47b49f91-c3c7-4deb-6d4b-16daf6721731"],
+Cell[1080344, 20043, 518, 12, 70, "Text",ExpressionUUID->"26f4962c-805e-a216-4e8b-087631e8f17c"],
+Cell[1080865, 20057, 466, 9, 70, "Text",ExpressionUUID->"313d5a7b-7caf-7acc-60c3-5c25755a4816"],
 Cell[CellGroupData[{
-Cell[1081925, 20074, 418, 12, 70, "Input",ExpressionUUID->"064e3005-d89e-7c03-2e75-aa6ed92b4769"],
-Cell[1082346, 20088, 129, 2, 70, "Output",ExpressionUUID->"76c2caed-aea0-13a2-1ef1-e3b6cb556188"]
+Cell[1081356, 20070, 418, 12, 70, "Input",ExpressionUUID->"2da78195-91be-94f0-5b5c-18df2048feda"],
+Cell[1081777, 20084, 129, 2, 70, "Output",ExpressionUUID->"39c6b7ab-78e0-e73c-6ffd-2ef5789aca06"]
 }, Open  ]],
-Cell[1082490, 20093, 321, 5, 70, "Text",ExpressionUUID->"260c3025-1fa9-9acd-4e33-a98f9a5de817"],
-Cell[1082814, 20100, 1092, 32, 70, "Text",ExpressionUUID->"4b1e6c2c-0452-4134-7925-8676ade7101e"],
+Cell[1081921, 20089, 321, 5, 70, "Text",ExpressionUUID->"3f7d0c35-7157-44bf-6502-a67f00e22e85"],
+Cell[1082245, 20096, 1092, 32, 70, "Text",ExpressionUUID->"47b49f91-c3c7-4deb-6d4b-16daf6721731"],
 Cell[CellGroupData[{
-Cell[1083931, 20136, 3761, 94, 70, "Input",ExpressionUUID->"2982aea8-af87-65d7-5fb1-47f5ca324f3d"],
-Cell[1087695, 20232, 386623, 6437, 70, "Output",ExpressionUUID->"19ac3a5e-0cd6-873c-4f53-bc18a560ea06"]
+Cell[1083362, 20132, 3761, 94, 70, "Input",ExpressionUUID->"064e3005-d89e-7c03-2e75-aa6ed92b4769"],
+Cell[1087126, 20228, 386623, 6437, 70, "Output",ExpressionUUID->"76c2caed-aea0-13a2-1ef1-e3b6cb556188"]
 }, Open  ]],
-Cell[1474333, 26672, 971, 23, 70, "Text",ExpressionUUID->"6e8690e9-968f-68b3-16bd-09b3233a3a99"],
-Cell[1475307, 26697, 315, 5, 70, "Text",ExpressionUUID->"2b6bc1ec-c569-bd9f-5968-d8c9ec1d07e5"],
+Cell[1473764, 26668, 971, 23, 70, "Text",ExpressionUUID->"260c3025-1fa9-9acd-4e33-a98f9a5de817"],
+Cell[1474738, 26693, 315, 5, 70, "Text",ExpressionUUID->"4b1e6c2c-0452-4134-7925-8676ade7101e"],
 Cell[CellGroupData[{
-Cell[1475647, 26706, 3125, 78, 70, "Input",ExpressionUUID->"25f1a39a-81e0-db80-538e-3ac4379aa9ea"],
-Cell[1478775, 26786, 133, 2, 70, "Output",ExpressionUUID->"35466be2-b7a8-26dc-637d-82cfc2428c26"]
+Cell[1475078, 26702, 3125, 78, 70, "Input",ExpressionUUID->"2982aea8-af87-65d7-5fb1-47f5ca324f3d"],
+Cell[1478206, 26782, 133, 2, 70, "Output",ExpressionUUID->"19ac3a5e-0cd6-873c-4f53-bc18a560ea06"]
 }, Open  ]],
-Cell[1478923, 26791, 1145, 28, 70, "Text",ExpressionUUID->"58bdea72-0ba3-5f4c-0842-0c3cae562596"],
+Cell[1478354, 26787, 1145, 28, 70, "Text",ExpressionUUID->"6e8690e9-968f-68b3-16bd-09b3233a3a99"],
 Cell[CellGroupData[{
-Cell[1480093, 26823, 151, 3, 70, "Input",ExpressionUUID->"6e8cef58-e908-949c-16b3-070588a2fee6"],
-Cell[1480247, 26828, 132, 2, 70, "Output",ExpressionUUID->"0abc4047-6c7b-4886-3a44-5a21050e1aec"]
+Cell[1479524, 26819, 151, 3, 70, "Input",ExpressionUUID->"2b6bc1ec-c569-bd9f-5968-d8c9ec1d07e5"],
+Cell[1479678, 26824, 132, 2, 70, "Output",ExpressionUUID->"25f1a39a-81e0-db80-538e-3ac4379aa9ea"]
 }, Open  ]],
-Cell[1480394, 26833, 290, 4, 70, "Text",ExpressionUUID->"24e21d63-fe6b-5877-4c91-954cfb1e2b5d"],
-Cell[1480687, 26839, 2983, 93, 70, "Text",ExpressionUUID->"348d2737-4aeb-e3cb-5cb2-bf716e9fb111"],
+Cell[1479825, 26829, 290, 4, 70, "Text",ExpressionUUID->"35466be2-b7a8-26dc-637d-82cfc2428c26"],
+Cell[1480118, 26835, 2983, 93, 70, "Text",ExpressionUUID->"58bdea72-0ba3-5f4c-0842-0c3cae562596"],
 Cell[CellGroupData[{
-Cell[1483695, 26936, 2036, 58, 70, "Input",ExpressionUUID->"2161c865-0900-0907-571e-e24fa8b5586d"],
-Cell[1485734, 26996, 111, 2, 70, "Output",ExpressionUUID->"3cadbe4b-a339-c651-6452-3014d6cdacbb"]
+Cell[1483126, 26932, 2036, 58, 70, "Input",ExpressionUUID->"6e8cef58-e908-949c-16b3-070588a2fee6"],
+Cell[1485165, 26992, 111, 2, 70, "Output",ExpressionUUID->"0abc4047-6c7b-4886-3a44-5a21050e1aec"]
 }, Open  ]],
-Cell[1485860, 27001, 1558, 43, 70, "Text",ExpressionUUID->"31169419-f57b-983b-672d-0e42fc0feb01"],
+Cell[1485291, 26997, 1558, 43, 70, "Text",ExpressionUUID->"24e21d63-fe6b-5877-4c91-954cfb1e2b5d"],
 Cell[CellGroupData[{
-Cell[1487443, 27048, 2082, 54, 70, "Input",ExpressionUUID->"40aa99e8-53bd-499c-70a9-10b266481be6"],
-Cell[1489528, 27104, 133, 2, 70, "Output",ExpressionUUID->"5d165407-aaf3-867b-0b2e-4e60ce87ed41"]
+Cell[1486874, 27044, 2082, 54, 70, "Input",ExpressionUUID->"348d2737-4aeb-e3cb-5cb2-bf716e9fb111"],
+Cell[1488959, 27100, 133, 2, 70, "Output",ExpressionUUID->"2161c865-0900-0907-571e-e24fa8b5586d"]
 }, Open  ]],
-Cell[1489676, 27109, 160, 3, 70, "Text",ExpressionUUID->"75cb8946-a0dc-0da7-23c8-2123d169578d"],
+Cell[1489107, 27105, 160, 3, 70, "Text",ExpressionUUID->"3cadbe4b-a339-c651-6452-3014d6cdacbb"],
 Cell[CellGroupData[{
-Cell[1489861, 27116, 149, 3, 70, "Input",ExpressionUUID->"63688a50-35e7-99e6-1117-2c1a4393ebcc"],
-Cell[1490013, 27121, 132, 2, 70, "Output",ExpressionUUID->"12187c95-2034-8b29-4238-75df51c6d673"]
+Cell[1489292, 27112, 149, 3, 70, "Input",ExpressionUUID->"31169419-f57b-983b-672d-0e42fc0feb01"],
+Cell[1489444, 27117, 132, 2, 70, "Output",ExpressionUUID->"40aa99e8-53bd-499c-70a9-10b266481be6"]
 }, Open  ]],
-Cell[1490160, 27126, 795, 20, 70, "Text",ExpressionUUID->"34b193bd-0a67-a7a6-5c4e-0ae7af130d8c"],
-Cell[1490958, 27148, 119, 0, 70, "Section",ExpressionUUID->"4fca8ec2-4b73-3b52-75c9-27ac6e0789b8"],
-Cell[1491080, 27150, 1012, 23, 70, "Text",ExpressionUUID->"656925a1-dac3-d209-1316-bc0adf77a153"],
+Cell[1489591, 27122, 795, 20, 70, "Text",ExpressionUUID->"5d165407-aaf3-867b-0b2e-4e60ce87ed41"],
+Cell[1490389, 27144, 119, 0, 70, "Section",ExpressionUUID->"75cb8946-a0dc-0da7-23c8-2123d169578d"],
+Cell[1490511, 27146, 1012, 23, 70, "Text",ExpressionUUID->"63688a50-35e7-99e6-1117-2c1a4393ebcc"],
 Cell[CellGroupData[{
-Cell[1492117, 27177, 1536, 41, 70, "Input",ExpressionUUID->"09e13884-5cc5-f650-3f9e-b1ee5571dcba"],
-Cell[1493656, 27220, 1396, 39, 70, "Output",ExpressionUUID->"29829495-262a-abaa-5fb1-0ddf53dcf9f0"]
+Cell[1491548, 27173, 1536, 41, 70, "Input",ExpressionUUID->"12187c95-2034-8b29-4238-75df51c6d673"],
+Cell[1493087, 27216, 1396, 39, 70, "Output",ExpressionUUID->"34b193bd-0a67-a7a6-5c4e-0ae7af130d8c"]
 }, Open  ]],
-Cell[1495067, 27262, 1556, 43, 70, "Text",ExpressionUUID->"136212ad-a4c2-b9f3-4111-8bf6cd740bd9"],
-Cell[1496626, 27307, 748, 21, 70, "Text",ExpressionUUID->"67f6b273-a0bf-ee61-0d8d-343cd14bb54b"],
+Cell[1494498, 27258, 1556, 43, 70, "Text",ExpressionUUID->"4fca8ec2-4b73-3b52-75c9-27ac6e0789b8"],
+Cell[1496057, 27303, 748, 21, 70, "Text",ExpressionUUID->"656925a1-dac3-d209-1316-bc0adf77a153"],
 Cell[CellGroupData[{
-Cell[1497399, 27332, 268, 7, 70, "Input",ExpressionUUID->"07a2a6c0-d7ac-3784-2d51-3fade25e9dee"],
-Cell[1497670, 27341, 129, 2, 70, "Output",ExpressionUUID->"7d29df82-54ab-6c21-24d6-d6ec5d5e370b"]
+Cell[1496830, 27328, 268, 7, 70, "Input",ExpressionUUID->"09e13884-5cc5-f650-3f9e-b1ee5571dcba"],
+Cell[1497101, 27337, 129, 2, 70, "Output",ExpressionUUID->"29829495-262a-abaa-5fb1-0ddf53dcf9f0"]
 }, Open  ]],
-Cell[1497814, 27346, 327, 8, 70, "Text",ExpressionUUID->"2673b224-f5d9-a24c-4e00-2b81fc6df096"],
+Cell[1497245, 27342, 327, 8, 70, "Text",ExpressionUUID->"136212ad-a4c2-b9f3-4111-8bf6cd740bd9"],
 Cell[CellGroupData[{
-Cell[1498166, 27358, 281, 7, 70, "Input",ExpressionUUID->"27388ee6-22a7-f122-4ec7-27c05753c008"],
-Cell[1498450, 27367, 129, 2, 70, "Output",ExpressionUUID->"51cd4bfd-d3fa-9dcf-07f3-62a6e58ce715"]
+Cell[1497597, 27354, 281, 7, 70, "Input",ExpressionUUID->"67f6b273-a0bf-ee61-0d8d-343cd14bb54b"],
+Cell[1497881, 27363, 129, 2, 70, "Output",ExpressionUUID->"07a2a6c0-d7ac-3784-2d51-3fade25e9dee"]
 }, Open  ]],
-Cell[1498594, 27372, 367, 5, 70, "Text",ExpressionUUID->"06a776cb-b9d0-3c58-2e5d-6f95386a86a2"],
+Cell[1498025, 27368, 367, 5, 70, "Text",ExpressionUUID->"7d29df82-54ab-6c21-24d6-d6ec5d5e370b"],
 Cell[CellGroupData[{
-Cell[1498986, 27381, 1494, 41, 70, "Input",ExpressionUUID->"7641b941-63e8-8619-1e7e-312b1582ed63"],
-Cell[1500483, 27424, 961, 27, 70, "Output",ExpressionUUID->"42b8cf72-fa81-ffe6-7247-e73fff35c5cc"]
+Cell[1498417, 27377, 1494, 41, 70, "Input",ExpressionUUID->"2673b224-f5d9-a24c-4e00-2b81fc6df096"],
+Cell[1499914, 27420, 961, 27, 70, "Output",ExpressionUUID->"27388ee6-22a7-f122-4ec7-27c05753c008"]
 }, Open  ]],
-Cell[1501459, 27454, 204, 3, 70, "Text",ExpressionUUID->"1c8db7a0-3aa3-299f-44b2-2e0abf567be5"],
+Cell[1500890, 27450, 204, 3, 70, "Text",ExpressionUUID->"51cd4bfd-d3fa-9dcf-07f3-62a6e58ce715"],
 Cell[CellGroupData[{
-Cell[1501688, 27461, 542, 16, 70, "Input",ExpressionUUID->"473593be-64fb-e664-6eca-0af80c8fcd4e"],
-Cell[1502233, 27479, 816, 24, 70, "Output",ExpressionUUID->"79a8e286-b760-8808-2f57-fbe3c21adb52"]
+Cell[1501119, 27457, 542, 16, 70, "Input",ExpressionUUID->"06a776cb-b9d0-3c58-2e5d-6f95386a86a2"],
+Cell[1501664, 27475, 816, 24, 70, "Output",ExpressionUUID->"7641b941-63e8-8619-1e7e-312b1582ed63"]
 }, Open  ]],
-Cell[1503064, 27506, 289, 4, 70, "Text",ExpressionUUID->"766f3dde-6e6e-8ae3-1e14-b4980b18d8c9"],
-Cell[1503356, 27512, 629, 17, 70, "Text",ExpressionUUID->"7acff19c-f8f8-c05b-2af4-e8d9f97292a1"],
+Cell[1502495, 27502, 289, 4, 70, "Text",ExpressionUUID->"42b8cf72-fa81-ffe6-7247-e73fff35c5cc"],
+Cell[1502787, 27508, 629, 17, 70, "Text",ExpressionUUID->"1c8db7a0-3aa3-299f-44b2-2e0abf567be5"],
 Cell[CellGroupData[{
-Cell[1504010, 27533, 1552, 42, 70, "Input",ExpressionUUID->"36bb0aa4-099e-3511-5e58-a30ea8289c7b"],
-Cell[1505565, 27577, 1297, 35, 70, "Output",ExpressionUUID->"6fab4322-7f5b-c123-15a9-5a8c7aef9009"]
+Cell[1503441, 27529, 1552, 42, 70, "Input",ExpressionUUID->"473593be-64fb-e664-6eca-0af80c8fcd4e"],
+Cell[1504996, 27573, 1297, 35, 70, "Output",ExpressionUUID->"79a8e286-b760-8808-2f57-fbe3c21adb52"]
 }, Open  ]],
-Cell[1506877, 27615, 1143, 26, 70, "Text",ExpressionUUID->"559c0528-76f1-864e-03a3-9d720285ec94"],
+Cell[1506308, 27611, 1143, 26, 70, "Text",ExpressionUUID->"766f3dde-6e6e-8ae3-1e14-b4980b18d8c9"],
 Cell[CellGroupData[{
-Cell[1508045, 27645, 1263, 36, 70, "Input",ExpressionUUID->"4c3b3e9a-7f95-6e09-75d8-b7c47a203553"],
-Cell[1509311, 27683, 1040, 35, 70, "Output",ExpressionUUID->"7b834648-1855-f17e-29b1-581299e1c044"]
+Cell[1507476, 27641, 1263, 36, 70, "Input",ExpressionUUID->"7acff19c-f8f8-c05b-2af4-e8d9f97292a1"],
+Cell[1508742, 27679, 1040, 35, 70, "Output",ExpressionUUID->"36bb0aa4-099e-3511-5e58-a30ea8289c7b"]
 }, Open  ]],
-Cell[1510366, 27721, 723, 15, 70, "Text",ExpressionUUID->"6aa15cf4-f328-f435-1a5f-55b186c2df1f"],
-Cell[1511092, 27738, 117, 0, 70, "Section",ExpressionUUID->"1fa3178e-7287-38be-4550-8ee807338a84"],
-Cell[1511212, 27740, 3166, 93, 70, "Text",ExpressionUUID->"33c53063-afff-c489-61fa-aa4cc98baed3"],
+Cell[1509797, 27717, 723, 15, 70, "Text",ExpressionUUID->"6fab4322-7f5b-c123-15a9-5a8c7aef9009"],
+Cell[1510523, 27734, 117, 0, 70, "Section",ExpressionUUID->"559c0528-76f1-864e-03a3-9d720285ec94"],
+Cell[1510643, 27736, 3166, 93, 70, "Text",ExpressionUUID->"4c3b3e9a-7f95-6e09-75d8-b7c47a203553"],
 Cell[CellGroupData[{
-Cell[1514403, 27837, 951, 27, 70, "Input",ExpressionUUID->"08d8bcb3-70a4-55b3-38e7-35fd01513f99"],
-Cell[1515357, 27866, 114, 2, 70, "Output",ExpressionUUID->"20e38226-5aed-155d-5090-1b805e987fa7"]
+Cell[1513834, 27833, 951, 27, 70, "Input",ExpressionUUID->"7b834648-1855-f17e-29b1-581299e1c044"],
+Cell[1514788, 27862, 114, 2, 70, "Output",ExpressionUUID->"6aa15cf4-f328-f435-1a5f-55b186c2df1f"]
 }, Open  ]],
-Cell[1515486, 27871, 95, 0, 70, "Text",ExpressionUUID->"160727ef-d1b8-0069-3e3c-bec8e04d52b3"],
+Cell[1514917, 27867, 95, 0, 70, "Text",ExpressionUUID->"1fa3178e-7287-38be-4550-8ee807338a84"],
 Cell[CellGroupData[{
-Cell[1515606, 27875, 151, 3, 70, "Input",ExpressionUUID->"261df1b1-b81e-57af-4e22-e8fb39ab3df5"],
-Cell[1515760, 27880, 113, 2, 70, "Output",ExpressionUUID->"00ba9d2f-c328-50fc-3059-1488f6dd22c6"]
+Cell[1515037, 27871, 151, 3, 70, "Input",ExpressionUUID->"33c53063-afff-c489-61fa-aa4cc98baed3"],
+Cell[1515191, 27876, 113, 2, 70, "Output",ExpressionUUID->"08d8bcb3-70a4-55b3-38e7-35fd01513f99"]
 }, Open  ]],
-Cell[1515888, 27885, 96, 0, 70, "Text",ExpressionUUID->"02964792-f196-8b6e-32ae-5edf8020d9b4"],
-Cell[1515987, 27887, 354, 8, 70, "Input",ExpressionUUID->"166d4e5f-4333-9385-3e13-601976c7e1ef"],
-Cell[1516344, 27897, 100, 0, 70, "Text",ExpressionUUID->"1c99ee20-d785-d362-44a6-078de231be48"],
-Cell[1516447, 27899, 352, 8, 70, "Input",ExpressionUUID->"60858f89-56d8-6615-10ba-26d3636d4d7f"],
-Cell[1516802, 27909, 146, 2, 70, "Text",ExpressionUUID->"2e45545e-c429-efe4-567b-4e1bedddb5ce"],
+Cell[1515319, 27881, 96, 0, 70, "Text",ExpressionUUID->"20e38226-5aed-155d-5090-1b805e987fa7"],
+Cell[1515418, 27883, 354, 8, 70, "Input",ExpressionUUID->"160727ef-d1b8-0069-3e3c-bec8e04d52b3"],
+Cell[1515775, 27893, 100, 0, 70, "Text",ExpressionUUID->"261df1b1-b81e-57af-4e22-e8fb39ab3df5"],
+Cell[1515878, 27895, 352, 8, 70, "Input",ExpressionUUID->"00ba9d2f-c328-50fc-3059-1488f6dd22c6"],
+Cell[1516233, 27905, 146, 2, 70, "Text",ExpressionUUID->"02964792-f196-8b6e-32ae-5edf8020d9b4"],
 Cell[CellGroupData[{
-Cell[1516973, 27915, 961, 25, 70, "Input",ExpressionUUID->"24564246-a2b2-7a9b-4c6e-6423d74748e1"],
-Cell[1517937, 27942, 1473, 45, 70, "Output",ExpressionUUID->"273d1382-afb1-09c0-4ec2-8aefca445b2a"]
+Cell[1516404, 27911, 961, 25, 70, "Input",ExpressionUUID->"166d4e5f-4333-9385-3e13-601976c7e1ef"],
+Cell[1517368, 27938, 1473, 45, 70, "Output",ExpressionUUID->"1c99ee20-d785-d362-44a6-078de231be48"]
 }, Open  ]],
-Cell[1519425, 27990, 442, 9, 70, "Text",ExpressionUUID->"39c9e52f-ed06-87fb-6ff6-fc8884b0edc1"],
+Cell[1518856, 27986, 442, 9, 70, "Text",ExpressionUUID->"60858f89-56d8-6615-10ba-26d3636d4d7f"],
 Cell[CellGroupData[{
-Cell[1519892, 28003, 706, 19, 70, "Input",ExpressionUUID->"46be6341-4be3-06d9-6e46-7b2b6d966c23"],
-Cell[1520601, 28024, 1253, 38, 70, "Output",ExpressionUUID->"352b8971-1d3f-d4c9-6328-213b94cbbe13"]
+Cell[1519323, 27999, 706, 19, 70, "Input",ExpressionUUID->"2e45545e-c429-efe4-567b-4e1bedddb5ce"],
+Cell[1520032, 28020, 1253, 38, 70, "Output",ExpressionUUID->"24564246-a2b2-7a9b-4c6e-6423d74748e1"]
 }, Open  ]],
-Cell[1521869, 28065, 578, 13, 70, "Text",ExpressionUUID->"227c7e4b-1c68-aac8-5204-70159502f812"],
+Cell[1521300, 28061, 578, 13, 70, "Text",ExpressionUUID->"273d1382-afb1-09c0-4ec2-8aefca445b2a"],
 Cell[CellGroupData[{
-Cell[1522472, 28082, 424, 11, 70, "Input",ExpressionUUID->"6cd9b5a9-dbed-51da-14e6-2cf2dd982320"],
-Cell[1522899, 28095, 884, 27, 70, "Output",ExpressionUUID->"4becebe3-5bfe-fac0-7993-02cd5d88c82a"]
+Cell[1521903, 28078, 424, 11, 70, "Input",ExpressionUUID->"39c9e52f-ed06-87fb-6ff6-fc8884b0edc1"],
+Cell[1522330, 28091, 884, 27, 70, "Output",ExpressionUUID->"46be6341-4be3-06d9-6e46-7b2b6d966c23"]
 }, Open  ]],
-Cell[1523798, 28125, 408, 6, 70, "Text",ExpressionUUID->"312d182f-c6c7-5e1e-60d2-9188f3722564"],
-Cell[1524209, 28133, 131, 0, 70, "Section",ExpressionUUID->"1449d45f-8382-90b9-3c76-ce193634e283"],
-Cell[1524343, 28135, 784, 16, 70, "Text",ExpressionUUID->"444f09dd-766a-dba7-6c74-a087031ca98d"],
+Cell[1523229, 28121, 408, 6, 70, "Text",ExpressionUUID->"352b8971-1d3f-d4c9-6328-213b94cbbe13"],
+Cell[1523640, 28129, 131, 0, 70, "Section",ExpressionUUID->"227c7e4b-1c68-aac8-5204-70159502f812"],
+Cell[1523774, 28131, 784, 16, 70, "Text",ExpressionUUID->"6cd9b5a9-dbed-51da-14e6-2cf2dd982320"],
 Cell[CellGroupData[{
-Cell[1525152, 28155, 949, 27, 70, "Input",ExpressionUUID->"79e9b65a-67eb-1624-2f96-2804119e7d0e"],
-Cell[1526104, 28184, 114, 2, 70, "Output",ExpressionUUID->"394df0e2-3b3f-7a44-6f72-e9ccbeca48ae"]
+Cell[1524583, 28151, 949, 27, 70, "Input",ExpressionUUID->"4becebe3-5bfe-fac0-7993-02cd5d88c82a"],
+Cell[1525535, 28180, 114, 2, 70, "Output",ExpressionUUID->"312d182f-c6c7-5e1e-60d2-9188f3722564"]
 }, Open  ]],
-Cell[1526233, 28189, 91, 0, 70, "Text",ExpressionUUID->"5d3de1d4-e864-19c9-04c2-f89189116b13"],
+Cell[1525664, 28185, 91, 0, 70, "Text",ExpressionUUID->"1449d45f-8382-90b9-3c76-ce193634e283"],
 Cell[CellGroupData[{
-Cell[1526349, 28193, 151, 3, 70, "Input",ExpressionUUID->"1adc8861-0296-99d3-4ae3-224bb720eb39"],
-Cell[1526503, 28198, 113, 2, 70, "Output",ExpressionUUID->"47f3727e-1788-b883-6d81-7438a2220ae9"]
+Cell[1525780, 28189, 151, 3, 70, "Input",ExpressionUUID->"444f09dd-766a-dba7-6c74-a087031ca98d"],
+Cell[1525934, 28194, 113, 2, 70, "Output",ExpressionUUID->"79e9b65a-67eb-1624-2f96-2804119e7d0e"]
 }, Open  ]],
-Cell[1526631, 28203, 116, 0, 70, "Text",ExpressionUUID->"02bfa0ec-e0fe-2fa7-3244-39c9908b758d"],
-Cell[1526750, 28205, 354, 8, 70, "Input",ExpressionUUID->"7cc1833e-1ead-5711-24fe-1b789b583a7b"],
-Cell[1527107, 28215, 120, 0, 70, "Text",ExpressionUUID->"3cb4236e-91b2-9328-644b-bb482044fe72"],
-Cell[1527230, 28217, 352, 8, 70, "Input",ExpressionUUID->"631da35c-735e-7e3b-1122-3b0606eb4501"],
-Cell[1527585, 28227, 146, 2, 70, "Text",ExpressionUUID->"44b7daea-ed84-b50e-6c4c-d3b784361c54"],
+Cell[1526062, 28199, 116, 0, 70, "Text",ExpressionUUID->"394df0e2-3b3f-7a44-6f72-e9ccbeca48ae"],
+Cell[1526181, 28201, 354, 8, 70, "Input",ExpressionUUID->"5d3de1d4-e864-19c9-04c2-f89189116b13"],
+Cell[1526538, 28211, 120, 0, 70, "Text",ExpressionUUID->"1adc8861-0296-99d3-4ae3-224bb720eb39"],
+Cell[1526661, 28213, 352, 8, 70, "Input",ExpressionUUID->"47f3727e-1788-b883-6d81-7438a2220ae9"],
+Cell[1527016, 28223, 146, 2, 70, "Text",ExpressionUUID->"02bfa0ec-e0fe-2fa7-3244-39c9908b758d"],
 Cell[CellGroupData[{
-Cell[1527756, 28233, 961, 25, 70, "Input",ExpressionUUID->"39f2334d-24de-3dcb-6f81-ab174d688711"],
-Cell[1528720, 28260, 1477, 45, 70, "Output",ExpressionUUID->"1ec600b7-0050-8550-46fd-99f1b1eaefba"]
+Cell[1527187, 28229, 961, 25, 70, "Input",ExpressionUUID->"7cc1833e-1ead-5711-24fe-1b789b583a7b"],
+Cell[1528151, 28256, 1477, 45, 70, "Output",ExpressionUUID->"3cb4236e-91b2-9328-644b-bb482044fe72"]
 }, Open  ]],
-Cell[1530212, 28308, 761, 17, 70, "Text",ExpressionUUID->"33bfe66e-cd59-d601-6144-f84be4edbd6b"],
+Cell[1529643, 28304, 761, 17, 70, "Text",ExpressionUUID->"631da35c-735e-7e3b-1122-3b0606eb4501"],
 Cell[CellGroupData[{
-Cell[1530998, 28329, 706, 19, 70, "Input",ExpressionUUID->"6a3ee8c1-8740-e1ad-1bc5-01ab32fab3f7"],
-Cell[1531707, 28350, 1257, 38, 70, "Output",ExpressionUUID->"33885b0f-111a-0c54-6188-5369a0af56be"]
+Cell[1530429, 28325, 706, 19, 70, "Input",ExpressionUUID->"44b7daea-ed84-b50e-6c4c-d3b784361c54"],
+Cell[1531138, 28346, 1257, 38, 70, "Output",ExpressionUUID->"39f2334d-24de-3dcb-6f81-ab174d688711"]
 }, Open  ]],
-Cell[1532979, 28391, 1022, 27, 70, "Text",ExpressionUUID->"5c9080a8-67dd-9047-04af-19f21269e2ad"],
+Cell[1532410, 28387, 1022, 27, 70, "Text",ExpressionUUID->"1ec600b7-0050-8550-46fd-99f1b1eaefba"],
 Cell[CellGroupData[{
-Cell[1534026, 28422, 663, 19, 70, "Input",ExpressionUUID->"2abc9d06-0494-496b-5a43-1560ad211bb1"],
-Cell[1534692, 28443, 804, 24, 70, "Output",ExpressionUUID->"43e301a0-76bb-1057-7190-980a034e62bd"]
+Cell[1533457, 28418, 663, 19, 70, "Input",ExpressionUUID->"33bfe66e-cd59-d601-6144-f84be4edbd6b"],
+Cell[1534123, 28439, 804, 24, 70, "Output",ExpressionUUID->"6a3ee8c1-8740-e1ad-1bc5-01ab32fab3f7"]
 }, Open  ]],
-Cell[1535511, 28470, 395, 8, 70, "Text",ExpressionUUID->"1ae06f2b-7109-3ba5-4a9f-877500bd898f"],
+Cell[1534942, 28466, 395, 8, 70, "Text",ExpressionUUID->"33885b0f-111a-0c54-6188-5369a0af56be"],
 Cell[CellGroupData[{
-Cell[1535931, 28482, 961, 25, 70, "Input",ExpressionUUID->"0856a555-3f58-6085-386d-3d1fbaed32ef"],
-Cell[1536895, 28509, 58897, 1322, 70, "Output",ExpressionUUID->"71eecbe3-9be0-9ba6-2795-e2cd1d9ae98c"]
+Cell[1535362, 28478, 961, 25, 70, "Input",ExpressionUUID->"5c9080a8-67dd-9047-04af-19f21269e2ad"],
+Cell[1536326, 28505, 58897, 1322, 70, "Output",ExpressionUUID->"2abc9d06-0494-496b-5a43-1560ad211bb1"]
 }, Open  ]],
-Cell[1595807, 29834, 435, 8, 70, "Text",ExpressionUUID->"59070895-187c-42ea-0f3c-a1df99091030"],
-Cell[1596245, 29844, 360, 5, 70, "Text",ExpressionUUID->"189fe470-6cd8-7cf4-48a4-fe3a056d46de"],
+Cell[1595238, 29830, 435, 8, 70, "Text",ExpressionUUID->"43e301a0-76bb-1057-7190-980a034e62bd"],
+Cell[1595676, 29840, 360, 5, 70, "Text",ExpressionUUID->"1ae06f2b-7109-3ba5-4a9f-877500bd898f"],
 Cell[CellGroupData[{
-Cell[1596630, 29853, 1300, 36, 70, "Input",ExpressionUUID->"04ed2843-d86c-272a-2c92-c22cd91e8a70"],
-Cell[1597933, 29891, 1047, 31, 70, "Output",ExpressionUUID->"70d9e217-b7c7-416b-20e6-0450c27213b1"]
+Cell[1596061, 29849, 1300, 36, 70, "Input",ExpressionUUID->"0856a555-3f58-6085-386d-3d1fbaed32ef"],
+Cell[1597364, 29887, 1047, 31, 70, "Output",ExpressionUUID->"71eecbe3-9be0-9ba6-2795-e2cd1d9ae98c"]
 }, Open  ]],
-Cell[1598995, 29925, 210, 3, 70, "Text",ExpressionUUID->"29221b72-bc55-8ef4-58d1-933c35e1d4de"],
+Cell[1598426, 29921, 210, 3, 70, "Text",ExpressionUUID->"59070895-187c-42ea-0f3c-a1df99091030"],
 Cell[CellGroupData[{
-Cell[1599230, 29932, 640, 19, 70, "Input",ExpressionUUID->"41172bde-c012-830e-772c-c29bf1a4ee54"],
-Cell[1599873, 29953, 895, 28, 70, "Output",ExpressionUUID->"3dd84232-0c35-660d-6bf8-647ca5c04d57"]
+Cell[1598661, 29928, 640, 19, 70, "Input",ExpressionUUID->"189fe470-6cd8-7cf4-48a4-fe3a056d46de"],
+Cell[1599304, 29949, 895, 28, 70, "Output",ExpressionUUID->"04ed2843-d86c-272a-2c92-c22cd91e8a70"]
 }, Open  ]],
-Cell[1600783, 29984, 356, 5, 70, "Text",ExpressionUUID->"5558c8fc-3d33-9e90-0367-e1a6b4c7e4fa"],
-Cell[1601142, 29991, 90, 0, 70, "Section",ExpressionUUID->"53291d47-a111-bd44-02d6-9520d0a507ae"],
-Cell[1601235, 29993, 1113, 22, 70, "Text",ExpressionUUID->"14460f59-6b0f-818e-3c7d-a7030ebbd3d4"],
-Cell[1602351, 30017, 1737, 34, 70, "Text",ExpressionUUID->"6afe19ed-5a5e-331e-1a85-90b75fe89e64"],
-Cell[1604091, 30053, 2489, 61, 70, "Text",ExpressionUUID->"142f588d-e120-bc70-3dd5-51d690da075a"]
+Cell[1600214, 29980, 356, 5, 70, "Text",ExpressionUUID->"70d9e217-b7c7-416b-20e6-0450c27213b1"],
+Cell[1600573, 29987, 90, 0, 70, "Section",ExpressionUUID->"29221b72-bc55-8ef4-58d1-933c35e1d4de"],
+Cell[1600666, 29989, 1113, 22, 70, "Text",ExpressionUUID->"41172bde-c012-830e-772c-c29bf1a4ee54"],
+Cell[1601782, 30013, 1737, 34, 70, "Text",ExpressionUUID->"3dd84232-0c35-660d-6bf8-647ca5c04d57"],
+Cell[1603522, 30049, 2489, 61, 70, "Text",ExpressionUUID->"5558c8fc-3d33-9e90-0367-e1a6b4c7e4fa"]
 }
 ]
 *)

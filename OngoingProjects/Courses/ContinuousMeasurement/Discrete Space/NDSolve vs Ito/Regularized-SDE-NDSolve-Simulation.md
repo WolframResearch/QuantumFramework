@@ -4,13 +4,9 @@ Template: Default
 
 # Handing NDSolve the explicit Stratonovich SDE: the state and the readout of a monitored qubit
 
-**A companion to *Watching a Qubit: Continuous Measurement and Quantum Trajectories* and a direct sequel to *Regularizing the Noise so NDSolve Can Integrate It*. There we smoothed the white noise so `NDSolve` could integrate the trajectory, then spent the document deriving the single drift term that separates the Itô and Stratonovich readings, so we could subtract it before handing the equation over. Here we drop that bookkeeping: the trajectory has an explicit Stratonovich form whose drift already carries the correction, so we write the drift and the diffusion out as they stand and feed `NDSolve` the equation directly. And we integrate all four components, the three Bloch numbers together with the readout $Q$ the detector accumulates, so a sample record rides alongside the state that produced it. What it buys is checked, not asserted: the built-in Stratonovich-to-Itô conversion certifies the explicit drift symbolically, the ensemble mean lands on the exact Lindblad master equation, and the ensemble spread lands on an independent native `StratonovichProcess` run, for every component of the Bloch vector, not just the monitored one.**
+**The trajectory of a continuously monitored qubit, the three Bloch components plus the readout the detector accumulates, is one stochastic differential equation driven by a single noise. This document writes it in the explicit Stratonovich form a smooth-noise solver requires and hands it to `NDSolve` directly, the white noise replaced by a cubic-interpolated Wiener path. Every step of the route is certified in place: the built-in Stratonovich-to-Itô conversion recovers the Lindblad drift symbolically, the ensemble mean lands on the exact `DSolve` solution of the master equation, the ensemble spread lands on a native `StratonovichProcess` reference that is itself step-refined, and the readout is held to the same standard, its mean against a closed form, its spread against the same native ensemble, its pathwise identity at solver error. Positivity is the admissibility condition $\Gamma_{CI}+\Gamma_{BA}\le2(\Gamma_d+\gamma_\phi)$, derived from the flux through the Bloch sphere and exercised inside, at, and beyond its boundary.**
 
 Mads Bahrami (last updated: August 11, 2026)
-
-I strongly believe in a computation-first narrative: if I cannot compute it, I cannot claim to understand it, so every claim below is turned into a short cell you can run and change. The environment is a live Wolfram notebook; evaluate the cells from top to bottom, since later ones use objects the earlier ones define. Change a rate, reseed the noise, lengthen the window, and watch what moves: my suggestion is to read each output and its meaning first, before unpacking the input that produced it.
-
-Let's start!
 
 ## The trajectory equations: the state and the readout in one SDE
 
