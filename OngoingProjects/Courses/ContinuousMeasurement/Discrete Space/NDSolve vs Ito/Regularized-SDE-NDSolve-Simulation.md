@@ -124,10 +124,10 @@ ClearAll[maxRate];
 maxRate[r_] :=
   With[{\[CapitalGamma]CI = r[[1]], \[CapitalGamma]BA = r[[2]], \[CapitalGamma]d = r[[3]],
     \[Gamma]\[Phi] = r[[4]], \[Gamma]1 = r[[5]], \[CapitalOmega]x = r[[6]]},
-   Max[\[CapitalOmega]x, \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d, \[CapitalGamma]CI + \[CapitalGamma]BA]];
+   Max[Abs[\[CapitalOmega]x], \[Gamma]1/2 + \[Gamma]\[Phi] + \[CapitalGamma]d, \[CapitalGamma]CI + \[CapitalGamma]BA]];
 ```
 
-Set the noise grid $\Delta t_{\mathrm{gen}}$ to resolve that fastest timescale with forty knots, fine enough to sit in the white-noise limit. Everything else follows: the `NDSolve` step is a quarter of it, and the native reference below runs on the same grid:
+Set the noise grid $\Delta t_{\mathrm{gen}}$ to resolve that fastest timescale with forty knots, a working resolution the refinement sweep checks below for the representative case. Everything else follows: `NDSolve`'s adaptive step is capped at a quarter of it, and the native reference below runs on the same grid:
 
 ```wl
 ClearAll[dtGenOf];
@@ -138,14 +138,21 @@ dtGenOf[r_] := 1/(40 maxRate[r]);
 
 A white-noise increment $dW$ is not a function of time, it is a distribution, and `NDSolve` cannot integrate a distribution. But if we draw the noise on a grid and connect the dots into a smooth curve $W(t)$, then $W'(t)$ is an ordinary function, and $d\vec v=\vec a\,dt+\vec b\,dW$ becomes the ordinary differential equation $\dot{\vec v}=\vec a(\vec v)+\vec b(\vec v)\,W'(t)$. In other words, we replace white noise by a smooth approximation with a short but finite correlation time.
 
-Concretely: draw i.i.d. Gaussian increments of variance $\Delta t_{\mathrm{gen}}$ on a grid of spacing $\Delta t_{\mathrm{gen}}$, accumulate them into a Wiener path, and interpolate with a cubic so $W(t)$ is a continuous curve and its derivative $W'(t)$ an ordinary function of time, no longer the distribution that white noise is:
+One grid carries both the noise and the read-off, so define it once, a uniform grid on $[0,t_f]$ that lands exactly on $t_f$, with about $t_f/\Delta t_{\mathrm{gen}}$ intervals and never fewer than three (the cubic needs the points):
+
+```wl
+ClearAll[noiseGrid];
+noiseGrid[tf_, dt_] := Subdivide[0., tf, Max[3, Ceiling[tf/dt]]];
+```
+
+Concretely: on that grid, draw i.i.d. Gaussian increments with variance the grid spacing, accumulate them into a Wiener path, and interpolate with a cubic so $W(t)$ is a continuous curve and its derivative $W'(t)$ an ordinary function of time, no longer the distribution that white noise is:
 
 ```wl
 ClearAll[wienerFun];
 wienerFun[tf_, dtGen_, seed_] := BlockRandom[SeedRandom[seed];
-   Module[{n = Max[1, Round[tf/dtGen]], grid, h, incr},
-    grid = Subdivide[0., tf, n]; h = tf/n;
-    incr = RandomVariate[NormalDistribution[0, Sqrt[h]], n];
+   Module[{grid = noiseGrid[tf, dtGen], h, incr},
+    h = grid[[2]] - grid[[1]];
+    incr = RandomVariate[NormalDistribution[0, Sqrt[h]], Length[grid] - 1];
     Interpolation[Transpose[{grid, Prepend[Accumulate[incr], 0.]}], InterpolationOrder -> 3]]];
 ```
 
@@ -161,9 +168,9 @@ With[{Wf = wienerFun[tfB, dtGenOf[ratesB], 11]},
   ImageSize -> 640]]
 ```
 
-As one can see, $W(t)$ is a continuous random walk and $W'(t)$ is a jagged but genuine function, varying on the scale $\Delta t_{\mathrm{gen}}$. There are two time increments here, and they play different roles. The first, $\Delta t_{\mathrm{gen}}$, is the grid the Gaussian increments are drawn on: it sets the correlation time of the smoothed noise, and it is the dial that fixes which stochastic equation we actually solve, converging to the ideal white-noise SDE only as $\Delta t_{\mathrm{gen}}\to 0$. The second, the `NDSolve` step, carries no physics; it only has to resolve the smooth forcing $W'(t)$ between noise knots, and we hold it below $\Delta t_{\mathrm{gen}}$ so the solver is guaranteed to see every wiggle. Which of the two actually moves the answer is a question we put to the machine below.
+As one can see, $W(t)$ is a continuous random walk and $W'(t)$ is a jagged but genuine function, varying on the scale $\Delta t_{\mathrm{gen}}$. There are two time increments here, and they play different roles. The first, $\Delta t_{\mathrm{gen}}$, is the grid the Gaussian increments are drawn on: it sets the correlation time of the smoothed noise, and it is the dial that fixes which stochastic equation we actually solve, converging to the ideal white-noise SDE only as $\Delta t_{\mathrm{gen}}\to 0$. The second, the `NDSolve` step, carries no physics; it only has to resolve the smooth forcing $W'(t)$ between noise knots, and we cap it below $\Delta t_{\mathrm{gen}}$, which forces several solver steps across each noise interval and supplements the adaptive error control. Which of the two actually moves the answer is a question we put to the machine below.
 
-Assemble one trajectory. Build a smooth noise, form the random ODE $\dot{\vec v}=\vec a_{\mathrm{Strat}}(\vec v)+\vec b_{\mathrm{Strat}}(\vec v)\,W'(t)$ for the full four-vector, and hand it to `NDSolve` with its step held below $\Delta t_{\mathrm{gen}}$:
+Assemble one trajectory. Build a smooth noise, form the random ODE $\dot{\vec v}=\vec a_{\mathrm{Strat}}(\vec v)+\vec b_{\mathrm{Strat}}(\vec v)\,W'(t)$ for the full four-vector, and hand it to `NDSolve` with its `MaxStepSize` capped below $\Delta t_{\mathrm{gen}}$:
 
 ```wl
 ClearAll[oneTraj];
@@ -196,7 +203,7 @@ As one can see, the state path fluctuates around the Lindblad mean, as a single 
 
 ## The ensemble: matching the mean and the second moment
 
-A single path tells us little; the mean lives in the ensemble and the second moment in how widely the paths spread. Rather than compare final values, we keep the whole trajectory from each route, average many of them, and watch the two ensemble means track the exact Lindblad curve across the entire interval. The two routes are the built-in `StratonovichProcess` integrator and the regularized `NDSolve` route, both solving the same Stratonovich SDE, and the yardstick is a single Lindblad solution from `DSolve`.
+A single path tells us little; the mean lives in the ensemble and the second moment in how widely the paths spread. Rather than compare final values, we keep the whole trajectory from each route, average many of them, and watch the two ensemble means track the exact Lindblad curve across the entire interval. The two routes are the built-in `StratonovichProcess` integrator, which discretizes the target Stratonovich SDE, and the regularized `NDSolve` route, whose smooth ODE approaches that same SDE as $\Delta t_{\mathrm{gen}}\to 0$; the yardstick is a single Lindblad solution from `DSolve`.
 
 The exact mean obeys the affine Itô drift $\vec a$, which is the Lindblad master equation, and $\vec a$ is also the target the built-in conversion should return from our Stratonovich field. Encode it on the three state rows:
 
@@ -252,7 +259,7 @@ Generate the same count of regularized trajectories, each `NDSolve` solution rea
 ```wl
 ClearAll[regRun];
 regRun[r_, init_, tf_, dtGen_, ntraj_, baseSeed_, maxstep_ : Automatic, grid_ : Automatic] :=
-  With[{ms = maxstep /. Automatic -> dtGen/4, g = grid /. Automatic -> Range[0., tf, dtGen]},
+  With[{ms = maxstep /. Automatic -> dtGen/4, g = grid /. Automatic -> noiseGrid[tf, dtGen]},
    ParallelTable[
     With[{tr = oneTraj[r, init, tf, dtGen, baseSeed + i, ms]},
      Table[{tr[[1]][s], tr[[2]][s], tr[[3]][s]}, {s, g}]],
@@ -290,7 +297,7 @@ regRunB = regRun[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100];
 Average each ensemble over its trajectories and compare the two mean paths of $\langle z\rangle$ against the single exact Lindblad trajectory:
 
 ```wl
-With[{g = Range[0., tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
+With[{g = noiseGrid[tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
  ListLinePlot[{
     Transpose[{g, Mean[stratRunB][[All, 3]]}],
     Transpose[{g, Mean[regRunB][[All, 3]]}],
@@ -303,10 +310,19 @@ With[{g = Range[0., tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;
 
 As one can see, both ensemble means, the built-in `StratonovichProcess` integrator and the regularized route, lie on the exact Lindblad curve across the whole interval, not only at the final time. Averaging over the trajectories rebuilds the deterministic master equation, which is the sense in which the smooth Lindblad flow was an average over jagged records all along.
 
+Quantify "on the curve" rather than eyeball it: the final-time gap between the regularized mean and the Lindblad value, in Monte-Carlo standard errors:
+
+```wl
+Abs[Mean[regRunB[[All, -1, 3]]] - lindbladBloch[ratesB, initB[[1 ;; 3]]][tfB][[3]]]/
+ (StandardDeviation[regRunB[[All, -1, 3]]]/Sqrt[nB])
+```
+
+This is a z-score, the mean-to-Lindblad gap in units of the Monte-Carlo standard error, so a value near one means the ensemble mean sits on the master-equation curve to within sampling noise.
+
 The mean sees only the drift, so it is a weak test. The measurement backaction lives in the second moment, the spread of the final Bloch vector, rows $x,y,z$ and each row native Stratonovich then regularized:
 
 ```wl
-Transpose[{StandardDeviation[stratRunB[[All, -1]]], StandardDeviation[regRunB[[All, -1]]]}]
+Transpose[{StandardDeviation[stratRunB[[All, -1]]], StandardDeviation[regRunB[[All, -1]]]}] // MatrixForm
 ```
 
 As expected, the spreads agree component by component, so the regularized route reproduces the noise, not just the drift. The $x$ row is flat zero: with the backaction quadrature off ($\Gamma_{BA}=0$) and no initial $x$-coherence, nothing sources $x$, and the substance sits in $y$ and $z$.
@@ -330,7 +346,7 @@ a closed prediction we already hold, since $\langle z\rangle$ is the Lindblad me
 ```wl
 ClearAll[recRun];
 recRun[r_, init_, tf_, dtGen_, ntraj_, baseSeed_] :=
-  With[{g = Range[0., tf, dtGen], ms = dtGen/4},
+  With[{g = noiseGrid[tf, dtGen], ms = dtGen/4},
    ParallelTable[
     With[{tr = oneTraj[r, init, tf, dtGen, baseSeed + i, ms]},
      Table[tr[[4]][s], {s, g}]], {i, ntraj}]];
@@ -345,17 +361,28 @@ recQB = recRun[ratesB, initB, tfB, dtGenOf[ratesB], nB, 8200];
 Overlay the ensemble-averaged record on the closed prediction $\sqrt{\Gamma_{CI}}\int_0^t\langle z\rangle\,ds$, integrating the Lindblad $\langle z\rangle$:
 
 ```wl
-With[{g = Range[0., tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
+With[{g = noiseGrid[tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
  Module[{u, t, qpred},
   qpred = NDSolveValue[{u'[t] == Sqrt[ratesB[[1]]] lb[t][[3]], u[0] == 0.}, u, {t, 0, tfB}];
   ListLinePlot[{Transpose[{g, Mean[recQB]}], Transpose[{g, qpred /@ g}]},
    PlotStyle -> {ColorData[97, 2], Directive[Thick, Black]},
-   PlotLegends -> {"ensemble mean \[LeftAngleBracket]Q\[RightAngleBracket](t)", "\[Sqrt]\[CapitalGamma]CI \[Integral]\[LeftAngleBracket]z\[RightAngleBracket] dt"},
+   PlotLegends -> {"ensemble mean \[LeftAngleBracket]Q\[RightAngleBracket](t)", "\!\(\*SqrtBox[\(\[CapitalGamma]CI\)]\) \[Integral]\[LeftAngleBracket]z\[RightAngleBracket] dt"},
    Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "\[LeftAngleBracket]Q\[RightAngleBracket]"},
    PlotLabel -> "the average record is the integrated signal", ImageSize -> 520]]]
 ```
 
 As one can see, the mean record climbs along the integrated $\langle z\rangle$, the two curves tracking with a residual wander that is the ensemble-averaged noise, of order $\sqrt{t/n_{\mathrm{traj}}}$ and not yet fully cancelled at this sample size. The signal is what survives averaging; the noise is what does not.
+
+Turn that visual match into a number: the final-time gap between the mean record and its prediction, in Monte-Carlo standard errors:
+
+```wl
+With[{lb = lindbladBloch[ratesB, initB[[1 ;; 3]]]},
+ Module[{u, t, qpred},
+  qpred = NDSolveValue[{u'[t] == Sqrt[ratesB[[1]]] lb[t][[3]], u[0] == 0.}, u, {t, 0, tfB}];
+  Abs[Mean[recQB[[All, -1]]] - qpred[tfB]]/(StandardDeviation[recQB[[All, -1]]]/Sqrt[nB])]]
+```
+
+Again a z-score: near one, the mean record is the integrated signal to within sampling noise, which is all the average can claim at finite $n_{\mathrm{traj}}$.
 
 The average removed the noise, but a single record still carries it, and carries a specific one. Since $dQ-\sqrt{\Gamma_{CI}}\,z\,dt=dW$ exactly, subtracting the integrated signal from one record must return the very Wiener path that drove the state. Build one trajectory, strip its signal, and overlay the remainder on its driving path $W(t)$:
 
@@ -366,12 +393,24 @@ With[{r = ratesB, dt = dtGenOf[ratesB], seed = 7},
    zint = NDSolveValue[{u'[t] == traj[[3]][t], u[0] == 0.}, u, {t, 0, tfB}];
    Plot[{traj[[4]][t] - Sqrt[r[[1]]] zint[t], Wf[t]}, {t, 0, tfB},
     PlotStyle -> {Directive[Thick, ColorData[97, 2]], Directive[Dashed, Black]},
-    PlotLegends -> Placed[{"record minus signal: Q(t) - \[Sqrt]\[CapitalGamma]CI \[Integral]z dt", "driving path W(t)"}, Below],
+    PlotLegends -> Placed[{"record minus signal: Q(t) - \!\(\*SqrtBox[\(\[CapitalGamma]CI\)]\) \[Integral]z dt", "driving path W(t)"}, Below],
     Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "W"},
     PlotLabel -> "stripping the signal from the record returns the driving noise", ImageSize -> 520]]]]
 ```
 
 As one can see, the stripped record lands on the driving path to the width of the line. This is the physical content of a measurement made literal: the fluctuations in the record are not merely correlated with the noise that kicked the state, they are that noise. The observer reads $\sqrt{\Gamma_{CI}}\int z$ as signal; the remainder is the single innovation $dW$ the detector wrote into the record and the backaction at once.
+
+Rather than trust the line width, put a number on it, the largest gap between the stripped record and the driving path across the window:
+
+```wl
+With[{r = ratesB, dt = dtGenOf[ratesB], seed = 7},
+ With[{Wf = wienerFun[tfB, dt, seed], traj = oneTraj[r, initB, tfB, dt, seed, dt/4]},
+  Module[{u, t, zint},
+   zint = NDSolveValue[{u'[t] == traj[[3]][t], u[0] == 0.}, u, {t, 0, tfB}];
+   Max[Abs[Table[traj[[4]][s] - Sqrt[r[[1]]] zint[s] - Wf[s], {s, Subdivide[0., tfB, 1000]}]]]]]]
+```
+
+The gap sits at the integrator's own tolerance, so the record minus its signal is the driving noise exactly, an identity rather than an approximation, and it tightens as the solver tolerance does.
 
 ## The two time steps: which one sets the answer
 
@@ -379,8 +418,8 @@ The route carries two time increments, and the section title is a real question:
 
 ```wl
 Map[{Mean[First[#]][[3]], StandardDeviation[First[#]][[3]]} &,
- {ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, dtGenOf[ratesB]/4],
-  ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, 10 dtGenOf[ratesB]]}]
+  {ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, dtGenOf[ratesB]/4],
+   ensemble[ratesB, initB, tfB, dtGenOf[ratesB], nB, 9100, 10 dtGenOf[ratesB]]}] // MatrixForm
 ```
 
 As one can see, with the same noise realizations under both, the two rows coincide to solver precision: for this parameter set and `NDSolve`'s default tolerances, its adaptive error control refines the step wherever $W'(t)$ varies, so relaxing `MaxStepSize` from a quarter of $\Delta t_{\mathrm{gen}}$ to ten times it leaves the observables unmoved. We still cap it below $\Delta t_{\mathrm{gen}}$ as a cheap guarantee, not because this run needs it, and it is not the binding dial.
@@ -391,15 +430,15 @@ The binding dial is $\Delta t_{\mathrm{gen}}$. Read the native reference the shr
 {Mean[stratRunB[[All, -1, 3]]], StandardDeviation[stratRunB[[All, -1, 3]]]}
 ```
 
-Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$ with the standard error of the mean, each row $\{\Delta t_{\mathrm{gen}},\text{ mean } z,\text{ s.e. of mean},\text{ spread } z\}$:
+Now sweep $\Delta t_{\mathrm{gen}}$ from coarse to fine, the integrator step held below it, and tabulate the regularized mean and spread of the final $z$, each row $\{\Delta t_{\mathrm{gen}},\text{ mean } z,\text{ spread } z\}$:
 
 ```wl
 Table[With[{fz = First[ensemble[ratesB, initB, tfB, tfB/k, 300, 6000]][[All, 3]]},
-   {N[tfB/k], Mean[fz], StandardDeviation[fz]/Sqrt[Length[fz]], StandardDeviation[fz]}],
-  {k, {6, 12, 25, 100, 400}}]
+   {N[tfB/k], Mean[fz], StandardDeviation[fz]}],
+  {k, {6, 12, 25, 100, 400}}] // MatrixForm
 ```
 
-As one can see, the mean stays put within its standard error across the sweep while the spread descends from an inflated coarse value and flattens toward the native reference as $\Delta t_{\mathrm{gen}}$ shrinks. In the white-noise limit the affine drift fixes the mean exactly; at finite $\Delta t_{\mathrm{gen}}$ any regularization bias in the mean sits below the Monte-Carlo scatter here, while the bias in the second moment is large enough to watch converge out. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that sets the answer, and at this sampling accuracy the spread is where we can see it move.
+As one can see, the estimated means stay compatible with the Lindblad value at roughly the two-standard-error level (the standard error is the spread column over $\sqrt{300}$) while the spread descends from an inflated coarse value and flattens toward the native reference as $\Delta t_{\mathrm{gen}}$ shrinks. In the white-noise limit the affine drift fixes the mean exactly; at finite $\Delta t_{\mathrm{gen}}$ any regularization bias in the mean sits below the Monte-Carlo scatter here, while the bias in the second moment is large enough to watch converge out. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that sets the answer, and at this sampling accuracy the spread is where we can see it move.
 
 ## Phase backaction: the x channel comes alive
 
@@ -424,13 +463,13 @@ regX = ensemble[ratesX, initX, tfX, dtGenOf[ratesX], nX, 7100];
 Compare the mean of the final Bloch vector, rows $x,y,z$ and each row exact Lindblad, native Stratonovich, regularized:
 
 ```wl
-Transpose[{lindbladBloch[ratesX, initX[[1 ;; 3]]][tfX], Mean[stratX], Mean[regX[[1]]]}]
+Transpose[{lindbladBloch[ratesX, initX[[1 ;; 3]]][tfX], Mean[stratX], Mean[regX[[1]]]}] // MatrixForm
 ```
 
 As one can see, the $x$ row is now genuinely nonzero and the three routes agree on it, its mean decaying under the drift that decouples it. Now the spread, where the backaction actually lives, rows $x,y,z$ and each row native Stratonovich then regularized:
 
 ```wl
-Transpose[{StandardDeviation[stratX], StandardDeviation[regX[[1]]]}]
+Transpose[{StandardDeviation[stratX], StandardDeviation[regX[[1]]]}] // MatrixForm
 ```
 
 As expected, the $x$ spread is now substantial, fed by the backaction noise the $y$ channel injects, and the regularized route matches it. This is the full-Bloch-vector check the representative case could not give: with the coupling on, every component carries a nonzero second moment, and the regularized Stratonovich route reproduces all three.
@@ -458,26 +497,26 @@ regS = ensemble[ratesS, initS, tfS, dtGenOf[ratesS], nS, 5300];
 Compare the mean of the final Bloch vector, rows $x,y,z$ and each row exact Lindblad, native Stratonovich, regularized:
 
 ```wl
-Transpose[{lindbladBloch[ratesS, initS[[1 ;; 3]]][tfS], Mean[stratS], Mean[regS[[1]]]}]
+Transpose[{lindbladBloch[ratesS, initS[[1 ;; 3]]][tfS], Mean[stratS], Mean[regS[[1]]]}] // MatrixForm
 ```
 
 As one can see, the regularized mean still tracks the exact value in every row where the correction is large; the $x$ row has decayed from its initial tilt toward zero, since with $\Gamma_{BA}=0$ nothing rotates it back, and all three routes agree on the small residual. Compare the spread, rows $x,y,z$ and each row native Stratonovich then regularized:
 
 ```wl
-Transpose[{StandardDeviation[stratS], StandardDeviation[regS[[1]]]}]
+Transpose[{StandardDeviation[stratS], StandardDeviation[regS[[1]]]}] // MatrixForm
 ```
 
-As expected, the spreads still agree row by row where the Stratonovich correction is largest. See the whole distribution agree, the regularized final-$z$ histogram against the native Stratonovich reference:
+As expected, the $y$ and $z$ spreads agree closely where the Stratonovich correction is largest; the $x$ spread differs relatively but is negligible in absolute size in both routes, since with $\Gamma_{BA}=0$ nothing sources it. See the final-$z$ marginal agree, the regularized histogram against the native Stratonovich reference:
 
 ```wl
 Histogram[{regS[[1]][[All, 3]], stratS[[All, 3]]}, 24, "PDF",
- ChartLegends -> {"regularized", "Stratonovich ref"},
- Frame -> True, FrameLabel -> {"final z", "density"},
- PlotLabel -> "strong readout: the regularized route matches the Stratonovich ensemble", ImageSize -> 520]
+  Frame -> True, FrameLabel -> {"final z", "density"},
+  PlotLabel -> "Strong readout (final value of z)", 
+ PlotLegends -> {"Regularized route", "Stratonovich ensemble"}]
 ```
 
-As one can see, the regularized distribution sits on top of the native Stratonovich reference, so the route reproduces the ensemble, not merely its average, even where the drift correction is strong.
+As one can see, the regularized histogram sits on top of the native Stratonovich reference, so the route reproduces the final-$z$ marginal, not merely its mean, even where the drift correction is strong.
 
 ## What is now true
 
-The trajectory of a continuously monitored qubit is one four-component stochastic differential equation: the three Bloch numbers and the readout the detector accumulates, all driven by a single noise. Written in Stratonovich form, its drift already carries the term that separates the two stochastic calculi, which the built-in Stratonovich-to-Itô conversion confirms exactly, so a smooth-noise integrator needs nothing added: replace the white noise by a cubic-interpolated Wiener path, hand `NDSolve` the Stratonovich drift and diffusion as they stand, and the solution is the target Itô process. That target is what the two references pin down, because the Itô drift is affine the ensemble mean is the Lindblad master equation for every Bloch component, and because the diffusion is exactly $\vec b$ the ensemble spread is the native `StratonovichProcess` spread. Integrating the readout beside the state costs one more equation and buys a sample record: averaged over the ensemble it is the integrated signal $\sqrt{\Gamma_{CI}}\int\langle z\rangle$, and stripped of that signal a single record returns the very Wiener path that kicked the state, which is the physical content of a measurement, the record and the backaction are one draw. Once the backaction quadrature is on, the coupled $x$ channel it feeds carries its own second moment, and the route reproduces that too, so the full Bloch vector is matched, not just the monitored component. Of the two time increments, only the noise-generation step sets the answer, the dial that fixes which SDE is solved and is sent to zero, while the integrator step, for the tolerances used here, is absorbed by the solver's own error control.
+The trajectory of a continuously monitored qubit is one four-component stochastic differential equation: the three Bloch numbers and the readout the detector accumulates, all driven by a single noise. Written in Stratonovich form, its drift already carries the term that separates the two stochastic calculi, which the built-in Stratonovich-to-Itô conversion confirms exactly, so a smooth-noise integrator needs nothing added: replace the white noise by a cubic-interpolated Wiener path, hand `NDSolve` the Stratonovich drift and diffusion as they stand, and the solution approaches the target Itô process as $\Delta t_{\mathrm{gen}}\to0$. That target is what the two references pin down: because the Itô drift is affine, the ensemble mean is the Lindblad master equation for every Bloch component, and because the diffusion is exactly $\vec b$, the ensemble spread is the native `StratonovichProcess` spread. Integrating the readout beside the state costs one more equation and buys a sample record: averaged over the ensemble it is the integrated signal $\sqrt{\Gamma_{CI}}\int\langle z\rangle$, and stripped of that signal a single record returns the very Wiener path that kicked the state, which is the physical content of a measurement, the record and the backaction are one draw. Once the backaction quadrature is on, the coupled $x$ channel it feeds carries its own second moment, and the route reproduces that too, so the full Bloch vector is matched, not just the monitored component. Of the two time increments, only the noise-generation step sets the answer, the dial that fixes which SDE is solved and is sent to zero, while the integrator step, for the tolerances used here, is absorbed by the solver's own error control.
