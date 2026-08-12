@@ -6,13 +6,11 @@ PackageExport["BosonicRelations"]
 
 PackageExport["BosonicNormalOrder"]
 
-PackageExport["BosonicAntiNormalOrder"]
+PackageExport["BosonicAntinormalOrder"]
 
 PackageExport["BosonicBCHTerms"]
 
 PackageExport["BosonicZassenhausTerms"]
-
-PackageExport["BosonicBCHExact"]
 
 PackageExport["BosonicVEV"]
 
@@ -96,37 +94,37 @@ Block[{
 ]
 
 
-BosonicAntiNormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntiNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+BosonicAntinormalOrder::usage =
+"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
 
-BosonicAntiNormalOrder::unknownMethod = "Unknown Method: `1`."
+BosonicAntinormalOrder::unknownMethod = "Unknown Method: `1`."
 
-Options[BosonicAntiNormalOrder] = Options[BosonicNormalOrder]
+Options[BosonicAntinormalOrder] = Options[BosonicNormalOrder]
 
 (* With no field variables there is nothing to reorder: a c-number is already in
    anti-normal order, so return it unchanged. *)
-BosonicAntiNormalOrder[expr_, {}, OptionsPattern[]] := expr
+BosonicAntinormalOrder[expr_, {}, OptionsPattern[]] := expr
 
-BosonicAntiNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
+BosonicAntinormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
 With[{
     method = OptionValue[Method],
     scalars = OptionValue["Scalars"]
 },
     If[ MatchQ[expr, _Plus],
         Return[Total[ParallelMap[
-            BosonicAntiNormalOrder[#, vars, "Scalars" -> scalars, Method -> method] &,
+            BosonicAntinormalOrder[#, vars, "Scalars" -> scalars, Method -> method] &,
             List @@ expr
         ]]]
     ];
     Replace[method, {
-        "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "AntiNormal"],
+        "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "Antinormal"],
         (* normal-order the swapped monomial, then swap back *)
         "Blasiak" :> ladderSwap[
             MultiModeBlasiakOrder[ladderSwap[expr, vars], vars, scalars],
             vars,
             "Inverse"
         ],
-        _ :> (Message[BosonicAntiNormalOrder::unknownMethod, method]; $Failed)
+        _ :> (Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed)
     }]
 ]
 
@@ -165,103 +163,6 @@ BosonicZassenhausTerms[ops_List, n_Integer, ncVars_List] :=
 Block[{zassTerm},
     zassTerm = ResourceFunction["ZassenhausTerms"][ops, n];
     bosonicReduce[NonCommutativeExpand[zassTerm], ncVars]
-]
-
-
-$nonuls  = {0. -> 0, 0. I -> 0, Complex[0.,0.] -> 0, Complex[x_, 0.]->x,
-          Complex[0.,y_] -> I y};
-          
-BosonicBCHExact::usage =
-"\!\(\*RowBox[{\"BosonicBCHExact\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Exactly evaluates a product of exponentials or an exponential conjugation when the algebra closes, using BCH and adjoint action identities.\n\!\(\*RowBox[{\"BosonicBCHExact\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars.";
-
-Options[BosonicBCHExact] = {"Scalars" -> {}};
-
-BosonicBCHExact[expr_] :=
-    Block[{vars, scalars},
-        vars = ExtractNCVars[{expr}];
-        scalars = DeleteDuplicates @ Cases[{expr}, s_Symbol /; !FormalSymbolQ[
-            s] && !NumericQ[s], Infinity];
-        BosonicBCHExact[expr, vars, "Scalars" -> scalars]
-    ]
-        
-
-BosonicBCHExact[Exp[b1_] ** Exp[b2_], vars_List, opts : OptionsPattern[
-    ]] :=
-    Block[{scalars = OptionValue["Scalars"], cmt},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, b2], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                Exp[b1 + b2]
-            ,
-            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
-                Exp[cmt / 2] * Exp[b1 + b2]
-            ,
-            True,
-                Exp[b1] ** Exp[b2]
-        ]
-    ]
-
-BosonicBCHExact[Exp[b1_] ** ops__ ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    Simplify[b3 + b1] === 0 && Length[{ops}] > 1 :=
-    NonCommutativeMultiply @@ (BosonicBCHExact[Exp[b1] ** # ** Exp[b3], vars, opts] & /@ {ops})
-
-BosonicBCHExact[Exp[b1_] ** op_ ** Exp[b3_], vars_List, opts : OptionsPattern[
-    ]] /; Simplify[b3 + b1] === 0 :=
-    Block[{scalars = OptionValue["Scalars"], cmt, cmt2, lam},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, op], vars,
-             "Scalars" -> scalars];
-        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b1, cmt], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                op
-            ,
-            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
-                op + cmt
-            ,
-            (cmt2 /. $nonuls) === 0,
-                op + cmt
-            ,
-            FreeQ[Simplify[cmt2 / op] /. $nonuls, Alternatives @@ vars
-                ],
-                Block[{},
-                    lam = Simplify[cmt2 / op] /. $nonuls;
-                    Simplify[Cos[I Sqrt[lam]] * op + Sin[I Sqrt[lam]]
-                         / (I Sqrt[lam]) * cmt] /. $nonuls
-                ]
-            ,
-            True,
-                Exp[b1] ** op ** Exp[b3]
-        ]
-    ]
-
-BosonicBCHExact[op_ ** Exp[b3_], vars_List, opts : OptionsPattern[]] :=
-    Block[{scalars = OptionValue["Scalars"], cmt, cmt2},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b3, op], vars,
-             "Scalars" -> scalars];
-        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b3, cmt], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                Exp[b3] ** op
-            ,
-            (cmt2 /. $nonuls) === 0,
-                Exp[b3] ** op - Exp[b3] ** cmt
-            ,
-            True,
-                op ** Exp[b3]
-        ]
-    ]
-    
-BosonicBCHExact[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    Simplify[b3 + b1] === 0 :=
-	Block[{scalars = OptionValue["Scalars"], newb2},
-    newb2 = BosonicBCHExact[Exp[b1] ** b2 ** Exp[b3], vars, opts];
-    If[FreeQ[newb2, BosonicBCHExact],
-        Exp[newb2],
-        Exp[b1] ** Exp[b2] ** Exp[b3]
-    ]
 ]
 
 

@@ -4,19 +4,19 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 
 
-BeginTestSection["ExpBosonOrder - number-operator exponentials"]
+BeginTestSection["BosonicExpOrder - number-operator exponentials"]
 
 (* Exp[lambda a^dagger a] normal-orders to the Stirling/Touchard form
    NormalOrdered[Exp[(E^lambda - 1) a^dagger a]].  The "Series" property re-expresses
    that as an inactive sum over normally-ordered monomials. *)
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]],
+    BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]],
     NormalOrdered[E^((-1 + E^\[Lambda])*SuperDagger[\[FormalA]]**\[FormalA])],
     TestID -> "NormalOrderedRes1"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]]["Series"],
+    BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]]["Series"],
     Inactive[Sum][
     ((-1 + E^\[Lambda])^k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k]**
     GeneralizedPower[NonCommutativeMultiply, \[FormalA], k])/k!, {k, 0, Infinity}],
@@ -24,14 +24,14 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]],
+    BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]],
     E^\[Lambda]*NormalOrdered[
     E^((-1 + E^\[Lambda])*SuperDagger[\[FormalA]]**\[FormalA])],
     TestID -> "NormalOrderedRes2"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]]["Series"],
+    BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]]["Series"],
     E^\[Lambda]*Inactive[Sum][
     ((-1 + E^\[Lambda])^k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k]**
     GeneralizedPower[NonCommutativeMultiply, \[FormalA], k])/k!, {k, 0, Infinity}],
@@ -39,13 +39,13 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[(3/10)*SuperDagger[\[FormalA]]**\[FormalA]]],
+    BosonicExpOrder[Exp[(3/10)*SuperDagger[\[FormalA]]**\[FormalA]]],
     NormalOrdered[E^((-1 + E^(3/10))*SuperDagger[\[FormalA]]**\[FormalA])],
     TestID -> "NormalOrderedResExactNumber"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[0.3*SuperDagger[\[FormalB]]**\[FormalB]]],
+    BosonicExpOrder[Exp[0.3*SuperDagger[\[FormalB]]**\[FormalB]]],
     NormalOrdered[E^((Exp[0.3] - 1)*SuperDagger[\[FormalB]]**\[FormalB])],
     TestID -> "NormalOrderOtherVariableAndFloat"
 ]
@@ -53,38 +53,38 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - linear ladder combinations"]
+BeginTestSection["BosonicExpOrder - linear ladder combinations"]
 
 (* A linear combination in a and a^dagger disentangles by the Weyl relation,
    picking up the Gaussian prefactor Exp[alpha beta / 2]. *)
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*\[FormalA] + \[Beta]*SuperDagger[\[FormalA]]]],
+    BosonicExpOrder[Exp[\[Lambda]*\[FormalA] + \[Beta]*SuperDagger[\[FormalA]]]],
     Exp[(\[Beta]*\[Lambda])/2]*Exp[\[Beta]*SuperDagger[\[FormalA]]]**
     Exp[\[Lambda]*\[FormalA]],
     TestID -> "LinearCombinationLadder"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Lambda]*\[FormalA] + \[Beta]*SuperDagger[\[FormalA]]], 
+    BosonicExpOrder[Exp[\[Lambda]*\[FormalA] + \[Beta]*SuperDagger[\[FormalA]]], 
     Assumptions -> \[Beta] == 1/\[Lambda]],
     Sqrt[E]*E^(\[Beta]*SuperDagger[\[FormalA]])**E^(\[FormalA]*\[Lambda]),
     TestID -> "TestAssumptions"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[0.3*\[FormalA] + 0.5*SuperDagger[\[FormalA]]]],
+    BosonicExpOrder[Exp[0.3*\[FormalA] + 0.5*SuperDagger[\[FormalA]]]],
     1.0778841508846315*E^(0.5*SuperDagger[\[FormalA]])**E^(0.3*\[FormalA]),
     TestID -> "LinearCombinationLadderFloat"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[0.8*SuperDagger[\[FormalA]] + 0.5*\[FormalA]]],
+    BosonicExpOrder[Exp[0.8*SuperDagger[\[FormalA]] + 0.5*\[FormalA]]],
     E^((0.8*0.5)/2)*E^(0.8*SuperDagger[\[FormalA]])**E^(0.5*\[FormalA]),
     TestID -> "LinearCombinationLadderFloat2"
 ]
 
 VerificationTest[
-    ExpBosonOrder[DisplacementOperator[\[Alpha], Infinity]],
+    BosonicExpOrder[DisplacementOperator[\[Alpha], Infinity]],
     DisplacementOperator[\[Alpha], Infinity, "Ordering" -> "Normal"],
     TestID -> "DisplacementOperatorNormal"
 ]
@@ -92,13 +92,13 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - SU(1,1) disentangling and squeezing"]
+BeginTestSection["BosonicExpOrder - SU(1,1) disentangling and squeezing"]
 
 (* Quadratic (two-photon) generators close on su(1,1), so products and sums of
    Exp[alpha a a] and Exp[beta a^dagger a^dagger] disentangle into the
    Exp[a^dagger a^dagger] . (...)^(a^dagger a) . Exp[a a] normal form. *)
 VerificationTest[
-    ExpBosonOrder[Exp[k*\[FormalC]**\[FormalC]]**
+    BosonicExpOrder[Exp[k*\[FormalC]**\[FormalC]]**
     Exp[m*SuperDagger[\[FormalC]]**SuperDagger[\[FormalC]]]],
     E^((m*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalC]], 2])/
     (1 - 4*k*m))**(1 - 4*k*m)^(-SuperDagger[\[FormalC]]**\[FormalC])**
@@ -107,7 +107,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[Conjugate[\[Lambda]]*\[FormalC]**\[FormalC]]**
+    BosonicExpOrder[Exp[Conjugate[\[Lambda]]*\[FormalC]**\[FormalC]]**
     Exp[\[Lambda]*SuperDagger[\[FormalC]]**SuperDagger[\[FormalC]]]],
     E^((\[Lambda]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalC]], 2])/
     (1 - 4*\[Lambda]*Conjugate[\[Lambda]]))**(1 - 4*\[Lambda]*Conjugate[\[Lambda]])^
@@ -118,7 +118,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Evaluate[ExpBosonOrder[Exp[0.5*SuperDagger[\[FormalA]]**SuperDagger[\[FormalA]] - 
+    Evaluate[BosonicExpOrder[Exp[0.5*SuperDagger[\[FormalA]]**SuperDagger[\[FormalA]] - 
     0.2*\[FormalA]**\[FormalA]]]],
     E^(0.4425138959884551*GeneralizedPower[NonCommutativeMultiply, 
     SuperDagger[\[FormalA]], 2])**(0.9103119246332295/
@@ -128,7 +128,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] -
     \[Beta]*\[FormalA]**\[FormalA]]],
     E^((k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]*
@@ -140,7 +140,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] -
     \[Beta]*GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]]],
     E^((k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]*
@@ -152,7 +152,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[(1/2)*(r/E^(I*\[Theta]))*\[FormalA]**\[FormalA] - 
+    BosonicExpOrder[Exp[(1/2)*(r/E^(I*\[Theta]))*\[FormalA]**\[FormalA] - 
     (1/2)*(r*E^(I*\[Theta]))*SuperDagger[\[FormalA]]**SuperDagger[\[FormalA]]],
     Assumptions -> r > 0],
     E^((-(1/2))*E^(I*\[Theta])*GeneralizedPower[NonCommutativeMultiply, 
@@ -162,7 +162,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[(1/2)*(r*E^(I*\[Theta]))*GeneralizedPower[NonCommutativeMultiply,
     SuperDagger[\[FormalA]], 2] - (1/2)*(r/E^(I*\[Theta]))*
     GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2]], Assumptions -> r > 0],
@@ -175,25 +175,25 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - shift rules on exponential-polynomial products"]
+BeginTestSection["BosonicExpOrder - shift rules on exponential-polynomial products"]
 
 (* Conjugating a polynomial by Exp[alpha a] / Exp[beta a^dagger] shifts the ladder
    operator it does not commute with: a^dagger -> a^dagger + alpha and a -> a + beta. *)
 VerificationTest[
-    ExpBosonOrder[Exp[\[Alpha]*\[FormalA]]**SuperDagger[\[FormalA]]],
+    BosonicExpOrder[Exp[\[Alpha]*\[FormalA]]**SuperDagger[\[FormalA]]],
     (\[Alpha] + SuperDagger[\[FormalA]])**E^(\[FormalA]*\[Alpha]),
     TestID -> "CoherentStateShift"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Alpha]*\[FormalA]]**(SuperDagger[\[FormalA]]**\[FormalA])],
+    BosonicExpOrder[Exp[\[Alpha]*\[FormalA]]**(SuperDagger[\[FormalA]]**\[FormalA])],
     (\[FormalA]*\[Alpha] + SuperDagger[\[FormalA]]**\[FormalA])**
     E^(\[FormalA]*\[Alpha]),
     TestID -> "NumberOperatorShift"
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[\[Alpha]*\[FormalA]]**(SuperDagger[\[FormalA]]**
+    BosonicExpOrder[Exp[\[Alpha]*\[FormalA]]**(SuperDagger[\[FormalA]]**
     SuperDagger[\[FormalA]])],
     (\[Alpha]^2 + GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
     2] + 2*\[Alpha]*SuperDagger[\[FormalA]])**E^(\[FormalA]*\[Alpha]),
@@ -201,13 +201,13 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[\[FormalA]**Exp[\[Beta]*SuperDagger[\[FormalA]]]],
+    BosonicExpOrder[\[FormalA]**Exp[\[Beta]*SuperDagger[\[FormalA]]]],
     E^(\[Beta]*SuperDagger[\[FormalA]])**(\[FormalA] + \[Beta]),
     TestID -> "SecondShiftAnnihilation"
 ]
 
 VerificationTest[
-    ExpBosonOrder[(SuperDagger[\[FormalA]]**\[FormalA])**
+    BosonicExpOrder[(SuperDagger[\[FormalA]]**\[FormalA])**
     Exp[\[Beta]*SuperDagger[\[FormalA]]]],
     E^(\[Beta]*SuperDagger[\[FormalA]])**(SuperDagger[\[FormalA]]**\[FormalA] + 
     \[Beta]*SuperDagger[\[FormalA]]),
@@ -215,7 +215,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[(SuperDagger[\[FormalA]]**\[FormalA]**\[FormalA])**
+    BosonicExpOrder[(SuperDagger[\[FormalA]]**\[FormalA]**\[FormalA])**
     Exp[\[Beta]*SuperDagger[\[FormalA]]]],
     E^(\[Beta]*SuperDagger[\[FormalA]])**
     (2*\[Beta]*SuperDagger[\[FormalA]]**\[FormalA] + SuperDagger[\[FormalA]]**
@@ -225,7 +225,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[(SuperDagger[\[FormalA]]**\[FormalA]**\[FormalA] + y*\[FormalA])**
+    BosonicExpOrder[(SuperDagger[\[FormalA]]**\[FormalA]**\[FormalA] + y*\[FormalA])**
     Exp[\[Beta]*SuperDagger[\[FormalA]]]],
     E^(\[Beta]*SuperDagger[\[FormalA]])**(y*\[FormalA] + y*\[Beta] + 
     2*\[Beta]*SuperDagger[\[FormalA]]**\[FormalA] + SuperDagger[\[FormalA]]**
@@ -237,13 +237,13 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - generalized normal ordering"]
+BeginTestSection["BosonicExpOrder - generalized normal ordering"]
 
 (* Exp[lambda (a^dagger)^r a (a^dagger)^s] falls under the Blasiak-Penson-Solomon
    theorem, giving a NormalOrdered expression with a non-trivial (a^dagger)-dependent
    prefactor and exponent. *)
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[\[Kappa]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 5]**
     \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 3]]],
     NormalOrdered[
@@ -255,7 +255,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[2*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 5]**\[FormalA]**
     GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 4]]],
     NormalOrdered[
@@ -266,7 +266,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[0.3*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 5]**\[FormalA]**
     GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]],
     NormalOrdered[
@@ -277,7 +277,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**\[FormalA]**
     GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]],
     NormalOrdered[(1/(1 - k*SuperDagger[\[FormalA]]))**
@@ -288,13 +288,13 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - series expansions"]
+BeginTestSection["BosonicExpOrder - series expansions"]
 
 (* "Series"[lambda] returns the coefficient generator -- a DifferenceRoot when the
    recursion has no closed form.  "Series"[lambda, order] truncates at that order, and
    must agree with truncating the inactive sum. *)
 VerificationTest[
-    ExpBosonOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
+    BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
     \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
     "Series", k],
     NormalOrdered[Inactive[Sum][k^n*SuperDagger[\[FormalA]]^n*
@@ -308,7 +308,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
+    BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
     \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
     "Series", k, 3],
     1 + k^2*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] + 
@@ -326,17 +326,17 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
+    BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
     \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
     "Series", k, 3],
-    Activate[ExpBosonOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
+    Activate[BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
     1]**\[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
     "Series", k]] /. Infinity -> 3,
     TestID -> "ActivateSumEqualsExplicitTruncation"
 ]
 
 VerificationTest[
-    Collect[ExpBosonOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
+    Collect[BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
     2]**\[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
     "Series", k, 3], k],
     1 + k*(GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] + 
@@ -357,11 +357,11 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - vanishing left ladder block"]
+BeginTestSection["BosonicExpOrder - vanishing left ladder block"]
 
 (* The r = 0 case, Exp[lambda a (a^dagger)^s], and its truncated expansions. *)
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[k*\[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]]],
     NormalOrdered[(1/(-1 + k*SuperDagger[\[FormalA]])^2)**
     E^((-1 + 1/(1 - k*SuperDagger[\[FormalA]]))**SuperDagger[\[FormalA]]**\[FormalA])],
@@ -369,7 +369,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Collect[ExpBosonOrder[Exp[k*\[FormalA]**GeneralizedPower[NonCommutativeMultiply, 
+    Collect[BosonicExpOrder[Exp[k*\[FormalA]**GeneralizedPower[NonCommutativeMultiply, 
     SuperDagger[\[FormalA]], 2]]]["Series", k, 2], k],
     1 + k*(GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2]**
     \[FormalA] + 2*SuperDagger[\[FormalA]]) +
@@ -381,7 +381,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    ExpBosonOrder[Exp[k*\[FormalA]**GeneralizedPower[NonCommutativeMultiply, 
+    BosonicExpOrder[Exp[k*\[FormalA]**GeneralizedPower[NonCommutativeMultiply, 
     SuperDagger[\[FormalA]], 2]]]["Series", k],
     NormalOrdered[Inactive[Sum][k^n*SuperDagger[\[FormalA]]^n*
     ((1 + n)*DifferenceRoot[Function[{\[FormalY], \[FormalN]},
@@ -403,11 +403,11 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - vanishing right ladder block"]
+BeginTestSection["BosonicExpOrder - vanishing right ladder block"]
 
 (* The s = 0 case, Exp[lambda (a^dagger)^r a]. *)
 VerificationTest[
-    ExpBosonOrder[
+    BosonicExpOrder[
     Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 5]**\[FormalA]]],
     NormalOrdered[
     E^((-1 + 1/(1 - 4*k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 4])^
@@ -416,7 +416,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Activate[ExpBosonOrder[Exp[\[Lambda]*GeneralizedPower[NonCommutativeMultiply, 
+    Activate[BosonicExpOrder[Exp[\[Lambda]*GeneralizedPower[NonCommutativeMultiply, 
     SuperDagger[\[FormalA]], 5]**\[FormalA]]]["Series", \[Lambda]]] /. Infinity -> 3,
     1 + \[Lambda]*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 
     5]**\[FormalA] + (5/2)*\[Lambda]^2*GeneralizedPower[NonCommutativeMultiply,
@@ -434,12 +434,12 @@ VerificationTest[
 EndTestSection[]
 
 
-BeginTestSection["ExpBosonOrder - two modes"]
+BeginTestSection["BosonicExpOrder - two modes"]
 
 (* Cross-mode quadratic generators: the two-mode squeezer, and the beam-splitter-like
    a b^dagger + a^dagger b generator. *)
 VerificationTest[
-    ExpBosonOrder[Exp[(r*\[FormalA]**\[FormalB])/E^(I*\[Theta]) - 
+    BosonicExpOrder[Exp[(r*\[FormalA]**\[FormalB])/E^(I*\[Theta]) - 
     r*E^(I*\[Theta])*SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]]], Assumptions -> r > 0],
     E^((-E^(I*\[Theta]))*SuperDagger[\[FormalA]]**SuperDagger[\[FormalB]]*Tanh[r])**
     Sech[r]*Sech[r]^(SuperDagger[\[FormalA]]**\[FormalA] + SuperDagger[\[FormalB]]**\[FormalB])**
@@ -448,7 +448,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Simplify[ExpBosonOrder[Exp[\[Alpha]*\[FormalA]**SuperDagger[\[FormalB]] + 
+    Simplify[BosonicExpOrder[Exp[\[Alpha]*\[FormalA]**SuperDagger[\[FormalB]] + 
     \[Beta]*SuperDagger[\[FormalA]]**\[FormalB]]]] /. {Sqrt[\[Alpha]*\[Beta]] -> \[Gamma],
     1/Sqrt[\[Alpha]*\[Beta]] -> 1/\[Gamma]},
     E^((\[Beta]*SuperDagger[\[FormalA]]**\[FormalB]*Tanh[\[Gamma]])/\[Gamma])**

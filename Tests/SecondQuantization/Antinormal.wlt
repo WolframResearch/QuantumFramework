@@ -33,46 +33,46 @@ $antiOrderedQ[expr_, vars_] := AllTrue[
 ];
 
 
-BeginTestSection["BosonicAntiNormalOrder - single mode"]
+BeginTestSection["BosonicAntinormalOrder - single mode"]
 
 (* a^dagger a = a a^dagger - 1 *)
 VerificationTest[
-    BosonicAntiNormalOrder[SuperDagger[\[FormalA]] ** \[FormalA], $antiVars],
+    BosonicAntinormalOrder[SuperDagger[\[FormalA]] ** \[FormalA], $antiVars],
     -1 + \[FormalA] ** SuperDagger[\[FormalA]],
-    TestID -> "AntiNormal-NumberOperator"
+    TestID -> "Antinormal-NumberOperator"
 ]
 
 (* (a^dagger)^2 a^2 = a^2 (a^dagger)^2 - 4 a a^dagger + 2 *)
 VerificationTest[
-    BosonicAntiNormalOrder[
+    BosonicAntinormalOrder[
         SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA], $antiVars],
     2 - 4 \[FormalA] ** SuperDagger[\[FormalA]] +
         GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] **
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2],
-    TestID -> "AntiNormal-SquaredNumberOperator"
+    TestID -> "Antinormal-SquaredNumberOperator"
 ]
 
 (* a^dagger a a^dagger = a (a^dagger)^2 - a^dagger *)
 VerificationTest[
-    BosonicAntiNormalOrder[
+    BosonicAntinormalOrder[
         SuperDagger[\[FormalA]] ** \[FormalA] ** SuperDagger[\[FormalA]], $antiVars],
     \[FormalA] ** GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] -
         SuperDagger[\[FormalA]],
-    TestID -> "AntiNormal-Sandwich"
+    TestID -> "Antinormal-Sandwich"
 ]
 
 (* An already anti-ordered monomial is a fixed point *)
 VerificationTest[
-    BosonicAntiNormalOrder[\[FormalA] ** SuperDagger[\[FormalA]], $antiVars],
+    BosonicAntinormalOrder[\[FormalA] ** SuperDagger[\[FormalA]], $antiVars],
     \[FormalA] ** SuperDagger[\[FormalA]],
-    TestID -> "AntiNormal-Idempotent"
+    TestID -> "Antinormal-Idempotent"
 ]
 
 (* Structural invariant: no creator ever precedes an annihilator in the result *)
 VerificationTest[
-    AllTrue[$antiBattery, $antiOrderedQ[BosonicAntiNormalOrder[#, $antiVars], $antiVars] &],
+    AllTrue[$antiBattery, $antiOrderedQ[BosonicAntinormalOrder[#, $antiVars], $antiVars] &],
     True,
-    TestID -> "AntiNormal-StructurallyAntiOrdered"
+    TestID -> "Antinormal-StructurallyAntiOrdered"
 ]
 
 (* Algebraic invariant: re-normal-ordering the anti-ordered form recovers the normal form,
@@ -80,27 +80,27 @@ VerificationTest[
 VerificationTest[
     AllTrue[$antiBattery,
         Simplify[
-            BosonicNormalOrder[BosonicAntiNormalOrder[#, $antiVars], $antiVars] -
+            BosonicNormalOrder[BosonicAntinormalOrder[#, $antiVars], $antiVars] -
                 BosonicNormalOrder[#, $antiVars]
         ] === 0 &],
     True,
-    TestID -> "AntiNormal-RoundTripThroughNormalOrder"
+    TestID -> "Antinormal-RoundTripThroughNormalOrder"
 ]
 
 EndTestSection[]
 
 
-BeginTestSection["BosonicAntiNormalOrder - two modes"]
+BeginTestSection["BosonicAntinormalOrder - two modes"]
 
 (* Modes commute with each other, only each mode's own pair reorders:
    a^dagger a b^dagger b = a b a^dagger b^dagger - a a^dagger - b b^dagger + 1 *)
 VerificationTest[
-    BosonicAntiNormalOrder[
+    BosonicAntinormalOrder[
         SuperDagger[\[FormalA]] ** \[FormalA] ** SuperDagger[\[FormalB]] ** \[FormalB],
         {\[FormalA], SuperDagger[\[FormalA]], \[FormalB], SuperDagger[\[FormalB]]}],
     1 - \[FormalA] ** SuperDagger[\[FormalA]] - \[FormalB] ** SuperDagger[\[FormalB]] +
         \[FormalA] ** \[FormalB] ** SuperDagger[\[FormalA]] ** SuperDagger[\[FormalB]],
-    TestID -> "AntiNormal-TwoModeNumberProduct"
+    TestID -> "Antinormal-TwoModeNumberProduct"
 ]
 
 (* Mixed two-mode polynomial: check the operator is preserved *)
@@ -109,21 +109,21 @@ VerificationTest[
         x = 2 SuperDagger[\[FormalA]] ** \[FormalA] +
             SuperDagger[\[FormalA]] ** SuperDagger[\[FormalB]] ** \[FormalA] ** \[FormalB];
         Simplify[
-            BosonicNormalOrder[BosonicAntiNormalOrder[x, vars], vars] - BosonicNormalOrder[x, vars]
+            BosonicNormalOrder[BosonicAntinormalOrder[x, vars], vars] - BosonicNormalOrder[x, vars]
         ] === 0
     ],
     True,
-    TestID -> "AntiNormal-TwoModeRoundTrip"
+    TestID -> "Antinormal-TwoModeRoundTrip"
 ]
 
 EndTestSection[]
 
 
-BeginTestSection["BosonicAntiNormalOrder - scalars"]
+BeginTestSection["BosonicAntinormalOrder - scalars"]
 
 (* Symbolic coefficients declared through "Scalars" must survive the reduction *)
 VerificationTest[
-    BosonicAntiNormalOrder[
+    BosonicAntinormalOrder[
         \[Alpha] SuperDagger[\[FormalA]] ** \[FormalA] +
             \[Beta] SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA],
         $antiVars,
@@ -132,38 +132,38 @@ VerificationTest[
         4 \[Beta] \[FormalA] ** SuperDagger[\[FormalA]] +
         \[Beta] GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] **
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2],
-    TestID -> "AntiNormal-ScalarCoefficients"
+    TestID -> "Antinormal-ScalarCoefficients"
 ]
 
 EndTestSection[]
 
 
-BeginTestSection["BosonicAntiNormalOrder - methods"]
+BeginTestSection["BosonicAntinormalOrder - methods"]
 
 (* "Blasiak" reaches anti-normal order by conjugating the normal-ordering formula with the
    automorphism a -> a^dagger, a^dagger -> -a; it must agree with the Grobner reduction *)
 VerificationTest[
     AllTrue[$antiBattery,
         Simplify[
-            BosonicAntiNormalOrder[#, $antiVars, Method -> "Blasiak"] -
-                BosonicAntiNormalOrder[#, $antiVars]
+            BosonicAntinormalOrder[#, $antiVars, Method -> "Blasiak"] -
+                BosonicAntinormalOrder[#, $antiVars]
         ] === 0 &],
     True,
-    TestID -> "AntiNormal-BlasiakMatchesGrobner"
+    TestID -> "Antinormal-BlasiakMatchesGrobner"
 ]
 
 (* The conjugating automorphism introduces a sign on odd-degree creator blocks, so the Blasiak
    path must accept a monomial carrying a scalar coefficient *)
 VerificationTest[
     Simplify[
-        BosonicAntiNormalOrder[
+        BosonicAntinormalOrder[
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] ** \[FormalA],
             $antiVars, Method -> "Blasiak"] -
         (\[FormalA] ** GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2] -
             2 SuperDagger[\[FormalA]])
     ] === 0,
     True,
-    TestID -> "AntiNormal-BlasiakSignedMonomial"
+    TestID -> "Antinormal-BlasiakSignedMonomial"
 ]
 
 (* Same requirement seen directly on BosonicNormalOrder: a coefficient in front of a monomial
@@ -174,21 +174,21 @@ VerificationTest[
             BosonicNormalOrder[-2 \[FormalA] ** SuperDagger[\[FormalA]], $antiVars]
     ] === 0,
     True,
-    TestID -> "AntiNormal-BlasiakCoefficientCarried"
+    TestID -> "Antinormal-BlasiakCoefficientCarried"
 ]
 
 
 VerificationTest[
-    BosonicAntiNormalOrder[SuperDagger[\[FormalA]] ** \[FormalA], $antiVars, Method -> "NoSuchMethod"],
+    BosonicAntinormalOrder[SuperDagger[\[FormalA]] ** \[FormalA], $antiVars, Method -> "NoSuchMethod"],
     $Failed,
-    {BosonicAntiNormalOrder::unknownMethod},
-    TestID -> "AntiNormal-UnknownMethod"
+    {BosonicAntinormalOrder::unknownMethod},
+    TestID -> "Antinormal-UnknownMethod"
 ]
 
 EndTestSection[]
 
 
-BeginTestSection["BosonicAntiNormalOrder - matrix realization"]
+BeginTestSection["BosonicAntinormalOrder - matrix realization"]
 
 (* Independent numeric check against truncated Fock matrices: the anti-ordered polynomial must
    act identically to the original.  Terms are realized separately so that the c-number part
@@ -212,11 +212,11 @@ VerificationTest[
             If[Head[e] === Plus, List @@ e, {e}]
         ];
         x = SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA];
-        anti = BosonicAntiNormalOrder[x, $antiVars];
+        anti = BosonicAntinormalOrder[x, $antiVars];
         toMatrix[x][[;; block, ;; block]] == toMatrix[anti][[;; block, ;; block]]
     ],
     True,
-    TestID -> "AntiNormal-MatrixRealization"
+    TestID -> "Antinormal-MatrixRealization"
 ]
 
 EndTestSection[]

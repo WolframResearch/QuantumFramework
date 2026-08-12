@@ -165,9 +165,9 @@ VerificationTest[
 (* Anti-normal-ordering with no field variables is likewise the identity on the
    c-number: nothing to reorder, so the constant passes through message-free. *)
 VerificationTest[
-    {BosonicAntiNormalOrder[7, {}], BosonicAntiNormalOrder[\[Lambda], {}]},
+    {BosonicAntinormalOrder[7, {}], BosonicAntinormalOrder[\[Lambda], {}]},
     {7, \[Lambda]},
-    TestID -> "SQ-BosonicAntiNormalOrder-empty-vars-is-identity"
+    TestID -> "SQ-BosonicAntinormalOrder-empty-vars-is-identity"
 ]
 
 (* Phase-space functions at the origin alpha = 0. The closed-form kernels carry a

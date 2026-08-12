@@ -100,7 +100,7 @@ OrderVariables[vars_List, direction_String : "Normal"] := Block[{annihilators, c
 
     creators     = Select[vars, !FreeQ[#, SuperDagger] &];
 
-    If[ direction === "AntiNormal",
+    If[ direction === "Antinormal",
         Join[Sort[annihilators],Sort[creators]],
         Join[Sort[creators],Sort[annihilators]]
     ]
