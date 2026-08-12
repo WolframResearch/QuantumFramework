@@ -224,7 +224,7 @@ With[{traj = oneTraj[ratesB, initB, tfB, dtGenOf[ratesB], 7, dtGenOf[ratesB]/4],
     PlotLegends -> Placed[{"one trajectory z(t)", "Lindblad \[LeftAngleBracket]z\[RightAngleBracket](t)"}, Below],
     Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "z"},
     PlotLabel -> "state: the monitored component", ImageSize -> Medium], "   ",
-   Plot[traj[[4]][t], {t, 0, tfB}, PlotStyle -> ColorData[97, 2],
+   Plot[traj[[4]][t], {t, 0, tfB},
     Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "Q"},
     PlotLabel -> "readout: the accumulated record Q(t)", ImageSize -> Medium]}]]
 ```
@@ -329,7 +329,7 @@ With[{g = noiseGrid[tfB, dtGenOf[ratesB]], lb = lindbladBloch[ratesB, initB[[1 ;
     Transpose[{g, Mean[stratRunB][[All, 3]]}],
     Transpose[{g, Mean[regRunB][[All, 3]]}],
     Transpose[{g, lb[#][[3]] & /@ g}]},
-   PlotStyle -> {ColorData[97, 1], Directive[Dashed, ColorData[97, 2]], Directive[Thick, Black]},
+   PlotStyle -> {Automatic, Dashed, Thick},
    PlotLegends -> {"StratonovichProcess mean", "regularized mean", "Lindblad \[LeftAngleBracket]z\[RightAngleBracket](t)"},
    Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "\[LeftAngleBracket]z\[RightAngleBracket]"},
    PlotLabel -> "averaging the trajectories rebuilds the master equation", ImageSize -> 520]]
@@ -444,7 +444,7 @@ Overlay the ensemble-averaged record on that prediction:
 ```wl
 With[{g = noiseGrid[tfB, dtGenOf[ratesB]]},
  ListLinePlot[{Transpose[{g, Mean[recQB]}], Transpose[{g, qpredB /@ g}]},
-  PlotStyle -> {ColorData[97, 2], Directive[Thick, Black]},
+  PlotStyle -> {Automatic, Thick},
   PlotLegends -> {"ensemble mean \[LeftAngleBracket]Q\[RightAngleBracket](t)", "\!\(\*SqrtBox[\(\[CapitalGamma]CI\)]\) \[Integral]\[LeftAngleBracket]z\[RightAngleBracket] dt"},
   Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "\[LeftAngleBracket]Q\[RightAngleBracket]"},
   PlotLabel -> "the average record is the integrated signal", ImageSize -> 520]]
@@ -477,7 +477,7 @@ With[{r = ratesB, dt = dtGenOf[ratesB], seed = 7},
   Module[{u, t, zint},
    zint = NDSolveValue[{u'[t] == traj[[3]][t], u[0] == 0.}, u, {t, 0, tfB}];
    Plot[{traj[[4]][t] - Sqrt[r[[1]]] zint[t], Wf[t]}, {t, 0, tfB},
-    PlotStyle -> {Directive[Thick, ColorData[97, 2]], Directive[Dashed, Black]},
+    PlotStyle -> {Thick, Dashed},
     PlotLegends -> Placed[{"record minus signal: Q(t) - \!\(\*SqrtBox[\(\[CapitalGamma]CI\)]\) \[Integral]z dt", "driving path W(t)"}, Below],
     Frame -> True, GridLines -> Automatic, FrameLabel -> {"t", "W"},
     PlotLabel -> "stripping the signal from the record returns the driving noise", ImageSize -> 520]]]]
@@ -592,8 +592,10 @@ As expected, the estimated means stay compatible with the Lindblad value within 
 
 ```wl
 With[{lbz = lindbladBloch[ratesB, initB[[1 ;; 3]]][tfB][[3]]},
- TableForm[Abs[Mean[#] - lbz]/(StandardDeviation[#]/Sqrt[nSweep]) & /@ sweepZB,
-  TableHeadings -> {N[tfB/{6, 12, 25, 100, 400}]}]]
+ TableForm[
+  Transpose[{N[tfB/{6, 12, 25, 100, 400}],
+    Abs[Mean[#] - lbz]/(StandardDeviation[#]/Sqrt[nSweep]) & /@ sweepZB}],
+  TableHeadings -> {None, {"noise step", "gap of the mean from Lindblad, in standard errors"}}]]
 ```
 
 All five distances sit where sampling noise puts the largest of a handful of draws, with no growth as the grid coarsens, so the mean carries no resolvable regularization bias at any of these grids: the affine drift doing exactly what the algebra said it must. So of the two increments it is $\Delta t_{\mathrm{gen}}$ that sets the answer, and at this sampling accuracy the spread is where we can see it move.
@@ -720,7 +722,9 @@ TableForm[Transpose[{N[tfS/{120, 240, 480}], StandardDeviation /@ sweepZS}],
 Now read each row as a distance from the native strong-case spread, in units of the two estimates' sampling errors in quadrature:
 
 ```wl
-TableForm[spreadGap[#, stratS[[All, 3]]] & /@ sweepZS, TableHeadings -> {N[tfS/{120, 240, 480}]}]
+TableForm[
+ Transpose[{N[tfS/{120, 240, 480}], spreadGap[#, stratS[[All, 3]]] & /@ sweepZS}],
+ TableHeadings -> {None, {"noise step", "gap of the spread from the native run, in sampling errors"}}]
 ```
 
 A resolvable regularization bias would grow steadily as the grid coarsens; these distances show no such growth, so what the sweep measures is its own sampling noise: forty knots per fastest rate carries margin where the correction is strongest, not only where it is mild.
