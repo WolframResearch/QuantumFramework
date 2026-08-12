@@ -235,7 +235,7 @@ As one can see, the state path fluctuates around the Lindblad mean, as a single 
 
 A single path tells us little; the mean lives in the ensemble and the noise in how widely the paths spread. Rather than compare final values, we keep the whole trajectory from each route, average many of them, and watch the two ensemble means track the exact Lindblad curve across the entire interval. The two routes are the built-in `StratonovichProcess` integrator, which discretizes the target Stratonovich SDE, and the regularized `NDSolve` route, whose smooth ODE approaches that same SDE as $\Delta t_{\mathrm{gen}}\to 0$; the yardstick is a single Lindblad solution from `DSolve`.
 
-Before any simulation, the central claim can be settled exactly, by the same built-in we are keeping. We never hand-compute the Itô-Stratonovich correction, but the conversion `ItoProcess[StratonovichProcess[...]]` applies it for us, rewriting our Stratonovich vector field in Itô form. If the explicit Stratonovich drift truly carries the correction, its Itô form must be the affine drift $\vec a$ we encoded as `driftIto` for the Lindblad reference, with the readout row untouched. Convert the full four-component field and subtract that target, under the physical assumption that the rates are nonnegative (needed only to fold $\sqrt{\Gamma_{CI}}\,\sqrt{\Gamma_{BA}}$ into a single root):
+Before any simulation, the central claim can be settled exactly, by the same built-in we are keeping. We never hand-compute the Itô-Stratonovich correction, but the conversion `ItoProcess[StratonovichProcess[...]]` applies it for us, rewriting our Stratonovich vector field in Itô form. If the explicit Stratonovich drift truly carries the correction, its Itô form must be the affine drift $\vec a$ we encoded as `driftIto` for the Lindblad reference, with the readout row untouched. Convert the full four-component field and test it against that target, under the physical assumption that the rates are nonnegative (needed only to fold $\sqrt{\Gamma_{CI}}\,\sqrt{\Gamma_{BA}}$ into a single root):
 
 ```wl
 Assuming[{Subscript[\[CapitalGamma], "CI"] >= 0, Subscript[\[CapitalGamma], "BA"] >= 0},
@@ -243,18 +243,18 @@ Assuming[{Subscript[\[CapitalGamma], "CI"] >= 0, Subscript[\[CapitalGamma], "BA"
   (ItoProcess[StratonovichProcess[{driftStrat[{x, y, z, q}, ratesSym],
         List /@ diffStrat[{x, y, z, q}, ratesSym], {x, y, z, q}},
        {{x, y, z, q}, {x0, y0, z0, q0}}, t]]["Drift"] /. {x[t] -> x, y[t] -> y, z[t] -> z, q[t] -> q})
-   - Append[driftIto[{x, y, z}, ratesSym], Sqrt[Subscript[\[CapitalGamma], "CI"]] z]]]
+   == Append[driftIto[{x, y, z}, ratesSym], Sqrt[Subscript[\[CapitalGamma], "CI"]] z]]]
 ```
 
-The difference vanishes row by row: the Itô form of the Stratonovich SDE we hand `NDSolve` is exactly the affine drift on all three Bloch rows, and the readout row is unchanged, so the correction is carried in full and $Q$ is the same in both calculi. This settles the central claim at no numerical cost and more decisively than any Monte-Carlo match; the ensemble below only confirms what the algebra already proves. One corollary in one line: switch the measurement off and the two calculi must coincide, because only the measurement noise separates them:
+The equality holds row by row: the Itô form of the Stratonovich SDE we hand `NDSolve` is exactly the affine drift on all three Bloch rows, with the readout row unchanged, so the correction is carried in full and $Q$ is the same in both calculi. This settles the central claim at no numerical cost and more decisively than any Monte-Carlo match; the ensemble below only confirms what the algebra already proves. One corollary in one line: switch the measurement off and the two calculi must coincide, because only the measurement noise separates them:
 
 ```wl
-Simplify[(driftStrat[{x, y, z, q}, ratesSym] -
-    Append[driftIto[{x, y, z}, ratesSym], Sqrt[ratesSym[[1]]] z]) /.
+Simplify[(driftStrat[{x, y, z, q}, ratesSym] ==
+     Append[driftIto[{x, y, z}, ratesSym], Sqrt[ratesSym[[1]]] z]) /.
   {ratesSym[[1]] -> 0, ratesSym[[2]] -> 0}]
 ```
 
-With $\Gamma_{CI}=\Gamma_{BA}=0$ the entire gap between the Stratonovich and Itô drifts closes: the correction is measurement backaction and nothing else.
+With $\Gamma_{CI}=\Gamma_{BA}=0$ the Stratonovich and Itô drifts coincide identically: the correction is measurement backaction and nothing else.
 
 Start the worker kernels:
 
