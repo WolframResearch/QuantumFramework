@@ -251,7 +251,7 @@ As one can see, the state path fluctuates around the Lindblad mean, as a single 
 
 A single path tells us little; the mean lives in the ensemble and the noise in how widely the paths spread. Rather than compare final values, we keep the whole trajectory from each route, average many of them, and watch the two ensemble means track the exact Lindblad curve across the entire interval. The two routes are the built-in `StratonovichProcess` integrator, which discretizes the target Stratonovich SDE, and the regularized `NDSolve` route, whose smooth ODE approaches that same SDE as $\Delta t_{\mathrm{gen}}\to 0$; the yardstick is a single Lindblad solution from `DSolve`.
 
-Before any simulation, let's verify the Itô-Stratonovich the conversion. If the explicit Stratonovich drift truly carries the correction, its Itô form must be the affine drift $\vec a$ we encoded as `driftIto` for the Lindblad reference, with the readout row untouched. Convert the full four-component field and test it against that target, under the physical assumption that the rates are nonnegative (needed only to fold $\sqrt{\Gamma_{CI}}\,\sqrt{\Gamma_{BA}}$ into a single root):
+Before any simulation, let's verify the Itô-Stratonovich conversion. If the explicit Stratonovich drift truly carries the correction, its Itô form must be the affine drift $\vec a$ we encoded as `driftIto` for the Lindblad reference, with the readout row untouched. Convert the full four-component field and test it against that target, under the physical assumption that the rates are nonnegative (needed only to fold $\sqrt{\Gamma_{CI}}\,\sqrt{\Gamma_{BA}}$ into a single root):
 
 ```wl
 Assuming[{Subscript[\[CapitalGamma], "CI"] >= 0, Subscript[\[CapitalGamma], "BA"] >= 0},
