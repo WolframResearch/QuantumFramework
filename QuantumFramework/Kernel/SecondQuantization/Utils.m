@@ -24,6 +24,10 @@ PackageScope["LiftNCScalars"]
 
 PackageScope["FormalSymbolQ"]
 
+PackageScope["$nonuls"]
+
+PackageScope["cNumberQ"]
+
 PackageExport["G2Coherence"]
 
 PackageExport["G1Correlation"]
@@ -49,6 +53,12 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 FormalSymbolQ[var_Symbol]:=StringStartsQ[ToString[FullForm[var]],"\\[Formal"];
 
 FormalSymbolQ[_]:=False;
+
+
+$nonuls = {0. -> 0, 0. I -> 0, Complex[0., 0.] -> 0, Complex[x_, 0.] :> x,
+    Complex[0., y_] :> I y};
+
+cNumberQ[expr_, vars_] := FreeQ[expr /. $nonuls, Alternatives @@ vars]
 
 
 FieldVariables::usage =

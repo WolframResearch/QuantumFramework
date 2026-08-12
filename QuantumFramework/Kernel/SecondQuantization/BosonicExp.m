@@ -6,9 +6,12 @@ PackageExport["BosonicExpOrder"]
 PackageExport["NormalOrdered"]
 PackageExport["AntinormalOrdered"]
 PackageExport["BosonicExpSimplify"]
+PackageExport["BosonicExpBraid"]
 
 
 algA[v_]   := algA[v] = NonCommutativeAlgebra[<|"Generators" -> {v, SuperDagger[v]}|>];
+
+algA[vars_List] := algA[vars] = NonCommutativeAlgebra[<|"Generators" -> vars|>];
 
 
 getNCPower[var_, var_] := 1;
@@ -310,99 +313,176 @@ BosonicExpOrder[expr_, assum_, opts : OptionsPattern[]] :=
     ]
 
 
-$nonuls = {0. -> 0, 0. I -> 0, Complex[0., 0.] -> 0, Complex[x_, 0.] -> x,
-    Complex[0., y_] -> I y};
-
-
 BosonicExpSimplify::usage =
 "\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) simplifies a product of exponentials, or a conjugation by an exponential, of the bosonic operators vars, returning a closed form when the algebra closes and expr unchanged otherwise.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", StyleBox[\"expr\", \"TI\"], \"]\"}]\) detects the non-commutative variables and scalars appearing in expr.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) treats syms as commuting scalars.";
 
 Options[BosonicExpSimplify] = {"Scalars" -> {}};
 
+ncPolyQ[exprs_List, vars_] :=
+    AllTrue[exprs, NonCommutativePolynomialQ[#, algA[vars]] &]
+
+ncJoin[xs___] := ncJoinList @ DeleteCases[{xs}, 1]
+
+ncJoinList[ys_] /; MemberQ[ys, 0] := 0
+ncJoinList[{}] := 1
+ncJoinList[{x_}] := x
+ncJoinList[ys_] := NonCommutativeMultiply @@ ys
+
+zeroQ[expr_] := (expr /. $nonuls) === 0
+
+inverseExponentsQ[b_, c_] := TrueQ[Simplify[b + c] == 0]
+
+ncCommutator[a_, b_, vars_, scalars_] :=
+    ncCommutator[a, b, vars, scalars, $Assumptions]
+
+ncCommutator[a_, b_, vars_, scalars_, assum_] :=
+    ncCommutator[a, b, vars, scalars, assum] =
+        Simplify @ BosonicNormalOrder[Commutator[a, b], vars, "Scalars" -> scalars]
+
+adRotate[op_, cmt_, lam_, vars_] /; cNumberQ[lam, vars] :=
+    With[{w = I Sqrt[lam]}, Simplify[Cos[w] op + Sin[w] / w cmt] /. $nonuls]
+
+adRotate[___] := $Failed
+
+adAction[b_, op_, vars_, scalars_] :=
+    With[{cmt = ncCommutator[b, op, vars, scalars]},
+        With[{cmt2 = ncCommutator[b, cmt, vars, scalars]},
+            Which[
+                cmt === 0,                          op,
+                cNumberQ[cmt, vars] || zeroQ[cmt2], op + cmt,
+                True,                               adRotate[op, cmt, Simplify[cmt2 / op], vars]
+            ]
+        ]
+    ]
+
+expOrFailed[$Failed] := $Failed
+expOrFailed[h_] := Exp[h]
+
+expConjugate[b_, Exp[g_], vars_, scalars_] /; ncPolyQ[{b, g}, vars] :=
+    expOrFailed @ adAction[b, g, vars, scalars]
+
+expConjugate[b_, op_, vars_, scalars_] /; ncPolyQ[{b, op}, vars] :=
+    adAction[b, op, vars, scalars]
+
+expConjugate[___] := $Failed
+
+expReduceRules[vars_, scalars_] := {
+    NonCommutativeMultiply[l___, 1, r___] :> ncJoin[l, r],
+
+    NonCommutativeMultiply[l___, Exp[b_], mid_, Exp[c_], r___] /; inverseExponentsQ[b, c] :>
+        With[{g = expConjugate[b, mid, vars, scalars]},
+            ncJoin[l, g, r] /; g =!= $Failed
+        ],
+
+    NonCommutativeMultiply[l___, Exp[b_], mid__, Exp[c_], r___] /;
+            Length[{mid}] > 1 && inverseExponentsQ[b, c] :>
+        With[{gs = expConjugate[b, #, vars, scalars] & /@ {mid}},
+            ncJoin[l, ##, r] & @@ gs /; FreeQ[gs, $Failed]
+        ],
+
+    NonCommutativeMultiply[l___, Exp[b1_], Exp[b2_], r___] /; ncPolyQ[{b1, b2}, vars] :>
+        With[{c = ncCommutator[b1, b2, vars, scalars]},
+            ncJoin[l, Exp[c / 2] Exp[b1 + b2], r] /; cNumberQ[c, vars]
+        ],
+
+    NonCommutativeMultiply[l___, op_, Exp[b_], r___] /; ncPolyQ[{op, b}, vars] :>
+        With[{cmt = ncCommutator[b, op, vars, scalars]},
+            With[{cmt2 = ncCommutator[b, cmt, vars, scalars]},
+                ncJoin[l, Exp[b], op - cmt, r] /; zeroQ[cmt2]
+            ]
+        ]
+}
+
 BosonicExpSimplify[expr_] :=
-    Block[{vars, scalars},
-        vars = ExtractNCVars[{expr}];
-        scalars = DeleteDuplicates @ Cases[{expr}, s_Symbol /; !FormalSymbolQ[
-            s] && !NumericQ[s], Infinity];
+    With[{
+        vars = ExtractNCVars[{expr}],
+        scalars = DeleteDuplicates @ Cases[{expr},
+            s_Symbol /; ! FormalSymbolQ[s] && ! NumericQ[s], Infinity]
+    },
         BosonicExpSimplify[expr, vars, "Scalars" -> scalars]
     ]
 
+BosonicExpSimplify[expr_, vars_List, opts : OptionsPattern[]] :=
+    expr //. expReduceRules[vars, OptionValue["Scalars"]]
 
-BosonicExpSimplify[Exp[b1_] ** Exp[b2_], vars_List, opts : OptionsPattern[
-    ]] :=
-    Block[{scalars = OptionValue["Scalars"], cmt},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, b2], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                Exp[b1 + b2]
-            ,
-            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
-                Exp[cmt / 2] * Exp[b1 + b2]
-            ,
-            True,
-                Exp[b1] ** Exp[b2]
+
+braidDequantize[gen_, v_, x_, y_] := gen //. {
+    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
+    SuperDagger[v] -> x,
+    v -> y,
+    NonCommutativeMultiply -> Times
+}
+
+adFamilyRules[cr_, v_, vars_] /; ! FreeQ[Values[cr], Alternatives @@ vars] := $Failed
+
+adFamilyRules[cr_, v_, vars_] /; Keys[cr] === {{1, 1}} :=
+    With[{lam = Lookup[cr, Key[{1, 1}]]},
+        {SuperDagger[v] -> Exp[lam] SuperDagger[v], v -> Exp[-lam] v}
+    ]
+
+adFamilyRules[cr_, v_, vars_] /; SubsetQ[{{1, 0}, {0, 1}}, Keys[cr]] :=
+    With[{mu = Lookup[cr, Key[{1, 0}], 0], nu = Lookup[cr, Key[{0, 1}], 0]},
+        {SuperDagger[v] -> SuperDagger[v] + nu, v -> v - mu}
+    ]
+
+adFamilyRules[cr_, v_, vars_] /; SubsetQ[{{2, 0}, {0, 2}}, Keys[cr]] :=
+    With[{p = Lookup[cr, Key[{2, 0}], 0], q = Lookup[cr, Key[{0, 2}], 0]},
+        With[{lam = 2 Sqrt[p q]},
+            {SuperDagger[v] -> Cos[lam] SuperDagger[v] + 2 q Sinc[lam] v,
+             v -> Cos[lam] v - 2 p Sinc[lam] SuperDagger[v]}
         ]
     ]
 
-BosonicExpSimplify[Exp[b1_] ** ops__ ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    Simplify[b3 + b1] === 0 && Length[{ops}] > 1 :=
-    NonCommutativeMultiply @@ (BosonicExpSimplify[Exp[b1] ** # ** Exp[b3], vars, opts] & /@ {ops})
+adFamilyRules[___] := $Failed
 
-BosonicExpSimplify[Exp[b1_] ** op_ ** Exp[b3_], vars_List, opts : OptionsPattern[
-    ]] /; Simplify[b3 + b1] === 0 :=
-    Block[{scalars = OptionValue["Scalars"], cmt, cmt2, lam},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b1, op], vars,
-             "Scalars" -> scalars];
-        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b1, cmt], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                op
-            ,
-            FreeQ[cmt /. $nonuls, Alternatives @@ vars],
-                op + cmt
-            ,
-            (cmt2 /. $nonuls) === 0,
-                op + cmt
-            ,
-            FreeQ[Simplify[cmt2 / op] /. $nonuls, Alternatives @@ vars
-                ],
-                Block[{},
-                    lam = Simplify[cmt2 / op] /. $nonuls;
-                    Simplify[Cos[I Sqrt[lam]] * op + Sin[I Sqrt[lam]]
-                         / (I Sqrt[lam]) * cmt] /. $nonuls
-                ]
-            ,
-            True,
-                Exp[b1] ** op ** Exp[b3]
+modeAdRules[gen_, v_, vars_] :=
+    Module[{x, y},
+        adFamilyRules[
+            KeyDrop[
+                Association @ CoefficientRules[
+                    Expand @ braidDequantize[gen, v, x, y], {x, y}],
+                Key[{0, 0}]
+            ],
+            v, vars
         ]
     ]
 
-BosonicExpSimplify[op_ ** Exp[b3_], vars_List, opts : OptionsPattern[]] :=
-    Block[{scalars = OptionValue["Scalars"], cmt, cmt2},
-        cmt = Simplify @ BosonicNormalOrder[Commutator[b3, op], vars,
-             "Scalars" -> scalars];
-        cmt2 = Simplify @ BosonicNormalOrder[Commutator[b3, cmt], vars,
-             "Scalars" -> scalars];
-        Which[
-            cmt === 0,
-                Exp[b3] ** op
-            ,
-            (cmt2 /. $nonuls) === 0,
-                Exp[b3] ** op - Exp[b3] ** cmt
-            ,
-            True,
-                op ** Exp[b3]
-        ]
+adRules[gen_, vars_] :=
+    With[{perMode = modeAdRules[gen, #, vars] & /@ Select[vars, FreeQ[#, SuperDagger] &]},
+        Catenate[perMode] /; FreeQ[perMode, $Failed]
     ]
 
-BosonicExpSimplify[Exp[b1_] ** Exp[b2_] ** Exp[b3_], vars_List, opts : OptionsPattern[]] /;
-    Simplify[b3 + b1] === 0 :=
-    Block[{scalars = OptionValue["Scalars"], newb2},
-        newb2 = BosonicExpSimplify[Exp[b1] ** b2 ** Exp[b3], vars, opts];
-        If[newb2 === Exp[b1] ** b2 ** Exp[b3],
-            Exp[b1] ** Exp[b2] ** Exp[b3],
-            Exp[newb2]
+adRules[___] := $Failed
+
+adApply[rules_, expr_, vars_] := LiftNCScalars[expr /. rules, vars]
+
+rulesBraidRight[vars_] := {
+    NonCommutativeMultiply[l___, Exp[bA_], Exp[bB_], r___] :>
+        With[{ar = adRules[bA, vars]},
+            ncJoin[l, Exp[adApply[ar, bB, vars]], Exp[bA], r] /; ar =!= $Failed
         ]
-    ]
+}
+
+rulesBraidLeft[vars_] := {
+    NonCommutativeMultiply[l___, Exp[bA_], Exp[bB_], r___] :>
+        With[{br = adRules[-bB, vars]},
+            ncJoin[l, Exp[bB], Exp[adApply[br, bA, vars]], r] /; br =!= $Failed
+        ]
+}
+
+BosonicExpBraid::usage =
+"\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", StyleBox[\"expr\", \"TI\"], \"]\"}]\) moves the left factor of an adjacent pair of exponentials past the right one, transporting the right generator by the adjoint action of the left: \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) becomes \!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{\"A\", \",\", \"B\"}], \"]\"}]]\)\!\(\*SuperscriptBox[\"e\", \"A\"]\). It reorders only, performing no ordering, merging or cancellation.\n\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", \"\\\"Direction\\\"->\", \"\\\"Left\\\"\"}], \"]\"}]\) instead moves the right factor left, as \!\(\*SuperscriptBox[\"e\", \"A\"]\)\!\(\*SuperscriptBox[\"e\", \"B\"]\) becomes \!\(\*SuperscriptBox[\"e\", \"B\"]\)\!\(\*SuperscriptBox[\"e\", RowBox[{\"Ad\", \"[\", RowBox[{RowBox[{\"-\", \"B\"}], \",\", \"A\"}], \"]\"}]]\).\n\!\(\*RowBox[{\"BosonicExpBraid\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) uses vars as the field variables.";
+
+BosonicExpBraid::direction = "`1` is not a valid setting for \"Direction\"; use \"Right\" or \"Left\"."
+
+Options[BosonicExpBraid] = {"Direction" -> "Right"};
+
+BosonicExpBraid[expr_, opts : OptionsPattern[]] :=
+    BosonicExpBraid[expr, ExtractNCVars[{expr}], opts]
+
+BosonicExpBraid[expr_, vars_List, opts : OptionsPattern[]] :=
+    Replace[OptionValue["Direction"], {
+        "Right" :> expr /. rulesBraidRight[vars],
+        "Left" :> expr /. rulesBraidLeft[vars],
+        other_ :> (Message[BosonicExpBraid::direction, other]; $Failed)
+    }]

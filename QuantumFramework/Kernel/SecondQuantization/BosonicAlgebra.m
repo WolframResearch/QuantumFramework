@@ -183,8 +183,8 @@ BosonicVEV[expr_, opts : OptionsPattern[]] :=
 BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] :=
     Block[{normalOrdered, terms},
         normalOrdered = BosonicNormalOrder[expr, vars, opts];
-        terms = If[Head[normalOrdered] === Plus, List @@ normalOrdered, {normalOrdered}];
-        Total @ Select[terms, FreeQ[#, Alternatives @@ vars] &]
+        terms = If[Head[normalOrdered] === Plus, List @@ normalOrdered, {normalOrdered}] /. $nonuls;
+        Total @ Select[terms, cNumberQ[#, vars] &]
     ]
 
 
