@@ -153,6 +153,49 @@ VerificationTest[
     TestID -> "SQ-BosonicVEV-cnumber-is-itself"
 ]
 
+(* A vacuum expectation is read off the normal-ordered polynomial, so an
+   expression that is not one has no answer to read. It stays unevaluated rather
+   than reporting the absence of a c-number term as a confident 0: <0|Cosh[a]|0>
+   is 1, not 0. Cosh here stands for any non-polynomial function of the
+   operators. Returning the unevaluated call asserts nothing, where returning
+   expr itself would claim <0|Cosh[a]|0> == Cosh[a]. *)
+VerificationTest[
+    BosonicVEV[Cosh[\[FormalA]]],
+    BosonicVEV[Cosh[\[FormalA]]],
+    {},
+    TestID -> "SQ-BosonicVEV-nonpolynomial-stays-unevaluated"
+]
+
+(* The dangerous case: <0|D(\[Alpha])|0> = E^(-Abs[\[Alpha]]^2/2), so a silent 0 or 1 here
+   would be indistinguishable from a real result. Unevaluated is safe; the
+   auto-detected variable list must not leak into the echoed call either. *)
+VerificationTest[
+    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]],
+    BosonicVEV[Exp[\[Alpha] SuperDagger[\[FormalA]] - Conjugate[\[Alpha]] \[FormalA]]],
+    {},
+    TestID -> "SQ-BosonicVEV-displacement-stays-unevaluated"
+]
+
+(* The explicit-vars form stays unevaluated in its own shape. *)
+VerificationTest[
+    BosonicVEV[Cosh[\[FormalA]], {\[FormalA], SuperDagger[\[FormalA]]}],
+    BosonicVEV[Cosh[\[FormalA]], {\[FormalA], SuperDagger[\[FormalA]]}],
+    {},
+    TestID -> "SQ-BosonicVEV-explicit-vars-stays-unevaluated"
+]
+
+(* An expression naming only one of the two ladder operators still needs both to
+   build the commutation relation; the missing partner is supplied. *)
+VerificationTest[
+    {
+        BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {\[FormalA]}],
+        BosonicVEV[\[FormalA] ** SuperDagger[\[FormalA]], {SuperDagger[\[FormalA]]}]
+    },
+    {1, 1},
+    {},
+    TestID -> "SQ-BosonicVEV-completes-the-ladder-pair"
+]
+
 (* Normal-ordering with no field variables is the identity on the c-number: with
    nothing to reduce, the reducer is never invoked and the constant passes through
    unchanged and message-free. *)

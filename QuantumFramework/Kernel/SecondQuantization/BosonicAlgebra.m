@@ -22,7 +22,7 @@ BosonicRelations::usage =
 
 BosonicRelations[vars_List] :=
 Block[{pairs},
-    pairs = Subsets[vars, {2}];
+    pairs = Subsets[LexicographicSort@vars, {2}];
     Map[
         If[ MatchQ[#, {x_, SuperDagger[x_]} | {SuperDagger[x_], x_}],
             Commutator[#[[1]], #[[2]]] - 1,
@@ -172,19 +172,39 @@ BosonicVEV::usage =
 Options[BosonicVEV] = Options[BosonicNormalOrder];
 
 BosonicVEV[expr_, opts : OptionsPattern[]] :=
-    Block[{vars = ExtractNCVars[{expr}]},
+    With[{vars = ExtractNCVars[{expr}]},
         (* A c-number carries no field variables; it is its own vacuum expectation.
            Short-circuit before re-dispatching: BosonicVEV[expr, {}] would re-match
            this same rule ({} is absorbed as empty options), so calling it here would
            recurse without bound. *)
-        If[vars === {}, expr, BosonicVEV[expr, vars, opts]]
+        With[{value = If[vars === {}, expr, BosonicVEV[expr, vars, opts]]},
+            (* An unevaluated inner call means there is nothing to read off; let
+               this call stay unevaluated too rather than echo the vars back. *)
+            value /; Head[value] =!= BosonicVEV
+        ]
     ]
 
-BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] :=
-    Block[{normalOrdered, terms},
-        normalOrdered = BosonicNormalOrder[expr, vars, opts];
-        terms = If[Head[normalOrdered] === Plus, List @@ normalOrdered, {normalOrdered}] /. $nonuls;
-        Total @ Select[terms, cNumberQ[#, vars] &]
+vevVars[vars_List] :=
+    DeleteDuplicates @
+        Catenate[{#, SuperDagger[#]} & /@ DeleteDuplicates[vars /. SuperDagger[v_] :> v]]
+
+vevCollapse[expr_] := expr //. {
+    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
+    NonCommutativeMultiply -> Times
+}
+
+vevPolynomialQ[expr_, vars_] :=
+    With[{syms = Table[Unique["vev"], Length[vars]]},
+        PolynomialQ[vevCollapse[expr] /. Thread[vars -> syms], syms]
+    ]
+
+(* The condition sits on the left-hand side so a non-polynomial never reaches
+   BosonicNormalOrder: the reducer would both fail and leak its own messages. *)
+BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] /;
+        vevPolynomialQ[expr, vevVars[vars]] :=
+    With[{all = vevVars[vars]},
+        vevCollapse[BosonicNormalOrder[expr, all, opts] /. $nonuls] /.
+            (Alternatives @@ all -> 0)
     ]
 
 
