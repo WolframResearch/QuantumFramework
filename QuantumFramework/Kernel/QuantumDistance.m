@@ -15,46 +15,33 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[q
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] :=
     1 - Re[Tr[MatrixPower[qs1["Computational"]["DensityMatrix"] . qs2["Computational"]["DensityMatrix"], 1 / 2]]]
 
-(* Umegaki relative entropy, S(s||t) = Tr[s log s] - Tr[s log t], taken from the
-   two eigendecompositions because a density matrix is routinely singular and
-   0 log 0 = 0 is what decides the answer there: a zero eigenvalue of s
-   contributes nothing, which keeps a pure s against a full-rank t finite, while
-   a zero eigenvalue of t diverges only where s has weight - the support
-   condition supp(s) subset of supp(t), reported as Quantity[Infinity, "Bits"],
-   which QuantumSimilarity carries through as 2^-Infinity == 0. *)
+(* Umegaki relative entropy, S(s||t) = Tr[s log s] - Tr[s log t], where the
+   cross term is taken as Sum_j <t_j|s|t_j> log q_j over the eigenbasis of t
+   alone - a density matrix is routinely singular and 0 log 0 = 0 is what
+   decides the answer there. A zero eigenvalue of s drops out of the entropy,
+   which keeps a pure s against a full-rank t finite; a zero q_j carrying weight
+   sends its term to -Infinity, so a violated support condition
+   supp(s) subset of supp(t) surfaces as Quantity[Infinity, "Bits"], which
+   QuantumSimilarity carries through as 2^-Infinity == 0. Chop supplies the
+   tolerance an inexact spectrum needs and leaves exact input untouched. *)
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /; qs1["Dimension"] == qs2["Dimension"] :=
     Block[{
-        s = Normal @ qs1["Computational"]["DensityMatrix"],
-        t = Normal @ qs2["Computational"]["DensityMatrix"],
-        exact, zeroQ, sv, svec, tv, tvec, entropy, crossTerm, supported = True
+        s = qs1["Computational"]["DensityMatrix"],
+        positive = ! TrueQ[Re[#] <= 0] &,
+        vals, vecs
     },
-        (* an inexact eigenvalue carries rounding noise, so it is tested against
-           a tolerance and its stray imaginary part dropped; an exact one needs
-           neither, and either would spend the exactness the input still has *)
-        exact = Precision[{s, t}] === Infinity;
-        zeroQ = If[exact, TrueQ[# <= 0] &, TrueQ[Re[#] <= 1*^-10] &];
-
-        {sv, svec} = Eigensystem[s];
-        {tv, tvec} = Eigensystem[t];
-        If[! exact, sv = Re[sv]; tv = Re[tv]];
-        svec = Normalize /@ svec; tvec = Normalize /@ tvec;
-
-        entropy = Total[If[zeroQ[#], 0, # Log[#]] & /@ sv];
-
-        crossTerm = Total @ Flatten @ Table[
-            With[{p = sv[[i]], q = tv[[j]], overlap = Abs[Conjugate[svec[[i]]] . tvec[[j]]] ^ 2},
-                Which[
-                    zeroQ[p] || zeroQ[overlap], 0,
-                    zeroQ[q], (supported = False; 0),
-                    True, p overlap Log[q]
-                ]
-            ],
-            {i, Length[sv]}, {j, Length[tv]}
-        ];
-
-        (* Chop only touches approximate numbers, so it leaves exact input alone *)
-        Quantity[If[supported, Chop[(entropy - crossTerm) / Log[2]], Infinity], "Bits"]
+        {vals, vecs} = Eigensystem[Normal@qs2["Computational"]["DensityMatrix"]];
+        Quantity[
+            Chop[(
+                Total[# Log[#] & /@ Select[Chop @ Eigenvalues[Normal@s], positive]] -
+                Total @ MapThread[If[positive[#2], #2 Log[#1], 0] &, Chop @ {
+                    If[positive[#], #, 0] & /@ vals,
+                    Conjugate[#] . s . # & /@ Normalize /@ vecs
+                }]
+            ) / Log[2]],
+            "Bits"
+        ]
     ]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /; qs1["Dimension"] == qs2["Dimension"] := With[{
