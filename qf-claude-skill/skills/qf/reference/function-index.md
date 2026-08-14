@@ -411,24 +411,24 @@ Returns `QuantumStateEstimation[<|14 keys|>]` including:
 - `BayesianSampler` — callable: `bayesianSampler[n, "StepSize" -> ..., "Burn" -> 0]` returns `n` `QuantumState`s sampled from the posterior.
 
 ### `QuantumDistance[qs1, qs2, t:"Fidelity"]`
-State distance with measure `t` (`Usage.m:141-152`). Defined in `Kernel/QuantumDistance.m` (80 LOC).
+State distance with measure `t` (`Usage.m:141-152`). Defined in `Kernel/QuantumDistance.m` (104 LOC).
 
 8 measures (`$QuantumDistances`, `:10`):
 | Measure | Formula | File:line | Notes |
 |---|---|---|---|
 | `"Fidelity"` | `1 - Re[Tr[MatrixPower[ρ₁ρ₂, 1/2]]]` | `:15-16` | **Returns `1 - F`, NOT F.** Use `QuantumSimilarity` for F. |
-| `"RelativeEntropy"` | `Tr[ρ₁(log ρ₁ - log ρ₂)] / Log[2]` (Quantity Bits) | `:18-34` | Uses `MatrixLog[..., Method -> "Jordan"]`. |
-| `"RelativePurity"` | `1 - Tr[ρ₁ ρ₂]` | `:36-41` | |
-| `"Trace"` | `Re[Tr[MatrixPower[(ρ₁-ρ₂)†(ρ₁-ρ₂), 1/2]]]/2` | `:44-48` | |
-| `"Bures"` | `Sqrt[2 × Fidelity]` | `:50-51` | |
-| `"BuresAngle"` | `Re[ArcCos[1 - Fidelity]]` | `:53-54` | |
-| `"HilbertSchmidt"` | `Norm[ρ₁-ρ₂, "Frobenius"]` | `:56-57` | |
-| `"Bloch"` | `Re[EuclideanDistance[bloch₁, bloch₂]]/2` | `:59-60` | **`Dimension == 2` only.** |
+| `"RelativeEntropy"` | `Tr[ρ₁(log ρ₁ - log ρ₂)] / Log[2]` (Quantity Bits) | `:26-58` | Umegaki, from both eigendecompositions under `0 log 0 = 0`. `Quantity[Infinity, "Bits"]` when `supp(ρ₁) ⊄ supp(ρ₂)`. Exact input gives an exact answer. |
+| `"RelativePurity"` | `1 - Tr[ρ₁ ρ₂]` | `:60-65` | |
+| `"Trace"` | `Re[Tr[MatrixPower[(ρ₁-ρ₂)†(ρ₁-ρ₂), 1/2]]]/2` | `:68-72` | |
+| `"Bures"` | `Sqrt[2 × Fidelity]` | `:74-75` | |
+| `"BuresAngle"` | `Re[ArcCos[1 - Fidelity]]` | `:77-78` | |
+| `"HilbertSchmidt"` | `Norm[ρ₁-ρ₂, "Frobenius"]` | `:80-81` | |
+| `"Bloch"` | `Re[EuclideanDistance[bloch₁, bloch₂]]/2` | `:83-84` | **`Dimension == 2` only.** |
 
 Recent change (`23d8c92b`): updated.
 
 ### `QuantumSimilarity[qs1, qs2, distance:"Fidelity"]`
-Implementation: `Kernel/QuantumDistance.m:63-79`. Maps each distance measure to a similarity in `[0, 1]`:
+Implementation: `Kernel/QuantumDistance.m:87-103`. Maps each distance measure to a similarity in `[0, 1]`:
 - `"Fidelity" | "Trace" | "Bloch" | "RelativePurity"`: `1 - d`
 - `"Bures" | "HilbertSchmidt"`: `1 - d/Sqrt[2]`
 - `"BuresAngle"`: `1 - d/(Pi/2)`

@@ -182,11 +182,83 @@ VerificationTest[
 
 (* ========== RelativeEntropy ========== *)
 
-(* Relative entropy to pure state returns entropy of first state *)
+(* Relative entropy DIVERGES against a pure state unless the states are equal:
+   supp(s) must lie inside supp(t), and a pure t has a one-dimensional support. *)
 VerificationTest[
-    QuantumDistance[qsMixed, qs0, "RelativeEntropy"],
-    qsMixed["Entropy"],
+    {
+        QuantumDistance[qsMixed, qs0, "RelativeEntropy"],
+        QuantumDistance[qs0, qs1, "RelativeEntropy"],
+        QuantumDistance[qs0, qs0, "RelativeEntropy"]
+    },
+    {Quantity[Infinity, "Bits"], Quantity[Infinity, "Bits"], Quantity[0, "Bits"]},
     TestID -> "RelativeEntropy-ToPureState"
+]
+
+(* A PURE first argument against a full-rank second is finite: the zero
+   eigenvalue of s contributes nothing under 0 log 0 = 0, which is why MatrixLog
+   cannot be used here at all - Log is not analytic at 0.
+   S(|0><0| || I/2) = log2(2) = 1 bit. *)
+VerificationTest[
+    Chop[QuantityMagnitude[QuantumDistance[qs0, qsMixed, "RelativeEntropy"]] - 1, 1*^-8],
+    0,
+    TestID -> "RelativeEntropy-PureAgainstFullRankIsFinite"
+]
+
+(* Exact input gives an exact answer, as it does for the other distances: the
+   tolerance and the Re that an inexact spectrum needs would both spend
+   exactness the input still has. *)
+(* S(diag(3/4,1/4) || I/2) = 1 - H(3/4) against the maximally mixed state. *)
+VerificationTest[
+    With[{
+        d = QuantumDistance[QuantumState[{{3/4, 0}, {0, 1/4}}], qsMixed, "RelativeEntropy"],
+        ref = 1 + (3/4) Log[2, 3/4] + (1/4) Log[2, 1/4]
+    },
+        {
+            Precision[d],
+            Simplify[QuantityMagnitude[d] - ref],
+            Precision @ QuantumDistance[qs0, qsMixed, "RelativeEntropy"]
+        }
+    ],
+    {Infinity, 0, Infinity},
+    TestID -> "RelativeEntropy-ExactInputStaysExact"
+]
+
+(* Machine input stays machine, and agrees with the exact answer. *)
+VerificationTest[
+    With[{
+        d = QuantumDistance[QuantumState[N @ {{3/4, 0}, {0, 1/4}}], QuantumState[N @ {{1/2, 0}, {0, 1/2}}], "RelativeEntropy"],
+        ref = N[1 + (3/4) Log[2, 3/4] + (1/4) Log[2, 1/4]]
+    },
+        {Precision[d], Chop[QuantityMagnitude[d] - ref, 1*^-10]}
+    ],
+    {MachinePrecision, 0},
+    TestID -> "RelativeEntropy-MachineInputStaysMachine"
+]
+
+(* Umegaki value against a reference computed here from the definition, both
+   directions, since the quantity is not symmetric. Both operands are full rank,
+   which is the case where MatrixLog is legitimate, so the reference is
+   independent of how QuantumDistance computes it. *)
+VerificationTest[
+    With[{am = {{0.7, 0.1}, {0.1, 0.3}}, bm = {{0.6, 0.}, {0., 0.4}}},
+        With[{umegaki = Function[{x, y},
+            Re[Tr[x . MatrixLog[x, Method -> "Jordan"]] - Tr[x . MatrixLog[y, Method -> "Jordan"]]] / Log[2]]},
+            Chop[{
+                QuantityMagnitude[QuantumDistance[QuantumState[am], QuantumState[bm], "RelativeEntropy"]] - umegaki[am, bm],
+                QuantityMagnitude[QuantumDistance[QuantumState[bm], QuantumState[am], "RelativeEntropy"]] - umegaki[bm, am]
+            }, 1*^-6]
+        ]
+    ],
+    {0, 0},
+    TestID -> "RelativeEntropy-matches-Umegaki-both-directions"
+]
+
+(* Infinite distance means zero similarity, which the exponential mapping in
+   QuantumSimilarity gives without a special case. *)
+VerificationTest[
+    QuantumSimilarity[qs0, qs1, "RelativeEntropy"],
+    0,
+    TestID -> "Similarity-RelativeEntropy-OrthogonalPuresAreZero"
 ]
 
 
