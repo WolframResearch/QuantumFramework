@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 Package["Wolfram`QuantumFramework`"]
 
 
@@ -55,9 +57,17 @@ QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
 QuantumChannelProp[qc_, "TraceBasis"] := qc["Output"]["Extract", Range[qc["TraceQudits"]]]
 
-QuantumChannelProp[qc_, "Trace"] := QuantumOperator @ QuantumPartialTrace[QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
+QuantumChannelProp[qc_, "Trace"] := qc["Operator"]["Dagger"] @ qc["Operator"]
 
 QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["MatrixRepresentation"]},
+    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
+]
+
+QuantumChannelProp[qc_, "UnitalQ"] := With[{
+    m = Chop @ QuantumOperator[QuantumPartialTrace[
+        QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
+    ]["MatrixRepresentation"]
+},
     If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
 ]
 
