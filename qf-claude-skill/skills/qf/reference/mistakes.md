@@ -323,8 +323,8 @@ Indexed by function/topic.
 
 ### `qc["TracePreservingQ"]` returns `Undefined` for symbolic channels
 - **The mistake**: Building a parametric `QuantumChannel` and asking `qc["TracePreservingQ"]` to verify CPTP.
-- **Why**: `QuantumChannel/Properties.m:55-57` — `If[MatrixQ[m, NumericQ], m == IdentityMatrix[...], Undefined]`. **Symbolic matrices return `Undefined`, not `True`/`False`.**
-- **The right way**: For symbolic verification, expand and `Simplify[qc["Trace"]["MatrixRepresentation"] - IdentityMatrix[d]] === ConstantArray[0, ...]`. Or substitute parameters before checking.
+- **Why**: `QuantumChannel/Properties.m` — `If[MatrixQ[m, NumericQ], m == IdentityMatrix[...], Undefined]`. **Symbolic matrices return `Undefined`, not `True`/`False`.**
+- **The right way**: For symbolic verification, expand and `Simplify[qc["Adjoint"]["Unitality"]["MatrixRepresentation"] - IdentityMatrix[d]] === ConstantArray[0, ...]`. Or substitute parameters before checking. (`qc["Trace"]` was removed: it never traced anything, and it returned `Sum K K^dag`, the *unitality* witness, not the trace-preservation one. `qc["Unitality"]` is that matrix; the trace-preservation witness is the same quantity on `qc["Adjoint"]`.)
 - **Date**: 2026-04-29.
 
 ### Channel auxiliary qudits are encoded as non-positive integers in `Order`
