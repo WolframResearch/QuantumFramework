@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 Package["Wolfram`QuantumFramework`"]
 
 
@@ -6,7 +8,8 @@ $QuantumChannelProperties = {
     "QuantumOperator",
     "Operator",
     "TraceOrder", "TraceQudits", "TraceDimensions",
-    "Trace",
+    "Unitality",
+    "UnitalQ",
     "TracePreservingQ"
 };
 
@@ -55,11 +58,20 @@ QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
 QuantumChannelProp[qc_, "TraceBasis"] := qc["Output"]["Extract", Range[qc["TraceQudits"]]]
 
-QuantumChannelProp[qc_, "Trace"] := QuantumOperator @ QuantumPartialTrace[QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
+(* "Unitality" is N(I) = Sum_i K_i K_i^dagger, the channel applied to the identity,
+   the partial trace over the Kraus qudits closing the sum. The adjoint channel
+   carries the Kraus set {K_i^dagger}, so its unitality matrix is
+   Sum_i K_i^dagger K_i: a channel is trace preserving exactly when its adjoint
+   is unital. *)
 
-QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["MatrixRepresentation"]},
+QuantumChannelProp[qc_, "Unitality"] := QuantumOperator @ QuantumPartialTrace[
+    QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
+
+QuantumChannelProp[qc_, "UnitalQ"] := With[{m = Chop @ qc["Unitality"]["MatrixRepresentation"]},
     If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
 ]
+
+QuantumChannelProp[qc_, "TracePreservingQ"] := qc["Adjoint"]["UnitalQ"]
 
 QuantumChannelProp[qc_, "EvolutionChannel"] := QuantumChannel[
     (I #)["EvolutionOperator"] & /@  qc["UnstackOutput", 1]
