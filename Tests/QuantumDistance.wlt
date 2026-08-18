@@ -235,6 +235,29 @@ VerificationTest[
     TestID -> "RelativeEntropy-MachineInputStaysMachine"
 ]
 
+(* Eigensystem hands back an arbitrary basis inside a degenerate eigenspace, and
+   for exact input that basis is generally not orthonormal, so Sum_j |t_j><t_j|
+   fails to resolve the identity and the cross term stops telescoping to
+   Tr[s log t]. Here t has eigenvalues {1/2, 1/4, 1/4} in a rotated basis: the
+   exact path read ~0.07 bits high while the machine path was right to 1e-16,
+   which is why only an EXACT degenerate second argument catches it. *)
+VerificationTest[
+    With[{
+        t = With[{p = Outer[Times, {1, 1, 1} / Sqrt[3], {1, 1, 1} / Sqrt[3]]},
+            p / 2 + (IdentityMatrix[3] - p) / 4],
+        s = With[{a = {{2 + I, 1, 3}, {0, 1 - 2 I, 1}, {1, 2, 1 + I}}},
+            # / Tr[#] & [a . ConjugateTranspose[a]]]
+    },
+        Chop[
+            Re @ N @ QuantityMagnitude @ QuantumDistance[QuantumState[s], QuantumState[t], "RelativeEntropy"] -
+                Re[Tr[N[s] . MatrixLog[N[s]]] - Tr[N[s] . MatrixLog[N[t]]]] / Log[2],
+            1*^-8
+        ]
+    ],
+    0,
+    TestID -> "RelativeEntropy-DegenerateExactSecondArgument"
+]
+
 (* Umegaki value against a reference computed here from the definition, both
    directions, since the quantity is not symmetric. Both operands are full rank,
    which is the case where MatrixLog is legitimate, so the reference is

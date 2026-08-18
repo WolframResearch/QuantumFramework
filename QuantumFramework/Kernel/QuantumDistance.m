@@ -23,7 +23,10 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["
    sends its term to -Infinity, so a violated support condition
    supp(s) subset of supp(t) surfaces as Quantity[Infinity, "Bits"], which
    QuantumSimilarity carries through as 2^-Infinity == 0. Chop supplies the
-   tolerance an inexact spectrum needs and leaves exact input untouched. *)
+   tolerance an inexact spectrum needs and leaves exact input untouched. The
+   sum only telescopes to Tr[s log t] on an orthonormal eigenbasis, which
+   Eigensystem does not supply inside a degenerate eigenspace, hence
+   "Orthogonalize". *)
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /; qs1["Dimension"] == qs2["Dimension"] :=
     Block[{
@@ -31,13 +34,14 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /
         positive = ! TrueQ[Re[#] <= 0] &,
         vals, vecs
     },
-        {vals, vecs} = Eigensystem[Normal@qs2["Computational"]["DensityMatrix"]];
+        {vals, vecs} = eigensystem[Normal@qs2["Computational"]["DensityMatrix"],
+            "Normalize" -> True, "Orthogonalize" -> True];
         Quantity[
             Chop[(
-                Total[# Log[#] & /@ Select[Chop @ Eigenvalues[Normal@s], positive]] -
+                Total[# Log[#] & /@ Select[Chop @ eigenvalues[Normal@s], positive]] -
                 Total @ MapThread[If[positive[#2], #2 Log[#1], 0] &, Chop @ {
                     If[positive[#], #, 0] & /@ vals,
-                    Conjugate[#] . s . # & /@ Normalize /@ vecs
+                    Conjugate[#] . s . # & /@ vecs
                 }]
             ) / Log[2]],
             "Bits"
