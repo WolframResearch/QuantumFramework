@@ -1,4 +1,4 @@
-# Outline — Watching a Qubit: Korotkov's Quantum-Bayesian Formalism
+# Outline: Watching a Qubit, Korotkov's Quantum-Bayesian Formalism
 
 Genre: "learning by computing" (computation-first .md, built to .nb via md2nb).
 Ground truth: `korotkov_physics_sheet.md` (this folder). Every equation below cites a sheet section.
@@ -81,7 +81,7 @@ the same physics; Section 7 closes the loop by matching the SDE.
 - interpretation: gamma is potential information dissipated before readout; the steady purity
   is set by eta, and eta = 1 is the only value that lets you monitor the wavefunction.  [sheet J, B]
 
-### 6. PAYOFF — the output spectrum and the factor of 4
+### 6. PAYOFF: the output spectrum and the factor of 4
 - establishes: the coherent line is bounded, peak-to-pedestal = 4 eta. [sheet I, K, 0003225]
 - bridge: Rabi oscillation modulates the record, so its spectrum carries a peak at Omega_R;
   simulate many long records, average the periodogram, and compare with the closed form:
@@ -92,7 +92,7 @@ the same physics; Section 7 closes the loop by matching the SDE.
   ideal detector; half the peak is the correlation between the detector noise and the
   measurement back-action, which no classical harmonic signal can produce.  [sheet I, 0003225]
 
-### 7. Cross-check — the Stratonovich SDE and the Ito trap
+### 7. Cross-check: the Stratonovich SDE and the Ito trap
 - establishes: the Bayesian update and the Stratonovich SDE agree; a naive Ito stepper does not. [sheet C]
 - bridge: The same physics is written as a Bloch-Langevin SDE in `NDSolve vs Ito/`; run both
   on matched ensembles and let tau -> 0 to see them converge:
@@ -102,12 +102,47 @@ the same physics; Section 7 closes the loop by matching the SDE.
 - interpretation: the Bayesian form has no calculus ambiguity at all (discrete Gaussian Bayes +
   unitary split); the SDE reproduces it only when the Stratonovich->Ito drift is kept.  [sheet C]
 
+### 8. The other back-action: the phase kick and the second quadrature
+- establishes: a general detector adds a unitary, record-driven z-rotation (phase/"realistic"
+  back-action); the symmetric K=0 detector used so far was the special case U_r = I. [sheet J, K]
+- bridge: A general reading rotates the coherence about z as well as squeezing the populations;
+  turn the correlation K on and watch the same record wind the coherence phase:
+- cell: one record, frozen qubit from |+>, coherence path in the (x,y) plane with phase
+  back-action (K != 0, factor e^{-iK Ibar tau} on rho_10) beside the informational-only run
+  (K = 0). Out = the radial K=0 meridian track vs the winding K!=0 parallel spiral.
+- interpretation: the phase kick is unitary (single run stays pure) but scrambles the ensemble
+  phase, adding K^2 S/4 to Gamma = (Delta I)^2/4S + K^2 S/4 + gamma, so the Section-6 peak is
+  4 eta-tilde, at most 2 for a phase-preserving cQED amp (two quadratures, split 50/50). Lands on
+  the Kraus polar form M_r = U_r sqrt(M_r^dag M_r): U_r = e^{-iK Ibar tau sigma_z/2} (phase),
+  sqrt(M_r^dag M_r) = the informational Bayes factor.  [sheet J, K; POVM bridge]
+
 ================================================================================
 ## Validation & close
 ================================================================================
 The essay is self-validating: Section 6 recovers the closed-form Korotkov-Averin spectrum from
 simulated trajectories, and Section 7 matches the independent Stratonovich SDE. Both are the
 "is it right" gates before the ask-first /wl-verify and /essay-verify loops.
+
+================================================================================
+## Sibling roadmap (Phase 2)
+================================================================================
+This essay is the K=0 core (informational back-action, one symmetric broadband detector).
+Section 8 opens the door to the phase back-action at the abstract-detector level; each Phase-2
+sibling turns one deferred piece of the SAME Bayesian update into its own essay:
+- DONE, `Watching-Two-Axes.md` (+ .nb): simultaneous non-commuting measurement, two detectors
+  reading sigma_z and sigma_phi at once; the two Gaussian kicks fail to commute by a rotation
+  about the third axis, no measured axis wins, the state diffuses on the sphere and the purity
+  ride-along of Section 3 is lost (steady Bloch radius sqrt(eta)); zero-lag cross-correlator = cos phi;
+  Bacon-Shor gauge-qubit connection. /wl-verify + /essay-verify both OPEN 0.
+- DONE, `Watching-Two-Qubits.md` (+ .nb): measurement-induced entanglement, one half-parity probe
+  reading a joint operator; equal coupling of |01>,|10> (dv_2 = dv_3) => the odd-parity coherence
+  rides the geometric mean sqrt(P2 P3) (the single-qubit purity ride-along one level up) and
+  survives localization as a Bell state; closed-form maximum concurrence recovered from the
+  ensemble envelope. /wl-verify + /essay-verify both OPEN 0.
+- Continuous quantum error correction (still future): continuously monitored stabilizers with
+  Bayesian tracking of the syndrome, the same update run on the code space.
+Also deferred (named in the essay's own close): finite detector bandwidth (1606.07162, track the
+qubit and the cavity field together) and measurement feedback to lock the Rabi oscillation.
 
 ## Build/verify checklist (for N3+)
 - write each subsection against the exemplar (introduction-to-QIS-revised.md) + learning-by-computing skill.

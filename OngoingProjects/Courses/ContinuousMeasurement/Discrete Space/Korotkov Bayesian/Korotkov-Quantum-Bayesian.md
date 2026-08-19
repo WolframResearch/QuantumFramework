@@ -16,23 +16,23 @@ In other words, I have tried to build a small laboratory for continuous measurem
 
 The environment you see is a live Wolfram notebook. Evaluate the cells from top to bottom; the toolkit defined in the next section is used by every section that follows, so those dependencies matter. Some cells run Monte-Carlo ensembles and take a little while. My suggestion is to focus on the output and its meaning first, then unpack the input code. You are not locked into any of it: change the rates, the step, the seed, and rerun your own experiments.
 
-Every equation below is anchored to the grounded physics sheet in this folder (`korotkov_physics_sheet.md`), which transcribes Korotkov's own papers with line references; I cite it as [sheet X] rather than re-derive from memory. This is the Bayesian-update door into the same physics that the sibling essays treat as a stochastic differential equation: `NDSolve vs Ito/` integrates the Stratonovich Bloch-Langevin equation for the state and readout, and `Manual StepLike Ito/` runs Rouchon trajectories. Section 7 closes the loop by matching that Stratonovich equation numerically.
+This essay is the Bayesian-update door into the same physics that the sibling essays treat as a stochastic differential equation: `NDSolve vs Ito/` integrates the Stratonovich Bloch-Langevin equation for the state and readout, and `Manual StepLike Ito/` runs Rouchon trajectories. Section 7 closes the loop by matching that Stratonovich equation numerically.
 
 Let's start!
 
 ## Notation and Conventions: The Detector, the Record, and the Rates
 
-We work in units where the reduced Planck constant is one, $\hbar=1$. The qubit is written in the measured (localized) basis $\{|1\rangle,|0\rangle\}$ that the detector couples to, with $|1\rangle=\{1,0\}$ and $|0\rangle=\{0,1\}$, so the density matrix is a $2\times 2$ matrix $\rho$ and the single monitored coordinate is the population difference $z=\rho_{11}-\rho_{00}$ [sheet K]. A qubit density matrix carries three real numbers, the Bloch vector; the detector reads out only the projection $z$, and the other two ride along in the coherence.
+We work in units where the reduced Planck constant is one, $\hbar=1$. The qubit is written in the measured (localized) basis $\{|1\rangle,|0\rangle\}$ that the detector couples to, with $|1\rangle=\{1,0\}$ and $|0\rangle=\{0,1\}$, so the density matrix is a $2\times 2$ matrix $\rho$ and the single monitored coordinate is the population difference $z=\rho_{11}-\rho_{00}$. A qubit density matrix carries three real numbers, the Bloch vector; the detector reads out only the projection $z$, and the other two ride along in the coherence.
 
 The detector emits a current whose short-time average over a window $\tau$ is $\bar I$. Given a definite state $|1\rangle$ or $|0\rangle$ the reading is Gaussian about $I_1$ or $I_0$, and in general it is a linear readout of $z$ plus white noise,
 
 $$ I(t)=I_c+\frac{\Delta I}{2}\,z(t)+\xi(t), \qquad \Delta I=I_1-I_0, \qquad I_c=\frac{I_1+I_0}{2}, $$
 
-with $\xi$ a white noise of single-sided spectral density $S$ [sheet K]. Averaging that current over the window $\tau$ leaves a Gaussian of variance $D=S/(2\tau)$ about the state-conditioned mean [sheet E]. Two rates organize everything: the measurement (information-acquisition) rate and the total ensemble dephasing rate,
+with $\xi$ a white noise of single-sided spectral density $S$. Averaging that current over the window $\tau$ leaves a Gaussian of variance $D=S/(2\tau)$ about the state-conditioned mean. Two rates organize everything: the measurement (information-acquisition) rate and the total ensemble dephasing rate,
 
 $$ \Gamma_m=\frac{(\Delta I)^2}{4S}, \qquad \Gamma_d \ge \Gamma_m, \qquad \gamma=\Gamma_d-\Gamma_m\ge 0, \qquad \eta=\frac{\Gamma_m}{\Gamma_d}\in(0,1] , $$
 
-where $\gamma$ is any extra dephasing the detector dissipates internally before readout, and the ideality $\eta$ is one exactly for a quantum-limited detector such as a symmetric quantum point contact [sheet B, sheet J]. A symmetric detector has zero output-backaction correlation, so there is no unitary phase kick; the back-action is purely informational, along the meridians of the Bloch sphere [sheet K]. When a Hamiltonian is present it is the symmetric-qubit drive $H_{qb}=\tfrac{\Omega_R}{2}\sigma_x$ with Rabi frequency $\Omega_R$ [sheet A].
+where $\gamma$ is any extra dephasing the detector dissipates internally before readout, and the ideality $\eta$ is one exactly for a quantum-limited detector such as a symmetric quantum point contact. A symmetric detector has zero output-backaction correlation, so there is no unitary phase kick; the back-action is purely informational, along the meridians of the Bloch sphere. When a Hamiltonian is present it is the symmetric-qubit drive $H_{qb}=\tfrac{\Omega_R}{2}\sigma_x$ with Rabi frequency $\Omega_R$.
 
 Fix the detector's two output levels and its noise once. We set $I_1=+1$, $I_0=-1$ (so $\Delta I=2$) and $I_c=0$; the noise density then follows from whatever measurement rate we choose, $S=(\Delta I)^2/(4\Gamma_m)$:
 
@@ -53,7 +53,7 @@ gaussLike[mu_, var_, ibar_] := Exp[-(ibar - mu)^2/(2 var)]/Sqrt[2 Pi var]
 
 This is the single probabilistic object the whole formalism turns on: everything downstream is Bayes' rule applied to these two likelihoods.
 
-Define the window variance $D=S/(2\tau)$ and the honest detector draw, sampling $\bar I$ from the Gaussian mixture $\rho_{11}\,\mathcal N(I_1,D)+\rho_{00}\,\mathcal N(I_0,D)$ that the current state predicts [sheet E]:
+Define the window variance $D=S/(2\tau)$ and the honest detector draw, sampling $\bar I$ from the Gaussian mixture $\rho_{11}\,\mathcal N(I_1,D)+\rho_{00}\,\mathcal N(I_0,D)$ that the current state predicts:
 
 ```wl
 ClearAll[avgVar, drawCurrent];
@@ -65,7 +65,7 @@ drawCurrent[rho_, var_] :=
 
 In words, the detector first picks which bell to ring with the current populations as weights, then buries the level under Gaussian noise of variance $D$; the window $\tau$ is the only knob that sharpens it.
 
-Now the heart of the formalism. The exact update over a step, in its cleanest form, keeps the populations Bayesian and lets each coherence carry the geometric mean of the two likelihoods, with an optional pure-dephasing factor for a non-ideal detector [sheet D, sheet J, sheet K]:
+Now the heart of the formalism. The exact update over a step, in its cleanest form, keeps the populations Bayesian and lets each coherence carry the geometric mean of the two likelihoods, with an optional pure-dephasing factor for a non-ideal detector:
 
 $$ \rho_{ij}\ \longrightarrow\ \rho_{ij}\,\frac{\sqrt{P_i\,P_j}}{\sum_k \rho_{kk}\,P_k}\ \times\ e^{-\gamma\tau}\ \text{(off-diagonal only)}, \qquad P_j=\text{gaussLike}(I_j,D,\bar I) . $$
 
@@ -91,7 +91,7 @@ With[{r = {{r11, r10}, {Conjugate[r10], 1 - r11}}},
 
 As expected, the two updated populations always sum to one: the normalizing denominator is exactly the predictive probability of the reading, so probability is conserved by construction.
 
-A single step of the full dynamics interleaves a Hamiltonian half-rotation, the Bayesian kick, and another half-rotation, a symmetric (Strang) split that is second-order accurate in the step [sheet C, sheet E]; for a frozen qubit the half-rotation is just the identity. Define the step, together with the readouts we will plot:
+A single step of the full dynamics interleaves a Hamiltonian half-rotation, the Bayesian kick, and another half-rotation, a symmetric (Strang) split that is second-order accurate in the step; for a frozen qubit the half-rotation is just the identity. Define the step, together with the readouts we will plot:
 
 ```wl
 ClearAll[measureStep, blochVec, purity, zComp];
@@ -119,7 +119,7 @@ We will return to this record in Section 6; for now it is enough that each measu
 
 ## 1. The Detector's Two Bells: Why One Look Cannot Separate Them
 
-A weak measurement is weak because a single short look is ambiguous. For a state that is definitely $|1\rangle$ or definitely $|0\rangle$ the averaged current is a Gaussian centered at $I_1$ or $I_0$ with spread $\sqrt D=\sqrt{S/(2\tau)}$; the two bells overlap heavily until the window $\tau$ is long enough to pull them apart, and the crossover scale is the measurement time $\tau_m=2S/(\Delta I)^2$ [sheet B].
+A weak measurement is weak because a single short look is ambiguous. For a state that is definitely $|1\rangle$ or definitely $|0\rangle$ the averaged current is a Gaussian centered at $I_1$ or $I_0$ with spread $\sqrt D=\sqrt{S/(2\tau)}$; the two bells overlap heavily until the window $\tau$ is long enough to pull them apart, and the crossover scale is the measurement time $\tau_m=2S/(\Delta I)^2$.
 
 Plot the two likelihoods $P_1$ and $P_0$ against the reading $\bar I$ for windows short, comparable to, and long relative to $\tau_m$:
 
@@ -138,9 +138,9 @@ Notice that at a quarter of the measurement time the two bells sit almost on top
 
 ## 2. Populations Follow Bayes: Localization Without a Hamiltonian
 
-Switch off the Hamiltonian and the record can only report which state we are in, never rotate us between them. Start from the fully uncertain equal mixture and feed each reading through the update: the populations move by the likelihood ratio and drift toward one pole, a noisy random walk in $z$ rather than a jump [sheet E]. The pole that wins is random, with probability equal to the initial population, which is the Born rule emerging from accumulated evidence.
+Switch off the Hamiltonian and the record can only report which state we are in, never rotate us between them. Start from the equatorial superposition $|{+}\rangle=(|0\rangle+|1\rangle)/\sqrt{2}$, whose two measured-basis populations are equal, and feed each reading through the update: the populations move by the likelihood ratio and drift toward one pole, a noisy random walk in $z$ rather than a jump. The pole that wins is random, with probability equal to the initial population, which is the Born rule emerging from accumulated evidence.
 
-Run one frozen-qubit trajectory from $\rho=\mathrm{diag}(\tfrac12,\tfrac12)$ and watch $z(t)$:
+Run one frozen-qubit trajectory from $\rho=|{+}\rangle\langle{+}|$ and watch $z(t)$:
 
 ```wl
 With[{gm = 1., tau = 0.02, nst = 1000},
@@ -157,7 +157,7 @@ The population difference wanders under the noisy evidence and then commits to a
 
 ## 3. The Purity Ride-Along: A Pure State Stays Pure in a Single Run
 
-Here is the fact that makes an ideal detector special. The coherence is not measured; it rides on the populations through the geometric mean $\sqrt{P_1P_0}$, so the ratio $|\rho_{10}|^2/(\rho_{11}\rho_{00})$ is left untouched by every update. A state that starts pure therefore stays exactly pure along the whole record, never leaving the surface of the Bloch sphere, even as its populations localize [sheet D, sheet C].
+Here is the fact that makes an ideal detector special. The coherence is not measured; it rides on the populations through the geometric mean $\sqrt{P_1P_0}$, so the ratio $|\rho_{10}|^2/(\rho_{11}\rho_{00})$ is left untouched by every update. A state that starts pure therefore stays exactly pure along the whole record, never leaving the surface of the Bloch sphere, even as its populations localize.
 
 First confirm the invariance symbolically: check that the ride-along ratio $|\rho_{10}|^2/(\rho_{11}\rho_{00})$ is unchanged by an ideal update:
 
@@ -187,7 +187,7 @@ As you may have noticed, the purity sits flat at one while $z$ wanders to a pole
 
 ## 4. Rabi Under Measurement: A Bayes Kick Between Half-Rotations
 
-Now switch on the drive $H_{qb}=\tfrac{\Omega_R}{2}\sigma_x$ and interleave it with the measurement by the symmetric split: a half rotation, the Bayesian kick, another half rotation [sheet C, sheet E]. The measurement pulls the state toward the $z$-poles while the field rotates it, so a single trajectory is a noisy Rabi oscillation whose phase slowly diffuses; a run that starts fully mixed at the center of the Bloch ball sharpens into that oscillation as the record accrues.
+Now switch on the drive $H_{qb}=\tfrac{\Omega_R}{2}\sigma_x$ and interleave it with the measurement by the symmetric split: a half rotation, the Bayesian kick, another half rotation. The measurement pulls the state toward the $z$-poles while the field rotates it, so a single trajectory is a noisy Rabi oscillation whose phase slowly diffuses; a run that starts fully mixed at the center of the Bloch ball sharpens into that oscillation as the record accrues.
 
 Run one noisy-Rabi trajectory from $|1\rangle$ and, beside it, a run that starts fully mixed and purifies:
 
@@ -212,7 +212,7 @@ The pure run oscillates and wobbles but keeps its full Bloch length, while the m
 
 ## 5. A Non-Ideal Detector: Ideality Caps the Purity
 
-A realistic detector loses some of the information it gathers before it reaches the output, and that lost information appears as an extra pure-dephasing factor $e^{-\gamma\tau}$ on the coherence, with $\gamma=\Gamma_d(1-\eta)$ [sheet J]. The measurement keeps localizing at the same informational rate, but the coherence is now bled faster than the populations sharpen, so the state settles short of the surface at a steady purity set entirely by the ideality $\eta$.
+A realistic detector loses some of the information it gathers before it reaches the output, and that lost information appears as an extra pure-dephasing factor $e^{-\gamma\tau}$ on the coherence, with $\gamma=\Gamma_d(1-\eta)$. The measurement keeps localizing at the same informational rate, but the coherence is now bled faster than the populations sharpen, so the state settles short of the surface at a steady purity set entirely by the ideality $\eta$.
 
 Overlay the ensemble-averaged purity for a driven qubit measured by detectors of ideality $\eta=1,\,0.7,\,0.4$, the extra dephasing $\gamma\tau=\Gamma_m(1/\eta-1)\tau$ per step:
 
@@ -234,11 +234,11 @@ As expected, only the ideal detector holds the state pure; below $\eta=1$ the pu
 
 ## 6. The Output Spectrum and the Factor of Four
 
-Now the payoff. When the drive keeps the qubit oscillating, the Rabi motion modulates the very current the detector reports, so the record carries a coherent line at $\Omega_R$ riding on the white noise floor $S$. Korotkov and Averin derived the line in closed form, and its height above the floor is bounded: at most four times the noise, reached only for an ideal detector, and degrading as $4\eta$ [sheet I, sheet K].
+Now the payoff. When the drive keeps the qubit oscillating, the Rabi motion modulates the very current the detector reports, so the record carries a coherent line at $\Omega_R$ riding on the white noise floor $S$. Korotkov and Averin derived the line in closed form, and its height above the floor is bounded: at most four times the noise, reached only for an ideal detector, and degrading as $4\eta$. This spectrum is not just a calculation: Palacios-Laloy and co-workers measured exactly this Rabi line in a continuously monitored superconducting qubit, and read its bounded height as a Leggett-Garg (temporal Bell) test of macroscopic realism (Nature Physics 6, 442 (2010), arXiv:1005.3435).
 
 $$ S_I(\omega)=S+4\eta\,S\,\frac{\Omega_R^2\,\Gamma^2}{(\omega^2-\Omega_R^2)^2+\Gamma^2\omega^2}, \qquad \Gamma=\Gamma_d=\frac{\Gamma_m}{\eta}. $$
 
-Half of that four is the ordinary spectrum of $z(t)$; the other half is a purely nonclassical correlation between the detector noise $\xi$ and the back-action it exerts on $z$, which no classical harmonic signal can produce [sheet I]. The record we simulate carries both halves automatically, because the same reading that enters the spectrum also drives the Bayesian kick.
+Half of that four is the ordinary spectrum of $z(t)$; the other half is a purely nonclassical correlation between the detector noise $\xi$ and the back-action it exerts on $z$, which no classical harmonic signal can produce. The record we simulate carries both halves automatically, because the same reading that enters the spectrum also drives the Bayesian kick.
 
 Simulate long records in the good-oscillation regime $\Omega_R\gg\Gamma_m$, average the periodogram over an ensemble for three idealities, and overlay the closed form (dashed):
 
@@ -269,7 +269,7 @@ Each simulated line sits on the closed-form Lorentzian, and the coherent peak cl
 
 ## 7. Cross-Check: The Stratonovich SDE and the Ito Trap
 
-The same physics is a Bloch-Langevin stochastic differential equation in the sibling essay `NDSolve vs Ito/`. The Bayesian update and that Stratonovich equation must agree as $\tau\to 0$, and comparing them exposes the classic Ito trap. The ensemble coherence decays at the total rate $\Gamma_d$; in the Ito form of the coherence equation that decay is the term $+(\Delta I)^2/4S$, which is not physical decoherence at all but the Stratonovich-to-Ito drift correction [sheet C]. Hand the Stratonovich right-hand side to a plain Ito-Euler stepper without that term and the coherence decays at the wrong rate.
+The same physics is a Bloch-Langevin stochastic differential equation in the sibling essay `NDSolve vs Ito/`. The Bayesian update and that Stratonovich equation must agree as $\tau\to 0$, and comparing them exposes the classic Ito trap. The ensemble coherence decays at the total rate $\Gamma_d$; in the Ito form of the coherence equation that decay is the term $+(\Delta I)^2/4S$, which is not physical decoherence at all but the Stratonovich-to-Ito drift correction. Hand the Stratonovich right-hand side to a plain Ito-Euler stepper without that term and the coherence decays at the wrong rate.
 
 Overlay the ensemble coherence $\langle x\rangle(t)$ from three routes started on the equator: the Bayesian update, the correct Ito stepper with the drift term, and the naive stepper missing it, against the exact decay $e^{-\Gamma_m t}$ (dashed):
 
@@ -294,9 +294,56 @@ With[{gm = 1., tau = 0.005, nst = 300, ntr = 1500},
 
 This confirms that the Bayesian update and the correct Ito stepper both fall onto the exact $e^{-\Gamma_m t}$ curve, while the naive stepper never dephases at all: the missing $+(\Delta I)^2/4S$ term was the entire ensemble decoherence. The Bayesian form has no calculus ambiguity to begin with, because it is discrete Gaussian Bayes between unitary half-steps; the stochastic differential equation reproduces it only when the Stratonovich-to-Ito drift is kept.
 
+## 8. The Other Back-Action: The Phase Kick and the Second Quadrature
+
+Every detector in this essay has been symmetric: a quantum point contact whose two output levels carry the same noise, so the correlation between the detector's output noise and the disturbance it feeds back to the qubit vanishes, $K=0$. That is exactly why the back-action has been purely informational. Each reading squeezes the populations and slides the state along a meridian of the Bloch sphere, changing $z$, and nothing turns the coherence. A general detector is not so gentle: alongside the informational disturbance it applies a second, physical one, an active rotation of the coherence about the $z$-axis, driven by the very same record.
+
+In other words, there are two back-actions, and so far we have felt only one. Korotkov names them "spooky" and "realistic". The spooky (informational) back-action is the non-unitary Bayes factor we have used throughout: it carries no physical mechanism, it is pure information, and it moves the state along meridians, changing $z$. The realistic (phase) back-action is unitary: it is a genuine rotation of the coherence about $z$, along the parallels of constant latitude, and it needs a physical mechanism, such as the fluctuating level shift an asymmetric detector imprints on the qubit. For a symmetric detector the second one is switched off; for a general one it is not.
+
+Concretely, the coherence picks up one extra factor. Where the ideal update multiplied $\rho_{10}$ by the geometric mean of the two likelihoods, a general detector multiplies it also by a record-driven phase,
+
+$$ \rho_{10}\ \longrightarrow\ \rho_{10}\,\frac{\sqrt{P_1 P_0}}{\sum_k \rho_{kk} P_k}\,e^{-\,iK\bar I\tau}, $$
+
+a rotation of the coherence through an angle $K\bar I\tau$ set by the correlation $K$ and the integrated current $\bar I\tau$ of that step. In circuit QED this second channel is not abstract: a phase-preserving amplifier reports two output quadratures at once, and while the in-phase quadrature $I(t)$ carries the informational back-action, the second quadrature $Q(t)$ is the one that carries the phase kick.
+
+Because the phase kick is unitary, it never touches a single run's purity: the ride-along of Section 3 still holds exactly, and a pure state stays on the surface of the Bloch sphere. It shows up instead in the ensemble, because different records wind the coherence by different angles and the average of $e^{-iK\bar I\tau}$ shrinks toward zero. The total ensemble dephasing rate therefore splits into three pieces,
+
+$$ \Gamma=\underbrace{\frac{(\Delta I)^2}{4S}}_{\text{informational}}+\underbrace{\frac{K^2 S}{4}}_{\text{phase}}+\underbrace{\gamma}_{\text{extra environment}}, $$
+
+and the fraction of that rate which is informational is precisely the number that fixes the height of the Section 6 line: peak-to-pedestal $=4\tilde\eta$, with $\tilde\eta=(\Delta I)^2/(4S\Gamma)$. In Section 6 the peak degraded as $4\eta$ only because $K=0$ made $\tilde\eta=\eta$; in general the height is $4\tilde\eta$, and the phase back-action pushes it down even when the detector wastes no information internally ($\eta=1$, $\gamma=0$). A phase-preserving amplifier splits its dephasing evenly between the two quadratures, so $\tilde\eta\le\tfrac12$ and its coherent line can rise at most twice above the noise floor, never four times.
+
+All of this is one statement about the measurement operator. The general weak-measurement (Kraus) operator for a reading $\bar I$ factorizes into a unitary times a positive part,
+
+$$ M_{\bar I}=U_{\bar I}\,\sqrt{M_{\bar I}^\dagger M_{\bar I}}, \qquad U_{\bar I}=e^{-iK\bar I\tau\,\sigma_z/2}, \qquad \sqrt{M_{\bar I}^\dagger M_{\bar I}}=\sqrt{P_1}\,|1\rangle\langle 1|+\sqrt{P_0}\,|0\rangle\langle 0| . $$
+
+The positive square-root factor is exactly the informational Bayes update we built in Section 2; the unitary $U_{\bar I}$ is the phase rotation, which we quietly set to the identity by taking $K=0$. Everything in this essay so far has been the special case $U_{\bar I}=\mathbb 1$.
+
+Turn the phase kick on and watch it act. Run one record through both detectors from the same pure equatorial start $\rho=|{+}\rangle\langle{+}|$, and plot the coherence in the equatorial $(x,y)$ plane for $K\neq 0$ beside the symmetric $K=0$ run:
+
+```wl
+With[{gm = 0.3, tau = 0.05, nst = 80, kk = 1., seed = 3},
+ With[{v = avgVar[gm, tau], plus = {{0.5, 0.5}, {0.5, 0.5}}},
+  With[{phaseStep = Function[{kval}, Function[rho,
+      With[{ib = drawCurrent[rho, v]},
+       With[{uk = DiagonalMatrix[{Exp[-I kval ib tau/2], Exp[I kval ib tau/2]}]},
+        uk . bayesUpdate[rho, ib, v, 0.] . ConjugateTranspose[uk]]]]]},
+   With[{pathK = ({#[[1]], #[[2]]} & @* blochVec) /@
+        BlockRandom[SeedRandom[seed]; NestList[phaseStep[kk], plus, nst]],
+      path0 = ({#[[1]], #[[2]]} & @* blochVec) /@
+        BlockRandom[SeedRandom[seed]; NestList[phaseStep[0.], plus, nst]]},
+    ListLinePlot[{pathK, path0}, AspectRatio -> 1,
+     PlotRange -> {{-1.05, 1.05}, {-1.05, 1.05}}, Frame -> True,
+     GridLines -> Automatic, FrameLabel -> {"Bloch x", "Bloch y"},
+     PlotLegends -> {"K \[NotEqual] 0: phase + informational", "K = 0: informational only"},
+     PlotLabel -> "same record: the phase back-action winds the coherence about z",
+     Epilog -> {GrayLevel[0.6], Dashed, Circle[{0, 0}, 1]}]]]]]
+```
+
+The same record that localizes the populations now also carries the coherence around the $z$-axis: the symmetric detector slides the state straight inward along a meridian with the phase pinned (the radial $K=0$ track), while the general detector adds the parallel motion, a unitary turn through an angle equal to $K$ times the integrated current (the winding $K\neq 0$ track), so every single run stays exactly as pure as before even though the ensemble of records now dephases faster. Turning $U_{\bar I}$ fully on, and letting two such detectors act at once, is where the sibling essay `Watching-Two-Axes.md` picks up.
+
 ## Where This Leaves Us (and What Comes Next)
 
-You now have a complete, computation-first toolkit for one qubit under one symmetric broadband detector: a Gaussian likelihood, a Bayes kick on the populations with the coherence riding along, a symmetric split that adds a Hamiltonian, a pure-dephasing factor for non-ideality, and an ensemble of records whose spectrum recovers the Korotkov-Averin line and its factor-of-four bound. Before moving on, the points that were computed and verified along the way:
+You now have a complete, computation-first toolkit for one qubit under one symmetric broadband detector: a Gaussian likelihood, a Bayes kick on the populations with the coherence riding along, a symmetric split that adds a Hamiltonian, a pure-dephasing factor for non-ideality, an ensemble of records whose spectrum recovers the Korotkov-Averin line and its factor-of-four bound, and a first look at the phase back-action a general detector adds on top of all this. Before moving on, the points that were computed and verified along the way:
 
 - The detector separates the two states only gradually; information is the shrinking overlap of two Gaussians, on the scale $\tau_m=2S/(\Delta I)^2$.
 - With no Hamiltonian the populations follow Gaussian Bayes and localize to a pole with the initial-population probability, the Born rule as accumulated evidence.
@@ -305,5 +352,6 @@ You now have a complete, computation-first toolkit for one qubit under one symme
 - Non-ideality is a pure-dephasing factor $e^{-\gamma\tau}$ with $\gamma=\Gamma_d(1-\eta)$; the steady purity is capped by $\eta$, and only $\eta=1$ monitors the wavefunction.
 - The output spectrum carries a coherent line at $\Omega_R$ whose height above the floor is $4\eta$, at most four, half of it the nonclassical noise-backaction correlation.
 - The Bayesian update and the Stratonovich SDE agree as $\tau\to 0$; a naive Ito stepper that drops the $(\Delta I)^2/4S$ drift loses the entire ensemble dephasing.
+- A general (non-symmetric) detector adds a unitary, record-driven phase kick $e^{-iK\bar I\tau}$ to the coherence; it keeps every single run pure yet adds $K^2S/4$ to the dephasing, so the coherent line is really $4\tilde\eta$, at most twice the floor for a phase-preserving amplifier, and the whole measurement reads $M_{\bar I}=U_{\bar I}\sqrt{M_{\bar I}^\dagger M_{\bar I}}$.
 
-The natural continuations are the pieces this essay deliberately left out: a non-ideal detector with output-backaction correlation, a finite detector bandwidth where the qubit and the cavity field must be tracked together, measurement feedback to lock the oscillation, and two-qubit measurement-induced entanglement. Each is a small extension of the same update, and each is a door the sibling essays begin to open.
+The natural continuations are the pieces this essay deliberately left out: a finite detector bandwidth where the qubit and the cavity field must be tracked together, measurement feedback to lock the oscillation, two detectors reading non-commuting observables at once, and two-qubit measurement-induced entanglement. The finite-bandwidth and feedback pieces are still doors to open; the last two are now companion essays in their own right, `Watching-Two-Axes.md` (two non-commuting axes) and `Watching-Two-Qubits.md` (a shared parity meter). Each is a small extension of the same update.

@@ -4,7 +4,7 @@ Template: Default
 
 # Watching Two Qubits at Once: Measurement-Induced Entanglement in the Quantum-Bayesian Picture
 
-**Two qubits that never interact can be entangled by a measurement alone, if the measurement is built so it cannot tell $|01\rangle$ from $|10\rangle$. A single probe that reflects off both qubits reads out only the parity group, sorting the four computational states into three bins, $|00\rangle$, $|11\rangle$, and the odd pair, and each noisy record steers the pair stochastically into one of the three. This essay builds the two-qubit quantum-Bayesian update from the single-qubit one and runs it: we watch the odd-parity coherence ride along on the geometric mean of its two populations, exactly the single-qubit purity ride-along one level up, watch one record climb into a Bell state while its siblings collapse to a product pole, and pull the concurrence distribution out of an ensemble of records. It is bimodal, a spike at zero and a peak that presses against a sharp ceiling, and that ceiling is the closed-form maximum concurrence, the entanglement of the most fortunate record, which we recover from the simulated envelope. A final step traces the same update to the remote-qubit experiments it models and to the entanglement essay's place beside the non-commuting one.**
+**Two qubits that never interact can be entangled by a measurement alone, if the measurement is built so it cannot tell $|01\rangle$ from $|10\rangle$. A single probe that reflects off both qubits reads out only the parity group, sorting the four computational states into three bins, $|00\rangle$, $|11\rangle$, and the odd pair, and each noisy record steers the pair stochastically into one of the three. This essay builds the two-qubit quantum-Bayesian update from the single-qubit one and runs it: we watch the odd-parity coherence ride along on the geometric mean of its two populations, exactly the single-qubit purity ride-along one level up, watch one record climb into a Bell state while its siblings collapse to a product state, and pull the concurrence distribution out of an ensemble of records. It is bimodal, a spike at zero and a peak that presses against a sharp ceiling, and that ceiling is the closed-form maximum concurrence, the entanglement of the most fortunate record, which we recover from the simulated envelope. A final step traces the same update to the remote-qubit experiments it models and to the entanglement essay's place beside the non-commuting one.**
 
 Mads Bahrami (last updated: August 18, 2026)
 
@@ -16,7 +16,7 @@ In other words, I have tried to build a small laboratory for entanglement by mea
 
 The environment you see is a live Wolfram notebook. Evaluate the cells from top to bottom; the toolkit defined in the next section is used by every section that follows, so those dependencies matter. A couple of cells run small Monte-Carlo ensembles and take a few seconds. My suggestion is to focus on the output and its meaning first, then unpack the input code. You are not locked into any of it: change the rates, the step, the seed, and rerun your own experiments.
 
-This is the two-qubit door into the continuous-measurement physics of the sibling essays. The core essay `Korotkov-Quantum-Bayesian.md` builds the single-qubit Bayes kick with the coherence riding along, which we here promote to two qubits; the essay `Watching-Two-Axes.md` watches one qubit along two incompatible axes, where this essay watches two qubits along one joint parity axis. The single-qubit purity ride-along is the prerequisite: the whole entangling mechanism is that same ride-along, one level up.
+This is the two-qubit door into the continuous-measurement physics of the sibling essays. The core essay `Korotkov-Quantum-Bayesian.md` builds the single-qubit Bayes kick with the coherence riding along, which we here promote to two qubits; the essay `Watching-Two-Axes.md` watches one qubit along two incompatible axes, where this essay watches two qubits along one joint parity axis. The single-qubit purity ride-along, the way an ideal measurement leaves the coherence riding on the geometric mean of its two populations so a pure state stays pure, is the prerequisite: the whole entangling mechanism is that same ride-along, one level up.
 
 Let's start!
 
@@ -50,7 +50,7 @@ That is the entire integrator: draw which bin the record leans toward with the c
 
 ## 1. The Odd-Parity Coherence Is the Purity Ride-Along, One Level Up
 
-The whole entangling mechanism is the single-qubit purity ride-along promoted to the odd-parity subspace. In the single-qubit case, because the coherence multiplies by the geometric mean of the two population likelihoods, the ratio $|\rho_{10}|^2/(\rho_{11}\rho_{00})$ is left untouched by every ideal update, so a pure state stays pure. Here the same ratio $|\rho_{01,10}|^2/(\rho_{01,01}\rho_{10,10})$ is left untouched, so a coherent superposition inside the odd subspace stays coherent while the meter localizes the pair into that subspace. Confirm that an ideal update ($\gamma=0$) leaves the odd-parity ride-along ratio unchanged:
+The whole entangling mechanism is the single-qubit purity ride-along promoted to the odd-parity subspace. In the single-qubit case, because the coherence multiplies by the geometric mean of the two population likelihoods, the ratio $|\rho_{10}|^2/(\rho_{11}\rho_{00})$ is left untouched by every ideal update, so a pure state stays pure. Here the same ratio $|\rho_{01,10}|^2/(\rho_{01,01}\rho_{10,10})$ is left untouched, so a coherent superposition inside the odd subspace stays coherent while the meter localizes the pair into that subspace. Confirm that an ideal update ($\gamma=0$) leaves that ratio $|\rho_{01,10}|^2/(\rho_{01,01}\rho_{10,10})$ unchanged:
 
 ```wl
 FullSimplify[
@@ -62,12 +62,12 @@ The ratio is algebraically conserved, so the odd-parity coherence rides its two 
 
 ## 2. The Half-Parity Meter: Three Bins, One Protected Subspace
 
-Start the pair in a product of equal superpositions, so all four populations are $1/4$ and the odd coherence is $1/4$ as well. The meter now sorts each record into one of three bins. If the record leans to $\delta v=-\delta v$ or $+\delta v$, the pair collapses toward the product pole $|00\rangle$ or $|11\rangle$ and the odd populations drain away; if the record stays near zero, the pair is steered into the odd subspace, where the surviving coherence makes it the Bell state $(|01\rangle+|10\rangle)/\sqrt2$. Watch one record that lands in the odd bin: track its concurrence, the two even populations, and the total odd population:
+Start the pair in a product of equal superpositions, so all four populations are 1/4 and the odd coherence is 1/4 as well. The meter now sorts each record into one of three bins. If the record leans toward $-\delta v$ or $+\delta v$, the pair collapses toward the product state $|00\rangle$ or $|11\rangle$ and the odd populations drain away; if the record stays near zero, the pair is steered into the odd subspace, where the surviving coherence makes it the Bell state $(|01\rangle+|10\rangle)/\sqrt2$. Watch one record that lands in the odd bin: track its concurrence, the two even populations, and the total odd population:
 
 ```wl
 With[{dvv = 1., ss = 2., gam = 0.15, dt = 0.02, nst = 300},
  With[{tt = Range[0, 300] 0.02,
-   traj = BlockRandom[SeedRandom[7];
+   traj = BlockRandom[SeedRandom[4];
      NestList[twoQubitStep[dvv, ss, gam dt, dt], {0.25, 0.25, 0.25, 0.25, 0.25}, nst]]},
   ListLinePlot[{Transpose[{tt, concurrence /@ traj}],
     Transpose[{tt, traj[[All, 1]]}], Transpose[{tt, traj[[All, 4]]}],
@@ -78,11 +78,11 @@ With[{dvv = 1., ss = 2., gam = 0.15, dt = 0.02, nst = 300},
    PlotLabel -> "one record steered into the entangled subspace", ImageSize -> 480]]]
 ```
 
-As one can see, the two even populations drain toward zero while the odd population fills toward one, and the concurrence climbs and then eases back: the record has projected the pair into the odd subspace and the surviving coherence has become genuine entanglement. A different seed would drain the odd population instead and collapse to a product pole with zero concurrence; the outcome is stochastic, set by which bin the noisy record happens to favor, with the bin probabilities equal to the initial populations, the Born rule again.
+As one can see, the two even populations drain toward zero while the odd population fills toward one, and the concurrence climbs and then eases back: the record has projected the pair into the odd subspace and the surviving coherence has become genuine entanglement. A different seed would drain the odd population instead and collapse to a product state with zero concurrence; the outcome is stochastic, set by which bin the noisy record happens to favor, with the bin probabilities equal to the initial populations, the Born rule again.
 
 ## 3. The Sharp Ceiling: A Closed-Form Maximum Concurrence
 
-How entangled can a record make the pair, and how does that depend on when we look? Because the whole X-state is fixed by the running readout $V$ together with the initial state and the two rates, the concurrence at any time is a definite function of $V$, and it is largest for the record that sits exactly at $V=0$, the most balanced odd-bin outcome. That most-fortunate concurrence is a closed form, a race between the extra dephasing $\gamma$ that erodes the coherence and the measurement rate $\delta v^2/s$ that first builds and then over-localizes it. Encode the maximum concurrence and confirm it is the concurrence-readout relation evaluated at $V=0$:
+How entangled can a record make the pair, and how does that depend on when we look? Because the whole X-state is fixed by the running readout $V$ together with the initial state and the two rates, the concurrence at any time is a definite function of $V$, and it is largest for the record that sits exactly at $V=0$, the most balanced odd-bin outcome. That most-fortunate concurrence is a closed form, a race between the extra dephasing $\gamma$ that erodes the coherence and the measurement rate $\delta v^2/s$ that first builds and then over-localizes it. Encode the maximum concurrence and the concurrence-readout relation:
 
 ```wl
 ClearAll[cmaxCF, cOfVCF];
@@ -129,7 +129,7 @@ With[{dvv = 1., ss = 2., gam = 0.15, dt = 0.02, nst = 300, ntr = 2000},
    PlotLabel -> "bimodal: a spike at zero and a peak beneath the ceiling", ImageSize -> 460]]]
 ```
 
-The distribution is bimodal: a tall spike at zero concurrence from the records that collapsed to $|00\rangle$ or $|11\rangle$, and a separate peak of entangled outcomes that pushes up against, but never past, the ceiling. The two peaks are the two fates of the pair, a product pole or the Bell subspace, and the gap between them is why the measurement must be conditioned, kept only when the record lands in the odd bin.
+The distribution is bimodal: a tall spike at zero concurrence from the records that collapsed to $|00\rangle$ or $|11\rangle$, and a separate peak of entangled outcomes that pushes up against, but never past, the ceiling. The two peaks are the two fates of the pair, a product state or the Bell subspace, and the gap between them is why the measurement must be conditioned, kept only when the record lands in the odd bin.
 
 ## 5. What Sets the Ceiling, and Where This Update Lives
 
@@ -143,7 +143,7 @@ With[{dvv = 1., ss = 2., dt = 0.01, nst = 800},
 
 As expected, the peak concurrence falls as the extra dephasing grows: a nearly ideal channel reaches deep into the entangled regime, while a lossy one barely leaves the separable one. This is exactly the trade-off that limited the first remote-qubit experiments, where two transmons a meter apart, joined only by a coaxial cable and a shared probe, reached a peak concurrence around a third before intrinsic dephasing and the finite efficiency of the amplifier stopped the climb.
 
-The update we ran is the same one those experiments are analyzed with. Two qubits in separate cavities, probed in sequence so the signal reflects off one and then the other, are a cascaded system whose joint measurement is exactly this half-parity meter; the diagonal elements follow classical Bayes and the odd-parity coherence rides the geometric mean, which is the whole content of `twoQubitStep`. The most-likely-path analysis of the ensemble splits into three branches, the high-concurrence odd branch that hugs the ceiling and the two low-concurrence branches that collapse to the poles, matching the bimodal histogram. And the essay beside this one, `Watching-Two-Axes.md`, is the same physics seen the other way: there one qubit is watched along two incompatible axes and diffuses on a great circle; here two qubits are watched along one parity axis and are steered into a Bell state. In both, the state is moved not by any Hamiltonian but by the information a noisy record carries, folded back by Bayes' rule.
+The update we ran is the same one those experiments are analyzed with. Two qubits in separate cavities, probed in sequence so the signal reflects off one and then the other, are a cascaded system whose joint measurement is exactly this half-parity meter; the diagonal elements follow classical Bayes and the odd-parity coherence rides the geometric mean, which is the whole content of `twoQubitStep`. The most-likely-path analysis of the ensemble splits into three branches, the high-concurrence odd branch that hugs the ceiling and the two low-concurrence branches that collapse to the product states $|00\rangle$ and $|11\rangle$, matching the bimodal histogram. And the essay beside this one, `Watching-Two-Axes.md`, is the same physics seen the other way: there one qubit is watched along two incompatible axes and diffuses on a great circle; here two qubits are watched along one parity axis and are steered into a Bell state. In both, the state is moved not by any Hamiltonian but by the information a noisy record carries, folded back by Bayes' rule.
 
 ## Where This Leaves Us (and What Comes Next)
 

@@ -14,7 +14,7 @@ This essay is a computation-first tour of one qubit watched by two linear detect
 
 In other words, I have tried to build a small laboratory for simultaneous measurement of incompatible observables. I strongly believe in a computation-first narrative for learning: in a sense, if I cannot compute it, I cannot claim to understand it. The rhythm throughout is concept, then computation, then interpretation.
 
-The environment you see is a live Wolfram notebook. Evaluate the cells from top to bottom; the toolkit defined in the next section is used by every section that follows, so those dependencies matter. Two of the cells run Monte-Carlo ensembles and take a minute or two; I flag them where they appear. My suggestion is to focus on the output and its meaning first, then unpack the input code. You are not locked into any of it: change the angle, the rates, the seed, and rerun your own experiments.
+The environment you see is a live Wolfram notebook. Evaluate the cells from top to bottom; the toolkit defined in the next section is used by every section that follows, so those dependencies matter. Several cells run Monte-Carlo ensembles; the heaviest take a minute or two, and I flag them where they appear. My suggestion is to focus on the output and its meaning first, then unpack the input code. You are not locked into any of it: change the angle, the rates, the seed, and rerun your own experiments.
 
 This is the non-commuting door into the same continuous-measurement physics that the core essay, `Korotkov-Quantum-Bayesian.md`, treats for a single symmetric detector. That essay is the prerequisite: it builds the Gaussian likelihood, the Bayes kick on the populations with the coherence riding along, and the purity ride-along that we here watch break. We recall its single-axis update in Section 1 and then generalize.
 
@@ -28,7 +28,7 @@ $$ I_z(t)=\mathrm{Tr}[\sigma_z\rho(t)] + \sqrt{\tau}\,\xi_z(t), \qquad I_\varphi
 
 with $\xi_z,\xi_\varphi$ independent white noises, $\langle\xi_i(t)\,\xi_j(t')\rangle=\delta_{ij}\,\delta(t-t')$. We assume phase-sensitive amplifiers on the optimal quadrature, so there is no phase back-action, only the informational (quantum-Bayesian) kind. Two numbers per channel organize everything: the ensemble dephasing rate $\Gamma$ that measurement imposes, and the detector efficiency $\eta\in(0,1]$, related to the collapse time $\tau$ by $\eta=1/(2\tau\Gamma)$; an ideal (quantum-limited) detector has $\eta=1$, so $\tau=1/(2\Gamma)$. When we average a record over a step $\Delta t$, the reading has Gaussian window variance $D=\tau/\Delta t=1/(2\Gamma\Delta t)$ for an ideal detector. We take the two channels equally strong, $\Gamma_z=\Gamma_\varphi=\Gamma$, unless we say otherwise.
 
-Fix the two measured directions and the readouts we will plot: the angled observable $\sigma_\varphi$, the Bloch vector, the purity, and the Bloch length:
+Fix the two measured directions and the readouts we will read off: the angled observable $\sigma_\varphi$, the Bloch vector, the purity, and the Bloch length:
 
 ```wl
 ClearAll[sigmaPhi, blochVec, purity, rlen];
@@ -39,6 +39,14 @@ rlen[rho_] := Norm[blochVec[rho]]
 ```
 
 The Bloch length $|\mathbf r|=\sqrt{x^2+y^2+z^2}$ is one for a pure state and shrinks toward zero for a mixed one, so it is the single number that tells us whether the record is monitoring an actual wavefunction or only an ensemble.
+
+For a qubit the purity is the same information in another guise, $\mathrm{Tr}\,\rho^2=(1+|\mathbf r|^2)/2$, and we will read it as a ceiling set by the detector efficiency in Section 5. Confirm the two agree for any qubit:
+
+```wl
+Block[{x, y, z},
+ With[{rho = (IdentityMatrix[2] + x PauliMatrix[1] + y PauliMatrix[2] + z PauliMatrix[3])/2},
+  FullSimplify[purity[rho] == (1 + rlen[rho]^2)/2, {x, y, z} \[Element] Reals]]]
+```
 
 Now the object the whole essay turns on. Recall from the core essay that measuring a $\pm 1$-valued observable and reading $\bar I$ over a step multiplies the state, in the eigenbasis of that observable, by the square roots of the two Gaussian likelihoods. That element-wise multiplication is exactly conjugation by a single operator: a Gaussian Kraus operator that is a matrix function of the measured Pauli. Encode it, for a reading $\bar I$ of a Pauli $A$ with window variance $D$:
 
@@ -144,7 +152,7 @@ The path hugs the unit circle, wandering around it without a preferred point: th
 
 ## 4. Turning the Angle: From Collapse to Localized Diffusion to a Free Walk
 
-The angle $\varphi$ between the two watched axes tunes the whole character of the motion. At $\varphi=0$ the two detectors watch the same axis, their kicks commute (both diagonal), and the state collapses to a $z$-pole exactly as one strong measurement would. As $\varphi$ opens up, the state can no longer reach a single point, but the axes still leave an imprint: it localizes to regions near the two eigen-directions and jitters there. At $\varphi=\pi/2$ the imprint vanishes and the walk is uniform. Watch this by running an ensemble from the center for three angles and reading, at the end of each run, how far the state sits from the equator, the mean of $|z|$, keyed by the angle (this cell runs a small ensemble and takes a few seconds):
+The angle $\varphi$ between the two watched axes tunes the whole character of the motion. At $\varphi=0$ the two detectors watch the same axis, their kicks commute (both diagonal), and the state collapses to a $z$-pole exactly as one strong measurement would. As $\varphi$ opens up, the state can no longer reach a single point, but the axes still leave an imprint: it localizes to regions near the two eigen-directions and jitters there. At $\varphi=\pi/2$ the imprint vanishes and the walk is uniform. Watch this by running an ensemble from the center for three angles and reading, at the end of each run, how far the state sits from the equator, the mean of $|z|$, keyed by the angle (this cell runs a small ensemble and takes under a minute):
 
 ```wl
 With[{gm = 1., dt = 0.03, nst = 250, ntr = 200},
@@ -169,7 +177,7 @@ FullSimplify[(2 - x^2 - z^2) - 2 Abs[y] >= 0,
 
 The inequality holds everywhere and, written as $(|y|-1)^2\ge 0$, saturates only at $|y|=1$: the disturbance vanishes only if the state points fully along $y$, which is a still point for neither the $z$ nor the $x$ detector but the direction that carries zero signal in both. Away from that single unreachable direction the disturbance is strictly positive, so the state is always being kicked, and the diffusion of Section 3 is a direct consequence of the uncertainty principle rather than a numerical artifact.
 
-A real detector loses some of the information it gathers, and that loss caps how pure the state can be kept. With efficiency $\eta<1$ per channel the coherence is bled faster than the two records sharpen it, so the isotropic walk settles onto a sphere of radius less than one. The steady radius is set entirely by the efficiency. First encode the non-ideal loss as a pure-dephasing factor $e^{-\gamma\Delta t}$ on the coherence about a measured axis $A$:
+A real detector loses some of the information it gathers, and that loss caps how pure the state can be kept. With efficiency $\eta<1$ per channel the coherence is bled faster than the two records sharpen it, so the isotropic walk settles onto a mixed state whose purity sits below one. That steady purity is set entirely by the efficiency. First encode the non-ideal loss as a pure-dephasing factor $e^{-\gamma\Delta t}$ on the coherence about a measured axis $A$:
 
 ```wl
 ClearAll[dephaseAxis];
@@ -177,7 +185,7 @@ dephaseAxis[rho_, A_, gt_] := With[{p = (IdentityMatrix[2] + A)/2, q = (Identity
    p . rho . p + q . rho . q + Exp[-gt] (rho - p . rho . p - q . rho . q)]
 ```
 
-This shrinks only the part of $\rho$ that is off-diagonal in the $A$-basis, leaving the $A$-populations alone, which is exactly the information the detector gathered but failed to deliver. Now add this loss to each of the two channels after the Bayesian kick, and read the steady Bloch length for three efficiencies, keyed by $\eta$ (this cell runs a small ensemble and takes a few seconds):
+This shrinks only the part of $\rho$ that is off-diagonal in the $A$-basis, leaving the $A$-populations alone, which is exactly the information the detector gathered but failed to deliver. Now add this loss to each of the two channels after the Bayesian kick, and read the steady purity for three efficiencies, keyed by $\eta$ (this cell runs a small ensemble and takes a minute or two):
 
 ```wl
 With[{gm = 1., dt = 0.02, nst = 600, ntr = 150},
@@ -188,11 +196,11 @@ With[{gm = 1., dt = 0.02, nst = 600, ntr = 150},
      With[{step = Function[rho, dephaseAxis[dephaseAxis[measureStepNC[Pi/2, dvar][rho],
           PauliMatrix[3], gt], sigmaPhi[Pi/2], gt]]},
       Mean[Table[BlockRandom[SeedRandom[Round[1000 eta] + k];
-         rlen@Last@NestList[step, {{0.5, 0.}, {0., 0.5}}, nst]], {k, ntr}]]]],
+         purity@Last@NestList[step, {{0.5, 0.}, {0., 0.5}}, nst]], {k, ntr}]]]],
     {eta, {1., 0.64, 0.36}}]]]]
 ```
 
-As expected, the steady radius tracks $\sqrt{\eta}$: only the ideal detector holds the state on the surface, and below $\eta=1$ the isotropic walk settles onto a smaller sphere whose radius drops as the square root of the efficiency. The lost information is the gap between monitoring an actual wavefunction and monitoring only its blurred image.
+As expected, the steady purity is the ceiling the efficiency allows: only the ideal detector holds a fully pure state, and below $\eta=1$ the ceiling falls, the two records no longer able to keep the state pure. Through the identity $\mathrm{Tr}\,\rho^2=(1+|\mathbf r|^2)/2$ verified earlier, this is the same statement as the Bloch radius settling at $\sqrt{\eta}$. The lost information is the gap between monitoring an actual wavefunction and monitoring only its blurred image.
 
 ## 6. The Output Correlators and the Cosine at Zero Lag
 
@@ -255,7 +263,7 @@ With[{Gp = 1.6, Gm = 0.4, tau = 0.5, phi = Pi/2},
  Table[(2 om Sin[phi]/(Gp - Gm)) (Exp[-Gm tau] - Exp[-Gp tau]), {om, {0., 0.05}}]]
 ```
 
-With no rotation the antisymmetrized cross-correlator is zero, and with a small rotation it is nonzero and grows linearly with $\tilde\Omega_R$: averaging many records turns a small, otherwise invisible frequency mismatch into a clearly measurable difference signal. In the experiment that grounds this theory, a residual Rabi frequency of a few kilohertz riding on a forty-megahertz drive was read out this way.
+With no rotation the antisymmetrized cross-correlator is zero, and with a small rotation it is nonzero and grows linearly with $\tilde\Omega_R$: averaging many records turns a small, otherwise invisible frequency mismatch into a clearly measurable difference signal. In the experiment that grounds this theory, a small residual Rabi frequency, far below the main drive, was read out exactly this way.
 
 The whole toy has a direct afterlife. A four-qubit Bacon-Shor code measures four two-qubit gauge operators continuously, and because two pairs of them do not commute, the encoded state carries a spare degree of freedom, a gauge qubit, that is measured along two orthogonal axes at once, exactly as here: it diffuses on a great circle while the logical qubit rides untouched. The code's error syndromes are then nothing but the cross-correlators of Section 6, positive when the code is clean and flipping sign when an error moves the state to a subspace where the two watched axes have swapped orientation. The nine-qubit error-correcting version watches twelve gauge operators and reads its syndromes from triple correlators of three records at a time. The one-qubit cross-correlator we pulled out of simulated noise is, in that setting, a continuously monitored error check.
 
@@ -267,7 +275,7 @@ You now have a complete, computation-first toolkit for one qubit under two simul
 - Two axes' Kraus operators fail to commute by $2i\sinh(a/2D)\sinh(b/2D)\,\sigma_y$, inheriting $[\sigma_z,\sigma_x]=2i\sigma_y$; there is no basis diagonalizing both, hence no closed-form population update.
 - Orthogonal detectors keep a pure state pure while forcing it to diffuse on a great circle, replacing collapse with a persistent walk that never lands.
 - The angle $\varphi$ tunes the motion from collapse ($\varphi=0$) through localized diffusion to an isotropic walk ($\varphi=\pi/2$), with the Bloch length untouched throughout.
-- The measurement disturbance is bounded below by the commutator magnitude, saturating only along the unreadable $y$-direction, so the diffusion is a consequence of the uncertainty principle; efficiency $\eta<1$ caps the steady radius at $\sqrt\eta$.
+- The measurement disturbance is bounded below by the commutator magnitude, saturating only along the unreadable $y$-direction, so the diffusion is a consequence of the uncertainty principle; efficiency $\eta<1$ caps the steady purity below one, equivalently the steady Bloch radius at $\sqrt\eta$.
 - The output self- and cross-correlators are sums of exponentials with rates $\Gamma(1\mp\cos\varphi)$; at zero lag $K_{zz}=1$ and $K_{z\varphi}=\cos\varphi$, recoverable directly from simulated records.
 - The antisymmetrized cross-correlator reads a hidden slow rotation; the same cross-correlators are the error syndromes of a Bacon-Shor code whose gauge qubit is exactly this doubly-watched qubit.
 
