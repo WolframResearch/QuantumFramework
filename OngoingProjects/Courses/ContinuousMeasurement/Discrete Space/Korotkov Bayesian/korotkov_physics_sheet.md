@@ -345,3 +345,161 @@ Feedback controller (2nd channel) Delta(w_qb - w_R) = -K[Q(t)-<Q>] (LesHouches2.
 WHICH NOTATION FOR THE ESSAY: use 1111.4016's z=rho_11-rho_00, I(t)=I_c+(Delta I/2)z+xi, S single-sided,
 the rho-diag/rho-off update, and Gamma/eta/eta_tilde. Symmetric detector K=0 keeps it pure-spooky.
 Map to 0008461 (rho_11 rho_22, S_0) only when citing the exact-solution anchors.
+
+================================================================================
+### PHASE 2 EXTENSION (sibling essays). New refs under scratchpad/refs/<id>/.  ###
+================================================================================
+Read-all done for 7 more papers (non-commuting: 1702.08077, 1710.05249, 1608.06652;
+entanglement: 1402.1868, 1603.09623; QEC capstone: 1612.02096, 1910.08272). Every
+equation below carries a <file>:<line> anchor into those TeX sources.
+
+===============================================================================
+## L. Simultaneous non-commuting z-and-x Bayesian update + output correlators ##
+    (1702.08077 = XZcorr-arXiv.tex; 1710.05249 = MTC-Arxiv.tex; 1608.06652 = Hacohen-Gourgy)
+===============================================================================
+
+L0. THE SCHEME. One qubit, TWO linear detectors measuring simultaneously sigma_z and
+sigma_phi = sigma_z cos phi + sigma_x sin phi (angle phi between the two Bloch axes).
+Rabi-rotated effective qubit; phase-sensitive amp on the optimal quadrature => NO phase
+backaction (K=0), only informational backaction. Bloch rho = (1 + x sigma_x + y sigma_y + z sigma_z)/2.
+
+L1. Two output signals (XZcorr:64-69, eq:outputs-Iz/Iphi):
+  I_z(t)     = Tr[sigma_z rho]     + sqrt(tau_z) xi_z(t)
+  I_phi(t)   = Tr[sigma_phi rho]   + sqrt(tau_phi) xi_phi(t)
+  white, uncorrelated: <xi_z xi_z>=<xi_phi xi_phi>=delta(t-t'), <xi_z xi_phi>=0  (XZcorr:75)
+  tau_z, tau_phi = "measurement" (collapse) times for informational SNR=1 per channel.
+  quantum efficiencies eta_z = 1/(2 tau_z Gamma_z), eta_phi = 1/(2 tau_phi Gamma_phi) (XZcorr:92-93).
+  Experiment (Hacohen-Gourgy): eta_z=0.49, eta_phi=0.41.
+
+L2. Ito SDEs, measurement only (XZcorr:80-90, eq:Ito-x/y/z) -- THE non-commuting update:
+  x. = -Gamma_z x - Gamma_phi cos phi (x cos phi - z sin phi)
+        - tau_z^{-1/2} xz xi_z - tau_phi^{-1/2}[xz cos phi - (1-x^2) sin phi] xi_phi
+  y. = -(Gamma_z+Gamma_phi) y - tau_z^{-1/2} yz xi_z - tau_phi^{-1/2} y[z cos phi + x sin phi] xi_phi
+  z. =  Gamma_phi sin phi (x cos phi - z sin phi)
+        + tau_z^{-1/2}(1-z^2) xi_z + tau_phi^{-1/2}[(1-z^2) cos phi - xz sin phi] xi_phi
+  Derivation: single-sigma_z Ito (XZcorr:497-504), rotate to sigma_phi basis (XZcorr:507-519),
+  ADD the two channels' terms (XZcorr:526, uncorrelated noises).
+  Extra (non-measurement) evolution: H = hbar Omega_tilde_R sigma_y/2, T1/T2 decoherence (XZcorr:97-101):
+    x. += Omega_tilde_R z - gamma x, y. += -T2^{-1} y, z. += -Omega_tilde_R x - gamma z,
+    gamma = (T1^{-1}+T2^{-1})/2.
+
+L3. CLEANEST GENERAL FORM (Bloch, unital, K=0)  (MTC:94-97, eq:Bayesian-eq):
+    r. = Lambda_ens (r - r_st) + sum_ell [ n_ell - (n_ell . r) r ] / sqrt(tau_ell) * xi_ell(t)
+  n_ell = ell-th measurement axis. The back-action term [n_ell - (n_ell.r) r] pulls r toward n_ell.
+  Ensemble (Lindblad) part: L_m[rho] = sum_ell Gamma_ell [sigma_ell rho sigma_ell - rho]/2,
+  Gamma_ell = 1/(2 eta_ell tau_ell)  (MTC:104). Unital <=> r_st = 0 (MTC:106).
+
+L3b. GENERAL DENSITY-MATRIX form, arbitrary Hermitian A_ell (MTC:409,414, eq:Bayes-general/-2):
+  rho. = L[rho] + sum_ell [ A_ell rho + rho A_ell - 2 rho Tr(A_ell rho) ] / sqrt(2 S_ell) * xi_ell(t),
+  I_ell = Tr(A_ell rho) + sqrt(S_ell/2) xi_ell,  L_m = sum_ell [A_ell rho A_ell -(A_ell^2 rho+rho A_ell^2)/2]/(2 eta_ell S_ell).
+
+L4. DISCRETE KRAUS UPDATE (the implementable form; reduces to core essay's single-basis update).
+  For a measured Pauli A (eigenvalues +/-1), reading Ibar over step Dt, window variance D:
+    M(Ibar, A) = cosh(Ibar/2D) I + sinh(Ibar/2D) A        [= exp(Ibar A /2D), since A^2=I]
+    rho -> M rho M / Tr(M rho M).
+  For A=sigma_z: M diagonal, populations Bayes-update + coherence rides -> IS the core essay's bayesUpdate.
+  For TWO non-commuting A's (sigma_z, sigma_x): M_z, M_x DO NOT COMMUTE, so M_x M_z != M_z M_x and
+  there is NO closed-form population update. Carry the full 2x2 rho. Symmetric (Strang) split
+  M_z^{1/2} M_x M_z^{1/2} is 2nd-order in Dt; agrees with the Ito SDE as Dt->0.
+  (Hacohen-Gourgy measurement operator, HG:369-373, eq:XYMeasOpp: Omega(V)=exp[sum_i -(Gamma_i eta_i/2)(V_i - sigma_delta,i)^2 dt],
+   rho(t+dt)=E_{1-eta}[Omega rho Omega^dag/Tr]. Same content; the (V-A)^2 Gaussian Kraus.)
+  Honest draw: Ibar_A = RandomChoice[{(1+<A>)/2,(1-<A>)/2}->{+1,-1}] + N(0, sqrt D). D = 1/(2 Gamma Dt) ideal.
+  Two-channel SME (HG:361-365, eq:SMEFinal): drho = sum_i (Gamma_i/2) D[sigma_delta_i] rho dt + sqrt(Gamma_i eta_i/2) H[sigma_delta_i] rho dW_i.
+
+L5. QUALITATIVE DYNAMICS (Hacohen-Gourgy experiment):
+  phi=0 (commuting): standard collapse to the two z-poles.
+  0<phi<pi/2: state localizes to finite regions near +/- axes, no point collapse.
+  phi=pi/2 (orthogonal, maximally incompatible): ISOTROPIC persistent diffusion, uniform random walk
+    on the Bloch sphere, NO imprint of the axes, no collapse. Azimuthal diffusion coeff 2Gamma (great circle).
+  Steady-state radius r = sqrt(eta) for orthogonal ideal-ish detectors (HG:164); most-likely steady purity 0.89.
+  Measurement-induced disturbance / uncertainty floor (HG:169-173, eq:distmap):
+    Tr[drho^dag drho] = (Var(sigma_delta,1) Gamma_1 eta_1 + Var(sigma_delta,2) Gamma_2 eta_2) dt
+                       >= |<[sigma_delta1, sigma_delta2]>| sqrt(eta_1 eta_2 Gamma_1 Gamma_2) dt.
+    Sum-of-variances form (MacCone-Pati), never trivial for non-commuting => state must diffuse forever.
+
+L6. OUTPUT SIGNAL CORRELATORS K_ij(tau) = <I_j(t1+tau) I_i(t1)>, tau>0 (XZcorr:107-115).
+  Collapse recipe (XZcorr:117-123, 631-637): replace continuous meas at t1 by PROJECTIVE meas of sigma_i
+  (result +/-1 w.p. {1 +/- Tr[sigma_i rho(t1)]}/2, collapse to |1_i> or |0_i>), evolve rho_av (noiseless)
+  by the ensemble eqs, then measure sigma_j:
+    K_ij(tau) = Tr[sigma_j rho_av(t1+tau|1_i)](1+Tr[sigma_i rho(t1)])/2 - Tr[sigma_j rho_av(t1+tau|0_i)](1-...)/2.
+  For unital evolution simplifies to K_ij(tau)=Tr[sigma_j rho_av(tau|1_i)], INDEPENDENT of the state (XZcorr:676).
+  Closed forms (XZcorr:135-150, eq:K-zz/K-zphi/Gamma_pm):
+    K_zz(tau)  = (1/2)[1 + (Gamma_z+cos2phi Gamma_phi)/(Gp-Gm)] e^{-Gm tau}
+               + (1/2)[1 - (Gamma_z+cos2phi Gamma_phi)/(Gp-Gm)] e^{-Gp tau}
+    K_zphi(tau)= [(Gamma_z+Gamma_phi)cos phi + 2 Omega_tilde_R sin phi]/[2(Gp-Gm)] (e^{-Gm tau} - e^{-Gp tau})
+               + (cos phi/2)(e^{-Gm tau} + e^{-Gp tau})
+    Gamma_pm = [Gamma_z+Gamma_phi +/- sqrt(Gamma_z^2+Gamma_phi^2+2 Gamma_z Gamma_phi cos2phi - 4 Omega_tilde_R^2)]/2
+               + (T1^{-1}+T2^{-1})/2.
+  Rotational symmetry: K_phiphi, K_phiz from K_zz, K_zphi via Gamma_z<->Gamma_phi, phi->-phi (XZcorr:152).
+  Do NOT depend on tau_z,tau_phi (=> not on eta): non-ideal = ideal + extra output noise, only hits K_ii(0) (XZcorr:155).
+
+L7. SPECIAL CASES (XZcorr:157-166):
+  (i) small time: K_zz(+0)=1, K_zphi(0)=K_phiz(0)=cos phi. [the felt cross-correlator-at-zero payoff]
+  (iii) Omega_tilde_R=T1^{-1}=T2^{-1}=0: phi=0 full corr (K_zphi=K_zz=1); phi=pi (anti, =-1);
+        phi=pi/2 no corr (K_zphi=0), K_zz=e^{-Gamma_phi tau}, K_phiphi=e^{-Gamma_z tau}.
+  (iv) Omega_tilde_R=0: cross-correlator symmetric K_zphi=K_phiz.
+  Zeno pinning |phi|<<1: K_zphi(tau) ~ exp(-2 Gamma_jump tau), Gamma_jump=(phi^2 Gamma_z Gamma_phi + Omega_tilde_R^2)/[2(Gamma_z+Gamma_phi)]+... (XZcorr:162-165).
+  ANTISYMMETRIZED cross-correlator estimates a small residual Rabi (XZcorr:204, eq:Kzphi-antisym):
+    K_zphi(tau) - K_phiz(tau) = [2 Omega_tilde_R sin phi/(Gp-Gm)](e^{-Gm tau} - e^{-Gp tau}).  Sensitive Omega_tilde_R probe.
+  Multi-time (MTC): even-N factorizes into product of 2-time correlators (MTC:168), odd-N adds <I(t1)> (MTC:173);
+    2-time K_{ij}(t_i,t_k)=n_k[exp(int Lambda_ens) n_i] (MTC:178-180). Verified vs experiment (3-time K_phizphi, 4-time K_zphizphi).
+
+L8. CAPSTONE LINK (Mads's own line). 4-qubit Bacon-Shor code (1612.02096): the four gauge operators
+  X12,X34,Z13,Z24 continuously measured reduce to a GAUGE QUBIT under simultaneous X-and-Z measurement,
+  diffusing on the great circle (4qubit:576, 616-626), errors read from cross-correlators
+  <I_X12 I_X34>, <I_Z13 I_Z24> = exp(-2 Gamma_m|t1-t2|) (4qubit:771; same-time = +1, NOT x_g^2, XZcorr:155 physics).
+  9-qubit code (1910.08272): 12 gauge ops, 4 gauge qubits, gauge SME (main:471),
+  triple cross-correlators (main:618-635), logical error rate ~ Gamma_d^1.88, crossover Gamma_d~10^-3/tau_coll (main:1236).
+
+===============================================================================
+## M. Two-qubit measurement-induced entanglement trajectories  (1603.09623 = Chantasri; 1402.1868 = Roch) ##
+===============================================================================
+
+M0. THE SCHEME. Two remote qubits, each in its own cavity, jointly measured in a "bounce-bounce" geometry
+  so the probe reflects off cavity 1 then cavity 2. Tuned so that the phase shifts for |01> and |10> are
+  EQUAL: the joint measurement is a HALF-PARITY meter distinguishing three groups {|00>}, {|11>}, {odd = |01>,|10>}
+  but NOT within the odd subspace. Post-select the odd outcome -> Bell state (|01>+|10>)/sqrt2. No local coupling;
+  entanglement is purely measurement-induced.
+
+M1. THE TWO-QUBIT BAYESIAN UPDATE (Chantasri, Twoqubit:136, eq-bayes) -- clean generalization of the
+  single-qubit purity ride-along:
+    rho_ij(t) = rho_ij(0) sqrt( p(V_t|i) p(V_t|j) ) e^{-gamma_ij t} / sum_k rho_kk(0) p(V_t|k)
+  i,j,k in {1,2,3,4} = {|00>,|01>,|10>,|11>}. POPULATIONS Bayes-update; each COHERENCE carries the
+  GEOMETRIC MEAN sqrt(P_i P_j) of the two likelihoods, decaying by e^{-gamma_ij t}. (Same one-line N-qubit
+  "quantum Bayes" as sheet J, NONIDEA2.TEX:924-935.)
+  Gaussian likelihoods (Twoqubit:143): p(V_t|i) = (t/pi s)^{-1/2} exp{-(V_t - dv_i)^2 t/s}, s = 1/(2 eta_m),
+  eta_m ~ 0.22 (Chantasri exp). Half-parity: dv_2 ~ dv_3 ~ 0, -dv_1 ~ dv_4 ~ dv (Twoqubit:143).
+  Extra dephasing gamma_ij ~ (eta_m^{-1}-1)(dv_i-dv_j)^2/(4s) (Twoqubit:143); rho_23 = odd-parity coherence
+  survives (dv_2=dv_3 => gamma_23 minimal), all others damp fast.
+
+M2. CONCURRENCE (X-state; only rho_23 and diagonals survive) (Twoqubit:153, eq-conc0):
+    C(t) = 2 max{ 0, x_5 - sqrt(x_1 x_4) },  x_1=rho_11(=|00>), x_4=rho_44(=|11>), x_5=|rho_23|(=|rho_{01,10}|).
+  (Roch simplified concurrence, Roch:344: C = 2 max(0, |rho_{01,10}| - sqrt(rho_00,00 rho_11,11)).)
+
+M3. CONCURRENCE-READOUT CLOSED FORM, perfectly-symmetric half-parity, product-of-x-states init (Twoqubit:177, eq-conc3):
+    C_ps,x(V_t, t) = [ e^{-gamma t} - e^{-dv^2 t/s} ] / [ 1 + cosh(2 V_t dv t/s) e^{-dv^2 t/s} ].
+  MAX over readout (at V_t=0) = the sharp upper concurrence BOUND (Twoqubit:207, eq-maxconc):
+    C_max,ps,x(t) = [ e^{-gamma t} - e^{-dv^2 t/s} ] / [ 1 + e^{-dv^2 t/s} ].
+  Two competing rates: extra dephasing gamma (kills the numerator) vs measurement rate dv^2/s (grows it,
+  then the -e^{-dv^2 t/s} decays it). Rises from 0, peaks, decays. The concurrence distribution p_C,t(c) has a
+  sharp cutoff at C_max(t): entanglement cannot be created faster than this even in rare records.
+
+M4. MOST-LIKELY-PATH (Twoqubit:231-395). Log-likelihood log P = S0 - int (1/s) sum_k (v_t - dv_k)^2 x_k dt' (Twoqubit:244).
+  Optimal readout v_t is CONSTANT in time for no-drive (Twoqubit:343). THREE branches: v_t=dv_{2,3}=0 -> high-concurrence
+  (odd subspace), v_t=+/-dv -> low-concurrence (collapse to |00> or |11>). High branch analytic (Twoqubit:271-277):
+    x_{1,4} ~ x0_{1,4} e^{-dv^2 t/4s}, x_{2,3} ~ x0_{2,3}, x_5 ~ x0_5 e^{-gamma t}, norm N=(1-x0_1-x0_4)+(x0_1+x0_4)e^{-dv^2 t/4s};
+    its concurrence coincides with C_max(t). Bimodal time-to-max-concurrence.
+  PARITY-METER (full parity, distinguishes even from odd but not within) exact solutions (Twoqubit:369-395):
+    x_o(t)=x0_o e^{-lambda t}/[1 - x0_o(1-e^{-lambda t})], lambda = 2 v_t dv/s - dv^2/s; x_e=1-x_o;
+    C(t)=2 max{0, [x0_5 |e^{-(gamma+lambda)t}| - sqrt(x0_1 x0_4)]/|1-(x0_2+x0_3)(1-e^{-lambda t})|}.
+
+M5. ROCH cascaded-SME anchors (1402.1868): measurement rate Gamma_meas = (1/2) eta_meas eta_loss |alpha_in|^2 sin(2 Dphi)^2 (Roch:181).
+  Diagonal classical Bayes rho^fin_ij,ij = rho^in_ij,ij p_sel(i,j)/p_ent (Roch:406). Odd-parity coherence ride-along
+  |rho^fin_01,10| = |rho^in_01,10| sqrt(rho^fin_01,01 rho^fin_10,10)/sqrt(rho^in_01,01 rho^in_10,10) * exp[-distinguishability dephasing] (Roch:411).
+  Concurrence peaks ~0.35 in experiment (SNR-limited vs decoherence trade-off, Roch:194). eta_meas=0.4, eta_loss=0.81.
+  Cascaded (one-way) SME + polaron transformation (Roch:452-549); X-state so only rho_00,00, rho_11,11, rho_01,10 matter for C.
+
+M6. ESSAY BUILD NOTE. The two-qubit essay implements M1 directly: 4x4 rho, populations Bayes + geometric-mean
+  coherence, gamma_23 the only surviving off-diagonal decay. Recover C_max(t) (M3) from an ensemble of records;
+  show the three most-likely branches (M4); the bounded, bimodal concurrence distribution. Symmetric half-parity,
+  product-of-x init x0_i=1/4. Ideal-ish: gamma=extra dephasing knob (eta_m). Do NOT need the cavity/polaron layer.
