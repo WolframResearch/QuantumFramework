@@ -24,7 +24,7 @@ VerificationTest[
     TestID -> "Opt-gradient-descent-converges"
 ]
 
-(* SPSRGradientValues builds Exp[I phi QuantumOperator[pauli]] for its shift gate; a bare
+(* SPSRGradientValues builds MatrixExp[I phi QuantumOperator[pauli]] for its shift gate; a bare
    gate-name string in that slot degrades to Power[E, ...] and exceeds $RecursionLimit in
    the circuit-shorthand parser. For a commuting generator G = theta X ox I the two split
    evolutions merge for every sample, so each random s draw yields the same difference and
@@ -39,8 +39,9 @@ VerificationTest[
     TestID -> "Opt-SPSR-commuting-generator-exact-derivative"
 ]
 
-(* The tutorial's own generator (non-commuting theta and drift parts) on a reduced sweep:
-   the estimator must come back as numeric pairs with no messages. *)
+(* The tutorial's own generator (non-commuting theta and drift parts) on a reduced sweep of
+   exact parameter values, the same shape the default Subdivide[0, 2 Pi, 50] sweep produces:
+   the estimator must come back as numeric-theta/real-value pairs with no messages. *)
 VerificationTest[
     Module[{gen},
         gen[t1_] = Normal @ QuantumOperator[
@@ -49,8 +50,8 @@ VerificationTest[
               1.6*QuantumOperator[{"I" -> {1}, "X" -> {2}}],
             "Parameters" -> {t1}]["Matrix"];
         MatchQ[
-            SPSRGradientValues[gen, "PauliX", "ParameterValues" -> {0.3, 1.1}, "RandomNumberCount" -> 2],
-            {{_Real, _Real} ..}
+            SPSRGradientValues[gen, "PauliX", "ParameterValues" -> Subdivide[0, 2 Pi, 2], "RandomNumberCount" -> 2],
+            {{_?NumericQ, _Real} ..}
         ]
     ],
     True,
