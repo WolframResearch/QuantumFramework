@@ -299,6 +299,11 @@ MatrixInverse[matrix_] := If[
 ]
 
 
+(* A scalar base with a matrix exponent is the matrix exponential,
+   base^mat = MatrixExp[Log[base] mat]; the general rule below reads Power
+   arguments matrix-first (MatrixPower) and would compute mat^base. *)
+matrixFunction[Power, mat_, {base_}, {}, OptionsPattern[]] := MatrixExp[Log[base] mat]
+
 matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := Switch[f,
     Plus | Minus | Times | Conjugate, f[left, mat, right],
     Power, MatrixPower[mat, left, right, opts],

@@ -317,6 +317,10 @@ QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["Q
 
 QuantumOperator[q : _ ? QuantumChannelQ | _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ, opts___] := QuantumOperator[q["Operator"], opts]
 
+(* A Failure from a nested constructor propagates as-is; the diagonal catch-all
+   below would otherwise absorb it as a scalar eigenvalue. *)
+QuantumOperator[failure_Failure, ___] := failure
+
 QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ | _ ? QuantumGateQ], args___] := Enclose @
     ConfirmBy[QuantumOperator["Diagonal"[If[AtomQ[x], x, HoldForm[x]]], args], QuantumOperatorQ]
 

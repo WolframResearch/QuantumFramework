@@ -650,3 +650,85 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - irreducible shorthands"]
+
+(* An expression no shorthand pass can reduce fails loudly instead of bouncing
+   between FromOperatorShorthand's catch-all and the NumericFunction constructor
+   rule until $RecursionLimit. *)
+VerificationTest[
+    QuantumOperator[Power[QuantumOperator["I"], QuantumOperator["X"]]],
+    Failure["InvalidArguments", _],
+    {QuantumOperator::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Irreducible-operator-power-fails"
+]
+
+VerificationTest[
+    QuantumOperator[QuantumOperator["Y"] QuantumOperator["Z"]],
+    Failure["InvalidArguments", _],
+    {QuantumOperator::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Irreducible-operator-times-fails"
+]
+
+VerificationTest[
+    QuantumOperator[Sqrt[2]],
+    Failure["InvalidArguments", _],
+    {QuantumOperator::invalidArgs},
+    SameTest -> MatchQ,
+    TestID -> "Irreducible-numeric-power-fails"
+]
+
+(* A Failure produced inside a constructor chain propagates instead of being
+   absorbed as a scalar eigenvalue by the diagonal catch-all. *)
+VerificationTest[
+    QuantumOperator[Failure["InvalidName", <||>]],
+    Failure["InvalidName", <||>],
+    TestID -> "Failure-passthrough"
+]
+
+(* Numeric constants are scalar coefficients in shorthands, never lifted to
+   operators; a bare non-numeric symbol is still the scalar-eigenvalue diagonal
+   shorthand, both directly and inside a product. *)
+VerificationTest[
+    Normal[QuantumOperator[Pi "PauliX"]["Matrix"]],
+    {{0, Pi}, {Pi, 0}},
+    TestID -> "Shorthand-constant-coefficient"
+]
+
+VerificationTest[
+    Normal[QuantumOperator[E]["Matrix"]],
+    {{E, 0}, {0, E}},
+    TestID -> "Scalar-E-diagonal"
+]
+
+VerificationTest[
+    Normal[QuantumOperator[2 \[FormalX]]["Matrix"]],
+    {{2 \[FormalX], 0}, {0, 2 \[FormalX]}},
+    TestID -> "Shorthand-symbol-scalar-diagonal"
+]
+
+(* A scalar base with an operator exponent is the matrix exponential
+   base^op = MatrixExp[Log[base] op]; an operator base with a scalar exponent
+   stays MatrixPower. *)
+VerificationTest[
+    Simplify[Normal[(Power @@ {E, QuantumOperator["Z"]})["Matrix"]]],
+    {{E, 0}, {0, 1/E}},
+    TestID -> "Power-scalar-base-matrix-exponential"
+]
+
+VerificationTest[
+    Simplify[Normal[(Power @@ {2, QuantumOperator["Z"]})["Matrix"]]],
+    {{2, 0}, {0, 1/2}},
+    TestID -> "Power-integer-base-matrix-exponential"
+]
+
+VerificationTest[
+    Normal[(QuantumOperator["X"]^2)["Matrix"]],
+    {{1, 0}, {0, 1}},
+    TestID -> "Power-operator-base-matrix-power"
+]
+
+EndTestSection[]

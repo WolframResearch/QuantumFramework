@@ -47,10 +47,13 @@ controlledZGate = ReplacePart[
     ]
 ];
 
+(* A bare symbol is a symbolic scalar shorthand (a scalar-eigenvalue diagonal operator).
+   Numeric constants (E, Pi, ...) are numbers, not parameters: they stay scalar
+   coefficients, so the base of Power[E, ...] is never lifted to an operator. *)
 $ShorthandOperatorPattern =
     _Rule |
     _String |
-    _Symbol |
+    Except[_ ? NumericQ, _Symbol] |
     _SuperDagger |
     (name_String[___] /; MemberQ[$QuantumOperatorNames, name]) |
     (c : g_Symbol[___] /; ! NumericQ[c] && MemberQ[Attributes[g], NumericFunction])
@@ -948,7 +951,18 @@ QuantumOperator[name_String, opts___] /; MemberQ[$QuantumOperatorNames, name] :=
 
 QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[Unevaluated[rule]], opts]
 
-QuantumOperator[f_Symbol[args___], opts___] /; MemberQ[Attributes[f], NumericFunction] := QuantumOperator[FromOperatorShorthand[Unevaluated[f[args]]], opts]
+(* A NumericFunction expression is convertible only while some argument is an operator
+   shorthand (FromOperatorShorthand lifts one such argument per pass). With none left,
+   FromOperatorShorthand's catch-all would hand the expression straight back to this
+   constructor, so it fails loudly here instead of recursing. *)
+QuantumOperator[expr : f_Symbol[___], opts___] /;
+    MemberQ[Attributes[f], NumericFunction] && MatchQ[Unevaluated[expr], _[___, $ShorthandOperatorPattern, ___]] :=
+    QuantumOperator[FromOperatorShorthand[Unevaluated[expr]], opts]
+
+QuantumOperator[expr : f_Symbol[___], ___] /; MemberQ[Attributes[f], NumericFunction] := (
+    Message[QuantumOperator::invalidArgs, Defer[expr]];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::invalidArgs, "MessageParameters" :> {Defer[expr]}|>]
+)
 
 QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | (name_String | name_String[___] /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
     Enclose @ QuantumOperator[
