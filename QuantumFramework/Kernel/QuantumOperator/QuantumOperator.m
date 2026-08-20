@@ -551,6 +551,31 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
     opts
 ]
 
+(* A scalar base with an endomorphism exponent is the matrix exponential,
+   base^op = MatrixExp[Log[base] op]; the general rule below reads Power
+   arguments matrix-first (MatrixPower) and would compute op^base. The base
+   must be a nonzero scalar (zero keeps the generic reading, its Log is
+   singular), never an array container or a quantum object, and the exponent
+   must map its own space to itself, or powers of it are not summable. *)
+scalarPowerBaseQ[base_] :=
+    ! TrueQ[PossibleZeroQ[base]] &&
+    FreeQ[base,
+        _ ? ArrayContainerQ | _ ? QuantumFrameworkOperatorQ |
+        _QuantumState | _QuantumMeasurement | _QuantumBasis | _QuditBasis | _QuditName |
+        _Failure | _String | _List
+    ]
+
+QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /;
+    qo["SquareQ"] && qo["Input"]["Dual"] === qo["Output"] := Enclose @ With[{
+    op = qo["Sort"]
+},
+    matrixOperator[
+        op,
+        ConfirmBy[MatrixExp[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
+        "Label" -> If[op["Label"] === None, None, Power[base, op["Label"]]]
+    ]
+]
+
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
     op = qo["Sort"]
 },

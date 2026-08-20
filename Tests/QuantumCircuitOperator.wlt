@@ -675,35 +675,83 @@ EndTestSection[]
 
 BeginTestSection["QuantumCircuitOperator - Exp shorthand element"]
 
-(* Exp[I phi "PauliX"] degrades to Power[E, Times[I, "PauliX", phi]] before the
-   parser sees it: the string lifts to the X operator, phi stays a scalar
-   coefficient, and the scalar-base power is the matrix exponential, so the
-   element is the one-parameter group element Exp[I phi X]. *)
+(* Exp[I p gen] degrades to Power[E, Times[I, gen, p]] before the parser sees
+   it: the string lifts to an operator, p stays a scalar coefficient, and the
+   scalar-base power is the matrix exponential. *)
+shorthandElement[gen_, p_] := Normal[First[QuantumCircuitOperator[{Exp[I p gen]}, "Parameters" -> {p}]["Operators"]]["Matrix"]]
+
+(* The independent closed form follows from X^2 = 1. *)
 VerificationTest[
-    With[{qc = QuantumCircuitOperator[{Exp[I \[FormalPhi] "PauliX"]}, "Parameters" -> {\[FormalPhi]}]},
-        Simplify[Normal[First[qc["Operators"]]["Matrix"]] - MatrixExp[I \[FormalPhi] PauliMatrix[1]]]
-    ],
+    Simplify[shorthandElement["PauliX", \[FormalPhi]] - (Cos[\[FormalPhi]] IdentityMatrix[2] + I Sin[\[FormalPhi]] PauliMatrix[1])],
     {{0, 0}, {0, 0}},
     TestID -> "Exp-string-shorthand-element"
 ]
 
-(* Regular at the vanishing angle, and numerically the matrix exponential. *)
+(* The series at vanishing angle recovers identity plus I phi times the
+   generator: the element is regular there with the right first order. *)
 VerificationTest[
-    With[{mat = Simplify[Normal[First[QuantumCircuitOperator[{Exp[I \[FormalTheta] "PauliZ"]}, "Parameters" -> {\[FormalTheta]}]["Operators"]]["Matrix"]]]},
-        {mat /. \[FormalTheta] -> 0, Norm[(mat /. \[FormalTheta] -> 0.7) - MatrixExp[0.7 I PauliMatrix[3]]] < 1*^-12}
+    Normal[Series[Simplify[shorthandElement["PauliX", \[FormalPhi]]], {\[FormalPhi], 0, 1}]],
+    IdentityMatrix[2] + I \[FormalPhi] Normal[PauliMatrix[1]],
+    TestID -> "Exp-string-shorthand-generator-series"
+]
+
+(* Exact at a rational angle, and numerically matched against an independent
+   truncated exponential series rather than MatrixExp itself. *)
+VerificationTest[
+    With[{m = Simplify[shorthandElement["PauliZ", \[FormalTheta]]]},
+        {
+            Simplify[(m /. \[FormalTheta] -> 7/10) - MatrixExp[(7/10) I PauliMatrix[3]]],
+            Norm[(m /. \[FormalTheta] -> 0.7) - Sum[MatrixPower[0.7 I Normal[PauliMatrix[3]], k]/k!, {k, 0, 40}]] < 1*^-12
+        }
     ],
-    {{{1, 0}, {0, 1}}, True},
-    TestID -> "Exp-string-shorthand-regular-and-numeric"
+    {{{0, 0}, {0, 0}}, True},
+    TestID -> "Exp-string-shorthand-exact-and-reference"
+]
+
+(* The entangling generator Z ox Z: the element is the diagonal one-parameter
+   group, and at phi = Pi/4 it takes the product state |++> to a maximally
+   entangled state (reduced purity 1/2). *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{Exp[I \[FormalPhi] "ZZ"]}, "Parameters" -> {\[FormalPhi]}]},
+        {
+            Simplify[shorthandElement["ZZ", \[FormalPhi]] - DiagonalMatrix[Exp[I \[FormalPhi] {1, -1, -1, 1}]]],
+            Simplify[QuantumPartialTrace[qc[<|\[FormalPhi] -> Pi/4|>][QuantumState["++"]], {2}]["Purity"]]
+        }
+    ],
+    {ConstantArray[0, {4, 4}], 1/2},
+    TestID -> "Exp-string-shorthand-entangling"
+]
+
+(* CHARACTERIZATION (known limitation, tracked): the Exp-of-operator route,
+   QuantumOperator[Exp[I phi QuantumOperator["PauliX"]]], keeps the baseline
+   eigendecomposition closed form, which is 0/0 at exactly phi = 0; its limit
+   is the identity, and the string route above is regular there directly. *)
+VerificationTest[
+    Simplify[Limit[Normal[QuantumOperator[Exp[I \[FormalPhi] QuantumOperator["PauliX"]]]["Matrix"]], \[FormalPhi] -> 0]],
+    IdentityMatrix[2],
+    TestID -> "Exp-operator-route-limit-at-zero"
 ]
 
 (* An element neither evaluation nor a shorthand pass can reduce fails loudly
    instead of hitting $RecursionLimit; the circuit wraps the inner
-   InvalidArguments failure through its own Confirm layers. *)
+   InvalidArguments failure through its own Confirm layers, and the failure is
+   not memoized, so the cache never swallows the message on a repeat (the
+   kernel's usual three-print repeat limit still applies). *)
 VerificationTest[
     FailureQ[QuantumCircuitOperator[{Power[QuantumOperator["H"], QuantumOperator["T"]]}]],
     True,
     {QuantumOperator::invalidArgs},
     TestID -> "Irreducible-element-fails"
+]
+
+VerificationTest[
+    FailureQ /@ {
+        QuantumCircuitOperator[{Power[QuantumOperator["S"], QuantumOperator["V"]]}],
+        QuantumCircuitOperator[{Power[QuantumOperator["S"], QuantumOperator["V"]]}]
+    },
+    {True, True},
+    {QuantumOperator::invalidArgs, QuantumOperator::invalidArgs},
+    TestID -> "Irreducible-element-failure-not-memoized"
 ]
 
 EndTestSection[]

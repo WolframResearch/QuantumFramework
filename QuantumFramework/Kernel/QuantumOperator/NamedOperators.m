@@ -47,6 +47,8 @@ controlledZGate = ReplacePart[
     ]
 ];
 
+numericFunctionQ[f_Symbol] := MemberQ[Attributes[f], NumericFunction]
+
 (* A bare symbol is a symbolic scalar shorthand (a scalar-eigenvalue diagonal operator).
    Numeric constants (E, Pi, ...) are numbers, not parameters: they stay scalar
    coefficients, so the base of Power[E, ...] is never lifted to an operator. *)
@@ -56,13 +58,13 @@ $ShorthandOperatorPattern =
     Except[_ ? NumericQ, _Symbol] |
     _SuperDagger |
     (name_String[___] /; MemberQ[$QuantumOperatorNames, name]) |
-    (c : g_Symbol[___] /; ! NumericQ[c] && MemberQ[Attributes[g], NumericFunction])
+    (c : g_Symbol[___] /; ! NumericQ[c] && numericFunctionQ[g])
 
 FromOperatorShorthand[f_Symbol[
     left___,
     op : $ShorthandOperatorPattern,
     right___]
-] /; MemberQ[Attributes[f], NumericFunction] := 
+] /; numericFunctionQ[f] :=
     Enclose @ With[{qo = ConfirmBy[QuantumOperator[Unevaluated[op]], QuantumOperatorQ]},
         If[MatchQ[f, Times], f[left, qo, right], FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 ]
@@ -955,14 +957,23 @@ QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[
    shorthand (FromOperatorShorthand lifts one such argument per pass). With none left,
    FromOperatorShorthand's catch-all would hand the expression straight back to this
    constructor, so it fails loudly here instead of recursing. *)
-QuantumOperator[expr : f_Symbol[___], opts___] /;
-    MemberQ[Attributes[f], NumericFunction] && MatchQ[Unevaluated[expr], _[___, $ShorthandOperatorPattern, ___]] :=
+QuantumOperator[expr : (f_Symbol ? numericFunctionQ)[___], opts___] /;
+    MatchQ[Unevaluated[expr], _[___, $ShorthandOperatorPattern, ___]] :=
     QuantumOperator[FromOperatorShorthand[Unevaluated[expr]], opts]
 
-QuantumOperator[expr : f_Symbol[___], ___] /; MemberQ[Attributes[f], NumericFunction] := (
-    Message[QuantumOperator::invalidArgs, Defer[expr]];
-    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::invalidArgs, "MessageParameters" :> {Defer[expr]}|>]
-)
+(* A fully numeric compound (Pi/2, Sqrt[2], 1 + Pi, E^2) is a scalar, and builds the
+   same scalar-eigenvalue diagonal operator an atomic scalar does. *)
+QuantumOperator[expr : (f_Symbol ? numericFunctionQ)[___], opts___] /; NumericQ[Unevaluated[expr]] :=
+    QuantumOperator["Diagonal"[expr], opts]
+
+(* Operators inside the reported expression show as their labels; splatting the
+   full internal state into the message buries the shape of the bad input. *)
+QuantumOperator[expr : (f_Symbol ? numericFunctionQ)[___], ___] := With[{
+    shown = HoldForm[Evaluate[expr /. qo_QuantumOperator :> qo["Label"]]]
+},
+    Message[QuantumOperator::invalidArgs, shown];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumOperator::invalidArgs, "MessageParameters" :> {shown}|>]
+]
 
 QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | (name_String | name_String[___] /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
     Enclose @ QuantumOperator[

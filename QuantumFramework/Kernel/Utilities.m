@@ -299,11 +299,6 @@ MatrixInverse[matrix_] := If[
 ]
 
 
-(* A scalar base with a matrix exponent is the matrix exponential,
-   base^mat = MatrixExp[Log[base] mat]; the general rule below reads Power
-   arguments matrix-first (MatrixPower) and would compute mat^base. *)
-matrixFunction[Power, mat_, {base_}, {}, OptionsPattern[]] := MatrixExp[Log[base] mat]
-
 matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := Switch[f,
     Plus | Minus | Times | Conjugate, f[left, mat, right],
     Power, MatrixPower[mat, left, right, opts],
@@ -395,7 +390,10 @@ Memoize[f_ ? Developer`SymbolQ, opts : OptionsPattern[]] := With[{g = Unique[f],
                         If[ ! MissingQ[hit] && First[hit] === held,
                             Last[hit],
                             With[{res = g[args]},
-                                If[ TrueQ[cacheQ[args]], cache[key] = {held, res}];
+                                (* a failed result (Failure, $Failed, or an abort) is
+                                   never cached: its Message side effects would be
+                                   swallowed on a hit, and an abort is not an answer *)
+                                If[ TrueQ[cacheQ[args]] && ! FailureQ[res], cache[key] = {held, res}];
                                 res
                             ]
                         ]

@@ -656,9 +656,9 @@ BeginTestSection["QuantumOperator - irreducible shorthands"]
 
 (* An expression no shorthand pass can reduce fails loudly instead of bouncing
    between FromOperatorShorthand's catch-all and the NumericFunction constructor
-   rule until $RecursionLimit. *)
+   rule until $RecursionLimit; the message shows operators as their labels. *)
 VerificationTest[
-    QuantumOperator[Power[QuantumOperator["I"], QuantumOperator["X"]]],
+    QuantumOperator[QuantumOperator["I"]^QuantumOperator["X"]],
     Failure["InvalidArguments", _],
     {QuantumOperator::invalidArgs},
     SameTest -> MatchQ,
@@ -673,12 +673,12 @@ VerificationTest[
     TestID -> "Irreducible-operator-times-fails"
 ]
 
+(* A fully numeric scalar, atomic or compound, builds the scalar-eigenvalue
+   diagonal operator. *)
 VerificationTest[
-    QuantumOperator[Sqrt[2]],
-    Failure["InvalidArguments", _],
-    {QuantumOperator::invalidArgs},
-    SameTest -> MatchQ,
-    TestID -> "Irreducible-numeric-power-fails"
+    Normal[QuantumOperator[#]["Matrix"]] & /@ {Sqrt[2], Pi/2, 1 + Pi, E, E^2},
+    # IdentityMatrix[2] & /@ {Sqrt[2], Pi/2, 1 + Pi, E, E^2},
+    TestID -> "Numeric-scalar-diagonal-family"
 ]
 
 (* A Failure produced inside a constructor chain propagates instead of being
@@ -690,18 +690,12 @@ VerificationTest[
 ]
 
 (* Numeric constants are scalar coefficients in shorthands, never lifted to
-   operators; a bare non-numeric symbol is still the scalar-eigenvalue diagonal
-   shorthand, both directly and inside a product. *)
+   operators; a bare non-numeric symbol is the scalar-eigenvalue shorthand,
+   directly and inside a product. *)
 VerificationTest[
     Normal[QuantumOperator[Pi "PauliX"]["Matrix"]],
     {{0, Pi}, {Pi, 0}},
     TestID -> "Shorthand-constant-coefficient"
-]
-
-VerificationTest[
-    Normal[QuantumOperator[E]["Matrix"]],
-    {{E, 0}, {0, E}},
-    TestID -> "Scalar-E-diagonal"
 ]
 
 VerificationTest[
@@ -710,25 +704,158 @@ VerificationTest[
     TestID -> "Shorthand-symbol-scalar-diagonal"
 ]
 
-(* A scalar base with an operator exponent is the matrix exponential
-   base^op = MatrixExp[Log[base] op]; an operator base with a scalar exponent
-   stays MatrixPower. *)
+(* A nonzero scalar base with an endomorphism exponent is the one-parameter
+   group element base^A = Exp[Log[base] A]; an operator base with a scalar
+   exponent stays MatrixPower; the unit base is Exp[0 A], the identity. *)
 VerificationTest[
-    Simplify[Normal[(Power @@ {E, QuantumOperator["Z"]})["Matrix"]]],
-    {{E, 0}, {0, 1/E}},
+    {Simplify[Normal[(E^QuantumOperator["Z"])["Matrix"]]],
+     Simplify[Normal[(2^QuantumOperator["Z"])["Matrix"]]]},
+    {{{E, 0}, {0, 1/E}}, {{2, 0}, {0, 1/2}}},
     TestID -> "Power-scalar-base-matrix-exponential"
 ]
 
 VerificationTest[
-    Simplify[Normal[(Power @@ {2, QuantumOperator["Z"]})["Matrix"]]],
-    {{2, 0}, {0, 1/2}},
-    TestID -> "Power-integer-base-matrix-exponential"
+    FullSimplify[
+        Normal[(\[FormalB]^QuantumOperator["PauliX"])["Matrix"]] -
+        (Cosh[Log[\[FormalB]]] IdentityMatrix[2] + Sinh[Log[\[FormalB]]] PauliMatrix[1])
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Power-symbolic-base-closed-form"
+]
+
+(* The same symbolic base across Hilbert-space dimensions: b^diag(0..d-1) is
+   diag(b^0, ..., b^(d-1)) for every d. *)
+VerificationTest[
+    Table[Simplify[Normal[(\[FormalB]^QuantumOperator[DiagonalMatrix[Range[0, d - 1]], d])["Matrix"]] - DiagonalMatrix[\[FormalB]^Range[0, d - 1]]], {d, 2, 6}],
+    Table[ConstantArray[0, {d, d}], {d, 2, 6}],
+    TestID -> "Power-symbolic-base-dimension-family"
 ]
 
 VerificationTest[
     Normal[(QuantumOperator["X"]^2)["Matrix"]],
     {{1, 0}, {0, 1}},
     TestID -> "Power-operator-base-matrix-power"
+]
+
+VerificationTest[
+    Normal[(1^QuantumOperator["Z"])["Matrix"]],
+    {{1, 0}, {0, 1}},
+    TestID -> "Power-unit-base-identity"
+]
+
+(* CHARACTERIZATION (contract boundary, not an endorsement): a zero base, a
+   frame-mismatched square operator (not an endomorphism), and a non-square
+   exponent all keep the generic reading, which is matrix-first: it computes
+   op^base where the user wrote base^op, so 0^Z and 2^(non-endomorphism) both
+   come back as the identity, op to the power zero or two. *)
+VerificationTest[
+    Normal[(0^QuantumOperator["Z"])["Matrix"]],
+    {{1, 0}, {0, 1}},
+    TestID -> "Power-zero-base-generic-reading"
+]
+
+VerificationTest[
+    With[{mm = QuantumOperator[PauliMatrix[3], QuantumBasis[QuditBasis["PauliX"], QuditBasis[2]]]},
+        Normal[(2^mm)["Matrix"]]
+    ],
+    {{1, 0}, {0, 1}},
+    TestID -> "Power-non-endomorphism-generic-reading"
+]
+
+VerificationTest[
+    FailureQ[2^QuantumOperator["Cup"]],
+    True,
+    {MatrixPower::matsq},
+    TestID -> "Power-nonsquare-exponent-generic-failure"
+]
+
+(* The exponential of I times a general Hermitian generator is unitary; the
+   commuting family satisfies the group law; a non-commuting pair breaks it at
+   exactly the commutator term of second order. *)
+VerificationTest[
+    With[{u = Normal[(E^(I QuantumOperator[\[FormalA] "PauliX" + \[FormalB] "PauliY" + \[FormalC] "PauliZ"]))["Matrix"]]},
+        FullSimplify[ConjugateTranspose[u] . u, Element[\[FormalA] | \[FormalB] | \[FormalC], Reals]]
+    ],
+    IdentityMatrix[2],
+    TestID -> "Power-exponential-unitary-general-generator"
+]
+
+VerificationTest[
+    With[{
+        ua = Normal[(E^(I \[FormalA] QuantumOperator["PauliX"]))["Matrix"]],
+        ub = Normal[(E^(I \[FormalB] QuantumOperator["PauliX"]))["Matrix"]],
+        uab = Normal[(E^(I (\[FormalA] + \[FormalB]) QuantumOperator["PauliX"]))["Matrix"]]
+    },
+        FullSimplify[ua . ub - uab]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Power-exponential-group-law"
+]
+
+VerificationTest[
+    With[{
+        ea = Normal[(E^(I \[FormalE] QuantumOperator["PauliX"]))["Matrix"]],
+        eb = Normal[(E^(I \[FormalE] QuantumOperator["PauliZ"]))["Matrix"]],
+        eab = Normal[(E^(I \[FormalE] QuantumOperator["PauliX" + "PauliZ"]))["Matrix"]],
+        px = Normal[PauliMatrix[1]], pz = Normal[PauliMatrix[3]]
+    },
+        Normal[Series[ea . eb - eab - (1/2) (I \[FormalE])^2 (px . pz - pz . px), {\[FormalE], 0, 2}]]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "Power-exponential-noncommuting-BCH"
+]
+
+(* A nilpotent generator is the case an eigendecomposition route gets wrong;
+   MatrixExp handles the defective matrix exactly. *)
+VerificationTest[
+    Normal[(E^QuantumOperator[{{0, 1}, {0, 0}}])["Matrix"]],
+    {{1, 1}, {0, 1}},
+    TestID -> "Power-nilpotent-generator"
+]
+
+(* The SU(2) sign: a 2 Pi rotation is -1, only the 4 Pi rotation is the
+   identity. An elementwise misreading of the exponential cannot produce it. *)
+VerificationTest[
+    {Simplify[Normal[(E^(I Pi QuantumOperator["PauliX"]))["Matrix"]]],
+     Simplify[Normal[(E^(2 I Pi QuantumOperator["PauliX"]))["Matrix"]]]},
+    {-IdentityMatrix[2], IdentityMatrix[2]},
+    TestID -> "Power-exponential-su2-sign"
+]
+
+(* A non-diagonal qutrit generator with a degenerate spectrum containing zero:
+   E^(-I theta Jy) at spin 1 is the Wigner small-d matrix. *)
+VerificationTest[
+    With[{jy = QuantumOperator[{{0, -I, 0}, {I, 0, -I}, {0, I, 0}}/Sqrt[2], 3]},
+        FullSimplify[
+            Normal[(E^(-I \[FormalT] jy))["Matrix"]] -
+            {{(1 + Cos[\[FormalT]])/2, -Sin[\[FormalT]]/Sqrt[2], (1 - Cos[\[FormalT]])/2},
+             {Sin[\[FormalT]]/Sqrt[2], Cos[\[FormalT]], -Sin[\[FormalT]]/Sqrt[2]},
+             {(1 - Cos[\[FormalT]])/2, Sin[\[FormalT]]/Sqrt[2], (1 + Cos[\[FormalT]])/2}}
+        ]
+    ],
+    ConstantArray[0, {3, 3}],
+    TestID -> "Power-spin1-wigner-d"
+]
+
+(* Symbolic base and symbolic angle together: b^(t A) = Exp[t Log[b] A]. *)
+VerificationTest[
+    FullSimplify[
+        Normal[(\[FormalB]^(\[FormalT] QuantumOperator["PauliX"]))["Matrix"]] -
+        (Cosh[\[FormalT] Log[\[FormalB]]] IdentityMatrix[2] + Sinh[\[FormalT] Log[\[FormalB]]] PauliMatrix[1])
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Power-symbolic-base-and-angle"
+]
+
+(* A two-qubit operator on genuinely non-contiguous wires, checked against the
+   involutive closed form b^A = ((b + 1/b)/2) Id + ((b - 1/b)/2) A for A^2 = Id,
+   independent of MatrixExp. *)
+VerificationTest[
+    With[{c = QuantumOperator["CNOT", {3, 1}]},
+        {Simplify[Normal[(2^c)["Matrix"]] - ((5/4) IdentityMatrix[4] + (3/4) Normal[c["Matrix"]])], (2^c)["Order"]}
+    ],
+    {ConstantArray[0, {4, 4}], {{1, 3}, {1, 3}}},
+    TestID -> "Power-two-qubit-nonadjacent-order"
 ]
 
 EndTestSection[]
