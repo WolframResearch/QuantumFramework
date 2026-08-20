@@ -503,3 +503,296 @@ M6. ESSAY BUILD NOTE. The two-qubit essay implements M1 directly: 4x4 rho, popul
   coherence, gamma_23 the only surviving off-diagonal decay. Recover C_max(t) (M3) from an ensemble of records;
   show the three most-likely branches (M4); the bounded, bimodal concurrence distribution. Symmetric half-parity,
   product-of-x init x0_i=1/4. Ideal-ish: gamma=extra dephasing knob (eta_m). Do NOT need the cavity/polaron layer.
+
+===============================================================================
+## Experimental Anchors (grounded from full-text arXiv reads)
+===============================================================================
+Each subsection below was extracted from the TeX source under scratchpad/korotkov_refs/<id>/,
+read end to end (main text AND supplement). Anchors are <file>:<line> into those sources plus the
+paper's own equation/section labels. Numbers are quoted as the paper states them (with units). All
+five e-prints came down as TeX tarballs (no PDF fallback). NOTE: 1612.02096 is a THEORY paper
+(analytics + Monte Carlo), not a lab experiment; it is anchored here for its formal reduction and
+its stated results, not for a measured number.
+
+-------------------------------------------------------------------------------
+### N1. 1305.7270  Murch-Weber-Macklin-Siddiqi (single-qubit trajectories)
+-------------------------------------------------------------------------------
+K. W. Murch, S. J. Weber, C. Macklin, I. Siddiqi, "Observing single quantum trajectories of a
+superconducting qubit", Nature 502, 211 (2013). arXiv:1305.7270.
+(main = sqwm_v5_arxiv.tex; supplement = z_sqwm_sup.tex)
+
+SETUP. 3D transmon dispersively coupled to a copper waveguide cavity, H_int = -hbar chi a+a sigma_z
+(sqwm:75). A near-quantum-limited lumped-element Josephson parametric amplifier (LJPA) run
+phase-sensitively amplifies ONE quadrature of the reflected tone and de-amplifies the other, so the
+experimenter chooses WHICH backaction the qubit feels. Two choices:
+  "Z-measurement": amplify the quadrature carrying qubit-state info (the state-dependent cavity phase
+     shift). State is driven toward the poles/eigenstates; trajectory rides a MERIDIAN of the Bloch
+     sphere (sqwm:78,107; z^Z=tanh, x^Z=sqrt(1-z^2), Fig.3a,b).
+  "phi-measurement": amplify the quadrature carrying intracavity photon-number info (amplitude). The
+     superposition phase diffuses (AC-Stark), no projection; trajectory confined to the EQUATOR
+     (sqwm:78,170). Physical-quadrature identity: qubit-state info sits in the quadrature IN
+     QUADRATURE with the input tone, photon-number info sits IN PHASE with it (sqwm:75). Abstract's
+     compressed wording: "selectively measure either the phase or amplitude of the cavity field, and
+     thereby confine trajectories to either the equator or a meridian" (sqwm:57).
+Bayesian update: z^Z = tanh(V_m S / 2 Delta V), x^Z = sqrt(1-(z^Z)^2) e^{-gamma tau}  (sqwm:117, eq:zz);
+  x^phi = cos(S V_m/(2 Delta V)) e^{-gamma tau}, y^phi = -sin(S V_m/(2 Delta V)) e^{-gamma tau} (sqwm:130-131).
+
+NUMBERS (with anchors):
+- Quantum efficiency eta = 0.49, from linear fit of S vs nbar (sqwm:119, also 145,176; Fig.1e inset).
+  Decomposed eta = eta_col * eta_amp, eta_col = 0.72 (collection), eta_amp = 0.68 (amplifier) [z_sqwm_sup:140].
+  "among the highest reported for a continuous variable" (sqwm:176).
+- Dimensionless measurement strength S = 64 tau chi^2 nbar eta / kappa = Delta V^2 / sigma^2 (SNR) (sqwm:119).
+- Dephasing rate gamma = 8 chi^2 nbar (1-eta)/kappa + 1/T_2* ; first term = measurement-induced dephasing
+  from the 1-eta undetected fraction (sqwm:122).
+- Dispersive coupling chi/2pi = -0.49 MHz; cavity decay kappa/2pi = 10.8 MHz (Fig.1 caption, sqwm:67).
+  (A commented Methods draft line lists -0.52 MHz; the live Fig.1 value is -0.49 MHz.)
+- LJPA: 10 dB gain, 20 MHz instantaneous bandwidth; two-junction SQUID from 2 uA junctions, 3 pF shunt;
+  pumped by sidebands +/-300 MHz about cavity (sqwm:67,182).
+- Qubit: E_c/h = 200 MHz, E_J/h = 11 GHz, omega_q/2pi = 3.999 GHz; cavity 6.8316 GHz; T_2* = 20 us (sqwm:122,180).
+- Weak-measurement window: integrate V_m for 1.8 us; trajectory time step tau_{i+1}-tau_i = 16 ns;
+  ~10^5 repetitions per point (sqwm:107,144,164).
+- Herald/tomography readout S = 42, 800 ns; pi/2 rotation 16 ns; readout fidelity 95%; ~4% of shots
+  outside {|0>,|1>} discarded (sqwm:184).
+- TOMOGRAPHIC VALIDATION: tomographically reconstructed <sigma_i> vs V_m match theory with eta=0.49 for
+  both Z (nbar=0.4, S=3.15) and phi (nbar=0.46, S=3.62) measurements, "excellent agreement" (sqwm:144-145,
+  Fig.2c,d); single-shot reconstructed trajectories track the tomographic ensemble (Fig.3).
+- EPR-steering witness S^{Z,phi} = <z^Z>^2 + <x^phi>^2 + <y^phi>^2 <= 1; experiment gives ~0.8; 1.4 dB
+  loss between cavity port and amp; eta_amp>0.5 => most backaction is quadrature-dependent (z_sqwm_sup:136-140).
+grounds: single-qubit core (essay Sections 3-6) and the Section-8 informational-vs-phase quadrature split
+  (Z-measurement = pure informational backaction on a meridian; phi-measurement = phase backaction on the equator).
+
+-------------------------------------------------------------------------------
+### N2. 1402.1868  Roch et al. (remote measurement-induced entanglement)
+-------------------------------------------------------------------------------
+N. Roch, M. E. Schwartz, F. Motzoi, C. Macklin, R. Vijay, A. W. Eddins, A. N. Korotkov, K. B. Whaley,
+M. Sarovar, I. Siddiqi, "Observation of measurement-induced entanglement and quantum trajectories of
+remote superconducting qubits", Phys. Rev. Lett. 112, 170501 (2014). arXiv:1402.1868.
+(measurement-based-entanglement-V2.tex; main + Supplemental Material read in full)
+
+SETUP. Two 3D-transmon qubits, each in its own copper cavity, connected via two microwave circulators
+and 1.3 meters of ordinary coaxial cable so a probe reflects off cavity 1 THEN cavity 2 (cascaded /
+"bounce-bounce", meas:148,150,565). Single-qubit reflection coefficient r^+/- (meas:158). Engineer the
+cavities/dispersive shifts so the RELATIVE phase shifts match, Delta_phi_1 = Delta_phi_2: then |01> and
+|10> acquire the SAME phase shift delta_1+delta_2 and become indistinguishable, while |00>,|11| stay
+separable = a HALF-PARITY meter (meas:161,163). Post-select the odd-parity outcome -> Bell state
+(|01>+|10>)/sqrt2. Homodyne via a phase-sensitive LJPA. Validated Fig.2b: |00>,|11> histograms well
+separated, |01>,|10> fully overlapping.
+
+NUMBERS (with anchors):
+- Physical separation: 1.3 meters of coaxial cable between the two cavities (meas:148,150,565).
+- PEAK CONCURRENCE = 0.35, reached at intermediate t_m where the SNR-improvement rate ~ Gamma_loss
+  (meas:194). "comparable to optical remote-entanglement; but the creation RATE is orders of magnitude
+  higher, Gamma_creation/2pi = 1 kHz" (meas:194). Models predict ~70% is reachable with better hardware (meas:196).
+- Measurement efficiency eta_meas = 0.4 +/- 0.10 (meas:161,394; Table S1, meas:634).
+- Inter-cavity power-transfer efficiency eta_loss ~ 0.81 +/- 0.05 (main text meas:161; Table S1 meas:633).
+  [The Simplified-Theory section rounds it to 0.75 in prose (meas:394); the calibrated value is 0.81 +/- 0.05.]
+- Entanglement-generation rate Gamma_meas = (1/2) eta_meas eta_loss |alpha_in|^2 sin(2 Delta_phi)^2 (meas:181, Eq.3).
+  nbar_1 = 1.2 => Gamma_meas/2pi ~ 210 kHz, tau_meas = 1/Gamma_meas ~ 750 ns (meas:184).
+- SNR ~ 2|alpha_in| sin(2 Delta_phi) sqrt(eta_loss eta_meas t_m) (meas:189, Eq.5).
+- Loss-induced dephasing of qubit 1: Gamma_loss ~ 2(1-eta_loss)|alpha_in|^2 sin(Delta_phi)^2 (meas:193, Eq.6).
+- Three regimes vs t_m: SNR-dominated t_m < 0.75 tau_meas; stabilization 0.75-1.25 tau_meas; decoherence
+  decay t_m > 1.25 tau_meas (meas:192-194).
+- Concurrence (X-state) C = 2 max(0, |rho_01,10| - sqrt(rho_00,00 rho_11,11)) (meas:344, Eq.concurrence-simple;
+  main-text simplified form meas:188).
+- HALF-PARITY / joint dispersive readout: choose omega_m where B_out^{(01)} = B_out^{(10)}; found by tuning
+  omega_m until the |01>,|10> single-shot histograms fully overlap (meas:384,581); omega_m/2pi = 7.19326 GHz (meas:585).
+- Post-selection p_ent = 10% (compensates finite eta; 50% for perfectly separated histograms) (meas:186,401).
+- 8,000 reps per tomographic rotation per t_m; 30 tomography rotations; 17 data sets for error bars;
+  tomographic reconstruction at t_m = 0.65 us; state-prep+tomo fidelity 98.8% (meas:186,163,651).
+- Projective post-selection of |00>: nbar_1 = 6.2, 1 us readout (meas:186).
+- QUANTUM-BAYESIAN VALIDATION FOR A CASCADED SYSTEM (explicit): abstract "confirming the validity of the
+  quantum Bayesian formalism for a cascaded system" (meas:135); body "demonstrates the validity of quantum
+  trajectory theories for cascaded quantum systems" (meas:207). Diagonal classical Bayes update
+  rho^fin_ij,ij = rho^in_ij,ij p_sel(i,j)/p_ent (meas:406, Eq.rho_fin); odd-parity coherence rides the
+  geometric mean |rho^fin_01,10| = |rho^in_01,10| sqrt(rho^fin_01,01 rho^fin_10,10)/sqrt(rho^in_01,01 rho^in_10,10)
+  x exp[-distinguishability dephasing] (meas:411, Eq.rho-01,10-num).
+- THREE-BRANCH / most-likely-path structure: single trajectories are projected onto the Bell state OR onto
+  the non-entangled |00> or |11> (meas:207, Fig.4b). Cascaded SME + polaron transform (meas:452-549); SME
+  simulated with 10^5 Wiener instances at 1 ns step (meas:202,704).
+- Table S1 (meas:626-635): omega_q/2pi = 4.31143 / 4.46143 GHz; omega_r/2pi = 7.1864 / 7.1984 GHz;
+  kappa/2pi = 18.5 / 21 MHz; chi/2pi = 1.275+/-0.025 / 1.085+/-0.035 MHz; T_1 = 27+/-5 / 20+/-3 us;
+  T_2* = 16+/-3 / 12+/-2 us (qubits 1 / 2).
+grounds: two-qubit generalization (essay Section M / two-qubit essay): 4x4 rho, populations Bayes-update,
+  odd-parity coherence ride-along, half-parity meter, three most-likely branches, cascaded-system validation.
+
+-------------------------------------------------------------------------------
+### N3. 1608.06652  Hacohen-Gourgy et al. (simultaneous non-commuting observables)
+-------------------------------------------------------------------------------
+S. Hacohen-Gourgy, L. S. Martin, E. Flurin, V. V. Ramasesh, K. B. Whaley, I. Siddiqi, "Dynamics of
+simultaneously measured non-commuting observables", Nature 538, 491 (2016). arXiv:1608.06652.
+(Hacohen-Gourgy_Non-Commuting_Measurements-ArxivFinal.tex; main + Methods read in full)
+
+SETUP. ONE transmon dispersively coupled to a MULTIMODE aluminum cavity; each of the two lowest cavity
+modes is a separate readout channel monitored by its own phase-sensitive LJPA (~90% of each signal routed
+to its amp) (HG:91,94,101,201). "Single-quadrature measurement" (SQM): drive Rabi oscillations at
+Omega_R/2pi = 40 MHz so the qubit becomes an effective low-frequency qubit; apply a pair of sidebands at
++/-Omega_R to each mode; the RELATIVE sideband phase delta sets the measured axis
+sigma_delta = sigma_x cos delta + sigma_y sin delta (HG:107,122,125,317). Two modes therefore measure two
+independently-chosen axes sigma_{delta_1}, sigma_{delta_2}; the ANGLE between them is delta_2 - delta_1.
+Effective-qubit rate Gamma eta = 2 chi^2 abar_0^2 eta/kappa (HG:125); Gamma = 8 g_tilde^2/kappa =
+2 chi^2 nbar_0/kappa with g_tilde = chi abar_0/2 (HG:356,318).
+
+COLLAPSE-TO-DIFFUSION TRANSITION as the axes go parallel -> orthogonal (HG:160-165, Fig.3a):
+  delta_1 = delta_2 (angle 0, commuting): standard collapse to the two poles.
+  0 < angle < 90 deg: state localizes to finite regions near the +/- axes, NO point collapse.
+  angle = 90 deg (sigma_x and sigma_y, maximally incompatible): the axes leave NO imprint; ISOTROPIC
+    PERSISTENT DIFFUSION = uniform random walk on the Bloch sphere, no collapse.
+
+NUMBERS (with anchors):
+- Rabi drive Omega_R/2pi = 40 MHz, stabilized to within 10 kHz by feedback; LO leakage suppressed to 10^-4
+  photon level (HG:107,151,220).
+- Quantum efficiencies eta_1 = 0.41 (mode 1), eta_2 = 0.49 (mode 2) (HG:101,201). Mode-1 dephasing rate
+  Gamma_1/2pi = 122 kHz (HG:101, Fig.1c). eta_i = (mu_up-mu_down)^2/(8 tau sigma^2 Gamma_i) (HG:239, from Korotkov 1111.4016).
+- Steady-state radius (orthogonal, ideal-ish) r = sqrt(eta) (HG:164). Most-likely steady-state purity P = 0.89
+  (HG:135,164-165).
+- Azimuthal diffusion on a ring (inner radius 0.86, outer 0.92): measured variance slope 1.4 us^-1 vs
+  expected 1.5 us^-1 for a perfect random walk; ~10% measurement-rate uncertainty (HG:136-137).
+- Measurement-induced disturbance / uncertainty floor (HG:169-173, eq:distmap):
+    Tr[drho^dag drho] = (Var(sigma_delta,1) Gamma_1 eta_1 + Var(sigma_delta,2) Gamma_2 eta_2) dt
+                       >= |<[sigma_delta1, sigma_delta2]>| sqrt(eta_1 eta_2 Gamma_1 Gamma_2) dt.
+  SUM-of-variances form (MacCone-Pati), never trivial for non-commuting => state must diffuse forever (HG:175).
+  disturbance mapped over Bloch sphere for angles delta_2-delta_1; no zero-disturbance point once non-commuting
+  (measured over a 64 ns interval, HG:167, Fig.4).
+- Two-channel SME (HG:361-365, eq:SMEFinal): drho = sum_i (Gamma_i/2) D[sigma_delta_i] rho dt
+    + sqrt(Gamma_i eta_i/2) H[sigma_delta_i] rho dW_i;  V_i dt = <sigma_delta_i> dt + dW_i/sqrt(2 eta_i Gamma_i).
+  Discrete Kraus / measurement operator (HG:371, eq:XYMeasOpp): Omega(V) = exp[ sum_i -(Gamma_i eta_i/2)(V_i - sigma_delta,i)^2 dt ],
+    rho(t+dt) = E_{1-eta_i}[ Omega rho Omega^dag / Tr ].
+- Trajectory update interval Delta t = 16 ns; tomography every 200 ns; 16 initial states reconstructed from
+  ~10,000 trajectories each; 57% of tomographic points within error bars (HG:153,129,158,244).
+- Methods hardware (HG:198): E_c/h = 220 MHz, omega_q/2pi = 4.262 GHz, T_1 = 60 us, T_2echo = 40 us, Rabi
+  decay 25 us; cavity 81x51x20 mm Al; modes omega_1/2pi = 6.666 GHz, omega_2/2pi = 7.391 GHz;
+  kappa_1/2pi = 7.2 MHz, kappa_2/2pi = 4.3 MHz; chi_1/2pi = 0.18 MHz, chi_2/2pi = 0.23 MHz; LJPA gains 15/18 dB.
+grounds: two-axes generalization (essay Section L). This is the experimental collapse->localized->isotropic-
+  diffusion transition and the r = sqrt(eta), purity 0.89 steady state that the two-axis essay reproduces.
+
+-------------------------------------------------------------------------------
+### N4. 1702.08077  Atalaya-Hacohen-Gourgy-Martin-Siddiqi-Korotkov (output correlators)
+-------------------------------------------------------------------------------
+J. Atalaya, S. Hacohen-Gourgy, L. S. Martin, I. Siddiqi, A. N. Korotkov, "Correlators in simultaneous
+measurement of non-commuting qubit observables", arXiv:1702.08077 (Phys. Rev. Lett. format; own journal
+line not present in fetched source). (XZcorr-arXiv.tex; main + Supplemental Material read in full)
+
+SETUP. Same apparatus as N3 (Rabi-rotated effective qubit, stroboscopic sideband measurement, two lowest
+cavity modes). Two linear detectors continuously and simultaneously measure sigma_z and
+sigma_phi = sigma_z cos phi + sigma_x sin phi, phi = angle between the two Bloch axes (XZcorr:36,53).
+Phase-sensitive amps on the optimal (informational) quadrature => NO phase backaction, only informational
+backaction (XZcorr:78). Output signals (XZcorr:64-68):
+  I_z(t)   = Tr[sigma_z rho]   + sqrt(tau_z) xi_z(t),
+  I_phi(t) = Tr[sigma_phi rho] + sqrt(tau_phi) xi_phi(t),  white, uncorrelated (XZcorr:75).
+Quantum efficiencies eta_z = 1/(2 tau_z Gamma_z), eta_phi = 1/(2 tau_phi Gamma_phi) (XZcorr:92).
+
+CLOSED-FORM CORRELATORS (this is the deliverable for the essay's kzzCF / kzpCF).
+Definition K_ij(tau) = <I_j(t1+tau) I_i(t1)>, tau>0 (XZcorr:111, eq:corr-def). Results (XZcorr:136-150):
+
+  K_zz(tau) = (1/2)[ 1 + (Gamma_z + cos(2 phi) Gamma_phi)/(Gamma_+ - Gamma_-) ] exp(-Gamma_- tau)
+            + (1/2)[ 1 - (Gamma_z + cos(2 phi) Gamma_phi)/(Gamma_+ - Gamma_-) ] exp(-Gamma_+ tau)
+
+  K_zphi(tau) = [ (Gamma_z + Gamma_phi) cos(phi) + 2 OmegaR_t sin(phi) ] / [ 2 (Gamma_+ - Gamma_-) ]
+                  * ( exp(-Gamma_- tau) - exp(-Gamma_+ tau) )
+              + (cos(phi)/2) * ( exp(-Gamma_- tau) + exp(-Gamma_+ tau) )
+
+  Gamma_pm = { Gamma_z + Gamma_phi
+               +/- sqrt[ Gamma_z^2 + Gamma_phi^2 + 2 Gamma_z Gamma_phi cos(2 phi) - 4 OmegaR_t^2 ] } / 2
+             + (T1^-1 + T2^-1)/2
+
+  where OmegaR_t = tilde-Omega_R = Omega_R - Omega_rf is the small residual Rabi mismatch (H = hbar OmegaR_t sigma_y/2).
+  K_phiphi, K_phiz follow by Gamma_z <-> Gamma_phi and phi -> -phi (XZcorr:152). The correlators do NOT depend
+  on tau_z, tau_phi (hence not on eta): non-ideality only hits the zero-lag self-correlator K_ii(0) (XZcorr:155).
+
+KEY SPECIAL CASES:
+- ZERO-LAG CROSS-CORRELATOR = cosine of the angle between the axes:
+    K_zz(+0) = 1,  K_zphi(0) = K_phiz(0) = cos(phi)   (XZcorr:160, eq:small_time_limit). Verified vs experiment,
+    Fig.2b (crosses = data, dashed = cos phi).
+- OmegaR_t = T1^-1 = T2^-1 = 0: phi=0 full correlation (K_zphi=K_zz=1); phi=pi full anticorrelation (-1);
+    phi=pi/2 zero cross-correlation, K_zz = exp(-Gamma_phi tau), K_phiphi = exp(-Gamma_z tau) (XZcorr:166).
+- OmegaR_t = 0: cross-correlator symmetric, K_zphi = K_phiz (XZcorr:166).
+- Zeno pinning |phi|<<1: K_zphi(tau) ~ exp(-2 Gamma_jump tau),
+    Gamma_jump = (phi^2 Gamma_z Gamma_phi + OmegaR_t^2)/[2(Gamma_z+Gamma_phi)] + (T1^-1+T2^-1)/4 (XZcorr:162-164).
+- ANTISYMMETRIZED cross-correlator PROBES A WEAK COHERENT ROTATION (XZcorr:204, eq:Kzphi-antisym):
+    K_zphi(tau) - K_phiz(tau) = [ 2 OmegaR_t sin(phi) / (Gamma_+ - Gamma_-) ] ( exp(-Gamma_- tau) - exp(-Gamma_+ tau) ).
+  Fitting the phi=pi/2 experimental antisymmetrized correlator gives OmegaR_t/2pi ~ 12 kHz (XZcorr:207,212),
+  a residual Rabi mismatch otherwise very hard to see under a 40 MHz drive.
+
+NUMBERS (with anchors), from the experiment used for the comparison (XZcorr:189, 611-612):
+- eta_z = 0.49, eta_phi = 0.41 (XZcorr:93). (z-channel = kappa 4.3 MHz mode; phi-channel = kappa 7.2 MHz mode.)
+- T1 = 60 us, T2 = 30 us; Gamma_z^-1 = Gamma_phi^-1 = 1.31 us; Omega_R ~ Omega_rf = 2pi x 40 MHz (XZcorr:189,611).
+- kappa_z/2pi = 4.3 MHz, kappa_phi/2pi = 7.2 MHz; kappa_z^-1 = 37 ns, kappa_phi^-1 = 22.1 ns; Omega_R^-1 = 4 ns;
+  resonator modes omega_r,z/2pi = 7.4 GHz, omega_r,phi/2pi = 6.7 GHz (XZcorr:189,612,983).
+- 11 angles phi_n = n pi/10, n=0..10, plus small correction delta_phi = (kappa_phi - kappa_z)/2 Omega_R ~ 0.036
+  (~2 deg), so phi = phi_n + delta_phi (XZcorr:180,190,557).
+- ~200,000 traces per angle, 5 us each, 4 ns sampling; correlators averaged over t1 in [1, 1.5] us (XZcorr:190-191).
+- Detector responses Delta_I_z = 4.0, Delta_I_phi = 4.4 (arb units); JPA half-bandwidths 3.6 MHz (z) and 10 MHz
+  (phi); analog filter cutoff ~25 MHz (~40 ns period ripple) (XZcorr:191,199). Markovian theory valid tau >~ 30 ns
+  but agrees even below (XZcorr:194).
+- Cooled to 30 mK (XZcorr:388). Weak self-correlator qubit tail Gamma/kappa_z = 0.028, Gamma/kappa_phi = 0.017 (XZcorr:1106).
+grounds: two-axes Sections 6-7 (essay kzzCF, kzpCF). K_zz, K_zphi above ARE the closed forms to paste into a
+  WL cell and check against the essay's correlators; zero-lag K_zphi(0)=cos(phi) is the felt payoff; the
+  antisymmetrized combination is the OmegaR_t probe.
+
+-------------------------------------------------------------------------------
+### N5. 1612.02096  Atalaya-Bahrami-Pryadko-Korotkov (Bacon-Shor, THEORY)
+-------------------------------------------------------------------------------
+J. Atalaya, M. Bahrami, L. P. Pryadko, A. N. Korotkov, "Bacon-Shor code with continuous measurement of
+non-commuting operators", arXiv:1612.02096 (Phys. Rev. A format; own journal line not present in fetched
+source). (4qubit-paper_arxiv.tex; read in full). THEORY paper: analytics + Monte Carlo, NO lab experiment.
+(Bahrami is the user; statements below are quoted from his own paper.)
+
+SETUP. Four-qubit Bacon-Shor code, four two-qubit GAUGE operators measured simultaneously and continuously:
+  X1X2 = X12 = G1,  X3X4 = X34 = G2,  Z1Z3 = Z13 = G3,  Z2Z4 = Z24 = G4   (4qubit:113-116, Eq.4-operators).
+Out of the six pairs, four are non-commuting; conventional operation instead measures them projectively in
+two steps (Z-pair then X-pair). Stabilizers X_all = X12 X34, Z_all = Z13 Z24 (4qubit:130-133). The 16-dim
+space splits into code space Q_0 (X_all=+1, Z_all=+1) and three error subspaces Q_X, Q_Y, Q_Z (4qubit:138-140).
+
+THE GAUGE-QUBIT REDUCTION (the explicit link to the single-qubit two-axis picture):
+- Under continuous measurement in Q_0 the four-qubit state stays |psi(t)> = a(t)|z+> + b(t)|z->, i.e. the
+  measurement drives a "GAUGE QUBIT" |a,b>_g while leaving the logical qubit |alpha,beta>_L untouched
+  (4qubit:446, Eq.psi-a-b; 4qubit:574).
+- In that 2-dim subspace, G3=Z13 and G4=Z24 are each a Z-MEASUREMENT of the gauge qubit, while G1=X12 and
+  G2=X34 are each an X-MEASUREMENT of it. So the four gauge operators = simultaneous X and Z measurement of a
+  single (gauge) qubit -- exactly the Ruskov-Korotkov-Molmer / Hacohen-Gourgy single-qubit two-axis problem
+  (4qubit:453-455,576). Ideal case Gamma_m = 1/(2 tau_m): the gauge qubit diffuses uniformly on the GREAT
+  CIRCLE of the Bloch sphere, a,b real (4qubit:455,627). Uniform-case gauge-qubit Ito SDE at 4qubit:616-626:
+    dx_g = (1-x_g^2)(xi1+xi2)/sqrt(tau_m) - x_g z_g (xi3+xi4)/sqrt(tau_m) - 2 Gamma_m x_g   (and z_g symmetric;
+    y_g decays at 4 Gamma_m). Output signals I1=I_X12=x_g+sqrt(tau1)xi1, ..., I4=I_Z24=z_g+sqrt(tau4)xi4 (4qubit:599-602).
+
+ERROR SYNDROME FROM TIME-AVERAGED CROSS-CORRELATORS (the Bacon-Shor close):
+- Projective parity X12 X34 = +1 and Z13 Z24 = +1 is replaced by POSITIVE cross-correlators of the noisy
+  outputs, <I_X12 I_X34> = +1 and <I_Z13 I_Z24> = +1 in Q_0; a single-qubit error flips one or both signs
+  (X_i -> Q_X flips the Z-correlator; Z_i -> Q_Z flips the X-correlator; Y_i flips both) (4qubit:457-458).
+- SAME-TIME cross-correlator = +1, NOT the naively expected x_g^2: the output noise xi_1 feeds back on the
+  state via quantum backaction, <sqrt(tau_1) xi_1(t) x_g(t+0)> = 1 - x_g^2, so the two terms sum to 1
+  (4qubit:769, following Korotkov PRB 63, 085312).
+- TWO-TIME cross-correlator (uniform case): <I_1(t1) I_2(t2)> = <I_3(t1) I_4(t2)> = exp(-2 Gamma_m |t1-t2|)
+  (4qubit:771, Eq.corr-tau). In error subspaces the sign flips to -exp(...). Cross-correlators of ORTHOGONAL
+  gauge components (I_1 with I_3, etc.) vanish in every subspace (4qubit:779).
+- Monitored (smoothed) correlators C_12(t), C_34(t) built by double time-integration: inner exponential kernel
+  time constant tau_c ~ Gamma_m^-1, outer kernel (rectangular T_c^r or exponential T_c^e) >= an order of
+  magnitude longer than Gamma_m^-1 (4qubit:789-799). An error is flagged when C crosses (1-Theta)<C_tilde>.
+
+THEORETICAL NUMBERS (with anchors):
+- Quantum efficiency of each detector eta_k = 1/(2 Gamma_k tau_k) (4qubit:553).
+- Optimal inner integration: eta=1 -> tau_c,opt = 0.342 tau_m, <C_tilde> = 0.745, A^2 = 2.13 tau_m;
+  eta=0.5 -> tau_c,opt = 0.247 tau_m, <C_tilde> = 0.670, A^2 = 2.20 tau_m (4qubit:844).
+- Response time T_R^r = (Theta/2) T_c^r, T_R^e = T_c^e ln[2/(2-Theta)] (4qubit:904). Optimal threshold for
+  exponential integration Theta_opt = 1.43, but symmetric Theta = 1 is the recommended practical choice
+  (4qubit:918,953). Exponential integration gives ~31% smaller logical error rate than rectangular at Theta=1
+  for the same false-alarm rate (4qubit:916).
+- Logical error rate scales with T_R. Depolarizing channel: projective gamma_L = (22/9) Gamma_d^2 Delta t
+  (4qubit:354); continuous gamma_L = (28/9) Gamma_d^2 T_R (4qubit:712). Ratio gamma_L,cont/gamma_L,proj
+  = (14 ln2 / 11)(T_c^e / Delta t) ~ 0.9 T_c^e / Delta t (4qubit:1053).
+- For a target false-alarm rate 10^-5 tau_m^-1: T_R^e ~ 22.6 tau_m (eta=1) or 28.3 tau_m (eta=0.5) at symmetric
+  threshold (4qubit:940).
+- MAIN RESULT: continuous and projective operation are comparable when the collapse timescale tau_m is about an
+  ORDER OF MAGNITUDE less than the projective inter-measurement period, Delta t ~ 20 tau_m (non-Gaussian
+  correction ~ Delta t/20; abstract "an order of magnitude less") (4qubit:48,1064,1076,1100).
+- Monte Carlo: full 4-qubit density matrix, 10^4-10^5 trajectories, time step delta t = 5e-3 Gamma_m^-1,
+  ideal Gamma_m = 1/(2 tau_m), phase backaction neglected (4qubit:969,971).
+grounds: the Bacon-Shor close of the essay. The gauge qubit under two Z- and two X- gauge measurements IS the
+  single-qubit two-axis picture (great-circle diffusion), and the error syndrome is read exactly from the
+  time-averaged cross-correlators whose two-time form is exp(-2 Gamma_m |t1-t2|) with same-time value +1.
+
+===============================================================================
+## READING LOG: all 5/5 Experimental-Anchor papers read END TO END. ##
+##   1305.7270 (main+supp), 1402.1868 (main+supp), 1608.06652 (main+methods),
+##   1702.08077 (main+supp), 1612.02096 (full). All fetched as TeX (no PDF fallback). ##
+===============================================================================

@@ -79,19 +79,19 @@ densityMatrix[excited]
 
 For $|e\rangle$ this is a single 1 in the top corner.
 
-Two quantities summarize any qubit state. The first is the **Bloch vector** $(\langle X\rangle, \langle Y\rangle, \langle Z\rangle)$: it has length 1 for a pure state and shrinks as the state mixes. Define it:
+Two quantities summarize any qubit state. The first is the **Bloch vector** $(\langle\hat\sigma_x\rangle, \langle\hat\sigma_y\rangle, \langle\hat\sigma_z\rangle)$: it has length 1 for a pure state and shrinks as the state mixes. Define it:
 
 ```wl
 blochVector[rho_] := Re[Tr[rho . #] & /@ {X, Y, Z}];
 ```
 
-Check that $|+\rangle$ points along $X$:
+Check that $|+\rangle$ points along the $x$-axis:
 
 ```wl
 blochVector[densityMatrix[plus]]
 ```
 
-It points along $X$, length one.
+It points along the $x$-axis, length one.
 
 The second quantity is the **purity** $\mathrm{Tr}(\rho^2)$: 1 for a pure state, $1/2$ for the maximally mixed qubit. Define it:
 
@@ -214,20 +214,20 @@ Min@Eigenvalues[naiveStep]
 
 A negative eigenvalue: the naive update has left the set of valid states. Shrinking $dt$ makes it rarer but never impossible.
 
-The fix is the structure-preserving filter of [Rouchon and Ralph (2015)](https://arxiv.org/abs/1410.5345): write the update as a sum of Kraus terms $A\rho A^\dagger$, an operator times $\rho$ times its conjugate transpose, so the result is manifestly positive at any step size. With monitored operators $\{\hat c_k\}$ at detection efficiencies $\{\eta_k\}$, unmonitored leaks $\{\hat l_j\}$, record increments $dy_k$, the no-jump generator $K = i\hat H + \tfrac12\big(\sum_k \hat c_k^\dagger \hat c_k + \sum_j \hat l_j^\dagger \hat l_j\big)$, and the measurement kick $s = \sum_k \sqrt{\eta_k}\,dy_k\,\hat c_k$, the corrected Kraus operator is
+The fix is the structure-preserving filter of [Rouchon and Ralph (2015)](https://arxiv.org/abs/1410.5345): write the update as a sum of Kraus terms $A\rho A^\dagger$, an operator times $\rho$ times its conjugate transpose, so the result is manifestly positive at any step size. With monitored operators $\{\hat c_k\}$ at detection efficiencies $\{\eta_k\}$, unmonitored leaks $\{\hat l_j\}$, record increments $dJ_k$, the no-jump generator $K = i\hat H + \tfrac12\big(\sum_k \hat c_k^\dagger \hat c_k + \sum_j \hat l_j^\dagger \hat l_j\big)$, and the measurement kick $s = \sum_k \sqrt{\eta_k}\,dJ_k\,\hat c_k$, the corrected Kraus operator is
 $$M = \mathbb{1} - K\,dt + s + \tfrac12 s^2 - \tfrac{dt}{2}\sum_k \eta_k\,\hat c_k^2,$$
 and the stepped state is the renormalized sum
 $$\tilde\rho = M\rho M^\dagger + dt\sum_j \hat l_j\,\rho\,\hat l_j^\dagger + dt\sum_k (1-\eta_k)\,\hat c_k\,\rho\,\hat c_k^\dagger, \qquad \rho' = \frac{\tilde\rho}{\mathrm{Tr}\,\tilde\rho}.$$
-The three terms of $\tilde\rho$ are the measured record, the unmonitored leaks, and the unrecorded fraction $(1-\eta_k)$ of each watched channel; each has Kraus form, so $\rho$ stays valid for any $dt$, and averaging over the $dy_k$ recovers the Lindblad master equation. Build it: it takes the fixed model pieces and returns a function mapping a state and a record to the next state:
+The three terms of $\tilde\rho$ are the measured record, the unmonitored leaks, and the unrecorded fraction $(1-\eta_k)$ of each watched channel; each has Kraus form, so $\rho$ stays valid for any $dt$, and averaging over the $dJ_k$ recovers the Lindblad master equation. Build it: it takes the fixed model pieces and returns a function mapping a state and a record to the next state:
 
 ```wl
 measurementStep[H_, watched_List, effs_List, unwatched_List, dt_] :=
   With[{id = IdentityMatrix[Length[H]],
     drift = I H + Total[ConjugateTranspose[#] . # & /@ Join[watched, unwatched]]/2,
     corr = Total[MapThread[#1 (#2 . #2) &, {effs, watched}]]/2},
-   Function[{rho, dy},
+   Function[{rho, dJ},
     Module[{sig, M, top},
-     sig = Total@MapThread[Sqrt[#2] #1 #3 &, {dy, effs, watched}];
+     sig = Total@MapThread[Sqrt[#2] #1 #3 &, {dJ, effs, watched}];
      M = id - drift dt + sig + sig . sig/2 - corr dt;
      top = M . rho . ConjugateTranspose[M] +
        dt Total[# . rho . ConjugateTranspose[#] & /@ unwatched] +
@@ -422,9 +422,9 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
 
 6. **Quantum Brownian motion.** In the high-temperature Caldeira-Leggett limit,
    $$
-   \dot\rho=-i\left[\frac{\hat P^2}{2M}+\frac12M\Omega^2\hat X^2,\rho\right]
-   -i\gamma[\hat X,\{\hat P,\rho\}]
-   -2\gamma Mk_BT[\hat X,[\hat X,\rho]].
+   \dot\rho=-i\left[\frac{\hat p^2}{2M}+\frac12M\Omega^2\hat x^2,\rho\right]
+   -i\gamma[\hat x,\{\hat p,\rho\}]
+   -2\gamma Mk_BT[\hat x,[\hat x,\rho]].
    $$
    For the Gaussian simulation this closes as
    $$
@@ -496,16 +496,16 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
     $$
     \dot\Sigma=A\Sigma+\Sigma A^T+D-\Sigma C^TC\Sigma,
     \qquad
-    d\bar r_c=A\bar r_c\,dt+\Sigma C^T(dY-C\bar r_c\,dt),
+    d\bar r_c=A\bar r_c\,dt+\Sigma C^T(dJ-C\bar r_c\,dt),
     $$
     $$
     A=\begin{pmatrix}0&1\\-1&0\end{pmatrix},\qquad
     D=\begin{pmatrix}0&0\\0&k\end{pmatrix},\qquad
     C=\begin{pmatrix}2\sqrt{k}&0\end{pmatrix},\qquad
-    dY=C\bar r_c\,dt+dW.
+    dJ=C\bar r_c\,dt+dW.
     $$
 
-14. **Markovian measurement feedback.** For the feedback Hamiltonian $\hat H_{\rm fb}=J(t)\hat F$,
+14. **Markovian measurement feedback.** For the feedback Hamiltonian $\hat H_{\rm fb}=\dot J\,\hat F$ with the current $\dot J=dJ/dt$,
     $$
     \dot\rho=-i[\hat H,\rho]+\mathcal D[\hat c]\rho
     -i[\hat F,\hat c\rho+\rho\hat c^\dagger]
@@ -664,7 +664,7 @@ In Bloch components $\dot x = -\frac{\gamma}{2}x$, $\dot y = -\Omega z - \frac{\
 $$x_{\mathrm{ss}} = 0,\qquad y_{\mathrm{ss}} = \frac{2\Omega\gamma}{\gamma^2 + 2\Omega^2},\qquad z_{\mathrm{ss}} = -\frac{\gamma^2}{\gamma^2 + 2\Omega^2},$$
 at the rate set by the eigenvalues $\lambda_\pm = -\frac{3\gamma}{4} \pm i\tilde\Omega$, with $\tilde\Omega = \sqrt{\Omega^2 - (\gamma/4)^2}$ (a damped oscillation once $\Omega > \gamma/4$). Solve it and watch the spiral.
 
-Now both terms at once: a laser drive about $X$ and spontaneous emission through $\hat\sigma_-$. Read the Bloch equations:
+Now both terms at once: a laser drive about $\hat\sigma_x$ and spontaneous emission through $\hat\sigma_-$. Read the Bloch equations:
 
 ```wl
 Clear[\[Gamma], \[CapitalOmega]]; Simplify[rates[(\[CapitalOmega]/2) X, {Sqrt[\[Gamma]] lower}], \[Gamma] > 0]
@@ -701,7 +701,7 @@ With[{gg = 1., om = 3.},
 
 They match to rounding. From the excited state the Bloch vector will spiral in (the complex eigenvalue pair guarantees the ringing).
 
-But a special pair of initial states skips the spiral entirely and slides straight in, and the reason sits in the drift matrix itself. Check that $\hat x = (1,0,0)$ is one of its eigenvectors, with eigenvalue $-\gamma/2$:
+But a special pair of initial states skips the spiral entirely and slides straight in, and the reason sits in the drift matrix itself. Check that $(1,0,0)$ is one of its eigenvectors, with eigenvalue $-\gamma/2$:
 
 ```wl
 Simplify[D[rates[(\[CapitalOmega]/2) X, {Sqrt[\[Gamma]] lower}], {{x, y, z}}] . {1, 0, 0}, \[Gamma] > 0]
@@ -731,7 +731,7 @@ orthPair = {#, -#} &@Normalize@N[{x, y, z} /. steady /. {\[CapitalOmega] -> 3., 
 {driftAt[prPair[[1]], 3., 1.], driftAt[orthPair[[1]], 3., 1.]}
 ```
 
-The PR endpoint's drift points purely along $\hat x$, the direction of its own chord (the two PR states differ only in $x$), so the state slides along the line joining the pair and never leaves it. The orthogonal endpoint's drift points along $\hat z$, across its chord (which lies in the $y$-$z$ plane), so the drive immediately rotates that state out of its own pair: no continuous measurement can keep the system perpetually in the orthogonal eigenbasis. That is exactly why the orthogonal ensemble is not physically realizable while the PR pair is.
+The PR endpoint's drift points purely along the $x$-axis, the direction of its own chord (the two PR states differ only in $x$), so the state slides along the line joining the pair and never leaves it. The orthogonal endpoint's drift points along the $z$-axis, across its chord (which lies in the $y$-$z$ plane), so the drive immediately rotates that state out of its own pair: no continuous measurement can keep the system perpetually in the orthogonal eigenbasis. That is exactly why the orthogonal ensemble is not physically realizable while the PR pair is.
 
 Now visualize all three paths, the spiral from the excited state and the two flat slides from the derived pair, with the steady state marked. This is the *unconditional* picture, the record averaged away, so every start relaxes into the mixed steady state:
 
@@ -1180,18 +1180,18 @@ The field starts as the vacuum, one blob at the origin, and drifts as the drive 
 
 ## Part Three: A Heavy Particle, and the Two Faces of a Warm Bath
 
-**The problem.** A particle of mass $M$ in a gentle trap $\tfrac12 M\Omega^2\hat X^2$, coupled to a warm bath (the Caldeira-Leggett model). In the high-temperature limit,
-$$\dot\rho = -i\Bigl[\frac{\hat P^2}{2M} + \tfrac12 M\Omega^2\hat X^2,\ \rho\Bigr] - i\gamma\bigl[\hat X,\{\hat P,\rho\}\bigr] - 2\gamma M k_B T\,\bigl[\hat X,[\hat X,\rho]\bigr].$$
-Friction damps the momentum at rate $2\gamma$; the double commutator $[\hat X,[\hat X,\rho]]$ decoheres a superposition of two positions a distance $\Delta x$ apart at a rate $\propto M k_B T\,\Delta x^2$, quadratic in the separation, the same law as the light-cat. For a smooth (Gaussian) blob the first and second moments of $(\hat X,\hat P)$ close into a small set of rate equations, exactly the five below.
+**The problem.** A particle of mass $M$ in a gentle trap $\tfrac12 M\Omega^2\hat x^2$, coupled to a warm bath (the Caldeira-Leggett model). In the high-temperature limit,
+$$\dot\rho = -i\Bigl[\frac{\hat p^2}{2M} + \tfrac12 M\Omega^2\hat x^2,\ \rho\Bigr] - i\gamma\bigl[\hat x,\{\hat p,\rho\}\bigr] - 2\gamma M k_B T\,\bigl[\hat x,[\hat x,\rho]\bigr].$$
+Friction damps the momentum at rate $2\gamma$; the double commutator $[\hat x,[\hat x,\rho]]$ decoheres a superposition of two positions a distance $\Delta x$ apart at a rate $\propto M k_B T\,\Delta x^2$, quadratic in the separation, the same law as the light-cat. For a smooth (Gaussian) blob the first and second moments of $(\hat x,\hat p)$ close into a small set of rate equations, exactly the five below.
 
-A heavy particle in a harmonic trap $\tfrac12 M\Omega^2\hat X^2$, coupled to a warm bath (Caldeira-Leggett). Friction damps the momentum; the bath's fluctuations grow the position variance to thermal equilibrium. For a Gaussian state the first and second moments of $(\hat X,\hat P)$ close into five equations: the mean $(\langle X\rangle, \langle P\rangle)$ and the covariance matrix $\Sigma$ with entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$. The high-temperature master equation above holds only when $k_B T \gg \hbar\Omega$, so fix the mass, trap frequency, friction, and a temperature well above the level spacing $\hbar\Omega = 1$:
+A heavy particle in a harmonic trap $\tfrac12 M\Omega^2\hat x^2$, coupled to a warm bath (Caldeira-Leggett). Friction damps the momentum; the bath's fluctuations grow the position variance to thermal equilibrium. For a Gaussian state the first and second moments of $(\hat x,\hat p)$ close into five equations: the mean $(\langle\hat x\rangle, \langle\hat p\rangle)$ and the covariance matrix $\Sigma$ with entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$. The high-temperature master equation above holds only when $k_B T \gg \hbar\Omega$, so fix the mass, trap frequency, friction, and a temperature well above the level spacing $\hbar\Omega = 1$:
 
 ```wl
 M = 1.; \[CapitalOmega]qbm = 1.; \[Gamma]qbm = 0.15; kT = 5.; Ddiff = 4 \[Gamma]qbm M kT;
 ```
 
 With $k_B T = 5$ against a level spacing of $1$, the bath is genuinely warm. Written out, those five equations are
-$$\dot{\langle X\rangle} = \frac{\langle P\rangle}{M}, \qquad \dot{\langle P\rangle} = -M\Omega^2\langle X\rangle - 2\gamma\langle P\rangle,$$
+$$\dot{\langle\hat x\rangle} = \frac{\langle\hat p\rangle}{M}, \qquad \dot{\langle\hat p\rangle} = -M\Omega^2\langle\hat x\rangle - 2\gamma\langle\hat p\rangle,$$
 $$\dot\Sigma_{xx} = \frac{2\Sigma_{xp}}{M}, \qquad \dot\Sigma_{xp} = \frac{\Sigma_{pp}}{M} - M\Omega^2\Sigma_{xx} - 2\gamma\Sigma_{xp}, \qquad \dot\Sigma_{pp} = -2M\Omega^2\Sigma_{xp} - 4\gamma\Sigma_{pp} + D,$$
 with diffusion coefficient $D = 4\gamma M k_B T$. The initial covariance must itself be a valid quantum state, so start from the trap's ground state, the minimum-uncertainty blob with $\Sigma_{xx} = \Sigma_{pp} = \hbar/2 = 1/2$ (so $\det\Sigma = \hbar^2/4 = 1/4$), displaced off the origin. Integrate them from there:
 
@@ -1244,7 +1244,7 @@ Plot[Det@spread[t] - 1/4, {t, 0, 25}, Frame -> True, GridLines -> Automatic, Plo
 
 The margin starts at zero, where the ground state saturates the bound, and only grows: the blob swells above the Heisenberg floor and never dips below it. Had we started from the old sub-ground blob $\Sigma_{xx} = \Sigma_{pp} = 0.1$, the margin would have opened at $0.01 - 0.25 < 0$, an invalid state the evolution could never repair; and pushed to low temperature, this same generator can drive an initially valid state below the floor, the known price of its non-Lindblad form.
 
-Those checks read the mean and the variance as numbers; the phase-space picture puts them in one object. That object is the state's **Wigner function** $W(x,p)$, the quasiprobability the cat used in Part Two, except that for a Gaussian state no Fock-basis sum is needed: $W$ is exactly the bivariate normal set by the five moments, centered at the mean $\bar r = (\langle X\rangle, \langle P\rangle)$ and shaped by the covariance $\Sigma$,
+Those checks read the mean and the variance as numbers; the phase-space picture puts them in one object. That object is the state's **Wigner function** $W(x,p)$, the quasiprobability the cat used in Part Two, except that for a Gaussian state no Fock-basis sum is needed: $W$ is exactly the bivariate normal set by the five moments, centered at the mean $\bar r = (\langle\hat x\rangle, \langle\hat p\rangle)$ and shaped by the covariance $\Sigma$,
 $$W(x,p) = \frac{1}{2\pi\sqrt{\det\Sigma}}\,\exp\!\left[-\tfrac12\,(r - \bar r)^{T}\,\Sigma^{-1}\,(r - \bar r)\right], \qquad r = (x,p),$$
 normalized so $\int W\,dx\,dp = 1$. Transcribe it as a function of time, reading $\bar r$ and $\Sigma$ off the solution at each $t$:
 
@@ -1551,9 +1551,9 @@ So the section is one ledger. A single observed record $dJ$ (equivalently its in
 
 ### Heterodyne: Reading Both Quadratures
 
-**The problem.** Reading *both* shadows at once (heterodyne) measures both quadratures through a complex noise:
-$$d\rho = -i[\hat H,\rho]\,dt + \mathcal{D}[\hat c]\rho\,dt + \mathcal{H}[dZ^*\hat c]\rho,\qquad dZ\,dZ^* = dt,\quad dZ^2 = 0.$$
-It is one point in a whole *general-dyne* family running from one sharp shadow (homodyne) to two blurry ones, every member averaging to the identical master equation while giving genuinely different single histories. Show that this particular reading is just two half-strength leaks a quarter-turn apart, then watch.
+**The problem.** Reading *both* shadows at once (heterodyne) splits the one monitored leak into two half-strength homodyne channels a quarter-turn apart, $\hat c_I = \hat c/\sqrt2$ and $\hat c_Q = i\hat c/\sqrt2$, each read as its own real current:
+$$d\rho = -i[\hat H,\rho]\,dt + \mathcal{D}[\hat c]\rho\,dt + \mathcal{H}[\hat c_I]\rho\,dW_I + \mathcal{H}[\hat c_Q]\rho\,dW_Q,\qquad dW_I^2 = dW_Q^2 = dt,\quad dW_I\,dW_Q = 0.$$
+It is one point in a whole *general-dyne* family running from one sharp shadow (homodyne) to two blurry ones, every member averaging to the identical master equation while giving genuinely different single histories. Show that the two channels reproduce the one leak, then watch.
 
 The third way, **heterodyne**: measure both quadratures at once. It is equivalent to two half-strength homodyne channels a quarter-turn apart, $\hat c/\sqrt2$ and $i\hat c/\sqrt2$. First prove those two dissipators sum to the original, for any $\hat c$ and $\rho$:
 
@@ -1564,18 +1564,11 @@ With[{c = Array[Subscript[\[FormalC], ##] &, {2, 2}],
    dissipator[c, r]] // FullSimplify
 ```
 
-It returns True, with no assumptions: the two channels reproduce the same dissipator, so the master equation is unchanged. The trajectory explores differently. Confirm the ensemble still averages to the master equation:
-
-```wl
-Max@Abs[(excitedPop /@ Mean[Table[
-      trajectory[densityMatrix[excited], Hdrive, {cAtom/Sqrt[2], I cAtom/Sqrt[2]}, {1., 1.}, {}, dtAtom, 6.0, k]["states"], {k, 150}]]) - averageChance]
-```
-
-Again the average matches.
+It returns True, with no assumptions: the two channels reproduce the same dissipator, so the master equation is unchanged, and as in the counting and homodyne runs an ensemble of these trajectories averages back to it.
 
 The trajectory explores differently, so hold apart what heterodyne *observes* from what it *infers*, exactly as with homodyne. `trajectory` still returns two objects, the conditional state $\rho_c$ (inferred) and the record (observed), but the record now has *two* columns, one real current per quadrature:
 $$dJ_I = \underbrace{\sqrt{\gamma/2}\,\langle\hat\sigma_x\rangle}_{\text{signal}}\,dt + dW_I,\qquad dJ_Q = \underbrace{\sqrt{\gamma/2}\,\langle\hat\sigma_y\rangle}_{\text{signal}}\,dt + dW_Q.$$
-Equivalently the two real records are the real and imaginary parts of a single *complex* record $dZ$, whose increment satisfies $dZ\,dZ^* = dt$ and $dZ^2 = 0$ (the complex noise at the head of this section): two independent real noises carried in one complex number. The single new fact over homodyne is that two conjugate quadratures, $\langle\hat\sigma_x\rangle$ and $\langle\hat\sigma_y\rangle$, are read at once. Run one history and keep its record:
+Equivalently the two real records are the real and imaginary parts of a single *complex* record $dJ = dJ_I + i\,dJ_Q$, whose increment satisfies $dJ^2 = 0$ (the two shot noises are independent) and $dJ\,dJ^* = 2dt$ (each quadrature contributes its own variance $dt$): two independent real noises carried in one complex number. The single new fact over homodyne is that two conjugate quadratures, $\langle\hat\sigma_x\rangle$ and $\langle\hat\sigma_y\rangle$, are read at once. Run one history and keep its record:
 
 ```wl
 hetOne = trajectory[densityMatrix[excited], Hdrive, {cAtom/Sqrt[2], I cAtom/Sqrt[2]}, {1., 1.}, {}, dtAtom, 6.0, 3];
@@ -1608,7 +1601,7 @@ ListLinePlot[{Transpose[{Most@when, dJI}], Transpose[{Most@when, dJQ}]},
 
 Each is nearly pure noise, and for a sharper reason than homodyne's: each channel carries only $\sqrt{\gamma/2}$ of signal, half the power homodyne put into its one quadrature, against the same shot noise.
 
-**The integrated record $J(t) = \int_0^t dZ$** (observed). *How obtained:* accumulate each column. *Status:* observed, the same data summed. A complex record integrates to a path in the $IQ$ plane, an observed walk that drifts along the inferred signal.
+**The integrated record $J(t) = \int_0^t dJ$** (observed). *How obtained:* accumulate each column. *Status:* observed, the same data summed. A complex record integrates to a path in the $IQ$ plane, an observed walk that drifts along the inferred signal.
 
 That signal is the per-channel coupling $\sqrt{\gamma/2}$ times each conditional quadrature, read off $\rho_c$ rather than measured, one channel for $\langle\hat\sigma_x\rangle$ and one for $\langle\hat\sigma_y\rangle$:
 
@@ -1633,14 +1626,14 @@ Now trace the observed walk against that inferred drift:
 
 ```wl
 ListLinePlot[{Transpose[{JI, JQ}], Transpose[{driftI, driftQ}]},
- PlotStyle -> {Gray, Directive[Thick, ColorData[97, 3]]}, PlotLegends -> {"integrated record", "inferred drift"},
+ PlotLegends -> {"integrated record", "inferred drift"},
  Frame -> True, GridLines -> Automatic, AspectRatio -> 1,
  FrameLabel -> {"I", "Q"}, PlotLabel -> "the observed record is a drifting walk in the IQ plane"]
 ```
 
 The jagged path is the raw data; the smooth curve it drifts along is inferred. Integrating both quadratures at once is a 2D filter: each signal accumulates coherently into the drift while its noise only spreads as $\sqrt t$, so the walk's net displacement carries the record's information where a single increment held almost none.
 
-**The innovations $dW_I, dW_Q$** (inferred). *How obtained:* $dW_I = dJ_I - \text{signal}_I\,dt$ and $dW_Q = dJ_Q - \text{signal}_Q\,dt$, each observed increment minus its inferred prediction. *Status:* inferred residuals. If the filter is optimal each is zero-mean white noise, and because $dZ^2 = 0$ the two are mutually independent. Check the whiteness of each channel first, against the $\pm 2/\sqrt N$ band:
+**The innovations $dW_I, dW_Q$** (inferred). *How obtained:* $dW_I = dJ_I - \text{signal}_I\,dt$ and $dW_Q = dJ_Q - \text{signal}_Q\,dt$, each observed increment minus its inferred prediction. *Status:* inferred residuals. If the filter is optimal each is zero-mean white noise, and because $dJ^2 = 0$ the two are mutually independent. Check the whiteness of each channel first, against the $\pm 2/\sqrt N$ band:
 
 ```wl
 dWI = dJI - hetSigI dtAtom;
@@ -1663,7 +1656,7 @@ Now the heterodyne-specific check with no homodyne counterpart, whether the two 
 Correlation[Transpose[{dWI, dWQ}]] // MatrixForm
 ```
 
-The diagonal is one and the off-diagonal sits near zero, within the same $\pm 2/\sqrt N$ band: the two residuals are not just each white but mutually independent, exactly the simulation realizing $dZ^2 = 0$. Reading both conjugate quadratures buys two independent white innovations, one per shadow.
+The off-diagonal sits near zero, within the same $\pm 2/\sqrt N$ band: the two residuals are not just each white but mutually independent, the simulation realizing the $dJ_I\,dJ_Q = 0$ half of $dJ^2 = 0$. Reading both conjugate quadratures buys two independent white innovations, one per shadow.
 
 Keeping the record splits purity into two quantities that need not agree: the purity of each conditioned state, and the purity of the state you get by averaging them. Run ninety homodyne histories of the same atom:
 
@@ -1796,7 +1789,7 @@ The dephasing $\hat n_1$ is a projector, and $\mathcal{D}[\hat n_1] = \tfrac14\m
 OmQpc = 2.0; kSlow = 0.6; kFast = 12.0; qpcLeak[\[Kappa]_] := Sqrt[\[Kappa]/4] Z;
 ```
 
-The conditioned trajectory uses the toolkit's positivity-preserving step; the recorded current is $J = \sqrt{\kappa}\,\langle\hat\sigma_z\rangle + \text{shot noise}$, the QPC output. Run one weakly-measured (coherent) history and one strongly-measured (Zeno) history:
+The conditioned trajectory uses the toolkit's positivity-preserving step; the recorded current is $\dot J = \sqrt{\kappa}\,\langle\hat\sigma_z\rangle + \text{shot noise}$, the QPC output. Run one weakly-measured (coherent) history and one strongly-measured (Zeno) history:
 
 ```wl
 dtQpc = 0.004; tfQpc = 10.;
@@ -1851,20 +1844,38 @@ Confirm the normalization is right: the spectrum integrates to the steady varian
 With[{wide = Range[-40, 40, 0.02]}, 0.02 Total[qpcSpectrum[1., wide]]/(2 Pi)]
 ```
 
-It returns one, so the spectral weight is accounted for. Now sweep the measurement strength across the $\hat\sigma_z$ spectrum, from weak through the exceptional point at $\kappa = 4\Omega$ to strong:
+It returns one, so the spectral weight is accounted for.
+
+Now sweep the ratio $r = k/\Omega$ of the effective measurement strength $k = \kappa/4$ to the drive, from weak, through the exceptional point at $r = 1$, to deep in the Zeno regime. Take five ratios along that path:
 
 ```wl
-kappaSweep = {1., 4., 6., 8., 12.}; tonesQpc = Range[-6, 6, 0.04];
-sweepCols = ColorData["TemperatureMap"] /@ Subdivide[Length[kappaSweep] - 1];
-ListLinePlot[Table[Transpose[{tonesQpc, qpcSpectrum[k, tonesQpc]}], {k, kappaSweep}],
- PlotStyle -> (Directive[#, Thickness[0.006]] & /@ sweepCols),
- PlotLegends -> Placed[LineLegend[sweepCols, {"\[Kappa] = 1  (weak)", "\[Kappa] = 4", "\[Kappa] = 6", "\[Kappa] = 8  (EP, \[Kappa] = 4\[CapitalOmega])", "\[Kappa] = 12  (Zeno)"}], {0.8, 0.68}],
- Frame -> True, GridLines -> {{-OmQpc, 0, OmQpc}, None}, PlotRange -> {{-6, 6}, {0, 7}}, ImageSize -> 620,
- FrameLabel -> {"frequency", "\!\(\*SubscriptBox[\(S\), \(zz\)]\)(\[Omega])"},
- PlotLabel -> "watching harder marches the Rabi peaks inward, merging them at the exceptional point"]
+ratioSweep = {0.25, 0.5, 0.75, 1., 1.5};
 ```
 
-At weak watching the spectrum is split, twin peaks near $\pm\Omega$, the coherent Rabi oscillation written into the fluctuations of $\hat\sigma_z$, the solid-state echo of the Mollow triplet's sidebands. Watching harder marches those peaks inward to the damped Rabi frequency $\pm\sqrt{\Omega^2 - (\kappa/4)^2}$ and broadens them, until at $\kappa = 4\Omega$ they collide and merge at zero: this is the exceptional point of the Zeno crossover read in frequency, the eigenvalue pair meeting on the real axis seen as two peaks becoming one. Past it a single central Lorentzian remains, narrowing as the Zeno rate $2\Omega^2/\kappa$, its half-width the same slowest eigenvalue that section tracked, so the whole crossover, not just that one rate, is seen twice.
+Resolve each spectrum on a fine frequency grid wide enough to hold both Rabi peaks near $\pm\Omega$:
+
+```wl
+tonesQpc = Range[-6, 6, 0.04];
+```
+
+Colour the curves warm to cool across the sweep, so the peaks' inward march reads at a glance:
+
+```wl
+sweepCols = ColorData["TemperatureMap"] /@ Subdivide[Length[ratioSweep] - 1];
+```
+
+Overlay the five power spectra, one per ratio (recovering $\kappa = 4\Omega r$ for each), with gridlines at $\pm\Omega$:
+
+```wl
+ListLinePlot[Table[Transpose[{tonesQpc, qpcSpectrum[4 OmQpc r, tonesQpc]}], {r, ratioSweep}],
+ PlotStyle -> (Directive[#, Thickness[0.006]] & /@ sweepCols),
+ PlotLegends -> LineLegend[sweepCols, {"k/\[CapitalOmega] = 0.25  (weak)", "k/\[CapitalOmega] = 0.5", "k/\[CapitalOmega] = 0.75", "k/\[CapitalOmega] = 1  (exceptional point)", "k/\[CapitalOmega] = 1.5  (Zeno)"}],
+ Frame -> True, GridLines -> {{-OmQpc, 0, OmQpc}, None}, PlotRange -> All, AspectRatio -> 1/2, ImageSize -> Medium,
+ FrameLabel -> {"frequency", "\!\(\*SubscriptBox[\(S\), \(zz\)]\)(\[Omega])"},
+ PlotLabel -> "watching harder marches the Rabi peaks inward,\n merging them at the exceptional point"]
+```
+
+At weak watching the spectrum is split, twin peaks near $\pm\Omega$, the coherent Rabi oscillation written into the fluctuations of $\hat\sigma_z$, the solid-state echo of the Mollow triplet's sidebands. Watching harder marches those peaks inward to the damped Rabi frequency $\pm\sqrt{\Omega^2 - k^2}$ and broadens them, until at $k = \Omega$ (ratio $k/\Omega = 1$, that is $\kappa = 4\Omega$) they collide and merge at zero. That coalescence is the **exceptional point** of the Zeno crossover read in frequency: the two Liouvillian eigenvalues and their eigenvectors merge together at once, leaving the Liouvillian defective, so the oscillation can no longer be told apart from the decay and the two spectral peaks become one. Past it a single central Lorentzian remains, narrowing as the Zeno rate $\Omega^2/(2k)$, its half-width the same slowest eigenvalue that section tracked, so the whole crossover, not just that one rate, is seen twice.
 
 What a lab actually records is the detector *current* spectrum, the flat shot-noise floor with this $S_{zz}(\omega)$ riding on it (scaled by the measurement coupling); a fundamental result, the Korotkov-Averin bound, caps that current peak at four times the shot-noise background for a quantum-limited detector, the solid-state statement of the measurement limit that runs through this whole catalog.
 
@@ -1903,7 +1914,7 @@ Show[ListLinePlot[Transpose[{gridLoc, #}] & /@ fanLoc, PlotStyle -> Directive[Co
 
 Every run ends at a pole, yet the thick curve never leaves $z_0$: the dephasing $\mathcal{D}[\hat\sigma_z]$ leaves the populations untouched, so $\langle\hat\sigma_z\rangle$ is conserved on average. That makes $\langle\hat\sigma_z\rangle(t)$ a bounded martingale trapped in $[-1, 1]$, and since every run is absorbed at $\pm 1$, the split follows from the optional stopping theorem with nothing to fit: $\langle\hat\sigma_z\rangle(\infty)$ averages back to $z_0$, so $p_+ - p_- = z_0$ and $p_+ + p_- = 1$ give $p_\pm = (1 \pm z_0)/2$. Born is a theorem about the martingale, not a fraction the run count has to chase. The symmetric $z_0 = 0$ start, the state the earlier examples called $|+\rangle$, is the equal-weight special case.
 
-The record is what a detector actually delivers, and it both drives the collapse and reads it out. Accumulate each run's record into the integrated readout $Y(t) = \int_0^t dJ$ and keep the pole it lands on:
+The record is what a detector actually delivers, and it both drives the collapse and reads it out. Accumulate each run's record into the integrated readout $J(t) = \int_0^t dJ$ and keep the pole it lands on:
 
 ```wl
 readOut[seed_] := With[{run = trajectory[blochState[x0Loc, 0, z0Loc], 0 id2, {measZ}, {1.}, {}, dtLoc, tfLoc, seed]},
@@ -1918,10 +1929,10 @@ With[{show = readData[[;; 50]]},
  ListLinePlot[Transpose[{gridLoc, #[[1]]}] & /@ show,
   PlotStyle -> (If[#[[2]] > 0, Directive[ColorData[97, 1], Opacity[0.45]], Directive[ColorData[97, 2], Opacity[0.45]]] & /@ show),
   Frame -> True, GridLines -> Automatic, ImageSize -> 560,
-  FrameLabel -> {"time", "integrated record  Y(t)"}, PlotLabel -> "the integrated record splits by the pole each run chose"]]
+  FrameLabel -> {"time", "integrated record  J(t)"}, PlotLabel -> "the integrated record splits by the pole each run chose"]]
 ```
 
-The sign of $Y(T)$ is the readout's verdict on the eigenstate; measure how often it is right as the integration window grows:
+The sign of $J(T)$ is the readout's verdict on the eigenstate; measure how often it is right as the integration window grows:
 
 ```wl
 fidLoc[T_] := With[{iT = Round[T/dtLoc] + 1}, Mean[Boole[Sign[#[[1, iT]]] == #[[2]]] & /@ readData]];
@@ -1930,7 +1941,7 @@ ListLinePlot[Table[{T, fidLoc[T]}, {T, 0.05, tfLoc, 0.05}], PlotRange -> {0.45, 
  FrameLabel -> {"integration time T", "assignment fidelity"}, PlotLabel -> "longer integration reads the eigenstate out with certainty"]
 ```
 
-The fidelity climbs to one: given enough record, the sign of its integral names the eigenstate for sure, a continuous measurement gone projective in the long-time limit. Two things keep this honest rather than a lookup. The eigenstate is not fixed in advance, it is chosen by the very record that reads it out, so the two groups form only as the collapse completes. And the flat-weight integral $Y$ is not the sharpest estimator: the conditional $\langle\hat\sigma_z\rangle(t)$ of the fan above is the Bayesian-optimal filter, which a uniform integral only approximates. This trajectory-read-from-its-own-record is what [Murch, Weber, Macklin, and Siddiqi](https://arxiv.org/abs/1305.7270) tracked on a superconducting qubit, reconstructing the conditioned state from the readout and confirming it by tomography.
+The fidelity climbs to one: given enough record, the sign of its integral names the eigenstate for sure, a continuous measurement gone projective in the long-time limit. Two things keep this honest rather than a lookup. The eigenstate is not fixed in advance, it is chosen by the very record that reads it out, so the two groups form only as the collapse completes. And the flat-weight integral $J$ is not the sharpest estimator: the conditional $\langle\hat\sigma_z\rangle(t)$ of the fan above is the Bayesian-optimal filter, which a uniform integral only approximates. This trajectory-read-from-its-own-record is what [Murch, Weber, Macklin, and Siddiqi](https://arxiv.org/abs/1305.7270) tracked on a superconducting qubit, reconstructing the conditioned state from the readout and confirming it by tomography.
 
 ### Quantum Kalman Filter: Tracking an Oscillator
 
@@ -2003,7 +2014,7 @@ kalDt = 0.004; kalN = 1500; kalGrid = kalDt Range[0, kalN];
 kalDW = BlockRandom[SeedRandom[7]; RandomVariate[NormalDistribution[0, Sqrt[kalDt]], kalN]];
 ```
 
-A note on the constant $k$. The Riccati above uses the catalog's own measurement-strength convention, $k = k_{\mathrm{cat}} = 2k_{\mathrm{Jacobs}}$, so the informative terms carry $4k$ and the mean gain is $2\sqrt{k}\,V$; the record noise and the gain must then be consistent, which pins the record normalization below. What the code calls a "reference conditional mean" is the physical conditional mean of one simulated record, driven by its own innovation $dW$ with that gain. Roll it out from a displaced start:
+A note on the constant $k$. In the catalog's measurement-strength convention the monitored leak is $\hat c = \sqrt{k}\,\hat x$, so the informative terms carry $4k$ and the mean gain is $2\sqrt{k}\,V$; the record noise and the gain must then be consistent, which pins the record normalization below. What the code calls a "reference conditional mean" is the physical conditional mean of one simulated record, driven by its own innovation $dW$ with that gain. Roll it out from a displaced start:
 
 ```wl
 kalTrue = FoldList[Function[{xp, jw}, With[{j = jw[[1]], dw = jw[[2]]},
@@ -2012,14 +2023,14 @@ kalTrue = FoldList[Function[{xp, jw}, With[{j = jw[[1]], dw = jw[[2]]},
    {3., 0.}, Transpose[{Range[kalN], kalDW}]];
 ```
 
-All the observer ever sees is the record, the signal $\langle x\rangle\,dt$ buried in white noise. Consistency with the $4k$-Riccati and the $2\sqrt k$ gain fixes its noise level at $dy = \langle x\rangle\,dt + dW/(2\sqrt k)$:
+All the observer ever sees is the record, the signal $\langle\hat x\rangle\,dt$ buried in white noise. Consistency with the $4k$-Riccati and the $2\sqrt k$ gain fixes its noise level at $dy = \langle\hat x\rangle\,dt + dW/(2\sqrt k)$:
 
 ```wl
 kalRec = MapThread[#1[[1]] kalDt + #2/(2 Sqrt[kKal]) &, {Most@kalTrue, kalDW}];
 ```
 
-Now the filter. Start it from a deliberately *wrong* guess for the position and feed it only the record: at each step it forms its own innovation, the record minus its own prediction, $\widehat{dW} = 2\sqrt{k}\,(dy - \hat x\,dt)$, and corrects the estimate with the Riccati gain,
-$$d\hat x = \hat p\,dt + 2\sqrt{k}\,\Sigma_{xx}(t)\,\widehat{dW}, \qquad d\hat p = -\hat x\,dt + 2\sqrt{k}\,\Sigma_{xp}(t)\,\widehat{dW},$$
+Now the filter. Start it from a deliberately *wrong* guess for the position and feed it only the record: at each step it forms its own innovation, the record minus its own prediction, $d\widehat W = 2\sqrt{k}\,(dy - \bar x\,dt)$, and corrects the estimate with the Riccati gain,
+$$d\bar x = \bar p\,dt + 2\sqrt{k}\,\Sigma_{xx}(t)\,d\widehat W, \qquad d\bar p = -\bar x\,dt + 2\sqrt{k}\,\Sigma_{xp}(t)\,d\widehat W,$$
 the deterministic Riccati covariance $\Sigma(t)$ setting the gain:
 
 ```wl
@@ -2048,7 +2059,9 @@ Legended[Show[
  LineLegend[{ColorData[97, 2], ColorData[97, 1]}, {"reference conditional mean", "estimate from wrong prior \[PlusMinus]\[Sigma]"}]]
 ```
 
-The estimate begins wildly wrong (opposite sign) inside a wide band, then the record pulls it onto the reference conditional mean and the band tightens to the steady conditional width: a wrong prior is forgotten, because the record carries the same information whatever the observer first believed. (The reference mean is not a hidden classical position; it is the conditional mean of the simulated record, the best anyone could know.) Confirm the lock, comparing the two once the filter has settled:
+The estimate begins wildly wrong (opposite sign) inside a wide band, then the record pulls it onto the reference conditional mean and the band tightens to the steady conditional width: a wrong prior is forgotten, because the record carries the same information whatever the observer first believed. (The reference mean is not a hidden classical position; it is the conditional mean of the simulated record, the best anyone could know.)
+
+Confirm the lock, comparing the two once the filter has settled:
 
 ```wl
 {Last@kalTrue[[All, 1]], Last@kalFilt[[All, 1]]}
@@ -2071,30 +2084,38 @@ The autocorrelation is flat at zero for every nonzero lag: the filter has wrung 
 
 ### Measurement Feedback: Steering With the Record
 
-**The problem.** Feed the homodyne record back as a Hamiltonian $\hat H_{\mathrm{fb}} = J(t)\,\hat F$; averaged over the noise, the conditioned-plus-feedback evolution becomes the Wiseman-Milburn feedback master equation
+**The problem.** Feed the homodyne record back as a Hamiltonian $\hat H_{\mathrm{fb}} = \dot J\,\hat F$, the feedback signal being the homodyne current $\dot J = dJ/dt$ read off the record $dJ = \langle\hat c + \hat c^\dagger\rangle\,dt + dW$, so over a step the loop applies $\hat F\,dJ$; averaged over the noise, the conditioned-plus-feedback evolution becomes the Wiseman-Milburn feedback master equation
 $$\dot\rho = -i[\hat H,\rho] + \mathcal{D}[\hat c]\rho - i[\hat F,\ \hat c\rho + \rho\hat c^\dagger] + \tfrac{1}{\eta}\,\mathcal{D}[\hat F]\rho,$$
 with $\eta$ the detection efficiency, this is just a plain leak with a shifted operator, $\mathcal{D}[\hat c - i\hat F]\rho$, plus a Hamiltonian correction. The feedback engineers the effective damping, here steering a shapeless switch onto a chosen state. Drive $\langle\hat\sigma_x\rangle$ to one with the record itself and check it against this equation.
 
-Close the loop: feed the measurement record back as a Hamiltonian in proportion, so the record steers the state. Concretely the measured operator is $\hat c = \sqrt{G}\,\hat\sigma_z$ and the feedback generator is $\hat F = \sqrt{G}\,\hat\sigma_y$, so the loop measures $\hat\sigma_z$ and rotates about $Y$ by an amount set by the record. The shifted operator is then $\hat c - i\hat F = \sqrt{G}\,(\hat\sigma_z - i\hat\sigma_y)$, and the Hamiltonian correction $\tfrac12(\hat c^\dagger\hat F + \hat F\hat c)$ vanishes because $\hat\sigma_z$ and $\hat\sigma_y$ anticommute, so the ideal loop is the single leak $G\,\mathcal{D}[\hat\sigma_z - i\hat\sigma_y]$. Set the gain and the time grid:
+Close the loop: feed the measurement record back as a Hamiltonian in proportion, so the record steers the state. Concretely the measured operator is $\hat c = \sqrt{G}\,\hat\sigma_z$ and the feedback generator is $\hat F = \sqrt{G}\,\hat\sigma_y$, so the loop measures $\hat\sigma_z$ and rotates about $Y$ by an amount set by the record. The one constant $G$ does two jobs here: it is the measurement rate, $\mathcal{D}[\hat c] = G\,\mathcal{D}[\hat\sigma_z]$, and it is the feedback gain, entering through $\hat F = \sqrt{G}\,\hat\sigma_y$; the two are matched on purpose, which is exactly what makes the target a dark state of the shifted leak below. The shifted operator is then $\hat c - i\hat F = \sqrt{G}\,(\hat\sigma_z - i\hat\sigma_y)$, and the Hamiltonian correction $\tfrac12(\hat c^\dagger\hat F + \hat F\hat c)$ vanishes because $\hat\sigma_z$ and $\hat\sigma_y$ anticommute, so the ideal loop is the single leak $G\,\mathcal{D}[\hat\sigma_z - i\hat\sigma_y]$. Set the gain and the time grid:
 
 ```wl
 Gfb = 0.8; tickFb = 0.01; track = tickFb Range[0, 200];
 ```
 
-A rotation about $Y$ has a closed form, $R_y(\phi) = e^{-i\phi\hat\sigma_y} = \cos\phi\,\mathbb{1} - i\sin\phi\,\hat\sigma_y$, and it is what the generator $\hat F$ produces: the feedback unitary applied each step is $e^{-i\hat F\,dy} = R_y(\sqrt{G}\,dy)$, so $\hat F$ is the generator and $R_y$ the finite rotation, not one and the same. The step is light:
+A rotation about $Y$ has a closed form, $R_y(\phi) = e^{-i\phi\hat\sigma_y} = \cos\phi\,\mathbb{1} - i\sin\phi\,\hat\sigma_y$, and it is what the generator $\hat F$ produces: the feedback unitary applied each step is $e^{-i\hat F\,dJ} = R_y(\sqrt{G}\,dJ)$, so $\hat F$ is the generator and $R_y$ the finite rotation, not one and the same. The step is light:
 
 ```wl
 rotateY[\[Phi]_] := Cos[\[Phi]] id2 - I Sin[\[Phi]] Y;
 ```
 
-One steered run: measure, then rotate by an amount set by the record just read:
+One steered run, one step at a time. Write $\rho^{\mathrm{meas}}$ for the positivity-preserving measurement update of $\rho$ under $\hat c = \sqrt{G}\,\hat\sigma_z$, given the record $dJ = 2\sqrt{G}\,\langle\hat\sigma_z\rangle_\rho\,dt + dW$. One step measures, then rotates by the commanded angle $\phi = \sqrt{G}\,dJ$:
+$$\rho' = R_y(\phi)\,\rho^{\mathrm{meas}}\,R_y(\phi)^\dagger,\qquad \phi = \sqrt{G}\,dJ,$$
+run $N = 200$ times from $\rho_0 = \tfrac12\mathbb{1}$. Keeping the pair $(\rho,\phi)$ at each step, the run is the whole causal chain at once,
+$$\bigl((\rho_0,\,0),\ (\rho_1,\phi_1),\ \dots,\ (\rho_N,\phi_N)\bigr),$$
+each state beside the command that produced it, the seed angle a placeholder $0$. One function then feeds every plot below, the response curves from its states and the command panel from its angles:
 
 ```wl
 steer[seed_] := BlockRandom[SeedRandom[seed];
    With[{measure = measurementStep[0 id2, {Sqrt[Gfb] Z}, {1.}, {}, tickFb]},
-    FoldList[Function[{rho, dw}, With[{dy = measurementRecord[rho, {Sqrt[Gfb] Z}, {1.}, tickFb, {dw}]},
-       With[{u = rotateY[Sqrt[Gfb] dy[[1]]]}, u . measure[rho, dy] . ConjugateTranspose[u]]]],
-     id2/2, RandomVariate[NormalDistribution[0, Sqrt[tickFb]], 200]]]];
+    FoldList[
+     Function[{prev, dw},
+      With[{rho = prev[[1]]},
+       With[{dJ = measurementRecord[rho, {Sqrt[Gfb] Z}, {1.}, tickFb, {dw}]},
+        With[{u = rotateY[Sqrt[Gfb] dJ[[1]]]}, {u . measure[rho, dJ] . ConjugateTranspose[u], Sqrt[Gfb] dJ[[1]]}]]]],
+     {id2/2, 0.},
+     RandomVariate[NormalDistribution[0, Sqrt[tickFb]], 200]]]];
 ```
 
 This feedback has a target: the $+X$ state is a fixed point the loop leaves alone, so from the maximally mixed state the loop should build it. Confirm $+X$ is the dark state (the shifted operator annihilates it):
@@ -2103,7 +2124,7 @@ This feedback has a target: the $+X$ state is a fixed point the loop leaves alon
 Chop[(Sqrt[Gfb] (Z - I Y)) . plus]
 ```
 
-The zero vector confirms it. Integrate the feedback master equation for the predicted $\langle X\rangle$:
+The zero vector confirms it. Integrate the feedback master equation for the predicted $\langle\hat\sigma_x\rangle$:
 
 ```wl
 predicted = blochVector[evolveODE[0 id2, {Sqrt[Gfb] (Z - I Y)}, id2/2, 2.][#]][[1]] & /@ track;
@@ -2112,40 +2133,36 @@ predicted = blochVector[evolveODE[0 id2, {Sqrt[Gfb] (Z - I Y)}, id2/2, 2.][#]][[
 Average sixty steered runs:
 
 ```wl
-steeredMean = Mean[Table[xOf@steer[s], {s, 60}]];
+steeredMean = Mean[Table[xOf[steer[s][[All, 1]]], {s, 60}]];
 ```
 
 Now visualize one run, the ensemble mean, and the master-equation prediction climbing together:
 
 ```wl
-ListLinePlot[{Transpose[{track, xOf@steer[2]}], Transpose[{track, steeredMean}], Transpose[{track, predicted}]},
+ListLinePlot[{Transpose[{track, xOf[steer[2][[All, 1]]]}], Transpose[{track, steeredMean}], Transpose[{track, predicted}]},
  PlotStyle -> {Directive[ColorData[97, 1], Opacity[0.45]], Directive[Thick, ColorData[97, 2]], Directive[Dashed, Red]},
  PlotLegends -> {"one steered run", "average of many", "predicted"}, Frame -> True, GridLines -> Automatic,
- PlotRange -> {-0.35, 1.05}, ImageSize -> 520, FrameLabel -> {"time", "\[LeftAngleBracket]X\[RightAngleBracket]"},
+ PlotRange -> {-0.35, 1.05}, ImageSize -> 520, FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]"},
  PlotLabel -> "feedback drives the maximally mixed state to a pure state"]
 ```
 
-$\langle X\rangle$ climbs from zero to one: the maximally mixed state is driven to a pure state by its own record. This is measurement-based feedback control, the basis of feedback cooling and qubit stabilization.
+$\langle\hat\sigma_x\rangle$ climbs from zero to one: the maximally mixed state is driven to a pure state by its own record. This is measurement-based feedback control, the basis of feedback cooling and qubit stabilization.
 
-The loop has a causal chain worth seeing whole: the noisy record drives a control command, which drives the state's response. Rerun one steered history, keeping the rotation the record commands at each step alongside the state:
+The loop has a causal chain worth seeing whole: the noisy record drives a control command, which drives the state's response. That same run already carries both, so take seed 2 and read its per-step command against its response:
 
 ```wl
-steerRec[seed_] := BlockRandom[SeedRandom[seed]; With[{measure = measurementStep[0 id2, {Sqrt[Gfb] Z}, {1.}, {}, tickFb]},
-   Rest@FoldList[Function[{prev, dw}, With[{rho = prev[[1]]}, With[{dy = measurementRecord[rho, {Sqrt[Gfb] Z}, {1.}, tickFb, {dw}]},
-       With[{u = rotateY[Sqrt[Gfb] dy[[1]]]}, {u . measure[rho, dy] . ConjugateTranspose[u], Sqrt[Gfb] dy[[1]]}]]]],
-     {id2/2, 0.}, RandomVariate[NormalDistribution[0, Sqrt[tickFb]], 200]]]];
-feedRun = steerRec[2];
+feedRun = steer[2];
 ```
 
 Now visualize the loop in time, two panels side by side: the feedback rotation the raw record commands at each step, a noise band, and the state's response $\langle\hat\sigma_x\rangle$ climbing to the target:
 
 ```wl
 Row[{
-  ListLinePlot[Transpose[{track[[2 ;;]], feedRun[[All, 2]]}], Frame -> True, GridLines -> Automatic,
+  ListLinePlot[Transpose[{track[[2 ;;]], feedRun[[2 ;;, 2]]}], Frame -> True, GridLines -> Automatic,
    ImageSize -> Medium, PlotRange -> All, FrameLabel -> {"time", "feedback rotation"},
    PlotLabel -> "the command the raw record drives"], "  ",
-  ListLinePlot[Transpose[{track[[2 ;;]], blochVector[#[[1]]][[1]] & /@ feedRun}], Frame -> True, GridLines -> Automatic,
-   ImageSize -> Medium, PlotRange -> All, FrameLabel -> {"time", "\[LeftAngleBracket]X\[RightAngleBracket]"},
+  ListLinePlot[Transpose[{track[[2 ;;]], blochVector[#[[1]]][[1]] & /@ feedRun[[2 ;;]]}], Frame -> True, GridLines -> Automatic,
+   ImageSize -> Medium, PlotRange -> All, FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]"},
    PlotLabel -> "the response it produces"]}]
 ```
 
@@ -2157,11 +2174,11 @@ But a real loop never has a perfect detector, and inefficiency caps how pure the
 steadyXeff[\[Eta]_] := blochVector[First@steadyState[0 id2, {Sqrt[Gfb] (Z - I Y), Sqrt[(1 - \[Eta])/\[Eta]] Sqrt[Gfb] Y}]][[1]];
 etasFb = Range[0.3, 1, 0.05];
 ListLinePlot[Transpose[{etasFb, steadyXeff /@ etasFb}], PlotMarkers -> Automatic, PlotStyle -> ColorData[97, 2], Frame -> True,
- GridLines -> Automatic, PlotRange -> {0, 1.05}, ImageSize -> 460, FrameLabel -> {"detection efficiency \[Eta]", "steady \[LeftAngleBracket]X\[RightAngleBracket]"},
+ GridLines -> Automatic, PlotRange -> {0, 1.05}, ImageSize -> 460, FrameLabel -> {"detection efficiency \[Eta]", "steady \[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]"},
  PlotLabel -> "a leaky detector cannot fully purify: feedback noise sets the floor"]
 ```
 
-Steady $\langle X\rangle$ climbs to one only as $\eta \to 1$; a lossy detector leaves the loop feeding its own missing information back as noise, and the target is reached only in part. Perfect stabilization needs a perfect record, the same efficiency limit that capped the feedback cooling.
+Steady $\langle\hat\sigma_x\rangle$ climbs to one only as $\eta \to 1$; a lossy detector leaves the loop feeding its own missing information back as noise, and the target is reached only in part. Perfect stabilization needs a perfect record, the same efficiency limit that capped the feedback cooling.
 
 ## Part Six: Settling Warm, Purifying Fast, Cooling Cold
 
@@ -2196,73 +2213,75 @@ fromCold = evolveODE[0 IdentityMatrix[topTh], {fall, climb}, densityMatrix[coher
 fromHot = evolveODE[0 IdentityMatrix[topTh], {fall, climb}, densityMatrix[UnitVector[topTh, 9]], 16.];
 ```
 
-Read both late occupations against $n_T$:
+Read as a dynamical law, this equation has three consequences worth drawing out one at a time, each sharper than the one before.
+
+The first is a **single attractor**: the evolution forgets the initial state, so every start relaxes to the same steady state. Test that from opposite extremes, the cold vacuum and the hot $n=9$ state, by reading their late mean occupations against $n_T$:
 
 ```wl
 {units[fromCold[16.]], units[fromHot[16.]], nT}
 ```
 
-Both reach the same mean occupation $n_T$.
+Both land on $n_T$. Watch them get there, the cold climbing and the hot relaxing until they meet:
 
-Not just the mean: the full population distribution settles to the thermal (Boltzmann) shape, the geometric distribution $p_n = (1 - r)\,r^n$ with ratio $r = \frac{n_T}{n_T+1} = e^{-\beta\omega}$, each Fock level less likely than the one below by that factor. Read the settled populations and the thermal shape they should match:
+```wl
+ListLinePlot[{Transpose[{Range[0, 16, 0.05], units[fromCold[#]] & /@ Range[0, 16, 0.05]}],
+   Transpose[{Range[0, 16, 0.05], units[fromHot[#]] & /@ Range[0, 16, 0.05]}], {{0, nT}, {16, nT}}},
+ PlotLegends -> {"from cold", "from hot", "warm equilibrium"}, Frame -> True, GridLines -> Automatic,
+ FrameLabel -> {"time", "mean occupation"}, PlotLabel -> "both starts reach the thermal mean", PlotRange -> All]
+```
+
+They settle on the same $n_T$ from opposite sides: the bath drains the hot oscillator and feeds the cold one, so wherever the state began, it ends where decay and excitation balance. This two-way traffic is what makes the attractor unique; the pure-dephasing bath of Part One, which only froze populations, left a whole line of steady states instead.
+
+The second consequence is stronger: the equation fixes **the whole state**, not just its mean. A mean is weak evidence, since a coherent, a squeezed, and a thermal state can all share the occupation $n_T$. So build the settled populations and the geometric thermal shape $p_n = (1-r)\,r^n$ with $r = n_T/(n_T+1) = e^{-\beta\omega}$, and read the largest gap between them:
 
 ```wl
 pops = Re@Diagonal[fromCold[16.]][[;; 8]];
 warmShape = With[{ratio = nT/(nT + 1)}, (1 - ratio) ratio^Range[0, 7]];
 ```
 
-Measure the largest mismatch:
-
 ```wl
 Max@Abs[pops - warmShape]
 ```
 
-The settled populations match the geometric thermal distribution to a fraction of a percent. The reason is **detailed balance**: the excitation rate divided by the decay rate is exactly the Boltzmann ratio that sets the distribution:
+They agree to a fraction of a percent. Level by level, the settled populations sit on the thermal bars rung for rung:
+
+```wl
+BarChart[Transpose@{pops, warmShape}, ChartLegends -> {"settled", "thermal"}, ChartLabels -> {Range[0, 7], None},
+ Frame -> True, FrameLabel -> {"Fock level", "probability"}, PlotLabel -> "the settled distribution is thermal"]
+```
+
+The attractor is a complete density matrix; reaching the thermal mean was only its shadow.
+
+The third consequence is the deepest, the point where a dynamical equation reproduces equilibrium statistical mechanics. Stationarity alone forces the population ratio on adjacent rungs to equal the ratio of the two rates, excitation $\gamma n_T$ over decay $\gamma(n_T+1)$, and that flux balance is mere bookkeeping. The physics is that the ratio is not free: through **detailed balance** the bath locks the downward rate above the upward one by exactly $e^{\beta\omega}$, its own thermal signature, so an oscillator with no temperature of its own is driven into the Boltzmann distribution at the bath's temperature. The canonical ensemble is derived here, not assumed:
 
 ```wl
 {(\[Gamma]th nT)/(\[Gamma]th (nT + 1)), nT/(nT + 1)}
 ```
 
-Now visualize both thermalization checks: the two means converging to the thermal occupation and the settled populations matching the thermal distribution:
+The two are equal, both $e^{-\beta\omega}$. The settled state shows the same thing directly: a geometric distribution is a straight line on a log axis, its constant slope the Boltzmann factor. Plot the settled populations against the thermal shape:
 
 ```wl
-GraphicsRow[{
-  ListLinePlot[{Transpose[{Range[0, 16, 0.05], units[fromCold[#]] & /@ Range[0, 16, 0.05]}],
-     Transpose[{Range[0, 16, 0.05], units[fromHot[#]] & /@ Range[0, 16, 0.05]}], {{0, nT}, {16, nT}}},
-    PlotStyle -> {ColorData[97, 1], ColorData[97, 2], Directive[Dashed, Gray]},
-    PlotLegends -> {"from cold", "from hot", "warm equilibrium"}, Frame -> True, GridLines -> Automatic,
-    ImageSize -> 360, FrameLabel -> {"time", "mean occupation"}, PlotLabel -> "both starts reach the thermal mean"],
-  BarChart[{pops, warmShape}, ChartLegends -> {"settled", "thermal"}, ChartLabels -> {Range[0, 7], None},
-    Frame -> True, ImageSize -> 340, FrameLabel -> {"Fock level", "probability"}, PlotLabel -> "the settled distribution is thermal"]},
- ImageSize -> 720]
+With[{fock = Range[0, 6]},
+ ListLogPlot[{Transpose[{fock, pops[[;; Length@fock]]}], Transpose[{fock, warmShape[[;; Length@fock]]}]},
+  Joined -> True, PlotMarkers -> Automatic, PlotStyle -> {Automatic, Dashed},
+  PlotLegends -> {"settled", "thermal"}, Frame -> True, FrameTicks -> {fock, Automatic}, GridLines -> {fock, Automatic},
+  ImageSize -> Medium, FrameLabel -> {"Fock level n", "population (log)"},
+  PlotLabel -> "geometric tail: a straight line on a log axis"]]
 ```
 
-Detailed balance has a sharper signature than the bar chart shows: on a logarithmic axis the geometric thermal distribution is a straight line, and its constant slope is the Boltzmann ratio. Plot the settled and thermal populations on a semilog scale, and the successive ratio $p_{n+1}/p_n$ beside them:
-
-```wl
-GraphicsRow[{
-  ListLogPlot[{pops, warmShape}, Joined -> True, PlotMarkers -> Automatic, PlotStyle -> {ColorData[97, 1], Directive[Dashed, Gray]},
-   PlotLegends -> {"settled", "thermal"}, Frame -> True, GridLines -> Automatic, ImageSize -> 360,
-   FrameLabel -> {"Fock level n", "population (log)"}, PlotLabel -> "geometric tail: a straight line on a log axis"],
-  ListLinePlot[Transpose[{Range[0, 6], pops[[2 ;;]]/pops[[;; 7]]}], PlotMarkers -> Automatic, PlotRange -> {0, 1},
-   Frame -> True, GridLines -> Automatic, ImageSize -> 360, PlotStyle -> ColorData[97, 1],
-   Epilog -> {Directive[Dashed, Gray], Line[{{0, nT/(nT + 1)}, {6, nT/(nT + 1)}}]},
-   FrameLabel -> {"Fock level n", "\!\(\*SubscriptBox[\(p\), \(n + 1\)]\)/\!\(\*SubscriptBox[\(p\), \(n\)]\)"},
-   PlotLabel -> "the ratio is flat at the Boltzmann factor"]},
- ImageSize -> 720]
-```
-
-The settled populations fall along a straight line parallel to the thermal one, and their level-to-level ratio sits flat on $n_T/(n_T+1) = e^{-\beta\omega}$: every rung is less likely than the one below by exactly the Boltzmann factor, the visible fingerprint of detailed balance. Damping and thermalization are the same bath: it drains a hot system and feeds a cold one, and the balance of decay and excitation is thermal equilibrium. This is relaxation of an oscillator to its bath temperature, derived from the two rates.
+The settled populations fall on a straight line, parallel to the thermal one and with the same constant slope: every rung is less likely than the one below by the bath's Boltzmann factor $e^{-\beta\omega}$, the visible fingerprint of detailed balance. The ratio of rates in the equation has become the slope of the ladder in the state. Damping and thermalization are then one process: decay $\hat a$ and excitation $\hat a^\dagger$ are the same bath, and the ground-state relaxation of the earlier examples is its $n_T \to 0$ corner, an oscillator settling to its bath temperature with its whole distribution fixed by two rates.
 
 ### Rapid Purification by Feedback
 
-**The problem.** How fast a measurement purifies a qubit depends on the angle $\theta$ between the measured axis and the Bloch vector. Measuring $\hat M = \sin\theta\,\hat\sigma_x + \cos\theta\,\hat\sigma_z$, the impurity $L = \tfrac12(1 - |\vec a|^2)$, with $\vec a = (x,y,z)$ the Bloch vector, falls on average as
-$$\overline{dL} = -4k\,L\,\bigl(\sin^2\theta + 2L\cos^2\theta\bigr)\,dt$$
-(here $\theta$ is measured from the Bloch vector and $k = k_{\mathrm{cat}} = 2k_{\mathrm{Jacobs}}$, the catalog's convention, so the crosswise rate is $4k$; in Jacobs' own $\theta$-from-the-pole and $k_{\mathrm{Jacobs}}$ it reads $-8k_{\mathrm{Jacobs}}L[1-(1-2L)\cos^2\theta]$), fastest when the measurement is held perpendicular to the Bloch vector ($\theta = \pi/2$). Feeding back a rotation that keeps it perpendicular makes the purification deterministic, $L(t) = e^{-4kt}L(0)$, while a fixed measurement, left aligned with the state it purifies, has no single rate.
+**The problem.** Continuously watching an observable extracts information and sharpens the state toward one of its eigenstates, so a monitored qubit purifies with time. Measure $\hat M = \sin\theta\,\hat\sigma_x + \cos\theta\,\hat\sigma_z$ at strength $k$ with no drive (the leak is $\hat c = \sqrt{k}\,\hat M$); the conditioned state obeys the same measurement equation as the localization example, now along a tilted axis,
+$$d\rho_c = k\,\mathcal D[\hat M]\rho_c\,dt + \sqrt{k}\,\bigl(\hat M\rho_c + \rho_c\hat M - 2\langle\hat M\rangle\rho_c\bigr)\,dW.$$
+How fast it purifies depends on where the state sits relative to that axis. Writing the impurity as $L = \tfrac12(1 - |\vec a|^2)$, with $\vec a$ the Bloch vector at angle $\theta$ to $\hat M$, Itô's rule turns the equation above into a stochastic increment $dL$ that fluctuates run to run but, averaged over the noise, drifts as
+$$\overline{dL} = -4k\,L\,\bigl(\sin^2\theta + 2L\cos^2\theta\bigr)\,dt,$$
+the bar the noise average, the $L$ on the right the current impurity. Measuring *crosswise* to the Bloch vector, $\theta = \pi/2$, is the fast case: there the noise in $dL$ drops out, so each run purifies deterministically with one clean rate, $L(t) = e^{-4kt}L(0)$; measuring *along* it, $\theta = 0$, is slowest, its rate dragged down by the extra factor $2L$. A fixed measurement axis lets the state drift into alignment, where it learns slowly, so reading the record back to keep the axis crosswise holds the fast rate and makes the purification deterministic. This is [Jacobs' rapid-purification protocol](https://arxiv.org/abs/quant-ph/0301056).
 
-One caveat sets what "optimal" means: this steering maximizes the *mean purity at a fixed time*, but it actually lengthens the *mean time* to reach a chosen purity, so the best protocol depends on which you care about (Wiseman-Ralph). Compare a fixed and a steered measurement.
+There is a catch in what "fast" means. Keeping the measurement crosswise maximizes the *mean purity at a fixed time*, yet it *lengthens* the mean time to reach a chosen purity, because its determinism forbids the lucky fast runs an aligned measurement occasionally enjoys; the two figures of merit disagree by a factor of two ([Wiseman and Ralph, 2006](https://arxiv.org/abs/quant-ph/0603062)). We build both strategies and let the distributions settle it.
 
-Measurement purifies a qubit (Part Five), but the rate depends on the angle between the measured axis and the Bloch vector: fastest when the measurement is crosswise to the state, slowest when aligned. A fixed measurement drives the state along its own axis, where it learns slowest. Feeding back a rotation that keeps the measurement crosswise purifies fastest. Compare fixed and steered, following the mean linear entropy from the maximally mixed state. The impurity reader:
+Both strategies start from the maximally mixed state and are scored by the same impurity, the linear entropy $L = \tfrac12(1 - |\vec a|^2)$, which is $\tfrac12$ when mixed and $0$ when pure. A reader for it:
 
 ```wl
 linearEntropy[rho_] := (1 - Norm[blochVector[rho]]^2)/2;
@@ -2274,36 +2293,40 @@ Set the measurement strength and the time grid:
 kPur = 1.; tickPur = 0.01; span = tickPur Range[0, 120];
 ```
 
-One fixed-axis run, measuring $Z$ throughout:
+The **fixed** strategy measures one axis, $\hat\sigma_z$, for the whole run. Each step feeds the record $dJ = 2\sqrt{k}\,\langle\hat\sigma_z\rangle\,dt + dW$ into the positivity-preserving update, and the conditioned state diffuses and lengthens; but as its Bloch vector swings toward the $z$-axis the measurement falls into alignment and the purification slows. One such run, returning its impurity history:
 
 ```wl
-fixedBlur[seed_] := linearEntropy /@ trajectory[id2/2, 0 id2, {Sqrt[kPur] Z}, {1.}, {}, tickPur, 1.2, seed]["states"];
+fixedBlur[seed_, nSteps_] := linearEntropy /@ trajectory[id2/2, 0 id2, {Sqrt[kPur] Z}, {1.}, {}, tickPur, nSteps tickPur, seed]["states"];
 ```
 
-The crosswise direction to a given Bloch vector:
+The **steered** strategy uses the record differently. Instead of a fixed axis it reads the current Bloch vector off the conditioned state and measures along an axis *crosswise* to it, holding the fast $\theta = \pi/2$ angle at every step. That is the feedback here: the record sets not a rotation of the state but the choice of which observable to measure next. A crosswise direction to a given Bloch vector:
 
 ```wl
 crosswise[lean_] := With[{c = Cross[lean, {0, 0, 1.}]}, If[Norm[c] < 1.*^-6, {1., 0., 0.}, Normalize[c]]];
 ```
 
-One steered step: measure along the axis crosswise to the current state:
+One steered step measures the Pauli operator along that crosswise axis and advances the conditioned state by the same positivity-preserving update:
 
 ```wl
-steerStep[rho_, dw_] := With[{L = Sqrt[kPur] (crosswise[blochVector[rho]] . {X, Y, Z})},
-   measurementStep[0 id2, {L}, {1.}, {}, tickPur][rho, measurementRecord[rho, {L}, {1.}, tickPur, {dw}]]];
+steerStep[rho_, dw_] := With[{leak = Sqrt[kPur] (crosswise[blochVector[rho]] . {X, Y, Z})},
+   measurementStep[0 id2, {leak}, {1.}, {}, tickPur][rho, measurementRecord[rho, {leak}, {1.}, tickPur, {dw}]]];
 ```
 
 One steered run:
 
 ```wl
-steeredBlur[seed_] := linearEntropy /@ BlockRandom[SeedRandom[seed];
-    FoldList[steerStep, id2/2, RandomVariate[NormalDistribution[0, Sqrt[tickPur]], 120]]];
+steeredBlur[seed_, nSteps_] := linearEntropy /@ BlockRandom[SeedRandom[seed];
+    FoldList[steerStep, id2/2, RandomVariate[NormalDistribution[0, Sqrt[tickPur]], nSteps]]];
 ```
+
+In formulas: with $\vec a = \langle\vec\sigma\rangle_\rho$ the current Bloch vector, `steerStep` measures the leak $\hat c = \sqrt{k}\,(\hat n\cdot\vec\sigma)$ along a crosswise axis $\hat n$, perpendicular to $\vec a$. Because that axis is perpendicular to the state the signal vanishes and the record is pure noise,
+$$dJ = 2\sqrt{k}\,(\hat n\cdot\vec a)\,dt + dW = dW,$$
+which is nonetheless the fast case: a crosswise state is an equal superposition of the measured operator's eigenstates, where the back-action is strongest. The step is then the positivity-preserving measurement update of $\rho$ under $\hat c$ with that record, and nothing else, with no feedback unitary; the steering is only the re-choice of $\hat n$ at the next step, which holds $\theta = \pi/2$ throughout. Folding this from $\rho_0 = \tfrac12\mathbb{1}$ over $N$ Wiener increments $dW$ (each of variance $dt$) gives one run's states $\rho_0, \dots, \rho_N$, and `steeredBlur` returns their impurities $L_j = \tfrac12(1 - |\vec a_j|^2)$.
 
 Average eighty runs of each strategy:
 
 ```wl
-fixedAvg = Mean[fixedBlur /@ Range[80]]; steeredAvg = Mean[steeredBlur /@ Range[80]];
+fixedAvg = Mean[fixedBlur[#, 120] & /@ Range[80]]; steeredAvg = Mean[steeredBlur[#, 120] & /@ Range[80]];
 ```
 
 Compare the two at the same instant:
@@ -2318,8 +2341,7 @@ Now visualize both purification strategies on a log scale, where a straight line
 
 ```wl
 ListLogPlot[{Transpose[{span, fixedAvg}], Transpose[{span, steeredAvg}]}, Joined -> True,
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic,
- PlotLegends -> {"fixed measurement", "steered measurement"}, ImageSize -> 480,
+ Frame -> True, GridLines -> Automatic, PlotLegends -> {"fixed measurement", "steered measurement"},
  FrameLabel -> {"time", "linear entropy (log scale)"}, PlotLabel -> "feedback purifies faster, and deterministically"]
 ```
 
@@ -2329,17 +2351,16 @@ But the mean hides the caveat, so look at the distributions. Run longer ensemble
 
 ```wl
 purGrid = tickPur Range[0, 200]; purN = 200;
-fixedBlurL[seed_] := linearEntropy /@ trajectory[id2/2, 0 id2, {Sqrt[kPur] Z}, {1.}, {}, tickPur, 2., seed]["states"];
-steeredBlurL[seed_] := linearEntropy /@ BlockRandom[SeedRandom[seed]; FoldList[steerStep, id2/2, RandomVariate[NormalDistribution[0, Sqrt[tickPur]], 200]]];
-fixedRunsPur = fixedBlurL /@ Range[purN]; steeredRunsPur = steeredBlurL /@ Range[purN];
+fixedRunsPur = fixedBlur[#, 200] & /@ Range[purN]; steeredRunsPur = steeredBlur[#, 200] & /@ Range[purN];
 ```
 
 First, that "deterministic" claim: the steered runs should each hug the exact law $L(t) = e^{-4kt}L(0)$ with $L(0) = 1/2$, while a fixed run wanders. Overlay thirty steered paths on the analytic exponential, on a log scale:
 
 ```wl
-Show[ListLogPlot[Transpose[{purGrid, #}] & /@ steeredRunsPur[[;; 30]], Joined -> True, PlotStyle -> Directive[ColorData[97, 2], Opacity[0.2]]],
- LogPlot[0.5 Exp[-4 kPur t], {t, 0, 2}, PlotStyle -> Directive[Thick, Black, Dashed]],
- Frame -> True, GridLines -> Automatic, ImageSize -> 480, PlotRange -> {{0, 2}, {10^-4, 1}},
+ListLogPlot[Append[Transpose[{purGrid, #}] & /@ steeredRunsPur[[;; 30]], Transpose[{purGrid, 0.5 Exp[-4 kPur purGrid]}]],
+ Joined -> True, PlotRange -> {{0, 2}, {10^-4, 1}}, Frame -> True, GridLines -> Automatic, ImageSize -> 480,
+ PlotStyle -> Append[ConstantArray[Directive[ColorData[97, 2], Opacity[0.2]], 30], Directive[Thick, ColorData[97, 1], Dashed]],
+ PlotLegends -> LineLegend[{ColorData[97, 1], ColorData[97, 2]}, {"deterministic law", "steered runs"}],
  FrameLabel -> {"time", "linear entropy (log)"}, PlotLabel -> "steered runs hug the deterministic exponential (dashed)"]
 ```
 
@@ -2348,43 +2369,59 @@ Each steered path clings to the dashed line: the feedback really does make the p
 Now the objective-dependence. At a *fixed time* the steered strategy wins, its impurity distribution sitting lower and tighter than the fixed one:
 
 ```wl
-Histogram[{fixedRunsPur[[All, 61]], steeredRunsPur[[All, 61]]}, {0, 0.35, 0.02}, "PDF",
- ChartLegends -> {"fixed", "steered"}, ChartStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, ImageSize -> 440,
+Histogram[{fixedRunsPur[[All, 61]], steeredRunsPur[[All, 61]]}, {0, 0.35, 0.01}, "PDF",
+ ChartLegends -> {"fixed", "steered"}, Frame -> True, AspectRatio -> 1/3,
  FrameLabel -> {"linear entropy at t = 0.6", "density"}, PlotLabel -> "at fixed time, steered is lower and tighter"]
 ```
 
-But the *first-passage time* to a chosen purity tells the opposite story. Record when each run first drops below $L = 0.05$:
+But the *first-passage time* to a chosen purity tells the opposite story. For each run, record the time it first drops below $L = 0.05$, or the window length if it never does:
 
 ```wl
 fptPur[run_] := With[{pos = FirstPosition[run, l_ /; l < 0.05]}, If[MissingQ[pos], 2., (First[pos] - 1) tickPur]];
-{fptFixed, fptSteer} = {fptPur /@ fixedRunsPur, fptPur /@ steeredRunsPur};
-Histogram[{fptFixed, fptSteer}, {0, 1.2, 0.06}, "PDF", ChartLegends -> {"fixed", "steered"},
- ChartStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, ImageSize -> 440,
- FrameLabel -> {"first-passage time to L < 0.05", "density"}, PlotLabel -> "yet the fixed measurement often reaches the target sooner"]
 ```
+
+Collect that time for every run of each strategy:
+
+```wl
+{fptFixed, fptSteer} = {fptPur /@ fixedRunsPur, fptPur /@ steeredRunsPur};
+```
+
+Histogram the two distributions:
+
+```wl
+Histogram[{fptFixed, fptSteer}, {0, 1.2, 0.06}, "PDF", ChartLegends -> {"fixed", "steered"},
+ Frame -> True, AspectRatio -> 1/3,
+ FrameLabel -> {"first-passage time to linear entropy < 0.05", "density"}, PlotLabel -> "yet the fixed measurement often reaches the target sooner"]
+```
+
+The fixed strategy reaches down to shorter times: its runs vary, and the lucky ones cross the target before the steered runs, which cluster tightly at their single deterministic hitting time.
 
 Compare the two means directly, fixed-time impurity against mean hitting time:
 
 ```wl
-{{"fixed-time L", Mean[fixedRunsPur[[All, 61]]], Mean[steeredRunsPur[[All, 61]]]},
- {"mean first-passage", Mean[fptFixed], Mean[fptSteer]}}
+Grid[{{"", Style["fixed", Bold], Style["steered", Bold]},
+   {Style["linear entropy at t = 0.6", Bold], Mean[fixedRunsPur[[All, 61]]], Mean[steeredRunsPur[[All, 61]]]},
+   {Style["first-passage time to linear entropy < 0.05", Bold], Mean[fptFixed], Mean[fptSteer]}},
+  Frame -> All, Alignment -> Left, Spacings -> {2, 1}]
 ```
 
-The steered strategy has the lower fixed-time impurity but the *longer* mean first-passage: its determinism forbids the lucky fast records that let a fixed measurement occasionally reach the target early. Which protocol is "optimal" depends on the question, sharp average purity by a deadline or shortest typical time to a goal, and no single curve can answer both. This is the Wiseman-Ralph point, made by the distributions rather than asserted.
+The steered strategy has the lower fixed-time impurity but the *longer* mean first-passage: its determinism forbids the lucky fast records that let a fixed measurement occasionally reach the target early. Which protocol is "optimal" depends on the question, sharp average purity by a deadline or shortest typical time to a goal, and no single curve can answer both. This is the [Wiseman-Ralph](https://arxiv.org/abs/quant-ph/0603062) point, made by the distributions rather than asserted.
 
 ### Feedback Cooling of a Mechanical Oscillator
 
-**The problem.** Continuously measure a mechanical oscillator's position (its step-down is $\hat b$) through a cavity and push against its estimated motion to cool it, against a thermal bath:
+**The problem.** Continuously measure a mechanical oscillator's position (its annihilation operator is $\hat b$) through a cavity and push against its estimated motion to cool it, against a thermal bath:
 $$d\rho = -i[\omega\hat b^\dagger\hat b - f(t)\hat x,\ \rho]\,dt + k\,\mathcal D[\hat x]\rho\,dt + \sqrt{\eta k}\,\bigl(\hat x\rho + \rho\hat x - 2\langle\hat x\rangle\rho\bigr)\,dW + \gamma(n_T+1)\mathcal{D}[\hat b]\rho\,dt + \gamma n_T\mathcal{D}[\hat b^\dagger]\rho\,dt.$$
 Watching sharpens the estimate, the feedback force $f \propto -G\langle\hat p\rangle$ drains the energy, and the leftover is a balance of measurement rate, efficiency $\eta$, gain $G$, and heating $\gamma n_T$. Watching alone only heats; feedback cools, but only up to an optimal gain beyond which it feeds the detector's noise back onto the oscillator. Cool a warm start, find the best gain, and sweep the detector quality.
 
-The same measure-and-feedback loop cools a mechanical oscillator, but cooling takes more than watching: the loop must act. Three pieces enter now that the Kalman tracker did not have. A thermal bath (damping $\gamma$, occupation $n_T$) keeps trying to warm the oscillator; the continuous position measurement (strength $k$, efficiency $\eta$) tracks it; and a feedback force pushes back against the *estimated* velocity, $f = -G\,\langle\hat p\rangle_c$, draining energy. The state is Gaussian throughout, so, as in the Kalman filter, the conditional covariance is deterministic and the conditional mean is stochastic. This example stands alone, so fix its own constants:
+The same measure-and-feedback loop cools a mechanical oscillator, but cooling takes more than watching: the loop must act. Three pieces enter now that the Kalman tracker did not have. A thermal bath (damping $\gamma$, occupation $n_T$) keeps trying to warm the oscillator; the continuous position measurement (strength $k$, efficiency $\eta$) tracks it; and a feedback force pushes back against the *estimated* velocity, $f = -G\,\langle\hat p\rangle_c$ (the conditional mean), draining energy. The state is Gaussian throughout, so, as in the Kalman filter, the conditional covariance is deterministic and the conditional mean is stochastic. This example stands alone, so fix its own constants:
 
 ```wl
 kCool = 1.; etaCool = 1.; gammaCool = 0.1; nCool = 10.;
 ```
 
-The conditional covariance is the tracking Riccati again, now carrying the bath (a drift toward the thermal spread $n_T + 1/2$) and the efficiency $\eta$ on the information-gain terms while the back-action term $+k$ stays full:
+The conditional covariance is the tracking Riccati of Part Five again, now carrying the bath (a drift toward the thermal spread $n_T + \tfrac12$ at rate $\gamma$) and the efficiency $\eta$ on the information-gain terms, while the back-action term $+k$ stays full. In the three entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$,
+$$\frac{d}{dt}\begin{pmatrix}\Sigma_{xx}\\\Sigma_{xp}\\\Sigma_{pp}\end{pmatrix} = \begin{pmatrix}2\Sigma_{xp} - 4\eta k\,\Sigma_{xx}^{2} - \gamma\Sigma_{xx} + \gamma\bigl(n_T + \tfrac12\bigr)\\\Sigma_{pp} - \Sigma_{xx} - 4\eta k\,\Sigma_{xx}\Sigma_{xp} - \gamma\Sigma_{xp}\\k - 2\Sigma_{xp} - 4\eta k\,\Sigma_{xp}^{2} - \gamma\Sigma_{pp} + \gamma\bigl(n_T + \tfrac12\bigr)\end{pmatrix},$$
+integrated from the thermal start $\Sigma_{xx} = \Sigma_{pp} = n_T + \tfrac12$, $\Sigma_{xp} = 0$:
 
 ```wl
 riccatiCool[\[Eta]_] := NDSolveValue[{
@@ -2394,12 +2431,27 @@ riccatiCool[\[Eta]_] := NDSolveValue[{
     vx[0] == nCool + 1/2, vc[0] == 0., vp[0] == nCool + 1/2}, {vx, vc, vp}, {t, 0, 80}];
 ```
 
-Its steady value is the sharpest the observer can ever know the oscillator, the conditional floor, and its Kalman gain $2\sqrt{\eta k}\,V$ drives the estimate:
+The steady covariance, read off the late-time solution, is the sharpest the observer can ever know the oscillator:
 
 ```wl
 steadyCovCool[\[Eta]_] := Through[riccatiCool[\[Eta]][80.]];
+```
+
+Take its three entries at perfect efficiency, $\eta = 1$:
+
+```wl
 {vxCool, vcCool, vpCool} = steadyCovCool[1.];
+```
+
+Its mean phonon number is the *conditional floor*, the lowest occupation the record can pin down:
+
+```wl
 condFloorCool = (vxCool + vpCool)/2 - 0.5;
+```
+
+The Kalman gains $2\sqrt{k}\,\Sigma_{xx}$ and $2\sqrt{k}\,\Sigma_{xp}$ set how hard each record increment steers the estimate:
+
+```wl
 kxCool = 2 Sqrt[kCool] vxCool; kpCool = 2 Sqrt[kCool] vcCool;
 ```
 
@@ -2456,26 +2508,22 @@ Now visualize the cooling: the occupation with the loop off (heating above the b
 
 ```wl
 ListLinePlot[{Transpose[{timesCool[[1 ;; ;; 25]], coolOff}], Transpose[{timesCool[[1 ;; ;; 25]], coolOn}]},
- PlotStyle -> {ColorData[97, 2], ColorData[97, 3]}, Frame -> True, GridLines -> Automatic, PlotRange -> {0, All},
- PlotLegends -> {"loop open (watching only)", "loop closed (feedback)"}, ImageSize -> 520,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ PlotLegends -> {"loop open (watching only)", "loop closed (feedback)"},
  FrameLabel -> {"time", "phonon number"}, PlotLabel -> "feedback cools; watching alone heats",
- Epilog -> {Directive[Gray, Dashed], Line[{{0, nCool}, {Last@timesCool, nCool}}],
-   Directive[Black, Dashed], Line[{{0, condFloorCool}, {Last@timesCool, condFloorCool}}]}]
+ Epilog -> {Directive[ColorData[97][3], Dashed], Line[{{0, nCool}, {Last@timesCool, nCool}}],
+   Directive[ColorData[97][4], Dashed], Line[{{0, condFloorCool}, {Last@timesCool, condFloorCool}}]}]
 ```
 
-The open loop climbs above the thermal line (gray); the closed loop drains fast and settles well below it, above the conditional floor (black).
+The open loop climbs above the thermal line (green); the closed loop drains fast and settles well below it, above the conditional floor (red).
 
 To see the loop acting, take one record and plot the estimated position with the feedback force it drives:
 
 ```wl
 coolRec = meanRunCool[Gcool, 4];
-Column[{
-  ListLinePlot[Transpose[{timesCool, coolRec[[All, 1]]}], PlotStyle -> ColorData[97, 1], Frame -> True,
-   GridLines -> Automatic, ImageSize -> 520, PlotRange -> {{0, 25}, All}, FrameLabel -> {"time", "estimated position"},
-   PlotLabel -> "the tracked motion rings down"],
-  ListLinePlot[Transpose[{timesCool, -Gcool coolRec[[All, 2]]}], PlotStyle -> ColorData[97, 3], Frame -> True,
-   GridLines -> Automatic, ImageSize -> 520, PlotRange -> {{0, 25}, All}, FrameLabel -> {"time", "feedback force f"},
-   PlotLabel -> "the force the loop applies"]}]
+ListLinePlot[{Transpose[{timesCool, coolRec[[All, 1]]}], Transpose[{timesCool, -Gcool coolRec[[All, 2]]}]},
+ Frame -> True, GridLines -> Automatic, PlotRange -> All, FrameLabel -> {"time", "estimated position"},
+ PlotLabel -> "the estimate rings down under the force it drives", PlotLegends -> {"estimated position", "feedback force"}]
 ```
 
 The estimate rings down as the force pushes against it, the mechanical analogue of a shock absorber built from a measurement.
@@ -2483,28 +2531,38 @@ The estimate rings down as the force pushes against it, the mechanical analogue 
 How hard should the loop push? Sweep the gain and read the steady occupation off the exact Lyapunov balance:
 
 ```wl
-gainsCool = Range[0, 12, 0.4];
-ListLinePlot[Transpose[{gainsCool, nUncCool /@ gainsCool}], PlotStyle -> ColorData[97, 3], Frame -> True,
- GridLines -> Automatic, ImageSize -> 500, PlotRange -> {0, All}, FrameLabel -> {"feedback gain G", "steady phonon number"},
+gainsCool = Range[0, 12, 0.1];
+ListLinePlot[Transpose[{gainsCool, nUncCool /@ gainsCool}], Frame -> True,
+ GridLines -> Automatic, PlotRange -> All, FrameLabel -> {"feedback gain G", "steady phonon number"},
  PlotLabel -> "an optimal gain: too little leaves it warm, too much feeds noise back",
- Epilog -> {Directive[Gray, Dashed], Line[{{0, nCool}, {Last@gainsCool, nCool}}],
-   Directive[Black, Dashed], Line[{{0, condFloorCool}, {Last@gainsCool, condFloorCool}}]}]
+ Epilog -> {Directive[ColorData[97][2], Dashed], Line[{{0, nCool}, {Last@gainsCool, nCool}}],
+   Directive[ColorData[97][3], Dashed], Line[{{0, condFloorCool}, {Last@gainsCool, condFloorCool}}]}]
 ```
 
-The occupation falls steeply from the heated open-loop value, reaches a minimum near $G \approx 2$, then rises again: beyond the optimum the loop feeds the estimate's own measurement noise back onto the oscillator, the imprecision-back-action tradeoff that caps every real feedback-cooling experiment. It never reaches the conditional floor (black): that would need a noiseless actuator acting on a perfectly known state.
+The occupation falls steeply from the heated open-loop value, reaches a minimum near $G \approx 2$, then rises again: beyond the optimum the loop feeds the estimate's own measurement noise back onto the oscillator, the imprecision-back-action tradeoff that caps every real feedback-cooling experiment. It never reaches the conditional floor (green): that would need a noiseless actuator acting on a perfectly known state.
 
-Finally, a better detector lowers both the floor and the achievable cold. Sweep the efficiency at the gain optimized for the ideal detector (a fixed gain, not re-optimized per efficiency, which is why the cooled curve is a conservative estimate at low $\eta$):
+Finally, a better detector lowers both the floor and the achievable cold. Repeat the floor-plus-spread Lyapunov balance at efficiency $\eta$, where the conditional covariance sharpens and the gain becomes $2\sqrt{\eta k}\,\Sigma$, holding $G$ fixed at its ideal-detector value (not re-optimized per $\eta$, so the cooled curve is conservative at low $\eta$):
 
 ```wl
 nUncCoolEta[\[Eta]_, gg_] := Module[{c = steadyCovCool[\[Eta]], kx, kp, s},
    kx = 2 Sqrt[\[Eta] kCool] c[[1]]; kp = 2 Sqrt[\[Eta] kCool] c[[2]];
    s = LyapunovSolve[{{-gammaCool/2, 1}, {-1, -gammaCool/2 - gg}}, -{{kx^2, kx kp}, {kx kp, kp^2}}];
    (s[[1, 1]] + c[[1]] + s[[2, 2]] + c[[3]])/2 - 0.5];
-etasCool = Range[0.2, 1, 0.1];
+```
+
+Sweep the efficiency from a poor detector, $\eta = 0.2$, to a perfect one:
+
+```wl
+etasCool = Range[0.2, 1, 0.01];
+```
+
+Plot the conditional floor and the fixed-gain cooled occupation against efficiency:
+
+```wl
 ListLinePlot[{Transpose[{etasCool, (#[[1]] + #[[3]])/2 - 0.5 & /@ (steadyCovCool /@ etasCool)}],
    Transpose[{etasCool, nUncCoolEta[#, Gcool] & /@ etasCool}]},
- PlotStyle -> {Directive[Black, Dashed], ColorData[97, 3]}, Frame -> True, GridLines -> Automatic, PlotRange -> {0, All},
- PlotLegends -> {"conditional floor", "cooled occupation (fixed gain)"}, ImageSize -> 500,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ PlotLegends -> {"conditional floor", "cooled occupation (fixed gain)"},
  FrameLabel -> {"detector efficiency", "phonon number"}, PlotLabel -> "a better detector cools colder"]
 ```
 
@@ -2515,9 +2573,9 @@ Both curves fall as the detector improves, and the gap between them is the price
 ### Linear vs Nonlinear: One Trajectory, Two Descriptions
 
 **The problem.** One diffusive history, written two equivalent ways. The *linear* stochastic Schrodinger equation runs an unnormalized state under plain noise,
-$$d\psi = K\,\psi\,dt + \sum_j R_j\,\psi\,dW_j,\qquad K = -i\hat H - \tfrac12\sum_j R_j^\dagger R_j,$$
+$$d\psi = K\,\psi\,dt + \sum_j \hat R_j\,\psi\,dW_j,\qquad K = -i\hat H - \tfrac12\sum_j \hat R_j^\dagger \hat R_j,$$
 whose squared norm $\|\psi\|^2$ is exactly the *likelihood* of the record that drove it. The *nonlinear* master equation instead carries the normalized state an experimenter tracks, driven not by that raw noise but by the **innovation** $d\widehat W_j = dW_j - v_j\,dt$, the increment with the conditional mean it predicts removed,
-$$d\rho = \mathcal{L}\rho\,dt + \sum_j\bigl(R_j\rho + \rho R_j^\dagger - v_j\rho\bigr)\,d\widehat W_j,\qquad v_j = 2\,\mathrm{Re}\,\mathrm{Tr}[R_j\rho].$$
+$$d\rho = \mathcal{L}\rho\,dt + \sum_j\bigl(\hat R_j\rho + \rho \hat R_j^\dagger - v_j\rho\bigr)\,d\widehat W_j,\qquad v_j = 2\,\mathrm{Re}\,\mathrm{Tr}[\hat R_j\rho].$$
 The startling fact is that the plain average of the *unnormalized* states, with no reweighting at all, already is the master equation. Build the linear version and check.
 
 One diffusive trajectory has two equivalent descriptions. The **nonlinear** SME (used so far) carries the normalized state and renormalizes each step. The **linear** SSE evolves an unnormalized state under plain (unconditioned) noise, never renormalizing,
@@ -2612,7 +2670,7 @@ The effective fraction falls from one toward a fraction of the ensemble: as time
 
 **The problem.** The fully worked driven, damped, emitting atom, both averaged and watched. In full generality its unconditional master equation carries detuning, thermal drive, and pure dephasing,
 $$\mathcal{L}\rho = -i[\check H,\rho] + \gamma(n_T+1)\,\mathcal{D}[\hat\sigma_-]\rho + \gamma\,n_T\,\mathcal{D}[\hat\sigma_+]\rho + \gamma\,k_d\,\mathcal{D}[\hat\sigma_z]\rho,\qquad \check H = \tfrac{\Delta\omega}{2}\hat\sigma_z + \tfrac{\Omega}{2}\hat\sigma_x,$$
-and relaxes to a mixed steady state inside the ball. We take the standard resonance-fluorescence corner, resonant ($\Delta\omega = 0$), zero temperature ($\bar n = 0$), no extra dephasing ($k_d = 0$), which reduces it to a single emission channel $R_1 = \sqrt\gamma\,\hat\sigma_-$,
+and relaxes to a mixed steady state inside the ball. We take the standard resonance-fluorescence corner, resonant ($\Delta\omega = 0$), zero temperature ($\bar n = 0$), no extra dephasing ($k_d = 0$), which reduces it to a single emission channel $\hat R_1 = \sqrt\gamma\,\hat\sigma_-$,
 $$\mathcal{L}\rho = -i\Bigl[\tfrac{\Omega}{2}\hat\sigma_x,\rho\Bigr] + \gamma\,\mathcal{D}[\hat\sigma_-]\rho.$$
 Watching that one channel with unit efficiency keeps the conditioned history pure on the surface of the ball; the record-blind average is the mixed interior point. Compare the two. (Restore any of $\Delta\omega$, $\bar n$, $k_d$ and the conditioned state would itself become mixed, since a thermal or dephasing channel is then present and unmonitored.)
 

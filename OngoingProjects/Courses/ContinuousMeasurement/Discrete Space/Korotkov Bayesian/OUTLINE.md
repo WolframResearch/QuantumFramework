@@ -2,7 +2,14 @@
 
 Genre: "learning by computing" (computation-first .md, built to .nb via md2nb).
 Ground truth: `korotkov_physics_sheet.md` (this folder). Every equation below cites a sheet section.
-Status: N2 (spine). Cells are PLANNED here, not written; write them in N3+ against the exemplar.
+Status: BUILT, VERIFIED, MERGED. This began as the single-qubit core; the two Phase-2 siblings
+(non-commuting axes, two-qubit entanglement) were later folded IN as Parts II and III, with five
+experimental anchors (Murch, Hacohen-Gourgy, Atalaya, Roch, Atalaya-Bahrami) grounded from full-text
+arXiv reads recorded in korotkov_physics_sheet.md. The result is ONE merged 20-section essay,
+Korotkov-Quantum-Bayesian.md/.nb; /wl-verify and /essay-verify both OPEN 0, outcell_lint 0/0.
+Merged structure: Part I = Sections 1-8 (the ladder below), Part II = Sections 9-15, Part III =
+Sections 16-20. The superseded sibling .md/.nb and the Phase-2 handoff doc are under archive/.
+The section ladder below is the original single-qubit plan, kept as the record of Part I's design.
 
 Template: Default (per Mads). Exact front-matter keys follow the MarkdownToNotebook docs;
 confirm them when the essay .md is created (N3), do not recall.
@@ -126,19 +133,20 @@ simulated trajectories, and Section 7 matches the independent Stratonovich SDE. 
 ================================================================================
 ## Sibling roadmap (Phase 2)
 ================================================================================
-This essay is the K=0 core (informational back-action, one symmetric broadband detector).
-Section 8 opens the door to the phase back-action at the abstract-detector level; each Phase-2
-sibling turns one deferred piece of the SAME Bayesian update into its own essay:
-- DONE, `Watching-Two-Axes.md` (+ .nb): simultaneous non-commuting measurement, two detectors
+Section 8 opens the door to the phase back-action at the abstract-detector level; both Phase-2
+generalizations are now FOLDED INTO this essay rather than living as separate siblings:
+- FOLDED IN as Part II (Sections 9-15): simultaneous non-commuting measurement, two detectors
   reading sigma_z and sigma_phi at once; the two Gaussian kicks fail to commute by a rotation
   about the third axis, no measured axis wins, the state diffuses on the sphere and the purity
-  ride-along of Section 3 is lost (steady Bloch radius sqrt(eta)); zero-lag cross-correlator = cos phi;
-  Bacon-Shor gauge-qubit connection. /wl-verify + /essay-verify both OPEN 0.
-- DONE, `Watching-Two-Qubits.md` (+ .nb): measurement-induced entanglement, one half-parity probe
+  ride-along of Section 3 is lost. Steady Bloch length = root of the purification/drain balance
+  u^2 - (2 + 1/eta) u + 2 = 0 (u = r^2), NOT sqrt(eta): u = eta solves it only at eta = 1; the
+  simulated ceilings match the root to ~1%. Zero-lag cross-correlator = cos phi;
+  Bacon-Shor gauge-qubit connection. Anchors: Hacohen-Gourgy 1608.06652, Atalaya 1702.08077, Atalaya-Bahrami 1612.02096.
+- FOLDED IN as Part III (Sections 16-20): measurement-induced entanglement, one half-parity probe
   reading a joint operator; equal coupling of |01>,|10> (dv_2 = dv_3) => the odd-parity coherence
   rides the geometric mean sqrt(P2 P3) (the single-qubit purity ride-along one level up) and
   survives localization as a Bell state; closed-form maximum concurrence recovered from the
-  ensemble envelope. /wl-verify + /essay-verify both OPEN 0.
+  ensemble envelope. Anchor: Roch 1402.1868 (0.35 concurrence at 1.3 m, cascaded-Bayesian validation).
 - Continuous quantum error correction (still future): continuously monitored stabilizers with
   Bayesian tracking of the syndrome, the same update run on the code space.
 Also deferred (named in the essay's own close): finite detector bandwidth (1606.07162, track the
