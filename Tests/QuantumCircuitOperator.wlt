@@ -671,3 +671,39 @@ With[{
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - Exp shorthand element"]
+
+(* Exp[I phi "PauliX"] degrades to Power[E, Times[I, "PauliX", phi]] before the
+   parser sees it: the string lifts to the X operator, phi stays a scalar
+   coefficient, and the scalar-base power is the matrix exponential, so the
+   element is the one-parameter group element Exp[I phi X]. *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{Exp[I \[FormalPhi] "PauliX"]}, "Parameters" -> {\[FormalPhi]}]},
+        Simplify[Normal[First[qc["Operators"]]["Matrix"]] - MatrixExp[I \[FormalPhi] PauliMatrix[1]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Exp-string-shorthand-element"
+]
+
+(* Regular at the vanishing angle, and numerically the matrix exponential. *)
+VerificationTest[
+    With[{mat = Simplify[Normal[First[QuantumCircuitOperator[{Exp[I \[FormalTheta] "PauliZ"]}, "Parameters" -> {\[FormalTheta]}]["Operators"]]["Matrix"]]]},
+        {mat /. \[FormalTheta] -> 0, Norm[(mat /. \[FormalTheta] -> 0.7) - MatrixExp[0.7 I PauliMatrix[3]]] < 1*^-12}
+    ],
+    {{{1, 0}, {0, 1}}, True},
+    TestID -> "Exp-string-shorthand-regular-and-numeric"
+]
+
+(* An element neither evaluation nor a shorthand pass can reduce fails loudly
+   instead of hitting $RecursionLimit; the circuit wraps the inner
+   InvalidArguments failure through its own Confirm layers. *)
+VerificationTest[
+    FailureQ[QuantumCircuitOperator[{Power[QuantumOperator["H"], QuantumOperator["T"]]}]],
+    True,
+    {QuantumOperator::invalidArgs},
+    TestID -> "Irreducible-element-fails"
+]
+
+EndTestSection[]

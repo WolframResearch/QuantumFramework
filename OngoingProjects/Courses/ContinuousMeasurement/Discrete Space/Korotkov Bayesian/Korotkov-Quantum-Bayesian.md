@@ -2,9 +2,9 @@
 Template: Default
 ---
 
-# Watching a Qubit: Korotkov's Quantum-Bayesian Formalism, from One Qubit to Entanglement
+# Watching a Qubit: The Quantum-Bayesian Approach to Continuous Measurement, from One Qubit to Entanglement
 
-**A weak continuous measurement never collapses a qubit outright. It trickles information out through a noisy detector current, and the observer folds each noisy reading back into the state with Bayes' rule. This essay builds Korotkov's quantum-Bayesian update from primitives, runs it, and then generalizes it twice. Part I is one qubit under one detector: a frozen qubit localizing by accumulating likelihood, a pure state staying exactly pure along a single record while the ensemble dephases, a Rabi drive interleaved as a symmetric split, a non-ideal detector capping the purity, the output spectrum whose coherent line can never rise more than four times above the noise floor, and the phase back-action a general detector adds, ending on the Kraus operator both generalizations grow from. Part II points a second detector at a different axis, so the two Bayes kicks stop commuting and the state stops collapsing and starts diffusing on the Bloch sphere. Part III gives one detector two qubits and a blind spot, so a measurement alone drives them into a Bell state. Each generalization is carried out against a real superconducting-qubit experiment: the single-qubit trajectories of Murch and Siddiqi, the simultaneous non-commuting measurement of Hacohen-Gourgy and co-workers, and the remote measurement-induced entanglement of Roch and co-workers.**
+**A weak continuous measurement never collapses a qubit outright. It trickles information out through a noisy detector current, and the observer folds each noisy reading back into the state with Bayes' rule. This essay builds the quantum-Bayesian update from primitives, runs it, and then generalizes it twice. Part I is one qubit under one detector: a frozen qubit localizing by accumulating likelihood, a pure state staying exactly pure along a single record while the ensemble dephases, a Rabi drive interleaved as a symmetric split, a non-ideal detector capping the purity, the output spectrum whose coherent line can never rise more than four times above the noise floor, and the phase back-action a general detector adds, ending on the Kraus operator both generalizations grow from. Part II points a second detector at a different axis, so the two Bayes kicks stop commuting and the state stops collapsing and starts diffusing on the Bloch sphere. Part III gives one detector two qubits and a blind spot, so a measurement alone drives them into a Bell state. Each generalization is carried out against a real superconducting-qubit experiment: the single-qubit trajectories of Murch and Siddiqi, the simultaneous non-commuting measurement of Hacohen-Gourgy and co-workers, and the remote measurement-induced entanglement of Roch and co-workers.**
 
 Mads Bahrami (last updated: August 18, 2026)
 
@@ -12,17 +12,232 @@ Mads Bahrami (last updated: August 18, 2026)
 
 We work in units where the reduced Planck constant is one, $\hbar=1$. The qubit is written in the measured (localized) basis $\{|0\rangle,|1\rangle\}$ that the detector couples to, with $|0\rangle=\{1,0\}$ and $|1\rangle=\{0,1\}$, so the density matrix is a $2\times 2$ matrix $\rho$ and the single monitored coordinate is the population difference $z=\rho_{00}-\rho_{11}=\langle\sigma_z\rangle$. A qubit density matrix carries three real numbers, the Bloch vector; the detector reads out only the projection $z$, and the other two ride along in the coherence.
 
-The detector emits a current whose short-time average over a window $\tau$ is $\bar I$. Given a definite state $|0\rangle$ or $|1\rangle$ the reading is Gaussian about $I_0$ or $I_1$, and in general it is a linear readout of $z$ plus white noise,
+The detector emits a current whose short-time average over a window $\tau$ is $\bar I$. Its two calibrated outputs are $I_0$ for a qubit definitely in $|0\rangle$ and $I_1$ for one definitely in $|1\rangle$. For a general state, a linear detector therefore has the population-weighted mean
 
-$$ I(t)=I_c+\frac{\Delta I}{2}\,z(t)+\xi(t), \qquad \Delta I=I_0-I_1, \qquad I_c=\frac{I_0+I_1}{2}, $$
+$$ \langle I(t)\rangle=\rho_{00}I_0+\rho_{11}I_1. $$
 
-with $\xi$ a white noise of single-sided spectral density $S$. Averaging that current over the window $\tau$ leaves a Gaussian of variance $D=S/(2\tau)$ about the state-conditioned mean. Two rates organize everything: the measurement (information-acquisition) rate and the total ensemble dephasing rate,
+Because $\rho_{00}+\rho_{11}=1$ and $z=\rho_{00}-\rho_{11}$, the populations are $\rho_{00}=(1+z)/2$ and $\rho_{11}=(1-z)/2$. Substitution separates the mean into a state-independent midpoint and a qubit-dependent signal,
 
-$$ \Gamma_m=\frac{(\Delta I)^2}{4S}, \qquad \Gamma_d \ge \Gamma_m, \qquad \gamma=\Gamma_d-\Gamma_m\ge 0, \qquad \eta=\frac{\Gamma_m}{\Gamma_d}\in(0,1] , $$
+$$ \langle I(t)\rangle=\frac{I_0+I_1}{2}+\frac{I_0-I_1}{2}\,z(t). $$
 
-where $\gamma$ is any extra dephasing the detector dissipates internally before readout, and the ideality $\eta$, the detector's quantum efficiency, is one exactly for a quantum-limited detector such as a symmetric quantum point contact. A symmetric detector has zero output-backaction correlation, so there is no unitary phase kick; the back-action is purely informational, along the meridians of the Bloch sphere. When a Hamiltonian is present it is the symmetric-qubit drive $H_{qb}=\tfrac{\Omega_R}{2}\sigma_x$ with Rabi frequency $\Omega_R$.
+The actual record fluctuates around this mean. Defining the midpoint $I_c$ and detector response $\Delta I$, and writing the zero-mean white noise as $\xi(t)$, gives
 
-Fix the detector's two output levels and its noise once. We set $I_0=+1$, $I_1=-1$ (so $\Delta I=2$) and $I_c=0$; the noise density then follows from whatever measurement rate we choose, $S=(\Delta I)^2/(4\Gamma_m)$:
+$$ I(t)=I_c+\frac{\Delta I}{2}\,z(t)+\xi(t), \qquad \Delta I=I_0-I_1, \qquad I_c=\frac{I_0+I_1}{2}. $$
+
+Here $\xi(t)$ is zero-mean white detector noise. In the single-sided convention used here,
+
+$$
+\langle\xi(t)\rangle=0,
+\qquad
+\langle\xi(t)\xi(t')\rangle=\frac{S}{2}\,\delta(t-t').
+$$
+
+Ideal white noise has no finite pointwise variance; only a record averaged over a nonzero time window is an ordinary random variable. Over the same window $\tau$ used to define $\bar I$, define
+
+$$
+\bar\xi_\tau(t)=\frac{1}{\tau}\int_t^{t+\tau}\xi(t')\,dt'.
+$$
+
+The averaged noise is Gaussian, with
+
+$$
+\langle\bar\xi_\tau(t)\rangle=0,
+\qquad
+\mathrm{Var}(\bar\xi_\tau(t))=\frac{S}{2\tau}.
+$$
+
+Thus a longer averaging window suppresses the detector noise: the variance decreases as $S/(2\tau)$ and the standard deviation as $\sqrt{S/(2\tau)}$. The limits make the construction explicit: $z=+1$ returns the mean $I_0$, while $z=-1$ returns $I_1$.
+
+### What Is Set, What Is Measured, and What Is Derived
+
+At a fixed detector operating point, the quantities have different roles:
+
+- **Calibrated detector quantities:** $I_0$, $I_1$, the noise spectral density $S$, and the total ensemble dephasing rate $\Gamma_d$ are obtained from separate experimental calibrations.
+- **Chosen controls:** the averaging window $\tau$ is selected by the observer or numerical protocol, while the Rabi frequency $\Omega_R$ is set by the qubit drive.
+- **Derived quantities:** $I_c$, $\Delta I$, the averaged-noise variance $D$, the measurement rate $\Gamma_m$, the measurement time $\tau_m$, the extra dephasing rate $\gamma$, and the efficiency $\eta$ follow from the calibrated quantities.
+- **Random and dynamical quantities:** the reading $\bar I$ is a random outcome, while $z(t)$ and $\rho(t)$ are the conditioned qubit state inferred from the accumulated record.
+
+The word *calibrated* is more precise here than *fundamental*. Experimental controls such as detector bias, measurement power, and amplifier gain establish an operating point. The effective model then takes the measured values $I_0$, $I_1$, $S$, and $\Gamma_d$ at that operating point as inputs.
+
+**Step 1: Calibrate the signal contrast.** Prepare the qubit in $|0\rangle$ and $|1\rangle$ separately and measure the corresponding mean outputs $I_0$ and $I_1$. Their midpoint and separation are then fixed:
+
+$$
+I_c=\frac{I_0+I_1}{2},
+\qquad
+\Delta I=I_0-I_1.
+$$
+
+Once $I_0$ and $I_1$ have been calibrated, $I_c$ and $\Delta I$ are not additional independent parameters.
+
+**Step 2: Calibrate the noise, then choose a window.** Measure the flat part of the detector's single-sided noise spectrum to obtain $S$. The observer then chooses a finite averaging window $\tau$. This choice produces the ordinary Gaussian variance
+
+$$ D=\mathrm{Var}(\bar\xi_\tau)=\frac{S}{2\tau}. $$
+
+The detector property is $S$; the analysis choice is $\tau$; and $D$ is derived from both. Making $\tau$ smaller makes each individual reading noisier, but it also produces more readings per unit time. It does not change the detector's intrinsic information-acquisition rate.
+
+For the white-noise model, $\tau$ must be longer than the detector correlation time. For a discrete weak-measurement step with a driven qubit, it should also be short enough that $\Gamma_m\tau\ll1$ and $\Omega_R\tau\ll1$.
+
+**Step 3: Derive the measurement rate.** Over a window $\tau$, the two possible readout distributions are Gaussians with the same variance $D$ and with means separated by $\Delta I$:
+
+$$
+P_j(\bar I\mid\tau)
+=\frac{1}{\sqrt{2\pi D}}
+\exp\!\left[-\frac{(\bar I-I_j)^2}{2D}\right],
+\qquad j\in\{0,1\}.
+$$
+
+Their overlap is
+
+$$
+\mathcal O(\tau)
+=\int_{-\infty}^{\infty}\sqrt{P_0(\bar I)P_1(\bar I)}\,d\bar I
+=\exp\!\left[-\frac{(\Delta I)^2}{8D}\right]
+=\exp\!\left[-\frac{(\Delta I)^2}{4S}\tau\right].
+$$
+
+Define the measurement rate by $\mathcal O(\tau)=e^{-\Gamma_m\tau}$. It follows that
+
+$$ \Gamma_m=\frac{(\Delta I)^2}{4S}. $$
+
+This formula says that information arrives faster when the two detector outputs are farther apart and slower when the detector is noisier. The units also work: $S$ has units of current squared times time, so $(\Delta I)^2/S$ has units of inverse time. Only two of the three quantities $\Delta I$, $S$, and $\Gamma_m$ are independent.
+
+The conventional measurement time is
+
+$$
+\tau_m=\frac{2S}{(\Delta I)^2},
+\qquad
+\Gamma_m=\frac{1}{2\tau_m}.
+$$
+
+The factor of two is a convention worth keeping visible. At $\tau=\tau_m$, the two Gaussian means are separated by twice their common standard deviation. The likelihood overlap decays on the related time scale $1/\Gamma_m=2\tau_m$.
+
+**Step 4: Calibrate total ensemble dephasing.** Repeat the experiment many times and ignore the individual detector records. The ensemble-averaged coherence decays as
+
+$$ \left|\langle\rho_{01}(t)\rangle_{\mathrm{records}}\right|\propto e^{-\Gamma_d t}. $$
+
+Thus $\Gamma_d$ is measured independently of $\Gamma_m$. Quantum mechanics requires the total dephasing associated with this measurement model to satisfy $\Gamma_d\geq\Gamma_m$: the qubit cannot reveal information in the accessible record without losing at least the corresponding ensemble coherence. The difference and ratio define
+
+$$
+\gamma=\Gamma_d-\Gamma_m\geq0,
+\qquad
+\eta=\frac{\Gamma_m}{\Gamma_d}\in(0,1].
+$$
+
+Here $\Gamma_m$ is the rate of information that reaches the observer, $\gamma$ is dephasing whose information is not present in the observed record, and $\eta$ is the fraction of the total dephasing that is accounted for by acquired information. Equivalently,
+
+$$
+\gamma=\Gamma_d(1-\eta)
+=\Gamma_m\left(\frac{1}{\eta}-1\right).
+$$
+
+For a quantum-limited detector, $\eta=1$, so $\Gamma_d=\Gamma_m$ and $\gamma=0$. A non-ideal detector has $\eta<1$ and therefore destroys ensemble coherence faster than its observed record acquires information.
+
+**Step 5: Keep detector symmetry separate from qubit symmetry.** For the symmetric detector used first in this essay, the output noise and phase back-action are uncorrelated. There is therefore no record-correlated unitary phase kick. In the ideal case, the conditioned back-action is purely informational and moves the state along Bloch-sphere meridians; if $\eta<1$, the unobserved part still contributes the extra dephasing $\gamma$. This detector assumption is distinct from the symmetric-qubit assumption of zero energy bias. With that qubit choice, the controlled Hamiltonian is
+
+$$ H_{qb}=\frac{\Omega_R}{2}\sigma_x, $$
+
+where $\Omega_R$ is an externally set Rabi frequency, not a quantity derived from $S$ or $\Gamma_m$.
+
+The physical calibration chain is therefore
+
+$$
+\{I_0,I_1,S\}
+\longrightarrow
+\{I_c,\Delta I,\Gamma_m,\tau_m\},
+\qquad
+\{S,\tau\}\longrightarrow D,
+\qquad
+\{\Gamma_m,\Gamma_d\}\longrightarrow\{\gamma,\eta\}.
+$$
+
+### The Detector Noise as a Wolfram Process
+
+The Notation stated the noise's features: zero mean, the $\tfrac{S}{2}\delta(t-t')$ correlation, the single-sided density $S$, and the window-averaged variance $S/(2\tau)$. In a computation-first account these are not taken on faith; we build the noise from Wolfram's own process objects and read each feature back off them. Two built-ins carry everything. The pointwise $\xi(t)$ has no ordinary variance, but its running integral does, and that integral is a Wiener process (Brownian motion, "integrated white Gaussian noise" in its own documentation): one derivative in each time turns its covariance back into the correlation of $\xi$. The window average, by contrast, is already an ordinary random variable, one independent Gaussian draw per window, which is exactly a discrete-time white-noise process. Everything below is read off these two objects. In code the single-sided density $S$ is written `ss` and the window $\tau$ is `tau`, and the two sample times are `t1` and `t2`.
+
+Start with the running integral. The noise accumulated over time is `WienerProcess[0, Sqrt[S/2]]`, its volatility $\sqrt{S/2}$ fixed so the variance builds at the two-sided noise level; read its mean and its covariance:
+
+```wl
+Block[{t1, t2},
+ With[{w = WienerProcess[0, Sqrt[ss/2]]},
+  {Mean[w[t1]], CovarianceFunction[w, t1, t2]}]]
+```
+
+The integrated noise is unbiased, so $\langle\xi\rangle=0$, and its covariance is $\tfrac{S}{2}\min(t_1,t_2)$, the signature of Brownian motion: two times share only the history up to the earlier one. Because this process is exactly $\int\xi$, differentiating that shared-history covariance once in each time must return the pointwise correlation of $\xi$ itself.
+
+Do that differentiation. Written as a smooth part plus a kink, $\min(t_1,t_2)=\tfrac12(t_1+t_2-|t_1-t_2|)$, the smooth part differentiates away and the kink carries the spike, since $|t|''=2\delta(t)$:
+
+```wl
+Block[{t1, t2},
+ D[CovarianceFunction[WienerProcess[0, Sqrt[ss/2]], t1, t2] /.
+     Min[p_, q_] :> (p + q - Abs[p - q])/2, t1, t2] /.
+  Derivative[2][Abs][r_] :> 2 DiracDelta[r]]
+```
+
+There it is: $\langle\xi(t_1)\xi(t_2)\rangle=\tfrac{S}{2}\delta(t_1-t_2)$, the single-sided correlation the Notation posited, now read off the integral of the noise rather than assumed. Note that the naive `D[Min[t1, t2], t1, t2]` returns zero, dropping the distributional spike: the delta lives entirely in the kink of the covariance, which is why we split that kink out before differentiating.
+
+A delta correlation is white by definition, so its power spectrum, the Fourier transform of the correlation in the lag, is flat. Fourier-transform the correlation just derived, with the second time fixed at zero so it becomes a function of the lag alone:
+
+```wl
+Block[{t1, t2, w},
+ FourierTransform[
+  D[CovarianceFunction[WienerProcess[0, Sqrt[ss/2]], t1, t2] /.
+      Min[p_, q_] :> (p + q - Abs[p - q])/2, t1, t2] /. t2 -> 0,
+  t1, w, FourierParameters -> {1, -1}]]
+```
+
+The spectrum is flat at $S/2$, equal power at every frequency, which is what "white" means; that flat two-sided level $S/2$ folds onto positive frequencies as the single-sided density $S$, the convention this essay keeps throughout.
+
+Now the window average, the object that does have a finite variance. It is $\bar\xi_\tau=\tfrac1\tau\int_0^\tau\xi$, so its variance is the Brownian variance at time $\tau$ divided by $\tau^2$, put in by nothing but the integral:
+
+```wl
+Variance[WienerProcess[0, Sqrt[ss/2]][tau]]/tau^2
+```
+
+The variance is the derived $D=S/(2\tau)$: a longer window suppresses the noise as $1/\tau$, not by assumption but because the Brownian variance $\tfrac{S}{2}\tau$ is spread over the whole window.
+
+That averaged noise is itself a discrete-time white-noise process, one independent normal draw of variance $D$ per window; read its three defining features off the object at once:
+
+```wl
+Block[{t1, t2},
+ With[{noise = WhiteNoiseProcess[NormalDistribution[0, Sqrt[ss/(2 tau)]]]},
+  {Mean[noise[t1]], Variance[noise[t1]], CovarianceFunction[noise, t1, t2]}]]
+```
+
+Zero mean, variance $S/(2\tau)$, and a covariance of $S/(2\tau)$ at zero lag and nothing off it: `CovarianceFunction` hands back a `DiscreteDelta`, the discrete image of the continuous Dirac correlation, so successive windows are genuinely independent draws.
+
+The reading is that averaged noise riding on the deterministic signal, one transformed process whose mean carries the state and whose spread is the noise the state must beat. Read its mean and variance; its correlation is the discrete delta of the white-noise process it is built from, which a transformed process does not re-expose, so only these two are read here:
+
+```wl
+Block[{xi, t1},
+ With[{current = TransformedProcess[ic + (dI/2) z + xi[t1],
+     xi \[Distributed] WhiteNoiseProcess[NormalDistribution[0, Sqrt[ss/(2 tau)]]], t1]},
+  {Mean[current[t1]], Variance[current[t1]]}]]
+```
+
+The mean is $I_c+\tfrac{\Delta I}{2}z$ and the variance is $S/(2\tau)$: the deterministic part carries every bit of the state dependence and the process carries all of the randomness, and the two never mix.
+
+The same reading in continuous time, before any window average, is a stochastic differential equation: the accumulated signal obeys $dY=(I_c+\tfrac{\Delta I}{2}z)\,dt+\sqrt{S/2}\,dW$, an Ito process whose drift is the deterministic level and whose single Wiener increment carries the noise. Read how its mean and variance grow in time:
+
+```wl
+Block[{xx, t1},
+ With[{proc = ItoProcess[{{ic + (dI/2) z}, {{Sqrt[ss/2]}}, xx[t1]}, {{xx}, {0}}, {t1, 0}]},
+  {Mean[proc[t1]], Variance[proc[t1]]}]]
+```
+
+The accumulated signal's mean grows as the deterministic level times $t$ and its variance as $\tfrac{S}{2}t$, the Brownian variance once more; divide that variance by the window $\tau^2$ and the per-window spread $S/(2\tau)$ comes back, so the continuous equation and the discrete window average are one and the same noise seen at two time scales.
+
+Finally, the two extremes of the mean recover the detector's own calibrated levels; evaluate the signal at the poles $z=\pm1$:
+
+```wl
+Block[{i0, i1}, With[{dI = i0 - i1, ic = (i0 + i1)/2},
+  Simplify[(ic + (dI/2) #) & /@ {1, -1}]]]
+```
+
+$z=+1$ returns $I_0$ and $z=-1$ returns $I_1$, so the mean interpolates linearly between the two calibrated levels while the window sets how sharply the noise lets them be told apart. The next section fixes these levels numerically to $I_0=+1$ and $I_1=-1$ and turns this noise into a runnable measurement step.
+
+### The Numerical Toolkit: From Calibration to a Runnable Step
+
+For the numerical examples, it is convenient to reverse one part of this chain and use $\Gamma_m$ as the time unit. We normalize the detector outputs to $I_0=+1$ and $I_1=-1$, so $\Delta I=2$ and $I_c=0$, and then infer the equivalent noise density from $S=(\Delta I)^2/(4\Gamma_m)$:
 
 ```wl
 ClearAll[dI, i0, i1, ic];
@@ -51,7 +266,7 @@ drawCurrent[rho_, var_] :=
     RandomVariate[NormalDistribution[0, Sqrt[var]]]
 ```
 
-In words, the detector first picks which bell to ring with the current populations as weights, then buries the level under Gaussian noise of variance $D$; the window $\tau$ is the only knob that sharpens it.
+In words, the detector first picks which bell to ring with the current populations as weights, then buries the level under Gaussian noise of variance $D$. For the fixed detector used in these examples, increasing $\tau$ sharpens an individual averaged readout but does not alter $\Gamma_m$.
 
 Now the heart of the formalism. The exact update over a step, in its cleanest form, keeps the populations Bayesian and lets each coherence carry the geometric mean of the two likelihoods, with an optional pure-dephasing factor for a non-ideal detector:
 
