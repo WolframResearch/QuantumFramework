@@ -320,8 +320,13 @@ VerificationTest[
     TestID -> "StatePreparation-roundtrip-GHZ3"
 ]
 
+(* The W3 multiplexer angles produce algebraically equal radicals in more than
+   one spelling (Sqrt[(3 + 2 Sqrt[2])/6] is (1 + Sqrt[2])/Sqrt[6]), so the
+   residual's syntactic reduction to 0 is not guaranteed; assert the state
+   numerically: machine roundoff on these O(1) amplitudes sits orders below
+   Chop's default 1*^-10 tolerance. *)
 VerificationTest[
-    Chop @ Norm[QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"] - QuantumState["W"[3]]["StateVector"]],
+    Chop @ Norm[N @ QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"] - N @ QuantumState["W"[3]]["StateVector"]],
     0,
     TestID -> "StatePreparation-roundtrip-W3"
 ]
@@ -722,14 +727,20 @@ VerificationTest[
     TestID -> "Exp-string-shorthand-entangling"
 ]
 
-(* CHARACTERIZATION (known limitation, tracked): the Exp-of-operator route,
-   QuantumOperator[Exp[I phi QuantumOperator["PauliX"]]], keeps the baseline
-   eigendecomposition closed form, which is 0/0 at exactly phi = 0; its limit
-   is the identity, and the string route above is regular there directly. *)
+(* Both spellings of the operator exponential, Exp[op] and E^op, share the
+   scalar-base Power route, so the Exp-of-operator form is a true matrix
+   exponential: identical in form to the E^ spelling and regular at exactly
+   phi = 0, where an eigendecomposition closed form would divide by vanishing
+   eigenvalue differences. *)
 VerificationTest[
-    Simplify[Limit[Normal[QuantumOperator[Exp[I \[FormalPhi] QuantumOperator["PauliX"]]]["Matrix"]], \[FormalPhi] -> 0]],
-    IdentityMatrix[2],
-    TestID -> "Exp-operator-route-limit-at-zero"
+    With[{m = Normal[QuantumOperator[Exp[I \[FormalPhi] QuantumOperator["PauliX"]]]["Matrix"]]},
+        {
+            m === Normal[QuantumOperator[E^(I \[FormalPhi] QuantumOperator["PauliX"])]["Matrix"]],
+            m /. \[FormalPhi] -> 0
+        }
+    ],
+    {True, IdentityMatrix[2]},
+    TestID -> "Exp-operator-route-regular-at-zero"
 ]
 
 (* An element neither evaluation nor a shorthand pass can reduce fails loudly

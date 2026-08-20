@@ -480,9 +480,8 @@ SPSRGradientValues[generatorFunction_,pauli_,OptionsPattern[]]:=Module[{result,s
 
 				state=QuantumCircuitOperator[{
 				
-		(* each gate must be an operator exponential: a bare gate name inside Exp degrades
-		   to Power[E, ...], which the circuit shorthand cannot parse, and MatrixExp (unlike
-		   Exp on an operator) stays regular where its exponent vanishes (s = 0, 1; \[Phi] = 0) *)
+		(* each gate is the matrix exponential of a lifted operator, so every element
+		   is regular where its exponent vanishes (s = 0, 1; \[Phi] = 0) *)
 		MatrixExp[I*(1.-s)*QuantumOperator[generatorFunction[\[Theta]]]],
 
 				MatrixExp[I*\[Phi]*QuantumOperator[pauli]],
