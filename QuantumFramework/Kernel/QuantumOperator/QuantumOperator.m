@@ -580,9 +580,16 @@ QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /;
    into Power[E, ...], so without a rule of its own Exp would fall through to
    the generic NumericFunction rule below, whose eigendecomposition closed form
    divides by eigenvalue differences and is singular where they vanish
-   (Exp[I phi op] at phi = 0). Restoring the Power normal form keeps both
-   spellings of the operator exponential on the scalar-base rule above. *)
-QuantumOperator /: Exp[qo_QuantumOperator] := E ^ qo
+   (Exp[I phi op] at phi = 0). An endomorphism therefore takes the Power normal
+   form, keeping both spellings of the operator exponential on the scalar-base
+   rule above; a non-endomorphism has no composition powers to sum, takes no
+   part in that rule (whose fall-through reads Power arguments matrix-first),
+   and is read as the matrix exponential of its stored matrix. *)
+QuantumOperator /: Exp[qo_QuantumOperator] :=
+    If[ TrueQ[qo["SquareQ"]] && qo["Input"]["Dual"] === qo["Output"],
+        E ^ qo,
+        MatrixExp[qo]
+    ]
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
     op = qo["Sort"]

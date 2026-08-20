@@ -727,20 +727,33 @@ VerificationTest[
     TestID -> "Exp-string-shorthand-entangling"
 ]
 
-(* Both spellings of the operator exponential, Exp[op] and E^op, share the
-   scalar-base Power route, so the Exp-of-operator form is a true matrix
-   exponential: identical in form to the E^ spelling and regular at exactly
-   phi = 0, where an eigendecomposition closed form would divide by vanishing
-   eigenvalue differences. *)
+(* On an endomorphism, both spellings of the operator exponential, Exp[op] and
+   E^op, share the scalar-base Power route, so the Exp-of-operator form is a
+   true matrix exponential: identical in form to the E^ spelling and regular at
+   exactly phi = 0, where an eigendecomposition closed form would divide by
+   vanishing eigenvalue differences. The numeric reference is an independent
+   truncated exponential series, not MatrixExp itself. *)
 VerificationTest[
     With[{m = Normal[QuantumOperator[Exp[I \[FormalPhi] QuantumOperator["PauliX"]]]["Matrix"]]},
         {
             m === Normal[QuantumOperator[E^(I \[FormalPhi] QuantumOperator["PauliX"])]["Matrix"]],
-            m /. \[FormalPhi] -> 0
+            m /. \[FormalPhi] -> 0,
+            Norm[(m /. \[FormalPhi] -> 0.7) - Sum[MatrixPower[0.7 I Normal[PauliMatrix[1]], k]/k!, {k, 0, 40}]] < 1*^-12
         }
     ],
-    {True, IdentityMatrix[2]},
+    {True, IdentityMatrix[2], True},
     TestID -> "Exp-operator-route-regular-at-zero"
+]
+
+(* A square operator whose input frame is not the dual of its output frame has
+   no composition powers to sum, so it takes no part in the scalar-base Power
+   route: Exp reads it as the matrix exponential of its stored matrix. *)
+VerificationTest[
+    With[{qo = QuantumOperator[{{0, 1}, {1, 0}}, QuantumBasis[QuditBasis["PauliZ"], QuditBasis["PauliX"]]]},
+        Normal[Exp[qo]["Matrix"]] === Normal[MatrixExp[qo]["Matrix"]]
+    ],
+    True,
+    TestID -> "Exp-operator-non-endomorphism-keeps-matrix-exponential"
 ]
 
 (* An element neither evaluation nor a shorthand pass can reduce fails loudly
