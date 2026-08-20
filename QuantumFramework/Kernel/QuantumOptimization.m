@@ -482,7 +482,9 @@ SPSRGradientValues[generatorFunction_,pauli_,OptionsPattern[]]:=Module[{result,s
 				
 		Exp[I*(1.-s)*QuantumOperator[generatorFunction[\[Theta]]]],
 		
-				Exp[I*\[Phi]*pauli],
+				(* the shift gate's generator must enter Exp as an operator: a bare gate name
+				   inside Exp degrades to Power[E, ...], which the circuit shorthand cannot parse *)
+				Exp[I*\[Phi]*QuantumOperator[pauli]],
 		
 				Exp[I*s*QuantumOperator[generatorFunction[\[Theta]]]]
 		
