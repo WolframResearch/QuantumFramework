@@ -128,8 +128,7 @@ VerificationTest[
             \[Beta] SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA],
         $antiVars,
         "Scalars" -> {\[Alpha], \[Beta]}],
-    -\[Alpha] + 2 \[Beta] + \[Alpha] \[FormalA] ** SuperDagger[\[FormalA]] -
-        4 \[Beta] \[FormalA] ** SuperDagger[\[FormalA]] +
+    -\[Alpha] + 2 \[Beta] + (\[Alpha] - 4 \[Beta]) \[FormalA] ** SuperDagger[\[FormalA]] +
         \[Beta] GeneralizedPower[NonCommutativeMultiply, \[FormalA], 2] **
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 2],
     TestID -> "Antinormal-ScalarCoefficients"

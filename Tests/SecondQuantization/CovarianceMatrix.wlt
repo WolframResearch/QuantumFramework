@@ -1,3 +1,7 @@
+Needs["Wolfram`QuantumFramework`"]
+Needs["Wolfram`QuantumFramework`SecondQuantization`"]
+
+
 BeginTestSection["CovarianceMatrix - vacuum and Fock states"]
 
 (* Vacuum: Serafini convention gives sigma = (1/2) I *)

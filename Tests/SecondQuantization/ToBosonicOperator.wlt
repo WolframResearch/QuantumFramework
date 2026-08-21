@@ -1,3 +1,7 @@
+Needs["Wolfram`QuantumFramework`"]
+Needs["Wolfram`QuantumFramework`SecondQuantization`"]
+
+
 BeginTestSection["ToBosonicOperator - single mode"]
 
 (* a^dagger a (number operator) via ** matches direct composition *)

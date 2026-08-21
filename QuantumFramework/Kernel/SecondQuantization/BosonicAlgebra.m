@@ -49,31 +49,38 @@ Block[{
 
 
 BosonicNormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+"\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings expr into normal order using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: Automatic (default), \"GrobnerBasis\", or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicNormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
 
 BosonicNormalOrder::unknownMethod = "Unknown Method: `1`."
 
-Options[BosonicNormalOrder] = {Method -> "GrobnerBasis", "Scalars" -> {}}
+Options[BosonicNormalOrder] = {Method -> Automatic, "Scalars" -> {}}
+
+(* Ordering is linear: a sum maps over its summands, and the map stays on
+   this kernel (parallel sub-kernels do not load the paclet).  A summand the
+   monomial reducer rejects fails the whole sum rather than leaving a
+   $Failed inside a Plus. *)
+linearOverSums[f_][expr_] :=
+    If[ MatchQ[expr, _Plus],
+        Replace[Map[f, expr], p_ /; ! FreeQ[p, $Failed] :> $Failed],
+        f[expr]
+    ]
 
 (* With no field variables there is nothing to reduce: a c-number is already in
    normal order, so return it unchanged. *)
 BosonicNormalOrder[expr_, {}, OptionsPattern[]] := expr
 
 BosonicNormalOrder[expr_, vars_List, opts : OptionsPattern[]] :=
-Block[{
+With[{
     method = OptionValue[Method],
     scalars = OptionValue["Scalars"]
 },
-    If[ MatchQ[expr, _Plus],
-        Return[Total[ParallelMap[
-            BosonicNormalOrder[#, vars, "Scalars" -> scalars, Method -> method] &,
-            List @@ expr
-        ]]]
-    ];
-    If[ method === "GrobnerBasis", Return[grobnerNormalOrder[expr, vars, scalars]] ];
-    If[ method === "Blasiak",      Return[MultiModeBlasiakOrder[expr, vars, scalars]] ];
-    Message[BosonicNormalOrder::unknownMethod, method];
-    $Failed
+    Replace[method, {
+        (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
+        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars],
+        (* MultiModeBlasiakOrder takes one monomial at a time. *)
+        "Blasiak" :> linearOverSums[MultiModeBlasiakOrder[#, vars, scalars] &][expr],
+        _ :> (Message[BosonicNormalOrder::unknownMethod, method]; $Failed)
+    }]
 ]
 
 
@@ -95,7 +102,7 @@ Block[{
 
 
 BosonicAntinormalOrder::usage =
-"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: \"GrobnerBasis\" (default) or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
+"\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Brings the polynomial expr into anti-normal order, with every annihilation operator to the left of every creation operator, using bosonic commutation relations.\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Specifies the reduction method: Automatic (default), \"GrobnerBasis\", or \"Blasiak\".\n\!\(\*RowBox[{\"BosonicAntinormalOrder\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) Treats syms as commuting scalars during reduction.";
 
 BosonicAntinormalOrder::unknownMethod = "Unknown Method: `1`."
 
@@ -110,20 +117,17 @@ With[{
     method = OptionValue[Method],
     scalars = OptionValue["Scalars"]
 },
-    If[ MatchQ[expr, _Plus],
-        Return[Total[ParallelMap[
-            BosonicAntinormalOrder[#, vars, "Scalars" -> scalars, Method -> method] &,
-            List @@ expr
-        ]]]
-    ];
     Replace[method, {
-        "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "Antinormal"],
-        (* normal-order the swapped monomial, then swap back *)
-        "Blasiak" :> ladderSwap[
-            MultiModeBlasiakOrder[ladderSwap[expr, vars], vars, scalars],
-            vars,
-            "Inverse"
-        ],
+        (* NonCommutativePolynomialReduce reduces a whole Plus itself. *)
+        Automatic | "GrobnerBasis" :> grobnerNormalOrder[expr, vars, scalars, "Antinormal"],
+        (* Normal-order each swapped monomial, then swap back. *)
+        "Blasiak" :> linearOverSums[
+            ladderSwap[
+                MultiModeBlasiakOrder[ladderSwap[#, vars], vars, scalars],
+                vars,
+                "Inverse"
+            ] &
+        ][expr],
         _ :> (Message[BosonicAntinormalOrder::unknownMethod, method]; $Failed)
     }]
 ]
