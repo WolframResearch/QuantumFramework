@@ -743,11 +743,12 @@ VerificationTest[
     TestID -> "Power-unit-base-identity"
 ]
 
-(* CHARACTERIZATION (contract boundary, not an endorsement): a zero base, a
-   frame-mismatched square operator (not an endomorphism), and a non-square
-   exponent all keep the generic reading, which is matrix-first: it computes
-   op^base where the user wrote base^op, so 0^Z and 2^(non-endomorphism) both
-   come back as the identity, op to the power zero or two. *)
+(* CHARACTERIZATION (contract boundary): a zero base and a non-square exponent
+   keep the generic reading, which is matrix-first: it computes op^base where
+   the user wrote base^op, so 0^Z is the identity, op to the power zero. A
+   square exponent takes the scalar-base reading whatever frames it carries,
+   so 2^Z is the exponential of the stored matrix, diag(2, 1/2), under any
+   frame pair. *)
 VerificationTest[
     Normal[(0^QuantumOperator["Z"])["Matrix"]],
     {{1, 0}, {0, 1}},
@@ -758,8 +759,8 @@ VerificationTest[
     With[{mm = QuantumOperator[PauliMatrix[3], QuantumBasis[QuditBasis["PauliX"], QuditBasis[2]]]},
         Normal[(2^mm)["Matrix"]]
     ],
-    {{1, 0}, {0, 1}},
-    TestID -> "Power-non-endomorphism-generic-reading"
+    {{2, 0}, {0, 1/2}},
+    TestID -> "Power-square-cross-frame-stored-exponential"
 ]
 
 VerificationTest[

@@ -452,7 +452,7 @@ FubiniStudyMetricTensorLayers[qc_QuantumCircuitOperator, parameters_List]:=Modul
 
 (* ::Input::Initialization::Plain:: *)
 Options[SPSRGradientValues]={
-"Shift"->\[Pi]/4.,
+"Shift"->\[Pi]/4,
 
 "ParameterValues"->Subdivide[0,2\[Pi],50],
 
@@ -480,13 +480,11 @@ SPSRGradientValues[generatorFunction_,pauli_,OptionsPattern[]]:=Module[{result,s
 
 				state=QuantumCircuitOperator[{
 				
-		(* each gate is the matrix exponential of a lifted operator, so every element
-		   is regular where its exponent vanishes (s = 0, 1; \[Phi] = 0) *)
-		MatrixExp[I*(1.-s)*QuantumOperator[generatorFunction[\[Theta]]]],
+		Exp[I*(1-s)*QuantumOperator[generatorFunction[\[Theta]]]],
 
-				MatrixExp[I*\[Phi]*QuantumOperator[pauli]],
+				Exp[I*\[Phi]*QuantumOperator[pauli]],
 
-				MatrixExp[I*s*QuantumOperator[generatorFunction[\[Theta]]]]
+				Exp[I*s*QuantumOperator[generatorFunction[\[Theta]]]]
 		
 				},"Parameters"->{s,\[Phi]}][];
 	
@@ -508,7 +506,7 @@ SPSRGradientValues[generatorFunction_,pauli_,OptionsPattern[]]:=Module[{result,s
 
 (* ::Input::Initialization::Plain:: *)
 Options[ASPSRGradientValues]={
-"Shift"->\[Pi]/4.,
+"Shift"->\[Pi]/4,
 
 "ParameterValues"->Subdivide[0,2\[Pi],50],
 
@@ -536,7 +534,7 @@ ASPSRGradientValues[generatorFunction_,pauli_,H_,OptionsPattern[]]:=Module[
 	result=Table[
 				state=QuantumCircuitOperator[{
 		
-				Exp[I*(1.-s)*QuantumOperator[generatorFunction[\[Theta]]]],
+				Exp[I*(1-s)*QuantumOperator[generatorFunction[\[Theta]]]],
 		
 				Exp[I*\[Pi]/4*(QuantumOperator[H]+shift*QuantumOperator[pauli])],
 		

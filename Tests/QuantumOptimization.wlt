@@ -24,11 +24,12 @@ VerificationTest[
     TestID -> "Opt-gradient-descent-converges"
 ]
 
-(* SPSRGradientValues builds MatrixExp[I phi QuantumOperator[pauli]] for its shift gate; a bare
-   gate-name string in that slot degrades to Power[E, ...] and exceeds $RecursionLimit in
-   the circuit-shorthand parser. For a commuting generator G = theta X ox I the two split
-   evolutions merge for every sample, so each random s draw yields the same difference and
-   the estimator equals the exact derivative of <Z1> = Cos[2 theta], namely -2 Sin[2 theta]. *)
+(* SPSRGradientValues lifts each gate name to an operator and exponentiates,
+   Exp[I phi QuantumOperator[pauli]], so every shift gate is the operator
+   exponential itself, regular where its exponent vanishes. For a commuting
+   generator G = theta X ox I the two split evolutions merge for every sample,
+   so each random s draw yields the same difference and the estimator equals
+   the exact derivative of <Z1> = Cos[2 theta], namely -2 Sin[2 theta]. *)
 VerificationTest[
     Module[{gen},
         gen[t1_] = Normal @ QuantumOperator[t1*QuantumOperator[{"X" -> {1}, "I" -> {2}}], "Parameters" -> {t1}]["Matrix"];
