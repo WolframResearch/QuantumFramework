@@ -22,7 +22,7 @@ PackageExport["QuantumStateSampler"]
 (*Public Symbols*)
 
 
-QuantumMeasurementSimulation::usage = "QuantumMeasurementSimulation[_QuantumState, (list of _QuantumMeasurementOperator), counts (list or per measurement operator)]";
+QuantumMeasurementSimulation::usage = "QuantumMeasurementSimulation[state, {mop1, mop2, ...}, n] simulates n repetitions of each quantum measurement operator mopk on state, giving an association from each operator to its vector of outcome counts.";
 
 inversion::usage = "inversion[measurementResult]";
 
@@ -34,7 +34,7 @@ logLikelihood::usage = "logLikelihood[_QuantumState, measurementResult]";
 
 buresState::usage = "looks like a panel. Extract buresState['densityMatrix'] or buresState['state']";
 
-QuantumStateEstimate::usage = "QuantumStateEstimate[measurementResults]";
+QuantumStateEstimate::usage = "QuantumStateEstimate[measurementResult] reconstructs a quantum state from measurement counts, giving a QuantumStateEstimation object that holds linear-inversion, maximum-likelihood and Bayesian estimates.\nQuantumStateEstimate[{povm1, povm2, ...}, {counts1, counts2, ...}] estimates from explicit POVM element matrices and their outcome counts.";
 
 QuantumStateEstimation::usage ="Use QuantumStateEstimation['properties']";
 
@@ -56,8 +56,19 @@ MeasurementResultQ[___] := False
 (*Measurement Simulation*)
 
 
+povmMatrix[qmo_] := Developer`ToPackedArray[N[Flatten /@ Normal[qmo["POVMElements"]]]]
+
+reducedState[state_, trace_] := Developer`ToPackedArray @ N @ Flatten @ Transpose @ Normal @
+	If[trace === {}, state, QuantumPartialTrace[state, trace]]["DensityMatrix"]
+
+outcomeProbabilities[qmo_, rho_] := # / Total[#] & @ Clip[Re[povmMatrix[qmo] . rho], {0, 1}]
+
 QuantumMeasurementSimulation[state_ ? QuantumStateQ, measurementOperators_ ? (VectorQ[#, QuantumMeasurementOperatorQ] &), n_] :=
-	AssociationMap[RandomVariate[MultinomialDistribution[n, #[state]["ProbabilitiesList"]]] &, measurementOperators]
+	Block[{traces, states},
+		traces = AssociationMap[Complement[Range[state["Qudits"]], #["Target"]] &, measurementOperators];
+		states = AssociationMap[reducedState[state, #] &, Union[Values[traces]]];
+		AssociationMap[RandomVariate[MultinomialDistribution[n, outcomeProbabilities[#, states[traces[#]]]]] &, measurementOperators]
+	]
 
 
 (* ::Section::Closed:: *)
