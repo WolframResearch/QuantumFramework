@@ -320,14 +320,17 @@ VerificationTest[
     TestID -> "StatePreparation-roundtrip-GHZ3"
 ]
 
-(* The W3 multiplexer angles produce algebraically equal radicals in more than
-   one spelling (Sqrt[(3 + 2 Sqrt[2])/6] is (1 + Sqrt[2])/Sqrt[6]), so the
-   residual's syntactic reduction to 0 is not guaranteed; assert the state
-   numerically: machine roundoff on these O(1) amplitudes sits orders below
-   Chop's default 1*^-10 tolerance. *)
+(* The multiplexer's RY factors carry off-diagonal entries in radical spellings
+   that are equal and opposite without being syntactically so,
+   (-1 + Sqrt[2])/Sqrt[6] against -(1/Sqrt[3]) + 1/Sqrt[6], so Plus need not
+   collapse the residual to literal zeros. RootReduce decides zero for
+   algebraic numbers in any spelling, keeping the assertion exact. *)
 VerificationTest[
-    Chop @ Norm[N @ QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"] - N @ QuantumState["W"[3]]["StateVector"]],
-    0,
+    RootReduce[
+        Normal[QuantumCircuitOperator["QuantumState"[QuantumState["W"[3]]]][]["StateVector"]] -
+        Normal[QuantumState["W"[3]]["StateVector"]]
+    ],
+    ConstantArray[0, 8],
     TestID -> "StatePreparation-roundtrip-W3"
 ]
 
