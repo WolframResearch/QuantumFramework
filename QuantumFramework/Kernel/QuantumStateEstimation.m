@@ -56,18 +56,23 @@ MeasurementResultQ[___] := False
 (*Measurement Simulation*)
 
 
-povmMatrix[qmo_] := Developer`ToPackedArray[N[Flatten /@ Normal[qmo["POVMElements"]]]]
-
-reducedState[state_, trace_] := Developer`ToPackedArray @ N @ Flatten @ Transpose @ Normal @
-	If[trace === {}, state, QuantumPartialTrace[state, trace]]["DensityMatrix"]
-
-outcomeProbabilities[qmo_, rho_] := # / Total[#] & @ Clip[Re[povmMatrix[qmo] . rho], {0, 1}]
-
 QuantumMeasurementSimulation[state_ ? QuantumStateQ, measurementOperators_ ? (VectorQ[#, QuantumMeasurementOperatorQ] &), n_] :=
 	Block[{traces, states},
 		traces = AssociationMap[Complement[Range[state["Qudits"]], #["Target"]] &, measurementOperators];
-		states = AssociationMap[reducedState[state, #] &, Union[Values[traces]]];
-		AssociationMap[RandomVariate[MultinomialDistribution[n, outcomeProbabilities[#, states[traces[#]]]]] &, measurementOperators]
+		states = AssociationMap[
+			Developer`ToPackedArray @ N @ Flatten @ If[
+				state["VectorQ"],
+				ArrayDot[Conjugate[state["StateTensor"]], state["StateTensor"], Transpose[{#, #}]],
+				Transpose[Normal[MatrixPartialTrace[state["DensityMatrix"], #, state["Dimensions"]]]]
+			] &,
+			Union[Values[traces]]
+		];
+		AssociationMap[
+			RandomVariate[MultinomialDistribution[n,
+				Normalize[Clip[Re[Developer`ToPackedArray[N[Flatten /@ Normal[#["POVMElements"]]]] . states[traces[#]]], {0, 1}], Total]
+			]] &,
+			measurementOperators
+		]
 	]
 
 
