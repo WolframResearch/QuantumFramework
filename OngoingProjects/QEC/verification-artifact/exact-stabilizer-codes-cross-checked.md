@@ -41,17 +41,13 @@ Why is this worth a dedicated exact tool when Stim already simulates stabilizer 
 
 The other axis is symbolic generality. A numeric simulator represents one concrete code at a time: fixed $n$, fixed generators, fixed angles. A symbolic engine can carry $n$ as a symbol and certify a statement about an entire infinite family in one evaluation, or carry an error angle $\theta$ and return the syndrome expectation as an exact function of it. Neither of those is a thing Stim is built to do, and neither competes with what Stim is built to do. The tools are complementary. This notebook stakes out the exact-and-symbolic corner and checks, at every step, that its exact answers agree with Stim's wherever the two overlap.
 
-The exact code-analysis layer used here ships in the QuantumFramework paclet, following the constructions in Gottesman's thesis. Let us load it. The code lives inside a QuantumFramework checkout; the cell below finds that checkout by walking up from the working directory, so there is no absolute path to edit (if you opened this notebook from outside the repository, set `repoDir` by hand to your checkout).
+The exact code-analysis layer used here ships in the QuantumFramework paclet, following the constructions in Gottesman's thesis. Let us load it: register the paclet directory, then read in the QEC package. The paths below point to a local QuantumFramework checkout; adjust them to your own.
 
 ```wl
-repoDir = SelectFirst[
-    NestList[ParentDirectory, Directory[], 10],
-    FileExistsQ[FileNameJoin[{#, "OngoingProjects", "QEC", "QEC", "QEC.wl"}]] &,
-    $Failed
-];
-PacletDirectoryLoad[repoDir];
-Needs["Wolfram`QuantumFramework`"];
-Get[FileNameJoin[{repoDir, "OngoingProjects", "QEC", "QEC", "QEC.wl"}]];
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/"]
+Needs["Wolfram`QuantumFramework`"]
+
+Get["/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/QEC/QEC/QEC.wl"]
 ```
 
 A code is an object you can ask questions of. Build the Steane code and read its parameters and generators:
