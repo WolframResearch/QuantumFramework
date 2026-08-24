@@ -1,0 +1,2724 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    105725,       2715]
+NotebookOptionsPosition[     89983,       2404]
+NotebookOutlinePosition[     90305,       2418]
+CellTagsIndexPosition[     90262,       2415]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Exact Stabilizer Codes", "Title",
+ CellID->874461601,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell["\<\
+Symbolic, sign-exact stabilizer-code analysis in the Wolfram Language, \
+re-derived from GF(2) first principles, cross-checked against Stim, and \
+carrying a parameter Stim cannot.\
+\>", "Subtitle",
+ CellID->36768919,ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+
+Cell["Mads Bahrami (last updated: Aug 24, 2026)", "Author",
+ CellID->1699946459,ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+
+Cell["Wolfram Research Inc, USA", "Affiliation",
+ CellID->1535504786,ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+
+Cell["Setting the Stage: How This Notebook Flows", "Subsection",
+ CellID->1208482393,ExpressionUUID->"25a568a6-87a2-527f-535a-810032572145"],
+
+Cell[TextData[{
+ "This notebook is a computation-first tour of a small, sharp corner of \
+quantum error correction: the ",
+ StyleBox["exact", "TI"],
+ " analysis of stabilizer codes. For the five textbook codes (the three-qubit \
+bit-flip and phase-flip codes, the nine-qubit Shor code, the five-qubit \
+perfect code, and the seven-qubit Steane code) we compute the exact code \
+distance and a minimum-weight witness for it, the logical Pauli operators \
+together with their full commutation algebra, and a sign-exact +1 Clifford \
+encoder. Every one of these results is then verified two independent ways: by \
+a from-scratch symplectic re-derivation written in this notebook, and by a \
+differential comparison against ",
+ ButtonBox["Stim",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://github.com/quantumlib/Stim"], None}],
+ ", the field-standard stabilizer simulator. At the end we do the one thing a \
+numeric simulator structurally cannot: carry a symbolic parameter (a whole \
+code family indexed by ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+ ", and a continuous error angle ",
+ Cell[BoxData[
+  StyleBox["\[Theta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ ") and certify the answer in a single evaluation."
+}], "Text",
+ CellID->28909615,ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
+
+Cell[TextData[{
+ "In other words, I have tried to build a small, honest instrument. It does \
+not race Stim on scale or speed, because it is not that kind of tool: it \
+computes things exactly, and exact minimum distance is NP-hard, so it lives \
+at small ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
+ " by mathematical necessity. What it offers instead is exactness and \
+symbolic generality, and the whole notebook is arranged so you can watch both \
+claims be checked rather than take them on faith. I strongly believe in a \
+computation-first narrative for learning: in a sense, if I cannot compute it, \
+I cannot claim to understand it."
+}], "Text",
+ CellID->193832008,ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+
+Cell["\<\
+Before we start, a few notes on the environment. This is a live Wolfram \
+notebook: evaluate the cells from top to bottom. Some cells define objects \
+(the code list, a handful of small symplectic functions, a Python session) \
+that later cells use, so order matters. The narrative runs as one continuous \
+sequence, like a movie, with headings only as gentle transitions. My \
+suggestion is to read each output and its meaning first, and only then unpack \
+the input code that produced it.\
+\>", "Text",
+ CellID->684317082,ExpressionUUID->"3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+
+Cell[TextData[{
+ "Remember that you are not locked into the code as given. You can (and \
+should) change the codes, feed in your own stabilizer generators, push the \
+symbolic family further, and re-run. That is the point of shipping this as a \
+notebook rather than a PDF. If you have questions, reach out at ",
+ ButtonBox["quantum@wolfram.com",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["mailto:quantum@wolfram.com"], None}],
+ "."
+}], "Text",
+ CellID->528485616,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+
+Cell["Prerequisites and How to Read This", "Subsection",
+ CellID->1392207227,ExpressionUUID->"234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+
+Cell[TextData[{
+ "You should be comfortable with the stabilizer formalism at the level of a \
+first course: Pauli operators, stabilizer generators, the codespace as their \
+joint +1 eigenspace, and logical operators as the normalizer modulo the \
+stabilizer group. The binary symplectic picture (each Pauli as a vector over \
+GF(2), commutation as a symplectic inner product) is built up from scratch in \
+Part II, so no prior fluency there is required. The cross-check in Part III \
+calls Stim through ",
+ Cell[BoxData[
+  ButtonBox["ExternalEvaluate",
+   BaseStyle->"Hyperlink",
+   ButtonData->{
+     URL["https://reference.wolfram.com/language/ref/ExternalEvaluate.html"], 
+     None}]], "InlineFormula",ExpressionUUID->
+  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+ "; if you do not have Stim installed those cells will say so and you can \
+skip them, keeping the independent re-derivation as your check."
+}], "Text",
+ CellID->705466992,ExpressionUUID->"0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+
+Cell["Let's start!", "Text",
+ CellID->1350516518,ExpressionUUID->"6ec9a758-58be-624c-16f6-3f02594b3096"],
+
+Cell["Part I: The Open Niche Beside a Fast Simulator", "Section",
+ CellID->907546795,ExpressionUUID->"23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+
+Cell[TextData[{
+ "A stabilizer code on ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e84829b-9667-6594-16bb-1bc523124ffe"],
+ " physical qubits is defined by a set of commuting Pauli operators, its \
+stabilizer generators. The codespace is their simultaneous +1 eigenspace, and \
+if there are ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "569e173f-6b36-b240-7ea5-8f790ec000aa"],
+ " independent generators the code stores ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["k", "TI"], "=", 
+   StyleBox["n", "TI"], "-", 
+   StyleBox["m", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+ " logical qubits. An error is ",
+ StyleBox["detectable", "TI"],
+ " when it anticommutes with at least one generator (it flips that \
+generator's measured eigenvalue, a syndrome bit), and ",
+ StyleBox["undetectable", "TI"],
+ " when it commutes with all of them. The dangerous errors are the \
+undetectable ones that still act nontrivially on the codespace: these are the \
+logical operators, and the code distance is the weight of the lightest one."
+}], "Text",
+ CellID->814772321,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+
+Cell[TextData[{
+ "Equivalently, and this is the representation the whole subject runs on, \
+each Pauli string on ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2867ea9b-6e8d-517b-581c-03c50b382041"],
+ " qubits becomes a binary vector of length ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["n", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+ ": an ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+ " contributes to the first half, a ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+ " to the second, a ",
+ Cell[BoxData[
+  StyleBox["Y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
+ " to both. Two Paulis commute exactly when a bilinear form over GF(2), the \
+symplectic product ",
+ Cell[BoxData[
+  StyleBox["\[Omega]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ ", vanishes between their vectors. In short, the entire question \"is this \
+error detectable, is it logical, how heavy is the lightest logical\" becomes \
+linear algebra over the two-element field."
+}], "Text",
+ CellID->1054628905,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+
+Cell[TextData[{
+ "Why is this worth a dedicated exact tool when Stim already simulates \
+stabilizer circuits at enormous scale? Because the two live on different \
+axes. Stim samples: it runs stabilizer circuits and detector-error models \
+blindingly fast, over thousands of qubits, which is exactly what decoder \
+benchmarking and threshold estimation need. It does not hand you the exact \
+minimum distance of a code, and for a deep reason. Computing the exact \
+minimum distance of a stabilizer code is NP-hard (Kapshikar and Kundu, ",
+ ButtonBox["arXiv:2203.04262",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://arxiv.org/abs/2203.04262"], None}],
+ "), so any tool that returns the ",
+ StyleBox["exact", "TI"],
+ " answer is confined to small codes no matter how it is written. That is not \
+a limitation to apologize for; it is the shape of the problem. The textbook \
+codes are small, and small is precisely where an exact, symbolic treatment \
+earns its keep."
+}], "Text",
+ CellID->2043779557,ExpressionUUID->"3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+
+Cell[TextData[{
+ "The other axis is symbolic generality. A numeric simulator represents one \
+concrete code at a time: fixed ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+ ", fixed generators, fixed angles. A symbolic engine can carry ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+ " as a symbol and certify a statement about an entire infinite family in one \
+evaluation, or carry an error angle ",
+ Cell[BoxData[
+  StyleBox["\[Theta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+ " and return the syndrome expectation as an exact function of it. Neither of \
+those is a thing Stim is built to do, and neither competes with what Stim is \
+built to do. The tools are complementary. This notebook stakes out the \
+exact-and-symbolic corner and checks, at every step, that its exact answers \
+agree with Stim's wherever the two overlap."
+}], "Text",
+ CellID->17830494,ExpressionUUID->"1cbde497-e826-5557-4442-fdd089d33fbd"],
+
+Cell[TextData[{
+ "The exact code-analysis layer used here ships in the QuantumFramework \
+paclet, following the constructions in Gottesman's thesis. Let us load it. \
+The code lives inside a QuantumFramework checkout; the cell below finds that \
+checkout by walking up from the working directory, so there is no absolute \
+path to edit (if you opened this notebook from outside the repository, set ",
+ Cell[BoxData["repoDir"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+ " by hand to your checkout)."
+}], "Text",
+ CellID->1589986527,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"repoDir", " ", "=", " ", 
+   RowBox[{"SelectFirst", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"NestList", "[", 
+      RowBox[{"ParentDirectory", ",", " ", 
+       RowBox[{"Directory", "[", "]"}], ",", " ", "10"}], "]"}], ",", "\n", 
+     "    ", 
+     RowBox[{
+      RowBox[{"FileExistsQ", "[", 
+       RowBox[{"FileNameJoin", "[", 
+        RowBox[{"{", 
+         RowBox[{
+         "#", ",", " ", "\"\<OngoingProjects\>\"", ",", " ", "\"\<QEC\>\"", ",",
+           " ", "\"\<QEC\>\"", ",", " ", "\"\<QEC.wl\>\""}], "}"}], "]"}], 
+       "]"}], " ", "&"}], ",", "\n", "    ", "$Failed"}], "\n", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"PacletDirectoryLoad", "[", "repoDir", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Get", "[", 
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"{", 
+     RowBox[{
+     "repoDir", ",", " ", "\"\<OngoingProjects\>\"", ",", " ", "\"\<QEC\>\"", 
+      ",", " ", "\"\<QEC\>\"", ",", " ", "\"\<QEC.wl\>\""}], "}"}], "]"}], 
+   "]"}], ";"}]}], "Input",
+ CellLabel->"In[1]:= ",
+ CellID->943101875,ExpressionUUID->"1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+
+Cell["\<\
+A code is an object you can ask questions of. Build the Steane code and read \
+its parameters and generators:\
+\>", "Text",
+ CellID->67888809,ExpressionUUID->"5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"steane", " ", "=", " ", 
+   RowBox[{"QECCode", "[", "\"\<SteaneCode\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"steane", "[", "\"\<Parameters\>\"", "]"}], ",", " ", 
+   RowBox[{"steane", "[", "\"\<Generators\>\"", "]"}]}], "}"}]}], "Input",
+ CellLabel->"In[2]:= ",
+ CellID->1801257020,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"7", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"\<\"IIIXXXX\"\>", ",", "\<\"XIXIXIX\"\>", ",", "\<\"IXXIIXX\"\>",
+      ",", "\<\"IIIZZZZ\"\>", ",", "\<\"ZIZIZIZ\"\>", 
+     ",", "\<\"IZZIIZZ\"\>"}], "}"}]}], "}"}]], "Output",
+ CellLabel->"Out[2]= ",
+ CellID->358626973,ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The first entry is ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    StyleBox["n", "TI"]}], ",", 
+   RowBox[{
+    StyleBox["k", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ ", the physical and logical qubit counts; the second is the six Pauli-string \
+generators, three all-",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35077f55-9291-6519-633d-771f27244c63"],
+ " checks and three all-",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ebf3687-f906-130d-7644-afe0f8b37e57"],
+ " checks, the hallmark of a CSS code."
+}], "Text",
+ CellID->876231958,ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+
+Cell["Part II: The Five Textbook Codes, Exactly", "Section",
+ CellID->1020575516,ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+
+Cell["\<\
+Collect the five codes we will study into one association, so later cells can \
+sweep over all of them at once:\
+\>", "Text",
+ CellID->1967685850,ExpressionUUID->"4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"codes", " ", "=", " ", 
+   RowBox[{"AssociationMap", "[", "\n", "    ", 
+    RowBox[{"QECCode", ",", "\n", "    ", 
+     RowBox[{"{", 
+      RowBox[{"\"\<BitFlipCode\>\"", ",", " ", "\"\<PhaseFlipCode\>\"", ",", 
+       " ", "\"\<ShorCode\>\"", ",", " ", "\"\<5QubitCode\>\"", ",", 
+       " ", "\"\<SteaneCode\>\""}], "}"}]}], "\n", "]"}]}], ";"}], "\n", 
+ RowBox[{"Keys", "[", "codes", "]"}]}], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->1728662077,ExpressionUUID->"02f88238-86c8-66df-3287-2462337d4c25"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"BitFlipCode\"\>", ",", "\<\"PhaseFlipCode\"\>", 
+   ",", "\<\"ShorCode\"\>", ",", "\<\"5QubitCode\"\>", 
+   ",", "\<\"SteaneCode\"\>"}], "}"}]], "Output",
+ CellLabel->"Out[3]= ",
+ CellID->1356957898,ExpressionUUID->"034d641c-5834-e412-3173-7e4659c6cf78"]
+}, Open  ]],
+
+Cell["The Symplectic Picture: A Pauli as a Vector over GF(2)", "Subsection",
+ CellID->1653200050,ExpressionUUID->"52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+
+Cell[TextData[{
+ "To verify the package's answers independently, we will not call the \
+package's own distance or logical-operator routines and ask them to check \
+themselves. Instead we rebuild the underlying linear algebra from scratch, in \
+a handful of tiny functions, and let ",
+ StyleBox["those", "TI"],
+ " pass judgment. This is also the cleanest way to see the machinery turn."
+}], "Text",
+ CellID->1384978530,ExpressionUUID->"5bfe104a-50de-a555-0985-8a1461680fbf"],
+
+Cell[TextData[{
+ "Start at the bottom of the ladder: map a Pauli string to its binary \
+symplectic vector, an ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "134534fb-1061-d656-417a-ada5a115bcbc"],
+ "-block followed by a ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+ "-block. Define the per-letter rule and assemble:"
+}], "Text",
+ CellID->519689844,ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"xzOf", " ", "=", " ", 
+   RowBox[{"<|", 
+    RowBox[{
+     RowBox[{"\"\<I\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", "0"}], "}"}]}], ",", " ", 
+     RowBox[{"\"\<X\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}]}], ",", " ", 
+     RowBox[{"\"\<Y\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "1"}], "}"}]}], ",", " ", 
+     RowBox[{"\"\<Z\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", "1"}], "}"}]}]}], "|>"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"strip", "[", "str_", "]"}], " ", ":=", " ", 
+   RowBox[{"StringDelete", "[", 
+    RowBox[{"str", ",", " ", 
+     RowBox[{"StartOfString", " ", "~~", " ", 
+      RowBox[{"(", 
+       RowBox[{"\"\<+\>\"", " ", "|", " ", "\"\<-\>\""}], ")"}]}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"symOf", "[", "str_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"ps", " ", "=", " ", 
+       RowBox[{"xzOf", " ", "/@", " ", 
+        RowBox[{"Characters", "[", 
+         RowBox[{"strip", "[", "str", "]"}], "]"}]}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"Join", "[", 
+      RowBox[{
+       RowBox[{"ps", "[", 
+        RowBox[{"[", 
+         RowBox[{"All", ",", " ", "1"}], "]"}], "]"}], ",", " ", 
+       RowBox[{"ps", "[", 
+        RowBox[{"[", 
+         RowBox[{"All", ",", " ", "2"}], "]"}], "]"}]}], "]"}]}], "\n", 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"symOf", "[", "\"\<XZZXI\>\"", "]"}]}], "Input",
+ CellLabel->"In[4]:= ",
+ CellID->558143646,ExpressionUUID->"608e87cc-8fce-afdf-10b5-1e962a78f525"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "1", ",", "0", ",", "0", ",", "1", ",", "0", ",", "0", ",", "1", ",", "1", ",",
+    "0", ",", "0"}], "}"}]], "Output",
+ CellLabel->"Out[4]= ",
+ CellID->252167569,ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The first five entries are the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+ "-pattern, the last five the ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+ "-pattern; an ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+ " shows up in the left half, a ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+ " in the right, and a ",
+ Cell[BoxData[
+  StyleBox["Y", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ " would show up in both."
+}], "Text",
+ CellID->1541450781,ExpressionUUID->"6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+
+Cell[TextData[{
+ "Two Paulis commute exactly when the symplectic product of their vectors, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Omega]", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["u", "TI"], ",", 
+    StyleBox["v", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    StyleBox["x", "TI"], 
+    StyleBox["u", "TI"]], "\[CenterDot]", 
+   SubscriptBox[
+    StyleBox["z", "TI"], 
+    StyleBox["v", "TI"]], "+", 
+   SubscriptBox[
+    StyleBox["z", "TI"], 
+    StyleBox["u", "TI"]], "\[CenterDot]", 
+   SubscriptBox[
+    StyleBox["x", "TI"], 
+    StyleBox["v", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+ " taken mod 2, is zero. Define it:"
+}], "Text",
+ CellID->1657269721,ExpressionUUID->"7b6211f5-475c-1194-2911-88bf72e963fe"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"omega", "[", 
+    RowBox[{"u_", ",", " ", "v_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"n", " ", "=", " ", 
+       RowBox[{
+        RowBox[{"Length", "[", "u", "]"}], "/", "2"}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"Mod", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"Take", "[", 
+          RowBox[{"u", ",", " ", "n"}], "]"}], " ", ".", " ", 
+         RowBox[{"Drop", "[", 
+          RowBox[{"v", ",", " ", "n"}], "]"}]}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"Drop", "[", 
+          RowBox[{"u", ",", " ", "n"}], "]"}], " ", ".", " ", 
+         RowBox[{"Take", "[", 
+          RowBox[{"v", ",", " ", "n"}], "]"}]}]}], ",", " ", "2"}], "]"}]}], 
+    "\n", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"omega", "[", 
+    RowBox[{
+     RowBox[{"symOf", "[", "\"\<XII\>\"", "]"}], ",", " ", 
+     RowBox[{"symOf", "[", "\"\<ZII\>\"", "]"}]}], "]"}], ",", " ", 
+   RowBox[{"omega", "[", 
+    RowBox[{
+     RowBox[{"symOf", "[", "\"\<XII\>\"", "]"}], ",", " ", 
+     RowBox[{"symOf", "[", "\"\<IZI\>\"", "]"}]}], "]"}]}], "}"}]}], "Input",
+ CellLabel->"In[5]:= ",
+ CellID->2048061839,ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1", ",", "0"}], "}"}]], "Output",
+ CellLabel->"Out[5]= ",
+ CellID->1680809496,ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"]
+}, Open  ]],
+
+Cell[TextData[{
+ "As one can see, ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["X", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+ " anticommute (they share a qubit and disagree there), while ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["X", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "55f417ec-7166-d78d-038b-8eb60010bdd7"],
+ " commute (they act on different qubits). This single function is the whole \
+notion of \"detectable\": the syndrome of an error is just its symplectic \
+product against each generator."
+}], "Text",
+ CellID->496109794,ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"],
+
+Cell["\<\
+We will also need the weight of a Pauli (how many qubits it touches) and, for \
+the distance search, every Pauli of a given weight. Define both:\
+\>", "Text",
+ CellID->108435171,ExpressionUUID->"1d359769-845f-cd94-44ca-0f332deb97fe"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"wt", "[", "str_", "]"}], " ", ":=", " ", 
+   RowBox[{"Count", "[", 
+    RowBox[{
+     RowBox[{"Characters", "[", 
+      RowBox[{"strip", "[", "str", "]"}], "]"}], ",", " ", 
+     RowBox[{"Except", "[", "\"\<I\>\"", "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"weightK", "[", 
+    RowBox[{"n_", ",", " ", "k_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"If", "[", 
+    RowBox[{
+     RowBox[{"k", " ", "==", " ", "0"}], ",", "\n", "    ", 
+     RowBox[{"{", 
+      RowBox[{"StringRepeat", "[", 
+       RowBox[{"\"\<I\>\"", ",", " ", "n"}], "]"}], "}"}], ",", "\n", "    ", 
+     
+     RowBox[{"Catenate", " ", "@", " ", 
+      RowBox[{"Map", "[", "\n", "        ", 
+       RowBox[{
+        RowBox[{"Function", "[", 
+         RowBox[{"pos", ",", "\n", "            ", 
+          RowBox[{"StringJoin", " ", "/@", " ", 
+           RowBox[{"(", "\n", "                ", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"ReplacePart", "[", 
+               RowBox[{
+                RowBox[{"ConstantArray", "[", 
+                 RowBox[{"\"\<I\>\"", ",", " ", "n"}], "]"}], ",", " ", 
+                RowBox[{"Thread", "[", 
+                 RowBox[{"pos", " ", "->", " ", "#"}], "]"}]}], "]"}], " ", 
+              "&"}], " ", "/@", " ", 
+             RowBox[{"Tuples", "[", 
+              RowBox[{
+               RowBox[{"{", 
+                
+                RowBox[{"\"\<X\>\"", ",", " ", "\"\<Y\>\"", ",", 
+                 " ", "\"\<Z\>\""}], "}"}], ",", " ", "k"}], "]"}]}], "\n", 
+            "            ", ")"}]}]}], "\n", "        ", "]"}], ",", "\n", 
+        "        ", 
+        RowBox[{"Subsets", "[", 
+         RowBox[{
+          RowBox[{"Range", "[", "n", "]"}], ",", " ", 
+          RowBox[{"{", "k", "}"}]}], "]"}]}], "\n", "    ", "]"}]}]}], "\n", 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Length", "[", 
+    RowBox[{"weightK", "[", 
+     RowBox[{"5", ",", " ", "1"}], "]"}], "]"}], ",", " ", 
+   RowBox[{"Length", "[", 
+    RowBox[{"weightK", "[", 
+     RowBox[{"5", ",", " ", "2"}], "]"}], "]"}]}], "}"}]}], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->525840340,ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"15", ",", "90"}], "}"}]], "Output",
+ CellLabel->"Out[6]= ",
+ CellID->1708324045,ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679"]
+}, Open  ]],
+
+Cell[TextData[{
+ "On five qubits there are ",
+ Cell[BoxData[
+  RowBox[{"3", "\[CenterDot]", "5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ " single-qubit Paulis and ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox["3", "2"], 
+   TemplateBox[{"5", "2"},
+    "Binomial"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ea251ed-865f-e03c-1652-48b733ebb306"],
+ " weight-two Paulis; the counts confirm the enumerator is complete, which \
+matters because the distance search below trusts it to miss nothing."
+}], "Text",
+ CellID->203008389,ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell["Distance from First Principles", "Subsection",
+ CellID->1090263105,ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
+
+Cell[TextData[{
+ "Here is the definition made computational. A Pauli is a logical operator \
+when it lies in the normalizer but not in the stabilizer group: it commutes \
+with every generator (syndrome zero) ",
+ StyleBox["and", "TI"],
+ " it is not itself a product of generators. The second condition is the one \
+that is easy to get backwards. Membership in the stabilizer group is a GF(2) \
+span question, and the correct test is that appending the candidate's vector \
+to the generator matrix leaves the rank unchanged; so \"not in the group\" \
+means the rank strictly ",
+ StyleBox["rises", "TI"],
+ ". Define the logical test with the rank-rises condition spelled out:"
+}], "Text",
+ CellID->1560876240,ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"genMatrix", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"symOf", " ", "/@", " ", 
+    RowBox[{"code", "[", "\"\<Generators\>\"", "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"logicalVecQ", "[", 
+    RowBox[{"code_", ",", " ", "v_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"sg", " ", "=", " ", 
+        RowBox[{"genMatrix", "[", "code", "]"}]}], ",", " ", 
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"code", "[", "\"\<StabilizerCount\>\"", "]"}]}]}], "}"}], ",",
+      "\n", "    ", 
+     RowBox[{
+      RowBox[{"AllTrue", "[", 
+       RowBox[{"sg", ",", " ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"omega", "[", 
+           RowBox[{"v", ",", " ", "#"}], "]"}], " ", "===", " ", "0"}], " ", 
+         "&"}]}], "]"}], " ", "&&", " ", 
+      RowBox[{
+       RowBox[{"MatrixRank", "[", 
+        RowBox[{
+         RowBox[{"Append", "[", 
+          RowBox[{"sg", ",", " ", "v"}], "]"}], ",", " ", 
+         RowBox[{"Modulus", " ", "->", " ", "2"}]}], "]"}], " ", ">", " ", 
+       "m"}]}]}], "\n", "]"}]}], ";"}], "\n", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"logicalVecQ", "[", 
+    RowBox[{
+     RowBox[{"codes", "[", "\"\<BitFlipCode\>\"", "]"}], ",", " ", 
+     RowBox[{"symOf", "[", "\"\<ZII\>\"", "]"}]}], "]"}], ",", "\n", " ", 
+   RowBox[{"logicalVecQ", "[", 
+    RowBox[{
+     RowBox[{"codes", "[", "\"\<BitFlipCode\>\"", "]"}], ",", " ", 
+     RowBox[{"symOf", "[", "\"\<ZZI\>\"", "]"}]}], "]"}]}], "}"}]}], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->201914069,ExpressionUUID->"2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"True", ",", "False"}], "}"}]], "Output",
+ CellLabel->"Out[7]= ",
+ CellID->607076188,ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e"]
+}, Open  ]],
+
+Cell[TextData[{
+ "As expected, ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c67103-72a1-9427-0efe-696d0755ff0d"],
+ " passes both tests for the bit-flip code (undetectable and outside the \
+group, so a genuine logical), while the generator ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["Z", "TI"], "1"], 
+   SubscriptBox[
+    StyleBox["Z", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+ " fails the second test: it commutes with everything, but it ",
+ StyleBox["is", "TI"],
+ " in the group, so its rank does not rise. We will come back to what that \
+first result means for the bit-flip code, because it is the honest surprise \
+of this whole subject."
+}], "Text",
+ CellID->807053435,ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell["\<\
+The distance is now a search: the smallest weight at which a logical exists, \
+and a witness achieving it. Climb the weights and stop at the first hit:\
+\>", "Text",
+ CellID->1633675818,ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"firstLogicalOfWeight", "[", 
+    RowBox[{"code_", ",", " ", "w_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"SelectFirst", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"weightK", "[", 
+      RowBox[{
+       RowBox[{"code", "[", "\"\<Qubits\>\"", "]"}], ",", " ", "w"}], "]"}], ",",
+      " ", 
+     RowBox[{
+      RowBox[{"logicalVecQ", "[", 
+       RowBox[{"code", ",", " ", 
+        RowBox[{"symOf", "[", "#", "]"}]}], "]"}], " ", "&"}]}], "\n", 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"independentWitness", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "w", "}"}], ",", "\n", "    ", 
+     RowBox[{
+      RowBox[{"w", " ", "=", " ", 
+       RowBox[{"SelectFirst", "[", 
+        RowBox[{
+         RowBox[{"Range", "[", 
+          RowBox[{"code", "[", "\"\<Qubits\>\"", "]"}], "]"}], ",", " ", 
+         RowBox[{
+          RowBox[{"!", " ", 
+           RowBox[{"MissingQ", "[", 
+            RowBox[{"firstLogicalOfWeight", "[", 
+             RowBox[{"code", ",", " ", "#"}], "]"}], "]"}]}], " ", "&"}]}], 
+        "]"}]}], ";", "\n", "    ", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"MissingQ", "[", "w", "]"}], ",", " ", 
+        RowBox[{"Missing", "[", "\"\<NoLogical\>\"", "]"}], ",", " ", 
+        RowBox[{"firstLogicalOfWeight", "[", 
+         RowBox[{"code", ",", " ", "w"}], "]"}]}], "]"}]}]}], "\n", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"independentDistance", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"x", " ", "=", " ", 
+       RowBox[{"independentWitness", "[", "code", "]"}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"MissingQ", "[", "x", "]"}], ",", " ", "Infinity", ",", " ", 
+       RowBox[{"wt", "[", "x", "]"}]}], "]"}]}], "\n", "]"}]}], ";"}], "\n", 
+ RowBox[{"independentWitness", "[", 
+  RowBox[{"codes", "[", "\"\<5QubitCode\>\"", "]"}], "]"}]}], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->817696651,ExpressionUUID->"7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+
+Cell[BoxData["\<\"XYXII\"\>"], "Output",
+ CellLabel->"Out[8]= ",
+ CellID->1663470633,ExpressionUUID->"3181a460-bc62-f1ee-67be-3e4a3514c334"]
+}, Open  ]],
+
+Cell["\<\
+This witness is a lightest logical for the five-qubit code, found by our own \
+search with no reference to the package. Its weight is the code distance.\
+\>", "Text",
+ CellID->1232986364,ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+
+Cell["\<\
+Now put the package and the independent re-derivation side by side. For each \
+code we show its parameters as the code itself reports them, the package's \
+minimum-weight logical, our independently computed distance, and whether the \
+two distances agree:\
+\>", "Text",
+ CellID->762269937,ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Prepend", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Function", "[", 
+       RowBox[{"name", ",", "\n", "            ", 
+        RowBox[{"With", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"c", " ", "=", " ", 
+             RowBox[{"codes", "[", "name", "]"}]}], ",", " ", 
+            RowBox[{"di", " ", "=", " ", 
+             RowBox[{"independentDistance", "[", 
+              RowBox[{"codes", "[", "name", "]"}], "]"}]}]}], "}"}], ",", 
+          "\n", "                ", 
+          RowBox[{"{", 
+           RowBox[{"name", ",", "\n", "                 ", 
+            RowBox[{"StringJoin", "[", 
+             RowBox[{"\"\<[[\>\"", ",", " ", 
+              RowBox[{"ToString", "[", 
+               RowBox[{"c", "[", "\"\<Qubits\>\"", "]"}], "]"}], ",", 
+              " ", "\"\<,\>\"", ",", " ", 
+              RowBox[{"ToString", "[", 
+               RowBox[{"c", "[", "\"\<LogicalQubits\>\"", "]"}], "]"}], ",", 
+              " ", "\"\<,\>\"", ",", " ", 
+              RowBox[{"ToString", "[", 
+               RowBox[{"CodeDistance", "[", "c", "]"}], "]"}], ",", 
+              " ", "\"\<]]\>\""}], "]"}], ",", "\n", "                 ", 
+            RowBox[{"MinimumWeightLogical", "[", "c", "]"}], ",", " ", "di", ",",
+             " ", 
+            RowBox[{
+             RowBox[{"CodeDistance", "[", "c", "]"}], " ", "===", " ", 
+             "di"}]}], "}"}]}], "\n", "            ", "]"}]}], "\n", 
+       "        ", "]"}], " ", "/@", " ", 
+      RowBox[{"Keys", "[", "codes", "]"}]}], ",", "\n", "        ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Style", "[", 
+        RowBox[{"#", ",", " ", "Bold"}], "]"}], " ", "&"}], " ", "/@", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<code\>\"", ",", " ", "\"\<[[n,k,d]]\>\"", ",", 
+        " ", "\"\<package witness\>\"", ",", " ", "\"\<independent d\>\"", ",",
+         " ", "\"\<agree\>\""}], "}"}]}]}], "\n", "    ", "]"}], ",", "\n", 
+   "    ", 
+   RowBox[{"Frame", " ", "->", " ", "All"}], ",", " ", 
+   RowBox[{"Alignment", " ", "->", " ", "Left"}], ",", " ", 
+   RowBox[{"Spacings", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"1.5", ",", " ", "0.8"}], "}"}]}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[9]:= ",
+ CellID->1596700196,ExpressionUUID->"5e187950-8ca2-2ab2-0638-711a25577898"],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {
+     StyleBox["\<\"code\"\>",
+      StripOnInput->False,
+      FontWeight->Bold], 
+     StyleBox["\<\"[[n,k,d]]\"\>",
+      StripOnInput->False,
+      FontWeight->Bold], 
+     StyleBox["\<\"package witness\"\>",
+      StripOnInput->False,
+      FontWeight->Bold], 
+     StyleBox["\<\"independent d\"\>",
+      StripOnInput->False,
+      FontWeight->Bold], 
+     StyleBox["\<\"agree\"\>",
+      StripOnInput->False,
+      FontWeight->Bold]},
+    {"\<\"BitFlipCode\"\>", "\<\"[[3,1,1]]\"\>", "\<\"ZII\"\>", "1", "True"},
+    {"\<\"PhaseFlipCode\"\>", "\<\"[[3,1,1]]\"\>", "\<\"XII\"\>", "1", "True"},
+    {"\<\"ShorCode\"\>", "\<\"[[9,1,3]]\"\>", "\<\"XXXIIIIII\"\>", "3", 
+     "True"},
+    {"\<\"5QubitCode\"\>", "\<\"[[5,1,3]]\"\>", "\<\"XYXII\"\>", "3", 
+     "True"},
+    {"\<\"SteaneCode\"\>", "\<\"[[7,1,3]]\"\>", "\<\"XXXIIII\"\>", "3", "True"}
+   },
+   AutoDelete->False,
+   GridBoxAlignment->{"Columns" -> {{Left}}},
+   GridBoxFrame->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}},
+   GridBoxSpacings->{"Columns" -> {{1.5}}, "Rows" -> {{0.8}}}],
+  "Grid"]], "Output",
+ CellLabel->"Out[9]= ",
+ CellID->1663427655,ExpressionUUID->"250a2d7c-9b81-05b0-5309-c5261e346f9a"]
+}, Open  ]],
+
+Cell["\<\
+The final column is the whole point of this part: for every code, the \
+distance our from-scratch symplectic search returns is exactly the distance \
+the package returns. The Shor, five-qubit, and Steane codes come out as the \
+familiar distance-three codes; the two three-qubit codes come out at distance \
+one, which brings us to the honest surprise.\
+\>", "Text",
+ CellID->2118931930,ExpressionUUID->"15a9104d-5625-6af3-4356-8a1763d038d9"],
+
+Cell["\<\
+The Honest Surprise: A Repetition Code Has Quantum Distance One\
+\>", "Subsection",
+ CellID->1039057480,ExpressionUUID->"58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+
+Cell[TextData[{
+ "The three-qubit bit-flip code is often introduced as a distance-three code, \
+and as a ",
+ StyleBox["classical", "TI"],
+ " code against bit flips it is. As a ",
+ StyleBox["quantum", "TI"],
+ " code it is not. Look at the syndrome of a single ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ " on the first qubit, and ask whether that ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ " is a logical operator:"
+}], "Text",
+ CellID->1411198270,ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Syndrome", "[", 
+    RowBox[{
+     RowBox[{"codes", "[", "\"\<BitFlipCode\>\"", "]"}], ",", 
+     " ", "\"\<ZII\>\""}], "]"}], ",", " ", 
+   RowBox[{"logicalVecQ", "[", 
+    RowBox[{
+     RowBox[{"codes", "[", "\"\<BitFlipCode\>\"", "]"}], ",", " ", 
+     RowBox[{"symOf", "[", "\"\<ZII\>\"", "]"}]}], "]"}]}], "}"}]], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->1062924604,ExpressionUUID->"0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0"}], "}"}], ",", "True"}], "}"}]], "Output",
+ CellLabel->"Out[10]= ",
+ CellID->827610706,ExpressionUUID->"6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The syndrome is all zeros, so a lone ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ " is undetectable: it commutes with both ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07359582-e823-44a1-2eca-0cef89d62e8b"],
+ "-type stabilizers. Yet it is not in the stabilizer group, so it acts \
+nontrivially on the codespace. It is therefore a weight-one logical, and the \
+quantum code distance is one, not three. In words, protecting against bit \
+flips with ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+ "-type checks leaves phase errors completely unguarded, and a single \
+unguarded phase error is a logical fault. This is not a defect in the \
+computation; it is the reason a real code has to protect against both error \
+types, which is exactly what the Shor code does by nesting the two repetition \
+ideas. The package agrees with the mathematics, not with the folklore, and \
+that is what we want from it."
+}], "Text",
+ CellID->1477609488,ExpressionUUID->"68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+
+Cell["Logical Operators and Their Algebra", "Subsection",
+ CellID->1030824397,ExpressionUUID->"6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+
+Cell[TextData[{
+ "A code with ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+ " logical qubits comes with logical operators ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["X", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+ ", and they must obey the same algebra as bare Paulis on ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
+ " qubits: ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["X", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
+ " anticommutes with its partner ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+ ", commutes with every other logical, all the ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["X", "TI"], "_"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
+ " commute among themselves, all the ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["Z", "TI"], "_"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "511b3347-8d7d-ab60-0738-ab212409f64a"],
+ " commute among themselves, and every logical commutes with every stabilizer \
+while lying outside the group. The package produces logical operators from a \
+standard-form reduction; we check the entire algebra independently with our \
+symplectic product and rank test:"
+}], "Text",
+ CellID->100031176,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"logicalAlgebraOkQ", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"Module", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"logs", " ", "=", " ", 
+        RowBox[{"LogicalOperators", "[", "code", "]"}]}], ",", " ", 
+       RowBox[{"sg", " ", "=", " ", 
+        RowBox[{"genMatrix", "[", "code", "]"}]}], ",", " ", 
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"code", "[", "\"\<StabilizerCount\>\"", "]"}]}], ",", " ", 
+       "xs", ",", " ", "zs", ",", " ", "k"}], "}"}], ",", "\n", "    ", 
+     RowBox[{
+      RowBox[{"xs", " ", "=", " ", 
+       RowBox[{"symOf", " ", "/@", " ", 
+        RowBox[{"logs", "[", "\"\<X\>\"", "]"}]}]}], ";", " ", 
+      RowBox[{"zs", " ", "=", " ", 
+       RowBox[{"symOf", " ", "/@", " ", 
+        RowBox[{"logs", "[", "\"\<Z\>\"", "]"}]}]}], ";", " ", 
+      RowBox[{"k", " ", "=", " ", 
+       RowBox[{"Length", "[", "xs", "]"}]}], ";", "\n", "    ", 
+      RowBox[{"And", "[", "\n", "        ", 
+       RowBox[{
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{"Tuples", "[", 
+           RowBox[{
+            RowBox[{"Range", "[", "k", "]"}], ",", " ", "2"}], "]"}], ",", 
+          "\n", "            ", 
+          RowBox[{
+           RowBox[{"With", "[", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"i", " ", "=", " ", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}]}], ",", " ", 
+               RowBox[{"j", " ", "=", " ", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}], ",", " ", 
+             RowBox[{
+              RowBox[{"omega", "[", 
+               RowBox[{
+                RowBox[{"xs", "[", 
+                 RowBox[{"[", "i", "]"}], "]"}], ",", " ", 
+                RowBox[{"zs", "[", 
+                 RowBox[{"[", "j", "]"}], "]"}]}], "]"}], " ", "===", " ", 
+              RowBox[{"If", "[", 
+               RowBox[{
+                RowBox[{"i", " ", "===", " ", "j"}], ",", " ", "1", ",", " ", 
+                "0"}], "]"}]}]}], "]"}], " ", "&"}]}], "]"}], ",", "\n", 
+        "        ", 
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{"Subsets", "[", 
+           RowBox[{
+            RowBox[{"Range", "[", "k", "]"}], ",", " ", 
+            RowBox[{"{", "2", "}"}]}], "]"}], ",", " ", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"omega", "[", 
+             RowBox[{
+              RowBox[{"xs", "[", 
+               RowBox[{"[", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}], ",", " ", 
+              RowBox[{"xs", "[", 
+               RowBox[{"[", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "2", "]"}], "]"}], "]"}], "]"}]}], "]"}], " ", "===",
+             " ", "0"}], " ", "&"}]}], "]"}], ",", "\n", "        ", 
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{"Subsets", "[", 
+           RowBox[{
+            RowBox[{"Range", "[", "k", "]"}], ",", " ", 
+            RowBox[{"{", "2", "}"}]}], "]"}], ",", " ", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"omega", "[", 
+             RowBox[{
+              RowBox[{"zs", "[", 
+               RowBox[{"[", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}], ",", " ", 
+              RowBox[{"zs", "[", 
+               RowBox[{"[", 
+                RowBox[{"#", "[", 
+                 RowBox[{"[", "2", "]"}], "]"}], "]"}], "]"}]}], "]"}], " ", "===",
+             " ", "0"}], " ", "&"}]}], "]"}], ",", "\n", "        ", 
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{"Join", "[", 
+           RowBox[{"xs", ",", " ", "zs"}], "]"}], ",", " ", 
+          RowBox[{"Function", "[", 
+           RowBox[{"l", ",", " ", 
+            RowBox[{"AllTrue", "[", 
+             RowBox[{"sg", ",", " ", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"omega", "[", 
+                 RowBox[{"l", ",", " ", "#"}], "]"}], " ", "===", " ", "0"}], 
+               " ", "&"}]}], "]"}]}], "]"}]}], "]"}], ",", "\n", "        ", 
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{"Join", "[", 
+           RowBox[{"xs", ",", " ", "zs"}], "]"}], ",", " ", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"MatrixRank", "[", 
+             RowBox[{
+              RowBox[{"Append", "[", 
+               RowBox[{"sg", ",", " ", "#"}], "]"}], ",", " ", 
+              RowBox[{"Modulus", " ", "->", " ", "2"}]}], "]"}], " ", ">", 
+            " ", "m"}], " ", "&"}]}], "]"}]}], "\n", "    ", "]"}]}]}], "\n", 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"logicalAlgebraOkQ", "[", 
+     RowBox[{"codes", "[", "#", "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"Keys", "[", "codes", "]"}]}], "]"}]}], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->384354388,ExpressionUUID->"6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"BitFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"PhaseFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"ShorCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"5QubitCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"SteaneCode\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[11]= ",
+ CellID->1325609351,ExpressionUUID->"519775d4-d545-25f2-07ad-6c91dcf18fd8"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Every code's logical operators pass the full algebra check. Note that a \
+minimum-weight witness from the distance search need not be one of these \
+canonical ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["X", "TI"], "_"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5900aac7-5263-773e-0f3f-43a167165a04"],
+ ", ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["Z", "TI"], "_"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+ ": the standard-form logicals are a valid ",
+ StyleBox["generating", "TI"],
+ " pair, while the witness is the lightest element of the whole coset, and \
+the two answer different questions."
+}], "Text",
+ CellID->1443527617,ExpressionUUID->"12d95fcb-3316-2212-42e7-569546a37178"],
+
+Cell["A Sign-Exact Encoder", "Subsection",
+ CellID->311511756,ExpressionUUID->"733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+
+Cell[TextData[{
+ "The last exact object is the encoder: a Clifford circuit that prepares a \
+codeword from the all-zeros state. \"Prepares a codeword\" has to mean the +1 \
+eigenstate of every generator, with the sign exactly +1 and not ",
+ Cell[BoxData[
+  RowBox[{"-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+ ", because a stabilizer with the wrong sign describes a different state \
+entirely. We check this at the level of the state vector, comparing vectors \
+rather than fidelities, so a sign error cannot hide."
+}], "Text",
+ CellID->1381425643,ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67"],
+
+Cell[TextData[{
+ "Build the Pauli operators as honest matrices, run the real encoding circuit \
+on ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{"0", "\[Ellipsis]", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+ ", and confirm each generator leaves the resulting vector fixed. The zero \
+test is symbolic, so it certifies exact equality rather than numerical \
+closeness:"
+}], "Text",
+ CellID->377280352,ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"pmat", " ", "=", " ", 
+   RowBox[{"<|", 
+    RowBox[{
+     RowBox[{"\"\<I\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "1"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"\"\<X\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", "1"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}]}], "}"}]}], ",", "\n", 
+     "         ", 
+     RowBox[{"\"\<Y\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", 
+          RowBox[{"-", "I"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"I", ",", " ", "0"}], "}"}]}], "}"}]}], ",", " ", 
+     RowBox[{"\"\<Z\>\"", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"0", ",", " ", 
+          RowBox[{"-", "1"}]}], "}"}]}], "}"}]}]}], "|>"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"pauliOp", "[", "str_", "]"}], " ", ":=", " ", 
+   RowBox[{"Fold", "[", 
+    RowBox[{"KroneckerProduct", ",", " ", 
+     RowBox[{"pmat", " ", "/@", " ", 
+      RowBox[{"Characters", "[", 
+       RowBox[{"strip", "[", "str", "]"}], "]"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"encodedVector", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"Normal", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"EncodingCircuit", "[", "code", "]"}], "[", "\n", "        ", 
+      RowBox[{"QuantumState", "[", 
+       RowBox[{
+        RowBox[{"SparseArray", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"1", " ", "->", " ", "1"}], "}"}], ",", " ", 
+          RowBox[{"2", "^", 
+           RowBox[{"code", "[", "\"\<Qubits\>\"", "]"}]}]}], "]"}], ",", " ", 
+        
+        RowBox[{"ConstantArray", "[", 
+         RowBox[{"2", ",", " ", 
+          RowBox[{"code", "[", "\"\<Qubits\>\"", "]"}]}], "]"}]}], "]"}], 
+      "\n", "    ", "]"}], "[", "\"\<StateVector\>\"", "]"}], "\n", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"encoderFixesQ", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"psi", " ", "=", " ", 
+       RowBox[{"encodedVector", "[", "code", "]"}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"AllTrue", "[", 
+      RowBox[{
+       RowBox[{"code", "[", "\"\<Generators\>\"", "]"}], ",", " ", 
+       RowBox[{
+        RowBox[{"AllTrue", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{"pauliOp", "[", "#", "]"}], " ", ".", " ", "psi"}], " ", "-",
+            " ", "psi"}], ",", " ", "PossibleZeroQ"}], "]"}], " ", "&"}]}], 
+      "]"}]}], "\n", "]"}]}], ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"encoderFixesQ", "[", 
+     RowBox[{"codes", "[", "#", "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"Keys", "[", "codes", "]"}]}], "]"}]}], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->353955539,ExpressionUUID->"78287f93-0f12-7c52-2828-76ddaaa746b8"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"BitFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"PhaseFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"ShorCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"5QubitCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"SteaneCode\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[12]= ",
+ CellID->631628885,ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2"]
+}, Open  ]],
+
+Cell["\<\
+For each code, applying any generator to the encoded state returns the state \
+unchanged, exactly: the encoder prepares a genuine +1 codeword, sign \
+included. The Pauli matrices here are built with qubit 1 as the leftmost \
+tensor factor, which is the same ordering QuantumFramework uses for its state \
+vectors, so the comparison is apples to apples.\
+\>", "Text",
+ CellID->1781880651,ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+
+Cell["Part III: Cross-Checking Against Stim", "Section",
+ CellID->1536527082,ExpressionUUID->"187adc3d-3961-76c2-4819-d667b8145c28"],
+
+Cell[TextData[{
+ "The independent re-derivation lives entirely inside the Wolfram Language, \
+so it shares the linear-algebra substrate with the package. A second, \
+genuinely external opinion is worth having, and Stim is the natural source: \
+it is the reference stabilizer simulator, written in C++, with an independent \
+tableau engine. We open a Python session and confirm Stim is importable; if \
+this cell reports that Stim is missing, install it with ",
+ Cell[BoxData[
+  RowBox[{"pip", " ", "install", " ", "stim"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "641c78eb-7f03-7846-0c24-71b57ab64aac"],
+ " into the Python that ",
+ Cell[BoxData["ExternalEvaluate"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+ " uses, or skip Part III and rely on the re-derivation above."
+}], "Text",
+ CellID->1621535814,ExpressionUUID->"112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stimSession", " ", "=", " ", 
+   RowBox[{"StartExternalSession", "[", 
+    RowBox[{"<|", 
+     RowBox[{"\"\<System\>\"", " ", "->", " ", "\"\<Python\>\""}], "|>"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"stimVersion", " ", "=", " ", 
+  RowBox[{"Check", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{"ExternalEvaluate", "[", 
+     RowBox[{
+     "stimSession", ",", " ", "\"\<import stim; stim.__version__\>\""}], 
+     "]"}], ",", "\n", 
+    "    ", "\"\<stim not available: skip Part III or pip install stim\>\""}],
+    "\n", "]"}]}]}], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->482293909,ExpressionUUID->"6121b9de-dddd-aca8-10de-309bd469f6f2"],
+
+Cell[BoxData["\<\"1.16.0\"\>"], "Output",
+ CellLabel->"Out[13]= ",
+ CellID->885243818,ExpressionUUID->"30209679-023a-ee91-61df-0823b7ccb4fb"]
+}, Open  ]],
+
+Cell["The Converter and the Syndrome Differential", "Subsection",
+ CellID->105329933,ExpressionUUID->"29bc1606-c22d-409d-5f43-8863f7d812e7"],
+
+Cell[TextData[{
+ "The converter is small because both sides speak Pauli strings. Stim writes \
+identity as an underscore, so the only translation is a character swap; a \
+syndrome bit is then Stim's own commutation test between a generator and an \
+error. Define the Stim-side syndrome and compare it, for every code, against \
+the package's ",
+ Cell[BoxData["Syndrome"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+ " across all weight-one and weight-two errors:"
+}], "Text",
+ CellID->1234416869,ExpressionUUID->"3119d855-3ffd-7401-6726-d21fb9885f6b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stimSyndrome", " ", "=", " ", 
+   RowBox[{"ExternalEvaluate", "[", 
+    RowBox[{
+    "stimSession", ",", 
+     " ", "\"\<\ndef stim_syndrome(gens, err):\n    e = \
+stim.PauliString(err.replace('I','_'))\n    return [0 if \
+stim.PauliString(g.replace('I','_')).commutes(e) else 1 for g in gens]\n\
+stim_syndrome\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"syndromeMatchesStimQ", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"gens", " ", "=", " ", 
+        RowBox[{"code", "[", "\"\<Generators\>\"", "]"}]}], ",", " ", 
+       RowBox[{"n", " ", "=", " ", 
+        RowBox[{"code", "[", "\"\<Qubits\>\"", "]"}]}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"With", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"errs", " ", "=", " ", 
+         RowBox[{"Join", "[", 
+          RowBox[{
+           RowBox[{"weightK", "[", 
+            RowBox[{"n", ",", " ", "1"}], "]"}], ",", " ", 
+           RowBox[{"weightK", "[", 
+            RowBox[{"n", ",", " ", "2"}], "]"}]}], "]"}]}], "}"}], ",", "\n", 
+       "        ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Syndrome", "[", 
+            RowBox[{"code", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", 
+          " ", "errs"}], ")"}], " ", "===", " ", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"stimSyndrome", "[", 
+            RowBox[{"gens", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", 
+          " ", "errs"}], ")"}]}]}], "\n", "    ", "]"}]}], "\n", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"syndromeMatchesStimQ", "[", 
+     RowBox[{"codes", "[", "#", "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"Keys", "[", "codes", "]"}]}], "]"}]}], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->249718593,ExpressionUUID->"62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"BitFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"PhaseFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"ShorCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"5QubitCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"SteaneCode\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[14]= ",
+ CellID->1625568682,ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df"]
+}, Open  ]],
+
+Cell["\<\
+For every code, the package's syndrome and Stim's syndrome agree on the \
+entire weight-one and weight-two error set, hundreds of errors per code. The \
+syndrome layer is exactly what a real decoder consumes, so this is the \
+differential that matters most for interoperability.\
+\>", "Text",
+ CellID->1771870337,ExpressionUUID->"51fce014-dca1-0630-0783-fa51d5546d1a"],
+
+Cell["The Encoder Differential", "Subsection",
+ CellID->305160771,ExpressionUUID->"657c1c65-980e-511d-1303-964f19bb2067"],
+
+Cell["\<\
+Stim can also judge the encoder, and more stringently than a syndrome check: \
+we translate the encoding gates into a Stim circuit, run Stim's tableau \
+simulator, and ask Stim for the expectation value of each of our generators \
+on the state it prepared. A value of +1 means Stim agrees the prepared state \
+is stabilized by that generator with the correct sign:\
+\>", "Text",
+ CellID->1896945989,ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stimEncoderExp", " ", "=", " ", 
+   RowBox[{"ExternalEvaluate", "[", 
+    RowBox[{
+    "stimSession", ",", 
+     " ", "\"\<\ndef stim_encoder_exp(gates, gens):\n    circ = \
+stim.Circuit()\n    tr = {'CNOT':'CX'}\n    for name, args in gates:\n        \
+circ.append(tr.get(name, name), [a-1 for a in args])\n    sim = \
+stim.TableauSimulator(); sim.do_circuit(circ)\n    return \
+[int(sim.peek_observable_expectation(stim.PauliString(g.replace('I','_')))) \
+for g in gens]\nstim_encoder_exp\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"gatePairs", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"#", "[", 
+        RowBox[{"[", "1", "]"}], "]"}], ",", " ", 
+       RowBox[{"Flatten", "[", 
+        RowBox[{"{", 
+         RowBox[{"#", "[", 
+          RowBox[{"[", "2", "]"}], "]"}], "}"}], "]"}]}], "}"}], " ", "&"}], 
+    " ", "/@", " ", 
+    RowBox[{"EncodingGates", "[", "code", "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stimEncoderOkQ", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"AllTrue", "[", 
+    RowBox[{
+     RowBox[{"stimEncoderExp", "[", 
+      RowBox[{
+       RowBox[{"gatePairs", "[", "code", "]"}], ",", " ", 
+       RowBox[{"code", "[", "\"\<Generators\>\"", "]"}]}], "]"}], ",", " ", 
+     RowBox[{
+      RowBox[{"#", " ", "===", " ", "1"}], " ", "&"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"stimEncoderOkQ", "[", 
+     RowBox[{"codes", "[", "#", "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"Keys", "[", "codes", "]"}]}], "]"}]}], "Input",
+ CellLabel->"In[15]:= ",
+ CellID->471728701,ExpressionUUID->"7e9b7e66-629a-1114-26b9-7040172f607e"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"BitFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"PhaseFlipCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"ShorCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"5QubitCode\"\>", "\[Rule]", "True"}], ",", 
+   RowBox[{"\<\"SteaneCode\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[15]= ",
+ CellID->1914386876,ExpressionUUID->"585a51e6-774f-2dd2-087a-48c002fa7738"]
+}, Open  ]],
+
+Cell["\<\
+Every generator has Stim-expectation +1 on the encoded state, for every code. \
+This is the same sign-exact statement we checked with our own Pauli matrices \
+in Part II, now confirmed by an independent simulator through a completely \
+different route (a tableau update, not a dense state vector).\
+\>", "Text",
+ CellID->1067269536,ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+
+Cell["The Witness Differential", "Subsection",
+ CellID->49659130,ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
+
+Cell[TextData[{
+ "Finally, Stim can certify the distance witness without ever enumerating \
+errors. A minimum-weight logical must be ",
+ StyleBox["undetectable", "TI"],
+ " (it commutes with every generator) and ",
+ StyleBox["nontrivial", "TI"],
+ " (it anticommutes with at least one logical operator, so it acts on the \
+codespace). Those two facts together put it in the normalizer but outside the \
+stabilizer group, which is the definition of a logical. Ask Stim for both:"
+}], "Text",
+ CellID->464508221,ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stimWitness", " ", "=", " ", 
+   RowBox[{"ExternalEvaluate", "[", 
+    RowBox[{
+    "stimSession", ",", 
+     " ", "\"\<\ndef stim_witness(gens, logicals, witness):\n    w = \
+stim.PauliString(witness.replace('I','_'))\n    undetectable = \
+all(stim.PauliString(g.replace('I','_')).commutes(w) for g in gens)\n    \
+nontrivial = any(not stim.PauliString(p.replace('I','_')).commutes(w) for p \
+in logicals)\n    return [bool(undetectable), bool(nontrivial)]\nstim_witness\
+\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"stimWitnessRes", "[", "code_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"logs", " ", "=", " ", 
+       RowBox[{"LogicalOperators", "[", "code", "]"}]}], "}"}], ",", "\n", 
+     "    ", 
+     RowBox[{"stimWitness", "[", 
+      RowBox[{
+       RowBox[{"code", "[", "\"\<Generators\>\"", "]"}], ",", " ", 
+       RowBox[{"Join", "[", 
+        RowBox[{
+         RowBox[{"logs", "[", "\"\<X\>\"", "]"}], ",", " ", 
+         RowBox[{"logs", "[", "\"\<Z\>\"", "]"}]}], "]"}], ",", " ", 
+       RowBox[{"MinimumWeightLogical", "[", "code", "]"}]}], "]"}]}], "\n", 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"stimWitnessRes", "[", 
+     RowBox[{"codes", "[", "#", "]"}], "]"}], " ", "&"}], ",", " ", 
+   RowBox[{"Keys", "[", "codes", "]"}]}], "]"}]}], "Input",
+ CellLabel->"In[16]:= ",
+ CellID->391084117,ExpressionUUID->"7519012f-e657-215b-2326-988893e273a1"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"BitFlipCode\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"True", ",", "True"}], "}"}]}], ",", 
+   RowBox[{"\<\"PhaseFlipCode\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"True", ",", "True"}], "}"}]}], ",", 
+   RowBox[{"\<\"ShorCode\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"True", ",", "True"}], "}"}]}], ",", 
+   RowBox[{"\<\"5QubitCode\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"True", ",", "True"}], "}"}]}], ",", 
+   RowBox[{"\<\"SteaneCode\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"True", ",", "True"}], "}"}]}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellLabel->"Out[16]= ",
+ CellID->625764944,ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0"]
+}, Open  ]],
+
+Cell[TextData[{
+ "For each code Stim reports the witness as both undetectable and nontrivial. \
+Stim confirms the witness is a valid logical of the stated weight; the ",
+ StyleBox["minimality", "TI"],
+ " of that weight, that nothing lighter is logical, is what our exhaustive \
+symplectic search established, and it is the part no sampler provides. The \
+division of labor is the honest one: Stim vouches that the witness is real, \
+and the exact search vouches that it is the lightest."
+}], "Text",
+ CellID->1907680634,ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+
+Cell["\<\
+As a last sanity check on the converter itself, ask Stim for the canonical \
+stabilizers of the encoded Steane state and compare them, by eye, with the \
+code's own generators:\
+\>", "Text",
+ CellID->483148123,ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stimCanonical", " ", "=", " ", 
+   RowBox[{"ExternalEvaluate", "[", 
+    RowBox[{
+    "stimSession", ",", 
+     " ", "\"\<\ndef stim_canonical(gates):\n    circ = stim.Circuit()\n    \
+tr = {'CNOT':'CX'}\n    for name, args in gates:\n        \
+circ.append(tr.get(name, name), [a-1 for a in args])\n    sim = \
+stim.TableauSimulator(); sim.do_circuit(circ)\n    return [str(s) for s in \
+sim.canonical_stabilizers()]\nstim_canonical\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{"stimCanonical", "[", 
+  RowBox[{"gatePairs", "[", "steane", "]"}], "]"}]}], "Input",
+ CellLabel->"In[17]:= ",
+ CellID->668869836,ExpressionUUID->"48a3d607-c312-9dd3-7850-c860f6a4e739"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"+X_X_X_X\"\>", ",", "\<\"+Z____ZZ\"\>", 
+   ",", "\<\"+_XX__XX\"\>", ",", "\<\"+_Z__Z_Z\"\>", ",", "\<\"+__Z_ZZ_\"\>", 
+   ",", "\<\"+___XXXX\"\>", ",", "\<\"+___ZZZZ\"\>"}], "}"}]], "Output",
+ CellLabel->"Out[17]= ",
+ CellID->1510519072,ExpressionUUID->"539491e8-328f-8d7b-01ab-08b2473bd441"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Stim returns seven signed stabilizers in its reduced canonical form. These \
+generate the same group as our six Steane generators plus the logical ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["Z", "TI"], "_"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+ " that pins the prepared codeword; the +1 expectations above already proved \
+each of our generators sits inside this group with the right sign, so the two \
+descriptions are the same stabilizer state written in two bases."
+}], "Text",
+ CellID->1521685512,ExpressionUUID->"023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+
+Cell["Part IV: A Parameter Stim Cannot Carry", "Section",
+ CellID->97201263,ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c"],
+
+Cell["\<\
+Everything so far was a concrete code at a concrete size. The \
+exact-and-symbolic corner has one more move, the one that has no numeric \
+counterpart: hold a parameter symbolic and certify a whole family, or a whole \
+continuum, at once.\
+\>", "Text",
+ CellID->878831761,ExpressionUUID->"289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+
+Cell["A Family Indexed by n", "Subsection",
+ CellID->1048559713,ExpressionUUID->"12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+
+Cell[TextData[{
+ "Take the ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["n", "TI"], ",", 
+     RowBox[{
+      StyleBox["n", "TI"], "-", "2"}], ",", "2"}], 
+    StyleBox["]",
+     SpanMaxSize->1]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+ " code family: two generators, an all-",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
+ " string and an all-",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "362a4e41-4988-041f-5e2a-602b683d6f65"],
+ " string, on ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+ " qubits. The generators must commute, and their symplectic product is a sum \
+of contributions, one per qubit; the all-",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "107fa29c-d013-1000-4004-3bd9e1a6636a"],
+ " and all-",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+ " strings overlap on every qubit, so each of the ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+ " qubits contributes a 1:"
+}], "Text",
+ CellID->300048012,ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"omegaXZ", " ", "=", " ", 
+  RowBox[{"Sum", "[", 
+   RowBox[{"1", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"i", ",", " ", "n"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[18]:= ",
+ CellID->524307849,ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+
+Cell[BoxData["n"], "Output",
+ CellLabel->"Out[18]= ",
+ CellID->1834301690,ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The product is ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1acd7f4d-3da3-7753-4af3-7717b4565db9"],
+ ", carried symbolically. The two generators commute exactly when that count \
+is even, which is the family's defining constraint: an odd ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+ " would make the two generators anticommute, and there would be no code at \
+all."
+}], "Text",
+ CellID->588230824,ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Mod", "[", 
+     RowBox[{"omegaXZ", ",", " ", "2"}], "]"}], " ", "==", " ", "0"}], ",", 
+   " ", 
+   RowBox[{"Element", "[", 
+    RowBox[{
+     RowBox[{"n", "/", "2"}], ",", " ", "Integers"}], "]"}]}], "]"}]], "Input",\
+
+ CellLabel->"In[19]:= ",
+ CellID->1127727415,ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+
+Cell[BoxData["True"], "Output",
+ CellLabel->"Out[19]= ",
+ CellID->1955467569,ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8"]
+}, Open  ]],
+
+Cell[TextData[{
+ "Now the distance. Every weight-one error is detected, because a single ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+ " overlaps the all-",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+ " generator on exactly one qubit, an odd overlap, so it anticommutes; that \
+rules out distance one for every ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+ ". A weight-two logical, on the other hand, commutes with both generators \
+and is lighter than every nontrivial group element (each of which has weight ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25b5b884-ef74-61b3-534a-31e18a013399"],
+ ") precisely when two is less than ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "574a2197-51ef-7938-7d49-b8d1679a4802"],
+ ":"
+}], "Text",
+ CellID->512383039,ExpressionUUID->"6e85e9ed-427b-8528-16ba-00b7770fec72"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Reduce", "[", 
+  RowBox[{
+   RowBox[{"2", " ", "<", " ", "n"}], ",", " ", "n", ",", " ", "Integers"}], 
+  "]"}]], "Input",
+ CellLabel->"In[20]:= ",
+ CellID->688684714,ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"n", "\[Element]", 
+   TemplateBox[{},
+    "Integers"]}], "&&", 
+  RowBox[{"n", "\[GreaterEqual]", "3"}]}]], "Output",
+ CellLabel->"Out[20]= ",
+ CellID->1478107962,ExpressionUUID->"31f4c073-8ff6-126f-678b-da3d298360b5"]
+}, Open  ]],
+
+Cell[TextData[{
+ "So the distance is exactly two for the whole even-",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "72ff7667-e560-b2c0-2285-68408c1a002a"],
+ " family, established from a single evaluation with ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c9be80e-0554-61c1-24b8-0268ace1332b"],
+ " symbolic. A numeric simulator has to instantiate a specific ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
+ " to say anything at all; it can confirm any number of cases but never the \
+family. As a bridge between the symbolic certificate and the concrete \
+package, here is the package's numeric distance at several sizes, each an \
+independent brute-force search, all landing where the certificate says they \
+must:"
+}], "Text",
+ CellID->1809098798,ExpressionUUID->"7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"CodeDistance", "[", 
+    RowBox[{"DistanceTwoCode", "[", "n", "]"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"n", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"4", ",", " ", "6", ",", " ", "8", ",", " ", "10"}], "}"}]}], 
+    "}"}]}], "]"}]], "Input",
+ CellLabel->"In[21]:= ",
+ CellID->308320186,ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"2", ",", "2", ",", "2", ",", "2"}], "}"}]], "Output",
+ CellLabel->"Out[21]= ",
+ CellID->845252322,ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The same style of one-shot argument handles the repetition family ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["n", "TI"], ",", 
+     RowBox[{"1", ",", "1"}]}], 
+    StyleBox["]",
+     SpanMaxSize->1]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b5b9263-9199-4e16-7978-144d202c157c"],
+ ": every generator is ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+ "-type, so a lone ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
+ " commutes with all of them for every ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3343f580-98d5-e31c-6170-ecea1961ce66"],
+ "; and a parity functional (the mod-2 sum of the ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "20a7420b-376a-b23f-505d-6455421c0105"],
+ "-support) vanishes on every weight-two generator but equals one on ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6af863a9-1098-c609-1a98-7af3a112ad53"],
+ ", so ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["Z", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+ " is never in the group. A single undetectable ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b0fb60e-2211-365f-5934-286857a59ca5"],
+ ", for every ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "201a2509-bdd9-2fa1-5039-bd53346c758b"],
+ ": quantum distance one, the honest surprise of Part II, now stated for the \
+whole family in one breath."
+}], "Text",
+ CellID->724760089,ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952"],
+
+Cell["A Continuous Error Angle", "Subsection",
+ CellID->168408080,ExpressionUUID->"5f932952-49a5-d34f-05a0-c11c6851a195"],
+
+Cell[TextData[{
+ "Symbolic generality is not only about integer families; it reaches \
+continuous parameters too, which is where a Pauli-sampling simulator has \
+nothing to say. Consider a ",
+ StyleBox["coherent", "TI"],
+ " error on the bit-flip codeword: not a discrete bit flip, but a rotation ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["R", "TI"], 
+    StyleBox["x", "TI"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Theta]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"-", 
+     StyleBox["i", "TI"], 
+     StyleBox["\[Theta]", "TI"], 
+     StyleBox["X", "TI"], "/", "2"}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
+ " on the first qubit, through a symbolic angle. The state stays a \
+superposition of \"no error\" and \"flipped,\" and the syndrome operator ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["Z", "TI"], "1"], 
+   SubscriptBox[
+    StyleBox["Z", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+ " has an expectation value that is an exact function of ",
+ Cell[BoxData[
+  StyleBox["\[Theta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+ ":"
+}], "Text",
+ CellID->811283638,ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psi0", " ", "=", " ", 
+   RowBox[{"QuantumState", "[", 
+    RowBox[{
+     RowBox[{"SparseArray", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", " ", "->", " ", "1"}], "}"}], ",", " ", "8"}], "]"}], ",",
+      " ", 
+     RowBox[{"{", 
+      RowBox[{"2", ",", " ", "2", ",", " ", "2"}], "}"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"vTheta", " ", "=", " ", 
+   RowBox[{"Normal", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumCircuitOperator", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\"\<RX\>\"", "[", "\[Theta]", "]"}], " ", "->", " ", "1"}], 
+        "}"}], "]"}], "[", "psi0", "]"}], "[", "\"\<StateVector\>\"", "]"}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"zzOp", " ", "=", " ", 
+   RowBox[{"KroneckerProduct", "[", 
+    RowBox[{
+     RowBox[{"PauliMatrix", "[", "3", "]"}], ",", " ", 
+     RowBox[{"PauliMatrix", "[", "3", "]"}], ",", " ", 
+     RowBox[{"IdentityMatrix", "[", "2", "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"zzExpectation", " ", "=", " ", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Conjugate", "[", "vTheta", "]"}], " ", ".", " ", "zzOp", " ", ".",
+      " ", "vTheta"}], ",", " ", 
+    RowBox[{"\[Theta]", " ", "\[Element]", " ", "Reals"}]}], 
+   "]"}]}]}], "Input",
+ CellLabel->"In[22]:= ",
+ CellID->1797514155,ExpressionUUID->"0642d375-09f3-9942-2e71-cb3faf87eba8"],
+
+Cell[BoxData[
+ RowBox[{"Cos", "[", "\[Theta]", "]"}]], "Output",
+ CellLabel->"Out[22]= ",
+ CellID->1258427959,ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861"]
+}, Open  ]],
+
+Cell[TextData[{
+ "The syndrome expectation is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["cos",
+    FontSlant->"Plain"], "\[ThinSpace]", 
+   StyleBox["\[Theta]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "63b9e3d6-2298-231e-1146-fa9057128e64"],
+ ": it interpolates continuously from +1 at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+ " (no error, the codeword is untouched) to ",
+ Cell[BoxData[
+  RowBox[{"-", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c440104-ea8a-4285-747b-99618f3f10ef"],
+ " at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "\[Pi]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c9a615-af45-c085-0ef6-385ecaf192ef"],
+ " (a full bit flip, a definite nonzero syndrome), passing through zero at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "\[Pi]", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0513e607-0f4c-1e20-3320-f861aaf9650a"],
+ " (a maximally uncertain syndrome). A coherent rotation is non-Clifford, so \
+it lives in the exact dense simulator, not in a stabilizer tableau; carrying \
+the angle symbolically returns the whole error curve as a closed form. This \
+is the natural language for coherent-error and threshold questions, and it is \
+exactly the representation a discrete stabilizer sampler cannot produce."
+}], "Text",
+ CellID->437474228,ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"zzExpectation", " ", "/.", " ", 
+    RowBox[{"\[Theta]", " ", "->", " ", "0"}]}], ",", " ", 
+   RowBox[{"zzExpectation", " ", "/.", " ", 
+    RowBox[{"\[Theta]", " ", "->", " ", 
+     RowBox[{"Pi", "/", "2"}]}]}], ",", " ", 
+   RowBox[{"zzExpectation", " ", "/.", " ", 
+    RowBox[{"\[Theta]", " ", "->", " ", "Pi"}]}]}], "}"}]], "Input",
+ CellLabel->"In[23]:= ",
+ CellID->590983534,ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1", ",", "0", ",", 
+   RowBox[{"-", "1"}]}], "}"}]], "Output",
+ CellLabel->"Out[23]= ",
+ CellID->1257758076,ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f"]
+}, Open  ]],
+
+Cell["\<\
+The three sampled values confirm the endpoints and the midpoint of the closed \
+form we just derived.\
+\>", "Text",
+ CellID->11631581,ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"],
+
+Cell["Part V: Where This Leaves Us", "Section",
+ CellID->1933762060,ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2"],
+
+Cell["\<\
+Before we close, let us summarize what we have actually established:\
+\>", "Text",
+ CellID->1055776787,ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+
+Cell["\<\
+For the bit-flip, phase-flip, Shor, five-qubit, and Steane codes, the exact \
+code distance from a from-scratch symplectic search matches the package's \
+distance in every case.\
+\>", "Item",
+ CellID->1859711813,ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
+
+Cell["\<\
+The package's minimum-weight witnesses are valid logicals of that weight, \
+verified both by our rank-and-commutation test and by Stim's \
+undetectable-and-nontrivial test.\
+\>", "Item",
+ CellID->1348896709,ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6"],
+
+Cell[TextData[{
+ "Each code's logical operators satisfy the full commutation algebra (",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["X", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "387a9e0d-0234-0e73-6819-1057b7c15559"],
+ " anticommutes with ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["Z", "TI"], "_"], 
+   StyleBox["i", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3f64ca0d-9927-5f44-651b-ec5718d225ae"],
+ " and commutes with everything else), checked independently."
+}], "Item",
+ CellID->1427211115,ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8"],
+
+Cell["\<\
+Each encoder prepares a sign-exact +1 codeword, confirmed both by dense Pauli \
+matrices and by Stim's tableau expectation values.\
+\>", "Item",
+ CellID->2099805207,ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba"],
+
+Cell["\<\
+The package's syndrome equals Stim's across every weight-one and weight-two \
+error, code by code.\
+\>", "Item",
+ CellID->1402006442,ExpressionUUID->"6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
+
+Cell[TextData[{
+ "The ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["n", "TI"], ",", 
+     RowBox[{
+      StyleBox["n", "TI"], "-", "2"}], ",", "2"}], 
+    StyleBox["]",
+     SpanMaxSize->1]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+ " and repetition families are certified at symbolic ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+ " in one evaluation, and a coherent error's syndrome is returned as the \
+exact function ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["cos",
+    FontSlant->"Plain"], "\[ThinSpace]", 
+   StyleBox["\[Theta]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74397683-04f4-1d4d-1dc7-6fedac816797"],
+ "."
+}], "Item",
+ CellID->1901179466,ExpressionUUID->"735e49d5-32a1-4a48-2166-609f47541892"],
+
+Cell["\<\
+The picture that leaves us with is a clean division of labor. Stim owns scale \
+and speed: sampling large circuits, benchmarking decoders, estimating \
+thresholds. This exact layer owns the small-and-certain corner: the exact \
+minimum distance, a witness for it, the logical algebra, a sign-exact \
+encoder, and, uniquely, the ability to hold a parameter symbolic and certify \
+an entire family or a continuous error at once. The two agree wherever they \
+overlap, which is what makes the exact answers trustworthy and the symbolic \
+ones worth reaching for.\
+\>", "Text",
+ CellID->210724908,ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+
+Cell["\<\
+The honest boundary is worth restating: exact minimum distance is NP-hard, so \
+this is a small-code instrument by mathematical necessity, not a scaling \
+competitor. That is the right trade to have made. When you want the exact \
+answer for a textbook code, or a statement about a whole family, the \
+exactness and the symbol are the point; when you want a threshold for a \
+distance-25 surface code, reach for Stim. Both live in the same notebook, and \
+now you can check one against the other yourself.\
+\>", "Text",
+ CellID->1992790374,ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651"],
+
+Cell[TextData[{
+ "If you want to push further: feed your own stabilizer generators into ",
+ Cell[BoxData["QECCode"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+ ", run the same independent checks, and diff against Stim; or take the \
+symbolic-family argument to a code family of your own and see whether one \
+evaluation can settle it."
+}], "Text",
+ CellID->292747604,ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 114, 1, 70, "Title",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93",
+ CellID->874461601],
+Cell[671, 23, 282, 5, 70, "Subtitle",ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b",
+ CellID->36768919],
+Cell[956, 30, 135, 1, 70, "Author",ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f",
+ CellID->1699946459],
+Cell[1094, 33, 124, 1, 70, "Affiliation",ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34",
+ CellID->1535504786],
+Cell[1221, 36, 140, 1, 70, "Subsection",ExpressionUUID->"285985c7-a1c8-13eb-5866-1ca0d07d6131",
+ CellID->1208482393],
+Cell[1364, 39, 1486, 30, 70, "Text",ExpressionUUID->"57868ed1-450c-c474-7dbd-279b6cbeaf5e",
+ CellID->28909615],
+Cell[2853, 71, 829, 15, 70, "Text",ExpressionUUID->"0c5e608e-35dc-f74f-3466-79e8bc6edd95",
+ CellID->193832008],
+Cell[3685, 88, 589, 9, 70, "Text",ExpressionUUID->"1a1e4090-3303-05ed-4a26-59da46b66f37",
+ CellID->684317082],
+Cell[4277, 99, 527, 11, 70, "Text",ExpressionUUID->"10256af3-3972-af7a-41da-83bdb804f240",
+ CellID->528485616],
+Cell[4807, 112, 132, 1, 70, "Subsection",ExpressionUUID->"457602f1-d86e-ac86-730d-9bbad918f6ec",
+ CellID->1392207227],
+Cell[4942, 115, 993, 18, 70, "Text",ExpressionUUID->"499f95c1-a958-6c18-7fa4-0caac8ed3762",
+ CellID->705466992],
+Cell[5938, 135, 104, 1, 70, "Text",ExpressionUUID->"0f1e874b-6d22-b8ab-3525-1f1504d40af1",
+ CellID->1350516518],
+Cell[6045, 138, 140, 1, 70, "Section",ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e",
+ CellID->907546795],
+Cell[6188, 141, 1294, 30, 70, "Text",ExpressionUUID->"6f909018-5ea1-6a32-15af-0a425b543918",
+ CellID->814772321],
+Cell[7485, 173, 1501, 38, 70, "Text",ExpressionUUID->"2f4595f3-090a-1216-557a-0cbda8bf617c",
+ CellID->1054628905],
+Cell[8989, 213, 1067, 19, 70, "Text",ExpressionUUID->"06385f5e-e9d4-4e6c-2fd8-571b886114b6",
+ CellID->2043779557],
+Cell[10059, 234, 1187, 24, 70, "Text",ExpressionUUID->"25d2fb85-296f-82e5-53e1-f2ef481bd0cf",
+ CellID->17830494],
+Cell[11249, 260, 648, 11, 70, "Text",ExpressionUUID->"3b9a140e-d97a-4136-69b9-8e6bd80f101c",
+ CellID->1589986527],
+Cell[11900, 273, 1211, 31, 70, "Input",ExpressionUUID->"4f9438da-b80f-a114-75ab-b18439bbf07e",
+ CellID->943101875],
+Cell[13114, 306, 207, 4, 70, "Text",ExpressionUUID->"7281c19b-2602-dcd4-22be-d8c553b4a63e",
+ CellID->67888809],
+Cell[CellGroupData[{
+Cell[13346, 314, 399, 9, 70, "Input",ExpressionUUID->"3c8746fc-db76-c487-64bd-5fb9de00aeed",
+ CellID->1801257020],
+Cell[13748, 325, 406, 10, 70, "Output",ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317",
+ CellID->358626973]
+}, Open  ]],
+Cell[14169, 338, 808, 23, 70, "Text",ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de",
+ CellID->876231958],
+Cell[14980, 363, 136, 1, 70, "Section",ExpressionUUID->"12c4fc3b-e00c-2bba-42fb-f66491b97980",
+ CellID->1020575516],
+Cell[15119, 366, 211, 4, 70, "Text",ExpressionUUID->"1d7e6892-18cd-6f45-4b05-81dc997835af",
+ CellID->1967685850],
+Cell[CellGroupData[{
+Cell[15355, 374, 541, 11, 70, "Input",ExpressionUUID->"325c8f47-cd85-89da-6263-2720e431db20",
+ CellID->1728662077],
+Cell[15899, 387, 298, 6, 70, "Output",ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c",
+ CellID->1356957898]
+}, Open  ]],
+Cell[16212, 396, 152, 1, 70, "Subsection",ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595",
+ CellID->1653200050],
+Cell[16367, 399, 473, 8, 70, "Text",ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db",
+ CellID->1384978530],
+Cell[16843, 409, 561, 14, 70, "Text",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78",
+ CellID->519689844],
+Cell[CellGroupData[{
+Cell[17429, 427, 1686, 48, 70, "Input",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed",
+ CellID->558143646],
+Cell[19118, 477, 259, 6, 70, "Output",ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742",
+ CellID->252167569]
+}, Open  ]],
+Cell[19392, 486, 988, 28, 70, "Text",ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d",
+ CellID->1541450781],
+Cell[20383, 516, 852, 28, 70, "Text",ExpressionUUID->"494d6e39-7750-b6eb-7f72-806302ea1c31",
+ CellID->1657269721],
+Cell[CellGroupData[{
+Cell[21260, 548, 1307, 37, 70, "Input",ExpressionUUID->"39b01e29-d171-5c92-6f4f-9072e00426f8",
+ CellID->2048061839],
+Cell[22570, 587, 173, 4, 70, "Output",ExpressionUUID->"4f6d713e-2461-11c8-7513-69784d146312",
+ CellID->1680809496]
+}, Open  ]],
+Cell[22758, 594, 1056, 29, 70, "Text",ExpressionUUID->"14ad582f-66ff-93eb-3c53-5189128be131",
+ CellID->496109794],
+Cell[23817, 625, 243, 4, 70, "Text",ExpressionUUID->"4f7ea056-2d28-85ec-7505-3a1044c2ef36",
+ CellID->108435171],
+Cell[CellGroupData[{
+Cell[24085, 633, 2236, 58, 70, "Input",ExpressionUUID->"16b00368-b832-202d-3e4f-9b3239c77377",
+ CellID->525840340],
+Cell[26324, 693, 175, 4, 70, "Output",ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8",
+ CellID->1708324045]
+}, Open  ]],
+Cell[26514, 700, 672, 17, 70, "Text",ExpressionUUID->"05feeeaf-4f58-f7b7-3385-07096ad2dd9d",
+ CellID->203008389],
+Cell[27189, 719, 128, 1, 70, "Subsection",ExpressionUUID->"583a98af-415b-100e-09d9-110970ee6354",
+ CellID->1090263105],
+Cell[27320, 722, 761, 13, 70, "Text",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3",
+ CellID->1560876240],
+Cell[CellGroupData[{
+Cell[28106, 739, 1694, 45, 70, "Input",ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4",
+ CellID->201914069],
+Cell[29803, 786, 179, 4, 70, "Output",ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554",
+ CellID->607076188]
+}, Open  ]],
+Cell[29997, 793, 909, 23, 70, "Text",ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8",
+ CellID->807053435],
+Cell[30909, 818, 251, 4, 70, "Text",ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc",
+ CellID->1633675818],
+Cell[CellGroupData[{
+Cell[31185, 826, 2145, 57, 70, "Input",ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f",
+ CellID->817696651],
+Cell[33333, 885, 140, 2, 70, "Output",ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75",
+ CellID->1663470633]
+}, Open  ]],
+Cell[33488, 890, 252, 4, 70, "Text",ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b",
+ CellID->1232986364],
+Cell[33743, 896, 354, 6, 70, "Text",ExpressionUUID->"5b23761c-2477-64e8-0ad1-68464d024e32",
+ CellID->762269937],
+Cell[CellGroupData[{
+Cell[34122, 906, 2403, 53, 70, "Input",ExpressionUUID->"73216bcf-7cf1-61ac-22de-82a9748433f6",
+ CellID->1596700196],
+Cell[36528, 961, 1285, 33, 70, "Output",ExpressionUUID->"69fa63e8-c0ca-4913-1f9a-7ab5f17f1879",
+ CellID->1663427655]
+}, Open  ]],
+Cell[37828, 997, 452, 7, 70, "Text",ExpressionUUID->"409bca18-cbd6-e54d-70b8-ec45ee60cf97",
+ CellID->2118931930],
+Cell[38283, 1006, 169, 3, 70, "Subsection",ExpressionUUID->"10b62b5f-1d3f-f012-404d-c31994cbc378",
+ CellID->1039057480],
+Cell[38455, 1011, 707, 18, 70, "Text",ExpressionUUID->"79984792-c453-565a-2fb8-5edfede63ca0",
+ CellID->1411198270],
+Cell[CellGroupData[{
+Cell[39187, 1033, 480, 12, 70, "Input",ExpressionUUID->"1d45428e-8fa1-6801-4b7b-5be82a543b6b",
+ CellID->1062924604],
+Cell[39670, 1047, 225, 6, 70, "Output",ExpressionUUID->"604bb87d-3174-a116-1048-32274006f07c",
+ CellID->827610706]
+}, Open  ]],
+Cell[39910, 1056, 1291, 27, 70, "Text",ExpressionUUID->"763191a2-6f8b-197a-1fce-080c0a3e6840",
+ CellID->1477609488],
+Cell[41204, 1085, 133, 1, 70, "Subsection",ExpressionUUID->"635fdfdb-2856-deda-1164-d68549e0a420",
+ CellID->1030824397],
+Cell[41340, 1088, 2108, 60, 70, "Text",ExpressionUUID->"0f6eb37a-d9e9-6713-3515-2b27df9c4a79",
+ CellID->100031176],
+Cell[CellGroupData[{
+Cell[43473, 1152, 5059, 126, 70, "Input",ExpressionUUID->"5c8469dd-bfc7-2a7a-04bb-80873a727940",
+ CellID->384354388],
+Cell[48535, 1280, 494, 10, 70, "Output",ExpressionUUID->"182ee0c1-720e-fc83-49d5-f9ab07b8c6e9",
+ CellID->1325609351]
+}, Open  ]],
+Cell[49044, 1293, 797, 20, 70, "Text",ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc",
+ CellID->1443527617],
+Cell[49844, 1315, 117, 1, 70, "Subsection",ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c",
+ CellID->311511756],
+Cell[49964, 1318, 675, 12, 70, "Text",ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21",
+ CellID->1381425643],
+Cell[50642, 1332, 536, 13, 70, "Text",ExpressionUUID->"77076ae4-09e5-8344-1d3c-83ceaf91d1ae",
+ CellID->377280352],
+Cell[CellGroupData[{
+Cell[51203, 1349, 3261, 92, 70, "Input",ExpressionUUID->"4289b0c6-8043-1b93-72b6-29a031f669f9",
+ CellID->353955539],
+Cell[54467, 1443, 493, 10, 70, "Output",ExpressionUUID->"070f3e08-556d-9d60-2d34-b0525c19e44a",
+ CellID->631628885]
+}, Open  ]],
+Cell[54975, 1456, 452, 7, 70, "Text",ExpressionUUID->"6d593b15-c37a-9c59-1b66-b35ef60ce6a3",
+ CellID->1781880651],
+Cell[55430, 1465, 132, 1, 70, "Section",ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c",
+ CellID->1536527082],
+Cell[55565, 1468, 944, 17, 70, "Text",ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60",
+ CellID->1621535814],
+Cell[CellGroupData[{
+Cell[56534, 1489, 678, 17, 70, "Input",ExpressionUUID->"16b44e14-0404-e868-3e4c-605eadb6bab2",
+ CellID->482293909],
+Cell[57215, 1508, 141, 2, 70, "Output",ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622",
+ CellID->885243818]
+}, Open  ]],
+Cell[57371, 1513, 140, 1, 70, "Subsection",ExpressionUUID->"7e10bd94-ae42-3b4d-262f-34d1cbf48997",
+ CellID->105329933],
+Cell[57514, 1516, 611, 11, 70, "Text",ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c",
+ CellID->1234416869],
+Cell[CellGroupData[{
+Cell[58150, 1531, 1996, 54, 70, "Input",ExpressionUUID->"013c2307-fb8b-27c7-30c3-bb60fe3f8d2d",
+ CellID->249718593],
+Cell[60149, 1587, 494, 10, 70, "Output",ExpressionUUID->"4b734859-75e7-efa6-7901-62030393b58c",
+ CellID->1625568682]
+}, Open  ]],
+Cell[60658, 1600, 378, 6, 70, "Text",ExpressionUUID->"4ae31c17-eefa-a706-7a90-96508a8c0a6c",
+ CellID->1771870337],
+Cell[61039, 1608, 121, 1, 70, "Subsection",ExpressionUUID->"00844d77-2817-3ec6-30bc-653149a3842c",
+ CellID->305160771],
+Cell[61163, 1611, 464, 7, 70, "Text",ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0",
+ CellID->1896945989],
+Cell[CellGroupData[{
+Cell[61652, 1622, 1756, 45, 70, "Input",ExpressionUUID->"04469009-6b02-dcc3-2c7d-0a530eb4a629",
+ CellID->471728701],
+Cell[63411, 1669, 494, 10, 70, "Output",ExpressionUUID->"4e35d333-5bd5-ef26-77ca-cb7d5e61b20c",
+ CellID->1914386876]
+}, Open  ]],
+Cell[63920, 1682, 397, 6, 70, "Text",ExpressionUUID->"5547dfb6-0e84-e145-037c-d6f0ab36b3af",
+ CellID->1067269536],
+Cell[64320, 1690, 120, 1, 70, "Subsection",ExpressionUUID->"12b61bfc-9cd7-eca9-424d-92a61563b6f3",
+ CellID->49659130],
+Cell[64443, 1693, 563, 10, 70, "Text",ExpressionUUID->"451364b5-819d-fb99-7321-7dff3029c9e3",
+ CellID->464508221],
+Cell[CellGroupData[{
+Cell[65031, 1707, 1532, 37, 70, "Input",ExpressionUUID->"13b49e24-0fb7-4441-414b-178eaa422eab",
+ CellID->391084117],
+Cell[66566, 1746, 763, 20, 70, "Output",ExpressionUUID->"445bf28f-7a5a-ecd1-6c78-ebe97fecb63b",
+ CellID->625764944]
+}, Open  ]],
+Cell[67344, 1769, 575, 9, 70, "Text",ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69",
+ CellID->1907680634],
+Cell[67922, 1780, 275, 5, 70, "Text",ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd",
+ CellID->483148123],
+Cell[CellGroupData[{
+Cell[68222, 1789, 694, 14, 70, "Input",ExpressionUUID->"0cdaad60-2181-5e26-34f9-454a5034250c",
+ CellID->668869836],
+Cell[68919, 1805, 337, 6, 70, "Output",ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b",
+ CellID->1510519072]
+}, Open  ]],
+Cell[69271, 1814, 646, 12, 70, "Text",ExpressionUUID->"00dd9d4d-f7ec-565f-30e2-151681993ca5",
+ CellID->1521685512],
+Cell[69920, 1828, 131, 1, 70, "Section",ExpressionUUID->"0d66b502-775d-ec4c-3b1d-2d6c02e9b696",
+ CellID->97201263],
+Cell[70054, 1831, 337, 6, 70, "Text",ExpressionUUID->"3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891",
+ CellID->878831761],
+Cell[70394, 1839, 119, 1, 70, "Subsection",ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072",
+ CellID->1048559713],
+Cell[70516, 1842, 1686, 52, 70, "Text",ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58",
+ CellID->300048012],
+Cell[CellGroupData[{
+Cell[72227, 1898, 280, 7, 70, "Input",ExpressionUUID->"1d9e3d6f-99f1-7c1e-4ba5-b5491f844764",
+ CellID->524307849],
+Cell[72510, 1907, 129, 2, 70, "Output",ExpressionUUID->"710db4a8-d877-0db2-2732-2df5d9025798",
+ CellID->1834301690]
+}, Open  ]],
+Cell[72654, 1912, 631, 15, 70, "Text",ExpressionUUID->"71e12f72-3ad4-a92f-279e-c73cbf66f875",
+ CellID->588230824],
+Cell[CellGroupData[{
+Cell[73310, 1931, 398, 12, 70, "Input",ExpressionUUID->"06ea8612-dd18-b4f0-2ee9-185fd4921eda",
+ CellID->1127727415],
+Cell[73711, 1945, 132, 2, 70, "Output",ExpressionUUID->"0b02f270-2101-5c3d-3931-f43a50b42707",
+ CellID->1955467569]
+}, Open  ]],
+Cell[73858, 1950, 1226, 30, 70, "Text",ExpressionUUID->"2d1868bf-f524-2aaf-5b27-81f8fcd178f5",
+ CellID->512383039],
+Cell[CellGroupData[{
+Cell[75109, 1984, 246, 6, 70, "Input",ExpressionUUID->"669caa83-24d6-d7e9-0ea3-43ed4d60bd33",
+ CellID->688684714],
+Cell[75358, 1992, 253, 7, 70, "Output",ExpressionUUID->"5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e",
+ CellID->1478107962]
+}, Open  ]],
+Cell[75626, 2002, 1017, 22, 70, "Text",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4",
+ CellID->1809098798],
+Cell[CellGroupData[{
+Cell[76668, 2028, 418, 11, 70, "Input",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169",
+ CellID->308320186],
+Cell[77089, 2041, 193, 4, 70, "Output",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8",
+ CellID->845252322]
+}, Open  ]],
+Cell[77297, 2048, 2162, 64, 70, "Text",ExpressionUUID->"12c044c4-b778-74e1-42f0-5da1c20d5ecb",
+ CellID->724760089],
+Cell[79462, 2114, 121, 1, 70, "Subsection",ExpressionUUID->"3d9aa029-60a8-273a-6bb9-3a7311428a00",
+ CellID->168408080],
+Cell[79586, 2117, 1453, 41, 70, "Text",ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5",
+ CellID->811283638],
+Cell[CellGroupData[{
+Cell[81064, 2162, 1411, 39, 70, "Input",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436",
+ CellID->1797514155],
+Cell[82478, 2203, 165, 3, 70, "Output",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605",
+ CellID->1258427959]
+}, Open  ]],
+Cell[82658, 2209, 1608, 38, 70, "Text",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089",
+ CellID->437474228],
+Cell[CellGroupData[{
+Cell[84291, 2251, 490, 11, 70, "Input",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3",
+ CellID->590983534],
+Cell[84784, 2264, 203, 5, 70, "Output",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d",
+ CellID->1257758076]
+}, Open  ]],
+Cell[85002, 2272, 199, 4, 70, "Text",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1",
+ CellID->11631581],
+Cell[85204, 2278, 123, 1, 70, "Section",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554",
+ CellID->1933762060],
+Cell[85330, 2281, 168, 3, 70, "Text",ExpressionUUID->"10bcaec6-cc03-bcfd-4043-47a3e5b706c7",
+ CellID->1055776787],
+Cell[85501, 2286, 277, 5, 70, "Item",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc",
+ CellID->1859711813],
+Cell[85781, 2293, 272, 5, 70, "Item",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e",
+ CellID->1348896709],
+Cell[86056, 2300, 683, 19, 70, "Item",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12",
+ CellID->1427211115],
+Cell[86742, 2321, 230, 4, 70, "Item",ExpressionUUID->"1318f44b-7a0d-b86f-4127-ee157fb90ab5",
+ CellID->2099805207],
+Cell[86975, 2327, 198, 4, 70, "Item",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09",
+ CellID->1402006442],
+Cell[87176, 2333, 1048, 35, 70, "Item",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799",
+ CellID->1901179466],
+Cell[88227, 2370, 658, 10, 70, "Text",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a",
+ CellID->210724908],
+Cell[88888, 2382, 605, 9, 70, "Text",ExpressionUUID->"2207e002-80f7-0285-523c-fa6c308250ef",
+ CellID->1992790374],
+Cell[89496, 2393, 483, 9, 70, "Text",ExpressionUUID->"440467ae-8db5-79b4-6c3c-7e0824404b9e",
+ CellID->292747604]
+}
+]
+*)
+
+(* End of internal cache information *)
