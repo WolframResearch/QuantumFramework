@@ -21,13 +21,13 @@ This is a hands-on tour of open quantum systems: systems that leak energy or inf
 
 I strongly believe in a computation-first way of learning: in a sense, if I cannot compute it, I cannot claim to understand it. Real understanding shows up when you can actually do the thing, simulate it, predict it, watch it, not when you can only repeat words about it. So the rhythm here is always the same: say an idea in plain words, say it again more plainly, compute it, look at what came out, and let that raise the next question.
 
-Two notes on style. First, the file stands on its own: no other document, textbook, or note is needed. Second, I use the standard names (density matrix, Bloch vector, master equation, dissipator, coherent state) and explain each in one plain sentence the first time it appears; the code uses the same standard names, so it reads like the physics.
+Two notes on style. First, the file stands on its own: the mathematics, simulation helpers, and plotting code it needs are defined below, using Wolfram Language built-ins and a single Function Repository resource, `BlochSpherePlot`, for the Bloch sphere. Second, I use the standard names (density matrix, Bloch vector, master equation, dissipator, coherent state) and explain each in one plain sentence the first time it appears; the code uses the same standard names, so it reads like the physics.
 
 The thing you are reading is a live notebook. Evaluate the cells from top to bottom, because later cells lean on earlier ones. My suggestion is to look at each output and what it means before picking apart the code that made it. And you are not locked into anything: change a number, watch a different system, reseed the randomness, and see what moves. That is the whole point.
 
 ### What You Need, and How to Read This
 
-You need three ideas. First, the state is a **density matrix** $\rho$: an $n\times n$ Hermitian matrix ($n$ = number of levels, 2 for a qubit, more for an oscillator), with the level populations on its diagonal (summing to one) and the coherences off-diagonal. Second, the system has a Hamiltonian $\hat H$ that drives its unitary evolution when left alone. Third, one random quantity recurs below: the Wiener increment $dW$, a Gaussian random step with variance equal to the time step $dt$. Where the pace steepens I will say so.
+You need three ideas. First, the state is a **density matrix** $\rho$: an $n\times n$ Hermitian, positive-semidefinite matrix ($n$ = number of levels, 2 for a qubit, more for an oscillator), with nonnegative level populations on its diagonal (summing to one) and the coherences off-diagonal. Second, the system has a Hamiltonian $\hat H$ that drives its unitary evolution when left alone. Third, one random quantity recurs below: the Wiener increment $dW$, a Gaussian random step with variance equal to the time step $dt$. Where the pace steepens I will say so.
 
 We set $\hbar = 1$ throughout, so every rate and frequency is in units of inverse time.
 
@@ -39,25 +39,25 @@ Before any specific system, we build the small set of tools every example reuses
 
 ### The density matrix, and quantities read from it
 
-The smallest system is a qubit. Everything is built from the three Pauli matrices $X$, $Y$, $Z$ and the $2\times2$ identity:
+The smallest system is a qubit. Everything is built from the three Pauli matrices $X$, $Y$, $Z$ and the 2-by-2 identity:
 
 ```wl
 {id2, X, Y, Z} = Table[PauliMatrix[j], {j, 0, 3}];
 ```
 
-The basis states are the excited state $|e\rangle = \{1,0\}$ and the ground state $|g\rangle = \{0,1\}$; their equal superposition is $|+\rangle = (|e\rangle + |g\rangle)/\sqrt2$:
+The basis states are the excited state $\left|e\right\rangle = \{1,0\}$ and the ground state $\left|g\right\rangle = \{0,1\}$; their equal superposition is $\left|+\right\rangle = (\left|e\right\rangle + \left|g\right\rangle)/\sqrt2$:
 
 ```wl
 excited = {1, 0}; ground = {0, 1}; plus = {1, 1}/Sqrt[2];
 ```
 
-The lowering operator $\hat\sigma_- = |g\rangle\langle e|$ takes the excited state to the ground state (an atom emitting a photon). Build it from the Pauli matrices:
+The lowering operator $\hat\sigma_- = \left|g\right\rangle\left(\left|e\right\rangle\right)^\dagger$ takes the excited state to the ground state (an atom emitting a photon). Build it from the Pauli matrices:
 
 ```wl
 lower = (X - I Y)/2;
 ```
 
-Check that it sends $|e\rangle$ to $|g\rangle$:
+Check that it sends $\left|e\right\rangle$ to $\left|g\right\rangle$:
 
 ```wl
 lower . excited
@@ -65,7 +65,7 @@ lower . excited
 
 It lands on the ground state. Its conjugate transpose is the raising operator $\hat\sigma_+$, written inline when needed.
 
-A state vector describes only a pure state. The general state, pure or mixed, is the density matrix; for a pure state it is the outer product $\rho = |\psi\rangle\langle\psi|$:
+A state vector describes only a pure state. The general state, pure or mixed, is the density matrix; for a pure state it is the outer product $\rho = \left|\psi\right\rangle\left(\left|\psi\right\rangle\right)^\dagger$:
 
 ```wl
 densityMatrix[v_] := KroneckerProduct[v, Conjugate[v]];
@@ -77,7 +77,7 @@ Form the density matrix of the excited state:
 densityMatrix[excited]
 ```
 
-For $|e\rangle$ this is a single 1 in the top corner.
+For $\left|e\right\rangle$ this is a single 1 in the top corner.
 
 Two quantities summarize any qubit state. The first is the **Bloch vector** $(\langle\hat\sigma_x\rangle, \langle\hat\sigma_y\rangle, \langle\hat\sigma_z\rangle)$: it has length 1 for a pure state and shrinks as the state mixes. Define it:
 
@@ -85,7 +85,7 @@ Two quantities summarize any qubit state. The first is the **Bloch vector** $(\l
 blochVector[rho_] := Re[Tr[rho . #] & /@ {X, Y, Z}];
 ```
 
-Check that $|+\rangle$ points along the $x$-axis:
+Check that $\left|+\right\rangle$ points along the $x$-axis:
 
 ```wl
 blochVector[densityMatrix[plus]]
@@ -107,10 +107,10 @@ Read it for a pure state and for the maximally mixed one:
 
 The pure state gives one, the maximally mixed state one half.
 
-Last, the **expectation value** $\langle A\rangle = \mathrm{Tr}(A\rho)$ of any operator, which predicts what a meter reads:
+Last, the **expectation value** $\langle A\rangle = \mathrm{Tr}(A\rho)$ of any operator. It is real when $A$ is Hermitian, as a physical meter observable must be, but it can be complex for a general operator:
 
 ```wl
-expectation[op_, rho_] := Re@Tr[op . rho];
+expectation[op_, rho_] := Tr[op . rho];
 ```
 
 ### The two terms of the master equation
@@ -146,27 +146,40 @@ This is a system leaking to an environment whose record we set aside, whether no
 
 ### The master equation, solved two independent ways
 
-We solve the master equation two independent ways and check they agree. The first vectorizes $\rho$ (stack its rows) and applies the **Liouvillian**, the matrix whose action is $\mathcal{L}$. In this row-stacking convention (matching WL's `Flatten`, with $\overline{\phantom{x}}$ the entrywise conjugate) it is the Kronecker form
-$$\mathcal{L} = -i\big(\hat H\otimes\mathbb{1} - \mathbb{1}\otimes\hat H^{T}\big) + \sum_k\Big[\hat c_k\otimes\overline{\hat c_k} - \tfrac12\big(\hat c_k^\dagger\hat c_k\otimes\mathbb{1} + \mathbb{1}\otimes(\hat c_k^\dagger\hat c_k)^{T}\big)\Big],$$
-which the code builds equivalently by feeding $\mathcal{L}$ each basis matrix and stacking the results:
+We solve the master equation two independent ways and check they agree. The first vectorizes $\rho$ (stack its rows) and applies the **Liouvillian**, the matrix whose action is $\mathcal{L}$. In this row-stacking convention (matching WL's `Flatten`; an overbar denotes entrywise conjugation) it is the Kronecker form
+$$\mathcal{L} = -i(\hat H\otimes\mathbb{1} - \mathbb{1}\otimes\hat H^{T}) + \sum_k[\hat c_k\otimes\overline{\hat c_k} - \tfrac12(\hat c_k^\dagger\hat c_k\otimes\mathbb{1} + \mathbb{1}\otimes(\hat c_k^\dagger\hat c_k)^{T})],$$
+which the code assembles directly, $\mathbb{1}$ the $d\times d$ identity (equivalently, the matrix whose columns are $\mathcal{L}$ applied to each basis matrix):
 
 ```wl
-liouvillian[H_, leaks_List, d_] := Module[{e}, Transpose@Table[
-   Flatten@lindbladian[H, leaks, ArrayReshape[UnitVector[d^2, e], {d, d}]], {e, d^2}]];
+liouvillian[H_, leaks_List, d_] := With[{id = IdentityMatrix[d]},
+   -I (KroneckerProduct[H, id] - KroneckerProduct[id, Transpose[H]]) +
+    Total[Function[c, KroneckerProduct[c, Conjugate[c]] -
+        (KroneckerProduct[ConjugateTranspose[c] . c, id] +
+           KroneckerProduct[id, Transpose[ConjugateTranspose[c] . c]])/2] /@ leaks]];
 ```
 
 The state at time $t$ is then a matrix exponential of the Liouvillian applied to the vectorized initial state, reshaped back to a matrix, $\mathrm{vec}\,\rho(t) = e^{\mathcal{L}t}\,\mathrm{vec}\,\rho_0$:
 
 ```wl
 evolve[H_, leaks_List, rho0_, t_] := With[{d = Length[rho0]},
-   ArrayReshape[MatrixExp[liouvillian[H, leaks, d] N[t]] . Flatten[N@rho0], {d, d}]];
+   ArrayReshape[MatrixExp[liouvillian[H, leaks, d] t] . Flatten[rho0], {d, d}]];
 ```
 
-The Liouvillian also gives the **steady state** $\rho_{\mathrm{ss}}$, satisfying $\mathcal{L}\rho_{\mathrm{ss}} = 0$: the null space of the Liouvillian, made physical. A steady density matrix is Hermitian with unit trace, so we take the Hermitian part of each null-space element (still in the kernel, since $\mathcal{L}$ maps Hermitian to Hermitian) and divide by its trace. There can be more than one, a whole line of steady states; a kernel direction that happens to be traceless is a steady *coherence*, not a state, so we return it as it is rather than dividing by zero:
+The Liouvillian also gives a **steady state** $\rho_{\mathrm{ss}}$, satisfying $\mathcal{L}\rho_{\mathrm{ss}} = 0$. A degenerate null space needs care: its arbitrary complex basis vectors are not themselves density matrices. `stationary` converts the complex null space into a complete real basis of Hermitian stationary operators, orthonormal in the Frobenius sense. When that basis is one-dimensional (the usual case, a single steady direction) it rescales the sole operator to a unit-trace Hermitian density matrix, so `First@stationary[...]` is the physical steady state. When the null space is degenerate, or the lone direction is traceless (a steady coherence, not a state), it returns the operator basis unchanged; the physical steady states are then the unit-trace, positive combinations of that basis, not the basis vectors separately.
 
 ```wl
-steadyState[H_, leaks_List] := With[{d = Length[H]},
-   (If[Abs[Tr[#]] > 10^-10, #/Tr[#], #] &) /@ ((# + ConjugateTranspose[#])/2 & /@ (ArrayReshape[#, {d, d}] & /@ NullSpace[liouvillian[H, leaks, d]]))];
+stationary[H_, leaks_List, tol_: 10^-10] :=
+  With[{d = Length[H]},
+   With[{candidates =
+       With[{raw = ArrayReshape[#, {d, d}] & /@ NullSpace[liouvillian[H, leaks, d]]},
+        Join[(# + ConjugateTranspose[#])/2 & /@ raw,
+         (# - ConjugateTranspose[#])/(2 I) & /@ raw]]},
+    With[{basis = ArrayReshape[#, {d, d}] & /@
+        Select[Orthogonalize[Flatten /@ candidates], Norm[N@#] > tol &]},
+     If[Length[basis] =!= 1, basis,
+      With[{weight = Tr[First@basis]},
+       If[Abs[N@weight] <= tol, basis,
+        With[{rho = First@basis/weight}, {(rho + ConjugateTranspose[rho])/2}]]]]]]];
 ```
 
 The second way integrates the master equation directly with an ODE solver, sharing no code with the Liouvillian route:
@@ -198,7 +211,7 @@ The largest disagreement is at the ODE solver's tolerance: the matrix exponentia
 
 ### The positivity-preserving measurement step
 
-Now put a detector on a leak and condition the state on its output. The naive update, nudging $\rho$ by the record, can push $\rho$ off the set of valid states and give a negative eigenvalue, a negative probability. See it break: take $|+\rangle$, measure $Z$ with no Hamiltonian, and feed one large noise kick into the naive update:
+Now put a detector on a leak and condition the state on its output. The naive update, nudging $\rho$ by the record, can push $\rho$ off the set of valid states and give a negative eigenvalue, a negative probability. See it break: take $\left|+\right\rangle$, measure $Z$ with no Hamiltonian, and feed one large noise kick into the naive update:
 
 ```wl
 naiveStep = densityMatrix[plus] + dissipator[Z, densityMatrix[plus]] 0.1 +
@@ -214,25 +227,28 @@ Min@Eigenvalues[naiveStep]
 
 A negative eigenvalue: the naive update has left the set of valid states. Shrinking $dt$ makes it rarer but never impossible.
 
-The fix is the structure-preserving filter of [Rouchon and Ralph (2015)](https://arxiv.org/abs/1410.5345): write the update as a sum of Kraus terms $A\rho A^\dagger$, an operator times $\rho$ times its conjugate transpose, so the result is manifestly positive at any step size. With monitored operators $\{\hat c_k\}$ at detection efficiencies $\{\eta_k\}$, unmonitored leaks $\{\hat l_j\}$, record increments $dJ_k$, the no-jump generator $K = i\hat H + \tfrac12\big(\sum_k \hat c_k^\dagger \hat c_k + \sum_j \hat l_j^\dagger \hat l_j\big)$, and the measurement kick $s = \sum_k \sqrt{\eta_k}\,dJ_k\,\hat c_k$, the corrected Kraus operator is
+The fix is the structure-preserving filter of [Rouchon and Ralph (2015)](https://arxiv.org/abs/1410.5345): write the update as a sum of Kraus terms $A\rho A^\dagger$, an operator times $\rho$ times its conjugate transpose, so the unnormalized result is manifestly positive whenever the supplied efficiencies satisfy $0\leq\eta_k\leq1$. With monitored operators $\{\hat c_k\}$ at detection efficiencies $\{\eta_k\}$, unmonitored leaks $\{\hat l_j\}$, record increments $dJ_k$, the no-jump generator $K = i\hat H + \tfrac12(\sum_k \hat c_k^\dagger \hat c_k + \sum_j \hat l_j^\dagger \hat l_j)$, and the measurement kick $s = \sum_k \sqrt{\eta_k}\,dJ_k\,\hat c_k$, the corrected Kraus operator is
 $$M = \mathbb{1} - K\,dt + s + \tfrac12 s^2 - \tfrac{dt}{2}\sum_k \eta_k\,\hat c_k^2,$$
 and the stepped state is the renormalized sum
 $$\tilde\rho = M\rho M^\dagger + dt\sum_j \hat l_j\,\rho\,\hat l_j^\dagger + dt\sum_k (1-\eta_k)\,\hat c_k\,\rho\,\hat c_k^\dagger, \qquad \rho' = \frac{\tilde\rho}{\mathrm{Tr}\,\tilde\rho}.$$
-The three terms of $\tilde\rho$ are the measured record, the unmonitored leaks, and the unrecorded fraction $(1-\eta_k)$ of each watched channel; each has Kraus form, so $\rho$ stays valid for any $dt$, and averaging over the $dJ_k$ recovers the Lindblad master equation. Build it: it takes the fixed model pieces and returns a function mapping a state and a record to the next state:
+The three terms of $\tilde\rho$ are the measured record, the unmonitored leaks, and the unrecorded fraction $(1-\eta_k)$ of each watched channel. Each has Kraus form, so a positive input gives a positive numerator; the normalized update is defined when that numerator has positive trace. This structural positivity is distinct from time-discretization accuracy: at finite $dt$ the update is an approximation to the continuous stochastic master equation, and its ensemble average has a systematic step-size bias in addition to Monte-Carlo scatter. Only one precondition matters physically: every detection efficiency must lie in $[0,1]$, since the upper bound $\eta_k\le1$ is exactly what keeps the Kraus-form update positive. The code asserts that and a positive time step once, up front; the returned stepper then preserves Hermiticity, positivity, and trace by construction, so it trusts its input and guards only the final normalization against a non-positive trace:
 
 ```wl
-measurementStep[H_, watched_List, effs_List, unwatched_List, dt_] :=
-  With[{id = IdentityMatrix[Length[H]],
-    drift = I H + Total[ConjugateTranspose[#] . # & /@ Join[watched, unwatched]]/2,
-    corr = Total[MapThread[#1 (#2 . #2) &, {effs, watched}]]/2},
-   Function[{rho, dJ},
-    Module[{sig, M, top},
-     sig = Total@MapThread[Sqrt[#2] #1 #3 &, {dJ, effs, watched}];
+measurementStep[H_, watched_, effs_, unwatched_, dt_] := Enclose[
+  Module[{d = Length[H], id = IdentityMatrix[Length[H]], channels = Join[watched, unwatched], drift, corr},
+   ConfirmAssert[VectorQ[effs, 0 <= # <= 1 &], "efficiencies must lie in [0,1]"];
+   ConfirmAssert[TrueQ[dt > 0], "time step must be positive"];
+   drift = I H + Fold[Plus, 0 H, ConjugateTranspose[#] . # & /@ channels]/2;
+   corr = Fold[Plus, 0 H, MapThread[#1 (#2 . #2) &, {effs, watched}]]/2;
+   Function[{rho, dJ}, Module[{sig, M, top, nrm},
+     sig = Fold[Plus, 0 H, MapThread[Sqrt[#2] #1 #3 &, {dJ, effs, watched}]];
      M = id - drift dt + sig + sig . sig/2 - corr dt;
      top = M . rho . ConjugateTranspose[M] +
-       dt Total[# . rho . ConjugateTranspose[#] & /@ unwatched] +
-       dt Total[MapThread[(1 - #2) #1 . rho . ConjugateTranspose[#1] &, {watched, effs}]];
-     top/Re@Tr[top]]]];
+       dt Fold[Plus, 0 H, # . rho . ConjugateTranspose[#] & /@ unwatched] +
+       dt Fold[Plus, 0 H, MapThread[(1 - #2) #1 . rho . ConjugateTranspose[#1] &, {watched, effs}]];
+     nrm = Re@Tr[top];
+     If[TrueQ[nrm > 0], top/nrm,
+       Failure["NonPositiveNormalization", <|"Normalization" -> nrm|>]]]]]];
 ```
 
 Here `watched` are the monitored channels, `effs` their detection efficiencies (1 for perfect, less if the detector misses some output), and `unwatched` the undetected leaks. Revisit the kick that broke the naive step, now through the positivity-preserving step:
@@ -247,7 +263,7 @@ Read the smallest eigenvalue and the trace of the stepped state:
 {Min@Re@Eigenvalues[fixedStep], Re@Tr[fixedStep]}
 ```
 
-The smallest eigenvalue is now zero to rounding and the trace is one: the step lands on the boundary of the state space instead of leaving it. Positivity no longer depends on the step size.
+The smallest eigenvalue is now zero to numerical precision and the trace is one: the step lands on the boundary of the state space instead of leaving it. Positivity of the normalized Kraus-form update no longer depends on taking an infinitesimal step, although agreement with the continuous-time filter still does.
 
 ### The measurement record, and one trajectory
 
@@ -301,7 +317,27 @@ Max@MapThread[Norm[#1 - #2, "Frobenius"] &,
    {Mean[crowd], smoothRef /@ (dt Range[0, Round[tf/dt]])}]
 ```
 
-The gap is the Monte-Carlo scatter of a finite ensemble, shrinking as $1/\sqrt N$. The trajectory ensemble and the master equation share no code yet agree: a numerical validation, repeated throughout, that a stochastic example is built right.
+The gap contains two errors: Monte-Carlo scatter, which shrinks as $1/\sqrt N$, and the finite-$dt$ bias of the discrete trajectory update, which shrinks only when the time step is refined. The trajectory ensemble and the master equation share no evolution code; agreement under both ensemble enlargement and time-step refinement is the numerical validation repeated throughout.
+
+Isolate the step-size effect without Monte-Carlo noise by quadrature over one full Gaussian record increment. `oneStepBias` compares that numerically integrated discrete-step average with the Lindblad evolution over the same interval:
+
+```wl
+oneStepBias[h_?NumericQ] := Module[{rho = densityMatrix[plus], c = Sqrt[0.4] Z, stepper, entry, averaged},
+   stepper = measurementStep[Hx, {c}, {1.}, {}, h];
+   entry[dw_?NumericQ, j_Integer, k_Integer] := PDF[NormalDistribution[0, Sqrt[h]], dw]
+     stepper[rho, measurementRecord[rho, {c}, {1.}, h, {dw}]][[j, k]];
+   averaged = Table[NIntegrate[entry[dw, j, k], {dw, -Infinity, Infinity},
+      Method -> "GlobalAdaptive"], {j, 2}, {k, 2}];
+   Norm[averaged - evolve[Hx, {c}, rho, h], "Frobenius"]];
+```
+
+Refine the step:
+
+```wl
+Table[{h, oneStepBias[h]}, {h, {0.1, 0.05, 0.025}}]
+```
+
+The bias decreases under refinement. This is the missing half of the ensemble check: increasing $N$ controls sampling error, while decreasing $dt$ controls discretization error.
 
 One more fact from the same run: each **conditional** trajectory stays pure, while the ensemble average is mixed. Compare the purity of one trajectory's final state with that of the ensemble mean:
 
@@ -314,10 +350,10 @@ The single trajectory ends pure; the average ends mixed. This is the heart of th
 
 ### The Bloch-sphere plot
 
-For a qubit the natural picture is the Bloch sphere: the Bloch vector's tip lies on the surface for a pure state, inside for a mixed one. `BlochSpherePlot` draws the labeled sphere:
+For a qubit the natural picture is the Bloch sphere: the Bloch vector's tip lies on the surface for a pure state, inside for a mixed one. Draw it with the `BlochSpherePlot` resource function, whose empty call returns the shaded ball with its axes and labels as a `Graphics3D` ready to overlay each trajectory on:
 
 ```wl
-bloch = ResourceFunction["BlochSpherePlot"];
+bloch[] := ResourceFunction["BlochSpherePlot"][]
 ```
 
 A small octahedron will mark where a trajectory ends; build it from its six vertices:
@@ -369,8 +405,8 @@ All three components move. $\langle\hat\sigma_x\rangle$ starts at one and decays
 Every example below opens with a one-line statement of its problem in standard notation, so the formal problem and the plain solution sit side by side. It is only names for the machinery you just built. The state is the density matrix $\rho$; the averaged evolution is the **master equation**
 $$\dot\rho = \mathcal{L}\rho = -i[\hat H,\rho] + \sum_k \mathcal{D}[\hat c_k]\rho, \qquad \hbar = 1,$$
 whose Hamiltonian part $-i[\hat H,\rho]$ is `commutatorTerm` and each of whose dissipators
-$$\mathcal{D}[\hat c]\rho = \hat c\,\rho\,\hat c^\dagger - \tfrac12\bigl(\hat c^\dagger\hat c\,\rho + \rho\,\hat c^\dagger\hat c\bigr)$$
-is `dissipator`. For a qubit the **Bloch vector** is $(x,y,z) = (\langle\hat\sigma_x\rangle,\langle\hat\sigma_y\rangle,\langle\hat\sigma_z\rangle)$, with $\rho = \tfrac12(\mathbb{1} + x\hat\sigma_x + y\hat\sigma_y + z\hat\sigma_z)$; the lowering operator is $\hat\sigma_- = |g\rangle\langle e|$, and for an oscillator the annihilation operator is $\hat a$ with $[\hat a,\hat a^\dagger] = 1$. When the record is kept, `measurementStep` integrates a **stochastic master equation** whose measurement (diffusion) term for a monitored $\hat c$ is $\mathcal{H}[\hat c]\rho = \hat c\rho + \rho\hat c^\dagger - \langle\hat c + \hat c^\dagger\rangle\rho$, driven by $dW$ with $dW^2 = dt$; photon counting instead applies the jump $\mathcal{G}[\hat c]\rho = \hat c\rho\hat c^\dagger/\mathrm{Tr}[\hat c\rho\hat c^\dagger] - \rho$ at click times.
+$$\mathcal{D}[\hat c]\rho = \hat c\,\rho\,\hat c^\dagger - \tfrac12(\hat c^\dagger\hat c\,\rho + \rho\,\hat c^\dagger\hat c)$$
+is `dissipator`. For a qubit the **Bloch vector** is $(x,y,z) = (\langle\hat\sigma_x\rangle,\langle\hat\sigma_y\rangle,\langle\hat\sigma_z\rangle)$, with $\rho = \tfrac12(\mathbb{1} + x\hat\sigma_x + y\hat\sigma_y + z\hat\sigma_z)$; the lowering operator is $\hat\sigma_- = \left|g\right\rangle\left(\left|e\right\rangle\right)^\dagger$, and for an oscillator the annihilation operator is $\hat a$ with $[\hat a,\hat a^\dagger] = 1$. When the record is kept, `measurementStep` integrates a **stochastic master equation** whose measurement (diffusion) term for a monitored $\hat c$ is $\mathcal{H}[\hat c]\rho = \hat c\rho + \rho\hat c^\dagger - \langle\hat c + \hat c^\dagger\rangle\rho$, driven by $dW$ with $dW^2 = dt$; photon counting instead applies the jump $\mathcal{G}[\hat c]\rho = \hat c\rho\hat c^\dagger/\mathrm{Tr}[\hat c\rho\hat c^\dagger] - \rho$ at click times.
 
 ### The Twenty Governing Equations, at a Glance
 
@@ -398,21 +434,21 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
    $$
    \dot\rho=\gamma\mathcal D[\hat a]\rho,
    \qquad
-   \rho(0)=\frac{(|\alpha\rangle+|-\alpha\rangle)(\langle\alpha|+\langle-\alpha|)}
-   {2\bigl(1+e^{-2|\alpha|^2}\bigr)}.
+   \rho(0)=\frac{(\left|\alpha\right\rangle+\left|-\alpha\right\rangle)(\left|\alpha\right\rangle+\left|-\alpha\right\rangle)^\dagger}
+   {2(1+e^{-2\left|\alpha\right|^2})}.
    $$
 
 4. **Atom-made cat and its decoherence.** During the dispersive atom-cavity interaction and the subsequent storage interval, respectively,
    $$
-   \dot\rho_{AC}=-i[\chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\rho_{AC}],
+   \dot\rho_{\mathrm{AC}}=-i[\chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\rho_{\mathrm{AC}}],
    \qquad
    \dot\rho_C=\gamma\mathcal D[\hat a]\rho_C.
    $$
 
 5. **Dispersive qubit readout.**
    $$
-   \dot\rho=-i\bigl[\epsilon(\hat a+\hat a^\dagger)
-   +\chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\rho\bigr]
+   \dot\rho=-i[\epsilon(\hat a+\hat a^\dagger)
+   +\chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\rho]
    +\gamma\mathcal D[\hat a]\rho,
    $$
    and, conditional on $\sigma_z=s=\pm1$, the coherent pointer obeys
@@ -439,16 +475,16 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
    +\gamma n_T\mathcal D[\hat a^\dagger]\rho.
    $$
 
-7. **Photon counting.** With $\lambda_t=\operatorname{Tr}(\hat c^\dagger\hat c\rho_c)$ and $\mathbb E[dN_t\mid\rho_c]=\lambda_t\,dt$,
+7. **Photon counting.** With $\lambda_t=\mathrm{Tr}(\hat c^\dagger\hat c\rho_c)$ and $\mathbb E[dN_t\ \text{given}\ \rho_c]=\lambda_t\,dt$,
    $$
-   d\rho_c=\bigl(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c\bigr)\,dt
+   d\rho_c=(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c)\,dt
    +\mathcal G[\hat c]\rho_c\,(dN_t-\lambda_t\,dt),
    $$
    where $\mathcal G[\hat c]\rho_c=\hat c\rho_c\hat c^\dagger/\lambda_t-\rho_c$.
 
 8. **Homodyne detection.**
    $$
-   d\rho_c=\bigl(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c\bigr)\,dt
+   d\rho_c=(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c)\,dt
    +\mathcal H[\hat c]\rho_c\,dW,
    \qquad
    dJ=\langle\hat c+\hat c^\dagger\rangle_c\,dt+dW.
@@ -456,7 +492,7 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
 
 9. **Heterodyne detection.** Put $\hat c_I=\hat c/\sqrt2$ and $\hat c_Q=i\hat c/\sqrt2$. Then
    $$
-   d\rho_c=\bigl(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c\bigr)\,dt
+   d\rho_c=(-i[\hat H,\rho_c]+\mathcal D[\hat c]\rho_c)\,dt
    +\mathcal H[\hat c_I]\rho_c\,dW_I
    +\mathcal H[\hat c_Q]\rho_c\,dW_Q,
    $$
@@ -531,11 +567,11 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
     $$
     d\rho_c=k\mathcal D[\hat M]\rho_c\,dt+\sqrt{k}\,\mathcal H[\hat M]\rho_c\,dW,
     $$
-    and the ensemble-mean impurity $L=(1-|\vec a|^2)/2$ obeys
+    and the ensemble-mean impurity $L=(1-\left|\vec a\right|^2)/2$ obeys
     $$
-    \mathbb E[dL]=-4kL\bigl(\sin^2\theta+2L\cos^2\theta\bigr)dt.
+    \mathbb E[dL]=-4kL(\sin^2\theta+2L\cos^2\theta)dt.
     $$
-    Feedback holds $\theta=\pi/2$, giving the deterministic equation $\dot L=-4kL$.
+    Ideal continuous-time feedback holds $\theta=\pi/2$, giving the pathwise deterministic equation $\dot L=-4kL$; the finite-step implementation below verifies convergence to it.
 
 17. **Feedback cooling.** In the code convention, with monitored operator $\sqrt{k}\,\hat x$,
     $$
@@ -550,8 +586,8 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
 
 18. **Linear and nonlinear trajectory bookkeepings.** The unnormalized linear state obeys
     $$
-    d|\tilde\psi\rangle=\left(-i\hat H-\frac12\sum_j\hat R_j^\dagger\hat R_j\right)|\tilde\psi\rangle dt
-    +\sum_j\hat R_j|\tilde\psi\rangle dW_j.
+    d\left|\tilde\psi\right\rangle=\left(-i\hat H-\frac12\sum_j\hat R_j^\dagger\hat R_j\right)\left|\tilde\psi\right\rangle dt
+    +\sum_j\hat R_j\left|\tilde\psi\right\rangle dW_j.
     $$
     The normalized conditional state obeys
     $$
@@ -579,8 +615,8 @@ so $k$ is the coefficient carried by the monitored operator $\sqrt{k}\hat M$ in 
     $$
     and quantum regression gives
     $$
-    S_{\rm inel}(\mu)\propto\operatorname{Re}\int_0^\infty
-    e^{i\mu t}\,\langle\delta\hat\sigma_+(t)\delta\hat\sigma_-(0)\rangle_{\rm ss}\,dt.
+    S_{\rm inel}(\mu)\propto\mathrm{Re}\int_0^\infty
+    e^{-i\mu t}\,\langle\delta\hat\sigma_+(t)\delta\hat\sigma_-(0)\rangle_{\rm ss}\,dt.
     $$
 
 ## Part One: Systems We Can Solve Symbolically
@@ -602,7 +638,7 @@ rates[H_, leaks_List] := ComplexExpand@Table[
 
 **The problem.** A two-level system dephased along $\hat\sigma_z$, with no Hamiltonian:
 $$\dot\rho = \gamma\,\mathcal{D}[\hat\sigma_z]\rho.$$
-Since $\hat\sigma_z^\dagger\hat\sigma_z = \mathbb{1}$ this is pure dephasing, so in Bloch components $\dot x = -2\gamma x$, $\dot y = -2\gamma y$, $\dot z = 0$, giving $x(t) = x_0 e^{-2\gamma t}$, $y(t) = y_0 e^{-2\gamma t}$, $z(t) = z_0$. Both poles $|\hat\sigma_z = \pm 1\rangle$ (the $\hat\sigma_z$ eigenstates $|e\rangle$ and $|g\rangle$, not to be confused with the $\hat\sigma_x$ eigenstate the code calls `plus`) are fixed points, so there is no unique steady state: any mixture $\rho_{\mathrm{ss}} = p_+\,|e\rangle\langle e| + p_-\,|g\rangle\langle g|$ sits still forever.
+Since $\hat\sigma_z^\dagger\hat\sigma_z = \mathbb{1}$ this is pure dephasing, so in Bloch components $\dot x = -2\gamma x$, $\dot y = -2\gamma y$, $\dot z = 0$, giving $x(t) = x_0 e^{-2\gamma t}$, $y(t) = y_0 e^{-2\gamma t}$, $z(t) = z_0$. Both poles $\left|\hat\sigma_z = \pm 1\right\rangle$ (the $\hat\sigma_z$ eigenstates $\left|e\right\rangle$ and $\left|g\right\rangle$, not to be confused with the $\hat\sigma_x$ eigenstate the code calls `plus`) are fixed points, so there is no unique steady state: any mixture $\rho_{\mathrm{ss}} = p_+\left|e\right\rangle(\left|e\right\rangle)^\dagger + p_-\left|g\right\rangle(\left|g\right\rangle)^\dagger$ sits still forever.
 
 Pure dephasing continuously measures $\hat\sigma_z$: it damps the transverse coherences and leaves the populations fixed. Turning off the Hamiltonian and with one dissipator, then the Bloch equations read as:
 
@@ -628,15 +664,21 @@ With[{gg = 0.5, a0 = {0.8, 0.4, 0.3}},
     blochVector[evolve[0 id2, {Sqrt[gg] Z}, blochState @@ a0, tt]]], {tt, 0, 3, 0.3}]]
 ```
 
-They agree to rounding.
+The maximum discrepancy is at numerical solver precision.
 
-Because $z$ never changes, there is no unique steady state: any mixture of $|e\rangle$ and $|g\rangle$ is stationary. To get all the steady states of the dephasing generator, we use the `steadyState` function, which takes a Hamiltonian matrix and a list of jump operators and returns the list of steady-state density matrices (unit-trace, Hermitian) spanning the Liouvillian's null space:
+Because $z$ never changes, there is no unique steady state: any mixture of $\left|e\right\rangle$ and $\left|g\right\rangle$ is stationary. The Hermitian stationary-operator basis is two-dimensional:
 
 ```wl
-steadyState[0 id2, {Sqrt[0.5] Z}]
+Chop@stationary[0 id2, {Sqrt[0.5] Z}]
 ```
 
-The two poles return, $|e\rangle\langle e|$ and $|g\rangle\langle g|$, each a stationary density matrix on its own.
+The returned basis spans the identity and $Z$ directions. It is an operator basis, not a list of physical states: every physical member of the stationary family is $\rho_{\mathrm{ss}}(z)=\tfrac12(\mathbb{1}+zZ)$ with $-1\leq z\leq1$. Verify the whole family directly:
+
+```wl
+FullSimplify[lindbladian[0 id2, {Sqrt[1/2] Z}, blochState[0, 0, z]]]
+```
+
+It vanishes identically. The endpoints $z=\pm1$ are the two poles, and every convex mixture between them is stationary. This degeneracy is exactly why `stationary` hands back the two-element operator basis for this generator rather than a single density matrix: only when the null space is one-dimensional does it collapse to one normalized state, the case every later example reads off through `First@stationary`.
 
 Now visualize the dephasing behavior above: start two Bloch vectors off-axis and watch each slide straight toward the $z$-axis (ball to diamond), keeping its height:
 
@@ -649,13 +691,13 @@ With[{gg = 0.6, starts = {{0.85, 0.25, 0.4}, {-0.6, -0.55, -0.35}}},
 
 Each tip drifts to the $z$-axis and stops at its own height: the transverse coherence is gone, the populations untouched. This is dephasing in its purest form, decoherence with nothing else attached.
 
-Two quantities summarize the dephasing. The transverse components decay at rate $2\gamma$, so the coherence time is $T_2 = 1/(2\gamma)$, while the populations never move, so there is no energy relaxation, $T_1 = \infty$. The purity follows from the closed-form Bloch vector, since a state with Bloch vector $\vec r$ has purity $\tfrac12(1 + |\vec r|^2)$:
+Two quantities summarize the dephasing. The transverse components decay at rate $2\gamma$, so the coherence time is $T_2 = 1/(2\gamma)$, while the populations never move, so there is no energy relaxation, $T_1 = \infty$. The purity follows from the closed-form Bloch vector, since a state with Bloch vector $\vec r$ has purity $\tfrac12(1 + \left|\vec r\right|^2)$:
 
 ```wl
 FullSimplify[(1 + closedDephasing[t] . closedDephasing[t])/2, \[Gamma] > 0]
 ```
 
-The purity is $\tfrac12\big(1 + z_0^2 + e^{-4\gamma t}(x_0^2 + y_0^2)\big)$: it relaxes from its start to $\tfrac12(1 + z_0^2)$, the purity of the leftover diagonal state, at twice the coherence rate. The environment has learned which $\hat\sigma_z$ eigenstate the atom is in and taken none of its energy.
+The purity is $\tfrac12(1 + z_0^2 + e^{-4\gamma t}(x_0^2 + y_0^2))$: it relaxes from its start to $\tfrac12(1 + z_0^2)$, the purity of the leftover diagonal state, at twice the coherence rate. The environment has learned which $\hat\sigma_z$ eigenstate the atom is in and taken none of its energy.
 
 ### A Driven, Damped Atom Relaxing to Steady State
 
@@ -686,7 +728,7 @@ Simplify[{x, y, z} /. steady, \[Gamma] > 0]
 
 The steady state in closed form: no transverse lean, and a tilt set by the ratio of drive to emission.
 
-Three physical numbers fall straight out of it. The excited population is the saturation curve $\rho_{ee}^{\mathrm{ss}} = \tfrac12(1 + z_{\mathrm{ss}}) = \Omega^2/(\gamma^2 + 2\Omega^2)$, which rises as $\Omega^2/\gamma^2$ for weak drive and saturates at one half for strong drive, never inverting the atom, and the steady fluorescence flux is $\gamma$ times it. Read both off the closed form:
+Three physical numbers fall straight out of it. The excited population is the saturation curve $\rho_{\mathrm{ee}}^{\mathrm{ss}} = \tfrac12(1 + z_{\mathrm{ss}}) = \Omega^2/(\gamma^2 + 2\Omega^2)$, which rises as $\Omega^2/\gamma^2$ for weak drive and saturates at one half for strong drive, never inverting the atom, and the steady fluorescence flux is $\gamma$ times it. Read both off the closed form:
 
 ```wl
 With[{zss = Simplify[z /. steady, \[Gamma] > 0]}, {(1 + zss)/2, \[Gamma] (1 + zss)/2}]
@@ -705,10 +747,10 @@ Two are complex conjugates: a **spiral**, a ringing approach, whenever the drive
 ```wl
 With[{gg = 1., om = 3.},
  Norm[(Simplify[{x, y, z} /. steady] /. {\[Gamma] -> gg, \[CapitalOmega] -> om}) -
-   blochVector[First@steadyState[(om/2) X, {Sqrt[gg] lower}]]]]
+   blochVector[First@stationary[(om/2) X, {Sqrt[gg] lower}]]]]
 ```
 
-They match to rounding. From the excited state the Bloch vector will spiral in (the complex eigenvalue pair guarantees the ringing).
+The discrepancy is at numerical precision. From the excited state the Bloch vector will spiral in (the complex eigenvalue pair guarantees the ringing).
 
 But a special pair of initial states skips the spiral entirely and slides straight in, and the reason sits in the drift matrix itself. Check that $(1,0,0)$ is one of its eigenvectors, with eigenvalue $-\gamma/2$:
 
@@ -723,7 +765,7 @@ flatPair = Simplify[With[{ss = {x, y, z} /. steady},
     {# Sqrt[1 - ss[[2]]^2 - ss[[3]]^2], ss[[2]], ss[[3]]} & /@ {1, -1}], \[CapitalOmega] > 0 && \[Gamma] > 0]
 ```
 
-The square root collapses to a rational form: the pair is $\bigl(\pm 2\Omega^2,\ 2\Omega\gamma,\ -\gamma^2\bigr)/(\gamma^2 + 2\Omega^2)$. Check that both have unit Bloch length, so both are pure:
+The square root collapses to a rational form: the pair is $(\pm 2\Omega^2,\ 2\Omega\gamma,\ -\gamma^2)/(\gamma^2 + 2\Omega^2)$. Check that both have unit Bloch length, so both are pure:
 
 ```wl
 Simplify[#.# & /@ flatPair, \[CapitalOmega] > 0 && \[Gamma] > 0]
@@ -762,41 +804,51 @@ The excited start rings down to the steady state; the two special starts glide s
 
 ## Part Two: Light in a Box, and States That Live in Two Places
 
-The next systems are a single mode of light in a cavity. Its states span the Fock ladder $|0\rangle, |1\rangle, |2\rangle, \dots$, an infinite-dimensional space. We truncate it at a cutoff high enough that the state never reaches the cutoff level $|n_{\mathrm{cutoff}}\rangle$, and check by raising the cutoff.
+The next systems are a single mode of light in a cavity. Its states span the Fock ladder $\left|0\right\rangle, \left|1\right\rangle, \left|2\right\rangle, \dots$, an infinite-dimensional space. A matrix of dimension $n$ retains $\left|0\right\rangle$ through $\left|n-1\right\rangle$ and discards $\left|n\right\rangle$ upward. We choose $n$ high enough that the retained top level has negligible population, then check by raising $n$.
 
-The **annihilation** and **creation** operators step down and up the ladder, $\hat a\,|n\rangle = \sqrt{n}\,|n-1\rangle$ and $\hat a^\dagger|n\rangle = \sqrt{n+1}\,|n+1\rangle$, so $\hat a$ carries $\sqrt{n}$ on its superdiagonal:
+The **annihilation** and **creation** operators step down and up the ladder, $\hat a\left|n\right\rangle = \sqrt{n}\left|n-1\right\rangle$ and $\hat a^\dagger\left|n\right\rangle = \sqrt{n+1}\left|n+1\right\rangle$, so $\hat a$ carries $\sqrt{n}$ on its superdiagonal:
 
 ```wl
-annihilation[n_] := N@DiagonalMatrix[Sqrt[Range[n - 1]], 1];
+annihilation[n_] := SparseArray[Band[{1, 2}] -> Sqrt[Range[n - 1]], {n, n}];
 creation[n_] := ConjugateTranspose[annihilation[n]];
 ```
 
-The **coherent state** $|\alpha\rangle$ (the most classical state, an eigenstate of $\hat a$) is the Fock-space sum
-$$|\alpha\rangle = e^{-|\alpha|^2/2}\sum_{n=0}^{\infty}\frac{\alpha^n}{\sqrt{n!}}\,|n\rangle.$$
-Build it on the coefficients $\alpha^n/\sqrt{n!}$ up to the cutoff, normalized in the truncated basis (the numerical normalization stands in for the $e^{-|\alpha|^2/2}$ prefactor):
+Finite truncation changes the canonical commutator only at the top retained level:
 
 ```wl
-coherentState[n_, a_] := With[{v = Table[If[k == 0 && a == 0, 1, a^k]/Sqrt[k!], {k, 0, n - 1}]}, N[v/Norm[v]]];
+With[{n = 7, aa = annihilation[7]},
+ aa . ConjugateTranspose[aa] - ConjugateTranspose[aa] . aa ==
+  IdentityMatrix[n] - n SparseArray[{{n, n} -> 1}, {n, n}]]
 ```
 
-The **displacement operator** $\hat D(\alpha) = e^{\alpha\hat a^\dagger - \alpha^*\hat a}$, which shifts the vacuum to $|\alpha\rangle$:
+It returns `True`. Thus $[a,a^\dagger]=\mathbb 1$ on all states below the boundary, with the required finite-dimensional correction on $\left|n-1\right\rangle$; cutoff checks ensure that correction is dynamically irrelevant.
+
+The **coherent state** $\left|\alpha\right\rangle$ (the most classical state, an eigenstate of $\hat a$) is the Fock-space sum
+$$\left|\alpha\right\rangle = e^{-\left|\alpha\right|^2/2}\sum_{n=0}^{\infty}\frac{\alpha^n}{\sqrt{n!}}\left|n\right\rangle.$$
+Build it on the coefficients $\alpha^n/\sqrt{n!}$ through the highest retained level, normalized in the truncated basis (that finite-sum normalization replaces the infinite-series prefactor $e^{-\left|\alpha\right|^2/2}$):
+
+```wl
+coherentState[n_, a_] := With[{v = Prepend[Table[a^k/Sqrt[k!], {k, n - 1}], 1]}, v/Norm[v]];
+```
+
+The **displacement operator** $\hat D(\alpha) = e^{\alpha\hat a^\dagger - \alpha^*\hat a}$, which shifts the vacuum to $\left|\alpha\right\rangle$:
 
 ```wl
 displacement[n_, a_] := MatrixExp[a creation[n] - Conjugate[a] annihilation[n]];
 ```
 
 The **Wigner function** $W(x,p)$ pictures a state on the phase-space plane: positive where the state is concentrated and, for a nonclassical state, negative in places. In the canonical $(x,p)$ normalization its displaced-parity definition, with $\hat\Pi = e^{i\pi\hat a^\dagger\hat a}$ the photon-number parity operator, is
-$$W(x,p) = \frac{1}{\pi}\,\mathrm{Tr}\!\left[\hat D^\dagger(\alpha)\rho\hat D(\alpha)\hat\Pi\right], \qquad \alpha = \frac{x + i p}{\sqrt{2}}.$$
+$$W(x,p) = \frac{1}{\pi}\,\mathrm{Tr}\left[\hat D^\dagger(\alpha)\rho\hat D(\alpha)\hat\Pi\right], \qquad \alpha = \frac{x + i p}{\sqrt{2}}.$$
 
-A word on the coordinate convention, kept fixed for every phase-space picture below. The axes $x$ and $p$ are the dimensionless quadratures $\hat x = (\hat a + \hat a^\dagger)/\sqrt2$, $\hat p = (\hat a - \hat a^\dagger)/(i\sqrt2)$ (so $[\hat x,\hat p] = i$ and the vacuum $|0\rangle$ has variances $\Sigma_{xx} = \Sigma_{pp} = 1/2$), and $\alpha = (x + ip)/\sqrt2$ is the complex amplitude. The prefactor $1/\pi$ is the textbook normalization on these axes, $\int W\,dx\,dp = 1$, so the vacuum is $W(x,p) = \tfrac1\pi e^{-x^2-p^2}$.
+A word on the coordinate convention, kept fixed for every phase-space picture below. The axes $x$ and $p$ are the dimensionless quadratures $\hat x = (\hat a + \hat a^\dagger)/\sqrt2$, $\hat p = (\hat a - \hat a^\dagger)/(i\sqrt2)$ (so $[\hat x,\hat p] = i$ and the vacuum $\left|0\right\rangle$ has variances $\Sigma_{\mathrm{xx}} = \Sigma_{\mathrm{pp}} = 1/2$), and $\alpha = (x + ip)/\sqrt2$ is the complex amplitude. The prefactor $1/\pi$ is the textbook normalization on these axes, $\int W\,dx\,dp = 1$, so the vacuum is $W(x,p) = \tfrac1\pi e^{-x^2-p^2}$.
 
-Rather than exponentiate the displacement operator at every grid point, evaluate this trace directly in the truncated Fock basis, writing $n$ for the cutoff: $\rho$ is then the $n\times n$ matrix on the states $|0\rangle, \dots, |n-1\rangle$, and every sum below runs over its $n$ superdiagonals $\ell = 0, \dots, n-1$. Define
-$$z = 2\alpha = \sqrt{2}(x + i p), \qquad b = |z|^2 = 4|\alpha|^2.$$
+Rather than exponentiate the displacement operator at every grid point, evaluate this trace directly in the truncated Fock basis, writing $n$ for the cutoff: $\rho$ is then the $n\times n$ matrix on the states $\left|0\right\rangle, \dots, \left|n-1\right\rangle$, and every sum below runs over its $n$ superdiagonals $\ell = 0, \dots, n-1$. Define
+$$z = 2\alpha = \sqrt{2}(x + i p), \qquad b = \left|z\right|^2 = 4\left|\alpha\right|^2.$$
 For the $\ell$th superdiagonal of $\rho$, define the radial Laguerre sum
 $$F_\ell(b) = \sum_{m=0}^{n-\ell-1}\rho_{m,m+\ell}(-1)^m\sqrt{\frac{m!\,\ell!}{(m+\ell)!}}\,L_m^{(\ell)}(b),$$
 where $L_m^{(\ell)}$ is a generalized Laguerre polynomial. The complete Wigner function is then
-$$W(x,p) = \frac{1}{\pi}e^{-b/2}\,\mathrm{Re}\!\left[F_0(b) + 2\sum_{\ell=1}^{n-1}\frac{z^\ell}{\sqrt{\ell!}}F_\ell(b)\right].$$
-In other words, the recurrence computes the radial function $F_\ell$ for one diagonal of $\rho$; the powers $z^\ell$ supply the angular dependence, and the Gaussian $e^{-b/2}$ supplies the envelope. Build the whole evaluation as one function: the Laguerre recurrence lives inside as a local helper, the input may be a state vector or a density matrix (a vector becomes its density matrix first), the cutoff is read off the input's size, and the grid, exact for the truncated state so the frame's far corners stay clean, is returned as an interpolating function of $(x,p)$:
+$$W(x,p) = \frac{1}{\pi}e^{-b/2}\,\mathrm{Re}\left[F_0(b) + 2\sum_{\ell=1}^{n-1}\frac{z^\ell}{\sqrt{\ell!}}F_\ell(b)\right].$$
+In other words, the recurrence computes the radial function $F_\ell$ for one diagonal of $\rho$; the powers $z^\ell$ supply the angular dependence, and the Gaussian $e^{-b/2}$ supplies the envelope. Build the whole evaluation as one function: the Laguerre recurrence lives inside as a local helper, the input may be a state vector or a density matrix (a vector becomes its density matrix first), and the cutoff is read off the input's size. Each grid value evaluates the finite-cutoff expression; the returned interpolating function is a numerical approximation between those grid points, with a wide enough frame that its far corners stay clean:
 
 ```wl
 wignerRepresentation[psi_?VectorQ, reach_, pts_] := wignerRepresentation[densityMatrix[psi], reach, pts];
@@ -824,9 +876,9 @@ With[{w = wignerRepresentation[coherentState[8, 0], 3., 25]},
  Max@Table[Abs[w[xx, pp] - (1/Pi) Exp[-xx^2 - pp^2]], {xx, -2, 2, 0.5}, {pp, -2, 2, 0.5}]]
 ```
 
-They agree to rounding on the grid's own points; between points the interpolation is accurate to the grid's resolution.
+The sampled discrepancy is at floating-point precision on the grid's own points; between grid nodes, accuracy is limited by the interpolation resolution.
 
-Wigner pictures are compared, across times or across states, and the comparison is only honest on one shared color scale. The plotter takes a list of Wigner interpolating functions and a label per member, finds the largest $|W|$ over the whole list, and draws every panel and the bar legend with the same diverging map: a light neutral at zero so empty phase space reads as empty, warm (orange) for positive, cold (blue) for negative, with the $W=0$ contour drawn as a thin gray line so the sign change is unmistakable. An optional color map replaces the default; it receives the signed fraction $W/\max|W|$ in $[-1,1]$:
+Wigner pictures are compared, across times or across states, and the comparison is only honest on one shared color scale. The plotter takes a list of Wigner interpolating functions and a label per member, finds the largest $\left|W\right|$ over the whole list, and draws every panel and the bar legend with the same diverging map: a light neutral at zero so empty phase space reads as empty, warm (orange) for positive, cold (blue) for negative, with the $W=0$ contour drawn as a thin gray line so the sign change is unmistakable. An optional color map replaces the default; it receives the signed fraction $W/\max\left|W\right|$ in $[-1,1]$:
 
 ```wl
 ClearAll[wignerPlot]
@@ -850,9 +902,9 @@ wignerPlot[w_InterpolatingFunction, label_, color_ : Automatic] := wignerPlot[{w
 
 **The problem.** A single leaky mode of light (a cavity dribbling photons), with no drive:
 $$\dot\rho = \gamma\,\mathcal{D}[\hat a]\rho.$$
-A lone coherent state only shrinks, staying pure, $|\alpha\rangle \to |\alpha e^{-\gamma t/2}\rangle$, but a *cat* $|\alpha\rangle + |\beta\rangle$ of two well-separated amplitudes keeps its cross-term only through a coherence factor
-$$|C(t)| = \exp\!\bigl[-\tfrac12\,|\alpha-\beta|^2\,(1 - e^{-\gamma t})\bigr] \;\approx\; \exp\!\bigl(-\tfrac12\,|\alpha-\beta|^2\,\gamma t\bigr)\ \text{at short time,}$$
-so the coherence decays at a rate $\propto |\alpha-\beta|^2$, quadratic in the phase-space separation. Build it in a truncated Fock basis and watch the fringes vanish.
+A lone coherent state only shrinks, staying pure, $\left|\alpha\right\rangle \to \left|\alpha e^{-\gamma t/2}\right\rangle$, but a *cat* $\left|\alpha\right\rangle + \left|\beta\right\rangle$ of two well-separated amplitudes keeps its cross-term only through a coherence factor
+$$\left|C(t)\right| = \exp\left(-\tfrac12\,\left|\alpha-\beta\right|^2\,(1 - e^{-\gamma t})\right) \;\approx\; \exp\left(-\tfrac12\,\left|\alpha-\beta\right|^2\,\gamma t\right)\ \text{at short time,}$$
+so the coherence decays at a rate $\propto \left|\alpha-\beta\right|^2$, quadratic in the phase-space separation. Build it in a truncated Fock basis and watch the fringes vanish.
 
 Set a high cutoff and a cavity decay rate:
 
@@ -869,7 +921,7 @@ With[{later = evolve[0 blankCat, {Sqrt[\[Gamma]cat] downCat}, densityMatrix[cohe
 
 Overlap one: a coherent state stays coherent.
 
-Now the interesting state, a **cat**, the superposition of two coherent states $|\alpha\rangle + |{-}\alpha\rangle$:
+Now the interesting state, a **cat**, the superposition of two coherent states $\left|\alpha\right\rangle + \left|{-}\alpha\right\rangle$:
 
 ```wl
 \[Alpha] = 2.; cat = Normalize[coherentState[topCat, \[Alpha]] + coherentState[topCat, -\[Alpha]]];
@@ -891,7 +943,7 @@ Confirm the master equation and this Kraus sum agree on the cat:
 Max@Abs@Flatten[evolve[0 blankCat, {Sqrt[\[Gamma]cat] downCat}, densityMatrix[cat], 0.6] - photonLoss[densityMatrix[cat], 0.6]]
 ```
 
-They agree to rounding.
+The discrepancy is at the numerical integration tolerance.
 
 Now visualize the cat's decoherence. Build the Wigner film over a short window:
 
@@ -910,15 +962,15 @@ The thin gray lines in each panel are the $W = 0$ contour, where the Wigner func
 
 At first there are two Gaussian lobes (the two coherent states) with interference fringes between them: the fringes are the coherence, the off-diagonal cross-term. Across this short window the fringes fade fast while the lobes barely shrink: the cat is collapsing toward a classical mixture of the two coherent states while both are still nearly full size. Decoherence is far faster than energy loss.
 
-How fast? The coherence $|C(t)|$ is the closed-form envelope from the problem statement, and the master equation can be made to report the same quantity on its own. Evolve the cat once over the plotted span:
+How fast? The coherence $\left|C(t)\right|$ is the closed-form envelope from the problem statement, and the master equation can be made to report the same quantity on its own. Evolve the cat once over the plotted span:
 
 ```wl
 catRun = evolveODE[0 blankCat, {Sqrt[\[Gamma]cat] downCat}, densityMatrix[cat], 2.];
 ```
 
-Under amplitude damping the state stays in the span of its two shrinking lobes,
-$$\rho(t) = p\,\bigl(|\alpha_t\rangle\langle\alpha_t| + |{-\alpha_t}\rangle\langle{-\alpha_t}|\bigr) + c\,\bigl(|\alpha_t\rangle\langle{-\alpha_t}| + |{-\alpha_t}\rangle\langle\alpha_t|\bigr), \qquad \alpha_t = \alpha e^{-\gamma t/2},$$
-and the coherence is the weight ratio $|C(t)| = c/p$. The two lobes are not orthogonal (they overlap by $o = \langle\alpha_t|{-\alpha_t}\rangle$), so read $p$ and $c$ off two matrix elements of $\rho(t)$ by undoing that overlap with a two-by-two linear solve:
+Under amplitude damping the state stays in the span of its two shrinking lobes. Write the rank-one operator $P(u,v) = \left|u\right\rangle(\left|v\right\rangle)^\dagger$; then
+$$\rho(t) = p\left(P(\alpha_t,\alpha_t) + P(-\alpha_t,-\alpha_t)\right) + c\left(P(\alpha_t,-\alpha_t) + P(-\alpha_t,\alpha_t)\right), \qquad \alpha_t = \alpha e^{-\gamma t/2},$$
+and the coherence is the weight ratio $\left|C(t)\right| = c/p$. The two lobes are not orthogonal (they overlap by $o = \langle\alpha_t,{-\alpha_t}\rangle$), so read $p$ and $c$ off two matrix elements of $\rho(t)$ by undoing that overlap with a two-by-two linear solve:
 
 ```wl
 catCoherence[t_?NumericQ] := Module[{va, vb, o, m1, m2, p, cc},
@@ -935,11 +987,11 @@ Now visualize both, the closed-form envelope and the master-equation extraction,
 Plot[{Exp[-2 \[Alpha]^2 (1 - Exp[-\[Gamma]cat t])], catCoherence[t]}, {t, 0, 2},
  PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Dashed]},
  PlotLegends -> {"closed form", "master equation"}, Frame -> True, GridLines -> Automatic,
- FrameLabel -> {"time", "coherence |C(t)|"}, PlotRange -> {0, 1}, ImageSize -> 460,
+ FrameLabel -> {"time", "coherence |C(t)|"}, PlotRange -> All,
  PlotLabel -> "master-equation coherence lies on the closed-form envelope"]
 ```
 
-The dashed master-equation extraction lies on the closed form: the envelope is not an approximation but the exact law of the simulated dynamics. The decoherence rate grows as the *square* of the separation, $|\alpha - (-\alpha)|^2 = 4|\alpha|^2$.
+The dashed master-equation extraction lies on the closed form within the displayed numerical tolerance. The envelope is the exact infinite-dimensional amplitude-damping law; the finite Fock simulation approaches it as its cutoff and solver accuracy are increased. The decoherence rate grows as the *square* of the separation, $\left|\alpha - (-\alpha)\right|^2 = 4\left|\alpha\right|^2$.
 
 Every Fock-space example truncates the infinite number-state ladder at a finite cutoff, so each needs a check that the cutoff is high enough not to change the answer. Recompute the mean photon number of a decaying coherent state at cutoffs 20, 30, and 40:
 
@@ -949,15 +1001,15 @@ With[{observable = Function[nn, expectation[creation[nn] . annihilation[nn], evo
  observable /@ {20, 30, 40}]
 ```
 
-The three cutoffs give the same mean photon number, so the truncation is fine enough not to affect the answer: 20 already holds the whole state, and raising it changes nothing.
+The three values are numerically indistinguishable at the shown precision. This bounds, rather than eliminates, the truncation error: for this observable and state, raising the dimension beyond 20 changes the result by less than the displayed tolerance.
 
 ### Making a Cat With an Atom, and Reading Its Decoherence
 
 **The problem.** A *far-detuned* atom, its transition frequency sitting far from the cavity's so it can trade no energy with the light and only turns its phase, imprints a state-dependent phase shift under
-$$\hat H_C = \chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\qquad |\alpha\rangle \to |\alpha e^{\pm i\phi}\rangle,\quad \phi = \chi\tau.$$
-An atom prepared in the equal superposition $(|e\rangle + |g\rangle)/\sqrt2$ therefore leaves the field in a two-phase **cat**, $|\alpha e^{-i\phi}\rangle + |\alpha e^{+i\phi}\rangle$, entangled with the atom. After the cat decoheres for a delay (the leak of the last example), a second atom probes the same field, and the two-atom correlation $\eta = p(e_2\,|\,e_1) - p(e_2\,|\,g_1)$ (the second atom's chance of coming out excited when the first did, minus when the first came out in the ground state) is nonzero only while the field keeps its coherence, so $\eta(\tau)$ tracks the surviving coherence $C(\tau)$ and falls to zero as the cat blurs into a mixture. This is the [Haroche experiment](https://link.aps.org/doi/10.1103/PhysRevLett.77.4887); build the atom-made cat and measure how fast the correlation dies.
+$$\hat H_C = \chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\qquad \left|\alpha\right\rangle \to \left|\alpha e^{\pm i\phi}\right\rangle,\quad \phi = \chi\tau.$$
+An atom prepared in the equal superposition $(\left|e\right\rangle + \left|g\right\rangle)/\sqrt2$ therefore leaves the field in a two-phase **cat**, $\left|\alpha e^{-i\phi}\right\rangle + \left|\alpha e^{+i\phi}\right\rangle$, entangled with the atom. After the cat decoheres for a delay (the leak of the last example), a second atom probes the same field, and the two-atom correlation $\eta = p(e_2\ \text{given}\ e_1) - p(e_2\ \text{given}\ g_1)$ (the second atom's chance of coming out excited when the first did, minus when the first came out in the ground state) is nonzero only while the field keeps its coherence, so $\eta(\tau)$ tracks the surviving coherence $C(\tau)$ and falls to zero as the cat blurs into a mixture. This is the [Haroche experiment](https://link.aps.org/doi/10.1103/PhysRevLett.77.4887); build the atom-made cat and measure how fast the correlation dies.
 
-In plainer terms, the atom is a phase stamp, not an absorber: far off resonance it takes no photon from the field, it only rotates the field's phase by $+\phi$ or $-\phi$ according to its state, so an atom in $(|e\rangle+|g\rangle)/\sqrt2$ leaves the two phase-rotated fields superposed and entangled with it. One probe atom cannot reveal this coherence, since its own outcome averages over the two phases; only the correlation $\eta$ between two atoms reading the same field exposes it, and only while it survives.
+In plainer terms, the atom is a phase stamp, not an absorber: far off resonance it takes no photon from the field, it only rotates the field's phase by $+\phi$ or $-\phi$ according to its state, so an atom in $(\left|e\right\rangle+\left|g\right\rangle)/\sqrt2$ leaves the two phase-rotated fields superposed and entangled with it. One probe atom cannot reveal this coherence, since its own outcome averages over the two phases; only the correlation $\eta$ between two atoms reading the same field exposes it, and only while it survives.
 
 The protocol runs a fixed sequence, one atom writing the cat onto the field and the next reading it back; here is the whole arc before we build each step:
 
@@ -999,33 +1051,33 @@ Set the cutoff, the cavity decay rate, and the number operator:
 topHar = 28; blankHar = IdentityMatrix[topHar]; downHar = annihilation[topHar]; numHar = creation[topHar] . downHar; \[Gamma]har = 0.5;
 ```
 
-The **trace distance** $\tfrac12\mathrm{Tr}|\rho_1 - \rho_2|$ will measure how far a field sits from a classical mixture:
+The **trace distance** $\tfrac12\mathrm{Tr}\left|\rho_1 - \rho_2\right|$ will measure how far a field sits from a classical mixture:
 
 ```wl
 traceDistance[a_, b_] := Total[SingularValueList[a - b]]/2;
 ```
 
-Because the singular values of any matrix sum to its trace norm, this is exactly $\tfrac12\mathrm{Tr}|a-b|$; for the Hermitian difference of two states those singular values are the magnitudes of its eigenvalues.
+Because the singular values of any matrix sum to its trace norm, this is exactly $\tfrac12\mathrm{Tr}\left|a-b\right|$; for the Hermitian difference of two states those singular values are the magnitudes of its eigenvalues.
 
-Now the machinery that makes the cat with an atom, three pieces on the joint atom-cavity space (atom first, cavity second). A **Ramsey $\pi/2$ pulse** rotates the atom by $\pi/2$ about $\hat\sigma_y$, turning $|g\rangle$ into an equal superposition:
+Now the machinery that makes the cat with an atom, three pieces on the joint atom-cavity space (atom first, cavity second). A **Ramsey $\pi/2$ pulse** rotates the atom by $\pi/2$ about $\hat\sigma_y$, turning $\left|g\right\rangle$ into an equal superposition:
 
 ```wl
 ramsey = KroneckerProduct[MatrixExp[-I (Pi/4) Y], blankHar];
 ```
 
-The **dispersive interaction** $e^{-i\phi\,\hat a^\dagger\hat a\,\hat\sigma_z}$ rotates the field's phase by $-\phi$ when the atom is $|e\rangle$ and by $+\phi$ when it is $|g\rangle$, the phase stamp of the problem statement:
+The **dispersive interaction** $e^{-i\phi\,\hat a^\dagger\hat a\,\hat\sigma_z}$ rotates the field's phase by $-\phi$ when the atom is $\left|e\right\rangle$ and by $+\phi$ when it is $\left|g\right\rangle$, the phase stamp of the problem statement:
 
 ```wl
 disperse[\[Phi]_] := KroneckerProduct[{{1, 0}, {0, 0}}, MatrixExp[-I \[Phi] numHar]] + KroneckerProduct[{{0, 0}, {0, 1}}, MatrixExp[I \[Phi] numHar]];
 ```
 
-And a reader for the cavity conditioned on finding the atom in $|e\rangle$ (block 1) or $|g\rangle$ (block 2), the atom's own diagonal block of the joint state:
+And a reader for the cavity conditioned on finding the atom in $\left|e\right\rangle$ (block 1) or $\left|g\right\rangle$ (block 2), the atom's own diagonal block of the joint state:
 
 ```wl
 cavityGiven[joint_, s_] := With[{r = ArrayReshape[joint, {2, topHar, 2, topHar}]}, r[[s, All, s, All]]];
 ```
 
-Start the atom in $|g\rangle$ and the cavity in the coherent state of amplitude $\alpha = 2$, Ramsey the atom into a superposition, and let the dispersive interaction entangle them at phase $\phi$:
+Start the atom in $\left|g\right\rangle$ and the cavity in the coherent state of amplitude $\alpha = 2$, Ramsey the atom into a superposition, and let the dispersive interaction entangle them at phase $\phi$:
 
 ```wl
 jointStart = densityMatrix[Flatten@KroneckerProduct[ground, coherentState[topHar, 2.]]];
@@ -1047,7 +1099,7 @@ wignerPlot[wignerRepresentation[reducedCavity[1.3], 4.0, 55], "atom ignored: a f
 
 Two clean lobes, no fringes: the which-phase information has leaked into the atom, and averaging over it erases the coherence, exactly as tracing out any unwatched detector does.
 
-The cat appears only when the atom is *read*. Send the atom through a second Ramsey pulse, the analysis pulse, and keep the runs where it comes out $|e\rangle$: that measurement projects the cavity into a superposition of the two pointers. Condition on the atom after the analysis pulse, and read the purity:
+The cat appears only when the atom is *read*. Send the atom through a second Ramsey pulse, the analysis pulse, and keep the runs where it comes out $\left|e\right\rangle$: that measurement projects the cavity into a superposition of the two pointers. Condition on the atom after the analysis pulse, and read the purity:
 
 ```wl
 conditionalCat[\[Phi]_, s_] := With[{r = ramsey . entangle[\[Phi]] . ConjugateTranspose[ramsey]}, With[{blk = cavityGiven[r, s]}, blk/Tr[blk]]];
@@ -1082,7 +1134,7 @@ wignerPlot[Join[harFilmSmall, harFilmLarge],
 Read the two triples against each other: the small-phase cat keeps its fringes across the window, while the large-phase cat, its two states farther apart, has collapsed to a fringeless mixture by the end. Same cavity, same leak, same clock; only the separation differs, and the fringes die at a rate set by its square.
 
 Turn that into a number. The mixture the cat decays toward is the equal blend of its two pointer states, each amplitude shrinking with the cavity,
-$$\rho_{\mathrm{mix}}(\phi,t) = \tfrac12\big(|\alpha_+\rangle\langle\alpha_+| + |\alpha_-\rangle\langle\alpha_-|\big), \qquad \alpha_\pm(t) = 2\,e^{-\gamma t/2}\,e^{\pm i\phi},$$
+$$\rho_{\mathrm{mix}}(\phi,t) = \tfrac12[\left|\alpha_+\right\rangle(\left|\alpha_+\right\rangle)^\dagger + \left|\alpha_-\right\rangle(\left|\alpha_-\right\rangle)^\dagger], \qquad \alpha_\pm(t) = 2\,e^{-\gamma t/2}\,e^{\pm i\phi},$$
 with $\gamma = \gamma_{\mathrm{har}}$:
 
 ```wl
@@ -1111,7 +1163,7 @@ ListLinePlot[{Transpose[{delays, close/First@close}], Transpose[{delays, far/Fir
 
 Both fall, but the large-$\phi$ curve plunges: the separation-squared decoherence law, the separation now set by the atom's phase shift.
 
-That trace distance is the theorist's coherence. The experiment reads it out with a *second atom*, and that two-atom correlation is what the section is named for. Send a second probe (in $|g\rangle$, Ramsey'd) through the decohered field, close its Ramsey, and read its excited chance; the correlation is $\eta = p(e_2\,|\,e_1) - p(e_2\,|\,g_1)$, the second atom's excited probability conditioned on the first atom's two outcomes. The probe's excited chance on a given field:
+That trace distance is the theorist's coherence. The experiment reads it out with a *second atom*, and that two-atom correlation is what the section is named for. Send a second probe (in $\left|g\right\rangle$, Ramsey'd) through the decohered field, close its Ramsey, and read its excited chance; the correlation is $\eta = p(e_2\ \text{given}\ e_1) - p(e_2\ \text{given}\ g_1)$, the second atom's excited probability conditioned on the first atom's two outcomes. The probe's excited chance on a given field:
 
 ```wl
 probe[\[Phi]_, cav_] := With[{U = disperse[\[Phi]], sig = KroneckerProduct[{{0, 0}, {0, 1}}, cav]},
@@ -1145,14 +1197,14 @@ The two curves fall together: the two-atom correlation, the thing a laboratory a
 $$\dot\rho = -i[\epsilon(\hat a + \hat a^\dagger),\rho] - i[\chi\,\hat a^\dagger\hat a\,\hat\sigma_z,\rho] + \gamma\,\mathcal{D}[\hat a]\rho.$$
 The drive $\epsilon$ and damping $\gamma$ settle the cavity into one of two qubit-conditioned coherent states, the meter's two readings, while the cavity's own leak decoheres any superposition of the two qubit states. Build the joint qubit-plus-cavity system and watch the two readings pull apart as the qubit's coherence blurs.
 
-A qubit is read out by a driven, damped cavity whose frequency it shifts (dispersive coupling). The cavity settles into one of two qubit-conditioned coherent states, each a dot sitting in one of two places in the phase plane: the cavity field is the meter, and these two settled amplitudes are its two **pointer states** (Zurek's name for the apparatus states that record a measurement outcome). Set the drive, coupling, and decay:
+A qubit is read out by a driven, damped cavity whose frequency it shifts (dispersive coupling). The cavity settles into one of two qubit-conditioned coherent states, each a dot sitting in one of two places in the phase plane: the cavity is the meter, and these two settled amplitudes are its two **pointer states** (Zurek's name for the apparatus states that record a measurement outcome). Set the drive, coupling, and decay:
 
 ```wl
 \[Epsilon] = 1.2; \[Chi] = 0.6; \[Gamma]disp = 1.0;
 ```
 
-The pointer amplitude obeys a linear driven-damped equation, one per qubit state $s = \pm1$, namely $\dot\alpha = -i\epsilon - (is\chi + \tfrac{\gamma}{2})\alpha$ with $\alpha(0)=0$, so in closed form
-$$\alpha_s(t) = \frac{-i\epsilon}{is\chi + \gamma/2}\Big(1 - e^{-(is\chi + \gamma/2)\,t}\Big),$$
+The pointer amplitude obeys a linear driven-damped equation, one per qubit state ($s = +1$ for $\left|e\right\rangle$, $s = -1$ for $\left|g\right\rangle$), namely $\dot\alpha = -i\epsilon - (is\chi + \tfrac{\gamma}{2})\alpha$ with $\alpha(0)=0$, so in closed form
+$$\alpha_s(t) = \frac{-i\epsilon}{is\chi + \gamma/2}(1 - e^{-(is\chi + \gamma/2)\,t}),$$
 settling to the mirror-image steady amplitudes $\alpha_s^{\mathrm{ss}} = -i\epsilon/(is\chi + \gamma/2)$. Solve it:
 
 ```wl
@@ -1162,13 +1214,13 @@ pointer[which_] := First[amp /. DSolve[{amp'[t] == -I \[Epsilon] - (I which \[Ch
 Evaluate the two pointers, one per qubit state:
 
 ```wl
-{up, dn} = {pointer[1], pointer[-1]};
+{\[Alpha]e, \[Alpha]g} = {pointer[1], pointer[-1]};
 ```
 
 Read the two late-time amplitudes:
 
 ```wl
-Chop[{up[9.], dn[9.]}]
+Chop[{\[Alpha]e[9.], \[Alpha]g[9.]}]
 ```
 
 The two steady amplitudes are mirror images, one per qubit state.
@@ -1176,12 +1228,9 @@ The two steady amplitudes are mirror images, one per qubit state.
 Now visualize the pointer-state separation by drawing both trajectories from the origin to their steady points:
 
 ```wl
-ListLinePlot[{Table[Sqrt[2] {Re@up[t], Im@up[t]}, {t, 0, 9, 0.03}], Table[Sqrt[2] {Re@dn[t], Im@dn[t]}, {t, 0, 9, 0.03}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, AspectRatio -> 1, ImageSize -> 360,
- PlotLegends -> {"pointer if qubit up", "pointer if qubit down"}, Frame -> True, GridLines -> Automatic,
- FrameLabel -> {"x", "p"}, PlotLabel -> "the meter pointer settles to two places, one per qubit state",
- Epilog -> {PointSize[0.03], ColorData[97, 1], Point[Sqrt[2] {Re@up[9.], Im@up[9.]}],
-   ColorData[97, 2], Point[Sqrt[2] {Re@dn[9.], Im@dn[9.]}]}]
+ListLinePlot[{Table[Sqrt[2] {Re@\[Alpha]e[t], Im@\[Alpha]e[t]}, {t, 0, 9, 0.03}], Table[Sqrt[2] {Re@\[Alpha]g[t], Im@\[Alpha]g[t]}, {t, 0, 9, 0.03}]},
+ PlotLegends -> {"pointer if qubit |e\[RightAngleBracket]", "pointer if qubit |g\[RightAngleBracket]"}, Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ FrameLabel -> {"x", "p"}, PlotLabel -> "the meter pointer settles to two places, one per qubit state"]
 ```
 
 What a real readout does with those two pointers is discriminate them in the IQ plane. Detecting the cavity output (heterodyne) turns each qubit-conditioned coherent pointer into a Gaussian blob of measurement outcomes, centered at its amplitude with the shot-noise width of a coherent state. As the pointers separate the two blobs pull apart and the assignment becomes reliable. Sample the two outcome clouds at three readout times:
@@ -1192,19 +1241,19 @@ iqCloud[ptr_, t_, seed_] := BlockRandom[SeedRandom[seed];
 iqTimes = {0.5, 1.5, 4.};
 ```
 
-Now visualize the readout separating in time, the two clouds (up in blue, down in orange) drifting apart across the IQ plane:
+Now visualize the readout separating in time, the two clouds (qubit $\left|e\right\rangle$ in blue, $\left|g\right\rangle$ in orange) drifting apart across the IQ plane:
 
 ```wl
 GraphicsRow[Table[
-   ListPlot[{iqCloud[up, t, 1], iqCloud[dn, t, 2]}, PlotStyle -> {Directive[Opacity[0.5], PointSize[0.015]], Directive[Opacity[0.5], PointSize[0.015]]},
+   ListPlot[{iqCloud[\[Alpha]e, t, 1], iqCloud[\[Alpha]g, t, 2]}, PlotStyle -> {Directive[Opacity[0.5], PointSize[0.015]], Directive[Opacity[0.5], PointSize[0.015]]},
     PlotRange -> {{-6, 6}, {-6, 6}}, AspectRatio -> 1, Frame -> True, GridLines -> Automatic, ImageSize -> 260,
     FrameLabel -> {"I", "Q"}, PlotLabel -> "t = " <> ToString[t]], {t, iqTimes}], ImageSize -> 800]
 ```
 
-Early the clouds overlap and the qubit state is ambiguous; by the last frame they are cleanly resolved. Turn that into numbers: discriminating the two pointer states from a single snapshot of the field, at one instant, has error $\tfrac12\mathrm{erfc}(|\alpha_\uparrow - \alpha_\downarrow|/2)$, the overlap of the two Gaussians. Define the pointer separation, the distance between the two coherent amplitudes:
+Early the clouds overlap and the qubit state is ambiguous; by the last frame they are cleanly resolved. Turn that into numbers: discriminating the two pointer states from a single snapshot of the cavity, at one instant, has error $\tfrac12\mathrm{erfc}(\left|\alpha_e - \alpha_g\right|/2)$, the overlap of the two Gaussians. Define the pointer separation, the distance between the two coherent amplitudes:
 
 ```wl
-sepDisp[t_] := Abs[up[t] - dn[t]];
+sepDisp[t_] := Abs[\[Alpha]e[t] - \[Alpha]g[t]];
 ```
 
 The wider that separation, the smaller the overlap error the discrimination leaves. Plot both against readout time:
@@ -1212,46 +1261,45 @@ The wider that separation, the smaller the overlap error the discrimination leav
 ```wl
 ListLinePlot[
  Transpose@Table[{{t, sepDisp[t]}, {t, 0.5 Erfc[sepDisp[t]/2]}}, {t, 0, 6, 0.05}],
- Frame -> True, GridLines -> Automatic, AspectRatio -> 1/3,
- PlotLegends -> Placed[{"pointer separation |\[Alpha]\[UpArrow]-\[Alpha]\[DownArrow]|", "assignment error 0.5 erfc(sep/2)"}, Right],
+ Frame -> True, GridLines -> Automatic, AspectRatio -> 1/2, PlotRange -> All,
+ PlotLegends -> Placed[{"pointer separation |alpha_e - alpha_g|", "assignment error 0.5 erfc(sep/2)"}, Right],
  FrameLabel -> {"readout time", "separation / error"},
- PlotLabel -> "instantaneous discrimination: separation and error saturate with the field"]
+ PlotLabel -> "instantaneous discrimination: \nseparation and error saturate once the cavity settles"]
 ```
 
-The separation rises to its steady value and the instantaneous error falls with it, then both flatten: once the intracavity field has settled, a snapshot of it says the same thing at every later instant. But that snapshot is not what a real readout uses. The cavity leaks the whole time, and a homodyne receiver integrates that output record, so its information keeps accumulating even after the field is stationary: the integrated signal-to-noise grows as $\mathrm{SNR}^2(t) \propto \gamma\int_0^t|\alpha_\uparrow(s) - \alpha_\downarrow(s)|^2\,ds$. Plot the saturating snapshot separation-squared against this integrated accumulation:
+The separation rises to its steady value and the instantaneous error falls with it, then both flatten: once the cavity has settled, a snapshot of it says the same thing at every later instant. But that snapshot is not what a real readout uses. The cavity leaks the whole time, and a homodyne receiver integrates that output record, so its information keeps accumulating even after the cavity is stationary: the integrated signal-to-noise grows as $\mathrm{SNR}^2(t) \propto \gamma\int_0^t\left|\alpha_e(s) - \alpha_g(s)\right|^2\,ds$. Plot the saturating snapshot separation-squared against this integrated accumulation:
 
 ```wl
-snrAccum[t_?NumericQ] := \[Gamma]disp NIntegrate[Abs[up[s] - dn[s]]^2, {s, 0, t}];
+snrAccum[t_?NumericQ] := \[Gamma]disp NIntegrate[Abs[\[Alpha]e[s] - \[Alpha]g[s]]^2, {s, 0, t}];
 ListLinePlot[{Table[{t, sepDisp[t]^2}, {t, 0, 6, 0.05}], Table[{t, snrAccum[t]}, {t, 0, 6, 0.1}]},
- Frame -> True, GridLines -> Automatic, AspectRatio -> 1/3,
- PlotLegends -> Placed[{"pointer separation squared |\[Alpha]\[UpArrow]-\[Alpha]\[DownArrow]\!\(\*SuperscriptBox[\(|\), \(2\)]\) (saturates)", "integrated \!\(\*SuperscriptBox[\(SNR\), \(2\)]\) (grows)"}, Right],
+ Frame -> True, GridLines -> Automatic, AspectRatio -> 1/2, PlotRange -> All,
+ PlotLegends -> Placed[{"pointer separation squared |alpha_e - alpha_g|^2 (saturates)", "integrated SNR^2 (grows)"}, Right],
  FrameLabel -> {"readout time", "distinguishability"},
  PlotLabel -> "the pointer separation saturates;\n the integrated output record keeps accumulating"]
 ```
 
-The snapshot separation-squared levels off as the pointers reach their steady amplitudes, but the integrated $\mathrm{SNR}^2$ climbs without bound, linearly once the field is stationary. That growing line, not the saturating one, is the single-shot readout a circuit-QED experiment optimizes, and it is the flip side of the qubit coherence the same measurement destroys. See [Gambetta et al.](https://arxiv.org/abs/cond-mat/0602322).
+The snapshot separation-squared levels off as the pointers reach their steady amplitudes, but the integrated $\mathrm{SNR}^2$ climbs without bound, linearly once the cavity is stationary. That growing line, not the saturating one, is the single-shot readout a circuit-QED experiment optimizes, and it is the flip side of the qubit coherence the same measurement destroys. See [Gambetta et al.](https://arxiv.org/abs/cond-mat/0602322).
 
 Measurement has a cost: as the pointer separates and reveals the qubit state, the qubit's coherence is destroyed. To see it we need the joint qubit-cavity density matrix and two helpers. First, embed a cavity operator on the joint space:
 
 ```wl
-onAtom[metering_] := KroneckerProduct[IdentityMatrix[2], metering];
+onCavity[metering_] := KroneckerProduct[IdentityMatrix[2], metering];
 ```
 
 Second, the partial trace over the cavity, recovering the qubit's reduced state $\rho_{\mathrm{qubit}} = \mathrm{Tr}_{\mathrm{cavity}}[\rho]$:
 
 ```wl
-traceMode[joint_, rungs_] := With[{r = ArrayReshape[joint, {2, rungs, 2, rungs}]},
-   Table[Sum[r[[a, k, b, k]], {k, rungs}], {a, 2}, {b, 2}]];
+reducedQubit[joint_, rungs_] := TensorContract[ArrayReshape[joint, {2, rungs, 2, rungs}], {{2, 4}}];
 ```
 
-Build a reader for the qubit coherence $|\rho_{eg}|$ as the pointer resolves the qubit:
+Build a reader for the qubit coherence $\left|\rho_{\mathrm{eg}}\right|$ as the pointer resolves the qubit:
 
 ```wl
 qubitCoherence[rungs_] := Module[{count = creation[rungs] . annihilation[rungs], H, run},
-   H = \[Epsilon] onAtom[annihilation[rungs] + creation[rungs]] + \[Chi] KroneckerProduct[Z, count];
-   run = evolveODE[H, {onAtom[Sqrt[\[Gamma]disp] annihilation[rungs]]},
+   H = \[Epsilon] onCavity[annihilation[rungs] + creation[rungs]] + \[Chi] KroneckerProduct[Z, count];
+   run = evolveODE[H, {onCavity[Sqrt[\[Gamma]disp] annihilation[rungs]]},
      densityMatrix[Flatten@KroneckerProduct[plus, coherentState[rungs, 0]]], 4.];
-   Function[t, 2 Abs[traceMode[run[t], rungs][[1, 2]]]]];
+   Function[t, 2 Abs[reducedQubit[run[t], rungs][[1, 2]]]]];
 ```
 
 Confirm the cutoff by comparing two truncations (cutoff at $n = 9$ and $n = 12$) at the same time:
@@ -1266,53 +1314,71 @@ The two cutoffs agree, so 9 is enough.
 Now visualize the qubit coherence draining as the pointer states separate:
 
 ```wl
-Plot[reading[t], {t, 0, 4}, Frame -> True, GridLines -> Automatic, PlotRange -> {0, 1}, AspectRatio -> 1/3,
+Plot[reading[t], {t, 0, 4}, Frame -> True, GridLines -> Automatic, PlotRange -> All, AspectRatio -> 1/3,
  FrameLabel -> {"time", "qubit coherence"},
  PlotLabel -> "the pointer measures away the qubit coherence"]
 ```
 
 The coherence falls to near zero as the pointer states separate: a measurement that distinguishes the qubit states must destroy their superposition.
 
-The cavity field, the meter itself, tells the same story in its Wigner picture, and what it shows depends on how you read the qubit. Trace the qubit out, $\rho_{\mathrm{cavity}} = \mathrm{Tr}_{\mathrm{qubit}}[\rho]$, and the field is a fringeless mixture of the two pointer states as soon as they separate, since the which-way record now lives in the qubit. But keep only the records where the qubit is found in $|+\rangle$ (the basis where its coherence lives), and the conditional field is a cat of the two pointers, its fringes carrying exactly the qubit's surviving coherence. A helper for the field conditioned on finding the qubit in a given state $|q\rangle$, the qubit sandwiched off and the result renormalized,
-$$\rho_{\mathrm{field}\,|\,q} = \frac{\langle q|\rho|q\rangle}{\mathrm{Tr}\,\langle q|\rho|q\rangle},$$
-where $\langle q|\rho|q\rangle$ leaves a field operator and its trace is the probability $\langle q|\rho_{\mathrm{qubit}}|q\rangle$ of that outcome:
+The cavity, the meter itself, tells the same story, and what it shows depends on how you read the qubit. Trace the qubit out, $\rho_{\mathrm{cavity}} = \mathrm{Tr}_{\mathrm{qubit}}[\rho]$, and the cavity is a fringeless mixture of the two pointer states as soon as they separate, since the which-way record now lives in the qubit. But keep only the records where the qubit is found in $\left|+\right\rangle$ (the basis where its coherence lives), and the conditional cavity is a cat of the two pointers, its off-diagonal coherence carrying the qubit's. A helper for the cavity conditioned on finding the qubit in a state $\left|q\right\rangle$ takes the qubit matrix element and renormalizes it, $\rho_{\mathrm{cavity};q} = \langle q,\rho q\rangle/\mathrm{Tr}\langle q,\rho q\rangle$, where $\langle q,\rho q\rangle$ leaves a cavity operator and its trace is the probability $\langle q,\rho_{\mathrm{qubit}}q\rangle$ of that outcome:
 
 ```wl
-fieldGiven[joint_, rungs_, q_] := With[{r = ArrayReshape[joint, {2, rungs, 2, rungs}]},
+cavityGiven[joint_, rungs_, q_] := With[{r = ArrayReshape[joint, {2, rungs, 2, rungs}]},
    With[{m = Sum[Conjugate[q[[a]]] q[[b]] r[[a, All, b, All]], {a, 2}, {b, 2}]}, m/Tr[m]]];
 ```
 
 Run the joint master equation once, at a cutoff wide enough for the pointer blobs:
 
 ```wl
-dispRungs = 12;
-dispRun = evolveODE[\[Epsilon] onAtom[annihilation[dispRungs] + creation[dispRungs]] + \[Chi] KroneckerProduct[Z, creation[dispRungs] . annihilation[dispRungs]],
-   {onAtom[Sqrt[\[Gamma]disp] annihilation[dispRungs]]},
+dispRungs = 16;
+dispRun = evolveODE[\[Epsilon] onCavity[annihilation[dispRungs] + creation[dispRungs]] + \[Chi] KroneckerProduct[Z, creation[dispRungs] . annihilation[dispRungs]],
+   {onCavity[Sqrt[\[Gamma]disp] annihilation[dispRungs]]},
    densityMatrix[Flatten@KroneckerProduct[plus, coherentState[dispRungs, 0]]], 3.];
 ```
 
-Build the Wigner film of the $|+\rangle$-conditioned field as the measurement proceeds:
+In the untruncated driven-damped model, the conditional cavity has a closed two-coherent-state form. Its two diagonal blocks are the pointer coherent states $\left|\alpha_e\right\rangle$ and $\left|\alpha_g\right\rangle$; the qubit coherence carried into the cavity as the off-diagonal weight is
+$$T(t) = \tfrac12\exp\left(-2i\chi\int_0^t \alpha_e\,\alpha_g^{*}\,dt'\right), \qquad \alpha_e\,\alpha_g^{*} = \frac{\epsilon^2}{\Lambda^2}(1 - e^{-\Lambda t'})^2,\quad \Lambda = i\chi + \tfrac{\gamma}{2},$$
+an elementary integral. Dividing $T$ by the pointers' overlap gives the coherence coefficient $c = T/\langle \alpha_g,\alpha_e\rangle$, so
+$$\rho_{\mathrm{cavity};+}(t) \;\propto\; \tfrac12\left|\alpha_e\right\rangle(\left|\alpha_e\right\rangle)^\dagger + \tfrac12\left|\alpha_g\right\rangle(\left|\alpha_g\right\rangle)^\dagger + c\left|\alpha_e\right\rangle(\left|\alpha_g\right\rangle)^\dagger + c^{*}\left|\alpha_g\right\rangle(\left|\alpha_e\right\rangle)^\dagger.$$
+Build it directly:
 
 ```wl
-dispTimes = {0., 1., 2., 3.};
-dispFilm = Table[wignerRepresentation[fieldGiven[dispRun[t], dispRungs, plus], 3.8, 45], {t, dispTimes}];
+\[CapitalLambda] = I \[Chi] + \[Gamma]disp/2;
+cohT[t_] := (1/2) Exp[-2 I \[Chi] (\[Epsilon]^2/\[CapitalLambda]^2) (t + (2/\[CapitalLambda]) (Exp[-\[CapitalLambda] t] - 1) - (1/(2 \[CapitalLambda])) (Exp[-2 \[CapitalLambda] t] - 1))];
+cavityCat[t_, rungs_] := With[{ke = coherentState[rungs, \[Alpha]e[t]], kg = coherentState[rungs, \[Alpha]g[t]]},
+   With[{cc = cohT[t]/(Conjugate[kg] . ke)},
+    With[{m = densityMatrix[ke]/2 + densityMatrix[kg]/2 + cc KroneckerProduct[ke, Conjugate[kg]] + Conjugate[cc] KroneckerProduct[kg, Conjugate[ke]]},
+     m/Tr[m]]]];
 ```
 
-Draw it on one shared color scale:
+Confirm the closed form against the simulated conditional cavity across the whole readout:
 
 ```wl
-wignerPlot[dispFilm, "time " <> ToString[#] & /@ dispTimes]
+Max@Table[traceDistance[cavityCat[t, dispRungs], cavityGiven[dispRun[t], dispRungs, plus]], {t, 0.1, 3, 0.1}]
 ```
 
-The field starts as the vacuum, one blob at the origin, and drifts as the drive builds the pointer amplitude. As the two pointer components begin to separate, the conditional field passes through a faint cat: an elongated blob with a patch of genuine negativity beneath it, the fringe that the qubit's surviving coherence can still paint. It never becomes a bright cat, and that is the physics: the meter resolves its two readings exactly by carrying the which-way information away, so by the time the pointers are distinct (last panel) the coherence that would fringe them is spent, and the field is a classical mixture of two readings. Contrast the Haroche cat of the earlier section: there the dispersive atom imprinted the two phases *before* the cavity leaked, so the separation came first and the decoherence after; here they are one and the same process. This is dispersive qubit readout in circuit QED, where the pointer is a microwave tone reflected off a resonator.
+The maximum trace-distance discrepancy is small but nonzero because the ODE integration and Fock truncation are numerical; decreasing the solver tolerance and increasing the cutoff reduce it. Within that controlled error, the two-coherent-state formula reproduces the simulated conditional cavity. Now the question a phase-space picture cannot answer cleanly: cat or mixture? Measure the conditional cavity against both references, the pure cat of the current pointers $(\left|\alpha_e\right\rangle + \left|\alpha_g\right\rangle)$ and their even mixture, as the readout runs:
+
+```wl
+ListLinePlot[{
+   Table[{t, traceDistance[cavityGiven[dispRun[t], dispRungs, plus], densityMatrix@Normalize[coherentState[dispRungs, \[Alpha]e[t]] + coherentState[dispRungs, \[Alpha]g[t]]]]}, {t, 0.1, 3, 0.05}],
+   Table[{t, traceDistance[cavityGiven[dispRun[t], dispRungs, plus], densityMatrix[coherentState[dispRungs, \[Alpha]e[t]]]/2 + densityMatrix[coherentState[dispRungs, \[Alpha]g[t]]]/2]}, {t, 0.1, 3, 0.05}]},
+ PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ PlotLegends -> {"distance to the pure cat", "distance to the classical mixture"},
+ FrameLabel -> {"readout time", "trace distance"},
+ PlotLabel -> "the conditional cavity starts a cat and decoheres into the mixture"]
+```
+
+Early the conditional cavity hugs the pure cat: the two pointers still coincide, so there is little to tell apart and little coherence to lose. As they separate its distance to the cat climbs while its distance to the mixture falls, the two crossing near $t \approx 2$ for these parameters; past there the state is closer to the classical mixture, and by the time the pointers are cleanly resolved it is close to that mixture. The cat is fleeting because distinguishability and dephasing grow together. Contrast the Haroche cat of the earlier section: there the dispersive atom imprinted the two phases *before* the cavity leaked, so separation came first and decoherence after; here they arise from the same readout process. This is dispersive qubit readout in circuit QED, where the pointer is a microwave tone reflected off a resonator.
 
 ## Part Three: A Heavy Particle, and the Two Faces of a Warm Bath
 
 **The problem.** A particle of mass $M$ in a gentle trap $\tfrac12 M\Omega^2\hat x^2$, coupled to a warm bath (the Caldeira-Leggett model). In the high-temperature limit,
-$$\dot\rho = -i\Bigl[\frac{\hat p^2}{2M} + \tfrac12 M\Omega^2\hat x^2,\ \rho\Bigr] - i\gamma\bigl[\hat x,\{\hat p,\rho\}\bigr] - 2\gamma M k_B T\,\bigl[\hat x,[\hat x,\rho]\bigr].$$
+$$\dot\rho = -i[\frac{\hat p^2}{2M} + \tfrac12 M\Omega^2\hat x^2,\ \rho] - i\gamma[\hat x,\{\hat p,\rho\}] - 2\gamma M k_B T\,[\hat x,[\hat x,\rho]].$$
 Friction damps the momentum at rate $2\gamma$; the double commutator $[\hat x,[\hat x,\rho]]$ decoheres a superposition of two positions a distance $\Delta x$ apart at a rate $\propto M k_B T\,\Delta x^2$, quadratic in the separation, the same law as the light-cat. For a smooth (Gaussian) blob the first and second moments of $(\hat x,\hat p)$ close into a small set of rate equations, exactly the five below.
 
-A heavy particle in a harmonic trap $\tfrac12 M\Omega^2\hat x^2$, coupled to a warm bath (Caldeira-Leggett). Friction damps the momentum; the bath's fluctuations grow the position variance to thermal equilibrium. For a Gaussian state the first and second moments of $(\hat x,\hat p)$ close into five equations: the mean $(\langle\hat x\rangle, \langle\hat p\rangle)$ and the covariance matrix $\Sigma$ with entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$. The high-temperature master equation above holds only when $k_B T \gg \hbar\Omega$, so fix the mass, trap frequency, friction, and a temperature well above the level spacing $\hbar\Omega = 1$:
+A heavy particle in a harmonic trap $\tfrac12 M\Omega^2\hat x^2$, coupled to a warm bath (Caldeira-Leggett). Friction damps the momentum; the bath's fluctuations grow the position variance to thermal equilibrium. For a Gaussian state the first and second moments of $(\hat x,\hat p)$ close into five equations: the mean $(\langle\hat x\rangle, \langle\hat p\rangle)$ and the covariance matrix $\Sigma$ with entries $(\Sigma_{\mathrm{xx}}, \Sigma_{\mathrm{xp}}, \Sigma_{\mathrm{pp}})$. The high-temperature master equation above holds only when $k_B T > \hbar\Omega$, so fix the mass, trap frequency, friction, and a temperature well above the level spacing $\hbar\Omega = 1$:
 
 ```wl
 M = 1.; \[CapitalOmega]qbm = 1.; \[Gamma]qbm = 0.15; kT = 5.; Ddiff = 4 \[Gamma]qbm M kT;
@@ -1320,8 +1386,8 @@ M = 1.; \[CapitalOmega]qbm = 1.; \[Gamma]qbm = 0.15; kT = 5.; Ddiff = 4 \[Gamma]
 
 With $k_B T = 5$ against a level spacing of $1$, the bath is genuinely warm. Written out, those five equations are
 $$\dot{\langle\hat x\rangle} = \frac{\langle\hat p\rangle}{M}, \qquad \dot{\langle\hat p\rangle} = -M\Omega^2\langle\hat x\rangle - 2\gamma\langle\hat p\rangle,$$
-$$\dot\Sigma_{xx} = \frac{2\Sigma_{xp}}{M}, \qquad \dot\Sigma_{xp} = \frac{\Sigma_{pp}}{M} - M\Omega^2\Sigma_{xx} - 2\gamma\Sigma_{xp}, \qquad \dot\Sigma_{pp} = -2M\Omega^2\Sigma_{xp} - 4\gamma\Sigma_{pp} + D,$$
-with diffusion coefficient $D = 4\gamma M k_B T$. The initial covariance must itself be a valid quantum state, so start from the trap's ground state, the minimum-uncertainty blob with $\Sigma_{xx} = \Sigma_{pp} = \hbar/2 = 1/2$ (so $\det\Sigma = \hbar^2/4 = 1/4$), displaced off the origin. Integrate them from there:
+$$\dot\Sigma_{\mathrm{xx}} = \frac{2\Sigma_{\mathrm{xp}}}{M}, \qquad \dot\Sigma_{\mathrm{xp}} = \frac{\Sigma_{\mathrm{pp}}}{M} - M\Omega^2\Sigma_{\mathrm{xx}} - 2\gamma\Sigma_{\mathrm{xp}}, \qquad \dot\Sigma_{\mathrm{pp}} = -2M\Omega^2\Sigma_{\mathrm{xp}} - 4\gamma\Sigma_{\mathrm{pp}} + D,$$
+with diffusion coefficient $D = 4\gamma M k_B T$. The initial covariance must itself be a valid quantum state, so start from the trap's ground state, the minimum-uncertainty blob with $\Sigma_{\mathrm{xx}} = \Sigma_{\mathrm{pp}} = \hbar/2 = 1/2$ (so $\det\Sigma = \hbar^2/4 = 1/4$), displaced off the origin. Integrate them from there:
 
 ```wl
 particle = NDSolveValue[{
@@ -1345,7 +1411,7 @@ Two checks. First, the mean spirals in from its displaced start to rest:
 {center[0], center[25]}
 ```
 
-It starts displaced and ends near the origin. Second, the position variance $\Sigma_{xx}$ grows from its ground-state value $\hbar/2 = 1/2$ to the thermal value $k_B T/(M\Omega^2)$, equipartition for a harmonic trap:
+It starts displaced and ends near the origin. Second, the position variance $\Sigma_{\mathrm{xx}}$ grows from its ground-state value $\hbar/2 = 1/2$ to the thermal value $k_B T/(M\Omega^2)$, equipartition for a harmonic trap:
 
 ```wl
 {particle[[3]][0], particle[[3]][25], kT/(M \[CapitalOmega]qbm^2)}
@@ -1362,7 +1428,7 @@ The Lyapunov steady state matches the integrated one.
 
 The same covariance bookkeeping returns under monitoring in Part Five. The Kalman filter's watched oscillator obeys $\dot\Sigma = A\Sigma + \Sigma A^{T} + D - \Sigma C^{T} C\Sigma$, the Lyapunov form above plus one term the bath cannot supply, the measurement's information gain $-\Sigma C^{T} C\Sigma$: diffusion widens the blob to thermal here, watching narrows it below the ground-state spread there.
 
-One more check the model must pass to be believed: a real quantum state obeys the Robertson-Schrodinger uncertainty relation $\det\Sigma = \Sigma_{xx}\Sigma_{pp} - \Sigma_{xp}^2 \ge \hbar^2/4 = 1/4$, so the margin $\det\Sigma - 1/4$ must stay non-negative for the whole run. The high-temperature Caldeira-Leggett generator is not of Lindblad form, so this is not automatic; watch it directly:
+One more check the model must pass to be believed: a real quantum state obeys the Robertson-Schrodinger uncertainty relation $\det\Sigma = \Sigma_{\mathrm{xx}}\Sigma_{\mathrm{pp}} - \Sigma_{\mathrm{xp}}^2 \ge \hbar^2/4 = 1/4$, so the margin $\det\Sigma - 1/4$ must stay non-negative for the whole run. The high-temperature Caldeira-Leggett generator is not of Lindblad form, so this is not automatic; watch it directly:
 
 ```wl
 Plot[Det@spread[t] - 1/4, {t, 0, 25}, Frame -> True, GridLines -> Automatic, PlotRange -> All,
@@ -1370,10 +1436,10 @@ Plot[Det@spread[t] - 1/4, {t, 0, 25}, Frame -> True, GridLines -> Automatic, Plo
  PlotLabel -> "the state stays above the uncertainty floor"]
 ```
 
-The margin starts at zero, where the ground state saturates the bound, and only grows: the blob swells above the Heisenberg floor and never dips below it. Had we started from the old sub-ground blob $\Sigma_{xx} = \Sigma_{pp} = 0.1$, the margin would have opened at $0.01 - 0.25 < 0$, an invalid state the evolution could never repair; and pushed to low temperature, this same generator can drive an initially valid state below the floor, the known price of its non-Lindblad form.
+The margin starts at zero, where the ground state saturates the bound, and only grows for this valid high-temperature run: the blob swells above the Heisenberg floor and never dips below it. Starting instead from $\Sigma_{\mathrm{xx}}=\Sigma_{\mathrm{pp}}=0.1$ would already violate the bound at $t=0$; the moment equations can later carry that covariance into the valid region, but doing so does not retroactively make the initial state physical. Conversely, at temperatures outside the model's high-temperature regime this non-Lindblad generator can drive an initially valid covariance below the floor. The point of the plotted check is therefore local and explicit: the chosen parameters and initial state remain physical throughout the displayed interval.
 
 Those checks read the mean and the variance as numbers; the phase-space picture puts them in one object. That object is the state's **Wigner function** $W(x,p)$, the quasiprobability the cat used in Part Two, except that for a Gaussian state no Fock-basis sum is needed: $W$ is exactly the bivariate normal set by the five moments, centered at the mean $\bar r = (\langle\hat x\rangle, \langle\hat p\rangle)$ and shaped by the covariance $\Sigma$,
-$$W(x,p) = \frac{1}{2\pi\sqrt{\det\Sigma}}\,\exp\!\left[-\tfrac12\,(r - \bar r)^{T}\,\Sigma^{-1}\,(r - \bar r)\right], \qquad r = (x,p),$$
+$$W(x,p) = \frac{1}{2\pi\sqrt{\det\Sigma}}\,\exp\left(-\tfrac12\,(r - \bar r)^{T}\,\Sigma^{-1}\,(r - \bar r)\right), \qquad r = (x,p),$$
 normalized so $\int W\,dx\,dp = 1$. Transcribe it as a function of time, reading $\bar r$ and $\Sigma$ off the solution at each $t$:
 
 ```wl
@@ -1408,8 +1474,8 @@ twoRung = 22; \[Gamma]warm = 0.5;
 ```
 
 The surviving coherence is the trace distance between the coherently evolved cat and the classical mixture its two lobes would form, both carried through the same thermal bath $\mathcal{L}\rho = \gamma(n_T+1)\,\mathcal{D}[\hat a]\rho + \gamma n_T\,\mathcal{D}[\hat a^\dagger]\rho$:
-$$\mathrm{warmCoherence}(n_T,\alpha,t) = \tfrac12\,\mathrm{Tr}\big|\,\rho_{\mathrm{cat}}(t) - \tfrac12\big[\rho_{+\alpha}(t) + \rho_{-\alpha}(t)\big]\,\big|,\quad \rho_{\mathrm{cat}}(t) = e^{\mathcal{L}t}\big[|\mathrm{cat}\rangle\langle\mathrm{cat}|\big],\ \ \rho_{\pm\alpha}(t) = e^{\mathcal{L}t}\big[|{\pm\alpha}\rangle\langle{\pm\alpha}|\big],$$
-with $\alpha = \text{gap}$. It is largest while the cat is still distinct from that mixture and falls to zero as the cross-terms decohere (both thermalize to the same steady state, so the distance can only shrink). The bath's $\hat a^\dagger$ channel heats a coherent state, so the two lobes will not stay coherent and are evolved rather than written down; compute it over a list of delays, one run each for the cat and its lobes:
+$$\mathrm{warmCoherence}(n_T,\alpha,t) = \tfrac12\,\mathrm{Tr}\left|\,\rho_{\mathrm{cat}}(t) - \tfrac12[\rho_{+\alpha}(t) + \rho_{-\alpha}(t)]\,\right|,\quad \rho_{\mathrm{cat}}(t) = e^{\mathcal{L}t}[\left|\mathrm{cat}\right\rangle(\left|\mathrm{cat}\right\rangle)^\dagger],\ \ \rho_{\pm\alpha}(t) = e^{\mathcal{L}t}[\left|{\pm\alpha}\right\rangle(\left|{\pm\alpha}\right\rangle)^\dagger],$$
+with $\alpha = \text{gap}$. Here `gap` is the coherent amplitude of either lobe and therefore half their phase-space amplitude separation $2\left|\alpha\right|$. It is largest while the cat is still distinct from that mixture and falls to zero as the cross-terms decohere (both thermalize to the same steady state). The bath's $\hat a^\dagger$ channel heats a coherent state, so the two lobes will not stay coherent and are evolved rather than written down; compute it over a list of delays, one run each for the cat and its lobes:
 
 ```wl
 warmCoherence[nT_, gap_, delays_] := With[
@@ -1434,8 +1500,8 @@ The warm bath decoheres the cat far faster: the rate grows with temperature. As 
 
 ```wl
 ListPlot[With[{sep = Range[0, 3, 0.05]}, {#, warmCoherence[1.5, #, {0.15}][[1]]} & /@ sep],
- Frame -> True, GridLines -> Automatic, PlotRange -> All, ImageSize -> 460,
- FrameLabel -> {"cat separation", "surviving coherence at fixed short delay"},
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ FrameLabel -> {"coherent amplitude |\[Alpha]| (half-separation)", "surviving coherence at fixed short delay"},
  PlotLabel -> "surviving coherence peaks at a modest cat size, then falls"]
 ```
 
@@ -1466,8 +1532,8 @@ averageChance = excitedPop[smoothAtom[#]] & /@ when;
 ### Counting the Flashes, One at a Time
 
 **The problem.** Any leak $\dot\rho = -i[\hat H,\rho] + \mathcal{D}[\hat c]\rho$ can be *unravelled* by watching its output, each way of detecting the emitted light giving one unravelling into pure-state histories. Counting photons one click at a time gives the jump trajectory
-$$d|\psi\rangle = \Bigl[dN\,\Bigl(\tfrac{\hat c}{\sqrt{\langle\hat c^\dagger\hat c\rangle}} - \mathbb{1}\Bigr) + dt\,\Bigl(\tfrac{\langle\hat c^\dagger\hat c\rangle}{2} - \tfrac{\hat c^\dagger\hat c}{2} - i\hat H\Bigr)\Bigr]|\psi\rangle,$$
-where the click $dN \in \{0,1\}$ arrives at rate $\langle\hat c^\dagger\hat c\rangle\,dt$: between clicks the norm decays under the non-Hermitian $\hat H - \tfrac{i}{2}\hat c^\dagger\hat c$, and at a click the state jumps by $\hat c$. Averaging $|\psi\rangle\langle\psi|$ over histories returns the master equation exactly. Watch one counted history and check the average.
+$$d\left|\psi\right\rangle = \left[dN\left(\tfrac{\hat c}{\sqrt{\langle\hat c^\dagger\hat c\rangle}} - \mathbb{1}\right) + dt\left(\tfrac{\langle\hat c^\dagger\hat c\rangle}{2} - \tfrac{\hat c^\dagger\hat c}{2} - i\hat H\right)\right]\left|\psi\right\rangle,$$
+where the click $dN \in \{0,1\}$ arrives at rate $\langle\hat c^\dagger\hat c\rangle\,dt$: between clicks the norm decays under the non-Hermitian $\hat H - \tfrac{i}{2}\hat c^\dagger\hat c$, and at a click the state jumps by $\hat c$. In continuous time, averaging $\left|\psi\right\rangle(\left|\psi\right\rangle)^\dagger$ over histories returns the master equation. The finite-step simulation below also carries Bernoulli time-discretization error, so its comparison contains both that bias and ensemble scatter.
 
 The first way, **photon counting**: detect each emitted photon. Between clicks the state evolves under the non-Hermitian $\hat H - \tfrac{i}{2}\hat c^\dagger\hat c$; at each click it jumps by $\hat c$ to the ground state. A single run is one sweep that does both jobs at once: `FoldList` advances and keeps the conditioned state at every step (a jump with probability $\langle\hat c^\dagger\hat c\rangle\,dt$, else the no-click drift), while `Sow` writes down the time whenever the jump fires. It returns the inferred state history and the raw click record together, because in a real experiment they are one run, not two. Everything that follows, one trajectory, the ensemble average, and the waiting-time statistic, reads off realizations of this single generator:
 
@@ -1500,7 +1566,7 @@ Now visualize one counted trajectory's excited-state population against the mast
 ```wl
 ListLinePlot[{Transpose[{when, excitedPopK /@ oneCount}], Transpose[{when, averageChance}]},
  PlotStyle -> {ColorData[97, 1], Directive[Thick, Red, Dashed]}, Frame -> True, GridLines -> Automatic,
- PlotLegends -> {"one trajectory (jumps)", "master equation"}, PlotRange -> {0, 1.05}, ImageSize -> 500,
+ PlotLegends -> {"one trajectory (jumps)", "master equation"}, PlotRange -> All,
  FrameLabel -> {"time", "excited-state population"}, PlotLabel -> "photon counting: one trajectory jumps, the average is smooth"]
 ```
 
@@ -1517,7 +1583,7 @@ A handful of photons over the run. Now put the record and the state on one time 
 ```wl
 ListLinePlot[{Transpose[{when, excitedPopK /@ oneCount}],
    Transpose[{Riffle[oneClicks, oneClicks], Riffle[Range@Length@oneClicks - 1, Range@Length@oneClicks]}]},
- MultiaxisArrangement -> All, PlotRange -> All, Frame -> True, ImageSize -> 560,
+ MultiaxisArrangement -> All, PlotRange -> All, Frame -> True,
  GridLines -> {{#, Red} & /@ oneClicks, None},
  FrameLabel -> {{"excited population", "cumulative count N(t)"}, {"time", None}},
  PlotLabel -> "clicks (red lines) fall at the population plunges; the staircase counts them"]
@@ -1538,18 +1604,18 @@ Averaging the conditioned states across the ensemble must recover the master equ
 Max@Abs[(excitedPop /@ Mean[Table[densityMatrix /@ Take[countRuns[[k]]["states"], Length[when]], {k, nCount}]]) - averageChance]
 ```
 
-The gap shrinks as $1/\sqrt N$: the jump trajectories average back to the master equation.
+At fixed `dtAtom`, the sampling component of the gap shrinks as $1/\sqrt N$; the residual time-step bias requires refinement of `dtAtom`. Together those limits recover the master equation.
 
-The click record carries a statistic no smooth curve can: the distribution of *waiting times* between clicks. A click leaves the atom in $|g\rangle$, so the time $\tau$ to the next click has the density
-$$w(\tau) = \langle\psi(\tau)|\hat c^\dagger\hat c|\psi(\tau)\rangle, \qquad |\psi(\tau)\rangle = e^{-i\hat H_{\mathrm{eff}}\tau}\,|g\rangle,\quad \hat H_{\mathrm{eff}} = \hat H - \tfrac{i}{2}\hat c^\dagger\hat c,$$
-the unnormalized no-click state evolved from the ground state. Since it starts in $|g\rangle$, $w(0) = \gamma\,|\langle e|g\rangle|^2 = 0$: the atom cannot emit twice at once, it must be re-driven to the excited state first, so very short gaps are forbidden. This is antibunching. Read the density directly off the no-click evolution:
+The click record carries a statistic no smooth curve can: the distribution of *waiting times* between clicks. A click leaves the atom in $\left|g\right\rangle$, so the time $\tau$ to the next click has the density
+$$w(\tau) = \langle \psi(\tau),\hat c^\dagger\hat c\,\psi(\tau)\rangle, \qquad \left|\psi(\tau)\right\rangle = e^{-i\hat H_{\mathrm{eff}}\tau}\left|g\right\rangle,\quad \hat H_{\mathrm{eff}} = \hat H - \tfrac{i}{2}\hat c^\dagger\hat c,$$
+the unnormalized no-click state evolved from the ground state. Since it starts in $\left|g\right\rangle$, $w(0) = \gamma\left|\langle e,g\rangle\right|^2 = 0$: the atom cannot emit twice at once, it must be re-driven to the excited state first, so very short gaps are forbidden. This is antibunching. Read the density directly off the no-click evolution:
 
 ```wl
 waitDensity[t_] := With[{psi = MatrixExp[-I (Hdrive - I/2 ConjugateTranspose[cAtom] . cAtom) t] . ground},
    Re[Conjugate[psi] . ConjugateTranspose[cAtom] . cAtom . psi]];
 ```
 
-No separate simulation is needed. Because every click resets the atom exactly to $|g\rangle$, the gap between two consecutive clicks in any trajectory is already a draw from $w(\tau)$: it begins where $w$ begins. Pool those gaps straight from the ensemble's click records, one set of differences per run (the leading interval, which starts from the excited state rather than from $|g\rangle$, drops out on its own, since a difference needs two clicks):
+No separate simulation is needed. Because every click resets the atom exactly to $\left|g\right\rangle$, the gap between two consecutive clicks in any trajectory is already a draw from $w(\tau)$: it begins where $w$ begins. Pool those gaps straight from the ensemble's click records, one set of differences per run (the leading interval, which starts from the excited state rather than from $\left|g\right\rangle$, drops out on its own, since a difference needs two clicks):
 
 ```wl
 waitTimes = Flatten[Differences[#["clicks"]] & /@ countRuns];
@@ -1560,7 +1626,7 @@ Overlay their histogram on the closed form:
 ```wl
 Show[Histogram[waitTimes, {0, 6, 0.2}, "PDF", ChartStyle -> ColorData[97, 1]],
  Plot[waitDensity[t], {t, 0, 6}, PlotStyle -> Directive[Thick, Red]],
- Frame -> True, GridLines -> Automatic, ImageSize -> 480,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
  FrameLabel -> {"waiting time between clicks", "density"},
  PlotLabel -> "the trajectory's own inter-click gaps land on the closed-form density"]
 ```
@@ -1580,7 +1646,7 @@ smoothHistory = trajectory[densityMatrix[excited], Hdrive, {cAtom}, {1.}, {}, dt
 ```
 
 `trajectory` hands back exactly two things, and everything else on this page is one of them or is computed from them. The **conditional state** $\rho_c(t)$ at each time node (`smoothHistory["states"]`) is the observer's running estimate of the atom given the record so far. The **record increment** $dJ$ at each step (`smoothHistory["record"]`) is the raw output of the detector. The model tying them is
-$$dJ = \underbrace{\sqrt\gamma\,\langle\hat\sigma_x\rangle}_{\text{signal}}\,dt + dW,$$
+$$dJ = \sqrt\gamma\,\langle\hat\sigma_x\rangle\,dt + dW,$$
 the signal read from $\rho_c$, the noise $dW$ a Wiener increment. Hold the two apart: $dJ$ is **observed**, and $\rho_c$ is **inferred**, reconstructed from $dJ$ by the filter (the positivity step from the toolkit).
 
 Take the conditional state first. Its excited population is one smooth diffusing history, no jumps:
@@ -1588,7 +1654,7 @@ Take the conditional state first. Its excited population is one smooth diffusing
 ```wl
 ListLinePlot[{Transpose[{when, excitedPop /@ smoothHistory["states"]}], Transpose[{when, averageChance}]},
  PlotStyle -> {ColorData[97, 1], Directive[Thick, Red, Dashed]}, Frame -> True, GridLines -> Automatic,
- PlotLegends -> {"one conditional history", "master equation"}, PlotRange -> {0, 1.05}, ImageSize -> 500,
+ PlotLegends -> {"one conditional history", "master equation"}, PlotRange -> All,
  FrameLabel -> {"time", "excited-state population"}, PlotLabel -> "the conditional state diffuses smoothly, no jumps"]
 ```
 
@@ -1598,7 +1664,7 @@ Smooth diffusion, not the plunges of a counted trajectory, yet averaging many co
 Max@Abs[(excitedPop /@ Mean[Table[trajectory[densityMatrix[excited], Hdrive, {cAtom}, {1.}, {}, dtAtom, 6.0, k]["states"], {k, 150}]]) - averageChance]
 ```
 
-The gap is Monte-Carlo scatter: the conditional state is inferred from a record, and its average over all records is exactly the unconditioned master equation.
+The gap combines Monte-Carlo scatter with the finite-step bias quantified in the toolkit. In the joint limits of large ensemble and small time step, the record-conditioned states average to the unconditioned master equation.
 
 Now the record itself, and the four quantities read from it, each labeled by how it is obtained and whether it is observed or inferred.
 
@@ -1648,11 +1714,11 @@ There is no current *curve*. The instantaneous homodyne current is a distributio
 ```wl
 ListLinePlot[Transpose[{Most@when, signal}],
  Frame -> True, GridLines -> Automatic, PlotRange -> {-1.05, 1.05},
- FrameLabel -> {"time", "signal  \!\(\*SqrtBox[\(\[Gamma]\)]\) \[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]"},
+ FrameLabel -> {"time", "signal  Sqrt[gamma] <sigma_x>"},
  PlotLabel -> "the signal, inferred from the conditional state, not measured"]
 ```
 
-No detector emits this curve. It is what the filter reconstructs, smooth because the conditional state is smooth, and it is exactly the drift the observed $J(t)$ climbed along.
+No detector emits this curve. It is what the filter reconstructs, smooth because the conditional state is smooth, and it is the conditional drift about which the observed $J(t)$ fluctuates.
 
 **The innovation $dW$** (inferred). *How obtained:* $dW = dJ - \text{signal}\,dt$, the observed increment minus the inferred prediction. *Status:* inferred, a residual, not a second measurement:
 
@@ -1686,16 +1752,16 @@ It is one point in a whole *general-dyne* family running from one sharp shadow (
 The third way, **heterodyne**: measure both quadratures at once. It is equivalent to two half-strength homodyne channels a quarter-turn apart, $\hat c/\sqrt2$ and $i\hat c/\sqrt2$. First prove those two dissipators sum to the original, for any $\hat c$ and $\rho$:
 
 ```wl
-With[{c = Array[Subscript[\[FormalC], ##] &, {2, 2}], 
-   r = Array[Subscript[\[FormalR], ##] &, {2, 2}]}, 
-  dissipator[c/Sqrt[2], r] + dissipator[I c/Sqrt[2], r] == 
+With[{c = Array[Subscript[\[FormalC], ##] &, {2, 2}],
+   r = Array[Subscript[\[FormalR], ##] &, {2, 2}]},
+  dissipator[c/Sqrt[2], r] + dissipator[I c/Sqrt[2], r] ==
    dissipator[c, r]] // FullSimplify
 ```
 
 It returns True, with no assumptions: the two channels reproduce the same dissipator, so the master equation is unchanged, and as in the counting and homodyne runs an ensemble of these trajectories averages back to it.
 
 The trajectory explores differently, so hold apart what heterodyne *observes* from what it *infers*, exactly as with homodyne. `trajectory` still returns two objects, the conditional state $\rho_c$ (inferred) and the record (observed), but the record now has *two* columns, one real current per quadrature:
-$$dJ_I = \underbrace{\sqrt{\gamma/2}\,\langle\hat\sigma_x\rangle}_{\text{signal}}\,dt + dW_I,\qquad dJ_Q = \underbrace{\sqrt{\gamma/2}\,\langle\hat\sigma_y\rangle}_{\text{signal}}\,dt + dW_Q.$$
+$$dJ_I = \sqrt{\gamma/2}\,\langle\hat\sigma_x\rangle\,dt + dW_I,\qquad dJ_Q = \sqrt{\gamma/2}\,\langle\hat\sigma_y\rangle\,dt + dW_Q.$$
 Equivalently the two real records are the real and imaginary parts of a single *complex* record $dJ = dJ_I + i\,dJ_Q$, whose increment satisfies $dJ^2 = 0$ (the two shot noises are independent) and $dJ\,dJ^* = 2dt$ (each quadrature contributes its own variance $dt$): two independent real noises carried in one complex number. The single new fact over homodyne is that both field quadratures are recorded at once, so the two records carry the two transverse signals $\langle\hat\sigma_x\rangle$ and $\langle\hat\sigma_y\rangle$ directly, each at half the power an optimally phased homodyne puts in its one. Run one history and keep its record:
 
 ```wl
@@ -1778,7 +1844,7 @@ With[{ci = 2/Sqrt[Length[dWI]]},
 
 Both correlograms hug zero within the band, the signature of white residuals: the filter has extracted every predictable part of each record.
 
-Now the heterodyne-specific check with no homodyne counterpart, whether the two residuals are independent of each other. Read off the $2\times2$ correlation matrix of the innovation channels:
+Now the heterodyne-specific check with no homodyne counterpart, whether the two residuals are independent of each other. Read off the 2-by-2 correlation matrix of the innovation channels:
 
 ```wl
 Correlation[Transpose[{dWI, dWQ}]] // MatrixForm
@@ -1799,7 +1865,7 @@ ListLinePlot[{Transpose[{when, Mean[purity /@ #] & /@ Transpose[homRuns]}],
    Transpose[{when, purity[Mean[#]] & /@ Transpose[homRuns]}]},
  PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic,
  PlotLegends -> {"mean purity of conditioned states", "purity of the mean state"},
- PlotRange -> {0, 1.05}, ImageSize -> 520, FrameLabel -> {"time", "purity"},
+ PlotRange -> All, FrameLabel -> {"time", "purity"},
  PlotLabel -> "every run stays pure; only the record-blind average mixes"]
 ```
 
@@ -1818,10 +1884,10 @@ zOf[states_] := blochVector[#][[3]] & /@ states; xOf[states_] := blochVector[#][
 ### Watching Harder Freezes It
 
 **The problem.** A driven qubit continuously measured along $\hat\sigma_z$, the quantum Zeno setup. The conditioned state obeys the stochastic master equation
-$$d\rho = -i\,\tfrac{\Omega}{2}[\hat\sigma_x,\rho]\,dt - \tfrac{k}{2}\,\bigl[\hat\sigma_z,[\hat\sigma_z,\rho]\bigr]\,dt + \sqrt{k}\,\bigl(\hat\sigma_z\rho + \rho\hat\sigma_z - 2\langle\hat\sigma_z\rangle\rho\bigr)\,dW,$$
-with drive $\Omega$ and measurement strength $k$. When $k \ll \Omega$ the qubit swings almost freely; when $k \gg \Omega$ the watching pins it near a pole and $z(t)$ becomes a random telegraph, the "watched pot" that never boils. Watch a gently-watched and a hard-watched history.
+$$d\rho = -i\,\tfrac{\Omega}{2}[\hat\sigma_x,\rho]\,dt - \tfrac{k}{2}\,[\hat\sigma_z,[\hat\sigma_z,\rho]]\,dt + \sqrt{k}\,(\hat\sigma_z\rho + \rho\hat\sigma_z - 2\langle\hat\sigma_z\rangle\rho)\,dW,$$
+with drive $\Omega$ and measurement strength $k$. When $k < \Omega$ the qubit swings almost freely; when $k > \Omega$ the watching pins it near a pole and $z(t)$ becomes a random telegraph, the "watched pot" that never boils. Watch a gently-watched and a hard-watched history.
 
-A driven qubit measured along $\hat\sigma_z$. Measure weakly ($k \ll \Omega$) and it swings almost freely; measure strongly ($k \gg \Omega$) and it is pinned near a $\hat\sigma_z$ eigenstate with occasional jumps, the quantum Zeno effect. Set the drive and the fine time grid:
+A driven qubit measured along $\hat\sigma_z$. Measure weakly ($k < \Omega$) and it swings almost freely; measure strongly ($k > \Omega$) and it is pinned near a $\hat\sigma_z$ eigenstate with occasional jumps, the quantum Zeno effect. Set the drive and the fine time grid:
 
 ```wl
 \[CapitalOmega]zeno = 2.0; fastZeno = 0.004; clockZeno = fastZeno Range[0, 3000];
@@ -1895,10 +1961,10 @@ zenoKs = \[CapitalOmega]zeno Table[2.^e, {e, -3, 4, 0.08}];
 ListLogLogPlot[
  {Table[{k, zenoRate[k/\[CapitalOmega]zeno]}, {k, zenoKs}], Table[{k, \[CapitalOmega]zeno^2/(2 k)}, {k, Select[zenoKs, # >= \[CapitalOmega]zeno &]}]},
  Joined -> {False, True},
- PlotLegends -> Placed[{"measured rate  |Re \[Lambda]|", "\!\(\*SuperscriptBox[\(\[CapitalOmega]\), \(2\)]\)/2k  (the Zeno freeze)"}, {Right, Top}],
+ PlotLegends -> Placed[{"measured rate  |Re \[Lambda]|", "Omega^2/(2 k)  (the Zeno freeze)"}, {Right, Top}],
  Frame -> True, GridLines -> {{{\[CapitalOmega]zeno, Directive[Gray, Dashed]}}, None},
  FrameLabel -> {"measurement strength k", "slowest relaxation rate  |Re \[Lambda]|"},
- PlotLabel -> "the rate follows k up to k = \[CapitalOmega], then freezes as \!\(\*SuperscriptBox[\(\[CapitalOmega]\), \(2\)]\)/2k"]
+ PlotLabel -> "the rate follows k up to k = \[CapitalOmega], then freezes as Omega^2/(2 k)"]
 ```
 
 Below $k = \Omega$ the rate climbs along $k$; above it the points settle onto the $\Omega^2/(2k)$ line, the leftover relaxation frozen as $1/k$, the small gap near the peak closing as the watching strengthens. Watching past the optimal strength does not pin the qubit harder, it slows what motion is left, the quantum Zeno suppression.
@@ -1908,8 +1974,8 @@ The whole crossover is exact, read straight off the deterministic Liouvillian wi
 ### A Charge Qubit Read by a Quantum Point Contact
 
 **The problem.** The last two examples watched an abstract qubit; here is the same watching realized in a solid-state device. A charge qubit (one electron shared between two quantum dots, "dot 1" or "dot 2") is monitored by a nearby quantum point contact (QPC) whose current depends on which dot holds the electron. With interdot tunnelling $\Omega$ and no detuning, the unconditional master equation is
-$$\dot\rho = -i\Bigl[\tfrac{\Omega}{2}\hat\sigma_x,\rho\Bigr] + \kappa\,\mathcal{D}[\hat n_1]\rho,\qquad \hat n_1 = \tfrac12(\mathbb{1} - \hat\sigma_z),$$
-with $\hat\sigma_z = \hat n_2 - \hat n_1$ the which-dot operator and $\kappa$ the measurement-induced dephasing rate. The QPC current is a continuous weak measurement of $\hat\sigma_z$: when $\kappa \ll \Omega$ the electron tunnels coherently and the current carries an oscillation at the Rabi frequency; when $\kappa \gg \Omega$ the qubit is pinned and the current is a random telegraph. Build the conditioned dynamics, the detector current, and the current's power spectrum.
+$$\dot\rho = -i[\tfrac{\Omega}{2}\hat\sigma_x,\rho] + \kappa\,\mathcal{D}[\hat n_1]\rho,\qquad \hat n_1 = \tfrac12(\mathbb{1} - \hat\sigma_z),$$
+with $\hat\sigma_z = \hat n_2 - \hat n_1$ the which-dot operator. Here $\kappa$ is the coefficient of $\mathcal D[n_1]$; because $n_1$ is a projector, the off-diagonal density-matrix element decays at rate $\kappa/2$. The QPC current is a continuous weak measurement of $\hat\sigma_z$: when $\kappa < \Omega$ the electron tunnels coherently and the current carries an oscillation at the Rabi frequency; when $\kappa > \Omega$ the qubit is pinned and the current is a random telegraph. Build the conditioned dynamics, the detector current, and the current's power spectrum.
 
 The dephasing $\hat n_1$ is a projector, and $\mathcal{D}[\hat n_1] = \tfrac14\mathcal{D}[\hat\sigma_z]$ (the identity part drops from any dissipator), so watching the QPC is exactly watching $\hat\sigma_z$ at strength $\kappa/4$: the machinery of the last two examples applies unchanged. Fix the tunnelling and the two regimes:
 
@@ -1917,7 +1983,7 @@ The dephasing $\hat n_1$ is a projector, and $\mathcal{D}[\hat n_1] = \tfrac14\m
 OmQpc = 2.0; kSlow = 0.6; kFast = 12.0; qpcLeak[\[Kappa]_] := Sqrt[\[Kappa]/4] Z;
 ```
 
-The conditioned trajectory uses the toolkit's positivity-preserving step; the recorded current is $\dot J = \sqrt{\kappa}\,\langle\hat\sigma_z\rangle + \text{shot noise}$, the QPC output. Run one weakly-measured (coherent) history and one strongly-measured (Zeno) history:
+The conditioned trajectory uses the toolkit's positivity-preserving step. After subtracting the state-independent mean QPC current and choosing the sign convention $Z=n_2-n_1$, the rescaled record is $\dot J = \sqrt{\kappa}\,\langle\hat\sigma_z\rangle + \text{shot noise}$. An experimental current can differ by an overall gain and sign; neither changes the conditioned dynamics. Run one weakly-measured (coherent) history and one strongly-measured (Zeno) history:
 
 ```wl
 dtQpc = 0.004; tfQpc = 10.;
@@ -1939,32 +2005,44 @@ ListLinePlot[{Transpose[{whenQpc, zOf@qpcSlow["states"]}], Transpose[{whenQpc, z
 
 Weak measurement leaves the electron tunnelling freely; strong measurement pins it in one dot with rare jumps.
 
-The distinctive QPC signature is not in any single record but in the *spectrum*, because a coherent oscillation is a *frequency*: it cancels in the time-integral of the record and shows itself only in the spectrum, painting a peak at the Rabi frequency in the fluctuations of $\hat\sigma_z$ that the detector current inherits. The power spectrum is the Fourier transform of the steady-state autocorrelation $\langle\delta\hat\sigma_z(\tau)\,\delta\hat\sigma_z(0)\rangle_{\mathrm{ss}}$, where $\delta\hat\sigma_z = \hat\sigma_z - \langle\hat\sigma_z\rangle_{\mathrm{ss}}$ is the fluctuation about the steady mean. Quantum regression is the statement that this correlation runs on the *same* Liouvillian as the state: plant the seed $\delta\hat\sigma_z\,\rho_{\mathrm{ss}}$, propagate it by $e^{\mathcal L\tau}$, and read $\delta\hat\sigma_z$ back off it, so $C(\tau) = \mathrm{Tr}\!\big[\delta\hat\sigma_z\,e^{\mathcal L\tau}(\delta\hat\sigma_z\,\rho_{\mathrm{ss}})\big]$.
+The distinctive QPC signature is not in any single record but in the *spectrum*, because a coherent oscillation is a *frequency*: it cancels in the time-integral of the record and shows itself only in the spectrum, painting a peak at the Rabi frequency in the fluctuations of $\hat\sigma_z$ that the detector current inherits. The power spectrum is the Fourier transform of the steady-state autocorrelation $\langle\delta\hat\sigma_z(\tau)\,\delta\hat\sigma_z(0)\rangle_{\mathrm{ss}}$, where $\delta\hat\sigma_z = \hat\sigma_z - \langle\hat\sigma_z\rangle_{\mathrm{ss}}$ is the fluctuation about the steady mean. Quantum regression is the statement that this correlation runs on the *same* Liouvillian as the state: plant the seed $\delta\hat\sigma_z\,\rho_{\mathrm{ss}}$, propagate it by $e^{\mathcal L\tau}$, and read $\delta\hat\sigma_z$ back off it, so $C(\tau) = \mathrm{Tr}[\delta\hat\sigma_z\,e^{\mathcal L\tau}(\delta\hat\sigma_z\,\rho_{\mathrm{ss}})]$.
 
-Fourier-transforming in $\tau$ replaces the propagator $e^{\mathcal L\tau}$ by a single matrix inverse, the resolvent $(i\omega - \mathcal L)^{-1}$, and diagonalizing the Liouvillian breaks that inverse into one simple pole per eigenvalue $\lambda_j$. An eigenvalue $\lambda_j = -\gamma_j + i\nu_j$ is one decaying, oscillating mode, and its pole is a Lorentzian centered at the frequency $\nu_j = \mathrm{Im}\,\lambda_j$ with half-width the decay rate $\gamma_j = |\mathrm{Re}\,\lambda_j|$. Each Lorentzian is weighted by $c_j\,r_j$: the coefficient $c_j$ is how much of the seed lies along mode $j$, its coordinate when the seed is written in the eigenbasis, and $r_j$ is how strongly the readout $\delta\hat\sigma_z$ sees that mode, its overlap with it. Summing the poles, with the steady mode $\lambda_j = 0$ dropped because $\delta\hat\sigma_z$ has zero steady mean,
+With the convention $S(\omega)=\int_{-\infty}^{\infty}e^{-i\omega\tau}C(\tau)\,d\tau$, Fourier-transforming in $\tau$ replaces the propagator $e^{\mathcal L\tau}$ by a single matrix inverse, the resolvent $(i\omega - \mathcal L)^{-1}$. If the Liouvillian is diagonalizable, the inverse splits into simple poles, one per eigenvalue $\lambda_j$. An eigenvalue $\lambda_j = -\gamma_j + i\nu_j$ supplies a pole at $\nu_j$ with width $\gamma_j$, but a complex residue can mix absorptive (Lorentzian) and dispersive line shapes; it is not generally a positive Lorentzian by itself. The coefficient $c_j$ is the seed's coordinate along mode $j$, and $r_j$ is the readout overlap. Summing the poles, with the steady mode $\lambda_j = 0$ dropped because $\delta\hat\sigma_z$ has zero steady mean,
 $$S(\omega) = 2\,\mathrm{Re}\sum_{\lambda_j\neq 0}\frac{c_j\,r_j}{i\omega - \lambda_j}.$$
-This is where the slowest eigenvalue of the Zeno crossover returns: it is the pole nearest the imaginary axis, so it is the narrowest Lorentzian, and its half-width is that same relaxation rate.
+This is where the slowest eigenvalue of the Zeno crossover returns: it is the pole nearest the imaginary axis and controls the narrowest long-time spectral scale. When its residue is real and it dominates the other modes, that scale appears as a Lorentzian half-width equal to the relaxation rate.
 
 Build the general spectrum for any Liouvillian, seed, and readout: eigendecompose the Liouvillian, find the seed's coordinates $c_j$ by solving for them in the eigenbasis, read each mode's overlap $r_j$ with the readout, and sum the poles at every requested frequency:
 
 ```wl
-regressionSpectrum[big_, seedMat_, readout_, tones_] := Module[{d = Length[readout], vals, vecs, coeffs, resu},
+regressionSpectrum[big_, seedMat_, readout_, tones_] := Module[{d = Length[readout], n = Length[big], vals, vecs, basis, singular, coeffs, resu},
    {vals, vecs} = Eigensystem[big];
-   coeffs = LinearSolve[Transpose[vecs], Flatten[seedMat]];
+   basis = Transpose[vecs]; singular = SingularValueList[N@basis];
+   If[MatrixRank[basis] < n || Last[singular]/First[singular] < 10^-7,
+    Return@Failure["DefectiveEigenbasis", <|"NumericalRank" -> MatrixRank[N@basis], "ConditionNumber" -> First[singular]/Last[singular]|>]];
+   coeffs = LinearSolve[basis, Flatten[seedMat]];
    resu = Table[Tr[readout . ArrayReshape[vecs[[j]], {d, d}]], {j, d^2}];
    Table[2 Re@Total@Table[If[Abs[vals[[j]]] < 10^-9, 0, coeffs[[j]] resu[[j]]/(I w - vals[[j]])], {j, d^2}], {w, tones}]];
 ```
 
 `vals` are the eigenvalues $\lambda_j$; `coeffs` are the $c_j$, produced by `LinearSolve` writing the seed as a combination of the eigenmodes; `resu` are the $r_j$, each mode's trace against the readout; the last line sums $c_j r_j/(i\omega - \lambda_j)$ over the nonzero eigenvalues.
 
-Now specialize to the QPC. Build its Liouvillian and steady state, center $\hat\sigma_z$ on its steady value to form $\delta\hat\sigma_z$, and hand the symmetrized seed $(\delta\hat\sigma_z\,\rho_{\mathrm{ss}} + \rho_{\mathrm{ss}}\,\delta\hat\sigma_z)/2$ together with that same $\delta\hat\sigma_z$ as the readout to the general function:
+The eigenmode sum is one way to the spectrum. There is a second that never diagonalizes at all: Fourier-transforming $C(\tau)$ turns $e^{\mathcal L\tau}$ straight into the resolvent $(i\omega - \mathcal L)^{-1}$, so $S(\omega) = 2\,\mathrm{Re}\,\mathrm{Tr}[\hat R\,(i\omega - \mathcal L)^{-1}\,\hat S]$ for readout $\hat R$ and seed $\hat S$. In other words, solve one linear system per frequency instead of splitting the inverse into poles. At $\omega = 0$ the propagated seed stays traceless, so we pin the physical branch by appending the trace condition and solving in the least-squares sense:
 
 ```wl
-qpcSpectrum[\[Kappa]_, tones_] := With[{big = liouvillian[(OmQpc/2) X, {qpcLeak[\[Kappa]]}, 2], rss = First@steadyState[(OmQpc/2) X, {qpcLeak[\[Kappa]]}]},
-   With[{dz = Z - Re[Tr[Z . rss]] id2}, regressionSpectrum[big, (dz . rss + rss . dz)/2, dz, tones]]];
+resolventSpectrum[big_, seedMat_, readout_, tones_] := With[{n = Length[big], d = Length[readout]},
+   Table[2 Re@Tr[readout . ArrayReshape[If[Abs[w] < 10^-9,
+       LeastSquares[Join[N[-big], {1. Flatten[IdentityMatrix[d]]}], Join[Flatten[seedMat], {0.}]],
+       LinearSolve[I w IdentityMatrix[n] - big, Flatten[seedMat]]], {d, d}]], {w, tones}]];
 ```
 
-Here `dz` is $\delta\hat\sigma_z$, and symmetrizing the seed keeps the correlation real and even in $\tau$, which is the physical spectrum a detector measures.
+Now specialize to the QPC. Build its Liouvillian and steady state, center $\hat\sigma_z$ on its steady value to form $\delta\hat\sigma_z$, and hand the symmetrized seed $(\delta\hat\sigma_z\,\rho_{\mathrm{ss}} + \rho_{\mathrm{ss}}\,\delta\hat\sigma_z)/2$ together with that same $\delta\hat\sigma_z$ as the readout to the resolvent form:
+
+```wl
+qpcSpectrum[\[Kappa]_, tones_] := With[{big = liouvillian[(OmQpc/2) X, {qpcLeak[\[Kappa]]}, 2], rss = First@stationary[(OmQpc/2) X, {qpcLeak[\[Kappa]]}]},
+   With[{dz = Z - Re[Tr[Z . rss]] id2}, resolventSpectrum[big, (dz . rss + rss . dz)/2, dz, tones]]];
+```
+
+Here `dz` is $\delta\hat\sigma_z$, and symmetrizing the seed selects the real, even correlation measured by the detector. `qpcSpectrum` deliberately uses the mode-free resolvent, so the parameter sweep remains defined at the exceptional point; the modal representation is used only as a cross-check away from coalescence.
 
 Confirm the normalization is right: the spectrum integrates to the steady variance of $\hat\sigma_z$, which is one for the maximally mixed steady state:
 
@@ -1974,23 +2052,14 @@ With[{wide = Range[-40, 40, 0.02]}, 0.02 Total[qpcSpectrum[1., wide]]/(2 Pi)]
 
 It returns one, so the spectral weight is accounted for.
 
-The eigenmode sum is one way to the spectrum. There is a second that never diagonalizes at all: Fourier-transforming $C(\tau)$ turns $e^{\mathcal L\tau}$ straight into the resolvent $(i\omega - \mathcal L)^{-1}$, so $S(\omega) = 2\,\mathrm{Re}\,\mathrm{Tr}\!\big[\hat R\,(i\omega - \mathcal L)^{-1}\,\hat S\big]$ for readout $\hat R$ and seed $\hat S$. In other words, solve one linear system per frequency instead of splitting the inverse into poles. At $\omega = 0$ the propagated seed stays traceless, so we pin the physical branch by appending the trace condition and solving in the least-squares sense:
-
-```wl
-resolventSpectrum[big_, seedMat_, readout_, tones_] := With[{n = Length[big], d = Length[readout]},
-   Table[2 Re@Tr[readout . ArrayReshape[If[Abs[w] < 10^-9,
-       LeastSquares[Join[N[-big], {1. Flatten[IdentityMatrix[d]]}], Join[Flatten[seedMat], {0.}]],
-       LinearSolve[I w IdentityMatrix[n] - big, Flatten[seedMat]]], {d, d}]], {w, tones}]];
-```
-
 Confirm the two ways give the same QPC spectrum, at a ratio far from any coalescence:
 
 ```wl
-With[{big = liouvillian[(OmQpc/2) X, {qpcLeak[4.]}, 2], rss = First@steadyState[(OmQpc/2) X, {qpcLeak[4.]}], grid = Range[-6, 6, 0.1]},
+With[{big = liouvillian[(OmQpc/2) X, {qpcLeak[4.]}, 2], rss = First@stationary[(OmQpc/2) X, {qpcLeak[4.]}], grid = Range[-6, 6, 0.1]},
  With[{dz = Z - Re[Tr[Z . rss]] id2}, Max@Abs[regressionSpectrum[big, (dz . rss + rss . dz)/2, dz, grid] - resolventSpectrum[big, (dz . rss + rss . dz)/2, dz, grid]]]]
 ```
 
-They agree to rounding: two representations of one spectrum. They part company at one place only. Where two Liouvillian eigenvalues and their eigenvectors coalesce, an **exceptional point** (met in the Zeno crossover above, and reached again in the squeezing spectrum of the last section), the eigenbasis the mode sum needs turns singular while the resolvent never forms it. There we will lean on this mode-free form.
+Away from coalescence, the maximum difference is at numerical precision: two representations of one spectrum. They part company at one place only. Where two Liouvillian eigenvalues and their eigenvectors coalesce, an **exceptional point** (met in the Zeno crossover above, and reached again in the squeezing spectrum of the last section), the eigenbasis the mode sum needs turns singular while the resolvent never forms it. The QPC sweep therefore uses the resolvent for every ratio, including the exact exceptional point.
 
 Now sweep the ratio $r = k/\Omega$ of the effective measurement strength $k = \kappa/4$ to the drive, from weak, past the point where the two spectral peaks merge, into the Zeno regime. Take five ratios along that path:
 
@@ -2016,12 +2085,12 @@ Overlay the five power spectra, one per ratio (recovering $\kappa = 4\Omega r$ f
 ListLinePlot[Table[Transpose[{tonesQpc, qpcSpectrum[4 OmQpc r, tonesQpc]}], {r, ratioSweep}],
  PlotStyle -> (Directive[#, Thickness[0.006]] & /@ sweepCols),
  PlotLegends -> LineLegend[sweepCols, {"k/\[CapitalOmega] = 0.25  (weak)", "k/\[CapitalOmega] = 0.5", "k/\[CapitalOmega] = 0.75", "k/\[CapitalOmega] = 1  (exceptional point)", "k/\[CapitalOmega] = 1.5  (Zeno)"}],
- Frame -> True, GridLines -> {{-OmQpc, 0, OmQpc}, None}, PlotRange -> All, AspectRatio -> 1/2, ImageSize -> Medium,
- FrameLabel -> {"frequency", "\!\(\*SubscriptBox[\(S\), \(zz\)]\)(\[Omega])"},
+ Frame -> True, GridLines -> {{-OmQpc, 0, OmQpc}, None}, PlotRange -> All, AspectRatio -> 1/2,
+ FrameLabel -> {"frequency", "S_zz(omega)"},
  PlotLabel -> "watching harder marches the spectral peaks inward,\n merging them before the exceptional point"]
 ```
 
-At weak watching the spectrum is split, twin peaks near $\pm\Omega$, the coherent Rabi oscillation written into the fluctuations of $\hat\sigma_z$, the solid-state echo of the Mollow triplet's sidebands. Watching harder marches those peaks inward, but not to the pole frequency: the damping pushes each maximum below it, to $\pm\sqrt{\Omega^2 - 2k^2}$, so the peaks reach zero and merge already at $k = \Omega/\sqrt2$ (ratio $r \approx 0.71$). That merger is one event; the exceptional point is another. The Liouvillian poles sit at $-k \pm i\sqrt{\Omega^2 - k^2}$ and keep oscillating until $k = \Omega$ (ratio $r = 1$, that is $\kappa = 4\Omega$), where the two eigenvalues *and their eigenvectors* coalesce and the Liouvillian turns defective. Spectral merger comes first, eigenvector coalescence later: at the plotted $r = 0.75$ the spectrum already shows a single central maximum even though the poles are still a damped-oscillating pair. Past the merger one central Lorentzian remains, narrowing deep in the Zeno regime as $\Omega^2/(2k)$, its half-width the slowest eigenvalue that section tracked, so that one rate is seen twice.
+At weak watching the spectrum is split, twin peaks near $\pm\Omega$, the coherent Rabi oscillation written into the fluctuations of $\hat\sigma_z$, the solid-state echo of the Mollow triplet's sidebands. Watching harder marches those peaks inward, but not to the pole frequency: the damping pushes each maximum below it, to $\pm\sqrt{\Omega^2 - 2k^2}$, so the peaks reach zero and merge already at $k = \Omega/\sqrt2$ (ratio $r \approx 0.71$). That merger is one event; the exceptional point is another. The Liouvillian poles sit at $-k \pm i\sqrt{\Omega^2 - k^2}$ and keep oscillating until $k = \Omega$ (ratio $r = 1$, that is $\kappa = 4\Omega$), where the two eigenvalues *and their eigenvectors* coalesce and the Liouvillian turns defective. Spectral merger comes first, eigenvector coalescence later: at the plotted $r = 0.75$ the spectrum already shows a single central maximum even though the poles are still a damped-oscillating pair. Deep in the Zeno regime the narrow slow pole dominates the central feature and its width scales as $\Omega^2/(2k)$, so the rate tracked in the previous section reappears spectrally.
 
 The two thresholds are easiest to see if we track the peak location itself. Plot the spectral maximum $\sqrt{\Omega^2 - 2k^2}$ and, beside it, the pole frequency $\sqrt{\Omega^2 - k^2}$ against the ratio, marking where each reaches zero:
 
@@ -2030,20 +2099,20 @@ With[{Om = OmQpc},
  ListLinePlot[{Table[{r, Re@Sqrt[Om^2 - 2 (r Om)^2]}, {r, 0, 1.5, 0.005}], Table[{r, Re@Sqrt[Om^2 - (r Om)^2]}, {r, 0, 1.5, 0.005}]},
   PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Dashed]}, PlotLegends -> {"spectral maximum", "pole frequency"},
   Frame -> True, GridLines -> {{{1/Sqrt[2], Directive[Gray, Dashed]}, {1, Directive[Gray, Dashed]}}, Automatic},
-  PlotRange -> All, ImageSize -> 480, FrameLabel -> {"k/\[CapitalOmega] ratio", "frequency"},
+  PlotRange -> All, FrameLabel -> {"k/\[CapitalOmega] ratio", "frequency"},
   PlotLabel -> "spectral peak reaches zero at k/\[CapitalOmega] \[TildeEqual] 0.71, poles only at k/\[CapitalOmega] = 1"]]
 ```
 
 The solid curve, the spectral maximum, hits zero first at $k = \Omega/\sqrt2$; the dashed curve, the pole frequency, survives to $k = \Omega$. Between the two gray markers the spectrum is already single-peaked while the trajectory still rings, so the five-ratio sweep above steps over both thresholds without landing on either.
 
-What a lab actually records is the detector *current* spectrum, the flat shot-noise floor with this $S_{zz}(\omega)$ riding on it (scaled by the measurement coupling); a fundamental result, the Korotkov-Averin bound, caps that current peak at four times the shot-noise background for a quantum-limited detector, the solid-state statement of the measurement limit that runs through this whole catalog.
+What a lab actually records is the detector *current* spectrum, the flat shot-noise floor with this $S_{\mathrm{zz}}(\omega)$ riding on it (scaled by the measurement coupling); a fundamental result, the Korotkov-Averin bound, caps that current peak at four times the shot-noise background for a quantum-limited detector, the solid-state statement of the measurement limit that runs through this whole catalog.
 
 Two different knobs move two different crossovers, and they should not be confused: the *measurement strength* $\kappa$ sets coherent-oscillation versus Zeno-telegraph behaviour (shown above), while the detector *transparency* sets whether the record is read as discrete electron jumps (a counting unravelling like the photon counter) or as this diffusive current. Both unravellings average to the one master equation above.
 
 ### Measurement-Induced Localization
 
 **The problem.** The general continuous measurement of an observable (here $\hat\sigma_z$) on an *undriven* qubit, written in the catalog's measurement-strength convention:
-$$d\rho = k\,\mathcal D[\hat\sigma_z]\rho\,dt + \sqrt{k}\,\bigl(\hat\sigma_z\rho + \rho\hat\sigma_z - 2\langle\hat\sigma_z\rangle\rho\bigr)\,dW,\qquad dy = \langle\hat\sigma_z\rangle\,dt + \frac{dW}{2\sqrt{k}}.$$
+$$d\rho = k\,\mathcal D[\hat\sigma_z]\rho\,dt + \sqrt{k}\,(\hat\sigma_z\rho + \rho\hat\sigma_z - 2\langle\hat\sigma_z\rangle\rho)\,dW,\qquad dy = \langle\hat\sigma_z\rangle\,dt + \frac{dW}{2\sqrt{k}}.$$
 With nothing pushing, the state's knowledge sharpens toward an eigenstate of $\hat\sigma_z$ at the rate set by $k$: each history collapses to one pole, the choice fixed only by the noise, while the average over histories stays balanced. Watch many histories make their choice.
 
 Turn off the drive and measure $\hat\sigma_z$ on a state leaning toward $+z$, $\langle\hat\sigma_z\rangle = z_0 = 0.5$. With no Hamiltonian, measurement alone drives each run to a $\hat\sigma_z$ eigenstate, $+1$ or $-1$, and the record that drives the collapse is also what reads out which pole it chose. Fix the biased start, the measured operator, and a fine grid:
@@ -2057,28 +2126,29 @@ One run reads the $z$ component throughout; run a fan of them, and beside them s
 
 ```wl
 locZ[seed_] := zOf@trajectory[blochState[x0Loc, 0, z0Loc], 0 id2, {measZ}, {1.}, {}, dtLoc, tfLoc, seed]["states"];
-fanLoc = ParallelTable[locZ[s], {s, 60}];
-meanLoc = zOf[evolveODE[0 id2, {measZ}, blochState[x0Loc, 0, z0Loc], tfLoc][#] & /@ gridLoc];
+fanLoc = Table[locZ[s], {s, 60}];
+locMeanRun = evolveODE[0 id2, {measZ}, blochState[x0Loc, 0, z0Loc], tfLoc];
+meanLoc = zOf[locMeanRun /@ gridLoc];
 ```
 
-Now visualize the fan against that conserved mean: every path is absorbed at a pole while the thick master-equation curve holds flat at $z_0$:
+Now visualize the fan against that conserved mean: every displayed path approaches a pole while the thick master-equation curve holds flat at $z_0$:
 
 ```wl
 Show[ListLinePlot[Transpose[{gridLoc, #}] & /@ fanLoc, PlotStyle -> Directive[ColorData[97, 1], Opacity[0.12]]],
  ListLinePlot[Transpose[{gridLoc, meanLoc}], PlotStyle -> Directive[Thick, ColorData[97, 2]]],
  Frame -> True, GridLines -> Automatic, PlotRange -> {-1.05, 1.05}, ImageSize -> 560,
  FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]z\[RightAngleBracket]"},
- PlotLabel -> "each run is absorbed at a pole; the master-equation mean holds at z0"]
+ PlotLabel -> "each run approaches a pole; the master-equation mean holds at z0"]
 ```
 
-Every run ends at a pole, yet the thick curve never leaves $z_0$: the dephasing $\mathcal{D}[\hat\sigma_z]$ leaves the populations untouched, so $\langle\hat\sigma_z\rangle$ is conserved on average. That makes $\langle\hat\sigma_z\rangle(t)$ a bounded martingale trapped in $[-1, 1]$, and since every run is absorbed at $\pm 1$, the split follows from the optional stopping theorem with nothing to fit: $\langle\hat\sigma_z\rangle(\infty)$ averages back to $z_0$, so $p_+ - p_- = z_0$ and $p_+ + p_- = 1$ give $p_\pm = (1 \pm z_0)/2$. Born is a theorem about the martingale, not a fraction the run count has to chase. The symmetric $z_0 = 0$ start, the state the earlier examples called $|+\rangle$, is the equal-weight special case.
+By the finite endpoint every displayed run is numerically close to a pole, while the thick curve never leaves $z_0$: the dephasing $\mathcal{D}[\hat\sigma_z]$ leaves the populations untouched, so $\langle\hat\sigma_z\rangle$ is conserved on average. In continuous time, $z(t)$ is a bounded martingale and converges asymptotically to $\pm1$; it does not hit a pole at a generic finite time. The limiting split follows from martingale convergence (equivalently, optional-stopping arguments applied to bounded approximating stopping times): $\mathbb E[z(\infty)]=z_0$, so $p_+ - p_- = z_0$ and $p_+ + p_- = 1$ give $p_\pm = (1 \pm z_0)/2$. Born is a theorem about the limiting martingale, not a fraction the finite run count has to fit. The symmetric $z_0 = 0$ start, the state the earlier examples called $\left|+\right\rangle$, is the equal-weight special case.
 
 The record is what a detector actually delivers, and it both drives the collapse and reads it out. Accumulate each run's record into the integrated readout $J(t) = \int_0^t dJ$ and keep the pole it lands on:
 
 ```wl
 readOut[seed_] := With[{run = trajectory[blochState[x0Loc, 0, z0Loc], 0 id2, {measZ}, {1.}, {}, dtLoc, tfLoc, seed]},
    {Prepend[Accumulate[Flatten@run["record"]], 0.], Sign[Last@zOf@run["states"]]}];
-readData = ParallelTable[readOut[s], {s, 400}];
+readData = Table[readOut[s], {s, 400}];
 ```
 
 Now visualize the integrated record, one path per run, colored by the pole the run reached: each single increment is almost pure noise, but the accumulated record fans into two well-separated groups:
@@ -2087,7 +2157,7 @@ Now visualize the integrated record, one path per run, colored by the pole the r
 With[{show = readData[[;; 50]]},
  ListLinePlot[Transpose[{gridLoc, #[[1]]}] & /@ show,
   PlotStyle -> (If[#[[2]] > 0, Directive[ColorData[97, 1], Opacity[0.45]], Directive[ColorData[97, 2], Opacity[0.45]]] & /@ show),
-  Frame -> True, GridLines -> Automatic, ImageSize -> 560,
+  Frame -> True, GridLines -> Automatic, PlotRange -> All,
   FrameLabel -> {"time", "integrated record  J(t)"}, PlotLabel -> "the integrated record splits by the pole each run chose"]]
 ```
 
@@ -2100,7 +2170,7 @@ ListLinePlot[Table[{T, fidLoc[T]}, {T, 0.05, tfLoc, 0.05}], PlotRange -> {0.45, 
  FrameLabel -> {"integration time T", "assignment fidelity"}, PlotLabel -> "longer integration reads the eigenstate out with certainty"]
 ```
 
-The fidelity climbs to one: given enough record, the sign of its integral names the eigenstate for sure, a continuous measurement gone projective in the long-time limit. Two things keep this honest rather than a lookup. The eigenstate is not fixed in advance, it is chosen by the very record that reads it out, so the two groups form only as the collapse completes. And the flat-weight integral $J$ is not the sharpest estimator: the conditional $\langle\hat\sigma_z\rangle(t)$ of the fan above is the Bayesian-optimal filter, which a uniform integral only approximates. This trajectory-read-from-its-own-record is what [Murch, Weber, Macklin, and Siddiqi](https://arxiv.org/abs/1305.7270) tracked on a superconducting qubit, reconstructing the conditioned state from the readout and confirming it by tomography.
+For these 400 seeded runs the empirical fidelity reaches one by the displayed endpoint. That is a finite-sample observation, not a finite-time certainty: at any fixed duration a Gaussian-noise record retains a nonzero error probability, while the assignment error tends to zero asymptotically as more record accumulates. Two things keep this honest rather than a lookup. The limiting eigenstate is not fixed in advance; it is selected by the same record used to infer it. And the flat-weight integral $J$ is not the sharpest estimator: the conditional $\langle\hat\sigma_z\rangle(t)$ of the fan above is the Bayesian-optimal filter, which a uniform integral only approximates. This trajectory-read-from-its-own-record is what [Murch, Weber, Macklin, and Siddiqi](https://arxiv.org/abs/1305.7270) tracked on a superconducting qubit, reconstructing the conditioned state from the readout and confirming it by tomography.
 
 ### Quantum Kalman Filter: Tracking an Oscillator
 
@@ -2108,8 +2178,8 @@ The fidelity climbs to one: given enough record, the sign of its integral names 
 $$\dot \Sigma = A \Sigma + \Sigma A^{T} + D - \Sigma\,C^{T} C\,\Sigma,$$
 with the free-rotation drift, the position readout, and the measurement back-action
 $$A = \begin{pmatrix}0 & 1\\-1 & 0\end{pmatrix},\qquad C = \begin{pmatrix}2\sqrt{k} & 0\end{pmatrix},\qquad D = \begin{pmatrix}0 & 0\\0 & k\end{pmatrix}.$$
-In the three independent entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$ of $\Sigma$ this reads
-$$\frac{d}{dt}\begin{pmatrix}\Sigma_{xx}\\\Sigma_{xp}\\\Sigma_{pp}\end{pmatrix} = \begin{pmatrix}2\Sigma_{xp} - 4k\,\Sigma_{xx}^{2}\\\Sigma_{pp} - \Sigma_{xx} - 4k\,\Sigma_{xx}\Sigma_{xp}\\k - 2\Sigma_{xp} - 4k\,\Sigma_{xp}^{2}\end{pmatrix},$$
+In the three independent entries $(\Sigma_{\mathrm{xx}}, \Sigma_{\mathrm{xp}}, \Sigma_{\mathrm{pp}})$ of $\Sigma$ this reads
+$$\frac{d}{dt}\begin{pmatrix}\Sigma_{\mathrm{xx}}\\ \Sigma_{\mathrm{xp}}\\ \Sigma_{\mathrm{pp}}\end{pmatrix} = \begin{pmatrix}2\Sigma_{\mathrm{xp}} - 4k\,\Sigma_{\mathrm{xx}}^{2}\\ \Sigma_{\mathrm{pp}} - \Sigma_{\mathrm{xx}} - 4k\,\Sigma_{\mathrm{xx}}\Sigma_{\mathrm{xp}}\\ k - 2\Sigma_{\mathrm{xp}} - 4k\,\Sigma_{\mathrm{xp}}^{2}\end{pmatrix},$$
 the quadratic $-4k(\cdots)$ terms being the information gain $-\Sigma C^{T} C \Sigma$, which is what makes this a Riccati and not a linear Lyapunov equation. Balanced against the back-action ($+D$), that gain relaxes the uncertainty to a steady value fixed only by how hard you watch, squeezing it below the oscillator's own quietest spread; the running best-guess then follows a linear equation driven by the record. Track the shrinking uncertainty and check its standstill.
 
 Continuously measure the position of a harmonic oscillator and you can track it with a Gaussian estimate: a conditional mean and covariance. The covariance obeys a *deterministic* Riccati equation, independent of the record, set only by the measurement strength. It is the warm particle's covariance law from Part Three, $\dot\Sigma = A\Sigma + \Sigma A^{T} + D$, now carrying the measurement's information gain $-\Sigma C^{T} C\Sigma$: diffusion widened that blob to thermal, watching squeezes this one below the ground state. Set the strength and integrate the Riccati equations from a broad start:
@@ -2117,7 +2187,7 @@ Continuously measure the position of a harmonic oscillator and you can track it 
 ```wl
 kKal = 1;
 riccati = NDSolveValue[{vx'[t] == 2 vc[t] - 4 kKal vx[t]^2, vc'[t] == vp[t] - vx[t] - 4 kKal vx[t] vc[t],
-   vp'[t] == -2 vc[t] + kKal - 4 kKal vc[t]^2, vx[0] == 3., vc[0] == 0., vp[0] == 3.}, {vx, vc, vp}, {t, 0, 6}];
+   vp'[t] == -2 vc[t] + kKal - 4 kKal vc[t]^2, vx[0] == 3., vc[0] == 0., vp[0] == 3.}, {vx, vc, vp}, {t, 0, 12}];
 ```
 
 A reader for the covariance matrix:
@@ -2129,33 +2199,33 @@ covariance[t_] := {{riccati[[1]][t], riccati[[2]][t]}, {riccati[[2]][t], riccati
 Compare the position variance at the start and at the end:
 
 ```wl
-{riccati[[1]][0], riccati[[1]][6]}
+{riccati[[1]][0], riccati[[1]][12]}
 ```
 
 The position variance has shrunk from its broad start below the ground-state variance of one half: continuous measurement conditionally squeezes it below the zero-point level. Two checks. First, the conditional state is pure, its uncertainty product at the Heisenberg floor:
 
 ```wl
-Det@covariance[6.]
+Det@covariance[12.]
 ```
 
-The uncertainty product sits at the Heisenberg floor: the conditional state is pure. Second, the steady covariance is independently the fixed point of the Riccati equation:
+The determinant is within the ODE tolerance of the Heisenberg floor; the continuum conditional state is pure, and the numerical solution converges toward that value. Second, the steady covariance is independently the fixed point of the Riccati equation:
 
 ```wl
 {N[vx /. Solve[{2 vc - 4 kKal vx^2 == 0, vp - vx - 4 kKal vx vc == 0,
-      -2 vc + kKal - 4 kKal vc^2 == 0, vx > 0}, {vx, vc, vp}, Reals][[1]]], riccati[[1]][6.]}
+      -2 vc + kKal - 4 kKal vc^2 == 0, vx > 0}, {vx, vc, vp}, Reals][[1]]], riccati[[1]][12.]}
 ```
 
 The fixed point matches the late value.
 
 That fixed point has a clean closed form. With $s = \sqrt{1 + 4k^2}$,
-$$\Sigma_{xx} = \frac{1}{\sqrt{2(1+s)}}, \qquad \Sigma_{xp} = \frac{s-1}{4k}, \qquad \Sigma_{pp} = s\,\Sigma_{xx},$$
+$$\Sigma_{\mathrm{xx}} = \frac{1}{\sqrt{2(1+s)}}, \qquad \Sigma_{\mathrm{xp}} = \frac{s-1}{4k}, \qquad \Sigma_{\mathrm{pp}} = s\,\Sigma_{\mathrm{xx}},$$
 and it sits exactly on the Heisenberg floor $\det\Sigma = 1/4$ for every measurement strength. Put the closed form beside the numerical fixed point:
 
 ```wl
-With[{s = Sqrt[1 + 4 kKal^2]}, {{1/Sqrt[2 (1 + s)], (s - 1)/(4 kKal), s/Sqrt[2 (1 + s)]}, Through[riccati[6.]]}]
+With[{s = Sqrt[1 + 4 kKal^2]}, {{1/Sqrt[2 (1 + s)], (s - 1)/(4 kKal), s/Sqrt[2 (1 + s)]}, Through[riccati[12.]]}]
 ```
 
-The two rows agree: position is conditionally squeezed below one half, momentum broadens to hold the product at the floor, and the tilt $\Sigma_{xp}$ carries the correlation the measurement builds. The conditional state is pure at any watching strength, not only the one plotted.
+The two rows agree: position is conditionally squeezed below one half, momentum broadens to hold the product at the floor, and the tilt $\Sigma_{\mathrm{xp}}$ carries the correlation the measurement builds. The conditional state is pure at any watching strength, not only the one plotted.
 
 The conditional state is Gaussian, so picture it as a one-sigma ellipse: the covariance $\Sigma$ around a center $c$ traces $c + \Sigma^{1/2}\{\cos s, \sin s\}$ as $s$ runs the circle. Define it:
 
@@ -2166,7 +2236,7 @@ covarianceEllipse[c_, \[CapitalSigma]_] := Table[c + Re[MatrixPower[\[CapitalSig
 Now visualize the covariance ellipse over time, broad at first and then tightening and tilting to a small steady one:
 
 ```wl
-trackTimes = {0, 0.1, 0.25, 0.5, 1, 2, 4};
+trackTimes = {0, 0.1, 0.25, 0.5, 1, 2, 4, 8, 12};
 Legended[Graphics[{Thick, MapIndexed[{ColorData["SunsetColors"][First[#2]/Length[trackTimes]], Line@covarianceEllipse[{0, 0}, covariance[#1]]} &, trackTimes]},
   Frame -> True, GridLines -> Automatic, AspectRatio -> 1, ImageSize -> 400, FrameLabel -> {"position", "momentum"},
   PlotLabel -> "measurement shrinks the covariance to a tight, tilted, steady one"],
@@ -2199,7 +2269,7 @@ kalRec = MapThread[#1[[1]] kalDt + #2/(2 Sqrt[kKal]) &, {Most@kalTrue, kalDW}];
 ```
 
 Now the filter. Start it from a deliberately *wrong* guess for the position and feed it only the record: at each step it forms its own innovation, the record minus its own prediction, $d\widehat W = 2\sqrt{k}\,(dy - \bar x\,dt)$, and corrects the estimate with the Riccati gain,
-$$d\bar x = \bar p\,dt + 2\sqrt{k}\,\Sigma_{xx}(t)\,d\widehat W, \qquad d\bar p = -\bar x\,dt + 2\sqrt{k}\,\Sigma_{xp}(t)\,d\widehat W,$$
+$$d\bar x = \bar p\,dt + 2\sqrt{k}\,\Sigma_{\mathrm{xx}}(t)\,d\widehat W, \qquad d\bar p = -\bar x\,dt + 2\sqrt{k}\,\Sigma_{\mathrm{xp}}(t)\,d\widehat W,$$
 the deterministic Riccati covariance $\Sigma(t)$ setting the gain:
 
 ```wl
@@ -2215,7 +2285,7 @@ Read the $\pm 1\sigma$ band off the covariance:
 kalBand = Sqrt[riccati[[1]][#]] & /@ kalGrid;
 ```
 
-Now visualize the tracking: the reference conditional mean, and the estimate from the incorrect prior rising out of its wrong start into a shrinking $\pm 1\sigma$ band:
+Now visualize the tracking: the reference conditional mean and the estimate from the incorrect prior. The deliberately wrong initial estimate is outside its own $\pm1\sigma$ band; the band quantifies conditional covariance under the assumed filter model, not uncertainty over an arbitrarily misspecified initial mean. The record then pulls the estimate toward the reference path:
 
 ```wl
 Legended[Show[
@@ -2228,15 +2298,15 @@ Legended[Show[
  LineLegend[{ColorData[97, 2], ColorData[97, 1]}, {"reference conditional mean", "estimate from wrong prior \[PlusMinus]\[Sigma]"}]]
 ```
 
-The estimate begins wildly wrong (opposite sign) inside a wide band, then the record pulls it onto the reference conditional mean and the band tightens to the steady conditional width: a wrong prior is forgotten, because the record carries the same information whatever the observer first believed. (The reference mean is not a hidden classical position; it is the conditional mean of the simulated record, the best anyone could know.)
+The estimate begins wildly wrong (opposite sign and outside its stated band), then the record pulls it close to the reference conditional mean while the band approaches the steady conditional width: this observable model forgets the deliberately wrong mean. The reference mean is not a hidden classical position; it is the conditional mean generated by the simulated innovation.
 
 Confirm the lock, comparing the two once the filter has settled:
 
 ```wl
-{Last@kalTrue[[All, 1]], Last@kalFilt[[All, 1]]}
+Abs[Last@kalTrue[[All, 1]] - Last@kalFilt[[All, 1]]]
 ```
 
-The two agree to several digits.
+The endpoint difference is about $3\times10^{-3}$ for this seeded Euler discretization. It is small on the unit position scale but not zero; refining `kalDt` is the relevant convergence check.
 
 The engine of the filter is its own innovation, the record minus the *filter's* prediction (not the reference mean's). For an optimal filter this must be white noise, zero-mean and uncorrelated; measure its autocorrelation past the transient, with the $\pm 2/\sqrt N$ band that white noise would sit inside:
 
@@ -2249,7 +2319,7 @@ With[{ci = 2/Sqrt[Length[kalInnov]]},
   FrameLabel -> {"lag", "innovation autocorrelation"}, PlotLabel -> "the filter's innovation is white within confidence limits"]]
 ```
 
-The autocorrelation is flat at zero for every nonzero lag: the filter has wrung all the structure out of the record, leaving pure noise. A whitened innovation is the working definition of an optimal filter, and it is the real-time diagnostic a lab watches to know its tracking model is right.
+For this finite record the displayed nonzero-lag correlations lie within the approximate white-noise bands. Innovation whiteness is a necessary and useful model diagnostic, not by itself a proof of optimality: a wrong model can pass a short autocorrelation check, and a correct one can show excursions in finite data.
 
 ### Measurement Feedback: Steering With the Record
 
@@ -2272,7 +2342,7 @@ rotateY[\[Phi]_] := Cos[\[Phi]] id2 - I Sin[\[Phi]] Y;
 One steered run, one step at a time. Write $\rho^{\mathrm{meas}}$ for the positivity-preserving measurement update of $\rho$ under $\hat c = \sqrt{G}\,\hat\sigma_z$, given the record $dJ = 2\sqrt{G}\,\langle\hat\sigma_z\rangle_\rho\,dt + dW$. One step measures, then rotates by the commanded angle $\phi = \sqrt{G}\,dJ$:
 $$\rho' = R_y(\phi)\,\rho^{\mathrm{meas}}\,R_y(\phi)^\dagger,\qquad \phi = \sqrt{G}\,dJ,$$
 run $N = 200$ times from $\rho_0 = \tfrac12\mathbb{1}$. Keeping the pair $(\rho,\phi)$ at each step, the run is the whole causal chain at once,
-$$\bigl((\rho_0,\,0),\ (\rho_1,\phi_1),\ \dots,\ (\rho_N,\phi_N)\bigr),$$
+$$((\rho_0,\,0),\ (\rho_1,\phi_1),\ \dots,\ (\rho_N,\phi_N)),$$
 each state beside the command that produced it, the seed angle a placeholder $0$. One function then feeds every plot below, the response curves from its states and the command panel from its angles:
 
 ```wl
@@ -2340,7 +2410,7 @@ Command to response, left to right: the loop reads the noisy record as a rotatio
 But a real loop never has a perfect detector, and inefficiency caps how pure the steered state can get. The Wiseman-Milburn feedback master equation carries an efficiency $\eta$ that adds an irreducible feedback-noise term $\tfrac{1-\eta}{\eta}\mathcal{D}[\hat F]$; solve its steady state against $\eta$:
 
 ```wl
-steadyXeff[\[Eta]_] := blochVector[First@steadyState[0 id2, {Sqrt[Gfb] (Z - I Y), Sqrt[(1 - \[Eta])/\[Eta]] Sqrt[Gfb] Y}]][[1]];
+steadyXeff[\[Eta]_] := blochVector[First@stationary[0 id2, {Sqrt[Gfb] (Z - I Y), Sqrt[(1 - \[Eta])/\[Eta]] Sqrt[Gfb] Y}]][[1]];
 etasFb = Range[0.3, 1, 0.05];
 ListLinePlot[Transpose[{etasFb, steadyXeff /@ etasFb}], PlotMarkers -> Automatic, PlotStyle -> ColorData[97, 2], Frame -> True,
  GridLines -> Automatic, PlotRange -> {0, 1.05}, ImageSize -> 460, FrameLabel -> {"detection efficiency \[Eta]", "steady \[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]"},
@@ -2372,7 +2442,7 @@ fall = Sqrt[\[Gamma]th (nT + 1)] a; climb = Sqrt[\[Gamma]th nT] creation[topTh];
 A reader for the mean occupation:
 
 ```wl
-units[rho_] := expectation[count, rho];
+units[rho_] := Re@expectation[count, rho];
 ```
 
 Settle a cold (vacuum) and a hot start:
@@ -2401,13 +2471,13 @@ ListLinePlot[{Transpose[{Range[0, 16, 0.05], units[fromCold[#]] & /@ Range[0, 16
 
 They settle on the same $n_T$ from opposite sides: the bath drains the hot oscillator and feeds the cold one, so wherever the state began, it ends where decay and excitation balance. This two-way traffic is what makes the attractor unique; the pure-dephasing bath of Part One, which only froze populations, left a whole line of steady states instead.
 
-The mean occupation does not merely end at $n_T$; its whole path is exact. Tracing the master equation against $\hat a^\dagger\hat a$ collapses to the closed scalar law $\dot{\langle n\rangle} = -\gamma(\langle n\rangle - n_T)$, so $\langle n(t)\rangle = n_T + \big(\langle n(0)\rangle - n_T\big)e^{-\gamma t}$. Check it against the simulated cold start ($\langle n(0)\rangle = 0$):
+In the infinite oscillator model, the mean occupation follows an exact closed path. Tracing the master equation against $\hat a^\dagger\hat a$ gives $\dot{\langle n\rangle} = -\gamma(\langle n\rangle - n_T)$, so $\langle n(t)\rangle = n_T + (\langle n(0)\rangle - n_T)e^{-\gamma t}$. The finite-cutoff simulation should approach that law; check the cold start ($\langle n(0)\rangle = 0$):
 
 ```wl
 Max@Table[Abs[units[fromCold[t]] - nT (1 - Exp[-\[Gamma]th t])], {t, 0, 16, 1}]
 ```
 
-Zero to rounding: one relaxation rate $\gamma$ carries the mean from its start to the bath value, whatever the rest of the distribution does on the way. The first field moment obeys the same kind of law but half as fast and while rotating, $\dot{\langle\hat a\rangle} = -(i\omega + \gamma/2)\langle\hat a\rangle$; the code sets $\omega = 0$, so no rotation is drawn here, which is exactly why the frequency lives in the coherence and never in the populations.
+The reported nonzero residual is the combined cutoff and ODE error; increasing the dimension and tightening solver tolerances reduce it. In the untruncated law one relaxation rate $\gamma$ carries the mean from its start to the bath value. The first field moment obeys the same kind of law but half as fast and while rotating, $\dot{\langle\hat a\rangle} = -(i\omega + \gamma/2)\langle\hat a\rangle$; the code sets $\omega = 0$, so no rotation is drawn here: the frequency appears in coherence rather than number populations.
 
 The second consequence is stronger: the equation fixes **the whole state**, not just its mean. A mean is weak evidence, since a coherent, a squeezed, and a thermal state can all share the occupation $n_T$. So build the settled populations and the geometric thermal shape $p_n = (1-r)\,r^n$ with $r = n_T/(n_T+1) = e^{-\beta\omega}$:
 
@@ -2444,7 +2514,7 @@ With[{fock = Range[0, 6]},
  ListLogPlot[{Transpose[{fock, pops[[;; Length@fock]]}], Transpose[{fock, warmShape[[;; Length@fock]]}]},
   Joined -> True, PlotMarkers -> Automatic, PlotStyle -> {Automatic, Dashed},
   PlotLegends -> {"settled", "thermal"}, Frame -> True, FrameTicks -> {fock, Automatic}, GridLines -> {fock, Automatic},
-  ImageSize -> Medium, FrameLabel -> {"Fock level n", "population (log)"},
+  PlotRange -> All, FrameLabel -> {"Fock level n", "population (log)"},
   PlotLabel -> "geometric tail: a straight line on a log axis"]]
 ```
 
@@ -2453,14 +2523,14 @@ The settled populations fall on a straight line, parallel to the thermal one and
 ### Rapid Purification by Feedback
 
 **The problem.** Continuously watching an observable extracts information and sharpens the state toward one of its eigenstates, so a monitored qubit purifies with time. Measure $\hat M = \sin\theta\,\hat\sigma_x + \cos\theta\,\hat\sigma_z$ at strength $k$ with no drive (the leak is $\hat c = \sqrt{k}\,\hat M$); the conditioned state obeys the same measurement equation as the localization example, now along a tilted axis,
-$$d\rho_c = k\,\mathcal D[\hat M]\rho_c\,dt + \sqrt{k}\,\bigl(\hat M\rho_c + \rho_c\hat M - 2\langle\hat M\rangle\rho_c\bigr)\,dW.$$
-How fast it purifies depends on where the state sits relative to that axis. Writing the impurity as $L = \tfrac12(1 - |\vec a|^2)$, with $\vec a$ the Bloch vector at angle $\theta$ to $\hat M$, Itô's rule turns the equation above into a stochastic increment $dL$ that fluctuates run to run but, averaged over the noise, drifts as
-$$\overline{dL} = -4k\,L\,\bigl(\sin^2\theta + 2L\cos^2\theta\bigr)\,dt,$$
-the bar the noise average, the $L$ on the right the current impurity. Measuring *crosswise* to the Bloch vector, $\theta = \pi/2$, is the fast case: there the noise in $dL$ drops out, so each run purifies deterministically with one clean rate, $L(t) = e^{-4kt}L(0)$; measuring *along* it, $\theta = 0$, is slowest, its rate dragged down by the extra factor $2L$. A fixed measurement axis lets the state drift into alignment, where it learns slowly, so reading the record back to keep the axis crosswise holds the fast rate and makes the purification deterministic. This is [Jacobs' rapid-purification protocol](https://arxiv.org/abs/quant-ph/0301056).
+$$d\rho_c = k\,\mathcal D[\hat M]\rho_c\,dt + \sqrt{k}\,(\hat M\rho_c + \rho_c\hat M - 2\langle\hat M\rangle\rho_c)\,dW.$$
+How fast it purifies depends on where the state sits relative to that axis. Writing the impurity as $L = \tfrac12(1 - \left|\vec a\right|^2)$, with $\vec a$ the Bloch vector at angle $\theta$ to $\hat M$, Itô's rule turns the continuous-time equation above into a stochastic increment $dL$ that fluctuates run to run but, averaged over the noise, drifts as
+$$\overline{\mathrm{dL}} = -4k\,L\,(\sin^2\theta + 2L\cos^2\theta)\,dt,$$
+the bar the noise average, the $L$ on the right the current impurity. Measuring *crosswise* to the Bloch vector, $\theta = \pi/2$, is the fast case: in the ideal continuous-time feedback limit the noise in $dL$ drops out, so $L(t) = e^{-4kt}L(0)$ pathwise; measuring *along* it, $\theta = 0$, is slowest, its rate dragged down by the extra factor $2L$. A fixed measurement axis lets the state drift into alignment, where it learns slowly, while instantaneous feedback that keeps the axis crosswise holds the fast rate. A finite-step implementation only approximates that limit and retains step-size-dependent path spread. This is [Jacobs' rapid-purification protocol](https://arxiv.org/abs/quant-ph/0301056).
 
 There is a catch in what "fast" means. Keeping the measurement crosswise maximizes the *mean purity at a fixed time*, yet it *lengthens* the mean time to reach a chosen purity, because its determinism forbids the lucky fast runs an aligned measurement occasionally enjoys; the two figures of merit disagree by a factor of two ([Wiseman and Ralph, 2006](https://arxiv.org/abs/quant-ph/0603062)). We build both strategies and let the distributions settle it.
 
-Both strategies start from the maximally mixed state and are scored by the same impurity, the linear entropy $L = \tfrac12(1 - |\vec a|^2)$, which is $\tfrac12$ when mixed and $0$ when pure. A reader for it:
+Both strategies start from the maximally mixed state and are scored by the same impurity, the linear entropy $L = \tfrac12(1 - \left|\vec a\right|^2)$, which is $\tfrac12$ when mixed and $0$ when pure. A reader for it:
 
 ```wl
 linearEntropy[rho_] := (1 - Norm[blochVector[rho]]^2)/2;
@@ -2475,7 +2545,8 @@ kPur = 1.; tickPur = 0.01; span = tickPur Range[0, 120];
 The **fixed** strategy measures one axis, $\hat\sigma_z$, for the whole run. Each step feeds the record $dJ = 2\sqrt{k}\,\langle\hat\sigma_z\rangle\,dt + dW$ into the positivity-preserving update, and the conditioned state diffuses and lengthens; but as its Bloch vector swings toward the $z$-axis the measurement falls into alignment and the purification slows. One such run, returning its impurity history:
 
 ```wl
-fixedBlur[seed_, nSteps_] := linearEntropy /@ trajectory[id2/2, 0 id2, {Sqrt[kPur] Z}, {1.}, {}, tickPur, nSteps tickPur, seed]["states"];
+fixedBlur[seed_, nSteps_, h_: tickPur] := linearEntropy /@
+   trajectory[id2/2, 0 id2, {Sqrt[kPur] Z}, {1.}, {}, h, nSteps h, seed]["states"];
 ```
 
 The **steered** strategy uses the record differently. Instead of a fixed axis it reads the current Bloch vector off the conditioned state and measures along an axis *crosswise* to it, holding the fast $\theta = \pi/2$ angle at every step. That is the feedback here: the record sets not a rotation of the state but the choice of which observable to measure next. A crosswise direction to a given Bloch vector:
@@ -2487,20 +2558,21 @@ crosswise[lean_] := With[{c = Cross[lean, {0, 0, 1.}]}, If[Norm[c] < 1.*^-6, {1.
 One steered step measures the Pauli operator along that crosswise axis and advances the conditioned state by the same positivity-preserving update:
 
 ```wl
-steerStep[rho_, dw_] := With[{leak = Sqrt[kPur] (crosswise[blochVector[rho]] . {X, Y, Z})},
-   measurementStep[0 id2, {leak}, {1.}, {}, tickPur][rho, measurementRecord[rho, {leak}, {1.}, tickPur, {dw}]]];
+steerStep[rho_, dw_, h_] := With[{leak = Sqrt[kPur] (crosswise[blochVector[rho]] . {X, Y, Z})},
+   measurementStep[0 id2, {leak}, {1.}, {}, h][rho, measurementRecord[rho, {leak}, {1.}, h, {dw}]]];
 ```
 
 One steered run:
 
 ```wl
-steeredBlur[seed_, nSteps_] := linearEntropy /@ BlockRandom[SeedRandom[seed];
-    FoldList[steerStep, id2/2, RandomVariate[NormalDistribution[0, Sqrt[tickPur]], nSteps]]];
+steeredBlur[seed_, nSteps_, h_: tickPur] := linearEntropy /@ BlockRandom[SeedRandom[seed];
+    FoldList[Function[{rho, dw}, steerStep[rho, dw, h]], id2/2,
+     RandomVariate[NormalDistribution[0, Sqrt[h]], nSteps]]];
 ```
 
-In formulas: with $\vec a = \langle\vec\sigma\rangle_\rho$ the current Bloch vector, `steerStep` measures the leak $\hat c = \sqrt{k}\,(\hat n\cdot\vec\sigma)$ along a crosswise axis $\hat n$, perpendicular to $\vec a$. Because that axis is perpendicular to the state the signal vanishes and the record is pure noise,
+In formulas: with $\vec a = \langle\vec\sigma\rangle_\rho$ the current Bloch vector, `steerStep` measures the leak $\hat c = \sqrt{k}\,(\hat n\cdot\vec\sigma)$ along a crosswise axis $\hat n$, perpendicular to $\vec a$ at the start of the step. Because that axis is perpendicular to the state the signal vanishes and the record is pure noise,
 $$dJ = 2\sqrt{k}\,(\hat n\cdot\vec a)\,dt + dW = dW,$$
-which is nonetheless the fast case: a crosswise state is an equal superposition of the measured operator's eigenstates, where the back-action is strongest. The step is then the positivity-preserving measurement update of $\rho$ under $\hat c$ with that record, and nothing else, with no feedback unitary; the steering is only the re-choice of $\hat n$ at the next step, which holds $\theta = \pi/2$ throughout. Folding this from $\rho_0 = \tfrac12\mathbb{1}$ over $N$ Wiener increments $dW$ (each of variance $dt$) gives one run's states $\rho_0, \dots, \rho_N$, and `steeredBlur` returns their impurities $L_j = \tfrac12(1 - |\vec a_j|^2)$.
+which is nonetheless the fast case: a crosswise state is an equal superposition of the measured operator's eigenstates, where the back-action is strongest. The step is then the positivity-preserving measurement update of $\rho$ under $\hat c$ with that record, and nothing else, with no feedback unitary; the steering is the re-choice of $\hat n$ at the next node. In continuous time this holds $\theta=\pi/2$ pathwise. At finite $h$, the state moves during a step before the axis is updated, creating the numerical spread measured below. Folding from $\rho_0 = \tfrac12\mathbb{1}$ over $N$ Wiener increments gives states $\rho_0,\dots,\rho_N$, and `steeredBlur` returns their impurities.
 
 Average eighty runs of each strategy:
 
@@ -2521,29 +2593,39 @@ Now visualize both purification strategies on a log scale, where a straight line
 ```wl
 ListLogPlot[{Transpose[{span, fixedAvg}], Transpose[{span, steeredAvg}]}, Joined -> True,
  Frame -> True, GridLines -> Automatic, PlotLegends -> {"fixed measurement", "steered measurement"},
- FrameLabel -> {"time", "linear entropy (log scale)"}, PlotLabel -> "feedback purifies faster, and deterministically"]
+ FrameLabel -> {"time", "linear entropy (log scale)"}, PlotLabel -> "steering purifies faster; finite steps approach the deterministic limit"]
 ```
 
-The steered curve is steeper and smoother (a straight line tracking its deterministic exponential, while the fixed one is ragged, with no single rate): feedback makes the mean purification faster and deterministic.
-
-But the mean hides the caveat, so look at the distributions. Run longer ensembles of each strategy so nearly every run reaches a target purity:
+The steered mean is steeper and smoother, tracking the continuous-time exponential more closely than the fixed-axis mean. The remaining discrepancy and run-to-run spread are numerical, so test them under step refinement at the common physical time $t=0.6$:
 
 ```wl
-purGrid = tickPur Range[0, 200]; purN = 200;
-fixedRunsPur = fixedBlur[#, 200] & /@ Range[purN]; steeredRunsPur = steeredBlur[#, 200] & /@ Range[purN];
+purificationConvergence = Table[With[{n = Round[0.6/h]},
+    With[{finals = Last[steeredBlur[#, n, h]] & /@ Range[80], target = 0.5 Exp[-4 kPur 0.6]},
+     {h, Mean[finals], StandardDeviation[finals], Abs[Mean[finals] - target]}]],
+   {h, {0.02, 0.01, 0.005}}];
+purificationConvergence
 ```
 
-First, that "deterministic" claim: the steered runs should each hug the exact law $L(t) = e^{-4kt}L(0)$ with $L(0) = 1/2$, while a fixed run wanders. Overlay thirty steered paths on the analytic exponential, on a log scale:
+The path spread and bias contract as $h$ is refined. Determinism is therefore a verified continuum-limit claim, not a property assigned to the $h=0.01$ discretization.
+
+But the mean hides the caveat, so look at the distributions. Use a four-unit window long enough that every one of the fixed seeded runs below reaches the target, as the explicit censor check will confirm:
+
+```wl
+purGrid = tickPur Range[0, 400]; purN = 200;
+fixedRunsPur = fixedBlur[#, 400] & /@ Range[purN]; steeredRunsPur = steeredBlur[#, 400] & /@ Range[purN];
+```
+
+First, compare the finite-step steered runs with the continuous-time law $L(t)=e^{-4kt}L(0)$, $L(0)=1/2$. Overlay thirty paths on the analytic exponential, on a log scale:
 
 ```wl
 ListLogPlot[Append[Transpose[{purGrid, #}] & /@ steeredRunsPur[[;; 30]], Transpose[{purGrid, 0.5 Exp[-4 kPur purGrid]}]],
  Joined -> True, PlotRange -> {{0, 2}, {10^-4, 1}}, Frame -> True, GridLines -> Automatic, ImageSize -> 480,
  PlotStyle -> Append[ConstantArray[Directive[ColorData[97, 2], Opacity[0.2]], 30], Directive[Thick, ColorData[97, 1], Dashed]],
- PlotLegends -> LineLegend[{ColorData[97, 1], ColorData[97, 2]}, {"deterministic law", "steered runs"}],
- FrameLabel -> {"time", "linear entropy (log)"}, PlotLabel -> "steered runs hug the deterministic exponential (dashed)"]
+ PlotLegends -> LineLegend[{ColorData[97, 1], ColorData[97, 2]}, {"continuous-time law", "finite-step steered runs"}],
+ FrameLabel -> {"time", "linear entropy (log)"}, PlotLabel -> "finite-step paths fluctuate around the continuum exponential (dashed)"]
 ```
 
-Each steered path clings to the dashed line: the feedback really does make the purification deterministic run by run, not just on average.
+The paths cluster around, but do not coincide with, the dashed line at this step size. The refinement table above is the evidence that this cluster collapses onto the pathwise deterministic continuum law.
 
 Now the objective-dependence. At a *fixed time* the steered strategy wins, its impurity distribution sitting lower and tighter than the fixed one:
 
@@ -2553,10 +2635,11 @@ Histogram[{fixedRunsPur[[All, 61]], steeredRunsPur[[All, 61]]}, {0, 0.35, 0.01},
  FrameLabel -> {"linear entropy at t = 0.6", "density"}, PlotLabel -> "at fixed time, steered is lower and tighter"]
 ```
 
-But the *first-passage time* to a chosen purity tells the opposite story. For each run, record the time it first drops below $L = 0.05$, or the window length if it never does:
+But the *first-passage time* to a chosen purity tells the opposite story. For each run, record the time it first drops below $L=0.05$; a run that does not cross within the window remains explicitly right-censored rather than being assigned the endpoint:
 
 ```wl
-fptPur[run_] := With[{pos = FirstPosition[run, l_ /; l < 0.05]}, If[MissingQ[pos], 2., (First[pos] - 1) tickPur]];
+fptPur[run_] := With[{pos = FirstPosition[run, l_ /; l < 0.05]},
+   If[MissingQ[pos], Missing["RightCensored", (Length[run] - 1) tickPur], (First[pos] - 1) tickPur]];
 ```
 
 Collect that time for every run of each strategy:
@@ -2565,22 +2648,30 @@ Collect that time for every run of each strategy:
 {fptFixed, fptSteer} = {fptPur /@ fixedRunsPur, fptPur /@ steeredRunsPur};
 ```
 
+Check the censor counts before computing a histogram or mean:
+
+```wl
+{Count[fptFixed, _Missing], Count[fptSteer, _Missing]}
+```
+
+The extended four-unit window gives zero censored runs for these fixed seeds. If either count were nonzero, an uncensored mean would be inappropriate and the window would need extension or a survival-analysis estimate.
+
 Histogram the two distributions:
 
 ```wl
-Histogram[{fptFixed, fptSteer}, {0, 1.2, 0.06}, "PDF", ChartLegends -> {"fixed", "steered"},
+Histogram[{DeleteMissing[fptFixed], DeleteMissing[fptSteer]}, {0, 1.2, 0.06}, "PDF", ChartLegends -> {"fixed", "steered"},
  Frame -> True, AspectRatio -> 1/3,
  FrameLabel -> {"first-passage time to linear entropy < 0.05", "density"}, PlotLabel -> "yet the fixed measurement often reaches the target sooner"]
 ```
 
-The fixed strategy reaches down to shorter times: its runs vary, and the lucky ones cross the target before the steered runs, which cluster tightly at their single deterministic hitting time.
+The fixed strategy reaches down to shorter times: its runs vary, and the lucky ones cross the target before the steered runs. At finite step the steered crossing times still have a narrow distribution; under refinement that distribution collapses toward the continuum strategy's single deterministic hitting time.
 
 Compare the two means directly, fixed-time impurity against mean hitting time:
 
 ```wl
 Grid[{{"", Style["fixed", Bold], Style["steered", Bold]},
    {Style["linear entropy at t = 0.6", Bold], Mean[fixedRunsPur[[All, 61]]], Mean[steeredRunsPur[[All, 61]]]},
-   {Style["first-passage time to linear entropy < 0.05", Bold], Mean[fptFixed], Mean[fptSteer]}},
+   {Style["first-passage time to linear entropy < 0.05", Bold], Mean@DeleteMissing[fptFixed], Mean@DeleteMissing[fptSteer]}},
   Frame -> All, Alignment -> Left, Spacings -> {2, 1}]
 ```
 
@@ -2589,7 +2680,7 @@ The steered strategy has the lower fixed-time impurity but the *longer* mean fir
 ### Feedback Cooling of a Mechanical Oscillator
 
 **The problem.** Continuously measure a mechanical oscillator's position (its annihilation operator is $\hat b$) through a cavity and push against its estimated motion to cool it, against a thermal bath:
-$$d\rho = -i[\omega\hat b^\dagger\hat b - f(t)\hat x,\ \rho]\,dt + k\,\mathcal D[\hat x]\rho\,dt + \sqrt{\eta k}\,\bigl(\hat x\rho + \rho\hat x - 2\langle\hat x\rangle\rho\bigr)\,dW + \gamma(n_T+1)\mathcal{D}[\hat b]\rho\,dt + \gamma n_T\mathcal{D}[\hat b^\dagger]\rho\,dt.$$
+$$d\rho = -i[\omega\hat b^\dagger\hat b - f(t)\hat x,\ \rho]\,dt + k\,\mathcal D[\hat x]\rho\,dt + \sqrt{\eta k}\,(\hat x\rho + \rho\hat x - 2\langle\hat x\rangle\rho)\,dW + \gamma(n_T+1)\mathcal{D}[\hat b]\rho\,dt + \gamma n_T\mathcal{D}[\hat b^\dagger]\rho\,dt.$$
 Watching sharpens the estimate, the feedback force $f \propto -G\langle\hat p\rangle$ drains the energy, and the leftover is a balance of measurement rate, efficiency $\eta$, gain $G$, and heating $\gamma n_T$. Watching alone only heats; feedback cools, but only up to an optimal gain beyond which it feeds the detector's noise back onto the oscillator. Cool a warm start, find the best gain, and sweep the detector quality.
 
 The same measure-and-feedback loop cools a mechanical oscillator, but cooling takes more than watching: the loop must act. Three pieces enter now that the Kalman tracker did not have. A thermal bath (damping $\gamma$, occupation $n_T$) keeps trying to warm the oscillator; the continuous position measurement (strength $k$, efficiency $\eta$) tracks it; and a feedback force pushes back against the *estimated* velocity, $f = -G\,\langle\hat p\rangle_c$ (the conditional mean), draining energy. The state is Gaussian throughout, so, as in the Kalman filter, the conditional covariance is deterministic and the conditional mean is stochastic. This example stands alone, so fix its own constants:
@@ -2598,9 +2689,9 @@ The same measure-and-feedback loop cools a mechanical oscillator, but cooling ta
 kCool = 1.; etaCool = 1.; gammaCool = 0.1; nCool = 10.;
 ```
 
-The conditional covariance is the tracking Riccati of Part Five again, now carrying the bath (a drift toward the thermal spread $n_T + \tfrac12$ at rate $\gamma$) and the efficiency $\eta$ on the information-gain terms, while the back-action term $+k$ stays full. In the three entries $(\Sigma_{xx}, \Sigma_{xp}, \Sigma_{pp})$,
-$$\frac{d}{dt}\begin{pmatrix}\Sigma_{xx}\\\Sigma_{xp}\\\Sigma_{pp}\end{pmatrix} = \begin{pmatrix}2\Sigma_{xp} - 4\eta k\,\Sigma_{xx}^{2} - \gamma\Sigma_{xx} + \gamma\bigl(n_T + \tfrac12\bigr)\\\Sigma_{pp} - \Sigma_{xx} - 4\eta k\,\Sigma_{xx}\Sigma_{xp} - \gamma\Sigma_{xp}\\k - 2\Sigma_{xp} - 4\eta k\,\Sigma_{xp}^{2} - \gamma\Sigma_{pp} + \gamma\bigl(n_T + \tfrac12\bigr)\end{pmatrix},$$
-integrated from the thermal start $\Sigma_{xx} = \Sigma_{pp} = n_T + \tfrac12$, $\Sigma_{xp} = 0$:
+The conditional covariance is the tracking Riccati of Part Five again, now carrying the bath (a drift toward the thermal spread $n_T + \tfrac12$ at rate $\gamma$) and the efficiency $\eta$ on the information-gain terms, while the back-action term $+k$ stays full. In the three entries $(\Sigma_{\mathrm{xx}}, \Sigma_{\mathrm{xp}}, \Sigma_{\mathrm{pp}})$,
+$$\frac{d}{dt}\begin{pmatrix}\Sigma_{\mathrm{xx}}\\ \Sigma_{\mathrm{xp}}\\ \Sigma_{\mathrm{pp}}\end{pmatrix} = \begin{pmatrix}2\Sigma_{\mathrm{xp}} - 4\eta k\,\Sigma_{\mathrm{xx}}^{2} - \gamma\Sigma_{\mathrm{xx}} + \gamma(n_T + \tfrac12)\\ \Sigma_{\mathrm{pp}} - \Sigma_{\mathrm{xx}} - 4\eta k\,\Sigma_{\mathrm{xx}}\Sigma_{\mathrm{xp}} - \gamma\Sigma_{\mathrm{xp}}\\ k - 2\Sigma_{\mathrm{xp}} - 4\eta k\,\Sigma_{\mathrm{xp}}^{2} - \gamma\Sigma_{\mathrm{pp}} + \gamma(n_T + \tfrac12)\end{pmatrix},$$
+integrated from the thermal start $\Sigma_{\mathrm{xx}} = \Sigma_{\mathrm{pp}} = n_T + \tfrac12$, $\Sigma_{\mathrm{xp}} = 0$:
 
 ```wl
 riccatiCool[\[Eta]_] := NDSolveValue[{
@@ -2628,7 +2719,7 @@ Its mean phonon number is the *conditional floor*, the lowest occupation the rec
 condFloorCool = (vxCool + vpCool)/2 - 0.5;
 ```
 
-The Kalman gains $2\sqrt{k}\,\Sigma_{xx}$ and $2\sqrt{k}\,\Sigma_{xp}$ set how hard each record increment steers the estimate:
+The Kalman gains $2\sqrt{k}\,\Sigma_{\mathrm{xx}}$ and $2\sqrt{k}\,\Sigma_{\mathrm{xp}}$ set how hard each record increment steers the estimate:
 
 ```wl
 kxCool = 2 Sqrt[kCool] vxCool; kpCool = 2 Sqrt[kCool] vcCool;
@@ -2642,7 +2733,7 @@ nUncCool[gg_] := With[{s = LyapunovSolve[{{-gammaCool/2, 1}, {-1, -gammaCool/2 -
    (s[[1, 1]] + vxCool + s[[2, 2]] + vpCool)/2 - 0.5];
 ```
 
-With no feedback, $G = 0$, watching does not cool at all: it *heats*, because measurement back-action kicks the momentum and nothing removes the energy. Confirm this two ways, the conditional-plus-spread bookkeeping against the plain unconditional master equation (back-action on $\Sigma_{pp}$, bath, no information gain):
+With no feedback, $G = 0$, watching does not cool at all: it *heats*, because measurement back-action kicks the momentum and nothing removes the energy. Confirm this two ways, the conditional-plus-spread bookkeeping against the plain unconditional master equation (back-action on $\Sigma_{\mathrm{pp}}$, bath, no information gain):
 
 ```wl
 {nUncCool[0.],
@@ -2751,15 +2842,15 @@ Both curves fall as the detector improves, and the gap between them is the price
 
 ### Linear vs Nonlinear: One Trajectory, Two Descriptions
 
-**The problem.** One diffusive history, written two equivalent ways. The *linear* stochastic Schrodinger equation runs an unnormalized state under plain noise,
-$$d\psi = K\,\psi\,dt + \sum_j \hat R_j\,\psi\,dW_j,\qquad K = -i\hat H - \tfrac12\sum_j \hat R_j^\dagger \hat R_j,$$
-whose squared norm $\|\psi\|^2$ is exactly the *likelihood* of the record that drove it. The *nonlinear* master equation instead carries the normalized state an experimenter tracks, driven not by that raw noise but by the **innovation** $d\widehat W_j = dW_j - v_j\,dt$, the increment with the conditional mean it predicts removed,
-$$d\rho = \mathcal{L}\rho\,dt + \sum_j\bigl(\hat R_j\rho + \rho \hat R_j^\dagger - v_j\rho\bigr)\,d\widehat W_j,\qquad v_j = 2\,\mathrm{Re}\,\mathrm{Tr}[\hat R_j\rho].$$
-The startling fact is that the plain average of the *unnormalized* states, with no reweighting at all, already is the master equation. Build the linear version and check.
+**The problem.** One diffusive history, written under two probability measures. Under a reference Wiener measure $Q$, the *linear* stochastic Schrodinger equation runs an unnormalized state under plain noise,
+$$d\tilde\psi = K\,\tilde\psi\,dt + \sum_j \hat R_j\,\tilde\psi\,dW_j^{(0)},\qquad K = -i\hat H - \tfrac12\sum_j \hat R_j^\dagger \hat R_j.$$
+Its squared norm is the Radon-Nikodym likelihood density $dP/dQ$ of the physical record measure relative to $Q$ up to that time, not an absolute probability for one continuous record. Under the physical measure $P$, the normalized master equation is driven by the innovation $d\widehat W_j=dY_j-v_jdt$ of the observed increment $dY_j$,
+$$d\rho = \mathcal{L}\rho\,dt + \sum_j(\hat R_j\rho + \rho \hat R_j^\dagger - v_j\rho)\,d\widehat W_j,\qquad v_j = 2\,\mathrm{Re}\,\mathrm{Tr}[\hat R_j\rho].$$
+The useful fact is that the reference-measure average of the unnormalized projectors is the master-equation state. Build the linear version and check.
 
 One diffusive trajectory has two equivalent descriptions. The **nonlinear** SME (used so far) carries the normalized state and renormalizes each step. The **linear** SSE evolves an unnormalized state under plain (unconditioned) noise, never renormalizing,
-$$d|\tilde\psi\rangle = \big(-i\hat H - \tfrac12\hat c^\dagger\hat c\big)|\tilde\psi\rangle\,dt + \hat c\,|\tilde\psi\rangle\,dW,$$
-its squared norm $\langle\tilde\psi|\tilde\psi\rangle$ the likelihood of the record. The striking fact: the plain average of the unnormalized outer products $|\tilde\psi\rangle\langle\tilde\psi|$, unweighted, is already the master-equation $\rho$. Fix the atom and the non-Hermitian drift $K = -i\hat H - \tfrac12\hat c^\dagger\hat c$:
+$$d\left|\tilde\psi\right\rangle = (-i\hat H - \tfrac12\hat c^\dagger\hat c)\left|\tilde\psi\right\rangle dt + \hat c\left|\tilde\psi\right\rangle dW,$$
+its squared norm $\langle\tilde\psi,\tilde\psi\rangle$ the likelihood ratio $dP/dQ$ accumulated by that reference-noise history. The plain $Q$-average of the unnormalized outer products $\left|\tilde\psi\right\rangle(\left|\tilde\psi\right\rangle)^\dagger$ is the master-equation $\rho$. Fix the atom and the non-Hermitian drift $K = -i\hat H - \tfrac12\hat c^\dagger\hat c$:
 
 ```wl
 \[CapitalOmega]lin = 2.; cLin = lower; Knh = -I (\[CapitalOmega]lin/2) X - ConjugateTranspose[cLin] . cLin/2;
@@ -2791,25 +2882,25 @@ Measure the gap to the master equation:
 Max@Abs@Flatten[linearAverage - evolve[(\[CapitalOmega]lin/2) X, {cLin}, densityMatrix[excited], steps step]]
 ```
 
-The unweighted average matches the master equation to the Monte-Carlo scatter, with no renormalization.
+The unweighted reference-measure average matches the master equation within Monte-Carlo scatter and Euler time-step error, with no pathwise renormalization.
 
-The squared norms are genuine likelihoods, so they average to one:
+The squared norms are likelihood ratios. Their expectation under the reference measure is one; the finite seeded Euler sample should be near one:
 
 ```wl
 Mean[Re[Conjugate[#] . #] & /@ linearStates]
 ```
 
-Different records carry different weight.
+Different reference-noise histories carry different likelihood-ratio weights.
 
 Now visualize the distribution of their likelihood weights:
 
 ```wl
-Histogram[Re[Conjugate[#] . #] & /@ linearStates, 30, "PDF", Frame -> True, GridLines -> Automatic, ImageSize -> 460,
- FrameLabel -> {"likelihood weight", "density"},
- PlotLabel -> "the likelihood weights average to one"]
+Histogram[Re[Conjugate[#] . #] & /@ linearStates, 30, "PDF", Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ FrameLabel -> {"likelihood-ratio weight dP/dQ", "density"},
+ PlotLabel -> "reference histories carry likelihood-ratio weights"]
 ```
 
-These are two faithful descriptions of the same diffusive process, related by a change of probability measure. Renormalize the state each step and feed the record back into the drift, and you get the physical (nonlinear) state an experimenter tracks in real time. Evolve the unnormalized state under plain, unconditioned noise and never renormalize, and you get the linear picture, often easier to simulate. The linear state's *direction* still fluctuates with the noise; what the weight $\|\psi\|^2$ isolates is not the randomness but the physical likelihood of each record, the Girsanov factor that turns the reference measure into the physical one.
+These are two descriptions of the same diffusive process related by a change of probability measure. Normalize and evolve with the physical innovation to get the nonlinear state an experimenter tracks. Evolve the unnormalized state under reference Wiener noise to get the linear picture. The linear state's direction still fluctuates; its squared norm is the Girsanov/Radon-Nikodym factor that converts reference-history averages into physical ones.
 
 One record carries both bookkeepings at once. Roll out a single linear run keeping its whole history:
 
@@ -2828,7 +2919,7 @@ Column[{
    FrameLabel -> {"time", "excited population (normalized)"}, PlotLabel -> "the state you track"],
   ListLinePlot[Transpose[{gridA5, Log[Re[Conjugate[#] . #]] & /@ oneA5}], PlotStyle -> ColorData[97, 3],
    Frame -> True, GridLines -> Automatic, PlotRange -> {{0, steps step}, All}, ImageSize -> 520,
-   FrameLabel -> {"time", "log weight  log \[LeftDoubleBracketingBar]\[Psi]\[RightDoubleBracketingBar]\!\(\*SuperscriptBox[\(\), \(2\)]\)"}, PlotLabel -> "the likelihood it carries"]}]
+   FrameLabel -> {"time", "log weight  log ||psi||^2"}, PlotLabel -> "the likelihood it carries"]}]
 ```
 
 The same record has a normalized-state reading and a running weight; neither alone is the trajectory, together they are.
@@ -2839,7 +2930,7 @@ The catch of the linear method is that the weights spread, so a handful of recor
 essPathsA5 = linPathA5 /@ Range[400];
 essA5 = Table[With[{w = (Re[Conjugate[#] . #] &@#[[j]]) & /@ essPathsA5}, (Total[w]^2/Total[w^2])/400.], {j, 1, steps + 1, 20}];
 ListLinePlot[Transpose[{gridA5[[1 ;; ;; 20]], essA5}], PlotStyle -> ColorData[97, 2], Frame -> True, GridLines -> Automatic,
- PlotRange -> {0, 1.02}, ImageSize -> 480, FrameLabel -> {"time", "effective sample size / N"},
+ PlotRange -> All, FrameLabel -> {"time", "effective sample size / N"},
  PlotLabel -> "the linear weights degenerate: fewer records carry the average"]
 ```
 
@@ -2850,7 +2941,7 @@ The effective fraction falls from one toward a fraction of the ensemble: as time
 **The problem.** The fully worked driven, damped, emitting atom, both averaged and watched. In full generality its unconditional master equation carries detuning, thermal drive, and pure dephasing,
 $$\mathcal{L}\rho = -i[\check H,\rho] + \gamma(n_T+1)\,\mathcal{D}[\hat\sigma_-]\rho + \gamma\,n_T\,\mathcal{D}[\hat\sigma_+]\rho + \gamma\,k_d\,\mathcal{D}[\hat\sigma_z]\rho,\qquad \check H = \tfrac{\Delta\omega}{2}\hat\sigma_z + \tfrac{\Omega}{2}\hat\sigma_x,$$
 and relaxes to a mixed steady state inside the ball. We take the standard resonance-fluorescence corner, resonant ($\Delta\omega = 0$), zero temperature ($\bar n = 0$), no extra dephasing ($k_d = 0$), which reduces it to a single emission channel $\hat R_1 = \sqrt\gamma\,\hat\sigma_-$,
-$$\mathcal{L}\rho = -i\Bigl[\tfrac{\Omega}{2}\hat\sigma_x,\rho\Bigr] + \gamma\,\mathcal{D}[\hat\sigma_-]\rho.$$
+$$\mathcal{L}\rho = -i[\tfrac{\Omega}{2}\hat\sigma_x,\rho] + \gamma\,\mathcal{D}[\hat\sigma_-]\rho.$$
 Watching that one channel with unit efficiency keeps the conditioned history pure on the surface of the ball; the record-blind average is the mixed interior point. Compare the two, then put the general parameters back and read the steady state they set. (Detuning $\Delta\omega$ is a Hamiltonian term: it turns the conditioned trajectory but never mixes it. Temperature $\bar n$ and extra dephasing $k_d$ add channels that do mix the trajectory, but only when their output goes unrecorded; monitor every channel ideally and even they leave it pure.)
 
 Before specializing, solve the general steady state once, so the corner we pick is a corner of something actually worked. Two rates organize it: the longitudinal rate $\Gamma_1 = \gamma(2\bar n + 1)$ at which populations relax, and the transverse rate $\Gamma_2 = \tfrac12\Gamma_1 + 2\gamma k_d$ at which coherences decay, faster than $\Gamma_1/2$ by the extra dephasing. Define the steady Bloch vector in closed form:
@@ -2863,15 +2954,15 @@ steadyGeneral[\[CapitalDelta]_, \[CapitalOmega]_, \[Gamma]_, nT_, kd_] := With[{
 Check it against the toolkit's steady-state finder with detuning, temperature, and dephasing all switched on:
 
 ```wl
-Max@Abs[steadyGeneral[1.3, 3., 1., 0.4, 0.25] - blochVector[First@steadyState[(1.3/2) Z + (3./2) X, {Sqrt[1. (0.4 + 1)] lower, Sqrt[1. 0.4] ConjugateTranspose[lower], Sqrt[1. 0.25] Z}]]]
+Max@Abs[steadyGeneral[1.3, 3., 1., 0.4, 0.25] - blochVector[First@stationary[(1.3/2) Z + (3./2) X, {Sqrt[1. (0.4 + 1)] lower, Sqrt[1. 0.4] ConjugateTranspose[lower], Sqrt[1. 0.25] Z}]]]
 ```
 
-Zero to rounding: the closed form is exact, and it reads off the phenomenology at a glance. The detuning enters through $\Gamma_2^2 + \Delta\omega^2$ in the denominator, so the resonance is a Lorentzian of width $\Gamma_2$ that the drive power-broadens through the $\Omega^2\Gamma_2$ term; temperature lifts the ground-state bias, since at $\Omega = 0$ the state rests at $z_{\mathrm{eq}} = -1/(2\bar n + 1)$ rather than the south pole. Plot the steady excited population $\tfrac12(1 + z)$ against detuning, weak drive against strong:
+The discrepancy is at numerical precision: the closed form is exact for the stated finite-dimensional Bloch equations. The detuning enters through $\Gamma_2^2 + \Delta\omega^2$ in the denominator, so the resonance has a Lorentzian denominator of width $\Gamma_2$ that the drive power-broadens through the $\Omega^2\Gamma_2$ term; temperature lifts the ground-state bias, since at $\Omega = 0$ the state rests at $z_{\mathrm{eq}} = -1/(2\bar n + 1)$ rather than the south pole. Plot the steady excited population $\tfrac12(1 + z)$ against detuning, weak drive against strong:
 
 ```wl
 ListLinePlot[Table[Table[{d, (1 + steadyGeneral[d, om, 1., 0., 0.][[3]])/2}, {d, -8, 8, 0.05}], {om, {1., 4.}}],
  PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, PlotLegends -> {"\[CapitalOmega] = 1", "\[CapitalOmega] = 4"},
- Frame -> True, GridLines -> Automatic, PlotRange -> All, ImageSize -> 480,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
  FrameLabel -> {"detuning \[CapitalDelta]\[Omega]", "steady excited population"},
  PlotLabel -> "resonance is a power-broadened Lorentzian in detuning"]
 ```
@@ -2881,7 +2972,7 @@ The excited population peaks on resonance and falls off as a Lorentzian to eithe
 Pull the threads together on one worked example: a driven, emitting atom. Averaged (unconditioned), it relaxes to a mixed steady state inside the Bloch ball. Fix the atom and compute its steady Bloch vector:
 
 ```wl
-\[CapitalOmega]dr = 3.; \[Gamma]dr = 1.; settled = blochVector[First@steadyState[\[CapitalOmega]dr/2 X, {Sqrt[\[Gamma]dr] lower}]];
+\[CapitalOmega]dr = 3.; \[Gamma]dr = 1.; settled = blochVector[First@stationary[\[CapitalOmega]dr/2 X, {Sqrt[\[Gamma]dr] lower}]];
 ```
 
 Read its length (a pure state has length one):
@@ -2904,7 +2995,7 @@ Confirm it stays pure, reading the largest linear entropy along the whole run:
 Max[(1 - Norm[blochVector[#]]^2)/2 & /@ watched["states"]]
 ```
 
-The linear entropy stays at zero to rounding.
+The largest linear entropy stays at zero within numerical precision.
 
 Now visualize the pure trajectory on the Bloch-sphere surface, with the mixed averaged state marked inside:
 
@@ -2913,13 +3004,13 @@ blochPlot[{blochVector /@ watched["states"]}, "a pure trajectory circles the mix
  {Black, PointSize[0.035], Point[settled]}]
 ```
 
-The surface path is the atom as an observer with the record sees it; the interior point is the atom traced over the record. Neither is more true; they answer different questions. This picture, a pure trajectory circling a mixed average, is the theme of all twenty systems.
+The surface path is the atom as an observer with the complete ideal record sees it; the interior point is the atom after that record is averaged out. Neither is more true; they answer different questions. The contrast applies whenever the initial state is pure, every decohering channel is monitored, and efficiency is one; examples with missed or thermal channels correctly produce mixed conditioned states.
 
 ### The Mollow Triplet: Resonance-Fluorescence Spectrum
 
-**The problem.** The spectrum (power spectrum) of the light a driven atom emits, computed by quantum regression from the master equation's two-time correlations. The light divides into two parts: an *elastic* (coherent) line at the drive frequency, a delta function carrying the weight $|\langle\hat\sigma_-\rangle_{\mathrm{ss}}|^2$, and the *inelastic* (fluorescence) spectrum of the fluctuations $\delta\hat\sigma_- = \hat\sigma_- - \langle\hat\sigma_-\rangle_{\mathrm{ss}}$, which by quantum regression is a resolvent of the Liouvillian at the steady state,
-$$S_{\mathrm{inel}}(\mu) \propto \mathrm{Re}\int_0^\infty e^{i\mu t}\,\langle\delta\hat\sigma_+(t)\,\delta\hat\sigma_-(0)\rangle_{\mathrm{ss}}\,dt.$$
-For weak driving the inelastic part is a single line; for strong driving $\Omega \gg \gamma$ it splits into the three-peaked *Mollow triplet*, a central line and two sidebands at $\pm\Omega$, the dynamical Stark effect.
+**The problem.** The spectrum (power spectrum) of the light a driven atom emits, computed by quantum regression from the master equation's two-time correlations. The light divides into two parts: an *elastic* (coherent) line at the drive frequency, a delta function carrying the weight $\left|\langle\hat\sigma_-\rangle_{\mathrm{ss}}\right|^2$, and the *inelastic* (fluorescence) spectrum of the fluctuations $\delta\hat\sigma_- = \hat\sigma_- - \langle\hat\sigma_-\rangle_{\mathrm{ss}}$, which by quantum regression is a resolvent of the Liouvillian at the steady state,
+$$S_{\mathrm{inel}}(\mu) \propto \mathrm{Re}\int_0^\infty e^{-i\mu t}\,\langle\delta\hat\sigma_+(t)\,\delta\hat\sigma_-(0)\rangle_{\mathrm{ss}}\,dt.$$
+For weak driving the inelastic part is a single line; for strong driving $\Omega > \gamma$ it splits into the three-peaked *Mollow triplet*, a central line and two sidebands at $\pm\Omega$, the dynamical Stark effect.
 
 Homodyne detection instead reads a chosen quadrature, and its spectrum can dip *below* the shot-noise floor: squeezed, nonclassical light. Build both from the same big matrix.
 
@@ -2927,7 +3018,7 @@ One last set of quantities from the master equation, all through the eigen-based
 
 ```wl
 mollowInelastic[\[CapitalOmega]_, \[Gamma]_, tones_] := With[{big = liouvillian[(\[CapitalOmega]/2) X, {Sqrt[\[Gamma]] lower}, 2],
-    rss = First@steadyState[(\[CapitalOmega]/2) X, {Sqrt[\[Gamma]] lower}]},
+    rss = First@stationary[(\[CapitalOmega]/2) X, {Sqrt[\[Gamma]] lower}]},
    With[{dm = lower - Tr[lower . rss] id2}, regressionSpectrum[big, dm . rss, ConjugateTranspose[dm], tones]]];
 ```
 
@@ -2945,7 +3036,7 @@ Now visualize the weak- and strong-drive inelastic spectra together. Their absol
 ```wl
 ListLinePlot[{Transpose[{tones, weak/Max[weak]}], Transpose[{tones, strong/Max[strong]}]},
  PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> {{-6, 0, 6}, None},
- PlotLegends -> {"weak drive", "strong drive"}, ImageSize -> 560, PlotRange -> All,
+ PlotLegends -> {"weak drive", "strong drive"}, PlotRange -> All,
  FrameLabel -> {"frequency (relative to drive)", "inelastic spectrum (each / its peak)"},
  PlotLabel -> "strong driving splits the inelastic spectrum into the Mollow triplet"]
 ```
@@ -2962,12 +3053,12 @@ The peaks sit at $\pm\Omega$. Confirm too that the inelastic spectrum is nowhere
 Min[strong]
 ```
 
-Nonnegative to rounding.
+Nonnegative within numerical precision.
 
 The elastic line lives separately, a delta at zero frequency whose weight is the coherent dipole; it dominates at weak drive and all but vanishes at strong drive as the light turns fully inelastic:
 
 ```wl
-elasticWeight[\[CapitalOmega]_] := With[{rss = First@steadyState[(\[CapitalOmega]/2) X, {Sqrt[1.] lower}]}, Abs[Tr[lower . rss]]^2];
+elasticWeight[\[CapitalOmega]_] := With[{rss = First@stationary[(\[CapitalOmega]/2) X, {Sqrt[1.] lower}]}, Abs[Tr[lower . rss]]^2];
 {elasticWeight[0.6], elasticWeight[6.]}
 ```
 
@@ -2988,7 +3079,7 @@ A homodyne detector sees something an intensity spectrometer cannot: it measures
 
 ```wl
 mollowHom[\[CapitalOmega]_, \[Gamma]_, \[Theta]_, tones_] := Module[{c = Sqrt[\[Gamma]] lower, big, rss, cth, mq, mean},
-   big = liouvillian[(\[CapitalOmega]/2) X, {c}, 2]; rss = First@steadyState[(\[CapitalOmega]/2) X, {c}];
+   big = liouvillian[(\[CapitalOmega]/2) X, {c}, 2]; rss = First@stationary[(\[CapitalOmega]/2) X, {c}];
    cth = c Exp[-I \[Theta]]; mq = cth + ConjugateTranspose[cth]; mean = Re@Tr[mq . rss];
    1 + resolventSpectrum[big, cth . rss + rss . ConjugateTranspose[cth] - mean rss, mq - mean id2, tones]];
 ```
@@ -3015,7 +3106,7 @@ How far the squeezing reaches, and where it is deepest, is a question about the 
 ```wl
 zeroFreqSqueeze[\[CapitalOmega]_] := mollowHom[\[CapitalOmega], 1., Pi/2, {0.}][[1]];
 ListLinePlot[Table[{om, zeroFreqSqueeze[om]}, {om, 0.05, 1.2, 0.02}],
- Frame -> True, GridLines -> {{0.5}, {{1, Directive[Gray, Dashed]}}}, PlotRange -> All, ImageSize -> 460,
+ Frame -> True, GridLines -> {{0.5}, {{1, Directive[Gray, Dashed]}}}, PlotRange -> All,
  FrameLabel -> {"drive \[CapitalOmega]/\[Gamma]", "zero-frequency spectrum S(0)"},
  PlotLabel -> "the in-phase quadrature is squeezed only for \[CapitalOmega] < \[Gamma]/2"]
 ```
@@ -3026,12 +3117,8 @@ $S(0)$ dips below the shot-noise line on $\Omega < \gamma/2$ (the vertical gridl
 Max@Table[Abs[zeroFreqSqueeze[om] - (1 + 8 om^2 (4 om^2 - 1)/(1 + 2 om^2)^3)], {om, 0.05, 1.2, 0.05}]
 ```
 
-Zero to rounding. The whole spectroscopy, elastic line, inelastic triplet, and squeezing dip, comes from the two-time correlations of the same master equation built on the first page.
+The maximum discrepancy is at numerical precision. The whole spectroscopy, elastic line, inelastic triplet, and squeezing dip, comes from the two-time correlations of the same master equation built on the first page.
 
 ## Where This Leaves Us
 
-From plain matrices and a few rules, we built a small laboratory for open quantum systems: the master equation for the unconditioned average, the positivity-preserving step for a kept record, and plotters for the Bloch sphere, phase space, the covariance ellipse, and spectra. On that base, twenty systems: pure dephasing, a driven damped atom, a cavity cat decohering at a rate set by the square of its separation, the Haroche experiment, dispersive qubit readout, quantum Brownian motion, the jump/homodyne/heterodyne unravellings, the quantum Zeno effect, a charge qubit read by a quantum point contact, measurement-induced collapse, a quantum Kalman filter, measurement feedback, thermalization, rapid purification, feedback cooling, the linear-vs-nonlinear trajectory, and the Mollow triplet. One theme runs through all of them: keeping the record turns the master equation's average into a pure, jagged, individual trajectory, and averaging the trajectories back recovers the master equation. Change a number in any cell and watch it move.
-
-
-
-
+From plain matrices and a few rules, we built a small laboratory for open quantum systems: the master equation for the unconditioned average, a positivity-preserving finite-step filter for a kept record, and plotters for the Bloch sphere, phase space, covariance ellipses, and spectra. On that base, twenty systems: pure dephasing, a driven damped atom, a cavity cat decohering at a rate set by the square of its separation, the Haroche experiment, dispersive qubit readout, quantum Brownian motion, the jump/homodyne/heterodyne unravellings, the quantum Zeno effect, a charge qubit read by a quantum point contact, measurement-induced collapse, a quantum Kalman filter, measurement feedback, thermalization, rapid purification, feedback cooling, the linear-vs-nonlinear trajectory, and the Mollow triplet. The recurring theme is conditionality: a complete ideal record can keep an initially pure state on a pure stochastic trajectory, whereas missed channels, inefficiency, or mixed initial data produce mixed conditional states. In every unravelling, ensemble recovery of the master equation is a joint large-sample and small-step limit. Change a number, rerun the convergence checks, and watch the physics move.
