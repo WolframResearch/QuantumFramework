@@ -159,14 +159,21 @@ G2Coherence[\[Psi]_QuantumState] := Block[{aOp, nOp, a2Op, numerator, denominato
     
     a2Op = SuperDagger[aOp] @ SuperDagger[aOp] @ aOp @ aOp;
     
-    If[ \[Psi]["PureStateQ"],
+    Switch[ TimeConstrained[\[Psi]["PureStateQ"], 3, $Aborted],
+        True,
         (* pure state: inner product formula *)
         numerator   = (\[Psi]["Dagger"] @ a2Op @ \[Psi])["Scalar"];
         denominator = (\[Psi]["Dagger"] @ nOp  @ \[Psi])["Scalar"],
-        
+
+        False,
         (* mixed state: trace formula Tr(rho O) *)
         numerator   = Tr[a2Op @ \[Psi]["Operator"]];
-        denominator = Tr[nOp @ \[Psi]["Operator"]]
+        denominator = Tr[nOp @ \[Psi]["Operator"]],
+
+        _,
+        (* unclassified state: trace formula on the density matrix *)
+        numerator   = Tr[a2Op["Matrix"] . \[Psi]["DensityMatrix"]];
+        denominator = Tr[nOp["Matrix"] . \[Psi]["DensityMatrix"]]
     ];
     numerator / denominator^2
 ]
