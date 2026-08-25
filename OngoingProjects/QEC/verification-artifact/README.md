@@ -1,17 +1,19 @@
-# Exact stabilizer codes, cross-checked against Stim
+# Stabilizer codes, cross-checked against Stim
 
-A public, reproducible verification artifact for the exact stabilizer-code analysis
-layer in QuantumFramework (`Wolfram`QuantumFramework`QEC``). It shows that the
-symbolic, exact code analysis agrees with the field-standard simulator
-[Stim](https://github.com/quantumlib/Stim) on the standard textbook codes, and does
-one thing Stim structurally cannot: carries a symbolic parameter and certifies a
-whole family (or a continuous error angle) in a single evaluation.
+A public, reproducible verification artifact for the stabilizer-code layer that
+ships in QuantumFramework (`PauliStabilizer`), plus an exact, symbolic code
+analysis built on top of it in the Wolfram Language. It shows that the shipped
+stabilizer engine agrees with the field-standard simulator
+[Stim](https://github.com/quantumlib/Stim) on the standard textbook codes, and
+that the Wolfram Language around it does one thing Stim structurally cannot:
+carry a symbolic parameter (a whole code family, or a continuous error angle) and
+a symbolic measurement outcome.
 
 The value is **exactness and symbolic generality, not scale or speed**. Exact
-minimum distance is NP-hard (Kapshikar and Kundu, arXiv:2203.04262), so this is a
-small-code instrument by mathematical necessity, complementary to Stim rather than
-competing with it. Stim owns scale, sampling, and decoding; this layer owns the
-exact, small, and symbolic corner.
+minimum distance is NP-hard (Kapshikar and Kundu, arXiv:2203.04262), so the
+distance analysis is a small-code instrument by mathematical necessity,
+complementary to Stim rather than competing with it. Stim owns scale, sampling,
+and decoding; this layer owns the exact, small, and symbolic corner.
 
 ## Contents
 
@@ -27,37 +29,54 @@ exact, small, and symbolic corner.
 
 ## What is verified
 
-For the bit-flip `[[3,1,1]]`, phase-flip `[[3,1,1]]`, Shor `[[9,1,3]]`, five-qubit
-`[[5,1,3]]`, and Steane `[[7,1,3]]` codes, the exact code distance and witness, the
-logical operators, and a sign-exact +1 encoder are each confirmed two independent ways:
+The five codes are shipped `PauliStabilizer` states (the five-qubit, Steane, and
+Shor codes are named; the three-qubit bit-flip `[[3,1,1]]` and phase-flip
+`[[3,1,1]]` codes are built from their generators). The work runs in two parts.
 
-1. **An in-language GF(2)/symplectic re-derivation** written from scratch, which does
-   not call the package's own analysis routines to check themselves. It reproduces the
-   distance, verifies the full logical commutation algebra, and confirms each encoder
-   fixes every generator with an exact (sign-aware) state-vector test.
-2. **A Stim differential.** A small converter maps each code to Stim, and the package's
-   `Syndrome` is diffed against Stim's over every weight-one and weight-two error; Stim's
-   tableau confirms each encoder to +1; and each distance witness is confirmed by Stim to
-   be undetectable and nontrivial.
+**Part A: the shipped stabilizer engine, cross-checked against Stim.**
 
-The symbolic differentiator then certifies the `[[n, n-2, 2]]` and repetition families
-at symbolic `n` in one evaluation, and returns a coherent error's syndrome as the exact
-function `Cos[θ]`.
+1. Each codeword is a **sign-exact +1 state**: applying every generator (sign
+   included) to the exact algebraic state vector leaves it fixed, under a symbolic
+   zero test, so a wrong sign cannot hide.
+2. Stim **accepts every generator set** as a consistent stabilizer group
+   (`stim.Tableau.from_stabilizers`).
+3. The engine's **syndrome equals Stim's** across every weight-one and weight-two
+   error, code by code (36, 36, 351, 105, and 210 errors for bit-flip, phase-flip,
+   Shor, five-qubit, and Steane).
+4. A **symbolic measurement** (`"SymbolicMeasure"`) carries a random outcome as a
+   formal bit and returns a forced outcome as an explicit function of the free
+   bits, which a numeric stabilizer sampler cannot represent.
 
-Note (correct, and worth stating): the three-qubit bit-flip and phase-flip codes have
-**quantum distance one**, not three. A single `Z` (or `X`) is an undetectable logical.
-The classical repetition code has distance three; as a quantum code it leaves the
-conjugate error type unguarded.
+**Part B: an in-language GF(2)/symplectic analysis, cross-checked against Stim.**
+Written from scratch (it calls no packaged distance routine to check itself), it
+reproduces the exact code **distance** and a minimum-weight **witness**, verifies
+the full **logical commutation algebra**, and has **Stim confirm each witness** is
+undetectable and nontrivial. It then certifies the `[[n, n-2, 2]]` and repetition
+families at symbolic `n` in one evaluation, and returns a coherent error's
+syndrome as the exact function `Cos[θ]`.
+
+Note (correct, and worth stating): the three-qubit bit-flip and phase-flip codes
+have **quantum distance one**, not three. A single `Z` (or `X`) is an undetectable
+logical. The classical repetition code has distance three; as a quantum code it
+leaves the conjugate error type unguarded.
+
+The exactness/symbolic content is Wolfram Language built on the shipped stabilizer
+primitives; the exact **distance** and **logical** operators are computed in the
+essay, not returned by a packaged function. What Stim independently cross-checks is
+the generator groups, the syndromes, and the witness validity; sign-exactness is the
+exact dense test on the Wolfram side.
 
 ## Requirements
 
 - A QuantumFramework checkout (this repository). The package is **not** installed as a
-  paclet; it is loaded from `OngoingProjects/QEC/QEC/QEC.wl` in the checkout. The scripts
-  locate the checkout automatically by walking up from their own location.
+  paclet; it is loaded from the checkout. The scripts locate the checkout automatically
+  by walking up from their own location; the essay's first cell uses an explicit path
+  that you adjust to your own checkout.
 - `wolframscript` on the PATH.
 - For the Stim differential only: `stim` importable from the Python that
-  `ExternalEvaluate` uses. Without it, `verify.wls` reports the Stim section as SKIP (not
-  FAIL) and the in-language re-derivation still runs.
+  `ExternalEvaluate` uses. Without it, `verify.wls` reports the Stim sections as SKIP
+  (not FAIL) and the sign-exact, distance, logical-algebra, and symbolic-family checks
+  still run.
 
 ## Reproduce
 
@@ -74,8 +93,9 @@ wolframscript -code 'ExternalEvaluate["Python", "import sys; sys.executable"]'
 /path/to/that/python -m pip install stim
 ```
 
-**2. Run the full verification harness** (package tests + independent re-derivation +
-Stim differential + symbolic families):
+**2. Run the full verification harness** (sign-exact states + Stim group acceptance +
+syndrome differential + symbolic measurement + in-language distance/logical/witness +
+symbolic families):
 
 ```bash
 wolframscript -file verify.wls
@@ -96,7 +116,10 @@ linked from that project.
 ## References
 
 - D. Gottesman, *Stabilizer Codes and Quantum Error Correction*, Caltech Ph.D. thesis
-  (1997), arXiv:quant-ph/9705052. The constructions the QEC package follows.
+  (1997), arXiv:quant-ph/9705052.
+- S. Aaronson and D. Gottesman, *Improved simulation of stabilizer circuits*,
+  Phys. Rev. A **70**, 052328 (2004), arXiv:quant-ph/0406196. The tableau engine
+  `PauliStabilizer` follows.
 - U. Kapshikar and S. Kundu, *On the hardness of the minimum distance problem of quantum
   codes*, arXiv:2203.04262 (2022). Exact quantum minimum distance is NP-hard.
 - C. Gidney, *Stim: a fast stabilizer circuit simulator*, Quantum **5**, 497 (2021),

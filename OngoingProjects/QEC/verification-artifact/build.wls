@@ -7,7 +7,7 @@
 artifactDir = DirectoryName[$InputFileName];
 repoRoot = SelectFirst[
     NestList[ParentDirectory, artifactDir, 10],
-    FileExistsQ[FileNameJoin[{#, "OngoingProjects", "QEC", "QEC", "QEC.wl"}]] &,
+    FileExistsQ[FileNameJoin[{#, "QuantumFramework", "PacletInfo.wl"}]] &,
     $Failed
 ];
 If[ repoRoot === $Failed,
