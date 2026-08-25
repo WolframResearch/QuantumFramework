@@ -64,6 +64,33 @@ agExtendToSymplecticBasis[stabBits_, n_Integer] := With[{J = agSymplecticForm[n]
     ]
 ]
 
+(* Symplectic Gram matrix of a set of 2n-bit Pauli encodings over F_2. The      *)
+(* (i, j) entry is 1 exactly when encodings i and j anticommute; the diagonal   *)
+(* is always 0, so a mutually commuting set has an all-zero Gram matrix.        *)
+agSymplecticGram[rows_, n_Integer] := With[{J = agSymplecticForm[n]}, Mod[rows . J . Transpose[rows], 2]]
+
+(* Genuine destabilizer half {Xdest, Zdest} for a full (square) stabilizer      *)
+(* tableau {Xstab, Zstab}. Destabilizer D_i is the symplectic partner of        *)
+(* stabilizer S_i: symp(D_i, S_j) = KroneckerDelta[i, j] and symp(D_i, D_k) = 0,*)
+(* built by the symplectic Gram-Schmidt (agExtendToSymplecticBasis) the         *)
+(* PauliStabilizer[QuantumState] path uses. A per-qubit X<->Z swap of the       *)
+(* stabilizers satisfies these relations only for the all-Z register, so a      *)
+(* general code (5-qubit, Steane, Shor) needs this to give ps["Circuit"] the    *)
+(* valid full tableau its Aaronson-Gottesman decomposition assumes. Returns     *)
+(* $Failed for a non-square, rank-deficient, or non-commuting generating set,   *)
+(* where no full symplectic completion exists and the caller keeps the swap.    *)
+agDestabilizerTableau[{xStab_, zStab_}] := Module[{nQubits, nGens, stabBits, destBits},
+    {nQubits, nGens} = Dimensions[xStab];
+    stabBits = MapThread[Join, {Transpose[xStab], Transpose[zStab]}];
+    If[ nQubits =!= nGens
+            || MatrixRank[stabBits, Modulus -> 2] =!= nGens
+            || Total[agSymplecticGram[stabBits, nGens], 2] =!= 0,
+        $Failed,
+        destBits = agExtendToSymplecticBasis[stabBits, nGens];
+        {Transpose[destBits[[All, ;; nQubits]]], Transpose[destBits[[All, nQubits + 1 ;;]]]}
+    ]
+]
+
 (* Compute <psi|P|psi> for every Pauli P on n qubits. Returns a list of        *)
 (* {encoding, sign} pairs for the 2^n Paulis with |<P>| ~= 1. The first  *)
 (* element is always {identity, 1}. *)
@@ -212,9 +239,24 @@ PauliStabilizer[tableau_ ? PauliTableauQ] := PauliStabilizer[1, tableau]
 
 PauliStabilizer[sign : -1 | 1, tableau_ ? PauliTableauQ] := PauliStabilizer[{sign}, tableau]
 
-PauliStabilizer[signs : {(-1 | 1) ...}, tableau_ ? PauliTableauQ] := With[{padSigns = PadRight[signs, Dimensions[tableau][[3]], 1]},
-    PauliStabilizer[
-        <|"Signs" -> Join[padSigns, padSigns], "Tableau" -> MapThread[Join[##, 2] &, {Reverse[tableau], tableau}]|>
+PauliStabilizer[signs : {(-1 | 1) ...}, tableau_ ? PauliTableauQ] := With[
+    {padSigns = PadRight[signs, Dimensions[tableau][[3]], 1], destHalf = agDestabilizerTableau[tableau]},
+    If[ destHalf === $Failed,
+        (* Under-determined or degenerate generating set: pad the destabilizer   *)
+        (* half by the per-qubit X<->Z swap. This is a valid symplectic partner   *)
+        (* only for the all-Z register, but it is the only closed form available  *)
+        (* when no full symplectic completion exists.                            *)
+        PauliStabilizer[<|
+            "Signs" -> Join[padSigns, padSigns],
+            "Tableau" -> MapThread[Join[##, 2] &, {Reverse[tableau], tableau}]
+        |>],
+        (* Full stabilizer state: pair each generator with a genuine destabilizer *)
+        (* (signs canonically +1) so ps["Circuit"] reproduces ps["State"] from    *)
+        (* |0...0> for named codes as it already does for random Cliffords.        *)
+        PauliStabilizer[<|
+            "Signs" -> Join[ConstantArray[1, Length[padSigns]], padSigns],
+            "Tableau" -> MapThread[Join[##, 2] &, {destHalf, tableau}]
+        |>]
     ]
 ]
 

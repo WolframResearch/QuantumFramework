@@ -132,7 +132,7 @@ ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
 (* Dagger / Inverse                                                             *)
 (* ============================================================================ *)
 
-PauliStabilizer::singular = "Cannot compute Dagger: symplectic matrix is singular mod 2 (this happens when the input PauliStabilizer was built from a stabilizer-only list whose Reverse-padded destabilizers coincide with the stabilizer rows). Use a circuit-built fixture or supply explicit destabilizers."
+PauliStabilizer::singular = "Cannot compute Dagger: the symplectic tableau matrix is singular mod 2. This arises for a degenerate stabilizer list (linearly dependent or under-determined generators) whose destabilizer half falls back to X<->Z padding rather than a genuine symplectic completion. Supply an independent generating set, explicit destabilizers, or a circuit-built fixture."
 
 (* Notes on Dagger:                                                            *)
 (*   (1) the inner inverse-matrix PS uses all-+1 signs so the composition's   *)

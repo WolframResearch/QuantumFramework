@@ -769,8 +769,10 @@ VerificationTest[
 (* For circuit-built fixtures (proper destab pairing), check:                   *)
 (*   M . \[CapitalOmega] . M^T == \[CapitalOmega] (mod 2)                       *)
 (* where \[CapitalOmega] = [[0,I],[I,0]] is the symplectic form.                *)
-(* String-list fixtures auto-pad destabilizers via Reverse rule (line 105),     *)
-(* which does NOT generally satisfy AG -- so use circuit-built fixtures here.   *)
+(* A full stabilizer state carries a genuine destabilizer pairing however it     *)
+(* is built (Constructors.m completes the destabilizer half symplectically),    *)
+(* so named-code fixtures satisfy this invariant as well; the sub-block tests    *)
+(* below isolate stabilizer-stabilizer commutation on those fixtures.           *)
 
 VerificationTest[
     With[{m = $psBell["Matrix"], n = $psBell["Qubits"]},

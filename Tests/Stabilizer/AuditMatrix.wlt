@@ -1418,13 +1418,22 @@ VerificationTest[
     TestID -> "Audit-A3-Dagger-Involutive-Register3"
 ]
 
-(* Singular-matrix path: stabilizer-only construction creates a non-invertible *)
-(* tableau via the Reverse-padding rule; Dagger now warns and returns $Failed.*)
+(* Singular-matrix path: a degenerate stabilizer list (linearly dependent      *)
+(* generators) has no invertible symplectic tableau; the destabilizer half     *)
+(* falls back to X<->Z padding and Dagger warns and returns $Failed.           *)
 VerificationTest[
-    PauliStabilizer[{"XX", "ZZ"}]["Dagger"],
+    PauliStabilizer[{"XX", "XX"}]["Dagger"],
     $Failed,
     {PauliStabilizer::singular},
     TestID -> "Audit-A3-Dagger-Singular-Matrix-EmitsMessage"
+]
+
+(* A valid full stabilizer list carries a genuine destabilizer pairing, so its  *)
+(* symplectic tableau is invertible and Dagger is involutive.                   *)
+VerificationTest[
+    PauliStabilizer[{"XX", "ZZ"}]["Dagger"]["Dagger"] === PauliStabilizer[{"XX", "ZZ"}],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-StringList-Bell"
 ]
 
 (* ============================================================================ *)

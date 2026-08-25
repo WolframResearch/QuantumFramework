@@ -176,6 +176,36 @@ VerificationTest[
 
 
 (* ============================================================================ *)
+(* TIER E2 -- Encoding-circuit correctness (AarGot04 canonical decomposition)   *)
+(*                                                                              *)
+(* ps["Circuit"] is the Clifford encoding circuit of the code. Applied to       *)
+(* |0...0> it must prepare the logical |0_L> = ps["State"], so the overlap      *)
+(* |<Circuit[|0...0>] | State>| is 1 (phase-insensitive) for each named code,   *)
+(* exactly as it already is for random Cliffords. A tableau with invalid        *)
+(* destabilizers silently yields an encoding circuit orthogonal to the code     *)
+(* state (overlap 0 for the 5- and 9-qubit codes, 1/8 for Steane); this test    *)
+(* pins the correct behaviour.                                                   *)
+(* ============================================================================ *)
+
+VerificationTest[
+    AllTrue[
+        {"5QubitCode", "SteaneCode", "9QubitCode"},
+        Function[name,
+            With[{ps = PauliStabilizer[name]},
+                Chop[Abs[
+                    Conjugate[Normal[ps["Circuit"][
+                        QuantumState[StringJoin[ConstantArray["0", ps["Qudits"]]]]
+                    ]["StateVector"]]] . Normal[ps["State"]["StateVector"]]
+                ]] == 1
+            ]
+        ]
+    ],
+    True,
+    TestID -> "EncodingCircuit-NamedCodes-PreparesLogicalZero"
+]
+
+
+(* ============================================================================ *)
 (* TIER F -- Cluster state stabilizers (AndBri05 Eq 1)                          *)
 (*                                                                              *)
 (* For a graph G with vertex i having neighbors N(i), the cluster-state        *)
