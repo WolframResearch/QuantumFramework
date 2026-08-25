@@ -6,8 +6,9 @@ analysis built on top of it in the Wolfram Language. It shows that the shipped
 stabilizer engine agrees with the field-standard simulator
 [Stim](https://github.com/quantumlib/Stim) on the standard textbook codes, and
 that the Wolfram Language around it does what Stim does not: it keeps an
-unresolved measurement outcome as an algebraic symbol, and returns a code family
-or a continuous error angle in closed form.
+unresolved measurement outcome as an algebraic symbol, derives a code family's
+condition at symbolic `n`, and returns a continuous error's syndrome in closed
+form.
 
 The value is **exactness and symbolic generality, not scale or speed**. Exact
 minimum distance is NP-hard in the worst case (Kapshikar and Kundu,

@@ -141,6 +141,9 @@ check["A4 SymbolicMeasure composes: m3 = m1 XOR m2 on the parity code",
    AllTrue[parityRows, Mod[Total[#], 2] === 0 &] && Length[parityRows] === 4];
 check["A4 conserved parity ZZZ stabilizes the state; only 2 formal bits are spent",
    parityState["Expectation", "ZZZ"] === 1 && Length[freeBits] === 2];
+check["A4 stored Outcomes map is the algebraic XOR of the two free bits",
+   With[{derived = First[Values[smPar["Outcomes"]]]},
+    And @@ ((derived /. Thread[freeBits -> #]) === Mod[Total[#], 2] & /@ Tuples[{0, 1}, Length[freeBits]])]];
 
 (* ---------- Part B: in-language exact analysis, cross-checked against Stim ---------- *)
 emit["\n=== Part B: in-language exact analysis vs Stim ===\n"];

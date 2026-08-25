@@ -7,7 +7,7 @@ Author: Mads Bahrami
 # Stabilizer Codes, Cross-Checked Against Stim
 
 <!-- #| style: Subtitle -->
-The shipped QuantumFramework stabilizer engine agrees with Stim where they overlap; the Wolfram Language around it keeps an unresolved measurement outcome as an algebraic symbol and returns a code family or a continuous error in closed form.
+The shipped QuantumFramework stabilizer engine agrees with Stim where they overlap; the Wolfram Language around it keeps an unresolved measurement outcome as an algebraic symbol, derives a code family's condition at symbolic $n$, and returns a continuous error's syndrome in closed form.
 
 <!-- #| style: Author -->
 Mads Bahrami (last updated: Aug 25, 2026)
@@ -17,9 +17,9 @@ Wolfram Research Inc, USA
 
 ### Setting the Stage: How This Notebook Flows
 
-This notebook is a computation-first tour of the stabilizer layer that ships in the QuantumFramework paclet, checked against [Stim](https://github.com/quantumlib/Stim), the field-standard stabilizer simulator. Part I frames the niche. Part II takes the shipped `PauliStabilizer` engine on the standard small codes (the three-qubit bit-flip and phase-flip codes, the nine-qubit Shor code, the five-qubit perfect code, and the seven-qubit Steane code) and checks, against Stim, that its stabilizer generators form a consistent group and its syndromes agree across every one- and two-qubit error, while a state-vector test confirms every codeword carries the correct sign. Part III builds an exact code analysis from GF(2) first principles and computes the exact distance, a minimum-weight witness, and the logical algebra, cross-checking the witness against Stim. Part IV does the move a numeric simulator has no counterpart for: it keeps an unresolved measurement outcome as an algebraic symbol, derives a code family's existence condition at symbolic $n$, and returns a coherent error's syndrome as a closed-form function of a continuous angle. Part V draws the boundary.
+This notebook is a computation-first tour of the stabilizer layer that ships in the QuantumFramework paclet, checked against [Stim](https://github.com/quantumlib/Stim), the field-standard stabilizer simulator. Part I frames the niche. Part II takes the shipped `PauliStabilizer` engine on the standard small codes (the three-qubit bit-flip and phase-flip codes, the nine-qubit Shor code, the five-qubit perfect code, and the seven-qubit Steane code) and checks, against Stim, that its stabilizer generators form a consistent group and its syndromes agree across every one- and two-qubit error, while a state-vector test confirms every codeword carries the correct sign; it then exercises a symbolic measurement that keeps an unresolved outcome as an algebraic symbol, which Stim has no counterpart for. Part III builds an exact code analysis from GF(2) first principles and computes the exact distance, a minimum-weight witness, and the logical algebra, cross-checking the witness against Stim. Part IV carries a symbolic parameter through the algebra: it derives a code family's existence condition at symbolic $n$, and returns a coherent error's syndrome as a closed-form function of a continuous angle. Part V draws the boundary.
 
-The division of labor is clean. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds over thousands of qubits. This layer owns the exact-and-symbolic corner: the exact minimum distance (which is NP-hard in the worst case, so an exhaustive search like the one here is a small-$n$ instrument), a sign-exact stabilizer state, and a parameter kept symbolic where the algebra allows. The two agree wherever they overlap, and that agreement is what makes the exact answers trustworthy and the symbolic ones worth reaching for. Neither competes with the other.
+The division of labor is clean. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds over thousands of qubits. This layer owns the exact-and-symbolic corner: the exact minimum distance (which is NP-hard in the worst case, so an exhaustive search like the one here is a small-$n$ instrument), a sign-exact stabilizer state, and a parameter kept symbolic where the algebra allows. The two agree wherever they overlap, and that agreement is what makes the shared states and syndromes trustworthy; the distance's minimality rests on the exhaustive search, and the symbolic results on the algebra. Neither competes with the other.
 
 Before we start, a few notes on the environment. This is a live Wolfram notebook: evaluate the cells from top to bottom. Some cells define objects (the code table, a handful of small symplectic functions, a Python session running Stim) that later cells use, so order matters. My suggestion is to read each output and its meaning first, and only then unpack the input code that produced it. You are not locked into the codes as given: feed in your own stabilizer generators, push the symbolic family further, and re-run. If you have questions, reach out at [quantum@wolfram.com](mailto:quantum@wolfram.com).
 
@@ -73,7 +73,7 @@ Keys[codes]
 
 ### A Sign-Exact +1 Codeword
 
-The first thing to get right is the sign. "The state is a codeword" has to mean the $+1$ eigenstate of every generator, with the sign exactly $+1$ and not $-1$, because a stabilizer with the wrong sign describes a different state entirely. We check this at the level of the state vector, comparing vectors rather than fidelities, so a sign error cannot hide. The shipped state has exact algebraic amplitudes (the Steane codeword's entries are $1/(2\sqrt 2)$, for instance), so the comparison is a symbolic zero test, not a numerical tolerance.
+The first thing to get right is the sign. "The state is a codeword" has to mean the $+1$ eigenstate of every generator, with the sign exactly $+1$ and not $-1$, because a stabilizer with the wrong sign describes a different state entirely. We check this at the level of the state vector, comparing vectors rather than fidelities. The choice matters: a fidelity $\lvert\langle\psi\rvert G\psi\rangle\rvert$ is $1$ whether $G$ fixes $\lvert\psi\rangle$ or sends it to $-\lvert\psi\rangle$, because it quotients out the very sign we are testing, so comparing the vectors is what keeps that sign visible. The shipped state has exact algebraic amplitudes (the Steane codeword's nonzero entries are $1/(2\sqrt 2)$, for instance), so the comparison is a symbolic zero test, not a numerical tolerance.
 
 Build the Pauli operators as dense matrices (qubit 1 as the leftmost tensor factor, the ordering `PauliStabilizer` uses), read the state vector, and confirm each generator, sign included, leaves it fixed exactly:
 
@@ -93,7 +93,7 @@ For every code, applying any generator to the codeword returns the codeword unch
 AllTrue[codes, With[{psi = Normal[#["state"]["State"]["StateVector"]]}, Simplify[Conjugate[psi] . psi] === 1] &]
 ```
 
-This is the exactness a numeric fidelity would blur. Stim now enters as a second, independent engine, to confirm that these same generators form a consistent stabilizer group and read every syndrome the way the shipped engine does.
+Normalization holds as an exact identity, not a value merely close to one. Stim now enters as a second, independent engine, to confirm that these same generators form a consistent stabilizer group and read every syndrome the way the shipped engine does.
 
 ### Opening a Stim Session
 
@@ -181,7 +181,13 @@ smPar = parityCode["SymbolicMeasure", {1, 2, 3}];
 freeBits = DeleteDuplicates@Cases[smPar["Phase"], \[FormalS][_], Infinity]
 ```
 
-Two bits, not three. Substituting them over all four assignments and reading each collapsed outcome exhibits the third bit as the sum of the first two, exactly what $Z_1 Z_2 Z_3$ demands:
+Two bits, not three. The third outcome is not discarded: the engine stores it as an explicit function of those two free bits, in the `"Outcomes"` map of the measured object.
+
+```wl
+smPar["Outcomes"]
+```
+
+That is the engine's closed-form record of the third qubit's outcome as a Boolean function of the two free bits, written in an unreduced form; over $\{0, 1\}$ it reduces to $m_1 \oplus m_2$. This is the object no sampler carries: the dependency held as an algebraic expression rather than a statistic. Substituting the two free bits over all assignments makes the same relation legible as a table:
 
 ```wl
 readBits[ps_] := First@Keys@Select[
@@ -189,9 +195,9 @@ readBits[ps_] := First@Keys@Select[
 readBits[smPar["SubstituteOutcomes", Thread[freeBits -> #]]] & /@ Tuples[{0, 1}, Length[freeBits]]
 ```
 
-The third bit is the sum of the first two in every row, consistent with the conserved $Z_1 Z_2 Z_3$: the engine spent a formal bit only on the free coins and let the determined outcome follow. That parity is the syndrome of the simplest possible code, a single $Z$-check, and the same relation, written for faults rather than measurements, is what a decoder consumes.
+The third bit is the sum of the first two in every row, consistent with the conserved $Z_1 Z_2 Z_3$: the engine spent a formal bit only on the free coins and stored the determined one as the function above, rather than allocating a third random bit. That parity is the syndrome of the simplest possible code, a single $Z$-check, and the same relation, written for faults rather than measurements, is what a decoder consumes.
 
-The difference from a sampler here is specific, and worth stating precisely rather than broadly. Stim propagates discrete outcome and fault dependencies very efficiently, through Pauli-frame sampling, sweep bits, and detector-error models that map error mechanisms to detector symptoms and logical frame changes; it does not re-traverse the circuit for every shot. What it does not do is keep a dependency as an *algebraic* object. Here the relation $m_3 = m_1 \oplus m_2$ comes back as a symbol you can substitute, simplify, or reason about in closed form, not only sample. That algebraic form, not the propagation of the dependency, is the part with no Stim counterpart.
+The difference from a sampler here is specific, and worth stating precisely rather than broadly. Stim propagates discrete outcome and fault dependencies very efficiently, through Pauli-frame sampling, sweep bits, and detector-error models that map error mechanisms to detector symptoms and logical frame changes; it does not re-traverse the circuit for every shot. What it does not do is keep a dependency as an *algebraic* object. Here the relation is held as the `"Outcomes"` symbol shown above, something you can substitute, simplify, or reason about in closed form, not only sample. That algebraic form, not the propagation of the dependency, is the part with no Stim counterpart.
 
 ## Part III: An Independent Exact Analysis, Cross-Checked Against Stim
 
@@ -350,7 +356,7 @@ The rotation is unitary, so the state it produces stays normalized at every angl
 Simplify[Conjugate[vTheta] . vTheta, \[Theta] \[Element] Reals]
 ```
 
-The syndrome expectation itself is $\cos\theta$: it interpolates continuously from $+1$ at $\theta = 0$ (no error, the codeword is untouched) to $-1$ at $\theta = \pi$ (a full bit flip, a definite nonzero syndrome), passing through zero at $\theta = \pi/2$ (a maximally uncertain syndrome). A coherent rotation is non-Clifford, so it lives in the exact dense simulator, not in a stabilizer tableau; carrying the angle symbolically returns the whole error curve as a closed form, the syndrome as a function of the continuous angle rather than a value estimated at one fixed angle.
+The syndrome expectation itself is $\cos\theta$: it interpolates continuously from $+1$ at $\theta = 0$ (no error, the codeword is untouched) to $-1$ at $\theta = \pi$ (a full bit flip, a definite nonzero syndrome), passing through zero at $\theta = \pi/2$ (a maximally uncertain syndrome). A coherent rotation is non-Clifford for generic $\theta$ (it happens to be Clifford at the special angles $0$, $\pi/2$, $\pi$ sampled just below), so at a symbolic angle it lives in the exact dense simulator, not in a stabilizer tableau; carrying the angle symbolically returns the whole error curve as a closed form, the syndrome as a function of the continuous angle rather than a value estimated at one fixed angle.
 
 ```wl
 {zzExpectation /. \[Theta] -> 0, zzExpectation /. \[Theta] -> Pi/2, zzExpectation /. \[Theta] -> Pi}
@@ -377,6 +383,6 @@ Before we close, a plain summary of what has been established:
 - An independent GF(2) search returns the exact distance and a minimum-weight witness for each code; the logical operators satisfy the full commutation algebra; and Stim confirms each witness is a valid logical, while the exhaustive search establishes it is the lightest.
 - The $[[n, n-2, 2]]$ code condition is derived at symbolic $n$, its distance argued size-independently and confirmed at sample sizes; the repetition family's distance is one; and a coherent error's syndrome is returned as the exact function $\cos\theta$, with a small-angle syndrome rate of $\theta^2/4$.
 
-The picture is a division of labor. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds. This layer, checked here against Stim, gets the states, signs, and syndromes exactly right and drops into the rest of a quantum-mechanics toolkit; and the Wolfram Language around it holds a parameter symbolic where the algebra allows, deriving a family's code condition at symbolic $n$ and returning a coherent error's syndrome as a closed form in the angle. The two agree wherever they overlap, which is what makes the exact answers trustworthy and the symbolic ones worth reaching for.
+The picture is a division of labor. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds. This layer, checked here against Stim, gets the states, signs, and syndromes exactly right and drops into the rest of a quantum-mechanics toolkit; and the Wolfram Language around it holds a parameter symbolic where the algebra allows, deriving a family's code condition at symbolic $n$ and returning a coherent error's syndrome as a closed form in the angle. The two agree wherever they overlap, which is what makes the shared states and syndromes trustworthy; the distance's minimality rests on the exhaustive search, not on Stim, and the symbolic results on the algebra.
 
 The boundary is worth naming plainly: the exhaustive distance search is a small-code instrument by construction, and exact minimum distance is NP-hard in the worst case, so this is not a scaling competitor. When you want the exact answer for a textbook code or a statement about a family, that exactness is what this buys; when you want a threshold for a distance-25 surface code, reach for Stim. Both live in the same notebook, and you can now check one against the other yourself. To push further, adapt the from-scratch functions to your own stabilizer generators (they assume a well-formed, independent set of checks) and diff against Stim, or carry the symbolic-family argument to a code family of your own.
