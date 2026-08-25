@@ -41,53 +41,61 @@ agPickIndependent[bits_, n_Integer] := Module[{bag = Internal`Bag[]},
     Internal`BagPart[bag, All]
 ]
 
-(* Given n stabilizer encodings (n x 2n), construct n destabilizer encodings   *)
-(* by symplectic Gram-Schmidt: each D_i satisfies symp(D_i, S_j) = delta_ij    *)
-(* and symp(D_i, D_k) = 0 for k < i. Each D_i depends on prior D_k via the    *)
-(* augmented constraint matrix; expressed as Fold over Range[n].               *)
-agExtendToSymplecticBasis[stabBits_, n_Integer] := With[{J = agSymplecticForm[n]},
-    Fold[
-        Function[{dests, i},
-            Append[dests,
-                LinearSolve[
-                    Mod[Join[stabBits, dests] . J, 2],
-                    Join[
-                        Normal @ SparseArray[{i -> 1}, n],
-                        ConstantArray[0, Length[dests]]
-                    ],
-                    Modulus -> 2
-                ]
-            ]
-        ],
-        {},
-        Range[n]
-    ]
-]
-
 (* Symplectic Gram matrix of a set of 2n-bit Pauli encodings over F_2. The      *)
 (* (i, j) entry is 1 exactly when encodings i and j anticommute; the diagonal   *)
 (* is always 0, so a mutually commuting set has an all-zero Gram matrix.        *)
 agSymplecticGram[rows_, n_Integer] := With[{J = agSymplecticForm[n]}, Mod[rows . J . Transpose[rows], 2]]
 
+(* Given n stabilizer encodings (n x 2n) that form a square, independent,       *)
+(* isotropic set, construct n destabilizer encodings by symplectic             *)
+(* Gram-Schmidt: each D_i satisfies symp(D_i, S_j) = delta_ij and              *)
+(* symp(D_i, D_k) = 0 for k < i. Each D_i depends on prior D_k via the          *)
+(* augmented constraint matrix; expressed as Fold over Range[n]. Any input      *)
+(* outside that precondition returns $Failed (no message), so the LinearSolve   *)
+(* fold only ever runs on a solvable system.                                    *)
+agExtendToSymplecticBasis[stabBits_ ? MatrixQ, n_Integer] /;
+    Dimensions[stabBits] === {n, 2 n} && MatrixRank[stabBits, Modulus -> 2] === n && Total[agSymplecticGram[stabBits, n], 2] === 0 :=
+    With[{J = agSymplecticForm[n]},
+        Fold[
+            Function[{dests, i},
+                Append[dests,
+                    LinearSolve[
+                        Mod[Join[stabBits, dests] . J, 2],
+                        Join[UnitVector[n, i], ConstantArray[0, Length[dests]]],
+                        Modulus -> 2
+                    ]
+                ]
+            ],
+            {},
+            Range[n]
+        ]
+    ]
+
+agExtendToSymplecticBasis[_, _] := $Failed
+
 (* Genuine destabilizer half {Xdest, Zdest} for a full (square) stabilizer      *)
 (* tableau {Xstab, Zstab}. Destabilizer D_i is the symplectic partner of        *)
-(* stabilizer S_i: symp(D_i, S_j) = KroneckerDelta[i, j] and symp(D_i, D_k) = 0,*)
-(* built by the symplectic Gram-Schmidt (agExtendToSymplecticBasis) the         *)
-(* PauliStabilizer[QuantumState] path uses. A per-qubit X<->Z swap of the       *)
-(* stabilizers satisfies these relations only for the all-Z register, so a      *)
-(* general code (5-qubit, Steane, Shor) needs this to give ps["Circuit"] the    *)
-(* valid full tableau its Aaronson-Gottesman decomposition assumes. Returns     *)
-(* $Failed for a non-square, rank-deficient, or non-commuting generating set,   *)
-(* where no full symplectic completion exists and the caller keeps the swap.    *)
-agDestabilizerTableau[{xStab_, zStab_}] := Module[{nQubits, nGens, stabBits, destBits},
-    {nQubits, nGens} = Dimensions[xStab];
-    stabBits = MapThread[Join, {Transpose[xStab], Transpose[zStab]}];
-    If[ nQubits =!= nGens
-            || MatrixRank[stabBits, Modulus -> 2] =!= nGens
-            || Total[agSymplecticGram[stabBits, nGens], 2] =!= 0,
-        $Failed,
-        destBits = agExtendToSymplecticBasis[stabBits, nGens];
-        {Transpose[destBits[[All, ;; nQubits]]], Transpose[destBits[[All, nQubits + 1 ;;]]]}
+(* stabilizer S_i: symp(D_i, S_j) = KroneckerDelta[i, j] and symp(D_i, D_k) = 0.*)
+(* A per-qubit X<->Z swap of the stabilizers satisfies these relations only for *)
+(* the all-Z register, so a general code (5-qubit, Steane, Shor) needs the       *)
+(* symplectic Gram-Schmidt to give ps["Circuit"] the valid full tableau its      *)
+(* Aaronson-Gottesman decomposition assumes. agExtendToSymplecticBasis returns   *)
+(* the destabilizer encodings for a square/independent/isotropic set and         *)
+(* $Failed otherwise, so a non-square, rank-deficient, or non-commuting          *)
+(* generating set leaves the caller on the swap padding. Normal[] first, so a    *)
+(* SparseArray-backed tableau (also PauliTableauQ) is handled like a dense one.  *)
+agDestabilizerTableau[tableau_ ? PauliTableauQ] := With[{stab = Normal[tableau]},
+    With[{
+        stabBits = MapThread[Join, {Transpose[stab[[1]]], Transpose[stab[[2]]]}],
+        nQubits = Length[stab[[1]]]
+    },
+        Replace[
+            agExtendToSymplecticBasis[stabBits, nQubits],
+            {
+                destBits_ ? MatrixQ :> {Transpose[destBits[[All, ;; nQubits]]], Transpose[destBits[[All, nQubits + 1 ;;]]]},
+                _ :> $Failed
+            }
+        ]
     ]
 ]
 
