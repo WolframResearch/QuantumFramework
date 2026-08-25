@@ -5,15 +5,17 @@ ships in QuantumFramework (`PauliStabilizer`), plus an exact, symbolic code
 analysis built on top of it in the Wolfram Language. It shows that the shipped
 stabilizer engine agrees with the field-standard simulator
 [Stim](https://github.com/quantumlib/Stim) on the standard textbook codes, and
-that the Wolfram Language around it does one thing Stim structurally cannot:
-carry a symbolic parameter (a whole code family, or a continuous error angle) and
-a symbolic measurement outcome.
+that the Wolfram Language around it does what Stim does not: it keeps an
+unresolved measurement outcome as an algebraic symbol, and returns a code family
+or a continuous error angle in closed form.
 
 The value is **exactness and symbolic generality, not scale or speed**. Exact
-minimum distance is NP-hard (Kapshikar and Kundu, arXiv:2203.04262), so the
-distance analysis is a small-code instrument by mathematical necessity,
-complementary to Stim rather than competing with it. Stim owns scale, sampling,
-and decoding; this layer owns the exact, small, and symbolic corner.
+minimum distance is NP-hard in the worst case (Kapshikar and Kundu,
+arXiv:2203.04262), so the exhaustive distance search here is a small-code
+instrument by construction (a limit of this algorithm plus the worst-case
+hardness, not a universal size boundary), complementary to Stim rather than
+competing with it. Stim owns scale, sampling, and decoding; this layer owns the
+exact, small, and symbolic corner.
 
 ## Contents
 
@@ -44,16 +46,20 @@ Shor codes are named; the three-qubit bit-flip `[[3,1,1]]` and phase-flip
    error, code by code (36, 36, 351, 105, and 210 errors for bit-flip, phase-flip,
    Shor, five-qubit, and Steane).
 4. A **symbolic measurement** (`"SymbolicMeasure"`) carries a random outcome as a
-   formal bit and returns a forced outcome as an explicit function of the free
-   bits, which a numeric stabilizer sampler cannot represent.
+   formal bit and returns a forced outcome as an explicit algebraic function of the
+   free bits. Stim propagates such outcome dependencies as concrete frames very
+   efficiently; what it does not do, and this does, is keep the dependency in
+   closed form.
 
 **Part B: an in-language GF(2)/symplectic analysis, cross-checked against Stim.**
 Written from scratch (it calls no packaged distance routine to check itself), it
 reproduces the exact code **distance** and a minimum-weight **witness**, verifies
 the full **logical commutation algebra**, and has **Stim confirm each witness** is
-undetectable and nontrivial. It then certifies the `[[n, n-2, 2]]` and repetition
-families at symbolic `n` in one evaluation, and returns a coherent error's
-syndrome as the exact function `Cos[θ]`.
+undetectable and nontrivial. It then derives the `[[n, n-2, 2]]` family's
+existence condition (even `n ≥ 4`) at symbolic `n`, argues its distance
+size-independently and confirms it at sample sizes, shows the repetition family at
+distance one, and returns a coherent error's syndrome as the exact function
+`Cos[θ]`.
 
 Note (correct, and worth stating): the three-qubit bit-flip and phase-flip codes
 have **quantum distance one**, not three. A single `Z` (or `X`) is an undetectable
