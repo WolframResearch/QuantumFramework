@@ -24,13 +24,13 @@ No "no drive" assumption is listed; node N records why.
 
 **S0 (from R1, R2, R3; cited).** Quantum trajectory theory turns the setup into the conditioned-state equation
 $$d\rho = k\,\mathcal D[\hat M]\rho\,dt + \sqrt{k}\left(\hat M\rho + \rho\hat M - 2\langle\hat M\rangle\rho\right)dW, \qquad dy = \langle\hat M\rangle\,dt + \frac{dW}{2\sqrt{k}},$$
-the record normalization being a declared convention. Each root is visible in the equation's shape: R1 fixes the diffusive form and the single strength; R2 is the noise coefficient being $\sqrt{k}$ rather than $\sqrt{\eta k}$, equivalently the fact that this equation keeps pure states exactly pure (at $\ell = 0$ both the drift and the noise of $d\ell$ vanish: nothing is being discarded); R3 is the absence of any further generator term. *Standard (quantum trajectory theory); the companion file computes with exactly this equation.*
+the record normalization being a declared convention. Each root is visible in the equation's shape: R1 fixes the diffusive form and the single strength; R2 is the noise coefficient being $\sqrt{k}$ rather than $\sqrt{\eta k}$, equivalently the fact that this equation keeps pure states exactly pure (at $\ell = 0$ both the drift and the noise of $d\ell$ vanish: nothing is being discarded); R3 is the absence of any further generator term. *Cited: Wiseman and Milburn, Quantum Measurement and Control (Cambridge 2010), and Jacobs and Steck, Contemporary Physics 47, 279 (2006); the companion file computes with exactly this equation.*
 
 ## Consequences
 
 **S1 (from S0).** The impurity's exact increment, with $\theta$ the angle between the Bloch vector and the measured axis:
 $$d\ell = -4k\,\ell\left(\sin^2\theta + 2\ell\cos^2\theta\right)dt \;-\; 4\sqrt{k}\,\ell\sqrt{1 - 2\ell}\,\cos\theta\,dW.$$
-In words: the drift is never positive, so every kept run purifies; how fast is pure geometry, and the randomness rides entirely on $\cos\theta$. Averaged over records the state stays maximally mixed, so "purifies" already means three inequivalent things: every run, the mean, or the time to a target. The headline is their disagreement. *Ito calculus on S0; checked.*
+In words: the drift is never positive, so every kept run purifies; how fast is pure geometry, and the randomness rides entirely on $\cos\theta$. Averaged over records the state stays maximally mixed, so "purifies" already means three inequivalent things: every run, the mean, or the time to a target. The headline is their disagreement. *Rederivable by Ito calculus on S0; cited: Jacobs 2003, quant-ph/0301056; checked.*
 
 **S2 (from S1).** Two protocols, one dial. *Fixed axis*: the sharpening state drifts into alignment, $\theta \to 0$, where the drift is weakest (of order $\ell^2$) and the noise largest: slow on average, lucky on occasion. *Steered*: re-aim the axis perpendicular to the state at every instant, $\theta \equiv \pi/2$: the noise coefficient vanishes and
 $$\ell(t) = \ell_0\,e^{-4kt} \ \ \text{on every record.}$$
@@ -38,7 +38,7 @@ Steering is a choice of what to measure next; no Hamiltonian is ever applied. *R
 
 ## The headline
 
-**H (from S2, C1).** "Faster" is two claims, and they disagree. At any fixed deadline the steered mean impurity is the lower one; the mean time to reach a fixed target is shorter for the fixed axis, whose lucky records cross early, a luck that determinism forbids. Mechanism: determinism buys the best average at a deadline by selling off the fast tail of the passage-time distribution. Any sentence of the form "this protocol purifies faster," with the score unnamed, has not yet said anything. Audit: H rests on R1, R2, R3, and C1, the full root set, with no conjecture in its closure. *The disagreement is Wiseman and Ralph's; checked.*
+**H (from S2, C1).** "Faster" is two claims, and they disagree. At any fixed deadline the steered mean impurity is the lower one; the mean time to reach a fixed target is shorter for the fixed axis, whose lucky records cross early, a luck that determinism forbids. Mechanism: determinism buys the best average at a deadline by selling off the fast tail of the passage-time distribution. Any sentence of the form "this protocol purifies faster," with the score unnamed, has not yet said anything. Audit: H rests on R1, R2, R3, and C1, the full root set, with no conjecture in its closure. *Cited: Wiseman and Ralph 2006, quant-ph/0603062; checked.*
 
 ## When an assumption is weakened
 
