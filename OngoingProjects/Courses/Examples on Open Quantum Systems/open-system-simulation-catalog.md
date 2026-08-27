@@ -1,13 +1,10 @@
 ---
 Template: Default
-Title: Watching Quantum Things: A Build-It-Yourself Catalog of Open-System Simulations
+Title: A Computational Guide to Open Quantum Systems: Lindblad Dynamics, Quantum Trajectories, and Feedback Control
 Author: Mads Bahrami
 ---
 
-# Watching Quantum Things: A Build-It-Yourself Catalog of Open-System Simulations
-
-<!-- #| style: Subtitle -->
-A single, self-contained tour of twenty small open quantum systems, from master equations for the unconditioned average to monitored trajectories and feedback, each built from plain matrices, computed on the spot, and shown as a picture.
+# A Computational Guide to Open Quantum Systems: Lindblad Dynamics, Quantum Trajectories, and Feedback Control
 
 <!-- #| style: Author -->
 Mads Bahrami
@@ -17,7 +14,7 @@ Wolfram Research, Inc.
 
 This computational essay is a hands-on tour of open quantum systems: systems that leak energy or information to their environment, watched by a detector on the output. We build a driven atom relaxing to its steady state, light in a leaky cavity, a superposition that decoheres almost the instant it forms, an atom whose fluorescence we read first as single photons and then as a homodyne current, a mechanical resonator cooled by measurement and feedback, and a dozen more. Each becomes a few lines of code you can run and change, and each ends in a picture.
 
-Two notes on style. First, the file stands on its own: the mathematics, simulation helpers, and plotting code it needs are defined below, using Wolfram Language. Second, I use the standard names (density matrix, Bloch vector, master equation, dissipator, coherent state) and explain each in one plain sentence the first time it appears; the code uses the same standard names, so it reads like the physics. It is a live notebook, so evaluate the cells from top to bottom, because later cells lean on earlier ones. You do not have to read every tool to follow the physics, though: if you would rather learn the code from the examples, run the definitions in "The Toolkit: Everything the Twenty Examples Share" without studying them and dive into that part only when you want the implementation. Look at each output and what it means before picking apart the code that made it. And you are not locked into anything: change a number, watch a different system, reseed the randomness, and see what moves. That is the whole point.
+This Wolfram notebook is a live animal, so evaluate the cells from top to bottom, change them, get errors, debug them, and practically do anything with it that comes to mind. This is the kind of document I wish I had when I was learning these topics as a graduate student. I remember reading many abstract stochastic dynamical equations and banging my head against the wall trying to truly understand what they meant, and now I am a little surprised (and perhaps disappointed) that I never tried exploring them the way I have done here in this notebook, or, more frankly, that nobody told me to learn by computing. Anyhow, as you read this notebook, you do not have to understand every tool to follow the physics: if you would rather learn the code from the examples, simply run the definitions in "The Toolkit: Everything the Twenty Examples Share" without studying them, and return to that part only when you want to understand the implementation. Look at each output and think about what it means before picking apart the code that produced it. And you are not locked into anything: change a number, watch a different system, reseed the randomness, and see what moves. That is the whole point.
 
 I wrote this essay assuming you know three ideas. First, the state is a **density matrix** $\rho$: an $n\times n$ Hermitian, positive-semidefinite matrix ($n$ is number of levels, 2 for a qubit, more for an oscillator), with nonnegative level populations on its diagonal (summing to one) and the coherences off-diagonal. Second, the system has a Hamiltonian $\hat H$ that drives its unitary evolution when left alone. Third, one random quantity recurs below: the Wiener increment $dW$, a Gaussian random step with variance equal to the time step $dt$. Where the pace steepens I will say so.
 
@@ -1027,7 +1024,7 @@ Now visualize both, the closed-form envelope and the master-equation extraction,
 
 ```wl
 Plot[{Exp[-2 \[Alpha]^2 (1 - Exp[-\[Gamma]cat t])], catCoherence[t]}, {t, 0, 2},
- PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Dashed]},
+ PlotStyle -> {Automatic, Dashed},
  PlotLegends -> {"closed form", "master equation"}, Frame -> True, GridLines -> Automatic,
  FrameLabel -> {"time", "coherence |C(t)|"}, PlotRange -> All,
  PlotLabel -> "master-equation coherence lies on the closed-form envelope"]
@@ -1429,7 +1426,7 @@ The maximum trace-distance discrepancy is small but nonzero because the ODE inte
 ListLinePlot[{
    Table[{t, traceDistance[cavityGiven[dispRun[t], dispRungs, plus], densityMatrix@Normalize[coherentState[dispRungs, \[Alpha]e[t]] + coherentState[dispRungs, \[Alpha]g[t]]]]}, {t, 0.1, 3, 0.05}],
    Table[{t, traceDistance[cavityGiven[dispRun[t], dispRungs, plus], densityMatrix[coherentState[dispRungs, \[Alpha]e[t]]]/2 + densityMatrix[coherentState[dispRungs, \[Alpha]g[t]]]/2]}, {t, 0.1, 3, 0.05}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic, PlotRange -> All,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
  PlotLegends -> {"distance to the pure cat", "distance to the classical mixture"},
  FrameLabel -> {"readout time", "trace distance"},
  PlotLabel -> "the conditional cavity starts a cat and decoheres into the mixture"]
@@ -1630,7 +1627,7 @@ Now visualize one counted trajectory's excited-state population against the mast
 
 ```wl
 ListLinePlot[{Transpose[{when, excitedPopK /@ oneCount}], Transpose[{when, averageChance}]},
- PlotStyle -> {ColorData[97, 1], Directive[Thick, Red, Dashed]}, Frame -> True, GridLines -> Automatic,
+ Frame -> True, GridLines -> Automatic,
  PlotLegends -> {"one trajectory (jumps)", "master equation"}, PlotRange -> All,
  FrameLabel -> {"time", "excited-state population"}, PlotLabel -> "photon counting: one trajectory jumps, the average is smooth"]
 ```
@@ -1721,7 +1718,7 @@ Take the conditional state first. Its excited population is one smooth diffusing
 
 ```wl
 ListLinePlot[{Transpose[{when, excitedPop /@ smoothHistory["states"]}], Transpose[{when, averageChance}]},
- PlotStyle -> {ColorData[97, 1], Directive[Thick, Red, Dashed]}, Frame -> True, GridLines -> Automatic,
+ Frame -> True, GridLines -> Automatic,
  PlotLegends -> {"one conditional history", "master equation"}, PlotRange -> All,
  FrameLabel -> {"time", "excited-state population"}, PlotLabel -> "the conditional state diffuses smoothly, no jumps"]
 ```
@@ -1820,7 +1817,7 @@ If the filter is optimal, the residual is zero-mean white noise. Check its autoc
 With[{innov = dW/Sqrt[dtAtom], ci = 2/Sqrt[Length[dW]]},
  ListPlot[CorrelationFunction[innov, {1, 10}], Filling -> Axis, PlotRange -> {-0.2, 0.2},
   Frame -> True, GridLines -> {None, {{ci, Directive[Gray, Dashed]}, {-ci, Directive[Gray, Dashed]}}},
-  PlotMarkers -> Automatic,
+  PlotMarkers -> Automatic, AspectRatio -> 1/3,
   FrameLabel -> {"lag", "innovation autocorrelation"}, PlotLabel -> "the innovation is white within confidence limits"]]
 ```
 
@@ -1857,7 +1854,7 @@ hetOne = trajectory[densityMatrix[excited], Hdrive, {cAtom/Sqrt[2], I cAtom/Sqrt
 
 ```wl
 ListLinePlot[{Transpose[{when, blochVector[#][[1]] & /@ hetOne["states"]}], Transpose[{when, blochVector[#][[2]] & /@ hetOne["states"]}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, PlotLegends -> {"\[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]", "\[LeftAngleBracket]\[Sigma]y\[RightAngleBracket]"},
+ PlotLegends -> {"\[LeftAngleBracket]\[Sigma]x\[RightAngleBracket]", "\[LeftAngleBracket]\[Sigma]y\[RightAngleBracket]"},
  Frame -> True, GridLines -> Automatic, PlotRange -> {-1.05, 1.05},
  FrameLabel -> {"time", "conditional transverse Bloch vector"}, PlotLabel -> "one heterodyne run resolves both quadratures"]
 ```
@@ -1873,7 +1870,7 @@ dJQ = hetOne["record"][[All, 2]];
 
 ```wl
 ListLinePlot[{Transpose[{Most@when, dJI}], Transpose[{Most@when, dJQ}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, PlotLegends -> {"I record", "Q record"},
+ PlotLegends -> {"I record", "Q record"},
  Frame -> True, GridLines -> Automatic, PlotRange -> All,
  FrameLabel -> {"time", "record increments"}, PlotLabel -> "both quadrature records: almost pure noise per step"]
 ```
@@ -1921,7 +1918,7 @@ dWQ = dJQ - hetSigQ dtAtom;
 
 ```wl
 With[{ci = 2/Sqrt[Length[dWI]]},
- ListPlot[{CorrelationFunction[dWI/Sqrt[dtAtom], {1, 10}], CorrelationFunction[dWQ/Sqrt[dtAtom], {1, 10}]},
+ ListPlot[{CorrelationFunction[dWI/Sqrt[dtAtom], {1, 10}], CorrelationFunction[dWQ/Sqrt[dtAtom], {1, 10}]}, AspectRatio -> 1/3,
   PlotRange -> {-0.2, 0.2}, PlotMarkers -> Automatic, PlotLegends -> {"I channel", "Q channel"},
   Frame -> True, GridLines -> {None, {{ci, Directive[Gray, Dashed]}, {-ci, Directive[Gray, Dashed]}}},
   FrameLabel -> {"lag", "innovation autocorrelation"}, PlotLabel -> "each innovation channel is white"]]
@@ -1948,7 +1945,7 @@ Follow both purities in time:
 ```wl
 ListLinePlot[{Transpose[{when, Mean[purity /@ #] & /@ Transpose[homRuns]}],
    Transpose[{when, purity[Mean[#]] & /@ Transpose[homRuns]}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic,
+ Frame -> True, GridLines -> Automatic,
  PlotLegends -> {"mean purity of conditioned states", "purity of the mean state"},
  PlotRange -> All, FrameLabel -> {"time", "purity"},
  PlotLabel -> "every run stays pure; only the record-blind average mixes"]
@@ -2008,9 +2005,9 @@ Now visualize the weakly and strongly measured trajectories together:
 
 ```wl
 ListLinePlot[{Transpose[{clockZeno, zOf@gentle["states"]}], Transpose[{clockZeno, zOf@hard["states"]}]},
- PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Opacity[0.8]]}, Frame -> True, GridLines -> Automatic,
+ Frame -> True, GridLines -> Automatic,
  PlotLegends -> {"weak measurement (free)", "strong measurement (pinned)"}, PlotRange -> {-1.05, 1.05},
- ImageSize -> 560, FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]z\[RightAngleBracket]"},
+ FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]z\[RightAngleBracket]"},
  PlotLabel -> "strong measurement freezes the qubit (Zeno)"]
 ```
 
@@ -2109,8 +2106,8 @@ Contrast the two regimes directly, the coherent swing against the strongly-watch
 
 ```wl
 ListLinePlot[{Transpose[{whenQpc, zOf@qpcSlow["states"]}], Transpose[{whenQpc, zOf@qpcFast["states"]}]},
- PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Opacity[0.85]]}, Frame -> True, GridLines -> Automatic,
- PlotLegends -> {"weak (coherent tunnelling)", "strong (Zeno telegraph)"}, PlotRange -> {-1.05, 1.05}, ImageSize -> 560,
+ Frame -> True, GridLines -> Automatic,
+ PlotLegends -> {"weak (coherent tunnelling)", "strong (Zeno telegraph)"}, PlotRange -> {-1.05, 1.05},
  FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]z\[RightAngleBracket]"}, PlotLabel -> "measurement strength selects coherent oscillation or telegraph"]
 ```
 
@@ -2197,7 +2194,7 @@ ListLinePlot[Table[Transpose[{tonesQpc, qpcSpectrum[4 OmQpc r, tonesQpc]}], {r, 
  PlotStyle -> (Directive[#, Thickness[0.006]] & /@ sweepCols),
  PlotLegends -> LineLegend[sweepCols, {"k/\[CapitalOmega] = 0.25  (weak)", "k/\[CapitalOmega] = 0.5", "k/\[CapitalOmega] = 0.75", "k/\[CapitalOmega] = 1  (exceptional point)", "k/\[CapitalOmega] = 1.5  (Zeno)"}],
  Frame -> True, GridLines -> {{-OmQpc, 0, OmQpc}, None}, PlotRange -> All, AspectRatio -> 1/2,
- FrameLabel -> {"frequency", "S_zz(omega)"},
+ FrameLabel -> {"frequency", "\!\(\*SubscriptBox[\(S\), \(zz\)]\)(omega)"},
  PlotLabel -> "watching harder marches the spectral peaks inward,\n merging them before the exceptional point"]
 ```
 
@@ -2208,7 +2205,7 @@ The two thresholds are easiest to see if we track the peak location itself. Plot
 ```wl
 With[{Om = OmQpc},
  ListLinePlot[{Table[{r, Re@Sqrt[Om^2 - 2 (r Om)^2]}, {r, 0, 1.5, 0.005}], Table[{r, Re@Sqrt[Om^2 - (r Om)^2]}, {r, 0, 1.5, 0.005}]},
-  PlotStyle -> {ColorData[97, 1], Directive[ColorData[97, 2], Dashed]}, PlotLegends -> {"spectral maximum", "pole frequency"},
+  PlotStyle -> {Automatic, Dashed}, PlotLegends -> {"spectral maximum", "pole frequency"},
   Frame -> True, GridLines -> {{{1/Sqrt[2], Directive[Gray, Dashed]}, {1, Directive[Gray, Dashed]}}, Automatic},
   PlotRange -> All, FrameLabel -> {"k/\[CapitalOmega] ratio", "frequency"},
   PlotLabel -> "spectral peak reaches zero at k/\[CapitalOmega] = \!\(\*FractionBox[\(1\), SqrtBox[\(2\)]]\), poles only at k/\[CapitalOmega] = 1"]]
@@ -2247,9 +2244,9 @@ Now visualize the fan against that conserved mean: every displayed path approach
 ```wl
 Show[ListLinePlot[Transpose[{gridLoc, #}] & /@ fanLoc, PlotStyle -> Directive[ColorData[97, 1], Opacity[0.12]]],
  ListLinePlot[Transpose[{gridLoc, meanLoc}], PlotStyle -> Directive[Thick, ColorData[97, 2]]],
- Frame -> True, GridLines -> Automatic, PlotRange -> {-1.05, 1.05}, ImageSize -> 560,
+ Frame -> True, GridLines -> Automatic, PlotRange -> {-1.05, 1.05},
  FrameLabel -> {"time", "\[LeftAngleBracket]\[Sigma]z\[RightAngleBracket]"},
- PlotLabel -> "each run approaches a pole; the master-equation mean holds at z0"]
+ PlotLabel -> "each run approaches a pole;\n the master-equation mean holds at \!\(\*SubscriptBox[\(z\), \(0\)]\)"]
 ```
 
 By the finite endpoint every displayed run is numerically close to a pole, while the thick curve never leaves $z_0$: the dephasing $\mathcal{D}[\hat\sigma_z]$ leaves the populations untouched, so $\langle\hat\sigma_z\rangle$ is conserved on average. In continuous time, $z(t)$ is a bounded martingale and converges asymptotically to $\pm1$; it does not hit a pole at a generic finite time. The limiting split follows from martingale convergence (equivalently, optional-stopping arguments applied to bounded approximating stopping times): $\mathbb E[z(\infty)]=z_0$, so $p_+ - p_- = z_0$ and $p_+ + p_- = 1$ give $p_\pm = (1 \pm z_0)/2$. Born is a theorem about the limiting martingale, not a fraction the finite run count has to fit. The symmetric $z_0 = 0$ start, the state the earlier examples called $\left|+\right\rangle$, is the equal-weight special case.
@@ -2276,8 +2273,8 @@ The sign of $J(T)$ is the readout's verdict on the eigenstate; measure how often
 
 ```wl
 fidLoc[T_] := With[{iT = Round[T/dtLoc] + 1}, Mean[Boole[Sign[#[[1, iT]]] == #[[2]]] & /@ readData]];
-ListLinePlot[Table[{T, fidLoc[T]}, {T, 0.05, tfLoc, 0.05}], PlotRange -> {0.45, 1.02},
- Frame -> True, GridLines -> Automatic, ImageSize -> 500,
+ListLinePlot[Table[{T, fidLoc[T]}, {T, dtLoc, tfLoc, 0.01}], PlotRange -> All,
+ Frame -> True, GridLines -> Automatic,
  FrameLabel -> {"integration time T", "assignment fidelity"}, PlotLabel -> "longer integration reads the eigenstate out with certainty"]
 ```
 
@@ -2975,59 +2972,92 @@ The mean phonon number $n=\langle\hat b^\dagger\hat b\rangle$ is the oscillator'
 
 The occupation plot shows that the loop cools, but not how. Take it apart, from a single record to the whole ensemble.
 
-Start with one record seen twice. A fixed seed draws the same starting point and the same noise kicks at any gain, so running it with the loop open and then closed holds the disturbance fixed and leaves the feedback as the only difference. Track the energy of the estimate's center, $E_{\mathrm{center}} = \tfrac12(\langle\hat x\rangle^2 + \langle\hat p\rangle^2)$:
+Start with one record seen twice. The quantity that separates watching from cooling is the energy carried by the center of the estimate, $E_{\mathrm{center}} = \tfrac12(\langle\hat x\rangle^2 + \langle\hat p\rangle^2)$, formed step by step from a run:
 
 ```wl
 centerEnergy[run_] := ((#[[1]]^2 + #[[2]]^2)/2 &) /@ run;
+```
+
+A fixed seed draws the same starting point and the same noise kicks at any gain, so running one seed with the loop open and then closed holds the disturbance fixed and leaves the feedback as the only difference between the two histories:
+
+```wl
 {recOff, recOn} = {meanRunCool[0., 4], meanRunCool[Gcool, 4]};
+```
+
+Lay the two center energies on one axis, the open record against the closed one:
+
+```wl
 ListLinePlot[{Transpose[{timesCool, centerEnergy[recOff]}], Transpose[{timesCool, centerEnergy[recOn]}]},
  PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> Automatic, PlotRange -> All,
- PlotLegends -> {"loop open (same noise)", "loop closed (same noise)"}, ImageSize -> 520,
+ PlotLegends -> {"loop open (same noise)", "loop closed (same noise)"},
  FrameLabel -> {"time", "center energy"}, PlotLabel -> "same record: feedback drains the estimate's energy"]
 ```
 
 Both traces start together. The open one wanders and stays high, since the bath damps the mean only at $\gamma/2$, far too slowly to remove the energy the noise pours in; the closed one, under the identical noise, is pulled down within a couple of periods and holds low. Same disturbance, opposite fate: the loop turns the record into a force that carries energy out.
 
-How much energy? The feedback force $-G\langle\hat p\rangle$ opposes the velocity, so it does work at rate $G\langle\hat p\rangle^2$; accumulate it along the closed record, $E_{\mathrm{removed}}(t) = G\int_0^t \langle\hat p\rangle^2\,ds$:
+How much energy? The feedback force $-G\langle\hat p\rangle$ opposes the velocity, so it does work at rate $G\langle\hat p\rangle^2$. Accumulate that rate along the closed record for the energy removed by time $t$, $E_{\mathrm{removed}}(t) = G\int_0^t \langle\hat p\rangle^2\,ds$:
 
 ```wl
-extractedWork[run_, gg_] := Prepend[gg dtCool Accumulate[(#[[2]]^2 &) /@ Most[run]], 0.];
-ListLinePlot[Transpose[{timesCool, extractedWork[recOn, Gcool]}],
- PlotStyle -> ColorData[97, 2], Frame -> True, GridLines -> Automatic, PlotRange -> All, ImageSize -> 520,
+extractedWork[run_, gg_] := 
+  Prepend[gg dtCool Accumulate[(#[[2]]^2 &) /@ Most[run]], 0.];
+```
+
+Plot that running total along the closed record:
+
+```wl
+ListLinePlot[Transpose[{timesCool, extractedWork[recOn, Gcool]}], AspectRatio -> 1/2,
+ Frame -> True, GridLines -> Automatic, PlotRange -> All,
  FrameLabel -> {"time", "energy removed by feedback"}, PlotLabel -> "cooling is a steady drain, not a one-time act"]
 ```
 
 The curve climbs and never flattens, and the work it reports far outruns the few units the estimate's energy actually fell. That gap is the mechanism: measurement back-action and the bath keep pouring energy in, and the feedback keeps taking it back out. Once the oscillator is cold the loop does not stop; it runs on to hold it there, the shock absorber built from a measurement, doing work forever against the noise.
 
-One record is one draw; cooling is a statement about the whole ensemble. Scatter the endpoint of the estimate's center, $(\langle\hat x\rangle, \langle\hat p\rangle)$, across many records, loop open against closed:
+One record is one draw; cooling is a statement about the whole ensemble. From each of many records at a fixed gain, take the endpoint of the estimate's center, $(\langle\hat x\rangle, \langle\hat p\rangle)$:
 
 ```wl
 cloudCool[gg_] := (meanRunCool[gg, #][[-1]] &) /@ Range[nEnsCool];
-ListPlot[{cloudCool[0.], cloudCool[Gcool]},
- PlotStyle -> {Directive[Opacity[0.5], ColorData[97, 1]], Directive[Opacity[0.6], ColorData[97, 2]]},
+```
+
+Scatter that cloud of endpoints, the loop open against closed:
+
+```wl
+ListPlot[{cloudCool[0.], cloudCool[Gcool]}, PlotStyle -> Opacity[0.5],
  PlotLegends -> {"loop open", "loop closed"}, AspectRatio -> 1, Frame -> True, GridLines -> Automatic,
- PlotRange -> {{-14, 14}, {-14, 14}}, ImageSize -> 400, FrameLabel -> {"x", "p"},
- PlotLabel -> "feedback pulls the cloud of estimates in"]
+ PlotRange -> All, FrameLabel -> {"<x>", "<p>"}, PlotLabel -> "feedback pulls the cloud of estimates in"]
 ```
 
 The open-loop centers sprawl across phase space, still spreading because nothing damps them; the closed-loop centers collapse into a tight knot at the origin. That knot is the mean-spread $S$, the covariance of where the estimate sits across records, and feedback is what pulls it in.
 
-The knot is only part of the uncertainty. What an outside observer sees is that spread $S$ blurred by the conditional floor $\Sigma$, how sharply the filter knows each single history, the two adding to the total covariance $\Sigma + S$. Draw the one-sigma ellipses of the floor $\Sigma$ and of the total $\Sigma + S$, open and closed. The spread solves the Lyapunov balance of the previous block, so these are exact, with no sampling:
+The knot is only part of the uncertainty. What an outside observer sees is that spread $S$ blurred by the conditional floor $\Sigma$, how sharply the filter knows each single history, the two adding to the total covariance $\Sigma + S$. Assemble the conditional floor $\Sigma$ from the three steady entries found above:
 
 ```wl
 condCovCool = {{vxCool, vcCool}, {vcCool, vpCool}};
-spreadCool[gg_] := LyapunovSolve[{{-gammaCool/2, 1}, {-1, -gammaCool/2 - gg}}, -{{kxCool^2, kxCool kpCool}, {kxCool kpCool, kpCool^2}}];
-Legended[Graphics[{
-   {ColorData[97, 1], Thick, Line[covarianceEllipse[{0, 0}, condCovCool + spreadCool[0.]]]},
-   {ColorData[97, 2], Thick, Line[covarianceEllipse[{0, 0}, condCovCool + spreadCool[Gcool]]]},
-   {Black, Thick, Dashed, Line[covarianceEllipse[{0, 0}, condCovCool]]}},
-  Frame -> True, GridLines -> Automatic, AspectRatio -> 1, PlotRange -> {{-5, 5}, {-5, 5}}, ImageSize -> 400,
-  FrameLabel -> {"x", "p"}, PlotLabel -> "feedback shrinks the total toward the fixed floor"],
- LineLegend[{ColorData[97, 1], ColorData[97, 2], Directive[Black, Dashed]},
-  {"total \[CapitalSigma]+S, open", "total \[CapitalSigma]+S, closed", "conditional floor \[CapitalSigma]"}]]
 ```
 
-The two solid ellipses are the whole state the world sees; the dashed one is the floor the measurement sets. Feedback pulls the wide open ellipse down almost onto the closed one, but it halts at the dashed floor and cannot cross it. And the floor is identical open and closed: feedback is a Hamiltonian, so it moves where the estimate sits, never how sharply the filter knows it, shrinking $S$ alone and leaving $\Sigma$ fixed. The gap left between the closed ellipse and the floor is the residual the next plot minimizes over the gain; the dashed floor is the cold that no gain can beat.
+The mean-spread $S$ solves the Lyapunov balance of the previous block, so it is exact, with no sampling:
+
+```wl
+spreadCool[gg_] := 
+  LyapunovSolve[{{-gammaCool/2, 
+     1}, {-1, -gammaCool/2 - gg}}, -{{kxCool^2, 
+      kxCool kpCool}, {kxCool kpCool, kpCool^2}}];
+```
+
+Draw the one-sigma ellipse of the floor $\Sigma$ alone and of the total $\Sigma + S$ with the loop open and closed:
+
+```wl
+ListLinePlot[{covarianceEllipse[{0, 0}, condCovCool + spreadCool[0.]],
+   covarianceEllipse[{0, 0}, condCovCool + spreadCool[Gcool]], 
+  covarianceEllipse[{0, 0}, condCovCool]}, Frame -> True, 
+ GridLines -> Automatic, AspectRatio -> 1, PlotRange -> All,
+   FrameLabel -> {"<x>", "<p>"}, 
+ PlotLabel -> "feedback shrinks the total toward the fixed floor",
+ PlotLegends -> {"total \[CapitalSigma]+S, open-loop", 
+   "total \[CapitalSigma]+S, closed-loop", 
+   "conditional floor \[CapitalSigma]"}]
+```
+
+The two total ellipses are the whole state the world sees; the third is the conditional floor $\Sigma$ by itself, the uncertainty the filter keeps on every single history. Closing the loop shrinks the total from the wide open-loop ellipse to the much smaller closed-loop one, but even that halts at the floor and cannot cross it. The floor itself is identical open and closed: feedback is a Hamiltonian, so it moves where the estimate sits, never how sharply the filter knows it, shrinking $S$ alone and leaving $\Sigma$ fixed. The gap between the closed-loop ellipse and the floor is the residual the next plot minimizes over the gain; that floor is the cold that no gain can beat.
 
 How hard should the loop push? Sweep the gain and read the steady occupation off the exact Lyapunov balance:
 
@@ -3147,12 +3177,12 @@ The middle equality is the change of measure, $\mathbb E_Q[w\,X]=\mathbb E_P[X]$
 With[{ws = Re[Conjugate[#] . #] & /@ linearStates,
    tildes = Outer[Times, #, Conjugate[#]] & /@ linearStates,
    ref = evolve[(\[CapitalOmega]lin/2) X, {cLin}, densityMatrix[excited], steps step]},
- With[{rows = {{"unnormalized projectors (Q)", Mean[tildes]},
+ {rows = {{"unnormalized projectors (Q)", Mean[tildes]},
      {"likelihood-weighted (Q)", Total[tildes]/Total[ws]},
      {"equal-weight normalized (Q)", Mean[MapThread[#1/#2 &, {tildes, ws}]]}}},
-  Grid[Prepend[{#[[1]], Re[#[[2, 1, 1]]], Norm[#[[2]] - ref, "Frobenius"]} & /@ rows,
+ Grid[Prepend[{#[[1]], Re[#[[2, 1, 1]]], Norm[#[[2]] - ref, "Frobenius"]} & /@ rows,
     {"reference-measure average", "excited population", "gap to master equation"}],
-   Frame -> All, Alignment -> Left]]]
+  Frame -> All, Alignment -> Left]]
 ```
 
 The two weighted rows sit on the master equation; the equal-weight row misses it, and by a bias no larger ensemble will close, since the error is in the sampling law and not the sample count. That gap is the whole content of the weight: it is what makes the reference measure physical. Two readings of one diffusive process follow from it: normalize the linear state and drive it with the physical innovation for the nonlinear state an experimenter tracks, or carry the unnormalized state under reference noise and keep its norm as the $dP/dQ$ factor.
@@ -3243,12 +3273,27 @@ ListLinePlot[Table[Table[{d, (1 + steadyGeneral[d, om, 1., 0., 0.][[3]])/2}, {d,
 
 The excited population peaks on resonance and falls off as a Lorentzian to either side; the stronger drive both lifts the peak toward saturation at one half and widens it, the power broadening. That is the general averaged atom, the no-record level: with the detector ignored, the state relaxes deterministically to one mixed interior point. To watch it we must say what a detector does with each of the three outputs, and that choice, not the Liouvillian, is what picks a trajectory out of the average.
 
-Now the same atom, watched. Fix the drive, the decay rate, and the three environmental rates, and build the Hamiltonian and the three channel operators from the toolkit's `lower`:
+Now the same atom, watched. Fix the drive $\Omega$, the decay rate $\gamma$, the detuning $\Delta\omega$, the bath occupation $n_T$, and the dephasing $k_d$:
 
 ```wl
 \[CapitalOmega]dr = 3.; \[Gamma]dr = 1.; \[CapitalDelta]dr = 0.8; nTdr = 0.3; kdDr = 0.2;
+```
+
+Build the Hamiltonian, a detuning about $\hat\sigma_z$ plus a drive about $\hat\sigma_x$:
+
+```wl
 Hdr = (\[CapitalDelta]dr/2) Z + (\[CapitalOmega]dr/2) X;
+```
+
+Build the three channel operators from the toolkit's `lower`: emission down, thermal absorption up, and dephasing about $\hat\sigma_z$:
+
+```wl
 Rdown = Sqrt[\[Gamma]dr (nTdr + 1)] lower; Rup = Sqrt[\[Gamma]dr nTdr] ConjugateTranspose[lower]; Rphi = Sqrt[\[Gamma]dr kdDr] Z;
+```
+
+Collect the three as the leak list:
+
+```wl
 drLeaks = {Rdown, Rup, Rphi};
 ```
 
@@ -3264,20 +3309,34 @@ Well short of one: with no record kept, the atom is mixed, sitting inside the ba
 To watch it, we must put a detector on each output, and that choice, not $\mathcal{L}$, is what selects a trajectory. Read all three channels by phase-zero homodyne, each carrying its own independent noise $dW_\alpha$ (with $dW_\alpha\,dW_\beta = \delta_{\alpha\beta}\,dt$), so each record is $dJ_\alpha = \langle\hat R_\alpha + \hat R_\alpha^\dagger\rangle_c\,dt + dW_\alpha$. Which system observable does each carry? Since $\hat\sigma_- + \hat\sigma_+ = \hat\sigma_x$, both emission records track $\langle\hat\sigma_x\rangle$, differing only by their thermal weights, while the dephasing operator is Hermitian, so $\hat R_\phi + \hat R_\phi^\dagger = 2\sqrt{\gamma k_d}\,\hat\sigma_z$ and its record tracks $\langle\hat\sigma_z\rangle$. Confirm the three record drifts are exactly those combinations:
 
 ```wl
-With[{probe = densityMatrix[Normalize[{1., 0.5 + 0.5 I}]]},
- With[{a = blochVector[probe]},
-  Chop[(Re@Tr[(# + ConjugateTranspose[#]) . probe] & /@ {Rdown, Rup, Rphi}) -
-    {Sqrt[\[Gamma]dr (nTdr + 1)] a[[1]], Sqrt[\[Gamma]dr nTdr] a[[1]], 2 Sqrt[\[Gamma]dr kdDr] a[[3]]}]]]
+With[{probe = densityMatrix[Normalize[{1., 0.5 + 0.5 I}]]}, {a = blochVector[probe]},
+ Chop[(Re@Tr[(# + ConjugateTranspose[#]) . probe] & /@ {Rdown, Rup, Rphi}) -
+   {Sqrt[\[Gamma]dr (nTdr + 1)] a[[1]], Sqrt[\[Gamma]dr nTdr] a[[1]], 2 Sqrt[\[Gamma]dr kdDr] a[[3]]}]]
 ```
 
 Zero in every slot: three independent records collapse onto two system observables. Two different baths both report $\langle\hat\sigma_x\rangle$, one reports $\langle\hat\sigma_z\rangle$, and $\langle\hat\sigma_y\rangle$, generally nonzero, appears in no record at all; it reaches the conditioned state only through the Hamiltonian rotation. Channel identity and measured observable are not the same thing.
 
-Integrate the record-blind master equation once as the baseline every ensemble must return to, and run two conditioned histories from the excited state: one keeping only the fluorescence (watch $\hat R_\downarrow$, let the thermal-absorption and dephasing outputs escape), one keeping all three ideally:
+Integrate the record-blind master equation once, the baseline every ensemble must return to:
 
 ```wl
 refRun = evolveODE[Hdr, drLeaks, densityMatrix[excited], 8.];
+```
+
+Run one conditioned history that keeps only the fluorescence, watching $\hat R_\downarrow$ while the thermal-absorption and dephasing outputs escape:
+
+```wl
 watchedOne = trajectory[densityMatrix[excited], Hdr, {Rdown}, {1.}, {Rup, Rphi}, 0.01, 8., 5];
+```
+
+Run another that keeps all three channels ideally:
+
+```wl
 watchedAll = trajectory[densityMatrix[excited], Hdr, drLeaks, {1., 1., 1.}, {}, 0.01, 8., 5];
+```
+
+Take the shared time grid off that run:
+
+```wl
 whenDr = watchedAll["times"];
 ```
 
@@ -3295,9 +3354,8 @@ See it as three curves in time, the record-blind purity against the two conditio
 ListLinePlot[{Transpose[{whenDr, purity[refRun[#]] & /@ whenDr}],
    Transpose[{whenDr, purity /@ watchedOne["states"]}],
    Transpose[{whenDr, purity /@ watchedAll["states"]}]},
- PlotStyle -> {Directive[Thick, Red, Dashed], ColorData[97, 1], ColorData[97, 2]},
  PlotLegends -> {"no record (unconditional)", "fluorescence only", "all three channels"},
- Frame -> True, GridLines -> Automatic, PlotRange -> {0.45, 1.02}, ImageSize -> 560,
+ Frame -> True, GridLines -> Automatic, PlotRange -> {0, 1.1},
  FrameLabel -> {"time", "purity"}, PlotLabel -> "only the complete record keeps a conditioned run pure"]
 ```
 
@@ -3357,7 +3415,7 @@ Now visualize the weak- and strong-drive inelastic spectra together. Their absol
 
 ```wl
 ListLinePlot[{Transpose[{tones, weak/Max[weak]}], Transpose[{tones, strong/Max[strong]}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> {{-6, 0, 6}, None},
+ Frame -> True, GridLines -> {{-6, 0, 6}, None},
  PlotLegends -> {"weak drive", "strong drive"}, PlotRange -> All,
  FrameLabel -> {"frequency (relative to drive)", "inelastic spectrum (each / its peak)"},
  PlotLabel -> "strong driving splits the inelastic spectrum into the Mollow triplet"]
@@ -3407,16 +3465,16 @@ Stack the inelastic spectra into a heatmap, each row scaled to its own peak so t
 mollowHeat = (#/Max[#]) & /@ (mollowInelastic[#, 1., Range[-11, 11, 0.1]] & /@ mollowDrives);
 ```
 
-Plot it, the dressed-transition lines $\mu = \pm\Omega$ overlaid as guides:
+Plot it as a heatmap, weak drive at the bottom rising to strong at the top:
 
 ```wl
-ArrayPlot[mollowHeat, DataRange -> {{-11, 11}, {First@mollowDrives, Last@mollowDrives}}, DataReversed -> True,
- ColorFunction -> "SunsetColors", Frame -> True, AspectRatio -> 1.1, ImageSize -> 460,
- Epilog -> {Directive[White, Dashed, Opacity[0.7]], Line[{{0.3, 0.3}, {8, 8}}], Line[{{-0.3, 0.3}, {-8, 8}}]},
- FrameLabel -> {"frequency", "drive \[CapitalOmega]"}, PlotLabel -> "the Mollow triplet is born as the drive grows (rows scaled to peak; \[Mu]=\[PlusMinus]\[CapitalOmega] dashed)"]
+ArrayPlot[mollowHeat, DataReversed -> True,
+ ColorFunction -> "SunsetColors", Frame -> True, AspectRatio -> 1/2,
+ FrameLabel -> {"frequency", "drive \[CapitalOmega]"},
+ PlotLabel -> "the Mollow triplet is born as the drive grows (rows scaled to peak)"]
 ```
 
-The bright ridge splits into three, the outer two fanning apart along $\mu = \pm\Omega$: the dressed-state sidebands. The triplet is what an ordinary spectrometer sees.
+The bright ridge splits into three, the outer two fanning apart as the drive grows: the dressed-state sidebands at $\mu = \pm\Omega$. The triplet is what an ordinary spectrometer sees.
 
 A homodyne detector sees something an intensity spectrometer cannot: it measures one quadrature $\hat\sigma_- e^{-i\theta} + \hat\sigma_+ e^{i\theta}$, and its spectrum, normalized so the shot-noise floor is one, can fall below that floor. The weak drive we examine, $\Omega = \gamma/4$, is exactly an exceptional point of this Liouvillian, the same coalescence the quantum point contact met: its two dressed modes merge there, so we read this spectrum with the mode-free `resolventSpectrum` rather than the eigenmode sum, which would divide by a singular eigenbasis. Build it from the measurement current fluctuations:
 
@@ -3431,8 +3489,8 @@ At weak drive, one quadrature is squeezed and the perpendicular one is not. Comp
 
 ```wl
 ListLinePlot[{Transpose[{tones, mollowHom[0.25, 1., Pi/2, tones]}], Transpose[{tones, mollowHom[0.25, 1., 0., tones]}]},
- PlotStyle -> {ColorData[97, 1], ColorData[97, 2]}, Frame -> True, GridLines -> {None, {{1, Directive[Gray, Dashed]}}},
- PlotLegends -> {"squeezed quadrature (\[Theta] = \[Pi]/2)", "anti-squeezed (\[Theta] = 0)"}, PlotRange -> {0.7, All}, ImageSize -> 560,
+ Frame -> True, GridLines -> {None, {{1, Directive[Gray, Dashed]}}},
+ PlotLegends -> {"squeezed quadrature (\[Theta] = \[Pi]/2)", "anti-squeezed (\[Theta] = 0)"}, PlotRange -> {0.7, All},
  FrameLabel -> {"frequency", "homodyne spectrum / shot noise"}, PlotLabel -> "resonance fluorescence dips below the shot-noise floor"]
 ```
 

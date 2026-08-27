@@ -135,6 +135,12 @@ math[display="block"] {
 <td>S0 (cat): dρ/dt = γ D[a]ρ.</td>
 </tr>
 <tr>
+<td>E</td>
+<td>contract</td>
+<td>The same equation node when posited without its construction: an equation-level axiom with a precise scope statement, legitimate only when no planned weakening reaches beneath it (rule 1).</td>
+<td>No instance yet; both current pages expose their construction, so their equation node is S0.</td>
+</tr>
+<tr>
 <td>S &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/></svg></td>
 <td>statement</td>
 <td>A derived claim; its header names its parents.</td>
@@ -187,20 +193,21 @@ math[display="block"] {
 </tr>
 <tr>
 <td>italic tail of a node</td>
-<td>Where the truth comes from: <em>derived in place</em> (the algebra is in the node), <em>cited</em> (a pinned source), <em>decided</em> (a decision-procedure verdict on exact input, call recorded), <em>checked</em> (verified downstream along a route independent of the one that found it), or <em>conjectured</em> (unverified; propagates to every descendant and surfaces in the headline's audit line).</td>
+<td>Provenance, then verification. Provenance: <em>derived in place</em>, <em>cited</em> (pinned), or <em>conjectured</em> (propagates to every descendant and surfaces in the audit line). Verification, per clause: <em>exact decision</em> (call recorded), <em>analytic cross-check</em>, <em>numerical check</em> (single-point checks say so), or <em>none</em>; the tail names the clause scope and what the checking route shares with the finding route. Full test manifests live beside the checks in the companion.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="rules-of-the-graph">Rules of the graph</h2>
 <ol>
-<li>The equation of motion is never a root. It enters as S0, translated from the setup roots by standard theory and cited, because the physically meaningful weakenings are acts on the setup, and only the setup layer makes their effect on the equation canonical.</li>
+<li>The page has two layers. In the construction layer, physical roots R are translated into the equation of motion S0 by cited standard theory. In the analysis layer, every consequence consumes the equation as a contract, and therefore survives any construction that yields the same equation. The equation is never a root by default; a page may posit the contract alone (label the node E, with a precise scope statement, construction declared out of scope) exactly when every planned weakening is expressible at the contract level. The moment one weakening reaches beneath the equation (a lost record share, an opened channel, a warmed bath), the construction layer is owed: the weakening set dictates the layer, never taste.</li>
 <li>Every root must be consumed by at least one statement that is not its own weakening. A root that fails this test is not an assumption of the theory but only a direction along which the model can be varied.</li>
 <li>Roots must be pairwise separable by corner models: for independent roots A and B there is a model with A and not B, and one with B and not A. Every weakening node doubles as one of these independence proofs.</li>
-<li>Every statement carries its truth source (the italic tail), one of five marks. <em>Derived in place</em>: the algebra is in the node, checkable by eye. <em>Cited</em>: a pinned source. <em>Decided</em>: a decision procedure or canonical form returned True on exact input, with the exact call recorded; a verdict, not a certificate. <em>Checked</em>: verified computationally downstream, naming what the checking route shares with the finding route; route independence is this method's substitute for a proof checker, since the structural claims physics essays make have none. <em>Conjectured</em>: stated and believed, unverified, and never wearing one of the other marks.</li>
+<li>Every statement's tail states its provenance, one of three: <em>derived in place</em> (the algebra is in the node, checkable by eye), <em>cited</em> (a pinned source, never a naked "standard"), or <em>conjectured</em> (stated and believed, unverified in origin). Provenance <em>conjectured</em> propagates to every descendant regardless of verification, because a numerically checked conjecture is still a conjecture.</li>
+<li>The same tail states its verification, per clause: <em>exact decision</em> (a decision procedure or canonical form returned True on exact input, call recorded), <em>analytic cross-check</em> (an independent closed form or derivation compared), <em>numerical check</em> (computation downstream; single-point checks say so, naming what was varied and what was held fixed), or <em>none</em>. The tail names the clause scope (whole node, or which clause) and what the checking route shares with the finding route; route independence is the method's substitute for a proof checker, since the structural claims physics makes have none. The full manifest of each check (the exact test, what varied, what was held fixed, corner cases, clause scope) lives beside the check in the downstream companion; the page carries only the compressed form. This applies forward; earlier companions are retrofitted when next touched.</li>
 <li>The page is the source of truth; the drawn graph is a rendering of its from-lists and should eventually be generated from the page mechanically, so the two cannot drift apart.</li>
 <li>The abstract is the graph linearized: read the node glosses in layer order, from the setup through the headline to the weakenings, and the dependency notation drops away.</li>
-<li>The headline ends with an audit line: the complete transitive set of roots and choices it rests on, read off the from-lists, with any conjecture anywhere in that closure surfaced by name. Conjecture status propagates to every descendant; a clean audit line and one carrying a conjecture describe different objects, and the difference must be visible at the top.</li>
-<li>While drafting, any candidate statement that falls inside a decidable fragment (an algebraic identity, a real inequality over finitely many parameters) must earn its <em>decided</em> verdict before it becomes a node, so wrong candidates die at the door instead of entering the graph.</li>
+<li>The headline ends with a two-stage audit line: first the contract and the analysis-layer premises it rests on, then the roots realizing the contract by the cited translation (or the scope statement of a posited E), with any conjecture anywhere in the closure surfaced by name. A clean audit line and one carrying a conjecture describe different objects, and the difference must be visible at the top.</li>
+<li>While drafting, any candidate statement that falls inside a decidable fragment (an algebraic identity, a real inequality over finitely many parameters) must earn its <em>exact decision</em> verdict before it becomes a node, so wrong candidates die at the door instead of entering the graph.</li>
 </ol>
 <h2 id="current-instances">Current instances</h2>
 <table>
@@ -224,6 +231,7 @@ math[display="block"] {
 </tr>
 </tbody>
 </table>
+<p>A note on labels across layers: the companion essay predates this key and keeps its own local labels (A1 through A5 with C1 in its part one, B1 through B4 with C2 and C3 in its part two); this key governs backbone pages only. Where the mapping is not obvious: the essay's A1 (no memory) is the cat page's R3 and its A2 the page's R2; the essay's B2 (efficiency) is the purification page's R2 and its B3 the page's R3; the essay's numerical assumptions (A5, the cutoff; B4, the step) have no backbone counterpart on purpose, being downstream-layer concerns.</p>
 <div class="page-number-footer"></div>
 </body>
 </html>
