@@ -425,4 +425,34 @@ VerificationTest[
     TestID -> "SQ-Wigner-symbolic-Fock1-form"
 ]
 
+(* Composing two two-mode operators contracts through ArrayContract instead of
+   forming TensorProduct[t1, t2], which for two rank-4 operator tensors is rank 8
+   with d^8 entries. At Fock size 20 that intermediate is 20^8 = 2.56*10^10
+   entries and the composition does not finish; the contraction itself is
+   milliseconds. The bound is generous so it tracks the blow-up, not the machine. *)
+VerificationTest[
+    TimeConstrained[
+        Block[{bs = Chop @ BeamSplitterOperator[{Pi / 4., Pi / 2.}, 20, {1, 2}]},
+            (bs @ PhaseShiftOperator[0.3, 20, {2}] @ bs)["Dimensions"]
+        ],
+        60, $TimedOut
+    ],
+    {20, 20, 20, 20},
+    TestID -> "SQ-composition-does-not-form-the-outer-product"
+]
+
+(* Direct composition and the circuit form must agree; only the contraction route
+   differs between them. *)
+VerificationTest[
+    Block[{bs = Chop @ BeamSplitterOperator[{Pi / 4., Pi / 2.}, 6, {1, 2}],
+           ps = PhaseShiftOperator[\[FormalTheta], 6, {2}]},
+        Chop @ Max @ Abs @ Normal[
+            (bs @ ps @ bs)["MatrixRepresentation"] -
+            QuantumCircuitOperator[{bs, ps, bs}]["QuantumOperator"]["MatrixRepresentation"]
+        ] /. \[FormalTheta] -> 0.37
+    ],
+    0,
+    TestID -> "SQ-composition-matches-circuit-form"
+]
+
 EndTestSection[]
