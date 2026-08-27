@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="720" viewBox="0 0 980 720" font-family="Helvetica, Arial, sans-serif">
+  <rect width="980" height="720" fill="#ffffff"/>
+  <text x="490" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">Dependency graph · Backbone: A Cavity Cat, and Why It Decoheres Almost at Once</text>
+  <text x="490" y="48" text-anchor="middle" font-size="10.5" fill="#777">nodes and edges are exactly the page's from-lists · source: backbone-cavity-cat.md</text>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
+    </marker>
+    <marker id="arrd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#A6699C"/>
+    </marker>
+  </defs>
+
+  <!-- solid derivation edges -->
+  <line x1="115" y1="118" x2="285" y2="180" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="305" y1="118" x2="305" y2="180" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="495" y1="118" x2="330" y2="180" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="305" y1="238" x2="305" y2="290" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="360" y1="348" x2="520" y2="398" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="690" y1="118" x2="610" y2="398" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="860" y1="118" x2="650" y2="398" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="245" y1="348" x2="140" y2="560" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- dashed weakening edges -->
+  <path d="M 440 118 C 80 180, 40 420, 110 560" fill="none" stroke="#A6699C" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrd)"/>
+  <path d="M 240 118 C 140 250, 140 430, 300 560" fill="none" stroke="#A6699C" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrd)"/>
+  <path d="M 740 118 C 840 280, 760 480, 600 560" fill="none" stroke="#A6699C" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrd)"/>
+
+  <!-- roots -->
+  <rect x="30" y="60" width="170" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+  <text x="115" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R1 · assumption</text>
+  <text x="115" y="92" text-anchor="middle" font-size="10.5" fill="#333">linear coupling: the bath</text>
+  <text x="115" y="105" text-anchor="middle" font-size="10.5" fill="#333">attaches to the amplitude</text>
+
+  <rect x="220" y="60" width="170" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+  <text x="305" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R2 · assumption</text>
+  <text x="305" y="92" text-anchor="middle" font-size="10.5" fill="#333">zero temperature:</text>
+  <text x="305" y="105" text-anchor="middle" font-size="10.5" fill="#333">absorbs, never returns</text>
+
+  <rect x="410" y="60" width="170" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+  <text x="495" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R3 · assumption</text>
+  <text x="495" y="92" text-anchor="middle" font-size="10.5" fill="#333">memoryless:</text>
+  <text x="495" y="105" text-anchor="middle" font-size="10.5" fill="#333">one constant rate γ</text>
+
+  <rect x="615" y="60" width="170" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+  <text x="700" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R4 · assumption</text>
+  <text x="700" y="92" text-anchor="middle" font-size="10.5" fill="#333">two coherent lobes,</text>
+  <text x="700" y="105" text-anchor="middle" font-size="10.5" fill="#333">overlap e^(-d²/2) ≪ 1</text>
+
+  <rect x="795" y="60" width="170" height="58" rx="8" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/>
+  <text x="880" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">C1 · choice</text>
+  <text x="880" y="92" text-anchor="middle" font-size="10.5" fill="#333">coherence = cross-term</text>
+  <text x="880" y="105" text-anchor="middle" font-size="10.5" fill="#333">weight ratio</text>
+
+  <!-- equation node, double border = cited -->
+  <rect x="190" y="182" width="230" height="56" rx="8" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/>
+  <rect x="194" y="186" width="222" height="48" rx="6" fill="none" stroke="#5E9C6B" stroke-width="0.8"/>
+  <text x="305" y="205" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S0 · equation (cited)</text>
+  <text x="305" y="222" text-anchor="middle" font-size="10.5" fill="#333">dρ/dt = γ D[a]ρ</text>
+
+  <!-- statements -->
+  <rect x="190" y="292" width="230" height="56" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+  <text x="305" y="309" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1 · dyadic law</text>
+  <text x="305" y="324" text-anchor="middle" font-size="10.5" fill="#333">⟨β|α⟩ raised to the</text>
+  <text x="305" y="337" text-anchor="middle" font-size="10.5" fill="#333">lost fraction</text>
+
+  <!-- headline -->
+  <rect x="435" y="400" width="250" height="60" rx="8" fill="#FFFFFF" stroke="#333333" stroke-width="2.5"/>
+  <text x="560" y="418" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">H · headline</text>
+  <text x="560" y="433" text-anchor="middle" font-size="10.5" fill="#333">Γdec/γ = d²/2:</text>
+  <text x="560" y="446" text-anchor="middle" font-size="10.5" fill="#333">interference dies first</text>
+  <text x="560" y="476" text-anchor="middle" font-size="9.5" font-style="italic" fill="#888">audit: rests on R1 R2 R3 R4 C1 · no conjectures</text>
+
+  <!-- weakened statements -->
+  <rect x="35" y="562" width="170" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+  <text x="120" y="579" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1′ · R3 weakened</text>
+  <text x="120" y="594" text-anchor="middle" font-size="10.5" fill="#333">memory: flat onset,</text>
+  <text x="120" y="607" text-anchor="middle" font-size="10.5" fill="#333">revival; d² survives</text>
+
+  <rect x="235" y="562" width="170" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+  <text x="320" y="579" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1″ · R2 weakened</text>
+  <text x="320" y="594" text-anchor="middle" font-size="10.5" fill="#333">warm: rate × (2n̄+1);</text>
+  <text x="320" y="607" text-anchor="middle" font-size="10.5" fill="#333">lobes heat</text>
+
+  <rect x="475" y="562" width="170" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+  <text x="560" y="579" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">H′ · R4 weakened</text>
+  <text x="560" y="594" text-anchor="middle" font-size="10.5" fill="#333">law survives,</text>
+  <text x="560" y="607" text-anchor="middle" font-size="10.5" fill="#333">phenomenon gone</text>
+
+  <!-- recorded non-assumption, detached -->
+  <rect x="725" y="562" width="210" height="58" rx="8" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="830" y="579" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">N · non-assumption</text>
+  <text x="830" y="594" text-anchor="middle" font-size="10.5" fill="#333">a free drive commutes;</text>
+  <text x="830" y="607" text-anchor="middle" font-size="10.5" fill="#333">never needed</text>
+  <text x="830" y="636" text-anchor="middle" font-size="9.5" font-style="italic" fill="#888">no incoming edges: nothing rests on stillness</text>
+
+  <!-- legend -->
+  <rect x="30" y="656" width="14" height="14" rx="3" fill="#E7EEF9" stroke="#5B7DB1"/>
+  <text x="50" y="667" font-size="10.5" fill="#333">assumption</text>
+  <rect x="130" y="656" width="14" height="14" rx="3" fill="#FDF2DA" stroke="#C09A4A"/>
+  <text x="150" y="667" font-size="10.5" fill="#333">choice</text>
+  <rect x="205" y="656" width="14" height="14" rx="3" fill="#E9F4EA" stroke="#5E9C6B"/>
+  <text x="225" y="667" font-size="10.5" fill="#333">equation, cited</text>
+  <rect x="315" y="656" width="14" height="14" rx="3" fill="#F4F4F4" stroke="#909090"/>
+  <text x="335" y="667" font-size="10.5" fill="#333">statement</text>
+  <rect x="405" y="656" width="14" height="14" rx="3" fill="#FFFFFF" stroke="#333" stroke-width="2"/>
+  <text x="425" y="667" font-size="10.5" fill="#333">headline</text>
+  <rect x="485" y="656" width="14" height="14" rx="3" fill="#FAFAFA" stroke="#999" stroke-dasharray="3 2"/>
+  <text x="505" y="667" font-size="10.5" fill="#333">recorded non-assumption</text>
+  <line x1="660" y1="663" x2="700" y2="663" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="708" y="667" font-size="10.5" fill="#333">derives from</text>
+  <line x1="790" y1="663" x2="830" y2="663" stroke="#A6699C" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrd)"/>
+  <text x="838" y="667" font-size="10.5" fill="#333">weakens</text>
+</svg>

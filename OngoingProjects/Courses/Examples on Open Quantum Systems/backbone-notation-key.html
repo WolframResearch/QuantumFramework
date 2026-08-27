@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backbone Notation Key</title>
+<style>
+@page {
+  size: letter;
+  margin: 1.2cm;
+  margin-bottom: calc(1.2cm + 1.1em);
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #555;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 1.35;
+  color: #000;
+  background: #fff;
+  margin: 0;
+  padding: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: Arial, Helvetica, sans-serif;
+  margin-top: 0.55em;
+  margin-bottom: 0.15em;
+  line-height: 1.2;
+  page-break-after: avoid;
+}
+h1 { font-size: 1.5em; border-bottom: 1.5px solid #000; padding-bottom: 0.1em; }
+h2 { font-size: 1.25em; border-bottom: 1px solid #555; padding-bottom: 0.08em; }
+h3 { font-size: 1.1em; }
+h4 { font-size: 1.0em; font-style: italic; }
+h5, h6 { font-size: 0.95em; }
+p { margin: 0 0 0.35em 0; orphans: 2; widows: 2; }
+ul, ol { margin: 0.2em 0 0.35em 1.4em; padding: 0; }
+li { margin-bottom: 0.1em; }
+li > p { margin: 0; }
+code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.88em;
+  background: #f2f2f2;
+  padding: 0.05em 0.25em;
+  border-radius: 2px;
+}
+pre {
+  background: #f2f2f2;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0.5em 0.7em;
+  overflow-x: auto;
+  margin: 0.3em 0 0.4em 0;
+  page-break-inside: avoid;
+}
+pre code { background: none; padding: 0; font-size: 0.86em; line-height: 1.3; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.3em 0 0.4em 0;
+  font-size: 0.95em;
+  page-break-inside: avoid;
+}
+th, td { border: 1px solid #999; padding: 0.2em 0.45em; text-align: left; }
+th { background: #e8e8e8; font-weight: bold; }
+tr:nth-child(even) td { background: #f8f8f8; }
+blockquote {
+  border-left: 3px solid #888;
+  margin: 0.3em 0 0.3em 0.5em;
+  padding: 0.15em 0.6em;
+  color: #333;
+}
+hr { border: none; border-top: 1px solid #888; margin: 0.5em 0; }
+img { max-width: 100%; height: auto; display: block; margin: 0.3em auto; page-break-inside: avoid; }
+a { color: #000; text-decoration: underline; }
+/* MathML sizing */
+math { font-size: 1.05em; }
+math[display="block"] {
+  display: block;
+  text-align: center;
+  margin: 0.5em 0;
+}
+@media print {
+  body { margin: 0; padding: 0; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.78em; color: #555; }
+  .page-number-footer {
+    display: block;
+    position: fixed;
+    bottom: 0.3cm;
+    width: 100%;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #555;
+  }
+}
+
+</style>
+</head>
+<body>
+<h1 id="backbone-notation-key">Backbone Notation Key</h1>
+<p>The reference card for reading a backbone page and its dependency graph. A backbone is the statement layer of an essay: a graph of assumptions, choices, and derived statements, given in words and formulas only, with the essay (prose, code, figures) built on it downstream.</p>
+<h2 id="node-kinds">Node kinds</h2>
+<table>
+<thead>
+<tr>
+<th>Label</th>
+<th>Name</th>
+<th>What it is</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/></svg></td>
+<td>root</td>
+<td>A setup assumption: a physical fact posited about the arrangement, with its scope in one line.</td>
+<td>R2 (cat): the environment is at zero temperature, it absorbs and never returns.</td>
+</tr>
+<tr>
+<td>C &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/></svg></td>
+<td>choice</td>
+<td>A meaning we fixed rather than a fact; another choice was possible, and the page compares them.</td>
+<td>C1 (cat): coherence means the cross-term weight ratio.</td>
+</tr>
+<tr>
+<td>S0 &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/><rect x="4" y="4" width="22" height="10" rx="2" fill="none" stroke="#5E9C6B" stroke-width="0.8"/></svg></td>
+<td>equation</td>
+<td>The equation of motion, derived from the roots by standard theory and cited; never itself a root. Each root should be visible in the equation's shape.</td>
+<td>S0 (cat): dρ/dt = γ D[a]ρ.</td>
+</tr>
+<tr>
+<td>S &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/></svg></td>
+<td>statement</td>
+<td>A derived claim; its header names its parents.</td>
+<td>S1 (cat): the dyadic law, the overlap raised to the lost fraction.</td>
+</tr>
+<tr>
+<td>H &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="2" y="2" width="26" height="14" rx="4" fill="#FFFFFF" stroke="#333333" stroke-width="2.5"/></svg></td>
+<td>headline</td>
+<td>The terminal statement, the essay's core claim; its gloss states the mechanism, not just the formula.</td>
+<td>H (cat): Γ_dec/γ = d²/2, interference dies before the light dims.</td>
+</tr>
+<tr>
+<td>N &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/></svg></td>
+<td>recorded non-assumption</td>
+<td>A premise deliberately absent, recorded with the reason it is not needed and the boundary of the deletion.</td>
+<td>N (cat): a free drive commutes with the loss; nothing rests on stillness.</td>
+</tr>
+<tr>
+<td>′ (prime)</td>
+<td>weakened variant</td>
+<td>The same statement under one weakened root.</td>
+<td>S1′ (cat): coherence under a bath with memory: flat onset, revival, d² survives.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="edge-and-border-conventions">Edge and border conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Mark</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>solid arrow &nbsp;<svg width="58" height="14" style="vertical-align:-2px"><line x1="2" y1="7" x2="44" y2="7" stroke="#666666" stroke-width="1.8"/><path d="M 44 2.5 L 53 7 L 44 11.5 z" fill="#666666"/></svg></td>
+<td>Derives from: the target consumes the source.</td>
+</tr>
+<tr>
+<td>dashed arrow &nbsp;<svg width="58" height="14" style="vertical-align:-2px"><line x1="2" y1="7" x2="44" y2="7" stroke="#A6699C" stroke-width="1.8" stroke-dasharray="6 4"/><path d="M 44 2.5 L 53 7 L 44 11.5 z" fill="#A6699C"/></svg></td>
+<td>Weakens: the target states what holds when the source root is weakened.</td>
+</tr>
+<tr>
+<td>double border &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/><rect x="4" y="4" width="22" height="10" rx="2" fill="none" stroke="#5E9C6B" stroke-width="0.8"/></svg></td>
+<td>Cited: the node's derivation is imported from standard theory, not reproved on the page.</td>
+</tr>
+<tr>
+<td>dotted border, disconnected &nbsp;<svg width="30" height="18" style="vertical-align:-4px"><rect x="1" y="1" width="28" height="16" rx="4" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/></svg></td>
+<td>Recorded non-assumption: nothing rests on it; the detachment is the content.</td>
+</tr>
+<tr>
+<td>italic tail of a node</td>
+<td>Where the truth comes from: <em>derived in place</em> (the algebra is in the node), <em>cited</em> (a pinned source), <em>decided</em> (a decision-procedure verdict on exact input, call recorded), <em>checked</em> (verified downstream along a route independent of the one that found it), or <em>conjectured</em> (unverified; propagates to every descendant and surfaces in the headline's audit line).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rules-of-the-graph">Rules of the graph</h2>
+<ol>
+<li>The equation of motion is never a root. It enters as S0, translated from the setup roots by standard theory and cited, because the physically meaningful weakenings are acts on the setup, and only the setup layer makes their effect on the equation canonical.</li>
+<li>Every root must be consumed by at least one statement that is not its own weakening. A root that fails this test is not an assumption of the theory but only a direction along which the model can be varied.</li>
+<li>Roots must be pairwise separable by corner models: for independent roots A and B there is a model with A and not B, and one with B and not A. Every weakening node doubles as one of these independence proofs.</li>
+<li>Every statement carries its truth source (the italic tail), one of five marks. <em>Derived in place</em>: the algebra is in the node, checkable by eye. <em>Cited</em>: a pinned source. <em>Decided</em>: a decision procedure or canonical form returned True on exact input, with the exact call recorded; a verdict, not a certificate. <em>Checked</em>: verified computationally downstream, naming what the checking route shares with the finding route; route independence is this method's substitute for a proof checker, since the structural claims physics essays make have none. <em>Conjectured</em>: stated and believed, unverified, and never wearing one of the other marks.</li>
+<li>The page is the source of truth; the drawn graph is a rendering of its from-lists and should eventually be generated from the page mechanically, so the two cannot drift apart.</li>
+<li>The abstract is the graph linearized: read the node glosses in layer order, from the setup through the headline to the weakenings, and the dependency notation drops away.</li>
+<li>The headline ends with an audit line: the complete transitive set of roots and choices it rests on, read off the from-lists, with any conjecture anywhere in that closure surfaced by name. Conjecture status propagates to every descendant; a clean audit line and one carrying a conjecture describe different objects, and the difference must be visible at the top.</li>
+<li>While drafting, any candidate statement that falls inside a decidable fragment (an algebraic identity, a real inequality over finitely many parameters) must earn its <em>decided</em> verdict before it becomes a node, so wrong candidates die at the door instead of entering the graph.</li>
+</ol>
+<h2 id="current-instances">Current instances</h2>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Graph</th>
+<th>Checked downstream in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>backbone-cavity-cat.md</td>
+<td>backbone-cavity-cat-graph.svg</td>
+<td>two-examples-from-minimal-assumptions.md</td>
+</tr>
+<tr>
+<td>backbone-rapid-purification.md</td>
+<td>backbone-rapid-purification-graph.svg</td>
+<td>two-examples-from-minimal-assumptions.md</td>
+</tr>
+</tbody>
+</table>
+<div class="page-number-footer"></div>
+</body>
+</html>
