@@ -39,12 +39,15 @@ The reference card for reading a backbone page and its dependency graph. A backb
 
 ## Current instances
 
+All backbone pages and graphs live in this Backbone folder; companions live beside the essays they check, one level up unless a fuller path is given.
+
 | Page | Graph | Checked downstream in |
 |---|---|---|
-| backbone-cavity-cat.md | backbone-cavity-cat-graph.svg | two-examples-from-minimal-assumptions.md |
-| backbone-rapid-purification.md | backbone-rapid-purification-graph.svg | two-examples-from-minimal-assumptions.md |
-| backbone-feedback-cooling.md | (none yet) | open-system-simulation-catalog.md (Feedback Cooling section) |
-| backbone-catalog-spine.md | backbone-catalog-spine-graph.svg | open-system-simulation-catalog.md (toolkit and all twenty examples) |
+| backbone-cavity-cat.md | backbone-cavity-cat-graph.svg | ../two-examples-from-minimal-assumptions.md |
+| backbone-rapid-purification.md | backbone-rapid-purification-graph.svg | ../two-examples-from-minimal-assumptions.md |
+| backbone-feedback-cooling.md | (none yet) | ../open-system-simulation-catalog.md (Feedback Cooling section) |
+| backbone-catalog-spine.md | backbone-catalog-spine-graph.svg | ../open-system-simulation-catalog.md (toolkit and all twenty examples) |
 | backbone-entanglement-sudden-death.md | backbone-entanglement-sudden-death-graph.svg | backbone-entanglement-sudden-death-checks.wl (exact-decision battery; no companion essay yet) |
+| ../../ContinuousMeasurement/Continuous Space/Caldeira-Leggett/backbone-gaussian-bath-exact-tcl2.md | backbone-gaussian-bath-exact-tcl2-graph.svg (same folder as its page) | ../../ContinuousMeasurement/Continuous Space/Caldeira-Leggett/gaussian-bath-exact-tcl2-conditions.md (the source draft) |
 
 A note on labels across layers: the companion essay predates this key and keeps its own local labels (A1 through A5 with C1 in its part one, B1 through B4 with C2 and C3 in its part two); this key governs backbone pages only. Where the mapping is not obvious: the essay's A1 (no memory) is the cat page's R3 and its A2 the page's R2; the essay's B2 (efficiency) is the purification page's R2 and its B3 the page's R3; the essay's numerical assumptions (A5, the cutoff; B4, the step) have no backbone counterpart on purpose, being downstream-layer concerns.
