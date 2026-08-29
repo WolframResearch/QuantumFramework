@@ -45,7 +45,6 @@ All backbone pages and graphs live in this Backbone folder; companions live besi
 |---|---|---|
 | backbone-cavity-cat.md | backbone-cavity-cat-graph.svg | ../two-examples-from-minimal-assumptions.md |
 | backbone-rapid-purification.md | backbone-rapid-purification-graph.svg | ../two-examples-from-minimal-assumptions.md |
-| backbone-feedback-cooling.md | (none yet) | ../open-system-simulation-catalog.md (Feedback Cooling section) |
 | backbone-entanglement-sudden-death.md | backbone-entanglement-sudden-death-graph.svg | backbone-entanglement-sudden-death-checks.wl (exact-decision battery; no companion essay yet) |
 | ../../ContinuousMeasurement/Continuous Space/Caldeira-Leggett/backbone-gaussian-bath-exact-tcl2.md | backbone-gaussian-bath-exact-tcl2-graph.svg (same folder as its page) | ../../ContinuousMeasurement/Continuous Space/Caldeira-Leggett/gaussian-bath-exact-tcl2-conditions.md (the source draft) |
 
