@@ -50,6 +50,7 @@ class Node:
         self.body = body
         self.parents = []          # list of (label, weakened_flag)
         self.tail = None
+        self.caption = None
         self.kind = self.classify()
 
     def classify(self):
@@ -108,6 +109,12 @@ def parse_page(text):
         base = label.rstrip("\u2032\u2033")
         if base != label and base not in [p for p, _ in node.parents]:
             node.parents.append((base, False))
+        # optional display caption for the generated graph
+        cm = re.search(r"<!--\s*box:\s*(.*?)-->", body, re.S)
+        node.caption = cm.group(1).strip() if cm else None
+        if cm:
+            body = (body[:cm.start()] + body[cm.end():]).strip()
+            node.body = body
         # tail: final italic span that closes the body
         spans = list(ITALIC_RX.finditer(body))
         if spans:
@@ -319,6 +326,22 @@ def gloss_snippet(n, limit=80):
     return cut[:cut.rfind(" ")].rstrip(",;: ") + " \u2026"
 
 
+def xml_escape(s):
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def rich_line(s):
+    out, pos = [], 0
+    for m in re.finditer(r"([_^])\{([^}]*)\}", s):
+        out.append(xml_escape(s[pos:m.start()]))
+        dy = "2.4" if m.group(1) == "_" else "-3.2"
+        back = "-2.4" if m.group(1) == "_" else "3.2"
+        out.append(f'<tspan font-size="7" dy="{dy}">{xml_escape(m.group(2))}</tspan><tspan dy="{back}"> </tspan>')
+        pos = m.end()
+    out.append(xml_escape(s[pos:]))
+    return "".join(out)
+
+
 def render_svg(nodes, title, out_path):
     layer = {}
 
@@ -371,14 +394,19 @@ def render_svg(nodes, title, out_path):
         kindname = {"R": "assumption", "C": "choice", "S0": "equation, cited", "E": "contract",
                     "S": "statement", "H": "headline", "N": "non-assumption"}.get(n.kind, "?")
         parts.append(f'<text x="{x:.0f}" y="{y - 12:.0f}" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">{n.label} \u00b7 {kindname}</text>')
-        snip = gloss_snippet(n)
-        if snip:
-            half = len(snip) // 2
-            cut = snip.rfind(" ", 0, half + 12)
-            l1, l2 = (snip[:cut], snip[cut + 1:]) if cut > 0 else (snip, "")
-            parts.append(f'<text x="{x:.0f}" y="{y + 3:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{l1}</text>')
-            if l2:
-                parts.append(f'<text x="{x:.0f}" y="{y + 16:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{l2}</text>')
+        if n.caption:
+            lines = [c.strip() for c in n.caption.split("|")][:2]
+            for i, line in enumerate(lines):
+                parts.append(f'<text x="{x:.0f}" y="{y + 3 + 13*i:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{rich_line(line)}</text>')
+        else:
+            snip = gloss_snippet(n)
+            if snip:
+                half = len(snip) // 2
+                cut = snip.rfind(" ", 0, half + 12)
+                l1, l2 = (snip[:cut], snip[cut + 1:]) if cut > 0 else (snip, "")
+                parts.append(f'<text x="{x:.0f}" y="{y + 3:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{xml_escape(l1)}</text>')
+                if l2:
+                    parts.append(f'<text x="{x:.0f}" y="{y + 16:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{xml_escape(l2)}</text>')
         if n.kind == "H":
             anc = ancestors(nodes, n.label)
             named = sorted(a for a in anc if a in nodes and nodes[a].kind in ("R", "C", "S0", "E"))

@@ -82,7 +82,7 @@ Graphs are **generated, never hand-laid**:
 python3 .../backbone_lint.py PAGE.md --render PAGE-graph.svg
 ```
 
-The generator owns the layout and the typography, which retires both the page-versus-drawing drift class and the SVG formula-mangling class. After rendering, open the SVG in the browser pane and screenshot it once to confirm the render is sane. If you must hand-edit an SVG anyway (legacy graphs only): no LaTeX markup or combining accents in SVG text; Greek letters, ⊗, ⟨⟩, ≥, ′ and digit sub/superscripts (², ⁻¹, ₂) are safe bare glyphs; modifier letters (ᵐ, ₜ) are banned; letter indices need tspan pairs with dy negated afterward.
+The generator owns the layout and the typography, which retires both the page-versus-drawing drift class and the SVG formula-mangling class. Each node's box text comes from a display caption written in the page as an invisible comment inside the node block: `<!-- box: first line | second line -->`, a curated summary of the node (its key inequality, rate, or verdict), not the gloss's opening words; use `_{...}` and `^{...}` for letter indices (the generator emits correct tspans), Greek and digit sub/superscripts as bare glyphs, about 40 characters per line. A node without a caption falls back to its gloss's opening words, which is legible but far less useful, so caption every node. After rendering, open the SVG in the browser pane and screenshot it once to confirm the render is sane. If you must hand-edit an SVG anyway (legacy graphs only): no LaTeX markup or combining accents in SVG text; Greek letters, ⊗, ⟨⟩, ≥, ′ and digit sub/superscripts (², ⁻¹, ₂) are safe bare glyphs; modifier letters (ᵐ, ₜ) are banned; letter indices need tspan pairs with dy negated afterward.
 
 ## Guardrails
 

@@ -1,112 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="780" viewBox="0 0 1000 780" font-family="Helvetica, Arial, sans-serif">
-  <rect width="1000" height="780" fill="#ffffff"/>
-  <text x="500" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">Dependency graph · Backbone: When the Exact Gaussian Generator Stops at Second Order</text>
-  <text x="500" y="48" text-anchor="middle" font-size="10.5" fill="#777">nodes and edges are exactly the page's from-lists · source: backbone-gaussian-bath-exact-tcl2.md</text>
-  <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
-    </marker>
-  </defs>
-
-  <!-- solid derivation edges -->
-  <line x1="105" y1="118" x2="295" y2="183" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="285" y1="118" x2="335" y2="183" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="465" y1="118" x2="410" y2="183" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="645" y1="118" x2="465" y2="183" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M 545 102 C 650 140, 745 220, 790 308" fill="none" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="860" y1="243" x2="828" y2="308" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="320" y1="251" x2="262" y2="308" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="400" y1="251" x2="455" y2="423" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="280" y1="374" x2="410" y2="427" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="500" y1="489" x2="560" y2="553" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <line x1="800" y1="380" x2="662" y2="553" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M 950 118 C 995 280, 990 460, 743 583" fill="none" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-
-  <!-- roots -->
-  <rect x="25" y="60" width="160" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
-  <text x="105" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R1 · assumption</text>
-  <text x="105" y="92" text-anchor="middle" font-size="10.5" fill="#333">product preparation</text>
-  <text x="105" y="105" text-anchor="middle" font-size="10.5" fill="#333">ρ<tspan font-size="7.5" dy="2.5">S</tspan><tspan dy="-2.5">(0) ⊗ ρ</tspan><tspan font-size="7.5" dy="2.5">B</tspan><tspan dy="-2.5">(0)</tspan></text>
-
-  <rect x="205" y="60" width="160" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
-  <text x="285" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R2 · assumption</text>
-  <text x="285" y="92" text-anchor="middle" font-size="10.5" fill="#333">thermal harmonic bath,</text>
-  <text x="285" y="105" text-anchor="middle" font-size="10.5" fill="#333">moments pair into C</text>
-
-  <rect x="385" y="60" width="160" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
-  <text x="465" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R3 · assumption</text>
-  <text x="465" y="92" text-anchor="middle" font-size="10.5" fill="#333">one channel −X⊗B:</text>
-  <text x="465" y="105" text-anchor="middle" font-size="10.5" fill="#333">single orbit X<tspan font-size="7.5" dy="2.5">I</tspan><tspan dy="-2.5">(t)</tspan></text>
-
-  <rect x="565" y="60" width="160" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
-  <text x="645" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R5 · assumption</text>
-  <text x="645" y="92" text-anchor="middle" font-size="10.5" fill="#333">C finite, series converges,</text>
-  <text x="645" y="105" text-anchor="middle" font-size="10.5" fill="#333">Φ<tspan font-size="7.5" dy="2.5">t</tspan><tspan dy="-2.5"> invertible</tspan></text>
-
-  <rect x="790" y="60" width="185" height="58" rx="8" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/>
-  <text x="882" y="77" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">C1 · choice</text>
-  <text x="882" y="92" text-anchor="middle" font-size="10.5" fill="#333">exact = generator terminates:</text>
-  <text x="882" y="105" text-anchor="middle" font-size="10.5" fill="#333">L<tspan font-size="7.5" dy="2.5">2m</tspan><tspan dy="-2.5"> = 0 for m ≥ 2, at every λ</tspan></text>
-
-  <!-- equation node, double border = cited -->
-  <rect x="230" y="185" width="270" height="66" rx="8" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/>
-  <rect x="234" y="189" width="262" height="58" rx="6" fill="none" stroke="#5E9C6B" stroke-width="0.8"/>
-  <text x="365" y="205" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S0 · equation (cited)</text>
-  <text x="365" y="222" text-anchor="middle" font-size="10.5" fill="#333">exact map Φ<tspan font-size="7.5" dy="2.5">t</tspan><tspan dy="-2.5"> = 1 + Σ λ</tspan><tspan font-size="7.5" dy="-3.5">2m</tspan><tspan dy="3.5"> M</tspan><tspan font-size="7.5" dy="2.5">2m</tspan><tspan dy="-2.5">,</tspan></text>
-  <text x="365" y="237" text-anchor="middle" font-size="10.5" fill="#333">generator L = Φ′ Φ⁻¹ with its recursion</text>
-
-  <!-- scope-restriction root, consumed by S3 only -->
-  <rect x="765" y="185" width="190" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
-  <text x="860" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R4 · assumption</text>
-  <text x="860" y="217" text-anchor="middle" font-size="10.5" fill="#333">finite dimension,</text>
-  <text x="860" y="230" text-anchor="middle" font-size="10.5" fill="#333">time-independent H<tspan font-size="7.5" dy="2.5">S</tspan></text>
-
-  <!-- statements -->
-  <rect x="110" y="310" width="260" height="64" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
-  <text x="240" y="328" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1 · fourth order = ordering</text>
-  <text x="240" y="343" text-anchor="middle" font-size="10.5" fill="#333">L₄ = the sum of three pairings of</text>
-  <text x="240" y="356" text-anchor="middle" font-size="10.5" fill="#333">T[A₂A₂] − A₂A₂</text>
-
-  <rect x="690" y="310" width="250" height="70" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
-  <text x="815" y="328" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S3 · pure-dephasing equivalence</text>
-  <text x="815" y="343" text-anchor="middle" font-size="10.5" fill="#333">[X<tspan font-size="7.5" dy="2.5">I</tspan><tspan dy="-2.5">(t), X</tspan><tspan font-size="7.5" dy="2.5">I</tspan><tspan dy="-2.5">(s)] = 0 for all times</tspan></text>
-  <text x="815" y="356" text-anchor="middle" font-size="10.5" fill="#333">⟺ [H<tspan font-size="7.5" dy="2.5">S</tspan><tspan dy="-2.5">, X] = 0</tspan></text>
-
-  <rect x="330" y="425" width="280" height="64" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
-  <text x="470" y="443" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S2 · commuting orbit terminates</text>
-  <text x="470" y="458" text-anchor="middle" font-size="10.5" fill="#333">M<tspan font-size="7.5" dy="2.5">2m</tspan><tspan dy="-2.5"> = M₂</tspan><tspan font-size="7.5" dy="-3.5">m</tspan><tspan dy="3.5">/m!,  Φ</tspan><tspan font-size="7.5" dy="2.5">t</tspan><tspan dy="-2.5"> = exp(λ²M₂),</tspan></text>
-  <text x="470" y="471" text-anchor="middle" font-size="10.5" fill="#333">L<tspan font-size="7.5" dy="2.5">2m</tspan><tspan dy="-2.5"> = 0 for m ≥ 2</tspan></text>
-
-  <!-- headline -->
-  <rect x="420" y="555" width="320" height="70" rx="8" fill="#FFFFFF" stroke="#333333" stroke-width="2.5"/>
-  <text x="580" y="574" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">H · headline</text>
-  <text x="580" y="590" text-anchor="middle" font-size="10.5" fill="#333">pure dephasing stops the exact generator</text>
-  <text x="580" y="603" text-anchor="middle" font-size="10.5" fill="#333">at second order, at every coupling;</text>
-  <text x="580" y="616" text-anchor="middle" font-size="10.5" fill="#333">necessity open</text>
-  <text x="580" y="645" text-anchor="middle" font-size="9.5" font-style="italic" fill="#888">audit: H rests on the contract S0 with C1, through S1 and S2, and on S3</text>
-  <text x="580" y="659" text-anchor="middle" font-size="9.5" font-style="italic" fill="#888">S0 from R1 R2 R3 by the cited construction · R5 for existence and invertibility · R4 only in S3 · no conjectures; necessity open</text>
-
-  <!-- recorded non-assumption, detached -->
-  <rect x="40" y="555" width="250" height="70" rx="8" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="165" y="574" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">N1 · non-assumption</text>
-  <text x="165" y="590" text-anchor="middle" font-size="10.5" fill="#333">no Born, Markov, secular, rotating-wave,</text>
-  <text x="165" y="603" text-anchor="middle" font-size="10.5" fill="#333">high-temperature, or Ohmic step anywhere</text>
-  <text x="165" y="645" text-anchor="middle" font-size="9.5" font-style="italic" fill="#888">no incoming edges: nothing above rests on them</text>
-
-  <!-- legend -->
-  <rect x="30" y="700" width="14" height="14" rx="3" fill="#E7EEF9" stroke="#5B7DB1"/>
-  <text x="50" y="711" font-size="10.5" fill="#333">assumption</text>
-  <rect x="130" y="700" width="14" height="14" rx="3" fill="#FDF2DA" stroke="#C09A4A"/>
-  <text x="150" y="711" font-size="10.5" fill="#333">choice</text>
-  <rect x="205" y="700" width="14" height="14" rx="3" fill="#E9F4EA" stroke="#5E9C6B"/>
-  <text x="225" y="711" font-size="10.5" fill="#333">equation, cited</text>
-  <rect x="315" y="700" width="14" height="14" rx="3" fill="#F4F4F4" stroke="#909090"/>
-  <text x="335" y="711" font-size="10.5" fill="#333">statement</text>
-  <rect x="405" y="700" width="14" height="14" rx="3" fill="#FFFFFF" stroke="#333" stroke-width="2"/>
-  <text x="425" y="711" font-size="10.5" fill="#333">headline</text>
-  <rect x="485" y="700" width="14" height="14" rx="3" fill="#FAFAFA" stroke="#999" stroke-dasharray="3 2"/>
-  <text x="505" y="711" font-size="10.5" fill="#333">recorded non-assumption</text>
-  <line x1="660" y1="707" x2="700" y2="707" stroke="#666" stroke-width="1.6" marker-end="url(#arr)"/>
-  <text x="708" y="711" font-size="10.5" fill="#333">derives from</text>
-  <text x="30" y="735" font-size="10" fill="#777">no dashed weakening edges appear: the draft computes no weakened roots, so the page records no primed variants</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1460" height="830" viewBox="0 0 1460 830" font-family="Helvetica, Arial, sans-serif">
+<rect width="1460" height="830" fill="#ffffff"/>
+<text x="730.0" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">Dependency graph · Backbone: When the Exact Gaussian Generator Stops at Second Order</text>
+<text x="730.0" y="48" text-anchor="middle" font-size="10.5" fill="#777">generated by backbone_lint.py from the page’s from-lists</text>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/></marker><marker id="arrd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#A6699C"/></marker></defs>
+<line x1="548" y1="119" x2="487" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="730" y1="119" x2="487" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="912" y1="119" x2="487" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="1278" y1="119" x2="487" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="487" y1="239" x2="730" y2="301" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="487" y1="239" x2="730" y2="421" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="730" y1="359" x2="730" y2="421" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="912" y1="119" x2="973" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="1095" y1="119" x2="973" y2="181" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="182" y1="119" x2="730" y2="541" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="730" y1="479" x2="730" y2="541" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<line x1="973" y1="239" x2="730" y2="541" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
+<rect x="458" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+<text x="548" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R1 · assumption</text>
+<text x="548" y="93" text-anchor="middle" font-size="9.5" fill="#333">product preparation</text>
+<text x="548" y="106" text-anchor="middle" font-size="9.5" fill="#333">ρ<tspan font-size="7" dy="2.4">S</tspan><tspan dy="-2.4"> </tspan>(0) ⊗ ρ<tspan font-size="7" dy="2.4">B</tspan><tspan dy="-2.4"> </tspan>(0)</text>
+<rect x="640" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+<text x="730" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R2 · assumption</text>
+<text x="730" y="93" text-anchor="middle" font-size="9.5" fill="#333">thermal harmonic bath,</text>
+<text x="730" y="106" text-anchor="middle" font-size="9.5" fill="#333">moments pair into C</text>
+<rect x="822" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+<text x="912" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R3 · assumption</text>
+<text x="912" y="93" text-anchor="middle" font-size="9.5" fill="#333">one channel −X⊗B:</text>
+<text x="912" y="106" text-anchor="middle" font-size="9.5" fill="#333">single orbit X<tspan font-size="7" dy="2.4">I</tspan><tspan dy="-2.4"> </tspan>(t)</text>
+<rect x="1005" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+<text x="1095" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R4 · assumption</text>
+<text x="1095" y="93" text-anchor="middle" font-size="9.5" fill="#333">finite dimension,</text>
+<text x="1095" y="106" text-anchor="middle" font-size="9.5" fill="#333">time-independent H<tspan font-size="7" dy="2.4">S</tspan><tspan dy="-2.4"> </tspan></text>
+<rect x="1188" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
+<text x="1278" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R5 · assumption</text>
+<text x="1278" y="93" text-anchor="middle" font-size="9.5" fill="#333">C finite, series converges,</text>
+<text x="1278" y="106" text-anchor="middle" font-size="9.5" fill="#333">Φ<tspan font-size="7" dy="2.4">t</tspan><tspan dy="-2.4"> </tspan> invertible</text>
+<rect x="92" y="61" width="180" height="58" rx="8" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/>
+<text x="182" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">C1 · choice</text>
+<text x="182" y="93" text-anchor="middle" font-size="9.5" fill="#333">exact = generator terminates:</text>
+<text x="182" y="106" text-anchor="middle" font-size="9.5" fill="#333">L<tspan font-size="7" dy="2.4">2m</tspan><tspan dy="-2.4"> </tspan> = 0 for m ≥ 2, at every λ</text>
+<rect x="397" y="181" width="180" height="58" rx="8" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/>
+<rect x="401" y="185" width="172" height="50" rx="6" fill="none" stroke="#5E9C6B" stroke-width="0.8"/>
+<text x="487" y="198" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S0 · equation, cited</text>
+<text x="487" y="213" text-anchor="middle" font-size="9.5" fill="#333">exact map Φ<tspan font-size="7" dy="2.4">t</tspan><tspan dy="-2.4"> </tspan> = 1 + Σ λ<tspan font-size="7" dy="-3.2">2m</tspan><tspan dy="3.2"> </tspan> M<tspan font-size="7" dy="2.4">2m</tspan><tspan dy="-2.4"> </tspan>,</text>
+<text x="487" y="226" text-anchor="middle" font-size="9.5" fill="#333">generator L = Φ′ Φ⁻¹</text>
+<rect x="640" y="301" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+<text x="730" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1 · statement</text>
+<text x="730" y="333" text-anchor="middle" font-size="9.5" fill="#333">L₄ = the sum of three pairings</text>
+<text x="730" y="346" text-anchor="middle" font-size="9.5" fill="#333">of T[A₂A₂] − A₂A₂</text>
+<rect x="640" y="421" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+<text x="730" y="438" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S2 · statement</text>
+<text x="730" y="453" text-anchor="middle" font-size="9.5" fill="#333">M<tspan font-size="7" dy="2.4">2m</tspan><tspan dy="-2.4"> </tspan> = M₂<tspan font-size="7" dy="-3.2">m</tspan><tspan dy="3.2"> </tspan>/m!, Φ<tspan font-size="7" dy="2.4">t</tspan><tspan dy="-2.4"> </tspan> = exp(λ²M₂),</text>
+<text x="730" y="466" text-anchor="middle" font-size="9.5" fill="#333">L<tspan font-size="7" dy="2.4">2m</tspan><tspan dy="-2.4"> </tspan> = 0 for m ≥ 2</text>
+<rect x="883" y="181" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
+<text x="973" y="198" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S3 · statement</text>
+<text x="973" y="213" text-anchor="middle" font-size="9.5" fill="#333">[X<tspan font-size="7" dy="2.4">I</tspan><tspan dy="-2.4"> </tspan>(t), X<tspan font-size="7" dy="2.4">I</tspan><tspan dy="-2.4"> </tspan>(s)] = 0 at all times</text>
+<text x="973" y="226" text-anchor="middle" font-size="9.5" fill="#333">⟺ [H<tspan font-size="7" dy="2.4">S</tspan><tspan dy="-2.4"> </tspan>, X] = 0</text>
+<rect x="640" y="541" width="180" height="58" rx="8" fill="#FFFFFF" stroke="#333333" stroke-width="2.5"/>
+<text x="730" y="558" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">H · headline</text>
+<text x="730" y="573" text-anchor="middle" font-size="9.5" fill="#333">pure dephasing stops the exact generator</text>
+<text x="730" y="586" text-anchor="middle" font-size="9.5" fill="#333">at second order; necessity open</text>
+<text x="730" y="615" text-anchor="middle" font-size="9" font-style="italic" fill="#888">audit: rests on C1 R1 R2 R3 R4 R5 S0 · no conjectures</text>
+<rect x="275" y="61" width="180" height="58" rx="8" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="365" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">N1 · non-assumption</text>
+<text x="365" y="93" text-anchor="middle" font-size="9.5" fill="#333">no Born, Markov, secular, rotating-wave,</text>
+<text x="365" y="106" text-anchor="middle" font-size="9.5" fill="#333">high-temperature, or Ohmic step</text>
 </svg>

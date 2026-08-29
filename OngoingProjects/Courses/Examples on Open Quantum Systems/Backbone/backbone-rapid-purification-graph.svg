@@ -20,52 +20,49 @@
 <line x1="653" y1="239" x2="735" y2="301" stroke="#666666" stroke-width="1.6" marker-end="url(#arr)"/>
 <rect x="302" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
 <text x="392" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R1 · assumption</text>
-<text x="392" y="93" text-anchor="middle" font-size="9.5" fill="#333">One observable of the</text>
-<text x="392" y="106" text-anchor="middle" font-size="9.5" fill="#333">qubit</text>
+<text x="392" y="93" text-anchor="middle" font-size="9.5" fill="#333">one axis watched, diffusive, strength k</text>
 <rect x="498" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
 <text x="588" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R2 · assumption</text>
-<text x="588" y="93" text-anchor="middle" font-size="9.5" fill="#333">The record is complete: everything the</text>
-<text x="588" y="106" text-anchor="middle" font-size="9.5" fill="#333">measurement emits is collected …</text>
+<text x="588" y="93" text-anchor="middle" font-size="9.5" fill="#333">complete record, η = 1</text>
 <rect x="694" y="61" width="180" height="58" rx="8" fill="#E7EEF9" stroke="#5B7DB1" stroke-width="1.5"/>
 <text x="784" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">R3 · assumption</text>
-<text x="784" y="93" text-anchor="middle" font-size="9.5" fill="#333">The watching is the only coupling: no other channel</text>
-<text x="784" y="106" text-anchor="middle" font-size="9.5" fill="#333">touches the qubit. This is …</text>
+<text x="784" y="93" text-anchor="middle" font-size="9.5" fill="#333">no other coupling (closure)</text>
 <rect x="106" y="61" width="180" height="58" rx="8" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/>
 <text x="196" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">C1 · choice</text>
-<text x="196" y="93" text-anchor="middle" font-size="9.5" fill="#333">The working variable: the</text>
-<text x="196" y="106" text-anchor="middle" font-size="9.5" fill="#333">impurity</text>
+<text x="196" y="93" text-anchor="middle" font-size="9.5" fill="#333">the working variable:</text>
+<text x="196" y="106" text-anchor="middle" font-size="9.5" fill="#333">impurity ℓ = 1 − Tr ρ²</text>
 <rect x="237" y="181" width="180" height="58" rx="8" fill="#FDF2DA" stroke="#C09A4A" stroke-width="1.5"/>
 <text x="327" y="198" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">C2 · choice</text>
-<text x="327" y="213" text-anchor="middle" font-size="9.5" fill="#333">The score: protocols are</text>
-<text x="327" y="226" text-anchor="middle" font-size="9.5" fill="#333">ranked by</text>
+<text x="327" y="213" text-anchor="middle" font-size="9.5" fill="#333">the score: rank by ℓ</text>
+<text x="327" y="226" text-anchor="middle" font-size="9.5" fill="#333">(entropy is a monotone relabel)</text>
 <rect x="563" y="181" width="180" height="58" rx="8" fill="#E9F4EA" stroke="#5E9C6B" stroke-width="1.5"/>
 <rect x="567" y="185" width="172" height="50" rx="6" fill="none" stroke="#5E9C6B" stroke-width="0.8"/>
 <text x="653" y="198" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S0 · equation, cited</text>
-<text x="653" y="213" text-anchor="middle" font-size="9.5" fill="#333">Quantum trajectory theory turns the setup into</text>
-<text x="653" y="226" text-anchor="middle" font-size="9.5" fill="#333">the conditioned-state equation</text>
+<text x="653" y="213" text-anchor="middle" font-size="9.5" fill="#333">dρ = kD[M]dt + √k H[M]dW</text>
+<text x="653" y="226" text-anchor="middle" font-size="9.5" fill="#333">dy = ⟨M⟩dt + dW/(2√k)</text>
 <rect x="155" y="301" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
 <text x="245" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S1 · statement</text>
-<text x="245" y="333" text-anchor="middle" font-size="9.5" fill="#333">The exact increment of C1's</text>
-<text x="245" y="346" text-anchor="middle" font-size="9.5" fill="#333">impurity, with</text>
+<text x="245" y="333" text-anchor="middle" font-size="9.5" fill="#333">dℓ increment: drift ≤ 0,</text>
+<text x="245" y="346" text-anchor="middle" font-size="9.5" fill="#333">noise ∝ cos θ</text>
 <rect x="400" y="421" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
 <text x="490" y="438" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S2 · statement</text>
-<text x="490" y="453" text-anchor="middle" font-size="9.5" fill="#333">Two protocols, one dial. Fixed axis: the</text>
-<text x="490" y="466" text-anchor="middle" font-size="9.5" fill="#333">sharpening state drifts into alignment</text>
+<text x="490" y="453" text-anchor="middle" font-size="9.5" fill="#333">steer ⊥: ℓ = ℓ₀e<tspan font-size="7" dy="-3.2">−4kt</tspan><tspan dy="3.2"> </tspan></text>
+<text x="490" y="466" text-anchor="middle" font-size="9.5" fill="#333">on every record</text>
 <rect x="237" y="541" width="180" height="58" rx="8" fill="#FFFFFF" stroke="#333333" stroke-width="2.5"/>
 <text x="327" y="558" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">H · headline</text>
-<text x="327" y="573" text-anchor="middle" font-size="9.5" fill="#333">"Faster" is two claims, and they disagree. At any</text>
-<text x="327" y="586" text-anchor="middle" font-size="9.5" fill="#333">fixed deadline the steered …</text>
+<text x="327" y="573" text-anchor="middle" font-size="9.5" fill="#333">deadline and race rank</text>
+<text x="327" y="586" text-anchor="middle" font-size="9.5" fill="#333">the protocols oppositely</text>
 <text x="327" y="615" text-anchor="middle" font-size="9" font-style="italic" fill="#888">audit: rests on C1 C2 R1 R2 R3 S0 · no conjectures</text>
 <rect x="563" y="541" width="180" height="58" rx="8" fill="#FAFAFA" stroke="#999999" stroke-width="1.5" stroke-dasharray="4 3"/>
 <text x="653" y="558" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">N · non-assumption</text>
-<text x="653" y="573" text-anchor="middle" font-size="9.5" fill="#333">A known rotation between measurements is</text>
-<text x="653" y="586" text-anchor="middle" font-size="9.5" fill="#333">absorbed by the next re-aim …</text>
+<text x="653" y="573" text-anchor="middle" font-size="9.5" fill="#333">a drive is absorbed</text>
+<text x="653" y="586" text-anchor="middle" font-size="9.5" fill="#333">by the re-aiming</text>
 <rect x="400" y="301" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
 <text x="490" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S3 · statement</text>
-<text x="490" y="333" text-anchor="middle" font-size="9.5" fill="#333">Collect only a</text>
-<text x="490" y="346" text-anchor="middle" font-size="9.5" fill="#333">fraction</text>
+<text x="490" y="333" text-anchor="middle" font-size="9.5" fill="#333">η &lt; 1: floor (1−η)/2;</text>
+<text x="490" y="346" text-anchor="middle" font-size="9.5" fill="#333">verdict reverses</text>
 <rect x="645" y="301" width="180" height="58" rx="8" fill="#F4F4F4" stroke="#909090" stroke-width="1.5"/>
 <text x="735" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#222">S4 · statement</text>
-<text x="735" y="333" text-anchor="middle" font-size="9.5" fill="#333">Open an additional channel the record</text>
-<text x="735" y="346" text-anchor="middle" font-size="9.5" fill="#333">does not see …</text>
+<text x="735" y="333" text-anchor="middle" font-size="9.5" fill="#333">cap exactly when the unwatched</text>
+<text x="735" y="346" text-anchor="middle" font-size="9.5" fill="#333">attractor is mixed</text>
 </svg>
