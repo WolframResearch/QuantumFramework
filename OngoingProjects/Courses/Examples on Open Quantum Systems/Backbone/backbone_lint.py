@@ -306,15 +306,17 @@ KIND_STYLE = {
 }
 
 
-def gloss_snippet(n, limit=56):
+def gloss_snippet(n, limit=80):
     plain = n.body.split("$")[0]
-    plain = re.sub(r"\*+", "", plain).strip().rstrip(",;:")
-    words, out = plain.split(), ""
-    for w in words:
-        if len(out) + len(w) + 1 > limit:
-            break
-        out = (out + " " + w).strip()
-    return out
+    plain = re.sub(r"\*+", "", plain).strip()
+    if len(plain) <= limit:
+        return plain.rstrip(",;: ")
+    cut = plain[:limit]
+    # prefer a clause boundary, else a word boundary, then mark the truncation
+    m = max(cut.rfind(", "), cut.rfind("; "), cut.rfind(": "))
+    if m > limit // 2:
+        return cut[:m].rstrip() + " \u2026"
+    return cut[:cut.rfind(" ")].rstrip(",;: ") + " \u2026"
 
 
 def render_svg(nodes, title, out_path):
@@ -377,6 +379,13 @@ def render_svg(nodes, title, out_path):
             parts.append(f'<text x="{x:.0f}" y="{y + 3:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{l1}</text>')
             if l2:
                 parts.append(f'<text x="{x:.0f}" y="{y + 16:.0f}" text-anchor="middle" font-size="9.5" fill="#333">{l2}</text>')
+        if n.kind == "H":
+            anc = ancestors(nodes, n.label)
+            named = sorted(a for a in anc if a in nodes and nodes[a].kind in ("R", "C", "S0", "E"))
+            conj = any(nodes[a].tail and "conjectured" in nodes[a].tail.lower()
+                       for a in anc | {n.label} if a in nodes)
+            caption = "audit: rests on " + " ".join(named) + (" \u00b7 conjectures in closure" if conj else " \u00b7 no conjectures")
+            parts.append(f'<text x="{x:.0f}" y="{y + bh/2 + 16:.0f}" text-anchor="middle" font-size="9" font-style="italic" fill="#888">{caption}</text>')
     parts.append("</svg>")
     open(out_path, "w", encoding="utf-8").write("\n".join(parts))
 
