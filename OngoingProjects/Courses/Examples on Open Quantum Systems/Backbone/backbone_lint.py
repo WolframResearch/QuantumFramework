@@ -343,30 +343,83 @@ def rich_line(s):
 
 
 def render_svg(nodes, title, out_path):
+    labels = list(nodes)
+    parents = {l: [p for p, _w in nodes[l].parents if p in nodes] for l in labels}
+    children = {l: [] for l in labels}
+    for l in labels:
+        for p in parents[l]:
+            children[p].append(l)
+    isolated = [l for l in labels if not parents[l] and not children[l]]
+    # Sugiyama stage 1: layer assignment by longest path
     layer = {}
 
     def depth(lbl, seen=()):
         if lbl in layer:
             return layer[lbl]
-        ps = [p for p, _w in nodes[lbl].parents if p in nodes and p not in seen]
+        ps = [p for p in parents[lbl] if p not in seen]
         d = 0 if not ps else 1 + max(depth(p, seen + (lbl,)) for p in ps)
         layer[lbl] = d
         return d
-    for lbl in nodes:
-        depth(lbl)
+    for l in labels:
+        if l not in isolated:
+            depth(l)
     maxd = max(layer.values()) if layer else 0
+    for l in isolated:
+        layer[l] = maxd  # detached nodes sit in the bottom row
     rows = {}
-    for lbl, d in layer.items():
-        rows.setdefault(d, []).append(lbl)
-    W = max(980, 200 * max(len(r) for r in rows.values()) + 60)
+    for l in labels:
+        rows.setdefault(layer[l], []).append(l)
+    W = max(980, 210 * max(len(r) for r in rows.values()) + 60)
     H_px = 170 + 120 * (maxd + 1) + 60
     bw, bh = 180, 58
-    pos = {}
-    for d in range(maxd + 1):
-        row = rows.get(d, [])
-        for i, lbl in enumerate(sorted(row)):
-            x = (i + 1) * W / (len(row) + 1)
-            pos[lbl] = (x, 90 + 120 * d)
+    xs = {}
+
+    def spread(row):
+        for i, l in enumerate(row):
+            xs[l] = (i + 1) * W / (len(row) + 1)
+    for d in sorted(rows):
+        spread(rows[d])
+    # Sugiyama stage 2: crossing minimization by barycenter sweeps
+    for sweep in range(4):
+        for d in (sorted(rows) if sweep % 2 == 0 else sorted(rows, reverse=True)):
+            row = rows[d]
+            refs = parents if sweep % 2 == 0 else children
+
+            def bary(l):
+                r = refs[l]
+                return sum(xs[p] for p in r) / len(r) if r else xs[l]
+            row.sort(key=bary)
+            spread(row)
+    # Sugiyama stage 3: coordinate assignment, parent/child alignment with min spacing
+    minsep = 205
+    for _ in range(6):
+        for d in sorted(rows):
+            row = rows[d]
+            for l in row:
+                ref = parents[l] + children[l]
+                if ref:
+                    xs[l] = sum(xs[p] for p in ref) / len(ref)
+            row.sort(key=lambda l: xs[l])
+            for i in range(1, len(row)):
+                if xs[row[i]] - xs[row[i - 1]] < minsep:
+                    xs[row[i]] = xs[row[i - 1]] + minsep
+            over = xs[row[-1]] - (W - 120)
+            if over > 0:
+                for l in row:
+                    xs[l] -= over
+            if xs[row[0]] < 120:
+                shift = 120 - xs[row[0]]
+                for l in row:
+                    xs[l] += shift
+                if xs[row[-1]] > W - 120:
+                    spread(row)
+    # normalize: fit the canvas to the content and center it
+    lo, hi = min(xs.values()), max(xs.values())
+    shift = 120 - lo
+    for l in xs:
+        xs[l] += shift
+    W = max(760, int(hi - lo) + 240)
+    pos = {l: (xs[l], 90 + 120 * layer[l]) for l in labels}
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H_px}" viewBox="0 0 {W} {H_px}" font-family="Helvetica, Arial, sans-serif">',
              f'<rect width="{W}" height="{H_px}" fill="#ffffff"/>',
              f'<text x="{W/2}" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">{title}</text>',
