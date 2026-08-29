@@ -40,7 +40,7 @@ Mechanism, in words: the environment identifies which lobe it is absorbing from,
 
 ## When an assumption is weakened
 
-**S1′ (from R3 weakened, with R1 and R2 kept; S1).** Let the environment remember: the smallest such environment is one auxiliary mode, coupled at $g$, itself leaking at $\kappa$. The lost fraction $1 - e^{-\gamma t}$ becomes $1 - \left|u(t)\right|^2$ with
+**S1′ (from R3 weakened, with R1, R2, and R4 kept; S1).** Let the environment remember: the smallest such environment is one auxiliary mode, coupled at $g$, itself leaking at $\kappa$. The lost fraction $1 - e^{-\gamma t}$ becomes $1 - \left|u(t)\right|^2$ with
 $$u'' + \tfrac{\kappa}{2}\,u' + g^2 u = 0, \qquad u(0) = 1, \quad u'(0) = 0,$$
 so the decay starts flat ($1 - u^2 \approx g^2 t^2$), partially revives when $\kappa < 4g$ (the mode hands amplitude back before losing it), and recovers R3 in the corner $\kappa \gg g$ with $\gamma_{\mathrm{eff}} = 4g^2/\kappa$. The restructured roots sharpen the attribution: the $d^2$ amplification persists at every instant because it descends from R1, the linearity that keeps the lobes coherent and their overlap Gaussian, while R3 owned only the clock, the exponential profile and the monotonicity of decoherence. *Derived in place from the linear two-mode dynamics with vacuum inputs; cited for the pseudomode analysis: Garraway, Phys. Rev. A 55, 2290 (1997). Verified by clause: the u equation by exact decision (FullSimplify on fully symbolic input, returning zero identically); the channel reduction by numerical check against the full two-mode simulation, at one coupling and one bath rate, no shared code; the fast-bath corner by analytic cross-check against the constant-rate law.*
 
