@@ -8,10 +8,11 @@ are mechanical-but-noisy; NOTICE covers declared deviations. --render emits an S
 generated from the derived graph, so drawing and page cannot drift.
 
 Usage:
-  python3 backbone_lint.py PAGE.md [--json] [--render OUT.svg]
+  python3 backbone_lint.py PAGE.md [--json] [--render OUT.svg] [--status]
 """
 
 import json
+import os
 import re
 import sys
 from collections import OrderedDict
@@ -26,8 +27,9 @@ def math_spans(text):
 ITALIC_RX = re.compile(r"(?<!\*)\*([^*\n][^*]*?)\*(?!\*)", re.S)
 
 PROV_WORDS = ["derived in place", "cited", "conjectured"]
-VERIF_WORDS = ["exact decision", "analytic cross-check", "numerical check",
-               "verification: none", "verified", "verification:", "checked"]
+VERIF_TYPED = ["exact decision", "analytic cross-check", "numerical check"]
+COMPANION_RX = re.compile(r"<!--\s*companion:\s*(.+?)\s*-->")
+MANIFEST_RX = re.compile(r"<!--\s*manifest:\s*(.+?)\s*-->")
 
 
 def norm_label(raw):
@@ -51,6 +53,10 @@ class Node:
         self.parents = []          # list of (label, weakened_flag)
         self.tail = None
         self.caption = None
+        self.prov_terms = []       # typed provenance words found in the tail
+        self.verif_types = []      # typed verification kinds found in the tail
+        self.verif_none = False    # the tail's verification is (or includes) none
+        self.manifest_state = "undeclared"
         self.kind = self.classify()
 
     def classify(self):
@@ -190,17 +196,27 @@ def lint(path):
         sev = "NOTICE" if 2 in deviations else "ERROR"
         findings.append((sev, n.label, "rule 2: no statement consumes this root except its own weakening"))
 
-    # tails: presence, provenance, verification, naked standard, cited sources in parents
+    # tails: presence, provenance, verification, naked standard, cited sources in parents.
+    # The provenance and verification kinds are fixed typed vocabularies (rule 4 and rule 5);
+    # a tail carries type only, never degree of belief.
     for n in nodes.values():
+        if n.tail:
+            low = n.tail.lower()
+            n.prov_terms = [w for w in PROV_WORDS
+                            if re.search(r"\b" + re.escape(w) + r"\b", low)]
+            vm = re.search(r"verif", low)
+            verif_half = low[vm.start():] if vm else low
+            n.verif_types = [w for w in VERIF_TYPED if w in verif_half]
+            n.verif_none = bool(re.search(r"\bnone\b", verif_half))
         if n.kind in ("S", "S0", "H", "E"):
             if not n.tail:
                 findings.append(("ERROR", n.label, "statement has no italic tail"))
                 continue
             low = n.tail.lower()
-            if not any(w in low for w in PROV_WORDS):
+            if not n.prov_terms:
                 findings.append(("ERROR", n.label, "tail names no provenance (derived in place / cited / conjectured)"))
-            if not any(w in low for w in VERIF_WORDS):
-                findings.append(("ERROR", n.label, "tail names no verification (exact decision / analytic cross-check / numerical check / none)"))
+            if not n.verif_types and not n.verif_none:
+                findings.append(("ERROR", n.label, "tail's verification names none of the typed kinds (exact decision / analytic cross-check / numerical check / none)"))
             if re.search(r"\bstandard\b", low) and "cited" not in low:
                 findings.append(("ERROR", n.label, "naked 'standard' in tail: pin a source"))
             prov_half = re.split(r"[Vv]erif", n.tail)[0]
@@ -210,6 +226,31 @@ def lint(path):
                 if tok not in allowed:
                     findings.append(("ERROR", n.label,
                                      f"tail derives from {tok}, which is not among the header's parents"))
+
+    # rule 5: companion declaration and manifest anchors (applies forward)
+    cdecl = COMPANION_RX.search(preamble)
+    if not cdecl:
+        findings.append(("NOTICE", "-",
+                         "no companion declared (<!-- companion: path -->); manifest anchors unchecked, the declaration applies forward"))
+    else:
+        comp_path = os.path.join(os.path.dirname(os.path.abspath(path)), cdecl.group(1))
+        if not os.path.exists(comp_path):
+            findings.append(("ERROR", "-", f"declared companion not found: {cdecl.group(1)}"))
+        else:
+            comp_text = open(comp_path, encoding="utf-8").read()
+            anchors = {norm_label(a) for a in MANIFEST_RX.findall(comp_text)}
+            for n in nodes.values():
+                if not n.tail:
+                    continue
+                if n.verif_types:
+                    n.manifest_state = "anchored" if n.label in anchors else "missing"
+                    if n.manifest_state == "missing":
+                        findings.append(("ERROR", n.label,
+                                         f"rule 5: tail claims a verification but the companion has no <!-- manifest: {n.label} --> anchor"))
+                elif n.verif_none:
+                    n.manifest_state = "none claimed"
+            for a in sorted(anchors - set(nodes)):
+                findings.append(("WARNING", "-", f"companion anchors {a}, which is not a node on this page"))
 
     # over-listed parents: the tail's provenance half names sources but omits this parent,
     # and the body never mentions it either (the B2/B3 signature)
@@ -471,9 +512,22 @@ def render_svg(nodes, title, out_path):
     open(out_path, "w", encoding="utf-8").write("\n".join(parts))
 
 
+def print_status(nodes):
+    for n in nodes.values():
+        anc = ancestors(nodes, n.label) | {n.label}
+        taint = any(nodes[a].tail and "conjectured" in nodes[a].tail.lower()
+                    for a in anc if a in nodes)
+        prov = ", ".join(n.prov_terms) or "-"
+        verif = ", ".join(n.verif_types) + (", none" if n.verif_none and n.verif_types else "") \
+            if n.verif_types else ("none" if n.verif_none else "-")
+        print(f"  {n.label:4s} {n.kind:3s} prov: {prov:32s} verif: {verif:44s} "
+              f"conjecture-tainted: {'yes' if taint else 'no':3s} manifest: {n.manifest_state}")
+
+
 def main():
     args = sys.argv[1:]
     as_json = "--json" in args
+    show_status = "--status" in args
     render_to = None
     if "--render" in args:
         render_to = args[args.index("--render") + 1]
@@ -496,6 +550,8 @@ def main():
                 print(f"  {s:7s} [{n}] {msg}")
             if not findings:
                 print("  clean")
+            if show_status and nodes:
+                print_status(nodes)
         if any(s == "ERROR" for s, _n, _m in findings):
             worst = 1
     sys.exit(worst)
