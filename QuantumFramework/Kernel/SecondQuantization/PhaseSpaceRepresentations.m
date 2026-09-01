@@ -12,6 +12,10 @@ PackageExport["WignerFunction"]
 
 PackageExport["HusimiQFunction"]
 
+PackageExport["SOrderedFunction"]
+
+PackageExport["SOrderedRepresentation"]
+
 
 (* ::Input::Initialization::Plain:: *)
 WignerRepresentation::usage =
@@ -60,7 +64,7 @@ WignerRepresentation[psi_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPat
     ];
 
     Interpolation[MapThread[List, {Flatten[Outer[List, xvec, pvec], 1
-        ], Flatten[Transpose[Re[w0] Exp[-B 0.5] (g^2 0.5 / \[Pi])]]}]]
+        ], Flatten[Transpose[Re[w0] Exp[-B 0.5] (g^2 0.5 / Pi)]]}]]
 ]
 
 
@@ -102,31 +106,50 @@ WigLaguerreVal[L_, x_, c_] :=
 ZeroLimitPower[_, 0] := 1
 ZeroLimitPower[base_, exp_] := base ^ exp
 
-\[ScriptCapitalK]mn[\[Gamma]_, m_, n_] :=
- With[{\[Zeta] = 2 \[Gamma]},
-  (-1)^n Exp[-(Abs[\[Zeta]]^2)/2] If[m >= n,
-   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] LaguerreL[n, m - n, Abs[\[Zeta]]^2],
-   Sqrt[m!/n!] Conjugate[-\[Zeta]]^(n - m) LaguerreL[m, n - m, Abs[\[Zeta]]^2]]]
+WignerKernel[gamma_, m_, n_] :=
+ With[{zeta = 2 gamma},
+  (-1)^n Exp[-(Abs[zeta]^2)/2] If[m >= n,
+   Sqrt[n!/m!] ZeroLimitPower[zeta, m - n] LaguerreL[n, m - n, Abs[zeta]^2],
+   Sqrt[m!/n!] Conjugate[-zeta]^(n - m) LaguerreL[m, n - m, Abs[zeta]^2]]]
    
-\[ScriptCapitalK]mnWirt[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
- With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
-  (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
-   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] LaguerreL[n, m - n, \[Zeta] \[Zeta]Star],
-   Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) LaguerreL[m, n - m, \[Zeta] \[Zeta]Star]]]
+WignerKernelWirtinger[gamma_, gammaStar_, m_, n_] :=
+ With[{zeta = 2 gamma, zetaStar = 2 gammaStar},
+  (-1)^n Exp[-(zeta zetaStar)/2] If[m >= n,
+   Sqrt[n!/m!] ZeroLimitPower[zeta, m - n] LaguerreL[n, m - n, zeta zetaStar],
+   Sqrt[m!/n!] (-zetaStar)^(n - m) LaguerreL[m, n - m, zeta zetaStar]]]
    
-\[ScriptCapitalK]mnWirtInactive[\[Gamma]_, \[Gamma]Star_, m_, n_] :=
- With[{\[Zeta] = 2 \[Gamma], \[Zeta]Star = 2 \[Gamma]Star},
-  (-1)^n Exp[-(\[Zeta] \[Zeta]Star)/2] If[m >= n,
-   Sqrt[n!/m!] ZeroLimitPower[\[Zeta], m - n] Inactive[LaguerreL][n, m - n, \[Zeta] \[Zeta]Star],
-   Sqrt[m!/n!] (-\[Zeta]Star)^(n - m) Inactive[LaguerreL][m, n - m, \[Zeta] \[Zeta]Star]]]
+WignerKernelWirtingerInactive[gamma_, gammaStar_, m_, n_] :=
+ With[{zeta = 2 gamma, zetaStar = 2 gammaStar},
+  (-1)^n Exp[-(zeta zetaStar)/2] If[m >= n,
+   Sqrt[n!/m!] ZeroLimitPower[zeta, m - n] Inactive[LaguerreL][n, m - n, zeta zetaStar],
+   Sqrt[m!/n!] (-zetaStar)^(n - m) Inactive[LaguerreL][m, n - m, zeta zetaStar]]]
    
 (* Husimi kernel for the density-matrix element <n|rho|m> at position {row=n+1, col=m+1}:
    Q(alpha) = (1/pi) <alpha|rho|alpha> puts the bra amplitude Conjugate[alpha]^n on the
    row index and the ket amplitude alpha^m on the column index. *)
-\[ScriptCapitalK]HusimiMN[\[Alpha]_, m_, n_] :=
- Exp[-Abs[\[Alpha]]^2] ZeroLimitPower[Conjugate[\[Alpha]], n] ZeroLimitPower[\[Alpha], m] / Sqrt[m! n!]
+HusimiKernel[alpha_, m_, n_] :=
+ Exp[-Abs[alpha]^2] ZeroLimitPower[Conjugate[alpha], n] ZeroLimitPower[alpha, m] / Sqrt[m! n!]
    
-SetAttributes[{\[ScriptCapitalK]mn, \[ScriptCapitalK]mnWirt, \[ScriptCapitalK]mnWirtInactive,\[ScriptCapitalK]HusimiMN}, Listable]
+(* Cahill-Glauber s-ordered kernel <m|T(alpha,s)|n>, scaled so the caller applies the same
+   outer 2/Pi as WignerFunction, so that s = 0 reproduces the Wirtinger kernel above term for
+   term. Written with one branch in {lo, hi} = MinMax[{m, n}]: the per-branch signs spelled
+   out above are exactly ((s+1)/(s-1))^lo here. *)
+SOrderedKernel[alpha_, alphaStar_, m_, n_, s_] :=
+ With[{zeta = 2 alpha, zetaStar = 2 alphaStar, u = 1 - s},
+  With[{lo = Min[m, n], hi = Max[m, n]},
+   Exp[-(zeta zetaStar)/(2 u)] Sqrt[lo!/hi!] ((s + 1)/(s - 1))^lo *
+    ZeroLimitPower[If[m >= n, zeta, zetaStar]/u, hi - lo] *
+    LaguerreL[lo, hi - lo, (zeta zetaStar)/(1 - s^2)] / u]]
+
+(* At s = -1 the general form is 0*Infinity, not merely ill-conditioned: the weight
+   ((s+1)/(s-1))^lo vanishes while the Laguerre argument (zeta zetaStar)/(1-s^2) divides by
+   zero, and the product evaluates to Indeterminate. The limit is the Husimi kernel, written
+   here in Wirtinger form rather than delegating so that it stays free of Abs and Conjugate
+   and can be compiled over independent quadratures. *)
+SOrderedKernel[alpha_, alphaStar_, m_, n_, s_ /; TrueQ[s == -1]] :=
+ Exp[-alpha alphaStar] ZeroLimitPower[alphaStar, n] ZeroLimitPower[alpha, m] / (2 Sqrt[m! n!])
+
+SetAttributes[{WignerKernel, WignerKernelWirtinger, WignerKernelWirtingerInactive,HusimiKernel, SOrderedKernel}, Listable]
 
 
 
@@ -140,38 +163,38 @@ WignerFunction::badopt = "Unknown SymbolicForm `1`. Use Automatic, \"Wirtinger\"
 
 Options[WignerFunction] = {SymbolicForm -> Automatic};
 
-WignerFunction[\[Rho]_QuantumState, {x_, p_}, opts:OptionsPattern[]] :=
-  If[\[Rho]["Qudits"] =!= 1,
-    (Message[WignerFunction::multimode, \[Rho]["Qudits"]]; $Failed),
-    1/2 ComplexExpand[WignerFunction[\[Rho], (x + I p)/Sqrt[2], opts]]];
+WignerFunction[state_QuantumState, {x_, p_}, opts:OptionsPattern[]] :=
+  If[state["Qudits"] =!= 1,
+    (Message[WignerFunction::multimode, state["Qudits"]]; $Failed),
+    1/2 ComplexExpand[WignerFunction[state, (x + I p)/Sqrt[2], opts]]];
 
-WignerFunction[\[Rho]_QuantumState, \[Alpha]_, opts:OptionsPattern[]] /; !ListQ[\[Alpha]] :=
+WignerFunction[state_QuantumState, alpha_, opts:OptionsPattern[]] /; !ListQ[alpha] :=
   Block[{
-    mat = \[Rho]["DensityMatrix"],
+    mat = state["DensityMatrix"],
     form = OptionValue[SymbolicForm],
     pos,
     vals
   },
-    If[\[Rho]["Qudits"] =!= 1, Message[WignerFunction::multimode, \[Rho]["Qudits"]]; Return[$Failed]];
+    If[state["Qudits"] =!= 1, Message[WignerFunction::multimode, state["Qudits"]]; Return[$Failed]];
     pos = mat["ExplicitPositions"];
     vals = mat["ExplicitValues"];
     Which[
       form === "Wirtinger",
-       2/\[Pi] Dot[
+       2/Pi Dot[
            mat["ExplicitValues"],
-           \[ScriptCapitalK]mnWirt[\[Alpha], Conjugate[\[Alpha]], pos[[All,2]] - 1, pos[[All,1]] - 1]
+           WignerKernelWirtinger[alpha, Conjugate[alpha], pos[[All,2]] - 1, pos[[All,1]] - 1]
            ],
         
       form === "LaguerreForm",
-       2/\[Pi] Dot[
+       2/Pi Dot[
            mat["ExplicitValues"],
-           \[ScriptCapitalK]mnWirtInactive[\[Alpha], Conjugate[\[Alpha]], pos[[All,2]] - 1, pos[[All,1]] - 1] 
+           WignerKernelWirtingerInactive[alpha, Conjugate[alpha], pos[[All,2]] - 1, pos[[All,1]] - 1] 
            ],
         
       form === Automatic,
-       2/\[Pi] Dot[
+       2/Pi Dot[
            mat["ExplicitValues"],
-           \[ScriptCapitalK]mn[\[Alpha], pos[[All,2]] - 1, pos[[All,1]]-1] 
+           WignerKernel[alpha, pos[[All,2]] - 1, pos[[All,1]]-1] 
            ],
         
       True,
@@ -185,20 +208,20 @@ HusimiQFunction::usage =
 
 HusimiQFunction::multimode = "HusimiQFunction is only defined for single-mode states. The provided state has `1` mode(s).";
 
-HusimiQFunction[\[Rho]_QuantumState, {x_, p_}] :=
-  If[\[Rho]["Qudits"] =!= 1,
-    (Message[HusimiQFunction::multimode, \[Rho]["Qudits"]]; $Failed),
-    1/2 ComplexExpand[HusimiQFunction[\[Rho], (x + I p)/Sqrt[2]]]];
+HusimiQFunction[state_QuantumState, {x_, p_}] :=
+  If[state["Qudits"] =!= 1,
+    (Message[HusimiQFunction::multimode, state["Qudits"]]; $Failed),
+    1/2 ComplexExpand[HusimiQFunction[state, (x + I p)/Sqrt[2]]]];
 
-HusimiQFunction[\[Rho]_QuantumState, \[Alpha]_] /; !ListQ[\[Alpha]] :=
+HusimiQFunction[state_QuantumState, alpha_] /; !ListQ[alpha] :=
  Block[{
-   mat = \[Rho]["DensityMatrix"],
+   mat = state["DensityMatrix"],
    pos,
    val},
-   If[\[Rho]["Qudits"] =!= 1, Message[HusimiQFunction::multimode, \[Rho]["Qudits"]]; Return[$Failed]];
+   If[state["Qudits"] =!= 1, Message[HusimiQFunction::multimode, state["Qudits"]]; Return[$Failed]];
    pos = mat["ExplicitPositions"];
    val = mat["ExplicitValues"];
-   1/\[Pi] Dot[val, \[ScriptCapitalK]HusimiMN[\[Alpha], pos[[All,2]] - 1, pos[[All,1]] - 1]]
+   1/Pi Dot[val, HusimiKernel[alpha, pos[[All,2]] - 1, pos[[All,1]] - 1]]
    ]
 
 
@@ -213,11 +236,11 @@ Options[HusimiQRepresentation]={
 "GridSize"->100
 };
 
-HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
+HusimiQRepresentation[state_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
      OptionsPattern[]] :=
     Module[{X, Y, amat, qmat, vals, vecs, g, xvec, pvec, outerList},
         
-        If[\[Psi]["Qudits"] =!= 1, Message[HusimiQRepresentation::multimode, \[Psi]["Qudits"]]; Return[$Failed]];
+        If[state["Qudits"] =!= 1, Message[HusimiQRepresentation::multimode, state["Qudits"]]; Return[$Failed]];
         
         g = OptionValue["GaussianScaling"];
 
@@ -238,9 +261,9 @@ HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
            0.25 g^2 = |d^2 alpha / d(x,p)| Jacobian re-expresses it as a density
            over dx dp, so it integrates to 1 and agrees with the {x,p} closed
            form. The mixed branch below carries the same factor. *)
-        If[\[Psi]["PureStateQ"],
-            qmat = 0.25 g^2 HusimiPure[\[Psi], amat],
-            {vals, vecs} = \[Psi]["Eigensystem"];
+        If[state["PureStateQ"],
+            qmat = 0.25 g^2 HusimiPure[state, amat],
+            {vals, vecs} = state["Eigensystem"];
             {vals, vecs} =
                 With[{mask = Unitize[vals]},
                     {Pick[vals, mask, 1], Pick[vecs, mask, 1]}
@@ -263,3 +286,94 @@ HusimiPure[psi_QuantumState, alphaMat_] :=
 		
 		Re[qmat] Exp[-Abs[alphaMat]^2]/Pi
     ]
+
+
+(* ::Input::Initialization::Plain:: *)
+SOrderedFunction::usage =
+"SOrderedFunction[state, alpha, s] gives the Cahill-Glauber s-ordered quasi-probability \
+distribution W(alpha, s) = (1/Pi) Tr[rho T(alpha, s)]. s = 0 is the Wigner function, s = -1 \
+the Husimi Q function, and s -> 1 the Glauber-Sudarshan P distribution.\n\
+SOrderedFunction[state, {x, p}, s] uses real quadratures, alpha = (x + I p)/Sqrt[2].\n\
+s may be symbolic; s = 1 is not a function and is rejected.";
+
+SOrderedFunction::multimode = "SOrderedFunction is only defined for single-mode states. The provided state has `1` mode(s).";
+
+SOrderedFunction::sunit = "s = 1 is the Glauber-Sudarshan P distribution, which is not a function: the kernel T(alpha, 1) is undefined and the s -> 1 limit is a distribution. Pair an s < 1 result with a test function instead.";
+
+SOrderedFunction::snum = "s must be a real number less than 1; got `1`.";
+
+SOrderedWirtinger[state_QuantumState, alpha_, alphaStar_, s_] :=
+ With[{mat = state["DensityMatrix"]},
+
+  With[{pos = mat["ExplicitPositions"]},
+  
+   (2/Pi) Dot[
+    mat["ExplicitValues"],
+    SOrderedKernel[alpha, alphaStar, pos[[All, 2]] - 1, pos[[All, 1]] - 1, s]]]]
+
+SOrderedFunction[state_QuantumState, {x_, p_}, s_] :=
+ Which[
+  state["Qudits"] =!= 1, Message[SOrderedFunction::multimode, state["Qudits"]]; $Failed,
+  TrueQ[s == 1], Message[SOrderedFunction::sunit]; $Failed,
+  NumericQ[s] && ! TrueQ[Re[s] < 1], Message[SOrderedFunction::snum, s]; $Failed,
+  True, 1/2 ComplexExpand @ SOrderedWirtinger[state, (x + I p)/Sqrt[2], (x - I p)/Sqrt[2], s]]
+
+SOrderedFunction[state_QuantumState, alpha_, s_] /; ! ListQ[alpha] :=
+ Which[
+  state["Qudits"] =!= 1, Message[SOrderedFunction::multimode, state["Qudits"]]; $Failed,
+  TrueQ[s == 1], Message[SOrderedFunction::sunit]; $Failed,
+  NumericQ[s] && ! TrueQ[Re[s] < 1], Message[SOrderedFunction::snum, s]; $Failed,
+  True, SOrderedWirtinger[state, alpha, Conjugate[alpha], s]]
+
+
+(* ::Input::Initialization::Plain:: *)
+SOrderedRepresentation::usage =
+"SOrderedRepresentation[state, {xmin, xmax}, {pmin, pmax}, s] computes the s-ordered \
+quasi-probability distribution over the given quadrature window. Returns an \
+InterpolatingFunction. s must be numeric and less than 1.\n\
+SOrderedRepresentation[..., opts] options: \"GaussianScaling\" -> Sqrt[2] (default), \
+\"GridSize\" -> 100 (default).";
+
+SOrderedRepresentation::multimode = "SOrderedRepresentation is only defined for single-mode states. The provided state has `1` mode(s).";
+
+SOrderedRepresentation::sunit = "s = 1 is the Glauber-Sudarshan P distribution, which is not a function and cannot be sampled on a grid.";
+
+SOrderedRepresentation::snum = "s must be a real number less than 1; got `1`.";
+
+SOrderedRepresentation::coarse = "Grid spacing `1` cannot resolve structure of scale Sqrt[1-s] = `2`; increase \"GridSize\" or lower s.";
+
+Options[SOrderedRepresentation] = {
+"GaussianScaling" -> Sqrt[2],
+"GridSize" -> 100
+};
+
+SOrderedRepresentation[state_QuantumState, {xmin_, xmax_}, {pmin_, pmax_}, s_?NumericQ,
+    OptionsPattern[]] :=
+ Module[{n, g, xvec, pvec, dx, xq, pq, cf, vals},
+
+  Which[
+   state["Qudits"] =!= 1,
+    Message[SOrderedRepresentation::multimode, state["Qudits"]]; Return[$Failed],
+   TrueQ[s == 1], Message[SOrderedRepresentation::sunit]; Return[$Failed],
+   ! TrueQ[Re[s] < 1], Message[SOrderedRepresentation::snum, s]; Return[$Failed]];
+
+  n = OptionValue["GridSize"];
+  g = OptionValue["GaussianScaling"];
+  xvec = N @ Subdivide[xmin, xmax, n - 1];
+  pvec = N @ Subdivide[pmin, pmax, n - 1];
+
+  (* Structure shrinks like Sqrt[1-s] while its amplitude grows, so a window that resolves
+     the Wigner function can miss an s near 1 entirely: at s = 0.9 a hundred-point grid
+     integrated to -122 instead of 1 while the pointwise values were still good to thirteen
+     digits. *)
+  dx = Min[xvec[[2]] - xvec[[1]], pvec[[2]] - pvec[[1]]];
+  If[dx > Sqrt[1 - s]/2, Message[SOrderedRepresentation::coarse, dx, N @ Sqrt[1 - s]]];
+
+  cf = Compile[{{xq, _Real}, {pq, _Real}},
+   Evaluate @ SOrderedWirtinger[state, g (xq + I pq)/2, g (xq - I pq)/2, s],
+   RuntimeAttributes -> {Listable}, RuntimeOptions -> "Speed"];
+
+  (* g^2/4 is the Jacobian from d^2 alpha to dx dp, as in WignerRepresentation. *)
+  vals = (g^2/4) Re @ cf[ConstantArray[xvec, n], Transpose @ ConstantArray[pvec, n]];
+
+  Interpolation @ MapThread[List, {Flatten[Outer[List, xvec, pvec], 1], Flatten[vals]}]]
