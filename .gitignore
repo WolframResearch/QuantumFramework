@@ -21,3 +21,15 @@ QuantumFramework/Documentation/English/SearchIndex/
 /OngoingProjects/Courses/ContinuousMeasurement/Aspelmeyer
 /OngoingProjects/Courses/ContinuousMeasurement/Paper Candidates
 /OngoingProjects/Courses/ContinuousMeasurement/Continuous Space/Caldeira-Leggett/
+
+# --- OngoingProjects/QEC ---
+# Source material is not ours to redistribute: Gottesman's 2026 book is an
+# unpublished draft from the author's own page. References/README.md indexes what
+# is used and says where to get it, and is the only file there that is tracked.
+/OngoingProjects/QEC/References/*
+!/OngoingProjects/QEC/References/README.md
+
+# Local working notes, and the regenerable output of the Stim cross-check
+# (StimCrossCheck/README.md carries the results; emit.wls rebuilds the rest).
+/OngoingProjects/QEC/CLAUDE.md
+/OngoingProjects/QEC/StimCrossCheck/out/
