@@ -4787,7 +4787,7 @@ called a qutrit, such as a spin-1 system. \
 Cell["\<\
 Applying the qutrit (3D) Hadamard to the 0 state yields an equal \
 superposition of all three basis states, each with the same magnitude and \
-evenly spaced relative phases:\
+the same phase (the evenly spaced relative phases appear for the 1 and 2 input states):\
 \>", "Text",
  CellChangeTimes->{{3.96919156411445*^9, 3.969191617786681*^9}, 
    3.969191676540999*^9, {3.969216272248207*^9, 3.969216273516864*^9}, {
@@ -5459,7 +5459,7 @@ Cell[BoxData[
 Cell["\<\
 If we run the experiment many times, we expect the frequency of results to \
 converge to the probabilities above. Now let\[CloseCurlyQuote]s generate \
-different data samples of results for 10, 100, and 10,000 runs. As the number \
+different data samples of results for 64, 256, and 1,024 runs. As the number \
 of realizations increases, the observed frequencies should get closer to the \
 expected probabilities.\
 \>", "Text",
@@ -8619,7 +8619,7 @@ Cell[BoxData[
   "In[199]:=",ExpressionUUID->"bf2f9df0-be97-455e-a55e-982b90d65199"],
 
 Cell["\<\
- Check that applying Pauli - X to the 1 state yields the 0 state .\
+ Check that applying Pauli-X to the 1 state yields the 0 state.\
 \>", "Text",
  CellChangeTimes->{{3.96843031009169*^9, 
   3.968430318703391*^9}},ExpressionUUID->"e550612b-17f6-4781-bf54-\
@@ -8671,8 +8671,8 @@ Cell[BoxData[
   "In[201]:=",ExpressionUUID->"7e1e0dbf-1ec3-42cd-96ab-f3762768d457"],
 
 Cell["\<\
-Let' s visualize the effect of the Pauli - X gate on different states by \
-comparing the Bloch vectors of the initial and final states .\
+Let\[CloseCurlyQuote]s visualize the effect of the Pauli-X gate on different states by \
+comparing the Bloch vectors of the initial and final states.\
 \>", "Text",
  CellChangeTimes->{{3.968430325632595*^9, 
   3.9684303290424356`*^9}},ExpressionUUID->"e49d4110-9661-40bd-be11-\
@@ -8766,7 +8766,7 @@ Cell[BoxData[{
 
 Cell["\<\
 Similarly, Pauli-Y on the 1 state acts like a phase-sensitive flip: it turns \
-0 into 1, up to an overall phase.\
+1 into 0, up to an overall phase.\
 \>", "Text",
  CellChangeTimes->{{3.9684304223856153`*^9, 
   3.968430437563341*^9}},ExpressionUUID->"2b364153-8113-4bcf-9b7b-\
@@ -8814,7 +8814,7 @@ Cell[BoxData[{
   "In[205]:=",ExpressionUUID->"38ee5fd2-0c66-4115-a461-56af3fc52d59"],
 
 Cell["\<\
-Let' s visualize the effect of the Pauli - Y gate on different states by \
+Let\[CloseCurlyQuote]s visualize the effect of the Pauli-Y gate on different states by \
 comparing the Bloch vectors of the initial and final states. Note that for \
 the computational basis, the overall phase is not observable.\
 \>", "Text",
@@ -9117,7 +9117,7 @@ Cell[BoxData[
  CellLabel->
   "In[218]:=",ExpressionUUID->"d3690e82-624a-4738-a17e-11e3ee7a8619"],
 
-Cell["Show matric form of S-gate:", "Text",
+Cell["Show the matrix form of S-gate:", "Text",
  CellChangeTimes->{{3.9684306541164427`*^9, 
   3.9684306631900997`*^9}},ExpressionUUID->"e9c64281-e64c-481c-a76f-\
 d9abcb774721"],
@@ -9206,7 +9206,7 @@ Cell[BoxData[
  CellLabel->
   "In[222]:=",ExpressionUUID->"c69fdf9f-97ca-491f-b313-ffa3a8b59707"],
 
-Cell["Show matrix forma of T gate:", "Text",
+Cell["Show the matrix form of T gate:", "Text",
  CellChangeTimes->{{3.9684308255694923`*^9, 
   3.9684308293212337`*^9}},ExpressionUUID->"9684aa28-5a42-4a3e-aeb6-\
 9a7d53b0d17b"],
@@ -10307,7 +10307,7 @@ Cell[BoxData[
   "In[242]:=",ExpressionUUID->"80596814-fc15-4b3e-9c5d-3f9691986470"],
 
 Cell["\<\
-As mentioned before, an y-rotation is a rotation around the y-axis on the \
+As mentioned before, a y-rotation is a rotation around the y-axis on the \
 Bloch sphere.\
 \>", "Text",
  CellChangeTimes->{{3.968431193238394*^9, 3.968431223824994*^9}, 
@@ -11090,7 +11090,7 @@ Cell[BoxData[
  CellLabel->
   "In[246]:=",ExpressionUUID->"f07f037f-aa8a-4479-a9f7-ddfa2c52088c"],
 
-Cell["Show the matrix form of x-rotation:", "Text",
+Cell["Show the matrix form of z-rotation:", "Text",
  CellChangeTimes->{{3.9684311800110903`*^9, 
   3.968431190610025*^9}},ExpressionUUID->"0836e52b-c9c3-4246-a9f1-\
 337352370456"],
@@ -11108,7 +11108,7 @@ Cell[BoxData[
   "In[247]:=",ExpressionUUID->"47f6f98f-43c9-4918-b811-ff68d00c426a"],
 
 Cell["\<\
-As mentioned before, an z-rotation is a rotation around the z-axis on the \
+As mentioned before, a z-rotation is a rotation around the z-axis on the \
 Bloch sphere.\
 \>", "Text",
  CellChangeTimes->{{3.968431193238394*^9, 3.968431223824994*^9}, {
@@ -11840,7 +11840,7 @@ Cell[BoxData[{
  CellLabel->
   "In[249]:=",ExpressionUUID->"049b1537-b1ef-464f-92ab-3ba597a2e934"],
 
-Cell["Show the matrix forma of U3:", "Text",
+Cell["Show the matrix form of U3:", "Text",
  CellChangeTimes->{{3.968431634158834*^9, 
   3.968431637988769*^9}},ExpressionUUID->"6f970bb1-d3eb-4659-96e1-\
 c0cb9b90f337"],
@@ -13356,7 +13356,7 @@ Cell["3-qubit gates and more", "Subsection",
 
 Cell[TextData[{
  "An important 3-qubit conditional gate is Toffoli gate. It is CCX gate, with \
-qubit 1 and 2 as control qubits and qubit 3 as the target one. Toffili gate \
+qubit 1 and 2 as control qubits and qubit 3 as the target one. Toffoli gate \
 is the backbone for adders, comparators, and many error-correction routines. \
 Its effect can be written as ",
  Cell[BoxData[
@@ -18942,7 +18942,7 @@ Cell[BoxData[
   "In[432]:=",ExpressionUUID->"ced90790-4abd-44bc-8f2f-4fed3405353b"],
 
 Cell["\<\
-As expected, you get 9 with 100% probability when running this circuit:\
+As expected, you get 12 with 100% probability when running this circuit:\
 \>", "Text",
  CellChangeTimes->{{3.9546029696155186`*^9, 3.95460299268272*^9}, {
   3.969104608675994*^9, 
