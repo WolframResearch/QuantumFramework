@@ -3,9 +3,13 @@
 Package["Wolfram`QuantumFramework`SecondQuantization`"]
 
 PackageExport["BosonicExpOrder"]
+
 PackageExport["NormalOrdered"]
+
 PackageExport["AntinormalOrdered"]
+
 PackageExport["BosonicExpSimplify"]
+
 PackageExport["BosonicExpBraid"]
 
 
@@ -314,9 +318,9 @@ BosonicExpOrder[expr_, assum_, opts : OptionsPattern[]] :=
 
 
 BosonicExpSimplify::usage =
-"\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) simplifies a product of exponentials, or a conjugation by an exponential, of the bosonic operators vars, returning a closed form when the algebra closes and expr unchanged otherwise.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", StyleBox[\"expr\", \"TI\"], \"]\"}]\) detects the non-commutative variables and scalars appearing in expr.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) treats syms as commuting scalars.";
+"\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) simplifies a product of exponentials, or a conjugation by an exponential, of the bosonic operators vars, returning a closed form when the algebra closes and expr unchanged otherwise.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", StyleBox[\"expr\", \"TI\"], \"]\"}]\) detects the non-commutative variables and scalars appearing in expr.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"\\\"Scalars\\\"->\", StyleBox[\"syms\", \"TI\"]}], \"]\"}]\) treats syms as commuting scalars.\n\!\(\*RowBox[{\"BosonicExpSimplify\", \"[\", RowBox[{\[Ellipsis], \",\", \"Assumptions->\", StyleBox[\"assum\", \"TI\"]}], \"]\"}]\) uses \!\(\*StyleBox[\"assum\", \"TI\"]\) as simplifying assumptions while reducing.";
 
-Options[BosonicExpSimplify] = {"Scalars" -> {}};
+Options[BosonicExpSimplify] = {"Scalars" -> {}, Assumptions :> $Assumptions};
 
 ncPolyQ[exprs_List, vars_] :=
     AllTrue[exprs, NonCommutativePolynomialQ[#, algA[vars]] &]
@@ -337,7 +341,10 @@ ncCommutator[a_, b_, vars_, scalars_] :=
 
 ncCommutator[a_, b_, vars_, scalars_, assum_] :=
     ncCommutator[a, b, vars, scalars, assum] =
-        Simplify @ BosonicNormalOrder[Commutator[a, b], vars, "Scalars" -> scalars]
+        Simplify[
+            BosonicNormalOrder[Commutator[a, b], vars, "Scalars" -> scalars],
+            assum
+        ]
 
 adRotate[op_, cmt_, lam_, vars_] /; cNumberQ[lam, vars] :=
     With[{w = I Sqrt[lam]}, Simplify[Cos[w] op + Sin[w] / w cmt] /. $nonuls]
@@ -393,17 +400,19 @@ expReduceRules[vars_, scalars_] := {
         ]
 }
 
-BosonicExpSimplify[expr_] :=
+BosonicExpSimplify[expr_, opts : OptionsPattern[]] :=
     With[{
         vars = ExtractNCVars[{expr}],
         scalars = DeleteDuplicates @ Cases[{expr},
             s_Symbol /; ! FormalSymbolQ[s] && ! NumericQ[s], Infinity]
     },
-        BosonicExpSimplify[expr, vars, "Scalars" -> scalars]
+        BosonicExpSimplify[expr, vars, opts, "Scalars" -> scalars]
     ]
 
 BosonicExpSimplify[expr_, vars_List, opts : OptionsPattern[]] :=
-    expr //. expReduceRules[vars, OptionValue["Scalars"]]
+    With[{assum = OptionValue[Assumptions], scalars = OptionValue["Scalars"]},
+        Assuming[assum, expr //. expReduceRules[vars, scalars]]
+    ]
 
 
 braidDequantize[gen_, v_, x_, y_] := gen //. {

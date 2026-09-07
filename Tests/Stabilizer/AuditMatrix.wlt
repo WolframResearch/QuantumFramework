@@ -1194,19 +1194,12 @@ VerificationTest[
     TestID -> "Audit-AG-Symplectic-Invariant-Bell"
 ]
 
-(* String-list-built PauliStabilizer["5QubitCode"] auto-pads destabilizers via *)
-(* the Reverse rule (Constructors.m:203), which does NOT satisfy the full AG  *)
-(* canonical pairing -- we only assert stabilizer-stabilizer commutation here. *)
+(* PauliStabilizer["5QubitCode"] carries a genuine destabilizer pairing, so its *)
+(* full 2n x 2n tableau is symplectic: M . J . M^T = J over F_2.                *)
 VerificationTest[
-    With[{
-        m = $ps5Q["Matrix"],
-        n = $ps5Q["Qubits"],
-        gen = $ps5Q["GeneratorCount"]
-    },
-        Mod[m[[gen + 1 ;; 2 gen]] . agSymplecticFormAudit[n] . Transpose[m[[gen + 1 ;; 2 gen]]], 2]
-    ],
-    ConstantArray[0, {5, 5}],
-    TestID -> "Audit-AG-Symplectic-StabStabBlock-5Q"
+    Normal @ agSymplectic[$ps5Q],
+    ConstantArray[0, {10, 10}],
+    TestID -> "Audit-AG-Symplectic-Invariant-5Q"
 ]
 
 (* Circuit-built random Cliffords ALWAYS produce AG-canonical pairs. *)
@@ -1418,13 +1411,22 @@ VerificationTest[
     TestID -> "Audit-A3-Dagger-Involutive-Register3"
 ]
 
-(* Singular-matrix path: stabilizer-only construction creates a non-invertible *)
-(* tableau via the Reverse-padding rule; Dagger now warns and returns $Failed.*)
+(* Singular-matrix path: a degenerate stabilizer list (linearly dependent      *)
+(* generators) has no invertible symplectic tableau; the destabilizer half     *)
+(* falls back to X<->Z padding and Dagger warns and returns $Failed.           *)
 VerificationTest[
-    PauliStabilizer[{"XX", "ZZ"}]["Dagger"],
+    PauliStabilizer[{"XX", "XX"}]["Dagger"],
     $Failed,
     {PauliStabilizer::singular},
     TestID -> "Audit-A3-Dagger-Singular-Matrix-EmitsMessage"
+]
+
+(* A valid full stabilizer list carries a genuine destabilizer pairing, so its  *)
+(* symplectic tableau is invertible and Dagger is involutive.                   *)
+VerificationTest[
+    PauliStabilizer[{"XX", "ZZ"}]["Dagger"]["Dagger"] === PauliStabilizer[{"XX", "ZZ"}],
+    True,
+    TestID -> "Audit-A3-Dagger-Involutive-StringList-Bell"
 ]
 
 (* ============================================================================ *)

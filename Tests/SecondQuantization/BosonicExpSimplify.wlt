@@ -213,3 +213,60 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicExpSimplify - Assumptions"]
+
+(* Squeeze generator 1/2 Conjugate[z] a a - 1/2 z a\[Dagger] a\[Dagger]. *)
+$squeeze[z_] := Exp[1/2 Conjugate[z] $a ** $a - 1/2 z $ad ** $ad];
+
+(* The su(1,1) closure runs Simplify internally; without assumptions it cannot
+   reduce Conjugate[r E^(I \[Theta])] and leaves the rotation angle unresolved. Passing
+   the assumptions in gives the Bogoliubov form in a single call. *)
+VerificationTest[
+    BosonicExpSimplify[
+        $squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])],
+        Assumptions -> r > 0 && \[Theta] \[Element] Reals
+    ],
+    $a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad,
+    {},
+    TestID -> "BosonicExpSimplify-AssumptionsSqueezedAnnihilation"
+]
+
+VerificationTest[
+    BosonicExpSimplify[
+        $squeeze[-r E^(I \[Theta])] ** $ad ** $squeeze[r E^(I \[Theta])],
+        Assumptions -> r > 0 && \[Theta] \[Element] Reals
+    ],
+    $ad Cosh[r] - E^(-I \[Theta]) Sinh[r] $a,
+    {},
+    TestID -> "BosonicExpSimplify-AssumptionsSqueezedCreation"
+]
+
+(* The option must survive the explicit-vars overload alongside "Scalars". *)
+VerificationTest[
+    BosonicExpSimplify[
+        $squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])],
+        {$a, $ad},
+        "Scalars" -> {r, \[Theta]},
+        Assumptions -> r > 0 && \[Theta] \[Element] Reals
+    ],
+    $a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad,
+    {},
+    TestID -> "BosonicExpSimplify-AssumptionsWithExplicitVars"
+]
+
+(* Assumptions are additive only: with none supplied the result must still be
+   the unassumed closed form, equal to the assumed one under Simplify. *)
+VerificationTest[
+    Simplify[
+        BosonicExpSimplify[$squeeze[-r E^(I \[Theta])] ** $a ** $squeeze[r E^(I \[Theta])]] -
+            ($a Cosh[r] - E^(I \[Theta]) Sinh[r] $ad),
+        r > 0 && \[Theta] \[Element] Reals
+    ],
+    0,
+    {},
+    TestID -> "BosonicExpSimplify-NoAssumptionsUnchanged"
+]
+
+EndTestSection[]

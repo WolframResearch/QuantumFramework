@@ -24,10 +24,10 @@ AnnihilationOperator::usage =
 
 AnnihilationOperator[order_?orderQ]:= AnnihilationOperator[$FockSize, order]
 
-AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= AnnihilationOperator[size, order] = 
+AnnihilationOperator[size_:$FockSize, Optional[order_?orderQ, {1}]]:= AnnihilationOperator[size, order] =
 	QuantumOperator[
 	SparseArray[Band[{1,2}]->Sqrt[Range[size-1]],{size,size}],
-	order, size]
+	order, size, "Label" -> OverHat["a"]]
 
 
 PhaseShiftOperator::usage =
@@ -35,8 +35,9 @@ PhaseShiftOperator::usage =
 
 PhaseShiftOperator[\[Theta]_,order_?orderQ]:= PhaseShiftOperator[\[Theta], $FockSize, order]
 
-PhaseShiftOperator[\[Theta]_,size_:$FockSize,Optional[order_?orderQ,{1}]]:= 
-	QuantumOperator[SparseArray[Band[{1,1}]->Exp[I \[Theta] Range[0,size-1]],{size,size}],order,size]
+PhaseShiftOperator[\[Theta]_,size_:$FockSize,Optional[order_?orderQ,{1}]]:=
+	QuantumOperator[SparseArray[Band[{1,1}]->Exp[I \[Theta] Range[0,size-1]],{size,size}],order,size,
+		"Label" -> "\[CapitalPhi]"[\[Theta]]]
 
 
 DisplacementOperator::usage =
@@ -79,19 +80,22 @@ DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
         {a = AnnihilationOperator[size,order],
         ordering = Replace[OptionValue["Ordering"], Automatic -> "Normal"]
     },
-        Switch[ordering,
-            "Normal",
-                Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[\[Alpha] (a["Dagger"])] @ MatrixExp[-Conjugate[\[Alpha]] a],
+        QuantumOperator[
+            Switch[ordering,
+                "Normal",
+                    Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[\[Alpha] (a["Dagger"])] @ MatrixExp[-Conjugate[\[Alpha]] a],
 
-            "Weak",
-               MatrixExp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
+                "Weak",
+                   MatrixExp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
 
-            "Antinormal",
-                Exp[\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[-Conjugate[\[Alpha]] a] @ MatrixExp[\[Alpha] (a["Dagger"])] ,
+                "Antinormal",
+                    Exp[\[Alpha] Conjugate[\[Alpha]]/2]  MatrixExp[-Conjugate[\[Alpha]] a] @ MatrixExp[\[Alpha] (a["Dagger"])] ,
 
-            _, 
-                Message[DisplacementOperator::invalidorder, ordering];
-                Abort[]
+                _,
+                    Message[DisplacementOperator::invalidorder, ordering];
+                    Abort[]
+            ],
+            "Label" -> OverHat["D"][\[Alpha]]
         ]
     ]
 
@@ -120,23 +124,26 @@ SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
         nu = Log[Cosh[Abs[xi]]];
         
         
-        Switch[ordering,
-            "Normal",
-                MatrixExp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ MatrixExp[-
-                    nu ((a["Dagger"]) @ a + 1/2 )] @ MatrixExp[Conjugate[tau] / 2 (a 
-                    @ a)]
-            ,
-            "Weak",
-                MatrixExp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
-            ,
-            "Antinormal",
-                MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[-nu ((a["Dagger"
-                    ]) @ a + 1/2 )] @ MatrixExp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
-                    ]))]
-            ,
-            _,
-                Message[SqueezeOperator::invalidorder, ordering];
-                Abort[]
+        QuantumOperator[
+            Switch[ordering,
+                "Normal",
+                    MatrixExp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ MatrixExp[-
+                        nu ((a["Dagger"]) @ a + 1/2 )] @ MatrixExp[Conjugate[tau] / 2 (a
+                        @ a)]
+                ,
+                "Weak",
+                    MatrixExp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
+                ,
+                "Antinormal",
+                    MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[-nu ((a["Dagger"
+                        ]) @ a + 1/2 )] @ MatrixExp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
+                        ]))]
+                ,
+                _,
+                    Message[SqueezeOperator::invalidorder, ordering];
+                    Abort[]
+            ],
+            "Label" -> OverHat["S"][xi]
         ]
     ]
 
@@ -191,12 +198,16 @@ BeamSplitterOperator[{\[Theta]_, \[CurlyPhi]_},size_Integer, order_?orderQ, Opti
   Switch[method,
    "MatrixExp",
     {op1, op2} = AnnihilationOperator[size, {#}] & /@ order;
-    MatrixExp[
-     \[Theta] (Exp[I \[CurlyPhi]] op1 @ SuperDagger[op2] - 
-        Exp[-I \[CurlyPhi]] SuperDagger[op1] @ op2)
+    QuantumOperator[
+     MatrixExp[
+      \[Theta] (Exp[I \[CurlyPhi]] op1 @ SuperDagger[op2] -
+         Exp[-I \[CurlyPhi]] SuperDagger[op1] @ op2)
+     ],
+     "Label" -> OverHat["BS"][\[Theta], \[CurlyPhi]]
     ],
    "Recurrence",
-    QuantumOperator[BeamsplitterMatrix[\[Theta], \[CurlyPhi], size], order, {size, size}],
+    QuantumOperator[BeamsplitterMatrix[\[Theta], \[CurlyPhi], size], order, {size, size},
+     "Label" -> OverHat["BS"][\[Theta], \[CurlyPhi]]],
    _,
     Message[BeamSplitterOperator::badmethod, method]; $Failed
   ]
@@ -209,6 +220,6 @@ QuadratureOperators::usage =
 QuadratureOperators[order_?orderQ] := QuadratureOperators[$FockSize,order]
 
 QuadratureOperators[size_:$FockSize, Optional[order_?orderQ, {1}]]:= Block[{a=AnnihilationOperator[size,order]},
-							{1/2(a+a["Dagger"]),
-							1/(2I)(a-a["Dagger"])}
+							{QuantumOperator[1/2(a+a["Dagger"]), "Label" -> Subscript[OverHat["X"],1]],
+							QuantumOperator[1/(2I)(a-a["Dagger"]), "Label" -> Subscript[OverHat["X"],2]]}
 						]

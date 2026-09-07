@@ -437,18 +437,18 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
     keepQ2OutIdx = Complement[Range[q2OutQ], sharedQ2Idx];
 
     contractPairs = Transpose[{q1OutQ + sharedQ1Idx, q1OutQ + q1InQ + sharedQ2Idx}];
-    (* Explicit tensors contract through the raw TensorProduct, as they always
-       did.  Any other tier goes through the ArrayContract mixing point, which
-       joins the operand tiers: raw TensorProduct treats a symbolic or lazy
-       operand as a SCALAR and multiplies, and the unevaluated expression then
-       reads downstream as a single amplitude of a state with the right
-       dimension and wrong contents. *)
-    (* The mixing point is only for an operand that is a NON-EXPLICIT container.
-       Asking "are both explicit" instead sent a scalar state tensor - the
-       identity of an empty circuit - into the list form, which saw {tensor, 1}
-       as one ragged array. *)
+    (* Two array containers contract through ArrayContract, which never forms the
+       outer product: TensorProduct[t1, t2] of two rank-4 operator tensors is rank
+       8 with d^8 entries, materialized in full before any index is contracted.
+       ArrayContract also joins the operand tiers, where a raw TensorProduct would
+       treat a symbolic or lazy operand as a SCALAR and multiply, the unevaluated
+       expression then reading downstream as a single amplitude.
+
+       A scalar operand is not a container and stays on the TensorProduct branch:
+       the list form reads {tensor, 1} as one ragged array. So does the case with
+       nothing to contract, which is a plain tensor product. *)
     resultTensor = With[{t1 = s1["StateTensor"], t2 = s2["StateTensor"]},
-        If[ (ArrayContainerQ[t1] && ! ArrayExplicitQ[t1]) || (ArrayContainerQ[t2] && ! ArrayExplicitQ[t2]),
+        If[ ArrayContainerQ[t1] && ArrayContainerQ[t2] && Length[contractPairs] > 0,
             ArrayContract[{t1, t2}, contractPairs],
             If[Length[contractPairs] == 0,
                 TensorProduct[t1, t2],
