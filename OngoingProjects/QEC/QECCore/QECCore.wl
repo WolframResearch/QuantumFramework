@@ -22,6 +22,7 @@ Module[{dir = DirectoryName[$InputFileName]},
         "Noise.wl",
         "ErrorRate.wl",
         "DetectorModel.wl",
+        "Cat.wl",
         "Memory.wl",
         "Stim.wl",
         "Cache.wl"

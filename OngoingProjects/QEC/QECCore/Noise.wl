@@ -104,10 +104,12 @@ $QECNoiseLevels = {"CodeCapacity", "Phenomenological", "Circuit"};
                the record and nothing else, which is what a classical readout
                error is.
    Reset       the ancilla is prepared in the wrong state: an X just after "R"
-   Idle        a qubit decohering while it waits.  Zero by default and honestly so:
-               the extraction here is emitted generator-by-generator rather than in
-               parallel layers, so there is no well-defined idle step to attach it
-               to yet.  It arrives with the layered emitter. *)
+   Idle        a qubit decohering while it waits.  Modelled: circuitSchedule groups
+               the instructions into parallel time steps and a qubit no instruction
+               of a step touches gets one location per step, three Paulis each.
+               Still ZERO BY DEFAULT, and that default is optimistic rather than
+               neutral -- serial extraction is the arrangement with the most idling.
+               Set it and it is charged. *)
 $QECCircuitLocations = {"OneQubit", "TwoQubit", "Measurement", "Reset", "Idle"};
 
 
@@ -314,7 +316,7 @@ QECNoiseModel /: MakeBoxes[obj : QECNoiseModel[a_Association] /; KeyExistsQ[a, "
     BoxForm`ArrangeSummaryBox[
         QECNoiseModel,
         obj,
-        BarChart[Rest[a["Probabilities"]] /. _Symbol -> 0.3, ChartLabels -> {"X", "Y", "Z"},
+        BarChart[Replace[Rest[a["Probabilities"]], _Symbol -> 0.3, {1}], ChartLabels -> {"X", "Y", "Z"},
             ImageSize -> {Automatic, 34}, Axes -> False, ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
         {
             BoxForm`SummaryItem[{"Model: ", a["Name"]}],
@@ -333,11 +335,16 @@ QECNoiseModel /: MakeBoxes[obj : QECNoiseModel[a_Association] /; KeyExistsQ[a, "
         "Interpretable" -> False
     ]
 
+(* Replace at level 1, not ReplaceAll.  A symbolic rate has to be swapped for a number
+   before BarChart sees it, but ReplaceAll rewrites heads too and List is itself a
+   Symbol, so {p, 0, 0} /. _Symbol -> 0.3 gives 0.3[0.3, 0, 0] and the chart fails to
+   render.  The numbers listed under the chart are always the real ones. *)
+
 QECNoiseModel /: MakeBoxes[obj : QECNoiseModel[a_Association] /; KeyExistsQ[a, "Rates"], form : (StandardForm | TraditionalForm)] :=
     BoxForm`ArrangeSummaryBox[
         QECNoiseModel,
         obj,
-        BarChart[Values[a["Rates"]] /. _Symbol -> 0.3, ChartLabels -> Keys[a["Rates"]],
+        BarChart[Replace[Values[a["Rates"]], _Symbol -> 0.3, {1}], ChartLabels -> Keys[a["Rates"]],
             ImageSize -> {Automatic, 34}, Axes -> False, ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
         {
             BoxForm`SummaryItem[{"Model: ", a["Name"]}],

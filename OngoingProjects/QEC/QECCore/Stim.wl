@@ -42,6 +42,7 @@ PackageScope[codeStimCircuit]
 QECStimCircuit::usage = "QECStimCircuit[code, noise] gives, as a string, the Stim source of a memory experiment: the encoder, rounds of noisy syndrome extraction, a noiseless final round, and a logical observable.\nQECStimCircuit[code, noise, r] uses r noisy rounds.\nQECStimCircuit[code] emits the noiseless circuit.\nThe option \"Observable\" -> \"Z\" or \"X\" chooses which logical operator is kept.";
 
 QECStimCircuit::observable = "\"Observable\" must be \"X\" or \"Z\"; got `1`.";
+QECStimCircuit::herald = "This circuit contains `1` herald measurement(s) (\"MH\"). Stim has no post-selection primitive, and emitting them as ordinary measurements would shift every rec[-k] index the detectors are built from. Export a circuit without heralds, or declare them as detectors and post-select outside Stim.";
 QECStimCircuit::level = "Stim has no notion of a code-capacity noise model, whose checks are perfect by assumption. Use a phenomenological or circuit-level model.";
 
 
@@ -82,27 +83,62 @@ encoderLines[a_Association] := Replace[
 (* One instruction, with its noise attached.  A measurement carries its own flip
    probability in Stim (M(p)), which is exactly the readout error, so it needs no
    separate line. *)
-instructionLines[instr_List, rates_Association] := Catenate @ Map[
-    Function[step,
-        Switch[First[step],
-            "R",
-                {"R " <> qb[step[[2]]],
-                 If[rates["Reset"] === 0, Nothing, "X_ERROR(" <> num[rates["Reset"]] <> ") " <> qb[step[[2]]]]},
-            "M",
-                {If[rates["Measurement"] === 0,
-                    "M " <> qb[step[[2]]],
-                    "M(" <> num[rates["Measurement"]] <> ") " <> qb[step[[2]]]]},
-            "CNOT",
-                {"CX " <> qbs[{step[[2]], step[[3]]}],
-                 If[rates["TwoQubit"] === 0, Nothing,
-                    "DEPOLARIZE2(" <> num[rates["TwoQubit"]] <> ") " <> qbs[{step[[2]], step[[3]]}]]},
-            _,
-                {stimGateName[First[step]] <> " " <> qb[step[[2]]],
-                 If[rates["OneQubit"] === 0, Nothing,
-                    "DEPOLARIZE1(" <> num[rates["OneQubit"]] <> ") " <> qb[step[[2]]]]}
-        ]
-    ],
-    instr
+stepLines[step_List, rates_Association] := Switch[First[step],
+    "R",
+        {"R " <> qb[step[[2]]],
+         If[rates["Reset"] === 0, Nothing, "X_ERROR(" <> num[rates["Reset"]] <> ") " <> qb[step[[2]]]]},
+    "M",
+        {If[rates["Measurement"] === 0,
+            "M " <> qb[step[[2]]],
+            "M(" <> num[rates["Measurement"]] <> ") " <> qb[step[[2]]]]},
+    "CNOT",
+        {"CX " <> qbs[{step[[2]], step[[3]]}],
+         If[rates["TwoQubit"] === 0, Nothing,
+            "DEPOLARIZE2(" <> num[rates["TwoQubit"]] <> ") " <> qbs[{step[[2]], step[[3]]}]]},
+    "CZ",
+        {"CZ " <> qbs[{step[[2]], step[[3]]}],
+         If[rates["TwoQubit"] === 0, Nothing,
+            "DEPOLARIZE2(" <> num[rates["TwoQubit"]] <> ") " <> qbs[{step[[2]], step[[3]]}]]},
+    _,
+        {stimGateName[First[step]] <> " " <> qb[step[[2]]],
+         If[rates["OneQubit"] === 0, Nothing,
+            "DEPOLARIZE1(" <> num[rates["OneQubit"]] <> ") " <> qb[step[[2]]]]}
+]
+
+(* Idling.  One DEPOLARIZE1 per idle slot, at the slot's anchor -- the same anchor
+   circuitIdleSlots hands the detector model, so the exported circuit's error model
+   and ours have the same locations by construction.
+
+   A qubit idle across several layers with one anchor gets several lines on the same
+   qubit, and that is right: they are independent chances to decohere during one gap,
+   and Stim reads consecutive DEPOLARIZE1 as independent channels exactly as the
+   detector model reads them as separate locations.  One line per slot rather than
+   repeated targets on one line, since a repeated target is not a documented way to
+   ask Stim for a repeated channel.
+
+   No TICK is emitted.  TICK would claim a time step, and the lines here are in
+   *emission* order, not layer order -- the two disagree, and reordering to fix that
+   would move measurements relative to each other and silently invalidate every
+   rec[-k] index the detectors are built from. *)
+idleLines[rates_Association, qs_List] := If[
+    rates["Idle"] === 0 || qs === {},
+    {},
+    "DEPOLARIZE1(" <> num[rates["Idle"]] <> ") " <> qb[#] & /@ qs
+]
+
+instructionLines[instr_List, rates_Association] := instructionLines[instr, rates, <||>, 0]
+
+(* offset is where this block starts in the whole circuit's instruction list, so a
+   per-round block can look up anchors computed over all rounds at once. *)
+instructionLines[instr_List, rates_Association, idleAt_Association, offset_Integer] := Join[
+    If[offset === 0, idleLines[rates, Lookup[idleAt, 0, {}]], {}],
+    Catenate @ Table[
+        Join[
+            stepLines[instr[[i]], rates],
+            idleLines[rates, Lookup[idleAt, offset + i, {}]]
+        ],
+        {i, Length[instr]}
+    ]
 ]
 
 $noRates = <|"OneQubit" -> 0, "TwoQubit" -> 0, "Measurement" -> 0, "Reset" -> 0, "Idle" -> 0|>;
@@ -122,12 +158,22 @@ detectorLines[m_Integer, first_ : False] := Table[
 (* ---- the circuit ---- *)
 
 codeStimCircuit[a_Association, noise_Association, rounds_Integer, basis_String] := Module[
-    {n = a["Qubits"], m = codeStabilizerCount[a], instr, rates, dataNoise, logical, lines, round},
+    {n = a["Qubits"], m = codeStabilizerCount[a], instr, rates, dataNoise, idleAt, logical, lines, round},
 
     logical = First[codeLogicalVectors[a][basis]];
 
     instr = codeCircuitInstructions[a, 1];
     rates = If[noiseLevel[noise] === "Circuit", noiseCircuitRates[noise], $noRates];
+
+    (* Idle anchors are computed over the *whole* multi-round circuit, because the
+       rounds pipeline: an ancilla's reset for round 2 schedules while the other
+       ancilla of round 1 is still being measured, so r rounds are not r copies of
+       one round's schedule.  The per-round blocks below index into it by offset. *)
+    idleAt = If[
+        rates["Idle"] === 0,
+        <||>,
+        GroupBy[circuitIdleSlots[codeCircuitInstructions[a, rounds], n + m], First -> Last]
+    ];
 
     (* Phenomenological data noise: one Pauli channel across the data qubits at the
        start of each round.  Circuit-level noise has none, because there the data is
@@ -146,7 +192,7 @@ codeStimCircuit[a_Association, noise_Association, rounds_Integer, basis_String] 
     round[r_] := Join[
         {"# --- round " <> ToString[r] <> " ---"},
         dataNoise,
-        instructionLines[instr, rates],
+        instructionLines[instr, rates, idleAt, (r - 1) Length[instr]],
         detectorLines[m, r === 1]
     ];
 
@@ -192,6 +238,9 @@ QECStimCircuit[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern
             Message[QECSyndromeCircuit::rounds, rounds]; $Failed,
         noiseLevel[First[noise]] === "CodeCapacity",
             Message[QECStimCircuit::level]; $Failed,
+        Count[codeCircuitInstructions[First[code], 1], {"MH", ___}] > 0,
+            Message[QECStimCircuit::herald,
+                Count[codeCircuitInstructions[First[code], 1], {"MH", ___}]]; $Failed,
         True,
             codeStimCircuit[First[code], First[noise], rounds, basis]
     ]

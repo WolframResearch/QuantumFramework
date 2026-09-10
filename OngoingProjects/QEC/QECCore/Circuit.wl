@@ -11,8 +11,15 @@ PackageScope[codeCircuitInstructions]
 PackageScope[generatorInstructions]
 PackageScope[framePropagate]
 PackageScope[frameZero]
+PackageScope[circuitSchedule]
+PackageScope[circuitIdleQubits]
+PackageScope[circuitInstructionLayers]
+PackageScope[circuitIdleAnchor]
+PackageScope[circuitIdleSlots]
 PackageScope[instructionEngineGates]
 PackageScope[$circuitOneQubitOps]
+PackageScope[$circuitTwoQubitOps]
+PackageScope[$circuitMeasureOps]
 
 
 (* ============================================================================ *)
@@ -88,20 +95,25 @@ PackageScope[$circuitOneQubitOps]
 (* level noise: a gadget satisfying the book's gate and error-correction           *)
 (* propagation properties (sec. 10.2) keeps the p^2.                               *)
 (*                                                                              *)
-(* SCHEDULING, and why "Idle" is zero.  The generators are extracted one after     *)
-(* another rather than interleaved into parallel layers.  Do not read the zero      *)
-(* idle rate as "there is no time step to idle in" -- that inference is exactly     *)
-(* the one book sec. 15.5.2 forbids, since it resolves an ill-defined time step by  *)
-(* *defining* one (the longest gate) and charging the padding as storage error.     *)
-(* Worse, sequential extraction means *more* waiting, not less: sec. 15.5.1 shows   *)
-(* partial parallelism multiplying the storage rate (p_S -> 3 p_S and              *)
-(* p_G -> p_G + 2 p_S at one-third parallelism) and states that "to have a          *)
-(* threshold, it is essential to do parallel gates, at least when the storage       *)
-(* error rate p_S is non-zero".  So: Idle = 0 is an optimistic simplification that  *)
-(* is not yet modelled, and it is optimistic in the direction this circuit is       *)
-(* already weakest.  A fixed-size code extracted serially is a constant number of  *)
-(* steps, which is what keeps it inside sec. 15.5.1's constant-fraction clause;     *)
-(* that clause, not the absence of idle locations, is the excuse.                   *)
+(* SCHEDULING, and idling.  The generators are extracted one after another rather  *)
+(* than interleaved into parallel layers, so the instruction list is sequential.    *)
+(* The *circuit* is not: instructions on disjoint qubits share a time step, and     *)
+(* circuitSchedule recovers those layers from the flat list by ASAP scheduling.     *)
+(* Idle mechanisms hang off them (DetectorModel.wl), so a waiting qubit is a fault  *)
+(* location like any other -- which is what book sec. 10.1.1, Definition 10.1 asks  *)
+(* for, listing preparation, gate, *wait* and measurement.                          *)
+(*                                                                              *)
+(* The "Idle" rate still DEFAULTS to zero, and that default is optimistic rather   *)
+(* than neutral.  Do not read it as "there is no time step to idle in" -- that      *)
+(* inference is exactly the one sec. 15.5.2 forbids, since it resolves an           *)
+(* ill-defined time step by *defining* one (the longest gate) and charging the      *)
+(* padding as storage error.  And sequential extraction means *more* waiting, not   *)
+(* less: sec. 15.5.1 shows partial parallelism multiplying the storage rate         *)
+(* (p_S -> 3 p_S and p_G -> p_G + 2 p_S at one-third parallelism) and states that   *)
+(* "to have a threshold, it is essential to do parallel gates, at least when the    *)
+(* storage error rate p_S is non-zero".  Scheduling is what makes the cost payable: *)
+(* the bit-flip circuit drops from 8 serial steps to 6 layers, and its idle count   *)
+(* from 28 qubit-steps to 18.  Set "Idle" and it is charged.                        *)
 (*                                                                              *)
 (* Reusing the ancillas across rounds is fine and is sourced.  Book sec. 15.4      *)
 (* re-examines the assumption that fresh qubits can be prepared mid-computation,    *)
@@ -128,10 +140,26 @@ QECSyndromeCircuit::noprop = "`1` is not a property of QECSyndromeCircuit. Use c
      {"R", q}          reset q to |0>
      {"H"|"S"|"V"|"Vdg", q}
      {"CNOT", c, t}
+     {"CZ", c, t}
      {"M", q}          measure q in Z and append the outcome to the record
+     {"MH", q}         measure q in Z as a herald: post-select, do not decode
 *)
 
 $circuitOneQubitOps = {"H", "S", "V", "Vdg"};
+
+(* CZ is here because a fault-tolerant Pauli measurement needs controlled-P from the
+   ancilla to the data (book sec. 12.1.2), and conjugating the data letter to Z with the
+   rotations above turns every controlled-P into a controlled-Z.  Note the direction is
+   the opposite of the bare-ancilla circuit, where the ancilla is the target. *)
+$circuitTwoQubitOps = {"CNOT", "CZ"};
+
+(* "M" feeds the decoder.  "MH" is a herald: a verification outcome that post-selects
+   the shot rather than contributing a syndrome bit -- the check measurements of a cat
+   state (sec. 12.1.3) are heralds, and a nonzero one means "discard and start over".
+   They are separated because they answer different questions and are consumed by
+   different machinery, and because the price of post-selection is a correction factor
+   of its own (sec. 14.5.2). *)
+$circuitMeasureOps = {"M", "MH"};
 
 (* The rotation that sends a generator's letter on a data qubit to Z, and the one
    that undoes it.  V has order four, so V^-1 = V^3; the two are separate ops here
@@ -219,7 +247,9 @@ circuitMeasurementLabels[a_Association] := Catenate @ Table[
                             symplectic part, since V^2 is the Pauli X
      CNOT  x_t ^= x_c, z_c ^= z_t
      R     x, z := 0        (the ancilla is re-prepared, so its frame is discarded)
+     CZ    z_t ^= x_c, z_c ^= x_t
      M     record x         (an X on the ancilla flips the readout)
+     MH    herald x         (same, but into the herald list)
 
    Faults are given as {instructionIndex, qubit, {x, z}} and are applied *after*
    the instruction at that index; index 0 means before the circuit starts, which
@@ -231,11 +261,12 @@ circuitMeasurementLabels[a_Association] := Catenate @ Table[
 frameZero[nq_Integer] := {ConstantArray[0, nq], ConstantArray[0, nq]}
 
 framePropagate[instr_List, nq_Integer, faults_List] := Module[
-    {x, z, out, byIndex, step, q, c, t, f},
+    {x, z, out, heralds, byIndex, step, q, c, t, f},
 
     x = ConstantArray[0, nq];
     z = ConstantArray[0, nq];
     out = Internal`Bag[];
+    heralds = Internal`Bag[];
     byIndex = GroupBy[faults, First];
 
     Do[
@@ -256,7 +287,11 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
             "CNOT", c = step[[2]]; t = step[[3]];
                     x[[t]] = BitXor[x[[t]], x[[c]]];
                     z[[c]] = BitXor[z[[c]], z[[t]]],
-            "M",    Internal`StuffBag[out, x[[step[[2]]]]]
+            "CZ",   c = step[[2]]; t = step[[3]];
+                    z[[t]] = BitXor[z[[t]], x[[c]]];
+                    z[[c]] = BitXor[z[[c]], x[[t]]],
+            "M",    Internal`StuffBag[out, x[[step[[2]]]]],
+            "MH",   Internal`StuffBag[heralds, x[[step[[2]]]]]
         ];
         Do[
             q = f[[2]];
@@ -267,7 +302,103 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
         {i, Length[instr]}
     ];
 
-    <|"Record" -> Internal`BagPart[out, All], "Frame" -> {x, z}|>
+    <|
+        "Record" -> Internal`BagPart[out, All],
+        "Heralds" -> Internal`BagPart[heralds, All],
+        "Frame" -> {x, z}
+    |>
+]
+
+
+(* ---- the schedule ---- *)
+
+(* The instruction list is flat and sequential, but the *circuit* is not: two
+   instructions on disjoint qubits happen in the same time step.  This groups the
+   instructions into parallel layers by ASAP list scheduling -- each instruction goes
+   into the earliest layer in which none of its qubits is already busy -- which
+   preserves the per-qubit order and never puts two instructions on one qubit into
+   the same layer.
+
+   The schedule is *derived*, not stored.  The instruction list stays canonical, so
+   every consumer that does not care about time -- framePropagate, the Stim writer,
+   the tests -- is untouched.  What it is for is idle noise: a qubit that no
+   instruction in a layer touches is waiting, and waiting is a fault location in its
+   own right.  Book sec. 10.1.1, Definition 10.1 lists preparation, gate, *wait* and
+   measurement; sec. 15.5.2 is explicit that an ill-defined time step is to be
+   *defined* (by the longest gate) and its padding charged as storage error, not
+   dropped.
+
+   Scheduling also shortens the circuit, which is the point of sec. 15.5.1: serial
+   extraction is the arrangement with the *most* idling, so charging zero for it is
+   optimistic in exactly the direction this gadget is already weakest.
+
+   Layers are lists of instruction indices in emission order, and the layers
+   themselves are in time order. *)
+
+circuitSchedule[instr_List, nq_Integer] := Module[
+    {ready = ConstantArray[1, nq], byLayer = <||>, qs, layer},
+    Do[
+        qs = Rest[instr[[i]]];
+        layer = Max[ready[[qs]]];
+        byLayer[layer] = Append[Lookup[byLayer, layer, {}], i];
+        Do[ready[[q]] = layer + 1, {q, qs}],
+        {i, Length[instr]}
+    ];
+    Values[KeySort[byLayer]]
+]
+
+(* The qubits no instruction of a layer touches. *)
+circuitIdleQubits[instr_List, nq_Integer, layer_List] :=
+    Complement[Range[nq], Union @@ (Rest[instr[[#]]] & /@ layer)]
+
+(* Which layer each instruction landed in, as a flat list indexed by instruction. *)
+circuitInstructionLayers[instr_List, nq_Integer] := Module[
+    {layers = circuitSchedule[instr, nq], out = ConstantArray[0, Length[instr]]},
+    Do[Do[out[[i]] = L, {i, layers[[L]]}], {L, Length[layers]}];
+    out
+]
+
+(* Where an idle fault goes.
+
+   The subtlety, and it is easy to get wrong: the instruction list is NOT ordered by
+   layer.  ASAP scheduling puts {R, n+1} and {R, n+2} in the same first layer, so
+   layer 1 holds instructions 1 and 5 while layer 2 holds instruction 2 -- in
+   emission order, instruction 5 comes *after* instruction 2.  "The last instruction
+   of the layer" is therefore not a point in time, and anchoring an idle fault there
+   would drop it in an arbitrary place.
+
+   What is well defined is per qubit.  framePropagate walks the flat list, so for a
+   fault on qubit q the only thing that matters is which instructions touching q run
+   after it.  A qubit idle in layer L has, by definition, no instruction in that
+   layer, so the fault belongs after the last instruction touching q in an earlier
+   layer -- and at index 0, before the circuit, when none has run yet.
+
+   Several layers can therefore share an anchor: a data qubit touched once, in layer
+   2, is idle in layers 3, 4, 5 and 6 and all four anchor at that one instruction.
+   That is correct rather than a collapse -- they are four independent chances to
+   decohere during a wait that the propagator sees as a single gap, so they stay four
+   separate locations with one shared insertion point. *)
+circuitIdleAnchor[instr_List, layerOf_List, q_Integer, L_Integer] := With[
+    {earlier = Select[
+        Range[Length[instr]],
+        MemberQ[Rest[instr[[#]]], q] && layerOf[[#]] < L &
+    ]},
+    If[earlier === {}, 0, Last[earlier]]
+]
+
+(* Every idle (layer, qubit) of the circuit, as {anchor, layer, qubit}.
+
+   This is the single source of truth for idling, and it is shared deliberately: the
+   detector model turns each slot into a mechanism, and the Stim writer turns each
+   slot into a DEPOLARIZE1 at the same anchor.  If the two computed their own the
+   exported circuit could drift from the model it is supposed to cross-check, which
+   would break the one thing the bridge is for. *)
+circuitIdleSlots[instr_List, nq_Integer] := With[
+    {layers = circuitSchedule[instr, nq], layerOf = circuitInstructionLayers[instr, nq]},
+    Catenate @ Table[
+        {circuitIdleAnchor[instr, layerOf, q, L], L, q},
+        {L, Length[layers]}, {q, circuitIdleQubits[instr, nq, layers[[L]]]}
+    ]
 ]
 
 
@@ -281,9 +412,11 @@ instructionEngineGates[instr_List] := Catenate[
     Replace[instr, {
         {"R", _} -> {},
         {"M", _} -> {},
+        {"MH", _} -> {},
         {"Vdg", q_} :> {"V" -> q, "V" -> q, "V" -> q},
         {op_, q_} :> {op -> q},
-        {"CNOT", c_, t_} :> {"CNOT" -> {c, t}}
+        {"CNOT", c_, t_} :> {"CNOT" -> {c, t}},
+        {"CZ", c_, t_} :> {"CZ" -> {c, t}}
     }, {1}]
 ]
 

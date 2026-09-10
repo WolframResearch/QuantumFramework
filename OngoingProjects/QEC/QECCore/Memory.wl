@@ -66,6 +66,8 @@ $QECDecoderSubsetLimit = 2 * 10^6;
 QECLogicalErrorRate::detbig = "The detector model has `1` detectors and `2` observables, so an exact sum needs a state space of `3`, past $QECExactDetectorLimit (`4`). Give a shot count to sample instead, or use fewer rounds.";
 QECLogicalErrorRate::subsets = "Stopping the decoder table at weight `1`: weight `2` would need `3` fault subsets, past $QECDecoderSubsetLimit (`4`).";
 QECLogicalErrorRate::symbolicshots = "A sampled rate needs numeric noise rates.";
+QECLogicalErrorRate::allrejected = "Every one of the `1` shots was rejected by a herald, so there is no accepted sample to take a rate from. Raise the shot count or lower the noise.";
+QECLogicalErrorRate::noacceptance = "The heralds reject with certainty, so the accepted probability is zero and there is no conditional rate to report. \"Rate\" comes back Indeterminate; \"Acceptance\" and \"Failure\" are still exact.";
 
 
 (* ---- packing a detector model into integers ---- *)
@@ -76,7 +78,8 @@ bitsToInteger[bits_List] := If[bits === {}, 0, FromDigits[bits, 2]]
 
 demRowKeys[a_Association] := demRowKeys[a] = {
     bitsToInteger /@ a["DetectorMatrix"],
-    bitsToInteger /@ a["ObservableMatrix"]
+    bitsToInteger /@ a["ObservableMatrix"],
+    bitsToInteger /@ Lookup[a, "HeraldMatrix", ConstantArray[{}, Length[a["Probabilities"]]]]
 }
 
 (* Mechanisms that belong to the same physical location are alternatives, not
@@ -95,7 +98,7 @@ demGroups[a_Association] := demGroups[a] = Values @ GroupBy[
 demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Module[
     {d, o, nf, table, stop},
 
-    {d, o} = demRowKeys[a];
+    {d, o} = Take[demRowKeys[a], 2];
     nf = Length[d];
     table = <|0 -> 0|>;
     stop = reach;
@@ -125,24 +128,30 @@ demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Mod
    leftover mass for "nothing happened".  Mechanisms dropped from the model because
    they had no effect are simply part of that leftover, which is why the weights
    still add up. *)
+(* One draw per location, all shots at once.  When the circuit has heralds the shots
+   they trip are DISCARDED, and the answer becomes conditional -- so it comes back as
+   an association carrying its own acceptance rather than as a bare number that could
+   be mistaken for an unconditional probability. *)
 demSampledFailure[a_Association, count_Integer, reach_Integer] := Module[
-    {d, o, groups, table, dKeys, oKeys, detectors, observables, predicted},
+    {d, o, h, groups, table, dKeys, oKeys, hKeys,
+     detectors, observables, heralds, predicted, wrong, accepted, nAcc},
 
-    {d, o} = demRowKeys[a];
+    {d, o, h} = demRowKeys[a];
     groups = demGroups[a];
     table = demDecoderTable[a, reach];
 
     (* index 0 means no fault, so the key lists are padded at the front *)
     dKeys = Prepend[d, 0];
     oKeys = Prepend[o, 0];
+    hKeys = Prepend[h, 0];
 
-    {detectors, observables} = Transpose @ Map[
+    {detectors, observables, heralds} = Transpose @ Map[
         Function[rows,
             With[{draw = RandomChoice[
                     Append[a["Probabilities"][[rows]], 1 - Total[a["Probabilities"][[rows]]]] ->
                         Append[rows, 0],
                     count]},
-                {dKeys[[draw + 1]], oKeys[[draw + 1]]}
+                {dKeys[[draw + 1]], oKeys[[draw + 1]], hKeys[[draw + 1]]}
             ]
         ],
         groups
@@ -150,31 +159,54 @@ demSampledFailure[a_Association, count_Integer, reach_Integer] := Module[
 
     detectors = Fold[BitXor, ConstantArray[0, count], detectors];
     observables = Fold[BitXor, ConstantArray[0, count], observables];
+    heralds = Fold[BitXor, ConstantArray[0, count], heralds];
 
     (* A pattern the table does not reach is undecodable, hence a failure; -1 is
        never a real observable key, so those shots count as one. *)
     predicted = Lookup[table, detectors, -1];
+    wrong = MapThread[Boole[#1 =!= #2] &, {predicted, observables}];
 
-    N[Count[Transpose[{predicted, observables}], {x_, y_} /; x =!= y] / count]
+    If[ Lookup[a, "Heralds", 0] === 0,
+        Return[N[Total[wrong] / count]]
+    ];
+
+    accepted = Flatten[Position[heralds, 0]];
+    nAcc = Length[accepted];
+    If[ nAcc === 0,
+        Message[QECLogicalErrorRate::allrejected, count];
+        Return[<|"Rate" -> Indeterminate, "Acceptance" -> 0., "Accepted" -> 0, "Shots" -> count|>]
+    ];
+    <|
+        "Rate" -> N[Total[wrong[[accepted]]] / nAcc],
+        "Acceptance" -> N[nAcc / count],
+        "Accepted" -> nAcc,
+        "Shots" -> count
+    |>
 ]
 
 
 (* ---- exact ---- *)
 
+(* Heralds join the state space, because conditioning needs the JOINT distribution:
+   P(fail | accepted) = P(fail and accepted) / P(accepted), and both numerator and
+   denominator are slices of the same fold.  That makes the space 2^(det+obs+heralds),
+   so $QECExactDetectorLimit bites sooner on a post-selected circuit -- which is
+   honest, since post-selection is exactly where sampling is the better route. *)
 demExactFailure[a_Association, reach_Integer] := Module[
-    {d, o, no, nd, dim, sigs, groups, dist, idx, table, mask},
+    {d, o, h, no, nd, nh, dim, sigs, groups, dist, idx, table, wrong, accept, num, den},
 
     nd = a["Detectors"];
     no = a["Observables"];
-    dim = 2^(nd + no);
+    nh = Lookup[a, "Heralds", 0];
+    dim = 2^(nd + no + nh);
 
     If[ dim > $QECExactDetectorLimit,
-        Message[QECLogicalErrorRate::detbig, nd, no, dim, $QECExactDetectorLimit];
+        Message[QECLogicalErrorRate::detbig, nd, no + nh, dim, $QECExactDetectorLimit];
         Return[$Failed]
     ];
 
-    {d, o} = demRowKeys[a];
-    sigs = BitShiftLeft[d, no] + o;
+    {d, o, h} = demRowKeys[a];
+    sigs = BitShiftLeft[d, no + nh] + BitShiftLeft[o, nh] + h;
     groups = demGroups[a];
     idx = Range[0, dim - 1];
 
@@ -191,13 +223,38 @@ demExactFailure[a_Association, reach_Integer] := Module[
 
     table = demDecoderTable[a, reach];
 
-    (* 1 on the states the decoder gets wrong. *)
-    mask = Table[
-        Boole[Lookup[table, Key[BitShiftRight[s, no]], -1] =!= BitAnd[s, 2^no - 1]],
+    (* 1 on the states the decoder gets wrong, and 1 on the states that survive
+       post-selection.  With no heralds every state is accepted and this reduces to
+       what it was before. *)
+    wrong = Table[
+        Boole[
+            Lookup[table, Key[BitShiftRight[s, no + nh]], -1] =!=
+                BitAnd[BitShiftRight[s, nh], 2^no - 1]
+        ],
         {s, idx}
     ];
+    accept = Table[Boole[BitAnd[s, 2^nh - 1] === 0], {s, idx}];
 
-    Simplify[mask . dist]
+    If[ nh === 0, Return[Simplify[wrong . dist]] ];
+
+    num = Simplify[(wrong accept) . dist];
+    den = Simplify[accept . dist];
+
+    (* Acceptance can be exactly zero -- a herald that fires with certainty -- and then
+       there is no conditional rate to report.  The guard has to come before the division
+       and not after it, because the Association is built eagerly: without it, asking for
+       "Acceptance" alone still evaluates "Rate" and emits Power::infy.  Reported rather
+       than silent, to match the sampled route's ::allrejected. *)
+    If[ TrueQ[PossibleZeroQ[den]],
+        Message[QECLogicalErrorRate::noacceptance];
+        Return[<|"Rate" -> Indeterminate, "Acceptance" -> den, "Failure" -> num|>]
+    ];
+
+    <|
+        "Rate" -> Simplify[num / den],
+        "Acceptance" -> den,
+        "Failure" -> num
+    |>
 ]
 
 

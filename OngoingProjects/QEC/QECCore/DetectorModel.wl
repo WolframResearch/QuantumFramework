@@ -7,10 +7,13 @@ PackageExport[QECDetectorModel]
 PackageScope[detectorData]
 PackageScope[codeDetectorModel]
 PackageScope[circuitFaultMechanisms]
+PackageScope[idleMechanisms]
 PackageScope[faultEffect]
 PackageScope[recordDetectors]
 PackageScope[roundLength]
 PackageScope[defaultRounds]
+PackageScope[$oneQubitPaulis]
+PackageScope[$twoQubitPaulis]
 
 
 (* ============================================================================ *)
@@ -128,7 +131,7 @@ circuitMechanisms[instr_List, rates_Association] := Catenate @ Table[
                     "Location" -> {"OneQubit", i}
                 |>, {p, $oneQubitPaulis}],
 
-            op === "CNOT",
+            MemberQ[$circuitTwoQubitOps, op],
                 Table[<|
                     "Faults" -> {{i, instr[[i, 2]], pp[[1]]}, {i, instr[[i, 3]], pp[[2]]}},
                     "Probability" -> rates["TwoQubit"] / 15,
@@ -137,7 +140,7 @@ circuitMechanisms[instr_List, rates_Association] := Catenate @ Table[
 
             (* Placed before the measurement, so it flips the record and is then
                wiped by the next reset: a classical readout error. *)
-            op === "M",
+            MemberQ[$circuitMeasureOps, op],
                 {<|
                     "Faults" -> {{i - 1, instr[[i, 2]], {1, 0}}},
                     "Probability" -> rates["Measurement"],
@@ -180,15 +183,52 @@ phenomenologicalMechanisms[instr_List, a_Association, noise_Association, rounds_
                 "Probability" -> q,
                 "Location" -> {"Measurement", i}
             |>,
-            {i, Select[Range[Length[instr]], instr[[#, 1]] === "M" &]}
+            {i, Select[Range[Length[instr]], MemberQ[$circuitMeasureOps, instr[[#, 1]]] &]}
         ]
     ]
 ]
 
+(* Idle: a qubit that no instruction of a time step touches is waiting, and a
+   waiting qubit decoheres.  One location per (layer, qubit), the three Paulis as its
+   mutually exclusive outcomes, and the fault anchored by circuitIdleAnchor -- after
+   the last instruction touching that qubit in an earlier layer, or at index 0 when
+   none has run yet.  See the note there for why "the end of the layer" is the wrong
+   anchor: the instruction list is not ordered by layer.
+
+   Emitted only when the idle rate is not literally zero.  With Idle -> 0 (the
+   default) this returns {} rather than a list of zero-probability rows, so the
+   mechanism list, the detector model and every number downstream are bit-for-bit
+   what they were before this existed.  A symbolic rate is never zero structurally,
+   so it is always emitted.
+
+   Ancilla idles are emitted too and mostly disappear in codeDetectorModel's filter,
+   since a reset wipes them; the ones that survive fall between an ancilla's R and
+   its M, act as readout errors, and belong in the model. *)
+idleMechanisms[instr_List, nq_Integer, rates_Association] := If[
+    rates["Idle"] === 0,
+    {},
+    Catenate[
+        Function[slot,
+            Table[
+                <|
+                    "Faults" -> {{slot[[1]], slot[[3]], pauli}},
+                    "Probability" -> rates["Idle"] / 3,
+                    "Location" -> {"Idle", slot[[2]], slot[[3]]}
+                |>,
+                {pauli, $oneQubitPaulis}
+            ]
+        ] /@ circuitIdleSlots[instr, nq]
+    ]
+]
+
 circuitFaultMechanisms[a_Association, noise_Association, rounds_Integer] := With[
-    {instr = codeCircuitInstructions[a, rounds]},
+    {instr = codeCircuitInstructions[a, rounds],
+     nq = a["Qubits"] + codeStabilizerCount[a]},
     Switch[noiseLevel[noise],
-        "Circuit", circuitMechanisms[instr, noiseCircuitRates[noise]],
+        "Circuit",
+            With[{rates = noiseCircuitRates[noise]},
+                Join[circuitMechanisms[instr, rates], idleMechanisms[instr, nq, rates]]
+            ],
         _, phenomenologicalMechanisms[instr, a, noise, rounds]
     ]
 ]
@@ -218,7 +258,10 @@ faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer, fa
     labels = Mod[Join[x[[1 ;; a["Qubits"]]], z[[1 ;; a["Qubits"]]]] . Transpose[codeLabelMatrix[a]], 2];
     {
         recordDetectors[run["Record"], labels[[1 ;; m]], m, rounds],
-        labels[[m + 1 ;; -1]]
+        labels[[m + 1 ;; -1]],
+        (* heralds need no differencing: a verification check reads 0 when nothing goes
+           wrong, so the raw outcome already is the "something is wrong" bit *)
+        run["Heralds"]
     }
 ]
 
@@ -249,15 +292,20 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer] := codeDetec
     mechanisms = circuitFaultMechanisms[a, noise, rounds];
     effects = faultEffect[a, instr, nq, m, rounds, #["Faults"]] & /@ mechanisms;
 
+    (* A row that only trips a herald is NOT effectless: it discards the shot, which is
+       an outcome the rate has to account for.  So the filter looks at all three. *)
     keep = Select[
         Range[Length[mechanisms]],
         mechanisms[[#, "Probability"]] =!= 0 &&
-            ! (AllTrue[effects[[#, 1]], # === 0 &] && AllTrue[effects[[#, 2]], # === 0 &]) &
+            ! (AllTrue[effects[[#, 1]], # === 0 &] && AllTrue[effects[[#, 2]], # === 0 &] &&
+               AllTrue[effects[[#, 3]], # === 0 &]) &
     ];
 
     <|
         "DetectorMatrix" -> effects[[keep, 1]],
         "ObservableMatrix" -> effects[[keep, 2]],
+        "HeraldMatrix" -> effects[[keep, 3]],
+        "Heralds" -> Count[instr, {"MH", ___}],
         "Probabilities" -> Lookup[mechanisms[[keep]], "Probability"],
         "Locations" -> Lookup[mechanisms[[keep]], "Location"],
         "Detectors" -> (rounds + 1) m,
@@ -305,9 +353,10 @@ QECDetectorModel[QECCode[a_Association], QECNoiseModel[noise_Association], round
 (* ---- properties ---- *)
 
 $detectorProperties = {
-    "DetectorMatrix", "ObservableMatrix", "Probabilities", "Locations",
-    "Detectors", "Observables", "Rounds", "Checks", "Faults", "Code", "Noise",
-    "LocationCounts", "UndetectableFaults", "DetectorRates", "ObservableRates", "Properties"
+    "DetectorMatrix", "ObservableMatrix", "HeraldMatrix", "Probabilities", "Locations",
+    "Detectors", "Observables", "Heralds", "Rounds", "Checks", "Faults", "Code", "Noise",
+    "LocationCounts", "UndetectableFaults", "DetectorRates", "ObservableRates",
+    "HeraldRates", "PostSelectedQ", "Properties"
 };
 
 (* How often each detector fires, exactly.  A detector fires when an odd number of
@@ -333,6 +382,12 @@ detectorFiringRates[a_Association] := If[
     Table[oddParityRate[a, a["DetectorMatrix"][[All, k]]], {k, a["Detectors"]}]
 ]
 
+heraldFiringRates[a_Association] := If[
+    a["HeraldMatrix"] === {} || a["Heralds"] === 0,
+    ConstantArray[0, a["Heralds"]],
+    Table[oddParityRate[a, a["HeraldMatrix"][[All, k]]], {k, a["Heralds"]}]
+];
+
 observableFlipRates[a_Association] := If[
     a["ObservableMatrix"] === {},
     ConstantArray[0, a["Observables"]],
@@ -343,8 +398,13 @@ detectorData[QECDetectorModel[a_Association]] := a
 
 QECDetectorModel[_Association]["Properties"] := $detectorProperties
 
-QECDetectorModel[a_Association][prop : ("DetectorMatrix" | "ObservableMatrix" | "Probabilities" |
-    "Locations" | "Detectors" | "Observables" | "Rounds" | "Checks")] := a[prop]
+QECDetectorModel[a_Association][prop : ("DetectorMatrix" | "ObservableMatrix" |
+    "HeraldMatrix" | "Probabilities" | "Locations" | "Detectors" | "Observables" |
+    "Heralds" | "Rounds" | "Checks")] := a[prop]
+
+(* Whether any of the circuit's measurements is a herald, i.e. whether a rate computed
+   from this model is conditional on acceptance. *)
+QECDetectorModel[a_Association]["PostSelectedQ"] := a["Heralds"] > 0
 
 QECDetectorModel[a_Association]["Faults"] := Length[a["Probabilities"]]
 QECDetectorModel[a_Association]["Code"] := QECCode[a["Code"]]
@@ -352,6 +412,7 @@ QECDetectorModel[a_Association]["Noise"] := QECNoiseModel[a["Noise"]]
 QECDetectorModel[a_Association]["LocationCounts"] := Counts[First /@ a["Locations"]]
 QECDetectorModel[a_Association]["DetectorRates"] := detectorFiringRates[a]
 QECDetectorModel[a_Association]["ObservableRates"] := observableFlipRates[a]
+QECDetectorModel[a_Association]["HeraldRates"] := heraldFiringRates[a]
 
 (* Faults that no detector can see.  Their existence is not a bug: they are the
    circuit-level analogue of a logical operator, and how many faults it takes to
