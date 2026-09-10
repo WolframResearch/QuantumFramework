@@ -690,7 +690,8 @@ QECNoiseModel["Circuit", <|"TwoQubit" -> p, "Measurement" -> q|>]["Rates"]
 
 <!-- => <|"OneQubit" -> 0, "TwoQubit" -> p, "Measurement" -> q, "Reset" -> 0, "Idle" -> 0|> -->
 
-Idling stays at zero deliberately, and the next section says why.
+Idling is modelled but stays at zero by default, and the next section says why that default is
+optimistic rather than neutral.
 
 ## The extraction circuit
 
@@ -1201,16 +1202,20 @@ rather than verified, which is what produces the hook errors measured two sectio
 an honest property of the circuit rather than an approximation: the rate reported is the true rate
 *for this circuit*, and §12.1.1 is where to read what it costs.
 
-**Zero idle noise is the one optimistic assumption left.** Generators are extracted sequentially,
-so the circuit waits more than a parallel one would, not less; §15.5.1 quantifies the storage rate
-that serialisation multiplies, and §15.5.2 says an ill-defined time step is to be defined and its
-padding charged, never dropped. Until `"Idle"` does something, every circuit-level number here is
-optimistic in the direction the circuit is already weakest.
+**Zero idle noise is the default, and it is the one optimistic assumption left.** Idling is now
+modelled rather than missing: the schedule is recovered from the instruction list by ASAP list
+scheduling, a qubit no instruction of a time step touches is waiting, and each such slot carries
+its three Paulis. But `"Idle"` still *defaults* to zero, and every circuit-level number in this
+note is computed at that default. Generators are extracted sequentially, so the circuit waits more
+than a parallel one would, not less; §15.5.1 quantifies the storage rate that serialisation
+multiplies, and §15.5.2 says an ill-defined time step is to be defined and its padding charged,
+never dropped. Set `"Idle"` and the numbers get worse, in the direction this circuit is already
+weakest.
 
 ## How this is checked
 
 Nothing above is trusted because the package computed it. Every fast routine is cross-checked
-against a slow, obvious one, and the checks run as a suite of 400 tests.
+against a slow, obvious one, and the checks run as a suite of 473 tests.
 
 | What | Checked against |
 |---|---|
@@ -1225,6 +1230,7 @@ against a slow, obvious one, and the checks run as a suite of 400 tests.
 | The extraction circuit | `code["Syndrome", …]`, and the circuit run as a state on the engine |
 | Detectors and faults | Stim's own sampler, detector by detector, over two million shots |
 | Circuit-level rate | The code-capacity polynomial it must reduce to, and a sampled route |
+| Idle noise and the schedule | The Stim export, `DEPOLARIZE1` line for line against the model's slots |
 | The exported circuit | PyMatching, which decodes it unchanged |
 
 The habit is worth keeping when extending the layer: a result checked only against the code that

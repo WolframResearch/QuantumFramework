@@ -38,6 +38,7 @@ qecWeightK = Symbol[qecScope <> "weightKVectors"];
 qecCompleted = Symbol[qecScope <> "codeCompletedGenerators"];
 qecCodeData = Symbol[qecScope <> "codeData"];
 qecEngineGates = Symbol[qecScope <> "instructionEngineGates"];
+qecSchedule = Symbol[qecScope <> "circuitSchedule"];
 
 qecNamed = {"BitFlipCode", "PhaseFlipCode", "ShorCode", "5QubitCode", "SteaneCode"};
 
@@ -305,4 +306,52 @@ VerificationTest[
     QECPauliWeight[qecAncillaFault[QECCode["5QubitCode"], 4, 6, {0, 1}]["Data"]],
     3,
     TestID -> "QEC-Circuit-one-fault-many-errors"
+]
+
+
+(* ============================================================================
+   Depth is time, not instruction count
+   ============================================================================ *)
+
+(* "Depth" counts time steps from the ASAP schedule, and "InstructionCount" counts
+   instructions.  They are different numbers and used to be the same one under the
+   wrong name: the repetition circuit issues 8 instructions but only needs 6 steps,
+   because the second ancilla resets while the first is still being read. *)
+VerificationTest[
+    With[{c = QECSyndromeCircuit[QECCode["Repetition", 3]]},
+        {c["Depth"], c["InstructionCount"]}
+    ],
+    {6, 8},
+    TestID -> "QEC-Circuit-depth-is-not-the-instruction-count"
+]
+
+(* Rounds pipeline, so depth grows by less than one round's worth: 6, 10, 14 and
+   not 6, 12, 18.  The instruction count is what grows linearly. *)
+VerificationTest[
+    With[{c = QECCode["Repetition", 3]},
+        {#["Depth"], #["InstructionCount"]} & /@
+            Table[QECSyndromeCircuit[c, r], {r, 3}]
+    ],
+    {{6, 8}, {10, 16}, {14, 24}},
+    TestID -> "QEC-Circuit-rounds-pipeline-in-depth"
+]
+
+(* The gap is wide once the X checks bring their Hadamards: Steane runs 60
+   instructions in 16 steps, because most of those Hadamards are parallel. *)
+VerificationTest[
+    With[{c = QECSyndromeCircuit[QECCode["SteaneCode"]]},
+        {c["Depth"], c["InstructionCount"], Total[c["GateCounts"]]}
+    ],
+    {16, 60, 60},
+    TestID -> "QEC-Circuit-depth-beats-gate-count-on-Steane"
+]
+
+(* Depth has to agree with the schedule that idle noise is charged against, or the
+   exported circuit and the model would be counting different time. *)
+VerificationTest[
+    With[{c = QECSyndromeCircuit[QECCode["SteaneCode"], 2]},
+        c["Depth"] === Length[qecSchedule[c["Instructions"], c["Qubits"]]]
+    ],
+    True,
+    TestID -> "QEC-Circuit-depth-agrees-with-the-schedule"
 ]

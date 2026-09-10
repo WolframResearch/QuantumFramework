@@ -220,7 +220,7 @@ circ["Properties"]
 
 ```wl
 AssociationMap[circ, {"DataQubits", "Ancillas", "Qubits", "Rounds",
-    "Depth", "MeasurementCount"}]
+    "Depth", "InstructionCount", "MeasurementCount"}]
 ```
 
 ---
@@ -317,7 +317,7 @@ worth watching happen.
 Find the CNOT ladder of generator 1, which runs into ancilla 6:
 
 ```wl
-ladder = Select[Range[circ["Depth"]], MatchQ[circ["Instructions"][[#]], {"CNOT", _, 6}] &]
+ladder = Select[Range[circ["InstructionCount"]], MatchQ[circ["Instructions"][[#]], {"CNOT", _, 6}] &]
 ```
 
 ---

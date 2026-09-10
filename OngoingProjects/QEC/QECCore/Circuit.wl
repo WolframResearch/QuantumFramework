@@ -425,7 +425,8 @@ instructionEngineGates[instr_List] := Catenate[
 
 $circuitProperties = {
     "Instructions", "DataQubits", "Ancillas", "Qubits", "Rounds", "Code",
-    "MeasurementCount", "MeasurementLabels", "Depth", "GateCounts", "Properties"
+    "MeasurementCount", "MeasurementLabels", "Depth", "InstructionCount",
+    "GateCounts", "Properties"
 };
 
 QECSyndromeCircuit[_Association]["Properties"] := $circuitProperties
@@ -438,7 +439,13 @@ QECSyndromeCircuit[a_Association]["Rounds"] := a["Rounds"]
 QECSyndromeCircuit[a_Association]["Code"] := QECCode[a["Code"]]
 QECSyndromeCircuit[a_Association]["MeasurementCount"] := a["Rounds"] a["Ancillas"]
 QECSyndromeCircuit[a_Association]["MeasurementLabels"] := circuitMeasurementLabels[a]
-QECSyndromeCircuit[a_Association]["Depth"] := Length[a["Instructions"]]
+(* Depth is the number of TIME STEPS, from the ASAP schedule -- not the number of
+   instructions, which is what this returned before and is a different quantity
+   entirely (it was the gate count under the wrong name).  The schedule is what
+   idle noise is charged against, so the two must agree on what a step is. *)
+QECSyndromeCircuit[a_Association]["Depth"] :=
+    Length[circuitSchedule[a["Instructions"], circuitQubitCount[a]]]
+QECSyndromeCircuit[a_Association]["InstructionCount"] := Length[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
 
 QECSyndromeCircuit[a_Association][prop_String] := (Message[QECSyndromeCircuit::noprop, prop]; Missing["NotFound", prop])
