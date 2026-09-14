@@ -4,13 +4,11 @@
    symbol here lives in IBMQuantumPlatform`Private`. Pure built-in graphics
    (Graph / Legended / BarLegend / ColorData): no QuantumFramework dependency.
 
-   The IBM analogue of QUALink's QUAConnect[backend]["ErrorMap"]. The parse +
-   draw layers are lifted verbatim from the verified proof of concept
-   OngoingProjects/IBM ErrorMap/ibm-error-map.wls (QuantumFramework repo); only
-   the transport is different: iIBMFetchModel reads the two free, read-only
-   metadata endpoints through the service connection's own raw requests
-   (RawBackendConfiguration / RawBackendProperties), so no circuit is run and no
-   quantum-seconds are spent. *)
+   iIBMDeviceModel parses IBM's configuration + properties into one normalized,
+   provider-neutral model; iIBMErrorMap draws it; the iIBM* projections each read
+   one channel. iIBMFetchModel reads the two free, read-only metadata endpoints
+   through the connection's own raw requests (RawBackendConfiguration /
+   RawBackendProperties), so no circuit is run and no quantum-seconds are spent. *)
 
 (* ============================================================================ *)
 (*  Parse: configuration + properties -> normalized, provider-neutral model      *)
@@ -70,7 +68,7 @@ iIBMDeviceModel[config_Association, props_Association] := Module[{
       (Lookup[g, "qubits"][[1]] -> iIBMParam[Lookup[g, "parameters", {}], "gate_error"])];
 
   (* per-pair cz error + duration, keyed by the sorted physical pair.
-     error == 1 is IBM's uncalibrated sentinel (analogue of QUA's error == 0). *)
+     error == 1 is IBM's uncalibrated sentinel. *)
   czPairs = Cases[gates,
     g_ /; Lookup[g, "gate", ""] === "cz" && MatchQ[Lookup[g, "qubits", {}], {_Integer, _Integer}] :>
       (Sort[Lookup[g, "qubits"]] -> <|
@@ -104,7 +102,7 @@ iIBMDeviceModel[config_Association, props_Association] := Module[{
   |>
 ];
 
-(* convenience projections (the QUAConnect-style pure accessors) *)
+(* convenience projections: one calibration channel each, keyed by qubit or sorted pair *)
 iIBMCZErrors[m_]      := Map[#["Error"] &, m["CZ"]];
 iIBMCZDurations[m_]   := Map[#["Duration"] &, m["CZ"]];
 iIBMZZ[m_]            := Lookup[m, "ZZ", <||>];          (* sorted-pair -> |ZZ| crosstalk, GHz *)
@@ -115,6 +113,18 @@ iIBMCoherence[m_]     := Map[KeyTake[#, {"T1", "T2"}] &, m["Qubits"]];
 iIBMGateErrors[m_, "cz"] := iIBMCZErrors[m];
 iIBMGateErrors[m_, "sx"] := m["SXErrors"];
 iIBMGateErrors[m_, _]    := <||>;
+
+(* the device lattice as a bare, composable Graph: qubit indices as vertices, the
+   undirected coupling map as edges, the IBM heavy-hex layout carried as
+   VertexCoordinates in rule form (independent of VertexList order). The topology
+   sibling of the "CouplingMap" projection; iIBMErrorMap annotates this same base.
+   Left unstyled so it feeds graph algorithms (FindShortestPath, GraphDistance,
+   VertexDegree, HighlightGraph, subgraph extraction for a qubit chain). *)
+iIBMCouplingGraph[m_Association] := Graph[
+  Sort @ Keys[m["Coords"]],
+  UndirectedEdge @@@ m["CouplingMap"],
+  VertexCoordinates -> KeyValueMap[#1 -> #2 &, KeySort @ m["Coords"]]
+];
 
 (* ============================================================================ *)
 (*  ErrorMap: the device lattice annotated with the live error model             *)
@@ -152,12 +162,12 @@ iIBMErrorMap[m_Association, opts : OptionsPattern[]] := Module[{
   arrowsQ = TrueQ @ OptionValue["EdgeArrows"],
   showLabels = TrueQ @ OptionValue["ShowQubitLabels"],
   bg = OptionValue[Background],
-  coords, cmap, czErr, czDur, zz, roErr, t1, sxErr, g,
+  coords, czErr, czDur, zz, roErr, t1, sxErr, g,
   validErr, lo, hi, thickData, tvVals, tvlo, tvhi, roVals, rlo, rhi, t1Vals, tlo, thi,
   edgeColor, edgeThick, vertRadius, vertColor, pct, ns, us, khz, thickFmt, thickLabel,
   bgLum, dark, fg, vEdge, esf, vsf, qTip, qLabel, qLabelColor, defect, vlist
 },
-  coords = m["Coords"];   cmap = m["CouplingMap"];
+  coords = m["Coords"];
   czErr  = iIBMCZErrors[m]; czDur = iIBMCZDurations[m]; zz = iIBMZZ[m];
   roErr  = iIBMReadoutErrors[m]; t1 = iIBMT1[m]; sxErr = m["SXErrors"];
 
@@ -252,8 +262,7 @@ iIBMErrorMap[m_Association, opts : OptionsPattern[]] := Module[{
         Tooltip[{EdgeForm[vEdge], FaceForm[fill], Disk[c, r], qLabel[c, q, r, fill]}, qTip[q]]],
       Tooltip[{defect[c], qLabel[c, q, 0.16, None]}, qTip[q]]]]];
 
-  g = Graph[Sort @ Keys[coords], UndirectedEdge @@@ cmap,
-    VertexCoordinates -> KeyValueMap[#1 -> #2 &, KeySort @ coords]];
+  g = iIBMCouplingGraph[m];
   vlist = VertexList[g];
 
   Legended[
@@ -285,26 +294,36 @@ iIBMErrorMap[m_Association, opts : OptionsPattern[]] := Module[{
 (*   Bearer-token + Service-CRN auth the connection already attaches)             *)
 (* ============================================================================ *)
 
-(* default backend: the JobRun PreprocessingFunction idiom, proven in this paclet *)
-iIBMDefaultBackend[] := Enclose @ First[
-  ConfirmMatch[SF`GetDefaultServiceObject["IBMQuantumPlatform"]["Backends"], {__String}],
-  Confirm @ Failure["IBMQuantumPlatform", <|"MessageTemplate" -> "No backends available on this connection."|>]];
+(* A backend must be named explicitly and must exist on the connection: there is
+   no silent default. An unspecified backend, or one the connection does not offer,
+   raises the matching message below and fails. Self-Enclosed (Enclose catches only
+   Confirms lexical to its argument, so each helper wraps its own), so a missing or
+   unknown backend returns a Failure. *)
+IBMQuantumPlatform::nobackend  = "A backend must be specified, e.g. \"Backend\" -> \"ibm_fez\". Available backends: ``.";
+IBMQuantumPlatform::badbackend = "`` is not an available backend on this connection. Available backends: ``.";
 
-iIBMResolveBackend[b_] := If[StringQ[b], b, iIBMDefaultBackend[]];
-
-(* fetch both free metadata endpoints via the connection's own raw requests (the
-   IBMJob idiom: so["RawX", "BackendID" -> b], which applies the request's
-   HTTPResponseProcessing and the connection's auth) *)
-iIBMFetchModel[backend_String] := Enclose @ Module[{so, cfg, props},
-  so    = ConfirmMatch[SF`GetDefaultServiceObject["IBMQuantumPlatform"], _ServiceObject];
-  cfg   = ConfirmBy[so["RawBackendConfiguration", "BackendID" -> backend], AssociationQ];
-  props = ConfirmBy[so["RawBackendProperties", "BackendID" -> backend], AssociationQ];
-  iIBMDeviceModel[cfg, props]
+iIBMResolveBackend[so_, p_] := Enclose @ Module[{avail, b},
+  avail = ConfirmMatch[so["Backends"], {___String}];
+  (* the connection's ParameterMap renames "Backend" to lowercase "backend"; accept either *)
+  b = Lookup[Association[p], "Backend", Lookup[Association[p], "backend", Automatic]];
+  Which[
+    ! StringQ[b],        Message[IBMQuantumPlatform::nobackend, avail];     Confirm[$Failed],
+    ! MemberQ[avail, b], Message[IBMQuantumPlatform::badbackend, b, avail]; Confirm[$Failed]
+  ];
+  b
 ];
 
-(* resolve the "Backend" parameter (a list of rules or an association, whichever the
-   service framework hands us) to a concrete device name *)
-iIBMBackendFromParams[p_] := iIBMResolveBackend[Lookup[Association[p], "Backend", Automatic]];
+(* fetch both free metadata endpoints for the validated backend (the IBMJob idiom:
+   so["RawX", "BackendID" -> b], which applies the request's HTTPResponseProcessing
+   and the connection's auth). Self-Enclosed: Confirm @ iIBMResolveBackend propagates
+   a bad-backend Failure and each endpoint fetch propagates its own, as one path. *)
+iIBMFetchModel[p_] := Enclose @ Module[{so, b, cfg, props},
+  so    = ConfirmMatch[SF`GetDefaultServiceObject["IBMQuantumPlatform"], _ServiceObject];
+  b     = Confirm @ iIBMResolveBackend[so, p];
+  cfg   = ConfirmBy[so["RawBackendConfiguration", "BackendID" -> b], AssociationQ];
+  props = ConfirmBy[so["RawBackendProperties", "BackendID" -> b], AssociationQ];
+  iIBMDeviceModel[cfg, props]
+];
 
 (* the 9 styling keys are all STRING service-parameter names; map them to the option
    rules iIBMErrorMap consumes (OptionsPattern matches a bare list). Two names need a

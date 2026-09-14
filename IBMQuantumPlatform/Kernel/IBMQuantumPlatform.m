@@ -109,12 +109,6 @@ params["RawRequests", "RawInstances"] = {
     "Headers"			-> $commonHeaders
 }
 
-params["RawRequests", "RawInstances"] = {
-    "URL"				-> path["instances"],
-    "HTTPSMethod"		-> "GET",
-    "Headers"			-> $commonHeaders
-}
-
 params["RawRequests", "RawInstancesUsage"] = {
     "URL"				-> path["instances", "usage"],
     "HTTPSMethod"		-> "GET",
@@ -225,12 +219,6 @@ params["RawRequests", "RawJobTags"] = {
     "RequiredParameters" -> {"JobID"}
 }
 
-params["RawRequests", "RawBackends"] = {
-    "URL"                -> path["backends"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
 params["RawRequests", "RawBackendProperties"] = {
     "URL"                -> Function[URLBuild[{path["backends"], #BackendID, "properties"}]],
     "HTTPSMethod"        -> "GET",
@@ -289,18 +277,6 @@ params["RawRequests", "RawSessionClose"] = {
 
 params["RawRequests", "RawInstance"] = {
     "URL"                -> path["instance"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
-params["RawRequests", "RawInstanceConfiguration"] = {
-    "URL"                -> path["instances", "configuration"],
-    "HTTPSMethod"        -> "GET",
-    "Headers"            -> $commonHeaders
-}
-
-params["RawRequests", "RawInstanceUsage"] = {
-    "URL"                -> path["instances", "usage"],
     "HTTPSMethod"        -> "GET",
     "Headers"            -> $commonHeaders
 }
@@ -379,19 +355,21 @@ params["ProcessedRequests", "JobResults"] = <|
 
 (* ---- backend calibration: error map + device model + projection accessors ----
    Properties of the connection object, e.g. conn["ErrorMap", "Backend" -> "ibm_fez"].
-   "Backend" defaults to the first available device, so conn["ErrorMap"] works bare.
-   Each reads the two free, read-only metadata endpoints (RawBackendConfiguration /
+   "Backend" is required and is validated against the connection's live backend
+   list: a bare conn["ErrorMap"] or an unknown backend raises
+   IBMQuantumPlatform::nobackend / ::badbackend and fails (no silent default). Each
+   reads the two free, read-only metadata endpoints (RawBackendConfiguration /
    RawBackendProperties) through the connection's own auth: no circuit, no quantum
    time. Drawing + parse live in ErrorMap.m (iIBM* helpers). For many projections
    at once, conn["DeviceModel"] fetches once and carries every projection as a key.
 
-   Each request uses Identity preprocessing (like "Backends") and resolves the
-   backend inside the ExecuteFunction: the framework hands ExecuteFunction the raw
-   parameters (a list of rules) as its first argument, which iIBMBackendFromParams /
-   iIBMStyleRules read via Association. Every styling parameter is a STRING key. *)
+   Each request wraps its body in Enclose and resolves the backend inside
+   iIBMFetchModel: the framework hands the ExecuteFunction the raw parameters (a
+   list of rules) as its first argument, from which iIBMResolveBackend reads the
+   backend and iIBMStyleRules the styling. Every styling parameter is a STRING key. *)
 
 params["ProcessedRequests", "ErrorMap"] = <|
-    "ExecuteFunction" -> Function[iIBMErrorMap[iIBMFetchModel[iIBMBackendFromParams[#]], iIBMStyleRules[#]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMErrorMap[Confirm @ iIBMFetchModel[#], iIBMStyleRules[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {
         "Backend"             -> Automatic,
@@ -412,7 +390,7 @@ params["ProcessedRequests", "ErrorMap"] = <|
 |>
 
 params["ProcessedRequests", "DeviceModel"] = <|
-    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]],
+    "ExecuteFunction" -> Function[Enclose @ Confirm @ iIBMFetchModel[#]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -422,7 +400,17 @@ params["ProcessedRequests", "DeviceModel"] = <|
 |>
 
 params["ProcessedRequests", "CouplingMap"] = <|
-    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]["CouplingMap"]],
+    "ExecuteFunction" -> Function[Enclose @ (Confirm @ iIBMFetchModel[#])["CouplingMap"]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "CouplingGraph"] = <|
+    "ExecuteFunction" -> Function[Enclose @ iIBMCouplingGraph[Confirm @ iIBMFetchModel[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -432,7 +420,17 @@ params["ProcessedRequests", "CouplingMap"] = <|
 |>
 
 params["ProcessedRequests", "CZErrors"] = <|
-    "ExecuteFunction" -> Function[iIBMCZErrors[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMCZErrors[Confirm @ iIBMFetchModel[#]]],
+    "SubmitFunction" -> "ExecuteFunction",
+    "Parameters" -> {"Backend" -> Automatic},
+    "RequiredParameters" -> {},
+    "HiddenParameters" -> {},
+    "PreprocessingFunction" -> Identity,
+    "ExecuteResultProcessing" -> Identity
+|>
+
+params["ProcessedRequests", "CZDurations"] = <|
+    "ExecuteFunction" -> Function[Enclose @ iIBMCZDurations[Confirm @ iIBMFetchModel[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -442,7 +440,7 @@ params["ProcessedRequests", "CZErrors"] = <|
 |>
 
 params["ProcessedRequests", "ZZ"] = <|
-    "ExecuteFunction" -> Function[iIBMZZ[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMZZ[Confirm @ iIBMFetchModel[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -452,7 +450,7 @@ params["ProcessedRequests", "ZZ"] = <|
 |>
 
 params["ProcessedRequests", "GateErrors"] = <|
-    "ExecuteFunction" -> Function[iIBMGateErrors[iIBMFetchModel[iIBMBackendFromParams[#]], Lookup[Association[#], "GateName", "cz"]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMGateErrors[Confirm @ iIBMFetchModel[#], Lookup[Association[#], "GateName", "cz"]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic, "GateName" -> "cz"},
     "RequiredParameters" -> {},
@@ -462,7 +460,7 @@ params["ProcessedRequests", "GateErrors"] = <|
 |>
 
 params["ProcessedRequests", "ReadoutErrors"] = <|
-    "ExecuteFunction" -> Function[iIBMReadoutErrors[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMReadoutErrors[Confirm @ iIBMFetchModel[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -472,7 +470,7 @@ params["ProcessedRequests", "ReadoutErrors"] = <|
 |>
 
 params["ProcessedRequests", "Coherence"] = <|
-    "ExecuteFunction" -> Function[iIBMCoherence[iIBMFetchModel[iIBMBackendFromParams[#]]]],
+    "ExecuteFunction" -> Function[Enclose @ iIBMCoherence[Confirm @ iIBMFetchModel[#]]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
@@ -482,7 +480,7 @@ params["ProcessedRequests", "Coherence"] = <|
 |>
 
 params["ProcessedRequests", "Qubits"] = <|
-    "ExecuteFunction" -> Function[iIBMFetchModel[iIBMBackendFromParams[#]]["Qubits"]],
+    "ExecuteFunction" -> Function[Enclose @ (Confirm @ iIBMFetchModel[#])["Qubits"]],
     "SubmitFunction" -> "ExecuteFunction",
     "Parameters" -> {"Backend" -> Automatic},
     "RequiredParameters" -> {},
