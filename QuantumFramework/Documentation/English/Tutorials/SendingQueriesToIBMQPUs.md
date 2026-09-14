@@ -3,6 +3,7 @@ Template: TechNote
 Name: SendingQueriesToIBMQPUs
 Title: Sending Queries to IBM QPUs
 Context: Wolfram`QuantumFramework`
+CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/SendingQueriesToIBMQPUs
 Keywords: [IBM Quantum, QPU, OpenQASM, Qiskit, ServiceConnect, IBMJobSubmit, IBMJob, sampler, SamplerV2, transpile, quantum hardware]
