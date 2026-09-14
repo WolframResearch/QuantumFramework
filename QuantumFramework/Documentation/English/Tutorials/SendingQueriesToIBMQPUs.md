@@ -165,6 +165,32 @@ job["QuantumSeconds"]
 
 <!-- => Quantity[…, "Seconds"] -->
 
+## Choosing the qubit layout
+
+By default [IBMJobSubmit]() lays the circuit out for you: it runs the backend's error-aware preset transpiler, which picks the physical qubits and the routing. Two options hand that choice back to you.
+
+`"InitialLayout"` pins the physical qubits. Give it the device qubit indices (0-indexed, the same numbering the backend and its error map use) that the circuit's logical qubits map onto in order. The circuit is still transpiled to the backend's native gates and routed, so it stays hardware-valid, but it runs on the qubits you chose, and the counts still return in the original logical-qubit order:
+
+```wl
+#| eval: false
+job = IBMJobSubmit[qc, "ibm_fez", "InitialLayout" -> {12, 13, 14}]
+```
+
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: … |>] -->
+
+`"Transpile" -> False` submits the circuit exactly as given, skipping layout and routing. Use it for a circuit that is already in the backend's native gate set on physical qubits, for example one you transpiled yourself to control every pass. Here the circuit is compiled with [QiskitCircuit]()'s `"Transpile"` property (which itself takes an `"InitialLayout"`) and handed straight to submission:
+
+```wl
+#| eval: false
+isa = QuantumCircuitOperator[
+   qc["Qiskit"]["Transpile", "Provider" -> "IBMProvider", "Backend" -> "ibm_fez", "InitialLayout" -> {12, 13, 14}]];
+job = IBMJobSubmit[isa, "ibm_fez", "Transpile" -> False]
+```
+
+<!-- => IBMJob[<| Status: Queued, Backend: ibm_fez, Job ID: … |>] -->
+
+The `SamplerV2` primitive only accepts a hardware-ready (ISA) circuit, so with `"Transpile" -> False` a circuit that is not already native for the backend is rejected by the QPU rather than silently re-laid-out. When you only need to fix which qubits are used, `"InitialLayout"` is the safer choice: it hands you that control while still producing a valid circuit.
+
 ## Comparing exact and hardware results
 
 `qpu` is the hardware measurement returned by the handle; the circuit `qc` gives the exact, noiseless reference. Take the corresponding Wolfram Language measurement:
