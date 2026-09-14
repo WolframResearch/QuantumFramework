@@ -3,6 +3,7 @@ Template: TechNote
 Name: TimeEvolution
 Title: Time Evolution
 Context: Wolfram`QuantumFramework`
+CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/TimeEvolution
 Keywords: [QuantumEvolve, Schrodinger equation, Lindblad, Liouvillian, Kossakowski, open system, propagator, Rabi oscillation, decoherence, Bloch vector, Heisenberg picture, superradiance]

@@ -3,6 +3,7 @@ Template: TechNote
 Name: QuantumMachineLearning
 Title: Quantum Machine Learning in Phase Space
 Context: Wolfram`QuantumFramework`
+CellContext: Global`
 ContextPath: [Wolfram`TensorNetworks`, Wolfram`Arrays`]
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/QuantumMachineLearning
