@@ -117,15 +117,40 @@ Options[IBMJobSubmit] = {
     "Observable" -> "Z",
     "Wait" -> False,
     "PrimitiveOptions" -> <||>,
-    (* transpiler optimization level for the submitted circuit. Submission always transpiles
-       against the backend's own Target (per-instruction error + duration), so layout/routing
-       are error-aware; this controls how aggressively. Automatic = qiskit's preset default. *)
-    "OptimizationLevel" -> Automatic
+    (* transpiler optimization level for the submitted circuit. With "Transpile" -> True (the
+       default), submission transpiles against the backend's own Target (per-instruction error +
+       duration), so layout/routing are error-aware; this controls how aggressively.
+       Automatic = qiskit's preset default. Ignored when "Transpile" -> False. *)
+    "OptimizationLevel" -> Automatic,
+    (* pin the physical-qubit layout the transpiler must use, as device qubit indices (0-indexed,
+       qiskit convention, matching QiskitCircuit["Transpile", "InitialLayout" -> ...]): logical
+       qubit k of the circuit is placed on the k-th listed physical qubit. The circuit is still
+       transpiled to the backend's ISA (basis gates + routing), so it stays valid, but on the
+       user's chosen qubits, and the sampler decode map still recovers the original qubit order.
+       Automatic lets the error-aware layout pass choose. Applies only when "Transpile" -> True. *)
+    "InitialLayout" -> Automatic,
+    (* True (default): transpile the circuit against the backend before submission. False: submit
+       the circuit exactly as given, skipping layout / routing / basis translation, the way the raw
+       so["JobRun", "QASM" -> isaQasm] path does. The V2 primitives require an ISA circuit, so a
+       circuit that is not already ISA for this backend is rejected server-side (surfaced as a
+       Failed job, not a client-side error); pre-transpile it (for example
+       qco["Qiskit"]["Transpile", ...] or QuantumQASM against the backend) before submitting with
+       "Transpile" -> False. *)
+    "Transpile" -> True
 }
 
 IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automatic, opts : OptionsPattern[]] := Enclose @ Module[{
     so, primitive, shots, waitQ, observable, userOpts, bk, obsTerms, sub, id, measured, job, vfail
 },
+    (* "InitialLayout" pins the transpiler's layout, so it presupposes a transpile; combining it
+       with "Transpile" -> False would silently drop the pin. Reject the contradiction up front,
+       before touching the connection, so a bad option combination fails fast either way. *)
+    If[ ! TrueQ[OptionValue["Transpile"]] && ! MatchQ[OptionValue["InitialLayout"], Automatic | None],
+        Return @ Failure["IBMJobSubmit", <|
+            "MessageTemplate" -> "\"InitialLayout\" pins the transpiler layout, but \"Transpile\" -> False skips transpilation. Use \"InitialLayout\" with \"Transpile\" -> True, or pre-transpile the circuit yourself and submit it with \"Transpile\" -> False."
+        |>]
+    ];
+
     so = ibmActiveConnection[];
     If[ so === $Failed,
         Return @ Failure["IBMJobSubmit", <|
@@ -166,7 +191,9 @@ IBMJobSubmit[qco_QuantumCircuitOperator, backend : _String | Automatic : Automat
        SamplerV2 / EstimatorV2; run() is not awaited, so a job handle returns immediately *)
     sub = qiskitPrimitiveSubmit[
         qco["Qiskit"], primitive, obsTerms, shots, ibmSnakeKeys[userOpts],
-        "Provider" -> "IBMProvider", "Backend" -> bk, "OptimizationLevel" -> OptionValue["OptimizationLevel"]
+        "Provider" -> "IBMProvider", "Backend" -> bk, "OptimizationLevel" -> OptionValue["OptimizationLevel"],
+        "InitialLayout" -> OptionValue["InitialLayout"],
+        "Transpile" -> OptionValue["Transpile"]
     ];
     If[! AssociationQ[sub], Return @ sub];   (* surface the qiskit Failure verbatim *)
     id = Lookup[sub, "JobID", $Failed];

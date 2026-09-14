@@ -726,7 +726,7 @@ result
    applied onto the primitive's own options object. Returns an Association or a Failure. *)
 qiskitPrimitiveSubmit[
     qc_QiskitCircuit, primitive_String, obsTerms : _List | Null, shots_Integer,
-    primOpts_Association, opts : OptionsPattern[Join[{"OptimizationLevel" -> Automatic}, Options[qiskitInitBackend]]]
+    primOpts_Association, opts : OptionsPattern[Join[{"OptimizationLevel" -> Automatic, "InitialLayout" -> Automatic, "Transpile" -> True}, Options[qiskitInitBackend]]]
 ] := Enclose @ Block[{
     $primitive = primitive,
     $obsTerms = Replace[obsTerms, None -> Null],
@@ -735,6 +735,15 @@ qiskitPrimitiveSubmit[
     (* level 1 already runs the error-aware layout passes against backend.target; users may
        raise to 2 / 3 for more optimization. Default preserves prior submission behavior. *)
     $optLevel = Replace[OptionValue["OptimizationLevel"], Automatic -> 1],
+    (* pin the transpiler's initial layout as device physical-qubit indices (0-indexed) that the
+       logical qubits map onto; Automatic (or None) lets the error-aware layout pass choose.
+       Both sentinels normalize to Null (Python None) once, here in the helper (like OptimizationLevel),
+       so a direct caller may pass either. Ignored when $transpile is False. *)
+    $initialLayout = Replace[OptionValue["InitialLayout"], (Automatic | None) -> Null],
+    (* True: transpile to the backend's ISA (error-aware layout/routing/translation) before
+       submitting. False: submit the circuit exactly as given: it must already be ISA for this
+       backend, otherwise the V2 primitive rejects it server-side. *)
+    $transpile = TrueQ[OptionValue["Transpile"]],
     env
 },
     env = Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
@@ -746,6 +755,7 @@ from wolframclient.language import wl
 primitive = <* $primitive *>
 shots = <* $shots *>
 opts = <* $primOpts *> or {}
+transpile = <* $transpile *>
 
 # the estimator measures observables, so any terminal measurement the circuit carries is
 # stripped; the sampler needs a classical register, added only when the circuit has none
@@ -756,10 +766,20 @@ elif circ.num_clbits == 0:
     circ = circ.copy()
     circ.measure_all()
 
-isa = generate_preset_pass_manager(backend=backend, optimization_level=<* $optLevel *>).run(circ)
+# transpile to the backend's ISA (error-aware layout/routing), optionally pinning the initial
+# layout to chosen physical qubits; or, when Transpile is False, submit the circuit exactly as
+# given (it must already be ISA for this backend, or the V2 primitive rejects it server-side)
+if transpile:
+    isa = generate_preset_pass_manager(backend=backend, optimization_level=<* $optLevel *>, initial_layout=<* $initialLayout *>).run(circ)
+else:
+    isa = circ
 
-# classical bit -> original (pre-transpile) qubit, so sampler counts can be reordered into
-# ascending-qubit order regardless of the transpiled measure -> clbit layout
+# classical bit -> qubit map, so sampler counts can be reordered into ascending-qubit order
+# regardless of the measure -> clbit layout. When the circuit was transpiled here, isa.layout maps
+# each physical qubit back to the original (pre-transpile) logical qubit, so counts decode into the
+# user's logical order even when a pinned layout put the circuit on other physical qubits. For a
+# pass-through submission (Transpile False) the circuit is taken exactly as given, so counts decode
+# by the physical qubit each clbit measures, with no layout re-interpretation.
 clbit_to_phys = {}
 for ins in isa.data:
     if ins.operation.name == 'measure':
@@ -767,7 +787,7 @@ for ins in isa.data:
 ncl = isa.num_clbits
 measured = None
 layout = getattr(isa, 'layout', None)
-if layout is not None:
+if transpile and layout is not None:
     try:
         final = layout.final_index_layout(filter_ancillas=True)
         phys_to_orig = {phys: orig for orig, phys in enumerate(final)}
@@ -790,7 +810,15 @@ def apply_opts(o, d):
 if primitive == 'estimator':
     from qiskit_ibm_runtime import EstimatorV2
     terms = <* $obsTerms *>
-    obs = SparsePauliOp.from_list([(t[0], complex(t[1], t[2])) for t in terms]).apply_layout(isa.layout)
+    obs = SparsePauliOp.from_list([(t[0], complex(t[1], t[2])) for t in terms])
+    # transpiled: the observable is on the original (logical) qubits, so map it onto the physical
+    # register through the layout the pass manager produced. Pass-through (Transpile False): the
+    # circuit is submitted as given, so the observable is taken on the circuit's own qubits and
+    # only widened to the circuit's width, never re-laid-out.
+    if transpile:
+        obs = obs.apply_layout(isa.layout)
+    else:
+        obs = obs.apply_layout(None, num_qubits=isa.num_qubits)
     est = EstimatorV2(mode=backend)
     est.options.default_shots = shots
     est.options.dynamical_decoupling.enable = True
