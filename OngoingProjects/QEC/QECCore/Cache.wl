@@ -30,7 +30,12 @@ $QECMemoisedFunctions := {
     codeBasis, codeSpanData, codeCompletedGenerators, codeStandardForm,
     codeLogicalVectors, codeMinimumLogical, codeSwapped, codeSyndromeTable,
     codeDecoderToWeight, codeDecoder, codeEncodingGates, codeCircuitInstructions,
-    codeLabelMatrix, codeDetectorModel, demRowKeys, demGroups, demDecoderTable, codeErrorTally, codeMaximumLikelihoodDecoder, codeCosetRepresentatives, cosetProbabilities, codeMinimumWeightDecoder
+    codeLabelMatrix, codeDetectorModel, demRowKeys, demGroups, demDecoderTable,
+    codeErrorTally, codeMaximumLikelihoodDecoder, codeCosetRepresentatives,
+    cosetProbabilities, codeMinimumWeightDecoder, codeLogicalWires,
+    transversalAction, transversalPairCode, transversalPairLogicals,
+    transversalCliffordWords, transversalGateNames, transversalPatterns,
+    ftGateWord
 };
 
 (* A cached answer is a rule whose left-hand side holds no pattern: its arguments

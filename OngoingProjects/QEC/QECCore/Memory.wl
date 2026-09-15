@@ -94,11 +94,25 @@ demGroups[a_Association] := demGroups[a] = Values @ GroupBy[
 (* ---- the decoder ---- *)
 
 (* Detector pattern -> the observable flip implied by the lightest fault set that
-   explains it.  Built once per (model, reach). *)
-demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Module[
-    {d, o, nf, table, stop},
+   explains it.  Built once per (model, reach).
 
-    {d, o} = Take[demRowKeys[a], 2];
+   ROWS THAT A HERALD REJECTS ARE NOT IN THE HYPOTHESIS SPACE, and leaving them in
+   was silently costing a fault-tolerant gadget its distance.  The decoder only ever
+   runs on a shot that was ACCEPTED, and a fault that trips a verification check
+   cannot have happened in an accepted shot.  Offering it as an explanation lets the
+   lightest-set rule claim a detector pattern on behalf of a fault the experiment
+   already threw away -- and since the rule is first-come, that claim displaces the
+   real explanation and the decoder returns the wrong logical class.
+
+   This is the decoder-side twin of the filter QECPauliMeasurement applies when it
+   reports its residual data weight: both statements are conditional on acceptance,
+   and both are wrong if the condition is dropped on one side only. *)
+demDecoderTable[a_Association, reach_Integer] := demDecoderTable[a, reach] = Module[
+    {d, o, h, rows, nf, table, stop},
+
+    {d, o, h} = demRowKeys[a];
+    rows = If[Lookup[a, "Heralds", 0] === 0, All, Select[Range[Length[d]], h[[#]] === 0 &]];
+    d = d[[rows]]; o = o[[rows]];
     nf = Length[d];
     table = <|0 -> 0|>;
     stop = reach;
@@ -260,8 +274,12 @@ demExactFailure[a_Association, reach_Integer] := Module[
 
 (* ---- the entry point for the two noisy levels ---- *)
 
-demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer] := Module[{dem},
-    dem = codeDetectorModel[a, noise, rounds];
+demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer] :=
+    demRate[a, noise, rounds, count, reach, "BareAncilla"]
+
+demRate[a_Association, noise_Association, rounds_Integer, count_, reach_Integer,
+    mode_String] := Module[{dem},
+    dem = codeDetectorModel[a, noise, rounds, mode];
     If[ count === None,
         demExactFailure[dem, reach],
         If[ noiseSymbolicQ[noise],

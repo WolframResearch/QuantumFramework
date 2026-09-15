@@ -10,6 +10,9 @@ PackageScope[circuitFaultMechanisms]
 PackageScope[idleMechanisms]
 PackageScope[faultEffect]
 PackageScope[recordDetectors]
+PackageScope[codeExtraction]   (* Measurement.wl *)
+PackageScope[$codeExtractions] (* Measurement.wl *)
+PackageScope[recordSyndromes]  (* Measurement.wl *)
 PackageScope[roundLength]
 PackageScope[defaultRounds]
 PackageScope[$oneQubitPaulis]
@@ -106,6 +109,7 @@ QECDetectorModel::usage = "QECDetectorModel[code, noise] gives the detector erro
 
 QECDetectorModel::level = "A detector model needs a phenomenological or circuit-level noise model; this one is `1`. Use QECNoiseModel[name, p, \"MeasurementError\" -> q] or QECNoiseModel[\"Circuit\", p].";
 QECDetectorModel::rounds = "The number of rounds must be a positive integer; got `1`.";
+QECDetectorModel::extraction = "\"Extraction\" -> `1` is not a known syndrome extraction; the choices are `2`. \"BareAncilla\" is the non-fault-tolerant circuit of Got26 sec. 12.1.1; \"Transversal\" measures each check through a verified cat state instead.";
 QECDetectorModel::noprop = "`1` is not a property of QECDetectorModel. Use dem[\"Properties\"] for the list.";
 
 
@@ -221,9 +225,13 @@ idleMechanisms[instr_List, nq_Integer, rates_Association] := If[
     ]
 ]
 
-circuitFaultMechanisms[a_Association, noise_Association, rounds_Integer] := With[
-    {instr = codeCircuitInstructions[a, rounds],
-     nq = a["Qubits"] + codeStabilizerCount[a]},
+(* The three-argument form is the bare-ancilla circuit, which is what every caller
+   meant before an extraction could be chosen. *)
+circuitFaultMechanisms[a_Association, noise_Association, rounds_Integer] :=
+    circuitFaultMechanisms[a, noise, rounds, codeExtraction[a, rounds, "BareAncilla"]]
+
+circuitFaultMechanisms[a_Association, noise_Association, rounds_Integer, ex_Association] := With[
+    {instr = ex["Instructions"], nq = ex["Qubits"]},
     Switch[noiseLevel[noise],
         "Circuit",
             With[{rates = noiseCircuitRates[noise]},
@@ -251,13 +259,21 @@ recordDetectors[record_List, finalSyndrome_List, m_Integer, rounds_Integer] := J
 (* The residual data Pauli, read through the code's label matrix: the first m bits
    are the syndrome a perfect final round would see, the rest are the logical class,
    i.e. which logical operators the survivor anticommutes with. *)
-faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer, faults_List] := Module[
+faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer, faults_List] :=
+    faultEffect[a, instr, nq, m, rounds, faults, ConstantArray[1, m]]
+
+(* The block sizes say how many record bits each generator contributes, so that an
+   extraction whose readout is several bits per check reduces to a syndrome before
+   the detectors are taken.  One bit per block is the identity, which is the
+   bare-ancilla case. *)
+faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer,
+    faults_List, blocks_List] := Module[
     {run, x, z, labels},
     run = framePropagate[instr, nq, faults];
     {x, z} = run["Frame"];
     labels = Mod[Join[x[[1 ;; a["Qubits"]]], z[[1 ;; a["Qubits"]]]] . Transpose[codeLabelMatrix[a]], 2];
     {
-        recordDetectors[run["Record"], labels[[1 ;; m]], m, rounds],
+        recordDetectors[recordSyndromes[run["Record"], blocks, rounds], labels[[1 ;; m]], m, rounds],
         labels[[m + 1 ;; -1]],
         (* heralds need no differencing: a verification check reads 0 when nothing goes
            wrong, so the raw outcome already is the "something is wrong" bit *)
@@ -282,15 +298,21 @@ faultEffect[a_Association, instr_List, nq_Integer, m_Integer, rounds_Integer, fa
    left in the table can claim a detector pattern that a real fault should have had,
    and quietly make the decoder worse than the noise deserves.  A symbolic rate is
    never dropped, since nothing can be concluded about it. *)
-codeDetectorModel[a_Association, noise_Association, rounds_Integer] := codeDetectorModel[a, noise, rounds] = Module[
-    {instr, nq, m, mechanisms, effects, keep},
+codeDetectorModel[a_Association, noise_Association, rounds_Integer] :=
+    codeDetectorModel[a, noise, rounds, "BareAncilla"]
 
-    instr = codeCircuitInstructions[a, rounds];
-    nq = a["Qubits"] + codeStabilizerCount[a];
+codeDetectorModel[a_Association, noise_Association, rounds_Integer, mode_String] :=
+    codeDetectorModel[a, noise, rounds, mode] = Module[
+    {ex, instr, nq, m, blocks, mechanisms, effects, keep},
+
+    ex = codeExtraction[a, rounds, mode];
+    instr = ex["Instructions"];
+    nq = ex["Qubits"];
+    blocks = ex["BlockSizes"];
     m = codeStabilizerCount[a];
 
-    mechanisms = circuitFaultMechanisms[a, noise, rounds];
-    effects = faultEffect[a, instr, nq, m, rounds, #["Faults"]] & /@ mechanisms;
+    mechanisms = circuitFaultMechanisms[a, noise, rounds, ex];
+    effects = faultEffect[a, instr, nq, m, rounds, #["Faults"], blocks] & /@ mechanisms;
 
     (* A row that only trips a herald is NOT effectless: it discards the shot, which is
        an outcome the rate has to account for.  So the filter looks at all three. *)
@@ -313,7 +335,8 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer] := codeDetec
         "Rounds" -> rounds,
         "Checks" -> m,
         "Code" -> a,
-        "Noise" -> noise
+        "Noise" -> noise,
+        "Extraction" -> mode
     |>
 ]
 
@@ -337,16 +360,23 @@ codeDetectorModel[a_Association, noise_Association, rounds_Integer] := codeDetec
    different questions, and "Rounds" is there to ask either. *)
 defaultRounds[a_Association] := With[{d = codeDistance[a]}, If[IntegerQ[d] && d > 0, d, 1]]
 
-QECDetectorModel[QECCode[a_Association], noise_QECNoiseModel] :=
-    QECDetectorModel[QECCode[a], noise, defaultRounds[a]]
+Options[QECDetectorModel] = {"Extraction" -> "BareAncilla"};
 
-QECDetectorModel[QECCode[a_Association], QECNoiseModel[noise_Association], rounds_] := Which[
-    ! (IntegerQ[rounds] && rounds > 0),
-        Message[QECDetectorModel::rounds, rounds]; $Failed,
-    noiseLevel[noise] === "CodeCapacity",
-        Message[QECDetectorModel::level, "code-capacity"]; $Failed,
-    True,
-        QECDetectorModel[codeDetectorModel[a, noise, rounds]]
+QECDetectorModel[QECCode[a_Association], noise_QECNoiseModel, opts : OptionsPattern[]] :=
+    QECDetectorModel[QECCode[a], noise, defaultRounds[a], opts]
+
+QECDetectorModel[QECCode[a_Association], QECNoiseModel[noise_Association], rounds_,
+    opts : OptionsPattern[]] := With[{mode = OptionValue["Extraction"]},
+    Which[
+        ! (IntegerQ[rounds] && rounds > 0),
+            Message[QECDetectorModel::rounds, rounds]; $Failed,
+        noiseLevel[noise] === "CodeCapacity",
+            Message[QECDetectorModel::level, "code-capacity"]; $Failed,
+        ! MemberQ[$codeExtractions, mode],
+            Message[QECDetectorModel::extraction, mode, $codeExtractions]; $Failed,
+        True,
+            QECDetectorModel[codeDetectorModel[a, noise, rounds, mode]]
+    ]
 ]
 
 
@@ -356,7 +386,7 @@ $detectorProperties = {
     "DetectorMatrix", "ObservableMatrix", "HeraldMatrix", "Probabilities", "Locations",
     "Detectors", "Observables", "Heralds", "Rounds", "Checks", "Faults", "Code", "Noise",
     "LocationCounts", "UndetectableFaults", "DetectorRates", "ObservableRates",
-    "HeraldRates", "PostSelectedQ", "Properties"
+    "HeraldRates", "PostSelectedQ", "Extraction", "Properties"
 };
 
 (* How often each detector fires, exactly.  A detector fires when an odd number of
@@ -405,6 +435,7 @@ QECDetectorModel[a_Association][prop : ("DetectorMatrix" | "ObservableMatrix" |
 (* Whether any of the circuit's measurements is a herald, i.e. whether a rate computed
    from this model is conditional on acceptance. *)
 QECDetectorModel[a_Association]["PostSelectedQ"] := a["Heralds"] > 0
+QECDetectorModel[a_Association]["Extraction"] := Lookup[a, "Extraction", "BareAncilla"]
 
 QECDetectorModel[a_Association]["Faults"] := Length[a["Probabilities"]]
 QECDetectorModel[a_Association]["Code"] := QECCode[a["Code"]]

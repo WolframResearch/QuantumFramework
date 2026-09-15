@@ -6,6 +6,7 @@ PackageExport[QECLogicalErrorRate]
 PackageExport[$QECExactEnumerationLimit]
 
 PackageScope[codeLabelMatrix]
+PackageScope[$codeExtractions]        (* Measurement.wl *)
 PackageScope[codeErrorLabels]
 PackageScope[codeErrorTally]
 PackageScope[codeCosetRepresentatives]
@@ -260,17 +261,20 @@ sampledLogicalErrorRate[a_Association, noise_Association, count_Integer, decoder
 ]
 
 
-Options[QECLogicalErrorRate] = {"Decoder" -> Automatic, "DecoderReach" -> Automatic, "Rounds" -> Automatic};
+Options[QECLogicalErrorRate] = {"Decoder" -> Automatic, "DecoderReach" -> Automatic,
+    "Rounds" -> Automatic, "Extraction" -> "BareAncilla"};
 
 QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, opts : OptionsPattern[]] :=
     logicalErrorRate[First[code], First[noise], None,
         OptionValue[QECLogicalErrorRate, {opts}, "Decoder"], OptionValue[QECLogicalErrorRate, {opts}, "DecoderReach"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"]]
+        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"],
+        OptionValue[QECLogicalErrorRate, {opts}, "Extraction"]]
 
 QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, count_Integer ? Positive, opts : OptionsPattern[]] :=
     logicalErrorRate[First[code], First[noise], count,
         OptionValue[QECLogicalErrorRate, {opts}, "Decoder"], OptionValue[QECLogicalErrorRate, {opts}, "DecoderReach"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"]]
+        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"],
+        OptionValue[QECLogicalErrorRate, {opts}, "Extraction"]]
 
 (* Rounds only mean something once a check can lie, so a code-capacity model ignores
    them and the other two levels default to the code distance -- the standard memory
@@ -278,16 +282,22 @@ QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, count_Integer ? Positive,
 roundsFor[a_Association, Automatic] := defaultRounds[a]
 roundsFor[_Association, r_Integer ? Positive] := r
 
-logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, roundSpec_] /;
+logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, roundSpec_, mode_] /;
         noiseLevel[noise] =!= "CodeCapacity" := Module[{reach},
     If[ codeLogicalQubits[a] === 0,
         Message[QECLogicalErrorRate::nological]; Return[$Failed]
     ];
+    If[ ! MemberQ[$codeExtractions, mode],
+        Message[QECDetectorModel::extraction, mode, $codeExtractions]; Return[$Failed]
+    ];
     reach = decoderReachFor[a, reachSpec];
-    demRate[a, noise, roundsFor[a, roundSpec], count, reach]
+    demRate[a, noise, roundsFor[a, roundSpec], count, reach, mode]
 ]
 
-logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, _] := Module[{decoder, reach},
+(* Code capacity has no circuit, so it has no extraction to choose; the option is
+   accepted and ignored rather than refused, since a sweep across noise levels
+   should not have to strip it. *)
+logicalErrorRate[a_Association, noise_Association, count_, spec_, reachSpec_, _, _] := Module[{decoder, reach},
     Which[
         codeLogicalQubits[a] === 0,
             Message[QECLogicalErrorRate::nological]; Return[$Failed],

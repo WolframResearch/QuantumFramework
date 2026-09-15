@@ -60,7 +60,7 @@ If[ qecCore === $Failed,
 
 ### Reaching the internals
 
-Twenty-one symbols are `PackageExport` and land on the context path. Everything else this page
+Twenty-five symbols are `PackageExport` and land on the context path. Everything else this page
 touches is `PackageScope`, which means it exists but is not exported, and is reached by its full
 context name. This is the same idiom the test suite uses:
 
@@ -100,10 +100,12 @@ sym[n_String] := Symbol[qec <> n];
 Length[Names["Wolfram`QuantumFramework`QEC`*"]]
 ```
 
-A third tier is invisible even here: `letterAt`, `basisGate`, `unbasisGate`, `rotation`,
-`oddParityRate`, `bitsToInteger`, `encoderLines` and friends are private to their file and cannot
-be called by name at all. They appear below through their effect — the basis rotations show up in
-the emitted instruction list, `oddParityRate` through the `"DetectorRates"` property.
+A third tier is invisible even here: `oddParityRate`, `bitsToInteger`, `encoderLines` and friends
+are private to their file and cannot be called by name at all. They appear below through their
+effect — `oddParityRate` through the `"DetectorRates"` property. The basis rotations
+(`letterAt`, `basisGate`, `unbasisGate`, `rotation`) used to be in that tier and were promoted to
+`PackageScope` when the fault-tolerant measurement needed the same letter vocabulary: two
+constructions deriving it separately is how they drift apart.
 
 Two codes carry the page. The bit-flip code is small enough for every exact route; the five-qubit
 code has generators carrying $Y$, so it exercises the $\sqrt{X}$ basis change:
@@ -1016,6 +1018,653 @@ assumption:
 ```wl
 QECStimCircuit[bitFlip, QECNoiseModel["BitFlip", 0.01]]
 ```
+
+## Cat.wl — a probe a single fault cannot spread
+
+Everything above measures the bare-ancilla circuit, and the last two sections priced what it
+costs: order $p$ instead of $p^2$, and 288 faults collapsing onto 71 signatures. The diagnosis in
+section 12.1.2 is precise — one ancilla shared by every data qubit of a check lets one fault reach
+several of them — and so is the fix: make the controlled-$P$ transversal, one ancilla qubit per
+letter, which needs those $m$ qubits in a coherent superposition of "do nothing" and "apply $P$ to
+all of them". That is the cat state $|0\ldots0\rangle + |1\ldots1\rangle$.
+
+```wl
+{catPrep, catInstr, catXPatterns, catPairs, catCoverQ, catCanonical} =
+    sym /@ {"catPrepInstructions", "catInstructions", "catXPatterns",
+            "catCheckPairs", "catChecksCoverQ", "catCanonicalPattern"};
+
+catPrep[{1, 2, 3, 4}]
+```
+
+---
+
+A cat built this way is useless unless it is checked, and the interesting question is *which* pairs
+to check. The book says "if we do this on enough pairs of qubits, any single fault in the circuit
+originally constructing the cat state will be picked up by the checks" and leaves the set open.
+Here it is derived: propagate every single fault of the preparation and collect the $X$ patterns it
+can leave.
+
+Two reductions make that set small. $X^{\otimes m}$ stabilises the cat, so a pattern and its
+complement are the same error; and a pattern of canonical weight one is a single data error, which
+the code corrects. Only canonical weight two and above is dangerous:
+
+```wl
+{catCanonical[{1, 1, 0, 0}], catCanonical[{0, 0, 1, 1}], catXPatterns[{1, 2, 3, 4}, 5]}
+```
+
+<!-- => {{0, 0, 1, 1}, {0, 0, 1, 1}, {{0, 0, 1, 1}}} -->
+
+That single pattern is the book's own figure 12.3b, recovered rather than transcribed. And the
+count follows a rule the book does not state: a fault reaching qubit $j$ leaves a suffix of ones of
+length $L$, which canonicalises to $\min(L, m - L)$, so the dangerous $L$ run from 2 to $m-2$ and
+there are $m - 3$ of them. An $m = 4$ cat needs one check, not three.
+
+```wl
+Table[{m, Length[catXPatterns[Range[m], m + 1]], catPairs[m], m - 3}, {m, 2, 7}] // TableForm
+```
+
+---
+
+`catChecksCoverQ` is the proof obligation rather than a comment: the chosen pairs have to detect
+every dangerous pattern, and a `False` here says the gadget is not fault tolerant.
+
+```wl
+Table[catCoverQ[catPairs[m], catXPatterns[Range[m], m + 1]], {m, 2, 9}]
+```
+
+<!-- => {True, True, True, True, True, True, True, True} -->
+
+---
+
+And no pair is redundant — drop one and coverage fails, which is what says the default set is
+minimal rather than merely sufficient:
+
+```wl
+With[{m = 6, pats = catXPatterns[Range[6], 7]},
+    Table[catCoverQ[Drop[catPairs[m], {k}], pats], {k, Length[catPairs[m]]}]]
+```
+
+<!-- => {False, False, False} -->
+
+---
+
+The check outcomes are heralds, not syndrome bits, which is why the instruction language grew
+`"MH"` two sections ago: a nonzero one means discard the attempt, and the price of that
+post-selection is an acceptance rate to carry alongside the answer.
+
+```wl
+cat = QECCatState[5];
+AssociationMap[cat, {"Size", "Pairs", "Heralds", "DangerousPatterns", "ChecksCoverQ"}]
+```
+
+## Measurement.wl — spending the cat
+
+The cat is the ancilla; this is the gadget that consumes it. One attempt applies a transversal
+controlled-$P$ and reads the eigenvalue out with a Hadamard transform, since
+
+$$H^{\otimes m}\left(|0\ldots0\rangle + (-1)^b |1\ldots1\rangle\right) = \sum_{\mathrm{wt}(x) \equiv b} |x\rangle$$
+
+so the *parity of the weight* of the measured string is $b$ — $m$ bits of record, one bit of
+answer.
+
+The sandwich that applies the controlled-$P$ is the same one `generatorInstructions` uses to
+measure, in the other direction. To apply a controlled-$L$, conjugate by the $U$ that sends $L$ to
+$Z$: $\text{controlled-}L = (I \otimes U^{-1})\, CZ\, (I \otimes U)$, which in time order is $U$,
+then $CZ$, then $U^{-1}$. For $L = X$ that is $H \cdot CZ \cdot H = CNOT$, so nothing is wasted.
+The rotations are shared rather than re-derived, which is why `basisGate` and `rotation` are
+`PackageScope`:
+
+```wl
+{catMeasure, pauliReps, pauliOutcome} =
+    sym /@ {"catMeasureInstructions", "pauliMeasureRepetitions", "pauliMeasureOutcome"};
+
+catMeasure[QECPauliVector["XZZXI"], 5, {6, 7, 8, 9}] // Column
+```
+
+---
+
+One attempt still fails the measurement correctness property — a bit flip on a cat qubit before
+its readout flips the reported $b$. The answer is $2t+1$ attempts with a *fresh* cat each time and
+a majority vote (Theorem 12.1), since one fault can corrupt only one cat:
+
+```wl
+{pauliReps /@ {1, 3, 5, 7}, QECPauliMeasurement[five, "ZZZZZ"]["Repetitions"]}
+```
+
+<!-- => {{1, 3, 5, 7}, 3} -->
+
+---
+
+Now the number the whole construction exists for, and it needs two corrections before it means
+anything.
+
+The residual is read **modulo $P$**. $X^{\otimes m}$ stabilises the cat, so a cat pattern and its
+complement are one physical error; through the transversal $CZ$ those two differ on the data by a
+$Z$ on every qubit of the support, which after the un-rotation is exactly $P$. The frame
+propagator tracks literal Paulis and cannot know the ancilla's own stabilizer, so without the
+quotient it reports a weight-$m$ residual for a fault that does nothing at all.
+
+And only **accepted** runs count: a fault early in the cat preparation does propagate along the
+chain, which is what checking is for, and the check fires.
+
+```wl
+mz = QECPauliMeasurement[five, "ZZZZZ"];
+{mz["TransversalQ"], mz["DataWeights"]}
+```
+
+<!-- => {True, {0, 1}} -->
+
+---
+
+Against the bare ancilla measuring the *same* operator, in the same units:
+
+```wl
+pauliWeights = sym["pauliMeasureDataWeights"];
+{
+    Max @ pauliWeights[genInstr[First[five["CheckMatrix"]], 5, 6], 6, 5, ConstantArray[0, 10], {}],
+    QECPauliMeasurement[five, "XZZXI", 1]["MaxDataWeight"]
+}
+```
+
+<!-- => {4, 1} -->
+
+---
+
+Two checks that the quotient is forced rather than convenient. The accepted weights come in
+complementary pairs $w$ and $m - w$, which is the fingerprint of $X^{\otimes m}$; and dropping the
+herald filter brings weight two back, so the cat checks are visibly load-bearing:
+
+```wl
+mg = QECPauliMeasurement[five, "XZZXI", 1];
+Sort @ pauliWeights[mg["Instructions"], mg["Qubits"], 5, ConstantArray[0, 10], {}]
+```
+
+<!-- => {0, 1, 3, 4} -->
+
+---
+
+What repetition does **not** fix is the honest boundary. If the codeword carries an error $E$ with
+$EP = -PE$, every repetition reads the flipped eigenvalue and the majority is confidently wrong —
+"no matter how many times we repeat it". Compare a fault inside one repetition against a data
+error that anticommutes with $P$:
+
+```wl
+parities[m_, f_] := Mod[Total /@ Partition[framePropagate[m["Instructions"], m["Qubits"], f]["Record"], m["Weight"]], 2];
+
+With[{i = FirstPosition[mz["Instructions"], {"M", 6}][[1]]},
+    {parities[mz, {{i - 1, 6, {1, 0}}}], parities[mz, {{0, 1, {1, 0}}}], parities[mz, {{0, 1, {0, 1}}}]}]
+```
+
+<!-- => {{1, 0, 0}, {1, 1, 1}, {0, 0, 0}} -->
+
+One repetition lost, majority intact; every repetition lost, majority wrong; and a commuting error
+invisible, as it should be. That middle column is why Theorem 12.1 needs error correction
+interspersed and not just more repetitions.
+
+## ErrorCorrection.wl — Steane EC, and why it is the one that fits
+
+Section 12.3 opens on cost: Shor EC "involves a lot of locations. Lots of locations means lots of
+opportunities for errors, which eventually will translate into a lousy threshold." Steane EC moves
+that work into preparing the ancilla, and the asymmetry that licenses it is the idea of the whole
+chapter — an ancilla can be checked and a data block cannot, "the reason is that we know the
+precise ancilla state that we are trying to create, but the state of the logical qubits somewhere
+in the middle of a long computation is unknown".
+
+It is CSS-only, and for a reason rather than by restriction: the construction runs on transversal
+CNOT being the logical CNOT.
+
+```wl
+{steaneRegions, steaneWeights, logicalWires, encZero, encPlus, applyGates} =
+    sym /@ {"steaneRegions", "steaneResidualWeights", "codeLogicalWires",
+            "codeEncodedZeroInstructions", "codeEncodedPlusInstructions", "applyGates"};
+
+ec = QECErrorCorrection[QECCode["SteaneCode"]];
+AssociationMap[ec, {"DataQubits", "AncillaQubits", "Qubits", "Measurements", "TransversalQ"}]
+```
+
+---
+
+Two halves. The bit-flip half puts the ancilla in encoded $|+\rangle$ and runs transversal CNOT
+from data to ancilla: on the encoded states $CNOT|\psi\rangle|+\rangle = |\psi\rangle|+\rangle$, so
+nothing happens logically, but the gate still propagates errors and bit flips land on the same
+positions of the ancilla. The phase half uses encoded $|0\rangle$, the CNOT the other way, and a
+transversal Hadamard so the same $Z$-basis readout sees phase errors:
+
+```wl
+{Take[ec["BitFlipInstructions"], -14], Take[ec["PhaseInstructions"], -21]} // Column
+```
+
+---
+
+The ancilla states are checked against the engine rather than asserted. Which wire carries the
+logical qubit going into the encoder is derived the same way:
+
+```wl
+prepared[instrs_, n_] := applyGates[PauliStabilizer[n], engineGates[instrs]];
+
+With[{a = codeData[QECCode["SteaneCode"]], st = QECCode["SteaneCode"]},
+    {
+        logicalWires[a],
+        With[{s = prepared[encZero[a, 0], 7]},
+            {AllTrue[st["Generators"], s["Expectation", #] === 1 &], s["Expectation", First[st["LogicalZ"]]]}],
+        With[{s = prepared[encPlus[a, 0], 7]},
+            {AllTrue[st["Generators"], s["Expectation", #] === 1 &], s["Expectation", First[st["LogicalX"]]]}]
+    }]
+```
+
+<!-- => {{7}, {True, 1}, {True, 1}} -->
+
+---
+
+Now the property that makes this the right sub-gadget for the measurement's slot. Section 12.3.3
+asks whether Steane EC needs repeating and answers no, because the errors are **additive**: the
+measured classical error is $e + f + g$, for $e$ the true data error, $f$ the ancilla's and $g$ the
+measurement's, so correcting by $e + f + g$ leaves $f + g$ — "a single-qubit error in the ancilla
+can only produce a single-qubit error in the final state. This is in contrast to Shor EC, where a
+single ancilla error changing one bit of the error syndrome could totally change the error we
+deduce."
+
+That is a claim to check, not to quote. The gadget splits in two regions and reports each:
+
+```wl
+{ec["RepetitionsNeeded"], ec["DataWeights"], ec["PreparationDataWeights"]}
+```
+
+<!-- => {1, {0, 1}, {0, 1, 2, 3, 4}} -->
+
+---
+
+One fault in the interaction, one data error. One fault in the ancilla **preparation**, up to four
+— because that preparation is the code's own non-fault-tolerant encoder. Got26 is equally explicit
+about both halves of that: "How do we make the ancilla states and ensure they do not have too many
+errors? That is the complicated part of Steane EC", and it is chapter 13 work, needed for a full FT
+protocol whatever EC gadget is chosen. So the gadget names the assumption rather than implying it:
+
+```wl
+ec["OpenAssumptions"]
+```
+
+---
+
+Filling the slot completes Theorem 12.1's structure. Without it the measurement handles ancilla
+faults only; with it, the composed gadget still leaves one data error per fault, and inherits the
+sub-gadget's open assumption rather than hiding it behind that `True`:
+
+```wl
+steane = QECCode["SteaneCode"];
+{
+    QECPauliMeasurement[steane, First[steane["LogicalZ"]]]["MeasurementCorrectQ"],
+    QECPauliMeasurement[steane, First[steane["LogicalZ"]], "ErrorCorrection" -> "Steane"]["MeasurementCorrectQ"],
+    QECPauliMeasurement[steane, First[steane["LogicalZ"]], "ErrorCorrection" -> "Steane"]["DataWeights"]
+}
+```
+
+<!-- => {False, True, {0, 1}} -->
+
+---
+
+And the restriction is enforced rather than documented. The five-qubit code is not CSS, so it can
+have a cat measurement but not Steane EC:
+
+```wl
+{QECCode["5QubitCode"]["CSSQ"], steane["CSSQ"]}
+```
+
+<!-- => {False, True} -->
+
+## The extraction, and the one thing that cannot cross over
+
+The three gadgets above are built and checked, but the rate machinery routes through
+`codeCircuitInstructions`, which is the bare-ancilla circuit and nothing else. `codeExtraction` is
+what makes that a choice: it returns the instructions, the qubit count, and the number of record
+bits each check contributes.
+
+```wl
+{codeExtraction, recordSyndromes} = sym /@ {"codeExtraction", "recordSyndromes"};
+
+{
+    KeyDrop[codeExtraction[codeData[bitFlip], 1, "BareAncilla"], "Instructions"],
+    KeyDrop[codeExtraction[codeData[bitFlip], 1, "Transversal"], "Instructions"]
+}
+```
+
+<!-- => {<|"Qubits" -> 5, "BlockSizes" -> {1, 1}|>, <|"Qubits" -> 6, "BlockSizes" -> {2, 2}|>} -->
+
+---
+
+Only half of Theorem 12.1's gadget can cross over, and the obstruction is structural. **A detector
+error model is a matrix** — the effect of a set of faults is the XOR of their rows — and the exact
+fold, the decoder table and the Stim writer all rest on that. A **majority** vote is not linear, so
+two faults whose individual effects are known do not have an effect given by their XOR once a vote
+is in the path.
+
+This is the same fork the package already stands on one side of: §12.2.2 answers a noisy syndrome
+by repeat-and-agree, and `DetectorModel.wl` takes differencing instead. `QECPauliMeasurement` is
+the book's gadget and keeps the vote; the extraction takes **transversality**, which is the half
+that cured the hook error in the first place. Its readout is a *parity*, which is linear, and
+`recordSyndromes` is where that reduction happens — the identity when a check contributes one bit,
+so the bare-ancilla path is untouched:
+
+```wl
+{recordSyndromes[{1, 0, 1, 1}, {1, 1}, 2],
+ recordSyndromes[{1, 1, 0, 1, 0, 0, 1, 0}, {2, 2}, 2],
+ recordSyndromes[{1, 1, 1, 0, 0, 1}, {3, 1, 2}, 1]}
+```
+
+<!-- => {{1, 0, 1, 1}, {0, 1, 0, 1}, {1, 0, 1}} -->
+
+---
+
+That linearity is a claim, so it is checked rather than argued: the effect of two faults against
+the XOR of their rows, over two hundred random pairs.
+
+```wl
+Module[{a, ex, instr, nq, blocks, eff, faults, pairs},
+    a = codeData[bitFlip];
+    ex = codeExtraction[a, 1, "Transversal"];
+    instr = ex["Instructions"]; nq = ex["Qubits"]; blocks = ex["BlockSizes"];
+    eff[f_] := faultEffect[a, instr, nq, 2, 1, f, blocks];
+    faults = Flatten[Table[{i, q, pauli}, {i, 0, Length[instr]}, {q, nq},
+        {pauli, {{1, 0}, {1, 1}, {0, 1}}}], 2];
+    pairs = BlockRandom[SeedRandom[20260914]; RandomSample[Subsets[faults, {2}], 200]];
+    AllTrue[pairs, With[{c = eff[#], u = eff[{#[[1]]}], v = eff[{#[[2]]}]},
+        c[[1]] === BitXor[u[[1]], v[[1]]] && c[[2]] === BitXor[u[[2]], v[[2]]] &&
+        c[[3]] === BitXor[u[[3]], v[[3]]]] &]]
+```
+
+<!-- => True -->
+
+---
+
+One change was needed on the decoder side before any of this showed up in a rate, and it is the
+kind of bug that hides behind a plausible number. `demDecoderTable` built its hypothesis space from
+every row of the model. But the decoder only ever runs on a shot that was **accepted**, so a fault
+that trips a verification check cannot have happened in it; offering that fault as an explanation
+lets the lightest-set rule claim a detector pattern on behalf of something the experiment already
+threw away, and since the rule is first-come, the claim displaces the real explanation.
+
+Before the fix the transversal extraction measured an exponent of 1.73 and looked like it had a
+residual linear term. It did not. The table now drops the herald-tripping rows, and the same
+condition is visible in the model itself:
+
+```wl
+Module[{dem, d, o, h, keep, grouped},
+    dem = QECDetectorModel[five, QECNoiseModel["Circuit", 1/1000], 1, "Extraction" -> "Transversal"];
+    d = dem["DetectorMatrix"]; o = dem["ObservableMatrix"]; h = dem["HeraldMatrix"];
+    keep = Select[Range[Length[d]], Total[h[[#]]] === 0 &];
+    grouped = GroupBy[keep, d[[#]] &, DeleteDuplicates[o[[#]] & /@ #] &];
+    <|"all rows" -> Length[d], "accepted" -> Length[keep],
+      "ambiguous among accepted" -> Count[grouped, alt_ /; Length[alt] > 1]|>]
+```
+
+<!-- => <|"all rows" -> 624, "accepted" -> 484, "ambiguous among accepted" -> 0|> -->
+
+Zero ambiguous signatures among accepted faults is the fault-tolerance property stated in the
+detector model's own language, and it is the same conditional statement `QECPauliMeasurement` makes
+about its residual data weight. Both are wrong if the condition is dropped on one side only, which
+is exactly what the decoder was doing.
+
+## Register.wl — blocks, and the layout that has to be right
+
+A logical qubit is a block, so a logical two-qubit gate is a gate between two blocks. `QECRegister`
+fixes the layout — block $b$ owns qubits $(b-1)n+1 \ldots bn$ — and `registerIndex` is the one line
+that says so, stated once so no consumer reconstructs it.
+
+```wl
+{registerIndex, registerLift, registerLabelMatrix, registerLogicalVectors,
+ registerTransversalCNOT, registerConjugate} =
+    sym /@ {"registerIndex", "registerLift", "registerLabelMatrix", "registerLogicalVectors",
+            "registerTransversalCNOT", "registerConjugate"};
+
+{registerIndex[7, 1, 3], registerIndex[7, 2, 3], registerLift[{{"CNOT", 1, 2}}, 7, 2]}
+```
+
+<!-- => {3, 10, {{"CNOT", 8, 9}}} -->
+
+---
+
+The label matrix is where this gets delicate, and the delicacy is inherited rather than invented.
+A code's label matrix has its $X$ and $Z$ halves **exchanged**, so that a plain matrix product
+computes symplectic products. Lifting a block's rows into a register therefore scatters each row
+into **two windows**, one in each half of the register's columns, not into one contiguous run.
+Getting that wrong produces a matrix of exactly the right shape that quietly reports the wrong
+syndromes — which is the worst kind of wrong.
+
+```wl
+Module[{steane = QECCode["SteaneCode"]},
+    {Dimensions[codeLabelMatrix[codeData[steane]]],
+     Dimensions[registerLabelMatrix[codeData[steane], 2]],
+     registerLabelMatrix[codeData[steane], 1] === codeLabelMatrix[codeData[steane]]}]
+```
+
+<!-- => {{8, 14}, {16, 28}, True} -->
+
+One block is the identity, which is the regression that keeps the rest of the package out of this
+file's way.
+
+---
+
+`registerConjugate` is how a claim about a gate gets checked instead of cited: put a Pauli in as the
+frame before the circuit starts, push it through, read the frame afterwards. Phases are dropped, as
+everywhere in the frame propagator, so what comes back is the action on the Pauli group modulo
+sign — which is exactly what "is this the logical CNOT" asks.
+
+```wl
+Module[{reg = QECRegister[QECCode["SteaneCode"], 2]},
+    reg["LogicalAction", 1, 2]]
+```
+
+Steane EC rested on that answer being the CNOT action, and the header of `ErrorCorrection.wl` cites
+§12.3.1 for it. This is where it is computed.
+
+---
+
+And the second half, which is the one that actually decides. A gate can act correctly on the
+logical operators and still take the state out of the code space; both have to hold. On the
+five-qubit code the $Z$ half of the action comes out right and the $X$ half does not, so a test
+that looked only at the logical operators would have passed half the time:
+
+```wl
+Module[{leaves},
+    leaves[r_] := Module[{instr = r["TransversalCNOT", 1, 2], nq = r["Qubits"], group},
+        group = QECCode[r["Generators"]];
+        Count[QECPauliString[registerConjugate[instr, nq, QECPauliVector[#]]] & /@ r["Generators"],
+              g_ /; ! group["StabilizerMemberQ", g]]];
+    <|"Steane" -> leaves[QECRegister[QECCode["SteaneCode"], 2]],
+      "five-qubit" -> leaves[QECRegister[QECCode["5QubitCode"], 2]]|>]
+```
+
+<!-- => <|"Steane" -> 0, "five-qubit" -> 8|> -->
+
+## Transversal.wl — tables that are computed, not typed
+
+The criterion of sec. 11.2 is cheap to state and easy to get subtly wrong: $U$ applied to every
+qubit separately is a gate gadget when it maps the stabilizer group to itself, and the logical gate
+is what it does to $\bar{X}$ and $\bar{Z}$. The subtlety is that both halves are statements **about
+signs**, and every conjugation in the layer up to this file threw signs away.
+
+So the first decision here is a negative one: `framePropagate` is not used. Rows carry their
+$\mathbb{Z}_4$ phase (`Pauli.wl`), products go through `QECPauliProduct`, and membership is asked of
+`codeStabilizerElement`, which returns the group element *with its true phase* rather than a yes
+about its symplectic part. An image equal to minus a generator preserves the stabilizer as a set of
+Paulis and destroys the code space; only the phase-aware test can tell those apart.
+
+The second decision is that the action tables are derived. A hand-written `H: X -> Z, S: Y -> -X`
+table is exactly the kind of thing that acquires one wrong sign and then reports plausible answers
+forever, so `transversalAction` computes each table once from the gate's own matrix — conjugate each
+Pauli, read the coefficient off a trace, and insist that it is a fourth root of unity:
+
+```wl
+{transversalAction, transversalConjugate, transversalPairCode, transversalGateNames,
+ transversalCliffordWords} =
+    sym /@ {"transversalAction", "transversalConjugate", "transversalPairCode",
+            "transversalGateNames", "transversalCliffordWords"};
+
+QECPauliString /@ Lookup[transversalAction["S", 1], {{1, 0}, {0, 1}, {1, 1}}]
+```
+
+<!-- => {"Y", "Z", "-X"} -->
+
+Adding a gate to this file is adding a matrix. The matrices are the engine's, and the tests compare
+them against `QuantumOperator[name]["MatrixRepresentation"]` so that a drift in either convention
+fails loudly instead of quietly flipping every sign below.
+
+---
+
+Conjugating a whole row is then qubit by qubit: the factors live on different qubits, so they
+commute, and their phases simply add.
+
+```wl
+{QECPauliString[transversalConjugate["S", QECPauliVector["IIIXXXX"]]],
+ QECPauliString[transversalConjugate["S", QECPauliVector["XXXXXXX"]]],
+ QECPauliString[transversalConjugate["H", QECPauliVector["XZZXI"]]]}
+```
+
+<!-- => {"IIIYYYY", "YYYYYYY", "ZXXZI"} -->
+
+Note where the minus of sec. 11.3 is *not*: the physical image of $X^{\otimes 7}$ is $Y^{\otimes 7}$
+with phase zero. The sign appears only when that image is divided by the logical representative,
+because $\bar{Y}$ is $-Y^{\otimes 7}$ and not $Y^{\otimes 7}$. `transversalDecompose` is what does
+the dividing: the exponents of $\bar{X}_j$ and $\bar{Z}_j$ come from commutation — anticommuting
+with $\bar{Z}_j$ is what an $\bar{X}_j$ factor does — and the sign is whatever is left once the
+logical part and the stabilizer part have been divided out.
+
+---
+
+A gate gadget is checked generator by generator, and the check is reported rather than reduced to a
+boolean, because the interesting failures are partial:
+
+```wl
+Normal[QECTransversalGate[QECCode["SteaneCode"], "S"]["StabilizerImages"]][[1]]
+```
+
+<!-- => <|"Generator" -> "IIIXXXX", "Image" -> "IIIYYYY", "StabilizerQ" -> True|> -->
+
+$X^{\otimes 4}$ goes to $Y^{\otimes 4}$, which is in the group with the right sign because every
+element of this stabilizer has weight 4 — the book's "the phases will take care of themselves",
+checked instead of assumed.
+
+---
+
+Two blocks reuse the machinery rather than duplicating it. `transversalPairCode` builds the direct
+sum of two copies of the stabilizer as an ordinary code association, which is what lets
+`codeStabilizerElement` answer membership for the pair with no second implementation, and the
+logical operators are taken block by block rather than from the pair's own standard form — the
+question is what the gate does to *this* block's qubit and *that* one's.
+
+```wl
+With[{pc = transversalPairCode[codeData[QECCode["SteaneCode"]]]},
+    {Length[pc["CheckMatrix"]], pc["Qubits"]}]
+```
+
+<!-- => {12, 14} -->
+
+The qubit layout is `Register.wl`'s, so a two-block gate emitted here drops straight into a
+register.
+
+---
+
+Naming the result is a lookup, not a classification. The twenty-four one-qubit Cliffords are
+enumerated as words in $H$ and $S$, keyed by what they do to $X$ and $Z$; the named gates are added
+last so that they win the key they share with a word, and the transversal $S$ of the seven-qubit
+code is reported as `"Sdg"` rather than as `"SSS"`.
+
+```wl
+{Length[transversalCliffordWords[1]], Length[transversalGateNames[1]], Length[transversalGateNames[2]]}
+```
+
+<!-- => {24, 24, 3} -->
+
+Two consequences worth naming. A code with $k > 1$ gets its logical action reported and its logical
+gate left as `Missing["NotNamed"]` — on the $[[4,2,2]]$ code the transversal $H$ is a Hadamard on
+each logical qubit *and* a swap of the two, and there is no one-qubit name for that. And one
+vocabulary change leaked out of this file: `"Sdg"` had to join the circuit ops, where it moves the
+frame exactly as `"S"` does and is emitted to the engine as three `"S"`, the same treatment `"Vdg"`
+already had.
+
+## FaultTolerant.wl — the substitution, and the bookkeeping that goes with it
+
+Def 10.6 is short, and almost all of this file is the bookkeeping it implies. Three parts of that
+bookkeeping are where a hand-assembled protocol goes wrong.
+
+**Which gadget.** Not the one with the same name. `ftGateWord` searches the transversal gates of the
+code for the one whose *logical action* is the gate requested, named gates first so that a single
+instruction wins over a three-instruction word that does the same thing:
+
+```wl
+{ftGateWord, ftRelocate, ftLocations, ftReadoutSupport} =
+    sym /@ {"ftGateWord", "ftRelocate", "ftLocations", "ftReadoutSupport"};
+
+{ftGateWord[codeData[QECCode["SteaneCode"]], "S"],
+ ftGateWord[codeData[QECCode["SteaneCode"]], "Sdg"],
+ ftGateWord[codeData[QECCode["SteaneCode"]], "T"]}
+```
+
+<!-- => {"Sdg", "S", Missing["NoGadget", "T"]} -->
+
+The gadget for a logical $S$ is the transversal $S^{\dagger}$ and vice versa (sec. 11.3), and a gate
+outside the Clifford group has no gadget at all, which is reported as a `Missing` rather than
+approximated. This is the whole payoff of carrying phases through `Transversal.wl`: without them the
+search cannot tell the two apart and the assembler ships the conjugate circuit.
+
+---
+
+**Where the gadget goes.** The error correction gadget is written for data on qubits $1 \ldots n$
+with its ancilla at an offset, because that is all it ever needed. Here the data is block $b$ and
+the ancilla is that block's own workspace. Every instruction of that gadget touches either a data
+qubit or an ancilla qubit, so relocating it is a two-branch map rather than a rewrite:
+
+```wl
+ftRelocate[{{"CNOT", 1, 8}}, 7, 7, 7, 21]
+```
+
+<!-- => {{"CNOT", 8, 22}} -->
+
+Data qubit 1 becomes qubit 1 of block 2; ancilla qubit 8 becomes qubit 1 of that block's workspace.
+One workspace per block rather than one shared one, so that the corrections of a layer can run in
+parallel — a shared ancilla would serialise them and inflate the depth overhead for no physical
+reason.
+
+---
+
+**When it goes there.** The assembly walks the *schedule* of $C$, not its instruction list. Def 10.6
+puts a correction between every adjacent pair of locations, and in a circuit with parallel gates
+"adjacent" means a layer. Within a layer: emit each location's gadget; then give every live block
+nobody touched a **storage** gadget, which emits nothing and is still a location; then put an error
+correction gadget on every block still live at the end of the layer. A block measured in that layer
+is done, and gets none.
+
+That is also why the size overhead is computed with `ftLocations` rather than `Length`: a location
+is an instruction *or* a wait, and the waits come from `circuitIdleSlots`, the same source the
+detector model and the Stim writer use.
+
+```wl
+ftLocations[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}}, 2]
+```
+
+<!-- => 7 -->
+
+Six instructions and one wait — block 2 idling through the Hadamard.
+
+---
+
+**What comes back out.** The measurement record is tracked while emitting rather than recovered
+afterwards, because a measurement gadget's $n$ outcomes sit in the middle of a record otherwise made
+of error-correction outcomes. `"Readouts"` gives, per logical qubit, the absolute positions whose
+parity is the logical bit; their offsets inside the block are the support of $\bar{Z}$, which a
+transversal $Z$ measurement is only able to read because that operator is a product of $Z$s:
+
+```wl
+ftReadoutSupport[codeData[QECCode["SteaneCode"]]]
+```
+
+<!-- => {2, 4, 6} -->
+
+And the gadgets can be taken apart again: the table is in emission order and each row carries its
+own length, so `ft["GadgetInstructions", "Gate"]` slices the assembled circuit by cumulative sums
+and never has to recognise a gadget by looking at its gates. That is what lets a check run the gate
+gadgets alone — preparation and gates, no corrections — and ask the engine whether the encoded
+blocks came out in the state the ideal circuit would have produced.
 
 ## Where this comes from
 

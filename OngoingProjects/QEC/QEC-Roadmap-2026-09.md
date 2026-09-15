@@ -39,8 +39,8 @@ Two defects found while building on it, both worth knowing:
 
 ### The code layer (rebuilt, in `OngoingProjects/QEC/`)
 
-The layer is no longer a prototype. It is a functional-idiom package of 16 files with
-**469 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
+The layer is no longer a prototype. It is a functional-idiom package of 22 files with
+**593 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
 every exported name is prefixed `QEC`. What it does, in the order the physics builds up:
 
 **The code object.** `QECCode` from generators, from a check matrix, or by name. Check
@@ -62,9 +62,10 @@ Pauli frame propagator, a detector error model mapping every circuit fault to th
 detectors it fires and observables it flips, a layered schedule so that waiting is a
 fault location of its own, exact and sampled logical error rates, and a Stim export.
 
-**Documentation.** Two tech notes built from literate markdown through
-MarkdownToNotebook: `StabilizerCodes` (the layer from the outside) and
-`QECCoreInternals` (the circuit-level modules function by function, 80 evaluated cells).
+**Documentation.** Three tech notes built from literate markdown through
+MarkdownToNotebook: `StabilizerCodes` (the layer from the outside, 91 evaluated cells),
+`QECCoreInternals` (the circuit-level modules function by function, 116 cells) and
+`FaultTolerantGadgets` (the six gadget objects, from the cat state to `FT(C)`, 40 cells).
 
 ### Results worth showing
 
@@ -105,18 +106,21 @@ general case"*.
 | error propagation through Cliffords | sec. 10.1.2 |
 | the Pauli frame | sec. 12.5.2 |
 | non-FT Pauli measurement | sec. 12.1.1, fig. 12.1a |
-| cat states and their verification | sec. 12.1.2–12.1.3 |
+| cat states and their verification, with a derived check set | sec. 12.1.2–12.1.3 |
+| FT Pauli measurement: transversal controlled-P, 2t+1 repetitions, majority | sec. 12.1.4–12.1.5, Thm 12.1 |
+| Steane error correction, with the e+f+g additivity checked | sec. 12.3 |
+| several blocks of a code, and the transversal CNOT between two of them | sec. 11.4, sec. 12.3.1 |
+| transversal gates, with the Z4 phase carried: which Cliffords a code admits and what each performs | ch. 11, sec. 11.2-11.4 |
+| FT(C): gadget substitution, error correction between locations, and the three overheads | Def 10.4-10.6, fig. 10.2 |
 | ancilla reuse by reset, residual as a preparation error | sec. 15.4, 15.4.3 |
 | waiting as a fault location; time steps defined, not dropped | sec. 10.1.1 Def 10.1; sec. 15.5.2 |
 | detectors, and post-selection accounted for honestly | *not the book* — DKLP, Gidney |
 
 | do not have | book |
 |---|---|
-| FT Pauli measurement (repetition and majority) | sec. 12.1.4–12.1.5, Thm 12.1 |
-| Shor / Steane / Knill error correction | sec. 12.2 / 12.3 / 12.4 |
+| Shor and Knill error correction — Shor being the one with no CSS restriction | sec. 12.2, 12.4 |
 | GPP, GCP, ECRP, ECCP as checkable properties | sec. 10.2 |
-| transversal gates | ch. 11 |
-| FT preparation of encoded states | sec. 13.1 |
+| FT preparation of encoded states — including the ancillas Steane EC consumes | sec. 13.1 |
 | gate teleportation, Clifford hierarchy, magic states, distillation | ch. 13 |
 | adversarial noise, exRecs, benign/malignant sets, the \*-decoder | sec. 14.1–14.4 |
 | level reduction, the threshold theorem, pseudothresholds | sec. 14.6–14.7 |
@@ -124,8 +128,13 @@ general case"*.
 | surface and toric codes | ch. 17 |
 
 The one-line summary: **we can build a code, put honest circuit-level noise on it, and get
-an exact answer for whether the logical qubit survives — but we cannot yet build a gadget
-that is fault tolerant, and therefore cannot yet reproduce the book's threshold results.**
+an exact answer for whether the logical qubit survives; we can build the gadgets that make a
+measurement fault tolerant, check that they are, hand one of them to the rate machinery and
+watch the exponent go from 1 to 2; we can say which gates a code performs transversally and
+which logical gate each one is; and we can assemble a whole circuit into `FT(C)` and price it
+in Def 10.6's own three overheads. What is still missing is the analysis on top — exRecs,
+benign and malignant fault sets, the rigorous threshold bound — and underneath it all the
+fault-tolerant preparation of the ancillas every gadget consumes.**
 
 ---
 
@@ -145,12 +154,30 @@ which needs fault-tolerant measurement, which needs verified cat states.
 | phase | deliver | book | status |
 |---|---|---|---|
 | **A** | cat states, verified, with a **derived** check set | sec. 12.1.2–12.1.3 | **done** |
-| **B** | `QECPauliMeasurement` — cat measurement, `2t+1` repetitions, majority | sec. 12.1.4–12.1.5, Thm 12.1 | next |
-| **C** | `QECErrorCorrection` — Steane EC | sec. 12.3 | |
-| **D** | multi-block addressing: a logical qubit is a *block* | — | |
-| **E** | transversal gates for the 7-qubit code | ch. 11, sec. 11.3 | |
-| **F** | **`QECFaultTolerant[circuit, code]`** — the assembler | Def 10.6, ch. 14 | |
-| **G** | exRecs, benign/malignant sets, the rigorous threshold bound | sec. 14.2–14.7 | |
+| **B** | `QECPauliMeasurement` — cat measurement, `2t+1` repetitions, majority | sec. 12.1.4–12.1.5, Thm 12.1 | **done** |
+| **C** | `QECErrorCorrection` — Steane EC | sec. 12.3 | **done** |
+| — | wire the gadgets into the rate machinery | — | **done** |
+| **D** | multi-block addressing: a logical qubit is a *block* | — | **done** |
+| **E** | transversal gates for the 7-qubit code | ch. 11, sec. 11.3 | **done** |
+| **F** | **`QECFaultTolerant[circuit, code]`** — the assembler | Def 10.6, ch. 14 | **done** |
+| **G** | exRecs, benign/malignant sets, the rigorous threshold bound | sec. 14.2–14.7 | next |
+
+**What A, B and C delivered, in one number each.** The cat's check set is derived, not
+assumed: `m − 3` checks suffice, `m = 2` and `m = 3` need none, and the `m = 4` dangerous
+pattern is exactly figure 12.3b. Measuring the same generator the same circuit-level way,
+one fault leaves at most **one** data error where the bare ancilla leaves **four**. And
+Steane EC splits cleanly: a fault in the interaction leaves **one** data error — the
+`e + f + g` additivity of sec. 12.3.3, which is why it needs no repetition — while a fault
+in the ancilla **preparation** leaves up to **four**, because that preparation is still the
+code's non-fault-tolerant encoder.
+
+**The one open assumption the three of them share**, and it is the same one the book names:
+fault-tolerant preparation of encoded `|0⟩` and `|+⟩` is chapter 13 work. `QECErrorCorrection`
+reports it as `"OpenAssumptions"` and `QECPauliMeasurement` inherits it rather than hiding it
+behind its `"MeasurementCorrectQ"` being `True`. Two consequences worth keeping in view: the
+five-qubit code can have a cat measurement but not Steane EC, since Steane EC runs on
+transversal CNOT being the logical CNOT and so is CSS-only; and Shor and Knill EC remain
+unbuilt, which matters because Shor EC is the one with no CSS restriction.
 
 Three decisions already taken, and the reasons, so they do not get relitigated:
 
@@ -166,11 +193,95 @@ Three decisions already taken, and the reasons, so they do not get relitigated:
   equivalent to applying it (sec. 12.5.2), which is what real experiments and Stim both
   do. This removed a whole subsystem from the critical path.
 
-**The milestone worth aiming at.** Phases B + C + D give `FT` of a *memory* experiment
-without needing E — prepare, wait, measure — and that is enough to compare fault-tolerant
-extraction against the bare-ancilla circuit we have today, and **see the `p²` restored
-against the current `O(p)`**, measured in our own layer. That single plot is the evidence
-that the hook error is a defect of the gadget and not a property of circuit-level noise.
+**The milestone worth aiming at, and what is left of it.** Phases B + C + D give `FT` of a
+*memory* experiment without needing E — prepare, wait, measure — and that is enough to compare
+fault-tolerant extraction against the bare-ancilla circuit we have today, and **see the `p²`
+restored against the current `O(p)`**, measured in our own layer. That single plot is the
+evidence that the hook error is a defect of the gadget and not a property of circuit-level
+noise.
+
+**And it landed.** `QECDetectorModel` and `QECLogicalErrorRate` now take
+`"Extraction" -> "Transversal"`, and for the five-qubit code at circuit level the measured
+exponent goes from **1.00** to **1.97**. The hook error is a defect of the gadget, shown in
+this layer's own units.
+
+Three things that result rests on, each of which was a correction to something already
+written rather than new machinery:
+
+- **Only half of Theorem 12.1 can cross over.** A detector error model is a matrix — the
+  effect of a set of faults is the XOR of their rows — and a *majority* vote is not linear,
+  so it cannot live inside one. What can is *transversality*, which is the half that cured
+  the hook error anyway; a cat readout's syndrome bit is a parity, which is linear.
+  Repetition stays where it already was, across rounds, with the detectors. Checked on 200
+  random fault pairs rather than argued.
+- **The decoder was reading rows the experiment had discarded.** `demDecoderTable` built its
+  hypothesis space from every row, including the ones a verification herald rejects. The
+  decoder only ever runs on an accepted shot, so those faults cannot have happened, and
+  offering them let the lightest-set rule claim a detector pattern on behalf of something
+  already thrown away. Before the fix the exponent measured 1.73 and looked like a residual
+  linear term; it was not.
+- **The claim is conditional, on both sides.** Among accepted faults the transversal
+  extraction has *zero* ambiguous single-fault signatures (484 faults, 67 signatures). The
+  rate is post-selected and carries its acceptance, about 0.98 at `p = 10⁻³`.
+
+**D followed**, and it paid a debt rather than only adding a feature. `QECRegister` lays blocks
+out — block `b` owns qubits `(b-1)n+1 … bn` — lifts a single-block circuit into a block, and
+builds the transversal CNOT between two of them. Steane EC had been resting on that gate being
+the logical CNOT since phase C, cited to sec. 12.3.1 and never checked; `"LogicalAction"` now
+derives it by conjugation, and the answer is the CNOT action on the logical pair.
+
+Two things that fell out of doing it properly. The gate also has to map the stabilizer group to
+itself, and that is the test that decides: on the five-qubit code the *Z* half of the action
+still comes out right and only the *X* half breaks, so checking the logical operators alone
+would have passed half the time. Steane leaves 0 of 12 generators outside the group; the
+five-qubit code leaves 8 of 8. And the register's label matrix inherits the exchanged-halves
+layout, so each block's rows scatter into two windows rather than one contiguous run — wrong
+there gives a matrix of the right shape reporting the wrong syndromes.
+
+**E is done**, and it needed one thing none of the previous phases did: *signs*. The criterion of
+sec. 11.2 — `U` applied qubit by qubit is a gate gadget when it maps the stabilizer to itself, and
+the logical gate is what it does to the logical operators — is a statement about phases on both
+sides, and every conjugation in the layer up to here went through the Pauli frame, which drops
+them. `QECTransversalGate` carries the Z4 phase through, and asks membership of
+`codeStabilizerElement`, which knows a generator's true phase: an image equal to *minus* a
+generator preserves the stabilizer as a set of Paulis and destroys the code space.
+
+The number that shows why it mattered is a single minus sign. On the 7-qubit code the transversal
+`S` sends `Xbar -> -Ybar`, because `Y^7 = -Ybar` (eq. 11.22), so it performs the logical `S†` and
+not the logical `S`. A sign-blind conjugation reports "S" and is wrong. The pattern behind it is
+the book's own: the transversal `U` gives the logical `U*`, which is now checked against the
+conjugate matrix for every gate in the set rather than repeated as a slogan.
+
+Two more results came out of the scan. The 7-qubit code admits **all 24** one-qubit Cliffords
+transversally, and with CNOT, CZ and SWAP between blocks that is the whole logical Clifford group
+(sec. 11.3). The five-qubit code admits **12 of 24** — no `H`, no `S`, no transversal CNOT, but the
+cyclic Clifford `X -> Y -> Z -> X` *is* transversal on it, so "the five-qubit code has no
+transversal gates" is the wrong summary and the scan gives the right one. The action tables are
+derived from the gates' matrices rather than typed in, and pinned to the engine's matrices in the
+tests, so adding a gate is adding a matrix.
+
+**F is done, and it is the object the whole critical path was aimed at.** `QECFaultTolerant`
+takes an ideal Clifford circuit on logical qubits and returns `FT(C)`: each qubit becomes a block,
+each location becomes its gadget, and an error correction gadget follows every preparation, gate and
+storage gadget — never a measurement gadget, whose output is classical. The assembly walks the
+*schedule* rather than the instruction list, because Def 10.6 puts a correction between every
+adjacent pair of locations and, in a circuit with parallel gates, "adjacent" means a layer.
+
+The numbers, for `R R H CNOT M M` on the 7-qubit code: **13 gadgets**, and Def 10.6's own three
+overheads — **263×** in locations (7 become 1841), **14×** in qubits (a block plus its own
+correction workspace, one per block so the corrections of a layer run in parallel), **19.25×** in
+depth. Waits are counted on both sides, which is what keeps the first of those honest: a live block
+idle in a layer is a storage gadget, and it earns a correction like any other.
+
+The detail that makes this more than bookkeeping, and the reason E had to come first: **the gadget
+for a logical `S` is the transversal `S†`**. The assembler never emits "the transversal version of
+the gate it was asked for" — it searches the code's transversal gates for the one whose *logical
+action* is the gate requested. Assembled that way the encoded qubit ends in the `+1` eigenstate of
+`Ȳ`; assembled by name it ends in the `-1` eigenstate, which is the conjugate circuit looking
+perfectly healthy. Both are checked on the engine, as states, not as tableaux algebra.
+
+What is still missing is G — and underneath it the chapter-13 ancilla preparation that the
+extraction, Steane EC and every preparation gadget here assume.
 
 ### Standalone, and cheap: things with no missing dependencies
 
@@ -214,9 +325,10 @@ Chapter 13 in full — gate teleportation, magic states, distillation — and th
 estimation. The five subsystems that gate it, in the order they bite:
 
 1. **verified ancillas** (done), which was the gate to all of ch. 12;
-2. **multi-block addressing** — Thm 13.2 needs `2m` blocks for a gate touching `m`;
-3. **transversal-gate machinery** — which Cliffords are transversal on a code, and with
-   what logical action;
+2. ~~**multi-block addressing** — Thm 13.2 needs `2m` blocks for a gate touching `m`~~ (done,
+   phase D: `QECRegister`);
+3. ~~**transversal-gate machinery** — which Cliffords are transversal on a code, and with
+   what logical action~~ (done, phase E: `QECTransversalGate`);
 4. **a Clifford frame, not just a Pauli frame** — a `𝒞₃` correction is a Clifford and
    cannot be absorbed into a Pauli frame;
 5. **the `[[15,1,3]]` code** for distillation, which needs Reed–Muller — absent from the

@@ -17,9 +17,14 @@ PackageScope[circuitInstructionLayers]
 PackageScope[circuitIdleAnchor]
 PackageScope[circuitIdleSlots]
 PackageScope[instructionEngineGates]
+PackageScope[engineGateInstructions]
 PackageScope[$circuitOneQubitOps]
 PackageScope[$circuitTwoQubitOps]
 PackageScope[$circuitMeasureOps]
+PackageScope[basisGate]
+PackageScope[unbasisGate]
+PackageScope[letterAt]
+PackageScope[rotation]
 
 
 (* ============================================================================ *)
@@ -145,13 +150,13 @@ QECSyndromeCircuit::noprop = "`1` is not a property of QECSyndromeCircuit. Use c
      {"MH", q}         measure q in Z as a herald: post-select, do not decode
 *)
 
-$circuitOneQubitOps = {"H", "S", "V", "Vdg"};
+$circuitOneQubitOps = {"H", "S", "Sdg", "V", "Vdg", "X", "Y", "Z"};
 
 (* CZ is here because a fault-tolerant Pauli measurement needs controlled-P from the
    ancilla to the data (book sec. 12.1.2), and conjugating the data letter to Z with the
    rotations above turns every controlled-P into a controlled-Z.  Note the direction is
    the opposite of the bare-ancilla circuit, where the ancilla is the target. *)
-$circuitTwoQubitOps = {"CNOT", "CZ"};
+$circuitTwoQubitOps = {"CNOT", "CZ", "SWAP"};
 
 (* "M" feeds the decoder.  "MH" is a herald: a verification outcome that post-selects
    the shot rather than contributing a syndrome bit -- the check measurements of a cat
@@ -281,7 +286,7 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
         Switch[First[step],
             "R",    q = step[[2]]; x[[q]] = 0; z[[q]] = 0,
             "H",    q = step[[2]]; {x[[q]], z[[q]]} = {z[[q]], x[[q]]},
-            "S",    q = step[[2]]; z[[q]] = BitXor[z[[q]], x[[q]]],
+            "S" | "Sdg", q = step[[2]]; z[[q]] = BitXor[z[[q]], x[[q]]],
             "V",    q = step[[2]]; x[[q]] = BitXor[x[[q]], z[[q]]],
             "Vdg",  q = step[[2]]; x[[q]] = BitXor[x[[q]], z[[q]]],
             "CNOT", c = step[[2]]; t = step[[3]];
@@ -290,6 +295,14 @@ framePropagate[instr_List, nq_Integer, faults_List] := Module[
             "CZ",   c = step[[2]]; t = step[[3]];
                     z[[t]] = BitXor[z[[t]], x[[c]]];
                     z[[c]] = BitXor[z[[c]], x[[t]]],
+            "SWAP", c = step[[2]]; t = step[[3]];
+                    {x[[c]], x[[t]]} = {x[[t]], x[[c]]};
+                    {z[[c]], z[[t]]} = {z[[t]], z[[c]]},
+            (* A deterministic Pauli gate conjugates every Pauli to itself up to a
+               sign, and signs are dropped here, so it moves no frame bit.  It is
+               still emitted rather than elided: the encoder produces them, and a
+               gate the noise model cannot see is a fault location silently lost. *)
+            "X" | "Z" | "Y", Null,
             "M",    Internal`StuffBag[out, x[[step[[2]]]]],
             "MH",   Internal`StuffBag[heralds, x[[step[[2]]]]]
         ];
@@ -414,11 +427,24 @@ instructionEngineGates[instr_List] := Catenate[
         {"M", _} -> {},
         {"MH", _} -> {},
         {"Vdg", q_} :> {"V" -> q, "V" -> q, "V" -> q},
+        {"Sdg", q_} :> {"S" -> q, "S" -> q, "S" -> q},
         {op_, q_} :> {op -> q},
         {"CNOT", c_, t_} :> {"CNOT" -> {c, t}},
-        {"CZ", c_, t_} :> {"CZ" -> {c, t}}
+        {"CZ", c_, t_} :> {"CZ" -> {c, t}},
+        {"SWAP", a_, b_} :> {"SWAP" -> {a, b}}
     }, {1}]
 ]
+
+
+(* The inverse, with an offset: an engine gate list -- which is what the encoder of
+   Encoder.wl produces -- read back as instructions on a block starting at offset+1.
+   The two directions live together so a gate added to one is missing from the other
+   loudly rather than silently.  Vdg is not produced here: the engine's own
+   vocabulary has no inverse-V, and three V are what it would be anyway. *)
+engineGateInstructions[gates_List, offset_Integer] := Replace[gates, {
+    (op_String -> q_Integer) :> {op, q + offset},
+    (op_String -> {a_Integer, b_Integer}) :> {op, a + offset, b + offset}
+}, {1}]
 
 
 (* ---- properties ---- *)
