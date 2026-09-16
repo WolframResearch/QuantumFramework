@@ -1,587 +1,485 @@
 # QEC Layer: API Audit and Redesign
 
-*Audit of `OngoingProjects/QEC/QECCore/` (Maurice Engelhardt's functional-idiom
-`Package[]` on top of the shipped stabilizer engine), against the three concerns
-the review is about: too many functions, names that are not the best, and
-uncertain signatures/downvalues. This is an update-and-redesign of a good first
-implementation, not a rewrite. The starting point is sound: 593 tests pass GREEN,
-the physics is cross-checked against dense matrices, the engine, and Stim, and the
-functional core is real. The work below is about the public surface, not the
-mathematics under it.*
+*Audit and redesign of the quantum-error-correction layer at
+`OngoingProjects/QEC/QECCore/` (Maurice Engelhardt's functional-idiom `Package[]` on
+top of the shipped stabilizer engine). This revision goes past the public-surface trim
+of the first pass and answers the three questions the review is actually about: are the
+function names right (checked against the QEC literature and the reference packages, not
+just against Wolfram house style); is the design built on the minimal set of objects that
+quantum theory itself uses for error correction; and, given that, what should the
+signatures be and what should each function return. The physics under the layer is sound
+(593 cross-checked tests pass), so nothing below touches the mathematics. It is about the
+shape of the objects and how they compose.*
 
 ## 0. What this rests on
 
-- **Read in full**, one file at a time: the loader `QECCore.wl`, all 21
-  implementation `.wl` files (`GF2`, `Pauli`, `Code`, `Structure`, `Syndrome`,
-  `Encoder`, `Circuit`, `Constructions`, `Families`, `Noise`, `ErrorRate`,
-  `DetectorModel`, `Cat`, `Memory`, `Stim`, `Cache`, `Register`, `Measurement`,
-  `ErrorCorrection`, `Transversal`, `FaultTolerant`), all 20 `.wlt` test files plus
-  the runner, and the four planning documents (`QEC-Development-Plan.md`,
-  `QEC-Roadmap-2026-09.md`, `README.md`; `EngineMeasurementBug.md` read as
-  historical, now fixed in the engine).
-- **The 28 public exports and every property list were dumped from a live kernel**
-  (WL 15.0, paclet 2.1.0 via `PacletDirectoryLoad`, then `Get` of the loader and
-  `Needs["Wolfram`QuantumFramework`QEC`"]`), not inferred from source. Sanity checks
-  agree with the code: Steane `{7,1,3}`; bit-flip depolarizing rate
-  `(2p(9−9p+4p²))/9`; `QECPauliProduct["X","Z"]` gives the row `{1,1,3}` = −iY;
-  the transversal S on Steane reports logical `"Sdg"`;
-  `QECPauliMeasurement[...]["MeasurementCorrectQ"]` without EC is `False`.
-- **The `Bosonic-QEC-Plan.md` named in the brief does not exist** in the tree or in
-  git history. The forward-compatibility target below is taken from the brief's own
-  description of it: a future bosonic code object sitting beside the qubit `QECCode`.
+- **The full layer, read in place:** the loader and all 21 implementation files, all 20
+  test files, and the planning documents, plus a live-kernel dump of the 28 public
+  exports and every property list (WL 15.0, paclet 2.1.0). Sanity values agree with the
+  code (Steane `{7,1,3}`; bit-flip depolarizing rate `(2p(9−9p+4p²))/9`;
+  `QECPauliProduct["X","Z"]` = `{1,1,3}` = −iY; transversal S on Steane = logical `Sdg`).
+- **The QEC literature and the reference packages, cross-checked** (details and citations
+  in §6). Two threads matter. The **operational-formalism** thread (Knill-Laflamme-Viola;
+  Kribs-Laflamme-Poulin operator QEC; Rahn-Doherty-Mabuchi; Cowtan-Burton) says what the
+  minimal objects of error correction are. The **software** thread (Gidney's Stim;
+  QuantumClifford.jl and its `QECCore.jl` interface package; PyMatching; the Derks-Eisert
+  detector-error-model paper; the QUITS simulator) says how a well-built QEC framework is
+  layered and what its objects are named. Both were read against the current design.
+- **The naming corpus** was taken from the live API of Stim (`stim.Circuit`,
+  `stim.DetectorErrorModel`, `stim.PauliString`, `stim.Tableau`, `stim.TableauSimulator`,
+  `stim.FlipSimulator`), from QuantumClifford.jl / `QECCore.jl` (`parity_checks`,
+  `code_n`/`code_k`/`code_s`, `distance`, `logx_ops`/`logz_ops`, `naive_syndrome_circuit`,
+  `naive_encoding_circuit`, `PauliFrame`, `PauliError`, `evaluate_decoder`), and from the
+  term-of-art usage in the DEM literature.
+- **The `Bosonic-QEC-Plan.md` in the brief does not exist** in the tree or git history;
+  the forward-compatibility target is taken from the brief and, below, given a firmer
+  footing than "a sibling object" (operator-algebra QEC, §3.5).
 
-Commit history frames the concern precisely. The layer grew in five real commits:
-`ebd05e73` (prototype, retired), `ea21d3b6` (the code-layer rebuild, plan items a-d),
-`7ec522a2` (cat states, idle noise, post-selection), `187e4e7c` (depth = time steps),
-and `4acb4be7` (2026-09-15, the fault-tolerance layer). That last commit added five
-files (`ErrorCorrection`, `FaultTolerant`, `Measurement`, `Register`, `Transversal`)
-and most of the recent symbols. The surface roughly doubled in one step, which is why
-the naming and the count are worth settling now, before the migration into
-`QuantumFramework/Kernel/QEC/` freezes it behind reference pages.
+The layer grew in five commits, doubling its surface in the last one (`4acb4be7`, the
+fault-tolerance layer). That is the right moment to settle names, objects, and return
+types, before the migration into `QuantumFramework/Kernel/QEC/` freezes them behind
+reference pages.
 
 ---
 
-## 1. Inventory: every public symbol, by module
+## 1. Inventory: the 28 public symbols
 
-28 public exports: **10 objects** (a head wrapping one `Association`, with property
-dispatch and a summary box), **8 free functions**, **7 Pauli utilities**, **3 global
-limits**. Signatures and property lists below are the live ones.
+10 property-dispatch objects, 8 free functions, 7 Pauli utilities, 3 global limits.
 
-### 1.1 The Pauli layer (`Pauli.wl`): 7 functions
+**Objects** (a head over one `Association`, with a `::noprop` catch-all and a summary box):
 
-Rows are `{x1..xn, z1..zn, e}` with `e` in Z4 (`i^e`), the same symplectic layout the
-engine's `PauliRow` uses (`Kernel/Stabilizer/Conversions.m`); the tests pin row-for-row
-agreement with `PauliStabilizer["Stabilizers"|"Destabilizers"|"Matrix"]`.
-
-| Symbol | Signature | Returns |
-|---|---|---|
-| `QECPauliVector` | `[s_String]`, `[v:{__Integer}]`, `[{__String}]` | row; strings and rows both accepted; `$Failed` + `::invalid`/`::badrow` on bad input |
-| `QECPauliString` | `[v:{__Integer}]`, `[s_String]`, `[{__List}]` | string, with leading `-`,`i`,`-i` for the phase |
-| `QECPauliQ` | `[s_String]`, `[v:{__Integer}]`, `[_]` | Bool (structural, message-free) |
-| `QECPauliWeight` | `[p]` | Integer (phase does not count) |
-| `QECPauliCommuteQ` | `[p, q]` | Bool, or `$Failed` + `::size` |
-| `QECPauliProduct` | `[ps__]` | row, phase carried in Z4; `$Failed` + `::size` |
-| `QECPauliPhase` | `[p]` | `0|1|2|3` |
-
-`PackageScope` here (correctly internal): `pauliQubits`, `symplecticPart`, `phasePart`,
-`symplecticProduct`, `pauliIdentity`, `weightKVectors`, `weightOneVectors`,
-`$pauliLetterXZ`.
-
-### 1.2 The code object (`Code.wl` + `Structure` + `Syndrome` + `Encoder`): `QECCode`
-
-Constructors:
-
-```
-QECCode[{"ZZI","IZZ"}]               (* from Pauli-string generators *)
-QECCode[{row, row, ...}]             (* from Pauli rows *)
-QECCode["SteaneCode"]                (* named, Families.wl *)
-QECCode["Repetition", 5]             (* family member, Families.wl *)
-QECCode["CSS", hx, hz]  QECCode["CSS", h]     (* construction, Constructions.wl *)
-QECCode["Hamming", r]  QECCode["DistanceTwo", n]  QECCode["PhaseRepetition", n]
-QECCode[ps_PauliStabilizer]          (* convert a stabilizer state to a code *)
-```
-
-Live `["Properties"]` (34 entries, three groups). Note **`"Decoder"` is listed twice**
-(it appears in both the derived and the parametrized group); confirmed in the live dump.
-
-- **Direct (8):** `CheckMatrix`, `Phases`, `Qubits`, `Generators`, `GeneratorVectors`,
-  `Signs`, `StabilizerCount`, `LogicalQubits`.
-- **Derived (18):** `Parameters` (`{n,k,d}`), `Distance`, `MinimumWeightLogical`,
-  `LogicalOperators` (`<|"X"->…,"Z"->…|>`), `LogicalX`, `LogicalZ`, `StandardForm`,
-  `CompletedGenerators`, `SyndromeTable`, `Decoder`, `PerfectQ`, `CSSQ`,
-  `SyndromeCircuit`, `EncodingGates`, `EncodingCircuit` (a `QuantumCircuitOperator`),
-  `EncodingCircuitValidQ`, `PauliStabilizer`, `State` (a `QuantumState`).
-- **Parametrized (8):** `["Syndrome", err]`, `["Decode", syn]`, `["Decoder", w_Integer]`
-  and `["Decoder", noise_QECNoiseModel]`, `["LogicalErrorRate", noise, (count)]`,
-  `["CorrectionCycle", err]`, `["PhysicalCorrectionCycle", err]`,
-  `["LogicalPauliQ", p]`, `["StabilizerMemberQ", p]`. Plus `["SyndromeCircuit", rounds]`
-  and `["StimCircuit", …]` (added by `Stim.wl`).
-
-Dispatch shape: one hard-coded downvalue per property, `QECCode[a_Association]["X"] := …`,
-memoized on internal `PackageScope` symbols via self-blocking `f[a] := f[a] = …`, closed
-by a catch-all `QECCode[a_Association][prop_String] := (Message[QECCode::noprop, prop];
-Missing["NotFound", prop])`. There is **no `QECCodeQ` guard** on the pattern.
-
-### 1.3 The gadgets and analysis objects: 8 more heads
-
-Each is a head over one `Association` with property dispatch, a `::noprop` catch-all,
-and an `ArrangeSummaryBox`. The six circuit-carrying ones share a substrate (see §2.1e).
-
-| Head | Constructors | Options | `["Properties"]` count |
+| Head | Constructors | Options | Props |
 |---|---|---|---|
-| `QECSyndromeCircuit` | `[code]`, `[code, rounds]` | none | 12 |
-| `QECNoiseModel` | `["Depolarizing"\|"BitFlip"\|"PhaseFlip"\|"BitPhaseFlip", p]`, `[<\|"X"->…\|>]`, `[{pI,pX,pY,pZ}]`, `["Circuit", p\|rates]` | `"MeasurementError"->0` | 13 |
-| `QECDetectorModel` | `[code, noise]`, `[code, noise, rounds]` | `"Extraction"->"BareAncilla"` | 21 |
-| `QECCatState` | `[m]`, `[qubits, check]` | `"Pairs"->Automatic`, `"Repetitions"->1` | 13 |
-| `QECRegister` | `[code]`, `[code, blocks]` | none | 16 |
-| `QECPauliMeasurement` | `[code, P]`, `[code, P, reps]` | `"Pairs"`, `"CatRepetitions"`, `"ErrorCorrection"->None` | 25 |
-| `QECErrorCorrection` | `[code]`, `[code, offset]` | `"Order"->"BitFlipFirst"` | 21 |
-| `QECTransversalGate` | `[code, gate]`, `[code, All]` | none | 12 |
-| `QECFaultTolerant` | `[circuit_List, code]` | `"Order"->"BitFlipFirst"` | 22 |
+| `QECCode` | `[{gens}]`, `[{rows}]`, `[name]`, `[name,args]`, `["CSS",hx,hz]`, `[ps_PauliStabilizer]` | none | 34 |
+| `QECNoiseModel` | `["Depolarizing"\|"BitFlip"\|"PhaseFlip"\|"BitPhaseFlip",p]`, `[<\|"X"->…\|>]`, `[{pI,pX,pY,pZ}]`, `["Circuit",p\|rates]` | `"MeasurementError"->0` | 13 |
+| `QECSyndromeCircuit` | `[code]`, `[code,rounds]` | none | 12 |
+| `QECDetectorModel` | `[code,noise]`, `[code,noise,rounds]` | `"Extraction"` | 21 |
+| `QECCatState` | `[m]`, `[qubits,check]` | `"Pairs"`, `"Repetitions"` | 13 |
+| `QECRegister` | `[code]`, `[code,blocks]` | none | 16 |
+| `QECPauliMeasurement` | `[code,P]`, `[code,P,reps]` | `"Pairs"`, `"CatRepetitions"`, `"ErrorCorrection"` | 25 |
+| `QECErrorCorrection` | `[code]`, `[code,offset]` | `"Order"` | 21 |
+| `QECTransversalGate` | `[code,gate]`, `[code,All]` | none | 12 |
+| `QECFaultTolerant` | `[circuit_List,code]` | `"Order"` | 22 |
 
-Notable parametrized properties: `QECRegister` carries `["BlockRange", b]`, `["Index", b, q]`,
-`["Lift", instr, b]`, `["TransversalCNOT", c, t]`, `["LogicalAction", c, t]`;
-`QECTransversalGate` carries `["LogicalGate"]`, `["LogicalAction"]`, `["StabilizerImages"]`;
-`QECFaultTolerant` carries `["GadgetInstructions", kind]`, `["Overheads"]`, `["OpenAssumptions"]`.
+**Free functions:** `QECLogicalErrorRate[code,noise,(count),opts]` (polymorphic return),
+`QECConcatenate`, `QECRemoveQubit`, `QECPasteCodes` (code -> code), `QECStimCircuit`
+(returns a String), `QECCodeCatalog` (Dataset), `QECClassicalHammingMatrix` (classical
+matrix), `QECClearCache`.
 
-### 1.4 Free functions (8)
+**Pauli utilities (7):** `QECPauliVector`, `QECPauliString`, `QECPauliQ`, `QECPauliWeight`,
+`QECPauliCommuteQ`, `QECPauliProduct`, `QECPauliPhase`, over the engine-compatible
+`{x1..xn,z1..zn,e}` row (Z4 phase).
 
-| Symbol | Signature | Returns |
+**Global limits (3):** `$QECExactEnumerationLimit`, `$QECExactDetectorLimit`,
+`$QECDecoderSubsetLimit`.
+
+Two live defects worth carrying forward: `QECCode["Properties"]` lists `"Decoder"` twice,
+and `Measurement.wl:212` uses a `Quiet` the package's own house rule forbids (the
+message-free `QECPauliQ` is the intended guard). Both are one-line fixes.
+
+---
+
+## 2. Axis 1: are the function names right?
+
+Measured against the field, not just against Wolfram style. The comparison corpus is the
+two reference implementations whose designs are cleanest and most used, Stim (the de facto
+substrate) and QuantumClifford.jl with its `QECCore.jl` interface package, plus the
+term-of-art of the detector-error-model literature.
+
+### 2.1 What the field calls these things
+
+| Concept | Stim | QuantumClifford / QECCore.jl | Literature term of art | Current QEC |
+|---|---|---|---|---|
+| Pauli operator | `PauliString` (one object) | `PauliOperator` (one object) | Pauli / stabilizer generator | **7 free functions** `QECPauli*` |
+| stabilizer code | (not an object; a circuit) | code types `Steane7`, `Shor9`, `Toric`, `Surface` | stabilizer code, `[[n,k,d]]` | `QECCode` |
+| check matrix | none | `parity_checks`, `parity_matrix_x/z` | (parity-)check matrix | `code["CheckMatrix"]` |
+| code parameters | none | `code_n`, `code_k`, `code_s`, `distance` | `[[n,k,d]]` | `code["Parameters"]`, `["Distance"]` |
+| logical operators | none | `logx_ops`, `logz_ops` | logical (X/Z) operators | `code["LogicalX"]`, `["LogicalZ"]` |
+| encoding circuit | none | `naive_encoding_circuit` | encoding circuit | `code["EncodingCircuit"]` |
+| syndrome-extraction circuit | (in the `Circuit`) | `naive_syndrome_circuit` | syndrome extraction circuit | `QECSyndromeCircuit` |
+| noise / error model | (baked into `Circuit`) | `PauliError`, `UnbiasedUncorrelatedNoise` | noise model / error model | `QECNoiseModel` |
+| detector error model | **`DetectorErrorModel`** | (via Stim) | **detector error model (DEM)** | `QECDetectorModel` |
+| logical error rate | (sampled from the model) | `evaluate_decoder` | logical error / failure rate | `QECLogicalErrorRate` |
+| decoder | (external: PyMatching) | `AbstractSyndromeDecoder`, `TableauDecoder` | decoder | `code["Decoder"]` |
+
+The reading is clear and mostly favorable: **the layer's object names are the field's
+names.** `QECDetectorModel` is exactly Stim's `DetectorErrorModel`, which the Derks-Eisert
+paper calls the standardized interface between a circuit and a decoder; adopting that
+noun verbatim is a strength, not an accident. `QECSyndromeCircuit` matches
+`naive_syndrome_circuit` (and, correctly, it *is* the non-fault-tolerant bare-ancilla
+construction that `naive_` names). `QECNoiseModel`, `QECLogicalErrorRate`, `["CheckMatrix"]`,
+`["Parameters"]`, `["Distance"]`, `["LogicalX"]`/`["LogicalZ"]` all sit on standard
+terms. The property vocabulary inside the objects (`"UndetectableFaults"`,
+`"ObservableRates"`, `"OpenAssumptions"`, `"Overheads"`) is precise and reads well.
+
+### 2.2 The names that the field says to change
+
+- **The 7 `QECPauli*` verbs should be one `QECPauli` object.** This was the first pass's
+  recommendation on Wolfram-idiom grounds; the field settles it. Both reference
+  implementations model a Pauli as a single object with methods (`PauliString` in Stim,
+  `PauliOperator` in QuantumClifford), never as a spray of free functions. `QECPauli`,
+  with `p["Weight"]`, `p["Phase"]`, `p["String"]`, `p["Vector"]`, `p["CommutesWith", q]`,
+  and product via `p ** q`, is the two-package-precedented shape, and it removes the only
+  qubit-specific symbols from the top level (which matters for §3.5).
+- **`QECFaultTolerant` is the one adjective head.** No package has a settled noun here
+  (Gottesman writes `FT(C)`, "the fault-tolerant simulation of a circuit"). Rename to a
+  noun: `QECFaultTolerantCircuit`, parallel to `QuantumCircuitOperator`, or
+  `QECFaultTolerantProtocol` for the broader gadget-set object.
+- **`QECStimCircuit` returns a String, so "Circuit" over-promises.** The field's verb for
+  this is "export to Stim"; Wolfram's own foreign-format head is `QuantumQASM`. Rename to
+  `QECStim` and additionally expose it as a property (`dem["StimString"]`), the way Stim
+  itself is reached by a method, not a constructor.
+- **`QECClassicalHammingMatrix`** is a classical-coding helper in the quantum namespace;
+  internalize it (§5).
+
+### 2.3 A naming gap the field exposes
+
+The current layer has no first-class **decoder** object, only `code["Decoder"]`
+(a lookup table) and `code["Decoder", noise]` (a coset map). Every serious framework makes
+the decoder a first-class, swappable thing: Stim hands its DEM to PyMatching's `Matching`;
+QuantumClifford has `AbstractSyndromeDecoder` with `TableauDecoder`, belief-propagation,
+and matching implementations behind it; QUITS makes the inner decoder a plug-in. The
+literature is explicit that the DEM is the interface precisely so that decoders are
+interchangeable behind it. A `QECDecoder` object (even if the only built-ins are the
+lookup table and maximum-likelihood, with a documented seam where PyMatching/BP-OSD plug
+in) would match the field and is the natural consumer of `QECDetectorModel`. This is an
+addition, not a rename, and it belongs with the object-model work of §3.
+
+---
+
+## 3. Axis 2: is the design built on the minimal objects of quantum theory?
+
+This is the load-bearing question. QuantumFramework is organized the way quantum theory
+is: a `QuantumState` is a state, a `QuantumOperator` transforms states, a `QuantumChannel`
+is a more general transformation, a `QuantumMeasurementOperator` is a measurement, and a
+`QuantumCircuitOperator` composes them, so that `op[state]`, `channel[state]`, and
+`qc1 /* qc2` all mean what they say. The QEC layer does not join that world. Its objects
+are associations with property dispatch; a code does not transform anything, noise is a
+separate model rather than a channel you apply, syndrome extraction is a flat instruction
+list rather than a measurement, and the correction cycle returns a report rather than a
+map. The question the brief asks is whether QEC *can* be expressed in the same object
+language. It can, and the reason is that error correction was defined in that language in
+the first place.
+
+### 3.1 What quantum theory says the objects are
+
+The operational formulation of quantum error correction, which is the standard one, is
+built from exactly the primitives QuantumFramework already ships. A code is an **encoding
+isometry** `V : H_L -> H_P` from k logical qubits into n physical ones; its **code space**
+is the range of the **projector** `P = V·V†`; physical noise is a **channel** `N` (a CPTP
+map); syndrome extraction is a **quantum instrument** `{M_s}`, a measurement that returns
+an outcome s and the post-measurement state; and recovery is a **syndrome-indexed family
+of channels** `{R_s}`. The whole cycle is a single composition, and the thing it produces
+is again a channel, the **effective logical channel**
+
+```
+    L  =  D ∘ ( Σ_s  R_s ∘ M_s ) ∘ N ∘ E ,
+```
+
+where E is encode (apply V), N is noise, `M_s` is the syndrome branch, `R_s` the recovery
+for that syndrome, and D decode (V†). This is Knill-Laflamme-Viola and Rahn-Doherty-Mabuchi
+(§6). Two facts from that formulation matter for a software design:
+
+- **The Knill-Laflamme condition** `P E_i† E_j P = λ_ij P` (for noise Kraus operators
+  `{E_i}`) is the exact-correctability test, and it is a statement purely about the
+  encoder V (through P) and the noise channel N. Correctability is a relation between two
+  objects the framework already has.
+- **Concatenation is literal composition** of these logical channels: the concatenated
+  code's logical channel is the composition of the inner and outer ones. Code constructions
+  are not bespoke matrix surgery; they are composition of maps.
+
+Cowtan and Burton make the last point exact for CSS codes: a code *is* an object (a chain
+complex over GF(2)), and the constructions the layer already implements are the standard
+categorical operations on those objects. Concatenation, the direct sum of two codes, CSS
+merging and splitting (lattice surgery), and the LDPC balanced product are all colimits
+(pushouts and coequalizers) in the category of codes; a code map is a morphism, and a
+morphism corresponds to a physical circuit. In their words the layer's `QECConcatenate`,
+`QECPasteCodes`, `QECRemoveQubit`, and CSS constructor are all **morphisms between code
+objects**, and morphisms compose.
+
+### 3.2 QuantumFramework already has every one of these objects
+
+| Operational object | QuantumFramework object |
+|---|---|
+| state `ρ` | `QuantumState` |
+| encoding isometry `V : H_L -> H_P` | `QuantumOperator` (rectangular / isometric) |
+| code-space projector `P = V·V†` | `QuantumOperator` (a projector), or the subspace itself |
+| physical noise `N`, recovery `R_s` | `QuantumChannel` |
+| syndrome instrument `{M_s}` | `QuantumMeasurementOperator` (retains outcome + post-state) |
+| composition `∘` and the cycle | `QuantumCircuitOperator`, `@`, `/*` |
+
+So the minimal object set for QEC introduces no new primitive type. It is the QF primitive
+set, specialized. The layer today touches this in exactly one place, and it is telling:
+`code["EncodingCircuit"]` already returns a genuine `QuantumCircuitOperator`, and
+`noise["QuantumChannel"]` already returns a `QuantumChannel`. The bridges exist; they are
+just not the spine of the design.
+
+### 3.3 What the code object should expose
+
+Make `QECCode` present the operational objects, so the cycle composes with the rest of QF:
+
+```
+code["Encoder"]                 -> QuantumOperator     (* the isometry V *)
+code["Codespace"] / ["Projector"] -> QuantumOperator   (* P = V·V†, the subspace *)
+code["SyndromeMeasurement"]     -> QuantumMeasurementOperator   (* the instrument {M_s} *)
+code["Recovery", syndrome]      -> QuantumChannel       (* R_s *)
+code["LogicalChannel", noise]   -> QuantumChannel       (* the effective L above *)
+```
+
+The first two make a code a subspace you can encode into and project onto; the third makes
+syndrome extraction a measurement a user can apply to any `QuantumState`; the last two make
+recovery and the whole cycle channels a user can compose, plot, or hand to `QuantumEvolve`.
+`code["LogicalChannel", noise]` is the operational payoff: it turns the code-plus-noise into
+one QF channel, and `QECLogicalErrorRate` becomes a functional of it (one minus the process
+fidelity of L to the identity, or the logical-flip probability). This is the object the
+whole layer is implicitly about, and right now it has no name.
+
+### 3.4 The efficiency caveat, stated honestly
+
+There is a real tension, and the design must resolve it rather than ignore it. A
+`QuantumChannel` or `QuantumMeasurementOperator` on n qubits is a `4^n`-sized object, and
+the entire reason the stabilizer and detector-error-model engines exist is to stay
+polynomial. So the operational objects are the **interface and the semantics**, not the
+computational representation. The rule is the one QF already lives by: a `QuantumOperator`
+may be symbolic or lazy, and `PauliStabilizer` is the efficient backend; likewise a code's
+`"Encoder"` is computed and stored as a Clifford tableau or a gate list, materialized as a
+dense `QuantumOperator` only when n is small enough to ask for its matrix. The detector
+error model is, in fact, already exactly this: an efficient, GF(2) representation of the
+composed logical channel L restricted to the syndrome and logical bits (this is the
+Derks-Eisert reading of the DEM). So the layer is *already computing* the operational
+composition; it is presenting it as a bag of matrices and rates instead of as the channel
+it is. Exposing the QF objects is a change of face, not a change of engine.
+
+### 3.5 Why this also fixes the bosonic forward-compatibility
+
+Operator-algebra quantum error correction (Kribs-Laflamme-Poulin; Poulin's stabilizer
+formalism for it; Dauphinais-Kribs-Vasmer) is the generalization that replaces the encoding
+isometry and the code projector by a **protected subsystem** or, most generally, a
+**correctable observable algebra**. It unifies subspace codes (what the layer does today),
+subsystem and gauge codes, decoherence-free subspaces, and noiseless subsystems, and it is
+the natural frame for the planned bosonic branch, because a bosonic or continuous-variable
+code is an algebra of operators, not a set of qubit Paulis. If the shared objects are
+`QECCode` presenting an encoder, a codespace, a syndrome measurement, and a logical
+channel, then a `QECBosonicCode` sibling answers the same interface with a different
+backend, and `QECLogicalErrorRate[code, noise]` reads a channel it does not have to know
+the qubit-ness of. The forward-compatibility argument for internalizing the qubit-Pauli
+helpers (§2.2) is the shallow version of this; operator-algebra QEC is the deep one.
+
+### 3.6 The verdict on axis 2
+
+Yes, QEC can follow QuantumFramework's object model, and it should, for three reasons that
+the literature makes concrete rather than aesthetic. The operational definition of error
+correction is already a composition of state, isometry, channel, and instrument, which are
+QF's primitives (§3.1, §3.2). Presenting them lets the QEC cycle compose with the rest of
+the framework, so a user encodes a `QuantumState`, pushes it through a `QuantumChannel`,
+and measures with a `QuantumMeasurementOperator`, instead of learning a separate vocabulary
+of associations. And the efficient engine the layer already has (stabilizer tableaux, the
+detector error model) is precisely the polynomial realization of that composition, so the
+alignment costs nothing at run time (§3.4). The current design has the right *layering*
+(it matches Stim/QUITS/Derks-Eisert almost module for module) but the wrong *object
+semantics*: it computes channels and measurements and presents them as bags.
+
+---
+
+## 4. Axis 3: signatures, and what each function returns
+
+Once the objects are the operational ones, the signatures and returns mostly write
+themselves, and they line up with how the reference packages read.
+
+### 4.1 The principle the packages share
+
+Stim's pipeline is method chaining on objects: `circuit.detector_error_model()`,
+`sampler = circuit.compile_detector_sampler()`, `matching.decode(syndrome)`.
+QuantumClifford's is `evaluate_decoder(decoder, setup, nsamples)`. Both build a small
+number of typed objects and pass them to each other. QuantumFramework's idiom is stronger
+than either, because its objects are *applied* and *composed*: `V[state]`, `N[state]`,
+`qmo[state]`, `channel1 /* channel2`. So a QEC-in-QF pipeline should read as application and
+composition, which is more natural in Wolfram than in Python and is the whole point of
+matching the object model.
+
+### 4.2 Constructors take algebra or QF objects; returns are QF objects
+
+- **`QECCode`** constructs from the algebraic data (generators, check matrix, name,
+  family) as today, and additionally from native QF objects: `QECCode[ps_PauliStabilizer]`
+  already works; add `QECCode[V_QuantumOperator]` (a code *is* its encoding isometry) and
+  `QECCode[P_projector]`. Its operational properties return QF objects (§3.3), not
+  associations.
+- **`QECNoiseModel`** stays the constructor for named/parametric Pauli noise, but the
+  function that consumes noise should accept either a `QECNoiseModel` or a bare
+  `QuantumChannel`, since noise *is* a channel: `QECLogicalErrorRate[code, channel]` where
+  `channel` is either. This is the operational statement that the code does not care how
+  the noise was named, only what map it is.
+- **`QECLogicalErrorRate`** returns **one type**: a number or a symbolic polynomial (the
+  rate), `Indeterminate` when acceptance is zero. The post-selected `Association`
+  (`"Rate"`, `"Acceptance"`, `"Failure"`, …) that it returns today only at circuit level is
+  the current return-type wart; move that decomposition onto `QECDetectorModel`
+  (`dem["LogicalErrorRate"]`, `dem["Acceptance"]`, `dem["Failure"]`), which already owns
+  `"DetectorRates"` and `"ObservableRates"`, and offer the full report through the
+  `QuantumLinearSolve[m, b, All]` precedent: `QECLogicalErrorRate[code, noise, All]`. The
+  bare call then always returns a rate, definable cleanly as a functional of
+  `code["LogicalChannel", noise]`.
+- **The gadgets** (`QECSyndromeCircuit`, `QECCatState`, `QECPauliMeasurement`,
+  `QECErrorCorrection`, `QECTransversalGate`, `QECFaultTolerantCircuit`) keep the fast flat
+  instruction list inside, but every one gains `["QuantumCircuitOperator"]` and
+  `["Diagram"]` (the highest-value single addition, from the first pass), so the circuits
+  return a QF object a user can draw, run, or compose, and the circuit-consuming entry
+  points accept a `QuantumCircuitOperator` in.
+- **`QECSyndromeCircuit`** additionally returns its measurement as
+  `["SyndromeMeasurement"]` -> `QuantumMeasurementOperator`, closing the loop with §3.3.
+
+### 4.3 The signature table, corrected and uniform
+
+| Function | Signature | Returns |
 |---|---|---|
-| `QECLogicalErrorRate` | `[code, noise, opts]`, `[code, noise, count_Integer, opts]` | **polymorphic**: symbolic polynomial (exact code-capacity), machine number (sampled/numeric), or `Association` `<\|"Rate","Acceptance",…\|>` (circuit level with heralds). Options `"Decoder"`, `"DecoderReach"`, `"Rounds"`, `"Extraction"`. |
-| `QECConcatenate` | `[outer_QECCode, inner_QECCode]` | `QECCode` |
-| `QECRemoveQubit` | `[code]`, `[code, q]` | `QECCode` |
-| `QECPasteCodes` | `[c1, c2, solo1, solo2]` | `QECCode` |
-| `QECStimCircuit` | `[code]`, `[code, noise]`, `[code, noise, rounds]` | **String** (Stim source). Option `"Observable"->"Z"`. |
-| `QECCodeCatalog` | `[]` | `Dataset` of named codes/families with `{n,k,d}` |
-| `QECClassicalHammingMatrix` | `[r_Integer]` | integer matrix (classical parity check) |
-| `QECClearCache` | `[]` | Integer (count of dropped memoized rules) |
+| `QECCode` | `[gens\|rows\|name\|ps\|V\|P, args]` | `QECCode` |
+| `QECCode["Encoder"\|"Codespace"\|"SyndromeMeasurement"]` | property | `QuantumOperator` / `QuantumMeasurementOperator` |
+| `QECCode["Recovery", s]`, `["LogicalChannel", noise]` | property | `QuantumChannel` |
+| `QECNoiseModel` | named / rates / `["Circuit", …]` | `QECNoiseModel` (yields a `QuantumChannel`) |
+| `QECLogicalErrorRate` | `[code, noise\|channel, (count), opts]`, `[…, All]` | rate (number/polynomial); `All` -> report `Association` |
+| `QECDetectorModel` | `[code, noise, (rounds), opts]` | `QECDetectorModel`; `dem["LogicalErrorRate"\|"Acceptance"\|"Failure"]` |
+| `QECDecoder` (new) | `[dem]` or `[code, noise]` | `QECDecoder`; `dec["Decode", syndrome]` -> correction |
+| `QECStim` (renamed) | `[code, (noise), (rounds), opts]` | `String` |
+| gadget heads | `[…]` | object; `["QuantumCircuitOperator"]`, `["Diagram"]` |
 
-### 1.5 Global limits (3)
-
-`$QECExactEnumerationLimit` (`4^10`, code-capacity enumeration cap),
-`$QECExactDetectorLimit` (`2^16`, circuit-level state-space cap),
-`$QECDecoderSubsetLimit` (`2·10^6`, fault-subset cap for the DEM decoder table).
-
-### 1.6 Internal surface worth naming
-
-The `PackageScope` layer is large and mostly healthy: GF(2) primitives (`gf2*`), the
-code internals (`codeStandardForm`, `codeLogicalVectors`, `codeMinimumLogical`,
-`codeStabilizerElement`, `codeDecoderToWeight`, `codeEncodingGates`, …), the frame
-propagator (`framePropagate`, `circuitSchedule`, `circuitIdleSlots`), the detector-model
-engine (`codeDetectorModel`, `demExactFailure`, `demSampledFailure`, `demDecoderTable`),
-the extraction abstraction (`codeExtraction`, `$codeExtractions`, `recordSyndromes`),
-and the FT internals (`transversalAction`, `ftAssemble`, `registerConjugate`). Two
-internal facts matter for the redesign:
-
-- **`transversalMatrix` hardcodes a gate-matrix table** `$transversalGateMatrix`
-  (I, X, Y, Z, H, S, Sdg, V, Vdg, CNOT, CZ, SWAP) that a test keeps in sync with
-  `QuantumOperator[name]["MatrixRepresentation"]`.
-- **`$QECMemoisedFunctions` (in `Cache.wl`) is a hand-maintained list** of every
-  memoized internal, including the FT-layer ones. `QECClearCache[]` walks it. A new
-  memoized function that is not added here silently escapes the cache reset.
+Argument order is already uniform and correct in the current layer (`code`, then
+`noise`/`channel`, then `count`/`rounds`, then options); the change is in the return types,
+not the argument lists.
 
 ---
 
-## 2. Audit against the three concerns
+## 5. The redesign, in two tiers
 
-### 2.1 "We have too many functions"
+**Tier A, the surface trim** (from the first pass, still valid and now with external
+precedent). Fold the four code -> code constructions onto `QECCode` as named constructors,
+so building a code is one question with one answer; collapse the seven `QECPauli*` verbs
+into one `QECPauli` object (Stim/QuantumClifford precedent); internalize
+`QECClassicalHammingMatrix`; move `QECCodeCatalog` onto `QECCode["Catalog"]`; rename
+`QECFaultTolerant -> QECFaultTolerantCircuit` and `QECStimCircuit -> QECStim`;
+de-duplicate `QECCode["Properties"]`; replace the `Quiet` in `Measurement.wl` with a
+`QECPauliQ` guard; share the six gadgets' circuit-property substrate and give it the
+`QuantumCircuitOperator`/`Diagram` bridge; de-polymorphize `QECLogicalErrorRate`. This
+takes the public surface from 28 symbols to about 16 with no capability lost.
 
-The 10 object heads are **not** the problem: property dispatch over many separate
-functions is exactly the QF house pattern (`QuantumOperator` alone exposes 209
-properties), and each head is a genuinely distinct object with its own physics. The
-189 properties spread across the ten objects are a feature, not bloat. The bloat is in
-the flat function/utility surface around the objects.
+**Tier B, the object-model alignment** (new, from §3-§4, and the more important half).
+Make `QECCode` expose the operational objects: `["Encoder"]` and `["Codespace"]` as
+`QuantumOperator`s, `["SyndromeMeasurement"]` as a `QuantumMeasurementOperator`,
+`["Recovery", s]` and `["LogicalChannel", noise]` as `QuantumChannel`s. Let noise be
+consumed as a `QuantumChannel`. Add a first-class `QECDecoder` object as the consumer of
+`QECDetectorModel` (§2.3), matching the field's decoder abstraction and marking the
+PyMatching/BP-OSD seam. Treat the code -> code constructions as the morphisms they are
+(Cowtan-Burton), so they compose. Keep operator-algebra QEC as the frame that makes the
+subspace layer, a future subsystem/gauge layer, and the bosonic branch answer one
+interface.
 
-**(a) The 7 `QECPauli*` utilities are a qubit-specific mini-package leaked into the
-public API.** They operate on the internal `{x|z|e}` row representation, which is
-deliberately the engine's own layout. A QF user does Pauli work with strings and
-`PauliStabilizer`; these seven are the QEC layer's private arithmetic that happens to
-be exported. They are also the one part of the public surface that is intrinsically
-about qubits, which is the wrong thing to freeze into the top level right before a
-bosonic sibling arrives (§4.5). **Recommendation: collapse the seven into one object,
-`QECPauli`, with property dispatch, and demote the rest.** `QECPauli["XZZXI"]` becomes
-the object; `p["Weight"]`, `p["Phase"]`, `p["String"]`, `p["Vector"]`,
-`QECPauli["X"] @ QECPauli["Z"]` (or `p["Times", q]`), `p["CommutesWith", q]`. That is
-7 top-level symbols down to 1, in the QF idiom, and it reads better than seven verbs.
-
-**(b) Code-building constructions are split across two mechanisms, inconsistently.**
-CSS lives on the head (`QECCode["CSS", hx, hz]`); concatenation, qubit removal, and
-pasting are three standalone symbols (`QECConcatenate`, `QECRemoveQubit`,
-`QECPasteCodes`). The roadmap gave the last three their `QEC` prefix precisely because
-the prototype's bare `RemoveQubit`/`PasteCodes` collided; folding them onto the head
-solves the collision the same way CSS already is solved. **Recommendation: make every
-code→code construction a named constructor on `QECCode`** (`QECCode["Concatenate",
-outer, inner]`, `QECCode["RemoveQubit", code, (q)]`, `QECCode["Paste", c1, c2, s1, s2]`),
-matching the family constructors that are already there. That retires three top-level
-symbols and makes "how do I build a code" one question with one answer.
-
-**(c) `QECClassicalHammingMatrix` is a classical coding-theory tool in the quantum-QEC
-namespace.** It builds a classical parity-check matrix and is used only inside
-`QECCode["Hamming", r]`. It is neither quantum nor an object property. **Recommendation:
-demote to `PackageScope`.** If a public classical-coding helper is ever wanted, it does
-not belong under the `QEC` object prefix.
-
-**(d) Two thin wrappers can move onto the object they describe.** `QECCodeCatalog[]`
-is naturally `QECCode["Catalog"]` (or a `$QECCodeNames` list next to the family
-constructors). `QECStimCircuit` is discussed under naming below; it can stay a function
-but should also be reachable as a property.
-
-**(e) Six heads re-implement one "instruction-carrying gadget" by hand.**
-`QECSyndromeCircuit`, `QECCatState`, `QECPauliMeasurement`, `QECErrorCorrection`,
-`QECTransversalGate`, and `QECFaultTolerant` each store `<|"Instructions"->…,
-"Qubits"->…|>` and each independently defines `"Instructions"`, `"Qubits"`, `"Depth"`,
-`"InstructionCount"`, `"GateCounts"`, `"Measurements"`/`"Heralds"`, and a nearly
-identical `BarChart` summary box. This is not public bloat (the heads should stay
-separate), but it is internal duplication that guarantees drift: today only some
-gadgets have `"Heralds"`, only some have `"MeasurementCount"`, and none has a
-`QuantumCircuitOperator` view. **Recommendation: one shared internal gadget trait**
-(`qecGadgetProp[a, prop]` for the circuit-like properties, plus a shared box builder)
-that every gadget head delegates to. Then a new circuit-like property is added once and
-appears on all of them.
-
-**Three global limits and `QECClearCache`** are legitimate (`$…Limit` globals are the
-`$RecursionLimit` idiom; a cache-reset is a real maintenance need). Keep them. The one
-improvement is on the cache mechanism itself (§2.3).
-
-Net effect of (a)-(d): about 28 public symbols down to roughly 16, with no object head
-lost and no capability removed.
-
-### 2.2 "Function names are not the best"
-
-Measured against the QF house style, where heads are nouns
-(`QuantumState`, `QuantumOperator`, `QuantumChannel`, `QuantumCircuitOperator`,
-`PauliStabilizer`, `CliffordChannel`, `StabilizerFrame`, `GraphState`):
-
-- **`QECFaultTolerant` is the one head that is an adjective, not a noun.** It denotes
-  `FT(C)`, the fault-tolerant simulation of a circuit. **Rename to a noun:
-  `QECFaultTolerantCircuit`** (parallel to `QuantumCircuitOperator`), or `QECProtocol`
-  if the intent is the broader Def-10.5 object. `QECFaultTolerant[circuit, code]`
-  reads like a predicate; `QECFaultTolerantCircuit[circuit, code]` reads like the
-  object it is.
-- **`QECStimCircuit` returns a String, but "Circuit" names an object.** Every other
-  `…Circuit` in the layer (`QECSyndromeCircuit`, `EncodingCircuit`) is a WL object.
-  QF's own foreign-format exporter is `QuantumQASM`, a head, not a `…Circuit`. **Rename
-  to `QECStim`** (parallel to `QuantumQASM`) so the name stops promising an object it
-  does not return, and additionally expose it as `dem["StimCircuit"]` /
-  `QECSyndromeCircuit[…]["Stim"]` for discoverability.
-- **`QECCatState` names a gadget, not a state.** The object holds the preparation and
-  verification instructions for a cat state, not the state. This is a mild mismatch;
-  "cat state" is the accepted name for the GHZ ancilla, so the name is defensible, but
-  the object is a `QECCatGadget` in kind. Low priority; keep unless the gadget family
-  is renamed as a set.
-- **`QECClassicalHammingMatrix`** is verbose and, once internal (§2.1c), moot.
-- **`QECPauli*` (seven verbs)** collapse to one noun object `QECPauli` (§2.1a), which
-  is both fewer symbols and a better name pattern.
-
-Everything else is well named and idiomatic. `QECCode`, `QECNoiseModel`,
-`QECDetectorModel`, `QECSyndromeCircuit`, `QECRegister`, `QECPauliMeasurement`,
-`QECErrorCorrection`, `QECTransversalGate`, `QECLogicalErrorRate` are all clear nouns or
-clear operations, and the property names inside the objects are consistent and readable
-(`"Distance"`, `"LogicalOperators"`, `"DetectorMatrix"`, `"UndetectableFaults"`,
-`"OpenAssumptions"`, `"Overheads"`). The property vocabulary is a strength.
-
-### 2.3 "Signatures and downvalues are uncertain"
-
-- **`QECLogicalErrorRate` has a polymorphic return that forces the caller to branch on
-  `Head`.** It returns a symbolic polynomial (exact, code capacity), a machine number
-  (sampled, or numeric exact), or an `Association` with keys `"Rate"`, `"Acceptance"`,
-  `"Failure"` (exact, circuit level with heralds) or `"Rate"`, `"Acceptance"`,
-  `"Accepted"`, `"Shots"` (sampled, post-selected). The `Herald.wlt` and `Extraction.wlt`
-  suites lean on this and the design reason is honest (a conditional rate must carry its
-  acceptance). But a function whose return type depends on the noise level and the
-  presence of heralds is exactly the "uncertain signature" the review names. **Fix, the
-  QF-idiomatic way: `QECLogicalErrorRate[code, noise, …]` always returns the bare rate**
-  (Indeterminate when acceptance is 0), and the acceptance/failure decomposition becomes
-  a property surface on `QECDetectorModel`, which already owns `"DetectorRates"`,
-  `"ObservableRates"`, `"HeraldRates"`: add `dem["LogicalErrorRate"]`,
-  `dem["Acceptance"]`, `dem["Failure"]`. The post-selected `Association` is a
-  property-dispatch object waiting to be born; the detector model is its home. If a
-  one-call full report is wanted, use the `QuantumLinearSolve[m, b, All]` precedent:
-  `QECLogicalErrorRate[code, noise, All]` returns the full `Association`, the bare form
-  returns the number. Either way the default return is one type.
-
-- **`QECCode` (and the other heads) dispatch without a validity guard, with a
-  hand-maintained property list.** The pattern is `QECCode[a_Association]["Prop"]` with
-  no `QECCodeQ` predicate, so a malformed `QECCode[<|garbage|>]["Distance"]` still tries
-  to dispatch, and the `"Properties"` list is a literal constant that has already drifted
-  (`"Decoder"` appears twice). QF's own heads use `head[prop_?propQ, args] /;
-  HeadQ[Unevaluated[head]]` delegating to an internal `HeadProp`, with uniform
-  `undefprop`/`failprop` messages and a cache wrapper. **Fix: adopt that shape.** Add a
-  `QECCodeQ` (and per-head `…Q`) predicate guard, route through a single internal
-  `qecCodeProp[a, prop, args]`, keep the `::noprop` message but add the `::failprop`
-  half, and derive `"Properties"` from the actual rule set (or at minimum de-duplicate
-  it now). This removes the double `"Decoder"` and makes the surface self-describing.
-
-- **One `Quiet` violates the package's own stated rule.** `Measurement.wl:212` reads
-  `v = Quiet[Check[QECPauliVector[p], $Failed]]`, while `GF2.wl:67` states the house
-  rule ("a message either matters or should not be raised") and the package is otherwise
-  `Quiet`-free and `Print`-free (verified: one `Quiet`, zero `Print`/`Echo`). The intent
-  is to catch a bad-Pauli input and re-report it as `QECPauliMeasurement::pauli`, but
-  the message-free predicate for exactly this already exists: **guard on `QECPauliQ[p]`
-  first, then convert.** Concrete one-line fix.
-
-- **Argument order across the free functions is consistent and correct.**
-  `[code, noise, count/rounds, opts]` holds for `QECLogicalErrorRate`,
-  `QECDetectorModel`, and `QECStimCircuit`. Option handling uses `OptionsPattern` and
-  `OptionValue` throughout. No reordering needed.
-
-- **Idiom, calibrated.** The rebuild is functional-leaning: `With` dominates (101
-  occurrences) and the code is built on `Map`/`Fold`/`Table`/`Association` with
-  pattern-matched dispatch. It is not maximally idiomatic: `Module` is used 63 times to
-  `Block`'s 1, and 28 `Do` / 2 `While` / 2 `AppendTo` remain. Most of that is
-  concentrated in algorithms that are inherently imperative (GF(2) echelon reduction
-  with pivoting and paired column swaps in `Structure.wl`/`Encoder.wl`, ASAP scheduling
-  in `Circuit.wl`), where local mutable state is a defensible choice and `Internal`Bag`
-  is already used in place of `AppendTo` in the hot spots. This is polish, not a defect.
-  The one idiom item that is actually load-bearing is the `Quiet` above.
-
----
-
-## 3. Interaction with QuantumFramework and the stabilizer formalism
-
-The layer already composes with the engine in several clean places, and diverges from
-it in a few that are worth naming.
-
-### 3.1 Clean, keep and lean on
-
-- **Row layout is the engine's.** `QECPauliVector` produces `Join[xbits, zbits, {e}]`,
-  the `PauliRow` format, so a code's rows and a `PauliStabilizer`'s tableau are the same
-  objects (`Pauli.wlt` checks it row for row). This is the single best integration
-  decision in the layer.
-- **Two-way traffic with `PauliStabilizer` and `QuantumState`.** `QECCode[ps]` ingests
-  a stabilizer state; `code["PauliStabilizer"]` and `code["State"]` emit one and a
-  `QuantumState`. The encoder runs through the engine's compiled bulk path
-  `ps["ApplyCircuit", gates]` rather than gate-by-gate (about 25x faster, per the source
-  note).
-- **`code["EncodingCircuit"]` returns a real `QuantumCircuitOperator`.** A user can
-  draw and run it.
-- **`noise["QuantumChannel", qubits]` returns a `QuantumChannel`.** The depolarizing
-  convention is converted correctly (the model's `p` spread over three Paulis maps to
-  the engine's `q = 4p/3`); `Noise.wlt` checks against the engine's own mixture.
-- **Syndromes are read as `(1 - ps["Expectation", p])/2`, never `ps["M", q]`,** which
-  sidesteps the generator-set-dependence documented in `EngineMeasurementBug.md`. That
-  bug is now fixed in the engine (`agExtendToSymplecticBasis` builds genuine
-  destabilizers), so the workaround is no longer forced, but reading through
-  `"Expectation"` remains a correct and clean choice.
-
-### 3.2 Awkward or missing, worth fixing
-
-- **The flat `{op, q…}` instruction list is a parallel universe to
-  `QuantumCircuitOperator`.** Every gadget stores and exposes this list, and **none
-  offers a `QuantumCircuitOperator` view or a `["Diagram"]`.** The flat list is the
-  right *internal* representation (the frame propagator walks millions of these; a
-  `Switch` on a string part is the cheapest dispatch), so the internal choice should
-  stay. But there is no bridge out: a user cannot turn a syndrome circuit, a cat gadget,
-  or an assembled `FT(C)` into a QF circuit to draw it, compose it, or run it on the
-  engine. **This is the highest-value integration addition. Give the shared gadget trait
-  a `["QuantumCircuitOperator"]` and a `["Diagram"]`,** built by extending the existing
-  `instructionEngineGates` map (which already handles the gate ops; add R -> reset,
-  M/MH -> `QuantumMeasurementOperator`). Symmetrically, `QECFaultTolerant` and the
-  circuit-consuming entry points should **accept a `QuantumCircuitOperator`** and lower
-  it to the flat list, so a user's own circuit composes in rather than having to be
-  hand-written as `{{"R",1},{"H",1},…}`.
-
-- **`QECTransversalGate` duplicates the engine's gate matrices.** `$transversalGateMatrix`
-  hardcodes X/Y/Z/H/S/V/… and is kept in sync with
-  `QuantumOperator[name]["MatrixRepresentation"]` only by a test. **Read the matrices
-  from `QuantumOperator` (memoized at first use)** and delete the literal table. The
-  test that guards the drift then becomes unnecessary because there is nothing to drift.
-
-- **The phase-carrying Clifford conjugation is a genuine QF capability gap, not just a
-  QEC choice.** `transversalAction` recomputes how a Clifford conjugates each Pauli,
-  *with the Z4 phase*, by dense matrix and trace overlap, because the engine's frame
-  conjugation (`framePropagate`, and `PauliStabilizer`'s own gate updates) drops signs.
-  The whole point of the transversal-gate layer is a sign (transversal S is logical
-  S†, because `Y^7 = -Ybar`), so the phase cannot be dropped. The engine's
-  `StabilizerFrame` already tracks phase-carrying relating Paulis in its `"Paulis"` key,
-  so the primitive nearly exists internally. **Longer-term, QF-side: expose a
-  phase-carrying "conjugate this Pauli by this Clifford" primitive** from the stabilizer
-  engine; then `transversalAction`'s dense-matrix route can be retired. Short-term, keep
-  it, but record the dependency so the migration knows what the layer is working around.
-
-- **Noise is simulated by the layer's own frame propagator, in parallel to QF's
-  circuit-application path.** This is deliberate and correct for detector-model
-  construction (GF(2) frame propagation is the right tool, and it is what makes the exact
-  symbolic polynomials possible), so no change is needed. It is worth stating plainly in
-  the guide page that the QEC layer runs its own Clifford simulation for noise rather
-  than routing through `CliffordChannel`, so a reader does not expect the two to be the
-  same code path.
-
-- **Foreign-format returns are fine as they are.** `QECStim` returning a String is the
-  right call (it mirrors QASM export); `QECCodeCatalog` returning a `Dataset` is good.
-  The only change is the naming and the property-level reachability above.
-
----
-
-## 4. The redesign
-
-### 4.1 Principles
-
-1. Property dispatch over standalone symbols. Keep the object heads; move utilities and
-   constructions onto them.
-2. Heads are nouns. Rename the one adjective and the one string-returning "Circuit".
-3. One return type per signature. Kill the polymorphic rate; put its decomposition on
-   the detector model.
-4. Bridge to QF objects at the boundary; keep the fast flat representation inside.
-5. Forward-compatible with a bosonic sibling: the shared symbols stay code-type-agnostic;
-   the qubit-specific helpers go internal.
-6. Update, do not rewrite. Every change below is a rename, a re-home, a guard, or an
-   added property. No physics moves.
-
-### 4.2 Keep / merge / internalize / rename
+### Keep / merge / internalize / rename / add
 
 | Current | Action | Becomes |
 |---|---|---|
-| `QECCode` | **keep**, add guard + fix `"Properties"` + absorb constructions | `QECCode` (qubit stabilizer code) |
-| `QECNoiseModel` | keep | `QECNoiseModel` |
-| `QECDetectorModel` | keep, add `"LogicalErrorRate"`/`"Acceptance"`/`"Failure"`/`"StimCircuit"` | `QECDetectorModel` |
-| `QECSyndromeCircuit` | keep, add `"QuantumCircuitOperator"`/`"Diagram"`/`"Stim"` | `QECSyndromeCircuit` |
-| `QECRegister` | keep | `QECRegister` |
-| `QECCatState`, `QECPauliMeasurement`, `QECErrorCorrection`, `QECTransversalGate` | keep as heads; share the gadget trait | (unchanged names) |
-| `QECFaultTolerant` | **rename** (adjective → noun) | `QECFaultTolerantCircuit` |
-| `QECLogicalErrorRate` | keep, **de-polymorphize** the return | `QECLogicalErrorRate` (bare rate; `All` for the report) |
-| `QECConcatenate`, `QECRemoveQubit`, `QECPasteCodes` | **merge** onto the head | `QECCode["Concatenate"\|"RemoveQubit"\|"Paste", …]` |
-| `QECPauliVector/String/Q/Weight/CommuteQ/Product/Phase` (7) | **merge** into one object | `QECPauli` (+ properties) |
-| `QECStimCircuit` | **rename** + also a property | `QECStim` (and `dem["StimCircuit"]`) |
+| `QECCode` | keep; add guard, fix `"Properties"`, absorb constructions, **expose operational objects** | `QECCode` |
+| `QECNoiseModel` | keep; **also consumable as a `QuantumChannel`** | `QECNoiseModel` |
+| `QECDetectorModel` | keep; add `"LogicalErrorRate"`/`"Acceptance"`/`"Failure"`/`"StimString"` | `QECDetectorModel` |
+| `QECSyndromeCircuit` + 5 gadgets | keep; share the trait; add `"QuantumCircuitOperator"`/`"Diagram"`; add `"SyndromeMeasurement"` | (same, `QECFaultTolerant` renamed) |
+| `QECFaultTolerant` | rename (adjective -> noun) | `QECFaultTolerantCircuit` |
+| `QECLogicalErrorRate` | keep; de-polymorphize; accept a channel | `QECLogicalErrorRate` |
+| `QECConcatenate`, `QECRemoveQubit`, `QECPasteCodes` | merge onto the head (they are code morphisms) | `QECCode["Concatenate"\|"RemoveQubit"\|"Paste", …]` |
+| `QECPauliVector/String/Q/Weight/CommuteQ/Product/Phase` | merge into one object | `QECPauli` (+ `QECPauliQ` kept as the guard) |
+| `QECStimCircuit` | rename + property | `QECStim`, `dem["StimString"]` |
 | `QECCodeCatalog` | merge onto head | `QECCode["Catalog"]` |
-| `QECClassicalHammingMatrix` | **internalize** | `PackageScope` |
-| `QECClearCache` | keep; fix the mechanism (§4.4) | `QECClearCache` |
-| `$QECExactEnumerationLimit`, `$QECExactDetectorLimit`, `$QECDecoderSubsetLimit` | keep | (unchanged) |
+| `QECClassicalHammingMatrix` | internalize | `PackageScope` |
+| `QECClearCache`, 3 `$…Limit` globals | keep | (unchanged) |
+| decoder | **add a first-class object** | `QECDecoder` (consumes `QECDetectorModel`) |
 
-Public surface: from **28** to about **16** (10 heads + `QECLogicalErrorRate` +
-`QECStim` + `QECClearCache` + 3 limits), with `QECPauli` replacing seven and
-constructions/catalog folded onto `QECCode`. No object and no capability is lost.
+### Order of work
 
-### 4.3 The proposed public API
+1. **Trivial, behavior-preserving, do first:** de-duplicate `QECCode["Properties"]`;
+   replace the `Quiet` with a `QECPauliQ` guard; internalize `QECClassicalHammingMatrix`.
+2. **The gadget trait and the `QuantumCircuitOperator`/`Diagram` bridge.** Highest
+   day-one value; isolated to the six gadget heads plus one converter.
+3. **The operational objects on `QECCode`** (`"Encoder"`, `"Codespace"`,
+   `"SyndromeMeasurement"`, `"Recovery"`, `"LogicalChannel"`) and noise-as-channel. This is
+   Tier B's core and where the design earns its keep.
+4. **De-polymorphize `QECLogicalErrorRate`** (move the report onto `QECDetectorModel`), and
+   add the `QECDecoder` object.
+5. **Fold constructions and the catalog onto `QECCode`; collapse the Pauli verbs into
+   `QECPauli`; rename the two heads.** Deprecate old symbols with one-release aliases.
+6. **Read `QECTransversalGate`'s matrices from `QuantumOperator`**, and, on the QF side,
+   propose a phase-carrying Clifford-conjugation primitive so the dense-matrix
+   `transversalAction` can retire (the one genuine QF capability gap the layer works
+   around).
 
-**`QECCode`: the qubit stabilizer code (the core everything rests on).**
-
-```
-QECCode[{gens}] | QECCode[{rows}] | QECCode[ps_PauliStabilizer]     (* construct *)
-QECCode[name] | QECCode[name, args]                                 (* named / family *)
-QECCode["CSS", hx, hz] | QECCode["Concatenate", outer, inner]
-QECCode["RemoveQubit", code, (q)] | QECCode["Paste", c1, c2, s1, s2]  (* constructions, unified *)
-QECCode["Catalog"]                                                  (* the Dataset *)
-```
-
-Properties unchanged in content, with two fixes: a `QECCodeQ` guard on the dispatch
-rule, and a `"Properties"` list derived from the rules (dropping the duplicate
-`"Decoder"`). The QF bridges (`"PauliStabilizer"`, `"State"`, `"EncodingCircuit"`) stay.
-
-**`QECPauli`: one object in place of seven functions.**
-
-```
-QECPauli["XZZXI"] | QECPauli[row]        (* construct from string or row *)
-p["String"] | p["Vector"] | p["Weight"] | p["Phase"] | p["QuditCount"]
-p["Times", q]  (or  p ** q)              (* product, Z4 phase carried *)
-p["CommutesWith", q]
-QECPauliQ[expr]                          (* keep the bare predicate; it is the guard others use *)
-```
-
-`QECPauliQ` is the one member worth keeping as a bare function, because it is the
-message-free guard the rest of the layer needs (it is the correct fix for the `Quiet`
-in §2.3). The other six fold into properties.
-
-**`QECNoiseModel`, unchanged**, with one design note: it carries three levels in one
-head via two internal shapes (`"Probabilities"` for code-capacity/phenomenological,
-`"Rates"` for circuit). That union is defensible (a code-capacity model is a
-phenomenological one with `q=0`, and the same detector machinery consumes both), so keep
-it; but if circuit-level rates and per-qubit channels diverge further, splitting
-`QECNoiseModel["Circuit", …]` into its own head is the fallback. Keep `"QuantumChannel"`.
-
-**`QECLogicalErrorRate`: one return type.**
-
-```
-QECLogicalErrorRate[code, noise, opts]          -> the rate (number or polynomial; Indeterminate if acceptance 0)
-QECLogicalErrorRate[code, noise, count, opts]   -> the sampled rate (number)
-QECLogicalErrorRate[code, noise, All, opts]     -> <|"Rate","Acceptance","Failure",...|>  (the old Association)
-```
-
-and the same decomposition on the detector model: `dem["LogicalErrorRate"]`,
-`dem["Acceptance"]`, `dem["Failure"]`. Options unchanged
-(`"Decoder"`, `"DecoderReach"`, `"Rounds"`, `"Extraction"`).
-
-**`QECDetectorModel`, unchanged, plus the rate/acceptance/Stim properties** listed in
-§4.2, so the memory experiment's conditional outputs live on the object that owns the
-detector matrix rather than leaking out of the rate function.
-
-**`QECSyndromeCircuit` and the gadgets** (`QECCatState`, `QECPauliMeasurement`,
-`QECErrorCorrection`, `QECTransversalGate`, `QECFaultTolerantCircuit`) keep their
-constructors and properties, and all gain, through the shared trait,
-`["QuantumCircuitOperator"]` and `["Diagram"]`. `QECFaultTolerantCircuit` and the
-syndrome circuit additionally **accept a `QuantumCircuitOperator`** as input.
-
-**`QECStim`** (renamed from `QECStimCircuit`) keeps its signature and `"Observable"`
-option and returns a String, and is additionally reachable as `dem["StimCircuit"]`.
-
-**`QECRegister`, `QECClearCache`, the three `$…Limit` globals** are unchanged in name and
-signature.
-
-### 4.4 The shared gadget substrate, and the cache
-
-The six circuit-carrying heads should delegate their circuit-like properties to one
-internal handler:
-
-```
-qecGadgetProp[a_Association, "Instructions"]        := a["Instructions"]
-qecGadgetProp[a_Association, "Qubits"]              := a["Qubits"]
-qecGadgetProp[a_Association, "Depth"]               := Length[circuitSchedule[a["Instructions"], a["Qubits"]]]
-qecGadgetProp[a_Association, "InstructionCount"]    := Length[a["Instructions"]]
-qecGadgetProp[a_Association, "GateCounts"]          := Counts[First /@ a["Instructions"]]
-qecGadgetProp[a_Association, "Measurements"]        := Count[a["Instructions"], {"M", _}]
-qecGadgetProp[a_Association, "Heralds"]             := Count[a["Instructions"], {"MH", _}]
-qecGadgetProp[a_Association, "QuantumCircuitOperator"] := gadgetToQuantumCircuit[a]
-qecGadgetProp[a_Association, "Diagram"]             := gadgetToQuantumCircuit[a]["Diagram"]
-```
-
-Each head keeps its own physics properties (a syndrome circuit's `"MeasurementLabels"`,
-a measurement gadget's `"DataWeights"`, a transversal gate's `"LogicalAction"`) and
-forwards the shared ones. A single `qecGadgetBox` builds the summary box. Adding a
-circuit-like property then happens once.
-
-For the cache, replace the hand-maintained `$QECMemoisedFunctions` list with a single
-keyed store: memoize on one internal `Association` (`$qecCache[{function, codeData,
-args}]`) rather than on the DownValues of each internal symbol, so `QECClearCache[]`
-is `$qecCache = <||>` and no function can escape the reset by being forgotten in a list.
-This is the WL "one cache association" pattern and removes the maintenance hazard the
-current `Cache.wl` header itself warns about.
-
-### 4.5 Forward compatibility with the bosonic branch
-
-The brief's target is a bosonic code object beside the qubit `QECCode`. The redesign
-serves it directly:
-
-- **The shared analysis symbols already have code-type-agnostic names**
-  (`QECNoiseModel`, `QECLogicalErrorRate`, `QECDetectorModel`). Keep them generic and
-  let them dispatch on the code object's type. A bosonic loss channel is
-  `QECNoiseModel["Loss", …]`; the logical-error-rate *question* is the same, even
-  though the enumeration under it is not.
-- **Internalizing the seven `QECPauli*` functions is what keeps the public layer
-  forward-compatible.** They are the only intrinsically qubit-specific symbols in the
-  top level. A bosonic code has no Pauli row. Freezing seven qubit-Pauli verbs into the
-  public API right before a non-qubit sibling arrives is exactly the thing to avoid;
-  folding them into one `QECPauli` object that the qubit `QECCode` uses, and that the
-  bosonic code simply does not, is clean.
-- **The gadget trait (§4.4) is code-type-agnostic.** "Instructions", "Depth",
-  "QuantumCircuitOperator" mean the same thing for any code whose gadgets are circuits.
-- Suggested shape when the branch lands: `QECCode` stays the qubit stabilizer code, a
-  `QECBosonicCode` (or a bosonic backend selected at construction) sits beside it, and
-  both answer `QECLogicalErrorRate[code, noise]`. Nothing in the redesign blocks that;
-  the only thing that would have blocked it is qubit-Pauli verbs at the top level, which
-  this removes.
-
-### 4.6 Order of work
-
-1. **Cheap and self-contained, do first:** de-duplicate `QECCode["Properties"]`; replace
-   the `Quiet` in `Measurement.wl` with a `QECPauliQ` guard; internalize
-   `QECClassicalHammingMatrix`. None touches behavior; all three close audit findings
-   outright.
-2. **The gadget trait and the `QuantumCircuitOperator`/`Diagram` bridge.** Highest user
-   value, isolated to the six gadget heads plus one new converter.
-3. **De-polymorphize `QECLogicalErrorRate`** and move the acceptance/failure
-   decomposition onto `QECDetectorModel`. This changes a return type, so it is the one
-   step with a test-migration cost (`Herald.wlt`, `Extraction.wlt`).
-4. **Fold the constructions and the catalog onto `QECCode`; collapse the seven Pauli
-   functions into `QECPauli`.** Deprecate the old symbols with a one-release alias if
-   any notebook depends on them.
-5. **Rename `QECFaultTolerant` → `QECFaultTolerantCircuit` and `QECStimCircuit` →
-   `QECStim`,** and adopt the QF property-dispatch shape (guard + `undefprop`/`failprop`)
-   across the heads.
-6. **Read `QECTransversalGate`'s matrices from `QuantumOperator`;** and, on the QF side
-   and separately, propose a phase-carrying Clifford-conjugation primitive so the
-   dense-matrix `transversalAction` can eventually be retired.
-
-Steps 1-2 are safe to land before the migration into `Kernel/QEC/`. Steps 3-6 are the
-ones worth settling before reference pages freeze the names, because every one of them
-is a name or a return type a doc page would otherwise pin in place.
+Steps 1-2 are safe before the migration into `Kernel/QEC/`. Steps 3-6 change names, return
+types, and the object model, so they are the ones to settle before reference pages freeze
+them.
 
 ---
 
-*The layer is a strong first implementation with the right internal choices: the
-engine-compatible row layout, the exact-and-symbolic detector model, the honest
-open-assumption accounting, and a functional core with 593 passing cross-checked tests.
-The redesign changes none of that. It trims a doubled surface back to its objects,
-gives every gadget a way back into a QF circuit, makes one return type per signature,
-and takes the qubit-specific helpers out of the top level so the bosonic sibling has
-room to stand beside `QECCode` rather than in front of it.*
+## 6. References
+
+Operational and categorical formulation (what the minimal objects are):
+
+- E. Knill, R. Laflamme, L. Viola, *Theory of quantum error correction for general noise*,
+  Phys. Rev. Lett. 84, 2525 (2000), [doi:10.1103/PhysRevLett.84.2525](https://doi.org/10.1103/PhysRevLett.84.2525).
+  The encode/noise/recover composition and the Knill-Laflamme condition.
+- B. Rahn, A. C. Doherty, H. Mabuchi, *Exact performance of concatenated quantum codes*,
+  Phys. Rev. A 66, 032304 (2002), [doi:10.1103/PhysRevA.66.032304](https://doi.org/10.1103/PhysRevA.66.032304).
+  The logical channel, and concatenation as its composition.
+- D. Kribs, R. Laflamme, D. Poulin, *Unified and generalized approach to quantum error
+  correction*, Phys. Rev. Lett. 94, 180501 (2005), [doi:10.1103/PhysRevLett.94.180501](https://doi.org/10.1103/PhysRevLett.94.180501);
+  and *Operator quantum error correction*, Quantum Inf. Comput. 6, 382 (2006),
+  [doi:10.1017/CBO9781139034807.008](https://doi.org/10.1017/CBO9781139034807.008).
+- D. Poulin, *Stabilizer formalism for operator quantum error correction*, Phys. Rev. Lett.
+  95, 230504 (2005), [doi:10.1103/PhysRevLett.95.230504](https://doi.org/10.1103/PhysRevLett.95.230504);
+  G. Dauphinais, D. Kribs, M. Vasmer, *Stabilizer formalism for operator algebra quantum
+  error correction*, Quantum 8, 1261 (2024), [doi:10.22331/q-2024-02-21-1261](https://doi.org/10.22331/q-2024-02-21-1261).
+  The operator-algebra frame for subsystem and bosonic forward-compatibility.
+- A. Cowtan, S. Burton, *CSS code surgery as a universal construction*, Quantum 8, 1344
+  (2024), [doi:10.22331/q-2024-05-14-1344](https://doi.org/10.22331/q-2024-05-14-1344).
+  Codes as objects, constructions as morphisms.
+- R. Cleve, D. Gottesman, *Efficient computations of encodings for quantum error
+  correction*, Phys. Rev. A 56, 76 (1997), [doi:10.1103/PhysRevA.56.76](https://doi.org/10.1103/PhysRevA.56.76).
+  The encoder as an efficiently computable isometry.
+
+Software design and the reference packages (how a QEC framework is layered and named):
+
+- C. Gidney, *Stim: a fast stabilizer circuit simulator*, Quantum 5, 497 (2021),
+  [doi:10.22331/q-2021-07-06-497](https://doi.org/10.22331/q-2021-07-06-497),
+  [arXiv:2103.02202](https://arxiv.org/abs/2103.02202). `Circuit`, `DetectorErrorModel`,
+  `PauliString`, `Tableau`.
+- P.-J. H. S. Derks et al. (incl. J. Eisert), *Designing fault-tolerant circuits using
+  detector error models*, Quantum 9, 1905 (2025), [doi:10.22331/q-2025-11-06-1905](https://doi.org/10.22331/q-2025-11-06-1905).
+  The DEM as the standardized circuit-to-decoder interface, and the three-level circuit
+  abstraction.
+- M. Kang et al. (incl. K. R. Brown), *QUITS: a modular qLDPC code circuit simulator*,
+  Quantum 9, 1931 (2025), [doi:10.22331/q-2025-12-05-1931](https://doi.org/10.22331/q-2025-12-05-1931).
+  The decoupled code / circuit / noise / DEM / decoder / rate pipeline.
+- O. Higgott, *PyMatching*, ACM Trans. Quantum Comput. 3, 1 (2022),
+  [doi:10.1145/3505637](https://doi.org/10.1145/3505637). The decoder that consumes a DEM.
+- N. Rengaswamy et al. (incl. H. D. Pfister), *Logical Clifford synthesis for stabilizer
+  codes*, IEEE Trans. Quantum Eng. 1, 1 (2020), [doi:10.1109/TQE.2020.3023419](https://doi.org/10.1109/TQE.2020.3023419).
+  The transversal/logical-gate layer as synthesis on the code.
+- QuantumClifford.jl and its `QECCore.jl` interface package (QuantumSavory):
+  `parity_checks`, `code_n`/`code_k`/`code_s`, `distance`, `logx_ops`/`logz_ops`,
+  `naive_syndrome_circuit`, `PauliFrame`, `PauliError`, `evaluate_decoder`. The one
+  ecosystem that has already factored the code interface into a separate package, which is
+  the direction this layer's `Kernel/QEC/` migration points.
+
+Grounding for the code families and the honest scope:
+
+- S. Bravyi et al., bivariate-bicycle qLDPC codes, Nature 627, 778 (2024),
+  [doi:10.1038/s41586-024-07107-7](https://doi.org/10.1038/s41586-024-07107-7),
+  [arXiv:2308.07915](https://arxiv.org/abs/2308.07915); D. Gottesman, *Stabilizer Codes and
+  Quantum Error Correction*, [arXiv:quant-ph/9705052](https://arxiv.org/abs/quant-ph/9705052)
+  and the 2026 book the layer is built against; Dennis, Kitaev, Landahl, Preskill,
+  *Topological quantum memory*, [arXiv:quant-ph/0110143](https://arxiv.org/abs/quant-ph/0110143).
+
+---
+
+*The layer is a strong implementation whose internal choices are right and whose module
+layering already matches the best of the field. What it has not done is present itself in
+the object language that quantum theory uses for error correction and that
+QuantumFramework is built on. A code is an encoding isometry, its noise is a channel, its
+syndrome extraction is a measurement, and its correction cycle is a channel: the framework
+has all four types already, and the stabilizer and detector-error-model engines are the
+efficient way to compute them. The redesign trims the doubled surface to its objects, and
+then makes those objects the operational ones, so the QEC cycle composes with the rest of
+QuantumFramework instead of standing beside it in a private vocabulary.*
