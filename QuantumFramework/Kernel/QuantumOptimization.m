@@ -222,17 +222,17 @@ ClassiqSetup::PythonEvaluators="WARNING: Non Python evaluator found";
 
 ClassiqSetup::"ClassiqInstallation"="WARNING: Classiq Installation failed";
 
-ClassiqSetup::"UpdatingClassiq"="Installing latest Classiq version";
+ClassiqSetup::"KeychainToken"="Classiq is importable but its authentication token is not readable from this interpreter (`1`). On macOS the token lives in the login Keychain and can be read only by the exact Python that wrote it. Pin that interpreter by passing \"Executable\" -> path to ClassiqSetup, or run Classiq's authenticate() inside this session so the same binary writes and reads the token.";
 
 ClassiqSetup::"PythonVersion"="WARNING: Incompatible Python version detected. Please install a supported Python version (3.10\[Dash]3.12). Make sure a compatible Python installation is properly \!\(\*TemplateBox[{\"configured\", {URL[\"https://reference.wolfram.com/language/workflow/ConfigurePythonForExternalEvaluate.html\"], None}, \"https://reference.wolfram.com/language/workflow/ConfigurePythonForExternalEvaluate.html\", \"HyperlinkActionRecycled\", {\"HyperlinkActive\"}, BaseStyle -> {\"Hyperlink\"}, HyperlinkAction -> \"Recycled\"},\n\"HyperlinkTemplate\"]\) and \!\(\*TemplateBox[{\"registered\", {URL[\"https://reference.wolfram.com/language/ref/RegisterExternalEvaluator.html\"], None}, \"https://reference.wolfram.com/language/ref/RegisterExternalEvaluator.html\", \"HyperlinkActionRecycled\", {\"HyperlinkActive\"}, BaseStyle -> {\"Hyperlink\"}, HyperlinkAction -> \"Recycled\"},\n\"HyperlinkTemplate\"]\) for ExternalEvaluate";
 
-Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"LatestClassiqVersion"->"0.86.0"};
+Options[ClassiqSetup]={"CheckDependencies"->{},"InstallPackages"->{},"Executable"->Automatic,"CheckToken"->False};
 
 ClassiqSetup[]:=ClassiqSetup[{"ClassiqVersion","Session"}];
 
 ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 	
-	{evaluators,cachedResults,reporter,output,classiq,ver,dependencies,dep,allpackages,packages,pak,evaluator,session,list,versions,compatible,path},
+	{evaluators,cachedResults,reporter,output,classiq,ver,dependencies,dep,allpackages,packages,pak,evaluator,session,list,versions,compatible,path,exe,chosen,tokenProbe,tokenStatus},
 		
 		cachedResults=<||>;
 		
@@ -263,13 +263,20 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			);		
 	
 		evaluators=FindExternalEvaluators["Python"];
+
+		exe=OptionValue["Executable"];
 		
 		
 		
-		If[Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
+		If[!StringQ[exe]&&Length@Normal[evaluators[All,"Evaluator"]]<1, Message[ClassiqSetup::PythonEvaluators]; Return[$Failed],
 			
+			If[StringQ[exe],
+
+			(* Pinned interpreter: skip discovery and bind the session to exactly this executable, so the Keychain-owning Python is the one used. *)
+			session=StartExternalSession[<|"System" -> "Python", "Executable"->exe, "ID" -> "default-python-session"|>],
+
 			If[$VersionNumber > 14.0,
-			
+
 			(* TODO: enumerate exact ExternalEvaluate::* messages emitted on bad/missing Python evaluators and tighten the suppression list *)
 			versions=Quiet[
 				(#->ExternalEvaluate[#,"import sys; sys.version_info"]/._Failure->$Failed/.x_List:>x[[;;3]])&/@ExternalEvaluators["Python"],
@@ -277,7 +284,9 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			];
 			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
 			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
-			path=First[First[compatible]]["Evaluator"];
+			(* Prefer a compatible interpreter that already holds classiq (so the session lands on the one that owns the Keychain token); otherwise keep the highest-version pick. *)
+			chosen=SelectFirst[compatible,installedQ["classiq",First[#]["Evaluator"]]&,First[compatible]];
+			path=First[chosen]["Evaluator"];
 			session=StartExternalSession[<|"System" -> "Python", "Evaluator"->path ,"ID" -> "default-python-session"|>],
 			
 			versions=FindExternalEvaluators["Python"][All,"Executable"]//Normal//Values;
@@ -285,8 +294,10 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			versions=Table[py->Quiet[ExternalEvaluate[<|"System"->"Python","Executable"->py|>,"import sys; sys.version_info"],{ExternalEvaluate::script, ExternalEvaluate::extss, ExternalEvaluate::nofile, ExternalEvaluate::venv, General::stop}]/._Failure->$Failed/.x_List:>x[[;;3]],{py,versions}];
 			compatible=DeleteDuplicates@ReverseSortBy[Select[DeleteCases[versions,_->$Failed],#[[2,2]]>=10&&#[[2,2]]<=12&],#[[2]]&];
 			If[MatchQ[compatible,{}],Return[ClassiqSetup::"PythonVersion",Module]];
-			path=First[First[compatible]];
+			chosen=SelectFirst[compatible,installedQ["classiq",First[#]]&,First[compatible]];
+			path=First[chosen];
 			session=StartExternalSession[<|"System"->"Python","Evaluator"->path,"ID"->"DefaultPythonSession"|>]
+			]
 			];
 		
 			reporter[<|"Evaluators"->evaluators|>];
@@ -295,17 +306,23 @@ ClassiqSetup[prop : _String | {__String} | All ,opts:OptionsPattern[]]:=Module[
 			
 			evaluator=session["Evaluator"];
 		
-			classiq=RunProcess[{evaluator,"-m","pip","--quiet","install","classiq"}];
+			(* Install or upgrade classiq in one step. pip resolves the latest release from PyPI, which is the source of truth for the latest version; never compare against a hardcoded constant, the repo clone, or the docs. *)
+			classiq=RunProcess[{evaluator,"-m","pip","--quiet","install","--upgrade","classiq"}];
 			
 					
 			If[!installedQ["classiq",evaluator],
-				Print[ClassiqSetup::ClassiqInstallation]; Return[$Failed],
-				ver=StringTrim@RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
-				If[!MatchQ[ver,OptionValue["LatestClassiqVersion"]],Print[ClassiqSetup::UpdatingClassiq];RunProcess[{evaluator,"-m","pip","--quiet","install","classiq","--upgrade"}]]
+				Message[ClassiqSetup::ClassiqInstallation]; Return[$Failed]
 			];
 			
 			ver=StringTrim@RunProcess[{evaluator,"-c","import classiq; print(classiq.__version__)"},"StandardOutput"];
-			
+
+			(* Opt-in Keychain readability check ("CheckToken" -> True). classiq keeps its auth token in the login Keychain, readable only by the exact Python that wrote it; this mirrors classiq's own accessor to see whether this interpreter can read it. The read itself prompts on a non-owning binary, so the check stays off by default. *)
+			If[TrueQ[OptionValue["CheckToken"]],
+				tokenProbe="import sys\ntry:\n from classiq._internals.authentication.password_manager import KeyringPasswordManager\n try:\n  sys.stdout.write('READABLE' if KeyringPasswordManager().access_token else 'ABSENT')\n except Exception as e:\n  sys.stdout.write('DENIED:'+type(e).__name__)\nexcept Exception as e:\n sys.stdout.write('UNKNOWN:'+type(e).__name__)\n";
+				tokenStatus=StringTrim@RunProcess[{evaluator,"-c",tokenProbe},"StandardOutput"];
+				If[StringStartsQ[tokenStatus,"ABSENT"|"DENIED"],Message[ClassiqSetup::KeychainToken,evaluator]]
+			];
+
 			reporter[<|"ClassiqVersion"->ver|>];
 			
 			dep=If[Length@dependencies>=1,
