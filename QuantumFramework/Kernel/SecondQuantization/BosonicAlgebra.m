@@ -173,15 +173,27 @@ Block[{zassTerm},
 BosonicVEV::usage =
 "\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"]}], \"]\"}]\) Computes the vacuum expectation value \[LeftAngleBracket]0\[VerticalSeparator]expr\[VerticalSeparator]0\[RightAngleBracket] by normal-ordering expr and extracting the scalar (c-number) part.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"]}], \"]\"}]\) Auto-detects non-commutative variables from expr.\n\!\(\*RowBox[{\"BosonicVEV\", \"[\", RowBox[{StyleBox[\"expr\", \"TI\"], \",\", StyleBox[\"vars\", \"TI\"], \",\", \"Method->\", StyleBox[\"m\", \"TI\"]}], \"]\"}]\) Passes method options to BosonicNormalOrder.";
 
+BosonicVEV::novars =
+"No field variables were recognized in `1`. Ladder operators must be Formal symbols (see FieldVariables), or be given explicitly as BosonicVEV[expr, vars]."
+
 Options[BosonicVEV] = Options[BosonicNormalOrder];
 
 BosonicVEV[expr_, opts : OptionsPattern[]] :=
     With[{vars = ExtractNCVars[{expr}]},
-        (* A c-number carries no field variables; it is its own vacuum expectation.
+        (* Non-formal symbols are scalars, so with no field variables the only
+           operator structure left is a ** joining c-numbers; SuperDagger instead
+           means ladder operators were meant but not written as Formal symbols.
            Short-circuit before re-dispatching: BosonicVEV[expr, {}] would re-match
            this same rule ({} is absorbed as empty options), so calling it here would
            recurse without bound. *)
-        With[{value = If[vars === {}, expr, BosonicVEV[expr, vars, opts]]},
+        With[{value = Which[
+            vars =!= {},
+                BosonicVEV[expr, vars, opts],
+            FreeQ[expr, SuperDagger],
+                vevCollapse[expr],
+            True,
+                Message[BosonicVEV::novars, expr]; $Failed
+        ]},
             (* An unevaluated inner call means there is nothing to read off; let
                this call stay unevaluated too rather than echo the vars back. *)
             value /; Head[value] =!= BosonicVEV

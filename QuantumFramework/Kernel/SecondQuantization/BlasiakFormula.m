@@ -97,8 +97,6 @@ ParseBlasiakMonomial[expr_, var_] := Module[{factors, typed, bad, blocks},
 
     blocks = {#[[1, 1]], Total[#[[All, 2]]]} & /@ Split[typed, First[#1] === First[#2] &];
 
-    (* padding to a creator-led, annihilator-closed word makes blocks alternate with even
-       length, so odd and even positions pair up as r with s *)
     blocks = Join[
         If[blocks =!= {} && blocks[[1, 1]] === "b", {{"bdag", 0}}, {}],
         blocks,

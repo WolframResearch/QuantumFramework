@@ -170,8 +170,8 @@ rulesAN = {
 };
 
 
-canonicalizeModeOrder[expr_] :=
-    expr //. NonCommutativeMultiply[
+canonicalizeGenerators[expr_] :=
+    (expr /. Exp[g_] :> Exp[Expand[g]]) //. NonCommutativeMultiply[
             a___,
             x : (mx_?FormalSymbolQ | SuperDagger[mx_?FormalSymbolQ]),
             y : (my_?FormalSymbolQ | SuperDagger[my_?FormalSymbolQ]),
@@ -285,7 +285,7 @@ AntinormalOrdered[expr_] /; ladderPolynomialQ[expr] :=
 
 expApplyRules[expr_, assum_, rules_] :=
     Assuming[assum,
-        Simplify[canonicalizeModeOrder[expr] /. rules,
+        Simplify[canonicalizeGenerators[expr] /. rules,
             ExcludedForms -> _GeneralizedPower
         ]
     ]

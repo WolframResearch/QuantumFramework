@@ -14,7 +14,7 @@ PackageExport["OperatorVariance"]
 
 PackageExport["FieldVariables"]
 
-PackageExport["OrderVariables"]
+PackageScope["OrderVariables"]
 
 PackageExport["ToBosonicOperator"]
 
@@ -200,33 +200,41 @@ G1Correlation[state_QuantumState, {{r1_, t1_}, {r2_, t2_}}] :=Block[{aOp, eMinus
 ]
 
 
-Options[CovarianceMatrix] = {"QuadratureScaling" -> 1/Sqrt[2]};
+Options[CovarianceMatrix] = {"QuadratureScaling" -> 1/Sqrt[2], "ReturnMeans" -> False};
+
+CovarianceMatrix::order = "Mode order `1` is not within the `2` mode(s) of the given state.";
+
+CovarianceMatrix::norm = "The state has norm `1` rather than 1; moments were rescaled accordingly. In a truncated Fock space this usually means the state has leaked past the cutoff and the result is unreliable.";
 
 CovarianceMatrix::usage =
-"\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"]}], \"]\"}]\) computes the 2\[Times]2 covariance matrix for the single-mode \!\(\*StyleBox[\"state\", \"TI\"]\) in the Serafini convention \!\(\*SubscriptBox[\(\[Sigma]\), \(vac\)]\) = 1/2 I.\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) computes the 2n\[Times]2n multi-mode covariance matrix for the n modes specified by \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"QuadratureScaling\\\"->\", StyleBox[\"s\", \"TI\"]}], \"]\"}]\) uses \!\(\*OverscriptBox[\"X\", \"^\"]\) = s(a+\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)), P = \[ImaginaryI] s(\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)-a). Default s = 1/\!\(\*SqrtBox[\"2\"]\) (Serafini). Use s = 1/2 for \[HBar]=1/2 or s = 1 for Simon convention.";
+"\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"]}], \"]\"}]\) computes the 2n\[Times]2n covariance matrix for all n modes of \!\(\*StyleBox[\"state\", \"TI\"]\) in the Serafini convention \!\(\*SubscriptBox[\(\[Sigma]\), \(vac\)]\) = 1/2 I.\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{StyleBox[\"state\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) restricts the computation to the modes specified by \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"QuadratureScaling\\\"->\", StyleBox[\"s\", \"TI\"]}], \"]\"}]\) uses \!\(\*OverscriptBox[\"X\", \"^\"]\) = s(a+\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)), P = \[ImaginaryI] s(\!\(\*SuperscriptBox[\"a\", \"\[Dagger]\"]\)-a). Default s = 1/\!\(\*SqrtBox[\"2\"]\) (Serafini). Use s = 1/2 for \[HBar]=1/2 or s = 1 for Simon convention.\n\!\(\*RowBox[{\"CovarianceMatrix\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"ReturnMeans\\\"->True\"}], \"]\"}]\) returns an Association with keys \"CovarianceMatrix\" and \"Means\", the latter being the vector of first moments \[LeftAngleBracket]\!\(\*SubscriptBox[OverscriptBox[\"R\", \"^\"], \"i\"]\)\[RightAngleBracket].";
 
 CovarianceMatrix[state_QuantumState, opts : OptionsPattern[]] :=
-    CovarianceMatrix[state, {1}, opts]
+    CovarianceMatrix[state, Range[state["Qudits"]], opts]
 
 CovarianceMatrix[state_QuantumState, order_?orderQ, OptionsPattern[]] :=
-    Block[{s = OptionValue["QuadratureScaling"], size, R, n, psi, Rpsi, rhoOp, Qops, means, upper},
-        size = First[state["Dimensions"]];
-        R    = Catenate[(2s * QuadratureOperators[size, {#}]) & /@ order];
-        n    = Length[R];
-        If[state["PureStateQ"],
-            psi   = state["StateVector"];
-            Rpsi  = (# @ state)["StateVector"] & /@ R;
-            means = Re[Conjugate[Rpsi] . psi];
-            Re[Conjugate[Rpsi] . Transpose[Rpsi]] - Outer[Times, means, means],
-            rhoOp = state["Operator"];
-            Qops  = # @ rhoOp & /@ R;
-            means = Re[Tr /@ Qops];
-            upper = Table[
-                If[i <= j,
-                    Re[Tr[R[[j]] @ Qops[[i]]]] - means[[i]] means[[j]],
-                    0],
-                {i, n}, {j, n}];
-            upper + Transpose[upper] - DiagonalMatrix[Diagonal[upper]]
+    Block[{s = OptionValue["QuadratureScaling"], dims = state["Dimensions"], R, A, norm, means, sigma},
+        If[ ! AllTrue[order, 1 <= # <= Length[dims] &],
+            Message[CovarianceMatrix::order, order, Length[dims]];
+            Return[$Failed]
+        ];
+        R = Catenate[(2s * QuadratureOperators[dims[[#]], {#}]) & /@ order];
+        If[ state["StateType"] === "Vector",
+            A     = (# @ state)["StateVector"] & /@ R;
+            norm  = Re[Conjugate[#] . #] & @ state["StateVector"];
+            means = Re[Conjugate[A] . state["StateVector"]];
+            sigma = Re[Conjugate[A] . Transpose[A]],
+            A     = # @ state["Operator"] & /@ R;
+            norm  = Re @ Tr @ state["DensityMatrix"];
+            means = Re[Tr /@ A];
+            sigma = Re @ Outer[Tr[#1 @ #2] &, R, A, 1]
+        ];
+        If[ TrueQ[Abs[norm - 1] > 10^-8], Message[CovarianceMatrix::norm, norm]];
+        means /= norm;
+        sigma = sigma / norm - Outer[Times, means, means];
+        If[ TrueQ[OptionValue["ReturnMeans"]],
+            <|"CovarianceMatrix" -> sigma, "Means" -> means|>,
+            sigma
         ]
     ]
 
