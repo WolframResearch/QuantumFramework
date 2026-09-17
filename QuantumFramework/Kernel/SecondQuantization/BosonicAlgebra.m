@@ -225,7 +225,7 @@ BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] /;
 
 
 BosonicMatrixElement::usage =
-"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]poly\[VerticalSeparator]n\[RightAngleBracket] for a polynomial in the field variables of a single mode, by normal ordering and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket]. The Fock indices may be symbolic.";
 
 SetAttributes[BosonicMatrixElement, HoldRest]
 
@@ -250,4 +250,33 @@ BosonicMatrixElement[{m_Integer?NonNegative, n_Integer?NonNegative}, SqueezeOper
             (Conjugate[\[Tau]]/2)^s / s! Sqrt[n!/m!] Sech[r]^(m + 1/2) *
                 Hypergeometric2F1[-m/2, (1 - m)/2, s + 1, -Sinh[r]^2]
         ]
+    ]
+
+
+fockLadderElement[m_, n_, p_, q_] :=
+    KroneckerDelta[m - p, n - q] Sqrt[FactorialPower[m, p]] Sqrt[FactorialPower[n, q]]
+
+ladderFockSum[m_, n_, expr_, v_] :=
+    Module[{x, y},
+        Total[(#[[2]] fockLadderElement[m, n, Sequence @@ #[[1]]]) & /@
+            CoefficientRules[
+                Expand[
+                    vevCollapse[BosonicNormalOrder[expr, {v, SuperDagger[v]}]] /.
+                        {SuperDagger[v] -> x, v -> y}
+                ],
+                {x, y}
+            ]
+        ]
+    ]
+
+BosonicMatrixElement[{m_, n_}, c_ ? NumericQ] := c KroneckerDelta[m, n]
+
+BosonicMatrixElement[{m_, n_}, expr_] :=
+    With[{v = Replace[
+            DeleteDuplicates[ExtractNCVars[{expr}] /. SuperDagger[w_] :> w],
+            {{u_} :> u, _ :> None}
+        ]},
+        ladderFockSum[m, n, expr, v] /;
+            v =!= None && FreeQ[expr, _QuantumOperator | _QuantumState] &&
+                vevPolynomialQ[expr, {v, SuperDagger[v]}]
     ]
