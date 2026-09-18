@@ -222,7 +222,7 @@ AntinormalOrdered[expr_]["Series"] := expr /. {
 }
 
 
-dequantizeLadder[expr_, v_, x_, y_] := expr /. {
+dequantizeLadder[expr_, v_, x_, y_] := expr //. {
     GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
     SuperDagger[v] -> x,
     v -> y,
@@ -230,7 +230,11 @@ dequantizeLadder[expr_, v_, x_, y_] := expr /. {
 }
 
 
-ladderMode[expr_] := First[Cases[expr, SuperDagger[w_] :> w, Infinity], None]
+ladderMode[expr_] :=
+    Replace[
+        DeleteDuplicates[ExtractNCVars[{expr}] /. SuperDagger[w_] :> w],
+        {{v_} :> v, _ :> None}
+    ]
 
 
 orderedSeries[ord_, expr_, lambda_] := Module[{v, x, y, n, coefN},
@@ -419,13 +423,6 @@ BosonicExpSimplify[expr_, vars_List, opts : OptionsPattern[]] :=
     ]
 
 
-braidDequantize[gen_, v_, x_, y_] := gen //. {
-    GeneralizedPower[NonCommutativeMultiply, op_, p_] :> op^p,
-    SuperDagger[v] -> x,
-    v -> y,
-    NonCommutativeMultiply -> Times
-}
-
 adFamilyRules[cr_, v_, vars_] /; ! FreeQ[Values[cr], Alternatives @@ vars] := $Failed
 
 adFamilyRules[cr_, v_, vars_] /; Keys[cr] === {{1, 1}} :=
@@ -453,7 +450,7 @@ modeAdRules[gen_, v_, vars_] :=
         adFamilyRules[
             KeyDrop[
                 Association @ CoefficientRules[
-                    Expand @ braidDequantize[gen, v, x, y], {x, y}],
+                    Expand @ dequantizeLadder[gen, v, x, y], {x, y}],
                 Key[{0, 0}]
             ],
             v, vars
