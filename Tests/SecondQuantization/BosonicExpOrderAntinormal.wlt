@@ -2,6 +2,12 @@
 Needs["Wolfram`QuantumFramework`"]
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
+(* The summation index of a "Series" result is owned by the paclet and prints as a
+   plain letter; rename it to a local symbol so the expected values below do not
+   pin an internal name. *)
+normalizeIndex[expr_, s_] :=
+    expr /. Inactive[Sum][b_, {i_, lo_, hi_}] :> Inactive[Sum][b /. i -> s, {s, lo, hi}]
+
 (* The anti-normal rule set is the image of rulesNO under the automorphism
    a -> a^dagger, a^dagger -> -a, which carries creator-left words to annihilator-left
    ones and sends a^dagger a to -(a a^dagger + 1).  Each expected form below was checked
@@ -55,8 +61,9 @@ VerificationTest[
 
 (* "Series" resolves the marker into annihilator-left monomials a^k (a^dag)^k *)
 VerificationTest[
-    BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]],
-        "Ordering" -> "Antinormal"]["Series"],
+    normalizeIndex[
+        BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]],
+            "Ordering" -> "Antinormal"]["Series"], k],
     Inactive[Sum][
         ((1 - E^(-\[Lambda]))^k*GeneralizedPower[NonCommutativeMultiply, \[FormalA], k]**
             GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k])/k!,

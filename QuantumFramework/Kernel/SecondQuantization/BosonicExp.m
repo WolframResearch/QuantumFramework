@@ -193,7 +193,11 @@ ladderMonomial[adag_, m_, a_, k_] := ladderPower[adag, m] ** ladderPower[a, k]
 orderedMonomial[NormalOrdered, v_, {m_, k_}] := ladderMonomial[SuperDagger[v], m, v, k]
 orderedMonomial[AntinormalOrdered, v_, {m_, k_}] := ladderMonomial[v, k, SuperDagger[v], m]
 
-expSeriesTerm[ord_, coeff_, v_] := With[{k = If[FreeQ[coeff, Global`k], Global`k, K[1]]},
+MakeBoxes[SeriesIndex[s_String], StandardForm] ^:= InterpretationBox[s, SeriesIndex[s]]
+
+MakeBoxes[SeriesIndex[s_String], TraditionalForm] ^:= InterpretationBox[s, SeriesIndex[s]]
+
+expSeriesTerm[ord_, coeff_, v_] := With[{k = SeriesIndex["k"]},
     Inactivate[Sum[
         (coeff^k/k!) orderedMonomial[ord, v, {k, k}],
         {k, 0, Infinity}
@@ -232,7 +236,7 @@ ladderMode[expr_] := First[Cases[expr, SuperDagger[w_] :> w, Infinity], None]
 orderedSeries[ord_, expr_, lambda_] := Module[{v, x, y, n, coefN},
     v = ladderMode[expr];
     If[v === None, Return[$Failed, Module]];
-    n = If[lambda =!= Global`n && FreeQ[expr, Global`n], Global`n, K[1]];
+    n = SeriesIndex["n"];
     coefN = SeriesCoefficient[dequantizeLadder[expr, v, x, y], {lambda, 0, n}];
 
     coefN = coefN /. Piecewise[{{val_, _}}, _] :> val;

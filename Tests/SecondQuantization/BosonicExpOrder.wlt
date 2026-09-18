@@ -2,6 +2,11 @@
 Needs["Wolfram`QuantumFramework`"]
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
+(* The summation index of a "Series" result is owned by the paclet and prints as a
+   plain letter; rename it to a local symbol so the expected values below do not
+   pin an internal name. *)
+normalizeIndex[expr_, s_] :=
+    expr /. Inactive[Sum][b_, {i_, lo_, hi_}] :> Inactive[Sum][b /. i -> s, {s, lo, hi}]
 
 
 BeginTestSection["BosonicExpOrder - independence from parallel sub-kernels"]
@@ -234,7 +239,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]]["Series"],
+    normalizeIndex[
+        BosonicExpOrder[Exp[\[Lambda]*SuperDagger[\[FormalA]]**\[FormalA]]]["Series"], k],
     Inactive[Sum][
     ((-1 + E^\[Lambda])^k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k]**
     GeneralizedPower[NonCommutativeMultiply, \[FormalA], k])/k!, {k, 0, Infinity}],
@@ -249,7 +255,8 @@ VerificationTest[
 ]
 
 VerificationTest[
-    BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]]["Series"],
+    normalizeIndex[
+        BosonicExpOrder[Exp[\[Lambda]*\[FormalA]**SuperDagger[\[FormalA]]]]["Series"], k],
     E^\[Lambda]*Inactive[Sum][
     ((-1 + E^\[Lambda])^k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], k]**
     GeneralizedPower[NonCommutativeMultiply, \[FormalA], k])/k!, {k, 0, Infinity}],
@@ -527,9 +534,10 @@ BeginTestSection["BosonicExpOrder - series expansions"]
    recursion has no closed form.  "Series"[lambda, order] truncates at that order, and
    must agree with truncating the inactive sum. *)
 VerificationTest[
-    BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
-    \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
-    "Series", k],
+    normalizeIndex[
+        BosonicExpOrder[Exp[k*GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]**
+        \[FormalA]**GeneralizedPower[NonCommutativeMultiply, SuperDagger[\[FormalA]], 1]]][
+        "Series", k], n],
     NormalOrdered[Inactive[Sum][k^n*SuperDagger[\[FormalA]]^n*
     DifferenceRoot[Function[{\[FormalY], \[FormalN]},
     {(-\[FormalN])*\[FormalY][\[FormalN]] + (2 + \[FormalN])*\[FormalY][3 + \[FormalN]] +

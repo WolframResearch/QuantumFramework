@@ -68,9 +68,11 @@ VerificationTest[
     TestID -> "CM-SqueezedVacuum-r0-IsVacuum"
 ]
 
-(* Uncertainty principle: det(sigma) >= 1/4 for all physical states *)
+(* Uncertainty principle: det(sigma) >= 1/4 for all physical states.
+   Quiet: at r = 1.5 the truncated squeeze operator leaks ~4*10^-4 of the norm
+   past the 64-level cutoff, which CovarianceMatrix::norm reports. *)
 VerificationTest[
-    Det[CovarianceMatrix[SqueezeOperator[1.5, 64] @ FockState[0, 64]]] >= 1/4,
+    Det[Quiet@CovarianceMatrix[SqueezeOperator[1.5, 64] @ FockState[0, 64]]] >= 1/4,
     True,
     TestID -> "CM-SqueezedVacuum-UncertaintyPrinciple"
 ]
@@ -126,6 +128,48 @@ VerificationTest[
     CovarianceMatrix[FockState[0], {1}],
     CovarianceMatrix[FockState[0]],
     TestID -> "CM-SingleMode-ConsistencyCheck"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["CovarianceMatrix - normalization and state storage"]
+
+(* A pure state stored as a density matrix must give the same sigma as the ket.
+   The vector branch is only valid for StateType "Vector": applying a quadrature to a
+   matrix-stored state conjugates it, so its "StateVector" is not linear in the operator. *)
+VerificationTest[
+    With[{v = Normalize[{1, 2 - I, 0.3 I, 0, 0, 0, 0, 0}]},
+        Chop[CovarianceMatrix[QuantumState[v, {8}]] -
+             CovarianceMatrix[QuantumState[Outer[Times, v, Conjugate[v]], {8}]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "CM-PureState-VectorVsMatrixStorage"
+]
+
+(* sigma is a ratio of moments, so it must not depend on the overall scale of the state *)
+VerificationTest[
+    Chop[Quiet@CovarianceMatrix[QuantumState[3 UnitVector[8, 2], {8}]] -
+         CovarianceMatrix[FockState[1, 8]]],
+    {{0, 0}, {0, 0}},
+    TestID -> "CM-Unnormalized-Vector-Rescaled"
+]
+
+VerificationTest[
+    With[{rho = DiagonalMatrix[N@{0.5, 0.3, 0.2, 0, 0, 0, 0, 0}]},
+        Chop[Quiet@CovarianceMatrix[QuantumState[4 rho, {8}]] -
+             CovarianceMatrix[QuantumState[rho, {8}]]]
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "CM-Unnormalized-Matrix-Rescaled"
+]
+
+(* A state that has leaked past the Fock cutoff is reported rather than silently used *)
+VerificationTest[
+    CovarianceMatrix[QuantumState[2 UnitVector[8, 1], {8}]],
+    {{1/2, 0}, {0, 1/2}},
+    {CovarianceMatrix::norm},
+    TestID -> "CM-Unnormalized-IssuesMessage"
 ]
 
 EndTestSection[]
