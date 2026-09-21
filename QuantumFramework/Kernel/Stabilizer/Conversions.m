@@ -140,6 +140,42 @@ ps_PauliStabilizer["Operator" | "QuantumOperator"] := With[{
 (* ============================================================================ *)
 
 qo_QuantumOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qo], ps]
+
+(* A circuit applied to a tableau selects its engine by Method as the           *)
+(* QuantumState form does, with one difference: the default for a tableau is   *)
+(* the stabilizer engine (a tableau in, a tableau out), where the QuantumState *)
+(* form defaults to the tensor-network contraction. The stabilizer engine      *)
+(* returns what PauliStabilizerApply returns: a PauliStabilizer for a Clifford *)
+(* circuit, a StabilizerFrame past a P/T gate, $Failed with                    *)
+(* PauliStabilizer::nonclifford for anything else. Any other engine            *)
+(* materializes ps["State"] and applies the circuit to that state, the mirror  *)
+(* image of the QuantumState -> tableau conversion Method -> "Stabilizer"      *)
+(* performs on a dense input; a tableau with symbolic signs has no dense state *)
+(* (PauliStabilizer::symbolicsigns). A gate wire below 1 is refused by the     *)
+(* engine itself (PauliStabilizer::wires), the same answer Method ->           *)
+(* "Stabilizer" gives on a state.                                              *)
+
+(* The tableau widened with |0> qubits up to the circuit's highest wire, as the  *)
+(* dense qco[qs] rule widens its state; without it the gate kernels index past  *)
+(* the tableau edge.                                                            *)
+stabilizerPadToCircuit[qco_QuantumCircuitOperator, ps_PauliStabilizer] :=
+    If[qco["Max"] > ps["Qubits"], ps["PadRight", qco["Max"]], ps]
+
+Options[stabilizerCircuitApply] = {Method -> Automatic}
+
+stabilizerCircuitApply[qco_QuantumCircuitOperator, ps_PauliStabilizer, OptionsPattern[]] :=
+    stabilizerCircuitDispatch[qco, ps, OptionValue[Method]]
+
+stabilizerCircuitDispatch[qco_, ps_, Automatic | "Stabilizer"] := PauliStabilizerApply[qco, stabilizerPadToCircuit[qco, ps]]
+
+stabilizerCircuitDispatch[qco_, ps_, {"Stabilizer", subOpts___}] := PauliStabilizerApply[qco, stabilizerPadToCircuit[qco, ps], subOpts]
+
+stabilizerCircuitDispatch[qco_, ps_ ? ConcretePauliStabilizerQ, method_] := qco[ps["State"], Method -> method]
+
+stabilizerCircuitDispatch[qco_, ps_, method_] := (Message[PauliStabilizer::symbolicsigns, method]; $Failed)
+
+PauliStabilizer /: (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[ps_PauliStabilizer ? PauliStabilizerQ, opts : OptionsPattern[]] :=
+    stabilizerCircuitApply[qco, ps, opts]
 QuantumState[ps_PauliStabilizer] ^:= ps["State"]
 (* The two below are `^:=` (UpValues on _PauliStabilizer) rather than         *)
 (* DownValues on host-paclet protected symbols, which silently fail to attach.*)

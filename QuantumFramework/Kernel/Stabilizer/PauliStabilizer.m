@@ -24,6 +24,10 @@ PauliStabilizer::badgate = "`1` is not a recognized stabilizer gate name."
 
 PauliStabilizer::nophasepoly = "`1`, so \"Compress\" -> \"PhasePolynomial\" cannot apply; falling back to the ordinary stabilizer path, which `2`."
 
+PauliStabilizer::wires = "Circuit wires `1` lie below qubit 1, outside the tableau register."
+
+PauliStabilizer::symbolicsigns = "Symbolic signs have no dense state to hand to Method -> `1`; use Method -> \"Stabilizer\" on this tableau."
+
 
 
 (* ============================================================================ *)
@@ -176,6 +180,16 @@ ps_PauliStabilizer[specs__] /; stabilizerGateSpecSeqQ[{specs}] := ps[{specs}]
 (* ============================================================================ *)
 
 Options[PauliStabilizerApply] = {"Compress" -> None};
+
+(* A tableau's wires are its qubits, indexed from 1, so a gate wire below 1 has  *)
+(* nothing to land on and the gate kernels would index past the tableau edge:   *)
+(* refused up front, whichever entrance (a circuit on a tableau, Method ->       *)
+(* "Stabilizer" on a state or on the default register) reached the engine. The  *)
+(* dense circuit path re-seats such a circuit onto its state instead.           *)
+PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic, OptionsPattern[]] :=
+    With[{low = Select[qco["FullInputOrder"], # < 1 &]},
+        (Message[PauliStabilizer::wires, low]; $Failed) /; low =!= {}
+    ]
 
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState | _PauliStabilizer : Automatic, opts : OptionsPattern[]] :=
     (* Opt-in phase-polynomial fast build (Method -> {"Stabilizer", "Compress" ->  *)

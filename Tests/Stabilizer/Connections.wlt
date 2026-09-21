@@ -35,6 +35,8 @@
    ========================================================================== *)
 
 Needs["Wolfram`QuantumFramework`"];
+(* PauliStabilizerApply, PauliStabilizerQ, StabilizerFrameQ and CliffordChannelQ are PackageScope. *)
+Needs["Wolfram`QuantumFramework`PackageScope`"];
 
 psValidQ = PauliStabilizerQ;
 sfValidQ = StabilizerFrameQ;
@@ -42,6 +44,21 @@ ccValidQ = CliffordChannelQ;
 
 matEqQO[a_, b_] := SameQ @@ (Normal @ #["Matrix"] & /@ {a, b})
 matEqQS[a_, b_] := SameQ @@ (Normal @ #["StateVector"] & /@ {a, b})
+(* Equal as rays, exactly: |<u|v>|^2 = <u|u><v|v> on amplitude lists (no normalization asked). *)
+rayEqQ[u_List, v_List] := Simplify[(Conjugate[u] . v) (Conjugate[v] . u) - (Conjugate[u] . u) (Conjugate[v] . v)] === 0
+
+(* Equal up to a global phase, exactly: the same ray, with both states normalized. *)
+phaseEqQS[a_, b_] := With[{u = Normal @ a["StateVector"], v = Normal @ b["StateVector"]},
+    rayEqQ[u, v] && Simplify[Conjugate[u] . u - 1] === 0 && Simplify[Conjugate[v] . v - 1] === 0
+]
+
+(* Aaronson-Gottesman pairing: the 2n generator rows (destabilizers, then stabilizers) *)
+(* form a symplectic basis of F_2^(2n), so M . Omega . M^T == Omega mod 2.        *)
+symplecticQ[ps_] := With[{n = ps["Qubits"]},
+    With[{om = ArrayFlatten[{{0 IdentityMatrix[n], IdentityMatrix[n]}, {IdentityMatrix[n], 0 IdentityMatrix[n]}}]},
+        Mod[ps["Matrix"] . om . Transpose[ps["Matrix"]], 2] === om
+    ]
+]
 
 
 (* Common fixtures *)
@@ -461,6 +478,245 @@ VerificationTest[
     ],
     True,
     TestID -> "Conn11-GraphState-EqualsClusterCircuit"
+]
+
+
+(* ============================================================================ *)
+(* CONNECTION 12 -- qco_QuantumCircuitOperator[ps] UpValue (circuit dispatch)   *)
+(*                                                                              *)
+(* qco[ps] routes to PauliStabilizerApply[qco, ps], the engine behind           *)
+(* Method -> "Stabilizer". Method selects the engine as it does for qco[qs],    *)
+(* except that the default for a tableau is the stabilizer engine (a tableau   *)
+(* in, a tableau out); a non-stabilizer Method materializes ps["State"]. The    *)
+(* state side never applies an operator (qs[qo] is not a QuantumState form),   *)
+(* so ps[qco] stays inert.                                                      *)
+(* ============================================================================ *)
+
+(* Direct dispatch fires and gives the Bell tableau. *)
+VerificationTest[
+    Head @ QuantumCircuitOperator["Bell"][$ps00],
+    PauliStabilizer,
+    {},
+    TestID -> "Conn12-qcoApplyPS-Dispatches"
+]
+
+VerificationTest[
+    Sort @ QuantumCircuitOperator["Bell"][$ps00]["Stabilizers"],
+    Sort @ {"XX", "ZZ"},
+    {},
+    TestID -> "Conn12-qcoBell-on-Zero-EqualsBell"
+]
+
+(* The UpValue, the engine, and the bracket form share one tableau. *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"]},
+        SameQ[
+            qco[$ps00]["Tableau"],
+            PauliStabilizerApply[qco, $ps00]["Tableau"],
+            $ps00[{"H" -> 1, "CNOT" -> {1, 2}}]["Tableau"]
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Conn12-qcoApplyPS-EqualsEngine-And-BracketForm"
+]
+
+(* The default engine follows the input: a tableau stays a tableau, a state     *)
+(* takes the dense contraction.                                                 *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"]},
+        {Head[qco[$ps00, Method -> Automatic]], Head[qco[$ps00["State"], Method -> Automatic]]}
+    ],
+    {PauliStabilizer, QuantumState},
+    {},
+    TestID -> "Conn12-qcoApplyPS-MethodAutomatic-StaysInTableau"
+]
+
+(* Method -> "Stabilizer" passes through to the same engine. *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"]},
+        qco[$ps00, Method -> "Stabilizer"]["Tableau"] === qco[$ps00]["Tableau"]
+    ],
+    True,
+    {},
+    TestID -> "Conn12-qcoApplyPS-MethodStabilizer-PassesThrough"
+]
+
+(* The "Compress" sub-option reaches the engine: on an explicit tableau the      *)
+(* phase-polynomial build does not apply, so the engine says so once and takes  *)
+(* the ordinary path.                                                           *)
+VerificationTest[
+    Head @ QuantumCircuitOperator["Bell"][$ps00, Method -> {"Stabilizer", "Compress" -> "PhasePolynomial"}],
+    PauliStabilizer,
+    {PauliStabilizer::nophasepoly},
+    TestID -> "Conn12-qcoApplyPS-MethodStabilizerCompress-FallsBackWithMessage"
+]
+
+(* A dense Method materializes the tableau and applies the circuit to the state. *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"], psPlus = $ps00["H", 2]},
+        Head[qco[psPlus, Method -> "Schrodinger"]] === QuantumState &&
+            matEqQS[qco[psPlus, Method -> "Schrodinger"], qco[psPlus["State"], Method -> "Schrodinger"]]
+    ],
+    True,
+    {},
+    TestID -> "Conn12-qcoApplyPS-DenseMethod-Materializes"
+]
+
+(* The non-Clifford trichotomy is the engine's: a T gate returns a StabilizerFrame *)
+(* equal to the dense circuit up to a global phase ...                          *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator[{"H" -> 1, "T" -> 1}]},
+        {Head[qco[$ps0]], phaseEqQS[qco[$ps0], qco[QuantumState["0"]]]}
+    ],
+    {StabilizerFrame, True},
+    {},
+    TestID -> "Conn12-qcoApplyPS-TGate-StabilizerFrame-MatchesDense"
+]
+
+(* ... and a generic unitary fails with ::nonclifford, as Method -> "Stabilizer" does. *)
+VerificationTest[
+    QuantumCircuitOperator[{"RX"[Pi/3] -> 1}][$ps0],
+    $Failed,
+    {PauliStabilizer::nonclifford},
+    TestID -> "Conn12-qcoApplyPS-NonClifford-Fails"
+]
+
+(* The engine folds gates only: a measurement operator inside the circuit is    *)
+(* refused with the same message, on a tableau as on a state under Method ->   *)
+(* "Stabilizer". A Pauli measurement on a tableau is qmo[ps] (HybridInterop).  *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, QuantumMeasurementOperator["Z", {1}]}]},
+        {qco[$ps00], qco[QuantumState["00"], Method -> "Stabilizer"]}
+    ],
+    {$Failed, $Failed},
+    {PauliStabilizer::nonclifford, PauliStabilizer::nonclifford},
+    TestID -> "Conn12-qcoApplyPS-MeasurementGate-NotFolded"
+]
+
+(* A tableau with symbolic signs (a recorded symbolic outcome) has no dense     *)
+(* state, so a dense Method is refused with a message, while the stabilizer    *)
+(* engine carries the symbolic signs through the circuit.                      *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"], psSym = $psBell["SymbolicMeasure", 1]},
+        {qco[psSym, Method -> "Schrodinger"], Head[qco[psSym]]}
+    ],
+    {$Failed, PauliStabilizer},
+    {PauliStabilizer::symbolicsigns},
+    TestID -> "Conn12-qcoApplyPS-DenseMethod-SymbolicSigns-Refused"
+]
+
+(* The phase gate "P"[theta] is the gate spec that carries a free symbol, and    *)
+(* the tableau route carries it through an entangled pair: H, CNOT, then        *)
+(* P[theta] on the partner qubit gives the frame (|00> + E^(I theta) |11>)/Sqrt[2],*)
+(* the free phase riding the entangled branch, and theta = Pi/4 is the T frame  *)
+(* exactly.                                                                     *)
+VerificationTest[
+    With[{frame = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "P"[\[FormalTheta]] -> 2}][$ps00]},
+        {
+            Head[frame],
+            Simplify[Normal @ frame["StateVector"] - {1, 0, 0, E^(I \[FormalTheta])} / Sqrt[2]],
+            Simplify[(Normal @ frame["StateVector"] /. \[FormalTheta] -> Pi/4) - Normal @ QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "T" -> 2}][$ps00]["StateVector"]]
+        }
+    ],
+    {StabilizerFrame, {0, 0, 0, 0}, {0, 0, 0, 0}},
+    {},
+    TestID -> "Conn12-qcoApplyPS-SymbolicPhaseGate-ClosedForm"
+]
+
+(* A tableau narrower than the circuit is padded with |0> qubits, as the dense  *)
+(* form pads its state: Bell on |+> is |00>, exactly.                            *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator["Bell"], psPlus = $ps0["H", 1]},
+        {qco[psPlus]["Qubits"], matEqQS[qco[psPlus]["State"], qco[QuantumState["+"]]]}
+    ],
+    {2, True},
+    {},
+    TestID -> "Conn12-qcoApplyPS-NarrowTableau-Padded"
+]
+
+(* A gate wire below 1 has no qubit on a tableau: refused with a message (the    *)
+(* dense form re-seats such a circuit onto its state instead) ...               *)
+VerificationTest[
+    QuantumCircuitOperator[{"H" -> 0, "CNOT" -> {0, 1}}][$ps0],
+    $Failed,
+    {PauliStabilizer::wires},
+    TestID -> "Conn12-qcoApplyPS-WireBelowOne-Fails"
+]
+
+(* ... and the refusal is the engine's own, so the other two entrances (a state  *)
+(* under Method -> "Stabilizer", the default register) answer the same way.    *)
+VerificationTest[
+    With[{qco = QuantumCircuitOperator[{"H" -> 0, "CNOT" -> {0, 1}}]},
+        {qco[QuantumState["0"], Method -> "Stabilizer"], qco[Method -> "Stabilizer"]}
+    ],
+    {$Failed, $Failed},
+    {PauliStabilizer::wires, PauliStabilizer::wires},
+    TestID -> "Conn12-MethodStabilizer-WireBelowOne-Fails-AtEveryEntrance"
+]
+
+(* ps[qco] stays inert: no QuantumFramework state applies an operator from the   *)
+(* state side.                                                                  *)
+VerificationTest[
+    MatchQ[$ps00[QuantumCircuitOperator["Bell"]], _PauliStabilizer[_QuantumCircuitOperator]],
+    True,
+    {},
+    TestID -> "Conn12-psOfQCO-StaysInert"
+]
+
+(* Random Clifford circuits on random stabilizer states, n = 1..5, on wirings    *)
+(* shifted by a random offset so that a circuit may start above wire 1 and run  *)
+(* past the tableau (the padding at work): the tableau route equals the dense   *)
+(* circuit application up to a global phase, exactly, and keeps the symplectic  *)
+(* pairing of its generators.                                                   *)
+VerificationTest[
+    BlockRandom[
+        SeedRandom[20260921];
+        AllTrue[
+            Flatten @ Table[
+                With[{ps = PauliStabilizer["Random"[n]], offset = RandomInteger[{0, 2}]},
+                    With[{
+                        qco = QuantumCircuitOperator @ Table[
+                            With[{g = RandomChoice[If[n == 1, {"H", "S"}, {"H", "S", "CNOT", "CZ", "SWAP"}]]},
+                                If[MemberQ[{"CNOT", "CZ", "SWAP"}, g], g -> offset + RandomSample[Range[n], 2], g -> offset + RandomInteger[{1, n}]]
+                            ],
+                            {3 n}
+                        ]
+                    },
+                        Head[qco[ps]] === PauliStabilizer && symplecticQ[qco[ps]] && phaseEqQS[qco[ps]["State"], qco[ps["State"]]]
+                    ]
+                ],
+                {n, 5}, {3}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Conn12-qcoApplyPS-Random-MatchesDense-UpToPhase-15reps"
+]
+
+(* The GHZ circuit through the UpValue gives the closed-form stabilizer group in *)
+(* n, X on every qubit together with every neighbouring Z_q Z_(q+1), with the   *)
+(* symplectic pairing intact, and a measurement on it stays in the tableau (a   *)
+(* single Z random, the Z_1 Z_2 parity certain); at n = 60 no dense reference   *)
+(* exists at all.                                                               *)
+VerificationTest[
+    Table[
+        With[{ps = QuantumCircuitOperator["GHZ"[n]][PauliStabilizer[n]]},
+            {
+                Head[ps],
+                Sort[ps["Stabilizers"]] === Sort @ Prepend[Table[StringReplacePart[StringRepeat["I", n], "ZZ", {q, q + 1}], {q, n - 1}], StringRepeat["X", n]],
+                symplecticQ[ps],
+                Sort @ Keys @ QuantumMeasurementOperator["Z", {2}][ps],
+                Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][ps]
+            }
+        ],
+        {n, {3, 7, 60}}
+    ],
+    ConstantArray[{PauliStabilizer, True, True, {0, 1}, {0}}, 3],
+    {},
+    TestID -> "Conn12-qcoApplyPS-GHZ-ClosedFormInN-BeyondDense"
 ]
 
 

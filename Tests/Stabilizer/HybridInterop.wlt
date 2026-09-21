@@ -13,10 +13,23 @@
    ========================================================================== *)
 
 Needs["Wolfram`QuantumFramework`"];
+(* The detector and register-label helpers exercised below are PackageScope. *)
+Needs["Wolfram`QuantumFramework`PackageScope`"];
 
 (* Local validity helper: re-export the package-scoped predicate so tests can
    assert on the receiver's structure. *)
 psValidQ = PauliStabilizerQ;
+
+(* Equal as rays, exactly: |<u|v>|^2 = <u|u><v|v> on amplitude lists (no normalization asked). *)
+rayEqQ[u_List, v_List] := Simplify[(Conjugate[u] . v) (Conjugate[v] . u) - (Conjugate[u] . u) (Conjugate[v] . v)] === 0
+
+(* Aaronson-Gottesman pairing: the 2n generator rows (destabilizers, then stabilizers) *)
+(* form a symplectic basis of F_2^(2n), so M . Omega . M^T == Omega mod 2.        *)
+symplecticQ[ps_] := With[{n = ps["Qubits"]},
+    With[{om = ArrayFlatten[{{0 IdentityMatrix[n], IdentityMatrix[n]}, {IdentityMatrix[n], 0 IdentityMatrix[n]}}]},
+        Mod[ps["Matrix"] . om . Transpose[ps["Matrix"]], 2] === om
+    ]
+]
 
 
 (* ============================================================================ *)
@@ -78,6 +91,231 @@ VerificationTest[
     True,
     {},
     TestID -> "Phase7-QMO-XX-on-Bell-MatchesNativeM"
+]
+
+
+(* A Pauli label shorter than the register is padded with identities, each     *)
+(* letter landing on the wire its target names, so a single-qubit measurement  *)
+(* on a larger tableau stays in the tableau. Z on qubit 2 of GHZ-3 is uniformly *)
+(* random ...                                                                   *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3][{"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}]},
+        Sort @ Keys @ QuantumMeasurementOperator["Z", {2}][ps]
+    ],
+    {0, 1},
+    {},
+    TestID -> "Phase7-QMO-Partial-Z-on-q2-of-GHZ3-NonDeterministic"
+]
+
+(* ... and is exactly the padded native measurement. *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3][{"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}]},
+        QuantumMeasurementOperator["Z", {2}][ps] === ps["M", "IZI"]
+    ],
+    True,
+    {},
+    TestID -> "Phase7-QMO-Partial-Z-on-q2-EqualsPaddedNativeM"
+]
+
+(* Deterministic partial measurement: Z on qubit 2 of |00> is outcome 0. *)
+VerificationTest[
+    Sort @ Keys @ QuantumMeasurementOperator["Z", {2}][PauliStabilizer[2]],
+    {0},
+    {},
+    TestID -> "Phase7-QMO-Partial-Z-on-q2-of-zero-Deterministic"
+]
+
+(* Unsorted multi-qubit targets: QuantumMeasurementOperator["XZ", {3, 1}] puts X *)
+(* on wire 3 and Z on wire 1, the operator's own convention                     *)
+(* (QuantumOperator["XZ", {3, 1}] sends |+00> to |-01>). On |0>|0>|+> both       *)
+(* factors are +1, so the joint outcome is deterministic; the other wire        *)
+(* assignment is random.                                                        *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3][{"H" -> 3}]},
+        {
+            Sort @ Keys @ QuantumMeasurementOperator["XZ", {3, 1}][ps],
+            QuantumMeasurementOperator["XZ", {3, 1}][ps] === ps["M", "ZIX"],
+            Sort @ Keys @ QuantumMeasurementOperator["XZ", {1, 3}][ps]
+        }
+    ],
+    {{0}, True, {0, 1}},
+    {},
+    TestID -> "Phase7-QMO-UnsortedTargets-XZ-on-31-LettersFollowWires"
+]
+
+(* The same wires through the operator-built and the matrix-built forms: the    *)
+(* matrix search finds its hit in sorted-wire order and reports it in the       *)
+(* operator's wire order.                                                       *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3][{"H" -> 3}],
+          qmoMat = QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], PauliMatrix[3]], {3, 1}]]},
+        {
+            Keys @ QuantumMeasurementOperator[QuantumOperator["XZ", {3, 1}]][ps],
+            Keys @ qmoMat[ps],
+            stabilizerPauliLabelFromQMO[qmoMat]
+        }
+    ],
+    {{0}, {0}, "XZ"},
+    {},
+    TestID -> "Phase7-QMO-UnsortedTargets-OperatorAndMatrixForms-Agree"
+]
+
+(* A signed partial label keeps its sign: -Z on qubit 2 of |000> is outcome 1. *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3], qmo = QuantumMeasurementOperator[QuantumOperator[-"Z", {2}]]},
+        {Sort @ Keys @ qmo[ps], qmo[ps] === ps["M", "-IZI"]}
+    ],
+    {{1}, True},
+    {},
+    TestID -> "Phase7-QMO-Partial-SignedLabel-NegZ-on-q2"
+]
+
+(* The padding contract: a label that already spans the register in wire order  *)
+(* is unchanged, in another wire order it is re-seated, a shorter one is padded, *)
+(* a non-Pauli basis passes through as Missing, and a one-letter basis tiled     *)
+(* over several wires is a Missing of its own.                                  *)
+VerificationTest[
+    {
+        stabilizerPauliRegisterLabel[QuantumMeasurementOperator["XZ", {1, 2}], 2],
+        stabilizerPauliRegisterLabel[QuantumMeasurementOperator["XZ", {2, 1}], 2],
+        stabilizerPauliRegisterLabel[QuantumMeasurementOperator["XZ", {3, 1}], 3],
+        stabilizerPauliRegisterLabel[QuantumMeasurementOperator[QuantumBasis["Computational"], {1}], 1],
+        stabilizerPauliRegisterLabel[QuantumMeasurementOperator["X", {1, 2}], 2]
+    },
+    {"XZ", "ZX", "ZIX", Missing["NonPauliBasis"], Missing["LabelWireMismatch"]},
+    {},
+    TestID -> "Phase7-RegisterLabel-Padding-Contract"
+]
+
+(* A mixed multi-letter Pauli operator carries a CircleTimes chain as its label; *)
+(* the detector reads it (with its sign and in the operator's wire order) at    *)
+(* any length, past the matrix-search cap, and a chain with a non-Pauli factor  *)
+(* is not a Pauli label.                                                        *)
+VerificationTest[
+    {
+        stabilizerPauliLabelFromQMO[QuantumMeasurementOperator[QuantumOperator[-"ZYYZY", Range[5]]]],
+        stabilizerPauliLabelFromQMO[QuantumMeasurementOperator[QuantumOperator["XZYXZ", {5, 1, 4, 2, 3}]]],
+        stabilizerPauliLabelFromQMO[QuantumMeasurementOperator[QuantumOperator["XHZ", Range[3]]]]
+    },
+    {"-ZYYZY", "XZYXZ", Missing["NonPauliBasis"]},
+    {},
+    TestID -> "Phase7-Detector-CircleTimesChain-Recognized"
+]
+
+(* A one-letter basis tiled over several wires (QuantumMeasurementOperator["X",  *)
+(* {1, 2}] measures both qubits in the X basis) is a product-basis measurement  *)
+(* no single Pauli string expresses: it takes the dense fallback.               *)
+VerificationTest[
+    Head @ QuantumMeasurementOperator["X", {1, 2}][PauliStabilizer[2]],
+    QuantumMeasurement,
+    {PauliStabilizer::nonpaulibasis},
+    TestID -> "Phase7-QMO-TiledLetterBasis-FallsBackToDense"
+]
+
+(* A target outside the register is refused with a message, not an assertion,  *)
+(* whatever the label: the wire range is judged before the letter count, so a   *)
+(* one-letter basis over a wire pair that leaves the register is refused too.   *)
+VerificationTest[
+    {
+        QuantumMeasurementOperator["Z", {4}][PauliStabilizer[3]],
+        QuantumMeasurementOperator["X", {1, 5}][PauliStabilizer[2]]
+    },
+    {$Failed, $Failed},
+    {PauliStabilizer::target, PauliStabilizer::target},
+    TestID -> "Phase7-QMO-TargetOutsideRegister-Fails"
+]
+
+(* Agreement with the dense path, exactly: Z on qubit 2 of GHZ-3 has Born        *)
+(* weights 1/2, 1/2 (the dense branches carry Sqrt[p]), the two tableau branches *)
+(* are orthogonal, and each equals its dense branch up to a global phase.        *)
+VerificationTest[
+    With[{ps = PauliStabilizer[3][{"H" -> 1, "CNOT" -> {1, 2}, "CNOT" -> {2, 3}}], qmo = QuantumMeasurementOperator["Z", {2}]},
+        With[{viaPS = qmo[ps], viaQS = qmo[ps["State"]]},
+            With[{tab = Normal @ #["State"]["StateVector"] & /@ Values[viaPS], dense = Normal @ #["StateVector"] & /@ viaQS["States"]},
+                {
+                    Values[viaQS["Probabilities"]],
+                    Simplify[Conjugate[#] . #] & /@ dense,
+                    Simplify[Conjugate[tab[[1]]] . tab[[2]]],
+                    MapThread[rayEqQ, {tab, dense}]
+                }
+            ]
+        ]
+    ],
+    {{1/2, 1/2}, {1/2, 1/2}, 0, {True, True}},
+    {},
+    TestID -> "Phase7-QMO-Partial-Z-on-q2-of-GHZ3-MatchesDense"
+]
+
+(* Random stabilizer states, random Pauli labels of length 1..n on random wire  *)
+(* subsets (sorted or not, signed or not), n = 1..6, past the matrix-search cap *)
+(* of 4 qubits so the label parser alone carries the longer ones, all exact:    *)
+(* <P> from the                                                                 *)
+(* operator's own action on the dense state is one of -1, 0, 1 and equals the   *)
+(* tableau's closed-form expectation on the register label the interop builds;  *)
+(* the outcome set is {0}, {1} or {0, 1} accordingly; the result is the native   *)
+(* measurement of that label; and every branch is the normalized               *)
+(* eigenprojection (1 +- P)|psi> up to a global phase.                           *)
+VerificationTest[
+    BlockRandom[
+        SeedRandom[20260921];
+        AllTrue[
+            Flatten @ Table[
+                With[{ps = PauliStabilizer["Random"[n]], k = RandomInteger[{1, n}]},
+                    With[{wires = RandomSample[Range[n], k], body = StringJoin[RandomChoice[{"X", "Y", "Z"}, k]], sign = RandomChoice[{1, -1}]},
+                        With[{qmo = QuantumMeasurementOperator[QuantumOperator[sign body, wires]]},
+                        With[{
+                            res = qmo[ps],
+                            v = Normal @ ps["State"]["StateVector"],
+                            pv = Normal @ QuantumOperator[sign body, wires][ps["State"]]["StateVector"],
+                            registerLabel = stabilizerPauliRegisterLabel[qmo, n]
+                        },
+                            With[{mean = Simplify[Conjugate[v] . pv]},
+                                MemberQ[{-1, 0, 1}, mean] &&
+                                    mean === stabilizerExpectation[ps, registerLabel] &&
+                                    Sort[Keys[res]] === Replace[mean, {1 -> {0}, -1 -> {1}, 0 -> {0, 1}}] &&
+                                    res === ps["M", registerLabel] &&
+                                    AllTrue[Keys[res],
+                                        With[{u = Normal @ res[#]["State"]["StateVector"]},
+                                            Simplify[Conjugate[u] . u - 1] === 0 && rayEqQ[u, v + (1 - 2 #) pv]
+                                        ] &
+                                    ]
+                            ]
+                        ]]
+                    ]
+                ],
+                {n, 6}, {4}
+            ],
+            TrueQ
+        ]
+    ],
+    True,
+    {},
+    TestID -> "Phase7-QMO-Partial-Random-MatchesOperatorAction-24reps"
+]
+
+(* Beyond any dense reference: on the 60-qubit GHZ tableau a single-qubit Z is   *)
+(* uniformly random and each branch is then certain of that same Z (the sign    *)
+(* bookkeeping), each branch keeps the symplectic pairing of its generators     *)
+(* (the tableau bookkeeping), the Z_1 Z_2 parity is certain from the start, and *)
+(* a mixed three-letter Pauli on far-apart wires, parsed from its CircleTimes   *)
+(* label, is measured in the tableau as well.                                   *)
+VerificationTest[
+    With[{n = 60},
+        With[{ps = PauliStabilizer[n][Prepend[Table["CNOT" -> {q, q + 1}, {q, n - 1}], "H" -> 1]]},
+            With[{branches = QuantumMeasurementOperator["Z", {17}][ps]},
+                {
+                    Sort @ Keys @ branches,
+                    KeyValueMap[Keys[QuantumMeasurementOperator["Z", {17}][#2]] === {#1} &, branches],
+                    symplecticQ /@ Values[branches],
+                    Sort @ Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][ps],
+                    Sort @ Keys @ QuantumMeasurementOperator[QuantumOperator["XZY", {17, 33, 51}]][ps]
+                }
+            ]
+        ]
+    ],
+    {{0, 1}, {True, True}, {True, True}, {0}, {0, 1}},
+    {},
+    TestID -> "Phase7-QMO-Partial-GHZ60-BeyondDense"
 ]
 
 
@@ -204,21 +442,43 @@ VerificationTest[
 (* TIER D -- ConcretePauliStabilizerQ guard: symbolic-phase ps falls through   *)
 (* ============================================================================ *)
 
-(* After ps["SymbolicMeasure", q] the receiver has symbolic phases. The fast
-   path is gated on ConcretePauliStabilizerQ (numeric +-1 signs only); a
-   subsequent qmo[ps] on the symbolic ps must NOT fire the Pauli fast path. *)
+(* After ps["SymbolicMeasure", q] the receiver carries symbolic signs. The Pauli *)
+(* measurement primitive ps["M", ...] carries them too, so a Pauli QMO on the   *)
+(* symbolic tableau stays in the tableau. On a Bell pair whose first qubit was  *)
+(* measured symbolically (outcome s), Z on the partner qubit is certain and     *)
+(* keyed by s itself (the Bell correlation), s really is the recorded Z outcome *)
+(* of qubit 1, the tableau is unchanged, the Z Z parity is certain, and X on    *)
+(* the measured qubit is uniformly random.                                       *)
 VerificationTest[
-    Module[{psSym, qmo, h},
-        psSym = PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1];
-        qmo = QuantumMeasurementOperator["Z", {1}];
-        h = Head @ qmo[psSym];
-        (* The dispatch should NOT match the Pauli fast path (which requires
-           ConcretePauliStabilizerQ). It falls to whatever generic dispatch
-           does -- we only require it doesn't crash and stays evaluable. *)
-        FreeQ[h, $Failed]
+    With[{psSym = PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["SymbolicMeasure", 1]},
+        With[{
+            s = First @ Cases[psSym["Signs"], _\[FormalS], Infinity],
+            res = QuantumMeasurementOperator["Z", {2}][psSym],
+            dense = QuantumMeasurementOperator["Z", {1}][PauliStabilizer[2][{"H" -> 1, "CNOT" -> {1, 2}}]["State"]]["States"]
+        },
+            {
+                Keys[res] === {s},
+                (* s is the Z outcome of qubit 1: substituting s = b lands on the dense branch b, |bb>. *)
+                Table[rayEqQ[Normal @ psSym["SubstituteOutcomes", s -> b]["State"]["StateVector"], Normal @ dense[[b + 1]]["StateVector"]], {b, 0, 1}],
+                res[s]["Tableau"] === psSym["Tableau"],
+                Keys @ QuantumMeasurementOperator["ZZ", {1, 2}][psSym],
+                Sort @ Keys @ QuantumMeasurementOperator["X", {1}][psSym]
+            }
+        ]
     ],
-    True,
-    TestID -> "Phase7-QMO-on-SymbolicPS-FallsThrough"
+    {True, {True, True}, True, {0}, {0, 1}},
+    {},
+    TestID -> "Phase7-QMO-on-SymbolicPS-StaysInTableau"
+]
+
+(* A non-Pauli basis on a symbolic-sign tableau matches no interop rule (symbolic *)
+(* signs cannot be materialized) and takes the generic circuit route, where the *)
+(* stabilizer engine cannot fold a measurement gate.                            *)
+VerificationTest[
+    QuantumMeasurementOperator[QuantumBasis["Computational"], {1}][PauliStabilizer[1]["H", 1]["SymbolicMeasure", 1]],
+    $Failed,
+    {PauliStabilizer::nonclifford},
+    TestID -> "Phase7-QMO-NonPauli-on-SymbolicPS-GenericRoute"
 ]
 
 
