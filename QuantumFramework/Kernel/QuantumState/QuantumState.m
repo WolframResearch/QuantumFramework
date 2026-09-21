@@ -164,8 +164,8 @@ QuantumState[qs_ ? QuantumStateQ, args : PatternSequence[Except[_ ? QuantumBasis
 
 (* row-side transform of a doubled (density-matrix) state: the flattened (output, input)
    index transforms as Out (x) (In^-1)^T, the vec image of Out . S . In^-1, so a dual
-   input leg enters through the inverse transpose (conjugated for a unitary frame);
-   with no input legs this is the basis ReducedMatrix itself *)
+   input qudit enters through the inverse transpose (conjugated for a unitary basis);
+   with no input qudits this is the basis ReducedMatrix itself *)
 doubledReducedMatrix[qb_] := If[ qb["InputDimension"] === 1,
     qb["ReducedMatrix"],
     KroneckerProduct[qb["Output"]["ReducedMatrix"], Transpose[MatrixInverse[qb["Input"]["ReducedMatrix"]]]]
@@ -402,7 +402,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
             ];
             If[ resBasis["ComputationalQ"],
                 QuantumState[state, resBasis],
-                (* the product data is computational; rebase it into the tagged frame *)
+                (* the product data is in the computational basis; change it into the basis the result carries *)
                 QuantumState[
                     QuantumState[state,
                         "Output" -> QuditBasis[resBasis["OutputDimensions"]],

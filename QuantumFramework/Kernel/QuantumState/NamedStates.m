@@ -85,11 +85,11 @@ QuantumState[("One" | "Down")[args___], opts___] := QuantumState["1"[args], opts
 (* A fixed-vector name takes a basis specification followed by options. The
    name's amplitudes become the coefficients in that basis, zero-padded when it
    holds more levels; the tail says what the coefficients are coefficients of
-   and does not rotate them into a new frame, which is the reading the digit
+   and does not rotate them into a new basis, which is the reading the digit
    string rule above already gives QuantumState["0", basis]. A trailing integer
    is therefore a qudit dimension and not a qudit count, the count staying
    inside the name as "Plus"[n]. These names denote kets of at least two levels,
-   so a tail reaching here that is not a basis, or is one carrying an input leg
+   so a tail reaching here that is not a basis, or is one carrying an input qudit
    or fewer than two levels, is rejected the way an unmatched call shape is:
    otherwise it would be taken quietly, turning the ket into an operator shaped
    object or dropping amplitudes to fit and leaving the state unnormalized. The

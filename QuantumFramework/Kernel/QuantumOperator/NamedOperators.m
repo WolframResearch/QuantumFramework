@@ -847,7 +847,7 @@ QuantumOperator["WignerD"[j : _ ? jQ : 1 / 2, b_ : 0], opts___] := QuantumOperat
 
 (* Each Cartesian component is stored in its own eigenbasis ("JX"[j] etc., elements
    ordered by ascending m), where its matrix is the diagonal of eigenvalues; the
-   computational-frame matrices come from the basis change ("MatrixRepresentation"). *)
+   computational-basis matrices come from the basis change ("MatrixRepresentation"). *)
 jMatrix[j_] := DiagonalMatrix[Range[- j, j], TargetStructure -> "Sparse"]
 
 QuantumOperator[("JX" | "AngularMomentumX")[j : _ ? jQ : 1 / 2], opts___] := QuantumOperator[QuantumOperator[jMatrix[j], "JX"[j]], opts, "Label" -> "JX"]
@@ -906,7 +906,7 @@ QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enc
     (* represent everything in one common basis (the Hamiltonian's output basis, or the computational
        basis when there is no Hamiltonian), so a named operator carrying its own basis (e.g. "J-")
        enters with its operator meaning rather than its raw matrix; QuantumEvolve's direct path
-       rebases the same way *)
+       changes basis the same way *)
     basis = If[h === None, If[ls === {}, None, QuantumBasis[First[ls]["OutputDimensions"]]], h["OutputBasis"]];
     If[ basis =!= None,
         If[h =!= None, h = QuantumOperator[h, basis]];

@@ -383,8 +383,8 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (* The direct contraction rules below glue qo1's input wires to qo2's output wires with an
    identity factor, which is faithful only when both sides carry the same basis (a dual flag
-   apart) on every shared wire. A mismatched frame falls through to the circuit route, which
-   rebases through the computational frame, so rep(qo1 @ qo2) = rep(qo1) . rep(qo2) always. *)
+   apart) on every shared wire. A mismatched basis falls through to the circuit fallback, which
+   changes basis through the computational basis, so rep(qo1 @ qo2) = rep(qo1) . rep(qo2) always. *)
 composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], qo2["OutputOrder"]]},
     shared === {} ||
         (* fully-aligned wires compare as whole bases, skipping the per-qudit walk *)
@@ -552,7 +552,7 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
 ]
 
 (* A scalar base with a square-operator exponent is the matrix exponential of
-   the stored matrix, base^op = MatrixExp[Log[base] op], the same stored-frame
+   the stored matrix, base^op = MatrixExp[Log[base] op], the same stored-basis
    reading as MatrixExp[op]; the general rule below reads Power arguments
    matrix-first (MatrixPower) and would compute op^base. The base must be a
    nonzero scalar (zero keeps the generic reading, its Log is singular), never

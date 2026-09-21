@@ -992,7 +992,7 @@ QuantumOperatorProp[qo_, "Decompose", gateset : {___String} : {"U", "CX"}] /;
 
 (* The single-qubit-unitary branch fires only on a genuine 1-qubit gate. SquareQ
    (OutputDimension == InputDimension) is required because non-square state-injection
-   tensors share the {2, 2} leg signature: a 2-output/0-input Cup also reports
+   tensors share the {2, 2} dimension list: a 2-output/0-input Cup also reports
    Dimensions === {2, 2} but has a 4x1 matrix, so without this guard UnitaryAngles is
    handed a non-square matrix and the emit fails opaquely. Non-square operators fall
    through to the catch-all, which emits the "// Unimplemented" marker that

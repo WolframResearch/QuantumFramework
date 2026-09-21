@@ -327,7 +327,7 @@ QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
 
 (* operator properties *)
 
-(* Rebasing the underlying operator into the computational frame strips the eigenvalue-tagged
+(* Changing the underlying operator to the computational basis strips the eigenvalue-tagged
    pointer labels, which silently corrupts measurement statistics for non-Z bases.
    When the eigenbasis is not already computational, leave the measurement untouched. *)
 QuantumMeasurementOperatorProp[qmo_, "Computational"] /; ! TrueQ[qmo["Eigenbasis"]["ComputationalQ"]] := qmo

@@ -31,8 +31,8 @@ Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
    eigenvalues of rho.rho-tilde. Norm of the vector is exact for a pure state of any dimension
    (= Sqrt[2 (1 - Tr[rhoA^2])]) and exact for two qubits (the textbook Wootters concurrence); for a
    d1 d2 > 4 mixed state it is a lower bound on the convex-roof concurrence, which has no closed form,
-   and (unlike the two-qubit Wootters concurrence) it is frame-dependent: not invariant under local
-   unitaries, though it stays below the LU-invariant convex-roof value in every frame.
+   and (unlike the two-qubit Wootters concurrence) it is basis-dependent: not invariant under local
+   unitaries, though it stays below the LU-invariant convex-roof value in every basis.
 
    Two qubits (one generator pair, d1 d2 == 4) and any symbolic reduction keep the exact operator
    square-root route. For d1 d2 > 4 on a numeric reduction, rho.rho-tilde is similar to the positive-

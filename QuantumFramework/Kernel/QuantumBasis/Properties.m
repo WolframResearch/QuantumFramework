@@ -233,10 +233,10 @@ QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
 QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["OutputQudits"]], Range[qb["InputQudits"]]]
 
 
-(* A dual-flagged leg contracts through the inverse of the elements it stores
+(* A dual-flagged qudit contracts through the inverse of the elements it stores
    (MatrixInverse[ReducedMatrix] on the input side, and symmetrically on the
-   output side), so for a unitary basis E a transposed leg stores Conjugate[E]
-   (its inverse is Transpose[E]) while a daggered leg stores E itself (its
+   output side), so for a unitary basis E a transposed qudit stores Conjugate[E]
+   (its inverse is Transpose[E]) while a daggered qudit stores E itself (its
    inverse is ConjugateTranspose[E]). *)
 
 QuantumBasisProp[qb_, "Transpose"] := simplifyLabel @ QuantumBasis[qb,
@@ -249,11 +249,11 @@ QuantumBasisProp[qb_, "Inverse"] := simplifyLabel @ QuantumBasis[qb,
     "Label" -> Superscript[qb["Label"], "-1"]
 ]
 
-(* A leg carried across the output/input divide is transposed: it contracts
-   through the inverse of the elements it stores, so the moved legs, and only
-   those, get their elements conjugated. The contract is frame-faithful for
-   orthonormal legs, where Inverse[Conjugate[E]] is Transpose[E]; a
-   non-orthonormal leg is outside it. *)
+(* A qudit carried across the output/input divide is transposed: it contracts
+   through the inverse of the elements it stores, so the moved qudits, and only
+   those, get their elements conjugated. The contract is basis-faithful for
+   orthonormal qudits, where Inverse[Conjugate[E]] is Transpose[E]; a
+   non-orthonormal qudit is outside it. *)
 QuantumBasisProp[qb_, "Permute", perm_Cycles] := With[{
     moved = Pick[Range[qb["Qudits"]], toggleSwap[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]]
 },
@@ -272,8 +272,8 @@ QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
 QuantumBasisProp[qb_, "Split", n_Integer] :=
     QuantumBasis["Output" -> #1, "Input" -> #2, qb["Options"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
 
-(* Re-seating a leg on the other side of the divide transposes it: the moved
-   legs get the Dual flag toggled and their elements conjugated, so the
+(* Re-seating a qudit on the other side of the divide transposes it: the moved
+   qudits get the Dual flag toggled and their elements conjugated, so the
    computational representation of the re-seated object is the reshape of the
    original one. *)
 QuantumBasisProp[qb_, "SplitDual", n_Integer] /; 0 <= n <= qb["Qudits"] :=
@@ -291,7 +291,7 @@ QuantumBasisProp[qb_, "SplitDual", n_Integer ? Negative] := qb["SplitDual", Mod[
 QuantumBasisProp[qb_, "SplitDual", _] := qb["SplitDual", qb["Qudits"]]
 
 
-(* Dual flags only: a daggered leg keeps the original elements so that the
+(* Dual flags only: a daggered qudit keeps the original elements so that the
    inverse-based dual contraction pairs each bra with its own ket (see the
    "Transpose" note above). *)
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumBasis[qb,

@@ -887,7 +887,7 @@ QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
     QuantumState[If[qs["VectorQ"], ArrayVector @ Transpose[qs["StateMatrix"]], ReshapeArray[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixDimensions"]]], qb]
 ]
 
-(* Partial transpose swaps the ket and bra legs of the chosen qudits, so those
+(* Partial transpose swaps the ket and bra sides of the chosen qudits, so those
    qudits' basis elements are conjugated (dual contraction convention, see
    QuantumBasis "Transpose"); the other qudits keep their elements. *)
 QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := With[{out = qs["Basis"]["OutputQudits"]},
