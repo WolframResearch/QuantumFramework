@@ -223,7 +223,7 @@ QECCatState[qubits_List, check_Integer, opts : OptionsPattern[]] := Module[
 $catProperties = {
     "Instructions", "CatQubits", "CheckQubit", "Pairs", "Repetitions", "Qubits",
     "Size", "PrepInstructions", "Heralds", "DangerousPatterns", "ChecksCoverQ",
-    "GateCounts", "Properties"
+    "GateCounts", "QuantumCircuitOperator", "Diagram", "Properties"
 };
 
 catData[QECCatState[a_Association]] := a
@@ -235,8 +235,11 @@ QECCatState[a_Association][prop : ("Instructions" | "CatQubits" | "CheckQubit" |
 
 QECCatState[a_Association]["Size"] := Length[a["CatQubits"]]
 QECCatState[a_Association]["PrepInstructions"] := catPrepInstructions[a["CatQubits"]]
-QECCatState[a_Association]["Heralds"] := Count[a["Instructions"], {"MH", _}]
-QECCatState[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+QECCatState[a_Association]["Heralds"] := gadgetHeralds[a["Instructions"]]
+QECCatState[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
+QECCatState[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[a["Instructions"]]
+QECCatState[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 
 (* The X patterns a single fault in the preparation can leave, and whether the checks
    catch them.  A False here means the gadget is not fault tolerant and says so. *)

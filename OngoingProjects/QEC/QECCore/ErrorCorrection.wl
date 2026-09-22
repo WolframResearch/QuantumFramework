@@ -243,6 +243,7 @@ QECErrorCorrection[code_QECCode, offset_Integer, opts : OptionsPattern[]] := Mod
 $correctionProperties = {
     "Instructions", "Code", "DataQubits", "AncillaQubits", "Offset", "Order",
     "Qubits", "Measurements", "Depth", "InstructionCount", "GateCounts",
+    "QuantumCircuitOperator", "Diagram",
     "BitFlipInstructions", "PhaseInstructions", "TransversalQ", "RepetitionsNeeded",
     "Regions", "DataWeights", "MaxDataWeight", "PreparationDataWeights",
     "OpenAssumptions", "Properties"
@@ -256,11 +257,13 @@ QECErrorCorrection[a_Association][prop : ("Instructions" | "DataQubits" |
     "AncillaQubits" | "Offset" | "Order" | "Qubits")] := a[prop]
 
 QECErrorCorrection[a_Association]["Code"] := QECCode[a["Code"]]
-QECErrorCorrection[a_Association]["Measurements"] := Count[a["Instructions"], {"M", _}]
+QECErrorCorrection[a_Association]["Measurements"] := gadgetMeasurements[a["Instructions"]]
 QECErrorCorrection[a_Association]["InstructionCount"] := Length[a["Instructions"]]
-QECErrorCorrection[a_Association]["Depth"] :=
-    Length[circuitSchedule[a["Instructions"], a["Qubits"]]]
-QECErrorCorrection[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+QECErrorCorrection[a_Association]["Depth"] := gadgetDepth[a["Instructions"], a["Qubits"]]
+QECErrorCorrection[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
+QECErrorCorrection[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[a["Instructions"]]
+QECErrorCorrection[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 
 QECErrorCorrection[a_Association]["BitFlipInstructions"] :=
     steaneBitFlipInstructions[a["Code"], a["Offset"]]

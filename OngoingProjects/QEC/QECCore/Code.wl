@@ -176,7 +176,11 @@ $codeParametrizedProperties = {
 
 QECCode::noprop = "`1` is not a property of QECCode. Use code[\"Properties\"] for the list.";
 
-QECCode[_Association]["Properties"] := Join[$codeDirectProperties, $codeDerivedProperties, $codeParametrizedProperties]
+(* "Decoder" belongs to two of the three lists, because code["Decoder"] (the lookup
+   table) and code["Decoder", noise] (the coset map) are two call shapes of one name.
+   Both dispatches stay; the listing names it once. *)
+QECCode[_Association]["Properties"] :=
+    DeleteDuplicates @ Join[$codeDirectProperties, $codeDerivedProperties, $codeParametrizedProperties]
 
 QECCode[a_Association]["CheckMatrix"] := a["CheckMatrix"]
 QECCode[a_Association]["Phases"] := a["Phases"]

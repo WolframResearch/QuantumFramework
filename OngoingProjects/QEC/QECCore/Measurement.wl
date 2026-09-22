@@ -209,11 +209,16 @@ QECPauliMeasurement[code_QECCode, p_, opts : OptionsPattern[]] :=
 
 QECPauliMeasurement[code_QECCode, p_, reps_, opts : OptionsPattern[]] := Module[
     {n = code["Qubits"], v, support, m, cat, check, pairs, catReps, ec, ecGadget, ecInstr},
-    v = Quiet[Check[QECPauliVector[p], $Failed]];
     ec = OptionValue["ErrorCorrection"];
     catReps = OptionValue["CatRepetitions"];
+    (* QECPauliQ is the message-free guard the Pauli layer provides for exactly this
+       question, so asking it is what the house rule wants instead of silencing
+       QECPauliVector's complaint.  The size and phase conditions are separate because
+       they are different refusals: a Pauli on the wrong number of qubits, and a Pauli
+       carrying a phase, whose Hermitian representative is what this gadget measures. *)
+    v = If[QECPauliQ[p], QECPauliVector[p], $Failed];
     Which[
-        ! MatchQ[v, {(0 | 1) ..}] || Length[v] < 2 n,
+        v === $Failed || Length[v] =!= 2 n + 1 || Last[v] =!= 0,
             Message[QECPauliMeasurement::pauli, p, n]; $Failed,
         ! (IntegerQ[reps] && reps > 0),
             Message[QECPauliMeasurement::reps, reps]; $Failed,
@@ -263,7 +268,8 @@ $measurementProperties = {
     "Instructions", "Pauli", "Support", "Weight", "Repetitions", "CatRepetitions",
     "DataQubits", "CatQubits", "CheckQubit", "Qubits", "Pairs", "Code", "Cat",
     "ErrorCorrection", "Heralds", "Measurements", "Depth", "InstructionCount",
-    "GateCounts", "TransversalQ", "DataWeights", "MaxDataWeight", "MeasurementCorrectQ",
+    "GateCounts", "QuantumCircuitOperator", "Diagram",
+    "TransversalQ", "DataWeights", "MaxDataWeight", "MeasurementCorrectQ",
     "OpenAssumptions", "Properties"
 };
 
@@ -278,11 +284,13 @@ QECPauliMeasurement[a_Association][prop : ("Instructions" | "Support" | "Repetit
 QECPauliMeasurement[a_Association]["Pauli"] := QECPauliString[Append[a["Pauli"], 0]]
 QECPauliMeasurement[a_Association]["Weight"] := Length[a["Support"]]
 QECPauliMeasurement[a_Association]["Code"] := QECCode[a["Code"]]
-QECPauliMeasurement[a_Association]["Heralds"] := Count[a["Instructions"], {"MH", _}]
-QECPauliMeasurement[a_Association]["Measurements"] := Count[a["Instructions"], {"M", _}]
+QECPauliMeasurement[a_Association]["Heralds"] := gadgetHeralds[a["Instructions"]]
+QECPauliMeasurement[a_Association]["Measurements"] := gadgetMeasurements[a["Instructions"]]
 QECPauliMeasurement[a_Association]["InstructionCount"] := Length[a["Instructions"]]
-QECPauliMeasurement[a_Association]["Depth"] :=
-    Length[circuitSchedule[a["Instructions"], a["Qubits"]]]
+QECPauliMeasurement[a_Association]["Depth"] := gadgetDepth[a["Instructions"], a["Qubits"]]
+QECPauliMeasurement[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[a["Instructions"]]
+QECPauliMeasurement[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 QECPauliMeasurement[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
 
 QECPauliMeasurement[a_Association]["Cat"] :=

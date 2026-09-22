@@ -452,7 +452,7 @@ engineGateInstructions[gates_List, offset_Integer] := Replace[gates, {
 $circuitProperties = {
     "Instructions", "DataQubits", "Ancillas", "Qubits", "Rounds", "Code",
     "MeasurementCount", "MeasurementLabels", "Depth", "InstructionCount",
-    "GateCounts", "Properties"
+    "GateCounts", "QuantumCircuitOperator", "Diagram", "Properties"
 };
 
 QECSyndromeCircuit[_Association]["Properties"] := $circuitProperties
@@ -470,8 +470,11 @@ QECSyndromeCircuit[a_Association]["MeasurementLabels"] := circuitMeasurementLabe
    entirely (it was the gate count under the wrong name).  The schedule is what
    idle noise is charged against, so the two must agree on what a step is. *)
 QECSyndromeCircuit[a_Association]["Depth"] :=
-    Length[circuitSchedule[a["Instructions"], circuitQubitCount[a]]]
+    gadgetDepth[a["Instructions"], circuitQubitCount[a]]
 QECSyndromeCircuit[a_Association]["InstructionCount"] := Length[a["Instructions"]]
+QECSyndromeCircuit[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[a["Instructions"]]
+QECSyndromeCircuit[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
 
 QECSyndromeCircuit[a_Association][prop_String] := (Message[QECSyndromeCircuit::noprop, prop]; Missing["NotFound", prop])

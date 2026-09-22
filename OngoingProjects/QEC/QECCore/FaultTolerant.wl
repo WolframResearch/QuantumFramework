@@ -95,7 +95,7 @@ $ftGadgetKinds = {"Preparation", "Gate", "Storage", "Measurement", "ErrorCorrect
 
 (* A location is an instruction OR a wait, and the waits come from the schedule
    rather than from the instruction list -- which is why this is not Length. *)
-ftLocations[instr_List, nq_Integer] := Length[instr] + Length[circuitIdleSlots[instr, nq]]
+ftLocations[instr_List, nq_Integer] := gadgetLocations[instr, nq]
 
 
 (* ---- moving a gadget onto a block ---- *)
@@ -332,7 +332,8 @@ QECFaultTolerant[circuit_List, code_QECCode, opts : OptionsPattern[]] := Module[
 $faultTolerantProperties = {
     "Code", "Circuit", "Blocks", "LogicalQubits", "Qubits", "Instructions",
     "InstructionCount", "Depth", "Locations", "CircuitLocations", "Measurements",
-    "Readouts", "Gadgets", "GadgetCounts", "GadgetInstructions", "GateCounts", "SizeOverhead",
+    "Readouts", "Gadgets", "GadgetCounts", "GadgetInstructions", "GateCounts",
+    "QuantumCircuitOperator", "Diagram", "SizeOverhead",
     "QubitOverhead", "DepthOverhead", "Overheads", "OpenAssumptions", "Properties"
 };
 
@@ -346,8 +347,11 @@ QECFaultTolerant[a_Association][prop : ("Circuit" | "Blocks" | "Qubits" |
 QECFaultTolerant[a_Association]["Code"] := QECCode[a["Code"]]
 QECFaultTolerant[a_Association]["LogicalQubits"] := a["Blocks"]
 QECFaultTolerant[a_Association]["InstructionCount"] := Length[a["Instructions"]]
-QECFaultTolerant[a_Association]["Depth"] := Length[circuitSchedule[a["Instructions"], a["Qubits"]]]
-QECFaultTolerant[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+QECFaultTolerant[a_Association]["Depth"] := gadgetDepth[a["Instructions"], a["Qubits"]]
+QECFaultTolerant[a_Association]["GateCounts"] := gadgetGateCounts[a["Instructions"]]
+QECFaultTolerant[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[a["Instructions"]]
+QECFaultTolerant[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 
 QECFaultTolerant[a_Association]["Gadgets"] := Dataset[a["Gadgets"]]
 

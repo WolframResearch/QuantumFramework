@@ -242,6 +242,31 @@ VerificationTest[
    Refusals
    ============================================================================ *)
 
+(* The input guard is QECPauliQ -- the message-free question the Pauli layer exists to
+   answer -- rather than a silenced parse.  Three different things are refused by the same
+   message: something that is not a Pauli at all, a Pauli on the wrong number of qubits,
+   and a Pauli carrying a phase, whose Hermitian representative is what would be measured. *)
+VerificationTest[
+    QECPauliMeasurement[five, "XYZW"],
+    $Failed,
+    {QECPauliMeasurement::pauli},
+    TestID -> "QEC-Measure-refuses-what-is-not-a-Pauli"
+]
+
+VerificationTest[
+    QECPauliMeasurement[five, "XZZX"],
+    $Failed,
+    {QECPauliMeasurement::pauli},
+    TestID -> "QEC-Measure-refuses-a-Pauli-of-the-wrong-size"
+]
+
+VerificationTest[
+    QECPauliMeasurement[five, "-XZZXI"],
+    $Failed,
+    {QECPauliMeasurement::pauli},
+    TestID -> "QEC-Measure-refuses-a-Pauli-carrying-a-phase"
+]
+
 VerificationTest[
     QECPauliMeasurement[five, "IIIII"],
     $Failed,

@@ -393,6 +393,7 @@ QECTransversalGate[code_QECCode, All] := With[{a = First[code]},
 
 $transversalProperties = {
     "Code", "Gate", "Blocks", "Qubits", "LogicalQubits", "Instructions", "Depth",
+    "QuantumCircuitOperator", "Diagram",
     "TransversalQ", "StabilizerImages", "LogicalAction", "LogicalGate", "Properties"
 };
 
@@ -413,6 +414,11 @@ QECTransversalGate[a_Association]["Instructions"] :=
 
 QECTransversalGate[a_Association]["Depth"] :=
     If[ListQ[a["Gate"]], Length[DeleteCases[a["Gate"], "I"]], If[a["Gate"] === "I", 0, 1]]
+
+QECTransversalGate[a_Association]["QuantumCircuitOperator"] :=
+    gadgetCircuitOperator[QECTransversalGate[a]["Instructions"]]
+QECTransversalGate[a_Association]["Diagram"] :=
+    gadgetDiagram[QECTransversalGate[a]["Instructions"]]
 
 QECTransversalGate[a_Association]["TransversalQ"] :=
     transversalValidQ[a["Code"], a["Gate"], transversalQubits[a["Gate"]]]
