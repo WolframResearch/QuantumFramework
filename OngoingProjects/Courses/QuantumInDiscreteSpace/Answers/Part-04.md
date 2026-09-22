@@ -1,224 +1,268 @@
 ## Part 4. Composite systems: tensor product and partial trace
 
-Two quantum systems join by the tensor product, and the reverse question, what one subsystem looks like once
-we ignore the other, is answered by the partial trace. In other words, this Part is about going up (stacking
-two systems into one) and coming back down (reading a piece of a joint state on its own). We build each
-direction from primitives and then confirm the framework agrees: the tensor product is a Kronecker product,
+Two quantum systems join by the tensor product, and the reverse question, what one subsystem looks like
+once the other is ignored, is answered by the partial trace. This Part builds each direction from
+primitives and then confirms that the framework object agrees: the tensor product is a Kronecker product,
 and the partial trace is a reshape-and-contract.
 
 ### 4.1 [BSc] How do I form the tensor product of states and of operators?
 
 Two subsystems combine by the tensor product: states as $|\psi\rangle\otimes|\phi\rangle$, operators as
 $A\otimes B$, and the two are compatible, $(A\otimes B)(|\psi\rangle\otimes|\phi\rangle) =
-(A|\psi\rangle)\otimes(B|\phi\rangle)$. In other words, the joint system carries one amplitude for every pair
-of subsystem labels, so the composite lives in the $d_1 d_2$-dimensional product space. In the computational
-basis this tensor product is exactly the Kronecker product.
+(A|\psi\rangle)\otimes(B|\phi\rangle)$. The joint system carries one amplitude for every pair of subsystem
+labels, so the composite lives in the $d_1 d_2$-dimensional product space, and in the computational basis
+the tensor product is exactly the Kronecker product.
 
-Form the tensor product of two single-qubit amplitude vectors $\{a,b\}$ and $\{c,d\}$, flattened into one
-length-4 vector:
+**WL** : the tensor product of two single-qubit amplitude vectors $\{a,b\}$ and $\{c,d\}$, flattened into
+one length-4 vector, one amplitude per computational label $00, 01, 10, 11$.
 
 ```wl
 Flatten[KroneckerProduct[{a, b}, {c, d}]]
 ```
 
-As one can see, the four amplitudes are the pairwise products $\{ac, ad, bc, bd\}$, one for each
-computational label $00, 01, 10, 11$.
-
-Operators combine the same way. Form $X\otimes Z$ as the Kronecker product of their matrices:
+Operators combine the same way; here $X\otimes Z$ as the Kronecker product of the two matrices.
 
 ```wl
 KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]
 ```
 
-The framework performs the same join but keeps the factor structure. Combine the two states with
-`QuantumTensorProduct`:
+The compatibility rule is what makes this a tensor product: acting with $X\otimes Z$ on the product
+state is the same as acting with $X$ and $Z$ on the two factors separately, for every $a, b, c, d$.
+
+```wl
+KroneckerProduct[PauliMatrix[1], PauliMatrix[3]] . Flatten[KroneckerProduct[{a, b}, {c, d}]] == Flatten[KroneckerProduct[PauliMatrix[1] . {a, b}, PauliMatrix[3] . {c, d}]]
+```
+
+**QF** : `QuantumTensorProduct` performs the same join but keeps the factor structure. The result is a
+two-qubit `QuantumState`, shown as its summary box.
 
 ```wl
 tp = QuantumTensorProduct[QuantumState[{a, b}], QuantumState[{c, d}]]
 ```
 
-The result is a two-qubit `QuantumState`; its summary box reports a $2\times2$-dimensional system, not just a
-bare vector. Read its amplitude vector back out:
+Its `"StateVector"` reads the amplitudes back out.
 
 ```wl
 tp["StateVector"] // Normal
 ```
 
-Confirm the object route and the hand computation agree:
+The object route and the hand computation agree.
 
 ```wl
-tp["StateVector"] // Normal == Flatten[KroneckerProduct[{a, b}, {c, d}]]
+Normal[tp["StateVector"]] == Flatten[KroneckerProduct[{a, b}, {c, d}]]
 ```
 
-It joins operators the same way; here $X\otimes Z$ kept as a `QuantumOperator`:
+It joins operators the same way; here $X\otimes Z$ kept as a `QuantumOperator`, shown as its summary box.
 
 ```wl
-QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["Z"]]
+xz = QuantumTensorProduct[QuantumOperator["X"], QuantumOperator["Z"]]
 ```
 
-Therefore both routes give the amplitude vector $\{ac, ad, bc, bd\}$ and the operator $X\otimes Z$: the
+Its matrix is the Kronecker product built by hand.
+
+```wl
+Normal[xz["Matrix"]] == KroneckerProduct[PauliMatrix[1], PauliMatrix[3]]
+```
+
+The compatibility rule holds at the object level too: the joint operator applied to the joint state is
+the tensor product of the two factor images, equal as states.
+
+```wl
+xz[tp] == QuantumTensorProduct[QuantumOperator["X"][QuantumState[{a, b}]], QuantumOperator["Z"][QuantumState[{c, d}]]]
+```
+
+Both give the amplitude vector $\{ac, ad, bc, bd\}$, the pairwise products of the two factors' amplitudes,
+and the operator $X\otimes Z$, and both confirm the compatibility rule for arbitrary amplitudes: the
 composite factorizes into its parts, and the framework object additionally knows it is a two-qubit system
-(its factors, order, and basis), a matrix being just one representation read from it.
+(its factors, order, and basis), a matrix being one representation read from it.
 
 ### 4.2 [BSc] How do I take a partial trace of a two-party state and obtain a reduced density matrix?
 
-The state of subsystem $A$ alone is the reduced density matrix $\rho_A = \mathrm{Tr}_B[\rho_{AB}]$, formed by
-tracing out $B$. In other words, we average over everything we cannot see in $B$, keeping only what $A$ can
+The state of subsystem $A$ alone is the reduced density matrix $\rho_A = \mathrm{Tr}_B[\rho_{AB}]$, formed
+by tracing out $B$: an average over everything in $B$ that is not observed, keeping only what $A$ can
 still predict on its own. For a product state $\rho_A$ stays pure; for an *entangled* state it comes out
-mixed, which is the operational signature of entanglement.
+mixed, which is the operational signature of entanglement. Take the one-parameter family
+$|\psi(\lambda)\rangle = \cos\lambda\,|00\rangle + \sin\lambda\,|11\rangle$, which runs from the product
+state $|00\rangle$ at $\lambda = 0$ to the Bell state $|\Phi^+\rangle$ at $\lambda = \pi/4$; every two-qubit
+pure state is one of these up to local unitaries, its Schmidt form (Part 11, 11.3).
 
-Take the Bell state $|\Phi^+\rangle = (|00\rangle + |11\rangle)/\sqrt2$ and trace out qubit $B$ by hand.
-First define its amplitudes:
+**WL** : the amplitudes of $|\psi(\lambda)\rangle$.
 
 ```wl
-bell = {1, 0, 0, 1}/Sqrt[2]
+psi = {Cos[\[Lambda]], 0, 0, Sin[\[Lambda]]}
 ```
 
-Its density matrix is the outer product $|\Phi^+\rangle\langle\Phi^+|$:
+Its density matrix is the outer product $|\psi\rangle\langle\psi|$.
 
 ```wl
-rho = KroneckerProduct[bell, Conjugate[bell]]
+rho = KroneckerProduct[psi, Conjugate[psi]];
 ```
 
 Reshape the $4\times4$ matrix into a $2\times2\times2\times2$ tensor, whose four legs are
 $\mathrm{ket}_A, \mathrm{ket}_B, \mathrm{bra}_A, \mathrm{bra}_B$, and trace out $B$ by contracting its two
-legs, indices $\{2,4\}$:
+legs, indices $\{2,4\}$; $\lambda$ is a real angle.
 
 ```wl
-rhoA = TensorContract[ArrayReshape[rho, {2, 2, 2, 2}], {{2, 4}}]
+rhoA = Simplify[TensorContract[ArrayReshape[rho, {2, 2, 2, 2}], {{2, 4}}], \[Lambda] \[Element] Reals]
 ```
 
-As one can see, the reduced state is $\tfrac12 I$: maximally mixed, retaining none of the pair's structure.
-
-The framework traces out the listed qubit in one call. Reduce the same Bell state, keeping the object form:
+Its purity $\mathrm{Tr}[\rho_A^2]$ measures how much of the pair's structure the reduction kept.
 
 ```wl
-redA = QuantumPartialTrace[QuantumState["PhiPlus"], {2}]
+purityA = Simplify[Tr[rhoA . rhoA], \[Lambda] \[Element] Reals]
 ```
 
-Its purity is below one, the quantitative signature of the entanglement discarded with $B$:
+At the two ends of the family, the product state and the Bell state.
 
 ```wl
-redA["Purity"]
+purityA /. {{\[Lambda] -> 0}, {\[Lambda] -> Pi/4}}
 ```
 
-Confirm the hand computation and the framework agree:
+**QF** : `QuantumPartialTrace` traces out the listed qubit in one call and returns the reduced state as an
+object, shown as its summary box.
 
 ```wl
-redA["DensityMatrix"] // Normal == rhoA
+redA = QuantumPartialTrace[QuantumState[psi], {2}]
 ```
 
-A *product* input, by contrast, reduces to a pure state. The product ket $|01\rangle$ is written directly as
-`QuantumState["01"]`; trace out qubit 2 and read the purity:
+Its `"Purity"` is the same function of $\lambda$.
 
 ```wl
-QuantumPartialTrace[QuantumState["01"], {2}]["Purity"]
+Simplify[redA["Purity"], \[Lambda] \[Element] Reals]
 ```
 
-As expected, purity $1$: a product state carries no entanglement, so nothing is lost in the reduction. The
+The hand computation and the framework agree.
+
+```wl
+Simplify[Normal[redA["DensityMatrix"]] == rhoA, \[Lambda] \[Element] Reals]
+```
+
+The two ends of the family are named states: the Bell pair `"PhiPlus"` and a product ket such as `"01"`.
+
+```wl
+QuantumPartialTrace[QuantumState[#], {2}]["Purity"] & /@ {"PhiPlus", "01"}
+```
+
+Both give $\rho_A = \mathrm{diag}(\cos^2\lambda, \sin^2\lambda)$ with purity $\cos^4\lambda + \sin^4\lambda$:
+the reduced state carries the Schmidt weights on its diagonal, pure at $\lambda = 0$ where the pair is a
+product and the maximally mixed $I/2$ at $\lambda = \pi/4$ where the pair is maximally entangled, so the
 mixedness of the reduced state is exactly the entanglement discarded along with $B$.
 
-**A heterogeneous register.** The reshape-and-contract recipe does not care that the qudits differ in size.
-Recall that the two-qubit case reshaped the density matrix so each qubit owned a ket leg and a bra leg; the
-same holds for qudits of any dimensions. Take three qudits of dimensions $(d_1,d_2,d_3) = (3,2,5)$ in the
-entangled state $|\psi\rangle = \tfrac1{\sqrt2}(|0,0,0\rangle + |1,1,1\rangle)$, living in
-$\mathbb C^{3}\otimes\mathbb C^{2}\otimes\mathbb C^{5} = \mathbb C^{30}$.
+**A heterogeneous register.** The reshape-and-contract recipe does not care that the qudits differ in
+size. In the two-qubit case each qubit owned a ket leg and a bra leg; the same holds for qudits of any
+dimensions. Take three qudits of dimensions $(d_1,d_2,d_3) = (3,2,5)$ in the same family,
+$|\psi(\lambda)\rangle = \cos\lambda\,|0,0,0\rangle + \sin\lambda\,|1,1,1\rangle$, living in
+$\mathbb C^{3}\otimes\mathbb C^{2}\otimes\mathbb C^{5} = \mathbb C^{30}$. The joint density matrix is
+$30\times30$; reshaped to a rank-6 array of shape $(3,2,5,3,2,5)$, its first three axes are the ket (row)
+legs of particles $1,2,3$ and the last three the bra (column) legs, so particle $p$ owns ket-leg $p$ and
+bra-leg $p+3$, each of size $d_p$. Tracing out a set of particles contracts their leg pairs, and the legs
+that survive, grouped into rows and columns, are the reduced density matrix on the remaining qudits, of
+size $\prod_{\text{kept}} d_q$.
 
-All the bookkeeping is in the indices, so let us be explicit about them. The joint density matrix is
-$30\times30$; reshape it to a rank-6 array of shape $(3,2,5,3,2,5)$. The first three axes are the ket (row)
-legs of particles $1,2,3$; the last three are the bra (column) legs. In short, particle $p$ owns two legs of
-size $d_p$: ket-leg $p$ and bra-leg $p+3$. Tracing out particle $p$ then means contracting those two legs
-together, and the legs that survive, reshaped into a square matrix of size $\prod_{\text{kept}} d_q$, are the
-reduced density matrix on the remaining qudits.
-
-Encode $|\psi\rangle$ as a length-30 vector, each term a Kronecker product of the three qudit levels:
+**WL** : build the two basis kets from the dimension list, one level $k$ on every qudit.
 
 ```wl
-psi = Normalize[Flatten[KroneckerProduct[{1, 0, 0}, {1, 0}, {1, 0, 0, 0, 0}]] + Flatten[KroneckerProduct[{0, 1, 0}, {0, 1}, {0, 1, 0, 0, 0}]]];
+kets = Table[Flatten[KroneckerProduct @@ (UnitVector[#, k] & /@ {3, 2, 5})], {k, 2}];
 ```
 
-Reshape its density matrix to the $(3,2,5,3,2,5)$ tensor:
+Combine them with the Schmidt weights.
+
+```wl
+psi = Cos[\[Lambda]] kets[[1]] + Sin[\[Lambda]] kets[[2]];
+```
+
+Reshape its density matrix to the $(3,2,5,3,2,5)$ tensor.
 
 ```wl
 rhoT = ArrayReshape[KroneckerProduct[psi, Conjugate[psi]], {3, 2, 5, 3, 2, 5}];
 ```
 
-The framework needs only the amplitudes and the dimension list to build the same register:
+Remove the dimension-$2$ qudit (particle $2$) by contracting legs $\{2,5\}$, then group the surviving ket
+legs into rows and bra legs into columns.
 
 ```wl
-qs = QuantumState[psi, {3, 2, 5}]
+rho13 = Flatten[TensorContract[rhoT, {{2, 5}}], {{1, 2}, {3, 4}}];
 ```
 
-Now trace out one qudit by contracting its single ket-bra leg pair. Remove the dim-$2$ qudit (particle $2$)
-by contracting legs $\{2,5\}$:
-
-```wl
-rho13 = ArrayReshape[TensorContract[rhoT, {{2, 5}}], {15, 15}];
-```
-
-The kept legs $(3,5)$ flatten to a $15\times15$ matrix:
+Its size is the product of the kept dimensions.
 
 ```wl
 Dimensions[rho13]
 ```
 
-and its purity is below one:
+It is a state: the input is normalized, and the reduction has unit trace, is Hermitian, and has a
+nonnegative spectrum, the two Schmidt weights and zeros.
 
 ```wl
-Tr[rho13 . rho13]
+Simplify[{Norm[psi], Tr[rho13], HermitianMatrixQ[rho13], Eigenvalues[rho13]}, \[Lambda] \[Element] Reals]
 ```
 
-The framework traces the same qudit from its indices, and because it keeps the $(3,5)$ factorization it
-reports the reduced dimensions as $(3,5)$ rather than the flattened $15$:
+Its purity is the same function of $\lambda$ as the qubit pair's.
 
 ```wl
-QuantumPartialTrace[qs, {2}]["Dimensions"]
+Simplify[Tr[rho13 . rho13], \[Lambda] \[Element] Reals]
 ```
 
-with the same purity:
+Remove two qudits at once: particle $p$ owns legs $p$ and $p+3$, so each pair of particles contracts two
+leg pairs, and the pairs $\{1,2\}, \{1,3\}, \{2,3\}$ leave the dimension-$5$, dimension-$2$, and
+dimension-$3$ qudit.
 
 ```wl
-QuantumPartialTrace[qs, {2}]["Purity"]
+pairs = Simplify[TensorContract[rhoT, Transpose[{#, # + 3}]] & /@ Subsets[Range[3], {2}], \[Lambda] \[Element] Reals]
 ```
 
-The leg pattern is uniform: particle $1$ (dim $3$) is legs $\{1,4\}$, particle $3$ (dim $5$) is $\{3,6\}$.
-Trace out each single qudit in turn and read the dimensions each reduction leaves behind:
+**QF** : the framework needs only the amplitudes and the dimension list to build the same register.
 
 ```wl
-Table[QuantumPartialTrace[qs, {p}]["Dimensions"], {p, 3}]
+qs = QuantumState[psi, {3, 2, 5}]
 ```
 
-As one can see, removing one qudit leaves the other two: $(2,5), (3,5), (3,2)$ as we drop particles
-$1, 2, 3$.
-
-Next trace out two qudits by contracting both leg pairs at once. Remove the dim-$3$ and dim-$2$ qudits
-(particles $\{1,2\}$, legs $\{1,4\}$ and $\{2,5\}$), leaving only the dim-$5$ qudit:
+Trace out the dimension-$2$ qudit once, as an object that keeps the $(3,5)$ factorization.
 
 ```wl
-TensorContract[rhoT, {{1, 4}, {2, 5}}]
+red2 = QuantumPartialTrace[qs, {2}]
 ```
 
-The framework agrees:
+Its dimensions are reported as $(3,5)$ rather than the flattened $15$.
 
 ```wl
-QuantumPartialTrace[qs, {1, 2}]["DensityMatrix"] // Normal
+red2["Dimensions"]
 ```
 
-Remove instead the dim-$3$ and dim-$5$ qudits (particles $\{1,3\}$, legs $\{1,4\}$ and $\{3,6\}$), leaving
-the dim-$2$ qudit maximally mixed:
+Its purity is the hand value.
 
 ```wl
-TensorContract[rhoT, {{1, 4}, {3, 6}}]
+Simplify[red2["Purity"], \[Lambda] \[Element] Reals]
 ```
 
-and again the framework matches:
+The hand matrix and the framework's agree.
 
 ```wl
-QuantumPartialTrace[qs, {1, 3}]["DensityMatrix"] // Normal
+Simplify[Normal[red2["DensityMatrix"]] == rho13, \[Lambda] \[Element] Reals]
 ```
 
-Therefore every reduction has dimension $\prod_{\text{kept}} d_q$: $15, 10, 6$ when one qudit is removed,
-$5, 2, 3$ when two are. Each comes out mixed at purity $\tfrac12$, because
-$(|0,0,0\rangle + |1,1,1\rangle)/\sqrt2$ is entangled across every cut. The contraction is the same
-construction at any sizes; only the leg dimensions change, and where the hand computation sees a flattened
-square matrix, the framework keeps the qudit factorization and reports its dimensions accordingly.
+The dimensions left by each single removal.
+
+```wl
+QuantumPartialTrace[qs, #]["Dimensions"] & /@ Subsets[Range[3], {1}]
+```
+
+The three pair removals equal the hand contractions.
+
+```wl
+Simplify[(Normal[QuantumPartialTrace[qs, #]["DensityMatrix"]] & /@ Subsets[Range[3], {2}]) == pairs, \[Lambda] \[Element] Reals]
+```
+
+The purity of all six reductions, the three single removals followed by the three pairs.
+
+```wl
+Simplify[QuantumPartialTrace[qs, #]["Purity"] & /@ Subsets[Range[3], {1, 2}], \[Lambda] \[Element] Reals]
+```
+
+Both routes give reductions of dimension $\prod_{\text{kept}} d_q$, $(2,5), (3,5), (3,2)$ for the single
+removals and $5, 2, 3$ for the pairs, and every one of the six carries the same spectrum, the two Schmidt
+weights $\cos^2\lambda, \sin^2\lambda$ padded with zeros, hence the same purity $\cos^4\lambda + \sin^4\lambda$:
+the state is entangled across every cut with the same Schmidt weights, and which qudit sizes sit on
+either side of the cut does not enter. The contraction is the same construction at any sizes; only the
+leg dimensions change, and where the hand computation sees a flattened square matrix, the framework keeps
+the qudit factorization and reports its dimensions accordingly.

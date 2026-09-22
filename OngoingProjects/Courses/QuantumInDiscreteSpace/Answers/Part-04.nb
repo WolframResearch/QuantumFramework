@@ -10,29 +10,30 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     42740,       1201]
-NotebookOptionsPosition[     36335,       1123]
-NotebookOutlinePosition[     36677,       1138]
-CellTagsIndexPosition[     36634,       1135]
+NotebookDataLength[     55039,       1579]
+NotebookOptionsPosition[     45898,       1412]
+NotebookOutlinePosition[     46220,       1426]
+CellTagsIndexPosition[     46177,       1423]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
-Cell["Part 4. Composite systems: tensor product and partial trace", "Section",ExpressionUUID->"38cc1e8c-0ef0-44ff-849a-451e3b05ade7"],
+Cell["Part 4. Composite systems: tensor product and partial trace", "Section",
+ CellID->874461601,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
 
 Cell["\<\
 Two quantum systems join by the tensor product, and the reverse question, \
-what one subsystem looks like once we ignore the other, is answered by the \
-partial trace. In other words, this Part is about going up (stacking two \
-systems into one) and coming back down (reading a piece of a joint state on \
-its own). We build each direction from primitives and then confirm the \
-framework agrees: the tensor product is a Kronecker product, and the partial \
-trace is a reshape-and-contract.\
-\>", "Text",ExpressionUUID->"93529419-5ea0-4f50-b79b-1644f3143dd3"],
+what one subsystem looks like once the other is ignored, is answered by the \
+partial trace. This Part builds each direction from primitives and then \
+confirms that the framework object agrees: the tensor product is a Kronecker \
+product, and the partial trace is a reshape-and-contract.\
+\>", "Text",
+ CellID->36768919,ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
 
 Cell["\<\
 4.1 [BSc] How do I form the tensor product of states and of operators?\
-\>", "Subsection",ExpressionUUID->"1f26178c-e1df-4d1b-8e14-7a9a9e63226f"],
+\>", "Subsection",
+ CellID->1699946459,ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
 
 Cell[TextData[{
  "Two subsystems combine by the tensor product: states as ",
@@ -45,14 +46,14 @@ Cell[TextData[{
      StyleBox["\[Phi]", "TI"]},
     "Ket"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8e822e99-dcb1-4828-b44f-5567d639d35c"],
+  "75d93363-5da6-51a4-23e6-ab4d5453238e"],
  ", operators as ",
  Cell[BoxData[
   RowBox[{
    StyleBox["A", "TI"], "\[CircleTimes]", 
    StyleBox["B", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "9bf5e910-35fd-492b-9a89-a3349d89448c"],
+  "25a568a6-87a2-527f-535a-810032572145"],
  ", and the two are compatible, ",
  Cell[BoxData[
   RowBox[{
@@ -87,9 +88,9 @@ Cell[TextData[{
         StyleBox["\[Phi]", "TI"]},
        "Ket"]}], ")"}]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "549891ff-cdaa-40d1-ba3b-84e9f9a7164f"],
- ". In other words, the joint system carries one amplitude for every pair of \
-subsystem labels, so the composite lives in the ",
+  "00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+ ". The joint system carries one amplitude for every pair of subsystem \
+labels, so the composite lives in the ",
  Cell[BoxData[
   RowBox[{
    SubscriptBox[
@@ -97,13 +98,16 @@ subsystem labels, so the composite lives in the ",
    SubscriptBox[
     StyleBox["d", "TI"], "2"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "28949c5c-4026-435c-bb92-7e8cddfb63c4"],
- "-dimensional product space. In the computational basis this tensor product \
-is exactly the Kronecker product."
-}], "Text",ExpressionUUID->"d3ee8908-ecd8-402b-aa1e-33fa928f0c7a"],
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ "-dimensional product space, and in the computational basis the tensor \
+product is exactly the Kronecker product."
+}], "Text",
+ CellID->1535504786,ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
 
 Cell[TextData[{
- "Form the tensor product of two single-qubit amplitude vectors ",
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the tensor product of two single-qubit amplitude vectors ",
  Cell[BoxData[
   RowBox[{
    RowBox[{"{", 
@@ -111,7 +115,7 @@ Cell[TextData[{
    RowBox[{
     StyleBox["b", "TI"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "aa6330f6-b59d-41c2-a01b-95cb1a1fc5fd"],
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
  " and ",
  Cell[BoxData[
   RowBox[{
@@ -120,9 +124,16 @@ Cell[TextData[{
    RowBox[{
     StyleBox["d", "TI"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1894da0c-9b3a-4cd7-afa8-007a33dba45e"],
- ", flattened into one length-4 vector:"
-}], "Text",ExpressionUUID->"06fe1838-8db2-4f02-a910-1390d0fc5e7b"],
+  "5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+ ", flattened into one length-4 vector, one amplitude per computational label \
+",
+ Cell[BoxData[
+  RowBox[{"00", ",", "01", ",", "10", ",", "11"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+ "."
+}], "Text",
+ CellID->1208482393,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
 
 Cell[BoxData[
  RowBox[{"Flatten", "[", 
@@ -132,58 +143,104 @@ Cell[BoxData[
      RowBox[{"a", ",", " ", "b"}], "}"}], ",", " ", 
     RowBox[{"{", 
      RowBox[{"c", ",", " ", "d"}], "}"}]}], "]"}], "]"}]], "Input",
- CellLabel->"In[1]:= ",ExpressionUUID->"0542eeb2-1643-4765-a0f3-778758647446"],
+ CellLabel->"In[1]:= ",
+ CellID->28909615,ExpressionUUID->"234f1fb7-07c6-bba9-5174-96f1b27009f3"],
 
 Cell[TextData[{
- "As one can see, the four amplitudes are the pairwise products ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", 
-    StyleBox["a", "TI"], 
-    StyleBox["c", "TI"]}], ",", 
-   StyleBox[
-    RowBox[{"a", "d"}], "TI"], ",", 
-   StyleBox[
-    RowBox[{"b", "c"}], "TI"], ",", 
-   RowBox[{
-    StyleBox["b", "TI"], 
-    StyleBox["d", "TI"], "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "2b650a8f-619c-4648-9cdf-93cb5997cae3"],
- ", one for each computational label ",
- Cell[BoxData[
-  RowBox[{"00", ",", "01", ",", "10", ",", "11"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "df41cf18-1678-4b36-9af7-a00e84c8b58d"],
- "."
-}], "Text",ExpressionUUID->"e479bd55-692d-4eaa-acbf-e79561fd34f1"],
-
-Cell[TextData[{
- "Operators combine the same way. Form ",
+ "Operators combine the same way; here ",
  Cell[BoxData[
   RowBox[{
    StyleBox["X", "TI"], "\[CircleTimes]", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "05a64a41-604c-4ce8-bcae-ada01540d1b8"],
- " as the Kronecker product of their matrices:"
-}], "Text",ExpressionUUID->"b49eb396-62a3-45d7-a82d-2c9f99747360"],
+  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+ " as the Kronecker product of the two matrices."
+}], "Text",
+ CellID->193832008,ExpressionUUID->"0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
 
 Cell[BoxData[
  RowBox[{"KroneckerProduct", "[", 
   RowBox[{
    RowBox[{"PauliMatrix", "[", "1", "]"}], ",", " ", 
    RowBox[{"PauliMatrix", "[", "3", "]"}]}], "]"}]], "Input",
- CellLabel->"In[2]:= ",ExpressionUUID->"c4bf9ebf-a136-4b28-a5aa-0e07d887ca23"],
+ CellLabel->"In[2]:= ",
+ CellID->684317082,ExpressionUUID->"6ec9a758-58be-624c-16f6-3f02594b3096"],
 
 Cell[TextData[{
- "The framework performs the same join but keeps the factor structure. \
-Combine the two states with ",
+ "The compatibility rule is what makes this a tensor product: acting with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["X", "TI"], "\[CircleTimes]", 
+   StyleBox["Z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+ " on the product state is the same as acting with ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e84829b-9667-6594-16bb-1bc523124ffe"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "569e173f-6b36-b240-7ea5-8f790ec000aa"],
+ " on the two factors separately, for every ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["a", "TI"], ",", 
+   StyleBox["b", "TI"], ",", 
+   StyleBox["c", "TI"], ",", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+ "."
+}], "Text",
+ CellID->528485616,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"KroneckerProduct", "[", 
+    RowBox[{
+     RowBox[{"PauliMatrix", "[", "1", "]"}], ",", " ", 
+     RowBox[{"PauliMatrix", "[", "3", "]"}]}], "]"}], " ", ".", " ", 
+   RowBox[{"Flatten", "[", 
+    RowBox[{"KroneckerProduct", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"a", ",", " ", "b"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"c", ",", " ", "d"}], "}"}]}], "]"}], "]"}]}], " ", "==", " ", 
+  
+  RowBox[{"Flatten", "[", 
+   RowBox[{"KroneckerProduct", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"PauliMatrix", "[", "1", "]"}], " ", ".", " ", 
+      RowBox[{"{", 
+       RowBox[{"a", ",", " ", "b"}], "}"}]}], ",", " ", 
+     RowBox[{
+      RowBox[{"PauliMatrix", "[", "3", "]"}], " ", ".", " ", 
+      RowBox[{"{", 
+       RowBox[{"c", ",", " ", "d"}], "}"}]}]}], "]"}], "]"}]}]], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->1392207227,ExpressionUUID->"2867ea9b-6e8d-517b-581c-03c50b382041"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : ",
  Cell[BoxData["QuantumTensorProduct"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6b7a493a-8c2b-44e8-94bf-18481c54180b"],
- ":"
-}], "Text",ExpressionUUID->"d401e686-a0c1-4bf5-90fd-5c0a30cb6c32"],
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+ " performs the same join but keeps the factor structure. The result is a \
+two-qubit ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+ ", shown as its summary box."
+}], "Text",
+ CellID->705466992,ExpressionUUID->"4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
 
 Cell[BoxData[
  RowBox[{"tp", " ", "=", " ", 
@@ -195,42 +252,41 @@ Cell[BoxData[
     RowBox[{"QuantumState", "[", 
      RowBox[{"{", 
       RowBox[{"c", ",", " ", "d"}], "}"}], "]"}]}], "]"}]}]], "Input",
- CellLabel->"In[3]:= ",ExpressionUUID->"524764ed-22cb-4c1b-bb86-06535041c05d"],
+ CellLabel->"In[4]:= ",
+ CellID->1350516518,ExpressionUUID->"741b091d-feb2-1a39-1c38-a146fb476903"],
 
 Cell[TextData[{
- "The result is a two-qubit ",
- Cell[BoxData["QuantumState"], "InlineFormula",
+ "Its ",
+ Cell[BoxData["\"\<StateVector\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "73de1a56-beaf-4b37-8621-f5e24d207088"],
- "; its summary box reports a ",
- Cell[BoxData[
-  RowBox[{"2", "\[Times]", "2"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3311c5a0-e719-4a6c-a61f-87a9c85fc1e0"],
- "-dimensional system, not just a bare vector. Read its amplitude vector back \
-out:"
-}], "Text",ExpressionUUID->"c7e98c1e-d73a-4e56-bb25-6fd8a414332e"],
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ " reads the amplitudes back out."
+}], "Text",
+ CellID->907546795,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"tp", "[", "\"\<StateVector\>\"", "]"}], " ", "//", " ", 
   "Normal"}]], "Input",
- CellLabel->"In[4]:= ",ExpressionUUID->"19921cb8-a6e8-4b3c-88db-45896f7acdbf"],
+ CellLabel->"In[5]:= ",
+ CellID->814772321,ExpressionUUID->"3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
 
-Cell["Confirm the object route and the hand computation agree:", "Text",ExpressionUUID->"138fb31e-97da-4b06-b73f-8d828b612999"],
+Cell["The object route and the hand computation agree.", "Text",
+ CellID->1054628905,ExpressionUUID->"1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
 
 Cell[BoxData[
  RowBox[{
-  RowBox[{"tp", "[", "\"\<StateVector\>\"", "]"}], " ", "//", " ", 
-  RowBox[{"Normal", " ", "==", " ", 
-   RowBox[{"Flatten", "[", 
-    RowBox[{"KroneckerProduct", "[", 
-     RowBox[{
-      RowBox[{"{", 
-       RowBox[{"a", ",", " ", "b"}], "}"}], ",", " ", 
-      RowBox[{"{", 
-       RowBox[{"c", ",", " ", "d"}], "}"}]}], "]"}], "]"}]}]}]], "Input",
- CellLabel->"In[5]:= ",ExpressionUUID->"de9e5cb7-c287-4bfc-99ae-fef26e2b7022"],
+  RowBox[{"Normal", "[", 
+   RowBox[{"tp", "[", "\"\<StateVector\>\"", "]"}], "]"}], " ", "==", " ", 
+  RowBox[{"Flatten", "[", 
+   RowBox[{"KroneckerProduct", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"a", ",", " ", "b"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"c", ",", " ", "d"}], "}"}]}], "]"}], "]"}]}]], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->2043779557,ExpressionUUID->"77d99fdb-a351-2d53-1de6-1684d6e477b9"],
 
 Cell[TextData[{
  "It joins operators the same way; here ",
@@ -239,23 +295,66 @@ Cell[TextData[{
    StyleBox["X", "TI"], "\[CircleTimes]", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "08cd5371-7fa5-4979-ac35-ab0c38b910f4"],
+  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
  " kept as a ",
  Cell[BoxData["QuantumOperator"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5641bf89-0fc7-453c-bbd5-387f6a48ead5"],
- ":"
-}], "Text",ExpressionUUID->"b401fa3b-d419-4564-bdfb-b20b15d073dd"],
+  "1cbde497-e826-5557-4442-fdd089d33fbd"],
+ ", shown as its summary box."
+}], "Text",
+ CellID->17830494,ExpressionUUID->"6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
 
 Cell[BoxData[
- RowBox[{"QuantumTensorProduct", "[", 
-  RowBox[{
-   RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], ",", " ", 
-   RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}]}], "]"}]], "Input",
- CellLabel->"In[6]:= ",ExpressionUUID->"bef98244-1b63-4f62-a99f-d18ec449d8a6"],
+ RowBox[{"xz", " ", "=", " ", 
+  RowBox[{"QuantumTensorProduct", "[", 
+   RowBox[{
+    RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], ",", " ", 
+    RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}]}], "]"}]}]], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->1589986527,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell["Its matrix is the Kronecker product built by hand.", "Text",
+ CellID->943101875,ExpressionUUID->"1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Normal", "[", 
+   RowBox[{"xz", "[", "\"\<Matrix\>\"", "]"}], "]"}], " ", "==", " ", 
+  RowBox[{"KroneckerProduct", "[", 
+   RowBox[{
+    RowBox[{"PauliMatrix", "[", "1", "]"}], ",", " ", 
+    RowBox[{"PauliMatrix", "[", "3", "]"}]}], "]"}]}]], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->67888809,ExpressionUUID->"5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+
+Cell["\<\
+The compatibility rule holds at the object level too: the joint operator \
+applied to the joint state is the tensor product of the two factor images, \
+equal as states.\
+\>", "Text",
+ CellID->1432876021,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"xz", "[", "tp", "]"}], " ", "==", " ", 
+  RowBox[{"QuantumTensorProduct", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], "[", 
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"{", 
+       RowBox[{"a", ",", " ", "b"}], "}"}], "]"}], "]"}], ",", " ", 
+    RowBox[{
+     RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}], "[", 
+     RowBox[{"QuantumState", "[", 
+      RowBox[{"{", 
+       RowBox[{"c", ",", " ", "d"}], "}"}], "]"}], "]"}]}], "]"}]}]], "Input",\
+
+ CellLabel->"In[9]:= ",
+ CellID->876231958,ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"],
 
 Cell[TextData[{
- "Therefore both routes give the amplitude vector ",
+ "Both give the amplitude vector ",
  Cell[BoxData[
   RowBox[{
    RowBox[{"{", 
@@ -269,30 +368,33 @@ Cell[TextData[{
     StyleBox["b", "TI"], 
     StyleBox["d", "TI"], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "be09ba8c-d738-4c9b-85cf-6826d343ac54"],
- " and the operator ",
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ ", the pairwise products of the two factors' amplitudes, and the operator ",
  Cell[BoxData[
   RowBox[{
    StyleBox["X", "TI"], "\[CircleTimes]", 
    StyleBox["Z", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7bce1edf-6dcd-4125-a86f-90162047e5bf"],
- ": the composite factorizes into its parts, and the framework object \
-additionally knows it is a two-qubit system (its factors, order, and basis), \
-a matrix being just one representation read from it."
-}], "Text",ExpressionUUID->"5efa5d03-cd5e-40d9-8b69-d68b9cfab7a4"],
+  "35077f55-9291-6519-633d-771f27244c63"],
+ ", and both confirm the compatibility rule for arbitrary amplitudes: the \
+composite factorizes into its parts, and the framework object additionally \
+knows it is a two-qubit system (its factors, order, and basis), a matrix \
+being one representation read from it."
+}], "Text",
+ CellID->1020575516,ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
 
 Cell["\<\
 4.2 [BSc] How do I take a partial trace of a two-party state and obtain a \
 reduced density matrix?\
-\>", "Subsection",ExpressionUUID->"bfa18269-3bee-4bc9-9c8f-c78194b8e447"],
+\>", "Subsection",
+ CellID->1967685850,ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
 
 Cell[TextData[{
  "The state of subsystem ",
  Cell[BoxData[
   StyleBox["A", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7a01ae74-6d84-4b72-806b-2413b4bce5d1"],
+  "7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
  " alone is the reduced density matrix ",
  Cell[BoxData[
   RowBox[{
@@ -312,102 +414,152 @@ Cell[TextData[{
    StyleBox["]",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a5eb78e9-5f91-47b2-ac71-d4b217d2df7a"],
+  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
  ", formed by tracing out ",
  Cell[BoxData[
   StyleBox["B", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e4aa7a2a-30cb-4ff2-a4ed-b9dbfd7e14df"],
- ". In other words, we average over everything we cannot see in ",
+  "02f88238-86c8-66df-3287-2462337d4c25"],
+ ": an average over everything in ",
  Cell[BoxData[
   StyleBox["B", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dae3db2d-1651-4a79-8143-294ddfb00daf"],
- ", keeping only what ",
+  "034d641c-5834-e412-3173-7e4659c6cf78"],
+ " that is not observed, keeping only what ",
  Cell[BoxData[
   StyleBox["A", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "ba81d9b5-900f-4d26-a620-c4dea3bafb8e"],
+  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
  " can still predict on its own. For a product state ",
  Cell[BoxData[
   SubscriptBox[
    StyleBox["\[Rho]", "TI"], 
    StyleBox["A", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1a9fcaf2-7147-4ea3-bd07-374822987e85"],
+  "5bfe104a-50de-a555-0985-8a1461680fbf"],
  " stays pure; for an ",
  StyleBox["entangled", "TI"],
  " state it comes out mixed, which is the operational signature of \
-entanglement."
-}], "Text",ExpressionUUID->"546f5064-2396-4ef1-8a8f-0b7707f2946b"],
-
-Cell[TextData[{
- "Take the Bell state ",
+entanglement. Take the one-parameter family ",
  Cell[BoxData[
   RowBox[{
    TemplateBox[{
-     SuperscriptBox["\[CapitalPhi]", "+"]},
+     RowBox[{
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["(", SpanMaxSize -> 1], 
+       StyleBox["\[Lambda]", "TI"], 
+       StyleBox[")", SpanMaxSize -> 1]}]},
     "Ket"], "=", 
    RowBox[{
-    RowBox[{"(", 
-     RowBox[{
-      TemplateBox[{"00"},
-       "Ket"], "+", 
-      TemplateBox[{"11"},
-       "Ket"]}], ")"}], "/", 
-    SqrtBox["2"]}]}]], "InlineFormula",
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], 
+     StyleBox["\[Lambda]", "TI"], 
+     TemplateBox[{"00"},
+      "Ket"]}], "+", 
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], 
+     StyleBox["\[Lambda]", "TI"], 
+     TemplateBox[{"11"},
+      "Ket"]}]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c82ca477-6be0-4176-a1ff-a4f134d5e4e8"],
- " and trace out qubit ",
+  "134534fb-1061-d656-417a-ada5a115bcbc"],
+ ", which runs from the product state ",
  Cell[BoxData[
-  StyleBox["B", "TI"]], "InlineFormula",
+  TemplateBox[{"00"},
+   "Ket"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5e41e7a3-456d-4199-9949-efa37717e1dd"],
- " by hand. First define its amplitudes:"
-}], "Text",ExpressionUUID->"43b48055-338b-4f6f-a80d-7ddbc6b3c32e"],
+  "2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+ " at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e1c99a5-dcef-9c28-1623-100ed49be772"],
+ " to the Bell state ",
+ Cell[BoxData[
+  TemplateBox[{
+    SuperscriptBox["\[CapitalPhi]", "+"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "608e87cc-8fce-afdf-10b5-1e962a78f525"],
+ " at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "\[Pi]", "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+ "; every two-qubit pure state is one of these up to local unitaries, its \
+Schmidt form (Part 11, 11.3)."
+}], "Text",
+ CellID->1044562475,ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+
+Cell[TextData[{
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : the amplitudes of ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["\[Psi]", "TI"], 
+      StyleBox["(", SpanMaxSize -> 1], 
+      StyleBox["\[Lambda]", "TI"], 
+      StyleBox[")", SpanMaxSize -> 1]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+ "."
+}], "Text",
+ CellID->1653200050,ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
 
 Cell[BoxData[
- RowBox[{"bell", " ", "=", " ", 
-  RowBox[{
-   RowBox[{"{", 
-    RowBox[{"1", ",", " ", "0", ",", " ", "0", ",", " ", "1"}], "}"}], "/", 
-   RowBox[{"Sqrt", "[", "2", "]"}]}]}]], "Input",
- CellLabel->"In[7]:= ",ExpressionUUID->"a46c4c48-00ed-4047-80b2-93202f052a65"],
+ RowBox[{"psi", " ", "=", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"Cos", "[", "\[Lambda]", "]"}], ",", " ", "0", ",", " ", "0", ",",
+     " ", 
+    RowBox[{"Sin", "[", "\[Lambda]", "]"}]}], "}"}]}]], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->1384978530,ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662"],
 
 Cell[TextData[{
  "Its density matrix is the outer product ",
  Cell[BoxData[
   RowBox[{
    TemplateBox[{
-     SuperscriptBox["\[CapitalPhi]", "+"]},
+     StyleBox["\[Psi]", "TI"]},
     "Ket"], 
    TemplateBox[{
-     SuperscriptBox["\[CapitalPhi]", "+"]},
+     StyleBox["\[Psi]", "TI"]},
     "Bra"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "18d0c2ee-9516-424f-9a92-d471d99ba2b5"],
- ":"
-}], "Text",ExpressionUUID->"b2a11415-9044-4a72-a440-feafc4f036da"],
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ "."
+}], "Text",
+ CellID->519689844,ExpressionUUID->"6801f052-da94-0b6f-183e-ea1fdf2159b5"],
 
 Cell[BoxData[
- RowBox[{"rho", " ", "=", " ", 
-  RowBox[{"KroneckerProduct", "[", 
-   RowBox[{"bell", ",", " ", 
-    RowBox[{"Conjugate", "[", "bell", "]"}]}], "]"}]}]], "Input",
- CellLabel->"In[8]:= ",ExpressionUUID->"da45a7fa-5ecb-40ae-a217-966f8e5c5d2b"],
+ RowBox[{
+  RowBox[{"rho", " ", "=", " ", 
+   RowBox[{"KroneckerProduct", "[", 
+    RowBox[{"psi", ",", " ", 
+     RowBox[{"Conjugate", "[", "psi", "]"}]}], "]"}]}], ";"}]], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->1609367578,ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51"],
 
 Cell[TextData[{
  "Reshape the ",
  Cell[BoxData[
   RowBox[{"4", "\[Times]", "4"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "c7f43609-404a-4ef5-9c02-168c53e9a6fb"],
+  "7b6211f5-475c-1194-2911-88bf72e963fe"],
  " matrix into a ",
  Cell[BoxData[
   RowBox[{"2", "\[Times]", "2", "\[Times]", "2", "\[Times]", "2"}]], 
   "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "deae39c7-2a62-45fe-aadb-90884e721953"],
+  "7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
  " tensor, whose four legs are ",
  Cell[BoxData[
   RowBox[{
@@ -428,133 +580,251 @@ Cell[TextData[{
      FontSlant->"Plain"], 
     StyleBox["B", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d53ec24d-8128-4b50-999a-5381288377b2"],
+  "14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
  ", and trace out ",
  Cell[BoxData[
   StyleBox["B", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5dada426-f9f5-4ca8-9d38-ccf2a9d5b085"],
+  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
  " by contracting its two legs, indices ",
  Cell[BoxData[
   RowBox[{
    RowBox[{"{", "2"}], ",", 
    RowBox[{"4", "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "67407c9a-d60e-45de-9663-8972e22c419b"],
- ":"
-}], "Text",ExpressionUUID->"9dc242d6-0350-43d9-94f3-3c168df548b1"],
+  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+ "; ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ " is a real angle."
+}], "Text",
+ CellID->1541450781,ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"],
 
 Cell[BoxData[
  RowBox[{"rhoA", " ", "=", " ", 
-  RowBox[{"TensorContract", "[", 
+  RowBox[{"Simplify", "[", 
    RowBox[{
-    RowBox[{"ArrayReshape", "[", 
-     RowBox[{"rho", ",", " ", 
+    RowBox[{"TensorContract", "[", 
+     RowBox[{
+      RowBox[{"ArrayReshape", "[", 
+       RowBox[{"rho", ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"2", ",", " ", "2", ",", " ", "2", ",", " ", "2"}], "}"}]}], 
+       "]"}], ",", " ", 
       RowBox[{"{", 
-       RowBox[{"2", ",", " ", "2", ",", " ", "2", ",", " ", "2"}], "}"}]}], 
-     "]"}], ",", " ", 
-    RowBox[{"{", 
-     RowBox[{"{", 
-      RowBox[{"2", ",", " ", "4"}], "}"}], "}"}]}], "]"}]}]], "Input",
- CellLabel->"In[9]:= ",ExpressionUUID->"eeb37267-e9fb-4bde-9d7a-788dcadbd978"],
+       RowBox[{"{", 
+        RowBox[{"2", ",", " ", "4"}], "}"}], "}"}]}], "]"}], ",", " ", 
+    RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], 
+   "]"}]}]], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->1657269721,ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"],
 
 Cell[TextData[{
- "As one can see, the reduced state is ",
+ "Its purity ",
  Cell[BoxData[
   RowBox[{
-   FractionBox["1", "2"], 
-   StyleBox["I", "TI"]}]], "InlineFormula",
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   SubsuperscriptBox[
+    StyleBox["\[Rho]", "TI"], 
+    StyleBox["A", "TI"], "2"], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e37780ec-9928-40aa-b74a-567483eea817"],
- ": maximally mixed, retaining none of the pair's structure."
-}], "Text",ExpressionUUID->"ea4e04ff-9090-40ca-982b-394ac308cd1e"],
+  "1d359769-845f-cd94-44ca-0f332deb97fe"],
+ " measures how much of the pair's structure the reduction kept."
+}], "Text",
+ CellID->1140508347,ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+
+Cell[BoxData[
+ RowBox[{"purityA", " ", "=", " ", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{
+    RowBox[{"Tr", "[", 
+     RowBox[{"rhoA", " ", ".", " ", "rhoA"}], "]"}], ",", " ", 
+    RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], 
+   "]"}]}]], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->496109794,ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679"],
 
 Cell["\<\
-The framework traces out the listed qubit in one call. Reduce the same Bell \
-state, keeping the object form:\
-\>", "Text",ExpressionUUID->"b3411f15-c09d-4c41-9c8e-5a0eea63d79e"],
+At the two ends of the family, the product state and the Bell state.\
+\>", "Text",
+ CellID->108435171,ExpressionUUID->"46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+
+Cell[BoxData[
+ RowBox[{"purityA", " ", "/.", " ", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"\[Lambda]", " ", "->", " ", "0"}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"\[Lambda]", " ", "->", " ", 
+      RowBox[{"Pi", "/", "4"}]}], "}"}]}], "}"}]}]], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->829388421,ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : ",
+ Cell[BoxData["QuantumPartialTrace"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+ " traces out the listed qubit in one call and returns the reduced state as \
+an object, shown as its summary box."
+}], "Text",
+ CellID->203008389,ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
 
 Cell[BoxData[
  RowBox[{"redA", " ", "=", " ", 
   RowBox[{"QuantumPartialTrace", "[", 
    RowBox[{
-    RowBox[{"QuantumState", "[", "\"\<PhiPlus\>\"", "]"}], ",", " ", 
+    RowBox[{"QuantumState", "[", "psi", "]"}], ",", " ", 
     RowBox[{"{", "2", "}"}]}], "]"}]}]], "Input",
- CellLabel->
-  "In[10]:= ",ExpressionUUID->"d0d6ff2d-5505-490b-b781-31129a46b57b"],
+ CellLabel->"In[15]:= ",
+ CellID->1090263105,ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
 
 Cell[TextData[{
- "Its purity is below one, the quantitative signature of the entanglement \
-discarded with ",
+ "Its ",
+ Cell[BoxData["\"\<Purity\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+ " is the same function of ",
  Cell[BoxData[
-  StyleBox["B", "TI"]], "InlineFormula",
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "31b84b2f-c9b5-4c8a-8d96-9dc53e38f60a"],
- ":"
-}], "Text",ExpressionUUID->"c69f26ce-b28c-4ca7-8bf4-763f48e5a35e"],
-
-Cell[BoxData[
- RowBox[{"redA", "[", "\"\<Purity\>\"", "]"}]], "Input",
- CellLabel->
-  "In[11]:= ",ExpressionUUID->"5582ffc8-98ad-40ca-950d-a9bdbd2b00e5"],
-
-Cell["Confirm the hand computation and the framework agree:", "Text",ExpressionUUID->"c5b2fcab-4d78-4d29-9bbd-fd268088124b"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"redA", "[", "\"\<DensityMatrix\>\"", "]"}], " ", "//", " ", 
-  RowBox[{"Normal", " ", "==", " ", "rhoA"}]}]], "Input",
- CellLabel->
-  "In[12]:= ",ExpressionUUID->"3e3361b3-b30d-409b-9ec2-6497038b91bc"],
-
-Cell[TextData[{
- "A ",
- StyleBox["product", "TI"],
- " input, by contrast, reduces to a pure state. The product ket ",
- Cell[BoxData[
-  TemplateBox[{"01"},
-   "Ket"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "44344d46-69aa-414a-9bd1-3ee933c25534"],
- " is written directly as ",
- Cell[BoxData[
-  RowBox[{"QuantumState", "[", "\"\<01\>\"", "]"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "db41caae-5ed7-4706-8820-6577164daef0"],
- "; trace out qubit 2 and read the purity:"
-}], "Text",ExpressionUUID->"4004580d-0799-4cba-97fa-408829975c60"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"QuantumPartialTrace", "[", 
-   RowBox[{
-    RowBox[{"QuantumState", "[", "\"\<01\>\"", "]"}], ",", " ", 
-    RowBox[{"{", "2", "}"}]}], "]"}], "[", "\"\<Purity\>\"", "]"}]], "Input",
- CellLabel->
-  "In[13]:= ",ExpressionUUID->"8ae244ab-037e-4bac-bb9d-1e066f7bea52"],
-
-Cell[TextData[{
- "As expected, purity ",
- Cell[BoxData["1"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "97cc7fd7-aed8-4164-ae25-0e89a04e127f"],
- ": a product state carries no entanglement, so nothing is lost in the \
-reduction. The mixedness of the reduced state is exactly the entanglement \
-discarded along with ",
- Cell[BoxData[
-  StyleBox["B", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "b62e2bf1-7df3-4331-86d2-28be751c0fb1"],
+  "14fd1512-f616-8834-3c82-8d5f83a0db1e"],
  "."
-}], "Text",ExpressionUUID->"a423fefa-67c6-43bb-ad6b-2b029d107261"],
+}], "Text",
+ CellID->1560876240,ExpressionUUID->"66c67103-72a1-9427-0efe-696d0755ff0d"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{"redA", "[", "\"\<Purity\>\"", "]"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[16]:= ",
+ CellID->176337227,ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+
+Cell["The hand computation and the framework agree.", "Text",
+ CellID->807053435,ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Normal", "[", 
+     RowBox[{"redA", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], " ", "==", 
+    " ", "rhoA"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[17]:= ",
+ CellID->1633675818,ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+
+Cell[TextData[{
+ "The two ends of the family are named states: the Bell pair ",
+ Cell[BoxData["\"\<PhiPlus\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+ " and a product ket such as ",
+ Cell[BoxData["\"\<01\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
+ "."
+}], "Text",
+ CellID->1828793009,ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"QuantumPartialTrace", "[", 
+     RowBox[{
+      RowBox[{"QuantumState", "[", "#", "]"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "]"}], "[", "\"\<Purity\>\"", "]"}], " ", 
+   "&"}], " ", "/@", " ", 
+  RowBox[{"{", 
+   RowBox[{"\"\<PhiPlus\>\"", ",", " ", "\"\<01\>\""}], "}"}]}]], "Input",
+ CellLabel->"In[18]:= ",
+ CellID->1232986364,ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+
+Cell[TextData[{
+ "Both give ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Rho]", "TI"], 
+    StyleBox["A", "TI"]], "=", 
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     SuperscriptBox[
+      StyleBox["cos",
+       FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+     StyleBox["\[Lambda]", "TI"]}], ",", 
+    RowBox[{
+     SuperscriptBox[
+      StyleBox["sin",
+       FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+     StyleBox["\[Lambda]", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e187950-8ca2-2ab2-0638-711a25577898"],
+ " with purity ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["cos",
+     FontSlant->"Plain"], "4"], "\[ThinSpace]", 
+   StyleBox["\[Lambda]", "TI"], "+", 
+   SuperscriptBox[
+    StyleBox["sin",
+     FontSlant->"Plain"], "4"], "\[ThinSpace]", 
+   StyleBox["\[Lambda]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+ ": the reduced state carries the Schmidt weights on its diagonal, pure at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a9104d-5625-6af3-4356-8a1763d038d9"],
+ " where the pair is a product and the maximally mixed ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["I", "TI"], "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ " at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "\[Pi]", "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ " where the pair is maximally entangled, so the mixedness of the reduced \
+state is exactly the entanglement discarded along with ",
+ Cell[BoxData[
+  StyleBox["B", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ "."
+}], "Text",
+ CellID->762269937,ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
 
 Cell[TextData[{
  StyleBox["A heterogeneous register.",
   FontWeight->"Bold"],
  " The reshape-and-contract recipe does not care that the qudits differ in \
-size. Recall that the two-qubit case reshaped the density matrix so each \
-qubit owned a ket leg and a bra leg; the same holds for qudits of any \
-dimensions. Take three qudits of dimensions ",
+size. In the two-qubit case each qubit owned a ket leg and a bra leg; the \
+same holds for qudits of any dimensions. Take three qudits of dimensions ",
  Cell[BoxData[
   RowBox[{
    StyleBox["(",
@@ -574,24 +844,32 @@ dimensions. Take three qudits of dimensions ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "097a0dcc-e1f6-4d98-93b5-8026eb0763d1"],
- " in the entangled state ",
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " in the same family, ",
  Cell[BoxData[
   RowBox[{
    TemplateBox[{
-     StyleBox["\[Psi]", "TI"]},
+     RowBox[{
+       StyleBox["\[Psi]", "TI"], 
+       StyleBox["(", SpanMaxSize -> 1], 
+       StyleBox["\[Lambda]", "TI"], 
+       StyleBox[")", SpanMaxSize -> 1]}]},
     "Ket"], "=", 
    RowBox[{
-    FractionBox["1", 
-     SqrtBox["2"]], 
-    RowBox[{"(", 
-     RowBox[{
-      TemplateBox[{"0,0,0"},
-       "Ket"], "+", 
-      TemplateBox[{"1,1,1"},
-       "Ket"]}], ")"}]}]}]], "InlineFormula",
+    RowBox[{
+     StyleBox["cos",
+      FontSlant->"Plain"], 
+     StyleBox["\[Lambda]", "TI"], 
+     TemplateBox[{"0,0,0"},
+      "Ket"]}], "+", 
+    RowBox[{
+     StyleBox["sin",
+      FontSlant->"Plain"], 
+     StyleBox["\[Lambda]", "TI"], 
+     TemplateBox[{"1,1,1"},
+      "Ket"]}]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1b2e444e-76a9-4d97-a522-b920c96db1cf"],
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
  ", living in ",
  Cell[BoxData[
   RowBox[{
@@ -600,18 +878,13 @@ dimensions. Take three qudits of dimensions ",
    SuperscriptBox["\:2102", "5"], "=", 
    SuperscriptBox["\:2102", "30"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d17ac3fc-4fa0-4020-9371-6a29875e8043"],
- "."
-}], "Text",ExpressionUUID->"e3bc1f22-09ac-4e30-be0d-931de2cc15a9"],
-
-Cell[TextData[{
- "All the bookkeeping is in the indices, so let us be explicit about them. \
-The joint density matrix is ",
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ ". The joint density matrix is ",
  Cell[BoxData[
   RowBox[{"30", "\[Times]", "30"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "36c1d4a2-fe29-4bbc-a5e4-d4881d5aafbd"],
- "; reshape it to a rank-6 array of shape ",
+  "07359582-e823-44a1-2eca-0cef89d62e8b"],
+ "; reshaped to a rank-6 array of shape ",
  Cell[BoxData[
   RowBox[{
    StyleBox["(",
@@ -620,42 +893,38 @@ The joint density matrix is ",
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dd40f080-e41a-47ef-ad38-4b56b9a5e039"],
- ". The first three axes are the ket (row) legs of particles ",
+  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+ ", its first three axes are the ket (row) legs of particles ",
  Cell[BoxData[
   RowBox[{"1", ",", "2", ",", "3"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2b2406c1-001b-4bf2-b972-74bfe0e00479"],
- "; the last three are the bra (column) legs. In short, particle ",
+  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+ " and the last three the bra (column) legs, so particle ",
  Cell[BoxData[
   StyleBox["p", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "25280596-8267-4df3-a4fd-4c08d52c6668"],
- " owns two legs of size ",
- Cell[BoxData[
-  SubscriptBox[
-   StyleBox["d", "TI"], 
-   StyleBox["p", "TI"]]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "c5c0e444-6a76-4a4d-8529-3a92ca0749a9"],
- ": ket-leg ",
+  "6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+ " owns ket-leg ",
  Cell[BoxData[
   StyleBox["p", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2c487d90-e061-410c-a3c4-95e0398ae1bd"],
+  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
  " and bra-leg ",
  Cell[BoxData[
   RowBox[{
    StyleBox["p", "TI"], "+", "3"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "91b9c4df-bbac-432d-aa04-fff24aa0d618"],
- ". Tracing out particle ",
+  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+ ", each of size ",
  Cell[BoxData[
-  StyleBox["p", "TI"]], "InlineFormula",
+  SubscriptBox[
+   StyleBox["d", "TI"], 
+   StyleBox["p", "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7b9b7121-fde7-414d-9757-aab6be3d4cbb"],
- " then means contracting those two legs together, and the legs that survive, \
-reshaped into a square matrix of size ",
+  "5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+ ". Tracing out a set of particles contracts their leg pairs, and the legs \
+that survive, grouped into rows and columns, are the reduced density matrix \
+on the remaining qudits, of size ",
  Cell[BoxData[
   RowBox[{
    UnderscriptBox["\[Product]", 
@@ -666,51 +935,60 @@ reshaped into a square matrix of size ",
     StyleBox["d", "TI"], 
     StyleBox["q", "TI"]]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "d0fd9c1c-19bb-4d34-a56b-44cea0495b91"],
- ", are the reduced density matrix on the remaining qudits."
-}], "Text",ExpressionUUID->"4c7df688-76bc-4b55-ba45-efe93cb2ecad"],
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
+ "."
+}], "Text",
+ CellID->405213039,ExpressionUUID->"52535901-cb26-8b9c-0261-516aeed0d9e6"],
 
 Cell[TextData[{
- "Encode ",
+ StyleBox["WL",
+  FontWeight->"Bold"],
+ " : build the two basis kets from the dimension list, one level ",
  Cell[BoxData[
-  TemplateBox[{
-    StyleBox["\[Psi]", "TI"]},
-   "Ket"]], "InlineFormula",
+  StyleBox["k", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f5680309-08c5-47d8-8966-04e0378c935b"],
- " as a length-30 vector, each term a Kronecker product of the three qudit \
-levels:"
-}], "Text",ExpressionUUID->"f1ade043-77be-4a14-bd4d-c5af2245f1f9"],
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+ " on every qudit."
+}], "Text",
+ CellID->2118931930,ExpressionUUID->"7421cf44-a1ac-4319-1dde-e721d0592e63"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"kets", " ", "=", " ", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"Flatten", "[", 
+      RowBox[{"KroneckerProduct", " ", "@@", " ", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"UnitVector", "[", 
+           RowBox[{"#", ",", " ", "k"}], "]"}], " ", "&"}], " ", "/@", " ", 
+         RowBox[{"{", 
+          RowBox[{"3", ",", " ", "2", ",", " ", "5"}], "}"}]}], ")"}]}], 
+      "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"k", ",", " ", "2"}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellLabel->"In[19]:= ",
+ CellID->1039057480,ExpressionUUID->"511b3347-8d7d-ab60-0738-ab212409f64a"],
+
+Cell["Combine them with the Schmidt weights.", "Text",
+ CellID->1411198270,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"psi", " ", "=", " ", 
-   RowBox[{"Normalize", "[", 
+   RowBox[{
     RowBox[{
-     RowBox[{"Flatten", "[", 
-      RowBox[{"KroneckerProduct", "[", 
-       RowBox[{
-        RowBox[{"{", 
-         RowBox[{"1", ",", " ", "0", ",", " ", "0"}], "}"}], ",", " ", 
-        RowBox[{"{", 
-         RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
-        RowBox[{"{", 
-         RowBox[{
-         "1", ",", " ", "0", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], 
-         "}"}]}], "]"}], "]"}], " ", "+", " ", 
-     RowBox[{"Flatten", "[", 
-      RowBox[{"KroneckerProduct", "[", 
-       RowBox[{
-        RowBox[{"{", 
-         RowBox[{"0", ",", " ", "1", ",", " ", "0"}], "}"}], ",", " ", 
-        RowBox[{"{", 
-         RowBox[{"0", ",", " ", "1"}], "}"}], ",", " ", 
-        RowBox[{"{", 
-         RowBox[{
-         "0", ",", " ", "1", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], 
-         "}"}]}], "]"}], "]"}]}], "]"}]}], ";"}]], "Input",
- CellLabel->
-  "In[14]:= ",ExpressionUUID->"1dd087e6-abab-4e81-aaf6-962e615d105d"],
+     RowBox[{"Cos", "[", "\[Lambda]", "]"}], " ", 
+     RowBox[{"kets", "[", 
+      RowBox[{"[", "1", "]"}], "]"}]}], " ", "+", " ", 
+    RowBox[{
+     RowBox[{"Sin", "[", "\[Lambda]", "]"}], " ", 
+     RowBox[{"kets", "[", 
+      RowBox[{"[", "2", "]"}], "]"}]}]}]}], ";"}]], "Input",
+ CellLabel->"In[20]:= ",
+ CellID->1703453532,ExpressionUUID->"6815cd54-0cd7-196f-182a-e51ea5626bb5"],
 
 Cell[TextData[{
  "Reshape its density matrix to the ",
@@ -722,9 +1000,10 @@ Cell[TextData[{
    StyleBox[")",
     SpanMaxSize->1]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8651203e-8ec9-4627-957a-5710bd959a28"],
- " tensor:"
-}], "Text",ExpressionUUID->"8549f9d5-e806-43c8-b511-d85a5c0a2758"],
+  "519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+ " tensor."
+}], "Text",
+ CellID->1477609488,ExpressionUUID->"5900aac7-5263-773e-0f3f-43a167165a04"],
 
 Cell[BoxData[
  RowBox[{
@@ -738,47 +1017,33 @@ Cell[BoxData[
       RowBox[{
       "3", ",", " ", "2", ",", " ", "5", ",", " ", "3", ",", " ", "2", ",", 
        " ", "5"}], "}"}]}], "]"}]}], ";"}]], "Input",
- CellLabel->
-  "In[15]:= ",ExpressionUUID->"4a28f8c9-d68b-4f9a-96e8-79947f8a031c"],
-
-Cell["\<\
-The framework needs only the amplitudes and the dimension list to build the \
-same register:\
-\>", "Text",ExpressionUUID->"80540175-32fb-42cc-bd12-2e47bf028e7b"],
-
-Cell[BoxData[
- RowBox[{"qs", " ", "=", " ", 
-  RowBox[{"QuantumState", "[", 
-   RowBox[{"psi", ",", " ", 
-    RowBox[{"{", 
-     RowBox[{"3", ",", " ", "2", ",", " ", "5"}], "}"}]}], "]"}]}]], "Input",
- CellLabel->
-  "In[16]:= ",ExpressionUUID->"b877655b-b2a0-475b-bfab-2ec3fb0cba50"],
+ CellLabel->"In[21]:= ",
+ CellID->1030824397,ExpressionUUID->"06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
 
 Cell[TextData[{
- "Now trace out one qudit by contracting its single ket-bra leg pair. Remove \
-the dim-",
+ "Remove the dimension-",
  Cell[BoxData["2"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f16a6593-9083-4ffd-968b-cfbb674c34f5"],
+  "12d95fcb-3316-2212-42e7-569546a37178"],
  " qudit (particle ",
  Cell[BoxData["2"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "16567235-6adb-41b4-a337-f5c77131a4e4"],
+  "733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
  ") by contracting legs ",
  Cell[BoxData[
   RowBox[{
    RowBox[{"{", "2"}], ",", 
    RowBox[{"5", "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "dee84818-5ef6-45fd-b6c3-1e8be7f2c020"],
- ":"
-}], "Text",ExpressionUUID->"75f31a76-4bad-44ec-b42e-b61f0a16beae"],
+  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+ ", then group the surviving ket legs into rows and bra legs into columns."
+}], "Text",
+ CellID->100031176,ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"rho13", " ", "=", " ", 
-   RowBox[{"ArrayReshape", "[", 
+   RowBox[{"Flatten", "[", 
     RowBox[{
      RowBox[{"TensorContract", "[", 
       RowBox[{"rhoT", ",", " ", 
@@ -786,140 +1051,300 @@ Cell[BoxData[
         RowBox[{"{", 
          RowBox[{"2", ",", " ", "5"}], "}"}], "}"}]}], "]"}], ",", " ", 
      RowBox[{"{", 
-      RowBox[{"15", ",", " ", "15"}], "}"}]}], "]"}]}], ";"}]], "Input",
- CellLabel->
-  "In[17]:= ",ExpressionUUID->"9dc2005d-0200-4b10-beae-269bcbbddd72"],
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", " ", "2"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"3", ",", " ", "4"}], "}"}]}], "}"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[22]:= ",
+ CellID->144223354,ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
 
-Cell[TextData[{
- "The kept legs ",
- Cell[BoxData[
-  RowBox[{
-   StyleBox["(",
-    SpanMaxSize->1], 
-   RowBox[{"3", ",", "5"}], 
-   StyleBox[")",
-    SpanMaxSize->1]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "d13ce20d-bd4f-481c-9e0f-87ecf8d15d55"],
- " flatten to a ",
- Cell[BoxData[
-  RowBox[{"15", "\[Times]", "15"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "9af926d6-0538-4068-9a52-cba64321a80b"],
- " matrix:"
-}], "Text",ExpressionUUID->"2feea26b-ae12-40dd-b255-b725779f3d85"],
+Cell["Its size is the product of the kept dimensions.", "Text",
+ CellID->1443527617,ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
 
 Cell[BoxData[
  RowBox[{"Dimensions", "[", "rho13", "]"}]], "Input",
- CellLabel->
-  "In[18]:= ",ExpressionUUID->"2d517759-a092-4582-80da-5a4ba0d7b144"],
+ CellLabel->"In[23]:= ",
+ CellID->311511756,ExpressionUUID->"78287f93-0f12-7c52-2828-76ddaaa746b8"],
 
-Cell["and its purity is below one:", "Text",ExpressionUUID->"07d3b6df-21b2-4775-ba1c-8cbd5f275b89"],
+Cell["\<\
+It is a state: the input is normalized, and the reduction has unit trace, is \
+Hermitian, and has a nonnegative spectrum, the two Schmidt weights and zeros.\
+\
+\>", "Text",
+ CellID->1381425643,ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2"],
 
 Cell[BoxData[
- RowBox[{"Tr", "[", 
-  RowBox[{"rho13", " ", ".", " ", "rho13"}], "]"}]], "Input",
- CellLabel->
-  "In[19]:= ",ExpressionUUID->"9ac53547-c012-4fca-9075-116fc9d09dac"],
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Norm", "[", "psi", "]"}], ",", " ", 
+     RowBox[{"Tr", "[", "rho13", "]"}], ",", " ", 
+     RowBox[{"HermitianMatrixQ", "[", "rho13", "]"}], ",", " ", 
+     RowBox[{"Eigenvalues", "[", "rho13", "]"}]}], "}"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[24]:= ",
+ CellID->377280352,ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
 
 Cell[TextData[{
- "The framework traces the same qudit from its indices, and because it keeps \
-the ",
+ "Its purity is the same function of ",
  Cell[BoxData[
-  RowBox[{
-   StyleBox["(",
-    SpanMaxSize->1], 
-   RowBox[{"3", ",", "5"}], 
-   StyleBox[")",
-    SpanMaxSize->1]}]], "InlineFormula",
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "f2202aaa-62b7-46ff-a916-6dd3d6104dd9"],
- " factorization it reports the reduced dimensions as ",
- Cell[BoxData[
-  RowBox[{
-   StyleBox["(",
-    SpanMaxSize->1], 
-   RowBox[{"3", ",", "5"}], 
-   StyleBox[")",
-    SpanMaxSize->1]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "b2852ed7-0285-412a-9048-ebd547374a1b"],
- " rather than the flattened ",
- Cell[BoxData["15"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3ca3e7d8-c709-4da3-af7a-b6326378db09"],
- ":"
-}], "Text",ExpressionUUID->"0bd48e3a-6fa1-4f9a-9e43-e62c882079ea"],
+  "187adc3d-3961-76c2-4819-d667b8145c28"],
+ " as the qubit pair's."
+}], "Text",
+ CellID->1717363484,ExpressionUUID->"641c78eb-7f03-7846-0c24-71b57ab64aac"],
 
 Cell[BoxData[
- RowBox[{
-  RowBox[{"QuantumPartialTrace", "[", 
-   RowBox[{"qs", ",", " ", 
-    RowBox[{"{", "2", "}"}]}], "]"}], "[", "\"\<Dimensions\>\"", 
-  "]"}]], "Input",
- CellLabel->
-  "In[20]:= ",ExpressionUUID->"b4eac063-17a2-4ad8-b62f-3fe4762ca4ec"],
-
-Cell["with the same purity:", "Text",ExpressionUUID->"bb284806-d374-4d20-b9ee-56cb9ce1e9d4"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"QuantumPartialTrace", "[", 
-   RowBox[{"qs", ",", " ", 
-    RowBox[{"{", "2", "}"}]}], "]"}], "[", "\"\<Purity\>\"", "]"}]], "Input",
- CellLabel->
-  "In[21]:= ",ExpressionUUID->"565eb7ee-11a5-4314-88d2-126e9608d020"],
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{"Tr", "[", 
+    RowBox[{"rho13", " ", ".", " ", "rho13"}], "]"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[25]:= ",
+ CellID->1781880651,ExpressionUUID->"5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
 
 Cell[TextData[{
- "The leg pattern is uniform: particle ",
- Cell[BoxData["1"], "InlineFormula",
+ "Remove two qudits at once: particle ",
+ Cell[BoxData[
+  StyleBox["p", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4c28f2e5-def6-4761-8ef0-df2a62dc7878"],
- " (dim ",
- Cell[BoxData["3"], "InlineFormula",
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+ " owns legs ",
+ Cell[BoxData[
+  StyleBox["p", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "e716f403-236d-4b66-ba07-6345f6884ed2"],
- ") is legs ",
+  "6121b9de-dddd-aca8-10de-309bd469f6f2"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["p", "TI"], "+", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30209679-023a-ee91-61df-0823b7ccb4fb"],
+ ", so each pair of particles contracts two leg pairs, and the pairs ",
  Cell[BoxData[
   RowBox[{
    RowBox[{"{", "1"}], ",", 
-   RowBox[{"4", "}"}]}]], "InlineFormula",
+   RowBox[{"2", "}"}], ",", 
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"3", "}"}], ",", 
+   RowBox[{"{", "2"}], ",", 
+   RowBox[{"3", "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "1d825b6f-3c16-4579-a3ba-40d2255b0a87"],
- ", particle ",
- Cell[BoxData["3"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "8b7ea2a9-138b-4ecf-8408-b4766bf39bd0"],
- " (dim ",
+  "29bc1606-c22d-409d-5f43-8863f7d812e7"],
+ " leave the dimension-",
  Cell[BoxData["5"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7b1dfccb-198d-4113-b9fe-2707b412e6d6"],
- ") is ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "3"}], ",", 
-   RowBox[{"6", "}"}]}]], "InlineFormula",
+  "7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+ ", dimension-",
+ Cell[BoxData["2"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "8c9bfb37-f475-40a5-9750-eb30f3cc925f"],
- ". Trace out each single qudit in turn and read the dimensions each \
-reduction leaves behind:"
-}], "Text",ExpressionUUID->"368baff2-de7d-4b9e-9a0b-45266ef11c1b"],
+  "3119d855-3ffd-7401-6726-d21fb9885f6b"],
+ ", and dimension-",
+ Cell[BoxData["3"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+ " qudit."
+}], "Text",
+ CellID->1536527082,ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
 
 Cell[BoxData[
- RowBox[{"Table", "[", 
+ RowBox[{"pairs", " ", "=", " ", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"TensorContract", "[", 
+       RowBox[{"rhoT", ",", " ", 
+        RowBox[{"Transpose", "[", 
+         RowBox[{"{", 
+          RowBox[{"#", ",", " ", 
+           RowBox[{"#", " ", "+", " ", "3"}]}], "}"}], "]"}]}], "]"}], " ", 
+      "&"}], " ", "/@", " ", 
+     RowBox[{"Subsets", "[", 
+      RowBox[{
+       RowBox[{"Range", "[", "3", "]"}], ",", " ", 
+       RowBox[{"{", "2", "}"}]}], "]"}]}], ",", " ", 
+    RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], 
+   "]"}]}]], "Input",
+ CellLabel->"In[26]:= ",
+ CellID->1621535814,ExpressionUUID->"51fce014-dca1-0630-0783-fa51d5546d1a"],
+
+Cell[TextData[{
+ StyleBox["QF",
+  FontWeight->"Bold"],
+ " : the framework needs only the amplitudes and the dimension list to build \
+the same register."
+}], "Text",
+ CellID->1193935837,ExpressionUUID->"657c1c65-980e-511d-1303-964f19bb2067"],
+
+Cell[BoxData[
+ RowBox[{"qs", " ", "=", " ", 
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"psi", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"3", ",", " ", "2", ",", " ", "5"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[27]:= ",
+ CellID->105329933,ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+
+Cell[TextData[{
+ "Trace out the dimension-",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e9b7e66-629a-1114-26b9-7040172f607e"],
+ " qudit once, as an object that keeps the ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"3", ",", "5"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "585a51e6-774f-2dd2-087a-48c002fa7738"],
+ " factorization."
+}], "Text",
+ CellID->1234416869,ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+
+Cell[BoxData[
+ RowBox[{"red2", " ", "=", " ", 
+  RowBox[{"QuantumPartialTrace", "[", 
+   RowBox[{"qs", ",", " ", 
+    RowBox[{"{", "2", "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[28]:= ",
+ CellID->240380995,ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
+
+Cell[TextData[{
+ "Its dimensions are reported as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"3", ",", "5"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2845529c-454d-b13b-587b-4bc66cf90001"],
+ " rather than the flattened ",
+ Cell[BoxData["15"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7519012f-e657-215b-2326-988893e273a1"],
+ "."
+}], "Text",
+ CellID->1771870337,ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0"],
+
+Cell[BoxData[
+ RowBox[{"red2", "[", "\"\<Dimensions\>\"", "]"}]], "Input",
+ CellLabel->"In[29]:= ",
+ CellID->305160771,ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+
+Cell["Its purity is the hand value.", "Text",
+ CellID->1896945989,ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{"red2", "[", "\"\<Purity\>\"", "]"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[30]:= ",
+ CellID->653417278,ExpressionUUID->"48a3d607-c312-9dd3-7850-c860f6a4e739"],
+
+Cell["The hand matrix and the framework's agree.", "Text",
+ CellID->1067269536,ExpressionUUID->"539491e8-328f-8d7b-01ab-08b2473bd441"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Normal", "[", 
+     RowBox[{"red2", "[", "\"\<DensityMatrix\>\"", "]"}], "]"}], " ", "==", 
+    " ", "rho13"}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[31]:= ",
+ CellID->49659130,ExpressionUUID->"7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+
+Cell["The dimensions left by each single removal.", "Text",
+ CellID->464508221,ExpressionUUID->"023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+
+Cell[BoxData[
+ RowBox[{
   RowBox[{
    RowBox[{
     RowBox[{"QuantumPartialTrace", "[", 
-     RowBox[{"qs", ",", " ", 
-      RowBox[{"{", "p", "}"}]}], "]"}], "[", "\"\<Dimensions\>\"", "]"}], ",",
-    " ", 
-   RowBox[{"{", 
-    RowBox[{"p", ",", " ", "3"}], "}"}]}], "]"}]], "Input",
- CellLabel->
-  "In[22]:= ",ExpressionUUID->"a1989d14-19b8-4363-a64d-6892c7c40800"],
+     RowBox[{"qs", ",", " ", "#"}], "]"}], "[", "\"\<Dimensions\>\"", "]"}], 
+   " ", "&"}], " ", "/@", " ", 
+  RowBox[{"Subsets", "[", 
+   RowBox[{
+    RowBox[{"Range", "[", "3", "]"}], ",", " ", 
+    RowBox[{"{", "1", "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[32]:= ",
+ CellID->1361313038,ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c"],
+
+Cell["The three pair removals equal the hand contractions.", "Text",
+ CellID->1907680634,ExpressionUUID->"289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Normal", "[", 
+        RowBox[{
+         RowBox[{"QuantumPartialTrace", "[", 
+          RowBox[{"qs", ",", " ", "#"}], "]"}], "[", "\"\<DensityMatrix\>\"", 
+         "]"}], "]"}], " ", "&"}], " ", "/@", " ", 
+      RowBox[{"Subsets", "[", 
+       RowBox[{
+        RowBox[{"Range", "[", "3", "]"}], ",", " ", 
+        RowBox[{"{", "2", "}"}]}], "]"}]}], ")"}], " ", "==", " ", "pairs"}], 
+   ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[33]:= ",
+ CellID->483148123,ExpressionUUID->"12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+
+Cell["\<\
+The purity of all six reductions, the three single removals followed by the \
+three pairs.\
+\>", "Text",
+ CellID->1195452142,ExpressionUUID->"7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumPartialTrace", "[", 
+       RowBox[{"qs", ",", " ", "#"}], "]"}], "[", "\"\<Purity\>\"", "]"}], 
+     " ", "&"}], " ", "/@", " ", 
+    RowBox[{"Subsets", "[", 
+     RowBox[{
+      RowBox[{"Range", "[", "3", "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "2"}], "}"}]}], "]"}]}], ",", " ", 
+   RowBox[{"\[Lambda]", " ", "\[Element]", " ", "Reals"}]}], "]"}]], "Input",
+ CellLabel->"In[34]:= ",
+ CellID->1521685512,ExpressionUUID->"2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
 
 Cell[TextData[{
- "As one can see, removing one qudit leaves the other two: ",
+ "Both routes give reductions of dimension ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Product]", 
+    StyleBox["kept",
+     FontSlant->"Plain"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["d", "TI"], 
+    StyleBox["q", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "362a4e41-4988-041f-5e2a-602b683d6f65"],
+ ", ",
  Cell[BoxData[
   RowBox[{
    RowBox[{
@@ -941,190 +1366,53 @@ Cell[TextData[{
     StyleBox[")",
      SpanMaxSize->1]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "a15d40b5-d35a-4313-b29a-c259ba7f64a7"],
- " as we drop particles ",
- Cell[BoxData[
-  RowBox[{"1", ",", "2", ",", "3"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "614d7ce6-5f60-41d9-9893-e397eb7aa5f9"],
- "."
-}], "Text",ExpressionUUID->"244b7831-1385-40c8-bb8f-3b687c36fa78"],
-
-Cell[TextData[{
- "Next trace out two qudits by contracting both leg pairs at once. Remove the \
-dim-",
- Cell[BoxData["3"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "d9a44bf8-b8ab-4775-9c0c-ed10b05290ed"],
- " and dim-",
- Cell[BoxData["2"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3a5e3e75-e543-4a8e-aacc-558ab51e759d"],
- " qudits (particles ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "1"}], ",", 
-   RowBox[{"2", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "f86ebd1b-e8e8-4ad3-bcb6-d574effa31df"],
- ", legs ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "1"}], ",", 
-   RowBox[{"4", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "c75e2c4c-1e40-448a-8e38-1bdfa091b096"],
- " and ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "2"}], ",", 
-   RowBox[{"5", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "0d4aefc6-b7eb-4bec-945d-9d1f979038c4"],
- "), leaving only the dim-",
- Cell[BoxData["5"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "927177e6-8ca4-4370-a0f3-b66fa6ad090b"],
- " qudit:"
-}], "Text",ExpressionUUID->"cd285e11-0646-4117-b683-d7f043b95209"],
-
-Cell[BoxData[
- RowBox[{"TensorContract", "[", 
-  RowBox[{"rhoT", ",", " ", 
-   RowBox[{"{", 
-    RowBox[{
-     RowBox[{"{", 
-      RowBox[{"1", ",", " ", "4"}], "}"}], ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"2", ",", " ", "5"}], "}"}]}], "}"}]}], "]"}]], "Input",
- CellLabel->
-  "In[23]:= ",ExpressionUUID->"eeb17050-7d8e-475d-b65b-e4c981cf309c"],
-
-Cell["The framework agrees:", "Text",ExpressionUUID->"004167d9-bced-4f5e-8c15-2d5359a0ef35"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{
-   RowBox[{"QuantumPartialTrace", "[", 
-    RowBox[{"qs", ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"1", ",", " ", "2"}], "}"}]}], "]"}], 
-   "[", "\"\<DensityMatrix\>\"", "]"}], " ", "//", " ", "Normal"}]], "Input",
- CellLabel->
-  "In[24]:= ",ExpressionUUID->"c5f288a2-44f2-4a33-aa7f-df4af1e8cee0"],
-
-Cell[TextData[{
- "Remove instead the dim-",
- Cell[BoxData["3"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "805ae3e9-58e1-4ca7-8859-9d8964c39c5d"],
- " and dim-",
- Cell[BoxData["5"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "581653f1-9b5a-464d-9c07-f66d8b8e4165"],
- " qudits (particles ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "1"}], ",", 
-   RowBox[{"3", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "8026599d-f127-4069-bdbf-d07b0636d897"],
- ", legs ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "1"}], ",", 
-   RowBox[{"4", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "b0ada232-65e3-45bc-b7d8-6dce01b549f1"],
- " and ",
- Cell[BoxData[
-  RowBox[{
-   RowBox[{"{", "3"}], ",", 
-   RowBox[{"6", "}"}]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "241a8c71-00ea-4bd6-8cd5-8dda56d127c6"],
- "), leaving the dim-",
- Cell[BoxData["2"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "d5fd6748-a5db-4477-ba30-3f01df6e3eee"],
- " qudit maximally mixed:"
-}], "Text",ExpressionUUID->"08c55288-6057-4291-8d98-4beb1853a47e"],
-
-Cell[BoxData[
- RowBox[{"TensorContract", "[", 
-  RowBox[{"rhoT", ",", " ", 
-   RowBox[{"{", 
-    RowBox[{
-     RowBox[{"{", 
-      RowBox[{"1", ",", " ", "4"}], "}"}], ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"3", ",", " ", "6"}], "}"}]}], "}"}]}], "]"}]], "Input",
- CellLabel->
-  "In[25]:= ",ExpressionUUID->"28e3fd51-33fd-4fcb-a61f-04ef7fc4ea8c"],
-
-Cell["and again the framework matches:", "Text",ExpressionUUID->"d7f893e4-055b-4fc3-bf1a-f40cf114e328"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{
-   RowBox[{"QuantumPartialTrace", "[", 
-    RowBox[{"qs", ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"1", ",", " ", "3"}], "}"}]}], "]"}], 
-   "[", "\"\<DensityMatrix\>\"", "]"}], " ", "//", " ", "Normal"}]], "Input",
- CellLabel->
-  "In[26]:= ",ExpressionUUID->"28441400-b4dc-4a34-be17-639117a58229"],
-
-Cell[TextData[{
- "Therefore every reduction has dimension ",
- Cell[BoxData[
-  RowBox[{
-   UnderscriptBox["\[Product]", 
-    StyleBox["kept",
-     FontSlant->"Plain"],
-    LimitsPositioning->False], 
-   SubscriptBox[
-    StyleBox["d", "TI"], 
-    StyleBox["q", "TI"]]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "0ffb36a4-8830-49c0-a666-aefcbdb51d6c"],
- ": ",
- Cell[BoxData[
-  RowBox[{"15", ",", "10", ",", "6"}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "f2349f5c-fb46-4569-a981-c2e39892d628"],
- " when one qudit is removed, ",
+  "01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+ " for the single removals and ",
  Cell[BoxData[
   RowBox[{"5", ",", "2", ",", "3"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "21fc30ae-59ae-45f6-b19f-ae95ae5a3f9c"],
- " when two are. Each comes out mixed at purity ",
- Cell[BoxData[
-  FractionBox["1", "2"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "e1a43cda-b9dd-49d1-85b2-a8dd8a068a57"],
- ", because ",
+  "107fa29c-d013-1000-4004-3bd9e1a6636a"],
+ " for the pairs, and every one of the six carries the same spectrum, the two \
+Schmidt weights ",
  Cell[BoxData[
   RowBox[{
-   RowBox[{"(", 
-    RowBox[{
-     TemplateBox[{"0,0,0"},
-      "Ket"], "+", 
-     TemplateBox[{"1,1,1"},
-      "Ket"]}], ")"}], "/", 
-   SqrtBox["2"]}]], "InlineFormula",
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["cos",
+      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+    StyleBox["\[Lambda]", "TI"]}], ",", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["sin",
+      FontSlant->"Plain"], "2"], "\[ThinSpace]", 
+    StyleBox["\[Lambda]", "TI"]}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "61c49528-8d78-4bb1-837d-f7c3f784b3dc"],
- " is entangled across every cut. The contraction is the same construction at \
-any sizes; only the leg dimensions change, and where the hand computation \
-sees a flattened square matrix, the framework keeps the qudit factorization \
-and reports its dimensions accordingly."
-}], "Text",ExpressionUUID->"7eea8975-ee49-48d2-b68f-16786202e733"]
+  "6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+ " padded with zeros, hence the same purity ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["cos",
+     FontSlant->"Plain"], "4"], "\[ThinSpace]", 
+   StyleBox["\[Lambda]", "TI"], "+", 
+   SuperscriptBox[
+    StyleBox["sin",
+     FontSlant->"Plain"], "4"], "\[ThinSpace]", 
+   StyleBox["\[Lambda]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+ ": the state is entangled across every cut with the same Schmidt weights, \
+and which qudit sizes sit on either side of the cut does not enter. The \
+contraction is the same construction at any sizes; only the leg dimensions \
+change, and where the hand computation sees a flattened square matrix, the \
+framework keeps the qudit factorization and reports its dimensions \
+accordingly."
+}], "Text",
+ CellID->97201263,ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"]
 },
-CreateCellID->True,
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"e87e7e57-c2b7-473f-8985-5c8d8593a5f8"
+ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"
 ]
 (* End of Notebook Content *)
 
@@ -1137,72 +1425,162 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[554, 20, 133, 0, 70, "Section",ExpressionUUID->"38cc1e8c-0ef0-44ff-849a-451e3b05ade7"],
-Cell[690, 22, 569, 8, 70, "Text",ExpressionUUID->"93529419-5ea0-4f50-b79b-1644f3143dd3"],
-Cell[1262, 32, 155, 2, 70, "Subsection",ExpressionUUID->"1f26178c-e1df-4d1b-8e14-7a9a9e63226f"],
-Cell[1420, 36, 1997, 66, 70, "Text",ExpressionUUID->"d3ee8908-ecd8-402b-aa1e-33fa928f0c7a"],
-Cell[3420, 104, 652, 20, 70, "Text",ExpressionUUID->"06fe1838-8db2-4f02-a910-1390d0fc5e7b"],
-Cell[4075, 126, 323, 8, 70, "Input",ExpressionUUID->"0542eeb2-1643-4765-a0f3-778758647446"],
-Cell[4401, 136, 742, 22, 70, "Text",ExpressionUUID->"e479bd55-692d-4eaa-acbf-e79561fd34f1"],
-Cell[5146, 160, 371, 9, 70, "Text",ExpressionUUID->"b49eb396-62a3-45d7-a82d-2c9f99747360"],
-Cell[5520, 171, 254, 5, 70, "Input",ExpressionUUID->"c4bf9ebf-a136-4b28-a5aa-0e07d887ca23"],
-Cell[5777, 178, 333, 7, 70, "Text",ExpressionUUID->"d401e686-a0c1-4bf5-90fd-5c0a30cb6c32"],
-Cell[6113, 187, 413, 10, 70, "Input",ExpressionUUID->"524764ed-22cb-4c1b-bb86-06535041c05d"],
-Cell[6529, 199, 519, 12, 70, "Text",ExpressionUUID->"c7e98c1e-d73a-4e56-bb25-6fd8a414332e"],
-Cell[7051, 213, 194, 4, 70, "Input",ExpressionUUID->"19921cb8-a6e8-4b3c-88db-45896f7acdbf"],
-Cell[7248, 219, 127, 0, 70, "Text",ExpressionUUID->"138fb31e-97da-4b06-b73f-8d828b612999"],
-Cell[7378, 221, 456, 11, 70, "Input",ExpressionUUID->"de9e5cb7-c287-4bfc-99ae-fef26e2b7022"],
-Cell[7837, 234, 482, 13, 70, "Text",ExpressionUUID->"b401fa3b-d419-4564-bdfb-b20b15d073dd"],
-Cell[8322, 249, 282, 5, 70, "Input",ExpressionUUID->"bef98244-1b63-4f62-a99f-d18ec449d8a6"],
-Cell[8607, 256, 940, 26, 70, "Text",ExpressionUUID->"5efa5d03-cd5e-40d9-8b69-d68b9cfab7a4"],
-Cell[9550, 284, 184, 3, 70, "Subsection",ExpressionUUID->"bfa18269-3bee-4bc9-9c8f-c78194b8e447"],
-Cell[9737, 289, 1701, 52, 70, "Text",ExpressionUUID->"546f5064-2396-4ef1-8a8f-0b7707f2946b"],
-Cell[11441, 343, 695, 23, 70, "Text",ExpressionUUID->"43b48055-338b-4f6f-a80d-7ddbc6b3c32e"],
-Cell[12139, 368, 280, 6, 70, "Input",ExpressionUUID->"a46c4c48-00ed-4047-80b2-93202f052a65"],
-Cell[12422, 376, 411, 13, 70, "Text",ExpressionUUID->"b2a11415-9044-4a72-a440-feafc4f036da"],
-Cell[12836, 391, 256, 5, 70, "Input",ExpressionUUID->"da45a7fa-5ecb-40ae-a217-966f8e5c5d2b"],
-Cell[13095, 398, 1401, 46, 70, "Text",ExpressionUUID->"9dc242d6-0350-43d9-94f3-3c168df548b1"],
-Cell[14499, 446, 464, 12, 70, "Input",ExpressionUUID->"eeb37267-e9fb-4bde-9d7a-788dcadbd978"],
-Cell[14966, 460, 369, 9, 70, "Text",ExpressionUUID->"ea4e04ff-9090-40ca-982b-394ac308cd1e"],
-Cell[15338, 471, 188, 3, 70, "Text",ExpressionUUID->"b3411f15-c09d-4c41-9c8e-5a0eea63d79e"],
-Cell[15529, 476, 300, 7, 70, "Input",ExpressionUUID->"d0d6ff2d-5505-490b-b781-31129a46b57b"],
-Cell[15832, 485, 323, 8, 70, "Text",ExpressionUUID->"c69f26ce-b28c-4ca7-8bf4-763f48e5a35e"],
-Cell[16158, 495, 153, 3, 70, "Input",ExpressionUUID->"5582ffc8-98ad-40ca-950d-a9bdbd2b00e5"],
-Cell[16314, 500, 124, 0, 70, "Text",ExpressionUUID->"c5b2fcab-4d78-4d29-9bbd-fd268088124b"],
-Cell[16441, 502, 236, 5, 70, "Input",ExpressionUUID->"3e3361b3-b30d-409b-9ec2-6497038b91bc"],
-Cell[16680, 509, 580, 15, 70, "Text",ExpressionUUID->"4004580d-0799-4cba-97fa-408829975c60"],
-Cell[17263, 526, 300, 7, 70, "Input",ExpressionUUID->"8ae244ab-037e-4bac-bb9d-1e066f7bea52"],
-Cell[17566, 535, 550, 13, 70, "Text",ExpressionUUID->"a423fefa-67c6-43bb-ad6b-2b029d107261"],
-Cell[18119, 550, 1678, 54, 70, "Text",ExpressionUUID->"e3bc1f22-09ac-4e30-be0d-931de2cc15a9"],
-Cell[19800, 606, 2317, 64, 70, "Text",ExpressionUUID->"4c7df688-76bc-4b55-ba45-efe93cb2ecad"],
-Cell[22120, 672, 357, 10, 70, "Text",ExpressionUUID->"f1ade043-77be-4a14-bd4d-c5af2245f1f9"],
-Cell[22480, 684, 1042, 28, 70, "Input",ExpressionUUID->"1dd087e6-abab-4e81-aaf6-962e615d105d"],
-Cell[23525, 714, 411, 12, 70, "Text",ExpressionUUID->"8549f9d5-e806-43c8-b511-d85a5c0a2758"],
-Cell[23939, 728, 489, 13, 70, "Input",ExpressionUUID->"4a28f8c9-d68b-4f9a-96e8-79947f8a031c"],
-Cell[24431, 743, 171, 3, 70, "Text",ExpressionUUID->"80540175-32fb-42cc-bd12-2e47bf028e7b"],
-Cell[24605, 748, 284, 7, 70, "Input",ExpressionUUID->"b877655b-b2a0-475b-bfab-2ec3fb0cba50"],
-Cell[24892, 757, 656, 18, 70, "Text",ExpressionUUID->"75f31a76-4bad-44ec-b42e-b61f0a16beae"],
-Cell[25551, 777, 465, 13, 70, "Input",ExpressionUUID->"9dc2005d-0200-4b10-beae-269bcbbddd72"],
-Cell[26019, 792, 525, 17, 70, "Text",ExpressionUUID->"2feea26b-ae12-40dd-b255-b725779f3d85"],
-Cell[26547, 811, 150, 3, 70, "Input",ExpressionUUID->"2d517759-a092-4582-80da-5a4ba0d7b144"],
-Cell[26700, 816, 99, 0, 70, "Text",ExpressionUUID->"07d3b6df-21b2-4775-ba1c-8cbd5f275b89"],
-Cell[26802, 818, 179, 4, 70, "Input",ExpressionUUID->"9ac53547-c012-4fca-9075-116fc9d09dac"],
-Cell[26984, 824, 862, 27, 70, "Text",ExpressionUUID->"0bd48e3a-6fa1-4f9a-9e43-e62c882079ea"],
-Cell[27849, 853, 258, 7, 70, "Input",ExpressionUUID->"b4eac063-17a2-4ad8-b62f-3fe4762ca4ec"],
-Cell[28110, 862, 92, 0, 70, "Text",ExpressionUUID->"bb284806-d374-4d20-b9ee-56cb9ce1e9d4"],
-Cell[28205, 864, 251, 6, 70, "Input",ExpressionUUID->"565eb7ee-11a5-4314-88d2-126e9608d020"],
-Cell[28459, 872, 1144, 33, 70, "Text",ExpressionUUID->"368baff2-de7d-4b9e-9a0b-45266ef11c1b"],
-Cell[29606, 907, 380, 11, 70, "Input",ExpressionUUID->"a1989d14-19b8-4363-a64d-6892c7c40800"],
-Cell[29989, 920, 851, 30, 70, "Text",ExpressionUUID->"244b7831-1385-40c8-bb8f-3b687c36fa78"],
-Cell[30843, 952, 1190, 36, 70, "Text",ExpressionUUID->"cd285e11-0646-4117-b683-d7f043b95209"],
-Cell[32036, 990, 351, 10, 70, "Input",ExpressionUUID->"eeb17050-7d8e-475d-b65b-e4c981cf309c"],
-Cell[32390, 1002, 92, 0, 70, "Text",ExpressionUUID->"004167d9-bced-4f5e-8c15-2d5359a0ef35"],
-Cell[32485, 1004, 336, 9, 70, "Input",ExpressionUUID->"c5f288a2-44f2-4a33-aa7f-df4af1e8cee0"],
-Cell[32824, 1015, 1142, 35, 70, "Text",ExpressionUUID->"08c55288-6057-4291-8d98-4beb1853a47e"],
-Cell[33969, 1052, 351, 10, 70, "Input",ExpressionUUID->"28e3fd51-33fd-4fcb-a61f-04ef7fc4ea8c"],
-Cell[34323, 1064, 103, 0, 70, "Text",ExpressionUUID->"d7f893e4-055b-4fc3-bf1a-f40cf114e328"],
-Cell[34429, 1066, 336, 9, 70, "Input",ExpressionUUID->"28441400-b4dc-4a34-be17-639117a58229"],
-Cell[34768, 1077, 1563, 44, 70, "Text",ExpressionUUID->"7eea8975-ee49-48d2-b68f-16786202e733"]
+Cell[554, 20, 153, 1, 70, "Section",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054",
+ CellID->874461601],
+Cell[710, 23, 462, 7, 70, "Text",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9",
+ CellID->36768919],
+Cell[1175, 32, 176, 3, 70, "Subsection",ExpressionUUID->"062d91f0-6326-41c0-2fd2-08ba16d3132a",
+ CellID->1699946459],
+Cell[1354, 37, 2005, 67, 70, "Text",ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2",
+ CellID->1535504786],
+Cell[3362, 106, 927, 29, 70, "Text",ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0",
+ CellID->1208482393],
+Cell[4292, 137, 342, 9, 70, "Input",ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8",
+ CellID->28909615],
+Cell[4637, 148, 393, 10, 70, "Text",ExpressionUUID->"26dca2d1-2715-746d-4ee3-3b9b52a05eb7",
+ CellID->193832008],
+Cell[5033, 160, 274, 6, 70, "Input",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae",
+ CellID->684317082],
+Cell[5310, 168, 1024, 29, 70, "Text",ExpressionUUID->"6b853673-18d0-d9fa-19ba-a83d996aabc0",
+ CellID->528485616],
+Cell[6337, 199, 967, 27, 70, "Input",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399",
+ CellID->1392207227],
+Cell[7307, 228, 545, 14, 70, "Text",ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802",
+ CellID->705466992],
+Cell[7855, 244, 434, 11, 70, "Input",ExpressionUUID->"6e85e9ed-427b-8528-16ba-00b7770fec72",
+ CellID->1350516518],
+Cell[8292, 257, 287, 7, 70, "Text",ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5",
+ CellID->907546795],
+Cell[8582, 266, 214, 5, 70, "Input",ExpressionUUID->"31f4c073-8ff6-126f-678b-da3d298360b5",
+ CellID->814772321],
+Cell[8799, 273, 140, 1, 70, "Text",ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a",
+ CellID->1054628905],
+Cell[8942, 276, 465, 12, 70, "Input",ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b",
+ CellID->2043779557],
+Cell[9410, 290, 527, 14, 70, "Text",ExpressionUUID->"106b7ad8-6378-599b-4069-7382160d2be1",
+ CellID->17830494],
+Cell[9940, 306, 340, 7, 70, "Input",ExpressionUUID->"7e6f7c7a-fa8f-2da1-2615-7627ff3a778b",
+ CellID->1589986527],
+Cell[10283, 315, 141, 1, 70, "Text",ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96",
+ CellID->943101875],
+Cell[10427, 318, 386, 9, 70, "Input",ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c",
+ CellID->67888809],
+Cell[10816, 329, 268, 5, 70, "Text",ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c",
+ CellID->1432876021],
+Cell[11087, 336, 637, 17, 70, "Input",ExpressionUUID->"475d7054-346c-a3cc-6d63-6a1ebd1ef116",
+ CellID->876231958],
+Cell[11727, 355, 1062, 28, 70, "Text",ExpressionUUID->"2ef71510-aa09-eca9-568c-8d5dcfbdb6f3",
+ CellID->1020575516],
+Cell[12792, 385, 205, 4, 70, "Subsection",ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66",
+ CellID->1967685850],
+Cell[13000, 391, 3270, 104, 70, "Text",ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105",
+ CellID->1044562475],
+Cell[16273, 497, 483, 16, 70, "Text",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53",
+ CellID->1653200050],
+Cell[16759, 515, 329, 8, 70, "Input",ExpressionUUID->"055bc2ad-6b92-a3be-3378-dbf70e24f184",
+ CellID->1384978530],
+Cell[17091, 525, 407, 14, 70, "Text",ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5",
+ CellID->519689844],
+Cell[17501, 541, 297, 7, 70, "Input",ExpressionUUID->"201a2509-bdd9-2fa1-5039-bd53346c758b",
+ CellID->1609367578],
+Cell[17801, 550, 1595, 52, 70, "Text",ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952",
+ CellID->1541450781],
+Cell[19399, 604, 630, 17, 70, "Input",ExpressionUUID->"5f932952-49a5-d34f-05a0-c11c6851a195",
+ CellID->1657269721],
+Cell[20032, 623, 523, 17, 70, "Text",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563",
+ CellID->1140508347],
+Cell[20558, 642, 362, 9, 70, "Input",ExpressionUUID->"10beb8bd-bdb6-ee93-4045-31e73440b4f9",
+ CellID->496109794],
+Cell[20923, 653, 167, 3, 70, "Text",ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a",
+ CellID->108435171],
+Cell[21093, 658, 386, 10, 70, "Input",ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef",
+ CellID->829388421],
+Cell[21482, 670, 406, 10, 70, "Text",ExpressionUUID->"0642d375-09f3-9942-2e71-cb3faf87eba8",
+ CellID->203008389],
+Cell[21891, 682, 306, 7, 70, "Input",ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861",
+ CellID->1090263105],
+Cell[22200, 691, 433, 12, 70, "Text",ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64",
+ CellID->1560876240],
+Cell[22636, 705, 289, 6, 70, "Input",ExpressionUUID->"67c13665-f813-2f11-0dfe-a84ef9a6727b",
+ CellID->176337227],
+Cell[22928, 713, 136, 1, 70, "Text",ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef",
+ CellID->807053435],
+Cell[23067, 716, 377, 9, 70, "Input",ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef",
+ CellID->1633675818],
+Cell[23447, 727, 473, 11, 70, "Text",ExpressionUUID->"0513e607-0f4c-1e20-3320-f861aaf9650a",
+ CellID->1828793009],
+Cell[23923, 740, 454, 12, 70, "Input",ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788",
+ CellID->1232986364],
+Cell[24380, 754, 2109, 65, 70, "Text",ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012",
+ CellID->762269937],
+Cell[26492, 821, 3887, 119, 70, "Text",ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f",
+ CellID->405213039],
+Cell[30382, 942, 372, 10, 70, "Text",ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7",
+ CellID->2118931930],
+Cell[30757, 954, 660, 18, 70, "Input",ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2",
+ CellID->1039057480],
+Cell[31420, 974, 130, 1, 70, "Text",ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd",
+ CellID->1411198270],
+Cell[31553, 977, 468, 13, 70, "Input",ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77",
+ CellID->1703453532],
+Cell[32024, 992, 432, 13, 70, "Text",ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6",
+ CellID->1477609488],
+Cell[32459, 1007, 507, 13, 70, "Input",ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559",
+ CellID->1030824397],
+Cell[32969, 1022, 683, 18, 70, "Text",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae",
+ CellID->100031176],
+Cell[33655, 1042, 602, 18, 70, "Input",ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8",
+ CellID->144223354],
+Cell[34260, 1062, 139, 1, 70, "Text",ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba",
+ CellID->1443527617],
+Cell[34402, 1065, 167, 3, 70, "Input",ExpressionUUID->"6ce33075-6d34-44a7-1490-aa3f04c12e8d",
+ CellID->311511756],
+Cell[34572, 1070, 258, 5, 70, "Text",ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663",
+ CellID->1381425643],
+Cell[34833, 1077, 495, 11, 70, "Input",ExpressionUUID->"6334ac9c-43f1-85c0-12cb-45c67585ef2a",
+ CellID->377280352],
+Cell[35331, 1090, 318, 8, 70, "Text",ExpressionUUID->"74397683-04f4-1d4d-1dc7-6fedac816797",
+ CellID->1717363484],
+Cell[35652, 1100, 318, 7, 70, "Input",ExpressionUUID->"735e49d5-32a1-4a48-2166-609f47541892",
+ CellID->1781880651],
+Cell[35973, 1109, 1436, 42, 70, "Text",ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807",
+ CellID->1536527082],
+Cell[37412, 1153, 722, 20, 70, "Input",ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651",
+ CellID->1621535814],
+Cell[38137, 1175, 241, 6, 70, "Text",ExpressionUUID->"045023ab-c37d-b770-2c6f-baf4f6091a5a",
+ CellID->1193935837],
+Cell[38381, 1183, 301, 7, 70, "Input",ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade",
+ CellID->105329933],
+Cell[38685, 1192, 558, 17, 70, "Text",ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803",
+ CellID->1234416869],
+Cell[39246, 1211, 263, 6, 70, "Input",ExpressionUUID->"794a4309-908b-2549-2f4a-5b53213f8f93",
+ CellID->240380995],
+Cell[39512, 1219, 538, 17, 70, "Text",ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b",
+ CellID->1771870337],
+Cell[40053, 1238, 174, 3, 70, "Input",ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f",
+ CellID->305160771],
+Cell[40230, 1243, 121, 1, 70, "Text",ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34",
+ CellID->1896945989],
+Cell[40354, 1246, 289, 6, 70, "Input",ExpressionUUID->"285985c7-a1c8-13eb-5866-1ca0d07d6131",
+ CellID->653417278],
+Cell[40646, 1254, 134, 1, 70, "Text",ExpressionUUID->"57868ed1-450c-c474-7dbd-279b6cbeaf5e",
+ CellID->1067269536],
+Cell[40783, 1257, 376, 9, 70, "Input",ExpressionUUID->"0c5e608e-35dc-f74f-3466-79e8bc6edd95",
+ CellID->49659130],
+Cell[41162, 1268, 134, 1, 70, "Text",ExpressionUUID->"1a1e4090-3303-05ed-4a26-59da46b66f37",
+ CellID->464508221],
+Cell[41299, 1271, 436, 12, 70, "Input",ExpressionUUID->"10256af3-3972-af7a-41da-83bdb804f240",
+ CellID->1361313038],
+Cell[41738, 1285, 144, 1, 70, "Text",ExpressionUUID->"457602f1-d86e-ac86-730d-9bbad918f6ec",
+ CellID->1907680634],
+Cell[41885, 1288, 706, 19, 70, "Input",ExpressionUUID->"499f95c1-a958-6c18-7fa4-0caac8ed3762",
+ CellID->483148123],
+Cell[42594, 1309, 190, 4, 70, "Text",ExpressionUUID->"0f1e874b-6d22-b8ab-3525-1f1504d40af1",
+ CellID->1195452142],
+Cell[42787, 1315, 602, 16, 70, "Input",ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e",
+ CellID->1521685512],
+Cell[43392, 1333, 2502, 77, 70, "Text",ExpressionUUID->"6f909018-5ea1-6a32-15af-0a425b543918",
+ CellID->97201263]
 }
 ]
 *)
