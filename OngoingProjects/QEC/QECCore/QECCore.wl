@@ -30,6 +30,7 @@ Module[{dir = DirectoryName[$InputFileName]},
         "FaultTolerant.wl",
         "Memory.wl",
         "Stim.wl",
+        "Bosonic.wl",
         "Cache.wl"
     }
 ]
