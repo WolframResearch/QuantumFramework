@@ -349,6 +349,13 @@ The joint, conditional and mutual entropies are assembled from those three by th
 Simplify[{sAB, sAB - sB, sA + sB - sAB}, 0 < t < Pi/2]
 ```
 
+The marginal entropy over the family rises from zero at the product endpoints to one bit at the maximally
+entangled point $t = \tfrac\pi4$.
+
+```wl
+Plot[sA, {t, 0, Pi/2}]
+```
+
 Measured in units of the marginal entropy, which is positive across the open interval, they collapse to
 constants: the whole family has one and the same entropic structure, only rescaled.
 
@@ -931,9 +938,10 @@ index itself in an orthonormal register gives the classical-quantum state
 $$\rho_{XB} = \sum_i p_i \, |i\rangle\langle i| \otimes \rho_i,$$
 
 whose mutual information $I(X{:}B)$ is $\chi$ on the nose, so the quantity is the mutual information of 14.3
-read on a state built to carry a classical variable in one half. The upper bound $\chi \le S(\bar\rho) \le
-\log_2 d$ follows from the first form, and it is the sharp statement of how much a channel of a given dimension
-can carry: a qubit is capped at one bit regardless of how many states the ensemble crowds into it.
+read on a state built to carry a classical variable in one half. The upper bound
+$\chi \le S(\bar\rho) \le \log_2 d$ follows from the first form, and it is the sharp statement of how much a
+channel of a given dimension can carry: a qubit is capped at one bit regardless of how many states the
+ensemble crowds into it.
 
 **WL** : the generic mixed qubit, the entropy read off the spectrum, and the definition assembled from the two.
 

@@ -104,6 +104,13 @@ Both monotones are named too, and each vanishes on exactly one side of that poin
 Simplify[{QuantumEntanglementMonotone[QuantumState["Werner"[\[FormalP], 2]], "Concurrence"], QuantumEntanglementMonotone[QuantumState["Werner"[\[FormalP], 2]], "Negativity"]}, 0 <= \[FormalP] <= 1]
 ```
 
+Plotting the concurrence over the triplet-weight parameter shows it falling linearly to zero at the threshold
+$p = \tfrac12$ and staying zero beyond it.
+
+```wl
+Plot[QuantumEntanglementMonotone[QuantumState["Werner"[\[FormalP], 2]], "Concurrence"], {\[FormalP], 0, 1}]
+```
+
 The conversion $\lambda = (3-4p)/3$ turns either threshold into the other.
 
 ```wl

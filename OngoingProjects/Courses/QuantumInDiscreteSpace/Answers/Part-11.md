@@ -91,6 +91,30 @@ The object also renders itself in Dirac notation, which shows the single-excitat
 wQF["Formula"]
 ```
 
+These states also have standard preparing circuits, which the framework draws. The Bell and GHZ states are
+named circuits:
+
+```wl
+QuantumCircuitOperator["Bell"]["Diagram"]
+```
+
+```wl
+QuantumCircuitOperator["GHZ"]["Diagram"]
+```
+
+The W state is prepared by a short gate sequence: a tuned $R_y$ that sets the single-excitation weight, a
+controlled Hadamard, and two controlled-NOTs that spread the excitation across the three wires.
+
+```wl
+QuantumCircuitOperator[{"RY"[2 ArcCos[1/Sqrt[3]]], "CH", "CNOT" -> {2, 3}, "CNOT", "X"}]["Diagram"]
+```
+
+Applying that circuit to the ground register reproduces the W state built above.
+
+```wl
+QuantumCircuitOperator[{"RY"[2 ArcCos[1/Sqrt[3]]], "CH", "CNOT" -> {2, 3}, "CNOT", "X"}][] == wQF
+```
+
 Both routes give the same three families. The framework objects additionally know their factorization into
 qubits, so they can be partially traced, measured on one wire, or fed to a circuit, whereas a bare amplitude
 vector has to be reshaped by hand each time.
@@ -500,6 +524,13 @@ Simplify[QuantumEntanglementMonotone[QuantumState[rho, {2, 2}], "Concurrence"], 
 
 ```wl
 Simplify[QuantumEntanglementMonotone[QuantumState[rho, {2, 2}], "Concurrence"] == concurrence, 0 < q < 1]
+```
+
+Plotting the two measures over the family shows them vanishing together at $q = 0$ and the concurrence rising
+above the negativity across the whole range.
+
+```wl
+Plot[{concurrence, negQF}, {q, 0, 1}, PlotLegends -> {"Concurrence", "Negativity"}]
 ```
 
 Both give concurrence exactly $q$, linear in the Bell admixture and reaching $1$ on the Bell state, and
