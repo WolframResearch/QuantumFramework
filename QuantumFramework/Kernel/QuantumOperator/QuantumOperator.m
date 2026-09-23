@@ -528,11 +528,14 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
 QuantumOperator /: HoldPattern[Plus[ops__QuantumOperator]] /; Length[{ops}] > 1 := Fold[addQuantumOperators, {ops}]
 
 QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOperator]] := With[{op = qo["Sort"]},
-    QuantumOperator[
-        Plus[DiagonalMatrix[ConstantArray[x, Min[op["MatrixNameDimensions"]], SparseArray], 0, op["MatrixNameDimensions"]], op["Matrix"]],
-        op["Order"],
-        op["Basis"],
-        "Label" -> If[op["Label"] === None, None, x + op["Label"]]
+    (* Add x on the diagonal by adding x times the identity operator on op's own
+       output space, reusing the operator sum.  Building the identity in the
+       computational basis and letting the sum reconcile keeps this correct for a
+       density-matrix-type operator, whose stored matrix is the d^2 x d^2
+       superoperator rather than the d x d name-dimensioned matrix. *)
+    With[{id = With[{v = QuantumOperator[IdentityMatrix[Times @@ op["OutputDimensions"]], op["Order"], QuantumBasis[op["OutputDimensions"]]]},
+                    If[op["StateType"] === "Matrix", v["ToMatrix"], v]]},
+        QuantumOperator[op + x id, "Label" -> If[op["Label"] === None, None, x + op["Label"]]]
     ]
 ]
 

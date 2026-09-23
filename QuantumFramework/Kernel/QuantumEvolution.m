@@ -171,11 +171,18 @@ QuantumEvolve[
                 If[protectedQ, Protect[Evaluate[parameter]]]
             ]
         ],
-        DSolveValue[
-            equations,
-            return,
-            param,
-            FilterRules[{opts}, Options[DSolveValue]]
+        If[ phaseSpaceQ && FreeQ[matrix, parameter],
+            (* Phase-space evolution is the linear system s'[t] == R.s[t] with a
+               time-independent rate matrix R, whose closed form is the matrix
+               exponential.  DSolveValue can fail to return it under the real
+               vector domain, so form it directly. *)
+            MatrixExp[parameter Normal[matrix]] . Normal[init],
+            DSolveValue[
+                equations,
+                return,
+                param,
+                FilterRules[{opts}, Options[DSolveValue]]
+            ]
         ]
     ];
     If[ TrueQ[OptionValue["ReturnSolution"]], Return[solution]];

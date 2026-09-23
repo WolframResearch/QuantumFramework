@@ -48,7 +48,7 @@ QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] :
 
 (qc_QuantumChannel ? QuantumChannelQ)[qm_QuantumMeasurement, args___] := QuantumMeasurement @ QuantumCircuitOperator[{qm, qc}][args]
 
-(qc_QuantumChannel ? QuantumChannelQ)[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op, qc}]["QuantumOperator", "Trace" -> False]
+(qc_QuantumChannel ? QuantumChannelQ)[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op, qc}]["QuantumOperator"]
 
 (qc_QuantumChannel ? QuantumChannelQ)[args___] := QuantumCircuitOperator[qc][args]
 

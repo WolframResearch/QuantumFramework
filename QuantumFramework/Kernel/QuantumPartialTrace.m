@@ -35,15 +35,16 @@ QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
         ]
     ]
 
-QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With[{
-    basis = QuantumPartialTrace[qs["Basis"], qudits]
-},
-    QuantumState[
-        If[ qs["VectorQ"],
-            ArrayVector @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
-            ReshapeArray[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
-        ],
-        basis
+QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := Enclose[
+    ConfirmAssert[DuplicateFreeQ[qudits[[All, 1]]] && DuplicateFreeQ[qudits[[All, 2]]], "a wire can be traced at most once"];
+    With[{basis = QuantumPartialTrace[qs["Basis"], qudits]},
+        QuantumState[
+            If[ qs["VectorQ"],
+                ArrayVector @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
+                ReshapeArray[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
+            ],
+            basis
+        ]
     ]
 ]
 
@@ -79,13 +80,14 @@ QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer
     outDims, inDims
 },
     ConfirmAssert[ContainsAll[qc["FullOutputOrder"], out] && ContainsAll[qc["FullInputOrder"], in]];
+    ConfirmAssert[DuplicateFreeQ[out] && DuplicateFreeQ[in], "a wire can be traced at most once"];
     outDims = qc["OutputDimensions"][[Lookup[outputIdx, out]]];
     inDims = qc["InputDimensions"][[Lookup[inputIdx, in]]];
     ConfirmAssert[outDims == inDims];
     min = Min[Keys[outputIdx], Keys[inputIdx]];
-    QuantumCircuitOperator[Reverse @ MapIndexed["Cup"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{out, outDims}]]] /*
+    QuantumCircuitOperator[Reverse @ MapIndexed["Cup"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]] /*
         qc /*
-    QuantumCircuitOperator[MapIndexed["Cap"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]]
+    QuantumCircuitOperator[MapIndexed["Cap"[#1[[2]]] -> {min - #2[[1]], #1[[1]]} &, Thread[{out, outDims}]]]
 ]
 
 QuantumPartialTrace[qc_QuantumCircuitOperator] := QuantumPartialTrace[qc, Intersection @@ qc["Order"]]

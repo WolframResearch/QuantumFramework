@@ -860,3 +860,58 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - scalar sum"]
+
+(* x + qo adds x on the diagonal of the represented operator: x I + A. *)
+VerificationTest[
+    Normal[(2 + QuantumOperator["X"])["Matrix"]],
+    2 IdentityMatrix[2] + PauliMatrix[1],
+    TestID -> "ScalarSum-vector-type"
+]
+
+(* Plus is orderless, so qo + x agrees with x + qo. *)
+VerificationTest[
+    Normal[(QuantumOperator["X"] + 2)["Matrix"]] === Normal[(2 + QuantumOperator["X"])["Matrix"]],
+    True,
+    TestID -> "ScalarSum-orderless"
+]
+
+(* A density-matrix-type operator stores the d^2 x d^2 superoperator, so the added
+   identity must be sized d^2.  Sizing it from the d-sized name dimensions raised a
+   Thread::tdlen dimension error and returned a Failure. *)
+VerificationTest[
+    With[{xm = QuantumOperator["X"]["ToMatrix"]},
+        {(2 + xm)["StateType"], Normal[(2 + xm)["Matrix"]] === 2 IdentityMatrix[4] + Normal[xm["Matrix"]]}
+    ],
+    {"Matrix", True},
+    TestID -> "ScalarSum-matrix-type"
+]
+
+(* The same on two qubits: a 16 x 16 superoperator. *)
+VerificationTest[
+    With[{cm = QuantumOperator["CNOT"]["ToMatrix"]},
+        Normal[(2 + cm)["Matrix"]] === 2 IdentityMatrix[16] + Normal[cm["Matrix"]]
+    ],
+    True,
+    TestID -> "ScalarSum-matrix-type-two-qubit"
+]
+
+(* The scalar lands on the represented map, not the stored coefficients: on the
+   non-orthonormal PauliX basis the running operator R represents X, and 2 + R
+   represents 2 I + X. *)
+VerificationTest[
+    Simplify[Normal[(2 + QuantumOperator[{{1, 0}, {0, -1}}, "PauliX"])["MatrixRepresentation"]] - (2 IdentityMatrix[2] + PauliMatrix[1])],
+    {{0, 0}, {0, 0}},
+    TestID -> "ScalarSum-nonorthonormal-basis"
+]
+
+(* A symbolic scalar stays symbolic. *)
+VerificationTest[
+    Simplify[Normal[(a + QuantumOperator["X"])["Matrix"]] - (a IdentityMatrix[2] + PauliMatrix[1])],
+    {{0, 0}, {0, 0}},
+    TestID -> "ScalarSum-symbolic-scalar"
+]
+
+EndTestSection[]

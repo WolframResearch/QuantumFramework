@@ -173,3 +173,51 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumEvolve - phase-space picture"]
+
+(* Evolving a phase-space state with a symbolic time returns a phase-space state
+   carrying the time, not an unevaluated DSolveValue with QuantumEvolve::error.
+   The evolution is the linear system W'[t] = R.W[t] with a time-independent rate
+   matrix R, so its closed form is the matrix exponential. *)
+
+VerificationTest[
+    With[{ev = QuantumEvolve[QuantumOperator["Z"], QuantumPhaseSpaceTransform[QuantumState[{1, 1}/Sqrt[2]]], \[FormalT]]},
+        {Head[ev], ev["Picture"]}
+    ],
+    {QuantumState, "PhaseSpace"},
+    TestID -> "Evolve-phase-space-symbolic-time"
+]
+
+(* The evolved quasiprobability vector equals exp(R t) W(0) with R the transition
+   rate matrix, for real time. *)
+VerificationTest[
+    With[{
+        ev = QuantumEvolve[QuantumOperator["Z"], QuantumPhaseSpaceTransform[QuantumState[{1, 1}/Sqrt[2]]], \[FormalT]],
+        rate = Normal @ HamiltonianTransitionRate[QuantumOperator["Z"]],
+        w0 = Normal @ QuantumPhaseSpaceTransform[QuantumState[{1, 1}/Sqrt[2]]]["StateVector"]
+    },
+        Simplify[Normal[ev["StateVector"]] - MatrixExp[\[FormalT] rate] . w0, Element[\[FormalT], Reals]]
+    ],
+    {0, 0, 0, 0},
+    TestID -> "Evolve-phase-space-matches-matrix-exponential"
+]
+
+(* A dense state with a symbolic time still evolves, on the unchanged solver path. *)
+VerificationTest[
+    Head @ QuantumEvolve[QuantumOperator["Z"], QuantumState[{1, 1}/Sqrt[2]], \[FormalT]],
+    QuantumState,
+    TestID -> "Evolve-dense-symbolic-time-still-works"
+]
+
+(* A phase-space state with a time interval still integrates numerically. *)
+VerificationTest[
+    With[{ev = QuantumEvolve[QuantumOperator["Z"], QuantumPhaseSpaceTransform[QuantumState[{1, 1}/Sqrt[2]]], {\[FormalT], 0, 1}]},
+        {Head[ev], ev["Picture"]}
+    ],
+    {QuantumState, "PhaseSpace"},
+    TestID -> "Evolve-phase-space-time-interval-still-works"
+]
+
+EndTestSection[]

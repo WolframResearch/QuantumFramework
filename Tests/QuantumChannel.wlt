@@ -167,3 +167,35 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumChannel - action on operators and circuits"]
+
+(* Applying a channel to a framework operator forms the two-element circuit
+   {op, channel} and compiles it.  It used to forward an undeclared "Trace" option
+   into the circuit compiler, which raised OptionValue::nodef.  A default
+   VerificationTest fails on any emitted message, so these pin down that the calls
+   are now message-free and return an operator. *)
+
+VerificationTest[
+    Head @ QuantumChannel["BitFlip"[1/10]][QuantumOperator["Z"]],
+    QuantumOperator,
+    TestID -> "Channel-on-operator-message-free"
+]
+
+VerificationTest[
+    Head @ QuantumChannel["BitFlip"[1/10]][QuantumCircuitOperator[{"H"}]],
+    QuantumOperator,
+    TestID -> "Channel-on-circuit-message-free"
+]
+
+(* The compiled value is unchanged: it equals compiling the explicit nested
+   circuit {circuit, channel}. *)
+VerificationTest[
+    Normal @ QuantumChannel["BitFlip"[1/10]][QuantumCircuitOperator[{"H"}]]["Matrix"] ===
+        Normal @ QuantumCircuitOperator[{QuantumCircuitOperator[{"H"}], QuantumChannel["BitFlip"[1/10]]}]["QuantumOperator"]["Matrix"],
+    True,
+    TestID -> "Channel-on-circuit-value-unchanged"
+]
+
+EndTestSection[]
