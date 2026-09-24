@@ -14,7 +14,7 @@ PackageScope[bosonicBlocks]
 PackageScope[ncDagger]
 
 
-QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis or a list of {coefficient, amplitude} pairs in the coherent basis.\nQECBosonicCode[\"Binomial\", N, S] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\", legs, alpha] builds the 2- or 4-component cat code of amplitude alpha.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
+QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis or a list of {coefficient, amplitude} pairs in the coherent basis.\nQECBosonicCode[\"Binomial\", N, S] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\", legs, alpha] builds the rotation-symmetric cat code of amplitude alpha on an even number of coherent-state legs; 2d legs correct up to d-1 photon losses.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
 
 
 $av := First[FieldVariables[]]
@@ -39,7 +39,7 @@ bosonicCodeData[QECBosonicCode[a_Association]] := a
 
 
 QECBosonicCode::words = "Codewords must be two associations <|n -> amplitude|> in the Fock basis, or two lists of {coefficient, amplitude} pairs in the coherent basis.";
-QECBosonicCode::legs = "Cat codes are built here for 2 or 4 legs; `1` was given.";
+QECBosonicCode::legs = "A cat code needs an even number of at least 2 legs; `1` was given.";
 
 Options[QECBosonicCode] = {Assumptions -> True};
 
@@ -70,7 +70,7 @@ QECBosonicCode["Binomial", nn_Integer ? NonNegative, ss_Integer ? NonNegative,
     ]
 
 QECBosonicCode["Cat", legs_Integer, al_, OptionsPattern[]] :=
-    If[ ! MemberQ[{2, 4}, legs],
+    If[ ! (EvenQ[legs] && legs >= 2),
         Message[QECBosonicCode::legs, legs]; $Failed,
         codeObject[
             Table[Table[{Exp[-2 Pi I r k/legs], al Exp[2 Pi I k/legs]}, {k, 0, legs - 1}],
@@ -95,7 +95,7 @@ wordNorm[a_Association, w_] := Sqrt[rawElement[a, w, w, 1]]
 
 bosonicElement[a_Association, i_Integer, j_Integer, expr_] :=
     With[{ws = a["Codewords"]},
-        FullSimplify[
+        Chop @ FullSimplify[
             rawElement[a, ws[[i]], ws[[j]], expr]/(wordNorm[a, ws[[i]]] wordNorm[a, ws[[j]]]),
             a["Assumptions"]]
     ]
@@ -121,12 +121,17 @@ bosonicBlocks[a_Association, channel_] :=
 bosonicKLMatrix[a_Association, channel_] :=
     Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, bosonicBlocks[a, channel], {2}]
 
-bosonicCorrectableQ[a_Association, channel_] :=
-    AllTrue[
+(* The obstruction itself: what each block has left over once the codeword-independent
+   part is removed. Zero exactly when the conditions hold. *)
+bosonicResidual[a_Association, channel_] :=
+    With[{b = bosonicBlocks[a, channel]},
         Flatten @ MapThread[#1 - IdentityMatrix[2] #2 &,
-            {bosonicBlocks[a, channel], bosonicKLMatrix[a, channel]}, 2],
-        PossibleZeroQ[FullSimplify[#, a["Assumptions"]]] &
+            {b, Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, b, {2}]}, 2]
     ]
+
+bosonicCorrectableQ[a_Association, channel_] :=
+    AllTrue[bosonicResidual[a, channel],
+        PossibleZeroQ[FullSimplify[#, a["Assumptions"]]] &]
 
 (* Capped: an approximate code never satisfies the conditions at finite alpha. *)
 $bosonicMaxOrder = 4;
@@ -134,16 +139,41 @@ $bosonicMaxOrder = 4;
 bosonicCorrectionOrder[a_Association, family_] :=
     LengthWhile[Range[0, $bosonicMaxOrder], bosonicCorrectableQ[a, family[#]] &] - 1
 
+(* An approximate code satisfies the conditions only in the limit of large amplitude.
+   Asking whether every residual vanishes there separates a code that is approximately
+   correcting from one that is not correcting at all. *)
+QECBosonicCode::novar = "This code has no amplitude parameter; supply the limit variable as the third argument.";
 
-(* The only place a cutoff enters, so codewords can reach the phase-space tools. *)
-fockAmplitudes[a_Association, w_, dd_Integer] :=
+bosonicApproxOrder[a_Association, family_, var_] :=
+    LengthWhile[
+        Range[0, $bosonicMaxOrder],
+        AllTrue[Simplify[bosonicResidual[a, family[#]], a["Assumptions"]],
+            PossibleZeroQ @ Quiet @ Limit[#, var -> Infinity] &] &
+    ] - 1
+
+
+(* The only place a cutoff enters, so codewords can reach the phase-space tools.
+   A Fock codeword is a finite sum and its size is exact; a coherent one needs enough
+   levels to hold the Poisson tail of its largest amplitude. *)
+QECBosonicCode::numeric = "Codeword amplitudes must be numeric to choose a Fock space size; give one explicitly as the second argument.";
+
+bosonicFockSpaceSize[a_Association] :=
     If[ a["Basis"] === "Fock",
-        Table[Lookup[w, n, 0], {n, 0, dd - 1}],
-        Total[#[[1]] Exp[-Abs[#[[2]]]^2/2] Table[#[[2]]^n/Sqrt[n!], {n, 0, dd - 1}] & /@ w]
+        Max[Union @@ (Keys /@ a["Codewords"])] + 1,
+        With[{nbar = Max[Abs[#[[2]]]^2 & /@ Catenate[a["Codewords"]]]},
+            If[ ! NumericQ[nbar],
+                $Failed,
+                Ceiling[Quantile[PoissonDistribution[Max[N[nbar], 1]], 1 - 10^-12]] + 5]
+        ]
     ]
 
-bosonicQuantumStates[a_Association, dd_Integer] :=
-    QuantumState[Normalize[fockAmplitudes[a, #, dd]], dd] & /@ a["Codewords"]
+bosonicCodewordStates[a_Association, dd_Integer] :=
+    Total[
+        If[ a["Basis"] === "Fock",
+            #[[2]] FockState[#[[1]], dd],
+            #[[1]] CoherentState[dd][#[[2]]]
+        ] & /@ wordComponents[a, #]
+    ]["Normalize"] & /@ a["Codewords"]
 
 
 $bosonicDirectProperties = {
@@ -151,8 +181,9 @@ $bosonicDirectProperties = {
 };
 
 $bosonicParametrizedProperties = {
-    "ErrorSet", "KnillLaflammeBlocks", "KnillLaflammeMatrix", "CorrectableQ",
-    "CorrectionOrder", "QuantumStates"
+    "ErrorSet", "KnillLaflammeBlocks", "KnillLaflammeMatrix", "KnillLaflammeResidual",
+    "CorrectableQ", "CorrectionOrder", "ApproximateCorrectionOrder", "CodewordStates",
+    "FockSpaceSize"
 };
 
 QECBosonicCode::noprop = "`1` is not a property of QECBosonicCode. Use code[\"Properties\"] for the list.";
@@ -171,22 +202,47 @@ QECBosonicCode[a_Association]["MeanPhotonNumber"] :=
 QECBosonicCode[a_Association]["ErrorSet", channel_] := bosonicErrorSet[channel]
 QECBosonicCode[a_Association]["KnillLaflammeBlocks", channel_] := bosonicBlocks[a, channel]
 QECBosonicCode[a_Association]["KnillLaflammeMatrix", channel_] := bosonicKLMatrix[a, channel]
+QECBosonicCode[a_Association]["KnillLaflammeResidual", channel_] := bosonicResidual[a, channel]
 QECBosonicCode[a_Association]["CorrectableQ", channel_] := bosonicCorrectableQ[a, channel]
 QECBosonicCode[a_Association]["CorrectionOrder", family_ : "Loss"] :=
     bosonicCorrectionOrder[a, family]
-QECBosonicCode[a_Association]["QuantumStates", dd_Integer] := bosonicQuantumStates[a, dd]
+
+QECBosonicCode[a_Association]["ApproximateCorrectionOrder", family_ : "Loss", var_ : Automatic] :=
+    With[{v = Replace[var, Automatic :> Lookup[a["Parameters"], "Alpha", $Failed]]},
+        If[ v === $Failed,
+            Message[QECBosonicCode::novar]; $Failed,
+            bosonicApproxOrder[a, family, v]
+        ]
+    ]
+QECBosonicCode[a_Association]["CodewordStates", dd_Integer] := bosonicCodewordStates[a, dd]
+
+QECBosonicCode[a_Association]["CodewordStates"] :=
+    With[{dd = bosonicFockSpaceSize[a]},
+        If[dd === $Failed, Message[QECBosonicCode::numeric]; $Failed, bosonicCodewordStates[a, dd]]]
+
+QECBosonicCode[a_Association]["FockSpaceSize"] := bosonicFockSpaceSize[a]
 
 QECBosonicCode[_Association][prop_, ___] /;
         ! MemberQ[Join[$bosonicDirectProperties, $bosonicParametrizedProperties, {"Properties"}], prop] :=
     (Message[QECBosonicCode::noprop, prop]; $Failed)
 
 
+signedTerm[c_, k_] :=
+    Which[
+        c === 1, {" + ", k},
+        c === -1, {" - ", k},
+        TrueQ[Negative[c]], {" - ", Row[{-c, k}]},
+        True, {" + ", Row[{c, k}]}]
+
 codewordForm[a_Association, w_] :=
-    Row[Riffle[
-        If[ a["Basis"] === "Fock",
-            KeyValueMap[Row[{#2, Ket[{#1}]}] &, w],
-            Row[{#[[1]], Ket[{#[[2]]}]}] & /@ w],
-        " + "]]
+    Module[{parts},
+        parts = Flatten @ If[
+            a["Basis"] === "Fock",
+            KeyValueMap[signedTerm[Chop[#2], Ket[{#1}]] &, w],
+            signedTerm[Chop[#[[1]]], Ket[{Chop[#[[2]]]}]] & /@ w];
+        parts[[1]] = If[parts[[1]] === " - ", "-", ""];
+        Row[parts]
+    ]
 
 (* Fixed: the harmonic well and its ladder of levels, the one mode a bosonic code
    lives in. *)

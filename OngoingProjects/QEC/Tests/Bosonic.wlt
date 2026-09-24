@@ -50,11 +50,26 @@ VerificationTest[
     TestID -> "QBC-Modes"
 ]
 
+(* Any even number of legs is a rotation-symmetric cat code; odd counts and
+   degenerate ones are not. *)
 VerificationTest[
     QECBosonicCode["Cat", 3, \[Alpha]],
     $Failed,
     {QECBosonicCode::legs},
-    TestID -> "QBC-Cat-BadLegs"
+    TestID -> "QBC-Cat-OddLegs"
+]
+
+VerificationTest[
+    QECBosonicCode["Cat", 0, \[Alpha]],
+    $Failed,
+    {QECBosonicCode::legs},
+    TestID -> "QBC-Cat-DegenerateLegs"
+]
+
+VerificationTest[
+    QECBosonicCode["Cat", 6, \[Alpha]]["Parameters"],
+    <|"Legs" -> 6, "Alpha" -> \[Alpha]|>,
+    TestID -> "QBC-Cat6-Parameters"
 ]
 
 VerificationTest[
@@ -181,19 +196,121 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QECBosonicCode - the 2d-leg family corrects d-1 losses"]
+
+(* The defining property of the rotation-symmetric cat family: on 2d legs, a^k takes
+   the code space outside itself for every k < d, and back inside at k = d, where it
+   acts as a logical error the syndrome cannot see. Derived from the codeword
+   overlaps rather than assumed, so it is a check on the layer as much as on the
+   codes. See Grimsmo, Combes & Baragiola on rotation-symmetric bosonic codes. *)
+
+ClearAll[lossBlock, lossBlockZeroQ]
+lossBlock[legs_, k_] :=
+    QECBosonicCode["Cat", legs, \[Alpha], Assumptions -> \[Alpha] > 0][
+        "KnillLaflammeBlocks", {1, Nest[# ** \[FormalA] &, \[FormalA], k - 1]}][[1, 2]]
+lossBlockZeroQ[legs_, k_] :=
+    TrueQ @ Simplify[lossBlock[legs, k] == {{0, 0}, {0, 0}}, \[Alpha] > 0]
+
+(* d = 1: even/odd cat, a single loss already acts inside the code space *)
+VerificationTest[
+    lossBlockZeroQ[2, 1],
+    False,
+    TestID -> "QBC-Cat2-d1-FailsAtOne"
+]
+
+(* d = 2: one loss leaves, two land back inside *)
+VerificationTest[
+    {lossBlockZeroQ[4, 1], lossBlockZeroQ[4, 2]},
+    {True, False},
+    TestID -> "QBC-Cat4-d2-FailsAtTwo"
+]
+
+(* d = 3: the six-component cat, robust to two losses where the four-component one
+   is not, which is the reason the family is generalised past four legs *)
+VerificationTest[
+    {lossBlockZeroQ[6, 1], lossBlockZeroQ[6, 2], lossBlockZeroQ[6, 3]},
+    {True, True, False},
+    TestID -> "QBC-Cat6-d3-FailsAtThree"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - approximate correction"]
+
+(* An exact code is correctable at finite amplitude, so the two orders agree. *)
+VerificationTest[
+    {QECBosonicCode["Binomial", 2, 2]["CorrectionOrder"],
+     QECBosonicCode["Binomial", 2, 2]["ApproximateCorrectionOrder", "Loss", \[Alpha]]},
+    {2, 2},
+    TestID -> "QBC-Binomial-ExactEqualsApproximate"
+]
+
+(* A cat satisfies the conditions only as alpha grows, so its exact order is 0 while its
+   approximate order is d - 1.  This is the distinction the boolean cannot make: Cat2 is
+   not approximately correcting at all, Cat4 is. *)
+VerificationTest[
+    {QECBosonicCode["Cat", 2, \[Alpha], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"],
+     QECBosonicCode["Cat", 4, \[Alpha], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"]},
+    {0, 1},
+    TestID -> "QBC-Cat-ApproximateOrder"
+]
+
+(* The residual is the obstruction itself, and vanishes identically for an exact code. *)
+VerificationTest[
+    DeleteDuplicates @ QECBosonicCode["Binomial", 1, 1]["KnillLaflammeResidual", "Loss"[1]],
+    {0},
+    TestID -> "QBC-Residual-ZeroForExactCode"
+]
+
+(* A code with no amplitude parameter has no limit to take. *)
+VerificationTest[
+    QECBosonicCode[{<|0 -> 1|>, <|1 -> 1|>}]["ApproximateCorrectionOrder"],
+    $Failed,
+    {QECBosonicCode::novar},
+    TestID -> "QBC-ApproximateOrder-NoAmplitude"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QECBosonicCode - truncated conversion"]
 
-(* The one cutoff in the object, for handing codewords to the phase-space tools. *)
+(* A Fock codeword is a finite sum, so its Fock space size is exact: highest occupied
+   level plus one.  A coherent codeword is sized from the Poisson tail of its amplitude. *)
 VerificationTest[
-    #["Dimensions"] & /@ QECBosonicCode["Binomial", 1, 1]["QuantumStates", 12],
-    {{12}, {12}},
-    TestID -> "QBC-QuantumStates-Dimensions"
+    {QECBosonicCode["Binomial", 1, 1]["FockSpaceSize"],
+     QECBosonicCode["Binomial", 3, 2]["FockSpaceSize"]},
+    {5, 13},
+    TestID -> "QBC-FockSpaceSize-Fock-Exact"
 ]
 
 VerificationTest[
-    Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat", 4, 2.]["QuantumStates", 24],
+    QECBosonicCode["Cat", 4, \[Alpha]]["CodewordStates"],
+    $Failed,
+    {QECBosonicCode::numeric},
+    TestID -> "QBC-FockSpaceSize-NeedsNumeric"
+]
+
+(* Auto-sized states are normalized and the two codewords stay orthogonal. *)
+VerificationTest[
+    With[{qs = QECBosonicCode["Cat", 4, 2.]["CodewordStates"]},
+        Chop[{#["Norm"] & /@ qs, (First[qs]["Dagger"] @ Last[qs])["Scalar"]} - {{1, 1}, 0}]],
+    {{0, 0}, 0},
+    TestID -> "QBC-CodewordStates-Auto-Orthonormal"
+]
+
+(* The one cutoff in the object, for handing codewords to the phase-space tools. *)
+VerificationTest[
+    #["Dimensions"] & /@ QECBosonicCode["Binomial", 1, 1]["CodewordStates", 12],
+    {{12}, {12}},
+    TestID -> "QBC-CodewordStates-Dimensions"
+]
+
+VerificationTest[
+    Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat", 4, 2.]["CodewordStates", 24],
     {0, 0},
-    TestID -> "QBC-QuantumStates-Normalized"
+    TestID -> "QBC-CodewordStates-Normalized"
 ]
 
 EndTestSection[]
