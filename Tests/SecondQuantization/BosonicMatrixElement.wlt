@@ -129,3 +129,44 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicMatrixElement - exponentials"]
+
+(* A function of the number operator is diagonal.  This one is the no-jump factor of the
+   photon-loss channel, which is not a polynomial and so had no route before. *)
+VerificationTest[
+    BosonicMatrixElement[{m, k}, \[Eta]^((adv ** av)/2)],
+    \[Eta]^(k/2) KroneckerDelta[m, k],
+    TestID -> "BME-Exp-NumberDiagonal"
+]
+
+(* A wing is an exponential of one operator alone, evaluated as a Taylor coefficient of
+   Exp[P].  A quadratic wing raises two levels at a time, so odd differences vanish. *)
+VerificationTest[
+    {BosonicMatrixElement[{4, 0}, Exp[s adv ** adv]],
+     BosonicMatrixElement[{3, 0}, Exp[s adv ** adv]]},
+    {Sqrt[6] s^2, 0},
+    TestID -> "BME-Exp-QuadraticWingParity"
+]
+
+(* An exponential mixing the two operators is disentangled first.  Cross-checked against
+   MatrixExp on a 40-level truncation, which gives 1.8682476751142998. *)
+VerificationTest[
+    Chop[N[BosonicMatrixElement[{6, 2}, Exp[av + adv]]] - 1.8682476751142998],
+    0,
+    TestID -> "BME-Exp-MixedDisentangles"
+]
+
+(* The payoff: a squeeze written as its disentangled product of wings agrees with the
+   closed form the SqueezeOperator clause gives for the same operator. *)
+VerificationTest[
+    With[{sd = BosonicExpOrder[
+            Exp[(Conjugate[\[Xi]] av ** av - \[Xi] adv ** adv)/2], \[Xi] > 0] /. \[Xi] -> 0.4},
+        Chop[BosonicMatrixElement[{2, 0}, Evaluate[sd]] -
+             BosonicMatrixElement[{2, 0}, SqueezeOperator[0.4]]]],
+    0,
+    TestID -> "BME-Exp-SqueezeMatchesNamed"
+]
+
+EndTestSection[]
