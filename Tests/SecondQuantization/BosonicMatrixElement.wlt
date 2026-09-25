@@ -169,4 +169,17 @@ VerificationTest[
     TestID -> "BME-Exp-SqueezeMatchesNamed"
 ]
 
+(* The factors are assembled as one normally ordered product, so an anti-normally ordered
+   product must not be taken at face value: reordering it while keeping its own scalar is
+   wrong by the exponential of the commutator.  It is declined and then disentangled, so
+   both spellings of the same operator agree. *)
+VerificationTest[
+    With[{no = BosonicExpOrder[Exp[0.7 adv - 0.4 av]],
+          an = BosonicExpOrder[Exp[0.7 adv - 0.4 av], "Ordering" -> "Antinormal"]},
+        Chop[BosonicMatrixElement[{3, 2}, Evaluate[an]] -
+             BosonicMatrixElement[{3, 2}, Evaluate[no]]]],
+    0,
+    TestID -> "BME-Exp-AntinormalNotReordered"
+]
+
 EndTestSection[]

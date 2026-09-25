@@ -348,6 +348,12 @@ normalProductElement[expr_, v_, m_, n_, j_] :=
             {q_NonCommutativeMultiply :> List @@ q, q_ :> {q}}];
         tagged = normalFactor[#, v, j, x] & /@ tagged;
         If[MemberQ[tagged, $Failed], Return[$Failed, Module]];
+        (* The factors are assembled as one normally ordered product, so they must arrive
+           in that order: an antinormal product would otherwise be silently reordered and
+           keep its own scalar, which is wrong by the exponential of the commutator. *)
+        If[ ! OrderedQ[First /@ tagged /. {"Up" -> 1, "Diagonal" -> 2, "Down" -> 3}],
+            Return[$Failed, Module]
+        ];
         u = Total[Cases[tagged, ("Up" -> c_) :> c]];
         w = Total[Cases[tagged, ("Down" -> c_) :> c]];
         f = Times @@ Cases[tagged, ("Diagonal" -> g_) :> g];
