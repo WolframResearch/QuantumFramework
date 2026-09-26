@@ -299,11 +299,94 @@ MatrixInverse[matrix_] := If[
 ]
 
 
-matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := Switch[f,
-    Plus | Minus | Times | Conjugate, f[left, mat, right],
-    Power, MatrixPower[mat, left, right, opts],
-    _, ResourceFunction["ComputeMatrixFunction"][f[left, #, right] &, mat, opts]
+(* A scalar function of a matrix. A diagonal matrix takes f entry by entry on its
+   diagonal. An exact or symbolic matrix goes through its minimal polynomial
+   (ComputeMatrixFunction), which is sound in exact arithmetic; its closed form is
+   generic in any parameters, valid where the eigenvalues it separates stay
+   distinct. In floating point that polynomial interpolation is ill-conditioned in
+   the number of distinct eigenvalues, so an inexact matrix is diagonalized instead,
+   and f of a diagonalized matrix needs no derivatives, so non-analytic f such as
+   Abs works too: a normal matrix by its Schur decomposition m = q.t.q^†, whose t
+   is diagonal to roundoff exactly when m is normal, and a non-normal one with a
+   well-conditioned eigenbasis v by v.f(d).v^-1. Any other goes to MatrixFunction (Schur-Parlett), which needs f
+   differentiable at the eigenvalues. *)
+matrixFunction[f : Plus | Minus | Times | Conjugate, mat_, {left___}, {right___}, ___] := f[left, mat, right]
+
+matrixFunction[Power, mat_, {left___}, {right___}, opts : OptionsPattern[]] := MatrixPower[mat, left, right, opts]
+
+matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := scalarMatrixFunction[f[left, #, right] &, mat, opts]
+
+(* f must be finite on numeric eigenvalues: Log at a zero eigenvalue is a Failure,
+   not a matrix of infinities. *)
+spectralValues[f_, eigenvalues_] := With[{values = f /@ eigenvalues},
+    If[ ! VectorQ[eigenvalues, NumericQ] || VectorQ[values, NumericQ],
+        values,
+        Failure["NonFiniteMatrixFunction", <|"MessageTemplate" -> "The function is not finite at an eigenvalue."|>]
+    ]
 ]
+
+(* An inexact diagonal is held to the same roundoff rule as a dense matrix, so f
+   commutes with a change of basis near a zero eigenvalue too. *)
+scalarMatrixFunction[f_, mat_, ___] /; SquareMatrixQ[mat] && DiagonalMatrixQ[mat] := Enclose @ With[
+    {eigenvalues = Normal[Diagonal[mat]]},
+    SparseArray[
+        Band[{1, 1}] -> Confirm[spectralValues[f,
+            If[MatrixQ[mat, NumericQ] && Precision[mat] < Infinity, roundoffEigenvalues[eigenvalues, 10 ^ -Precision[mat]], eigenvalues]
+        ]],
+        Dimensions[mat]
+    ]
+]
+
+scalarMatrixFunction[f_, mat_, opts___] /; SquareMatrixQ[mat] && MatrixQ[mat, NumericQ] && Precision[mat] < Infinity :=
+    With[{m = Normal[mat], eps = 10 ^ -Precision[mat]},
+        inexactMatrixFunction[f, m, eps, 100 Length[m] eps, opts]
+    ]
+
+scalarMatrixFunction[f_, mat_, opts___] := Enclose @ ConfirmBy[
+    ResourceFunction["ComputeMatrixFunction"][f, mat, opts],
+    FreeQ[#, Indeterminate | _DirectedInfinity] &,
+    "The function is not finite at an eigenvalue."
+]
+
+(* eps is the relative precision of the entries; within tol = 100 n eps the matrix
+   counts as Hermitian and the strict upper triangle of t as zero. An eigenvalue
+   within 10 eps of zero, relative to the largest, is set to zero: roundoff alone
+   puts it there, and f may be singular at zero (Sqrt, Log). *)
+roundoffEigenvalues[eigenvalues_, eps_] := Chop[eigenvalues, 10 eps Max[Abs[eigenvalues]]]
+
+(* The Schur factor q is unitary even inside a degenerate eigenspace, where the
+   eigenvectors Eigensystem returns need not be orthonormal, so f(m) = q.f(t).q^†
+   when t is diagonal to roundoff. q.(x q^†) is q.DiagonalMatrix[x].q^† without the
+   dense diagonal product. A Hermitian matrix keeps real eigenvalues and, for real
+   f values, gives an exactly Hermitian result, real for real input. HermitianMatrixQ's
+   Tolerance zeroes small entries rather than bounding m - m^†, so the test is
+   written out. *)
+inexactMatrixFunction[f_, mat_, eps_, tol_, opts___] := Enclose @ With[
+    {qt = SchurDecomposition[mat, RealBlockDiagonalForm -> False]},
+    {q = First[qt], t = Last[qt], hermitianQ = Max[Abs[mat - ConjugateTranspose[mat]]] <= tol Max[Abs[mat]]},
+    If[ hermitianQ || Max[Abs[UpperTriangularize[t, 1]]] <= tol Max[Abs[t]],
+        With[
+            {values = Confirm[spectralValues[f, roundoffEigenvalues[If[hermitianQ, Re, Identity][Diagonal[t]], eps]]]},
+            {result = q . (values ConjugateTranspose[q])},
+            Which[
+                ! hermitianQ || ! FreeQ[values, _Complex], result,
+                FreeQ[mat, _Complex], Re[(result + Transpose[result]) / 2],
+                True, (result + ConjugateTranspose[result]) / 2
+            ]
+        ],
+        nonNormalMatrixFunction[f, mat, Eigensystem[mat], eps, opts]
+    ]
+]
+
+(* An eigenbasis v whose condition number stays below eps^(-1/4) keeps the error of
+   v.f(d).v^-1 near eps^(3/4). A defective or nearly defective matrix fails this and
+   goes to MatrixFunction (Schur-Parlett), which needs f differentiable there. *)
+nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
+    With[{sv = SingularValueList[vectors]}, Length[sv] == Length[vectors] && Max[sv] <= eps ^ (-1/4) Min[sv]] :=
+    Enclose[Transpose[vectors] . (Confirm[spectralValues[f, eigenvalues]] Inverse[Transpose[vectors]])]
+
+nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
+    Enclose[Confirm[spectralValues[f, eigenvalues]]; MatrixFunction[f, mat, opts]]
 
 
 SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]
