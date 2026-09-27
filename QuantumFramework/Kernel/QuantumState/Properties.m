@@ -192,11 +192,20 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
    to save; going through Once anyway would make the common path pay a hash of
    the whole array on every property read and then keep a second reference to it
    for the rest of the session. The cache is for containers that actually cost
-   something to read. *)
+   something to read.
+
+   A named Function of the parameters is read as its body at the parameters
+   themselves: the closed form in the parameter symbols, where ArrayComputable
+   would hand the lazy container back and a reshape would expand it into an
+   array of scalar Functions. *)
 
 computableState[qs_] := With[{state = qs["State"]},
-    If[ ArrayComputeNativeQ[state],
+    Which[
+        ArrayComputeNativeQ[state],
         state,
+        MatchQ[state, HoldPattern[Function[_Symbol | {__Symbol}, _]]] && ArrayLazyQ[state],
+        Once[state @@ Flatten[{First[state]}]],
+        True,
         Once[ArrayComputable[state]]
     ]
 ]

@@ -539,15 +539,19 @@ QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOper
     ]
 ]
 
+(* The amplitudes an operator stores for the matrix mat: the flattened matrix for a
+   vector-type state, the doubled layout for a matrix-type one. *)
+operatorAmplitudes[mat_, vectorQ_, nameDimensions_, dimension_] := If[ vectorQ,
+    Flatten[mat],
+    ArrayReshape[
+        Transpose[ArrayReshape[mat, Join[nameDimensions, nameDimensions]], 2 <-> 3],
+        {dimension, dimension}
+    ]
+]
+
 matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
     QuantumState[
-        If[ op["VectorQ"],
-            Flatten[mat],
-            ArrayReshape[
-                Transpose[ArrayReshape[mat, Join[#, #] & @ op["MatrixNameDimensions"]], 2 <-> 3],
-                {#, #} & @ op["Dimension"]
-            ]
-        ],
+        operatorAmplitudes[mat, op["VectorQ"], op["MatrixNameDimensions"], op["Dimension"]],
         op["Basis"]
     ],
     op["Order"],
@@ -593,10 +597,53 @@ QuantumOperator /: Exp[qo_QuantumOperator] := E ^ qo
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
     op = qo["Sort"]
 },
-    matrixOperator[
-        op,
-        ConfirmBy[matrixFunction[f, op["Matrix"], {left}, {right}, opts], MatrixQ],
-        "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
+    If[ op["ParameterArity"] > 0,
+        parametricMatrixFunctionOperator[f, op, {left}, {right}, {opts}],
+        matrixOperator[
+            op,
+            ConfirmBy[matrixFunction[f, op["Matrix"], {left}, {right}, opts], MatrixQ],
+            "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
+        ]
+    ]
+]
+
+(* The amplitudes of f of the matrix, or a Failure when f is not defined there
+   (Log at a zero eigenvalue), so that a substitution reaching that value fails. *)
+matrixFunctionAmplitudes[f_, mat_, {left___}, {right___}, {opts___}, vectorQ_, nameDimensions_, dimension_] := Enclose @
+    operatorAmplitudes[ConfirmBy[matrixFunction[f, mat, {left}, {right}, opts], MatrixQ], vectorQ, nameDimensions, dimension]
+
+(* f of an operator with declared parameters keeps f unapplied until values arrive:
+   its amplitudes are a lazy Function of the parameters whose body applies f to the
+   matrix with the values in place. Substituting into a closed form of f(M) instead
+   divides by differences of eigenvalues, so it is Indeterminate where the values
+   make two of them collide (sin M = sin(r)/r M at r = 0) and loses accuracy near
+   such values; applying f to the substituted matrix is regular there. The closed
+   form in the parameters is what the lazy amplitudes give when read (the Function
+   applied to its own parameters), and a partial substitution curries the Function.
+   The shape is declared so that Wolfram`Arrays` does not probe the body. *)
+parametricMatrixFunctionOperator[f_, op_, {left___}, {right___}, {opts___}] := With[{
+    parameters = op["Parameters"],
+    (* a List, not a SparseArray: a SparseArray is atomic, so Function application
+       would not reach the parameters inside it *)
+    mat = Normal[op["Matrix"]],
+    vectorQ = op["VectorQ"],
+    nameDimensions = op["MatrixNameDimensions"],
+    dimension = op["Dimension"]
+},
+    (* Function binds its first argument, so With cannot write the parameters there;
+       Apply puts them in front of the held body instead. *)
+    With[{
+        amplitudes = Function @@ Prepend[
+            Hold[matrixFunctionAmplitudes[f, mat, {left}, {right}, {opts}, vectorQ, nameDimensions, dimension]],
+            parameters
+        ]
+    },
+        ArrayDeclareShape[amplitudes, ArrayDimensions[op["State"]["State"]]];
+        QuantumOperator[
+            QuantumState[amplitudes, op["Basis"]],
+            op["Order"],
+            "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
+        ]
     ]
 ]
 
@@ -721,7 +768,7 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     qo[AssociationThread[Take[qo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qo["Parameters"]] :=
-    QuantumOperator[qo["State"][rules], qo["Order"]]
+    Enclose @ QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]]
 
 
 (* *)

@@ -18,9 +18,9 @@
                           Hermitian draws against a 30-digit diagonalization,
                           cos^2 + sin^2 = 1 and [cos H, H] = 0
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
-                          defective) is a Failure; degenerate spectra of
-                          multiplicity 8 and 4; a parameter value where two
-                          eigenvalues collide *)
+                          defective, or reached by substitution) is a Failure;
+                          degenerate spectra of multiplicity 8 and 4; parameter
+                          values at and next to a collision of two eigenvalues *)
 
 BeginTestSection["QuantumOperator - matrix functions"]
 
@@ -478,7 +478,7 @@ VerificationTest[
 
 (* M = [[a, b], [b, -a]] squares to r^2 with r = sqrt(a^2 + b^2), so its sine series
    sums to sin M = sinc(r) M, regular at r = 0 where the two eigenvalues +-r
-   collide. The closed form f[qo] returns is sin(r)/r M, generic in (a, b). *)
+   collide. The closed form f[qo] shows is sin(r)/r M, generic in (a, b). *)
 mfCollision = QuantumOperator[{{mfA, mfB}, {mfB, -mfA}}, "Parameters" -> {mfA, mfB}];
 
 (* Close to the collision the closed form is still exact: it equals sinc(r) M
@@ -499,15 +499,56 @@ VerificationTest[
     TestID -> "MatrixFunction-parameter-collision-substitute-first"
 ]
 
-(* Known limitation: substituting into the generic closed form at the collision
-   evaluates sin(r)/r at r = 0 and gives Indeterminate, not the limit 0. This test
-   records the current behavior; when the closed form learns the removable
-   singularity, it should expect ConstantArray[0, {2, 2}] and no messages. *)
+(* Substituting values into f[qo] applies f to the substituted matrix rather than
+   evaluating the closed form sin(r)/r M at r = 0, so at the collision the result is
+   sin 0 = 0 with no messages, whether the values arrive at once, one parameter at a
+   time, or positionally. *)
 VerificationTest[
-    Normal[Sin[mfCollision][0, 0]["Matrix"]],
-    ConstantArray[Indeterminate, {2, 2}],
-    {Power::infy, Infinity::indet, Power::infy, Infinity::indet, Power::infy, General::stop, Infinity::indet, General::stop},
-    TestID -> "MatrixFunction-parameter-collision-known-limitation"
+    Normal /@ {
+        Sin[mfCollision][<|mfA -> 0, mfB -> 0|>]["Matrix"],
+        Sin[mfCollision][<|mfA -> 0|>][<|mfB -> 0|>]["Matrix"],
+        Sin[mfCollision][0, 0]["Matrix"]
+    },
+    ConstantArray[0, {3, 2, 2}],
+    TestID -> "MatrixFunction-parameter-collision-substitute-after"
+]
+
+(* A collision that makes the matrix defective: [[a, 1], [0, b]] at a = b is a
+   Jordan block, and sin of it needs the derivative, [[sin b, cos b], [0, sin b]],
+   also when a -> b is substituted symbolically. *)
+VerificationTest[
+    With[{jordan = QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}]},
+        Simplify[{
+            Normal[Sin[jordan][1, 1]["Matrix"]] - {{Sin[1], Cos[1]}, {0, Sin[1]}},
+            Normal[Sin[jordan][<|mfA -> mfB|>]["Matrix"]] - {{Sin[mfB], Cos[mfB]}, {0, Sin[mfB]}}
+        }]
+    ],
+    ConstantArray[0, {2, 2, 2}],
+    TestID -> "MatrixFunction-parameter-collision-defective"
+]
+
+(* Near, not at, a collision with machine values: the closed form's divided
+   difference (sin a - sin b)/(a - b) cancels catastrophically at a - b = 10^-12
+   (it was off by 1e-4); applying f to the substituted matrix is accurate. The
+   reference is the exact matrix at 30 digits. *)
+VerificationTest[
+    With[{jordan = QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}]},
+        Max[Abs[
+            Normal[Sin[jordan][1., 1. + 10.^-12]["Matrix"]] -
+                N[MatrixFunction[Sin, {{1, 1}, {0, 1 + 10^-12}}], 30]
+        ]]
+    ],
+    _ ? (# < 10^-12 &),
+    SameTest -> MatchQ,
+    TestID -> "MatrixFunction-parameter-near-collision-machine"
+]
+
+(* Where f itself is not defined at the substituted matrix, the substitution fails:
+   Log of [[a, b], [b, -a]] at a = b = 0 is the log of the zero matrix. *)
+VerificationTest[
+    Head[Log[mfCollision][0, 0]],
+    Failure,
+    TestID -> "MatrixFunction-parameter-substitution-Log-fails"
 ]
 
 EndTestSection[]
