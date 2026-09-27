@@ -12,6 +12,7 @@ PackageExport["QuantumOperator"]
 PackageScope["QuantumOperatorQ"]
 PackageScope["StackQuantumOperators"]
 PackageScope["$QuantumOperatorBroadcastLimit"]
+PackageScope["matrixMapAmplitudes"]
 
 
 (* What the matrix constructors below accept: a rank-2 array container of any
@@ -576,10 +577,13 @@ QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /;
     TrueQ[qo["SquareQ"]] := Enclose @ With[{
     op = qo["Sort"]
 },
-    matrixOperator[
-        op,
-        ConfirmBy[MatrixExp[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
-        "Label" -> If[op["Label"] === None, None, Power[base, op["Label"]]]
+    If[ lazyMatrixMapQ[op],
+        parametricMatrixMapOperator[MatrixExp[Log[base] #] &, qo, op, If[op["Label"] === None, None, Power[base, op["Label"]]]],
+        matrixOperator[
+            op,
+            ConfirmBy[MatrixExp[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
+            "Label" -> If[op["Label"] === None, None, Power[base, op["Label"]]]
+        ]
     ]
 ]
 
@@ -597,8 +601,13 @@ QuantumOperator /: Exp[qo_QuantumOperator] := E ^ qo
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
     op = qo["Sort"]
 },
-    If[ op["ParameterArity"] > 0,
-        parametricMatrixFunctionOperator[f, op, {left}, {right}, {opts}],
+    If[ lazyMatrixMapQ[op],
+        parametricMatrixMapOperator[
+            matrixFunction[f, #, {left}, {right}, opts] &,
+            qo,
+            op,
+            If[op["Label"] === None, None, f[left, op["Label"], right]]
+        ],
         matrixOperator[
             op,
             ConfirmBy[matrixFunction[f, op["Matrix"], {left}, {right}, opts], MatrixQ],
@@ -607,53 +616,86 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
     ]
 ]
 
-(* The amplitudes of f of the matrix, or a Failure when f is not defined there
-   (Log at a zero eigenvalue), so that a substitution reaching that value fails. *)
-matrixFunctionAmplitudes[f_, mat_, {left___}, {right___}, {opts___}, vectorQ_, nameDimensions_, dimension_] := Enclose @
-    operatorAmplitudes[ConfirmBy[matrixFunction[f, mat, {left}, {right}, opts], MatrixQ], vectorQ, nameDimensions, dimension]
-
-(* f of an operator with declared parameters keeps f unapplied until values arrive:
-   its amplitudes are a lazy Function of the parameters whose body applies f to the
-   matrix with the values in place. Substituting into a closed form of f(M) instead
-   divides by differences of eigenvalues, so it is Indeterminate where the values
-   make two of them collide (sin M = sin(r)/r M at r = 0) and loses accuracy near
-   such values; applying f to the substituted matrix is regular there. The closed
-   form in the parameters is what the lazy amplitudes give when read (the Function
-   applied to its own parameters), and a partial substitution curries the Function.
-   The shape is declared so that Wolfram`Arrays` does not probe the body. *)
-parametricMatrixFunctionOperator[f_, op_, {left___}, {right___}, {opts___}] := With[{
-    parameters = op["Parameters"],
-    (* a List, not a SparseArray: a SparseArray is atomic, so Function application
-       would not reach the parameters inside it *)
-    mat = Normal[op["Matrix"]],
-    vectorQ = op["VectorQ"],
-    nameDimensions = op["MatrixNameDimensions"],
-    dimension = op["Dimension"]
+QuantumOperator /: MatrixExp[qo_QuantumOperator] := Enclose @ With[{
+    op = qo["Sort"]
 },
-    (* Function binds its first argument, so With cannot write the parameters there;
-       Apply puts them in front of the held body instead. *)
-    With[{
-        amplitudes = Function @@ Prepend[
-            Hold[matrixFunctionAmplitudes[f, mat, {left}, {right}, {opts}, vectorQ, nameDimensions, dimension]],
-            parameters
-        ]
-    },
-        ArrayDeclareShape[amplitudes, ArrayDimensions[op["State"]["State"]]];
-        QuantumOperator[
-            QuantumState[amplitudes, op["Basis"]],
-            op["Order"],
-            "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
+    If[ lazyMatrixMapQ[op],
+        parametricMatrixMapOperator[MatrixExp, qo, op, If[op["Label"] === None, None, Exp[op["Label"]]]],
+        matrixOperator[
+            op,
+            ConfirmBy[MatrixExp[op["Matrix"]], MatrixQ],
+            "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
         ]
     ]
 ]
 
-QuantumOperator /: MatrixExp[qo_QuantumOperator] := Enclose @ With[{
-    op = qo["Sort"]
+(* A matrix map g of an operator with declared parameters (f of the matrix for a
+   NumericFunction f, the matrix exponential for Exp, MatrixExp and base^op) keeps g
+   unapplied until values arrive: the amplitudes are a lazy Function of the
+   parameters whose body applies g to the matrix with the values in place.
+   Substituting into a closed form of g(M) instead divides by differences of
+   eigenvalues, so it is Indeterminate where the values make two of them collide
+   (sin M = sin(r)/r M at r = 0) and loses accuracy near such values; applying g to
+   the substituted matrix is regular there. Reading the amplitudes gives the closed
+   form (the Function at its own parameters), and a partial substitution curries
+   the Function.
+
+   The parameters can be the variables of a Function only when they are plain
+   unprotected symbols: an indexed th[1] or a Subscript is not, and those operators
+   keep the closed form, as do non-square ones, which have no matrix function. *)
+lazyMatrixMapQ[op_] := op["ParameterArity"] > 0 && TrueQ[op["SquareQ"]] &&
+    MatchQ[op["Parameters"], {__Symbol}] && AllTrue[op["Parameters"], ! MemberQ[Attributes[#], Protected] &]
+
+(* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
+   at a zero eigenvalue), so that a substitution reaching that value fails. *)
+matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose @ operatorAmplitudes[
+    ConfirmBy[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]], MatrixQ],
+    vectorQ, nameDimensions, dimension
+]
+
+(* The matrix of the amplitudes amps in the parameter-free basis qb, in the sorted
+   order the matrix map works in. *)
+amplitudesMatrix[amps_, qb_, order_] := Normal[QuantumOperator[QuantumState[amps, qb], order]["Sort"]["Matrix"]]
+
+(* The matrix the body applies g to, held so that the parameters in it stay free.
+   For an operator qo that is itself such a lazy result (g1 of an operator, then
+   g2), it is the inner body read as a matrix, so the values reach the innermost
+   matrix first rather than the closed form of g1. It is read from qo as given,
+   before sorting its order, since sorting rebuilds the amplitudes from the closed
+   form; the sorting happens inside the body instead. Otherwise it is the sorted
+   matrix as a List: a SparseArray is atomic, so neither Function application nor
+   ReplaceAll would reach the parameters inside it. The basis written into the body
+   carries no parameter specification, which a substitution would otherwise
+   overwrite. *)
+heldOperatorMatrix[qo_, op_] := With[{amplitudes = qo["State"]["State"]},
+    If[ MatchQ[amplitudes, HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]]],
+        With[{qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}], order = qo["Order"]},
+            Replace[Extract[amplitudes, {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
+        ],
+        With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
+    ]
+]
+
+(* Function binds its first argument, so With cannot write the parameters there;
+   Apply puts them in front of the held body instead. The shape is declared so that
+   Wolfram`Arrays` does not probe the body; Arrays keeps that declaration, keyed on
+   the Function, for the rest of the session. Evaluating the closed form here fails
+   construction when g is undefined for every value of the parameters, and caches
+   it for later reads. *)
+parametricMatrixMapOperator[g_, qo_, op_, label_] := Enclose @ With[{
+    vectorQ = op["VectorQ"],
+    nameDimensions = op["MatrixNameDimensions"],
+    dimension = op["Dimension"]
 },
-    matrixOperator[
-        op,
-        ConfirmBy[MatrixExp[op["Matrix"]], MatrixQ],
-        "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
+    With[{
+        amplitudes = Function @@ Prepend[
+            Replace[heldOperatorMatrix[qo, op], Hold[mat_] :> Hold[matrixMapAmplitudes[g, mat, vectorQ, nameDimensions, dimension]]],
+            op["Parameters"]
+        ]
+    },
+        ConfirmBy[lazyClosedForm[amplitudes], ArrayQ];
+        ArrayDeclareShape[amplitudes, ArrayDimensions[op["State"]["State"]]];
+        QuantumOperator[QuantumState[amplitudes, op["Basis"]], op["Order"], "Label" -> label]
     ]
 ]
 

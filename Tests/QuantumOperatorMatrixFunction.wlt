@@ -551,4 +551,96 @@ VerificationTest[
     TestID -> "MatrixFunction-parameter-substitution-Log-fails"
 ]
 
+(* Parameters that cannot be Function variables (indexed th[1], th[2]) keep the
+   closed form: still sin(r)/r M, and correct away from the collision. *)
+VerificationTest[
+    With[{q = QuantumOperator[{{th[1], th[2]}, {th[2], -th[1]}}, "Parameters" -> {th[1], th[2]}]},
+        Simplify[{
+            Normal[Sin[q]["Matrix"]] - Sin[Sqrt[th[1]^2 + th[2]^2]] / Sqrt[th[1]^2 + th[2]^2] {{th[1], th[2]}, {th[2], -th[1]}},
+            Normal[Sin[q][3/10, 4/10]["Matrix"]] - 2 Sin[1/2] {{3/10, 4/10}, {4/10, -3/10}}
+        }]
+    ],
+    ConstantArray[0, {2, 2, 2}],
+    TestID -> "MatrixFunction-parameter-indexed-parameters"
+]
+
+(* A non-square operator has no matrix function, with or without parameters. *)
+VerificationTest[
+    Head[Sin[QuantumOperator[{{mfA, 1}, {0, mfA}, {1, 0}, {0, 1}}, "Parameters" -> {mfA}]]],
+    Failure,
+    TestID -> "MatrixFunction-parameter-nonsquare-fails"
+]
+
+(* Abs is not differentiable, and a Jordan block needs the derivative: substituting
+   a = b = 1 into Abs of [[a, 1], [0, b]] fails rather than returning an unevaluated
+   Derivative[1][Abs][1]. *)
+VerificationTest[
+    Head[Abs[QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}]][1, 1]],
+    Failure,
+    TestID -> "MatrixFunction-parameter-Abs-defective-fails"
+]
+
+(* A symbolic second argument keeps a symbolic result: log base b of [[2, 1], [1, 2]]
+   (eigenvalues 3 and 1) is log 3/(2 log b) [[1, 1], [1, 1]], with or without
+   parameters in the operator. *)
+VerificationTest[
+    Simplify[{
+        Normal[Log[mfB, QuantumOperator[{{2, 1}, {1, 2}}]]["Matrix"]] - Log[3] / (2 Log[mfB]) {{1, 1}, {1, 1}},
+        Normal[Log[mfB, QuantumOperator[{{mfA, 1}, {1, mfA}}, "Parameters" -> {mfA}]][2]["Matrix"]] - Log[3] / (2 Log[mfB]) {{1, 1}, {1, 1}}
+    }],
+    ConstantArray[0, {2, 2, 2}],
+    TestID -> "MatrixFunction-symbolic-second-argument"
+]
+
+(* f of f: exp(sin M) at the collision a = b = 0 is exp 0 = 1, where exp of the closed
+   form sin(r)/r M is 0/0; one parameter at a time too, and away from the collision
+   it matches the built-in MatrixExp of MatrixFunction[Sin, m]. The same holds when
+   the inner result is placed on the reversed order {2, 1} of a two-qubit
+   operator a Z(x)X + b X(x)I, whose order the outer function sorts. *)
+VerificationTest[
+    With[{
+        m = {{1/3, 1/5}, {1/5, -1/3}},
+        reordered = QuantumOperator[
+            Sin[QuantumOperator[mfA KroneckerProduct[PauliMatrix[3], PauliMatrix[1]] + mfB KroneckerProduct[PauliMatrix[1], IdentityMatrix[2]], {1, 2}, "Parameters" -> {mfA, mfB}]],
+            {2, 1}
+        ]
+    },
+        Simplify[{
+            Normal[Exp[Sin[mfCollision]][0, 0]["Matrix"]] - IdentityMatrix[2],
+            Normal[Exp[Sin[mfCollision]][<|mfA -> 0|>][<|mfB -> 0|>]["Matrix"]] - IdentityMatrix[2],
+            Normal[Exp[Sin[mfCollision]][1/3, 1/5]["Matrix"]] - MatrixExp[MatrixFunction[Sin, m]],
+            Normal[Exp[reordered][0, 0]["Matrix"]][[;; 2, ;; 2]] - IdentityMatrix[2],
+            Normal[Exp[reordered][0, 0]["Matrix"]][[3 ;;, 3 ;;]] - IdentityMatrix[2]
+        }]
+    ],
+    ConstantArray[0, {5, 2, 2}],
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-parameter-nested-collision"
+]
+
+(* The exponential spellings take the same route: exp M, e^M, 2^M and MatrixExp at the
+   collision a = b = 0 are the identity, and exp of [[a, 1], [0, b]] at a = b = 1 is
+   e [[1, 1], [0, 1]]. *)
+VerificationTest[
+    {
+        Normal /@ {
+            Exp[mfCollision][0, 0]["Matrix"],
+            (E ^ mfCollision)[0, 0]["Matrix"],
+            (2 ^ mfCollision)[0, 0]["Matrix"],
+            MatrixExp[mfCollision][0, 0]["Matrix"]
+        },
+        Normal[Exp[QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}]][1, 1]["Matrix"]]
+    },
+    {ConstantArray[IdentityMatrix[2], 4], E {{1, 1}, {0, 1}}},
+    TestID -> "MatrixFunction-parameter-exponential-collision"
+]
+
+(* A zero eigenvalue that does not depend on the parameter: log of [[a, 1], [0, 0]]
+   exists for no a, so it fails at construction. *)
+VerificationTest[
+    Head[Log[QuantumOperator[{{mfA, 1}, {0, 0}}, "Parameters" -> {mfA}]]],
+    Failure,
+    TestID -> "MatrixFunction-parameter-undefined-everywhere-fails"
+]
+
 EndTestSection[]

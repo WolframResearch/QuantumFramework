@@ -342,10 +342,13 @@ scalarMatrixFunction[f_, mat_, opts___] /; SquareMatrixQ[mat] && MatrixQ[mat, Nu
         inexactMatrixFunction[f, m, eps, 100 Length[m] eps, opts]
     ]
 
+(* A derivative at numeric arguments with no numeric value, Derivative[1][Abs][1] at
+   a Jordan block, means f is not differentiable where the matrix needs it; one that
+   is merely unevaluated, Derivative[1][Zeta][2], has a value. *)
 scalarMatrixFunction[f_, mat_, opts___] := Enclose @ ConfirmBy[
     ResourceFunction["ComputeMatrixFunction"][f, mat, opts],
-    FreeQ[#, Indeterminate | _DirectedInfinity] &,
-    "The function is not finite at an eigenvalue."
+    FreeQ[#, Indeterminate | _DirectedInfinity | (d : Derivative[__][_][__ ? NumericQ] /; ! NumericQ[N[d]])] &,
+    "The function is not finite, or not differentiable where the matrix needs it, at an eigenvalue."
 ]
 
 (* eps is the relative precision of the entries; within tol = 100 n eps the matrix

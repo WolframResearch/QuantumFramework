@@ -2,6 +2,8 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageImport["Wolfram`Arrays`"]
 
+PackageScope["lazyClosedForm"]
+
 
 
 $QuantumStateProperties = {
@@ -194,17 +196,22 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
    for the rest of the session. The cache is for containers that actually cost
    something to read.
 
-   A named Function of the parameters is read as its body at the parameters
-   themselves: the closed form in the parameter symbols, where ArrayComputable
-   would hand the lazy container back and a reshape would expand it into an
-   array of scalar Functions. *)
+   The amplitudes of f[qo] for an operator with declared parameters, a Function of
+   the parameters whose body is matrixMapAmplitudes, are read as the body at
+   the parameters themselves: the closed form in the parameter symbols, where
+   ArrayComputable would hand the lazy container back and a reshape would expand
+   it into an array of scalar Functions. *)
+
+(* The closed form of lazy matrix-map amplitudes, cached on the Function, so that
+   evaluating it when the operator is built also serves every later read. *)
+lazyClosedForm[state_] := Once[Replace[state @@ Flatten[{First[state]}], a_ ? ArrayQ :> SparseArray[a]]]
 
 computableState[qs_] := With[{state = qs["State"]},
     Which[
         ArrayComputeNativeQ[state],
         state,
-        MatchQ[state, HoldPattern[Function[_Symbol | {__Symbol}, _]]] && ArrayLazyQ[state],
-        Once[state @@ Flatten[{First[state]}]],
+        MatchQ[state, HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]]],
+        lazyClosedForm[state],
         True,
         Once[ArrayComputable[state]]
     ]

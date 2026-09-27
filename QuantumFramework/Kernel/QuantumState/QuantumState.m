@@ -447,13 +447,13 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         qs["Basis"][rules]
     ]
 
-(* A named Function of the parameters (the amplitudes of f[qo] for an operator
-   with declared parameters) is substituted through its unevaluated body: binding
-   every parameter calls it, binding some writes the values into the held body and
-   keeps the rest as its parameters. ArrayReplaceAll curries through the body
-   evaluated at the parameters instead, which is the closed form the Function
-   exists to avoid substituting into. *)
-substituteAmplitudes[state : HoldPattern[Function[_Symbol | {__Symbol}, _]] ? ArrayLazyQ, rules_List] := With[{
+(* The amplitudes of f[qo] for an operator with declared parameters, a Function of
+   the parameters whose body is matrixMapAmplitudes, are substituted through
+   the unevaluated body: binding every parameter calls it, binding some writes the
+   values into the held body and keeps the rest as its parameters. ArrayReplaceAll
+   curries through the body evaluated at the parameters instead, which is the
+   closed form the Function exists to avoid substituting into. *)
+substituteAmplitudes[state : HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]], rules_List] := With[{
     parameters = Flatten[{First[state]}]
 },
     With[{free = DeleteCases[parameters, Alternatives @@ Keys[rules]]},
