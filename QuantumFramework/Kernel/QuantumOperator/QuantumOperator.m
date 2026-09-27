@@ -13,6 +13,7 @@ PackageScope["QuantumOperatorQ"]
 PackageScope["StackQuantumOperators"]
 PackageScope["$QuantumOperatorBroadcastLimit"]
 PackageScope["matrixMapAmplitudes"]
+PackageScope["lazyMatrixMapAmplitudesQ"]
 
 
 (* What the matrix constructors below accept: a rank-2 array container of any
@@ -573,59 +574,29 @@ scalarPowerBaseQ[base_] :=
         _Failure | _String | _List
     ]
 
-QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /;
-    TrueQ[qo["SquareQ"]] := Enclose @ With[{
-    op = qo["Sort"]
-},
-    If[ lazyMatrixMapQ[op],
-        parametricMatrixMapOperator[MatrixExp[Log[base] #] &, qo, op, If[op["Label"] === None, None, Power[base, op["Label"]]]],
-        matrixOperator[
-            op,
-            ConfirmBy[MatrixExp[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
-            "Label" -> If[op["Label"] === None, None, Power[base, op["Label"]]]
-        ]
-    ]
-]
+QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
+    matrixMapOperator[MatrixExp[Log[base] #] &, qo, Power[base, #] &]
 
-(* The generic NumericFunction rule below matches Exp[qo] directly with
-   f = Exp, so the built-in rewrite of Exp into Power[E, ...] never runs on an
-   operator argument; the closed form that rule computes divides by the
-   differences of the eigenvalues it treats as distinct, so it breaks at
-   parameter values where two of them collide (Exp[I phi op] at phi = 0), and
-   a non-square operator fails there without a message. Delegating to the
-   Power normal form instead makes the spellings of the operator exponential
-   one object: the matrix exponential of the stored matrix for a square
-   operator, a loud MatrixPower failure otherwise. *)
+(* The generic NumericFunction rule below would match Exp[qo] directly with f = Exp,
+   so the built-in rewrite of Exp into Power[E, ...] never runs on an operator
+   argument. Delegating to the Power normal form makes the spellings of the
+   operator exponential one object: the matrix exponential of the stored matrix
+   for a square operator, a loud MatrixPower failure otherwise. *)
 QuantumOperator /: Exp[qo_QuantumOperator] := E ^ qo
 
-QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
-    op = qo["Sort"]
-},
-    If[ lazyMatrixMapQ[op],
-        parametricMatrixMapOperator[
-            matrixFunction[f, #, {left}, {right}, opts] &,
-            qo,
-            op,
-            If[op["Label"] === None, None, f[left, op["Label"], right]]
-        ],
-        matrixOperator[
-            op,
-            ConfirmBy[matrixFunction[f, op["Matrix"], {left}, {right}, opts], MatrixQ],
-            "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
-        ]
-    ]
-]
+QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
+    matrixMapOperator[matrixFunction[f, #, {left}, {right}, opts] &, qo, f[left, #, right] &]
 
-QuantumOperator /: MatrixExp[qo_QuantumOperator] := Enclose @ With[{
-    op = qo["Sort"]
-},
+QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[MatrixExp, qo, Exp]
+
+(* The operator g(M) for the matrix M of qo in sorted order, labelled with labelF of
+   its label: evaluated now, or kept lazy in the parameters (below). *)
+matrixMapOperator[g_, qo_, labelF_] := Enclose @ With[
+    {op = qo["Sort"]},
+    {label = If[op["Label"] === None, None, labelF[op["Label"]]]},
     If[ lazyMatrixMapQ[op],
-        parametricMatrixMapOperator[MatrixExp, qo, op, If[op["Label"] === None, None, Exp[op["Label"]]]],
-        matrixOperator[
-            op,
-            ConfirmBy[MatrixExp[op["Matrix"]], MatrixQ],
-            "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
-        ]
+        parametricMatrixMapOperator[g, qo, op, label],
+        matrixOperator[op, ConfirmBy[g[op["Matrix"]], matrixContainerQ, Defer[label]], "Label" -> label]
     ]
 ]
 
@@ -638,13 +609,19 @@ QuantumOperator /: MatrixExp[qo_QuantumOperator] := Enclose @ With[{
    (sin M = sin(r)/r M at r = 0) and loses accuracy near such values; applying g to
    the substituted matrix is regular there. Reading the amplitudes gives the closed
    form (the Function at its own parameters), and a partial substitution curries
-   the Function.
+   the Function. A scalar multiple stays lazy; a sum or a product with another
+   operator, or the action on a state, is built from the closed form, so values at
+   a collision fail there and values near one lose accuracy without a message.
 
    The parameters can be the variables of a Function only when they are plain
    unprotected symbols: an indexed th[1] or a Subscript is not, and those operators
    keep the closed form, as do non-square ones, which have no matrix function. *)
 lazyMatrixMapQ[op_] := op["ParameterArity"] > 0 && TrueQ[op["SquareQ"]] &&
     MatchQ[op["Parameters"], {__Symbol}] && AllTrue[op["Parameters"], ! MemberQ[Attributes[#], Protected] &]
+
+(* Amplitudes built by this route: a Function of the parameters whose body is
+   matrixMapAmplitudes. They are read and substituted through that body. *)
+lazyMatrixMapAmplitudesQ[amplitudes_] := MatchQ[amplitudes, HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]]]
 
 (* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
    at a zero eigenvalue), so that a substitution reaching that value fails. *)
@@ -667,14 +644,14 @@ amplitudesMatrix[amps_, qb_, order_] := Normal[QuantumOperator[QuantumState[amps
    ReplaceAll would reach the parameters inside it. The basis written into the body
    carries no parameter specification, which a substitution would otherwise
    overwrite. *)
-heldOperatorMatrix[qo_, op_] := With[{amplitudes = qo["State"]["State"]},
-    If[ MatchQ[amplitudes, HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]]],
-        With[{qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}], order = qo["Order"]},
-            Replace[Extract[amplitudes, {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
-        ],
-        With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
-    ]
+heldOperatorMatrix[qo_, op_] /; lazyMatrixMapAmplitudesQ[qo["State"]["State"]] := With[{
+    qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}],
+    order = qo["Order"]
+},
+    Replace[Extract[qo["State"]["State"], {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
 ]
+
+heldOperatorMatrix[_, op_] := With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
 
 (* Function binds its first argument, so With cannot write the parameters there;
    Apply puts them in front of the held body instead. The shape is declared so that

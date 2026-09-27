@@ -372,7 +372,8 @@ inexactMatrixFunction[f_, mat_, eps_, tol_, opts___] := Enclose @ With[
             {values = Confirm[spectralValues[f, roundoffEigenvalues[If[hermitianQ, Re, Identity][Diagonal[t]], eps]]]},
             {result = q . (values ConjugateTranspose[q])},
             Which[
-                ! hermitianQ || ! FreeQ[values, _Complex], result,
+                ! hermitianQ, realOnRealInput[f, mat, Diagonal[t], values, tol, result],
+                ! FreeQ[values, _Complex], result,
                 FreeQ[mat, _Complex], Re[(result + Transpose[result]) / 2],
                 True, (result + ConjugateTranspose[result]) / 2
             ]
@@ -381,12 +382,28 @@ inexactMatrixFunction[f_, mat_, eps_, tol_, opts___] := Enclose @ With[
     ]
 ]
 
+(* A real matrix has eigenvalues in conjugate pairs, and when f maps each conjugate
+   eigenvalue to the conjugate value (Cos, Exp, Log off the negative axis), f of it
+   is real: its imaginary part is roundoff and is dropped. *)
+realOnRealInput[f_, mat_, eigenvalues_, values_, tol_, result_] := If[
+    FreeQ[mat, _Complex] && With[{conjugateValues = f /@ Conjugate[eigenvalues]},
+        VectorQ[conjugateValues, NumericQ] &&
+            Max[Abs[conjugateValues - Conjugate[values]]] <= tol Max[1, Max[Abs[values]]]
+    ],
+    Re[result],
+    result
+]
+
 (* An eigenbasis v whose condition number stays below eps^(-1/4) keeps the error of
    v.f(d).v^-1 near eps^(3/4). A defective or nearly defective matrix fails this and
    goes to MatrixFunction (Schur-Parlett), which needs f differentiable there. *)
 nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
     With[{sv = SingularValueList[vectors]}, Length[sv] == Length[vectors] && Max[sv] <= eps ^ (-1/4) Min[sv]] :=
-    Enclose[Transpose[vectors] . (Confirm[spectralValues[f, eigenvalues]] Inverse[Transpose[vectors]])]
+    Enclose @ With[{values = Confirm[spectralValues[f, eigenvalues]]},
+        realOnRealInput[f, mat, eigenvalues, values, 100 Length[mat] eps,
+            Transpose[vectors] . (values Inverse[Transpose[vectors]])
+        ]
+    ]
 
 nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
     Enclose[Confirm[spectralValues[f, eigenvalues]]; MatrixFunction[f, mat, opts]]

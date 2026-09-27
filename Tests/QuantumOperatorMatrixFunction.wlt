@@ -6,14 +6,25 @@
    accuracy: the Ising spectra here have 32 distinct eigenvalues, each twice
    degenerate under the global spin flip.
 
+   Physics. f(H) = sum over eigenspaces of f(lambda) P_lambda for normal H, and the
+   Jordan form for a defective one; for an operator with parameters f is applied to
+   the matrix with the values in place, which is regular where two eigenvalues
+   collide. Invariants checked: f(H) Hermitian for real f and Hermitian H,
+   exp(-i t H) unitary, cos^2 + sin^2 = 1, [f(H), H] = 0, sqrt(rho) positive,
+   exp(A (x) 1 + 1 (x) B) = exp(A) (x) exp(B), exp(-i t H) = 1 - i t H + O(t^2).
+   Refused base case: a single qubit at generic parameter values.
+
    Regimes covered:
      general symbolic     cos(t X), sin(t ZZ), t(XX + YY), [[a, b], [b, -a]],
-                          cos(t sum_i Z_i) on 6 qubits, cos(t H) for the 4-qubit
-                          Heisenberg chain, "Parameters", exact input
+                          cos(t sum_i Z_i) on n = 2 .. 6 qubits, cos(t H) for the
+                          4-qubit Heisenberg chain, exp(-i H) of the 3-qubit
+                          transverse-field Ising chain in (J, g), "Parameters",
+                          exact input
      exactly solvable     Jordan block, exact Log, Hadamard-rotated Ising, |A| of a
                           diagonalizable non-normal A, sqrt of a projector
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
-                          defective), eigenvalue 10^-12 next to 1, coupling 10^-9
+                          defective), eigenvalue 10^-12 next to 1, coupling 10^-9,
+                          decoupled subsystems, short time t -> 0
      numerical reference  64-dim Ising spectrum in a random eigenbasis, 600 random
                           Hermitian draws against a 30-digit diagonalization,
                           cos^2 + sin^2 = 1 and [cos H, H] = 0
@@ -367,20 +378,6 @@ VerificationTest[
     TestID -> "MatrixFunction-symbolic-parameter-dependent-spectrum"
 ]
 
-(* n qubits: cos(t sum_i Z_i) is diagonal with cos(t m), m the magnetization of each
-   basis state. *)
-VerificationTest[
-    With[{n = 6},
-        Simplify[
-            Normal[Cos[mfT Total[QuantumOperator["Z", {#}] & /@ Range[n]]]["Matrix"]] -
-                DiagonalMatrix[Cos[mfT Total[1 - 2 Tuples[{0, 1}, n], {2}]]]
-        ]
-    ],
-    ConstantArray[0, {64, 64}],
-    TimeConstraint -> 120,
-    TestID -> "MatrixFunction-symbolic-n-qubit-magnetization"
-]
-
 (* Across the route switches: [[1, 1], [0, 1 + d]] runs from well separated to
    defective as d -> 0, and cos of it is [[cos 1, (cos(1 + d) - cos 1)/d], [0, cos(1 + d)]]. *)
 VerificationTest[
@@ -528,9 +525,9 @@ VerificationTest[
 ]
 
 (* Near, not at, a collision with machine values: the closed form's divided
-   difference (sin a - sin b)/(a - b) cancels catastrophically at a - b = 10^-12
-   (it was off by 1e-4); applying f to the substituted matrix is accurate. The
-   reference is the exact matrix at 30 digits. *)
+   difference (sin a - sin b)/(a - b) cancels catastrophically at a - b = 10^-12;
+   applying f to the substituted matrix is accurate. The reference is the exact
+   matrix at 30 digits. *)
 VerificationTest[
     With[{jordan = QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}]},
         Max[Abs[
@@ -641,6 +638,145 @@ VerificationTest[
     Head[Log[QuantumOperator[{{mfA, 1}, {0, 0}}, "Parameters" -> {mfA}]]],
     Failure,
     TestID -> "MatrixFunction-parameter-undefined-everywhere-fails"
+]
+
+(* Unitarity and Hermiticity on the parametric route: for H = [[w, g], [g, -w]],
+   exp(-i t H) is unitary and cos H Hermitian identically in real (t, w, g), and at
+   the collision w = g = 0 the propagator is the identity. *)
+VerificationTest[
+    With[{h = QuantumOperator[{{mfA, mfB}, {mfB, -mfA}}, "Parameters" -> {mfT, mfA, mfB}]},
+        With[
+            {u = Normal[Exp[-I mfT h]["Matrix"]], c = Normal[Cos[h]["Matrix"]]},
+            {
+                FullSimplify[ComplexExpand[u . ConjugateTranspose[u]], Element[{mfT, mfA, mfB}, Reals]],
+                FullSimplify[ComplexExpand[c - ConjugateTranspose[c]], Element[{mfA, mfB}, Reals]],
+                Normal[Exp[-I mfT h][<|mfT -> 1, mfA -> 0, mfB -> 0|>]["Matrix"]]
+            }
+        ]
+    ],
+    {IdentityMatrix[2], ConstantArray[0, {2, 2}], IdentityMatrix[2]},
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-parameter-unitarity-hermiticity"
+]
+
+(* A many-body level crossing: the 3-qubit transverse-field Ising chain
+   H = J (Z1 Z2 + Z2 Z3) + g (X1 + X2 + X3). Its closed-form propagator has about
+   9 million leaves and is not finite at g = 0; the lazy propagator equals the
+   built-in MatrixExp at the crossing (J, g) = (1, 0) and at a generic point. *)
+mfTFIM = With[{z = PauliMatrix[3], x = PauliMatrix[1], i2 = IdentityMatrix[2]},
+    mfA (KroneckerProduct[z, z, i2] + KroneckerProduct[i2, z, z]) +
+        mfB (KroneckerProduct[x, i2, i2] + KroneckerProduct[i2, x, i2] + KroneckerProduct[i2, i2, x])
+];
+
+VerificationTest[
+    With[{u = Exp[QuantumOperator[-I mfTFIM, {1, 2, 3}, "Parameters" -> {mfA, mfB}]]},
+        {
+            Simplify[Normal[u[1, 0]["Matrix"]] - MatrixExp[-I mfTFIM /. {mfA -> 1, mfB -> 0}]],
+            Max[Abs[Normal[u[0.7, 0.3]["Matrix"]] - MatrixExp[-I mfTFIM /. {mfA -> 0.7, mfB -> 0.3}]]] < 10^-12
+        }
+    ],
+    {ConstantArray[0, {8, 8}], True},
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-parameter-transverse-Ising-crossing"
+]
+
+(* Decoupled subsystems: exp(a X (x) 1 + b 1 (x) Z) = exp(a X) (x) exp(b Z), in closed
+   form and after substitution, including b = 0 where the Z factor is the identity. *)
+VerificationTest[
+    With[{q = QuantumOperator[mfA KroneckerProduct[PauliMatrix[1], IdentityMatrix[2]] + mfB KroneckerProduct[IdentityMatrix[2], PauliMatrix[3]], {1, 2}, "Parameters" -> {mfA, mfB}]},
+        Simplify[{
+            Normal[Exp[q]["Matrix"]] - KroneckerProduct[MatrixExp[mfA PauliMatrix[1]], MatrixExp[mfB PauliMatrix[3]]],
+            Normal[Exp[q][1/3, 0]["Matrix"]] - KroneckerProduct[MatrixExp[PauliMatrix[1] / 3], IdentityMatrix[2]]
+        }]
+    ],
+    ConstantArray[0, {2, 4, 4}],
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-parameter-decoupled-subsystems"
+]
+
+(* Short time: exp(-i t H) = 1 - i t H + O(t^2) for H = [[a, b], [b, -a]]. *)
+VerificationTest[
+    Simplify[
+        Normal[Series[Normal[Exp[-I mfT QuantumOperator[{{mfA, mfB}, {mfB, -mfA}}, "Parameters" -> {mfT, mfA, mfB}]]["Matrix"]], {mfT, 0, 1}]] -
+            (IdentityMatrix[2] - I mfT {{mfA, mfB}, {mfB, -mfA}})
+    ],
+    ConstantArray[0, {2, 2}],
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-parameter-short-time"
+]
+
+(* cos(t sum_i Z_i) over n = 2 .. 6 qubits: diagonal with cos(t m), m the
+   magnetization of each basis state. *)
+VerificationTest[
+    Table[
+        Simplify[
+            Normal[Cos[mfT Total[QuantumOperator["Z", {#}] & /@ Range[n]]]["Matrix"]] -
+                DiagonalMatrix[Cos[mfT Total[1 - 2 Tuples[{0, 1}, n], {2}]]]
+        ] === ConstantArray[0, {2^n, 2^n}],
+        {n, 2, 6}
+    ],
+    ConstantArray[True, 5],
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-symbolic-magnetization-sweep"
+]
+
+(* Known limitation: the lazy route stops at operations applied afterwards (a
+   product with another operator, a sum, an action on a state); those are built from
+   the closed form, so values at a collision give a Failure rather than Indeterminate
+   amplitudes, and substituting first gives the answer, sin 0 X = 0. When these
+   operations become lazy, the Failure should become the zero matrix. *)
+VerificationTest[
+    {
+        Head[(Sin[mfCollision] @ QuantumOperator["X"])[0, 0]],
+        Normal[(Sin[mfCollision[0, 0]] @ QuantumOperator["X"])["Matrix"]]
+    },
+    {Failure, ConstantArray[0, {2, 2}]},
+    {Power::infy, Infinity::indet, Power::infy, Infinity::indet, Power::infy, General::stop, Infinity::indet, General::stop},
+    TestID -> "MatrixFunction-parameter-after-composition-fails"
+]
+
+(* Known limitation, near a collision: a product built from the closed form keeps
+   its divided difference, so sin([[a, 1], [0, b]]) X at a = 1., b = 1. + 10^-12 is
+   off by about 10^-4 with no message, while sin of the substituted matrix times X is
+   accurate. When products become lazy, the first error should drop to roundoff. *)
+VerificationTest[
+    With[{
+        jordan = QuantumOperator[{{mfA, 1}, {0, mfB}}, "Parameters" -> {mfA, mfB}],
+        reference = N[MatrixFunction[Sin, {{1, 1}, {0, 1 + 10^-12}}] . PauliMatrix[1], 30]
+    },
+        {
+            Max[Abs[Normal[(Sin[jordan] @ QuantumOperator["X"])[1., 1. + 10.^-12]["Matrix"]] - reference]] > 10^-6,
+            Max[Abs[Normal[(Sin[jordan[1., 1. + 10.^-12]] @ QuantumOperator["X"])["Matrix"]] - reference]] < 10^-12
+        }
+    ],
+    {True, True},
+    TestID -> "MatrixFunction-parameter-product-near-collision-known-limitation"
+]
+
+(* A real matrix with a real-analytic f gives a real result, also off the Hermitian
+   branch: cos of a rotation matrix (normal, complex eigenvalues) and of the
+   non-normal [[0, 1], [-2, 1/2]]. *)
+VerificationTest[
+    {
+        FreeQ[Normal[Cos[QuantumOperator[N[RotationMatrix[3/10]]]]["Matrix"]], _Complex],
+        FreeQ[Normal[Cos[QuantumOperator[{{0., 1.}, {-2., 0.5}}]]["Matrix"]], _Complex],
+        Max[Abs[Normal[Cos[QuantumOperator[N[RotationMatrix[3/10]]]]["Matrix"]] - N[MatrixFunction[Cos, RotationMatrix[3/10]], 30]]] < 10^-14
+    },
+    {True, True, True},
+    TestID -> "MatrixFunction-real-input-real-result"
+]
+
+(* The operator as base, M^p, is a matrix power: X^p = (1 + (-1)^p)/2 1 + (1 - (-1)^p)/2 X,
+   X^(1/2) is the square root, and on the lazy route q^(1/2) at the collision of
+   q = [[a, b], [b, -a]] is 0. *)
+VerificationTest[
+    {
+        Simplify[Normal[(QuantumOperator["X"] ^ mfT)["Matrix"]] - ((1 + (-1)^mfT) / 2 IdentityMatrix[2] + (1 - (-1)^mfT) / 2 PauliMatrix[1])],
+        (QuantumOperator["X"] ^ (1/2))["Matrix"] === Sqrt[QuantumOperator["X"]]["Matrix"],
+        Normal[(mfCollision ^ (1/2))[0, 0]["Matrix"]]
+    },
+    {ConstantArray[0, {2, 2}], True, ConstantArray[0, {2, 2}]},
+    TestID -> "MatrixFunction-operator-base-power"
 ]
 
 EndTestSection[]

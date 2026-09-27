@@ -210,7 +210,7 @@ computableState[qs_] := With[{state = qs["State"]},
     Which[
         ArrayComputeNativeQ[state],
         state,
-        MatchQ[state, HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]]],
+        lazyMatrixMapAmplitudesQ[state],
         lazyClosedForm[state],
         True,
         Once[ArrayComputable[state]]

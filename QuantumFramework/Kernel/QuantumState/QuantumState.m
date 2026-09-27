@@ -441,11 +441,22 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
    lazy container binds all its parameters in one whole-array evaluation, where
    an element-wise map would call the underlying function once per amplitude. *)
 
+(* Values that make an amplitude Indeterminate (a closed form dividing by a
+   difference of eigenvalues that the values make vanish) give a Failure rather
+   than a state with Indeterminate amplitudes. *)
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
-    Enclose @ QuantumState[
-        Confirm[substituteAmplitudes[qs["State"], Normal[rules]]],
-        qs["Basis"][rules]
+    Enclose @ With[{state = Confirm[substituteAmplitudes[qs["State"], Normal[rules]]]},
+        ConfirmAssert[
+            indeterminateAmplitudesQ[qs["State"]] || ! indeterminateAmplitudesQ[state],
+            "The values make an amplitude Indeterminate."
+        ];
+        QuantumState[state, qs["Basis"][rules]]
     ]
+
+(* FreeQ does not look inside a SparseArray, so its values are read out. *)
+indeterminateAmplitudesQ[state_SparseArray] := ! FreeQ[{state["NonzeroValues"], state["Background"]}, Indeterminate]
+
+indeterminateAmplitudesQ[state_] := ! FreeQ[state, Indeterminate]
 
 (* The amplitudes of f[qo] for an operator with declared parameters, a Function of
    the parameters whose body is matrixMapAmplitudes, are substituted through
@@ -453,7 +464,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
    values into the held body and keeps the rest as its parameters. ArrayReplaceAll
    curries through the body evaluated at the parameters instead, which is the
    closed form the Function exists to avoid substituting into. *)
-substituteAmplitudes[state : HoldPattern[Function[_Symbol | {__Symbol}, _matrixMapAmplitudes]], rules_List] := With[{
+substituteAmplitudes[state_ ? lazyMatrixMapAmplitudesQ, rules_List] := With[{
     parameters = Flatten[{First[state]}]
 },
     With[{free = DeleteCases[parameters, Alternatives @@ Keys[rules]]},
