@@ -4,6 +4,13 @@
    stored, that reading it agrees with the split form it replaces, and that
    "Expand" -> True still produces the split form. *)
 
+(* ArrayLazyQ and ArrayDimensions below are Wolfram`Arrays` functions named by
+   their short names, so that context has to be on $ContextPath when this file
+   is read for those names to resolve rather than intern as inert Global
+   symbols.  The runner puts it there for every file; naming it here lets this
+   one also run under a bare TestReport. *)
+Needs["Wolfram`Arrays`"]
+
 BeginTestSection["QuantumEvolve - lazy container"]
 
 $evolved := QuantumEvolve[
