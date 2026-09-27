@@ -454,3 +454,253 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurement - branch conditional states"]
+
+(* "States" returns the conditional post-measurement branch for each outcome, the CP
+   map image M_m . rho . ConjugateTranspose[M_m] (Lueders / Kraus branch), trace p_m.
+   For a mixed input this was Sum_j M_m rho M_j^dag = M_m rho: the whole pointer block-row
+   was summed, collapsing the bra pointer index and leaving a non-Hermitian, non-positive
+   object that is not a valid state. The branch must instead be the diagonal pointer block
+   M_m rho M_m^dag. These branches were undocumented and untested, so the whole contract is
+   pinned here. The defect was invisible whenever rho is diagonal in the measurement
+   eigenbasis (M_m rho = M_m rho M_m), which is why the common demos never caught it. *)
+
+(* --- the reported regression: Z on a mixed state with computational-basis coherence.
+   Before the fix this returned {{{1/2, 1/4}, {0, 0}}, {{0, 0}, {1/4, 1/2}}} (M_m rho). --- *)
+VerificationTest[
+    Normal[#["DensityMatrix"]] & /@
+        QuantumMeasurementOperator["Z"][QuantumState[{{1/2, 1/4}, {1/4, 1/2}}]]["States"],
+    {{{1/2, 0}, {0, 0}}, {{0, 0}, {0, 1/2}}},
+    TestID -> "BranchStates-Z-mixed-Lueders-exact"
+]
+
+(* every branch is a valid density operator: Hermitian and positive semidefinite. A
+   complex off-diagonal makes M_m rho manifestly non-Hermitian, so this bites hardest. *)
+VerificationTest[
+    With[{dms = Normal[#["DensityMatrix"]] & /@
+        QuantumMeasurementOperator["Z"][QuantumState[{{1/2, I/4}, {-I/4, 1/2}}]]["States"]},
+        {AllTrue[dms, HermitianMatrixQ], AllTrue[dms, PositiveSemidefiniteMatrixQ]}
+    ],
+    {True, True},
+    TestID -> "BranchStates-Hermitian-and-PSD-complex-mixed"
+]
+
+(* branch trace equals the outcome probability, Tr(M_m rho M_m^dag) = p_m *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[{{1/2, 1/4}, {1/4, 1/2}}]]},
+        (Tr[Normal[#["DensityMatrix"]]] & /@ qm["States"]) == qm["ProbabilitiesList"]
+    ],
+    True,
+    TestID -> "BranchStates-trace-equals-probability"
+]
+
+(* the branches resolve the averaged post-measurement (decohered) state:
+   Sum_m M_m rho M_m^dag = PostMeasurementState. The buggy branches summed to rho itself
+   (Sum_m M_m rho = rho), so this invariant fails on the old code. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[{{1/2, I/4}, {-I/4, 1/2}}]]},
+        Total[Normal[#["DensityMatrix"]] & /@ qm["States"]] ==
+            Normal[qm["PostMeasurementState"]["DensityMatrix"]]
+    ],
+    True,
+    TestID -> "BranchStates-sum-equals-decohered-state"
+]
+
+(* non-projective measurement: a SIC-POVM has non-orthogonal Kraus operators, so the
+   correct branches M_m rho M_m^dag are genuinely non-diagonal (not just zeroed off a
+   projector). They must still be Hermitian, PSD, trace p_m, and resolve the averaged
+   state. Guards that the fix is CP-map correct, not merely projector-correct. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["TetrahedronSICPOVM"][
+        QuantumState[{{0.6, 0.2 + 0.1 I}, {0.2 - 0.1 I, 0.4}}]]},
+        Module[{dms, probs, post},
+            dms = Normal[#["DensityMatrix"]] & /@ qm["States"];
+            probs = qm["ProbabilitiesList"];
+            post = Normal[qm["PostMeasurementState"]["DensityMatrix"]];
+            {
+                AllTrue[dms, Max[Abs[# - ConjugateTranspose[#]]] < 1.*^-10 &],
+                AllTrue[dms, Min[Re @ Eigenvalues[#]] > -1.*^-10 &],
+                Max[Abs[(Tr /@ dms) - probs]] < 1.*^-10,
+                Max[Abs[Flatten[Total[dms] - post]]] < 1.*^-10
+            }
+        ]
+    ],
+    {True, True, True, True},
+    TestID -> "BranchStates-POVM-tetrahedron-CP-branches"
+]
+
+(* basis independence: an X measurement of a state with coherence in the X eigenbasis
+   (here rho is diagonal in Z, so it is NOT diagonal in X). Branch validity is intrinsic
+   (Hermiticity, positivity, trace) and holds in any basis representation. *)
+VerificationTest[
+    With[{dms = Normal[#["DensityMatrix"]] & /@
+        QuantumMeasurementOperator["X"][QuantumState[{{3/4, 0}, {0, 1/4}}]]["States"],
+        probs = QuantumMeasurementOperator["X"][QuantumState[{{3/4, 0}, {0, 1/4}}]]["ProbabilitiesList"]},
+        {AllTrue[dms, HermitianMatrixQ], AllTrue[dms, PositiveSemidefiniteMatrixQ], (Tr /@ dms) == probs}
+    ],
+    {True, True, True},
+    TestID -> "BranchStates-X-basis-intrinsic-invariants"
+]
+
+(* two-qubit Z(x)Z on a mixed Bell state: the branches carry the Bell coherence on one
+   row before the fix. All four branches must be Hermitian, PSD, and trace to the
+   outcome probability. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator[{1, 2}][
+        QuantumState[0.7 KroneckerProduct[{1, 0, 0, 1}/Sqrt[2], {1, 0, 0, 1}/Sqrt[2]] + 0.3 IdentityMatrix[4]/4, 2]]},
+        Module[{dms, probs},
+            dms = Normal[#["DensityMatrix"]] & /@ qm["States"];
+            probs = qm["ProbabilitiesList"];
+            {
+                Length[dms],
+                AllTrue[dms, Max[Abs[# - ConjugateTranspose[#]]] < 1.*^-10 &],
+                AllTrue[dms, Min[Re @ Eigenvalues[#]] > -1.*^-10 &],
+                Max[Abs[(Tr /@ dms) - probs]] < 1.*^-10
+            }
+        ]
+    ],
+    {4, True, True, True},
+    TestID -> "BranchStates-two-qubit-ZZ-mixed-Bell"
+]
+
+(* a pure input carries no bra pointer index; its branches are M_m|psi><psi|M_m^dag
+   directly and were always correct. The fix leaves this path untouched. *)
+VerificationTest[
+    Normal[#["DensityMatrix"]] & /@ QuantumMeasurementOperator["Z"][QuantumState["+"]]["States"],
+    {{{1/2, 0}, {0, 0}}, {{0, 0}, {0, 1/2}}},
+    TestID -> "BranchStates-pure-ket-unchanged"
+]
+
+(* regression anchor for the case that always worked: a state diagonal in the
+   measurement eigenbasis. The fix must not disturb it. *)
+VerificationTest[
+    Normal[#["DensityMatrix"]] & /@
+        QuantumMeasurementOperator["Z"][QuantumState[{{3/4, 0}, {0, 1/4}}]]["States"],
+    {{{3/4, 0}, {0, 0}}, {{0, 0}, {0, 1/4}}},
+    TestID -> "BranchStates-diagonal-input-unchanged"
+]
+
+(* the user-facing accessor "StateAssociation" (outcome -> branch) is built from
+   "States" and must surface the corrected branches too *)
+VerificationTest[
+    Normal[#["DensityMatrix"]] & /@ Values @
+        QuantumMeasurementOperator["Z"][QuantumState[{{1/2, 1/4}, {1/4, 1/2}}]]["StateAssociation"],
+    {{{1/2, 0}, {0, 0}}, {{0, 0}, {0, 1/2}}},
+    TestID -> "BranchStates-StateAssociation-accessor-corrected"
+]
+
+(* representation independence: the branch is fixed by storage type, not purity. A pure
+   state given as a DENSITY MATRIX carries both pointer indices, so it must yield the same
+   two branches as the same physical state given as a ket, not Eigendimension^2 of them.
+   Before the fix this returned four branches with traces {1/4,1/4,0,0}. *)
+VerificationTest[
+    Normal[#["DensityMatrix"]] & /@
+        QuantumMeasurementOperator["Z"][QuantumState[{{1/2, 1/2}, {1/2, 1/2}}]]["States"],
+    {{{1/2, 0}, {0, 0}}, {{0, 0}, {0, 1/2}}},
+    TestID -> "BranchStates-pure-state-as-density-matrix"
+]
+
+(* a deterministic input has a zero-probability outcome: its branch is the zero operator,
+   trace 0, and the outcome drops out of "StateAssociation". Before the fix a pure density
+   matrix produced a length mismatch (Thread::tdlen) between branches and probabilities. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[{{1, 0}, {0, 0}}]]},
+        {
+            Normal[#["DensityMatrix"]] & /@ qm["States"],
+            (Tr[Normal[#["DensityMatrix"]]] & /@ qm["States"]) == qm["ProbabilitiesList"],
+            Length[qm["StateAssociation"]]
+        }
+    ],
+    {{{{1, 0}, {0, 0}}, {{0, 0}, {0, 0}}}, True, 1},
+    TestID -> "BranchStates-zero-probability-outcome"
+]
+
+(* a genuine single-qudit d=3 measurement (not the d=4 two-qubit tensor): three branches,
+   each a valid conditional state, resolving the decohered state. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator[{1}, 3][
+        QuantumState[{{1/3, 1/12, 0}, {1/12, 1/3, 1/12}, {0, 1/12, 1/3}}, 3]]},
+        Module[{dms = Normal[#["DensityMatrix"]] & /@ qm["States"]},
+            {Length[dms], AllTrue[dms, HermitianMatrixQ], AllTrue[dms, PositiveSemidefiniteMatrixQ],
+             (Tr /@ dms) == qm["ProbabilitiesList"],
+             Total[dms] == Normal[qm["PostMeasurementState"]["DensityMatrix"]]}
+        ]
+    ],
+    {3, True, True, True, True},
+    TestID -> "BranchStates-qutrit-single-qudit"
+]
+
+(* a rank-1 projector observable on a qutrit has a degenerate zero eigenspace; the eigenbasis
+   comes back from an orthogonalized degenerate block. The branches must still be valid
+   conditional states with the right traces and resolution. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator[Outer[Times, {1, 1, 0}/Sqrt[2], {1, 1, 0}/Sqrt[2]]][
+        QuantumState[N @ {{1/2, 1/6, 1/12}, {1/6, 1/4, 0}, {1/12, 0, 1/4}}, 3]]},
+        Module[{dms = Normal[Chop[#["DensityMatrix"]]] & /@ qm["States"], probs = qm["ProbabilitiesList"]},
+            {AllTrue[dms, Max[Abs[# - ConjugateTranspose[#]]] < 1.*^-10 &],
+             AllTrue[dms, Min[Re @ Eigenvalues[#]] > -1.*^-10 &],
+             Max[Abs[(Tr /@ dms) - probs]] < 1.*^-10,
+             Max[Abs[Flatten[Total[dms] - Normal[qm["PostMeasurementState"]["DensityMatrix"]]]]] < 1.*^-10}
+        ]
+    ],
+    {True, True, True, True},
+    TestID -> "BranchStates-degenerate-eigenspace-projective"
+]
+
+(* invariants are necessary but not sufficient: pin the branch values against the CP image
+   M_m . rho . ConjugateTranspose[M_m] built independently from the measurement's own
+   projectors, for a projective Z on a mixed state. *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Z"][QuantumState[{{1/2, 1/4}, {1/4, 1/2}}]],
+          rho = {{1/2, 1/4}, {1/4, 1/2}}},
+        Sort[Normal[#["DensityMatrix"]] & /@ qm["States"]] ==
+            Sort[(# . rho . ConjugateTranspose[#] &) /@ (Normal /@ qm["Projectors"])]
+    ],
+    True,
+    TestID -> "BranchStates-matches-independent-CP-image"
+]
+
+(* the four invariants are necessary but do not fix each branch of a non-orthogonal-Kraus
+   measurement. Pin the SIC-POVM branches by value against the CP image
+   M_m . rho . ConjugateTranspose[M_m] with M_m = Sqrt[E_m] reconstructed from the POVM
+   elements: each branch must equal one such image. *)
+VerificationTest[
+    With[{rho = {{0.6, 0.2 + 0.1 I}, {0.2 - 0.1 I, 0.4}}, qmo = QuantumMeasurementOperator["TetrahedronSICPOVM"]},
+        With[{
+            states = Normal[Chop[#["DensityMatrix"]]] & /@ qmo[QuantumState[rho]]["States"],
+            cp = (# . rho . ConjugateTranspose[#] &) /@ (MatrixPower[N[#], 1/2] & /@ (Normal /@ qmo["POVMElements"]))
+        },
+            AllTrue[states, s |-> AnyTrue[cp, Max[Abs[Flatten[s - #]]] < 1.*^-9 &]]
+        ]
+    ],
+    True,
+    TestID -> "BranchStates-POVM-matches-independent-CP-image"
+]
+
+(* partial measurement: measure qubit 1 of a mixed two-qubit state and keep the entangled
+   spectator. Each branch lives in the full two-qubit space and equals
+   (P_m (x) I) . rho . (P_m (x) I), and the branches resolve the FULL decohered state.
+   The spectator is retained here, so the resolution is against the full state, not
+   "PostMeasurementState" (which traces the spectator out and lives in a smaller space). *)
+VerificationTest[
+    With[{rho = 0.7 KroneckerProduct[{1, 0, 0, 1}/Sqrt[2], {1, 0, 0, 1}/Sqrt[2]] + 0.3 IdentityMatrix[4]/4},
+        With[{qm = QuantumMeasurementOperator["Z", {1}][QuantumState[rho, 2]],
+              p0 = KroneckerProduct[{{1, 0}, {0, 0}}, IdentityMatrix[2]],
+              p1 = KroneckerProduct[{{0, 0}, {0, 1}}, IdentityMatrix[2]]},
+            With[{dms = Normal[Chop[#["DensityMatrix"]]] & /@ qm["States"], cp = {p0 . rho . p0, p1 . rho . p1}},
+                {
+                    Dimensions /@ dms,
+                    AllTrue[dms, s |-> AnyTrue[cp, Max[Abs[Flatten[s - #]]] < 1.*^-9 &]],
+                    Max[Abs[Flatten[Total[dms] - Total[cp]]]] < 1.*^-9,
+                    Max[Abs[(Tr /@ dms) - qm["ProbabilitiesList"]]] < 1.*^-10
+                }
+            ]
+        ]
+    ],
+    {{{4, 4}, {4, 4}}, True, True, True},
+    TestID -> "BranchStates-partial-measurement-keeps-spectator"
+]
+
+EndTestSection[]

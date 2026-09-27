@@ -126,7 +126,7 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
     Join[Range[qm["Eigenqudits"]], qm["Eigenqudits"] + Complement[Range[qm["StateQudits"]], qm["Target"]]]
 ]
 
-QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
+QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["State"]["StateType"] === "Vector", 1, 2]},
     Which[
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["StateDimensions"]]], qm["StateBasis"]]["Computational"] & /@
@@ -140,7 +140,20 @@ QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1
     ]
 ]
 
-QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["Eigendimension"] qm["InputDimension"]]]
+(* Branch state for outcome m: the diagonal block M_m . rho . ConjugateTranspose[M_m]
+   of the joint pointer-system state. A vector-stored (ket) input has no bra pointer
+   index, so "MixedStates" already lists one branch per outcome and they are returned as
+   is. A matrix-stored (density-operator) input carries both pointer indices, so
+   "MixedStates" lists the blocks M_i . rho . ConjugateTranspose[M_j] in row-major order,
+   Eigendimension blocks per block-row, and outcome m's branch is the m-th diagonal block.
+   Summing a block-row instead would collapse the bra index (Sum_j M_m rho M_j^dag =
+   M_m rho), which is not Hermitian. The split is on storage type, not purity: a pure
+   state given as a density matrix still carries both pointer indices. *)
+QuantumMeasurementProp[qm_, "States"] := If[
+    qm["State"]["StateType"] === "Vector",
+    qm["MixedStates"],
+    Diagonal @ Partition[qm["MixedStates"], qm["Eigendimension"] qm["InputDimension"]]
+]
 
 QuantumMeasurementProp[qm_, prop : "ProbabilityList" | "ProbabilitiesList"] :=
     Normal @ Which[
@@ -167,8 +180,11 @@ QuantumMeasurementProp[qm_, "Outcomes", args___] := Which[
     qm["Canonical"]
 ]["Eigenvalues", args]
 
+(* one outcome label per branch: split on storage type, matching "MixedStates" and
+   "States". A vector-stored (ket) input has one outcome per branch; a matrix-stored
+   input pairs each outcome with a dual to label the Eigendimension^2 pointer blocks. *)
 QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
-    qm["PureStateQ"],
+    qm["State"]["StateType"] === "Vector",
     qm["Outcomes"],
     QuantumTensorProduct @@@ Tuples[{qm["Outcomes"], #["Dual"] & /@ qm["Outcomes"]}]
 ]
