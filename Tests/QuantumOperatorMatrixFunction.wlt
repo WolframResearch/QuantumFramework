@@ -8,7 +8,8 @@
 
    Regimes covered:
      general symbolic     cos(t X), sin(t ZZ), t(XX + YY), [[a, b], [b, -a]],
-                          cos(t sum_i Z_i) on 6 qubits, "Parameters", exact input
+                          cos(t sum_i Z_i) on 6 qubits, cos(t H) for the 4-qubit
+                          Heisenberg chain, "Parameters", exact input
      exactly solvable     Jordan block, exact Log, Hadamard-rotated Ising, |A| of a
                           diagonalizable non-normal A, sqrt of a projector
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
@@ -18,7 +19,8 @@
                           cos^2 + sin^2 = 1 and [cos H, H] = 0
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
                           defective) is a Failure; degenerate spectra of
-                          multiplicity 8 and 4 *)
+                          multiplicity 8 and 4; a parameter value where two
+                          eigenvalues collide *)
 
 BeginTestSection["QuantumOperator - matrix functions"]
 
@@ -451,6 +453,61 @@ VerificationTest[
     Failure,
     {MatrixFunction::drvnnum},
     TestID -> "MatrixFunction-Abs-defective-fails"
+]
+
+(* An interacting exact Hamiltonian: the open 4-qubit Heisenberg chain
+   H = sum_i (X_i X_i+1 + Y_i Y_i+1 + Z_i Z_i+1), spectrum 3 (5 times), -1 (3 times),
+   -1 +- 2 sqrt 2 (3 times each), -3 +- 2 sqrt 3. The reference is the sum over
+   eigenspaces of cos(t lambda) times the orthogonal projector, built from an exact
+   Eigensystem; the two closed forms must agree identically in t. *)
+mfHeisenberg[n_] := Total[Flatten[Table[QuantumOperator[p, {i, i + 1}], {i, n - 1}, {p, {"XX", "YY", "ZZ"}}]]]
+
+VerificationTest[
+    With[
+        {h = Normal[mfHeisenberg[4]["Matrix"]]},
+        {eigenspaces = GatherBy[Transpose[Eigensystem[h]], First]},
+        {reference = Total[
+            With[{v = Orthogonalize[#[[All, 2]]]}, Cos[mfT #[[1, 1]]] Transpose[v] . Conjugate[v]] & /@ eigenspaces
+        ]},
+        Simplify[Normal[Cos[mfT mfHeisenberg[4]]["Matrix"]] - reference]
+    ],
+    ConstantArray[0, {16, 16}],
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-symbolic-Heisenberg-chain"
+]
+
+(* M = [[a, b], [b, -a]] squares to r^2 with r = sqrt(a^2 + b^2), so its sine series
+   sums to sin M = sinc(r) M, regular at r = 0 where the two eigenvalues +-r
+   collide. The closed form f[qo] returns is sin(r)/r M, generic in (a, b). *)
+mfCollision = QuantumOperator[{{mfA, mfB}, {mfB, -mfA}}, "Parameters" -> {mfA, mfB}];
+
+(* Close to the collision the closed form is still exact: it equals sinc(r) M
+   identically at a = 10^-8, b = 2 10^-8. *)
+VerificationTest[
+    With[{a = 10^-8, b = 2 10^-8},
+        FullSimplify[Normal[Sin[mfCollision][a, b]["Matrix"]] - Sinc[Sqrt[a^2 + b^2]] {{a, b}, {b, -a}}]
+    ],
+    ConstantArray[0, {2, 2}],
+    TestID -> "MatrixFunction-parameter-near-collision"
+]
+
+(* At the collision itself, substituting the parameters before applying f gives the
+   right answer, sin 0 = 0. *)
+VerificationTest[
+    Normal[Sin[mfCollision[0, 0]]["Matrix"]],
+    ConstantArray[0, {2, 2}],
+    TestID -> "MatrixFunction-parameter-collision-substitute-first"
+]
+
+(* Known limitation: substituting into the generic closed form at the collision
+   evaluates sin(r)/r at r = 0 and gives Indeterminate, not the limit 0. This test
+   records the current behavior; when the closed form learns the removable
+   singularity, it should expect ConstantArray[0, {2, 2}] and no messages. *)
+VerificationTest[
+    Normal[Sin[mfCollision][0, 0]["Matrix"]],
+    ConstantArray[Indeterminate, {2, 2}],
+    {Power::infy, Infinity::indet, Power::infy, Infinity::indet, Power::infy, General::stop, Infinity::indet, General::stop},
+    TestID -> "MatrixFunction-parameter-collision-known-limitation"
 ]
 
 EndTestSection[]
