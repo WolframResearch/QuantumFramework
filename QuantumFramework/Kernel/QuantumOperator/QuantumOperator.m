@@ -560,37 +560,32 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
     opts
 ]
 
-(* A scalar base with a square-operator exponent is the matrix function of t -> base^t,
-   the value MatrixFunction[base^# &, m] gives. For a nonzero base it is the matrix
-   exponential of the stored matrix, base^op = MatrixExp[Log[base] op], the same
-   stored-basis reading as MatrixExp[op], which stays regular at parameter values
-   where eigenvalues collide. A zero base has no logarithm, so t -> 0^t is applied
-   on the spectrum instead (below). The general rule further down reads Power
-   arguments matrix-first (MatrixPower) and would compute op^base. The base is
-   never an array container or a quantum object. *)
+(* A scalar base with a square-operator exponent is the matrix exponential of the
+   stored matrix, base^op = MatrixExp[Log[base] op], the same stored-basis reading as
+   MatrixExp[op], which stays regular at parameter values where eigenvalues collide.
+   A zero base has no logarithm, and 0^op is the limit of base^op as base -> 0: for a
+   number operator n, 0^n is the vacuum projector, as in the zero-temperature thermal
+   state and the total-loss channel. A base that is a declared parameter reaches the
+   same limit when its value is zero on the lazy route of matrixMapOperator, where the
+   base is read only when the values arrive; parameters that are not plain symbols
+   substitute into the closed form instead. The general rule further down reads Power
+   arguments matrix-first (MatrixPower) and would compute op^base. The base is never
+   an array container or a quantum object. *)
 scalarPowerBaseQ[base_] :=
-    ! TrueQ[PossibleZeroQ[base]] &&
     FreeQ[base,
         _ ? ArrayContainerQ | _ ? QuantumFrameworkOperatorQ |
         _QuantumState | _QuantumMeasurement | _QuantumBasis | _QuditBasis | _QuditName |
         _Failure | _String | _List
     ]
 
+zeroBaseQ[base_] := TrueQ[PossibleZeroQ[base]]
+
+scalarBasePower[base_ ? zeroBaseQ, mat_] := zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
+
+scalarBasePower[base_, mat_] := MatrixExp[Log[base] mat]
+
 QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
-    matrixMapOperator[MatrixExp[Log[base] #] &, qo, Power[base, #] &]
-
-(* 0^op is 0^t on the spectrum: the zero matrix when every eigenvalue has positive
-   real part and none needs a derivative, and a Failure where 0^t is undefined (a
-   zero eigenvalue, since 0^0 is Indeterminate, or a negative or imaginary one) or
-   not differentiable (a Jordan block), as MatrixFunction[0^# &, m] gives no result
-   there. The vacuum projector |0><0| of a number operator n is the limit of b^n as
-   b -> 0, not 0^n. *)
-zeroBaseQ[base_] := NumericQ[base] && TrueQ[PossibleZeroQ[base]]
-
-zeroBasePower[mat_] := matrixFunction[0^# &, mat, {}, {}]
-
-QuantumOperator /: Power[base_ ? zeroBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
-    matrixMapOperator[zeroBasePower, qo, Power[base, #] &]
+    matrixMapOperator[scalarBasePower[base, #] &, qo, Power[base, #] &]
 
 (* The generic NumericFunction rule below would match Exp[qo] directly with f = Exp,
    so the built-in rewrite of Exp into Power[E, ...] never runs on an operator
@@ -611,7 +606,7 @@ matrixMapOperator[g_, qo_, labelF_] := Enclose @ With[
     {label = If[op["Label"] === None, None, labelF[op["Label"]]]},
     If[ lazyMatrixMapQ[op],
         parametricMatrixMapOperator[g, qo, op, label],
-        matrixOperator[op, ConfirmBy[g[op["Matrix"]], matrixContainerQ, Defer[label]], "Label" -> label]
+        matrixOperator[op, ConfirmBy[Confirm[g[op["Matrix"]]], matrixContainerQ, Defer[label]], "Label" -> label]
     ]
 ]
 
@@ -641,7 +636,7 @@ lazyMatrixMapAmplitudesQ[amplitudes_] := MatchQ[amplitudes, HoldPattern[Function
 (* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
    at a zero eigenvalue), so that a substitution reaching that value fails. *)
 matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose @ operatorAmplitudes[
-    ConfirmBy[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]], MatrixQ],
+    ConfirmBy[Confirm[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]]], MatrixQ],
     vectorQ, nameDimensions, dimension
 ]
 

@@ -743,16 +743,15 @@ VerificationTest[
     TestID -> "Power-unit-base-identity"
 ]
 
-(* A zero base is 0^t on the spectrum, as MatrixFunction[0^# &, m] reads it: Z has
-   the eigenvalue -1, where 0^-1 is infinite, so 0^Z fails rather than returning
-   Z^0 = 1. A non-square exponent keeps the generic reading. A square exponent
-   takes the scalar-base reading whatever frames it carries, so 2^Z is the
-   exponential of the stored matrix, diag(2, 1/2), under any frame pair. *)
+(* A zero base is the limit of b^op as b -> 0: Z has the eigenvalue -1, where b^-1
+   diverges, so 0^Z fails rather than returning Z^0 = 1. A non-square exponent
+   keeps the generic reading. A square exponent takes the scalar-base reading
+   whatever frames it carries, so 2^Z is the exponential of the stored matrix,
+   diag(2, 1/2), under any frame pair. *)
 VerificationTest[
     Head[0^QuantumOperator["Z"]],
     Failure,
-    {Power::infy},
-    TestID -> "Power-zero-base-spectral-reading"
+    TestID -> "Power-zero-base-limit"
 ]
 
 VerificationTest[

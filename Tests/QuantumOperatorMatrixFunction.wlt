@@ -779,11 +779,49 @@ VerificationTest[
     TestID -> "MatrixFunction-operator-base-power"
 ]
 
-(* A zero base is 0^t on the spectrum, the value MatrixFunction[0^# &, m] gives on an
-   exact matrix: the zero matrix when every eigenvalue has positive real part
-   (diagonal, non-diagonal, complex, machine, and on the lazy parametric route),
-   and a Failure where 0^t is undefined at an eigenvalue (0^0, 0^-1) or has no
-   derivative a Jordan block needs. A nonzero base is unchanged, 2^M = diag(2, 4). *)
+(* 0^M is the limit of b^M = MatrixExp[Log[b] M] as b -> 0: 1 on a semisimple zero
+   eigenvalue and 0 on eigenvalues with positive real part, so the spectral
+   projector onto the null space of M along its range. For a number operator it is
+   the vacuum projector: one mode, two modes through their total number, a machine
+   matrix in a rotated basis (exactly Hermitian), and a parameter base or a thermal
+   weight q^n sent to zero. The references are the limit of MatrixExp[Log[b] M]
+   taken by Limit, including a non-normal M (oblique projector) and a Jordan block
+   at a positive eigenvalue (zero). *)
+VerificationTest[
+    With[{
+        n = DiagonalMatrix[{0, 1, 2}],
+        u = {{1, 1}, {1, -1}} / Sqrt[2],
+        vacuum = DiagonalMatrix[{1, 0, 0}],
+        limit = Function[m, Limit[MatrixExp[Log[mfB] m], mfB -> 0]]
+    },
+        With[{
+            total = QuantumOperator[QuantumOperator[n], {1}] + QuantumOperator[QuantumOperator[n], {2}],
+            rotated = 0 ^ QuantumOperator[N[u . DiagonalMatrix[{0, 1}] . u]],
+            nq = QuantumOperator[n, "Parameters" -> {mfT}]
+        },
+            {
+                Normal[(0 ^ QuantumOperator[n])["Matrix"]] == vacuum,
+                Normal[(0 ^ total)["Matrix"]] == KroneckerProduct[vacuum, vacuum],
+                Max[Abs[Normal[rotated["Matrix"]] - N[u . DiagonalMatrix[{1, 0}] . u]]] < 10^-14,
+                Normal[rotated["Matrix"]] === ConjugateTranspose[Normal[rotated["Matrix"]]],
+                Normal[(mfT ^ nq)[0]["Matrix"]] == vacuum,
+                Normal[((1 - mfT) mfT ^ nq)[0]["Matrix"]] == vacuum,
+                Normal[(mfT ^ nq)[1/2]["Matrix"]] == DiagonalMatrix[{1, 1/2, 1/4}],
+                AllTrue[
+                    {{{0, 1}, {0, 1}}, {{1, 1, 0}, {1, 1, 0}, {0, 0, 3}}, {{2, 1}, {0, 2}}},
+                    Normal[(0 ^ QuantumOperator[#])["Matrix"]] == limit[#] &
+                ]
+            }
+        ]
+    ],
+    ConstantArray[True, 8],
+    TestID -> "MatrixFunction-zero-base-vacuum-projector"
+]
+
+(* With every eigenvalue of positive real part the limit is the zero matrix, which
+   is also what MatrixFunction[0^# &, m] gives there (diagonal, non-diagonal,
+   complex, machine, and on the lazy parametric route). A nonzero base is the
+   matrix exponential, 2^M = diag(2, 4). *)
 VerificationTest[
     With[{m = {{3/2, 1/2}, {1/2, 3/2}}},
         {
@@ -799,15 +837,101 @@ VerificationTest[
     TestID -> "MatrixFunction-zero-base-positive-spectrum"
 ]
 
+(* The limit does not exist for an eigenvalue that is neither zero nor of positive
+   real part (b^-1 diverges, b^I oscillates) or for a Jordan block at zero, where
+   b^M = I + Log[b] N diverges. The Failure carries the reason: a Jordan block at
+   zero, exact or machine, triangular or conjugated by a change of basis, and a
+   machine matrix within roundoff of one, all fail as defective, without messages. *)
 VerificationTest[
-    Head /@ {
-        0 ^ QuantumOperator[DiagonalMatrix[{0, 1}]],
-        0 ^ QuantumOperator[DiagonalMatrix[{1, -1}]],
-        0 ^ QuantumOperator[{{1, 1}, {0, 1}}]
+    Cases[#, Failure[tag : "ZeroBasePowerNoLimit" | "ZeroBasePowerDefective", _] :> tag, Infinity, 1] & /@ {
+        0 ^ QuantumOperator[DiagonalMatrix[{0, -1}]],
+        0 ^ QuantumOperator[{{0, 1}, {-1, 0}}],
+        0 ^ QuantumOperator[{{0, 1}, {0, 0}}],
+        0 ^ QuantumOperator[N[{{0, 1}, {0, 0}}]],
+        0 ^ QuantumOperator[{{3, -1}, {9, -3}}],
+        0 ^ QuantumOperator[N[{{3, -1}, {9, -3}}]],
+        0 ^ QuantumOperator[N[{{-1, 1}, {-1, 1}}]],
+        0 ^ QuantumOperator[{{10.^-17, 1.}, {0., 0.}}]
     },
-    {Failure, Failure, Failure},
-    {Power::indet, Power::infy, Infinity::indet},
+    Join[{{"ZeroBasePowerNoLimit"}, {"ZeroBasePowerNoLimit"}}, ConstantArray[{"ZeroBasePowerDefective"}, 6]],
     TestID -> "MatrixFunction-zero-base-undefined-fails"
+]
+
+(* The null space of an inexact matrix is read off its singular values, within 100 n
+   eps of the norm, and its zero eigenvalues may move by that tolerance times their
+   condition number: a non-normal machine matrix with eigenvalues 3, 2, 0 gives the
+   projector of its exact form, so does a rotated {{10^-4, 1}, {0, 0}}, whose zero
+   eigenvalue has condition number near 10^4, a machine number operator of dimension
+   128 in a random orthogonal basis gives its vacuum projector (trace 1, exactly
+   symmetric), and a 40-digit matrix keeps its precision. A positive spectrum gives
+   machine zeros for machine input. *)
+VerificationTest[
+    With[{
+        m = {{-2, 3, 4}, {6, -3, -6}, {-8, 6, 10}},
+        ill = {{3/5, -4/5}, {4/5, 3/5}} . {{1/10000, 1}, {0, 0}} . {{3/5, 4/5}, {-4/5, 3/5}},
+        u = BlockRandom[SeedRandom[3]; Orthogonalize[RandomReal[NormalDistribution[], {128, 128}]]],
+        zeroBasePower = Wolfram`QuantumFramework`PackageScope`zeroBasePower
+    },
+        With[{
+            machine = Normal[(0 ^ QuantumOperator[N[m]])["Matrix"]],
+            illExact = Normal[(0 ^ QuantumOperator[ill])["Matrix"]],
+            vacuum = Normal[(0 ^ QuantumOperator[Transpose[u] . DiagonalMatrix[N[Range[0, 127]]] . u])["Matrix"]],
+            digits40 = zeroBasePower[N[{{1, 1}, {1, 1}}, 40]]
+        },
+            {
+                Normal[(0 ^ QuantumOperator[m])["Matrix"]],
+                Max[Abs[machine - {{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}}]] < 10^-13,
+                Max[Abs[Normal[(0 ^ QuantumOperator[N[ill]])["Matrix"]] - illExact]] < 10^-8 Max[Abs[illExact]],
+                Max[Abs[vacuum - Outer[Times, u[[1]], u[[1]]]]] < 10^-12,
+                Abs[Tr[vacuum] - 1] < 10^-12,
+                vacuum === Transpose[vacuum],
+                Precision[digits40] > 35 && Max[Abs[Normal[digits40] - {{1, -1}, {-1, 1}} / 2]] < 10^-35,
+                Precision[zeroBasePower[N[{{3/2, 1/2}, {1/2, 3/2}}]]] === MachinePrecision
+            }
+        ]
+    ],
+    {{{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}}, True, True, True, True, True, True, True},
+    TestID -> "MatrixFunction-zero-base-inexact-zero-eigenvalue"
+]
+
+(* A symbolic eigenvalue t keeps 0^t, the limit wherever Re t > 0, and one that is
+   identically zero gives 1: w n for a symbolic w is diag(1, 0^w, 0^(2 w)), and the
+   closed form of 0^(w M) for M with eigenvalues 0 and 2 is the projector onto the
+   null space of M at w = 1. With w declared, the values reach the limit directly: the
+   projector at w = 1, the identity at w = 0, where b^0 = 1, and a Failure at w = -1.
+   A Jordan block needs the limits of the derivatives, Log[b]^k b^t, which vanish
+   for Re t > 0: a block at 2 beside a symbolic eigenvalue w and a zero one gives
+   diag(0, 0, 0^w, 1), the parametric block {{a, 1}, {0, a}} has the closed form
+   0^a {{1, 1}, {0, 1}}, is 0 at a = 1 and fails at a = 0, and a symbolic block at
+   zero fails without messages. A base that is identically zero but not written as
+   0 reads the same way. *)
+VerificationTest[
+    With[{m = {{1, 1}, {1, 1}}, null = {{1, -1}, {-1, 1}} / 2},
+        With[{
+            wm = 0 ^ QuantumOperator[mfW m, "Parameters" -> {mfW}],
+            jordan = 0 ^ QuantumOperator[{{mfA, 1}, {0, mfA}}, "Parameters" -> {mfA}]
+        },
+            {
+                Normal[(0 ^ QuantumOperator[mfW DiagonalMatrix[{0, 1, 2}]])["Matrix"]],
+                Simplify[Normal[(0 ^ QuantumOperator[mfW m])["Matrix"]] /. mfW -> 1] == null,
+                Normal[wm[1]["Matrix"]] == null,
+                Normal[wm[0]["Matrix"]] == IdentityMatrix[2],
+                FailureQ[wm[-1]],
+                Simplify[Normal[(0 ^ QuantumOperator[{{2, 1, 0, 0}, {0, 2, 0, 0}, {0, 0, mfW, 0}, {0, 0, 0, 0}}])["Matrix"]]],
+                Normal[jordan["Matrix"]],
+                Normal[jordan[1]["Matrix"]],
+                FailureQ[jordan[0]],
+                FailureQ[0 ^ QuantumOperator[{{0, mfW}, {0, 0}}]],
+                Normal[((Sin[mfTheta]^2 + Cos[mfTheta]^2 - 1) ^ QuantumOperator[DiagonalMatrix[{0, 1}]])["Matrix"]]
+            }
+        ]
+    ],
+    {
+        {{1, 0, 0}, {0, 0^mfW, 0}, {0, 0, 0^(2 mfW)}}, True, True, True, True,
+        DiagonalMatrix[{0, 0, 0^mfW, 1}], {{0^mfA, 0^mfA}, {0, 0^mfA}}, ConstantArray[0, {2, 2}], True, True,
+        {{1, 0}, {0, 0}}
+    },
+    TestID -> "MatrixFunction-zero-base-symbolic"
 ]
 
 EndTestSection[]
