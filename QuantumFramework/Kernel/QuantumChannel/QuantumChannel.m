@@ -7,6 +7,7 @@ PackageScope["QuantumChannelQ"]
 
 QuantumChannel::invalidName = "`1` is not a recognized QuantumChannel constructor"
 QuantumChannel::invalidArgs = "QuantumChannel constructor `1` did not match any rule"
+QuantumChannel::emptyKraus = "An empty list does not define a channel; provide at least one Kraus operator."
 
 
 quantumChannelQ[QuantumChannel[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]]]] :=
@@ -20,6 +21,21 @@ QuantumChannelQ[___] := False
 
 qc_QuantumChannel /; System`Private`HoldNotValidQ[qc] && quantumChannelQ[Unevaluated[qc]] := System`Private`HoldSetValid[qc]
 
+
+(* A channel's operator-sum runs over a nonempty Kraus set, so an empty list is
+   not a channel. Reject it before the general list path lets {} reach MapAt and
+   surface an internal part error. *)
+QuantumChannel[{}, ___] := (
+    Message[QuantumChannel::emptyKraus];
+    Failure["EmptyKraus", <|"MessageTemplate" :> QuantumChannel::emptyKraus|>]
+)
+
+(* A one-element Kraus list is the deterministic channel rho -> M rho M^dagger:
+   an isometry with no environment to trace. Route it to the single-operator
+   constructor; the general list path below would hand this lone operator a
+   dimension-1 environment qudit that collapses, leaving the output wire on the
+   non-positive environment label and the channel invalid. *)
+QuantumChannel[{opArg_}, args___] := QuantumChannel[QuantumOperator[opArg, args]["Computational"]]
 
 QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#, args]["Computational"] & /@ opArgs, order, inputDims, outputDims},
     order = Union @@@ Thread[Through[ops["Order"]]];
