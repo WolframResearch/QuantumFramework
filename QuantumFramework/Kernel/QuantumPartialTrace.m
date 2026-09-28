@@ -35,12 +35,34 @@ QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
         ]
     ]
 
+(* A trace pair contracts a stored output leg against a stored input leg.  A plain index
+   contraction sums the diagonal of the stored coefficient matrix C, Tr[C], but the physical trace
+   is that of the represented map A = F_out . C . F_in^-1, i.e. Tr[A] = Tr[C . F_in^-1 . F_out].
+   Fold the local change of basis M = F_in^-1 . F_out into each traced input leg before contracting;
+   when the wire's two sides carry the same basis M is the identity and the leg is left untouched. *)
+
+tracedLegBasisMatrix[qb_, q_] := Normal @ qb["Delete", Complement[Range[qb["Qudits"]], {q}]]["Matrix"]
+
+tracedLegModeMultiply[T_, k_, M_] := With[{perm = Append[DeleteCases[Range[ArrayDepth[T]], k], k]},
+    Transpose[Transpose[T, perm] . SparseArray[M], Ordering[perm]]
+]
+
+reconcileTracedLegs[qs_, qudits_] := With[{outB = qs["Basis"]["Output"], inB = qs["Basis"]["Input"], oq = qs["OutputQudits"]},
+    Fold[
+        With[{fOut = tracedLegBasisMatrix[outB, #2[[1]]], fIn = tracedLegBasisMatrix[inB, #2[[2]]]},
+            If[fOut === fIn, #1, tracedLegModeMultiply[#1, oq + #2[[2]], Inverse[fIn] . fOut]]
+        ] &,
+        qs["StateTensor"],
+        qudits
+    ]
+]
+
 QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := Enclose[
     ConfirmAssert[DuplicateFreeQ[qudits[[All, 1]]] && DuplicateFreeQ[qudits[[All, 2]]], "a wire can be traced at most once"];
     With[{basis = QuantumPartialTrace[qs["Basis"], qudits]},
         QuantumState[
             If[ qs["VectorQ"],
-                ArrayVector @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
+                ArrayVector @ TensorContract[reconcileTracedLegs[qs, qudits], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
                 ReshapeArray[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
             ],
             basis
