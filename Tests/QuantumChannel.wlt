@@ -74,6 +74,19 @@ VerificationTest[
     TestID -> "InvalidArgs-BitFlip"
 ]
 
+(* An empty Kraus list is not a channel: the operator sum runs over a nonempty
+   index set.  It fails with the QuantumChannel::emptyKraus message and a bare
+   Failure, rather than letting {} reach MapAt, leak MapAt::partw, and return a
+   QuantumChannel wrapped around a Failure.  The third argument pins the exact
+   message set, so a returning MapAt::partw would fail the test. *)
+VerificationTest[
+    QuantumChannel[{}],
+    Failure["EmptyKraus", _],
+    {QuantumChannel::emptyKraus},
+    SameTest -> MatchQ,
+    TestID -> "EmptyKraus-list"
+]
+
 EndTestSection[]
 
 
