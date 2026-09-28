@@ -360,8 +360,13 @@ VerificationTest[
   TestID -> "B1-Math-PiOver2Rule"
 ];
 
-(* All 6 example outputs in the QuantumSimilarity.nb reference page must
-   match fresh kernel runs. *)
+(* The six examples of the QuantumSimilarity.nb reference page, their values
+   pinned to what the kernel returns, in two tests. The inputs of these five
+   are vector states or positive semidefinite matrices, so none raises the
+   notphysical warning. That check reads only whether the least eigenvalue
+   falls below -10^-8, not the trace: the identity matrix of the second
+   example has trace 2, so its fidelity similarity exceeds 1, yet no warning
+   fires. *)
 VerificationTest[
   With[{qst = Wolfram`QuantumFramework`QuantumState,
         qsim = Wolfram`QuantumFramework`QuantumSimilarity},
@@ -369,15 +374,33 @@ VerificationTest[
       qsim[qst["0"], qst["1"]],
       qsim[qst[{{1/4, 0}, {0, 3/4}}], qst[{{1, 0}, {0, 1}}]],
       qsim[qst[{{1/4, 0}, {0, 3/4}}], qst[{1, 0}]],
-      qsim[qst[{{1/4, 1}, {1, 3/4}}], qst[{{1/2, 2}, {2, 1/2}}], "Trace"],
       qsim[qst["GHZ"], qst["W"], "HilbertSchmidt"],
       qsim[qst[{1, 0, 0}, 3], qst[{1/Sqrt[3], 0, Sqrt[2/3]}, 3]]
     }
   ]
   ,
-  {0, 1/2 + Sqrt[3]/2, 1/2, 1 - Sqrt[17]/4, 0, 1/Sqrt[3]}
+  {0, 1/2 + Sqrt[3]/2, 1/2, 0, 1/Sqrt[3]}
   ,
   TestID -> "B1-Examples-Match"
+];
+
+(* The fourth example compares two matrices that are Hermitian with unit
+   trace but have a negative determinant, hence one negative eigenvalue each:
+   neither is a density matrix, so QuantumDistance warns once with
+   notphysical. Their trace distance exceeds 1, the largest trace distance two
+   density matrices can have, so the similarity is negative. *)
+VerificationTest[
+  Wolfram`QuantumFramework`QuantumSimilarity[
+    Wolfram`QuantumFramework`QuantumState[{{1/4, 1}, {1, 3/4}}],
+    Wolfram`QuantumFramework`QuantumState[{{1/2, 2}, {2, 1/2}}],
+    "Trace"
+  ]
+  ,
+  1 - Sqrt[17]/4
+  ,
+  {Wolfram`QuantumFramework`QuantumDistance::notphysical}
+  ,
+  TestID -> "B1-Examples-Match-NonPSD"
 ];
 
 (* Identity and orthogonality boundary conditions: similarity of a state
