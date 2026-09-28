@@ -563,14 +563,14 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
 (* A scalar base with a square-operator exponent is the matrix exponential of the
    stored matrix, base^op = MatrixExp[Log[base] op], the same stored-basis reading as
    MatrixExp[op], which stays regular at parameter values where eigenvalues collide.
-   A zero base has no logarithm, and 0^op is the limit of base^op as base -> 0: for a
-   number operator n, 0^n is the vacuum projector, as in the zero-temperature thermal
-   state and the total-loss channel. A base that is a declared parameter reaches the
-   same limit when its value is zero on the lazy route of matrixMapOperator, where the
-   base is read only when the values arrive; parameters that are not plain symbols
-   substitute into the closed form instead. The general rule further down reads Power
-   arguments matrix-first (MatrixPower) and would compute op^base. The base is never
-   an array container or a quantum object. *)
+   A zero base has no logarithm, and 0^op is the limit of base^op as base -> 0
+   (zeroBasePower): for a number operator n, 0^n is the vacuum projector, as in the
+   zero-temperature thermal state and the total-loss channel. A base that is a
+   declared parameter reaches the same limit when its value is zero on the lazy route
+   of matrixMapOperator, where the base is read only when the values arrive;
+   parameters that are not plain symbols substitute into the closed form instead. The
+   general rule further down reads Power arguments matrix-first (MatrixPower) and
+   would compute op^base. The base is never an array container or a quantum object. *)
 scalarPowerBaseQ[base_] :=
     FreeQ[base,
         _ ? ArrayContainerQ | _ ? QuantumFrameworkOperatorQ |
@@ -578,9 +578,7 @@ scalarPowerBaseQ[base_] :=
         _Failure | _String | _List
     ]
 
-zeroBaseQ[base_] := TrueQ[PossibleZeroQ[base]]
-
-scalarBasePower[base_ ? zeroBaseQ, mat_] := zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
+scalarBasePower[base_ ? PossibleZeroQ, mat_] := zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
 
 scalarBasePower[base_, mat_] := MatrixExp[Log[base] mat]
 
@@ -600,15 +598,23 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
 QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[MatrixExp, qo, Exp]
 
 (* The operator g(M) for the matrix M of qo in sorted order, labelled with labelF of
-   its label: evaluated now, or kept lazy in the parameters (below). *)
-matrixMapOperator[g_, qo_, labelF_] := Enclose @ With[
-    {op = qo["Sort"]},
-    {label = If[op["Label"] === None, None, labelF[op["Label"]]]},
-    If[ lazyMatrixMapQ[op],
-        parametricMatrixMapOperator[g, qo, op, label],
-        matrixOperator[op, ConfirmBy[Confirm[g[op["Matrix"]]], matrixContainerQ, Defer[label]], "Label" -> label]
-    ]
+   its label: evaluated now, or kept lazy in the parameters (below). Where g fails,
+   the result is the Failure that names the reason. *)
+matrixMapOperator[g_, qo_, labelF_] := Enclose[
+    With[
+        {op = qo["Sort"]},
+        {label = If[op["Label"] === None, None, labelF[op["Label"]]]},
+        If[ lazyMatrixMapQ[op],
+            parametricMatrixMapOperator[g, qo, op, label],
+            matrixOperator[op, ConfirmBy[Confirm[g[op["Matrix"]]], matrixContainerQ, Defer[label]], "Label" -> label]
+        ]
+    ],
+    innermostFailure
 ]
+
+(* A failed Confirm returns a Failure wrapping the Failure it confirmed; the innermost
+   one names the reason. *)
+innermostFailure[failure_] := Replace[failure["Expression"], {inner_ ? FailureQ :> innermostFailure[inner], _ :> failure}]
 
 (* A matrix map g of an operator with declared parameters (f of the matrix for a
    NumericFunction f, the matrix exponential for Exp, MatrixExp and base^op) keeps g
@@ -635,9 +641,12 @@ lazyMatrixMapAmplitudesQ[amplitudes_] := MatchQ[amplitudes, HoldPattern[Function
 
 (* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
    at a zero eigenvalue), so that a substitution reaching that value fails. *)
-matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose @ operatorAmplitudes[
-    ConfirmBy[Confirm[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]]], MatrixQ],
-    vectorQ, nameDimensions, dimension
+matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose[
+    operatorAmplitudes[
+        ConfirmBy[Confirm[g[ConfirmBy[mat, ! valuelessEntriesQ[#] &]]], MatrixQ],
+        vectorQ, nameDimensions, dimension
+    ],
+    innermostFailure
 ]
 
 (* The matrix of the amplitudes amps in the parameter-free basis qb, in the sorted
@@ -797,7 +806,7 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     qo[AssociationThread[Take[qo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qo["Parameters"]] :=
-    Enclose @ QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]]
+    Enclose[QuantumOperator[Confirm[qo["State"][rules]], qo["Order"]], innermostFailure]
 
 
 (* *)

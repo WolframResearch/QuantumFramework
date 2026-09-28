@@ -749,8 +749,8 @@ VerificationTest[
    whatever frames it carries, so 2^Z is the exponential of the stored matrix,
    diag(2, 1/2), under any frame pair. *)
 VerificationTest[
-    Head[0^QuantumOperator["Z"]],
-    Failure,
+    MatchQ[0^QuantumOperator["Z"], Failure["ZeroBasePowerNoLimit", _]],
+    True,
     TestID -> "Power-zero-base-limit"
 ]
 

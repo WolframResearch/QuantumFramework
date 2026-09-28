@@ -31,7 +31,41 @@
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
                           defective, or reached by substitution) is a Failure;
                           degenerate spectra of multiplicity 8 and 4; parameter
-                          values at and next to a collision of two eigenvalues *)
+                          values at and next to a collision of two eigenvalues
+
+   The zero base, 0^M, the limit of b^M as b -> 0 (the projector onto the null space
+   of M along its range), has its own rows. Refused base case: one diagonal mode with
+   a rank-1 kernel.
+     general symbolic     0^(w n), 0^(w M) for every w > 0, 0^(c M) = 0^M for every
+                          c > 0, a parametric Jordan block, the XXZ pair on both
+                          sides of its level crossing in d, Lindblad generators for
+                          every rate: damping, the driven qubit (resonance
+                          fluorescence, through its exceptional point) and the
+                          thermal generator, the ferromagnetic ring for n = 4, 6, 8
+     exactly solvable     vacuum projector of one and three modes, ground spaces of
+                          the XX chain, the Heisenberg triangle and the
+                          ferromagnetic ring, the entangled kernel of B^dagger B,
+                          steady states of damping, dephasing, collective decay,
+                          the driven qubit and the thermal generator (ThermalState),
+                          Louisell's identity, the total-loss channel,
+                          ThermalState at nbar = 0
+     limiting             thermal state to first order in q, exp(-beta (H - E0))
+                          -> 0^(H - E0) with leading term exp(-beta gap) times the
+                          first-excited projector, steady state as the
+                          t -> Infinity limit of exp(t L), {{e, 1}, {0, 0}} as
+                          e -> 0, where the limits in b and e do not commute
+     numerical reference  exact against machine and 40 digits, a rotated number
+                          operator of dimension 128, projectors built by
+                          construction, P.P = P, M.P = P.M = 0, Tr P = nullity,
+                          Hermitian P for Hermitian M, Choi positivity and trace
+                          preservation for steady-state projectors
+     failure / edge       eigenvalue -1, a unitary generator (imaginary spectrum),
+                          a dark coherence that rotates, Jordan blocks at zero
+                          (exact, machine, conjugated, symbolic), machine matrices
+                          within roundoff of one, exact spectra over 150 orders of
+                          magnitude and an eigenvalue -10^-130, decided exactly *)
+
+Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 BeginTestSection["QuantumOperator - matrix functions"]
 
@@ -780,80 +814,312 @@ VerificationTest[
 ]
 
 (* 0^M is the limit of b^M = MatrixExp[Log[b] M] as b -> 0: 1 on a semisimple zero
-   eigenvalue and 0 on eigenvalues with positive real part, so the spectral
-   projector onto the null space of M along its range. For a number operator it is
-   the vacuum projector: one mode, two modes through their total number, a machine
-   matrix in a rotated basis (exactly Hermitian), and a parameter base or a thermal
-   weight q^n sent to zero. The references are the limit of MatrixExp[Log[b] M]
-   taken by Limit, including a non-normal M (oblique projector) and a Jordan block
-   at a positive eigenvalue (zero). *)
+   eigenvalue and 0 on eigenvalues with positive real part, so the spectral projector
+   onto the null space of M along its range. Each test returns its physical claims by
+   name, and a failure is read by the tag of the Failure that 0^M itself returns. *)
+mfZeroBaseTag[Failure[tag_, _]] := tag
+
+mfZeroBaseTag[_] := None
+
+(* The matrix of 0^M for an operator or a matrix M. *)
+mfZero[m_] := Normal[(0 ^ If[MatrixQ[m], QuantumOperator[m], m])["Matrix"]]
+
+(* MatrixPower[a, 0] of the singular annihilator stays unevaluated with
+   MatrixPower::sing, so its powers are built by Dot. *)
+mfPower[x_, k_] := Nest[x . # &, IdentityMatrix[Length[x]], k]
+
+(* The Choi matrix of a superoperator acting on row-major vectorized d x d matrices. *)
+mfChoi[p_, d_] := Flatten[Transpose[ArrayReshape[p, {d, d, d, d}], {1, 3, 2, 4}], {{1, 2}, {3, 4}}]
+
+(* For a number operator n, 0^n is the vacuum projector, the value the literature
+   uses: the thermal state (1 - q) q^n as q -> 0, ThermalState at nbar = 0 included,
+   which leaves the vacuum at first order in q; the total-loss channel, whose Kraus
+   operators carry eta^(n/2), at eta = 0, where every state goes to the vacuum; and
+   Louisell's normal-ordered sum_k (-1)^k a^dagger^k a^k / k!, the lambda = 1 case
+   of (1 - lambda)^n. Also for three modes through their total number, for a machine
+   number operator in a rotated basis, and for a parameter base sent to zero. *)
 VerificationTest[
-    With[{
-        n = DiagonalMatrix[{0, 1, 2}],
-        u = {{1, 1}, {1, -1}} / Sqrt[2],
-        vacuum = DiagonalMatrix[{1, 0, 0}],
-        limit = Function[m, Limit[MatrixExp[Log[mfB] m], mfB -> 0]]
-    },
-        With[{
-            total = QuantumOperator[QuantumOperator[n], {1}] + QuantumOperator[QuantumOperator[n], {2}],
-            rotated = 0 ^ QuantumOperator[N[u . DiagonalMatrix[{0, 1}] . u]],
-            nq = QuantumOperator[n, "Parameters" -> {mfT}]
+    With[
+        {a = AnnihilationOperator[5], a3 = AnnihilationOperator[3], u = {{1, 1}, {1, -1}} / Sqrt[2], vacuum = DiagonalMatrix[{1, 0, 0, 0, 0}]},
+        {number = a["Dagger"] @ a, annihilator = Normal[a["Matrix"]], state = Outer[Times, {0, 1, 0, 1, 0}, {0, 1, 0, 1, 0}] / 2},
+        {
+            thermal = (1 - mfQ) mfQ ^ QuantumOperator[number, "Parameters" -> {mfQ}],
+            base = mfT ^ QuantumOperator[number, "Parameters" -> {mfT}],
+            loss = Normal[(mfEta ^ QuantumOperator[number / 2, "Parameters" -> {mfEta}])[0]["Matrix"]],
+            rotated = mfZero[N[u . DiagonalMatrix[{0, 1}] . u]],
+            normalOrdered = Function[lambda, Total[Table[(-lambda)^k mfPower[ConjugateTranspose[annihilator], k] . mfPower[annihilator, k] / k!, {k, 0, 4}]]]
         },
-            {
-                Normal[(0 ^ QuantumOperator[n])["Matrix"]] == vacuum,
-                Normal[(0 ^ total)["Matrix"]] == KroneckerProduct[vacuum, vacuum],
-                Max[Abs[Normal[rotated["Matrix"]] - N[u . DiagonalMatrix[{1, 0}] . u]]] < 10^-14,
-                Normal[rotated["Matrix"]] === ConjugateTranspose[Normal[rotated["Matrix"]]],
-                Normal[(mfT ^ nq)[0]["Matrix"]] == vacuum,
-                Normal[((1 - mfT) mfT ^ nq)[0]["Matrix"]] == vacuum,
-                Normal[(mfT ^ nq)[1/2]["Matrix"]] == DiagonalMatrix[{1, 1/2, 1/4}],
-                AllTrue[
-                    {{{0, 1}, {0, 1}}, {{1, 1, 0}, {1, 1, 0}, {0, 0, 3}}, {{2, 1}, {0, 2}}},
-                    Normal[(0 ^ QuantumOperator[#])["Matrix"]] == limit[#] &
-                ]
-            }
-        ]
+        {kraus = Table[loss . mfPower[annihilator, k] / Sqrt[k!], {k, 0, 4}], closedThermal = Normal[thermal["Matrix"]]},
+        <|
+            "one mode" -> mfZero[number] == vacuum,
+            "three modes" -> mfZero[Total[QuantumOperator[a3["Dagger"] @ a3, {#}] & /@ {1, 2, 3}]] == Outer[Times, UnitVector[27, 1], UnitVector[27, 1]],
+            "rotated machine" -> Max[Abs[rotated - N[u . DiagonalMatrix[{1, 0}] . u]]] < 10^-14 && rotated === Transpose[rotated],
+            "parameter base" -> Normal[base[0]["Matrix"]] == vacuum && Normal[base[1/2]["Matrix"]] == DiagonalMatrix[2^-Range[0, 4]],
+            "ThermalState at nbar = 0" -> Normal[ThermalState[0, 5]["DensityMatrix"]] == vacuum,
+            "thermal limit" -> Normal[thermal[0]["Matrix"]] == Limit[closedThermal, mfQ -> 0] == vacuum,
+            "thermal first order" -> Limit[(closedThermal - vacuum) / mfQ, mfQ -> 0] == DiagonalMatrix[{-1, 1, 0, 0, 0}],
+            "total loss" -> Total[ConjugateTranspose[#] . # & /@ kraus] == IdentityMatrix[5] && Total[# . state . ConjugateTranspose[#] & /@ kraus] == vacuum,
+            "Louisell" -> normalOrdered[1] == vacuum,
+            "Louisell (1 - lambda)^n" -> Simplify[normalOrdered[mfLambda] - Normal[((1 - mfLambda) ^ QuantumOperator[number, "Parameters" -> {mfLambda}])["Matrix"]]] ==
+                ConstantArray[0, {5, 5}]
+        |>
     ],
-    ConstantArray[True, 8],
+    <|
+        "one mode" -> True, "three modes" -> True, "rotated machine" -> True, "parameter base" -> True, "ThermalState at nbar = 0" -> True,
+        "thermal limit" -> True, "thermal first order" -> True, "total loss" -> True, "Louisell" -> True, "Louisell (1 - lambda)^n" -> True
+    |>,
     TestID -> "MatrixFunction-zero-base-vacuum-projector"
 ]
 
+(* 0^(H - E0) is the projector onto the ground space, degenerate and entangled for
+   an interacting H, and Hermitian with H.P = P.H = 0, which tells it from an oblique
+   projector onto the same null space: the XX chain -(X1 X2 + X2 X3), whose ground
+   space is spanned by |+++> and |--->; the Heisenberg triangle, whose ground space
+   is total spin 1/2, P = (15/4 - S^2)/3 = (3 - H)/6; the ferromagnetic ring of n
+   sites, the sum of bond singlet projectors (1 - SWAP)/2, whose ground space is the
+   symmetric subspace of dimension n + 1, for n = 4, 6, 8; and B^dagger B for
+   B = (a1 + a2)/Sqrt[2], whose kernel holds the antisymmetric (|01> - |10>)/Sqrt[2].
+   The XXZ pair XX + YY + d ZZ has a level crossing at d = -1: its ground space is the
+   singlet for every d > -1 and the doublet {|00>, |11>} for every d < -1, both in
+   closed form, and with the ground energy Min[d, -2 - d] as the shift, the values
+   of d give the ranks 1, 3, 2, 2 at d = 0, -1, -2, -3. The ground-space projector
+   is the zero-temperature limit of the Boltzmann operator exp(-beta (H - E0)),
+   approached as exp(-beta gap) times the projector onto the first excited level,
+   itself 0^((H - E0 - gap)^2). *)
+VerificationTest[
+    With[
+        {
+            xx = -(QuantumOperator["XX", {1, 2}] + QuantumOperator["XX", {2, 3}]),
+            heisenberg = Total[QuantumOperator[#, {1, 2}] + QuantumOperator[#, {2, 3}] + QuantumOperator[#, {1, 3}] & /@ {"XX", "YY", "ZZ"}],
+            ring = Function[n, Total[Table[(QuantumOperator[IdentityMatrix[4], {i, Mod[i, n] + 1}] - QuantumOperator["SWAP", {i, Mod[i, n] + 1}]) / 2, {i, n}]]],
+            b = (AnnihilationOperator[3, {1}] + AnnihilationOperator[3, {2}]) / Sqrt[2],
+            xxz = QuantumOperator["XX"] + QuantumOperator["YY"] + mfD QuantumOperator["ZZ"],
+            singlet = Outer[Times, {0, 1, -1, 0}, {0, 1, -1, 0}] / 2,
+            doublet = DiagonalMatrix[{1, 0, 0, 1}]
+        },
+        {
+            ground = mfZero[xx + 2],
+            shifted = Normal[(xx + 2)["Matrix"]],
+            orthogonalQ = Function[{h, p}, p == ConjugateTranspose[p] && p . p == p && Normal[h["Matrix"]] . p == 0 p && p . Normal[h["Matrix"]] == 0 p],
+            crossing = 0 ^ QuantumOperator[xxz - Min[mfD, -2 - mfD], "Parameters" -> {mfD}]
+        },
+        {gap = Min[DeleteCases[Eigenvalues[shifted], 0]]},
+        {excited = mfZero[QuantumOperator[(shifted - gap IdentityMatrix[8]) . (shifted - gap IdentityMatrix[8]), {1, 2, 3}]]},
+        <|
+            "XX chain" -> ground == Total[Normal[QuantumState[#]["DensityMatrix"]] & /@ {"+++", "---"}] && orthogonalQ[xx + 2, ground],
+            "Heisenberg triangle" -> mfZero[heisenberg + 3] == (3 IdentityMatrix[8] - Normal[heisenberg["Matrix"]]) / 6,
+            "ferromagnetic ring" -> (With[{h = ring[#]}, {p = mfZero[ring[#]]}, orthogonalQ[h, p] && Tr[p] == # + 1] & /@ {4, 6, 8}),
+            "entangled kernel" -> With[{bb = b["Dagger"] @ b}, {p = mfZero[b["Dagger"] @ b], antisymmetric = UnitVector[9, 2] - UnitVector[9, 4]},
+                orthogonalQ[bb, p] && Tr[p] == 3 && p . antisymmetric == antisymmetric],
+            "XXZ crossing" -> Simplify[mfZero[xxz + 2 + mfD], mfD > -1] == singlet && Simplify[mfZero[xxz - mfD], mfD < -1] == doublet &&
+                (MatrixRank[Normal[crossing[#]["Matrix"]]] & /@ {0, -1, -2, -3}) == {1, 3, 2, 2} &&
+                Normal[crossing[-1]["Matrix"]] == singlet + doublet && Normal[crossing[-3]["Matrix"]] == doublet,
+            "zero temperature" -> Simplify[Limit[MatrixExp[-mfBeta shifted], mfBeta -> Infinity] - ground] == ConstantArray[0, {8, 8}],
+            "approach as exp(-beta gap)" -> Tr[excited] == 4 && Simplify[Limit[Exp[gap mfBeta] (MatrixExp[-mfBeta shifted] - ground), mfBeta -> Infinity]] == excited
+        |>
+    ],
+    <|
+        "XX chain" -> True, "Heisenberg triangle" -> True, "ferromagnetic ring" -> {True, True, True}, "entangled kernel" -> True,
+        "XXZ crossing" -> True, "zero temperature" -> True, "approach as exp(-beta gap)" -> True
+    |>,
+    TestID -> "MatrixFunction-zero-base-ground-space"
+]
+
+(* For a Lindblad generator L, b^(-L) = exp(t L) with b = exp(-t), so 0^(-L) is the
+   limit of the evolution as t -> Infinity: the projector P onto the steady states,
+   with P.P = P and L.P = P.L = 0, trace preserving, and completely positive (its
+   Choi matrix is positive). Amplitude damping sends every state to |0><0| (the rows
+   read vec(|0><0|) Tr) for every rate g > 0; dephasing keeps the populations and
+   removes the coherences. The resonantly driven qubit, H = Omega X / 2 with decay at
+   rate gamma, has in closed form the resonance-fluorescence steady state,
+   rho_11 = Omega^2 / (gamma^2 + 2 Omega^2) and rho_01 = I gamma Omega / (gamma^2 +
+   2 Omega^2), where the condition that the other eigenvalues (gamma/2 and
+   (3 gamma +- Sqrt[gamma^2 - 16 Omega^2])/4) have positive real part holds on both
+   sides of the exceptional point gamma = 4 Omega and at it, where two of them
+   collide and the closed form still gives rho_11 = 1/18. The thermal generator,
+   decay at rate nbar + 1 and excitation at rate nbar, has ThermalState as its steady
+   state for every nbar > 0, and the vacuum at nbar = 0. Collective decay of two
+   qubits, J = s1^- + s2^-, leaves a noiseless qubit on {|00>, |S>} with the singlet
+   |S> dark, so P is oblique (P != P^dagger) and the steady state depends on the
+   initial one: |01><01| goes to (|00><00| + |S><S|)/2 and |11><11| to |00><00|.
+   With H = Z1 + Z2 the coherence |00><S| rotates forever and there is no limit, nor
+   for a unitary generator, whose spectrum is imaginary. *)
+VerificationTest[
+    With[
+        {
+            lowering = QuantumOperator[{{0, 1}, {0, 0}}],
+            collectiveJump = QuantumOperator[{{0, 1}, {0, 0}}, {1}] + QuantumOperator[{{0, 1}, {0, 0}}, {2}],
+            a3 = AnnihilationOperator[3],
+            density = Normal[QuantumState[#]["DensityMatrix"]] &
+        },
+        {
+            damping = QuantumOperator["Liouvillian"[None, {lowering}, {1}]],
+            dampingRate = QuantumOperator["Liouvillian"[None, {lowering}, {mfG}]],
+            dephasing = QuantumOperator["Liouvillian"[None, {QuantumOperator["Z"]}, {1}]],
+            driven = QuantumOperator["Liouvillian"[mfOmega QuantumOperator["X"] / 2, {lowering}, {mfGamma}]],
+            thermalGenerator = QuantumOperator["Liouvillian"[None, {a3, a3["Dagger"]}, {mfN + 1, mfN}]],
+            collective = QuantumOperator["Liouvillian"[None, {collectiveJump}, {1}]],
+            singletState = With[{s = Normal[QuantumState["01"]["StateVector"] - QuantumState["10"]["StateVector"]] / Sqrt[2]}, Outer[Times, s, s]],
+            steady = Function[l, mfZero[-l]],
+            apply = Function[{p, rho}, ArrayReshape[p . Flatten[rho], Dimensions[rho]]]
+        },
+        {
+            projectorQ = Function[{l, d}, With[{p = steady[l], lm = Normal[l["Matrix"]]},
+                p . p == p && lm . p == 0 lm && p . lm == 0 lm && Flatten[IdentityMatrix[d]] . p == Flatten[IdentityMatrix[d]] &&
+                    PositiveSemidefiniteMatrixQ[mfChoi[p, d]] && Simplify[Limit[MatrixExp[mfTime lm], mfTime -> Infinity] - p] == 0 lm
+            ]],
+            fluorescence = apply[steady[driven], density["0"]],
+            thermalSteady = apply[steady[thermalGenerator], DiagonalMatrix[{1, 0, 0}]]
+        },
+        <|
+            "projector invariants" -> {projectorQ[damping, 2], projectorQ[dephasing, 2], projectorQ[collective, 4]},
+            "amplitude damping" -> steady[damping] == {{1, 0, 0, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}} &&
+                Simplify[steady[dampingRate], mfG > 0] == steady[damping],
+            "dephasing" -> steady[dephasing] == DiagonalMatrix[{1, 0, 0, 1}],
+            "resonance fluorescence" -> (fluorescence /. Piecewise[{{value_, _}}, _] :> value) ==
+                {{mfGamma^2 + mfOmega^2, I mfGamma mfOmega}, {-I mfGamma mfOmega, mfOmega^2}} / (mfGamma^2 + 2 mfOmega^2),
+            "condition holds for every rate" -> Reduce[ForAll[{mfOmega, mfGamma}, mfOmega > 0 && mfGamma >= 4 mfOmega, 3 mfGamma > Sqrt[mfGamma^2 - 16 mfOmega^2]], Reals] &&
+                Refine[Re[Sqrt[mfGamma^2 - 16 mfOmega^2]], 0 < mfGamma < 4 mfOmega] == 0,
+            "exceptional point" -> (fluorescence /. {mfOmega -> 1, mfGamma -> 4}) == {{17/18, 2 I / 9}, {-2 I / 9, 1/18}},
+            "thermal steady state" -> Simplify[thermalSteady - Normal[ThermalState[mfN, 3]["DensityMatrix"]], mfN > 0] == ConstantArray[0, {3, 3}] &&
+                (thermalSteady /. mfN -> 0) == DiagonalMatrix[{1, 0, 0}],
+            "collective decay" -> With[{p = steady[collective]},
+                Tr[p] == 4 && p =!= ConjugateTranspose[p] && apply[p, density["01"]] == (density["00"] + singletState) / 2 && apply[p, density["11"]] == density["00"]],
+            "no limit" -> mfZeroBaseTag /@ {
+                0 ^ -QuantumOperator["Liouvillian"[QuantumOperator["Z", {1}] + QuantumOperator["Z", {2}], {collectiveJump}, {1}]],
+                0 ^ -QuantumOperator["Liouvillian"[QuantumOperator["X"], {}, {}]]
+            }
+        |>
+    ],
+    <|
+        "projector invariants" -> {True, True, True}, "amplitude damping" -> True, "dephasing" -> True,
+        "resonance fluorescence" -> True, "condition holds for every rate" -> True, "exceptional point" -> True,
+        "thermal steady state" -> True, "collective decay" -> True, "no limit" -> {"ZeroBasePowerNoLimit", "ZeroBasePowerNoLimit"}
+    |>,
+    TestID -> "MatrixFunction-zero-base-steady-state"
+]
+
+(* The projector P = 0^M of M = S.(0_k (+) D).S^-1, with Re D > 0 and D holding a
+   Jordan block or a complex eigenvalue, is S.(1_k (+) 0).S^-1: P.P = P,
+   M.P = P.M = 0, Tr P = k. It is the same for c M at every c > 0, in closed form, it
+   factors over a sum A (x) 1 + 1 (x) B of commuting parts, and the machine route
+   agrees. *)
+VerificationTest[
+    With[
+        {
+            s4 = {{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 1, 1, 0}, {1, 0, 1, 1}} . {{1, 2, 0, 1}, {0, 1, 1, 0}, {0, 0, 1, 2}, {0, 0, 0, 1}},
+            s5 = {{1, 0, 0, 0, 0}, {0, 1, 0, 0, 0}, {1, 1, 1, 0, 0}, {0, 1, 0, 1, 0}, {1, 0, 1, 1, 1}} .
+                {{1, 1, 0, 2, 0}, {0, 1, 1, 0, 1}, {0, 0, 1, 1, 0}, {0, 0, 0, 1, 1}, {0, 0, 0, 0, 1}}
+        },
+        {
+            cases = {
+                {s4, 2, ArrayFlatten[{{ConstantArray[0, {2, 2}], 0}, {0, {{2, 1}, {0, 2}}}}]},
+                {s5, 3, ArrayFlatten[{{ConstantArray[0, {3, 3}], 0}, {0, {{1 + I, 0}, {0, 1/2}}}}]}
+            },
+            invariants = Function[{sim, k, block},
+                With[{m = sim . block . Inverse[sim]}, {p = mfZero[sim . block . Inverse[sim]]},
+                    <|
+                        "idempotent" -> p . p == p,
+                        "annihilates M" -> m . p == 0 m && p . m == 0 m,
+                        "trace is nullity" -> Tr[p] == k,
+                        "projector by construction" -> p == sim . DiagonalMatrix[Join[ConstantArray[1, k], ConstantArray[0, 2]]] . Inverse[sim],
+                        "scale invariance" -> Simplify[mfZero[mfC m] - p, mfC > 0] == 0 m,
+                        "machine agrees" -> Max[Abs[mfZero[N[m]] - p]] < 10^-12
+                    |>
+                ]
+            ]
+        },
+        {a = s4 . cases[[1, 3]] . Inverse[s4]},
+        Append[
+            Merge[invariants @@@ cases, Identity],
+            "factorizes" -> mfZero[KroneckerProduct[a, IdentityMatrix[2]] + KroneckerProduct[IdentityMatrix[4], DiagonalMatrix[{0, 3}]]] ==
+                KroneckerProduct[mfZero[a], DiagonalMatrix[{1, 0}]]
+        ]
+    ],
+    <|
+        "idempotent" -> {True, True}, "annihilates M" -> {True, True}, "trace is nullity" -> {True, True},
+        "projector by construction" -> {True, True}, "scale invariance" -> {True, True}, "machine agrees" -> {True, True},
+        "factorizes" -> True
+    |>,
+    TestID -> "MatrixFunction-zero-base-invariants"
+]
+
+(* Approaching a Jordan block, M = {{e, 1}, {0, 0}} has 0^M = {{0, -1/e}, {0, 1}} for
+   every e > 0, whose norm grows as 1/e, while at fixed b the e -> 0 limit of b^M is
+   {{1, Log[b]}, {0, 1}}: the limits b -> 0 and e -> 0 do not commute. The machine
+   route follows the closed form while e is resolvable, and fails as defective once
+   the matrix is within roundoff of the block. *)
+VerificationTest[
+    With[
+        {closed = mfZero[{{mfE, 1}, {0, 0}}], machine = Function[e, 0 ^ QuantumOperator[N[{{e, 1}, {0, 0}}]]]},
+        <|
+            "closed form" -> Simplify[closed, mfE > 0] == {{0, -1 / mfE}, {0, 1}},
+            "limits do not commute" -> Limit[MatrixExp[Log[mfB] {{mfE, 1}, {0, 0}}], mfE -> 0] == {{1, Log[mfB]}, {0, 1}},
+            "machine follows" -> AllTrue[{10^-1, 10^-3, 10^-5}, Max[Abs[Normal[machine[#]["Matrix"]] - {{0, -1 / #}, {0, 1}}]] # < 10^-10 &],
+            "machine at roundoff" -> mfZeroBaseTag[machine[10^-9]]
+        |>
+    ],
+    <|"closed form" -> True, "limits do not commute" -> True, "machine follows" -> True, "machine at roundoff" -> "ZeroBasePowerDefective"|>,
+    TestID -> "MatrixFunction-zero-base-jordan-approach"
+]
+
 (* With every eigenvalue of positive real part the limit is the zero matrix, which
-   is also what MatrixFunction[0^# &, m] gives there (diagonal, non-diagonal,
-   complex, machine, and on the lazy parametric route). A nonzero base is the
-   matrix exponential, 2^M = diag(2, 4). *)
+   is also what MatrixFunction[0^# &, m] gives there. A nonzero base is the matrix
+   exponential. *)
 VerificationTest[
     With[{m = {{3/2, 1/2}, {1/2, 3/2}}},
-        {
-            Normal[(0 ^ QuantumOperator[DiagonalMatrix[{1, 2}]])["Matrix"]],
-            Normal[(0 ^ QuantumOperator[m])["Matrix"]] == MatrixFunction[0^# &, m],
-            Normal[(0 ^ QuantumOperator[DiagonalMatrix[{1 + I, 2}]])["Matrix"]],
-            Max[Abs[Normal[(0. ^ QuantumOperator[N[m]])["Matrix"]]]] == 0,
-            Normal[(0 ^ QuantumOperator[mfT DiagonalMatrix[{1, 2}], "Parameters" -> {mfT}])[1/2]["Matrix"]],
-            Normal[(2 ^ QuantumOperator[DiagonalMatrix[{1, 2}]])["Matrix"]]
-        }
+        <|
+            "diagonal" -> mfZero[DiagonalMatrix[{1, 2}]] == ConstantArray[0, {2, 2}],
+            "as MatrixFunction" -> mfZero[m] == MatrixFunction[0^# &, m],
+            "complex" -> mfZero[DiagonalMatrix[{1 + I, 2}]] == ConstantArray[0, {2, 2}],
+            "machine" -> Max[Abs[Normal[(0. ^ QuantumOperator[N[m]])["Matrix"]]]] == 0,
+            "parametric" -> Normal[(0 ^ QuantumOperator[mfT DiagonalMatrix[{1, 2}], "Parameters" -> {mfT}])[1/2]["Matrix"]] == ConstantArray[0, {2, 2}],
+            "nonzero base" -> Normal[(2 ^ QuantumOperator[DiagonalMatrix[{1, 2}]])["Matrix"]] == {{2, 0}, {0, 4}}
+        |>
     ],
-    {ConstantArray[0, {2, 2}], True, ConstantArray[0, {2, 2}], True, ConstantArray[0, {2, 2}], {{2, 0}, {0, 4}}},
+    <|"diagonal" -> True, "as MatrixFunction" -> True, "complex" -> True, "machine" -> True, "parametric" -> True, "nonzero base" -> True|>,
     TestID -> "MatrixFunction-zero-base-positive-spectrum"
 ]
 
 (* The limit does not exist for an eigenvalue that is neither zero nor of positive
    real part (b^-1 diverges, b^I oscillates) or for a Jordan block at zero, where
-   b^M = I + Log[b] N diverges. The Failure carries the reason: a Jordan block at
-   zero, exact or machine, triangular or conjugated by a change of basis, and a
-   machine matrix within roundoff of one, all fail as defective, without messages. *)
+   b^M = 1 + Log[b] N diverges. The result is the Failure that names the reason,
+   without messages: a Jordan block at zero exact or machine, triangular or
+   conjugated, and a machine matrix within roundoff of one, are all defective. For
+   exact input the eigenvalue in the message is exact, or left out when only the
+   exact decision could tell its sign, as for an eigenvalue -10^-130 beside 1.
+   Other matrix functions return the Failure that names their reason too, as Log at
+   a zero eigenvalue does. *)
 VerificationTest[
-    Cases[#, Failure[tag : "ZeroBasePowerNoLimit" | "ZeroBasePowerDefective", _] :> tag, Infinity, 1] & /@ {
-        0 ^ QuantumOperator[DiagonalMatrix[{0, -1}]],
-        0 ^ QuantumOperator[{{0, 1}, {-1, 0}}],
-        0 ^ QuantumOperator[{{0, 1}, {0, 0}}],
-        0 ^ QuantumOperator[N[{{0, 1}, {0, 0}}]],
-        0 ^ QuantumOperator[{{3, -1}, {9, -3}}],
-        0 ^ QuantumOperator[N[{{3, -1}, {9, -3}}]],
-        0 ^ QuantumOperator[N[{{-1, 1}, {-1, 1}}]],
-        0 ^ QuantumOperator[{{10.^-17, 1.}, {0., 0.}}]
-    },
-    Join[{{"ZeroBasePowerNoLimit"}, {"ZeroBasePowerNoLimit"}}, ConstantArray[{"ZeroBasePowerDefective"}, 6]],
+    With[{r3 = {{1, 2, 2}, {2, 1, -2}, {2, -2, 1}} / 3},
+        Append[
+            mfZeroBaseTag /@ <|
+                "eigenvalue -1" -> 0 ^ QuantumOperator[DiagonalMatrix[{0, -1}]],
+                "eigenvalues +-I" -> 0 ^ QuantumOperator[{{0, 1}, {-1, 0}}],
+                "eigenvalue -10^-130" -> 0 ^ QuantumOperator[r3 . DiagonalMatrix[{0, -10^-130, 1}] . Transpose[r3]],
+                "Jordan block" -> 0 ^ QuantumOperator[{{0, 1}, {0, 0}}],
+                "machine Jordan block" -> 0 ^ QuantumOperator[N[{{0, 1}, {0, 0}}]],
+                "conjugated Jordan block" -> 0 ^ QuantumOperator[{{3, -1}, {9, -3}}],
+                "machine conjugated Jordan block" -> 0 ^ QuantumOperator[N[{{3, -1}, {9, -3}}]],
+                "machine nilpotent" -> 0 ^ QuantumOperator[N[{{-1, 1}, {-1, 1}}]],
+                "nearly defective" -> 0 ^ QuantumOperator[{{10.^-17, 1.}, {0., 0.}}],
+                "Log at a zero eigenvalue" -> Log[QuantumOperator[DiagonalMatrix[{0, 1}]]]
+            |>,
+            "eigenvalues named" -> {
+                (0 ^ QuantumOperator[{{0, 1}, {-1, 0}}])["MessageParameters"],
+                (0 ^ QuantumOperator[{{0, 1}, {1, 0}}])["MessageParameters"],
+                (0 ^ QuantumOperator[r3 . DiagonalMatrix[{0, -10^-130, 1}] . Transpose[r3]])["MessageParameters"]
+            }
+        ]
+    ],
+    <|
+        "eigenvalue -1" -> "ZeroBasePowerNoLimit", "eigenvalues +-I" -> "ZeroBasePowerNoLimit", "eigenvalue -10^-130" -> "ZeroBasePowerNoLimit",
+        "Jordan block" -> "ZeroBasePowerDefective", "machine Jordan block" -> "ZeroBasePowerDefective",
+        "conjugated Jordan block" -> "ZeroBasePowerDefective", "machine conjugated Jordan block" -> "ZeroBasePowerDefective",
+        "machine nilpotent" -> "ZeroBasePowerDefective", "nearly defective" -> "ZeroBasePowerDefective",
+        "Log at a zero eigenvalue" -> "NonFiniteMatrixFunction",
+        "eigenvalues named" -> {{I}, {-1}, Missing["NotAvailable", "MessageParameters"]}
+    |>,
     TestID -> "MatrixFunction-zero-base-undefined-fails"
 ]
 
@@ -864,73 +1130,97 @@ VerificationTest[
    eigenvalue has condition number near 10^4, a machine number operator of dimension
    128 in a random orthogonal basis gives its vacuum projector (trace 1, exactly
    symmetric), and a 40-digit matrix keeps its precision. A positive spectrum gives
-   machine zeros for machine input. *)
+   machine zeros for machine input. An exact matrix is decided exactly where the
+   digits cannot tell, so its projector does not depend on the basis however wide its
+   spectrum: eigenvalues 0, 10^-12, 10^20 and 0, 1, 10^150, non-normal or Hermitian,
+   and 0, 10^-130, 1. *)
 VerificationTest[
-    With[{
-        m = {{-2, 3, 4}, {6, -3, -6}, {-8, 6, 10}},
-        ill = {{3/5, -4/5}, {4/5, 3/5}} . {{1/10000, 1}, {0, 0}} . {{3/5, 4/5}, {-4/5, 3/5}},
-        u = BlockRandom[SeedRandom[3]; Orthogonalize[RandomReal[NormalDistribution[], {128, 128}]]],
-        zeroBasePower = Wolfram`QuantumFramework`PackageScope`zeroBasePower
-    },
-        With[{
-            machine = Normal[(0 ^ QuantumOperator[N[m]])["Matrix"]],
-            illExact = Normal[(0 ^ QuantumOperator[ill])["Matrix"]],
-            vacuum = Normal[(0 ^ QuantumOperator[Transpose[u] . DiagonalMatrix[N[Range[0, 127]]] . u])["Matrix"]],
-            digits40 = zeroBasePower[N[{{1, 1}, {1, 1}}, 40]]
+    With[
+        {
+            m = {{-2, 3, 4}, {6, -3, -6}, {-8, 6, 10}},
+            ill = {{3/5, -4/5}, {4/5, 3/5}} . {{1/10000, 1}, {0, 0}} . {{3/5, 4/5}, {-4/5, 3/5}},
+            u = BlockRandom[SeedRandom[3]; Orthogonalize[RandomReal[NormalDistribution[], {128, 128}]]],
+            s3 = {{1, 0, 0}, {1, 1, 0}, {0, 1, 1}} . {{1, 2, 0}, {0, 1, 1}, {0, 0, 1}},
+            r3 = {{1, 2, 2}, {2, 1, -2}, {2, -2, 1}} / 3,
+            zeroBasePower = Wolfram`QuantumFramework`PackageScope`zeroBasePower
         },
-            {
-                Normal[(0 ^ QuantumOperator[m])["Matrix"]],
-                Max[Abs[machine - {{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}}]] < 10^-13,
-                Max[Abs[Normal[(0 ^ QuantumOperator[N[ill]])["Matrix"]] - illExact]] < 10^-8 Max[Abs[illExact]],
-                Max[Abs[vacuum - Outer[Times, u[[1]], u[[1]]]]] < 10^-12,
-                Abs[Tr[vacuum] - 1] < 10^-12,
-                vacuum === Transpose[vacuum],
-                Precision[digits40] > 35 && Max[Abs[Normal[digits40] - {{1, -1}, {-1, 1}} / 2]] < 10^-35,
-                Precision[zeroBasePower[N[{{3/2, 1/2}, {1/2, 3/2}}]]] === MachinePrecision
+        {
+            illExact = mfZero[ill],
+            vacuum = mfZero[Transpose[u] . DiagonalMatrix[N[Range[0, 127]]] . u],
+            digits40 = zeroBasePower[N[{{1, 1}, {1, 1}}, 40]],
+            conjugated = Function[{sim, spectrum}, mfZero[sim . DiagonalMatrix[spectrum] . Inverse[sim]] == sim . DiagonalMatrix[Boole[PossibleZeroQ[spectrum]]] . Inverse[sim]]
+        },
+        <|
+            "exact non-normal" -> mfZero[m] == {{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}},
+            "machine non-normal" -> Max[Abs[mfZero[N[m]] - {{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}}]] < 10^-13,
+            "ill-conditioned" -> Max[Abs[mfZero[N[ill]] - illExact]] < 10^-8 Max[Abs[illExact]],
+            "rotated number operator" -> Max[Abs[vacuum - Outer[Times, u[[1]], u[[1]]]]] < 10^-12 && Abs[Tr[vacuum] - 1] < 10^-12 && vacuum === Transpose[vacuum],
+            "40 digits" -> Precision[digits40] > 35 && Max[Abs[Normal[digits40] - {{1, -1}, {-1, 1}} / 2]] < 10^-35,
+            "machine zeros" -> Precision[zeroBasePower[N[{{3/2, 1/2}, {1/2, 3/2}}]]] === MachinePrecision,
+            "wide spectra, any basis" -> {
+                conjugated[s3, {0, 10^-12, 10^20}], conjugated[s3, {0, 1, 10^150}],
+                conjugated[r3, {0, 1, 10^150}], conjugated[r3, {0, 10^-130, 1}]
             }
-        ]
+        |>
     ],
-    {{{1, -1, -1}, {-2, 2, 2}, {2, -2, -2}}, True, True, True, True, True, True, True},
+    <|
+        "exact non-normal" -> True, "machine non-normal" -> True, "ill-conditioned" -> True,
+        "rotated number operator" -> True, "40 digits" -> True, "machine zeros" -> True,
+        "wide spectra, any basis" -> {True, True, True, True}
+    |>,
     TestID -> "MatrixFunction-zero-base-inexact-zero-eigenvalue"
 ]
 
-(* A symbolic eigenvalue t keeps 0^t, the limit wherever Re t > 0, and one that is
-   identically zero gives 1: w n for a symbolic w is diag(1, 0^w, 0^(2 w)), and the
-   closed form of 0^(w M) for M with eigenvalues 0 and 2 is the projector onto the
-   null space of M at w = 1. With w declared, the values reach the limit directly: the
-   projector at w = 1, the identity at w = 0, where b^0 = 1, and a Failure at w = -1.
-   A Jordan block needs the limits of the derivatives, Log[b]^k b^t, which vanish
-   for Re t > 0: a block at 2 beside a symbolic eigenvalue w and a zero one gives
-   diag(0, 0, 0^w, 1), the parametric block {{a, 1}, {0, a}} has the closed form
-   0^a {{1, 1}, {0, 1}}, is 0 at a = 1 and fails at a = 0, and a symbolic block at
-   zero fails without messages. A base that is identically zero but not written as
-   0 reads the same way. *)
+(* A symbolic diagonal entry t gives the limit in closed form, 1 at t == 0, 0 for
+   Re[t] > 0 and Indeterminate on the half-plane where there is no limit: w n is the
+   identity at w = 0, the vacuum projector at w = 1 and Indeterminate at w = -1. A
+   symbolic matrix that is not diagonal gives the projector from its null spaces at
+   generic values, carrying the condition that the other eigenvalues have positive
+   real part: 0^(w M) for M with eigenvalues 0 and 2 is the null-space projector for
+   every w > 0; the parametric Jordan block {{a, 1}, {0, a}} has no null space and
+   gives 0 wherever Re a > 0; a block at 2 beside a symbolic eigenvalue w and a zero
+   one gives diag(0, 0, 0, 1) at w = 3, and at w = 0, where the null space grows, the
+   closed form has no value while the declared parameter reaches diag(0, 0, 1, 1). A
+   symbolic block at zero, or a numeric eigenvalue -1 beside a symbolic one, fails
+   with its reason. With w declared, values reach the limit directly, also through a
+   further matrix function, and an indexed parameter substitutes into the closed
+   form. A base that is identically zero but not written as 0 reads the same way. *)
 VerificationTest[
-    With[{m = {{1, 1}, {1, 1}}, null = {{1, -1}, {-1, 1}} / 2},
-        With[{
-            wm = 0 ^ QuantumOperator[mfW m, "Parameters" -> {mfW}],
-            jordan = 0 ^ QuantumOperator[{{mfA, 1}, {0, mfA}}, "Parameters" -> {mfA}]
+    With[
+        {
+            m = {{1, 1}, {1, 1}},
+            null = {{1, -1}, {-1, 1}} / 2,
+            block = {{2, 1, 0, 0}, {0, 2, 0, 0}, {0, 0, mfW, 0}, {0, 0, 0, 0}},
+            limit = Function[t, Piecewise[{{1, t == 0}, {0, Re[t] > 0}}, Indeterminate]]
         },
-            {
-                Normal[(0 ^ QuantumOperator[mfW DiagonalMatrix[{0, 1, 2}]])["Matrix"]],
-                Simplify[Normal[(0 ^ QuantumOperator[mfW m])["Matrix"]] /. mfW -> 1] == null,
-                Normal[wm[1]["Matrix"]] == null,
-                Normal[wm[0]["Matrix"]] == IdentityMatrix[2],
-                FailureQ[wm[-1]],
-                Simplify[Normal[(0 ^ QuantumOperator[{{2, 1, 0, 0}, {0, 2, 0, 0}, {0, 0, mfW, 0}, {0, 0, 0, 0}}])["Matrix"]]],
-                Normal[jordan["Matrix"]],
-                Normal[jordan[1]["Matrix"]],
-                FailureQ[jordan[0]],
-                FailureQ[0 ^ QuantumOperator[{{0, mfW}, {0, 0}}]],
-                Normal[((Sin[mfTheta]^2 + Cos[mfTheta]^2 - 1) ^ QuantumOperator[DiagonalMatrix[{0, 1}]])["Matrix"]]
-            }
-        ]
+        {
+            wn = mfZero[mfW DiagonalMatrix[{0, 1, 2}]],
+            wm = 0 ^ QuantumOperator[mfW m, "Parameters" -> {mfW}],
+            jordan = 0 ^ QuantumOperator[{{mfA, 1}, {0, mfA}}, "Parameters" -> {mfA}],
+            blockClosed = mfZero[block],
+            indexed = 0 ^ QuantumOperator[mfX[1] DiagonalMatrix[{0, 1, 2}], "Parameters" -> {mfX[1]}]
+        },
+        <|
+            "closed form" -> wn === DiagonalMatrix[{1, limit[mfW], limit[2 mfW]}],
+            "values of w" -> {wn /. mfW -> 0, wn /. mfW -> 1, wn /. mfW -> -1} ===
+                {IdentityMatrix[3], DiagonalMatrix[{1, 0, 0}], DiagonalMatrix[{1, Indeterminate, Indeterminate}]},
+            "non-diagonal" -> Simplify[mfZero[mfW m], mfW > 0] == null,
+            "parametric" -> Normal[wm[1]["Matrix"]] == null && Normal[wm[0]["Matrix"]] == IdentityMatrix[2] && mfZeroBaseTag[wm[-1]] === "ZeroBasePowerNoLimit",
+            "Jordan block" -> Normal[jordan["Matrix"]] === ConstantArray[Piecewise[{{0, Re[mfA] > 0}}, Indeterminate], {2, 2}] &&
+                Normal[jordan[1]["Matrix"]] == ConstantArray[0, {2, 2}] && mfZeroBaseTag[jordan[0]] === "ZeroBasePowerDefective",
+            "block beside w" -> (blockClosed /. mfW -> 3) == DiagonalMatrix[{0, 0, 0, 1}] && ! FreeQ[blockClosed /. mfW -> 0, Indeterminate] &&
+                Normal[(0 ^ QuantumOperator[block, "Parameters" -> {mfW}])[0]["Matrix"]] == DiagonalMatrix[{0, 0, 1, 1}],
+            "symbolic failures" -> {mfZeroBaseTag[0 ^ QuantumOperator[{{0, mfW}, {0, 0}}]], mfZeroBaseTag[0 ^ QuantumOperator[{{mfW, 1}, {0, -1}}]]} ==
+                {"ZeroBasePowerDefective", "ZeroBasePowerNoLimit"},
+            "nested" -> Normal[Sqrt[wm][1]["Matrix"]] == null,
+            "indexed parameter" -> Normal[indexed[0]["Matrix"]] == IdentityMatrix[3] && FailureQ[indexed[-1]],
+            "zero base" -> Normal[((Sin[mfTheta]^2 + Cos[mfTheta]^2 - 1) ^ QuantumOperator[DiagonalMatrix[{0, 1}]])["Matrix"]] == {{1, 0}, {0, 0}}
+        |>
     ],
-    {
-        {{1, 0, 0}, {0, 0^mfW, 0}, {0, 0, 0^(2 mfW)}}, True, True, True, True,
-        DiagonalMatrix[{0, 0, 0^mfW, 1}], {{0^mfA, 0^mfA}, {0, 0^mfA}}, ConstantArray[0, {2, 2}], True, True,
-        {{1, 0}, {0, 0}}
-    },
+    <|
+        "closed form" -> True, "values of w" -> True, "non-diagonal" -> True, "parametric" -> True, "Jordan block" -> True,
+        "block beside w" -> True, "symbolic failures" -> True, "nested" -> True, "indexed parameter" -> True, "zero base" -> True
+    |>,
     TestID -> "MatrixFunction-zero-base-symbolic"
 ]
 

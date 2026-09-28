@@ -441,22 +441,18 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
    lazy container binds all its parameters in one whole-array evaluation, where
    an element-wise map would call the underlying function once per amplitude. *)
 
-(* Values that make an amplitude Indeterminate (a closed form dividing by a
-   difference of eigenvalues that the values make vanish) give a Failure rather
-   than a state with Indeterminate amplitudes. *)
+(* Values that leave an amplitude without a value give a Failure rather than a state
+   with such amplitudes: Indeterminate where a closed form divides by a difference of
+   eigenvalues that the values make vanish, or where they fall outside every case of
+   a Piecewise closed form, as in that of 0^op. *)
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
     Enclose @ With[{state = Confirm[substituteAmplitudes[qs["State"], Normal[rules]]]},
         ConfirmAssert[
-            indeterminateAmplitudesQ[qs["State"]] || ! indeterminateAmplitudesQ[state],
-            "The values make an amplitude Indeterminate."
+            valuelessEntriesQ[qs["State"]] || ! valuelessEntriesQ[state],
+            "The values leave an amplitude without a value."
         ];
         QuantumState[state, qs["Basis"][rules]]
     ]
-
-(* FreeQ does not look inside a SparseArray, so its values are read out. *)
-indeterminateAmplitudesQ[state_SparseArray] := ! FreeQ[{state["NonzeroValues"], state["Background"]}, Indeterminate]
-
-indeterminateAmplitudesQ[state_] := ! FreeQ[state, Indeterminate]
 
 (* The amplitudes of f[qo] for an operator with declared parameters, a Function of
    the parameters whose body is matrixMapAmplitudes, are substituted through

@@ -72,17 +72,16 @@ CoherentState[size_Integer: $FockSize, OptionsPattern[]] := Block[{n = 0},
 ThermalState::usage =
 "\!\(\*RowBox[{\"ThermalState\", \"[\", RowBox[{StyleBox[\"nbar\", \"TI\"]}], \"]\"}]\) gives a thermal mixed state with mean photon number \!\(\*StyleBox[\"nbar\", \"TI\"]\).\n\!\(\*RowBox[{\"ThermalState\", \"[\", RowBox[{StyleBox[\"nbar\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).";
 
-ThermalState[nbar_, size_:$FockSize] :=
-
+(* rho_nn = (1 - q) q^n with q = nbar / (1 + nbar), the diagonal built as a running
+   product, as CoherentState builds its amplitudes: the n = 0 entry is 1 - q, not
+   q^0, so nbar = 0 gives the vacuum rather than 0^0. *)
+ThermalState[nbar_, size_:$FockSize] := With[{q = nbar / (1 + nbar)},
     QuantumState[
-    
-        DiagonalMatrix[1 / (1 + nbar)
-        
-            Table[(nbar / (1 + nbar)) ^ n,
-            
-           {n, 0, size-1}
-          ]
-        ], size, "Label"->StringForm["ThermalState[``]",nbar]]["Normalize"]
+        SparseArray[Band[{1, 1}] -> NestList[q # &, 1 - q, size - 1], {size, size}],
+        size,
+        "Label" -> StringForm["ThermalState[``]", nbar]
+    ]["Normalize"]
+]
 
 
 
