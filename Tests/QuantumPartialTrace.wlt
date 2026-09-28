@@ -76,3 +76,69 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumPartialTrace - operator basis mismatch on traced wire"]
+
+(* On an operator whose traced wire carries different output and input bases, the trace is that of
+   the represented map A = F_out . C . F_in^-1, not of the stored coefficients C.  A stored identity
+   with a Pauli-X output basis and a computational input basis is the Hadamard, whose trace is 0;
+   the plain index contraction used to return Tr[stored I] = 2. *)
+VerificationTest[
+    QuantumPartialTrace[
+        QuantumOperator[IdentityMatrix[2], QuantumBasis[QuditBasis["PauliX"], QuditBasis[2]]],
+        {{1, 1}}
+    ]["Number"],
+    0,
+    TestID -> "Mismatched-basis-traces-the-map-not-the-coefficients"
+]
+
+(* The trace of a map does not depend on the basis: the same Hadamard, in three encodings, traces
+   to 0.  The first stores it in the computational basis, the second re-expresses it in the X basis. *)
+VerificationTest[
+    QuantumPartialTrace[QuantumOperator[{{1, 1}, {1, -1}}/Sqrt[2]], {{1, 1}}]["Number"] == 0 &&
+    QuantumPartialTrace[QuantumOperator[QuantumOperator[{{1, 1}, {1, -1}}/Sqrt[2]], "PauliX"], {{1, 1}}]["Number"] == 0,
+    True,
+    TestID -> "Trace-is-basis-independent-across-encodings"
+]
+
+(* A non-orthonormal traced basis reconciles through the exact inverse F_in^-1, not the adjoint.
+   Stored {{2,3},{5,7}} with output basis columns {{1,0},{1,1}} represents {{7,10},{5,7}}, trace 14. *)
+VerificationTest[
+    QuantumPartialTrace[
+        QuantumOperator[{{2, 3}, {5, 7}},
+            QuantumBasis[QuditBasis[Transpose[{{1, 1}, {0, 1}}]], QuditBasis[2]]],
+        {{1, 1}}
+    ]["Number"],
+    14,
+    TestID -> "Non-orthonormal-traced-wire-uses-inverse"
+]
+
+(* Partial trace keeping a wire: reconciling only the traced wire equals converting the whole
+   operator to the computational basis first (the ground-truth route). *)
+VerificationTest[
+    Normal @ QuantumPartialTrace[
+        QuantumOperator[Partition[Range[16], 4], QuantumBasis[QuditBasis[{"PauliX", "PauliX"}], QuditBasis[{2, 2}]]],
+        {{1, 1}}
+    ]["Computational"]["Matrix"],
+    Normal @ QuantumPartialTrace[
+        QuantumOperator[Partition[Range[16], 4], QuantumBasis[QuditBasis[{"PauliX", "PauliX"}], QuditBasis[{2, 2}]]]["Computational"],
+        {{1, 1}}
+    ]["Computational"]["Matrix"],
+    TestID -> "Local-reconciliation-matches-computational-route"
+]
+
+(* A bent pair a != b with a mismatched traced wire matches the whole-operator route too. *)
+VerificationTest[
+    Normal @ QuantumPartialTrace[
+        QuantumOperator[Partition[Range[16], 4], QuantumBasis[QuditBasis[{"PauliX", 2}], QuditBasis[{2, 2}]]],
+        {{1, 2}}
+    ]["Computational"]["Matrix"],
+    Normal @ QuantumPartialTrace[
+        QuantumOperator[Partition[Range[16], 4], QuantumBasis[QuditBasis[{"PauliX", 2}], QuditBasis[{2, 2}]]]["Computational"],
+        {{1, 2}}
+    ]["Computational"]["Matrix"],
+    TestID -> "Bent-pair-mismatched-basis-matches-computational-route"
+]
+
+EndTestSection[]
