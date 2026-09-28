@@ -563,4 +563,29 @@ VerificationTest[
     TestID -> "RenyiEntropy-PureStillComputes"
 ]
 
+
+(* ========== Non-physical (non-PSD) input warning ========== *)
+
+(* a Hermitian 2-qubit matrix with a negative eigenvalue is not a physical state; a monotone still returns
+   a number but warns, since the value is meaningless there *)
+VerificationTest[
+    QuantumEntanglementMonotone[
+        QuantumState[{{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}],
+        "Negativity"
+    ],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-NonPSD-Warns"
+]
+
+(* a physical mixed state does not warn *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[N @ werner[4/5], {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-PSD-NoWarn"
+]
+
 EndTestSection[]

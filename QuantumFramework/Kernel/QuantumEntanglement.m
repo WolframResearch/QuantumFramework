@@ -3,6 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageExport["QuantumEntangledQ"]
 PackageExport["QuantumEntanglementMonotone"]
 PackageScope["$QuantumEntanglementMonotones"]
+PackageScope["numericStateNotPSDQ"]
 
 
 
@@ -13,6 +14,11 @@ $QuantumEntanglementMonotones = {
 
 QuantumEntanglementMonotone::mixedentropy =
     "The entanglement entropy of a subsystem measures entanglement only for a pure state; the reduced von Neumann or Renyi entropy of a mixed state is not an entanglement measure. Use Negativity, LogNegativity, or Concurrence for a mixed state."
+
+QuantumEntanglementMonotone::notphysical =
+    "The input is not a positive-semidefinite density matrix; an entanglement monotone of a non-physical state may be meaningless."
+
+warnUnphysicalMonotone[qs_] := If[numericStateNotPSDQ[qs], Message[QuantumEntanglementMonotone::notphysical]]
 
 (* The Chop-ed monotone as a number, or $Failed when it is not numeric (symbolic or undefined). The
    self-contained Enclose keeps the monotone's own Confirm from escaping, so several criteria can be read
@@ -54,7 +60,12 @@ QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method : _Strin
 
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition : Except[_String] : Automatic] :=
+(* Default monotone is the concurrence. A method reaches this head either as a bare string in the second
+   slot (the optional biPartition then defaults) or as the {"RenyiEntropy", alpha} list; both are excluded
+   here so a method spec is never mistaken for a bipartition, which is always Automatic, an integer, or a
+   list of qudit indices, never a method name. *)
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ,
+    biPartition : Except[_String | {"RenyiEntanglementEntropy" | "RenyiEntropy", _}] : Automatic] :=
     QuantumEntanglementMonotone[qs, biPartition, "Concurrence"]
 
 
@@ -105,28 +116,35 @@ ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
 
 Concurrence[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Norm @ ConcurrenceVector[qs, biPartition]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "ConcurrenceVector"] := ConcurrenceVector[qs, biPartition]
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "ConcurrenceVector"] :=
+    (warnUnphysicalMonotone[qs]; ConcurrenceVector[qs, biPartition])
 
 (* The concurrence depends only on the state's direction, not its overall scale: the bipartition is
    normalized before the reduced purity is read, so an input with trace or vector-norm != 1 gives the
    same value as its normalized form. Every monotone in this file shares that contract (the mixed route
    normalizes inside ConcurrenceVector). Without it the reduced purity picks up the scale, and the
    Max[0, ...] clamp on the now-shifted 2 (1 - Purity) silently returns 0 for a scaled pure state. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] := (
+    warnUnphysicalMonotone[qs];
     If[ qs["VectorQ"],
         With[{val = 2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition]["Normalized"], {1}] ^ 2)["Norm"])},
             Sqrt[If[NumericQ[val], Max[0, Re[val]], val]]
         ],
         Concurrence[qs, biPartition]
     ]
+)
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] := (
+    warnUnphysicalMonotone[qs];
     Enclose[(ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"] - 1) / 2]
+)
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] := (
+    warnUnphysicalMonotone[qs];
     Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
+)
 
 
 (* Entanglement entropy is the von Neumann entropy of a reduced state, an entanglement measure only for
@@ -136,6 +154,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := Enclose @ With[{
     bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
 },
+    warnUnphysicalMonotone[qs];
     Which[
         bp["VectorQ"],
             Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
@@ -155,6 +174,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
     Enclose @ With[{
         bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
     },
+        warnUnphysicalMonotone[qs];
         If[ bp["VectorQ"] || TrueQ[bp["PureStateQ"]],
             With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[QuantumPartialTrace[bp, {1}]["DensityMatrix"], alpha]]},
                 If[NumericQ[val], Re[val], val]
@@ -165,6 +185,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] :=
     With[{bqs = qs["Bipartition", biPartition]["Normalized"]},
+        warnUnphysicalMonotone[qs];
         Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2] - 1
     ]
 
@@ -188,11 +209,11 @@ QuantumDiscord[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : 
 	MutualInformationI[rho, biPartition] - MutualInformationJ[rho, qm, biPartition]
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "MutualInformationI"] :=
-    MutualInformationI[qs, biPartition]
+    (warnUnphysicalMonotone[qs]; MutualInformationI[qs, biPartition])
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "MutualInformationJ"] :=
-    MutualInformationJ[qs, qm, biPartition]
+    (warnUnphysicalMonotone[qs]; MutualInformationJ[qs, qm, biPartition])
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "Discord"] :=
-    QuantumDiscord[qs, qm, biPartition]
+    (warnUnphysicalMonotone[qs]; QuantumDiscord[qs, qm, biPartition])
 

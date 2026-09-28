@@ -380,4 +380,26 @@ VerificationTest[
 ]
 
 
+(* ========== Non-physical (non-PSD) input warning ========== *)
+
+(* a Hermitian matrix with a negative eigenvalue is not a physical state; the distance still computes but
+   warns, since e.g. the fidelity self-distance goes negative *)
+VerificationTest[
+    QuantumDistance[QuantumState[{{0.5, 0.6}, {0.6, 0.5}}], QuantumState[{{0.5, 0.6}, {0.6, 0.5}}], "Fidelity"],
+    _ ? NumericQ,
+    {QuantumDistance::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Distance-NonPSD-Warns"
+]
+
+(* a genuine physical state does not warn *)
+VerificationTest[
+    QuantumDistance[qs0, qsMixed, "Fidelity"],
+    _ ? NumericQ,
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Distance-PSD-NoWarn"
+]
+
+
 EndTestSection[]

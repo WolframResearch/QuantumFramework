@@ -4,16 +4,39 @@ PackageExport["QuantumDistance"]
 PackageExport["QuantumSimilarity"]
 
 PackageScope["$QuantumDistances"]
+PackageScope["numericStateNotPSDQ"]
 
 
 
 $QuantumDistances = {"Fidelity", "RelativeEntropy", "RelativePurity", "Trace", "Bures", "BuresAngle", "HilbertSchmidt", "Bloch"}
 
 
+(* A physical density matrix is positive semidefinite; a measure of a non-physical input (for instance a
+   Hermitian matrix with a negative eigenvalue) can return a meaningless value, such as a negative
+   self-distance. This flags a numeric matrix state whose least eigenvalue is negative beyond rounding.
+   A vector state is pure, hence physical, and a symbolic state is left alone. Shared with the entanglement
+   monotones. *)
+numericStateNotPSDQ[qs_ ? QuantumStateQ] := ! qs["VectorQ"] && Enclose[
+    With[{dm = N @ Normal @ qs["DensityMatrix"]},
+        MatrixQ[dm, NumericQ] && Min[Re @ Eigenvalues[dm]] < -1.*^-8
+    ],
+    False &
+]
+numericStateNotPSDQ[_] := False
+
+QuantumDistance::notphysical =
+    "An input is not a positive-semidefinite density matrix; a distance or similarity involving a non-physical state may be meaningless."
+
+warnUnphysicalDistance[qs1_, qs2_] :=
+    If[numericStateNotPSDQ[qs1] || numericStateNotPSDQ[qs2], Message[QuantumDistance::notphysical]]
+
+
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] :=
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] := (
+    warnUnphysicalDistance[qs1, qs2];
     1 - Re[Tr[MatrixPower[qs1["Computational"]["DensityMatrix"] . qs2["Computational"]["DensityMatrix"], 1 / 2]]]
+)
 
 (* Umegaki relative entropy, S(s||t) = Tr[s log s] - Tr[s log t], where the
    cross term is taken as Sum_j <t_j|s|t_j> log q_j over the eigenbasis of t
@@ -34,6 +57,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /
         positive = ! TrueQ[Re[#] <= 0] &,
         vals, vecs
     },
+        warnUnphysicalDistance[qs1, qs2];
         {vals, vecs} = eigensystem[Normal@qs2["Computational"]["DensityMatrix"],
             "Normalize" -> True, "Orthogonalize" -> True];
         Quantity[
@@ -52,6 +76,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /;
     s = qs1["Computational"]["DensityMatrix"],
     t = qs2["Computational"]["DensityMatrix"]
 },
+    warnUnphysicalDistance[qs1, qs2];
     1 - Chop[Tr[s . t]]
 ]
 
@@ -59,6 +84,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /;
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] /; qs1["Dimension"] == qs2["Dimension"] := With[{
     m = qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"]
 },
+    warnUnphysicalDistance[qs1, qs2];
     Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2
 ]
 
@@ -68,11 +94,15 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bures"] /; qs1["Dim
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "BuresAngle"] /; qs1["Dimension"] == qs2["Dimension"]  :=
     Re @ ArcCos[1 - QuantumDistance[qs1, qs2, "Fidelity"]]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "HilbertSchmidt"] /; qs1["Dimension"] == qs2["Dimension"] :=
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "HilbertSchmidt"] /; qs1["Dimension"] == qs2["Dimension"] := (
+    warnUnphysicalDistance[qs1, qs2];
     Norm[qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"], "Frobenius"]
+)
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dimension"] == qs2["Dimension"] :=
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dimension"] == qs2["Dimension"] := (
+    warnUnphysicalDistance[qs1, qs2];
     Re @ EuclideanDistance[qs1["BlochCartesianCoordinates"], qs2["BlochCartesianCoordinates"]] / 2
+)
 
 
 QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] :=
