@@ -199,3 +199,69 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumChannel - single Kraus operator"]
+
+(* A one-element Kraus list is the deterministic channel rho -> M rho M^dagger.
+   The general list path stacked the operators against an environment qudit of
+   dimension Length[ops], which for one operator is 1: it collapsed and left the
+   lone output wire on the non-positive environment label, so quantumChannelQ
+   rejected the object.  "ValidQ" guards application and every property downvalue,
+   so the channel could neither be applied to a state nor answer "TracePreservingQ".
+   The one-operator case now routes to the single-operator constructor. *)
+
+VerificationTest[
+    {
+        QuantumChannel[{IdentityMatrix[2]}]["ValidQ"],
+        QuantumChannel[{PauliMatrix[1]}]["ValidQ"],
+        QuantumChannel[{QuantumOperator["X"]}]["ValidQ"]
+    },
+    {True, True, True},
+    TestID -> "Channel-single-Kraus-ValidQ"
+]
+
+(* The identity Kraus is the identity channel: |0><0| stays |0><0|. *)
+VerificationTest[
+    Normal @ QuantumChannel[{IdentityMatrix[2]}][QuantumState["0"]]["DensityMatrix"],
+    {{1, 0}, {0, 0}},
+    TestID -> "Channel-single-Kraus-identity-applies"
+]
+
+(* A single X Kraus, matrix or named operator, flips |0> to |1>. *)
+VerificationTest[
+    {
+        Normal @ QuantumChannel[{PauliMatrix[1]}][QuantumState["0"]]["DensityMatrix"],
+        Normal @ QuantumChannel[{QuantumOperator["X"]}][QuantumState["0"]]["DensityMatrix"]
+    },
+    {{{0, 0}, {0, 1}}, {{0, 0}, {0, 1}}},
+    TestID -> "Channel-single-Kraus-X-applies"
+]
+
+(* M^dagger M = I makes the one-Kraus channel trace preserving. *)
+VerificationTest[
+    QuantumChannel[{IdentityMatrix[2]}]["TracePreservingQ"],
+    True,
+    TestID -> "Channel-single-Kraus-TracePreserving"
+]
+
+(* Validity is structural, not a CPTP check: a non-isometric single Kraus still
+   builds a valid, applicable object, but it is not trace preserving. *)
+VerificationTest[
+    {
+        QuantumChannel[{2 IdentityMatrix[2]}]["ValidQ"],
+        QuantumChannel[{2 IdentityMatrix[2]}]["TracePreservingQ"]
+    },
+    {True, False},
+    TestID -> "Channel-single-Kraus-nonTracePreserving"
+]
+
+(* The single-element list matches the single-operator constructor bit for bit. *)
+VerificationTest[
+    Normal @ QuantumChannel[{QuantumOperator["X"]}]["QuantumOperator"]["Matrix"] ===
+        Normal @ QuantumChannel[QuantumOperator["X"]]["QuantumOperator"]["Matrix"],
+    True,
+    TestID -> "Channel-single-Kraus-matches-single-operator"
+]
+
+EndTestSection[]
