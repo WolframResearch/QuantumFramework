@@ -779,4 +779,35 @@ VerificationTest[
     TestID -> "MatrixFunction-operator-base-power"
 ]
 
+(* A zero base is 0^t on the spectrum, the value MatrixFunction[0^# &, m] gives on an
+   exact matrix: the zero matrix when every eigenvalue has positive real part
+   (diagonal, non-diagonal, complex, machine, and on the lazy parametric route),
+   and a Failure where 0^t is undefined at an eigenvalue (0^0, 0^-1) or has no
+   derivative a Jordan block needs. A nonzero base is unchanged, 2^M = diag(2, 4). *)
+VerificationTest[
+    With[{m = {{3/2, 1/2}, {1/2, 3/2}}},
+        {
+            Normal[(0 ^ QuantumOperator[DiagonalMatrix[{1, 2}]])["Matrix"]],
+            Normal[(0 ^ QuantumOperator[m])["Matrix"]] == MatrixFunction[0^# &, m],
+            Normal[(0 ^ QuantumOperator[DiagonalMatrix[{1 + I, 2}]])["Matrix"]],
+            Max[Abs[Normal[(0. ^ QuantumOperator[N[m]])["Matrix"]]]] == 0,
+            Normal[(0 ^ QuantumOperator[mfT DiagonalMatrix[{1, 2}], "Parameters" -> {mfT}])[1/2]["Matrix"]],
+            Normal[(2 ^ QuantumOperator[DiagonalMatrix[{1, 2}]])["Matrix"]]
+        }
+    ],
+    {ConstantArray[0, {2, 2}], True, ConstantArray[0, {2, 2}], True, ConstantArray[0, {2, 2}], {{2, 0}, {0, 4}}},
+    TestID -> "MatrixFunction-zero-base-positive-spectrum"
+]
+
+VerificationTest[
+    Head /@ {
+        0 ^ QuantumOperator[DiagonalMatrix[{0, 1}]],
+        0 ^ QuantumOperator[DiagonalMatrix[{1, -1}]],
+        0 ^ QuantumOperator[{{1, 1}, {0, 1}}]
+    },
+    {Failure, Failure, Failure},
+    {Power::indet, Power::infy, Infinity::indet},
+    TestID -> "MatrixFunction-zero-base-undefined-fails"
+]
+
 EndTestSection[]

@@ -743,16 +743,16 @@ VerificationTest[
     TestID -> "Power-unit-base-identity"
 ]
 
-(* CHARACTERIZATION (contract boundary): a zero base and a non-square exponent
-   keep the generic reading, which is matrix-first: it computes op^base where
-   the user wrote base^op, so 0^Z is the identity, op to the power zero. A
-   square exponent takes the scalar-base reading whatever frames it carries,
-   so 2^Z is the exponential of the stored matrix, diag(2, 1/2), under any
-   frame pair. *)
+(* A zero base is 0^t on the spectrum, as MatrixFunction[0^# &, m] reads it: Z has
+   the eigenvalue -1, where 0^-1 is infinite, so 0^Z fails rather than returning
+   Z^0 = 1. A non-square exponent keeps the generic reading. A square exponent
+   takes the scalar-base reading whatever frames it carries, so 2^Z is the
+   exponential of the stored matrix, diag(2, 1/2), under any frame pair. *)
 VerificationTest[
-    Normal[(0^QuantumOperator["Z"])["Matrix"]],
-    {{1, 0}, {0, 1}},
-    TestID -> "Power-zero-base-generic-reading"
+    Head[0^QuantumOperator["Z"]],
+    Failure,
+    {Power::infy},
+    TestID -> "Power-zero-base-spectral-reading"
 ]
 
 VerificationTest[

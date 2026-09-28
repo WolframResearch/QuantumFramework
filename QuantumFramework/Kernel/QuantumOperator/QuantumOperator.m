@@ -560,12 +560,14 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
     opts
 ]
 
-(* A scalar base with a square-operator exponent is the matrix exponential of
-   the stored matrix, base^op = MatrixExp[Log[base] op], the same stored-basis
-   reading as MatrixExp[op]; the general rule below reads Power arguments
-   matrix-first (MatrixPower) and would compute op^base. The base must be a
-   nonzero scalar (zero keeps the generic reading, its Log is singular), never
-   an array container or a quantum object. *)
+(* A scalar base with a square-operator exponent is the matrix function of t -> base^t,
+   the value MatrixFunction[base^# &, m] gives. For a nonzero base it is the matrix
+   exponential of the stored matrix, base^op = MatrixExp[Log[base] op], the same
+   stored-basis reading as MatrixExp[op], which stays regular at parameter values
+   where eigenvalues collide. A zero base has no logarithm, so t -> 0^t is applied
+   on the spectrum instead (below). The general rule further down reads Power
+   arguments matrix-first (MatrixPower) and would compute op^base. The base is
+   never an array container or a quantum object. *)
 scalarPowerBaseQ[base_] :=
     ! TrueQ[PossibleZeroQ[base]] &&
     FreeQ[base,
@@ -576,6 +578,19 @@ scalarPowerBaseQ[base_] :=
 
 QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
     matrixMapOperator[MatrixExp[Log[base] #] &, qo, Power[base, #] &]
+
+(* 0^op is 0^t on the spectrum: the zero matrix when every eigenvalue has positive
+   real part and none needs a derivative, and a Failure where 0^t is undefined (a
+   zero eigenvalue, since 0^0 is Indeterminate, or a negative or imaginary one) or
+   not differentiable (a Jordan block), as MatrixFunction[0^# &, m] gives no result
+   there. The vacuum projector |0><0| of a number operator n is the limit of b^n as
+   b -> 0, not 0^n. *)
+zeroBaseQ[base_] := NumericQ[base] && TrueQ[PossibleZeroQ[base]]
+
+zeroBasePower[mat_] := matrixFunction[0^# &, mat, {}, {}]
+
+QuantumOperator /: Power[base_ ? zeroBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
+    matrixMapOperator[zeroBasePower, qo, Power[base, #] &]
 
 (* The generic NumericFunction rule below would match Exp[qo] directly with f = Exp,
    so the built-in rewrite of Exp into Power[E, ...] never runs on an operator
