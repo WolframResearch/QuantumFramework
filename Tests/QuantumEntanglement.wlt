@@ -386,4 +386,181 @@ VerificationTest[
  Simplify[ent[psiUneven] - (2 - 3 Log2[3]/4)], 0,
  TestID -> "EntanglementEntropy-ExactUnequalWeights"]
 
+
+(* ========== Normalization contract: every monotone reads the direction, not the scale ==========
+   Entanglement is a property of the ray, so an input whose trace (mixed) or vector norm (pure) is not
+   1 must give the same value as its normalized form. The concurrence path read 0 on a scaled pure state
+   until its bipartition was normalized like the sibling monotones already were; these guard the shared
+   contract. *)
+
+ubell = QuantumState[2 bell["StateVector"]];   (* unnormalized Bell, vector norm 2 *)
+
+(* pure: the reduced-purity route clamps a scaled 2 (1 - Purity) to 0 without normalization *)
+VerificationTest[
+    QuantumEntanglementMonotone[ubell, "Concurrence"],
+    1,
+    TestID -> "Concurrence-UnnormalizedPureScaleInvariant"
+]
+
+VerificationTest[
+    QuantumEntanglementMonotone[ubell, "ConcurrenceVector"],
+    QuantumEntanglementMonotone[bell, "ConcurrenceVector"],
+    TestID -> "ConcurrenceVector-ScaleInvariant"
+]
+
+(* mixed: a Werner(4/5) scaled by 3 (trace 3) reads the same as the normalized state, and every mixed-state
+   monotone in the family agrees on the scaled vs normalized input *)
+VerificationTest[
+    With[{w = QuantumState[N @ werner[4/5], {2, 2}], wu = QuantumState[3 N @ werner[4/5], {2, 2}]},
+        Chop[
+            Function[m, QuantumEntanglementMonotone[wu, m] - QuantumEntanglementMonotone[w, m]] /@
+                {"Concurrence", "Negativity", "LogNegativity", "Realignment"}
+        ]
+    ],
+    {0, 0, 0, 0},
+    TestID -> "Monotones-ScaleInvariantAcrossFamily"
+]
+
+(* entanglement entropy (pure only) reads the same for the scaled and normalized pure state *)
+VerificationTest[
+    QuantityMagnitude @ QuantumEntanglementMonotone[ubell, "EntanglementEntropy"],
+    1,
+    TestID -> "EntanglementEntropy-UnnormalizedPureScaleInvariant"
+]
+
+
+(* ========== Negativity / LogNegativity / Realignment on the Bell state (value checks) ========== *)
+
+VerificationTest[
+    QuantumEntanglementMonotone[bell, "LogNegativity"],
+    1,
+    TestID -> "LogNegativity-Bell"
+]
+
+(* CCNR realigned Bell has trace norm 2, so the criterion value is 2 - 1 = 1 *)
+VerificationTest[
+    Chop[QuantumEntanglementMonotone[bell, "Realignment"] - 1],
+    0,
+    TestID -> "Realignment-Bell"
+]
+
+
+(* ========== Separability criteria: PPT (negativity) and CCNR (realignment) are complementary ==========
+   Each QuantumEntanglementMonotone-backed criterion is one-directional: a positive value certifies
+   entanglement, a non-positive one does not certify separability. For 2x2 and 2x3 the negativity/PPT
+   value is exact (necessary and sufficient), while realignment/CCNR is only sufficient; in higher
+   dimensions realignment catches positive-partial-transpose (bound) entangled states that negativity
+   misses. Neither criterion dominates the other. These fix the method-explicit facts; the choice of
+   the QuantumEntangledQ default over them is a separate, deliberate decision. *)
+
+(* A PSD two-qubit entangled state (negativity > 0, exact here) that CCNR fails to flag: a rank-deficient
+   real state with 0.5% maximally-mixed noise sits below the realignment threshold while still entangled. *)
+ccnrMissRho = With[{
+    r0 = {{46/1000, 33/1000, -166/1000, -22/1000}, {33/1000, 30/1000, -117/1000, -59/1000},
+          {-166/1000, -117/1000, 604/1000, 56/1000}, {-22/1000, -59/1000, 56/1000, 320/1000}}
+}, N[(1 - 1/200) r0 + (1/200) IdentityMatrix[4] / 4]];
+
+VerificationTest[
+    {
+        Min @ Re @ Eigenvalues @ ccnrMissRho >= 0,                                          (* genuinely PSD *)
+        QuantumEntanglementMonotone[QuantumState[ccnrMissRho, {2, 2}], "Negativity"] > 0,   (* entangled *)
+        QuantumEntanglementMonotone[QuantumState[ccnrMissRho, {2, 2}], "Realignment"] <= 0  (* CCNR blind *)
+    },
+    {True, True, True},
+    TestID -> "Criterion-CCNR-MissesWhatPPTCatches-2qubit"
+]
+
+VerificationTest[
+    {
+        QuantumEntangledQ[QuantumState[ccnrMissRho, {2, 2}], Automatic, "Negativity"],
+        QuantumEntangledQ[QuantumState[ccnrMissRho, {2, 2}], Automatic, "Realignment"]
+    },
+    {True, False},
+    TestID -> "Criterion-EntangledQ-NegativityCatches-RealignmentMisses"
+]
+
+(* The reverse blind spot: the Horodecki 3x3 bound entangled state (P. Horodecki, Phys. Lett. A 232, 333
+   (1997)) is PPT, so negativity is 0 and misses it, while realignment/CCNR detects it. *)
+horodeckiRho = With[{a = 1/2}, (1/(8 a + 1)) {
+    {a, 0, 0, 0, a, 0, 0, 0, a}, {0, a, 0, 0, 0, 0, 0, 0, 0}, {0, 0, a, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, a, 0, 0, 0, 0, 0}, {a, 0, 0, 0, a, 0, 0, 0, a}, {0, 0, 0, 0, 0, a, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, (1 + a)/2, 0, Sqrt[1 - a^2]/2}, {0, 0, 0, 0, 0, 0, 0, a, 0},
+    {a, 0, 0, 0, a, 0, Sqrt[1 - a^2]/2, 0, (1 + a)/2}
+}];
+
+VerificationTest[
+    {
+        Chop[QuantumEntanglementMonotone[QuantumState[N @ horodeckiRho, {3, 3}], "Negativity"]],
+        QuantumEntanglementMonotone[QuantumState[N @ horodeckiRho, {3, 3}], "Realignment"] > 0
+    },
+    {0, True},
+    TestID -> "Criterion-Horodecki-PPTMisses-CCNRCatches"
+]
+
+VerificationTest[
+    {
+        QuantumEntangledQ[QuantumState[N @ horodeckiRho, {3, 3}], Automatic, "Negativity"],
+        QuantumEntangledQ[QuantumState[N @ horodeckiRho, {3, 3}], Automatic, "Realignment"]
+    },
+    {False, True},
+    TestID -> "Criterion-EntangledQ-Horodecki-RealignmentCatches-NegativityMisses"
+]
+
+(* The dimension-aware default certifies both examples: negativity for the 2-qubit state (exact there),
+   the negativity-or-realignment union for the Horodecki 3x3 bound entangled state. *)
+VerificationTest[
+    {
+        QuantumEntangledQ[QuantumState[ccnrMissRho, {2, 2}]],
+        QuantumEntangledQ[QuantumState[N @ horodeckiRho, {3, 3}]]
+    },
+    {True, True},
+    TestID -> "EntangledQ-DimensionAwareDefault-CertifiesBoth"
+]
+
+(* a separable state stays False under the default in both dimensions *)
+VerificationTest[
+    {
+        QuantumEntangledQ[sep],
+        QuantumEntangledQ[QuantumState[N[IdentityMatrix[9] / 9], {3, 3}]]
+    },
+    {False, False},
+    TestID -> "EntangledQ-DimensionAwareDefault-SeparableFalse"
+]
+
+
+(* ========== EntanglementEntropy is guarded to pure inputs ========== *)
+
+(* a genuinely mixed state is not an entanglement-entropy case: it returns Indeterminate with a message,
+   since the reduced von Neumann entropy there counts classical ignorance, not entanglement *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[N[IdentityMatrix[4] / 4], {2, 2}], "EntanglementEntropy"],
+    Indeterminate,
+    {QuantumEntanglementMonotone::mixedentropy},
+    TestID -> "EntanglementEntropy-MixedGuarded"
+]
+
+(* a pure state supplied as a density matrix is still computed (the reduced-state branch), no message *)
+VerificationTest[
+    QuantityMagnitude @ QuantumEntanglementMonotone[bellDM, "EntanglementEntropy"],
+    1,
+    TestID -> "EntanglementEntropy-PureDensityMatrixStillComputes"
+]
+
+(* RenyiEntropy shares the pure-only semantics, so it is guarded the same way *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[N[IdentityMatrix[4] / 4], {2, 2}], "RenyiEntropy"],
+    Indeterminate,
+    {QuantumEntanglementMonotone::mixedentropy},
+    TestID -> "RenyiEntropy-MixedGuarded"
+]
+
+(* a pure state still computes: for equal Schmidt weights every Renyi order equals the von Neumann value,
+   so the alpha = 1/2 Renyi entanglement entropy of the Bell state is 1 bit, from both the vector and the
+   density-matrix form *)
+VerificationTest[
+    Chop[{QuantumEntanglementMonotone[bell, "RenyiEntropy"], QuantumEntanglementMonotone[bellDM, "RenyiEntropy"]} - 1],
+    {0, 0},
+    TestID -> "RenyiEntropy-PureStillComputes"
+]
+
 EndTestSection[]

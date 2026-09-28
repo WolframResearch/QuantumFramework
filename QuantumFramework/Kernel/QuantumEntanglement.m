@@ -11,8 +11,46 @@ $QuantumEntanglementMonotones = {
     "MutualInformationI", "MutualInformationJ", "Discord"
 }
 
-QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method_String : "Realignment"] /; MemberQ[$QuantumEntanglementMonotones, method] :=
-    Enclose[Chop[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ]] > 0, Indeterminate &]
+QuantumEntanglementMonotone::mixedentropy =
+    "The entanglement entropy of a subsystem measures entanglement only for a pure state; the reduced von Neumann or Renyi entropy of a mixed state is not an entanglement measure. Use Negativity, LogNegativity, or Concurrence for a mixed state."
+
+(* The Chop-ed monotone as a number, or $Failed when it is not numeric (symbolic or undefined). The
+   self-contained Enclose keeps the monotone's own Confirm from escaping, so several criteria can be read
+   and combined below without a stray Confirm. *)
+monotoneValue[qs_, biPartition_, method_] :=
+    Enclose[Chop @ ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ], $Failed &]
+
+(* A positive value certifies entanglement; a non-positive one does not certify separability in general,
+   and a value that could not be computed is Indeterminate. *)
+certifyEntangled[$Failed] := Indeterminate
+certifyEntangled[val_] := Positive[val]
+
+(* The default criterion is dimension-aware. For 2 (x) 2 and 2 (x) 3 the negativity (positive partial
+   transpose) criterion is necessary and sufficient, so there a False certifies separability. In every
+   larger bipartition no single efficiently computable criterion is complete: negativity and the
+   realignment (computable cross norm) criterion are complementary, each certifying entangled states the
+   other misses (realignment catches positive-partial-transpose bound entangled states negativity cannot),
+   so a positive value from either certifies entanglement. An explicitly named method bypasses this and
+   uses that monotone alone. *)
+QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method : _String | Automatic : Automatic] /;
+        method === Automatic || MemberQ[$QuantumEntanglementMonotones, method] :=
+    Enclose[
+        If[ method =!= Automatic,
+            certifyEntangled @ monotoneValue[qs, biPartition, method],
+            If[ MatchQ[Sort @ ConfirmMatch[qs["Bipartition", biPartition]["Dimensions"], {_Integer, _Integer}], {2, 2} | {2, 3}],
+                certifyEntangled @ monotoneValue[qs, biPartition, "Negativity"],
+                With[{neg = monotoneValue[qs, biPartition, "Negativity"], re = monotoneValue[qs, biPartition, "Realignment"]},
+                    Which[
+                        NumericQ[neg] && Positive[neg], True,
+                        NumericQ[re]  && Positive[re],  True,
+                        neg === $Failed || re === $Failed, Indeterminate,
+                        True, False
+                    ]
+                ]
+            ]
+        ],
+        Indeterminate &
+    ]
 
 
 
@@ -45,7 +83,7 @@ Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
 wootterCombination[lambda_] := Max[0, 2 Max[lambda] - Total[lambda]] (* lambda1 - Sum[rest]: largest minus the rest, order-independent (the singular values are not guaranteed sorted for symbolic input) *)
 
 ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
-	rho = qs["Bipartition", biPartition]["Operator"], component, d1, d2, y1, y2
+	rho = qs["Bipartition", biPartition]["Normalized"]["Operator"], component, d1, d2, y1, y2
 },
 	{d1, d2} = rho["OutputDimensions"];
 	y1 = Y[d1];
@@ -69,9 +107,14 @@ Concurrence[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Norm @ Concurrence
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "ConcurrenceVector"] := ConcurrenceVector[qs, biPartition]
 
+(* The concurrence depends only on the state's direction, not its overall scale: the bipartition is
+   normalized before the reduced purity is read, so an input with trace or vector-norm != 1 gives the
+   same value as its normalized form. Every monotone in this file shares that contract (the mixed route
+   normalizes inside ConcurrenceVector). Without it the reduced purity picks up the scale, and the
+   Max[0, ...] clamp on the now-shifted 2 (1 - Purity) silently returns 0 for a scaled pure state. *)
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] :=
     If[ qs["VectorQ"],
-        With[{val = 2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition], {1}] ^ 2)["Norm"])},
+        With[{val = 2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition]["Normalized"], {1}] ^ 2)["Norm"])},
             Sqrt[If[NumericQ[val], Max[0, Re[val]], val]]
         ],
         Concurrence[qs, biPartition]
@@ -86,26 +129,37 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
     Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
 
 
+(* Entanglement entropy is the von Neumann entropy of a reduced state, an entanglement measure only for
+   a pure global state. A pure state reads it through its Schmidt weights (vector) or its reduced state
+   (density-matrix form); a genuinely mixed state's reduced von Neumann entropy mixes classical ignorance
+   into the count, so it is not returned as entanglement. *)
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := Enclose @ With[{
     bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
 },
-    If[ bp["VectorQ"],
-        Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
-        QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"]
+    Which[
+        bp["VectorQ"],
+            Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
+        TrueQ[bp["PureStateQ"]],
+            QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"],
+        True,
+            Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
     ]
 ]
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
     QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
+(* The Renyi entanglement entropy is the Renyi entropy of the reduced state, an entanglement measure only
+   for a pure global state, so a genuinely mixed input is guarded exactly as EntanglementEntropy is. *)
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
-    Enclose[
-        With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
-            QuantumPartialTrace[
-                ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &],
-                {1}
-            ]["DensityMatrix"], alpha]]},
-            If[NumericQ[val], Re[val], val]
+    Enclose @ With[{
+        bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
+    },
+        If[ bp["VectorQ"] || TrueQ[bp["PureStateQ"]],
+            With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[QuantumPartialTrace[bp, {1}]["DensityMatrix"], alpha]]},
+                If[NumericQ[val], Re[val], val]
+            ],
+            Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
         ]
     ]
 
