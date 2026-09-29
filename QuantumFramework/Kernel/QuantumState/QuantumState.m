@@ -447,12 +447,21 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
    a Piecewise closed form, as in that of 0^op. *)
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
     Enclose @ With[{state = Confirm[substituteAmplitudes[qs["State"], Normal[rules]]]},
-        ConfirmAssert[
-            valuelessEntriesQ[qs["State"]] || ! valuelessEntriesQ[state],
-            "The values leave an amplitude without a value."
-        ];
+        ConfirmAssert[! newlyValuelessQ[qs["State"], state], "The values leave an amplitude without a value."];
         QuantumState[state, qs["Basis"][rules]]
     ]
+
+(* True when an amplitude that had a value before the substitution has none after it,
+   read amplitude by amplitude. Before and after it, an amplitude that has not chosen a
+   case of a Piecewise has a value, whatever its cases hold, and one without a value
+   outside any Piecewise has none. *)
+newlyValuelessQ[before_, after_] := valuelessEntriesQ[after] && If[
+    ArrayQ[before] && Dimensions[before] === Dimensions[after],
+    Or @@ MapThread[! valuelessOutsidePiecewiseQ[#1] && valuelessOutsidePiecewiseQ[#2] &, Flatten /@ Normal /@ {before, after}],
+    AnyTrue[Flatten[{Normal[after]}], valuelessOutsidePiecewiseQ]
+]
+
+valuelessOutsidePiecewiseQ[x_] := ! FreeQ[x /. HoldPattern[Piecewise[___]] :> 0, Indeterminate | Undefined | _DirectedInfinity]
 
 (* The amplitudes of f[qo] for an operator with declared parameters, a Function of
    the parameters whose body is matrixMapAmplitudes, are substituted through

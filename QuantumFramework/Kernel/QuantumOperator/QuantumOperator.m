@@ -570,7 +570,9 @@ matrixOperator[op_QuantumOperator, mat_, opts___] := QuantumOperator[
    of matrixMapOperator, where the base is read only when the values arrive;
    parameters that are not plain symbols substitute into the closed form instead. The
    general rule further down reads Power arguments matrix-first (MatrixPower) and
-   would compute op^base. The base is never an array container or a quantum object. *)
+   would compute op^base. The base is never an array container or a quantum object.
+   An inexact base is zero when it equals 0 (1.*^-400 is not), an exact number when
+   exactZeroQ finds it zero, and a symbolic one when PossibleZeroQ does. *)
 scalarPowerBaseQ[base_] :=
     FreeQ[base,
         _ ? ArrayContainerQ | _ ? QuantumFrameworkOperatorQ |
@@ -578,7 +580,8 @@ scalarPowerBaseQ[base_] :=
         _Failure | _String | _List
     ]
 
-scalarBasePower[base_ ? PossibleZeroQ, mat_] := zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
+scalarBasePower[base_ /; Which[! NumericQ[base], PossibleZeroQ[base], InexactNumberQ[base], base == 0, True, exactZeroQ[base]], mat_] :=
+    zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
 
 scalarBasePower[base_, mat_] := MatrixExp[Log[base] mat]
 

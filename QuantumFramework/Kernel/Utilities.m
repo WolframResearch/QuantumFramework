@@ -49,6 +49,7 @@ PackageScope["MatrixInverse"]
 PackageScope["matrixFunction"]
 PackageScope["zeroBasePower"]
 PackageScope["valuelessEntriesQ"]
+PackageScope["exactZeroQ"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
@@ -333,7 +334,7 @@ scalarMatrixFunction[f_, mat_, ___] /; SquareMatrixQ[mat] && DiagonalMatrixQ[mat
     {eigenvalues = Normal[Diagonal[mat]]},
     SparseArray[
         Band[{1, 1}] -> Confirm[spectralValues[f,
-            If[MatrixQ[mat, NumericQ] && Precision[mat] < Infinity, roundoffEigenvalues[eigenvalues, 10 ^ -Precision[mat]], eigenvalues]
+            If[MatrixQ[mat, NumericQ] && Precision[mat] < Infinity, roundoffEigenvalues[eigenvalues, roundoff[mat]], eigenvalues]
         ]],
         Dimensions[mat]
     ]
@@ -341,16 +342,14 @@ scalarMatrixFunction[f_, mat_, ___] /; SquareMatrixQ[mat] && DiagonalMatrixQ[mat
 
 scalarMatrixFunction[f_, mat_, opts___] /; SquareMatrixQ[mat] && MatrixQ[mat, NumericQ] && Precision[mat] < Infinity :=
     With[{m = Normal[mat]},
-        inexactMatrixFunction[f, m, 10 ^ -Precision[m], roundoffTolerance[m], opts]
+        inexactMatrixFunction[f, m, roundoff[m], roundoffTolerance[m], opts]
     ]
 
 (* A derivative at numeric arguments with no numeric value, Derivative[1][Abs][1] at
    a Jordan block, means f is not differentiable where the matrix needs it; one that
    is merely unevaluated, Derivative[1][Zeta][2], has a value. *)
-scalarMatrixFunction[f_, mat_, opts___] := Enclose @ ConfirmBy[
-    ResourceFunction["ComputeMatrixFunction"][f, mat, opts],
-    ! valuelessEntriesQ[#] && FreeQ[#, (d : Derivative[__][_][__ ? NumericQ] /; ! NumericQ[N[d]])] &,
-    "The function is not finite, or not differentiable where the matrix needs it, at an eigenvalue."
+scalarMatrixFunction[f_, mat_, opts___] := With[{values = ResourceFunction["ComputeMatrixFunction"][f, mat, opts]},
+    If[! valuelessEntriesQ[values] && FreeQ[values, (d : Derivative[__][_][__ ? NumericQ] /; ! NumericQ[N[d]])], values, derivativeFailure]
 ]
 
 (* An entry holds Indeterminate, Undefined or an infinity somewhere other than the
@@ -370,7 +369,11 @@ roundoffEigenvalues[eigenvalues_, eps_] := Chop[eigenvalues, 10 eps Max[Abs[eige
 
 (* The roundoff a decomposition of an n x n matrix at precision p leaves, relative to
    its norm, with room to spare: 100 n 10^-p. *)
-roundoffTolerance[mat_] := 100 Length[mat] 10 ^ -Precision[mat]
+roundoffTolerance[mat_] := 100 Length[mat] roundoff[mat]
+
+(* The unit roundoff 10^-p of a matrix of precision p, computed at 20 digits so that it
+   does not underflow for p above 307. *)
+roundoff[mat_] := 10 ^ -SetPrecision[Precision[mat], 20]
 
 (* HermitianMatrixQ's Tolerance zeroes small entries rather than bounding m - m^†, so
    the test is written out. *)
@@ -422,8 +425,14 @@ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
         ]
     ]
 
-nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
-    Enclose[Confirm[spectralValues[f, eigenvalues]]; MatrixFunction[f, mat, opts]]
+nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] := Enclose[
+    Confirm[spectralValues[f, eigenvalues]];
+    Replace[MatrixFunction[f, mat, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
+]
+
+derivativeFailure = Failure["NonFiniteMatrixFunction", <|
+    "MessageTemplate" -> "The function has no finite value, or no derivative where a Jordan block of the matrix needs one, at an eigenvalue."
+|>]
 
 (* 0^m is the limit of b^m = MatrixExp[Log[b] m] as b -> 0. On an eigenvalue t the
    limit of b^t is 1 at t = 0 and 0 for Re t > 0, and there is none for any other t.
@@ -434,97 +443,388 @@ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
    operator it is the vacuum projector, for H - E0 the projector onto the ground
    space, and for minus a Lindblad generator L the limit of exp(t L) as t -> Infinity,
    the projector onto its steady states. The kind of matrix picks the computation. *)
-zeroBasePower[mat_ ? SquareMatrixQ] /; ! MatrixQ[mat, NumericQ] := symbolicZeroBasePower[mat]
+zeroBasePower[mat_ ? SquareMatrixQ] /; DiagonalMatrixQ[mat] && ! inexactMatrixQ[mat] := diagonalZeroBasePower[mat]
 
-zeroBasePower[mat_ ? SquareMatrixQ] /; MatrixQ[mat, NumericQ] && DiagonalMatrixQ[mat] := diagonalZeroBasePower[mat]
+zeroBasePower[mat_ ? SquareMatrixQ] /; DiagonalMatrixQ[mat] && inexactMatrixQ[mat] := inexactDiagonalZeroBasePower[mat]
 
-zeroBasePower[mat_ ? SquareMatrixQ] /; MatrixQ[mat, NumericQ] && ! DiagonalMatrixQ[mat] && Precision[mat] < Infinity :=
-    inexactZeroBasePower[Normal[mat]]
+zeroBasePower[mat_ ? SquareMatrixQ] /; ! DiagonalMatrixQ[mat] && ! MatrixQ[mat, NumericQ] := symbolicZeroBasePower[zeroesWritten[Normal[mat]]]
 
-zeroBasePower[mat_ ? SquareMatrixQ] /; MatrixQ[mat, NumericQ] && ! DiagonalMatrixQ[mat] && Precision[mat] === Infinity :=
-    If[HermitianMatrixQ[mat], exactHermitianZeroBasePower[Normal[mat]], exactZeroBasePower[Normal[mat]]]
+zeroBasePower[mat_ ? SquareMatrixQ] /; ! DiagonalMatrixQ[mat] && inexactMatrixQ[mat] := inexactZeroBasePower[Normal[mat]]
 
-(* Each diagonal entry is an eigenvalue with its own null vector, so the limit is
-   decided on the whole diagonal at once. An inexact diagonal is held to the same
-   tolerance as a dense matrix, so that 0^m commutes with a change of basis. *)
+zeroBasePower[mat_ ? SquareMatrixQ] /; ! DiagonalMatrixQ[mat] && MatrixQ[mat, NumericQ] && ! inexactMatrixQ[mat] :=
+    With[{m = zeroesWritten[Normal[mat]]}, Which[
+        DiagonalMatrixQ[m], diagonalZeroBasePower[m],
+        exactHermitianQ[m] && FreeQ[settledValue[#, Identity] & /@ Select[DeleteDuplicates[Flatten[m]], ! gaussianRationalQ[#] &], Missing["Overflow"]], exactHermitianZeroBasePower[m],
+        True, exactZeroBasePower[m]
+    ]]
+
+inexactMatrixQ[mat_] := MatrixQ[mat, NumericQ] && Precision[mat] < Infinity
+
+(* m with every numeric part that is zero but not written as 0 written as 0, decided as
+   exactZeroQ decides, so that a number the convention there reads as zero, as
+   Exp[-10^8], is zero throughout what follows; each distinct part is decided once, and
+   a part that is zero is written as 0 whole. *)
+zeroesWritten[m_] := With[
+    {zero = AssociationMap[exactZeroQ, DeleteDuplicates[Cases[m, x_ /; ! AtomQ[x] && NumericQ[x], {2, Infinity}]]]},
+    m /. x_ /; TrueQ[zero[x]] :> 0
+]
+
+(* An exact m is Hermitian when m minus its conjugate transpose is zero entry by entry,
+   decided exactly, as the real part of m_ij - m_ji and the imaginary part of
+   m_ij + m_ji for i <= j. (HermitianMatrixQ compares the entries of a SparseArray
+   numerically, and calls a matrix with long algebraic entries Hermitian that is
+   not; Conjugate decides realness numerically, and hits the precision limit on an
+   entry that holds a zero on a branch cut.) *)
+exactHermitianQ[m_ ? (MatrixQ[#, gaussianRationalQ] &)] := m === ConjugateTranspose[m]
+
+exactHermitianQ[m_] := AllTrue[
+    Flatten[{UpperTriangularize[m - Transpose[m]], UpperTriangularize[I (m + Transpose[m])]}],
+    realPartSign[#] === 0 &
+]
+
+(* A diagonal m that is exact or symbolic: each entry t is an eigenvalue with its own
+   null vector. The limit of b^t is 1 where t is zero and 0 where t is a number of
+   positive real part, both decided exactly however t is written, and for a symbolic t
+   it is the closed form Piecewise[{{1, t == 0}, {0, Re[t] > 0}}, Indeterminate],
+   Indeterminate on the half-plane where there is no limit. (Not Undefined: Piecewise
+   turns an Undefined default into a ConditionalExpression, and Normal of a SparseArray
+   drops that.) A numeric entry with no limit is the Failure. *)
 diagonalZeroBasePower[mat_] := With[
+    {limits = zeroBaseLimit /@ Normal[Diagonal[mat]]},
+    Replace[FirstCase[limits, Missing["NoLimit", t_] :> t], {
+        _Missing :> SparseArray[Band[{1, 1}] -> limits, Dimensions[mat]],
+        t_ :> noLimitFailure[t]
+    }]
+]
+
+zeroBaseLimit[t_ ? NumericQ] := Which[exactZeroQ[t], 1, realPartSign[t] === 1, 0, True, Missing["NoLimit", t]]
+
+zeroBaseLimit[t_ ? PossibleZeroQ] := 1
+
+zeroBaseLimit[t_] := Piecewise[{{1, t == 0}, {0, Re[t] > 0}}, Indeterminate]
+
+(* An inexact diagonal is held to the tolerance of a dense inexact matrix, so that 0^m
+   commutes with a change of basis: an entry within it of zero counts as zero, and an
+   entry whose real part does not exceed it has no limit. A machine m gives machine
+   zeros and ones, and an arbitrary-precision m ones at its precision and exact zeros,
+   as N does. *)
+inexactDiagonalZeroBasePower[mat_] := With[
     {eigenvalues = Normal[Diagonal[mat]]},
-    {classes = spectrumClasses[eigenvalues, If[Precision[mat] === Infinity, None, roundoffTolerance[mat] Max[Abs[eigenvalues]]]]},
-    If[ Total[classes["NoLimit"]] > 0,
-        noLimitFailure[First[Pick[eigenvalues, classes["NoLimit"], 1]]],
-        SparseArray[Band[{1, 1}] -> atPrecisionOf[mat, classes["Zero"]], Dimensions[mat], atPrecisionOf[mat, 0]]
+    {scale = roundoffTolerance[mat] Max[Abs[eigenvalues]]},
+    {zero = UnitStep[scale - Abs[eigenvalues]]},
+    {noLimit = (1 - zero) UnitStep[scale - Re[eigenvalues]]},
+    If[ Total[noLimit] > 0,
+        noLimitFailure[First[Pick[eigenvalues, noLimit, 1]]],
+        SparseArray[Band[{1, 1}] -> N[zero, Precision[mat]], Dimensions[mat], N[0, Precision[mat]]]
     ]
-]
-
-(* 1 where an eigenvalue is zero, and 1 where it is neither zero nor of positive real
-   part: decided exactly, or to within scale for inexact eigenvalues. *)
-spectrumClasses[eigenvalues_, None] := With[{zero = Boole[PossibleZeroQ[eigenvalues]]},
-    <|"Zero" -> zero, "NoLimit" -> (1 - zero) (1 - Boole[Positive[Re[eigenvalues]]])|>
-]
-
-spectrumClasses[eigenvalues_, scale_] := With[{zero = UnitStep[scale - Abs[eigenvalues]]},
-    <|"Zero" -> zero, "NoLimit" -> (1 - zero) UnitStep[scale - Re[eigenvalues]]|>
 ]
 
 (* An exact Hermitian m: its zero eigenvalue is semisimple and the projector is the
-   orthogonal one onto its null space. The exact nullity k and the machine
-   eigenvalues decide the signs where they can, since each machine eigenvalue lies
-   within the roundoff bound of an exact one (Weyl): m has a negative eigenvalue when
-   the smallest lies below minus the bound, and none when the (k+1)-th smallest lies
-   above it. In between, PositiveSemidefiniteMatrixQ decides exactly. *)
+   orthogonal one onto its null space, from the null vectors of m and their conjugates,
+   which are the null vectors of its transpose. (Those are taken when an entry is not
+   a Gaussian rational: Conjugate decides realness numerically, and on an entry that
+   holds a zero on a branch cut hits the precision limit.) The exact nullity k and
+   numerical eigenvalues decide the signs: each eigenvalue computed at precision p from
+   the entries of m rounded to p digits lies within the roundoff bound
+   100 n 10^-p ||m|| of an exact one (Weyl), so m has a negative eigenvalue when the
+   smallest lies below minus the bound, and none when the (k+1)-th smallest lies above
+   it. That exact eigenvalue is not zero, so doubling p until one of the two holds
+   ends; p starts at machine precision, or at twice it when an entry of m is too small
+   or too large for a machine number, and after 8 doublings the route for any exact
+   matrix decides instead. *)
 exactHermitianZeroBasePower[m_] := With[
-    {x = NullSpace[m], eigenvalues = Sort[Re[Eigenvalues[N[m]]]]},
-    {k = Length[x], bound = roundoffTolerance[N[m]] Max[Abs[eigenvalues]]},
+    {x = NullSpace[m]},
+    {spectrum = NestWhile[
+        hermitianSpectrum[m, 2 #["Precision"]] &,
+        hermitianSpectrum[m, If[machineRangeQ[m], MachinePrecision, 2 MachinePrecision]],
+        undecidedSpectrumQ[#, Length[x]] &,
+        1,
+        8
+    ]},
     Which[
-        First[eigenvalues] < - bound,
-            noLimitFailure[Replace[exactEigenvalue[m, First[eigenvalues]], _Missing :> First[eigenvalues]]],
-        k < Length[m] && eigenvalues[[k + 1]] <= bound && ! PositiveSemidefiniteMatrixQ[m],
-            noLimitFailure[Missing["Undetermined"]],
-        k == 0, SparseArray[{}, Dimensions[m]],
-        True, nullSpaceProjector[Transpose[x], Conjugate[x]]
+        undecidedSpectrumQ[spectrum, Length[x]], exactZeroBasePower[m],
+        First[spectrum["Eigenvalues"]] < - spectrum["Bound"], noLimitFailure[smallestEigenvalue[m, spectrum]],
+        x === {}, SparseArray[{}, Dimensions[m]],
+        True, nullSpaceProjector[Transpose[x], If[MatrixQ[m, gaussianRationalQ], Conjugate[x], NullSpace[Transpose[m]]]]
     ]
+]
+
+(* True when every entry of m that is not 0 lies between 10^-290 and 10^290 in size, so
+   that m, its eigenvalues and their roundoff bound round to machine numbers without
+   underflow. *)
+machineRangeQ[m_] := AllTrue[
+    DeleteCases[DeleteDuplicates[Flatten[m]], 0],
+    With[{v = If[gaussianRationalQ[#], #, settledValue[#, Identity]]}, ! MissingQ[v] && 10 ^ -290 < Abs[v] < 10 ^ 290] &
+]
+
+(* The eigenvalues of the exact Hermitian m at precision p in increasing order, and the
+   bound within which each lies of an exact one. *)
+hermitianSpectrum[m_, p_] := With[
+    {mp = roundedEntries[m, p]},
+    {eigenvalues = Sort[Re[Eigenvalues[mp]]]},
+    <|"Eigenvalues" -> eigenvalues, "Bound" -> roundoffTolerance[mp] Max[Abs[eigenvalues]], "Precision" -> p|>
+]
+
+(* The entries of m, whose zeros are written as 0, rounded to p digits of its largest
+   entry. An entry that is not a Gaussian rational is first evaluated to an accuracy of
+   3 more digits than that, with as much working precision as its cancellations need,
+   so that each entry is off by rounding alone. (An accuracy goal is reached on an
+   entry that holds a zero not written as 0, such as 4/3 + (GoldenRatio -
+   (1 + Sqrt[5]) / 2), where a precision goal is not.) *)
+roundedEntries[m_, p_] := With[
+    {entries = DeleteDuplicates[Cases[m, Except[_ ? gaussianRationalQ], {2}]]},
+    {accuracy = Max[N[p], 20] + 3 - Floor[Log10[Max[Abs[Cases[m, _ ? gaussianRationalQ, {2}]], Abs[Replace[settledValue[#, Identity] & /@ entries, _Missing -> 0, {1}]], 10 ^ -3200]]]},
+    N[Replace[m, Dispatch[(# -> valueAt[#, Identity, accuracy]) & /@ entries], {2}], p]
+]
+
+undecidedSpectrumQ[spectrum_, k_] := With[
+    {eigenvalues = spectrum["Eigenvalues"], bound = spectrum["Bound"]},
+    First[eigenvalues] >= - bound && k < Length[eigenvalues] && eigenvalues[[k + 1]] <= bound
+]
+
+(* The smallest eigenvalue t of the exact Hermitian m, from its spectrum computed at 64
+   digits at least. For m of Gaussian rationals it is exact when the rational or
+   quadratic irrational r that Rationalize or RootApproximant finds within the bound of
+   t, both applied to t scaled by a power of 10 to order one, is an eigenvalue, decided
+   on f(m) for the minimal polynomial f of r, a matrix of Gaussian rationals. Otherwise
+   it is t to machine precision, or to the fewer digits the bound leaves it, and t as
+   computed when it lies within the bound of zero. *)
+smallestEigenvalue[m_, spectrum_] := With[
+    {refined = If[spectrum["Precision"] < 64, hermitianSpectrum[m, 64], spectrum]},
+    {t = First[refined["Eigenvalues"]], bound = refined["Bound"]},
+    If[ Abs[t] > bound,
+        With[{digits = SetPrecision[t, Min[Log10[Abs[t] / bound], $MachinePrecision]]},
+            If[MatrixQ[m, gaussianRationalQ], exactEigenvalueNear[m, t, bound, refined["Eigenvalues"], digits], digits]
+        ],
+        t
+    ]
+]
+
+(* The rational that Rationalize finds within the bound of t, or else the quadratic
+   irrational that RootApproximant finds from the digits of t the bound leaves, at most
+   50, both applied to t scaled by a power of 10 to order one, when it is an eigenvalue
+   of m; default otherwise. (Given the digits past the bound, RootApproximant fits a
+   quadratic to the roundoff in them and evaluates its roots past the precision
+   limit.) *)
+exactEigenvalueNear[m_, t_, bound_, eigenvalues_, default_] := With[
+    {scale = 10 ^ -Round[Log10[Abs[t]]], acceptQ = Abs[valueAt[#, Identity, 10 - Log10[bound]] - t] <= bound && eigenvalueNearQ[m, #, eigenvalues, bound] &},
+    With[{r = Rationalize[scale t, scale bound] / scale},
+        If[acceptQ[r], r, With[{q = RootApproximant[SetPrecision[scale t, Min[Log10[Abs[t] / bound], 50]], 2] / scale}, If[acceptQ[q], q, default]]]
+    ]
+]
+
+(* True when the rational or quadratic irrational r is an eigenvalue of the Hermitian m
+   of Gaussian rationals, given its eigenvalues each computed within the bound: the
+   nullity of f(m), for the minimal polynomial f of r, counts the eigenvalues equal to
+   a root of f, and it equals the number computed within the bound of one only when
+   each of those is a root. *)
+eigenvalueNearQ[m_, r_, eigenvalues_, bound_] := With[
+    {f = MinimalPolynomial[r, \[FormalX]]},
+    {c = CoefficientList[f, \[FormalX]], roots = valueAt[#, Identity, 10 - Log10[bound]] & /@ SolveValues[f == 0, \[FormalX]]},
+    Length[m] - MatrixRank[Total[MapThread[#1 #2 &, {c, NestList[m . # &, IdentityMatrix[Length[m], SparseArray], Length[c] - 1]}]]] ==
+        Count[eigenvalues, e_ /; AnyTrue[roots, Abs[e - #] <= bound &]]
 ]
 
 (* An exact m. Its core-nilpotent decomposition m = t.(c (+) n).t^-1 separates the
    nonsingular core c from the nilpotent part n on the generalized null space, so the
-   zero eigenvalue is semisimple exactly when n = 0, the other eigenvalues are those
-   of c, and the projector is t.(0 (+) 1).t^-1, the last columns of t against the last
-   rows of its inverse. *)
-exactZeroBasePower[m_] := With[
-    {decomposition = CoreNilpotentDecomposition[m]},
-    {t = decomposition[[1]], core = decomposition[[2]], nilpotent = decomposition[[3]]},
-    {noLimit = If[core === {}, Missing[], coreNoLimit[core]]},
-    Which[
-        ! FreeQ[PossibleZeroQ[Normal[nilpotent]], False], defectiveZeroFailure,
-        FailureQ[noLimit], noLimit,
-        nilpotent === {}, SparseArray[{}, Dimensions[m]],
+   zero eigenvalue is semisimple exactly when n = 0, that is when the rank of m equals
+   the size of c (the entries of n, zero, can be written as expressions too long to
+   evaluate), the other eigenvalues are those of c, and the projector is
+   t.(0 (+) 1).t^-1, the last columns of t against the last rows of its inverse. *)
+exactZeroBasePower[m_] := coreNilpotentZeroBasePower[m, CoreNilpotentDecomposition[m]]
+
+(* True when the zero eigenvalue of the exact m, of algebraic multiplicity k, is
+   semisimple, that is when m has k independent null vectors. At k <= 1 it is: a
+   nilpotent part of size 1 is 0. Otherwise the null vectors NullSpace finds are each
+   checked exactly, m.x = 0 entry by entry, and when that fails the rank of m with
+   every pivot decided as exactZeroQ decides settles it. (That rank alone is slow: its
+   pivots grow unsimplified.) *)
+semisimpleZeroQ[_, k_ /; k <= 1] := True
+
+semisimpleZeroQ[m_ ? (MatrixQ[#, gaussianRationalQ] &), k_] := MatrixRank[m] == Length[m] - k
+
+semisimpleZeroQ[m_, k_] := With[{x = NullSpace[m]},
+    If[ Length[x] == k && AllTrue[Flatten[m . Transpose[x]], exactZeroQ],
+        True,
+        MatrixRank[m, ZeroTest -> exactZeroQ] == Length[m] - k
+    ]
+]
+
+coreNilpotentZeroBasePower[m_, {t_, core_, nilpotent_}] := If[
+    semisimpleZeroQ[m, Length[m] - Length[core]],
+    Replace[If[core === {}, Missing[], coreNoLimit[corePolynomial[m, Length[m] - Length[core]]]], _Missing :> Which[
+        nilpotent === {}, SparseArray[{}, Dimensions[t]],
         True, t[[All, Length[core] + 1 ;;]] . Inverse[t][[Length[core] + 1 ;;]]
-    ]
+    ]],
+    defectiveZeroFailure
 ]
 
-(* Missing[] when every eigenvalue of the exact core has positive real part, the
-   Failure otherwise. The signs are read at 30 digits with the tolerance of the
-   inexact route; where a real part lies within it of zero, the exact eigenvalues
-   decide, each real part reduced by RootReduce to a canonical algebraic number,
-   whose sign is exact. (CountRoots does not count a root on the edge of a rectangle
-   when the coefficients are complex, and Re[t] > 0 hits the precision limit when
-   the real part is exactly zero.) *)
-coreNoLimit[core_] := With[
-    {c = N[core, 30]},
-    {scale = roundoffTolerance[c] Norm[c, "Frobenius"], eigenvalues = Eigenvalues[c]},
-    {negative = SelectFirst[eigenvalues, Re[#] < - scale &]},
+(* The characteristic polynomial of the core, that of m divided by (-z)^k for the size
+   k of the nilpotent part, which is zero here: det(m - z) = det(c - z) (-z)^k, so its
+   k lowest coefficients vanish, however they are written, and are dropped. From m its
+   coefficients stay small, where the entries of the core the decomposition returns
+   can grow by orders of magnitude in size. *)
+corePolynomial[m_, k_] := With[{c = CoefficientList[CharacteristicPolynomial[m, \[FormalZ]], \[FormalZ]]},
+    Together[(-1) ^ k Drop[c, k]] . \[FormalZ] ^ Range[0, Length[c] - k - 1]
+]
+
+(* Missing[] when every root of the characteristic polynomial p of the exact core has
+   positive real part, and otherwise the Failure naming one that has not. *)
+coreNoLimit[p_] := If[rightHalfPlaneQ[p], Missing[], noLimitFailure[namedNoLimitEigenvalue[p]]]
+
+(* True when every root of the polynomial p has positive real part, decided exactly and
+   without the roots. A real p is kept; otherwise p times the polynomial of conjugate
+   coefficients is real, and its roots are those of p and their conjugates. Either way
+   the roots all have positive real part exactly when the roots of that polynomial at
+   -s all have negative real part, which the Routh-Hurwitz test decides from the
+   coefficients. *)
+rightHalfPlaneQ[p_] := With[
+    {q = realCoefficients[CoefficientList[p, \[FormalZ]]]},
+    hurwitzStableQ[Reverse[Together[q] (-1) ^ Range[0, Length[q] - 1]]]
+]
+
+(* The coefficients a of a polynomial when they are real, as for the characteristic
+   polynomial of every Lindblad generator, and otherwise those of its product with the
+   polynomial of conjugate coefficients. *)
+realCoefficients[a_] := With[{conjugate = conjugateEntry /@ a}, If[conjugate === a, a, ListConvolve[a, conjugate, {1, -1}, 0]]]
+
+(* The complex conjugate of the exact matrix c. An entry whose imaginary part is zero,
+   decided by value, is kept. In any other entry I goes to -I, a Root object to its
+   conjugate, and to their conjugates as a whole a power with an exponent that is not
+   an integer and a base whose real part is not positive, and any other function value
+   whose imaginary part is not zero, as ArcCos[2] or Log[-2]; a function value whose
+   imaginary part is zero, as Im[ArcCos[2]], is kept whole, since conjugating inside it
+   would change it. So c is real when this leaves it unchanged. (Conjugate itself
+   decides whether a long real expression is real numerically, and hits the precision
+   limit on one with cancellations.) *)
+exactConjugate[c_] := Map[conjugateEntry, c, {2}]
+
+conjugateEntry[x_ ? gaussianRationalQ] := Conjugate[x]
+
+conjugateEntry[x_] := If[realPartSign[I x] === 0, x, x /. {
+    Complex[a_, b_] :> Complex[a, -b],
+    y : Power[b_, e_] /; ! IntegerQ[e] && realPartSign[b] =!= 1 :> Conjugate[y],
+    r_Root :> Conjugate[r],
+    y : f_Symbol[__] /; NumericQ[y] && ! MemberQ[{Plus, Times, Power}, f] :> If[realPartSign[I y] === 0, y, Conjugate[y]]
+}]
+
+(* True when every root of the real polynomial with coefficients a, from the highest
+   power down, has negative real part: every leading entry of the Routh array is
+   positive. Each row of the array is the row two above it less the multiple of the
+   row above that clears its leading entry, and the rows stop at the first leading
+   entry that is not positive, so the roots are all in the left half-plane when a[[1]]
+   is positive and the rows reach the last one with a positive leading entry. *)
+hurwitzStableQ[a_List] := With[
+    {width = Ceiling[Length[a] / 2] + 1},
+    {pairs = NestWhileList[routhStep, {PadRight[a[[1 ;; ;; 2]], width], PadRight[a[[2 ;; ;; 2]], width]}, lowerLeadingPositiveQ, 1, Length[a] - 2]},
+    realPartSign[First[a]] === 1 && Length[pairs] == Length[a] - 1 && lowerLeadingPositiveQ[Last[pairs]]
+]
+
+routhStep[{upper_, lower_}] := {lower, Together[Append[Rest[upper] - First[upper] / First[lower] Rest[lower], 0]]}
+
+lowerLeadingPositiveQ[{_, lower_}] := realPartSign[First[lower]] === 1
+
+(* An eigenvalue without positive real part among the roots of the characteristic
+   polynomial p, named exactly when it is a root of a factor with real coefficients,
+   decided by value, or of a linear or quadratic one, and Missing[] when such
+   eigenvalues are roots only of factors with complex coefficients of degree 3 or more.
+   (The kernel crashes building the exact roots of such a factor of degree 32, as
+   Eigenvalues of a dense complex 32 x 32 matrix does.) A p of degree 3 or more is
+   factored when Element proves its coefficients algebraic and they hold at most 3
+   distinct radicals or Root objects; FactorList fails on others, as Exp[10^7], or
+   takes minutes, as with 8 square roots, and p is then its own factor. *)
+namedNoLimitEigenvalue[p_] := SelectFirst[
+    Catenate[SolveValues[# == 0, \[FormalZ]] & /@ Select[
+        If[ Exponent[p, \[FormalZ]] >= 3 && AllTrue[CoefficientList[p, \[FormalZ]], TrueQ[Element[#, Algebraics]] &] &&
+                Length[DeleteDuplicates[Cases[CoefficientList[p, \[FormalZ]], Power[_Integer | _Rational, _Rational] | _Root | _AlgebraicNumber, {0, Infinity}]]] <= 3,
+            FactorList[p, Extension -> Automatic][[All, 1]],
+            {p}
+        ],
+        Exponent[#, \[FormalZ]] >= 1 && (Exponent[#, \[FormalZ]] <= 2 || AllTrue[CoefficientList[#, \[FormalZ]], realPartSign[I #] === 0 &]) &
+    ]],
+    realPartSign[#] =!= 1 &
+]
+
+(* Exact numbers are decided by value. The value of x at 50, then 400 and 3200 digits of
+   precision or of accuracy, whichever N reaches first, tells a nonzero x from zero, and
+   a sign read off it is exact. (The accuracy goal is reached on a number that holds a
+   zero not written as 0, and the precision goal on a huge number without all of its
+   digits.) What stays within 10^-3200 of zero is zero when Element proves it
+   algebraic, after FunctionExpand, and PossibleZeroQ with the method ExactAlgebraics,
+   which is exact for algebraic numbers, finds it zero, as for
+   GoldenRatio - (1 + Sqrt[5]) / 2, and is taken as zero when Element does not, as
+   for Log[6] - Log[2] - Log[3]; a number that is not zero, lies within 10^-3200 of
+   it and is not proved algebraic, as Tanh[10^4] - 1, is read as zero. A real part
+   proved algebraic and found nonzero is read to digits that keep doubling until they
+   tell, as they must, up to 12 doublings. These decisions are exact for numbers
+   between $MinNumber and $MaxNumber, the range of arbitrary-precision numbers. Beyond
+   it N reports an underflow or an overflow with its own messages: a value that
+   underflows is read as zero, proved algebraic or not (PossibleZeroQ with the method
+   ExactAlgebraics crashes the kernel on some, as (Sqrt[2] - 1)^(10^20) -
+   (Sqrt[2] - 1)^(10^20 + 1)), and one that overflows as nonzero, with the sign of
+   its real part as Sign reads it from the expression, as for -Exp[Exp[100]], and
+   Indeterminate when Sign cannot. *)
+exactZeroQ[x_ ? gaussianRationalQ] := x == 0
+
+exactZeroQ[x_] := Replace[settledValue[x, Identity], {
+    Missing["Overflow"] -> False,
+    Missing["Underflow"] -> True,
+    _Missing :> Replace[provenAlgebraic[x], {_Missing -> True, y_ :> PossibleZeroQ[y, Method -> "ExactAlgebraics"]}],
+    _ -> False
+}]
+
+(* The sign of the real part of the exact number x. *)
+realPartSign[x_ ? gaussianRationalQ] := Sign[Re[x]]
+
+realPartSign[x_] := Replace[settledValue[x, Re], {
+    Missing["Overflow"] :> Replace[Sign[Re[x]], Except[-1 | 0 | 1] -> Indeterminate],
+    Missing["Underflow"] -> 0,
+    _Missing :> With[{re = Replace[provenAlgebraic[x], {_Missing :> Re[x], y_ :> Re[y]}]},
+        If[exactZeroQ[re], 0, Sign[digitsValue[x, Re, NestWhile[2 # &, 6400, digitsValue[x, Re, #] == 0 &, 1, 12]]]]
+    ],
+    v_ :> Sign[v]
+}]
+
+(* x as FunctionExpand writes it when Element then proves it algebraic, as
+   Sin[ArcCos[1/3] / 2] = 1 / Sqrt[3]; Missing[] when Element does not. *)
+provenAlgebraic[x_] := With[{y = FunctionExpand[x]}, If[TrueQ[Element[y, Algebraics]], y, Missing[]]]
+
+(* The part of the value of x, as read by part, at the first of 50, 400 and 3200 digits
+   that tells it from zero; Missing[] when none does, and Missing["Underflow"] or
+   Missing["Overflow"] when the value underflows or overflows. *)
+settledValue[x_, part_] := firstNonzeroValue[x, part, {50, 400, 3200}]
+
+firstNonzeroValue[_, _, {}] := Missing[]
+
+firstNonzeroValue[x_, part_, {digits_, rest___}] := With[{v = digitsValue[x, part, digits]},
     Which[
-        ! MissingQ[negative], noLimitFailure[Replace[exactEigenvalue[core, negative], _Missing :> N[negative]]],
-        AllTrue[eigenvalues, Re[#] > scale &], Missing[],
-        True, Replace[SelectFirst[Eigenvalues[core], Sign[RootReduce[Re[#]]] =!= 1 &], t : Except[_Missing] :> noLimitFailure[t]]
+        v === Overflow[], Missing["Overflow"],
+        v === Underflow[], Missing["Underflow"],
+        v != 0, v,
+        True, firstNonzeroValue[x, part, {rest}]
     ]
 ]
 
-(* The eigenvalue of the exact m near t, when t lies within 10^-10 of a Gaussian
-   rational whose rank drop of m - t confirms it. *)
-exactEigenvalue[m_, t_] := With[{r = Rationalize[t, 10^-10 Max[1, Abs[t]]]},
-    If[MatrixRank[m - r IdentityMatrix[Length[m]]] < Length[m], r, Missing["NotGaussianRational"]]
-]
+(* The part of the value of x at the given digits of precision or of accuracy, whichever
+   N reaches first. *)
+digitsValue[x_, part_, digits_] := Block[{$MaxExtraPrecision = extraPrecision[x, digits]}, part[N[x, {digits, digits}]]]
+
+(* The part of the value of x to the given accuracy. *)
+valueAt[x_, part_, accuracy_] := Block[{$MaxExtraPrecision = extraPrecision[x, accuracy]}, part[N[x, {Infinity, accuracy}]]]
+
+(* The working precision N may add to reach its goal: enough for the cancellation that
+   integers of d digits in x can cause, and finite. Under an unlimited one N never
+   finishes on a number that holds an exact zero where a function jumps, as
+   Sqrt[-1 + (GoldenRatio - (1 + Sqrt[5]) / 2) I] - I does on the branch cut of
+   Sqrt. A number whose cancellation needs more, as between terms far beyond
+   10^10000 in size, is not told from zero: it is read as zero, as one within
+   10^-3200 of it is, and N says so with its own message. *)
+extraPrecision[x_, digits_] := 10 Max[digits, 0] + 10000 + 2 Max[0, Cases[x,
+    r : _Integer | _Rational | _Complex :> IntegerLength[Max[Abs[Numerator[{Re[r], Im[r]}]], Denominator[{Re[r], Im[r]}]]],
+    {0, Infinity}
+]]
+
+gaussianRationalQ[x_] := MatchQ[x, _Integer | _Rational | Complex[_Integer | _Rational, _Integer | _Rational]]
 
 (* An inexact m. Roundoff moves each singular value by at most of order eps ||m||, so
    those within scale = roundoffTolerance[m] ||m|| count as zero and give the nullity
@@ -536,9 +836,10 @@ exactEigenvalue[m_, t_] := With[{r = Rationalize[t, 10^-10 Max[1, Abs[t]]]},
    bound, or the zero eigenvalue is defective to within roundoff, and have real part
    above scale, or there is no limit. A Hermitian m gives an exactly Hermitian
    projector. *)
-inexactZeroBasePower[m_] := With[
-    {usv = SingularValueDecomposition[m], tol = roundoffTolerance[m]},
-    {u = usv[[1]], sigma = Diagonal[usv[[2]]], v = usv[[3]]},
+inexactZeroBasePower[m_] := inexactZeroBasePower[m, SingularValueDecomposition[m]]
+
+inexactZeroBasePower[m_, {u_, s_, v_}] := With[
+    {sigma = Diagonal[s], tol = roundoffTolerance[m]},
     {scale = tol Max[sigma]},
     {k = Total[UnitStep[scale - sigma]]},
     {x = Take[v, All, -k], y = ConjugateTranspose[Take[u, All, -k]]},
@@ -555,7 +856,7 @@ inexactZeroBaseProjector[m_, x_, y_, eigenvalues_, k_, scale_, bound_] := With[
     Which[
         Max[Abs[zeros], 0] > bound || Min[Abs[others], Infinity] <= bound, defectiveZeroFailure,
         ! MissingQ[noLimit], noLimitFailure[noLimit],
-        k == 0, SparseArray[{}, Dimensions[m], atPrecisionOf[m, 0]],
+        k == 0, SparseArray[{}, Dimensions[m], N[0, Precision[m]]],
         True, With[{p = nullSpaceProjector[x, y]}, If[nearlyHermitianQ[m, roundoffTolerance[m]], (p + ConjugateTranspose[p]) / 2, p]]
     ]
 ]
@@ -563,18 +864,6 @@ inexactZeroBaseProjector[m_, x_, y_, eigenvalues_, k_, scale_, bound_] := With[
 (* The spectral projector onto the null space along the range, from columns x
    spanning the null space and rows y spanning it from the left. *)
 nullSpaceProjector[x_, y_] := x . Inverse[y . x] . y
-
-(* A symbolic diagonal m: on each entry t the limit is 1 where t is identically zero,
-   0 where t is a number with positive real part, and for a symbol the closed form
-   Piecewise[{{1, t == 0}, {0, Re[t] > 0}}, Indeterminate], Indeterminate on the
-   half-plane where there is no limit. (Not Undefined: Piecewise turns an Undefined
-   default into a ConditionalExpression, and Normal of a SparseArray drops that.) A
-   numeric entry with no limit is the Failure. *)
-symbolicZeroBasePower[mat_] /; DiagonalMatrixQ[mat] := With[
-    {entries = Normal[Diagonal[mat]]},
-    {noLimit = SelectFirst[entries, NumericQ[#] && ! PossibleZeroQ[#] && ! TrueQ[Re[#] > 0] &]},
-    If[MissingQ[noLimit], SparseArray[Band[{1, 1}] -> zeroBaseLimit /@ entries, Dimensions[mat]], noLimitFailure[noLimit]]
-]
 
 (* A symbolic m that is not diagonal: the projector from the null spaces of m and of
    its transpose for generic values of the symbols, rational in them, where every
@@ -587,11 +876,10 @@ symbolicZeroBasePower[mat_] /; DiagonalMatrixQ[mat] := With[
    Indeterminate; with the symbols declared as parameters the values reach the limit
    there directly. A zero eigenvalue with fewer null vectors than its multiplicity at
    generic values, or a numeric eigenvalue with no limit, is the Failure. *)
-symbolicZeroBasePower[mat_] /; ! DiagonalMatrixQ[mat] := With[
-    {m = Normal[mat]},
-    {x = NullSpace[m], others = DeleteCases[Eigenvalues[m], _ ? PossibleZeroQ]},
+symbolicZeroBasePower[m_] := With[
+    {x = NullSpace[m], others = DeleteCases[Eigenvalues[m], t_ /; If[NumericQ[t], exactZeroQ[t], PossibleZeroQ[t]]]},
     {
-        noLimit = SelectFirst[others, NumericQ[#] && ! TrueQ[Re[#] > 0] &],
+        noLimit = SelectFirst[others, NumericQ[#] && realPartSign[#] =!= 1 &],
         condition = And @@ DeleteDuplicates[Re[#] > 0 & /@ Select[others, ! NumericQ[#] &]]
     },
     Which[
@@ -605,16 +893,6 @@ symbolicZeroBasePower[mat_] /; ! DiagonalMatrixQ[mat] := With[
         ]
     ]
 ]
-
-zeroBaseLimit[t_ ? PossibleZeroQ] := 1
-
-zeroBaseLimit[t_ ? NumericQ] := 0
-
-zeroBaseLimit[t_] := Piecewise[{{1, t == 0}, {0, Re[t] > 0}}, Indeterminate]
-
-(* Values at the precision of m: a machine m gives machine zeros and ones, and an
-   arbitrary-precision m keeps exact zeros, as N does. *)
-atPrecisionOf[m_, x_] := If[MatrixQ[m, NumericQ] && Precision[m] < Infinity, N[x, Precision[m]], x]
 
 noLimitFailure[_Missing] := Failure["ZeroBasePowerNoLimit", <|
     "MessageTemplate" -> "0^m is the limit of b^m as b -> 0, which does not exist: m has an eigenvalue neither zero nor with positive real part."
