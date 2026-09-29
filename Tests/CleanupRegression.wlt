@@ -299,20 +299,23 @@ VerificationTest[
   TestID -> "B1-RefPage-Parses"
 ];
 
-(* The 4 transformation rules from Kernel/QuantumDistance.m:63-79 must hold
-   exactly: similarity = f(distance) for each measure. We test on |+> vs |->
-   (orthogonal in the X basis). *)
+(* The 4 transformation rules of the QuantumSimilarity definition in
+   Kernel/QuantumDistance.m must hold exactly: similarity = f(distance) for
+   each measure. The first three are tested on diag(1/4, 3/4) against |+>,
+   where every distance lies strictly inside its range, so a rule that only
+   pins the endpoints, such as 1 - d^2, fails; at an orthogonal pair every
+   similarity is 0, and any such rule would pass. *)
 VerificationTest[
   With[{
-    psi1 = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]],
-    psi2 = Wolfram`QuantumFramework`QuantumState[{1, -1}/Sqrt[2]]
+    rho = Wolfram`QuantumFramework`QuantumState[{{1/4, 0}, {0, 3/4}}],
+    plus = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]]
   },
     AllTrue[
       {"Fidelity", "Trace", "Bloch", "RelativePurity"},
       Function[m,
         FullSimplify[
-          Wolfram`QuantumFramework`QuantumSimilarity[psi1, psi2, m] -
-            (1 - Wolfram`QuantumFramework`QuantumDistance[psi1, psi2, m])
+          Wolfram`QuantumFramework`QuantumSimilarity[rho, plus, m] -
+            (1 - Wolfram`QuantumFramework`QuantumDistance[rho, plus, m])
         ] === 0
       ]
     ]
@@ -325,15 +328,15 @@ VerificationTest[
 
 VerificationTest[
   With[{
-    psi1 = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]],
-    psi2 = Wolfram`QuantumFramework`QuantumState[{1, -1}/Sqrt[2]]
+    rho = Wolfram`QuantumFramework`QuantumState[{{1/4, 0}, {0, 3/4}}],
+    plus = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]]
   },
     AllTrue[
       {"Bures", "HilbertSchmidt"},
       Function[m,
         FullSimplify[
-          Wolfram`QuantumFramework`QuantumSimilarity[psi1, psi2, m] -
-            (1 - Wolfram`QuantumFramework`QuantumDistance[psi1, psi2, m]/Sqrt[2])
+          Wolfram`QuantumFramework`QuantumSimilarity[rho, plus, m] -
+            (1 - Wolfram`QuantumFramework`QuantumDistance[rho, plus, m]/Sqrt[2])
         ] === 0
       ]
     ]
@@ -346,12 +349,12 @@ VerificationTest[
 
 VerificationTest[
   With[{
-    psi1 = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]],
-    psi2 = Wolfram`QuantumFramework`QuantumState[{1, -1}/Sqrt[2]]
+    rho = Wolfram`QuantumFramework`QuantumState[{{1/4, 0}, {0, 3/4}}],
+    plus = Wolfram`QuantumFramework`QuantumState[{1, 1}/Sqrt[2]]
   },
     FullSimplify[
-      Wolfram`QuantumFramework`QuantumSimilarity[psi1, psi2, "BuresAngle"] -
-        (1 - Wolfram`QuantumFramework`QuantumDistance[psi1, psi2, "BuresAngle"]/(Pi/2))
+      Wolfram`QuantumFramework`QuantumSimilarity[rho, plus, "BuresAngle"] -
+        (1 - Wolfram`QuantumFramework`QuantumDistance[rho, plus, "BuresAngle"]/(Pi/2))
     ] === 0
   ]
   ,
@@ -360,33 +363,64 @@ VerificationTest[
   TestID -> "B1-Math-PiOver2Rule"
 ];
 
-(* The six examples of the QuantumSimilarity.nb reference page, their values
-   pinned to what the kernel returns, in two tests. The inputs of these five
-   are vector states or positive semidefinite matrices, so none raises the
-   notphysical warning. That check reads only whether the least eigenvalue
-   falls below -10^-8, not the trace: the identity matrix of the second
-   example has trace 2, so its fidelity similarity exceeds 1, yet no warning
-   fires. *)
+(* The RelativeEntropy rule, similarity = 2^-d with d in bits, on |0> against
+   diag(1/4, 3/4): d = -log2(1/4) = 2 bits and the similarity is 1/4, where
+   the rules 1/(1 + d) and 1 - d/2 would give 1/3 and 0. An orthogonal pair
+   would not do: its relative entropy is infinite, and 2^-d and 1/(1 + d)
+   both send that to 0. *)
+VerificationTest[
+  With[{
+    zero = Wolfram`QuantumFramework`QuantumState[{1, 0}],
+    rho = Wolfram`QuantumFramework`QuantumState[{{1/4, 0}, {0, 3/4}}]
+  },
+    With[{
+      d = QuantityMagnitude[
+        Wolfram`QuantumFramework`QuantumDistance[zero, rho, "RelativeEntropy"]]
+    },
+      FullSimplify[{
+        d,
+        Wolfram`QuantumFramework`QuantumSimilarity[zero, rho, "RelativeEntropy"] - 2^(-d)
+      }]
+    ]
+  ]
+  ,
+  {2, 0}
+  ,
+  TestID -> "B1-Math-ExpRule"
+];
+
+(* The examples of the QuantumSimilarity.nb reference page, their values
+   pinned to what the kernel returns, in two tests. The inputs of these seven
+   (Basic Examples, Scope, and Properties and Relations) are density matrices
+   or normalized state vectors, for which every similarity lies in [0, 1], and
+   none has a negative eigenvalue, so none raises the notphysical warning. The
+   last maps over two states with the same populations {1/2, 1/2}: the
+   maximally mixed state commutes with diag(1/4, 3/4), so its fidelity
+   similarity is the overlap Sqrt[1/4 1/2] + Sqrt[3/4 1/2] of the populations,
+   while |+> does not commute with it and gives the smaller 1/Sqrt[2]. *)
 VerificationTest[
   With[{qst = Wolfram`QuantumFramework`QuantumState,
         qsim = Wolfram`QuantumFramework`QuantumSimilarity},
     {
       qsim[qst["0"], qst["1"]],
-      qsim[qst[{{1/4, 0}, {0, 3/4}}], qst[{{1, 0}, {0, 1}}]],
+      qsim[qst[{{1/4, 0}, {0, 3/4}}], qst[{{1/2, 0}, {0, 1/2}}]],
       qsim[qst[{{1/4, 0}, {0, 3/4}}], qst[{1, 0}]],
+      qsim[qst[{{1/4, 1/4}, {1/4, 3/4}}], qst["+"], "Trace"],
       qsim[qst["GHZ"], qst["W"], "HilbertSchmidt"],
-      qsim[qst[{1, 0, 0}, 3], qst[{1/Sqrt[3], 0, Sqrt[2/3]}, 3]]
+      qsim[qst[{1, 0, 0}, 3], qst[{1/Sqrt[3], 0, Sqrt[2/3]}, 3]],
+      qsim[qst[{{1/4, 0}, {0, 3/4}}], #] & /@ {qst[{{1/2, 0}, {0, 1/2}}], qst["+"]}
     }
   ]
   ,
-  {0, 1/2 + Sqrt[3]/2, 1/2, 0, 1/Sqrt[3]}
+  {0, Sqrt[3/2]/2 + 1/(2 Sqrt[2]), 1/2, 1 - 1/(2 Sqrt[2]), 0, 1/Sqrt[3],
+    {Sqrt[3/2]/2 + 1/(2 Sqrt[2]), 1/Sqrt[2]}}
   ,
   TestID -> "B1-Examples-Match"
 ];
 
-(* The fourth example compares two matrices that are Hermitian with unit
-   trace but have a negative determinant, hence one negative eigenvalue each:
-   neither is a density matrix, so QuantumDistance warns once with
+(* The Possible Issues example compares two matrices that are Hermitian with
+   unit trace but have a negative determinant, hence one negative eigenvalue
+   each: neither is a density matrix, so QuantumDistance warns once with
    notphysical. Their trace distance exceeds 1, the largest trace distance two
    density matrices can have, so the similarity is negative. *)
 VerificationTest[
