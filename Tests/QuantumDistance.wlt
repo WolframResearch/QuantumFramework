@@ -432,12 +432,35 @@ VerificationTest[
     TestID -> "NonHermitian-Machine-Tolerance"
 ]
 
+(* So is an asymmetry of 10^-17 opposite a structural zero, which QuantumState stores in a SparseArray. *)
+VerificationTest[
+    QuantumDistance[QuantumState[{{0.5, 1.*^-17}, {0., 0.5}}], qsMixed, "Trace"],
+    _Real,
+    {},
+    SameTest -> MatchQ,
+    TestID -> "NonHermitian-Machine-SparseRoundoff"
+]
+
 (* A zero state has no trace to divide by; it is not physical, and the measure is computed as given. *)
 VerificationTest[
     QuantumDistance[QuantumState[{{0, 0}, {0, 0}}], qs0, "Trace"],
     1/2,
     {QuantumDistance::notphysical},
     TestID -> "ZeroTrace-NotPhysical"
+]
+
+(* Nor is a trace that is negative or not real a state's, at any scale: -10^-9 diag(1/4, 3/4) has no
+   eigenvalue below -10^-8, and every entry of 10^-9 diag(1/4 + I, 3/4) lies below the 10^-8 Hermiticity
+   tolerance, yet neither is physical. Neither is divided by its trace, so the measure is computed as given. *)
+VerificationTest[
+    {
+        QuantumDistance[QuantumState[-10^-9 {{1/4, 0}, {0, 3/4}}], qsMixed, "Trace"],
+        QuantumDistance[QuantumState[1.*^-9 {{0.25 + I, 0.}, {0., 0.75}}], qsMixed, "Trace"]
+    },
+    {1000000001/2000000000, _Real ? (Abs[# - 0.4999999995] < 1.*^-12 &)},
+    {QuantumDistance::notphysical, QuantumDistance::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "NegativeOrComplexTrace-NotPhysical"
 ]
 
 
@@ -524,6 +547,16 @@ VerificationTest[
     {0, 0},
     {QuantumDistance::notnormalized, QuantumDistance::notnormalized},
     TestID -> "Unnormalized-TinyTrace-Rescaled"
+]
+
+(* An algebraic trace whose sign Positive cannot decide is reduced with RootReduce, and once found positive
+   is divided out like any other: the ket {1 + I Sqrt[2], 1} has the squared norm
+   (1 + I Sqrt[2]) (1 - I Sqrt[2]) + 1, which is 4, and is read as its normalized form. *)
+VerificationTest[
+    QuantumDistance[QuantumState[{1 + I Sqrt[2], 1}], qsPlus, "Trace"],
+    1/2,
+    {QuantumDistance::notnormalized},
+    TestID -> "Unnormalized-UndecidedTrace-Rescaled"
 ]
 
 (* A machine trace is judged against the Frobenius norm of its matrix: the machine ket 10^-5 |0> is rescaled

@@ -588,4 +588,163 @@ VerificationTest[
     TestID -> "Monotone-PSD-NoWarn"
 ]
 
+(* A monotone computes from its input divided by the trace (a state vector divided by its norm), so the
+   warning is judged on that matrix: a non-physical matrix warns and a physical one is silent at any scale at
+   which the kernel can decide the sign of the trace, and at which the machine entries and a state vector's
+   squared norm stay in the normal range. A matrix that is not Hermitian is not a state even with a
+   positive spectrum, and neither is one whose trace is 0, negative, or not real. Each warning test makes
+   one call, so the declared message is pinned to that call. *)
+
+nonHermitian = KroneckerProduct[#, #] &[{{1/2, 1}, {0, 1/2}}];   (* trace 1, the eigenvalue 1/4 four times *)
+pureDM = Outer[Times, #, Conjugate[#]] &[Normalize[{1, 2, 3, 4 I}]];   (* a pure state as a density matrix *)
+
+(* the non-physical matrix above, scaled by 10^-9, still warns and gives its unscaled negativity *)
+VerificationTest[
+    Chop[
+        QuantumEntanglementMonotone[
+            QuantumState[1.*^-9 {{0.5, 0, 0, 0.7}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0.7, 0, 0, 0.5}}, {2, 2}],
+            "Negativity"
+        ] - 7/10
+    ],
+    0,
+    {QuantumEntanglementMonotone::notphysical},
+    TestID -> "Monotone-NonPSD-Scaled-Warns"
+]
+
+(* a matrix that is not Hermitian warns though its eigenvalues are positive *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[nonHermitian, {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-NonHermitian-Warns"
+]
+
+(* in machine numbers and scaled by 10^-9 it still warns: every entry of the scaled matrix lies below the
+   10^-8 tolerance of the Hermiticity test, which therefore runs on the matrix divided by its trace *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[1.*^-9 N[nonHermitian], {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-NonHermitian-Scaled-Warns"
+]
+
+(* a zero trace cannot be divided out: the zero vector warns *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[{0, 0, 0, 0}, {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-ZeroTrace-Warns"
+]
+
+(* a negative trace warns at any scale: -10^-9 times the Werner state has no eigenvalue below -10^-8, and the
+   division by its trace hands the monotone the Werner state itself, so it returns the Werner negativity *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[-10^-9 werner[4/5], {2, 2}], "Negativity"],
+    7/20,
+    {QuantumEntanglementMonotone::notphysical},
+    TestID -> "Monotone-NegativeTrace-Warns"
+]
+
+(* a physical state is silent at any scale: the Werner state times 10^-9, and a pure state times 10^9, whose
+   zero eigenvalues come out with round-off proportional to the scale, beyond an absolute -10^-8 floor *)
+VerificationTest[
+    {
+        QuantumEntanglementMonotone[QuantumState[1.*^-9 N @ werner[4/5], {2, 2}], "Negativity"],
+        QuantumEntanglementMonotone[QuantumState[1.*^9 N[pureDM], {2, 2}], "Negativity"]
+    },
+    {_ ? NumericQ, _ ? NumericQ},
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-PSD-AnyScale-NoWarn"
+]
+
+(* an algebraic trace whose sign Positive cannot decide is reduced with RootReduce, and the state is physical:
+   the density matrix of the ket (1 + I Sqrt[2]) |00> + |11> has the trace (1 + I Sqrt[2]) (1 - I Sqrt[2])
+   + 1, which is 4, and gives the negativity of the normalized ket without a warning *)
+VerificationTest[
+    Chop[
+        N @ QuantumEntanglementMonotone[
+            QuantumState[QuantumState[{1 + I Sqrt[2], 0, 0, 1}, {2, 2}]["DensityMatrix"], {2, 2}],
+            "Negativity"
+        ] - Sqrt[3]/4
+    ],
+    0,
+    {},
+    TestID -> "Monotone-PSD-UndecidedTrace-NoWarn"
+]
+
+(* an asymmetry of 10^-17 opposite a structural zero of a SparseArray is round-off, not a defect *)
+VerificationTest[
+    Chop[
+        QuantumEntanglementMonotone[
+            QuantumState[N[werner[4/5]] + SparseArray[{{2, 3} -> 1.*^-17}, {4, 4}], {2, 2}],
+            "Negativity"
+        ] - 7/20
+    ],
+    0,
+    {},
+    TestID -> "Monotone-PSD-SparseRoundoff-NoWarn"
+]
+
+(* a ket is judged in the computational basis: {1, 0, -1, 0}, in a basis whose two elements for the first
+   qubit are both |0>, is the zero vector there, and warns *)
+VerificationTest[
+    QuantumEntanglementMonotone[
+        QuantumState[{1, 0, -1, 0}, QuantumTensorProduct[QuantumBasis[{{1, 0}, {1, 0}}], QuantumBasis[2]]],
+        "Negativity"
+    ],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-ZeroKet-DependentBasis-Warns"
+]
+
+(* Exact numbers on which Equal or Positive fails. zR and zR3 are 0 and trig2 is 2: Positive cannot decide
+   the sign of zR or trig2, and Equal cannot decide zR3 == 0 until RootReduce reduces it. QuantumState stores
+   a ket with several entries zR in a SparseArray whose default element is zR, on which Norm returns a wrong
+   value or crashes the kernel. The sign of a trace scaled by trig2 stays undecided, and the matrix is then
+   judged as given. tA is positive, of order 10^-200, so 1/2 + I tA is not real. These pin the helper's
+   verdict, which decides the warning, without the messages the monotones' own arithmetic on such entries
+   gives. *)
+
+zR = Sqrt[3 + 2 Sqrt[2]] - 1 - Sqrt[2];
+zR3 = Expand[(Sqrt[3 + 2 Sqrt[2]] - Sqrt[2])^2] - 1;
+tA = Sqrt[2 + 10^-200] - Sqrt[2];
+trig2 = 2 (Cos[1] + I Sin[1]) (Cos[1] - I Sin[1]);
+notPhysicalQ = Wolfram`QuantumFramework`PackageScope`numericStateNotPSDQ;
+
+(* a ket whose only nonzero entry is Equal-undecidable zR3 is the zero vector, and warns *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[{zR3, 0, 0, 0}, {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-ExactZeroKet-Warns"
+]
+
+(* an exact rational is compared as it is: a ket whose squared norm is 10^-400, below the machine range, is
+   physical, and neither warns nor raises General::munfl *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[{10^-200, 0, 0, 0}, {2, 2}], "Negativity"],
+    _ ? NumericQ,
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-TinyExactKet-NoWarn"
+]
+
+VerificationTest[
+    {
+        notPhysicalQ[QuantumState[{zR3, 0}]],
+        notPhysicalQ[QuantumState[{zR, zR, zR, 1}, {2, 2}]],
+        notPhysicalQ[QuantumState[{{1/2 + I tA, 0}, {0, 1/2}}]],
+        notPhysicalQ[QuantumState[trig2 werner[4/5], {2, 2}]],
+        notPhysicalQ[QuantumState[trig2 {{1/2, 0, 0, 7/10}, {0, 0, 0, 0}, {0, 0, 0, 0}, {7/10, 0, 0, 1/2}}, {2, 2}]]
+    },
+    {True, False, True, False, True},
+    TestID -> "Helper-UndecidableExactEntries"
+]
+
 EndTestSection[]
