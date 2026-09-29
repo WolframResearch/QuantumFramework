@@ -27,16 +27,140 @@ numericStateNotPSDQ[_] := False
 QuantumDistance::notphysical =
     "An input is not a positive-semidefinite density matrix; a distance or similarity involving a non-physical state may be meaningless."
 
-warnUnphysicalDistance[qs1_, qs2_] :=
-    If[numericStateNotPSDQ[qs1] || numericStateNotPSDQ[qs2], Message[QuantumDistance::notphysical]]
+QuantumDistance::notnormalized =
+    "Input `1` has trace `2`, not 1 (for a state vector, the trace is its squared norm); it is divided by its trace."
+
+QuantumDistance::bloch =
+    "The \"Bloch\" distance is defined for single-qubit states; these states have dimension `1`. \"Trace\" and \"HilbertSchmidt\" are defined for any dimension."
+
+(* The tolerance below which a machine number is read as round-off: a trace this close to 1, or to 0 in
+   units of the Frobenius norm of its matrix, a negative eigenvalue or a Hermiticity defect this small in a
+   state of unit trace, and a fidelity distance this far below 0. *)
+$distanceTolerance = 1.*^-8
+
+
+(* The two density matrices a measure is computed from, each input's in the computational basis. An input
+   whose trace (for a state vector, its squared norm) is a positive number other than 1 stands for the
+   state rho / Tr[rho], and is divided by its trace: an exact trace other than 1 with a notnormalized
+   message naming the input, and a machine trace in any case, since round-off leaves it a few units in the
+   last place from 1, with the message only when it is more than $distanceTolerance from 1. The trace is
+   not simplified: a symbolic input is rescaled only when its trace evaluates to a number, as that of
+   {{2 p, 0}, {0, 2 - 2 p}} does, and is otherwise used as given. An input with a zero trace, or a numeric
+   one that is not Hermitian or has a negative eigenvalue once divided by its trace, is not physical, and
+   one notphysical message covers the call. *)
+distanceMatrices[qs1_, qs2_] := With[{inputs = MapThread[distanceMatrix, {{qs1, qs2}, {1, 2}}]},
+    If[Or @@ inputs[[All, 2]], Message[QuantumDistance::notphysical]];
+    inputs[[All, 1]]
+]
+
+distanceMatrix[qs_, i_] := With[{rho = qs["Computational"]["DensityMatrix"]},
+    With[{t = Tr[rho]}, inputMatrix[traceClass[t, rho], qs, rho, t, i]]
+]
+
+(* {the matrix the measures read, whether the input is not physical} *)
+inputMatrix["Zero", _, rho_, _, _] := {rho, True}
+inputMatrix["Positive", qs_, rho_, t_, i_] := withPhysicality[qs, rescaled[rho, Re[t], i]]
+inputMatrix[_, qs_, rho_, _, _] := withPhysicality[qs, rho]
+
+withPhysicality[qs_, m_] := {m, ! qs["VectorQ"] && notPhysicalMatrixQ[m]}
+
+rescaled[rho_, t_, i_] := (
+    If[Precision[t] === Infinity || Abs[t - 1] > $distanceTolerance, Message[QuantumDistance::notnormalized, i, t]];
+    rho / t
+)
+
+(* The trace of an input as "Zero", "Unit", "Positive" (real and positive, other than an exact 1) or
+   "Other", and "Symbolic" when it does not evaluate to a number. An exact trace is classified exactly: one
+   whose machine value is near 0 or 1 and that is algebraic is first reduced with RootReduce, since Equal
+   cannot always decide a sum of nested radicals such as Expand[(Sqrt[3 + 2 Sqrt[2]] - Sqrt[2])^2], which
+   is 1. A machine trace is judged against the Frobenius norm of its matrix, so a state vector of norm
+   10^-5 is rescaled like any other. *)
+traceClass[t_ ? NumericQ, _] /; Precision[t] === Infinity := With[{
+    u = If[Min[Abs[N[t]], Abs[N[t] - 1]] < 1.*^-6 && TrueQ[Element[t, Algebraics]], RootReduce[t], t]
+},
+    Which[
+        TrueQ[u == 0], "Zero",
+        TrueQ[u == 1], "Unit",
+        TrueQ[Positive[u]], "Positive",
+        True, "Other"
+    ]
+]
+traceClass[t_ ? NumericQ, rho_] := With[{tolerance = $distanceTolerance frobeniusNorm[rho]},
+    Which[
+        Abs[t] <= tolerance, "Zero",
+        Abs[Im[t]] <= tolerance && Re[t] > tolerance, "Positive",
+        True, "Other"
+    ]
+]
+traceClass[_, _] := "Symbolic"
+
+(* The Frobenius norm as the norm of the flattened entries, which keeps a SparseArray sparse and is many
+   times faster than Norm[rho, "Frobenius"] on one; 1. for a matrix with a symbolic entry, whose trace is
+   then judged on its own. *)
+frobeniusNorm[rho_] := With[{f = N @ Norm[Flatten[rho]]}, If[NumericQ[f], f, 1.]]
+
+(* A numeric matrix that is not Hermitian, or that has an eigenvalue below -$distanceTolerance. The check
+   runs on the matrix after it is divided by its trace, so the tolerance is relative to the state, and the
+   eigenvalues are machine numbers: an exact negative eigenvalue closer to 0 than the tolerance is not
+   seen, which is the price of not deciding the spectrum of an exact matrix exactly. A matrix of exact
+   rational entries is checked for Hermiticity exactly, at no such cost. *)
+notPhysicalMatrixQ[m_] := With[{dm = N[m]},
+    MatrixQ[dm, NumericQ] && Or[
+        ! If[ArrayQ[m, 2, ExactNumberQ], HermitianMatrixQ[m], HermitianMatrixQ[dm, Tolerance -> $distanceTolerance]],
+        Min[Re @ Eigenvalues[Normal @ dm]] < - $distanceTolerance
+    ]
+]
 
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] := (
-    warnUnphysicalDistance[qs1, qs2];
-    1 - Re[Tr[MatrixPower[qs1["Computational"]["DensityMatrix"] . qs2["Computational"]["DensityMatrix"], 1 / 2]]]
-)
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dimension"] == qs2["Dimension"] != 2 :=
+    nonQubitBlochFailure[qs1["Dimension"]]
+
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, measure : Alternatives @@ $QuantumDistances] /; qs1["Dimension"] == qs2["Dimension"] :=
+    Apply[
+        If[equalMatricesQ[##], equalStateDistance[measure, #1], matrixDistance[measure][##]] &,
+        distanceMatrices[qs1, qs2]
+    ]
+
+(* Each measure as a function of the two density matrices. *)
+matrixDistance["Fidelity"] = fidelityDistance;
+matrixDistance["RelativeEntropy"] = relativeEntropy;
+matrixDistance["RelativePurity"] = 1 - Chop[Tr[#1 . #2]] &;
+(* For symbolic states that do not commute, the matrix square root in "Trace" leaves an expression that can
+   evaluate to Indeterminate at numeric parameter values; FullSimplify under assumptions on the parameters
+   recovers the value. *)
+matrixDistance["Trace"] = With[{m = #1 - #2}, Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2] &;
+matrixDistance["Bures"] = Sqrt[2 fidelityDistance[##]] &;
+matrixDistance["BuresAngle"] = Re @ ArcCos[1 - fidelityDistance[##]] &;
+matrixDistance["HilbertSchmidt"] = Norm[#1 - #2, "Frobenius"] &;
+matrixDistance["Bloch"] = EuclideanDistance[blochVector[#1], blochVector[#2]] / 2 &;
+
+(* Two matrices are equal when they are identical, or when they are exact and every entry of their
+   difference reduces to 0 under RootReduce, as Sqrt[3 + 2 Sqrt[2]] - 1 - Sqrt[2] does. Equal states are at
+   distance 0 in every measure, exact or machine as the matrix is, and at 0 bits of relative entropy;
+   "RelativePurity" gives 1 - Tr[rho^2], which is 0 only for a pure state. Computed from the formulas
+   instead, the distance of an exact state with irrational eigenvalues to itself is a sum of nested
+   radicals that is 0 but is never simplified, on which Re and ArcCos cannot decide. *)
+equalMatricesQ[r_, s_] := r === s || Precision[{r, s}] === Infinity && With[{nr = N[r], ns = N[s]},
+    MatrixQ[nr, NumericQ] && MatrixQ[ns, NumericQ] && Max[Abs[Flatten[nr - ns]]] < $distanceTolerance
+] && AllTrue[Flatten[Normal[r - s]], RootReduce[#] === 0 &]
+
+equalStateDistance["RelativePurity", r_] := matrixDistance["RelativePurity"][r, r]
+equalStateDistance["RelativeEntropy", r_] := Quantity[zeroLike[r], "Bits"]
+equalStateDistance[_, r_] := zeroLike[r]
+
+zeroLike[r_] := If[Precision[r] === Infinity, 0, 0.]
+
+(* One minus the fidelity Tr[Sqrt[Sqrt[r] . s . Sqrt[r]]], computed as Tr[Sqrt[r . s]], which has the same
+   eigenvalues under the square root. For machine input the value can land a few units in the last place
+   below 0, which the square root in "Bures" would turn into an imaginary part, and such a value is read as
+   0.; a value further below 0, from a non-physical input, and every symbolic value, are returned as they
+   are. *)
+fidelityDistance[r_, s_] := roundoffZero[1 - Re[Tr[MatrixPower[r . s, 1 / 2]]]]
+
+roundoffZero[d_Real] /; - $distanceTolerance < d < 0 := 0.
+roundoffZero[d_] := d
 
 (* Umegaki relative entropy, S(s||t) = Tr[s log s] - Tr[s log t], where the
    cross term is taken as Sum_j <t_j|s|t_j> log q_j over the eigenbasis of t
@@ -50,76 +174,55 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["
    sum only telescopes to Tr[s log t] on an orthonormal eigenbasis, which
    Eigensystem does not supply inside a degenerate eigenspace, hence
    "Orthogonalize". *)
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /; qs1["Dimension"] == qs2["Dimension"] :=
-    Block[{
-        s = qs1["Computational"]["DensityMatrix"],
-        positive = ! TrueQ[Re[#] <= 0] &,
-        vals, vecs
-    },
-        warnUnphysicalDistance[qs1, qs2];
-        {vals, vecs} = eigensystem[Normal@qs2["Computational"]["DensityMatrix"],
-            "Normalize" -> True, "Orthogonalize" -> True];
-        Quantity[
-            Chop[(
-                Total[# Log[#] & /@ Select[Chop @ eigenvalues[Normal@s], positive]] -
-                Total @ MapThread[If[positive[#2], #2 Log[#1], 0] &, Chop @ {
-                    If[positive[#], #, 0] & /@ vals,
-                    Conjugate[#] . s . # & /@ vecs
-                }]
-            ) / Log[2]],
-            "Bits"
-        ]
+relativeEntropy[s_, t_] := With[{positive = ! TrueQ[Re[#] <= 0] &},
+    Apply[
+        Function[{vals, vecs},
+            Quantity[
+                Chop[(
+                    With[{p = Select[Chop @ eigenvalues[Normal @ s], positive]}, Total[p Log[p]]] -
+                    Total @ MapThread[If[positive[#2], #2 Log[#1], 0] &, Chop @ {
+                        If[positive[#], #, 0] & /@ vals,
+                        Conjugate[#] . s . # & /@ vecs
+                    }]
+                ) / Log[2]],
+                "Bits"
+            ]
+        ],
+        eigensystem[Normal @ t, "Normalize" -> True, "Orthogonalize" -> True]
     ]
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] /; qs1["Dimension"] == qs2["Dimension"] := With[{
-    s = qs1["Computational"]["DensityMatrix"],
-    t = qs2["Computational"]["DensityMatrix"]
-},
-    warnUnphysicalDistance[qs1, qs2];
-    1 - Chop[Tr[s . t]]
 ]
 
+(* The Bloch vector {Tr[m . X], Tr[m . Y], Tr[m . Z]} of a qubit density matrix m, in the generators
+   GellMannMatrices[2] that "BlochVector" also uses; half the Euclidean distance between two Bloch vectors
+   is the trace distance of the two states. In a higher dimension the generalized Bloch vector gives only a
+   multiple of the Hilbert-Schmidt distance, so the measure is defined for a single qubit, and any other
+   dimension gives a Failure, as QuantumQASM does for a circuit that is not on qubits. *)
+blochVector[m_] := Tr[m . #] & /@ GellMannMatrices[2]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] /; qs1["Dimension"] == qs2["Dimension"] := With[{
-    m = qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"]
-},
-    warnUnphysicalDistance[qs1, qs2];
-    Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2
-]
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bures"] /; qs1["Dimension"] == qs2["Dimension"]  :=
-    Sqrt[2 QuantumDistance[qs1, qs2, "Fidelity"]]
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "BuresAngle"] /; qs1["Dimension"] == qs2["Dimension"]  :=
-    Re @ ArcCos[1 - QuantumDistance[qs1, qs2, "Fidelity"]]
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "HilbertSchmidt"] /; qs1["Dimension"] == qs2["Dimension"] := (
-    warnUnphysicalDistance[qs1, qs2];
-    Norm[qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"], "Frobenius"]
-)
-
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] /; qs1["Dimension"] == qs2["Dimension"] := (
-    warnUnphysicalDistance[qs1, qs2];
-    Re @ EuclideanDistance[qs1["BlochCartesianCoordinates"], qs2["BlochCartesianCoordinates"]] / 2
-)
+nonQubitBlochFailure[d_] := Failure["NonQubitBloch", <|
+    "MessageTemplate" :> QuantumDistance::bloch,
+    "MessageParameters" -> {d},
+    "Dimension" -> d
+|>]
 
 
-QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] :=
-    Block[{d = QuantumDistance[qs1, qs2, distance]},
-        Switch[distance,
-            "Fidelity" | "Trace" | "Bloch" | "RelativePurity",
-                1 - d,
-            "Bures",
-                1 - d / Sqrt[2],
-            "BuresAngle",
-                1 - d / (Pi / 2),
-            "HilbertSchmidt",
-                1 - d / Sqrt[2],
-            "RelativeEntropy",
-                2 ^ (-Replace[d, q_Quantity :> QuantityMagnitude[q]]), (* exponential decay for unbounded metric *)
-            _,
-                1 - d
-        ]
-    ]
+QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, measure : Alternatives @@ $QuantumDistances : "Fidelity"] :=
+    With[{d = QuantumDistance[qs1, qs2, measure]}, If[FailureQ[d], d, unitInterval @ similarity[measure, d]]]
+
+(* Each similarity from its distance d: 1 - d for the measures bounded by 1, 1 - d / Sqrt[2] and
+   1 - d / (Pi / 2) for those bounded by Sqrt[2] and Pi / 2, and an exponential decay for the unbounded
+   relative entropy. A state has similarity 1 with itself in every measure but "RelativePurity", whose
+   similarity Tr[rho . sigma] is then the purity Tr[rho^2], 1 only for a pure state. *)
+similarity["Bures" | "HilbertSchmidt", d_] := 1 - d / Sqrt[2]
+similarity["BuresAngle", d_] := 1 - d / (Pi / 2)
+similarity["RelativeEntropy", d_] := 2 ^ (-Replace[d, q_Quantity :> QuantityMagnitude[q]])
+similarity[_, d_] := 1 - d
+
+(* A machine similarity that round-off leaves just outside [0, 1], as the self RelativePurity similarity of
+   a pure state a unit in the last place above 1, is returned at the end of the interval. The differences
+   are compared with 0, since a comparison of two machine numbers such as 1. + 2.^-52 > 1 ignores the last
+   bits; a value further outside, from a non-physical input, is returned as it is. *)
+unitInterval[x_Real] /; - $distanceTolerance < x < 0 := 0.
+unitInterval[x_Real] /; 0 < x - 1 < $distanceTolerance := 1.
+unitInterval[x_] := x
 

@@ -390,14 +390,15 @@ VerificationTest[
 ];
 
 (* The examples of the QuantumSimilarity.nb reference page, their values
-   pinned to what the kernel returns, in two tests. The inputs of these seven
+   pinned to what the kernel returns, in three tests. The inputs of these seven
    (Basic Examples, Scope, and Properties and Relations) are density matrices
    or normalized state vectors, for which every similarity lies in [0, 1], and
-   none has a negative eigenvalue, so none raises the notphysical warning. The
-   last maps over two states with the same populations {1/2, 1/2}: the
-   maximally mixed state commutes with diag(1/4, 3/4), so its fidelity
-   similarity is the overlap Sqrt[1/4 1/2] + Sqrt[3/4 1/2] of the populations,
-   while |+> does not commute with it and gives the smaller 1/Sqrt[2]. *)
+   none has a negative eigenvalue or a trace other than 1, so none raises a
+   message. The last maps over two states with the same populations
+   {1/2, 1/2}: the maximally mixed state commutes with diag(1/4, 3/4), so its
+   fidelity similarity is the overlap Sqrt[1/4 1/2] + Sqrt[3/4 1/2] of the
+   populations, while |+> does not commute with it and gives the smaller
+   1/Sqrt[2]. *)
 VerificationTest[
   With[{qst = Wolfram`QuantumFramework`QuantumState,
         qsim = Wolfram`QuantumFramework`QuantumSimilarity},
@@ -418,11 +419,11 @@ VerificationTest[
   TestID -> "B1-Examples-Match"
 ];
 
-(* The Possible Issues example compares two matrices that are Hermitian with
-   unit trace but have a negative determinant, hence one negative eigenvalue
-   each: neither is a density matrix, so QuantumDistance warns once with
-   notphysical. Their trace distance exceeds 1, the largest trace distance two
-   density matrices can have, so the similarity is negative. *)
+(* The first Possible Issues example compares two matrices that are Hermitian
+   with unit trace but have a negative determinant, hence one negative
+   eigenvalue each: neither is a density matrix, so QuantumDistance warns once
+   with notphysical. Their trace distance exceeds 1, the largest trace distance
+   two density matrices can have, so the similarity is negative. *)
 VerificationTest[
   Wolfram`QuantumFramework`QuantumSimilarity[
     Wolfram`QuantumFramework`QuantumState[{{1/4, 1}, {1, 3/4}}],
@@ -435,6 +436,23 @@ VerificationTest[
   {Wolfram`QuantumFramework`QuantumDistance::notphysical}
   ,
   TestID -> "B1-Examples-Match-NonPSD"
+];
+
+(* The second Possible Issues example compares diag(1/4, 3/4) with the
+   identity matrix, whose trace is 2: QuantumDistance divides it by its trace,
+   with one notnormalized message, and reads it as the maximally mixed state,
+   so the similarity is the one the maximally mixed state gives. *)
+VerificationTest[
+  Wolfram`QuantumFramework`QuantumSimilarity[
+    Wolfram`QuantumFramework`QuantumState[{{1/4, 0}, {0, 3/4}}],
+    Wolfram`QuantumFramework`QuantumState[{{1, 0}, {0, 1}}]
+  ]
+  ,
+  Sqrt[3/2]/2 + 1/(2 Sqrt[2])
+  ,
+  {Wolfram`QuantumFramework`QuantumDistance::notnormalized}
+  ,
+  TestID -> "B1-Examples-Match-Unnormalized"
 ];
 
 (* Identity and orthogonality boundary conditions: similarity of a state

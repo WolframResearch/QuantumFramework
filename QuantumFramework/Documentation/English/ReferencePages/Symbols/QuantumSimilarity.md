@@ -13,19 +13,20 @@ RelatedGuides: [WolframQuantumComputationFramework]
 <!--
 Source of QuantumSimilarity.nb, built with MarkdownToNotebook. Every example state outside
 Possible Issues is a density matrix (positive semidefinite, unit trace) or a normalized state
-vector, the inputs for which the similarity lies in [0, 1]; the one pair that is not, and the
-QuantumDistance::notphysical message it issues, is under Possible Issues.
-Tests/CleanupRegression.wlt replays these examples ("B1-Examples-Match" and
-"B1-Examples-Match-NonPSD"), so a change to one needs the same change to the other.
+vector, and none issues a message; the two examples under Possible Issues show the
+QuantumDistance::notphysical and QuantumDistance::notnormalized messages.
+Tests/CleanupRegression.wlt replays these examples ("B1-Examples-Match",
+"B1-Examples-Match-NonPSD" and "B1-Examples-Match-Unnormalized"), so a change to one needs
+the same change to the other.
 -->
 
 ## Usage
 
-<code>[QuantumSimilarity]()[$qs_{1}$,$qs_{2}$,*t*]</code> returns the similarity between two quantum discrete states using measure *t*, a number in [0,1] for density matrices and normalized state vectors.
+<code>[QuantumSimilarity]()[$qs_{1}$,$qs_{2}$,*t*]</code> returns the similarity between two quantum discrete states using measure *t*, a number in [0,1] for numeric state vectors and positive semidefinite matrices (single-qubit states for `"Bloch"`).
 
 ## Details & Options
 
-- <code>[QuantumSimilarity]()[…]</code> returns the similarity between two input states, a number in [0,1] when both are numeric and each is a density matrix or a normalized state vector. In <code>[QuantumSimilarity]()[$qs_{1}$,$qs_{2}$,*t*]</code> the following similarity measures *t* are supported:
+- <code>[QuantumSimilarity]()[…]</code> returns the similarity between two input states, a number in [0,1] when both are numeric and each is a state vector or a positive semidefinite matrix; `"Bloch"` is defined for single qubits only. In <code>[QuantumSimilarity]()[$qs_{1}$,$qs_{2}$,*t*]</code> the following similarity measures *t* are supported:
 
 |   |   |
 |---|---|
@@ -42,7 +43,9 @@ Tests/CleanupRegression.wlt replays these examples ("B1-Examples-Match" and
 
 - Each similarity is constructed from the corresponding [QuantumDistance]() measure *d* by the rules below, so that identical states give similarity `1` and states with orthogonal supports give similarity `0`, with two exceptions: the `"RelativePurity"` similarity of a mixed state with itself is its purity $Tr[\rho^{2}]$, less than `1`, and the `"HilbertSchmidt"` similarity of two states with orthogonal supports is $1-\sqrt{(Tr[\rho_{1}^{2}]+Tr[\rho_{2}^{2}])/2}$, above `0` unless both states are pure. For `"Fidelity"`, `"Trace"`, `"Bloch"`, and `"RelativePurity"`, the similarity is $1-d$. For `"Bures"` and `"HilbertSchmidt"` (whose distance ranges in $[0,\sqrt{2}]$), the similarity is $1-\frac{d}{\sqrt{2}}$. For `"BuresAngle"` (whose distance ranges in $[0,\frac{\pi }{2}]$), the similarity is $1-\frac{d}{\frac{\pi }{2}}$. The `"RelativeEntropy"` case is unbounded and uses an exponential decay: similarity is $2^{-d}$. See [QuantumDistance]() for the underlying distance formulas.
 
-- The range [0,1] holds for density matrices, which are positive semidefinite with unit trace; a normalized state vector qualifies. The inputs are used as given: a state whose density matrix does not have unit trace, such as an unnormalized state vector, is not rescaled first, except by `"Bloch"`, which reads the Bloch vector of the rescaled state; <code>*qs*["Normalized"]</code> gives the rescaled state. An input whose density matrix is numeric and has an eigenvalue below $-10^{-8}$ issues a `QuantumDistance::notphysical` message; a symbolic input is not checked.
+- The similarities are defined for density matrices, which are Hermitian and positive semidefinite with unit trace. An input whose trace is a positive number other than 1, such as a state vector whose squared norm is not 1, is divided by its trace first, so the range [0,1] holds for any numeric state vector and positive semidefinite matrix. An exact positive trace other than 1 issues a `QuantumDistance::notnormalized` message; a machine-precision trace is divided in any case, and issues the message when it is more than $10^{-8}$ from 1. A symbolic input is rescaled only when its trace evaluates to a number, and is otherwise used as given; <code>*qs*["Normalized"]</code> gives the state it stands for. An input whose trace is 0, or a numeric input that is not Hermitian or that has an eigenvalue below $-10^{-8}$ once divided by its trace, issues a `QuantumDistance::notphysical` message; a symbolic matrix is not checked.
+
+- The `"Bloch"` similarity is defined for a single qubit; for any other dimension it returns a <code>[Failure]()</code> object.
 
 ## Basic Examples
 
@@ -122,3 +125,13 @@ QuantumSimilarity[QuantumState[{{1/4, 1}, {1, 3/4}}],
  QuantumState[{{1/2, 2}, {2, 1/2}}], "Trace"]
 ```
 <!-- => QuantumDistance::notphysical message, then 1 - Sqrt[17]/4 -->
+
+---
+
+The identity matrix has trace 2, so it is divided by its trace and read as the maximally mixed state, and a message is issued:
+
+```wl
+QuantumSimilarity[QuantumState[{{1/4, 0}, {0, 3/4}}], 
+ QuantumState[{{1, 0}, {0, 1}}]]
+```
+<!-- => QuantumDistance::notnormalized message, then Sqrt[3/2]/2 + 1/(2 Sqrt[2]) -->
