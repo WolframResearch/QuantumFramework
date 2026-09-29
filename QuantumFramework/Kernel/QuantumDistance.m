@@ -180,10 +180,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, measure : Alternativ
 matrixDistance["Fidelity"] = fidelityDistance;
 matrixDistance["RelativeEntropy"] = relativeEntropy;
 matrixDistance["RelativePurity"] = 1 - Chop[Tr[#1 . #2]] &;
-(* For symbolic states that do not commute, the matrix square root in "Trace" leaves an expression that can
-   evaluate to Indeterminate at numeric parameter values; FullSimplify under assumptions on the parameters
-   recovers the value. *)
-matrixDistance["Trace"] = With[{m = #1 - #2}, Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2] &;
+matrixDistance["Trace"] = traceDistance;
 matrixDistance["Bures"] = Sqrt[2 fidelityDistance[##]] &;
 matrixDistance["BuresAngle"] = Re @ ArcCos[1 - fidelityDistance[##]] &;
 matrixDistance["HilbertSchmidt"] = Norm[#1 - #2, "Frobenius"] &;
@@ -205,12 +202,158 @@ equalStateDistance[_, r_] := zeroLike[r]
 
 zeroLike[r_] := If[Precision[r] === Infinity, 0, 0.]
 
-(* One minus the fidelity Tr[Sqrt[Sqrt[r] . s . Sqrt[r]]], computed as Tr[Sqrt[r . s]], which has the same
-   eigenvalues under the square root. For machine input the value can land a few units in the last place
-   below 0, which the square root in "Bures" would turn into an imaginary part, and such a value is read as
-   0.; a value further below 0, from a non-physical input, and every symbolic value, are returned as they
-   are. *)
-fidelityDistance[r_, s_] := roundoffZero[1 - Re[Tr[MatrixPower[r . s, 1 / 2]]]]
+(* One minus the fidelity of the two matrices. Round-off can leave the value just below 0, which the square
+   root in "Bures" would turn into an imaginary part: a Real less than $distanceTolerance below 0 is read as
+   the machine number 0., whatever its precision; a value further below 0, from a non-physical input, and
+   every symbolic value, are returned as they are. *)
+fidelityDistance[r_, s_] := roundoffZero[1 - fidelity[r, s]]
+
+(* Below machine precision the arbitrary-precision linear algebra has too few digits to work with, and
+   SingularValueList can fail to converge or run for minutes, as it does on some pairs of 4 x 4 states at
+   precision 2. The fidelity and the trace distance are then computed from the machine numbers of the input
+   and given the accuracy the input and the machine computation support. With every entry known to within
+   10^-a, each state is known to within d^(3/2) 10^-a in trace norm. The trace distance moves by no more
+   than that. The fidelity, by the Powers-Stormer inequality, which bounds the squared Hilbert-Schmidt
+   distance of the square roots of two states by their trace-norm distance, moves by no more than
+   2 (d^(3/2) 10^-a)^(1/2), so it keeps about half the digits of its input; the eigenvalues the machine
+   computation drops below its cut add at most 2 Sqrt[(d - 1) cut], and its round-off about
+   d $MachineEpsilon. *)
+fidelity[r_, s_] /; lowPrecisionMatricesQ[r, s] := With[{a = workingPrecision[{r, s}], d = Length[r]},
+    SetAccuracy[
+        fidelity[N[r], N[s]],
+        -Log10[2 Sqrt[d^(3 / 2) 10^-a] + 2 Sqrt[(d - 1) N[100 10^-MachinePrecision]] + d $MachineEpsilon]
+    ]
+]
+
+(* The fidelity Tr[Sqrt[Sqrt[r] . s . Sqrt[r]]] of two matrices of inexact numbers, from the eigensystem of
+   each. With r = Sum_i a_i |u_i><u_i| and s = Sum_j b_j |v_j><v_j|, it is the sum of the singular values of
+   Sqrt[r] . Sqrt[s], and so of M_ij = Sqrt[a_i] <u_i|v_j> Sqrt[b_j], which is the same matrix between
+   factors with orthonormal columns. Round-off moves an eigenvalue of a Hermitian matrix, and a singular
+   value, no further than the norm of the round-off, however small the overlap of the two states. The
+   eigenvalues of r . s, which is not Hermitian, have no such bound: for two nearly orthogonal states the
+   round-off in them grows, relative to the small eigenvalues that carry the fidelity, as the overlap
+   shrinks, and the square roots of those that are round-off of 0 put an error far above the round-off into
+   their sum. An input that is not physical enters as the positive part of its Hermitian part. The entries
+   that are exactly 0 in an arbitrary-precision input stay exact under N, and a fidelity made of them alone,
+   as that of two orthogonal states in the computational basis, is an exact 0, which is given the accuracy
+   of the input. *)
+fidelity[r_, s_] /; inexactMatricesQ[r, s] := With[{p = workingPrecision[{r, s}]},
+    With[{f = inexactFidelity[N[r, p], N[s, p], p]}, If[Precision[f] === Infinity && p =!= MachinePrecision, SetAccuracy[f, p], f]]
+]
+
+(* The fidelity of exact or symbolic matrices, from the eigenvalues of r . s, which are those of
+   Sqrt[r] . s . Sqrt[r]: the trace of a square root is the sum of the square roots of the eigenvalues, so
+   no square root of a matrix is formed. An exact matrix has radicals or Root objects for eigenvalues, and
+   the sum of their square roots stays small, where the square root of the matrix carries its eigenvectors
+   in every entry and grows far faster with the dimension; a symbolic sum has no difference of two
+   eigenvalues in a denominator, so it stays finite at parameter values where they coincide; and a product
+   that is not diagonalizable, which only a non-physical input gives, can have no square root, as the
+   nilpotent |+><+| . Z has none, while its eigenvalues always exist. *)
+fidelity[r_, s_] := Re[Total[Sqrt[Eigenvalues[r . s]]]]
+
+inexactMatricesQ[r_, s_] := Precision[{r, s}] < Infinity && MatrixQ[r, NumericQ] && MatrixQ[s, NumericQ]
+
+lowPrecisionMatricesQ[r_, s_] := inexactMatricesQ[r, s] && workingPrecision[{r, s}] < $MachinePrecision
+
+(* The working precision of an inexact matrix, or of a list of matrices: machine precision for machine
+   numbers, and otherwise the least accuracy of the entries, the number of digits known after the decimal
+   point. The entries of a density matrix are no larger than 1, so their accuracy measures what is known of
+   the state; the precision of an entry falls as the entry shrinks, to 0 for a zero known only to an
+   accuracy, as the 0``29.8 that Cos[N[Pi, 30] / 2] gives, and says little about the other entries. *)
+workingPrecision[m_] := With[{p = Precision[m]}, If[p === MachinePrecision, p, Accuracy[m]]]
+
+(* Two diagonal matrices commute, and their fidelity is the sum over the diagonal of the square roots of the
+   products of their populations, taken as Sqrt[p] Sqrt[q] so that a product of two small populations does
+   not leave the range of machine numbers; a negative population, from a non-physical input, counts as 0. *)
+inexactFidelity[r_, s_, _] /; diagonalQ[r] && diagonalQ[s] :=
+    Total[Sqrt[Ramp[Re[Normal[Diagonal[r]]]]] Sqrt[Ramp[Re[Normal[Diagonal[s]]]]]]
+inexactFidelity[r_, s_, p_] := supportFidelity[hermitianSupport[r], hermitianSupport[s], p]
+
+(* A matrix whose every entry off the diagonal is 0, exact or a zero known only to an accuracy, as 0``29.8;
+   DiagonalMatrixQ with its default tolerance also takes a machine matrix with small nonzero entries off the
+   diagonal for diagonal. *)
+diagonalQ[m_] := DiagonalMatrixQ[m, Tolerance -> 0]
+
+(* The sum of the singular values of M from the two supports, {eigenvalues, eigenvectors as rows}; with no
+   eigenvalue left in a support, which only a non-physical input gives, the fidelity is 0. *)
+supportFidelity[{a_, u_}, {b_, v_}, p_] := If[a === {} || b === {},
+    N[0, p],
+    Total[SingularValueList[KroneckerProduct[Sqrt[a], Sqrt[b]] Normal[Conjugate[u] . Transpose[v]], Tolerance -> 0]]
+]
+
+(* The positive eigenvalues of a diagonal matrix, its diagonal entries as stored, with the unit vectors as
+   eigenvectors. No eigensolver adds round-off to them, so each is kept however small: the fidelity of
+   diag(1 - 10^-20, 10^-20) with the pure state {10^-12, Sqrt[1 - 10^-24]} lies almost all in the
+   population 10^-20. *)
+hermitianSupport[m_] /; diagonalQ[m] := With[{l = Re[Normal[Diagonal[m]]]},
+    With[{keep = Thread[l > 0]},
+        {Pick[l, keep], IdentityMatrix[Length[l], SparseArray][[Pick[Range[Length[l]], keep]]]}
+    ]
+]
+
+(* The eigenvalues of the Hermitian part of an inexact matrix that are above 100 10^-p times the largest in
+   magnitude, at precision p, with their eigenvectors as rows; the others, negative ones included, are
+   dropped. Round-off moves the eigenvalues by about 10^-p times the largest, so the cut keeps the square
+   roots of round-off of 0 out of the fidelity. A genuine eigenvalue below the cut is dropped too, which
+   changes the fidelity by no more than the square root of the cut for each one dropped, and only by that
+   much when the other state has its weight on the eigenvector; the precision an arbitrary-precision result
+   claims does not account for that change, which can exceed its stated uncertainty at any precision. A
+   diagonal matrix keeps every positive entry instead, so two states whose overlap lies in eigenvalues below
+   the cut get a fidelity that depends, by up to that much, on whether the basis they are given in makes
+   them diagonal. The eigenvectors must be orthonormal. Eigensystem gives the eigenvectors of an inexact
+   matrix normalized and independent, but not orthogonal, and at higher precision two eigenvectors of a
+   repeated eigenvalue can be orthogonal to far fewer digits than the working precision; there they are the
+   columns of q in the Schur decomposition q . t . ConjugateTranspose[q], where q is unitary and t, for a
+   Hermitian matrix, is diagonal with the eigenvalues. The kept eigenvectors are then made orthonormal with
+   Orthogonalize by Householder reflections, which keeps the span of each leading set of them, and so each
+   eigenspace; vectors that are already orthonormal come back changed only by round-off and by a factor of
+   modulus 1 on each, which leaves the singular values of M as they are. *)
+hermitianSupport[m_] := With[{e = hermitianEigensystem[m]},
+    With[{keep = Thread[Re[e[[1]]] > N[100 10^-workingPrecision[m]] Max[Abs[e[[1]]]]]},
+        {Re[Pick[e[[1]], keep]], orthonormalRows[Pick[e[[2]], keep]]}
+    ]
+]
+
+orthonormalRows[v_] := Orthogonalize[v, Method -> "Householder"]
+
+(* The eigensystem of the Hermitian part of m. A SparseArray of machine numbers with both real and
+   complex entries gives an unpacked list, on which forming the Hermitian part is many times slower than
+   on a packed one, so the list is packed as complex first; only machine numbers are packed, since packing
+   would round arbitrary-precision entries to machine numbers. *)
+hermitianEigensystem[m_] /; Precision[m] === MachinePrecision :=
+    Eigensystem[hermitianPart[With[{n = Normal[m]}, If[Developer`PackedArrayQ[n], n, Developer`ToPackedArray[n, Complex]]]]]
+hermitianEigensystem[m_] := With[{qt = SchurDecomposition[hermitianPart[Normal[m]]]}, {Diagonal[qt[[2]]], Transpose[qt[[1]]]}]
+
+hermitianPart[m_] := (m + ConjugateTranspose[m]) / 2
+
+(* Below machine precision, as for the fidelity, the trace distance is computed from the machine numbers of
+   the input and given the accuracy its bound d^(3/2) 10^-a, plus the round-off of the machine computation,
+   supports. *)
+traceDistance[r_, s_] /; lowPrecisionMatricesQ[r, s] := With[{a = workingPrecision[{r, s}], d = Length[r]},
+    SetAccuracy[traceDistance[N[r], N[s]], -Log10[d^(3 / 2) 10^-a + d $MachineEpsilon]]
+]
+
+(* Two diagonal matrices: the singular values of their difference are the absolute differences of their
+   populations. *)
+traceDistance[r_, s_] /; inexactMatricesQ[r, s] && diagonalQ[r] && diagonalQ[s] := Total[Abs[Normal[Diagonal[r] - Diagonal[s]]]] / 2
+
+(* Half the trace norm of r - s, the sum of its singular values. SingularValueList finds them without
+   forming ConjugateTranspose[r - s] . (r - s), so a singular value of the order of the round-off stays that
+   small, where the square root of an eigenvalue of that product would be of the order of the square root
+   of the round-off. For inexact input it is given the dense difference, since a SparseArray with few nonzero
+   entries, which is how QuantumState keeps a sparse density matrix, is converted to a dense one above
+   dimension 100 with a SingularValueList::arh message; and Tolerance -> 0, since its default drops singular
+   values below 100 10^-p times the largest, which are well above round-off. The trace norm of a difference
+   that is not Hermitian, which only a non-physical input gives, is still the sum of its singular values, not
+   of the absolute values of its eigenvalues. *)
+traceDistance[r_, s_] /; inexactMatricesQ[r, s] := Total[SingularValueList[Normal[r - s], Tolerance -> 0]] / 2
+
+(* For exact and symbolic input the default tolerance is 0 and only exact zeros are dropped. The singular
+   values are radicals or Root objects with no difference of two eigenvalues in a denominator, so they stay
+   finite where eigenvalues of ConjugateTranspose[r - s] . (r - s) coincide, as they do at every real point
+   for two qubit states; Re removes the zero imaginary part such a value can pick up when it is evaluated
+   numerically. *)
+traceDistance[r_, s_] := Re @ Total[SingularValueList[r - s]] / 2
 
 roundoffZero[d_Real] /; - $distanceTolerance < d < 0 := 0.
 roundoffZero[d_] := d

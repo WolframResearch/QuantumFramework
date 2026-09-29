@@ -616,9 +616,12 @@ VerificationTest[
     TestID -> "Normalized-MachineRounding-NoMessage"
 ]
 
+(* Divided by its machine trace, the same ket is |0> up to a unit in the last place, so its fidelity with
+   |0> can land a unit in the last place below 1, which the Bures distance turns into Sqrt[$MachineEpsilon];
+   the distance is bounded by that of a fidelity two units in the last place below 1. *)
 VerificationTest[
-    With[{v = QuantumState[{Sqrt[1 - 9.*^-9], 0.}]}, {QuantumDistance[v, v, "Bures"], QuantumDistance[v, qs0, "Bures"]}],
-    {0., 0.},
+    With[{v = QuantumState[{Sqrt[1 - 9.*^-9], 0.}]}, {QuantumDistance[v, v, "Bures"], QuantumDistance[v, qs0, "Bures"] <= Sqrt[2 $MachineEpsilon]}],
+    {0., True},
     {},
     TestID -> "Normalized-MachineNearUnitTrace-NoMessage"
 ]
@@ -1002,6 +1005,316 @@ VerificationTest[
     {},
     SameTest -> MatchQ,
     TestID -> "Bloch-NonQubit-Failure"
+]
+
+
+(* ========== Fidelity and trace distance from spectra ========== *)
+
+(* A pair of exact mixed states of dimension 4 in general position: the fidelity is a sum of the square
+   roots of the eigenvalues of r . s, which are Root objects, and the trace distance half a sum of
+   singular values, so each result stays under a thousand leaves, the bound checked here, and both agree to
+   25 digits with the nuclear norm of Sqrt[r] . Sqrt[s] and the singular values of r - s at 40 digits. *)
+VerificationTest[
+    BlockRandom[
+        With[{
+            r = With[{a = RandomInteger[{-4, 4}, {4, 4}] + I RandomInteger[{-4, 4}, {4, 4}]}, # / Tr[#] & [a . ConjugateTranspose[a]]],
+            s = With[{a = RandomInteger[{-4, 4}, {4, 4}] + I RandomInteger[{-4, 4}, {4, 4}]}, # / Tr[#] & [a . ConjugateTranspose[a]]]
+        },
+            With[{f = QuantumDistance[QuantumState[r], QuantumState[s], "Fidelity"], t = QuantumDistance[QuantumState[r], QuantumState[s], "Trace"]},
+                {
+                    LeafCount[f] < 1000,
+                    LeafCount[t] < 1000,
+                    Abs[N[1 - f, 30] - Total[SingularValueList[MatrixPower[N[r, 40], 1/2] . MatrixPower[N[s, 40], 1/2], Tolerance -> 0]]] < 10^-25,
+                    Abs[N[t, 30] - Total[SingularValueList[N[r - s, 40], Tolerance -> 0]] / 2] < 10^-25
+                }
+            ]
+        ],
+        RandomSeeding -> 9
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "Exact-Spectral-CompactAndCorrect"
+]
+
+(* Machine pure states in dimension 64: the fidelity distance is 1 - |<a|b>| and the trace distance
+   Sqrt[1 - |<a|b>|^2] to round-off, for a random pair and for a pair with |<a|b>| = 10^-6. For that pair
+   r . s has one eigenvalue |<a|b>|^2 = 10^-12 and 63 that are round-off of 0, and the round-off in its
+   eigenvalues grows, relative to |<a|b>|^2, as the overlap shrinks, so the square roots of those 63 would
+   put an error far above the round-off into the fidelity; r and s each have one eigenvalue 1 and round-off
+   of 0, and their eigenvectors give the overlap to round-off. *)
+VerificationTest[
+    BlockRandom[
+        With[{a = Normalize[RandomComplex[{-1 - I, 1 + I}, 64]], c = RandomComplex[{-1 - I, 1 + I}, 64]},
+            With[{
+                b = Normalize[RandomComplex[{-1 - I, 1 + I}, 64]],
+                bNearlyOrthogonal = 1.*^-6 a + Sqrt[1 - 1.*^-12] Normalize[c - (Conjugate[a] . c) a]
+            },
+                Flatten @ Map[
+                    Function[v, With[{overlap = Abs[Conjugate[a] . v]},
+                        {
+                            Abs[QuantumDistance[QuantumState[a], QuantumState[v], "Fidelity"] - (1 - overlap)] < 1.*^-13,
+                            Abs[QuantumDistance[QuantumState[a], QuantumState[v], "Trace"] - Sqrt[1 - overlap^2]] < 1.*^-13
+                        }
+                    ]],
+                    {b, bNearlyOrthogonal}
+                ]
+            ]
+        ],
+        RandomSeeding -> 10
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "Machine-PureStates-NoSqrtOfRoundoff"
+]
+
+(* Pure states at 30 digits in dimension 8, a random pair and a pair with |<a|b>| = 10^-10: the fidelity
+   distance keeps its digits to 10^-25 for both. For the second pair the eigenvalue |<a|b>|^2 = 10^-20 of r . s is
+   not far above the round-off in the eigenvalues of that product, and a fidelity taken from them keeps far
+   fewer of its digits. *)
+VerificationTest[
+    BlockRandom[
+        With[{
+            a = Normalize[RandomComplex[{-1 - I, 1 + I}, 8, WorkingPrecision -> 30]],
+            b = Normalize[RandomComplex[{-1 - I, 1 + I}, 8, WorkingPrecision -> 30]],
+            c = RandomComplex[{-1 - I, 1 + I}, 8, WorkingPrecision -> 30]
+        },
+            With[{bNearlyOrthogonal = N[10^-10, 30] a + N[Sqrt[1 - 10^-20], 30] Normalize[c - (Conjugate[a] . c) a]},
+                Map[
+                    Abs[QuantumDistance[QuantumState[a], QuantumState[#]] - (1 - Abs[Conjugate[a] . #])] < 10^-25 &,
+                    {b, bNearlyOrthogonal}
+                ]
+            ]
+        ],
+        RandomSeeding -> 11
+    ],
+    {True, True},
+    {},
+    TestID -> "ArbitraryPrecision-PureStates-KeepDigits"
+]
+
+(* A rank-2 state with a repeated eigenvalue, 1/2 twice, against a rank-4 state, at 60 digits. With the
+   eigenvectors the columns of u and v, the fidelity is the sum of the singular values of
+   M_ij = Sqrt[1/2] <u_i|v_j> Sqrt[q_j], which needs no eigensolver, and the distance agrees with it to
+   10^-50; two eigenvectors of the repeated eigenvalue that are orthogonal to far fewer digits than the
+   working precision put an error far above 10^-50 into the distance. *)
+VerificationTest[
+    BlockRandom[
+        With[{
+            u = Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {6, 6}, WorkingPrecision -> 90]],
+            v = Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {6, 6}, WorkingPrecision -> 90]],
+            p = {1/2, 1/2, 0, 0, 0, 0},
+            q = {1/10, 2/10, 3/10, 4/10, 0, 0}
+        },
+            Abs[
+                QuantumDistance[
+                    QuantumState[N[u . DiagonalMatrix[p] . ConjugateTranspose[u], 60]],
+                    QuantumState[N[v . DiagonalMatrix[q] . ConjugateTranspose[v], 60]]
+                ] -
+                (1 - Total[SingularValueList[KroneckerProduct[Sqrt[p[[1 ;; 2]]], Sqrt[q[[1 ;; 4]]]] (ConjugateTranspose[u][[1 ;; 2]] . v[[All, 1 ;; 4]])]])
+            ] < 10^-50
+        ],
+        RandomSeeding -> 7
+    ],
+    True,
+    {},
+    TestID -> "ArbitraryPrecision-RepeatedEigenvalue-KeepDigits"
+]
+
+(* Two commuting machine states with small populations, 10^-8 and 2 10^-8: the fidelity takes
+   Sqrt[10^-8 2 10^-8] from the product of the populations, an eigenvalue of r . s at the level of the
+   round-off of its largest, which a cut for round-off in r . s drops, while the eigenvalues of r and s
+   themselves are far above round-off and keep it. *)
+VerificationTest[
+    Abs[
+        QuantumDistance[QuantumState[N[DiagonalMatrix[{1 - 10^-8, 10^-8}]]], QuantumState[N[DiagonalMatrix[{1 - 2 10^-8, 2 10^-8}]]]] -
+        N[1 - Sqrt[(1 - 10^-8) (1 - 2 10^-8)] - Sqrt[10^-8 2 10^-8]]
+    ] < 1.*^-15,
+    True,
+    {},
+    TestID -> "Machine-CommutingStates-KeepSmallPopulations"
+]
+
+(* Two diagonal machine states with swapped populations, diag(1 - e, e) and diag(e, 1 - e), for e = 10^-14
+   and 10^-20: the fidelity 2 Sqrt[e (1 - e)] lies entirely in the small population e. The populations are
+   the eigenvalues, stored exactly, and each is kept however small, so the distance is
+   1 - 2 Sqrt[e (1 - e)] to round-off; a cut relative to the largest eigenvalue of each state would drop e
+   and give 1. *)
+VerificationTest[
+    Map[
+        Abs[
+            QuantumDistance[QuantumState[N[DiagonalMatrix[{1 - #, #}]]], QuantumState[N[DiagonalMatrix[{#, 1 - #}]]]] -
+            N[1 - 2 Sqrt[# (1 - #)]]
+        ] < 1.*^-15 &,
+        {10^-14, 10^-20}
+    ],
+    {True, True},
+    {},
+    TestID -> "Machine-SwappedPopulations-KeepSmallPopulations"
+]
+
+(* Two orthogonal machine states: every measure built on the fidelity, and the trace distance, is a machine
+   number, as the input is, and none is an exact number. *)
+VerificationTest[
+    QuantumDistance[QuantumState[{1., 0.}], QuantumState[{0., 1.}], #] & /@ {"Fidelity", "Bures", "BuresAngle", "Trace"},
+    {1., Sqrt[2.], N[Pi / 2], 1.},
+    {},
+    TestID -> "Machine-OrthogonalStates-MachineResults"
+]
+
+(* A diagonal machine state against a pure state that is not diagonal, diag(1 - 10^-20, 10^-20) against
+   {10^-12, Sqrt[1 - 10^-24]}: the fidelity Sqrt[(1 - 10^-20) 10^-24 + 10^-20 (1 - 10^-24)] lies almost all
+   in the population 10^-20, which the diagonal state gives as stored, far below a cut relative to its
+   largest eigenvalue. *)
+VerificationTest[
+    Abs[
+        QuantumDistance[QuantumState[N[DiagonalMatrix[{1 - 10^-20, 10^-20}]]], QuantumState[N[{10^-12, Sqrt[1 - 10^-24]}]]] -
+        N[1 - Sqrt[(1 - 10^-20) 10^-24 + 10^-20 (1 - 10^-24)]]
+    ] < 1.*^-15,
+    True,
+    {},
+    TestID -> "Machine-DiagonalAgainstPure-KeepSmallPopulation"
+]
+
+(* 30-digit states whose zero entries are known only to an accuracy, as the 0``29.8 of Cos[N[Pi, 30] / 2]:
+   such a zero has precision 0, and so does a matrix that holds one, while the nonzero entries carry the 30
+   digits. |1> built that way is at distance 0 from |1> and at 1 - 1/Sqrt[2] from |+>, and so is the
+   maximally mixed state built with such zeros from |+>. *)
+VerificationTest[
+    With[{
+        one = QuantumState[{Cos[N[Pi, 30] / 2], Sin[N[Pi, 30] / 2]}],
+        mixed = QuantumState[{{N[1/2, 30], Cos[N[Pi, 30] / 2]}, {Cos[N[Pi, 30] / 2], N[1/2, 30]}}],
+        plus = QuantumState[N[{1, 1} / Sqrt[2], 30]]
+    },
+        {
+            Abs[QuantumDistance[one, QuantumState[N[{0, 1}, 30]]]] < 10^-25,
+            Abs[QuantumDistance[one, plus] - (1 - 1 / Sqrt[2])] < 10^-25,
+            Abs[QuantumDistance[mixed, plus] - (1 - 1 / Sqrt[2])] < 10^-25
+        }
+    ],
+    {True, True, True},
+    {},
+    TestID -> "ArbitraryPrecision-AccuracyOnlyZeros-KeepPrecision"
+]
+
+(* Two pairs of 4 x 4 states at precision 2. In arbitrary-precision arithmetic, the fidelity of the first
+   pair computed from the eigensystems of the two states comes back with an accuracy it does not have, and
+   the singular values of the difference of the second pair run for minutes without converging. Computed from
+   the machine numbers of the input, the fidelity distance of the first pair and the trace distance of the
+   second return at once, and the exact distance of the states the input rounds lies within the uncertainty
+   each result states. *)
+VerificationTest[
+    With[{
+        dm = Function[{k, seed},
+            BlockRandom[With[{a = RandomInteger[{-4, 4}, {4, k}] + I RandomInteger[{-4, 4}, {4, k}]}, # / Tr[#] &[a . ConjugateTranspose[a]]], RandomSeeding -> seed]]
+    },
+        Map[
+            Function[c, With[{r = dm @@ c[[1]], s = dm @@ c[[2]]},
+                With[{d = TimeConstrained[QuantumDistance[QuantumState[N[r, 2]], QuantumState[N[s, 2]], c[[3]]], 30, $Aborted]},
+                    NumberQ[d] && Abs[N[d] - N[QuantumDistance[QuantumState[r], QuantumState[s], c[[3]]]]] <= 10^-Accuracy[d]
+                ]
+            ]],
+            {{{4, 911}, {2, 961}, "Fidelity"}, {{2, 909}, {3, 959}, "Trace"}}
+        ]
+    ],
+    {True, True},
+    {},
+    TestID -> "LowPrecision-NoHang-HonestAccuracy"
+]
+
+(* Near machine precision the machine computation drops an eigenvalue below its cut, and the stated
+   accuracy accounts for it. A qubit pair whose fidelity 10^-7 lies entirely in an eigenvalue 10^-14 of the
+   first state, and a qutrit pair whose trace distance 3/10 includes a singular value 5 10^-15 of the
+   difference, both rotated out of the computational basis, at precision 15.9: the exact distance lies
+   within the uncertainty each result states. At machine precision the trace distance keeps that singular
+   value, to 10^-15. *)
+VerificationTest[
+    With[{
+        rot2 = {{3/5, -4/5}, {4/5, 3/5}},
+        rot3 = {{2/3, -2/3, 1/3}, {2/3, 1/3, -2/3}, {1/3, 2/3, 2/3}}
+    },
+        With[{
+            qubits = {rot2 . DiagonalMatrix[{1 - 10^-14, 10^-14}] . Transpose[rot2], rot2 . DiagonalMatrix[{0, 1}] . Transpose[rot2]},
+            qutrits = {rot3 . DiagonalMatrix[{1/2, 1/2, 0}] . Transpose[rot3], rot3 . DiagonalMatrix[{1/5, 4/5 - 5 10^-15, 5 10^-15}] . Transpose[rot3]}
+        },
+            {
+                With[{d = QuantumDistance @@ Append[QuantumState[N[#, 159/10]] & /@ qubits, "Fidelity"]},
+                    Abs[N[d] - N[1 - 10^-7]] <= 10^-Accuracy[d]],
+                With[{d = QuantumDistance @@ Append[QuantumState[N[#, 159/10]] & /@ qutrits, "Trace"]},
+                    Abs[N[d] - 3/10] <= 10^-Accuracy[d]],
+                Abs[QuantumDistance @@ Append[QuantumState[N[#]] & /@ qutrits, "Trace"] - 3/10] < 1.*^-15
+            }
+        ]
+    ],
+    {True, True, True},
+    {},
+    TestID -> "NearMachinePrecision-StatedAccuracyHolds"
+]
+
+(* Two 256 x 256 machine states that QuantumState keeps as SparseArray, one banded and one diagonal: the
+   trace distance is computed on the dense difference, with no SingularValueList::arh message, and matches
+   half the sum of the absolute eigenvalues of the difference. *)
+VerificationTest[
+    With[{
+        banded = With[{b = IdentityMatrix[256] + 0.3 (DiagonalMatrix[ConstantArray[1., 255], 1] + DiagonalMatrix[ConstantArray[1., 255], -1])}, b / Tr[b]],
+        thermal = With[{w = Exp[-5. Range[0, 255] / 256]}, DiagonalMatrix[w / Total[w]]]
+    },
+        Abs[QuantumDistance[QuantumState[banded], QuantumState[thermal], "Trace"] - Total[Abs[Eigenvalues[banded - thermal]]] / 2] < 1.*^-13
+    ],
+    True,
+    {},
+    TestID -> "Machine-SparseStates-TraceNoMessage"
+]
+
+(* Two orthogonal 30-digit states, |0> and |1>: the zero entries of N[{1, 0}, 30] are exact, so their
+   fidelity is made of exact zeros alone, and given the accuracy of the input it keeps every measure an
+   inexact number. *)
+VerificationTest[
+    With[{d = QuantumDistance[QuantumState[N[{1, 0}, 30]], QuantumState[N[{0, 1}, 30]], #] & /@ {"Fidelity", "Bures", "BuresAngle", "Trace"}},
+        {AllTrue[d, InexactNumberQ], Max[Abs[d - {1, Sqrt[2], Pi / 2, 1}]] < 10^-25}
+    ],
+    {True, True},
+    {},
+    TestID -> "ArbitraryPrecision-OrthogonalStates-InexactResults"
+]
+
+(* A symbolic qubit pair, r on the z axis with Bloch length a and s at angle t with length b, whose
+   distances are evaluated at parameter values after they are computed. A closed form that divides by a
+   difference of two eigenvalues is 0/0 wherever they coincide: the eigenvalues of
+   ConjugateTranspose[r - s] . (r - s) coincide at every real point, and those of r . s at points such as
+   a = b = 0, two maximally mixed states, and a = b, t = Pi, two states with swapped populations. The
+   spectral sums have no such denominator: the trace distance is half the Bloch distance
+   Sqrt[a^2 + b^2 - 2 a b Cos[t]] at a = 3/10, b = 6/10, t = 11/10, as a closed form, and at a pure pair,
+   and the fidelity distance is 0 and 1 - Sqrt[1 - a^2] at the two points where the two eigenvalues of
+   r . s are equal. *)
+VerificationTest[
+    With[{
+        r = (IdentityMatrix[2] + a PauliMatrix[3]) / 2,
+        s = (IdentityMatrix[2] + b (Cos[t] PauliMatrix[3] + Sin[t] PauliMatrix[1])) / 2,
+        bloch = Sqrt[a^2 + b^2 - 2 a b Cos[t]] / 2
+    },
+        With[{trace = QuantumDistance[QuantumState[r], QuantumState[s], "Trace"], fidelity = QuantumDistance[QuantumState[r], QuantumState[s]]},
+            {
+                Chop[N[trace /. {a -> 3/10, b -> 6/10, t -> 11/10}] - N[bloch /. {a -> 3/10, b -> 6/10, t -> 11/10}]],
+                FullSimplify[trace - bloch, 0 < a < 1 && 0 < b < 1 && 0 < t < Pi],
+                Chop[N[QuantumDistance[QuantumState[{1, 0}], QuantumState[{Cos[d / 2], Sin[d / 2]}], "Trace"] /. d -> 11/10] - N[Sin[11/20]]],
+                N[fidelity /. {a -> 0, b -> 0, t -> 1}],
+                Chop[N[fidelity /. {a -> 3/10, b -> 3/10, t -> Pi}] - N[1 - Sqrt[1 - (3/10)^2]]]
+            }
+        ]
+    ],
+    {0, 0, 0, 0., 0},
+    {},
+    TestID -> "Symbolic-Distances-EvaluateAtCoincidentEigenvalues"
+]
+
+(* |+> against the traceless Pauli Z, whose expectation in |+> is 0: the product of the two matrices is a
+   nonzero 2 x 2 nilpotent matrix, which has no square root, while its eigenvalues are 0 and the fidelity is
+   0. The input is not physical, and the distance comes with the notphysical message. *)
+VerificationTest[
+    QuantumDistance[QuantumState["+"], QuantumState[PauliMatrix[3]]],
+    1,
+    {QuantumDistance::notphysical},
+    TestID -> "NonPhysical-NilpotentProduct-HasFidelity"
 ]
 
 
