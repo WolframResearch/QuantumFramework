@@ -31,6 +31,12 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 qecConjugate = Symbol[qecScope <> "registerConjugate"];
@@ -44,11 +50,11 @@ reg = QECRegister[steane, 2];
 reg5 = QECRegister[five, 2];
 
 (* The product of two Pauli strings, as a string. *)
-qecProd[s1_, s2_] := QECPauliString[QECPauliProduct[s1, s2]]
+qecProd[s1_, s2_] := qecPauliString[qecPauliProduct[s1, s2]]
 
 (* Where a circuit sends each register generator. *)
 qecImages[r_] := Module[{instr = r["TransversalCNOT", 1, 2], nq = r["Qubits"]},
-    QECPauliString[qecConjugate[instr, nq, QECPauliVector[#]]] & /@ r["Generators"]
+    qecPauliString[qecConjugate[instr, nq, qecPauliVector[#]]] & /@ r["Generators"]
 ]
 
 
@@ -101,7 +107,7 @@ VerificationTest[
 
 (* Each block's logical operators, as register-wide Paulis with identity elsewhere. *)
 VerificationTest[
-    Map[QECPauliString, reg["LogicalVectors"], {2}],
+    Map[qecPauliString, reg["LogicalVectors"], {2}],
     <|"X" -> {"IIXIXXIIIIIIII", "IIIIIIIIIXIXXI"},
       "Z" -> {"IZIZIZIIIIIIII", "IIIIIIIIZIZIZI"}|>,
     TestID -> "QEC-Register-logical-operators-sit-inside-their-block"
@@ -125,8 +131,8 @@ VerificationTest[
 VerificationTest[
     reg["LogicalAction", 1, 2],
     With[{
-        x = QECPauliString /@ reg["LogicalVectors"]["X"],
-        z = QECPauliString /@ reg["LogicalVectors"]["Z"]
+        x = qecPauliString /@ reg["LogicalVectors"]["X"],
+        z = qecPauliString /@ reg["LogicalVectors"]["Z"]
     },
         <|{"X", 1, 1} -> qecProd[x[[1]], x[[2]]], {"X", 2, 1} -> x[[2]],
           {"Z", 1, 1} -> z[[1]],                  {"Z", 2, 1} -> qecProd[z[[1]], z[[2]]]|>
@@ -164,8 +170,8 @@ VerificationTest[
 VerificationTest[
     With[{
         act = reg5["LogicalAction", 1, 2],
-        x = QECPauliString /@ reg5["LogicalVectors"]["X"],
-        z = QECPauliString /@ reg5["LogicalVectors"]["Z"]
+        x = qecPauliString /@ reg5["LogicalVectors"]["X"],
+        z = qecPauliString /@ reg5["LogicalVectors"]["Z"]
     },
         {act[{"Z", 2, 1}] === qecProd[z[[1]], z[[2]]],
          act[{"X", 1, 1}] === qecProd[x[[1]], x[[2]]]}

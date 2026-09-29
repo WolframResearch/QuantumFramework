@@ -26,7 +26,7 @@ cases = {
 
 Do[
     Module[{name = c[[1]], code = c[[2]], noise = c[[3]], r = c[[4]], dem},
-        Export[FileNameJoin[{out, name <> ".stim"}], QECStimCircuit[code, noise, r], "Text"];
+        Export[FileNameJoin[{out, name <> ".stim"}], QECStim[code, noise, r], "Text"];
         dem = QECDetectorModel[code, noise, r];
         Export[FileNameJoin[{out, name <> ".json"}], <|
             "name" -> name, "rounds" -> r,

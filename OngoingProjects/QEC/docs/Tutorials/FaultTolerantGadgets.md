@@ -24,7 +24,7 @@ Each one is an object you can hold, ask questions of, and hand to the next:
 | 3 | `QECErrorCorrection` | do that for a whole code at once — Steane EC |
 | 4 | `QECRegister` | several blocks, so there is something to compute *with* |
 | 5 | `QECTransversalGate` | which logical gates the code performs for free |
-| 6 | `QECFaultTolerant` | all of the above, spent on a whole circuit: $FT(C)$ |
+| 6 | `QECFaultTolerantCircuit` | all of the above, spent on a whole circuit: $FT(C)$ |
 
 The thread running through them is that every claim is **measured rather than cited**. "This gadget
 is fault tolerant" becomes a number: how many data errors one fault leaves behind. "This is the
@@ -412,7 +412,7 @@ action of $S^{\dagger}$: the transversal $S$ performs the *inverse* of the gate 
 sign is one line of Pauli algebra:
 
 ```wl
-QECPauliString[QECPauliProduct["XXXXXXX", "ZZZZZZZ"]]
+(QECPauli["XXXXXXX"] ** QECPauli["ZZZZZZZ"])["String"]
 ```
 
 <!-- => "iYYYYYYY" -->
@@ -479,7 +479,7 @@ $H$, $S$ and CNOT generate the Clifford group, so the seven-qubit code performs 
 Clifford group transversally, each gate arriving conjugated per the sign above. Nothing outside that
 group is transversal on any code of this kind; that is chapter 13's problem, not this note's.
 
-## 6. `QECFaultTolerant` — spending all of it on a circuit
+## 6. `QECFaultTolerantCircuit` — spending all of it on a circuit
 
 Definition 10.6 says how to put the gadgets together. Take an ideal circuit $C$, replace each of its
 qubits with a **block**, replace each of its locations with the corresponding gadget, and after every
@@ -488,10 +488,10 @@ after a measurement gadget, whose output is classical.
 
 ```wl
 circuit = {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}};
-ft = QECFaultTolerant[circuit, steane]
+ft = QECFaultTolerantCircuit[circuit, steane]
 ```
 
-<!-- => a QECFaultTolerant summary box: 2 logical qubits, 28 qubits, 13 gadgets -->
+<!-- => a QECFaultTolerantCircuit summary box: 2 logical qubits, 28 qubits, 13 gadgets -->
 
 ```wl
 ft["Gadgets"]
@@ -540,7 +540,7 @@ Now the detail that makes this more than bookkeeping. Asked for a logical $S$, t
 transversal $S^{\dagger}$:
 
 ```wl
-Union @ Map[First, QECFaultTolerant[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]
+Union @ Map[First, QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]
 ```
 
 <!-- => {"Sdg"} -->
@@ -592,7 +592,7 @@ fail.
 | `QECErrorCorrection[code]` | a CSS code; an optional ancilla offset; option `"Order"` | the two halves, the two regions, and the data weights of each | correcting a whole block, with no repetition needed |
 | `QECRegister[code, b]` | a code and a number of blocks | the layout, the lift, the transversal CNOT and what it does logically | making a logical qubit addressable |
 | `QECTransversalGate[code, gate]` | a code and a gate, a sequence of gates, or `All` | whether it is a gadget, the images of the generators, the logical action and its name | knowing which logical gate you actually performed |
-| `QECFaultTolerant[circuit, code]` | an ideal Clifford circuit on logical qubits, and a CSS code | $FT(C)$, its gadget table, its readouts, and the three overheads | turning a circuit into its fault-tolerant simulation |
+| `QECFaultTolerantCircuit[circuit, code]` | an ideal Clifford circuit on logical qubits, and a CSS code | $FT(C)$, its gadget table, its readouts, and the three overheads | turning a circuit into its fault-tolerant simulation |
 
 Every one of them answers `obj["Properties"]` with its full list, and every one that stands on
 something it has not built says so in `obj["OpenAssumptions"]`.

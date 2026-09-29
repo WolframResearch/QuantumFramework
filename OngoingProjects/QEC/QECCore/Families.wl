@@ -2,8 +2,8 @@
 
 Package["Wolfram`QuantumFramework`QEC`"]
 
-PackageExport[QECCodeCatalog]
-PackageExport[QECClassicalHammingMatrix]
+PackageScope[codeCatalog]
+PackageScope[classicalHammingMatrix]
 
 
 (* ============================================================================ *)
@@ -54,7 +54,7 @@ QECCode::hammingsize = "The Hamming CSS construction needs r >= 3 for the classi
 
 (* Neighbouring-pair checks: ZZ for bit flips, XX for phase flips (thesis sec. 2.2). *)
 repetitionRows[n_Integer, letter_ : "Z"] := Table[
-    QECPauliVector[StringJoin[ReplacePart[ConstantArray["I", n], {i -> letter, i + 1 -> letter}]]],
+    pauliVector[StringJoin[ReplacePart[ConstantArray["I", n], {i -> letter, i + 1 -> letter}]]],
     {i, n - 1}
 ]
 
@@ -75,25 +75,24 @@ QECCode["DistanceTwo", n_Integer] := If[
 
 (* Columns are the nonzero binary words of length r: the classical [2^r-1, 2^r-1-r, 3]
    Hamming code. *)
-QECClassicalHammingMatrix::usage = "QECClassicalHammingMatrix[r] gives the parity-check matrix of the classical Hamming code with r checks.";
-
-QECClassicalHammingMatrix[r_Integer ? Positive] := Transpose[Table[IntegerDigits[j, 2, r], {j, 2^r - 1}]]
+classicalHammingMatrix[r_Integer ? Positive] := Transpose[Table[IntegerDigits[j, 2, r], {j, 2^r - 1}]]
 
 (* The CSS code built on it, [[2^r-1, 2^r-1-2r, 3]], which is the Steane code at r = 3. *)
 QECCode["Hamming", r_Integer] := If[
-    r >= 3, QECCode["CSS", QECClassicalHammingMatrix[r]], Message[QECCode::hammingsize]; $Failed
+    r >= 3, QECCode["CSS", classicalHammingMatrix[r]], Message[QECCode::hammingsize]; $Failed
 ]
 
 
 (* ---- the catalog ---- *)
 
-QECCodeCatalog::usage = "QECCodeCatalog[] gives a Dataset of the available named codes and code families with their [[n, k, d]] parameters.";
-
 $QECCatalogExamples = {
     {"Repetition", 5}, {"PhaseRepetition", 5}, {"DistanceTwo", 6}, {"Hamming", 4}
 };
 
-QECCodeCatalog[] := Dataset @ Association @ Join[
+(* The catalog is a question about the head, so it is asked of the head. *)
+QECCode["Catalog"] := codeCatalog[]
+
+codeCatalog[] := Dataset @ Association @ Join[
     Table[
         name -> AssociationThread[{"n", "k", "d"}, QECCode[name]["Parameters"]],
         {name, Keys[$QECNamedCodes]}

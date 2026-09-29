@@ -44,7 +44,7 @@ gadgets = {
     QECPauliMeasurement[five, "XZZXI"],
     QECErrorCorrection[steane],
     QECTransversalGate[steane, "S"],
-    QECFaultTolerant[{{"R", 1}, {"H", 1}, {"M", 1}}, steane]
+    QECFaultTolerantCircuit[{{"R", 1}, {"H", 1}, {"M", 1}}, steane]
 };
 
 

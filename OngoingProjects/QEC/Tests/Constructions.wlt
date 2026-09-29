@@ -32,13 +32,18 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+qecHammingMatrix = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`classicalHammingMatrix"];
+
 
 (* ============================================================================
    CSS
    ============================================================================ *)
 
 VerificationTest[
-    QECCode["CSS", QECClassicalHammingMatrix[3]]["Parameters"],
+    QECCode["CSS", qecHammingMatrix[3]]["Parameters"],
     {7, 1, 3},
     TestID -> "QEC-CSS-hamming-parameters"
 ]
@@ -46,7 +51,7 @@ VerificationTest[
 (* The Steane code exactly: the generators come out in a different order, so the
    claim is about the stabilizer group, checked with signs in both directions. *)
 VerificationTest[
-    Module[{css = QECCode["CSS", QECClassicalHammingMatrix[3]], steane = QECCode["SteaneCode"]},
+    Module[{css = QECCode["CSS", qecHammingMatrix[3]], steane = QECCode["SteaneCode"]},
         AllTrue[steane["GeneratorVectors"], css["StabilizerMemberQ", #] &] &&
         AllTrue[css["GeneratorVectors"], steane["StabilizerMemberQ", #] &]
     ],
@@ -55,7 +60,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Sort[QECCode["CSS", QECClassicalHammingMatrix[3]]["Generators"]] === Sort[QECCode["SteaneCode"]["Generators"]],
+    Sort[QECCode["CSS", qecHammingMatrix[3]]["Generators"]] === Sort[QECCode["SteaneCode"]["Generators"]],
     True,
     TestID -> "QEC-CSS-reproduces-steane-generators"
 ]
@@ -64,7 +69,7 @@ VerificationTest[QECCode["CSS", {{1, 1, 1, 1}}, {{1, 1, 1, 1}}]["Parameters"], {
 
 VerificationTest[QECCode["CSS", {{1, 1, 1, 1}}]["Distance"], 2, TestID -> "QEC-CSS-single-matrix"]
 
-VerificationTest[QECCode["CSS", QECClassicalHammingMatrix[3]]["CSSQ"], True, TestID -> "QEC-CSS-is-css"]
+VerificationTest[QECCode["CSS", qecHammingMatrix[3]]["CSSQ"], True, TestID -> "QEC-CSS-is-css"]
 
 VerificationTest[Quiet[QECCode["CSS", {{1, 1, 0}}, {{1, 0, 0}}]], $Failed, TestID -> "QEC-CSS-reject-non-orthogonal"]
 
@@ -146,7 +151,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{code = QECConcatenate[QECCode["5QubitCode"], QECCode["BitFlipCode"]]},
-        QECPauliWeight[code["MinimumWeightLogical"]] === code["Distance"] &&
+        qecPauliWeight[code["MinimumWeightLogical"]] === code["Distance"] &&
         code["LogicalPauliQ", code["MinimumWeightLogical"]]
     ],
     True,

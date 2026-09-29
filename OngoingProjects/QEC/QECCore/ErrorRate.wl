@@ -18,6 +18,8 @@ PackageScope[decoderFor]
 PackageScope[decoderReachFor]
 PackageScope[exactLogicalErrorRate]
 PackageScope[sampledLogicalErrorRate]
+PackageScope[rateReport]
+PackageScope[rateValue]
 
 
 (* ============================================================================ *)
@@ -49,7 +51,7 @@ PackageScope[sampledLogicalErrorRate]
 (* on the code alone; changing p costs nothing.                                    *)
 (* ============================================================================ *)
 
-QECLogicalErrorRate::usage = "QECLogicalErrorRate[code, noise] gives the probability that a correction cycle leaves a logical error, computed exactly by enumeration. With a symbolic noise rate the result is an exact expression in it.\nQECLogicalErrorRate[code, noise, n] estimates the same quantity from n sampled errors.\nThe option \"Decoder\" chooses which decoder the number describes: \"MaximumLikelihood\" (the most probable coset, needs the full enumeration), \"MinimumWeight\" (the lookup table, cheap at any size), or Automatic, which takes maximum likelihood when the code can be enumerated and minimum weight when it cannot.";
+QECLogicalErrorRate::usage = "QECLogicalErrorRate[code, noise] gives the probability that a correction cycle leaves a logical error, computed exactly by enumeration. With a symbolic noise rate the result is an exact expression in it.\nQECLogicalErrorRate[code, noise, n] estimates the same quantity from n sampled errors.\nQECLogicalErrorRate[code, noise, All] and QECLogicalErrorRate[code, noise, n, All] give the full report, <|\"Rate\" -> ..., \"Acceptance\" -> ..., ...|>, which matters when the circuit post-selects on heralds: the rate is then conditional on acceptance.\nThe option \"Decoder\" chooses which decoder the number describes: \"MaximumLikelihood\" (the most probable coset, needs the full enumeration), \"MinimumWeight\" (the lookup table, cheap at any size), or Automatic, which takes maximum likelihood when the code can be enumerated and minimum weight when it cannot.";
 
 QECLogicalErrorRate::toobig = "Exact enumeration needs 4^`1` = `2` errors, above the limit $QECExactEnumerationLimit = `3`. Give a sample count as a third argument to estimate it instead, or raise the limit.";
 
@@ -264,17 +266,45 @@ sampledLogicalErrorRate[a_Association, noise_Association, count_Integer, decoder
 Options[QECLogicalErrorRate] = {"Decoder" -> Automatic, "DecoderReach" -> Automatic,
     "Rounds" -> Automatic, "Extraction" -> "BareAncilla"};
 
+(* ONE RETURN TYPE.  QECLogicalErrorRate gives the rate and only the rate: a number,
+   or an exact expression when the noise is symbolic, and Indeterminate when a
+   post-selected circuit accepts nothing (with the message saying so).  It used to
+   return an Association instead whenever the circuit had heralds, so the caller had
+   to know the circuit's internals to know the shape of the answer.
+
+   The whole report -- the conditional rate, the acceptance, and the joint failure
+   probability they come from -- is one argument away, QECLogicalErrorRate[..., All],
+   on the QuantumLinearSolve[m, b, All] precedent, and it has the same keys whether or
+   not anything was post-selected: without heralds the acceptance is 1 and the failure
+   is the rate.  It is also what the detector model answers as dem["LogicalErrorRate"],
+   dem["Acceptance"] and dem["Failure"]. *)
+rateArguments[opts___] := Sequence @@ (OptionValue[QECLogicalErrorRate, {opts}, #] & /@
+    {"Decoder", "DecoderReach", "Rounds", "Extraction"})
+
+rateReport[r_Association, _] := r
+rateReport[r : ($Failed | _Missing), _] := r
+rateReport[r_, None] := <|"Rate" -> r, "Acceptance" -> 1, "Failure" -> r|>
+rateReport[r_, count_Integer] := <|"Rate" -> r, "Acceptance" -> 1., "Accepted" -> count, "Shots" -> count|>
+
+rateValue[r_Association] := r["Rate"]
+rateValue[r_] := r
+
+QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, All, opts : OptionsPattern[]] :=
+    rateReport[logicalErrorRate[First[code], First[noise], None, rateArguments[opts]], None]
+
+QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, count_Integer ? Positive, All, opts : OptionsPattern[]] :=
+    rateReport[logicalErrorRate[First[code], First[noise], count, rateArguments[opts]], count]
+
 QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, opts : OptionsPattern[]] :=
-    logicalErrorRate[First[code], First[noise], None,
-        OptionValue[QECLogicalErrorRate, {opts}, "Decoder"], OptionValue[QECLogicalErrorRate, {opts}, "DecoderReach"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Extraction"]]
+    rateValue @ logicalErrorRate[First[code], First[noise], None, rateArguments[opts]]
 
 QECLogicalErrorRate[code_QECCode, noise_QECNoiseModel, count_Integer ? Positive, opts : OptionsPattern[]] :=
-    logicalErrorRate[First[code], First[noise], count,
-        OptionValue[QECLogicalErrorRate, {opts}, "Decoder"], OptionValue[QECLogicalErrorRate, {opts}, "DecoderReach"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Rounds"],
-        OptionValue[QECLogicalErrorRate, {opts}, "Extraction"]]
+    rateValue @ logicalErrorRate[First[code], First[noise], count, rateArguments[opts]]
+
+(* A one-qubit Pauli QuantumChannel is the same noise said in the framework's own
+   terms; QECNoiseModel reads it back (and refuses a non-Pauli one with its reason). *)
+QECLogicalErrorRate[code_QECCode, qc_Wolfram`QuantumFramework`QuantumChannel, rest___] :=
+    Replace[QECNoiseModel[qc], {noise_QECNoiseModel :> QECLogicalErrorRate[code, noise, rest], _ -> $Failed}]
 
 (* Rounds only mean something once a check can lie, so a code-capacity model ignores
    them and the other two levels default to the code distance -- the standard memory

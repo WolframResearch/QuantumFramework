@@ -162,7 +162,7 @@ $$X \to H \quad (HXH = Z), \qquad Y \to V \quad (VYV^{-1} = Z), \qquad Z \to \te
 
 ```wl
 g1 = First[five["CheckMatrix"]];
-QECPauliString[Append[g1, 0]]
+QECPauli[Append[g1, 0]]["String"]
 ```
 
 ---
@@ -298,7 +298,7 @@ circuits. They agree, and that agreement over every weight-one and weight-two er
 `Tests/Circuit.wlt` checks:
 
 ```wl
-five["Syndrome", QECPauliString["XIIII"]]
+five["Syndrome", QECPauli["XIIII"]]
 ```
 
 ---
@@ -307,7 +307,7 @@ Same for a $Z$, which the five-qubit code also sees:
 
 ```wl
 {framePropagate[circ["Instructions"], circ["Qubits"], {{0, 3, {0, 1}}}]["Record"],
- five["Syndrome", QECPauliString["IIZII"]]}
+ five["Syndrome", QECPauli["IIZII"]]}
 ```
 
 ### The hook error
@@ -958,7 +958,7 @@ noisyIdle = QECNoiseModel["Circuit", <|"OneQubit" -> 1/1000, "TwoQubit" -> 1/100
     "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>];
 {
   Length[circuitIdleSlots[codeCircInstr[bfData, 2], 5]],
-  StringCount[QECStimCircuit[bitFlip, noisyIdle, 2], "DEPOLARIZE1(0.002)"]
+  StringCount[QECStim[bitFlip, noisyIdle, 2], "DEPOLARIZE1(0.002)"]
 }
 ```
 
@@ -975,7 +975,7 @@ $|0\ldots0\rangle$, which is not a codeword for a general code, and a memory exp
 start inside the code space or its first round of detectors means nothing.
 
 ```wl
-Column[StringSplit[QECStimCircuit[bitFlip, QECNoiseModel["Circuit", 0.001], 2], "\n"]]
+Column[StringSplit[QECStim[bitFlip, QECNoiseModel["Circuit", 0.001], 2], "\n"]]
 ```
 
 ---
@@ -985,7 +985,7 @@ noise, because there the extraction is a black box:
 
 ```wl
 Column[StringSplit[
-    QECStimCircuit[bitFlip, QECNoiseModel["BitFlip", 0.01, "MeasurementError" -> 0.02], 1],
+    QECStim[bitFlip, QECNoiseModel["BitFlip", 0.01, "MeasurementError" -> 0.02], 1],
     "\n"]]
 ```
 
@@ -997,7 +997,7 @@ memory experiment is single-basis by construction: prepare $|0_L\rangle$, keep i
 $\bar{Z}$. The detector part is basis-independent, and is where the two models are compared.
 
 ```wl
-StringTake[QECStimCircuit[QECCode["SteaneCode"], QECNoiseModel["Circuit", 0.001], 3,
+StringTake[QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 0.001], 3,
     "Observable" -> "X"], -60]
 ```
 
@@ -1016,7 +1016,7 @@ Code capacity is refused, because Stim has no notion of a model whose checks are
 assumption:
 
 ```wl
-QECStimCircuit[bitFlip, QECNoiseModel["BitFlip", 0.01]]
+QECStim[bitFlip, QECNoiseModel["BitFlip", 0.01]]
 ```
 
 ## Cat.wl — a probe a single fault cannot spread
@@ -1118,7 +1118,7 @@ The rotations are shared rather than re-derived, which is why `basisGate` and `r
 {catMeasure, pauliReps, pauliOutcome} =
     sym /@ {"catMeasureInstructions", "pauliMeasureRepetitions", "pauliMeasureOutcome"};
 
-catMeasure[QECPauliVector["XZZXI"], 5, {6, 7, 8, 9}] // Column
+catMeasure[QECPauli["XZZXI"]["Vector"], 5, {6, 7, 8, 9}] // Column
 ```
 
 ---
@@ -1468,7 +1468,7 @@ that looked only at the logical operators would have passed half the time:
 Module[{leaves},
     leaves[r_] := Module[{instr = r["TransversalCNOT", 1, 2], nq = r["Qubits"], group},
         group = QECCode[r["Generators"]];
-        Count[QECPauliString[registerConjugate[instr, nq, QECPauliVector[#]]] & /@ r["Generators"],
+        Count[QECPauli[registerConjugate[instr, nq, QECPauli[#]["Vector"]]]["String"] & /@ r["Generators"],
               g_ /; ! group["StabilizerMemberQ", g]]];
     <|"Steane" -> leaves[QECRegister[QECCode["SteaneCode"], 2]],
       "five-qubit" -> leaves[QECRegister[QECCode["5QubitCode"], 2]]|>]
@@ -1484,7 +1484,7 @@ is what it does to $\bar{X}$ and $\bar{Z}$. The subtlety is that both halves are
 signs**, and every conjugation in the layer up to this file threw signs away.
 
 So the first decision here is a negative one: `framePropagate` is not used. Rows carry their
-$\mathbb{Z}_4$ phase (`Pauli.wl`), products go through `QECPauliProduct`, and membership is asked of
+$\mathbb{Z}_4$ phase (`Pauli.wl`), products go through `pauliProduct` (the row function behind `QECPauli[p]["Product", q]`), and membership is asked of
 `codeStabilizerElement`, which returns the group element *with its true phase* rather than a yes
 about its symplectic part. An image equal to minus a generator preserves the stabilizer as a set of
 Paulis and destroys the code space; only the phase-aware test can tell those apart.
@@ -1500,7 +1500,7 @@ Pauli, read the coefficient off a trace, and insist that it is a fourth root of 
     sym /@ {"transversalAction", "transversalConjugate", "transversalPairCode",
             "transversalGateNames", "transversalCliffordWords"};
 
-QECPauliString /@ Lookup[transversalAction["S", 1], {{1, 0}, {0, 1}, {1, 1}}]
+(QECPauli[#]["String"] &) /@ Lookup[transversalAction["S", 1], {{1, 0}, {0, 1}, {1, 1}}]
 ```
 
 <!-- => {"Y", "Z", "-X"} -->
@@ -1515,9 +1515,9 @@ Conjugating a whole row is then qubit by qubit: the factors live on different qu
 commute, and their phases simply add.
 
 ```wl
-{QECPauliString[transversalConjugate["S", QECPauliVector["IIIXXXX"]]],
- QECPauliString[transversalConjugate["S", QECPauliVector["XXXXXXX"]]],
- QECPauliString[transversalConjugate["H", QECPauliVector["XZZXI"]]]}
+{QECPauli[transversalConjugate["S", QECPauli["IIIXXXX"]["Vector"]]]["String"],
+ QECPauli[transversalConjugate["S", QECPauli["XXXXXXX"]["Vector"]]]["String"],
+ QECPauli[transversalConjugate["H", QECPauli["XZZXI"]["Vector"]]]["String"]}
 ```
 
 <!-- => {"IIIYYYY", "YYYYYYY", "ZXXZI"} -->
@@ -1665,6 +1665,93 @@ own length, so `ft["GadgetInstructions", "Gate"]` slices the assembled circuit b
 and never has to recognise a gadget by looking at its gates. That is what lets a check run the gate
 gadgets alone — preparation and gates, no corrections — and ask the engine whether the encoded
 blocks came out in the state the ideal circuit would have produced.
+
+## Operational.wl — the code as the objects quantum theory uses
+
+The file makes a `QECCode` present the operational formulation of error correction (Knill,
+Laflamme, Viola; Rahn, Doherty, Mabuchi): encoder isometry, codewords, code-space projector,
+syndrome instrument, recovery channels, logical channel, Knill–Laflamme matrix. It is a change of
+face, not of engine; three decisions carry it.
+
+**The logical channel is built from the coset engine, never by composing channels.** For Pauli noise
+the cycle's residue $R_s E$ lies in the normalizer, so its effect is a logical Pauli, and the channel
+is the $4^k$ probabilities of the residue class. `cosetProbabilities` already holds
+$P(\text{syndrome}, \text{class})$ exactly; the decoder maps a syndrome to a class $d$; labels are
+linear, so an error of class $c$ leaves the residue $c \oplus d$. `codeLogicalClassPaulis` names each
+class key by labelling a representative of every logical Pauli with the same `codeLabelKeys` the rate
+uses, so the naming cannot drift from the decoding. A syndrome the decoder does not cover is kept
+apart as `"Undecoded"` — exactly the part the rate counts as failure on top of the wrong-class part —
+so $1 - q_I$ equals the rate for every decoder, and the channel refuses to exist when that part is
+nonzero, since the cycle then leaves the code space.
+
+```wl
+With[{a = First[QECCode["BitFlipCode"]]},
+    Wolfram`QuantumFramework`QEC`PackageScope`codeLogicalClassPaulis[a]]
+```
+
+<!-- => <|0 -> "I", 2 -> "Z", 1 -> "X", 3 -> "Y"|> -->
+
+**The encoder is canonicalized.** `codeEncodingGates` is a valid encoder whose logical labelling is
+its own; on the five-qubit code its $|0\ldots0\rangle$ output is the $-1$ eigenstate of the reported
+$\bar{Z}$. `codeEncoderMatrix` takes that output, applies $\bar{X}_j$ wherever
+$\langle v_0|\bar{Z}_j|v_0\rangle = -1$, and generates column $c$ as $\bar{X}^c|0_L\rangle$. A test pins
+$V^\dagger \bar{Z}_j V = Z_j$ and $V^\dagger \bar{X}_j V = X_j$ on five codes. `Encoder.wl` is left as
+it is: the circuit is still what the extraction and Stim consume.
+
+**Knill–Laflamme is symplectic.** For $E_a, E_b$ the product $E_a^\dagger E_b$ is formed as a row
+(`pauliDagger` conjugates the $\mathbb{Z}_4$ phase, the Hermitian part is its own adjoint); a nonzero
+syndrome gives 0, `codeStabilizerElement` gives the stabilizer element with its true phase and so the
+entry $i^{e - e'}$, and `Missing` from it means a nontrivial logical, reported with the pair. No
+$2^n$ vector is formed, which is why `"CorrectableQ"` is not behind `$QECDenseQubitLimit` and the
+encoder is.
+
+One engine quirk is routed around rather than fixed. A one-element Kraus list with an order is read
+by `QuantumChannel` as a channel whose environment wire replaces the first system wire:
+
+```wl
+QuantumChannel[{PauliMatrix[1]}, {1}]["Order"]
+```
+
+<!-- => {{0}, {1}} -->
+
+A unitary channel given that way acts on the wrong qubits. `krausChannel` (in `Noise.wl`) sends a
+single Kraus operator through `QuantumChannel[QuantumOperator[…]]` instead, and both the recovery and
+the noiseless logical channel go through it; two tests pin the resulting order.
+
+On the noise side, `QECNoiseModel[qc]` reads a one-qubit channel back as Pauli weights,
+$q_\sigma = \sum_k |\mathrm{Tr}(\sigma K_k)|^2/4$, takes $q_I$ as the complement (the trace form comes
+back as `Abs[1 - u - w]` for symbolic weights, the complement stays a polynomial), and accepts only if
+the Pauli mixture has the channel's own superoperator.
+
+## Decoder.wl — three decoders that already existed, given one head
+
+`QECDecoder` adds no decoding. Its four methods delegate: `"MinimumWeight"` to
+`codeDecoderToWeight`, `"MaximumLikelihood"` to `codeCosetRepresentatives` and
+`codeMaximumLikelihoodDecoder`, `"DetectorModel"` to `demDecoderTable`, and `"Function"` to whatever
+was passed. The rate consumes decoders as syndrome-key → class-key tables; `decoderClassTable` builds
+that table for the object, from the engine's own table for the built-ins and by labelling the
+function's corrections with `codeLabelKeys` for the seam, and `decoderFor` accepts the object as its
+`spec`.
+
+Because every method delegates, the herald filter in `demDecoderTable` — rows a verification check
+rejects are not offered as explanations — is inherited rather than re-implemented, and the test
+asserts it at the table level twice: the object's table is the engine's, and that table differs from
+the one built with the heralds ignored.
+
+The rate itself lost its second return type in the same step. `rateReport` normalizes whatever the
+engine returns (a number without heralds, an association with) into one report shape, `rateValue`
+reads the rate off it, and the public entry points choose which of the two to return by whether `All`
+was passed. The detector model's `demExactReport` is memoised, so `"LogicalErrorRate"`,
+`"Acceptance"` and `"Failure"` cost one computation between them.
+
+## Deprecated.wl — the names that were retired
+
+Ten names were retired in step 5 of the redesign: the six `QECPauli*` verbs (now `QECPauli`'s
+properties, with the verbs themselves as `PackageScope` row functions under their old definitions),
+`QECFaultTolerant`, `QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`. Each alias calls
+the function that now does the job and warns once per session through `General::qecdeprecated`; the
+set of warned names is reset on every load, which is what makes the warning testable in every test
+file that reloads the package. The file goes one release after the rename.
 
 ## Where this comes from
 

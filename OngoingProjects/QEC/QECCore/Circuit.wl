@@ -452,7 +452,7 @@ engineGateInstructions[gates_List, offset_Integer] := Replace[gates, {
 $circuitProperties = {
     "Instructions", "DataQubits", "Ancillas", "Qubits", "Rounds", "Code",
     "MeasurementCount", "MeasurementLabels", "Depth", "InstructionCount",
-    "GateCounts", "QuantumCircuitOperator", "Diagram", "Properties"
+    "GateCounts", "QuantumCircuitOperator", "Diagram", "SyndromeMeasurement", "Properties"
 };
 
 QECSyndromeCircuit[_Association]["Properties"] := $circuitProperties
@@ -476,6 +476,10 @@ QECSyndromeCircuit[a_Association]["QuantumCircuitOperator"] :=
     gadgetCircuitOperator[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["Diagram"] := gadgetDiagram[a["Instructions"]]
 QECSyndromeCircuit[a_Association]["GateCounts"] := Counts[First /@ a["Instructions"]]
+(* What the circuit implements, stated as the instrument it implements: one projector
+   per syndrome on the data qubits.  The circuit is one way to realize it; the code
+   owns the object (Operational.wl), so this only delegates. *)
+QECSyndromeCircuit[a_Association]["SyndromeMeasurement"] := QECCode[a["Code"]]["SyndromeMeasurement"]
 
 QECSyndromeCircuit[a_Association][prop_String] := (Message[QECSyndromeCircuit::noprop, prop]; Missing["NotFound", prop])
 

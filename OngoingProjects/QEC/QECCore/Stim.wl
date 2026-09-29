@@ -2,7 +2,7 @@
 
 Package["Wolfram`QuantumFramework`QEC`"]
 
-PackageExport[QECStimCircuit]
+PackageExport[QECStim]
 
 PackageScope[stimGateName]
 PackageScope[codeStimCircuit]
@@ -39,11 +39,11 @@ PackageScope[codeStimCircuit]
 (* basis-independent and is where the two models are compared.                    *)
 (* ============================================================================ *)
 
-QECStimCircuit::usage = "QECStimCircuit[code, noise] gives, as a string, the Stim source of a memory experiment: the encoder, rounds of noisy syndrome extraction, a noiseless final round, and a logical observable.\nQECStimCircuit[code, noise, r] uses r noisy rounds.\nQECStimCircuit[code] emits the noiseless circuit.\nThe option \"Observable\" -> \"Z\" or \"X\" chooses which logical operator is kept.";
+QECStim::usage = "QECStim[code, noise] gives, as a string, the Stim source of a memory experiment: the encoder, rounds of noisy syndrome extraction, a noiseless final round, and a logical observable.\nQECStim[code, noise, r] uses r noisy rounds.\nQECStim[code] emits the noiseless circuit.\nThe option \"Observable\" -> \"Z\" or \"X\" chooses which logical operator is kept.";
 
-QECStimCircuit::observable = "\"Observable\" must be \"X\" or \"Z\"; got `1`.";
-QECStimCircuit::herald = "This circuit contains `1` herald measurement(s) (\"MH\"). Stim has no post-selection primitive, and emitting them as ordinary measurements would shift every rec[-k] index the detectors are built from. Export a circuit without heralds, or declare them as detectors and post-select outside Stim.";
-QECStimCircuit::level = "Stim has no notion of a code-capacity noise model, whose checks are perfect by assumption. Use a phenomenological or circuit-level model.";
+QECStim::observable = "\"Observable\" must be \"X\" or \"Z\"; got `1`.";
+QECStim::herald = "This circuit contains `1` herald measurement(s) (\"MH\"). Stim has no post-selection primitive, and emitting them as ordinary measurements would shift every rec[-k] index the detectors are built from. Export a circuit without heralds, or declare them as detectors and post-select outside Stim.";
+QECStim::level = "Stim has no notion of a code-capacity noise model, whose checks are perfect by assumption. Use a phenomenological or circuit-level model.";
 
 
 (* ---- gate names ---- *)
@@ -199,7 +199,7 @@ codeStimCircuit[a_Association, noise_Association, rounds_Integer, basis_String] 
     lines = Join[
         {"# " <> ToString[n] <> " data qubits, " <> ToString[m] <> " check ancillas, " <>
             ToString[rounds] <> " noisy rounds, " <> basis <> "-basis memory",
-         "# emitted by QECStimCircuit"},
+         "# emitted by QECStim"},
         {"# --- encode ---"},
         encoderLines[a],
         Catenate[round /@ Range[rounds]],
@@ -221,29 +221,47 @@ codeStimCircuit[a_Association, noise_Association, rounds_Integer, basis_String] 
 
 (* ---- construction ---- *)
 
-Options[QECStimCircuit] = {"Observable" -> "Z"};
+Options[QECStim] = {"Observable" -> "Z"};
 
-QECStimCircuit[code_QECCode, opts : OptionsPattern[]] :=
-    QECStimCircuit[code, QECNoiseModel["Circuit", <||>], 1, opts]
+QECStim[code_QECCode, opts : OptionsPattern[]] :=
+    QECStim[code, QECNoiseModel["Circuit", <||>], 1, opts]
 
-QECStimCircuit[code_QECCode, noise_QECNoiseModel, opts : OptionsPattern[]] :=
-    QECStimCircuit[code, noise, defaultRounds[First[code]], opts]
+QECStim[code_QECCode, noise_QECNoiseModel, opts : OptionsPattern[]] :=
+    QECStim[code, noise, defaultRounds[First[code]], opts]
 
-QECStimCircuit[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern[]] := With[
-    {basis = OptionValue[QECStimCircuit, {opts}, "Observable"]},
+QECStim[code_QECCode, noise_QECNoiseModel, rounds_, opts : OptionsPattern[]] := With[
+    {basis = OptionValue[QECStim, {opts}, "Observable"]},
     Which[
         ! MemberQ[{"X", "Z"}, basis],
-            Message[QECStimCircuit::observable, basis]; $Failed,
+            Message[QECStim::observable, basis]; $Failed,
         ! (IntegerQ[rounds] && rounds > 0),
             Message[QECSyndromeCircuit::rounds, rounds]; $Failed,
         noiseLevel[First[noise]] === "CodeCapacity",
-            Message[QECStimCircuit::level]; $Failed,
+            Message[QECStim::level]; $Failed,
         Count[codeCircuitInstructions[First[code], 1], {"MH", ___}] > 0,
-            Message[QECStimCircuit::herald,
+            Message[QECStim::herald,
                 Count[codeCircuitInstructions[First[code], 1], {"MH", ___}]]; $Failed,
         True,
             codeStimCircuit[First[code], First[noise], rounds, basis]
     ]
 ]
 
-QECCode[a_Association]["StimCircuit", rest___] := QECStimCircuit[QECCode[a], rest]
+QECCode[a_Association]["StimCircuit", rest___] := QECStim[QECCode[a], rest]
+
+
+(* The detector model's own circuit, in Stim's language: the same code, noise and
+   rounds, so a Stim run of this string samples the model this object describes.
+   The writer emits the bare-ancilla extraction only; a model built from another
+   extraction says so rather than handing back a different circuit. *)
+QECDetectorModel::stimextraction = "The Stim writer emits the bare-ancilla extraction; this model was built with \"`1`\".";
+
+QECDetectorModel[a_Association]["StimString"] := detectorStimString[a]
+QECDetectorModel[a_Association]["StimString", opts__] := detectorStimString[a, opts]
+
+detectorStimString[a_Association, opts___] := With[
+    {mode = Lookup[a, "Extraction", "BareAncilla"]},
+    If[ mode === "BareAncilla",
+        QECStim[QECCode[a["Code"]], QECNoiseModel[a["Noise"]], a["Rounds"], opts],
+        Message[QECDetectorModel::stimextraction, mode]; Missing["NotAvailable", mode]
+    ]
+]

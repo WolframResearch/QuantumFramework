@@ -89,24 +89,22 @@ $transversalOneQubitGates = {"I", "X", "Y", "Z", "H", "S", "Sdg", "V", "Vdg"};
 
 $transversalTwoQubitGates = {"CNOT", "CZ", "SWAP"};
 
-(* The engine's own matrices, in the engine's convention (Kernel/QuantumOperator):
-   V is Sqrt[X], so it sends Z to -Y.  Tests compare these against
-   QuantumOperator[name]["MatrixRepresentation"] so that a drift in either
-   convention fails loudly instead of quietly changing every sign below. *)
-$transversalGateMatrix = <|
-    "I"    -> IdentityMatrix[2],
-    "X"    -> {{0, 1}, {1, 0}},
-    "Y"    -> {{0, -I}, {I, 0}},
-    "Z"    -> {{1, 0}, {0, -1}},
-    "H"    -> {{1, 1}, {1, -1}} / Sqrt[2],
-    "S"    -> {{1, 0}, {0, I}},
-    "Sdg"  -> {{1, 0}, {0, -I}},
-    "V"    -> {{1/2 + I/2, 1/2 - I/2}, {1/2 - I/2, 1/2 + I/2}},
-    "Vdg"  -> {{1/2 - I/2, 1/2 + I/2}, {1/2 + I/2, 1/2 - I/2}},
-    "CNOT" -> {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}},
-    "CZ"   -> DiagonalMatrix[{1, 1, 1, -1}],
-    "SWAP" -> {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}
-|>;
+(* The engine's own matrices, READ FROM the engine rather than copied from it: the
+   table this replaced was a literal transcription of Kernel/QuantumOperator, and a
+   transcription is a second copy of a convention.  Now there is one.  V is Sqrt[X],
+   so it sends Z to -Y; the two daggers are the engine's own "Dagger", which is also
+   how the circuit bridge draws them (Gadget.wl).  The tests still compare the table
+   against QuantumOperator[name], now as a check that the read did what it says. *)
+$transversalGateMatrix = Association @ Join[
+    Table[
+        g -> Normal[Wolfram`QuantumFramework`QuantumOperator[g]["MatrixRepresentation"]],
+        {g, {"I", "X", "Y", "Z", "H", "S", "V", "CNOT", "CZ", "SWAP"}}
+    ],
+    Table[
+        (g <> "dg") -> Normal[Wolfram`QuantumFramework`QuantumOperator[g]["Dagger"]["MatrixRepresentation"]],
+        {g, {"S", "V"}}
+    ]
+];
 
 $transversalRootPhase = <|1 -> 0, I -> 1, -1 -> 2, -I -> 3|>;
 
@@ -241,8 +239,8 @@ transversalStabilizerImages[a_Association, gate_, nq_Integer] := Module[{code, c
     Table[
         With[{elt = codeStabilizerElement[code, images[[i]]]},
             <|
-                "Generator" -> QECPauliString[gens[[i]]],
-                "Image" -> QECPauliString[images[[i]]],
+                "Generator" -> pauliString[gens[[i]]],
+                "Image" -> pauliString[images[[i]]],
                 "StabilizerQ" -> (! MissingQ[elt] && Last[elt] === Last[images[[i]]])
             |>
         ],
@@ -275,7 +273,7 @@ transversalDecompose[a_Association, v_Association, w_List] := Module[
     (* i^(x z) per logical qubit, so that {1, 1} means Ybar and not Xbar Zbar. *)
     logical = MapAt[
         Mod[# + Total[ex ez], 4] &,
-        If[factors === {}, pauliIdentity[n], Fold[QECPauliProduct, factors]],
+        If[factors === {}, pauliIdentity[n], Fold[pauliProduct, factors]],
         -1
     ];
 
@@ -284,7 +282,7 @@ transversalDecompose[a_Association, v_Association, w_List] := Module[
 
     If[ MissingQ[elt],
         Missing["NotInNormalizer"],
-        Join[ex, ez, {Mod[Last[w] - Last[QECPauliProduct[logical, elt]], 4]}]
+        Join[ex, ez, {Mod[Last[w] - Last[pauliProduct[logical, elt]], 4]}]
     ]
 ]
 
@@ -297,7 +295,7 @@ transversalLogicalAction[a_Association, gate_, nq_Integer] := Module[{code, logi
     Table[
         Replace[
             transversalDecompose[code, logicals, conj[row]],
-            {r_List :> QECPauliString[r], m_ :> m}
+            {r_List :> pauliString[r], m_ :> m}
         ],
         {row, Join[logicals["X"], logicals["Z"]]}
     ]
@@ -311,8 +309,8 @@ transversalLogicalAction[a_Association, gate_, nq_Integer] := Module[{code, logi
 transversalGeneratorImages[gate_, nq_Integer] := With[
     {t = transversalAction[gate, nq], z = gf2Zero[nq]},
     Join[
-        Table[QECPauliString[t[Join[Normal @ UnitVector[nq, j], z]]], {j, nq}],
-        Table[QECPauliString[t[Join[z, Normal @ UnitVector[nq, j]]]], {j, nq}]
+        Table[pauliString[t[Join[Normal @ UnitVector[nq, j], z]]], {j, nq}],
+        Table[pauliString[t[Join[z, Normal @ UnitVector[nq, j]]]], {j, nq}]
     ]
 ]
 

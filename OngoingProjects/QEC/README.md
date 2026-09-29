@@ -12,14 +12,24 @@ Priorities are set by [`QEC-Development-Plan.md`](QEC-Development-Plan.md). Item
 of that plan are done; 3 is partly done; 4 and 5 are not started.
 
 **Start here:** [`docs/Tutorials/StabilizerCodes.nb`](docs/Tutorials/StabilizerCodes.nb) —
-a tech note in 19 sections with 61 runnable examples, which is the guided tour of
+a tech note in 28 sections with 104 runnable examples, which is the guided tour of
 everything below. Its source is the markdown beside it; the notebook is generated.
+[`QECCoreInternals`](docs/Tutorials/QECCoreInternals.nb) goes file by file, and
+[`FaultTolerantGadgets`](docs/Tutorials/FaultTolerantGadgets.nb) covers the six gadget
+objects.
+
+The public surface was redesigned after an API audit
+([`QEC-API-Audit-and-Redesign.md`](QEC-API-Audit-and-Redesign.md)); what was done, and the
+four decisions taken provisionally, are in [`QEC-API-Redesign-Plan.md`](QEC-API-Redesign-Plan.md).
+Retired names (`QECPauliVector` and the other `QECPauli*` verbs, `QECFaultTolerant`,
+`QECStimCircuit`, `QECCodeCatalog`, `QECClassicalHammingMatrix`) still work for one release
+and say what replaced them.
 
 ## What is here
 
 ```
-QECCore/           the layer: 16 files, ~3,200 lines, 22 public symbols
-Tests/             406 tests in 10 MUnit files, plus a local runner
+QECCore/           the layer: 25 files and a loader, ~6,900 lines, 19 public functions
+Tests/             685 tests in 23 MUnit files, plus a local runner
 StimCrossCheck/    the external oracle: emit the circuits, compare against Stim
 docs/              markdown sources, the build script, and the built notebook
 References/        an index of the source material (the PDFs are not in the repo)

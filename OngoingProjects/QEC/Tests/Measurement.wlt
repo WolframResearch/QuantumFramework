@@ -32,6 +32,10 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 qecFrame    = Symbol[qecScope <> "framePropagate"];
@@ -94,7 +98,7 @@ VerificationTest[
 (* The readout is the Hadamard transform of eqs. 12.1-12.3, not a disentangling
    circuit: one H on each cat qubit, then measure them all. *)
 VerificationTest[
-    Take[qecCatMeas[QECPauliVector["ZZZZZ"], 5, {6, 7, 8, 9, 10}], -10],
+    Take[qecCatMeas[qecPauliVector["ZZZZZ"], 5, {6, 7, 8, 9, 10}], -10],
     Join[Table[{"H", q}, {q, 6, 10}], Table[{"M", q}, {q, 6, 10}]],
     TestID -> "QEC-Measure-readout-is-a-hadamard-transform"
 ]
@@ -103,7 +107,7 @@ VerificationTest[
    with CZ where that has CNOT -- shared rather than re-derived, so the two
    constructions cannot drift apart on what a letter's rotation is. *)
 VerificationTest[
-    Cases[qecCatMeas[QECPauliVector["XZZXI"], 5, {6, 7, 8, 9}], {"H" | "V" | "Vdg", q_} /; q <= 5],
+    Cases[qecCatMeas[qecPauliVector["XZZXI"], 5, {6, 7, 8, 9}], {"H" | "V" | "Vdg", q_} /; q <= 5],
     Cases[qecGenInstr[First[five["CheckMatrix"]], 5, 6], {"H" | "V" | "Vdg", q_} /; q <= 5],
     TestID -> "QEC-Measure-rotations-are-shared-with-the-extraction-circuit"
 ]
@@ -158,7 +162,7 @@ VerificationTest[
     Max @ DeleteDuplicates @ Flatten @ Table[
         With[{
             fr = qecFrame[mg["Instructions"], mg["Qubits"], {{i, q, pauli}}]["Frame"],
-            pv = Take[QECPauliVector["XZZXI"], 10]
+            pv = Take[qecPauliVector["XZZXI"], 10]
         },
             With[{row = Join[Take[fr[[1]], 5], Take[fr[[2]], 5]]},
                 Min[

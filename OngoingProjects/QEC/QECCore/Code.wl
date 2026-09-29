@@ -133,7 +133,7 @@ fromVectors[vecs : {__List}] := Module[{n, m, mat, x, z, gram, bad, rank},
     gram = Mod[x . Transpose[z] + z . Transpose[x], 2];
     bad = FirstPosition[gram, 1, Missing["None"], {2}];
     If[ ! MissingQ[bad],
-        Message[QECCode::noncomm, QECPauliString[vecs[[bad[[1]]]]], QECPauliString[vecs[[bad[[2]]]]]];
+        Message[QECCode::noncomm, pauliString[vecs[[bad[[1]]]]], pauliString[vecs[[bad[[2]]]]]];
         Return[$Failed]
     ];
     rank = gf2Rank[mat];
@@ -147,7 +147,7 @@ fromVectors[vecs : {__List}] := Module[{n, m, mat, x, z, gram, bad, rank},
 
 QECCode[gens : {__String}] := If[
     AllTrue[gens, QECPauliQ],
-    fromVectors[QECPauliVector /@ gens],
+    fromVectors[pauliVector /@ gens],
     Message[QECCode::gens]; $Failed
 ]
 
@@ -166,12 +166,15 @@ $codeDirectProperties = {
 $codeDerivedProperties = {
     "Parameters", "Distance", "MinimumWeightLogical", "LogicalOperators", "LogicalX", "LogicalZ",
     "StandardForm", "CompletedGenerators", "SyndromeTable", "Decoder", "PerfectQ", "CSSQ", "SyndromeCircuit",
-    "EncodingGates", "EncodingCircuit", "EncodingCircuitValidQ", "PauliStabilizer", "State"
+    "EncodingGates", "EncodingCircuit", "EncodingCircuitValidQ", "PauliStabilizer", "State",
+    "Encoder", "Codewords", "Codespace", "SyndromeMeasurement"
 };
 
 $codeParametrizedProperties = {
     "Syndrome", "Decode", "Decoder", "LogicalErrorRate", "CorrectionCycle", "PhysicalCorrectionCycle",
-    "LogicalPauliQ", "StabilizerMemberQ"
+    "LogicalPauliQ", "StabilizerMemberQ",
+    "Recovery", "LogicalChannel", "LogicalPauliProbabilities", "KnillLaflammeMatrix", "CorrectableQ",
+    "Concatenate", "RemoveQubit", "Paste"
 };
 
 QECCode::noprop = "`1` is not a property of QECCode. Use code[\"Properties\"] for the list.";
@@ -188,7 +191,7 @@ QECCode[a_Association]["Qubits"] := a["Qubits"]
 QECCode[a_Association]["StabilizerCount"] := codeStabilizerCount[a]
 QECCode[a_Association]["LogicalQubits"] := codeLogicalQubits[a]
 QECCode[a_Association]["GeneratorVectors"] := codeVectors[a]
-QECCode[a_Association]["Generators"] := QECPauliString /@ codeVectors[a]
+QECCode[a_Association]["Generators"] := pauliString /@ codeVectors[a]
 QECCode[a_Association]["Signs"] := Replace[a["Phases"], {0 -> 1, 2 -> -1, e_ :> I^e}, {1}]
 
 QECCode[a_Association]["Parameters"] := {a["Qubits"], codeLogicalQubits[a], codeDistance[a]}
@@ -210,15 +213,15 @@ QECCode[a_Association]["Decoder"] := codeDecoder[a]
    code that cannot be enumerated; code["Decoder", w] is the cheap table for those. *)
 QECCode[a_Association]["Decoder", QECNoiseModel[noise_Association]] := If[
     exactEnumerableQ[a],
-    QECPauliString /@ codeCosetRepresentatives[a, noise],
+    pauliString /@ codeCosetRepresentatives[a, noise],
     Message[QECLogicalErrorRate::mlneedsall, a["Qubits"], 4^a["Qubits"], $QECExactEnumerationLimit];
     $Failed
 ]
 
-QECCode[a_Association]["LogicalErrorRate", noise_QECNoiseModel, opts___] :=
+QECCode[a_Association]["LogicalErrorRate", noise : _QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel, opts___] :=
     QECLogicalErrorRate[QECCode[a], noise, opts]
 
-QECCode[a_Association]["LogicalErrorRate", noise_QECNoiseModel, count_Integer, opts___] :=
+QECCode[a_Association]["LogicalErrorRate", noise : _QECNoiseModel | _Wolfram`QuantumFramework`QuantumChannel, count_Integer, opts___] :=
     QECLogicalErrorRate[QECCode[a], noise, count, opts]
 QECCode[a_Association]["Decoder", maxWeight_Integer] := codeDecoderToWeight[a, maxWeight]
 QECCode[a_Association]["PerfectQ"] := codePerfectQ[a]
@@ -231,7 +234,7 @@ QECCode[a_Association]["EncodingGates"] := codeEncodingGates[a]
 QECCode[a_Association]["EncodingCircuit"] := Wolfram`QuantumFramework`QuantumCircuitOperator[codeEncodingGates[a]]
 QECCode[a_Association]["EncodingCircuitValidQ"] := codeEncodingValidQ[a]
 
-QECCode[a_Association]["PauliStabilizer"] := Wolfram`QuantumFramework`PauliStabilizer[QECPauliString /@ codeVectors[a]]
+QECCode[a_Association]["PauliStabilizer"] := Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ codeVectors[a]]
 QECCode[a_Association]["State"] := QECCode[a]["PauliStabilizer"]["State"]
 
 QECCode[a_Association]["Syndrome", err_] := codeSyndrome[a, err]
@@ -261,7 +264,7 @@ QECCode /: MakeBoxes[obj : QECCode[a_Association] /; KeyExistsQ[a, "CheckMatrix"
             BoxForm`SummaryItem[{"Generators: ", codeStabilizerCount[a]}]
         },
         {
-            BoxForm`SummaryItem[{"Stabilizers: ", Row[QECPauliString /@ codeVectors[a], ", "]}],
+            BoxForm`SummaryItem[{"Stabilizers: ", Row[pauliString /@ codeVectors[a], ", "]}],
             BoxForm`SummaryItem[{"Parameters: ", Dynamic[Row[{"[[", Row[obj["Parameters"], ","], "]]"}]]}],
             BoxForm`SummaryItem[{"Logical X: ", Dynamic[obj["LogicalX"]]}],
             BoxForm`SummaryItem[{"Logical Z: ", Dynamic[obj["LogicalZ"]]}],

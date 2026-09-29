@@ -28,6 +28,12 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+qecPauliCommuteQ = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliCommuteQ"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecNamed = {"BitFlipCode", "PhaseFlipCode", "ShorCode", "5QubitCode", "SteaneCode"};
 
 (* The defining property of a logical pair: it commutes with the checks, it is
@@ -35,10 +41,10 @@ qecNamed = {"BitFlipCode", "PhaseFlipCode", "ShorCode", "5QubitCode", "SteaneCod
    else, and the X's and the Z's commute among themselves. *)
 qecLogicalsConsistentQ[code_] := Module[{lo = code["LogicalOperators"], xs, zs, k},
     xs = lo["X"]; zs = lo["Z"]; k = Length[xs];
-    AllTrue[Flatten[Outer[QECPauliCommuteQ, Join[xs, zs], code["Generators"]]], TrueQ] &&
-    And @@ Flatten[Table[QECPauliCommuteQ[xs[[i]], zs[[j]]] === (i =!= j), {i, k}, {j, k}]] &&
-    AllTrue[Flatten[Outer[QECPauliCommuteQ, xs, xs]], TrueQ] &&
-    AllTrue[Flatten[Outer[QECPauliCommuteQ, zs, zs]], TrueQ] &&
+    AllTrue[Flatten[Outer[qecPauliCommuteQ, Join[xs, zs], code["Generators"]]], TrueQ] &&
+    And @@ Flatten[Table[qecPauliCommuteQ[xs[[i]], zs[[j]]] === (i =!= j), {i, k}, {j, k}]] &&
+    AllTrue[Flatten[Outer[qecPauliCommuteQ, xs, xs]], TrueQ] &&
+    AllTrue[Flatten[Outer[qecPauliCommuteQ, zs, zs]], TrueQ] &&
     AllTrue[Join[xs, zs], ! code["StabilizerMemberQ", #] &]
 ];
 
@@ -111,7 +117,7 @@ VerificationTest[
 (* Zbar and the all-Z operator differ by a stabilizer on both these codes. *)
 VerificationTest[
     Module[{code = QECCode["5QubitCode"]},
-        code["StabilizerMemberQ", QECPauliProduct[First[code["LogicalZ"]], "ZZZZZ"]]
+        code["StabilizerMemberQ", qecPauliProduct[First[code["LogicalZ"]], "ZZZZZ"]]
     ],
     True,
     TestID -> "QEC-Structure-logical-Z-coset-five-qubit"
@@ -119,7 +125,7 @@ VerificationTest[
 
 VerificationTest[
     Module[{code = QECCode["SteaneCode"]},
-        code["StabilizerMemberQ", QECPauliProduct[First[code["LogicalZ"]], "ZZZZZZZ"]]
+        code["StabilizerMemberQ", qecPauliProduct[First[code["LogicalZ"]], "ZZZZZZZ"]]
     ],
     True,
     TestID -> "QEC-Structure-logical-Z-coset-steane"
@@ -154,7 +160,7 @@ VerificationTest[QECCode["BitFlipCode"]["StabilizerMemberQ", "ZZI"], True, TestI
 VerificationTest[
     Module[{code = QECCode["SteaneCode"], gens},
         gens = code["GeneratorVectors"];
-        AllTrue[Subsets[gens, {1, 3}], code["StabilizerMemberQ", QECPauliProduct @@ #] &]
+        AllTrue[Subsets[gens, {1, 3}], code["StabilizerMemberQ", qecPauliProduct @@ #] &]
     ],
     True,
     TestID -> "QEC-Structure-member-all-products"
@@ -170,7 +176,7 @@ VerificationTest[QECCode["BitFlipCode"]["LogicalPauliQ", "IXI"], False, TestID -
 VerificationTest[
     Module[{code = QECCode["5QubitCode"], xbar},
         xbar = First[code["LogicalX"]];
-        AllTrue[code["GeneratorVectors"], code["LogicalPauliQ", QECPauliProduct[xbar, #]] &]
+        AllTrue[code["GeneratorVectors"], code["LogicalPauliQ", qecPauliProduct[xbar, #]] &]
     ],
     True,
     TestID -> "QEC-Structure-logical-coset-stays-logical"
@@ -195,7 +201,7 @@ VerificationTest[
 VerificationTest[
     Module[{code = QECCode["SteaneCode"], full},
         full = code["CompletedGenerators"];
-        AllTrue[Subsets[full, {2}], QECPauliCommuteQ @@ # &]
+        AllTrue[Subsets[full, {2}], qecPauliCommuteQ @@ # &]
     ],
     True,
     TestID -> "QEC-Structure-completion-commutes"
@@ -236,7 +242,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECPauliWeight[QECCode["5QubitCode"]["MinimumWeightLogical"]],
+    qecPauliWeight[QECCode["5QubitCode"]["MinimumWeightLogical"]],
     3,
     TestID -> "QEC-Structure-witness-weight"
 ]
@@ -251,7 +257,7 @@ VerificationTest[
 VerificationTest[
     AllTrue[qecNamed,
         With[{code = QECCode[#]},
-            QECPauliWeight[code["MinimumWeightLogical"]] === code["Distance"]
+            qecPauliWeight[code["MinimumWeightLogical"]] === code["Distance"]
         ] &
     ],
     True,

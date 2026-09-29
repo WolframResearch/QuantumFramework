@@ -37,7 +37,7 @@ codeSpanData[a_Association] := codeSpanData[a] = Module[{m = codeStabilizerCount
 codeStabilizerElement[a_Association, v_List] := Module[{sd, rows, piv, trans, residual, coeff, gens, used},
     sd = codeSpanData[a];
     {rows, piv, trans} = Lookup[sd, {"Rows", "Pivots", "Transform"}];
-    residual = symplecticPart[QECPauliVector[v]];
+    residual = symplecticPart[pauliVector[v]];
     coeff = gf2Zero[codeStabilizerCount[a]];
     Do[
         If[ residual[[piv[[i]]]] === 1,
@@ -49,18 +49,18 @@ codeStabilizerElement[a_Association, v_List] := Module[{sd, rows, piv, trans, re
     If[residual =!= gf2Zero[2 a["Qubits"]], Return[Missing["NotInStabilizerGroup"]]];
     gens = codeVectors[a];
     used = Pick[gens, coeff, 1];
-    If[used === {}, pauliIdentity[a["Qubits"]], QECPauliProduct @@ used]
+    If[used === {}, pauliIdentity[a["Qubits"]], pauliProduct @@ used]
 ]
 
 (* Membership in the stabilizer group proper: the symplectic part must be in the
    span AND the phase must agree.  -M for a stabilizer M is in N(S) but not in S. *)
-codeStabilizerMemberQ[a_Association, p_] := With[{v = QECPauliVector[p], el = codeStabilizerElement[a, QECPauliVector[p]]},
+codeStabilizerMemberQ[a_Association, p_] := With[{v = pauliVector[p], el = codeStabilizerElement[a, pauliVector[p]]},
     ! MissingQ[el] && phasePart[el] === phasePart[v]
 ]
 
 (* In the normaliser but not the stabilizer group: a logical operator.  Sign is
    irrelevant here -- P and -P are logical together -- so this compares spans. *)
-codeLogicalPauliQ[a_Association, p_] := With[{v = QECPauliVector[p]},
+codeLogicalPauliQ[a_Association, p_] := With[{v = pauliVector[p]},
     Length[v] === 2 a["Qubits"] + 1 &&
     codeSyndromeVector[a, v] === gf2Zero[codeStabilizerCount[a]] &&
     MissingQ[codeStabilizerElement[a, v]]
@@ -200,7 +200,7 @@ codeLogicalVectors[a_Association] := codeLogicalVectors[a] = Module[
     <|"X" -> (unpermute /@ xRows), "Z" -> (unpermute /@ zRows)|>
 ]
 
-codeLogicalOperators[a_Association] := Map[QECPauliString, codeLogicalVectors[a], {2}]
+codeLogicalOperators[a_Association] := Map[pauliString, codeLogicalVectors[a], {2}]
 
 
 (* ---- distance ---- *)
@@ -218,7 +218,7 @@ codeMinimumLogical[a_Association] := codeMinimumLogical[a] = Module[
     If[codeLogicalQubits[a] === 0, Return[{Infinity, Missing["NoLogicalOperators"]}]];
 
     logicals = Join @@ Values[codeLogicalVectors[a]];
-    weights = QECPauliWeight /@ logicals;
+    weights = pauliWeight /@ logicals;
     bound = Min[weights];
     witness = logicals[[First[FirstPosition[weights, bound]]]];
 
@@ -239,7 +239,7 @@ codeMinimumLogical[a_Association] := codeMinimumLogical[a] = Module[
 codeDistance[a_Association] := First[codeMinimumLogical[a]]
 
 codeMinimumWeightLogical[a_Association] := With[{res = Last[codeMinimumLogical[a]]},
-    If[MissingQ[res], res, QECPauliString[res]]
+    If[MissingQ[res], res, pauliString[res]]
 ]
 
 

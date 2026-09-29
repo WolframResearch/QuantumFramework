@@ -2,13 +2,15 @@
 
 Package["Wolfram`QuantumFramework`QEC`"]
 
-PackageExport[QECPauliVector]
-PackageExport[QECPauliString]
+PackageExport[QECPauli]
 PackageExport[QECPauliQ]
-PackageExport[QECPauliWeight]
-PackageExport[QECPauliCommuteQ]
-PackageExport[QECPauliProduct]
-PackageExport[QECPauliPhase]
+
+PackageScope[pauliVector]
+PackageScope[pauliString]
+PackageScope[pauliWeight]
+PackageScope[pauliCommuteQ]
+PackageScope[pauliProduct]
+PackageScope[pauliPhase]
 
 PackageScope[pauliQubits]
 PackageScope[symplecticPart]
@@ -41,19 +43,7 @@ PackageScope[$pauliLetterXZ]
 (* have even e, and e/2 is exactly the engine's phase bit.                      *)
 (* ============================================================================ *)
 
-QECPauliVector::usage = "QECPauliVector[p] gives the Pauli row {x1..xn, z1..zn, e} of a Pauli, where the operator is i^e times the product of X^x_j Z^z_j taken Hermitian on each qubit. p may be a Pauli string such as \"XZZXI\" or \"-iXY\", a row (returned unchanged), or a list of strings.";
-
-QECPauliString::usage = "QECPauliString[v] gives the Pauli string of a Pauli row, with a leading -, i or -i when the phase calls for one. Strings pass through unchanged and lists are mapped over.";
-
 QECPauliQ::usage = "QECPauliQ[p] gives True if p is a Pauli string or a Pauli row.";
-
-QECPauliWeight::usage = "QECPauliWeight[p] gives the number of qubits on which the Pauli acts nontrivially. The phase does not count.";
-
-QECPauliCommuteQ::usage = "QECPauliCommuteQ[p, q] gives True if the two Paulis commute, which is the symplectic product of their rows being zero.";
-
-QECPauliProduct::usage = "QECPauliProduct[p1, p2, ...] gives the product of the Paulis as a Pauli row, carrying the phase in Z4: QECPauliProduct[\"X\", \"Z\"] is -iY.";
-
-QECPauliPhase::usage = "QECPauliPhase[p] gives the phase of a Pauli as an element of Z4: the operator carries an overall factor i^QECPauliPhase[p]. Hermitian Paulis give 0 or 2.";
 
 
 $pauliLetterXZ = <|"I" -> {0, 0}, "X" -> {1, 0}, "Y" -> {1, 1}, "Z" -> {0, 1}|>;
@@ -78,37 +68,37 @@ pauliIdentity[n_Integer] := Append[gf2Zero[2 n], 0]
 
 (* ---- strings in, strings out ---- *)
 
-QECPauliVector::invalid = "`1` is not a Pauli string: expected an optional -, i or -i followed by letters I, X, Y, Z.";
+QECPauli::invalid = "`1` is not a Pauli string: expected an optional -, i or -i followed by letters I, X, Y, Z.";
 
-QECPauliVector::badrow = "`1` is not a Pauli row: expected a list of an odd number of integers, {x1..xn, z1..zn, e}.";
+QECPauli::badrow = "`1` is not a Pauli row: expected a list of an odd number of integers, {x1..xn, z1..zn, e}.";
 
-QECPauliVector[s_String] := Module[{prefix, body, chars, pairs},
+pauliVector[s_String] := Module[{prefix, body, chars, pairs},
     prefix = Replace[StringCases[s, StartOfString ~~ p : ("-i" | "-" | "i") :> p], {{p_} :> p, _ -> ""}];
     body = StringDrop[s, StringLength[prefix]];
     chars = Characters[body];
     If[ chars === {} || ! SubsetQ[Keys[$pauliLetterXZ], DeleteDuplicates[chars]],
-        Message[QECPauliVector::invalid, s]; Return[$Failed]
+        Message[QECPauli::invalid, s]; Return[$Failed]
     ];
     pairs = Lookup[$pauliLetterXZ, chars];
     Join[pairs[[All, 1]], pairs[[All, 2]], {$phasePrefix[prefix]}]
 ]
 
-QECPauliVector[v : {__Integer}] := If[
+pauliVector[v : {__Integer}] := If[
     OddQ[Length[v]] && SubsetQ[{0, 1}, DeleteDuplicates[Most[v]]],
     MapAt[Mod[#, 4] &, v, -1],
-    Message[QECPauliVector::badrow, v]; $Failed
+    Message[QECPauli::badrow, v]; $Failed
 ]
 
-QECPauliVector[ps : {__String}] := QECPauliVector /@ ps
+pauliVector[ps : {__String}] := pauliVector /@ ps
 
 
-QECPauliString[v : {__Integer}] := Module[{n = pauliQubits[v]},
+pauliString[v : {__Integer}] := Module[{n = pauliQubits[v]},
     $prefixPhase[Mod[Last[v], 4]] <> StringJoin[Lookup[$xzPauliLetter, Transpose[{v[[1 ;; n]], v[[n + 1 ;; 2 n]]}]]]
 ]
 
-QECPauliString[s_String] := s
+pauliString[s_String] := s
 
-QECPauliString[l : {__List}] := QECPauliString /@ l
+pauliString[l : {__List}] := pauliString /@ l
 
 
 (* Checked structurally rather than by parsing and silencing the message. *)
@@ -121,7 +111,7 @@ QECPauliQ[_] := False
 
 (* ---- the algebra ---- *)
 
-QECPauliWeight[p_] := With[{v = QECPauliVector[p]},
+pauliWeight[p_] := With[{v = pauliVector[p]},
     With[{n = pauliQubits[v]}, Count[v[[1 ;; n]] + v[[n + 1 ;; 2 n]], _ ? Positive]]
 ]
 
@@ -131,11 +121,11 @@ symplecticProduct[u_List, v_List] := With[{n = pauliQubits[u]},
     Mod[u[[1 ;; n]] . v[[n + 1 ;; 2 n]] + u[[n + 1 ;; 2 n]] . v[[1 ;; n]], 2]
 ]
 
-QECPauliCommuteQ::size = "Paulis act on different numbers of qubits.";
+QECPauli::size = "Paulis act on different numbers of qubits.";
 
-QECPauliCommuteQ[p_, q_] := With[{u = QECPauliVector[p], v = QECPauliVector[q]},
+pauliCommuteQ[p_, q_] := With[{u = pauliVector[p], v = pauliVector[q]},
     If[ Length[u] =!= Length[v],
-        Message[QECPauliCommuteQ::size]; $Failed,
+        Message[QECPauli::size]; $Failed,
         symplecticProduct[u, v] === 0
     ]
 ]
@@ -152,16 +142,77 @@ pauliTimes[u_List, v_List] := Module[{n = pauliQubits[u], x1, z1, x2, z2, x3, z3
     Join[x3, z3, {Mod[Last[u] + Last[v] + c, 4]}]
 ]
 
-QECPauliProduct::size = "Paulis act on different numbers of qubits.";
 
-QECPauliProduct[ps__] := Module[{vs = QECPauliVector /@ {ps}},
+pauliProduct[ps__] := Module[{vs = pauliVector /@ {ps}},
     If[ Length[DeleteDuplicates[Length /@ vs]] =!= 1,
-        Message[QECPauliProduct::size]; Return[$Failed]
+        Message[QECPauli::size]; Return[$Failed]
     ];
     Fold[pauliTimes, vs]
 ]
 
-QECPauliPhase[p_] := Mod[Last[QECPauliVector[p]], 4]
+pauliPhase[p_] := Mod[Last[pauliVector[p]], 4]
+
+
+(* ---- the object ---- *)
+
+(* QECPauli is the one public face of everything above.  It WRAPS a row; it does
+   not replace it (constraint C3 of the redesign plan): every function in the layer
+   keeps taking and returning raw rows, because the algebra runs on them, and the
+   object exists for the reader.  The seven former verbs are its properties:
+
+       QECPauliVector[p]      ->  QECPauli[p]["Vector"]
+       QECPauliString[p]      ->  QECPauli[p]["String"]
+       QECPauliWeight[p]      ->  QECPauli[p]["Weight"]
+       QECPauliPhase[p]       ->  QECPauli[p]["Phase"]
+       QECPauliCommuteQ[p, q] ->  QECPauli[p]["CommuteQ", q]
+       QECPauliProduct[p, q]  ->  QECPauli[p]["Product", q]   or   QECPauli[p] ** QECPauli[q]
+       QECPauliQ[p]           ->  stays, as the guard
+
+   The canonical form is QECPauli[row], phase reduced mod 4, which is also the
+   shape the constructor settles into, so an object is a row with a head on it and
+   pattern-matching on it costs nothing.  Every row function accepts the object as
+   well, so a QECPauli can go anywhere a string or a row could: code["Syndrome", P]. *)
+
+QECPauli::usage = "QECPauli[p] represents a Pauli operator, given as a string such as \"XZZXI\" or \"-iXY\" or as a row {x1..xn, z1..zn, e} meaning i^e times the product of X^x_j Z^z_j taken Hermitian on each qubit.\nP[\"String\"], P[\"Vector\"], P[\"Weight\"], P[\"Phase\"], P[\"Qubits\"], P[\"Support\"], P[\"HermitianQ\"], P[\"Matrix\"] and P[\"QuantumOperator\"] give its forms; P[\"CommuteQ\", q] and P[\"Product\", q, ...] relate it to others, and P ** Q multiplies.\nQECPauli[{p1, p2, ...}] maps over a list. P[\"Properties\"] lists the properties.";
+
+QECPauli::noprop = "`1` is not a property of QECPauli. Use P[\"Properties\"] for the list.";
+
+pauliRowQ[v_List] := VectorQ[v, IntegerQ] && OddQ[Length[v]] && Length[v] >= 3 && SubsetQ[{0, 1}, DeleteDuplicates[Most[v]]]
+pauliRowQ[_] := False
+
+QECPauli[p_QECPauli] := p
+QECPauli[s_String] := Replace[pauliVector[s], v_List :> QECPauli[v]]
+QECPauli[v : {__Integer}] /; ! pauliRowQ[v] := (Message[QECPauli::badrow, v]; $Failed)
+QECPauli[v : {__Integer}] /; pauliRowQ[v] && ! 0 <= Last[v] <= 3 := QECPauli[MapAt[Mod[#, 4] &, v, -1]]
+QECPauli[l : {(_String | _QECPauli | {__Integer}) ..}] /; ! VectorQ[l, IntegerQ] := QECPauli /@ l
+
+pauliVector[QECPauli[v_List]] := v
+pauliString[QECPauli[v_List]] := pauliString[v]
+QECPauliQ[QECPauli[v_List]] := pauliRowQ[v]
+
+$pauliProperties = {
+    "String", "Vector", "Weight", "Phase", "Qubits", "Support", "HermitianQ",
+    "Matrix", "QuantumOperator", "CommuteQ", "Product", "Properties"
+};
+
+QECPauli[_List]["Properties"] := $pauliProperties
+QECPauli[v_List]["String"] := pauliString[v]
+QECPauli[v_List]["Vector"] := v
+QECPauli[v_List]["Weight"] := pauliWeight[v]
+QECPauli[v_List]["Phase"] := pauliPhase[v]
+QECPauli[v_List]["Qubits"] := pauliQubits[v]
+QECPauli[v_List]["Support"] := With[{n = pauliQubits[v]}, Flatten @ Position[v[[1 ;; n]] + v[[n + 1 ;; 2 n]], _ ? Positive]]
+QECPauli[v_List]["HermitianQ"] := EvenQ[Last[v]]
+QECPauli[v_List]["Matrix"] := pauliRowMatrix[v]
+QECPauli[v_List]["QuantumOperator"] := Wolfram`QuantumFramework`QuantumOperator[pauliRowMatrix[v], Range[pauliQubits[v]]]
+QECPauli[v_List]["CommuteQ", q_] := pauliCommuteQ[v, q]
+QECPauli[v_List]["Product", qs__] := Replace[pauliProduct[v, qs], w_List :> QECPauli[w]]
+QECPauli[_List][prop_String, ___] := (Message[QECPauli::noprop, prop]; Missing["NotFound", prop])
+
+QECPauli /: NonCommutativeMultiply[p_QECPauli, q_QECPauli] := p["Product", q]
+
+QECPauli /: MakeBoxes[obj : QECPauli[v_List] /; pauliRowQ[v], form : (StandardForm | TraditionalForm)] :=
+    InterpretationBox[RowBox[{"QECPauli", "[", #, "]"}], obj] & @ ToBoxes[pauliString[v], form]
 
 
 (* ---- enumeration of low-weight errors ---- *)

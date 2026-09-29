@@ -186,7 +186,7 @@ QECRegister[a_Association]["LogicalVectors"] := registerLogicalVectors[a["Code"]
 QECRegister[a_Association]["Generators"] := With[
     {n = a["Code"]["Qubits"], blocks = a["Blocks"]},
     Catenate @ Table[
-        QECPauliString[
+        pauliString[
             Join[
                 PadRight[PadLeft[#[[1 ;; n]], b n], blocks n],
                 PadRight[PadLeft[#[[n + 1 ;; 2 n]], b n], blocks n],
@@ -232,7 +232,7 @@ QECRegister[a_Association]["LogicalAction", c_Integer, t_Integer] := Module[
        levels deep and Flatten takes it to a flat list of rules.  Flatten on an
        Association is an error, not a no-op, which is how this was caught. *)
     Association @ Flatten @ Table[
-        {name, b, j} -> QECPauliString[
+        {name, b, j} -> pauliString[
             registerConjugate[instr, nq, v[name][[(b - 1) k + j]]]
         ],
         {name, {"X", "Z"}}, {b, {c, t}}, {j, k}

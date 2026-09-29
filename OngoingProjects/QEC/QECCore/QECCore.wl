@@ -29,8 +29,11 @@ Module[{dir = DirectoryName[$InputFileName]},
         "Register.wl",
         "Transversal.wl",
         "FaultTolerant.wl",
+        "Operational.wl",
         "Memory.wl",
+        "Decoder.wl",
         "Stim.wl",
+        "Deprecated.wl",
         "Cache.wl"
     }
 ]

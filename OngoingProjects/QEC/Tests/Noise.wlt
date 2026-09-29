@@ -31,6 +31,11 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 (* Failure probability of the n-qubit repetition code under independent bit
@@ -143,7 +148,7 @@ VerificationTest[
 (* Over all 4^n errors the probabilities sum to one. *)
 VerificationTest[
     Module[{noise = QECNoiseModel["Depolarizing", qecP], all},
-        all = QECPauliString /@ Flatten[Table[Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[3, w], {w, 0, 3}], 1];
+        all = qecPauliString /@ Flatten[Table[Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[3, w], {w, 0, 3}], 1];
         Simplify[Total[noise["ErrorProbability", #] & /@ all]]
     ],
     1,
@@ -239,7 +244,7 @@ VerificationTest[
     Module[{sample},
         SeedRandom[4];
         sample = QECNoiseModel["Depolarizing", 1/10]["RandomErrors", 20, 5000];
-        Abs[Mean[N[QECPauliWeight /@ sample]] - 2] < 0.15
+        Abs[Mean[N[qecPauliWeight /@ sample]] - 2] < 0.15
     ],
     True,
     TestID -> "QEC-Noise-sample-mean-weight"

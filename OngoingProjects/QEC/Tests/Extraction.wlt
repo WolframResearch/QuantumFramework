@@ -265,9 +265,9 @@ VerificationTest[
 VerificationTest[
     Module[{r1, r2, exponent},
         r1 = QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1,
-            "Extraction" -> "Transversal"]["Rate"];
+            "Extraction" -> "Transversal"];
         r2 = QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1,
-            "Extraction" -> "Transversal"]["Rate"];
+            "Extraction" -> "Transversal"];
         exponent = N[Log[r1 / r2] / Log[2]];
         1.9 < exponent < 2.1
     ],

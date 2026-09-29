@@ -29,6 +29,11 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecNamed = {"BitFlipCode", "PhaseFlipCode", "ShorCode", "5QubitCode", "SteaneCode"};
 
 qecCliffordGates = {"H", "S", "CNOT", "CZ", "SWAP", "X", "Y", "Z"};
@@ -120,7 +125,7 @@ VerificationTest[
             PauliStabilizer[3], code["EncodingGates"]
         ];
         AllTrue[Subsets[code["GeneratorVectors"], {1, 2}],
-            prepared["Expectation", QECPauliString[QECPauliProduct @@ #]] === 1 &
+            prepared["Expectation", qecPauliString[qecPauliProduct @@ #]] === 1 &
         ]
     ],
     True,

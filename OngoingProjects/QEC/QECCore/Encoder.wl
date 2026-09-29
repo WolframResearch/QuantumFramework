@@ -32,7 +32,7 @@ applyPauliVector[ps_Wolfram`QuantumFramework`PauliStabilizer, v_List] := Module[
     ]
 ]
 
-applyPauliVector[ps_Wolfram`QuantumFramework`PauliStabilizer, s_String] := applyPauliVector[ps, QECPauliVector[s]]
+applyPauliVector[ps_Wolfram`QuantumFramework`PauliStabilizer, s_String] := applyPauliVector[ps, pauliVector[s]]
 
 (* The engine's compiled bulk fold, not a gate-by-gate object fold.  Every gate the
    reduction emits is an arrow `name -> order` over {H, S, X, Y, Z, CNOT, CZ, SWAP},
@@ -117,7 +117,7 @@ codeEncodingGates[a_Association] := codeEncodingGates[a] = Module[
     completed = codeCompletedGenerators[a];
     If[completed === $Failed, Return[$Failed]];
 
-    wrong = Boole[prepared["Expectation", #] === -1] & /@ (QECPauliString /@ completed);
+    wrong = Boole[prepared["Expectation", #] === -1] & /@ (pauliString /@ completed);
     If[Total[wrong] === 0, Return[encoder]];
 
     (* Row i of the system is generator i with its halves swapped, so that
@@ -134,5 +134,5 @@ codeEncodingGates[a_Association] := codeEncodingGates[a] = Module[
 
 codeEncodingValidQ[a_Association] := With[
     {prepared = applyGates[Wolfram`QuantumFramework`PauliStabilizer[a["Qubits"]], codeEncodingGates[a]]},
-    AllTrue[QECPauliString /@ codeVectors[a], prepared["Expectation", #] === 1 &]
+    AllTrue[pauliString /@ codeVectors[a], prepared["Expectation", #] === 1 &]
 ]

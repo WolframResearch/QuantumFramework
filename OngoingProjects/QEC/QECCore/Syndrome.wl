@@ -27,7 +27,7 @@ codeSyndromeVector[a_Association, v_List] := Mod[symplecticPart[v] . Transpose[c
 
 QECCode::errsize = "The error must act on `1` qubits.";
 
-codeSyndrome[a_Association, err_] := With[{v = QECPauliVector[err]},
+codeSyndrome[a_Association, err_] := With[{v = pauliVector[err]},
     Which[
         v === $Failed, $Failed,
         Length[v] =!= 2 a["Qubits"] + 1, Message[QECCode::errsize, a["Qubits"]]; $Failed,
@@ -37,8 +37,8 @@ codeSyndrome[a_Association, err_] := With[{v = QECPauliVector[err]},
 
 (* Syndromes of every weight-one error, keyed by the error. *)
 codeSyndromeTable[a_Association] := codeSyndromeTable[a] = AssociationMap[
-    codeSyndromeVector[a, QECPauliVector[#]] &,
-    QECPauliString /@ weightOneVectors[a["Qubits"]]
+    codeSyndromeVector[a, pauliVector[#]] &,
+    pauliString /@ weightOneVectors[a["Qubits"]]
 ]
 
 
@@ -87,7 +87,7 @@ QECCode::badsyn = "The syndrome must be a binary vector of length `1`.";
 codeDecode[a_Association, syn_List] := With[{m = codeStabilizerCount[a]},
     If[ Length[syn] =!= m || ! SubsetQ[{0, 1}, DeleteDuplicates[syn]],
         Message[QECCode::badsyn, m]; $Failed,
-        Replace[Lookup[codeDecoder[a], Key[syn], Missing["UndecodableSyndrome", syn]], v : {__Integer} :> QECPauliString[v]]
+        Replace[Lookup[codeDecoder[a], Key[syn], Missing["UndecodableSyndrome", syn]], v : {__Integer} :> pauliString[v]]
     ]
 ]
 
@@ -103,7 +103,7 @@ codeDecode[a_Association, syn_List] := With[{m = codeStabilizerCount[a]},
    syndrome it cannot decode at all, and the prototype's single Success boolean
    could not tell them apart. *)
 codeCorrectionCycle[a_Association, err_] := Module[{v, syn, corr, residual, inStabilizer},
-    v = QECPauliVector[err];
+    v = pauliVector[err];
     If[v === $Failed || Length[v] =!= 2 a["Qubits"] + 1, Message[QECCode::errsize, a["Qubits"]]; Return[$Failed]];
 
     syn = codeSyndromeVector[a, v];
@@ -111,19 +111,19 @@ codeCorrectionCycle[a_Association, err_] := Module[{v, syn, corr, residual, inSt
 
     If[ MissingQ[corr],
         Return[<|
-            "Error" -> QECPauliString[v], "Syndrome" -> syn, "Correction" -> corr,
+            "Error" -> pauliString[v], "Syndrome" -> syn, "Correction" -> corr,
             "Residual" -> Missing["Undecodable"], "Outcome" -> "Undecodable", "Success" -> False
         |>]
     ];
 
-    residual = QECPauliProduct[v, corr];
+    residual = pauliProduct[v, corr];
     inStabilizer = gf2MemberQ[codeBasis[a], symplecticPart[residual]];
 
     <|
-        "Error" -> QECPauliString[v],
+        "Error" -> pauliString[v],
         "Syndrome" -> syn,
-        "Correction" -> QECPauliString[corr],
-        "Residual" -> QECPauliString[residual],
+        "Correction" -> pauliString[corr],
+        "Residual" -> pauliString[residual],
         "Outcome" -> If[inStabilizer, "Corrected", "LogicalError"],
         "Success" -> inStabilizer
     |>
@@ -139,21 +139,21 @@ codePhysicalCorrectionCycle[a_Association, err_] := Module[{gens, reference, dam
     gens = codeCompletedGenerators[a];
     If[gens === $Failed, Return[$Failed]];
 
-    reference = Wolfram`QuantumFramework`PauliStabilizer[QECPauliString /@ gens];
-    damaged = applyPauliVector[reference, QECPauliVector[err]];
-    syn = (1 - (damaged["Expectation", #] & /@ (QECPauliString /@ codeVectors[a]))) / 2;
+    reference = Wolfram`QuantumFramework`PauliStabilizer[pauliString /@ gens];
+    damaged = applyPauliVector[reference, pauliVector[err]];
+    syn = (1 - (damaged["Expectation", #] & /@ (pauliString /@ codeVectors[a]))) / 2;
     corr = Lookup[codeDecoder[a], Key[syn], Missing["UndecodableSyndrome", syn]];
 
     If[ MissingQ[corr],
-        Return[<|"Error" -> QECPauliString[QECPauliVector[err]], "Syndrome" -> syn, "Correction" -> corr, "Success" -> False|>]
+        Return[<|"Error" -> pauliString[pauliVector[err]], "Syndrome" -> syn, "Correction" -> corr, "Success" -> False|>]
     ];
 
     final = applyPauliVector[damaged, corr];
 
     <|
-        "Error" -> QECPauliString[QECPauliVector[err]],
+        "Error" -> pauliString[pauliVector[err]],
         "Syndrome" -> syn,
-        "Correction" -> QECPauliString[corr],
+        "Correction" -> pauliString[corr],
         "Success" -> final["Stabilizers"] === reference["Stabilizers"]
     |>
 ]

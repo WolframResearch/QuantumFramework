@@ -32,6 +32,15 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+qecPauliCommuteQ = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliCommuteQ"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+qecPauliPhase = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliPhase"];
+
 (* ---- local oracle: Pauli string -> dense matrix ---- *)
 
 qecPauliMat["I"] = {{1, 0}, {0, 1}};
@@ -57,35 +66,35 @@ qecRandomPaulis[n_, count_] := Table[StringJoin[RandomChoice[{"I", "X", "Y", "Z"
    Rows in, rows out
    ============================================================================ *)
 
-VerificationTest[QECPauliVector["XI"], {1, 0, 0, 0, 0}, TestID -> "QEC-Pauli-vector-XI"]
+VerificationTest[qecPauliVector["XI"], {1, 0, 0, 0, 0}, TestID -> "QEC-Pauli-vector-XI"]
 
-VerificationTest[QECPauliVector["IX"], {0, 1, 0, 0, 0}, TestID -> "QEC-Pauli-vector-IX"]
+VerificationTest[qecPauliVector["IX"], {0, 1, 0, 0, 0}, TestID -> "QEC-Pauli-vector-IX"]
 
-VerificationTest[QECPauliVector["ZI"], {0, 0, 1, 0, 0}, TestID -> "QEC-Pauli-vector-ZI"]
+VerificationTest[qecPauliVector["ZI"], {0, 0, 1, 0, 0}, TestID -> "QEC-Pauli-vector-ZI"]
 
-VerificationTest[QECPauliVector["IZ"], {0, 0, 0, 1, 0}, TestID -> "QEC-Pauli-vector-IZ"]
+VerificationTest[qecPauliVector["IZ"], {0, 0, 0, 1, 0}, TestID -> "QEC-Pauli-vector-IZ"]
 
-VerificationTest[QECPauliVector["YZ"], {1, 0, 1, 1, 0}, TestID -> "QEC-Pauli-vector-YZ"]
+VerificationTest[qecPauliVector["YZ"], {1, 0, 1, 1, 0}, TestID -> "QEC-Pauli-vector-YZ"]
 
-VerificationTest[QECPauliVector["XZZXI"], {1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}, TestID -> "QEC-Pauli-vector-XZZXI"]
+VerificationTest[qecPauliVector["XZZXI"], {1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}, TestID -> "QEC-Pauli-vector-XZZXI"]
 
-VerificationTest[QECPauliVector["-ZI"], {0, 0, 1, 0, 2}, TestID -> "QEC-Pauli-vector-minus"]
+VerificationTest[qecPauliVector["-ZI"], {0, 0, 1, 0, 2}, TestID -> "QEC-Pauli-vector-minus"]
 
-VerificationTest[QECPauliVector["iZI"], {0, 0, 1, 0, 1}, TestID -> "QEC-Pauli-vector-i"]
+VerificationTest[qecPauliVector["iZI"], {0, 0, 1, 0, 1}, TestID -> "QEC-Pauli-vector-i"]
 
-VerificationTest[QECPauliVector["-iZI"], {0, 0, 1, 0, 3}, TestID -> "QEC-Pauli-vector-minus-i"]
+VerificationTest[qecPauliVector["-iZI"], {0, 0, 1, 0, 3}, TestID -> "QEC-Pauli-vector-minus-i"]
 
-VerificationTest[Quiet[QECPauliVector["XQZ"]], $Failed, TestID -> "QEC-Pauli-vector-bad-letter"]
+VerificationTest[Quiet[qecPauliVector["XQZ"]], $Failed, TestID -> "QEC-Pauli-vector-bad-letter"]
 
-VerificationTest[Quiet[QECPauliVector[""]], $Failed, TestID -> "QEC-Pauli-vector-empty"]
+VerificationTest[Quiet[qecPauliVector[""]], $Failed, TestID -> "QEC-Pauli-vector-empty"]
 
-VerificationTest[QECPauliString[{1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}], "XZZXI", TestID -> "QEC-Pauli-string-XZZXI"]
+VerificationTest[qecPauliString[{1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0}], "XZZXI", TestID -> "QEC-Pauli-string-XZZXI"]
 
-VerificationTest[QECPauliString[{0, 0, 1, 1, 0}], "ZZ", TestID -> "QEC-Pauli-string-ZZ"]
+VerificationTest[qecPauliString[{0, 0, 1, 1, 0}], "ZZ", TestID -> "QEC-Pauli-string-ZZ"]
 
-VerificationTest[QECPauliString[{0, 0, 1, 1, 2}], "-ZZ", TestID -> "QEC-Pauli-string-minus-ZZ"]
+VerificationTest[qecPauliString[{0, 0, 1, 1, 2}], "-ZZ", TestID -> "QEC-Pauli-string-minus-ZZ"]
 
-VerificationTest[QECPauliString[{0, 0, 1, 1, 3}], "-iZZ", TestID -> "QEC-Pauli-string-minus-i-ZZ"]
+VerificationTest[qecPauliString[{0, 0, 1, 1, 3}], "-iZZ", TestID -> "QEC-Pauli-string-minus-i-ZZ"]
 
 VerificationTest[
     Module[{},
@@ -93,7 +102,7 @@ VerificationTest[
         AllTrue[
             Table[
                 With[{s = StringJoin[RandomChoice[{"I", "X", "Y", "Z"}, RandomInteger[{1, 12}]]]},
-                    QECPauliString[QECPauliVector[s]] === s
+                    qecPauliString[qecPauliVector[s]] === s
                 ],
                 {100}
             ],
@@ -110,7 +119,7 @@ VerificationTest[
         AllTrue[
             Table[
                 With[{s = RandomChoice[{"", "-", "i", "-i"}] <> StringJoin[RandomChoice[{"I", "X", "Y", "Z"}, 6]]},
-                    QECPauliString[QECPauliVector[s]] === s
+                    qecPauliString[qecPauliVector[s]] === s
                 ],
                 {60}
             ],
@@ -131,9 +140,9 @@ VerificationTest[QECPauliQ[{1, 0, 1, 0}], False, TestID -> "QEC-Pauli-Q-even-row
 
 VerificationTest[QECPauliQ[3], False, TestID -> "QEC-Pauli-Q-nonsense"]
 
-VerificationTest[QECPauliPhase["-XZ"], 2, TestID -> "QEC-Pauli-phase-minus"]
+VerificationTest[qecPauliPhase["-XZ"], 2, TestID -> "QEC-Pauli-phase-minus"]
 
-VerificationTest[QECPauliPhase["XZ"], 0, TestID -> "QEC-Pauli-phase-plus"]
+VerificationTest[qecPauliPhase["XZ"], 0, TestID -> "QEC-Pauli-phase-plus"]
 
 
 (* ============================================================================
@@ -148,7 +157,7 @@ VerificationTest[
     Module[{samples},
         SeedRandom[3];
         samples = Join[{"XZ", "ZX", "YI", "IY", "XY", "ZZ", "XXI"}, qecRandomPaulis[4, 20]];
-        AllTrue[samples, Most[PauliRow[qecDense[#], StringLength[#]]] === Most[QECPauliVector[#]] &]
+        AllTrue[samples, Most[PauliRow[qecDense[#], StringLength[#]]] === Most[qecPauliVector[#]] &]
     ],
     True,
     TestID -> "QEC-Pauli-layout-matches-engine"
@@ -159,7 +168,7 @@ VerificationTest[
         SeedRandom[4];
         samples = ("-" <> # &) /@ qecRandomPaulis[3, 15];
         AllTrue[samples,
-            With[{row = PauliRow[qecDense[#], 3], ours = QECPauliVector[#]},
+            With[{row = PauliRow[qecDense[#], 3], ours = qecPauliVector[#]},
                 Most[row] === Most[ours] && 2 Last[row] === Last[ours]
             ] &
         ]
@@ -170,7 +179,7 @@ VerificationTest[
 
 VerificationTest[
     With[{p = PauliStabilizer[3]["H", 1]["CNOT", 1, 2]["CNOT", 2, 3]},
-        Most[QECPauliVector[#]] & /@ Join[p["Destabilizers"], p["Stabilizers"]] === Normal[p["Matrix"]]
+        Most[qecPauliVector[#]] & /@ Join[p["Destabilizers"], p["Stabilizers"]] === Normal[p["Matrix"]]
     ],
     True,
     TestID -> "QEC-Pauli-tableau-agreement"
@@ -181,18 +190,18 @@ VerificationTest[
    Weight
    ============================================================================ *)
 
-VerificationTest[QECPauliWeight["XZZXI"], 4, TestID -> "QEC-Pauli-weight-XZZXI"]
+VerificationTest[qecPauliWeight["XZZXI"], 4, TestID -> "QEC-Pauli-weight-XZZXI"]
 
-VerificationTest[QECPauliWeight["III"], 0, TestID -> "QEC-Pauli-weight-identity"]
+VerificationTest[qecPauliWeight["III"], 0, TestID -> "QEC-Pauli-weight-identity"]
 
-VerificationTest[QECPauliWeight["-ZI"], 1, TestID -> "QEC-Pauli-weight-signed"]
+VerificationTest[qecPauliWeight["-ZI"], 1, TestID -> "QEC-Pauli-weight-signed"]
 
-VerificationTest[QECPauliWeight[{1, 0, 1, 1, 0}], 2, TestID -> "QEC-Pauli-weight-row"]
+VerificationTest[qecPauliWeight[{1, 0, 1, 1, 0}], 2, TestID -> "QEC-Pauli-weight-row"]
 
 VerificationTest[
     Module[{},
         SeedRandom[5];
-        AllTrue[qecRandomPaulis[8, 40], QECPauliWeight[#] === StringLength[#] - StringCount[#, "I"] &]
+        AllTrue[qecRandomPaulis[8, 40], qecPauliWeight[#] === StringLength[#] - StringCount[#, "I"] &]
     ],
     True,
     TestID -> "QEC-Pauli-weight-random"
@@ -203,46 +212,46 @@ VerificationTest[
    Commutation, against the dense oracle
    ============================================================================ *)
 
-VerificationTest[QECPauliCommuteQ["X", "Z"], False, TestID -> "QEC-Pauli-commute-XZ"]
+VerificationTest[qecPauliCommuteQ["X", "Z"], False, TestID -> "QEC-Pauli-commute-XZ"]
 
-VerificationTest[QECPauliCommuteQ["X", "Y"], False, TestID -> "QEC-Pauli-commute-XY"]
+VerificationTest[qecPauliCommuteQ["X", "Y"], False, TestID -> "QEC-Pauli-commute-XY"]
 
-VerificationTest[QECPauliCommuteQ["Y", "Z"], False, TestID -> "QEC-Pauli-commute-YZ"]
+VerificationTest[qecPauliCommuteQ["Y", "Z"], False, TestID -> "QEC-Pauli-commute-YZ"]
 
-VerificationTest[QECPauliCommuteQ["X", "X"], True, TestID -> "QEC-Pauli-commute-XX"]
+VerificationTest[qecPauliCommuteQ["X", "X"], True, TestID -> "QEC-Pauli-commute-XX"]
 
-VerificationTest[QECPauliCommuteQ["X", "I"], True, TestID -> "QEC-Pauli-commute-XI"]
+VerificationTest[qecPauliCommuteQ["X", "I"], True, TestID -> "QEC-Pauli-commute-XI"]
 
-VerificationTest[QECPauliCommuteQ["XX", "ZZ"], True, TestID -> "QEC-Pauli-commute-XXZZ"]
+VerificationTest[qecPauliCommuteQ["XX", "ZZ"], True, TestID -> "QEC-Pauli-commute-XXZZ"]
 
-VerificationTest[QECPauliCommuteQ["XI", "ZZ"], False, TestID -> "QEC-Pauli-commute-XIZZ"]
+VerificationTest[qecPauliCommuteQ["XI", "ZZ"], False, TestID -> "QEC-Pauli-commute-XIZZ"]
 
-VerificationTest[QECPauliCommuteQ["XXXX", "ZZZZ"], True, TestID -> "QEC-Pauli-commute-even"]
+VerificationTest[qecPauliCommuteQ["XXXX", "ZZZZ"], True, TestID -> "QEC-Pauli-commute-even"]
 
-VerificationTest[QECPauliCommuteQ["XXXXX", "ZZZZZ"], False, TestID -> "QEC-Pauli-commute-odd"]
+VerificationTest[qecPauliCommuteQ["XXXXX", "ZZZZZ"], False, TestID -> "QEC-Pauli-commute-odd"]
 
-VerificationTest[QECPauliCommuteQ["-ZI", "XI"], False, TestID -> "QEC-Pauli-commute-signed"]
+VerificationTest[qecPauliCommuteQ["-ZI", "XI"], False, TestID -> "QEC-Pauli-commute-signed"]
 
 VerificationTest[
-    Outer[QECPauliCommuteQ, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}],
+    Outer[qecPauliCommuteQ, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}],
     ConstantArray[True, {4, 4}],
     TestID -> "QEC-Pauli-commute-five-qubit-checks"
 ]
 
 VerificationTest[
-    QECPauliCommuteQ["IXIII", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"},
+    qecPauliCommuteQ["IXIII", #] & /@ {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"},
     {False, True, True, True},
     TestID -> "QEC-Pauli-commute-five-qubit-error"
 ]
 
-VerificationTest[Quiet[QECPauliCommuteQ["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-commute-size-mismatch"]
+VerificationTest[Quiet[qecPauliCommuteQ["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-commute-size-mismatch"]
 
 VerificationTest[
     Module[{samples},
         SeedRandom[6];
         samples = qecRandomPaulis[3, 25];
         AllTrue[Tuples[samples, 2],
-            QECPauliCommuteQ @@ # === (qecDense[#[[1]]] . qecDense[#[[2]]] == qecDense[#[[2]]] . qecDense[#[[1]]]) &
+            qecPauliCommuteQ @@ # === (qecDense[#[[1]]] . qecDense[#[[2]]] == qecDense[#[[2]]] . qecDense[#[[1]]]) &
         ]
     ],
     True,
@@ -257,32 +266,32 @@ VerificationTest[
    vectors and threw the phase away, so X.Z came back as Y instead of -iY.
    ============================================================================ *)
 
-VerificationTest[QECPauliString[QECPauliProduct["X", "Z"]], "-iY", TestID -> "QEC-Pauli-product-XZ"]
+VerificationTest[qecPauliString[qecPauliProduct["X", "Z"]], "-iY", TestID -> "QEC-Pauli-product-XZ"]
 
-VerificationTest[QECPauliString[QECPauliProduct["Z", "X"]], "iY", TestID -> "QEC-Pauli-product-ZX"]
+VerificationTest[qecPauliString[qecPauliProduct["Z", "X"]], "iY", TestID -> "QEC-Pauli-product-ZX"]
 
-VerificationTest[QECPauliString[QECPauliProduct["X", "X"]], "I", TestID -> "QEC-Pauli-product-XX"]
+VerificationTest[qecPauliString[qecPauliProduct["X", "X"]], "I", TestID -> "QEC-Pauli-product-XX"]
 
-VerificationTest[QECPauliString[QECPauliProduct["Y", "Y"]], "I", TestID -> "QEC-Pauli-product-YY"]
+VerificationTest[qecPauliString[qecPauliProduct["Y", "Y"]], "I", TestID -> "QEC-Pauli-product-YY"]
 
-VerificationTest[QECPauliString[QECPauliProduct["Y", "X"]], "-iZ", TestID -> "QEC-Pauli-product-YX"]
+VerificationTest[qecPauliString[qecPauliProduct["Y", "X"]], "-iZ", TestID -> "QEC-Pauli-product-YX"]
 
 (* The prototype answered "XZY" here: it added symplectic vectors and dropped the
    phase.  X.Z on the third qubit contributes -i, and the dense oracle above agrees. *)
-VerificationTest[QECPauliString[QECPauliProduct["XIX", "IZZ"]], "-iXZY", TestID -> "QEC-Pauli-product-strings"]
+VerificationTest[qecPauliString[qecPauliProduct["XIX", "IZZ"]], "-iXZY", TestID -> "QEC-Pauli-product-strings"]
 
-VerificationTest[QECPauliString[QECPauliProduct["XX", "ZZ"]], "-YY", TestID -> "QEC-Pauli-product-two-qubit"]
+VerificationTest[qecPauliString[qecPauliProduct["XX", "ZZ"]], "-YY", TestID -> "QEC-Pauli-product-two-qubit"]
 
-VerificationTest[QECPauliString[QECPauliProduct["X", "Y", "Z"]], "iI", TestID -> "QEC-Pauli-product-three-factors"]
+VerificationTest[qecPauliString[qecPauliProduct["X", "Y", "Z"]], "iI", TestID -> "QEC-Pauli-product-three-factors"]
 
-VerificationTest[Quiet[QECPauliProduct["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-product-size-mismatch"]
+VerificationTest[Quiet[qecPauliProduct["XI", "XXX"]], $Failed, TestID -> "QEC-Pauli-product-size-mismatch"]
 
 VerificationTest[
     Module[{samples},
         SeedRandom[7];
         samples = qecRandomPaulis[3, 25];
         AllTrue[Tuples[samples, 2],
-            qecDense[QECPauliString[QECPauliProduct @@ #]] == qecDense[#[[1]]] . qecDense[#[[2]]] &
+            qecDense[qecPauliString[qecPauliProduct @@ #]] == qecDense[#[[1]]] . qecDense[#[[2]]] &
         ]
     ],
     True,
@@ -294,7 +303,7 @@ VerificationTest[
         SeedRandom[8];
         samples = (RandomChoice[{"", "-", "i", "-i"}] <> # &) /@ qecRandomPaulis[2, 20];
         AllTrue[Tuples[samples, 2],
-            qecDense[QECPauliString[QECPauliProduct @@ #]] == qecDense[#[[1]]] . qecDense[#[[2]]] &
+            qecDense[qecPauliString[qecPauliProduct @@ #]] == qecDense[#[[1]]] . qecDense[#[[2]]] &
         ]
     ],
     True,
@@ -305,7 +314,7 @@ VerificationTest[
     Module[{samples},
         SeedRandom[9];
         samples = qecRandomPaulis[4, 20];
-        AllTrue[samples, QECPauliString[QECPauliProduct[#, #]] === StringRepeat["I", 4] &]
+        AllTrue[samples, qecPauliString[qecPauliProduct[#, #]] === StringRepeat["I", 4] &]
     ],
     True,
     TestID -> "QEC-Pauli-product-self-inverse"
@@ -317,13 +326,13 @@ VerificationTest[
    ============================================================================ *)
 
 VerificationTest[
-    QECPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[2],
+    qecPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[2],
     {"XI", "YI", "ZI", "IX", "IY", "IZ"},
     TestID -> "QEC-Pauli-weight-one-enumeration"
 ]
 
 VerificationTest[
-    Sort[QECPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[2, 1]],
+    Sort[qecPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[2, 1]],
     Sort[{"XI", "YI", "ZI", "IX", "IY", "IZ"}],
     TestID -> "QEC-Pauli-weight-k-one"
 ]
@@ -335,13 +344,13 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[3, 0],
+    qecPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[3, 0],
     {"III"},
     TestID -> "QEC-Pauli-weight-zero"
 ]
 
 VerificationTest[
-    AllTrue[Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[4, 3], QECPauliWeight[#] === 3 &],
+    AllTrue[Wolfram`QuantumFramework`QEC`PackageScope`weightKVectors[4, 3], qecPauliWeight[#] === 3 &],
     True,
     TestID -> "QEC-Pauli-weight-k-all-have-weight-k"
 ]

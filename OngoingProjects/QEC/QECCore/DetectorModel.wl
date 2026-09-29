@@ -5,6 +5,7 @@ Package["Wolfram`QuantumFramework`QEC`"]
 PackageExport[QECDetectorModel]
 
 PackageScope[detectorData]
+PackageScope[demExactReport]
 PackageScope[codeDetectorModel]
 PackageScope[circuitFaultMechanisms]
 PackageScope[idleMechanisms]
@@ -386,7 +387,8 @@ $detectorProperties = {
     "DetectorMatrix", "ObservableMatrix", "HeraldMatrix", "Probabilities", "Locations",
     "Detectors", "Observables", "Heralds", "Rounds", "Checks", "Faults", "Code", "Noise",
     "LocationCounts", "UndetectableFaults", "DetectorRates", "ObservableRates",
-    "HeraldRates", "PostSelectedQ", "Extraction", "Properties"
+    "HeraldRates", "PostSelectedQ", "Extraction",
+    "LogicalErrorRate", "Acceptance", "Failure", "StimString", "Properties"
 };
 
 (* How often each detector fires, exactly.  A detector fires when an odd number of
@@ -444,6 +446,31 @@ QECDetectorModel[a_Association]["LocationCounts"] := Counts[First /@ a["Location
 QECDetectorModel[a_Association]["DetectorRates"] := detectorFiringRates[a]
 QECDetectorModel[a_Association]["ObservableRates"] := observableFlipRates[a]
 QECDetectorModel[a_Association]["HeraldRates"] := heraldFiringRates[a]
+
+(* The rate this model implies, with its decoder at the code's default reach -- the
+   same number QECLogicalErrorRate[code, noise] gives at this level, and here the
+   natural home of the post-selected report: the acceptance is a property of the
+   heralds, which are a property of the model.  Exact; a sample count estimates it. *)
+demReach[a_Association] := decoderReachFor[a["Code"], Automatic]
+
+demExactReport[a_Association] := demExactReport[a] = rateReport[demExactFailure[a, demReach[a]], None]
+
+demSampledReport[a_Association, count_Integer] := If[
+    noiseSymbolicQ[a["Noise"]],
+    Message[QECLogicalErrorRate::symbolicshots]; $Failed,
+    rateReport[demSampledFailure[a, count, demReach[a]], count]
+]
+
+demReportPart[r_Association, key_String] := r[key]
+demReportPart[r_, _] := r
+
+QECDetectorModel[a_Association]["LogicalErrorRate"] := demReportPart[demExactReport[a], "Rate"]
+QECDetectorModel[a_Association]["LogicalErrorRate", All] := demExactReport[a]
+QECDetectorModel[a_Association]["LogicalErrorRate", count_Integer ? Positive] :=
+    demReportPart[demSampledReport[a, count], "Rate"]
+QECDetectorModel[a_Association]["LogicalErrorRate", count_Integer ? Positive, All] := demSampledReport[a, count]
+QECDetectorModel[a_Association]["Acceptance"] := demReportPart[demExactReport[a], "Acceptance"]
+QECDetectorModel[a_Association]["Failure"] := demReportPart[demExactReport[a], "Failure"]
 
 (* Faults that no detector can see.  Their existence is not a bug: they are the
    circuit-level analogue of a logical operator, and how many faults it takes to

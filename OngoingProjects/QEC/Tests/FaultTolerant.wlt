@@ -34,6 +34,12 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 qecGateWord     = Symbol[qecScope <> "ftGateWord"];
@@ -53,7 +59,7 @@ four = QECCode["DistanceTwo", 4];
 steaneData = qecCodeData[steane];
 
 (* R, H, CNOT, M -- one of each kind of location, and one block left idling. *)
-ft = QECFaultTolerant[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}}, steane];
+ft = QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}}, steane];
 
 (* The instructions of the gadgets of a given kind, in order. *)
 qecGadgetInstructions[obj_, kinds_List] := obj["GadgetInstructions", kinds]
@@ -63,11 +69,11 @@ qecFinalState[instr_, nq_] :=
     qecApplyGates[PauliStabilizer[nq], qecEngineGates[instr]]
 
 reg = QECRegister[steane, 2];
-xbar = QECPauliString /@ reg["LogicalVectors"]["X"];
-zbar = QECPauliString /@ reg["LogicalVectors"]["Z"];
+xbar = qecPauliString /@ reg["LogicalVectors"]["X"];
+zbar = qecPauliString /@ reg["LogicalVectors"]["Z"];
 
 (* Ybar = i Xbar Zbar, Hermitian, on the first block of a 14-qubit register. *)
-ybar = QECPauliString @ MapAt[Mod[# + 1, 4] &, QECPauliProduct[xbar[[1]], zbar[[1]]], -1];
+ybar = qecPauliString @ MapAt[Mod[# + 1, 4] &, qecPauliProduct[xbar[[1]], zbar[[1]]], -1];
 
 
 (* ============================================================================
@@ -106,7 +112,7 @@ VerificationTest[
 
 (* The smallest FT(C) there is: one preparation, one error correction. *)
 VerificationTest[
-    With[{one = QECFaultTolerant[{{"R", 1}}, steane]},
+    With[{one = QECFaultTolerantCircuit[{{"R", 1}}, steane]},
         {one["GadgetCounts"], one["Qubits"], one["CircuitLocations"]}
     ],
     {<|"Preparation" -> 1, "ErrorCorrection" -> 1|>, 14, 1},
@@ -146,7 +152,7 @@ VerificationTest[
 VerificationTest[
     Module[{gates, named},
         gates = qecGadgetInstructions[
-            QECFaultTolerant[{{"R", 1}, {"H", 1}, {"S", 1}}, steane],
+            QECFaultTolerantCircuit[{{"R", 1}, {"H", 1}, {"S", 1}}, steane],
             {"Preparation", "Gate"}];
         named = Join[Drop[gates, -7], Table[{"S", q}, {q, 7}]];
         {qecFinalState[gates, 14]["Expectation", ybar],
@@ -162,12 +168,12 @@ VerificationTest[
     Module[{state, prod},
         state = qecFinalState[
             qecGadgetInstructions[
-                QECFaultTolerant[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}}, steane],
+                QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}}, steane],
                 {"Preparation", "Gate"}],
             28];
-        prod[s1_, s2_] := QECPauliString[
-            Join[QECPauliVector[QECPauliProduct[s1, s2]][[1 ;; 14]], ConstantArray[0, 14],
-                 QECPauliVector[QECPauliProduct[s1, s2]][[15 ;; 28]], ConstantArray[0, 14], {0}]];
+        prod[s1_, s2_] := qecPauliString[
+            Join[qecPauliVector[qecPauliProduct[s1, s2]][[1 ;; 14]], ConstantArray[0, 14],
+                 qecPauliVector[qecPauliProduct[s1, s2]][[15 ;; 28]], ConstantArray[0, 14], {0}]];
         {state["Expectation", prod[xbar[[1]], xbar[[2]]]],
          state["Expectation", prod[zbar[[1]], zbar[[2]]]]}
     ],
@@ -192,7 +198,7 @@ VerificationTest[
 VerificationTest[
     {Length[ft["GadgetInstructions", "Gate"]],
      Union[First /@ ft["GadgetInstructions", "Gate"]],
-     Union[First /@ QECFaultTolerant[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]},
+     Union[First /@ QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, steane]["GadgetInstructions", "Gate"]]},
     {14, {"CNOT", "H"}, {"Sdg"}},
     TestID -> "QEC-FT-the-gadgets-can-be-taken-apart-again"
 ]
@@ -247,7 +253,7 @@ VerificationTest[
    qubit: 7 data and 7 ancilla, and the ancilla is per block so that the
    corrections of one layer can run in parallel. *)
 VerificationTest[
-    With[{three = QECFaultTolerant[{{"R", 1}, {"R", 2}, {"R", 3}}, steane]},
+    With[{three = QECFaultTolerantCircuit[{{"R", 1}, {"R", 2}, {"R", 3}}, steane]},
         {three["Qubits"], three["QubitOverhead"]}
     ],
     {42, 14},
@@ -270,40 +276,40 @@ VerificationTest[
 (* Outside the Clifford group there is no transversal gadget, and chapter 13 is
    where that is fixed -- so it is refused rather than approximated. *)
 VerificationTest[
-    QECFaultTolerant[{{"R", 1}, {"T", 1}}, steane],
+    QECFaultTolerantCircuit[{{"R", 1}, {"T", 1}}, steane],
     $Failed,
-    {QECFaultTolerant::gate},
+    {QECFaultTolerantCircuit::gate},
     TestID -> "QEC-FT-refuses-a-gate-with-no-gadget"
 ]
 
 (* Steane EC is CSS-only, so the protocol is. *)
 VerificationTest[
-    QECFaultTolerant[{{"R", 1}}, five],
+    QECFaultTolerantCircuit[{{"R", 1}}, five],
     $Failed,
-    {QECFaultTolerant::css},
+    {QECFaultTolerantCircuit::css},
     TestID -> "QEC-FT-needs-a-CSS-code"
 ]
 
 (* One logical qubit per block, which is Def 10.4's own simplification and what
    makes "the gadget for logical g" a well-posed question. *)
 VerificationTest[
-    QECFaultTolerant[{{"R", 1}}, four],
+    QECFaultTolerantCircuit[{{"R", 1}}, four],
     $Failed,
-    {QECFaultTolerant::logical},
+    {QECFaultTolerantCircuit::logical},
     TestID -> "QEC-FT-needs-one-logical-qubit-per-block"
 ]
 
 VerificationTest[
-    {QECFaultTolerant[{{"H", 1}}, steane],
-     QECFaultTolerant[{{"R", 1}, {"M", 1}, {"H", 1}}, steane]},
+    {QECFaultTolerantCircuit[{{"H", 1}}, steane],
+     QECFaultTolerantCircuit[{{"R", 1}, {"M", 1}, {"H", 1}}, steane]},
     {$Failed, $Failed},
-    {QECFaultTolerant::unprepared, QECFaultTolerant::measured},
+    {QECFaultTolerantCircuit::unprepared, QECFaultTolerantCircuit::measured},
     TestID -> "QEC-FT-a-block-has-to-be-live-to-be-used"
 ]
 
 VerificationTest[
     ft["Nonsense"],
     Missing["NotFound", "Nonsense"],
-    {QECFaultTolerant::noprop},
+    {QECFaultTolerantCircuit::noprop},
     TestID -> "QEC-FT-unknown-property-is-refused"
 ]

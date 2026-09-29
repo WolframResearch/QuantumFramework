@@ -31,6 +31,13 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 qecFrame = Symbol[qecScope <> "framePropagate"];
@@ -53,7 +60,7 @@ qecFrameSyndrome[code_, v_List] := Module[{n = code["Qubits"], circ = code["Synd
 
 qecFrameAgrees[code_] := With[
     {vs = Join @@ Table[qecWeightK[code["Qubits"], w], {w, 1, 2}]},
-    AllTrue[vs, qecFrameSyndrome[code, #] === code["Syndrome", QECPauliString[#]] &]
+    AllTrue[vs, qecFrameSyndrome[code, #] === code["Syndrome", qecPauliString[#]] &]
 ];
 
 (* The same circuit run on a real state through the engine. *)
@@ -63,7 +70,7 @@ qecAncZ[n_, m_, j_] := StringJoin[Table[If[k == n + j, "Z", "I"], {k, n + m}]];
 qecEngineSyndrome[code_, err_String] := Module[
     {n = code["Qubits"], m = code["StabilizerCount"], base, ps},
     base = Join[
-        qecPad[#, m] & /@ (QECPauliString /@ qecCompleted[qecCodeData[code]]),
+        qecPad[#, m] & /@ (qecPauliString /@ qecCompleted[qecCodeData[code]]),
         Table[qecAncZ[n, m, j], {j, m}]
     ];
     ps = Fold[
@@ -79,7 +86,7 @@ qecEngineAgrees[code_] := Module[{n = code["Qubits"], ref},
     ref = qecEngineSyndrome[code, StringRepeat["I", n]];
     AllTrue[
         Join @@ Table[qecWeightK[n, w], {w, 1, 2}],
-        BitXor[ref, qecEngineSyndrome[code, QECPauliString[#]]] === code["Syndrome", QECPauliString[#]] &
+        BitXor[ref, qecEngineSyndrome[code, qecPauliString[#]]] === code["Syndrome", qecPauliString[#]] &
     ]
 ];
 
@@ -184,8 +191,8 @@ Table[
 (* An error and a stabilizer differ by nothing a check can see. *)
 VerificationTest[
     With[{c = QECCode["BitFlipCode"]},
-        qecFrameSyndrome[c, QECPauliVector["XII"]] ===
-            qecFrameSyndrome[c, QECPauliProduct["XII", "ZZI"]]
+        qecFrameSyndrome[c, qecPauliVector["XII"]] ===
+            qecFrameSyndrome[c, qecPauliProduct["XII", "ZZI"]]
     ],
     True,
     TestID -> "QEC-Circuit-frame-stabilizer-invariance"
@@ -193,8 +200,8 @@ VerificationTest[
 
 (* Frames add: the record of a product is the XOR of the records. *)
 VerificationTest[
-    With[{c = QECCode["5QubitCode"], u = QECPauliVector["XIYIZ"], v = QECPauliVector["IZZXI"]},
-        qecFrameSyndrome[c, QECPauliVector[QECPauliProduct[u, v]]] ===
+    With[{c = QECCode["5QubitCode"], u = qecPauliVector["XIYIZ"], v = qecPauliVector["IZZXI"]},
+        qecFrameSyndrome[c, qecPauliVector[qecPauliProduct[u, v]]] ===
             BitXor[qecFrameSyndrome[c, u], qecFrameSyndrome[c, v]]
     ],
     True,
@@ -244,7 +251,7 @@ qecAncillaFault[code_, i_, ancilla_, pauli_] := Module[{n = code["Qubits"], circ
     circ = code["SyndromeCircuit"];
     run = qecFrame[circ["Instructions"], circ["Qubits"], {{i, ancilla, pauli}}];
     data = Join[run["Frame"][[1, 1 ;; n]], run["Frame"][[2, 1 ;; n]], {0}];
-    <|"Data" -> QECPauliString[data], "Record" -> run["Record"],
+    <|"Data" -> qecPauliString[data], "Record" -> run["Record"],
       "StabilizerQ" -> code["StabilizerMemberQ", data]|>
 ];
 
@@ -303,7 +310,7 @@ VerificationTest[
 
 (* The whole point of the above: one fault, a multi-qubit data error. *)
 VerificationTest[
-    QECPauliWeight[qecAncillaFault[QECCode["5QubitCode"], 4, 6, {0, 1}]["Data"]],
+    qecPauliWeight[qecAncillaFault[QECCode["5QubitCode"], 4, 6, {0, 1}]["Data"]],
     3,
     TestID -> "QEC-Circuit-one-fault-many-errors"
 ]

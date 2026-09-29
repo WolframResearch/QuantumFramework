@@ -213,10 +213,10 @@ QECPauliMeasurement[code_QECCode, p_, reps_, opts : OptionsPattern[]] := Module[
     catReps = OptionValue["CatRepetitions"];
     (* QECPauliQ is the message-free guard the Pauli layer provides for exactly this
        question, so asking it is what the house rule wants instead of silencing
-       QECPauliVector's complaint.  The size and phase conditions are separate because
+       pauliVector's complaint.  The size and phase conditions are separate because
        they are different refusals: a Pauli on the wrong number of qubits, and a Pauli
        carrying a phase, whose Hermitian representative is what this gadget measures. *)
-    v = If[QECPauliQ[p], QECPauliVector[p], $Failed];
+    v = If[QECPauliQ[p], pauliVector[p], $Failed];
     Which[
         v === $Failed || Length[v] =!= 2 n + 1 || Last[v] =!= 0,
             Message[QECPauliMeasurement::pauli, p, n]; $Failed,
@@ -281,7 +281,7 @@ QECPauliMeasurement[a_Association][prop : ("Instructions" | "Support" | "Repetit
     "CatRepetitions" | "DataQubits" | "CatQubits" | "CheckQubit" | "Qubits" | "Pairs" |
     "ErrorCorrection")] := a[prop]
 
-QECPauliMeasurement[a_Association]["Pauli"] := QECPauliString[Append[a["Pauli"], 0]]
+QECPauliMeasurement[a_Association]["Pauli"] := pauliString[Append[a["Pauli"], 0]]
 QECPauliMeasurement[a_Association]["Weight"] := Length[a["Support"]]
 QECPauliMeasurement[a_Association]["Code"] := QECCode[a["Code"]]
 QECPauliMeasurement[a_Association]["Heralds"] := gadgetHeralds[a["Instructions"]]
@@ -460,7 +460,7 @@ QECPauliMeasurement /: MakeBoxes[
         ImageSize -> {Automatic, 34}, Axes -> False,
         ChartStyle -> RGBColor[0.15, 0.5, 0.65]],
     {
-        BoxForm`SummaryItem[{"Pauli: ", QECPauliString[Append[a["Pauli"], 0]]}],
+        BoxForm`SummaryItem[{"Pauli: ", pauliString[Append[a["Pauli"], 0]]}],
         BoxForm`SummaryItem[{"Weight: ", Length[a["Support"]]}],
         BoxForm`SummaryItem[{"Repetitions: ", a["Repetitions"]}]
     },

@@ -39,9 +39,13 @@ Two defects found while building on it, both worth knowing:
 
 ### The code layer (rebuilt, in `OngoingProjects/QEC/`)
 
-The layer is no longer a prototype. It is a functional-idiom package of 22 files with
-**593 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
-every exported name is prefixed `QEC`. What it does, in the order the physics builds up:
+The layer is no longer a prototype. It is a functional-idiom package of 25 files with
+**685 tests**, built on GF(2) symplectic rows with Z4 phases rather than strings, and
+every exported name is prefixed `QEC`. Its public surface was redesigned after the API
+audit (`QEC-API-Redesign-Plan.md`, steps 0–7 done): a code now also presents itself as
+quantum operations (encoder, codewords, syndrome measurement, recovery, logical channel,
+Knill–Laflamme), decoders are objects (`QECDecoder`, with a seam for external ones), the
+rate has one return type, and Paulis are one object (`QECPauli`). What it does, in the order the physics builds up:
 
 **The code object.** `QECCode` from generators, from a check matrix, or by name. Check
 matrix, standard form, logical operators, exact distance with a minimum-weight witness,
@@ -63,8 +67,8 @@ detectors it fires and observables it flips, a layered schedule so that waiting 
 fault location of its own, exact and sampled logical error rates, and a Stim export.
 
 **Documentation.** Three tech notes built from literate markdown through
-MarkdownToNotebook: `StabilizerCodes` (the layer from the outside, 91 evaluated cells),
-`QECCoreInternals` (the circuit-level modules function by function, 116 cells) and
+MarkdownToNotebook: `StabilizerCodes` (the layer from the outside, 104 evaluated cells),
+`QECCoreInternals` (the modules function by function, 118 cells) and
 `FaultTolerantGadgets` (the six gadget objects, from the cat state to `FT(C)`, 40 cells).
 
 ### Results worth showing

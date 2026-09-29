@@ -25,6 +25,10 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+
 qecFive = {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"};
 
 
@@ -72,7 +76,7 @@ VerificationTest[QECCode[{"-ZI", "IZ"}]["Generators"], {"-ZI", "IZ"}, TestID -> 
 
 (* Rows are accepted as readily as strings, and give the same code. *)
 VerificationTest[
-    QECCode[QECPauliVector /@ {"ZZI", "IZZ"}] === QECCode[{"ZZI", "IZZ"}],
+    QECCode[qecPauliVector /@ {"ZZI", "IZZ"}] === QECCode[{"ZZI", "IZZ"}],
     True,
     TestID -> "QEC-Code-from-rows"
 ]
@@ -144,7 +148,7 @@ VerificationTest[
 
 VerificationTest[
     QECCode[{"ZZI", "IZZ"}]["GeneratorVectors"],
-    QECPauliVector /@ {"ZZI", "IZZ"},
+    qecPauliVector /@ {"ZZI", "IZZ"},
     TestID -> "QEC-Code-generator-vectors"
 ]
 

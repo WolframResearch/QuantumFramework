@@ -26,6 +26,10 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecHammingMatrix = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`classicalHammingMatrix"];
+
 
 (* ============================================================================
    Named codes
@@ -119,10 +123,10 @@ VerificationTest[
    The Hamming CSS family
    ============================================================================ *)
 
-VerificationTest[Dimensions[QECClassicalHammingMatrix[3]], {3, 7}, TestID -> "QEC-Families-hamming-matrix-shape"]
+VerificationTest[Dimensions[qecHammingMatrix[3]], {3, 7}, TestID -> "QEC-Families-hamming-matrix-shape"]
 
 VerificationTest[
-    QECClassicalHammingMatrix[3],
+    qecHammingMatrix[3],
     {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}},
     TestID -> "QEC-Families-hamming-matrix"
 ]
@@ -149,22 +153,22 @@ VerificationTest[
    The catalog
    ============================================================================ *)
 
-VerificationTest[Head[QECCodeCatalog[]], Dataset, TestID -> "QEC-Families-catalog-head"]
+VerificationTest[Head[QECCode["Catalog"]], Dataset, TestID -> "QEC-Families-catalog-head"]
 
 VerificationTest[
-    KeyExistsQ[Normal[QECCodeCatalog[]], "SteaneCode"],
+    KeyExistsQ[Normal[QECCode["Catalog"]], "SteaneCode"],
     True,
     TestID -> "QEC-Families-catalog-contains-steane"
 ]
 
 VerificationTest[
-    AllTrue[Values[Normal[QECCodeCatalog[]]], Keys[#] === {"n", "k", "d"} &],
+    AllTrue[Values[Normal[QECCode["Catalog"]]], Keys[#] === {"n", "k", "d"} &],
     True,
     TestID -> "QEC-Families-catalog-columns"
 ]
 
 VerificationTest[
-    Normal[QECCodeCatalog[]]["ShorCode"],
+    Normal[QECCode["Catalog"]]["ShorCode"],
     <|"n" -> 9, "k" -> 1, "d" -> 3|>,
     TestID -> "QEC-Families-catalog-shor-row"
 ]

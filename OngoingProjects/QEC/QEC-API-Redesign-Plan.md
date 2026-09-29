@@ -4,7 +4,7 @@
 document says in what order they are carried out, what each step touches, how each one is
 verified, and the four design decisions that should be settled before the third step
 starts. Nothing here changes the mathematics: the 593 tests are the invariant every step
-is measured against.*
+is measured against. (All eight steps are done; the suite now stands at 685.)*
 
 ## 0. What this plan accepts, and the four constraints it works under
 
@@ -26,13 +26,33 @@ message; "the test now expects the new name" is a reason, "the number moved" is 
 **C2 — The exact symbolic rate is the one capability nobody else has, and it survives.**
 The layer returns `3p² − 2p³`, `32p/15` against `112p/15`, a closed-form rational function
 at circuit level — computed by enumeration over cosets and by a fold over detector effects,
-with `p` left symbolic. A dense `QuantumChannel` on the 7-qubit code is a `4⁷ = 16384`
-dimensional object, and symbolic at that. So §4.2 of the audit is right as a *definition* —
-the rate is a functional of the logical channel — and must not be read as an implementation
-plan. **`code["LogicalChannel", noise]` is semantics and the small-`n` case; the detector
-error model is the implementation.** The audit makes exactly this argument for channels in
-general (§3.4, "the operational objects are the interface and the semantics, not the
-computational representation"); this plan writes it into the design for the rate as well.
+with `p` left symbolic. The audit's §4.2 makes the rate a functional of the logical channel,
+and that is compatible with this, *provided the logical channel is built the right way*.
+There are two ways to build it, and only one keeps the rate symbolic:
+
+- **By composing physical channels**, `D ∘ (Σ R_s ∘ M_s) ∘ N ∘ E` taken literally. The noise
+  on the 7-qubit code is then a `4⁷ × 4⁷` superoperator, about 2.7×10⁸ entries, each a
+  polynomial in `p`. That does not fit in memory, and every product grows the expressions.
+  It works at `n = 3` and dies long before `n = 7`.
+- **From the engine the layer already has.** For Pauli noise on a stabilizer code the logical
+  channel is *always* a Pauli channel on the `k` logical qubits: each physical error `E` has a
+  syndrome `s`, the recovery `R_s` is a Pauli, so the residue `R_s·E` lies in the normalizer —
+  a logical Pauli times a stabilizer — and its whole effect on the encoded state is that
+  logical Pauli. So the channel is `4ᵏ` numbers, the probability of each logical residue, and
+  those are exactly the coset probabilities the maximum-likelihood decoder already computes,
+  exactly and symbolically.
+
+Checked before writing this down: the Steane code under depolarizing noise, `p` symbolic,
+comes out as a logical Pauli channel of four exact degree-7 polynomials in 0.07 s, and
+`1 − q_Ī` agrees with `QECLogicalErrorRate` identically (the difference simplifies to `0`).
+So **`code["LogicalChannel", noise]` is built from the coset / detector-model engine as a
+logical Pauli channel, never by composing `4ⁿ` physical channels, and the rate is a
+functional of it with nothing lost.** The one real limit is non-Pauli noise (amplitude
+damping, say): there the residue is no longer a logical Pauli, the channel is no longer a
+Pauli channel, the coset engine does not apply, and the only exact route is the dense one,
+for small codes only. The audit's §3.4 ("the operational objects are the interface and the
+semantics, not the computational representation") is the same argument; this constraint
+makes it concrete for the channel the rate is read from.
 
 **C3 — The public surface is a face, not an engine.** The layer runs on raw symplectic rows
 `{x₁…xₙ, z₁…zₙ, e}` in the frame propagator, the detector model and the label matrix, and
@@ -48,24 +68,24 @@ step, done once.
 
 ## 1. Traceability: every observation to a step
 
-| # | Audit observation | § | Action | Step | Risk |
-|---|---|---|---|---|---|
-| 1 | `QECCode["Properties"]` lists `"Decoder"` twice | 1 | de-duplicate the listing | 1 | none |
-| 2 | `Measurement.wl:212` uses a forbidden `Quiet` | 1 | replace with a `QECPauliQ` guard | 1 | none |
-| 3 | `QECClassicalHammingMatrix` is a classical helper in a quantum namespace | 2.2, 5 | internalize to `PackageScope` | **5** (moved, see below) | low |
-| 4 | gadgets return flat instruction lists, not QF objects | 4.2, 5 | shared circuit trait; `"QuantumCircuitOperator"`, `"Diagram"` | 2 | low |
-| 5 | `QECSyndromeCircuit` should expose its measurement | 4.2 | `"SyndromeMeasurement"` -> `QuantumMeasurementOperator` | 3 | medium |
-| 6 | a code should present the operational objects | 3.3, 5 | `"Encoder"`, `"Codespace"`, `"SyndromeMeasurement"`, `"Recovery"`, `"LogicalChannel"` | 3 | medium |
-| 7 | noise is a channel and should be consumable as one | 4.2, 5 | general Pauli `QuantumChannel`; accept a channel wherever a noise model is accepted | 3 | medium |
-| 8 | `QECLogicalErrorRate` is polymorphic in its return | 4.2, 5 | one return type; report moves to the DEM; `All` for the full report | 4 | medium |
-| 9 | there is no first-class decoder object | 2.3, 5 | add `QECDecoder` over `QECDetectorModel` | 4 | low |
-| 10 | 7 `QECPauli*` verbs should be one object | 2.2, 5 | `QECPauli` (+ `QECPauliQ` kept as the guard) | 5 | low, wide |
-| 11 | `QECFaultTolerant` is an adjective | 2.2 | rename to a noun (decision D) | 5 | low, wide |
-| 12 | `QECStimCircuit` returns a String | 2.2 | `QECStim` + `dem["StimString"]` | 5 | low |
-| 13 | `QECCodeCatalog` is a free function | 5 | `QECCode["Catalog"]` | 5 | low |
-| 14 | the code -> code constructions are morphisms | 3.1, 5 | see decision B | 5 | low |
-| 15 | `QECTransversalGate` hard-codes gate matrices | 5 | read them from `QuantumOperator`; propose the QF primitive | 6 | low |
-| 16 | operator-algebra QEC as the frame for the bosonic branch | 3.5 | cross-check against the now-existing `Bosonic-QEC-Plan.md` | 3 (design only) | none |
+| # | Audit observation | § | Action | Step | Risk | Status |
+|---|---|---|---|---|---|---|
+| 1 | `QECCode["Properties"]` lists `"Decoder"` twice | 1 | de-duplicate the listing | 1 | none | done |
+| 2 | `Measurement.wl:212` uses a forbidden `Quiet` | 1 | replace with a `QECPauliQ` guard | 1 | none | done |
+| 3 | `QECClassicalHammingMatrix` is a classical helper in a quantum namespace | 2.2, 5 | internalize to `PackageScope` | **5** (moved, see below) | low | done: `PackageScope`, alias warns |
+| 4 | gadgets return flat instruction lists, not QF objects | 4.2, 5 | shared circuit trait; `"QuantumCircuitOperator"`, `"Diagram"` | 2 | low | done: `Gadget.wl` |
+| 5 | `QECSyndromeCircuit` should expose its measurement | 4.2 | `"SyndromeMeasurement"` -> `QuantumMeasurementOperator` | 3 | medium | done: `sc["SyndromeMeasurement"]` |
+| 6 | a code should present the operational objects | 3.3, 5 | `"Encoder"`, `"Codespace"`, `"SyndromeMeasurement"`, `"Recovery"`, `"LogicalChannel"` | 3 | medium | done: plus `"Codewords"`, `"KnillLaflammeMatrix"`, `"CorrectableQ"` |
+| 7 | noise is a channel and should be consumable as one | 4.2, 5 | general Pauli `QuantumChannel`; accept a channel wherever a noise model is accepted | 3 | medium | done: `QECNoiseModel[qc]`, `noise["QuantumChannel"]` for every Pauli model |
+| 8 | `QECLogicalErrorRate` is polymorphic in its return | 4.2, 5 | one return type; report moves to the DEM; `All` for the full report | 4 | medium | done: `[…, All]`, `dem["LogicalErrorRate" | "Acceptance" | "Failure"]` |
+| 9 | there is no first-class decoder object | 2.3, 5 | add `QECDecoder` over `QECDetectorModel` | 4 | low | done: four constructors incl. the function seam |
+| 10 | 7 `QECPauli*` verbs should be one object | 2.2, 5 | `QECPauli` (+ `QECPauliQ` kept as the guard) | 5 | low, wide | done: `QECPauli`, six aliases |
+| 11 | `QECFaultTolerant` is an adjective | 2.2 | rename to a noun (decision D) | 5 | low, wide | done: `QECFaultTolerantCircuit` |
+| 12 | `QECStimCircuit` returns a String | 2.2 | `QECStim` + `dem["StimString"]` | 5 | low | done |
+| 13 | `QECCodeCatalog` is a free function | 5 | `QECCode["Catalog"]` | 5 | low | done |
+| 14 | the code -> code constructions are morphisms | 3.1, 5 | see decision B | 5 | low | done: functions kept, properties added |
+| 15 | `QECTransversalGate` hard-codes gate matrices | 5 | read them from `QuantumOperator`; propose the QF primitive | 6 | low | done: read from the engine; proposal in `QF-Clifford-Conjugation-Proposal.md` |
+| 16 | operator-algebra QEC as the frame for the bosonic branch | 3.5 | cross-check against the now-existing `Bosonic-QEC-Plan.md` | 3 (design only) | none | done: same names adopted (step 3 note) |
 
 ---
 
@@ -161,8 +181,9 @@ settled.
 - **`code["SyndromeMeasurement"]` -> `QuantumMeasurementOperator`**, the instrument `{M_s}`;
   also exposed from `QECSyndromeCircuit` (observation 5).
 - **`code["Recovery", s]` -> `QuantumChannel`**, from the decoder table already computed.
-- **`code["LogicalChannel", noise]` -> `QuantumChannel`**, the composed `L`. Semantics and
-  small `n` (constraint C2).
+- **`code["LogicalChannel", noise]` -> `QuantumChannel`**, the composed `L`, built from the
+  coset / detector-model engine as a logical Pauli channel of `4ᵏ` probabilities (constraint
+  C2) — symbolic, and cheap at every size the exact rate already handles.
 - **Noise as a channel.** `noise["QuantumChannel"]` today returns `Missing` for anything but
   a *named* channel — `noiseChannelName` covers depolarizing / bit-flip / phase-flip and
   nothing else. Build the general Pauli channel from the four probabilities, then accept a
@@ -183,6 +204,65 @@ returns.
 for subsystem, gauge and bosonic codes) against `Bosonic-QEC-Plan.md`, which did not exist
 when the audit was written and does now. If the bosonic plan's object is the same
 interface, say so in one paragraph; if it is not, that is a finding worth reporting back.
+
+**Done**, in `QECCore/Operational.wl` and `Tests/Operational.wlt` (30 tests), with the
+noise side in `Noise.wl`. What exists now:
+
+| Property | Returns | Dense? |
+|---|---|---|
+| `code["Encoder"]` | `QuantumOperator`, the isometry `V` (k → n qubits) | yes |
+| `code["Codewords"]` | the `2ᵏ` codewords as `QuantumState`s, in logical basis order | yes |
+| `code["Codespace"]` | `QuantumOperator`, `P = V·V†` | yes |
+| `code["SyndromeMeasurement"]` | `QuantumMeasurementOperator`, one projector per syndrome; outcome `i` is syndrome `IntegerDigits[i−1, 2, m]`. Also `QECSyndromeCircuit[…]["SyndromeMeasurement"]` | yes |
+| `code["Recovery", s]` | `QuantumChannel` of the decoder's correction for `s` | yes |
+| `code["LogicalPauliProbabilities", noise]` | `<\|"I" -> q_I, "X" -> …\|>`, the `4ᵏ` weights of the logical channel, exact and symbolic | no |
+| `code["LogicalChannel", noise]` | `QuantumChannel` on the `k` logical qubits built from those weights | no |
+| `code["KnillLaflammeMatrix", errors]` | the matrix `h_ab`, or `Missing["NotCorrectable", …]` naming the pair whose product is a logical | no |
+| `code["CorrectableQ", errors]` | `True` / `False`; `errors` is a list or `"Weight"[t]` | no |
+
+`noise` may be a `QECNoiseModel` or a one-qubit Pauli `QuantumChannel` everywhere, including
+`QECLogicalErrorRate`. `QECNoiseModel[qc]` reads a channel back (Kraus → Pauli weights, then
+a superoperator check) and refuses a non-Pauli one (`::notpauli`, e.g. amplitude damping);
+`noise["QuantumChannel"]` now works for every Pauli model, not only the named ones. The
+dense objects stop at `$QECDenseQubitLimit` (default 10) with a message naming the cheap
+route. The logical channel is code-capacity only: at circuit level it returns
+`Missing["NotAvailable", "Circuit"]` and points to the detector model (step 4 is where that
+side gets its single return type).
+
+The verifications the step asked for, as they came out: the logical channel's
+`1 − q_I` equals `QECLogicalErrorRate` identically on the Steane code (symbolic, 0.07 s);
+bit flip gives `q_X = (3 − 2p)p²`, i.e. the rate `3p² − 2p³`; the Knill–Laflamme matrix is
+computed symplectically and checked against its dense definition `⟨W_i|E_a†E_b|W_j⟩` on
+the 3-qubit code, and reports weight-1 correctable / weight-2 not on Steane, weight-1
+correctable on the 5-qubit code. (`"Projector"` was not added as a second name for
+`"Codespace"`: one name per object. The check "`Encoder` on `|0…0⟩` equals `code["State"]`"
+was replaced by the projector cross-check, since `code["State"]` is only defined up to the
+logical freedom when `k > 0`.) **636/636 GREEN.**
+
+Two findings, recorded here rather than fixed at their source:
+
+- *The encoding circuit's logical labelling is its own.* On the 5-qubit code
+  `codeEncodingGates` sends `|0…0⟩` to the −1 eigenstate of the `Z̄` that
+  `code["LogicalZ"]` reports. It is still a valid encoder, but an isometry built directly
+  from it would relabel `|0_L⟩ ↔ |1_L⟩` against the code's own logical operators. The
+  operational layer canonicalizes (`|0_L⟩` is moved into the +1 eigenspace of every `Z̄_j`,
+  `|c_L⟩ = X̄^c|0_L⟩`), and a test pins `V†Z̄V = Z`, `V†X̄V = X` on five codes.
+  `Encoder.wl` is untouched.
+- *Engine: a one-element Kraus list with an order acts on the wrong wires.*
+  `QuantumChannel[{X}, {1}]["Order"]` is `{{0}, {1}}` and `QuantumChannel[{P}, {1,2,3}]` is
+  `{{0,1,2}, {1,2,3}}`: the environment wire takes the place of the first system wire, so
+  a unitary channel given this way silently acts on the wrong qubits. The layer routes a
+  single Kraus operator through `QuantumChannel[QuantumOperator[…]]` instead
+  (`krausChannel`), and two tests pin it. Worth reporting upstream; nothing in the kernel
+  was changed.
+
+*Design note — the bosonic plan.* `Bosonic-QEC-Plan.md` and its Part A spec describe the
+same frame the audit's §3.5 asks for: a code is a subspace (codewords / isometry), an
+error set, a correctability question, and a logical channel. The qubit layer now answers
+that frame with the same spellings the bosonic spec chose — `"Codewords"`,
+`"KnillLaflammeMatrix"`, `"CorrectableQ"` — so the two branches share an interface rather
+than two dialects. What differs is only how each is computed: symplectically here, by
+truncated Fock-space linear algebra there. Nothing in the bosonic spec had to change.
 
 ### Step 4 — Return types, and the decoder (3–4 days)
 
@@ -206,6 +286,35 @@ produces — including the herald-row filter, which is what moved the measured e
 
 **Surface: 27 -> 28** (one added object).
 
+**Done**, in `QECCore/Decoder.wl` (new), `ErrorRate.wl`, `DetectorModel.wl`, and
+`Tests/Decoder.wlt` (20 tests).
+
+- `QECLogicalErrorRate[code, noise]` and `[code, noise, n]` now return **the rate only** —
+  a number, or an exact expression, `Indeterminate` (with `::noacceptance`) when a herald
+  rejects everything. `QECLogicalErrorRate[code, noise, All]` / `[code, noise, n, All]`
+  give the report `<|"Rate", "Acceptance", "Failure"|>` (sampled:
+  `<|"Rate", "Acceptance", "Accepted", "Shots"|>`), with the same keys whether or not
+  anything was post-selected; without heralds the acceptance is 1 and the failure is the
+  rate. The one test that read `["Rate"]` off the old association
+  (`QEC-Extraction-restores-the-p-squared`) now reads the number directly.
+- The detector model answers `dem["LogicalErrorRate"]`, `dem["LogicalErrorRate", All]`,
+  `dem["LogicalErrorRate", n]`, `dem["Acceptance"]`, `dem["Failure"]`; the exact report is
+  computed once and shared (memoised, cleared by `QECClearCache`).
+- `QECDecoder` has four constructors: `QECDecoder[code]` (minimum weight),
+  `QECDecoder[code, noise]` (maximum likelihood at code capacity; the detector-model
+  decoder at the other two levels, with `"Rounds"` and `"Extraction"`),
+  `QECDecoder[dem]` (lightest fault set), and `QECDecoder[code, f]` — **the seam**: `f`
+  maps a syndrome to a correction Pauli or `Missing[]`, so PyMatching or BP-OSD plug in
+  through `ExternalEvaluate` without the layer knowing. `dec["Decode", s]`,
+  `dec["Table"]`, `dec["Method"]`, `dec["Reach"]`. The rate accepts it as
+  `"Decoder" -> dec`, so a custom decoder is scored by the same machinery as the built-ins.
+
+Every built-in delegates to the engine function that already decoded; the tests compare
+tables, not rates. The herald filter is pinned twice: the object's table equals the
+engine's filtered table on the 5-qubit transversal extraction, **and** that table differs
+from the one built with the heralds ignored, so the filter is shown to be doing something.
+**656/656 GREEN** (see the final count in step 7).
+
 ### Step 5 — The renames, all at once (2–3 days)
 
 One commit, one notebook rebuild, aliases for one release.
@@ -224,6 +333,32 @@ and warns. Rebuild the three notebooks at the end of the step, not during it.
 
 **Surface: 28 -> about 16.**
 
+**Done**, in one pass over `QECCore/`, `Tests/`, the three tutorial sources and
+`StimCrossCheck/emit.wls`, with `QECCore/Deprecated.wl` (new) and `Tests/Surface.wlt` (29
+tests, new).
+
+| Before | After |
+|---|---|
+| `QECPauliVector`, `QECPauliString`, `QECPauliWeight`, `QECPauliPhase`, `QECPauliCommuteQ`, `QECPauliProduct` | `QECPauli[p]` with `"Vector"`, `"String"`, `"Weight"`, `"Phase"`, `"CommuteQ"`, `"Product"` (and `**`), plus `"Qubits"`, `"Support"`, `"HermitianQ"`, `"Matrix"`, `"QuantumOperator"`; `QECPauliQ` stays as the guard |
+| `QECFaultTolerant` | `QECFaultTolerantCircuit` (decision D) |
+| `QECStimCircuit` | `QECStim`, plus `dem["StimString"]` |
+| `QECCodeCatalog[]` | `QECCode["Catalog"]` |
+| `QECClassicalHammingMatrix` | `PackageScope`; `QECCode["Hamming", r]` builds the quantum code, and the doc cells write the matrix out |
+| `QECConcatenate`, `QECPasteCodes`, `QECRemoveQubit` | unchanged (decision B), plus `code["Concatenate", inner]`, `code["Paste", other, s1, s2]`, `code["RemoveQubit"]`, `code["RemoveQubit", q]` |
+
+How the rename was kept honest: the six verbs became the `PackageScope` row functions
+`pauliVector` … `pauliPhase` under their old definitions (constraint C3), so every internal
+call site changed name and nothing else; the messages moved to `QECPauli::invalid`,
+`::badrow`, `::size`. The test files call the row functions through `Symbol[...]` the way
+they already reach other internals, so no expected value changed. The retired ten names
+live in `Deprecated.wl`: each returns exactly what it returned and warns once per session
+(`General::qecdeprecated`); `Surface.wlt` checks value and warning for all ten, and that the
+second use is silent. Decision C held: `code["Generators"]` still returns strings.
+
+Public functions after the step: 19 (plus 4 `$` limits), from 26 — not the audit's "about
+16", because steps 3–4 added `QECDecoder` and the step keeps the three constructions as
+functions. **685/685 GREEN.**
+
 ### Step 6 — Transversal matrices from `QuantumOperator`, and the QF gap (2 days)
 
 `Transversal.wl` carries its own `$transversalGateMatrix` table. The tests already pin it
@@ -236,6 +371,13 @@ conjugation primitive**. That is the one genuine capability gap the layer works 
 in the framework conjugates a Pauli through a Clifford *with its `ℤ₄` phase*. Propose it to
 the QF side as a small, separable addition; if it lands, `transversalAction` retires.
 
+**Done.** `$transversalGateMatrix` is now read from `QuantumOperator[name]` (and
+`["Dagger"]` for `Sdg`, `Vdg`) at load time instead of transcribed; the 24 transversal tests
+pass unchanged. The capability gap is written up as a proposal to the QF side in
+`QF-Clifford-Conjugation-Proposal.md`: `CliffordChannel` already holds the phase-carrying
+conjugation table for a Clifford unitary, and what is missing is a constructor from a Clifford
+`QuantumOperator` and a `cc["Conjugate", P]` query. Nothing in the kernel was changed.
+
 ### Step 7 — Documentation and close (2 days)
 
 Rewrite the affected sections of the three tech notes, `validate.wls`, `build.wls`, update
@@ -243,17 +385,39 @@ the roadmap, and re-walk the audit's own tables point by point so the response i
 checkable. The `FaultTolerantGadgets` note is the most affected, since it is written
 entirely around the six gadget objects.
 
+**Done.** `StabilizerCodes` gained two sections, *The code as quantum operations* (encoder,
+codewords in the code's own basis, syndrome instrument and recovery, the logical channel from
+the coset engine and its agreement with the rate, noise read from a `QuantumChannel`,
+Knill–Laflamme) and *Decoders as objects* (the built-ins, the function seam, the rate's `All`
+report), plus the post-selected report where the transversal extraction is measured and six
+new rows in its checks table. `QECCoreInternals` gained *Operational.wl*, *Decoder.wl* and
+*Deprecated.wl*. All three notes use the new names throughout (`QECPauli`,
+`QECFaultTolerantCircuit`, `QECStim`, the Hamming matrix written out). `validate.wls` runs
+all 262 cells with the only non-results being the two deliberate refusals the notes show;
+the three notebooks are rebuilt. The roadmap and the README carry the new counts. The audit's
+observations are walked point by point in the status column of §1.
+
+**Final: 685/685 GREEN**, 23 test files, on bare Wolfram. Nothing committed; nothing in
+`QuantumFramework/Kernel/`.
+
 ---
 
 ## 3. Four decisions to settle before step 3 starts
 
-**A. Is the rate computed from the logical channel, or is the logical channel a presentation
-of what the rate machinery already computes?** *Recommendation: the second.* The audit's
-formulation is right as a definition and wrong as an implementation, for the reason in
-constraint C2: the symbolic exact polynomial is the layer's one unique capability and it
-cannot survive a dense `4ⁿ` channel. `["LogicalChannel"]` ships as semantics plus the small
-codes; the enumeration and the DEM fold stay the implementation of the rate. This should be
-written into the design document, not left to the implementer.
+*Status: work proceeds on the four recommendations below, adopted provisionally so steps 3–7
+are not blocked. Any of them that review changes is revisited afterwards; each is isolated
+enough (A and C in step 3, B and D in step 5) that reversing one does not touch the others.*
+
+**A. Is the rate computed from the logical channel?** *Recommendation: yes, as the audit
+proposes — with one condition on how that channel is built.* `code["LogicalChannel", noise]`
+is constructed from the coset / detector-model engine as a logical Pauli channel (`4ᵏ`
+exact probabilities), never by composing the `4ⁿ`-dimensional physical channels; the rate is
+then `1 − q_Ī`, a functional of that channel, and stays an exact symbolic polynomial. The
+Steane check in constraint C2 shows the two agree identically. Non-Pauli noise is the one case
+that falls back to the dense route, and it should be refused beyond small codes rather than
+attempted. *(An earlier revision of this plan recommended against the audit here, on the
+grounds that a dense channel cannot carry the symbolic rate. That was the right worry aimed
+at the wrong target: the dense construction is what cannot, and it is not the only one.)*
 
 **B. Do `QECConcatenate`, `QECPasteCodes` and `QECRemoveQubit` become properties of
 `QECCode`?** *Recommendation: keep them as free functions, add the properties as sugar.*

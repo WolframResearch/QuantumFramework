@@ -391,7 +391,7 @@ VerificationTest[
             {slots = Length[qecSlots[qecInstr[c, 2], qecNq[c]]],
              dem = Length[Select[qecMechanisms[qecCodeData[c], First[noise], 2],
                  First[#["Location"]] === "Idle" &]],
-             stim = StringCount[QECStimCircuit[c, noise, 2], "DEPOLARIZE1(0.002)"]},
+             stim = StringCount[QECStim[c, noise, 2], "DEPOLARIZE1(0.002)"]},
             {dem === 3 slots, stim === slots}
         ]
     ],
@@ -405,7 +405,7 @@ VerificationTest[
    mean idle noise leaked into a circuit that did not ask for it. *)
 VerificationTest[
     StringCount[
-        QECStimCircuit[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/1000], 2],
+        QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/1000], 2],
         "DEPOLARIZE1"],
     0,
     TestID -> "QEC-Idle-stim-clean-when-rate-is-zero"
@@ -415,7 +415,7 @@ VerificationTest[
    residual it is supposed to reveal would be corrupted by the act of revealing it. *)
 VerificationTest[
     With[
-        {src = QECStimCircuit[QECCode["BitFlipCode"],
+        {src = QECStim[QECCode["BitFlipCode"],
             QECNoiseModel["Circuit", <|"OneQubit" -> 1/1000, "TwoQubit" -> 1/1000,
                 "Measurement" -> 1/1000, "Reset" -> 1/1000, "Idle" -> 1/500|>], 2]},
         StringFreeQ[Last[StringSplit[src, "# --- final noiseless round ---"]], "DEPOLARIZE"]

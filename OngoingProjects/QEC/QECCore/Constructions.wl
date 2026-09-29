@@ -16,7 +16,7 @@ PackageScope[embedPauli]
 (* 8.6 / QECC book ch. 5 (CSS).                                                 *)
 (*                                                                              *)
 (* All of these are row operations and block embeddings on Pauli rows, and here  *)
-(* they carry phases through: a generator product is taken with QECPauliProduct  *)
+(* they carry phases through: a generator product is taken with pauliProduct  *)
 (* instead of adding symplectic vectors and discarding the sign.  It matters     *)
 (* because S and -S are different codes, and the prototype's string surgery      *)
 (* silently dropped the distinction.                                            *)
@@ -81,7 +81,7 @@ QECConcatenate[QECCode[outer_Association], QECCode[inner_Association]] := Module
         {x, z} === {0, 0}, pauliIdentity[n2],
         {x, z} === {1, 0}, xbar,
         {x, z} === {0, 1}, zbar,
-        True, MapAt[Mod[# + 1, 4] &, QECPauliProduct[xbar, zbar], -1]
+        True, MapAt[Mod[# + 1, 4] &, pauliProduct[xbar, zbar], -1]
     ];
 
     innerGens = Flatten[
@@ -117,14 +117,14 @@ removeQubitAt[a_Association, q_Integer] := Module[{n = a["Qubits"], rows, xrow, 
     xrow = SelectFirst[Range[Length[rows]], rows[[#, q]] === 1 &];
     If[MissingQ[xrow], Return[$Failed]];
     rows = MapIndexed[
-        If[First[#2] =!= xrow && #1[[q]] === 1, QECPauliProduct[#1, rows[[xrow]]], #1] &,
+        If[First[#2] =!= xrow && #1[[q]] === 1, pauliProduct[#1, rows[[xrow]]], #1] &,
         rows
     ];
 
     zrow = SelectFirst[Range[Length[rows]], # =!= xrow && rows[[#, n + q]] === 1 &];
     If[MissingQ[zrow], Return[$Failed]];
     rows = MapIndexed[
-        If[First[#2] =!= zrow && #1[[n + q]] === 1, QECPauliProduct[#1, rows[[zrow]]], #1] &,
+        If[First[#2] =!= zrow && #1[[n + q]] === 1, pauliProduct[#1, rows[[zrow]]], #1] &,
         rows
     ];
 
@@ -169,3 +169,17 @@ QECPasteCodes[QECCode[a1_Association], QECCode[a2_Association], solo1_Integer, s
 
     QECCode[Join[solo, paired]]
 ]
+
+
+(* ---- the same constructions, asked of a code ---- *)
+
+(* Sugar, not a replacement (decision B of the redesign plan).  The constructions are
+   morphisms between codes -- Cowtan-Burton -- and a function of two codes is their
+   natural spelling; these let a code be asked for them as well, which is where a
+   reader looking at a code's properties will look first.  The argument order is the
+   function's, with the code in the first slot. *)
+QECCode[a_Association]["Concatenate", inner_QECCode] := QECConcatenate[QECCode[a], inner]
+QECCode[a_Association]["RemoveQubit"] := QECRemoveQubit[QECCode[a]]
+QECCode[a_Association]["RemoveQubit", q_Integer] := QECRemoveQubit[QECCode[a], q]
+QECCode[a_Association]["Paste", other_QECCode, solo1_Integer, solo2_Integer] :=
+    QECPasteCodes[QECCode[a], other, solo1, solo2]

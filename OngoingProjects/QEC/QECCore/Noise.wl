@@ -14,6 +14,8 @@ PackageScope[noiseMeasurementError]
 PackageScope[noiseCircuitRates]
 PackageScope[$QECNoiseLevels]
 PackageScope[$QECCircuitLocations]
+PackageScope[krausChannel]
+PackageScope[$channelPaulis]
 
 
 (* ============================================================================ *)
@@ -194,6 +196,57 @@ QECNoiseModel[rates : {_, _, _, _}, opts : OptionsPattern[]] := fromRates[
     OptionValue[QECNoiseModel, {opts}, "MeasurementError"]
 ]
 
+(* From a QuantumChannel.  A one-qubit channel is Pauli noise exactly when its chi
+   matrix in the Pauli basis is diagonal; the diagonal is then q_s = Sum_k |Tr(s K_k)|^2/4,
+   and the check that the Pauli mixture with those weights has the same superoperator
+   as the channel is what makes the conversion a statement rather than a projection.
+   A non-Pauli channel (amplitude damping is the usual one) is refused: its effect on a
+   stabilizer code is not a distribution over Paulis, and forcing it into one -- the
+   Pauli twirl -- is a modelling choice the caller should make on purpose.
+
+   q_I is taken as 1 - q_X - q_Y - q_Z rather than read off the same way.  For a
+   trace-preserving channel the two agree, and the difference is only in how they
+   look: the trace of a symbolic Kraus operator comes back as Abs[1 - u - w] where the
+   complement stays a polynomial. *)
+QECNoiseModel::notpauli = "`1` is not a one-qubit Pauli channel; only Pauli noise has a description on a stabilizer code. Twirl it first if its Pauli approximation is what you want.";
+
+$channelPaulis = {PauliMatrix[0], PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]};
+
+channelKraus[qc_] := If[
+    qc["TraceQudits"] === 0,
+    {Normal[qc["QuantumOperator"]["MatrixRepresentation"]]},
+    Normal[#["MatrixRepresentation"]] & /@ qc["UnstackOutput", 1]
+]
+
+channelParameters[expr_] := DeleteDuplicates @ Cases[expr, s_Symbol /; ! NumericQ[s] && Context[s] =!= "System`", Infinity]
+
+channelSuperoperator[ks_List] := Total[KroneckerProduct[#, Conjugate[#]] & /@ ks]
+
+channelPauliProbabilities[qc_] := Module[{ks, params, assume, q, rates, same},
+    ks = channelKraus[qc];
+    If[! MatchQ[Dimensions[ks], {_, 2, 2}], Return[$Failed]];
+    params = channelParameters[ks];
+    assume = And @@ (0 <= # <= 1 & /@ params);
+    q = Table[
+        Chop @ Simplify[ComplexExpand[Total[Abs[Tr[s . #]]^2 & /@ ks] / 4], assume],
+        {s, Rest[$channelPaulis]}
+    ];
+    rates = Prepend[q, Simplify[1 - Total[q], assume]];
+    same = AllTrue[
+        Flatten @ ComplexExpand[channelSuperoperator[ks] - channelSuperoperator[MapThread[Sqrt[#1] #2 &, {rates, $channelPaulis}]]],
+        PossibleZeroQ[Chop[Simplify[#, assume]]] &
+    ];
+    If[same, rates, $Failed]
+]
+
+QECNoiseModel[qc_Wolfram`QuantumFramework`QuantumChannel, opts : OptionsPattern[]] := With[
+    {rates = channelPauliProbabilities[qc]},
+    If[ rates === $Failed,
+        Message[QECNoiseModel::notpauli, qc]; $Failed,
+        QECNoiseModel[rates, opts]
+    ]
+]
+
 
 (* ---- accessors ---- *)
 
@@ -226,7 +279,7 @@ noiseProfileProbability[a_Association, n_Integer, {nx_, ny_, nz_}] := With[
     factor[p[[1]], n - nx - ny - nz] factor[p[[2]], nx] factor[p[[3]], ny] factor[p[[4]], nz]
 ]
 
-noiseErrorProbability[a_Association, pauli_] := With[{v = QECPauliVector[pauli]},
+noiseErrorProbability[a_Association, pauli_] := With[{v = pauliVector[pauli]},
     With[{n = pauliQubits[v]},
         noiseProfileProbability[a, n, pauliProfile[v]]
     ]
@@ -279,10 +332,10 @@ QECNoiseModel[a_Association]["MeanWeight"] := Total[Rest[a["Probabilities"]]]
 QECNoiseModel[a_Association]["ErrorProbability", pauli_] := noiseErrorProbability[a, pauli]
 
 QECNoiseModel[a_Association]["RandomError", n_Integer] :=
-    QECPauliString[First[noiseSampleRows[a, n, 1]]]
+    pauliString[First[noiseSampleRows[a, n, 1]]]
 
 QECNoiseModel[a_Association]["RandomErrors", n_Integer, count_Integer] :=
-    QECPauliString /@ noiseSampleRows[a, n, count]
+    pauliString /@ noiseSampleRows[a, n, count]
 
 (* The engine's own channel, for the qubits given: this is how the model reaches
    PauliStabilizer states, where qc[ps] returns the {probability, state} mixture.
@@ -297,12 +350,29 @@ noiseChannelName["Depolarizing", p_] := "Depolarizing"[4 (1 - p[[1]]) / 3]
 noiseChannelName["BitFlip", p_] := "BitFlip"[p[[2]]]
 noiseChannelName["PhaseFlip", p_] := "PhaseFlip"[p[[4]]]
 noiseChannelName["BitPhaseFlip", p_] := "BitPhaseFlip"[p[[3]]]
-noiseChannelName[_, _] := Missing["NotAvailable", "a general Pauli channel has no named QuantumChannel form"]
+noiseChannelName[_, _] := Missing["NotAvailable", "no engine name"]
+
+(* A Pauli channel with no engine name is still a channel: one Kraus operator
+   Sqrt[p_s] s per Pauli with nonzero weight, and on several qubits the independent
+   product of one such channel per qubit, which is what this model says the noise is. *)
+(* A channel from its Kraus matrices on the given qubits.  One operator is a unitary
+   (or isometric) channel and goes in as that operator: the engine reads a one-element
+   Kraus list with an order as a channel whose environment takes the place of the first
+   system qubit (QuantumChannel[{X}, {1}]["Order"] is {{0}, {1}}), which silently acts
+   on the wrong wires. *)
+krausChannel[{k_}, qubits_List] :=
+    Wolfram`QuantumFramework`QuantumChannel[Wolfram`QuantumFramework`QuantumOperator[k, qubits]]
+krausChannel[ks_List, qubits_List] := Wolfram`QuantumFramework`QuantumChannel[ks, qubits]
+
+noiseGeneralChannel[p_List, qubits_List] := With[
+    {one = Pick[MapThread[Sqrt[#1] #2 &, {p, $channelPaulis}], PossibleZeroQ /@ p, False]},
+    krausChannel[Fold[KroneckerProduct, #] & /@ Tuples[one, Length[qubits]], qubits]
+]
 
 QECNoiseModel[a_Association]["QuantumChannel", qubits_ : {1}] := With[
     {spec = noiseChannelName[a["Name"], a["Probabilities"]]},
     If[ MissingQ[spec],
-        spec,
+        noiseGeneralChannel[a["Probabilities"], Flatten[{qubits}]],
         Wolfram`QuantumFramework`QuantumChannel[spec, qubits]
     ]
 ]

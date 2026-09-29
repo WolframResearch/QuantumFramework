@@ -98,7 +98,7 @@ codeLogicalWires[a_Association] := codeLogicalWires[a] = With[
             applyGates[
                 Wolfram`QuantumFramework`PauliStabilizer[n],
                 Join[{"H" -> #}, gates]
-            ]["Expectation", QECPauliString[xbars[[j]]]] === 1 &
+            ]["Expectation", pauliString[xbars[[j]]]] === 1 &
         ],
         {j, Length[xbars]}
     ]

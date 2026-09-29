@@ -174,10 +174,21 @@ Underneath the code object, a Pauli is a row of bits: $x_1 \ldots x_n$, then $z_
 then a phase. It is the same layout the stabilizer engine uses internally, so the two halves of
 the framework speak one format.
 
-A Pauli string converted to its row:
+A Pauli is one object, `QECPauli`. It is built from a string or a row, prints as its string, and
+holds the row:
 
 ```wl
-QECPauliVector["XZZXI"]
+QECPauli["XZZXI"]
+```
+
+<!-- => QECPauli["XZZXI"] -->
+
+Its properties are the forms and facts a Pauli has — `"String"`, `"Vector"`, `"Weight"`,
+`"Phase"`, `"Support"`, `"Matrix"`, `"QuantumOperator"` — and the two relations, `"CommuteQ"` and
+`"Product"` (also written `**`). The row, for one:
+
+```wl
+QECPauli["XZZXI"]["Vector"]
 ```
 
 <!-- => {1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0} -->
@@ -191,7 +202,7 @@ group is not closed under multiplication with a sign alone.
 The product of X and Z is not Y:
 
 ```wl
-QECPauliString[QECPauliProduct["X", "Z"]]
+(QECPauli["X"] ** QECPauli["Z"])["String"]
 ```
 
 <!-- => "-iY" -->
@@ -203,7 +214,7 @@ phase or refuse to multiply. Carrying $\mathbb{Z}_4$ costs one integer per Pauli
 algebra closed:
 
 ```wl
-QECPauliString[QECPauliProduct["XIX", "IZZ"]]
+(QECPauli["XIX"] ** QECPauli["IZZ"])["String"]
 ```
 
 <!-- => "-iXZY" -->
@@ -216,7 +227,7 @@ exactly the engine's sign bit, so nothing is lost in translation.
 Commutation is the symplectic product of two rows, which is what makes it cheap:
 
 ```wl
-Outer[QECPauliCommuteQ, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}]
+Outer[QECPauli[#1]["CommuteQ", #2] &, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}, {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}]
 ```
 
 <!-- => 4x4 array of True -->
@@ -281,7 +292,7 @@ canonical pair the standard form produces.
 That witness is a logical operator, and its weight is the distance:
 
 ```wl
-{QECPauliWeight[QECCode["5QubitCode"]["MinimumWeightLogical"]],
+{QECPauli[QECCode["5QubitCode"]["MinimumWeightLogical"]]["Weight"],
  QECCode["5QubitCode"]["LogicalPauliQ", QECCode["5QubitCode"]["MinimumWeightLogical"]]}
 ```
 
@@ -333,7 +344,7 @@ is a table from syndrome to a minimum-weight error producing it, built out to th
 actually guarantees:
 
 ```wl
-QECPauliString /@ QECCode["BitFlipCode"]["Decoder"]
+(QECPauli[#]["String"] &) /@ QECCode["BitFlipCode"]["Decoder"]
 ```
 
 <!-- => <|{0, 0} -> "III", {1, 0} -> "XII", {1, 1} -> "IXI", {0, 1} -> "IIX"|> -->
@@ -439,7 +450,7 @@ of the other Z-type, and they commute exactly when the matrices are orthogonal o
 classical Hamming matrix, the construction reproduces the Steane code:
 
 ```wl
-QECCode["CSS", QECClassicalHammingMatrix[3]]["Parameters"]
+QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}]["Parameters"]
 ```
 
 <!-- => {7, 1, 3} -->
@@ -450,7 +461,7 @@ QECCode["CSS", QECClassicalHammingMatrix[3]]["Parameters"]
 the stabilizer *group*, checked in both directions and with signs:
 
 ```wl
-Module[{css = QECCode["CSS", QECClassicalHammingMatrix[3]], steane = QECCode["SteaneCode"]},
+Module[{css = QECCode["CSS", {{0, 0, 0, 1, 1, 1, 1}, {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1}}], steane = QECCode["SteaneCode"]},
     AllTrue[steane["GeneratorVectors"], css["StabilizerMemberQ", #] &] &&
     AllTrue[css["GeneratorVectors"], steane["StabilizerMemberQ", #] &]
 ]
@@ -649,6 +660,187 @@ Coefficient[
 ```
 
 <!-- => 651/25 -->
+
+## The code as quantum operations
+
+Everything so far has been symplectic: rows, syndromes, cosets. The same code is also a set of
+ordinary quantum objects — an encoding isometry, a code-space projector, a syndrome measurement,
+recovery channels, and one effective channel on the logical qubit — and those are what the rest of
+the framework composes with. The code gives them directly.
+
+The encoder is the isometry $V$ from the logical qubit into the physical ones:
+
+```wl
+QECCode["BitFlipCode"]["Encoder"]
+```
+
+<!-- => a QuantumOperator from 1 input qubit to 3 output qubits -->
+
+---
+
+Its columns are the codewords, and they are stated in the code's own logical basis: $|0_L\rangle$
+is the $+1$ eigenstate of the $\bar{Z}$ that `code["LogicalZ"]` reports, $|1_L\rangle$ the $-1$ one.
+That is not automatic. The encoding circuit of the five-qubit code sends $|00000\rangle$ to the
+$-1$ eigenstate of that $\bar{Z}$ — still a valid encoder, but with its own labels — so the
+codewords are moved into the code's basis before they are handed out:
+
+```wl
+With[{five = QECCode["5QubitCode"]},
+    With[{z = Normal[QECPauli[First[five["LogicalZ"]]]["Matrix"]]},
+        Simplify[Conjugate[#] . z . #] & /@ (Normal[#["StateVector"]] & /@ five["Codewords"])
+    ]
+]
+```
+
+<!-- => {1, -1} -->
+
+---
+
+The syndrome measurement is a `QuantumMeasurementOperator` with one projector
+$\prod_i (1 + (-1)^{s_i} g_i)/2$ per syndrome, outcome $i$ being the syndrome
+`IntegerDigits[i - 1, 2, m]`. An $X$ on the middle qubit of the bit-flip code trips both checks,
+syndrome $\{1, 1\}$, the fourth outcome, with certainty — and the recovery for that syndrome puts the
+codeword back:
+
+```wl
+Module[{bf = QECCode["BitFlipCode"], zero, hit},
+    zero = First[bf["Codewords"]];
+    hit = QuantumOperator["IXI"][zero];
+    <|"syndrome" -> bf["Syndrome", "IXI"],
+      "outcome probabilities" -> Values[Normal[bf["SyndromeMeasurement"][hit]["Probabilities"]]],
+      "recovered" -> Chop[Normal[bf["Recovery", {1, 1}][QuantumState[hit["DensityMatrix"]]]["DensityMatrix"]] -
+          Normal[zero["DensityMatrix"]]] == ConstantArray[0, {8, 8}]|>
+]
+```
+
+<!-- => <|"syndrome" -> {1, 1}, "outcome probabilities" -> {0, 0, 0, 1}, "recovered" -> True|> -->
+
+---
+
+These four are dense — $2^n$-sized — and stop at `$QECDenseQubitLimit` (10 qubits by default)
+with a message naming the cheap route. The next one is not dense, and it is the one that matters.
+
+Encode, apply the noise, measure the syndrome, recover, decode: the whole cycle is one channel on
+the logical qubit. Taken literally that composition runs through a $4^n$-dimensional superoperator.
+But for Pauli noise on a stabilizer code the cycle's net effect is always a logical Pauli — the
+error times the correction lies in the normalizer — so the logical channel is a Pauli channel with
+$4^k$ weights, and those weights are exactly the coset probabilities the maximum-likelihood decoder
+already computes. So it comes out exact and symbolic:
+
+```wl
+QECCode["BitFlipCode"]["LogicalPauliProbabilities", QECNoiseModel["BitFlip", p]]
+```
+
+<!-- => <|"I" -> (1 - p)^2 (1 + 2 p), "X" -> (3 - 2 p) p^2, "Y" -> 0, "Z" -> 0|> -->
+
+---
+
+and the logical error rate is nothing but one minus its identity weight — on the Steane code, to the
+last coefficient:
+
+```wl
+With[{steane = QECCode["SteaneCode"], noise = QECNoiseModel["Depolarizing", p]},
+    Simplify[1 - steane["LogicalPauliProbabilities", noise]["I"] - QECLogicalErrorRate[steane, noise]]
+]
+```
+
+<!-- => 0 -->
+
+---
+
+`code["LogicalChannel", noise]` is the same thing as a `QuantumChannel` on the logical qubits, ready
+to compose with anything else in the framework. It is a code-capacity object: at circuit level the
+checks themselves are noisy, the cycle is not one channel, and the rate comes from the detector model
+instead.
+
+Noise can be given in the framework's own terms, too. A one-qubit `QuantumChannel` that is a Pauli
+channel reads back as a noise model — its Kraus operators reduced to Pauli weights, then checked
+against the channel's superoperator — and is accepted wherever a noise model is:
+
+```wl
+{QECNoiseModel[QuantumChannel["Depolarizing"[q]]]["Probabilities"],
+ Expand[QECLogicalErrorRate[QECCode["Repetition", 3], QuantumChannel["BitFlip"[p]]]]}
+```
+
+<!-- => {{1 - 3 q/4, q/4, q/4, q/4}, 3 p^2 - 2 p^3} -->
+
+A channel that is not Pauli — amplitude damping is the usual one — is refused with its reason
+rather than twirled silently: its effect on a stabilizer code is not a distribution over Paulis, and
+choosing to approximate it by one is a modelling decision.
+
+---
+
+The question under all of this — does the code correct this set of errors? — is the
+Knill–Laflamme condition, $\langle W_i | E_a^\dagger E_b | W_j\rangle = h_{ab}\,\delta_{ij}$. For
+Pauli errors it is decided by where $E_a^\dagger E_b$ sits: anticommuting with a check gives 0, in
+the stabilizer gives its phase, a nontrivial logical breaks the condition. So it is computed on rows,
+at any size, and the dense definition is only its test:
+
+```wl
+With[{bf = QECCode["BitFlipCode"]},
+    {bf["KnillLaflammeMatrix", {"III", "XII", "IXI", "IIX"}],
+     bf["KnillLaflammeMatrix", {"XII", "IXX"}]}
+]
+```
+
+<!-- => {IdentityMatrix[4], Missing["NotCorrectable", <|"Errors" -> {"XII", "IXX"}, "Product" -> "XXX"|>]} -->
+
+---
+
+The failure names the pair and the logical operator their product is. Asked of every error up to a
+weight, it reads the distance off:
+
+```wl
+Table[QECCode["SteaneCode"]["CorrectableQ", "Weight"[t]], {t, 0, 2}]
+```
+
+<!-- => {True, True, False} -->
+
+These are the spellings the bosonic branch of the project uses for the same questions —
+`"Codewords"`, `"KnillLaflammeMatrix"`, `"CorrectableQ"` — so a qubit code and an oscillator code
+answer them alike.
+
+## Decoders as objects
+
+The decoders behind the rate can be held. `QECDecoder[code]` is the minimum-weight table,
+`QECDecoder[code, noise]` maximum likelihood (or, at circuit level, the detector model's decoder),
+`QECDecoder[dem]` the detector model's lightest-fault rule:
+
+```wl
+With[{d = QECDecoder[QECCode["SteaneCode"]]}, {d["Method"], d["Decode", {0, 0, 0, 1, 1, 1}]}]
+```
+
+<!-- => {"MinimumWeight", "IIIIIIX"} -->
+
+---
+
+The fourth constructor is the seam for everything else. `QECDecoder[code, f]` wraps any function
+from a syndrome to a correction — PyMatching through `ExternalEvaluate`, a neural decoder, a lookup —
+and the rate scores it with the same machinery as the built-ins, through `"Decoder" -> dec`. The
+decoder that never corrects anything, on the bit-flip code, fails whenever anything happened:
+
+```wl
+Simplify[QECLogicalErrorRate[QECCode["BitFlipCode"], QECNoiseModel["BitFlip", p],
+    "Decoder" -> QECDecoder[QECCode["BitFlipCode"], If[# === {0, 0}, "III", Missing[]] &]]]
+```
+
+<!-- => p (3 - 3 p + p^2), which is 1 - (1 - p)^3 -->
+
+---
+
+`QECLogicalErrorRate` returns the rate and only the rate. The full report — the rate, the
+probability of acceptance, and the joint failure probability — is one argument away, with the same
+keys whether or not anything was post-selected:
+
+```wl
+QECLogicalErrorRate[QECCode["SteaneCode"], QECNoiseModel["Depolarizing", 1/10], All]
+```
+
+<!-- => <|"Rate" -> 13147289/113906250, "Acceptance" -> 1, "Failure" -> 13147289/113906250|> -->
+
+The detector model answers the same questions as `dem["LogicalErrorRate"]`, `dem["Acceptance"]` and
+`dem["Failure"]`; they differ from the plain rate only when a gadget rejects shots, which is where the
+next sections go.
 
 ## Noisy syndrome extraction
 
@@ -1339,8 +1531,8 @@ two physical rates a factor of two apart and reading the slope off:
 ```wl
 Module[{exponent, five = QECCode["5QubitCode"]},
     exponent[opts___] := N @ Log[
-        Replace[QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1, opts], a_Association :> a["Rate"]] /
-        Replace[QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1, opts], a_Association :> a["Rate"]]
+        QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/1000], "Rounds" -> 1, opts] /
+        QECLogicalErrorRate[five, QECNoiseModel["Circuit", 1/2000], "Rounds" -> 1, opts]
     ] / Log[2];
     Dataset @ <|"bare ancilla" -> exponent[],
                 "transversal" -> exponent["Extraction" -> "Transversal"]|>]
@@ -1351,7 +1543,16 @@ circuit-level noise — which is what §10.2 exists to make possible, and what t
 sections above was the price of not having.
 
 Two things that number is not. It is a **post-selected** rate, and the acceptance travels with it —
-about 0.98 at $p = 10^{-3}$, and the gadget reports it rather than quietly dividing it out. And it
+about 0.98 at $p = 10^{-3}$, and the layer reports it rather than quietly dividing it out:
+
+```wl
+N @ QECLogicalErrorRate[QECCode["5QubitCode"], QECNoiseModel["Circuit", 1/1000], All,
+    "Rounds" -> 1, "Extraction" -> "Transversal"]
+```
+
+<!-- => <|"Rate" -> 0.00205, "Acceptance" -> 0.980, "Failure" -> 0.00201|> -->
+
+The rate is the failure divided by the acceptance. And it
 still rests on the ancilla preparation being clean, since the cat is built by a non-fault-tolerant
 chain and only its dangerous patterns are checked; that is the same chapter-13 assumption Steane EC
 names, and it is why the four ambiguous signatures existed to be conditioned away in the first
@@ -1419,9 +1620,7 @@ Module[{images},
     images[r_] := Module[{instr = r["TransversalCNOT", 1, 2], nq = r["Qubits"], group},
         group = QECCode[r["Generators"]];
         Count[
-            QECPauliString[
-                Wolfram`QuantumFramework`QEC`PackageScope`registerConjugate[instr, nq, QECPauliVector[#]]
-            ] & /@ r["Generators"],
+            QECPauli[Wolfram`QuantumFramework`QEC`PackageScope`registerConjugate[instr, nq, QECPauli[#]["Vector"]]]["String"] & /@ r["Generators"],
             g_ /; ! group["StabilizerMemberQ", g]]];
     Dataset @ <|
         "Steane (CSS)" -> images[QECRegister[QECCode["SteaneCode"], 2]],
@@ -1442,9 +1641,9 @@ $\bar{Z}_1\bar{Z}_2$, exactly as a CNOT would. Only the $X$ half breaks:
 ```wl
 Module[{reg5 = QECRegister[QECCode["5QubitCode"], 2], act, x, z, prod},
     act = reg5["LogicalAction", 1, 2];
-    x = QECPauliString /@ reg5["LogicalVectors"]["X"];
-    z = QECPauliString /@ reg5["LogicalVectors"]["Z"];
-    prod[s1_, s2_] := QECPauliString[QECPauliProduct[s1, s2]];
+    x = (QECPauli[#]["String"] &) /@ reg5["LogicalVectors"]["X"];
+    z = (QECPauli[#]["String"] &) /@ reg5["LogicalVectors"]["Z"];
+    prod[s1_, s2_] := (QECPauli[s1] ** QECPauli[s2])["String"];
     <|"Z half behaves" -> (act[{"Z", 2, 1}] === prod[z[[1]], z[[2]]]),
       "X half behaves" -> (act[{"X", 1, 1}] === prod[x[[1]], x[[2]]])|>]
 ```
@@ -1491,7 +1690,7 @@ built from — so if you want the logical $S$ on this code, you apply the transv
 The sign is one line of Pauli algebra, and it is worth seeing on its own:
 
 ```wl
-QECPauliString[QECPauliProduct["XXXXXXX", "ZZZZZZZ"]]
+(QECPauli["XXXXXXX"] ** QECPauli["ZZZZZZZ"])["String"]
 ```
 
 <!-- => "iYYYYYYY" -->
@@ -1579,11 +1778,11 @@ the code, replace each of its locations with the corresponding gadget, and after
 gate and storage gadget put an **error correction gadget** on each block involved — never after a
 measurement gadget, because its output is classical and classical circuits are assumed not to fail.
 
-`QECFaultTolerant` is that substitution. Here is a four-location circuit — prepare two logical
+`QECFaultTolerantCircuit` is that substitution. Here is a four-location circuit — prepare two logical
 qubits, Hadamard one, CNOT them, measure both — made fault tolerant on the seven-qubit code:
 
 ```wl
-QECFaultTolerant[
+QECFaultTolerantCircuit[
     {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
     QECCode["SteaneCode"]]["Gadgets"]
 ```
@@ -1603,7 +1802,7 @@ Definition 10.6 also defines what that costs, in three ratios, so they are prope
 something you assemble yourself:
 
 ```wl
-QECFaultTolerant[
+QECFaultTolerantCircuit[
     {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
     QECCode["SteaneCode"]]["Overheads"]
 ```
@@ -1623,7 +1822,7 @@ transversal $S$:
 
 ```wl
 Union @ Map[First,
-    QECFaultTolerant[{{"R", 1}, {"S", 1}}, QECCode["SteaneCode"]]["GadgetInstructions", "Gate"]]
+    QECFaultTolerantCircuit[{{"R", 1}, {"S", 1}}, QECCode["SteaneCode"]]["GadgetInstructions", "Gate"]]
 ```
 
 <!-- => {"Sdg"} -->
@@ -1643,7 +1842,7 @@ its outcomes, and those outcomes sit in a record otherwise full of error-correct
 decoder has to be told *where*:
 
 ```wl
-Module[{ft = QECFaultTolerant[
+Module[{ft = QECFaultTolerantCircuit[
         {{"R", 1}, {"R", 2}, {"H", 1}, {"CNOT", 1, 2}, {"M", 1}, {"M", 2}},
         QECCode["SteaneCode"]]},
     <|"measurements in the whole circuit" -> ft["Measurements"],
@@ -1678,7 +1877,7 @@ meaningless first round of detectors — then runs the noisy rounds, then a nois
 
 ```wl
 Column @ Take[
-    StringSplit[QECStimCircuit[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/200], 2], "\n"],
+    StringSplit[QECStim[QECCode["BitFlipCode"], QECNoiseModel["Circuit", 1/200], 2], "\n"],
     14
 ]
 ```
@@ -1690,7 +1889,7 @@ round, and a single logical observable. Three noisy rounds of the Steane code's 
 four layers of six:
 
 ```wl
-Module[{source = QECStimCircuit[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/500], 3]},
+Module[{source = QECStim[QECCode["SteaneCode"], QECNoiseModel["Circuit", 1/500], 3]},
     {StringCount[source, "DETECTOR"], StringCount[source, "OBSERVABLE_INCLUDE"]}
 ]
 ```
@@ -1798,7 +1997,7 @@ weakest.
 ## How this is checked
 
 Nothing above is trusted because the package computed it. Every fast routine is cross-checked
-against a slow, obvious one, and the checks run as a suite of 593 tests.
+against a slow, obvious one, and the checks run as a suite of 685 tests.
 
 | What | Checked against |
 |---|---|
@@ -1823,6 +2022,12 @@ against a slow, obvious one, and the checks run as a suite of 593 tests.
 | That a transversal gate is the gate you think it is | The gate's own matrix, conjugated with the $\mathbb{Z}_4$ phase carried; the logical gate against the complex conjugate of the physical one |
 | That the assembled FT(C) computes C | The engine: the gate gadgets alone, run with no faults, must leave the blocks in the state the ideal circuit would |
 | The exported circuit | PyMatching, which decodes it unchanged |
+| The encoder and codewords | $V^\dagger V = 1$, $V V^\dagger$ against $\prod (1+g)/2$, and $V^\dagger \bar{P} V = P$ for the code's own logical operators |
+| The logical channel | The exact logical error rate, identically, and its action on a state against its own weights |
+| Knill–Laflamme, symplectically | Its dense definition over the codewords |
+| Noise read from a channel | The channel's superoperator, and the named channels' known weights |
+| A decoder object | The engine's own decoding table, entry for entry, herald filter included |
+| The retired names | The value each returned before, and one warning per session |
 
 The habit is worth keeping when extending the layer: a result checked only against the code that
 produced it is not checked.

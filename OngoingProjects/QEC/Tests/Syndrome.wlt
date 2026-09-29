@@ -29,9 +29,16 @@ Get[FileNameJoin[{
    read, so the tests would silently check the old package. *)
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliVector = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliVector"];
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliWeight = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliWeight"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecFive = {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"};
 
-qecWeightOne[n_] := QECPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[n];
+qecWeightOne[n_] := qecPauliString /@ Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[n];
 
 
 (* ============================================================================
@@ -117,7 +124,7 @@ VerificationTest[QECCode[qecFive]["SyndromeTable"]["IXIII"], {1, 0, 0, 0}, TestI
    is exactly what it is for: correcting single X errors.  The decoder's reach is
    Max[t, 1] for that reason. *)
 VerificationTest[
-    QECPauliString /@ QECCode["BitFlipCode"]["Decoder"],
+    qecPauliString /@ QECCode["BitFlipCode"]["Decoder"],
     <|{0, 0} -> "III", {1, 0} -> "XII", {1, 1} -> "IXI", {0, 1} -> "IIX"|>,
     TestID -> "QEC-Syndrome-decoder-bitflip"
 ]
@@ -178,8 +185,8 @@ VerificationTest[
         decoder = code["Decoder"];
         AllTrue[Normal[decoder],
             With[{syn = First[#], corr = Last[#]},
-                QECPauliWeight[corr] === Min[QECPauliWeight /@ Select[
-                    Prepend[Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[5], QECPauliVector["IIIII"]],
+                qecPauliWeight[corr] === Min[qecPauliWeight /@ Select[
+                    Prepend[Wolfram`QuantumFramework`QEC`PackageScope`weightOneVectors[5], qecPauliVector["IIIII"]],
                     code["Syndrome", #] === syn &
                 ]]
             ] &
@@ -278,7 +285,7 @@ VerificationTest[
 VerificationTest[
     Module[{code = QECCode[qecFive]},
         AllTrue[qecWeightOne[5],
-            code["CorrectionCycle", #]["Residual"] === QECPauliString[QECPauliProduct[#, code["CorrectionCycle", #]["Correction"]]] &
+            code["CorrectionCycle", #]["Residual"] === qecPauliString[qecPauliProduct[#, code["CorrectionCycle", #]["Correction"]]] &
         ]
     ],
     True,

@@ -299,7 +299,7 @@ VerificationTest[
    The Stim export
    ============================================================================ *)
 
-qecStim = QECStimCircuit[qecBF, QECNoiseModel["Circuit", 1/200], 2];
+qecStim = QECStim[qecBF, QECNoiseModel["Circuit", 1/200], 2];
 
 VerificationTest[
     StringQ[qecStim],
@@ -345,29 +345,29 @@ VerificationTest[
 
 VerificationTest[
     StringContainsQ[
-        QECStimCircuit[qecBF, QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/50], 1],
+        QECStim[qecBF, QECNoiseModel["Depolarizing", 1/100, "MeasurementError" -> 1/50], 1],
         "PAULI_CHANNEL_1"],
     True,
     TestID -> "QEC-CircuitNoise-stim-phenomenological-channel"
 ]
 
 VerificationTest[
-    QECStimCircuit[qecBF, QECNoiseModel["Depolarizing", 1/100], 1],
+    QECStim[qecBF, QECNoiseModel["Depolarizing", 1/100], 1],
     $Failed,
-    {QECStimCircuit::level},
+    {QECStim::level},
     TestID -> "QEC-CircuitNoise-stim-refuses-code-capacity"
 ]
 
 VerificationTest[
-    QECStimCircuit[qecBF, QECNoiseModel["Circuit", 1/200], 1, "Observable" -> "Q"],
+    QECStim[qecBF, QECNoiseModel["Circuit", 1/200], 1, "Observable" -> "Q"],
     $Failed,
-    {QECStimCircuit::observable},
+    {QECStim::observable},
     TestID -> "QEC-CircuitNoise-stim-bad-observable"
 ]
 
 (* The Y-generator path reaches Stim as its sqrt(X). *)
 VerificationTest[
-    StringContainsQ[QECStimCircuit[QECCode[{"YYI", "IYY"}], QECNoiseModel["Circuit", 1/500], 1], "SQRT_X"],
+    StringContainsQ[QECStim[QECCode[{"YYI", "IYY"}], QECNoiseModel["Circuit", 1/500], 1], "SQRT_X"],
     True,
     TestID -> "QEC-CircuitNoise-stim-sqrt-x"
 ]

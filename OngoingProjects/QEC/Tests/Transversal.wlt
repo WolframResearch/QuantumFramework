@@ -31,6 +31,11 @@ Get[FileNameJoin[{
 
 QECClearCache[];
 
+(* The row functions and helpers that the public QECPauli and QECCode["CSS", ...]
+   stand on, in PackageScope since step 5 of the API redesign. *)
+qecPauliString = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliString"];
+qecPauliProduct = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`pauliProduct"];
+
 qecScope = "Wolfram`QuantumFramework`QEC`PackageScope`";
 
 qecAction     = Symbol[qecScope <> "transversalAction"];
@@ -54,7 +59,7 @@ qecSamePhaseQ[m1_, m2_] := With[{p = Simplify[m1 . ConjugateTranspose[m2]]},
 ]
 
 (* The action table read as strings: the image of X, of Z, of Y. *)
-qecActionStrings[gate_] := QECPauliString /@ Lookup[qecAction[gate, 1], {{1, 0}, {0, 1}, {1, 1}}]
+qecActionStrings[gate_] := qecPauliString /@ Lookup[qecAction[gate, 1], {{1, 0}, {0, 1}, {1, 1}}]
 
 
 (* ============================================================================
@@ -117,8 +122,8 @@ VerificationTest[
 (* Eq. 11.22, on its own, because everything below turns on it: Y^7 is MINUS the
    logical Y, since Xbar Zbar = i Y^7 and Ybar = i Xbar Zbar. *)
 VerificationTest[
-    {QECPauliString[QECPauliProduct["XXXXXXX", "ZZZZZZZ"]],
-     QECPauliString[QECPauliProduct[{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, QECPauliProduct["XXXXXXX", "ZZZZZZZ"]]]},
+    {qecPauliString[qecPauliProduct["XXXXXXX", "ZZZZZZZ"]],
+     qecPauliString[qecPauliProduct[{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, qecPauliProduct["XXXXXXX", "ZZZZZZZ"]]]},
     {"iYYYYYYY", "-YYYYYYY"},
     TestID -> "QEC-Transversal-Y-to-the-seven-is-minus-the-logical-Y"
 ]
