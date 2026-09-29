@@ -1,0 +1,34 @@
+D1 X Bend: order, matrix dimensions, equals X (x) conj(X): {{{1, 2}, {1, 2}}, {4, 4}, True}
+D1b (-X) Bend equals X Bend: True
+D1c |+> Bend is the density vector: True
+D1d the stored state of X: output and input qudits: {1, 1}
+D2 matrix dimensions of Copy, Decohere, Discard, Measure, Encode: {{4, 2}, {2, 4}, {1, 4}, {2, 4}, {4, 2}}
+D2b Copy, Decohere, Discard matrices: {{{1, 0}, {0, 0}, {0, 0}, {0, 1}}, {{1, 0, 0, 0}, {0, 0, 0, 1}}, {{1, 0, 0, 1}}}
+D2c WSpider: order, m.m^dagger: {{{2}, {1, 2}}, {{1, 0}, {0, 2}}}
+D2d Multiplexer[] dimensions: {2, 2}
+D3 Cup state vector: {1, 0, 0, 1}
+D3b snake: Cap after Cup on a spectator wire equals the identity: True
+D4 d=4, q=p=1: 2 e^{i pi qp/d} F^2 Z X is an element; 2 e^{2 pi i qp/d} F^2 Z X is not: {True, False}
+D4b Gram matrices: d=2 is 8 I, d=4 is 16 I, d=3 is 3 I: {True, True, True}
+D4c all elements Hermitian for d=2,3,4: True
+D4d traces of the elements, d=2 and d=4: {{4, 0, 0, 0}, {4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0}}
+D4e d=2 elements: {{{2, 0}, {0, 2}}, {{0, 2}, {2, 0}}, {{2, 0}, {0, -2}}, {{0, 2*I}, {-2*I, 0}}}
+D5 qutrit: dimension after the transform and after the inverse: {9, 3}
+D5b inverse of the transform of e^{i a}|+>: state type, equals |+><+| for real a: {"Matrix", True}
+D5c d=4 complex state: inverse of the transform equals its density matrix: True
+D6 qubit H = h X: R, R.W(rho) == W(-i[H,rho]), == W(-i[H,rho])/i, column sums of R: {{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, -2*h}, {0, 0, 2*h, 0}}, True, False, {0, 0, 2*h, -2*h}}
+D6b qutrit Hermitian H: R.W(rho) == W(-i[H,rho]), column sums: {True, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+
+QuantumEvolve::error: Differential Solver failed to find a solution
+D7 QuantumEvolve[Z, phase-space |+>, t]: head: DSolveValue
+D7b QuantumEvolve[Z, phase-space |+>, {t, 0, 1}]: head, picture: {QuantumState, "PhaseSpace"}
+D7c the same with a dense state and symbolic t: head: QuantumState
+D8 QuantumWignerTransform[chan], QuantumPhaseSpaceTransform[chan]: heads: {QuantumChannel, QuantumOperator}
+D8b QuditBasis form with a wrong-size target: head and dimension; QuantumBasis form: head: {QuditBasis, 4, Failure}
+D9 Left[X] == X (x) I; Right[X] == I (x) X^T: {True, True}
+D9b Liouvillian[X] == -i(X (x) I - I (x) X^T): True
+D9c Liouvillian[X] applied to |0><0| == -i[X, |0><0|]: True
+D9d bit-flip channel Sum M rho M^dag on |0><0| == diag(3/4, 1/4): True
+D10 measurement POVMElements are the effects {e0, e1}: True
+D10b measurement operators equal Sqrt[e0], Sqrt[e1]: True
+D10c channel from the same list keeps e0, e1 as Kraus: E(|0><0|) == e0.|0><0|.e0 + e1.|0><0|.e1: True

@@ -1,0 +1,48 @@
+A1 X on wire 3 applied to |1>: {0, 0, 0, 0, 0, 1, 0, 0}
+A1b full input order of that one-element circuit: {1, 2, 3}
+
+QuantumCircuitOperator::dim: Circuit expecting dimensions {2, 3}, but the state has dimensions {2, 2}.
+A1c X[3] on wire 2 applied to |1>, a missing qutrit: $Failed
+A1d X on wire 1 applied to a qubit-qutrit state: dimensions of the result: {2, 3}
+A2 CNOT{3,1}[CNOT{3,1}] order: {{1, 3}, {1, 3}}
+A2b CNOT{2,4}[CNOT{1,2}] order: {{2, 4, 1}, {4, 1, 2}}
+A2c X1[Z2] order, matrix == X(x)Z: {{{1, 2}, {1, 2}}, True}
+A2d Heisenberg X composed with Schrodinger Z: head, picture (defect 2): {QuantumOperator, "Schrodinger"}
+A2e tensor product across pictures: head: QuantumOperator
+A2f parameter intervals on the direct path: {{\[Theta], 0, 3}}
+A2g parameter intervals on the fallback forced by a basis mismatch: {{\[Theta], 2, 3}}
+A3 QuantumTensorProduct[]: QuditBasis[<|{QuditName[\[FormalCapitalI], "Dual" -> False], 1} -> 1|>]
+A3b operator with channel: head: Failure
+A4 rep(f), rep(f dagger), rep(f)^dagger: {{{1, I}, {4, 6}}, {{1, 1}, {-I, 3/2}}, {{1, 4}, {-I, 6}}}
+A4b after Computational, rep(f dagger) == rep(f)^dagger: True
+A4c BitFlip order, Adjoint order, SuperDagger order: {{{0, 1}, {1}}, {{0, 1}, {1}}, {{0, 1}, {1}}}
+A5 trace of qudit 1 of PhiPlus: matrix, InputQudits, StateType: {{{1/2, 0}, {0, 1/2}}, 0, "Matrix"}
+A5b stored I2 with PauliX output and computational input: MatrixRepresentation: {{1/Sqrt[2], 1/Sqrt[2]}, {1/Sqrt[2], -(1/Sqrt[2])}}
+A5c its pair trace, then the same after Computational (defect 4): {{{2}}, {{0}}}
+A5d circuit X from wire 2 to wire 1 traced {{1,2}}: order, then label and order of each element (defect 3): {{{1}, {2}}, {{"Cup", {{0, 1}, {}}}, {"X", {{1}, {2}}}, {"Cap", {{}, {0, 2}}}}}
+A5e circuit X traced {{1,1}}: order: {{}, {}}
+
+TensorContract::lvreps: Contractions {{1, 3}, {1, 3}} contain repeated levels.
+A5f repeated pair: head, ValidQ, contraction left unevaluated (defect 7): {QuantumOperator, True, True}
+A6 X1 + Z2: order, matrix == X(x)I + I(x)Z: {{{1, 2}, {1, 2}}, True}
+A6b rep(1 + h) - rep(h) for PauliX output and computational input: {{-(1/Sqrt[2]) + Sqrt[2], -(1/Sqrt[2]) + Sqrt[2]}, {-(1/Sqrt[2]) + Sqrt[2], 1/Sqrt[2] - Sqrt[2]}}
+
+Thread::tdlen: Objects of unequal length in {{2, 0}, {0, 2}} + {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}} cannot be combined.
+
+Thread::tdlen: Objects of unequal length in {{2, 0}, {0, 2}} + {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}} cannot be combined.
+
+Thread::tdlen: Objects of unequal length in {{2, 0}, {0, 2}} + {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}} cannot be combined.
+
+General::stop: Further output of Thread::tdlen will be suppressed during this calculation.
+
+QuantumOperator::invalidArgs: QuantumOperator constructor {{2, 0}, {0, 2}} + {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}} did not match any rule
+A6c 2 + X[ToMatrix]: head (defect 5): Failure
+A7 PostMeasurementState qudits and matrix; qudits of each branch state: {1, {{1/2, 0}, {0, 1/2}}, {2, 2}}
+A7b measuring circuit: qco[] and qco[qs] heads: {QuantumMeasurement, QuantumMeasurement}
+A7c circuit applied to a QuantumMeasurement: head: QuantumMeasurement
+A7d Z on wire 3 applied to |1> directly, then inside a circuit: probabilities: {{0, 1}, {1, 0}}
+A8 qc[Z] elements, Z[qc] elements: {4, 3}
+
+OptionValue::nodef: Unknown option Trace for Wolfram`QuantumFramework`Properties`PackagePrivate`quantumCircuitCompile.
+A8b chan[qc]: head, with its message (defect 6): QuantumOperator
+A9 QuantumEvolve[Z, None, t]: head: QuantumOperator

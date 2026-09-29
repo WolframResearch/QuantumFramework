@@ -1,0 +1,52 @@
+register: head, keys, stabilizers -> {PauliStabilizer, {"Signs", "Tableau"}, {"ZII", "IZI", "IIZ"}}
+one gate: head, keys (packed form) -> {PauliStabilizer, {"PackedX", "PackedZ", "Signs", "Qubits"}}
+gate list: head, keys, stabilizers -> {PauliStabilizer, {"Signs", "Tableau"}, {"XXX", "ZZI", "IZZ"}}
+packed and canonical agree on the tableau -> True
+StabilizerStateQ on ps, on a dense Bell state -> {True, False}
+QuantumState[ps]: head, dimension, equals dense GHZ -> {QuantumState, 8, True}
+PauliStabilizer[QuantumState[ps]]: head, keys, same stabilizers -> {PauliStabilizer, {"Signs", "Tableau", "GlobalPhase"}, False}
+round trip keeps the global phase: PauliStabilizer[qs]['State'] == qs -> True
+PauliStabilizer of a non-stabilizer state -> Failure
+QuantumCircuitOperator[ps]: head, gates; QuantumOperator[ps]: head -> {QuantumCircuitOperator, 4, QuantumOperator}
+synthesized circuit reproduces the state -> True
+qo[ps] Clifford: head -> PauliStabilizer
+qo[ps] non-Clifford T: head -> StabilizerFrame
+
+PauliStabilizer::nonclifford: Gate GlobalPhase[0.893802] is not a Clifford operation; PauliStabilizer cannot update the tableau. Use Method -> "TensorNetwork" or "Schrodinger" for non-Clifford circuits.
+qo[ps] generic unitary: result -> $Failed
+qco[ps] Clifford circuit: head -> PauliStabilizer
+qco[] with Method Stabilizer: head -> PauliStabilizer
+qco[qs] with Method Stabilizer: head -> PauliStabilizer
+Method Stabilizer on H,T circuit: head -> StabilizerFrame
+
+PauliStabilizer::nonclifford: Gate GlobalPhase[1.35193] is not a Clifford operation; PauliStabilizer cannot update the tableau. Use Method -> "TensorNetwork" or "Schrodinger" for non-Clifford circuits.
+Method Stabilizer on a generic unitary circuit: result -> $Failed
+ps[{1}] measurement: head, keys, value heads -> {Association, {{0}, {1}}, {PauliStabilizer, PauliStabilizer}}
+deterministic measurement on |000>: keys -> {{0}}
+qmo[ps] Z on qubit 1: head, keys -> {Association, {0, 1}}
+ps expectation ZZI, XXX, ZII -> {1, 1, 0}
+inner product <000|GHZ> -> 1/Sqrt[2]
+frame: head, keys, length, qubits -> {StabilizerFrame, {"Components", "Paulis"}, 2, 3}
+frame state == dense T on GHZ -> True
+second T doubles the components -> 4
+frame + frame, c frame: heads and lengths -> {StabilizerFrame, 6, StabilizerFrame, {1 + E^((I/4)*Pi), 1 - E^((I/4)*Pi)}}
+StabilizerStateQ on a frame of length 1 and 2 -> {True, False}
+frame expectation ZZI -> ((1 - E^((-1/4*I)*Pi))*(1 - E^((I/4)*Pi)))/4 + ((1 + E^((-1/4*I)*Pi))*(1 + E^((I/4)*Pi)))/4
+
+PauliStabilizer::nonpaulibasis: Hybrid interop: the measurement/channel basis is non-Pauli; falling back to the generic circuit path.
+qmo[frame] result head -> QuantumMeasurement
+BitFlip[ps]: head, structure -> {List, {{9/10, PauliStabilizer}, {1/10, PauliStabilizer}}}
+
+PauliStabilizer::nonpaulibasis: Hybrid interop: the measurement/channel basis is non-Pauli; falling back to the generic circuit path.
+AmplitudeDamping[ps]: head -> QuantumState
+
+First::normal: Nonatomic expression expected at position 1 in First[CliffordChannel[<|UA -> {}, UB -> {{1, 1, 1, 0, 0, 0}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 0, 1, 1}}, c -> {0, 0, 0}, InputQubits -> 0, OutputQubits -> 3, Source -> PauliStabilizer|>]].
+
+Keys::invrl: The argument First[CliffordChannel[<|UA -> {}, UB -> {{1, 1, 1, 0, 0, 0}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 0, 1, 1}}, c -> {0, 0, 0}, InputQubits -> 0, OutputQubits -> 3, Source -> PauliStabilizer|>]] is not a valid Association or a list of rules.
+CliffordChannel[ps]: head, keys -> {CliffordChannel, Keys[First[CliffordChannel[<|"UA" -> {}, "UB" -> {{1, 1, 1, 0, 0, 0}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 0, 1, 1}}, "c" -> {0, 0, 0}, "InputQubits" -> 0, "OutputQubits" -> 3, "Source" -> "PauliStabilizer"|>]]]}
+GraphState: head, stabilizers, PauliStabilizer head -> {GraphState, {"XZZ", "ZXZ", "ZZX"}, PauliStabilizer}
+
+GraphState::nongraph: PauliStabilizer PauliStabilizer[<|Signs -> {1, 1, 1, 1, 1, 1}, Tableau -> {{{0, 0, 0, 1, 0, 0}, {0, 1, 0, 1, 0, 0}, {0, 1, 1, 1, 0, 0}}, {{1, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 1}, {0, 0, 0, 0, 0, 1}}}|>] is not in graph-state form (each stabilizer must have X at exactly one position and Z elsewhere). Use a local-Clifford conversion (AndBri05 Lemma 1) before calling GraphState.
+GraphState[ps] on GHZ (not graph form) -> $Failed
+LocalComplement head -> GraphState
+DONE

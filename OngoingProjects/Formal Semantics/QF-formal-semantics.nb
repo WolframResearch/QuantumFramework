@@ -1,0 +1,4261 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    159279,       4252]
+NotebookOptionsPosition[    142839,       3961]
+NotebookOutlinePosition[    143156,       3975]
+CellTagsIndexPosition[    143113,       3972]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["A formal semantics for QuantumFramework", "Title",
+ CellID->874461601,ExpressionUUID->"782f5365-32eb-4ad5-85a5-99c2ea2a7564"],
+
+Cell[TextData[{
+ "This document describes QuantumFramework (QF) 2.1.1 (kernel ",
+ Cell[BoxData[
+  RowBox[{"2", "d3c29e8"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4e61cb45-0793-4398-ae16-41d9efffe2b4"],
+ ", 2026-09-22). Sections 1 to 11 cover the finite-dimensional core: for each \
+object, what QF stores, and what QF does with the stored information for each \
+operation. The appendices hold the full nesting and return-head tables (A), \
+the constructor edge cases (B), the phase-space formulas (C), and the \
+placement against the published literature (D, the only part that cites)."
+}], "Text",
+ CellID->36768919,ExpressionUUID->"0ca60653-3dc4-4b49-9c77-b548b19f3cb8"],
+
+Cell[TextData[{
+ "One idea runs through the whole account: ",
+ StyleBox["QF represents states and transformations together with their bases \
+and subsystem structure, and then uses that information to compose them, \
+discard subsystems, and read out measurements.",
+  FontWeight->"Bold"],
+ " A single running example carries it: one object whose meaning comes from \
+its declared basis, not from its stored coefficient array alone."
+}], "Text",
+ CellID->1699946459,ExpressionUUID->"eb217e90-3745-47c3-a0b9-138cf1d72766"],
+
+Cell["1. States and operators", "Section",
+ CellID->1535504786,ExpressionUUID->"ed821ec4-dc4a-4a24-a1b6-e83c664533c6"],
+
+Cell["\<\
+A QuantumFramework state, operator, channel, or measurement is a coefficient \
+array together with the information needed to read it. That information is \
+what makes the array mean something, so it comes first: the array alone does \
+not fix what it represents.\
+\>", "Text",
+ CellID->1208482393,ExpressionUUID->"1c3d03bf-e787-4871-955a-809b1dba320d"],
+
+Cell["Take six complex numbers. The same six can be", "Text",
+ CellID->28909615,ExpressionUUID->"66512c92-dc9d-4b20-ba91-5907f3ce23f1"],
+
+Cell[TextData[{
+ "one six-level system, ",
+ Cell[BoxData[
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"c1", ",", " ", "...", ",", " ", "c6"}], "}"}], ",", " ", "6"}], 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ff6c0c8-4c34-411a-8d84-6038668637bf"],
+ ", a qudit of dimension six;"
+}], "Item",
+ CellID->193832008,ExpressionUUID->"b1488c7f-e0c3-4b71-a4b3-0ea5d4eedb59"],
+
+Cell[TextData[{
+ "a qubit together with a qutrit, ",
+ Cell[BoxData[
+  RowBox[{"QuantumState", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"c1", ",", " ", "...", ",", " ", "c6"}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"2", ",", " ", "3"}], "}"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e76189c2-4182-4ed8-be0a-133ce02b1024"],
+ ";"
+}], "Item",
+ CellID->684317082,ExpressionUUID->"0e75c595-acd9-45aa-8a82-421fe74045fa"],
+
+Cell[TextData[{
+ "a linear map from a qutrit to a qubit, the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1142b717-cfbf-4746-ac69-0a8a2250b828"],
+ " matrix with rows ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["c", "TI"], "1"], ",", 
+    SubscriptBox[
+     StyleBox["c", "TI"], "2"], ",", 
+    SubscriptBox[
+     StyleBox["c", "TI"], "3"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e9c1d8f-6f4f-4c47-94d4-70f387d390f8"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["c", "TI"], "4"], ",", 
+    SubscriptBox[
+     StyleBox["c", "TI"], "5"], ",", 
+    SubscriptBox[
+     StyleBox["c", "TI"], "6"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "241f01c9-9d50-48bb-8cbc-d48da434c449"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"c1", ",", " ", "c2", ",", " ", "c3"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"c4", ",", " ", "c5", ",", " ", "c6"}], "}"}]}], "}"}], ",", 
+    " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", "1", "}"}], ",", " ", 
+      RowBox[{"{", "2", "}"}]}], "}"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57814770-f8ab-481a-aee8-7b883e71f610"],
+ "."
+}], "Item",
+ CellID->528485616,ExpressionUUID->"00a778f4-8910-4305-aa85-e5d23f8ac8db"],
+
+Cell["\<\
+Nothing in the numbers chooses among these. The subsystem dimensions and the \
+split into what the object takes in and what it puts out decide it, and QF \
+stores exactly that: for each object, the dimensions of its subsystems, an \
+output side, an input side, and the basis on each side.\
+\>", "Text",
+ CellID->1392207227,ExpressionUUID->"67dcbae4-f308-4a2d-aa9d-c61045fd3e4f"],
+
+Cell[TextData[{
+ "The third reading, the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "784f461a-8634-4f08-b140-6ef0b9795e38"],
+ " map, lowers dimension from three levels to two. One physical operation has \
+exactly this shape: removing a photon applies the annihilation operator ",
+ Cell[BoxData[
+  StyleBox["a", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "89318454-ad37-449a-819b-85764af8461f"],
+ ", with ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["a", "TI"], 
+    TemplateBox[{
+      StyleBox["n", "TI"]},
+     "Ket"]}], "=", 
+   RowBox[{
+    SqrtBox[
+     StyleBox["n", "TI"]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["n", "TI"], "-", "1"}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "afe86e32-fc52-41b6-bfe6-f18428c7bea8"],
+ ", which on inputs of at most two photons is the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e6e0b96-e7ad-454e-a719-0fc0bcfec0ab"],
+ " matrix sending ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], ",", 
+    TemplateBox[{"1"},
+     "Ket"], ",", 
+    TemplateBox[{"2"},
+     "Ket"]}], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d95eceef-fb6d-41f3-9b8e-5b5a69a6d76d"],
+ " to ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{
+    TemplateBox[{"0"},
+     "Ket"], ",", 
+    TemplateBox[{"1"},
+     "Ket"]}], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fb899e29-4f34-4451-bf29-8854e5bd252c"],
+ ". This ",
+ ButtonBox["photon subtraction",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://www.science.org/doi/abs/10.1126/science.1146204"], None}],
+ " is heralded, conditional on detecting the removed photon, so the map does \
+not preserve the norm: it is the unnormalized operator applied to the state \
+and renormalized after the herald."
+}], "Text",
+ CellID->705466992,ExpressionUUID->"c3d3bfe0-0447-4f44-8c8f-89cd300ce49f"],
+
+Cell["\<\
+For each kind of object, three things: its ordinary quantum meaning, what QF \
+stores, and how QF uses what it stores.\
+\>", "Text",
+ CellID->1350516518,ExpressionUUID->"73a00beb-30eb-4a73-b992-2b1626e67741"],
+
+Cell[TextData[{
+ "A ",
+ StyleBox["state",
+  FontWeight->"Bold"],
+ " is a ket ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["\[Psi]", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "28a36c5f-2f2e-4d21-8ac7-402e1cc267bf"],
+ " or a density operator ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f0887e7-0bff-4692-b349-3e787aa7730b"],
+ ", and an ",
+ StyleBox["operator",
+  FontWeight->"Bold"],
+ " ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11a4f14d-1bc1-46a3-8aaf-91ed3a8041f5"],
+ " is a linear map. An operator acts in three ways:"
+}], "Text",
+ CellID->907546795,ExpressionUUID->"3daa11ba-13bc-4cbf-b559-908be1b1405e"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    TemplateBox[{
+      StyleBox["\[Psi]", "TI"]},
+     "Ket"], "\[Function]", 
+    RowBox[{
+     StyleBox["A", "TI"], 
+     TemplateBox[{
+       StyleBox["\[Psi]", "TI"]},
+      "Ket"]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    StyleBox["\[Rho]", "TI"], "\[Function]", 
+    RowBox[{
+     StyleBox["A", "TI"], 
+     StyleBox["\[Rho]", "TI"], 
+     SuperscriptBox[
+      StyleBox["A", "TI"], "\[Dagger]"]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    StyleBox["\[Rho]", "TI"], "\[Function]", 
+    RowBox[{"\[ScriptCapitalE]", 
+     RowBox[{
+      RowBox[{
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["\[Rho]", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}], "."}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->814772321,ExpressionUUID->"289ac760-b4ef-46f9-97d7-591fe268b415"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15392e93-66e0-4645-aac5-2da75f1b5ea6"],
+ " is an operator on kets; ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   StyleBox["\[Rho]", "TI"], 
+   SuperscriptBox[
+    StyleBox["A", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f074fca-2cfd-43e1-b1f6-b12df52dafee"],
+ " is the same operator acting on a density matrix by conjugation; ",
+ Cell[BoxData[
+  RowBox[{"\[ScriptCapitalE]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3df3ca74-f9fc-4d2d-b393-3866476336d2"],
+ " is a general linear map on density matrices, which need not be a single \
+conjugation, such as a channel or the generator of an open-system evolution. \
+QF represents all three with ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7721c4bd-075a-49ef-adba-fd51d5bea5c5"],
+ ": ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ff4380b-12a5-46a2-85a7-bc9e5a22e8f1"],
+ " by its matrix on kets, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   StyleBox["\[Rho]", "TI"], 
+   SuperscriptBox[
+    StyleBox["A", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e8a41ad0-3afa-4db0-9285-4a43a108af37"],
+ " by that matrix acting through conjugation, and ",
+ Cell[BoxData[
+  RowBox[{"\[ScriptCapitalE]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e8b9584e-8bac-4566-bfa4-cdb5ae70260c"],
+ " by a matrix on the operator space."
+}], "Text",
+ CellID->1054628905,ExpressionUUID->"8ac13a1e-0ab3-4fe3-8714-d6643e49d254"],
+
+Cell[TextData[{
+ "Mathematically a density operator is an operator, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["\[Rho]", "TI"], "\[Dagger]"], "\[GreaterEqual]", "0"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2780b499-dfa6-4965-bcd8-fac12b888ea4"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["\[Rho]", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1be20299-8232-4adb-a8eb-e9ac34329434"],
+ "; the two differ in how QF stores them. QF stores a ket as its amplitudes \
+with no input subsystem. It stores an ordinary operator by flattening its \
+matrix into a single coefficient vector over the output and input subsystems \
+together. It stores a density operator as a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c015fc0-8728-4046-a379-b75440860cab"],
+ " carrying matrix coefficients, a ket index and its conjugate, with no input \
+subsystem."
+}], "Text",
+ CellID->2043779557,ExpressionUUID->"a1adbc34-871c-4bc0-a170-df2a1b0e2c2b"],
+
+Cell["\<\
+So the storage records two independent things: whether the coefficients are a \
+flattened vector or a matrix, and how the subsystems split into output and \
+input. A density operator and an operator are the same kind of mathematical \
+object stored two different ways; conflating the storage with the object, or \
+calling both \"a vector,\" hides the split QF actually tracks.\
+\>", "Text",
+ CellID->17830494,ExpressionUUID->"c702f4b2-2a57-42de-a65c-4abefe1decf3"],
+
+Cell[TextData[{
+ "A ",
+ StyleBox["channel",
+  FontWeight->"Bold"],
+ " and a ",
+ StyleBox["measurement",
+  FontWeight->"Bold"],
+ " are operators with one extra output subsystem set aside, and a ",
+ StyleBox["circuit",
+  FontWeight->"Bold"],
+ " is a list of these placed on shared wires. The public objects and their \
+meanings:"
+}], "Text",
+ CellID->1589986527,ExpressionUUID->"2dbef215-6b25-40ae-985d-6fcf6ed49fa7"],
+
+Cell[BoxData[GridBox[{
+   {Cell["Object", "TableText",
+     FontWeight->Bold,ExpressionUUID->"530dc7f1-5e4e-46c9-b608-03816dea8ccc"],
+     Cell["Quantum meaning", "TableText",
+     FontWeight->Bold,ExpressionUUID->"d4605e4d-06db-4228-9bc6-5804fe55b5a7"]},
+   {Cell[TextData[Cell[BoxData["QuantumState"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "61a3f211-2d0f-4382-9834-4c9495302133"]], "TableText",ExpressionUUID->
+     "13985353-3f2d-42fb-9da0-87801cc7ad4e"], Cell[
+    "a ket, or a density operator", "TableText",ExpressionUUID->
+     "b1d3a472-27c2-44e2-b598-927af74038b5"]},
+   {Cell[TextData[Cell[BoxData["QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "d4e4ac0e-9533-4940-b917-107479bcf316"]], "TableText",ExpressionUUID->
+     "29dd0057-8bf1-417d-bc68-4e75be99fe5f"], Cell[
+    "a linear map, with an output side and an input side", "TableText",
+     ExpressionUUID->"93f6c992-4e7c-4a59-9585-880a218e1ecd"]},
+   {Cell[TextData[Cell[BoxData["QuantumChannel"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "cfbd5a3b-c5d5-49dd-ab52-76a3bafcb929"]], "TableText",ExpressionUUID->
+     "ba3505a3-8b0c-431e-a041-09e7b7bd31a1"], Cell["\<\
+a completely positive map, stored as a dilation with an environment set aside\
+\
+\>", "TableText",ExpressionUUID->"31e08602-32cd-4cae-b21e-76c13b00600c"]},
+   {Cell[TextData[Cell[BoxData[
+    "QuantumMeasurementOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "e9e19184-b31a-4018-b736-063e6f00fa48"]], "TableText",ExpressionUUID->
+     "2a2c0598-4a6c-411f-81bb-75ef7fec9b59"], Cell["\<\
+a general measurement, stored as a dilation with the outcome index kept \
+rather than traced\
+\>", "TableText",ExpressionUUID->"2ccb46b9-eb0c-41e2-92e8-3ccbba897e98"]},
+   {Cell[TextData[Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "c81697cb-050f-4ae1-8f6d-cfa51a59643c"]], "TableText",ExpressionUUID->
+     "6e5708d8-ce99-4214-b5ae-05c278f3b489"], Cell["\<\
+the result of a measurement: outcome probabilities and post-measurement states\
+\>", "TableText",ExpressionUUID->"0dcd5c91-38e4-4fdf-9c49-97e48692c958"]},
+   {Cell[TextData[Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a0ab2213-cd27-4465-8cbf-f132a779bf9f"]], "TableText",ExpressionUUID->
+     "ad76fc50-adbb-4377-a352-6a56a11668a4"], Cell[
+    "a list of the above on numbered wires, a diagram", "TableText",
+     ExpressionUUID->"66bd8e8a-f54c-4949-8da7-6b564a8f640e"]}
+  },
+  GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+  GridBoxDividers->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+  GridBoxItemSize->{"Columns" -> {
+      Scaled[0.44], 
+      Scaled[0.44]}, "Rows" -> {{Automatic}}},
+  GridBoxSpacings->{"Columns" -> {{1.5}}, "Rows" -> {{0.8}}}]], "Text",
+ CellID->943101875,ExpressionUUID->"b301367c-be06-45eb-8835-62c5dc6e3b9b"],
+
+Cell["\<\
+These heads are layers, each adding one thing to the one it contains:\
+\>", "Text",
+ CellID->67888809,ExpressionUUID->"604e48b6-60ab-4335-b4fb-1fb6987f0fd6"],
+
+Cell[BoxData[GridBox[{
+   {Cell["Layer", "TableText",
+     FontWeight->Bold,ExpressionUUID->"ea23d3ee-3a31-4a45-bf76-baf448ef1f48"],
+     Cell["What it contributes", "TableText",
+     FontWeight->Bold,ExpressionUUID->"8cdb6fa3-3249-4f86-a3fb-337546be8d57"]},
+   {Cell[TextData[{
+     Cell[BoxData["QuditBasis"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "a4ab64e2-71f2-4093-bafd-f2df22bb8d3f"],
+     ", ",
+     Cell[BoxData["QuantumBasis"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "66135ec0-e858-4996-94d5-59ae10595744"]
+    }], "TableText",ExpressionUUID->"a7bc1f4e-b186-4e4c-ba0f-3e301122a5a0"], 
+    Cell["\<\
+the basis elements and subsystem dimensions on an output side and an input \
+side, together with the picture and the parameters: everything needed to read \
+an array as a state or an operator\
+\>", "TableText",ExpressionUUID->"dc916bf8-e8d4-4845-99d7-b867df0fd804"]},
+   {Cell[TextData[Cell[BoxData["QuantumState"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "87d86e53-2635-452a-90f8-429f1fb67530"]], "TableText",ExpressionUUID->
+     "e7cf682f-816c-43f9-8a1f-cc31181467ed"], Cell[
+    "a coefficient array together with that basis", "TableText",
+     ExpressionUUID->"b3e565ad-fe74-4c50-9a4c-9589931de548"]},
+   {Cell[TextData[Cell[BoxData["QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "3afccf5e-3bf9-47a6-8f11-1beae09a88ed"]], "TableText",ExpressionUUID->
+     "f69923a3-b95f-4e7b-b6ad-efef6c3586dc"], Cell[TextData[{
+     "a ",
+     Cell[BoxData["QuantumState"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "c1ddd644-c592-4e65-a54a-e553cc34f7a4"],
+     " placed on specified output and input wires"
+    }], "TableText",ExpressionUUID->"0c0f2191-95e0-45e9-a5e9-763ca760f3ba"]},
+   {Cell[TextData[{
+     Cell[BoxData["QuantumChannel"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "9cd6365a-e819-4569-8883-c16fd8916386"],
+     ", ",
+     Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "39593526-df05-4940-b3b7-7fd63688da2e"]
+    }], "TableText",ExpressionUUID->"8fcb51d4-a84d-43e9-86fd-1e384b149b68"], 
+    Cell["\<\
+an operator with one extra output wire, read as an environment or as an \
+outcome\
+\>", "TableText",ExpressionUUID->"a309bdc1-1599-4664-8f50-0f6447febb11"]},
+   {Cell[TextData[Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "7d1b830e-bf71-40b9-956c-27ccd7181a6f"]], "TableText",ExpressionUUID->
+     "8c155a12-76bf-4be8-a72b-62e524e8430a"], Cell["\<\
+operations and their wiring, from which a method computes a result\
+\>", "TableText",ExpressionUUID->"d9659496-de1e-4b93-8db0-d45c27530513"]}
+  },
+  GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+  GridBoxDividers->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+  GridBoxItemSize->{"Columns" -> {
+      Scaled[0.44], 
+      Scaled[0.44]}, "Rows" -> {{Automatic}}},
+  GridBoxSpacings->{"Columns" -> {{1.5}}, "Rows" -> {{0.8}}}]], "Text",
+ CellID->1432876021,ExpressionUUID->"db86562d-b58c-4408-95a9-493e92cd11ff"],
+
+Cell[TextData[{
+ "The exhaustive nesting is in Appendix A. A head names a representation, not \
+a physical object. A ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e9f96a26-3576-4e0c-a9e7-7f2095b197b8"],
+ " need only have the right shape; it need not be normalized or positive, and \
+the same head holds the trace-zero output of a Liouvillian as readily as a \
+physical state. Whether an object is a valid state, a unitary, or a \
+trace-preserving channel is a separate question the constructor does not \
+ask."
+}], "Text",
+ CellID->876231958,ExpressionUUID->"ac06ee91-fa93-40e4-a08b-ab9b3b545857"],
+
+Cell["\<\
+Throughout what follows the running example is one operator on a qubit on \
+wire 1, introduced next.\
+\>", "Text",
+ CellID->1020575516,ExpressionUUID->"a4d627be-feef-454b-9800-940515498386"],
+
+Cell["\<\
+2. Coefficients and basis: stored numbers versus the represented map\
+\>", "Section",
+ CellID->1967685850,ExpressionUUID->"42dee198-82b1-40f9-99f1-4d558565dc90"],
+
+Cell[TextData[{
+ "The coefficients QF stores represent an operator in whatever basis is \
+declared; the stored matrix can differ from the operator's matrix in the \
+computational basis. Write ",
+ Cell[BoxData[
+  StyleBox["C", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7fe4de8d-1e3a-4165-b3be-65c6e1f324b8"],
+ " for the stored coefficient matrix and ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112cde6f-c78f-4f33-96d5-aaa0dc24cd89"],
+ " for the same operator's computational-basis matrix. If the columns of ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["F", "TI"], 
+   StyleBox["out",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c0f08fc1-4035-49fb-a70f-a3b9aa1fd67f"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["F", "TI"], 
+   StyleBox["in",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ed25e952-725e-4ee9-a25e-d7a842e50dc5"],
+ " are the declared output and input basis vectors, then"
+}], "Text",
+ CellID->1044562475,ExpressionUUID->"fdf04b78-a569-4dac-9942-ee0e3877c22e"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["A", "TI"], "=", 
+    SubscriptBox[
+     StyleBox["F", "TI"], 
+     StyleBox["out",
+      FontSlant->"Plain"]], "\[ThinSpace]", 
+    StyleBox["C", "TI"], "\[ThinSpace]", 
+    SubsuperscriptBox[
+     StyleBox["F", "TI"], 
+     StyleBox["in",
+      FontSlant->"Plain"], 
+     RowBox[{"-", "1"}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1653200050,ExpressionUUID->"ede81200-d461-4fc1-9039-4428f8790653"],
+
+Cell[TextData[{
+ "This needs only that the basis matrices ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["F", "TI"], 
+   StyleBox["out",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b0d6b396-f47c-4158-b0c6-b609567fbcaa"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["F", "TI"], 
+   StyleBox["in",
+    FontSlant->"Plain"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0ad5cb14-2919-47e6-8885-b74eda6749a2"],
+ " are invertible; it does not need them orthonormal. A concrete case: store ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["C", "TI"], "=", 
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "92b37d49-353e-478f-9db5-d5c5eee3c868"],
+ " and declare the basis to be the eigenbasis of ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "de68351f-fde1-425f-aa94-73e94f70d038"],
+ ", with columns ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"+"},
+    "Ket"], ",", 
+   TemplateBox[{"-"},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "156afa34-ec67-404f-85e5-4f639eb061e0"],
+ ". Then ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      TemplateBox[{"+"},
+       "Ket"], 
+      TemplateBox[{"+"},
+       "Bra"]}], "-", 
+     RowBox[{
+      TemplateBox[{"-"},
+       "Ket"], 
+      TemplateBox[{"-"},
+       "Bra"]}]}], "=", 
+    StyleBox["X", "TI"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e3931fe0-3684-4882-ae03-c9c5125eac35"],
+ ": the stored coefficients ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1eb58fdc-4286-4cc9-8f5c-ebc0ab288108"],
+ " represent the operator ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0892d636-43b2-4ad8-9224-c9fa2c3c9f49"],
+ " in the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f0a303d-f7e1-4c14-906c-6a77fce53ef0"],
+ " basis, though the same ",
+ Cell[BoxData[
+  StyleBox["C", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4431e4d-4652-4a94-8b1e-e170a517ddc8"],
+ " in the computational basis would be ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "17b1925f-6fd1-4c68-a7a0-a6c5fe362239"],
+ ". In QF this is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["R", "TI"], "="}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "65adb349-05d5-460d-93ea-581e1c1d33d9"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", 
+        RowBox[{"-", "1"}]}], "}"}]}], "}"}], ",", " ", "\"\<PauliX\>\""}], 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c0c53232-54d2-42c7-b499-abaaac0482a7"],
+ "; its stored coefficient matrix ",
+ Cell[BoxData[
+  StyleBox["C", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cf4e30ab-7412-4454-acc6-a7da749b4890"],
+ " is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fb39b9d0-4738-494c-aec5-0503163791a5"],
+ " and its computational matrix ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "79ceffc8-ed19-4f73-af0b-0e83f2b71eec"],
+ " is ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6d6f0783-7243-4358-aade-29472fb03c49"],
+ ". ",
+ Cell[BoxData[
+  StyleBox["R", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f4177f8-8eac-4ec6-a201-0becc355d3aa"],
+ " is the running operator."
+}], "Text",
+ CellID->1384978530,ExpressionUUID->"acc551bf-8089-4b7c-b66c-fa33a7fb3e18"],
+
+Cell[TextData[{
+ "Two constructions use the basis for opposite purposes, and QF keeps them \
+apart. Declaring a basis fixes what supplied numbers mean: ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "0"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", 
+        RowBox[{"-", "1"}]}], "}"}]}], "}"}], ",", " ", "\"\<PauliX\>\""}], 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "015d3c27-3fb1-4e2b-8c78-c32dd533cd16"],
+ " reads the numbers ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "72f8c35a-6d36-4266-a8ed-0e009f3d84cd"],
+ " as coefficients in the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4773396b-1daa-4890-a123-962336405aaf"],
+ " basis, and so builds ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "47607c3d-8dbf-4144-a7b8-54f0c70dbf09"],
+ ". Converting an existing object to another basis preserves the object and \
+recomputes its numbers: ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{
+    RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], ",", 
+    " ", "\"\<PauliX\>\""}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bad581cb-aa15-456f-b805-36fa13f96c35"],
+ " takes the operator ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6a10640f-42c0-409c-acce-bc6590488e00"],
+ ", already built, and re-expresses it in the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "066194b7-2ce2-41d9-bfbc-4b6966c4553f"],
+ " basis, where its stored matrix becomes ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6c9959fc-de94-4476-b4ba-026a6734e889"],
+ ". The first turns numbers into an operator; the second turns an operator \
+into different numbers for the same operator. Both reach ",
+ Cell[BoxData[
+  StyleBox["R", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d65a5a8a-84a9-4951-8924-6cd6b02b1bc2"],
+ "."
+}], "Text",
+ CellID->519689844,ExpressionUUID->"b8bf5047-372b-47af-a1e0-611cd169042a"],
+
+Cell[TextData[{
+ "A change of coordinates preserves the operator ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b4a27de5-57a2-43ba-aedf-760bed38b297"],
+ "; applying a gate changes the state. This is why QF reconciles bases before \
+it composes: coefficients on a shared subsystem cannot be contracted until \
+both sides are written in one basis. The ",
+ Cell[BoxData["QuantumBasis"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e7f2511c-5009-4af0-a2a7-77eb92154350"],
+ " also records a picture, the convention that fixes how the stored \
+coefficients are read. This account treats the Schr\[ODoubleDot]dinger, \
+Heisenberg, and phase-space pictures; the kernel also stores an interaction \
+picture, which is outside this account."
+}], "Text",
+ CellID->1609367578,ExpressionUUID->"e65c3bec-5cfa-43fc-ad66-8cf516ad2c69"],
+
+Cell["3. Maps on density matrices", "Section",
+ CellID->1541450781,ExpressionUUID->"111727e6-59f4-40db-9470-f7feb0383547"],
+
+Cell[TextData[{
+ "The map ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[Function]", "\[ScriptCapitalE]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "081b9e37-d20b-47b7-811e-49f1cbb3d804"],
+ " on density matrices is the foundation for channels, evolution, and the \
+phase-space picture. It cannot always be written as a single conjugation ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[Function]", 
+   StyleBox["A", "TI"], 
+   StyleBox["\[Rho]", "TI"], 
+   SuperscriptBox[
+    StyleBox["A", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b5f08ae8-1028-49cd-bb1b-e1e0d6d1b91f"],
+ ": a channel is a sum ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["m", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], 
+   StyleBox["\[Rho]", "TI"], 
+   SubsuperscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f5a844c-b451-4209-b3ba-7954afcb9d3f"],
+ ", and the generator of a continuous evolution is a commutator plus \
+dissipators. QF represents such a map the same way it represents an operator, \
+as a matrix of coefficients. The step that makes this possible is to turn ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d2ca4508-8692-4839-8fa9-d44c963dc9fd"],
+ " into a vector."
+}], "Text",
+ CellID->1657269721,ExpressionUUID->"b451b15a-c5db-4a84-83ad-df8ef91638ee"],
+
+Cell[TextData[{
+ "For a system of dimension ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7f98f3ae-d1e6-497a-bfe8-66006d4da30a"],
+ ", vectorization arranges the ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["d", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9387d12-9807-4c95-9fd8-22469c259d99"],
+ " elements of its ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "\[Times]", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "241c526f-3c48-470b-9a1c-5acc6834d3b6"],
+ " density matrix into a vector of length ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["d", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7f7608e7-815e-4b95-b3a2-65dfe265a7e4"],
+ ", and a map on density matrices then becomes a ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["d", "TI"], "2"], "\[Times]", 
+   SuperscriptBox[
+    StyleBox["d", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "386ebf2c-34b2-48f1-97b0-967cda0fc8d1"],
+ " matrix acting on that vector. That matrix is again a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "91256437-2832-4ad4-a95e-12070dd9103a"],
+ ", on the operator space of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "\[Times]", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8fc245d4-9624-4570-b6ff-3bc2d05b0ff1"],
+ " matrices. It is how the map is represented; applying the map need not \
+build it in full, since a tensor contraction can carry out the same action. \
+Left and right multiplication are ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{"\"\<Left\>\"", "[", "A", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ab07dde8-d69b-4945-84a1-02ea2ccc9edb"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"=", 
+   RowBox[{
+    StyleBox["A", "TI"], "\[CircleTimes]", 
+    StyleBox["I", "TI"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4234335c-0afd-40f0-a13c-a08d7eafb7c1"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{"\"\<Right\>\"", "[", "A", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "310bde5a-b2da-44cd-a2bc-e80103b8ffe1"],
+ " ",
+ Cell[BoxData[
+  RowBox[{"=", 
+   RowBox[{
+    StyleBox["I", "TI"], "\[CircleTimes]", 
+    SuperscriptBox[
+     StyleBox["A", "TI"], 
+     StyleBox["T",
+      FontFamily->"Helvetica",
+      FontSlant->"Plain"]]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "135eadf3-4f7f-4220-a2ff-7056e5890f56"],
+ "; a conjugation ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[Function]", 
+   StyleBox["A", "TI"], 
+   StyleBox["\[Rho]", "TI"], 
+   SuperscriptBox[
+    StyleBox["A", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e9e005c2-b531-4172-99b5-08b36595c11d"],
+ " combines left multiplication by ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9a3beb5-e31a-47cb-95b1-9323f9fe572a"],
+ " with right multiplication by ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["A", "TI"], "\[Dagger]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a42b8ffd-4480-4dc4-942a-f22bb96b4807"],
+ "; the generator of the von Neumann equation is ",
+ Cell[BoxData[
+  RowBox[{"QuantumOperator", "[", 
+   RowBox[{"\"\<Liouvillian\>\"", "[", "H", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54bd09ab-ccac-49e5-b8d3-bfdddae26b1a"],
+ ", the matrix of ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   StyleBox["i", "TI"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["H", "TI"], ",", "\[CenterDot]"}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "41892c6f-2340-4597-97c3-bd390a4416f6"],
+ ". The Liouvillian of ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4234f47-c722-4a8c-8694-2007ad464f57"],
+ " applied to the density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"0"},
+    "Ket"], 
+   TemplateBox[{"0"},
+    "Bra"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10781922-758d-46cc-9a3d-6ed61a359b29"],
+ " returns the commutator, a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ef4413d0-099f-4562-bf45-dde8eba35902"],
+ " of trace zero:"
+}], "Text",
+ CellID->1140508347,ExpressionUUID->"b73ca98b-f709-4cd0-89f0-ba841ea47b10"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox[
+     RowBox[{"QuantumOperator", 
+      StyleBox["[",
+       SpanMaxSize->1], 
+      RowBox[{"\<\"Liouvillian\"\>", 
+       RowBox[{
+        StyleBox["[",
+         SpanMaxSize->1], "\<\"X\"\>", 
+        StyleBox["]",
+         SpanMaxSize->1]}]}], 
+      StyleBox["]",
+       SpanMaxSize->1]}],
+     FontFamily->"Courier",
+     FontSlant->"Plain"], 
+    StyleBox["[",
+     FontSize->1.2 Inherited], 
+    RowBox[{
+     TemplateBox[{"0"},
+      "Ket"], 
+     TemplateBox[{"0"},
+      "Bra"]}], 
+    StyleBox["]",
+     FontSize->1.2 Inherited]}], "=", 
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{
+      StyleBox["i", "TI"], "[", 
+      RowBox[{
+       StyleBox["X", "TI"], ",", 
+       RowBox[{
+        TemplateBox[{"0"},
+         "Ket"], 
+        TemplateBox[{"0"},
+         "Bra"]}]}], "]"}]}], "=", 
+    RowBox[{
+     RowBox[{"(", GridBox[{
+        {"0", 
+         StyleBox["i", "TI"]},
+        {
+         RowBox[{"-", 
+          StyleBox["i", "TI"]}], "0"}
+       }], ")"}], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->496109794,ExpressionUUID->"bc5b1d00-c0aa-4248-bb79-c081b0d6baf5"],
+
+Cell[TextData[{
+ "The stored coefficients and this matrix are the same numbers read with \
+different indices. To build the matrix that acts on the vectorized density \
+operator, QF reshapes the stored coefficient array and swaps its two index \
+groups (the property ",
+ Cell[BoxData["\"\<StateMatrix\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e9e67494-a75c-4d96-9fff-088acaa3ca15"],
+ "); the numbers do not change, only their arrangement. Two steps are worth \
+separating: ",
+ Cell[BoxData["\"\<Bend\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2fb4b643-25ad-482a-9c5c-6d3966eaa16c"],
+ " forms the density matrix, from a ket as ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"], 
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Bra"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6524e5fe-81b1-4cc1-8c2f-929512976c72"],
+ " and from a stored matrix as itself, then vectorizes it into the ",
+ Cell[BoxData["\"\<DensityVector\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ceac0db-2e67-4de4-855f-866f3a7b1e0a"],
+ " of length ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["d", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ba0779ee-20f2-4433-b3fa-e57a004b130a"],
+ "; ",
+ Cell[BoxData["\"\<Double\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c1015ff-0fc0-4001-98f6-d5b3a6eff4f5"],
+ " additionally interleaves the axes so each subsystem sits beside its \
+conjugate, the arrangement the maps above act on."
+}], "Text",
+ CellID->108435171,ExpressionUUID->"8880a569-8322-4beb-9f03-579539f8c2cd"],
+
+Cell[TextData[{
+ "Three things now share one model. A channel is the map ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[Function]", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["m", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], 
+   StyleBox["\[Rho]", "TI"], 
+   SubsuperscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "afa7ab15-1703-4dd8-a7be-4b4d31cd1a3a"],
+ ", an operator-space matrix that QF stores as a dilation with an environment \
+rather than as the matrix itself. A continuous evolution integrates the map \
+generated by the Liouvillian, or by the Lindbladian when there are \
+dissipators. The phase-space picture is a change of coordinates of this same \
+matrix. Each is the same operator-space representation read or generated \
+differently, not a separate mechanism."
+}], "Text",
+ CellID->829388421,ExpressionUUID->"242f6f98-bc46-4569-a2a8-b706f18d9170"],
+
+Cell["4. Combining objects", "Section",
+ CellID->203008389,ExpressionUUID->"7a5a9e83-94f1-4939-bad0-9c41bf8269f9"],
+
+Cell["\<\
+Apply, compose, tensor, adjoint, and discard, each with what QF does to \
+perform it.\
+\>", "Text",
+ CellID->1090263105,ExpressionUUID->"abf002b1-9638-4997-98d3-472f5ea5db4d"],
+
+Cell[BoxData[GridBox[{
+   {Cell["Operation", "TableText",
+     FontWeight->Bold,ExpressionUUID->"b92422ff-0027-4ec2-b007-6efe0a4195d0"],
+     Cell["Meaning", "TableText",
+     FontWeight->Bold,ExpressionUUID->"440c93a6-52f7-4414-ba4c-b9e0388ac126"],
+     Cell["What QF adds", "TableText",
+     FontWeight->Bold,ExpressionUUID->"6746b367-80c4-4ae6-939d-ac45ce4acfa9"]},
+   {Cell["Apply to a ket", "TableText",ExpressionUUID->
+     "5b9b45a7-30b0-4cae-a370-32d655030c02"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      StyleBox["A", "TI"], 
+      TemplateBox[{
+        StyleBox["\[Psi]", "TI"]},
+       "Ket"]}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "f5a1cdb3-e77d-44f5-8023-526ebd88bd5e"]], "TableText",ExpressionUUID->
+     "2776b7cf-60dd-4028-a752-0c607bd48d1a"], Cell["\<\
+reads the state on the input wires, carries untouched wires unchanged, \
+reconciles the basis\
+\>", "TableText",ExpressionUUID->"8b601715-cf13-4fd5-9b8e-e7cc256696b4"]},
+   {Cell["Apply to a density matrix", "TableText",ExpressionUUID->
+     "b6cefeb3-d24c-4abb-9977-fca6a43568a3"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      StyleBox["A", "TI"], 
+      StyleBox["\[Rho]", "TI"], 
+      SuperscriptBox[
+       StyleBox["A", "TI"], "\[Dagger]"]}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "1d7071d5-0465-493c-8cd9-a3d23b24eb46"]], "TableText",ExpressionUUID->
+     "9a39a568-2546-4691-b614-0039d45a16e1"], Cell[
+    "the same, on the stored density coefficients", "TableText",
+     ExpressionUUID->"38cd7d8d-2f3b-4b6a-96cd-ee9a8d0e4356"]},
+   {Cell[TextData[{
+     "Compose (",
+     Cell[BoxData[
+      StyleBox["B", "TI"]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "2f586442-e7fc-418d-be3e-e21d3dbb65f8"],
+     " then ",
+     Cell[BoxData[
+      StyleBox["A", "TI"]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "263ff5cf-0747-42ff-8b1c-fb1276e1da41"],
+     ")"
+    }], "TableText",ExpressionUUID->"66b09634-146b-4e6d-8c2b-3057054a1d93"], 
+    Cell[TextData[Cell[BoxData[
+     StyleBox[
+      RowBox[{"A", "B"}], "TI"]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "1b69d84e-3c7a-4803-a7e6-3d373e0fa202"]], "TableText",ExpressionUUID->
+     "97ec8634-a147-468f-934e-d1b1311939e0"], Cell[
+    "contracts the shared wire, aligning bases first", "TableText",
+     ExpressionUUID->"59c7ae51-e2f5-4c0a-b3dd-66fdd7cfde53"]},
+   {Cell["Tensor", "TableText",ExpressionUUID->
+     "b2fdc1df-79d9-4266-adca-f8eb7bdfe41f"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      StyleBox["A", "TI"], "\[CircleTimes]", 
+      StyleBox["B", "TI"]}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "caafe378-f741-4f1c-b613-818b2d908367"]], "TableText",ExpressionUUID->
+     "53750381-761a-4103-b2cd-7cb69607169d"], Cell[
+    "places on disjoint wires, renumbering to avoid clashes", "TableText",
+     ExpressionUUID->"c57e82d5-a9be-4b99-97d7-72232f80ba6e"]},
+   {Cell["Adjoint", "TableText",ExpressionUUID->
+     "5befe7a3-28ea-40a6-9df7-a61889c1cfd6"], Cell[TextData[Cell[BoxData[
+     SuperscriptBox[
+      StyleBox["A", "TI"], "\[Dagger]"]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "aaebf00b-12b1-489e-8e69-ec637f5ec0d1"]], "TableText",ExpressionUUID->
+     "99ee4a22-65cd-4589-8945-0a326daa63cb"], Cell["\<\
+swaps input and output and conjugates; the physical adjoint only on \
+orthonormal bases\
+\>", "TableText",ExpressionUUID->"16bc7fbc-b13a-48a2-b137-bb5347e40df7"]},
+   {Cell["Discard a subsystem", "TableText",ExpressionUUID->
+     "286d6fdd-d2cf-453d-a759-15578642d606"], Cell[TextData[Cell[BoxData[
+     RowBox[{
+      SubscriptBox[
+       StyleBox["Tr",
+        FontSlant->"Plain"], 
+       StyleBox["B", "TI"]], 
+      StyleBox["\[Rho]", "TI"]}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "64c9bc25-161e-4017-af37-d3b35e4d3047"]], "TableText",ExpressionUUID->
+     "d9c04fce-ecf6-4ba0-a779-7b82f9aef794"], Cell[
+    "contracts the discarded subsystem's row and column indices", "TableText",
+     ExpressionUUID->"ae5a7d46-9489-4cc5-9f9f-fe52581bfeb9"]}
+  },
+  GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+  GridBoxDividers->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+  GridBoxItemSize->{"Columns" -> {
+      Scaled[0.3], 
+      Scaled[0.1], 
+      Scaled[0.5]}, "Rows" -> {{Automatic}}},
+  GridBoxSpacings->{"Columns" -> {{1.5}}, "Rows" -> {{0.8}}}]], "Text",
+ CellID->1560876240,ExpressionUUID->"9442591b-b5f4-4b66-9b89-70f0a551481d"],
+
+Cell[TextData[{
+ StyleBox["Applying.",
+  FontWeight->"Bold"],
+ " An operator acts on the wires it names and leaves the rest alone. Pauli ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ea82500-a766-492a-9312-1b1ee67c4540"],
+ " on qubit 1 of a two-qubit register sends ",
+ Cell[BoxData[
+  TemplateBox[{"00"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5a820f68-39e0-4ccf-aeb5-6be70c8f5d7d"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"10"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "317b670f-9f95-4646-9641-b68a38157f11"],
+ ": QF puts an identity on qubit 2 and matches the dimension on qubit 1. If \
+the state has fewer qubits than the operator reaches, QF pads it with ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "65425b5b-b48f-4b85-a361-7a3386d803b5"],
+ " on the missing wires. On a density matrix the same operator gives ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["X", "TI"], 
+   StyleBox["\[Rho]", "TI"], 
+   SuperscriptBox[
+    StyleBox["X", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a6231f46-e1cf-4277-9ca9-efe4d887c70a"],
+ ". The result carries a basis of its own, so its stored amplitudes need not \
+be its computational amplitudes; applying ",
+ Cell[BoxData[
+  StyleBox["R", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ebc32e97-4c67-4a00-8782-9cad5af986c1"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "571c22b9-38b5-4c37-934e-cbd1bfae6e25"],
+ " gives ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d665df66-ee41-4c0f-a46b-2955765d60c3"],
+ ", stored as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "/", 
+   SqrtBox["2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66ae52df-2762-486b-9dc3-1ed9d7d30df0"],
+ " in the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8c86577d-0567-449a-b059-9aafd6bd6abc"],
+ " basis."
+}], "Text",
+ CellID->176337227,ExpressionUUID->"62b2b129-2562-4a28-93ab-6272ff568551"],
+
+Cell["\<\
+Applying runs as a short sequence, and the other operations share its shape. \
+QF reads which wires the operator and the state have in common and their \
+dimensions; writes both on a common basis, changing coordinates when the \
+shared wires carry different ones; takes the amplitude form for a ket and the \
+vectorized form for a density matrix; contracts the shared wires; and \
+rebuilds the result as a new object carrying its own basis and wire orders. \
+Compose, tensor, and trace are the same steps with a different contraction, \
+and a method runs this for a whole circuit at once.\
+\>", "Text",
+ CellID->807053435,ExpressionUUID->"c1b7935f-57dd-497b-b97a-d8e64ab89b82"],
+
+Cell[TextData[{
+ StyleBox["Composing.",
+  FontWeight->"Bold"],
+ " Applying ",
+ Cell[BoxData[
+  StyleBox["B", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35cd2a51-2268-4cbd-bcd9-0a30a8f4dacd"],
+ " then ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "22905977-65b0-49df-9f94-26d25f1d49e7"],
+ " is the matrix product ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"A", "B"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c06aa8f8-0a47-4e37-9025-5c5abc02dd64"],
+ ","
+}], "Text",
+ CellID->1633675818,ExpressionUUID->"7d1e340d-0d4d-4a3d-80fa-29902ee08efa"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      StyleBox[
+       RowBox[{"A", "B"}], "TI"], 
+      StyleBox[")",
+       SpanMaxSize->1]}], 
+     StyleBox[
+      RowBox[{"i", "k"}], "TI"]], "=", 
+    UnderscriptBox["\[Sum]", 
+     StyleBox["j", "TI"],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     StyleBox["A", "TI"], 
+     StyleBox[
+      RowBox[{"i", "j"}], "TI"]], "\[ThinSpace]", 
+    SubscriptBox[
+     StyleBox["B", "TI"], 
+     StyleBox[
+      RowBox[{"j", "k"}], "TI"]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1828793009,ExpressionUUID->"e2f750dd-e3c6-4b91-ad0b-f02d02be1765"],
+
+Cell[TextData[{
+ "The summed index ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "de8737db-7f96-43cc-8c35-d1eea6d6ea7e"],
+ " runs over the basis of the shared subsystem, the one ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ef5f5da-f8ae-4c26-8e77-ae1df25ae2cd"],
+ " takes as input and ",
+ Cell[BoxData[
+  StyleBox["B", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c10dcb60-fda0-4cc3-a936-38dcf8e7c531"],
+ " produces as output. QF contracts that subsystem, keeps every subsystem the \
+contraction does not touch (the remaining outputs and inputs of both \
+operands), and on the shared subsystem writes both operators in one basis \
+before summing. When the two operators overlap only partially, this is the \
+general rule: composing a two-qubit gate on wires 1 and 2 with a one-qubit \
+gate on wire 2 contracts wire 2 and leaves wire 1's output and the two-qubit \
+gate's other input in place. Maps on density matrices compose by the same \
+contraction on the operator space, so a channel after a channel, or a gate \
+after a channel, is one more contraction."
+}], "Text",
+ CellID->1232986364,ExpressionUUID->"0ceced26-c386-47d2-9396-37365e449aa4"],
+
+Cell[TextData[{
+ "That basis step is where the stored coefficients matter. Compose ",
+ Cell[BoxData[
+  StyleBox["Z", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "709214c0-26a2-4f45-8662-1e15cf1e014d"],
+ " after ",
+ Cell[BoxData[
+  StyleBox["R", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "79d3aba4-e75f-4ab5-b5fe-6fac87fa0258"],
+ ", whose stored coefficient matrix is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ccda0024-dce7-444d-8a80-516b74325172"],
+ " although the operator is ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0d40bf1e-6e8f-403e-bf65-6299e2ca8f27"],
+ ". Contracting the stored numbers as they sit would give ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Z", "TI"], 
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1059d861-8cae-4e86-85f5-1e17692dcfa9"],
+ ", the wrong operator. QF reconciles the bases and returns ",
+ Cell[BoxData[
+  StyleBox[
+   RowBox[{"Z", "X"}], "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9bfd0f0a-77c3-43fd-92fa-1f8a39e2d150"],
+ ","
+}], "Text",
+ CellID->762269937,ExpressionUUID->"7a8dbc07-f0ba-4639-ba11-2ceeb7886488"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Z", "TI"], 
+    StyleBox["X", "TI"], "=", "(", GridBox[{
+      {"0", "1"},
+      {
+       RowBox[{"-", "1"}], "0"}
+     }], ")"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->405213039,ExpressionUUID->"121e8cab-668c-4578-a5ed-c451a05dadf8"],
+
+Cell[TextData[{
+ StyleBox["Adjoint.",
+  FontWeight->"Bold"],
+ " ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["A", "TI"], "\[Dagger]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dad0259-b2db-4925-8631-c67c4ca6e19d"],
+ " swaps the input and output sides and conjugate-transposes the \
+coefficients. This is the physical adjoint only when the bases are \
+orthonormal. In general, with Gram matrices ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["G", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["F", "TI"], "\[Dagger]"], 
+   StyleBox["F", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49788b55-f5c6-4b62-b63f-ddda87842acd"],
+ " on each side, the adjoint of the represented map has coefficients ",
+ Cell[BoxData[
+  RowBox[{
+   SubsuperscriptBox[
+    StyleBox["G", "TI"], 
+    StyleBox["in",
+     FontSlant->"Plain"], 
+    RowBox[{"-", "1"}]], "\[ThinSpace]", 
+   SuperscriptBox[
+    StyleBox["C", "TI"], "\[Dagger]"], "\[ThinSpace]", 
+   SubscriptBox[
+    StyleBox["G", "TI"], 
+    StyleBox["out",
+     FontSlant->"Plain"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "38087f86-3dde-43a4-b926-91c57baced14"],
+ ", and QF omits the Gram factors, so on a non-orthonormal basis one first \
+changes to the computational basis."
+}], "Text",
+ CellID->2118931930,ExpressionUUID->"b0a299d2-a55c-48f1-bea1-7ed876b221f6"],
+
+Cell[TextData[{
+ StyleBox["Tensor product.",
+  FontWeight->"Bold"],
+ " ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], "\[CircleTimes]", 
+   StyleBox["B", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3a49add9-0daa-4ae1-a929-bd1f2b914473"],
+ " places the two operators on disjoint wires, renumbering ",
+ Cell[BoxData[
+  StyleBox["B", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e354bde0-52b0-423b-8d75-24f94a639734"],
+ "'s wires so none clashes; the pictures are not checked for compatibility, \
+and the first operand's picture is adopted."
+}], "Text",
+ CellID->1039057480,ExpressionUUID->"c1f6d5f5-72c7-4dc6-a94c-e40073f86173"],
+
+Cell[TextData[{
+ StyleBox["Discarding.",
+  FontWeight->"Bold"],
+ " The partial trace has one rule per object. On a density matrix, discarding \
+a subsystem sums over the matching row and column indices of that subsystem, ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["Tr",
+     FontSlant->"Plain"], 
+    StyleBox["B", "TI"]], 
+   StyleBox["\[Rho]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "afbf0515-7fff-4f80-9904-4cd25f83db5b"],
+ ". On an operator, a trace pair contracts one output wire against one input \
+wire; the two wires must carry the same basis, or the result is the trace of \
+the stored coefficients rather than the trace of the map. On a circuit, the \
+trace is drawn as a cap: a wire that closes the two ends into a loop."
+}], "Text",
+ CellID->1411198270,ExpressionUUID->"f728d1c6-977d-4ace-9c03-7eeda6c581d9"],
+
+Cell[TextData[{
+ StyleBox["Circuits.",
+  FontWeight->"Bold"],
+ " A circuit is the composition of its listed operations on numbered wires, \
+applied in order. QF composes them by the same contraction, so the circuit is \
+one object; a method turns the diagram into a value."
+}], "Text",
+ CellID->1703453532,ExpressionUUID->"3b7afd79-b891-4105-b90d-ba720f4d03ed"],
+
+Cell[TextData[{
+ StyleBox["The correctness requirement for composition.",
+  FontWeight->"Bold"],
+ " Convert the composed object to its computational matrix and you get the \
+product of the two operators' computational matrices, once both are placed on \
+a common register with identities on the untouched subsystems and their bases \
+are aligned. This holds for any invertible basis matrices on the shared \
+subsystems, and it rests entirely on the change-of-basis step."
+}], "Text",
+ CellID->1477609488,ExpressionUUID->"10b17f37-523a-4645-8868-8cb7acb82959"],
+
+Cell["\<\
+Composition needs the shared subsystems to carry the same dimensions. A \
+dimension mismatch is refused. A mismatch between the Schr\[ODoubleDot]dinger \
+and Heisenberg pictures is not refused; it is silently resolved to the Schr\
+\[ODoubleDot]dinger picture. A phase-space operand instead fails on a \
+dimension mismatch.\
+\>", "Text",
+ CellID->1030824397,ExpressionUUID->"b14f8880-245c-4d9b-a72e-d8cb1b25a632"],
+
+Cell["5. Channels and measurements", "Section",
+ CellID->100031176,ExpressionUUID->"746f0264-b4c7-45c1-95c0-8f7e9feaaf4d"],
+
+Cell["\<\
+A channel and a measurement both come from a family of operators, but the \
+family means different things and the list constructors read it differently. \
+That difference fixes the physical object the user creates.\
+\>", "Text",
+ CellID->144223354,ExpressionUUID->"d29b3ef7-0068-441f-bd15-d8e9fe1e2485"],
+
+Cell[TextData[{
+ "A ",
+ StyleBox["channel",
+  FontWeight->"Bold"],
+ " is the map ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "\[Function]", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["m", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], 
+   StyleBox["\[Rho]", "TI"], 
+   SubsuperscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07c0455f-9c16-49c3-92d0-fea0dffe9b65"],
+ ", the ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["M", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "637ac333-fcc4-4d8c-828b-71f7979d0627"],
+ " its Kraus operators. ",
+ Cell[BoxData[
+  RowBox[{"QuantumChannel", "[", 
+   RowBox[{"{", 
+    RowBox[{"M1", ",", " ", "M2", ",", " ", "..."}], "}"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d8e874ea-efb3-46ed-a3c3-a64e744a6356"],
+ " reads the list as Kraus operators directly. QF stores the family as one \
+operator with an extra output subsystem,"
+}], "Text",
+ CellID->1443527617,ExpressionUUID->"62c2bf53-f4f7-4ea5-8b97-a5e09519c163"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["V", "TI"], "=", 
+    RowBox[{
+     UnderscriptBox["\[Sum]", 
+      StyleBox["m", "TI"],
+      LimitsPositioning->False], 
+     RowBox[{
+      TemplateBox[{
+        StyleBox["m", "TI"]},
+       "Ket"], "\[CircleTimes]", 
+      SubscriptBox[
+       StyleBox["M", "TI"], 
+       StyleBox["m", "TI"]]}]}]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->311511756,ExpressionUUID->"736f0682-f03f-4178-9c36-74ef4fad596d"],
+
+Cell[TextData[{
+ "the Kraus operators stacked along that index; discarding the index, the \
+environment, and tracing it out returns the map. This is the Stinespring \
+form: a dilation followed by a trace. ",
+ Cell[BoxData[
+  StyleBox["V", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ed79de6a-7627-498d-8c93-a06b974dc183"],
+ " is an isometry, and the map preserves the trace, exactly when ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["m", "TI"],
+    LimitsPositioning->False], 
+   SubsuperscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"], "\[Dagger]"], 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], "=", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d2b74a0e-36a7-447a-b2d1-e47ef11726b3"],
+ ", which QF does not check at construction and exposes as ",
+ Cell[BoxData["\"\<TracePreservingQ\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d00684a-31a4-4d73-8722-b74a075b007d"],
+ "; a channel built from an arbitrary list is completely positive but need \
+not preserve the trace. On the running qubit, the bit-flip channel ",
+ Cell[BoxData[
+  RowBox[{"QuantumChannel", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Sqrt", "[", 
+       RowBox[{"3", "/", "4"}], "]"}], " ", "I"}], ",", " ", 
+     RowBox[{
+      RowBox[{"Sqrt", "[", 
+       RowBox[{"1", "/", "4"}], "]"}], " ", "X"}]}], "}"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c8532eb-61d7-4792-80f1-10a89382ad96"],
+ " sends ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"0"},
+    "Ket"], 
+   TemplateBox[{"0"},
+    "Bra"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "153c2512-468a-4c84-a3b0-0bbc1c4ec4e6"],
+ " to ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{"3", "/", "4"}], ",", 
+    RowBox[{"1", "/", "4"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1bb688df-daf4-486a-a380-33a165c2070b"],
+ "."
+}], "Text",
+ CellID->1381425643,ExpressionUUID->"3c2c100d-56c9-42e2-9f14-d4176050d697"],
+
+Cell[TextData[{
+ "A ",
+ StyleBox["measurement",
+  FontWeight->"Bold"],
+ " is read branch by branch. With measurement operators ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["M", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d231c40-7382-466f-9940-11b138798b15"],
+ " acting on a state ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f66575b4-fecc-4fc3-9b23-16041fade3dc"],
+ " by"
+}], "Text",
+ CellID->377280352,ExpressionUUID->"af167b6f-9bb3-448f-9eb3-39697c4e6dbe"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[ScriptCapitalI]", 
+     StyleBox["m", "TI"]], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    StyleBox["\[Rho]", "TI"], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    SubscriptBox[
+     StyleBox["M", "TI"], 
+     StyleBox["m", "TI"]], 
+    StyleBox["\[Rho]", "TI"], 
+    SubsuperscriptBox[
+     StyleBox["M", "TI"], 
+     StyleBox["m", "TI"], "\[Dagger]"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["p", "TI"], 
+     StyleBox["m", "TI"]], "=", 
+    RowBox[{
+     StyleBox["Tr",
+      FontSlant->"Plain"], 
+     SubscriptBox["\[ScriptCapitalI]", 
+      StyleBox["m", "TI"]], 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      StyleBox["\[Rho]", "TI"], 
+      StyleBox[")",
+       SpanMaxSize->1]}]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Rho]", "TI"], 
+     StyleBox["m", "TI"]], "=", 
+    RowBox[{
+     FractionBox[
+      RowBox[{
+       SubscriptBox["\[ScriptCapitalI]", 
+        StyleBox["m", "TI"]], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["\[Rho]", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}], 
+      SubscriptBox[
+       StyleBox["p", "TI"], 
+       StyleBox["m", "TI"]]], " ", 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      RowBox[{
+       SubscriptBox[
+        StyleBox["p", "TI"], 
+        StyleBox["m", "TI"]], ">", "0"}], 
+      StyleBox[")",
+       SpanMaxSize->1]}]}]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1717363484,ExpressionUUID->"3b837036-96c3-48fc-92b5-63280449a7ce"],
+
+Cell[TextData[{
+ "four things are distinct and QF keeps them distinct: the unnormalized \
+branch ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox["\[ScriptCapitalI]", 
+    StyleBox["m", "TI"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3ee3a09f-bfb3-4656-a796-e32ec3bfa2f9"],
+ ", its probability ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["p", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f19088fa-ea7c-4139-bea3-4a7a1b5199c0"],
+ ", the conditional state ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "96540cdf-dda8-48a3-92fe-0301d2ada0d8"],
+ ", and the state ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["m", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox["\[ScriptCapitalI]", 
+    StyleBox["m", "TI"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fec612f0-2b32-4a7c-b68c-524b159ed762"],
+ " obtained by ignoring the outcome. The probabilities alone come from the \
+effects ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["E", "TI"], 
+    StyleBox["m", "TI"]], "=", 
+   SubsuperscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"], "\[Dagger]"], 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c969ccbc-1720-481b-8c79-b5d7fba6aa17"],
+ ", a positive operator-valued measure (POVM), through the Born rule ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["p", "TI"], 
+    StyleBox["m", "TI"]], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["E", "TI"], 
+     StyleBox["m", "TI"]], 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30e9bbbd-9402-415e-8d64-c08a84945971"],
+ "; the POVM fixes the probabilities but not the disturbance, since many \
+measurement operators share one effect."
+}], "Text",
+ CellID->1781880651,ExpressionUUID->"ba4f843e-a382-4ca3-bf5b-a01a40900bfb"],
+
+Cell[TextData[{
+ "The list constructors read a measurement's family as effects, not as Kraus \
+operators. ",
+ Cell[BoxData[
+  RowBox[{"QuantumMeasurementOperator", "[", 
+   RowBox[{"{", 
+    RowBox[{"E1", ",", " ", "E2", ",", " ", "..."}], "}"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f1803c2d-c1a0-4258-9e84-7879dfaf80a4"],
+ " takes the ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["E", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "71c9b96d-6ec1-4940-91d4-486c2aa11912"],
+ " to be POVM effects and forms each measurement operator as the matrix \
+square root ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], "=", 
+   SqrtBox[
+    SubscriptBox[
+     StyleBox["E", "TI"], 
+     StyleBox["m", "TI"]]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8e2dbb2a-0d23-40ff-94a2-bab2b12fe0a7"],
+ ", the canonical choice. The stored measurement operators are these ",
+ Cell[BoxData[
+  SqrtBox[
+   SubscriptBox[
+    StyleBox["E", "TI"], 
+    StyleBox["m", "TI"]]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e89e15e2-4cc6-45c9-bf42-f00dec58bb12"],
+ ". ",
+ Cell[BoxData["\"\<POVMElements\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "440028ba-602a-48dd-ba21-6ac0702f3085"],
+ " returns the effects, rescaled so their sum has unit mean diagonal; it \
+returns them verbatim only when the supplied effects already sum that way. An \
+observable is its own construction: ",
+ Cell[BoxData[
+  RowBox[{"QuantumMeasurementOperator", "[", "obs", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d613b1ca-113f-4844-832e-dcb1df7abe4e"],
+ " measures a Hermitian operator in its eigenbasis. So the same list of \
+matrices builds a different object under ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dee5bcc2-a79c-4217-a5db-8aea0b150529"],
+ ", where it is Kraus operators, than under ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "28a0dd42-36c7-4904-a060-b12b9af3725e"],
+ ", where it is effects."
+}], "Text",
+ CellID->1536527082,ExpressionUUID->"8d2dbef9-b193-49c6-a8a2-8fff6bb13e4f"],
+
+Cell[TextData[{
+ "The measurement stores its family as the same ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["V", "TI"], "=", 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     StyleBox["m", "TI"],
+     LimitsPositioning->False], 
+    RowBox[{
+     TemplateBox[{
+       StyleBox["m", "TI"]},
+      "Ket"], "\[CircleTimes]", 
+     SubscriptBox[
+      StyleBox["M", "TI"], 
+      StyleBox["m", "TI"]]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d1b53027-e0ba-490f-98df-5461bea9e53c"],
+ ", now with the extra index kept to carry the outcome. This is where the \
+QF-specific semantics lives: the extra index can be kept as a live wire, a \
+bare isometry with nothing measured yet; discarded, the channel above; or \
+read, the measurement. Kept, the branches stay coherent in ",
+ Cell[BoxData[
+  StyleBox["V", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6fcacba5-e660-47f0-b482-e8de806490b2"],
+ " and record no classical outcome; the outcome becomes classical only once \
+the index is read."
+}], "Text",
+ CellID->1621535814,ExpressionUUID->"d1f24231-2d12-45a9-9f59-f6d006cf20a7"],
+
+Cell[TextData[{
+ "Read, applying the measurement returns a ",
+ Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0b55144a-bff3-4d9d-8a67-237a72a4c997"],
+ " exposing ",
+ Cell[BoxData["\"\<Probabilities\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b46bba71-13d4-4c97-9caf-93cad74aad9b"],
+ ", ",
+ Cell[BoxData["\"\<States\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d6485aa4-b6a6-4a28-b1db-429f83f89f43"],
+ ", and ",
+ Cell[BoxData["\"\<PostMeasurementState\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f9ccacad-f498-4611-89db-905ac20f94bb"],
+ ". ",
+ Cell[BoxData["\"\<Probabilities\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fe32530b-4d91-44f4-98e8-083c32621743"],
+ " is the Born distribution, an association keyed by outcome; the bare vector \
+is ",
+ Cell[BoxData["\"\<ProbabilitiesList\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8fa3eb40-376d-43f3-a489-d9749555650b"],
+ ", and returning either is not sampling a single outcome. ",
+ Cell[BoxData["\"\<States\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c7126764-e5ff-4990-9e54-2737765d66ad"],
+ " returns the branch states on the full register, not the normalized \
+conditional states ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35ca500d-fed5-49aa-85f9-d986ed8a12bb"],
+ ". For a pure input each branch comes back as the unnormalized ket ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox["m", "TI"]], 
+   TemplateBox[{
+     StyleBox["\[Psi]", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "92981d5f-f76e-4a00-97e2-7c08d35b7a03"],
+ ", of norm ",
+ Cell[BoxData[
+  SqrtBox[
+   SubscriptBox[
+    StyleBox["p", "TI"], 
+    StyleBox["m", "TI"]]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b048690-a320-47ac-aef1-fad953b17c23"],
+ ". Its density operator is the branch ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubscriptBox["\[ScriptCapitalI]", 
+     StyleBox["m", "TI"]], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     StyleBox["\[Rho]", "TI"], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["M", "TI"], 
+     StyleBox["m", "TI"]], 
+    TemplateBox[{
+      StyleBox["\[Psi]", "TI"]},
+     "Ket"], 
+    TemplateBox[{
+      StyleBox["\[Psi]", "TI"]},
+     "Bra"], 
+    SubsuperscriptBox[
+     StyleBox["M", "TI"], 
+     StyleBox["m", "TI"], "\[Dagger]"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ecc4bf44-cf35-4545-8cc1-02cb6083ffed"],
+ ", of trace ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["p", "TI"], 
+   StyleBox["m", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c9f28170-a4eb-43a9-9974-8f40123e428a"],
+ ". Measuring one qubit of a Bell state returns two branch kets of norm ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   SqrtBox["2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2fc2c2dd-ec16-4a19-a1fd-a84277525a78"],
+ ", each the unnormalized half of the split with probability ",
+ Cell[BoxData[
+  RowBox[{"1", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a5993f10-053f-465d-9ee8-bd4c2000ee0a"],
+ ". ",
+ Cell[BoxData["\"\<PostMeasurementState\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "428e3e0c-9bab-49fa-9ac2-5fe04fbd63ed"],
+ " reduces to the target subsystems, tracing out the outcome index and every \
+non-target subsystem, so it is not the full-register object ",
+ Cell[BoxData["\"\<States\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "379d87ee-a686-4184-b959-471ff22efe33"],
+ " returns."
+}], "Text",
+ CellID->1193935837,ExpressionUUID->"0da79b2e-a377-4e03-8d89-e9ee2a6c9713"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  RowBox[{"R", "[", "\"\<Matrix\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cd937e69-d0d3-4e7f-8db6-8f0435eda7d1"],
+ " is the stored ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["diag",
+    FontSlant->"Plain"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "752ee6d8-6c61-4201-8ee1-6af124406318"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"R", "[", "\"\<MatrixRepresentation\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "29f4b70c-4320-469e-8103-67db08ba2f33"],
+ " is its computational matrix ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4a6dff96-b21b-4671-8677-5dca5970c27d"],
+ "; applying it, ",
+ Cell[BoxData[
+  RowBox[{"R", "[", 
+   RowBox[{"QuantumState", "[", "\"\<0\>\"", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "13e00814-be04-4e3c-ba44-db4fc462c402"],
+ " is ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bcd945e9-ab26-4397-8e3b-c97ebbd88c0f"],
+ ", stored ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", 
+    RowBox[{"-", "1"}]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "/", 
+   SqrtBox["2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "83817b2c-d989-4883-8039-a8ac2fb36618"],
+ " in the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d23ed7c5-6307-44bf-9c52-77f654f1544a"],
+ " basis. Measuring the ",
+ Cell[BoxData[
+  StyleBox["X", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c97095dd-20e5-4b71-87a0-df4691d8cce1"],
+ " observable on that state, ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"QuantumMeasurementOperator", "[", "\"\<X\>\"", "]"}], "[", 
+   RowBox[{"R", "[", 
+    RowBox[{"QuantumState", "[", "\"\<0\>\"", "]"}], "]"}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0973fe8a-fab3-4742-9810-4d37499c551b"],
+ ", returns a ",
+ Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "350041a2-b3ed-4c23-b2b9-640edb60ae2c"],
+ " with probabilities ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1", "/", "2"}], ",", 
+   RowBox[{"1", "/", "2", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "488b10c4-341e-436a-8f68-b7cbe9249bf0"],
+ " and two branch kets of norm ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   SqrtBox["2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9fe3052e-b069-4139-88b3-6da0ccec78e1"],
+ ", the split of ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"1"},
+    "Ket"], "=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      TemplateBox[{"+"},
+       "Ket"], "-", 
+      TemplateBox[{"-"},
+       "Ket"]}], ")"}], "/", 
+    SqrtBox["2"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b5eeb4e-f2e9-42af-8108-13f557126fe2"],
+ "."
+}], "Text",
+ CellID->105329933,ExpressionUUID->"36ac53af-cbc9-4b1a-b6ab-e0aaf026078c"],
+
+Cell["6. Parameters and evolution", "Section",
+ CellID->1234416869,ExpressionUUID->"cf9d98af-04fb-4bd6-93de-d48cf710f03f"],
+
+Cell[TextData[{
+ "A parameterized operator is a family indexed by the values of its \
+parameters, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "\[Function]", 
+   StyleBox["A", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["\[Theta]", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ed51e0a-dad2-418d-8b85-1bc5dad95c00"],
+ "; QF records the parameter names and their ranges alongside the \
+coefficients, and composing two families composes them value by value on the \
+union of their names. Substituting a parameter value is evaluation at a \
+point, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   SubscriptBox[
+    StyleBox["\[Theta]", "TI"], "0"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eb052905-e438-4468-97dd-753510064fcd"],
+ ". Because the host is a computer-algebra system, an amplitude may itself \
+stay symbolic, so a value can enter either as a declared parameter or as a \
+symbolic amplitude; which one to use is a modeling choice."
+}], "Text",
+ CellID->240380995,ExpressionUUID->"1f4754f3-82c9-400f-bf42-901acd2c27af"],
+
+Cell[TextData[{
+ "Continuous-time evolution is ",
+ Cell[BoxData["QuantumEvolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9b6dbe86-19a9-402d-a517-0dc6c3603ba3"],
+ ", and it acts on the representations already built. From a Hamiltonian ",
+ Cell[BoxData[
+  StyleBox["H", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ae084a17-7253-4ca5-bd25-2c37c34b6dea"],
+ " it integrates the Schr\[ODoubleDot]dinger equation on the state; from a \
+Hamiltonian, a list of Lindblad operators, and rates it integrates the map \
+generated by the Lindbladian, so the evolved object is a density-matrix ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3884d024-5d22-419a-bee5-feb6a34d6d04"],
+ ". With no initial state it returns the propagator as an operator, and from \
+an initial observable it returns the Heisenberg-picture evolution as an \
+operator. The equation is solved when ",
+ Cell[BoxData["QuantumEvolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f7103eb-4e58-4912-a80c-58f95a733671"],
+ " is called, since the solver runs inside the constructor; only the \
+evaluation of the stored solution at a chosen time is deferred. On the \
+running qubit, ",
+ Cell[BoxData[
+  RowBox[{"QuantumEvolve", "[", 
+   RowBox[{
+    RowBox[{"QuantumOperator", "[", "\"\<X\>\"", "]"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}], "}"}], ",", " ", 
+    "\[Rho]", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"t", ",", " ", "0", ",", " ", "1"}], "}"}]}], "]"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d305c875-3213-424e-93eb-7f8cdc609234"],
+ " returns a state whose density matrix carries the time ",
+ Cell[BoxData[
+  StyleBox["t", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2896a819-5a8e-4fb4-a1b3-f1740c341ac4"],
+ "."
+}], "Text",
+ CellID->1771870337,ExpressionUUID->"40505f0c-b270-4d33-ba34-f545e963b466"],
+
+Cell["7. Coordinate changes: phase space", "Section",
+ CellID->305160771,ExpressionUUID->"5eca6664-6e90-41a7-8cb4-4a740ac6fe01"],
+
+Cell[TextData[{
+ "A phase-space picture is a change of coordinates of the operator-space \
+representation. Until now a basis has been the state vectors that expand a \
+ket; here it is an operator basis, a set of matrices ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["B", "TI"], 
+   StyleBox["a", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c4c9e909-ace5-4c79-804f-167ad00eca81"],
+ " that expand a density matrix as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["a", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["c", "TI"], 
+    StyleBox["a", "TI"]], 
+   SubscriptBox[
+    StyleBox["B", "TI"], 
+    StyleBox["a", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3ea9332d-c2e1-4ac2-9034-c27c063ea0ac"],
+ ". For one qubit the four matrices ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["I", "TI"], ",", 
+   StyleBox["X", "TI"], ",", 
+   StyleBox["Y", "TI"], ",", 
+   StyleBox["Z", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c54cf789-d4a5-46aa-ac04-ad9fdf2eccf8"],
+ " are such a basis. Which picture the ",
+ Cell[BoxData["QuantumBasis"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fcb024a0-2e99-4b81-8c76-fbfdca929ef9"],
+ " records fixes what the coefficients are: a ket's amplitudes, a density \
+matrix's matrix elements in the Schr\[ODoubleDot]dinger picture, and in a \
+phase-space picture the operator-basis coefficients ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["c", "TI"], 
+   StyleBox["a", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "fe28d9a9-45e6-4a31-bbad-6efa0fcdd1b8"],
+ ", which are quasi-probabilities; the Heisenberg picture instead carries the \
+evolution on operators rather than states. QF reaches a phase-space picture \
+with ",
+ Cell[BoxData["QuantumPhaseSpaceTransform"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "323fdc4a-aba6-4a9f-b669-55c56892f717"],
+ ": read the operator-space coefficients in an operator basis with ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["d", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "87154897-fa73-4c8f-91ab-5ee69cb4e5ba"],
+ " elements per subsystem. Because it is a change of coordinates of the \
+operator-space matrices, it preserves composition and application: \
+transforming a product gives the product of the transforms. When both the \
+density matrix and the operator basis are Hermitian, as the Wigner, Pauli, \
+and Gell-Mann bases are, the coefficients ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["c", "TI"], 
+   StyleBox["a", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "acb0b6aa-336d-47fd-800d-521e1cb37777"],
+ " are real, though the vectorized matrix is complex."
+}], "Text",
+ CellID->1896945989,ExpressionUUID->"6cc8b5b8-4652-4177-a801-958423041ace"],
+
+Cell[TextData[{
+ "A complete operator basis always gives coordinates, its expansion \
+coefficients fixing the density matrix; a measurement's outcome probabilities \
+fix it only when the measurement is informationally complete, which an \
+arbitrary POVM need not be. The Wigner basis (displaced parities in odd \
+dimension, and a half-phase variant in even dimension) gives the discrete \
+Wigner function; a Hermitian operator basis gives real Bloch-like components; \
+an informationally complete POVM, such as the symmetric informationally \
+complete (SIC) POVM of the named ",
+ Cell[BoxData["\"\<QBismSIC\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "db191e28-ded2-4b32-a201-7f78c254b8a9"],
+ " basis, gives its outcome probabilities as coordinates, built from the \
+POVM's dual operators. The inverse, ",
+ Cell[BoxData["QuantumWeylTransform"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2b885243-a27a-45cb-a992-e8b1e8c2efd9"],
+ ", takes square roots of the dimensions and returns to the \
+Schr\[ODoubleDot]dinger picture; it recovers a density matrix exactly but \
+forgets the global phase of a ket or a unitary, because the density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], "=", 
+   StyleBox["\[Psi]", "TI"], 
+   SuperscriptBox[
+    StyleBox["\[Psi]", "TI"], "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aa18e9b4-aa0a-48fd-a9b9-f69fb46808c3"],
+ " does not carry it. The rate matrix ",
+ Cell[BoxData[
+  RowBox[{"HamiltonianTransitionRate", "[", "H", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e4c451c2-d861-41d4-a4b8-20da68a54e0f"],
+ " is the Liouvillian ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   StyleBox["i", "TI"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["H", "TI"], ",", "\[CenterDot]"}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77b733bf-8021-428e-9ff9-0ca2dd0952bd"],
+ " expressed directly in these coordinates. The even-dimension convention, \
+the weighted trace-preservation condition, and the sign-sector transform are \
+in Appendix C."
+}], "Text",
+ CellID->653417278,ExpressionUUID->"7fa7592d-800f-4959-8186-e1762e801e15"],
+
+Cell["8. The stabilizer representation", "Section",
+ CellID->1067269536,ExpressionUUID->"a5909573-4e2f-4078-bcd2-25e758b524f5"],
+
+Cell[TextData[{
+ "A qubit stabilizer state is a different data structure, a tableau: the \
+group of Pauli operators that fixes the state, stored as bits, with one \
+recorded global phase. It is not a tensor of amplitudes, and QF joins it to \
+the tensor representation by two conversions. ",
+ Cell[BoxData[
+  RowBox[{"QuantumState", "[", "ps", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "93b09b82-7372-46c5-9e43-5a5fc75e5118"],
+ " builds the state vector from the tableau and multiplies in the recorded \
+global phase; its cost is set by the construction it uses, a ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox["2", 
+    StyleBox["n", "TI"]], "\[Times]", 
+   SuperscriptBox["2", 
+    StyleBox["n", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "16a83184-f0a3-41b8-8a90-ba583bc5b966"],
+ " operator and its null space, not by the ",
+ Cell[BoxData[
+  SuperscriptBox["2", 
+   StyleBox["n", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e7a6377-a12d-44ee-8e76-7160379eb655"],
+ " amplitudes it returns. ",
+ Cell[BoxData[
+  RowBox[{"PauliStabilizer", "[", "qs", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c0245a5d-64a8-41de-b430-60de2b50e201"],
+ " converts a state to a tableau, succeeds only on stabilizer states, and \
+records the global phase it finds. Because the phase is recorded, converting \
+a state to a tableau and back returns the same physical state including its \
+global phase; the reverse round trip returns the same stabilizer group, \
+though not necessarily the same generator list. The conversions keep the \
+phase; only the Clifford gate updates inside the tableau act up to global \
+phase."
+}], "Text",
+ CellID->49659130,ExpressionUUID->"46567f11-decf-44bf-b4d7-5d8e4b7d7048"],
+
+Cell[TextData[{
+ "The boundary is sharp. Clifford gates, including the ",
+ Cell[BoxData[
+  RowBox[{"\[Pi]", "/", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c4557cff-58ea-4402-8906-5d634c20262c"],
+ " phase gate ",
+ Cell[BoxData[
+  StyleBox["S", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c376322e-76a3-4add-9c02-63787a14b48b"],
+ ", keep the tableau. A non-Clifford phase gate such as ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "86ae0c61-721a-433c-886b-15f34609a872"],
+ " leaves it for a sum of stabilizer states. A non-Clifford non-phase unitary \
+is refused."
+}], "Text",
+ CellID->464508221,ExpressionUUID->"673d26e5-fe1c-4615-b602-458bc01d7347"],
+
+Cell["\<\
+A separate result connects the two representations in odd dimension; it \
+concerns qudit states, not the qubit tableau above. A pure qudit state has a \
+nonnegative discrete Wigner function exactly when it is a stabilizer state. \
+So Wigner negativity appears only once a state leaves the stabilizer set. It \
+appears only on states that a non-Clifford gate actually moves: a gate \
+diagonal in the computational basis fixes its own stabilizer eigenstates, and \
+those stay nonnegative. Qubits are even-dimensional, and there Wigner \
+nonnegativity is not this criterion.\
+\>", "Text",
+ CellID->1361313038,ExpressionUUID->"a4264537-3d72-4508-929f-3ee1918ca030"],
+
+Cell["9. Execution methods", "Section",
+ CellID->1907680634,ExpressionUUID->"dd2dc0d6-b513-4579-abcd-3ef7a6b5b0e8"],
+
+Cell["\<\
+A circuit is a diagram until a method turns it into a value, and the methods \
+do not all return the same kind of value. The default method contracts the \
+circuit as one network of tensors joined at its wires, in a chosen order. The \
+Schr\[ODoubleDot]dinger method instead multiplies the gates one at a time. \
+The stabilizer method runs in the tableau. These are exact simulators: each \
+must return, after decoding, the state the circuit's operator produces, so on \
+any one circuit they must agree. An external method hands the circuit to a \
+simulator or to hardware, and there the return is not a state but what the \
+backend gives back: a table of shot counts, or a job to be queried. The exact \
+methods agree on the output state; a shot-based or hardware run returns \
+samples of it, not the state.\
+\>", "Text",
+ CellID->483148123,ExpressionUUID->"f666d727-fd7e-402b-94c6-23ddb85fd159"],
+
+Cell["10. Distances and entanglement", "Section",
+ CellID->1195452142,ExpressionUUID->"991d01aa-fc50-45d8-bea4-692a636bf406"],
+
+Cell["\<\
+Two families read a number off the density-matrix representation rather than \
+build a new object.\
+\>", "Text",
+ CellID->1521685512,ExpressionUUID->"d6aae513-8bb7-4ed2-855b-384c2a85bd27"],
+
+Cell[TextData[{
+ "A distance compares two states. ",
+ Cell[BoxData[
+  RowBox[{"QuantumDistance", "[", 
+   RowBox[{"a", ",", " ", "b"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f8b42584-d5ed-4daf-9d8b-4ab7a4818c01"],
+ " defaults to the ",
+ Cell[BoxData["\"\<Fidelity\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d77bf612-f148-4049-b466-7cae08bbbadc"],
+ " measure. Despite the name this measure is a distance, ",
+ Cell[BoxData[
+  RowBox[{"1", "-", 
+   StyleBox["Re",
+    FontSlant->"Plain"], 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   SqrtBox[
+    RowBox[{
+     SubscriptBox[
+      StyleBox["\[Rho]", "TI"], 
+      StyleBox["a", "TI"]], 
+     SubscriptBox[
+      StyleBox["\[Rho]", "TI"], 
+      StyleBox["b", "TI"]]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aa357f5a-9cd3-4c22-8833-972779a94235"],
+ ", zero on identical states and not the Uhlmann fidelity itself. A third \
+argument selects another measure instead: trace, Bures, Bures-angle, \
+Hilbert-Schmidt, relative-entropy, relative-purity, or Bloch. ",
+ Cell[BoxData["QuantumSimilarity"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f921dd45-1daa-4762-858e-b3fb5d5372ca"],
+ " is the companion quantity ",
+ Cell[BoxData[
+  RowBox[{"1", "-", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aed23aed-75ad-4d33-9e8d-e6f839bf4c84"],
+ "."
+}], "Text",
+ CellID->97201263,ExpressionUUID->"16c281d6-6804-4c41-9aaf-cec3e2e60e35"],
+
+Cell[TextData[{
+ "An entanglement monotone reads one state across a bipartition. ",
+ Cell[BoxData[
+  RowBox[{"QuantumEntanglementMonotone", "[", 
+   RowBox[{"a", ",", " ", "part"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49a030bd-107d-4115-8742-96b182ac54c9"],
+ " defaults to the concurrence, taken from the reduced state for a pure input \
+and from the concurrence vector for a mixed one, and exact only for two \
+qubits or a pure state. Its alternatives are negativity, log-negativity, the \
+entanglement and Renyi entropies, realignment, mutual information, and \
+discord. ",
+ Cell[BoxData["QuantumEntangledQ"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bbdd0f92-df0b-4a79-ba1f-f7b2270ba581"],
+ " tests entanglement and defaults to the realignment criterion."
+}], "Text",
+ CellID->878831761,ExpressionUUID->"017a020a-5191-44ee-bd06-5e82327fd123"],
+
+Cell["\<\
+All of these are functionals on the state already represented, so they \
+inherit its shape assumptions. Nothing here checks that the input is \
+normalized or positive.\
+\>", "Text",
+ CellID->1048559713,ExpressionUUID->"b479fc59-4421-4ada-9d5f-90f19152f339"],
+
+Cell["11. Assumptions and limitations", "Section",
+ CellID->300048012,ExpressionUUID->"df368ed9-5969-4446-bd98-3e268442efb7"],
+
+Cell[TextData[{
+ "QF checks shapes, not physics. A constructor accepts a vector or a square \
+matrix of the right dimension; it does not check normalization, positivity, \
+unitarity, or trace preservation, which are assumptions of the model, \
+readable afterward but not enforced. So a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "08a27477-2271-4b26-9e91-d0e3c8406f37"],
+ " need not be normalized, and a ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a176260b-31c0-4894-93da-7cb318961fda"],
+ " need not preserve the trace."
+}], "Text",
+ CellID->1962937852,ExpressionUUID->"74a04e17-b504-4092-8214-85b7ac4d1947"],
+
+Cell[TextData[{
+ "Two operations are computed directly on the coefficient matrix in the \
+declared basis, and each matches the physical operation only under a \
+condition. The adjoint conjugate-transposes the coefficient matrix, which is \
+the Hermitian adjoint ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["A", "TI"], "\[Dagger]"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "99c5ab3b-236d-4ba4-a2d0-171f3c692a73"],
+ ", fixed by ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["\[Phi]", "TI"], 
+     RowBox[{
+       StyleBox["A", "TI"], 
+       StyleBox["\[Psi]", "TI"]}]},
+    "BraKet"], "=", 
+   TemplateBox[{
+     RowBox[{
+       SuperscriptBox[
+        StyleBox["A", "TI"], "\[Dagger]"], 
+       StyleBox["\[Phi]", "TI"]}], 
+     StyleBox["\[Psi]", "TI"]},
+    "BraKet"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8ade59cc-ffa5-44d6-a98b-3be66ded7a0f"],
+ ", only in an orthonormal basis; in a non-orthonormal basis the overlaps of \
+the basis vectors, collected in the Gram matrix, enter, and the bare \
+conjugate-transpose omits them. The partial trace contracts a subsystem's \
+output index with its input index, and because the trace of an operator does \
+not depend on the basis, this reproduces the physical partial trace ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["Tr",
+      FontSlant->"Plain"], 
+     StyleBox["S", "TI"]], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], "\[CenterDot]", 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    UnderscriptBox["\[Sum]", 
+     StyleBox["i", "TI"],
+     LimitsPositioning->False], 
+    RowBox[{
+     TemplateBox[{
+       StyleBox["i", "TI"]},
+      "Bra"], "\[CenterDot]", 
+     TemplateBox[{
+       StyleBox["i", "TI"]},
+      "Ket"]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07f49e36-b505-4a8f-ac41-d77ecd59b619"],
+ " whenever the subsystem's two sides carry the same basis; when they carry \
+different bases the contraction pairs vectors that are not dual to each \
+other, and the result is not the trace. In both cases QF still returns a \
+well-defined object, but off these conditions it is not the physical adjoint \
+or partial trace."
+}], "Text",
+ CellID->588230824,ExpressionUUID->"0970dc82-d8e9-40a5-961b-457441412de5"],
+
+Cell["\<\
+Two identifications must not be over-read. Two kets that differ by a phase \
+are the same physical state, and two normalized density matrices equal as \
+operators are the same state; the freedom to rescale an unnormalized positive \
+operator to unit trace is a chosen normalization, not a general equality of \
+QF objects. In particular a subnormalized measurement branch is not \
+identified up to an arbitrary positive factor, because its trace is its \
+probability. And the finite-dimensional compositional core described here \
+does not exhaust the kernel: the bosonic and second-quantization layers carry \
+their own objects and are outside this account.\
+\>", "Text",
+ CellID->2099309037,ExpressionUUID->"ea7af6bb-0d40-40a9-bc30-5c533cf06aef"],
+
+Cell["Appendix A. Objects and their nesting", "Section",
+ CellID->512383039,ExpressionUUID->"d5964f60-bc24-4e66-a11b-6c7b3cacb956"],
+
+Cell[TextData[{
+ "The heads wrap one another; there is no second data structure in the chain. \
+A ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f4e21b7c-46dc-45da-a08c-9de434790cae"],
+ " contains a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f8a6ac6a-2aef-4889-a06a-a208cf00ee81"],
+ "; a ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f156461-780a-4963-9b47-83a9a1060774"],
+ " and a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a2ab85d3-5a52-4282-8a7b-f2f8f22a9c66"],
+ " contain a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "34ef223e-9971-42b4-947f-4cafc921adbf"],
+ "; a ",
+ Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eb6dc4f7-43c6-4d94-b2e2-71e27bc00ff7"],
+ " contains a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "603e8040-c848-4a2f-bc67-04b99b100295"],
+ " after application. The stabilizer heads (",
+ Cell[BoxData["PauliStabilizer"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "eebb70aa-3b6c-4c61-bf7b-bc1a5eba3c8b"],
+ ", ",
+ Cell[BoxData["StabilizerFrame"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9c0d67f5-1884-45f8-b8ff-d20cbf28735d"],
+ ", ",
+ Cell[BoxData["CliffordChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6a3abeef-3ddc-4e7e-9a09-4c58b81c1fd3"],
+ ", ",
+ Cell[BoxData["GraphState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "05c55ad9-a5bb-4497-bf5b-074deabfd3fe"],
+ ") are the one other representation, joined to the tensor representation by \
+two conversions."
+}], "Text",
+ CellID->273308241,ExpressionUUID->"fe601add-ac55-4f57-9104-00b3bd6da4c2"],
+
+Cell[TextData[{
+ "The head that comes back from each call, run against the working tree. A \
+lowercase name stands for any object of the matching head: ",
+ Cell[BoxData["qs"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57cf5e7b-02f9-4779-9a44-1b7d38a68ee4"],
+ " a ",
+ Cell[BoxData["QuantumState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "803d2ae7-afbe-42b5-8dcf-56d4b1db55b9"],
+ ", ",
+ Cell[BoxData["qo"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b181a1e4-ec84-4a09-b3e6-7ad8da1b269e"],
+ " a ",
+ Cell[BoxData["QuantumOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "dd1a3d48-e2e9-434c-b0ea-234300099c09"],
+ ", ",
+ Cell[BoxData["qmo"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e813c4e8-7a88-49a5-9857-67d7f0260ad4"],
+ " a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b634d7d-ebc2-4bad-a71e-a5df73226f8a"],
+ ", ",
+ Cell[BoxData["qm"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e0f2c920-abb5-40cd-89ca-649b40dc3e3b"],
+ " a ",
+ Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "db8966b4-75f2-4e5c-a893-4bb1b2b659ba"],
+ ", ",
+ Cell[BoxData["chan"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8466439e-0796-45c3-a9c1-4a6c503e59da"],
+ " a ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2aacca00-ff2d-4740-a7d4-13682d4f8c70"],
+ ", ",
+ Cell[BoxData["qco"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b5de8d31-5091-448f-829e-49cf16ce7fd9"],
+ " and ",
+ Cell[BoxData["qc"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "570c9397-6c85-47d0-8c4f-725bc4b0a3dc"],
+ " a ",
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10acca47-bbbd-4f34-b35f-22dec1f2417d"],
+ ", and ",
+ Cell[BoxData["ps"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11d644ef-a3f4-43c8-9d72-77befcb6f125"],
+ " a ",
+ Cell[BoxData["PauliStabilizer"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d616fd65-18bc-4e27-bb69-70b081acd9d8"],
+ "; ",
+ Cell[BoxData["op"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6fb0a75e-d993-43ce-88ee-c9f4809dcdc6"],
+ " is any operation a circuit can hold."
+}], "Text",
+ CellID->1809098798,ExpressionUUID->"5d2db493-fe98-4ab1-93c2-0bcad5fd6d58"],
+
+Cell[BoxData[GridBox[{
+   {Cell["Call", "TableText",
+     FontWeight->Bold,ExpressionUUID->"a5d1ac1a-167c-4a63-bbc1-537aa92d1729"],
+     Cell["Head of result", "TableText",
+     FontWeight->Bold,ExpressionUUID->"9dafd0b2-9d39-4e52-8928-cbd3186d14b6"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"qo", "[", "qs", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "7de1524a-dd4e-4e3d-9c21-d64275368a4a"]], "TableText",ExpressionUUID->
+     "ef672c85-2380-4884-af2c-9e4fc8f37f51"], Cell[TextData[Cell[BoxData[
+    "QuantumState"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "d8110243-a52a-4410-8d95-2ef15e87c457"]], "TableText",ExpressionUUID->
+     "5a560b6b-fce8-45e1-b671-fb42cec9bdb5"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"qo1", "[", "qo2", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "a85f6447-6bc3-4505-a74d-8a89b04d4d96"]], "TableText",ExpressionUUID->
+     "119b3b65-cfc4-4b40-82d0-cca5d2eb2d55"], Cell[TextData[Cell[BoxData[
+    "QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "e6e45a43-214f-4a30-a5a7-988e3fa1560f"]], "TableText",ExpressionUUID->
+     "b139048b-ba3c-491c-854a-2f8133bb133a"]},
+   {Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{"qo", "[", "qmo", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "0c72db80-0e98-43b3-9a7b-3f37f7b815c9"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"qmo", "[", "qo", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "75a4e7ce-277e-4657-a802-742b7ef27760"]
+    }], "TableText",ExpressionUUID->"131fe111-0543-44a5-b257-831b24dcf9a5"], 
+    Cell[TextData[Cell[BoxData[
+    "QuantumMeasurementOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "3c842551-e6b1-4f50-a8f7-eea5a2e1f2e5"]], "TableText",ExpressionUUID->
+     "9e646f91-5d9f-4d9e-909a-27c890a7fc07"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"qo", "[", "chan", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "6fd7f674-bb07-446f-8893-c0725783cfc7"]], "TableText",ExpressionUUID->
+     "4286c810-657a-4df8-a201-d0070753454c"], Cell[TextData[Cell[BoxData[
+    "QuantumChannel"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "d45f3039-b5a8-400a-acc5-0138616ce6ae"]], "TableText",ExpressionUUID->
+     "2a8c4c74-5b85-4b99-acfa-bc2bb29e0f4a"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"chan", "[", "qs", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "0ed083a7-ec5f-45c6-8f20-5e421c4f4745"]], "TableText",ExpressionUUID->
+     "7b16d17a-7b97-4683-8117-8c287663774a"], Cell[TextData[Cell[BoxData[
+    "QuantumState"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "2b9fd30d-c80b-4206-86d6-204adf155635"]], "TableText",ExpressionUUID->
+     "7b38852b-34e8-4cf0-bd48-928b6dd04440"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"qmo", "[", "qs", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "097580ab-193b-43ad-8e4a-c6ff1ae6a22d"]], "TableText",ExpressionUUID->
+     "f39d0c30-c73e-4367-b1df-22eb37a8e87e"], Cell[TextData[Cell[BoxData[
+    "QuantumMeasurement"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "e7937c5e-ac6d-49fa-874f-55dd553c88cc"]], "TableText",ExpressionUUID->
+     "be3f03cc-9f11-4843-a57b-21f7a94c1a18"]},
+   {Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{"qco", "[", "qs", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "f8ab9504-23c0-42bb-ab96-d51b2f9d718f"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"qco", "[", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "48232d1c-045e-4d3f-92a4-f5c02920b5b6"],
+     " without a measurement"
+    }], "TableText",ExpressionUUID->"05767d49-baeb-45fd-9bd5-7a006e55864b"], 
+    Cell[TextData[Cell[BoxData["QuantumState"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "d8ce69ca-96b6-4604-b78a-3016fadedf71"]], "TableText",ExpressionUUID->
+     "0110dbc2-08b1-4e69-9256-97adeb9a6b79"]},
+   {Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{"qco", "[", "qs", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "e01c7cfd-0d39-48b1-b028-0287ea9dcb83"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"qco", "[", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "ab1c3ae0-1733-493e-8d23-c35cf597b458"],
+     " with a measurement"
+    }], "TableText",ExpressionUUID->"0f304133-e67f-41d0-8fb3-9c14b192fb5e"], 
+    Cell[TextData[Cell[BoxData["QuantumMeasurement"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "07e67ff0-d7e5-4f45-8d8c-1e1fb0dcb77c"]], "TableText",ExpressionUUID->
+     "bcd0a364-cb6b-4174-ac3d-7c5877102abd"]},
+   {Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{"qco", "[", "op", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "08f5497b-12fd-47fa-8564-be60671ed691"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"qc1", " ", "/*", " ", "qc2"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "1169adf0-4c89-4506-8dae-7fc58e3c678d"]
+    }], "TableText",ExpressionUUID->"0be2adb2-e598-4472-be0f-39fe13b9e1fc"], 
+    Cell[TextData[Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "95cadcb4-71b8-4cc3-950a-df029aa83d9d"]], "TableText",ExpressionUUID->
+     "56bfe51e-a7fb-4c02-b32d-48b77ce2f0c4"]},
+   {Cell[TextData[{
+     Cell[BoxData["QuantumPartialTrace"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "a7aec1d4-c259-4016-8660-010da5201122"],
+     " of a state, operator, or circuit"
+    }], "TableText",ExpressionUUID->"219e23b1-f528-4428-8bce-0d98e21bce89"], 
+    Cell["same head as the argument", "TableText",ExpressionUUID->
+     "e7602812-5286-4b14-9618-52976916bd13"]},
+   {Cell[TextData[{
+     Cell[BoxData[
+      RowBox[{"SuperDagger", "[", "qo", "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "8fb6005c-eb56-4dd5-9550-a409ecc03db3"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"qo1", " ", "+", " ", "qo2"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "ce98a8f6-21f3-4a8a-aaec-eb004ceffcc7"],
+     ", ",
+     Cell[BoxData[
+      RowBox[{"QuantumTensorProduct", "[", 
+       RowBox[{"qo1", ",", " ", "qo2"}], "]"}]], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "5416c9bb-e307-4e17-b8fd-e48b971b1b4a"]
+    }], "TableText",ExpressionUUID->"6ad3d9a9-757b-453a-a61d-7998b86abaaa"], 
+    Cell[TextData[Cell[BoxData["QuantumOperator"], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "ea5de272-c625-499b-a2c3-86251aa961bb"]], "TableText",ExpressionUUID->
+     "7771e5a9-a465-4f3c-a289-30752120f3e6"]},
+   {Cell[TextData[Cell[BoxData[
+     RowBox[{"QuantumEvolve", "[", "...", "]"}]], "InlineFormula",
+     FontSize->0.9 Inherited,ExpressionUUID->
+     "383baeab-df53-4c53-be47-9b0009c0bc61"]], "TableText",ExpressionUUID->
+     "a8d7b632-548f-4b6d-ae0b-8797ec1c103d"], Cell[TextData[{
+     Cell[BoxData["QuantumState"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "e97fb5a3-f3ca-40bd-b7a8-e62f61ad3342"],
+     " or ",
+     Cell[BoxData["QuantumOperator"], "InlineFormula",
+      FontSize->0.9 Inherited,ExpressionUUID->
+      "15d9145a-f5a9-4589-814d-d64b88b6228d"]
+    }], "TableText",ExpressionUUID->"cf796f89-3fc4-4d4f-a93a-c7121fcddfdb"]}
+  },
+  GridBoxAlignment->{"Columns" -> {{Left}}, "Rows" -> {{Baseline}}},
+  GridBoxDividers->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+  GridBoxItemSize->{"Columns" -> {
+      Scaled[0.44], 
+      Scaled[0.44]}, "Rows" -> {{Automatic}}},
+  GridBoxSpacings->{"Columns" -> {{1.5}}, "Rows" -> {{0.8}}}]], "Text",
+ CellID->156430199,ExpressionUUID->"0b2b76f4-85a5-431d-8416-02c6c4981117"],
+
+Cell["Appendix B. Constructor edge cases and wire numbers", "Section",
+ CellID->724760089,ExpressionUUID->"232d607a-738c-4885-afce-dc60d05cc22c"],
+
+Cell[TextData[{
+ "The integer on each wire records its role by its sign: a positive number is \
+a live quantum wire; a non-positive number is a trace subsystem inside a ",
+ Cell[BoxData["QuantumChannel"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8d46b760-cc30-462b-b316-22e77480a57c"],
+ " and an outcome subsystem inside a ",
+ Cell[BoxData["QuantumMeasurementOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "708daa72-f4b6-46a3-aebf-b37261a62706"],
+ ", and carries no role on a bare operator. The role is assigned by the \
+wrapper, so the same coefficients serve as a unitary, a channel, or a \
+measurement, and the role is invisible in a bare wire list."
+}], "Text",
+ CellID->168408080,ExpressionUUID->"94fa2c99-146e-470d-a3bb-3d7945480000"],
+
+Cell[TextData[{
+ "When an operator reaches wires the state does not fill, the state is padded \
+with ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "010a8451-3cbf-4ad5-922c-5794d85d3022"],
+ " on the missing wires, up to the full input order of the one-element \
+circuit, gaps included; the padding is by qubits, so a missing qutrit fails \
+with a dimension message rather than being prepared. A coefficient array \
+whose dimension factors, such as six, is split into subsystems by default (",
+ Cell[BoxData[
+  RowBox[{"QuantumState", "[", 
+   RowBox[{"Range", "[", "6", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d5df660a-b827-4e8f-9f13-305c35d2adb1"],
+ " is a qubit and a qutrit, not one six-level qudit); pass the dimension \
+explicitly to override. A tableau is stored bit-packed, sixty-two qubits to a \
+machine word, with one recorded global phase (the sixty-two-rows-per-word \
+layout is a transient packing used only by the compiled gate fold)."
+}], "Text",
+ CellID->811283638,ExpressionUUID->"e9c43035-583c-42fd-a398-1837dbf93e1a"],
+
+Cell["Appendix C. Phase-space formulas", "Section",
+ CellID->207978548,ExpressionUUID->"64b6c4dd-e395-45f9-9258-b739f893a84b"],
+
+Cell[TextData[{
+ "In odd dimension the Wigner basis element at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["q", "TI"], ",", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "87cc3df2-7b83-4901-80b5-22e6d4c2b4d7"],
+ " is a displaced parity, built from three operators on a ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f445ad4b-d980-424a-bfb1-229e298b27e6"],
+ "-level system with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Omega]", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{"2", "\[Pi]", 
+     StyleBox["i", "TI"], "/", 
+     StyleBox["d", "TI"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "caf3c343-c8ea-44e1-917d-8c8c1bd95377"],
+ ": the Fourier operator ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["F", "TI"], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}], "=", 
+   RowBox[{
+    FractionBox["1", 
+     SqrtBox[
+      StyleBox["d", "TI"]]], 
+    RowBox[{
+     UnderscriptBox["\[Sum]", 
+      StyleBox["j", "TI"],
+      LimitsPositioning->False], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["\[Omega]", "TI"], 
+       StyleBox[
+        RowBox[{"j", "k"}], "TI"]], 
+      TemplateBox[{
+        StyleBox["j", "TI"]},
+       "Ket"]}]}]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a6e4a47d-1a88-4d01-a753-c72d019eeff0"],
+ ", the clock ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["Z", "TI"], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}], "=", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["\[Omega]", "TI"], 
+     StyleBox["k", "TI"]], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e8a28449-88f0-4fc2-bf96-e4e488bfe9d6"],
+ ", and the shift ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["X", "TI"], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}], "=", 
+   TemplateBox[{
+     RowBox[{
+       StyleBox["k", "TI"], "-", "1", 
+       StyleBox["mod", FontSlant -> "Plain"], 
+       StyleBox["d", "TI"]}]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8f3c4cd5-d278-45ad-a273-0b7401724977"],
+ ". The parity is ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["F", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b0c49646-0bfd-40c7-9b0c-b9072e49526e"],
+ ", with ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["F", "TI"], "2"], 
+    TemplateBox[{
+      StyleBox["k", "TI"]},
+     "Ket"]}], "=", 
+   TemplateBox[{
+     RowBox[{"-", 
+       StyleBox["k", "TI"], 
+       StyleBox["mod", FontSlant -> "Plain"], 
+       StyleBox["d", "TI"]}]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7cdb4c7e-0377-4b87-a905-88babe367930"],
+ ", and the displaced parity is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["q", "TI"], ",", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SuperscriptBox[
+    StyleBox["e", "TI"], 
+    RowBox[{
+     StyleBox["i", "TI"], "\[Pi]", 
+     StyleBox["q", "TI"], 
+     StyleBox["p", "TI"], "/", 
+     StyleBox["d", "TI"]}]], "\[ThinSpace]", 
+   SuperscriptBox[
+    StyleBox["F", "TI"], "2"], "\[ThinSpace]", 
+   SuperscriptBox[
+    StyleBox["Z", "TI"], 
+    StyleBox["q", "TI"]], 
+   SuperscriptBox[
+    StyleBox["X", "TI"], 
+    StyleBox["p", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "e592e6b8-9c39-4d51-af3c-bcbc712adf4f"],
+ ", which the kernel builds directly in this form rather than through a \
+separate displacement operator. The Wigner basis element at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["q", "TI"], ",", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "aa65abad-7ade-4bd3-b353-c6dbad5971fb"],
+ " is ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{"2", 
+     StyleBox["q", "TI"]}], ",", 
+    RowBox[{"2", 
+     StyleBox["p", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ad9fc900-43fd-434f-a71e-6de5e007b0ff"],
+ ", reaching every grid point because ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2e593c4b-972b-48d3-83ef-0d036052eb4b"],
+ " is invertible mod ",
+ Cell[BoxData[
+  StyleBox["d", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9d2d9ec4-3942-4e94-bc95-fec229f9ee80"],
+ "; the elements are Hermitian, unit trace, mutually orthogonal with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["A", "TI"], 
+     StyleBox["a", "TI"]], 
+    SubscriptBox[
+     StyleBox["A", "TI"], 
+     StyleBox["b", "TI"]]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "=", 
+   StyleBox["d", "TI"], "\[ThinSpace]", 
+   SubscriptBox[
+    StyleBox["\[Delta]", "TI"], 
+    StyleBox[
+     RowBox[{"a", "b"}], "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bc6e521-d057-4ce9-a851-5a15a35f7c1e"],
+ ", summing to ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["d", "TI"], "\[CenterDot]", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "b0bc5f3d-0c96-45a4-b863-a9fb952b3085"],
+ ", and the coordinates are ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["W", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["q", "TI"], ",", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["A", "TI"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     RowBox[{"2", 
+      StyleBox["q", "TI"]}], ",", 
+     RowBox[{"2", 
+      StyleBox["p", "TI"]}]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "\[ThinSpace]", 
+    StyleBox["\[Rho]", "TI"]}], 
+   StyleBox["]",
+    SpanMaxSize->1], "/", 
+   StyleBox["d", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "bea4f6c5-b3d4-4a07-a53a-8d7921f9a715"],
+ ". In even dimension ",
+ Cell[BoxData["2"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "ef0b0fe5-49a5-4b2d-add1-265de5a72c38"],
+ " is not invertible, the parity orbit is too small, and the element is ",
+ Cell[BoxData[
+  RowBox[{"2", "\[ThinSpace]", 
+   StyleBox["A", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["q", "TI"], ",", 
+    StyleBox["p", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d5f7cee-89a8-4cd0-8a4f-665a48fda14d"],
+ " instead, with Gram matrix ",
+ Cell[BoxData[
+  RowBox[{"4", 
+   StyleBox["d", "TI"], "\[CenterDot]", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "99d83264-21be-469a-8caf-e565565f8f2b"],
+ "; for a qubit these are ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"2", "{", 
+    StyleBox["I", "TI"]}], ",", 
+   StyleBox["X", "TI"], ",", 
+   StyleBox["Z", "TI"], ",", 
+   RowBox[{"-", 
+    StyleBox["Y", "TI"], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "017ea0b8-3af2-4f77-9ab7-ffa6b44687f7"],
+ ". The elements no longer share a trace, so ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["\[Rho]", "TI"], "=", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["a", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["a", "TI"]], 
+   SubscriptBox[
+    StyleBox["c", "TI"], 
+    StyleBox["a", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a5778a-8831-443e-bdcd-29f35feae360"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["a", "TI"]], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   SubscriptBox[
+    StyleBox["A", "TI"], 
+    StyleBox["a", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "598a4dfc-c81f-4edc-8515-472af0efb8d4"],
+ ", which for a qubit is ",
+ Cell[BoxData[
+  RowBox[{"4", 
+   SubscriptBox[
+    StyleBox["c", "TI"], "0"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8140001a-2b64-440a-882f-5826fac5edcd"],
+ ". The inverse ",
+ Cell[BoxData["QuantumWeylTransform"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "22b79637-6ca5-4da8-9ca7-b86fef6c3da1"],
+ " takes the square root of each dimension (",
+ Cell[BoxData[
+  RowBox[{"9", "\[Rule]", "3"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "122f0a5b-fe02-45d3-b9d4-5b05bfa5e23b"],
+ " for a qutrit)."
+}], "Text",
+ CellID->437474228,ExpressionUUID->"173902e6-ef66-4e14-8589-7c08aefb9c07"],
+
+Cell[TextData[{
+ "The rate matrix ",
+ Cell[BoxData[
+  RowBox[{"HamiltonianTransitionRate", "[", "H", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "87db6deb-41e0-4d2a-a1c4-4a9ba214b6cf"],
+ " is the matrix of ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   StyleBox["i", "TI"], 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["H", "TI"], ",", "\[CenterDot]"}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ff997b6-f0a7-4ba9-b6e6-11fe399c3a97"],
+ " in these coordinates with no further factor. Trace preservation is the \
+weighted condition ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["R", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6fabc5f2-47c4-49ba-b3fe-1bd92ad16367"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["a", "TI"]], "=", 
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   SubscriptBox[
+    StyleBox["A", "TI"], 
+    StyleBox["a", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "c6e27395-3b6a-4c4c-a796-97ae431250c7"],
+ ", since ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["Tr",
+    FontSlant->"Plain"], 
+   StyleBox["\[Rho]", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["c", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "9e4b1d67-6098-4adb-9077-7586e24affd7"],
+ "; it holds for a valid generator. The ordinary column sums ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["1",
+     FontWeight->"Bold",
+     FontSlant->"Plain"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["R", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "cc6c5920-0199-441f-b408-ee784c3f9352"],
+ ", with ",
+ Cell[BoxData[
+  StyleBox["1",
+   FontWeight->"Bold",
+   FontSlant->"Plain"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "f33a625d-d0c0-4bfc-89d7-d28be800806e"],
+ " the all-ones vector, are a different quantity. When all basis elements \
+share one nonzero trace, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Tau]", "TI"], "\[Proportional]", 
+   StyleBox["1",
+    FontWeight->"Bold",
+    FontSlant->"Plain"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "75b1ffda-5163-4eb0-8093-469fa5df1107"],
+ ", so ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["1",
+     FontWeight->"Bold",
+     FontSlant->"Plain"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["R", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a7cb942d-343e-4b5d-8377-d79ba7a5fb29"],
+ " is proportional to ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["\[Tau]", "TI"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["R", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "8f2cb0ac-8f53-4556-9d85-01d226f7da06"],
+ " and vanishes, as for the odd-dimension displaced parities (zero for the \
+qutrit); with unequal traces it need not, and the even-dimension qubit basis \
+has ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["1",
+     FontWeight->"Bold",
+     FontSlant->"Plain"], 
+    StyleBox["T", "TI"]], 
+   StyleBox["R", "TI"], "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{"0", ",", "0"}], ",", 
+    RowBox[{"2", 
+     StyleBox["h", "TI"]}], ",", 
+    RowBox[{"-", "2", 
+     StyleBox["h", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5d07827e-c193-4fa5-9b89-08d8424c08d4"],
+ " for ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["H", "TI"], "=", 
+   StyleBox["h", "TI"], 
+   StyleBox["X", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25b0d4d0-096f-484e-b6bb-b95adc02292b"],
+ ". The sign-sector transform ",
+ Cell[BoxData["QuantumPositiveTransform"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "861b2c4d-6322-4009-bd8e-c4f8ae61bdef"],
+ " splits the coordinate axis into a nonnegative pair ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["w", "TI"], "+"], ",", 
+    SuperscriptBox[
+     StyleBox["w", "TI"], "-"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "d9455f12-bbaf-4389-9dbd-2a0a2c7b2623"],
+ " with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["w", "TI"], "=", 
+   SuperscriptBox[
+    StyleBox["w", "TI"], "+"], "-", 
+   SuperscriptBox[
+    StyleBox["w", "TI"], "-"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54a11409-eeaa-4690-8667-9d29791a4d85"],
+ "; on a matrix it yields the block form ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["[",
+    SpanMaxSize->1], 
+   RowBox[{
+    RowBox[{
+     StyleBox["[",
+      SpanMaxSize->1], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["T", "TI"], "+"], ",", 
+      SuperscriptBox[
+       StyleBox["T", "TI"], "-"]}], 
+     StyleBox["]",
+      SpanMaxSize->1]}], ",", 
+    RowBox[{
+     StyleBox["[",
+      SpanMaxSize->1], 
+     RowBox[{
+      SuperscriptBox[
+       StyleBox["T", "TI"], "-"], ",", 
+      SuperscriptBox[
+       StyleBox["T", "TI"], "+"]}], 
+     StyleBox["]",
+      SpanMaxSize->1]}]}], 
+   StyleBox["]",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c0223fc-e30f-4718-af89-cecbdd09ef38"],
+ ", and the decoding ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", "=", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["I", "TI"], ",", 
+    RowBox[{"-", 
+     StyleBox["I", "TI"]}]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "32417ad1-c9c3-461f-83cc-912ce60f3cb8"],
+ " satisfies ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalDelta]", "\[ThinSpace]", 
+   StyleBox["P", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["T", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   StyleBox["T", "TI"], "\[ThinSpace]", "\[CapitalDelta]"}]], "InlineFormula",
+  
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "a51571c4-175c-4c64-bcf3-080898cae947"],
+ "."
+}], "Text",
+ CellID->874582697,ExpressionUUID->"46040b61-e1e4-453b-8961-250e44eb9585"],
+
+Cell["Appendix D. Related work", "Section",
+ CellID->11631581,ExpressionUUID->"2d86e240-8653-4825-a51e-154597126bc2"],
+
+Cell[TextData[{
+ "The nearest published model for QF is a composite: a categorical process \
+model with an environment and classical structure as the meaning, and a \
+Proto-Quipper-style typed core as the language. The categorical line [Abr04, \
+Sel07, Coe06, Coe10, Coe14] is the closest reading of the channels and \
+measurements: the doubling ",
+ Cell[BoxData["\"\<Bend\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35305d2c-567e-40d0-8776-1ada9af85c03"],
+ " corresponds to the completely positive maps (CPM) construction, the cup \
+and cap to a dagger-compact structure, the spiders to basis structures, and a \
+measurement to a morphism to a classical object. The programming-language \
+line [Rio17, Fu22, Pay17, Sel04, Sel04b, Ros26] is the closest reading of the \
+circuit shape: a circuit as a morphism in a free category with a functor for \
+its meaning. The operator-algebraic line [Cho14, Jia21, Lin25c, Ran21] is \
+where the picture structure lives, the Schr\[ODoubleDot]dinger description \
+evolving states and the Heisenberg description evolving observables. Phase \
+space is Wootters and Gross [Woo87, Gro06, Gib04], the rate matrix is Braasch \
+and Wootters [Bra20], and the tableau is Aaronson and Gottesman [Aar04, \
+Got98, Nes09]."
+}], "Text",
+ CellID->1933762060,ExpressionUUID->"91b90eff-546a-43ce-be8b-a0b7a019df19"],
+
+Cell["\<\
+Against that composite, QF combines four things no surveyed system combines: \
+a basis stored with every state and operator, with an implicit change of \
+basis rather than a rejection (Qwerty [Ada24] and D\[IAcute]az-Caro [Dia25b, \
+Dia25] put the basis in the type instead; D\[IAcute]az-Caro's core carries an \
+implicit change of basis of its own, but in the type rather than stored with \
+the object); three pictures in one object model, connected by transforms, \
+with the phase-space picture unrepresented in any surveyed system; channels \
+stored as a Stinespring operator with the environment as trace subsystems; \
+and a second representation, the stabilizer tableau, joined by conversions \
+that carry the global phase. Yao.jl [Luo19] shares the unified block type but \
+has none of the four; the idealized cores lambda-Q# [Sin22], QIR [Luo23], and \
+Qunity [Voi22] formalize a designed subset rather than a shipping framework.\
+\>", "Text",
+ CellID->1055776787,ExpressionUUID->"668d0185-c33f-4fd6-a2bc-3433fbc67434"],
+
+Cell["\<\
+This comparison records what each cited work builds into its published model, \
+not a limit of its approach: a feature a work does not present may be a \
+matter of scope rather than reach, since for a designed core or a categorical \
+axiomatization the construction could often be added within the same \
+framework. It is a comparison against published formal models; coexisting \
+statevector and stabilizer representations with conversions between them are \
+also routine in circuit simulators such as Stim, Qiskit Aer, and Cirq, so \
+what is distinctive in QF is not that the two coexist but that they form one \
+object model, with the phase-carrying round trip stated as a property.\
+\>", "Text",
+ CellID->1859711813,ExpressionUUID->"a0fbbaec-269e-4815-b6b6-ed6b6152ae7e"],
+
+Cell[TextData[{
+ "A vocabulary note, since this appendix speaks the language of the works it \
+cites. A ",
+ StyleBox["functor", "TI"],
+ " is a representation-to-representation map that preserves composition, of \
+the kind this account calls a transform; a ",
+ StyleBox["morphism", "TI"],
+ " is a linear map, channel, or state; a ",
+ StyleBox["dagger-compact category", "TI"],
+ " is finite-dimensional states and operators with tensor product and \
+adjoint; the ",
+ StyleBox["CPM construction", "TI"],
+ " is the doubling; a ",
+ StyleBox["Frobenius algebra", "TI"],
+ ", or ",
+ StyleBox["spider", "TI"],
+ ", is the copy-and-compare structure of a basis."
+}], "Text",
+ CellID->1348896709,ExpressionUUID->"1ca3c526-a52c-4505-949f-56457a6fa11d"],
+
+Cell["\<\
+The deep search behind this survey is at \
+https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/\
+Formal%20semantics%20and%20object%20models%20of%20quantum%20software%\
+20frameworks .\
+\>", "Text",
+ CellID->1427211115,ExpressionUUID->"97c5446e-4533-4ab9-b580-a9197baeb730"],
+
+Cell["\<\
+[Aar04] S. Aaronson, D. Gottesman, \"Improved simulation of stabilizer \
+circuits,\" Phys. Rev. A 70 (2004) 052328. doi:10.1103/PhysRevA.70.052328\
+\>", "Item",
+ CellID->2099805207,ExpressionUUID->"b1d46747-74b1-48e3-88b8-83cd43bf699f"],
+
+Cell["\<\
+[Abr04] S. Abramsky, B. Coecke, \"A categorical semantics of quantum \
+protocols,\" LICS 2004. doi:10.1109/LICS.2004.1319636\
+\>", "Item",
+ CellID->1402006442,ExpressionUUID->"0b0c956b-949e-436e-bf88-d0fd07610161"],
+
+Cell["\<\
+[Ada24] A. J. Adams, S. Khan, J. S. Young, T. Conte, \"Qwerty: A \
+Basis-Oriented Quantum Programming Language,\" IEEE QCE 2025, pp. 804-815. \
+doi:10.1109/QCE65121.2025.00093\
+\>", "Item",
+ CellID->1901179466,ExpressionUUID->"aa5b4640-d07b-401c-b085-4b080e0cd1f1"],
+
+Cell["\<\
+[Ber18] V. Bergholm et al., \"PennyLane: Automatic differentiation of hybrid \
+quantum-classical computations,\" arXiv:1811.04968.\
+\>", "Item",
+ CellID->210724908,ExpressionUUID->"17af1d6d-4981-42cc-af44-138ed9cf65a6"],
+
+Cell["\<\
+[Bra20] W. F. Braasch Jr., W. K. Wootters, \"Transition probabilities and \
+transition rates in discrete phase space,\" Phys. Rev. A 102 (2020) 052204. \
+doi:10.1103/PhysRevA.102.052204\
+\>", "Item",
+ CellID->1992790374,ExpressionUUID->"871d77fe-99d2-4046-acaf-83d7157f91e3"],
+
+Cell["\<\
+[Cho14] K. Cho, \"Semantics for a Quantum Programming Language by Operator \
+Algebras,\" New Generation Computing 34 (2016) 25-68. \
+doi:10.1007/s00354-016-0204-3\
+\>", "Item",
+ CellID->292747604,ExpressionUUID->"8d92f5e0-40c9-4c72-a917-919179c9e505"],
+
+Cell["\<\
+[Cle22] A. Cl\[EAcute]ment, N. Heurtel, S. Mansfield, S. Perdrix, B. Valiron, \
+\"A Complete Equational Theory for Quantum Circuits,\" LICS 2023. \
+doi:10.1109/LICS56636.2023.10175801\
+\>", "Item",
+ CellID->1553818268,ExpressionUUID->"4ab4db18-3c30-4c57-a1bb-ffd87061cec9"],
+
+Cell["\<\
+[Cle23b] A. Cl\[EAcute]ment, N. Delorme, S. Perdrix, R. Vilmart, \"Quantum \
+Circuit Completeness: Extensions and Simplifications,\" CSL 2024. \
+doi:10.4230/LIPIcs.CSL.2024.20\
+\>", "Item",
+ CellID->1870754514,ExpressionUUID->"51d06a10-918d-4d6b-8537-6010e7b49fde"],
+
+Cell["\<\
+[Coe06] B. Coecke, D. Pavlovic, \"Quantum measurements without sums,\" in \
+Mathematics of Quantum Computation and Quantum Technology (2007). \
+doi:10.1201/9781584889007.ch16\
+\>", "Item",
+ CellID->1358728755,ExpressionUUID->"0dd45889-ac3e-4c27-94ac-2edfa599050f"],
+
+Cell["\<\
+[Coe09] B. Coecke, R. Duncan, \"Interacting quantum observables: categorical \
+algebra and diagrammatics,\" New J. Phys. 13 (2011) 043016. \
+doi:10.1088/1367-2630/13/4/043016\
+\>", "Item",
+ CellID->935019337,ExpressionUUID->"a80d21f4-ab46-43a8-9a58-87319716e79f"],
+
+Cell["\<\
+[Coe10] B. Coecke, S. Perdrix, \"Environment and Classical Channels in \
+Categorical Quantum Mechanics,\" Log. Methods Comput. Sci. 8(4:14) (2012). \
+doi:10.2168/LMCS-8(4:14)2012\
+\>", "Item",
+ CellID->642744358,ExpressionUUID->"d0e526be-ac59-4ddd-a452-7403eb763072"],
+
+Cell["\<\
+[Coe13] B. Coecke, C. Heunen, A. Kissinger, \"Categories of quantum and \
+classical channels,\" Quantum Inf. Process. 15 (2016) 5179-5209. \
+doi:10.1007/s11128-014-0837-4\
+\>", "Item",
+ CellID->1478372881,ExpressionUUID->"a7555a45-75ad-466c-ba49-48e14351e076"],
+
+Cell["\<\
+[Coe14] B. Coecke, C. Heunen, A. Kissinger, \"Categories of Quantum and \
+Classical Channels (extended abstract),\" QPL 2012, EPTCS 158, pp. 1-14. \
+doi:10.4204/EPTCS.158.1\
+\>", "Item",
+ CellID->124263719,ExpressionUUID->"a5082e3b-f8ff-4726-b296-0a5ab340d311"],
+
+Cell["\<\
+[Cro21] A. W. Cross et al., \"OpenQASM 3: A Broader and Deeper Quantum \
+Assembly Language,\" ACM TQC 3(3) (2022). doi:10.1145/3505636\
+\>", "Item",
+ CellID->1310926461,ExpressionUUID->"318f189a-3794-4363-bff9-70a6bd5e9c79"],
+
+Cell["\<\
+[Dia25] A. D\[IAcute]az-Caro, N. A. Monzon, \"A Quantum-Control \
+Lambda-Calculus with Multiple Measurement Bases,\" APLAS 2025, pp. 151-170. \
+doi:10.1007/978-981-95-3585-9_8\
+\>", "Item",
+ CellID->1124211690,ExpressionUUID->"ebe11453-dd70-4b08-ad74-bfff356c1d20"],
+
+Cell["\<\
+[Dia25b] A. D\[IAcute]az-Caro, O. Malherbe, R. Romero, \"Basis-Sensitive \
+Quantum Typing via Realisability,\" arXiv:2510.18542. \
+doi:10.48550/arXiv.2510.18542\
+\>", "Item",
+ CellID->1335749844,ExpressionUUID->"15704684-c9f1-4b60-8896-7b3481397f6a"],
+
+Cell["\<\
+[Fu20b] P. Fu, K. Kishida, P. Selinger, \"Linear Dependent Type Theory for \
+Quantum Programming Languages,\" LICS 2020. doi:10.1145/3373718.3394765\
+\>", "Item",
+ CellID->793802945,ExpressionUUID->"f9f24319-a06b-4a01-82bf-910c6e41ba7a"],
+
+Cell["\<\
+[Fu22] P. Fu, K. Kishida, N. J. Ross, P. Selinger, \"Proto-Quipper with \
+Dynamic Lifting,\" Proc. ACM Program. Lang. (POPL 2023) 309-334. \
+doi:10.1145/3571204\
+\>", "Item",
+ CellID->631769182,ExpressionUUID->"71b012c2-dc54-43d2-97f2-a980fa8d802f"],
+
+Cell["\<\
+[Fu24] P. Fu, K. Kishida, N. J. Ross, P. Selinger, \"Proto-Quipper with \
+Reversing and Control,\" QPL 2024, EPTCS 426. doi:10.4204/EPTCS.426.1\
+\>", "Item",
+ CellID->1873681340,ExpressionUUID->"ec177b73-2477-46d2-a584-bba24edc9502"],
+
+Cell["\<\
+[Gib04] K. S. Gibbons, M. J. Hoffman, W. K. Wootters, \"Discrete phase space \
+based on finite fields,\" Phys. Rev. A 70 (2004) 062101. \
+doi:10.1103/PhysRevA.70.062101\
+\>", "Item",
+ CellID->1468251080,ExpressionUUID->"ce2de4d2-3866-4033-a3e2-5a2f14aeb89c"],
+
+Cell["\<\
+[Got98] D. Gottesman, \"The Heisenberg Representation of Quantum Computers,\" \
+arXiv:quant-ph/9807006 (1998).\
+\>", "Item",
+ CellID->1989234463,ExpressionUUID->"83119f48-b7df-4bf5-9de0-7ac4ceb4a128"],
+
+Cell["\<\
+[Gre13] A. S. Green, P. L. Lumsdaine, N. J. Ross, P. Selinger, B. Valiron, \
+\"Quipper: a scalable quantum programming language,\" PLDI 2013. \
+doi:10.1145/2499370.2462177\
+\>", "Item",
+ CellID->1607696641,ExpressionUUID->"7d505d45-f4b8-4911-b38c-d8b7dbd6b0fe"],
+
+Cell["\<\
+[Gro06] D. Gross, \"Hudson's theorem for finite-dimensional quantum \
+systems,\" J. Math. Phys. 47 (2006) 122107. doi:10.1063/1.2393152\
+\>", "Item",
+ CellID->1817342824,ExpressionUUID->"1d67ca6c-cd3d-495e-9666-efb5950795e9"],
+
+Cell["\<\
+[Jia21] X. Jia, A. Kornell, B. Lindenhovius, M. Mislove, V. Zamdzhiev, \
+\"Semantics for variational quantum programming,\" Proc. ACM Program. Lang. \
+(POPL 2022) 1-31. doi:10.1145/3498687\
+\>", "Item",
+ CellID->530774412,ExpressionUUID->"e226a9e2-7302-4879-a46e-c90fb967f9d5"],
+
+Cell["\<\
+[Lee21] D. Lee, V. Perrelle, B. Valiron, Z. Xu, \"Concrete Categorical Model \
+of a Quantum Circuit Description Language with Measurement,\" FSTTCS 2021. \
+doi:10.4230/LIPIcs.FSTTCS.2021.51\
+\>", "Item",
+ CellID->599957810,ExpressionUUID->"1ee28477-7d1c-407c-a7ca-d4688aeb0b24"],
+
+Cell["\<\
+[Lin25c] B. Lindenhovius, V. Zamdzhiev, \"Operator Spaces, Linear Logic and \
+the Heisenberg-Schr\[ODoubleDot]dinger Duality of Quantum Theory,\" LICS \
+2025, pp. 870-883. doi:10.1109/LICS65433.2025.00071\
+\>", "Item",
+ CellID->1899946997,ExpressionUUID->"42fc0dc3-08a8-4775-b4d6-c77c6c34c46b"],
+
+Cell["\<\
+[Luo19] X.-Z. Luo, J.-G. Liu, P. Zhang, L. Wang, \"Yao.jl: Extensible, \
+Efficient Framework for Quantum Algorithm Design,\" Quantum 4 (2020) 341. \
+doi:10.22331/q-2020-10-11-341\
+\>", "Item",
+ CellID->1051619128,ExpressionUUID->"6d8f20b7-0245-46ba-8162-4d7842b7385d"],
+
+Cell["\<\
+[Luo23] J. Luo, J. Zhao, \"Formalization of Quantum Intermediate \
+Representations for Code Safety,\" J. Syst. Softw. (2023) 112236. \
+doi:10.48550/arXiv.2303.14500\
+\>", "Item",
+ CellID->1921351195,ExpressionUUID->"40ad0525-2a86-4262-a65a-8c3a3776ec89"],
+
+Cell["\<\
+[Nes09] M. Van den Nest, \"Simulating quantum computers with probabilistic \
+methods,\" Quantum Inf. Comput. 11 (2011) 784-812. doi:10.26421/QIC11.9-10-5\
+\>", "Item",
+ CellID->1207491739,ExpressionUUID->"dea2e428-80c9-4a1c-9c6a-e8c3f0929ee8"],
+
+Cell["\<\
+[Pay17] J. Paykin, R. Rand, S. Zdancewic, \"QWIRE: a core language for \
+quantum circuits,\" POPL 2017. doi:10.1145/3009837.3009894\
+\>", "Item",
+ CellID->216741342,ExpressionUUID->"5ca6e90e-2103-4bf9-a38d-8f9c3133bb18"],
+
+Cell["\<\
+[Ran21] R. Rand, A. Sundaram, K. Singhal, B. Lackey, \"Gottesman Types for \
+Quantum Programs,\" QPL 2020, EPTCS 340, pp. 279-290. doi:10.4204/EPTCS.340.14\
+\>", "Item",
+ CellID->2096934290,ExpressionUUID->"108da0da-8474-4556-a5b4-ced3c756f70a"],
+
+Cell["\<\
+[Rio17] F. Rios, P. Selinger, \"A categorical model for a quantum circuit \
+description language,\" QPL 2017, EPTCS 266, pp. 164-178. \
+doi:10.4204/EPTCS.266.11\
+\>", "Item",
+ CellID->1367217003,ExpressionUUID->"506ba4dd-f04a-419f-bcbe-980fab2d7531"],
+
+Cell["\<\
+[Ros26] N. J. Ross, S. Wesley, \"Parameterized Quantum Circuit Semantics \
+Through Enriched Categories,\" arXiv:2607.16114. doi:10.48550/arXiv.2607.16114\
+\>", "Item",
+ CellID->1372538143,ExpressionUUID->"9d65de09-0bd1-4bde-9d3b-dcd36eb91f5e"],
+
+Cell["\<\
+[Sel04] P. Selinger, \"Towards a quantum programming language,\" Math. \
+Struct. Comput. Sci. 14 (2004) 527-586. doi:10.1017/S0960129504004256\
+\>", "Item",
+ CellID->485911656,ExpressionUUID->"3151090b-eabc-4f99-a238-9e45539feb04"],
+
+Cell["\<\
+[Sel04b] P. Selinger, B. Valiron, \"A lambda calculus for quantum computation \
+with classical control,\" Math. Struct. Comput. Sci. 16 (2006) 527-552. \
+doi:10.1017/S0960129506005238\
+\>", "Item",
+ CellID->181917407,ExpressionUUID->"df8f4c82-c3fc-4f69-aa94-ba1bc82bf438"],
+
+Cell["\<\
+[Sel07] P. Selinger, \"Dagger Compact Closed Categories and Completely \
+Positive Maps,\" ENTCS 170 (2007) 139-163. doi:10.1016/j.entcs.2006.12.018\
+\>", "Item",
+ CellID->1906087345,ExpressionUUID->"e670944c-71d3-4e61-a7c6-13e0a39a42a7"],
+
+Cell["\<\
+[Sin22] K. Singhal, K. Hietala, S. Marshall, R. Rand, \"Q# as a Quantum \
+Algorithmic Language,\" QPL 2022, EPTCS 394, pp. 170-191. \
+doi:10.4204/EPTCS.394.10\
+\>", "Item",
+ CellID->354048744,ExpressionUUID->"053b32c2-f2fa-4378-82dd-3319ba51843c"],
+
+Cell["\<\
+[Sta15] S. Staton, \"Algebraic Effects, Linearity, and Quantum Programming \
+Languages,\" POPL 2015. doi:10.1145/2775051.2676999\
+\>", "Item",
+ CellID->786710823,ExpressionUUID->"e9c16f9d-7faa-4fe4-8416-294b0d1f5125"],
+
+Cell["\<\
+[Voi22] F. Voichick, L. Li, R. Rand, M. Hicks, \"Qunity: A Unified Language \
+for Quantum and Classical Computing,\" Proc. ACM Program. Lang. (POPL 2023) \
+921-951. doi:10.1145/3571225\
+\>", "Item",
+ CellID->1859374462,ExpressionUUID->"291a39ed-8d53-4098-9821-763546fd6ae5"],
+
+Cell["\<\
+[Woo87] W. K. Wootters, \"A Wigner-function formulation of finite-state \
+quantum mechanics,\" Ann. Phys. 176 (1987) 1-21. \
+doi:10.1016/0003-4916(87)90176-X\
+\>", "Item",
+ CellID->544914423,ExpressionUUID->"21f01a48-d1f5-46b8-9da1-21ca5ab198b6"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"2f04a1b6-c8fd-4c09-9010-047d977221d0"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 131, 1, 70, "Title",ExpressionUUID->"782f5365-32eb-4ad5-85a5-99c2ea2a7564",
+ CellID->874461601],
+Cell[688, 23, 698, 12, 70, "Text",ExpressionUUID->"0ca60653-3dc4-4b49-9c77-b548b19f3cb8",
+ CellID->36768919],
+Cell[1389, 37, 520, 9, 70, "Text",ExpressionUUID->"eb217e90-3745-47c3-a0b9-138cf1d72766",
+ CellID->1699946459],
+Cell[1912, 48, 118, 1, 70, "Section",ExpressionUUID->"ed821ec4-dc4a-4a24-a1b6-e83c664533c6",
+ CellID->1535504786],
+Cell[2033, 51, 362, 6, 70, "Text",ExpressionUUID->"1c3d03bf-e787-4871-955a-809b1dba320d",
+ CellID->1208482393],
+Cell[2398, 59, 135, 1, 70, "Text",ExpressionUUID->"66512c92-dc9d-4b20-ba91-5907f3ce23f1",
+ CellID->28909615],
+Cell[2536, 62, 430, 12, 70, "Item",ExpressionUUID->"b1488c7f-e0c3-4b71-a4b3-0ea5d4eedb59",
+ CellID->193832008],
+Cell[2969, 76, 466, 13, 70, "Item",ExpressionUUID->"0e75c595-acd9-45aa-8a82-421fe74045fa",
+ CellID->684317082],
+Cell[3438, 91, 1641, 57, 70, "Item",ExpressionUUID->"00a778f4-8910-4305-aa85-e5d23f8ac8db",
+ CellID->528485616],
+Cell[5082, 150, 388, 6, 70, "Text",ExpressionUUID->"67dcbae4-f308-4a2d-aa9d-c61045fd3e4f",
+ CellID->1392207227],
+Cell[5473, 158, 2074, 65, 70, "Text",ExpressionUUID->"c3d3bfe0-0447-4f44-8c8f-89cd300ce49f",
+ CellID->705466992],
+Cell[7550, 225, 218, 4, 70, "Text",ExpressionUUID->"73a00beb-30eb-4a73-b992-2b1626e67741",
+ CellID->1350516518],
+Cell[7771, 231, 778, 26, 70, "Text",ExpressionUUID->"3daa11ba-13bc-4cbf-b559-908be1b1405e",
+ CellID->907546795],
+Cell[8552, 259, 1015, 35, 70, "DisplayFormula",ExpressionUUID->"289ac760-b4ef-46f9-97d7-591fe268b415",
+ CellID->814772321],
+Cell[9570, 296, 2102, 64, 70, "Text",ExpressionUUID->"8ac13a1e-0ab3-4fe3-8714-d6643e49d254",
+ CellID->1054628905],
+Cell[11675, 362, 1147, 28, 70, "Text",ExpressionUUID->"a1adbc34-871c-4bc0-a170-df2a1b0e2c2b",
+ CellID->2043779557],
+Cell[12825, 392, 474, 7, 70, "Text",ExpressionUUID->"c702f4b2-2a57-42de-a65c-4abefe1decf3",
+ CellID->17830494],
+Cell[13302, 401, 415, 13, 70, "Text",ExpressionUUID->"2dbef215-6b25-40ae-985d-6fcf6ed49fa7",
+ CellID->1589986527],
+Cell[13720, 416, 2987, 51, 70, "Text",ExpressionUUID->"b301367c-be06-45eb-8835-62c5dc6e3b9b",
+ CellID->943101875],
+Cell[16710, 469, 167, 3, 70, "Text",ExpressionUUID->"604e48b6-60ab-4335-b4fb-1fb6987f0fd6",
+ CellID->67888809],
+Cell[16880, 474, 3215, 61, 70, "Text",ExpressionUUID->"db86562d-b58c-4408-95a9-493e92cd11ff",
+ CellID->1432876021],
+Cell[20098, 537, 648, 12, 70, "Text",ExpressionUUID->"ac06ee91-fa93-40e4-a08b-ab9b3b545857",
+ CellID->876231958],
+Cell[20749, 551, 200, 4, 70, "Text",ExpressionUUID->"a4d627be-feef-454b-9800-940515498386",
+ CellID->1020575516],
+Cell[20952, 557, 171, 3, 70, "Section",ExpressionUUID->"42dee198-82b1-40f9-99f1-4d558565dc90",
+ CellID->1967685850],
+Cell[21126, 562, 1163, 31, 70, "Text",ExpressionUUID->"fdf04b78-a569-4dac-9942-ee0e3877c22e",
+ CellID->1044562475],
+Cell[22292, 595, 499, 17, 70, "DisplayFormula",ExpressionUUID->"ede81200-d461-4fc1-9039-4428f8790653",
+ CellID->1653200050],
+Cell[22794, 614, 4448, 152, 70, "Text",ExpressionUUID->"acc551bf-8089-4b7c-b66c-fa33a7fb3e18",
+ CellID->1384978530],
+Cell[27245, 768, 2680, 79, 70, "Text",ExpressionUUID->"b8bf5047-372b-47af-a1e0-611cd169042a",
+ CellID->519689844],
+Cell[29928, 849, 895, 17, 70, "Text",ExpressionUUID->"e65c3bec-5cfa-43fc-ad66-8cf516ad2c69",
+ CellID->1609367578],
+Cell[30826, 868, 122, 1, 70, "Section",ExpressionUUID->"111727e6-59f4-40db-9470-f7feb0383547",
+ CellID->1541450781],
+Cell[30951, 871, 1688, 47, 70, "Text",ExpressionUUID->"b451b15a-c5db-4a84-83ad-df8ef91638ee",
+ CellID->1657269721],
+Cell[32642, 920, 4661, 138, 70, "Text",ExpressionUUID->"b73ca98b-f709-4cd0-89f0-ba841ea47b10",
+ CellID->1140508347],
+Cell[37306, 1060, 1180, 48, 70, "DisplayFormula",ExpressionUUID->"bc5b1d00-c0aa-4248-bb79-c081b0d6baf5",
+ CellID->496109794],
+Cell[38489, 1110, 1687, 41, 70, "Text",ExpressionUUID->"8880a569-8322-4beb-9f03-579539f8c2cd",
+ CellID->108435171],
+Cell[40179, 1153, 1033, 24, 70, "Text",ExpressionUUID->"242f6f98-bc46-4569-a2a8-b706f18d9170",
+ CellID->829388421],
+Cell[41215, 1179, 114, 1, 70, "Section",ExpressionUUID->"7a5a9e83-94f1-4939-bad0-9c41bf8269f9",
+ CellID->203008389],
+Cell[41332, 1182, 185, 4, 70, "Text",ExpressionUUID->"abf002b1-9638-4997-98d3-472f5ea5db4d",
+ CellID->1090263105],
+Cell[41520, 1188, 4550, 94, 70, "Text",ExpressionUUID->"9442591b-b5f4-4b66-9b89-70f0a551481d",
+ CellID->1560876240],
+Cell[46073, 1284, 2400, 73, 70, "Text",ExpressionUUID->"62b2b129-2562-4a28-93ab-6272ff568551",
+ CellID->176337227],
+Cell[48476, 1359, 687, 10, 70, "Text",ExpressionUUID->"c1b7935f-57dd-497b-b97a-d8e64ab89b82",
+ CellID->807053435],
+Cell[49166, 1371, 654, 21, 70, "Text",ExpressionUUID->"7d1e340d-0d4d-4a3d-80fa-29902ee08efa",
+ CellID->1633675818],
+Cell[49823, 1394, 715, 27, 70, "DisplayFormula",ExpressionUUID->"e2f750dd-e3c6-4b91-ad0b-f02d02be1765",
+ CellID->1828793009],
+Cell[50541, 1423, 1291, 26, 70, "Text",ExpressionUUID->"0ceced26-c386-47d2-9396-37365e449aa4",
+ CellID->1232986364],
+Cell[51835, 1451, 1636, 52, 70, "Text",ExpressionUUID->"7a8dbc07-f0ba-4639-ba11-2ceeb7886488",
+ CellID->762269937],
+Cell[53474, 1505, 333, 12, 70, "DisplayFormula",ExpressionUUID->"121e8cab-668c-4578-a5ed-c451a05dadf8",
+ CellID->405213039],
+Cell[53810, 1519, 1376, 39, 70, "Text",ExpressionUUID->"b0a299d2-a55c-48f1-bea1-7ed876b221f6",
+ CellID->2118931930],
+Cell[55189, 1560, 687, 18, 70, "Text",ExpressionUUID->"c1f6d5f5-72c7-4dc6-a94c-e40073f86173",
+ CellID->1039057480],
+Cell[55879, 1580, 869, 19, 70, "Text",ExpressionUUID->"f728d1c6-977d-4ace-9c03-7eeda6c581d9",
+ CellID->1411198270],
+Cell[56751, 1601, 361, 7, 70, "Text",ExpressionUUID->"3b7afd79-b891-4105-b90d-ba720f4d03ed",
+ CellID->1703453532],
+Cell[57115, 1610, 559, 9, 70, "Text",ExpressionUUID->"10b17f37-523a-4645-8868-8cb7acb82959",
+ CellID->1477609488],
+Cell[57677, 1621, 422, 7, 70, "Text",ExpressionUUID->"b14f8880-245c-4d9b-a72e-d8cb1b25a632",
+ CellID->1030824397],
+Cell[58102, 1630, 122, 1, 70, "Section",ExpressionUUID->"746f0264-b4c7-45c1-95c0-8f7e9feaaf4d",
+ CellID->100031176],
+Cell[58227, 1633, 313, 5, 70, "Text",ExpressionUUID->"d29b3ef7-0068-441f-bd15-d8e9fe1e2485",
+ CellID->144223354],
+Cell[58543, 1640, 1203, 38, 70, "Text",ExpressionUUID->"62c2bf53-f4f7-4ea5-8b97-a5e09519c163",
+ CellID->1443527617],
+Cell[59749, 1680, 506, 18, 70, "DisplayFormula",ExpressionUUID->"736f0682-f03f-4178-9c36-74ef4fad596d",
+ CellID->311511756],
+Cell[60258, 1700, 2225, 67, 70, "Text",ExpressionUUID->"3c2c100d-56c9-42e2-9f14-d4176050d697",
+ CellID->1381425643],
+Cell[62486, 1769, 579, 18, 70, "Text",ExpressionUUID->"af167b6f-9bb3-448f-9eb3-39697c4e6dbe",
+ CellID->377280352],
+Cell[63068, 1789, 1763, 65, 70, "DisplayFormula",ExpressionUUID->"3b837036-96c3-48fc-92b5-63280449a7ce",
+ CellID->1717363484],
+Cell[64834, 1856, 2415, 80, 70, "Text",ExpressionUUID->"ba4f843e-a382-4ca3-bf5b-a01a40900bfb",
+ CellID->1781880651],
+Cell[67252, 1938, 2298, 60, 70, "Text",ExpressionUUID->"8d2dbef9-b193-49c6-a8a2-8fff6bb13e4f",
+ CellID->1536527082],
+Cell[69553, 2000, 1121, 29, 70, "Text",ExpressionUUID->"d1f24231-2d12-45a9-9f59-f6d006cf20a7",
+ CellID->1621535814],
+Cell[70677, 2031, 3958, 113, 70, "Text",ExpressionUUID->"0da79b2e-a377-4e03-8d89-e9ee2a6c9713",
+ CellID->1193935837],
+Cell[74638, 2146, 3219, 105, 70, "Text",ExpressionUUID->"36ac53af-cbc9-4b1a-b6ab-e0aaf026078c",
+ CellID->105329933],
+Cell[77860, 2253, 122, 1, 70, "Section",ExpressionUUID->"cf9d98af-04fb-4bd6-93de-d48cf710f03f",
+ CellID->1234416869],
+Cell[77985, 2256, 1235, 33, 70, "Text",ExpressionUUID->"1f4754f3-82c9-400f-bf42-901acd2c27af",
+ CellID->240380995],
+Cell[79223, 2291, 1987, 44, 70, "Text",ExpressionUUID->"40505f0c-b270-4d33-ba34-f545e963b466",
+ CellID->1771870337],
+Cell[81213, 2337, 128, 1, 70, "Section",ExpressionUUID->"5eca6664-6e90-41a7-8cb4-4a740ac6fe01",
+ CellID->305160771],
+Cell[81344, 2340, 2911, 72, 70, "Text",ExpressionUUID->"6cc8b5b8-4652-4177-a801-958423041ace",
+ CellID->1896945989],
+Cell[84258, 2414, 2248, 49, 70, "Text",ExpressionUUID->"7fa7592d-800f-4959-8186-e1762e801e15",
+ CellID->653417278],
+Cell[86509, 2465, 127, 1, 70, "Section",ExpressionUUID->"a5909573-4e2f-4078-bcd2-25e758b524f5",
+ CellID->1067269536],
+Cell[86639, 2468, 1800, 38, 70, "Text",ExpressionUUID->"46567f11-decf-44bf-b4d7-5d8e4b7d7048",
+ CellID->49659130],
+Cell[88442, 2508, 763, 19, 70, "Text",ExpressionUUID->"673d26e5-fe1c-4615-b602-458bc01d7347",
+ CellID->464508221],
+Cell[89208, 2529, 671, 10, 70, "Text",ExpressionUUID->"a4264537-3d72-4508-929f-3ee1918ca030",
+ CellID->1361313038],
+Cell[89882, 2541, 115, 1, 70, "Section",ExpressionUUID->"dd2dc0d6-b513-4579-abcd-3ef7a6b5b0e8",
+ CellID->1907680634],
+Cell[90000, 2544, 907, 13, 70, "Text",ExpressionUUID->"f666d727-fd7e-402b-94c6-23ddb85fd159",
+ CellID->483148123],
+Cell[90910, 2559, 125, 1, 70, "Section",ExpressionUUID->"991d01aa-fc50-45d8-bea4-692a636bf406",
+ CellID->1195452142],
+Cell[91038, 2562, 198, 4, 70, "Text",ExpressionUUID->"d6aae513-8bb7-4ed2-855b-384c2a85bd27",
+ CellID->1521685512],
+Cell[91239, 2568, 1525, 42, 70, "Text",ExpressionUUID->"16c281d6-6804-4c41-9aaf-cec3e2e60e35",
+ CellID->97201263],
+Cell[92767, 2612, 902, 17, 70, "Text",ExpressionUUID->"017a020a-5191-44ee-bd06-5e82327fd123",
+ CellID->878831761],
+Cell[93672, 2631, 267, 5, 70, "Text",ExpressionUUID->"b479fc59-4421-4ada-9d5f-90f19152f339",
+ CellID->1048559713],
+Cell[93942, 2638, 125, 1, 70, "Section",ExpressionUUID->"df368ed9-5969-4446-bd98-3e268442efb7",
+ CellID->300048012],
+Cell[94070, 2641, 715, 14, 70, "Text",ExpressionUUID->"74a04e17-b504-4092-8214-85b7ac4d1947",
+ CellID->1962937852],
+Cell[94788, 2657, 2326, 64, 70, "Text",ExpressionUUID->"0970dc82-d8e9-40a5-961b-457441412de5",
+ CellID->588230824],
+Cell[97117, 2723, 758, 11, 70, "Text",ExpressionUUID->"ea7af6bb-0d40-40a9-bc30-5c533cf06aef",
+ CellID->2099309037],
+Cell[97878, 2736, 131, 1, 70, "Section",ExpressionUUID->"d5964f60-bc24-4e66-a11b-6c7b3cacb956",
+ CellID->512383039],
+Cell[98012, 2739, 1955, 49, 70, "Text",ExpressionUUID->"fe601add-ac55-4f57-9104-00b3bd6da4c2",
+ CellID->273308241],
+Cell[99970, 2790, 2498, 68, 70, "Text",ExpressionUUID->"5d2db493-fe98-4ab1-93c2-0bcad5fd6d58",
+ CellID->1809098798],
+Cell[102471, 2860, 7931, 162, 70, "Text",ExpressionUUID->"0b2b76f4-85a5-431d-8416-02c6c4981117",
+ CellID->156430199],
+Cell[110405, 3024, 145, 1, 70, "Section",ExpressionUUID->"232d607a-738c-4885-afce-dc60d05cc22c",
+ CellID->724760089],
+Cell[110553, 3027, 789, 14, 70, "Text",ExpressionUUID->"94fa2c99-146e-470d-a3bb-3d7945480000",
+ CellID->168408080],
+Cell[111345, 3043, 1140, 22, 70, "Text",ExpressionUUID->"e9c43035-583c-42fd-a398-1837dbf93e1a",
+ CellID->811283638],
+Cell[112488, 3067, 126, 1, 70, "Section",ExpressionUUID->"64b6c4dd-e395-45f9-9258-b739f893a84b",
+ CellID->207978548],
+Cell[112617, 3070, 9059, 321, 70, "Text",ExpressionUUID->"173902e6-ef66-4e14-8589-7c08aefb9c07",
+ CellID->437474228],
+Cell[121679, 3393, 6261, 218, 70, "Text",ExpressionUUID->"46040b61-e1e4-453b-8961-250e44eb9585",
+ CellID->874582697],
+Cell[127943, 3613, 117, 1, 70, "Section",ExpressionUUID->"2d86e240-8653-4825-a51e-154597126bc2",
+ CellID->11631581],
+Cell[128063, 3616, 1362, 21, 70, "Text",ExpressionUUID->"91b90eff-546a-43ce-be8b-a0b7a019df19",
+ CellID->1933762060],
+Cell[129428, 3639, 1036, 14, 70, "Text",ExpressionUUID->"668d0185-c33f-4fd6-a2bc-3433fbc67434",
+ CellID->1055776787],
+Cell[130467, 3655, 785, 11, 70, "Text",ExpressionUUID->"a0fbbaec-269e-4815-b6b6-ed6b6152ae7e",
+ CellID->1859711813],
+Cell[131255, 3668, 739, 18, 70, "Text",ExpressionUUID->"1ca3c526-a52c-4505-949f-56457a6fa11d",
+ CellID->1348896709],
+Cell[131997, 3688, 307, 6, 70, "Text",ExpressionUUID->"97c5446e-4533-4ab9-b580-a9197baeb730",
+ CellID->1427211115],
+Cell[132307, 3696, 246, 4, 70, "Item",ExpressionUUID->"b1d46747-74b1-48e3-88b8-83cd43bf699f",
+ CellID->2099805207],
+Cell[132556, 3702, 224, 4, 70, "Item",ExpressionUUID->"0b0c956b-949e-436e-bf88-d0fd07610161",
+ CellID->1402006442],
+Cell[132783, 3708, 275, 5, 70, "Item",ExpressionUUID->"aa5b4640-d07b-401c-b085-4b080e0cd1f1",
+ CellID->1901179466],
+Cell[133061, 3715, 229, 4, 70, "Item",ExpressionUUID->"17af1d6d-4981-42cc-af44-138ed9cf65a6",
+ CellID->210724908],
+Cell[133293, 3721, 285, 5, 70, "Item",ExpressionUUID->"871d77fe-99d2-4046-acaf-83d7157f91e3",
+ CellID->1992790374],
+Cell[133581, 3728, 261, 5, 70, "Item",ExpressionUUID->"8d92f5e0-40c9-4c72-a917-919179c9e505",
+ CellID->292747604],
+Cell[133845, 3735, 283, 5, 70, "Item",ExpressionUUID->"4ab4db18-3c30-4c57-a1bb-ffd87061cec9",
+ CellID->1553818268],
+Cell[134131, 3742, 275, 5, 70, "Item",ExpressionUUID->"51d06a10-918d-4d6b-8537-6010e7b49fde",
+ CellID->1870754514],
+Cell[134409, 3749, 274, 5, 70, "Item",ExpressionUUID->"0dd45889-ac3e-4c27-94ac-2edfa599050f",
+ CellID->1358728755],
+Cell[134686, 3756, 273, 5, 70, "Item",ExpressionUUID->"a80d21f4-ab46-43a8-9a58-87319716e79f",
+ CellID->935019337],
+Cell[134962, 3763, 277, 5, 70, "Item",ExpressionUUID->"d0e526be-ac59-4ddd-a452-7403eb763072",
+ CellID->642744358],
+Cell[135242, 3770, 270, 5, 70, "Item",ExpressionUUID->"a7555a45-75ad-466c-ba49-48e14351e076",
+ CellID->1478372881],
+Cell[135515, 3777, 271, 5, 70, "Item",ExpressionUUID->"a5082e3b-f8ff-4726-b296-0a5ab340d311",
+ CellID->124263719],
+Cell[135789, 3784, 234, 4, 70, "Item",ExpressionUUID->"318f189a-3794-4363-bff9-70a6bd5e9c79",
+ CellID->1310926461],
+Cell[136026, 3790, 275, 5, 70, "Item",ExpressionUUID->"ebe11453-dd70-4b08-ad74-bfff356c1d20",
+ CellID->1124211690],
+Cell[136304, 3797, 260, 5, 70, "Item",ExpressionUUID->"15704684-c9f1-4b60-8896-7b3481397f6a",
+ CellID->1335749844],
+Cell[136567, 3804, 247, 4, 70, "Item",ExpressionUUID->"f9f24319-a06b-4a01-82bf-910c6e41ba7a",
+ CellID->793802945],
+Cell[136817, 3810, 259, 5, 70, "Item",ExpressionUUID->"71b012c2-dc54-43d2-97f2-a980fa8d802f",
+ CellID->631769182],
+Cell[137079, 3817, 243, 4, 70, "Item",ExpressionUUID->"ec177b73-2477-46d2-a584-bba24edc9502",
+ CellID->1873681340],
+Cell[137325, 3823, 268, 5, 70, "Item",ExpressionUUID->"ce2de4d2-3866-4033-a3e2-5a2f14aeb89c",
+ CellID->1468251080],
+Cell[137596, 3830, 210, 4, 70, "Item",ExpressionUUID->"83119f48-b7df-4bf5-9de0-7ac4ceb4a128",
+ CellID->1989234463],
+Cell[137809, 3836, 271, 5, 70, "Item",ExpressionUUID->"7d505d45-f4b8-4911-b38c-d8b7dbd6b0fe",
+ CellID->1607696641],
+Cell[138083, 3843, 235, 4, 70, "Item",ExpressionUUID->"1d67ca6c-cd3d-495e-9666-efb5950795e9",
+ CellID->1817342824],
+Cell[138321, 3849, 287, 5, 70, "Item",ExpressionUUID->"e226a9e2-7302-4879-a46e-c90fb967f9d5",
+ CellID->530774412],
+Cell[138611, 3856, 288, 5, 70, "Item",ExpressionUUID->"1ee28477-7d1c-407c-a7ca-d4688aeb0b24",
+ CellID->599957810],
+Cell[138902, 3863, 304, 5, 70, "Item",ExpressionUUID->"42fc0dc3-08a8-4775-b4d6-c77c6c34c46b",
+ CellID->1899946997],
+Cell[139209, 3870, 278, 5, 70, "Item",ExpressionUUID->"6d8f20b7-0245-46ba-8162-4d7842b7385d",
+ CellID->1051619128],
+Cell[139490, 3877, 264, 5, 70, "Item",ExpressionUUID->"40ad0525-2a86-4262-a65a-8c3a3776ec89",
+ CellID->1921351195],
+Cell[139757, 3884, 253, 4, 70, "Item",ExpressionUUID->"dea2e428-80c9-4a1c-9c6a-e8c3f0929ee8",
+ CellID->1207491739],
+Cell[140013, 3890, 230, 4, 70, "Item",ExpressionUUID->"5ca6e90e-2103-4bf9-a38d-8f9c3133bb18",
+ CellID->216741342],
+Cell[140246, 3896, 255, 4, 70, "Item",ExpressionUUID->"108da0da-8474-4556-a5b4-ced3c756f70a",
+ CellID->2096934290],
+Cell[140504, 3902, 260, 5, 70, "Item",ExpressionUUID->"506ba4dd-f04a-419f-bcbe-980fab2d7531",
+ CellID->1367217003],
+Cell[140767, 3909, 253, 4, 70, "Item",ExpressionUUID->"9d65de09-0bd1-4bde-9d3b-dcd36eb91f5e",
+ CellID->1372538143],
+Cell[141023, 3915, 241, 4, 70, "Item",ExpressionUUID->"3151090b-eabc-4f99-a238-9e45539feb04",
+ CellID->485911656],
+Cell[141267, 3921, 282, 5, 70, "Item",ExpressionUUID->"df8f4c82-c3fc-4f69-aa94-ba1bc82bf438",
+ CellID->181917407],
+Cell[141552, 3928, 247, 4, 70, "Item",ExpressionUUID->"e670944c-71d3-4e61-a7c6-13e0a39a42a7",
+ CellID->1906087345],
+Cell[141802, 3934, 257, 5, 70, "Item",ExpressionUUID->"053b32c2-f2fa-4378-82dd-3319ba51843c",
+ CellID->354048744],
+Cell[142062, 3941, 227, 4, 70, "Item",ExpressionUUID->"e9c16f9d-7faa-4fe4-8416-294b0d1f5125",
+ CellID->786710823],
+Cell[142292, 3947, 284, 5, 70, "Item",ExpressionUUID->"291a39ed-8d53-4098-9821-763546fd6ae5",
+ CellID->1859374462],
+Cell[142579, 3954, 256, 5, 70, "Item",ExpressionUUID->"21f01a48-d1f5-46b8-9da1-21ca5ab198b6",
+ CellID->544914423]
+}
+]
+*)
+
+(* End of internal cache information *)

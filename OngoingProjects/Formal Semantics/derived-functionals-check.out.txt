@@ -1,0 +1,5 @@
+E1 QuantumDistance default == explicit Fidelity == 1 - Re Tr sqrt(rho1 rho2): {True, True}
+E1b QuantumDistance vanishes on identical states, and default != Uhlmann fidelity: {True, True}
+E1c QuantumSimilarity default is 1 - d for the Fidelity distance: True
+E2 QuantumEntanglementMonotone default (Concurrence): Bell 1, product 0: {True, True}
+E2b QuantumEntangledQ (default Realignment): Bell True, product False: {True, False}

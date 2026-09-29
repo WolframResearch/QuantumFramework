@@ -1,0 +1,26 @@
+QuantumOperator wraps head -> QuantumState
+QuantumOperator order {out,in} -> {{1}, {1}}
+Channel outQ>=inQ -> {2, 1}
+QMO wraps head -> QuantumOperator
+qo[qs] -> QuantumState
+qo1[qo2] -> QuantumOperator
+qo[qmo] -> QuantumMeasurementOperator
+qo[qc(hannel)] -> QuantumChannel
+qmo[qs] -> QuantumMeasurement
+qmo[qo] -> QuantumMeasurementOperator
+chan[qs] -> QuantumState
+qco[qs] -> QuantumState
+qco[] -> QuantumState
+qco[op] (extend) -> QuantumCircuitOperator
+qc1 /* qc2 -> QuantumCircuitOperator
+PartialTrace[qs] -> QuantumState
+PartialTrace[qo] -> QuantumOperator
+PartialTrace[qc] -> QuantumCircuitOperator
+SuperDagger[qo] -> QuantumOperator
+qo1 + qo2 -> QuantumOperator
+TensorProduct[qo,qo] -> QuantumOperator
+QuantumEvolve[H,psi0,t] -> QuantumState
+qm Head -> QuantumMeasurement
+qm Distribution head -> CategoricalDistribution
+qm PostMeasurementState head -> QuantumState
+DONE

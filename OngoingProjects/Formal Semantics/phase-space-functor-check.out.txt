@@ -1,0 +1,69 @@
+Wigner[3] element count, dimension -> {9, 9}
+elements are 3x3 Hermitian with trace 1 -> {True, True, {1., 1., 1., 1., 1., 1., 1., 1., 1.}}
+Gram matrix Tr[A_a A_b] == d Identity -> True
+sum of elements == d Identity -> True
+W(|0>) picture, dimensions, qudits -> {"PhaseSpace", {9}, 1}
+W(|0>) vector -> {0.3333333333333333, 0, 0, 0.3333333333333333, 0, 0, 0.3333333333333333, 0, 0}
+W(|0>) == Tr[A_a rho]/d -> True
+W(|0>) grid -> {{0.3333333333333333, 0, 0}, {0.3333333333333333, 0, 0}, {0.3333333333333333, 0, 0}}
+W(strange) min entry, total, sum|W| -> {-0.3333333333333333, 1., 1.6666666666666665}
+W(Fourier) dims, real -> {{9, 9}, True}
+Cliffords F, X, Z, S3 are permutations -> {True, True, True, True}
+random unitary: permutation, real, column sums 1 -> {False, True, True}
+functoriality W(F.S) == W(F).W(S) -> True
+functoriality W(R.F) == W(R).W(F) -> True
+equivariance W(R rho) == W(R).W(rho) -> True
+equivariance through the heads W(R)[W(rho)] -> True
+inverse on states: Weyl[W(rho)] == rho -> True
+inverse on operators: Weyl[W(F)] dims -> {9, 9}
+inverse on operators lands on the doubled operator F (x) conj F -> True
+W kills the global phase: W(I F) == W(F) -> True
+Born probabilities of the strange state -> {0, 0.5, 0.5}
+W(qmo): head, POVM dims, targets -> {QuantumMeasurementOperator, {81, 9}, {{1}}}
+W(qmo)[W(rho)]: head, outcome count -> {QuantumMeasurement, 9}
+W(qmo)[W(rho)] outcomes -> {QuditName[Subscript["\[ScriptCapitalW]", Row[{0, 0}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{0, 1}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{0, 2}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{1, 0}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{1, 1}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{1, 2}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{2, 0}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{2, 1}]], "Dual" -> False], QuditName[Subscript["\[ScriptCapitalW]", Row[{2, 2}]], "Dual" -> False]}
+W(qmo)[W(rho)] probabilities -> {0.16666666666666666, 0.08333333333333333, 0.08333333333333333, 0.16666666666666666, 0.08333333333333333, 0.08333333333333333, 0.16666666666666666, 0.08333333333333333, 0.08333333333333333}
+W(diag Born) vector -> {0, 0.16666666666666666, 0.16666666666666666, 0, 0.16666666666666666, 0.16666666666666666, 0, 0.16666666666666666, 0.16666666666666666}
+probabilities == W(diag Born) -> False
+probabilities == Tr[A_a diag Born] (no 1/d) -> False
+probabilities == coordinates of the doubled register marginal -> False
+
+Downloading... (96 bytes of 96 bytes) [========================================] Elapsed time 1s
+SIC coordinates, nonnegative, sum -> {{0.39679416385633454, 0.19854709036191523, 0.3447483140194015, 0.05991043176234889}, True, 1.0000000000000002}
+SIC coordinates == QBismSICPOVM probabilities -> True
+SIC transform of H: real, min entry -> {True, -0.5000000000000001}
+Positive(W): dims (sector, point), min >= 0 -> {{2, 9}, True}
+Positive(W): plus - minus == W, total == sum|W| -> {True, True}
+Positive(W(R)): dims (sector, point, sector, point), min >= 0 -> {{2, 9, 2, 9}, True}
+Positive(W(R)) blocks are T+, T-, T-, T+ -> {True, True, True, True}
+sectors of Positive(W(R)).Positive(W) recover W(R).W -> True
+measurement map: dims after inverse vs dense post-measurement joint -> {{3, 3}, {3, 3}}
+measurement map is equivariant (inverse of transformed joint == dense joint) -> True
+QuditBasis has a 'Canonical' property -> False
+
+ArrayReshape::listrp: List, SparseArray object or structured array expected at position 1 in ArrayReshape[QuditBasis[<|{QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}]|>], {}].
+                                                                                                                                                   00                                                                              01                                                                              02                                                                              10                                                                              11                                                                              12                                                                              20                                                                              21                                                                              22
+
+SparseArray::list: List expected at position 1 in SparseArray[ArrayReshape[QuditBasis[<|{QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}], {QuditName[\[ScriptCapitalW]  , Dual -> False], 1} -> SparseArray[<3>, {3, 3}]|>], {}]].
+                                                                                                                    00                                                                              01                                                                              02                                                                              10                                                                              11                                                                              12                                                                              20                                                                              21                                                                              22
+
+QuditBasis::invalidName: Split is not a recognized QuditBasis constructor
+QuantumPositiveTransform on a state: head, valid state -> {Failure, False}
+rate matrix dims, real, column sums 0 -> {{9, 9}, True, True}
+exp(R t).W(0) == W(rho(t)) -> True
+W(channel): head, dims, real -> {QuantumOperator, {4, 4}, True}
+W(channel).W(rho) == W(channel[rho]) -> True
+Wigner[2] elements -> {{{2., 0}, {0, 2.}}, {{0, 2.}, {2., 0}}, {{2., 0}, {0, -2.}}, {{0, 0. + 2.*I}, {0. - 2.*I, 0}}}
+Wigner[2] traces, Gram matrix, sum -> {{4., 0, 0, 0}, {{8., 0, 0, 0}, {0, 8., 0, 0}, {0, 0, 8., 0}, {0, 0, 0, 8.}}, {{4., 2. + 2.*I}, {2. - 2.*I, 0}}}
+qubit W(|0>) vector, total -> {{0.25, 0, 0.25, 0}, 0.5}
+qubit W(|0>) == Tr[A_a rho]/d ? -> False
+qubit grid 2d x 2d, total, Total[grid][[;;;;2]] -> {{{0.25, 0, 0.25, 0}, {0.25, 0, -0.25, 0}, {0.25, 0, 0.25, 0}, {0.25, 0, -0.25, 0}}, 1., {1., 0.}}
+qubit W(H): matrix, column sums -> {{{1., 0, 0, 0}, {0, 0, 1., 0}, {0, 1., 0, 0}, {0, 0, 0, -1.}}, {1., 1., 1., -1.}}
+qubit equivariance W(H).W(|0>) == W(H|0>) -> True
+qubit inverse Weyl[W(|0>)] == |0> -> True
+W(channel) column sums (even d) -> {1., 1., 0.8, 0.8}
+2-qubit SIC: dims, product of single-qubit coordinates -> {{4, 4}, True}
+QuasiProbability dims (one d=4 qudit) vs head-wise W(bell) grid dims -> {{8, 8}, {4, 4, 4, 4}}
+qutrit with the qubit SIC basis -> Failure
+qutrit with QuditBasis['QBismSIC'] -> Failure
+DONE
