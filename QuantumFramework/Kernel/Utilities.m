@@ -425,10 +425,64 @@ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
         ]
     ]
 
+(* MatrixFunction takes divided differences of f between eigenvalues that roundoff has
+   split apart around zero, and those stay finite where f has no derivative at zero, so
+   Sqrt and Log of a matrix within roundoff of a nilpotent one can come out as large
+   numbers that mean nothing. So the eigenvalue 0 is read to within roundoff as 0^m reads
+   it, and f fails when it has no finite value there or, as its series shows, no finite
+   derivative of an order below a bound on the size of the largest Jordan block there. *)
 nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] := Enclose[
     Confirm[spectralValues[f, eigenvalues]];
-    Replace[MatrixFunction[f, mat, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
+    If[ lacksDerivativeAtZeroQ[f, zeroJordanBlockBound[mat, roundoffZeroEigenvalue[mat, eigenvalues]]],
+        derivativeFailure,
+        Replace[MatrixFunction[f, mat, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
+    ]
 ]
+
+(* A bound on the size of the largest Jordan block of the eigenvalue 0 of the inexact m to
+   within roundoff, given zero = roundoffZeroEigenvalue[m, eigenvalues]: 0 when 0 is not
+   an eigenvalue, 1 when it is a semisimple one, and when it is defective a - k + 1, and at
+   least 2, for its k null vectors and the largest a for which the a eigenvalues of
+   smallest modulus lie within tol^(1/a) ||m|| of zero, as far as a perturbation of size
+   tol ||m|| spreads the eigenvalues of a Jordan block of size a. Small eigenvalues that
+   roundoff cannot bring to zero can count in a too, so the bound can exceed the size. *)
+zeroJordanBlockBound[m_, zero_] := Which[
+    zero["Defective"], Max[2, Max[0, Select[Range[Length[m]], Abs[zero["Eigenvalues"][[#]]] <= zero["Tolerance"] ^ (1 / #) zero["Norm"] &]] - zero["Nullity"] + 1],
+    zero["Nullity"] > 0, 1,
+    True, 0
+]
+
+(* True when f has no finite value at zero, for s at least 1, or, for s above 1, its series
+   at zero shows that it has no finite derivative there of some order below s: a series
+   that comes back as a SeriesData with a nonzero term of power at most s - 1 whose
+   coefficient is not numeric (a logarithm) or whose power is not a nonnegative integer (a
+   pole, or a branch point as Sqrt has), or as a Piecewise, an expansion that depends on
+   the side of zero (Surd, RealAbs). f is read with exact parameters, so BesselJ[1., x]
+   expands as BesselJ[1, x] does, and its value is taken at an exact 0, so where it has
+   none the kernel may say so, as for 1/x; the series may warn as well, as for
+   AlternatingFactorial. A derivative whose formula is 0/0 at zero, as that of
+   SinhIntegral, is finite. A series of any other shape (Abs and Round do not expand,
+   LogIntegral comes back as a multiple of a SeriesData), or one not read within a second
+   (DirichletEta at a block of size 64), leaves the decision to MatrixFunction. *)
+lacksDerivativeAtZeroQ[_, s_] /; s < 1 := False
+
+lacksDerivativeAtZeroQ[f_, s_] := With[{exact = SetPrecision[f, Infinity]},
+    ! NumericQ[N[exact[0]]] || s > 1 && TimeConstrained[nonTaylorQ[Series[exact[\[FormalX]], {\[FormalX], 0, s - 1}], s - 1], 1, False]
+]
+
+(* SeriesData[x, 0, c, nmin, nmax, den] is the sum of c[[i]] x^((nmin + i - 1)/den) plus
+   terms of order x^(nmax/den). A coefficient is tested for zero last, and only on a term
+   that is not a Taylor term, since that test can take seconds. *)
+nonTaylorQ[series_SeriesData, order_] := With[{c = series[[3]], nmin = series[[4]], den = series[[6]]},
+    AnyTrue[
+        Transpose[{c, (nmin + Range[0, Length[c] - 1]) / den}],
+        #[[2]] <= order && ! (NumericQ[#[[1]]] && IntegerQ[#[[2]]] && #[[2]] >= 0) && ! TrueQ[#[[1]] == 0] &
+    ]
+]
+
+nonTaylorQ[_Piecewise, _] := True
+
+nonTaylorQ[_, _] := False
 
 derivativeFailure = Failure["NonFiniteMatrixFunction", <|
     "MessageTemplate" -> "The function has no finite value, or no derivative where a Jordan block of the matrix needs one, at an eigenvalue."
@@ -826,39 +880,43 @@ extraPrecision[x_, digits_] := 10 Max[digits, 0] + 10000 + 2 Max[0, Cases[x,
 
 gaussianRationalQ[x_] := MatchQ[x, _Integer | _Rational | Complex[_Integer | _Rational, _Integer | _Rational]]
 
-(* An inexact m. Roundoff moves each singular value by at most of order eps ||m||, so
-   those within scale = roundoffTolerance[m] ||m|| count as zero and give the nullity
-   k, and the singular vectors give x and y. The zero eigenvalue is semisimple to
-   within roundoff when the smallest singular value of y.x, the cosine of the largest
-   angle between the null spaces of m and m^†, stays above the tolerance; its
-   computed eigenvalues then lie within scale over that cosine of zero, so they are
-   the k eigenvalues of smallest modulus. Every other eigenvalue must lie outside that
-   bound, or the zero eigenvalue is defective to within roundoff, and have real part
-   above scale, or there is no limit. A Hermitian m gives an exactly Hermitian
-   projector. *)
-inexactZeroBasePower[m_] := inexactZeroBasePower[m, SingularValueDecomposition[m]]
+(* An inexact m. The limit exists when its zero eigenvalue is semisimple to within
+   roundoff (roundoffZeroEigenvalue) and every other eigenvalue has real part above
+   scale = roundoffTolerance[m] ||m||, and it is then the projector from the null spaces.
+   A Hermitian m gives an exactly Hermitian projector. *)
+inexactZeroBasePower[m_] := With[
+    {zero = roundoffZeroEigenvalue[m, Eigenvalues[m]]},
+    {noLimit = SelectFirst[Drop[zero["Eigenvalues"], zero["Nullity"]], Re[#] <= zero["Tolerance"] zero["Norm"] &]},
+    Which[
+        zero["Defective"], defectiveZeroFailure,
+        ! MissingQ[noLimit], noLimitFailure[noLimit],
+        zero["Nullity"] == 0, SparseArray[{}, Dimensions[m], N[0, Precision[m]]],
+        True, With[{p = nullSpaceProjector @@ zero["NullSpaces"]}, If[nearlyHermitianQ[m, roundoffTolerance[m]], (p + ConjugateTranspose[p]) / 2, p]]
+    ]
+]
 
-inexactZeroBasePower[m_, {u_, s_, v_}] := With[
+(* The eigenvalue 0 of an inexact m to within roundoff, read from the singular value
+   decomposition of m and its eigenvalues, which are kept sorted by modulus. Roundoff
+   moves each singular value by at most of order eps ||m||, so those within scale =
+   roundoffTolerance[m] ||m|| count as zero and give the nullity k, and the singular
+   vectors give x and y. The zero eigenvalue is semisimple to within roundoff when the
+   smallest singular value of y.x, the cosine of the largest angle between the null
+   spaces of m and m^†, stays above the tolerance; its computed eigenvalues then lie
+   within scale over that cosine of zero, so they are the k eigenvalues of smallest
+   modulus, and every other eigenvalue must lie outside that bound, or the zero
+   eigenvalue is defective to within roundoff. *)
+roundoffZeroEigenvalue[m_, eigenvalues_] := roundoffZeroEigenvalue[m, SingularValueDecomposition[m], SortBy[eigenvalues, Abs]]
+
+roundoffZeroEigenvalue[m_, {u_, s_, v_}, eigenvalues_] := With[
     {sigma = Diagonal[s], tol = roundoffTolerance[m]},
     {scale = tol Max[sigma]},
     {k = Total[UnitStep[scale - sigma]]},
     {x = Take[v, All, -k], y = ConjugateTranspose[Take[u, All, -k]]},
     {cosine = If[k == 0, 1, Min[SingularValueList[y . x, Tolerance -> 0]]]},
-    If[ cosine <= tol,
-        defectiveZeroFailure,
-        inexactZeroBaseProjector[m, x, y, SortBy[Eigenvalues[m], Abs], k, scale, scale / cosine]
-    ]
-]
-
-inexactZeroBaseProjector[m_, x_, y_, eigenvalues_, k_, scale_, bound_] := With[
-    {zeros = Take[eigenvalues, k], others = Drop[eigenvalues, k]},
-    {noLimit = SelectFirst[others, Re[#] <= scale &]},
-    Which[
-        Max[Abs[zeros], 0] > bound || Min[Abs[others], Infinity] <= bound, defectiveZeroFailure,
-        ! MissingQ[noLimit], noLimitFailure[noLimit],
-        k == 0, SparseArray[{}, Dimensions[m], N[0, Precision[m]]],
-        True, With[{p = nullSpaceProjector[x, y]}, If[nearlyHermitianQ[m, roundoffTolerance[m]], (p + ConjugateTranspose[p]) / 2, p]]
-    ]
+    <|
+        "Nullity" -> k, "NullSpaces" -> {x, y}, "Eigenvalues" -> eigenvalues, "Tolerance" -> tol, "Norm" -> Max[sigma],
+        "Defective" -> (cosine <= tol || Max[Abs[Take[eigenvalues, k]], 0] > scale / cosine || Min[Abs[Drop[eigenvalues, k]], Infinity] <= scale / cosine)
+    |>
 ]
 
 (* The spectral projector onto the null space along the range, from columns x

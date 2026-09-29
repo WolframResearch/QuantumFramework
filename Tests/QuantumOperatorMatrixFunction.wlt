@@ -21,17 +21,27 @@
                           transverse-field Ising chain in (J, g), "Parameters",
                           exact input
      exactly solvable     Jordan block, exact Log, Hadamard-rotated Ising, |A| of a
-                          diagonalizable non-normal A, sqrt of a projector
+                          diagonalizable non-normal A, sqrt of a projector, sqrt and
+                          log of machine Jordan blocks at 1 of order 2 and 3, cos and
+                          SinhIntegral of a machine nilpotent
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
                           defective), eigenvalue 10^-12 next to 1, coupling 10^-9,
-                          decoupled subsystems, short time t -> 0
+                          decoupled subsystems, short time t -> 0, sqrt of
+                          [[e, 1], [0, 0]] from resolvable e to where roundoff can
+                          merge its eigenvalues into a Jordan block
      numerical reference  64-dim Ising spectrum in a random eigenbasis, 600 random
                           Hermitian draws against a 30-digit diagonalization,
                           cos^2 + sin^2 = 1 and [cos H, H] = 0
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
                           defective, or reached by substitution) is a Failure;
                           degenerate spectra of multiplicity 8 and 4; parameter
-                          values at and next to a collision of two eigenvalues
+                          values at and next to a collision of two eigenvalues;
+                          sqrt and log of machine matrices within roundoff of a
+                          Jordan block at zero (nilpotent of order 2 and 3, the
+                          lowering operator in a random frame) fail as 0^M reads
+                          them, and so does log of a projector whose null space lies
+                          within 10^-6 of its range, and 1/x at its pole; Sinc of a
+                          machine nilpotent is a known limitation
 
    The zero base, 0^M, the limit of b^M as b -> 0 (the projector onto the null space
    of M along its range), has its own rows. Refused base case: one diagonal mode with
@@ -1451,6 +1461,151 @@ VerificationTest[
         "zero eigenvalue not written as 0" -> True, "numeric eigenvalue 10^-100 beside w" -> True
     |>,
     TestID -> "MatrixFunction-zero-base-symbolic"
+]
+
+(* A machine matrix within roundoff of a Jordan block at zero has no square root and no
+   logarithm, as 0^M reads it defective there: roundoff splits the eigenvalues of the
+   nilpotent [[3, -1], [9, -3]] and [[1, 1], [-1, -1]] apart around zero, and the divided
+   differences of Sqrt across that split, and of Log for the first, are finite but mean
+   nothing. *)
+VerificationTest[
+    With[{m1 = N[{{3, -1}, {9, -3}}], m2 = N[{{1, 1}, {-1, -1}}]},
+        <|
+            "Sqrt" -> {mfZeroBaseTag[Sqrt[QuantumOperator[m1]]], mfZeroBaseTag[Sqrt[QuantumOperator[m2]]]},
+            "Log" -> mfZeroBaseTag[Log[QuantumOperator[m1]]],
+            "0^M" -> {mfZeroBaseTag[0 ^ QuantumOperator[m1]], mfZeroBaseTag[0 ^ QuantumOperator[m2]]}
+        |>
+    ],
+    <|
+        "Sqrt" -> {"NonFiniteMatrixFunction", "NonFiniteMatrixFunction"}, "Log" -> "NonFiniteMatrixFunction",
+        "0^M" -> {"ZeroBasePowerDefective", "ZeroBasePowerDefective"}
+    |>,
+    TestID -> "MatrixFunction-roundoff-nilpotent-fails"
+]
+
+(* The same holds for longer blocks and in any frame: a nilpotent of order 3 in an integer
+   basis, and the lowering operator of 4 Fock levels, a single Jordan block at zero, in a
+   random unitary frame. A semisimple zero needs a finite value only, so Log fails at a
+   projector whose zero eigenvalues roundoff moves off zero: P onto span(e1, e2) along
+   span(e1 + 10^-6 e3, e2 + 10^-6 e4), in the same frame. *)
+VerificationTest[
+    With[
+        {
+            s3 = {{1, 2, 0}, {1, 3, 1}, {0, 1, 2}},
+            u = Orthogonalize[mfUnitary[[;; 4, ;; 4]]],
+            projector = {{1, 0, -10^6, 0}, {0, 1, 0, -10^6}, {0, 0, 0, 0}, {0, 0, 0, 0}}
+        },
+        {
+            nilpotent = N[s3 . DiagonalMatrix[{1, 1}, 1] . Inverse[s3]],
+            lowering = u . Normal[AnnihilationOperator[4]["Matrix"]] . ConjugateTranspose[u]
+        },
+        <|
+            "order 3" -> {mfZeroBaseTag[Sqrt[QuantumOperator[nilpotent]]], mfZeroBaseTag[Log[QuantumOperator[nilpotent]]], mfZeroBaseTag[0 ^ QuantumOperator[nilpotent]]},
+            "lowering operator" -> {mfZeroBaseTag[Sqrt[QuantumOperator[lowering]]], mfZeroBaseTag[Log[QuantumOperator[lowering]]], mfZeroBaseTag[0 ^ QuantumOperator[lowering]]},
+            "Log of a projector" -> mfZeroBaseTag[Log[QuantumOperator[u . projector . ConjugateTranspose[u]]]]
+        |>
+    ],
+    <|
+        "order 3" -> {"NonFiniteMatrixFunction", "NonFiniteMatrixFunction", "ZeroBasePowerDefective"},
+        "lowering operator" -> {"NonFiniteMatrixFunction", "NonFiniteMatrixFunction", "ZeroBasePowerDefective"},
+        "Log of a projector" -> "NonFiniteMatrixFunction"
+    |>,
+    TestID -> "MatrixFunction-roundoff-Jordan-block-at-zero-fails"
+]
+
+(* Approaching a Jordan block at zero, M = [[e, 1], [0, 0]] has the square root
+   [[Sqrt[e], 1/Sqrt[e]], [0, 0]], whose norm grows as 1/Sqrt[e]. The machine route
+   follows it while e is resolvable and fails once e^2 falls below 100 n eps ||M||^2, for
+   n = 2 and the unit roundoff eps, inside the range where a perturbation of the size of
+   roundoff, 100 n eps ||M||, can merge the eigenvalues e and 0 into a Jordan block; that
+   is the e where 0^M turns from a projector to defective. *)
+VerificationTest[
+    With[{root = Function[e, Sqrt[QuantumOperator[N[{{e, 1}, {0, 0}}]]]]},
+        <|
+            "follows the closed form" -> AllTrue[{10^-1, 10^-3, 10^-5}, Max[Abs[Normal[root[#]["Matrix"]] - {{Sqrt[#], 1 / Sqrt[#]}, {0, 0}}]] Sqrt[#] < 10^-14 &],
+            "fails where 0^M does" -> ({FailureQ[root[#]], FailureQ[0 ^ QuantumOperator[N[{{#, 1}, {0, 0}}]]]} & /@ {10^-5, 10^-9})
+        |>
+    ],
+    <|"follows the closed form" -> True, "fails where 0^M does" -> {{False, False}, {True, True}}|>,
+    TestID -> "MatrixFunction-roundoff-Jordan-approach"
+]
+
+(* A Jordan block away from zero keeps its matrix functions, which need the derivative
+   there: sqrt and log of the machine block [[0, 1], [-1, 2]] at 1, the block
+   [[1, 1], [0, 1]] in the basis [[1, 2], [1, 3]], are [[1/2, 1/2], [-1/2, 3/2]] and
+   [[-1, 1], [-1, 1]], at machine precision and at 40 digits; log of [[1, 1], [0, 1]] is
+   [[0, 1], [0, 0]]; and sqrt and log of a block 1 + N of order 3 are 1 + N/2 - N^2/8 and
+   N - N^2/2 in its basis. An entire f has every derivative at zero, so the nilpotent
+   keeps its cosine, cos M = 1 - M^2/2 = 1, and so does a block at zero beside the
+   eigenvalue 5; so does Gamma[2., M] = 1 - M^2/2 = 1, the incomplete gamma function with an
+   inexact parameter. Round, which the kernel does not expand at zero, is left to
+   MatrixFunction and gives Round[M] = 0. A semisimple zero needs no derivative: the square
+   root of the projector P onto span(e1, e2) along span(e1 + 10^-6 e3, e2 + 10^-6 e4) is
+   P. *)
+VerificationTest[
+    With[
+        {
+            s3 = {{1, 2, 0}, {1, 3, 1}, {0, 1, 2}},
+            nilpotent = DiagonalMatrix[{1, 1}, 1],
+            block = N[{{0, 1}, {-1, 2}}],
+            projector = {{1, 0, -10^6, 0}, {0, 1, 0, -10^6}, {0, 0, 0, 0}, {0, 0, 0, 0}}
+        },
+        {root = Normal[Sqrt[QuantumOperator[block]]["Matrix"]], log = Normal[Log[QuantumOperator[block]]["Matrix"]]},
+        <|
+            "sqrt at 1" -> mfDistance[root, {{1/2, 1/2}, {-1/2, 3/2}}] < 10^-14 && mfDistance[root . root, block] < 10^-14,
+            "log at 1" -> mfDistance[log, {{-1, 1}, {-1, 1}}] < 10^-14 && mfDistance[MatrixExp[log], block] < 10^-14,
+            "40 digits" -> mfDistance[Sqrt[QuantumOperator[N[{{0, 1}, {-1, 2}}, 40]]]["Matrix"], {{1/2, 1/2}, {-1/2, 3/2}}] < 10^-35 &&
+                mfDistance[Log[QuantumOperator[N[{{0, 1}, {-1, 2}}, 40]]]["Matrix"], {{-1, 1}, {-1, 1}}] < 10^-35,
+            "log of [[1, 1], [0, 1]]" -> mfDistance[Log[QuantumOperator[N[{{1, 1}, {0, 1}}]]]["Matrix"], {{0, 1}, {0, 0}}] < 10^-15,
+            "sqrt and log of order 3" -> With[{block3 = N[s3 . (IdentityMatrix[3] + nilpotent) . Inverse[s3]]},
+                mfDistance[Sqrt[QuantumOperator[block3]]["Matrix"], s3 . (IdentityMatrix[3] + nilpotent / 2 - nilpotent . nilpotent / 8) . Inverse[s3]] < 10^-13 &&
+                    mfDistance[Log[QuantumOperator[block3]]["Matrix"], s3 . (nilpotent - nilpotent . nilpotent / 2) . Inverse[s3]] < 10^-13
+            ],
+            "cos of the nilpotent" -> mfDistance[Cos[QuantumOperator[N[{{3, -1}, {9, -3}}]]]["Matrix"], IdentityMatrix[2]] < 10^-13,
+            "Gamma[2., M] and Round of the nilpotent" -> mfDistance[Gamma[2., QuantumOperator[N[{{3, -1}, {9, -3}}]]]["Matrix"], IdentityMatrix[2]] < 10^-13 &&
+                mfDistance[Round[QuantumOperator[N[{{3, -1}, {9, -3}}]]]["Matrix"], ConstantArray[0, {2, 2}]] == 0,
+            "cos beside 5" -> mfDistance[
+                Cos[QuantumOperator[N[s3 . {{0, 1, 0}, {0, 0, 0}, {0, 0, 5}} . Inverse[s3]]]]["Matrix"],
+                N[s3 . DiagonalMatrix[{1, 1, Cos[5]}] . Inverse[s3]]
+            ] < 10^-13,
+            "semisimple zero" -> mfDistance[Sqrt[QuantumOperator[N[projector]]]["Matrix"], projector] < 10^-8
+        |>
+    ],
+    <|
+        "sqrt at 1" -> True, "log at 1" -> True, "40 digits" -> True, "log of [[1, 1], [0, 1]]" -> True, "sqrt and log of order 3" -> True,
+        "cos of the nilpotent" -> True, "Gamma[2., M] and Round of the nilpotent" -> True, "cos beside 5" -> True, "semisimple zero" -> True
+    |>,
+    TestID -> "MatrixFunction-roundoff-Jordan-block-controls"
+]
+
+(* 1/x has no value at zero, so the reciprocal of the nilpotent [[3, -1], [9, -3]] is a
+   Failure; the value of Divide[1, #] & is taken at an exact 0, and the kernel says why. *)
+VerificationTest[
+    mfZeroBaseTag[Divide[1, QuantumOperator[N[{{3, -1}, {9, -3}}]]]],
+    "NonFiniteMatrixFunction",
+    {Divide::infy},
+    TestID -> "MatrixFunction-roundoff-pole-at-zero"
+]
+
+(* SinhIntegral has every derivative finite at zero, although the formula of its first
+   derivative, Sinh[x]/x, is 0/0 there, so the nilpotent M = [[3, -1], [9, -3]] keeps
+   SinhIntegral M = M, with MatrixFunction's own warning. *)
+VerificationTest[
+    mfDistance[SinhIntegral[QuantumOperator[N[{{3, -1}, {9, -3}}]]]["Matrix"], {{3, -1}, {9, -3}}] < 10^-13,
+    True,
+    {MatrixFunction::valtlrg},
+    TestID -> "MatrixFunction-roundoff-removable-singularity"
+]
+
+(* Known limitation: Sinc has every derivative finite at zero, so Sinc of the nilpotent
+   [[3, -1], [9, -3]] goes to MatrixFunction, whose result near zero is off from the
+   identity by more than 1, with its own warning. When MatrixFunction evaluates such a
+   block accurately, the error should drop to roundoff. *)
+VerificationTest[
+    mfDistance[Sinc[QuantumOperator[N[{{3, -1}, {9, -3}}]]]["Matrix"], IdentityMatrix[2]] > 1,
+    True,
+    {MatrixFunction::valtlrg},
+    TestID -> "MatrixFunction-roundoff-Sinc-known-limitation"
 ]
 
 EndTestSection[]
