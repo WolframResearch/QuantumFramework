@@ -529,10 +529,55 @@ QuantumOperatorProp[qo_, "SplitBasis"] := With[{
     }
 ]
 
-QuantumOperatorProp[qo_, "Projectors", opts___] /; qo["SquareQ"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
+(* A normal operator, m.m^† == m^†.m, has an orthonormal eigenbasis, and no other
+   operator has one. NormalMatrixQ compares the norm of m.m^† - m^†.m with its tolerance
+   times the norm of m, not of m.m^†, so an inexact matrix is scaled to a largest entry
+   of 1 first, and the tolerance is the roundoff 100 n 10^-p that a decomposition of an
+   n x n matrix at precision p leaves. *)
+normalMatrixQ[m_] := MatrixQ[m, NumericQ] && If[Precision[m] === Infinity,
+    NormalMatrixQ[m],
+    With[{s = Max[Abs[m]]}, s == 0 || NormalMatrixQ[m / s, Tolerance -> 100 Length[m] 10 ^ -SetPrecision[Precision[m], 20]]]
+]
+
+(* The eigensystem of qo, its eigenvectors orthonormal when qo is normal and opts leave
+   "Orthogonalize" unset. Eigensystem returns an arbitrary basis inside the eigenspace of
+   a repeated eigenvalue. Gram-Schmidt on the eigenvectors of a normal operator changes
+   them only inside each eigenspace, since eigenvectors of distinct eigenvalues are
+   orthogonal already; on those of any other operator it would return vectors that are
+   not eigenvectors, so those are kept as Eigensystem gives them. Inexact eigenvectors go
+   through Gram-Schmidt all together, their products across eigenspaces being roundoff.
+   Exact ones are orthonormalized one eigenspace at a time, the eigenspace being the
+   vectors Eigensystem gives the identical eigenvalue: their products across eigenspaces
+   are zero without simplifying to 0, and normalized exact eigenvectors are larger
+   expressions than the ones Eigensystem returns, so the unnormalized vectors of each
+   eigenspace are orthonormalized with a simplifying inner product. *)
+orthonormalEigensystem[qo_, opts___] := With[{m = qo["MatrixRepresentation"]}, Which[
+    MemberQ[Flatten[{opts}], ("Orthogonalize" -> _) | ("Orthogonalize" :> _)] || ! normalMatrixQ[m],
+    qo["Eigensystem", opts],
+    Precision[m] < Infinity,
+    qo["Eigensystem", opts, "Orthogonalize" -> True],
+    True,
+    exactOrthonormalEigensystem[qo, opts]
+]]
+
+exactOrthonormalEigensystem[qo_, opts___] := With[
+    {es = qo["Eigensystem", opts]},
+    {values = First[es], vectors = Last[es]},
+    {eigenspaces = Select[GatherBy[Range[Length[values]], values[[#]] &], Length[#] > 1 &]},
+    If[ eigenspaces === {},
+        {values, vectors},
+        With[{unnormalized = Last @ qo["Eigensystem", opts, "Normalize" -> False]},
+            {values, ReplacePart[vectors,
+                Catenate[Thread[# -> Simplify[Orthogonalize[unnormalized[[#]], Simplify[Conjugate[#1] . #2] &]]] & /@ eigenspaces]
+            ]}
+        ]
+    ]
+]
+
+QuantumOperatorProp[qo_, "Projectors", opts___] /; qo["SquareQ"] := projector /@ SparseArray @ Chop @ Last @ orthonormalEigensystem[qo, opts]
 
 QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vectors, values},
-    {values, vectors} = qo["Eigensystem", opts, "Sort" -> True];
+    {values, vectors} = orthonormalEigensystem[qo, opts, "Sort" -> True];
     QuantumOperator[
         DiagonalMatrix[values],
         Take[#, UpTo[1]] & /@ qo["Order"],

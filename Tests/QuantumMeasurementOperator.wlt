@@ -704,3 +704,124 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurementOperator - operators of a projective measurement"]
+
+(* "Operators" gives, under each outcome label, the operator a projective measurement
+   applies for that outcome: the projector P_k onto the orthonormal eigenbasis the
+   measurement itself builds. So the operators carry the outcome labels of the
+   measurement in its order, sum to the identity, are idempotent, and give its
+   branches: P_k.rho.P_k is the k-th post-measurement state, whose trace is the
+   probability of outcome k. The observables have a repeated eigenvalue in a rotated
+   basis, where Eigensystem returns a non-orthogonal basis of the eigenspace. Exact
+   residuals are decided exactly, inexact ones to 10^-8. *)
+
+(* whether the operators of qmo carry the outcome labels of qmo[psi] in order, and the
+   entries of Sum_k P_k - 1, P_k.P_k - P_k and P_k.rho.P_k minus the k-th branch, all
+   in the computational basis, the one "MatrixRepresentation" writes the operators in;
+   a measurement returns its branches in the basis of its observable *)
+eigenbasisMeasurementResiduals[qmo_, psi_] := With[
+    {ops = Normal[#["MatrixRepresentation"]] & /@ qmo["Operators"], qm = qmo[psi], rho = Normal[psi["Computational"]["DensityMatrix"]]},
+    {
+        Keys[ops] === Keys[qm["Probabilities"]],
+        Flatten[{
+            Total[Values[ops]] - IdentityMatrix[Length[rho]],
+            (# . # - #) & /@ Values[ops],
+            MapThread[#1 . rho . #1 - Normal[#2["Computational"]["DensityMatrix"]] &, {Values[ops], qm["States"]}]
+        }]
+    }
+]
+
+eigenbasisMeasurementExactQ[{labelsQ_, residuals_}] := {labelsQ, AllTrue[residuals, PossibleZeroQ[#, Method -> "ExactAlgebraics"] &]}
+
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+            QuantumMeasurementOperator[QuantumOperator[f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f], {1, 2}]],
+            QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+        ]
+    ],
+    {True, True},
+    TestID -> "Operators-ExactRotatedDegenerate"
+]
+
+(* Machine precision: this rotation fails HermitianMatrixQ from roundoff alone, so
+   Eigensystem takes its general solver, whose eigenvectors for a repeated eigenvalue
+   are not orthogonal. *)
+VerificationTest[
+    With[{u = BlockRandom[Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {4, 4}]], RandomSeeding -> 35]},
+        With[{m = ConjugateTranspose[u] . DiagonalMatrix[N @ {1, 1, -1, -1}] . u},
+            With[{r = eigenbasisMeasurementResiduals[QuantumMeasurementOperator[QuantumOperator[m, {1, 2}]], QuantumState[N @ {1, 2 I, -1, 3} / Sqrt[15], {2, 2}]]},
+                {HermitianMatrixQ[m], First[r], Max[Abs[Last[r]]]}
+            ]
+        ]
+    ],
+    {False, True, _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Operators-MachineRotatedDegenerate"
+]
+
+VerificationTest[
+    With[{f = FourierMatrix[3]},
+        eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+            QuantumMeasurementOperator[QuantumOperator[f . DiagonalMatrix[{1, 1, 0}] . ConjugateTranspose[f], {1}, 3]],
+            QuantumState[{1, 2, 2 I} / 3, 3]
+        ]
+    ],
+    {True, True},
+    TestID -> "Operators-ExactRotatedDegenerateQutrit"
+]
+
+(* The outcomes come in the order of the sorted eigenvalues -1, 0, 1/2, 2, not the
+   order Eigenvectors lists the eigenvectors of diag(2, -1, 1/2, 0) in; each outcome
+   label must carry its own projector. *)
+VerificationTest[
+    eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+        QuantumMeasurementOperator[QuantumOperator[DiagonalMatrix[{2, -1, 1/2, 0}], {1, 2}]],
+        QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    ],
+    {True, True},
+    TestID -> "Operators-OutcomeOrder"
+]
+
+(* an observable stored in the PauliX basis *)
+VerificationTest[
+    eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+        QuantumMeasurementOperator[QuantumOperator[QuantumOperator["ZZ"], QuantumBasis["PauliX", 2]]],
+        QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    ],
+    {True, True},
+    TestID -> "Operators-NonComputationalBasis"
+]
+
+(* a measurement that targets qudit 1 of a two-qudit observable: one operator per
+   outcome, acting on both qudits *)
+VerificationTest[
+    eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+        QuantumMeasurementOperator[QuantumOperator["ZI"], {1}],
+        QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    ],
+    {True, True},
+    TestID -> "Operators-PartialTarget"
+]
+
+(* "POVMElements", which QuantumStateEstimate reads, are the operators squared and so,
+   for a projective measurement, the projectors themselves, summing to the identity *)
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        With[{qmo = QuantumMeasurementOperator[QuantumOperator[f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f], {1, 2}]]},
+            AllTrue[
+                Flatten[{
+                    Total[Normal /@ qmo["POVMElements"]] - IdentityMatrix[4],
+                    (Normal /@ qmo["POVMElements"]) - Values[Normal[#["MatrixRepresentation"]] & /@ qmo["Operators"]]
+                }],
+                PossibleZeroQ[#, Method -> "ExactAlgebraics"] &
+            ]
+        ]
+    ],
+    True,
+    TestID -> "POVMElements-ExactRotatedDegenerate"
+]
+
+EndTestSection[]

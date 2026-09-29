@@ -198,12 +198,15 @@ QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := # / Mean[Diagonal[Total[#]]] & @ (# . # & /@ Through[Values[qmo["Operators"]]["MatrixRepresentation"]])
 
-QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
+QuantumMeasurementOperatorProp[qmo_, "Operators"] /; qmo["POVMQ"] :=
     AssociationThread[qmo["Eigenvalues"], QuantumOperator[#, {Drop[qmo["OutputOrder"], qmo["Eigenqudits"]], qmo["InputOrder"]}, qmo["StateBasis"]] & /@
         ArrayReshape[qmo["Tensor"], Catenate @ MapAt[{Times @@ #} &, {1}] @ TakeDrop[qmo["Dimensions"], qmo["Eigenqudits"]]]
-    ],
-    AssociationThread[qmo["Eigenvalues"], QuantumOperator[projector @ #, {Automatic, qmo["InputOrder"]}, qmo["Basis"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
-]
+    ]
+
+(* A projective measurement acts through its "POVM" form, whose Kraus operators are the
+   projectors onto the orthonormal eigenbasis "SuperOperator" builds, one per outcome
+   under the labels of "Eigenvalues"; so its operators are those. *)
+QuantumMeasurementOperatorProp[qmo_, "Operators"] /; qmo["ProjectionQ"] := qmo["POVM"]["Operators"]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Automatic] := Module[{
     trace,
