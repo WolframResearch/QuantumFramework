@@ -17,7 +17,7 @@ Wolfram Research Inc, USA
 
 ### Setting the Stage: How This Notebook Flows
 
-This notebook is a computation-first tour of the stabilizer layer that ships in the QuantumFramework paclet, checked against [Stim](https://github.com/quantumlib/Stim), the field-standard stabilizer simulator. Part I frames the niche. Part II takes the shipped `PauliStabilizer` engine on the standard small codes (the three-qubit bit-flip and phase-flip codes, the nine-qubit Shor code, the five-qubit perfect code, and the seven-qubit Steane code) and checks, against Stim, that its stabilizer generators form a consistent group and its syndromes agree across every one- and two-qubit error, while a state-vector test confirms every codeword carries the correct sign; it then exercises a symbolic measurement that keeps an unresolved outcome as an algebraic symbol, which Stim has no counterpart for. Part III builds an exact code analysis from GF(2) first principles and computes the exact distance, a minimum-weight witness, and the logical algebra, cross-checking the witness against Stim. Part IV carries a symbolic parameter through the algebra: it derives a code family's existence condition at symbolic $n$, and returns a coherent error's syndrome as a closed-form function of a continuous angle. Part V draws the boundary.
+This notebook is a computation-first tour of the stabilizer layer that ships in the QuantumFramework paclet, checked against [Stim](https://github.com/quantumlib/Stim), the field-standard stabilizer simulator. Part I frames the niche. Part II takes the shipped `PauliStabilizer` engine on the standard small codes (the three-qubit bit-flip and phase-flip codes, the nine-qubit Shor code, the five-qubit perfect code, and the seven-qubit Steane code) and checks, against Stim, that its stabilizer generators form a consistent group and its syndromes agree across every one- and two-qubit error, while a reconstruction from each code's textbook definition, independent of the shipped object, confirms the codeword with its sign; it then exercises a symbolic measurement that keeps an unresolved outcome as an algebraic symbol, which Stim has no counterpart for. Part III builds an exact code analysis from GF(2) first principles and computes the exact distance, a minimum-weight witness, and the logical algebra, cross-checking the witness against Stim. Part IV carries a symbolic parameter through the algebra: it derives a code family's existence condition at symbolic $n$, and returns a coherent error's syndrome as a closed-form function of a continuous angle. Part V draws the boundary.
 
 The division of labor is clean. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds over thousands of qubits. This layer owns the exact-and-symbolic corner: the exact minimum distance (which is NP-hard in the worst case, so an exhaustive search like the one here is a small-$n$ instrument), a sign-exact stabilizer state, and a parameter kept symbolic where the algebra allows. The two agree wherever they overlap, and that agreement is what makes the shared states and syndromes trustworthy; the distance's minimality rests on the exhaustive search, and the symbolic results on the algebra. Neither competes with the other.
 
@@ -33,7 +33,7 @@ Let's start!
 
 A stabilizer code on $n$ physical qubits is defined by a set of commuting Pauli operators, its stabilizer generators. The codespace is their simultaneous $+1$ eigenspace, and if there are $m$ independent generators the code stores $k = n - m$ logical qubits. An error is *detectable* when it anticommutes with at least one generator (it flips that generator's measured eigenvalue, a syndrome bit), and *undetectable* when it commutes with all of them. The dangerous errors are the undetectable ones that still act nontrivially on the codespace: these are the logical operators, and the code distance is the weight of the lightest one.
 
-QuantumFramework ships a compiled stabilizer engine, `PauliStabilizer`, built on the Aaronson-Gottesman tableau. It carries a stabilizer state as $O(n^2)$ bits rather than $2^n$ amplitudes, applies Clifford gates and measurements in polynomial time, and already comes with the standard codes as named states. That engine is fast and scales; this notebook is not about its speed. It is about two things speed does not settle: does it get the *signs* and *syndromes* exactly right, checked against an independent engine, and can the surrounding language say something a stabilizer sampler cannot say at all.
+QuantumFramework ships a compiled stabilizer engine, `PauliStabilizer`, built on the Aaronson-Gottesman tableau ([arXiv:quant-ph/0406196](https://arxiv.org/abs/quant-ph/0406196)). It carries a stabilizer state as $O(n^2)$ bits rather than $2^n$ amplitudes, applies Clifford gates and measurements in polynomial time, and already comes with the standard codes as named states. That engine is fast and scales; this notebook is not about its speed. It is about two things speed does not settle: does it get the *signs* and *syndromes* exactly right, checked against an independent engine, and can the surrounding language say something a stabilizer sampler cannot say at all.
 
 Why is exactness worth isolating when Stim samples so well? Because computing the exact minimum distance of a stabilizer code is NP-hard in the worst case (Kapshikar and Kundu, [arXiv:2203.04262](https://arxiv.org/abs/2203.04262)): there is no known efficient general method, and the exhaustive weight-search this notebook uses is a small-code instrument by construction. That is a property of this algorithm together with the worst-case hardness, not a claim that every large code is out of reach; structured families and smarter exact solvers go further. The textbook codes are simply where an exhaustive exact treatment earns its keep. And why symbolic generality? Because a numeric simulator represents one concrete code at a time: fixed $n$, fixed generators, fixed angles. A symbolic engine can carry $n$ as a symbol and settle a family-level statement that a simulator tied to one concrete $n$ cannot reach, or carry an error angle $\theta$ and return a syndrome expectation as an exact function of it. Neither is a thing Stim is built to do.
 
@@ -42,6 +42,15 @@ Load the framework from a local checkout (adjust the path to your own), and buil
 ```wl
 PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework"];
 Needs["Wolfram`QuantumFramework`"]
+```
+
+Record the exact versions and commit this notebook was run against, so the cross-check is reproducible (the Stim version is captured later, where the Python session opens):
+
+```wl
+<|"Wolfram Language" -> $Version,
+  "QuantumFramework commit" -> StringTrim@RunProcess[{"git", "-C",
+       "/Users/mohammadb/Documents/GitHub/QuantumFramework",
+       "rev-parse", "--short", "HEAD"}, "StandardOutput"]|>
 ```
 
 ```wl
@@ -81,13 +90,35 @@ Build the Pauli operators as dense matrices (qubit 1 as the leftmost tensor fact
 strip[s_] := StringDelete[s, StartOfString ~~ ("+" | "-")];
 sgn[s_] := If[StringStartsQ[s, "-"], -1, 1];
 pauliOp[s_] := sgn[s] Fold[KroneckerProduct,
-   PauliMatrix /@ (Characters[strip[s]] /. {"I" -> 0, "X" -> 1, "Y" -> 2, "Z" -> 3})];
+   SparseArray /@ (PauliMatrix /@ (Characters[strip[s]] /. {"I" -> 0, "X" -> 1, "Y" -> 2, "Z" -> 3}))];
 denseFixesQ[c_] := With[{psi = Normal[c["state"]["State"]["StateVector"]]},
    AllTrue[c["state"]["Stabilizers"], AllTrue[pauliOp[#] . psi - psi, PossibleZeroQ] &]];
 denseFixesQ /@ codes
 ```
 
-For every code, applying any generator to the codeword returns the codeword unchanged, exactly: the shipped state is a $+1$ codeword, sign included. This is an internal-consistency check rather than an independent reconstruction, and worth reading as such: the state vector is materialized from the same tableau whose generators it tests, so what it certifies is that QuantumFramework's own state vector and stabilizer signs agree exactly. The externally independent checks come next, when Stim weighs in on the group and the syndromes, and in Part III, where a from-scratch search recomputes the distance. The same exact amplitudes make normalization a symbolic identity, not a numerical near-miss, so each codeword has unit length as an exact statement:
+For every code, applying any generator to the codeword returns the codeword unchanged, exactly: the shipped state is a $+1$ codeword of its own generators. That much is an internal-consistency check: the state vector is materialized from the same tableau whose generators it tests, so on its own it certifies only that QuantumFramework's state vector and its stabilizer signs agree with each other. A wrong-but-consistent codeword would still pass it: flip the sign of the generator that pins the codeword ($ZZZ \to -ZZZ$ on the bit-flip code) and the state becomes the orthogonal $\lvert 1_L\rangle$, which returns True here just the same.
+
+To close that gap, reconstruct each code's requirements from its *standard definition*, independent of the shipped object, and test the state against them. The state must be fixed by the code's defining checks (it lies in the right code space) *and* be the $+1$ eigenstate of the code's logical pin (it is the intended codeword, sign included). The check strings and pins below come from the codes' standard definitions (see the Part V references), not read back out of the object:
+
+```wl
+(* checks and logical pins from the codes' standard definitions, NOT from ["Stabilizers"] *)
+book = <|
+   "bit-flip" -> <|"checks" -> {"ZZI", "IZZ"}, "pin" -> "ZII"|>,
+   "phase-flip" -> <|"checks" -> {"XXI", "IXX"}, "pin" -> "XXX"|>,
+   "5-qubit" -> <|"checks" -> {"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"}, "pin" -> "ZZZZZ"|>,
+   "Steane" -> <|"checks" -> {"IIIXXXX", "IXXIIXX", "XIXIXIX", "IIIZZZZ", "IZZIIZZ", "ZIZIZIZ"}, "pin" -> "ZZZZZZZ"|>,
+   "Shor" -> <|"checks" -> {"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX"}, "pin" -> "ZZZZZZZZZ"|>
+   |>;
+independentCodewordQ[name_] := With[
+   {v = Normal[codes[name]["state"]["State"]["StateVector"]], b = book[name]},
+   AllTrue[b["checks"], AllTrue[pauliOp[#] . v - v, PossibleZeroQ] &] &&
+    Simplify[Conjugate[v] . pauliOp[b["pin"]] . v] === 1];
+independentCodewordQ /@ Keys[codes]
+```
+
+Every code passes: the shipped state sits in the code space its standard checks define and is the $+1$ eigenstate of the standard logical pin, so it is the intended codeword with the intended sign, checked against strings sourced from the code definitions rather than from the object itself. On the $ZZZ \to -ZZZ$ imposter above, this cell returns False, exactly the case the internal check misses. The pin is an $X$-string for the phase-flip code because the state shipped there is the $+1$ eigenstate of the logical $X$, not the logical $Z$: the check confirms which logical eigenstate the state is, and so would catch a flipped sign.
+
+The same exact amplitudes make normalization a symbolic identity, not a numerical near-miss, so each codeword has unit length as an exact statement:
 
 ```wl
 AllTrue[codes, With[{psi = Normal[#["state"]["State"]["StateVector"]]}, Simplify[Conjugate[psi] . psi] === 1] &]
@@ -100,10 +131,11 @@ Normalization holds as an exact identity, not a value merely close to one. Stim 
 The check so far lives entirely inside the Wolfram Language. A second, genuinely external opinion is worth having, and Stim is the natural source: the reference stabilizer simulator, written in C++, with an independent tableau engine. Open a Python session and confirm Stim is importable; if this reports Stim missing, install it with `pip install stim` into the Python that `ExternalEvaluate` uses, or skip the Stim cells and rely on the in-language checks.
 
 ```wl
-stimSession = StartExternalSession[<|"System" -> "Python"|>];
-stimVersion = Check[
-   ExternalEvaluate[stimSession, "import stim; stim.__version__"],
-   "stim not available: skip the Stim cells"]
+stimSession = Check[StartExternalSession[<|"System" -> "Python"|>], $Failed];
+stimVersion = If[stimSession === $Failed,
+   "Python not available: skip the Stim cells",
+   Check[ExternalEvaluate[stimSession, "import stim; stim.__version__"],
+    "stim not available: skip the Stim cells"]]
 ```
 
 Stim reads identity as an underscore, so the only translation between the two sides is a character swap. Define that once and reuse it for the differentials below:
@@ -201,7 +233,7 @@ The difference from a sampler here is specific, and worth stating precisely rath
 
 ## Part III: An Independent Exact Analysis, Cross-Checked Against Stim
 
-The shipped engine reports syndromes and states. It does not, on its own, hand you the exact code distance or a lightest logical operator, and neither does Stim. Part III builds that exact analysis from the ground up, in a few small functions over GF(2), and then checks its answers both against the definition and against Stim. Rebuilding the linear algebra from scratch (rather than calling a packaged distance routine to check itself) is also the cleanest way to watch the machinery turn.
+The shipped engine reports syndromes and states. It does not, on its own, hand you the exact code distance or a lightest logical operator. Stim can search a circuit's detector-error model for low-weight logicals (`shortest_graphlike_error`, `search_for_undetectable_logical_errors`), but not from a bare stabilizer generator set, and its graphlike search is exact only for errors that flip at most two detectors. Part III builds that exact analysis from the ground up, in a few small functions over GF(2), and then checks its answers both against the definition and against Stim. Rebuilding the linear algebra from scratch (rather than calling a packaged distance routine to check itself) is also the cleanest way to watch the machinery turn.
 
 ### The Symplectic Picture: A Pauli as a Vector over GF(2)
 
@@ -219,21 +251,30 @@ As one can see, $X_1$ and $Z_1$ anticommute (they share a qubit and disagree the
 
 ### Distance from First Principles
 
-A Pauli is a logical operator when it lies in the normalizer but not in the stabilizer group: it commutes with every generator (zero syndrome) *and* it is not itself a product of generators. The second condition is the one that is easy to get backwards. Membership in the group is a GF(2) span question, and the correct test is that appending the candidate's vector to the check matrix leaves the rank unchanged; so "not in the group" means the rank strictly *rises*. Spell that out as `logicalVecQ`, then make the distance a weight-increasing search that stops at the first logical it finds. The search builds the check matrix and its rank once and reuses them across every candidate, rather than rebuilding them at each step:
+A Pauli is a logical operator when it lies in the normalizer but not in the stabilizer group: it commutes with every generator (zero syndrome) *and* it is not itself a product of generators. The second condition is the one that is easy to get backwards. Membership in the group is a GF(2) span question, and the correct test is that appending the candidate's vector to the check matrix leaves the rank unchanged; so "not in the group" means the rank strictly *rises*. This GF(2) test decides membership up to Pauli phase, which is exactly the resolution distance needs, since multiplying a logical by $-1$ leaves its weight unchanged; it is a deliberate step down from the $\pm 1$ sign-exactness of Part II, where the sign was the whole point. Spell that out as `logicalVecQ`, then make the distance a weight-increasing search that stops at the first logical it finds; a `validChecksQ` guard first confirms the checks are a well-formed, independent, mutually commuting Pauli set with $k > 0$, so the search only ever runs on an actual code. The search builds the check matrix and its rank once and reuses them across every candidate, rather than rebuilding them at each step:
 
 ```wl
 rank2[rows_] := MatrixRank[rows, Modulus -> 2];
 logicalVecQ[checks_, v_] := With[{sg = symOf /@ checks},
    With[{m = rank2[sg]}, AllTrue[sg, omega[v, #] === 0 &] && rank2[Append[sg, v]] > m]];
-distanceWitness[checks_] := With[{sg = symOf /@ checks, n = StringLength[strip[First[checks]]]},
-   With[{m = rank2[sg]},
-    With[{logicalQ = Function[v, AllTrue[sg, omega[v, #] === 0 &] && rank2[Append[sg, v]] > m]},
-     Catch[
-      Scan[Function[w,
-        With[{cand = SelectFirst[weightK[n, w], logicalQ[symOf[#]] &]},
-         If[! MissingQ[cand], Throw[{w, cand}]]]],
-       Range[n]];
-      Missing[]]]]];
+validChecksQ[checks_] := ListQ[checks] && Length[checks] > 0 && AllTrue[checks, StringQ] &&
+   Equal @@ (StringLength[strip[#]] & /@ checks) &&
+   AllTrue[checks, StringMatchQ[strip[#], ("I" | "X" | "Y" | "Z") ..] &] &&
+   With[{sg = symOf /@ checks},
+    rank2[sg] === Length[sg] && AllTrue[Tuples[sg, 2], omega[First[#], Last[#]] === 0 &]] &&
+   With[{sg = symOf /@ checks}, StringLength[strip[First[checks]]] - rank2[sg] > 0];
+distanceWitness[checks_] := If[! validChecksQ[checks],
+   Failure["InvalidCode", <|"MessageTemplate" ->
+      "checks must be a nonempty, equal-length, independent, mutually commuting Pauli set with k>0"|>],
+   With[{sg = symOf /@ checks, n = StringLength[strip[First[checks]]]},
+    With[{m = rank2[sg]},
+     With[{logicalQ = Function[v, AllTrue[sg, omega[v, #] === 0 &] && rank2[Append[sg, v]] > m]},
+      Catch[
+       Scan[Function[w,
+         With[{cand = SelectFirst[weightK[n, w], logicalQ[symOf[#]] &]},
+          If[! MissingQ[cand], Throw[{w, cand}]]]],
+        Range[n]];
+       Missing[]]]]]];
 distanceWitness[codes["5-qubit"]["checks"]]
 ```
 
@@ -295,7 +336,7 @@ stimWitnessQ[c_] := With[{w = distanceWitness[c["checks"]][[2]]},
 stimWitnessQ /@ codes
 ```
 
-For each code Stim reports the witness as both undetectable and nontrivial. Stim vouches that the witness is a valid logical; the *minimality* of its weight, that nothing lighter is logical, is what our exhaustive symplectic search established, and it is the part no sampler provides. The division of labor is clear: Stim confirms the witness is a real logical, and the exact search confirms it is the lightest.
+For each code Stim reports the witness as both undetectable and nontrivial. Stim vouches that the witness is a valid logical; the *minimality* of its weight, that nothing lighter is logical, is what our exhaustive symplectic search established. Stim's own distance tooling reaches minimality only from a circuit-level error model and only for graphlike errors, not from a bare generator set, so for these codes the exhaustive search is what settles it. The two roles are distinct: Stim confirms the witness is a real logical, and the exact search confirms it is the lightest.
 
 ## Part IV: A Parameter Stim Cannot Carry
 
@@ -324,7 +365,7 @@ familyChecks[n_] := {StringRepeat["X", n], StringRepeat["Z", n]};
 logicalVecQ[familyChecks[6], symOf["XXIIII"]]
 ```
 
-$X_1 X_2$ is a logical: it meets the all-$Z$ generator on two qubits (an even overlap, so it commutes), meets the all-$X$ generator trivially, and (for $n > 2$) is not a product of the generators. That argument is size-independent, even though the check above ran at a representative $n$: $X_1 X_2$ has weight two, while the only nontrivial group elements are $X^{\otimes n}$, $Z^{\otimes n}$, and $Y^{\otimes n}$, each of weight $n$. So for even $n \geq 4$ the lightest logical has weight two: no weight-one error is undetectable, and a weight-two logical exists. The lower bound $n > 2$ is not decoration; at $n = 2$ the construction degenerates, with $k = 0$ and $X_1 X_2 = X^{\otimes 2}$ equal to the generator itself, so there is no logical to weigh. Run the search at several sizes to confirm the distance lands where the argument says:
+$X_1 X_2$ is a logical: it meets the all-$Z$ generator on two qubits (an even overlap, so it commutes), meets the all-$X$ generator trivially, and (for $n > 2$) is not a product of the generators. That argument is size-independent, even though the check above ran at a representative $n$: $X_1 X_2$ has weight two, while the only nontrivial group elements are $X^{\otimes n}$, $Z^{\otimes n}$, and (up to the phase $(-1)^{n/2}$, immaterial to weight) $Y^{\otimes n}$, each of weight $n$. So for even $n \geq 4$ the lightest logical has weight two: no weight-one error is undetectable, and a weight-two logical exists. The lower bound $n > 2$ is not decoration; at $n = 2$ the construction degenerates, with $k = 0$ and $X_1 X_2 = X^{\otimes 2}$ equal to the generator itself, so there is no logical to weigh. Run the search at several sizes to confirm the distance lands where the argument says:
 
 ```wl
 Table[distanceWitness[familyChecks[n]][[1]], {n, {4, 6, 8, 10}}]
@@ -370,7 +411,7 @@ The endpoints are the whole story only at large angle. For a *weak* coherent err
 Normal@Series[(1 - zzExpectation)/2, {\[Theta], 0, 2}]
 ```
 
-To leading order the syndrome fires with probability $\theta^2/4$: the error rate is quadratic in the rotation angle, vanishing faster than linearly as $\theta \to 0$. That is the kind of input a threshold calculation consumes, delivered here as a closed form in the angle rather than a number at a fixed rate.
+To leading order the syndrome fires with probability $\theta^2/4$: the error rate is quadratic in the rotation angle, vanishing faster than linearly as $\theta \to 0$. This $\theta^2/4$ is one syndrome marginal, delivered as a closed form in the angle rather than a number at a fixed rate; a coherent-noise threshold estimate needs the full channel and circuit context, not this marginal alone.
 
 One qualification keeps the example honest. The observable here, the $Z_1 Z_2$ syndrome, sees only the flip *probability*: a stochastic bit-flip channel with $p = \sin^2(\theta/2)$ gives $\langle Z_1 Z_2\rangle = 1 - 2p = \cos\theta$, the identical curve. So this demonstrates a symbolic continuous-parameter calculation, not an observable that tells a coherent rotation apart from incoherent noise; distinguishing those would take an interference-sensitive measurement, such as reading the qubit in a rotated basis. What is genuinely beyond a Pauli sampler is the closed form itself, the syndrome returned as a function of $\theta$ rather than a statistic estimated at each fixed angle.
 
@@ -383,6 +424,16 @@ Before we close, a plain summary of what has been established:
 - An independent GF(2) search returns the exact distance and a minimum-weight witness for each code; the logical operators satisfy the full commutation algebra; and Stim confirms each witness is a valid logical, while the exhaustive search establishes it is the lightest.
 - The $[[n, n-2, 2]]$ code condition is derived at symbolic $n$, its distance argued size-independently and confirmed at sample sizes; the repetition family's distance is one; and a coherent error's syndrome is returned as the exact function $\cos\theta$, with a small-angle syndrome rate of $\theta^2/4$.
 
-The picture is a division of labor. Stim owns scale and speed: sampling large circuits, benchmarking decoders, estimating thresholds. This layer, checked here against Stim, gets the states, signs, and syndromes exactly right and drops into the rest of a quantum-mechanics toolkit; and the Wolfram Language around it holds a parameter symbolic where the algebra allows, deriving a family's code condition at symbolic $n$ and returning a coherent error's syndrome as a closed form in the angle. The two agree wherever they overlap, which is what makes the shared states and syndromes trustworthy; the distance's minimality rests on the exhaustive search, not on Stim, and the symbolic results on the algebra.
+Stim owns scale and speed; this layer owns the exact-and-symbolic corner. It reproduces each codeword, matched sign-exactly to its standard definition by a reconstruction independent of the shipped object, and its syndromes agree with Stim across every weight-one and weight-two error; it drops into the rest of a quantum-mechanics toolkit, and the Wolfram Language around it holds a parameter symbolic where the algebra allows, deriving a family's code condition at symbolic $n$ and returning a coherent error's syndrome as a closed form in the angle. The two agree wherever they overlap, which is what makes the shared states and syndromes trustworthy; the distance's minimality rests on the exhaustive search, not on Stim, and the symbolic results on the algebra.
 
-The boundary is worth naming plainly: the exhaustive distance search is a small-code instrument by construction, and exact minimum distance is NP-hard in the worst case, so this is not a scaling competitor. When you want the exact answer for a textbook code or a statement about a family, that exactness is what this buys; when you want a threshold for a distance-25 surface code, reach for Stim. Both live in the same notebook, and you can now check one against the other yourself. To push further, adapt the from-scratch functions to your own stabilizer generators (they assume a well-formed, independent set of checks) and diff against Stim, or carry the symbolic-family argument to a code family of your own.
+The boundary is worth naming plainly: the exhaustive distance search is a small-code instrument by construction, and exact minimum distance is NP-hard in the worst case, so this is not a scaling competitor. When you want the exact answer for a textbook code or a statement about a family, that exactness is what this buys; when you want a threshold for a distance-25 surface code, reach for Stim. Both live in the same notebook, and you can now check one against the other yourself. To push further, adapt the from-scratch functions to your own stabilizer generators (they validate that the checks are a well-formed, independent, commuting set with $k > 0$, and return a `Failure` otherwise) and diff against Stim, or carry the symbolic-family argument to a code family of your own.
+
+**References.** The codes, formalism, and tools used above:
+
+- P. W. Shor, "Scheme for reducing decoherence in quantum computer memory," Phys. Rev. A **52**, R2493 (1995): the nine-qubit code.
+- A. M. Steane, "Multiple particle interference and quantum error correction," [arXiv:quant-ph/9601029](https://arxiv.org/abs/quant-ph/9601029): the seven-qubit code.
+- R. Laflamme, C. Miquel, J. P. Paz, and W. H. Zurek, "Perfect quantum error correction code," [arXiv:quant-ph/9602019](https://arxiv.org/abs/quant-ph/9602019): the five-qubit code.
+- D. Gottesman, "Stabilizer Codes and Quantum Error Correction," [arXiv:quant-ph/9705052](https://arxiv.org/abs/quant-ph/9705052): the stabilizer formalism and the check strings used in the independent reconstruction.
+- S. Aaronson and D. Gottesman, "Improved simulation of stabilizer circuits," [arXiv:quant-ph/0406196](https://arxiv.org/abs/quant-ph/0406196): the tableau `PauliStabilizer` is built on.
+- U. Kapshikar and S. Kundu, "On the hardness of the minimum distance problem of quantum codes," [arXiv:2203.04262](https://arxiv.org/abs/2203.04262): NP-hardness of exact minimum distance.
+- C. Gidney, "Stim: a fast stabilizer circuit simulator," Quantum **5**, 497 (2021), [arXiv:2103.02202](https://arxiv.org/abs/2103.02202); [github.com/quantumlib/Stim](https://github.com/quantumlib/Stim).
