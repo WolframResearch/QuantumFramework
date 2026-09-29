@@ -1499,3 +1499,232 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumState - Physical and EigenPrune on degenerate spectra"]
+
+(* "Physical" and "EigenPrune" rebuild a state as sum_k w_k |v_k><v_k| from the
+   eigenvectors v_k of its density matrix, so the rebuild is right only when the
+   v_k are orthonormal. A repeated eigenvalue leaves its eigenvectors free to
+   rotate inside their eigenspace, and that is where a solver that does not
+   orthogonalize them goes wrong. Each state below has a known spectrum with
+   repeated values placed in a known eigenbasis, and the expected state is
+   written from that basis, with no eigensolver: when the weights kept or clipped
+   are equal across each eigenspace, the rebuilt state does not depend on which
+   eigenvectors the solver picks. "EigenPrune" keeps whole eigenspaces here,
+   since the n largest values of PositionLargest group eigenvalues only when
+   they are equal to the last bit: n is at least the rank, except for the
+   diagonal state, whose tied magnitudes are exactly equal. The eigensystem
+   both properties use sets eigenvector entries below 10^-10 to zero, which can
+   move a rebuilt state by a few times that, so the tolerance is 10^-8. *)
+
+(* The density matrix with spectrum p whose eigenvectors are the columns of u^dagger. *)
+degenRotated[u_, p_] := ConjugateTranspose[u] . DiagonalMatrix[p] . u
+
+degenUnitary[d_, seed_] := BlockRandom[Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {d, d}]], RandomSeeding -> seed]
+
+degenDistance[a_, b_] := Max[Abs[Normal[a] - Normal[b]]]
+
+(* Two qubits with eigenvalues {1/2, 1/2, 0, 0}: the two largest span the whole
+   support, so pruning to them returns the state itself, of purity 1/2. *)
+VerificationTest[
+    With[{rho = BlockRandom[QuantumOperator["RandomUnitary", {1, 2}], RandomSeeding -> 6][QuantumState[N @ DiagonalMatrix[{1/2, 1/2, 0, 0}], {2, 2}]]},
+        {degenDistance[rho["EigenPrune", 2]["DensityMatrix"], rho["DensityMatrix"]], rho["EigenPrune", 2]["Purity"] - 1/2}
+    ],
+    {_ ? (# < 10^-8 &), _ ? (Abs[#] < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "EigenPrune-RotatedDegeneratePair"
+]
+
+(* Four qubits with eigenvalues 3/10, 3/20 and 1/20, each twice, and ten zeros:
+   the six nonzero ones rebuild the state. *)
+VerificationTest[
+    With[{u = degenUnitary[16, 5], p = N @ Join[{3/10, 3/10, 3/20, 3/20, 1/20, 1/20}, ConstantArray[0, 10]]},
+        degenDistance[QuantumState[degenRotated[u, p], ConstantArray[2, 4]]["EigenPrune", 6]["DensityMatrix"], degenRotated[u, p]]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "EigenPrune-FourQubitDegenerateBlocks"
+]
+
+(* Six qubits, eight eigenvalues 1/8 and 56 zeros. *)
+VerificationTest[
+    With[{u = degenUnitary[64, 9], p = N @ Join[ConstantArray[1/8, 8], ConstantArray[0, 56]]},
+        degenDistance[QuantumState[degenRotated[u, p], ConstantArray[2, 6]]["EigenPrune", 8]["DensityMatrix"], degenRotated[u, p]]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TimeConstraint -> 120,
+    TestID -> "EigenPrune-SixQubitDegenerate"
+]
+
+(* Splitting the pair as {1/2 + e, 1/2 - e, 0, 0}: the support stays the same
+   plane for every e, so the pruned state is the state itself all the way into
+   the degenerate limit e = 0. *)
+VerificationTest[
+    With[{u = degenUnitary[4, 4]},
+        Map[
+            With[{p = N @ {1/2 + #, 1/2 - #, 0, 0}},
+                degenDistance[QuantumState[degenRotated[u, p], {2, 2}]["EigenPrune", 2]["DensityMatrix"], degenRotated[u, p]]
+            ] &,
+            {10^-3, 10^-6, 10^-9, 10^-12, 0}
+        ]
+    ],
+    {_ ? (# < 10^-8 &) ..},
+    SameTest -> MatchQ,
+    TestID -> "EigenPrune-DegenerateLimit"
+]
+
+(* Eigenvalues {0.7, 0.5, -0.5, 0.3} in the computational basis: the two largest
+   values in magnitude are 0.7 and the tied pair +-0.5, and each kept eigenvalue
+   must stay with its own eigenvector, so the weights divided by their total
+   0.7 are {1, 5/7, -5/7, 0}. *)
+VerificationTest[
+    degenDistance[
+        QuantumState[N @ DiagonalMatrix[{7/10, 1/2, -1/2, 3/10}], {2, 2}]["EigenPrune", 2]["DensityMatrix"],
+        DiagonalMatrix[{1, 5/7, -5/7, 0}]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "EigenPrune-OppositeSignTie"
+]
+
+(* Eigenvalues {3/5, 3/5, -1/10, -1/10}: "Physical" sets the negative pair to zero
+   and renormalizes, leaving 1/2 on each of the first two eigenvectors. *)
+VerificationTest[
+    With[{v = BlockRandom[QuantumOperator["RandomUnitary", {1, 2}], RandomSeeding -> 8]},
+        With[{vm = Normal[v["Matrix"]]},
+            degenDistance[
+                v[QuantumState[N @ DiagonalMatrix[{3/5, 3/5, -1/10, -1/10}], {2, 2}]]["Physical"]["DensityMatrix"],
+                vm . DiagonalMatrix[{1/2, 1/2, 0, 0}] . ConjugateTranspose[vm]
+            ]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-RotatedDegeneratePair"
+]
+
+(* Four qubits with eigenvalues 7/20 three times, 1/10 twice, -1/8 twice and nine
+   zeros: dropping the negative pair leaves a total of 5/4, so the physical state
+   has 7/25 three times and 2/25 twice. *)
+VerificationTest[
+    With[{u = degenUnitary[16, 12]},
+        degenDistance[
+            QuantumState[degenRotated[u, N @ Join[{7/20, 7/20, 7/20, 1/10, 1/10, -1/8, -1/8}, ConstantArray[0, 9]]], ConstantArray[2, 4]]["Physical"]["DensityMatrix"],
+            degenRotated[u, N @ Join[{7/25, 7/25, 7/25, 2/25, 2/25}, ConstantArray[0, 11]]]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-FourQubitDegenerateBlocks"
+]
+
+(* Six qubits, eigenvalue 3/10 four times, -1/20 four times and 56 zeros: the
+   physical state is 1/4 on each of the four eigenvectors of 3/10. *)
+VerificationTest[
+    With[{u = degenUnitary[64, 13]},
+        degenDistance[
+            QuantumState[degenRotated[u, N @ Join[ConstantArray[3/10, 4], ConstantArray[-1/20, 4], ConstantArray[0, 56]]], ConstantArray[2, 6]]["Physical"]["DensityMatrix"],
+            degenRotated[u, N @ Join[ConstantArray[1/4, 4], ConstantArray[0, 60]]]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TimeConstraint -> 120,
+    TestID -> "Physical-SixQubitDegenerate"
+]
+
+(* A state that is not positive semidefinite reads its probabilities off its
+   "Physical" state, so they are the diagonal of the clipped state. *)
+VerificationTest[
+    With[{u = degenUnitary[4, 3]},
+        Max[Abs[
+            QuantumState[degenRotated[u, N @ {3/5, 3/5, -1/10, -1/10}], {2, 2}]["ProbabilityList"] -
+                Re[Diagonal[degenRotated[u, N @ {1/2, 1/2, 0, 0}]]]
+        ]]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-ProbabilityList"
+]
+
+(* A density matrix that is Hermitian only to 10^-10, as one integrated
+   numerically or reconstructed from noisy data is, goes through its Hermitian
+   part, the nearest Hermitian matrix: both properties return what they return
+   for the Hermitian state, however close the degenerate eigenvalues are. *)
+VerificationTest[
+    With[{
+        u = degenUnitary[4, 4],
+        a = BlockRandom[With[{g = RandomComplex[{-1 - I, 1 + I}, {4, 4}]}, (g - ConjugateTranspose[g]) / 2], RandomSeeding -> 17]
+    },
+        {
+            degenDistance[
+                QuantumState[degenRotated[u, N @ {1/2, 1/2, 0, 0}] + 10^-10 a, {2, 2}]["EigenPrune", 2]["DensityMatrix"],
+                degenRotated[u, N @ {1/2, 1/2, 0, 0}]
+            ],
+            degenDistance[
+                QuantumState[degenRotated[u, N @ {3/5, 3/5, -1/10, -1/10}] + 10^-10 a, {2, 2}]["Physical"]["DensityMatrix"],
+                degenRotated[u, N @ {1/2, 1/2, 0, 0}]
+            ]
+        }
+    ],
+    {_ ? (# < 10^-8 &), _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "EigenPruneAndPhysical-HermitianToTenDigits"
+]
+
+(* An anti-Hermitian part with a trace, 10^-3 times a random anti-Hermitian matrix
+   plus I times the identity, makes the trace of the matrix complex. "Physical"
+   takes the Hermitian part before dividing by the trace, so it returns the
+   physical state of the Hermitian part. *)
+VerificationTest[
+    With[{
+        u = degenUnitary[4, 4],
+        a = BlockRandom[With[{g = RandomComplex[{-1 - I, 1 + I}, {4, 4}]}, (g - ConjugateTranspose[g]) / 2], RandomSeeding -> 17]
+    },
+        degenDistance[
+            QuantumState[degenRotated[u, N @ {3/5, 3/5, -1/10, -1/10}] + 10^-3 (a + I IdentityMatrix[4]), {2, 2}]["Physical"]["DensityMatrix"],
+            degenRotated[u, N @ {1/2, 1/2, 0, 0}]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Physical-AntiHermitianPartWithTrace"
+]
+
+(* The eigensystem both properties rest on, with Chop -> True: a Hermitian
+   matrix gets a real spectrum and eigenvectors that are orthonormal inside the
+   degenerate eigenspaces too. *)
+VerificationTest[
+    With[{m = degenRotated[degenUnitary[6, 7], N @ {1/2, 1/2, 0, 0, 0, 0}]},
+        With[{es = QuantumState[m, {2, 3}]["Eigensystem", Chop -> True]},
+            {
+                FreeQ[First[es], _Complex],
+                degenDistance[Conjugate[Last[es]] . Transpose[Last[es]], IdentityMatrix[6]],
+                degenDistance[m . Transpose[Last[es]], Transpose[Last[es]] . DiagonalMatrix[First[es]]]
+            }
+        ]
+    ],
+    {True, _ ? (# < 10^-8 &), _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Eigensystem-ChopHermitianDegenerate"
+]
+
+(* A matrix that is not Hermitian keeps its own eigenvectors, unit vectors v with
+   m.v = lambda v; symmetrizing m first would break the second condition. *)
+VerificationTest[
+    With[{m = N @ {{1, 2, 0, 1}, {0, 3, 1, 0}, {1, 0, -1, 1}, {0, 1, 0, 2}}},
+        With[{es = QuantumState[m, {2, 2}]["Eigensystem", Chop -> True]},
+            {
+                Max[Abs[Norm /@ Last[es] - 1]],
+                degenDistance[m . Transpose[Last[es]], Transpose[Last[es]] . DiagonalMatrix[First[es]]]
+            }
+        ]
+    ],
+    {_ ? (# < 10^-8 &), _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Eigensystem-ChopNonHermitian"
+]
+
+EndTestSection[]

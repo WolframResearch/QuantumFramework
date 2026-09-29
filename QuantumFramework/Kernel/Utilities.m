@@ -166,7 +166,10 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
     {values, vectors} = Chop @ Simplify @ Enclose[
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
-                If[ Precision[matrix] === MachinePrecision,
+                Which[
+                    MatrixQ[matrix, NumericQ] && Precision[matrix] === MachinePrecision,
+                    machineEigensystem[N[Normal[matrix]]],
+                    Precision[matrix] === MachinePrecision,
                     Quiet[
                         Check[
                             Eigensystem[matrix, ZeroTest -> (Chop[N[#1]] == 0 &)],
@@ -175,6 +178,7 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
                         ],
                         Eigensystem::eivec0
                     ],
+                    True,
                     Eigensystem[Chop @ matrix]
                 ],
                 Eigensystem[matrix]
@@ -202,6 +206,16 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
 
     {values, vectors}
 ]
+
+(* A machine matrix is diagonalized with no ZeroTest: an explicit ZeroTest takes
+   it off the numerical eigensolvers, although the Eigensystem documentation
+   limits that option to exact and symbolic matrices. Of the two solvers the
+   default method chooses between, only the Hermitian one guarantees orthonormal
+   eigenvectors inside a degenerate eigenspace, and it runs only when
+   HermitianMatrixQ holds at its default tolerance, which roundoff alone can
+   fail; so a matrix Hermitian to roundoff is made exactly Hermitian first. Any
+   other matrix goes to the general solver as it is. *)
+machineEigensystem[m_] := Eigensystem[If[nearlyHermitianQ[m, roundoffTolerance[m]], (m + ConjugateTranspose[m]) / 2, m]]
 
 Options[eigenvalues] = Options[eigensystem]
 
@@ -375,9 +389,14 @@ roundoffTolerance[mat_] := 100 Length[mat] roundoff[mat]
    does not underflow for p above 307. *)
 roundoff[mat_] := 10 ^ -SetPrecision[Precision[mat], 20]
 
-(* HermitianMatrixQ's Tolerance zeroes small entries rather than bounding m - m^†, so
-   the test is written out. *)
-nearlyHermitianQ[mat_, tol_] := Max[Abs[mat - ConjugateTranspose[mat]]] <= tol Max[Abs[mat]]
+(* HermitianMatrixQ's Tolerance t sets entries below t to zero and compares the others
+   to relative precision t one entry at a time, which does not bound m - m^† against
+   the largest entry, so the test is written out: the largest entry of m - m^† against
+   tol times the largest absolute entry s. For s below 1 it divides by s instead, so
+   that the bound does not underflow for a matrix near the smallest machine numbers. *)
+nearlyHermitianQ[mat_, tol_] := With[{s = Max[Abs[mat]], d = Max[Abs[mat - ConjugateTranspose[mat]]]},
+    s == 0 || If[s < 1, d / s <= tol, d <= tol s]
+]
 
 (* The Schur factor q is unitary even inside a degenerate eigenspace, where the
    eigenvectors Eigensystem returns need not be orthonormal, so f(m) = q.f(t).q^†

@@ -936,9 +936,19 @@ QuantumStateProp[qs_, prop : "Dual" | "Conjugate", args___] := QuantumState[Arra
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := simplifyLabel @ QuantumState[qs["Conjugate"]["Transpose"], "Label" -> SuperDagger[qs["Label"]]]
 
+(* "Physical" and "EigenPrune" rebuild a state as sum_k w_k |v_k><v_k|, which takes
+   an orthonormal eigenbasis, one that a Hermitian matrix has. So every machine
+   density matrix is replaced by its Hermitian part (m + m^†)/2, the Hermitian
+   matrix nearest to it and the matrix itself when it is Hermitian: a matrix that
+   roundoff, integration error or noise left slightly non-Hermitian then gives a
+   state that does not depend on which eigensolver roundoff selects. "Physical"
+   takes the Hermitian part before it divides by the trace. An exact or symbolic
+   matrix is taken as it is. *)
+machineHermitianPart[m_] := If[MatrixQ[m, NumericQ] && Precision[m] === MachinePrecision, (m + ConjugateTranspose[m]) / 2, m]
+
 QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
-		{d, u} = eigensystem[qs["NormalizedDensityMatrix"], Chop -> True, "Normalize" -> True];
+		{d, u} = eigensystem[normalizeMatrix[machineHermitianPart[qs["DensityMatrix"]]], Chop -> True, "Normalize" -> True];
 		d = Normalize[Max[#, 0] & /@ Re[d], Total];
 		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
     ]
@@ -946,10 +956,10 @@ QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 
 QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1, opts : OptionsPattern["Normalize" -> True]] /; qs["NumericQ"] :=
 	Block[{d, u, p},
-		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
+		{d, u} = eigensystem[machineHermitianPart[qs["DensityMatrix"]], Chop -> True, "Normalize" -> True];
         p = Catenate[PositionLargest[Abs[d], n]];
         d = d[[p]];
-		If[TrueQ[OptionValue["Normalize"]], d = Normalize[d[[p]], Total]];
+		If[TrueQ[OptionValue["Normalize"]], d = Normalize[d, Total]];
         u = u[[p]];
 		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
     ]
