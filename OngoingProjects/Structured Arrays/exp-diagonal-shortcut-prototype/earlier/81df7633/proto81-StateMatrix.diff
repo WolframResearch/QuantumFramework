@@ -1,0 +1,11 @@
+--- proto81/QuantumFramework/Kernel/QuantumState/Properties.m	2026-09-27 16:29:57
++++ proto81s/QuantumFramework/Kernel/QuantumState/Properties.m	2026-09-27 18:41:02
+@@ -1052,7 +1052,7 @@
+     qs["VectorQ"],
+     ReshapeArray[qs["StateVector"], qs["MatrixNameDimensions"]],
+     ReshapeArray[
+-        Transpose[ReshapeArray[{qs["StateTensor"]}, Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
++        Transpose[ReshapeArray[With[{t = qs["StateTensor"]}, If[SparseArrayQ[t], t, {t}]], Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
+         qs["MatrixNameDimensions"] ^ 2
+     ]
+ ]

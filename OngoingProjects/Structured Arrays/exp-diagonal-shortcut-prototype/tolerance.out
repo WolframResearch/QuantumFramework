@@ -1,0 +1,9 @@
+Options[DiagonalMatrixQ]	{Tolerance -> Automatic, ZeroTest -> Automatic}
+default, strict: off-diagonal 5.6e-14 beside a largest entry 2	{True, False}
+default, strict: off-diagonal 1e-12 beside a largest entry 2	{False, False}
+default, strict: 1e-9 between two entries 1, an entry 1e6 elsewhere	{True, False}
+default, strict: the same coupling without the entry 1e6	{False, False}
+strict: machine zeros 0., -0., 0. + 0. I off the diagonal	True
+strict: Sin[y]^2 + Cos[y]^2 - 1 off the diagonal	True
+strict: Gamma[g + 1] - g Gamma[g] off the diagonal, and FullSimplify of it	{False, 0}
+strict: a 2 x 3 matrix with zeros off the diagonal	True

@@ -1,0 +1,73 @@
+proto	detect	strict test, dense random 1024 (non-diagonal)	0.
+proto	detect	strict test, SparseArray diagonal 2^16	0.0001
+proto	detect	strict test, sparse TFI n=12 (non-diagonal)	0.
+proto	detect	strict test, symbolic dense 64 (non-diagonal)	0.
+proto	detect	strict test, dense diagonal 4096	0.3512
+proto	ising	Exp[-I 0.3 qo] n=12	0.0064
+proto	ising	  error vs entrywise n=12	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=12	0.0063
+proto	ising	Exp[-I 0.3 qo] n=13	0.0068000000000000005
+proto	ising	  error vs entrywise n=13	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=13	0.0073
+proto	ising	Exp[-I 0.3 qo] n=14	0.0201
+proto	ising	  error vs entrywise n=14	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=14	0.0105
+proto	ising	Exp[-I 0.3 qo] n=15	0.0122
+proto	ising	  error vs entrywise n=15	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=15	0.0128
+proto	ising	Exp[-I 0.3 qo] n=16	0.0145
+proto	ising	  error vs entrywise n=16	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=16	0.015000000000000001
+proto	liouvillian	build Liouvillian n=4	0.2341
+proto	liouvillian	  Head stored state / Head Matrix n=4	{SparseArray, 0.003, List}
+proto	liouvillian	Exp[0.7 L] n=4	0.0064
+proto	liouvillian	  error vs entrywise n=4	0.702668398504436
+proto	liouvillian	build Liouvillian n=5	0.4641
+proto	liouvillian	  Head stored state / Head Matrix n=5	{SparseArray, 0.0126, List}
+proto	liouvillian	Exp[0.7 L] n=5	0.030600000000000002
+proto	liouvillian	  error vs entrywise n=5	0.759921276912051
+proto	liouvillian	build Liouvillian n=6	9.7109
+proto	liouvillian	  Head stored state / Head Matrix n=6	{SparseArray, 0.1593, List}
+proto	liouvillian	Exp[0.7 L] n=6	0.42350000000000004
+proto	liouvillian	  error vs entrywise n=6	1.2345513664407222
+proto	qaoa	param build Exp n=8	0.0205
+proto	qaoa	  ByteCount n=8	74064
+proto	qaoa	  one point n=8	0.0044
+proto	qaoa	  error at 0.3 n=8	0.
+proto	qaoa	  25 points n=8	0.11170000000000001
+proto	qaoa	  100 points n=8	0.43620000000000003
+proto	qaoa	param build Exp n=10	0.022600000000000002
+proto	qaoa	  ByteCount n=10	176880
+proto	qaoa	  one point n=10	0.006
+proto	qaoa	  error at 0.3 n=10	0.
+proto	qaoa	  25 points n=10	0.14930000000000002
+proto	qaoa	  100 points n=10	0.6088
+proto	qaoa	param build Exp n=12	0.0304
+proto	qaoa	  ByteCount n=12	557328
+proto	qaoa	  one point n=12	0.012100000000000001
+proto	qaoa	  error at 0.3 n=12	0.
+proto	qaoa	  25 points n=12	0.3078
+proto	qaoa	  100 points n=12	1.2351
+proto	qaoa	param build Exp n=14	0.0584
+proto	qaoa	  ByteCount n=14	2042240
+proto	qaoa	  one point n=14	0.0393
+proto	qaoa	  error at 0.3 n=14	0.
+proto	qaoa	  25 points n=14	0.9691000000000001
+proto	qaoa	  100 points n=14	3.9013
+proto	qaoa	param build Exp n=16	0.17070000000000002
+proto	qaoa	  ByteCount n=16	7948704
+proto	qaoa	  one point n=16	0.1373
+proto	qaoa	  error at 0.3 n=16	0.
+proto	qaoa	  25 points n=16	3.4787000000000003
+proto	qaoa	  100 points n=16	14.4221
+proto	controls	TFI n=10 Exp	3.7909
+proto	controls	random Hermitian n=8 Exp	0.31570000000000004
+proto	controls	random Hermitian n=10 Exp	19.755200000000002
+proto	controls	diagonal + 1e-12 corner coupling n=10 Exp	0.0298
+proto	controls	symbolic block 4x4 Exp	0.004
+proto	controls	RX[theta] build	0.0094
+proto	controls	R[theta, XX] build	0.022000000000000002
+proto	controls	RZ[theta] build	0.0076
+proto	controls	R[theta, ZZ] build	0.0177
+proto	controls	R[0.3, ZZZZ] build	0.031400000000000004
+proto	controls	Trotter 4-qubit ZZ+X order 2 x 5 build	0.10690000000000001

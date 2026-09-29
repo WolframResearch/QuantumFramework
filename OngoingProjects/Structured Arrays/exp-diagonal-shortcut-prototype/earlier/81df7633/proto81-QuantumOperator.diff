@@ -1,0 +1,55 @@
+--- base81/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-27 16:29:57
++++ proto81/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-27 18:41:02
+@@ -575,7 +575,7 @@
+     ]
+ 
+ QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
+-    matrixMapOperator[MatrixExp[Log[base] #] &, qo, Power[base, #] &]
++    matrixMapOperator[matrixExponential[Log[base] #] &, qo, Power[base, #] &]
+ 
+ (* The generic NumericFunction rule below would match Exp[qo] directly with f = Exp,
+    so the built-in rewrite of Exp into Power[E, ...] never runs on an operator
+@@ -587,7 +587,7 @@
+ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
+     matrixMapOperator[matrixFunction[f, #, {left}, {right}, opts] &, qo, f[left, #, right] &]
+ 
+-QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[MatrixExp, qo, Exp]
++QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[matrixExponential, qo, Exp]
+ 
+ (* The operator g(M) for the matrix M of qo in sorted order, labelled with labelF of
+    its label: evaluated now, or kept lazy in the parameters (below). *)
+@@ -626,7 +626,7 @@
+ (* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
+    at a zero eigenvalue), so that a substitution reaching that value fails. *)
+ matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose @ operatorAmplitudes[
+-    ConfirmBy[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]], MatrixQ],
++    ConfirmBy[g[ConfirmBy[mat, FreeQ[If[SparseArrayQ[#], {#["NonzeroValues"], #["Background"]}, #], Indeterminate | _DirectedInfinity] &]], MatrixQ],
+     vectorQ, nameDimensions, dimension
+ ]
+ 
+@@ -651,7 +651,12 @@
+     Replace[Extract[qo["State"]["State"], {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
+ ]
+ 
+-heldOperatorMatrix[_, op_] := With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
++heldOperatorMatrix[_, op_] := With[{mat = op["Matrix"]},
++    If[ diagonalMatrixQ[mat],
++        With[{d = Normal[Diagonal[mat]], n = Length[mat]}, Hold[SparseArray[Transpose[{Range[n], Range[n]}] -> d, {n, n}]]],
++        With[{m = Normal[mat]}, Hold[m]]
++    ]
++]
+ 
+ (* Function binds its first argument, so With cannot write the parameters there;
+    Apply puts them in front of the held body instead. The shape is declared so that
+@@ -679,9 +684,9 @@
+ QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ With[{op = qo["Sort"]},
+     QuantumState[
+         If[ op["VectorQ"] && qs["VectorQ"],
+-            MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
++            matrixExponential[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
+             ArrayReshape[
+-                MatrixExp[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
++                matrixExponential[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
+                 {#, #} & @ op["OutputDimension"]
+             ]
+         ],

@@ -1,0 +1,40 @@
+qo^0.5 n=10	0.1199
+  qo^0.5 error vs entrywise principal branch n=10	4.440892098500626*^-16
+  entrywise time n=10	0.0004
+qo^3 n=10	0.0035
+qo^0.5 n=12	5.7199
+  qo^0.5 error vs entrywise principal branch n=12	4.440892098500626*^-16
+  entrywise time n=12	0.0016
+qo^3 n=12	0.0035
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+Eigenvalues n=8	0.0001
+  order: equals h sorted by decreasing Abs n=8	True
+  order: equals h in diagonal order n=8	False
+  Eigenvalues[structured] n=8	0.0002
+  Eigenvalues[structured] sorted equal n=8	True
+
+Eigensystem::arh: Because finding 1024 out of the 1024 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+Eigenvalues n=10	0.0001
+  order: equals h sorted by decreasing Abs n=10	True
+  order: equals h in diagonal order n=10	False
+  Eigenvalues[structured] n=10	0.0005
+  Eigenvalues[structured] sorted equal n=10	True
+
+IdentityMatrix::dims: Dimension specification {3, 2, 1} should be a positive machine integer or a pair of positive machine integers.
+
+IdentityMatrix::nonopt: Options expected (instead of {3, 2, 1}) beyond position 2 in IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]. An option must be a rule or a list of rules.
+Eigensystem of structured DiagonalMatrix (WL 15.0)	{{4., 3., 1.}, IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]}
+Eigensystem of SparseArray diagonal	{{4., 3., 1.}, {{0., 0., 1.}, {0., 1., 0.}, {1., 0., 0.}}}
+Eigensystem of exact degenerate diagonal	{{2, 2, 1}, {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}}
+QuantumEvolve numeric {t,0,1} n=6	0.009300000000000001
+  error at t=1 vs entrywise closed form n=6	5.523601914702986*^-7
+  closed form time n=6	0.
+QuantumEvolve numeric {t,0,1} n=8	0.0236
+  error at t=1 vs entrywise closed form n=8	1.2563739200780674*^-6
+  closed form time n=8	0.
+QuantumEvolve numeric {t,0,1} n=10	0.2155
+  error at t=1 vs entrywise closed form n=10	3.233880204524078*^-6
+  closed form time n=10	0.
+QuantumEvolve symbolic t, 2 qubits	0.035300000000000005
+  symbolic result	{1/(2*E^(I*\[FormalT])), E^(I*\[FormalT])/2, 1/(2*E^((2*I)*\[FormalT])), 1/2}

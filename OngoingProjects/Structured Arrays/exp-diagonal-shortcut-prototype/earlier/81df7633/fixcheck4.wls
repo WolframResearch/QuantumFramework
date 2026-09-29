@@ -1,0 +1,14 @@
+which = Last[$ScriptCommandLine];
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], which, "QuantumFramework"}]];
+Needs["Wolfram`QuantumFramework`"];
+out[l_, x_] := WriteString[$Output, l, "\t", ToString[x, InputForm], "\n"];
+SetAttributes[msgs, HoldAll];
+msgs[e_] := Block[{$MessageList = {}}, {e, $MessageList}];
+out["R1 complex subnormal part", Last @ msgs[Exp[QuantumOperator[SparseArray[{{1, 1} -> -708. + 1.5 I}, {2, 2}]]]]];
+out["R1 lazy", Last @ msgs[Exp[QuantumOperator[DiagonalMatrix[{al, be}], "Parameters" -> {al, be}]][-708. + 1.5 I, 0.]]];
+out["R2 Indeterminate", Head[Exp[QuantumOperator[DiagonalMatrix[{Indeterminate, 1.}]]]]];
+out["R2 -Infinity", Head[Exp[QuantumOperator[DiagonalMatrix[{-Infinity, 1.}]]]]];
+out["R3 packed Normal RZ[0.4]", Developer`PackedArrayQ[Normal[QuantumOperator["RZ"[0.4]]["Matrix"]]]];
+out["R3 packed Ising", Developer`PackedArrayQ[Normal[Exp[-I 0.3 QuantumOperator[SparseArray[Band[{1, 1}] -> RandomReal[1, 256]], Range[8]]]["Matrix"]]]];
+out["Ising diag exact", With[{h = RandomReal[{-1, 1}, 1024]}, Max[Abs[Normal[Diagonal[Exp[-I 0.3 QuantumOperator[SparseArray[Band[{1, 1}] -> h], Range[10]]]["Matrix"]]] - Exp[-I 0.3 h]]]]];
+out["symbolic still", Normal[Exp[QuantumOperator[DiagonalMatrix[{a, b}]]]["Matrix"]]];

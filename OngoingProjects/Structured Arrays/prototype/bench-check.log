@@ -1,0 +1,44 @@
+"START ""check"" ""15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)"" ""Sat 26 Sep 2026 18:55:14"
+"QFT"" n="4" gates="12" share in monomial runs="0.6666666666666666
+"  QF ""Schrodinger"": "1.573471" s, diff "0.
+"  QF "Automatic": "0.108311" s, diff "0.
+"  B gate-by-gate state vector: "0.003821" s"{" diff ", 1.5406844766068322*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.008812" s + apply "0.000178" s = "0.00899" s, steps "8{" diff ", 1.0007415106216804*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.004644" s + apply "0.000116" s = "0.0047599999999999995" s, steps "8{" diff ", 1.0007415106216804*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.000258" s + apply "0.000291" s = "0.000549" s, steps "1{" diff ", 4.17603827166687*^-16}
+"QPE"" n="5" gates="15" share in monomial runs="0.4
+"  QF ""Schrodinger"": "1.157826" s, diff "0.
+"  QF "Automatic": "0.121521" s, diff "0.
+"  B gate-by-gate state vector: "0.004962" s"{" diff ", 1.2182650628633384*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.00683" s + apply "0.000241" s = "0.007071" s, steps "13{" diff ", 1.2182650628633384*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.005888" s + apply "0.000176" s = "0.006064" s, steps "13{" diff ", 1.2320201043084444*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.003214" s + apply "0.000193" s = "0.003407" s, steps "8{" diff ", 2.2991140426169464*^-16}
+"BV"" n="5" gates="14" share in monomial runs="0.35714285714285715
+"  QF ""Schrodinger"": "1.131246" s, diff "0.
+"  QF "Automatic": "0.110515" s, diff "0.
+"  B gate-by-gate state vector: "0.004249" s"{" diff ", 0.}
+"  ""C fusion as structured arrays (Dot)"": compile "0.006323" s + apply "0.000194" s = "0.006516999999999999" s, steps "10{" diff ", 0.}
+"  ""D fusion as vectors (Part, Times)"": compile "0.00481" s + apply "0.000134" s = "0.0049440000000000005" s, steps "10{" diff ", 0.}
+"  ""E D + QFT blocks as FFT"": compile "0.004967" s + apply "0.000126" s = "0.005093" s, steps "10{" diff ", 0.}
+"QAOA p=2"" n="4" gates="24" share in monomial runs="0.5
+"  QF ""Schrodinger"": "2.653044" s, diff "0.
+"  QF "Automatic": "0.126331" s, diff "3.2673644459994813*^-16
+"  B gate-by-gate state vector: "0.007454" s"{" diff ", 2.7885376365513637*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.012632" s + apply "0.00024" s = "0.012872000000000001" s, steps "14{" diff ", 3.242030640122536*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.008525" s + apply "0.000164" s = "0.008688999999999999" s, steps "14{" diff ", 3.242030640122536*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.00886" s + apply "0.000155" s = "0.009015" s, steps "14{" diff ", 3.242030640122536*^-16}
+"Clifford+T"" n="4" gates="40" share in monomial runs="0.9
+"  QF ""Schrodinger"": "4.091341" s, diff "0.
+"  QF "Automatic": "0.174696" s, diff "2.408705867777664*^-16
+"  B gate-by-gate state vector: "0.011647" s"{" diff ", 3.331436961895761*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.025377" s + apply "0.000206" s = "0.025583" s, steps "9{" diff ", 3.870338744293495*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.015088" s + apply "0.000109" s = "0.015197" s, steps "9{" diff ", 3.870338744293495*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.015205" s + apply "0.000103" s = "0.015308" s, steps "9{" diff ", 3.870338744293495*^-16}
+"dense"" n="4" gates="12" share in monomial runs="0.
+"  QF ""Schrodinger"": "1.49193" s, diff "0.
+"  QF "Automatic": "0.11095" s, diff "3.353001051350937*^-16
+"  B gate-by-gate state vector: "0.003818" s"{" diff ", 5.123164454060819*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.004316" s + apply "0.000156" s = "0.004472" s, steps "12{" diff ", 5.123164454060819*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.004105" s + apply "0.000142" s = "0.004247" s, steps "12{" diff ", 5.123164454060819*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.004388" s + apply "0.000146" s = "0.004534000000000001" s, steps "12{" diff ", 5.123164454060819*^-16}
+"DONE ""Sat 26 Sep 2026 18:55:30"

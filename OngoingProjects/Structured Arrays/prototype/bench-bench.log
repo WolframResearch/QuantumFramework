@@ -1,0 +1,79 @@
+"START ""bench"" ""15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)"" ""Sat 26 Sep 2026 18:55:39"
+"QFT"" n="14" gates="112" share in monomial runs="0.875
+"  QF "Automatic": "1.837987" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "0.799355" s, diff "4.2324750663620182*^-16
+"  B gate-by-gate state vector: "0.099811" s"{" diff ", 4.2324750663620182*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "1.283344" s + apply "0.014479" s = "1.297823" s, steps "28{" diff ", 4.61503428913884*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.294724" s + apply "0.08102" s = "0.37574399999999997" s, steps "28{" diff ", 4.807443687365403*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.00244" s + apply "0.000733" s = "0.003173" s, steps "1{" diff ", 1.459491254115563*^-15}
+"QFT"" n="16" gates="144" share in monomial runs="0.8888888888888888
+"  QF "Automatic": "3.547315" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "3.705514" s, diff "4.798439962932269*^-16
+"  B gate-by-gate state vector: "0.161702" s"{" diff ", 4.798439962932269*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "3.703786" s + apply "0.044923" s = "3.748709" s, steps "32{" diff ", 5.19622646787682*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "1.413517" s + apply "0.397056" s = "1.810573" s, steps "32{" diff ", 5.46058484730515*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.002548" s + apply "0.001665" s = "0.004213" s, steps "1{" diff ", 1.6162610923523392*^-15}
+"QPE"" n="14" gates="110" share in monomial runs="0.6727272727272727
+"  QF "Automatic": "1.714298" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "0.853829" s, diff "5.006834206040473*^-16
+"  B gate-by-gate state vector: "0.090403" s"{" diff ", 5.595874616509355*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "0.667792" s + apply "0.018034" s = "0.685826" s, steps "49{" diff ", 5.615321331710482*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "0.416742" s + apply "0.073853" s = "0.490595" s, steps "49{" diff ", 5.701005258072254*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.0143" s + apply "0.005825" s = "0.020125" s, steps "26{" diff ", 1.2849022386611025*^-15}
+"QPE"" n="16" gates="142" share in monomial runs="0.704225352112676
+"  QF "Automatic": "3.724059" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "4.074408" s, diff "5.597096090803632*^-16
+"  B gate-by-gate state vector: "0.159362" s"{" diff ", 6.14255896575344*^-16}
+"  ""C fusion as structured arrays (Dot)"": compile "2.954584" s + apply "0.072974" s = "3.027558" s, steps "57{" diff ", 6.142222534024257*^-16}
+"  ""D fusion as vectors (Part, Times)"": compile "1.078473" s + apply "0.418609" s = "1.497082" s, steps "57{" diff ", 6.295989635805706*^-16}
+"  ""E D + QFT blocks as FFT"": compile "0.026143" s + apply "0.02972" s = "0.055862999999999996" s, steps "30{" diff ", 1.49940917515709*^-15}
+"BV"" n="17" gates="50" share in monomial runs="0.34
+"  QF "Automatic": "3.060933" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "3.36005" s, diff "0.
+"  B gate-by-gate state vector: "0.08292" s"{" diff ", 0.}
+"  ""C fusion as structured arrays (Dot)"": compile "0.776589" s + apply "0.06278" s = "0.839369" s, steps "34{" diff ", 0.}
+"  ""D fusion as vectors (Part, Times)"": compile "0.203194" s + apply "0.054117" s = "0.257311" s, steps "34{" diff ", 0.}
+"  ""E D + QFT blocks as FFT"": compile "0.188121" s + apply "0.045006" s = "0.233127" s, steps "34{" diff ", 0.}
+"QAOA p=2"" n="12" gates="168" share in monomial runs="0.7857142857142857
+"  QF "Automatic": "1.691257" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "0.482663" s, diff "9.716776935409403*^-16
+"  B gate-by-gate state vector: "0.056288" s"{" diff ", 1.0101806535486482*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "0.351341" s + apply "0.001653" s = "0.35299400000000003" s, steps "38{" diff ", 1.0033914092273325*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "0.09226" s + apply "0.001394" s = "0.093654" s, steps "38{" diff ", 1.0033914092273325*^-15}
+"  ""E D + QFT blocks as FFT"": compile "0.099504" s + apply "0.001416" s = "0.10092" s, steps "38{" diff ", 1.0033914092273325*^-15}
+"QAOA p=2"" n="14" gates="224" share in monomial runs="0.8125
+"  QF "Automatic": "2.903047" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "1.631176" s, diff "1.1304070118247752*^-15
+"  B gate-by-gate state vector: "0.119049" s"{" diff ", 1.1899734674262918*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "1.76513" s + apply "0.007068" s = "1.7721980000000002" s, steps "44{" diff ", 1.1748536962206158*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "0.268163" s + apply "0.006898" s = "0.275061" s, steps "44{" diff ", 1.1748536962206158*^-15}
+"  ""E D + QFT blocks as FFT"": compile "0.27567" s + apply "0.009529" s = "0.28519900000000004" s, steps "44{" diff ", 1.1748536962206158*^-15}
+"Clifford+T"" n="12" gates="500" share in monomial runs="0.802
+"  QF "Automatic": "6.671102" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "2.158088" s, diff "1.108785809583705*^-15
+"  B gate-by-gate state vector: "0.158693" s"{" diff ", 1.1484113348686436*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "1.09548" s + apply "0.042758" s = "1.138238" s, steps "180{" diff ", 1.1471418888931648*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "0.399037" s + apply "0.088988" s = "0.488025" s, steps "180{" diff ", 1.2452351730335987*^-15}
+"  ""E D + QFT blocks as FFT"": compile "0.401539" s + apply "0.088101" s = "0.48963999999999996" s, steps "180{" diff ", 1.2452351730335987*^-15}
+"Clifford+T"" n="14" gates="500" share in monomial runs="0.792
+"  QF "Automatic": "7.874898" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "3.96402" s, diff "1.1054574300615095*^-15
+"  B gate-by-gate state vector: "0.24491" s"{" diff ", 1.1394270183443285*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "3.478838" s + apply "0.181407" s = "3.660245" s, steps "193{" diff ", 1.1582337942514077*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "1.172536" s + apply "0.456322" s = "1.6288580000000001" s, steps "193{" diff ", 1.2592767571266164*^-15}
+"  ""E D + QFT blocks as FFT"": compile "1.118951" s + apply "0.456831" s = "1.575782" s, steps "193{" diff ", 1.2592767571266164*^-15}
+"dense"" n="12" gates="150" share in monomial runs="0.
+"  QF "Automatic": "1.93348" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "0.42512" s, diff "1.6387209679622486*^-15
+"  B gate-by-gate state vector: "0.053402" s"{" diff ", 1.6571303435681663*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "0.051668" s + apply "0.007981" s = "0.059649" s, steps "150{" diff ", 1.6571303435681663*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "0.052455" s + apply "0.008415" s = "0.06087" s, steps "150{" diff ", 1.6571303435681663*^-15}
+"  ""E D + QFT blocks as FFT"": compile "0.053546" s + apply "0.008032" s = "0.061578" s, steps "150{" diff ", 1.6571303435681663*^-15}
+"dense"" n="14" gates="150" share in monomial runs="0.
+"  QF "Automatic": "2.324662" s, diff "0.
+"  QF "{"TensorNetwork", "Path" -> "Greedy"}": "1.240748" s, diff "1.6167572839358852*^-15
+"  B gate-by-gate state vector: "0.086559" s"{" diff ", 1.643255584653262*^-15}
+"  ""C fusion as structured arrays (Dot)"": compile "0.052519" s + apply "0.042855" s = "0.095374" s, steps "150{" diff ", 1.643255584653262*^-15}
+"  ""D fusion as vectors (Part, Times)"": compile "0.051618" s + apply "0.048214" s = "0.099832" s, steps "150{" diff ", 1.643255584653262*^-15}
+"  ""E D + QFT blocks as FFT"": compile "0.05366" s + apply "0.041084" s = "0.094744" s, steps "150{" diff ", 1.643255584653262*^-15}
+"DONE ""Sat 26 Sep 2026 18:57:45"

@@ -1,0 +1,69 @@
+=======================================================================
+  QuantumFramework Test Coverage Report
+=======================================================================
+  Date:       Mon 28 Sep 2026 13:12:00
+  Paclet:     /private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/proto/QuantumFramework
+  Loaded:     /private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/proto/QuantumFramework/Kernel/QuantumFrameworkMain.m
+  Test files: 1 matching "DiagonalExp"
+PACLET	/private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/proto/QuantumFramework
+
+  NOTE: an installed Wolfram/QuantumFramework paclet is also visible:
+    /Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__QuantumFramework-2.1.1
+    Nothing has been uninstalled.  PacletDirectoryLoad gives the repo
+    copy priority, so this is usually harmless.  To remove it yourself:
+      PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]
+
+-----------------------------------------------------------------------
+  QuantumOperatorDiagonalExp.wlt
+-----------------------------------------------------------------------
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-symbolic-closed-form"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-symbolic-unitary-group-law"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-on-a-pure-register"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-QAOA-gate-factorization"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-long-time-unitarity"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-40-digit-reference"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-16-qubit-Ising"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-parameter-scan-12-qubit"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-symbolic"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-limits"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-complete-positivity"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-collective-dephasing"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-superoperator-acting-on-state"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-against-QuantumEvolve"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-acting-on-states"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-on-part-of-the-register"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-beyond-the-register"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-ZZ-entangler-concurrence"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-spin-one-JX-eigenbasis"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-chain-partition-function"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-chain-correlations"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Gibbs-ground-states"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Gibbs-shift-invariance"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-QAOA-depth-one-ring"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-QAOA-scan-with-gamma-declared"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-symbolic-and-exact"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-hidden-zero-no-pole"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-hidden-zero-unproved-falls-back"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-underflow"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-overflow"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-complex-subnormal-part"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-thirty-digit-diagonal"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-non-finite-diagonal-fails"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-mixed-exact-and-machine"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-substitution-decides-route"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-resonant-roundoff-coupling-kept"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-parameter-collision"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-rank-zero-matrix"	Success
+FILE	QuantumOperatorDiagonalExp.wlt	38	38
+  38/38 succeeded
+
+=======================================================================
+  Summary
+=======================================================================
+  PASS QuantumOperatorDiagonalExp.wlt: 38/38
+
+  Total: 38/38 succeeded (100.0%)
+OUTCOME	Success	38
+TOTAL	38	38
+STATUS	GREEN
+=======================================================================

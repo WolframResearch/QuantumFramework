@@ -1,0 +1,55 @@
+--- base/QuantumFramework/Kernel/Utilities.m	2026-09-27 16:24:19
++++ proto/QuantumFramework/Kernel/Utilities.m	2026-09-27 16:36:14
+@@ -47,6 +47,8 @@
+ 
+ PackageScope["MatrixInverse"]
+ PackageScope["matrixFunction"]
++PackageScope["diagonalMatrixQ"]
++PackageScope["matrixExponential"]
+ PackageScope["SetPrecisionNumeric"]
+ PackageScope["TranscendentalRecognize"]
+ 
+@@ -327,7 +329,7 @@
+ 
+ (* An inexact diagonal is held to the same roundoff rule as a dense matrix, so f
+    commutes with a change of basis near a zero eigenvalue too. *)
+-scalarMatrixFunction[f_, mat_, ___] /; SquareMatrixQ[mat] && DiagonalMatrixQ[mat] := Enclose @ With[
++scalarMatrixFunction[f_, mat_, ___] /; diagonalMatrixQ[mat] := Enclose @ With[
+     {eigenvalues = Normal[Diagonal[mat]]},
+     SparseArray[
+         Band[{1, 1}] -> Confirm[spectralValues[f,
+@@ -390,8 +392,34 @@
+ 
+ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
+     Enclose[Confirm[spectralValues[f, eigenvalues]]; MatrixFunction[f, mat, opts]]
++
++
++(* A matrix counts as diagonal when it is square and every off-diagonal entry is
++   zero, with no tolerance: a coupling at roundoff relative to the largest entry
++   still mixes two degenerate levels over a long time, and a dense method resolves
++   that mixing. *)
++diagonalMatrixQ[mat_] := SquareMatrixQ[mat] && DiagonalMatrixQ[mat, Tolerance -> 0]
++
++(* The exponential of a diagonal matrix is the exponential of each diagonal entry,
++   and its action on a vector multiplies the vector by those exponentials; any
++   other matrix goes to MatrixExp. *)
++matrixExponential[mat_ ? diagonalMatrixQ] := diagonalMatrixExponential[mat]
++matrixExponential[mat_] := MatrixExp[mat]
++matrixExponential[mat_ ? diagonalMatrixQ, v_] := diagonalExp[Normal[Diagonal[mat]]] v
++matrixExponential[mat_, v_] := MatrixExp[mat, v]
+ 
++diagonalMatrixExponential[mat_] := With[{n = Length[mat]},
++    SparseArray[Transpose[{Range[n], Range[n]}] -> diagonalExp[Normal[Diagonal[mat]]], {n, n}]
++]
+ 
++(* A machine number whose exponential falls below the smallest normalized machine
++   number gives zero, as MatrixExp gives, rather than an underflow message. *)
++diagonalExp[x_ ? (VectorQ[#, MachineNumberQ] &)] := With[{keep = N[UnitStep[Re[x] - Log[$MinMachineNumber]]]},
++    keep Exp[keep x]
++]
++diagonalExp[x_] := Exp[x]
++
++
+ SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]
+ 
+ SetPrecisionNumeric[x_] := x

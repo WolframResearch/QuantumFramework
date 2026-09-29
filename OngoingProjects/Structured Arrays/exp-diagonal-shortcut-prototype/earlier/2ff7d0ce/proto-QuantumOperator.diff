@@ -1,0 +1,54 @@
+--- base/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-27 16:24:20
++++ proto/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-27 16:33:20
+@@ -578,10 +578,10 @@
+     op = qo["Sort"]
+ },
+     If[ lazyMatrixMapQ[op],
+-        parametricMatrixMapOperator[MatrixExp[Log[base] #] &, qo, op, If[op["Label"] === None, None, Power[base, op["Label"]]]],
++        parametricMatrixMapOperator[matrixExponential[Log[base] #] &, qo, op, If[op["Label"] === None, None, Power[base, op["Label"]]]],
+         matrixOperator[
+             op,
+-            ConfirmBy[MatrixExp[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
++            ConfirmBy[matrixExponential[Log[base] op["Matrix"]], matrixContainerQ, Defer[Power[base, op["Label"]]]],
+             "Label" -> If[op["Label"] === None, None, Power[base, op["Label"]]]
+         ]
+     ]
+@@ -620,10 +620,10 @@
+     op = qo["Sort"]
+ },
+     If[ lazyMatrixMapQ[op],
+-        parametricMatrixMapOperator[MatrixExp, qo, op, If[op["Label"] === None, None, Exp[op["Label"]]]],
++        parametricMatrixMapOperator[matrixExponential, qo, op, If[op["Label"] === None, None, Exp[op["Label"]]]],
+         matrixOperator[
+             op,
+-            ConfirmBy[MatrixExp[op["Matrix"]], MatrixQ],
++            ConfirmBy[matrixExponential[op["Matrix"]], MatrixQ],
+             "Label" -> If[op["Label"] === None, None, Exp[op["Label"]]]
+         ]
+     ]
+@@ -672,7 +672,12 @@
+         With[{qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}], order = qo["Order"]},
+             Replace[Extract[amplitudes, {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
+         ],
+-        With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
++        With[{mat = op["Matrix"]},
++            If[ diagonalMatrixQ[mat],
++                With[{d = Normal[Diagonal[mat]], n = Length[mat]}, Hold[SparseArray[Transpose[{Range[n], Range[n]}] -> d, {n, n}]]],
++                With[{m = Normal[mat]}, Hold[m]]
++            ]
++        ]
+     ]
+ ]
+ 
+@@ -702,9 +707,9 @@
+ QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ With[{op = qo["Sort"]},
+     QuantumState[
+         If[ op["VectorQ"] && qs["VectorQ"],
+-            MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
++            matrixExponential[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
+             ArrayReshape[
+-                MatrixExp[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
++                matrixExponential[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
+                 {#, #} & @ op["OutputDimension"]
+             ]
+         ],

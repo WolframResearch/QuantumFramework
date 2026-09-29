@@ -1,0 +1,60 @@
+--- base81/QuantumFramework/Kernel/Utilities.m	2026-09-27 16:29:57
++++ proto81/QuantumFramework/Kernel/Utilities.m	2026-09-27 19:46:22
+@@ -47,6 +47,8 @@
+ 
+ PackageScope["MatrixInverse"]
+ PackageScope["matrixFunction"]
++PackageScope["diagonalMatrixQ"]
++PackageScope["matrixExponential"]
+ PackageScope["SetPrecisionNumeric"]
+ PackageScope["TranscendentalRecognize"]
+ 
+@@ -407,8 +409,48 @@
+ 
+ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] :=
+     Enclose[Confirm[spectralValues[f, eigenvalues]]; MatrixFunction[f, mat, opts]]
++
++
++(* For the exponential, a matrix counts as diagonal when it is square and every
++   off-diagonal entry is zero, with no tolerance: a coupling at roundoff relative to
++   the largest entry still mixes two degenerate levels over a long time, and
++   MatrixExp resolves that mixing. *)
++diagonalMatrixQ[mat_] := SquareMatrixQ[mat] && DiagonalMatrixQ[mat, Tolerance -> 0]
++
++(* The exponential of a diagonal matrix is the exponential of each diagonal entry,
++   and its action on a vector multiplies the vector by those exponentials; any
++   other matrix goes to MatrixExp. *)
++matrixExponential[mat_ ? finiteDiagonalMatrixQ] := diagonalMatrixExponential[mat]
++matrixExponential[mat_] := MatrixExp[mat]
++matrixExponential[mat_ ? finiteDiagonalMatrixQ, v_] := diagonalExp[Normal[Diagonal[mat]]] v
++matrixExponential[mat_, v_] := MatrixExp[mat, v]
++
++(* A diagonal with an infinite or indeterminate entry goes to MatrixExp, which
++   fails on it. *)
++finiteDiagonalMatrixQ[mat_] := diagonalMatrixQ[mat] && FreeQ[Normal[Diagonal[mat]], Indeterminate | _DirectedInfinity]
++
++(* The zero off the diagonal is a machine zero when the diagonal is a machine
++   vector, so that Normal of the result stays packed. *)
++diagonalMatrixExponential[mat_] := With[{n = Length[mat], d = diagonalExp[Normal[Diagonal[mat]]]},
++    SparseArray[Transpose[{Range[n], Range[n]}] -> d, {n, n},
++        If[Precision[d] === MachinePrecision, If[FreeQ[d, _Complex], 0., 0. + 0. I], 0]
++    ]
++]
+ 
++(* A numeric diagonal at machine precision, exact entries included, is exponentiated
++   in machine numbers, as MatrixExp does, and as one packed array: Exp on an unpacked
++   list raises an underflow message for a complex entry whose real or imaginary part
++   is subnormal. An entry whose exponential falls below the smallest normalized
++   machine number gives zero rather than an underflow message. A numeric diagonal at
++   a higher finite precision is exponentiated at that precision. *)
++diagonalExp[x_ ? (VectorQ[#, NumericQ] && Precision[#] === MachinePrecision &)] := With[
++    {y = Developer`ToPackedArray[N[x], If[FreeQ[N[x], _Complex], Real, Complex]]},
++    With[{keep = N[UnitStep[Re[y] - Log[$MinMachineNumber]]]}, keep Exp[keep y]]
++]
++diagonalExp[x_ ? (VectorQ[#, NumericQ] && Precision[#] < Infinity &)] := Exp[N[x, Precision[x]]]
++diagonalExp[x_] := Exp[x]
+ 
++
+ SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]
+ 
+ SetPrecisionNumeric[x_] := x

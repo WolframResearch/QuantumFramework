@@ -1,0 +1,45 @@
+base	qo^0.5 n=10	0.0801
+base	  qo^0.5 against h^0.5 entry by entry n=10	4.440892098500626*^-16
+base	  h^0.5 as a sparse diagonal n=10	0.0001
+base	qo^3 n=10	0.0026000000000000003
+base	qo^0.5 n=12	3.7555
+base	  qo^0.5 against h^0.5 entry by entry n=12	4.440892098500626*^-16
+base	  h^0.5 as a sparse diagonal n=12	0.0005
+base	qo^3 n=12	0.0027
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+base	first-call Eigenvalues n=8	0.06720000000000001
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+base	first-call Eigensystem n=8	0.015700000000000002
+base	  order is decreasing absolute value n=8	True
+base	  Eigenvalues of the structured diagonal n=8	0.0002
+base	  same values n=8	True
+
+Eigensystem::arh: Because finding 1024 out of the 1024 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+
+General::stop: Further output of Eigensystem::arh will be suppressed during this calculation.
+base	first-call Eigenvalues n=10	0.1923
+base	first-call Eigensystem n=10	0.1719
+base	  order is decreasing absolute value n=10	True
+base	  Eigenvalues of the structured diagonal n=10	0.0005
+base	  same values n=10	True
+base	first-call Eigenvalues n=12	4.8262
+base	first-call Eigensystem n=12	5.0801
+base	  order is decreasing absolute value n=12	True
+base	  Eigenvalues of the structured diagonal n=12	0.002
+base	  same values n=12	True
+
+IdentityMatrix::dims: Dimension specification {3, 2, 1} should be a positive machine integer or a pair of positive machine integers.
+
+IdentityMatrix::nonopt: Options expected (instead of {3, 2, 1}) beyond position 2 in IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]. An option must be a rule or a list of rules.
+base	Eigensystem of a structured DiagonalMatrix	{{4., 3., 1.}, IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]}
+base	Eigensystem of an exact degenerate diagonal	{{2, 2, 1}, {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}}
+base	QuantumEvolve over t in [0, 1] n=6	0.0176
+base	  error at t = 1 against Exp[-I h] psi(0) n=6	5.523601915641948*^-7
+base	QuantumEvolve over t in [0, 1] n=8	0.0534
+base	  error at t = 1 against Exp[-I h] psi(0) n=8	1.2563739200823092*^-6
+base	QuantumEvolve over t in [0, 1] n=10	0.612
+base	  error at t = 1 against Exp[-I h] psi(0) n=10	3.2338802045551944*^-6
+base	QuantumEvolve with symbolic t, 2 qubits	{1/(2*E^(I*\[FormalT])), E^(I*\[FormalT])/2, 1/(2*E^((2*I)*\[FormalT])), 1/2}
+base	Sin of a 16-qubit diagonal: time, background, Normal packed	{0.0392, 0, False}

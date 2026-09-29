@@ -1,0 +1,98 @@
+--- base/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-27 20:34:42
++++ proto/QuantumFramework/Kernel/QuantumOperator/QuantumOperator.m	2026-09-28 13:05:45
+@@ -582,7 +582,7 @@
+ 
+ scalarBasePower[base_ ? zeroBaseQ, mat_] := zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
+ 
+-scalarBasePower[base_, mat_] := MatrixExp[Log[base] mat]
++scalarBasePower[base_, mat_] := matrixExponential[Log[base] mat]
+ 
+ QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
+     matrixMapOperator[scalarBasePower[base, #] &, qo, Power[base, #] &]
+@@ -597,7 +597,7 @@
+ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
+     matrixMapOperator[matrixFunction[f, #, {left}, {right}, opts] &, qo, f[left, #, right] &]
+ 
+-QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[MatrixExp, qo, Exp]
++QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[matrixExponential, qo, Exp]
+ 
+ (* The operator g(M) for the matrix M of qo in sorted order, labelled with labelF of
+    its label: evaluated now, or kept lazy in the parameters (below). *)
+@@ -636,7 +636,7 @@
+ (* The amplitudes of g of the matrix, or a Failure when g is not defined there (Log
+    at a zero eigenvalue), so that a substitution reaching that value fails. *)
+ matrixMapAmplitudes[g_, mat_, vectorQ_, nameDimensions_, dimension_] := Enclose @ operatorAmplitudes[
+-    ConfirmBy[Confirm[g[ConfirmBy[mat, FreeQ[#, Indeterminate | _DirectedInfinity] &]]], MatrixQ],
++    ConfirmBy[Confirm[g[ConfirmBy[mat, finiteArrayQ]]], MatrixQ],
+     vectorQ, nameDimensions, dimension
+ ]
+ 
+@@ -650,10 +650,11 @@
+    matrix first rather than the closed form of g1. It is read from qo as given,
+    before sorting its order, since sorting rebuilds the amplitudes from the closed
+    form; the sorting happens inside the body instead. Otherwise it is the sorted
+-   matrix as a List: a SparseArray is atomic, so neither Function application nor
+-   ReplaceAll would reach the parameters inside it. The basis written into the body
+-   carries no parameter specification, which a substitution would otherwise
+-   overwrite. *)
++   matrix: for a diagonal matrix the List of its diagonal entries, made into a sparse
++   diagonal matrix only after the substitution, and for any other the matrix as a
++   List. A SparseArray is atomic, so neither Function application nor ReplaceAll
++   would reach the parameters inside one. The basis written into the body carries no
++   parameter specification, which a substitution would otherwise overwrite. *)
+ heldOperatorMatrix[qo_, op_] /; lazyMatrixMapAmplitudesQ[qo["State"]["State"]] := With[{
+     qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}],
+     order = qo["Order"]
+@@ -661,8 +662,11 @@
+     Replace[Extract[qo["State"]["State"], {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
+ ]
+ 
+-heldOperatorMatrix[_, op_] := With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
++heldOperatorMatrix[_, op_] := heldMatrix[op["Matrix"]]
+ 
++heldMatrix[mat_ ? diagonalMatrixQ] := With[{d = Normal[Diagonal[mat]]}, Hold[DiagonalMatrix[d, TargetStructure -> "Sparse"]]]
++heldMatrix[mat_] := With[{m = Normal[mat]}, Hold[m]]
++
+ (* Function binds its first argument, so With cannot write the parameters there;
+    Apply puts them in front of the held body instead. The shape is declared so that
+    Wolfram`Arrays` does not probe the body; Arrays keeps that declaration, keyed on
+@@ -685,16 +689,18 @@
+         QuantumOperator[QuantumState[amplitudes, op["Basis"]], op["Order"], "Label" -> label]
+     ]
+ ]
++
++(* The exponential e^M of the operator acting on the state, as Exp[qo][qs] gives: a
++   pure state is multiplied by e^M, a mixed state rho becomes e^M rho e^(M^dagger),
++   and a superoperator acts on the density vector. An operator on any other qudits
++   than exactly the state's, with their dimensions, goes through Exp[qo][qs], which
++   extends the operator by the identity on qudits it does not act on, extends the
++   state to qudits it lacks, and fails on a dimension mismatch. *)
++QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] /; ! wholeRegisterQ[qo, qs] := Exp[qo][qs]
+ 
+ QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ With[{op = qo["Sort"]},
+     QuantumState[
+-        If[ op["VectorQ"] && qs["VectorQ"],
+-            MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
+-            ArrayReshape[
+-                MatrixExp[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
+-                {#, #} & @ op["OutputDimension"]
+-            ]
+-        ],
++        ConfirmBy[exponentialAction[op, QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]], ArrayQ],
+         QuantumBasis[
+             op["Output"],
+             "Label" -> If[op["Label"] === None || qs["Label"] === None, None, Exp[op["Label"]][qs["Label"]]]
+@@ -702,7 +708,13 @@
+     ]
+ ]
+ 
++wholeRegisterQ[qo_, qs_] := Sort[Transpose[{qo["InputOrder"], qo["InputDimensions"]}]] === Transpose[{Range[qs["OutputQudits"]], qs["OutputDimensions"]}]
+ 
++exponentialAction[op_ ? (#["VectorQ"] &), qs_ ? (#["VectorQ"] &)] := matrixExponential[op["Matrix"], qs["StateVector"]]
++exponentialAction[op_ ? (#["VectorQ"] &), qs_] := With[{u = matrixExponential[op["Matrix"]]}, u . qs["DensityMatrix"] . ConjugateTranspose[u]]
++exponentialAction[op_, qs_] := ArrayReshape[matrixExponential[op["ToMatrix"]["Matrix"], qs["DensityVector"]], {#, #} & @ op["OutputDimension"]]
++
++
+ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
+     orderInput, orderOutput,
+     ordered1, ordered2

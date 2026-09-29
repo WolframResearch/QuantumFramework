@@ -1,0 +1,60 @@
+base	detect	strict test, dense random 1024 (non-diagonal)	0.
+base	detect	strict test, SparseArray diagonal 2^16	0.0001
+base	detect	strict test, sparse TFI n=12 (non-diagonal)	0.
+base	detect	strict test, symbolic dense 64 (non-diagonal)	0.
+base	detect	strict test, dense diagonal 4096	0.3518
+base	ising	Exp[-I 0.3 qo] n=12	0.1519
+base	ising	  error vs entrywise n=12	6.206335383118183*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=12	0.013600000000000001
+base	ising	Exp[-I 0.3 qo] n=13	0.5858
+base	ising	  error vs entrywise n=13	8.08254562088053*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=13	0.0182
+base	ising	Exp[-I 0.3 qo] n=14	3.387
+base	ising	  error vs entrywise n=14	9.694605782913356*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=14	0.059500000000000004
+base	ising	Exp[-I 0.3 qo] n=15	37.6518
+base	ising	  error vs entrywise n=15	9.42055475210265*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=15	0.0371
+base	ising	Exp[-I 0.3 qo] n=16	171.2432
+base	ising	  error vs entrywise n=16	1.0007415106216803*^-15
+base	ising	MatrixExp[-I 0.3 qo, qs] n=16	0.06280000000000001
+base	liouvillian	build Liouvillian n=4	0.26280000000000003
+base	liouvillian	  Head stored state / Head Matrix n=4	{SparseArray, 0.0044, List}
+base	liouvillian	Exp[0.7 L] n=4	0.027800000000000002
+base	liouvillian	  error vs entrywise n=4	3.6638411145107034*^-16
+base	liouvillian	build Liouvillian n=5	0.4879
+base	liouvillian	  Head stored state / Head Matrix n=5	{SparseArray, 0.018500000000000003, List}
+base	liouvillian	Exp[0.7 L] n=5	0.4112
+base	liouvillian	  error vs entrywise n=5	3.510833468576701*^-16
+base	liouvillian	build Liouvillian n=6	9.346
+base	liouvillian	  Head stored state / Head Matrix n=6	{SparseArray, 0.1505, List}
+base	liouvillian	Exp[0.7 L] n=6	18.6081
+base	liouvillian	  error vs entrywise n=6	5.613217783960923*^-16
+base	qaoa	param build Exp n=8	0.0519
+base	qaoa	  ByteCount n=8	1675168
+base	qaoa	  one point n=8	0.053000000000000005
+base	qaoa	  error at 0.3 n=8	3.510833468576701*^-16
+base	qaoa	  25 points n=8	1.3688
+base	qaoa	  100 points n=8	5.8025
+base	qaoa	param build Exp n=10	0.5064000000000001
+base	qaoa	  ByteCount n=10	25850176
+base	qaoa	  one point n=10	0.9122
+base	qaoa	  error at 0.3 n=10	3.5827460789783494*^-16
+base	qaoa	  25 points n=10	24.2774
+base	qaoa	  100 points n=10	97.94420000000001
+base	qaoa	param build Exp n=12	13.3474
+base	qaoa	  ByteCount n=12	411533152
+base	qaoa	  one point n=12	26.535
+base	qaoa	  error at 0.3 n=12	6.206335383118183*^-16
+base	controls	TFI n=10 Exp	3.8248
+base	controls	random Hermitian n=8 Exp	0.3145
+base	controls	random Hermitian n=10 Exp	19.7722
+base	controls	diagonal + 1e-12 corner coupling n=10 Exp	0.029300000000000003
+base	controls	symbolic block 4x4 Exp	0.0039000000000000003
+base	controls	RX[theta] build	0.0098
+base	controls	R[theta, XX] build	0.0221
+base	controls	RZ[theta] build	0.0081
+base	controls	R[theta, ZZ] build	0.018600000000000002
+base	controls	R[0.3, ZZZZ] build	0.031400000000000004
+base	controls	Trotter 4-qubit ZZ+X order 2 x 5 build	0.11180000000000001
+DONE

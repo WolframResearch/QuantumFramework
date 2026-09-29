@@ -1,0 +1,69 @@
+ERR	Ising8 Exp vs dense MatrixExp	2.482534153247273*^-16
+ERR	Ising8 Exp vs entrywise	0.
+ERR	Ising8 unitarity	2.233123666176098*^-16
+ERR	Ising8 E^ vs Exp vs MatrixExp	{0., 0.}
+ERR	Ising8 2^qo vs MatrixExp[Log2]	3.8000443211611854*^-16
+HEAD	Ising8 result matrix head	SparseArray
+ERR	Ising8 theta->0 limit is identity	0.
+SAME	exact diag Exp	3262085807113092471
+VAL	exact diag Exp	{{-1, 0, 0, 0}, {0, 2, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, -I}}
+SAME	symbolic diag Exp	962292908061095055
+VAL	symbolic diag Exp	{{E^a, 0, 0, 0}, {0, E^b, 0, 0}, {0, 0, E^c, 0}, {0, 0, 0, E^d}}
+SAME	symbolic diag x^qo	2169083948628549103
+SAME	symbolic MatrixExp[qo]	962292908061095055
+SAME	symbolic Exp label	7021676445104137984
+SAME	RZ[theta]	1709647084875694717
+SAME	RZ[0.4]	3584942650732399467
+SAME	RZ[theta, 3]	6407256848063953216
+SAME	R[theta, ZZ]	7905088902146618640
+SAME	R[theta, ZZZ]	2749873585728804409
+SAME	R[0.7, ZIZ]	857094769411642327
+SAME	RX[theta]	3478656566967682015
+SAME	R[theta, XX]	5392404794274339168
+SAME	RZ label	8857113064471340197
+HEAD	param Exp amplitudes head	Function
+ERR	param Exp at 0.3 vs numeric Exp	0.
+ERR	param Exp at 0 is identity	0.
+SAME	param Exp closed form	6042218423902678500
+VAL	collision Exp at a=b=1	{{E, 0}, {0, E}}
+VAL	collision Sin at a=b=0	{{0, 0}, {0, 0}}
+VAL	collision Exp[Sin] at a=b=0	{{1, 0}, {0, 1}}
+VAL	collision MatrixExp at a=b=2	{{E^2, 0}, {0, E^2}}
+VAL	non-diagonal param Exp at 0,0	{{1, 0}, {0, 1}}
+ERR	non-diagonal param Exp at 1/3,1/5	0.
+ERR	off-diagonal vanishing only at some values	0.
+ERR	MatrixExp[qo, qs] vs dense	1.302314116208532*^-16
+ERR	Liouvillian Exp vs dense MatrixExp	2.220446049250313*^-16
+ERR	Liouvillian trace preserved	7.703719777548943*^-34
+ERR	Liouvillian populations conserved	0.
+ERR	Liouvillian coherence decay closed form	4.336808689942018*^-19
+ERR	Liouvillian MatrixExp[qo, qs] vs Exp[qo][qs]	7.757919228897728*^-18
+SAME	TFI4 Exp	4684226359659609679
+SAME	random Hermitian Exp	7683974614520255923
+SAME	exact non-diagonal Exp	3309289483381340036
+SAME	symbolic non-diagonal Exp	2896659867314601565
+SAME	coupling 1e-12 (not diagonal) Exp	6073781392816574017
+ERR	coupling 1e-15 dropped vs MatrixExp	2.482534153247273*^-16
+BOOL	1e-9 coupling beside a 1e6 entry counts as diagonal	True
+ERR	1e-9 coupling beside 1e6, t = 1: shortcut vs MatrixExp	1.6030334162181025*^-11
+ERR	1e-9 coupling beside 1e6, t = 1e6: shortcut vs exact eigen route	0.0000316350453507322
+VAL	underflow Exp[-2000 qo]	{{0, 0}, {0, 1.}}
+MSG	underflow Exp[-2000 qo]	0
+VAL	complex underflow	{{0, 0}, {0, 0.5403023058681398 + 0.8414709848078965*I}}
+MSG	complex underflow	0
+MSG	Ising8 Exp messages	0
+VAL	zero operator Exp	{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}
+
+MatrixPower::matsq: Argument SparseArray[<2>, {4, 2}] at position 1 is not a nonempty square matrix.
+VAL	non-square E^qo head	Failure
+
+MatrixPower::matsq: Argument SparseArray[<2>, {4, 2}] at position 1 is not a nonempty square matrix.
+SAME	non-square E^qo	5366832453916149278
+VAL	arbitrary precision diag Exp precision	29.69897000433602
+ERR	resonant Exp block error, t = 1e6	0.000047782657710286784
+
+MatrixFunction::valtlrg: Warning: At least one value returned by the function or one of its derivatives is significantly larger than its argument. The resulting matrix function may be inaccurate or may not exist.
+ERR	resonant Cos[qo] block error, t = 1e6	4.999999586585702*^-7
+BOOL	symbolic hidden zero strict	True
+SAME	symbolic hidden-zero Exp	5669459117247997040
+PACKED	underflow result packed	False

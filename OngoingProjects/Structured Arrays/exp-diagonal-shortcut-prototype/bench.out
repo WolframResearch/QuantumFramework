@@ -1,0 +1,152 @@
+proto	detect	strict test, dense random 1024 (not diagonal)	0.
+proto	detect	strict test, SparseArray diagonal 2^16	0.0001
+proto	detect	strict test, sparse transverse field, 12 qubits (not diagonal)	0.
+proto	detect	strict test, symbolic dense 64 (not diagonal)	0.
+proto	detect	strict test, dense diagonal 4096	0.3609
+proto	detect	strict test, symbolic 64 whose off-diagonal entries are all Sin[y]^2 + Cos[y]^2 - 1 (diagonal)	{True, 0.0007}
+proto	detect	sparse diagonal of 2^16 entries: DiagonalMatrix Sparse, index pairs, Band	{0., 0.0007, 0.031100000000000003}
+proto	ising	Exp[-I 0.3 qo] n=12	0.0235
+proto	ising	  error against Exp of the energies n=12	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=12	0.0071
+proto	ising	Exp[-I 0.3 qo] n=13	0.0239
+proto	ising	  error against Exp of the energies n=13	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=13	0.0076
+proto	ising	Exp[-I 0.3 qo] n=14	0.0253
+proto	ising	  error against Exp of the energies n=14	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=14	0.0094
+proto	ising	Exp[-I 0.3 qo] n=15	0.0281
+proto	ising	  error against Exp of the energies n=15	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=15	0.0125
+proto	ising	Exp[-I 0.3 qo] n=16	0.0342
+proto	ising	  error against Exp of the energies n=16	0.
+proto	ising	MatrixExp[-I 0.3 qo, qs] n=16	0.0195
+proto	liouvillian	build Liouvillian n=4	1.3306
+proto	liouvillian	  head of the stored state, time and head of Matrix n=4	{SparseArray, 0.0029000000000000002, List}
+proto	liouvillian	Exp[0.7 L] n=4	0.0108
+proto	liouvillian	  error against Exp of the diagonal n=4	0.
+proto	liouvillian	build Liouvillian n=5	2.3187
+proto	liouvillian	  head of the stored state, time and head of Matrix n=5	{SparseArray, 0.012400000000000001, List}
+proto	liouvillian	Exp[0.7 L] n=5	0.0427
+proto	liouvillian	  error against Exp of the diagonal n=5	0.
+proto	liouvillian	build Liouvillian n=6	9.1274
+proto	liouvillian	  head of the stored state, time and head of Matrix n=6	{SparseArray, 0.14400000000000002, List}
+proto	liouvillian	Exp[0.7 L] n=6	0.5247
+proto	liouvillian	  error against Exp of the diagonal n=6	0.
+proto	qaoa	build Exp with gamma declared n=8	0.11120000000000001
+proto	qaoa	  ByteCount n=8	73680
+proto	qaoa	  one value n=8	0.0044
+proto	qaoa	  error at 0.3 against Exp of the energies n=8	0.
+proto	qaoa	  25 values n=8	0.1125
+proto	qaoa	  100 values n=8	0.4587
+proto	qaoa	build Exp with gamma declared n=10	0.061700000000000005
+proto	qaoa	  ByteCount n=10	176496
+proto	qaoa	  one value n=10	0.006200000000000001
+proto	qaoa	  error at 0.3 against Exp of the energies n=10	0.
+proto	qaoa	  25 values n=10	0.1627
+proto	qaoa	  100 values n=10	0.6511
+proto	qaoa	build Exp with gamma declared n=12	0.09960000000000001
+proto	qaoa	  ByteCount n=12	556944
+proto	qaoa	  one value n=12	0.014
+proto	qaoa	  error at 0.3 against Exp of the energies n=12	0.
+proto	qaoa	  25 values n=12	0.3471
+proto	qaoa	  100 values n=12	1.3933
+proto	qaoa	build Exp with gamma declared n=14	0.2503
+proto	qaoa	  ByteCount n=14	2041856
+proto	qaoa	  one value n=14	0.0437
+proto	qaoa	  error at 0.3 against Exp of the energies n=14	0.
+proto	qaoa	  25 values n=14	1.0944
+proto	qaoa	  100 values n=14	4.3879
+proto	qaoa	build Exp with gamma declared n=16	0.8267
+proto	qaoa	  ByteCount n=16	7948320
+proto	qaoa	  one value n=16	0.16190000000000002
+proto	qaoa	  error at 0.3 against Exp of the energies n=16	0.
+proto	qaoa	  25 values n=16	4.0440000000000005
+proto	qaoa	  100 values n=16	16.8791
+proto	controls	transverse field, 10 qubits, Exp	4.1006
+proto	controls	random Hermitian, 8 qubits, Exp	0.3059
+proto	controls	random Hermitian, 10 qubits, Exp	19.2714
+proto	controls	diagonal plus a 1e-12 corner coupling, 10 qubits, Exp	0.029300000000000003
+proto	controls	symbolic 4 x 4 blocks, Exp	0.0041
+proto	controls	build RX[theta]	0.01
+proto	controls	build R[theta, XX]	0.021500000000000002
+proto	controls	build RZ[theta]	0.0077
+proto	controls	build R[theta, ZZ]	0.0178
+proto	controls	build R[0.3, ZZZZ]	0.030100000000000002
+proto	controls	build a 4-qubit order-2 Trotter circuit, 5 steps	0.15430000000000002
+protos	liouvillian	build Liouvillian n=4	1.2997
+protos	liouvillian	  head of the stored state, time and head of Matrix n=4	{SparseArray, 0.0021000000000000003, SparseArray}
+protos	liouvillian	Exp[0.7 L] n=4	0.0083
+protos	liouvillian	  error against Exp of the diagonal n=4	0.
+protos	liouvillian	build Liouvillian n=5	1.9675
+protos	liouvillian	  head of the stored state, time and head of Matrix n=5	{SparseArray, 0.0023, SparseArray}
+protos	liouvillian	Exp[0.7 L] n=5	0.0085
+protos	liouvillian	  error against Exp of the diagonal n=5	0.
+protos	liouvillian	build Liouvillian n=6	3.5361000000000002
+protos	liouvillian	  head of the stored state, time and head of Matrix n=6	{SparseArray, 0.0027, SparseArray}
+protos	liouvillian	Exp[0.7 L] n=6	0.0102
+protos	liouvillian	  error against Exp of the diagonal n=6	0.
+protos	liouvillian	build Liouvillian n=7	9.585600000000001
+protos	liouvillian	  head of the stored state, time and head of Matrix n=7	{SparseArray, 0.0039000000000000003, SparseArray}
+protos	liouvillian	Exp[0.7 L] n=7	0.0128
+protos	liouvillian	  error against Exp of the diagonal n=7	0.
+base	detect	strict test, dense random 1024 (not diagonal)	0.
+base	detect	strict test, SparseArray diagonal 2^16	0.0001
+base	detect	strict test, sparse transverse field, 12 qubits (not diagonal)	0.
+base	detect	strict test, symbolic dense 64 (not diagonal)	0.
+base	detect	strict test, dense diagonal 4096	0.3589
+base	detect	strict test, symbolic 64 whose off-diagonal entries are all Sin[y]^2 + Cos[y]^2 - 1 (diagonal)	{True, 0.0007}
+base	detect	sparse diagonal of 2^16 entries: DiagonalMatrix Sparse, index pairs, Band	{0., 0.0007, 0.0281}
+base	ising	Exp[-I 0.3 qo] n=12	0.1632
+base	ising	  error against Exp of the energies n=12	6.206335383118183*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=12	0.0103
+base	ising	Exp[-I 0.3 qo] n=13	0.5824
+base	ising	  error against Exp of the energies n=13	7.447602459741819*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=13	0.0375
+base	ising	Exp[-I 0.3 qo] n=14	2.2089000000000003
+base	ising	  error against Exp of the energies n=14	1.0190492755571723*^-15
+base	ising	MatrixExp[-I 0.3 qo, qs] n=14	0.0198
+base	ising	Exp[-I 0.3 qo] n=15	22.6169
+base	ising	  error against Exp of the energies n=15	9.694605782913356*^-16
+base	ising	MatrixExp[-I 0.3 qo, qs] n=15	0.0281
+base	ising	Exp[-I 0.3 qo] n=16	124.37710000000001
+base	ising	  error against Exp of the energies n=16	1.0429598422709816*^-15
+base	ising	MatrixExp[-I 0.3 qo, qs] n=16	0.0488
+base	liouvillian	build Liouvillian n=4	1.3273000000000001
+base	liouvillian	  head of the stored state, time and head of Matrix n=4	{SparseArray, 0.0029000000000000002, List}
+base	liouvillian	Exp[0.7 L] n=4	0.018000000000000002
+base	liouvillian	  error against Exp of the diagonal n=4	3.6638411145107034*^-16
+base	liouvillian	build Liouvillian n=5	2.3566000000000003
+base	liouvillian	  head of the stored state, time and head of Matrix n=5	{SparseArray, 0.0122, List}
+base	liouvillian	Exp[0.7 L] n=5	0.3069
+base	liouvillian	  error against Exp of the diagonal n=5	3.510833468576701*^-16
+base	liouvillian	build Liouvillian n=6	8.9232
+base	liouvillian	  head of the stored state, time and head of Matrix n=6	{SparseArray, 0.1558, List}
+base	liouvillian	Exp[0.7 L] n=6	16.2606
+base	liouvillian	  error against Exp of the diagonal n=6	5.613217783960923*^-16
+base	qaoa	build Exp with gamma declared n=8	0.41100000000000003
+base	qaoa	  ByteCount n=8	1675072
+base	qaoa	  one value n=8	0.050800000000000005
+base	qaoa	  error at 0.3 against Exp of the energies n=8	3.510833468576701*^-16
+base	qaoa	  25 values n=8	1.4449
+base	qaoa	  100 values n=8	6.0995
+base	qaoa	build Exp with gamma declared n=10	4.892
+base	qaoa	  ByteCount n=10	25850080
+base	qaoa	  one value n=10	0.9081
+base	qaoa	  error at 0.3 against Exp of the energies n=10	4.002966042486721*^-16
+base	qaoa	  25 values n=10	24.244600000000002
+base	qaoa	  100 values n=10	95.6097
+base	qaoa	build Exp with gamma declared n=12	76.04140000000001
+base	qaoa	  ByteCount n=12	411533056
+base	qaoa	  one value n=12	23.4894
+base	qaoa	  error at 0.3 against Exp of the energies n=12	6.206335383118183*^-16
+base	controls	transverse field, 10 qubits, Exp	3.6942000000000004
+base	controls	random Hermitian, 8 qubits, Exp	0.3129
+base	controls	random Hermitian, 10 qubits, Exp	19.2115
+base	controls	diagonal plus a 1e-12 corner coupling, 10 qubits, Exp	0.0292
+base	controls	symbolic 4 x 4 blocks, Exp	0.0039000000000000003
+base	controls	build RX[theta]	0.0097
+base	controls	build R[theta, XX]	0.0218
+base	controls	build RZ[theta]	0.0079
+base	controls	build R[theta, ZZ]	0.0179
+base	controls	build R[0.3, ZZZZ]	0.0307
+base	controls	build a 4-qubit order-2 Trotter circuit, 5 steps	0.15660000000000002

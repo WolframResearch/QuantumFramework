@@ -1,0 +1,20 @@
+base	MatrixExp of diag(-720., 0.)	{{2.0322308024*^-313, 0.}, {0., 1.0000000000000002}}
+base	Exp[I t PauliZ[3]], its diagonal and the difference from Exp of the clock phases	{{E^(I*t), E^(-((-1)^(5/6)*t)), E^(-((-1)^(1/6)*t))}, {0, 0, 0}}
+base	Exp[-2000. diag(1., 1.)] entries	{{0., 0.}, {0., 0.}}
+base	Exp with gamma declared at gamma = 0.	{{1. + 0.*I, 0. + 0.*I}, {0. + 0.*I, 1. + 0.*I}}
+base	e^800: relative error at 40 digits, precision	{2.897541204222259*^-13, 15.954589770191005}
+
+                                 1
+Power::infy: Infinite expression - encountered.
+                                 0
+base	diag(1/a, b) declared, at a = 0: head	Failure
+proto	MatrixExp of diag(-720., 0.)	{{2.0322308024*^-313, 0.}, {0., 1.0000000000000002}}
+proto	Exp[I t PauliZ[3]], its diagonal and the difference from Exp of the clock phases	{{E^(I*t), E^((I*t)/E^(((2*I)/3)*Pi)), E^(I*E^(((2*I)/3)*Pi)*t)}, {0, 0, 0}}
+proto	Exp[-2000. diag(1., 1.)] entries	{{0., 0.}, {0., 0.}}
+proto	Exp with gamma declared at gamma = 0.	{{1. + 0.*I, 0. + 0.*I}, {0. + 0.*I, 1. + 0.*I}}
+proto	e^800: relative error at 40 digits, precision	{0., 13.051499783199061}
+
+                                 1
+Power::infy: Infinite expression - encountered.
+                                 0
+proto	diag(1/a, b) declared, at a = 0: head	Failure

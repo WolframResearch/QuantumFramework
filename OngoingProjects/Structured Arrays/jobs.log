@@ -1,0 +1,36 @@
+"START ""15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)"" ""Sat 26 Sep 2026 18:19:58"
+"CHECK QPE last element of body: "QuantumCircuitOperator" "SuperDagger["QFT"]
+"CHECK QPE FFT-replacement vs QF body (Schrodinger): "1.9539428865791119*^-16
+"CHECK QAOA cost layer == Exp[-I g h] up to phase: "1.1070847898564584*^-16
+"QPE n="8" QF full circuit, Method -> "Automatic": "1.009478" s, diff vs first: "0.
+"QPE n="8" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "0.187994" s, diff vs first: "4.061250306683741*^-16
+"QPE n="8" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Optimal"}": "2.448366" s, diff vs first: "6.4211354434660845*^-16
+"QPE n="8" QF full circuit, Method -> ""Schrodinger"": "3.574546" s, diff vs first: "4.341407298806037*^-16
+"QPE n="8" QF without inverse QFT (Method -> "Automatic"): "0.1825" s + FFT: "0.000315" s = "0.182815" s, diff vs QF: "4.265453925588016*^-16
+"QPE n="8" QF without inverse QFT (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "0.079146" s + FFT: "0.000253" s = "0.079399" s, diff vs QF: "4.664767942377993*^-16
+"QPE n="10" QF full circuit, Method -> "Automatic": "0.989469" s, diff vs first: "0.
+"QPE n="10" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "0.206681" s, diff vs first: "4.722202608890078*^-16
+"QPE n="10" QF full circuit, Method -> ""Schrodinger"": "4.660545" s, diff vs first: "5.557975953346594*^-16
+"QPE n="10" QF without inverse QFT (Method -> "Automatic"): "0.187707" s + FFT: "0.000369" s = "0.18807600000000002" s, diff vs QF: "5.15700003601342*^-16
+"QPE n="10" QF without inverse QFT (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "0.119906" s + FFT: "0.000343" s = "0.120249" s, diff vs QF: "5.976766502570921*^-16
+"QPE n="12" QF full circuit, Method -> "Automatic": "1.323563" s, diff vs first: "0.
+"QPE n="12" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "0.325629" s, diff vs first: "5.268337392756518*^-16
+"QPE n="12" QF full circuit, Method -> ""Schrodinger"": "7.824032" s, diff vs first: "5.855635783173772*^-16
+"QPE n="12" QF without inverse QFT (Method -> "Automatic"): "0.235277" s + FFT: "0.000521" s = "0.23579799999999998" s, diff vs QF: "4.86139942818704*^-16
+"QPE n="12" QF without inverse QFT (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "0.135344" s + FFT: "0.000943" s = "0.136287" s, diff vs QF: "5.453799114417395*^-16
+"QAOA n="10" QF full circuit, Method -> "Automatic": "20.920483{" s, max diff vs first: ", 0.}
+"QAOA n="10" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "15.416431{" s, max diff vs first: ", 2.6645352591003757*^-15}
+"QAOA n="10" QF full circuit, Method -> ""Schrodinger"": "132.449672{" s, max diff vs first: ", 1.1546319456101628*^-14}
+"QAOA n="10" structured cost layer + QF mixer (Method -> "Automatic"): "4.251552{" s, max diff vs QF: ", 9.769962616701378*^-15}
+"QAOA n="10" structured cost layer + QF mixer (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "2.990188{" s, max diff vs QF: ", 9.769962616701378*^-15}
+"QAOA n="12" QF full circuit, Method -> "Automatic": "28.255459{" s, max diff vs first: ", 0.}
+"QAOA n="12" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "20.271569{" s, max diff vs first: ", 2.6645352591003757*^-15}
+"QAOA n="12" QF full circuit, Method -> ""Schrodinger"": "228.061659{" s, max diff vs first: ", 1.4210854715202004*^-14}
+"QAOA n="12" structured cost layer + QF mixer (Method -> "Automatic"): "5.1049{" s, max diff vs QF: ", 1.4210854715202004*^-14}
+"QAOA n="12" structured cost layer + QF mixer (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "3.860683{" s, max diff vs QF: ", 1.4210854715202004*^-14}
+"QAOA n="14" QF full circuit, Method -> "Automatic": "38.681845{" s, max diff vs first: ", 0.}
+"QAOA n="14" QF full circuit, Method -> "{"TensorNetwork", "Path" -> "Greedy"}": "27.510214{" s, max diff vs first: ", 3.552713678800501*^-15}
+"QAOA n="14" QF full circuit, Method -> ""Schrodinger"": ""timeout>300s"""
+"QAOA n="14" structured cost layer + QF mixer (Method -> "Automatic"): "7.085425{" s, max diff vs QF: ", 2.3092638912203256*^-14}
+"QAOA n="14" structured cost layer + QF mixer (Method -> "{"TensorNetwork", "Path" -> "Greedy"}"): "5.826134{" s, max diff vs QF: ", 2.3092638912203256*^-14}
+"DONE ""Sat 26 Sep 2026 18:34:36"

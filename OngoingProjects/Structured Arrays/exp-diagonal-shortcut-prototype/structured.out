@@ -1,0 +1,9 @@
+
+General::munfl: Exp[-1000. + 3. I] is too small to represent as a normalized machine number; precision may be lost.
+15.	MatrixExp of a structured diagonal with an underflowing complex entry	MatrixExp[DiagonalMatrix[StructuredArray`StructuredData[{2, 2}, {{-1000. + 3.*I, 1. + 0.*I}, 0}]]]
+15.	MatrixExp of the same diagonal as a SparseArray	{{0. + 0.*I, 0. + 0.*I}, {0. + 0.*I, 2.7182818284592782 - 6.744604874597826*^-15*I}}
+
+IdentityMatrix::dims: Dimension specification {3, 2, 1} should be a positive machine integer or a pair of positive machine integers.
+
+IdentityMatrix::nonopt: Options expected (instead of {3, 2, 1}) beyond position 2 in IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]. An option must be a rule or a list of rules.
+15.	Eigensystem of a structured diagonal	{{4., 3., 1.}, IdentityMatrix[WorkingPrecision -> MachinePrecision, List, {3, 2, 1}]}

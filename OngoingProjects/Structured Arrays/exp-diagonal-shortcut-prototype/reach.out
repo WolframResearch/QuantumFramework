@@ -1,0 +1,8 @@
+proto	Bell density matrix: heads of Matrix, StateMatrix	{List, List}
+proto	its partial trace over qudit 1: head of Matrix, the matrix	{List, {{1/2}, {0}, {0}, {1/2}}}
+proto	amplitude damping: head of Matrix	List
+proto	amplitude damping: Exp[0.7 L] against MatrixExp of the dense matrix	0.
+protos	Bell density matrix: heads of Matrix, StateMatrix	{SparseArray, SparseArray}
+protos	its partial trace over qudit 1: head of Matrix, the matrix	{SparseArray, {{1/2}, {0}, {0}, {1/2}}}
+protos	amplitude damping: head of Matrix	SparseArray
+protos	amplitude damping: Exp[0.7 L] against MatrixExp of the dense matrix	5.551115123125783*^-17

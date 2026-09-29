@@ -1,0 +1,102 @@
+=======================================================================
+  QuantumFramework Test Coverage Report
+=======================================================================
+  Date:       Mon 28 Sep 2026 13:08:36
+  Paclet:     /private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/base/QuantumFramework
+  Loaded:     /private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/base/QuantumFramework/Kernel/QuantumFrameworkMain.m
+  Test files: 1 matching "DiagonalExp"
+PACLET	/private/tmp/claude-10838/-Users-mohammadb-Documents-GitHub-QuantumFramework--claude-worktrees-stoic-bartik-983700/8cbaac90-e05b-4fd8-8dd7-2feec73b8d1d/scratchpad/base/QuantumFramework
+
+  NOTE: an installed Wolfram/QuantumFramework paclet is also visible:
+    /Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__QuantumFramework-2.1.1
+    Nothing has been uninstalled.  PacletDirectoryLoad gives the repo
+    copy priority, so this is usually harmless.  To remove it yourself:
+      PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]
+
+-----------------------------------------------------------------------
+  QuantumOperatorDiagonalExp.wlt
+-----------------------------------------------------------------------
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-symbolic-closed-form"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-symbolic-unitary-group-law"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-on-a-pure-register"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-QAOA-gate-factorization"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-long-time-unitarity"	Failure
+      expected: {{True, True}, {True, True}, {True, True}}
+      actual:   {{False, True}, {False, True}, {False, True}}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-40-digit-reference"	Failure
+      expected: {True, True, True, True}
+      actual:   {False, False, False, False}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-16-qubit-Ising"	Failure
+      expected: True
+      actual:   Failure["TimeConstrained", <|"MessageTemplate" :> TestEvaluate::cnsexd, "MessageParameters" -> <|"Function" :> TimeConstrained, "Constraint" :> HoldForm[30]|>|>]
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-parameter-scan-12-qubit"	Failure
+      expected: {True, True, {True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True}}
+      actual:   Failure["TimeConstrained", <|"MessageTemplate" :> TestEvaluate::cnsexd, "MessageParameters" -> <|"Function" :> TimeConstrained, "Constraint" :> HoldForm[60]|>|>]
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-symbolic"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-limits"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-complete-positivity"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-collective-dephasing"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-superoperator-acting-on-state"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-dephasing-against-QuantumEvolve"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-acting-on-states"	Failure
+      expected: {{{{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}, {{0, 0}, {0, 0}}}, 0, {0, 0}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}
+      actual:   {{{{deA*(-1 + E^deTheta^2), deC*(-E^((-2*I)*deTheta) + E^(-deTheta^2))}, {(-E^((2*I)*deTheta) + E^(-deTheta^2))*Conjugate[deC], -((-1 + deA)*(-1 + E^deTheta^2))}}, {{-1/2 + deA/E^deTheta^2 + ((1 - 2*deA)*Cos[2*deTheta])/2 + Im[deC]*Sin[2*deTheta] + Sinh[deTheta^2], (I*Im[deC])/E^deTheta^2 + E^deTheta^2*Re[deC] - Conjugate[deC]*Sin[deTheta]^2 - Cos[deTheta]*(deC*Cos[deTheta] + I*(-1 + 2*deA)*Sin[deTheta])}, {-(Conjugate[deC]*Cos[deTheta]^2) - (I*Im[deC])/E^deTheta^2 + E^deTheta^2*Re[deC] + I*(-1 + 2*deA)*Cos[deTheta]*Sin[deTheta] - deC*Sin[deTheta]^2, -Cos[deTheta]^2 + deA*Cos[2*deTheta] - (-1 + deA)*Cosh[deTheta^2] - Im[deC]*Sin[2*deTheta] + deA*Sinh[deTheta^2]}}, {{-1/2 + deA/E^deTheta^2 + ((1 - 2*deA)*Cos[2*deTheta])/2 + Re[deC]*Sin[2*deTheta] + Sinh[deTheta^2], deC*E^deTheta^2 + Conjuga... (2010 chars total)
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-on-part-of-the-register"	Failure
+      expected: {{{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {0, 0, 0, 0}}, {{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {0, 0, 0, 0}}}, {{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}}}
+      actual:   {{{{{ArrayReshape[MatrixExp[{{0, 0, 0, deTheta^2}, {0, 0, deTheta^2, 0}, {0, deTheta^2, 0, 0}, {deTheta^2, 0, 0, 0}}, {deR[1, 1], deR[1, 2], deR[1, 3], deR[1, 4], deR[2, 1], deR[2, 2], deR[2, 3], deR[2, 4], deR[3, 1], deR[3, 2], deR[3, 3], deR[3, 4], deR[4, 1], deR[4, 2], deR[4, 3], deR[4, 4]}], {2, 2}] - Cos[deTheta]^2*deR[1, 1] - I*Cos[deTheta]*(deR[1, 2] - deR[2, 1])*Sin[deTheta] - deR[2, 2]*Sin[deTheta]^2, ArrayReshape[MatrixExp[{{0, 0, 0, deTheta^2}, {0, 0, deTheta^2, 0}, {0, deTheta^2, 0, 0}, {deTheta^2, 0, 0, 0}}, {deR[1, 1], deR[1, 2], deR[1, 3], deR[1, 4], deR[2, 1], deR[2, 2], deR[2, 3], deR[2, 4], deR[3, 1], deR[3, 2], deR[3, 3], deR[3, 4], deR[4, 1], deR[4, 2], deR[4, 3], deR[4, 4]}], {2, 2}] - Cos[deTheta]^2*deR[1, 2] - I*Cos[deTheta]*(deR[1, 1] - deR[2, 2])*Sin[deTheta] - deR... (17841 chars total)
+      messages: expected none, got MatrixExp::lslc, ArrayReshape::listrp, MatrixExp::lslc, ArrayReshape::listrp, MatrixExp::lslc, General::stop, ArrayReshape::listrp, General::stop
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-exponential-beyond-the-register"	Failure
+      expected: {{0, 0, 0, 0, 0, 0, 0, 0}, $Failed}
+      actual:   {{Cos[deTheta], (-I)*Sin[deTheta]} + {-Cos[deTheta], I*Sin[deTheta], 0, 0, 0, 0, 0, 0}, QuantumState[MatrixExp[SparseArray[Automatic, {2, 2}, 0, {1, {{0, 1, 2}, {{1}, {2}}}, {(-I)*deTheta, I*deTheta}}], SparseArray[Automatic, {4}, 0, {1, {{0, 1}, {{1}}}, {1}}]], QuantumBasis[<|"Input" -> QuditBasis[<|{QuditName[\[FormalCapitalI], "Dual" -> False], 1} -> 1|>], "Output" -> QuditBasis[<|{QuditName[0, "Dual" -> False], 1} -> SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{1}}}, {1}}], {QuditName[1, "Dual" -> False], 1} -> SparseArray[Automatic, {2}, 0, {1, {{0, 1}, {{2}}}, {1}}]|>], "Picture" -> "Schrodinger", "Label" -> (E^((-I)*"Z"*deTheta))["0"], "ParameterSpec" -> {}|>]]}
+      messages: expected "Circuit expecting dimensions `1`, but the state has dimensions `2`.", got Thread::tdlen, MatrixExp::lslc
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-ZZ-entangler-concurrence"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-spin-one-JX-eigenbasis"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-chain-partition-function"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Ising-chain-correlations"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Gibbs-ground-states"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-Gibbs-shift-invariance"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-QAOA-depth-one-ring"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-QAOA-scan-with-gamma-declared"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-symbolic-and-exact"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-hidden-zero-no-pole"	Failure
+      expected: {{E^deA, 0}, {0, E^deA}}
+      actual:   {{E^deA, Indeterminate}, {0, E^deA}}
+      messages: expected none, got Power::infy, Infinity::indet
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-hidden-zero-unproved-falls-back"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-underflow"	Failure
+      expected: {True, True, MachinePrecision}
+      actual:   {True, True, 12.954155692711687}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-overflow"	Failure
+      expected: {True, True}
+      actual:   {False, True}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-complex-subnormal-part"	Failure
+      expected: {True, True}
+      actual:   {False, False}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-thirty-digit-diagonal"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-non-finite-diagonal-fails"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-mixed-exact-and-machine"	Failure
+      expected: {{MachinePrecision, True}, {MachinePrecision, True}, {MachinePrecision, True}, {MachinePrecision, True}}
+      actual:   {{MachinePrecision, True}, {MachinePrecision, False}, {MachinePrecision, True}, {MachinePrecision, False}}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-substitution-decides-route"	Failure
+      expected: {True, True}
+      actual:   {False, True}
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-resonant-roundoff-coupling-kept"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-parameter-collision"	Success
+TEST	QuantumOperatorDiagonalExp.wlt	"DiagonalExp-rank-zero-matrix"	Success
+FILE	QuantumOperatorDiagonalExp.wlt	25	38
+  25/38 succeeded
+  Failure: 13
+
+=======================================================================
+  Summary
+=======================================================================
+  FAIL QuantumOperatorDiagonalExp.wlt: 25/38
+
+  Total: 25/38 succeeded (65.7%)
+  Failure: 13
+OUTCOME	Success	25
+OUTCOME	Failure	13
+TOTAL	25	38
+ALERT	NonSuccess	13
+STATUS	RED
+=======================================================================
