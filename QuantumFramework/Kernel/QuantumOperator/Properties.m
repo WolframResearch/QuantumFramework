@@ -120,16 +120,23 @@ QuantumOperatorProp[QuantumOperator[_, {_, inputOrder_}], "InputOrder"] := input
 QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := outputOrder
 
 
+(* A property that fails returns its Failure. Declining the rule instead would pass
+   qo[prop] to the rule that applies qo as a circuit; the circuit computes the properties
+   it defines itself and hands every other operator property back to qo, where it fails
+   again, until $RecursionLimit. *)
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
     result = QuantumOperatorProp[qo, prop, args]
     },
-    If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
-        QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
-        cacheProperty[QuantumOperatorProp[qo, prop, args], result],
-        result
+    If[ FailureQ[Unevaluated @ result],
+        Message[QuantumOperator::failprop, prop, result];
+        result,
+        If[ TrueQ[$QuantumFrameworkPropCache] &&
+            ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
+            QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
+            cacheProperty[QuantumOperatorProp[qo, prop, args], result],
+            result
+        ]
     ] /;
-        (!FailureQ[Unevaluated @ result] || Message[QuantumOperator::failprop, prop, result]) &&
         (!MatchQ[result, _QuantumOperatorProp] || Message[QuantumOperator::undefprop, prop])
 ]
 
@@ -509,9 +516,59 @@ QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvecto
 
 QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[{vecs = qo["Eigenvectors", opts, "Sort" -> False]},
-    QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[vectors]], vectors]]
+QuantumOperator::noeigenbasis = "the eigenvectors of the operator span only `1` of its `2` dimensions at the precision of its eigenvectors, so it has no eigenbasis";
+
+(* The eigenvectors of qo as a basis, normalized, as orthonormalEigensystem returns them:
+   orthonormal when that helper judges qo normal. "Orthogonalize" and "Normalize" options
+   are dropped: Gram-Schmidt would turn the eigenvectors of a non-normal operator into
+   vectors that are not eigenvectors, and unnormalized vectors are not orthonormal. The
+   basis carries the operator's picture, label and parameters, as "Diagonalize" does. Each
+   element is named by its eigenvalue the way a QuantumMeasurementOperator names its
+   eigenbasis: the name shows the eigenvalue and holds the eigenvector's position, which
+   keeps the eigenvectors of a repeated eigenvalue apart. The eigensystem sets real and
+   imaginary parts below 10^-10 to zero, which moves smaller eigenvalues and eigenvector
+   components.
+
+   A defective operator has fewer linearly independent eigenvectors than its dimension, so
+   it has no eigenbasis. For exact and symbolic input Eigensystem fills the eigenvectors a
+   defective eigenvalue lacks with zero vectors and returns the others independent, so the
+   nonzero ones count the span. At a finite precision p, the precision of the eigenvectors,
+   roundoff either leaves those zero vectors or splits apart the eigenvectors of a Jordan
+   block, by about 10^(-p/k) for a block of length k whose off-diagonal part is comparable
+   to the operator's scale, and by more when that part is smaller. The span counts the
+   singular values of the eigenvector matrix that reach 10^(-p/3) of the largest. That
+   catches blocks up to length 3 at the operator's scale, and often longer ones; it can miss
+   a block whose off-diagonal part is small next to the operator's scale; and it finds no
+   eigenbasis for any operator whose normalized eigenvector matrix has a condition number
+   above about 10^(p/3), 2 10^5 at machine precision, however far apart its eigenvalues
+   are. Above 30 digits, where 10^(-p/3) falls below 10^-10, the zeroing can merge
+   eigenvectors first and reject an operator farther from a defective one. *)
+QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[
+    {es = orthonormalEigensystem[qo, Sequence @@ DeleteCases[Flatten[{opts}], (("Orthogonalize" | "Normalize") -> _) | (("Orthogonalize" | "Normalize") :> _)]]},
+    {values = First[es], vectors = Last[es]},
+    {rank = If[ ArrayQ[vectors, 2, NumericQ] && Precision[vectors] < Infinity,
+        Length[SingularValueList[vectors, Tolerance -> N[10 ^ (- Precision[vectors] / 3)]]],
+        Count[Normal[vectors], Except[{0 ..}]]
+    ]},
+    If[ rank < Length[vectors],
+        Message[QuantumOperator::noeigenbasis, rank, Length[vectors]];
+        Failure["NoEigenbasis", <|"MessageTemplate" :> QuantumOperator::noeigenbasis, "MessageParameters" -> {rank, Length[vectors]}|>],
+        QuantumBasis[
+            AssociationThread[
+                MapIndexed[Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", #1], Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &, values],
+                vectors
+            ],
+            qo["Basis"]["Options"]
+        ]
+    ]
 ]
+
+QuantumOperator::nonsquare = "the operator maps a space of dimension `1` to one of dimension `2`, so it has no eigenvectors";
+
+QuantumOperatorProp[qo_, "Eigenbasis", ___] /; ! qo["SquareQ"] := (
+    Message[QuantumOperator::nonsquare, qo["InputDimension"], qo["OutputDimension"]];
+    Failure["NotSquare", <|"MessageTemplate" :> QuantumOperator::nonsquare, "MessageParameters" -> {qo["InputDimension"], qo["OutputDimension"]}|>]
+)
 
 QuantumOperatorProp[qo_, "SplitBasis"] := With[{
     output = Thread[{qo["FullOutputOrder"], qo["Output"]["Decompose"]}],

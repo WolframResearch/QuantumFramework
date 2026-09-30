@@ -570,6 +570,16 @@ VerificationTest[
     TestID -> "InvalidArgs-X"
 ]
 
+(* A property that fails returns its Failure, with QuantumOperator::failprop. "Undouble"
+   needs a doubled operator, whose dimensions are squares, and X is not one. *)
+VerificationTest[
+    QuantumOperator["X"]["Undouble"],
+    Failure["ConfirmationFailed", _],
+    {QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "FailedProperty-returns-Failure"
+]
+
 EndTestSection[]
 
 
@@ -1360,6 +1370,247 @@ VerificationTest[
     ],
     {0},
     TestID -> "Eigenbasis-SymbolicEigenvaluesNumericEigenvectors"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - Eigenbasis property"]
+
+(* qo["Eigenbasis"] is a basis of eigenvectors of qo, one element per dimension,
+   orthonormal when qo is normal and its eigenvectors are numeric. Each element is named
+   by its eigenvalue as qmo["Eigenbasis"] names it: the name shows the eigenvalue and
+   keeps the eigenvector's position, so the eigenvectors of a repeated eigenvalue stay
+   apart. The coordinates QuantumState gives a state in an orthonormal eigenbasis are its
+   Born amplitudes <v_k|psi>. *)
+
+(* the eigenvalue a basis element's name carries *)
+eigenbasisElementEigenvalue[name_] := Replace[Normal[name], {Interpretation[_, {value_, _}]} :> value]
+
+(* the entries of v^*.v^T - 1 and of m.v_k - lambda_k v_k, for the elements v_k of the
+   eigenbasis eb of m and the eigenvalues lambda_k their names carry *)
+eigenbasisResiduals[m_, eb_] := With[
+    {v = Normal[eb["Elements"]], values = eigenbasisElementEigenvalue /@ eb["Names"]},
+    Flatten[{Conjugate[v] . Transpose[v] - IdentityMatrix[Length[m]], MapThread[m . #2 - #1 #2 &, {values, v}]}]
+]
+
+(* X has eigenvalues -1 and 1 with eigenvectors (|0> - |1>)/Sqrt[2] and
+   (|0> + |1>)/Sqrt[2], so |0> has probability 1/2 on each. *)
+VerificationTest[
+    With[{eb = QuantumOperator["X"]["Eigenbasis"]},
+        {
+            eb["Dimension"],
+            Sort[eigenbasisElementEigenvalue /@ eb["Names"]],
+            Abs[Normal @ QuantumState[QuantumState["0"], eb]["StateVector"]] ^ 2
+        }
+    ],
+    {2, {-1, 1}, {1/2, 1/2}},
+    TestID -> "Eigenbasis-X"
+]
+
+(* The spectrum 1 + e, 1 - e, -1 + e, -1 - e in the Fourier basis of two qubits. For
+   0 < e < 1 no eigenvalue repeats, and the eigenvectors of a normal matrix are orthogonal
+   whatever the solver. At e = 0 the eigenvalues pair up and Eigensystem returns
+   eigenvectors that are not orthogonal inside each pair; the basis must still be
+   orthonormal, with its elements eigenvectors of the eigenvalues their names carry. *)
+VerificationTest[
+    Map[
+        With[{spectrum = {1 + #, 1 - #, -1 + #, -1 - #}},
+            With[{m = eigenbasisFourierRotated[spectrum]},
+                With[{eb = QuantumOperator[m, {1, 2}]["Eigenbasis"]},
+                    {
+                        eb["Dimension"],
+                        Sort[eigenbasisElementEigenvalue /@ eb["Names"]] === Sort[spectrum],
+                        eigenbasisExactZeroQ @ eigenbasisResiduals[m, eb]
+                    }
+                ]
+            ]
+        ] &,
+        {1/10, 10^-6, 0}
+    ],
+    ConstantArray[{4, True, True}, 3],
+    TestID -> "Eigenbasis-ExactRotatedDegenerate"
+]
+
+(* The coordinates of a state in the eigenbasis of the rotated diag(1, 1, -1, -1) are its
+   Born amplitudes <v_k|psi> for every psi: the amplitudes of psi are free symbols. For a
+   given psi the squared amplitudes over the eigenvectors of one eigenvalue add up to
+   <psi|P|psi>, P = F.diag(1 on that eigenvalue).F^† its spectral projector, the
+   probability of measuring that eigenvalue. *)
+VerificationTest[
+    With[{f = FourierMatrix[4], spectrum = {1, 1, -1, -1}},
+        With[{eb = QuantumOperator[f . DiagonalMatrix[spectrum] . ConjugateTranspose[f], {1, 2}]["Eigenbasis"]},
+            {
+                With[{psi = Array[\[FormalA], 4]},
+                    Simplify[Normal @ QuantumState[QuantumState[psi, QuantumBasis[{2, 2}]], eb]["StateVector"] - Conjugate[Normal[eb["Elements"]]] . psi]
+                ],
+                With[{psi = {1, 2 I, -1, 3} / Sqrt[15]},
+                    With[{amplitudes = Normal @ QuantumState[QuantumState[psi, QuantumBasis[{2, 2}]], eb]["Amplitudes"]},
+                        Map[
+                            Function[value, Simplify[
+                                Total[Cases[amplitudes, (name_ -> a_) /; eigenbasisElementEigenvalue[name] === value :> Abs[a] ^ 2]] -
+                                    Conjugate[psi] . f . DiagonalMatrix[Boole[Thread[spectrum == value]]] . ConjugateTranspose[f] . psi
+                            ]],
+                            {1, -1}
+                        ]
+                    ]
+                ]
+            }
+        ]
+    ],
+    {{0, 0, 0, 0}, {0, 0}},
+    TestID -> "Eigenbasis-BornAmplitudes"
+]
+
+(* Machine precision: the rotated unitary diag(1, 1, i, i) is normal but not Hermitian, so
+   Eigensystem takes its general solver, whose eigenvectors for a repeated eigenvalue are
+   not orthogonal. Residuals are compared to 10^-8, above the 10^-10 below which the
+   eigensystem sets entries to zero. *)
+VerificationTest[
+    With[{m = N @ eigenbasisFourierRotated[{1, 1, I, I}]},
+        With[{eb = QuantumOperator[m, {1, 2}]["Eigenbasis"]},
+            {HermitianMatrixQ[m], eb["Dimension"], Max[Abs[eigenbasisResiduals[m, eb]]]}
+        ]
+    ],
+    {False, 4, _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-MachineRotatedUnitaryDegenerate"
+]
+
+(* A non-normal operator has no orthonormal eigenbasis, and the basis keeps its
+   eigenvectors as they are, so the coordinates of psi are the coefficients c_k of
+   psi = Sum_k c_k v_k rather than inner products. *)
+VerificationTest[
+    With[{m = {{1, 1}, {0, 2}}, psi = Array[\[FormalA], 2]},
+        With[{eb = QuantumOperator[m]["Eigenbasis"]},
+            With[{v = Normal[eb["Elements"]], values = eigenbasisElementEigenvalue /@ eb["Names"]},
+                {
+                    Simplify[Normal @ QuantumState[QuantumState[psi], eb]["StateVector"] . v - psi],
+                    Simplify[MapThread[m . #2 - #1 #2 &, {values, v}]]
+                }
+            ]
+        ]
+    ],
+    {{0, 0}, {{0, 0}, {0, 0}}},
+    TestID -> "Eigenbasis-NonNormalExpansionCoefficients"
+]
+
+(* A defective operator has fewer linearly independent eigenvectors than its dimension,
+   so it has no eigenbasis: exact, at machine precision, and with a free parameter. The
+   eigenvalue 2 of the exact qutrit operator below has one eigenvector where it needs
+   two, and the eigenvalue 1 has its own, so its eigenvectors span 2 of its 3
+   dimensions. *)
+VerificationTest[
+    QuantumOperator[{{2, 1, 0}, {0, 2, 0}, {0, 0, 1}}]["Eigenbasis"],
+    Failure["NoEigenbasis", KeyValuePattern["MessageParameters" -> {2, 3}]],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-Exact"
+]
+
+VerificationTest[
+    QuantumOperator[N @ {{0, 1}, {0, 0}}]["Eigenbasis"],
+    Failure["NoEigenbasis", _],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-Machine"
+]
+
+VerificationTest[
+    QuantumOperator[{{\[FormalA], 1}, {0, \[FormalA]}}]["Eigenbasis"],
+    Failure["NoEigenbasis", _],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-Symbolic"
+]
+
+(* At a finite precision p roundoff can split a Jordan block of length k into eigenvectors
+   about 10^(-p/k) apart instead of leaving zero vectors, and the span counts the singular
+   values of the eigenvector matrix that reach 10^(-p/3) of the largest. A rotated J2 and a
+   rotated J3 at machine precision, and at 30 digits the companion matrix of
+   (x^2 - x - 1)^2, whose two eigenvalues have one eigenvector each. The split J3 leaves
+   its second singular value near 10^(-p/3), so the span it reports is 1 or 2 depending on
+   the roundoff. *)
+VerificationTest[
+    QuantumOperator[N[RotationMatrix[1] . {{0, 1}, {0, 0}} . Transpose[RotationMatrix[1]]]]["Eigenbasis"],
+    Failure["NoEigenbasis", KeyValuePattern["MessageParameters" -> {1, 2}]],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-MachineRotatedJordan2"
+]
+
+VerificationTest[
+    With[{r = RotationMatrix[1, {1, 2, 3}]},
+        QuantumOperator[N[r . {{0, 1, 0}, {0, 0, 1}, {0, 0, 0}} . Transpose[r]]]["Eigenbasis"]
+    ],
+    Failure["NoEigenbasis", KeyValuePattern["MessageParameters" -> {1 | 2, 3}]],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-MachineRotatedJordan3"
+]
+
+VerificationTest[
+    QuantumOperator[N[{{0, 0, 0, -1}, {1, 0, 0, -2}, {0, 1, 0, 1}, {0, 0, 1, 2}}, 30], {1, 2}]["Eigenbasis"],
+    Failure["NoEigenbasis", KeyValuePattern["MessageParameters" -> {2, 4}]],
+    {QuantumOperator::noeigenbasis, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-Defective-30DigitCompanion"
+]
+
+(* A diagonalizable operator near an exceptional point keeps its eigenbasis. The
+   PT-symmetric {{i g, 1}, {1, -i g}} is defective at g = 1; at g = 1 - 10^-8 its two
+   eigenvectors are about 10^-4 apart, above 10^(-p/3) at machine precision. *)
+VerificationTest[
+    With[{m = N @ {{I (1 - 10^-8), 1}, {1, -I (1 - 10^-8)}}},
+        With[{eb = QuantumOperator[m]["Eigenbasis"]},
+            {
+                eb["Dimension"],
+                Max[Abs[Flatten[MapThread[m . #2 - #1 #2 &, {eigenbasisElementEigenvalue /@ eb["Names"], Normal[eb["Elements"]]}]]]] < 10^-8
+            }
+        ]
+    ],
+    {2, True},
+    TestID -> "Eigenbasis-NearExceptionalPoint"
+]
+
+(* "Orthogonalize" and "Normalize" options do not change the basis: the eigenvectors of
+   the non-normal {{1, 1}, {0, 2}} stay eigenvectors, and those of the rotated
+   diag(1, 1, -1, -1) and of X stay orthonormal. *)
+VerificationTest[
+    {
+        With[{m = {{1, 1}, {0, 2}}},
+            With[{eb = QuantumOperator[m]["Eigenbasis", "Orthogonalize" -> True]},
+                Simplify[MapThread[m . #2 - #1 #2 &, {eigenbasisElementEigenvalue /@ eb["Names"], Normal[eb["Elements"]]}]]
+            ]
+        ],
+        With[{m = eigenbasisFourierRotated[{1, 1, -1, -1}]},
+            eigenbasisExactZeroQ @ eigenbasisResiduals[m, QuantumOperator[m, {1, 2}]["Eigenbasis", "Orthogonalize" -> False]]
+        ],
+        With[{m = PauliMatrix[1]},
+            eigenbasisExactZeroQ @ eigenbasisResiduals[m, QuantumOperator["X"]["Eigenbasis", "Normalize" -> False]]
+        ]
+    },
+    {{{0, 0}, {0, 0}}, True, True},
+    TestID -> "Eigenbasis-OrthogonalizeNormalizeOptionsDropped"
+]
+
+(* An operator between spaces of different dimensions has no eigenvectors. *)
+VerificationTest[
+    QuantumOperator[{{1, 0, 0, 1}, {0, 1, 1, 0}}]["Eigenbasis"],
+    Failure["NotSquare", KeyValuePattern["MessageParameters" -> {4, 2}]],
+    {QuantumOperator::nonsquare, QuantumOperator::failprop},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-NonSquare"
+]
+
+(* The basis carries the operator's picture and parameters, as "Diagonalize" does. *)
+VerificationTest[
+    {
+        QuantumOperator["Z", "Heisenberg"]["Eigenbasis"]["Picture"],
+        QuantumOperator[{{Cos[\[FormalX]], Sin[\[FormalX]]}, {Sin[\[FormalX]], -Cos[\[FormalX]]}}, "Parameters" -> {\[FormalX]}]["Eigenbasis"]["Parameters"]
+    },
+    {"Heisenberg", {\[FormalX]}},
+    TestID -> "Eigenbasis-KeepsPictureAndParameters"
 ]
 
 EndTestSection[]
