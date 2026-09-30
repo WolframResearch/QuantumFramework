@@ -225,7 +225,7 @@ BosonicVEV[expr_, vars_List, opts : OptionsPattern[]] /;
 
 
 BosonicMatrixElement::usage =
-"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]poly\[VerticalSeparator]n\[RightAngleBracket] for a polynomial in the field variables of a single mode, by normal ordering and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket]. The Fock indices may be symbolic.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) Returns \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]poly\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states of amplitude \[Alpha] and \[Beta], by normal ordering and \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]\[Beta]\[RightAngleBracket] = \!\(\*SuperscriptBox[OverscriptBox[\"\[Alpha]\", \"_\"], \"p\"]\)\!\(\*SuperscriptBox[\"\[Beta]\", \"q\"]\)\[LeftAngleBracket]\[Alpha]\[VerticalBar]\[Beta]\[RightAngleBracket].";
+"\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]D(\[Alpha])\[VerticalSeparator]n\[RightAngleBracket] in closed form via associated Laguerre polynomials.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]S(\[Xi])\[VerticalSeparator]n\[RightAngleBracket] in closed form (zero when m+n is odd).\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"m\", \"TI\"], \",\", StyleBox[\"n\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns \[LeftAngleBracket]m\[VerticalSeparator]poly\[VerticalSeparator]n\[RightAngleBracket] for a polynomial in the field variables of a single mode, by normal ordering and the closed form for \[LeftAngleBracket]m\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]n\[RightAngleBracket]. The Fock indices may be symbolic.\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"\[Beta]\", \"TI\"]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"], \",\", \"\\\"Basis\\\"->\\\"Coherent\\\"\"}], \"]\"}]\) Returns \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]poly\[VerticalSeparator]\[Beta]\[RightAngleBracket] between coherent states of amplitude \[Alpha] and \[Beta], by normal ordering and \[LeftAngleBracket]\[Alpha]\[VerticalSeparator]\!\(\*SuperscriptBox[\"a\", RowBox[{\"\[Dagger]\", \"p\"}]]\)\!\(\*SuperscriptBox[\"a\", \"q\"]\)\[VerticalSeparator]\[Beta]\[RightAngleBracket] = \!\(\*SuperscriptBox[OverscriptBox[\"\[Alpha]\", \"_\"], \"p\"]\)\!\(\*SuperscriptBox[\"\[Beta]\", \"q\"]\)\[LeftAngleBracket]\[Alpha]\[VerticalBar]\[Beta]\[RightAngleBracket].\n\!\(\*RowBox[{\"BosonicMatrixElement\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", SubscriptBox[StyleBox[\"m\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}], \",\", RowBox[{\"{\", RowBox[{SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"1\", \"TR\"]], \",\", SubscriptBox[StyleBox[\"n\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", StyleBox[\"\[Ellipsis]\", \"TR\"]}], \"}\"}]}], \"}\"}], \",\", StyleBox[\"poly\", \"TI\"]}], \"]\"}]\) Returns the element between multimode Fock states, one index per mode, for a polynomial in the field variables of several independent modes. The modes are the \"Generators\" in the order given, or else the field variables of poly, sorted; declare them when poly does not touch every mode. With \"Basis\"->\"Coherent\" the indices are amplitude vectors.";
 
 Options[BosonicMatrixElement] = {"Basis" -> "Fock", "Generators" -> Automatic}
 
@@ -261,16 +261,35 @@ fockLadderElement[m_, n_, p_, q_] :=
 coherentOverlap[\[Alpha]_, \[Beta]_] :=
     Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
 
-ladderSum[eval_, expr_, v_] :=
-    Module[{x, y},
-        Total[(#[[2]] eval @@ #[[1]]) & /@
-            CoefficientRules[
-                Expand[
-                    vevCollapse[BosonicNormalOrder[expr, {v, SuperDagger[v]}]] /.
-                        {SuperDagger[v] -> x, v -> y}
+(* Distinct modes commute and the Fock space is their tensor product, so a normally
+   ordered monomial splits into one element[m, n, p, q] per mode, p and q its powers of
+   that mode's creation and annihilation operators.  One mode reads its powers straight
+   off the terms, which undercuts CoefficientRules' fixed cost; with several,
+   CoefficientRules is the cheaper read, and since a mode's {p, q} repeats across
+   monomials its element is formed once per distinct pair. *)
+ladderSum[element_, {ms_, ns_}, expr_, vs_List] :=
+    Module[{x, y, k = Length[vs], vars, p},
+        vars = Join[Array[x, k], Array[y, k]];
+        p = Expand[vevCollapse[BosonicNormalOrder[expr, vevVars[vs]]] /. Thread[Join[SuperDagger /@ vs, vs] -> vars]];
+        Which[
+            p === 0, 0,
+            k == 1,
+                With[{t = Replace[p, {s_Plus :> List @@ s, s_ :> {s}}]},
+                    (t /. Thread[vars -> 1]) . MapThread[element[First[ms], First[ns], #1, #2] &, Exponent[t, #] & /@ vars]
                 ],
-                {x, y}
-            ]
+            True,
+                With[{r = CoefficientRules[p, vars]},
+                    With[{e = Transpose[Keys[r]]},
+                        Values[r] . Times @@ Table[
+                            With[{pq = Transpose[{e[[i]], e[[k + i]]}]},
+                                With[{u = DeleteDuplicates[pq]},
+                                    Lookup[AssociationThread[u, element[ms[[i]], ns[[i]], ##] & @@@ u], pq]
+                                ]
+                            ],
+                            {i, k}
+                        ]
+                    ]
+                ]
         ]
     ]
 
@@ -278,27 +297,34 @@ coherentBasisQ[opts___] :=
     OptionValue[BosonicMatrixElement, {opts}, "Basis"] === "Coherent"
 
 (* Any formal symbol may name a mode, so a formal scalar is told apart only by declaring
-   the generators; left Automatic the variables are inferred as before. *)
-fieldVariable[expr_, opts___] :=
-    Replace[
-        DeleteDuplicates[
-            Replace[OptionValue[BosonicMatrixElement, {opts}, "Generators"],
-                Automatic :> ExtractNCVars[{expr}]] /. SuperDagger[w_] :> w
-        ],
-        {{u_} :> u, _ :> None}
+   the generators; left Automatic the variables are inferred as before.  Declared
+   generators keep the order given and inferred ones are sorted, so an index vector
+   always has a settled mode to sit against. *)
+fieldVariables[expr_, opts___] :=
+    DeleteDuplicates[
+        Replace[OptionValue[BosonicMatrixElement, {opts}, "Generators"],
+            Automatic :> Sort[ExtractNCVars[{expr}]]] /. SuperDagger[w_] :> w
     ]
 
-BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] :=
-    c If[coherentBasisQ[opts], coherentOverlap[m, n], KroneckerDelta[m, n]]
+BosonicMatrixElement[{{m_}, {n_}}, expr_, opts : OptionsPattern[]] := BosonicMatrixElement[{m, n}, expr, opts]
+
+BosonicMatrixElement[{m_, n_}, c_ ? NumericQ, opts : OptionsPattern[]] /;
+        Length[Flatten[{m}]] === Length[Flatten[{n}]] :=
+    c Times @@ MapThread[
+        If[coherentBasisQ[opts], coherentOverlap[##], KroneckerDelta[##]] &,
+        {Flatten[{m}], Flatten[{n}]}
+    ]
 
 BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
-    With[{v = fieldVariable[expr, opts]},
+    With[{vs = fieldVariables[expr, opts], ms = Flatten[{m}], ns = Flatten[{n}]},
         If[ coherentBasisQ[opts],
-            coherentOverlap[m, n] ladderSum[Conjugate[m]^#1 n^#2 &, expr, v],
-            ladderSum[fockLadderElement[m, n, ##] &, expr, v]
+            Times @@ MapThread[coherentOverlap, {ms, ns}] *
+                ladderSum[Conjugate[#1]^#3 #2^#4 &, {ms, ns}, expr, vs],
+            ladderSum[fockLadderElement, {ms, ns}, expr, vs]
         ] /;
-            v =!= None && FreeQ[expr, _QuantumOperator | _QuantumState] &&
-                vevPolynomialQ[expr, {v, SuperDagger[v]}]
+            Length[ms] === Length[vs] && Length[ns] === Length[vs] &&
+                FreeQ[expr, _QuantumOperator | _QuantumState] &&
+                    vevPolynomialQ[expr, vevVars[vs]]
     ]
 
 
@@ -369,9 +395,9 @@ normalProductElement[expr_, v_, m_, n_, j_] :=
     ]
 
 BosonicMatrixElement[{m_, n_}, expr_, opts : OptionsPattern[]] :=
-    Module[{v = fieldVariable[expr, opts], j, r},
+    Module[{v = Replace[fieldVariables[expr, opts], {{u_} :> u, _ :> None}], j, r},
         r = Which[
-            v === None, $Failed,
+            v === None || ListQ[m] || ListQ[n], $Failed,
             coherentBasisQ[opts],
                 Replace[numberDiagonal[expr, v, j],
                     f : Except[$Failed] :>

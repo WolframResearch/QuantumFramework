@@ -183,3 +183,125 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["BosonicMatrixElement - independent modes"]
+
+{b1, bd1, b2, bd2} = FieldVariables[{1, 2}];
+
+(* Distinct modes commute and the Fock space is their tensor product, so the element of a
+   normally ordered monomial is one single-mode element per mode, multiplied. *)
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 ** bd2 ** b2],
+    Sqrt[m1] Sqrt[m2] Sqrt[n1] Sqrt[n2] KroneckerDelta[m1 - 1, n1 - 1] KroneckerDelta[m2 - 1, n2 - 1],
+    TestID -> "BME-Modes-NumberProduct"
+]
+
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b2],
+    Sqrt[m1] Sqrt[n2] KroneckerDelta[m1 - 1, n1] KroneckerDelta[m2, n2 - 1],
+    TestID -> "BME-Modes-CrossMode"
+]
+
+(* Inferred modes are sorted, so index slot 1 belongs to the first label however the
+   operator happens to be written. *)
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd2 ** b1],
+    Sqrt[n1] Sqrt[m2] KroneckerDelta[m1, n1 - 1] KroneckerDelta[m2 - 1, n2],
+    TestID -> "BME-Modes-InferredOrderSorted"
+]
+
+(* An operator that leaves a mode alone cannot name it, so the modes are declared; the idle
+   mode then contributes the identity.  Declared generators keep the order given. *)
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, "Generators" -> {b1, bd1, b2, bd2}],
+    Sqrt[m1] Sqrt[n1] KroneckerDelta[m1 - 1, n1 - 1] KroneckerDelta[m2, n2],
+    TestID -> "BME-Modes-IdleModeDeclared"
+]
+
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1, "Generators" -> {b2, bd2, b1, bd1}],
+    Sqrt[m2] Sqrt[n2] KroneckerDelta[m1, n1] KroneckerDelta[m2 - 1, n2 - 1],
+    TestID -> "BME-Modes-DeclaredOrderKept"
+]
+
+(* A product of single-mode operators factorizes into their single-mode elements. *)
+VerificationTest[
+    Simplify[
+        BosonicMatrixElement[{{m1, m2}, {n1, n2}}, (b1 + bd1) ** (b1 + bd1) ** bd2 ** b2 ** b2] -
+        BosonicMatrixElement[{m1, n1}, (b1 + bd1) ** (b1 + bd1), "Generators" -> {b1, bd1}] *
+            BosonicMatrixElement[{m2, n2}, bd2 ** b2 ** b2, "Generators" -> {b2, bd2}]
+    ],
+    0,
+    TestID -> "BME-Modes-ProductFactorizes"
+]
+
+(* Independent of the reduction: a mixed, not normally ordered operator against explicit
+   matrices on a 6-level truncation of each mode.  The operator has degree 3, so on
+   indices up to 2 no intermediate state leaves the truncation and the block is exact. *)
+VerificationTest[
+    With[{d = 6, op = (b2 + bd1) ** (b1 + bd2) ** b1},
+        With[{low = SparseArray[{i_, j_} /; j == i + 1 :> Sqrt[i], {d, d}], one = IdentityMatrix[d]},
+            With[{mat = Normal[op /. NonCommutativeMultiply -> Dot /. {
+                    b1 -> KroneckerProduct[low, one], bd1 -> KroneckerProduct[Transpose[low], one],
+                    b2 -> KroneckerProduct[one, low], bd2 -> KroneckerProduct[one, Transpose[low]]}]},
+                Count[Tuples[Tuples[Range[0, 2], 2], 2],
+                    {{i1_, i2_}, {j1_, j2_}} /;
+                        Simplify[BosonicMatrixElement[{{i1, i2}, {j1, j2}}, op] - mat[[i1 d + i2 + 1, j1 d + j2 + 1]]] =!= 0]
+            ]
+        ]
+    ],
+    0,
+    TestID -> "BME-Modes-MatchesTruncatedMatrices"
+]
+
+(* Coherent states factorize too: the overlap is a product of single-mode overlaps. *)
+VerificationTest[
+    Simplify[
+        BosonicMatrixElement[{{\[Alpha]1, \[Alpha]2}, {\[Beta]1, \[Beta]2}}, b1,
+            "Basis" -> "Coherent", "Generators" -> {b1, bd1, b2, bd2}] -
+        \[Beta]1 Exp[Conjugate[\[Alpha]1] \[Beta]1 - (Abs[\[Alpha]1]^2 + Abs[\[Beta]1]^2)/2] *
+            Exp[Conjugate[\[Alpha]2] \[Beta]2 - (Abs[\[Alpha]2]^2 + Abs[\[Beta]2]^2)/2]
+    ],
+    0,
+    TestID -> "BME-Modes-CoherentFactorizes"
+]
+
+VerificationTest[
+    BosonicMatrixElement[{{m1, m2}, {n1, n2}}, 7],
+    7 KroneckerDelta[m1, n1] KroneckerDelta[m2, n2],
+    TestID -> "BME-Modes-Constant"
+]
+
+(* Operators of different modes commute, and an operator that cancels only once ordered
+   is zero, not a stray term with a negative power. *)
+VerificationTest[
+    {BosonicMatrixElement[{{m1, m2}, {n1, n2}}, Commutator[b1, bd2], "Generators" -> {b1, bd1, b2, bd2}],
+     BosonicMatrixElement[{{m1, m2}, {n1, n2}}, bd1 ** b1 - b1 ** bd1 + 1, "Generators" -> {b1, bd1, b2, bd2}],
+     BosonicMatrixElement[{m, n}, adv ** av - av ** adv + 1]},
+    {0, 0, 0},
+    TestID -> "BME-Modes-CancellationIsZero"
+]
+
+(* One mode reads the same with a scalar index, a one-component index vector, or a
+   labelled field variable, on every route: polynomial, wing and closed form. *)
+VerificationTest[
+    {BosonicMatrixElement[{{m}, {n}}, adv ** av],
+     BosonicMatrixElement[{{2}, {0}}, Exp[z adv]],
+     BosonicMatrixElement[{{1}, {0}}, DisplacementOperator[\[Alpha]]],
+     BosonicMatrixElement[{m, n}, bd1 ** b1],
+     BosonicMatrixElement[{2, 0}, Exp[z bd1]]},
+    {Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2], \[Alpha] E^(-Abs[\[Alpha]]^2/2),
+     Sqrt[m] Sqrt[n] KroneckerDelta[m - 1, n - 1], z^2/Sqrt[2]},
+    TestID -> "BME-Modes-OneModeSpellings"
+]
+
+(* Exponentials are still read one mode at a time; several modes stay unevaluated rather
+   than feed an index vector to the single-mode wing formula. *)
+VerificationTest[
+    Head[BosonicMatrixElement[{{2, 1}, {0, 0}}, Exp[z bd1]]],
+    BosonicMatrixElement,
+    TestID -> "BME-Modes-ExponentialUnevaluated"
+]
+
+EndTestSection[]
