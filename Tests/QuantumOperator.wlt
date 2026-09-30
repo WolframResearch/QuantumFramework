@@ -65,6 +65,108 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QuantumOperator - normalized eigenvectors of exact operators"]
+
+(* "Eigenvalues", "Eigenvectors" and "Eigensystem" scale each eigenvector to unit norm
+   and fix its phase by first dividing it by one of its entries, so for an exact
+   operator that entry has to be told from zero exactly. The first entry of an
+   eigenvector of the 5 x 5 Fourier transform for the eigenvalue I or -I is zero
+   without being written 0; a test that leaves x != 0 undecided puts an unevaluated If
+   inside the vector, on which "Projectors" fails with SparseArray::rect. The
+   normalized vectors must also stay near the size of the vectors Eigensystem returns,
+   and their machine values must keep the digits of their exact values. Identities
+   between the vectors are decided exactly; sums of products of them are zero without
+   being written 0 and take minutes to decide exactly, so those are evaluated to 30
+   digits of accuracy. *)
+
+VerificationTest[
+    With[{qo = QuantumOperator["Fourier"[5]]},
+        {m = Normal[qo["MatrixRepresentation"]], es = qo["Eigensystem"]},
+        {
+            FreeQ[es, _If],
+            Count[First /@ Last[es], 0],
+            AllTrue[Last[es], PossibleZeroQ[Conjugate[#] . # - 1, Method -> "ExactAlgebraics"] &],
+            AllTrue[Flatten[MapThread[m . #2 - #1 #2 &, es]], PossibleZeroQ[#, Method -> "ExactAlgebraics"] &],
+            AllTrue[Last[es], With[{x = FirstCase[#, Except[0]]}, PossibleZeroQ[x - Abs[x], Method -> "ExactAlgebraics"]] &]
+        }
+    ],
+    {True, 2, True, True, True},
+    {},
+    TestID -> "Eigensystem-Fourier5-UnitEigenvectorsWithPositiveFirstNonzeroEntry"
+]
+
+(* The eigenvalue 1 of the Fourier transform is repeated, and "Projectors" takes an
+   orthonormal basis of its eigenspace. A zero whose terms cancel can need more working
+   precision than the default $MaxExtraPrecision allows to reach 30 digits of accuracy. *)
+VerificationTest[
+    With[{qo = QuantumOperator["Fourier"[5]]},
+        {m = Normal[qo["MatrixRepresentation"]], p = Normal /@ qo["Projectors"], values = qo["Eigenvalues"]},
+        Block[{$MaxExtraPrecision = 1000},
+            Max[Abs[N[Flatten[{Total[p] - IdentityMatrix[5], (# . # - #) & /@ p, MapThread[m . #2 - #1 #2 &, {values, p}]}], {Infinity, 30}]]]
+        ]
+    ],
+    _ ? (# < 10^-25 &),
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Projectors-Fourier5-ResolveIdentity"
+]
+
+VerificationTest[
+    With[{vectors = Last @ QuantumOperator["Fourier"[5]]["Eigensystem"]},
+        Max[Abs[N[vectors] - N[vectors, 40]]]
+    ],
+    _ ? (# < 10^-12 &),
+    {},
+    SameTest -> MatchQ,
+    TestID -> "Eigensystem-Fourier5-MachineValuesKeepTheirDigits"
+]
+
+(* diag(1, 1, 1, -1, -1, 2, 2, 0) in the Fourier basis of three qubits, whose entries lie
+   in Q(i, Sqrt[2]) *)
+VerificationTest[
+    With[{f = FourierMatrix[8]},
+        {m = f . DiagonalMatrix[{1, 1, 1, -1, -1, 2, 2, 0}] . ConjugateTranspose[f]},
+        {qo = QuantumOperator[m, {1, 2, 3}]},
+        {es = qo["Eigensystem"], unnormalized = Last @ qo["Eigensystem", "Normalize" -> False]},
+        {
+            LeafCount[Last[es]] < 4 LeafCount[unnormalized],
+            AllTrue[Last[es], PossibleZeroQ[Conjugate[#] . # - 1, Method -> "ExactAlgebraics"] &],
+            AllTrue[Flatten[MapThread[m . #2 - #1 #2 &, es]], PossibleZeroQ[#, Method -> "ExactAlgebraics"] &]
+        }
+    ],
+    {True, True, True},
+    {},
+    TestID -> "Eigensystem-FourierRotated8-VectorsStaySmall"
+]
+
+(* An eigenvector of Gaussian rationals, a symbolic one and an inexact one are divided by
+   their first entry when it is a nonzero number and are otherwise only scaled; so is an
+   exact one whose norm Normalize already writes compactly, as for the eigenbases of the
+   qudit Pauli X and of the spin matrices. *)
+VerificationTest[
+    Function[{m, sort}, With[{es = eigensystem[m, "Sort" -> sort]},
+        eigensystem[m, "Normalize" -> True, "Sort" -> sort] ===
+            {First[es], Normalize[If[NumericQ[First[#]] && First[#] != 0, # / First[#], #]] & /@ Last[es]}
+    ]] @@@ {
+        {{{0, -I}, {I, 0}}, False},
+        {{{1, 0, 0}, {0, 0, -I}, {0, I, 0}}, False},
+        {FourierMatrix[4], False},
+        {{{\[FormalA], 1}, {1, -\[FormalA]}}, False},
+        {N[FourierMatrix[5]], False},
+        {N[{{1, 2}, {2, 1/3}}, 60], False},
+        {pauliMatrix[1, 3], True},
+        {pauliMatrix[1, 6], True},
+        {spinMatrix[1, 4], Identity},
+        {spinMatrix[2, 5], Identity}
+    },
+    ConstantArray[True, 10],
+    {},
+    TestID -> "Eigensystem-FirstEntryRuleWhereItAlreadyGivesCompactVectors"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumOperator - composition"]
 
 VerificationTest[

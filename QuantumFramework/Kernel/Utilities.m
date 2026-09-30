@@ -159,6 +159,42 @@ matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 blockDiagonalMatrix[ms : {__ ? MatrixQ}] := MyBlockDiagonalMatrix[DeleteCases[ms, _ ? emptyTensorQ]]
 
 
+(* The eigenvector v scaled to unit norm, its phase fixed by first dividing v by one of
+   its entries.
+
+   An exact v with an entry that is not a Gaussian rational is divided by its first
+   entry that is not zero, and each entry that is zero is written 0. Such an entry can
+   be zero without being written 0, as the first entry of an eigenvector of the Fourier
+   transform can, and Unequal then leaves x != 0 undecided; exactZeroQ decides it by
+   value, exactly for an algebraic number. Normalize divides by the norm written out
+   through Abs, which for entries holding roots of unity grows into nested radicals many
+   times the size of the vector. RootReduce writes the simplified norm, when it is
+   algebraic, as a rational, a quadratic radical or one Root object, whose value N finds
+   by isolating a root of an integer polynomial; Simplify alone can return a smaller
+   expression whose terms cancel, which loses digits under machine N. The vector is
+   divided by that form of its norm when this gives the smaller vector.
+
+   Any other v, inexact, symbolic, or of Gaussian rationals, is divided by its first
+   entry when that entry is a nonzero number. *)
+normalizedEigenvector[v_] := If[
+    VectorQ[v, NumericQ] && Precision[v] === Infinity && ! VectorQ[v, gaussianRationalQ],
+    exactNormalizedEigenvector[Normal[v]],
+    Normalize[If[NumericQ[First[v]] && First[v] != 0, v / First[v], v]]
+]
+
+exactNormalizedEigenvector[v_] := With[
+    {z = Replace[v, _ ? exactZeroQ -> 0, {1}]},
+    {k = FirstPosition[z, Except[0], {0}, {1}, Heads -> False][[1]]},
+    If[ k == 0,
+        z,
+        With[{w = z / z[[k]]},
+            {norm = RootReduce[Simplify[Norm[w]]]},
+            {reduced = w / norm, plain = Normalize[w]},
+            If[TrueQ[Element[norm, Algebraics]] && LeafCount[reduced] < LeafCount[plain], reduced, plain]
+        ]
+    ]
+]
+
 
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, "Orthogonalize" -> False, Chop -> False}
 
@@ -196,7 +232,7 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
             vectors = vectors[[ordering]]
         ]
     ];
-    If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize[If[NumericQ[First[#]] && First[#] != 0, # / First[#], #]] & /@ vectors];
+    If[ TrueQ[OptionValue["Normalize"]], vectors = normalizedEigenvector /@ vectors];
     (* Eigensystem returns an arbitrary (generally non-orthonormal) basis within a degenerate
        eigenspace, so the eigenvectors need not resolve the identity. Gram-Schmidt in the
        (sorted) eigenvalue order repairs each degenerate block; distinct-eigenvalue vectors of
