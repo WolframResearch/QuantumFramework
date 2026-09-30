@@ -11,7 +11,8 @@
    the matrix with the values in place, which is regular where two eigenvalues
    collide. Invariants checked: f(H) Hermitian for real f and Hermitian H,
    exp(-i t H) unitary, cos^2 + sin^2 = 1, [f(H), H] = 0, sqrt(rho) positive,
-   exp(A (x) 1 + 1 (x) B) = exp(A) (x) exp(B), exp(-i t H) = 1 - i t H + O(t^2).
+   exp(A (x) 1 + 1 (x) B) = exp(A) (x) exp(B), exp(-i t H) = 1 - i t H + O(t^2),
+   (M^(1/2))^2 = (M^(1/3))^3 = M.
    Refused base case: a single qubit at generic parameter values.
 
    Regimes covered:
@@ -24,7 +25,7 @@
                           diagonalizable non-normal A, sqrt of a projector, sqrt and
                           log of machine Jordan blocks at 1 of order 2 and 3, cos and
                           SinhIntegral of a machine nilpotent, sqrt and log of Jordan
-                          blocks of order 2 and 3 at -1
+                          blocks of order 2 and 3 at -1, and their real powers M^p
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
                           defective), eigenvalue 10^-12 next to 1, coupling 10^-9,
                           decoupled subsystems, short time t -> 0, sqrt of
@@ -34,7 +35,8 @@
      numerical reference  64-dim Ising spectrum in a random eigenbasis, 600 random
                           Hermitian draws against a 30-digit diagonalization,
                           cos^2 + sin^2 = 1 and [cos H, H] = 0, random integer and
-                          rational orthogonal frames against f of the exact core
+                          rational orthogonal frames against f of the exact core,
+                          M^p against MatrixPower of the exact matrix
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
                           defective, or reached by substitution) is a Failure;
                           degenerate spectra of multiplicity 8 and 4; parameter
@@ -42,9 +44,15 @@
                           sqrt and log of machine matrices within roundoff of a
                           Jordan block at zero (nilpotent of order 2 and 3, the
                           lowering operator in a random frame) fail as 0^M reads
-                          them, and so does log of a projector whose null space lies
-                          within 10^-6 of its range, and 1/x at its pole; Sinc of a
-                          machine nilpotent is a known limitation; the eigenvalue -1
+                          them, and so does M^p for p below the size of the block
+                          less one, rational or not, which above it is
+                          MatrixPower's; so does log of a projector whose null
+                          space lies within 10^-6 of its range, and 1/x at its
+                          pole; Sinc of a machine nilpotent, and M^p just above
+                          that bound, beside a Jordan block at -1, or where a
+                          small eigenvalue raises the bound above the size of the
+                          block, are known limitations; the exponent 0. of a
+                          singular matrix is the Integer 0; the eigenvalue -1
                           on the branch cut of Sqrt and Log, simple, double and in
                           Jordan blocks of order 2 and 3, of normal and non-normal,
                           real and complex matrices, at its principal value, while
@@ -1981,6 +1989,163 @@ VerificationTest[
     |>,
     TimeConstraint -> 120,
     TestID -> "MatrixFunction-branch-cut-leaves-resolved-eigenvalues"
+]
+
+(* The largest relative error of M^p for the machine matrix M = s.core.s^-1 over the
+   frames s, against MatrixPower of the exact matrix. *)
+mfPowerFrameError[p_, core_, frames_] := Max @ Map[
+    With[{exact = # . core . Inverse[#]}, {reference = MatrixPower[exact, p]},
+        Max[Abs[Normal[(QuantumOperator[N[exact]] ^ p)["Matrix"]] - reference]] / Max[Abs[N[reference]]]
+    ] &,
+    frames
+]
+
+(* The power M^p for a real p that is not an integer is the scalar function x^p of M, whose
+   branch cut is the negative real axis, as for Sqrt, and it takes the principal value
+   there. For the Jordan block m = [[-2, 1], [-1, 0]] = -1 + n at -1 that is
+   m^(1/2) = i (1 - n/2) = [[3i/2, -i/2], [i/2, i/2]] and m^(1/3) = e^(i pi/3) (1 - n/3),
+   the values MatrixPower gives for the exact matrix: at machine precision, for the machine
+   exponent 0.5 too, at 40 digits, in the real frames of the tests above for blocks of
+   order 2 and 3, and in their complex frames for order 2; so are m^(3/2), m^(5/2), m^Pi
+   and m^(-1/2). The roots square and cube back to m, and the square root is the one Sqrt
+   gives, for the block and for a state. *)
+VerificationTest[
+    With[
+        {
+            m = {{-2, 1}, {-1, 0}},
+            jordan2 = {{-1, 1}, {0, -1}},
+            jordan3 = {{-1, 1, 0}, {0, -1, 1}, {0, 0, -1}},
+            realFrames = mfFrames[RandomInteger[{-4, 4}, {2, 2}] &, 40, 3],
+            frames3 = mfFrames[RandomInteger[{-2, 2}, {3, 3}] &, 20, 7],
+            complexFrames = mfFrames[RandomInteger[{-3, 3}, {2, 2}] + I RandomInteger[{-3, 3}, {2, 2}] &, 20, 13],
+            power = Function[{mat, p}, Normal[(QuantumOperator[mat] ^ p)["Matrix"]]],
+            rho = QuantumState[N[{{2, 1}, {1, 2}}] / 4]
+        },
+        <|
+            "square root" -> mfDistance[power[N[m], 1/2], MatrixPower[m, 1/2]] < 10^-13,
+            "cube root" -> mfDistance[power[N[m], 1/3], MatrixPower[m, 1/3]] < 10^-13,
+            "machine exponent" -> mfDistance[power[N[m], 0.5], MatrixPower[m, 1/2]] < 10^-13,
+            "other exponents" -> Max[mfDistance[power[N[m], #], MatrixPower[m, #]] / Max[Abs[N[MatrixPower[m, #]]]] & /@ {3/2, 5/2, Pi, -1/2}] < 10^-13,
+            "square and cube back" -> mfDistance[MatrixPower[power[N[m], 1/2], 2], m] < 10^-13 && mfDistance[MatrixPower[power[N[m], 1/3], 3], m] < 10^-13,
+            "as Sqrt" -> power[N[m], 1/2] === Normal[Sqrt[QuantumOperator[N[m]]]["Matrix"]] && (rho ^ (1/2))["DensityMatrix"] === Sqrt[rho]["DensityMatrix"],
+            "40 digits" -> Max[mfDistance[power[N[m, 40], #], MatrixPower[m, #]] & /@ {1/2, 1/3}] < 10^-35,
+            "order 2" -> Max[mfPowerFrameError[#, jordan2, realFrames] & /@ {1/2, 1/3}] < 10^-12,
+            "order 3" -> Max[mfPowerFrameError[#, jordan3, frames3] & /@ {1/2, 1/3}] < 10^-12,
+            "complex frames" -> Max[mfPowerFrameError[#, jordan2, complexFrames] & /@ {1/2, 1/3}] < 10^-12
+        |>
+    ],
+    <|
+        "square root" -> True, "cube root" -> True, "machine exponent" -> True, "other exponents" -> True, "square and cube back" -> True,
+        "as Sqrt" -> True, "40 digits" -> True, "order 2" -> True, "order 3" -> True, "complex frames" -> True
+    |>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-power-Jordan-block-on-branch-cut"
+]
+
+(* What stays with MatrixPower: an exponent of integer value, an Integer or a machine number
+   such as 2. or -1., whose power of the machine block m is the product m.m or the inverse;
+   an exact matrix, whose roots are MatrixPower's exact values; a symbolic exponent, whose
+   closed form is MatrixPower's, here for h = [[2, 1], [1, 2]]; and the power of h applied to
+   a vector, MatrixPower[h, p, v]. *)
+VerificationTest[
+    With[
+        {
+            m = {{-2, 1}, {-1, 0}},
+            h = N[{{2, 1}, {1, 2}}]
+        },
+        <|
+            "integer exponent" -> (Normal[(QuantumOperator[N[m]] ^ #)["Matrix"]] & /@ {2, 2., -1.}) === {N[m] . N[m], N[m] . N[m], MatrixPower[N[m], -1]},
+            "exact matrix" -> (Normal[(QuantumOperator[m] ^ #)["Matrix"]] & /@ {1/2, 1/3}) === (MatrixPower[m, #] & /@ {1/2, 1/3}),
+            "symbolic exponent" -> Normal[(QuantumOperator[h] ^ mfT)["Matrix"]] === MatrixPower[h, mfT],
+            "vector" -> Wolfram`QuantumFramework`PackageScope`matrixFunction[Power, h, {}, {1/2, {1., 0.}}] === MatrixPower[h, 1/2, {1., 0.}]
+        |>
+    ],
+    <|"integer exponent" -> True, "exact matrix" -> True, "symbolic exponent" -> True, "vector" -> True|>,
+    TestID -> "MatrixFunction-power-controls"
+]
+
+(* The exponent 0. is the Integer 0: for the singular projector [[1, 1], [1, 1]]/2 both give
+   the Failure of MatrixPower[m, 0], which calls the matrix singular, where MatrixPower of
+   the machine exponent 0. crashes the kernel (WL 15.0.1). *)
+VerificationTest[
+    Head /@ {QuantumOperator[N[{{1, 1}, {1, 1}} / 2]] ^ 0., QuantumOperator[N[{{1, 1}, {1, 1}} / 2]] ^ 0},
+    {Failure, Failure},
+    {MatrixPower::sing, MatrixPower::sing},
+    TestID -> "MatrixFunction-power-machine-zero-exponent"
+]
+
+(* A Jordan block at zero of size s needs the derivatives of x^p at 0 up to order s - 1,
+   which exist, all 0, when p > s - 1, and one of which does not when p < s - 1. Within
+   roundoff of such a block M^p has no value for p below the size less one, rational or
+   not, as Sqrt has none there and 0^M reads the block as defective, and above it M^p is
+   MatrixPower's: for the nilpotent [[3, -1], [9, -3]] of order 2, a nilpotent of order 3
+   in an integer basis, and the lowering operator of 4 Fock levels in a random unitary
+   frame, on both sides of the size less one (1.9 and 2.1 for order 3, 2.9 and 3.1 for the
+   lowering operator). For the two nilpotents in integer bases it is 0 once p is well
+   above. *)
+VerificationTest[
+    With[
+        {
+            s3 = {{1, 2, 0}, {1, 3, 1}, {0, 1, 2}},
+            u = Orthogonalize[mfUnitary[[;; 4, ;; 4]]]
+        },
+        {
+            nilpotent2 = QuantumOperator[N[{{3, -1}, {9, -3}}]],
+            nilpotent3 = QuantumOperator[N[s3 . DiagonalMatrix[{1, 1}, 1] . Inverse[s3]]],
+            lowering = QuantumOperator[u . Normal[AnnihilationOperator[4]["Matrix"]] . ConjugateTranspose[u]]
+        },
+        <|
+            "below the size less one" -> mfZeroBaseTag /@ {
+                nilpotent2 ^ (1/2), nilpotent2 ^ (1/3), nilpotent3 ^ (3/2), nilpotent3 ^ Sqrt[2], nilpotent3 ^ 1.9,
+                lowering ^ (5/2), lowering ^ E, lowering ^ 2.9
+            },
+            "above it, MatrixPower's" -> Max[
+                mfDistance[(First[#] ^ Last[#])["Matrix"], MatrixPower[Normal[First[#]["Matrix"]], Last[#]]] & /@
+                    {{nilpotent2, 3/2}, {nilpotent2, Pi}, {nilpotent3, 2.1}, {nilpotent3, 5/2}, {lowering, 3.1}, {lowering, 7/2}}
+            ] < 10^-12,
+            "well above, 0" -> Max[Abs[Normal[(nilpotent2 ^ Pi)["Matrix"]]], Abs[Normal[(nilpotent3 ^ 3.5)["Matrix"]]]] < 10^-12,
+            "0^M" -> mfZeroBaseTag /@ {0 ^ nilpotent2, 0 ^ nilpotent3, 0 ^ lowering}
+        |>
+    ],
+    <|
+        "below the size less one" -> ConstantArray["NonFiniteMatrixFunction", 8], "above it, MatrixPower's" -> True, "well above, 0" -> True,
+        "0^M" -> ConstantArray["ZeroBasePowerDefective", 3]
+    |>,
+    TestID -> "MatrixFunction-power-Jordan-block-at-zero"
+]
+
+(* Known limitations of M^p at a Jordan block at zero, where the power exists and the route
+   does not give it. Just above the size less one, MatrixPower's M^p of a machine matrix is
+   far from the exact block's value, 0: for the lowering operator of 4 Fock levels in a
+   random unitary frame, M^Pi. Beside a Jordan block at -1, MatrixPower takes x^p there from
+   both sides of the cut: s4.(J2(0) (+) J2(-1)).s4^-1 to the powers 3/2 and Pi is far from
+   s4.(0 (+) J2(-1)^p).s4^-1. And a nonzero eigenvalue 10^-4 beside a Jordan block of size
+   2 at zero lies as close to zero as a block of size 3 would spread its eigenvalues, which
+   raises the bound to 3, so M^(3/2) is the Failure although it is s3.(0 (+) 10^-6).s3^-1.
+   When the route reads the block at zero as exact, the first two should drop to roundoff
+   and the last should give the power. *)
+VerificationTest[
+    With[
+        {
+            u = Orthogonalize[mfUnitary[[;; 4, ;; 4]]],
+            s4 = {{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 1}, {1, 0, 0, 2}},
+            s3 = {{1, 2, 0}, {1, 3, 1}, {0, 1, 2}},
+            nilpotent = {{0, 1}, {0, 0}},
+            jordan = {{-1, 1}, {0, -1}}
+        },
+        <|
+            "just above the size less one" ->
+                Max[Abs[Normal[(QuantumOperator[u . Normal[AnnihilationOperator[4]["Matrix"]] . ConjugateTranspose[u]] ^ Pi)["Matrix"]]]] > 0.1,
+            "beside a Jordan block at -1" -> Min[
+                With[{reference = s4 . ArrayFlatten[{{ConstantArray[0, {2, 2}], 0}, {0, MatrixPower[jordan, #]}}] . Inverse[s4]},
+                    mfDistance[(QuantumOperator[N[s4 . ArrayFlatten[{{nilpotent, 0}, {0, jordan}}] . Inverse[s4]]] ^ #)["Matrix"], reference] / Max[Abs[N[reference]]]
+                ] & /@ {3/2, Pi}
+            ] > 1,
+            "bound above the size" -> mfZeroBaseTag[QuantumOperator[N[s3 . ArrayFlatten[{{nilpotent, 0}, {0, {{10^-4}}}}] . Inverse[s3]]] ^ (3/2)]
+        |>
+    ],
+    <|"just above the size less one" -> True, "beside a Jordan block at -1" -> True, "bound above the size" -> "NonFiniteMatrixFunction"|>,
+    TestID -> "MatrixFunction-power-Jordan-block-at-zero-known-limitation"
 ]
 
 EndTestSection[]

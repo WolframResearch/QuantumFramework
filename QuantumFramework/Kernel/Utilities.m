@@ -371,9 +371,51 @@ MatrixInverse[matrix_] := If[
    eigenvalue the decomposition has resolved. *)
 matrixFunction[f : Plus | Minus | Times | Conjugate, mat_, {left___}, {right___}, ___] := f[left, mat, right]
 
+(* The power M^p of an inexact matrix for a real exponent p that is not an Integer
+   (inexactMatrixPower). MatrixPower keeps an Integer exponent, an exact or symbolic
+   matrix, and the power applied to a vector. *)
+matrixFunction[Power, mat_, {}, {p_}] /; realNonIntegerQ[p] && SquareMatrixQ[mat] && inexactMatrixQ[mat] :=
+    inexactMatrixPower[mat, Re[p]]
+
 matrixFunction[Power, mat_, {left___}, {right___}, opts : OptionsPattern[]] := MatrixPower[mat, left, right, opts]
 
 matrixFunction[f_, mat_, {left___}, {right___}, opts : OptionsPattern[]] := scalarMatrixFunction[f[left, #, right] &, mat, opts]
+
+(* A number with no imaginary part that is not an Integer, as 1/2, 0.5, 2. and Pi are. *)
+realNonIntegerQ[p_] := NumericQ[p] && ! IntegerQ[p] && TrueQ[Im[p] == 0]
+
+(* An exponent of integer value, as 2. or -1., gives the power MatrixPower computes for
+   that Integer, from products and the inverse. *)
+inexactMatrixPower[mat_, p_] /; TrueQ[p == Round[p]] := MatrixPower[mat, Round[p]]
+
+(* For any other p, x^p has the branch cut of Sqrt and Log on the negative real axis, and
+   M^p takes their route and their principal value there, unless the matrix has a Jordan
+   block at zero. Such a block of size s needs the derivatives of x^p at 0 up to order
+   s - 1: they exist, all 0, when p > s - 1, and one of them does not when p < s - 1. That
+   route would take derivatives of x^p near zero, which grow without bound, on the
+   eigenvalues roundoff splits apart there, so the block is read first, as 0^m reads it,
+   with bound = zeroJordanBlockBound: for p < bound - 1 M^p is the Failure, as Sqrt is
+   there, and for larger p it is MatrixPower's, off on the block by up to the order of
+   ||m||^p just above bound - 1 and by far less well above it. The bound can
+   exceed s, when a small nonzero eigenvalue lies as close to zero as the eigenvalues of a
+   longer block would be spread, and M^p is then the Failure although it exists; and
+   beside a Jordan block on the negative real axis, MatrixPower's M^p takes x^p there from
+   both sides of the cut. *)
+inexactMatrixPower[mat_, p_] := With[{bound = powerZeroBlockBound[mat]},
+    Which[
+        bound < 2, scalarMatrixFunction[# ^ p &, mat],
+        p < bound - 1, derivativeFailure,
+        True, MatrixPower[mat, p]
+    ]
+]
+
+(* zeroJordanBlockBound of the inexact mat, 0 for a diagonal or Hermitian mat, which has no
+   Jordan block. *)
+powerZeroBlockBound[mat_] /; DiagonalMatrixQ[mat] := 0
+
+powerZeroBlockBound[mat_] := With[{m = Normal[mat]},
+    If[nearlyHermitianQ[m, roundoffTolerance[m]], 0, zeroJordanBlockBound[m, roundoffZeroEigenvalue[m, Eigenvalues[m]]]]
+]
 
 (* f must be finite on numeric eigenvalues: Log at a zero eigenvalue is a Failure,
    not a matrix of infinities. *)
