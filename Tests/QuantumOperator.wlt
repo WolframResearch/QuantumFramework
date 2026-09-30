@@ -84,25 +84,28 @@ VerificationTest[
         {m = Normal[qo["MatrixRepresentation"]], es = qo["Eigensystem"]},
         {
             FreeQ[es, _If],
-            Count[First /@ Last[es], 0],
+            Sort[Pick[First[es], (First[#] === 0) & /@ Last[es]]],
             AllTrue[Last[es], PossibleZeroQ[Conjugate[#] . # - 1, Method -> "ExactAlgebraics"] &],
             AllTrue[Flatten[MapThread[m . #2 - #1 #2 &, es]], PossibleZeroQ[#, Method -> "ExactAlgebraics"] &],
-            AllTrue[Last[es], With[{x = FirstCase[#, Except[0]]}, PossibleZeroQ[x - Abs[x], Method -> "ExactAlgebraics"]] &]
+            AllTrue[Last[es], With[{x = FirstCase[#, Except[0]]},
+                ! PossibleZeroQ[x, Method -> "ExactAlgebraics"] && PossibleZeroQ[x - Abs[x], Method -> "ExactAlgebraics"]] &]
         }
     ],
-    {True, 2, True, True, True},
+    {True, {-I, I}, True, True, True},
     {},
     TestID -> "Eigensystem-Fourier5-UnitEigenvectorsWithPositiveFirstNonzeroEntry"
 ]
 
 (* The eigenvalue 1 of the Fourier transform is repeated, and "Projectors" takes an
-   orthonormal basis of its eigenspace. A zero whose terms cancel can need more working
+   orthonormal basis of its eigenspace. Each projector P is checked against its own
+   eigenvalue Tr[m . P], since two eigensystem calls on one exact matrix need not list
+   the eigenvalues in the same order. A zero whose terms cancel can need more working
    precision than the default $MaxExtraPrecision allows to reach 30 digits of accuracy. *)
 VerificationTest[
     With[{qo = QuantumOperator["Fourier"[5]]},
-        {m = Normal[qo["MatrixRepresentation"]], p = Normal /@ qo["Projectors"], values = qo["Eigenvalues"]},
+        {m = Normal[qo["MatrixRepresentation"]], p = Normal /@ qo["Projectors"]},
         Block[{$MaxExtraPrecision = 1000},
-            Max[Abs[N[Flatten[{Total[p] - IdentityMatrix[5], (# . # - #) & /@ p, MapThread[m . #2 - #1 #2 &, {values, p}]}], {Infinity, 30}]]]
+            Max[Abs[N[Flatten[{Total[p] - IdentityMatrix[5], (# . # - #) & /@ p, (m . # - Tr[m . #] #) & /@ p}], {Infinity, 30}]]]
         ]
     ],
     _ ? (# < 10^-25 &),
@@ -141,12 +144,14 @@ VerificationTest[
 
 (* An eigenvector of Gaussian rationals, a symbolic one and an inexact one are divided by
    their first entry when it is a nonzero number and are otherwise only scaled; so is an
-   exact one whose norm Normalize already writes compactly, as for the eigenbases of the
-   qudit Pauli X and of the spin matrices. *)
+   exact one whose first entry is not zero and whose norm Normalize already writes
+   compactly, as for the eigenbases of the qudit Pauli X and of the spin matrices. The eigenvalue and eigenvector pairs are
+   compared as sets, since two eigensystem calls on one exact matrix need not list them in
+   the same order. *)
 VerificationTest[
     Function[{m, sort}, With[{es = eigensystem[m, "Sort" -> sort]},
-        eigensystem[m, "Normalize" -> True, "Sort" -> sort] ===
-            {First[es], Normalize[If[NumericQ[First[#]] && First[#] != 0, # / First[#], #]] & /@ Last[es]}
+        Sort[Transpose[eigensystem[m, "Normalize" -> True, "Sort" -> sort]]] ===
+            Sort[Transpose[{First[es], Normalize[If[NumericQ[First[#]] && First[#] != 0, # / First[#], #]] & /@ Last[es]}]]
     ]] @@@ {
         {{{0, -I}, {I, 0}}, False},
         {{{1, 0, 0}, {0, 0, -I}, {0, I, 0}}, False},
