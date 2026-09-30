@@ -97,6 +97,10 @@ FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name]
 
 FromOperatorShorthand[arg : namePattern -> order : _ ? orderQ] /;
     MemberQ[$QuantumOperatorNames, name] && ! (MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..]) := QuantumOperator[arg, order]
+(* "Lueders"[op] -> order measures op, placed on order, as one observable; the next rule
+   would measure each qudit of order on its own *)
+FromOperatorShorthand["Lueders"[op_] -> order : _Integer | _ ? orderQ] :=
+    QuantumMeasurementOperator["Lueders"[QuantumOperator[op, Flatten[{order}]]]]
 FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; MemberQ[$QuantumMeasurementOperatorNames, name] :=
     With[{ops = QuantumMeasurementOperator[arg, {#}] & /@ Flatten[{order}]}, QuantumMeasurementOperator[Fold[#2[#1] &, ops], "Label" -> First[ops]["Label"]]]
 FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; MemberQ[$QuantumChannelNames, name] :=

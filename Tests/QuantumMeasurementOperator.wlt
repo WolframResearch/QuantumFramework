@@ -17,6 +17,302 @@ VerificationTest[QuantumMeasurementOperator[1]["Targets"], {{1}}, TestID -> "Int
 EndTestSection[]
 
 
+BeginTestSection["QuantumMeasurementOperator - Lueders measurement"]
+
+(* "Lueders"[op] measures the observable op with one outcome per distinct eigenvalue, whose
+   Kraus operator is the projector P onto that eigenvalue's eigenspace. So for an op on
+   exactly the measured qudits the outcome labels are the eigenvalues, the probabilities
+   ||P psi||^2 sum to 1, the branch of an outcome of nonzero probability is
+   P psi / ||P psi||, and "Mean" is <psi|op|psi>. Most of the observables have repeated
+   eigenvalues, where this differs from the eigenbasis measurement
+   QuantumMeasurementOperator[op], and the rotated ones give Eigensystem a non-orthogonal
+   basis of each eigenspace. *)
+
+(* the outcome values of qmo[qs] minus values, then the probabilities minus ||P psi||^2,
+   their sum minus 1, each branch of nonzero probability normalized minus P psi / ||P psi||,
+   and "Mean" minus <psi|o|psi>, for the projectors ps listed in the order of values *)
+luedersResiduals[qmo_, o_, qs_, values_, ps_] := With[
+    {qm = qmo[qs], psi = Normal[qs["StateVector"]]},
+    {p = qm["ProbabilitiesList"]},
+    Flatten[{
+        (First /@ qm["EigenvalueVectors"]) - values,
+        p - (Norm[# . psi] ^ 2 & /@ ps),
+        Total[p] - 1,
+        MapThread[If[PossibleZeroQ[#3], {}, Normalize[Normal[#1["StateVector"]]] - Normalize[#2 . psi]] &, {qm["States"], ps, p}],
+        qm["Mean"] - Conjugate[psi] . o . psi
+    }]
+]
+
+(* the exact probabilities come back as nested radicals, which PossibleZeroQ decides in
+   minutes unless they are simplified first *)
+luedersExactQ[residuals_] := AllTrue[Simplify[residuals], PossibleZeroQ[#, Method -> "ExactAlgebraics"] &]
+
+(* ZZ has the eigenvalues -1 and 1, each twice, and |Phi+> lies in the eigenspace of 1: it
+   is found there with certainty and left unchanged *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ"]]][QuantumState["PhiPlus"]]},
+        {First /@ qm["EigenvalueVectors"], qm["ProbabilitiesList"], qm["Mean"], Normal[Last[qm["States"]]["StateVector"]]}
+    ],
+    {{-1, 1}, {0, 1}, 1, {1, 0, 0, 1} / Sqrt[2]},
+    TestID -> "Lueders-ZZ-PhiPlus"
+]
+
+(* its Kraus operators, under the outcome labels -1 and 1, are the projectors onto the two
+   eigenspaces of ZZ *)
+VerificationTest[
+    KeyMap[
+        Replace[QuditName[Interpretation[_, {value_, _}], ___] :> value],
+        Normal[#["MatrixRepresentation"]] & /@ QuantumMeasurementOperator["Lueders"[QuantumOperator["ZZ"]]]["Operators"]
+    ],
+    <|-1 -> DiagonalMatrix[{0, 1, 1, 0}], 1 -> DiagonalMatrix[{1, 0, 0, 1}]|>,
+    TestID -> "Lueders-ZZ-Operators-are-eigenspace-projectors"
+]
+
+(* the eigenbasis measurement is still the default: one outcome per eigenvector *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator[QuantumOperator["ZZ"]][QuantumState["PhiPlus"]]},
+        {First /@ qm["EigenvalueVectors"], qm["ProbabilitiesList"], Normal[#["StateVector"]] & /@ qm["States"]}
+    ],
+    {{-1, -1, 1, 1}, {0, 0, 1/2, 1/2}, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 1/Sqrt[2]}, {1/Sqrt[2], 0, 0, 0}}},
+    TestID -> "Lueders-default-eigenbasis-measurement-unchanged"
+]
+
+(* exact: the eigenspaces of diag(1, 1, -1, -1) rotated by the Fourier matrix, on a state
+   with weight in both *)
+VerificationTest[
+    With[{f = FourierMatrix[4]}, {o = f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f]},
+        luedersExactQ @ luedersResiduals[
+            QuantumMeasurementOperator["Lueders"[QuantumOperator[o, {1, 2}]]],
+            o,
+            QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}],
+            {-1, 1},
+            f . DiagonalMatrix[#] . ConjugateTranspose[f] & /@ {{0, 0, 1, 1}, {1, 1, 0, 0}}
+        ]
+    ],
+    True,
+    TestID -> "Lueders-ExactRotatedDegenerate"
+]
+
+(* Machine precision: this rotation fails HermitianMatrixQ from roundoff alone, so
+   Eigensystem takes its general solver, whose eigenvectors for a repeated eigenvalue are
+   not orthogonal, and the two eigenvalues of each eigenspace differ in their last bits. *)
+VerificationTest[
+    With[{u = BlockRandom[Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {4, 4}]], RandomSeeding -> 35]},
+        {o = ConjugateTranspose[u] . DiagonalMatrix[N @ {1, 1, -1, -1}] . u},
+        {
+            HermitianMatrixQ[o],
+            Max[Abs[luedersResiduals[
+                QuantumMeasurementOperator["Lueders"[QuantumOperator[o, {1, 2}]]],
+                o,
+                QuantumState[N @ {1, 2 I, -1, 3} / Sqrt[15], {2, 2}],
+                {-1, 1},
+                ConjugateTranspose[u] . DiagonalMatrix[#] . u & /@ {{0, 0, 1, 1}, {1, 1, 0, 0}}
+            ]]] < 10 ^ -8
+        }
+    ],
+    {False, True},
+    TestID -> "Lueders-MachineRotatedDegenerate"
+]
+
+(* a qutrit: diag(1, 1, 0) rotated by the 3 x 3 Fourier matrix *)
+VerificationTest[
+    With[{f = FourierMatrix[3]}, {o = f . DiagonalMatrix[{1, 1, 0}] . ConjugateTranspose[f]},
+        luedersExactQ @ luedersResiduals[
+            QuantumMeasurementOperator["Lueders"[QuantumOperator[o, {1}, 3]]],
+            o,
+            QuantumState[{1, 2, 2 I} / 3, 3],
+            {0, 1},
+            f . DiagonalMatrix[#] . ConjugateTranspose[f] & /@ {{0, 0, 1}, {1, 1, 0}}
+        ]
+    ],
+    True,
+    TestID -> "Lueders-ExactRotatedDegenerateQutrit"
+]
+
+(* symbolic eigenvalues a and b on exact eigenspaces: the outcomes are labeled a and b *)
+VerificationTest[
+    Module[{a, b},
+        With[{f = FourierMatrix[4], psi = {1, 2 I, -1, 3} / Sqrt[15]},
+            {pa = f . DiagonalMatrix[{1, 1, 0, 0}] . ConjugateTranspose[f], pb = f . DiagonalMatrix[{0, 0, 1, 1}] . ConjugateTranspose[f]},
+            With[{qm = QuantumMeasurementOperator["Lueders"[QuantumOperator[a pa + b pb, {1, 2}]]][QuantumState[psi, {2, 2}]]},
+                {
+                    KeySort[AssociationThread[First /@ qm["EigenvalueVectors"], Simplify[qm["ProbabilitiesList"]]]] ===
+                        KeySort[Simplify /@ <|a -> Norm[pa . psi] ^ 2, b -> Norm[pb . psi] ^ 2|>],
+                    Simplify[qm["Mean"] - Conjugate[psi] . (a pa + b pb) . psi]
+                }
+            ]
+        ]
+    ],
+    {True, 0},
+    TestID -> "Lueders-SymbolicEigenvalues"
+]
+
+(* a mixed state rho: the probabilities are Tr[P rho] and the branches P.rho.P *)
+VerificationTest[
+    With[{f = FourierMatrix[4], psi = {1, 2 I, -1, 3} / Sqrt[15]},
+        {rho = 3/4 KroneckerProduct[psi, Conjugate[psi]] + IdentityMatrix[4] / 16, ps = f . DiagonalMatrix[#] . ConjugateTranspose[f] & /@ {{0, 0, 1, 1}, {1, 1, 0, 0}}},
+        With[{qm = QuantumMeasurementOperator["Lueders"[QuantumOperator[f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f], {1, 2}]]][QuantumState[rho, {2, 2}]]},
+            luedersExactQ @ Flatten[{
+                qm["ProbabilitiesList"] - (Tr[# . rho] & /@ ps),
+                (Normal[#["DensityMatrix"]] & /@ qm["States"]) - (# . rho . # & /@ ps)
+            }]
+        ]
+    ],
+    True,
+    TestID -> "Lueders-MixedState-branches"
+]
+
+(* without a repeated eigenvalue each eigenspace is one eigenvector, and the measurement is
+   the eigenbasis measurement *)
+VerificationTest[
+    With[{f = FourierMatrix[4], qs = QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]},
+        {o = QuantumOperator[f . DiagonalMatrix[{3, 1, -1, -2}] . ConjugateTranspose[f], {1, 2}]},
+        With[{lueders = QuantumMeasurementOperator["Lueders"[o]][qs], eigenbasis = QuantumMeasurementOperator[o][qs]},
+            luedersExactQ @ Flatten[{
+                (First /@ lueders["EigenvalueVectors"]) - (First /@ eigenbasis["EigenvalueVectors"]),
+                lueders["ProbabilitiesList"] - eigenbasis["ProbabilitiesList"],
+                (Normal[#["StateVector"]] & /@ lueders["States"]) - (Normal[#["StateVector"]] & /@ eigenbasis["States"])
+            }]
+        ]
+    ],
+    True,
+    TestID -> "Lueders-nondegenerate-is-eigenbasis-measurement"
+]
+
+(* "SuperOperator" chops the entries of the operator it diagonalizes below 10^-10, so inexact
+   eigenvalues are one outcome within the larger of twice what that removes and the
+   roundoff 100 n 10^-p of the largest: 1 and 1 + 10^-14 are one, 1 and 1 + 10^-6 two *)
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        {Head[#], Length[#["Eigenvalues"]]} & @ QuantumMeasurementOperator["Lueders"[QuantumOperator[N[f . DiagonalMatrix[{1, 1 + #, -1, -1}] . ConjugateTranspose[f]], {1, 2}]]] & /@ {10 ^ -14, 10 ^ -6}
+    ],
+    {{QuantumMeasurementOperator, 2}, {QuantumMeasurementOperator, 3}},
+    TestID -> "Lueders-machine-eigenvalue-grouping"
+]
+
+(* where the Chop removes nothing the tolerance is the roundoff alone, so the eigenvalues
+   1 - 10^-11 and 1 + 10^-11 are two outcomes *)
+VerificationTest[
+    Length[QuantumMeasurementOperator["Lueders"[QuantumOperator[N[IdentityMatrix[2] + 10 ^ -11 PauliMatrix[3]]]]]["Eigenvalues"]],
+    2,
+    TestID -> "Lueders-close-eigenvalues-nothing-chopped"
+]
+
+(* an operator with entries 10^12 and 1 is measured as it is, so the Chop leaves its
+   eigenvalues -1 and 1 apart *)
+VerificationTest[
+    First /@ QuantumMeasurementOperator["Lueders"[QuantumOperator[N[DiagonalMatrix[{10 ^ 12, 10 ^ 12, 1, -1}]], {1, 2}]]]["EigenvalueVectors"],
+    {-1., 1., 1.*^12},
+    SameTest -> (Max[Abs[#1 - #2] / Abs[#2]] < 10 ^ -8 &),
+    TestID -> "Lueders-wide-range-eigenvalues"
+]
+
+(* an operator whose entries are all small is measured multiplied up to largest entry 1, so
+   an observable in SI units keeps its two outcomes and its eigenvalue labels *)
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        With[{qmo = QuantumMeasurementOperator["Lueders"[QuantumOperator[N[10 ^ -12 f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f]], {1, 2}]]]},
+            Max[Abs[(First /@ qmo["EigenvalueVectors"]) - {-10 ^ -12, 10 ^ -12}]] < 10 ^ -24
+        ]
+    ],
+    True,
+    TestID -> "Lueders-small-scale-observable"
+]
+
+(* ZX on the order {2, 1} is X on qudit 1 and Z on qudit 2, so |+0> is its eigenstate for 1 *)
+VerificationTest[
+    With[{qm = QuantumMeasurementOperator["Lueders"[QuantumOperator["ZX", {2, 1}]]][QuantumState["+0"]]},
+        {First /@ qm["EigenvalueVectors"], qm["ProbabilitiesList"]}
+    ],
+    {{-1, 1}, {0, 1}},
+    TestID -> "Lueders-unsorted-order"
+]
+
+(* Z (x) diag(1, 1, 2) on a qubit and a qutrit, with its input legs listed in the order {2, 1}:
+   the dimensions read {2, 3} out and {3, 2} in, and it is measured as its sorted form *)
+VerificationTest[
+    With[{sorted = QuantumOperator[KroneckerProduct[PauliMatrix[3], DiagonalMatrix[{1, 1, 2}]], {1, 2}, {2, 3}]},
+        With[{permuted = QuantumOperator[sorted["PermuteInput", Cycles[{{1, 2}}]], {{1, 2}, {2, 1}}]},
+            {
+                permuted["InputDimensions"],
+                First /@ QuantumMeasurementOperator["Lueders"[permuted]]["EigenvalueVectors"],
+                First /@ QuantumMeasurementOperator["Lueders"[sorted]]["EigenvalueVectors"]
+            }
+        ]
+    ],
+    {{3, 2}, {-2, -1, 1, 2}, {-2, -1, 1, 2}},
+    TestID -> "Lueders-permuted-input-order-mixed-dimensions"
+]
+
+(* an integer target inside op's order is the target {1}: Z (x) I on qudits 1 and 2, measured
+   on qudit 1 of |10>, gives its negative eigenvalue with certainty (keyed by the sign of
+   the label, whose size depends on how the partial trace over qudit 2 is normalized) *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator["Lueders"[QuantumOperator[KroneckerProduct[PauliMatrix[3], IdentityMatrix[2]], {1, 2}]], 1]},
+        With[{qm = qmo[QuantumState["10"]]},
+            {qmo["Target"], KeySort[AssociationThread[Sign[First /@ qm["EigenvalueVectors"]], qm["ProbabilitiesList"]]]}
+        ]
+    ],
+    {{1}, <|-1 -> 1, 1 -> 0|>},
+    TestID -> "Lueders-integer-target"
+]
+
+(* in a circuit, "Lueders"[op] -> order places op on order and measures it as one observable,
+   and so does a target outside op's qudits, as {2, 3} is for "ZZ", built on {1, 2} *)
+VerificationTest[
+    {First /@ #["EigenvalueVectors"], #["ProbabilitiesList"]} & /@ {
+        QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, "Lueders"["ZZ"] -> {1, 2}}][],
+        QuantumCircuitOperator[{"H" -> 2, "CNOT" -> {2, 3}, "Lueders"["ZZ"] -> {2, 3}}][],
+        QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2} -> "Lueders"["ZZ"]}][],
+        QuantumCircuitOperator[{"H" -> 2, "CNOT" -> {2, 3}, {2, 3} -> "Lueders"["ZZ"]}][]
+    },
+    ConstantArray[{{-1, 1}, {0, 1}}, 4],
+    TestID -> "Lueders-circuit-specs"
+]
+
+(* a non-normal operator has no orthogonal eigenspaces, exact or at 30 digits *)
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["Lueders"[QuantumOperator[{{1, 1}, {0, 2}}]]],
+    True,
+    {QuantumMeasurementOperator::luedersnotnormal},
+    TestID -> "Lueders-non-normal-fails"
+]
+
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["Lueders"[QuantumOperator[N[{{1, 1}, {-1, 2}}, 30]]]],
+    True,
+    {QuantumMeasurementOperator::luedersnotnormal},
+    TestID -> "Lueders-non-normal-arbitrary-precision-fails"
+]
+
+(* a target outside op's qudits must have as many qudits as op, and a target lists distinct
+   qudits *)
+VerificationTest[
+    FailureQ /@ {QuantumMeasurementOperator["Lueders"["ZZ"], {3}], QuantumMeasurementOperator["Lueders"["ZZ"], {1, 1}]},
+    {True, True},
+    {QuantumMeasurementOperator::luederstarget, QuantumMeasurementOperator::luederstarget},
+    TestID -> "Lueders-invalid-target-fails"
+]
+
+(* an operator from qudit 1 to qudit 2 is not an observable of qudit 1 *)
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["Lueders"[QuantumOperator[PauliMatrix[3], {{2}, {1}}]]],
+    True,
+    {QuantumMeasurementOperator::luedersnotsquare},
+    TestID -> "Lueders-output-qudits-not-input-qudits-fails"
+]
+
+(* a multiple of the identity has a single outcome, which leaves no eigenqudit *)
+VerificationTest[
+    FailureQ @ QuantumMeasurementOperator["Lueders"[QuantumOperator[3 IdentityMatrix[4], {1, 2}]]],
+    True,
+    {QuantumMeasurementOperator::luedersoneoutcome},
+    TestID -> "Lueders-identity-one-outcome-fails"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumMeasurementOperator - basic action"]
 
 (* projector measurement: probabilities of |+> in computational basis *)
