@@ -1026,14 +1026,15 @@ EndTestSection[]
 BeginTestSection["QuantumOperator - orthonormal eigenbasis of a normal operator"]
 
 (* Eigensystem returns an arbitrary basis inside the eigenspace of a repeated
-   eigenvalue. That basis is not orthogonal for exact input, above machine precision,
-   or for a machine matrix that fails HermitianMatrixQ, which roundoff alone can make
-   it fail. A normal operator has an orthonormal eigenbasis, and its projectors P_k
-   onto it satisfy m.P_k = lambda_k P_k, P_k.P_k = P_k, Sum_k P_k = 1 and
-   Sum_k lambda_k P_k = m, and the basis that diagonalizes it is orthonormal. Each
-   operator below is a diagonal matrix of known spectrum written in a rotated basis, so
-   these identities hold whatever basis the eigensolver picks. Exact residuals are
-   decided exactly; inexact ones are compared to 10^-8, above the 10^-10 below which the
+   eigenvalue. That basis need not be orthogonal for exact input, above machine
+   precision, or for a machine matrix that fails HermitianMatrixQ, which roundoff alone
+   can make it fail. A normal operator has an orthonormal eigenbasis, and its projectors
+   P_k onto it satisfy m.P_k = lambda_k P_k, P_k.P_k = P_k, Sum_k P_k = 1 and
+   Sum_k lambda_k P_k = m, with lambda_k = Tr[m.P_k] the eigenvalue of P_k, and the
+   basis that diagonalizes it is orthonormal. Most normal operators below are diagonal
+   matrices of known spectrum written in a rotated basis, so these identities hold
+   whatever basis the eigensolver picks. Exact residuals are decided exactly; inexact
+   residuals of normal operators are compared to 10^-8, above the 10^-10 below which the
    eigensystem sets entries to zero. *)
 
 (* diag(spectrum) in the Fourier basis *)
@@ -1045,8 +1046,9 @@ eigenbasisHadamardRotated[spectrum_] := With[
     h . DiagonalMatrix[spectrum] . h
 ]
 
-(* diag(spectrum) in the Haar-random basis of the given seed, at the precision of the spectrum *)
-eigenbasisHaarRotated[spectrum_, seed_] := With[
+(* diag(spectrum) in a random unitary basis of the given seed, the Gram-Schmidt
+   orthonormalization of random complex vectors, at the precision of the spectrum *)
+eigenbasisRandomRotated[spectrum_, seed_] := With[
     {u = BlockRandom[
         Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {Length[spectrum], Length[spectrum]}, WorkingPrecision -> Precision[spectrum]]],
         RandomSeeding -> seed
@@ -1055,9 +1057,12 @@ eigenbasisHaarRotated[spectrum_, seed_] := With[
 ]
 
 (* the entries of m.P_k - lambda_k P_k, P_k.P_k - P_k, Sum_k P_k - 1 and
-   Sum_k lambda_k P_k - m, for the projectors of qo paired with its eigenvalues *)
+   Sum_k lambda_k P_k - m for the projectors P_k of qo, each with its own eigenvalue
+   lambda_k = Tr[m.P_k]: a separate call of qo["Eigenvalues"] can list the eigenvalues
+   of an exact matrix in another order *)
 eigenbasisProjectorResiduals[qo_] := With[
-    {m = Normal[qo["MatrixRepresentation"]], p = Normal /@ qo["Projectors"], values = qo["Eigenvalues"]},
+    {m = Normal[qo["MatrixRepresentation"]], p = Normal /@ qo["Projectors"]},
+    {values = Tr[m . #] & /@ p},
     Flatten[{
         MapThread[m . #2 - #1 #2 &, {values, p}],
         (# . # - #) & /@ p,
@@ -1093,29 +1098,28 @@ VerificationTest[
 ]
 
 (* The same spectrum in the Fourier basis of three qubits, whose entries lie in
-   Q(i, Sqrt[2]). Gram-Schmidt over all eight of its normalized exact eigenvectors takes
-   minutes and leaves N::meprec, so the time constraint is part of the test. The
-   projectors of each repeated eigenvalue add up to its spectral projector
+   Q(i, Sqrt[2]), where exact expressions for the eigenvectors can grow large, so the
+   time constraint is part of the test. The projectors of each repeated eigenvalue,
+   identified by their eigenvalue Tr[m.P_k], add up to its spectral projector
    F.diag(1 on that eigenvalue).F^†. *)
 VerificationTest[
     With[{f = FourierMatrix[8], spectrum = {1, 1, 1, -1, -1, 2, 2, 0}},
-        With[{qo = QuantumOperator[f . DiagonalMatrix[spectrum] . ConjugateTranspose[f], {1, 2, 3}]},
-            With[{p = Normal /@ qo["Projectors"], values = qo["Eigenvalues"]},
-                eigenbasisExactZeroQ @ Flatten[Map[
-                    Total[Pick[p, values, #]] - f . DiagonalMatrix[Boole[Thread[spectrum == #]]] . ConjugateTranspose[f] &,
-                    {1, -1, 2}
-                ]]
-            ]
-        ]
+        {m = f . DiagonalMatrix[spectrum] . ConjugateTranspose[f]},
+        {p = Normal /@ QuantumOperator[m, {1, 2, 3}]["Projectors"]},
+        {values = RootReduce[Tr[m . #]] & /@ p},
+        eigenbasisExactZeroQ @ Flatten[Map[
+            Total[Pick[p, values, #]] - f . DiagonalMatrix[Boole[Thread[spectrum == #]]] . ConjugateTranspose[f] &,
+            {1, -1, 2}
+        ]]
     ],
     True,
     TimeConstraint -> 120,
     TestID -> "Projectors-ExactAlgebraicEntries"
 ]
 
-(* The spectrum 1 + e, 1 - e, -1 + e, -1 - e has no repeated eigenvalue for e > 0, where
-   the eigenvectors of a normal matrix are orthogonal whatever the solver; the projectors
-   must stay right as e reaches 0 and the eigenvalues pair up. *)
+(* The spectrum 1 + e, 1 - e, -1 + e, -1 - e has no repeated eigenvalue for 0 < e < 1,
+   where the eigenvectors of a normal matrix are orthogonal whatever the solver; the
+   projectors must stay right as e reaches 0 and the eigenvalues pair up. *)
 VerificationTest[
     Map[
         eigenbasisExactZeroQ @ eigenbasisProjectorResiduals[QuantumOperator[eigenbasisFourierRotated[{1 + #, 1 - #, -1 + #, -1 - #}], {1, 2}]] &,
@@ -1125,11 +1129,88 @@ VerificationTest[
     TestID -> "Projectors-ExactSplitPairLimit"
 ]
 
+(* The reflection 1 - 2 u.u^†/(u^†.u) with u = (1, r, r^2, r^3), for the negative root r
+   of x^4 = x + 1: the eigenvalue -1 on u and 1 on its three-dimensional complement,
+   with entries in the field of r. Two calls of Eigensystem on this matrix can list its
+   eigenvalues in different orders. *)
+VerificationTest[
+    With[{r = Root[#^4 - # - 1 &, 1]},
+        {u = {1, r, r^2, r^3}},
+        {qo = QuantumOperator[IdentityMatrix[4] - 2 Outer[Times, u, u] / (u . u), {1, 2}]},
+        eigenbasisExactZeroQ @ Join[eigenbasisProjectorResiduals[qo], eigenbasisDiagonalizeResiduals[qo]]
+    ],
+    True,
+    TestID -> "Eigenbasis-ExactQuarticFieldReflection"
+]
+
+(* Degenerate perturbation theory: e V, with V = |f1><f3| + |f3><f1| in the Fourier basis
+   f1, ..., f4, couples the eigenvalue-1 vector f1 to the eigenvalue -1 vector f3 of
+   F.diag(1, 1, -1, -1).F^†. For e != 0 the eigenvalues are 1, -1 and +-Sqrt[1 + e^2], so
+   the projectors depend on e. As e -> 0 each tends to the projector onto one Fourier
+   vector: the perturbation picks that basis of the eigenspaces, whatever basis the
+   eigensolver takes at e = 0. The projectors whose eigenvalue tends to 1 add up to the
+   spectral projector F.diag(1, 1, 0, 0).F^† of the eigenvalue 1 at e = 0. *)
+VerificationTest[
+    With[{f = FourierMatrix[4], v = Outer[Times, UnitVector[4, 1], UnitVector[4, 3]] + Outer[Times, UnitVector[4, 3], UnitVector[4, 1]]},
+        {m = f . (DiagonalMatrix[{1, 1, -1, -1}] + e v) . ConjugateTranspose[f]},
+        {pe = Normal /@ QuantumOperator[m, {1, 2}]["Projectors"]},
+        {
+            FreeQ[pe, e],
+            Sort @ Map[
+                Function[p, SelectFirst[Range[4], Simplify[Limit[p, e -> 0] - f . DiagonalMatrix[UnitVector[4, #]] . ConjugateTranspose[f]] === ConstantArray[0, {4, 4}] &]],
+                pe
+            ],
+            Simplify[Limit[Total[Select[pe, Limit[Tr[m . #], e -> 0] === 1 &]], e -> 0] - f . DiagonalMatrix[{1, 1, 0, 0}] . ConjugateTranspose[f]]
+        }
+    ],
+    {False, {1, 2, 3, 4}, ConstantArray[0, {4, 4}]},
+    TestID -> "Projectors-ExactDegeneratePerturbationLimit"
+]
+
+(* The quantum Fourier transform on three qubits, a unitary whose eigenvalues 1, i, -1
+   and -i repeat 3, 2, 2 and 1 times *)
+VerificationTest[
+    With[{qo = QuantumOperator[FourierMatrix[8], {1, 2, 3}]},
+        eigenbasisExactZeroQ @ Join[eigenbasisProjectorResiduals[qo], eigenbasisDiagonalizeResiduals[qo]]
+    ],
+    True,
+    TestID -> "Projectors-ExactQuantumFourierTransform"
+]
+
+(* The same on four qubits in machine numbers. A unitary is not Hermitian, so Eigensystem
+   takes its general solver, whose eigenvectors for a repeated eigenvalue are far from
+   orthogonal. *)
+VerificationTest[
+    With[{f = N[FourierMatrix[16]]},
+        {
+            Max[Abs[Conjugate[#] . Transpose[#] - IdentityMatrix[16]]] & @ Last[Eigensystem[f]],
+            Max[Abs[Join[eigenbasisProjectorResiduals[#], eigenbasisDiagonalizeResiduals[#]]]] & @ QuantumOperator[f, Range[4]]
+        }
+    ],
+    {_ ? (# > 10^-1 &), _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Projectors-MachineQuantumFourierTransform"
+]
+
+(* The Heisenberg ring H = Sum_i sigma_i . sigma_(i+1) of n spins, whose SU(2) and
+   translation symmetries leave its levels degenerate: for n = 4 they repeat 1, 3, 7 and
+   5 times, and for n = 5 the eigenvectors of some lie in Q(Sqrt[5]). *)
+eigenbasisHeisenbergRing[n_] := Sum[
+    KroneckerProduct @@ ReplacePart[ConstantArray[IdentityMatrix[2], n], {i -> s, Mod[i, n] + 1 -> s}],
+    {i, n}, {s, PauliMatrix /@ {1, 2, 3}}
+]
+
+VerificationTest[
+    eigenbasisExactZeroQ @ eigenbasisProjectorResiduals[QuantumOperator[eigenbasisHeisenbergRing[#], Range[#]]] & /@ {4, 5},
+    {True, True},
+    TestID -> "Projectors-ExactHeisenbergRing"
+]
+
 (* Machine precision: this rotation fails HermitianMatrixQ from roundoff alone, so
    Eigensystem takes its general solver, whose eigenvectors for a repeated eigenvalue
    are not orthogonal. *)
 VerificationTest[
-    With[{m = eigenbasisHaarRotated[N @ {1, 1, -1, -1}, 35]},
+    With[{m = eigenbasisRandomRotated[N @ {1, 1, -1, -1}, 35]},
         {HermitianMatrixQ[m], Max[Abs[eigenbasisProjectorResiduals[QuantumOperator[m, {1, 2}]]]]}
     ],
     {False, _ ? (# < 10^-8 &)},
@@ -1140,7 +1221,7 @@ VerificationTest[
 (* 60 digits: above machine precision Eigensystem normalizes the eigenvectors of a
    repeated eigenvalue but does not orthogonalize them, Hermitian input or not. *)
 VerificationTest[
-    Max[Abs[eigenbasisProjectorResiduals[QuantumOperator[eigenbasisHaarRotated[N[{1/2, 1/2, 0, 0}, 60], 3], {1, 2}]]]],
+    Max[Abs[eigenbasisProjectorResiduals[QuantumOperator[eigenbasisRandomRotated[N[{1/2, 1/2, 0, 0}, 60], 3], {1, 2}]]]],
     _ ? (# < 10^-8 &),
     SameTest -> MatchQ,
     TestID -> "Projectors-60DigitRotatedDegenerate"
@@ -1153,7 +1234,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    With[{m = eigenbasisHaarRotated[N @ {1, 1, -1, -1}, 35]},
+    With[{m = eigenbasisRandomRotated[N @ {1, 1, -1, -1}, 35]},
         {HermitianMatrixQ[m], Max[Abs[eigenbasisDiagonalizeResiduals[QuantumOperator[m, {1, 2}]]]]}
     ],
     {False, _ ? (# < 10^-8 &)},
@@ -1162,26 +1243,123 @@ VerificationTest[
 ]
 
 (* A non-normal operator has no orthonormal eigenbasis, and orthogonalizing its
-   eigenvectors would give vectors that are not eigenvectors. Its projectors stay onto
-   eigenvectors, m.P_k = lambda_k P_k, and its diagonalization still represents it,
-   also with a repeated eigenvalue: s.diag(1, 1, 2).s^-1 for a non-unitary s. *)
+   eigenvectors would give vectors that are not eigenvectors. When it can be
+   diagonalized, its projectors stay onto eigenvectors, m.P_k = lambda_k P_k, and its
+   diagonalization still represents it, also with a repeated eigenvalue:
+   s.diag(1, 1, 2).s^-1 for a non-unitary s. *)
+(* the entries of m.P_k - Tr[m.P_k] P_k for the projectors P_k of qo, and of the operator
+   that qo["Diagonalize"] represents minus qo: what still holds when the eigenvectors of
+   qo are kept *)
+eigenbasisKeptResiduals[qo_] := With[{m = Normal[qo["MatrixRepresentation"]]},
+    Flatten[{(m . # - Tr[m . #] #) & /@ (Normal /@ qo["Projectors"]), Normal[qo["Diagonalize"]["MatrixRepresentation"]] - m}]
+]
+
 VerificationTest[
-    Map[
-        Function[m,
-            With[{qo = QuantumOperator[m]},
-                eigenbasisExactZeroQ @ Flatten[{
-                    MapThread[m . #2 - #1 #2 &, {qo["Eigenvalues"], Normal /@ qo["Projectors"]}],
-                    Normal[qo["Diagonalize"]["MatrixRepresentation"]] - m
-                }]
-            ]
-        ],
-        {
-            {{1, 1}, {0, 2}},
-            With[{s = {{1, 1, 0}, {0, 1, 1}, {1, 0, 2}}}, s . DiagonalMatrix[{1, 1, 2}] . Inverse[s]]
-        }
-    ],
+    eigenbasisExactZeroQ @ eigenbasisKeptResiduals[QuantumOperator[#]] & /@ {
+        {{1, 1}, {0, 2}},
+        With[{s = {{1, 1, 0}, {0, 1, 1}, {1, 0, 2}}}, s . DiagonalMatrix[{1, 1, 2}] . Inverse[s]]
+    },
     {True, True},
     TestID -> "Eigenbasis-NonNormalKeepsEigenvectors"
+]
+
+(* Non-normal by 10^-7 with eigenvalues 10^-8 apart: m.m^† - m^†.m is only of order
+   10^-14 there, but the eigenvectors (1, 0) and nearly (0.995, 0.0995) are far from
+   orthogonal, and orthogonalizing them would leave a residual of order 10^-7. *)
+VerificationTest[
+    Max[Abs[eigenbasisKeptResiduals[QuantumOperator[{{1., 1.*^-7}, {0., 1.00000001}}]]]],
+    _ ? (# < 10^-12 &),
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-NearlyNonNormalKeepsEigenvectors"
+]
+
+(* Adding a multiple of the identity changes neither the eigenvectors nor the departure
+   from normality, so it must not change the projectors either: m, non-normal by 10^-6
+   with eigenvalues 10^-3 apart, keeps its eigenvectors with 100, 1000 or 10^4 added. *)
+VerificationTest[
+    With[{m = {{0, 1.*^-6}, {0, 1.*^-3}}},
+        {sorted = SortBy[Normal /@ QuantumOperator[#]["Projectors"], Re[Tr[m . #]] &] &},
+        Max[Abs[Flatten[{
+            eigenbasisKeptResiduals[QuantumOperator[m]],
+            sorted[m + # IdentityMatrix[2]] - sorted[m] & /@ {100, 1000, 10^4}
+        }]]]
+    ],
+    _ ? (# < 10^-12 &),
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-ShiftKeepsEigenvectors"
+]
+
+(* The propagator exp(-i h dt) over a short time dt shares the eigenvectors of its
+   generator h = X - (i/2)|0><0|, which is not normal: its eigenvectors overlap. However
+   close to the identity the propagator is, its departure from normality, of order dt,
+   is far above roundoff, so its projectors must be those of h, to the accuracy with
+   which roundoff lets the eigensolver resolve them, which falls as dt does. *)
+VerificationTest[
+    With[{h = {{-I/2, 1}, {1, 0}}},
+        {byEigenvalue = SortBy[#, Re[Tr[h . #]] &] &},
+        {hp = byEigenvalue[Outer[Times, #, Conjugate[#]] / (Conjugate[#] . #) & /@ Eigenvectors[h]]},
+        Max[Abs[Flatten[byEigenvalue[Normal /@ QuantumOperator[MatrixExp[-I h #]]["Projectors"]] - hp & /@ {1.*^-8, 1.*^-9, 1.*^-10}]]]
+    ],
+    _ ? (# < 10^-4 &),
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-ShortTimePropagatorKeepsEigenvectors"
+]
+
+(* The same s.diag(1, 1, 2).s^-1 computed in 60-digit arithmetic. The entries that cancel
+   become zeros known only to some accuracy, of precision 0, so the matrix has precision
+   0; that must not make it pass for normal. *)
+VerificationTest[
+    With[{s = N[{{1, 1, 0}, {0, 1, 1}, {1, 0, 2}}, 60]},
+        {m = s . DiagonalMatrix[N[{1, 1, 2}, 60]] . Inverse[s]},
+        {qo = QuantumOperator[m]},
+        {Precision[m], Max[Abs[eigenbasisKeptResiduals[qo]]]}
+    ],
+    {0., _ ? (# < 10^-40 &)},
+    SameTest -> MatchQ,
+    TestID -> "Eigenbasis-AccuracyOnlyZeroKeepsEigenvectors"
+]
+
+(* The evolution operator exp(-i h t) of the machine matrix h of the test
+   Projectors-MachineRotatedDegenerate, at a long time t, is unitary, but roundoff in the
+   matrix exponential leaves it further from normal than one decomposition leaves; it
+   must still get a spectral decomposition. *)
+VerificationTest[
+    Max[Abs[eigenbasisProjectorResiduals[QuantumOperator[MatrixExp[-I 1000.7 eigenbasisRandomRotated[N @ {1, 1, -1, -1}, 35]], {1, 2}]]]],
+    _ ? (# < 10^-8 &),
+    SameTest -> MatchQ,
+    TestID -> "Projectors-LongTimeUnitary"
+]
+
+(* Eigenvectors that are orthonormal already come back unchanged, bit for bit: a machine
+   operator whose eigenvalues are all distinct, and a Hermitian one whose eigensolver
+   returns an orthonormal basis. *)
+VerificationTest[
+    Map[
+        With[{qo = #},
+            {
+                Normal /@ qo["Projectors"] === Normal /@ qo["Projectors", "Orthogonalize" -> False],
+                qo["Diagonalize"] === qo["Diagonalize", "Orthogonalize" -> False]
+            }
+        ] &,
+        {
+            QuantumOperator["RX"[0.3]],
+            QuantumOperator[eigenbasisRandomRotated[N @ {1, 2, 3, 4}, 7], {1, 2}],
+            QuantumOperator[BlockRandom[Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {4, 4}]], RandomSeeding -> 11], {1, 2}]
+        }
+    ],
+    ConstantArray[{True, True}, 3],
+    TestID -> "Eigenbasis-OrthonormalEigenvectorsUnchanged"
+]
+
+(* Symbolic eigenvalues a, a, b, b with numeric eigenvectors: the eigenspaces are those of
+   the distinct symbols, and their eigenvectors are orthonormalized as for numbers. *)
+VerificationTest[
+    With[{qo = QuantumOperator[eigenbasisFourierRotated[{a, a, b, b}], {1, 2}]},
+        {v = Normal /@ qo["Diagonalize"]["Basis"]["Output"]["Elements"]},
+        Union @ Flatten @ Simplify[{eigenbasisProjectorResiduals[qo], Conjugate[v] . Transpose[v] - IdentityMatrix[4]}]
+    ],
+    {0},
+    TestID -> "Eigenbasis-SymbolicEigenvaluesNumericEigenvectors"
 ]
 
 EndTestSection[]

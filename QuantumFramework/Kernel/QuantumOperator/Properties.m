@@ -530,58 +530,113 @@ QuantumOperatorProp[qo_, "SplitBasis"] := With[{
 ]
 
 (* A normal operator, m.m^† == m^†.m, has an orthonormal eigenbasis, and no other
-   operator has one. NormalMatrixQ compares the norm of m.m^† - m^†.m with its tolerance
-   times the norm of m, not of m.m^†, so an inexact matrix is scaled to a largest entry
-   of 1 first, and the tolerance is the roundoff 100 n 10^-p that a decomposition of an
-   n x n matrix at precision p leaves. *)
-normalMatrixQ[m_] := MatrixQ[m, NumericQ] && If[Precision[m] === Infinity,
-    NormalMatrixQ[m],
-    With[{s = Max[Abs[m]]}, s == 0 || NormalMatrixQ[m / s, Tolerance -> 100 Length[m] 10 ^ -SetPrecision[Precision[m], 20]]]
+   operator has one. NormalMatrixQ decides an exact or symbolic matrix. An inexact m is
+   judged by its Schur form m = q.t.q^†: the norm of the strictly upper part of t, the
+   departure of m from normality, vanishes exactly when m is normal and grows linearly
+   with its non-normal part, while m.m^† - m^†.m, which NormalMatrixQ bounds, grows
+   quadratically with it where eigenvalues nearly coincide. Orthonormalized eigenvectors
+   of m satisfy the eigenvalue equation to within about the departure, while eigenvectors
+   kept as they are give projectors that need not add up to the identity. Neither the
+   departure nor the eigenvectors change when a multiple of the identity is added to m,
+   so the departure is measured against the traceless part m - Tr[m]/n of m: m counts as
+   normal when its departure is below Sqrt[eps] times the norm of that part, for the
+   relative roundoff eps of the entries of m, which admits the roundoff that computing m
+   leaves, as a unitary exp(-i h t) computed for long times has. A matrix whose traceless
+   part is below roundoff counts as normal when its departure is below the roundoff
+   100 n eps ||m|| of one decomposition of an n x n matrix, the only non-normality its
+   entries can carry; a product of many steps that comes back close to the identity can
+   carry more, and then keeps its eigenvectors. A deliberate non-normal part above both,
+   such as a shear of 10^-7, or the generator of a propagator exp(-i h t) over a short t,
+   keeps its eigenvectors, whatever multiple of the identity is added. *)
+normalMatrixQ[m_] := If[ MatrixQ[m, NumericQ] && Precision[m] < Infinity,
+    With[{a = Normal[m], eps = relativeRoundoff[m]},
+        {t = Last @ SchurDecomposition[a, RealBlockDiagonalForm -> False], traceless = a - Tr[a] / Length[a] IdentityMatrix[Length[a]]},
+        Norm[UpperTriangularize[t, 1], "Frobenius"] <= Max[Sqrt[eps] Norm[traceless, "Frobenius"], 100 Length[a] eps Norm[a, "Frobenius"]]
+    ],
+    NormalMatrixQ[m]
 ]
 
-(* The eigensystem of qo, its eigenvectors orthonormal when qo is normal and opts leave
-   "Orthogonalize" unset. Eigensystem returns an arbitrary basis inside the eigenspace of
-   a repeated eigenvalue. Gram-Schmidt on the eigenvectors of a normal operator changes
-   them only inside each eigenspace, since eigenvectors of distinct eigenvalues are
-   orthogonal already; on those of any other operator it would return vectors that are
-   not eigenvectors, so those are kept as Eigensystem gives them. Inexact eigenvectors go
-   through Gram-Schmidt all together, their products across eigenspaces being roundoff.
-   Exact ones are orthonormalized one eigenspace at a time, the eigenspace being the
-   vectors Eigensystem gives the identical eigenvalue: their products across eigenspaces
-   are zero without simplifying to 0, and normalized exact eigenvectors are larger
-   expressions than the ones Eigensystem returns, so the unnormalized vectors of each
-   eigenspace are orthonormalized with a simplifying inner product. *)
-orthonormalEigensystem[qo_, opts___] := With[{m = qo["MatrixRepresentation"]}, Which[
-    MemberQ[Flatten[{opts}], ("Orthogonalize" -> _) | ("Orthogonalize" :> _)] || ! normalMatrixQ[m],
-    qo["Eigensystem", opts],
-    Precision[m] < Infinity,
-    qo["Eigensystem", opts, "Orthogonalize" -> True],
-    True,
-    exactOrthonormalEigensystem[qo, opts]
-]]
+(* The relative roundoff 10^-p of the entries of m that are not zero. An entry known only
+   to lie within some accuracy of zero, such as 0``40, has precision 0, which says nothing
+   about the others. *)
+relativeRoundoff[m_] := 10 ^ -SetPrecision[Precision[Select[Flatten[Normal[m]], # != 0 &]], 20]
 
-exactOrthonormalEigensystem[qo_, opts___] := With[
-    {es = qo["Eigensystem", opts]},
-    {values = First[es], vectors = Last[es]},
-    {eigenspaces = Select[GatherBy[Range[Length[values]], values[[#]] &], Length[#] > 1 &]},
-    If[ eigenspaces === {},
-        {values, vectors},
-        With[{unnormalized = Last @ qo["Eigensystem", opts, "Normalize" -> False]},
-            {values, ReplacePart[vectors,
-                Catenate[Thread[# -> Simplify[Orthogonalize[unnormalized[[#]], Simplify[Conjugate[#1] . #2] &]]] & /@ eigenspaces]
-            ]}
-        ]
+(* The eigensystem of qo, with an orthonormal eigenbasis when qo is normal, its
+   eigenvectors are numeric and opts leave "Orthogonalize" unset. Eigensystem returns an
+   arbitrary basis inside the eigenspace of a repeated eigenvalue. Gram-Schmidt on the
+   eigenvectors of a normal operator changes them only inside each eigenspace, since
+   eigenvectors of distinct eigenvalues are orthogonal already; on those of any other
+   operator it would return vectors that are not eigenvectors, so those are kept as
+   Eigensystem gives them, and so are eigenvectors that are orthonormal already. *)
+orthonormalEigensystem[qo_, opts___] := With[{es = qo["Eigensystem", opts]},
+    Which[
+        FilterRules[Flatten[{opts}], "Orthogonalize"] =!= {} || ! ArrayQ[Last[es], 2, NumericQ],
+        es,
+        Precision[Last[es]] < Infinity,
+        inexactOrthonormalEigensystem[qo, es],
+        True,
+        exactOrthonormalEigensystem[qo, es]
     ]
 ]
 
+(* Inexact eigenvectors orthonormal to within the roundoff 100 n 10^-p that a
+   decomposition of an n x n matrix at precision p leaves are kept. Those of a normal
+   operator that are not go through Gram-Schmidt all together: their products across
+   eigenspaces are roundoff, except between eigenvalues that nearly coincide, and there
+   Gram-Schmidt changes m.v - lambda v only by the gap between the eigenvalues times the
+   overlap it removes. *)
+inexactOrthonormalEigensystem[qo_, {values_, vectors_}] := If[
+    Max[Abs[Conjugate[vectors] . Transpose[vectors] - IdentityMatrix[Length[vectors]]]] <= 100 Length[vectors] relativeRoundoff[vectors] ||
+        ! normalMatrixQ[qo["MatrixRepresentation"]],
+    {values, vectors},
+    {values, Orthogonalize[vectors]}
+]
+
+(* Exact eigenvectors are orthonormalized one eigenspace at a time, the eigenspace being
+   the vectors Eigensystem gives the identical eigenvalue, since their products across
+   eigenspaces are zero without simplifying to 0. *)
+exactOrthonormalEigensystem[qo_, {values_, vectors_}] := With[
+    {eigenspaces = Select[
+        Values @ PositionIndex[values],
+        Length[#] > 1 && Conjugate[vectors[[#]]] . Transpose[vectors[[#]]] =!= IdentityMatrix[Length[#]] &
+    ]},
+    If[ eigenspaces === {} || ! normalMatrixQ[qo["MatrixRepresentation"]],
+        {values, vectors},
+        {values, ReplacePart[vectors, Catenate[Thread[# -> orthonormalRows[unitLeadingEntry /@ vectors[[#]]]] & /@ eigenspaces]]}
+    ]
+]
+
+(* v divided by its first entry that is not zero, which takes out the square root that
+   normalized it and leaves its entries in the field generated by the entries of the
+   matrix and its eigenvalue *)
+unitLeadingEntry[v_] := With[{u = Normal[v]}, u / SelectFirst[u, # =!= 0 &]]
+
+(* Gram-Schmidt that takes no square root until the end: each vector less its projections
+   on the earlier ones, every coefficient and entry reduced as it is made, and then each
+   vector divided by its length. The entries stay in the field generated by the entries of
+   v and their complex conjugates, where an exact zero reduces to 0, and each vector takes
+   a single square root. RootReduce gives an algebraic number its canonical form, a
+   single Root object, which is written back in radicals unless v carries Root objects
+   already: ToRadicals writes a root of a general quartic with hundreds of terms. Any
+   other number is simplified. *)
+orthonormalRows[v_] := With[{reduce = exactReduce[If[FreeQ[v, _Root], ToRadicals, Identity]]},
+    # / Sqrt[reduce[Conjugate[#] . #]] & /@ Fold[
+        Function[{w, u}, Append[w, reduce /@ (u - Total[reduce[Conjugate[#] . u / (Conjugate[#] . #)] # & /@ w])]],
+        {},
+        v
+    ]
+]
+
+exactReduce[form_][x_] := With[{r = RootReduce[x]}, If[TrueQ[Element[r, Algebraics]], form[r], Simplify[x]]]
+
 QuantumOperatorProp[qo_, "Projectors", opts___] /; qo["SquareQ"] := projector /@ SparseArray @ Chop @ Last @ orthonormalEigensystem[qo, opts]
 
-QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vectors, values},
-    {values, vectors} = orthonormalEigensystem[qo, opts, "Sort" -> True];
+QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := With[
+    {es = orthonormalEigensystem[qo, opts, "Sort" -> True]},
     QuantumOperator[
-        DiagonalMatrix[values],
+        DiagonalMatrix[First[es]],
         Take[#, UpTo[1]] & /@ qo["Order"],
-        QuantumBasis[AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors], qo["Basis"]["Options"]]
+        QuantumBasis[AssociationThread[Subscript["s", #] & /@ Range[Length[First[es]]], Last[es]], qo["Basis"]["Options"]]
     ]
 ]
 

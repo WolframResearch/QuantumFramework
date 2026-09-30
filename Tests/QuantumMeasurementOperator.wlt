@@ -1430,9 +1430,13 @@ BeginTestSection["QuantumMeasurementOperator - operators of a projective measure
    measurement itself builds. So the operators carry the outcome labels of the
    measurement in its order, sum to the identity, are idempotent, and give its
    branches: P_k.rho.P_k is the k-th post-measurement state, whose trace is the
-   probability of outcome k. The observables have a repeated eigenvalue in a rotated
-   basis, where Eigensystem returns a non-orthogonal basis of the eigenspace. Exact
-   residuals are decided exactly, inexact ones to 10^-8. *)
+   probability of outcome k. The first observables have a repeated eigenvalue in a
+   rotated basis, where Eigensystem returns a non-orthogonal basis of the eigenspace,
+   measured on pure states and on a mixed one; the next three check the order of the
+   outcomes, an observable stored in another basis and a measurement of part of an
+   observable's qudits, then "POVMElements" is checked, and the last test compares an
+   exact observable with its machine numbers. Exact residuals are decided exactly,
+   inexact ones to 10^-8. *)
 
 (* whether the operators of qmo carry the outcome labels of qmo[psi] in order, and the
    entries of Sum_k P_k - 1, P_k.P_k - P_k and P_k.rho.P_k minus the k-th branch, all
@@ -1461,6 +1465,19 @@ VerificationTest[
     ],
     {True, True},
     TestID -> "Operators-ExactRotatedDegenerate"
+]
+
+(* The same observable measured on a mixed state, the two-qubit Werner state with
+   p = 1/3: P_k.rho.P_k is still the k-th branch *)
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        eigenbasisMeasurementExactQ @ eigenbasisMeasurementResiduals[
+            QuantumMeasurementOperator[QuantumOperator[f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f], {1, 2}]],
+            QuantumState["Werner"[1/3, 2]]
+        ]
+    ],
+    {True, True},
+    TestID -> "Operators-ExactRotatedDegenerateMixedState"
 ]
 
 (* Machine precision: this rotation fails HermitianMatrixQ from roundoff alone, so
@@ -1539,6 +1556,33 @@ VerificationTest[
     ],
     True,
     TestID -> "POVMElements-ExactRotatedDegenerate"
+]
+
+(* A measurement of an observable with a repeated eigenvalue has one outcome for each
+   vector of an orthonormal basis of its eigenspace, and the basis the eigensolver picks
+   can differ between the exact observable and its machine numbers. The projector onto
+   each eigenspace, the sum of the operators of its outcomes, cannot: it is the spectral
+   projector F.diag(1 on that eigenvalue).F^†. The outcomes of an eigenvalue lambda are
+   those whose operator P has Tr[m.P] = lambda. *)
+VerificationTest[
+    With[{f = FourierMatrix[4], spectrum = {1, 1, -1, -1}},
+        {m = f . DiagonalMatrix[spectrum] . ConjugateTranspose[f]},
+        Map[
+            Function[observable,
+                With[{ops = Normal[#["MatrixRepresentation"]] & /@ Values[QuantumMeasurementOperator[QuantumOperator[observable, {1, 2}]]["Operators"]]},
+                    Max[Abs[Flatten[Map[
+                        Total[Select[ops, Function[p, If[Precision[p] === Infinity, RootReduce[Tr[m . p]] === #, Abs[Tr[m . p] - #] < 10^-8]]]] -
+                            f . DiagonalMatrix[Boole[Thread[spectrum == #]]] . ConjugateTranspose[f] &,
+                        {1, -1}
+                    ]]]]
+                ]
+            ],
+            {m, N[m]}
+        ]
+    ],
+    {0, _ ? (# < 10^-8 &)},
+    SameTest -> MatchQ,
+    TestID -> "Operators-ExactAndMachineEigenspaces"
 ]
 
 EndTestSection[]
