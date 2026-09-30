@@ -261,12 +261,6 @@ fockLadderElement[m_, n_, p_, q_] :=
 coherentOverlap[\[Alpha]_, \[Beta]_] :=
     Exp[Conjugate[\[Alpha]] \[Beta] - (Abs[\[Alpha]]^2 + Abs[\[Beta]]^2)/2]
 
-(* Distinct modes commute and the Fock space is their tensor product, so a normally
-   ordered monomial splits into one element[m, n, p, q] per mode, p and q its powers of
-   that mode's creation and annihilation operators.  One mode reads its powers straight
-   off the terms, which undercuts CoefficientRules' fixed cost; with several,
-   CoefficientRules is the cheaper read, and since a mode's {p, q} repeats across
-   monomials its element is formed once per distinct pair. *)
 ladderSum[element_, {ms_, ns_}, expr_, vs_List] :=
     Module[{x, y, k = Length[vs], vars, p},
         vars = Join[Array[x, k], Array[y, k]];
