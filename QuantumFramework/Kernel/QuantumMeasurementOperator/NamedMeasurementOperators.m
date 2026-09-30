@@ -140,7 +140,7 @@ QuantumMeasurementOperator["Lueders"[op_], args___] := Enclose @ luedersMeasurem
 luedersMeasurement[qmo_] /; Sort[qmo["OutputOrder"]] === Sort[qmo["InputOrder"]] && ! (qmo["QuantumOperator"]["SortedQ"] && OrderedQ[qmo["Target"]]) :=
     luedersMeasurement[QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort"], {Sort @ qmo["Target"]}]]
 
-luedersMeasurement[qmo_] := Enclose @ Block[{trace, observable, inexact, scale, scaled, povm, values, groups, lueders},
+luedersMeasurement[qmo_] := Enclose @ Block[{trace, observable, inexact, povm, values, groups, lueders},
     ConfirmAssert[
         qmo["ProjectionQ"] && Sort[qmo["OutputOrder"]] === Sort[qmo["InputOrder"]],
         Message[QuantumMeasurementOperator::luedersnotsquare]
@@ -150,21 +150,15 @@ luedersMeasurement[qmo_] := Enclose @ Block[{trace, observable, inexact, scale, 
     trace = DeleteCases[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]];
     observable = Normal[Simplify[QuantumPartialTrace[qmo, trace]]["MatrixRepresentation"]];
     ConfirmAssert[normalQ[observable], Message[QuantumMeasurementOperator::luedersnotnormal]];
-    (* "SuperOperator" chops the entries of that operator below 10^-10, which would erase an
-       inexact operator whose entries are all small, so such an operator is measured
-       multiplied up to largest entry 1, which has the same eigenspaces, and the eigenvalues
-       are scaled back *)
     inexact = inexactArrayQ[observable];
-    scale = If[inexact, Replace[Min[1, Max[Abs[observable]]], _ ? PossibleZeroQ -> 1], 1];
-    scaled = If[scale === 1, qmo, QuantumMeasurementOperator[qmo["QuantumOperator"] / scale, qmo["Targets"]]];
-    povm = scaled["POVM"];
+    povm = qmo["POVM"];
     ConfirmAssert[povm["Eigenindex"] === {1}];
     values = First /@ povm["EigenvalueVectors"];
-    groups = eigenspacePositions[values, If[inexact, groupingTolerance[Simplify[QuantumPartialTrace[scaled, trace]], values], 0]];
+    groups = eigenspacePositions[values, If[inexact, groupingTolerance[Simplify[QuantumPartialTrace[qmo, trace]], qmo, values], 0]];
     (* a qudit of dimension 1 has no place in a QuditBasis, so one outcome leaves no eigenqudit *)
     ConfirmAssert[Length[groups] > 1, Message[QuantumMeasurementOperator::luedersoneoutcome]];
     lueders = QuantumMeasurementOperator[
-        mergeEigenqudit[povm["Operator"], groups, scale (If[inexact, Mean[values[[#]]], values[[First[#]]]] & /@ groups)],
+        mergeEigenqudit[povm["Operator"], groups, If[inexact, Mean[values[[#]]], values[[First[#]]]] & /@ groups],
         qmo["Targets"]
     ];
     ConfirmAssert[completeQ[lueders["Operator"]], Message[QuantumMeasurementOperator::luedersnotcomplete]];
@@ -185,17 +179,22 @@ equalEigenvaluesTest[values_ ? (VectorQ[#, NumericQ] &), tolerance_] := Abs[#1 -
 equalEigenvaluesTest[_, _] := Simplify[#1 - #2] === 0 &
 
 (* The distance within which inexact eigenvalue labels count as one, where values are the
-   labels "SuperOperator" gives the traced operator t: twice the Frobenius norm of what its
-   Chop removes from t, which bounds how far that moves two eigenvalues apart, or the
-   roundoff 100 n 10^-p of the largest label at precision p, whichever is more. The labels
-   may be the eigenvalues of t divided by a number, so the first term is carried into their
-   units by the largest label over the norm of t. *)
-groupingTolerance[t_, values_] := With[
+   labels "SuperOperator" gives t, the operator of qmo traced over the qudits outside its
+   targets: twice the Frobenius norm of what "SuperOperator" writes 0 in t as roundoff
+   (roundoffChopOperator), which bounds how far that moves two eigenvalues apart, or the
+   roundoff 100 n 10^-p of the largest label at precision p, formed at 20 digits so that it
+   does not underflow for labels near the smallest machine number, whichever is more. The
+   labels may be the eigenvalues of t divided by a number, so the first term is carried into
+   their units by the largest label over the norm of t. Roundoff that building the operator
+   accumulated above that distance, as in an observable evolved over a long time, reads as a
+   splitting, and its eigenspace then has more than one outcome: the numbers do not tell it
+   from a splitting of the same size. *)
+groupingTolerance[t_, qmo_, values_] := With[
     {m = Normal[t["MatrixRepresentation"]], largest = Max[Abs[values]]},
     {norm = Norm[m]},
     Max[
-        If[PossibleZeroQ[norm], 0, 2 Norm[Flatten[m - Normal[Chop[t]["MatrixRepresentation"]]]] largest / norm],
-        100 Length[values] 10 ^ -SetPrecision[nonzeroPrecision[values], 20] largest
+        If[PossibleZeroQ[norm], 0, 2 Norm[Flatten[m - Normal[roundoffChopOperator[t, qmo]["MatrixRepresentation"]]]] largest / norm],
+        100 Length[values] 10 ^ -SetPrecision[nonzeroPrecision[values], 20] SetPrecision[largest, 20]
     ]
 ]
 

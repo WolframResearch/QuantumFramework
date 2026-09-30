@@ -33,6 +33,7 @@ PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvalues"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
+PackageScope["roundoffChop"]
 PackageScope["pauliMatrix"]
 PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
@@ -207,7 +208,7 @@ zeroEntryQ[x_] := ! TrueQ[x != 0] && If[TrueQ[Element[x, Algebraics]], RootReduc
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, "Orthogonalize" -> False, Chop -> False}
 
 eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
-    {values, vectors} = Chop @ Simplify @ Enclose[
+    {values, vectors} = chopEigensystem[matrix, Simplify @ Enclose[
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 Which[
@@ -223,14 +224,14 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
                         Eigensystem::eivec0
                     ],
                     True,
-                    Eigensystem[Chop @ matrix]
+                    Eigensystem[roundoffChop[matrix]]
                 ],
                 Eigensystem[matrix]
             ],
             MatchQ[{_ ? ListQ, _ ? MatrixQ}]
         ],
         Eigensystem[matrix] &
-    ];
+    ]];
     If[ ! MatchQ[OptionValue["Sort"], False | None] && AllTrue[values, NumericQ],
         With[{ordering = OrderingBy[values, Replace[OptionValue["Sort"],
                 True | Automatic :> If[Length[values] > 2 && ContainsOnly[Arg[values], {0, Pi}], Identity, {Mod[Arg[#], 2 Pi], Abs[#]} &]
@@ -260,6 +261,68 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
    fail; so a matrix Hermitian to roundoff is made exactly Hermitian first. Any
    other matrix goes to the general solver as it is. *)
 machineEigensystem[m_] := Eigensystem[If[nearlyHermitianQ[m, roundoffTolerance[m]], (m + ConjugateTranspose[m]) / 2, m]]
+
+(* The eigenvalues and eigenvectors of the matrix m with each number below the roundoff of
+   the eigensystem, relative to its scale, written 0. For an inexact numeric n x n matrix at
+   precision p, with tol the smaller of 100 n 10^-p and 10^-10, that is an eigenvalue, or its
+   real or imaginary part, smaller in magnitude than tol times the largest eigenvalue in
+   magnitude, and the real or imaginary part of an eigenvector entry smaller than tol, against
+   the unit norm of the eigenvectors Eigensystem returns for an inexact matrix (it pairs an
+   extra eigenvalue of a defective one with a zero vector). The bound 10^-10 acts only below
+   about 12 digits, where 100 n 10^-p reaches the digits the numbers carry: at 3 digits it
+   would write 0 for the eigenvalue -0.372 of {{1, 2}, {3, 4}} and for the eigenvalue 1 of
+   diag(1, 2, 3, 4). An eigenvalue below tol is not told from roundoff in a
+   general basis, though a diagonal matrix gives it exactly: at machine precision
+   diag(10^10, 10^-5) has the eigenvalues 10^10 and 0. A matrix that is roundoff throughout,
+   as the commutator of two commuting matrices computed at machine precision, has no scale of
+   its own to measure that roundoff against, and its eigenvalues are that roundoff. Any other
+   matrix gets Chop's threshold, which leaves exact numbers as they are. *)
+chopEigensystem[m_ ? inexactNumericArrayQ, {values_, vectors_}] := With[{tol = Min[roundoffTolerance[m], 10^-10]},
+    {chopAtScale[values, tol, Max[Abs[values]]], chopAtScale[vectors, tol, 1.]}
+]
+
+chopEigensystem[_, es_] := Chop[es]
+
+(* roundoffChop[a, n, ref] writes 0 for each approximate number in the numeric array a, or for
+   its real or imaginary part, that roundoff alone could have left there, a being computed from
+   ref, the entries of an n x n matrix at precision p: a number smaller in magnitude than tol
+   times the largest entry of ref. tol is the smaller of 100 n 10^-p, what a computation at
+   precision p leaves relative to the scale of such a matrix, with room to spare
+   (roundoffTolerance), and 10^-10, a bound that acts only below about 12 digits, where
+   100 n 10^-p reaches the digits the numbers carry: at 3 digits it would write 0 for the
+   entry 1 of diag(1, 2, 3, 4). ref is a itself when it is not given, and n the number of rows
+   of a matrix a when neither is. Chop's own threshold, 10^-10, does not scale with the
+   numbers: it writes 0 for every entry of an array whose entries are all smaller, as those of
+   hbar/2 sigma_z in SI units, and for the entries below it that a matrix known to 30 digits
+   resolves. An array of exact numbers keeps them, and one that is not numeric, with no scale
+   to measure roundoff against, gets Chop's threshold. *)
+roundoffChop[a_ ? (ArrayQ[#, _, NumericQ] &), n_Integer, ref_ ? inexactNumericArrayQ] :=
+    chopAtScale[a, Min[100 n roundoff[ref], 10^-10], Max[Abs[ref]]]
+
+roundoffChop[a_, _Integer, _] := Chop[a]
+
+roundoffChop[a_, n_Integer] := roundoffChop[a, n, a]
+
+roundoffChop[m_] := roundoffChop[m, Length[m]]
+
+(* A numeric array with an approximate number in it other than a zero known only to an
+   accuracy, so that its entries have a precision and roundoff has a size (entryPrecision). *)
+inexactNumericArrayQ[a_] := ArrayQ[a, _, NumericQ] && entryPrecision[a] < Infinity
+
+(* Chop at tol times scale, as a machine number where it is one, since Chop compares machine
+   numbers with a machine threshold faster. For a machine scale of at least 10^-290 and a tol
+   of at least 10^-16, as machine precision gives, the product is formed in machine arithmetic
+   and stays above the smallest machine number; otherwise it is formed at 20 digits, so that
+   it does not underflow, and N is taken of it only inside the machine range. It is 0 only
+   when the scale is, every number then being zero, and Chop at its own threshold writes those
+   0. *)
+chopAtScale[x_, tol_, scale_] := Which[
+    ! TrueQ[scale > 0], Chop[x],
+    MachineNumberQ[scale] && scale >= 1.*^-290 && tol >= 1.*^-16, Chop[x, N[tol] scale],
+    True, With[{delta = SetPrecision[tol, 20] SetPrecision[scale, 20]},
+        Chop[x, If[$MinMachineNumber <= delta <= $MaxMachineNumber, N[delta], delta]]
+    ]
+]
 
 Options[eigenvalues] = Options[eigensystem]
 
@@ -495,15 +558,24 @@ roundoffTolerance[mat_] := 100 Length[mat] roundoff[mat]
 backwardError[mat_, scale_] := 10 Length[mat] roundoff[mat] scale
 
 (* The unit roundoff 10^-p of a matrix of precision p, computed at 20 digits so that it
-   does not underflow for p above 307. *)
-roundoff[mat_] := 10 ^ -SetPrecision[entryPrecision[mat], 20]
+   does not underflow for p above 307; the machine value is computed once. *)
+roundoff[mat_] := roundoffAt[entryPrecision[mat]]
+
+roundoffAt[MachinePrecision] = 10 ^ -SetPrecision[MachinePrecision, 20]
+
+roundoffAt[p_] := 10 ^ -SetPrecision[p, 20]
 
 (* The precision of the entries of mat other than zeros known to an accuracy, Infinity
    when there are none. A zero known to an accuracy, as 0``40, has precision 0, which
-   says nothing about the roundoff in the other entries; a machine 0. does. *)
-entryPrecision[mat_SparseArray] := Precision[Select[Append[mat["NonzeroValues"], mat["Background"]], ! accuracyZeroQ[#] &]]
+   says nothing about the roundoff in the other entries; a machine 0. does. The precision
+   of mat is either 0 or already that of its other entries, so they are gone through one
+   at a time only when it is 0, which for a large matrix takes longer than its
+   eigensystem. *)
+entryPrecision[mat_] := With[{p = Precision[mat]}, If[p > 0, p, nonzeroEntryPrecision[mat]]]
 
-entryPrecision[mat_] := Precision[Select[Flatten[mat], ! accuracyZeroQ[#] &]]
+nonzeroEntryPrecision[mat_SparseArray] := Precision[Select[Append[mat["NonzeroValues"], mat["Background"]], ! accuracyZeroQ[#] &]]
+
+nonzeroEntryPrecision[mat_] := Precision[Select[Flatten[mat], ! accuracyZeroQ[#] &]]
 
 accuracyZeroQ[x_] := TrueQ[x == 0] && Precision[x] == 0
 

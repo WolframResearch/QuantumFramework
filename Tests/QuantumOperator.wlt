@@ -172,6 +172,112 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QuantumOperator - eigensystem of an inexact operator below 10^-10"]
+
+(* "Eigenvalues", "Eigenvectors" and "Eigensystem" write 0 for the numbers roundoff alone
+   leaves in the eigensystem of an inexact operator: an eigenvalue, or its real or imaginary
+   part, below tol times the largest eigenvalue, and an eigenvector entry below tol, where tol
+   is the smaller of 100 n 10^-p and 10^-10 for an n x n matrix at precision p; the bound
+   10^-10 acts below about 12 digits, where 100 n 10^-p reaches the digits the numbers carry.
+   Every larger number is kept at any scale, where a threshold fixed at 10^-10 would read the
+   whole spectrum of hbar/2 sigma_z in SI units as 0, the imaginary parts of the eigenvalues
+   1 + 10^-12 I and 1 - 10^-12 I as 0, and the eigenvector entries of size 10^-11 that a
+   matrix known to 30 digits resolves as 0. *)
+
+(* the projectors onto the eigenvectors, in increasing order of the eigenvalues *)
+inexactEigenprojectors[{values_, vectors_}] := KroneckerProduct[#, Conjugate[#]] & /@ Normalize /@ vectors[[Ordering[N[values]]]]
+
+(* hbar/2 sigma_z in SI units has the eigenvalues -hbar/2 and hbar/2, with the eigenvectors
+   of sigma_z, and 10^-30 times the projector onto (Cos[1/3], Sin[1/3]) has the eigenvalues
+   0 and 10^-30, its 0 from roundoff written 0 *)
+VerificationTest[
+    With[{hbar = 1.054571817*^-34, v = N[{Cos[1/3], Sin[1/3]}]},
+        With[{es = QuantumOperator[hbar / 2 PauliMatrix[3]]["Eigensystem"], small = Sort[QuantumOperator[10^-30 KroneckerProduct[v, v]]["Eigenvalues"]]},
+            {
+                Max[Abs[Sort[First[es]] / (hbar / 2) - {-1, 1}]] < 10^-14,
+                Max[Abs[Flatten[inexactEigenprojectors[es] - {{{0, 0}, {0, 1}}, {{1, 0}, {0, 0}}}]]] < 10^-14,
+                First[small] === 0,
+                Abs[Last[small] / 10^-30 - 1] < 10^-14
+            }
+        ]
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "InexactEigensystem-SmallScale"
+]
+
+(* diag(1, 10^-11) has the eigenvalue 10^-11, and 1 + 10^-12 {{0, 1}, {-1, 0}} the eigenvalues
+   1 + 10^-12 I and 1 - 10^-12 I, the imaginary parts known to about 10^-16 *)
+VerificationTest[
+    {
+        Abs[Min[QuantumOperator[N[DiagonalMatrix[{1, 10^-11}]]]["Eigenvalues"]] / 10^-11 - 1] < 10^-12,
+        Max[Abs[Sort[Im[QuantumOperator[N[{{1, 10^-12}, {-10^-12, 1}}]]["Eigenvalues"]]] / 10^-12 - {-1, 1}]] < 10^-3
+    },
+    {True, True},
+    {},
+    TestID -> "InexactEigensystem-SmallEigenvalueAndImaginaryPart"
+]
+
+(* {{1, 10^-11}, {10^-11, 2}} to 30 digits has eigenvectors with entries of size 10^-11:
+   "Eigensystem", and the eigensystem eigensystem[..., Chop -> True] gives "Physical" and
+   "EigenPrune" for a matrix above machine precision, give the projectors onto them to about
+   the digits the matrix carries *)
+VerificationTest[
+    With[{m = N[{{1, 10^-11}, {10^-11, 2}}, 30], exact = inexactEigenprojectors[Eigensystem[{{1, 10^-11}, {10^-11, 2}}]]},
+        {
+            Max[Abs[N[Flatten[inexactEigenprojectors[QuantumOperator[m]["Eigensystem"]] - exact], 30]]] < 10^-25,
+            Max[Abs[N[Flatten[inexactEigenprojectors[eigensystem[m, Chop -> True, "Normalize" -> True]] - exact], 30]]] < 10^-25
+        }
+    ],
+    {True, True},
+    {},
+    TestID -> "InexactEigensystem-30Digits-Eigenvectors"
+]
+
+(* forming the threshold for eigenvalues near the smallest machine number does not underflow,
+   and 10^-300 diag(1, 1/2) keeps the eigenvalues 10^-300 and 10^-300/2 *)
+VerificationTest[
+    Max[Abs[Sort[QuantumOperator[10^-300 N[DiagonalMatrix[{1, 1/2}]]]["Eigenvalues"]] / 10^-300 - {1/2, 1}]] < 10^-14,
+    True,
+    {},
+    TestID -> "InexactEigensystem-NearSmallestMachineNumber"
+]
+
+(* roundoff is still written 0: the eigenvalue 0 of the projector onto (Cos[1/3], Sin[1/3]),
+   which Eigensystem gives as a number of order 10^-17, and the eigenvalues 0. of the machine
+   nilpotent {{0., 1.}, {0., 0.}}, whose spectrum has the scale 0 *)
+VerificationTest[
+    With[{v = N[{Cos[1/3], Sin[1/3]}]},
+        {
+            First[Sort[QuantumOperator[KroneckerProduct[v, v]]["Eigenvalues"]]],
+            QuantumOperator[{{0., 1.}, {0., 0.}}]["Eigenvalues"]
+        }
+    ],
+    {0, {0, 0}},
+    {},
+    TestID -> "InexactEigensystem-RoundoffWrittenZero"
+]
+
+(* at 3 digits, where 100 n 10^-p times the largest eigenvalue exceeds the smallest one, the
+   eigenvalues (5 - Sqrt[33])/2 and (5 + Sqrt[33])/2 of {{1, 2}, {3, 4}} are kept, and so are
+   the eigenvalues 1, 2, 3 and 4 of diag(1, 2, 3, 4) with the unit vectors of the
+   computational basis *)
+VerificationTest[
+    With[{es = eigensystem[N[DiagonalMatrix[{1, 2, 3, 4}], 3]]},
+        {
+            Max[Abs[N[Sort[eigenvalues[N[{{1, 2}, {3, 4}}, 3]]] - {5 - Sqrt[33], 5 + Sqrt[33]} / 2]]] < 10^-2,
+            Round[Sort[First[es]]],
+            Round[inexactEigenprojectors[es]]
+        }
+    ],
+    {True, {1, 2, 3, 4}, KroneckerProduct[#, #] & /@ IdentityMatrix[4]},
+    {},
+    TestID -> "InexactEigensystem-LowPrecision"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumOperator - composition"]
 
 VerificationTest[

@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["roundoffChopOperator"]
+
 
 
 $QuantumMeasurementOperatorProperties = {
@@ -223,6 +225,37 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] /; qmo["POVMQ"] :=
    under the labels of "Eigenvalues"; so its operators are those. *)
 QuantumMeasurementOperatorProp[qmo_, "Operators"] /; qmo["ProjectionQ"] := qmo["POVM"]["Operators"]
 
+(* The partial trace leaves roundoff where the traced operator has zero entries, and inside a
+   degenerate eigenspace the eigenvectors Eigensystem returns would follow it. Each entry of the
+   traced operator sums as many entries of the operator of qmo as the traced qudits have
+   dimensions, so its roundoff is measured against that operator before the trace: an entry of
+   the traced state below 100 N 10^-p times the largest entry of the operator's state, for the
+   N x N operator at precision p, or below 10^-10 times it where that is smaller, as it is
+   below about 12 digits, is written 0 (roundoffChop), and the traced operator keeps its
+   basis. That writes 0 for all of a traced operator that cancels, as X (x) Z does on its first
+   qudit in any frame, where roundoff alone leaves numbers. The threshold scales with the
+   operator, so a relative structure below it is written 0 at every scale: the off-diagonal
+   entries of 10^6 (1 + 10^-15 X) are, as those of 1 + 10^-15 X are, and it is measured in the
+   computational basis. A threshold that does not scale would also write 0 for entries that
+   are not roundoff: all of an operator whose entries are all small, and the off-diagonal
+   entries of 1 + 10^-11 X, whose eigenvectors |+> and |-> would give way to the computational
+   basis that Eigensystem returns for the identity. Numbers above the threshold are kept, even
+   when roundoff accumulated in building the operator put them there, as in an observable
+   evolved over a long time: inside a twofold eigenspace they then pick the eigenvectors. A
+   traced operator whose state is not an array of numbers gets Chop, of its state and of its
+   basis. *)
+roundoffChopOperator[traced_, qmo_] := With[
+    {qo = traced["QuantumOperator"], operator = qmo["QuantumOperator"]},
+    {state = qo["State"], reference = operator["State"]["State"]},
+    If[ ArrayQ[state["State"], _, NumericQ] && ArrayQ[reference, _, NumericQ],
+        QuantumMeasurementOperator[
+            QuantumOperator[QuantumState[roundoffChop[state["State"], operator["OutputDimension"], reference], state["Basis"]], qo["Order"]],
+            traced["Target"]
+        ],
+        Chop[traced]
+    ]
+]
+
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Automatic] := Module[{
     trace,
     traceQudits,
@@ -239,7 +272,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
 
         qmo["Operator"],
 
-        tracedOperator = Chop @ Simplify @ QuantumPartialTrace[qmo, trace];
+        tracedOperator = roundoffChopOperator[Simplify @ QuantumPartialTrace[qmo, trace], qmo];
 
         (* "Orthogonalize" repairs the degenerate-eigenspace basis Eigensystem returns:
            without it the eigen-projectors do not resolve the identity and the outcome

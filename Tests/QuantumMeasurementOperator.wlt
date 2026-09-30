@@ -179,9 +179,9 @@ VerificationTest[
     TestID -> "Lueders-nondegenerate-is-eigenbasis-measurement"
 ]
 
-(* "SuperOperator" chops the entries of the operator it diagonalizes below 10^-10, so inexact
-   eigenvalues are one outcome within the larger of twice what that removes and the
-   roundoff 100 n 10^-p of the largest: 1 and 1 + 10^-14 are one, 1 and 1 + 10^-6 two *)
+(* inexact eigenvalues are one outcome within the larger of twice what "SuperOperator" writes 0
+   as roundoff in the operator it diagonalizes and the roundoff 100 n 10^-p of the largest:
+   1 and 1 + 10^-14 are one, 1 and 1 + 10^-6 two *)
 VerificationTest[
     With[{f = FourierMatrix[4]},
         {Head[#], Length[#["Eigenvalues"]]} & @ QuantumMeasurementOperator["Lueders"[QuantumOperator[N[f . DiagonalMatrix[{1, 1 + #, -1, -1}] . ConjugateTranspose[f]], {1, 2}]]] & /@ {10 ^ -14, 10 ^ -6}
@@ -190,16 +190,33 @@ VerificationTest[
     TestID -> "Lueders-machine-eigenvalue-grouping"
 ]
 
-(* where the Chop removes nothing the tolerance is the roundoff alone, so the eigenvalues
-   1 - 10^-11 and 1 + 10^-11 are two outcomes *)
+(* where "SuperOperator" writes nothing 0 the tolerance is the roundoff alone, so the
+   eigenvalues 1 - 10^-11 and 1 + 10^-11 are two outcomes *)
 VerificationTest[
     Length[QuantumMeasurementOperator["Lueders"[QuantumOperator[N[IdentityMatrix[2] + 10 ^ -11 PauliMatrix[3]]]]]["Eigenvalues"]],
     2,
     TestID -> "Lueders-close-eigenvalues-nothing-chopped"
 ]
 
-(* an operator with entries 10^12 and 1 is measured as it is, so the Chop leaves its
-   eigenvalues -1 and 1 apart *)
+(* structure below 10^-10 in any basis splits eigenspaces: 1 + 10^-11 X has two outcomes,
+   |+> giving that of 1 + 10^-11 with certainty, and diag(1, 1, 10^-11, -10^-11) has three *)
+VerificationTest[
+    With[{
+        x = QuantumMeasurementOperator["Lueders"[QuantumOperator[N[IdentityMatrix[2] + 10 ^ -11 PauliMatrix[1]]]]],
+        d = QuantumMeasurementOperator["Lueders"[QuantumOperator[N[DiagonalMatrix[{1, 1, 10 ^ -11, -10 ^ -11}]], {1, 2}]]]
+    },
+        {
+            Length[x["Eigenvalues"]],
+            Max[Abs[x[QuantumState["+"]]["ProbabilitiesList"] - {0, 1}]] < 10 ^ -12,
+            Length[d["Eigenvalues"]]
+        }
+    ],
+    {2, True, 3},
+    TestID -> "Lueders-structure-below-1e-10"
+]
+
+(* an operator with entries 10^12 and 1: its roundoff 100 n 10^-p relative to its largest
+   entry, 4.4 10^-2, leaves its eigenvalues -1 and 1 apart *)
 VerificationTest[
     First /@ QuantumMeasurementOperator["Lueders"[QuantumOperator[N[DiagonalMatrix[{10 ^ 12, 10 ^ 12, 1, -1}]], {1, 2}]]]["EigenvalueVectors"],
     {-1., 1., 1.*^12},
@@ -207,8 +224,8 @@ VerificationTest[
     TestID -> "Lueders-wide-range-eigenvalues"
 ]
 
-(* an operator whose entries are all small is measured multiplied up to largest entry 1, so
-   an observable in SI units keeps its two outcomes and its eigenvalue labels *)
+(* an operator whose entries are all small, as an observable in SI units, keeps its two
+   outcomes and its eigenvalue labels, the thresholds scaling with it *)
 VerificationTest[
     With[{f = FourierMatrix[4]},
         With[{qmo = QuantumMeasurementOperator["Lueders"[QuantumOperator[N[10 ^ -12 f . DiagonalMatrix[{1, 1, -1, -1}] . ConjugateTranspose[f]], {1, 2}]]]},
@@ -715,6 +732,228 @@ VerificationTest[
     ],
     True,
     TestID -> "DegenerateEigenbasis-KCBS-machine-precision"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurementOperator - inexact observables with structure below 10^-10"]
+
+(* A projective measurement of an inexact observable is built from the eigensystem of its
+   matrix, and the numbers roundoff alone leaves there are written 0 against thresholds that
+   scale with the observable: for the entries of the measured matrix, 100 N 10^-p times the
+   largest entry of the N x N operator at precision p, taken before any partial trace; for its
+   eigenvalues, 100 n 10^-p times the largest one, for the n x n measured matrix; and for the
+   entries of its unit eigenvectors, 100 n 10^-p. Each factor 100 N 10^-p or 100 n 10^-p is
+   bounded by 10^-10, a bound that acts below about 12 digits, where the factor reaches the
+   digits the numbers carry. A threshold fixed at 10^-10 would measure
+   1 + 10^-11 X in the computational basis, read eigenvalues of size 10^-11 as 0, read an
+   observable whose entries are all small as 0, and drop eigenvector entries of size 10^-11
+   that a matrix known to 30 digits resolves. Each outcome is read by the eigenvalue that
+   labels it. *)
+
+inexactObservableLabels[qmo_] := Replace[qmo["Eigenvalues"], QuditName[Interpretation[_, {l_, _}], ___] :> l, {1}]
+
+(* 1 + 10^-11 X has the eigenvectors |-> and |+> for the eigenvalues 1 - 10^-11 and
+   1 + 10^-11, so |+> gives the second outcome with certainty; 1 + 10^-11 Z has the same
+   spectrum in the computational basis, and |0> gives its second outcome *)
+VerificationTest[
+    With[{
+        x = QuantumMeasurementOperator[QuantumOperator[N[IdentityMatrix[2] + 10^-11 PauliMatrix[1]]]],
+        z = QuantumMeasurementOperator[QuantumOperator[N[IdentityMatrix[2] + 10^-11 PauliMatrix[3]]]]
+    },
+        {
+            Max[Abs[inexactObservableLabels[x] - {1 - 10^-11, 1 + 10^-11}]] < 10^-14,
+            Max[Abs[inexactObservableLabels[x] - inexactObservableLabels[z]]] < 10^-14,
+            Max[Abs[x[QuantumState["+"]]["ProbabilitiesList"] - {0, 1}]] < 10^-12,
+            Max[Abs[z[QuantumState["0"]]["ProbabilitiesList"] - {0, 1}]] < 10^-12
+        }
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "InexactObservable-OffDiagonal-SetsEigenbasis"
+]
+
+(* diag(1, 1, 10^-11, -10^-11) keeps its two eigenvalues of size 10^-11 apart, and |2>, the
+   eigenvector of 10^-11, has the mean 10^-11; diag(1, 10^-11) keeps the eigenvalue 10^-11 *)
+VerificationTest[
+    With[{
+        four = QuantumMeasurementOperator[QuantumOperator[N[DiagonalMatrix[{1, 1, 10^-11, -10^-11}]]]],
+        two = QuantumMeasurementOperator[QuantumOperator[N[DiagonalMatrix[{1, 10^-11}]]]]
+    },
+        {
+            Max[Abs[inexactObservableLabels[four] / {-10^-11, 10^-11, 1, 1} - 1]] < 10^-12,
+            Abs[four[QuantumState[{0, 0, 1, 0}]]["Mean"] / 10^-11 - 1] < 10^-12,
+            Max[Abs[inexactObservableLabels[two] / {10^-11, 1} - 1]] < 10^-12
+        }
+    ],
+    {True, True, True},
+    {},
+    TestID -> "InexactObservable-SmallEigenvalues"
+]
+
+(* hbar/2 sigma_z in SI units has the eigenvalues hbar/2 and -hbar/2 and the eigenvectors of
+   sigma_z, so |0> gives the first outcome and the mean hbar/2; hbar/2 sigma_x, a positive
+   multiple of sigma_x, has the eigenvectors of sigma_x and gives on |+> the probabilities
+   sigma_x gives *)
+VerificationTest[
+    With[{hbar = 1.054571817*^-34},
+        With[{
+            z = QuantumMeasurementOperator[QuantumOperator[hbar / 2 PauliMatrix[3]]],
+            smallX = QuantumMeasurementOperator[QuantumOperator[hbar / 2 N[PauliMatrix[1]]]],
+            x = QuantumMeasurementOperator[QuantumOperator[N[PauliMatrix[1]]]]
+        },
+            {
+                Max[Abs[inexactObservableLabels[z] / (hbar / 2) - {1, -1}]] < 10^-14,
+                Max[Abs[z[QuantumState["0"]]["ProbabilitiesList"] - {1, 0}]] < 10^-14,
+                Abs[z[QuantumState["0"]]["Mean"] / (hbar / 2) - 1] < 10^-14,
+                Max[Abs[smallX[QuantumState["+"]]["ProbabilitiesList"] - x[QuantumState["+"]]["ProbabilitiesList"]]] < 10^-14
+            }
+        ]
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "InexactObservable-SmallScale-HbarPauli"
+]
+
+(* F diag(1, 1 + eps, -1, -1) F^†, for F the 4 x 4 Fourier transform, carries the splitting
+   eps in entries of size eps/4. At eps = 10^-10 and 10^-11 the labels of 1 and 1 + eps
+   differ by eps and the two labels of -1 agree, and the second column of F, the eigenvector
+   of 1 + eps, gives that outcome up to the error in the eigenvectors of two eigenvalues eps
+   apart at machine precision, of order 10^-16 / eps in amplitude. *)
+VerificationTest[
+    With[{f = FourierMatrix[4]},
+        Table[
+            With[{qmo = QuantumMeasurementOperator[QuantumOperator[N[f . DiagonalMatrix[{1, 1 + eps, -1, -1}] . ConjugateTranspose[f]]]]},
+                With[{labels = inexactObservableLabels[qmo], p = qmo[QuantumState[N[f[[All, 2]]]]]["ProbabilitiesList"]},
+                    With[{sorted = Sort[labels]},
+                        {
+                            Abs[sorted[[2]] - sorted[[1]]] < 10^-13,
+                            Abs[sorted[[4]] - sorted[[3]] - eps] < 10^-13,
+                            Abs[p[[First[Ordering[labels, -1]]]] - 1] < 10^-6
+                        }
+                    ]
+                ]
+            ],
+            {eps, {10^-10, 10^-11}}
+        ]
+    ],
+    {{True, True, True}, {True, True, True}},
+    {},
+    TestID -> "InexactObservable-FourierRotated-KeepsSplitting"
+]
+
+(* {{1, 10^-11}, {10^-11, 2}} to 30 digits has eigenvectors with entries of size 10^-11,
+   and the measurement's Kraus operators are the projectors onto them to about the digits
+   the matrix carries *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator[N[{{1, 10^-11}, {10^-11, 2}}, 30]]],
+        exact = Eigensystem[{{1, 10^-11}, {10^-11, 2}}]
+    },
+        With[{projectors = KroneckerProduct[#, Conjugate[#]] & /@ Normalize /@ Last[exact][[Ordering[N[First[exact]]]]]},
+            Max[Abs[N[Flatten[(Normal[#["MatrixRepresentation"]] & /@ Values[qmo["Operators"]]) - projectors], 30]]] < 10^-25
+        ]
+    ],
+    True,
+    {},
+    TestID -> "InexactObservable-30Digits-Projectors"
+]
+
+(* (1 + 10^-11 X) (x) 1 measured on qudit 1 measures 1 + 10^-11 X, the partial trace over
+   qudit 2 divided by its dimension, and |+0> gives the outcome of 1 + 10^-11 with certainty *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[N[IdentityMatrix[2] + 10^-11 PauliMatrix[1]], IdentityMatrix[2]]], {1}]},
+        {
+            Max[Abs[inexactObservableLabels[qmo] - {1 - 10^-11, 1 + 10^-11}]] < 10^-14,
+            Max[Abs[qmo[QuantumState["+0"]]["ProbabilitiesList"] - {0, 1}]] < 10^-12
+        }
+    ],
+    {True, True},
+    {},
+    TestID -> "InexactObservable-PartialTarget"
+]
+
+(* Z (x) 1 + 10^-15 1 (x) X: 10^-15 is below the roundoff 100 n 10^-p of a 4 x 4 machine
+   matrix of entries of size 1, so it is written 0 and the twofold eigenspaces keep the
+   computational basis, in which |00> and |01> each give one outcome with certainty; left in
+   the matrix, it would split the eigenspace of 1 into |0>|+> and |0>|->, on which |00> gives
+   two outcomes of probability 1/2. 10^-30 times the same matrix keeps its eigenvalues
+   -10^-30 and 10^-30 and writes its 10^-45 entries 0 in the same way. *)
+VerificationTest[
+    With[{m = N[KroneckerProduct[PauliMatrix[3], IdentityMatrix[2]]] + 10^-15 N[KroneckerProduct[IdentityMatrix[2], PauliMatrix[1]]]},
+        {
+            Max[QuantumMeasurementOperator[QuantumOperator[m]][QuantumState["00"]]["ProbabilitiesList"]],
+            Max[QuantumMeasurementOperator[QuantumOperator[m]][QuantumState["01"]]["ProbabilitiesList"]]
+        }
+    ],
+    {1., 1.},
+    {},
+    SameTest -> (Max[Abs[#1 - #2]] < 10^-14 &),
+    TestID -> "InexactObservable-RoundoffInDegenerateEigenspaceWrittenZero"
+]
+
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator[10^-30 (N[KroneckerProduct[PauliMatrix[3], IdentityMatrix[2]]] + 10^-15 N[KroneckerProduct[IdentityMatrix[2], PauliMatrix[1]]])]]},
+        {
+            Max[Abs[Sort[inexactObservableLabels[qmo]] / 10^-30 - {-1, -1, 1, 1}]] < 10^-14,
+            Abs[Max[qmo[QuantumState["00"]]["ProbabilitiesList"]] - 1] < 10^-14
+        }
+    ],
+    {True, True},
+    {},
+    TestID -> "InexactObservable-SmallScale-RoundoffWrittenZero"
+]
+
+(* X (x) Z in the frame u1 (x) u2, measured on qudit 1: its partial trace over qudit 2 is
+   u1 X u1^† Tr[u2 Z u2^†] = 0, which roundoff leaves as numbers of order 10^-17 in these
+   three frames. Measured against the operator before the trace they are written 0, so the
+   measured observable is 0: its labels are exact zeros, and |00> and |01> each give one
+   outcome with certainty, where the roundoff left in would split them in the third frame. *)
+VerificationTest[
+    With[{frame = N[MatrixExp[-I #1 (#2 . {PauliMatrix[1], PauliMatrix[2], PauliMatrix[3]})]] &},
+        Map[
+            With[{u = KroneckerProduct[frame @@ First[#], frame @@ Last[#]]},
+                With[{qmo = QuantumMeasurementOperator[QuantumOperator[u . KroneckerProduct[PauliMatrix[1], PauliMatrix[3]] . ConjugateTranspose[u]], {1}]},
+                    {
+                        inexactObservableLabels[qmo] === {0, 0},
+                        Abs[Max[qmo[QuantumState["00"]]["ProbabilitiesList"]] - 1] < 10^-14,
+                        Abs[Max[qmo[QuantumState["01"]]["ProbabilitiesList"]] - 1] < 10^-14
+                    }
+                ]
+            ] &,
+            {{{1/3, {1, 2, 2} / 3}, {2/7, {2, -1, 2} / 3}}, {{3/5, {1, 1, 1} / Sqrt[3]}, {7/9, {-1, 2, 2} / 3}}, {{2/3, {2, 1, 2} / 3}, {3/4, {1, 2, 2} / 3}}}
+        ]
+    ],
+    {{True, True, True}, {True, True, True}, {True, True, True}},
+    {},
+    TestID -> "InexactObservable-PartialTarget-CancellingObservable"
+]
+
+(* forming the threshold for an observable near the smallest machine number does not
+   underflow, and 10^-300 sigma_z keeps the labels 10^-300 and -10^-300 *)
+VerificationTest[
+    Max[Abs[inexactObservableLabels[QuantumMeasurementOperator[QuantumOperator[10^-300 N[PauliMatrix[3]]]]] / 10^-300 - {1, -1}]] < 10^-14,
+    True,
+    {},
+    TestID -> "InexactObservable-NearSmallestMachineNumber"
+]
+
+(* at 3 digits, where 100 n 10^-p times the largest eigenvalue exceeds the smallest one,
+   diag(1, 2, 3, 4) keeps the labels 1, 2, 3 and 4, and |00> and |11> give the first and the
+   last outcome; the probabilities carry less than one digit at this precision, so each
+   number is compared after rounding *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator[N[DiagonalMatrix[{1, 2, 3, 4}], 3]]]},
+        {
+            Round[inexactObservableLabels[qmo]],
+            Round[qmo[QuantumState["00"]]["ProbabilitiesList"]],
+            Round[qmo[QuantumState["11"]]["ProbabilitiesList"]]
+        }
+    ],
+    {{1, 2, 3, 4}, {1, 0, 0, 0}, {0, 0, 0, 1}},
+    {},
+    TestID -> "InexactObservable-LowPrecision"
 ]
 
 EndTestSection[]
