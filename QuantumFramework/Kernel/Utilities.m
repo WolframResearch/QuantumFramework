@@ -417,14 +417,23 @@ powerZeroBlockBound[mat_] := With[{m = Normal[mat]},
     If[nearlyHermitianQ[m, roundoffTolerance[m]], 0, zeroJordanBlockBound[m, roundoffZeroEigenvalue[m, Eigenvalues[m]]]]
 ]
 
-(* f must be finite on numeric eigenvalues: Log at a zero eigenvalue is a Failure,
-   not a matrix of infinities. *)
-spectralValues[f_, eigenvalues_] := With[{values = f /@ eigenvalues},
-    If[ ! VectorQ[eigenvalues, NumericQ] || VectorQ[values, NumericQ],
+(* f must have a finite value at each numeric eigenvalue: Log at a zero eigenvalue is a
+   Failure, not a matrix of infinities. At an inexact eigenvalue the value must pass
+   numberValueQ, not only NumericQ: a function defined on real arguments only, as CubeRoot
+   or Surd, stays unevaluated at a complex eigenvalue, CubeRoot[-1. + 0.5 I], and NumericQ
+   of that is True. A caller that does not use the values, and asks only that they be
+   finite, gives valueQ = NumericQ. *)
+spectralValues[f_, eigenvalues_, valueQ_ : numberValueQ] := With[{values = f /@ eigenvalues},
+    If[ ! VectorQ[eigenvalues, NumericQ] || And @@ MapThread[If[InexactNumberQ[#1], valueQ[#2], NumericQ[#2]] &, {eigenvalues, values}],
         values,
-        Failure["NonFiniteMatrixFunction", <|"MessageTemplate" -> "The function is not finite at an eigenvalue."|>]
+        Failure["NonFiniteMatrixFunction", <|"MessageTemplate" -> "The function has no finite value at an eigenvalue."|>]
     ]
 ]
+
+(* A value of f at an inexact argument: a number, or an exact numeric value, as
+   Arg[-1.] = Pi; not an expression left unevaluated at the argument, as
+   CubeRoot[-1. + 0.5 I], whose precision is that of the argument. *)
+numberValueQ[v_] := NumberQ[v] || NumericQ[v] && Precision[v] === Infinity
 
 (* An inexact diagonal is held to the same roundoff rules as a dense matrix, so f
    commutes with a change of basis near a zero eigenvalue and near the negative real
@@ -583,12 +592,14 @@ nonNormalMatrixFunction[f_, mat_, _, {eigenvalues_, vectors_}, eps_, ___] /;
    numbers that mean nothing. So the eigenvalue 0 is read to within roundoff as 0^m reads
    it, and f fails when it has no finite value there or, as its series shows, no finite
    derivative of an order below a bound on the size of the largest Jordan block there.
-   Otherwise the Schur form goes to cutMatrixFunction. *)
+   Otherwise the Schur form goes to cutMatrixFunction. Of f's values at these eigenvalues
+   only finiteness is asked: MatrixFunction takes f at eigenvalues it computes itself, and
+   builtinMatrixFunction guards those calls; a Failure it returns is the result. *)
 nonNormalMatrixFunction[f_, mat_, qt_, {eigenvalues_, _}, _, opts___] := Enclose[
-    Confirm[spectralValues[f, eigenvalues]];
+    Confirm[spectralValues[f, eigenvalues, NumericQ]];
     If[ lacksDerivativeAtZeroQ[f, zeroJordanBlockBound[mat, roundoffZeroEigenvalue[mat, eigenvalues]]],
         derivativeFailure,
-        Replace[cutMatrixFunction[f, mat, qt, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
+        Replace[cutMatrixFunction[f, mat, qt, opts], Except[_Failure | _ ? (MatrixQ[#, numberValueQ] &)] -> derivativeFailure]
     ]
 ]
 
@@ -606,9 +617,9 @@ nonNormalMatrixFunction[f_, mat_, qt_, {eigenvalues_, _}, _, opts___] := Enclose
    differentiated only on the axis, so every eigenvalue split from one on the cut takes
    the value from above the cut, as the exact matrix does. The terms shrink at least as
    fast as (|d| / |Re x|)^j; a matrix that would need more than four terms at that rate,
-   or has nothing to move, goes to MatrixFunction unchanged, and so does one that leaves
-   beside the restored eigenvalues another whose side of the cut the decomposition has
-   not determined (undecidedQ). *)
+   or has nothing to move, goes to builtinMatrixFunction unchanged, and so does one that
+   leaves beside the restored eigenvalues another whose side of the cut the decomposition
+   has not determined (undecidedQ). *)
 cutMatrixFunction[f_, mat_, {q_, t_}, opts___] := With[
     {eigenvalues = Diagonal[t], scale = Norm[Flatten[t]]},
     {bound = backwardError[mat, scale], mirrors = If[FreeQ[mat, _Complex], Nearest[eigenvalues -> "Index", Conjugate[eigenvalues]], None]},
@@ -620,7 +631,7 @@ cutMatrixFunction[f_, mat_, {q_, t_}, opts___] := With[
     ]},
     If[ Max[moves] == 0 || order > 4 ||
             MemberQ[moves, 2] && AnyTrue[Pick[eigenvalues, moves, 0], undecidedQ[f, t, #, bound, scale, roundoff[mat]] &],
-        realResult[mat, MatrixFunction[f, mat, opts]],
+        realResult[mat, builtinMatrixFunction[f, mat, opts]],
         seriesMatrixFunction[f, mat, q, t + DiagonalMatrix[placed - eigenvalues], displacement, order, opts]
     ]
 ]
@@ -682,7 +693,7 @@ jumpQ[f_, a_, eps_] := With[{h = Sqrt[eps] Abs[a]}, {above = f[a + I h], below =
    order 0, when nothing is restored, it is f(t'). The series has converged when its
    last term is within roundoff of the sum. Otherwise the order doubles, up to 8: an
    eigenvalue near the moved ones slows the series. One that has not converged by then,
-   or that MatrixFunction cannot compute, gives way to MatrixFunction of m. *)
+   or that MatrixFunction cannot compute, gives way to builtinMatrixFunction of m. *)
 seriesMatrixFunction[f_, mat_, q_, t_, displacement_, order_, opts___] := With[
     {n = Length[t]},
     {blocks = MatrixFunction[f,
@@ -693,13 +704,13 @@ seriesMatrixFunction[f_, mat_, q_, t_, displacement_, order_, opts___] := With[
     {terms = If[MatrixQ[blocks, NumericQ], ArrayReshape[blocks[[;; n]], {n, order + 1, n}], None]},
     Which[
         terms === None,
-            realResult[mat, MatrixFunction[f, mat, opts]],
+            realResult[mat, builtinMatrixFunction[f, mat, opts]],
         order == 0 || Max[Abs[terms[[All, -1]]]] <= roundoffTolerance[mat] Max[Abs[Total[terms, {2}]]],
             realResult[mat, q . Total[terms, {2}] . ConjugateTranspose[q]],
         order < 8,
             seriesMatrixFunction[f, mat, q, t, displacement, Min[2 order, 8], opts],
         True,
-            realResult[mat, MatrixFunction[f, mat, opts]]
+            realResult[mat, builtinMatrixFunction[f, mat, opts]]
     ]
 ]
 
@@ -709,6 +720,54 @@ realResult[mat_, result_] := If[
     Re[result],
     result
 ]
+
+(* The built-in MatrixFunction. Its default method for an inexact matrix, Schur-Parlett,
+   takes f at the mean of each cluster of close eigenvalues of its own complex Schur form:
+   at complex numbers at machine precision, x + 0. I for a real eigenvalue x, and above it
+   at the eigenvalues that roundoff moves off the real axis. A function defined on real
+   arguments only, as CubeRoot, Surd or RealAbs, stays unevaluated at a complex number, and
+   MatrixFunction then crashes the kernel at machine precision and, above it, returns a
+   matrix typically off by order 1. So f is first taken once at each distinct entry of the
+   diagonal of SchurDecomposition's complex form, read as complex at machine precision
+   when the matrix is to be balanced first, whose Schur form is then another one, and the
+   result is a Failure that names the entry farthest from the real axis at which f has no
+   value. That diagonal can be complex where the cluster means are real, as for a complex
+   matrix with a real eigenvalue, so the check can fail where MatrixFunction would have
+   been right. Above machine precision MatrixFunction also returns huge numbers for exact
+   values of f, as RealSign[-1.`30] = -1, which inexactValue gives at the precision of the
+   argument. Another method, or an option MatrixFunction does not know, is left to
+   MatrixFunction, and a result with an entry that is not a value is the Failure. *)
+builtinMatrixFunction[f_, mat_, opts___] := With[
+    {method = OptionValue[MatrixFunction, FilterRules[{opts}, Options[MatrixFunction]], Method]},
+    {points = If[
+        MatchQ[method, Automatic | "Schur" | {Automatic | "Schur", ___}] && FilterRules[{opts}, Except[Options[MatrixFunction]]] === {},
+        DeleteDuplicates @ SortBy[
+            Diagonal[Last[SchurDecomposition[mat, RealBlockDiagonalForm -> False]]] +
+                If[MemberQ[method, (("Balanced" -> v_) | ("Balanced" :> v_)) /; TrueQ[v]], 0. I, 0],
+            - Abs[Im[#]] &
+        ],
+        {}
+    ]},
+    {checked = Reap[SelectFirst[points, With[{v = f[#]}, Sow[v, builtinMatrixFunction]; ! numberValueQ[v]] &], builtinMatrixFunction]},
+    Replace[First[checked], {
+        _Missing :> Replace[
+            MatrixFunction[
+                If[Precision[mat] =!= MachinePrecision && MemberQ[Catenate[Last[checked]], v_ /; Precision[v] === Infinity], inexactValue[f, #] &, f],
+                mat,
+                opts
+            ],
+            Except[_ ? (MatrixQ[#, numberValueQ] &)] -> derivativeFailure
+        ],
+        z_ :> complexValueFailure[z]
+    }]
+]
+
+(* f at an inexact argument, with an exact value given by N at the precision of the
+   argument, which leaves 0 exact; at any other argument, a symbolic one included, f
+   itself, so that MatrixFunction takes f's derivatives. *)
+inexactValue[f_, x_ ? InexactNumberQ] := With[{v = f[x]}, If[Precision[v] === Infinity, N[v, Precision[x]], v]]
+
+inexactValue[f_, x_] := f[x]
 
 (* A bound on the size of the largest Jordan block of the eigenvalue 0 of the inexact m to
    within roundoff, given zero = roundoffZeroEigenvalue[m, eigenvalues]: 0 when 0 is not
@@ -757,6 +816,11 @@ nonTaylorQ[_, _] := False
 
 derivativeFailure = Failure["NonFiniteMatrixFunction", <|
     "MessageTemplate" -> "The function has no finite value, or no derivative where a Jordan block of the matrix needs one, at an eigenvalue."
+|>]
+
+complexValueFailure[z_] := Failure["NonFiniteMatrixFunction", <|
+    "MessageTemplate" -> "The function has no finite value at the eigenvalue `1` of the complex Schur form, from which the matrix function of a matrix without a well-conditioned eigenbasis is computed.",
+    "MessageParameters" -> {z}
 |>]
 
 (* 0^m is the limit of b^m = MatrixExp[Log[b] m] as b -> 0. On an eigenvalue t the

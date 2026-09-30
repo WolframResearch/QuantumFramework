@@ -25,7 +25,10 @@
                           diagonalizable non-normal A, sqrt of a projector, sqrt and
                           log of machine Jordan blocks at 1 of order 2 and 3, cos and
                           SinhIntegral of a machine nilpotent, sqrt and log of Jordan
-                          blocks of order 2 and 3 at -1, and their real powers M^p
+                          blocks of order 2 and 3 at -1, and their real powers M^p,
+                          the real cube root of a Jordan block at -1, exact and at 30
+                          digits, Arg at negative eigenvalues, where its value Pi is
+                          exact
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
                           defective), eigenvalue 10^-12 next to 1, coupling 10^-9,
                           decoupled subsystems, short time t -> 0, sqrt of
@@ -58,7 +61,13 @@
                           real and complex matrices, at its principal value, while
                           eigenvalues within 10^-13 of the cut that the decomposition
                           resolves keep their side on the normal and eigenvector
-                          routes
+                          routes; a function defined on real arguments only
+                          (CubeRoot, Surd, RealAbs) fails at a complex eigenvalue
+                          and where MatrixFunction would take it at one, on the
+                          complex Schur form of a machine Jordan block or of a
+                          30-digit one that roundoff splits, and so do UnitStep,
+                          Clip and InverseErf of a machine nilpotent; a Jordan
+                          block in a complex frame is a known limitation
 
    The zero base, 0^M, the limit of b^M as b -> 0 (the projector onto the null space
    of M along its range), has its own rows. Refused base case: one diagonal mode with
@@ -2146,6 +2155,151 @@ VerificationTest[
     ],
     <|"just above the size less one" -> True, "beside a Jordan block at -1" -> True, "bound above the size" -> "NonFiniteMatrixFunction"|>,
     TestID -> "MatrixFunction-power-Jordan-block-at-zero-known-limitation"
+]
+
+(* A function defined on real arguments only, as CubeRoot, Surd or RealAbs, has no value
+   at a complex number. A machine matrix without a well-conditioned eigenbasis goes to
+   MatrixFunction, whose Schur-Parlett method takes f at complex numbers, x + 0. I for a
+   real eigenvalue x, and crashes the kernel on such an f there. So CubeRoot of the Jordan
+   blocks at -1 and at 1, Surd and RealAbs of the block at -1, CubeRoot of a block at -1
+   beside the eigenvalue 2, of a parametric block at the machine value -1. and of the block
+   with the default method written as {Automatic} are the Failure that names that
+   eigenvalue, with the kernel's own message where it has one, and
+   UnitStep, Clip and InverseErf of the machine nilpotent [[3, -1], [9, -3]] fail too. The
+   matrix functions themselves exist, as the real cube root [[-1, 1/3], [0, -1]] of the
+   block at -1 in the next test but one: when a route in real arithmetic reaches them,
+   these Failures should become their values. *)
+VerificationTest[
+    With[
+        {
+            jordan = QuantumOperator[{{-1., 1.}, {0., -1.}}],
+            nilpotent = QuantumOperator[N[{{3, -1}, {9, -3}}]],
+            named = Function[failure, {mfZeroBaseTag[failure], failure["MessageParameters"]}]
+        },
+        <|
+            "CubeRoot at -1" -> named[CubeRoot[jordan]],
+            "CubeRoot at 1" -> named[CubeRoot[QuantumOperator[{{1., 1.}, {0., 1.}}]]],
+            "Surd at -1" -> named[Surd[jordan, 3]],
+            "RealAbs at -1" -> named[RealAbs[jordan]],
+            "beside 2" -> named[CubeRoot[QuantumOperator[{{-1., 1., 0.}, {0., -1., 0.}, {0., 0., 2.}}]]],
+            "substituted" -> named[CubeRoot[QuantumOperator[{{mfA, 1}, {0, mfA}}, "Parameters" -> {mfA}]][-1.]],
+            "default method as {Automatic}" -> named[CubeRoot[jordan, Method -> {Automatic}]],
+            "nilpotent" -> mfZeroBaseTag /@ {UnitStep[nilpotent], Clip[nilpotent], InverseErf[nilpotent]}
+        |>
+    ],
+    <|
+        "CubeRoot at -1" -> {"NonFiniteMatrixFunction", {-1. + 0. I}}, "CubeRoot at 1" -> {"NonFiniteMatrixFunction", {1. + 0. I}},
+        "Surd at -1" -> {"NonFiniteMatrixFunction", {-1. + 0. I}}, "RealAbs at -1" -> {"NonFiniteMatrixFunction", {-1. + 0. I}},
+        "beside 2" -> {"NonFiniteMatrixFunction", {-1. + 0. I}}, "substituted" -> {"NonFiniteMatrixFunction", {-1. + 0. I}},
+        "default method as {Automatic}" -> {"NonFiniteMatrixFunction", {-1. + 0. I}},
+        "nilpotent" -> ConstantArray["NonFiniteMatrixFunction", 3]
+    |>,
+    {CubeRoot::preal, CubeRoot::preal, Surd::preal, CubeRoot::preal, General::stop, Clip::ncompl, Clip::ncompl, Clip::ncompl, General::stop},
+    TestID -> "MatrixFunction-real-argument-function-machine-Jordan-block-fails"
+]
+
+(* At a complex eigenvalue such a function has no value on any route: the normal rotation
+   matrix, whose eigenvalues are Exp[+-3 I/10], a complex diagonal, the non-normal
+   [[0, 1], [-2, 1/2]] through its eigenbasis, and a Jordan block at -1 + I/2 at 30 digits,
+   where MatrixFunction would return the zero matrix. *)
+VerificationTest[
+    mfZeroBaseTag /@ <|
+        "normal" -> CubeRoot[QuantumOperator[N[RotationMatrix[3/10]]]],
+        "diagonal" -> CubeRoot[QuantumOperator[DiagonalMatrix[{-1. + 0.5 I, 2.}]]],
+        "eigenbasis" -> CubeRoot[QuantumOperator[{{0., 1.}, {-2., 0.5}}]],
+        "Jordan block at 30 digits" -> CubeRoot[QuantumOperator[N[{{-1 + I/2, 1}, {0, -1 + I/2}}, 30]]]
+    |>,
+    <|
+        "normal" -> "NonFiniteMatrixFunction", "diagonal" -> "NonFiniteMatrixFunction", "eigenbasis" -> "NonFiniteMatrixFunction",
+        "Jordan block at 30 digits" -> "NonFiniteMatrixFunction"
+    |>,
+    {CubeRoot::preal, CubeRoot::preal, CubeRoot::preal, General::stop},
+    TestID -> "MatrixFunction-real-argument-function-complex-eigenvalue-fails"
+]
+
+(* Where the arithmetic stays real, CubeRoot of an operator with a real spectrum is its real
+   cube root, f(J) = f(-1) + f'(-1) N = [[-1, 1/3], [0, -1]] for the Jordan block
+   J = -1 + N at -1: exactly for the exact block, which cubes back to J, and to 30 digits
+   for the triangular 30-digit block, whose Schur form keeps -1 real; for the machine
+   [[-2, 1], [0, -1]] through its eigenbasis, [[-2^(1/3), 2^(1/3) - 1], [0, -1]]; for the
+   symmetric r.diag(-8, 27).r, r.diag(-2, 3).r; and for the machine block by the Jordan
+   method, asked for, which forms no Schur form. The same holds for s.(J (+) 2).s^-1 at 30
+   digits with c = [[-3, -1, 1], [-2, 0, -1], [-1, -1, -1]] in place of s; and RealSign,
+   which is locally constant, of the one with b = [[-1, -2, -3], [-3, -2, -3], [0, -2, 0]]
+   is its spectral sign b.diag(-1, -1, 1).b^-1, although its values are exact integers. In
+   the dense basis s = [[1, 3, 1], [1, -1, 2], [-3, -3, -1]] roundoff splits the eigenvalue
+   -1 at 30 digits into a complex pair, MatrixFunction errs there by order 1, and the
+   result is the Failure; so is the result for c when balancing is asked for, where
+   MatrixFunction errs too. *)
+VerificationTest[
+    With[
+        {
+            block = {{-1, 1}, {0, -1}},
+            root = {{-1, 1/3}, {0, -1}},
+            r = {{3, 4}, {4, -3}} / 5,
+            s = {{1, 3, 1}, {1, -1, 2}, {-3, -3, -1}},
+            b = {{-1, -2, -3}, {-3, -2, -3}, {0, -2, 0}},
+            c = {{-3, -1, 1}, {-2, 0, -1}, {-1, -1, -1}},
+            beside2 = Function[t, N[t . {{-1, 1, 0}, {0, -1, 0}, {0, 0, 2}} . Inverse[t], 30]],
+            matrix = Normal[#["Matrix"]] &
+        },
+        {
+            exact = matrix[CubeRoot[QuantumOperator[block]]],
+            eigenbasis = matrix[CubeRoot[QuantumOperator[{{-2., 1.}, {0., -1.}}]]]
+        },
+        <|
+            "exact" -> exact == root && exact . exact . exact == block,
+            "30 digits" -> mfDistance[matrix[CubeRoot[QuantumOperator[N[block, 30]]]], root] < 10^-25,
+            "eigenbasis" -> mfDistance[eigenbasis, {{-2^(1/3), 2^(1/3) - 1}, {0, -1}}] < 10^-14 &&
+                mfDistance[eigenbasis . eigenbasis . eigenbasis, {{-2, 1}, {0, -1}}] < 10^-14,
+            "symmetric" -> mfDistance[matrix[CubeRoot[QuantumOperator[N[r . DiagonalMatrix[{-8, 27}] . r]]]], r . DiagonalMatrix[{-2, 3}] . r] < 10^-14,
+            "Jordan method" -> mfDistance[matrix[CubeRoot[QuantumOperator[N[block]], Method -> "Jordan"]], root] < 10^-15,
+            "basis c" -> mfDistance[matrix[CubeRoot[QuantumOperator[beside2[c]]]], c . {{-1, 1/3, 0}, {0, -1, 0}, {0, 0, 2^(1/3)}} . Inverse[c]] < 10^-25,
+            "RealSign" -> mfDistance[matrix[RealSign[QuantumOperator[beside2[b]]]], b . DiagonalMatrix[{-1, -1, 1}] . Inverse[b]] < 10^-25,
+            "dense basis at 30 digits" -> mfZeroBaseTag[CubeRoot[QuantumOperator[beside2[s]]]],
+            "balanced" -> mfZeroBaseTag[CubeRoot[QuantumOperator[beside2[c]], Method -> {"Schur", "Balanced" -> True}]]
+        |>
+    ],
+    <|
+        "exact" -> True, "30 digits" -> True, "eigenbasis" -> True, "symmetric" -> True, "Jordan method" -> True, "basis c" -> True, "RealSign" -> True,
+        "dense basis at 30 digits" -> "NonFiniteMatrixFunction", "balanced" -> "NonFiniteMatrixFunction"
+    |>,
+    {CubeRoot::preal, CubeRoot::preal, CubeRoot::preal, General::stop},
+    TestID -> "MatrixFunction-real-cube-root"
+]
+
+(* At a negative real argument Arg is exactly Pi, an exact value rather than a number, so Arg
+   of an operator with a real spectrum is Pi times the projector onto its negative
+   eigenspace, on the diagonal, normal and eigenbasis routes: diag(0, Pi) for Z,
+   Pi (1 - X)/2 for X, and Pi for [[-2, 1], [0, -1]], whose eigenvalues are both negative. *)
+VerificationTest[
+    With[{arg = Normal[Arg[QuantumOperator[#]]["Matrix"]] &},
+        {
+            arg[N[PauliMatrix[3]]] == {{0, 0}, {0, Pi}},
+            mfDistance[arg[N[PauliMatrix[1]]], Pi (IdentityMatrix[2] - PauliMatrix[1]) / 2] < 10^-14,
+            mfDistance[arg[{{-2., 1.}, {0., -1.}}], Pi IdentityMatrix[2]] < 10^-14
+        }
+    ],
+    {True, True, True},
+    TestID -> "MatrixFunction-Arg-exact-value-at-negative-eigenvalue"
+]
+
+(* Known limitation: a Jordan block with the real eigenvalue -1 in a complex frame,
+   M = [[-1 - I, 1], [1, -1 + I]], has the real cube root -1 + (M + 1)/3 exactly, but an
+   inexact M fails at machine precision and at 30 digits, since roundoff moves its
+   eigenvalue off the real axis, where CubeRoot has no value. When eigenvalues that are
+   complex only by roundoff are read as real, these should become the real cube root. *)
+VerificationTest[
+    With[{m = {{-1 - I, 1}, {1, -1 + I}}},
+        {
+            Normal[CubeRoot[QuantumOperator[m]]["Matrix"]] == -IdentityMatrix[2] + (m + IdentityMatrix[2]) / 3,
+            mfZeroBaseTag[CubeRoot[QuantumOperator[N[m]]]],
+            mfZeroBaseTag[CubeRoot[QuantumOperator[N[m, 30]]]]
+        }
+    ],
+    {True, "NonFiniteMatrixFunction", "NonFiniteMatrixFunction"},
+    {CubeRoot::preal, CubeRoot::preal, CubeRoot::preal, General::stop},
+    TestID -> "MatrixFunction-real-argument-function-complex-frame-known-limitation"
 ]
 
 EndTestSection[]
