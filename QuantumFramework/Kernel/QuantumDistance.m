@@ -225,20 +225,40 @@ fidelity[r_, s_] /; lowPrecisionMatricesQ[r, s] := With[{a = workingPrecision[{r
     ]
 ]
 
-(* The fidelity Tr[Sqrt[Sqrt[r] . s . Sqrt[r]]] of two matrices of inexact numbers, from the eigensystem of
-   each. With r = Sum_i a_i |u_i><u_i| and s = Sum_j b_j |v_j><v_j|, it is the sum of the singular values of
-   Sqrt[r] . Sqrt[s], and so of M_ij = Sqrt[a_i] <u_i|v_j> Sqrt[b_j], which is the same matrix between
-   factors with orthonormal columns. Round-off moves an eigenvalue of a Hermitian matrix, and a singular
-   value, no further than the norm of the round-off, however small the overlap of the two states. The
-   eigenvalues of r . s, which is not Hermitian, have no such bound: for two nearly orthogonal states the
-   round-off in them grows, relative to the small eigenvalues that carry the fidelity, as the overlap
-   shrinks, and the square roots of those that are round-off of 0 put an error far above the round-off into
-   their sum. An input that is not physical enters as the positive part of its Hermitian part. The entries
-   that are exactly 0 in an arbitrary-precision input stay exact under N, and a fidelity made of them alone,
-   as that of two orthogonal states in the computational basis, is an exact 0, which is given the accuracy
-   of the input. *)
+(* The fidelity Tr[Sqrt[Sqrt[r] . s . Sqrt[r]]] of two matrices of inexact numbers, from the eigensystems
+   of the two states, or, above machine precision, for a state that is pure to within the error of its
+   entries, from a column of its matrix. With r = Sum_i a_i |u_i><u_i| and s = Sum_j b_j |v_j><v_j|, it is
+   the sum of the singular values of Sqrt[r] . Sqrt[s], and so of M_ij = Sqrt[a_i] <u_i|v_j> Sqrt[b_j],
+   which is the same matrix between factors with orthonormal columns. Round-off moves an eigenvalue of a
+   Hermitian matrix, and a singular value, no further than the norm of the round-off, however small the
+   overlap of the two states. The eigenvalues of r . s, which is not Hermitian, have no such bound: for two
+   nearly orthogonal states the round-off in them grows, relative to the small eigenvalues that carry the
+   fidelity, as the overlap shrinks, and the square roots of those that are round-off of 0 put an error far
+   above the round-off into their sum. An input that is not physical enters as the positive part of its
+   Hermitian part. *)
 fidelity[r_, s_] /; inexactMatricesQ[r, s] := With[{p = workingPrecision[{r, s}]},
-    With[{f = inexactFidelity[N[r, p], N[s, p], p]}, If[Precision[f] === Infinity && p =!= MachinePrecision, SetAccuracy[f, p], f]]
+    withClaimedAccuracy[inexactFidelity[N[r, p], N[s, p], p], p]
+]
+
+(* The fidelity from {fidelity, bound}, the bound being on the change that the eigenvalues dropped below the
+   cut and resolved above their uncertainty make in it. A machine fidelity claims no accuracy. Above machine
+   precision a fidelity claims an uncertainty of twice the larger of the one significance arithmetic gives
+   it and the bound: a number read exactly, as SetPrecision[x, Infinity] reads it, is rounded at the
+   accuracy it carries, by up to half of its uncertainty, and the second half leaves room for that
+   rounding. The entries that are exactly 0 in an arbitrary-precision input stay exact under N, and a
+   fidelity made of them alone, as that of two orthogonal states in the computational basis, is an exact 0,
+   which is given the accuracy of the input first. Significance arithmetic follows the round-off of the
+   computation, not the sensitivity of the square root to the input, and an eigenvalue that the arithmetic
+   cannot tell from its uncertainty d 10^-p, up to a few times that, is taken as 0. Where one state has such
+   an eigenvalue, or a kept one near 0, that the other state weighs, the fidelity can move by more than the
+   accuracy it claims when the entries move within theirs: by up to about the square root of a few times
+   d 10^-p for an eigenvalue taken as 0, and, for a 30-digit state vector against a mixed state whose
+   weight on it is 10^-16, by about 10^-23 when the entries of the mixed state move by 10^-30. Bounding that
+   for every input, as the Powers-Stormer inequality does below machine precision, would leave every
+   arbitrary-precision fidelity about half the digits of its input. *)
+withClaimedAccuracy[{f_, _}, MachinePrecision] := f
+withClaimedAccuracy[{f_, b_}, p_] := With[{g = If[Precision[f] === Infinity, SetAccuracy[f, p], f]},
+    SetAccuracy[g, Min[Accuracy[g], If[TrueQ[b > 0], - Log10[b], Infinity]] - Log10[2]]
 ]
 
 (* The fidelity of exact or symbolic matrices, from the eigenvalues of r . s, which are those of
@@ -266,19 +286,83 @@ workingPrecision[m_] := With[{p = Precision[m]}, If[p === MachinePrecision, p, A
    products of their populations, taken as Sqrt[p] Sqrt[q] so that a product of two small populations does
    not leave the range of machine numbers; a negative population, from a non-physical input, counts as 0. *)
 inexactFidelity[r_, s_, _] /; diagonalQ[r] && diagonalQ[s] :=
-    Total[Sqrt[Ramp[Re[Normal[Diagonal[r]]]]] Sqrt[Ramp[Re[Normal[Diagonal[s]]]]]]
-inexactFidelity[r_, s_, p_] := supportFidelity[hermitianSupport[r], hermitianSupport[s], p]
+    {Total[Sqrt[Ramp[Re[Normal[Diagonal[r]]]]] Sqrt[Ramp[Re[Normal[Diagonal[s]]]]]], 0}
+inexactFidelity[r_, s_, p : MachinePrecision] := {supportFidelity[hermitianSupport[r], hermitianSupport[s], p], 0}
+inexactFidelity[r_, s_, p_] := formFidelity[stateForm[r], stateForm[s], r, s, p]
+
+(* Above machine precision the eigensystem is the costly step, and a state that is pure to within the error
+   of its entries needs none. For m = l |u><u|, the column c of m through its largest diagonal entry m_kk is
+   Sqrt[l m_kk] |u> up to a phase, and c c^dagger / m_kk is m. When that rank-one matrix lies within d 10^-p
+   of m in Frobenius norm, every other eigenvalue of m lies within d 10^-p of 0, whatever its sign, since no
+   matrix of rank one is closer to m than the root of the sum of their squares: none of them is resolved,
+   and they are taken as 0. The cut drops them too while d 10^-p lies below it, that is for d below about
+   100 times the largest eigenvalue; above that they include eigenvalues the cut would keep. The distance is
+   computed at precision p, and is known only to a few times d 10^-p, so the comparison, which holds when
+   the two agree to within that, lets through eigenvalues up to a few times d 10^-p. A state with more
+   weight off u, a resolved small eigenvalue or a negative one of a non-physical input included, takes its
+   eigensystem. As for the eigensystem, m is read through its Hermitian part. A diagonal matrix keeps its
+   populations, as below. *)
+stateForm[m_] /; diagonalQ[m] := hermitianSupport[m]
+stateForm[m_] := With[{n = hermitianPart[Normal[m]]},
+    With[{k = First[Ordering[Re[Diagonal[n]], -1]]},
+        With[{c = n[[All, k]], mkk = Re[n[[k, k]]]},
+            If[TrueQ[mkk > 0 && Norm[Flatten[n - Outer[Times, c, Conjugate[c]] / mkk]] <= N[Length[n] 10^-workingPrecision[m]]],
+                rankOne[c, mkk],
+                hermitianSupport[m]
+            ]
+        ]
+    ]
+]
+
+(* {fidelity, bound} from the forms of the two states. For a pure state l |u><u| and a state s the fidelity
+   is Sqrt[l <u|s|u>], taken as the norm of the overlaps of u with the eigenvectors of s weighted by the
+   square roots of their eigenvalues: each overlap is computed directly, and the sum of their squares has
+   no cancellation, where <u|s|u> summed over the entries of s can cancel to far below the entries. For two
+   pure states it is Sqrt[l l'] |<u|u'>|, the overlap of their columns. A pure state drops no resolved
+   eigenvalue, so only the eigenvalues a support drops add to the bound. *)
+formFidelity[rankOne[c_, k_], rankOne[c2_, k2_], _, _, p_] := {Abs[uniformAccuracy[Conjugate[c] . c2 / Sqrt[k k2], p]], 0}
+formFidelity[rankOne[c_, k_], {b_, v_, eb_, vb_}, r_, _, p_] :=
+    {If[b === {}, N[0, p], Norm[uniformAccuracy[Sqrt[b] (Conjugate[v] . c) / Sqrt[k], p]]], droppedBound[eb, vb, r]}
+formFidelity[support_List, pure_rankOne, r_, s_, p_] := formFidelity[pure, support, s, r, p]
+formFidelity[{a_, u_, ea_, ua_}, {b_, v_, eb_, vb_}, r_, s_, p_] :=
+    {supportFidelity[{a, u}, {b, v}, p], droppedBound[ea, ua, s] + droppedBound[eb, vb, r]}
+
+(* Dropping eigenvalues e_i with eigenvectors u_i from r changes its fidelity with s by at most
+   Sum_i Sqrt[e_i <u_i|s|u_i>], the trace norm of (Sqrt[r] - Sqrt[r']) . Sqrt[s] bounded term by term. *)
+droppedBound[{}, _, _] := 0
+droppedBound[e_, u_, s_] := Total[Sqrt[e Ramp[Re[Total[Conjugate[u] (u . Transpose[Normal[s]]), {2}]]]]]
 
 (* A matrix whose every entry off the diagonal is 0, exact or a zero known only to an accuracy, as 0``29.8;
    DiagonalMatrixQ with its default tolerance also takes a machine matrix with small nonzero entries off the
    diagonal for diagonal. *)
 diagonalQ[m_] := DiagonalMatrixQ[m, Tolerance -> 0]
 
-(* The sum of the singular values of M from the two supports, {eigenvalues, eigenvectors as rows}; with no
-   eigenvalue left in a support, which only a non-physical input gives, the fidelity is 0. *)
-supportFidelity[{a_, u_}, {b_, v_}, p_] := If[a === {} || b === {},
+(* The sum of the singular values of M from the two supports, {eigenvalues, eigenvectors as rows, ...}; with
+   no eigenvalue left in a support, which only a non-physical input gives, the fidelity is 0. *)
+supportFidelity[{a_, u_, ___}, {b_, v_, ___}, p_] := If[a === {} || b === {},
     N[0, p],
-    Total[SingularValueList[KroneckerProduct[Sqrt[a], Sqrt[b]] Normal[Conjugate[u] . Transpose[v]], Tolerance -> 0]]
+    Total[SingularValueList[zeroUnresolvedParts[uniformAccuracy[KroneckerProduct[Sqrt[a], Sqrt[b]] Normal[Conjugate[u] . Transpose[v]], p]], Tolerance -> 0]]
+]
+
+(* Above machine precision, a sum that cancels can leave a number whose imaginary part lies far below its
+   accuracy and has few digits, as Complex[0``30, -1.8`13.5*^-58], and SingularValueList and Norm then return
+   a result with about as few: SingularValueList gives 0``0.7 for the singular value 1/4 of a 2 x 2 matrix
+   holding one, and Norm[{0.5`30, Complex[0``30, -1.8`13.5*^-58]}] is 0.5`1.95. A zero known to an accuracy
+   does no such harm. Every entry is given one accuracy, the least of theirs and that of the input, which
+   turns such an imaginary part into a zero known to that accuracy and keeps every value larger than its
+   uncertainty; the entries are the terms of the fidelity itself, divided by Sqrt[m_kk] for a pure state,
+   so that this accuracy is theirs. That is enough for Norm and Abs. SingularValueList still collapses, or
+   does not return, when a real or imaginary part lies within a few times its uncertainty without being 0,
+   and so has less than one digit: every part within ten times the uncertainty 10^-a of the entries is made
+   a zero known to the accuracy a - 1, whose uncertainty covers the value it replaces. *)
+uniformAccuracy[x_, MachinePrecision] := x
+uniformAccuracy[x_, p_] := SetAccuracy[x, Min[Accuracy[x], p]]
+
+zeroUnresolvedParts[m_] /; Precision[m] === MachinePrecision := m
+zeroUnresolvedParts[m_] := With[{a = Accuracy[m]},
+    With[{zeroed = Function[x, If[Abs[x] <= 10 10^-a, SetAccuracy[0, a - 1], x]]},
+        Map[zeroed[Re[#]] + I zeroed[Im[#]] &, m, {2}]
+    ]
 ]
 
 (* The positive eigenvalues of a diagonal matrix, its diagonal entries as stored, with the unit vectors as
@@ -287,34 +371,38 @@ supportFidelity[{a_, u_}, {b_, v_}, p_] := If[a === {} || b === {},
    population 10^-20. *)
 hermitianSupport[m_] /; diagonalQ[m] := With[{l = Re[Normal[Diagonal[m]]]},
     With[{keep = Thread[l > 0]},
-        {Pick[l, keep], IdentityMatrix[Length[l], SparseArray][[Pick[Range[Length[l]], keep]]]}
+        {Pick[l, keep], IdentityMatrix[Length[l], SparseArray][[Pick[Range[Length[l]], keep]]], {}, {}}
     ]
 ]
 
-(* The eigenvalues of the Hermitian part of an inexact matrix that are above 100 10^-p times the largest in
-   magnitude, at precision p, with their eigenvectors as rows; the others, negative ones included, are
+(* {kept eigenvalues, their eigenvectors as rows, bounds on the resolved dropped eigenvalues, their
+   eigenvectors as rows} of the Hermitian part of an inexact matrix at precision p. An eigenvalue is kept
+   when it is above 100 10^-p times the largest in magnitude; the others, negative ones included, are
    dropped. Round-off moves the eigenvalues by about 10^-p times the largest, so the cut keeps the square
    roots of round-off of 0 out of the fidelity. A genuine eigenvalue below the cut is dropped too, which
    changes the fidelity by no more than the square root of the cut for each one dropped, and only by that
-   much when the other state has its weight on the eigenvector; the precision an arbitrary-precision result
-   claims does not account for that change, which can exceed its stated uncertainty at any precision. A
-   diagonal matrix keeps every positive entry instead, so two states whose overlap lies in eigenvalues below
-   the cut get a fidelity that depends, by up to that much, on whether the basis they are given in makes
-   them diagonal. The eigenvectors must be orthonormal. Eigensystem gives the eigenvectors of an inexact
-   matrix normalized and independent, but not orthogonal, and at higher precision two eigenvectors of a
-   repeated eigenvalue can be orthogonal to far fewer digits than the working precision; there they are the
-   columns of q in the Schur decomposition q . t . ConjugateTranspose[q], where q is unitary and t, for a
-   Hermitian matrix, is diagonal with the eigenvalues. The kept eigenvectors are then made orthonormal with
-   Orthogonalize by Householder reflections, which keeps the span of each leading set of them, and so each
-   eigenspace; vectors that are already orthonormal come back changed only by round-off and by a factor of
-   modulus 1 on each, which leaves the singular values of M as they are. *)
-hermitianSupport[m_] := With[{e = hermitianEigensystem[m]},
-    With[{keep = Thread[Re[e[[1]]] > N[100 10^-workingPrecision[m]] Max[Abs[e[[1]]]]]},
-        {Re[Pick[e[[1]], keep]], orthonormalRows[Pick[e[[2]], keep]]}
+   much when the other state has its weight on the eigenvector. A dropped eigenvalue that is above d 10^-p,
+   the bound on how far an error of 10^-p in each entry moves an eigenvalue, by more than its own
+   uncertainty is resolved: it is kept aside with d 10^-p added, to bound the change it makes; any other is
+   taken as 0. A diagonal matrix keeps
+   every positive entry instead, so two states whose overlap lies in eigenvalues below the cut get a
+   fidelity that depends, by up to that much, on whether the basis they are given in makes them diagonal.
+   The eigenvectors are orthonormal. At machine precision they come from Eigensystem, whose documentation
+   promises normalized, independent eigenvectors only; on a matrix that is Hermitian exactly, as the
+   Hermitian part of a machine matrix is, it runs its Hermitian solver, which returns them orthonormal. At
+   higher precision Eigensystem leaves two eigenvectors of a repeated eigenvalue orthogonal to far fewer
+   digits than the working precision, and they are the columns of q in the Schur decomposition
+   q . t . ConjugateTranspose[q] instead, where q is unitary and t, for a Hermitian matrix, is diagonal with
+   the eigenvalues. *)
+hermitianSupport[m_] := With[{e = hermitianEigensystem[m], p = workingPrecision[m]},
+    With[{l = Re[e[[1]]], delta = N[Length[m] 10^-p]},
+        With[{keep = Thread[l > N[100 10^-p] Max[Abs[e[[1]]]]]},
+            With[{resolved = Boole[Thread[l > delta]] - Boole[keep]},
+                {Pick[l, keep], Pick[e[[2]], keep], Pick[l, resolved, 1] + delta, Pick[e[[2]], resolved, 1]}
+            ]
+        ]
     ]
 ]
-
-orthonormalRows[v_] := Orthogonalize[v, Method -> "Householder"]
 
 (* The eigensystem of the Hermitian part of m. A SparseArray of machine numbers with both real and
    complex entries gives an unpacked list, on which forming the Hermitian part is many times slower than

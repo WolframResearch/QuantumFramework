@@ -1317,5 +1317,138 @@ VerificationTest[
     TestID -> "NonPhysical-NilpotentProduct-HasFidelity"
 ]
 
+(* 30-digit states with an eigenvalue below the cut 100 10^-p but several times its uncertainty d 10^-p, on
+   whose eigenvector the other state has its weight: dropping it changes the fidelity by its square root,
+   about 10^-15, and the exact distance lies within the uncertainty the result states. The states: rank 2
+   in dimension 2, 3 and 8, pure but for that eigenvalue, against a pure state; rank 3 against a pure state
+   and against a mixed state. *)
+VerificationTest[
+    With[{
+        rot2 = {{3/5, -4/5}, {4/5, 3/5}},
+        rot3 = {{2/3, -2/3, 1/3}, {2/3, 1/3, -2/3}, {1/3, 2/3, 2/3}},
+        rot8 = IdentityMatrix[8] - ConstantArray[1/4, {8, 8}]
+    },
+        With[{
+            rankThree = rot3 . DiagonalMatrix[{1/2, 1/2 - 3 10^-29, 3 10^-29}] . Transpose[rot3],
+            rankTwo = Function[{u, x}, u . DiagonalMatrix[PadRight[{1 - x, x}, Length[u]]] . Transpose[u]],
+            pure = Function[{u, j}, Outer[Times, u[[All, j]], u[[All, j]]]]
+        },
+            Map[
+                Function[c, With[{d = QuantumDistance[QuantumState[N[c[[1]], 30]], QuantumState[N[c[[2]], 30]]]},
+                    Abs[N[d] - N[c[[3]]]] <= 10^-Accuracy[d]
+                ]],
+                {
+                    {rankTwo[rot2, 10^-29], pure[rot2, 2], 1 - Sqrt[10^-29]},
+                    {rankTwo[rot3, 2 10^-29], pure[rot3, 2], 1 - Sqrt[2 10^-29]},
+                    {rankTwo[rot8, 3 10^-29], pure[rot8, 2], 1 - Sqrt[3 10^-29]},
+                    {rankThree, pure[rot3, 3], 1 - Sqrt[3 10^-29]},
+                    {rankThree, rot3 . DiagonalMatrix[{1/2, 0, 1/2}] . Transpose[rot3], 1/2 - Sqrt[3 10^-29 / 2]}
+                }
+            ]
+        ]
+    ],
+    {True, True, True, True, True},
+    {},
+    TestID -> "ArbitraryPrecision-DroppedEigenvalue-HonestAccuracy"
+]
+
+(* A 30-digit input of trace 1 that is pure but for the eigenvalues 10^-9 and -10^-9, with eigenvectors u_2
+   and u_3, which are too small for the notphysical message: it enters as the positive part of its Hermitian
+   part, in which -10^-9 is 0. Against the pure state u_2 its fidelity is 10^-(9/2), and against the pure
+   state (u_2 + u_3) / Sqrt[2], which also weighs the negative eigenvalue, it is (10^-9 / 2)^(1/2). *)
+VerificationTest[
+    With[{rot3 = {{2/3, -2/3, 1/3}, {2/3, 1/3, -2/3}, {1/3, 2/3, 2/3}}},
+        With[{m = QuantumState[N[rot3 . DiagonalMatrix[{1, 10^-9, -10^-9}] . Transpose[rot3], 30]]},
+            Map[
+                Function[c, Abs[QuantumDistance[m, QuantumState[N[Outer[Times, c[[1]], c[[1]]], 30]]] - (1 - Sqrt[c[[2]]])] < 10^-20],
+                {{rot3[[All, 2]], 10^-9}, {(rot3[[All, 2]] + rot3[[All, 3]]) / Sqrt[2], 10^-9 / 2}}
+            ]
+        ]
+    ],
+    {True, True},
+    {},
+    TestID -> "ArbitraryPrecision-NearlyPureNonPhysical-PositivePart"
+]
+
+(* 30-digit states in dimension 8 whose entries are dyadic, so that their 30-digit numbers are exact, built
+   on the columns e_j of a unitary matrix of dyadic entries. A pure state a = e_1 against a state of rank 2
+   holding it, and against a state whose eigenvector of eigenvalue 1/2 has overlap 2^-33 with a while its
+   other eigenvectors are orthogonal to it, so that <a|s|a> = 2^-67: a pure state needs no eigensystem, and
+   its fidelity with s comes from the overlaps of a with the eigenvectors of s, so the distance keeps its
+   digits to 10^-25, and agrees to 10^-25 with the states in either order. Taken at 30 digits from entries
+   of order 1/10, <a|s|a> cancels to 2^-67, and its square root keeps far fewer digits. Two mixed states of
+   rank 2 with fidelity 1/4: overlaps of their eigenvectors that are 0 come out with an imaginary part far
+   below their accuracy and with few digits, and the distance is still 3/4 to 10^-25. *)
+VerificationTest[
+    With[{w = DiagonalMatrix[{1, I, 1, I, 1, I, 1, I}] . (IdentityMatrix[8] - ConstantArray[1/4, {8, 8}])},
+        With[{a = w[[All, 1]], e = Transpose[w], proj = Outer[Times, #, Conjugate[#]] &},
+            Map[
+                Function[c, With[{r30 = N[c[[1]], 30], s30 = N[c[[2]], 30]},
+                    With[{d = QuantumDistance[QuantumState[r30], QuantumState[s30]]},
+                        {Abs[d - c[[3]]] < 10^-25, Abs[d - QuantumDistance[QuantumState[s30], QuantumState[r30]]] < 10^-25}
+                    ]
+                ]],
+                {
+                    {a, proj[a + e[[2]] + e[[3]]] / 4 + proj[e[[4]]] / 4, 1/2},
+                    {a, proj[2^-33 a + e[[2]]] / 2 + proj[e[[3]]] / 4 + (1/4 - 2^-67) proj[e[[4]]], 1 - 2^-33 / Sqrt[2]},
+                    {proj[a + e[[2]] + e[[3]]] / 4 + proj[e[[4]]] / 4, proj[e[[2]] + e[[5]]] / 4 + proj[a - e[[3]]] / 4, 3/4}
+                }
+            ]
+        ]
+    ],
+    {{True, True}, {True, True}, {True, True}},
+    {},
+    TestID -> "ArbitraryPrecision-DyadicStates-KeepDigits"
+]
+
+(* Three pairs of 30-digit mixed states of rank 3 in dimension 8, with entries in multiples of 1/64 or
+   1/128, so that their 30-digit numbers are exact. The matrix M of each pair holds entries with a real or
+   imaginary part within a few times its uncertainty but not 0, and SingularValueList on it returned no
+   digit, with Divide::indet, or did not return within minutes. Each distance comes back within a minute,
+   with no message and more than 20 digits, and holds the exact distance within its uncertainty. *)
+VerificationTest[
+    Map[
+        Function[pair, With[{r = pair[[1]] / 64, s = pair[[2]] / 64},
+            With[{d = TimeConstrained[QuantumDistance[QuantumState[N[r, 30]], QuantumState[N[s, 30]]], 60, $Aborted]},
+                NumberQ[d] && Accuracy[d] > 20 &&
+                    Abs[SetPrecision[d, Infinity] - (1 - Re[Total[Sqrt[Eigenvalues[N[r . s, 120]]]]])] <= 10^-Accuracy[d]
+            ]
+        ]],
+        {
+            {
+                {{9, 2 + I, 5, 2 - 3 I, 3 + 2 I, 2 + I, 1 - 4 I, 4 + 7 I}, {2 - I, 5, 2 - 5 I, 1, I, -3, -2 - I, 7 + 2 I},
+                 {5, 2 + 5 I, 9, 2 + I, -1 + 2 I, 2 - 3 I, -3 - 4 I, 4 + 11 I}, {2 + 3 I, 1, 2 - I, 5, 5 I, 1, -2 + 3 I, 3 + 2 I},
+                 {3 - 2 I, -I, -1 - 2 I, -5 I, 5, -I, 3 + 2 I, 2 - 3 I}, {2 - I, -3, 2 + 3 I, 1, I, 5, -2 - I, -1 + 2 I},
+                 {1 + 4 I, -2 + I, -3 + 4 I, -2 - 3 I, 3 - 2 I, -2 + I, 9, -8 - I}, {4 - 7 I, 7 - 2 I, 4 - 11 I, 3 - 2 I, 2 + 3 I, -1 - 2 I, -8 + I, 17}},
+                {{13, 3 I, -3, 11 I, -3, -I, -3, 3 I}, {-3 I, 5, 5 I, -3, 5 I, 1, 5 I, 5}, {-3, -5 I, 5, 3 I, 5, -I, 5, -5 I},
+                 {-11 I, -3, -3 I, 21, -3 I, -7, -3 I, -3}, {-3, -5 I, 5, 3 I, 5, -I, 5, -5 I}, {I, 1, I, -7, I, 5, I, 1},
+                 {-3, -5 I, 5, 3 I, 5, -I, 5, -5 I}, {-3 I, 5, 5 I, -3, 5 I, 1, 5 I, 5}}
+            },
+            {
+                {{7, I, I, 2 + I, -1 - 6 I, -2 - 3 I, 4 - 3 I, -I}, {-I, 7, 3 + 4 I, -1 + 2 I, 6 - I, 3 - 2 I, -1, 1},
+                 {-I, 3 - 4 I, 5, 5, -3 I, 1 - 4 I, 1, -1 - 2 I}, {2 - I, -1 - 2 I, 5, 15, -8 - I, 3 - 4 I, 5, -3 - 6 I},
+                 {-1 + 6 I, 6 + I, 3 I, -8 + I, 15, 4 - 3 I, 3 I, 2 + 3 I}, {-2 + 3 I, 3 + 2 I, 1 + 4 I, 3 + 4 I, 4 + 3 I, 7, 1 + 4 I, 1 - 2 I},
+                 {4 + 3 I, -1, 1, 5, -3 I, 1 - 4 I, 5, -1 - 2 I}, {I, 1, -1 + 2 I, -3 + 6 I, 2 - 3 I, 1 + 2 I, -1 + 2 I, 3}},
+                {{11, -2 - I, -1 + 4 I, 4 - 7 I, -5 - 8 I, -2 - 5 I, -15 - 2 I, -2 - I}, {-2 + I, 7, 2 + 5 I, 5 - 2 I, -2 + 9 I, 3, -9 I, 7},
+                 {-1 - 4 I, 2 - 5 I, 11, -8 - 3 I, 7 + 12 I, 2 - I, -11 + 2 I, 2 - 5 I}, {4 + 7 I, 5 + 2 I, -8 + 3 I, 19, -4 - 9 I, 1 - 6 I, -2 - 11 I, 5 + 2 I},
+                 {-5 + 8 I, -2 - 9 I, 7 - 12 I, -4 + 9 I, 27, 6 - 5 I, -7 - 2 I, -2 - 9 I}, {-2 + 5 I, 3, 2 + I, 1 + 6 I, 6 + 5 I, 7, -13 I, 3},
+                 {-15 + 2 I, 9 I, -11 - 2 I, -2 + 11 I, -7 + 2 I, 13 I, 39, 9 I}, {-2 + I, 7, 2 + 5 I, 5 - 2 I, -2 + 9 I, 3, -9 I, 7}} / 2
+            },
+            {
+                {{5, -4 - I, -3 + 4 I, -I, 1, -I, -3, -I}, {-4 + I, 13, 8 - 7 I, -3 + 4 I, -4 - 3 I, -3 + 4 I, -4 - 7 I, -3 + 4 I},
+                 {-3 - 4 I, 8 + 7 I, 13, -4 - I, 1 - 4 I, -4 - I, -3 - 4 I, -4 - I}, {I, -3 - 4 I, -4 + I, 5, 5 I, 5, I, 5},
+                 {1, -4 + 3 I, 1 + 4 I, -5 I, 5, -5 I, 1, -5 I}, {I, -3 - 4 I, -4 + I, 5, 5 I, 5, I, 5},
+                 {-3, -4 + 7 I, -3 + 4 I, -I, 1, -I, 13, -I}, {I, -3 - 4 I, -4 + I, 5, 5 I, 5, I, 5}},
+                {{2, -2, 2, -2 I, -2, -2 I, 2 I, -2 I}, {-2, 6, -2, 2 I, -2 - 4 I, 2 I, 4 - 2 I, 2 I}, {2, -2, 18, -2 I, -18, -2 I, 2 I, -2 I},
+                 {2 I, -2 I, 2 I, 2, -2 I, 2, -2, 2}, {-2, -2 + 4 I, -18, 2 I, 26, 2 I, -4 + 2 I, 2 I}, {2 I, -2 I, 2 I, 2, -2 I, 2, -2, 2},
+                 {-2 I, 4 + 2 I, -2 I, -2, -4 - 2 I, -2, 6, -2}, {2 I, -2 I, 2 I, 2, -2 I, 2, -2, 2}}
+            }
+        }
+    ],
+    {True, True, True},
+    {},
+    TestID -> "ArbitraryPrecision-DyadicMixedStates-NoCollapse"
+]
+
 
 EndTestSection[]
