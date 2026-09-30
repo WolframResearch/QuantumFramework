@@ -41,7 +41,7 @@ PhaseShiftOperator[\[Theta]_,size_:$FockSize,Optional[order_?orderQ,{1}]]:=
 
 
 DisplacementOperator::usage =
-"\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) gives the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering definition.\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) returns a symbolic expression for bosonic algebra calculations.";
+"\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"]}], \"]\"}]\) gives the displacement operator D(\[Alpha]) with complex amplitude \[Alpha].\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\) \"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering definition; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"DisplacementOperator\", \"[\", RowBox[{StyleBox[\"\[Alpha]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) returns a symbolic expression for bosonic algebra calculations.";
 
 
 Options[DisplacementOperator] = {"Ordering" -> Automatic};
@@ -75,7 +75,7 @@ DisplacementOperator[\[Alpha]_, \[Infinity], Optional[order_?orderQ, {1}], Optio
 ]
 
 
-DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
+DisplacementOperator[\[Alpha]_, size_Integer ? Positive, order_?orderQ, OptionsPattern[]] :=
     Block[
         {a = AnnihilationOperator[size,order],
         ordering = Replace[OptionValue["Ordering"], Automatic -> "Normal"]
@@ -102,9 +102,9 @@ DisplacementOperator[\[Alpha]_, size_, order_?orderQ, OptionsPattern[]] :=
 
 
 SqueezeOperator::usage =
-"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering.";
+"\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"]}], \"]\"}]\) gives the squeeze operator S(\[Xi]) with complex squeeze parameter \[Xi].\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: $FockSize).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) specifies the subsystem \!\(\*StyleBox[\"order\", \"TI\"]\).\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", \"\\\"Ordering\\\"->\", StyleBox[\"ord\", \"TI\"]}], \"]\"}]\)\"Ordering\" accepts \"Normal\" | \"Weak\" | \"Antinormal\" for operator ordering; Automatic, the default, is \"Normal\" for a matrix and \"Weak\" for the symbolic form.\n\!\(\*RowBox[{\"SqueezeOperator\", \"[\", RowBox[{StyleBox[\"\[Xi]\", \"TI\"], \",\", \"\[Infinity]\", \",\", StyleBox[\"order\", \"TI\"]}], \"]\"}]\) returns a symbolic expression in the field variables of mode order for bosonic algebra calculations.";
 
-Options[SqueezeOperator] = {"Ordering" -> "Normal"};
+Options[SqueezeOperator] = {"Ordering" -> Automatic};
 
 SqueezeOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'Normal', 'Weak', or 'Antinormal'.";
 
@@ -114,16 +114,41 @@ SqueezeOperator[xi_, size_, opts : OptionsPattern[]] := SqueezeOperator[xi, size
 
 SqueezeOperator[xi_, order_?orderQ, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize,order, opts];
 
-SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
+SqueezeOperator[xi_, \[Infinity], Optional[order_?orderQ, {1}], OptionsPattern[]] :=
+    Block[{
+        ordering = Replace[OptionValue["Ordering"], Automatic -> "Weak"],
+        tau = Exp[I Arg[xi]] Tanh[Abs[xi]],
+        a, adag
+    },
+        {a, adag} = FieldVariables[order];
+        Replace[
+            Switch[ordering,
+                "Normal",
+                Exp[-tau/2 adag ** adag] ** Sech[Abs[xi]]^(adag ** a + 1/2) ** Exp[Conjugate[tau]/2 a ** a],
+
+                "Weak",
+                Exp[(Conjugate[xi] a ** a - xi adag ** adag)/2],
+
+                "Antinormal",
+                Exp[Conjugate[tau]/2 a ** a] ** Cosh[Abs[xi]]^(adag ** a + 1/2) ** Exp[-tau/2 adag ** adag],
+            _,
+                Message[SqueezeOperator::invalidorder, ordering];
+                Abort[]
+            ],
+            NonCommutativeMultiply[1 ..] -> 1
+        ]
+    ]
+
+SqueezeOperator[xi_, size_Integer ? Positive, order_?orderQ, OptionsPattern[]] :=
     Module[{tau, nu, a = AnnihilationOperator[size,order], ordering},
-    
-        ordering = OptionValue["Ordering"];
-        
-        tau = xi / Abs[xi] Tanh[Abs[xi]];
-        
+
+        ordering = Replace[OptionValue["Ordering"], Automatic -> "Normal"];
+
+        tau = Exp[I Arg[xi]] Tanh[Abs[xi]];
+
         nu = Log[Cosh[Abs[xi]]];
-        
-        
+
+
         QuantumOperator[
             Switch[ordering,
                 "Normal",
@@ -135,7 +160,7 @@ SqueezeOperator[xi_, size_, order_?orderQ, OptionsPattern[]] :=
                     MatrixExp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
                 ,
                 "Antinormal",
-                    MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[-nu ((a["Dagger"
+                    MatrixExp[1/2 Conjugate[tau] (a @ a)] @ MatrixExp[nu ((a["Dagger"
                         ]) @ a + 1/2 )] @ MatrixExp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
                         ]))]
                 ,
