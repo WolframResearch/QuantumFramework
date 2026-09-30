@@ -506,8 +506,9 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
 orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := With[{op = qo @ qmo["SuperOperator"]},
-    If[ContainsAll[Select[op["OutputOrder"], Positive], Select[qmo["OutputOrder"], Positive]] && op["VectorQ"], QuantumMeasurementOperator[op, qmo["Targets"]], op]
+(* the measurement's "POVM" form carries its dilation together with the targets that go with it *)
+(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := With[{povm = qmo["POVM"]}, {op = qo @ povm["QuantumOperator"]},
+    If[ContainsAll[Select[op["OutputOrder"], Positive], Select[qmo["OutputOrder"], Positive]] && op["VectorQ"], QuantumMeasurementOperator[op, povm["Targets"]], op]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qc_ ? QuantumChannelQ] := With[{op = qo @ qc["QuantumOperator"]},

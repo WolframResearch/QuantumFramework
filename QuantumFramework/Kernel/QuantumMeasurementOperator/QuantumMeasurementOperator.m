@@ -88,8 +88,10 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
 
+(* Automatic labels the outcomes with the eigenvalues "SuperOperator" finds for the observable
+   measured on the target *)
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ -> eigenvalues : _ ? VectorQ | Automatic, args___] :=
-    QuantumMeasurementOperator[qo, args]["POVM", Replace[eigenvalues, Automatic :> qo["Eigenvalues", "Sort" -> True]]]
+    QuantumMeasurementOperator[qo, args]["POVM", eigenvalues]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 

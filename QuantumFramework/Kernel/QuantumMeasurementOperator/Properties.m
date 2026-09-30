@@ -122,6 +122,21 @@ canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Ti
 ]
 
 
+(* A projective measurement is built from the eigenvectors of its operator's
+   "MatrixRepresentation", whose tensor factors follow the sorted qudit order, and its target
+   names the measured qudits. The rules below for these properties build the measurement in
+   that sorted order and then attach the operator's stored order or the target list to the
+   result, which is right only when both are sorted. So an operator stored on an unsorted
+   order, or a target listed out of order, is measured as the sorted operator on the sorted
+   target: the same observable on the same qudits. This rule has to stay above those rules,
+   which would otherwise answer first. *)
+QuantumMeasurementOperatorProp[qmo_,
+    prop : "SuperOperator" | "POVM" | "Canonical" | "DiscardExtraQudits" | "ReverseEigenQudits" | "Double" | "Conjugate" | "Dual" | "Unbend",
+    args___
+] /; qmo["ProjectionQ"] && ! (qmo["QuantumOperator"]["SortedQ"] && OrderedQ[qmo["Target"]]) :=
+    QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort"], {Sort @ qmo["Target"]}][prop, args]
+
+
 
 QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
     basis = qmo["CanonicalBasis"],
@@ -211,12 +226,14 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] /; qmo["ProjectionQ"] := qmo["
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Automatic] := Module[{
     trace,
     traceQudits,
+    traceDimension,
     tracedOperator,
     eigenvalues, eigenvectors, projectors,
     eigenBasis, outputBasis, inputBasis, operator
 },
     trace = DeleteCases[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]];
     traceQudits = trace - Min[qmo["FullInputOrder"]] + 1;
+    traceDimension = Times @@ Lookup[qmo["QuantumOperator"]["InputOrderDimensions"], trace];
     If[
         ! qmo["ProjectionQ"],
 
@@ -228,7 +245,11 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
            without it the eigen-projectors do not resolve the identity and the outcome
            probabilities of a degenerate observable are silently wrong. *)
         {eigenvalues, eigenvectors} = profile["Eigensystem"] @ Simplify @ tracedOperator["Eigensystem", "Sort" -> True, "Orthogonalize" -> True];
-        eigenvalues = PadRight[Replace[defaultEigenvalues, Automatic -> eigenvalues], Length[eigenvectors], 0];
+        (* The observable measured on the target is the partial trace over the other qudits
+           divided by their dimension, so an operator that acts as A on the target and as the
+           identity elsewhere is measured as A. The division scales the eigenvalues and leaves
+           the eigenvectors alone. *)
+        eigenvalues = PadRight[Replace[defaultEigenvalues, Automatic -> eigenvalues / traceDimension], Length[eigenvectors], 0];
         projectors = projector /@ eigenvectors;
 
         eigenBasis = QuditBasis[
@@ -244,7 +265,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Auto
 
         (* construct *)
         operator = QuantumOperator[
-            SparseArray @ Map[kroneckerProduct[IdentityMatrix[Times @@ qmo["InputDimensions"][[traceQudits]], SparseArray], #] &, projectors],
+            SparseArray @ Map[kroneckerProduct[IdentityMatrix[traceDimension, SparseArray], #] &, projectors],
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[
                     eigenBasis,

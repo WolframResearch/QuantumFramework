@@ -456,6 +456,427 @@ VerificationTest[
 EndTestSection[]
 
 
+BeginTestSection["QuantumMeasurementOperator - operator stored on an unsorted qudit order"]
+
+(* A measurement of an operator measures that operator, whatever order its qudits are stored
+   in and whatever order its target lists them in. Every reference comes from the operator's
+   own "MatrixRepresentation" m, which lists the qudits in sorted order: the mean <v|m|v>,
+   and the Born weight <v|P|v> of each eigenvalue lambda, with P the eigenspace projector
+   Prod_{mu != lambda} (m - mu)/(lambda - mu). P needs no eigenvectors, so a degenerate
+   observable has a reference too. "ZX" on {2, 1} is X on qudit 1 and Z on qudit 2: |+0> is
+   its +1 eigenstate and |0+> has mean 0, where the qudit-swapped Z1 X2 gives 0 and 1. *)
+
+unsortedOrderEigenprojectors[m_] := With[{id = IdentityMatrix[Length[m]], values = Union[Eigenvalues[m]]},
+    AssociationMap[l |-> Fold[#1 . (m - #2 id) / (l - #2) &, id, DeleteCases[values, l]], values]
+]
+
+unsortedOrderEigenvalueWeights[m_, v_] := Simplify[Conjugate[v] . # . v] & /@ unsortedOrderEigenprojectors[m]
+
+(* the measured weight of each eigenvalue: the probabilities of the outcomes it labels, summed *)
+unsortedOrderMeasuredWeights[qm_] := KeySort @ Merge[
+    KeyValueMap[Replace[#1, QuditName[Interpretation[_, {l_, _}], ___] :> l] -> #2 &, qm["Probabilities"]],
+    Total
+]
+
+(* the eigenvalue labels of a measurement's outcomes, sorted *)
+measurementOutcomeEigenvalues[qmo_] := Sort[Replace[qmo["Eigenvalues"], QuditName[Interpretation[_, {l_, _}], ___] :> l, {1}]]
+
+(* whether the mean and the eigenvalue weights of qmo in psi are those of the operator op *)
+unsortedOrderReadoutQ[qmo_, op_, psi_] := With[
+    {m = Normal[op["MatrixRepresentation"]], v = Normal[psi["StateVector"]], qm = qmo[psi]},
+    With[{measured = unsortedOrderMeasuredWeights[qm], expected = unsortedOrderEigenvalueWeights[m, v]},
+        Simplify[qm["Mean"] - Conjugate[v] . m . v] === 0 &&
+            Keys[measured] === Keys[expected] &&
+            Simplify[Values[measured] - Values[expected]] === ConstantArray[0, Length[expected]]
+    ]
+]
+
+VerificationTest[
+    With[{op = QuantumOperator["ZX", {2, 1}]},
+        With[{qmo = QuantumMeasurementOperator[op]},
+            {
+                Normal[op["MatrixRepresentation"]] === Normal[QuantumOperator["XZ", {1, 2}]["MatrixRepresentation"]],
+                qmo[QuantumState["0+"]]["Mean"],
+                qmo[QuantumState["+0"]]["Mean"],
+                unsortedOrderMeasuredWeights[qmo[QuantumState["0+"]]],
+                unsortedOrderMeasuredWeights[qmo[QuantumState["+0"]]]
+            }
+        ]
+    ],
+    {True, 0, 1, <|-1 -> 1/2, 1 -> 1/2|>, <|-1 -> 0, 1 -> 1|>},
+    {},
+    TestID -> "UnsortedOrder-ZX-on-21-MeasuresX1Z2"
+]
+
+(* the states on which each measurement departs from its operator: none, for an observable
+   whose eigenvalues are all degenerate, a nondegenerate one (diag(1, 2) on qudit 2, X on
+   qudit 1), and the first re-expressed in the PauliX basis *)
+VerificationTest[
+    Map[
+        op |-> With[{qmo = QuantumMeasurementOperator[op]},
+            Select[{"00", "0+", "+0", "+-", "LR", "1L", "R-"}, ! unsortedOrderReadoutQ[qmo, op, QuantumState[#]] &]
+        ],
+        {
+            QuantumOperator["ZX", {2, 1}],
+            QuantumOperator[KroneckerProduct[DiagonalMatrix[{1, 2}], PauliMatrix[1]], {2, 1}],
+            QuantumOperator[QuantumOperator["ZX", {2, 1}], QuantumBasis["PauliX", 2]]
+        }
+    ],
+    {{}, {}, {}},
+    {},
+    TestID -> "UnsortedOrder-TwoQubit-MatchesOwnMatrix"
+]
+
+(* X on qudit 3, Y on qudit 1, Z on qudit 2: the sorted operator is Y1 Z2 X3 *)
+VerificationTest[
+    With[{op = QuantumOperator["XYZ", {3, 1, 2}]},
+        With[{qmo = QuantumMeasurementOperator[op]},
+            Select[{"000", "L0+", "+L0", "0+L", "RR1", "-0L", "1-R"}, ! unsortedOrderReadoutQ[qmo, op, QuantumState[#]] &]
+        ]
+    ],
+    {},
+    {},
+    TestID -> "UnsortedOrder-ThreeCycle-MatchesOwnMatrix"
+]
+
+(* a qutrit observable diag(1, 2, 3) on qudit 2 and X on qubit 1, stored on {2, 1}: the stored
+   dimensions are {3, 2} and the sorted ones {2, 3}. |+> (|0> + |2>)/Sqrt[2] has mean 2. *)
+VerificationTest[
+    With[{op = QuantumOperator[KroneckerProduct[DiagonalMatrix[{1, 2, 3}], PauliMatrix[1]], {2, 1}, QuantumBasis[{3, 2}, {3, 2}]]},
+        With[{qmo = QuantumMeasurementOperator[op], states = {
+                QuantumState[Flatten[KroneckerProduct[{1, 1} / Sqrt[2], {1, 0, 1} / Sqrt[2]]], {2, 3}],
+                QuantumState[Flatten[KroneckerProduct[{1, 0}, {1, 1, 1} / Sqrt[3]]], {2, 3}],
+                QuantumState[Flatten[KroneckerProduct[{1, -I} / Sqrt[2], {0, 1, 1} / Sqrt[2]]], {2, 3}]
+            }},
+            {
+                Normal[op["MatrixRepresentation"]] === KroneckerProduct[PauliMatrix[1], DiagonalMatrix[{1, 2, 3}]],
+                qmo[First[states]]["Mean"],
+                unsortedOrderReadoutQ[qmo, op, #] & /@ states
+            }
+        ]
+    ],
+    {True, 2, {True, True, True}},
+    {},
+    TestID -> "UnsortedOrder-MixedDimensions-MatchesOwnMatrix"
+]
+
+(* a partial target with the traced qudit between the targets: Z on 3, I on 2 and X on 1,
+   measured on {3, 1}, is X1 Z3, whose mean and eigenvalue weights are those of the whole
+   operator *)
+VerificationTest[
+    With[{op = QuantumOperator["ZIX", {3, 2, 1}]},
+        With[{qmo = QuantumMeasurementOperator[op, {3, 1}]},
+            Select[{"000", "+00", "00+", "-01", "L1R", "+1-"}, ! unsortedOrderReadoutQ[qmo, op, QuantumState[#]] &]
+        ]
+    ],
+    {},
+    {},
+    TestID -> "UnsortedOrder-PartialTarget-TracedQuditBetween"
+]
+
+(* the target names the measured qudits: listing them as {2, 1} measures the same Z1 X2 *)
+VerificationTest[
+    With[{op = QuantumOperator["ZX"]},
+        With[{qmo = QuantumMeasurementOperator[op, {2, 1}]},
+            {
+                qmo[QuantumState["0+"]]["Mean"],
+                qmo[QuantumState["+0"]]["Mean"],
+                qmo == QuantumMeasurementOperator[op]
+            }
+        ]
+    ],
+    {1, 0, True},
+    {},
+    TestID -> "UnsortedOrder-TargetListOrder-SameObservable"
+]
+
+(* the same observable stored on two orders is one measurement: equal under ==, which
+   compares eigenvectors, with the same eigenvalue labels, mean and eigenvalue weights *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]],
+        twin = QuantumMeasurementOperator[QuantumOperator["XZ", {1, 2}]],
+        psi = QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    },
+        {
+            qmo == twin,
+            measurementOutcomeEigenvalues[qmo] === measurementOutcomeEigenvalues[twin],
+            Simplify[qmo[psi]["Mean"] - twin[psi]["Mean"]] === 0,
+            unsortedOrderMeasuredWeights[qmo[psi]] === unsortedOrderMeasuredWeights[twin[psi]]
+        }
+    ],
+    {True, True, True, True},
+    {},
+    TestID -> "UnsortedOrder-SameObservableTwoOrders-Equal"
+]
+
+(* the forms built from the measurement's dilation keep that agreement: its "POVM" form is
+   the same measurement, its "SuperOperator", "Dagger", "POVM", "Conjugate", "Dual" and
+   "Double" forms equal those of the sorted twin, and a tensor product with another
+   measurement gives the twin's outcome probabilities in the same order. The last entry is
+   the qudit-swapped observable, whose "POVM" form differs. *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]],
+        twin = QuantumMeasurementOperator[QuantumOperator["XZ", {1, 2}]],
+        swapped = QuantumMeasurementOperator[QuantumOperator["ZX", {1, 2}]],
+        psi = QuantumState[{1, 2, 0, 1, 3, 1, 2, 1} / Sqrt[21]]
+    },
+        {
+            qmo["POVM"] == qmo,
+            qmo["SuperOperator"] == twin["SuperOperator"],
+            qmo["Dagger"] == twin["Dagger"],
+            qmo["POVM"] == twin["POVM"],
+            qmo["Conjugate"] == twin["Conjugate"],
+            qmo["Dual"] == twin["Dual"],
+            qmo["Double"] == twin["Double"],
+            QuantumTensorProduct[QuantumMeasurementOperator[{1}], qmo][psi]["ProbabilitiesList"] ===
+                QuantumTensorProduct[QuantumMeasurementOperator[{1}], twin][psi]["ProbabilitiesList"],
+            qmo["POVM"] == swapped["POVM"]
+        }
+    ],
+    {True, True, True, True, True, True, True, True, False},
+    {},
+    TestID -> "UnsortedOrder-DilationFormsMatchSortedTwin"
+]
+
+(* an operator stored on {2, 1} with its target listed in sorted order is the same
+   measurement too, with the same "POVM" form and the same measurement channel *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}], {1, 2}],
+        twin = QuantumMeasurementOperator[QuantumOperator["XZ", {1, 2}]],
+        swapped = QuantumMeasurementOperator[QuantumOperator["ZX", {1, 2}]],
+        psi = QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    },
+        {
+            qmo == twin,
+            qmo["POVM"] == qmo,
+            qmo[QuantumState[#]]["Mean"] & /@ {"0+", "+0"},
+            Simplify[Normal[qmo["DiscardExtraQudits"][psi]["DensityMatrix"]] - Normal[twin["DiscardExtraQudits"][psi]["DensityMatrix"]]] ===
+                ConstantArray[0, {4, 4}],
+            Simplify[Normal[qmo["DiscardExtraQudits"][psi]["DensityMatrix"]] - Normal[swapped["DiscardExtraQudits"][psi]["DensityMatrix"]]] ===
+                ConstantArray[0, {4, 4}]
+        }
+    ],
+    {True, True, {0, 1}, True, False},
+    {},
+    TestID -> "UnsortedOrder-SortedTargetOnUnsortedOperator"
+]
+
+(* "ReverseEigenQudits" puts the dilation back on the measurement's own order: it measures the
+   operator, with <X1 Z2> = -2/15 on the state below where Z1 X2 gives 2/5, and equals the
+   sorted twin's form *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]],
+        twin = QuantumMeasurementOperator[QuantumOperator["XZ", {1, 2}]],
+        swapped = QuantumMeasurementOperator[QuantumOperator["ZX", {1, 2}]],
+        psi = QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]
+    },
+        {
+            Simplify[qmo["ReverseEigenQudits"][psi]["Mean"]],
+            qmo["ReverseEigenQudits"] == twin["ReverseEigenQudits"],
+            swapped["ReverseEigenQudits"] == twin["ReverseEigenQudits"]
+        }
+    ],
+    {-2/15, True, False},
+    {},
+    TestID -> "UnsortedOrder-ReverseEigenQudits-MeasuresOperator"
+]
+
+(* composing an operator after the measurement keeps it the same measurement as the sorted
+   twin's composition *)
+VerificationTest[
+    With[{
+        qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]],
+        twin = QuantumMeasurementOperator[QuantumOperator["XZ", {1, 2}]],
+        swapped = QuantumMeasurementOperator[QuantumOperator["ZX", {1, 2}]]
+    },
+        {
+            QuantumOperator["H"][qmo] == QuantumOperator["H"][twin],
+            QuantumOperator["H"][qmo]["QuantumOperator"] == QuantumOperator["H"][twin]["QuantumOperator"],
+            QuantumOperator["H"][qmo] == QuantumOperator["H"][swapped]
+        }
+    ],
+    {True, True, False},
+    {},
+    TestID -> "UnsortedOrder-OperatorAfterMeasurementMatchesTwin"
+]
+
+(* the measurement's operators are the projectors it applies: weighted by their eigenvalues
+   they rebuild the operator's own matrix, and they sum to the identity *)
+VerificationTest[
+    With[{op = QuantumOperator["ZX", {2, 1}]},
+        With[{ops = QuantumMeasurementOperator[op]["Operators"]},
+            {
+                Total[KeyValueMap[Replace[#1, QuditName[Interpretation[_, {l_, _}], ___] :> l] Normal[#2["MatrixRepresentation"]] &, ops]] -
+                    Normal[op["MatrixRepresentation"]],
+                Total[Normal[#["MatrixRepresentation"]] & /@ Values[ops]] - IdentityMatrix[4]
+            }
+        ]
+    ],
+    {ConstantArray[0, {4, 4}], ConstantArray[0, {4, 4}]},
+    {},
+    TestID -> "UnsortedOrder-OperatorsRebuildTheOperator"
+]
+
+(* the circuit route and the stabilizer route measure the same observable: after H on
+   qudit 1 the register is |+0>, certain to give +1, outcome 0 of the tableau *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]]},
+        {
+            QuantumCircuitOperator[{"H" -> 1, qmo}][]["Mean"],
+            Keys @ qmo[PauliStabilizer[2][{"H" -> 1}]]
+        }
+    ],
+    {1, {0}},
+    {},
+    TestID -> "UnsortedOrder-CircuitAndStabilizerRoutesAgree"
+]
+
+(* the measurement channel of a nondegenerate observable is Sum_lambda P rho P, with the
+   eigenspace projectors of the operator's own matrix: for the operator stored on {2, 1}, and
+   for the sorted operator with its target listed as {2, 1} *)
+VerificationTest[
+    With[{op = QuantumOperator[KroneckerProduct[DiagonalMatrix[{1, 2}], PauliMatrix[1]], {2, 1}], psi = QuantumState[{1, 2 I, -1, 3} / Sqrt[15], {2, 2}]},
+        With[{rho = Normal[psi["DensityMatrix"]]},
+            With[{channel = Total[(# . rho . #) & /@ Values[unsortedOrderEigenprojectors[Normal[op["MatrixRepresentation"]]]]]},
+                Simplify[Normal[#["DiscardExtraQudits"][psi]["DensityMatrix"]] - channel] & /@ {
+                    QuantumMeasurementOperator[op],
+                    QuantumMeasurementOperator[op["Sort"], {2, 1}]
+                }
+            ]
+        ]
+    ],
+    ConstantArray[0, {2, 4, 4}],
+    {},
+    TestID -> "UnsortedOrder-DiscardExtraQuditsIsTheMeasurementChannel"
+]
+
+(* a state with a free angle t: |+> on qudit 1 and Cos[t]|0> + Sin[t]|1> on qudit 2 has
+   <X1 Z2> = Cos[2 t] and eigenvalue weights Sin[t]^2, Cos[t]^2, where Z1 X2 gives 0 and
+   1/2, 1/2 for every t *)
+VerificationTest[
+    Module[{t},
+        With[{qm = QuantumMeasurementOperator[QuantumOperator["ZX", {2, 1}]][
+                QuantumState[Flatten[KroneckerProduct[{1, 1} / Sqrt[2], {Cos[t], Sin[t]}]]]]},
+            Simplify[{qm["Mean"] - Cos[2 t], Values[unsortedOrderMeasuredWeights[qm]] - {Sin[t]^2, Cos[t]^2}}, Element[t, Reals]]
+        ]
+    ],
+    {0, {0, 0}},
+    {},
+    TestID -> "UnsortedOrder-SymbolicAngle-ClosedForm"
+]
+
+(* machine precision: a Hermitian operator with a nondegenerate spectrum, stored on {2, 1} *)
+VerificationTest[
+    With[{op = QuantumOperator[N @ {{1, 2 I, 0, 1}, {-2 I, -1, 3, 0}, {0, 3, 2, -I}, {1, 0, I, 0}}, {2, 1}]},
+        With[{qmo = QuantumMeasurementOperator[op], m = Normal[op["MatrixRepresentation"]]},
+            Max @ Map[
+                With[{v = Normal[#["StateVector"]]}, Abs[qmo[#]["Mean"] - Conjugate[v] . m . v]] &,
+                QuantumState /@ {"00", "0+", "+0", "LR", "1-"}
+            ]
+        ]
+    ],
+    _ ? (# < 10^-8 &),
+    {},
+    SameTest -> MatchQ,
+    TestID -> "UnsortedOrder-MachinePrecision-MeanMatchesOwnMatrix"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumMeasurementOperator - partial target measures the reduced observable"]
+
+(* A measurement whose target is part of its operator's qudits measures the partial trace
+   over the other qudits divided by their dimension: A itself when the operator is A on the
+   target and the identity elsewhere, and in general the part of the operator that acts as
+   the identity on the traced qudits. *)
+
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator["ZI"], {1}]},
+        {
+            measurementOutcomeEigenvalues[qmo],
+            qmo[QuantumState[#]]["Mean"] & /@ {"00", "10", "+0"}
+        }
+    ],
+    {{-1, 1}, {1, -1, 0}},
+    {},
+    TestID -> "PartialTarget-ZI-on-1-MeasuresZ1"
+]
+
+(* Z (x) Z + X (x) 1 on target {1}: the Z Z part traces to zero, so the measured observable is X1 *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[
+            QuantumOperator[KroneckerProduct[PauliMatrix[3], PauliMatrix[3]] + KroneckerProduct[PauliMatrix[1], IdentityMatrix[2]], {1, 2}],
+            {1}
+        ]},
+        {
+            measurementOutcomeEigenvalues[qmo],
+            qmo[QuantumState[#]]["Mean"] & /@ {"+0", "0+", "-1"}
+        }
+    ],
+    {{-1, 1}, {1, 0, -1}},
+    {},
+    TestID -> "PartialTarget-SumOperator-MeasuresIdentityPart"
+]
+
+(* X on a qubit and the identity on a traced qutrit: the division is by 3. The state
+   (Cos[1/3], Sin[1/3]) on the qubit has <X> = Sin[2/3]. *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator[KroneckerProduct[PauliMatrix[1], IdentityMatrix[3]], {1, 2}, QuantumBasis[{2, 3}, {2, 3}]], {1}]},
+        {
+            measurementOutcomeEigenvalues[qmo],
+            Simplify[qmo[QuantumState[Flatten[KroneckerProduct[{Cos[1/3], Sin[1/3]}, {1, 1, 1} / Sqrt[3]]], {2, 3}]]["Mean"] - Sin[2/3]]
+        }
+    ],
+    {{-1, 1}, 0},
+    {},
+    TestID -> "PartialTarget-TracedQutrit-DividesByThree"
+]
+
+(* an operator on the non-contiguous order {1, 3}, measured on qudit 1: the traced qudit's
+   dimension is looked up by its label, not by its position *)
+VerificationTest[
+    With[{qmo = QuantumMeasurementOperator[QuantumOperator["XI", {1, 3}], {1}]},
+        {
+            measurementOutcomeEigenvalues[qmo],
+            qmo[QuantumState[#]]["Mean"] & /@ {"+00", "-00", "0+1"}
+        }
+    ],
+    {{-1, 1}, {1, -1, 0}},
+    {},
+    TestID -> "PartialTarget-NonContiguousOrder"
+]
+
+(* eigenvalue labels given explicitly are used as given, with no division *)
+VerificationTest[
+    measurementOutcomeEigenvalues[QuantumMeasurementOperator[QuantumOperator["ZI"] -> {7, 9, 11, 13}, {1}]],
+    {7, 9},
+    {},
+    TestID -> "PartialTarget-ExplicitLabelsUnscaled"
+]
+
+(* "-> Automatic" labels the outcomes with the measured observable's own eigenvalues: those
+   of the reduced observable on a partial target, and the operator's on a full target *)
+VerificationTest[
+    {
+        measurementOutcomeEigenvalues[QuantumMeasurementOperator[QuantumOperator["ZI"] -> Automatic, {1}]],
+        QuantumMeasurementOperator[QuantumOperator["ZI"] -> Automatic, {1}][QuantumState["00"]]["Mean"],
+        With[{op = QuantumOperator[KroneckerProduct[DiagonalMatrix[{1, 2}], PauliMatrix[1]], {2, 1}]},
+            measurementOutcomeEigenvalues[QuantumMeasurementOperator[op -> Automatic]] === Sort[Eigenvalues[Normal[op["MatrixRepresentation"]]]]
+        ]
+    },
+    {{-1, 1}, 1, True},
+    {},
+    TestID -> "PartialTarget-AutomaticLabelsAreMeasuredEigenvalues"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumMeasurement - branch conditional states"]
 
 (* "States" returns the conditional post-measurement branch for each outcome, the CP
