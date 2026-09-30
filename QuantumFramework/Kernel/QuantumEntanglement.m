@@ -151,30 +151,32 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
    a pure global state. A pure state reads it through its Schmidt weights (vector) or its reduced state
    (density-matrix form); a genuinely mixed state's reduced von Neumann entropy mixes classical ignorance
    into the count, so it is not returned as entanglement. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := Enclose @ With[{
-    bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
-},
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := (
     warnUnphysicalMonotone[qs];
-    Which[
-        bp["VectorQ"],
-            Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
-        TrueQ[bp["PureStateQ"]],
-            QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"],
-        True,
-            Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
+    Enclose @ With[{
+        bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
+    },
+        Which[
+            bp["VectorQ"],
+                Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["SchmidtBasis"]["Probability"], If[NumericQ[#], # > 0, True] &]], "Bits"],
+            TrueQ[bp["PureStateQ"]],
+                QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"],
+            True,
+                Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
+        ]
     ]
-]
+)
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
     QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
 (* The Renyi entanglement entropy is the Renyi entropy of the reduced state, an entanglement measure only
    for a pure global state, so a genuinely mixed input is guarded exactly as EntanglementEntropy is. *)
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] := (
+    warnUnphysicalMonotone[qs];
     Enclose @ With[{
         bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
     },
-        warnUnphysicalMonotone[qs];
         If[ bp["VectorQ"] || TrueQ[bp["PureStateQ"]],
             With[{val = (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[QuantumPartialTrace[bp, {1}]["DensityMatrix"], alpha]]},
                 If[NumericQ[val], Re[val], val]
@@ -182,6 +184,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
             Message[QuantumEntanglementMonotone::mixedentropy]; Indeterminate
         ]
     ]
+)
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] :=
     With[{bqs = qs["Bipartition", biPartition]["Normalized"]},

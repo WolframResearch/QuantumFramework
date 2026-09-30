@@ -450,8 +450,9 @@ VerificationTest[
 ]
 
 (* Nor is a trace that is negative or not real a state's, at any scale: -10^-9 diag(1/4, 3/4) has no
-   eigenvalue below -10^-8, and every entry of 10^-9 diag(1/4 + I, 3/4) lies below the 10^-8 Hermiticity
-   tolerance, yet neither is physical. Neither is divided by its trace, so the measure is computed as given. *)
+   eigenvalue below -10^-8, and every entry of the machine matrix 1.*^-9 diag(0.25 + I, 0.75) lies below the
+   10^-8 Hermiticity tolerance, yet neither is physical. Neither is divided by its trace, so the measure is
+   computed as given. *)
 VerificationTest[
     {
         QuantumDistance[QuantumState[-10^-9 {{1/4, 0}, {0, 3/4}}], qsMixed, "Trace"],
@@ -574,6 +575,35 @@ VerificationTest[
     {0, 0, 0},
     {QuantumDistance::notnormalized, QuantumDistance::notphysical, QuantumDistance::notphysical},
     TestID -> "MachineTrace-JudgedAgainstNorm"
+]
+
+(* The trace is compared with that norm without forming a number below the range of machine numbers: 10^-300
+   times the maximally mixed state is rescaled with no General::munfl, and a matrix whose entries are of
+   order 10^10 and whose trace is 3 10^-308 is not divided by that trace, and is not physical. *)
+VerificationTest[
+    {
+        Chop @ QuantumDistance[QuantumState[1.*^-300 {{0.5, 0.}, {0., 0.5}}], qsMixed, "Trace"],
+        QuantumDistance[QuantumState[{{3.*^-308, 1.*^10}, {1.*^10, 0.}}], qsMixed, "HilbertSchmidt"]
+    },
+    {0, _Real},
+    {QuantumDistance::notnormalized, QuantumDistance::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "MachineTrace-NoUnderflow"
+]
+
+(* A matrix with a symbolic entry has no Frobenius norm; its machine trace is judged against the norm of its
+   numeric entries, which scales with the matrix: 10^-9 times a matrix of trace 1 is rescaled, while a
+   matrix whose trace is 10^-12 against numeric entries of order 1 is not divided by that trace, and is not
+   physical. *)
+VerificationTest[
+    {
+        QuantumDistance[QuantumState[1.*^-9 {{0.5, x}, {Conjugate[x], 0.5}}], qsMixed, "HilbertSchmidt"],
+        QuantumDistance[QuantumState[{{0.5, x}, {Conjugate[x], -0.5 + 1.*^-12}}], qsMixed, "HilbertSchmidt"]
+    },
+    {_, _},
+    {QuantumDistance::notnormalized, QuantumDistance::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "MachineTrace-SymbolicEntry-JudgedAgainstNumericEntries"
 ]
 
 (* An exact trace is classified exactly, however small: {{p, 0}, {0, 1 - p}} / 10^9 has trace 10^-9 and is

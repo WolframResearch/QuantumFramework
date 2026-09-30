@@ -11,36 +11,46 @@ PackageScope["numericStateNotPSDQ"]
 $QuantumDistances = {"Fidelity", "RelativeEntropy", "RelativePurity", "Trace", "Bures", "BuresAngle", "HilbertSchmidt", "Bloch"}
 
 
-(* Whether a state is not physical, for the entanglement monotones, by the rule distanceMatrix applies to an
-   input. A monotone computes from a state divided by its trace (a state vector divided by its norm): a
-   trace that traceClass finds to be 0, negative, or not real is never a state's, a positive trace is
-   divided out before notPhysicalMatrixQ tests the matrix, and a trace whose sign the kernel cannot
-   decide, or a symbolic one, leaves the matrix to be tested as given. Multiplying a state by a positive
-   number therefore leaves the verdict as it is when the kernel can decide the sign of both the original
-   and the new trace, and neither the machine entries nor a state vector's squared norm leave the normal
-   range of machine numbers. A state vector is physical unless it is zero, which
-   zeroVectorQ reads from its dense computational vector without forming its density matrix. The density
-   matrix of a mixed state is made dense as well: traceClass reads a machine trace against Norm, which can
-   return a wrong value, or crash the kernel, on a SparseArray whose default element is not 0, and
-   QuantumState can store an input holding unsimplified exact zeros in such an array. *)
+(* Whether a state is not physical, for the entanglement monotones. QuantumDistance takes its notphysical
+   verdict on an input from the same functions on the same matrix, so the two warn on the same states. A
+   monotone computes from a state divided by its trace (a state vector divided by its norm), and a state
+   vector is physical unless it is 0, which zeroVectorQ reads without forming its density matrix; a mixed
+   state is judged by densityReading. Multiplying a machine state by a positive machine number, or a state
+   of exact rational or complex rational entries by a positive rational number, leaves the verdict as it
+   is when the entries, before and after the division by the trace, and a state vector's squared norm lie
+   in the normal range of machine numbers, and no quantity compared with a tolerance lies within round-off
+   of it. Another multiplier can change the Hermiticity test from exact to one with the tolerance: a
+   machine number makes an exact state machine, and an irrational number can leave a trace that does not
+   cancel from the divided entries, as the trace 1/(3 Sqrt[2]) + Sqrt[2]/3 of diag(1/3, 2/3) / Sqrt[2]
+   does. The state is read in its dense form: QuantumState can store an input holding several unsimplified
+   exact zeros in a SparseArray whose default element is such a zero, and Norm, which traceScale takes of a
+   matrix, can crash the kernel on such an array. *)
 numericStateNotPSDQ[qs_ ? QuantumStateQ] := If[
     qs["VectorQ"],
     zeroVectorQ[Normal @ qs["Computational"]["StateVector"]],
-    With[{rho = Normal @ qs["Computational"]["DensityMatrix"]},
-        With[{t = Tr[rho]},
-            Switch[traceClass[t, rho],
-                "Zero" | "Other", True,
-                "Positive", notPhysicalMatrixQ[rho / Re[t]],
-                _, notPhysicalMatrixQ[rho]
-            ]
-        ]
-    ]
+    Last @ densityReading[Normal @ qs["Computational"]["DensityMatrix"]]
 ]
 numericStateNotPSDQ[_] := False
 
+(* {the class of the trace of a density matrix, the trace, whether the matrix is not physical}: a trace that
+   traceClass finds to be 0, negative, or not real is never a state's, a positive trace is divided out
+   before notPhysicalMatrixQ tests the matrix, and a trace whose sign the kernel cannot decide, or a
+   symbolic one, leaves the matrix to be tested as given. Tr raises General::munfl when machine entries in
+   the normal range cancel to a nonzero trace below it, as those of diag(5 10^-301, -4.99999999999 10^-301)
+   do. *)
+densityReading[rho_] := With[{t = Tr[rho]},
+    With[{class = traceClass[t, rho]},
+        {class, t, Switch[class,
+            "Zero" | "Other", True,
+            "Positive", notPhysicalMatrixQ[rho / Re[t]],
+            _, notPhysicalMatrixQ[rho]
+        ]}
+    ]
+]
+
 (* Whether a state vector is 0, from its squared norm: through reducedTrace for exact entries, as traceClass
    compares an exact trace with 0, and for machine entries when the squared norm is 0., as it is too when
-   the squared norm underflows, which distanceMatrix then reads as a trace of 0. *)
+   the squared norm underflows. *)
 zeroVectorQ[v_] := With[{t = Conjugate[v] . v},
     Which[
         ! NumericQ[t], False,
@@ -59,8 +69,11 @@ QuantumDistance::bloch =
     "The \"Bloch\" distance is defined for single-qubit states; these states have dimension `1`. \"Trace\" and \"HilbertSchmidt\" are defined for any dimension."
 
 (* The tolerance below which a machine number is read as round-off: a trace this close to 1, or to 0 in
-   units of the Frobenius norm of its matrix, a negative eigenvalue or a Hermiticity defect this small in a
-   state of unit trace, and a fidelity distance this far below 0. *)
+   units of the scale traceScale gives its matrix, a negative eigenvalue this small in a state of unit
+   trace, and a fidelity distance this far below 0. It is also the Tolerance of the Hermiticity test, under
+   which HermitianMatrixQ takes an entry of absolute value at most 10^-8 for 0 and compares larger entries
+   except for their last Log2[10^-8 / $MachineEpsilon] bits, about 25.4, so that two of them may differ
+   by a relative 5 10^-9. *)
 $distanceTolerance = 1.*^-8
 
 
@@ -79,17 +92,20 @@ distanceMatrices[qs1_, qs2_] := With[{inputs = MapThread[distanceMatrix, {{qs1, 
     inputs[[All, 1]]
 ]
 
+(* {the matrix the measures read, whether the input is not physical}. The verdict is numericStateNotPSDQ's:
+   zeroVectorQ's for a state vector, and for a mixed state densityReading's of the dense matrix, which also
+   gives the trace and its class that decide the division. The measures read the matrix as the state
+   stores it, divided by its trace when that is positive; any other is read as given. *)
 distanceMatrix[qs_, i_] := With[{rho = qs["Computational"]["DensityMatrix"]},
-    With[{t = Tr[rho]}, inputMatrix[traceClass[t, rho], qs, rho, t, i]]
+    inputMatrix[rho, i, If[
+        qs["VectorQ"],
+        With[{t = Tr[rho]}, {traceClass[t, rho], t, numericStateNotPSDQ[qs]}],
+        densityReading[Normal @ rho]
+    ]]
 ]
 
-(* {the matrix the measures read, whether the input is not physical}; a trace that is 0, negative, or not
-   real is never a state's, whatever the scale of the input, and such an input is read as given *)
-inputMatrix["Zero" | "Other", _, rho_, _, _] := {rho, True}
-inputMatrix["Positive", qs_, rho_, t_, i_] := withPhysicality[qs, rescaled[rho, Re[t], i]]
-inputMatrix[_, qs_, rho_, _, _] := withPhysicality[qs, rho]
-
-withPhysicality[qs_, m_] := {m, ! qs["VectorQ"] && notPhysicalMatrixQ[m]}
+inputMatrix[rho_, i_, {"Positive", t_, notPhysical_}] := {rescaled[rho, Re[t], i], notPhysical}
+inputMatrix[rho_, _, {_, _, notPhysical_}] := {rho, notPhysical}
 
 rescaled[rho_, t_, i_] := (
     If[Precision[t] === Infinity || Abs[t - 1] > $distanceTolerance, Message[QuantumDistance::notnormalized, i, t]];
@@ -99,8 +115,8 @@ rescaled[rho_, t_, i_] := (
 (* The trace of an input as "Zero", "Unit", "Positive" (real and positive, other than an exact 1), "Other"
    (negative or not real), "Undecided" (an exact trace whose sign the kernel cannot decide), or "Symbolic"
    (one that does not evaluate to a number). An exact trace is compared with 0 and 1 through reducedTrace,
-   and classed by its sign through signClass. A machine trace is judged against the Frobenius norm of its
-   matrix, so a state vector of norm 10^-5 is rescaled like any other. *)
+   and classed by its sign through signClass. A machine trace is judged against the scale traceScale gives
+   its matrix, so a state vector of norm 10^-5 is rescaled like any other. *)
 traceClass[t_ ? NumericQ, _] /; Precision[t] === Infinity := With[{u = reducedTrace[t]},
     Which[
         TrueQ[u == 0], "Zero",
@@ -108,22 +124,35 @@ traceClass[t_ ? NumericQ, _] /; Precision[t] === Infinity := With[{u = reducedTr
         True, signClass[u, Positive[u]]
     ]
 ]
-traceClass[t_ ? NumericQ, rho_] := With[{tolerance = $distanceTolerance frobeniusNorm[rho]},
-    Which[
-        Abs[t] <= tolerance, "Zero",
-        Abs[Im[t]] <= tolerance && Re[t] > tolerance, "Positive",
-        True, "Other"
-    ]
-]
+traceClass[t_ ? NumericQ, rho_] := If[t == 0, "Zero", With[{s = traceScale[t, rho]},
+    If[s < 1, scaledTraceClass[t / s, 1], scaledTraceClass[t, s]]
+]]
 traceClass[_, _] := "Symbolic"
 
-(* An exact trace to compare with 0 and 1: one that is algebraic and whose machine value is near 0 or 1 is
-   reduced with RootReduce, since Equal cannot always decide a sum of nested radicals such as
-   Expand[(Sqrt[3 + 2 Sqrt[2]] - Sqrt[2])^2], which is 1. An exact rational or complex rational is
-   compared exactly as it is, and is not converted to a machine number, which for one below about 10^-308
-   raises General::munfl. *)
+(* The class of a machine trace t against the scale s: 0 within $distanceTolerance s, and positive when its
+   real part exceeds that and its imaginary part does not. traceClass passes t / s against 1 when s is
+   below 1, so that, for a trace in the normal range of machine numbers, neither that quotient nor the
+   product $distanceTolerance s falls below it. A comparison that does not evaluate to True, as one with
+   Indeterminate, leaves the trace "Other". *)
+scaledTraceClass[t_, s_] := Which[
+    TrueQ[Abs[t] <= $distanceTolerance s], "Zero",
+    TrueQ[Abs[Im[t]] <= $distanceTolerance s && Re[t] > $distanceTolerance s], "Positive",
+    True, "Other"
+]
+
+(* An exact trace to compare with 0 and 1: one that is algebraic and lies within 10^-6 of 0 or 1 is reduced
+   with RootReduce, since Equal cannot always decide a sum of nested radicals such as
+   Expand[(Sqrt[3 + 2 Sqrt[2]] - Sqrt[2])^2], which is 1. Less compares the trace with the exact bound
+   10^-6 without the General::munfl that converting a trace below about 10^-308 to a machine number
+   raises; like Positive, it raises Less::meprec for a trace closer to the bound than $MaxExtraPrecision
+   resolves, as 10^-6 + Sqrt[2 + 10^-200] - Sqrt[2], which is then not reduced. An exact rational or
+   complex rational is compared exactly as it is. *)
 reducedTrace[t_ ? ExactNumberQ] := t
-reducedTrace[t_] := If[Min[Abs[N[t]], Abs[N[t] - 1]] < 1.*^-6 && TrueQ[Element[t, Algebraics]], RootReduce[t], t]
+reducedTrace[t_] := If[
+    (TrueQ[Abs[t] < 10^-6] || TrueQ[Abs[t - 1] < 10^-6]) && TrueQ[Element[t, Algebraics]],
+    RootReduce[t],
+    t
+]
 
 (* The class of a nonzero exact trace u from s = Positive[u]. When Positive cannot decide an algebraic
    trace, RootReduce decides it when the sign of the reduced form can be decided: (1 + I Sqrt[2])
@@ -142,19 +171,31 @@ signClass[u_, _] /; TrueQ[Element[u, Algebraics]] := With[{r = RootReduce[u]},
 ]
 signClass[_, _] := "Undecided"
 
-(* The Frobenius norm as the norm of the flattened entries, which keeps a SparseArray sparse and is many
-   times faster than Norm[rho, "Frobenius"] on one; 1. for a matrix with a symbolic entry, whose trace is
-   then judged on its own. *)
-frobeniusNorm[rho_] := With[{f = N @ Norm[Flatten[rho]]}, If[NumericQ[f], f, 1.]]
+(* The scale a nonzero machine trace t is judged against: the larger of the absolute value of t and the
+   Frobenius norm of the numeric entries of its matrix, all of them for a numeric matrix, taken as the norm
+   of the flattened entries. Both scale with the matrix, so the class of t does not depend on its scale: t
+   is 0 when its absolute value is at most $distanceTolerance times that norm, positive when its real part
+   exceeds, and its imaginary part is at most, $distanceTolerance times the scale, and "Other" otherwise.
+   The norm is not converted to a machine number, which for arbitrary-precision entries below the range of
+   machine numbers would underflow to 0. *)
+traceScale[t_, rho_] := Max[Abs[t], numericEntriesNorm[Flatten[rho]]]
+numericEntriesNorm[entries_] :=
+    If[VectorQ[entries, NumericQ], Norm[entries], numericNorm[Select[Normal[entries], NumericQ]]]
+numericNorm[{}] := 0
+numericNorm[entries_] := Norm[entries]
 
 (* A numeric matrix that is not Hermitian, or that has an eigenvalue below -$distanceTolerance. The check
    runs on the matrix after it is divided by a positive trace, so the tolerance is relative to the state; a
    matrix whose trace is undecided or symbolic is checked as given, against the same tolerance. The
-   eigenvalues are machine numbers: an exact negative eigenvalue closer to 0 than the tolerance is not
-   seen, which is the price of not deciding the spectrum of an exact matrix exactly, and an exact matrix
-   whose entries machine arithmetic cannot evaluate is not checked at all, as DiagonalMatrix[{t, -t/2}]
-   divided by its trace, with t = Sqrt[2 + 10^-200] - Sqrt[2]: its entries evaluate to 0./0., with the
-   messages that division raises. A matrix of exact rational entries is checked for Hermiticity exactly;
+   eigenvalues are those of N of the matrix, so an exact negative eigenvalue closer to 0 than the
+   tolerance is not seen, which is the price of not deciding the spectrum of an exact matrix exactly. N
+   turns an exact or arbitrary-precision entry below the range of machine numbers into 0., with
+   General::munfl, and an exact one above that range into an arbitrary-precision number, whose eigenvalues
+   raise General::munfl, as the entries 10^400 of {{10^-400, 1}, {1, 0}} divided by its trace do. An
+   exact matrix whose entries machine arithmetic cannot evaluate is not checked at all, as
+   DiagonalMatrix[{t, -t/2}] divided by its trace, with t = Sqrt[2 + 10^-200] - Sqrt[2]: its entries
+   evaluate to 0./0., with the Power::infy and Infinity::indet messages of that division. A matrix whose
+   entries, as divided, are exact rational or complex rational numbers is checked for Hermiticity exactly;
    any other is checked in its dense form, since HermitianMatrixQ with a Tolerance reads a SparseArray more
    strictly than the same matrix dense, and fails a round-off entry opposite a structural zero. *)
 notPhysicalMatrixQ[m_] := With[{dm = Normal @ N[m]},

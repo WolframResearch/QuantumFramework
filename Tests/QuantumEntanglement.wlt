@@ -589,11 +589,12 @@ VerificationTest[
 ]
 
 (* A monotone computes from its input divided by the trace (a state vector divided by its norm), so the
-   warning is judged on that matrix: a non-physical matrix warns and a physical one is silent at any scale at
-   which the kernel can decide the sign of the trace, and at which the machine entries and a state vector's
-   squared norm stay in the normal range. A matrix that is not Hermitian is not a state even with a
-   positive spectrum, and neither is one whose trace is 0, negative, or not real. Each warning test makes
-   one call, so the declared message is pinned to that call. *)
+   warning is judged on that matrix: a non-physical matrix warns and a physical one is silent at any scale,
+   a machine one for a machine matrix and a rational one for a matrix of exact rational or complex rational
+   entries, at which the entries and a state vector's squared norm stay in the normal range of machine
+   numbers and no quantity compared with a tolerance moves across it by round-off. A matrix that is not
+   Hermitian is not a state even with a positive spectrum, and neither is one whose trace is 0, negative,
+   or not real. Each warning test makes one call, so the declared message is pinned to that call. *)
 
 nonHermitian = KroneckerProduct[#, #] &[{{1/2, 1}, {0, 1/2}}];   (* trace 1, the eigenvalue 1/4 four times *)
 pureDM = Outer[Times, #, Conjugate[#]] &[Normalize[{1, 2, 3, 4 I}]];   (* a pure state as a density matrix *)
@@ -661,9 +662,19 @@ VerificationTest[
     TestID -> "Monotone-PSD-AnyScale-NoWarn"
 ]
 
-(* an algebraic trace whose sign Positive cannot decide is reduced with RootReduce, and the state is physical:
-   the density matrix of the ket (1 + I Sqrt[2]) |00> + |11> has the trace (1 + I Sqrt[2]) (1 - I Sqrt[2])
-   + 1, which is 4, and gives the negativity of the normalized ket without a warning *)
+(* 10^-300 times the Werner state lies in the normal range of machine numbers, and its trace is judged
+   against its scale without forming a number below that range: the monotone neither warns nor raises
+   General::munfl *)
+VerificationTest[
+    Chop[QuantumEntanglementMonotone[QuantumState[1.*^-300 N @ werner[4/5], {2, 2}], "Negativity"] - 7/20],
+    0,
+    {},
+    TestID -> "Monotone-PSD-TinyMachineScale-NoMessage"
+]
+
+(* a trace whose sign Positive cannot decide is not taken for a negative or non-real one: the density matrix
+   of the ket (1 + I Sqrt[2]) |00> + |11> has the trace (1 + I Sqrt[2]) (1 - I Sqrt[2]) + 1, which is 4,
+   and gives the negativity of the normalized ket without a warning *)
 VerificationTest[
     Chop[
         N @ QuantumEntanglementMonotone[
@@ -702,11 +713,29 @@ VerificationTest[
     TestID -> "Monotone-ZeroKet-DependentBasis-Warns"
 ]
 
+(* the entropies warn before they check the bipartition, as the other monotones do: a qubit with the
+   eigenvalue -1/5 warns, and the monotone, which needs two qudits, fails *)
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[{{0.5, 0.7}, {0.7, 0.5}}], "EntanglementEntropy"],
+    _Failure,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-EntanglementEntropy-SingleQudit-Warns"
+]
+
+VerificationTest[
+    QuantumEntanglementMonotone[QuantumState[{{0.5, 0.7}, {0.7, 0.5}}], "RenyiEntropy"],
+    _Failure,
+    {QuantumEntanglementMonotone::notphysical},
+    SameTest -> MatchQ,
+    TestID -> "Monotone-RenyiEntropy-SingleQudit-Warns"
+]
+
 (* Exact numbers on which Equal or Positive fails. zR and zR3 are 0 and trig2 is 2: Positive cannot decide
    the sign of zR or trig2, and Equal cannot decide zR3 == 0 until RootReduce reduces it. QuantumState stores
-   a ket with several entries zR in a SparseArray whose default element is zR, on which Norm returns a wrong
-   value or crashes the kernel. The sign of a trace scaled by trig2 stays undecided, and the matrix is then
-   judged as given. tA is positive, of order 10^-200, so 1/2 + I tA is not real. These pin the helper's
+   the ket {zR, zR, zR, 1} in a SparseArray whose default element is zR, and the helper reads it as the
+   nonzero vector it is. The sign of a trace scaled by trig2 stays undecided, and the matrix is then judged
+   as given. tA is positive, of order 10^-200, so the trace 1 + I tA is not real. These pin the helper's
    verdict, which decides the warning, without the messages the monotones' own arithmetic on such entries
    gives. *)
 
@@ -745,6 +774,47 @@ VerificationTest[
     },
     {True, False, True, False, True},
     TestID -> "Helper-UndecidableExactEntries"
+]
+
+(* a matrix with a symbolic entry is judged through its trace alone, and a machine trace against the norm of
+   its numeric entries, which scales with the matrix: the state is physical at 10^-9 as at 1, and a trace of
+   10^-12 against numeric entries of order 1 counts as 0, so that matrix is not physical *)
+VerificationTest[
+    With[{m = {{0.5, 0, 0, x}, {0, 0, 0, 0}, {0, 0, 0, 0}, {Conjugate[x], 0, 0, 0.5}}},
+        {
+            notPhysicalQ[QuantumState[m, {2, 2}]],
+            notPhysicalQ[QuantumState[1.*^-9 m, {2, 2}]],
+            notPhysicalQ[QuantumState[ReplacePart[m, {4, 4} -> -0.5 + 1.*^-12], {2, 2}]]
+        }
+    ],
+    {False, False, True},
+    TestID -> "Helper-SymbolicEntry-AnyScale"
+]
+
+(* an exact trace is compared with 0 and 1 without converting it to a machine number: the trace
+   Sqrt[2] 10^-400, and the squared norm of the ket {2^(1/4) 10^-200, 0}, lie below the machine range, and
+   raise no General::munfl *)
+VerificationTest[
+    {
+        notPhysicalQ[QuantumState[Sqrt[2] 10^-400 {{1/2, 0}, {0, 1/2}}]],
+        notPhysicalQ[QuantumState[{2^(1/4) 10^-200, 0}]]
+    },
+    {False, False},
+    {},
+    TestID -> "Helper-TinyExactTrace-NoMessage"
+]
+
+(* arbitrary-precision entries keep their precision in the scale their trace is judged against: in 30-digit
+   numbers and multiplied by 10^-400, below the range of machine numbers, the matrix with the eigenvalue
+   -1/5 is not physical and the Werner state is, with no General::munfl *)
+VerificationTest[
+    {
+        notPhysicalQ[QuantumState[10^-400 N[{{1/2, 0, 0, 7/10}, {0, 0, 0, 0}, {0, 0, 0, 0}, {7/10, 0, 0, 1/2}}, 30], {2, 2}]],
+        notPhysicalQ[QuantumState[10^-400 N[werner[4/5], 30], {2, 2}]]
+    },
+    {True, False},
+    {},
+    TestID -> "Helper-ArbitraryPrecisionTinyScale"
 ]
 
 EndTestSection[]
