@@ -362,7 +362,12 @@ MatrixInverse[matrix_] := If[
    Abs works too: a normal matrix by its Schur decomposition m = q.t.q^†, whose t
    is diagonal to roundoff exactly when m is normal, and a non-normal one with a
    well-conditioned eigenbasis v by v.f(d).v^-1. Any other goes to MatrixFunction (Schur-Parlett), which needs f
-   differentiable at the eigenvalues. *)
+   differentiable at the eigenvalues. An eigenvalue within the error bound of the
+   decomposition from the negative real axis is put on it, so that Sqrt and Log take
+   their principal value on the branch cut there, as for the exact matrix. The bound is
+   the eigenvalue's own on the normal and eigenvector routes; on the Schur route of a
+   nearly defective matrix it is one for the whole matrix, and it can take in an
+   eigenvalue the decomposition has resolved. *)
 matrixFunction[f : Plus | Minus | Times | Conjugate, mat_, {left___}, {right___}, ___] := f[left, mat, right]
 
 matrixFunction[Power, mat_, {left___}, {right___}, opts : OptionsPattern[]] := MatrixPower[mat, left, right, opts]
@@ -378,13 +383,17 @@ spectralValues[f_, eigenvalues_] := With[{values = f /@ eigenvalues},
     ]
 ]
 
-(* An inexact diagonal is held to the same roundoff rule as a dense matrix, so f
-   commutes with a change of basis near a zero eigenvalue too. *)
+(* An inexact diagonal is held to the same roundoff rules as a dense matrix, so f
+   commutes with a change of basis near a zero eigenvalue and near the negative real
+   axis too. *)
 scalarMatrixFunction[f_, mat_, ___] /; SquareMatrixQ[mat] && DiagonalMatrixQ[mat] := Enclose @ With[
     {eigenvalues = Normal[Diagonal[mat]]},
     SparseArray[
         Band[{1, 1}] -> Confirm[spectralValues[f,
-            If[MatrixQ[mat, NumericQ] && Precision[mat] < Infinity, roundoffEigenvalues[eigenvalues, roundoff[mat]], eigenvalues]
+            If[ MatrixQ[mat, NumericQ] && Precision[mat] < Infinity,
+                onNegativeAxis[roundoffEigenvalues[eigenvalues, roundoff[mat]], 16 roundoff[mat] Max[Abs[eigenvalues]]],
+                eigenvalues
+            ]
         ]],
         Dimensions[mat]
     ]
@@ -421,6 +430,11 @@ roundoffEigenvalues[eigenvalues_, eps_] := Chop[eigenvalues, 10 eps Max[Abs[eige
    its norm, with room to spare: 100 n 10^-p. *)
 roundoffTolerance[mat_] := 100 Length[mat] roundoff[mat]
 
+(* The error a Schur decomposition of an n x n matrix at precision p leaves in q.t.q^† - m,
+   with room to spare: 10 n 10^-p times the scale of the matrix, a tenth of
+   roundoffTolerance. *)
+backwardError[mat_, scale_] := 10 Length[mat] roundoff[mat] scale
+
 (* The unit roundoff 10^-p of a matrix of precision p, computed at 20 digits so that it
    does not underflow for p above 307. *)
 roundoff[mat_] := 10 ^ -SetPrecision[Precision[mat], 20]
@@ -438,46 +452,73 @@ nearlyHermitianQ[mat_, tol_] := With[{s = Max[Abs[mat]], d = Max[Abs[mat - Conju
    eigenvectors Eigensystem returns need not be orthonormal, so f(m) = q.f(t).q^†
    when t is diagonal to roundoff. q.(x q^†) is q.DiagonalMatrix[x].q^† without the
    dense diagonal product. A Hermitian matrix keeps real eigenvalues and, for real
-   f values, gives an exactly Hermitian result, real for real input. *)
+   f values, gives an exactly Hermitian result, real for real input. The eigenvalue
+   t_ii of a normal matrix is known to within the residual of its Schur vector. *)
 inexactMatrixFunction[f_, mat_, eps_, tol_, opts___] := Enclose @ With[
     {qt = SchurDecomposition[mat, RealBlockDiagonalForm -> False]},
     {q = First[qt], t = Last[qt], hermitianQ = nearlyHermitianQ[mat, tol]},
     If[ hermitianQ || Max[Abs[UpperTriangularize[t, 1]]] <= tol Max[Abs[t]],
         With[
-            {values = Confirm[spectralValues[f, roundoffEigenvalues[If[hermitianQ, Re, Identity][Diagonal[t]], eps]]]},
+            {eigenvalues = With[{e = roundoffEigenvalues[If[hermitianQ, Re, Identity][Diagonal[t]], eps]},
+                If[hermitianQ, e, onNegativeAxis[e, eigenvalueError[mat, q, Diagonal[t], Max[Abs[t]]]]]
+            ]},
+            {values = Confirm[spectralValues[f, eigenvalues]]},
             {result = q . (values ConjugateTranspose[q])},
             Which[
-                ! hermitianQ, realOnRealInput[f, mat, Diagonal[t], values, tol, result],
+                ! hermitianQ, realOnRealInput[mat, eigenvalues, values, tol, result],
                 ! FreeQ[values, _Complex], result,
                 FreeQ[mat, _Complex], Re[(result + Transpose[result]) / 2],
                 True, (result + ConjugateTranspose[result]) / 2
             ]
         ],
-        nonNormalMatrixFunction[f, mat, Eigensystem[mat], eps, opts]
+        nonNormalMatrixFunction[f, mat, qt, Eigensystem[mat], eps, opts]
     ]
 ]
 
-(* A real matrix has eigenvalues in conjugate pairs, and when f maps each conjugate
-   eigenvalue to the conjugate value (Cos, Exp, Log off the negative axis), f of it
-   is real: its imaginary part is roundoff and is dropped. *)
-realOnRealInput[f_, mat_, eigenvalues_, values_, tol_, result_] := If[
-    FreeQ[mat, _Complex] && With[{conjugateValues = f /@ Conjugate[eigenvalues]},
-        VectorQ[conjugateValues, NumericQ] &&
-            Max[Abs[conjugateValues - Conjugate[values]]] <= tol Max[1, Max[Abs[values]]]
-    ],
+(* An eigenvalue x left of the imaginary axis whose distance |Im x| from the negative
+   real axis, where Sqrt and Log have their branch cut, is within bound (one number, or
+   one per eigenvalue), the error the decomposition may have made in it, is put on that
+   axis: which side of the cut it landed on may be roundoff. f of the real number is the
+   principal value, the value the exact matrix gives when x is real. *)
+onNegativeAxis[eigenvalues_, bound_] := MapThread[
+    If[Re[#1] < 0 && Abs[Im[#1]] <= #2, Re[#1], #1] &,
+    {eigenvalues, If[ListQ[bound], bound, ConstantArray[bound, Length[eigenvalues]]]}
+]
+
+(* How far each computed eigenvalue x_i with the unit vector v_i (the columns of vectors)
+   can lie from an eigenvalue of m, with room to spare: four times its residual
+   ||m.v_i - x_i v_i|| plus 16 10^-p scale for the roundoff in computing it. That bounds
+   the error for a normal m; for any other it is multiplied by the condition number of
+   the eigenvalue. *)
+eigenvalueError[mat_, vectors_, eigenvalues_, scale_] :=
+    4 (Norm /@ Transpose[mat . vectors - (# eigenvalues &) /@ vectors]) + 16 roundoff[mat] scale
+
+(* A real matrix has eigenvalues in conjugate pairs, and f of it is real when f takes
+   each pair to conjugate values, as Cos and Exp do, and Log off the negative axis.
+   Each eigenvalue is paired with the one nearest its conjugate, which is itself when
+   it is real, so that f of a real eigenvalue must be real; the imaginary part of the
+   result is then roundoff and is dropped. *)
+realOnRealInput[mat_, eigenvalues_, values_, tol_, result_] := If[
+    FreeQ[mat, _Complex] && VectorQ[values, NumericQ] &&
+        Max[Abs[values[[Nearest[eigenvalues -> "Index", Conjugate[eigenvalues]][[All, 1]]]] - Conjugate[values]]] <=
+            tol Max[1, Max[Abs[values]]],
     Re[result],
     result
 ]
 
 (* An eigenbasis v whose condition number stays below eps^(-1/4) keeps the error of
-   v.f(d).v^-1 near eps^(3/4). A defective or nearly defective matrix fails this and
-   goes to MatrixFunction (Schur-Parlett), which needs f differentiable there. *)
-nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
+   v.f(d).v^-1 near eps^(3/4). The rows of v^-1 are the left eigenvectors scaled to the
+   unit right ones, and the length of a row is the condition number of its eigenvalue:
+   to first order, a perturbation of size e moves the eigenvalue by up to e times it. A
+   defective or nearly defective matrix fails the condition and goes to the Schur form
+   (cutMatrixFunction). *)
+nonNormalMatrixFunction[f_, mat_, _, {eigenvalues_, vectors_}, eps_, ___] /;
     With[{sv = SingularValueList[vectors]}, Length[sv] == Length[vectors] && Max[sv] <= eps ^ (-1/4) Min[sv]] :=
-    Enclose @ With[{values = Confirm[spectralValues[f, eigenvalues]]},
-        realOnRealInput[f, mat, eigenvalues, values, roundoffTolerance[mat],
-            Transpose[vectors] . (values Inverse[Transpose[vectors]])
-        ]
+    Enclose @ With[
+        {inverse = Inverse[Transpose[vectors]], tol = roundoffTolerance[mat]},
+        {placed = onNegativeAxis[eigenvalues, eigenvalueError[mat, Transpose[vectors], eigenvalues, Norm[Flatten[mat]]] (Norm /@ inverse)]},
+        {values = Confirm[spectralValues[f, placed]]},
+        realOnRealInput[mat, placed, values, tol, Transpose[vectors] . (values inverse)]
     ]
 
 (* MatrixFunction takes divided differences of f between eigenvalues that roundoff has
@@ -485,13 +526,132 @@ nonNormalMatrixFunction[f_, mat_, {eigenvalues_, vectors_}, eps_, ___] /;
    Sqrt and Log of a matrix within roundoff of a nilpotent one can come out as large
    numbers that mean nothing. So the eigenvalue 0 is read to within roundoff as 0^m reads
    it, and f fails when it has no finite value there or, as its series shows, no finite
-   derivative of an order below a bound on the size of the largest Jordan block there. *)
-nonNormalMatrixFunction[f_, mat_, {eigenvalues_, _}, _, opts___] := Enclose[
+   derivative of an order below a bound on the size of the largest Jordan block there.
+   Otherwise the Schur form goes to cutMatrixFunction. *)
+nonNormalMatrixFunction[f_, mat_, qt_, {eigenvalues_, _}, _, opts___] := Enclose[
     Confirm[spectralValues[f, eigenvalues]];
     If[ lacksDerivativeAtZeroQ[f, zeroJordanBlockBound[mat, roundoffZeroEigenvalue[mat, eigenvalues]]],
         derivativeFailure,
-        Replace[MatrixFunction[f, mat, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
+        Replace[cutMatrixFunction[f, mat, qt, opts], Except[_ ? (MatrixQ[#, NumericQ] &)] -> derivativeFailure]
     ]
+]
+
+(* f of the Schur form q.t.q^† of a defective or nearly defective m. Roundoff splits an
+   eigenvalue with a Jordan block into several about it, and on the negative real axis
+   they land on both sides of the cut of Sqrt and Log. Taken there, f comes from both
+   sides, and the divided differences MatrixFunction takes between them, of order one
+   over the split, mean nothing. Each eigenvalue that roundoff may have moved off the
+   axis, at a point where f jumps across it (cutMove), is put back on it, at its real
+   part. An imaginary part within the backward error is dropped; a larger one is restored
+   by expanding f(t) about that t' in the imaginary parts d, since f(t) can be sensitive
+   to it far beyond its size, as when a genuine eigenvalue lies close by: the blocks
+   along the top row of f of the block matrix with t' on the diagonal and
+   DiagonalMatrix[d] above it are the terms (1/j!) d^j/ds^j f(t' + s d) at s = 0. f is
+   differentiated only on the axis, so every eigenvalue split from one on the cut takes
+   the value from above the cut, as the exact matrix does. The terms shrink at least as
+   fast as (|d| / |Re x|)^j; a matrix that would need more than four terms at that rate,
+   or has nothing to move, goes to MatrixFunction unchanged, and so does one that leaves
+   beside the restored eigenvalues another whose side of the cut the decomposition has
+   not determined (undecidedQ). *)
+cutMatrixFunction[f_, mat_, {q_, t_}, opts___] := With[
+    {eigenvalues = Diagonal[t], scale = Norm[Flatten[t]]},
+    {bound = backwardError[mat, scale], mirrors = If[FreeQ[mat, _Complex], Nearest[eigenvalues -> "Index", Conjugate[eigenvalues]], None]},
+    {moves = MapIndexed[cutMove[f, t, #1, First[#2], bound, scale, mirrors, roundoff[mat]] &, eigenvalues]},
+    {placed = MapThread[If[#2 > 0, Re[#1], #1] &, {eigenvalues, moves}]},
+    {displacement = MapThread[If[#3 == 2, #1 - #2, 0] &, {eigenvalues, placed, moves}]},
+    {order = If[Max[Abs[displacement]] == 0, 0,
+        Ceiling[Log[roundoff[mat]] / Log[Max[MapThread[If[#3 == 2, Abs[#1] / Abs[#2], 0] &, {displacement, placed, moves}]]]]
+    ]},
+    If[ Max[moves] == 0 || order > 4 ||
+            MemberQ[moves, 2] && AnyTrue[Pick[eigenvalues, moves, 0], undecidedQ[f, t, #, bound, scale, roundoff[mat]] &],
+        realResult[mat, MatrixFunction[f, mat, opts]],
+        seriesMatrixFunction[f, mat, q, t + DiagonalMatrix[placed - eigenvalues], displacement, order, opts]
+    ]
+]
+
+(* Whether f may need its value from above the cut at the eigenvalue x: Re x < 0, Im x not
+   zero, since a real eigenvalue is on the axis already, and at most half the distance
+   -Re x from the branch point 0, so that an expansion about Re x reaches it, and f jumps
+   across the axis at Re x (jumpQ), which Cos and Exp do not. *)
+nearCutQ[f_, x_, eps_] := Re[x] < 0 && Im[x] != 0 && Abs[Im[x]] <= - Re[x] / 2 && jumpQ[f, Re[x], eps]
+
+(* Whether the eigenvalue x near the cut, left where it is by cutMove, may nevertheless lie
+   on the axis: it is farther from it than any split of a Jordan block of order up to 4,
+   yet a perturbation of t within the backward error puts an eigenvalue at the point
+   halfway from x to the axis. Its side of the cut is then not determined, and no series
+   restores it. *)
+undecidedQ[f_, t_, x_, bound_, scale_, eps_] := nearCutQ[f, x, eps] && Abs[Im[x]] > 2 (bound / scale) ^ (1 / 4) scale &&
+    halfwaySingularValue[t, x] <= bound
+
+(* The smallest singular value of t at the point halfway from x to the real axis. *)
+halfwaySingularValue[t_, x_] := First[SingularValueList[t - (Re[x] + I Im[x] / 2) IdentityMatrix[Length[t]], -1, Tolerance -> 0]]
+
+(* How the eigenvalue x of t, the i-th, is put on the negative real axis: 0 when it stays,
+   1 when it moves to Re x, 2 when it moves and its imaginary part is restored by the
+   series. It stays unless it is near the cut (nearCutQ). It just moves when Im x is
+   within the backward error. It moves and is restored when, for a real m (mirrors
+   lists, for each eigenvalue, those nearest its conjugate), x is its own mirror image,
+   which in a real matrix only an eigenvalue on the real axis, or split from one there,
+   can be; or when a perturbation of t within the backward error puts an eigenvalue at
+   the point halfway from x to the axis: the smallest singular value of t there is at
+   most bound. The pair a +- b i of a real m is each other's mirror image and passes only
+   that last test, which a pair farther apart than roundoff can split fails. The singular
+   value is computed only within the widest split roundoff gives a Jordan block of order
+   up to 4, 2 (bound / scale)^(1/4) scale. *)
+cutMove[f_, t_, x_, i_, bound_, scale_, mirrors_, eps_] := Which[
+    ! nearCutQ[f, x, eps],
+        0,
+    Abs[Im[x]] <= bound,
+        1,
+    ListQ[mirrors] && MemberQ[mirrors[[i]], i] ||
+        Abs[Im[x]] <= 2 (bound / scale) ^ (1 / 4) scale && halfwaySingularValue[t, x] <= bound,
+        2,
+    True,
+        0
+]
+
+(* Whether f is discontinuous across the real axis at a, where it has a derivative for the
+   expansion to use (which Arg does not): its values a distance h above and below a differ
+   by far more than the 2 h |f'(a)| a smooth f moves over the gap, and by more than
+   roundoff in their size. Values that are not numbers, as CubeRoot of a complex number,
+   count as no jump. *)
+jumpQ[f_, a_, eps_] := With[{h = Sqrt[eps] Abs[a]}, {above = f[a + I h], below = f[a - I h], slope = Derivative[1][f][a]},
+    NumberQ[above] && NumberQ[below] && NumberQ[slope] &&
+        Abs[above - below] > 10 ^ 4 2 h Abs[slope] + 10 ^ -4 (Abs[above] + Abs[below])
+]
+
+(* f(t' + d) for the Schur factor t' and the displacements d, through the terms of
+   order up to order in d, read off the top block row of f of the block matrix with t'
+   on the diagonal and DiagonalMatrix[d] above it, and returned in the frame q; at
+   order 0, when nothing is restored, it is f(t'). The series has converged when its
+   last term is within roundoff of the sum. Otherwise the order doubles, up to 8: an
+   eigenvalue near the moved ones slows the series. One that has not converged by then,
+   or that MatrixFunction cannot compute, gives way to MatrixFunction of m. *)
+seriesMatrixFunction[f_, mat_, q_, t_, displacement_, order_, opts___] := With[
+    {n = Length[t]},
+    {blocks = MatrixFunction[f,
+        KroneckerProduct[IdentityMatrix[order + 1], t] +
+            If[order > 0, KroneckerProduct[DiagonalMatrix[ConstantArray[1, order], 1], DiagonalMatrix[displacement]], 0],
+        opts
+    ]},
+    {terms = If[MatrixQ[blocks, NumericQ], ArrayReshape[blocks[[;; n]], {n, order + 1, n}], None]},
+    Which[
+        terms === None,
+            realResult[mat, MatrixFunction[f, mat, opts]],
+        order == 0 || Max[Abs[terms[[All, -1]]]] <= roundoffTolerance[mat] Max[Abs[Total[terms, {2}]]],
+            realResult[mat, q . Total[terms, {2}] . ConjugateTranspose[q]],
+        order < 8,
+            seriesMatrixFunction[f, mat, q, t, displacement, Min[2 order, 8], opts],
+        True,
+            realResult[mat, MatrixFunction[f, mat, opts]]
+    ]
+]
+
+(* f of a real matrix whose imaginary part is roundoff is real. *)
+realResult[mat_, result_] := If[
+    FreeQ[mat, _Complex] && MatrixQ[result, NumericQ] && Max[Abs[Im[result]]] <= roundoffTolerance[mat] Max[Abs[result]],
+    Re[result],
+    result
 ]
 
 (* A bound on the size of the largest Jordan block of the eigenvalue 0 of the inexact m to

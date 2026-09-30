@@ -23,15 +23,18 @@
      exactly solvable     Jordan block, exact Log, Hadamard-rotated Ising, |A| of a
                           diagonalizable non-normal A, sqrt of a projector, sqrt and
                           log of machine Jordan blocks at 1 of order 2 and 3, cos and
-                          SinhIntegral of a machine nilpotent
+                          SinhIntegral of a machine nilpotent, sqrt and log of Jordan
+                          blocks of order 2 and 3 at -1
      limiting             [[1, 1], [0, 1 + d]] for d = 10^-1 .. 10^-15 (separated to
                           defective), eigenvalue 10^-12 next to 1, coupling 10^-9,
                           decoupled subsystems, short time t -> 0, sqrt of
                           [[e, 1], [0, 0]] from resolvable e to where roundoff can
-                          merge its eigenvalues into a Jordan block
+                          merge its eigenvalues into a Jordan block, the pair
+                          -1 +- d i on both sides of the cut for d = 1/20 .. 10^-7
      numerical reference  64-dim Ising spectrum in a random eigenbasis, 600 random
                           Hermitian draws against a 30-digit diagonalization,
-                          cos^2 + sin^2 = 1 and [cos H, H] = 0
+                          cos^2 + sin^2 = 1 and [cos H, H] = 0, random integer and
+                          rational orthogonal frames against f of the exact core
      failure / edge       Log of a singular operator (numeric, diagonal, exact,
                           defective, or reached by substitution) is a Failure;
                           degenerate spectra of multiplicity 8 and 4; parameter
@@ -41,7 +44,13 @@
                           lowering operator in a random frame) fail as 0^M reads
                           them, and so does log of a projector whose null space lies
                           within 10^-6 of its range, and 1/x at its pole; Sinc of a
-                          machine nilpotent is a known limitation
+                          machine nilpotent is a known limitation; the eigenvalue -1
+                          on the branch cut of Sqrt and Log, simple, double and in
+                          Jordan blocks of order 2 and 3, of normal and non-normal,
+                          real and complex matrices, at its principal value, while
+                          eigenvalues within 10^-13 of the cut that the decomposition
+                          resolves keep their side on the normal and eigenvector
+                          routes
 
    The zero base, 0^M, the limit of b^M as b -> 0 (the projector onto the null space
    of M along its range), has its own rows. Refused base case: one diagonal mode with
@@ -1606,6 +1615,224 @@ VerificationTest[
     True,
     {MatrixFunction::valtlrg},
     TestID -> "MatrixFunction-roundoff-Sinc-known-limitation"
+]
+
+(* Sqrt and Log have their branch cut on the negative real axis, and the principal
+   value there is the limit from above: Sqrt[-1] = i, Log[-1] = i pi. The machine
+   eigenvalues of a matrix whose exact eigenvalue lies on the cut come out on either
+   side of it by roundoff; the tests below check that f takes the principal value
+   there, the value the exact matrix gives.
+
+   m = [[-2, 1], [-1, 0]] = -1 + n with n^2 = 0 has the eigenvalue -1 twice and one
+   eigenvector, a Jordan block, so Sqrt[m] = i (1 - n/2) and Log[m] = i pi - n.
+   Roundoff splits the double eigenvalue of the machine matrix into a pair about
+   10^-8 apart that straddles the cut, and f taken at the two computed eigenvalues
+   comes from its two sides, with a divided difference of order 10^8 between them.
+   Read with the centre of the pair on the axis, the machine matrix gives the
+   principal values, squares back to m and exponentiates back to m. The triangular
+   Jordan block itself gives Sqrt = [[i, -i/2], [0, i]] and Log = [[i pi, -1], [0, i pi]]. *)
+VerificationTest[
+    With[{m = N[{{-2, 1}, {-1, 0}}], jordan = N[{{-1, 1}, {0, -1}}]},
+        With[{root = Normal[Sqrt[QuantumOperator[m]]["Matrix"]], log = Normal[Log[QuantumOperator[m]]["Matrix"]]},
+            <|
+                "square root" -> mfDistance[root, {{3 I/2, -I/2}, {I/2, I/2}}] < 10^-13,
+                "logarithm" -> mfDistance[log, {{1 + I Pi, -1}, {1, -1 + I Pi}}] < 10^-13,
+                "squares back" -> mfDistance[root . root, m] < 10^-13,
+                "exponentiates back" -> mfDistance[MatrixExp[log], m] < 10^-13,
+                "triangular" -> mfDistance[Sqrt[QuantumOperator[jordan]]["Matrix"], {{I, -I/2}, {0, I}}] < 10^-14 &&
+                    mfDistance[Log[QuantumOperator[jordan]]["Matrix"], {{I Pi, -1}, {0, I Pi}}] < 10^-14
+            |>
+        ]
+    ],
+    <|"square root" -> True, "logarithm" -> True, "squares back" -> True, "exponentiates back" -> True, "triangular" -> True|>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-Jordan-block-on-branch-cut"
+]
+
+(* count invertible matrices draw[], from the seed. *)
+mfFrames[draw_, count_, seed_] := BlockRandom[Take[Select[Table[draw[], {5 count}], Det[#] != 0 &], count], RandomSeeding -> seed]
+
+(* The largest relative error of f of the machine matrix s.core.s^-1 over the frames
+   s, against s.f(core).s^-1 with f(core) of the exact core. *)
+mfFrameError[f_, core_, frames_] := Max @ Map[
+    With[{reference = # . MatrixFunction[f, core] . Inverse[#]},
+        Max[Abs[Normal[f[QuantumOperator[N[# . core . Inverse[#]]]]["Matrix"]] - reference]] / Max[Abs[N[reference]]]
+    ] &,
+    frames
+]
+
+(* The Jordan block at -1 in frames: of order 2 and 3, the block of order 2 beside the
+   eigenvalue 2, and in complex frames, each conjugated by random integer matrices s,
+   so that f(s.J.s^-1) = s.f(J).s^-1 with f(J) of the exact block. A block of order a
+   splits by roundoff into a eigenvalues on a circle of radius about 10^(-16/a) about
+   -1, with some on each side of the cut. Sqrt(J3) = i - (i/2) n - (i/8) n^2 and
+   Log(J3) = i pi - n - n^2/2 for the nilpotent n. The block keeps its principal value
+   beside a real eigenvalue close to it, -99/100 coupled to it in complex frames, and
+   -10^-8 or -10^-3 in complex frames, and beside the pair -1 +- 10^-4 i, which roundoff
+   does not merge with it; the last is conditioned only to about 10^-6 and comes out
+   within about 10^-5. *)
+VerificationTest[
+    With[
+        {
+            jordan2 = {{-1, 1}, {0, -1}},
+            jordan3 = {{-1, 1, 0}, {0, -1, 1}, {0, 0, -1}},
+            realFrames = mfFrames[RandomInteger[{-4, 4}, {2, 2}] &, 40, 3],
+            complexFrames = mfFrames[RandomInteger[{-3, 3}, {2, 2}] + I RandomInteger[{-3, 3}, {2, 2}] &, 20, 13]
+        },
+        <|
+            "order 2" -> Max[mfFrameError[#, jordan2, realFrames] & /@ {Sqrt, Log}] < 10^-12,
+            "order 3" -> Max[mfFrameError[#, jordan3, mfFrames[RandomInteger[{-2, 2}, {3, 3}] &, 20, 7]] & /@ {Sqrt, Log}] < 10^-12,
+            "beside 2" -> Max[mfFrameError[#, ArrayFlatten[{{jordan2, 0}, {0, {{2}}}}], mfFrames[RandomInteger[{-3, 3}, {3, 3}] &, 20, 11]] & /@ {Sqrt, Log}] < 10^-12,
+            "complex frames" -> Max[mfFrameError[#, jordan2, complexFrames] & /@ {Sqrt, Log}] < 10^-12,
+            "beside -99/100" -> Max[mfFrameError[#, {{-1, 1, 1}, {0, -1, 1}, {0, 0, -99/100}},
+                mfFrames[RandomInteger[{-3, 3}, {3, 3}] + I RandomInteger[{-3, 3}, {3, 3}] &, 20, 113]] & /@ {Sqrt, Log}] < 10^-11,
+            "beside -10^-8 and -10^-3" -> With[{frames = mfFrames[RandomInteger[{-2, 2}, {3, 3}] + I RandomInteger[{-2, 2}, {3, 3}] &, 12, 902]},
+                mfFrameError[Sqrt, ArrayFlatten[{{jordan2, 0}, {0, {{-10^-8}}}}], frames] < 10^-10 &&
+                    mfFrameError[Sqrt, ArrayFlatten[{{jordan2, 0}, {0, {{-10^-3}}}}], frames] < 10^-12
+            ],
+            "beside the pair -1 +- 10^-4 i" -> Max[mfFrameError[#, ArrayFlatten[{{jordan2, 0}, {0, {{-1, 10^-4}, {-10^-4, -1}}}}],
+                mfFrames[RandomInteger[{-2, 2}, {4, 4}] &, 10, 901]] & /@ {Sqrt, Log}] < 10^-4
+        |>
+    ],
+    <|
+        "order 2" -> True, "order 3" -> True, "beside 2" -> True, "complex frames" -> True, "beside -99/100" -> True,
+        "beside -10^-8 and -10^-3" -> True, "beside the pair -1 +- 10^-4 i" -> True
+    |>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-Jordan-block-on-branch-cut-frames"
+]
+
+(* A cayley transform (1 - a).(1 + a)^-1 of an integer skew-symmetric a is a rational
+   orthogonal matrix. *)
+mfCayley[n_] := With[{a = # - Transpose[#] &[UpperTriangularize[RandomInteger[{-2, 2}, {n, n}], 1]]},
+    (IdentityMatrix[n] - a) . Inverse[IdentityMatrix[n] + a]
+]
+
+(* The eigenvalue -1 without a Jordan block. A real orthogonal matrix with the
+   eigenvalue -1, once and twice beside a rotation by arccos(3/5), in rational
+   orthogonal frames: a normal matrix, whose square root and logarithm come from its
+   Schur form, and whose f is real only when f is real at -1, which Sqrt and Log are
+   not. A complex non-normal matrix with the simple eigenvalue -1 beside 2 i and
+   1 + i, and the double eigenvalue -1 with two eigenvectors beside 2, in integer
+   frames where roundoff moves the two copies to opposite sides of the cut. In each
+   f(s.d.s^-1) = s.f(d).s^-1 with f(d) of the exact core d, the principal value. A
+   single eigenvalue -2 - 10^-18 i beside an exact Jordan block at -1 lies within
+   roundoff of the cut and is read at -2, where Sqrt is i sqrt(2) and Log is
+   log 2 + i pi. *)
+VerificationTest[
+    With[{rotation = {{3/5, -4/5}, {4/5, 3/5}}, single = {{-1, 1, 0}, {0, -1, 1}, {0, 0, -2}}},
+        <|
+            "single eigenvalue beside a Jordan block" -> Max[
+                mfDistance[#[QuantumOperator[ReplacePart[N[single], {3, 3} -> Complex[-2., -10.^-18]]]]["Matrix"], MatrixFunction[#, single]] & /@ {Sqrt, Log}
+            ] < 10^-14,
+            "orthogonal, -1 once" -> Max[mfFrameError[#, ArrayFlatten[{{{{-1}}, 0}, {0, rotation}}], mfFrames[mfCayley[3] &, 20, 13]] & /@ {Sqrt, Log}] < 10^-12,
+            "orthogonal, -1 twice" -> Max[mfFrameError[#, ArrayFlatten[{{-IdentityMatrix[2], 0}, {0, rotation}}], mfFrames[mfCayley[4] &, 20, 17]] & /@ {Sqrt, Log}] < 10^-12,
+            "complex non-normal" -> Max[mfFrameError[#, DiagonalMatrix[{-1, 2 I, 1 + I}],
+                mfFrames[RandomInteger[{-3, 3}, {3, 3}] + I RandomInteger[{-3, 3}, {3, 3}] &, 20, 9]] & /@ {Sqrt, Log}] < 10^-12,
+            "double, two eigenvectors" -> Max[mfFrameError[#, DiagonalMatrix[{-1, -1, 2}], {
+                {{-3, -2, 1}, {-3, 3, -3}, {0, 2, -2}}, {{1, 2, -3}, {-3, -3, -1}, {3, 2, 2}}, {{-2, 0, -3}, {1, 3, -3}, {-1, 2, -3}},
+                {{3, -1, -3}, {1, 3, 1}, {2, -3, -2}}, {{2, -1, 1}, {-2, 2, -3}, {0, 2, -2}}, {{-3, -1, -1}, {-3, -3, -2}, {0, -1, -1}}
+            }] & /@ {Sqrt, Log}] < 10^-11
+        |>
+    ],
+    <|
+        "single eigenvalue beside a Jordan block" -> True, "orthogonal, -1 once" -> True, "orthogonal, -1 twice" -> True,
+        "complex non-normal" -> True, "double, two eigenvectors" -> True
+    |>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-eigenvalue-on-branch-cut"
+]
+
+(* What the cut must leave alone. The Jordan block [[0, 1], [-1, 2]] at 1, off the
+   cut, has the real square root [[1/2, 1/2], [-1/2, 3/2]]. The pair -1 +- d i of
+   [[-1, 1], [-d^2, -1]] is genuine for d = 1/20, 10^-3, 10^-5, 5 10^-7 and 10^-7:
+   each eigenvalue keeps its side of the cut, and the result is the principal value
+   of the exact matrix to the precision its conditioning 1/d allows. Below about
+   7 10^-8 the pair lies within the backward error of the Jordan block at -1 and is
+   read as one. Cos and Sin are analytic across the cut and stay real on a real
+   Jordan block at -1, and JacobiP[1, i, 0, x] and Log[-1, x], complex on the real
+   axis, keep their imaginary parts. A strongly non-normal matrix whose eigenvalues
+   -1 - k/32 roundoff moves by up to 0.2 is left to MatrixFunction, the side of the cut
+   of each being undetermined. *)
+VerificationTest[
+    With[{jordanFrames = mfFrames[RandomInteger[{-4, 4}, {2, 2}] &, 40, 3], jordan = {{-1, 1}, {0, -1}}},
+        <|
+            "Jordan block at 1" -> With[{root = Normal[Sqrt[QuantumOperator[N[{{0, 1}, {-1, 2}}]]]["Matrix"]]},
+                FreeQ[root, _Complex] && mfDistance[root, {{1/2, 1/2}, {-1/2, 3/2}}] < 10^-14
+            ],
+            "genuine pairs" -> AllTrue[{1/20, 10^-3, 10^-5, 5 10^-7, 10^-7},
+                Function[d, With[{m = {{-1, 1}, {-d^2, -1}}},
+                    Max[(mfDistance[#[QuantumOperator[N[m]]]["Matrix"], MatrixFunction[#, m]] / Max[Abs[N[MatrixFunction[#, m]]]]) & /@ {Sqrt, Log}] < 10^-15 / d
+                ]]
+            ],
+            "analytic across the cut" -> AllTrue[Tuples[{{Cos, Sin}, jordanFrames}],
+                    FreeQ[Normal[First[#][QuantumOperator[N[Last[#] . jordan . Inverse[Last[#]]]]]["Matrix"]], _Complex] &] &&
+                Max[mfFrameError[#, jordan, jordanFrames] & /@ {Cos, Sin}] < 10^-13,
+            "complex on the axis" -> With[{m = {{-2, 1}, {-1, 0}}},
+                Max[mfFrameError[#, m, {IdentityMatrix[2]}] & /@ {JacobiP[1, I, 0, #] &, Log[-1, #] &}] < 10^-14
+            ],
+            "undetermined eigenvalues" -> With[{m = BlockRandom[
+                    With[{q = Orthogonalize[RandomReal[{-1, 1}, {32, 32}]]}, q . (2 UpperTriangularize[RandomReal[{-1, 1}, {32, 32}], 1] + DiagonalMatrix[-1. - Range[32] / 32]) . Transpose[q]],
+                    RandomSeeding -> 332
+                ]},
+                Normal[Sqrt[QuantumOperator[m]]["Matrix"]] === MatrixFunction[Sqrt, m] && Normal[Log[QuantumOperator[m]]["Matrix"]] === MatrixFunction[Log, m]
+            ]
+        |>
+    ],
+    <|"Jordan block at 1" -> True, "genuine pairs" -> True, "analytic across the cut" -> True, "complex on the axis" -> True, "undetermined eigenvalues" -> True|>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-branch-cut-controls"
+]
+
+(* An eigenvalue goes onto the negative axis only when the error the decomposition may
+   have made in it can put it there, so eigenvalues that the decomposition resolves keep
+   their values. -1 - 10^-13 i in a frame of condition 2 is known to about 10^-16 and
+   keeps its place below the cut; so does -1 - 3 10^-14 i of a normal matrix, where the
+   diagonal and the rotated matrix agree. Two Jordan blocks at -1 +- i/1000 in the real
+   frame s stay apart (conditioned to about 10^-6), and the close pairs 1.1 10^-6,
+   0.9 10^-6 and 6 10^-3, 8 10^-3 off the cut keep their full accuracy. So do
+   -1 - 5 10^-12 i beside 101 .. 115 in a 16-dimensional frame, and -1 - 10^-11 i beside
+   1000 i + k in a unitary one: on these routes an eigenvalue is judged against its own
+   error, not against the scale of the whole matrix. On the Schur route of a nearly
+   defective matrix the bound is one for the whole matrix, and an eigenvalue it takes in
+   is put on the axis even when the decomposition has resolved it. *)
+VerificationTest[
+    With[
+        {
+            s = {{1, 2 + I, 0}, {-1, 1, 1 - 2 I}, {1 + I, 0, 2}}, u = N[RotationMatrix[7/10]], diagonal = DiagonalMatrix[{-1. - 3.*^-14 I, 2.}],
+            pair = {{-1, 1/1000}, {-1/1000, -1}}
+        },
+        <|
+            "below the cut, eigenvector route" -> Max[mfFrameError[#, DiagonalMatrix[{-1 - 10^-13 I, 2, 3 I}], {s}] & /@ {Sqrt, Log}] < 10^-14,
+            "below the cut, normal" -> mfDistance[
+                Sqrt[QuantumOperator[u . diagonal . Transpose[u]]]["Matrix"], u . DiagonalMatrix[Sqrt[{-1 - 3 10^-14 I, 2}]] . Transpose[u]
+            ] < 10^-14 && mfDistance[Sqrt[QuantumOperator[diagonal]]["Matrix"], DiagonalMatrix[Sqrt[{-1 - 3 10^-14 I, 2}]]] < 10^-14,
+            "two Jordan blocks at -1 +- i/1000" -> Max[mfFrameError[#, ArrayFlatten[{{pair, IdentityMatrix[2]}, {0, pair}}],
+                {{{1, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 1}, {1, 0, 0, 2}}}] & /@ {Sqrt, Log}] < 10^-5,
+            "close pairs off the cut" -> Max[Function[m,
+                    (mfDistance[#[QuantumOperator[N[m]]]["Matrix"], MatrixFunction[#, m]] / Max[Abs[N[MatrixFunction[#, m]]]]) & /@ {Sqrt, Log}
+                ] /@ {{{11/10^7, 1}, {0, 9/10^7}}, {{6/1000, 10^4}, {0, 8/1000}}}] < 10^-14,
+            "graded spectra" -> BlockRandom[
+                    With[{s16 = SetPrecision[IdentityMatrix[16] + RandomComplex[{-1 - I, 1 + I}, {16, 16}] / 10, 50], spectrum = Join[{-1 - 5 10^-12 I}, 100 + Range[15]]},
+                        Max[Abs[Normal[Sqrt[QuantumOperator[N[s16 . DiagonalMatrix[spectrum] . Inverse[s16]]]]["Matrix"]] -
+                            s16 . DiagonalMatrix[Sqrt[spectrum]] . Inverse[s16]]] / Max[Abs[s16 . DiagonalMatrix[Sqrt[spectrum]] . Inverse[s16]]]
+                    ],
+                    RandomSeeding -> 32
+                ] < 10^-13 && BlockRandom[
+                    With[{u16 = Orthogonalize[RandomComplex[{-1 - I, 1 + I}, {16, 16}, WorkingPrecision -> 40]], spectrum = Join[{-1 - 10^-11 I}, 1000 I + Range[15]]},
+                        Max[Abs[Normal[Sqrt[QuantumOperator[N[u16 . DiagonalMatrix[spectrum] . ConjugateTranspose[u16]]]]["Matrix"]] -
+                            u16 . DiagonalMatrix[Sqrt[spectrum]] . ConjugateTranspose[u16]]] / Max[Abs[N[Sqrt[spectrum]]]]
+                    ],
+                    RandomSeeding -> 33
+                ] < 10^-13
+        |>
+    ],
+    <|
+        "below the cut, eigenvector route" -> True, "below the cut, normal" -> True, "two Jordan blocks at -1 +- i/1000" -> True,
+        "close pairs off the cut" -> True, "graded spectra" -> True
+    |>,
+    TimeConstraint -> 120,
+    TestID -> "MatrixFunction-branch-cut-leaves-resolved-eigenvalues"
 ]
 
 EndTestSection[]
