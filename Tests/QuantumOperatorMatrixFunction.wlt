@@ -94,18 +94,26 @@
                           complex values written without I, as ArcCos[2], and
                           precisions past 307 digits, all decided exactly, and a
                           zero and a real part that are 0 but not written as 0,
-                          alone, inside an entry or on a branch cut, and huge
-                          entries. The exact decisions end where a number that
-                          Element does not prove algebraic lies within 10^-3200 of
-                          zero, or where telling it from zero takes more working
-                          precision than N is given (a cancellation between terms
-                          far beyond 10^10000 in size): it is read as zero, and in
-                          the second case N says so. Past $MinNumber or $MaxNumber
-                          N reports an underflow or an overflow (with N::meprec): a
-                          value that underflows is read as zero, and one that
-                          overflows as nonzero with the sign Sign reads from the
-                          expression, Indeterminate where Sign cannot. The exact
-                          decisions hold between those two *)
+                          alone, inside an entry or on a branch cut, huge entries,
+                          and entries written with powers far outside machine
+                          range, as 1 / (1 + (1 + Sqrt[2])^(10^6)), or with an
+                          irrational exponent, as E^(10^5 Sqrt[2]). The exact
+                          decisions end where a number lies within 10^-3200 of
+                          zero and Element does not prove it algebraic, or neither
+                          PossibleZeroQ in 1 s nor RootReduce in 5 s settles it; or
+                          where telling it from zero takes more working precision
+                          than N is given (2 digits + 200, plus twice the size of
+                          its largest part up to 10^5 digits, a size read from the
+                          structure of powers, Cosh and Sinh but not of Gamma):
+                          it is read as zero, and in the second case N says so;
+                          and where the sign of an algebraic real part below
+                          10^-102400 takes RootReduce more than 5 s: it is
+                          Indeterminate, counted as not positive. Past $MinNumber
+                          or $MaxNumber N reports an underflow or an overflow (with
+                          N::meprec): a value that underflows is read as zero, and
+                          one that overflows as nonzero with the sign Sign reads
+                          from the expression, Indeterminate where Sign cannot. The
+                          exact decisions hold between those two *)
 
 Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
@@ -1376,6 +1384,21 @@ VerificationTest[
                 }
             ],
             "symbolic beside a part read as zero" -> Simplify[mfZero[{{mfW, 1}, {0, Exp[-10^8]}}] /. mfW -> 2] == {{0, -1/2}, {0, 1}},
+            "tiny factor of a nonzero entry" -> {
+                mfZeroBaseTag[0 ^ QuantumOperator[{{-10^4344 Exp[-10^4], 1}, {0, 1}}]],
+                mfZeroBaseTag[0 ^ QuantumOperator[r3 . DiagonalMatrix[{0, -10^4344 Exp[-10^4], 1}] . Transpose[r3]]]
+            },
+            "tiny nonzero base" -> {
+                Normal[(Exp[-10^4] ^ QuantumOperator[DiagonalMatrix[{0, 1}]])["Matrix"]] === {{1, 0}, {0, E^-10000}},
+                Normal[(Exp[-10^4] ^ QuantumOperator[DiagonalMatrix[{0, -1}]])["Matrix"]] === {{1, 0}, {0, E^10000}},
+                Normal[((Erf[100] - 1) ^ QuantumOperator[DiagonalMatrix[{0, 10^-6}]])["Matrix"]] === {{1, 0}, {0, (Erf[100] - 1)^(1/1000000)}}
+            },
+            "high power" -> mfZero[DiagonalMatrix[{(1 + Sqrt[2])^5225 - (Sqrt[2] - 1)^-5225, 1}]] == {{1, 0}, {0, 0}},
+            "huge imaginary part" -> {mfZero[{{Exp[10^7], I}, {-I, 1}}] == ConstantArray[0, {2, 2}], mfZero[DiagonalMatrix[{5 + I Exp[10^7], 1}]] == ConstantArray[0, {2, 2}]},
+            "zeros known to an accuracy" -> {
+                Normal[(0 ^ (QuantumOperator[DiagonalMatrix[N[{1, 2, 3}, 40]]] - N[1, 40]))["Matrix"]] == DiagonalMatrix[{1, 0, 0}],
+                mfZeroBaseTag[0 ^ QuantumOperator[{{0``40, 1`40}, {1`40, 1`40}}]]
+            },
             "inexact base that is not zero" -> Max[Abs[(Normal[((1.`20*^-400) ^ QuantumOperator[DiagonalMatrix[{0, -1}]])["Matrix"]] - {{1, 0}, {0, 10^400}}) / {{1, 1}, {1, 10^400}}]] < 10^-15,
             "part read as zero" -> mfZero[r3 . DiagonalMatrix[{0, - Exp[-10^8], 1}] . Transpose[r3]] == r3 . DiagonalMatrix[{1, 1, 0}] . Transpose[r3],
             "huge entry" -> mfZero[DiagonalMatrix[{Exp[10^7], 0}]] == {{0, 0}, {0, 1}},
@@ -1406,11 +1429,136 @@ VerificationTest[
         "real parts of complex values" -> {True, "ZeroBasePowerNoLimit", "ZeroBasePowerNoLimit", True},
         "algebraic after FunctionExpand" -> {True, "ZeroBasePowerNoLimit"}, "zero on a branch cut" -> {True, True, True},
         "zero written with Log" -> True, "eight square roots" -> {True, "ZeroBasePowerNoLimit", "ZeroBasePowerNoLimit"},
-        "symbolic beside a part read as zero" -> True, "inexact base that is not zero" -> True, "part read as zero" -> True,
+        "symbolic beside a part read as zero" -> True,
+        "tiny factor of a nonzero entry" -> {"ZeroBasePowerNoLimit", "ZeroBasePowerNoLimit"}, "tiny nonzero base" -> {True, True, True},
+        "high power" -> True, "huge imaginary part" -> {True, True}, "zeros known to an accuracy" -> {True, "ZeroBasePowerNoLimit"},
+        "inexact base that is not zero" -> True, "part read as zero" -> True,
         "huge entry" -> True, "algebraic spectrum" -> {True, True},
         "precision past 307 digits" -> {True, True}, "entry holding a zero" -> True
     |>,
     TestID -> "MatrixFunction-zero-base-inexact-zero-eigenvalue"
+]
+
+(* The stated limits of the exact decisions, each with the messages N gives for it: a
+   cancellation deeper than the working precision N is given, between terms of size
+   E^(10^6), is not told from zero and is read as zero, with N::meprec; a value below
+   $MinNumber underflows and is read as zero; one above $MaxNumber overflows and is
+   read as nonzero. *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`exactZeroQ[(E^(10^6) - Sqrt[E^(2 10^6) + 4]) / 2],
+    True,
+    {N::meprec, N::meprec, N::meprec, General::stop},
+    TestID -> "MatrixFunction-zero-base-limit-working-precision"
+]
+
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`exactZeroQ[Exp[-Exp[100]]],
+    True,
+    {General::unfl, General::unfl, General::unfl, General::stop, N::meprec},
+    TestID -> "MatrixFunction-zero-base-limit-underflow"
+]
+
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`exactZeroQ[-Exp[Exp[100]]],
+    False,
+    {General::ovfl, General::ovfl, General::ovfl, General::stop, N::meprec},
+    TestID -> "MatrixFunction-zero-base-limit-overflow"
+]
+
+(* Exact numbers written with powers far outside the range of machine numbers are
+   decided by value, and the powers are kept whole through the polynomial algebra.
+   With y1 = 1 / (1 + (Sqrt[2] - 1)^(10^6)), about 1, and y2 = 1 / (1 + (1 + Sqrt[2])^(10^6)),
+   about 10^-382775: y2 is a base that is not zero and a positive entry beside zero;
+   y1 beside zero gives the oblique projector, whose entry -1 - (Sqrt[2] - 1)^(10^6)
+   is exact; -y1 beside 2 and 3 has no limit and is named; and the Hermitian
+   {{y1, 1}, {1, 1 / y1}} gives the orthogonal projector onto (1, -y1). 10^-200000 plus
+   a zero written with radicals is positive, a sign read past every digit N is asked
+   for; (1 + Sqrt[2])^52250 - (Sqrt[2] - 1)^-52250 + 10^-10 is 10^-10 and
+   Cosh[10^5]^2 - Sinh[10^5]^2 - 2 is -1. The entry 10^4344 Exp[-10^4] w keeps its
+   factor Exp[-10^4], so at w = 1 it is about 11.35, positive, and a 40-digit matrix
+   whose zeros are machine zeros is computed at machine precision. *)
+VerificationTest[
+    With[
+        {
+            y1 = 1 / (1 + (Sqrt[2] - 1)^(10^6)),
+            y2 = 1 / (1 + (1 + Sqrt[2])^(10^6)),
+            g3 = (Sqrt[2] + Sqrt[3])^2 - 5 - 2 Sqrt[6],
+            x = (1 + Sqrt[2])^52250 - (Sqrt[2] - 1)^-52250 + 10^-10,
+            held = Function[e, Together[e /. (Sqrt[2] - 1)^(10^6) -> mfQ]],
+            zeroBasePower = Wolfram`QuantumFramework`PackageScope`zeroBasePower
+        },
+        <|
+            "tiny base" -> Normal[(y2 ^ QuantumOperator[DiagonalMatrix[{0, 1}]])["Matrix"]] === {{1, 0}, {0, y2}},
+            "tiny entry" -> mfZero[DiagonalMatrix[{y2, 0}]] == {{0, 0}, {0, 1}},
+            "oblique projector" -> held[mfZero[{{y1, 1}, {0, 0}}]] === {{0, -1 - mfQ}, {0, 1}},
+            "named" -> held[First[(0 ^ QuantumOperator[{{-y1, 1, 0}, {0, 2, 1}, {0, 0, 3}}])["MessageParameters"]] + y1] === 0,
+            "orthogonal projector" -> held[mfZero[{{y1, 1}, {1, 1 / y1}}] - {{1, -y1}, {-y1, y1^2}} / (1 + y1^2)] === {{0, 0}, {0, 0}},
+            "sign past the digits read" -> mfZero[DiagonalMatrix[{10^-200000 + g3, 1}]] == ConstantArray[0, {2, 2}],
+            "cancellation" -> {
+                mfZero[DiagonalMatrix[{x, 1}]] == ConstantArray[0, {2, 2}],
+                mfZeroBaseTag[0 ^ QuantumOperator[DiagonalMatrix[{Cosh[10^5]^2 - Sinh[10^5]^2 - 2, 1}]]]
+            },
+            "symbolic factor" -> (Normal[zeroBasePower[{{10^4344 Exp[-10^4] mfW, 1}, {0, 1}}]] /. mfW -> 1) == ConstantArray[0, {2, 2}],
+            "machine zeros" -> Max[Abs[
+                Normal[zeroBasePower[{{N[9/25, 40], N[12/25, 40], 0.}, {N[12/25, 40], N[16/25, 40], 0.}, {0., 0., N[1, 40]}}]] -
+                    {{16, -12, 0}, {-12, 9, 0}, {0, 0, 0}} / 25
+            ]] < 10^-12
+        |>
+    ],
+    <|
+        "tiny base" -> True, "tiny entry" -> True, "oblique projector" -> True, "named" -> True,
+        "orthogonal projector" -> True, "sign past the digits read" -> True,
+        "cancellation" -> {True, "ZeroBasePowerNoLimit"}, "symbolic factor" -> True, "machine zeros" -> True
+    |>,
+    TestID -> "MatrixFunction-zero-base-long-exact-numbers"
+]
+
+(* The working precision N is given follows the size of the parts of a number, read
+   from its structure, also for an irrational exponent and for Cosh and Sinh on their
+   own: E^(10^5 Sqrt[2]) - Cosh[10^5 Sqrt[2]] - Sinh[10^5 Sqrt[2]] + 10^-10, whose terms
+   cancel over 61418 digits, is 10^-10, positive, and that number less 2 10^-10 has no
+   limit; so do Cosh[10^5] - Sinh[10^5] plus and minus 10^-10, all without messages. *)
+VerificationTest[
+    With[
+        {
+            x = E^(10^5 Sqrt[2]) - Cosh[10^5 Sqrt[2]] - Sinh[10^5 Sqrt[2]] + 10^-10,
+            y = Cosh[10^5] - Sinh[10^5]
+        },
+        <|
+            "irrational exponent" -> {
+                mfZero[DiagonalMatrix[{x, 1}]] == ConstantArray[0, {2, 2}],
+                mfZeroBaseTag[0 ^ QuantumOperator[DiagonalMatrix[{x - 2 10^-10, 1}]]]
+            },
+            "Cosh and Sinh" -> {
+                mfZero[DiagonalMatrix[{y + 10^-10, 1}]] == ConstantArray[0, {2, 2}],
+                mfZeroBaseTag[0 ^ QuantumOperator[DiagonalMatrix[{y - 10^-10, 1}]]]
+            }
+        |>
+    ],
+    <|"irrational exponent" -> {True, "ZeroBasePowerNoLimit"}, "Cosh and Sinh" -> {True, "ZeroBasePowerNoLimit"}|>,
+    TestID -> "MatrixFunction-zero-base-sizes-from-structure"
+]
+
+(* A number that is zero but not written as 0 is decided in bounded time when no exact
+   method settles it fast: EllipticK[1/2] - Gamma[1/4]^2 / (4 Sqrt[Pi]), which N reads
+   as zero up to 3200 digits, and the algebraic sum of
+   (1 + Sqrt[2])^5225 - (Sqrt[2] - 1)^-5225 and S^2 - Expand[S^2] for S the sum of the
+   square roots of the primes up to 19, which PossibleZeroQ and RootReduce do not settle
+   in their time, are each read as zero within seconds. *)
+VerificationTest[
+    With[
+        {
+            elliptic = EllipticK[1/2] - Gamma[1/4]^2 / (4 Sqrt[Pi]),
+            s = Sqrt[2] + Sqrt[3] + Sqrt[5] + Sqrt[7] + Sqrt[11] + Sqrt[13] + Sqrt[17] + Sqrt[19]
+        },
+        <|
+            "special functions" -> mfZero[DiagonalMatrix[{elliptic, 1}]],
+            "algebraic" -> mfZero[DiagonalMatrix[{(1 + Sqrt[2])^5225 - (Sqrt[2] - 1)^-5225 + s^2 - Expand[s^2], 1}]]
+        |>
+    ],
+    <|"special functions" -> {{1, 0}, {0, 0}}, "algebraic" -> {{1, 0}, {0, 0}}|>,
+    TimeConstraint -> 300,
+    TestID -> "MatrixFunction-zero-base-exact-zeros-in-bounded-time"
 ]
 
 (* A symbolic diagonal entry t gives the limit in closed form, 1 at t == 0, 0 for

@@ -50,6 +50,7 @@ PackageScope["matrixFunction"]
 PackageScope["zeroBasePower"]
 PackageScope["valuelessEntriesQ"]
 PackageScope["exactZeroQ"]
+PackageScope["zeroBaseQ"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
@@ -437,7 +438,20 @@ backwardError[mat_, scale_] := 10 Length[mat] roundoff[mat] scale
 
 (* The unit roundoff 10^-p of a matrix of precision p, computed at 20 digits so that it
    does not underflow for p above 307. *)
-roundoff[mat_] := 10 ^ -SetPrecision[Precision[mat], 20]
+roundoff[mat_] := 10 ^ -SetPrecision[entryPrecision[mat], 20]
+
+(* The precision of the entries of mat other than zeros known to an accuracy, Infinity
+   when there are none. A zero known to an accuracy, as 0``40, has precision 0, which
+   says nothing about the roundoff in the other entries; a machine 0. does. *)
+entryPrecision[mat_SparseArray] := Precision[Select[Append[mat["NonzeroValues"], mat["Background"]], ! accuracyZeroQ[#] &]]
+
+entryPrecision[mat_] := Precision[Select[Flatten[mat], ! accuracyZeroQ[#] &]]
+
+accuracyZeroQ[x_] := TrueQ[x == 0] && Precision[x] == 0
+
+(* The precision of a result computed from the inexact mat: that of its nonzero entries,
+   and machine precision when it has none. *)
+resultPrecision[mat_] := Replace[entryPrecision[mat], Infinity -> MachinePrecision]
 
 (* HermitianMatrixQ's Tolerance t sets entries below t to zero and compares the others
    to relative precision t one entry at a time, which does not bound m - m^† against
@@ -723,7 +737,7 @@ zeroBasePower[mat_ ? SquareMatrixQ] /; ! DiagonalMatrixQ[mat] && inexactMatrixQ[
 zeroBasePower[mat_ ? SquareMatrixQ] /; ! DiagonalMatrixQ[mat] && MatrixQ[mat, NumericQ] && ! inexactMatrixQ[mat] :=
     With[{m = zeroesWritten[Normal[mat]]}, Which[
         DiagonalMatrixQ[m], diagonalZeroBasePower[m],
-        exactHermitianQ[m] && FreeQ[settledValue[#, Identity] & /@ Select[DeleteDuplicates[Flatten[m]], ! gaussianRationalQ[#] &], Missing["Overflow"]], exactHermitianZeroBasePower[m],
+        exactHermitianQ[m] && FreeQ[settledValue[#, Abs] & /@ Select[DeleteDuplicates[Flatten[m]], ! gaussianRationalQ[#] &], Missing["Overflow" | "Underflow" | "NotANumber"]], exactHermitianZeroBasePower[m],
         True, exactZeroBasePower[m]
     ]]
 
@@ -732,10 +746,17 @@ inexactMatrixQ[mat_] := MatrixQ[mat, NumericQ] && Precision[mat] < Infinity
 (* m with every numeric part that is zero but not written as 0 written as 0, decided as
    exactZeroQ decides, so that a number the convention there reads as zero, as
    Exp[-10^8], is zero throughout what follows; each distinct part is decided once, and
-   a part that is zero is written as 0 whole. *)
+   a part that is zero is written as 0 whole. An entry takes the rewrite only when
+   what it changes by is a number that is zero too: in -10^4344 Exp[-10^4], about
+   -11.35, the factor Exp[-10^4] stays, so the entry keeps its value in any basis, and
+   so it does in 10^4344 Exp[-10^4] w for a symbol w. *)
 zeroesWritten[m_] := With[
     {zero = AssociationMap[exactZeroQ, DeleteDuplicates[Cases[m, x_ /; ! AtomQ[x] && NumericQ[x], {2, Infinity}]]]},
-    m /. x_ /; TrueQ[zero[x]] :> 0
+    Map[
+        With[{w = # /. x_ /; TrueQ[zero[x]] :> 0}, If[w === # || NumericQ[# - w] && exactZeroQ[# - w], w, #]] &,
+        m,
+        {2}
+    ]
 ]
 
 (* An exact m is Hermitian when m minus its conjugate transpose is zero entry by entry,
@@ -784,7 +805,7 @@ inexactDiagonalZeroBasePower[mat_] := With[
     {noLimit = (1 - zero) UnitStep[scale - Re[eigenvalues]]},
     If[ Total[noLimit] > 0,
         noLimitFailure[First[Pick[eigenvalues, noLimit, 1]]],
-        SparseArray[Band[{1, 1}] -> N[zero, Precision[mat]], Dimensions[mat], N[0, Precision[mat]]]
+        SparseArray[Band[{1, 1}] -> N[zero, resultPrecision[mat]], Dimensions[mat], N[0, resultPrecision[mat]]]
     ]
 ]
 
@@ -823,7 +844,7 @@ exactHermitianZeroBasePower[m_] := With[
    underflow. *)
 machineRangeQ[m_] := AllTrue[
     DeleteCases[DeleteDuplicates[Flatten[m]], 0],
-    With[{v = If[gaussianRationalQ[#], #, settledValue[#, Identity]]}, ! MissingQ[v] && 10 ^ -290 < Abs[v] < 10 ^ 290] &
+    With[{v = If[gaussianRationalQ[#], Abs[#], settledValue[#, Abs]]}, ! MissingQ[v] && 10 ^ -290 < v < 10 ^ 290] &
 ]
 
 (* The eigenvalues of the exact Hermitian m at precision p in increasing order, and the
@@ -835,15 +856,18 @@ hermitianSpectrum[m_, p_] := With[
 ]
 
 (* The entries of m, whose zeros are written as 0, rounded to p digits of its largest
-   entry. An entry that is not a Gaussian rational is first evaluated to an accuracy of
-   3 more digits than that, with as much working precision as its cancellations need,
-   so that each entry is off by rounding alone. (An accuracy goal is reached on an
-   entry that holds a zero not written as 0, such as 4/3 + (GoldenRatio -
-   (1 + Sqrt[5]) / 2), where a precision goal is not.) *)
+   entry. An entry that is not a Gaussian rational is first valued to 3 more digits
+   than p, and to 23 at least, of its own precision or of accuracy relative to the
+   largest entry, whichever N reaches first, so that each entry is off by rounding
+   alone. (The
+   accuracy goal is reached on an entry that holds a zero not written as 0, such as
+   4/3 + (GoldenRatio - (1 + Sqrt[5]) / 2), and the precision goal on a huge entry, as
+   Exp[10^7], without all of its digits; neither goal is negative.) *)
 roundedEntries[m_, p_] := With[
     {entries = DeleteDuplicates[Cases[m, Except[_ ? gaussianRationalQ], {2}]]},
-    {accuracy = Max[N[p], 20] + 3 - Floor[Log10[Max[Abs[Cases[m, _ ? gaussianRationalQ, {2}]], Abs[Replace[settledValue[#, Identity] & /@ entries, _Missing -> 0, {1}]], 10 ^ -3200]]]},
-    N[Replace[m, Dispatch[(# -> valueAt[#, Identity, accuracy]) & /@ entries], {2}], p]
+    {digits = Max[N[p], 20] + 3},
+    {accuracy = digits - Floor[Log10[Max[Abs[Cases[m, _ ? gaussianRationalQ, {2}]], Replace[settledValue[#, Abs] & /@ entries, _Missing -> 0, {1}], 10 ^ -3200]]]},
+    N[Replace[m, Dispatch[(# -> valueWithin[#, Identity, {digits, Max[accuracy, digits]}]) & /@ entries], {2}], p]
 ]
 
 undecidedSpectrumQ[spectrum_, k_] := With[
@@ -933,8 +957,9 @@ coreNilpotentZeroBasePower[m_, {t_, core_, nilpotent_}] := If[
    k lowest coefficients vanish, however they are written, and are dropped. From m its
    coefficients stay small, where the entries of the core the decomposition returns
    can grow by orders of magnitude in size. *)
-corePolynomial[m_, k_] := With[{c = CoefficientList[CharacteristicPolynomial[m, \[FormalZ]], \[FormalZ]]},
-    Together[(-1) ^ k Drop[c, k]] . \[FormalZ] ^ Range[0, Length[c] - k - 1]
+corePolynomial[m_, k_] := keepingPowers[
+    With[{c = CoefficientList[CharacteristicPolynomial[#, \[FormalZ]], \[FormalZ]]}, Together[(-1) ^ k Drop[c, k]] . \[FormalZ] ^ Range[0, Length[c] - k - 1]] &,
+    m
 ]
 
 (* Missing[] when every root of the characteristic polynomial p of the exact core has
@@ -949,7 +974,7 @@ coreNoLimit[p_] := If[rightHalfPlaneQ[p], Missing[], noLimitFailure[namedNoLimit
    coefficients. *)
 rightHalfPlaneQ[p_] := With[
     {q = realCoefficients[CoefficientList[p, \[FormalZ]]]},
-    hurwitzStableQ[Reverse[Together[q] (-1) ^ Range[0, Length[q] - 1]]]
+    hurwitzStableQ[Reverse[togetherKeepingPowers[q] (-1) ^ Range[0, Length[q] - 1]]]
 ]
 
 (* The coefficients a of a polynomial when they are real, as for the characteristic
@@ -989,29 +1014,66 @@ hurwitzStableQ[a_List] := With[
     realPartSign[First[a]] === 1 && Length[pairs] == Length[a] - 1 && lowerLeadingPositiveQ[Last[pairs]]
 ]
 
-routhStep[{upper_, lower_}] := {lower, Together[Append[Rest[upper] - First[upper] / First[lower] Rest[lower], 0]]}
+routhStep[{upper_, lower_}] := {lower, togetherKeepingPowers[Append[Rest[upper] - First[upper] / First[lower] Rest[lower], 0]]}
+
+(* f of x with every integer power beyond the 64th of a compound number held as a
+   symbol, and put back after, for f that holds whatever the values of those powers,
+   as Together, the characteristic polynomial, a factorization and the roots of a
+   linear or quadratic factor do: Together, CharacteristicPolynomial, Exponent and
+   FactorList expand (Sqrt[2] - 1)^1000000 into a polynomial in Sqrt[2], for
+   minutes. A power of an atom, as E^1000, cannot be expanded and is left as it
+   is. *)
+keepingPowers[f_, x_] := With[
+    {powers = DeleteDuplicates[Cases[x, _ ? heldPowerQ, {0, Infinity}]]},
+    {held = Array[\[FormalCapitalP], Length[powers]]},
+    f[x /. Thread[powers -> held]] /. Thread[held -> powers]
+]
+
+heldPowerQ[x_] := MatchQ[x, Power[b_, n_Integer] /; Abs[n] > 64 && ! AtomQ[b] && NumericQ[b]]
+
+togetherKeepingPowers[x_] := keepingPowers[Together, x]
+
+(* The degree in z of the polynomial p, whose leading coefficient is not zero, with
+   the powers keepingPowers holds held: Exponent expands them. *)
+polynomialDegree[p_] := keepingPowers[Exponent[#, \[FormalZ]] &, p]
 
 lowerLeadingPositiveQ[{_, lower_}] := realPartSign[First[lower]] === 1
 
 (* An eigenvalue without positive real part among the roots of the characteristic
-   polynomial p, named exactly when it is a root of a factor with real coefficients,
-   decided by value, or of a linear or quadratic one, and Missing[] when such
-   eigenvalues are roots only of factors with complex coefficients of degree 3 or more.
-   (The kernel crashes building the exact roots of such a factor of degree 32, as
-   Eigenvalues of a dense complex 32 x 32 matrix does.) A p of degree 3 or more is
-   factored when Element proves its coefficients algebraic and they hold at most 3
-   distinct radicals or Root objects; FactorList fails on others, as Exp[10^7], or
-   takes minutes, as with 8 square roots, and p is then its own factor. *)
+   polynomial p, named exactly when it is a root of a linear or quadratic factor, or
+   of a factor with real coefficients, decided by value, that holds no power that
+   keepingPowers holds, and Missing[] when such eigenvalues are roots only of other
+   factors. (The kernel crashes building the exact roots of a factor with complex
+   coefficients of degree 32, as Eigenvalues of a dense complex 32 x 32 matrix does,
+   and a Root object expands such a power.) *)
 namedNoLimitEigenvalue[p_] := SelectFirst[
-    Catenate[SolveValues[# == 0, \[FormalZ]] & /@ Select[
-        If[ Exponent[p, \[FormalZ]] >= 3 && AllTrue[CoefficientList[p, \[FormalZ]], TrueQ[Element[#, Algebraics]] &] &&
-                Length[DeleteDuplicates[Cases[CoefficientList[p, \[FormalZ]], Power[_Integer | _Rational, _Rational] | _Root | _AlgebraicNumber, {0, Infinity}]]] <= 3,
-            FactorList[p, Extension -> Automatic][[All, 1]],
-            {p}
-        ],
-        Exponent[#, \[FormalZ]] >= 1 && (Exponent[#, \[FormalZ]] <= 2 || AllTrue[CoefficientList[#, \[FormalZ]], realPartSign[I #] === 0 &]) &
+    Catenate[keepingPowers[SolveValues[# == 0, \[FormalZ]] &, #] & /@ Select[
+        polynomialFactors[p],
+        polynomialDegree[#] >= 1 && (
+            polynomialDegree[#] <= 2 ||
+                FreeQ[#, _ ? heldPowerQ] && AllTrue[CoefficientList[#, \[FormalZ]], realPartSign[I #] === 0 &]
+        ) &
     ]],
     realPartSign[#] =!= 1 &
+]
+
+(* The factors of the polynomial p. A p of degree 3 or more is factored, with the
+   powers keepingPowers holds held, when Element proves its coefficients algebraic
+   and they hold at most 3 other distinct radicals or Root objects; FactorList fails on
+   others, as Exp[10^7], or takes minutes, as with 8 square roots, and p is then its
+   own factor. (Element is not asked about an integer exponent beyond 10^9, on some
+   of which it crashes the kernel.) *)
+polynomialFactors[p_] := If[
+    polynomialDegree[p] >= 3 && FreeQ[p, Power[_, n_Integer /; Abs[n] > 10 ^ 9]] &&
+        AllTrue[CoefficientList[p, \[FormalZ]], TrueQ[Element[#, Algebraics]] &],
+    keepingPowers[
+        If[ Length[DeleteDuplicates[Cases[CoefficientList[#, \[FormalZ]], Power[_Integer | _Rational, _Rational] | _Root | _AlgebraicNumber, {0, Infinity}]]] <= 3,
+            FactorList[#, Extension -> Automatic][[All, 1]],
+            {#}
+        ] &,
+        p
+    ],
+    {p}
 ]
 
 (* Exact numbers are decided by value. The value of x at 50, then 400 and 3200 digits of
@@ -1019,26 +1081,67 @@ namedNoLimitEigenvalue[p_] := SelectFirst[
    a sign read off it is exact. (The accuracy goal is reached on a number that holds a
    zero not written as 0, and the precision goal on a huge number without all of its
    digits.) What stays within 10^-3200 of zero is zero when Element proves it
-   algebraic, after FunctionExpand, and PossibleZeroQ with the method ExactAlgebraics,
-   which is exact for algebraic numbers, finds it zero, as for
-   GoldenRatio - (1 + Sqrt[5]) / 2, and is taken as zero when Element does not, as
-   for Log[6] - Log[2] - Log[3]; a number that is not zero, lies within 10^-3200 of
-   it and is not proved algebraic, as Tanh[10^4] - 1, is read as zero. A real part
-   proved algebraic and found nonzero is read to digits that keep doubling until they
-   tell, as they must, up to 12 doublings. These decisions are exact for numbers
-   between $MinNumber and $MaxNumber, the range of arbitrary-precision numbers. Beyond
-   it N reports an underflow or an overflow with its own messages: a value that
-   underflows is read as zero, proved algebraic or not (PossibleZeroQ with the method
-   ExactAlgebraics crashes the kernel on some, as (Sqrt[2] - 1)^(10^20) -
-   (Sqrt[2] - 1)^(10^20 + 1)), and one that overflows as nonzero, with the sign of
-   its real part as Sign reads it from the expression, as for -Exp[Exp[100]], and
-   Indeterminate when Sign cannot. *)
+   algebraic, after FunctionExpand, and algebraicZeroQ, which is exact, finds it zero,
+   as for GoldenRatio - (1 + Sqrt[5]) / 2; it is taken as zero when Element does not, as
+   for Log[6] - Log[2] - Log[3], and when algebraicZeroQ does not settle it in its time,
+   so a number that is not zero, lies within 10^-3200 of it and is not proved
+   algebraic, as Tanh[10^4] - 1, is read as zero. A real part proved algebraic and
+   found nonzero is read to digits doubling from 6400 to 102400, and past that its sign
+   is read from RootReduce within 5 s; it is Indeterminate, which counts as not
+   positive, when RootReduce does not end in time. With these readings the decisions
+   are exact for numbers between $MinNumber and $MaxNumber, the range of
+   arbitrary-precision numbers. Beyond it N reports an underflow or an overflow with
+   its own messages: a value that underflows is read as zero, proved algebraic or not
+   (PossibleZeroQ with the method ExactAlgebraics crashes the kernel on some, as
+   (Sqrt[2] - 1)^(10^20) - (Sqrt[2] - 1)^(10^20 + 1)), and one that overflows as
+   nonzero, with the sign of its real part as Sign reads it from the expression, as for
+   -Exp[Exp[100]], and Indeterminate when Sign cannot. *)
 exactZeroQ[x_ ? gaussianRationalQ] := x == 0
 
-exactZeroQ[x_] := Replace[settledValue[x, Identity], {
+exactZeroQ[x_] := Replace[settledValue[x, Abs], {
     Missing["Overflow"] -> False,
     Missing["Underflow"] -> True,
-    _Missing :> Replace[provenAlgebraic[x], {_Missing -> True, y_ :> PossibleZeroQ[y, Method -> "ExactAlgebraics"]}],
+    Missing["NotANumber"] :> With[{y = simplifiedForm[x]}, If[y =!= x, exactZeroQ[y], False]],
+    _Missing :> Replace[provenAlgebraic[x], {_Missing -> True, y_ :> Replace[algebraicZeroQ[y], _Missing -> True]}],
+    _ -> False
+}]
+
+(* x as FullSimplify writes it, within 5 s, for a number N cannot value as written,
+   because a part of it overflows or underflows, as
+   Exp[Exp[100]] / (1 + Exp[Exp[100]]); x itself when that fails. *)
+simplifiedForm[x_] := TimeConstrained[FullSimplify[x], 5, x]
+
+(* The sign of the real part of x when Sign can read it from the expression, as for
+   -Exp[Exp[100]], and Indeterminate when it cannot. *)
+expressionSign[x_] := Replace[Sign[Re[x]], Except[-1 | 0 | 1] -> Indeterminate]
+
+(* True when the algebraic number y is zero and False when it is not, decided exactly,
+   and Missing[] when neither decision ends in its time. PossibleZeroQ with the method
+   ExactAlgebraics is fast on sums of many radicals and slow on high powers, as
+   (1 + Sqrt[2])^5225 - (Sqrt[2] - 1)^-5225 (minutes); RootReduce the other way round.
+   So the first is given 1 s and the second 5 s after it; both take minutes on the sum
+   of that difference and S^2 - Expand[S^2] for S the sum of the square roots of the
+   primes up to 19. *)
+algebraicZeroQ[y_] := TimeConstrained[
+    PossibleZeroQ[y, Method -> "ExactAlgebraics"],
+    1,
+    TimeConstrained[RootReduce[y] === 0, 5, Missing[]]
+]
+
+(* True when the number base of a power base^op is zero, without the conventions of
+   exactZeroQ, which read a tiny nonzero number such as Exp[-10^4] as zero: a
+   Gaussian rational that is 0, and a number that stays within 10^-3200 of zero and
+   is zero exactly, by algebraicZeroQ when Element proves it algebraic and otherwise
+   when FullSimplify reduces it to 0, as Log[6] - Log[2] - Log[3]. One it does not
+   reduce, as Erf[100] - 1, or that algebraicZeroQ does not settle in its time, is taken
+   as nonzero, and base^op is computed from it. (PossibleZeroQ assumes such a number
+   zero, with a message.) *)
+zeroBaseQ[x_ ? gaussianRationalQ] := x == 0
+
+zeroBaseQ[x_] := Replace[settledValue[x, Abs], {
+    Missing["Overflow"] -> False,
+    Missing["NotANumber"] :> With[{y = simplifiedForm[x]}, If[y =!= x, zeroBaseQ[y], False]],
+    _Missing :> Replace[provenAlgebraic[x], {_Missing :> TimeConstrained[FullSimplify[x] === 0, 5, False], y_ :> Replace[algebraicZeroQ[y], _Missing -> False]}],
     _ -> False
 }]
 
@@ -1046,21 +1149,48 @@ exactZeroQ[x_] := Replace[settledValue[x, Identity], {
 realPartSign[x_ ? gaussianRationalQ] := Sign[Re[x]]
 
 realPartSign[x_] := Replace[settledValue[x, Re], {
-    Missing["Overflow"] :> Replace[Sign[Re[x]], Except[-1 | 0 | 1] -> Indeterminate],
+    Missing["Overflow"] :> expressionSign[x],
     Missing["Underflow"] -> 0,
+    Missing["NotANumber"] :> With[{y = simplifiedForm[x]}, If[y =!= x, realPartSign[y], expressionSign[x]]],
     _Missing :> With[{re = Replace[provenAlgebraic[x], {_Missing :> Re[x], y_ :> Re[y]}]},
-        If[exactZeroQ[re], 0, Sign[digitsValue[x, Re, NestWhile[2 # &, 6400, digitsValue[x, Re, #] == 0 &, 1, 12]]]]
+        If[exactZeroQ[re], 0, tinySign[x, re]]
     ],
     v_ :> Sign[v]
 }]
 
-(* x as FunctionExpand writes it when Element then proves it algebraic, as
-   Sin[ArcCos[1/3] / 2] = 1 / Sqrt[3]; Missing[] when Element does not. *)
-provenAlgebraic[x_] := With[{y = FunctionExpand[x]}, If[TrueQ[Element[y, Algebraics]], y, Missing[]]]
+(* The sign of re, the real part of x, which is not zero and lies within 10^-3200 of it:
+   read at digits doubling from 6400, 4 times, and past that from RootReduce, which is
+   exact, within 5 s; Indeterminate when neither tells. *)
+tinySign[x_, re_] := Replace[digitsValue[x, Re, NestWhile[2 # &, 6400, TrueQ[digitsValue[x, Re, #] == 0] &, 1, 4]], {
+    v_ /; NumberQ[v] && TrueQ[v != 0] :> Sign[v],
+    _ :> Replace[TimeConstrained[reducedSign[RootReduce[re]], 5, Indeterminate], Except[-1 | 0 | 1] -> Indeterminate]
+}]
+
+(* The sign of the algebraic number r as RootReduce writes it, read by Sign with 4 times
+   the digits of its integers as extra working precision: a quadratic irrational
+   a + b Sqrt[2] that is not zero, with a and b of d digits, lies no closer than about
+   10^-d to zero, as 1 / (1 + (1 + Sqrt[2])^(10^6)) does, of 382776 digits, where
+   Sign under the default limit gives up. *)
+reducedSign[r_] := Block[{$MaxExtraPrecision = 10000 + 4 integerDigits[r]}, Sign[r]]
+
+(* x, or x as FunctionExpand writes it, when Element proves it algebraic, as
+   Sin[ArcCos[1/3] / 2] = 1 / Sqrt[3]; Missing[] when Element does not. Element is
+   asked first, since FunctionExpand takes minutes on 1 / (1 + (1 + Sqrt[2])^(10^6)),
+   which Element proves at once; and neither is asked about a number with an integer
+   exponent beyond 10^9, on some of which Element crashes the kernel, as
+   (Sqrt[2] - 1)^(10^20) / ((Sqrt[2] - 1)^(10^20) + (Sqrt[2] - 1)^(10^20 + 1)). *)
+provenAlgebraic[x_] /; ! FreeQ[x, Power[_, n_Integer /; Abs[n] > 10 ^ 9]] := Missing[]
+
+provenAlgebraic[x_] := If[TrueQ[Element[x, Algebraics]],
+    x,
+    With[{y = TimeConstrained[FunctionExpand[x], 1, x]}, If[y =!= x && TrueQ[Element[y, Algebraics]], y, Missing[]]]
+]
 
 (* The part of the value of x, as read by part, at the first of 50, 400 and 3200 digits
-   that tells it from zero; Missing[] when none does, and Missing["Underflow"] or
-   Missing["Overflow"] when the value underflows or overflows. *)
+   that tells it from zero; Missing[] when none does, Missing["Underflow"] or
+   Missing["Overflow"] when the value underflows or overflows, and
+   Missing["NotANumber"] when N gives no number, as when a part of x overflows while
+   x does not. *)
 settledValue[x_, part_] := firstNonzeroValue[x, part, {50, 400, 3200}]
 
 firstNonzeroValue[_, _, {}] := Missing[]
@@ -1069,29 +1199,86 @@ firstNonzeroValue[x_, part_, {digits_, rest___}] := With[{v = digitsValue[x, par
     Which[
         v === Overflow[], Missing["Overflow"],
         v === Underflow[], Missing["Underflow"],
-        v != 0, v,
+        ! NumberQ[v], Missing["NotANumber"],
+        TrueQ[v != 0], v,
         True, firstNonzeroValue[x, part, {rest}]
     ]
 ]
 
-(* The part of the value of x at the given digits of precision or of accuracy, whichever
-   N reaches first. *)
-digitsValue[x_, part_, digits_] := Block[{$MaxExtraPrecision = extraPrecision[x, digits]}, part[N[x, {digits, digits}]]]
+(* The part of x, as part picks it, valued to the given precision or accuracy, whichever
+   N reaches first (Infinity for a goal not set). The part is taken before N, so that
+   the goal applies to it: the real part of 5 + I Exp[10^7] is 5, which the digits of
+   the whole number would not show, and N reads Abs[I Exp[10^7]] where it hits the
+   precision limit on I Exp[10^7]. *)
+valueWithin[x_, part_, {precision_, accuracy_}] :=
+    Block[{$MaxExtraPrecision = extraPrecision[x, Max[Select[{precision, accuracy}, NumericQ]]]}, N[part[x], {precision, accuracy}]]
 
-(* The part of the value of x to the given accuracy. *)
-valueAt[x_, part_, accuracy_] := Block[{$MaxExtraPrecision = extraPrecision[x, accuracy]}, part[N[x, {Infinity, accuracy}]]]
+digitsValue[x_, part_, digits_] := valueWithin[x, part, {digits, digits}]
 
-(* The working precision N may add to reach its goal: enough for the cancellation that
-   integers of d digits in x can cause, and finite. Under an unlimited one N never
-   finishes on a number that holds an exact zero where a function jumps, as
-   Sqrt[-1 + (GoldenRatio - (1 + Sqrt[5]) / 2) I] - I does on the branch cut of
-   Sqrt. A number whose cancellation needs more, as between terms far beyond
-   10^10000 in size, is not told from zero: it is read as zero, as one within
-   10^-3200 of it is, and N says so with its own message. *)
-extraPrecision[x_, digits_] := 10 Max[digits, 0] + 10000 + 2 Max[0, Cases[x,
-    r : _Integer | _Rational | _Complex :> IntegerLength[Max[Abs[Numerator[{Re[r], Im[r]}]], Denominator[{Re[r], Im[r]}]]],
-    {0, Infinity}
-]]
+(* The part of x valued to the given accuracy. *)
+valueAt[x_, part_, accuracy_] := valueWithin[x, part, {Infinity, accuracy}]
+
+(* The working precision N may add to reach its goal: twice the digits asked for, plus
+   200, plus twice the size in digits of the largest integer or part of x, as its
+   structure shows it, up to 10^5 digits, enough for the cancellation between such
+   parts (as (1 + Sqrt[2])^52250 - (Sqrt[2] - 1)^-52250 or
+   E^(10^5 Sqrt[2]) - Cosh[10^5 Sqrt[2]] - Sinh[10^5 Sqrt[2]]). A part of more than
+   10^6 digits does not count: no working precision given here reaches a cancellation
+   between such parts, and N would spend it in vain, for minutes on
+   (Sqrt[2] - 1)^(10^20) / ((Sqrt[2] - 1)^(10^20) + (Sqrt[2] - 1)^(10^20 + 1)), whose
+   parts underflow. The limit is finite: under an unlimited one
+   N never finishes on a number that holds an exact zero where a function jumps, as
+   Sqrt[-1 + (GoldenRatio - (1 + Sqrt[5]) / 2) I] - I does on the branch cut of Sqrt.
+   And it is no larger than that: on a number that is zero, N raises its precision to
+   the limit before it gives the zero, so the limit sets the time, minutes for
+   Gamma[1/3] Gamma[2/3] - 2 Pi / Sqrt[3] under a limit of tens of thousands of digits.
+   A number whose cancellation needs more, as between terms far beyond 10^100000 in size
+   or between parts whose size the structure does not show, as BesselI[0, 10^5], is not
+   told from zero: it is read as zero, as one within 10^-3200 of it is, and N says so
+   with its own message. *)
+extraPrecision[x_, digits_] := 2 Max[digits, 0] + 200 + 2 Min[10 ^ 5, Max[0, Select[
+    Join[integerLengths[x], Abs[sizeDigits /@ Level[x, {0, Infinity}]]],
+    # <= 10 ^ 6 &
+]]]
+
+(* The number of digits of each integer in x, of the numerator and denominator of each
+   rational, and of the largest integer of all. *)
+integerLengths[x_] := Cases[x, r : _Integer | _Rational | _Complex :> IntegerLength[Max[Abs[Numerator[{Re[r], Im[r]}]], Denominator[{Re[r], Im[r]}]]], {0, Infinity}]
+
+integerDigits[x_] := Max[0, integerLengths[x]]
+
+(* About log10 of the size of the number x, read from its structure alone, so that no
+   part of x is valued (a value can underflow, or hit the precision limit on a zero
+   hidden on a branch cut): log10 itself for integers, rationals and constants such as
+   Pi; for a power, the exponent times the size of the base, and for Cosh or Sinh of y,
+   |y| log10(e), where the exponent or y is a rational of moderate size, and otherwise
+   the same with 10^s, s the size of the exponent or of y up to 12, in place of its
+   magnitude (its sign unread, so a power with a negative exponent counts as large);
+   the sum for a product, the largest term plus log10 of their number for a sum, and 0
+   for anything else. *)
+sizeDigits[x : _Integer | _Rational] := If[x == 0, 0, N[Log10[Abs[x]]]]
+
+sizeDigits[Complex[a_, b_]] := Max[sizeDigits[a], sizeDigits[b]]
+
+sizeDigits[x_Symbol ? NumericQ] := Log10[Abs[N[x]]]
+
+sizeDigits[Power[b_, e : _Integer | _Rational]] /; 10 ^ -6 < Abs[e] < 10 ^ 12 := e sizeDigits[b]
+
+sizeDigits[Power[b_, e_]] /; unsizedNumberQ[e] := 10 ^ Min[sizeDigits[e], 12] Abs[sizeDigits[b]]
+
+sizeDigits[(Cosh | Sinh)[y : _Integer | _Rational]] /; Abs[y] < 10 ^ 12 := Abs[y] Log10[N[E]]
+
+sizeDigits[(Cosh | Sinh)[y_]] /; unsizedNumberQ[y] := 10 ^ Min[sizeDigits[y], 12] Log10[N[E]]
+
+(* True for a number whose magnitude the rules above do not take as it is: one that is
+   not a rational, or a rational of 10^12 or more. *)
+unsizedNumberQ[y_] := NumericQ[y] && ! (MatchQ[y, _Integer | _Rational] && Abs[y] < 10 ^ 12)
+
+sizeDigits[x_Times] := Total[sizeDigits /@ List @@ x]
+
+sizeDigits[x_Plus] := Max[sizeDigits /@ List @@ x] + Log10[N[Length[x]]]
+
+sizeDigits[_] := 0
 
 gaussianRationalQ[x_] := MatchQ[x, _Integer | _Rational | Complex[_Integer | _Rational, _Integer | _Rational]]
 
@@ -1105,7 +1292,7 @@ inexactZeroBasePower[m_] := With[
     Which[
         zero["Defective"], defectiveZeroFailure,
         ! MissingQ[noLimit], noLimitFailure[noLimit],
-        zero["Nullity"] == 0, SparseArray[{}, Dimensions[m], N[0, Precision[m]]],
+        zero["Nullity"] == 0, SparseArray[{}, Dimensions[m], N[0, resultPrecision[m]]],
         True, With[{p = nullSpaceProjector @@ zero["NullSpaces"]}, If[nearlyHermitianQ[m, roundoffTolerance[m]], (p + ConjugateTranspose[p]) / 2, p]]
     ]
 ]
