@@ -39,9 +39,9 @@ WignerRepresentation[psi_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPat
 
     M = Length[rho];
 
-    xvec = N@Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
+    xvec = Developer`ToPackedArray@N@Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
 
-    pvec = N@Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
+    pvec = Developer`ToPackedArray@N@Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
 
     {X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
 
@@ -244,9 +244,9 @@ HusimiQRepresentation[state_QuantumState, {xmin_, xmax_}, {pmin_, pmax_},
         
         g = OptionValue["GaussianScaling"];
 
-        xvec = Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
+        xvec = Developer`ToPackedArray @ N @ Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
 
-        pvec = Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
+        pvec = Developer`ToPackedArray @ N @ Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
 
         outerList = Outer[List, xvec, pvec];
 
