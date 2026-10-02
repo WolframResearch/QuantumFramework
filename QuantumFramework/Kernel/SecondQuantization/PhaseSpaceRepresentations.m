@@ -376,4 +376,4 @@ SOrderedRepresentation[state_QuantumState, {xmin_, xmax_}, {pmin_, pmax_}, s_?Nu
   (* g^2/4 is the Jacobian from d^2 alpha to dx dp, as in WignerRepresentation. *)
   vals = (g^2/4) Re @ cf[ConstantArray[xvec, n], Transpose @ ConstantArray[pvec, n]];
 
-  Interpolation @ MapThread[List, {Flatten[Outer[List, xvec, pvec], 1], Flatten[vals]}]]
+  Interpolation @ MapThread[List, {Flatten[Outer[List, xvec, pvec], 1], Flatten[Transpose @ vals]}]]

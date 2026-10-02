@@ -139,6 +139,16 @@ VerificationTest[
     TestID -> "SOrdRep-Fock1-Origin-Husimi"
 ]
 
+(* A coherent state displaced along x, on unequal x and p windows: a grid with its axes
+   swapped returns W(p, x), which the origin tests above cannot see. *)
+VerificationTest[
+    With[{st = CoherentState[20][3/2]},
+        Chop[SOrderedRepresentation[st, {-3, 5}, {-4, 4}, #, "GridSize" -> 161][2.1, 0.3] -
+            SOrderedFunction[st, {2.1, 0.3}, #], 10^-3] & /@ {-1, -1/2, 0}],
+    {0, 0, 0},
+    TestID -> "SOrdRep-OffAxis-MatchesSOrderedFunction"
+]
+
 VerificationTest[
     Head @ SOrderedRepresentation[FockState[2, 6], {-4, 4}, {-4, 4}, -1/2, "GridSize" -> 40],
     InterpolatingFunction,
