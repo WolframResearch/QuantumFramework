@@ -27,25 +27,25 @@ BeginTestSection["QECBosonicCode - construction"]
 
 (* The spec's worked example: N = 1, S = 1 gives (|0> + |4>)/Sqrt[2] and |2>. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["Codewords"],
+    QECBosonicCode["Binomial"[1, 1]]["Codewords"],
     {<|0 -> 1/Sqrt[2], 4 -> 1/Sqrt[2]|>, <|2 -> 1|>},
     TestID -> "QBC-Binomial-11-Codewords"
 ]
 
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["Parameters"],
+    QECBosonicCode["Binomial"[1, 1]]["Parameters"],
     <|"N" -> 1, "S" -> 1|>,
     TestID -> "QBC-Binomial-Parameters"
 ]
 
 VerificationTest[
-    {QECBosonicCode["Binomial", 1, 1]["Basis"], QECBosonicCode["Cat", 4, 2]["Basis"]},
+    {QECBosonicCode["Binomial"[1, 1]]["Basis"], QECBosonicCode["Cat"[4, 2]]["Basis"]},
     {"Fock", "Coherent"},
     TestID -> "QBC-Basis-Detection"
 ]
 
 VerificationTest[
-    QECBosonicCode["Cat", 4, \[Alpha]]["Modes"],
+    QECBosonicCode["Cat"[4, \[Alpha]]]["Modes"],
     1,
     TestID -> "QBC-Modes"
 ]
@@ -53,21 +53,21 @@ VerificationTest[
 (* Any even number of legs is a rotation-symmetric cat code; odd counts and
    degenerate ones are not. *)
 VerificationTest[
-    QECBosonicCode["Cat", 3, \[Alpha]],
+    QECBosonicCode["Cat"[3, \[Alpha]]],
     $Failed,
     {QECBosonicCode::legs},
     TestID -> "QBC-Cat-OddLegs"
 ]
 
 VerificationTest[
-    QECBosonicCode["Cat", 0, \[Alpha]],
+    QECBosonicCode["Cat"[0, \[Alpha]]],
     $Failed,
     {QECBosonicCode::legs},
     TestID -> "QBC-Cat-DegenerateLegs"
 ]
 
 VerificationTest[
-    QECBosonicCode["Cat", 6, \[Alpha]]["Parameters"],
+    QECBosonicCode["Cat"[6, \[Alpha]]]["Parameters"],
     <|"Legs" -> 6, "Alpha" -> \[Alpha]|>,
     TestID -> "QBC-Cat6-Parameters"
 ]
@@ -80,7 +80,7 @@ VerificationTest[
 ]
 
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["Nonsense"],
+    QECBosonicCode["Binomial"[1, 1]]["Nonsense"],
     $Failed,
     {QECBosonicCode::noprop},
     TestID -> "QBC-UndefinedProperty"
@@ -93,14 +93,14 @@ BeginTestSection["QECBosonicCode - mean photon number"]
 
 (* Equal across the two codewords, which is half of why loss is correctable here. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["MeanPhotonNumber"],
+    QECBosonicCode["Binomial"[1, 1]]["MeanPhotonNumber"],
     {2, 2},
     TestID -> "QBC-Binomial-MeanPhotonNumber"
 ]
 
 (* The two-legged cat in closed form.  These differ, so the conditions fail. *)
 VerificationTest[
-    QECBosonicCode["Cat", 2, \[Alpha], Assumptions -> \[Alpha] > 0]["MeanPhotonNumber"],
+    QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0]["MeanPhotonNumber"],
     {\[Alpha]^2 Tanh[\[Alpha]^2], \[Alpha]^2 Coth[\[Alpha]^2]},
     TestID -> "QBC-Cat2-MeanPhotonNumber"
 ]
@@ -113,7 +113,7 @@ BeginTestSection["QECBosonicCode - Knill-Laflamme, binomial"]
 (* The milestone: h00 = <W|I|W> = 1, h11 = <W|n|W> = 2, and h01 = 0 because a flips
    photon-number parity.  Exact, with no Fock cutoff anywhere. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Loss"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", "Loss"[1]],
     {{1, 0}, {0, 2}},
     TestID -> "QBC-Binomial-KLMatrix-Loss1"
 ]
@@ -121,13 +121,13 @@ VerificationTest[
 (* Every block is a multiple of the identity over codewords, which is the condition
    itself rather than a summary of it. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["KnillLaflammeBlocks", "Loss"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeBlocks", "Loss"[1]],
     {{{{1, 0}, {0, 1}}, {{0, 0}, {0, 0}}}, {{{0, 0}, {0, 0}}, {{2, 0}, {0, 2}}}},
     TestID -> "QBC-Binomial-KLBlocks-Loss1"
 ]
 
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["CorrectableQ", "Loss"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", "Loss"[1]],
     True,
     TestID -> "QBC-Binomial-Correctable-Loss1"
 ]
@@ -135,21 +135,21 @@ VerificationTest[
 (* Two losses are not corrected: <W|ad^2 a^2|W> is 6 on one codeword and 2 on the
    other, so the Knill-Laflamme diagonal is codeword-dependent. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["CorrectableQ", "Loss"[2]],
+    QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", "Loss"[2]],
     False,
     TestID -> "QBC-Binomial-NotCorrectable-Loss2"
 ]
 
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["CorrectionOrder"],
+    QECBosonicCode["Binomial"[1, 1]]["CorrectionOrder"],
     1,
     TestID -> "QBC-Binomial-CorrectionOrder"
 ]
 
 (* An explicit set of ladder words must agree with the named channel. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", {1, qecAv}],
-    QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Loss"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", {1, qecAv}],
+    QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", "Loss"[1]],
     TestID -> "QBC-ExplicitErrorSet-MatchesNamed"
 ]
 
@@ -161,7 +161,7 @@ BeginTestSection["QECBosonicCode - Knill-Laflamme, cats"]
 (* a sends the mod-4 combs out of the code space, so the single-loss block vanishes
    identically and only the mean-photon gap obstructs correction. *)
 VerificationTest[
-    QECBosonicCode["Cat", 4, \[Alpha], Assumptions -> \[Alpha] > 0][
+    QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0][
         "KnillLaflammeBlocks", "Loss"[1]][[1, 2]],
     {{0, 0}, {0, 0}},
     TestID -> "QBC-Cat4-LossBlockVanishes"
@@ -171,13 +171,13 @@ VerificationTest[
    code, exact only as alpha -> infinity; Cat2 is not approximately correcting at all,
    since its off-diagonal block grows with alpha. *)
 VerificationTest[
-    QECBosonicCode["Cat", 4, \[Alpha], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
+    QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
     False,
     TestID -> "QBC-Cat4-NotExactlyCorrectable"
 ]
 
 VerificationTest[
-    QECBosonicCode["Cat", 2, \[Alpha], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
+    QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0]["CorrectableQ", "Loss"[1]],
     False,
     TestID -> "QBC-Cat2-NotExactlyCorrectable"
 ]
@@ -186,7 +186,7 @@ VerificationTest[
    cat, so the block is nonzero exactly where the binomial code's is zero. *)
 VerificationTest[
     FullSimplify[
-        QECBosonicCode["Cat", 2, \[Alpha], Assumptions -> \[Alpha] > 0][
+        QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0][
             "KnillLaflammeBlocks", "Loss"[1]][[1, 2]] == {{0, 0}, {0, 0}},
         \[Alpha] > 0],
     False,
@@ -206,7 +206,7 @@ BeginTestSection["QECBosonicCode - the 2d-leg family corrects d-1 losses"]
 
 ClearAll[lossBlock, lossBlockZeroQ]
 lossBlock[legs_, k_] :=
-    QECBosonicCode["Cat", legs, \[Alpha], Assumptions -> \[Alpha] > 0][
+    QECBosonicCode["Cat"[legs, \[Alpha]], Assumptions -> \[Alpha] > 0][
         "KnillLaflammeBlocks", {1, Nest[# ** \[FormalA] &, \[FormalA], k - 1]}][[1, 2]]
 lossBlockZeroQ[legs_, k_] :=
     TrueQ @ Simplify[lossBlock[legs, k] == {{0, 0}, {0, 0}}, \[Alpha] > 0]
@@ -240,8 +240,8 @@ BeginTestSection["QECBosonicCode - approximate correction"]
 
 (* An exact code is correctable at finite amplitude, so the two orders agree. *)
 VerificationTest[
-    {QECBosonicCode["Binomial", 2, 2]["CorrectionOrder"],
-     QECBosonicCode["Binomial", 2, 2]["ApproximateCorrectionOrder", "Loss", \[Alpha]]},
+    {QECBosonicCode["Binomial"[2, 2]]["CorrectionOrder"],
+     QECBosonicCode["Binomial"[2, 2]]["ApproximateCorrectionOrder", "Loss", \[Alpha]]},
     {2, 2},
     TestID -> "QBC-Binomial-ExactEqualsApproximate"
 ]
@@ -250,15 +250,15 @@ VerificationTest[
    approximate order is d - 1.  This is the distinction the boolean cannot make: Cat2 is
    not approximately correcting at all, Cat4 is. *)
 VerificationTest[
-    {QECBosonicCode["Cat", 2, \[Alpha], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"],
-     QECBosonicCode["Cat", 4, \[Alpha], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"]},
+    {QECBosonicCode["Cat"[2, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"],
+     QECBosonicCode["Cat"[4, \[Alpha]], Assumptions -> \[Alpha] > 0]["ApproximateCorrectionOrder"]},
     {0, 1},
     TestID -> "QBC-Cat-ApproximateOrder"
 ]
 
 (* The residual is the obstruction itself, and vanishes identically for an exact code. *)
 VerificationTest[
-    DeleteDuplicates @ QECBosonicCode["Binomial", 1, 1]["KnillLaflammeResidual", "Loss"[1]],
+    DeleteDuplicates @ QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeResidual", "Loss"[1]],
     {0},
     TestID -> "QBC-Residual-ZeroForExactCode"
 ]
@@ -279,14 +279,14 @@ BeginTestSection["QECBosonicCode - truncated conversion"]
 (* A Fock codeword is a finite sum, so its Fock space size is exact: highest occupied
    level plus one.  A coherent codeword is sized from the Poisson tail of its amplitude. *)
 VerificationTest[
-    {QECBosonicCode["Binomial", 1, 1]["FockSpaceSize"],
-     QECBosonicCode["Binomial", 3, 2]["FockSpaceSize"]},
+    {QECBosonicCode["Binomial"[1, 1]]["FockSpaceSize"],
+     QECBosonicCode["Binomial"[3, 2]]["FockSpaceSize"]},
     {5, 13},
     TestID -> "QBC-FockSpaceSize-Fock-Exact"
 ]
 
 VerificationTest[
-    QECBosonicCode["Cat", 4, \[Alpha]]["CodewordStates"],
+    QECBosonicCode["Cat"[4, \[Alpha]]]["CodewordStates"],
     $Failed,
     {QECBosonicCode::numeric},
     TestID -> "QBC-FockSpaceSize-NeedsNumeric"
@@ -294,7 +294,7 @@ VerificationTest[
 
 (* Auto-sized states are normalized and the two codewords stay orthogonal. *)
 VerificationTest[
-    With[{qs = QECBosonicCode["Cat", 4, 2.]["CodewordStates"]},
+    With[{qs = QECBosonicCode["Cat"[4, 2.]]["CodewordStates"]},
         Chop[{#["Norm"] & /@ qs, (First[qs]["Dagger"] @ Last[qs])["Scalar"]} - {{1, 1}, 0}]],
     {{0, 0}, 0},
     TestID -> "QBC-CodewordStates-Auto-Orthonormal"
@@ -302,13 +302,13 @@ VerificationTest[
 
 (* The one cutoff in the object, for handing codewords to the phase-space tools. *)
 VerificationTest[
-    #["Dimensions"] & /@ QECBosonicCode["Binomial", 1, 1]["CodewordStates", 12],
+    #["Dimensions"] & /@ QECBosonicCode["Binomial"[1, 1]]["CodewordStates", 12],
     {{12}, {12}},
     TestID -> "QBC-CodewordStates-Dimensions"
 ]
 
 VerificationTest[
-    Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat", 4, 2.]["CodewordStates", 24],
+    Chop[#["Norm"] - 1] & /@ QECBosonicCode["Cat"[4, 2.]]["CodewordStates", 24],
     {0, 0},
     TestID -> "QBC-CodewordStates-Normalized"
 ]
@@ -321,13 +321,13 @@ BeginTestSection["QECBosonicCode - displacement error sets"]
 (* Every normally ordered monomial up to total degree L, so the set has the triangular
    count (L+1)(L+2)/2 rather than the L+1 of a loss set. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["ErrorSet", "Displacement"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["ErrorSet", "Displacement"[1]],
     {1, qecAv, qecAdv},
     TestID -> "QBC-Displacement-ErrorSet"
 ]
 
 VerificationTest[
-    Table[Length[QECBosonicCode["Binomial", 1, 1]["ErrorSet", "Displacement"[l]]], {l, 0, 3}],
+    Table[Length[QECBosonicCode["Binomial"[1, 1]]["ErrorSet", "Displacement"[l]]], {l, 0, 3}],
     Table[(l + 1) (l + 2)/2, {l, 0, 3}],
     TestID -> "QBC-Displacement-SetSize"
 ]
@@ -335,7 +335,7 @@ VerificationTest[
 (* A code built against photon loss does not correct displacements: a^dagger takes it out
    of the code space in a way the loss set never probes. *)
 VerificationTest[
-    QECBosonicCode["Binomial", 1, 1]["CorrectableQ", "Displacement"[1]],
+    QECBosonicCode["Binomial"[1, 1]]["CorrectableQ", "Displacement"[1]],
     False,
     TestID -> "QBC-Displacement-BinomialNotCorrectable"
 ]
@@ -347,8 +347,8 @@ VerificationTest[
    in the sense of Du et al. would be read from. *)
 VerificationTest[
     With[{offDiagonal = DeleteCases[Flatten[# - DiagonalMatrix[Diagonal[#]]], 0] &},
-        {offDiagonal[QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Loss"[2]]],
-         offDiagonal[QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Displacement"[2]]]}],
+        {offDiagonal[QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", "Loss"[2]]],
+         offDiagonal[QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeMatrix", "Displacement"[2]]]}],
     {{}, {2, Sqrt[3/2], 2, Sqrt[3/2]}},
     TestID -> "QBC-Displacement-OffDiagonalsSurvive"
 ]

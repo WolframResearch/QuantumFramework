@@ -14,7 +14,7 @@ PackageScope[bosonicBlocks]
 PackageScope[ncDagger]
 
 
-QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis or a list of {coefficient, amplitude} pairs in the coherent basis.\nQECBosonicCode[\"Binomial\", N, S] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\", legs, alpha] builds the rotation-symmetric cat code of amplitude alpha on an even number of coherent-state legs; 2d legs correct up to d-1 photon losses.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
+QECBosonicCode::usage = "QECBosonicCode[{w0, w1}] represents a single-mode bosonic code with the given logical codewords, each an association <|n -> amplitude|> in the Fock basis or a list of {coefficient, amplitude} pairs in the coherent basis.\nQECBosonicCode[\"Binomial\"[N, S]] builds the binomial code of Michael et al. with parameters N and S.\nQECBosonicCode[\"Cat\"[legs, alpha]] builds the rotation-symmetric cat code of amplitude alpha on an even number of coherent-state legs; 2d legs correct up to d-1 photon losses.\ncode[prop] gives a property; code[\"Properties\"] lists them.";
 
 
 $av := First[FieldVariables[]]
@@ -60,7 +60,7 @@ QECBosonicCode[ws : {_, _}, OptionsPattern[]] :=
         True, Message[QECBosonicCode::words]; $Failed
     ]
 
-QECBosonicCode["Binomial", nn_Integer ? NonNegative, ss_Integer ? NonNegative,
+QECBosonicCode["Binomial"[nn_Integer ? NonNegative, ss_Integer ? NonNegative],
         OptionsPattern[]] :=
     With[{word = Function[par,
             normalizeFock[Association[Table[
@@ -69,7 +69,7 @@ QECBosonicCode["Binomial", nn_Integer ? NonNegative, ss_Integer ? NonNegative,
             OptionValue[Assumptions]]
     ]
 
-QECBosonicCode["Cat", legs_Integer, al_, OptionsPattern[]] :=
+QECBosonicCode["Cat"[legs_Integer, al_], OptionsPattern[]] :=
     If[ ! (EvenQ[legs] && legs >= 2),
         Message[QECBosonicCode::legs, legs]; $Failed,
         codeObject[
