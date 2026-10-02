@@ -314,3 +314,43 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QECBosonicCode - displacement error sets"]
+
+(* Every normally ordered monomial up to total degree L, so the set has the triangular
+   count (L+1)(L+2)/2 rather than the L+1 of a loss set. *)
+VerificationTest[
+    QECBosonicCode["Binomial", 1, 1]["ErrorSet", "Displacement"[1]],
+    {1, qecAv, qecAdv},
+    TestID -> "QBC-Displacement-ErrorSet"
+]
+
+VerificationTest[
+    Table[Length[QECBosonicCode["Binomial", 1, 1]["ErrorSet", "Displacement"[l]]], {l, 0, 3}],
+    Table[(l + 1) (l + 2)/2, {l, 0, 3}],
+    TestID -> "QBC-Displacement-SetSize"
+]
+
+(* A code built against photon loss does not correct displacements: a^dagger takes it out
+   of the code space in a way the loss set never probes. *)
+VerificationTest[
+    QECBosonicCode["Binomial", 1, 1]["CorrectableQ", "Displacement"[1]],
+    False,
+    TestID -> "QBC-Displacement-BinomialNotCorrectable"
+]
+
+(* The structural difference from loss.  A loss set is graded by photon number, so
+   E_p^dagger E_q moves it unless p = q and the coefficient matrix comes out diagonal at
+   every order.  A displacement set is not graded - pairs such as (I, a^dagger a) preserve
+   photon number - so the off-diagonal coefficients survive.  They are what a signature
+   in the sense of Du et al. would be read from. *)
+VerificationTest[
+    With[{offDiagonal = DeleteCases[Flatten[# - DiagonalMatrix[Diagonal[#]]], 0] &},
+        {offDiagonal[QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Loss"[2]]],
+         offDiagonal[QECBosonicCode["Binomial", 1, 1]["KnillLaflammeMatrix", "Displacement"[2]]]}],
+    {{}, {2, Sqrt[3/2], 2, Sqrt[3/2]}},
+    TestID -> "QBC-Displacement-OffDiagonalsSurvive"
+]
+
+EndTestSection[]

@@ -108,6 +108,15 @@ bosonicErrorSet["Loss"[l_Integer ? NonNegative]] := NestList[ncTimes[#, $av] &, 
 bosonicErrorSet["Dephasing"[dd_Integer ? NonNegative]] :=
     NestList[ncTimes[#, $adv ** $av] &, 1, dd]
 
+(* Every normally ordered monomial up to total degree L, the span a displacement reaches
+   when expanded to that order.  Unlike loss it is not graded by photon number, so the
+   coefficient matrix need not come out diagonal. *)
+bosonicErrorSet["Displacement"[l_Integer ? NonNegative]] :=
+    Flatten @ Table[
+        ncTimes[Nest[ncTimes[#, $adv] &, 1, p], Nest[ncTimes[#, $av] &, 1, t - p]],
+        {t, 0, l}, {p, 0, t}
+    ]
+
 bosonicErrorSet[es_List] := es
 
 
