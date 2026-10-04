@@ -227,4 +227,19 @@ VerificationTest[
     TestID -> "Evolve-phase-space-time-interval-still-works"
 ]
 
+(* A numerically integrated density matrix carries roundoff that can fail
+   PhysicalQ, and so can the state "Physical" repairs it into. Reading its
+   probabilities must not ask the repaired state for "Weights" again, which
+   recursed until $RecursionLimit on this driven, damped five-level ladder. *)
+VerificationTest[
+    Module[{b = QuantumOperator[DiagonalMatrix[Sqrt[Range[4]], 1], {1}, 5], h, rho, p},
+        h = (-Pi/5) (b["Dagger"] @ b["Dagger"] @ b @ b) + ((Pi/12) (1 - Cos[2 Pi \[FormalT]/12])/2) (b + b["Dagger"]);
+        rho = QuantumEvolve[h, {b} -> {1/100000}, QuantumState[UnitVector[5, 1], 5], {\[FormalT], 0, 12}];
+        p = rho[12]["ProbabilitiesList"];
+        {Length[p], Chop[Total[p] - 1, 1*^-8], 0.96 < p[[2]] < 0.97}
+    ],
+    {5, 0, True},
+    TestID -> "Evolve-Lindblad-probabilities-of-a-roundoff-state-do-not-recurse"
+]
+
 EndTestSection[]

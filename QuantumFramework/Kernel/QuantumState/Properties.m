@@ -287,7 +287,9 @@ QuantumStateProp[qs_, "Weights"] := Which[
     qs["PhysicalQ"] || ! qs["NumericQ"],
     Abs @ Diagonal @ qs["DensityMatrix"],
     True,
-    qs["Physical"]["Weights"]
+    (* the repaired state's own diagonal: asking it for "Weights" retests
+       PhysicalQ, which roundoff left by the repair can fail again *)
+    Abs @ Diagonal @ qs["Physical"]["DensityMatrix"]
 ]
 
 QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
