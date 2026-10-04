@@ -34,6 +34,12 @@ jobs:
         paclet_cicd_version: 0.36.0
         definition_notebook: ./QuantumFramework/ResourceDefinition.nb
         resource_system_base: https://www.wolframcloud.com/obj/resourcesystem/api/1.0
+    - name: Upload paclet
+      uses: actions/upload-artifact@v4
+      with:
+        name: QuantumFramework-paclet
+        path: ${{ env.PACLET_PATH }}
+        if-no-files-found: error
     - run: |
         wolframscript -code "
         CloudConnect[\"wolframquantumframework@wolfram.com\", \"${{ secrets.WQF_PASSWORD }}\"];
