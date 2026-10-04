@@ -6,9 +6,16 @@ PackageExport[QuantumEvolve]
 PackageExport[HamiltonianTransitionRate]
 PackageExport[LindbladTransitionRates]
 
+PackageScope[$QuantumEvolveSparseThreshold]
+
 
 
 QuantumEvolve::error = "Differential Solver failed to find a solution"
+
+(* the number of unknowns above which a numeric solve keeps its operators sparse: NDSolve
+   integrates the dense equations faster up to about a thousand unknowns and slows sharply
+   beyond *)
+$QuantumEvolveSparseThreshold = 1024
 
 Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
     {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "ReturnSolution" -> False, "MergeInterpolatingFunctions" -> True, "Expand" -> False},
@@ -165,7 +172,16 @@ QuantumEvolve[
                 Flatten[{OptionValue["AdditionalEquations"]}]
             ]
         ],
-        equations = equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
+        equations = If[ numericQ && Times @@ ArrayDimensions[init] > $QuantumEvolveSparseThreshold,
+            Join[
+                {
+                    \[FormalS]'[parameter] == sparseNumericRHS[rhs, parameter, OptionValue[WorkingPrecision]],
+                    \[FormalS][parameterSpec[[2]]] == Normal[init]
+                },
+                Flatten[{OptionValue["AdditionalEquations"]}] /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
+            ],
+            equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
+        ]
     ];
 
     solution = If[numericQ,
@@ -248,6 +264,37 @@ QuantumEvolve[hamiltonian_QuantumOperator, args___] := QuantumEvolve[hamiltonian
 
 
 MapSparseArray[f_, sa_] := SparseArray[Thread[sa["ExplicitPositions"] -> f /@ sa["ExplicitValues"]], Dimensions[sa]]
+
+(* A sparse array whose entries depend on the parameter, as {coefficient, array} terms whose
+   arrays do not: each entry expands into terms, and each term splits into the factors that
+   hold the parameter and the rest. Plus leaves an exact and an inexact multiple of the same
+   factor apart, so one entry can contribute several terms to an array; they are summed. *)
+parameterTerms[sa_SparseArray, parameter_] := KeyValueMap[
+    {#1, SparseArray[Normal @ Merge[#2, Total], Dimensions[sa]]} &,
+    GroupBy[
+        Catenate @ MapThread[
+            {pos, value} |-> Map[
+                With[{factors = If[Head[#] === Times, List @@ #, {#}]},
+                    Times @@ Select[factors, ! FreeQ[#, parameter] &] -> (pos -> Times @@ Select[factors, FreeQ[#, parameter] &])
+                ] &,
+                If[Head[#] === Plus, List @@ #, {#}] & @ Expand[value]
+            ],
+            {sa["ExplicitPositions"], sa["ExplicitValues"]}
+        ],
+        First -> Last
+    ]
+]
+
+(* NDSolve multiplies a numeric SparseArray without densifying it but rejects one holding a
+   symbol, so an array that depends on the parameter becomes a sum of numeric arrays with
+   parameter-dependent coefficients *)
+sparseNumericRHS[rhs_, parameter_, precision_] := ReplaceAll[
+    ReplaceRepeated[rhs,
+        Dot[a___, sa_SparseArray ? SparseArrayQ /; ! FreeQ[sa["ExplicitValues"], parameter], b___] :>
+            Total[#1 Dot[a, #2, b] & @@@ parameterTerms[sa, parameter]]
+    ],
+    sa_SparseArray ? SparseArrayQ :> N[sa, precision]
+]
 
 MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, values, ifs, grid, dims, dim, params, param},
     pos = array["ExplicitPositions"];

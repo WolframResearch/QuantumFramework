@@ -275,4 +275,42 @@ VerificationTest[
     TestID -> "Evolve-Lindblad-two-mode-loss-at-a-composite-cutoff"
 ]
 
+(* Above $QuantumEvolveSparseThreshold unknowns the numeric solve keeps its operators
+   sparse, splitting a time-dependent one into numeric arrays with time-dependent
+   coefficients; lowering the threshold puts small systems on that route. Under
+   H = cos(t) X from |0>, the population of |1> is sin(sin t)^2. *)
+VerificationTest[
+    Block[{$QuantumEvolveSparseThreshold = 0},
+        Abs[QuantumEvolve[QuantumOperator[Cos[\[FormalT]] PauliMatrix[1]], QuantumState["0"], {\[FormalT], 0, 2}][2]["ProbabilitiesList"][[2]] - Sin[Sin[2.]] ^ 2] < 10 ^ -6
+    ],
+    True,
+    TestID -> "Evolve-time-dependent-sparse-matches-closed-form"
+]
+
+(* An entry can hold an exact and an inexact multiple of the same time factor, which Plus
+   keeps apart; both reach the sparse route. A DRAG-corrected pi pulse on a five-level
+   transmon gives the same final state on both routes. *)
+VerificationTest[
+    Module[{b = QuantumOperator[DiagonalMatrix[Sqrt[Range[4]], 1], {1}, 5], env, h, final},
+        env = (Pi / 12) (1 - Cos[2 Pi \[FormalT] / 12]);
+        h = (-Pi / 5) (b["Dagger"] @ b["Dagger"] @ b @ b) + 0.03 (b["Dagger"] @ b) + (env / 2) (b + b["Dagger"]) -
+            (0.7 D[env, \[FormalT]] / (-4 Pi / 5)) (I (b["Dagger"] - b));
+        final[] := Normal @ QuantumEvolve[h, QuantumState[UnitVector[5, 1], 5], {\[FormalT], 0, 12}][12]["StateVector"];
+        Max @ Abs[Block[{$QuantumEvolveSparseThreshold = 0}, final[]] - final[]] < 10 ^ -7
+    ],
+    True,
+    TestID -> "Evolve-time-dependent-sparse-keeps-exact-and-inexact-terms"
+]
+
+VerificationTest[
+    Module[{a = QuantumOperator[DiagonalMatrix[Sqrt[Range[5]], 1], {1}, 6], h, rho, ref},
+        h = 0.25 (a["Dagger"] @ a["Dagger"] @ a @ a) + (0.7 Cos[\[FormalT]]) (a + a["Dagger"]);
+        rho = Block[{$QuantumEvolveSparseThreshold = 0}, QuantumEvolve[h, {a} -> {0.2}, QuantumState[UnitVector[6, 1], 6], {\[FormalT], 0, 3}]];
+        ref = QuantumEvolve[h, {a} -> {0.2}, QuantumState[UnitVector[6, 1], 6], {\[FormalT], 0, 3}, "MergeInterpolatingFunctions" -> False];
+        Max @ Abs[Normal[rho[3]["DensityMatrix"]] - Normal[ref[3]["DensityMatrix"]]] < 10 ^ -6
+    ],
+    True,
+    TestID -> "Evolve-Lindblad-time-dependent-sparse-matches-dense-route"
+]
+
 EndTestSection[]
