@@ -2,20 +2,20 @@
 
 What Wolfram QuantumFramework can do numerically today, measured rather than claimed, and what stands in the way of each problem class ranked in the companion survey, [Quantum software numerics priorities](reports/Quantum%20software%20numerics%20priorities.md).
 
-**Environment.** QF 2.1.1 working tree, Wolfram Language 15.0, 4 October 2026, 48 GB macOS machine. Swap was 97% full and other kernels were running during part of the session, so absolute timings carry roughly ±2× noise; ratios measured inside one kernel are reliable. Every number below comes from a script in [numeric-inventory-probes/](numeric-inventory-probes/), runnable from that folder against the repository's paclet. The per-process probes' result lines are in `results.log` (kernel message dumps removed); `batchA`, `batchB2`, `batchB3`, `batchD` and `t0` print to the terminal. Run probes one per kernel with `./runprobes.sh probe.wls`, which kills a kernel that outlives its time limit: `TimeConstrained` and `MemoryConstrained` did not stop several of these computations.
+**Environment.** QF 2.1.1 working tree, Wolfram Language 15.0, 4 October 2026 (the P0 defects re-measured after their fixes on 5 October), 48 GB macOS machine. Swap was 97% full and other kernels were running during part of the session, so absolute timings carry roughly ±2× noise; ratios measured inside one kernel are reliable. Every number below comes from a script in [numeric-inventory-probes/](numeric-inventory-probes/), runnable from that folder against the repository's paclet. The per-process probes' result lines are in `results.log` (kernel message dumps removed); `batchA`, `batchB2`, `batchB3`, `batchD` and `t0` print to the terminal. Run probes one per kernel with `./runprobes.sh probe.wls`, which kills a kernel that outlives its time limit: `TimeConstrained` and `MemoryConstrained` did not stop several of these computations.
 
 ## Readiness against the survey's ranking
 
 | # | Problem class | Verified in QF | What blocks a study | Readiness |
 |---|---|---|---|---|
-| 1 | Driven-dissipative Kerr: bistability, Liouvillian gap | Lindblad evolution converges in the cutoff; exact steady state from the Liouvillian null space, which also exposes multiple steady states; 28-digit evolution | The solve is 30 to 250 times slower than the published N = 50 numbers (see Dynamics) | **Blocked**: needs a sparse vectorized Liouvillian |
+| 1 | Driven-dissipative Kerr: bistability, Liouvillian gap | Lindblad evolution converges in the cutoff; exact steady state from the Liouvillian null space, which also exposes multiple steady states; 28-digit evolution | A solve at N = 50 takes 3.6 s, 17 to 140 times the published numbers (see Dynamics) | **Ready** to N of about 60 |
 | 2 | Transmon beyond two levels: leakage, DRAG | 4-level transmon, Gaussian pi pulse; the DRAG coefficient that minimizes leakage is found numerically in 1.2 s | Smooth pulses inside long idle windows are skipped, exactly as in QuTiP | **Ready**, with step control |
 | 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | Dense circuit engine takes 14 s at 12 qubits and 28 min at 20; no trajectory engine found | Repetition codes only |
-| 4 | Cavity-QED spectra | Damped Jaynes-Cummings is correct once the jump operator is written on the full space | Jump operators on a subsystem fail silently; no correlation or spectrum routine | **Blocked** on that defect |
+| 4 | Cavity-QED spectra | Damped Jaynes-Cummings with the jump operator on the cavity alone matches the exact one-excitation solution | No correlation or spectrum routine | Dynamics ready; spectra are a gap |
 | 5 | Exponentially small splittings and gaps | 28 correct digits in time evolution | Not yet run on the double-well benchmark | Promising, verify next |
 | 6 | Rydberg arrays | Not tested | Same ODE and circuit performance limits as 1 and 3 | Untested |
 | 7 | Quench dynamics, light cones, Trotter error | Full-chain light-cone contraction exact to 16 qubits | No automatic light-cone pruning: 24 qubits did not finish | Small chains only |
-| 8 | Lossy phase estimation, Fock-space photonics | NOON quantum Fisher information matches n^2 eta^n to 6 digits up to n = 10 in 0.4 s; exact cat-state Wigner values | Composite Fock cutoffs are silently split into several qudits and crash the kernel; no bosonic loss channel | **Ready**, with explicit dimensions |
+| 8 | Lossy phase estimation, Fock-space photonics | NOON quantum Fisher information matches n^2 eta^n to 6 digits up to n = 10 in 0.4 s; exact cat-state Wigner values | No bosonic loss channel | **Ready** |
 | 9 | Trajectories, continuous measurement | Not found | No trajectory solver | Gap |
 | 10 | Lindblad vs Bloch-Redfield vs HEOM | Lindblad and Kossakowski forms | No Bloch-Redfield or HEOM | Gap |
 | 11 | Characterization and tomography | 9 Pauli settings x 1000 shots reconstructed to fidelity 0.9998 in 0.6 s; Bayesian estimator present | A fidelity call failed at 10,000 shots | **Ready** |
@@ -30,15 +30,17 @@ Variational studies are slow, consistent with the survey's advice to concede the
 3. **Exponentially small gaps (class 5).** Run QuantumToolbox.jl's double-well benchmark. If QF's arbitrary precision holds there, the study is a match plus a verification win, because that incumbent documents its own failure at N = 150.
 4. **Tomography with credible regions (class 11).** How many shots does it take to certify entanglement at 95% posterior probability? QF's Metropolis-Hastings estimator answers that directly.
 
-Kerr (class 1) and cavity-QED spectra (class 4) are the survey's top problems, but they wait on the first two P0 fixes below.
+Kerr (class 1) is the survey's top problem and now runs at N up to about 60 in seconds per solve; cavity-QED spectra (class 4) still need a correlation routine.
 
 ## Defects and gaps, by priority
 
 ### P0: block a ranked study
 
-1. **Lindblad performance.** `QuantumEvolve` writes the master equation as a dense matrix ODE (`equations /. sa_SparseArray :> Normal[sa]`), and NDSolve's automatic method has a cliff between N = 30 and 35. NDSolve alone on QF's equations takes 0.35 s at N = 30, 5.0 s at N = 35 and 6.5 s at N = 40. End to end, `QuantumEvolve` adds 1.5 to 4 s on top. The incumbents' published N = 50 times are 0.026 to 0.21 s, on different parameters (QuantumToolbox.jl paper, arXiv:2504.21440). The non-default `"MergeInterpolatingFunctions" -> False` path keeps sparse operations and ran 2.6 times faster, which points at the fix.
-2. **Jump operators on a subsystem fail silently.** Damped Jaynes-Cummings with `AnnihilationOperator[12, {2}]` as the jump operator returns an unevaluated `NDSolveValue`, with no QF message. The same operator written as `QuantumTensorProduct[QuantumOperator[IdentityMatrix[2], {1}], a]` solves in 0.06 s and reproduces cos^2(g t) e^(-kappa t / 2). This also hits every multi-mode loss problem.
-3. **Composite dimensions are factored.** `QuantumOperator[IdentityMatrix[k], {2}]` returns dimensions {2, 3, 2, 3} for k = 6, {2, 2, 2, 2, 2, 2} for k = 8 and {3, 3, 3, 3} for k = 9, although the order names one qudit. In a two-mode Lindblad problem at Fock cutoff 9 this produced a reproducible kernel segfault (exit 139). Passing the dimension explicitly, `QuantumOperator[IdentityMatrix[9], {2}, 9]`, fixes it. Any Fock cutoff that is not prime is affected.
+Resolved on 5 October 2026; what each now does:
+
+1. **Lindblad performance.** Above `$QuantumEvolveSparseThreshold` = 1,024 unknowns a numeric `QuantumEvolve` keeps its operators sparse, splitting a time-dependent one into numeric arrays with time-dependent coefficients; below it NDSolve integrates the dense equations faster. The Kerr oscillator end to end takes 0.42 s at N = 30, 0.88 s at 35, 1.41 s at 40, 3.6 s at 50 and 7.8 s at 60, agreeing with the matrix exponential of the Liouvillian to 7e-7 at N = 50. The incumbents' published N = 50 times are 0.026 to 0.21 s, on different parameters (QuantumToolbox.jl paper, arXiv:2504.21440). What remains is NDSolve's per-evaluation overhead: at N = 50 an explicit Runge-Kutta solve takes 1,171 steps and 11,707 right-hand-side evaluations at about 180 µs each, against 47 µs for the sparse matrix-vector product alone.
+2. **Jump operators on a subsystem** act as the identity on the Hamiltonian's other qudits. Damped Jaynes-Cummings with `AnnihilationOperator[12, {2}]` as the jump operator matches the one-excitation solution e^(-kappa t/2) (cos w t + kappa/(4 w) sin w t)^2, w = sqrt(g^2 - kappa^2/16), to 1e-6, and writing each jump of a two-mode loss problem on its own mode gives the same density matrix as writing it on the full space.
+3. **A matrix on an order** spans as many qudits as the order names: `QuantumOperator[IdentityMatrix[9], {2}]` is one 9-dimensional qudit, a dimension splits evenly when it can and takes its smallest divisors first when it cannot (12 on {1, 2} gives 2 x 6), and a matrix too small for its order is broadcast over it, as a named operator is. The two-mode NOON loss problem at Fock cutoff 9 that segfaulted runs in 0.08 s, with the |8,0><0,8| coherence matching e^(-n t)/2 to 5e-8.
 
 ### P1: degrade a study or its credibility
 
@@ -57,7 +59,7 @@ Kerr (class 1) and cavity-QED spectra (class 4) are the survey's top problems, b
 
 ### P2: friction or unsupported claims
 
-8. No named bosonic loss channel; loss has to be written as Lindblad, which then meets defect 2.
+8. No named bosonic loss channel; loss has to be written as Lindblad.
 9. Light-cone locality is not automatic. The showcase draft's claim that the same contraction gives the same number "for a site deep inside a chain of fifty thousand" holds only because the draft builds the 9-qubit cone by hand.
 10. `WhenEvent` works through `"AdditionalEquations"`, but only by referring to the undocumented internal state symbol `\[FormalS]`.
 11. The QuEST backend is unavailable without a runtime download from qtechtheory.org.
@@ -76,8 +78,8 @@ Kerr (class 1) and cavity-QED spectra (class 4) are the survey's top problems, b
 | Rabi flop with `WorkingPrecision -> 40` | 28 correct digits of cos^2 1; 7 at default settings |
 | `WhenEvent` stopping when P0 first drops below 1/2 | integration ends at 0.7853981668; pi/4 = 0.7853981634 |
 | Steady state of the Kerr oscillator at N = 20 from the Liouvillian null space | 0.84 s, null space of dimension 1 |
-| Kerr oscillator, `QuantumEvolve` end to end, t in [0, 10] | 0.06 s at N = 10, 0.10 s at 20, 0.42 s at 30, 9.3 s at 35, 5.3 to 11.2 s at 40, 12.4 s at 45, 16.9 s at 50; mean photon number converged to 2.0732 by N = 20 |
-| Damped Jaynes-Cummings, qubit x cavity of 12, jump written on the full space | 0.06 s; excited population 1, 6.4e-5, 0.951, 0.905 at t = 0, 1, 2, 4 |
+| Kerr oscillator, `QuantumEvolve` end to end, t in [0, 10] | 0.06 s at N = 10, 0.10 s at 20, 0.42 s at 30, 0.88 s at 35, 1.41 s at 40, 3.6 s at 50, 7.8 s at 60; mean photon number converged to 2.0732 by N = 20 |
+| Damped Jaynes-Cummings, qubit x cavity of 12, g = 1, kappa = 0.05, jump on the cavity alone | population of the excited state with an empty cavity 0.2960, 0.1557, 0.3981 at t = 1, 2, 4, each within 1e-6 of the exact one-excitation solution |
 
 ### Bosonic
 
