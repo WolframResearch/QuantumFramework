@@ -1,0 +1,21 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[Short[x, 2], InputForm]]);
+n = 6; hx = 1.0;
+Hising = Total[Table[-QuantumOperator["Z", {i}] @ QuantumOperator["Z", {i + 1}], {i, n - 1}]] + Total[Table[-hx QuantumOperator["X", {i}], {i, n}]];
+hm = N @ Normal @ Hising["Matrix"]; e0 = Min @ Eigenvalues[hm];
+P["exact ground energy", e0];
+pars = Array[\[FormalTheta], 2 n];
+ansatz = QuantumCircuitOperator[Join[Table["RY"[\[FormalTheta][i]] -> i, {i, n}], Table["CNOT" -> {i, i + 1}, {i, n - 1}],
+    Table["RY"[\[FormalTheta][n + i]] -> i, {i, n}]], "Parameters" -> pars];
+P["declared parameters", Length[ansatz["Parameters"]]];
+th0 = ConstantArray[0.1, 2 n];
+energy[th_ ? (VectorQ[#, NumericQ] &)] := Re @ With[{v = Normal @ (ansatz @@ th)[]["StateVector"]}, Conjugate[v] . hm . v];
+{t1, e1} = AbsoluteTiming[energy[th0]];
+P["one bound energy evaluation (s), value", {t1, e1}];
+P["  value is a number?", NumericQ[e1]];
+energyS[th_ ? (VectorQ[#, NumericQ] &)] := Re @ With[{v = Normal @ (ansatz @@ th)[Method -> "Schrodinger"]["StateVector"]}, Conjugate[v] . hm . v];
+P["one bound energy evaluation, Schrodinger engine (s)", First @ AbsoluteTiming[energyS[th0]]];
+xs = Array[x, 2 n]; SeedRandom[3]; init = RandomReal[{-0.3, 0.3}, 2 n];
+{tF, fm} = AbsoluteTiming[Quiet @ FindMinimum[energy[xs], Transpose[{xs, init}], MaxIterations -> 200]];
+P["FindMinimum VQE (s), energy", {tF, First[fm]}];
+P["  relative error vs exact", Abs[(First[fm] - e0)/e0]];

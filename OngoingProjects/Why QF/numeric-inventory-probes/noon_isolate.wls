@@ -1,0 +1,18 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+d = 9; n = 8;
+a1F = QuantumTensorProduct[AnnihilationOperator[d, {1}], QuantumOperator[IdentityMatrix[d], {2}]];
+a2F = QuantumTensorProduct[QuantumOperator[IdentityMatrix[d], {1}], AnnihilationOperator[d, {2}]];
+P["1 two-mode jump operators built, dims", a1F["Dimensions"]];
+psi = QuantumState[(UnitVector[d^2, n d + 1] + UnitVector[d^2, n + 1])/Sqrt[2.], {d, d}];
+P["2 NOON state built, dimension", psi["Dimension"]];
+H = 0. (a1F["Dagger"] @ a1F);
+P["3 zero Hamiltonian built", H["Dimensions"]];
+{eqs, ret, par} = QuantumEvolve[H, {a1F, a2F} -> {1., 1.}, psi, {\[FormalT], 0, -Log[0.9]}, "ReturnEquations" -> True];
+P["4 equations built, leaf count", LeafCount[eqs]];
+r = NDSolveValue[eqs, ret, par];
+P["5 NDSolveValue on returned equations, head", Head[r]];
+rho = QuantumEvolve[H, {a1F, a2F} -> {1., 1.}, psi, {\[FormalT], 0, -Log[0.9]}];
+P["6 QuantumEvolve full, head", Head[rho]];
+m = Normal[(rho /. \[FormalT] -> -Log[0.9])["DensityMatrix"]];
+P["7 density matrix extracted, trace", Chop @ Tr[m]];

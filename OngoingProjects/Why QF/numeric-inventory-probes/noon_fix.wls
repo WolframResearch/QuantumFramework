@@ -1,0 +1,20 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[Short[x, 2], InputForm]]);
+Do[P["QuantumOperator[IdentityMatrix[" <> ToString[k] <> "], {2}] dims", QuantumOperator[IdentityMatrix[k], {2}]["Dimensions"]], {k, {5, 6, 8, 9}}];
+P["with explicit dimension 9", QuantumOperator[IdentityMatrix[9], {2}, 9]["Dimensions"]];
+P["AnnihilationOperator[9, {2}] dims (for comparison)", AnnihilationOperator[9, {2}]["Dimensions"]];
+qfi[rho_, g_] := Module[{l, v, m}, {l, v} = Eigensystem[(rho + ConjugateTranspose[rho])/2]; l = Chop[Re[l]];
+  m = Conjugate[v] . g . Transpose[v];
+  2 Total[Flatten @ Table[If[l[[i]] + l[[j]] > 1*^-12, (l[[i]] - l[[j]])^2/(l[[i]] + l[[j]]) Abs[m[[i, j]]]^2, 0], {i, Length[l]}, {j, Length[l]}]]];
+noonFixed[n_, eta_] := Module[{d = n + 1, a1F, a2F, psi, H, rho, r, n2},
+  a1F = QuantumTensorProduct[AnnihilationOperator[d, {1}], QuantumOperator[IdentityMatrix[d], {2}, d]];
+  a2F = QuantumTensorProduct[QuantumOperator[IdentityMatrix[d], {1}, d], AnnihilationOperator[d, {2}]];
+  psi = QuantumState[(UnitVector[d^2, n d + 1] + UnitVector[d^2, n + 1])/Sqrt[2.], {d, d}];
+  H = 0. (a1F["Dagger"] @ a1F);
+  rho = QuantumEvolve[H, {a1F, a2F} -> {1., 1.}, psi, {\[FormalT], 0, -Log[eta]}];
+  r = Normal[(rho /. \[FormalT] -> -Log[eta])["DensityMatrix"]];
+  n2 = Normal[(a2F["Dagger"] @ a2F)["Matrix"]];
+  {qfi[r, n2], n^2 eta^n}];
+Do[Module[{t, r}, {t, r} = AbsoluteTiming[noonFixed[n, 0.9]];
+   P["explicit-dims lossy NOON n=" <> ToString[n] <> " {QFI, n^2 eta^n}", r];
+   P["  seconds", t]], {n, {8, 10}}];

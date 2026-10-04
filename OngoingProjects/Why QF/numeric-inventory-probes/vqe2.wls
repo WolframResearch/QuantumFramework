@@ -1,0 +1,30 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[Short[x, 2], InputForm]]);
+n = 6; hx = 1.0;
+Hising = Total[Table[-QuantumOperator["Z", {i}] @ QuantumOperator["Z", {i + 1}], {i, n - 1}]] + Total[Table[-hx QuantumOperator["X", {i}], {i, n}]];
+e0 = Min @ Eigenvalues[N @ Normal @ Hising["Matrix"]];
+P["exact ground energy", e0];
+pars = Array[\[FormalTheta], 2 n];
+ansatz = QuantumCircuitOperator @ Join[Table["RY"[\[FormalTheta][i]] -> i, {i, n}], Table["CNOT" -> {i, i + 1}, {i, n - 1}], Table["RY"[\[FormalTheta][n + i]] -> i, {i, n}]];
+hm = N @ Normal @ Hising["Matrix"];
+(* three ways to evaluate the same energy *)
+eDefault[th_ ? (VectorQ[#, NumericQ] &)] := Re @ Module[{psi = (ansatz /. Thread[pars -> th])[]}, (psi["Dagger"] @ Hising @ psi)["Scalar"]];
+eDense[th_ ? (VectorQ[#, NumericQ] &)] := Re @ Module[{v = Normal @ (ansatz /. Thread[pars -> th])[Method -> "Schrodinger"]["StateVector"]}, Conjugate[v] . hm . v];
+(* symbolic once, numeric many: compile the state vector as a function of the parameters *)
+{tS, vSym} = AbsoluteTiming[Normal @ ansatz[]["StateVector"]];
+vf = Compile[Evaluate[Transpose[{pars, ConstantArray[_Real, 2 n]}]], Evaluate[vSym], CompilationTarget -> "WVM"];
+eComp[th_ ? (VectorQ[#, NumericQ] &)] := Re @ With[{v = vf @@ th}, Conjugate[v] . hm . v];
+th0 = ConstantArray[0.1, 2 n];
+P["energy: default engine (s), value", AbsoluteTiming[eDefault[th0]]];
+P["energy: Schrodinger engine (s), value", AbsoluteTiming[eDense[th0]]];
+P["symbolic state vector, built once (s)", tS];
+P["energy: compiled symbolic state (s), value", AbsoluteTiming[eComp[th0]]];
+xs = Array[x, 2 n];
+SeedRandom[3]; init = RandomReal[{-0.3, 0.3}, 2 n];
+{tF, fm} = AbsoluteTiming[Quiet @ FindMinimum[eComp[xs], Transpose[{xs, init}]]];
+P["FindMinimum on the compiled energy (s), energy", {tF, First[fm]}];
+P["  relative error vs exact", Abs[(First[fm] - e0)/e0]];
+{tN, nm} = AbsoluteTiming[Quiet @ NMinimize[eComp[xs], xs, Method -> "DifferentialEvolution"]];
+P["NMinimize global (s), energy, rel error", {tN, First[nm], Abs[(First[nm] - e0)/e0]}];
+g = Quiet @ FubiniStudyMetricTensor[ansatz[], "Matrix", "Parameters" -> pars];
+P["FubiniStudyMetricTensor: Head, Dimensions", {Head[g], Dimensions[g]}];

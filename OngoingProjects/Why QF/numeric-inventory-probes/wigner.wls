@@ -1,0 +1,10 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+cat = Quiet @ Check[CatState[2, 40], CatState[2]];
+P["CatState[2, 40] head / dimension", {Head[cat], Quiet @ Check[cat["Dimension"], "?"]}];
+{t1, w0} = AbsoluteTiming[WignerFunction[cat, 0.]];
+P["W(0) of the cat (negative = nonclassical)", w0];
+P["  seconds", t1];
+{t2, grid} = AbsoluteTiming[Table[WignerFunction[cat, x + I y], {x, -3., 3., 0.3}, {y, -3., 3., 0.3}]];
+P["21x21 Wigner grid at Fock 40 (s)", t2];
+P["  minimum value on the grid", Min[Re[grid]]];

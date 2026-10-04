@@ -1,0 +1,16 @@
+PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+param = CatState[40];
+P["CatState[40] parameters", Quiet @ Check[param["Parameters"], "?"]];
+cat = Quiet @ Check[param[2., 0.], (param /. {\[FormalAlpha] -> 2., \[FormalPhi] -> 0.})];
+cat = Quiet @ Check[cat["Normalize"], cat];
+P["even cat alpha=2 at Fock 40: head, norm", {Head[cat], Quiet @ Check[Chop @ Norm[Normal @ cat["StateVector"]], "?"]}];
+{t1, w0} = AbsoluteTiming[WignerFunction[cat, 0.]];
+P["W(0) (even cat: +2/Pi = 0.6366 expected)", w0];
+P["  seconds", t1];
+{t2, grid} = AbsoluteTiming[Table[WignerFunction[cat, x + I y], {x, -3., 3., 0.3}, {y, -3., 3., 0.3}]];
+P["21x21 Wigner grid at Fock 40 (s)", t2];
+P["  minimum on the grid (fringes: negative)", Min[Re[grid]]];
+odd = Quiet @ Check[param[2., N[Pi]], (param /. {\[FormalAlpha] -> 2., \[FormalPhi] -> N[Pi]})];
+odd = Quiet @ Check[odd["Normalize"], odd];
+P["odd cat W(0) (expect -2/Pi = -0.6366)", WignerFunction[odd, 0.]];
