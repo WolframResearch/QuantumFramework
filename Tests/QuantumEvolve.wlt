@@ -242,6 +242,23 @@ VerificationTest[
     TestID -> "Evolve-Lindblad-probabilities-of-a-roundoff-state-do-not-recurse"
 ]
 
+(* A jump operator on a subsystem acts as the identity on the rest. Damped Jaynes-Cummings
+   with cavity loss: in the one-excitation sector the population of |e,0> is
+   e^(-k t/2) (cos w t + k/(4 w) sin w t)^2 with w = sqrt(g^2 - k^2/16). *)
+VerificationTest[
+    Module[{n = 12, g = 1., k = 0.05, w, a, sm, h, psi0, rho},
+        w = Sqrt[g ^ 2 - k ^ 2 / 16];
+        a = QuantumOperator[DiagonalMatrix[Sqrt[Range[n - 1]], 1], {2}, n];
+        sm = QuantumOperator[{{0, 1}, {0, 0}}, {1}];
+        h = g (sm["Dagger"] @ a + sm @ a["Dagger"]);
+        psi0 = QuantumState[UnitVector[2 n, n + 1], {2, n}];
+        rho = QuantumEvolve[h, {a} -> {k}, psi0, {\[FormalT], 0, 2}];
+        Abs[rho[2]["ProbabilitiesList"][[n + 1]] - Exp[-k] (Cos[2 w] + k / (4 w) Sin[2 w]) ^ 2] < 10 ^ -5
+    ],
+    True,
+    TestID -> "Evolve-Lindblad-jump-on-a-subsystem"
+]
+
 (* Loss on both modes of a NOON state, with jump operators built on the full space through
    a nine-dimensional identity: the coherence between |n,0> and |0,n> decays as
    e^(-n t) / 2 at unit rates. *)

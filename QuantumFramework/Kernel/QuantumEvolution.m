@@ -26,6 +26,24 @@ QuantumEvolve[hamiltonian_QuantumOperator, lindblad : {___QuantumOperator}, args
 
 QuantumEvolve[hamiltonian_QuantumOperator, (lindblad : Except[_List] -> gamma_) | (lindblad_ -> gamma : Except[_List]), args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
 
+(* a jump operator on some of the qudits acts as the identity on the rest: on the
+   Hamiltonian's own order when it covers them all, else on the union of every order *)
+QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List, args___] /;
+    AnyTrue[lindblad, #["Order"] =!= hamiltonian["Order"] &] :=
+    With[{ops = If[
+        AllTrue[lindblad, SubsetQ[hamiltonian["OutputOrder"], #["OutputOrder"]] && SubsetQ[hamiltonian["InputOrder"], #["InputOrder"]] &],
+        Prepend[
+            If[ #["Order"] === hamiltonian["Order"],
+                #,
+                #["OrderedInput", hamiltonian["InputOrder"], hamiltonian["Input"]]["OrderedOutput", hamiltonian["OutputOrder"], hamiltonian["Output"]]
+            ] & /@ lindblad,
+            hamiltonian
+        ],
+        padQuantumOperators[Prepend[lindblad, hamiltonian]]
+    ]},
+        QuantumEvolve[First[ops], Rest[ops] -> gammas, args] /; SameQ @@ Through[ops["Order"]]
+    ]
+
 (* a matrix of rates is a Kossakowski matrix: evolve with the corresponding Liouvillian superoperator *)
 QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List ? MatrixQ, args___] :=
     QuantumEvolve[QuantumOperator["Hamiltonian"[hamiltonian, lindblad, gammas]], args]

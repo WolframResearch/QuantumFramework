@@ -14,6 +14,7 @@ PackageScope["StackQuantumOperators"]
 PackageScope["$QuantumOperatorBroadcastLimit"]
 PackageScope["matrixMapAmplitudes"]
 PackageScope["lazyMatrixMapAmplitudesQ"]
+PackageScope["padQuantumOperators"]
 
 
 (* What the matrix constructors below accept: a rank-2 array container of any
@@ -778,24 +779,30 @@ QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ W
 ]
 
 
-addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
-    orderInput, orderOutput,
-    ordered1, ordered2
+(* operators padded with identities to the qudits any of them acts on, each qudit in the
+   basis of the last operator acting on it *)
+padQuantumOperators[ops : {__QuantumOperator}] := Module[{
+    orderInput, orderOutput
 },
     orderInput = With[{
-            order = Union[qo1["InputOrder"], qo2["InputOrder"]],
-            qbMap = Association[Thread[qo1["InputOrder"] -> qo1["Input"]["Decompose"]], Thread[qo2["InputOrder"] -> qo2["Input"]["Decompose"]]]
+            order = Union @@ Through[ops["InputOrder"]],
+            qbMap = Association[Thread[#["InputOrder"] -> #["Input"]["Decompose"]] & /@ ops]
         },
             {"OrderedInput", order, QuantumTensorProduct[order /. qbMap]}
     ];
     orderOutput = With[{
-            order = Union[qo1["OutputOrder"], qo2["OutputOrder"]],
-            qbMap = Association[Thread[qo1["OutputOrder"] -> qo1["Output"]["Decompose"]], Thread[qo2["OutputOrder"] -> qo2["Output"]["Decompose"]]]
+            order = Union @@ Through[ops["OutputOrder"]],
+            qbMap = Association[Thread[#["OutputOrder"] -> #["Output"]["Decompose"]] & /@ ops]
         },
             {"OrderedOutput", order, QuantumTensorProduct[order /. qbMap]}
     ];
-    ordered1 = ((qo1 @@ orderInput)["Sort"] @@ orderOutput)["Sort"];
-    ordered2 = ((qo2 @@ orderInput)["Sort"] @@ orderOutput)["Sort"];
+    ((# @@ orderInput)["Sort"] @@ orderOutput)["Sort"] & /@ ops
+]
+
+addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
+    ordered1, ordered2
+},
+    {ordered1, ordered2} = padQuantumOperators[{qo1, qo2}];
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
         QuantumState[
