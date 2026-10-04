@@ -1720,3 +1720,71 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - a matrix on an order"]
+
+(* With no basis given, the order says how many qudits the matrix spans: a matrix was
+   split into its prime factors whatever the order said, and a shorter order reshaped it
+   into another map. *)
+VerificationTest[
+    With[{op = QuantumOperator[IdentityMatrix[6], {2}]}, {op["OutputDimensions"], op["InputDimensions"], op["Order"]}],
+    {{6}, {6}, {{2}, {2}}},
+    TestID -> "MatrixOrder-OnePositionIsOneQudit"
+]
+
+VerificationTest[
+    With[{m = RandomInteger[9, {6, 6}]}, Normal[QuantumOperator[m, {2}]["Matrix"]] == m],
+    True,
+    TestID -> "MatrixOrder-OnePositionKeepsTheMatrix"
+]
+
+VerificationTest[
+    QuantumOperator[IdentityMatrix[#1], #2]["OutputDimensions"] & @@@ {{9, {1, 2}}, {36, {1, 2}}, {6, {1, 2}}, {12, {1, 2, 3}}},
+    {{3, 3}, {6, 6}, {2, 3}, {2, 2, 3}},
+    TestID -> "MatrixOrder-EvenSplitElsePrimeFactors"
+]
+
+(* A dimension with no even split takes its smallest divisors first. *)
+VerificationTest[
+    QuantumOperator[IdentityMatrix[12], {1, 2}]["OutputDimensions"],
+    {2, 6},
+    TestID -> "MatrixOrder-SmallestDivisorsFirst"
+]
+
+(* A matrix too small for its order is broadcast over it, as a named operator is. *)
+VerificationTest[
+    With[{cnot = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}}},
+        {
+            Normal[QuantumOperator[PauliMatrix[1], {1, 2}]["Matrix"]] == KroneckerProduct[PauliMatrix[1], PauliMatrix[1]],
+            QuantumOperator[PauliMatrix[1], {1, 2}] == QuantumOperator["X", {1, 2}],
+            Normal[QuantumOperator[cnot, {1, 2, 3, 4}]["Matrix"]] == KroneckerProduct[cnot, cnot],
+            QuantumOperator[IdentityMatrix[6], {1, 2, 3}]["OutputDimensions"]
+        }
+    ],
+    {True, True, True, {6, 6, 6}},
+    TestID -> "MatrixOrder-Broadcast"
+]
+
+(* A side of dimension 1 spans no qudits: a column is a ket on the order, a row a bra. *)
+VerificationTest[
+    Map[
+        {#["OutputDimensions"], #["InputDimensions"], #["Order"]} &,
+        {QuantumOperator[{{1}, {0}, {0}, {0}}, {1}], QuantumOperator[{{1, 0, 0, 0}}, {3}], QuantumOperator[ConstantArray[1, {4, 2}], {2}]}
+    ],
+    {{{4}, {}, {{1}, {}}}, {{}, {4}, {{}, {3}}}, {{4}, {2}, {{2}, {2}}}},
+    TestID -> "MatrixOrder-RectangularSides"
+]
+
+(* An explicit dimension still decides, and an order matching the prime factors reads as before. *)
+VerificationTest[
+    {
+        QuantumOperator[IdentityMatrix[9], {2}, 9]["OutputDimensions"],
+        QuantumOperator[IdentityMatrix[4], {1, 2}]["OutputDimensions"],
+        QuantumOperator[PauliMatrix[3], {2}]["Order"]
+    },
+    {{9}, {2, 2}, {{2}, {2}}},
+    TestID -> "MatrixOrder-ExplicitAndMatchingUnchanged"
+]
+
+EndTestSection[]

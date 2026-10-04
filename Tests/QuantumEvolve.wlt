@@ -242,4 +242,20 @@ VerificationTest[
     TestID -> "Evolve-Lindblad-probabilities-of-a-roundoff-state-do-not-recurse"
 ]
 
+(* Loss on both modes of a NOON state, with jump operators built on the full space through
+   a nine-dimensional identity: the coherence between |n,0> and |0,n> decays as
+   e^(-n t) / 2 at unit rates. *)
+VerificationTest[
+    Module[{d = 9, n = 8, t = -Log[0.9], a, a1, a2, psi, rho},
+        a = DiagonalMatrix[Sqrt[Range[d - 1]], 1];
+        a1 = QuantumTensorProduct[QuantumOperator[a, {1}, d], QuantumOperator[IdentityMatrix[d], {2}]];
+        a2 = QuantumTensorProduct[QuantumOperator[IdentityMatrix[d], {1}], QuantumOperator[a, {2}, d]];
+        psi = QuantumState[(UnitVector[d ^ 2, n d + 1] + UnitVector[d ^ 2, n + 1]) / Sqrt[2.], {d, d}];
+        rho = QuantumEvolve[0. (a1["Dagger"] @ a1), {a1, a2} -> {1., 1.}, psi, {\[FormalT], 0, t}];
+        {a1["Dimensions"], Abs[Abs[Normal[rho[t]["DensityMatrix"]][[n d + 1, n + 1]]] - Exp[-n t] / 2] < 10 ^ -6}
+    ],
+    {{9, 9, 9, 9}, True},
+    TestID -> "Evolve-Lindblad-two-mode-loss-at-a-composite-cutoff"
+]
+
 EndTestSection[]

@@ -173,6 +173,67 @@ QuantumOperator[assoc_Association, order : (_ ? orderQ) : {1}, args___, opts : O
 QuantumOperator::invalidState = "invalid state specification";
 
 
+(* d as n qudit dimensions: equal when d is an n-th power, otherwise its smallest
+   divisors first and the rest last *)
+splitDimension[1, _] := {1}
+
+splitDimension[d_, 1] := {d}
+
+splitDimension[d_, n_] := With[{root = Round[d ^ (1 / n)]},
+    If[ root ^ n == d,
+        ConstantArray[root, n],
+        With[{factors = primeFactors[d]}, Append[Take[factors, n - 1], Times @@ Drop[factors, n - 1]]]
+    ]
+]
+
+(* the fewest copies of a matrix that fill its orders: each order length divides into at
+   most as many qudits as its side's dimension has prime factors *)
+matrixBroadcastMultiplicity[dims_, orders_] := With[{
+    sides = Select[Transpose[{dims, Length /@ orders}], First[#] > 1 &]
+},
+    If[ sides === {},
+        1,
+        SelectFirst[
+            Divisors[GCD @@ sides[[All, 2]]],
+            k |-> AllTrue[sides, #[[2]] / k <= Length[primeFactors[#[[1]]]] &]
+        ]
+    ]
+]
+
+(* With no basis given, the order says how many qudits each side of the matrix spans, and
+   a matrix too small for its order is broadcast over it, as a named operator is. A side
+   of dimension 1 spans none. *)
+QuantumOperator[matrix_ ? matrixContainerQ, order : _ ? orderQ | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}, opts : OptionsPattern[]] := Enclose @ Module[{
+    dims = ArrayDimensions[matrix], orders, multiplicity, op
+},
+    orders = MapThread[
+        Which[#1 == 1, {}, MatchQ[#2, Automatic | {}], Range[Length[primeFactors[#1]]], True, #2] &,
+        {dims, Replace[order, o_ ? orderQ :> {o, o}]}
+    ];
+    multiplicity = matrixBroadcastMultiplicity[dims, orders];
+    If[ MissingQ[multiplicity],
+        (* no number of copies fills both orders: each side spans as many qudits as it can *)
+        orders = MapThread[Take[#2, UpTo[Length[primeFactors[#1]]]] &, {dims, orders}];
+        multiplicity = 1
+    ];
+    op = ConfirmBy[
+        QuantumOperator[matrix, QuantumBasis @@ MapThread[splitDimension[#1, Length[#2] / multiplicity] &, {dims, orders}]],
+        QuantumOperatorQ
+    ];
+    Which[
+        multiplicity == 1,
+        QuantumOperator[op["State"], orders, opts],
+        op["Dimension"] ^ multiplicity > $QuantumOperatorBroadcastLimit,
+        Message[QuantumOperator::broadcast,
+            Max[op["OutputQudits"], op["InputQudits"]], Max[Length /@ orders],
+            op["Dimension"] ^ multiplicity, $QuantumOperatorBroadcastLimit
+        ];
+        $Failed,
+        True,
+        QuantumOperator[{op, multiplicity}, orders, opts]
+    ]
+]
+
 QuantumOperator[matrix_ ? matrixContainerQ, order : _ ? autoOrderQ, args___, opts : OptionsPattern[]] := Enclose @ Module[{
     op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ],
     newOutputOrder, newInputOrder
