@@ -62,9 +62,17 @@ If[ Length[$ScriptCommandLine] > 1,
 
 Print["building ", Length[pages], " documentation page(s)"]
 
+(* A tutorial threads its bindings from the first cell to the last. By default
+   the converter clears them at every heading and "---", so a running example
+   defined early would echo its own input in every later section. *)
+
+techNoteQ[src_] := StringContainsQ[Import[src, "Text"], RegularExpression["(?m)^Template:\\s*TechNote\\s*$"]]
+
 Scan[
     Function[src,
-        mtn[src, FileNameJoin[{DirectoryName[src], FileBaseName[src] <> ".nb"}]];
+        With[{out = FileNameJoin[{DirectoryName[src], FileBaseName[src] <> ".nb"}]},
+            If[techNoteQ[src], mtn[src, out, "EvaluateSeparator" -> None], mtn[src, out]]
+        ];
         Print["  ", FileNameTake[src], " -> ", FileBaseName[src], ".nb"]
     ],
     Sort[pages]
