@@ -314,3 +314,43 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumEvolve - short pulses"]
+
+(* A pi pulse of width 0.01 at t = 50 in [0, 100], under H = Omega(t) X / 2: step control
+   steps over it unless the integration restarts at the landmarks of the time
+   dependence. Captured, the population of |1> at t = 100 is 1. *)
+$piPulse[omega_] := QuantumEvolve[(omega / 2) QuantumOperator["X"], QuantumState["0"], {\[FormalT], 0, 100}][100]["ProbabilitiesList"][[2]]
+
+VerificationTest[
+    Quiet[$piPulse[(Pi / (Sqrt[2 Pi] 0.0025)) Exp[-(\[FormalT] - 50) ^ 2 / (2 0.0025 ^ 2)]], General::munfl] > 1 - 10 ^ -6,
+    True,
+    TestID -> "Evolve-short-Gaussian-pulse-captured"
+]
+
+VerificationTest[
+    $piPulse[Piecewise[{{Pi / 0.01, Abs[\[FormalT] - 50] < 0.005}}, 0]] > 1 - 10 ^ -6,
+    True,
+    TestID -> "Evolve-short-square-pulse-captured"
+]
+
+(* The landmarks are restarts at each discontinuity and across each Gaussian profile; a
+   smooth drive has none. *)
+VerificationTest[
+    {
+        Count[First @ QuantumEvolve[QuantumOperator[Cos[\[FormalT]] PauliMatrix[1]], QuantumState["0"], {\[FormalT], 0, 10}, "ReturnEquations" -> True], _WhenEvent],
+        Length @ Cases[
+            First @ QuantumEvolve[QuantumOperator[Exp[-(\[FormalT] - 5) ^ 2 / 2 / 0.01] PauliMatrix[1]], QuantumState["0"], {\[FormalT], 0, 10}, "ReturnEquations" -> True],
+            WhenEvent[_ == x_, "RestartIntegration"] :> Round[x, 10 ^ -6]
+        ],
+        Cases[
+            First @ QuantumEvolve[QuantumOperator[UnitStep[\[FormalT] - 3] PauliMatrix[1]], QuantumState["0"], {\[FormalT], 0, 10}, "ReturnEquations" -> True],
+            WhenEvent[_ == x_, "RestartIntegration"] :> Round[x, 10 ^ -6]
+        ]
+    },
+    {0, 5, {3}},
+    TestID -> "Evolve-restart-landmarks"
+]
+
+EndTestSection[]

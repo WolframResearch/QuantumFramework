@@ -67,7 +67,7 @@ QuantumEvolve[
     parameter, parameterSpec,
     numericQ, solution,
     rhs, init,
-    equations, return, param,
+    equations, additional, return, param,
     phaseSpaceQ = False,
     mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
 },
@@ -130,12 +130,23 @@ QuantumEvolve[
         ]
     ];
     init = If[defaultState === None, IdentityMatrix[Length[matrix], SparseArray], state["State"]];
+    (* restarting the integration at the landmarks of the time dependence keeps step
+       control from stepping over a short pulse *)
+    additional = Join[
+        Flatten[{OptionValue["AdditionalEquations"]}],
+        If[ numericQ,
+            With[{p = parameter}, WhenEvent[p == #, "RestartIntegration"] & /@
+                pulseLandmarks[{matrix, jumps}, parameter, Rest[parameterSpec], OptionValue[WorkingPrecision]]
+            ],
+            {}
+        ]
+    ];
     equations = Join[
         {
             \[FormalS]'[parameter] == rhs,
             \[FormalS][If[numericQ, parameterSpec[[2]], 0]] == init
         },
-        Flatten[{OptionValue["AdditionalEquations"]}]
+        additional
     ];
     return = If[ numericQ,
         \[FormalS],
@@ -169,7 +180,7 @@ QuantumEvolve[
                     \[FormalS]'[parameter] == frhs[\[FormalS][parameter], parameter],
                     \[FormalS][0] == Normal[init]
                 },
-                Flatten[{OptionValue["AdditionalEquations"]}]
+                additional
             ]
         ],
         equations = If[ numericQ && Times @@ ArrayDimensions[init] > $QuantumEvolveSparseThreshold,
@@ -178,7 +189,7 @@ QuantumEvolve[
                     \[FormalS]'[parameter] == sparseNumericRHS[rhs, parameter, OptionValue[WorkingPrecision]],
                     \[FormalS][parameterSpec[[2]]] == Normal[init]
                 },
-                Flatten[{OptionValue["AdditionalEquations"]}] /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
+                additional /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
             ],
             equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
         ]
@@ -274,14 +285,49 @@ parameterTerms[sa_SparseArray, parameter_] := KeyValueMap[
     GroupBy[
         Catenate @ MapThread[
             {pos, value} |-> Map[
-                With[{factors = If[Head[#] === Times, List @@ #, {#}]},
+                term |-> With[{factors = If[Head[term] === Times, List @@ term, {term}]},
                     Times @@ Select[factors, ! FreeQ[#, parameter] &] -> (pos -> Times @@ Select[factors, FreeQ[#, parameter] &])
-                ] &,
+                ],
                 If[Head[#] === Plus, List @@ #, {#}] & @ Expand[value]
             ],
             {sa["ExplicitPositions"], sa["ExplicitValues"]}
         ],
         First -> Last
+    ]
+]
+
+(* Times at which a numeric solve restarts its integration, so that step control cannot
+   step over a feature of the time dependence much shorter than the steps around it: each
+   discontinuity, and two and four widths either side of the centre of each Gaussian or
+   exponential profile. Each sits a hair before its time in the direction of integration,
+   where NDSolve's own event at a discontinuity would otherwise coincide with it. *)
+pulseLandmarks[expr_, t_, {t0_, t1_}, precision_] := Module[{
+    values, points,
+    delta = Sign[t1 - t0] 10 ^ -9 Max[Abs[{t0, t1}], 1]
+},
+    values = DeleteDuplicates @ Select[Flatten[{expr /. sa_SparseArray ? SparseArrayQ :> sa["ExplicitValues"]}], ! FreeQ[#, t] &];
+    points = Join[
+        Catenate @ Map[
+            Quiet @ TimeConstrained[t /. Solve[FunctionDiscontinuities[#, t] && Min[t0, t1] < t < Max[t0, t1], t, Reals], 1, {}] &,
+            DeleteDuplicates @ Cases[values,
+                f : (Piecewise | UnitStep | HeavisideTheta | HeavisidePi | UnitBox | Boole | Sign | Floor | Ceiling | Round | Mod)[___] /; ! FreeQ[f, t],
+                {0, Infinity}
+            ]
+        ],
+        Catenate @ Cases[values,
+            Power[E, q_] /; PolynomialQ[q, t] && Exponent[q, t] == 2 && TrueQ[Re[Coefficient[q, t, 2]] < 0] :>
+                With[{a = Re[Coefficient[q, t, 2]], b = Re[Coefficient[q, t, 1]]}, - b / (2 a) + {-4, -2, 0, 2, 4} / Sqrt[- 2 a]],
+            {0, Infinity}
+        ],
+        Catenate @ Cases[values,
+            Power[E, q_] /; PolynomialQ[q, t] && Exponent[q, t] == 1 && TrueQ[Re[Coefficient[q, t, 1]] != 0] :>
+                With[{a = Re[Coefficient[q, t, 1]], b = Re[Coefficient[q, t, 0]]}, - b / a + {-4, -2, 0, 2, 4} / Abs[a]],
+            {0, Infinity}
+        ]
+    ];
+    DeleteDuplicates[
+        Sort @ Select[Cases[N[points - delta, precision], _Real], Min[t0, t1] < # < Max[t0, t1] &],
+        Abs[#1 - #2] < Abs[delta] &
     ]
 ]
 
