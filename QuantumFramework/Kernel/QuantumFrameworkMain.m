@@ -14,9 +14,9 @@ Needs["IBMQuantumPlatform`"]
 
 (* A dependency below its floor installs from the Paclet Repository: through the
    resource system first, which has a version as soon as it is published, then
-   through the repository's paclet site, whose index lags behind. When neither has
-   a version that meets the floor, QuantumFramework loads with what is installed
-   and says so.
+   through the repository's paclet site, whose index lags behind. An install that
+   fails reports its own messages. When neither route has a version that meets the
+   floor, QuantumFramework loads with what is installed and says so.
 
    The floors are not cosmetic. Below TensorNetworks 1.0.10 the "NetGraph"
    contraction method fails on a phase-space contraction with
@@ -27,8 +27,8 @@ Needs["IBMQuantumPlatform`"]
 requirePaclet::unmet = "QuantumFramework needs `1` `2` or later, which could not be installed from the Paclet Repository. Installed: `3`."
 
 requirePaclet[paclet_String, version_String] := If[ ! pacletInstalledQ[paclet, version],
-    Quiet @ PacletInstall[ResourceObject[paclet]];
-    If[ ! pacletInstalledQ[paclet, version], Quiet @ PacletInstall[paclet]];
+    PacletInstall[ResourceObject[paclet]];
+    If[ ! pacletInstalledQ[paclet, version], PacletInstall[paclet]];
     If[ ! pacletInstalledQ[paclet, version],
         Message[requirePaclet::unmet, paclet, version, Replace[Through[PacletFind[paclet]["Version"]], {{v_, ___} :> v, {} -> "none"}]]
     ]
