@@ -418,6 +418,13 @@ GramDual[x_] := GramMatrix[x] . x
 
 (* optimization *)
 
+(* An exactly unitary matrix, such as the Fourier basis matrix of roots of unity, inverts by
+   its conjugate transpose; the general exact inverse of the same matrix does not finish at
+   dimension 16. Machine and symbolic matrices keep the general inverse. *)
+exactUnitaryMatrixQ[matrix_] := SquareMatrixQ[matrix] && Precision[matrix] === Infinity && MatrixQ[matrix, NumericQ] && UnitaryMatrixQ[matrix]
+
+MatrixInverse[matrix_ ? exactUnitaryMatrixQ] := ConjugateTranspose[matrix]
+
 MatrixInverse[matrix_] := If[
     SquareMatrixQ[matrix],
     Quiet[Check[Inverse[matrix], PseudoInverse[matrix], Inverse::sing], Inverse::sing],
