@@ -11,6 +11,7 @@ PackageScope[stabilizerGateSpecListQ]
 PackageScope[stabilizerGateSpecSeqQ]
 PackageScope[stabilizerDefaultTarget]
 PackageScope[stabilizerNormalizeSpec]
+PackageScope[stabilizerGateFold]
 
 
 
@@ -18,9 +19,13 @@ PackageScope[stabilizerNormalizeSpec]
 (* Messages                                                                     *)
 (* ============================================================================ *)
 
-PauliStabilizer::nonclifford = "Gate `1` is not a Clifford operation; PauliStabilizer cannot update the tableau. Use Method -> \"TensorNetwork\" or \"Schrodinger\" for non-Clifford circuits."
+PauliStabilizer::nonclifford = "Gate `1` cannot be applied to the stabilizer tableau: `2`. Use Method -> \"TensorNetwork\" or \"Schrodinger\" for operations the stabilizer engine cannot track."
 
 PauliStabilizer::badgate = "`1` is not a recognized stabilizer gate name."
+
+PauliStabilizer::aftermeasurement = "Gate `1` follows a measurement. ApplyCircuit returns a measurement's outcomes as an Association of tableaux, so a measurement must be the last element of the circuit."
+
+PauliStabilizer::largegate ="Reading the `1`-qubit gate `2` from its matrix takes time and memory growing as 4^`1`: expect seconds, and minutes for an exact matrix on 12 qubits."
 
 PauliStabilizer::nophasepoly = "`1`, so \"Compress\" -> \"PhasePolynomial\" cannot apply; falling back to the ordinary stabilizer path, which `2`."
 
@@ -211,7 +216,7 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
     (If[compress === "PhasePolynomial",
         If[qs === Automatic,
             Message[PauliStabilizer::nophasepoly,
-                "The circuit is not in the diagonal (no-Hadamard) fragment",
+                "The circuit is not in the diagonal (no-Hadamard) fragment, or a gate's matrix is not the product of the T, S, Z, CZ and CNOT gates its label names",
                 "evolves |0...0> rather than the |+...+> the phase polynomial assumes"],
             Message[PauliStabilizer::nophasepoly,
                 "An explicit input state was supplied",
@@ -221,49 +226,75 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
         (* a circuit like {"H" -> 2} has Arity 1 but acts on wire 2, and an        *)
         (* Arity-sized register silently drops the gate off the register edge.     *)
         init = Replace[qs, {Automatic :> PauliStabilizer[Max[qco["Arity"], qco["Max"]]], s_QuantumState :> PauliStabilizer[s]}],
-        gateSpecs = QuantumShortcut[qco]
+        (* Each gate is read from its matrix, not its label (Stabilizer/GateMatrix.m): *)
+        (* a Clifford becomes the named gates of its own tableau, a one-qubit        *)
+        (* diagonal non-Clifford becomes "P"[phase], and a product of one-qubit gates *)
+        (* is read factor by factor. A composite, and a symbolic gate those steps    *)
+        (* cannot read, go through the gates their label names, used only when that *)
+        (* reproduces the matrix. Anything else is a Missing that the fold refuses.  *)
+        gateSpecs = stabilizerCircuitSpecs[qco]
     },
         (* Fast path: a pure-Clifford circuit (every gate in the compiled set)    *)
         (* over a concrete state folds in one compiled kernel call               *)
         (* (Stabilizer/Compiled.m). encodeStabilizerGates returns $Failed for any *)
-        (* gate outside the set, so non-Clifford or controlled circuits fall      *)
-        (* through to the per-gate fold below unchanged.                          *)
+        (* spec outside the set, so a frame gate or a refused gate falls through  *)
+        (* to the per-gate fold.                                                  *)
         With[{gates = If[PauliStabilizerQ[init] && psConcreteFastQ[init], encodeStabilizerGates[gateSpecs], $Failed]},
             If[ ListQ[gates],
                 applyCompiledFold[init, gates],
-                Fold[
-                    Function[{state, gate},
-                        (* Short-circuit: once a non-Clifford gate has aborted the fold,        *)
-                        (* propagate $Failed without firing the message again for every         *)
-                        (* remaining gate.                                                       *)
-                        If[state === $Failed,
-                            $Failed,
-                            With[{
-                                rewrittenGate = Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]
-                            },
-                                With[{result = state[rewrittenGate]},
-                                    Which[
-                                        (* Clifford gate: PauliStabilizer in, PauliStabilizer out. *)
-                                        PauliStabilizerQ[result], result,
-                                        (* Non-Clifford gate that returns a StabilizerFrame (e.g. P[\[Theta]], T, T\[Dagger]). *)
-                                        StabilizerFrameQ[result], result,
-                                        (* Gate produced a Plus (superposition of stabilizer states): carry it through. *)
-                                        MatchQ[result, _Plus], result,
-                                        (* state was already a Plus and didn't distribute over the gate; pass it through. *)
-                                        MatchQ[state, _Plus], state,
-                                        (* Unknown / unsupported gate. *)
-                                        True, Message[PauliStabilizer::nonclifford, gate]; $Failed
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ],
-                    init,
-                    gateSpecs
-                ]
+                stabilizerGateFold[init, gateSpecs]
             ]
         ]
     ]
     )
     ]]
     ]
+
+
+(* ============================================================================ *)
+(* The per-gate fold shared by PauliStabilizerApply and ps["ApplyCircuit"].     *)
+(* A gate the engine cannot apply stops the fold with one                      *)
+(* PauliStabilizer::nonclifford; later gates are not tried, so the message     *)
+(* fires once. A spec refused by its matrix (a Missing from                    *)
+(* stabilizerCircuitSpecs) is refused before it reaches the state, and is      *)
+(* named by its QuantumShortcut token with the reason; the message shortens    *)
+(* both. With branches True (ps["ApplyCircuit"]), a measurement's outcomes, an *)
+(* Association of tableaux, are a result as well, and a gate after them is     *)
+(* refused with PauliStabilizer::aftermeasurement. A measurement's outcomes    *)
+(* elsewhere, and a channel, whose result is a mixture of tableaux, are        *)
+(* refused with a reason that says where they can be applied.                  *)
+(* ============================================================================ *)
+
+stabilizerRefusal[Missing[reason_, op_QuantumOperator]] := {Replace[QuantumShortcut[op], {one_} :> one], stabilizerRefusalReason[reason]}
+stabilizerRefusal[gate_] := {gate, "the stabilizer engine has no rule for it"}
+stabilizerRefusal[gate_QuantumChannel, _] := {gate, "it is a channel, whose result is a mixture of tableaux; apply it to the tableau itself, as channel[ps]"}
+stabilizerRefusal[gate_, _Association] := {gate, "it is a measurement with several outcomes, and only ps[\"ApplyCircuit\", specs] returns outcomes, as tableaux, for a measurement that comes last"}
+stabilizerRefusal[gate_, _] := stabilizerRefusal[gate]
+
+stabilizerGateFold[init_, specs_List, branches_ : False] := Fold[
+    Function[{state, gate},
+        Which[
+            state === $Failed, $Failed,
+            AssociationQ[state], Message[PauliStabilizer::aftermeasurement, First[stabilizerRefusal[gate]]]; $Failed,
+            MissingQ[gate], Message[PauliStabilizer::nonclifford, Sequence @@ stabilizerRefusal[gate]]; $Failed,
+            True, With[{result = state[Replace[gate, "C"[g : "NOT" | "X" | "Z" -> t_, c_, _] :> "C" <> g -> Join[c, t]]]},
+                Which[
+                    (* Clifford gate: PauliStabilizer in, PauliStabilizer out. *)
+                    PauliStabilizerQ[result], result,
+                    (* Non-Clifford gate that returns a StabilizerFrame (e.g. P[\[Theta]], T, T\[Dagger]). *)
+                    StabilizerFrameQ[result], result,
+                    (* Gate produced a Plus (superposition of stabilizer states): carry it through. *)
+                    MatchQ[result, _Plus], result,
+                    (* state was already a Plus and didn't distribute over the gate; pass it through. *)
+                    MatchQ[state, _Plus], state,
+                    (* A measurement's outcomes, where the caller accepts them. *)
+                    TrueQ[branches] && AssociationQ[result] && AllTrue[result, PauliStabilizerQ], result,
+                    (* Unknown / unsupported gate, or a result the fold cannot carry. *)
+                    True, Message[PauliStabilizer::nonclifford, Sequence @@ stabilizerRefusal[gate, result]]; $Failed
+                ]
+            ]
+        ]
+    ],
+    init,
+    specs
+]

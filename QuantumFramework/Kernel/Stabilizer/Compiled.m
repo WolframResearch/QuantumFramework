@@ -238,13 +238,15 @@ applyCompiledFold[ps_PauliStabilizer, {}] := ps
 (* Each spec is a QuantumCircuitOperator-style gate (`op -> order`). When every  *)
 (* gate is in the compiled set and ps is concrete, the whole list folds in one   *)
 (* compiled kernel call; otherwise it falls back to the per-gate dispatch (which *)
-(* also handles non-Clifford gates / StabilizerFrame).                           *)
+(* also handles non-Clifford gates / StabilizerFrame and returns a measurement's *)
+(* outcomes), and a spec the engine cannot apply is refused with                *)
+(* PauliStabilizer::nonclifford.                                                *)
 (* ============================================================================ *)
 
 ps_PauliStabilizer["ApplyCircuit", gateSpecs_List] :=
     With[{gates = If[psConcreteFastQ[ps], encodeStabilizerGates[gateSpecs], $Failed]},
         If[ ListQ[gates],
             applyCompiledFold[ps, gates],
-            Fold[#1[#2] &, ps, gateSpecs]
+            stabilizerGateFold[ps, gateSpecs, True]
         ]
     ]

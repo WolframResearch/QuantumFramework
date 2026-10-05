@@ -153,35 +153,57 @@ stabilizerPauliLabelReorder[label_String, from_List, to_List] := Replace[stabili
 ]
 
 
+(* Forms 1 to 5 of a label, as a signed Pauli string, or $unmatchedPauliLabel. *)
+stabilizerPauliLabelParse[label_] := Which[
+    (* Form 1: plain Pauli string. *)
+    StringQ[label] && StringMatchQ[label, RegularExpression["^-?[IXYZ]+$"]], label,
+    (* Forms 2/3/4: common label expressions. *)
+    True, Replace[
+        Replace[label, {
+            Times[-1, Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]]] :>
+                "-" <> StringJoin[ConstantArray[letter, m]],
+            Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]] :>
+                StringJoin[ConstantArray[letter, m]],
+            Times[-1, str_String /; StringMatchQ[str, RegularExpression["^[IXYZ]+$"]]] :>
+                "-" <> str,
+            _ :> $unmatchedPauliLabel
+        }],
+        (* Form 5: a CircleTimes chain. *)
+        $unmatchedPauliLabel :> stabilizerPauliChainLabel[label]
+    ]
+]
+
+(* The signed Pauli string as a SparseArray, so a long string never builds a dense matrix. *)
+stabilizerPauliSparseMatrix[s_String] := Replace[stabilizerPauliSignLetters[s],
+    {sign_, letters_} :> With[{mats = SparseArray[PauliMatrix[Lookup[<|"I" -> 0, "X" -> 1, "Y" -> 2, "Z" -> 3|>, #]]] & /@ letters},
+        If[sign === "-", -1, 1] * If[Length[mats] == 1, First[mats], KroneckerProduct @@ mats]
+    ]
+]
+
+(* A label, its letters on the wires `target` in that order, names the 2^n x 2^n matrix `matrix`, *)
+(* indexed by sorted wires. Both are sparse, with 2^n stored entries for a Pauli string, and their *)
+(* difference is tested as the gate test tests one (Stabilizer/GateMatrix.m).                       *)
+stabilizerPauliLabelMatchesMatrixQ[label_String, matrix_, target_List] := With[{n = Length[target]},
+    Length[Last[stabilizerPauliSignLetters[label]]] == n && Dimensions[matrix] === {2 ^ n, 2 ^ n} &&
+        stabilizerArrayZeroQ[SparseArray[matrix] - stabilizerPauliSparseMatrix[stabilizerPauliLabelReorder[label, target, Sort[target]]]]
+]
+
 stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
-    op, label, matched, matrix, target, n, matSearch
+    op, matched, matrix, target, n, matSearch
 },
     op = qmo["Operator"];
-    label = op["Label"];
+    target = qmo["InputOrder"];
+    n = Length[target];
 
-    (* Form 1: plain Pauli string. *)
-    If[StringQ[label] && StringMatchQ[label, RegularExpression["^-?[IXYZ]+$"]],
-        Return[label]
-    ];
-
-    (* Forms 2/3/4: pattern-replace common label expressions. *)
-    matched = Replace[label, {
-        Times[-1, Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]]] :>
-            "-" <> StringJoin[ConstantArray[letter, m]],
-        Superscript[letter : "X" | "Y" | "Z" | "I", CircleTimes[m_Integer ? Positive]] :>
-            StringJoin[ConstantArray[letter, m]],
-        Times[-1, str_String /; StringMatchQ[str, RegularExpression["^[IXYZ]+$"]]] :>
-            "-" <> str,
-        _ :> $unmatchedPauliLabel
-    }];
-
-    If[matched =!= $unmatchedPauliLabel && StringQ[matched],
-        Return[matched]
-    ];
-
-    (* Form 5: a CircleTimes chain. *)
-    matched = stabilizerPauliChainLabel[label];
-    If[StringQ[matched],
+    (* A label is display metadata and decides nothing on its own. An operator  *)
+    (* whose output dimensions equal its input dimensions is a square           *)
+    (* observable, and its matrix says which Pauli string it is: the label is   *)
+    (* used only when it names that matrix, and otherwise the matrix search     *)
+    (* below decides. A projector stack (the form QF builds from a Pauli name,  *)
+    (* QuantumMeasurementOperator["ZZ", {1, 2}], with more output dimensions    *)
+    (* than input ones) keeps its label.                                        *)
+    matched = stabilizerPauliLabelParse[op["Label"]];
+    If[ StringQ[matched] && (op["OutputDimensions"] =!= op["InputDimensions"] || stabilizerPauliLabelMatchesMatrixQ[matched, op["MatrixRepresentation"], target]),
         Return[matched]
     ];
 
@@ -189,8 +211,6 @@ stabilizerPauliLabelFromQMO[qmo_QuantumMeasurementOperator] := Module[{
     (* 2^n x 2^n matrix; non-square shapes (e.g. computational-basis projector  *)
     (* stacks of shape {2^(n+1), 2^n}) signal a multi-Kraus QMO and fall        *)
     (* through to the dense materialization path.                                *)
-    target = qmo["InputOrder"];
-    n = Length[target];
     If[1 <= n <= $stabilizerPauliMatrixSearchMaxQubits,
         matrix = op["MatrixRepresentation"];
         If[MatrixQ[Normal[matrix]] && Dimensions[Normal[matrix]] === {2^n, 2^n},
@@ -259,8 +279,10 @@ PauliStabilizer::target = "Hybrid interop: measurement wires `1` do not fit the 
 (* ps["M", pauliString], the existing AG measurement primitive                 *)
 (* (Stabilizer/PauliMeasure.m), which carries symbolic signs (SymPhase         *)
 (* states) as well as concrete ones. Stays in the tableau, O(n^2), for any     *)
-(* labelled Pauli operator; a label-free matrix operator is identified by the  *)
-(* capped matrix search first.                                                 *)
+(* Pauli operator whose label names it; checking a square observable's label   *)
+(* against its matrix costs time proportional to the matrix's 2^n stored       *)
+(* entries. A label-free matrix operator is identified by the capped matrix    *)
+(* search first.                                                               *)
 (*                                                                              *)
 (* Fallback: a non-Pauli basis on a concrete tableau emits ::nonpaulibasis and *)
 (* materializes through the dense state-vector path. Symbolic signs cannot be  *)

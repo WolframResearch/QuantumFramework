@@ -48,6 +48,20 @@ PauliRow[mat_ ? MatrixQ, n_Integer ? Positive, d : _Integer ? Positive : 2] := E
 ]
 
 
+(* Qubit operators on up to $stabilizerMatrixMaxQubits wires: rows read from the  *)
+(* matrix (Stabilizer/GateMatrix.m), a product of one-qubit Cliffords factor by    *)
+(* factor and anything else by the Clifford test, which decides exact, machine and *)
+(* arbitrary-precision matrices alike. PauliRow below tests entries by exact       *)
+(* membership in {1, I, -1, -I}, so it refuses every machine-precision Clifford    *)
+(* and an exact one whose phase is written (-1)^(1/4). Both give the same rows     *)
+(* where both accept (qo is sorted and computational at the call site, so its      *)
+(* matrix is indexed by sorted wires).                                             *)
+QuantumOperatorTableau[qo_QuantumOperator] /;
+    1 <= qo["InputQudits"] == qo["OutputQudits"] <= $stabilizerMatrixMaxQubits && AllTrue[qo["Dimensions"], # == 2 &] :=
+    Replace[stabilizerMatrixRows[qo["Matrix"], qo["Label"]],
+        Missing[reason_] :> Failure["NotClifford", <|"MessageTemplate" -> "the operator is not a Clifford operation (``)", "MessageParameters" -> {reason}|>]
+    ]
+
 QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] && Equal @@ qo["Dimensions"] := Enclose @ With[
     {n = qo["InputQudits"], d = First @ qo["Dimensions"]},
     Join[
@@ -97,7 +111,7 @@ ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := B
 },
     (* The AG canonical decomposition is a sequential greedy algorithm: each     *)
     (* `append` mutates `clifford` (residual tableau) and Sows the gate. Genuine *)
-    (* state-machine — one of the cases the wl-native-style skill flags as       *)
+    (* state-machine: one of the cases the wl-native-style skill flags as        *)
     (* legitimate `Do` use. Internal`Bag is the WL idiom for amortized append. *)
     destabX[q_] := Thread[clifford["DestabilizerX"][[All, q]] == 1];
     destabZ[q_] := Thread[clifford["DestabilizerZ"][[All, q]] == 1];

@@ -71,13 +71,20 @@ sfPhasePolyFold[st_Association, spec_] := Module[{val = st["val"], phase = st["p
 (* interior H or any non-diagonal gate makes sfPhasePolyFold return $Failed, an     *)
 (* unshortcuttable circuit fails the ConfirmAssert), so the caller falls back.      *)
 sfPhasePolyFromCircuit[qco_QuantumCircuitOperator] := Enclose @ Module[
-    {specs, n, st, mat},
-    specs = QuantumShortcut[qco];
+    {pairs, specs, n, st, mat},
+    (* QuantumShortcut[qco], kept element by element for the label check below. *)
+    pairs = stabilizerShortcutPairs[qco];
+    specs = Catenate[pairs[[All, 2]]];
     ConfirmAssert[ListQ[specs] && FreeQ[specs, _Missing | _Failure]];
     n = Replace[Max[qco["Arity"], qco["Max"]], Except[_Integer ? Positive] -> $Failed];
     ConfirmAssert[IntegerQ[n] && n > 0];
     st = Fold[sfPhasePolyFold, <|"val" -> Association[Table[q -> sfPathVar[q], {q, n}]], "phase" -> 0|>, specs];
     ConfirmAssert[AssociationQ[st]];
+    (* The fold read each gate from its label's tokens. Build only if every      *)
+    (* operator's matrix is the product of those tokens (to the zero test's      *)
+    (* tolerance for an approximate matrix); otherwise fall back to the ordinary *)
+    (* path, which reads matrices (Stabilizer/GateMatrix.m).                     *)
+    ConfirmAssert[stabilizerLabelsHonestQ[pairs]];
     mat = SparseArray @ Table[Mod[Coefficient[sfF2[st["val"][q]], sfPathVar[i]], 2], {q, n}, {i, n}];
     (* The CNOT-dihedral output map is always a bijection; the check is defensive. *)
     ConfirmAssert[Mod[Det[mat], 2] === 1];
