@@ -353,4 +353,12 @@ VerificationTest[
     TestID -> "Evolve-restart-landmarks"
 ]
 
+(* With "MergeInterpolatingFunctions" -> False the initial state sits at the start of the
+   time range: a Rabi flop over [-1, 1] leaves cos^2 2 in |0>. *)
+VerificationTest[
+    Abs[QuantumEvolve[QuantumOperator["X"], QuantumState["0"], {\[FormalT], -1, 1}, "MergeInterpolatingFunctions" -> False][1]["ProbabilitiesList"][[1]] - Cos[2.] ^ 2] < 10 ^ -6,
+    True,
+    TestID -> "Evolve-unmerged-route-starts-at-the-range-start"
+]
+
 EndTestSection[]

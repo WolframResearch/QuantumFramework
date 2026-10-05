@@ -178,7 +178,7 @@ QuantumEvolve[
             equations = Join[
                 {
                     \[FormalS]'[parameter] == frhs[\[FormalS][parameter], parameter],
-                    \[FormalS][0] == Normal[init]
+                    \[FormalS][parameterSpec[[2]]] == Normal[init]
                 },
                 additional
             ]
