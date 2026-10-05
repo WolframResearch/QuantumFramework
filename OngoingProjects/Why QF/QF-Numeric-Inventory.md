@@ -57,16 +57,30 @@ Resolved on 5 October 2026; what each now does:
 5. **Dense circuit engine.** A 4-step Trotter quench takes 13.9 s at 12 qubits, 72.9 s at 16 and 1,656 s at 20, about 10.6 s per gate at 2^20 amplitudes. Results are correct throughout.
 6. **`"MergeInterpolatingFunctions" -> False`** now starts the evolution at the start of the time range, resolved on 5 October 2026: a Rabi flop over [-1, 1] gives cos^2 2 = 0.1732.
 7. **Circuit parameters do not bind by `ReplaceAll`.** `ansatz /. Thread[pars -> values]` silently leaves the circuit symbolic, and every later step computes symbolic expressions. Parameters must be declared (`"Parameters" -> pars`) and bound by calling the circuit, `ansatz @@ values`.
+8. **Named operators with structure go through general algorithms.** QF stores every operator as a `SparseArray`, so a named operator whose structure fixes an answer still gets it from a general algorithm. At their default arguments, 23 of the 108 named operators are diagonal (Z, the phase gates, S, T, CZ, CPHASE, `"Z"[d]`, `"Diagonal"`), 18 are permutations (X, `"X"[d]`, SUM, SWAP, CNOT, Toffoli, Fredkin), 6 are permutations with phases (Y, CY), and the Fourier operator is the Fourier matrix. Of the 43 named circuits, PhaseOracle is diagonal, BooleanOracle and SimonOracle are permutations, and the Fourier circuit is the Fourier matrix, as is the Fourier basis. The exponential of a diagonal operator, and any function of one, already reads the diagonal (`191f1ac3`). These do not, measured on 6 October 2026 on main at `f46ec628` (probe `structured.wls`):
+
+   | Named operator | Operation | QF | From the structure |
+   |---|---|---|---|
+   | `"Diagonal"[h]`, 10 qubits | `"Eigenvalues"` | 0.32 s, printing `Eigensystem::arh` | the diagonal, 0.1 ms |
+   | `"Z"[128]` | `"Eigenvalues"` | 2.4 s, printing `Eigensystem::arhm` | the diagonal |
+   | `"X"[64]` | `"Eigenvalues"` | 2.0 s | the 64th roots of unity, from its one cycle |
+   | `"X"[64] @ "Z"[64]` | `"Eigenvalues"` | 1.6 s | the 64th roots of the product of its phases, from its one cycle |
+   | Fourier circuit as an operator, 4 qubits | `"Eigenvalues"` | 8.6 s | F^4 = 1 |
+   | `QuantumBasis["Fourier"[16]]` | change of basis | did not finish in 30 s | F^-1 = F^dagger, 0.5 ms |
+   | `"Fourier"[14]` circuit | applied to a state | 4.1 s | `Fourier` of the amplitudes, 0.5 ms, agreeing to 1.5e-15 |
+   | `"PhaseOracle"`, random function of 10 variables | build, then apply | 3.0 s + 11.6 s, 226 gates | the sign vector of its truth table, 0.5 ms, agreeing exactly |
+
+   Measuring a diagonal observable is slow too, 18.3 s for 64 outcomes on 6 qubits, but its eigensystem takes 0.01 s of that. The time goes into applying a measurement with many outcomes, which a computational-basis measurement does in 0.27 s, so the structure alone does not remove it. The task briefs in [Structured Arrays/tasks](../Structured%20Arrays/tasks/README.md) cover the diagonal and permutation spectra (briefs 2 and 4), the Fourier basis (brief 1) and the QFT on a state (brief 5); the permutations with phases and the phase oracle are not briefed.
 
 ### P2: friction or unsupported claims
 
-8. No named bosonic loss channel; loss has to be written as Lindblad.
-9. Light-cone locality is not automatic. The showcase draft's claim that the same contraction gives the same number "for a site deep inside a chain of fifty thousand" holds only because the draft builds the 9-qubit cone by hand.
-10. `WhenEvent` works through `"AdditionalEquations"`, but only by referring to the undocumented internal state symbol `\[FormalS]`.
-11. The QuEST backend is unavailable without a runtime download from qtechtheory.org.
-12. `QF-Stabilizer-vs-Packages.md`, the source cited for the showcase's Stim comparison, is not in the repository.
-13. Stabilizer per-gate cost is flat only up to about 3,000 qubits (see Circuits); the half-chain entropy dominates beyond that.
-14. An evolved state read before its time is bound (`psi["StateVector"]` rather than `psi[t]`) failed with `Interpolation::inddp` when NDSolve repeats a grid point, which it does at a discontinuity of the Hamiltonian, because the Wolfram/Arrays lazy container rebuilt its interpolations over the whole grid. Resolved in Arrays 1.4.1, which QF now requires: the read matches `psi[t]` on both sides of a pulse edge.
+9. No named bosonic loss channel; loss has to be written as Lindblad.
+10. Light-cone locality is not automatic. The showcase draft's claim that the same contraction gives the same number "for a site deep inside a chain of fifty thousand" holds only because the draft builds the 9-qubit cone by hand.
+11. `WhenEvent` works through `"AdditionalEquations"`, but only by referring to the undocumented internal state symbol `\[FormalS]`.
+12. The QuEST backend is unavailable without a runtime download from qtechtheory.org.
+13. `QF-Stabilizer-vs-Packages.md`, the source cited for the showcase's Stim comparison, is not in the repository.
+14. Stabilizer per-gate cost is flat only up to about 3,000 qubits (see Circuits); the half-chain entropy dominates beyond that.
+15. An evolved state read before its time is bound (`psi["StateVector"]` rather than `psi[t]`) failed with `Interpolation::inddp` when NDSolve repeats a grid point, which it does at a discontinuity of the Hamiltonian, because the Wolfram/Arrays lazy container rebuilt its interpolations over the whole grid. Resolved in Arrays 1.4.1, which QF now requires: the read matches `psi[t]` on both sides of a pulse edge.
 
 ## Measurements
 
