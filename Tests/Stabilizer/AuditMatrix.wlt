@@ -1374,7 +1374,7 @@ VerificationTest[
 (* neighbors. Should still convert correctly.                                  *)
 VerificationTest[
     Module[{gs = GraphState[PauliStabilizer[{"XZI", "ZXZ", "IZX"}]]},
-        Head[gs] === GraphState && Sort[EdgeList[gs["Graph"]]] === Sort[{1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]
+        MatchQ[gs, _GraphState] && Sort[EdgeList[gs["Graph"]]] === Sort[{1 \[UndirectedEdge] 2, 2 \[UndirectedEdge] 3}]
     ],
     True,
     TestID -> "Audit-A13-GraphState-LinearCluster3-Works"

@@ -417,7 +417,7 @@ VerificationTest[
         result = QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}][
             QuantumState["00"], Method -> "Stabilizer"
         ];
-        Head[result] === PauliStabilizer && Sort[result["Stabilizers"]] === Sort[{"XX", "ZZ"}]
+        MatchQ[result, _PauliStabilizer] && Sort[result["Stabilizers"]] === Sort[{"XX", "ZZ"}]
     ],
     True,
     TestID -> "Conn9-MethodStabilizer-ExplicitQS"
@@ -555,7 +555,7 @@ VerificationTest[
 (* A dense Method materializes the tableau and applies the circuit to the state. *)
 VerificationTest[
     With[{qco = QuantumCircuitOperator["Bell"], psPlus = $ps00["H", 2]},
-        Head[qco[psPlus, Method -> "Schrodinger"]] === QuantumState &&
+        MatchQ[qco[psPlus, Method -> "Schrodinger"], _QuantumState] &&
             matEqQS[qco[psPlus, Method -> "Schrodinger"], qco[psPlus["State"], Method -> "Schrodinger"]]
     ],
     True,
@@ -683,7 +683,7 @@ VerificationTest[
                             {3 n}
                         ]
                     },
-                        Head[qco[ps]] === PauliStabilizer && symplecticQ[qco[ps]] && phaseEqQS[qco[ps]["State"], qco[ps["State"]]]
+                        MatchQ[qco[ps], _PauliStabilizer] && symplecticQ[qco[ps]] && phaseEqQS[qco[ps]["State"], qco[ps["State"]]]
                     ]
                 ],
                 {n, 5}, {3}
@@ -818,7 +818,7 @@ VerificationTest[
         psf = ccS[ps];
 
         (* Verify chain end: stabilizer is "Y". *)
-        Head[psf] === PauliStabilizer && psf["Stabilizers"] === {"Y"}
+        MatchQ[psf, _PauliStabilizer] && psf["Stabilizers"] === {"Y"}
     ],
     True,
     TestID -> "Chain4-QFcircuit-Method-Stabilizer-CC-Composition"

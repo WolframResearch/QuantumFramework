@@ -803,7 +803,7 @@ VerificationTest[
     Module[{ps0 = PauliStabilizer[1], ccZ, ps1},
         ccZ = ccS[ccS];
         ps1 = ccZ[ps0];
-        Head[ps1] === PauliStabilizer && ps1["Stabilizers"] === {"Z"}
+        MatchQ[ps1, _PauliStabilizer] && ps1["Stabilizers"] === {"Z"}
     ],
     True,
     {},
@@ -815,7 +815,7 @@ VerificationTest[
     Module[{ps1 = PauliStabilizer[1]["X", 1], ccZ, psf},
         ccZ = ccS[ccS];
         psf = ccZ[ps1];
-        Head[psf] === PauliStabilizer && psf["Stabilizers"] === {"-Z"}
+        MatchQ[psf, _PauliStabilizer] && psf["Stabilizers"] === {"-Z"}
     ],
     True,
     {},
@@ -850,7 +850,7 @@ VerificationTest[
 VerificationTest[
     Module[{psPlus = PauliStabilizer[1]["H", 1], psResult},
         psResult = ccS[psPlus];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"Y"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"Y"}
     ],
     True,
     {},
@@ -861,7 +861,7 @@ VerificationTest[
 VerificationTest[
     Module[{ps0 = PauliStabilizer[1], psResult},
         psResult = ccH[ps0];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"X"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"X"}
     ],
     True,
     {},
@@ -872,7 +872,7 @@ VerificationTest[
 VerificationTest[
     Module[{ps0 = PauliStabilizer[1], psResult},
         psResult = ccX[ps0];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"-Z"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"-Z"}
     ],
     True,
     {},
@@ -885,7 +885,7 @@ VerificationTest[
 VerificationTest[
     Module[{ccHSH = ccH[ccS[ccH]], psPlus = PauliStabilizer[1]["H", 1], psResult},
         psResult = ccHSH[psPlus];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"X"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"X"}
     ],
     True,
     {},
@@ -899,7 +899,7 @@ VerificationTest[
 VerificationTest[
     Module[{ccHSH = ccH[ccS[ccH]], ps0 = PauliStabilizer[1], psResult},
         psResult = ccHSH[ps0];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"-Y"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"-Y"}
     ],
     True,
     {},
@@ -910,7 +910,7 @@ VerificationTest[
 VerificationTest[
     Module[{ccH4 = ccH[ccH[ccH[ccH]]], ps0 = PauliStabilizer[1], psResult},
         psResult = ccH4[ps0];
-        Head[psResult] === PauliStabilizer && psResult["Stabilizers"] === {"Z"}
+        MatchQ[psResult, _PauliStabilizer] && psResult["Stabilizers"] === {"Z"}
     ],
     True,
     {},

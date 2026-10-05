@@ -274,10 +274,10 @@ parameterTerms[sa_SparseArray, parameter_] := KeyValueMap[
     GroupBy[
         Catenate @ MapThread[
             {pos, value} |-> Map[
-                term |-> With[{factors = If[Head[term] === Times, List @@ term, {term}]},
+                term |-> With[{factors = If[MatchQ[term, _Times], List @@ term, {term}]},
                     Times @@ Select[factors, ! FreeQ[#, parameter] &] -> (pos -> Times @@ Select[factors, FreeQ[#, parameter] &])
                 ],
-                If[Head[#] === Plus, List @@ #, {#}] & @ Expand[value]
+                If[MatchQ[#, _Plus], List @@ #, {#}] & @ Expand[value]
             ],
             {sa["ExplicitPositions"], sa["ExplicitValues"]}
         ],

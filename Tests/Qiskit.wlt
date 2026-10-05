@@ -5,7 +5,7 @@ BeginTestSection["QuantumQASM"]
    no Python) every Python-touching test trivially passes. The `qtest` helper holds its
    arguments and only evaluates them when qiskitOK is True. *)
 
-qiskitOK = TrueQ @ Quiet @ Check[Head[QuantumCircuitOperator["Bell"]["Qiskit"]] === QiskitCircuit, False];
+qiskitOK = TrueQ @ Quiet @ Check[MatchQ[QuantumCircuitOperator["Bell"]["Qiskit"], _QiskitCircuit], False];
 
 SetAttributes[qtest, HoldAll];
 qtest[actual_, expected_, id_] := VerificationTest[If[qiskitOK, actual, "skip"], If[qiskitOK, expected, "skip"], TestID -> id];

@@ -196,7 +196,7 @@ BosonicVEV[expr_, opts : OptionsPattern[]] :=
         ]},
             (* An unevaluated inner call means there is nothing to read off; let
                this call stay unevaluated too rather than echo the vars back. *)
-            value /; Head[value] =!= BosonicVEV
+            value /; ! MatchQ[value, _BosonicVEV]
         ]
     ]
 

@@ -656,12 +656,12 @@ VerificationTest[
 
 (* Display-form properties produce concrete heads (not Missing). *)
 VerificationTest[
-    Head[PauliStabilizer["5QubitCode"]["TableauForm"]] =!= Missing,
+    ! MatchQ[PauliStabilizer["5QubitCode"]["TableauForm"], _Missing],
     True,
     TestID -> "Coverage-TableauForm-NonMissing"
 ]
 VerificationTest[
-    Head[PauliStabilizer["5QubitCode"]["StabilizerTableauForm"]] =!= Missing,
+    ! MatchQ[PauliStabilizer["5QubitCode"]["StabilizerTableauForm"], _Missing],
     True,
     TestID -> "Coverage-StabilizerTableauForm-NonMissing"
 ]
@@ -1489,7 +1489,7 @@ VerificationTest[
    StabilizerFrame.m). The frame has 2 components for any single P[theta] application. *)
 VerificationTest[
     With[{ps = PauliStabilizer[1]["H", 1]},
-        Head[ps["P"[Pi/2], 1]] === StabilizerFrame
+        MatchQ[ps["P"[Pi/2], 1], _StabilizerFrame]
     ],
     True,
     TestID -> "Physics-Symbolic-PHalfPi-IsStabilizerFrame-Phase4"
@@ -1500,7 +1500,7 @@ VerificationTest[
 VerificationTest[
     With[{ps = PauliStabilizer[1]},
         With[{result = ps["P"[\[FormalTheta]], 1]},
-            Head[result] === StabilizerFrame && result["Length"] == 2
+            MatchQ[result, _StabilizerFrame] && result["Length"] == 2
         ]
     ],
     True,
@@ -1686,21 +1686,21 @@ VerificationTest[
     Block[{checks}, SeedRandom[20260612];
         checks = <|
             "PauliStabilizer[stabStrings]" ->
-                Head[PauliStabilizer[{"XX", "ZZ"}]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[{"XX", "ZZ"}], _PauliStabilizer],
             "PauliStabilizer[name]" ->
-                Head[PauliStabilizer["SteaneCode"]] === PauliStabilizer,
+                MatchQ[PauliStabilizer["SteaneCode"], _PauliStabilizer],
             "PauliStabilizer[Random, n]" ->
-                Head[PauliStabilizer["Random", 3]] === PauliStabilizer,
+                MatchQ[PauliStabilizer["Random", 3], _PauliStabilizer],
             "PauliStabilizer[n]" ->
-                Head[PauliStabilizer[3]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[3], _PauliStabilizer],
             "PauliStabilizer[qs]" ->
-                Head[PauliStabilizer[QuantumState["Bell"]]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[QuantumState["Bell"]], _PauliStabilizer],
             "PauliStabilizer[qo]" ->
-                Head[PauliStabilizer[QuantumOperator["H"]]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[QuantumOperator["H"]], _PauliStabilizer],
             "PauliStabilizer[qco]" ->
-                Head[PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]], _PauliStabilizer],
             "ps[gate, q]" ->
-                Head[PauliStabilizer[2]["CNOT" -> {1, 2}]] === PauliStabilizer,
+                MatchQ[PauliStabilizer[2]["CNOT" -> {1, 2}], _PauliStabilizer],
             "ps[M, q]" ->
                 MatchQ[PauliStabilizer[1]["M", 1], _Association],
             "ps[Expectation, pauli]" ->
@@ -1715,15 +1715,15 @@ VerificationTest[
                 StabilizerFrame[PauliStabilizer[1]]["Length"] === 1 &&
                     ListQ[StabilizerFrame[{{1, PauliStabilizer[1]}}]["Coefficients"]],
             "non-Clifford gate -> StabilizerFrame" ->
-                Head[PauliStabilizer[1]["H", 1]["T", 1]] === StabilizerFrame,
+                MatchQ[PauliStabilizer[1]["H", 1]["T", 1], _StabilizerFrame],
             "CliffordChannel[Identity, n]" ->
-                Head[CliffordChannel["Identity", 2]] === CliffordChannel,
+                MatchQ[CliffordChannel["Identity", 2], _CliffordChannel],
             "CliffordChannel[ps]" ->
-                Head[CliffordChannel[PauliStabilizer[2]]] === CliffordChannel,
+                MatchQ[CliffordChannel[PauliStabilizer[2]], _CliffordChannel],
             "GraphState[g]" ->
-                Head[GraphState[PathGraph[Range[3]]]] === GraphState,
+                MatchQ[GraphState[PathGraph[Range[3]]], _GraphState],
             "LocalComplement[g, v]" ->
-                Head[LocalComplement[PathGraph[Range[3]], 2]] === Graph
+                MatchQ[LocalComplement[PathGraph[Range[3]], 2], _Graph]
         |>;
         Keys @ Select[checks, # =!= True &]
     ],
@@ -2114,7 +2114,7 @@ VerificationTest[
 VerificationTest[
     Module[{psT2},
         psT2 = PauliStabilizer[1]["H", 1]["T", 1]["T", 1];
-        Head[psT2] === StabilizerFrame && psT2["Length"] === 4
+        MatchQ[psT2, _StabilizerFrame] && psT2["Length"] === 4
     ],
     True,
     TestID -> "Phase4-TT-FourComponentFrame"

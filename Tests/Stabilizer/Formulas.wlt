@@ -412,7 +412,7 @@ VerificationTest[
    returns Missing[NotAvailable, Stabilizers]. *)
 VerificationTest[
     With[{wState = QuantumState[(UnitVector[8, 2] + UnitVector[8, 3] + UnitVector[8, 5])/Sqrt[3]]},
-        Head[PauliStabilizer[wState]["Stabilizers"]] === Missing
+        MatchQ[PauliStabilizer[wState]["Stabilizers"], _Missing]
     ],
     True,
     TestID -> "S3-WState-NotAStabilizer"
@@ -1359,7 +1359,7 @@ VerificationTest[
 VerificationTest[
     Module[{wState = QuantumState[
             (UnitVector[8, 2] + UnitVector[8, 3] + UnitVector[8, 5]) / Sqrt[3]]},
-        Head[PauliStabilizer[wState]["Stabilizers"]] === Missing
+        MatchQ[PauliStabilizer[wState]["Stabilizers"], _Missing]
     ],
     True,
     TestID -> "S23-W-State-Not-Stabilizer"

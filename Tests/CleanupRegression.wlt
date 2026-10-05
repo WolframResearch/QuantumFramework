@@ -496,7 +496,7 @@ BeginTestSection["B.2 - Reference page bulk fills"]
 VerificationTest[
   AllTrue[
     {"QuantumState.nb", "QuantumChannel.nb", "QuantumCircuitOperator.nb"},
-    Head[Import[qfSymbolPage[#], "Notebook"]] === Notebook &
+    MatchQ[Import[qfSymbolPage[#], "Notebook"], _Notebook] &
   ]
   ,
   True

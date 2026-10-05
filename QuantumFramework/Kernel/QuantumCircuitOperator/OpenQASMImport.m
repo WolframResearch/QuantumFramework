@@ -224,7 +224,7 @@ ImportOpenQASM[src0_String] := Catch[
         ][[2]];
         elements = If[elements === {}, {}, First[elements]];
         qc = Quiet @ Check[QuantumCircuitOperator[elements], $Failed];
-        If[ Head[qc] =!= QuantumCircuitOperator,
+        If[ ! MatchQ[qc, _QuantumCircuitOperator],
             qasmThrow["Assembly", "Parsed statements did not assemble into a valid circuit."]
         ];
         qc

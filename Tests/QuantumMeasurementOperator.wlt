@@ -651,7 +651,7 @@ VerificationTest[
 (* ProbabilityArray is the symbolic weight vector, fully resolved (no leftover Information) *)
 VerificationTest[
     With[{a = QuantumMeasurement[<|0 -> p, 1 -> 1 - p|>]["ProbabilityArray"]},
-        Head[a] === List && FreeQ[a, _Information | _CategoricalDistribution]
+        MatchQ[a, _List] && FreeQ[a, _Information | _CategoricalDistribution]
     ],
     True,
     {},

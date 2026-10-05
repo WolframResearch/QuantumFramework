@@ -17,7 +17,7 @@ $antiBattery = {
 };
 
 $antiOrderedQ[expr_, vars_] := AllTrue[
-    If[Head[expr] === Plus, List @@ expr, {expr}],
+    If[MatchQ[expr, _Plus], List @@ expr, {expr}],
     Function[term,
         OrderedQ @ Map[
             Boole[! FreeQ[#, SuperDagger]] &,
@@ -208,7 +208,7 @@ VerificationTest[
                     NonCommutativeMultiply -> Dot
                 }
             ] &,
-            If[Head[e] === Plus, List @@ e, {e}]
+            If[MatchQ[e, _Plus], List @@ e, {e}]
         ];
         x = SuperDagger[\[FormalA]] ** SuperDagger[\[FormalA]] ** \[FormalA] ** \[FormalA];
         anti = BosonicAntinormalOrder[x, $antiVars];
