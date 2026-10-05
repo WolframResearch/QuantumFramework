@@ -1,0 +1,22 @@
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+spectrum	diagonal n=8: Eigenvalues {seconds}, messages	{0.24180000000000001, {}}
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+spectrum	diagonal n=8: Eigensystem seconds	0.155
+
+Eigensystem::arh: Because finding 256 out of the 256 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors would be sufficient, consider restricting this number using the second argument to Eigensystem.
+
+General::stop: Further output of Eigensystem::arh will be suppressed during this calculation.
+spectrum	diagonal n=8: bare Eigensystem[sparse] seconds	0.2305
+spectrum	diagonal n=8: Simplify of that Eigensystem seconds	0.0039000000000000003
+spectrum	diagonal n=10: Eigenvalues {seconds}, messages	{3.0500000000000003, {}}
+spectrum	diagonal n=10: Eigensystem seconds	2.479
+spectrum	diagonal n=10: bare Eigensystem[sparse] seconds	3.3934
+spectrum	diagonal n=10: Simplify of that Eigensystem seconds	0.0806
+spectrum	diagonal n=12: Eigenvalues {seconds}, messages	{46.2789, {}}
+spectrum	diagonal n=12: Eigensystem seconds	38.5691
+spectrum	diagonal n=12: bare Eigensystem[sparse] seconds	37.3923
+spectrum	diagonal n=12: Simplify of that Eigensystem seconds	0.9078
+spectrum	exact diag(2, 1, 2): Eigenvalues, Eigenvectors	{{2, 2, 1}, {{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}}
+spectrum	machine diag(2., 1., 2.): Eigenvalues	{2., 2., 1.}

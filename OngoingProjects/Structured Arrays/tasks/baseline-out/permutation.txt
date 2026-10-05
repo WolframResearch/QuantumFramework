@@ -1,0 +1,15 @@
+permutation	X[16]: Eigenvalues seconds	0.09870000000000001
+permutation	X[16]: Eigenvalues[PermutationMatrix structured] seconds	0.041600000000000005
+permutation	X[16]: matrix equals PermutationMatrix[RotateRight[Range[d]]]	True
+permutation	X[64]: Eigenvalues seconds	2.2875
+permutation	X[64]: Eigenvalues[PermutationMatrix structured] seconds	0.23770000000000002
+permutation	X[64]: matrix equals PermutationMatrix[RotateRight[Range[d]]]	True
+
+Eigensystem::arhm: Because finding 128 out of the 128 eigenvalues and/or eigenvectors is likely to be faster with dense matrix methods, the sparse input matrix will be converted. If fewer eigenvalues and/or eigenvectors at machine precision would be sufficient, consider using N on the matrix and restricting this number using the second argument to Eigensystem.
+permutation	X[128]: Eigenvalues seconds	33.3039
+permutation	X[128]: Eigenvalues[PermutationMatrix structured] seconds	1.0567
+permutation	X[128]: matrix equals PermutationMatrix[RotateRight[Range[d]]]	True
+permutation	QFT n=3: Eigenvalues seconds	0.7222000000000001
+permutation	QFT n=3: Eigenvalues[FourierMatrix structured] seconds	0.0004
+permutation	QFT n=4: Eigenvalues seconds	9.8968
+permutation	QFT n=4: Eigenvalues[FourierMatrix structured] seconds	0.0004

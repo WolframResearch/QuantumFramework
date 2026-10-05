@@ -1,12 +1,42 @@
 # Exponential of a diagonal operator: entry by entry instead of MatrixExp
 
+## What landed (2026-10-05)
+
+The prototype is on QF's main on GitHub as three commits on top of `75cfae5a`:
+
+| Commit | What it does | Section |
+|---|---|---|
+| `191f1ac3` | `Exp`, `base ^ qo` and `MatrixExp[qo]` exponentiate a diagonal matrix entry by entry; an operator with declared parameters holds only its diagonal | 5.1, 5.3 |
+| `da0c3cf1` | `MatrixExp[qo, qs]` gives the state `Exp[qo][qs]` gives | 5.2 |
+| `f6299b43` | `"StateMatrix"` of a matrix-type state keeps the stored `SparseArray` | 5.4 |
+
+What differs from the prototype described below:
+
+- The guard edit of section 5.2 and `finiteArrayQ` are gone. Main's `valuelessEntriesQ` already reads the stored values of a `SparseArray`, and `matrixExponential` sends a diagonal to `MatrixExp` when `valuelessEntriesQ` finds an entry without a value, which also covers `Undefined`.
+- The `heldOperatorMatrix` rule for a nested map, which main gained after `a1799b61`, is untouched; only the plain rule holds the diagonal.
+- `Tests/QuantumOperatorDiagonalExp.wlt` has 40 tests, not 38. `DiagonalExp-MatrixExp-of-operator` covers `MatrixExp[qo]` of a diagonal at θ = 10⁶, and `DiagonalExp-sparse-superoperator` asserts that the six-qubit dephasing superoperator and its exponential stay `SparseArray`s, which no test covered before. The four comparisons that demanded agreement to the last bit (`underflow`, `complex-subnormal-part`, `thirty-digit-diagonal`, `substitution-decides-route`) now compare against a stated bound, so a change in the last bits of a later `MatrixExp` cannot fail them. `substitution-decides-route` therefore also passes without the change: it guards the values, and other tests tell the two routes apart. The copy in `exp-diagonal-shortcut-prototype/` is the 38-test prototype version.
+- Each commit carries the tests of its own part: 36, then 3, then 1.
+
+Verification was by kernel runs only; no `/wl-verify` or `/wl-quality` round ran on the landed version.
+
+- With the three commits on `75cfae5a`, in the QF checkout before the push: 40 of 40 new tests and 3206 of 3206 in the full suite.
+- On `75cfae5a` without them: 26 of 40. The 14 that fail are the cases the change fixes: accuracy and unitarity at large θ, `MatrixExp[qo]` at large θ, the 16- and 12-qubit sizes, the sparse superoperator, the three `MatrixExp[qo, qs]` cases, the symbolic 0/0, underflow, overflow, the subnormal entry, and mixed exact and machine entries.
+- The correctness battery (`correct.wls`) prints the same lines on `ed7f7c1a` and on `75cfae5a`, with and without the change: non-diagonal results are identical to the last bit, and diagonal ones change as section 6 describes. The timings of section 4 reproduce on `ed7f7c1a`.
+- In one kernel, `MatrixExp` and `matrixExponential` take the same time on the non-diagonal transverse-field control of section 4.5, within the spread between runs, and return the same result.
+
+The two decisions below: the `MatrixExp[qo, qs]` fix landed as its own commit, as decision 2 proposed. For decision 1, the change landed with two tests of "diagonal", the strict one for the exponential and the default tolerance for `f[qo]`; the single rule and `f[qo]`'s setting of small eigenvalues to zero (open question 5) remain open. Open question 2 is answered, since section 5.4 landed as its own commit; questions 1 and 3 to 7 and the follow-ons of section 8 remain open.
+
+On this machine, the `Wolfram/Arrays` paclet installed on 2026-10-05 (1.4.0) makes QF before `bd321ccb` fail in `ArrayContract` whenever an operator acts on a mixed state. Older commits tested here fail eight mixed-state tests of the new file for that reason alone, with or without the change.
+
+## The investigation
+
 Investigation and prototype, 2026-09-27 and 28. WL 15.0.1, macOS ARM, 12 cores, with other kernels running throughout. Nothing was committed and no tracked file was edited. The prototype lives in scratch copies of the paclet exported from main. Its diffs, a script that applies them to a fresh export, the new test file, the scripts that produced every number below and their raw outputs are in `exp-diagonal-shortcut-prototype/` beside this report; section 12 lists them.
 
 Main moved during the work, from `2ff7d0ce` through `81df7633` and `b13a9077` to `a1799b61`. The final prototype and every measurement below are on `a1799b61`, whose `0 ^ qo` rule the prototype leaves as it is. Earlier versions and their logs are in `exp-diagonal-shortcut-prototype/earlier/`. Main has since moved to `bdbe7165`, where `1f95b354` made the substitution guard read the stored values of a `SparseArray` (`valuelessEntriesQ`, `Utilities.m:361-363`). The prototype's guard edit (section 5.2) therefore no longer applies and is no longer needed. With it dropped, every other edit applies to `bdbe7165` and the 38 tests pass there (`file-bdbe7165.out`); on that main, `matrixExponential` would use `! valuelessEntriesQ` in place of `finiteArrayQ`.
 
 Verification status (section 11): three rounds of `/wl-verify` ran on the `81df7633` version and did not converge. Their findings are fixed, but the code changed after the last round, so its correctness rests on the full suite, the 38 new tests and the correctness battery, not on a fresh verifier. `/wl-quality` ran its three rounds and did not converge: the third reported 13 open issues. Eleven were fixed after it, among them one change to the kernel code (`MatrixExp[qo, qs]` for an operator on other qudits than exactly the state's); one, the `f[qo]` diagonal builder, is left with decision 1; and one is the fact that the physics brief was written after the code. Nothing changed after the third round has been reviewed by a fresh critic.
 
-**Decisions needed from Mads:**
+**Decisions needed from Mads before landing** (their outcome is in "What landed" above):
 1. The detection rule. For the exponential the prototype treats a matrix as diagonal only when every off-diagonal entry is exactly zero (`Tolerance -> 0`), because `DiagonalMatrixQ`'s default tolerance drops a coupling that `MatrixExp` resolves (section 3). The existing `f[qo]` branch keeps its default-tolerance test, since sharing the strict one would slow `f[qo]` without changing its results. So there are two tests of "diagonal", one per route, and they disagree where it matters: on section 3's resonant matrix A, e^(iA) and cos A + i sin A differ by 10⁻³, on main as on the prototype, because `Sin` and `Cos` drop the coupling that `Exp` keeps. One rule could serve every function: drop an off-diagonal entry m_ij only when its first-order effect on f(M), |m_ij| times the divided difference |f[m_ii, m_jj]| (f'(m_ii) for degenerate entries), is below the roundoff of f of the diagonal. That rule keeps the resonant coupling, whose first-order effect is 10⁻³, and drops a roundoff coupling between well-separated levels, whose divided difference is at most 2/|m_ii - m_jj| for a unitary e^(-iθM). It would not restore Euler's formula by itself, because `f[qo]`'s Schur route also sets the eigenvalues ±10⁻³ of that matrix to zero (open question 5), so it belongs with a change to `f[qo]` and is not in this prototype.
 2. `MatrixExp[qo, qs]`. Today it disagrees with `Exp[qo][qs]` on a mixed state, where it does not return e^M ρ e^(M†), and for any operator not on exactly the state's qudits (section 2); the prototype makes the two agree. That changes outputs, so it may belong in its own commit.
 

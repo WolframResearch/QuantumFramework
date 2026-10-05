@@ -1,0 +1,19 @@
+supplement	named bases at default arguments: {name, square, unitary numerically}	{{"Computational", True, True}, {"PauliX", True, True}, {"PauliY", True, True}, {"PauliZ", True, True}, {"Identity", True, True}, {"I", True, True}, {"X", True, True}, {"Y", True, True}, {"Z", True, True}, {"JX", True, True}, {"JY", True, True}, {"JZ", True, True}, {"J", True, True}, {"JI", True, True}, {"Bell", True, True}, {"Fourier", True, True}, {"Schwinger", True, False}, {"Dirac", True, False}, {"Ivanovic", True, True}, {"Wigner", True, False}, {"WignerMIC", True, False}, {"Pauli", True, False}, {"GellMann", True, False}, {"GellMannMIC", True, False}, {"Bloch", True, False}, {"BlochSphere", True, False}, {"GellMannBloch", True, False}, {"GellMannBlochMIC", True, False}, {"Wootters", True, False}, {"Feynman", True, False}, {"Tetrahedron", True, False}, {"RandomMIC", True, False}, {"RandomHaarMIC", True, False}, {"RandomBlochMIC", True, False}, {"QBismSIC", True, False}, {"HesseSIC", True, False}, {"HoggarSIC", True, False}}
+supplement	Fourier d=16: exact UnitaryMatrixQ {seconds, value}	{0.0145, True}
+supplement	Fourier d=16: Inverse[N[m]] seconds	0.0001
+supplement	Fourier d=16: ConjugateTranspose[m] equals FourierMatrix-based conjugate transpose	True
+supplement	Fourier d=32: exact UnitaryMatrixQ {seconds, value}	{0.1095, True}
+supplement	Fourier d=32: Inverse[N[m]] seconds	0.0008
+supplement	Fourier d=32: ConjugateTranspose[m] equals FourierMatrix-based conjugate transpose	True
+supplement	Fourier d=64: exact UnitaryMatrixQ {seconds, value}	{1.0084, True}
+supplement	Fourier d=64: Inverse[N[m]] seconds	0.006900000000000001
+supplement	Fourier d=64: ConjugateTranspose[m] equals FourierMatrix-based conjugate transpose	True
+supplement	Fourier over PauliX[3]: exact UnitaryMatrixQ	True
+supplement	symbolic 2x2: UnitaryMatrixQ {seconds, value}	{0.0002, False}
+supplement	MatrixInverse definition	446
+supplement2	|Fourier[v] - FourierMatrix[2^10] . v|	0.
+supplement2	HoggarSIC: dimensions, exact UnitaryMatrixQ {seconds, value}	{{64, 64}, {0.0495, False}}
+supplement2	machine diag(2., 1., 2.): Eigenvectors	{{1., 0., 0.}, {0., 0., 1.}, {0., 1., 0.}}
+supplement2	exact diag(1, -1, i, -i, 1): Eigenvalues, Eigenvectors	{{-1, I, -I, 1, 1}, {{0, 1, 0, 0, 0}, {0, 0, 1, 0, 0}, {0, 0, 0, 1, 0}, {0, 0, 0, 0, 1}, {1, 0, 0, 0, 0}}}
+supplement2	Z[3] clock: Eigenvalues, diagonal	{{-(-1)^(1/3), (-1)^(2/3), 1}, {1, E^(((-2*I)/3)*Pi), E^(((2*I)/3)*Pi)}}
+supplement2	Eigenvalues of Z measurement operator outcomes order	{QuditName[Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", 1], Bold], "Eigenvalue 1"], {1, {1}}], "Dual" -> False], QuditName[Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", -1], Bold], "Eigenvalue 2"], {-1, {2}}], "Dual" -> False]}
