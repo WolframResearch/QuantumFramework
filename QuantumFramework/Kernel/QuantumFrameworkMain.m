@@ -12,18 +12,31 @@ If[ ! pacletInstalledQ["IBMQuantumPlatform", "0.0.4"],
    separate Needs["IBMQuantumPlatform`"] from the user. *)
 Needs["IBMQuantumPlatform`"]
 
-(* Both are published, so they install from the repository by name.  The
-   version floors are not cosmetic: the "NetGraph" contraction method needs
-   TensorNetworks 1.0.10, and below it a phase-space contraction fails with
-   FindPermutation::norel rather than producing a net. *)
+(* A dependency below its floor installs from the Paclet Repository: through the
+   resource system first, which has a version as soon as it is published, then
+   through the repository's paclet site, whose index lags behind. When neither has
+   a version that meets the floor, QuantumFramework loads with what is installed
+   and says so.
 
-If[ ! pacletInstalledQ["Wolfram/TensorNetworks", "1.0.10"],
-    PacletInstall["Wolfram/TensorNetworks"]
+   The floors are not cosmetic. Below TensorNetworks 1.0.10 the "NetGraph"
+   contraction method fails on a phase-space contraction with
+   FindPermutation::norel. Below Arrays 1.4.1 an evolved state read before its time
+   is bound fails with Interpolation::inddp when the time grid repeats a point, as
+   NDSolve's does at a discontinuity of the Hamiltonian. *)
+
+requirePaclet::unmet = "QuantumFramework needs `1` `2` or later, which could not be installed from the Paclet Repository. Installed: `3`."
+
+requirePaclet[paclet_String, version_String] := If[ ! pacletInstalledQ[paclet, version],
+    Quiet @ PacletInstall[ResourceObject[paclet]];
+    If[ ! pacletInstalledQ[paclet, version], Quiet @ PacletInstall[paclet]];
+    If[ ! pacletInstalledQ[paclet, version],
+        Message[requirePaclet::unmet, paclet, version, Replace[Through[PacletFind[paclet]["Version"]], {{v_, ___} :> v, {} -> "none"}]]
+    ]
 ]
 
-If[ ! pacletInstalledQ["Wolfram/Arrays", "1.4.1"],
-    PacletInstall["Wolfram/Arrays"]
-]
+requirePaclet["Wolfram/TensorNetworks", "1.0.10"]
+
+requirePaclet["Wolfram/Arrays", "1.4.1"]
 
 $ContextAliases["H`"] = "WolframInstitute`Hypergraph`"
 
