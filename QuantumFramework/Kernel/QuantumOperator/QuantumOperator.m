@@ -789,11 +789,11 @@ QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ W
     ]
 ]
 
-wholeRegisterQ[qo_, qs_] := Sort[Transpose[{qo["InputOrder"], qo["InputDimensions"]}]] === Transpose[{Range[qs["OutputQudits"]], qs["OutputDimensions"]}]
+wholeRegisterQ[qo_, qs_] := Sort[Thread[{qo["InputOrder"], qo["InputDimensions"]}]] === Thread[{Range[qs["OutputQudits"]], qs["OutputDimensions"]}]
 
 exponentialAction[op_ ? (#["VectorQ"] &), qs_ ? (#["VectorQ"] &)] := matrixExponential[op["Matrix"], qs["StateVector"]]
 exponentialAction[op_ ? (#["VectorQ"] &), qs_] := With[{u = matrixExponential[op["Matrix"]]}, u . qs["DensityMatrix"] . ConjugateTranspose[u]]
-exponentialAction[op_, qs_] := ArrayReshape[matrixExponential[op["ToMatrix"]["Matrix"], qs["DensityVector"]], {#, #} & @ op["OutputDimension"]]
+exponentialAction[op_, qs_] := ReshapeArray[matrixExponential[op["ToMatrix"]["Matrix"], qs["DensityVector"]], {#, #} & @ op["OutputDimension"]]
 
 
 (* operators padded with identities to the qudits any of them acts on, each qudit in the
