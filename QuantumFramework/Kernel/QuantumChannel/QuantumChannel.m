@@ -35,9 +35,10 @@ QuantumChannel[{}, ___] := (
    constructor; the general list path below would hand this lone operator a
    dimension-1 environment qudit that collapses, leaving the output wire on the
    non-positive environment label and the channel invalid. *)
-QuantumChannel[{opArg_}, args___] := QuantumChannel[QuantumOperator[opArg, args]["Computational"]]
+QuantumChannel[{opArg_}, args___] := Enclose @ QuantumChannel[ConfirmBy[QuantumOperator[opArg, args], QuantumOperatorQ]["Computational"]]
 
-QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#, args]["Computational"] & /@ opArgs, order, inputDims, outputDims},
+(* each Kraus operator has to build: one that fails stops the channel with its Failure *)
+QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#, args], QuantumOperatorQ]["Computational"] & /@ opArgs, order, inputDims, outputDims},
     order = Union @@@ Thread[Through[ops["Order"]]];
     inputDims = Merge[AssociationThread[#["InputOrder"], #["InputDimensions"]] & /@ ops, Identity];
     ConfirmAssert[AllTrue[inputDims, Apply[Equal]]];

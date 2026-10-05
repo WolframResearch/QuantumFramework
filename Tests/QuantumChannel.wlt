@@ -278,3 +278,24 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumChannel - Kraus operators that fail to build"]
+
+(* A list entry that does not build an operator stops the channel with a Failure: the
+   list {"BitFlip", p} read as two Kraus operators recursed until $RecursionLimit. *)
+VerificationTest[
+    Block[{$RecursionLimit = 256}, FailureQ @ QuantumChannel[{"BitFlip", p}, {2, 3}]],
+    True,
+    {QuantumOperator::invalidName},
+    TestID -> "Channel-failed-Kraus-operator-stops-the-list"
+]
+
+VerificationTest[
+    FailureQ @ QuantumChannel[{"NoSuchOperator"}],
+    True,
+    {QuantumOperator::invalidName},
+    TestID -> "Channel-failed-single-Kraus-operator"
+]
+
+EndTestSection[]
