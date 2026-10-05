@@ -21,57 +21,83 @@ If[ ! FileExistsQ[nbFile],
 
 Needs["DefinitionNotebookClient`"]
 
-If[! TrueQ[$CloudConnected], CloudConnect[]]
+(* The account to submit from is WOLFRAM_CLOUD_USER and WOLFRAM_CLOUD_PASSWORD in
+   the .env beside this script, which git ignores. Without them the kernel's own
+   cloud session is used. *)
 
-If[ ! TrueQ[$CloudConnected],
-    Print["FATAL: not cloud connected."];
-    Exit[1]
+envFile = FileNameJoin[{repoDir, ".env"}]
+
+env = If[ FileExistsQ[envFile],
+    Association @ Cases[
+        StringSplit[Select[ReadList[envFile, String], ! StringStartsQ[StringTrim[#], "#"] &], "=", 2],
+        {key_, value_} /; StringMatchQ[StringTrim[key], RegularExpression["[A-Za-z_][A-Za-z0-9_]*"]] :>
+            StringTrim[key] -> StringTrim[StringTrim[value], "\"" | "'"]
+    ],
+    <||>
 ]
 
-Print["submitting as ", $WolframID]
+(* Submitting needs the Internet, which a kernel can be set to refuse: it is
+   allowed for the rest of this script alone, and the preference is left as it
+   is. *)
 
-(* The pre-submission check first: a submission with outstanding errors is
-   rejected by the repository anyway, so failing here is strictly cheaper.
-   Suggestions (such as PacletFilesChanged after a rebuild) do not block. *)
+Block[{$AllowInternet = True},
 
-check = UsingFrontEnd @ Block[{nb, r},
-    nb = NotebookOpen[nbFile, Visible -> False];
-    r = DefinitionNotebookClient`CheckDefinitionNotebook[nb];
-    NotebookClose[nb];
-    r
-]
+    If[ StringQ[env["WOLFRAM_CLOUD_USER"]] && StringQ[env["WOLFRAM_CLOUD_PASSWORD"]],
+        If[TrueQ[$CloudConnected] && $WolframID =!= env["WOLFRAM_CLOUD_USER"], CloudDisconnect[]];
+        If[! TrueQ[$CloudConnected], CloudConnect[env["WOLFRAM_CLOUD_USER"], env["WOLFRAM_CLOUD_PASSWORD"]]],
+        If[! TrueQ[$CloudConnected], CloudConnect[]]
+    ];
 
-issues = Normal[check]
+    If[ ! TrueQ[$CloudConnected],
+        Print["FATAL: not cloud connected."];
+        Exit[1]
+    ];
 
-Scan[Print["  [", #Level, "] ", #Tag] &, issues]
+    Print["submitting as ", $WolframID];
 
-If[ MemberQ[issues[[All, "Level"]], "Error"],
-    Print["FATAL: the definition notebook has errors; fix them before submitting."];
-    Exit[1]
-]
+    (* The pre-submission check first: a submission with outstanding errors is
+       rejected by the repository anyway, so failing here is strictly cheaper.
+       Suggestions (such as PacletFilesChanged after a rebuild) do not block. *)
 
-(* Warnings, unlike errors, do not block a submission - the repository asks the
-   submitter to acknowledge them, through a dialog that cannot open in a
-   headless kernel (DialogInput::ninit, and the submission then reports
-   $Failed against an expected True | $Canceled).  The acknowledgement is
-   answered here instead, which is the same answer a submitter clicking through
-   would give: the errors have already been checked for above and are fatal, so
-   what reaches this point is warnings and suggestions only. *)
+    check = UsingFrontEnd @ Block[{nb, r},
+        nb = NotebookOpen[nbFile, Visible -> False];
+        r = DefinitionNotebookClient`CheckDefinitionNotebook[nb];
+        NotebookClose[nb];
+        r
+    ];
 
-result = UsingFrontEnd @ Block[
-    {nb, r, DefinitionNotebookClient`ConfirmIssuesDialog = (True &)},
-    nb = NotebookOpen[nbFile, Visible -> False];
-    r = DefinitionNotebookClient`SubmitRepository[nb];
-    NotebookClose[nb];
-    r
-]
+    issues = Normal[check];
 
-submission = FirstCase[result, _Success, Missing["NotFound"], Infinity]
+    Scan[Print["  [", #Level, "] ", #Tag] &, issues];
 
-If[ MatchQ[submission, _Success],
-    Print["submitted:"];
-    KeyValueMap[Print["  ", #1, ": ", #2] &, KeyDrop[Last[submission], "Message"]],
-    Print["SUBMISSION DID NOT SUCCEED:"];
-    Print[result];
-    Exit[1]
+    If[ MemberQ[issues[[All, "Level"]], "Error"],
+        Print["FATAL: the definition notebook has errors; fix them before submitting."];
+        Exit[1]
+    ];
+
+    (* Warnings, unlike errors, do not block a submission - the repository asks the
+       submitter to acknowledge them, through a dialog that cannot open in a
+       headless kernel (DialogInput::ninit, and the submission then reports
+       $Failed against an expected True | $Canceled).  The acknowledgement is
+       answered here instead, which is the same answer a submitter clicking through
+       would give: the errors have already been checked for above and are fatal, so
+       what reaches this point is warnings and suggestions only. *)
+
+    result = UsingFrontEnd @ Block[
+        {nb, r, DefinitionNotebookClient`ConfirmIssuesDialog = (True &)},
+        nb = NotebookOpen[nbFile, Visible -> False];
+        r = DefinitionNotebookClient`SubmitRepository[nb];
+        NotebookClose[nb];
+        r
+    ];
+
+    submission = FirstCase[result, _Success, Missing["NotFound"], Infinity];
+
+    If[ MatchQ[submission, _Success],
+        Print["submitted:"];
+        KeyValueMap[Print["  ", #1, ": ", #2] &, KeyDrop[Last[submission], "Message"]],
+        Print["SUBMISSION DID NOT SUCCEED:"];
+        Print[result];
+        Exit[1]
+    ]
 ]
