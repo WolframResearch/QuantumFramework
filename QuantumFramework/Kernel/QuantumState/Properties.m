@@ -1064,10 +1064,15 @@ QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["VectorQ"],
     ReshapeArray[qs["StateVector"], qs["MatrixNameDimensions"]],
     ReshapeArray[
-        Transpose[ReshapeArray[{qs["StateTensor"]}, Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
+        Transpose[ReshapeArray[stateTensorArray[qs["StateTensor"]], Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
         qs["MatrixNameDimensions"] ^ 2
     ]
 ]
+
+(* The state tensor as an array for ReshapeArray: the tensor of a state with no
+   qudits, such as a full trace, is a scalar. *)
+stateTensorArray[t_ /; ArrayDepth[t] == 0] := {t}
+stateTensorArray[t_] := t
 
 
 QuantumStateProp[qs_, "Matrix"] := qs["Computational"]["StateMatrix"]

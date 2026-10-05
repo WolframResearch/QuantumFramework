@@ -345,6 +345,25 @@ VerificationTest[
     TestID -> "DiagonalExp-dephasing-against-QuantumEvolve"
 ]
 
+(* Pure dephasing of six qubits under a diagonal Ising H: the matrix the exponential
+   reads is the stored 4096 x 4096 SparseArray, diagonal with no tolerance, so neither
+   the superoperator nor its exponential is held as a dense List, and each diagonal
+   entry of e^(t L) is e^(t L_kk) within one machine epsilon. *)
+VerificationTest[
+    With[{l = 0.7 QuantumOperator["Liouvillian"[
+            QuantumOperator["Diagonal"[deEnergies6], Range[6], "Label" -> None],
+            QuantumOperator[StringReplacePart["IIIIII", "Z", {#, #}]] & /@ Range[6],
+            ConstantArray[0.2, 6]
+        ]]},
+        With[{m = l["Sort"]["Matrix"], u = Exp[l]["Matrix"]},
+            {Head[m], DiagonalMatrixQ[m, Tolerance -> 0], Head[u], Max[Abs[Normal[Diagonal[u]] - Exp[Normal[Diagonal[m]]]]] <= $MachineEpsilon}
+        ]
+    ],
+    {SparseArray, True, SparseArray, True},
+    TimeConstraint -> 30,
+    TestID -> "DiagonalExp-sparse-superoperator"
+]
+
 (* e^M acting on a mixed state rho gives e^M rho e^(M^dagger): for M = -i theta Z, X
    and Y, and for the non-Hermitian no-jump generator diag(0, -g/2) of amplitude
    damping, whose unnormalized state keeps the trace a + (1 - a) e^(-g), and for the
