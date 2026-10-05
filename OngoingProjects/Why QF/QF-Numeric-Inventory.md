@@ -70,6 +70,8 @@ Resolved on 5 October 2026; what each now does:
    | `"Fourier"[14]` circuit | applied to a state | 4.1 s | `Fourier` of the amplitudes, 0.5 ms, agreeing to 1.5e-15 |
    | `"PhaseOracle"`, random function of 10 variables | build, then apply | 3.0 s + 11.6 s, 226 gates | the sign vector of its truth table, 0.5 ms, agreeing exactly |
 
+   The change of basis is resolved on 6 October 2026 (`2ca84551`): an exactly unitary basis matrix inverts by its conjugate transpose, so a state goes into the Fourier basis in 0.01 s at d = 8, 0.02 s at 16, 0.12 s at 32 and 0.98 s at 64, where d = 16 to 64 did not finish before (the probe's second run). Machine, symbolic and non-unitary basis matrices keep the general inverse.
+
    Measuring a diagonal observable is slow too, 18.3 s for 64 outcomes on 6 qubits, but its eigensystem takes 0.01 s of that. The time goes into applying a measurement with many outcomes, which a computational-basis measurement does in 0.27 s, so the structure alone does not remove it. The task briefs in [Structured Arrays/tasks](../Structured%20Arrays/tasks/README.md) cover the diagonal and permutation spectra (briefs 2 and 4), the Fourier basis (brief 1) and the QFT on a state (brief 5); the permutations with phases and the phase oracle are not briefed.
 
 ### P2: friction or unsupported claims

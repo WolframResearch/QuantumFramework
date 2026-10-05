@@ -9,7 +9,7 @@ QF stores every operator as a `SparseArray`, so when an operator's structure alr
 | 1 | Exponential of a diagonal operator | Landed 2026-10-05 (`191f1ac3`), see `../exp-diagonal-shortcut-report.md` |
 | 9 | Exponential of a dephasing Liouvillian | Landed with row 1 and `f6299b43` (the superoperator stays a `SparseArray`) |
 | 2 | f of a diagonal operator (`Cos[qo]`, `Sqrt[qo]`) | Already entry by entry in `f[qo]`; the September note that `Cos[qo]` is wrong no longer holds |
-| 6 | Change of basis into the Fourier basis | Brief 1, `01-unitary-change-of-basis.md` |
+| 6 | Change of basis into the Fourier basis | Landed 2026-10-06 (`2ca84551`) from brief 1, `01-unitary-change-of-basis.md`: the 16-dimensional Fourier basis takes 0.02 s |
 | 5 | Spectrum of a diagonal operator | Brief 2, `02-diagonal-spectrum.md` |
 | (open question 6 of the report) | Building a Liouvillian | Brief 3, `03-liouvillian-build.md`, investigate first |
 | 3, 4 | Spectrum of a permutation and of the QFT | Brief 4, `04-permutation-and-qft-spectra.md`, investigate first |

@@ -170,3 +170,29 @@
 @@   measurement of it applied to a state s                     18.3031
 @@   computational measurement, 64 outcomes s                   0.2725
 ### exit 0 for structured.wls  02:07:59
+### structured.wls  02:53:42
+@@ named operators by structure                                 <|"identity" -> 15, "diagonal" -> 23, "Fourier" -> 5, "other" -> 26, "error" -> 5, "permutation" -> 18, "phase permutation" -> 6, "non-square" -> 10|>
+@@ named circuits by structure                                  <|"non-square" -> 14, "other" -> 15, "permutation" -> 4, "diagonal" -> 3, "identity" -> 4, "phase permutation" -> 2, "Fourier" -> 1, "inverse Fourier" -> 1|>
+@@ Diagonal[h], 10 qubits: Eigenvalues s                        0.3135
+@@   equal to the diagonal                                      0.
+@@   the diagonal itself s                                      0.0001
+@@ "Z"[128]: Eigenvalues s                                      2.4047
+@@ "X"[64]: Eigenvalues s                                       2.1221
+@@ "X"[64] @ "Z"[64]: Eigenvalues s                             1.6279
+@@ QFT operator, 4 qubits: Eigenvalues s                        8.7564
+@@ Fourier[8] change of basis s                                 0.0076
+@@   ConjugateTranspose of the basis matrix s                   0.0002
+@@ Fourier[16] change of basis s                                0.0202
+@@   ConjugateTranspose of the basis matrix s                   0.0003
+@@ Fourier[14] circuit on a state s                             4.0522
+@@   Fourier[v] s                                               0.0005
+@@   agreement                                                  1.4602525357963067*^-15
+@@ PhaseOracle, random function of 10 variables: build s        3.8403
+@@   gates                                                      226
+@@   apply to the uniform state s                               11.925
+@@   sign vector of the truth table s                           0.0005
+@@   agreement                                                  0.
+@@ Diagonal[h], 6 qubits: Eigensystem s                         0.0096
+@@   measurement of it applied to a state s                     20.0143
+@@   computational measurement, 64 outcomes s                   0.2777
+### exit 0 for structured.wls  02:54:56
