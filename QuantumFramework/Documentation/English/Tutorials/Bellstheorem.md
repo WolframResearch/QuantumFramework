@@ -7,6 +7,7 @@ CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/Bellstheorem
 RelatedGuides: [WolframQuantumComputationFramework]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 ```wl
@@ -67,7 +68,7 @@ Define a Pauli vector:
 Calculate $\langle \psi^{-}|\vec{a}_{1}.\vec{\sigma }\otimes \vec{a}_{2}.\vec{\sigma }|\psi^{-}\rangle $:
 
 ```wl
-\[Psi]m["Dagger"][
+SuperDagger[\[Psi]m][
  QuantumTensorProduct[\[Sigma][\[Theta]1, \[Phi]1], \
 \[Sigma][\[Theta]2, \[Phi]2]][\[Psi]m]]
 ```
@@ -92,7 +93,7 @@ Define new basis (Pauli-X which is rotated by π/8 around z-axis) and label it:
 
 ```wl
 newBasis = 
-  QuantumBasis[N@QuantumOperator[{"RZ", \[Pi]/8}][QuantumBasis["X"]], 
+  QuantumBasis[N@QuantumOperator["RZ"[\[Pi]/8]][QuantumBasis["X"]], 
    "Label" -> 
     "\!\(\*SubscriptBox[\((\*FractionBox[\(\[Pi]\), \(8\)])\), \
 \(xz\)]\)"];
@@ -133,7 +134,7 @@ The following quantum circuit prepare a 2-qubit quantum system in $\psi^{-}$ fir
 qc1 = QuantumCircuitOperator[{QuantumCircuitOperator[{"X" -> {1, 2}, 
       "H", "CNOT"}, 
      "Circuit to create \!\(\*SuperscriptBox[\(\[Psi]\), \(-\)]\)"], \
-{"RZ", \[Pi]/8} -> 2, "H" -> {1, 2}, {1}, {2}}];
+"RZ"[\[Pi]/8] -> 2, "H" -> {1, 2}, {1}, {2}}];
 qc1["Diagram"]
 ```
 
@@ -263,14 +264,14 @@ Given four unit vectors $\vec{a}_{i}$, we will focus on this case: $VectorAngle[
 ```wl
 corQC12 = 
   QuantumCircuitOperator[{"X" -> {1, 2}, "H", 
-    "CNOT", {"RZ", \[Phi]} -> 2, "H" -> {1, 2}, {1, 2}}];
+    "CNOT", "RZ"[\[Phi]] -> 2, "H" -> {1, 2}, {1, 2}}];
 corQC12["Diagram"]
 ```
 
 ```wl
 corQC32 = 
   QuantumCircuitOperator[{"X" -> {1, 2}, "H", 
-    "CNOT", {"RZ", \[Phi]}, {"RZ", 2 \[Phi]} -> 2, 
+    "CNOT", "RZ"[\[Phi]], "RZ"[2 \[Phi]] -> 2, 
     "H" -> {1, 2}, {1, 2}}];
 corQC32["Diagram"]
 ```
@@ -278,7 +279,7 @@ corQC32["Diagram"]
 ```wl
 corQC34 = 
   QuantumCircuitOperator[{"X" -> {1, 2}, "H", 
-    "CNOT", {"RZ", 2 \[Phi]} -> 1, {"RZ", 3 \[Phi]} -> 2, 
+    "CNOT", "RZ"[2 \[Phi]] -> 1, "RZ"[3 \[Phi]] -> 2, 
     "H" -> {1, 2}, {1, 2}}];
 corQC34["Diagram"]
 ```
@@ -286,7 +287,7 @@ corQC34["Diagram"]
 ```wl
 corQC14 = 
   QuantumCircuitOperator[{"X" -> {1, 2}, "H", 
-    "CNOT", {"RZ", 3 \[Phi]} -> 2, "H" -> {1, 2}, {1, 2}}];
+    "CNOT", "RZ"[3 \[Phi]] -> 2, "H" -> {1, 2}, {1, 2}}];
 corQC14["Diagram"]
 ```
 

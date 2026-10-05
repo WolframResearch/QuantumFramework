@@ -8,7 +8,8 @@ Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/TimeEvolution
 Keywords: [QuantumEvolve, Schrodinger equation, Lindblad, Liouvillian, Kossakowski, open system, propagator, Rabi oscillation, decoherence, Bloch vector, Heisenberg picture, superradiance]
 RelatedGuides: [WolframQuantumComputationFramework]
-RelatedTutorials: [GettingStarted, QuantumMachineLearning]
+RelatedTutorials: [GettingStarted, QuantumMachineLearning, TransmonGates]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 [QuantumEvolve]() solves the equation of motion of a quantum system. Which equation that is depends on what you hand it: the Schrodinger equation for a closed system, the Lindblad master equation once jump operators are present, the Heisenberg equation when the thing being evolved is an operator, and the Kossakowski equation when the jump operators are correlated.
@@ -301,7 +302,7 @@ Dephasing drives a qubit to the maximally mixed state because it has no preferre
 \[CapitalOmega] = 50; \[Gamma] = 1; n = 3;
 H = \[CapitalOmega]/2 QuantumOperator["Z"];
 \[Sigma]m = QuantumOperator[{{0, 1}, {0, 0}}];
-Ls = {\[Sigma]m, \[Sigma]m["Dagger"]};
+Ls = {\[Sigma]m, SuperDagger[\[Sigma]m]};
 \[Gamma]s = \[Gamma] {n + 1, n};
 ```
 
@@ -430,7 +431,7 @@ The same superoperator run backwards evolves *observables* instead of states. Ta
 
 ```wl
 A0 = QuantumOperator["Z"];
-At = U["Dagger"][A0["MatrixQuantumState"]]["Operator"];
+At = SuperDagger[U][A0["MatrixQuantumState"]]["Operator"];
 ```
 
 ---
@@ -590,7 +591,7 @@ Max[Abs[(sol[#]["Probability"][[1]] & /@ First[points]) - 0.5]]
 Shading the plot between them marks out the intervals where the qubit is mostly excited:
 
 ```wl
-Plot[sol[t]["Probability"][[1]], {t, 0, 2}, Mesh -> First[points],
+Plot[sol[t]["Probability"][[1]], {t, 0, 2}, Mesh -> {First[points]},
     MeshShading -> {Green, Orange}, PlotRange -> {0, 1}]
 ```
 

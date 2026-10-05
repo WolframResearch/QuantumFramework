@@ -366,8 +366,8 @@ Example for the construction of quantum circuit without measurement:
 
 ```wl
 qc = QuantumCircuitOperator[{"X", 1, 
-    "CNOT" -> {3, 2}, {"R", \[Theta], "YY" -> {2, 3}}, "SWAP", 
-    "SX" -> 3, "P"[\[Phi]], "T" -> 2, {"C", "NOT" -> 3, {1, 2}}, 
+    "CNOT" -> {3, 2}, "R"[\[Theta], "YY" -> {2, 3}], "SWAP", 
+    "SX" -> 3, "P"[\[Phi]], "T" -> 2, "C"["NOT" -> 3, {1, 2}], 
     "H" -> 2, "BitFlip"[p] -> {1}, "Braid" -> {1, 3}}, 
    "Parameters" -> {\[Theta], \[Phi], p}];
 qc["Diagram"]

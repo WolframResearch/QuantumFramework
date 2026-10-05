@@ -7,6 +7,7 @@ CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/QuantumOptimization
 RelatedGuides: [WolframQuantumComputationFramework]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 This technical note presents documentation for the functionalities utilized in the implementation of quantum optimization algorithms. The document systematically outlines the core features, methodologies, and application contexts of the framework, offering insights into its integration within the quantum computational paradigm.

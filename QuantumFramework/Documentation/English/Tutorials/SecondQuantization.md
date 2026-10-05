@@ -8,6 +8,8 @@ Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/SecondQuantization
 Keywords: [Second Quantization, Fock Space, Quantum Optics]
 RelatedGuides: [WolframQuantumComputationFramework]
+RelatedTutorials: [TransmonGates]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 This tech note introduces the QuantumFramework implementation of bosonic second quantization on a truncated Fock space. The truncation provides a finite-dimensional representation that is convenient for computation while retaining the structure of common states and operators. The examples below focus on practical workflows for building states, applying operators, and visualizing results in quantum mechanics and quantum optics.
@@ -215,7 +217,7 @@ Define the creation operator by taking the adjoint (SuperDagger) of the annihila
 Or use the "Dagger" property directly:
 
 ```wl
-(AnnihilationOperator[]["Dagger"]@FockState[1])["Formula"]
+(SuperDagger[AnnihilationOperator[]]@FockState[1])["Formula"]
 ```
 
 ### Coherent state
@@ -647,7 +649,7 @@ Evolve the operator:
 ```wl
 heisenbergAnnihilation = 
   Simplify[
-   exp\[ScriptCapitalH]["Dagger"][a["MatrixQuantumState"]][
+   SuperDagger[exp\[ScriptCapitalH]][a["MatrixQuantumState"]][
     "Operator"], {t, \[Omega]} \[Element] Reals];
 ```
 
@@ -933,7 +935,7 @@ Set up the master equation:
 
 ```wl
 \[ScriptCapitalH] = 
-  QuantumOperator["Hamiltonian"[g (a + a["Dagger"]), {a}, {\[Gamma]}]];
+  QuantumOperator["Hamiltonian"[g (a + SuperDagger[a]), {a}, {\[Gamma]}]];
 ```
 
 Numerical evolution from $t_{i}=0\, $ to $t_{f}=3$ :
@@ -967,11 +969,11 @@ Evolved state:
 \[Rho]t = QuantumEvolve[\[ScriptCapitalH], \[Rho]0, {t, 0, 1}];
 ```
 
-Photon number expectations and fidelity:
+The integrator leaves the evolved density matrix with eigenvalues a little below zero, so the fidelity is taken with its repaired form, the "Physical" property. Photon number expectations and fidelity:
 
 ```wl
 time = Range[0, 0.8, 0.02];
-qs = QuantumSimilarity[CoherentState[][-I g #], \[Rho]t[#]] & /@ time;
+qs = QuantumSimilarity[CoherentState[][-I g #], \[Rho]t[#]["Physical"]] & /@ time;
 meanN = Chop[
      Range[0, $FockSize - 1] . 
       Diagonal[\[Rho]t[#]["DensityMatrix"]]] & /@ time ;
@@ -1083,7 +1085,7 @@ Define the initial state $|\psi_{0}\rangle \, =\, |g\rangle |\alpha \rangle \, w
 Extracting the coefficients $c_{e}$ and $c_{g}$ for all n as a function of time:
 
 ```wl
-{cet[t_], cgt[t_]} = (#["Dagger"]@\[Psi]t[1, t])["AmplitudesList"] & /@ 
+{cet[t_], cgt[t_]} = (SuperDagger[#]@\[Psi]t[1, t])["AmplitudesList"] & /@ 
    atomBasis["BasisStates"];
 ```
 

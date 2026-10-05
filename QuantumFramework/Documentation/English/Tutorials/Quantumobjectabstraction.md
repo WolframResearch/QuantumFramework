@@ -7,6 +7,7 @@ CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/Quantumobjectabstraction
 RelatedGuides: [WolframQuantumComputationFramework]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 <!-- #| style: DefinitionBox -->
@@ -98,10 +99,10 @@ QuditBasis[]
 
 The next level of abstraction is our framework is [QuantumBasis](). Its generic form is as follows: <code>[QuantumBasis]()[<|"Input" -> [QuditBasis]()[…], "Output" -> [QuditBasis]()[…], "Picture" -> …, "Label" -> …, "Parameters" -> …|>]</code>.
 
-In contrast to previous quantum objects, the key additions for [QuantumBasis]() are the input and output information. All other details are categorized as the "Meta" data.
+In contrast to previous quantum objects, the key additions for [QuantumBasis]() are the input and output information. All other details are the basis options:
 
 ```wl
-QuantumBasis[{2}, {3}]["Meta"]
+QuantumBasis[{2}, {3}]["Options"]
 ```
 
 Pauli-X quantum basis:
@@ -162,7 +163,7 @@ state["Output"]
 Create a bra state, which is the conjugate-transpose of the original state:
 
 ```wl
-bra = QuantumState["0"]["Dagger"]
+bra = SuperDagger[QuantumState["0"]]
 ```
 
 A state with no output and only input is called an effect (see the above summary box).
@@ -188,7 +189,7 @@ bra["Output"]
 An inner product (bra-ket):
 
 ```wl
-braket = QuantumState["Plus"]["Dagger"]@QuantumState["1"]
+braket = SuperDagger[QuantumState["Plus"]]@QuantumState["1"]
 ```
 
 An inner product is a scalar (see the summary box above):
@@ -206,7 +207,7 @@ AssociationMap[braket, {"Input", "Output"}]
 Create a ket-bra:
 
 ```wl
-ketbra = QuantumState["0"]@QuantumState["1"]["Dagger"]
+ketbra = QuantumState["0"]@SuperDagger[QuantumState["1"]]
 ```
 
 Return the traditional form:
@@ -303,12 +304,22 @@ mea // InputForm
 It is a wrapper for quantum operators, representing a quantum channel
 
 ```wl
-QuantumChannel[{"BitFlip", p}, {2, 3}] // InputForm
+QuantumChannel["BitFlip"[p], {2, 3}] // InputForm
 ```
 
 ## QuantumCircuitOperator
 
 QuantumCircuitOperator is abstracted as an association with elements as list of operators, ops, and a circuit label, i.e. QuantumCircuitOperator[<|”Elements” -> ops, “Label” -> “Bell”|>]
+
+The elements of the Bell circuit as `ops`:
+
+```wl
+ops = QuantumCircuitOperator["Bell"]["Elements"]
+```
+
+---
+
+The circuit rebuilt from its association:
 
 ```wl
 QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> "Bell"|>]

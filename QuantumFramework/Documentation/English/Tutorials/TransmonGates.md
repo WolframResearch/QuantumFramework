@@ -10,6 +10,7 @@ URI: Wolfram/QuantumFramework/tutorial/TransmonGates
 Keywords: [transmon, superconducting qubit, leakage, DRAG, pi pulse, anharmonicity, gate error, pulse length, Lindblad, decoherence, T1, T2, qudit, optimization]
 RelatedGuides: [WolframQuantumComputationFramework]
 RelatedTutorials: [TimeEvolution, SecondQuantization]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 A transmon is a superconducting circuit that behaves as a weakly anharmonic oscillator. A qubit is stored in its two lowest levels, and a microwave pulse at the qubit frequency rotates it between them. The anharmonicity is small, a few hundred megahertz against a qubit frequency of several gigahertz, so the transition from |1⟩ to |2⟩ lies close to the qubit transition. A short pulse has a broad spectrum and drives both, carrying population out of the qubit. A long pulse avoids that but is exposed for longer to energy decay and dephasing.
@@ -31,7 +32,7 @@ b = AnnihilationOperator[5]
 In the rotating frame the qubit levels |0⟩ and |1⟩ are degenerate, and the higher levels are shifted by $\alpha$, $3\alpha$ and $6\alpha$:
 
 ```wl
-MatrixForm[Normal[((\[Alpha]/2) (b["Dagger"] @ b["Dagger"] @ b @ b))["Matrix"]]]
+MatrixForm[Normal[((\[Alpha]/2) (SuperDagger[b] @ SuperDagger[b] @ b @ b))["Matrix"]]]
 ```
 
 <!-- => MatrixForm[{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, \[Alpha], 0, 0}, {0, 0, 0, 3*\[Alpha], 0}, {0, 0, 0, 0, 6*\[Alpha]}}] -->
@@ -41,7 +42,7 @@ MatrixForm[Normal[((\[Alpha]/2) (b["Dagger"] @ b["Dagger"] @ b @ b))["Matrix"]]]
 A drive couples neighboring levels with strengths 1, $\sqrt{2}$, $\sqrt{3}$ and 2, so it drives the transition from |1⟩ to |2⟩ more strongly than the qubit transition:
 
 ```wl
-MatrixForm[Normal[(b + b["Dagger"])["Matrix"]]]
+MatrixForm[Normal[(b + SuperDagger[b])["Matrix"]]]
 ```
 
 <!-- => MatrixForm[{{0, 1, 0, 0, 0}, {1, 0, Sqrt[2], 0, 0}, {0, Sqrt[2], 0, Sqrt[3], 0}, {0, 0, Sqrt[3], 0, 2}, {0, 0, 0, 2, 0}}] -->
@@ -76,8 +77,8 @@ The whole Hamiltonian as one operator, with the anharmonicity, the DRAG coeffici
 
 ```wl
 model = QuantumOperator[
-  (\[Alpha]/2) (b["Dagger"] @ b["Dagger"] @ b @ b) + \[Delta] (b["Dagger"] @ b) +
-    (envelope/2) (b + b["Dagger"]) - (\[Lambda] D[envelope, t]/(2 \[Alpha])) (I (b["Dagger"] - b)),
+  (\[Alpha]/2) (SuperDagger[b] @ SuperDagger[b] @ b @ b) + \[Delta] (SuperDagger[b] @ b) +
+    (envelope/2) (b + SuperDagger[b]) - (\[Lambda] D[envelope, t]/(2 \[Alpha])) (I (SuperDagger[b] - b)),
   "Parameters" -> {\[Alpha], \[Lambda], \[Delta], \[Tau]}]
 ```
 
@@ -226,7 +227,7 @@ The transfer error with decay and dephasing, from the Lindblad master equation:
 ```wl
 openError[drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] :=
   1 - QuantumEvolve[model[anharmonicity, drag, detuning, length],
-      {b, b["Dagger"] @ b} -> {1/T1, 2/dephasingTime}, FockState[0, 5], {t, 0, length}][length]["ProbabilitiesList"][[2]]
+      {b, SuperDagger[b] @ b} -> {1/T1, 2/dephasingTime}, FockState[0, 5], {t, 0, length}][length]["ProbabilitiesList"][[2]]
 ```
 
 ---
@@ -315,7 +316,7 @@ Every result above keeps five levels. The leakage of the 8 ns pulse without DRAG
 
 ```wl
 leakageWithLevels[d_] := With[{a = AnnihilationOperator[d]},
-  QuantumEvolve[(anharmonicity/2) (a["Dagger"] @ a["Dagger"] @ a @ a) + ((envelope /. \[Tau] -> 8)/2) (a + a["Dagger"]),
+  QuantumEvolve[(anharmonicity/2) (SuperDagger[a] @ SuperDagger[a] @ a @ a) + ((envelope /. \[Tau] -> 8)/2) (a + SuperDagger[a]),
     FockState[0, d], {t, 0, 8}][8]["ProbabilitiesList"][[3]]]
 ```
 

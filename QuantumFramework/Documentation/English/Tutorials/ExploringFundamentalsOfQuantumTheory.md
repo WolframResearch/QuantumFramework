@@ -7,6 +7,7 @@ CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/ExploringFundamentalsOfQuantumTheory
 RelatedGuides: [WolframQuantumComputationFramework]
+Typeset: _SuperDagger -> StandardForm
 ---
 
 We will explore some important experiment in the foundation of quantum theory, using the Wolfram Quantum Framework. In this document, we will discuss quantum eraser, Elitzur-Vaidman bomb experiment, Hardy’s paradox, and quantum SWITCH.
@@ -33,7 +34,7 @@ qc["Diagram"]
 Calculate the system evolution through each step:
 
 ```wl
-steps = ComposeList[qc["Operators"], QuantumState[{"Register", 2}]];
+steps = ComposeList[qc["Operators"], QuantumState["Register"[2]]];
 ```
 
 Show the states prior to measurement:
@@ -48,7 +49,7 @@ Grid[Transpose[{Style[#, Bold] & /@ {"Initial state",
 Get the probability of each outcome:
 
 ```wl
-qc[QuantumState[{"Register", 2}]]["ProbabilityPlot"]
+qc[QuantumState["Register"[2]]]["ProbabilityPlot"]
 ```
 
 ### Erasing path information: interference
@@ -71,7 +72,7 @@ Note that the Hadamard gate acting on 2nd qubit serves as quantum eraser.
 Calculate the system evolution through each step:
 
 ```wl
-steps = ComposeList[qc["Operators"], QuantumState[{"Register", 2}]];
+steps = ComposeList[qc["Operators"], QuantumState["Register"[2]]];
 ```
 
 Show the states prior to measurement:
@@ -87,7 +88,7 @@ Grid[Transpose[{Style[#, Bold] & /@ {"Initial state",
 Get the probability of each outcome:
 
 ```wl
-qc[QuantumState[{"Register", 2}]]["ProbabilityPlot"]
+qc[QuantumState["Register"[2]]]["ProbabilityPlot"]
 ```
 
 ## Elitzur-Vaidman bomb
@@ -130,7 +131,7 @@ Wolfram`QuantumFramework`QuditName[{1, 0}, "Dual" -> False]])
 The Hadamard gate acts like a 50:50 beam splitter. One can replace it with a $R_{y}(\theta)$ gate, which is rotates along the $y$-axis with an arbitrary angle θ:
 
 ```wl
-QuantumOperator[{"RY", \[Theta]}]
+QuantumOperator["RY"[\[Theta]]]
 ```
 
 Compare the Hadamard gate with the $R_{y}(\theta)$ gate on the quantum state $|0\rangle $:
@@ -141,7 +142,7 @@ QuantumOperator["H"][QuantumState[{1, 0}]]["Amplitudes"]
 
 ```wl
 FullSimplify /@ 
- QuantumOperator[{"RY", \[Theta]}][QuantumState[{1, 0}]]["Amplitudes"]
+ QuantumOperator["RY"[\[Theta]]][QuantumState[{1, 0}]]["Amplitudes"]
 ```
 
 Note that the reflection will turn the qubit to $|1\rangle $, meaning it will be in the arm where the bomb is located.
@@ -149,8 +150,8 @@ Note that the reflection will turn the qubit to $|1\rangle $, meaning it will be
 Define a new quantum circuit using $R_{y}(\theta)\, $:
 
 ```wl
-qc = QuantumCircuitOperator[{{"RY", \[Theta]}, 
-    "CX", {"RY", \[Theta]}, {1}, {2}}];
+qc = QuantumCircuitOperator[{"RY"[\[Theta]], 
+    "CX", "RY"[\[Theta]], {1}, {2}}];
 qc["Diagram"]
 ```
 
@@ -158,7 +159,7 @@ Get the probability of each outcome:
 
 ```wl
 prob = FullSimplify[#, \[Theta] \[Element] Reals] & /@ 
-  qc[QuantumState[{"Register", 2}]]["Probabilities"]
+  qc[QuantumState["Register"[2]]]["Probabilities"]
 ```
 
 Return the efficiency rate:
@@ -188,8 +189,8 @@ Define a new quantum circuit using $R_{y}(\theta)\, $:
 qcN[\[Theta]_, m_Integer] := 
   With[{n = m - 1}, 
    QuantumCircuitOperator@
-    Append[Table[{{"RY", \[Theta]}, "CX" -> {1, i + 1}}, {i, 
-       n}], {"RY", \[Theta]}]
+    Append[Table[{"RY"[\[Theta]], "CX" -> {1, i + 1}}, {i, 
+       n}], "RY"[\[Theta]]]
    ];
 ```
 
@@ -203,14 +204,14 @@ Return the efficiency rate $\eta = P_{00,...,0}/(1-P_{10,...,0})$:
 \[Eta][\[Theta]_, n_] := 
  Module[{\[Psi]r, \[Psi]t, \[Psi]f, pDet, pNul},
   (*|000,...,00\[RightAngleBracket]*)
-  \[Psi]r = QuantumState[{"Register", n}];
+  \[Psi]r = QuantumState["Register"[n]];
   (*|100,...,00\[RightAngleBracket]*)
-  \[Psi]t = QuantumOperator["X"]@QuantumState[{"Register", n}];
+  \[Psi]t = QuantumOperator["X"]@QuantumState["Register"[n]];
   (*final state at the end of the cicruit*)
   \[Psi]f = qcN[\[Theta], n][\[Psi]r];
   (*inner products wrt final state*)
   {pDet, pNul} = 
-   Abs[First@#["Dagger"][\[Psi]f][
+   Abs[First@SuperDagger[#][\[Psi]f][
          "StateVector"]]^2 & /@ {\[Psi]r, \[Psi]t};
   (*\[Eta]*)
   pDet/(1 - pNul)
@@ -233,11 +234,11 @@ Define a new quantum circuit using $R_{y}(\theta)$:
 
 ```wl
 qcH[\[Theta]1_, \[Theta]2_] := 
-  QuantumCircuitOperator[{QuantumOperator[{"YRotation", \[Theta]1}], 
-    QuantumOperator[{"YRotation", \[Theta]2}, {2}], 
+  QuantumCircuitOperator[{QuantumOperator["YRotation"[\[Theta]1]], 
+    QuantumOperator["YRotation"[\[Theta]2], {2}], 
     QuantumOperator["Toffoli"], 
-    QuantumOperator[{"YRotation", \[Pi] - \[Theta]1}], 
-    QuantumOperator[{"YRotation", \[Pi] - \[Theta]2}, {2}]}];
+    QuantumOperator["YRotation"[\[Pi] - \[Theta]1]], 
+    QuantumOperator["YRotation"[\[Pi] - \[Theta]2], {2}]}];
 ```
 
 ```wl
@@ -247,7 +248,7 @@ qcH[\[Theta]1, \[Theta]2]["Diagram"]
 Get the final state:
 
 ```wl
-final = qcH[\[Theta]1, \[Theta]2][QuantumState[{"Register", 3}]];
+final = qcH[\[Theta]1, \[Theta]2][QuantumState["Register"[3]]];
 ```
 
 Calculate the nonlocal probability for $|000\rangle $ (where one considers only cases where 3rd qubit is nonzero) as $P_{000}/(P_{000}+P_{100}+P_{010}+P_{110})$:
@@ -301,10 +302,10 @@ Create two random commuting operators:
 
 ```wl
 A = QuantumOperator[
-   u@QuantumOperator[{"Phase", RandomReal[{0, 2 \[Pi]}]}]@u["Dagger"],
+   u@QuantumOperator["Phase"[RandomReal[{0, 2 \[Pi]}]]]@SuperDagger[u],
     "Label" -> "A"];
 B = QuantumOperator[
-   u@QuantumOperator[{"Phase", RandomReal[{0, 2 \[Pi]}]}]@u["Dagger"],
+   u@QuantumOperator["Phase"[RandomReal[{0, 2 \[Pi]}]]]@SuperDagger[u],
     "Label" -> "B"];
 ```
 
@@ -350,8 +351,8 @@ u = QuantumOperator["RandomUnitary"];
 Create two commuting operators:
 
 ```wl
-A = QuantumOperator[u@QuantumOperator["X"]@u["Dagger"], "Label" -> "A"];
-B = QuantumOperator[u@QuantumOperator["Z"]@u["Dagger"], "Label" -> "B"];
+A = QuantumOperator[u@QuantumOperator["X"]@SuperDagger[u], "Label" -> "A"];
+B = QuantumOperator[u@QuantumOperator["Z"]@SuperDagger[u], "Label" -> "B"];
 ```
 
 Note that we consider the case where {A,B}=0:
