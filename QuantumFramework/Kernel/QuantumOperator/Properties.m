@@ -120,16 +120,23 @@ QuantumOperatorProp[QuantumOperator[_, {_, inputOrder_}], "InputOrder"] := input
 QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := outputOrder
 
 
-(* A property that fails returns its Failure. Declining the rule instead would pass
+(* A property that fails returns its Failure, and so does an operator property called
+   with arguments none of its definitions takes. Declining the rule instead would pass
    qo[prop] to the rule that applies qo as a circuit; the circuit computes the properties
    it defines itself and hands every other operator property back to qo, where it fails
-   again, until $RecursionLimit. *)
+   again, until $RecursionLimit. A name operators do not define is declined, for the
+   circuit to answer. *)
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
     result = QuantumOperatorProp[qo, prop, args]
     },
-    If[ FailureQ[Unevaluated @ result],
+    Which[
+        FailureQ[Unevaluated @ result],
         Message[QuantumOperator::failprop, prop, result];
         result,
+        MatchQ[Unevaluated @ result, _QuantumOperatorProp],
+        Message[QuantumOperator::undefprop, prop];
+        Failure["UndefinedProperty", <|"MessageTemplate" :> QuantumOperator::undefprop, "MessageParameters" -> {prop}|>],
+        True,
         If[ TrueQ[$QuantumFrameworkPropCache] &&
             ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
             QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
@@ -137,7 +144,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
             result
         ]
     ] /;
-        (!MatchQ[result, _QuantumOperatorProp] || Message[QuantumOperator::undefprop, prop])
+        ! MatchQ[result, _QuantumOperatorProp] || MemberQ[QuantumOperator["Properties"], First[Flatten[{prop}]]]
 ]
 
 

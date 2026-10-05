@@ -1788,3 +1788,24 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumOperator - property called with arguments it does not take"]
+
+(* An operator property called with arguments none of its definitions takes returns a
+   Failure: it recursed between the operator and its circuit until $RecursionLimit. A
+   name operators do not define still reaches the circuit. *)
+VerificationTest[
+    Block[{$RecursionLimit = 256}, FailureQ @ QuantumOperator["X"]["OrderedMatrix", {1}]],
+    True,
+    {QuantumOperator::undefprop},
+    TestID -> "Property-unmatched-arguments-returns-Failure"
+]
+
+VerificationTest[
+    Head @ QuantumOperator["X"]["Diagram"],
+    Graphics,
+    TestID -> "Property-circuit-name-reaches-the-circuit"
+]
+
+EndTestSection[]
