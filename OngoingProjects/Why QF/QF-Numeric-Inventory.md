@@ -9,7 +9,7 @@ What Wolfram QuantumFramework can do numerically today, measured rather than cla
 | # | Problem class | Verified in QF | What blocks a study | Readiness |
 |---|---|---|---|---|
 | 1 | Driven-dissipative Kerr: bistability, Liouvillian gap | Lindblad evolution converges in the cutoff; exact steady state from the Liouvillian null space, which also exposes multiple steady states; 28-digit evolution | A solve at N = 50 takes 3.6 s, 17 to 140 times the published numbers (see Dynamics) | **Ready** to N of about 60 |
-| 2 | Transmon beyond two levels: leakage, DRAG | 4-level transmon, Gaussian pi pulse; the DRAG coefficient that minimizes leakage is found numerically in 1.2 s | Smooth pulses inside long idle windows are skipped, exactly as in QuTiP | **Ready**, with step control |
+| 2 | Transmon beyond two levels: leakage, DRAG | 4-level transmon, Gaussian pi pulse; the DRAG coefficient that minimizes leakage is found numerically in 1.2 s | | **Ready** |
 | 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | Dense circuit engine takes 14 s at 12 qubits and 28 min at 20; no trajectory engine found | Repetition codes only |
 | 4 | Cavity-QED spectra | Damped Jaynes-Cummings with the jump operator on the cavity alone matches the exact one-excitation solution | No correlation or spectrum routine | Dynamics ready; spectra are a gap |
 | 5 | Exponentially small splittings and gaps | 28 correct digits in time evolution | Not yet run on the double-well benchmark | Promising, verify next |
@@ -44,17 +44,18 @@ Resolved on 5 October 2026; what each now does:
 
 ### P1: degrade a study or its credibility
 
-4. **Short pulses are skipped**, the most reported failure across QuTiP users. A pi pulse at t = 50 in [0, 100]:
+4. **Short pulses**, the most reported failure across QuTiP users (issue #2814), resolved on 5 October 2026. A numeric `QuantumEvolve` reads landmarks off the symbolic Hamiltonian and restarts its integration at each one: every discontinuity, and two and four widths either side of the centre of every Gaussian or exponential profile, which covers square, Gaussian, sech and tanh pulses. A pi pulse at t = 50 in [0, 100], with no options set:
 
-   | Width | Square `Piecewise` pulse | Smooth Gaussian pulse |
-   |---|---|---|
-   | 1.0 | captured | skipped |
-   | 0.1 | captured | skipped |
-   | 0.01 | skipped | skipped |
+   | Width | Square `Piecewise` | Square `UnitStep` | Gaussian | sech |
+   |---|---|---|---|---|
+   | 1.0 | captured | captured | captured (skipped before) | captured |
+   | 0.1 | captured | captured | captured (skipped before) | captured |
+   | 0.01 | captured (skipped before) | captured | captured (skipped before) | captured |
+   | 0.001 | captured | captured | captured | captured |
 
-   `MaxStepSize` fixes it today, as `max_step` does in QuTiP. Detecting pulse times from the Hamiltonian automatically would beat every incumbent on their most reported numerical failure; QuTiP issue #2814 asks for exactly that.
+   Each solve takes about 0.02 s; a train of 50 Gaussian pi/2 pulses of width 0.04 lands on the exact population to 2e-10 in 0.07 s. A smooth drive has no landmarks and runs as before. A pulse given as data (an `InterpolatingFunction`) is not read, so `MaxStepSize` remains the control there.
 5. **Dense circuit engine.** A 4-step Trotter quench takes 13.9 s at 12 qubits, 72.9 s at 16 and 1,656 s at 20, about 10.6 s per gate at 2^20 amplitudes. Results are correct throughout.
-6. **`"MergeInterpolatingFunctions" -> False` pins the initial state at t = 0** instead of the start of the time range. A Rabi flop over [-1, 1] gives 0.2919 (cos^2 1) instead of 0.1732 (cos^2 2).
+6. **`"MergeInterpolatingFunctions" -> False`** now starts the evolution at the start of the time range, resolved on 5 October 2026: a Rabi flop over [-1, 1] gives cos^2 2 = 0.1732.
 7. **Circuit parameters do not bind by `ReplaceAll`.** `ansatz /. Thread[pars -> values]` silently leaves the circuit symbolic, and every later step computes symbolic expressions. Parameters must be declared (`"Parameters" -> pars`) and bound by calling the circuit, `ansatz @@ values`.
 
 ### P2: friction or unsupported claims
@@ -65,6 +66,7 @@ Resolved on 5 October 2026; what each now does:
 11. The QuEST backend is unavailable without a runtime download from qtechtheory.org.
 12. `QF-Stabilizer-vs-Packages.md`, the source cited for the showcase's Stim comparison, is not in the repository.
 13. Stabilizer per-gate cost is flat only up to about 3,000 qubits (see Circuits); the half-chain entropy dominates beyond that.
+14. An evolved state read before its time is bound (`psi["StateVector"]` rather than `psi[t]`) failed with `Interpolation::inddp` when NDSolve repeats a grid point, which it does at a discontinuity of the Hamiltonian, because the Wolfram/Arrays lazy container rebuilt its interpolations over the whole grid. Resolved in Arrays 1.4.1, which QF now requires: the read matches `psi[t]` on both sides of a pulse edge.
 
 ## Measurements
 
