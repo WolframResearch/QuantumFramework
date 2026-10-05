@@ -276,3 +276,35 @@ With[{d = 2},
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["Liouvillian - jump operators on a subsystem"]
+
+(* A jump operator on some of the qudits acts as the identity on the rest, in the
+   superoperators as in QuantumEvolve: cavity loss written on the cavity alone builds
+   the same Liouvillian as loss written on the full space. *)
+VerificationTest[
+    Module[{n = 4, a, aFull, sm, h},
+        a = QuantumOperator[DiagonalMatrix[Sqrt[Range[n - 1]], 1], {2}, n];
+        aFull = QuantumTensorProduct[QuantumOperator[IdentityMatrix[2], {1}], a];
+        sm = QuantumOperator[{{0, 1}, {0, 0}}, {1}];
+        h = SuperDagger[sm] @ a + sm @ SuperDagger[a];
+        {
+            Normal[QuantumOperator["Liouvillian"[h, {a}, {1 / 20}]]["Matrix"]] === Normal[QuantumOperator["Liouvillian"[h, {aFull}, {1 / 20}]]["Matrix"]],
+            Normal[QuantumOperator["Hamiltonian"[h, {a}, {1 / 20}]]["Matrix"]] === Normal[QuantumOperator["Hamiltonian"[h, {aFull}, {1 / 20}]]["Matrix"]]
+        }
+    ],
+    {True, True},
+    TestID -> "Liouvillian-jump-on-a-subsystem"
+]
+
+(* Without a Hamiltonian, jump operators on different modes act on their union. *)
+VerificationTest[
+    With[{c = QuantumOperator[DiagonalMatrix[Sqrt[Range[2]], 1], {1}, 3], d = QuantumOperator[DiagonalMatrix[Sqrt[Range[2]], 1], {2}, 3]},
+        QuantumOperator["Liouvillian"[None, {c, d}, {1, 1}]]["Order"]
+    ],
+    {{1, 2}, {1, 2}},
+    TestID -> "Liouvillian-jumps-on-two-modes"
+]
+
+EndTestSection[]

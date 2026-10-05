@@ -15,6 +15,7 @@ PackageScope["$QuantumOperatorBroadcastLimit"]
 PackageScope["matrixMapAmplitudes"]
 PackageScope["lazyMatrixMapAmplitudesQ"]
 PackageScope["padQuantumOperators"]
+PackageScope["padJumpOperators"]
 
 
 (* What the matrix constructors below accept: a rank-2 array container of any
@@ -798,6 +799,25 @@ padQuantumOperators[ops : {__QuantumOperator}] := Module[{
     ];
     ((# @@ orderInput)["Sort"] @@ orderOutput)["Sort"] & /@ ops
 ]
+
+(* {Hamiltonian, jump operators} with each jump operator on some of the qudits acting as
+   the identity on the rest: on the Hamiltonian's own order when it covers them all, else
+   on the union of every order. Without a Hamiltonian the jump operators share their union. *)
+padJumpOperators[h_ ? QuantumOperatorQ, ls : {___ ? QuantumOperatorQ}] := Which[
+    AllTrue[ls, #["Order"] === h["Order"] &],
+    {h, ls},
+    AllTrue[ls, SubsetQ[h["OutputOrder"], #["OutputOrder"]] && SubsetQ[h["InputOrder"], #["InputOrder"]] &],
+    {h, If[ #["Order"] === h["Order"],
+            #,
+            #["OrderedInput", h["InputOrder"], h["Input"]]["OrderedOutput", h["OutputOrder"], h["Output"]]
+        ] & /@ ls},
+    True,
+    With[{ops = padQuantumOperators[Prepend[ls, h]]}, {First[ops], Rest[ops]}]
+]
+
+padJumpOperators[None, ls : {___ ? QuantumOperatorQ}] := {None, If[SameQ @@ Through[ls["Order"]], ls, padQuantumOperators[ls]]}
+
+padJumpOperators[h_, ls_] := {h, ls}
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
     ordered1, ordered2
