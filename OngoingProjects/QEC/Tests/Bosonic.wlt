@@ -258,9 +258,30 @@ VerificationTest[
 
 (* The residual is the obstruction itself, and vanishes identically for an exact code. *)
 VerificationTest[
-    DeleteDuplicates @ QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeResidual", "Loss"[1]],
-    {0},
+    DeleteDuplicates @ Values @ QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeResidual", "Loss"[1]],
+    {{{0, 0}, {0, 0}}},
     TestID -> "QBC-Residual-ZeroForExactCode"
+]
+
+(* Keyed by error pair: past its design order the binomial code fails only where a^2 enters. *)
+VerificationTest[
+    Keys @ Select[QECBosonicCode["Binomial"[1, 1]]["KnillLaflammeResidual", "Loss"[2]],
+        # =!= {{0, 0}, {0, 0}} &],
+    {{1, qecAv ** qecAv}, {qecAv ** qecAv, 1}, {qecAv ** qecAv, qecAv ** qecAv}},
+    TestID -> "QBC-Residual-KeyedByErrorPair"
+]
+
+(* Blocks are computed once per code and channel. *)
+VerificationTest[
+    With[{blocks = Symbol["Wolfram`QuantumFramework`QEC`PackageScope`bosonicBlocks"],
+          code = QECBosonicCode["Binomial"[2, 1]]},
+        With[{n0 = Length @ DownValues[blocks]},
+            code["CorrectableQ", "Loss"[1]];
+            code["KnillLaflammeMatrix", "Loss"[1]];
+            code["KnillLaflammeResidual", "Loss"[1]];
+            Length @ DownValues[blocks] - n0]],
+    1,
+    TestID -> "QBC-Blocks-Memoised"
 ]
 
 (* A code with no amplitude parameter has no limit to take. *)

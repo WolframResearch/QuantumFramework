@@ -120,7 +120,7 @@ bosonicErrorSet["Displacement"[l_Integer ? NonNegative]] :=
 bosonicErrorSet[es_List] := es
 
 
-bosonicBlocks[a_Association, channel_] :=
+bosonicBlocks[a_Association, channel_] := bosonicBlocks[a, channel] =
     With[{es = bosonicErrorSet[channel]},
         Table[
             Table[bosonicElement[a, i, j, ncTimes[ncDagger[es[[p]]], es[[q]]]], {i, 2}, {j, 2}],
@@ -131,15 +131,16 @@ bosonicKLMatrix[a_Association, channel_] :=
     Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, bosonicBlocks[a, channel], {2}]
 
 (* The obstruction itself: what each block has left over once the codeword-independent
-   part is removed. Zero exactly when the conditions hold. *)
+   part is removed, keyed by the error pair {E_a, E_b}. Zero exactly when the conditions hold. *)
 bosonicResidual[a_Association, channel_] :=
-    With[{b = bosonicBlocks[a, channel]},
-        Flatten @ MapThread[#1 - IdentityMatrix[2] #2 &,
-            {b, Map[FullSimplify[Tr[#]/2, a["Assumptions"]] &, b, {2}]}, 2]
+    With[{es = bosonicErrorSet[channel]},
+        AssociationThread[Tuples[{es, es}],
+            Flatten[Map[# - IdentityMatrix[2] FullSimplify[Tr[#]/2, a["Assumptions"]] &,
+                bosonicBlocks[a, channel], {2}], 1]]
     ]
 
 bosonicCorrectableQ[a_Association, channel_] :=
-    AllTrue[bosonicResidual[a, channel],
+    AllTrue[Flatten @ Values @ bosonicResidual[a, channel],
         PossibleZeroQ[FullSimplify[#, a["Assumptions"]]] &]
 
 (* Capped: an approximate code never satisfies the conditions at finite alpha. *)
@@ -156,7 +157,7 @@ QECBosonicCode::novar = "This code has no amplitude parameter; supply the limit 
 bosonicApproxOrder[a_Association, family_, var_] :=
     LengthWhile[
         Range[0, $bosonicMaxOrder],
-        AllTrue[Simplify[bosonicResidual[a, family[#]], a["Assumptions"]],
+        AllTrue[Simplify[Flatten @ Values @ bosonicResidual[a, family[#]], a["Assumptions"]],
             PossibleZeroQ @ Quiet @ Limit[#, var -> Infinity] &] &
     ] - 1
 
