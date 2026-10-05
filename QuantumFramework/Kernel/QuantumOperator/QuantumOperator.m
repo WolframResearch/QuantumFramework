@@ -509,12 +509,14 @@ composableBasesQ[qo1_, qo2_] := With[{shared = Intersection[qo1["InputOrder"], q
        treat a symbolic or lazy operand as a SCALAR and multiply, the unevaluated
        expression then reading downstream as a single amplitude.
 
-       A scalar operand is not a container and stays on the TensorProduct branch:
-       the list form reads {tensor, 1} as one ragged array. So does the case with
-       nothing to contract, which is a plain tensor product. *)
+       The operands go to ArrayContract as an inactive tensor product, which names
+       them one by one; a plain list of them would read as a single ragged array.
+       A scalar operand is not a container and stays on the TensorProduct branch,
+       and so does the case with nothing to contract, which is a plain tensor
+       product. *)
     resultTensor = With[{t1 = s1["StateTensor"], t2 = s2["StateTensor"]},
         If[ ArrayContainerQ[t1] && ArrayContainerQ[t2] && Length[contractPairs] > 0,
-            ArrayContract[{t1, t2}, contractPairs],
+            ArrayContract[Inactive[TensorProduct][t1, t2], contractPairs],
             If[Length[contractPairs] == 0,
                 TensorProduct[t1, t2],
                 TensorContract[TensorProduct[t1, t2], contractPairs]
