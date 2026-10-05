@@ -338,17 +338,21 @@ QuantumOperatorProp[qo_, "SortOutput"] := If[
 ]
 
 
-QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[
-    qo["SortOutput"]["SortInput"],
-    "Label" -> collectLabel @ Replace[qo["Label"], {
-        Subscript["C", subLabel_][controls__] :>
-            Subscript["C", sortLabel[subLabel, qo["TargetOrder"]]][controls],
-        Subscript["R", subLabel_][angle_] :>
-            Subscript["R", sortLabel[subLabel, qo["InputOrder"]]][angle],
-        "\[Pi]"[perm__] :> "\[Pi]" @@ {perm}[[Ordering[qo["InputOrder"]]]],
-        subLabel_  :> sortLabel[subLabel, qo["InputOrder"]]
-    }]
-]
+QuantumOperatorProp[qo_, "Sort"] := sortedOperator[qo, sortedLabel[qo]]
+
+(* an operator with sorted orders, whose label sorting leaves as it is, is its own sort *)
+sortedOperator[qo_, label_] /; qo["SortedQ"] && label === qo["Label"] := qo
+
+sortedOperator[qo_, label_] := QuantumOperator[qo["SortOutput"]["SortInput"], "Label" -> label]
+
+sortedLabel[qo_] := collectLabel @ Replace[qo["Label"], {
+    Subscript["C", subLabel_][controls__] :>
+        Subscript["C", sortLabel[subLabel, qo["TargetOrder"]]][controls],
+    Subscript["R", subLabel_][angle_] :>
+        Subscript["R", sortLabel[subLabel, qo["InputOrder"]]][angle],
+    "\[Pi]"[perm__] :> "\[Pi]" @@ {perm}[[Ordering[qo["InputOrder"]]]],
+    subLabel_  :> sortLabel[subLabel, qo["InputOrder"]]
+}]
 
 QuantumOperatorProp[qo_, "SortedQ"] := AllTrue[qo["Order"], OrderedQ]
 
