@@ -1285,6 +1285,20 @@ QuantumOperatorProp[qo_, "CircuitDiagram", opts___] := QuantumCircuitOperator[qo
 
 (* state properties *)
 
+(* The properties an operator hands to its state: those both "AllProperties" lists share, for a
+   state of dimension 2 and for any other. Both lists are fixed, so each set is computed once. *)
+operatorStateProperties[twoQ_] := operatorStateProperties[twoQ] = With[{
+    stateProperties = If[twoQ, QuantumState["Properties"], DeleteCases[QuantumState["Properties"], _ ? (StringStartsQ["Bloch"])]]
+},
+    AssociationThread[
+        Intersection[
+            stateProperties,
+            Union @ Join[QuantumOperator["Properties"], Complement[stateProperties, {"BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"}]]
+        ],
+        True
+    ]
+]
+
 QuantumOperatorProp[qo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qo["State"]["AllProperties"], qo["AllProperties"]], prop] := qo["State"][args]
+    Lookup[operatorStateProperties[qo["State"]["Dimension"] == 2], prop, False] := qo["State"][args]
 

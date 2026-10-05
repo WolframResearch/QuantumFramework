@@ -1808,4 +1808,17 @@ VerificationTest[
     TestID -> "Property-circuit-name-reaches-the-circuit"
 ]
 
+(* An operator hands to its state exactly the properties its own and its state's
+   "AllProperties" share, for a state of dimension 2 and of any other dimension. *)
+VerificationTest[
+    With[{handed = Wolfram`QuantumFramework`Properties`PackagePrivate`operatorStateProperties},
+        Map[
+            Sort[Keys[handed[#["State"]["Dimension"] == 2]]] === Sort[Intersection[#["State"]["AllProperties"], #["AllProperties"]]] &,
+            {QuantumOperator[{{1}, {0}}], QuantumOperator["X"], QuantumOperator["CNOT"], QuantumOperator["X"[3]]}
+        ]
+    ],
+    {True, True, True, True},
+    TestID -> "Property-handed-to-the-state-match-AllProperties"
+]
+
 EndTestSection[]
