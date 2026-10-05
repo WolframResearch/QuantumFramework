@@ -650,7 +650,7 @@ scalarPowerBaseQ[base_] :=
 scalarBasePower[base_ /; Which[! NumericQ[base], PossibleZeroQ[base], InexactNumberQ[base], base == 0, True, zeroBaseQ[base]], mat_] :=
     zeroBasePower[If[InexactNumberQ[base], N[mat], mat]]
 
-scalarBasePower[base_, mat_] := MatrixExp[Log[base] mat]
+scalarBasePower[base_, mat_] := matrixExponential[Log[base] mat]
 
 QuantumOperator /: Power[base_ ? scalarPowerBaseQ, qo_QuantumOperator] /; TrueQ[qo["SquareQ"]] :=
     matrixMapOperator[scalarBasePower[base, #] &, qo, Power[base, #] &]
@@ -665,7 +665,7 @@ QuantumOperator /: Exp[qo_QuantumOperator] := E ^ qo
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator | OptionsPattern[]] ..., opts : OptionsPattern[]] /; MemberQ[Attributes[f], NumericFunction] :=
     matrixMapOperator[matrixFunction[f, #, {left}, {right}, opts] &, qo, f[left, #, right] &]
 
-QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[MatrixExp, qo, Exp]
+QuantumOperator /: MatrixExp[qo_QuantumOperator] := matrixMapOperator[matrixExponential, qo, Exp]
 
 (* The operator g(M) for the matrix M of qo in sorted order, labelled with labelF of
    its label: evaluated now, or kept lazy in the parameters (below). Where g fails,
@@ -729,10 +729,11 @@ amplitudesMatrix[amps_, qb_, order_] := Normal[QuantumOperator[QuantumState[amps
    matrix first rather than the closed form of g1. It is read from qo as given,
    before sorting its order, since sorting rebuilds the amplitudes from the closed
    form; the sorting happens inside the body instead. Otherwise it is the sorted
-   matrix as a List: a SparseArray is atomic, so neither Function application nor
-   ReplaceAll would reach the parameters inside it. The basis written into the body
-   carries no parameter specification, which a substitution would otherwise
-   overwrite. *)
+   matrix: for a diagonal matrix the List of its diagonal entries, made into a sparse
+   diagonal matrix only after the substitution, and for any other the matrix as a
+   List. A SparseArray is atomic, so neither Function application nor ReplaceAll
+   would reach the parameters inside one. The basis written into the body carries no
+   parameter specification, which a substitution would otherwise overwrite. *)
 heldOperatorMatrix[qo_, op_] /; lazyMatrixMapAmplitudesQ[qo["State"]["State"]] := With[{
     qb = QuantumBasis[qo["Basis"], "ParameterSpec" -> {}],
     order = qo["Order"]
@@ -740,7 +741,10 @@ heldOperatorMatrix[qo_, op_] /; lazyMatrixMapAmplitudesQ[qo["State"]["State"]] :
     Replace[Extract[qo["State"]["State"], {2}, Hold], Hold[body_] :> Hold[amplitudesMatrix[body, qb, order]]]
 ]
 
-heldOperatorMatrix[_, op_] := With[{mat = Normal[op["Matrix"]]}, Hold[mat]]
+heldOperatorMatrix[_, op_] := heldMatrix[op["Matrix"]]
+
+heldMatrix[mat_ ? diagonalMatrixQ] := With[{d = Normal[Diagonal[mat]]}, Hold[DiagonalMatrix[d, TargetStructure -> "Sparse"]]]
+heldMatrix[mat_] := With[{m = Normal[mat]}, Hold[m]]
 
 (* Function binds its first argument, so With cannot write the parameters there;
    Apply puts them in front of the held body instead. The shape is declared so that

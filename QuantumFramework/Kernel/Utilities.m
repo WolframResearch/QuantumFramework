@@ -49,6 +49,8 @@ PackageScope["alignDimensions"]
 PackageScope["MatrixInverse"]
 PackageScope["matrixFunction"]
 PackageScope["zeroBasePower"]
+PackageScope["diagonalMatrixQ"]
+PackageScope["matrixExponential"]
 PackageScope["valuelessEntriesQ"]
 PackageScope["exactZeroQ"]
 PackageScope["zeroBaseQ"]
@@ -1551,6 +1553,42 @@ noLimitFailure[t_] := Failure["ZeroBasePowerNoLimit", <|
 defectiveZeroFailure = Failure["ZeroBasePowerDefective", <|
     "MessageTemplate" -> "0^m is the limit of b^m as b -> 0, which does not exist: the zero eigenvalue of m is defective, where b^m grows as Log[b]."
 |>]
+
+
+(* For the exponential, a matrix counts as diagonal when it is square and every
+   off-diagonal entry is zero, with no tolerance: a coupling at roundoff relative to
+   the largest entry still mixes two degenerate levels over a long time, and
+   MatrixExp resolves that mixing. A symbolic off-diagonal entry counts as zero when
+   DiagonalMatrixQ's zero test proves it zero; that test is best effort, and an
+   identically zero entry it cannot prove sends the matrix to MatrixExp. *)
+diagonalMatrixQ[mat_] := SquareMatrixQ[mat] && DiagonalMatrixQ[mat, Tolerance -> 0]
+
+(* The exponential of a diagonal matrix is the diagonal of the exponentials of its
+   entries, and its action on a vector multiplies the vector by them. Any other
+   matrix, and a diagonal with an entry that has no value (infinite, indeterminate),
+   goes to MatrixExp, which fails on the latter. *)
+matrixExponential[mat_ ? diagonalMatrixQ, v___] := With[{d = Normal[Diagonal[mat]]},
+    diagonalAction[diagonalExp[d], v] /; ! valuelessEntriesQ[d]
+]
+matrixExponential[mat_, v___] := MatrixExp[mat, v]
+
+diagonalAction[values_] := DiagonalMatrix[values, TargetStructure -> "Sparse"]
+diagonalAction[values_, v_] := values v
+
+(* A numeric diagonal at machine precision, exact entries included, is exponentiated
+   in machine numbers, as MatrixExp does, and as one packed array. On a packed array
+   Exp returns an exponential below the smallest normalized machine number as a
+   subnormal number or zero, and one above the largest as an arbitrary-precision
+   number, without a message; on an unpacked list it raises General::munfl. A numeric
+   diagonal at a higher finite precision is exponentiated at that precision. *)
+diagonalExp[d_ ? machineVectorQ] := Exp[packedVector[N[d]]]
+diagonalExp[d_ ? (VectorQ[#, NumericQ] && Precision[#] < Infinity &)] := Exp[N[d, Precision[d]]]
+diagonalExp[d_] := Exp[d]
+
+machineVectorQ[d_] := VectorQ[d, NumericQ] && Precision[d] === MachinePrecision
+
+packedVector[y_ ? (FreeQ[#, _Complex] &)] := Developer`ToPackedArray[y, Real]
+packedVector[y_] := Developer`ToPackedArray[y, Complex]
 
 
 SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]
