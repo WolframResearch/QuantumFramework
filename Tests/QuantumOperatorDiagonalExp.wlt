@@ -345,6 +345,69 @@ VerificationTest[
     TestID -> "DiagonalExp-dephasing-against-QuantumEvolve"
 ]
 
+(* e^M acting on a mixed state rho gives e^M rho e^(M^dagger): for M = -i theta Z, X
+   and Y, and for the non-Hermitian no-jump generator diag(0, -g/2) of amplitude
+   damping, whose unnormalized state keeps the trace a + (1 - a) e^(-g), and for the
+   entangling M = -i theta ZZ on a generic two-qubit rho; on a pure state it gives
+   e^M psi. The reference is MatrixExp of the explicit matrix. *)
+VerificationTest[
+    With[{
+        rho = QuantumState[{{deA, deC}, {Conjugate[deC], 1 - deA}}],
+        psi = QuantumState[{deC0, deC1}],
+        generators = {-I deTheta QuantumOperator["Z"], -I deTheta QuantumOperator["X"], -I deTheta QuantumOperator["Y"], QuantumOperator[{{0, 0}, {0, -deG / 2}}]}
+    },
+        FullSimplify[{
+            With[{u = MatrixExp[Normal[#["Matrix"]]]}, Normal[MatrixExp[#, rho]["DensityMatrix"]] - u . Normal[rho["DensityMatrix"]] . ConjugateTranspose[u]] & /@ generators,
+            Tr[Normal[MatrixExp[Last[generators], rho]["DensityMatrix"]]] - (deA + (1 - deA) Exp[-deG]),
+            Normal[MatrixExp[-I deTheta QuantumOperator["X"], psi]["StateVector"]] - MatrixExp[-I deTheta {{0, 1}, {1, 0}}] . {deC0, deC1},
+            With[{u = DiagonalMatrix[Exp[-I deTheta {1, -1, -1, 1}]]}, Normal[MatrixExp[-I deTheta QuantumOperator["ZZ"], deRho0State]["DensityMatrix"]] - u . deRho0 . ConjugateTranspose[u]]
+        }, Element[{deTheta, deG, deA}, Reals]]
+    ],
+    {ConstantArray[0, {4, 2, 2}], 0, {0, 0}, ConstantArray[0, {4, 4}]},
+    TestID -> "DiagonalExp-exponential-acting-on-states"
+]
+
+(* An operator on qubit 2 of a two-qubit state acts there as 1 (x) e^M: a mixed state
+   becomes (1 (x) e^M) rho (1 (x) e^M)^dagger and a pure state (1 (x) e^M) psi, for
+   M = -i theta X and for the diagonal M = -i theta Z. Dephasing qubit 1 of a Bell
+   pair, a superoperator on part of the register, leaves the coherence e^(-2 gamma t)/2
+   between 00 and 11, from the mixed and from the pure Bell state. *)
+VerificationTest[
+    {
+        Map[
+            With[{m = -I deTheta QuantumOperator[#, {2}], u = KroneckerProduct[IdentityMatrix[2], MatrixExp[-I deTheta Normal[QuantumOperator[#]["Matrix"]]]]},
+                FullSimplify[{
+                    Normal[MatrixExp[m, deRho0State]["DensityMatrix"]] - u . deRho0 . ConjugateTranspose[u],
+                    Normal[MatrixExp[m, QuantumState[Array[deV, 4], QuantumBasis[{2, 2}]]]["StateVector"]] - u . Array[deV, 4]
+                }, Element[deTheta, Reals]]
+            ] &,
+            {"X", "Z"}
+        ],
+        With[{
+            dephaseOne = deT QuantumOperator["Liouvillian"[None, {QuantumOperator["Z", {1}]}, {deGam}]],
+            expected = {{1/2, 0, 0, Exp[-2 deGam deT] / 2}, {0, 0, 0, 0}, {0, 0, 0, 0}, {Exp[-2 deGam deT] / 2, 0, 0, 1/2}}
+        },
+            Simplify[Normal[MatrixExp[dephaseOne, #]["DensityMatrix"]] - expected] & /@
+                {QuantumState[QuantumState["PhiPlus"]["DensityMatrix"], QuantumBasis[{2, 2}]], QuantumState["PhiPlus"]}
+        ]
+    },
+    {ConstantArray[{ConstantArray[0, {4, 4}], ConstantArray[0, 4]}, 2], ConstantArray[0, {2, 4, 4}]},
+    TestID -> "DiagonalExp-exponential-on-part-of-the-register"
+]
+
+(* An operator on a qudit the state lacks extends the state, as Exp[qo][qs] does: X on
+   qubit 3 of |0> gives cos(theta) |000> - i sin(theta) |001>. A qubit operator on a
+   qutrit fails, as Exp[qo][qs] does. *)
+VerificationTest[
+    {
+        FullSimplify[Normal[MatrixExp[-I deTheta QuantumOperator["X", {3}], QuantumState["0"]]["StateVector"]] - (Cos[deTheta] UnitVector[8, 1] - I Sin[deTheta] UnitVector[8, 2]), Element[deTheta, Reals]],
+        MatrixExp[-I deTheta QuantumOperator["Z"], QuantumState["0", 3]]
+    },
+    {ConstantArray[0, 8], $Failed},
+    {QuantumCircuitOperator::dim},
+    TestID -> "DiagonalExp-exponential-beyond-the-register"
+]
+
 (* e^(-i g ZZ) entangles |++>: the concurrence of the result is |sin 2g|. *)
 VerificationTest[
     FullSimplify[QuantumEntanglementMonotone[Exp[-I deG QuantumOperator["ZZ"]][QuantumState["++"]], {1}, "Concurrence"] - Abs[Sin[2 deG]], Element[deG, Reals]],

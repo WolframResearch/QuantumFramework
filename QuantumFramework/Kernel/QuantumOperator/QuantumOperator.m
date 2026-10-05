@@ -769,21 +769,29 @@ parametricMatrixMapOperator[g_, qo_, op_, label_] := Enclose @ With[{
     ]
 ]
 
+(* The exponential e^M of the operator acting on the state, as Exp[qo][qs] gives: a
+   pure state is multiplied by e^M, a mixed state rho becomes e^M rho e^(M^dagger),
+   and a superoperator acts on the density vector. An operator on any other qudits
+   than exactly the state's, with their dimensions, goes through Exp[qo][qs], which
+   extends the operator by the identity on qudits it does not act on, extends the
+   state to qudits it lacks, and fails on a dimension mismatch. *)
+QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] /; ! wholeRegisterQ[qo, qs] := Exp[qo][qs]
+
 QuantumOperator /: MatrixExp[qo_QuantumOperator, qs_QuantumState] := Enclose @ With[{op = qo["Sort"]},
     QuantumState[
-        If[ op["VectorQ"] && qs["VectorQ"],
-            MatrixExp[op["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["StateVector"]],
-            ArrayReshape[
-                MatrixExp[op["ToMatrix"]["Matrix"], QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]["DensityVector"]],
-                {#, #} & @ op["OutputDimension"]
-            ]
-        ],
+        ConfirmBy[exponentialAction[op, QuantumState[qs, QuantumBasis[op["Input"], qs["Input"]]]], ArrayQ],
         QuantumBasis[
             op["Output"],
             "Label" -> If[op["Label"] === None || qs["Label"] === None, None, Exp[op["Label"]][qs["Label"]]]
         ]
     ]
 ]
+
+wholeRegisterQ[qo_, qs_] := Sort[Transpose[{qo["InputOrder"], qo["InputDimensions"]}]] === Transpose[{Range[qs["OutputQudits"]], qs["OutputDimensions"]}]
+
+exponentialAction[op_ ? (#["VectorQ"] &), qs_ ? (#["VectorQ"] &)] := matrixExponential[op["Matrix"], qs["StateVector"]]
+exponentialAction[op_ ? (#["VectorQ"] &), qs_] := With[{u = matrixExponential[op["Matrix"]]}, u . qs["DensityMatrix"] . ConjugateTranspose[u]]
+exponentialAction[op_, qs_] := ArrayReshape[matrixExponential[op["ToMatrix"]["Matrix"], qs["DensityVector"]], {#, #} & @ op["OutputDimension"]]
 
 
 (* operators padded with identities to the qudits any of them acts on, each qudit in the
