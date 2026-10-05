@@ -542,7 +542,7 @@ QuantumCircuitOperator[{
             Splice @ Table[QuantumOperator["Controlled"[qo ^ 2 ^ (n - i), {i + m}]], {i, n}]
         ]
     ],
-    QuantumCircuitOperator["InverseFourier"[n]],
+    QuantumCircuitOperator["InverseFourier"[n, m]],
     Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
 },
     opts,
@@ -555,10 +555,10 @@ QuantumCircuitOperator["PhaseEstimation"[op_ ? QuantumCircuitOperatorQ /; op["In
 QuantumCircuitOperator[{
     Splice @ Table[QuantumOperator["X", {n + i + m}], {i, op["InputQudits"]}],
     Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
-    With[{qo = op["Shift", m]},
+    With[{qo = op["Shift", n + m]},
         Splice @ Catenate @ Table[Table[QuantumCircuitOperator["Controlled"[qo, {i + m}]], 2 ^ (n - i)], {i, n}]
     ],
-    QuantumCircuitOperator["InverseFourier"[n]],
+    QuantumCircuitOperator["InverseFourier"[n, m]],
     Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
 },
     opts,

@@ -883,3 +883,22 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumCircuitOperator - phase estimation"]
+
+(* T has the eigenvalue e^(2 pi i / 8) on |1>, which the circuit prepares, so three
+   counting qubits read 1/8 = 0.001 in binary with certainty. The counting register sits
+   on qubits m + 1 to m + 3 and the unitary after it, wherever the register starts and
+   whether the unitary is an operator or a circuit. *)
+VerificationTest[
+    Table[
+        Simplify[QuantumCircuitOperator["PhaseEstimation"[u, 3, m]][]["ProbabilitiesList"]] === UnitVector[8, 2],
+        {u, {QuantumOperator["T"], QuantumCircuitOperator[{QuantumOperator["T"]}]}},
+        {m, {0, 1, 2}}
+    ],
+    {{True, True, True}, {True, True, True}},
+    TestID -> "PhaseEstimation-reads-the-phase-at-any-offset"
+]
+
+EndTestSection[]
