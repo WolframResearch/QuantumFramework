@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[x, InputForm]]);
 d = 4; aZZ = 0.4; aX = 0.6;
 quench[m_] := QuantumCircuitOperator @ Join[{StringJoin @ ConstantArray["0", m]},
    Flatten @ Table[Join[("R"[aZZ, "ZZ"] -> # &) /@ Partition[Range[m], 2, 1], ("RX"[aX] -> # &) /@ Range[m]], {d}]];

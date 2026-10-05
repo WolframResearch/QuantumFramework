@@ -1,7 +1,7 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]];
 Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
 b[e_, t_:300] := TimeConstrained[MemoryConstrained[e, 6*^9, "OOM"], t, "TIMEOUT"];
-P[l_, x_] := Print["@@ ", StringPadRight[l, 50], " ", ToString[Short[x, 2], InputForm]];
+P[l_, x_] := Print["@@ ", StringPadRight[l, 50], " ", ToString[x, InputForm]];
 N0 = 12;
 a2 = AnnihilationOperator[N0, {2}]; sm = QuantumOperator[{{0, 1}, {0, 0}}, {1}];
 H = 2 Pi 0.25 ((sm["Dagger"] @ a2) + (sm @ a2["Dagger"]));

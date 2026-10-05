@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[x, InputForm]]);
 Do[P["QuantumOperator[IdentityMatrix[" <> ToString[k] <> "], {2}] dims", QuantumOperator[IdentityMatrix[k], {2}]["Dimensions"]], {k, {5, 6, 8, 9}}];
 P["with explicit dimension 9", QuantumOperator[IdentityMatrix[9], {2}, 9]["Dimensions"]];
 P["AnnihilationOperator[9, {2}] dims (for comparison)", AnnihilationOperator[9, {2}]["Dimensions"]];

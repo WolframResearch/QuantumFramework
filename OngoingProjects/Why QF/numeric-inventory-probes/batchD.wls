@@ -1,7 +1,7 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]];
 Needs["Wolfram`QuantumFramework`"];
 b[e_, t_:240] := TimeConstrained[MemoryConstrained[e, 6*^9, "OOM"], t, "TIMEOUT"];
-P[l_, x_] := Print["@@ ", StringPadRight[l, 50], " ", ToString[Short[x, 2], InputForm]];
+P[l_, x_] := Print["@@ ", StringPadRight[l, 50], " ", ToString[x, InputForm]];
 tm[e_, t_:240] := Module[{r = AbsoluteTiming[b[e, t]]}, If[StringQ[r[[2]]] , r[[2]], {Round[r[[1]], 0.001], r[[2]]}]];
 SetAttributes[tm, HoldFirst];
 

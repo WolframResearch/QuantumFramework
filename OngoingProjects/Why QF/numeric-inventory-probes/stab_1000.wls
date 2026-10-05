@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[x, InputForm]]);
 SeedRandom[1]; n = 1000;
 gates = Flatten @ Table[{"H" -> RandomInteger[{1, n}], "CNOT" -> RandomSample[Range[n], 2], "S" -> RandomInteger[{1, n}]}, {6666}];
 {tg, st} = AbsoluteTiming[PauliStabilizer[n]["ApplyCircuit", gates]];

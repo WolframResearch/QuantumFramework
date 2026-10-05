@@ -22,7 +22,7 @@ Module[{N = 12, a, ad, sm, H, rho, tm2},
   H = 2 Pi 0.25 ((sm["Dagger"] @ a) + (sm @ ad));
   {tm2, rho} = AbsoluteTiming[b[QuantumEvolve[H, {a} -> {0.05}, QuantumTensorProduct[QuantumState["1"], FockState[0, N]], {\[FormalT], 0, 20}]]];
   P["damped JC qubit x cavity(12) Lindblad (s)", Round[tm2, 0.01]];
-  P["  Head / dims", If[MatchQ[rho, _QuantumState], rho["Dimensions"], Short[rho, 1]]];
+  P["  Head / dims", If[MatchQ[rho, _QuantumState], rho["Dimensions"], Head[rho]]];
   If[MatchQ[rho, _QuantumState],
     P["  P(excited) at t = 0, 1, 2, 4", Table[Chop@Re@Total[Normal[(rho /. \[FormalT] -> t)["DensityMatrix"]][[N + 1 ;; 2 N, N + 1 ;; 2 N]] // Diagonal], {t, {0, 1, 2, 4}}]]]];
 Print[];

@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[x, InputForm]]);
 param = CatState[40];
 P["CatState[40] parameters", Quiet @ Check[param["Parameters"], "?"]];
 cat = Quiet @ Check[param[2., 0.], (param /. {\[FormalAlpha] -> 2., \[FormalPhi] -> 0.})];

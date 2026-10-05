@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 58], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 58], " ", ToString[x, InputForm]]);
 kerrH[n_] := Module[{a = AnnihilationOperator[n], ad}, ad = a["Dagger"];
    {-0.5 (ad @ a) + 0.25 (ad @ ad @ a @ a) + 1.0 (a + ad), a}];
 n = 40; {H, L} = kerrH[n]; psi0 = FockState[0, n];

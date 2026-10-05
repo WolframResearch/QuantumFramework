@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"]; Needs["Wolfram`QuantumFramework`SecondQuantization`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 52], " ", ToString[x, InputForm]]);
 cat = Quiet @ Check[CatState[2, 40], CatState[2]];
 P["CatState[2, 40] head / dimension", {Head[cat], Quiet @ Check[cat["Dimension"], "?"]}];
 {t1, w0} = AbsoluteTiming[WignerFunction[cat, 0.]];

@@ -1,172 +1,172 @@
 ### pulse.wls  03:46:25
-@@ w=1. square (Piecewise) pulse: P1                    Short[0.9999999916978553, 2]
-@@ w=1. smooth Gaussian pulse:   P1                     Short[0, 2]
-@@ w=0.1 square (Piecewise) pulse: P1                   Short[0.999999991697857, 2]
-@@ w=0.1 smooth Gaussian pulse:   P1                    Short[0, 2]
-@@ w=0.01 square (Piecewise) pulse: P1                  Short[0, 2]
-@@ w=0.01 smooth Gaussian pulse:   P1                   Short[0, 2]
+@@ w=1. square (Piecewise) pulse: P1                    0.9999999916978553
+@@ w=1. smooth Gaussian pulse:   P1                     0
+@@ w=0.1 square (Piecewise) pulse: P1                   0.999999991697857
+@@ w=0.1 smooth Gaussian pulse:   P1                    0
+@@ w=0.01 square (Piecewise) pulse: P1                  0
+@@ w=0.01 smooth Gaussian pulse:   P1                   0
 ### exit 0 for pulse.wls  03:46:30
 ### noon.wls  03:46:30
-@@ lossy NOON n=2 eta=0.9 {QFI, n^2 eta^n}              Short[{3.240000212054323, 3.24}, 2]
-@@   seconds                                            Short[0.166237, 2]
-@@ lossy NOON n=4 eta=0.9 {QFI, n^2 eta^n}              Short[{10.497601418216522, 10.497600000000002}, 2]
-@@   seconds                                            Short[0.141711, 2]
-@@ lossy NOON n=6 eta=0.9 {QFI, n^2 eta^n}              Short[{19.13187920224539, 19.131876000000005}, 2]
-@@   seconds                                            Short[0.471427, 2]
+@@ lossy NOON n=2 eta=0.9 {QFI, n^2 eta^n}              {3.240000212054323, 3.24}
+@@   seconds                                            0.166237
+@@ lossy NOON n=4 eta=0.9 {QFI, n^2 eta^n}              {10.497601418216522, 10.497600000000002}
+@@   seconds                                            0.141711
+@@ lossy NOON n=6 eta=0.9 {QFI, n^2 eta^n}              {19.13187920224539, 19.131876000000005}
+@@   seconds                                            0.471427
 ### exit 139 for noon.wls  03:46:36
 ### wigner.wls  03:46:36
-@@ CatState[2, 40] head / dimension                     Short[{CatState, CatState[2, 40]["Dimension"]}, 2]
-@@ W(0) of the cat (negative = nonclassical)            Short[WignerFunction[CatState[2, 40], 0.], 2]
-@@   seconds                                            Short[1.*^-6, 2]
-@@ 21x21 Wigner grid at Fock 40 (s)                     Short[0.00024, 2]
-@@   minimum value on the grid                          Short[Min[Re[WignerFunction[CatState[2, 40], -3. - 1.1102230246251565*^-16*I]], Re[WignerFunction[CatState[2, 40], -3. + 0.2999999999999999*I]], Re[WignerFunction[CatState[2, 40], -3. - 0.3000000000000001*I]], Re[WignerFunction[CatState[2, 40],
+@@ CatState[2, 40] head / dimension                     {CatState, CatState[2, 40]["Dimension"]}
+@@ W(0) of the cat (negative = nonclassical)            WignerFunction[CatState[2, 40], 0.]
+@@   seconds                                            1.*^-6
+@@ 21x21 Wigner grid at Fock 40 (s)                     0.00024
+@@   minimum value on the grid                          Min[Re[WignerFunction[CatState[2, 40], -3. - 1.1102230246251565*^-16*I]], Re[WignerFunction[CatState[2, 40], -3. + 0.2999999999999999*I]], Re[WignerFunction[CatState[2, 40], -3. - 0.3000000000000001*I]], Re[WignerFunction[CatState[2, 40],
 ### exit 0 for wigner.wls  03:46:39
 ### kerr.wls  03:46:39
-@@ Kerr Lindblad N=30 evolve (s)                        Short[0.423702, 2]
-@@ Kerr Lindblad N=35 evolve (s)                        Short[9.29959, 2]
-@@ Kerr Lindblad N=40 evolve (s)                        Short[11.182502, 2]
-@@ Kerr Lindblad N=45 evolve (s)                        Short[12.421249, 2]
-@@ Kerr Lindblad N=50 evolve (s)                        Short[16.943278, 2]
-@@ N=40 building the equations only (s)                 Short[0.013467, 2]
-@@   RHS leaf count (size of the ODE system expression) Short[43, 2]
-@@   NDSolveValue on those equations directly (s)       Short[0.023512, 2]
+@@ Kerr Lindblad N=30 evolve (s)                        0.423702
+@@ Kerr Lindblad N=35 evolve (s)                        9.29959
+@@ Kerr Lindblad N=40 evolve (s)                        11.182502
+@@ Kerr Lindblad N=45 evolve (s)                        12.421249
+@@ Kerr Lindblad N=50 evolve (s)                        16.943278
+@@ N=40 building the equations only (s)                 0.013467
+@@   RHS leaf count (size of the ODE system expression) 43
+@@   NDSolveValue on those equations directly (s)       0.023512
 ### exit 0 for kerr.wls  03:47:35
 ### estim_vqe.wls  03:47:35
-@@ 9 two-qubit Pauli settings build                     Short[{QuantumMeasurementOperator, QuantumMeasurementOperator}, 2]
-@@ simulate 9 x 1000 shots (s)                          Short[0.51, 2]
-@@   QuantumStateEstimate (s), head                     Short[{0.11, QuantumStateEstimation}, 2]
-@@   properties                                         Short[{"Invertible", "PhysicalInversion", "InversionState", "MaximumLikelihoodState", "MaximumLikelihoodAcceptanceRatio", "MaximumLikelihoodConvergence", "MaximumLikelihoodConvergenceStepSize", "BayesianAcceptanceRatio", "BayesianSampler", "Tot
-@@   fidelity of MLE to target                          Short[0.00021053068339083048, 2]
-@@ simulate 9 x 10000 shots (s)                         Short[0., 2]
-@@   QuantumStateEstimate (s), head                     Short[{0.1, QuantumStateEstimation}, 2]
-@@   properties                                         Short[{"Invertible", "PhysicalInversion", "InversionState", "MaximumLikelihoodState", "MaximumLikelihoodAcceptanceRatio", "MaximumLikelihoodConvergence", "MaximumLikelihoodConvergenceStepSize", "BayesianAcceptanceRatio", "BayesianSampler", "Tot
-@@   fidelity of MLE to target                          Short["?", 2]
-@@ exact ground energy (6 sites, open chain)            Short[-7.296229810558768, 2]
-@@ one energy evaluation (s)                            Short[0.47300000000000003, 2]
-@@ FindMinimum VQE (s), energy                          Short[{0., FindMinimum[energy[pars], Transpose[{pars, RandomReal[{-0.3, 0.3}, 2*n]}]]}, 2]
-@@   relative error vs exact                            Short["n/a", 2]
-@@ FubiniStudyMetricTensor 12 parameters (s), dims      Short[{0.08, {3}}, 2]
+@@ 9 two-qubit Pauli settings build                     {QuantumMeasurementOperator, QuantumMeasurementOperator}
+@@ simulate 9 x 1000 shots (s)                          0.51
+@@   QuantumStateEstimate (s), head                     {0.11, QuantumStateEstimation}
+@@   properties                                         {"Invertible", "PhysicalInversion", "InversionState", "MaximumLikelihoodState", "MaximumLikelihoodAcceptanceRatio", "MaximumLikelihoodConvergence", "MaximumLikelihoodConvergenceStepSize", "BayesianAcceptanceRatio", "BayesianSampler", "Tot
+@@   fidelity of MLE to target                          0.00021053068339083048
+@@ simulate 9 x 10000 shots (s)                         0.
+@@   QuantumStateEstimate (s), head                     {0.1, QuantumStateEstimation}
+@@   properties                                         {"Invertible", "PhysicalInversion", "InversionState", "MaximumLikelihoodState", "MaximumLikelihoodAcceptanceRatio", "MaximumLikelihoodConvergence", "MaximumLikelihoodConvergenceStepSize", "BayesianAcceptanceRatio", "BayesianSampler", "Tot
+@@   fidelity of MLE to target                          "?"
+@@ exact ground energy (6 sites, open chain)            -7.296229810558768
+@@ one energy evaluation (s)                            0.47300000000000003
+@@ FindMinimum VQE (s), energy                          {0., FindMinimum[energy[pars], Transpose[{pars, RandomReal[{-0.3, 0.3}, 2*n]}]]}
+@@   relative error vs exact                            "n/a"
+@@ FubiniStudyMetricTensor 12 parameters (s), dims      {0.08, {3}}
 ### exit 0 for estim_vqe.wls  03:47:42
 ### dense.wls  03:47:42
-@@ dense Schrodinger quench n=12 (s)                    Short[13.939966, 2]
-@@   <Z_center> from the state vector                   Short[-0.17115575583420375, 2]
-@@ dense Schrodinger quench n=16 (s)                    Short[72.919931, 2]
-@@   <Z_center> from the state vector                   Short[-0.1711557558342042, 2]
-@@ dense Schrodinger quench n=20 (s)                    Short[1655.639457, 2]
-@@   <Z_center> from the state vector                   Short[-0.17115575583419726, 2]
+@@ dense Schrodinger quench n=12 (s)                    13.939966
+@@   <Z_center> from the state vector                   -0.17115575583420375
+@@ dense Schrodinger quench n=16 (s)                    72.919931
+@@   <Z_center> from the state vector                   -0.1711557558342042
+@@ dense Schrodinger quench n=20 (s)                    1655.639457
+@@   <Z_center> from the state vector                   -0.17115575583419726
 ### exit 124 for dense.wls  05:14:30
 ### stab_1000.wls  05:14:30
-@@ stabilizer n=1000, 19998 gates: ApplyCircuit (s)     Short[1.316157, 2]
-@@   per-gate cost (microseconds)                       Short[65.81443144314431, 2]
-@@   half-chain entropy (s), value                      Short[{0.785319, 496}, 2]
+@@ stabilizer n=1000, 19998 gates: ApplyCircuit (s)     1.316157
+@@   per-gate cost (microseconds)                       65.81443144314431
+@@   half-chain entropy (s), value                      {0.785319, 496}
 ### exit 0 for stab_1000.wls  05:14:35
 ### stab_3000.wls  05:14:35
-@@ stabilizer n=3000, 19998 gates: ApplyCircuit (s)     Short[0.84515, 2]
-@@   per-gate cost (microseconds)                       Short[42.26172617261726, 2]
-@@   half-chain entropy (s), value                      Short[{4.225843, 833}, 2]
+@@ stabilizer n=3000, 19998 gates: ApplyCircuit (s)     0.84515
+@@   per-gate cost (microseconds)                       42.26172617261726
+@@   half-chain entropy (s), value                      {4.225843, 833}
 ### exit 0 for stab_3000.wls  05:14:44
 ### stab_10000.wls  05:14:44
-@@ stabilizer n=10000, 19998 gates: ApplyCircuit (s)    Short[5.187431, 2]
-@@   per-gate cost (microseconds)                       Short[259.3974897489749, 2]
-@@   half-chain entropy (s), value                      Short[{45.101606, 588}, 2]
+@@ stabilizer n=10000, 19998 gates: ApplyCircuit (s)    5.187431
+@@   per-gate cost (microseconds)                       259.3974897489749
+@@   half-chain entropy (s), value                      {45.101606, 588}
 ### exit 0 for stab_10000.wls  05:15:38
 ### kerr_diag.wls  05:16:33
-@@ 1 NDSolveValue, plain                                      Short[0.027636, 2]
-@@ 2 + StepMonitor :> (time = t)                              Short[0.000373, 2]
-@@ 3 + Progress`EvaluateWithProgress around 2                 Short[0.000596, 2]
-@@ 4 QuantumEvolve, ReturnSolution -> True (no state built)   Short[7.914226, 2]
-@@ 5 QuantumEvolve, full                                      Short[7.880811, 2]
-@@ 6 QuantumEvolve, MergeInterpolatingFunctions -> False      Short[3.059255, 2]
-@@ N=30: 3-style progress-wrapped solve                       Short[0.000469, 2]
+@@ 1 NDSolveValue, plain                                      0.027636
+@@ 2 + StepMonitor :> (time = t)                              0.000373
+@@ 3 + Progress`EvaluateWithProgress around 2                 0.000596
+@@ 4 QuantumEvolve, ReturnSolution -> True (no state built)   7.914226
+@@ 5 QuantumEvolve, full                                      7.880811
+@@ 6 QuantumEvolve, MergeInterpolatingFunctions -> False      3.059255
+@@ N=30: 3-style progress-wrapped solve                       0.000469
 ### exit 0 for kerr_diag.wls  05:16:56
 ### noon8.wls  05:16:56
 ### exit 139 for noon8.wls  05:17:02
 ### wigner2.wls  05:17:02
-@@ CatState[40] parameters                              Short[{, }, 2]
-@@ even cat alpha=2 at Fock 40: head, norm              Short[{QuantumState, 1.0000000000000002}, 2]
-@@ W(0) (even cat: +2/Pi = 0.6366 expected)             Short[0.6366197723675814 + 0.*I, 2]
-@@   seconds                                            Short[0.007323, 2]
-@@ 21x21 Wigner grid at Fock 40 (s)                     Short[3.349813, 2]
-@@   minimum on the grid (fringes: negative)            Short[-0.39179894703146545, 2]
-@@ odd cat W(0) (expect -2/Pi = -0.6366)                Short[-0.6366197723675814 + 3.569319423234935*^-34*I, 2]
+@@ CatState[40] parameters                              {, }
+@@ even cat alpha=2 at Fock 40: head, norm              {QuantumState, 1.0000000000000002}
+@@ W(0) (even cat: +2/Pi = 0.6366 expected)             0.6366197723675814 + 0.*I
+@@   seconds                                            0.007323
+@@ 21x21 Wigner grid at Fock 40 (s)                     3.349813
+@@   minimum on the grid (fringes: negative)            -0.39179894703146545
+@@ odd cat W(0) (expect -2/Pi = -0.6366)                -0.6366197723675814 + 3.569319423234935*^-34*I
 ### exit 0 for wigner2.wls  05:17:08
 ### vqe2.wls  05:17:08
-@@ exact ground energy                                      Short[-7.296229810558768, 2]
-@@ energy: default engine (s), value                        Short[{0.245301, Re[Conjugate[(Cos[[9]/2]*Sin[[4]/2]*(Cos[[3]/2]*Cos[[8]/2]*(Cos[[2]/2]*Cos[[7]/2]*Sin[[1]/2] + Cos[[1]/2]*Sin[[2]/2]*Sin[[7]/2]) + Sin[[3]/2]*(Cos[[7]/2]*Sin[[1]/2]*Sin[[2]/2] + Cos[[1]/2]*Cos[[2]/2]*Sin[[7
+@@ exact ground energy                                      -7.296229810558768
+@@ energy: default engine (s), value                        {0.245301, Re[Conjugate[(Cos[[9]/2]*Sin[[4]/2]*(Cos[[3]/2]*Cos[[8]/2]*(Cos[[2]/2]*Cos[[7]/2]*Sin[[1]/2] + Cos[[1]/2]*Sin[[2]/2]*Sin[[7]/2]) + Sin[[3]/2]*(Cos[[7]/2]*Sin[[1]/2]*Sin[[2]/2] + Cos[[1]/2]*Cos[[2]/2]*Sin[[7
 ### exit 137 for vqe2.wls  05:24:23
 ### quest.wls  05:24:23
 @@ QuEST backend available?                      False
 ### exit 0 for quest.wls  05:24:27
 ### kerr_diag2.wls  05:25:09
-@@ N=30 sparse arrays in the equations / their element kinds    Short[{7, {Complex, Integer, Real}}, 2]
-@@ N=30 A: NDSolveValue on sparse equations (s, head)           Short[{0.025102, NDSolveValue}, 2]
-@@ N=30   dense arrays packed?                                  Short[{False, False, False}, 2]
-@@ N=30 B: NDSolveValue after the Normal[] QuantumEvolve applie Short[{0.354628, InterpolatingFunction}, 2]
-@@ N=30 C: same, arrays forced packed                           Short[{0.355213, InterpolatingFunction}, 2]
-@@ N=35 sparse arrays in the equations / their element kinds    Short[{7, {Complex, Integer, Real}}, 2]
-@@ N=35 A: NDSolveValue on sparse equations (s, head)           Short[{0.000364, NDSolveValue}, 2]
-@@ N=35   dense arrays packed?                                  Short[{False, False, False}, 2]
-@@ N=35 B: NDSolveValue after the Normal[] QuantumEvolve applie Short[{5.022563, InterpolatingFunction}, 2]
-@@ N=35 C: same, arrays forced packed                           Short[{4.938046, InterpolatingFunction}, 2]
-@@ N=40 sparse arrays in the equations / their element kinds    Short[{7, {Complex, Integer, Real}}, 2]
-@@ N=40 A: NDSolveValue on sparse equations (s, head)           Short[{0.000422, NDSolveValue}, 2]
-@@ N=40   dense arrays packed?                                  Short[{False, False, False}, 2]
-@@ N=40 B: NDSolveValue after the Normal[] QuantumEvolve applie Short[{6.506154, InterpolatingFunction}, 2]
-@@ N=40 C: same, arrays forced packed                           Short[{6.717822, InterpolatingFunction}, 2]
+@@ N=30 sparse arrays in the equations / their element kinds    {7, {Complex, Integer, Real}}
+@@ N=30 A: NDSolveValue on sparse equations (s, head)           {0.025102, NDSolveValue}
+@@ N=30   dense arrays packed?                                  {False, False, False}
+@@ N=30 B: NDSolveValue after the Normal[] QuantumEvolve applie {0.354628, InterpolatingFunction}
+@@ N=30 C: same, arrays forced packed                           {0.355213, InterpolatingFunction}
+@@ N=35 sparse arrays in the equations / their element kinds    {7, {Complex, Integer, Real}}
+@@ N=35 A: NDSolveValue on sparse equations (s, head)           {0.000364, NDSolveValue}
+@@ N=35   dense arrays packed?                                  {False, False, False}
+@@ N=35 B: NDSolveValue after the Normal[] QuantumEvolve applie {5.022563, InterpolatingFunction}
+@@ N=35 C: same, arrays forced packed                           {4.938046, InterpolatingFunction}
+@@ N=40 sparse arrays in the equations / their element kinds    {7, {Complex, Integer, Real}}
+@@ N=40 A: NDSolveValue on sparse equations (s, head)           {0.000422, NDSolveValue}
+@@ N=40   dense arrays packed?                                  {False, False, False}
+@@ N=40 B: NDSolveValue after the Normal[] QuantumEvolve applie {6.506154, InterpolatingFunction}
+@@ N=40 C: same, arrays forced packed                           {6.717822, InterpolatingFunction}
 ### exit 0 for kerr_diag2.wls  05:25:37
 ### noon_isolate.wls  05:25:37
-@@ 1 two-mode jump operators built, dims                Short[{9, 3, 9, 3, 3, 3}, 2]
-@@ 2 NOON state built, dimension                        Short[81, 2]
-@@ 3 zero Hamiltonian built                             Short[{9, 3, 3, 3, 9, 3, 3, 3}, 2]
-@@ 4 equations built, leaf count                        Short[1, 2]
-@@ 5 NDSolveValue on returned equations, head           Short[NDSolveValue, 2]
-@@ 6 QuantumEvolve full, head                           Short[Failure, 2]
-@@ 7 density matrix extracted, trace                    Short[Tr[Missing["NotAvailable", "DensityMatrix"]], 2]
+@@ 1 two-mode jump operators built, dims                {9, 3, 9, 3, 3, 3}
+@@ 2 NOON state built, dimension                        81
+@@ 3 zero Hamiltonian built                             {9, 3, 3, 3, 9, 3, 3, 3}
+@@ 4 equations built, leaf count                        1
+@@ 5 NDSolveValue on returned equations, head           NDSolveValue
+@@ 6 QuantumEvolve full, head                           Failure
+@@ 7 density matrix extracted, trace                    Tr[Missing["NotAvailable", "DensityMatrix"]]
 ### exit 0 for noon_isolate.wls  05:25:41
 ### vqe3.wls  05:25:41
-@@ exact ground energy                                      Short[-7.296229810558768, 2]
-@@ declared parameters                                      Short[12, 2]
-@@ one bound energy evaluation (s), value                   Short[{0.352784, -5.650778731227135}, 2]
-@@   value is a number?                                     Short[True, 2]
-@@ one bound energy evaluation, Schrodinger engine (s)      Short[2.45398, 2]
-@@ FindMinimum VQE (s), energy                              Short[{262.682113, -7.234201646757123}, 2]
-@@   relative error vs exact                                Short[0.008501399409305966, 2]
+@@ exact ground energy                                      -7.296229810558768
+@@ declared parameters                                      12
+@@ one bound energy evaluation (s), value                   {0.352784, -5.650778731227135}
+@@   value is a number?                                     True
+@@ one bound energy evaluation, Schrodinger engine (s)      2.45398
+@@ FindMinimum VQE (s), energy                              {262.682113, -7.234201646757123}
+@@   relative error vs exact                                0.008501399409305966
 ### exit 0 for vqe3.wls  05:30:11
 ### noon_fix.wls  05:30:12
-@@ QuantumOperator[IdentityMatrix[5], {2}] dims             Short[{5, 5}, 2]
-@@ QuantumOperator[IdentityMatrix[6], {2}] dims             Short[{2, 3, 2, 3}, 2]
-@@ QuantumOperator[IdentityMatrix[8], {2}] dims             Short[{2, 2, 2, 2, 2, 2}, 2]
-@@ QuantumOperator[IdentityMatrix[9], {2}] dims             Short[{3, 3, 3, 3}, 2]
-@@ with explicit dimension 9                                Short[{9, 9}, 2]
-@@ AnnihilationOperator[9, {2}] dims (for comparison)       Short[{9, 9}, 2]
-@@ explicit-dims lossy NOON n=8 {QFI, n^2 eta^n}            Short[{27.549907865053438, 27.54990144000001}, 2]
-@@   seconds                                                Short[0.244238, 2]
-@@ explicit-dims lossy NOON n=10 {QFI, n^2 eta^n}           Short[{34.867856561567365, 34.86784401000002}, 2]
-@@   seconds                                                Short[0.355357, 2]
+@@ QuantumOperator[IdentityMatrix[5], {2}] dims             {5, 5}
+@@ QuantumOperator[IdentityMatrix[6], {2}] dims             {2, 3, 2, 3}
+@@ QuantumOperator[IdentityMatrix[8], {2}] dims             {2, 2, 2, 2, 2, 2}
+@@ QuantumOperator[IdentityMatrix[9], {2}] dims             {3, 3, 3, 3}
+@@ with explicit dimension 9                                {9, 9}
+@@ AnnihilationOperator[9, {2}] dims (for comparison)       {9, 9}
+@@ explicit-dims lossy NOON n=8 {QFI, n^2 eta^n}            {27.549907865053438, 27.54990144000001}
+@@   seconds                                                0.244238
+@@ explicit-dims lossy NOON n=10 {QFI, n^2 eta^n}           {34.867856561567365, 34.86784401000002}
+@@   seconds                                                0.355357
 ### exit 0 for noon_fix.wls  05:30:17
 ### structured.wls  02:06:17
-@@ named operators by structure                                 Short[<|"identity" -> 15, "diagonal" -> 23, "Fourier" -> 5, "other" -> 26, "error" -> 5, "permutation" -> 18, "phase permutation" -> 6, "non-square" -> 10|>, 2]
-@@ named circuits by structure                                  Short[<|"non-square" -> 14, "other" -> 15, "permutation" -> 4, "diagonal" -> 3, "identity" -> 4, "phase permutation" -> 2, "Fourier" -> 1, "inverse Fourier" -> 1|>, 2]
-@@ Diagonal[h], 10 qubits: Eigenvalues s                        Short[0.3159, 2]
-@@   equal to the diagonal                                      Short[0., 2]
-@@   the diagonal itself s                                      Short[0.0001, 2]
-@@ "Z"[128]: Eigenvalues s                                      Short[2.3776, 2]
-@@ "X"[64]: Eigenvalues s                                       Short[2.0261, 2]
-@@ "X"[64] @ "Z"[64]: Eigenvalues s                             Short[1.6242, 2]
-@@ QFT operator, 4 qubits: Eigenvalues s                        Short[8.6286, 2]
-@@ Fourier[8] change of basis s                                 Short[0.5163, 2]
-@@   ConjugateTranspose of the basis matrix s                   Short[0.00030000000000000003, 2]
-@@ Fourier[16] change of basis s                                Short["timeout", 2]
-@@   ConjugateTranspose of the basis matrix s                   Short[0.0005, 2]
-@@ Fourier[14] circuit on a state s                             Short[4.1189, 2]
-@@   Fourier[v] s                                               Short[0.0005, 2]
-@@   agreement                                                  Short[1.4602525357963067*^-15, 2]
-@@ PhaseOracle, random function of 10 variables: build s        Short[3.0386, 2]
-@@   gates                                                      Short[226, 2]
-@@   apply to the uniform state s                               Short[11.5638, 2]
-@@   sign vector of the truth table s                           Short[0.0005, 2]
-@@   agreement                                                  Short[0., 2]
-@@ Diagonal[h], 6 qubits: Eigensystem s                         Short[0.0095, 2]
-@@   measurement of it applied to a state s                     Short[18.3031, 2]
-@@   computational measurement, 64 outcomes s                   Short[0.2725, 2]
+@@ named operators by structure                                 <|"identity" -> 15, "diagonal" -> 23, "Fourier" -> 5, "other" -> 26, "error" -> 5, "permutation" -> 18, "phase permutation" -> 6, "non-square" -> 10|>
+@@ named circuits by structure                                  <|"non-square" -> 14, "other" -> 15, "permutation" -> 4, "diagonal" -> 3, "identity" -> 4, "phase permutation" -> 2, "Fourier" -> 1, "inverse Fourier" -> 1|>
+@@ Diagonal[h], 10 qubits: Eigenvalues s                        0.3159
+@@   equal to the diagonal                                      0.
+@@   the diagonal itself s                                      0.0001
+@@ "Z"[128]: Eigenvalues s                                      2.3776
+@@ "X"[64]: Eigenvalues s                                       2.0261
+@@ "X"[64] @ "Z"[64]: Eigenvalues s                             1.6242
+@@ QFT operator, 4 qubits: Eigenvalues s                        8.6286
+@@ Fourier[8] change of basis s                                 0.5163
+@@   ConjugateTranspose of the basis matrix s                   0.00030000000000000003
+@@ Fourier[16] change of basis s                                "timeout"
+@@   ConjugateTranspose of the basis matrix s                   0.0005
+@@ Fourier[14] circuit on a state s                             4.1189
+@@   Fourier[v] s                                               0.0005
+@@   agreement                                                  1.4602525357963067*^-15
+@@ PhaseOracle, random function of 10 variables: build s        3.0386
+@@   gates                                                      226
+@@   apply to the uniform state s                               11.5638
+@@   sign vector of the truth table s                           0.0005
+@@   agreement                                                  0.
+@@ Diagonal[h], 6 qubits: Eigensystem s                         0.0095
+@@   measurement of it applied to a state s                     18.3031
+@@   computational measurement, 64 outcomes s                   0.2725
 ### exit 0 for structured.wls  02:07:59

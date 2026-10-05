@@ -2,7 +2,7 @@ PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..
 Needs["Wolfram`QuantumFramework`"];
 b[e_, ___] := e;
 SetAttributes[b, HoldFirst];
-P[l_, x_] := Print["@@ ", StringPadRight[l, 52], " ", ToString[Short[x, 2], InputForm]];
+P[l_, x_] := Print["@@ ", StringPadRight[l, 52], " ", ToString[x, InputForm]];
 
 (* 1. Two-qubit tomography from simulated shots: linear inversion, maximum likelihood, Bayesian *)
 SeedRandom[7];

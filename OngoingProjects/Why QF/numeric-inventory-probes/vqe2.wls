@@ -1,5 +1,5 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 56], " ", ToString[x, InputForm]]);
 n = 6; hx = 1.0;
 Hising = Total[Table[-QuantumOperator["Z", {i}] @ QuantumOperator["Z", {i + 1}], {i, n - 1}]] + Total[Table[-hx QuantumOperator["X", {i}], {i, n}]];
 e0 = Min @ Eigenvalues[N @ Normal @ Hising["Matrix"]];

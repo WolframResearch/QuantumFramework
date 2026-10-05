@@ -1,8 +1,8 @@
 PacletDirectoryLoad[FileNameJoin[{DirectoryName[$InputFileName], "..", "..", "..", "QuantumFramework"}]]; Needs["Wolfram`QuantumFramework`"];
-P[l_, x_] := (Print["@@ ", StringPadRight[l, 60], " ", ToString[Short[x, 2], InputForm]]);
+P[l_, x_] := (Print["@@ ", StringPadRight[l, 60], " ", ToString[x, InputForm]]);
 (* seconds of one call after ClearSystemCache[], or "timeout" / "memory" *)
 SetAttributes[sec, HoldFirst];
-sec[e_, limit_ : 60] := (ClearSystemCache[]; Replace[MemoryConstrained[TimeConstrained[First[AbsoluteTiming[e;]], limit, "timeout"], 3 10^9, "memory"], t_Real :> Round[t, 0.0001]]);
+sec[e_, limit_ : 60] := (ClearSystemCache[]; Replace[MemoryConstrained[TimeConstrained[First[AbsoluteTiming[e;]], limit, "timeout"], 3 10^9, "memory"], t_Real :> N[Round[t, 1 / 10000]]]);
 SeedRandom[7];
 
 (* The structure of every named operator, basis and circuit at its default arguments, read off its matrix in the computational basis. *)
