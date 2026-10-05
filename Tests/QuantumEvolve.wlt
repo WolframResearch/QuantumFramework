@@ -353,6 +353,19 @@ VerificationTest[
     TestID -> "Evolve-restart-landmarks"
 ]
 
+(* A solution whose grid repeats the time of a discontinuity, with a different value on
+   each side, expands to the same state on both sides of it: just past the pulse edge and
+   at the end. *)
+VerificationTest[
+    Module[{h = (Piecewise[{{Pi / 0.01, Abs[\[FormalT] - 50] < 0.005}}, 0] / 2) QuantumOperator["X"], lazy, expanded},
+        lazy = QuantumEvolve[h, QuantumState["0"], {\[FormalT], 0, 100}];
+        expanded = QuantumEvolve[h, QuantumState["0"], {\[FormalT], 0, 100}, "Expand" -> True];
+        Max @ Abs[Flatten[Table[Normal[expanded[x]["StateVector"]] - Normal[lazy[x]["StateVector"]], {x, {50.006, 50.01, 60., 100.}}]]] < 10 ^ -7
+    ],
+    True,
+    TestID -> "Evolve-Expand-across-a-discontinuity"
+]
+
 (* With "MergeInterpolatingFunctions" -> False the initial state sits at the start of the
    time range: a Rabi flop over [-1, 1] leaves cos^2 2 in |0>. *)
 VerificationTest[

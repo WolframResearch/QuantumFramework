@@ -380,8 +380,33 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
 
 
+(* NDSolve repeats a grid time where the integration restarts at a discontinuity of the
+   equations, and the two values there differ: the first is the state before the step
+   that crossed it, the second the state after, and the solution takes the first at the
+   time itself and the second just past it. Each run between repeats is interpolated on
+   its own and the runs are joined, the earlier one up to and including the repeated time.
+   A repeat carrying the same value is no discontinuity and is dropped. The join is built
+   with Apply, so the bound variable is not renamed. *)
+gridInterpolation[pairs_List, order_Integer] := Module[{runs, interpolants},
+    runs = If[ DuplicateFreeQ[pairs[[All, 1]]],
+        {pairs},
+        Split[DeleteDuplicates[pairs], First[#1] =!= First[#2] &]
+    ];
+    interpolants = If[ Length[#] == 1,
+        Function[Evaluate[#[[1, 2]]]],
+        Interpolation[#, InterpolationOrder -> Min[order, Length[#] - 1]]
+    ] & /@ runs;
+    If[ Length[interpolants] == 1,
+        First[interpolants],
+        Function @@ {\[FormalT], Piecewise[
+            MapThread[{#1[\[FormalT]], \[FormalT] <= #2} &, {Most[interpolants], Most[runs][[All, -1, 1, 1]]}],
+            Last[interpolants][\[FormalT]]
+        ]}
+    ]
+]
+
 ExpandInterpolatingFunction[f_InterpolatingFunction, parameter_] := Map[
-    Interpolation[Thread[{f["Grid"], #}], InterpolationOrder -> f["InterpolationOrder"]][parameter] &,
+    gridInterpolation[Thread[{f["Grid"], #}], Replace[f["InterpolationOrder"], {{k_Integer} :> k, k_Integer :> k, _ :> 3}]][parameter] &,
     Transpose[f["ValuesOnGrid"], InversePermutation[Cycles[{Range[Length[f["OutputDimensions"]] + 1]}]]],
     {-2}
 ]
