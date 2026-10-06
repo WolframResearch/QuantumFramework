@@ -216,33 +216,28 @@ QuantumOperator["U2"[phi_ : 0, lambda_ : Pi], opts___] := QuantumOperator[
 
 (* An operator on qudits of the given dimensions in the computational basis, built in its final
    form - the state of its matrix, its basis and its order - instead of through the general
-   constructors. A named gate called with at most the qudit it acts on and a label takes it. *)
-computationalOperator[matrix_, order : {_List, _List}, {outputDimensions_List, inputDimensions_List}, label_] := QuantumOperator[
+   constructors. Its options apply to its basis, as they do on the general path. *)
+computationalOperator[matrix_, order : {_List, _List}, {outputDimensions_List, inputDimensions_List}, label_, opts : OptionsPattern[]] := QuantumOperator[
     QuantumState[
         SparseArray[Flatten[matrix]],
-        QuantumBasis[<|
-            "Input" -> QuditBasis[inputDimensions]["Dual"], "Output" -> QuditBasis[outputDimensions],
-            "Picture" -> "Schrodinger", "Label" -> label, "ParameterSpec" -> {}
-        |>]
+        QuantumBasis[
+            QuantumBasis[<|
+                "Input" -> QuditBasis[inputDimensions]["Dual"], "Output" -> QuditBasis[outputDimensions],
+                "Picture" -> "Schrodinger", "Label" -> label, "ParameterSpec" -> {}
+            |>],
+            opts
+        ]
     ],
     order
 ]
 
-(* the options a direct build reads, as {order, label}: at most the one qudit the gate acts on,
-   then at most a label; any other options leave the gate to the general constructors *)
-directOptions[{}] := {{{1}, {1}}, Automatic}
-directOptions[{{q_Integer ? Positive}}] := {{{q}, {q}}, Automatic}
-directOptions[{"Label" -> label_}] := {{{1}, {1}}, label}
-directOptions[{{q_Integer ? Positive}, "Label" -> label_}] := {{{q}, {q}}, label}
-directOptions[_] := None
+(* a single-qudit gate on the qudit given; the named gates below take this route when called with
+   at most that qudit and options, and any other arguments go through the general constructors *)
+singleQuditGate[matrix_, {qudit_}, label_, opts : OptionsPattern[]] :=
+    computationalOperator[matrix, {{qudit}, {qudit}}, {{Length[matrix]}, {Length[matrix]}}, label, opts]
 
-(* a single-qudit gate on one qudit, labelled by the caller if a label was given *)
-directGate[matrix_, dimension_, opts_List, label_] := With[{orderLabel = directOptions[opts]},
-    computationalOperator[matrix, First[orderLabel], {{dimension}, {dimension}}, Replace[Last[orderLabel], Automatic -> label]]
-]
-
-QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}, {dimension, dimension}], dimension, {opts}, "P"[angle]]
+QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}, {dimension, dimension}], qudit, "P"[angle], opts]
 
 QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[
@@ -254,8 +249,8 @@ QuantumOperator[("Phase" | "P" | "U1")[angle_ : Pi, dimension : _Integer ? Posit
 ]
 
 
-QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Sign[k] 2 Pi / 2 ^ Abs[k]]}, {2, 2}], 2, {opts}, "PhaseShift"[k]]
+QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Sign[k] 2 Pi / 2 ^ Abs[k]]}, {2, 2}], qudit, "PhaseShift"[k], opts]
 
 QuantumOperator["PhaseShift"[k : _Integer | _Symbol : 1], opts___] := QuantumOperator[
     QuantumOperator["Phase"[Sign[k] 2 Pi / 2 ^ Abs[k]], "Label" -> "PhaseShift"[k]],
@@ -314,11 +309,13 @@ QuantumOperator["FlipSign"[digits : {__Integer} : {1, 1, 1}, dim : _Integer ? Po
 QuantumOperator["FlipSign"[s_String, args___], opts___] := QuantumOperator["FlipSign"[FromDigits /@ Characters[s], args], opts]
 
 
-QuantumOperator["S"[], opts___] /; directOptions[{opts}] =!= None := directGate[SparseArray[{{1, 1} -> 1, {2, 2} -> I}, {2, 2}], 2, {opts}, "S"]
+QuantumOperator["S"[], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[SparseArray[{{1, 1} -> 1, {2, 2} -> I}, {2, 2}], qudit, "S", opts]
 
 QuantumOperator["S"[], opts___] := QuantumOperator[QuantumOperator["Phase"[Pi / 2], "Label" -> "S"], opts]
 
-QuantumOperator["T"[], opts___] /; directOptions[{opts}] =!= None := directGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Pi / 4]}, {2, 2}], 2, {opts}, "T"]
+QuantumOperator["T"[], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I Pi / 4]}, {2, 2}], qudit, "T", opts]
 
 QuantumOperator["T"[], opts___] := QuantumOperator[QuantumOperator["Phase"[Pi / 4], "Label" -> "T"], opts]
 
@@ -456,22 +453,24 @@ QuantumOperator[("C" | "Controlled")[qo_ ? QuantumOperatorQ, control1 : _ ? orde
         },
             order
         ],
-        op, controls1, controls0, {opts},
-        Subscript["C", op["Label"]][control1, control0]
+        op, controls1, controls0,
+        Subscript["C", op["Label"]][control1, control0],
+        opts
     ]
 ]
 
 (* a controlled gate whose target is in the computational basis, with no picture or parameters
    of its own, is built directly; any other keeps the general constructor *)
-controlledOperator[matrix_, order_, op_, controls1_, controls0_, {}, label_] /;
+controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts : OptionsPattern[]] /;
     op["Output"]["ComputationalQ"] && op["Input"]["ComputationalQ"] && op["Picture"] === "Schrodinger" && op["ParameterSpec"] === {} :=
     computationalOperator[
         matrix, order,
         {Join[ConstantArray[2, controls1 + controls0], op["OutputDimensions"]], Join[ConstantArray[2, controls1 + controls0], op["InputDimensions"]]},
-        label
+        label,
+        opts
     ]
 
-controlledOperator[matrix_, order_, op_, controls1_, controls0_, {opts___}, label_] := QuantumOperator[
+controlledOperator[matrix_, order_, op_, controls1_, controls0_, label_, opts___] := QuantumOperator[
     matrix, order,
     QuantumTensorProduct[
         QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],
@@ -610,24 +609,24 @@ QuantumOperator["SUM"[dimension : _Integer ? Positive : 2], opts___] := QuantumO
 ]
 
 
-QuantumOperator[("PauliX" | "X" | "Shift")[dimension : _Integer ? Positive : 2], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[pauliMatrix[1, dimension], dimension, {opts}, "X"]
+QuantumOperator[("PauliX" | "X" | "Shift")[dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[pauliMatrix[1, dimension], qudit, "X", opts]
 
 QuantumOperator[("PauliX" | "X" | "Shift")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"],
     opts
 ]
 
-QuantumOperator[("PauliY" | "Y")[dimension : _Integer ? Positive : 2], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[pauliMatrix[2, dimension], dimension, {opts}, "Y"]
+QuantumOperator[("PauliY" | "Y")[dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[pauliMatrix[2, dimension], qudit, "Y", opts]
 
 QuantumOperator[("PauliY" | "Y")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"],
     opts
 ]
 
-QuantumOperator[("PauliZ" | "Z" | "ShiftPhase")[dimension : _Integer ? Positive : 2], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[pauliMatrix[3, dimension], dimension, {opts}, "Z"]
+QuantumOperator[("PauliZ" | "Z" | "ShiftPhase")[dimension : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[pauliMatrix[3, dimension], qudit, "Z", opts]
 
 QuantumOperator[("PauliZ" | "Z" | "ShiftPhase")[dimension : _Integer ? Positive : 2], opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
@@ -656,8 +655,8 @@ QuantumOperator["RootNOT"[dimension : _Integer ? Positive : 2], opts___] := Quan
 
 hadamardMatrix[dim_] := hadamardMatrix[dim] = QuantumOperator["Fourier"[dim]]["Matrix"]
 
-QuantumOperator[("Hadamard" | "H")[dim : _Integer ? Positive : 2], opts___] /; directOptions[{opts}] =!= None :=
-    directGate[hadamardMatrix[dim], dim, {opts}, "H"]
+QuantumOperator[("Hadamard" | "H")[dim : _Integer ? Positive : 2], qudit : {_Integer ? Positive} : {1}, opts : OptionsPattern[]] :=
+    singleQuditGate[hadamardMatrix[dim], qudit, "H", opts]
 
 QuantumOperator[("Hadamard" | "H")[dim : _Integer ? NonNegative : 2], order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator["Fourier"[dim] -> order,
