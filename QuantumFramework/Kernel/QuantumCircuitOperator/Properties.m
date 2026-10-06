@@ -272,11 +272,18 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{
     indices = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "ReturnIndices" -> True, "Computational" -> False],
-    ops = qco["Flatten"]["Sort"]["NormalOperators"],
+    ops = qco["Flatten"]["NormalOperators"],
     quditBases
 },
     ConfirmAssert[Length[indices] == Length[ops]];
-    quditBases = Catenate @ MapThread[Join[Thread[Take[#1, #2["OutputQudits"]] -> #2["Output"]["Decompose"]], Thread[Take[#1, - #2["InputQudits"]] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
+    (* the indices name each operator's qudits in sorted order, and its bases decompose in its own order *)
+    quditBases = Catenate @ MapThread[
+        Join[
+            Thread[Take[#1, #2["OutputQudits"]] -> #2["Output"]["Decompose"][[Ordering[#2["OutputOrder"]]]]],
+            Thread[Take[#1, - #2["InputQudits"]] -> #2["Input"]["Decompose"][[Ordering[#2["InputOrder"]]]]]
+        ] &,
+        {indices, ops}
+    ];
     <|"ContractionIndices" -> indices, "FreeIndices" -> tensorNetworkIndexSort[Keys[Select[Counts[Catenate[indices]], # == 1 &]]], "QuditBases" -> quditBases, "Operators" -> ops|>
 ]
 

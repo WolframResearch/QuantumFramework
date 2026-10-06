@@ -21,6 +21,19 @@ Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> Tr
 
 Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options[Graph]]
 
+(* An operator's state holds its qudits in the operator's own order, and its tensor in sorted
+   qudit order is that state's tensor transposed by the rank of each qudit; reading it this way
+   spares building the sorted operator. *)
+sortedTensor[op_ ? QuantumOperatorQ] /; op["VectorQ"] && op["Order"] === op["FullOrder"] &&
+    op["OutputQudits"] + op["InputQudits"] > 0 && ArrayDepth[op["StateTensor"]] === op["OutputQudits"] + op["InputQudits"] :=
+    sortedLevels[op["StateTensor"], Join[Ordering[Ordering[op["OutputOrder"]]], Ordering[Ordering[op["InputOrder"]]] + op["OutputQudits"]]]
+
+sortedTensor[op_] := If[op["MatrixQ"], op["Double"], op]["Tensor"]
+
+sortedLevels[tensor_, perm_] /; perm === Range[Length[perm]] := tensor
+
+sortedLevels[tensor_, perm_] := Transpose[tensor, perm]
+
 QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Sort"], width, min, ops, orders, arity, vertices, edges, tensors
 },
@@ -92,7 +105,7 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
 
 (* TODO: refactor with above *)
 QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco["Sort"], width, min, ops, orders, arity, vertices, rules, tensors, indices
+    circuit = qco, width, min, ops, orders, arity, vertices, rules, tensors, indices
 },
 	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
     width = circuit["Width"];
@@ -154,7 +167,7 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     If[ TrueQ[OptionValue["ReturnIndices"]],
         Return[indices];
     ];
-	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
+	tensors = sortedTensor /@ ops;
 	ConfirmBy[
         TensorNetwork[
             tensors, indices,
@@ -267,7 +280,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPa
 ]["State"]
 
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] := Block[{
-    circuit = qco["Sort"], res
+    circuit = qco, res
 },
     If[ qs["Qudits"] > 0,
         circuit = QuantumCircuitOperator[{qs -> circuit["FullInputOrder"]} /* circuit, "Label" -> None]
