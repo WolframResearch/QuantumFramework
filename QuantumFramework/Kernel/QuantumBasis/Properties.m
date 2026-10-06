@@ -45,7 +45,7 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
     result = QuantumBasisProp[qb, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters"}], prop],
+        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters", "ParameterArity"}], prop],
         cacheProperty[QuantumBasisProp[qb, prop, args], result],
         result
     ] /; !FailureQ[Unevaluated @ result] &&
@@ -59,6 +59,8 @@ QuantumBasisProp[_, "Properties"] := QuantumBasis["Properties"]
 (* getters *)
 
 QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] := data[key]
+
+QuantumBasisProp[QuantumBasis[data_Association], "ParameterArity"] := Length[data["ParameterSpec"]]
 
 QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
 
@@ -329,8 +331,6 @@ QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] 
         True, "Rectangle"
     ]
 ]
-
-QuantumBasisProp[qb_, "ParameterArity"] := Length[qb["ParameterSpec"]]
 
 QuantumBasisProp[qb_, "Parameters"] := qb["ParameterSpec"][[All, 1]]
 
