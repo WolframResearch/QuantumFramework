@@ -233,23 +233,27 @@ EndTestSection[]
 BeginTestSection["QuantumCircuitOperator - Qiskit export"]
 
 (* Qiskit export must hand Python a tuple (name, args), not a WL function call.
-   The bug surfaced as `'Measure'[(1,)]` on the Python side; lock it down. *)
+   The bug surfaced as `'Measure'[(1,)]` on the Python side; lock it down. Each test
+   matches the whole result, so a failed export reports its Failure and messages. *)
 
 VerificationTest[
-    Quiet @ Head @ QuantumCircuitOperator[{{1}}]["Qiskit"],
-    QiskitCircuit,
+    QuantumCircuitOperator[{{1}}]["Qiskit"],
+    QiskitCircuit[_ByteArray],
+    SameTest -> MatchQ,
     TestID -> "Qiskit-measurement-from-list"
 ]
 
 VerificationTest[
-    Quiet @ Head @ QuantumCircuitOperator["Bell"]["Qiskit"],
-    QiskitCircuit,
+    QuantumCircuitOperator["Bell"]["Qiskit"],
+    QiskitCircuit[_ByteArray],
+    SameTest -> MatchQ,
     TestID -> "Qiskit-Bell"
 ]
 
 VerificationTest[
-    Quiet @ Head @ QuantumCircuitOperator[{"U"[Pi/3, Pi/4, Pi/5] -> 1}]["Qiskit"],
-    QiskitCircuit,
+    QuantumCircuitOperator[{"U"[Pi/3, Pi/4, Pi/5] -> 1}]["Qiskit"],
+    QiskitCircuit[_ByteArray],
+    SameTest -> MatchQ,
     TestID -> "Qiskit-U3"
 ]
 
