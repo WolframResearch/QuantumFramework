@@ -117,6 +117,10 @@ QuantumOperatorProp[QuantumOperator[_, {_, inputOrder_}], "InputOrder"] := input
 
 QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := outputOrder
 
+(* The basis's data and the shape it gives are read off the basis directly and are not cached
+   here: the basis caches its own. *)
+QuantumOperatorProp[QuantumOperator[state_, _], prop_String] /; MemberQ[$QuantumBasisStructureProperties, prop] := state["Basis"][prop]
+
 
 (* A property that fails returns its Failure, and so does an operator property called
    with arguments none of its definitions takes. Declining the rule instead would pass
@@ -137,6 +141,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
         True,
         If[ TrueQ[$QuantumFrameworkPropCache] &&
             ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
+            ! MemberQ[$QuantumBasisStructureProperties, prop] &&
             QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
             cacheProperty[QuantumOperatorProp[qo, prop, args], result],
             result

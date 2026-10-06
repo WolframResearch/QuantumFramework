@@ -5,6 +5,7 @@ PackageExport["QuantumBasis"]
 PackageScope["quantumBasisQ"]
 PackageScope["QuantumBasisQ"]
 PackageScope["$QuantumBasisDataKeys"]
+PackageScope["$QuantumBasisStructureProperties"]
 PackageScope["$QuantumBasisPictures"]
 PackageScope["MergeParameterSpecs"]
 
@@ -42,6 +43,14 @@ QuantumBasis::phaseSpacePicture = "a phase space basis is already a phase space 
 
 
 $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
+
+(* the basis's data and the shape it gives, which states and operators read off their basis *)
+$QuantumBasisStructureProperties = Join[$QuantumBasisDataKeys, {
+    "Qudits", "InputQudits", "OutputQudits",
+    "Dimension", "InputDimension", "OutputDimension",
+    "Dimensions", "InputDimensions", "OutputDimensions",
+    "MatrixNameDimensions"
+}]
 
 $QuantumBasisDefaults = {
     "Input" -> QuditBasis[],

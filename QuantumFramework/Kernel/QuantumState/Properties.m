@@ -118,6 +118,7 @@ QuantumState::failprop = "property `` failed with ``"
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "AllProperties", "Basis", "State"}, prop] &&
+        ! MemberQ[$QuantumBasisStructureProperties, prop] &&
         QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
         cacheProperty[QuantumStateProp[qs, prop, args], result],
         result
@@ -150,6 +151,10 @@ QuantumStateProp[QuantumState[_, basis_], "ParameterSpec"] := basis["ParameterSp
 QuantumStateProp[QuantumState[_, basis_], "Parameters"] := basis["Parameters"]
 
 QuantumStateProp[QuantumState[_, basis_], "ParameterArity"] := basis["ParameterArity"]
+
+(* The basis's data and the shape it gives are read off the basis directly and are not cached
+   here: the basis caches its own. *)
+QuantumStateProp[QuantumState[_, basis_], prop_String] /; MemberQ[$QuantumBasisStructureProperties, prop] := basis[prop]
 
 
 (* two types of states *)
