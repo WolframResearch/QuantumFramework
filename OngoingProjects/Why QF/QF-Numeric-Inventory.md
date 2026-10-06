@@ -10,7 +10,7 @@ What Wolfram QuantumFramework can do numerically today, measured rather than cla
 |---|---|---|---|---|
 | 1 | Driven-dissipative Kerr: bistability, Liouvillian gap | Lindblad evolution converges in the cutoff; exact steady state from the Liouvillian null space, which also exposes multiple steady states; 28-digit evolution | A solve at N = 50 takes 3.6 s, 17 to 140 times the published numbers (see Dynamics) | **Ready** to N of about 60 |
 | 2 | Transmon beyond two levels: leakage, DRAG | 4-level transmon, Gaussian pi pulse; the DRAG coefficient that minimizes leakage is found numerically in 1.2 s | | **Ready** |
-| 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | Dense circuit engine takes 14 s at 12 qubits and 28 min at 20; no trajectory engine found | Repetition codes only |
+| 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | The default circuit method takes 0.45 s at 12 qubits and 1.6 s at 16, but runs past 4 GB at 20 with TensorNetworks 1.0.11; no trajectory engine found | Repetition codes only |
 | 4 | Cavity-QED spectra | Damped Jaynes-Cummings with the jump operator on the cavity alone matches the exact one-excitation solution | No correlation or spectrum routine | Dynamics ready; spectra are a gap |
 | 5 | Exponentially small splittings and gaps | 28 correct digits in time evolution | Not yet run on the double-well benchmark | Promising, verify next |
 | 6 | Rydberg arrays | Not tested | Same ODE and circuit performance limits as 1 and 3 | Untested |
@@ -54,7 +54,7 @@ Resolved on 5 October 2026; what each now does:
    | 0.001 | captured | captured | captured | captured |
 
    Each solve takes about 0.02 s; a train of 50 Gaussian pi/2 pulses of width 0.04 lands on the exact population to 2e-10 in 0.07 s. A smooth drive has no landmarks and runs as before. A pulse given as data (an `InterpolatingFunction`) is not read, so `MaxStepSize` remains the control there.
-5. **Dense circuit engine.** A 4-step Trotter quench takes 13.9 s at 12 qubits, 72.9 s at 16 and 1,656 s at 20, about 10.6 s per gate at 2^20 amplitudes. Results are correct throughout.
+5. **Dense circuits at 20 qubits.** A 4-step Trotter quench applied with QF's default tensor-network method takes 0.45 s at 12 qubits and 1.56 s at 16, but at 20 it runs past 4 GB, because TensorNetworks 1.0.11 contracts the whole network as one product. The `"Schrodinger"` method, which the earlier figures here measured, takes 12.4 s and 73.3 s and took 1,656 s at 20. With the TensorNetworks checkout of 6 October that contracts along a greedy path (uncommitted, with the Arrays checkout), the default method takes 0.40 s, 0.62 s and 4.56 s at 12, 16 and 20 qubits (probe `dense2.wls`). Results agree throughout.
 6. **`"MergeInterpolatingFunctions" -> False`** now starts the evolution at the start of the time range, resolved on 5 October 2026: a Rabi flop over [-1, 1] gives cos^2 2 = 0.1732.
 7. **Circuit parameters do not bind by `ReplaceAll`.** `ansatz /. Thread[pars -> values]` silently leaves the circuit symbolic, and every later step computes symbolic expressions. Parameters must be declared (`"Parameters" -> pars`) and bound by calling the circuit, `ansatz @@ values`.
 8. **Named operators with structure go through general algorithms.** QF stores every operator as a `SparseArray`, so a named operator whose structure fixes an answer still gets it from a general algorithm. At their default arguments, 23 of the 108 named operators are diagonal (Z, the phase gates, S, T, CZ, CPHASE, `"Z"[d]`, `"Diagonal"`), 18 are permutations (X, `"X"[d]`, SUM, SWAP, CNOT, Toffoli, Fredkin), 6 are permutations with phases (Y, CY), and the Fourier operator is the Fourier matrix. Of the 43 named circuits, PhaseOracle is diagonal, BooleanOracle and SimonOracle are permutations, and the Fourier circuit is the Fourier matrix, as is the Fourier basis. The exponential of a diagonal operator, and any function of one, already reads the diagonal (`191f1ac3`). These do not, measured on 6 October 2026 on main at `f46ec628` (probe `structured.wls`):
@@ -116,6 +116,7 @@ Resolved on 5 October 2026; what each now does:
 | Stabilizer half-chain entropy after those gates | 0.79 s, 4.2 s and 45.1 s |
 | Light-cone magnetization, full chain, depth 4, greedy path | 2.15 s at 9 qubits, 3.32 s at 16, both -0.1711558 as with the hand-built cone; 24 qubits did not finish in 10 min at 6 to 10 GB |
 | Dense `"Schrodinger"` engine, same circuit | 13.9 s at 12 qubits, 72.9 s at 16, 1,656 s at 20 |
+| Default tensor-network method, same circuit | 0.45 s at 12 qubits, 1.56 s at 16, past 4 GB at 20 with TensorNetworks 1.0.11; 0.40 s, 0.62 s and 4.56 s with the uncommitted TensorNetworks and Arrays checkouts of 6 October |
 
 ### Measurement, estimation, optimization
 
