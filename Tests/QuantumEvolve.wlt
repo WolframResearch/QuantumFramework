@@ -375,3 +375,175 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["QuantumEvolve - malformed input"]
+
+(* A call that fits none of QuantumEvolve's forms returns a Failure at once, with a
+   message naming the argument at fault. TimeConstrained turns a call that rewrites
+   itself without end into a failed test instead of a stalled run. First of a Failure
+   is its tag. *)
+
+$sigmaMinus = QuantumOperator[{{0, 1}, {0, 0}}];
+
+VerificationTest[
+    With[{f = TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {foo[2]} -> {1}, QuantumState["1"], \[FormalT]], 10, {"TIMEOUT"}]},
+        {First[f], f["MessageParameters"]}
+    ],
+    {"InvalidJumpOperators", {{foo[2]}}},
+    {QuantumEvolve::jump},
+    TestID -> "Evolve-nonoperator-jump-fails"
+]
+
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], foo[2] -> 1, QuantumState["1"], \[FormalT]], 10, {"TIMEOUT"}],
+    "InvalidJumpOperators",
+    {QuantumEvolve::jump},
+    TestID -> "Evolve-nonoperator-jump-rule-fails"
+]
+
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus, foo} -> {1, 1}, QuantumState["1"], \[FormalT]], 10, {"TIMEOUT"}],
+    "InvalidJumpOperators",
+    {QuantumEvolve::jump},
+    TestID -> "Evolve-mixed-jump-list-fails"
+]
+
+(* Through the observable form the Failure comes back as it is. *)
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {foo} -> {1}, QuantumOperator["X"], \[FormalT]], 10, {"TIMEOUT"}],
+    "InvalidJumpOperators",
+    {QuantumEvolve::jump},
+    TestID -> "Evolve-observable-form-returns-the-failure"
+]
+
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], QuantumState["1"], {\[FormalT], 0, T}], 10, {"TIMEOUT"}],
+    "InvalidArguments",
+    {QuantumEvolve::args},
+    TestID -> "Evolve-symbolic-time-range-fails"
+]
+
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {1}, "1", \[FormalT]], 10, {"TIMEOUT"}],
+    "InvalidArguments",
+    {QuantumEvolve::args},
+    TestID -> "Evolve-string-state-fails"
+]
+
+(* Rates go in a rule with the jump operators, never as a separate argument. *)
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus}, {1}, QuantumState["1"], \[FormalT]], 10, {"TIMEOUT"}],
+    "InvalidArguments",
+    {QuantumEvolve::args},
+    TestID -> "Evolve-positional-rates-fail"
+]
+
+VerificationTest[
+    First @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {1}, QuantumState["1"], \[FormalT], 5], 10, {"TIMEOUT"}],
+    "InvalidArguments",
+    {QuantumEvolve::args},
+    TestID -> "Evolve-extra-argument-fails"
+]
+
+(* A rate list of the wrong length is refused, neither padded with unit rates nor cut. *)
+VerificationTest[
+    With[{f = QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus, $sigmaMinus} -> {\[FormalG]}, QuantumState["1"], \[FormalT]]},
+        {First[f], f["MessageParameters"]}
+    ],
+    {"InvalidRates", {{\[FormalG]}, 2}},
+    {QuantumEvolve::rates},
+    TestID -> "Evolve-too-few-rates-fail"
+]
+
+VerificationTest[
+    First @ QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {1, 2}, QuantumState["1"], \[FormalT]],
+    "InvalidRates",
+    {QuantumEvolve::rates},
+    TestID -> "Evolve-too-many-rates-fail"
+]
+
+VerificationTest[
+    First @ QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {{1, 0}, {0, 1}}, QuantumState["1"], \[FormalT]],
+    "InvalidRates",
+    {QuantumEvolve::rates},
+    TestID -> "Evolve-rate-matrix-of-the-wrong-size-fails"
+]
+
+(* An option in the second argument is an option, not a jump operator. *)
+VerificationTest[
+    Length @ TimeConstrained[QuantumEvolve[QuantumOperator["Z"], "ReturnEquations" -> True], 10, {"TIMEOUT"}],
+    3,
+    TestID -> "Evolve-options-without-a-state"
+]
+
+EndTestSection[]
+
+
+BeginTestSection["QuantumEvolve - Lindblad forms"]
+
+(* Amplitude damping of |1> by sigma-minus at rate g: the excited population decays as
+   Exp[-g t] whether the rate is a rule, folded into the jump operator, or given as a
+   1 by 1 rate matrix. *)
+$dampingClosedForm = {{1 - Exp[-\[FormalG] \[FormalT]], 0}, {0, Exp[-\[FormalG] \[FormalT]]}};
+
+VerificationTest[
+    Simplify[
+        Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {\[FormalG]}, QuantumState["1"], \[FormalT]]["DensityMatrix"]] - $dampingClosedForm,
+        \[FormalG] > 0
+    ],
+    {{0, 0}, {0, 0}},
+    TestID -> "Evolve-damping-closed-form"
+]
+
+VerificationTest[
+    Simplify[
+        {
+            Normal[QuantumEvolve[QuantumOperator["Z"], {Sqrt[\[FormalG]] $sigmaMinus}, QuantumState["1"], \[FormalT]]["DensityMatrix"]],
+            Normal[QuantumEvolve[QuantumOperator["Z"], $sigmaMinus -> \[FormalG], QuantumState["1"], \[FormalT]]["DensityMatrix"]],
+            Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {{\[FormalG]}}, QuantumState["1"], \[FormalT]]["DensityMatrix"]]
+        } - {$dampingClosedForm, $dampingClosedForm, $dampingClosedForm},
+        \[FormalG] > 0
+    ],
+    ConstantArray[0, {3, 2, 2}],
+    TestID -> "Evolve-damping-rate-forms-agree"
+]
+
+(* No rates means a unit rate for each jump operator. *)
+VerificationTest[
+    Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {}, QuantumState["1"], \[FormalT]]["DensityMatrix"]] ===
+        Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus}, QuantumState["1"], \[FormalT]]["DensityMatrix"]] ===
+        Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {1}, QuantumState["1"], \[FormalT]]["DensityMatrix"]],
+    True,
+    TestID -> "Evolve-no-rates-are-unit-rates"
+]
+
+(* The damped state relaxes to the ground state |0>. *)
+VerificationTest[
+    Limit[
+        Simplify[Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {\[FormalG]}, QuantumState["1"], \[FormalT]]["DensityMatrix"]], \[FormalG] > 0],
+        \[FormalT] -> Infinity,
+        Assumptions -> \[FormalG] > 0
+    ],
+    {{1, 0}, {0, 0}},
+    TestID -> "Evolve-damping-relaxes-to-the-ground-state"
+]
+
+(* A numeric time range reproduces the closed form. *)
+VerificationTest[
+    Max @ Abs[
+        Normal[QuantumEvolve[QuantumOperator["Z"], {$sigmaMinus} -> {1 / 2}, QuantumState["1"], {\[FormalT], 0, 3}][3]["DensityMatrix"]] -
+            N[$dampingClosedForm /. {\[FormalG] -> 1 / 2, \[FormalT] -> 3}]
+    ] < 10 ^ -6,
+    True,
+    TestID -> "Evolve-damping-numeric-time-matches-closed-form"
+]
+
+(* Without jump operators a symbolic time gives the unitary closed form. *)
+VerificationTest[
+    Simplify[Normal[QuantumEvolve[QuantumOperator["X"], QuantumState["0"], \[FormalT]]["StateVector"]] - {Cos[\[FormalT]], -I Sin[\[FormalT]]}],
+    {0, 0},
+    TestID -> "Evolve-symbolic-time-unitary"
+]
+
+EndTestSection[]

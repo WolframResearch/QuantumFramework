@@ -906,6 +906,10 @@ LindbladMixedOperator[l_QuantumOperator, ldg : _QuantumOperator | None : None] :
 ]
 
 QuantumOperator["Liouvillian"[H_, Ls : _ : {}, Gammas : _ : {}], opts___] := Enclose @ Block[{ls = ToList[Ls], gammas = ToList[Gammas], h = If[H === None, None, QuantumOperator[H]], basis},
+    If[ ! jumpRatesQ[ls, gammas],
+        Message[QuantumOperator::rates, gammas, Length[ls]];
+        Confirm[Failure["InvalidRates", <|"MessageTemplate" :> QuantumOperator::rates, "MessageParameters" -> {gammas, Length[ls]}|>]]
+    ];
     (* a jump operator on some of the qudits acts as the identity on the rest *)
     {h, ls} = padJumpOperators[h, ls];
 	ConfirmAssert[SameQ @@ Join[If[h === None, {}, {h["OutputDimension"], h["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]], "Hamiltonian and Lindblad operators must have the same dimensions"];

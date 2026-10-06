@@ -11,6 +11,9 @@ PackageScope[$QuantumEvolveSparseThreshold]
 
 
 QuantumEvolve::error = "Differential Solver failed to find a solution"
+QuantumEvolve::jump = "the jump operators `1` are not QuantumOperators"
+QuantumEvolve::rates = "the rates `1` do not fit the jump operators: give as many rates as there are jump operators, `2`, or a `2` by `2` rate matrix"
+QuantumEvolve::args = "the arguments `1` do not fit QuantumEvolve[hamiltonian, jumps, state, time]: jumps are {L1, ...} or {L1, ...} -> {rate1, ...}, the state is a QuantumState, Automatic or None, and the time is a symbol t or {t, t0, t1} with numeric t0 and t1"
 
 (* the number of unknowns above which a numeric solve keeps its operators sparse: NDSolve
    integrates the dense equations faster up to about a thousand unknowns and slows sharply
@@ -27,11 +30,18 @@ QuantumEvolve[
     lindblad_,
     observable_ ? QuantumOperatorQ,
     args___
-] := SuperDagger[QuantumEvolve[hamiltonian, lindblad, None, args]][observable["MatrixQuantumState"]]["Operator"]
+] := With[{evolution = QuantumEvolve[hamiltonian, lindblad, None, args]},
+    If[FailureQ[evolution], evolution, SuperDagger[evolution][observable["MatrixQuantumState"]]["Operator"]]
+]
 
 QuantumEvolve[hamiltonian_QuantumOperator, lindblad : {___QuantumOperator}, args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> {}, args]
 
-QuantumEvolve[hamiltonian_QuantumOperator, (lindblad : Except[_List] -> gamma_) | (lindblad_ -> gamma : Except[_List]), args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
+(* a rule whose left side is a string or a symbol is an option, not a jump operator *)
+QuantumEvolve[
+    hamiltonian_QuantumOperator,
+    (lindblad : Except[_List | _String | _Symbol] -> gamma_) | (lindblad : Except[_String | _Symbol] -> gamma : Except[_List]),
+    args___
+] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
 
 (* a jump operator on some of the qudits acts as the identity on the rest *)
 QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List, args___] /;
@@ -41,7 +51,7 @@ QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ
     ]
 
 (* a matrix of rates is a Kossakowski matrix: evolve with the corresponding Liouvillian superoperator *)
-QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List ? MatrixQ, args___] :=
+QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {__ ? QuantumOperatorQ} -> gammas_List ? MatrixQ, args___] /; jumpRatesQ[lindblad, gammas] :=
     QuantumEvolve[QuantumOperator["Hamiltonian"[hamiltonian, lindblad, gammas]], args]
 
 QuantumEvolve[
@@ -50,7 +60,7 @@ QuantumEvolve[
     defaultState : _ ? QuantumStateQ | Automatic | None : Automatic,
     defaultParameter : _Symbol | {_Symbol, _ ? NumericQ, _ ? NumericQ} | Automatic : Automatic,
     opts : OptionsPattern[]
-] := Enclose @ Block[{
+] /; jumpRatesQ[lindblad, gammas] := Enclose @ Block[{
     state = None, basis,
     matrix, jumps,
     parameter, parameterSpec,
@@ -260,7 +270,24 @@ QuantumEvolve[
     ]
 ]
 
-QuantumEvolve[hamiltonian_QuantumOperator, args___] := QuantumEvolve[hamiltonian, {} -> {}, args]
+(* a call without jump operators gets an empty list of them; the rule it adds in their
+   place keeps this definition from applying a second time *)
+QuantumEvolve[hamiltonian_QuantumOperator, args___] /; ! MatchQ[{args}, {_List -> _, ___}] := QuantumEvolve[hamiltonian, {} -> {}, args]
+
+(* a call that reaches this definition matched none of the forms above: name the argument at fault *)
+QuantumEvolve[_QuantumOperator, lindblad_List -> gammas_, args___] := Which[
+    ! AllTrue[lindblad, QuantumOperatorQ],
+    With[{bad = Select[lindblad, ! QuantumOperatorQ[#] &]},
+        Message[QuantumEvolve::jump, bad];
+        Failure["InvalidJumpOperators", <|"MessageTemplate" :> QuantumEvolve::jump, "MessageParameters" -> {bad}|>]
+    ],
+    ! jumpRatesQ[lindblad, gammas],
+    Message[QuantumEvolve::rates, gammas, Length[lindblad]];
+    Failure["InvalidRates", <|"MessageTemplate" :> QuantumEvolve::rates, "MessageParameters" -> {gammas, Length[lindblad]}|>],
+    True,
+    Message[QuantumEvolve::args, {args}];
+    Failure["InvalidArguments", <|"MessageTemplate" :> QuantumEvolve::args, "MessageParameters" -> {{args}}|>]
+]
 
 
 MapSparseArray[f_, sa_] := SparseArray[Thread[sa["ExplicitPositions"] -> f /@ sa["ExplicitValues"]], Dimensions[sa]]

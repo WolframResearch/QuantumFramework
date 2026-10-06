@@ -308,3 +308,35 @@ VerificationTest[
 ]
 
 EndTestSection[]
+
+
+BeginTestSection["Liouvillian - rates"]
+
+(* A rate list of the wrong length is refused, neither padded with unit rates nor cut. *)
+VerificationTest[
+    With[{l = QuantumOperator[{{0, 1}, {0, 0}}]},
+        FailureQ @ QuantumOperator["Liouvillian"[QuantumOperator["Z"], {l, l}, {\[FormalG]}]]
+    ],
+    True,
+    {QuantumOperator::rates},
+    TestID -> "Liouvillian-too-few-rates-fail"
+]
+
+VerificationTest[
+    FailureQ @ QuantumOperator["Hamiltonian"[QuantumOperator["Z"], {QuantumOperator[{{0, 1}, {0, 0}}]}, {{1, 0}, {0, 1}}]],
+    True,
+    {QuantumOperator::rates},
+    TestID -> "Hamiltonian-rate-matrix-of-the-wrong-size-fails"
+]
+
+(* No rates means a unit rate for each jump operator. *)
+VerificationTest[
+    With[{l = QuantumOperator[{{0, 1}, {0, 0}}]},
+        Normal[QuantumOperator["Liouvillian"[QuantumOperator["Z"], {l}]]["Matrix"]] ===
+            Normal[QuantumOperator["Liouvillian"[QuantumOperator["Z"], {l}, {1}]]["Matrix"]]
+    ],
+    True,
+    TestID -> "Liouvillian-no-rates-are-unit-rates"
+]
+
+EndTestSection[]

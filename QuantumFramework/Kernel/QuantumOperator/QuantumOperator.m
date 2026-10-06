@@ -16,6 +16,7 @@ PackageScope["matrixMapAmplitudes"]
 PackageScope["lazyMatrixMapAmplitudesQ"]
 PackageScope["padQuantumOperators"]
 PackageScope["padJumpOperators"]
+PackageScope["jumpRatesQ"]
 
 
 (* What the matrix constructors below accept: a rank-2 array container of any
@@ -34,6 +35,7 @@ QuantumOperator::invalidOutputOrder = "output order should be a list of distinct
 QuantumOperator::invalidName = "`1` is not a recognized QuantumOperator constructor"
 QuantumOperator::invalidArgs = "QuantumOperator constructor `1` did not match any rule"
 QuantumOperator::broadcast = "broadcasting a `1`-qudit operator over an order of length `2` would build a tensor power of dimension `3`, exceeding `4`; supply an operator and order of matching size"
+QuantumOperator::rates = "the rates `1` do not fit the jump operators: give as many rates as there are jump operators, `2`, or a `2` by `2` rate matrix"
 
 
 (* largest implied dimension the order-driven multiplicity broadcast may materialize *)
@@ -832,6 +834,13 @@ padJumpOperators[h_ ? QuantumOperatorQ, ls : {___ ? QuantumOperatorQ}] := Which[
 padJumpOperators[None, ls : {___ ? QuantumOperatorQ}] := {None, If[SameQ @@ Through[ls["Order"]], ls, padQuantumOperators[ls]]}
 
 padJumpOperators[h_, ls_] := {h, ls}
+
+(* rates for a list of jump operators: none (every rate is 1), one rate per jump operator,
+   or a square matrix of them (a Kossakowski matrix) *)
+jumpRatesQ[ls_List, gammas_] :=
+    gammas === {} ||
+    VectorQ[gammas] && Length[gammas] == Length[ls] ||
+    MatrixQ[gammas] && Dimensions[gammas] === {Length[ls], Length[ls]}
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
     ordered1, ordered2
