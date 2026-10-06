@@ -17,29 +17,25 @@ FockState::usage =
 "\!\(\*RowBox[{\"FockState\", \"[\", RowBox[{StyleBox[\"n\", \"TI\"]}], \"]\"}]\) gives the Fock (number) state |\!\(\*StyleBox[\"n\", \"TI\"]\)\[RightAngleBracket].\n\!\(\*RowBox[{\"FockState\", \"[\", RowBox[{RowBox[{\"{\", RowBox[{StyleBox[\"n1\", \"TI\"], \",\", StyleBox[\"n2\", \"TI\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \"]\"}]\) gives the multi-mode Fock state |\!\(\*StyleBox[\"n1\", \"TI\"]\), \!\(\*StyleBox[\"n2\", \"TI\"]\), ...\[RightAngleBracket].\n\!\(\*RowBox[{\"FockState\", \"[\", RowBox[{\"\[Ellipsis]\", \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) of all the defined modes (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).";
 FockState::clip = "Index `1` was outside the valid range {0, `2`} and has been clipped.";
 
-FockState[n_Integer, size_ : $FockSize] := Block[{nEff = n},
+fockClip[n_Integer, size_] := If[0 <= n < size, n,
 
-  If[n < 0 || n >= size,
-  
-    Message[FockState::clip, n, size - 1];
-    
-    nEff = Clip[n, {0, size - 1}];
-  ];
-  
-  QuantumState[SparseArray[{nEff + 1 -> 1}, size], size, "Label"-> Ket[{n}]]
-];
+  Message[FockState::clip, n, size - 1];
+
+  Clip[n, {0, size - 1}]
+]
+
+FockState[n_Integer, size_ : $FockSize] := With[{nEff = fockClip[n, size]},
+
+  QuantumState[SparseArray[{nEff + 1 -> 1}, size], size, "Label"-> Ket[{nEff}]]
+]
 
 
 
-FockVals::len="Values of `1` must be non negative integers less that the desired size of the space: `2`";
+FockState[vals : {__Integer}, size_ : $FockSize] := With[{nEffs = fockClip[#, size] & /@ vals},
 
-FockState[vals_List, size_:$FockSize]:= If[!AllTrue[vals,IntegerQ[#]&&(0<=#<size)&], 
-
-	Message[FockVals::len,vals,size],
-
-	With[{idx = FromDigits[vals, size] + 1, dim = size^Length[vals]},
-      QuantumState[SparseArray[{idx -> 1}, dim], ConstantArray[size, Length[vals]]
-      ,"Label"->Ket[vals]]
+	With[{idx = FromDigits[nEffs, size] + 1, dim = size^Length[nEffs]},
+      QuantumState[SparseArray[{idx -> 1}, dim], ConstantArray[size, Length[nEffs]]
+      ,"Label"->Ket[nEffs]]
     ]
   ]
 
@@ -71,16 +67,22 @@ CoherentState[size_Integer: $FockSize, OptionsPattern[]] := Block[{n = 0},
 
 ThermalState::usage =
 "\!\(\*RowBox[{\"ThermalState\", \"[\", RowBox[{StyleBox[\"nbar\", \"TI\"]}], \"]\"}]\) gives a thermal mixed state with mean photon number \!\(\*StyleBox[\"nbar\", \"TI\"]\).\n\!\(\*RowBox[{\"ThermalState\", \"[\", RowBox[{StyleBox[\"nbar\", \"TI\"], \",\", StyleBox[\"size\", \"TI\"]}], \"]\"}]\) specifies the Fock space \!\(\*StyleBox[\"size\", \"TI\"]\) (default: \!\(\*StyleBox[\"$FockSize\", \"TI\"]\)).";
+ThermalState::nbar = "The mean photon number `1` must be a non-negative real number.";
 
 (* rho_nn = (1 - q) q^n with q = nbar / (1 + nbar), the diagonal built as a running
    product, as CoherentState builds its amplitudes: the n = 0 entry is 1 - q, not
    q^0, so nbar = 0 gives the vacuum rather than 0^0. *)
-ThermalState[nbar_, size_:$FockSize] := With[{q = nbar / (1 + nbar)},
-    QuantumState[
-        SparseArray[Band[{1, 1}] -> NestList[q # &, 1 - q, size - 1], {size, size}],
-        size,
-        "Label" -> StringForm["ThermalState[``]", nbar]
-    ]["Normalize"]
+ThermalState[nbar_, size_:$FockSize] := If[NumericQ[nbar] && !TrueQ[NonNegative[nbar]],
+
+    Message[ThermalState::nbar, nbar]; $Failed,
+
+    With[{q = nbar / (1 + nbar)},
+        QuantumState[
+            SparseArray[Band[{1, 1}] -> NestList[q # &, 1 - q, size - 1], {size, size}],
+            size,
+            "Label" -> StringForm["ThermalState[``]", nbar]
+        ]["Normalize"]
+    ]
 ]
 
 
