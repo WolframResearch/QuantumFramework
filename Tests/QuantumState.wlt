@@ -1727,4 +1727,11 @@ VerificationTest[
     TestID -> "Eigensystem-ChopNonHermitian"
 ]
 
+(* A state hands to its basis exactly the properties both "Properties" lists share. *)
+VerificationTest[
+    Sort[Keys[Wolfram`QuantumFramework`Properties`PackagePrivate`stateBasisProperties]],
+    Sort[Intersection[QuantumBasis["Properties"], QuantumState["Properties"]]],
+    TestID -> "Property-handed-to-the-basis-match-Properties"
+]
+
 EndTestSection[]

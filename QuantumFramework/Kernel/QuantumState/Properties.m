@@ -142,10 +142,8 @@ QuantumStateProp[QuantumState[_, basis_], "Basis"] := basis
 
 (* Direct parameter getters: the parameter spec lives in the basis. Without these,
    qs["Parameters"] falls through every QuantumStateProp clause to the generic basis
-   delegation at the end of this file, whose guard rebuilds both property lists and
-   intersects them on each call. The parameterization rule reads these three times per
-   qs[t0] - twice in its two-stage dispatch, once in its guard - so that fall-through was
-   most of what substituting a parameter cost outside the basis rebuild itself. *)
+   delegation at the end of this file. The parameterization rule reads these three times per
+   qs[t0] - twice in its two-stage dispatch, once in its guard. *)
 
 QuantumStateProp[QuantumState[_, basis_], "ParameterSpec"] := basis["ParameterSpec"]
 
@@ -1165,6 +1163,9 @@ QuantumStateProp[qs_, "PauliTree" | "PauliGraph", args___] := QuantumStatePauliT
 
 (* basis properties *)
 
-QuantumStateProp[qs_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[QuantumBasis["Properties"], QuantumState["Properties"]]] := qs["Basis"][prop, args]
+(* The properties a state hands to its basis: those both "Properties" lists share. Both lists are
+   fixed, so the set is computed once. *)
+stateBasisProperties := stateBasisProperties = AssociationThread[Intersection[QuantumBasis["Properties"], QuantumState["Properties"]], True]
+
+QuantumStateProp[qs_, prop_ ? propQ, args___] /; KeyExistsQ[stateBasisProperties, prop] := qs["Basis"][prop, args]
 

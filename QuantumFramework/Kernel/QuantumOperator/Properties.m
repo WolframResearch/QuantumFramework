@@ -106,11 +106,9 @@ QuantumOperator::failprop = "property `` have failed with ``";
 
 QuantumOperatorProp[QuantumOperator[state_, _], "State"] := state
 
-(* Direct structural getter: the basis lives in the wrapped state. Without this, qo["Basis"]
-   falls through all ~124 QuantumOperatorProp clauses to the generic delegation, whose guard
-   recomputes AllProperties on both operator and state and intersects them. Because the
-   cache-eligibility guard reads qo["Basis"]["ParameterArity"] on every property access, that
-   fall-through taxed every read; the direct getter removes it. *)
+(* Direct structural getter: the basis lives in the wrapped state. The cache-eligibility guard
+   reads qo["Basis"]["ParameterArity"] on every property access, so qo["Basis"] does not fall
+   through the clauses below to the generic delegation. *)
 QuantumOperatorProp[QuantumOperator[state_, _], "Basis"] := state["Basis"]
 
 QuantumOperatorProp[QuantumOperator[_, order : {_, _}], "Order"] := order
