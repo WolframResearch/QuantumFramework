@@ -61,7 +61,6 @@ PackageScope["QuditAdjacencyMatrix"]
 
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
-PackageScope["Memoize"]
 PackageScope["cacheProperty"]
 
 
@@ -1655,46 +1654,6 @@ profile[label_] := Function[{expr}, If[TrueQ[$QuantumFrameworkProfile], EchoTimi
 ReverseHalf[list_] /; Divisible[Length[list], 2] := Catenate @ Reverse[TakeDrop[list, Length[list] / 2]]
 
 HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Insert[#, Splice @ ReverseHalf[# + Length[#]], Length[#] / 2 + 1] &, {1, 2}, n - 1]
-
-(* Memoize[f] rewrites f so its results are cached. Results are stored in a private
-   Association keyed on Hash[Hold[args]] (with the held key kept alongside for collision
-   safety), instead of appending literal f[args] -> res DownValues. Because the cache key
-   is an integer hash and never a pattern, this never trips Rule::rhs even when arguments
-   contain Blank/Pattern (the failure the old QuantumOperatorProp cache had to Quiet).
-
-   Memoize[f, "CacheQ" -> pred] only caches calls for which pred @@ args is True; pred is
-   evaluated once on a cache miss (never on a hit), so an expensive cacheability predicate
-   does not tax repeated reads. The original definitions are preserved on a shadow symbol
-   whose bodies still call f, so recursion stays memoized.
-   TODO: WFR. *)
-Options[Memoize] = {"CacheQ" -> Automatic};
-
-Memoize[f_ ? Developer`SymbolQ, opts : OptionsPattern[]] := With[{g = Unique[f], cache = Unique[f]},
-    cache = <||>;
-    SetAttributes[g, HoldAll];
-    DownValues[g] = MapAt[ReplaceAll[f -> g], DownValues[f], {All, 1}];
-    With[{cacheQ = Replace[OptionValue[Memoize, {opts}, "CacheQ"], Automatic -> (True &)]},
-        ResourceFunction["BlockProtected"][{f},
-            DownValues[f] = {
-                HoldPattern[f[args___]] :> With[{held = Hold[args]},
-                    Module[{key = Hash[held], hit},
-                        hit = Lookup[cache, key, Missing[]];
-                        If[ ! MissingQ[hit] && First[hit] === held,
-                            Last[hit],
-                            With[{res = g[args]},
-                                (* a failed result (Failure, $Failed, or an abort) is
-                                   never cached: its Message side effects would be
-                                   swallowed on a hit, and an abort is not an answer *)
-                                If[ TrueQ[cacheQ[args]] && ! FailureQ[res], cache[key] = {held, res}];
-                                res
-                            ]
-                        ]
-                    ]
-                ]
-            }
-        ]
-    ]
-]
 
 (* Safe store for the *Prop property caches. Replaces the fragile
    `Quiet[HeadProp[obj, prop, args] = result, Rule::rhs]` (and bare Set) used in the object

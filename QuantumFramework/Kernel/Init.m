@@ -4,4 +4,4 @@ PackageImport["Wolfram`QuantumFramework`"]
 
 PackageImport["Wolfram`QuantumFramework`PackageScope`"]
 
-Memoize[FromOperatorShorthand]
+ResourceFunction["Memoize"][FromOperatorShorthand]
