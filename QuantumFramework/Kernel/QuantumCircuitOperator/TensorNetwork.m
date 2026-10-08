@@ -220,7 +220,17 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True, "Path" -> Automatic}, Options[QuantumTensorNetworkGraph], Options[TensorNetworkContract]]
+(* TensorNetworks contracts an index shared by more than two tensors natively from 1.1.0 on; an
+   older one runs out of memory on the network of a 14-qubit QFT whose diagonal gates share their
+   wires' indices *)
+tensorNetworksHyperedgesQ := tensorNetworksHyperedgesQ = ! PacletNewerQ["1.1.0", First[PacletFind["Wolfram/TensorNetworks"]]["Version"]]
+
+(* "DiagonalHyperedges" -> Automatic puts diagonal gates on shared wire indices when TensorNetworks
+   contracts them natively *)
+Options[TensorNetworkCompile] = Join[
+    {"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True, "Path" -> Automatic, "DiagonalHyperedges" -> Automatic},
+    FilterRules[Join[Options[QuantumTensorNetworkGraph], Options[TensorNetworkContract]], Except["DiagonalHyperedges"]]
+]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -251,7 +261,15 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
+    net = ConfirmBy[
+        QuantumTensorNetwork[circuit,
+            "Computational" -> computationalQ,
+            "DiagonalHyperedges" -> Replace[OptionValue["DiagonalHyperedges"], Automatic :> tensorNetworksHyperedgesQ],
+            FilterRules[{opts}, Options[QuantumTensorNetwork]],
+            "PrependInitial" -> False
+        ],
+        TensorNetworkQ
+    ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ TensorNetworkContract[net, OptionValue["Path"], FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},

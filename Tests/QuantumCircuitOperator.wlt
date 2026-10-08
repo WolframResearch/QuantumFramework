@@ -663,6 +663,16 @@ VerificationTest[
     TestID -> "DiagonalHyperedges-network-form"
 ]
 
+(* the apply path uses the shared-wire form by default with TensorNetworks 1.1.0 or later *)
+VerificationTest[
+    Wolfram`QuantumFramework`PackageScope`TensorNetworkCompile[
+        QuantumCircuitOperator[{QuantumState["00"] -> {1, 2}, "Z" -> 1, "CZ" -> {1, 2}, "H" -> 2}],
+        "ReturnTensorNetwork" -> True
+    ]["BinaryQ"],
+    False,
+    TestID -> "DiagonalHyperedges-default-with-TensorNetworks-1.1"
+]
+
 EndTestSection[]
 
 
