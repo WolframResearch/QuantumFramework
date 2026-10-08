@@ -604,6 +604,68 @@ With[{
 EndTestSection[]
 
 
+BeginTestSection["QuantumCircuitOperator - diagonal gates on shared wires"]
+
+(* With "DiagonalHyperedges", a circuit whose every wire starts at a state puts each diagonal gate
+   on its wires' current indices, so the gates on a wire share one index. TensorNetworks contracts
+   such a network natively from 1.1.0 on, and it gives the state the binary network gives. *)
+With[{
+    hyper = Method -> {"TensorNetwork", "DiagonalHyperedges" -> True},
+    binary = Method -> {"TensorNetwork", "DiagonalHyperedges" -> False},
+    distance = Max[Abs[N[Normal[#1["StateVector"]] - Normal[#2["StateVector"]]]]] &
+},
+    VerificationTest[
+        With[{qc = QuantumCircuitOperator["Fourier"[4]], psi = QuantumState[Range[16] / Sqrt[1496]]},
+            distance[qc[psi, hyper], qc[psi, binary]]
+        ],
+        _ ? (# < 10^-12 &),
+        SameTest -> MatchQ,
+        TestID -> "DiagonalHyperedges-QFT-eq-binary"
+    ];
+
+    VerificationTest[
+        With[{qc = QuantumCircuitOperator["PhaseOracle"[BooleanFunction[1234, 4]]], psi = QuantumState[ConstantArray[1 / 4, 16], ConstantArray[2, 4]]},
+            distance[qc[psi, hyper], qc[psi, binary]]
+        ],
+        _ ? (# < 10^-12 &),
+        SameTest -> MatchQ,
+        TestID -> "DiagonalHyperedges-PhaseOracle-eq-binary"
+    ];
+
+    VerificationTest[
+        With[{qc = QuantumCircuitOperator[{"X"[3] -> 1, "Z"[3] -> 1, "P"[Pi / 3, 3] -> 2, "Z"[3] -> 2, "X"[3] -> 2}], psi = QuantumState[Range[9] / Sqrt[285], {3, 3}]},
+            distance[qc[psi, hyper], qc[psi, binary]]
+        ],
+        _ ? (# < 10^-12 &),
+        SameTest -> MatchQ,
+        TestID -> "DiagonalHyperedges-qutrits-eq-binary"
+    ];
+
+    VerificationTest[
+        With[{qc = QuantumCircuitOperator @ Flatten @ Table[Join[("R"[0.4, "ZZ"] -> # &) /@ Partition[Range[4], 2, 1], ("RX"[0.6] -> # &) /@ Range[4]], {2}], psi = QuantumState["0000"]},
+            distance[qc[psi, hyper], qc[psi, binary]]
+        ],
+        _ ? (# < 10^-12 &),
+        SameTest -> MatchQ,
+        TestID -> "DiagonalHyperedges-Trotter-eq-binary"
+    ]
+]
+
+(* the gates on a wire share its index, so the network is not binary *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{QuantumState["00"] -> {1, 2}, "Z" -> 1, "CZ" -> {1, 2}, "H" -> 2}]},
+        {
+            Wolfram`QuantumFramework`PackageScope`QuantumTensorNetwork[qc, "DiagonalHyperedges" -> True]["BinaryQ"],
+            Wolfram`QuantumFramework`PackageScope`QuantumTensorNetwork[qc, "DiagonalHyperedges" -> False]["BinaryQ"]
+        }
+    ],
+    {False, True},
+    TestID -> "DiagonalHyperedges-network-form"
+]
+
+EndTestSection[]
+
+
 BeginTestSection["QuantumCircuitOperator - Schrodinger method"]
 
 (* Method -> "Schrodinger" folds gates one at a time; each per-gate apply

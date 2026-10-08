@@ -17,7 +17,18 @@ PackageScope["QuantumCircuitHypergraph"]
 
 tensorNetworkIndexSort[indices_List] := Catenate[Lookup[GroupBy[indices, MatchQ[_Superscript], SortBy[Last]], {True, False}]]
 
-Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False}
+Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False, "DiagonalHyperedges" -> False}
+
+(* A gate whose matrix in the computational basis is diagonal acts on its wires without moving them.
+   Its state's matrix holds its qudits in its own order, the same for rows and columns, so it is
+   diagonal exactly when the sorted matrix is, and its diagonal is the gate's tensor in that order. *)
+diagonalGateQ[op_ ? QuantumOperatorQ] := op["VectorQ"] && op["InputQudits"] > 0 &&
+    op["OutputOrder"] === op["InputOrder"] && op["OutputDimensions"] === op["InputDimensions"] &&
+    op["Output"]["ComputationalQ"] && op["Input"]["ComputationalQ"] && diagonalMatrixQ[op["StateMatrix"]]
+
+diagonalGateQ[_] := False
+
+diagonalTensor[op_] := ArrayReshape[Diagonal[op["StateMatrix"]], op["InputDimensions"]]
 
 Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options[Graph]]
 
@@ -105,7 +116,7 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
 
 (* TODO: refactor with above *)
 QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco, width, min, ops, orders, arity, vertices, rules, tensors, indices
+    circuit = qco, width, min, ops, orders, arity, vertices, rules, tensors, indices, diagonal, steps, diagonalIndices
 },
 	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
     width = circuit["Width"];
@@ -125,41 +136,57 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - arity;
-	rules = Catenate @ FoldPairList[
-		{nprev, order} |-> Block[{output, input, n, prev, next, indexRules},
+    (* With "DiagonalHyperedges", and every wire starting at a state, a diagonal gate is the tensor
+       of its diagonal on its wires' current indices, which it leaves as they are: the gates on a
+       wire between two others share one index, and the last of them share its free index. *)
+    diagonal = If[TrueQ[OptionValue["DiagonalHyperedges"]] && arity == 0, diagonalGateQ /@ ops, ConstantArray[False, Length[ops]]];
+	steps = FoldPairList[
+		{nprev, step} |-> Block[{output, input, n, prev, next, indexRules, diagonalQ},
             {n, prev} = nprev;
             n += 1;
-            next = prev;
-			{output, input} = order;
-            next[[ output - min + 1 ]] = n;
-			next[[ Complement[input, output] - min + 1 ]] = None[n];
-            indexRules = Superscript[prev[[# - min + 1]], #] -> Subscript[next[[# - min + 1]], #] & /@ input;
-			{
-                Replace[
-                    Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
+			{{output, input}, diagonalQ} = step;
+            If[ diagonalQ,
+                {{{}, Superscript[prev[[# - min + 1]], #] & /@ input}, {n, prev}},
+                next = prev;
+                next[[ output - min + 1 ]] = n;
+                next[[ Complement[input, output] - min + 1 ]] = None[n];
+                indexRules = Superscript[prev[[# - min + 1]], #] -> Subscript[next[[# - min + 1]], #] & /@ input;
+                {
                     {
-                        DirectedEdge[None[_], ___] :> Nothing,
-                        DirectedEdge[_, None[_], tag_] :> (tag /. None[i_] :> i),
-                        DirectedEdge[_, _, tag_] :> tag
+                        Replace[
+                            Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
+                            {
+                                DirectedEdge[None[_], ___] :> Nothing,
+                                DirectedEdge[_, None[_], tag_] :> (tag /. None[i_] :> i),
+                                DirectedEdge[_, _, tag_] :> tag
+                            },
+                            1
+                        ],
+                        None
                     },
-                    1
-                ],
-                {n, next}
-            }
-            
+                    {n, next}
+                }
+            ]
 		],
 		{1 - arity, Table[1 - arity, width]},
-		Rest[orders]
+		Rest[Thread[{orders, diagonal}]]
 	];
+    rules = Catenate[steps[[All, 1]]];
+    diagonalIndices = Prepend[steps[[All, 2]], None];
     If[ ! TrueQ[OptionValue["PrependInitial"]],
         vertices = Drop[vertices, arity];
         orders = Drop[orders, arity];
         ops = Drop[ops, arity];
+        diagonal = Drop[diagonal, arity];
+        diagonalIndices = Drop[diagonalIndices, arity];
     ];
     indices = Replace[
         MapThread[
-            Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]] &,
-            {vertices, orders}
+            If[ ListQ[#3],
+                #3,
+                Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]]
+            ] &,
+            {vertices, orders, diagonalIndices}
         ],
         rules,
         {2}
@@ -167,14 +194,13 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     If[ TrueQ[OptionValue["ReturnIndices"]],
         Return[indices];
     ];
-	tensors = sortedTensor /@ ops;
+	tensors = MapThread[If[#2, diagonalTensor[#1], sortedTensor[#1]] &, {ops, diagonal}];
 	ConfirmBy[
-        TensorNetwork[
-            tensors, indices,
-            With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
-                FindPermutation[
-                    free, tensorNetworkIndexSort[free]
-                ]
+        With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
+            If[ MemberQ[diagonal, True],
+                (* a free index the diagonal tensors share appears more than once, so the output is listed *)
+                TensorNetwork[tensors, indices, tensorNetworkIndexSort @ Union[free, Cases[Catenate[Pick[indices, diagonal]], _Superscript]]],
+                TensorNetwork[tensors, indices, FindPermutation[free, tensorNetworkIndexSort[free]]]
             ]
         ],
         TensorNetworkQ
