@@ -12,38 +12,38 @@ PackageScope["QuantumInterferometerQ"]
 
 
 
-(* ============================================================================ *)
-(* QuantumInterferometer: a passive linear-optical network on m modes.          *)
-(*                                                                              *)
-(* The primary data is the m x m transfer matrix W, with the convention         *)
-(*       W[[j, k]] = <1_j| U |1_k>,   i.e.   U a_k^dag U^dag = Sum_j W[[j,k]] a_j^dag *)
-(* so a gate g1 followed by g2 has W = W2 . W1. A Fock-space circuit is built    *)
-(* from W only on request ("CircuitOperator"), and photon statistics come from    *)
-(* permanents of submatrices of W, with no Fock-space truncation.                *)
-(*                                                                              *)
-(* Internal representation:                                                     *)
-(*   QuantumInterferometer[<|"Unitary" -> W, "Modes" -> m, "Method" -> method,   *)
-(*       "Elements" -> {"PS"[a] -> {p}, "BS"[t, f] -> {p, q}, ...},              *)
-(*       "Layers" -> {x1, x2, ...}|>]                                           *)
-(* Elements are time ordered, in QuantumCircuitOperator shorthand; Layers hold   *)
-(* each element's horizontal position in the mesh: integer k for the beam        *)
-(* splitter of column k, k -/+ 1/4 for the phase of a mesh cell, and half        *)
-(* integers for phases outside cells.                                           *)
-(*                                                                              *)
-(* Decompositions: Reck et al., PRL 73, 58 (1994); Clements et al., Optica 3,    *)
-(* 1460 (2016). Both meshes use Clements' cell T(t, f) of Eq. 1, a phase f on    *)
-(* the upper mode followed by a real beam splitter BS(t, 0).                    *)
-(* ============================================================================ *)
+(* QuantumInterferometer: a passive linear-optical network on m modes.
+
+   The primary data is the m x m transfer matrix W, with the convention
+       W[[j, k]] = <1_j| U |1_k>,   i.e.   U a_k^dag U^dag = Sum_j W[[j,k]] a_j^dag
+   so a gate g1 followed by g2 has W = W2 . W1. A Fock-space circuit is built
+   from W only on request ("CircuitOperator"), and photon statistics come from
+   permanents of submatrices of W, with no Fock-space truncation.
+
+   Internal representation:
+     QuantumInterferometer[<|"Unitary" -> W, "Modes" -> m, "Method" -> method,
+         "Elements" -> {"PS"[a] -> {p}, "BS"[t, f] -> {p, q}, ...},
+         "Layers" -> {x1, x2, ...}|>]
+   Elements are time ordered, in QuantumCircuitOperator shorthand; Layers hold
+   each element's horizontal position in the mesh: integer k for the beam
+   splitter of column k and half integers for phases.
+
+   Decompositions: Reck et al., PRL 73, 58 (1994); Clements et al., Optica 3,
+   1460 (2016); Dhand and Goyal, PRA 92, 043813 (2015). Reck and Clements null W
+   with Clements' cell T(t, f) of Eq. 1, a phase f on the upper mode followed by
+   a real beam splitter BS(t, 0); the cosine-sine mesh recurses on the CS
+   decomposition. Every mesh then moves its phases into the beam splitters' own
+   phi, which leaves a single phase column at the output. *)
 
 
 QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times]m unitary u into a mesh of beam splitters and phase shifters.
-QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"ClementsPhaseEnd\" or \"Reck\" mesh.
+QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Reck\" or \"CosineSine\" mesh.
 QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
-QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"ClementsPhaseEnd\" or \"Reck\".";
+QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\" or \"CosineSine\".";
 QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q} or \"PS\"[\[Alpha]] -> p.";
 QuantumInterferometer::modes = "The elements act on mode `1`, outside the `2` modes of the interferometer.";
 QuantumInterferometer::occ = "`1` is not a list of `2` nonnegative photon numbers.";
@@ -51,15 +51,12 @@ QuantumInterferometer::levels = "\"CircuitOperator\" needs the number of Fock le
 QuantumInterferometer::state = "The state must have `1` modes with the same number of levels each.";
 QuantumInterferometer::cutoff = "The state holds up to `1` photons but each mode keeps only `2` levels; at least `3` levels are needed for a faithful result.";
 QuantumInterferometer::compose ="Cannot compose interferometers on `1` and `2` modes.";
+QuantumInterferometer::plot = "\"MatrixPlot\" needs a numeric transfer matrix.";
 QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
 
 Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True};
 
 
-
-(* ============================================================================ *)
-(* Blocks: single-photon actions of the optical elements                        *)
-(* ============================================================================ *)
 
 (* BeamSplitterOperator[{t, f}] on modes p, q *)
 bsBlock[t_, f_] := {{Cos[t], - Exp[- I f] Sin[t]}, {Exp[I f] Sin[t], Cos[t]}}
@@ -91,20 +88,16 @@ normalAngle[x_] := If[NumericQ[x], Mod[x, 2 Pi, - Pi], x]
 
 
 
-(* ============================================================================ *)
-(* Nulling steps                                                                *)
-(* ============================================================================ *)
-
-(* Angles of the cell whose inverse, multiplied from the right on columns c and  *)
-(* c + 1, zeroes a = u[[r, c]] against its right neighbour b = u[[r, c + 1]].   *)
+(* Angles of the cell whose inverse, multiplied from the right on columns c and
+   c + 1, zeroes a = u[[r, c]] against its right neighbour b = u[[r, c + 1]]. *)
 rightNullAngles[a_, b_, tol_] := Which[
     zeroQ[a, tol], {0, 0},
     zeroQ[b, tol], {Pi / 2, 0},
     True, {ArcTan[Abs[b], Abs[a]], Arg[a Conjugate[b]]}
 ]
 
-(* Angles of the cell that, multiplied from the left on rows r - 1 and r, zeroes *)
-(* b = u[[r, c]] against the entry a = u[[r - 1, c]] above it.                 *)
+(* Angles of the cell that, multiplied from the left on rows r - 1 and r, zeroes
+   b = u[[r, c]] against the entry a = u[[r - 1, c]] above it. *)
 leftNullAngles[a_, b_, tol_] := Which[
     zeroQ[b, tol], {0, 0},
     zeroQ[a, tol], {Pi / 2, 0},
@@ -112,15 +105,6 @@ leftNullAngles[a_, b_, tol_] := Which[
 ]
 
 
-
-(* ============================================================================ *)
-(* Decompositions                                                               *)
-(* ============================================================================ *)
-
-(* One nulling step: the matrix with entry {r, c} zeroed, sowing the cell used.  *)
-(* "Right" multiplies columns c, c + 1 from the right by a cell inverse, against *)
-(* the right neighbour; "Left" multiplies rows r - 1, r from the left by a cell, *)
-(* against the entry above.                                                     *)
 nullStep[u_, {"Right", {r_, c_}}, tol_, simp_] := With[{angles = simp /@ rightNullAngles[u[[r, c]], u[[r, c + 1]], tol]},
     Sow[Append[angles, c], "Right"];
     Module[{v = u},
@@ -139,18 +123,17 @@ nullStep[u_, {"Left", {r_, c_}}, tol_, simp_] := With[{angles = simp /@ leftNull
     ]
 ]
 
-(* Fold the steps over W: {right cells, diagonal, left cells} with              *)
-(* L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D.                                    *)
+(* {right cells, diagonal, left cells} with L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D *)
 nullingSweep[w_, steps_, tol_, simp_] := With[{reaped = Reap[Fold[nullStep[#1, #2, tol, simp] &, w, steps], {"Right", "Left"}]},
     {Catenate[reaped[[2, 1]]], simp /@ Diagonal[reaped[[1]]], Catenate[reaped[[2, 2]]]}
 ]
 
-(* Reck: the entries below the diagonal, row by row from the bottom, each against *)
-(* its right neighbour, so W = D . R_K ... R_1: the cells, then the phase column. *)
+(* Reck: the entries below the diagonal, row by row from the bottom, each against
+   its right neighbour, so W = D . R_K ... R_1. *)
 reckSteps[m_] := Catenate @ Table[{"Right", {r, c}}, {r, m, 2, -1}, {c, r - 1}]
 
-(* Clements, supplementary material: along the i-th antidiagonal, from the right *)
-(* for odd i and from the left for even i, so W = L_1^-1 ... L_k^-1 . D . R_n ... R_1. *)
+(* Clements, supplementary material: along the i-th antidiagonal, from the right
+   for odd i and from the left for even i, so W = L_1^-1 ... L_k^-1 . D . R_n ... R_1. *)
 clementsSteps[m_] := Catenate @ Table[
     If[ OddQ[i],
         Table[{"Right", {m - j, i - j}}, {j, 0, i - 1}],
@@ -159,27 +142,8 @@ clementsSteps[m_] := Catenate @ Table[
     {i, m - 1}
 ]
 
-(* Move the phase column through one inverse cell, sowing the forward cell left  *)
-(* behind: T^-1(t, f) . diag(e^ia, e^ib) = diag(e^i(b - f + Pi), e^ib) . T(t, a - b + Pi). *)
-pushPhases[angles_, {t_, f_, p_}, simp_] := With[{a = angles[[p]], b = angles[[p + 1]]},
-    Sow[{t, simp @ normalAngle[a - b + Pi], p}, "Moved"];
-    ReplacePart[angles, p -> simp @ normalAngle[b - f + Pi]]
-]
-
-(* Pushing through the inverse cells, last one first, leaves                     *)
-(* W = D' . T'_1 ... T'_k . R_n ... R_1 (Clements Eq. 5).                        *)
-clementsPhaseEnd[{rights_, diagonal_, lefts_}, simp_] := With[{
-    reaped = Reap[Fold[pushPhases[#1, #2, simp] &, simp /@ Arg[diagonal], Reverse[lefts]], "Moved"]
-},
-    Join[
-        {"Cell", ##} & @@@ rights,
-        {"Cell", ##} & @@@ Catenate[reaped[[2]]],
-        MapIndexed[{"PS", #1, First[#2]} &, reaped[[1]]]
-    ]
-]
-
-(* A decomposition gives a time-ordered list of items: {"Cell", t, f, p},        *)
-(* {"InverseCell", t, f, p}, {"BS", t, f, {p, q}} and {"PS", a, p}.              *)
+(* A decomposition gives a time-ordered list of items: {"Cell", t, f, p},
+   {"InverseCell", t, f, p}, {"BS", t, f, {p, q}} and {"PS", a, p}. *)
 decompositionItems["Reck", w_, tol_, simp_] := With[{dec = nullingSweep[w, reckSteps[Length[w]], tol, simp]},
     Join[{"Cell", ##} & @@@ dec[[1]], MapIndexed[{"PS", simp[Arg[#1]], First[#2]} &, dec[[2]]]]
 ]
@@ -192,48 +156,82 @@ decompositionItems["Clements", w_, tol_, simp_] := With[{dec = nullingSweep[w, c
     ]
 ]
 
-decompositionItems["ClementsPhaseEnd", w_, tol_, simp_] :=
-    clementsPhaseEnd[nullingSweep[w, clementsSteps[Length[w]], tol, simp], simp]
+(* U = (L1 + L2) . CS . (R1^dag + R2^dag) on the first p = Ceiling[m/2] and the last q
+   modes, CS coupling mode p - q + i with p + i by BS(t_i, 0), cos t_i the singular
+   values of U11. L2 is the polar factor of U21 . R1, which is L2 . S, and
+   R2^dag = C . L2^dag . U22 - S . (L1^dag . U12) needs no division by C or S. *)
+csItems[{{z_}}, k_] := {{"PS", Arg[z], k + 1}}
 
-
-
-(* ============================================================================ *)
-(* Mesh layout: items to elements and positions                                 *)
-(* ============================================================================ *)
-
-(* Place one item given the last occupied column of every mode: each beam       *)
-(* splitter goes to the first column free on all the modes it spans, and a phase *)
-(* outside a cell half a column after the last beam splitter on its mode.        *)
-(* Returns {placed elements, updated last columns}, the FoldPairList contract.   *)
-placeItem[last_, {"Cell", t_, f_, p_}] := With[{k = 1 + Max[last[[{p, p + 1}]]]},
-    {{{"PS"[f] -> {p}, k - 1/4}, {"BS"[t, 0] -> {p, p + 1}, k}}, ReplacePart[last, {p -> k, p + 1 -> k}]}
+csItems[u_, k_] := Module[{p = Ceiling[Length[u] / 2], q = Floor[Length[u] / 2], l1, sigma, r1, y, l2, c, s},
+    {l1, sigma, r1} = SingularValueDecomposition[u[[;; p, ;; p]]];
+    y = (u[[p + 1 ;;, ;; p]] . r1)[[All, p - q + 1 ;;]];
+    l2 = #1 . ConjugateTranspose[#3] & @@ SingularValueDecomposition[y];
+    c = Diagonal[sigma][[p - q + 1 ;;]];
+    s = Norm /@ Transpose[y];
+    Join[
+        csItems[ConjugateTranspose[r1], k],
+        csItems[c (ConjugateTranspose[l2] . u[[p + 1 ;;, p + 1 ;;]]) - s (ConjugateTranspose[l1] . u[[;; p, p + 1 ;;]])[[p - q + 1 ;;]], k + p],
+        MapThread[{"BS", ArcTan[#1, #2], 0, {k + p - q + #3, k + p + #3}} &, {c, s, Range[q]}],
+        csItems[l1, k],
+        csItems[l2, k + p]
+    ]
 ]
 
-placeItem[last_, {"InverseCell", t_, f_, p_}] := With[{k = 1 + Max[last[[{p, p + 1}]]]},
-    {{{"BS"[- t, 0] -> {p, p + 1}, k}, {"PS"[- f] -> {p}, k + 1/4}}, ReplacePart[last, {p -> k, p + 1 -> k}]}
+decompositionItems["CosineSine", w_, _, _] := csItems[N[w], 0]
+
+(* BS(t, g) . diag(e^ia, e^ib) = diag(e^ia, e^ib) . BS(t, g + a - b): the phases met
+   so far ride along to the output, and each beam splitter takes up their difference.
+   BS(-t, g) = BS(t, g + Pi) keeps every t in [0, Pi/2]. *)
+absorbItem[phases_, {"Cell", t_, f_, p_}, simp_] := With[{new = ReplacePart[phases, p -> phases[[p]] + f]},
+    Sow[{"BS", t, simp @ normalAngle[new[[p]] - new[[p + 1]]], {p, p + 1}}];
+    new
 ]
 
+absorbItem[phases_, {"InverseCell", t_, f_, p_}, simp_] := (
+    Sow[{"BS", t, simp @ normalAngle[phases[[p]] - phases[[p + 1]] + Pi], {p, p + 1}}];
+    ReplacePart[phases, p -> phases[[p]] - f]
+)
+
+absorbItem[phases_, {"BS", t_, f_, {p_, q_}}, simp_] := (
+    Sow[{"BS", t, simp @ normalAngle[f + phases[[p]] - phases[[q]]], {p, q}}];
+    phases
+)
+
+absorbItem[phases_, {"PS", a_, p_}, _] := ReplacePart[phases, p -> phases[[p]] + a]
+
+meshItems[items_, m_, simp_] := With[{reaped = Reap[Fold[absorbItem[#1, #2, simp] &, ConstantArray[0, m], items]]},
+    Join[Catenate[reaped[[2]]], MapIndexed[{"PS", simp @ normalAngle[#1], First[#2]} &, reaped[[1]]]]
+]
+
+
+
+(* last holds the last occupied position of every mode: a beam splitter takes the
+   first column after it on all the modes it spans, a phase the next free
+   half-integer position. *)
 placeItem[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[p, q]]},
-    With[{k = 1 + Max[last[[span]]]},
+    With[{k = 1 + Floor[Max[last[[span]]]]},
         {{{"BS"[t, f] -> {p, q}, k}}, ReplacePart[last, Thread[span -> k]]}
     ]
 ]
 
-placeItem[last_, {"PS", a_, p_}] := {{{"PS"[a] -> {p}, last[[p]] + 1/2}}, last}
+placeItem[last_, {"PS", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2}, {{{"PS"[a] -> {p}, x}}, ReplacePart[last, p -> x]}]
 
-(* A phase outside a cell with no beam splitter after it on its mode moves to    *)
-(* the end of the mesh, so a trailing phase column lines up.                     *)
+modeSpan[_[__] -> modes_] := Range @@ MinMax[modes]
+
+(* Phases outside cells with no beam splitter after them on their mode shift
+   together, so that the first one lands on a common column after the mesh. *)
 alignTrailingPhases[placed_, m_] := With[{
     lastSplitter = Fold[
-        ReplacePart[#1, Thread[Range @@ MinMax[#2[[2]]] -> #2[[1]]]] &,
+        ReplacePart[#1, Thread[modeSpan[#2[[2]]] -> #2[[1]]]] &,
         ConstantArray[0, m],
-        Cases[MapIndexed[{First[#2], First[#1]} &, placed], {i_, "BS"[__] -> modes_} :> {i, modes}]
+        Cases[MapIndexed[{First[#2], First[#1]} &, placed], {i_, gate : ("BS"[__] -> _)} :> {i, gate}]
     ],
     end = Max[0, Cases[placed, {"BS"[__] -> _, x_} :> x]] + 1/2
 },
-    MapIndexed[
-        Replace[#1, {gate : ("PS"[_] -> {p_}), x_} /; IntegerQ[x - 1/2] && First[#2] > lastSplitter[[p]] :> {gate, end}] &,
-        placed
+    With[{trailing = Cases[MapIndexed[{First[#2], #1} &, placed], {i_, {"PS"[_] -> {p_}, x_}} /; IntegerQ[x - 1/2] && i > lastSplitter[[p]] :> {i, p, x}]},
+        With[{first = GroupBy[trailing, #[[2]] & -> Last, Min]},
+            ReplacePart[placed, {#1, 2} -> end + #3 - first[#2] & @@@ trailing]
+        ]
     ]
 ]
 
@@ -257,10 +255,6 @@ makeInterferometer[w_, m_, method_, items_, drop_, tol_] := With[{layout = layou
 
 
 
-(* ============================================================================ *)
-(* Constructors                                                                 *)
-(* ============================================================================ *)
-
 QuantumInterferometerQ[QuantumInterferometer[KeyValuePattern[{
     "Unitary" -> _ ? SquareMatrixQ, "Modes" -> _Integer, "Method" -> _, "Elements" -> _List, "Layers" -> _List
 }]]] := True
@@ -274,11 +268,11 @@ QuantumInterferometer[w_ ? SquareMatrixQ, opts : OptionsPattern[]] := Module[{
     tol = OptionValue[Tolerance]
 },
     If[! MatrixQ[w, NumericQ], Message[QuantumInterferometer::symbolic]; Return[$Failed]];
-    If[! MemberQ[{"Clements", "ClementsPhaseEnd", "Reck"}, method], Message[QuantumInterferometer::method, method]; Return[$Failed]];
+    If[! MemberQ[{"Clements", "Reck", "CosineSine"}, method], Message[QuantumInterferometer::method, method]; Return[$Failed]];
     If[! unitaryQ[w, tol], Message[QuantumInterferometer::nonunitary, tol]; Return[$Failed]];
     makeInterferometer[
         w, m, method,
-        decompositionItems[method, w, tol, If[Precision[w] === Infinity, Simplify, Identity]],
+        With[{simp = If[Precision[w] === Infinity, Simplify, Identity]}, meshItems[decompositionItems[method, w, tol, simp], m, simp]],
         OptionValue["DropIdentities"], tol
     ]
 ]
@@ -314,25 +308,21 @@ QuantumInterferometer[elements : {__Rule}, opts : OptionsPattern[]] :=
 QuantumInterferometer["Random"[m_Integer ? Positive], opts : OptionsPattern[]] :=
     QuantumInterferometer[RandomVariate[CircularUnitaryMatrixDistribution[m]], opts]
 
+(* the exact decomposition of FourierMatrix[m] stalls from m = 5 on *)
 QuantumInterferometer["Fourier"[m_Integer ? Positive], opts : OptionsPattern[]] :=
-    QuantumInterferometer[FourierMatrix[m], opts]
+    QuantumInterferometer[N @ FourierMatrix[m], opts]
 
 QuantumInterferometer[name : "Random" | "Fourier", m_Integer ? Positive, opts : OptionsPattern[]] :=
     QuantumInterferometer[name[m], opts]
 
-(* re-mesh with another method *)
 QuantumInterferometer[qi_QuantumInterferometer ? QuantumInterferometerQ, opts : OptionsPattern[]] :=
     QuantumInterferometer[qi["Unitary"], opts]
 
 
 
-(* ============================================================================ *)
-(* Properties                                                                   *)
-(* ============================================================================ *)
-
 $QuantumInterferometerProperties = {
     "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers",
-    "Depth", "BeamSplitterCount", "PhaseShifterCount", "Parameters",
+    "Depth", "BeamSplitterCount", "PhaseShifterCount", "ElementTable",
     "Diagram", "MatrixPlot", "CircuitOperator",
     "Amplitude", "Probability", "Probabilities", "Dagger"
 };
@@ -353,23 +343,22 @@ QuantumInterferometerProp[qi_, "BeamSplitterCount"] := Count[qi["Elements"], "BS
 
 QuantumInterferometerProp[qi_, "PhaseShifterCount"] := Count[qi["Elements"], "PS"[_] -> _]
 
-QuantumInterferometerProp[qi_, "Parameters"] := Dataset @ MapThread[
+QuantumInterferometerProp[qi_, "ElementTable"] := Dataset @ MapThread[
     <|"Element" -> Head[#1[[1]]], "Parameters" -> List @@ #1[[1]], "Modes" -> #1[[2]], "Position" -> #2|> &,
     {qi["Elements"], qi["Layers"]}
 ]
 
 QuantumInterferometerProp[qi_, "Diagram", opts : OptionsPattern[]] := interferometerDiagram[qi, opts]
 
-QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] := interferometerMatrixPlot[qi, opts]
+QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] :=
+    If[MatrixQ[qi["Unitary"], NumericQ], interferometerMatrixPlot[qi, opts], Message[QuantumInterferometer::plot]; $Failed]
 
 QuantumInterferometerProp[qi_, "CircuitOperator", d_Integer ? Positive, opts : OptionsPattern[]] := interferometerCircuit[qi, d, opts]
 
 QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferometer::levels]; $Failed)
 
-(* Photon patterns are occupation lists {n1, n2, ...} or Ket[{n1, n2, ...}];    *)
-(* results are keyed by Ket so they read in Dirac notation.                     *)
-
-(* single entries cost one permanent each, for when the full distribution is too large *)
+(* Photon patterns are occupation lists {n1, n2, ...} or Ket[{n1, n2, ...}];
+   results are keyed by Ket so they read in Dirac notation. *)
 QuantumInterferometerProp[qi_, "Amplitude", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
     If[occupationQ[qi, in] && occupationQ[qi, out], permanentAmplitude[qi["Unitary"], in, out], $Failed]
 ]
@@ -387,25 +376,21 @@ QuantumInterferometerProp[qi_, "Probabilities", s_] := With[{in = occupation[s]}
     ]
 ]
 
-inverseElement["BS"[t_, f_] -> modes_] := "BS"[- t, f] -> modes
+inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
 
 inverseElement["PS"[a_] -> modes_] := "PS"[- a] -> modes
 
-QuantumInterferometerProp[qi_, "Dagger"] := With[{depth = qi["Depth"]},
+QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceiling[Max[0, qi["Layers"]] - 1/2]]},
     QuantumInterferometer[<|
         "Unitary" -> ConjugateTranspose[qi["Unitary"]],
         "Modes" -> qi["Modes"],
         "Method" -> None,
         "Elements" -> Reverse[inverseElement /@ qi["Elements"]],
-        "Layers" -> Reverse[depth + 1 - qi["Layers"]]
+        "Layers" -> Reverse[last + 1 - qi["Layers"]]
     |>]
 ]
 
 
-
-(* ============================================================================ *)
-(* Photon statistics in the photon-number sector                                *)
-(* ============================================================================ *)
 
 occupation[Ket[s_List]] := s
 
@@ -417,7 +402,6 @@ occupationQ[qi_, s_] := If[
     Message[QuantumInterferometer::occ, s, qi["Modes"]]; False
 ]
 
-(* the row (or column) list of an occupation pattern: mode k repeated s_k times *)
 modeList[occupation_] := Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, occupation]
 
 photonPatterns[n_, m_] := ReverseSort @ FrobeniusSolve[ConstantArray[1, m], n]
@@ -429,8 +413,8 @@ permanentAmplitude[w_, s_, t_] := Which[
     True, Permanent[w[[modeList[t], modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
 ]
 
-(* All output amplitudes at once: U |S> = Prod_k (Sum_j W[[j, k]] a_j^dag)^s_k / Sqrt[s_k!] |0>, *)
-(* so the amplitude of T is its monomial's coefficient times Sqrt[Prod t! / Prod s!]. *)
+(* U |S> = Prod_k (Sum_j W[[j, k]] a_j^dag)^s_k / Sqrt[s_k!] |0>, so the amplitude
+   of T is its monomial's coefficient times Sqrt[Prod t! / Prod s!]. *)
 photonAmplitudes[w_, s_] := Module[{x},
     With[{vars = Array[x, Length[w]]},
         Association @ ReverseSortBy[First] @ Map[
@@ -446,10 +430,6 @@ photonAmplitudes[w_, s_] := Module[{x},
 
 
 
-(* ============================================================================ *)
-(* Fock-space circuit                                                           *)
-(* ============================================================================ *)
-
 elementOperator["BS"[t_, f_] -> {p_, q_}, d_, opts___] :=
     BeamSplitterOperator[{t, f}, d, {p, q}, Sequence @@ FilterRules[{opts}, Options[BeamSplitterOperator]]]
 
@@ -464,19 +444,17 @@ interferometerCircuit[qi_, d_, opts___] := With[{
     ]
 ]
 
-(* the Fock components {occupation, amplitude} of a state vector with d levels per mode *)
 fockComponents[qs_, d_, m_] := {IntegerDigits[#[[1, 1]] - 1, d, m], #[[2]]} & /@
     Most @ ArrayRules[SparseArray[qs["Computational"]["StateVector"]]]
 
-(* U Sum_S c_S |S> from the permanents, keeping the patterns that fit in d levels *)
 photonSectorState[w_, components_, d_, m_] := With[{
     amplitudes = KeySelect[Merge[#2 photonAmplitudes[w, #1] & @@@ components, Total], Max[#] < d &]
 },
     QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m]]
 ]
 
-(* A state vector goes through the permanents; a density matrix through the     *)
-(* Fock-space circuit. Either way the result keeps the input's d levels per mode. *)
+(* A state vector goes through the permanents; a density matrix through the
+   Fock-space circuit. Either way the result keeps the input's d levels per mode. *)
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[qs_QuantumState, opts : OptionsPattern[]] := Module[{
     dims = qs["Dimensions"], m = qi["Modes"], d, components, photons
 },
@@ -497,11 +475,9 @@ photonSectorState[w_, components_, d_, m_] := With[{
 
 
 
-(* ============================================================================ *)
-(* Composition                                                                  *)
-(* ============================================================================ *)
+modePositions[qi_] := Merge[MapThread[Thread[modeSpan[#1] -> #2] &, {qi["Elements"], qi["Layers"]}], Identity]
 
-(* qi2[qi1] is qi1 followed by qi2 *)
+(* qi2[qi1] is qi1 followed by qi2, shifted by whole columns until it clears qi1 on every shared mode *)
 (qi2_QuantumInterferometer ? QuantumInterferometerQ)[qi1_QuantumInterferometer ? QuantumInterferometerQ] := If[
     qi1["Modes"] != qi2["Modes"],
     Message[QuantumInterferometer::compose, qi1["Modes"], qi2["Modes"]]; $Failed,
@@ -510,15 +486,14 @@ photonSectorState[w_, components_, d_, m_] := With[{
         "Modes" -> qi1["Modes"],
         "Method" -> None,
         "Elements" -> Join[qi1["Elements"], qi2["Elements"]],
-        "Layers" -> Join[qi1["Layers"], qi2["Layers"] + Ceiling[Max[0, qi1["Layers"]]]]
+        "Layers" -> Join[
+            qi1["Layers"],
+            qi2["Layers"] + Max[0, Values @ Merge[KeyIntersection[{Max /@ modePositions[qi1], Min /@ modePositions[qi2]}], Floor[Subtract @@ #] + 1 &]]
+        ]
     |>]
 ]
 
 
-
-(* ============================================================================ *)
-(* Mesh diagram                                                                 *)
-(* ============================================================================ *)
 
 $couplerHalfWidth = 0.3;
 
@@ -531,23 +506,17 @@ phaseColor[a_] := If[NumericQ[a], Hue[Mod[N[a] / (2 Pi), 1], 0.7, 0.95], White]
 
 parameterForm[v_] := If[NumericQ[v], NumberForm[Chop[N[v]], {3, 2}], v]
 
-(* a waveguide that leaves the height y0 at x - w, runs at y1 through the coupling *)
-(* region in the middle half, and returns to y0 at x + w                         *)
 waveguide[x_, w_, y0_, y1_] := Line @ Table[
     {x + u w, y0 + (y1 - y0) (1 - Cos[Pi Min[1, 2 (1 - Abs[u])]]) / 2},
     {u, -1, 1, 1/20}
 ]
 
-(* the pieces of the wire on mode p in [x0, x1] that no coupler covers *)
 wireSegments[p_, couplers_, {x0_, x1_}] := With[{
     blocked = SortBy[Cases[couplers, {x_, p, _, _, _} | {x_, _, p, _, _} :> {x - $couplerHalfWidth, x + $couplerHalfWidth}], First]
 },
     Partition[Flatten[{x0, blocked, x1}], 2]
 ]
 
-(* A coupler is labelled by its pair (t, f): for a mesh cell f is the cell's     *)
-(* phase on the upper mode, which is drawn as part of the coupler; for a plain   *)
-(* beam splitter it is the beam splitter's own phase.                           *)
 couplerPrimitive[{x_, p_, q_, t_, f_}, labelQ_] := With[{w = $couplerHalfWidth, mid = - (p + q) / 2, gap = 0.08},
     Tooltip[
         {
@@ -575,21 +544,15 @@ phasePrimitive[{x_, p_, a_}, labelQ_] := Tooltip[
 Options[interferometerDiagram] = {"ShowParameters" -> False, "ModeLabels" -> Automatic};
 
 interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphics}]] := Module[{
-    m = qi["Modes"], placed = Transpose[{qi["Elements"], qi["Layers"]}], cellPhases, couplers, phases,
-    labelQ = TrueQ[OptionValue["ShowParameters"]], x0 = 0.25, x1
+    m = qi["Modes"], placed = Transpose[{qi["Elements"], qi["Layers"]}], couplers,
+    labelQ = TrueQ[OptionValue["ShowParameters"]], x0 = 0.25, x1 = Max[0, qi["Layers"]] + 0.75
 },
-    x1 = Max[0, qi["Layers"]] + 0.75;
-    (* a phase at k -/+ 1/4 belongs to the cell whose beam splitter is at column k *)
-    cellPhases = Association @ Cases[placed, {"PS"[a_] -> {p_}, x_} /; ! IntegerQ[2 x] :> {Round[x], p} -> a];
-    couplers = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :>
-        {x, Min[p, q], Max[p, q], t, Lookup[cellPhases, Key[{x, Min[p, q]}], f]}
-    ];
-    phases = Cases[placed, {"PS"[a_] -> {p_}, x_} /; IntegerQ[2 x] :> {x, p, a}];
+    couplers = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :> {x, Min[p, q], Max[p, q], t, f}];
     Graphics[
         {
             {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, couplers, {x0, x1}]], {p, m}]},
             couplerPrimitive[#, labelQ] & /@ couplers,
-            phasePrimitive[#, labelQ] & /@ phases,
+            phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
             If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
                 Table[Text[Style[p, 10, GrayLevel[0.4]], {x0 - 0.1, - p}, {1, 0}], {p, m}],
                 Nothing
@@ -610,14 +573,10 @@ interferometerMatrixPlot[qi_, opts : OptionsPattern[]] := With[{w = N[qi["Unitar
         ArrayPlot[Map[If[Abs[#] < 10^-12, White, phaseColor[Arg[#]]] &, w, {2}], opts,
             PlotLabel -> "Arg \!\(\*SubscriptBox[\(W\), \(jk\)]\)", Frame -> True, FrameTicks -> Automatic, Mesh -> All, MeshStyle -> GrayLevel[0.85], ImageSize -> 220
         ]
-    }, "  "] /; MatrixQ[w, NumericQ]
+    }, "  "]
 ]
 
 
-
-(* ============================================================================ *)
-(* Formatting                                                                   *)
-(* ============================================================================ *)
 
 interferometerIcon[qi_] := If[
     qi["Modes"] <= 16 && Length[qi["Elements"]] <= 400,

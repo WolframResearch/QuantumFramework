@@ -8,7 +8,9 @@ Needs["Wolfram`QuantumFramework`SecondQuantization`"]
 
 BeginTestSection["QuantumInterferometer"]
 
-$methods = {"Reck", "Clements", "ClementsPhaseEnd"};
+$exactMethods = {"Reck", "Clements"};
+
+$methods = Append[$exactMethods, "CosineSine"];
 
 rebuild[qi_] := QuantumInterferometer[qi["Elements"], qi["Modes"]]["Unitary"]
 
@@ -50,33 +52,53 @@ VerificationTest[
         With[{qi = QuantumInterferometer[FourierMatrix[m], Method -> method]},
             Precision[qi["Elements"]] === Infinity && AllTrue[Flatten[rebuild[qi] - FourierMatrix[m]], PossibleZeroQ]
         ],
-        {m, 3, 4}, {method, $methods}
+        {m, 3, 4}, {method, $exactMethods}
     ],
-    ConstantArray[True, {2, 3}],
+    ConstantArray[True, {2, 2}],
     TestID -> "QI-exact-Fourier-decomposition"
 ]
 
-(* The identity that moves the middle phase column to the output (Clements Eq. 5). *)
+(* The identities that move every phase of the mesh to its output, and keep theta in [0, Pi/2]. *)
 VerificationTest[
     With[{
-        cell = {{Exp[I #2] Cos[#1], - Sin[#1]}, {Exp[I #2] Sin[#1], Cos[#1]}} &,
+        bs = {{Cos[#1], - Exp[- I #2] Sin[#1]}, {Exp[I #2] Sin[#1], Cos[#1]}} &,
         phases = DiagonalMatrix[{Exp[I #1], Exp[I #2]}] &
     },
-        FullSimplify[
-            Inverse[cell[\[Theta], \[Phi]]] . phases[\[Alpha], \[Beta]] ==
-                phases[\[Beta] - \[Phi] + Pi, \[Beta]] . cell[\[Theta], \[Alpha] - \[Beta] + Pi]
+        FullSimplify[{
+            bs[\[Theta], \[Gamma]] . phases[\[Alpha], \[Beta]] == phases[\[Alpha], \[Beta]] . bs[\[Theta], \[Gamma] + \[Alpha] - \[Beta]],
+            bs[- \[Theta], \[Gamma]] == bs[\[Theta], \[Gamma] + Pi]
+        }]
+    ],
+    {True, True},
+    TestID -> "QI-phase-absorption-identities"
+]
+
+(* Every mesh element is a beam splitter with theta in [0, Pi/2], followed by one output phase column. *)
+VerificationTest[
+    SeedRandom[20];
+    With[{w = RandomVariate[CircularUnitaryMatrixDistribution[6]]},
+        Table[
+            With[{elements = Join[qi["Elements"], qi["Dagger"]["Elements"]]},
+                {
+                    qi["BeamSplitterCount"] == 15,
+                    qi["PhaseShifterCount"] <= 6,
+                    AllTrue[Cases[elements, ("BS"[t_, _] -> _) :> t], 0 <= # <= Pi / 2 &],
+                    MatchQ[qi["Elements"], {("BS"[__] -> _) .., ("PS"[_] -> _) ...}]
+                }
+            ],
+            {qi, QuantumInterferometer[w, Method -> #] & /@ $methods}
         ]
     ],
-    True,
-    TestID -> "QI-phase-end-commutation-identity"
+    ConstantArray[True, {3, 4}],
+    TestID -> "QI-mesh-is-beam-splitters-then-phases"
 ]
 
 VerificationTest[
     SeedRandom[12];
     With[{w = RandomVariate[CircularUnitaryMatrixDistribution[6]]},
-        {#["BeamSplitterCount"], #["Depth"]} & /@ (QuantumInterferometer[w, Method -> #] & /@ $methods)
+        {#["BeamSplitterCount"], #["Depth"]} & /@ (QuantumInterferometer[w, Method -> #] & /@ $exactMethods)
     ],
-    {{15, 9}, {15, 6}, {15, 6}},
+    {{15, 9}, {15, 6}},
     TestID -> "QI-mesh-sizes"
 ]
 
@@ -90,10 +112,28 @@ VerificationTest[
             DiagonalMatrix[Exp[I {1, 2, 3, 4}]],
             FourierMatrix[2]
         }},
-        {method, $methods}
+        {method, $exactMethods}
     ],
-    ConstantArray[True, {4, 3}],
+    ConstantArray[True, {4, 2}],
     TestID -> "QI-degenerate-unitaries"
+]
+
+(* The cosine-sine mesh is numeric; these have every t_i at 0 or Pi/2, so the singular values are degenerate. *)
+VerificationTest[
+    Table[
+        Max[Abs[rebuild[QuantumInterferometer[w, Method -> "CosineSine"]] - w]] < 10^-10,
+        {w, {
+            IdentityMatrix[5],
+            PermutationMatrix[{3, 1, 4, 2}],
+            PermutationMatrix[{3, 4, 1, 2}],
+            PermutationMatrix[{4, 5, 1, 2, 3}],
+            DiagonalMatrix[Exp[I {1, 2, 3, 4}]],
+            FourierMatrix[2],
+            FourierMatrix[7]
+        }}
+    ],
+    ConstantArray[True, 7],
+    TestID -> "QI-cosine-sine-degenerate-unitaries"
 ]
 
 VerificationTest[
@@ -153,7 +193,7 @@ VerificationTest[
 (* One photon per port of the Fourier tritter: the six patterns whose mode labels
    do not sum to a multiple of 3 are dark. *)
 VerificationTest[
-    Keys @ Select[QuantumInterferometer["Fourier"[3]]["Probabilities", {1, 1, 1}], PossibleZeroQ],
+    Keys @ Select[QuantumInterferometer[FourierMatrix[3]]["Probabilities", {1, 1, 1}], PossibleZeroQ],
     Ket /@ {{2, 1, 0}, {2, 0, 1}, {1, 2, 0}, {1, 0, 2}, {0, 2, 1}, {0, 1, 2}},
     TestID -> "QI-Fourier-tritter-suppression-law"
 ]
@@ -223,6 +263,56 @@ VerificationTest[
     $Failed,
     {QuantumInterferometer::levels},
     TestID -> "QI-circuit-needs-levels"
+]
+
+(* the exact decomposition of FourierMatrix[5] stalls, so the named form is numeric *)
+VerificationTest[
+    With[{qi = TimeConstrained[QuantumInterferometer["Fourier"[8]], 10]},
+        {Precision[qi["Unitary"]], Max[Abs[rebuild[qi] - FourierMatrix[8]]] < 10^-10}
+    ],
+    {MachinePrecision, True},
+    TestID -> "QI-named-Fourier-is-numeric"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]["MatrixPlot"],
+    $Failed,
+    {QuantumInterferometer::plot},
+    TestID -> "QI-matrix-plot-needs-numbers"
+]
+
+(* consecutive phases on one mode get their own positions, also as trailing phases and after "Dagger" *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"PS"[a] -> 1, "PS"[b] -> 1, "BS"[t] -> {1, 2}, "PS"[c] -> 2, "PS"[e] -> 2}, 2]},
+        {qi["Layers"], qi["Dagger"]["Layers"]}
+    ],
+    {{1/2, 3/2, 2, 5/2, 7/2}, {1/2, 3/2, 2, 5/2, 7/2}},
+    TestID -> "QI-consecutive-phases-layout"
+]
+
+(* the coupler of a mesh cell shows its beam splitter's own (theta, phi); the cell phase is a separate box *)
+VerificationTest[
+    SeedRandom[19];
+    With[{qi = QuantumInterferometer["Random"[4]]},
+        With[{diagram = qi["Diagram", "ShowParameters" -> True]},
+            {
+                Count[diagram, _Rectangle, Infinity] == qi["PhaseShifterCount"],
+                Cases[diagram, Tooltip[_, Row[{"(\[Theta], \[Phi]) = ", tf_, __}]] :> tf, Infinity] ==
+                    Cases[qi["Elements"], ("BS"[t_, f_] -> _) :> {t, f}]
+            }
+        ]
+    ],
+    {True, True},
+    TestID -> "QI-diagram-labels-beam-splitter-parameters"
+]
+
+VerificationTest[
+    SeedRandom[18];
+    With[{qi1 = QuantumInterferometer["Random"[4], Method -> "Reck"], qi2 = QuantumInterferometer["Random"[4]]},
+        qi2[qi1]["Depth"] == qi1["Depth"] + qi2["Depth"]
+    ],
+    True,
+    TestID -> "QI-composition-is-compact"
 ]
 
 EndTestSection[]
