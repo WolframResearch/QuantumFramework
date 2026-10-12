@@ -27,7 +27,7 @@ transferMatrix[op_, m_, d_] := Transpose @ Map[
 VerificationTest[
     With[{qi = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}, "PS"[\[Alpha]] -> 2}, 2]},
         FullSimplify[
-            qi["Unitary"] == transferMatrix[qi["CircuitOperator", 2, Method -> "Recurrence"], 2, 2],
+            qi["Unitary"] == transferMatrix[qi["CircuitOperator", 2], 2, 2],
             (\[Theta] | \[Phi] | \[Alpha]) \[Element] Reals
         ]
     ],
@@ -146,7 +146,7 @@ VerificationTest[
     SeedRandom[13];
     With[{qi = QuantumInterferometer["Random"[3]]},
         With[{amplitudes = qi[{1, 1, 1}], out = qi["CircuitOperator", 4][FockState[{1, 1, 1}, 4]]["StateVector"]},
-            Max[Abs[Lookup[amplitudes, Ket[#], 0] - out[[fockIndex[#, 4]]]] & /@ Tuples[Range[0, 3], 3]] < 10^-10
+            Max[Abs[Lookup[amplitudes, QuditName[#], 0] - out[[fockIndex[#, 4]]]] & /@ Tuples[Range[0, 3], 3]] < 10^-10
         ]
     ],
     True,
@@ -176,7 +176,7 @@ VerificationTest[
     With[{qi = QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2]},
         {
             qi["Amplitude", {1, 1} -> {1, 1}],
-            qi["Probability", Ket[{1, 1}] -> Ket[{2, 0}]],
+            qi["Probability", Ket[{1, 1}] -> QuditName[{2, 0}]],
             qi["Probabilities", {1, 1}],
             qi[Ket[{1, 1}]]
         }
@@ -184,8 +184,8 @@ VerificationTest[
     {
         0,
         1/2,
-        <|Ket[{2, 0}] -> 1/2, Ket[{1, 1}] -> 0, Ket[{0, 2}] -> 1/2|>,
-        <|Ket[{2, 0}] -> - 1/Sqrt[2], Ket[{0, 2}] -> 1/Sqrt[2]|>
+        <|QuditName[{2, 0}] -> 1/2, QuditName[{1, 1}] -> 0, QuditName[{0, 2}] -> 1/2|>,
+        <|QuditName[{2, 0}] -> - 1/Sqrt[2], QuditName[{0, 2}] -> 1/Sqrt[2]|>
     },
     TestID -> "QI-Hong-Ou-Mandel"
 ]
@@ -194,7 +194,7 @@ VerificationTest[
    do not sum to a multiple of 3 are dark. *)
 VerificationTest[
     Keys @ Select[QuantumInterferometer[FourierMatrix[3]]["Probabilities", {1, 1, 1}], PossibleZeroQ],
-    Ket /@ {{2, 1, 0}, {2, 0, 1}, {1, 2, 0}, {1, 0, 2}, {0, 2, 1}, {0, 1, 2}},
+    QuditName /@ {{2, 1, 0}, {2, 0, 1}, {1, 2, 0}, {1, 0, 2}, {0, 2, 1}, {0, 1, 2}},
     TestID -> "QI-Fourier-tritter-suppression-law"
 ]
 
@@ -203,7 +203,7 @@ VerificationTest[
     With[{qi = QuantumInterferometer["Random"[5]]},
         {
             Chop[Total[qi["Probabilities", {1, 1, 0, 1, 0}]] - 1],
-            Chop[qi["Probability", {1, 1, 0, 1, 0} -> {0, 0, 2, 0, 1}] - qi["Probabilities", {1, 1, 0, 1, 0}][Ket[{0, 0, 2, 0, 1}]]]
+            Chop[qi["Probability", {1, 1, 0, 1, 0} -> {0, 0, 2, 0, 1}] - qi["Probabilities", {1, 1, 0, 1, 0}][QuditName[{0, 0, 2, 0, 1}]]]
         }
     ],
     {0, 0},
@@ -254,7 +254,7 @@ VerificationTest[
 VerificationTest[
     QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2][FockState[{1, 1}, 2]]["Norm"],
     0,
-    {QuantumInterferometer::cutoff},
+    {QuantumInterferometer::truncation},
     TestID -> "QI-warns-on-short-cutoff"
 ]
 
@@ -313,6 +313,84 @@ VerificationTest[
     ],
     True,
     TestID -> "QI-composition-is-compact"
+]
+
+
+(* ---- squeezers: <t| U |s> = <0|U|0> Haf(K_{t+s}) / Sqrt[t! s!] ---- *)
+
+hafnian = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`hafnian;
+
+(* all-ones matrices count perfect matchings, (n - 1)!!; Haf([[0, G], [G^T, 0]]) = Perm(G) on both the pairing and the power-trace paths *)
+VerificationTest[
+    SeedRandom[21];
+    With[{g = RandomComplex[{-1 - I, 1 + I}, {6, 6}], h = RandomInteger[{-3, 3}, {3, 3}]},
+        {
+            hafnian[ConstantArray[1, {#, #}]] & /@ {2, 4, 6, 8},
+            Chop[hafnian[ConstantArray[1., {10, 10}]] - 945],
+            hafnian[ArrayFlatten[{{0, h}, {Transpose[h], 0}}]] == Permanent[h],
+            Abs[hafnian[ArrayFlatten[{{0, g}, {Transpose[g], 0}}]] - Permanent[g]] < 10^-10
+        }
+    ],
+    {{1, 3, 15, 105}, 0, True, True},
+    TestID -> "QI-hafnian"
+]
+
+fockAmplitudes[circuit_, in_, d_, outs_] := Normal[circuit[FockState[in, d]]["StateVector"]][[FromDigits[#, d] + 1 & /@ outs]]
+
+(* Gaussian boson sampling: the mesh conserves photon number, so the Fock circuit is exact below d photons *)
+VerificationTest[
+    SeedRandom[22];
+    With[{qi = QuantumInterferometer[Join[{"S"[0.5] -> 1, "S"[0.3 Exp[I]] -> 2, "S"[0.4] -> 3}, QuantumInterferometer["Random"[3]]["Elements"]], 3],
+          outs = Select[Tuples[Range[0, 6], 3], Total[#] <= 6 &]},
+        Max[Abs[(qi["Amplitude", {0, 0, 0} -> #] & /@ outs) - fockAmplitudes[qi["CircuitOperator", 7], {0, 0, 0}, 7, outs]]] < 10^-12
+    ],
+    True,
+    TestID -> "QI-squeezers-then-mesh-match-Fock-circuit"
+]
+
+(* squeezers between beam splitters, with photons in: the truncated circuit converges to the hafnians *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"S"[0.4 Exp[0.5 I]] -> 1, "BS"[0.7, 0.3] -> {1, 2}, "S"[0.3 Exp[-1.2 I]] -> 2, "BS"[0.4, 1.] -> {1, 2}}, 2],
+          outs = Tuples[Range[0, 4], 2]},
+        Max @ Table[Abs[(qi["Amplitude", in -> #] & /@ outs) - fockAmplitudes[qi["CircuitOperator", 40], in, 40, outs]], {in, {{0, 0}, {1, 0}, {0, 2}}}] < 10^-9
+    ],
+    True,
+    TestID -> "QI-interleaved-squeezers-match-Fock-circuit"
+]
+
+(* S(r) and S(-r) on a 50:50 splitter give the two-mode squeezed vacuum, Sum_n Tanh[r]^n |n, n> / Cosh[r] *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"S"[0.5] -> 1, "S"[-0.5] -> 2, "BS"[Pi / 4, 0] -> {1, 2}}, 2]},
+        {
+            Max @ Abs @ KeyValueMap[#2 - If[Equal @@ #1["Name"], Tanh[0.5] ^ (2 #1["Name"][[1]]) / Cosh[0.5] ^ 2, 0] &, qi["Probabilities", {0, 0}, "Cutoff" -> 6]] < 10^-12,
+            qi["Unitary"],
+            qi["SqueezerCount"]
+        }
+    ],
+    {True, $Failed, 2},
+    {QuantumInterferometer::squeezed},
+    TestID -> "QI-two-mode-squeezed-vacuum"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"S"[0.4 Exp[0.5 I]] -> 1, "BS"[0.7, 0.3] -> {1, 2}, "S"[0.3 Exp[-1.2 I]] -> 2, "PS"[0.9] -> 2}, 2]},
+        {
+            Max[Abs[Table[qi["Dagger"][qi]["Amplitude", in -> out], {in, {{0, 0}, {1, 0}, {1, 1}}}, {out, {{0, 0}, {1, 0}, {1, 1}}}] - IdentityMatrix[3]]] < 10^-12,
+            Total[qi["Probabilities", {1, 0}]] > 1 - 10^-4
+        }
+    ],
+    {True, True},
+    TestID -> "QI-squeezers-dagger-and-auto-cutoff"
+]
+
+(* passive networks ignore "Cutoff": photon number is fixed *)
+VerificationTest[
+    SeedRandom[23];
+    With[{qi = QuantumInterferometer["Random"[3]]},
+        qi["Probabilities", {1, 1, 0}, "Cutoff" -> 1] === qi["Probabilities", {1, 1, 0}] && qi["SqueezerCount"] == 0
+    ],
+    True,
+    TestID -> "QI-passive-ignores-cutoff"
 ]
 
 EndTestSection[]

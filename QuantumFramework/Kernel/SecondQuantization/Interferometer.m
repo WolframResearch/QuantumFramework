@@ -33,25 +33,34 @@ PackageScope["QuantumInterferometerQ"]
    with Clements' cell T(t, f) of Eq. 1, a phase f on the upper mode followed by
    a real beam splitter BS(t, 0); the cosine-sine mesh recurses on the CS
    decomposition. Every mesh then moves its phases into the beam splitters' own
-   phi, which leaves a single phase column at the output. *)
+   phi, which leaves a single phase column at the output.
+
+   Squeezers "S"[xi] -> {p}, S(xi) = Exp[(xi^* a^2 - xi a^dag^2) / 2] as SqueezeOperator,
+   make the network active: "Unitary" is None and "Bogoliubov" holds {alpha, beta, c}
+   with U a_k^dag U^dag = Sum_j (alpha_jk a_j^dag + beta_jk a_j) and c = <0|U|0>.
+   Passive networks carry no "Bogoliubov" key and keep the permanent paths. *)
 
 
 QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times]m unitary u into a mesh of beam splitters and phase shifters.
 QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Reck\" or \"CosineSine\" mesh.
 QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
-QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.";
+QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
+Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
 QuantumInterferometer::method = "Method `1` is not one of \"Clements\", \"Reck\" or \"CosineSine\".";
-QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q} or \"PS\"[\[Alpha]] -> p.";
+QuantumInterferometer::elem = "`1` is not a valid element; use \"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p or \"S\"[\[Xi]] -> p.";
 QuantumInterferometer::modes = "The elements act on mode `1`, outside the `2` modes of the interferometer.";
 QuantumInterferometer::occ = "`1` is not a list of `2` nonnegative photon numbers.";
 QuantumInterferometer::levels = "\"CircuitOperator\" needs the number of Fock levels per mode, as in interferometer[\"CircuitOperator\", d]; n photons need d >= n + 1.";
 QuantumInterferometer::state = "The state must have `1` modes with the same number of levels each.";
-QuantumInterferometer::cutoff = "The state holds up to `1` photons but each mode keeps only `2` levels; at least `3` levels are needed for a faithful result.";
+QuantumInterferometer::truncation = "The state holds up to `1` photons but each mode keeps only `2` levels; at least `3` levels are needed for a faithful result.";
 QuantumInterferometer::compose ="Cannot compose interferometers on `1` and `2` modes.";
 QuantumInterferometer::plot = "\"MatrixPlot\" needs a numeric transfer matrix.";
+QuantumInterferometer::squeezed = "`1` is not defined for an interferometer with squeezers.";
+QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
+QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing; set \"Cutoff\" -> n.";
 QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
 
 Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True};
@@ -79,12 +88,76 @@ identityGateQ["BS"[t_, _] -> _, tol_] := zeroQ[t, tol]
 
 identityGateQ["PS"[a_] -> _, tol_] := zeroQ[Exp[I a] - 1, tol]
 
+identityGateQ["S"[xi_] -> _, tol_] := zeroQ[xi, tol]
+
 unitaryQ[w_, tol_] := If[Precision[w] === Infinity,
     AllTrue[Flatten[w . ConjugateTranspose[w] - IdentityMatrix[Length[w]]], PossibleZeroQ],
     UnitaryMatrixQ[w, Tolerance -> tol]
 ]
 
 normalAngle[x_] := If[NumericQ[x], Mod[x, 2 Pi, - Pi], x]
+
+
+passiveQ[QuantumInterferometer[data_]] := data["Unitary"] =!= None
+
+bogoliubov[element : (("BS"[__] | "PS"[_]) -> _), m_] := {gateMatrix[element, m], ConstantArray[0, {m, m}]}
+
+bogoliubov["S"[xi_] -> {p_}, m_] := {
+    ReplacePart[IdentityMatrix[m], {p, p} -> Cosh[Abs[xi]]],
+    ReplacePart[ConstantArray[0, {m, m}], {p, p} -> Exp[- I Arg[xi]] Sinh[Abs[xi]]]
+}
+
+vacuumMatrix[a_, b_] := - Inverse[ConjugateTranspose[a]] . ConjugateTranspose[b]
+
+(* {alpha, beta} compose as (a2, b2) o (a1, b1) = (a2 a1 + b2^* b1, b2 a1 + a2^* b1). A squeezer
+   on p acting on c Exp[a^dag . B . a^dag / 2] |0> leaves the vacuum amplitude
+   c Sqrt[Sech[r]] (1 - tau^* B_pp)^(-1/2), tau = e^(i phi) Tanh[r]; |tau|, |B_pp| < 1 keep the root on its principal branch. *)
+gaussianData[elements_, m_] := Fold[
+    With[{a = #1[[1]], b = #1[[2]], c = #1[[3]], e = bogoliubov[#2, m]},
+        {
+            e[[1]] . a + Conjugate[e[[2]]] . b,
+            e[[2]] . a + Conjugate[e[[1]]] . b,
+            Replace[#2, {("S"[xi_] -> {p_}) :> c Sqrt[Sech[Abs[xi]]] (1 - Exp[- I Arg[xi]] Tanh[Abs[xi]] vacuumMatrix[a, b][[p, p]]) ^ (-1/2), _ :> c}]
+        }
+    ] &,
+    {IdentityMatrix[m], ConstantArray[0, {m, m}], 1},
+    elements
+]
+
+(* <0| e^(x.a) U e^(y.a^dag) |0> = c Exp[z.K.z / 2], z = (x, y), so
+   <t| U |s> = c Haf(K_{t+s}) / Sqrt[t! s!] with output rows first *)
+kMatrix[{a_, b_, _}] := With[{bv = vacuumMatrix[a, b]},
+    ArrayFlatten[{{bv, a + bv . b}, {Transpose[a + bv . b], (Transpose[a] . b + Transpose[b] . a) / 2 + Transpose[b] . bv . b}}]
+]
+
+gaussianAmplitude[{k_, c_}, s_, t_] := c hafnian[k[[#, #]] &[Join[modeList[t], Length[s] + modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
+
+gaussianKernel[QuantumInterferometer[data_]] := {kMatrix[data["Bogoliubov"]], data["Bogoliubov"][[3]]}
+
+
+hafnian[{}] := 1
+
+hafnian[a_ /; OddQ[Length[a]]] := 0
+
+hafnian[a_] := If[Length[a] <= 8 || Precision[a] === Infinity, hafnianPairing[a], hafnianTrace[a]]
+
+hafnianPairing[{}] := 1
+
+hafnianPairing[a_] := Sum[a[[1, j]] hafnianPairing[a[[#, #]] &[Complement[Range[2, Length[a]], {j}]]], {j, 2, Length[a]}]
+
+(* Bjorklund, Gupt and Quesada, arXiv:1805.12498: Haf(A) = Sum_Z (-1)^(n/2 - |Z|) f((A X)_Z), f(C) the
+   eta^(n/2) coefficient of Exp[Sum_k Tr[C^k] eta^k / (2 k)] *)
+hafnianTrace[a_] := With[{m = Length[a] / 2},
+    With[{b = a[[All, Join[Range[m + 1, 2 m], Range[m]]]]},
+        Total[(-1) ^ (m - Length[#]) traceCoefficient[b[[Join[#, # + m], Join[#, # + m]]], m] & /@ Subsets[Range[m]]]
+    ]
+]
+
+traceCoefficient[{}, _] := 0
+
+traceCoefficient[c_, m_] := With[{t = Tr /@ NestList[c . # &, c, m - 1]},
+    Last @ Fold[Append[#1, Total[t[[;; #2]] Reverse[#1]] / (2 #2)] &, {1}, Range[m]]
+]
 
 
 
@@ -214,7 +287,7 @@ placeItem[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[
     ]
 ]
 
-placeItem[last_, {"PS", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2}, {{{"PS"[a] -> {p}, x}}, ReplacePart[last, p -> x]}]
+placeItem[last_, {kind : "PS" | "S", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2}, {{{kind[a] -> {p}, x}}, ReplacePart[last, p -> x]}]
 
 modeSpan[_[__] -> modes_] := Range @@ MinMax[modes]
 
@@ -224,7 +297,7 @@ alignTrailingPhases[placed_, m_] := With[{
     lastSplitter = Fold[
         ReplacePart[#1, Thread[modeSpan[#2[[2]]] -> #2[[1]]]] &,
         ConstantArray[0, m],
-        Cases[MapIndexed[{First[#2], First[#1]} &, placed], {i_, gate : ("BS"[__] -> _)} :> {i, gate}]
+        Cases[MapIndexed[{First[#2], First[#1]} &, placed], {i_, gate : (("BS"[__] | "S"[_]) -> _)} :> {i, gate}]
     ],
     end = Max[0, Cases[placed, {"BS"[__] -> _, x_} :> x]] + 1/2
 },
@@ -256,7 +329,7 @@ makeInterferometer[w_, m_, method_, items_, drop_, tol_] := With[{layout = layou
 
 
 QuantumInterferometerQ[QuantumInterferometer[KeyValuePattern[{
-    "Unitary" -> _ ? SquareMatrixQ, "Modes" -> _Integer, "Method" -> _, "Elements" -> _List, "Layers" -> _List
+    "Unitary" -> _ ? SquareMatrixQ | None, "Modes" -> _Integer, "Method" -> _, "Elements" -> _List, "Layers" -> _List
 }]]] := True
 
 QuantumInterferometerQ[_] := False
@@ -284,6 +357,8 @@ normalizeElement[("BS" | "BeamSplitter")[t_, f_ : 0] -> {p_Integer ? Positive, q
 
 normalizeElement[("PS" | "PhaseShift")[a_] -> (p_Integer ? Positive | {p_Integer ? Positive})] := {"PS", a, p}
 
+normalizeElement[("S" | "Squeeze")[xi_] -> (p_Integer ? Positive | {p_Integer ? Positive})] := {"S", xi, p}
+
 normalizeElement[element_] := (Message[QuantumInterferometer::elem, element]; $Failed)
 
 QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : OptionsPattern[]] := Module[{items = normalizeElement /@ elements, layout},
@@ -292,13 +367,20 @@ QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : Options
         If[top > m, Message[QuantumInterferometer::modes, top, m]; Return[$Failed]]
     ];
     layout = layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]];
-    QuantumInterferometer[<|
-        "Unitary" -> elementsUnitary[layout[[1]], m],
-        "Modes" -> m,
-        "Method" -> None,
-        "Elements" -> layout[[1]],
-        "Layers" -> layout[[2]]
-    |>]
+    elementsInterferometer[layout[[1]], layout[[2]], m, None]
+]
+
+elementsInterferometer[elements_, layers_, m_, unitary_] := With[{passive = FreeQ[elements, "S"[_] -> _]},
+    QuantumInterferometer @ Join[
+        <|
+            "Unitary" -> If[passive, Replace[unitary, None :> elementsUnitary[elements, m]], None],
+            "Modes" -> m,
+            "Method" -> None,
+            "Elements" -> elements,
+            "Layers" -> layers
+        |>,
+        If[passive, <||>, <|"Bogoliubov" -> gaussianData[elements, m]|>]
+    ]
 ]
 
 QuantumInterferometer[elements : {__Rule}, opts : OptionsPattern[]] :=
@@ -316,13 +398,13 @@ QuantumInterferometer[name : "Random" | "Fourier", m_Integer ? Positive, opts : 
     QuantumInterferometer[name[m], opts]
 
 QuantumInterferometer[qi_QuantumInterferometer ? QuantumInterferometerQ, opts : OptionsPattern[]] :=
-    QuantumInterferometer[qi["Unitary"], opts]
+    If[passiveQ[qi], QuantumInterferometer[qi["Unitary"], opts], Message[QuantumInterferometer::squeezed, "Re-meshing"]; $Failed]
 
 
 
 $QuantumInterferometerProperties = {
     "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers",
-    "Depth", "BeamSplitterCount", "PhaseShifterCount", "ElementTable",
+    "Depth", "BeamSplitterCount", "PhaseShifterCount", "SqueezerCount", "ElementTable",
     "Diagram", "MatrixPlot", "CircuitOperator",
     "Amplitude", "Probability", "Probabilities", "Dagger"
 };
@@ -333,7 +415,10 @@ $QuantumInterferometerProperties = {
 
 QuantumInterferometerProp[_, "Properties"] := $QuantumInterferometerProperties
 
-QuantumInterferometerProp[QuantumInterferometer[data_], key : "Unitary" | "Modes" | "Method" | "Elements" | "Layers"] := data[key]
+QuantumInterferometerProp[QuantumInterferometer[data_], key : "Modes" | "Method" | "Elements" | "Layers"] := data[key]
+
+QuantumInterferometerProp[qi : QuantumInterferometer[data_], "Unitary"] :=
+    If[passiveQ[qi], data["Unitary"], Message[QuantumInterferometer::squeezed, "\"Unitary\""]; $Failed]
 
 QuantumInterferometerProp[qi_, "TransferMatrix"] := qi["Unitary"]
 
@@ -343,56 +428,63 @@ QuantumInterferometerProp[qi_, "BeamSplitterCount"] := Count[qi["Elements"], "BS
 
 QuantumInterferometerProp[qi_, "PhaseShifterCount"] := Count[qi["Elements"], "PS"[_] -> _]
 
-QuantumInterferometerProp[qi_, "ElementTable"] := Dataset @ MapThread[
-    <|"Element" -> Head[#1[[1]]], "Parameters" -> List @@ #1[[1]], "Modes" -> #1[[2]], "Position" -> #2|> &,
-    {qi["Elements"], qi["Layers"]}
+QuantumInterferometerProp[qi_, "SqueezerCount"] := Count[qi["Elements"], "S"[_] -> _]
+
+QuantumInterferometerProp[qi_, "ElementTable"] := Dataset @ Map[
+    <|"Element" -> Head[#[[1]]], "Parameters" -> List @@ #[[1]], "Modes" -> #[[2]]|> &,
+    qi["Elements"]
 ]
 
 QuantumInterferometerProp[qi_, "Diagram", opts : OptionsPattern[]] := interferometerDiagram[qi, opts]
 
-QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] :=
-    If[MatrixQ[qi["Unitary"], NumericQ], interferometerMatrixPlot[qi, opts], Message[QuantumInterferometer::plot]; $Failed]
+QuantumInterferometerProp[qi_, "MatrixPlot", opts : OptionsPattern[]] := Which[
+    ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "\"MatrixPlot\""]; $Failed,
+    MatrixQ[qi["Unitary"], NumericQ], interferometerMatrixPlot[qi, opts],
+    True, Message[QuantumInterferometer::plot]; $Failed
+]
 
-QuantumInterferometerProp[qi_, "CircuitOperator", d_Integer ? Positive, opts : OptionsPattern[]] := interferometerCircuit[qi, d, opts]
+QuantumInterferometerProp[qi_, "CircuitOperator", d_Integer ? Positive] := interferometerCircuit[qi, d]
 
 QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferometer::levels]; $Failed)
 
-(* Photon patterns are occupation lists {n1, n2, ...} or Ket[{n1, n2, ...}];
-   results are keyed by Ket so they read in Dirac notation. *)
+(* Photon patterns are occupation lists {n1, n2, ...}, Ket[{n1, n2, ...}] or QuditName[{n1, n2, ...}];
+   results are keyed by QuditName, as QuantumState["Probabilities"] is. *)
+fockAmplitude[qi_, s_, t_] := If[passiveQ[qi], permanentAmplitude[qi["Unitary"], s, t], gaussianAmplitude[gaussianKernel[qi], s, t]]
+
 QuantumInterferometerProp[qi_, "Amplitude", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
-    If[occupationQ[qi, in] && occupationQ[qi, out], permanentAmplitude[qi["Unitary"], in, out], $Failed]
+    If[occupationQ[qi, in] && occupationQ[qi, out], fockAmplitude[qi, in, out], $Failed]
 ]
 
 QuantumInterferometerProp[qi_, "Probability", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
-    If[occupationQ[qi, in] && occupationQ[qi, out], Abs[permanentAmplitude[qi["Unitary"], in, out]] ^ 2, $Failed]
+    If[occupationQ[qi, in] && occupationQ[qi, out], Abs[fockAmplitude[qi, in, out]] ^ 2, $Failed]
 ]
 
-QuantumInterferometerProp[qi_, "Probabilities", s_] := With[{in = occupation[s]},
-    If[ occupationQ[qi, in],
-        With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
-            Association @ Map[Ket[#] -> Abs[Lookup[amplitudes, Key[#], 0]] ^ 2 &, photonPatterns[Total[in], qi["Modes"]]]
+QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
+    Which[
+        ! occupationQ[qi, in], $Failed,
+        passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
+            Association @ Map[QuditName[#] -> Abs[Lookup[amplitudes, Key[#], 0]] ^ 2 &, photonPatterns[Total[in], qi["Modes"]]]
         ],
-        $Failed
+        True, Replace[gaussianAmplitudes[qi, in, OptionValue["Cutoff"]], a_Association :> Abs[a] ^ 2]
     ]
 ]
 
 inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes
 
-inverseElement["PS"[a_] -> modes_] := "PS"[- a] -> modes
+inverseElement[(kind : "PS" | "S")[a_] -> modes_] := kind[- a] -> modes
 
 QuantumInterferometerProp[qi_, "Dagger"] := With[{last = Max[qi["Depth"], Ceiling[Max[0, qi["Layers"]] - 1/2]]},
-    QuantumInterferometer[<|
-        "Unitary" -> ConjugateTranspose[qi["Unitary"]],
-        "Modes" -> qi["Modes"],
-        "Method" -> None,
-        "Elements" -> Reverse[inverseElement /@ qi["Elements"]],
-        "Layers" -> Reverse[last + 1 - qi["Layers"]]
-    |>]
+    elementsInterferometer[
+        Reverse[inverseElement /@ qi["Elements"]], Reverse[last + 1 - qi["Layers"]], qi["Modes"],
+        If[passiveQ[qi], ConjugateTranspose[qi["Unitary"]], None]
+    ]
 ]
 
 
 
 occupation[Ket[s_List]] := s
+
+occupation[s_QuditName] := s["Name"]
 
 occupation[s_] := s
 
@@ -424,23 +516,47 @@ photonAmplitudes[w_, s_] := Module[{x},
     ]
 ]
 
-(qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List]] /; VectorQ[occupation[s], IntegerQ] := With[{in = occupation[s]},
-    If[occupationQ[qi, in], KeyMap[Ket, photonAmplitudes[qi["Unitary"], in]], $Failed]
+shellAmplitudes[g_, s_, n_] := AssociationMap[gaussianAmplitude[g, s, #] &, photonPatterns[n, Length[s]]]
+
+(* squeezers change the photon number in pairs, so the output shells share the input's parity *)
+gaussianAmplitudes[qi_, s_, cutoff_] := With[{g = gaussianKernel[qi], start = Mod[Total[s], 2]},
+    Which[
+        IntegerQ[cutoff], KeyMap[QuditName, Association[shellAmplitudes[g, s, #] & /@ Range[start, cutoff, 2]]],
+        MatrixQ[N[g[[1]]], NumericQ], KeyMap[QuditName, autoShells[g, s, start]],
+        True, Message[QuantumInterferometer::symcutoff]; $Failed
+    ]
+]
+
+autoShells[g_, s_, start_] := Module[{n = start, amplitudes = shellAmplitudes[g, s, start], held},
+    held := N[Total[Abs[Values[amplitudes]] ^ 2]];
+    While[held < 1 - 10^-4 && n < 16, n += 2; amplitudes = Join[amplitudes, shellAmplitudes[g, s, n]]];
+    If[held < 1 - 10^-4, Message[QuantumInterferometer::autocutoff, n, held]];
+    amplitudes
+]
+
+(qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List] | _QuditName, opts : OptionsPattern[{"Cutoff" -> Automatic}]] /;
+    VectorQ[occupation[s], IntegerQ] := With[{in = occupation[s]},
+    Which[
+        ! occupationQ[qi, in], $Failed,
+        passiveQ[qi], KeyMap[QuditName, photonAmplitudes[qi["Unitary"], in]],
+        True, gaussianAmplitudes[qi, in, OptionValue["Cutoff"]]
+    ]
 ]
 
 
 
-elementOperator["BS"[t_, f_] -> {p_, q_}, d_, opts___] :=
-    BeamSplitterOperator[{t, f}, d, {p, q}, Sequence @@ FilterRules[{opts}, Options[BeamSplitterOperator]]]
+elementOperator["BS"[t_, f_] -> {p_, q_}, d_] := BeamSplitterOperator[{t, f}, d, {p, q}, Method -> "Recurrence"]
 
-elementOperator["PS"[a_] -> {p_}, d_, ___] := PhaseShiftOperator[a, d, {p}]
+elementOperator["PS"[a_] -> {p_}, d_] := PhaseShiftOperator[a, d, {p}]
 
-interferometerCircuit[qi_, d_, opts___] := With[{
+elementOperator["S"[xi_] -> {p_}, d_] := SqueezeOperator[xi, d, {p}]
+
+interferometerCircuit[qi_, d_] := With[{
     idle = Complement[Range[qi["Modes"]], Flatten[qi["Elements"][[All, 2]]]]
 },
     QuantumCircuitOperator @ Join[
         QuantumOperator[IdentityMatrix[d, SparseArray], {#}, d] & /@ idle,
-        elementOperator[#, d, opts] & /@ qi["Elements"]
+        elementOperator[#, d] & /@ qi["Elements"]
     ]
 ]
 
@@ -453,22 +569,23 @@ photonSectorState[w_, components_, d_, m_] := With[{
     QuantumState[SparseArray[KeyValueMap[FromDigits[#1, d] + 1 -> #2 &, amplitudes], d ^ m], ConstantArray[d, m]]
 ]
 
-(* A state vector goes through the permanents; a density matrix through the
-   Fock-space circuit. Either way the result keeps the input's d levels per mode. *)
-(qi_QuantumInterferometer ? QuantumInterferometerQ)[qs_QuantumState, opts : OptionsPattern[]] := Module[{
+(* A state vector goes through the permanents; a density matrix, or any state when
+   there are squeezers, through the Fock-space circuit. Either way the result keeps the
+   input's d levels per mode. *)
+(qi_QuantumInterferometer ? QuantumInterferometerQ)[qs_QuantumState] := Module[{
     dims = qs["Dimensions"], m = qi["Modes"], d, components, photons
 },
     If[Length[dims] != m || ! Equal @@ dims, Message[QuantumInterferometer::state, m]; Return[$Failed]];
     d = First[dims];
-    components = If[qs["StateType"] === "Vector", fockComponents[qs, d, m], None];
+    components = If[passiveQ[qi] && qs["StateType"] === "Vector", fockComponents[qs, d, m], None];
     photons = If[ components === None,
         Max[0, Total[IntegerDigits[# - 1, d, m]] & /@
             Flatten @ Position[Normal[qs["ProbabilitiesList"]], p_ /; ! PossibleZeroQ[p], {1}, Heads -> False]],
         Max[0, Total /@ components[[All, 1]]]
     ];
-    If[photons >= d, Message[QuantumInterferometer::cutoff, photons, d, photons + 1]];
+    If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
     If[ components === None,
-        qi["CircuitOperator", d, opts][qs],
+        qi["CircuitOperator", d][qs],
         photonSectorState[qi["Unitary"], components, d, m]
     ]
 ]
@@ -481,16 +598,15 @@ modePositions[qi_] := Merge[MapThread[Thread[modeSpan[#1] -> #2] &, {qi["Element
 (qi2_QuantumInterferometer ? QuantumInterferometerQ)[qi1_QuantumInterferometer ? QuantumInterferometerQ] := If[
     qi1["Modes"] != qi2["Modes"],
     Message[QuantumInterferometer::compose, qi1["Modes"], qi2["Modes"]]; $Failed,
-    QuantumInterferometer[<|
-        "Unitary" -> qi2["Unitary"] . qi1["Unitary"],
-        "Modes" -> qi1["Modes"],
-        "Method" -> None,
-        "Elements" -> Join[qi1["Elements"], qi2["Elements"]],
-        "Layers" -> Join[
+    elementsInterferometer[
+        Join[qi1["Elements"], qi2["Elements"]],
+        Join[
             qi1["Layers"],
             qi2["Layers"] + Max[0, Values @ Merge[KeyIntersection[{Max /@ modePositions[qi1], Min /@ modePositions[qi2]}], Floor[Subtract @@ #] + 1 &]]
-        ]
-    |>]
+        ],
+        qi1["Modes"],
+        If[passiveQ[qi1] && passiveQ[qi2], qi2["Unitary"] . qi1["Unitary"], None]
+    ]
 ]
 
 
@@ -541,6 +657,16 @@ phasePrimitive[{x_, p_, a_}, labelQ_] := Tooltip[
     Row[{"\[Phi] = ", a, ", mode ", p}]
 ]
 
+squeezerPrimitive[{x_, p_, xi_}, labelQ_] := Tooltip[
+    {
+        EdgeForm[{GrayLevel[0.25], AbsoluteThickness[1]}], FaceForm[RGBColor[0.96, 0.72, 0.38]],
+        Rectangle[{x - 0.11, - p - 0.11}, {x + 0.11, - p + 0.11}],
+        {Black, Text[Style["S", 7], {x, - p}]},
+        If[labelQ, {Black, Text[Style[parameterForm[xi], 8], {x, - p - 0.3}]}, Nothing]
+    },
+    Row[{"\[Xi] = ", xi, ", mode ", p}]
+]
+
 Options[interferometerDiagram] = {"ShowParameters" -> False, "ModeLabels" -> Automatic};
 
 interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphics}]] := Module[{
@@ -553,6 +679,7 @@ interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphic
             {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, couplers, {x0, x1}]], {p, m}]},
             couplerPrimitive[#, labelQ] & /@ couplers,
             phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
+            squeezerPrimitive[#, labelQ] & /@ Cases[placed, {"S"[xi_] -> {p_}, x_} :> {x, p, xi}],
             If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
                 Table[Text[Style[p, 10, GrayLevel[0.4]], {x0 - 0.1, - p}, {1, 0}], {p, m}],
                 Nothing
@@ -592,8 +719,8 @@ MakeBoxes[qi_QuantumInterferometer ? QuantumInterferometerQ, form_] ^:= BoxForm`
         {BoxForm`SummaryItem[{"Beam splitters: ", qi["BeamSplitterCount"]}], BoxForm`SummaryItem[{"Depth: ", qi["Depth"]}]}
     },
     {
-        {BoxForm`SummaryItem[{"Phase shifters: ", qi["PhaseShifterCount"]}]},
-        If[qi["Modes"] <= 6, {BoxForm`SummaryItem[{"Unitary: ", MatrixForm[qi["Unitary"]]}]}, Nothing]
+        {BoxForm`SummaryItem[{"Phase shifters: ", qi["PhaseShifterCount"]}], BoxForm`SummaryItem[{"Squeezers: ", qi["SqueezerCount"]}]},
+        If[passiveQ[qi] && qi["Modes"] <= 6, {BoxForm`SummaryItem[{"Unitary: ", MatrixForm[qi["Unitary"]]}]}, Nothing]
     },
     form
 ]
