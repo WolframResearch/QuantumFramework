@@ -360,3 +360,12 @@ Inference, supported by the cited material: lossy interferometric phase estimati
 ### Gaps
 - I found no survey of master's-level quantum-optics curricula or instructor preferences. The ranking is a reasoned inference, not an evidence-based measure of audience appeal.
 - I did not verify which lossy-interferometry quantities (QFI versus classical Fisher information for photon counting versus homodyne) have closed forms at finite N. A study would need to settle that before claiming where numerics are indispensable.
+
+## Undermind research references
+
+Related saved searches for follow-up research. These links do not establish that this document was originally derived from Undermind; its cited primary sources remain its evidence base.
+
+- [Quantum numerical applications with essential nonstandard representations](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20numerical%20applications%20with%20essential%20nonstandard%20representations) — Related Fock-basis, bosonic spectroscopy and numerical-representation questions.
+- [Compact computational questions across quantum science](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Compact%20computational%20questions%20across%20quantum%20science) — Related molecular-spectrum, imaging and photonic-operation studies.
+
+Workspace: [Roadmap for Wolfram quantum](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3); workspace ID: `bcedc042-7a0d-4f3d-b4ca-4e1c138571a3`. Links checked on 2026-10-04. For reuse, inspect the saved search goal and results before launching a new search; follow the primary-paper links for evidence.

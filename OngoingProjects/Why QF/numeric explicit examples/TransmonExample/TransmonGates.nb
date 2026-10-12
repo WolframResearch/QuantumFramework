@@ -1,0 +1,3211 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[    116456,       3202]
+NotebookOptionsPosition[     97841,       2865]
+NotebookOutlinePosition[     98848,       2893]
+CellTagsIndexPosition[     98805,       2890]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Fast Gates on a Transmon", "Title",
+ CellID->509267359,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell[TextData[{
+ "A transmon is a superconducting circuit that behaves as a weakly anharmonic \
+oscillator. A qubit is stored in its two lowest levels, and a microwave pulse \
+at the qubit frequency rotates it between them. The anharmonicity is small, a \
+few hundred megahertz against a qubit frequency of several gigahertz, so the \
+transition from ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+ " lies close to the qubit transition from ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "75d93363-5da6-51a4-23e6-ab4d5453238e"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25a568a6-87a2-527f-535a-810032572145"],
+ ". A short pulse has a broad spectrum and drives both transitions, carrying \
+population out of the qubit. It must also be strong to complete the rotation \
+in time, and a strong drive shifts the qubit frequency, so the rotation \
+misses its target unless the pulse's amplitude and frequency are calibrated. \
+A long pulse avoids both problems but is exposed for longer to energy decay \
+and dephasing."
+}], "Text",
+ CellID->329621944,ExpressionUUID->"00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+
+Cell[TextData[{
+ "The gate studied here flips the qubit, taking ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5902d484-617f-9570-0f31-cdee100bfc5a"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+ ". It rotates the qubit by an angle \[Pi], so it is called a \[Pi] pulse. \
+The population a pulse carries out of the qubit, mostly into ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+ ", is called leakage. A correction known as DRAG (derivative removal by \
+adiabatic gate) reduces it by adding a second drive to the pulse, shaped so \
+that, for a weak drive, the combined pulse has no component at the frequency \
+of the transition from ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+ "."
+}], "Text",
+ CellID->515379898,ExpressionUUID->"6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+
+Cell[TextData[{
+ "For a given pulse shape, how long the best \[Pi] pulse is, and how much \
+DRAG shortens it, has no closed-form answer. Both follow from the Schr\
+\[ODoubleDot]dinger and Lindblad equations solved with the levels the qubit \
+leaks into kept explicitly, and with the amplitude, frequency and DRAG \
+coefficient of the pulse calibrated together with its length. For an \
+anharmonicity of \[Minus]200 MHz and coherence times ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ec9a758-58be-624c-16f6-3f02594b3096"],
+ " of 100 \[Mu]s, DRAG lets the pulse shrink until energy decay and dephasing \
+alone set its error. Without DRAG the pulse must stay long enough for leakage \
+to die out, and its best error is larger."
+}], "Text",
+ CellID->604760901,ExpressionUUID->"23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+
+Cell["The Driven Transmon", "Section",
+ CellID->1476799103,ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"],
+
+Cell["\<\
+The transmon is well approximated by an anharmonic oscillator. It is driven \
+by a microwave pulse near its qubit frequency, with a DRAG correction added \
+to the pulse:\
+\>", "Text",
+ CellID->448336599,ExpressionUUID->"569e173f-6b36-b240-7ea5-8f790ec000aa"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["H", "TI"], 
+    StyleBox["lab",
+     FontSlant->"Plain"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   SubscriptBox[
+    StyleBox["\[Omega]", "TI"], 
+    StyleBox["q", "TI"]], 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   StyleBox["b", "TI"], "+", 
+   FractionBox[
+    StyleBox["\[Alpha]", "TI"], "2"], 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   StyleBox["b", "TI"], 
+   StyleBox["b", "TI"], "+", "[", 
+   RowBox[{"\[CapitalOmega]", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    StyleBox["t", "TI"], 
+    StyleBox[")",
+     SpanMaxSize->1], 
+    StyleBox["cos",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["\[Omega]", "TI"], 
+      StyleBox["d", "TI"]], 
+     StyleBox["t", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "-", 
+    FractionBox[
+     RowBox[{
+      StyleBox["\[Lambda]", "TI"], "\[ThinSpace]", 
+      OverscriptBox["\[CapitalOmega]", "."], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      StyleBox["t", "TI"], 
+      StyleBox[")",
+       SpanMaxSize->1]}], 
+     StyleBox["\[Alpha]", "TI"]], 
+    StyleBox["sin",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["\[Omega]", "TI"], 
+      StyleBox["d", "TI"]], 
+     StyleBox["t", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], "]", "(", 
+   RowBox[{
+    StyleBox["b", "TI"], "+", 
+    SuperscriptBox[
+     StyleBox["b", "TI"], "\[Dagger]"]}], ")"}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->970785311,ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+
+Cell[TextData[{
+ "The first two terms describe the transmon, and the last term is the drive. \
+Here ",
+ Cell[BoxData[
+  StyleBox["b", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "779c57de-bb93-d239-1da4-4e983e27a103"],
+ " lowers the number of excitations by one, ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Omega]", "TI"], 
+   StyleBox["q", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2867ea9b-6e8d-517b-581c-03c50b382041"],
+ " is the qubit frequency and ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+ " is the anharmonicity. For a transmon ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+ " is negative: the transition from ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
+ " lies ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ " below the qubit transition."
+}], "Text",
+ CellID->1377816002,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+
+Cell[TextData[{
+ "The drive oscillates at ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["\[Omega]", "TI"], 
+    StyleBox["d", "TI"]], "=", 
+   SubscriptBox[
+    StyleBox["\[Omega]", "TI"], 
+    StyleBox["q", "TI"]], "-", 
+   StyleBox["\[Delta]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+ ", detuned from the qubit by ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+ " so that it can follow the shift of the qubit frequency that a strong drive \
+causes, and its envelope ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalOmega]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+ " sets its strength. The second term in the bracket is the DRAG correction. \
+It oscillates as ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["sin",
+    FontSlant->"Plain"], "\[ThinSpace]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Omega]", "TI"], 
+     StyleBox["d", "TI"]], 
+    StyleBox["t", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+ " instead of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["cos",
+    FontSlant->"Plain"], "\[ThinSpace]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["\[Omega]", "TI"], 
+     StyleBox["d", "TI"]], 
+    StyleBox["t", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1cbde497-e826-5557-4442-fdd089d33fbd"],
+ ", and its strength follows the slope of the envelope, scaled by the DRAG \
+coefficient ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+ ". Dividing the slope by ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+ " gives it the units of ",
+ Cell[BoxData["\[CapitalOmega]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+ ", so ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+ " is a pure number. At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "110914de-bbdd-83a1-4736-8d983e69d18b"],
+ " the correction is off and the pulse is a plain microwave drive. The \
+amplitude of the envelope, ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76d004f9-29e5-6665-1eef-9da34f904d4f"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ " are the three controls of the pulse."
+}], "Text",
+ CellID->1439899046,ExpressionUUID->"35077f55-9291-6519-633d-771f27244c63"],
+
+Cell[TextData[{
+ "The drive is simplest to describe in a frame rotating with it, which \
+subtracts ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["\[Omega]", "TI"], 
+   StyleBox["d", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ebf3687-f906-130d-7644-afe0f8b37e57"],
+ " for every excitation. The drive terms then split into slow terms and terms \
+that oscillate at twice the drive frequency. The fast terms average out \
+because ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalOmega]", "\[LessLess]", 
+   SubscriptBox[
+    StyleBox["\[Omega]", "TI"], 
+    StyleBox["q", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+ ", and dropping them is the rotating-wave approximation. What remains is the \
+Hamiltonian used throughout:"
+}], "Text",
+ CellID->1641200340,ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   StyleBox["H", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   FractionBox[
+    StyleBox["\[Alpha]", "TI"], "2"], 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   StyleBox["b", "TI"], 
+   StyleBox["b", "TI"], "+", 
+   StyleBox["\[Delta]", "TI"], "\[ThinSpace]", 
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   StyleBox["b", "TI"], "+", 
+   FractionBox[
+    RowBox[{"\[CapitalOmega]", 
+     StyleBox["(",
+      SpanMaxSize->1], 
+     StyleBox["t", "TI"], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"], "(", 
+   RowBox[{
+    StyleBox["b", "TI"], "+", 
+    SuperscriptBox[
+     StyleBox["b", "TI"], "\[Dagger]"]}], ")", "-", 
+   FractionBox[
+    RowBox[{
+     StyleBox["\[Lambda]", "TI"], "\[ThinSpace]", 
+     OverscriptBox["\[CapitalOmega]", "."], 
+     StyleBox["(",
+      SpanMaxSize->1], 
+     StyleBox["t", "TI"], 
+     StyleBox[")",
+      SpanMaxSize->1]}], 
+    RowBox[{"2", 
+     StyleBox["\[Alpha]", "TI"]}]], "\[ThinSpace]", 
+   StyleBox["i", "TI"], "(", 
+   RowBox[{
+    SuperscriptBox[
+     StyleBox["b", "TI"], "\[Dagger]"], "-", 
+    StyleBox["b", "TI"]}], ")"}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1424533854,ExpressionUUID->"4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+
+Cell[TextData[{
+ "In this frame the first two terms set the energies of the levels, and the \
+last two couple neighboring levels. To write these terms as matrices, the \
+oscillator is truncated to its five lowest levels, ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "02f88238-86c8-66df-3287-2462337d4c25"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"4"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "034d641c-5834-e412-3173-7e4659c6cf78"],
+ ", which hold the qubit and the levels it leaks into; the last section \
+checks that a sixth level does not change the results."
+}], "Text",
+ CellID->535457321,ExpressionUUID->"52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+
+Cell["Define the lowering operator of a five-level oscillator:", "Text",
+ CellID->141959522,ExpressionUUID->"5bfe104a-50de-a555-0985-8a1461680fbf"],
+
+Cell[BoxData[
+ RowBox[{"b", " ", "=", " ", 
+  RowBox[{"AnnihilationOperator", "[", "5", "]"}]}]], "Input",
+ CellLabel->"In[1]:= ",
+ CellID->299517738,ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc"],
+
+Cell[TextData[{
+ "Without detuning, the qubit levels ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e1c99a5-dcef-9c28-1623-100ed49be772"],
+ " have the same energy in this frame, and the higher levels sit at ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "608e87cc-8fce-afdf-10b5-1e962a78f525"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{"3", 
+   StyleBox["\[Alpha]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"6", 
+   StyleBox["\[Alpha]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+ ":"
+}], "Text",
+ CellID->2142391071,ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"\[Alpha]", "/", "2"}], ")"}], " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+       RowBox[{
+        RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+        RowBox[{"b", " ", "@", " ", "b"}]}]}], ")"}]}], ")"}], 
+   "[", "\"\<Matrix\>\"", "]"}], "]"}]], "Input",
+ CellLabel->"In[2]:= ",
+ CellID->1002769646,ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+
+Cell[TextData[{
+ "The drive couples neighboring levels with strengths 1, ",
+ Cell[BoxData[
+  SqrtBox["2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+ ", ",
+ Cell[BoxData[
+  SqrtBox["3"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ " and 2:"
+}], "Text",
+ CellID->436346740,ExpressionUUID->"6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{
+   RowBox[{"(", 
+    RowBox[{"b", " ", "+", " ", 
+     RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}]}], ")"}], "[", "\"\<Matrix\>\"",
+    "]"}], "]"}]], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->2122865143,ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+
+Cell[TextData[{
+ "The coupling between ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b6211f5-475c-1194-2911-88bf72e963fe"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+ " is larger than the coupling between ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+ " by a factor of ",
+ Cell[BoxData[
+  SqrtBox["2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+ ", so the drive acts more strongly on the leakage transition than on the \
+qubit transition. The leakage transition is also off resonance by only ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ ". Both make leakage easy."
+}], "Text",
+ CellID->1735808809,ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"],
+
+Cell["The Pulse", "Section",
+ CellID->753514147,ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765"],
+
+Cell[TextData[{
+ "The envelope of a pulse of length ",
+ Cell[BoxData[
+  StyleBox["\[Tau]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d359769-845f-cd94-44ca-0f332deb97fe"],
+ " must vanish at both ends, so the drive switches on and off smoothly. Its \
+slope must vanish there too, so the DRAG correction, which follows the slope, \
+also starts and ends at zero. A constant and one cosine harmonic are the \
+fewest terms that meet both conditions. They give the raised cosine used here:"
+}], "Text",
+ CellID->1164297175,ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{"\[CapitalOmega]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   StyleBox["A", "TI"], "\[ThinSpace]", 
+   FractionBox["\[Pi]", 
+    StyleBox["\[Tau]", "TI"]], "(", 
+   RowBox[{"1", "-", 
+    StyleBox["cos",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    FractionBox[
+     RowBox[{"2", "\[Pi]", 
+      StyleBox["t", "TI"]}], 
+     StyleBox["\[Tau]", "TI"]]}], ")"}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->632614636,ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679"],
+
+Cell[TextData[{
+ "It has no shape parameter beyond its amplitude ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ " and its length ",
+ Cell[BoxData[
+  StyleBox["\[Tau]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ea251ed-865f-e03c-1652-48b733ebb306"],
+ "."
+}], "Text",
+ CellID->1689610856,ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell["Define the envelope:", "Text",
+ CellID->1303163127,ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
+
+Cell[BoxData[
+ RowBox[{"envelope", " ", "=", " ", 
+  RowBox[{"A", " ", 
+   RowBox[{"(", 
+    RowBox[{"Pi", "/", "\[Tau]"}], ")"}], " ", 
+   RowBox[{"(", 
+    RowBox[{"1", " ", "-", " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"2", " ", "Pi", " ", 
+       RowBox[{"t", "/", "\[Tau]"}]}], "]"}]}], ")"}]}]}]], "Input",
+ CellLabel->"In[4]:= ",
+ CellID->2098230307,ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+
+Cell[TextData[{
+ "Without DRAG and detuning, and restricted to ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+ ", the drive rotates the qubit at the rate ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalOmega]", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c67103-72a1-9427-0efe-696d0755ff0d"],
+ ", so the rotation angle is the area under the envelope:"
+}], "Text",
+ CellID->1930159659,ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+
+Cell[BoxData[
+ RowBox[{"Integrate", "[", 
+  RowBox[{"envelope", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"t", ",", " ", "0", ",", " ", "\[Tau]"}], "}"}]}], "]"}]], "Input",\
+
+ CellLabel->"In[5]:= ",
+ CellID->1113655915,ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell[TextData[{
+ "At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+ ", the area is ",
+ Cell[BoxData["\[Pi]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+ ", giving a complete flip for the resonant two-level model above. In our \
+truncated five-level model, the drive also transfers amplitude into higher \
+levels and back. Amplitude returning to ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
+ " has accumulated phase according to those levels\[CloseCurlyQuote] energies \
+and interferes with the amplitude already there. This affects the transfer \
+between ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b45e796-37a7-eecc-197a-fed04253b416"],
+ ", while some population may also remain in higher levels. An area of ",
+ Cell[BoxData["\[Pi]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e187950-8ca2-2ab2-0638-711a25577898"],
+ " therefore no longer guarantees a complete flip. We calibrate ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+ ", together with the other pulse controls, rather than fix it at 1."
+}], "Text",
+ CellID->1606118752,ExpressionUUID->"15a9104d-5625-6af3-4356-8a1763d038d9"],
+
+Cell[TextData[{
+ "With the envelope defined, the Hamiltonian ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["H", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ " becomes one operator, with five parameters in this order: the \
+anharmonicity ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ ", the amplitude ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ ", the DRAG coefficient ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+ ", the detuning ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " and the pulse length ",
+ Cell[BoxData[
+  StyleBox["\[Tau]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+ ". The ",
+ Cell[BoxData["\"\<Parameters\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ " list specifies the order in which we will supply their values:"
+}], "Text",
+ CellID->2141499446,ExpressionUUID->"07359582-e823-44a1-2eca-0cef89d62e8b"],
+
+Cell[BoxData[
+ RowBox[{"model", " ", "=", " ", 
+  RowBox[{"QuantumOperator", "[", "\n", "  ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"\[Alpha]", "/", "2"}], ")"}], " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+        RowBox[{
+         RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+         RowBox[{"b", " ", "@", " ", "b"}]}]}], ")"}]}], " ", "+", " ", 
+     RowBox[{"\[Delta]", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", "b"}], 
+       ")"}]}], " ", "+", "\n", "    ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"envelope", "/", "2"}], ")"}], " ", 
+      RowBox[{"(", 
+       RowBox[{"b", " ", "+", " ", 
+        RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}]}], ")"}]}], " ", "-", " ", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"\[Lambda]", " ", 
+        RowBox[{
+         RowBox[{"D", "[", 
+          RowBox[{"envelope", ",", " ", "t"}], "]"}], "/", 
+         RowBox[{"(", 
+          RowBox[{"2", " ", "\[Alpha]"}], ")"}]}]}], ")"}], " ", 
+      RowBox[{"(", 
+       RowBox[{"I", " ", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "-", " ", "b"}], 
+         ")"}]}], ")"}]}]}], ",", "\n", "  ", 
+    RowBox[{"\"\<Parameters\>\"", " ", "->", " ", 
+     RowBox[{"{", 
+      RowBox[{
+      "\[Alpha]", ",", " ", "A", ",", " ", "\[Lambda]", ",", " ", "\[Delta]", 
+       ",", " ", "\[Tau]"}], "}"}]}]}], "]"}]}]], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->339082558,ExpressionUUID->"7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+
+Cell[TextData[{
+ "We use ",
+ Cell[BoxData[
+  RowBox[{"\[HBar]", "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+ " and measure time in nanoseconds, so ",
+ Cell[BoxData[
+  StyleBox["\[Alpha]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+ ", ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+ " and ",
+ Cell[BoxData["\[CapitalOmega]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+ " are expressed in radians per nanosecond. The amplitude factor ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+ " and DRAG coefficient ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
+ " are dimensionless. An anharmonicity of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], "/", 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"2", "\[Pi]"}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", "-", "200", "\[ThinSpace]", 
+   StyleBox["MHz",
+    FontSlant->"Plain"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
+ " corresponds to ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Alpha]", "TI"], "=", "-", "2", "\[Pi]", "\[Times]", "0.2", "\[ThinSpace]", 
+   StyleBox[
+    RowBox[{"rad", "/", "ns"}],
+    FontSlant->"Plain"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+ ":"
+}], "Text",
+ CellID->432388834,ExpressionUUID->"7421cf44-a1ac-4319-1dde-e721d0592e63"],
+
+Cell[BoxData[
+ RowBox[{"anharmonicity", " ", "=", " ", 
+  RowBox[{
+   RowBox[{"-", "2"}], " ", "Pi", " ", "0.2"}]}]], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->443736588,ExpressionUUID->"511b3347-8d7d-ab60-0738-ab212409f64a"],
+
+Cell["Leakage", "Section",
+ CellID->1593449978,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+
+Cell[TextData[{
+ "We now examine how coupling to higher levels affects the transfer of \
+population from ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+ ". Before calibrating the controls, we follow the population during an 8 ns \
+pulse of area ",
+ Cell[BoxData["\[Pi]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5900aac7-5263-773e-0f3f-43a167165a04"],
+ ". Starting from ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+ ", evolve the transmon with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12d95fcb-3316-2212-42e7-569546a37178"],
+ ", no DRAG (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+ ") and no detuning (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Delta]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+ "):"
+}], "Text",
+ CellID->1742646261,ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67"],
+
+Cell[BoxData[
+ RowBox[{"psi", " ", "=", " ", 
+  RowBox[{"QuantumEvolve", "[", 
+   RowBox[{
+    RowBox[{"model", "[", 
+     RowBox[{
+     "anharmonicity", ",", " ", "1", ",", " ", "0", ",", " ", "0", ",", " ", 
+      "8"}], "]"}], ",", " ", 
+    RowBox[{"FockState", "[", 
+     RowBox[{"0", ",", " ", "5"}], "]"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"t", ",", " ", "0", ",", " ", "8"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->29467524,ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+
+Cell[TextData[{
+ "The drive is resonant with the ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"0"},
+    "Ket"], "\[Rule]", 
+   TemplateBox[{"1"},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e157ee2-48da-d240-062b-77cc696ca0aa"],
+ " transition, while ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{"1"},
+    "Ket"], "\[Rule]", 
+   TemplateBox[{"2"},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78287f93-0f12-7c52-2828-76ddaaa746b8"],
+ " is off resonance by ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "08285353-0e0e-39f8-3828-4b1dabb88bc2"],
+ ". When ",
+ Cell[BoxData[
+  RowBox[{"\[CapitalOmega]", "\[LessLess]", GridBox[{
+     {
+      StyleBox["\[Alpha]", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+ ", excitation of ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "187adc3d-3961-76c2-4819-d667b8145c28"],
+ " is weak. When ",
+ Cell[BoxData["\[CapitalOmega]"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "641c78eb-7f03-7846-0c24-71b57ab64aac"],
+ " becomes comparable to ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+ ", the drive can transfer substantial population into ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+ ". For this pulse, the envelope peaks at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["t", "TI"], "=", 
+   StyleBox["\[Tau]", "TI"], "/", "2", "=", "4", "\[ThinSpace]", 
+   StyleBox["ns",
+    FontSlant->"Plain"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6121b9de-dddd-aca8-10de-309bd469f6f2"],
+ ". Compare its peak value with ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30209679-023a-ee91-61df-0823b7ccb4fb"],
+ ":"
+}], "Text",
+ CellID->1939141443,ExpressionUUID->"29bc1606-c22d-409d-5f43-8863f7d812e7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(", 
+   RowBox[{"envelope", " ", "/.", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"A", " ", "->", " ", "1"}], ",", " ", 
+      RowBox[{"\[Tau]", " ", "->", " ", "8"}], ",", " ", 
+      RowBox[{"t", " ", "->", " ", "4"}]}], "}"}]}], ")"}], "/", 
+  RowBox[{"Abs", "[", "anharmonicity", "]"}]}]], "Input",
+ CellLabel->"In[9]:= ",
+ CellID->5047578,ExpressionUUID->"7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+
+Cell[TextData[{
+ "The peak drive is ",
+ Cell[BoxData[
+  RowBox[{"0.625", GridBox[{
+     {
+      StyleBox["\[Alpha]", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3119d855-3ffd-7401-6726-d21fb9885f6b"],
+ ", large enough to produce appreciable excitation of ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+ ". We chose the short 8 ns pulse to make this excitation visible. For the \
+same pulse shape and area, increasing the duration lowers the peak drive \
+strength."
+}], "Text",
+ CellID->15008895,ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
+
+Cell[TextData[{
+ "Plot the populations of ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "51fce014-dca1-0630-0783-fa51d5546d1a"],
+ ", ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "657c1c65-980e-511d-1303-964f19bb2067"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+ " during the pulse:"
+}], "Text",
+ CellID->1892712309,ExpressionUUID->"7e9b7e66-629a-1114-26b9-7040172f607e"],
+
+Cell[BoxData[
+ RowBox[{"Plot", "[", 
+  RowBox[{
+   RowBox[{"Evaluate", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"psi", "[", "t", "]"}], "[", "\"\<ProbabilitiesList\>\"", "]"}],
+      "[", 
+     RowBox[{"[", 
+      RowBox[{";;", " ", "3"}], "]"}], "]"}], "]"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"t", ",", " ", "0", ",", " ", "8"}], "}"}], ",", "\n", "   ", 
+   RowBox[{"PlotLegends", " ", "->", " ", "\n", "  ", 
+    RowBox[{"LineLegend", "[", "\n", "   ", 
+     RowBox[{
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"ColorData", "[", "97", "]"}], "[", "j", "]"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"j", ",", " ", "4"}], "}"}]}], "]"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<|0\[RightAngleBracket]\>\"", ",", 
+        " ", "\"\<|1\[RightAngleBracket]\>\"", ",", " ", "\n", 
+        "    ", "\"\<|2\[RightAngleBracket]\>\"", ",", " ", "\"\<Pulse\>\""}],
+        "}"}]}], "]"}]}], " ", ",", "\n", "   ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<population change during a \[Pi] pulse\>\""}], ",", "\n", "   ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", "\n", " ", 
+   RowBox[{"Prolog", " ", "->", " ", "\n", "  ", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"pnts", " ", "=", " ", "\n", "     ", 
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"t", ",", " ", 
+            RowBox[{"envelope", " ", "/.", " ", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"A", " ", "->", " ", "1"}], ",", " ", 
+               RowBox[{"\[Tau]", " ", "->", " ", "8"}]}], "}"}]}]}], "}"}], ",",
+           " ", 
+          RowBox[{"{", 
+           RowBox[{
+           "t", ",", " ", "0", ",", " ", "\n", "       ", "8", ",", " ", 
+            ".1"}], "}"}]}], "]"}]}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"ColorData", "[", "97", "]"}], "[", "4", "]"}], ",", " ", 
+        "Dashed", ",", " ", 
+        RowBox[{"Line", "[", "pnts", "]"}]}], "}"}]}], "]"}]}], ",", "\n", 
+   "   ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<t (ns)\>\"", ",", " ", "\"\<population\>\""}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->787969749,ExpressionUUID->"585a51e6-774f-2dd2-087a-48c002fa7738"],
+
+Cell[TextData[{
+ "Population reaches ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+ " through ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "370294fd-9e49-2d35-5d31-0da71bfc741f"],
+ ", since the drive couples only neighboring levels. Its population grows as ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2845529c-454d-b13b-587b-4bc66cf90001"],
+ " becomes occupied and the drive strengthens. As the drive weakens, some \
+population returns to the qubit, but ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7519012f-e657-215b-2326-988893e273a1"],
+ " does not empty completely."
+}], "Text",
+ CellID->525088789,ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0"],
+
+Cell["Compute the populations at the end of the pulse:", "Text",
+ CellID->357930410,ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"psi", "[", "8", "]"}], "[", "\"\<Probabilities\>\"", 
+  "]"}]], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->1802489801,ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f"],
+
+Cell[TextData[{
+ "The final population outside ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "48a3d607-c312-9dd3-7850-c860f6a4e739"],
+ " has two contributions: population in ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "539491e8-328f-8d7b-01ab-08b2473bd441"],
+ ", indicating an incomplete flip, and population in higher levels, mainly ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+ ", which is leakage. We next calibrate the pulse controls to maximize the \
+final population in ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+ ", first without DRAG and then with it."
+}], "Text",
+ CellID->115301326,ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c"],
+
+Cell["DRAG and Calibration", "Section",
+ CellID->1651187567,ExpressionUUID->"289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+
+Cell[TextData[{
+ "We first ask how much calibration and DRAG can improve the transfer at the \
+same pulse duration. Keeping the duration at 8 ns, we adjust the amplitude ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+ " and detuning ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+ " without DRAG, then adjust them together with the DRAG coefficient ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
+ ". We postpone optimizing the duration until we include energy decay and \
+dephasing: a longer pulse can reduce leakage, but it also leaves more time \
+for these processes to spoil the transfer. The next section includes both \
+effects and optimizes the duration along with the controls."
+}], "Text",
+ CellID->941376513,ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65"],
+
+Cell["\<\
+Calibration requires simulating the pulse for many trial settings. We \
+therefore construct the Schr\[ODoubleDot]dinger equation once, keeping the \
+controls and duration as parameters, and solve it numerically for each set of \
+values. Leaving the duration as a parameter also lets us evaluate pulses of \
+different lengths later.\
+\>", "Text",
+ CellID->2120243592,ExpressionUUID->"01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+
+Cell[TextData[{
+ "Set ",
+ Cell[BoxData[
+  RowBox[{"\"\<ReturnEquations\>\"", " ", "->", " ", "True"}]], 
+  "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "107fa29c-d013-1000-4004-3bd9e1a6636a"],
+ " to obtain the Schr\[ODoubleDot]dinger equation and initial condition \
+without solving them. The upper limit ",
+ Cell[BoxData["1"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+ " in ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{"t", ",", " ", "0", ",", " ", "1"}], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+ " is a placeholder; we will supply the actual interval ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{"t", ",", " ", "0", ",", " ", "length"}], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+ " to the numerical solver below:"
+}], "Text",
+ CellID->1047559317,ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"equations", ",", " ", "state", ",", " ", "range"}], "}"}], " ", "=",
+    "\n", "  ", 
+   RowBox[{"QuantumEvolve", "[", "\n", "   ", 
+    RowBox[{
+     RowBox[{"model", "[", 
+      RowBox[{
+      "anharmonicity", ",", " ", "amplitude", ",", " ", "drag", ",", " ", 
+       "detuning", ",", " ", "length"}], "]"}], ",", "\n", "   ", 
+     RowBox[{"FockState", "[", 
+      RowBox[{"0", ",", " ", "5"}], "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", " ", "0", ",", " ", "1"}], "}"}], ",", " ", 
+     RowBox[{"\"\<ReturnEquations\>\"", " ", "->", " ", "True"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->1820947576,ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"],
+
+Cell[TextData[{
+ "Leave ",
+ Cell[BoxData["amplitude"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1acd7f4d-3da3-7753-4af3-7717b4565db9"],
+ ", ",
+ Cell[BoxData["drag"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+ ", ",
+ Cell[BoxData["detuning"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
+ " and ",
+ Cell[BoxData["length"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+ " unassigned so they remain parameters in the equations. For each trial \
+pulse, we will supply their numerical values as arguments to the solution \
+function constructed below."
+}], "Text",
+ CellID->670734585,ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
+
+Cell[TextData[{
+ "Write the state as five amplitudes, each a function of time, corresponding \
+in order to ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+ " through ",
+ Cell[BoxData[
+  TemplateBox[{"4"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+ ". Substituting this list into the equations expresses them in terms of the \
+individual amplitudes. ",
+ Cell[BoxData[
+  TemplateBox[{
+    Cell[
+     TextData["Normal"]], "paclet:ref/Normal"},
+   "RefLink",
+   BaseStyle->"InlineFormula"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+ " converts the sparse arrays in the equations to ordinary lists:"
+}], "Text",
+ CellID->58232708,ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"stateEntries", " ", "=", " ", 
+   RowBox[{"Array", "[", 
+    RowBox[{"\[Psi]", ",", " ", "5"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"stateEquations", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"Normal", "[", "equations", "]"}], " ", "/.", " ", 
+    RowBox[{"state", " ", "->", " ", 
+     RowBox[{"Function", "[", 
+      RowBox[{"s", ",", " ", 
+       RowBox[{"Evaluate", "[", 
+        RowBox[{"Through", "[", 
+         RowBox[{"stateEntries", "[", "s", "]"}], "]"}], "]"}]}], "]"}]}]}]}],
+   ";"}]}], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->393464600,ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802"],
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData["ParametricNDSolveValue"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e85e9ed-427b-8528-16ba-00b7770fec72"],
+ " to construct ",
+ Cell[BoxData["solution"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "73b76025-96bb-3fff-214d-798f234f85c5"],
+ ". For each numerical choice of controls and duration, ",
+ Cell[BoxData[
+  RowBox[{"solution", "[", 
+   RowBox[{
+   "amplitude", ",", " ", "drag", ",", " ", "detuning", ",", " ", "length"}], 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "31f4c073-8ff6-126f-678b-da3d298360b5"],
+ " returns the five amplitudes as functions of time. We raise the precision \
+and accuracy goals because the transfer errors calculated later can be very \
+small:"
+}], "Text",
+ CellID->1484396876,ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a"],
+
+Cell[BoxData[
+ RowBox[{"solution", " ", "=", " ", 
+  RowBox[{"ParametricNDSolveValue", "[", 
+   RowBox[{"stateEquations", ",", " ", "stateEntries", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"t", ",", " ", "0", ",", " ", "length"}], "}"}], ",", "\n", "  ", 
+    RowBox[{"{", 
+     RowBox[{
+     "amplitude", ",", " ", "drag", ",", " ", "detuning", ",", " ", 
+      "length"}], "}"}], ",", " ", 
+    RowBox[{"PrecisionGoal", " ", "->", " ", "12"}], ",", " ", 
+    RowBox[{"AccuracyGoal", " ", "->", " ", "14"}]}], "]"}]}]], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->1149283354,ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b"],
+
+Cell[TextData[{
+ "Define the transfer error as one minus the final population in ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
+ ", starting from ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+ ". The second amplitude returned by ",
+ Cell[BoxData["solution"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "304452a4-201b-d64c-607c-4b0e51afbc96"],
+ " corresponds to ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
+ ", and its squared magnitude gives that population. This error measures the \
+transfer for this initial state only, not the full qubit gate."
+}], "Text",
+ CellID->1092188694,ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"transferError", "[", 
+   RowBox[{
+    RowBox[{"amplitude_", "?", "NumericQ"}], ",", " ", 
+    RowBox[{"drag_", "?", "NumericQ"}], ",", " ", 
+    RowBox[{"detuning_", "?", "NumericQ"}], ",", " ", "\n", "  ", 
+    RowBox[{"length_", "?", "NumericQ"}]}], "]"}], " ", ":=", " ", "\n", " ", 
+  
+  RowBox[{"1", " ", "-", " ", 
+   RowBox[{
+    RowBox[{"Abs", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"solution", "[", 
+        RowBox[{
+        "amplitude", ",", " ", "drag", ",", " ", "detuning", ",", " ", 
+         "length"}], "]"}], "[", 
+       RowBox[{"[", "2", "]"}], "]"}], "[", "length", "]"}], "]"}], "^", 
+    "2"}]}]}]], "Input",
+ CellLabel->"In[15]:= ",
+ CellID->559599970,ExpressionUUID->"475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+
+Cell[TextData[{
+ "First calibrate the 8 ns pulse without DRAG (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
+ ") by minimizing the transfer error over ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3343f580-98d5-e31c-6170-ecea1961ce66"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "20a7420b-376a-b23f-505d-6455421c0105"],
+ ". We restrict the search to ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["A", "TI"], ">", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6af863a9-1098-c609-1a98-7af3a112ad53"],
+ ", since reversing the drive\[CloseCurlyQuote]s sign leaves the populations \
+unchanged when starting from ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+ ". The detuning may have either sign:"
+}], "Text",
+ CellID->1710123944,ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5"],
+
+Cell[BoxData[
+ RowBox[{"calibratedNoDRAG", " ", "=", " ", 
+  RowBox[{"NMinimize", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"transferError", "[", 
+       RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "8"}], "]"}], ",",
+       " ", 
+      RowBox[{"a", " ", ">", " ", "0"}]}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"a", ",", " ", "d"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[16]:= ",
+ CellID->934597701,ExpressionUUID->"201a2509-bdd9-2fa1-5039-bd53346c758b"],
+
+Cell[TextData[{
+ "Now calibrate the 8 ns pulse with DRAG, minimizing the transfer error over ",
+ Cell[BoxData[
+  StyleBox["A", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7085d256-6adc-aa08-20ba-d4100f6ef952"],
+ ", ",
+ Cell[BoxData[
+  StyleBox["\[Lambda]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f932952-49a5-d34f-05a0-c11c6851a195"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["\[Delta]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
+ " together. We keep the same amplitude and detuning constraints and search \
+over non-negative DRAG coefficients (",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Lambda]", "TI"], "\[GreaterEqual]", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+ "):"
+}], "Text",
+ CellID->284780108,ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+
+Cell[BoxData[
+ RowBox[{"calibratedDRAG", " ", "=", " ", 
+  RowBox[{"NMinimize", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"transferError", "[", 
+       RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "8"}], "]"}], ",",
+       " ", 
+      RowBox[{"a", " ", ">", " ", "0"}], ",", " ", 
+      RowBox[{"l", " ", ">=", " ", "0"}]}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"a", ",", " ", "l", ",", " ", "d"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[17]:= ",
+ CellID->643798763,ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+
+Cell[TextData[{
+ "Pass the calibrated parameter values to ",
+ Cell[BoxData["solution"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
+ " to obtain the five amplitudes as functions of time for each pulse:"
+}], "Text",
+ CellID->268959046,ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"psiNoDRAG", " ", "=", " ", 
+   RowBox[{"solution", "[", 
+    RowBox[{
+     RowBox[{"Sequence", " ", "@@", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"a", ",", " ", "0", ",", " ", "d"}], "}"}], " ", "/.", " ", 
+        RowBox[{"Last", "[", "calibratedNoDRAG", "]"}]}], ")"}]}], ",", " ", 
+     "8"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"psiDRAG", " ", "=", " ", 
+   RowBox[{"solution", "[", 
+    RowBox[{
+     RowBox[{"Sequence", " ", "@@", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"a", ",", " ", "l", ",", " ", "d"}], "}"}], " ", "/.", " ", 
+        RowBox[{"Last", "[", "calibratedDRAG", "]"}]}], ")"}]}], ",", " ", 
+     "8"}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[18]:= ",
+ CellID->403125484,ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64"],
+
+Cell[TextData[{
+ "Compare the population of ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+ " during the two calibrated pulses. A logarithmic vertical scale makes the \
+small populations remaining at the end easier to compare:"
+}], "Text",
+ CellID->931950651,ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef"],
+
+Cell[BoxData[
+ RowBox[{"LogPlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Abs", "[", 
+       RowBox[{
+        RowBox[{"psiNoDRAG", "[", 
+         RowBox[{"[", "3", "]"}], "]"}], "[", "t", "]"}], "]"}], "^", "2"}], ",",
+      " ", 
+     RowBox[{
+      RowBox[{"Abs", "[", 
+       RowBox[{
+        RowBox[{"psiDRAG", "[", 
+         RowBox[{"[", "3", "]"}], "]"}], "[", "t", "]"}], "]"}], "^", "2"}]}],
+     "}"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"t", ",", " ", "0", ",", " ", "8"}], "}"}], ",", "\n", "  ", 
+   RowBox[{"PlotStyle", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"ColorData", "[", "97", "]"}], "[", "3", "]"}], ",", " ", 
+        "Dashed"}], "]"}], ",", " ", 
+      RowBox[{
+       RowBox[{"ColorData", "[", "97", "]"}], "[", "3", "]"}]}], "}"}]}], ",",
+    "\n", "  ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<|2\[RightAngleBracket] no DRAG\>\"", ",", 
+      " ", "\"\<|2\[RightAngleBracket] DRAG\>\""}], "}"}]}], ",", "\n", "  ", 
+   
+   RowBox[{"PlotRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"10", "^", 
+       RowBox[{"-", "4"}]}], ",", " ", "1"}], "}"}]}], ",", " ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<leakage during the calibrated 8 ns \[Pi] pulses\>\""}], ",", 
+   " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", "\n", "  ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<t (ns)\>\"", ",", 
+      " ", "\"\<population of |2\[RightAngleBracket]\>\""}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[19]:= ",
+ CellID->412518898,ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef"],
+
+Cell[TextData[{
+ "Both pulses appreciably populate ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0513e607-0f4c-1e20-3320-f861aaf9650a"],
+ " during the pulse. Toward the end of the pulse, this population decreases. \
+The DRAG pulse (solid curve) has a somewhat lower peak and leaves less \
+population in ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+ " than the pulse without DRAG (dashed curve). DRAG therefore reduces the \
+final leakage, although neither pulse empties this level completely."
+}], "Text",
+ CellID->622967176,ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+
+Cell["Decoherence and the Best Pulse Length", "Section",
+ CellID->1358080856,ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
+
+Cell["\<\
+The calibrated pulses still leave population in higher levels. Increasing the \
+duration allows a weaker drive and can reduce this leakage, but it also gives \
+energy decay and dephasing more time to act. We now include these processes \
+and optimize the duration together with the pulse controls to find the \
+smallest final transfer error.\
+\>", "Text",
+ CellID->320615307,ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"],
+
+Cell[TextData[{
+ "We describe the state by a density matrix ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Rho]", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3279c00f-c9e2-8758-6206-da68ef94eda2"],
+ " in our truncated five-level model. Keeping the same Hamiltonian ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["H", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   StyleBox["t", "TI"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+ ", we include energy decay and pure dephasing through the Lindblad master \
+equation:"
+}], "Text",
+ CellID->1594238871,ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     StyleBox[
+      RowBox[{"d", "\[Rho]"}], "TI"], 
+     StyleBox[
+      RowBox[{"d", "t"}], "TI"]], "=", "-", 
+    StyleBox["i", "TI"], 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     RowBox[{
+      StyleBox["H", "TI"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      StyleBox["t", "TI"], 
+      StyleBox[")",
+       SpanMaxSize->1]}], ",", 
+     StyleBox["\[Rho]", "TI"]}], 
+    StyleBox["]",
+     SpanMaxSize->1], "+", 
+    UnderscriptBox["\[Sum]", 
+     RowBox[{
+      RowBox[{
+       StyleBox["\[Mu]", "TI"], "\[Element]", "{", "1"}], ",", 
+      RowBox[{
+       StyleBox["\[Phi]", "TI"], "}"}]}],
+     LimitsPositioning->False], "(", 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"]], 
+     StyleBox["\[Rho]", "TI"], 
+     SubsuperscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"], "\[Dagger]"], "-", 
+     FractionBox["1", "2"], 
+     SubsuperscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"], "\[Dagger]"], 
+     SubscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"]], 
+     StyleBox["\[Rho]", "TI"], "-", 
+     FractionBox["1", "2"], 
+     StyleBox["\[Rho]", "TI"], 
+     SubsuperscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"], "\[Dagger]"], 
+     SubscriptBox[
+      StyleBox["L", "TI"], 
+      StyleBox["\[Mu]", "TI"]]}], ")"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->2002505366,ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6"],
+
+Cell["The two Lindblad operators, with their rates included, are", "Text",
+ CellID->2121396920,ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["L", "TI"], "1"], "=", 
+    FractionBox[
+     StyleBox["b", "TI"], 
+     SqrtBox[
+      SubscriptBox[
+       StyleBox["T", "TI"], "1"]]]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["L", "TI"], 
+     StyleBox["\[Phi]", "TI"]], "=", 
+    RowBox[{
+     SqrtBox[
+      FractionBox["2", 
+       SubscriptBox[
+        StyleBox["T", "TI"], 
+        StyleBox["\[Phi]", "TI"]]]], "\[ThinSpace]", 
+     SuperscriptBox[
+      StyleBox["b", "TI"], "\[Dagger]"], 
+     RowBox[{
+      StyleBox["b", "TI"], "."}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->993357154,ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
+
+Cell[TextData[{
+ "The first describes energy decay from ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["n", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "399d1ff3-4632-be92-6fa2-96bd73c404f8"],
+ " to ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["n", "TI"], "-", "1"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1170384d-2f38-2c50-470f-b2174acd76ba"],
+ " at rate ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["n", "TI"], "/", 
+   SubscriptBox[
+    StyleBox["T", "TI"], "1"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
+ ". The second describes pure dephasing: on its own, it damps the \
+off-diagonal entries of ",
+ Cell[BoxData[
+  StyleBox["\[Rho]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+ " while leaving the populations unchanged. The pure dephasing time ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], 
+   StyleBox["\[Phi]", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+ " is related to the qubit\[CloseCurlyQuote]s energy decay time ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "74397683-04f4-1d4d-1dc7-6fedac816797"],
+ " and coherence time ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "735e49d5-32a1-4a48-2166-609f47541892"],
+ " by"
+}], "Text",
+ CellID->50259360,ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox["1", 
+     SubscriptBox[
+      StyleBox["T", "TI"], 
+      StyleBox["\[Phi]", "TI"]]], "=", 
+    FractionBox["1", 
+     SubscriptBox[
+      StyleBox["T", "TI"], "2"]], "-", 
+    FractionBox["1", 
+     RowBox[{"2", 
+      SubscriptBox[
+       StyleBox["T", "TI"], "1"]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->680111415,ExpressionUUID->"3bfbbd45-edb8-1b0b-6998-352e844d6651"],
+
+Cell[TextData[{
+ "For this example, take ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["T", "TI"], "1"], "=", 
+   SubscriptBox[
+    StyleBox["T", "TI"], "2"], "=", "100", "\[ThinSpace]", 
+   StyleBox["\[Mu]", "TI"], 
+   StyleBox["s",
+    FontSlant->"Plain"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+ ". Express both times in nanoseconds:"
+}], "Text",
+ CellID->1912025938,ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"],
+
+Cell[BoxData[
+ RowBox[{"T1", " ", "=", " ", 
+  RowBox[{"T2", " ", "=", " ", "100000"}]}]], "Input",
+ CellLabel->"In[20]:= ",
+ CellID->1678275947,ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
+
+Cell[TextData[{
+ "Compute the corresponding pure dephasing time ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["T", "TI"], 
+   StyleBox["\[Phi]", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "794a4309-908b-2549-2f4a-5b53213f8f93"],
+ ", also in nanoseconds:"
+}], "Text",
+ CellID->1570109414,ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
+
+Cell[BoxData[
+ RowBox[{"dephasingTime", " ", "=", " ", 
+  RowBox[{"1", "/", 
+   RowBox[{"(", 
+    RowBox[{
+     RowBox[{"1", "/", "T2"}], " ", "-", " ", 
+     RowBox[{"1", "/", 
+      RowBox[{"(", 
+       RowBox[{"2", " ", "T1"}], ")"}]}]}], ")"}]}]}]], "Input",
+ CellLabel->"In[21]:= ",
+ CellID->746824257,ExpressionUUID->"15eb24b6-b946-3a65-43e8-bdf038f0894f"],
+
+Cell[TextData[{
+ "Return the Lindblad equation and initial condition for a transmon starting \
+in ",
+ Cell[BoxData[
+  TemplateBox[{"0"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "27d2a24c-1e84-19ee-4de1-44169b316b34"],
+ ", keeping the pulse controls and duration symbolic. Here ",
+ Cell[BoxData["QuantumEvolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "285985c7-a1c8-13eb-5866-1ca0d07d6131"],
+ " takes the operators ",
+ Cell[BoxData[
+  StyleBox["b", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    StyleBox["b", "TI"], "\[Dagger]"], 
+   StyleBox["b", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
+ " with their rates ",
+ Cell[BoxData[
+  RowBox[{"1", "/", 
+   SubscriptBox[
+    StyleBox["T", "TI"], "1"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1a1e4090-3303-05ed-4a26-59da46b66f37"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"2", "/", 
+   SubscriptBox[
+    StyleBox["T", "TI"], 
+    StyleBox["\[Phi]", "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10256af3-3972-af7a-41da-83bdb804f240"],
+ " supplied separately:"
+}], "Text",
+ CellID->966663717,ExpressionUUID->"457602f1-d86e-ac86-730d-9bbad918f6ec"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"openEquations", ",", " ", "openState", ",", " ", "openRange"}], 
+    "}"}], " ", "=", " ", 
+   RowBox[{"QuantumEvolve", "[", 
+    RowBox[{
+     RowBox[{"model", "[", 
+      RowBox[{
+      "anharmonicity", ",", " ", "amplitude", ",", " ", "drag", ",", " ", 
+       "detuning", ",", " ", "length"}], "]"}], ",", "\n", "   ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"b", ",", " ", 
+        RowBox[{
+         RowBox[{"b", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", "b"}]}], 
+       "}"}], " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"1", "/", "T1"}], ",", " ", 
+        RowBox[{"2", "/", "dephasingTime"}]}], "}"}]}], ",", " ", 
+     RowBox[{"FockState", "[", 
+      RowBox[{"0", ",", " ", "5"}], "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", " ", "0", ",", " ", "1"}], "}"}], ",", " ", 
+     RowBox[{"\"\<ReturnEquations\>\"", " ", "->", " ", "True"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[22]:= ",
+ CellID->634665076,ExpressionUUID->"499f95c1-a958-6c18-7fa4-0caac8ed3762"],
+
+Cell[TextData[{
+ "Represent each entry of the ",
+ Cell[BoxData[
+  RowBox[{"5", "\[Times]", "5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
+ " density matrix by a function of time. Substituting this matrix into the \
+Lindblad equation gives the coupled equations for its 25 entries:"
+}], "Text",
+ CellID->1607396713,ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"densityEntries", " ", "=", " ", 
+   RowBox[{"Array", "[", 
+    RowBox[{"\[Rho]", ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"5", ",", " ", "5"}], "}"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"densityEquations", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"Normal", "[", "openEquations", "]"}], " ", "/.", " ", 
+    RowBox[{"openState", " ", "->", " ", 
+     RowBox[{"Function", "[", 
+      RowBox[{"s", ",", " ", 
+       RowBox[{"Evaluate", "[", 
+        RowBox[{"Map", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"#", "[", "s", "]"}], " ", "&"}], ",", " ", 
+          "densityEntries", ",", " ", 
+          RowBox[{"{", "2", "}"}]}], "]"}], "]"}]}], "]"}]}]}]}], 
+  ";"}]}], "Input",
+ CellLabel->"In[23]:= ",
+ CellID->171231949,ExpressionUUID->"6f909018-5ea1-6a32-15af-0a425b543918"],
+
+Cell[TextData[{
+ "Use ",
+ Cell[BoxData["ParametricNDSolveValue"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f4595f3-090a-1216-557a-0cbda8bf617c"],
+ " to construct ",
+ Cell[BoxData["openSolution"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06385f5e-e9d4-4e6c-2fd8-571b886114b6"],
+ ". For each numerical choice of controls and duration, ",
+ Cell[BoxData[
+  RowBox[{"openSolution", "[", 
+   RowBox[{
+   "amplitude", ",", " ", "drag", ",", " ", "detuning", ",", " ", "length"}], 
+   "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25d2fb85-296f-82e5-53e1-f2ef481bd0cf"],
+ " returns a ",
+ Cell[BoxData[
+  RowBox[{"5", "\[Times]", "5"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b9a140e-d97a-4136-69b9-8e6bd80f101c"],
+ " matrix whose entries are functions of time. We use lower precision and \
+accuracy goals here because the transfer errors with decay and dephasing are \
+larger than the smallest errors without them:"
+}], "Text",
+ CellID->820919957,ExpressionUUID->"4f9438da-b80f-a114-75ab-b18439bbf07e"],
+
+Cell[BoxData[
+ RowBox[{"openSolution", " ", "=", " ", 
+  RowBox[{"ParametricNDSolveValue", "[", 
+   RowBox[{"densityEquations", ",", " ", "densityEntries", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"t", ",", " ", "0", ",", " ", "length"}], "}"}], ",", "\n", "  ", 
+    RowBox[{"{", 
+     RowBox[{
+     "amplitude", ",", " ", "drag", ",", " ", "detuning", ",", " ", 
+      "length"}], "}"}], ",", " ", 
+    RowBox[{"PrecisionGoal", " ", "->", " ", "10"}], ",", " ", 
+    RowBox[{"AccuracyGoal", " ", "->", " ", "12"}]}], "]"}]}]], "Input",
+ CellLabel->"In[24]:= ",
+ CellID->1006830744,ExpressionUUID->"7281c19b-2602-dcd4-22be-d8c553b4a63e"],
+
+Cell[TextData[{
+ "Keep the same definition of transfer error: one minus the final population \
+in ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3c8746fc-db76-c487-64bd-5fb9de00aeed"],
+ ". With the density matrix, this population is the second diagonal entry \
+evaluated at the end of the pulse."
+}], "Text",
+ CellID->1175763064,ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"openError", "[", 
+   RowBox[{
+    RowBox[{"a_", "?", "NumericQ"}], ",", " ", 
+    RowBox[{"l_", "?", "NumericQ"}], ",", " ", 
+    RowBox[{"d_", "?", "NumericQ"}], ",", " ", 
+    RowBox[{"T_", "?", "NumericQ"}]}], "]"}], " ", ":=", " ", 
+  RowBox[{"1", " ", "-", " ", 
+   RowBox[{"Re", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"openSolution", "[", 
+       RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"2", ",", " ", "2"}], "]"}], "]"}], "[", "T", "]"}], 
+    "]"}]}]}]], "Input",
+ CellLabel->"In[25]:= ",
+ CellID->1074416020,ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de"],
+
+Cell["\<\
+A device is calibrated with its decoherence present, so the controls are now \
+calibrated directly on this error, and the length is optimized together with \
+them. With DRAG, start from the calibrated 8 ns pulse and let the length vary \
+with the controls. The search is local: it follows that pulse to a length \
+where the controls remove leakage almost completely, so decay and dephasing \
+set what remains:\
+\>", "Text",
+ CellID->2143439988,ExpressionUUID->"12c4fc3b-e00c-2bba-42fb-f66491b97980"],
+
+Cell[BoxData[
+ RowBox[{"bestWithDRAG", " ", "=", " ", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"start", " ", "=", " ", 
+      RowBox[{"Last", "[", "calibratedDRAG", "]"}]}], "}"}], ",", "\n", "  ", 
+    
+    RowBox[{"FindMinimum", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"openError", "[", 
+         RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "]"}], ",",
+         " ", 
+        RowBox[{"a", " ", ">", " ", "0"}], ",", " ", 
+        RowBox[{"l", " ", ">=", " ", "0"}]}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"a", ",", " ", 
+          RowBox[{"a", " ", "/.", " ", "start"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"l", ",", " ", 
+          RowBox[{"l", " ", "/.", " ", "start"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"d", ",", " ", 
+          RowBox[{"d", " ", "/.", " ", "start"}]}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"T", ",", " ", "8"}], "}"}]}], "}"}]}], "]"}]}], 
+   "]"}]}]], "Input",
+ CellLabel->"In[26]:= ",
+ CellID->1933756212,ExpressionUUID->"1d7e6892-18cd-6f45-4b05-81dc997835af"],
+
+Cell["The same pulse without decay and dephasing:", "Text",
+ CellID->943735407,ExpressionUUID->"325c8f47-cd85-89da-6263-2720e431db20"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"transferError", "[", 
+   RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "]"}], " ", "/.",
+   " ", 
+  RowBox[{"Last", "[", "bestWithDRAG", "]"}]}]], "Input",
+ CellLabel->"In[27]:= ",
+ CellID->865519937,ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c"],
+
+Cell["\<\
+Without decay and dephasing the error of this pulse is far smaller, so they \
+set nearly all of it.\
+\>", "Text",
+ CellID->845186625,ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595"],
+
+Cell["\<\
+Without DRAG, a local search from the calibrated 8 ns pulse stops at a nearby \
+dip in the leakage, so the length is searched globally from 6 to 40 ns:\
+\>", "Text",
+ CellID->14312863,ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db"],
+
+Cell[BoxData[
+ RowBox[{"bestWithoutDRAG", " ", "=", " ", 
+  RowBox[{"NMinimize", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"openError", "[", 
+       RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "T"}], "]"}], ",",
+       " ", 
+      RowBox[{"a", " ", ">", " ", "0"}], ",", " ", 
+      RowBox[{"6", " ", "<=", " ", "T", " ", "<=", " ", "40"}]}], "}"}], ",", 
+    " ", 
+    RowBox[{"{", 
+     RowBox[{"a", ",", " ", "d", ",", " ", "T"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[28]:= ",
+ CellID->315698450,ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78"],
+
+Cell["The same pulse without decay and dephasing:", "Text",
+ CellID->1751204118,ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"transferError", "[", 
+   RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "T"}], "]"}], " ", "/.",
+   " ", 
+  RowBox[{"Last", "[", "bestWithoutDRAG", "]"}]}]], "Input",
+ CellLabel->"In[29]:= ",
+ CellID->2116603297,ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742"],
+
+Cell["\<\
+Decay and dephasing also set most of the error of this pulse, which is long \
+enough for leakage to have died down.\
+\>", "Text",
+ CellID->530919167,ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d"],
+
+Cell["The density matrices during the two best pulses:", "Text",
+ CellID->1242319925,ExpressionUUID->"494d6e39-7750-b6eb-7f72-806302ea1c31"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"rhoNoDRAG", " ", "=", " ", 
+   RowBox[{"openSolution", "[", 
+    RowBox[{"Sequence", " ", "@@", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "T"}], "}"}], 
+       " ", "/.", " ", 
+       RowBox[{"Last", "[", "bestWithoutDRAG", "]"}]}], ")"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"rhoDRAG", " ", "=", " ", 
+   RowBox[{"openSolution", "[", 
+    RowBox[{"Sequence", " ", "@@", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "}"}], 
+       " ", "/.", " ", 
+       RowBox[{"Last", "[", "bestWithDRAG", "]"}]}], ")"}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellLabel->"In[30]:= ",
+ CellID->1600082692,ExpressionUUID->"39b01e29-d171-5c92-6f4f-9072e00426f8"],
+
+Cell[TextData[{
+ "The population of ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f6d713e-2461-11c8-7513-69784d146312"],
+ " during the two best pulses, on a logarithmic scale. The DRAG pulse is much \
+shorter, so each pulse is drawn against the fraction of its own length:"
+}], "Text",
+ CellID->1091979148,ExpressionUUID->"14ad582f-66ff-93eb-3c53-5189128be131"],
+
+Cell[BoxData[
+ RowBox[{"LogPlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Re", "[", 
+      RowBox[{
+       RowBox[{"rhoNoDRAG", "[", 
+        RowBox[{"[", 
+         RowBox[{"3", ",", " ", "3"}], "]"}], "]"}], "[", 
+       RowBox[{"s", " ", 
+        RowBox[{"(", 
+         RowBox[{"T", " ", "/.", " ", 
+          RowBox[{"Last", "[", "bestWithoutDRAG", "]"}]}], ")"}]}], "]"}], 
+      "]"}], ",", " ", 
+     RowBox[{"Re", "[", 
+      RowBox[{
+       RowBox[{"rhoDRAG", "[", 
+        RowBox[{"[", 
+         RowBox[{"3", ",", " ", "3"}], "]"}], "]"}], "[", 
+       RowBox[{"s", " ", 
+        RowBox[{"(", 
+         RowBox[{"T", " ", "/.", " ", 
+          RowBox[{"Last", "[", "bestWithDRAG", "]"}]}], ")"}]}], "]"}], 
+      "]"}]}], "}"}], ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"s", ",", " ", "0", ",", " ", "1"}], "}"}], ",", "\n", "  ", 
+   RowBox[{"PlotStyle", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"ColorData", "[", "97", "]"}], "[", "3", "]"}], ",", " ", 
+        "Dashed"}], "]"}], ",", " ", 
+      RowBox[{
+       RowBox[{"ColorData", "[", "97", "]"}], "[", "3", "]"}]}], "}"}]}], ",",
+    "\n", "  ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<|2\[RightAngleBracket] no DRAG\>\"", ",", 
+      " ", "\"\<|2\[RightAngleBracket] DRAG\>\""}], "}"}]}], ",", "\n", "  ", 
+   
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<leakage during the best \[Pi] pulses\>\""}], ",", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", "\n", "  ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<fraction of the pulse\>\"", ",", 
+      " ", "\"\<population of |2\[RightAngleBracket]\>\""}], "}"}]}]}], 
+  "]"}]], "Input",
+ CellLabel->"In[31]:= ",
+ CellID->1239660989,ExpressionUUID->"4f7ea056-2d28-85ec-7505-3a1044c2ef36"],
+
+Cell[TextData[{
+ "The DRAG pulse fills ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "16b00368-b832-202d-3e4f-9b3239c77377"],
+ " more in the middle, because it is shorter and drives harder, and then \
+empties it steeply at the end, finishing below the slower pulse without DRAG. \
+It cannot empty ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06d00634-a672-f252-2eef-9871d304c0b8"],
+ " completely: dephasing scrambles the phase relation that brings the \
+population back, so a small part stays behind, far more than the same pulse \
+leaves without decay and dephasing."
+}], "Text",
+ CellID->234435634,ExpressionUUID->"05feeeaf-4f58-f7b7-3385-07096ad2dd9d"],
+
+Cell[TextData[{
+ "The pulse without DRAG sends less population through ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "583a98af-415b-100e-09d9-110970ee6354"],
+ " during the pulse only because it is slow. The length of the best DRAG \
+pulse:"
+}], "Text",
+ CellID->417968184,ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3"],
+
+Cell[BoxData[
+ RowBox[{"dragLength", " ", "=", " ", 
+  RowBox[{"T", " ", "/.", " ", 
+   RowBox[{"Last", "[", "bestWithDRAG", "]"}]}]}]], "Input",
+ CellLabel->"In[32]:= ",
+ CellID->1274591649,ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4"],
+
+Cell["\<\
+Calibrate the pulse without DRAG at that length. The search needs more than \
+the default 100 iterations to converge:\
+\>", "Text",
+ CellID->1243964799,ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554"],
+
+Cell[BoxData[
+ RowBox[{"sameLengthWithoutDRAG", " ", "=", " ", 
+  RowBox[{"NMinimize", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"openError", "[", 
+       RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "dragLength"}], 
+       "]"}], ",", " ", 
+      RowBox[{"a", " ", ">", " ", "0"}]}], "}"}], ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"a", ",", " ", "d"}], "}"}], ",", " ", 
+    RowBox[{"MaxIterations", " ", "->", " ", "200"}]}], "]"}]}]], "Input",
+ CellLabel->"In[33]:= ",
+ CellID->1828403510,ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8"],
+
+Cell["\<\
+Its error without decay and dephasing, which comes only from leakage and the \
+rotation error:\
+\>", "Text",
+ CellID->623026911,ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"transferError", "[", 
+   RowBox[{"a", ",", " ", "0", ",", " ", "d", ",", " ", "dragLength"}], "]"}],
+   " ", "/.", " ", 
+  RowBox[{"Last", "[", "sameLengthWithoutDRAG", "]"}]}]], "Input",
+ CellLabel->"In[34]:= ",
+ CellID->308489360,ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f"],
+
+Cell[TextData[{
+ "The population it leaves in ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2dc22b63-32d1-862f-5bf1-c34d4765ed75"],
+ ":"
+}], "Text",
+ CellID->387004599,ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Abs", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"solution", "[", 
+      RowBox[{
+       RowBox[{"Sequence", " ", "@@", " ", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"a", ",", " ", "0", ",", " ", "d"}], "}"}], " ", "/.", " ", 
+          RowBox[{"Last", "[", "sameLengthWithoutDRAG", "]"}]}], ")"}]}], ",",
+        " ", "dragLength"}], "]"}], "[", 
+     RowBox[{"[", "3", "]"}], "]"}], "[", "dragLength", "]"}], "]"}], "^", 
+  "2"}]], "Input",
+ CellLabel->"In[35]:= ",
+ CellID->1976158344,ExpressionUUID->"5b23761c-2477-64e8-0ad1-68464d024e32"],
+
+Cell[TextData[{
+ "At the same length, the pulse without DRAG has a much larger error than the \
+DRAG pulse. Removing decay and dephasing barely changes this error. Almost \
+all the population that misses ",
+ Cell[BoxData[
+  TemplateBox[{"1"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "73216bcf-7cf1-61ac-22de-82a9748433f6"],
+ " ends up in ",
+ Cell[BoxData[
+  TemplateBox[{"2"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "69fa63e8-c0ca-4913-1f9a-7ab5f17f1879"],
+ ", so the error is leakage. DRAG removes this leakage, which is why the DRAG \
+pulse can be this short."
+}], "Text",
+ CellID->1232186413,ExpressionUUID->"409bca18-cbd6-e54d-70b8-ec45ee60cf97"],
+
+Cell[TextData[{
+ "The best pulses the two searches found, side by side, with the peak drive \
+in units of ",
+ Cell[BoxData[GridBox[{
+    {
+     StyleBox["\[Alpha]", "TI"]}
+   },
+   GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+   GridBoxSpacings->{"Columns" -> {{0.15}}}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10b62b5f-1d3f-f012-404d-c31994cbc378"],
+ ":"
+}], "Text",
+ CellID->655687319,ExpressionUUID->"79984792-c453-565a-2fb8-5edfede63ca0"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"summary", "[", 
+    RowBox[{"{", 
+     RowBox[{"e_", ",", " ", "rules_"}], "}"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"r", " ", "=", " ", 
+       RowBox[{"Join", "[", 
+        RowBox[{"rules", ",", " ", 
+         RowBox[{"{", 
+          RowBox[{"l", " ", "->", " ", "0"}], "}"}]}], "]"}]}], "}"}], ",", 
+     "\n", "  ", 
+     RowBox[{"<|", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"\"\<length (ns)\>\"", " ", "->", " ", "T"}], " ", "/.", " ", 
+        "r"}], ",", " ", 
+       RowBox[{"\"\<error\>\"", " ", "->", " ", "e"}], ",", " ", 
+       RowBox[{
+        RowBox[{"\"\<amplitude\>\"", " ", "->", " ", "a"}], " ", "/.", " ", 
+        "r"}], ",", " ", 
+       RowBox[{
+        RowBox[{"\"\<DRAG coefficient\>\"", " ", "->", " ", "l"}], " ", "/.", 
+        " ", "r"}], ",", "\n", "    ", 
+       RowBox[{
+        RowBox[{"\"\<detuning (MHz)\>\"", " ", "->", " ", 
+         RowBox[{"1000", " ", 
+          RowBox[{"d", "/", 
+           RowBox[{"(", 
+            RowBox[{"2", " ", "Pi"}], ")"}]}]}]}], " ", "/.", " ", "r"}], ",",
+        " ", 
+       RowBox[{
+        RowBox[{"\"\<peak drive / |\[Alpha]|\>\"", " ", "->", " ", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"2", " ", "Pi", " ", 
+            RowBox[{"a", "/", "T"}]}], ")"}], "/", 
+          RowBox[{"Abs", "[", "anharmonicity", "]"}]}]}], " ", "/.", " ", 
+        "r"}]}], "|>"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Dataset", "[", 
+  RowBox[{"<|", 
+   RowBox[{
+    RowBox[{"\"\<with DRAG\>\"", " ", "->", " ", 
+     RowBox[{"summary", "[", "bestWithDRAG", "]"}]}], ",", " ", 
+    RowBox[{"\"\<without DRAG\>\"", " ", "->", " ", 
+     RowBox[{"summary", "[", "bestWithoutDRAG", "]"}]}]}], "|>"}], 
+  "]"}]}], "Input",
+ CellLabel->"In[36]:= ",
+ CellID->1589358908,ExpressionUUID->"1d45428e-8fa1-6801-4b7b-5be82a543b6b"],
+
+Cell["\<\
+With DRAG the best pulse is short enough that its error comes almost entirely \
+from decay and dephasing during the pulse: the calibrated controls remove \
+leakage and the rotation error to far below that level. Without DRAG the \
+pulse has to be much longer before leakage falls below the decoherence error, \
+and the longer pulse pays for it in decay and dephasing. The price of the \
+short DRAG pulse is a strong drive, a sizable fraction of the anharmonicity \
+at its peak.\
+\>", "Text",
+ CellID->1191517648,ExpressionUUID->"604bb87d-3174-a116-1048-32274006f07c"],
+
+Cell["Five Levels Are Enough", "Section",
+ CellID->960670710,ExpressionUUID->"763191a2-6f8b-197a-1fce-080c0a3e6840"],
+
+Cell[TextData[{
+ "Every result above keeps five levels. Define the final populations of a \
+transmon truncated to ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "635fdfdb-2856-deda-1164-d68549e0a420"],
+ " levels, with the same Hamiltonian:"
+}], "Text",
+ CellID->1307080411,ExpressionUUID->"0f6eb37a-d9e9-6713-3515-2b27df9c4a79"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"finalPopulations", "[", 
+   RowBox[{"n_", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{"a_", ",", " ", "l_", ",", " ", "d_", ",", " ", "T_"}], "}"}]}], 
+   "]"}], " ", ":=", " ", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"c", " ", "=", " ", 
+      RowBox[{"AnnihilationOperator", "[", "n", "]"}]}], "}"}], ",", "\n", 
+    "  ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"QuantumEvolve", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"QuantumOperator", "[", "\n", "      ", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"\[Alpha]", "/", "2"}], ")"}], " ", 
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"c", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+               RowBox[{
+                RowBox[{"c", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+                RowBox[{"c", " ", "@", " ", "c"}]}]}], ")"}]}], " ", "+", " ", 
+            RowBox[{"\[Delta]", " ", 
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"c", "[", "\"\<Dagger\>\"", "]"}], " ", "@", " ", 
+               "c"}], ")"}]}], " ", "+", "\n", "        ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"envelope", "/", "2"}], ")"}], " ", 
+             RowBox[{"(", 
+              RowBox[{"c", " ", "+", " ", 
+               RowBox[{"c", "[", "\"\<Dagger\>\"", "]"}]}], ")"}]}], " ", "-",
+             " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"\[Lambda]", " ", 
+               RowBox[{
+                RowBox[{"D", "[", 
+                 RowBox[{"envelope", ",", " ", "t"}], "]"}], "/", 
+                RowBox[{"(", 
+                 RowBox[{"2", " ", "\[Alpha]"}], ")"}]}]}], ")"}], " ", 
+             RowBox[{"(", 
+              RowBox[{"I", " ", 
+               RowBox[{"(", 
+                RowBox[{
+                 RowBox[{"c", "[", "\"\<Dagger\>\"", "]"}], " ", "-", " ", 
+                 "c"}], ")"}]}], ")"}]}]}], ",", "\n", "      ", 
+           RowBox[{"\"\<Parameters\>\"", " ", "->", " ", 
+            RowBox[{"{", 
+             RowBox[{
+             "\[Alpha]", ",", " ", "A", ",", " ", "\[Lambda]", ",", " ", 
+              "\[Delta]", ",", " ", "\[Tau]"}], "}"}]}]}], "]"}], "[", 
+         RowBox[{
+         "anharmonicity", ",", " ", "a", ",", " ", "l", ",", " ", "d", ",", 
+          " ", "T"}], "]"}], ",", "\n", "    ", 
+        RowBox[{"FockState", "[", 
+         RowBox[{"0", ",", " ", "n"}], "]"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"t", ",", " ", "0", ",", " ", "T"}], "}"}], ",", " ", 
+        RowBox[{"PrecisionGoal", " ", "->", " ", "12"}], ",", " ", 
+        RowBox[{"AccuracyGoal", " ", "->", " ", "14"}]}], "]"}], "[", "T", 
+      "]"}], "[", "\"\<ProbabilitiesList\>\"", "]"}]}], "]"}]}]], "Input",
+ CellLabel->"In[37]:= ",
+ CellID->1960030258,ExpressionUUID->"5c8469dd-bfc7-2a7a-04bb-80873a727940"],
+
+Cell["\<\
+The smallest error in this tutorial is that of the best DRAG pulse without \
+decay and dephasing, where a change from the truncation would matter most. \
+Its transfer error with five levels:\
+\>", "Text",
+ CellID->535682707,ExpressionUUID->"182ee0c1-720e-fc83-49d5-f9ab07b8c6e9"],
+
+Cell[BoxData[
+ RowBox[{"1", " ", "-", " ", 
+  RowBox[{
+   RowBox[{"finalPopulations", "[", 
+    RowBox[{"5", ",", " ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "}"}], " ",
+       "/.", " ", 
+      RowBox[{"Last", "[", "bestWithDRAG", "]"}]}]}], "]"}], "[", 
+   RowBox[{"[", "2", "]"}], "]"}]}]], "Input",
+ CellLabel->"In[38]:= ",
+ CellID->1167207179,ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc"],
+
+Cell["The same pulse with six levels:", "Text",
+ CellID->1612953718,ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c"],
+
+Cell[BoxData[
+ RowBox[{"1", " ", "-", " ", 
+  RowBox[{
+   RowBox[{"finalPopulations", "[", 
+    RowBox[{"6", ",", " ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"a", ",", " ", "l", ",", " ", "d", ",", " ", "T"}], "}"}], " ",
+       "/.", " ", 
+      RowBox[{"Last", "[", "bestWithDRAG", "]"}]}]}], "]"}], "[", 
+   RowBox[{"[", "2", "]"}], "]"}]}]], "Input",
+ CellLabel->"In[39]:= ",
+ CellID->790826209,ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21"],
+
+Cell[TextData[{
+ "A sixth level changes this error by well under a percent, so the levels \
+above ",
+ Cell[BoxData[
+  TemplateBox[{"4"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77076ae4-09e5-8344-1d3c-83ceaf91d1ae"],
+ " do not affect the results."
+}], "Text",
+ CellID->1163030741,ExpressionUUID->"4289b0c6-8043-1b93-72b6-29a031f669f9"],
+
+Cell["References", "Section",
+ CellID->1753119213,ExpressionUUID->"070f3e08-556d-9d60-2d34-b0525c19e44a"],
+
+Cell[TextData[{
+ "J. Koch et al., \"Charge-insensitive qubit design derived from the Cooper \
+pair box,\" ",
+ ButtonBox["Phys. Rev. A 76, 042319 (2007)",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://doi.org/10.1103/PhysRevA.76.042319"], None}],
+ "."
+}], "Item",
+ CellID->2037256,ExpressionUUID->"6d593b15-c37a-9c59-1b66-b35ef60ce6a3"],
+
+Cell[TextData[{
+ "F. Motzoi, J. M. Gambetta, P. Rebentrost and F. K. Wilhelm, \"Simple pulses \
+for elimination of leakage in weakly nonlinear qubits,\" ",
+ ButtonBox["Phys. Rev. Lett. 103, 110501 (2009)",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://doi.org/10.1103/PhysRevLett.103.110501"], None}],
+ "."
+}], "Item",
+ CellID->339747688,ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c"],
+
+Cell[TextData[{
+ "J. M. Gambetta, F. Motzoi, S. T. Merkel and F. K. Wilhelm, \"Analytic \
+control methods for high-fidelity unitary operations in a weakly nonlinear \
+oscillator,\" ",
+ ButtonBox["Phys. Rev. A 83, 012308 (2011)",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://doi.org/10.1103/PhysRevA.83.012308"], None}],
+ "."
+}], "Item",
+ CellID->1569376968,ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60"],
+
+Cell[TextData[{
+ "P. Krantz et al., \"A quantum engineer's guide to superconducting qubits,\" \
+",
+ ButtonBox["Appl. Phys. Rev. 6, 021318 (2019)",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://doi.org/10.1063/1.5089550"], None}],
+ "."
+}], "Item",
+ CellID->1336445995,ExpressionUUID->"16b44e14-0404-e868-3e4c-605eadb6bab2"],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "TutorialMoreAboutSection",
+ CellChangeTimes->{{3.843042384656711*^9, 3.843042386024461*^9}},
+ CellID->23220180,ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622"],
+
+Cell[TextData[Cell[BoxData[
+ TemplateBox[{
+   Cell[
+    TextData["WolframQuantumComputationFramework"]], 
+   "paclet:Wolfram/QuantumFramework/guide/WolframQuantumComputationFramework"},
+  "RefLinkPlain",
+  BaseStyle->{
+   "InlineFormula"}]], \
+"InlineFormula",ExpressionUUID->"7e10bd94-ae42-3b4d-262f-34d1cbf48997"]], \
+"TutorialMoreAbout",
+ CellID->1420431610,ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Tech Notes", "RelatedTutorialsSection",
+ CellID->415694126,ExpressionUUID->"013c2307-fb8b-27c7-30c3-bb60fe3f8d2d"],
+
+Cell[TextData[{
+ Cell[BoxData[
+  TemplateBox[{
+    Cell[
+     TextData["TimeEvolution"]], 
+    "paclet:Wolfram/QuantumFramework/tutorial/TimeEvolution"},
+   "RefLinkPlain",
+   BaseStyle->{"InlineFormula"}]], "InlineFormula",ExpressionUUID->
+  "4b734859-75e7-efa6-7901-62030393b58c"],
+ " \[FilledVerySmallSquare] ",
+ Cell[BoxData[
+  TemplateBox[{
+    Cell[
+     TextData["SecondQuantization"]], 
+    "paclet:Wolfram/QuantumFramework/tutorial/SecondQuantization"},
+   "RefLinkPlain",
+   BaseStyle->{"InlineFormula"}]], "InlineFormula",ExpressionUUID->
+  "4ae31c17-eefa-a706-7a90-96508a8c0a6c"]
+}], "RelatedTutorials",
+ CellID->1851983809,ExpressionUUID->"00844d77-2817-3ec6-30bc-653149a3842c"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Metadata", "MetadataSection",
+ CellID->311882160,ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0"],
+
+Cell[TextData[{
+ "New in: ",
+ Cell["XX", "HistoryData",
+  CellTags->"New",ExpressionUUID->"04469009-6b02-dcc3-2c7d-0a530eb4a629"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"4e35d333-5bd5-ef26-77ca-cb7d5e61b20c"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->
+  "5547dfb6-0e84-e145-037c-d6f0ab36b3af"]
+}], "History",
+ CellID->341476719,ExpressionUUID->"12b61bfc-9cd7-eca9-424d-92a61563b6f3"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",
+ CellID->1122911449,ExpressionUUID->"451364b5-819d-fb99-7321-7dff3029c9e3"],
+
+Cell["Tutorial", "Categorization",
+ CellLabel->"Entity Type",
+ CellID->686433507,ExpressionUUID->"13b49e24-0fb7-4441-414b-178eaa422eab"],
+
+Cell["Wolfram/QuantumFramework", "Categorization",
+ CellLabel->"Paclet Name",
+ CellID->605800465,ExpressionUUID->"445bf28f-7a5a-ecd1-6c78-ebe97fecb63b"],
+
+Cell["Wolfram`QuantumFramework`", "Categorization",
+ CellLabel->"Context",
+ CellID->468444828,ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69"],
+
+Cell["Wolfram/QuantumFramework/tutorial/TransmonGates", "Categorization",
+ CellLabel->"URI",
+ CellID->955925492,ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",
+ CellID->1427428552,ExpressionUUID->"0cdaad60-2181-5e26-34f9-454a5034250c"],
+
+Cell["transmon", "Keywords",
+ CellID->1491006849,ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b"],
+
+Cell["superconducting qubit", "Keywords",
+ CellID->1661384961,ExpressionUUID->"00dd9d4d-f7ec-565f-30e2-151681993ca5"],
+
+Cell["leakage", "Keywords",
+ CellID->1212309981,ExpressionUUID->"0d66b502-775d-ec4c-3b1d-2d6c02e9b696"],
+
+Cell["DRAG", "Keywords",
+ CellID->1766883648,ExpressionUUID->"3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891"],
+
+Cell["pi pulse", "Keywords",
+ CellID->318739035,ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072"],
+
+Cell["anharmonicity", "Keywords",
+ CellID->1160456466,ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58"],
+
+Cell["transfer error", "Keywords",
+ CellID->761160701,ExpressionUUID->"1d9e3d6f-99f1-7c1e-4ba5-b5491f844764"],
+
+Cell["pulse length", "Keywords",
+ CellID->689036725,ExpressionUUID->"710db4a8-d877-0db2-2732-2df5d9025798"],
+
+Cell["Lindblad", "Keywords",
+ CellID->1830661342,ExpressionUUID->"71e12f72-3ad4-a92f-279e-c73cbf66f875"],
+
+Cell["decoherence", "Keywords",
+ CellID->757803963,ExpressionUUID->"06ea8612-dd18-b4f0-2ee9-185fd4921eda"],
+
+Cell["T1", "Keywords",
+ CellID->1279840733,ExpressionUUID->"0b02f270-2101-5c3d-3931-f43a50b42707"],
+
+Cell["T2", "Keywords",
+ CellID->45647854,ExpressionUUID->"2d1868bf-f524-2aaf-5b27-81f8fcd178f5"],
+
+Cell["optimization", "Keywords",
+ CellID->2050034218,ExpressionUUID->"669caa83-24d6-d7e9-0ea3-43ed4d60bd33"]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{700, 771},
+WindowMargins->{{4, Automatic}, {Automatic, 0}},
+TaggingRules->{
+ "Metadata" -> {
+   "title" -> "TransmonGates", "context" -> "Wolfram`QuantumFramework`", 
+    "keywords" -> {
+     "transmon", "superconducting qubit", "leakage", "DRAG", "pi pulse", 
+      "anharmonicity", "transfer error", "pulse length", "Lindblad", 
+      "decoherence", "T1", "T2", "optimization"}, "summary" -> "", "paclet" -> 
+    "Wolfram/QuantumFramework", "uri" -> 
+    "Wolfram/QuantumFramework/tutorial/TransmonGates", "type" -> "Tutorial", 
+    "index" -> True, "language" -> "en"}},
+CellContext->"Global`",
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
+StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TechNotePageStylesExt.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 116, 1, 70, "Title",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4",
+ CellID->509267359],
+Cell[695, 25, 1513, 36, 70, "Text",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169",
+ CellID->329621944],
+Cell[2211, 63, 1651, 49, 70, "Text",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8",
+ CellID->515379898],
+Cell[3865, 114, 1071, 22, 70, "Text",ExpressionUUID->"12c044c4-b778-74e1-42f0-5da1c20d5ecb",
+ CellID->604760901],
+Cell[4939, 138, 114, 1, 70, "Section",ExpressionUUID->"3d9aa029-60a8-273a-6bb9-3a7311428a00",
+ CellID->1476799103],
+Cell[5056, 141, 268, 5, 70, "Text",ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5",
+ CellID->448336599],
+Cell[5327, 148, 1859, 70, 70, "DisplayFormula",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436",
+ CellID->970785311],
+Cell[7189, 220, 1620, 47, 70, "Text",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605",
+ CellID->1377816002],
+Cell[8812, 269, 3297, 101, 70, "Text",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089",
+ CellID->1439899046],
+Cell[12112, 372, 898, 22, 70, "Text",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3",
+ CellID->1641200340],
+Cell[13013, 396, 1411, 50, 70, "DisplayFormula",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d",
+ CellID->1424533854],
+Cell[14427, 448, 751, 18, 70, "Text",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1",
+ CellID->535457321],
+Cell[15181, 468, 147, 1, 70, "Text",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554",
+ CellID->141959522],
+Cell[15331, 471, 205, 4, 70, "Input",ExpressionUUID->"10bcaec6-cc03-bcfd-4043-47a3e5b706c7",
+ CellID->299517738],
+Cell[15539, 477, 1033, 32, 70, "Text",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc",
+ CellID->2142391071],
+Cell[16575, 511, 550, 15, 70, "Input",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e",
+ CellID->1002769646],
+Cell[17128, 528, 450, 13, 70, "Text",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12",
+ CellID->436346740],
+Cell[17581, 543, 311, 8, 70, "Input",ExpressionUUID->"1318f44b-7a0d-b86f-4127-ee157fb90ab5",
+ CellID->2122865143],
+Cell[17895, 553, 1412, 42, 70, "Text",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09",
+ CellID->1735808809],
+Cell[19310, 597, 103, 1, 70, "Section",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799",
+ CellID->753514147],
+Cell[19416, 600, 602, 11, 70, "Text",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a",
+ CellID->1164297175],
+Cell[20021, 613, 600, 20, 70, "DisplayFormula",ExpressionUUID->"2207e002-80f7-0285-523c-fa6c308250ef",
+ CellID->632614636],
+Cell[20624, 635, 470, 13, 70, "Text",ExpressionUUID->"440467ae-8db5-79b4-6c3c-7e0824404b9e",
+ CellID->1689610856],
+Cell[21097, 650, 112, 1, 70, "Text",ExpressionUUID->"141585f4-d1c1-5bbd-3c2a-1cb1e0742987",
+ CellID->1303163127],
+Cell[21212, 653, 417, 11, 70, "Input",ExpressionUUID->"3d27d006-86b8-9131-64dc-ca603332e01b",
+ CellID->2098230307],
+Cell[21632, 666, 824, 25, 70, "Text",ExpressionUUID->"3e44340b-ef5c-51d5-667b-ae548ae9233f",
+ CellID->1930159659],
+Cell[22459, 693, 273, 7, 70, "Input",ExpressionUUID->"321034f4-436e-dcec-622f-adbe7618a636",
+ CellID->1113655915],
+Cell[22735, 702, 1730, 44, 70, "Text",ExpressionUUID->"1287d3f9-6500-de4e-42bc-caa30cbaa494",
+ CellID->1606118752],
+Cell[24468, 748, 1545, 44, 70, "Text",ExpressionUUID->"3035d7f6-28ea-dcd5-61ca-ceb0489ca63f",
+ CellID->2141499446],
+Cell[26016, 794, 1661, 45, 70, "Input",ExpressionUUID->"087f5f2f-6486-1b59-3805-56890d3369a3",
+ CellID->339082558],
+Cell[27680, 841, 1863, 54, 70, "Text",ExpressionUUID->"7ddf1aac-cdaa-cd7e-2be4-9309e45c9444",
+ CellID->432388834],
+Cell[29546, 897, 225, 5, 70, "Input",ExpressionUUID->"2b41c4a9-15e8-1804-597e-ddf3a39d6b6e",
+ CellID->443736588],
+Cell[29774, 904, 102, 1, 70, "Section",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81",
+ CellID->1593449978],
+Cell[29879, 907, 1492, 45, 70, "Text",ExpressionUUID->"6724c974-bdf1-27a5-0edb-e13e3b858d8f",
+ CellID->1742646261],
+Cell[31374, 954, 518, 13, 70, "Input",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832",
+ CellID->29467524],
+Cell[31895, 969, 2727, 83, 70, "Text",ExpressionUUID->"53412643-5a68-df00-017e-b82d5f02a26a",
+ CellID->1939141443],
+Cell[34625, 1054, 443, 11, 70, "Input",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c",
+ CellID->5047578],
+Cell[35071, 1067, 804, 21, 70, "Text",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6",
+ CellID->15008895],
+Cell[35878, 1090, 624, 21, 70, "Text",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99",
+ CellID->1892712309],
+Cell[36505, 1113, 2371, 61, 70, "Input",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2",
+ CellID->787969749],
+Cell[38879, 1176, 971, 28, 70, "Text",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79",
+ CellID->525088789],
+Cell[39853, 1206, 139, 1, 70, "Text",ExpressionUUID->"07a61755-6475-fbf7-2d5d-8f1f0d01c9dd",
+ CellID->357930410],
+Cell[39995, 1209, 208, 5, 70, "Input",ExpressionUUID->"539b0e4e-9e5a-5525-01b8-a0281bef3c0f",
+ CellID->1802489801],
+Cell[40206, 1216, 1003, 28, 70, "Text",ExpressionUUID->"1cd82739-42e3-b7ed-44e7-bf6376971d37",
+ CellID->115301326],
+Cell[41212, 1246, 115, 1, 70, "Section",ExpressionUUID->"0971a20b-7913-467e-3f0e-445578a62d44",
+ CellID->1651187567],
+Cell[41330, 1249, 1081, 22, 70, "Text",ExpressionUUID->"09df342d-d743-5809-3fe4-ae76e2f62b53",
+ CellID->941376513],
+Cell[42414, 1273, 431, 7, 70, "Text",ExpressionUUID->"0a0cc1e9-e2ca-26d9-3a33-d8b2977c8c23",
+ CellID->2120243592],
+Cell[42848, 1282, 1023, 26, 70, "Text",ExpressionUUID->"21fdaace-430e-f3f9-5782-43a876b8c1c3",
+ CellID->1047559317],
+Cell[43874, 1310, 767, 19, 70, "Input",ExpressionUUID->"1b4e2dea-4a49-bf2e-4975-c4b46ffd0274",
+ CellID->1820947576],
+Cell[44644, 1331, 832, 21, 70, "Text",ExpressionUUID->"10b057f0-cb39-4e6e-4040-4ebdeecc14b4",
+ CellID->670734585],
+Cell[45479, 1354, 922, 26, 70, "Text",ExpressionUUID->"41c6bfc6-0792-5005-77fd-36a0b227236f",
+ CellID->58232708],
+Cell[46404, 1382, 649, 17, 70, "Input",ExpressionUUID->"62752e4e-571f-d961-120a-c02862aba84b",
+ CellID->393464600],
+Cell[47056, 1401, 876, 21, 70, "Text",ExpressionUUID->"34ee5221-bb14-cc46-5c96-4b8b3ea696ac",
+ CellID->1484396876],
+Cell[47935, 1424, 631, 13, 70, "Input",ExpressionUUID->"166277e1-e8de-815f-3e12-6eca8968d3a5",
+ CellID->1149283354],
+Cell[48569, 1439, 979, 26, 70, "Text",ExpressionUUID->"0ae7a534-7379-468c-3a9c-3d7e060c2cd6",
+ CellID->1092188694],
+Cell[49551, 1467, 776, 21, 70, "Input",ExpressionUUID->"34baef30-7963-b757-5c59-077a78171dbd",
+ CellID->559599970],
+Cell[50330, 1490, 1174, 32, 70, "Text",ExpressionUUID->"15ce0314-20ee-2b64-43f5-9b5e509b764e",
+ CellID->1710123944],
+Cell[51507, 1524, 502, 13, 70, "Input",ExpressionUUID->"38a9ac88-4644-6c0e-6856-45d273f13754",
+ CellID->934597701],
+Cell[52012, 1539, 952, 25, 70, "Text",ExpressionUUID->"64802aa2-b136-451c-0cbf-c30fc0c32c66",
+ CellID->284780108],
+Cell[52967, 1566, 568, 14, 70, "Input",ExpressionUUID->"67771ff6-ea2e-a98b-0d0c-96b38fd8fbd1",
+ CellID->643798763],
+Cell[53538, 1582, 348, 7, 70, "Text",ExpressionUUID->"233ecb8e-17f3-8d32-52c5-e2e8a187d418",
+ CellID->268959046],
+Cell[53889, 1591, 878, 24, 70, "Input",ExpressionUUID->"7dd949a9-d8cf-50b3-2be7-60f2d97a2299",
+ CellID->403125484],
+Cell[54770, 1617, 421, 10, 70, "Text",ExpressionUUID->"4a74bc9f-39f4-5114-7a0b-35d9bf81207e",
+ CellID->931950651],
+Cell[55194, 1629, 1761, 51, 70, "Input",ExpressionUUID->"598f41e5-f1df-a461-0fb5-58ce806b0f4b",
+ CellID->412518898],
+Cell[56958, 1682, 757, 18, 70, "Text",ExpressionUUID->"1e0f0df5-2071-c96f-4634-a4bf51059bb5",
+ CellID->622967176],
+Cell[57718, 1702, 132, 1, 70, "Section",ExpressionUUID->"7f6e12d5-e3b9-0bb9-2515-8b9e964c5983",
+ CellID->1358080856],
+Cell[57853, 1705, 440, 7, 70, "Text",ExpressionUUID->"41ecc127-3c02-05fa-7793-d881b5b76fc0",
+ CellID->320615307],
+Cell[58296, 1714, 831, 26, 70, "Text",ExpressionUUID->"1190ff72-a9fe-60f8-47af-f73fcf8b32c2",
+ CellID->1594238871],
+Cell[59130, 1742, 1584, 56, 70, "DisplayFormula",ExpressionUUID->"19c80315-d7de-7125-4ff7-9b5ee26b400f",
+ CellID->2002505366],
+Cell[60717, 1800, 150, 1, 70, "Text",ExpressionUUID->"6fdf78a7-59a9-97d9-15e5-7101585dfd23",
+ CellID->2121396920],
+Cell[60870, 1803, 813, 29, 70, "DisplayFormula",ExpressionUUID->"7a87483f-bfa4-2eb6-2abd-62793a51749c",
+ CellID->993357154],
+Cell[61686, 1834, 1680, 51, 70, "Text",ExpressionUUID->"09b26917-59e6-8729-3f41-81515f90ea73",
+ CellID->50259360],
+Cell[63369, 1887, 478, 17, 70, "DisplayFormula",ExpressionUUID->"521ad179-838d-ce9b-0239-c923363994e1",
+ CellID->680111415],
+Cell[63850, 1906, 505, 15, 70, "Text",ExpressionUUID->"136d7364-bcfb-8461-4113-6b4e348fef4b",
+ CellID->1912025938],
+Cell[64358, 1923, 200, 4, 70, "Input",ExpressionUUID->"2b78534b-7a52-d624-5918-4b157fe4bd0e",
+ CellID->1678275947],
+Cell[64561, 1929, 370, 10, 70, "Text",ExpressionUUID->"30c454b2-bdb8-e427-60fc-4dfc3432cf0d",
+ CellID->1570109414],
+Cell[64934, 1941, 362, 10, 70, "Input",ExpressionUUID->"6879dfe8-0276-0c7b-1806-d6b2b7035741",
+ CellID->746824257],
+Cell[65299, 1953, 1392, 42, 70, "Text",ExpressionUUID->"7cc522fa-6a93-e579-24fa-bba40f27cc43",
+ CellID->966663717],
+Cell[66694, 1997, 1097, 29, 70, "Input",ExpressionUUID->"5b82e386-6ff5-c0ee-09b1-fae009819234",
+ CellID->634665076],
+Cell[67794, 2028, 433, 9, 70, "Text",ExpressionUUID->"34a39a2f-b372-ffce-5c50-1388c604c514",
+ CellID->1607396713],
+Cell[68230, 2039, 842, 23, 70, "Input",ExpressionUUID->"66ca9132-7812-8248-0ec9-097c79a4d092",
+ CellID->171231949],
+Cell[69075, 2064, 1090, 26, 70, "Text",ExpressionUUID->"023b1c4a-5b09-a8c9-33d8-96145ebdfa13",
+ CellID->820919957],
+Cell[70168, 2092, 639, 13, 70, "Input",ExpressionUUID->"29a4f364-fd74-7ca4-5f5b-eb41f401468e",
+ CellID->1006830744],
+Cell[70810, 2107, 451, 11, 70, "Text",ExpressionUUID->"47740231-7fc8-4299-6d0b-a47b7a7d10e3",
+ CellID->1175763064],
+Cell[71264, 2120, 683, 18, 70, "Input",ExpressionUUID->"1af52337-5e42-c8c3-4a8a-bb715bf49a29",
+ CellID->1074416020],
+Cell[71950, 2140, 509, 8, 70, "Text",ExpressionUUID->"2fdb82dc-2353-e9b3-55f8-1b8656e7bb99",
+ CellID->2143439988],
+Cell[72462, 2150, 1185, 32, 70, "Input",ExpressionUUID->"5782d92f-a790-094a-7db1-d088d2255b90",
+ CellID->1933756212],
+Cell[73650, 2184, 134, 1, 70, "Text",ExpressionUUID->"05d48452-325d-a277-33eb-1e1c47e9f15d",
+ CellID->943735407],
+Cell[73787, 2187, 304, 7, 70, "Input",ExpressionUUID->"087ffcf6-194e-431e-3804-f5b098fb2e64",
+ CellID->865519937],
+Cell[74094, 2196, 198, 4, 70, "Text",ExpressionUUID->"615fadf7-df9a-5675-1764-44b0da2f3d5f",
+ CellID->845186625],
+Cell[74295, 2202, 249, 4, 70, "Text",ExpressionUUID->"5de452e3-5fd7-a751-0b9c-4bcd5a630dbb",
+ CellID->14312863],
+Cell[74547, 2208, 592, 15, 70, "Input",ExpressionUUID->"2d0df906-1ebb-1081-5b32-f1609b4e62eb",
+ CellID->315698450],
+Cell[75142, 2225, 135, 1, 70, "Text",ExpressionUUID->"519a4e0d-3467-bfb9-07ba-6057bd130583",
+ CellID->1751204118],
+Cell[75280, 2228, 308, 7, 70, "Input",ExpressionUUID->"3a891815-8c00-cf41-6ab6-925f25ba95ab",
+ CellID->2116603297],
+Cell[75591, 2237, 214, 4, 70, "Text",ExpressionUUID->"0dbacffa-31b0-43f6-3b59-e6a4404511dc",
+ CellID->530919167],
+Cell[75808, 2243, 140, 1, 70, "Text",ExpressionUUID->"196a859c-b643-c1b3-4f69-1cd9c3f79399",
+ CellID->1242319925],
+Cell[75951, 2246, 852, 24, 70, "Input",ExpressionUUID->"48c8a383-1e42-ef31-78f7-3aed9bf4b21b",
+ CellID->1600082692],
+Cell[76806, 2272, 430, 10, 70, "Text",ExpressionUUID->"50735439-04fd-dee7-0001-4e63ac89a4cd",
+ CellID->1091979148],
+Cell[77239, 2284, 1907, 53, 70, "Input",ExpressionUUID->"3597ba8d-914b-928f-63ac-33d720ffe0d5",
+ CellID->1239660989],
+Cell[79149, 2339, 791, 19, 70, "Text",ExpressionUUID->"056fda38-a5bc-2884-3314-dc65cc497aee",
+ CellID->234435634],
+Cell[79943, 2360, 394, 10, 70, "Text",ExpressionUUID->"383c4a9f-130c-f8c1-69c4-63d9a6beca2b",
+ CellID->417968184],
+Cell[80340, 2372, 246, 5, 70, "Input",ExpressionUUID->"7b649e79-a2e1-7610-291b-1022d6945d7a",
+ CellID->1274591649],
+Cell[80589, 2379, 217, 4, 70, "Text",ExpressionUUID->"09cb884c-5fc8-b209-3fc8-22165a620153",
+ CellID->1243964799],
+Cell[80809, 2385, 579, 14, 70, "Input",ExpressionUUID->"376c6589-bcca-29e8-5d14-7cd3357f7b32",
+ CellID->1828403510],
+Cell[81391, 2401, 193, 4, 70, "Text",ExpressionUUID->"667bb688-7420-22c7-0e18-2fd27dd5702d",
+ CellID->623026911],
+Cell[81587, 2407, 322, 7, 70, "Input",ExpressionUUID->"72002252-da4c-5210-223f-c41fdff9217a",
+ CellID->308489360],
+Cell[81912, 2416, 291, 9, 70, "Text",ExpressionUUID->"084561a7-5440-aaee-387b-78015dfaf834",
+ CellID->387004599],
+Cell[82206, 2427, 622, 17, 70, "Input",ExpressionUUID->"721e71e5-9ca7-ded5-2226-68cf1553a43f",
+ CellID->1976158344],
+Cell[82831, 2446, 719, 18, 70, "Text",ExpressionUUID->"0a84e7eb-55e0-1894-3abb-feb563956afe",
+ CellID->1232186413],
+Cell[83553, 2466, 482, 13, 70, "Text",ExpressionUUID->"3261920b-7b77-02d6-621e-14557e02503c",
+ CellID->655687319],
+Cell[84038, 2481, 1913, 51, 70, "Input",ExpressionUUID->"4ebe3b2c-9c8f-bd2d-7645-b376153b0477",
+ CellID->1589358908],
+Cell[85954, 2534, 577, 9, 70, "Text",ExpressionUUID->"7d6a0058-fb4a-caff-2b69-9a05fefc98c5",
+ CellID->1191517648],
+Cell[86534, 2545, 116, 1, 70, "Section",ExpressionUUID->"41d92934-9aba-8299-77e6-c17e1f4cd0e3",
+ CellID->960670710],
+Cell[86653, 2548, 385, 9, 70, "Text",ExpressionUUID->"5cc23ff5-bf0f-f019-04f1-b6bf3abbc363",
+ CellID->1307080411],
+Cell[87041, 2559, 2963, 72, 70, "Input",ExpressionUUID->"29880975-91f0-008f-5fb7-a13f278552d5",
+ CellID->1960030258],
+Cell[90007, 2633, 289, 5, 70, "Text",ExpressionUUID->"551c00cf-fc58-99c4-0323-99a8f5d2eb2e",
+ CellID->535682707],
+Cell[90299, 2640, 466, 12, 70, "Input",ExpressionUUID->"22235db8-54be-42b7-53d1-54e25d4b109d",
+ CellID->1167207179],
+Cell[90768, 2654, 123, 1, 70, "Text",ExpressionUUID->"0976d5ae-737d-f257-3f0d-cc080609c0bd",
+ CellID->1612953718],
+Cell[90894, 2657, 465, 12, 70, "Input",ExpressionUUID->"13e711b4-4d78-4d68-419c-88fe640d17b2",
+ CellID->790826209],
+Cell[91362, 2671, 370, 10, 70, "Text",ExpressionUUID->"3fd09d86-aea1-a602-65ef-14e3cb550d68",
+ CellID->1163030741],
+Cell[91735, 2683, 105, 1, 70, "Section",ExpressionUUID->"2f6c0922-6605-ed68-5513-a08c13b1b7b2",
+ CellID->1753119213],
+Cell[91843, 2686, 348, 9, 70, "Item",ExpressionUUID->"2caab86a-2af9-b1b1-54a9-32344e8d039b",
+ CellID->2037256],
+Cell[92194, 2697, 406, 9, 70, "Item",ExpressionUUID->"7f56169e-4783-4dbb-256d-8fd872361781",
+ CellID->339747688],
+Cell[92603, 2708, 426, 10, 70, "Item",ExpressionUUID->"5b84d4d6-858d-5842-09bb-cd902c382aa8",
+ CellID->1569376968],
+Cell[93032, 2720, 335, 9, 70, "Item",ExpressionUUID->"67558936-e5eb-8680-0d6a-2173939fecea",
+ CellID->1336445995],
+Cell[CellGroupData[{
+Cell[93392, 2733, 190, 2, 70, "TutorialMoreAboutSection",ExpressionUUID->"1072dc7c-f7d5-c74e-4001-d6398261ad94",
+ CellID->23220180],
+Cell[93585, 2737, 416, 10, 70, "TutorialMoreAbout",ExpressionUUID->"3462f0a3-098c-f6b3-5c11-e90da83edc99",
+ CellID->1420431610]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[94038, 2752, 128, 1, 70, "RelatedTutorialsSection",ExpressionUUID->"04cac1af-436c-9192-2cc9-d809761ee3f8",
+ CellID->415694126],
+Cell[94169, 2755, 691, 19, 70, "RelatedTutorials",ExpressionUUID->"63be94f2-239e-9b81-1145-0dbc5628e9eb",
+ CellID->1851983809]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[94909, 2780, 110, 1, 70, "MetadataSection",ExpressionUUID->"5a3d7a71-218e-1995-0bc3-7c3b503b6bff",
+ CellID->311882160],
+Cell[95022, 2783, 476, 12, 70, "History",ExpressionUUID->"3a0f2024-2f71-09ca-6a34-b98e4a045b10",
+ CellID->341476719],
+Cell[CellGroupData[{
+Cell[95523, 2799, 123, 1, 70, "CategorizationSection",ExpressionUUID->"277956ac-4c9d-d338-4d07-4ff66529be02",
+ CellID->1122911449],
+Cell[95649, 2802, 136, 2, 70, "Categorization",ExpressionUUID->"178a6a52-23e4-1142-3d89-8c1c559163a8",
+ CellID->686433507],
+Cell[95788, 2806, 152, 2, 70, "Categorization",ExpressionUUID->"52ddf811-e480-8137-02e2-f25a8d3ad01d",
+ CellID->605800465],
+Cell[95943, 2810, 149, 2, 70, "Categorization",ExpressionUUID->"719ae17a-c654-ed44-27b9-f927f3e6b7ae",
+ CellID->468444828],
+Cell[96095, 2814, 167, 2, 70, "Categorization",ExpressionUUID->"62c8f42b-c628-388a-12f7-ee74f3c28ad0",
+ CellID->955925492]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[96299, 2821, 111, 1, 70, "KeywordsSection",ExpressionUUID->"36e5ffeb-8179-694d-5e9a-f6b5300c3b97",
+ CellID->1427428552],
+Cell[96413, 2824, 104, 1, 70, "Keywords",ExpressionUUID->"7af061c8-c44a-ae8e-2a80-7895edfcf4d4",
+ CellID->1491006849],
+Cell[96520, 2827, 117, 1, 70, "Keywords",ExpressionUUID->"0d437dad-8290-de9a-3b71-74f7372aa4e0",
+ CellID->1661384961],
+Cell[96640, 2830, 103, 1, 70, "Keywords",ExpressionUUID->"7aafc905-908a-67da-2a54-e16f213f4d20",
+ CellID->1212309981],
+Cell[96746, 2833, 100, 1, 70, "Keywords",ExpressionUUID->"62016b94-8ad8-fb56-123e-82de2f52c9bc",
+ CellID->1766883648],
+Cell[96849, 2836, 103, 1, 70, "Keywords",ExpressionUUID->"0e7c794a-82c2-56e7-3604-711437773ccd",
+ CellID->318739035],
+Cell[96955, 2839, 109, 1, 70, "Keywords",ExpressionUUID->"30f601cf-5001-fb68-608d-98a961b5c9b2",
+ CellID->1160456466],
+Cell[97067, 2842, 109, 1, 70, "Keywords",ExpressionUUID->"04bc0f0b-f02f-243d-2c43-a75481db8f07",
+ CellID->761160701],
+Cell[97179, 2845, 107, 1, 70, "Keywords",ExpressionUUID->"1a24bdc2-598a-1b95-4bdb-34ac583f69ff",
+ CellID->689036725],
+Cell[97289, 2848, 104, 1, 70, "Keywords",ExpressionUUID->"705e212e-f5a4-7717-2065-b88bfc515a7d",
+ CellID->1830661342],
+Cell[97396, 2851, 106, 1, 70, "Keywords",ExpressionUUID->"5c2f5325-a3f6-c048-05d5-4a8ed5809292",
+ CellID->757803963],
+Cell[97505, 2854, 98, 1, 70, "Keywords",ExpressionUUID->"211ecaf2-61ee-418f-5725-e3bc179b13d5",
+ CellID->1279840733],
+Cell[97606, 2857, 96, 1, 70, "Keywords",ExpressionUUID->"51e4dffc-d38f-5703-079b-d6b9e63a3a69",
+ CellID->45647854],
+Cell[97705, 2860, 108, 1, 70, "Keywords",ExpressionUUID->"30e43b5d-74af-d0fb-609b-b3077d5ba2c1",
+ CellID->2050034218]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

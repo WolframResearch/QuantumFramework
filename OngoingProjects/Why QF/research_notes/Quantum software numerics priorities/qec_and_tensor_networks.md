@@ -332,3 +332,12 @@ Random circuit sampling is compelling as a complexity story but is less of a qua
 ### Gaps
 - I found no published survey of teaching usage or student preference for these problem classes. The ranking above is reasoned inference from what the sources show about numerical decisiveness and conceptual accessibility.
 - I found no incumbent-published, ready-made benchmark for "exact non-Pauli noise on small surface codes" against which a QF study could be compared directly. The comparison would have to be constructed from the Stim baseline plus the definitions of SD6 and SI1000.
+
+## Undermind research references
+
+Related saved searches for follow-up research. These links do not establish that this document was originally derived from Undermind; its cited primary sources remain its evidence base.
+
+- [Quantum results requiring symbolic and numerical operations together](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20results%20requiring%20symbolic%20and%20numerical%20operations%20together) — Related logical-channel and coherent-error calculations.
+- [Quantum numerical applications with essential nonstandard representations](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20numerical%20applications%20with%20essential%20nonstandard%20representations) — Related nonstandard-representation candidates, including qudit stabilizer methods; not evidence for a particular tensor-network implementation.
+
+Workspace: [Roadmap for Wolfram quantum](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3); workspace ID: `bcedc042-7a0d-4f3d-b4ca-4e1c138571a3`. Links checked on 2026-10-04. For reuse, inspect the saved search goal and results before launching a new search; follow the primary-paper links for evidence.

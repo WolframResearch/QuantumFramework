@@ -854,3 +854,12 @@ Source: [arXiv 2403.04006](https://arxiv.org/abs/2403.04006)
 - No consensus open-system benchmark suite shared across packages was found. Each package benchmarks its own chosen models.
 - HEOM benchmark parameters (bath cutoffs, hierarchy depth) used across packages were not compared.
 - Tensor-network circuit-contraction benchmarks (e.g. Sycamore contraction with quimb/cotengra) were not separately verified for 2022–2026.
+
+## Undermind research references
+
+Related saved searches for follow-up research. These links do not establish that this document was originally derived from Undermind; its cited primary sources remain its evidence base.
+
+- [Quantum numerical applications with essential nonstandard representations](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20numerical%20applications%20with%20essential%20nonstandard%20representations) — Related precision, truncation and alternative-representation questions.
+- [Compact computational questions across quantum science](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Compact%20computational%20questions%20across%20quantum%20science) — Related candidate problems for reusable computational studies.
+
+Workspace: [Roadmap for Wolfram quantum](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3); workspace ID: `bcedc042-7a0d-4f3d-b4ca-4e1c138571a3`. Links checked on 2026-10-04. For reuse, inspect the saved search goal and results before launching a new search; follow the primary-paper links for evidence.

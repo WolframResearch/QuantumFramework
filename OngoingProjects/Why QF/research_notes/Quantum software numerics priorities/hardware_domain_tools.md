@@ -202,3 +202,12 @@ Most canonical benchmarks have both an incumbent tutorial and a primary paper (t
 ### Gaps
 - I found no survey or teaching study measuring which of these topics master's students find most compelling; the ranking above is reasoned inference.
 - I did not find incumbent tutorials that combine control and noise for transmons (pulse plus Lindblad) to set a quantitative accuracy bar for such a study.
+
+## Undermind research references
+
+Related saved searches for follow-up research. These links do not establish that this document was originally derived from Undermind; its cited primary sources remain its evidence base.
+
+- [Compact computational questions across quantum science](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Compact%20computational%20questions%20across%20quantum%20science) — Related physical models for control, transport and molecular applications.
+- [Quantum numerical applications with essential nonstandard representations](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20numerical%20applications%20with%20essential%20nonstandard%20representations) — Related bosonic and vibrational numerical-representation questions.
+
+Workspace: [Roadmap for Wolfram quantum](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3); workspace ID: `bcedc042-7a0d-4f3d-b4ca-4e1c138571a3`. Links checked on 2026-10-04. For reuse, inspect the saved search goal and results before launching a new search; follow the primary-paper links for evidence.

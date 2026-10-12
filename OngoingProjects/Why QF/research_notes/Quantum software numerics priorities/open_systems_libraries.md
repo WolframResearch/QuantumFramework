@@ -619,3 +619,12 @@ Optimal control (GRAPE/CRAB) and GPU-scale spin chains matter to practitioners. 
 ### Gaps
 - I found no survey of master's-level course usage (which QuTiP lectures are assigned in courses). The audience ranking above is reasoning, not data.
 - I did not check whether QuTiP or QuantumOptics.jl publish worked Liouvillian-gap or metastability examples beyond QuantumToolbox.jl's arbitrary-precision page.
+
+## Undermind research references
+
+Related saved searches for follow-up research. These links do not establish that this document was originally derived from Undermind; its cited primary sources remain its evidence base.
+
+- [Quantum numerical applications with essential nonstandard representations](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Quantum%20numerical%20applications%20with%20essential%20nonstandard%20representations) — Related leads on driven bosonic modes, truncation and steady-state calculations.
+- [Compact computational questions across quantum science](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3?path=/Compact%20computational%20questions%20across%20quantum%20science) — Related compact dynamics and transport studies.
+
+Workspace: [Roadmap for Wolfram quantum](https://app.undermind.ai/projects/bcedc042-7a0d-4f3d-b4ca-4e1c138571a3); workspace ID: `bcedc042-7a0d-4f3d-b4ca-4e1c138571a3`. Links checked on 2026-10-04. For reuse, inspect the saved search goal and results before launching a new search; follow the primary-paper links for evidence.
