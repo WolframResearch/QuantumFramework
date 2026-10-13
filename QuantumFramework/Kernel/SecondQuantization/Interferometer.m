@@ -651,7 +651,8 @@ couplerPrimitive[{x_, p_, q_, t_, f_}, labelQ_] := With[{w = $couplerHalfWidth, 
 phasePrimitive[{x_, p_, a_}, labelQ_] := Tooltip[
     {
         EdgeForm[{GrayLevel[0.25], AbsoluteThickness[1]}], FaceForm[GrayLevel[0.95]],
-        Rectangle[{x - 0.08, - p - 0.08}, {x + 0.08, - p + 0.08}],
+        Rectangle[{x - 0.11, - p - 0.11}, {x + 0.11, - p + 0.11}],
+        {Black, Text[Style["\[Phi]", 8], {x, - p}]},
         If[labelQ, {Black, Text[Style[parameterForm[a], 8], {x, - p - 0.3}]}, Nothing]
     },
     Row[{"\[Phi] = ", a, ", mode ", p}]
