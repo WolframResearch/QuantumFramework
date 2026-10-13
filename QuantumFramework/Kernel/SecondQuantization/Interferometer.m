@@ -611,7 +611,7 @@ modePositions[qi_] := Merge[MapThread[Thread[modeSpan[#1] -> #2] &, {qi["Element
 
 
 
-$couplerHalfWidth = 0.3;
+$beamSplitterHalfWidth = 0.25;
 
 reflectivityColor[t_] := If[NumericQ[t],
     Blend[{RGBColor[0.62, 0.74, 0.88], RGBColor[0.05, 0.25, 0.6]}, N[Sin[t] ^ 2]],
@@ -622,23 +622,18 @@ phaseColor[a_] := If[NumericQ[a], Hue[Mod[N[a] / (2 Pi), 1], 0.7, 0.95], White]
 
 parameterForm[v_] := If[NumericQ[v], NumberForm[Chop[N[v]], {3, 2}], v]
 
-waveguide[x_, w_, y0_, y1_] := Line @ Table[
-    {x + u w, y0 + (y1 - y0) (1 - Cos[Pi Min[1, 2 (1 - Abs[u])]]) / 2},
-    {u, -1, 1, 1/20}
-]
-
-wireSegments[p_, couplers_, {x0_, x1_}] := With[{
-    blocked = SortBy[Cases[couplers, {x_, p, _, _, _} | {x_, _, p, _, _} :> {x - $couplerHalfWidth, x + $couplerHalfWidth}], First]
+wireSegments[p_, splitters_, {x0_, x1_}] := With[{
+    blocked = SortBy[Cases[splitters, {x_, p, _, _, _} | {x_, _, p, _, _} :> {x - $beamSplitterHalfWidth, x + $beamSplitterHalfWidth}], First]
 },
     Partition[Flatten[{x0, blocked, x1}], 2]
 ]
 
-couplerPrimitive[{x_, p_, q_, t_, f_}, labelQ_] := With[{w = $couplerHalfWidth, mid = - (p + q) / 2, gap = 0.08},
+beamSplitterPrimitive[{x_, p_, q_, t_, f_}, labelQ_] := With[{w = $beamSplitterHalfWidth, mid = - (p + q) / 2},
     Tooltip[
         {
-            reflectivityColor[t], AbsoluteThickness[2],
-            waveguide[x, w, - p, mid + gap],
-            waveguide[x, w, - q, mid - gap],
+            reflectivityColor[t], AbsoluteThickness[2], CapForm["Round"],
+            Line[{{{x - w, - p}, {x + w, - q}}, {{x - w, - q}, {x + w, - p}}}],
+            {GrayLevel[0.15], AbsoluteThickness[3], CapForm["Butt"], Line[{{x - 0.12, mid}, {x + 0.12, mid}}]},
             If[ labelQ,
                 {Black, Text[Style[Row[{"(", parameterForm[t], ", ", parameterForm[f], ")"}], 8], {x, - p + 0.32}]},
                 Nothing
@@ -671,14 +666,14 @@ squeezerPrimitive[{x_, p_, xi_}, labelQ_] := Tooltip[
 Options[interferometerDiagram] = {"ShowParameters" -> False, "ModeLabels" -> Automatic};
 
 interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphics}]] := Module[{
-    m = qi["Modes"], placed = Transpose[{qi["Elements"], qi["Layers"]}], couplers,
+    m = qi["Modes"], placed = Transpose[{qi["Elements"], qi["Layers"]}], splitters,
     labelQ = TrueQ[OptionValue["ShowParameters"]], x0 = 0.25, x1 = Max[0, qi["Layers"]] + 0.75
 },
-    couplers = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :> {x, Min[p, q], Max[p, q], t, f}];
+    splitters = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :> {x, Min[p, q], Max[p, q], t, f}];
     Graphics[
         {
-            {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, couplers, {x0, x1}]], {p, m}]},
-            couplerPrimitive[#, labelQ] & /@ couplers,
+            {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, splitters, {x0, x1}]], {p, m}]},
+            beamSplitterPrimitive[#, labelQ] & /@ splitters,
             phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
             squeezerPrimitive[#, labelQ] & /@ Cases[placed, {"S"[xi_] -> {p_}, x_} :> {x, p, xi}],
             If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
