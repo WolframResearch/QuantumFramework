@@ -62,6 +62,7 @@ PackageScope["QuditAdjacencyMatrix"]
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
 PackageScope["cacheProperty"]
+PackageScope["cachedPropertyQ"]
 
 
 
@@ -1665,10 +1666,20 @@ HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Inser
 SetAttributes[cacheProperty, HoldFirst];
 cacheProperty[prop_, result_] := (
     If[ FreeQ[Unevaluated[prop], _Pattern | _Blank | _BlankSequence | _BlankNullSequence | _Optional],
-        prop = result
+        prop = result;
+        $cachedPropertyKeys[Hash[Unevaluated[prop]]] = True
     ];
     result
 )
+
+(* The hashes of the keys cacheProperty has stored. The object wrappers ask cachedPropertyQ
+   first, so a value their cache served is not stored again: storing replaces the DownValue,
+   20 us for an operator, where hashing the key takes 1.5 us. Two keys with one hash leave the
+   second uncached. *)
+$cachedPropertyKeys = <||>;
+
+SetAttributes[cachedPropertyQ, HoldFirst];
+cachedPropertyQ[prop_] := KeyExistsQ[$cachedPropertyKeys, Hash[Unevaluated[prop]]]
 
 MyBlockDiagonalMatrix[{m1_ ? matrixQ, m2_ ? matrixQ}] := Block[{
     r1, r2, c1, c2

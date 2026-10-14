@@ -139,7 +139,7 @@ QuantumOperatorProp[QuantumOperator[state_, _], prop_String] /; MemberQ[$Quantum
         Message[QuantumOperator::undefprop, prop];
         Failure["UndefinedProperty", <|"MessageTemplate" :> QuantumOperator::undefprop, "MessageParameters" -> {prop}|>],
         True,
-        If[ TrueQ[$QuantumFrameworkPropCache] &&
+        If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumOperatorProp[qo, prop, args]] &&
             ! MemberQ[{"Properties", "AllProperties", "State", "Basis", "Order", "InputOrder", "OutputOrder"}, prop] &&
             ! MemberQ[$QuantumBasisStructureProperties, prop] &&
             QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,

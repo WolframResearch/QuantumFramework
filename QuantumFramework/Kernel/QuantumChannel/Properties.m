@@ -28,7 +28,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
 (qc_QuantumChannel[prop_ ? propQ, args___]) /; QuantumChannelQ[qc] := With[{
     result = QuantumChannelProp[qc, prop, args]
 },
-    If[ TrueQ[$QuantumFrameworkPropCache] &&
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumChannelProp[qc, prop, args]] &&
         ! MemberQ[{"Properties", "AllProperties", "Operator", "QuantumOperator", "Basis"}, prop] &&
         QuantumChannelProp[qc, "Basis"]["ParameterArity"] == 0,
         cacheProperty[QuantumChannelProp[qc, prop, args], result],

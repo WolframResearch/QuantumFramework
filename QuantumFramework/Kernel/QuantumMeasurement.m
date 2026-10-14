@@ -75,7 +75,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 (qm_QuantumMeasurement[prop_ ? propQ, args___]) /; QuantumMeasurementQ[qm] := With[{
     result = QuantumMeasurementProp[qm, prop, args]
     },
-    If[ ! TrueQ[$QuantumFrameworkPropCache] ||
+    If[ ! TrueQ[$QuantumFrameworkPropCache] || cachedPropertyQ[QuantumMeasurementProp[qm, prop, args]] ||
         (* don't cache Simulated* results *)
         MatchQ[prop, name_String | {name_String, ___} /; StringStartsQ[name, "Simulated"]] ||
         MemberQ[{"Properties", "AllProperties", "QuantumOperator", "Basis"}, prop] ||

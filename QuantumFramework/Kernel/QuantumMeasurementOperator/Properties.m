@@ -37,7 +37,7 @@ $QuantumMeasurementOperatorPreventCache = {"Properties", "AllProperties", "Quant
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
     },
-    If[ TrueQ[$QuantumFrameworkPropCache] &&
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! cachedPropertyQ[QuantumMeasurementOperatorProp[qmo, prop, args]] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
         QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
         cacheProperty[QuantumMeasurementOperatorProp[qmo, prop, args], result],
