@@ -10,7 +10,7 @@ What Wolfram QuantumFramework can do numerically today, measured rather than cla
 |---|---|---|---|---|
 | 1 | Driven-dissipative Kerr: bistability, Liouvillian gap | Lindblad evolution converges in the cutoff; exact steady state from the Liouvillian null space, which also exposes multiple steady states; 28-digit evolution | A solve at N = 50 takes 3.6 s, 17 to 140 times the published numbers (see Dynamics) | **Ready** to N of about 60 |
 | 2 | Transmon beyond two levels: leakage, DRAG | 4-level transmon, Gaussian pi pulse; the DRAG coefficient that minimizes leakage is found numerically in 1.2 s | | **Ready** |
-| 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | The default circuit method takes 1.6 s at 12 qubits, 1.8 s at 16 and 1.9 s at 20 in a fresh kernel with TensorNetworks 1.2.0, about 1.1 s of each being the kernel's one-time cost for its first circuit apply; no trajectory engine found | Repetition codes only |
+| 3 | Small codes beyond Pauli noise | Density matrices, channels and qudits exist | The default circuit method takes 0.47 s at 12 qubits, 0.78 s at 16 and 0.72 s at 20 in a fresh kernel with TensorNetworks 1.2.0; no trajectory engine found | Repetition codes only |
 | 4 | Cavity-QED spectra | Damped Jaynes-Cummings with the jump operator on the cavity alone matches the exact one-excitation solution | No correlation or spectrum routine | Dynamics ready; spectra are a gap |
 | 5 | Exponentially small splittings and gaps | 28 correct digits in time evolution | Not yet run on the double-well benchmark | Promising, verify next |
 | 6 | Rydberg arrays | Not tested | Same ODE and circuit performance limits as 1 and 3 | Untested |
@@ -54,7 +54,7 @@ Resolved on 5 October 2026; what each now does:
    | 0.001 | captured | captured | captured | captured |
 
    Each solve takes about 0.02 s; a train of 50 Gaussian pi/2 pulses of width 0.04 lands on the exact population to 2e-10 in 0.07 s. A smooth drive has no landmarks and runs as before. A pulse given as data (an `InterpolatingFunction`) is not read, so `MaxStepSize` remains the control there.
-5. **Dense circuits at 20 qubits**, resolved on 8 October 2026. A 4-step Trotter quench applied with QF's default tensor-network method ran past 4 GB at 20 qubits, because TensorNetworks 1.0.11 contracts the whole network as one product. TensorNetworks 1.1.0 contracts along a greedy path and 1.2.0 also reduces diagonal gates, so the default method now takes 1.6 s, 1.8 s and 1.9 s at 12, 16 and 20 qubits in a fresh kernel (on 15 October 2026), against 1.8 s, 2.9 s and past 4 GB before (see [Circuits before and after](#circuits-before-and-after-the-work-of-6-to-8-october-2026)). The `"Schrodinger"` method takes 12.4 s and 73.3 s at 12 and 16 qubits and took 1,656 s at 20. Results agree throughout.
+5. **Dense circuits at 20 qubits**, resolved on 8 October 2026. A 4-step Trotter quench applied with QF's default tensor-network method ran past 4 GB at 20 qubits, because TensorNetworks 1.0.11 contracts the whole network as one product. TensorNetworks 1.1.0 contracts along a greedy path and 1.2.0 also reduces diagonal gates, so the default method now takes 0.47 s, 0.78 s and 0.72 s at 12, 16 and 20 qubits in a fresh kernel (QF `4e96d9bc`, 15 October 2026), against 1.8 s, 2.9 s and past 4 GB before (see [Circuits before and after](#circuits-before-and-after-the-work-of-6-to-8-october-2026)). The `"Schrodinger"` method takes 12.4 s and 73.3 s at 12 and 16 qubits and took 1,656 s at 20. Results agree throughout.
 6. **`"MergeInterpolatingFunctions" -> False`** now starts the evolution at the start of the time range, resolved on 5 October 2026: a Rabi flop over [-1, 1] gives cos^2 2 = 0.1732.
 7. **Circuit parameters do not bind by `ReplaceAll`.** `ansatz /. Thread[pars -> values]` silently leaves the circuit symbolic, and every later step computes symbolic expressions. Parameters must be declared (`"Parameters" -> pars`) and bound by calling the circuit, `ansatz @@ values`.
 8. **Named operators with structure go through general algorithms.** QF stores every operator as a `SparseArray`, so a named operator whose structure fixes an answer still gets it from a general algorithm. At their default arguments, 23 of the 108 named operators are diagonal (Z, the phase gates, S, T, CZ, CPHASE, `"Z"[d]`, `"Diagonal"`), 18 are permutations (X, `"X"[d]`, SUM, SWAP, CNOT, Toffoli, Fredkin), 6 are permutations with phases (Y, CY), and the Fourier operator is the Fourier matrix. Of the 43 named circuits, PhaseOracle is diagonal, BooleanOracle and SimonOracle are permutations, and the Fourier circuit is the Fourier matrix, as is the Fourier basis. The exponential of a diagonal operator, and any function of one, already reads the diagonal (`191f1ac3`). These do not, measured on 6 October 2026 on main at `f46ec628` (probe `structured.wls`):
@@ -116,7 +116,7 @@ Resolved on 5 October 2026; what each now does:
 | Stabilizer half-chain entropy after those gates | 0.79 s, 4.2 s and 45.1 s |
 | Light-cone magnetization, full chain, depth 4, greedy path | 2.15 s at 9 qubits, 3.32 s at 16, both -0.1711558 as with the hand-built cone; 24 qubits did not finish in 10 min at 6 to 10 GB |
 | Dense `"Schrodinger"` engine, same circuit | 13.9 s at 12 qubits, 72.9 s at 16, 1,656 s at 20 |
-| Default tensor-network method, same circuit | 1.6 s at 12 qubits, 1.8 s at 16 and 1.9 s at 20 in a fresh kernel with QF main on 15 October 2026 and TensorNetworks 1.2.0, of which about 1.1 s is the one-time cost of the kernel's first circuit apply (a 2-qubit circuit's first apply takes 1.1 s, and the 12-qubit quench after it 0.52 s); 1.8 s, 2.9 s and past 4 GB with QF `0bd75989` and TensorNetworks 1.0.11 (see the next section) |
+| Default tensor-network method, same circuit | 0.47 s at 12 qubits, 0.78 s at 16 and 0.72 s at 20 in a fresh kernel with QF `4e96d9bc` and TensorNetworks 1.2.0 (see [Circuit apply overhead](#circuit-apply-overhead-15-october-2026)); 1.8 s, 2.9 s and past 4 GB with QF `0bd75989` and TensorNetworks 1.0.11 (see the next section) |
 
 ### Circuits before and after the work of 6 to 8 October 2026
 
@@ -152,6 +152,32 @@ QF stopped building that form on 14 October 2026. Over it, TensorNetworks' greed
 TensorNetworks 1.2.0, published on 15 October 2026 and required by QF since, makes that simplification itself and contracts whichever form its pricing finds cheaper, never more expensive than greedy over the binary network QF hands it. On QF main (median of three runs, fresh kernels), the Grover search takes 3.5 s with `"Path" -> "Greedy"` and 2.3 s with the default path, the 20-qubit quench 1.9 s, and the oracle's second apply 0.89 s on the zero state and 0.82 s on the uniform state.
 
 The change of basis is `c9100bb4`: an exactly unitary basis matrix inverts by its conjugate transpose. Every environment gives the same state: the amplitudes agree to 1e-10 and <Z> to 1e-12.
+
+### Circuit apply overhead, 15 October 2026
+
+Measured with probe `apply-overhead.sh` (`apply-overhead.wls` for the first two rows, `before-after.wls` and `grover.wls` for the others); the raw results are in `apply-overhead.tsv` and the table comes from `apply-overhead-table.py`. Each cell is the median of three runs, each row in a fresh kernel, alternating QF `d682b341` (before) and `4e96d9bc` (after), both with TensorNetworks 1.2.0 and Arrays 1.4.2, under a load average of 7 to 14 from other kernels.
+
+| Workload | Before | After | Before / after | Same result |
+|---|---|---|---|---|
+| A kernel's first QuantumState["0000000000"] (ms) | 1094.3 | 35.5 | 30.8x |  |
+| Phase oracle, 10 variables, applied to a new random state (s, median of five) | 1.34 | 0.649 | 2.1x | yes |
+| Phase oracle, 10 variables, applied to the zero state (s, first / second) | 2.04 / 0.955 | 1.28 / 0.384 | 1.6x / 2.5x | yes |
+| Phase oracle, 10 variables, applied to the uniform state (s, first / second) | 1.95 / 0.822 | 1.25 / 0.322 | 1.6x / 2.6x | yes |
+| QFT, 14 qubits, applied to the zero state (s, first / second) | 0.69 / 0.285 | 0.568 / 0.169 | 1.2x / 1.7x | yes |
+| QFT, 14 qubits, applied to a random state (s, first / second) | 0.608 / 0.289 | 0.483 / 0.157 | 1.3x / 1.8x | yes |
+| Trotter quench, 4 steps, 12 qubits, in a fresh kernel (s) | 1.59 | 0.47 | 3.4x | yes |
+| Trotter quench, 4 steps, 16 qubits, in a fresh kernel (s) | 1.83 | 0.781 | 2.3x | yes |
+| Trotter quench, 4 steps, 20 qubits, in a fresh kernel (s) | 1.99 | 0.715 | 2.8x | yes |
+| Grover search of QF-Showcase, 8 qubits, "Path" -> "Greedy" (s) | 3.55 | 3.31 | 1.1x | yes |
+| Grover search of QF-Showcase, 8 qubits, default path (s) | 2.32 | 2.09 | 1.1x | yes |
+
+All four changes are in QF:
+- A state given as a digit string read its levels through `Interpreter`, whose first call loads the Interpreter framework, so a kernel's first `QuantumState["00"]` took 1.1 s (`f4509fc2`). That one-time cost was most of the 12- and 16-qubit quench times in a fresh kernel.
+- Building the network renamed the oracle's 4,446 index slots against a plain list of 2,218 rules, 123 ms; through a `Dispatch` table it takes 1.4 ms (`9669808c`).
+- Every cached property call stored its value again and checked the basis for parameters: 42 µs per operator property, against 1.6 µs for the cached lookup. The object wrappers now skip both on a hit, 9 µs (`e4b990bb`).
+- Composing circuits rebuilt each circuit from its elements, and an apply rebuilt the circuit with its state prepended three times. Composition now joins the elements, which are valid already, directly (`4e96d9bc`).
+
+Of the oracle's 0.32 s second apply, the contraction in TensorNetworks takes about 0.14 s and QF's network build about 0.13 s. A new state costs about 0.33 s more than a repeated one, because QF computes the properties of the circuit with that state prepended (its normal form, orders, trace and measurement checks and tensor-network info) afresh. Labelling each gate's legs in its own qudit order, instead of transposing its tensor into sorted order, saved nothing measurable: the property calls that choose a gate's route cost as much as the transposes.
 
 ### Measurement, estimation, optimization
 

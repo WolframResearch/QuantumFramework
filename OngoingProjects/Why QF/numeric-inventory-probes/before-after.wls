@@ -4,6 +4,8 @@
    Prints ENV <tab> TN version <tab> Arrays version, then
    RESULT <tab> row <tab> seconds (or milliseconds per gate) <tab> a check of the result. *)
 {qfDir, row} = $ScriptCommandLine[[2 ;; 3]];
+(* a TensorNetworks paclet directory in the environment variable TN_DIR is loaded ahead of the installed one *)
+With[{tnDir = Environment["TN_DIR"]}, If[StringQ[tnDir], PacletDirectoryLoad[tnDir]]];
 PacletDirectoryLoad[qfDir];
 Needs["Wolfram`QuantumFramework`"];
 WriteString["stdout", "ENV\t", First[PacletFind["Wolfram/TensorNetworks"]]["Version"], "\t", First[PacletFind["Wolfram/Arrays"]]["Version"], "\n"];
