@@ -904,11 +904,11 @@ qpe["TensorNetworkGraph"]
 ```
 A `Graph` whose vertices are the gate and state tensors and whose edges are the contracted indices: the diagram shows the physics, the network shows the computation, and Claim 4 steered the order in which such a network is contracted.
 
-The same network renders in the dual picture too, as a hypergraph in which the roles swap, every index a vertex and every tensor one hyperedge spanning its indices:
+The same network renders in the dual picture too, as a hypergraph in which the roles swap, every index a vertex and every tensor one edge joining all of its indices:
 ```wolfram
 qpe["TensorNetwork"]["Hypergraph"]
 ```
-The result is a `Hypergraph` with one hyperedge per tensor of the phase-estimation circuit, drawn over the network's indices: the tensor-contraction picture of the algorithm, in which contracting two tensors is the merging of two hyperedges.
+The result is a `Hypergraph` with one edge per tensor of the phase-estimation circuit, drawn over the network's indices: the tensor-contraction picture of the algorithm, in which contracting two tensors merges their two edges.
 
 ---
 

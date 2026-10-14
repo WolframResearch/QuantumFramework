@@ -198,7 +198,7 @@ Stim documents three hard limits: no non-Clifford gates, only Pauli noise channe
 - **Non-Clifford QEC circuits:** the original magic-state-cultivation work simulated most d=5 circuits "by replacing the T(T†) gates entirely with S(S†) gates" (a Clifford proxy) — reported by [Wan, Zhong, Zapirain, Quantum 10, 2134 (2026)](https://quantum-journal.org/papers/q-2026-06-12-2134/) *(search snippet)*. Tsim and stabilizer-rank/ZX methods now target this gap — [arXiv:2604.01059](https://arxiv.org/abs/2604.01059).
 
 #### PyMatching
-- It requires graphlike error mechanisms: "each error must produce exactly one or two detection events". Stim's `decompose_errors=True` is the standard workaround. Correlated (hyperedge) information is used only through the v2.3 two-pass reweighting — [PyMatching README](https://github.com/oscarhiggott/PyMatching) *(summarized)*, [PyMatching releases](https://github.com/oscarhiggott/PyMatching/releases).
+- It requires graphlike error mechanisms: "each error must produce exactly one or two detection events". Stim's `decompose_errors=True` is the standard workaround. Correlated information (errors with more than two detection events) is used only through the v2.3 two-pass reweighting — [PyMatching README](https://github.com/oscarhiggott/PyMatching) *(summarized)*, [PyMatching releases](https://github.com/oscarhiggott/PyMatching/releases).
 - Robustness example: a segfault with correlations enabled for pure-Y data noise (`PAULI_CHANNEL_1(0, p, 0)`) was fixed in v2.3.1 — [PyMatching issue #175](https://github.com/oscarhiggott/PyMatching/issues/175).
 
 #### quimb and cotengra
@@ -221,7 +221,7 @@ Stim documents three hard limits: no non-Clifford gates, only Pauli noise channe
   - multi-control or non-Pauli feedback.
   Users currently use Pauli-twirled approximations, forks (Deltakit-Stim), or new tools (Tsim). The size of the error from Pauli-twirling a non-Pauli channel at small distance is a question where numerics decide the answer, and where exact small-scale simulation is the ground truth.
 - For tensor networks, the documented failure mode is not "too many qubits" but treewidth and entanglement growth, plus slicing overhead. Problems with bounded light cones (shallow circuits, short-time quenches) are where tensor-network tools shine, and deep generic circuits are where they fail.
-- PyMatching's graphlike requirement means Y errors and hyperedges need decomposition or correlated reweighting. Decoder choice (MWPM, correlated MWPM, BP+OSD, union-find, NN) therefore changes published thresholds, which is a source of non-comparability across studies.
+- PyMatching's graphlike requirement means Y errors and other errors with more than two detection events need decomposition or correlated reweighting. Decoder choice (MWPM, correlated MWPM, BP+OSD, union-find, NN) therefore changes published thresholds, which is a source of non-comparability across studies.
 
 ### Gaps
 - I found no Stim, sinter or PyMatching documentation describing coherent-error support beyond the general "Pauli noise only" statement. The Willow paper injects coherent errors on hardware (line "We inject a range of coherent errors…"), but I did not extract how they were simulated.

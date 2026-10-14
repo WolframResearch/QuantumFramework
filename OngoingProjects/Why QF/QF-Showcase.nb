@@ -133141,7 +133141,7 @@ contracted."
 
 Cell["\<\
 The same network renders in the dual picture too, as a hypergraph in which \
-the roles swap, every index a vertex and every tensor one hyperedge spanning \
+the roles swap, every index a vertex and every tensor one edge joining all of \
 its indices:\
 \>", "Text",ExpressionUUID->"5a8341fe-fd5d-b2cd-0ab1-58bbf4e90017"],
 
@@ -135156,9 +135156,9 @@ Cell[TextData[{
  Cell[BoxData["Hypergraph"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
   "4db09b50-0334-b760-7b4f-131ab6c61a4a"],
- " with one hyperedge per tensor of the phase-estimation circuit, drawn over \
+ " with one edge per tensor of the phase-estimation circuit, drawn over \
 the network's indices: the tensor-contraction picture of the algorithm, in \
-which contracting two tensors is the merging of two hyperedges."
+which contracting two tensors merges their two edges."
 }], "Text",ExpressionUUID->"7cb56032-9c81-172f-244b-7a7c15347a75"]
 }, Closed]]
 }, Open  ]],

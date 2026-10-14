@@ -128,7 +128,7 @@ For a step contracting index set `c` (dims K = Times @@ dc) between A (free `al`
 | `Dot[x, y]` | `DotLayer[]` (2 inputs, edge order = port order) | Exactly WL `Dot`: contracts last dim of input 1 with first dim of input 2. Verified m.v, m.m, rank3.rank2, rank3.rank3, and v.v (rank-0 scalar 14.). Arbitrary ranks, but only that one axis pair |
 | `TensorProduct[x, y]` (k = 0, outer) | `ReshapeLayer[{m,1}]` + `ReshapeLayer[{1,n}]` + `DotLayer` + `ReshapeLayer[dims_x ~Join~ dims_y]` | verified on disconnected {2}x{3} |
 | numeric leaf | `NetArrayLayer["Array" -> a]` | trainable parameter by default |
-| `SymbolicDeltaProductArray` leaf (hyperedge binarization) | `NetArrayLayer["Array" -> Normal[delta]]` | `Normal` is the paclet's own materialization (EinsteinSummation.wl:129) |
+| `SymbolicDeltaProductArray` leaf (the copy tensor that binarizing an index shared by three or more tensors leaves) | `NetArrayLayer["Array" -> Normal[delta]]` | `Normal` is the paclet's own materialization (EinsteinSummation.wl:129) |
 
 So one step compiles to TransposeLayer(A) -> ReshapeLayer{Prod[al], K}, TransposeLayer(B) -> ReshapeLayer{K, Prod[br]}, DotLayer -> optional ReshapeLayer unfuse; identity transposes/reshapes are elidable (`einsumDot` already elides them), and k = 1 needs no reshapes at all since `DotLayer` handles higher-rank operands like `Dot`. Under the complex lift each DotLayer becomes 4. The general Transpose+Reshape+Dot+Reshape emulation was independently verified against `TensorContract`:
 
@@ -151,18 +151,18 @@ Emission is fully mechanical: `TensorNetworkContraction[data, path, Method -> "D
 - Matrix chain {2,3}.{3,4}.{4,2}, optimal path `{{2,3},{1,2}}`: max diff 4.5e-8.
 - Rank-3 with transpose+fuse (T{2,3,4} idx {a,i,j} x B{4,3,5} idx {j,i,b} -> {2,5}, two contracted indices): 1.6e-7.
 - Outer product (disconnected {2}x{3}): 2.2e-8.
-- Mechanical compiler on chain optimal+greedy, rank-3, outer, and a 2-qubit circuit optimal+greedy: all agree <= 1.6e-7. Random 6-vertex/9-edge hyperedge network (after `Normal`izing delta leaves): 25 layers, output dims {3,2,2,3,3}, max diff 5.2e-7.
+- Mechanical compiler on chain optimal+greedy, rank-3, outer, and a 2-qubit circuit optimal+greedy: all agree <= 1.6e-7. Random 6-vertex/9-edge network with indices shared by three or more tensors (after `Normal`izing delta leaves): 25 layers, output dims {3,2,2,3,3}, max diff 5.2e-7.
 
 ### 3.4 Proposed API
 
 - New function `TensorNetworkNetGraph[tn, path, opts]` in a new `Kernel/NetGraph.wl`, implemented as a post-pass over the existing `Method -> "Dot"` Inactive output (zero disturbance to Contraction.wl), plus `TensorNetworkContraction[..., Method -> "NetGraph"]` sugar delegating to it.
 - Return value: the assembled `NetGraph[...]` object directly. The assembled net is already inert and is what `NetTrain`/`NetPortGradient` consume. An `"Inactive" -> True` option gives `Inactive[NetGraph][nodes, edges]` for symbolic uniformity with the paclet's Inactive pipeline (`Activate` then assembles the net) - both forms verified to work.
-- Required pre-pass: `/. d: _SymbolicDeltaProductArray | _SymbolicIdentityArray :> Normal[d]` on binarized data. Side observation from the probe: the paclet's own active path-based fold and the ActivateTensors route both currently return unevaluated for hyperedge networks containing symbolic deltas (`ArrayReshape::listrp` etc.); materializing deltas first fixes both, so this pre-pass doubles as a bug workaround.
+- Required pre-pass: `/. d: _SymbolicDeltaProductArray | _SymbolicIdentityArray :> Normal[d]` on binarized data. Side observation from the probe: the paclet's own active path-based fold and the ActivateTensors route both currently return unevaluated for networks with such shared indices that contain symbolic deltas (`ArrayReshape::listrp` etc.); materializing deltas first fixes both, so this pre-pass doubles as a bug workaround.
 - Shape derivation inside the compiler should use the paclet's internal `symbolicTensorDimensions` (Utilities.wl:77, handles delta arrays) to get ranks for `PermutationList[perm, rank]` without evaluating; the prototype's `Dimensions@Activate` hack is the only non-production shortcut and is trivial to replace once the code lives inside the package.
 
 ## 4. QML story (QuantumFramework)
 
-**What works today.** Real-gate circuits compile and differentiate end to end. Verified flow: 2-qubit |00> state, RY(0.7) tensor RY(-1.3), then CNOT, all real tensors. TN reference (`TensorNetworkContract`, hyperedges psi{a,b}, RY1{c,a}, RY2{d,b}, CNOT{e,f,c,d}) = `{{0.7478, -0.5685}, {-0.2075, 0.2730}}`, matching dense matrix algebra to 0. A hand-built net (NetArrayLayer gates + DotLayer/ReshapeLayer, 9 layers) and the mechanically compiled net (10 layers, both greedy and optimal paths) agree to 2.6e-8.
+**What works today.** Real-gate circuits compile and differentiate end to end. Verified flow: 2-qubit |00> state, RY(0.7) tensor RY(-1.3), then CNOT, all real tensors. TN reference (`TensorNetworkContract`, index lists psi{a,b}, RY1{c,a}, RY2{d,b}, CNOT{e,f,c,d}) = `{{0.7478, -0.5685}, {-0.2075, 0.2730}}`, matching dense matrix algebra to 0. A hand-built net (NetArrayLayer gates + DotLayer/ReshapeLayer, 9 layers) and the mechanically compiled net (10 layers, both greedy and optimal paths) agree to 2.6e-8.
 
 **Differentiability** (verified in both probes):
 
@@ -198,9 +198,9 @@ NetTrain[tnet, <|"Input"->xs,"Output"->ys|>, LossFunction->MeanSquaredLossLayer[
 
 1. **Complex amplitudes.** Real/imag doubling is mandatory for generic quantum nets (4x DotLayers per contraction, 2 leaves per tensor). Verified correct for one matvec; the general graph transform is designed but not yet implemented. Real-gate circuits work today.
 2. **Parameterized leaves.** NetArrayLayer holds raw tensors; theta-parameterized gates need FunctionLayer/CompiledLayer leaves, changing emission and interacting with the complex lift. Note `FunctionLayer` construction is fragile (`FunctionLayer[Dot]`, `FunctionLayer[#1 . #2 &]`, and `TensorContract` forms all fail; slot-named forms work).
-3. **Delta/hyperedge leaves.** Must be materialized with `Normal`; dense copy-tensors could be large. SparseArray-aware emission or contraction-time elision (delta absorbed into DotLayer as a gather) is future work. The paclet's active hyperedge folds also fail on symbolic deltas today (pre-existing bug the pre-pass papers over; should be fixed upstream).
+3. **Delta (copy-tensor) leaves.** Must be materialized with `Normal`; dense copy-tensors could be large. SparseArray-aware emission or contraction-time elision (delta absorbed into DotLayer as a gather) is future work. The paclet's active folds over shared indices also fail on symbolic deltas today (pre-existing bug the pre-pass papers over; should be fixed upstream).
 4. **Precision.** fp32 by default (~1e-7 agreement in all prototypes); fp64 requires Real64 NumericArray leaves plus `WorkingPrecision -> "Real64"` at call time, and neither NetGraph nor NetArrayLayer accepts a WorkingPrecision option at construction. Quantum applications sensitive to amplitude cancellation need the fp64 path threaded everywhere.
 5. **Internal-context dependencies.** `NeuralNetworks`ValidNetQ` (recognition gate) and `symbolicTensorDimensions` (compiler shapes) are internal; both need defensive wrapping or upstream promotion.
-6. **Traces and hyperedges beyond binarization.** No trace-type layer exists; repeated indices on one tensor must be eliminated symbolically before emission (mask-and-AggregationLayer alternative untested).
+6. **Traces and shared indices beyond binarization.** No trace-type layer exists; repeated indices on one tensor must be eliminated symbolically before emission (mask-and-AggregationLayer alternative untested).
 7. **Batched/state-input variant untested.** Shape-static layers should batch, but leaf-to-port conversion changes edge emission and has not been run.
 8. **Unitarity under training.** Raw-array gradients leave the unitary manifold (demonstrated concretely); acceptable for the parameterized-gate path, unsolved for raw-array ansatze.
