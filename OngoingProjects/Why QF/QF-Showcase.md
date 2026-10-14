@@ -1,5 +1,12 @@
 # What Makes Wolfram QuantumFramework Unique: A Verified Showcase
 
+<p>
+  <img src="img/image_001.png" alt="Quantum Computing by Model and Simulation, book cover" height="150">
+  <img src="img/image_002-QR-book.png" alt="QR code to the book page" height="150">
+</p>
+
+**Get the free pre-release of the book:** [*Quantum Computing by Model and Simulation: A Computational Approach*](https://www.wolfram-media.com/products/quantum-computing-by-model-and-simulation/) (Wolfram Media).
+
 Wolfram QuantumFramework is a quantum laboratory built into the Wolfram Language. The objects of quantum theory, states, operators, channels, measurements, circuits, are exact symbolic or numeric expressions: they can carry free parameters, compose with one another in closed form, and answer questions about themselves through one uniform interface. A computation here typically ends in a formula, the propagator $U(t)$ of a time-dependent Hamiltonian, an optimization landscape you can differentiate, an entanglement entropy $S(t)$ you can solve, rather than a table of numbers, though a fully numeric workflow is equally supported. The same objects run in any finite dimension, qubits, qutrits, spin-$j$ multiplets, $N$-level systems, and they reach outward as well, to OpenQASM, to device transpilation, to real quantum hardware. It is most useful when the goal is insight rather than a number: a closed form, an exact threshold, a verified physical statement. These are not estimates that tighten with more shots or a finer grid; they are exact, so where a numeric run or a finite measurement returns a value, QF returns the closed form, the exact integer, or the algebraic root that the value only approximates.
 
 This document makes that concrete as seven claims, each developed through worked examples:
@@ -7,12 +14,16 @@ This document makes that concrete as seven claims, each developed through worked
 1. **Symbolic-first, exact algebra by default.** Time-dependent Hamiltonians solved to closed-form propagators, an exact QAOA landscape, a many-body entanglement entropy as a formula in time.
 2. **One object model spans all of quantum theory.** Channels, POVMs, bosonic Fock space, and phase-space quasi-probabilities are the same kind of object as a gate; a master equation solves symbolically for every state and every rate at once; every object carries its own basis; the model runs in any finite dimension, from a spin-1 qutrit to a five-site ring; and it closes with a full state-tomography loop.
 3. **Measurement records are quantum wires.** A measurement appends a pointer qudit instead of collapsing the state, so feedforward is a controlled gate on a record: teleportation carries its classical channel as a quantum wire, a coherent error is digitized and corrected at codeword fidelity exactly $1$, and a measurement can be run in reverse.
-4. **One object model, three computational engines.** The same circuit runs as exact state-vector algebra, as a steered tensor-network contraction, or as a compiled stabilizer tableau that represents a thousand-qubit state, and the representations convert into one another exactly.
+4. **One object model, three computational engines.** The same circuit runs as exact state-vector algebra, as a steered tensor-network contraction, or as a compiled stabilizer tableau that represents a thousand-qubit state, and the representations convert into one another exactly; a stabilizer-code layer in development builds on that tableau, returning a code's logical error rate as an exact polynomial in the noise rate.
 5. **A quantum object is an ordinary Wolfram Language expression.** Native functions operate on the object: `Exp` exponentiates a generator into a propagator, `D` differentiates a gate into another operator, `Plus` and `Commutator` build a Hamiltonian, and the closed forms they yield pass directly into solvers.
 6. **Every object draws itself.** Bloch spheres, amplitude charts that carry the phases, measurement histograms, circuit diagrams, and the tensor network behind a circuit, each a one-call property of the object it depicts.
 7. **An interoperability hub, down to real hardware.** OpenQASM in and out natively; transpilation to a device target; submission to a real QPU, with IBM as the worked example.
 
 The claims build on one another, from symbolic objects to real hardware, so we begin with the symbolic algebra that the others rely on.
+
+**QR code for this notebook** (the published version on the Wolfram Cloud, [QF-Showcase.nb](https://www.wolframcloud.com/obj/mohammadb/Published/QF-Showcase.nb)):
+
+<img src="img/image_003-QR-notebook.png" alt="QR code to the published notebook on the Wolfram Cloud" width="140">
 
 ---
 
@@ -388,6 +399,31 @@ Row[{
 ```
 The same cat state, two quasi-probabilities. The Wigner on the left has the two Gaussian lobes at $x = \pm 2\sqrt2$, the coherent components, together with the interference ridge oscillating above and below zero between them; that negativity is the signature of the superposition. The Husimi on the right keeps only the two smooth, non-negative lobes, each near $1/2\pi$, with the fringes smoothed flat. Both are properly normalized quasi-probabilities, the Wigner integrating to $1$ over $dx\,dp$ and the Husimi to $1$ over $d^2\alpha = dx\,dp/2$ (equivalently, to $2$ over $dx\,dp$), but only the Wigner can take negative values, which is why Wigner negativity, and not the always-positive Husimi, is the witness of nonclassicality. Decoherence erases the Wigner fringes and leaves the lobes, moving the left picture toward the right.
 
+### Many-photon interference in a linear-optical network
+A linear-optical network is its own object. `QuantumInterferometer` describes light entering several modes, passing through beam splitters and phase shifters, with photons counted at the output; each output probability is a permanent of a submatrix of the network's mode-to-mode transfer matrix, returned exactly and with no photon-number cutoff. The two-photon Hong-Ou-Mandel cancellation on a single balanced beam splitter generalizes to a balanced multiport, the discrete Fourier transform, whose symmetry extinguishes whole families of output patterns by exact destructive interference. Build the three-mode case, the "tritter":
+```wolfram
+tritter = QuantumInterferometer[FourierMatrix[3]];
+```
+Draw it:
+```wolfram
+tritter["Diagram"]
+```
+The diagram is the beam-splitter-and-phase-shifter mesh that realizes the $3\times3$ Fourier matrix. Send one photon into every mode and read the output distribution:
+```wolfram
+tritter["Probabilities", {1, 1, 1}]
+```
+The ten patterns return as exact rationals: the three fully bunched outputs ($\{3,0,0\}$, $\{0,3,0\}$, $\{0,0,3\}$) at $\tfrac29$ each and the fully spread $\{1,1,1\}$ at $\tfrac13$, while every pattern that splits as two-plus-one is exactly zero. The effect sharpens with size. Take four modes, one photon each, and count how many outputs are forbidden:
+```wolfram
+fourmode = QuantumInterferometer[FourierMatrix[4]];
+```
+```wolfram
+p = fourmode["Probabilities", {1, 1, 1, 1}];
+{Count[Values[p], 0], Length[p]}
+```
+Of the $35$ output patterns, $25$ are forbidden. These exact zeros are a stringent signature of genuine multi-photon interference, and computing each surviving probability is exactly the hard permanent problem behind boson sampling: a floating-point simulation blurs a true zero into noise, while the exact permanent returns it as zero.
+
+*Reference:* M. C. Tichy, K. Mayer, A. Buchleitner, K. Mølmer, Phys. Rev. Lett. **113**, 020502 (2014).
+
 ### Every object carries its basis
 The scope extends inward as well: every state, operator, and measurement above is stored together with the basis it is written in. A basis is a stored matrix $B$ whose rows are the basis vectors in computational coordinates, a change of basis is the similarity transformation $A_{\mathcal B} = B^{-1} A B$, and objects written in different bases reconcile automatically through the computational frame. About three dozen named bases are provided (Bell, Fourier, Schwinger, Dirac, Gell-Mann, Wigner, MUB, SIC), and the same mechanism converts non-computational measurements for OpenQASM export and supplies the Bell-derived basis used in two-qubit KAK gate compilation. The representation changes while the physics does not: take the qubit $|+\rangle$, the superposition $(|0\rangle+|1\rangle)/\sqrt2$ in the computational basis, and write it in the $X$ basis instead:
 ```wolfram
@@ -724,7 +760,7 @@ Apply them to the $n$-qubit stabilizer state and time the evolution:
 ```wolfram
 First @ AbsoluteTiming[big = PauliStabilizer[n]["ApplyCircuit", gates];]
 ```
-The whole gate stream folds in a fraction of a second: `ApplyCircuit` runs the tableau updates through one compiled kernel whose per-gate cost is flat in $n$ and independent of the $2^n$ that never gets built. The cross-engine comparison is boundary-dependent rather than a single ratio: a dedicated C++ tableau (Stim) is roughly $4\times$ faster at the engine core and $11$-$16\times$ faster end to end, while a Python-driven gate-by-gate pipeline around that same C++ engine is about $27\times$ slower than this one compiled call (measurements in the companion `QF-Stabilizer-vs-Packages.md`). The bipartite entanglement entropy across the half-chain cut is then a closed form, $S(A) = \operatorname{rank}_{\mathbb{F}_2}(\text{generators restricted to } A) - |A|$, exact at any qubit count:
+The whole gate stream folds in a fraction of a second: `ApplyCircuit` runs the tableau updates through one compiled kernel whose per-gate cost is flat in $n$ and independent of the $2^n$ that never gets built. Raw tableau speed is not the claim here, and a dedicated C++ stabilizer simulator is faster still; the claim is that this thousand-qubit state lives in the same object model as everything else in this document, so a property of it comes back as an exact closed form rather than a sampled estimate. The bipartite entanglement entropy across the half-chain cut is one such form, $S(A) = \operatorname{rank}_{\mathbb{F}_2}(\text{generators restricted to } A) - |A|$, exact at any qubit count:
 ```wolfram
 big["Entropy", Range[n/2]]
 ```
@@ -760,6 +796,38 @@ The conversion also runs back to circuits: the tableau synthesizes a Clifford ci
 stab3["Circuit"]["Diagram"]
 ```
 A five-gate Clifford circuit returns, interleaved Hadamards and controlled-NOTs, and applying it to $|000\rangle$ reproduces the state vector exactly (verified). Circuit to tableau, tableau to state, tableau back to circuit: three representations of one object, each available where it is cheapest, with symbols, structure, or scale deciding which engine runs.
+
+### The code layer: a logical error rate in closed form
+
+*Quantum error correction is a code layer built on the stabilizer engine, available as an extension to the framework.*
+
+The engine stores a *state* as its stabilizer group. A quantum error-correcting code is the companion object: a *subspace* fixed by a group of commuting Pauli checks. `QECCode` holds that subspace as a check matrix and derives everything else from it. Build the five-qubit code, the smallest code that corrects an arbitrary single-qubit error:
+```wolfram
+code = QECCode["5QubitCode"]
+```
+The object reports its parameters $[[n, k, d]] = [[5, 1, 3]]$: five physical qubits carry one logical qubit at distance $3$. Its four stabilizer generators and its logical operators are read off the check matrix, not supplied:
+```wolfram
+{code["Generators"], code["LogicalX"], code["LogicalZ"]}
+```
+The generators return as the cyclic set $\{XZZXI, IXZZX, XIXZZ, ZXIXZ\}$, with logical $\bar X = ZIIZX$ and $\bar Z = ZZZZZ$.
+
+Distance $3$ means the code should correct every weight-one error and no guarantee beyond that. This is the Knill-Laflamme condition, and it is checked on the Pauli algebra directly, with no $2^5$ state vector formed:
+```wolfram
+{code["CorrectableQ", "Weight"[1]], code["CorrectableQ", "Weight"[2]]}
+```
+The pair returns $\{\text{True}, \text{False}\}$: every single-qubit error is correctable, some weight-two error is not, which is distance $3$ stated as a decision rather than a number.
+
+The figure of merit is the logical error rate: the probability that a correction cycle leaves a logical fault. Give the code depolarizing noise at a *symbolic* rate $p$, and the rate comes back as an exact function of $p$, summed over all $4^5$ error patterns:
+```wolfram
+QECLogicalErrorRate[code, QECNoiseModel["Depolarizing", p]]
+```
+The result is an exact rational function of $p$, quadratic at leading order ($10\,p^2$): the distance-$3$ code turns a physical error rate $p$ into a logical rate of order $p^2$. No noise realization was drawn; this is the closed form a Monte Carlo simulation estimates.
+
+Because each rate is an exact polynomial, the error-correction threshold stops being a fit to sampled curves and becomes a crossing of them. The repetition code's logical error rate under bit-flip noise is one polynomial per code size, and for three sizes the curves cross at exactly one half:
+```wolfram
+Plot[Evaluate[Table[QECLogicalErrorRate[QECCode["Repetition", n], QECNoiseModel["BitFlip", p]], {n, {3, 5, 7}}]], {p, 0, 1}, PlotLegends -> {"n = 3", "n = 5", "n = 7"}, AxesLabel -> {"physical error rate", "logical error rate"}, ImageSize -> 380]
+```
+Below one half the longer code is better and the gap widens with $n$; above it the order reverses, since adding qubits that each fail more often than not only hastens the failure. That crossing is the whole argument for error correction, and here it is an exact statement about three polynomials, not a fit to three sampled curves. The same `QECLogicalErrorRate` call accepts circuit-level noise, `QECNoiseModel["Circuit", p]`, which charges every gate, reset, and readout in the syndrome-extraction circuit and returns an exact expression as long as the detector enumeration stays in range: for the five-qubit code that means a single round, `"Rounds" -> 1`, since its distance-many default rounds push the enumeration past the exact-sum limit. Past that range `QECStim[code, noise]` emits the experiment as Stim source instead, so the large-scale regime hands off to the sampling simulators and matching decoders built around that format. The exact polynomial and the external sampler are two ends of one object: QF returns the closed form where a code is small enough to enumerate, and exports the circuit where it is not.
 
 ---
 
@@ -1026,7 +1094,7 @@ So the scope is narrow and exact. QF carries a computation to closed form precis
 
 ## Where This Leaves Us
 
-Seven claims, each demonstrated in executed code. Symbolic algebra carried dynamics to closed form: the Rabi propagator of a rotating drive, a Landau-Zener sweep expressed in parabolic cylinder functions, a QAOA landscape whose exact maximum is a closed-form cubic root, the entanglement entropy of a quench as a function of time. One object model held the rest of the theory: channels, POVMs, Fock space, and phase space; a master equation solved once for every initial state and every rate, with $T_2 \le 2T_1$ arriving as a theorem rather than a remembered rule; a basis and a dimension on every object, a spin-1 Hamiltonian and a five-site ring each diagonalized by its own named basis; a state reconstructed from measured counts at a fidelity close to $1$. Measurement stayed inside the physics: records became quantum wires, teleportation carried its classical channel as a quantum wire, a coherent error was digitized and corrected at codeword fidelity exactly $1$, and a measurement ran backwards. Underneath, three engines computed the same objects: exact state-vector algebra, a steered tensor-network contraction, and a stabilizer tableau that carried a thousand qubits to near-maximal half-chain entanglement computed exactly, the representations converting into one another exactly. Because these objects are ordinary Wolfram Language expressions, the kernel's own functions transformed them directly, exponentiating a generator into its propagator and differentiating a gate to recover the Hamiltonian that drives it, and each of them drew itself. And the same objects left the system: out to OpenQASM and back, through a transpiler to a device's native gates, and onto a physical quantum processor, whose $4096$-shot histogram stands in this document next to the exact distribution it approximates.
+Seven claims, each demonstrated in executed code. Symbolic algebra carried dynamics to closed form: the Rabi propagator of a rotating drive, a Landau-Zener sweep expressed in parabolic cylinder functions, a QAOA landscape whose exact maximum is a closed-form cubic root, the entanglement entropy of a quench as a function of time. One object model held the rest of the theory: channels, POVMs, Fock space, and phase space; a master equation solved once for every initial state and every rate, with $T_2 \le 2T_1$ arriving as a theorem rather than a remembered rule; a basis and a dimension on every object, a spin-1 Hamiltonian and a five-site ring each diagonalized by its own named basis; a state reconstructed from measured counts at a fidelity close to $1$. Measurement stayed inside the physics: records became quantum wires, teleportation carried its classical channel as a quantum wire, a coherent error was digitized and corrected at codeword fidelity exactly $1$, and a measurement ran backwards. Underneath, three engines computed the same objects: exact state-vector algebra, a steered tensor-network contraction, and a stabilizer tableau that carried a thousand qubits to near-maximal half-chain entanglement computed exactly, the representations converting into one another exactly, and on that tableau a code layer still in development read a stabilizer code's logical error rate off as an exact polynomial in the noise rate, its pseudothreshold an exact algebraic number. Because these objects are ordinary Wolfram Language expressions, the kernel's own functions transformed them directly, exponentiating a generator into its propagator and differentiating a gate to recover the Hamiltonian that drives it, and each of them drew itself. And the same objects left the system: out to OpenQASM and back, through a transpiler to a device's native gates, and onto a physical quantum processor, whose $4096$-shot histogram stands in this document next to the exact distribution it approximates.
 
 Behind all seven claims is one mechanism: quantum objects that are exact symbolic expressions compose, with each other and with the entire language. One consequence ran through every example: the result was exact, the algebraic QAOA optimum, the closed-form relaxation law, the integer stabilizer entropy, the exactly-recovered teleported state, never a value sampled near the answer but the exact quantity such a sample converges toward. That is the numerical claim underlying the symbolic one: where a numeric simulation or a finite measurement returns an estimate, QF returns the exact object it estimates. The distance from writing a Hamiltonian to reading its closed form, or to running it on hardware, is a few composable calls. A result that is a formula can be differentiated, reduced, or taken to a limit; a result that is a circuit is already in the format the rest of the quantum ecosystem uses.
 
