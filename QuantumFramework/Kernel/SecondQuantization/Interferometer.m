@@ -139,7 +139,15 @@ hafnian[{}] := 1
 
 hafnian[a_ /; OddQ[Length[a]]] := 0
 
-hafnian[a_] := If[Length[a] <= 8 || Precision[a] === Infinity, hafnianPairing[a], hafnianTrace[a]]
+hafnian[a_] := Which[
+    Length[a] <= 8 || Precision[a] === Infinity, hafnianPairing[a],
+    Precision[a] === MachinePrecision, With[{m = Length[a] / 2},
+        With[{e = Round[Subdivide[0, 2 ^ m - 1, Min[2 ^ m - 1, 64]]]},
+            Total[hafnianTraceTerms[N[a[[All, Join[Range[m + 1, 2 m], Range[m]]]]], Most[e] + 1, Rest[e]]]
+        ]
+    ],
+    True, hafnianTrace[a]
+]
 
 hafnianPairing[{}] := 1
 
@@ -157,6 +165,27 @@ traceCoefficient[{}, _] := 0
 
 traceCoefficient[c_, m_] := With[{t = Tr /@ NestList[c . # &, c, m - 1]},
     Last @ Fold[Append[#1, Total[t[[;; #2]] Reverse[#1]] / (2 #2)] &, {1}, Range[m]]
+]
+
+
+hafnianTraceTerms := hafnianTraceTerms = Compile[{{b, _Complex, 2}, {lo, _Integer}, {hi, _Integer}},
+    Module[{m = Quotient[Length[b], 2], tot = 0. + 0. I, idx, c, p, t, f, s},
+        Do[
+            idx = Flatten[Position[IntegerDigits[mask, 2, m], 1]];
+            idx = Join[idx, idx + m];
+            c = b[[idx, idx]];
+            p = c;
+            t = Table[0. + 0. I, {m}];
+            Do[s = 0. + 0. I; Do[s += p[[i, i]], {i, Length[p]}]; t[[k]] = s; If[k < m, p = c . p], {k, m}];
+            f = Table[0. + 0. I, {m + 1}];
+            f[[1]] = 1. + 0. I;
+            Do[s = 0. + 0. I; Do[s += t[[i]] f[[j - i + 1]], {i, j}]; f[[j + 1]] = s / (2 j), {j, m}];
+            tot += If[EvenQ[m - Quotient[Length[idx], 2]], 1., -1.] f[[m + 1]],
+            {mask, lo, hi}
+        ];
+        tot
+    ],
+    RuntimeAttributes -> {Listable}, Parallelization -> True, RuntimeOptions -> "Speed"
 ]
 
 
