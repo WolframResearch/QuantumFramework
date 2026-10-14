@@ -58,7 +58,7 @@ QuantumState["", args__] := namedStateTailRejected[""]
    which is the one test that cannot drift out of step with "BasisState". *)
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
     basis = QuantumBasis[args, "Label" -> s],
-    levels = Interpreter[DelimitedSequence["Digit", ""]] @ s
+    levels = ToCharacterCode[s] - 48
 },
     If[ QuantumBasisQ[basis] && basis["Qudits"] > 0 && VectorQ[levels, IntegerQ] && Max[levels] < basis["Dimension"],
         Replace[
