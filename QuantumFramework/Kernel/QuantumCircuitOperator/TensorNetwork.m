@@ -17,18 +17,7 @@ PackageScope["QuantumCircuitHypergraph"]
 
 tensorNetworkIndexSort[indices_List] := Catenate[Lookup[GroupBy[indices, MatchQ[_Superscript], SortBy[Last]], {True, False}]]
 
-Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False, "DiagonalHyperedges" -> False}
-
-(* A gate whose matrix in the computational basis is diagonal acts on its wires without moving them.
-   Its state's matrix holds its qudits in its own order, the same for rows and columns, so it is
-   diagonal exactly when the sorted matrix is, and its diagonal is the gate's tensor in that order. *)
-diagonalGateQ[op_ ? QuantumOperatorQ] := op["VectorQ"] && op["InputQudits"] > 0 &&
-    op["OutputOrder"] === op["InputOrder"] && op["OutputDimensions"] === op["InputDimensions"] &&
-    op["Output"]["ComputationalQ"] && op["Input"]["ComputationalQ"] && diagonalMatrixQ[op["StateMatrix"]]
-
-diagonalGateQ[_] := False
-
-diagonalTensor[op_] := ArrayReshape[Diagonal[op["StateMatrix"]], op["InputDimensions"]]
+Options[QuantumTensorNetwork] = {"PrependInitial" -> True, "Computational" -> True, "ReturnIndices" -> False}
 
 Options[QuantumTensorNetworkGraph] = Join[Options[QuantumTensorNetwork], Options[Graph]]
 
@@ -116,7 +105,7 @@ QuantumTensorNetworkGraph[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :
 
 (* TODO: refactor with above *)
 QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco, width, min, ops, orders, arity, vertices, rules, tensors, indices, diagonal, steps, diagonalIndices
+    circuit = qco, width, min, ops, orders, arity, vertices, rules, tensors, indices
 },
 	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
     width = circuit["Width"];
@@ -136,57 +125,41 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - arity;
-    (* With "DiagonalHyperedges", and every wire starting at a state, a diagonal gate is the tensor
-       of its diagonal on its wires' current indices, which it leaves as they are: the gates on a
-       wire between two others share one index, and the last of them share its free index. *)
-    diagonal = If[TrueQ[OptionValue["DiagonalHyperedges"]] && arity == 0, diagonalGateQ /@ ops, ConstantArray[False, Length[ops]]];
-	steps = FoldPairList[
-		{nprev, step} |-> Block[{output, input, n, prev, next, indexRules, diagonalQ},
+	rules = Catenate @ FoldPairList[
+		{nprev, order} |-> Block[{output, input, n, prev, next, indexRules},
             {n, prev} = nprev;
             n += 1;
-			{{output, input}, diagonalQ} = step;
-            If[ diagonalQ,
-                {{{}, Superscript[prev[[# - min + 1]], #] & /@ input}, {n, prev}},
-                next = prev;
-                next[[ output - min + 1 ]] = n;
-                next[[ Complement[input, output] - min + 1 ]] = None[n];
-                indexRules = Superscript[prev[[# - min + 1]], #] -> Subscript[next[[# - min + 1]], #] & /@ input;
-                {
+            next = prev;
+			{output, input} = order;
+            next[[ output - min + 1 ]] = n;
+			next[[ Complement[input, output] - min + 1 ]] = None[n];
+            indexRules = Superscript[prev[[# - min + 1]], #] -> Subscript[next[[# - min + 1]], #] & /@ input;
+			{
+                Replace[
+                    Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
                     {
-                        Replace[
-                            Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indexRules]],
-                            {
-                                DirectedEdge[None[_], ___] :> Nothing,
-                                DirectedEdge[_, None[_], tag_] :> (tag /. None[i_] :> i),
-                                DirectedEdge[_, _, tag_] :> tag
-                            },
-                            1
-                        ],
-                        None
+                        DirectedEdge[None[_], ___] :> Nothing,
+                        DirectedEdge[_, None[_], tag_] :> (tag /. None[i_] :> i),
+                        DirectedEdge[_, _, tag_] :> tag
                     },
-                    {n, next}
-                }
-            ]
+                    1
+                ],
+                {n, next}
+            }
+            
 		],
 		{1 - arity, Table[1 - arity, width]},
-		Rest[Thread[{orders, diagonal}]]
+		Rest[orders]
 	];
-    rules = Catenate[steps[[All, 1]]];
-    diagonalIndices = Prepend[steps[[All, 2]], None];
     If[ ! TrueQ[OptionValue["PrependInitial"]],
         vertices = Drop[vertices, arity];
         orders = Drop[orders, arity];
         ops = Drop[ops, arity];
-        diagonal = Drop[diagonal, arity];
-        diagonalIndices = Drop[diagonalIndices, arity];
     ];
     indices = Replace[
         MapThread[
-            If[ ListQ[#3],
-                #3,
-                Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]]
-            ] &,
-            {vertices, orders, diagonalIndices}
+            Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]] &,
+            {vertices, orders}
         ],
         rules,
         {2}
@@ -194,13 +167,14 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     If[ TrueQ[OptionValue["ReturnIndices"]],
         Return[indices];
     ];
-	tensors = MapThread[If[#2, diagonalTensor[#1], sortedTensor[#1]] &, {ops, diagonal}];
+	tensors = sortedTensor /@ ops;
 	ConfirmBy[
-        With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
-            If[ MemberQ[diagonal, True],
-                (* a free index the diagonal tensors share appears more than once, so the output is listed *)
-                TensorNetwork[tensors, indices, tensorNetworkIndexSort @ Union[free, Cases[Catenate[Pick[indices, diagonal]], _Superscript]]],
-                TensorNetwork[tensors, indices, FindPermutation[free, tensorNetworkIndexSort[free]]]
+        TensorNetwork[
+            tensors, indices,
+            With[{free = Keys[Select[Counts[Catenate[indices]], # == 1 &]]},
+                FindPermutation[
+                    free, tensorNetworkIndexSort[free]
+                ]
             ]
         ],
         TensorNetworkQ
@@ -220,17 +194,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-(* TensorNetworks contracts an index shared by more than two tensors natively from 1.1.0 on; an
-   older one runs out of memory on the network of a 14-qubit QFT whose diagonal gates share their
-   wires' indices *)
-tensorNetworksHyperedgesQ := tensorNetworksHyperedgesQ = ! PacletNewerQ["1.1.0", First[PacletFind["Wolfram/TensorNetworks"]]["Version"]]
-
-(* "DiagonalHyperedges" -> Automatic puts diagonal gates on shared wire indices when TensorNetworks
-   contracts them natively *)
-Options[TensorNetworkCompile] = Join[
-    {"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True, "Path" -> Automatic, "DiagonalHyperedges" -> Automatic},
-    FilterRules[Join[Options[QuantumTensorNetworkGraph], Options[TensorNetworkContract]], Except["DiagonalHyperedges"]]
-]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "ReturnTensorNetwork" -> False, "Trace" -> True, "Path" -> Automatic}, Options[QuantumTensorNetworkGraph], Options[TensorNetworkContract]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -261,15 +225,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[
-        QuantumTensorNetwork[circuit,
-            "Computational" -> computationalQ,
-            "DiagonalHyperedges" -> Replace[OptionValue["DiagonalHyperedges"], Automatic :> tensorNetworksHyperedgesQ],
-            FilterRules[{opts}, Options[QuantumTensorNetwork]],
-            "PrependInitial" -> False
-        ],
-        TensorNetworkQ
-    ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, "Computational" -> computationalQ, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False], TensorNetworkQ];
     If[TrueQ[OptionValue["ReturnTensorNetwork"]], Return[net]];
     res = Confirm @ TensorNetworkContract[net, OptionValue["Path"], FilterRules[{opts}, Options[TensorNetworkContract]]];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},

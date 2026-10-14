@@ -19,9 +19,7 @@ Needs["IBMQuantumPlatform`"]
    floor, QuantumFramework loads with what is installed and says so.
 
    The floors are not cosmetic. Below TensorNetworks 1.1.0 the 20-qubit Trotter
-   quench of the dense-circuit probe runs out of 4 GB, and a network whose diagonal
-   gates share their wires' indices, the form the apply path builds from 1.1.0 on,
-   runs out of memory even for the 14-qubit QFT; below 1.0.10 the "NetGraph"
+   quench of the dense-circuit probe runs out of 4 GB; below 1.0.10 the "NetGraph"
    contraction method also fails on a phase-space contraction with
    FindPermutation::norel. Below Arrays 1.4.1 an evolved state read before its time
    is bound fails with Interpolation::inddp when the time grid repeats a point, as
