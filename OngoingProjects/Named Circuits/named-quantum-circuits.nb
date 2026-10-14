@@ -1,0 +1,444 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     16094,        435]
+NotebookOptionsPosition[     11730,        350]
+NotebookOutlinePosition[     12047,        364]
+CellTagsIndexPosition[     12004,        361]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Named Quantum Circuits", "Title",
+ CellID->874461601,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell[TextData[{
+ Cell[BoxData["QuantumCircuitOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+ " accepts a library of named constructions. A bare string builds the default \
+instance; ",
+ Cell[BoxData[
+  RowBox[{"\"\<Name\>\"", "[", "...", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+ " passes arguments. This page walks the ",
+ StyleBox["Grover",
+  FontWeight->"Bold"],
+ " family through every signature it accepts, one line each, showing the \
+circuit diagram."
+}], "Text",
+ CellID->36768919,ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+
+Cell[TextData[{
+ "The names split into two layers: the diffusion block alone, and the full \
+search step ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["G", "TI"], "=", 
+   StyleBox["D", "TI"], "\[ThinSpace]", 
+   StyleBox["O", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25a568a6-87a2-527f-535a-810032572145"],
+ " that wraps a diffusion block around an oracle."
+}], "Text",
+ CellID->1699946459,ExpressionUUID->"00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+
+Cell["The diffusion block", "Section",
+ CellID->1535504786,ExpressionUUID->"2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+
+Cell["\<\
+The default amplitude-amplification block on three wires: Hadamard-and-flip \
+the first two, mark onto the third, undo:\
+\>", "Text",
+ CellID->1208482393,ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", "\"\<GroverDiffusion\>\"", "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",
+ CellID->28909615,ExpressionUUID->"56e0e12c-de7d-6135-7e9f-f889db08301f"],
+
+Cell[TextData[{
+ "The same block on ",
+ StyleBox["n", "TI"],
+ " wires:"
+}], "Text",
+ CellID->193832008,ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverDiffusion\>\"", "[", "2", "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[2]:= ",
+ CellID->684317082,ExpressionUUID->"3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+
+Cell["\<\
+The block placed on a chosen (possibly non-contiguous) set of wires, marking \
+onto the highest:\
+\>", "Text",
+ CellID->528485616,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverDiffusion\>\"", "[", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", " ", "3"}], "}"}], "]"}], "]"}], "[", "\"\<Diagram\>\"",
+   "]"}]], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->1392207227,ExpressionUUID->"234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+
+Cell["\<\
+A supplied operator sets the marking gate: its wire (2) becomes the target, \
+the other wires its controls:\
+\>", "Text",
+ CellID->705466992,ExpressionUUID->"6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverDiffusion\>\"", "[", 
+    RowBox[{"3", ",", " ", 
+     RowBox[{"QuantumOperator", "[", 
+      RowBox[{"\"\<Z\>\"", ",", " ", 
+       RowBox[{"{", "2", "}"}]}], "]"}]}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[4]:= ",
+ CellID->1350516518,ExpressionUUID->"0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+
+Cell[TextData[{
+ "The exact reflection about ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{"0", "\[CenterEllipsis]", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ec9a758-58be-624c-16f6-3f02594b3096"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"2", 
+    TemplateBox[{
+      RowBox[{"0", "\[CenterEllipsis]", "0"}]},
+     "Ket"], 
+    TemplateBox[{
+      RowBox[{"0", "\[CenterEllipsis]", "0"}]},
+     "Bra"]}], "-", 
+   StyleBox["I", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+ ", with no flag wire:"
+}], "Text",
+ CellID->907546795,ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverDiffusion0\>\"", "[", "3", "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[5]:= ",
+ CellID->814772321,ExpressionUUID->"569e173f-6b36-b240-7ea5-8f790ec000aa"],
+
+Cell["\<\
+The phase-kickback spelling of the block, which builds the identical operator:\
+\>", "Text",
+ CellID->1054628905,ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverPhaseDiffusion\>\"", "[", "3", "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->2043779557,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+
+Cell[TextData[{
+ "The phase-kickback about-zero reflection, equal to ",
+ Cell[BoxData["GroverDiffusion0"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2867ea9b-6e8d-517b-581c-03c50b382041"],
+ ":"
+}], "Text",
+ CellID->17830494,ExpressionUUID->"76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverPhaseDiffusion0\>\"", "[", "3", "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->1589986527,ExpressionUUID->"0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+
+Cell["\<\
+The same block under its amplitude-named synonym, which builds only with an \
+argument, never bare:\
+\>", "Text",
+ CellID->943101875,ExpressionUUID->"4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverAmplification\>\"", "[", "3", "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->67888809,ExpressionUUID->"741b091d-feb2-1a39-1c38-a146fb476903"],
+
+Cell["The full search operator", "Section",
+ CellID->1432876021,ExpressionUUID->"3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+
+Cell["\<\
+The default search step over the built-in three-variable boolean function, \
+with one oracle ancilla:\
+\>", "Text",
+ CellID->876231958,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", "\"\<Grover\>\"", "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[9]:= ",
+ CellID->1020575516,ExpressionUUID->"3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+
+Cell["\<\
+The search step marking the states that satisfy a boolean formula:\
+\>", "Text",
+ CellID->1967685850,ExpressionUUID->"1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<Grover\>\"", "[", 
+    RowBox[{
+     RowBox[{"\[FormalX]", "[", "1", "]"}], " ", "&&", " ", 
+     RowBox[{"\[FormalX]", "[", "2", "]"}], " ", "&&", " ", 
+     RowBox[{"!", " ", 
+      RowBox[{"\[FormalX]", "[", "3", "]"}]}]}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->1044562475,ExpressionUUID->"77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+
+Cell["\<\
+A variable-to-wire list that names every variable, so no ancilla is added \
+(width 3, not 4):\
+\>", "Text",
+ CellID->1653200050,ExpressionUUID->"04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<Grover\>\"", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[FormalX]", "[", "1", "]"}], " ", "&&", " ", 
+      RowBox[{"\[FormalX]", "[", "2", "]"}]}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", "2"}], "}"}]}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->1384978530,ExpressionUUID->"1cbde497-e826-5557-4442-fdd089d33fbd"],
+
+Cell["\<\
+A second argument that is an integer sets the oracle's target wire; choosing \
+1 collides with a variable, so the variables shift to 2,3 and the target \
+lands on 1:\
+\>", "Text",
+ CellID->519689844,ExpressionUUID->"6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<Grover\>\"", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"\[FormalX]", "[", "1", "]"}], " ", "&&", " ", 
+      RowBox[{"\[FormalX]", "[", "2", "]"}]}], ",", " ", "1"}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->1609367578,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell[TextData[{
+ "A ",
+ Cell[BoxData["BooleanFunction"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+ " object accepted directly in place of a symbolic formula:"
+}], "Text",
+ CellID->1541450781,ExpressionUUID->"5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<Grover\>\"", "[", 
+    RowBox[{"BooleanFunction", "[", 
+     RowBox[{"7", ",", " ", "2"}], "]"}], "]"}], "]"}], "[", "\"\<Diagram\>\"",
+   "]"}]], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->1657269721,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[TextData[{
+ "A prebuilt oracle operator wrapped as given, with no formula compilation \
+(here ",
+ Cell[BoxData["CZ"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76d004f9-29e5-6665-1eef-9da34f904d4f"],
+ ", marking ",
+ Cell[BoxData[
+  TemplateBox[{"11"},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ "):"
+}], "Text",
+ CellID->1140508347,ExpressionUUID->"35077f55-9291-6519-633d-771f27244c63"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<Grover\>\"", "[", 
+    RowBox[{"QuantumOperator", "[", "\"\<CZ\>\"", "]"}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->496109794,ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
+
+Cell["\<\
+The phase-oracle search step, which marks by sign flip on the data wires and \
+so needs no ancilla:\
+\>", "Text",
+ CellID->108435171,ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", 
+   RowBox[{"\"\<GroverPhase\>\"", "[", 
+    RowBox[{
+     RowBox[{"\[FormalX]", "[", "1", "]"}], " ", "&&", " ", 
+     RowBox[{"\[FormalX]", "[", "2", "]"}]}], "]"}], "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[15]:= ",
+ CellID->829388421,ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+
+Cell[TextData[{
+ "The search step whose diffusion reflects about ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{"0", "\[CenterEllipsis]", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+ " instead of the amplitude-amplification form:"
+}], "Text",
+ CellID->203008389,ExpressionUUID->"02f88238-86c8-66df-3287-2462337d4c25"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"QuantumCircuitOperator", "[", "\"\<Grover0\>\"", "]"}], 
+  "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[16]:= ",
+ CellID->1090263105,ExpressionUUID->"034d641c-5834-e412-3173-7e4659c6cf78"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"52ce4f6a-032d-a48b-02f6-6734b6d90ed1"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 114, 1, 70, "Title",ExpressionUUID->"5bfe104a-50de-a555-0985-8a1461680fbf",
+ CellID->874461601],
+Cell[671, 23, 682, 16, 70, "Text",ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc",
+ CellID->36768919],
+Cell[1356, 41, 473, 12, 70, "Text",ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2",
+ CellID->1699946459],
+Cell[1832, 55, 114, 1, 70, "Section",ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772",
+ CellID->1535504786],
+Cell[1949, 58, 219, 4, 70, "Text",ExpressionUUID->"608e87cc-8fce-afdf-10b5-1e962a78f525",
+ CellID->1208482393],
+Cell[2171, 64, 240, 5, 70, "Input",ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d",
+ CellID->28909615],
+Cell[2414, 71, 158, 5, 70, "Text",ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f",
+ CellID->193832008],
+Cell[2575, 78, 270, 6, 70, "Input",ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4",
+ CellID->684317082],
+Cell[2848, 86, 195, 4, 70, "Text",ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1",
+ CellID->528485616],
+Cell[3046, 92, 327, 8, 70, "Input",ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662",
+ CellID->1392207227],
+Cell[3376, 102, 206, 4, 70, "Text",ExpressionUUID->"2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa",
+ CellID->705466992],
+Cell[3585, 108, 414, 10, 70, "Input",ExpressionUUID->"6801f052-da94-0b6f-183e-ea1fdf2159b5",
+ CellID->1350516518],
+Cell[4002, 120, 697, 23, 70, "Text",ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51",
+ CellID->907546795],
+Cell[4702, 145, 271, 6, 70, "Input",ExpressionUUID->"7b6211f5-475c-1194-2911-88bf72e963fe",
+ CellID->814772321],
+Cell[4976, 153, 178, 3, 70, "Text",ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0",
+ CellID->1054628905],
+Cell[5157, 158, 276, 6, 70, "Input",ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80",
+ CellID->2043779557],
+Cell[5436, 166, 300, 7, 70, "Text",ExpressionUUID->"5d5cbd3a-e88d-ee42-0b63-35678939b4a8",
+ CellID->17830494],
+Cell[5739, 175, 277, 6, 70, "Input",ExpressionUUID->"3b7fe4cc-5889-7f4e-6904-fd96593c4594",
+ CellID->1589986527],
+Cell[6019, 183, 198, 4, 70, "Text",ExpressionUUID->"6cb5c01f-62f5-68e0-144a-da5916803aca",
+ CellID->943101875],
+Cell[6220, 189, 273, 6, 70, "Input",ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7",
+ CellID->67888809],
+Cell[6496, 197, 119, 1, 70, "Section",ExpressionUUID->"4b6e5dad-9702-0c1f-7916-54f722b75765",
+ CellID->1432876021],
+Cell[6618, 200, 200, 4, 70, "Text",ExpressionUUID->"1d359769-845f-cd94-44ca-0f332deb97fe",
+ CellID->876231958],
+Cell[6821, 206, 233, 5, 70, "Input",ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888",
+ CellID->1020575516],
+Cell[7057, 213, 166, 3, 70, "Text",ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679",
+ CellID->1967685850],
+Cell[7226, 218, 467, 11, 70, "Input",ExpressionUUID->"46632a09-cc5f-b0ef-6e10-cc52e5eb0235",
+ CellID->1044562475],
+Cell[7696, 231, 193, 4, 70, "Text",ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306",
+ CellID->1653200050],
+Cell[7892, 237, 470, 12, 70, "Input",ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72",
+ CellID->1384978530],
+Cell[8365, 251, 264, 5, 70, "Text",ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d",
+ CellID->519689844],
+Cell[8632, 258, 412, 10, 70, "Input",ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae",
+ CellID->1609367578],
+Cell[9047, 270, 308, 7, 70, "Text",ExpressionUUID->"2d1ff276-b82a-c3ca-5b24-f43039dc9110",
+ CellID->1541450781],
+Cell[9358, 279, 338, 8, 70, "Input",ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e",
+ CellID->1657269721],
+Cell[9699, 289, 486, 14, 70, "Text",ExpressionUUID->"66c67103-72a1-9427-0efe-696d0755ff0d",
+ CellID->1140508347],
+Cell[10188, 305, 315, 7, 70, "Input",ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6",
+ CellID->496109794],
+Cell[10506, 314, 198, 4, 70, "Text",ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f",
+ CellID->108435171],
+Cell[10707, 320, 383, 9, 70, "Input",ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f",
+ CellID->829388421],
+Cell[11093, 331, 395, 10, 70, "Text",ExpressionUUID->"7d9821c9-0e61-bc6d-2ba7-b893ab1506b7",
+ CellID->203008389],
+Cell[11491, 343, 235, 5, 70, "Input",ExpressionUUID->"3181a460-bc62-f1ee-67be-3e4a3514c334",
+ CellID->1090263105]
+}
+]
+*)
+
+(* End of internal cache information *)
