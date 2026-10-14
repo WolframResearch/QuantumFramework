@@ -283,7 +283,10 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPa
     circuit = qco, res
 },
     If[ qs["Qudits"] > 0,
-        circuit = QuantumCircuitOperator[{qs -> circuit["FullInputOrder"]} /* circuit, "Label" -> None]
+        circuit = QuantumCircuitOperator[<|
+            "Elements" -> Join[QuantumCircuitOperator[{qs -> circuit["FullInputOrder"]}]["Elements"], circuit["Elements"]],
+            "Label" -> None
+        |>]
     ];
     res = TensorNetworkCompile[circuit, opts];
     Which[

@@ -163,14 +163,26 @@ op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperato
     QuantumCircuitOperator[Append[qco["Elements"], op], Replace[{op["Label"], qco["Label"]}, {{None, _} | {_, None} -> None, {lbl1_, lbl2_} :> lbl1[lbl2]}]]
 
 
+(* A composition joins its circuits' elements, which are valid already, so the circuit is built
+   from them directly; an argument that is a circuit is used as it is. *)
+compositionCircuit[qc_ ? QuantumCircuitOperatorQ] := qc
+
+compositionCircuit[arg_] := QuantumCircuitOperator[arg]
+
 QuantumCircuitOperator /: comp : Composition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
-With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[Through[Reverse[ops]["Elements"]], 1], If[# === {} || MemberQ[#, None], None, Composition @@ #] & @ Through[ops["Label"]]]
+With[{ops = ConfirmBy[compositionCircuit[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[<|
+        "Elements" -> Flatten[Through[Reverse[ops]["Elements"]], 1],
+        "Label" -> If[# === {} || MemberQ[#, None], None, Composition @@ #] & @ Through[ops["Label"]]
+    |>]
 ]
 
 QuantumCircuitOperator /: comp : RightComposition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
-With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[Through[ops["Elements"]], 1], If[# === {} || MemberQ[#, None], None, Composition @@ Reverse @ #] & @ Through[ops["Label"]]]
+With[{ops = ConfirmBy[compositionCircuit[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[<|
+        "Elements" -> Flatten[Through[ops["Elements"]], 1],
+        "Label" -> If[# === {} || MemberQ[#, None], None, Composition @@ Reverse @ #] & @ Through[ops["Label"]]
+    |>]
 ]
 
 
