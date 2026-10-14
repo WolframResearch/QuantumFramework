@@ -112,11 +112,11 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     min = circuit["Min"];
     ops = circuit["NormalOperators"];
     If[ TrueQ[OptionValue["Computational"]],
-        ops = Splice[{
-            If[#["InputQudits"] > 0 && ! #["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[#["Input"]["ReducedMatrix"]], {#, #} & @ #["InputOrder"], QuantumBasis[#, #] & @ #["InputDimensions"], "Label" -> "I"[#["Label"]]], Nothing],
+        ops = With[{basis = #["Basis"]}, Splice[{
+            If[basis["InputQudits"] > 0 && ! basis["Input"]["ComputationalQ"], QuantumOperator[MatrixInverse[basis["Input"]["ReducedMatrix"]], {#, #} & @ #["InputOrder"], QuantumBasis[#, #] & @ basis["InputDimensions"], "Label" -> "I"[#["Label"]]], Nothing],
             #,
-            If[#["OutputQudits"] > 0 && ! #["Output"]["ComputationalQ"], QuantumOperator[#["Output"]["ReducedMatrix"], {#, #} & @ #["OutputOrder"], QuantumBasis[#, #] & @ #["OutputDimensions"], "Label" -> "I"[#["Label"]]], Nothing]
-        }] & /@ ops
+            If[basis["OutputQudits"] > 0 && ! basis["Output"]["ComputationalQ"], QuantumOperator[basis["Output"]["ReducedMatrix"], {#, #} & @ #["OutputOrder"], QuantumBasis[#, #] & @ basis["OutputDimensions"], "Label" -> "I"[#["Label"]]], Nothing]
+        }]] & /@ ops
     ];
     arity = circuit["Arity"];
     MapThread[
@@ -158,10 +158,10 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
     indices = Replace[
         MapThread[
-            Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#2[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #2[[2]]] &,
+            Join[Thread[Superscript[#1, Sort[#2[[1]]]]], Thread[Subscript[#1, Sort[#2[[2]]]]]] &,
             {vertices, orders}
         ],
-        rules,
+        Dispatch[rules],
         {2}
     ];
     If[ TrueQ[OptionValue["ReturnIndices"]],
