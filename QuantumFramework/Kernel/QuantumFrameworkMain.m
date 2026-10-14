@@ -18,8 +18,10 @@ Needs["IBMQuantumPlatform`"]
    fails reports its own messages. When neither route has a version that meets the
    floor, QuantumFramework loads with what is installed and says so.
 
-   The floors are not cosmetic. Below TensorNetworks 1.1.0 the 20-qubit Trotter
-   quench of the dense-circuit probe runs out of 4 GB; below 1.0.10 the "NetGraph"
+   The floors are not cosmetic. Below TensorNetworks 1.2.0 the 8-qubit Grover search
+   of QF-Showcase takes 15 s instead of 3.5 s, and the 20-qubit Trotter quench of the
+   dense-circuit probe 5.5 s instead of 1.9 s; below 1.1.0 that quench runs out of
+   4 GB; below 1.0.10 the "NetGraph"
    contraction method also fails on a phase-space contraction with
    FindPermutation::norel. Below Arrays 1.4.1 an evolved state read before its time
    is bound fails with Interpolation::inddp when the time grid repeats a point, as
@@ -35,7 +37,7 @@ requirePaclet[paclet_String, version_String] := If[ ! pacletInstalledQ[paclet, v
     ]
 ]
 
-requirePaclet["Wolfram/TensorNetworks", "1.1.0"]
+requirePaclet["Wolfram/TensorNetworks", "1.2.0"]
 
 requirePaclet["Wolfram/Arrays", "1.4.1"]
 
