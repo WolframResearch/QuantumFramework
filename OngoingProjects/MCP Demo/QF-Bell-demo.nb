@@ -1,0 +1,67 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[      1886,         58]
+NotebookOptionsPosition[      1433,         44]
+NotebookOutlinePosition[      1750,         58]
+CellTagsIndexPosition[      1707,         55]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["Bell state in QuantumFramework", "Title",ExpressionUUID->"996e68da-0254-4b5b-b2f1-af2caa7629fe"],
+
+Cell["\<\
+A Hadamard on the first qubit followed by a CNOT prepares a maximally \
+entangled pair. \
+\>", "Text",ExpressionUUID->"1641c67c-058d-43c5-af5f-b3b116561b43"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"bell", "=", 
+   RowBox[{
+    RowBox[{"QuantumCircuitOperator", "[", 
+     RowBox[{"{", 
+      RowBox[{"\"\<H\>\"", ",", "\"\<CNOT\>\""}], "}"}], "]"}], "[", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"Values", " ", "@", " ", 
+    RowBox[{"bell", "[", "\"\<Amplitudes\>\"", "]"}]}], ",", 
+   RowBox[{"QuantumEntangledQ", "[", "bell", "]"}], ",", 
+   RowBox[{"QuantumEntanglementMonotone", "[", 
+    RowBox[{"bell", ",", "\"\<Concurrence\>\""}], "]"}]}], "}"}]}], "Input",Ex\
+pressionUUID->"19eb6e58-9285-4906-b7ce-fc4f324f085f"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"d5480921-1521-4eca-b69a-4aa65dd2124c"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 102, 0, 70, "Title",ExpressionUUID->"996e68da-0254-4b5b-b2f1-af2caa7629fe"],
+Cell[659, 22, 167, 3, 70, "Text",ExpressionUUID->"1641c67c-058d-43c5-af5f-b3b116561b43"],
+Cell[829, 27, 600, 15, 70, "Input",ExpressionUUID->"19eb6e58-9285-4906-b7ce-fc4f324f085f"]
+}
+]
+*)
+
+(* End of internal cache information *)

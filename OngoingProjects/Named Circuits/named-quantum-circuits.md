@@ -72,14 +72,6 @@ QuantumCircuitOperator["GroverAmplification"[3]]["Diagram"]
 
 ## The full search operator
 
-The default search step over the built-in three-variable boolean function, with one oracle ancilla:
-
-```wl
-QuantumCircuitOperator["Grover"]["Diagram"]
-```
-
----
-
 The search step marking the states that satisfy a boolean formula:
 
 ```wl

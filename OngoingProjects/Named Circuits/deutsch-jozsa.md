@@ -60,6 +60,14 @@ QuantumCircuitOperator[{"DeutschJozsa"[1, 3]}]["Diagram"]
 
 ---
 
+The decision, read out: the parity function sends all the weight onto the all-minus outcome, so the all-plus string that would certify a constant function has probability zero (the constant case puts probability 1 there instead):
+
+```wl
+QuantumCircuitOperator[{"DeutschJozsa"[Xor[\[FormalX][1], \[FormalX][2], \[FormalX][3]]]}][]["Probabilities"]
+```
+
+---
+
 A second argument fixes the number of input qubits when the function is left to a random draw:
 
 ```wl

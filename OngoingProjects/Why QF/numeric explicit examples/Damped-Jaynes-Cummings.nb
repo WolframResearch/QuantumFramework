@@ -1,0 +1,1773 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     61911,       1764]
+NotebookOptionsPosition[     53429,       1609]
+NotebookOutlinePosition[     53746,       1623]
+CellTagsIndexPosition[     53703,       1620]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+When does the photon come back? Jaynes-Cummings with dissipation\
+\>", "Title",
+ CellID->874461601,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
+
+Cell["\<\
+A single two-level atom sits inside a cavity that holds one electromagnetic \
+mode. The atom can give its excitation to the field as a photon and take it \
+back again, and in a closed cavity this exchange is a clean oscillation: the \
+Rabi oscillation. Real cavities are not closed. The atom can decay into modes \
+outside the cavity, and the cavity mirror leaks photons to the outside world. \
+Both losses drain the excitation that the oscillation is passing back and \
+forth.\
+\>", "Text",
+ CellID->36768919,ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
+
+Cell["\<\
+So the question is: with both channels open, what happens to the exchange? \
+Two things, and this example computes both. First, an atom that starts high \
+up the ladder, with several photons already in the cavity, shows a Rabi \
+oscillation under a decaying envelope: the exchange keeps going while the \
+excitation slowly bleeds away. Second, an atom that starts with a single \
+quantum, so that only one photon can ever be in play, splits into three \
+regimes set by how the coupling compares with the loss rates: the excitation \
+either oscillates under decay, or stops oscillating at a critical ratio, or \
+never oscillates at all and the atom simply decays faster than it would in \
+free space.\
+\>", "Text",
+ CellID->1699946459,ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
+
+Cell["The model: two loss channels draining one exchange", "Section",
+ CellID->1535504786,ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
+
+Cell[TextData[{
+ "Let ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["e", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25a568a6-87a2-527f-535a-810032572145"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["g", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
+ " be the excited and ground atomic states, and ",
+ Cell[BoxData[
+  TemplateBox[{
+    StyleBox["n", "TI"]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ " the cavity Fock states with ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5902d484-617f-9570-0f31-cdee100bfc5a"],
+ " photons. The atom is the first subsystem and the field the second. The \
+atomic operators are ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "-"], "=", 
+   RowBox[{
+    TemplateBox[{
+      StyleBox["g", "TI"]},
+     "Ket"], 
+    TemplateBox[{
+      StyleBox["e", "TI"]},
+     "Bra"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "+"], "=", 
+   SubsuperscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "-", "\[Dagger]"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5708d032-2150-04f2-7d37-ca7c50e56ed8"],
+ ", and the field operator obeys ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["a", "TI"], "^"], 
+    TemplateBox[{
+      StyleBox["n", "TI"]},
+     "Ket"]}], "=", 
+   RowBox[{
+    SqrtBox[
+     StyleBox["n", "TI"]], 
+    TemplateBox[{
+      RowBox[{
+        StyleBox["n", "TI"], "-", "1"}]},
+     "Ket"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+ ". In the rotating-wave approximation the Jaynes-Cummings Hamiltonian is"
+}], "Text",
+ CellID->1208482393,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    OverscriptBox[
+     StyleBox["H", "TI"], "^"], "=", 
+    RowBox[{
+     RowBox[{"\[HBar]", 
+      StyleBox["\[Nu]", "TI"], 
+      SuperscriptBox[
+       OverscriptBox[
+        StyleBox["a", "TI"], "^"], "\[Dagger]"], 
+      OverscriptBox[
+       StyleBox["a", "TI"], "^"]}], "+", 
+     RowBox[{
+      FractionBox["1", "2"], "\[HBar]", 
+      StyleBox["\[Omega]", "TI"], 
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["\[Sigma]", "TI"], "^"], 
+       StyleBox["z", "TI"]]}], "+", 
+     RowBox[{"\[HBar]", 
+      StyleBox["g", "TI"], 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         SubscriptBox[
+          OverscriptBox[
+           StyleBox["\[Sigma]", "TI"], "^"], "-"], 
+         SuperscriptBox[
+          OverscriptBox[
+           StyleBox["a", "TI"], "^"], "\[Dagger]"]}], "+", 
+        RowBox[{
+         SubscriptBox[
+          OverscriptBox[
+           StyleBox["\[Sigma]", "TI"], "^"], "+"], 
+         OverscriptBox[
+          StyleBox["a", "TI"], "^"]}]}], ")"}]}]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["\[Sigma]", "TI"], "^"], 
+     StyleBox["z", "TI"]], "=", 
+    RowBox[{
+     RowBox[{
+      TemplateBox[{
+        StyleBox["e", "TI"]},
+       "Ket"], 
+      TemplateBox[{
+        StyleBox["e", "TI"]},
+       "Bra"]}], "-", 
+     RowBox[{
+      TemplateBox[{
+        StyleBox["g", "TI"]},
+       "Ket"], 
+      RowBox[{
+       TemplateBox[{
+         StyleBox["g", "TI"]},
+        "Bra"], "."}]}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->28909615,ExpressionUUID->"234f1fb7-07c6-bba9-5174-96f1b27009f3"],
+
+Cell[TextData[{
+ "The interaction turns ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", 
+      StyleBox["n", "TI"]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+ " into ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", 
+      StyleBox["n", "TI"], "+", "1"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+ " and back, so it conserves the total number of excitations ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["a", "TI"], "^"], "\[Dagger]"], 
+   OverscriptBox[
+    StyleBox["a", "TI"], "^"], "+", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "+"], 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "-"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ec9a758-58be-624c-16f6-3f02594b3096"],
+ ". In other words, every photon the field gains is a quantum the atom has \
+lost, and that sum stays fixed under the coupling. We take the resonant case ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Nu]", "TI"], "=", 
+   StyleBox["\[Omega]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+ ". On resonance the two states ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", 
+      StyleBox["n", "TI"]}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e84829b-9667-6594-16bb-1bc523124ffe"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", 
+      StyleBox["n", "TI"], "+", "1"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "569e173f-6b36-b240-7ea5-8f790ec000aa"],
+ " that the coupling mixes carry the same free energy, so the first two terms \
+contribute only an overall phase to each excitation manifold and the \
+excited-state population is set entirely by the coupling and the losses."
+}], "Text",
+ CellID->193832008,ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+
+Cell["\<\
+Dissipation enters through a Lindblad master equation with two jump \
+operators, atomic decay and cavity photon loss,\
+\>", "Text",
+ CellID->684317082,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      StyleBox["d", "TI"], 
+      OverscriptBox[
+       StyleBox["\[Rho]", "TI"], "^"]}], 
+     StyleBox[
+      RowBox[{"d", "t"}], "TI"]], "=", "-", 
+    FractionBox[
+     StyleBox["i", "TI"], "\[HBar]"], 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    RowBox[{
+     OverscriptBox[
+      StyleBox["H", "TI"], "^"], ",", 
+     OverscriptBox[
+      StyleBox["\[Rho]", "TI"], "^"]}], 
+    StyleBox["]",
+     SpanMaxSize->1], "+", "\|01d49f", 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "1"], 
+    StyleBox["]",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["\[Rho]", "TI"], "^"], "+", "\|01d49f", 
+    StyleBox["[",
+     SpanMaxSize->1], 
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "2"], 
+    StyleBox["]",
+     SpanMaxSize->1], 
+    OverscriptBox[
+     StyleBox["\[Rho]", "TI"], "^"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "1"], "=", 
+    RowBox[{
+     SqrtBox[
+      StyleBox["\[Gamma]", "TI"]], "\[ThinSpace]", 
+     RowBox[{
+      SubscriptBox[
+       OverscriptBox[
+        StyleBox["\[Sigma]", "TI"], "^"], "-"], "\[CircleTimes]", 
+      OverscriptBox[
+       StyleBox["I", "TI"], "^"]}]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "2"], "=", 
+    RowBox[{
+     SqrtBox[
+      StyleBox["\[Kappa]", "TI"]], "\[ThinSpace]", 
+     RowBox[{
+      OverscriptBox[
+       StyleBox["I", "TI"], "^"], "\[CircleTimes]", 
+      OverscriptBox[
+       StyleBox["a", "TI"], "^"]}]}]}], ","}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->528485616,ExpressionUUID->"2867ea9b-6e8d-517b-581c-03c50b382041"],
+
+Cell[TextData[{
+ "with ",
+ Cell[BoxData[
+  RowBox[{"\|01d49f", 
+   StyleBox["[",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["L", "TI"], "^"], 
+   StyleBox["]",
+    SpanMaxSize->1], 
+   OverscriptBox[
+    StyleBox["\[Rho]", "TI"], "^"], "=", 
+   OverscriptBox[
+    StyleBox["L", "TI"], "^"], 
+   OverscriptBox[
+    StyleBox["\[Rho]", "TI"], "^"], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["L", "TI"], "^"], "\[Dagger]"], "-", 
+   FractionBox["1", "2"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    SuperscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "\[Dagger]"], 
+    OverscriptBox[
+     StyleBox["L", "TI"], "^"], 
+    OverscriptBox[
+     StyleBox["\[Rho]", "TI"], "^"], "+", 
+    OverscriptBox[
+     StyleBox["\[Rho]", "TI"], "^"], 
+    SuperscriptBox[
+     OverscriptBox[
+      StyleBox["L", "TI"], "^"], "\[Dagger]"], 
+    OverscriptBox[
+     StyleBox["L", "TI"], "^"]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+ ". Here ",
+ Cell[BoxData[
+  StyleBox["\[Gamma]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+ " is the atomic decay rate and ",
+ Cell[BoxData[
+  StyleBox["\[Kappa]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
+ " the cavity photon-loss rate. The atomic jump ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], "-"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
+ " lowers the atom without touching the field; the cavity jump ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ " removes a photon without touching the atom."
+}], "Text",
+ CellID->1392207227,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
+
+Cell["Load the checked-out QF paclet and its two contexts:", "Text",
+ CellID->705466992,ExpressionUUID->"3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+
+Cell[BoxData[
+ RowBox[{"PacletDirectoryLoad", 
+  "[", "\"\</Users/mohammadb/Documents/GitHub/QuantumFramework/\
+QuantumFramework/\>\"", "]"}]], "Input",
+ CellLabel->"In[1]:= ",
+ CellID->1350516518,ExpressionUUID->"1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+
+Cell["Load the main context:", "Text",
+ CellID->907546795,ExpressionUUID->"77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}]], "Input",
+ CellLabel->"In[2]:= ",
+ CellID->814772321,ExpressionUUID->"04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+
+Cell[TextData[{
+ "Expose the bosonic (second-quantization) context, which carries ",
+ Cell[BoxData["AnnihilationOperator"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1cbde497-e826-5557-4442-fdd089d33fbd"],
+ " and ",
+ Cell[BoxData["FockState"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+ ":"
+}], "Text",
+ CellID->1054628905,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell[BoxData[
+ RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`SecondQuantization`\>\"",
+   "]"}]], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->2043779557,ExpressionUUID->"1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+
+Cell[TextData[{
+ "The bosonic constructors truncate the cavity to ",
+ Cell[BoxData["$FockSize"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+ " levels. Twelve is comfortable for an initial state with a couple of \
+photons:"
+}], "Text",
+ CellID->17830494,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData[
+ RowBox[{"SetFockSpaceSize", "[", "12", "]"}]], "Input",
+ CellLabel->"In[4]:= ",
+ CellID->1589986527,ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"],
+
+Cell["\<\
+Build photon annihilation on the second subsystem; this same operator is also \
+the cavity-loss jump:\
+\>", "Text",
+ CellID->943101875,ExpressionUUID->"2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+
+Cell[BoxData[
+ RowBox[{"a", " ", "=", " ", 
+  RowBox[{"AnnihilationOperator", "[", 
+   RowBox[{"{", "2", "}"}], "]"}]}]], "Input",
+ CellLabel->"In[5]:= ",
+ CellID->67888809,ExpressionUUID->"35077f55-9291-6519-633d-771f27244c63"],
+
+Cell[TextData[{
+ "Use the labels ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    TemplateBox[{"0"},
+     "Ket"], 
+    StyleBox["a", "TI"]], "=", 
+   TemplateBox[{
+     StyleBox["e", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ebf3687-f906-130d-7644-afe0f8b37e57"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    TemplateBox[{"1"},
+     "Ket"], 
+    StyleBox["a", "TI"]], "=", 
+   TemplateBox[{
+     StyleBox["g", "TI"]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+ ", the excited-first convention. In that convention QF's named ",
+ Cell[BoxData["\"\<-\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+ " is exactly ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "-"], "=", 
+   RowBox[{
+    TemplateBox[{
+      StyleBox["g", "TI"]},
+     "Ket"], 
+    TemplateBox[{
+      StyleBox["e", "TI"]},
+     "Bra"]}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+ " on the first subsystem, and ",
+ Cell[BoxData["\"\<+\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "02f88238-86c8-66df-3287-2462337d4c25"],
+ " is its adjoint ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], "+"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "034d641c-5834-e412-3173-7e4659c6cf78"],
+ ":"
+}], "Text",
+ CellID->1432876021,ExpressionUUID->"52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+
+Cell[BoxData[
+ RowBox[{"\[Sigma]minus", " ", "=", " ", 
+  RowBox[{"QuantumOperator", "[", "\"\<-\>\"", "]"}]}]], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->876231958,ExpressionUUID->"5bfe104a-50de-a555-0985-8a1461680fbf"],
+
+Cell["The atomic raising operator:", "Text",
+ CellID->1020575516,ExpressionUUID->"134534fb-1061-d656-417a-ada5a115bcbc"],
+
+Cell[BoxData[
+ RowBox[{"\[Sigma]plus", " ", "=", " ", 
+  RowBox[{"QuantumOperator", "[", "\"\<+\>\"", "]"}]}]], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->1967685850,ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+
+Cell[TextData[{
+ "For QF operators, ",
+ Cell[BoxData[
+  RowBox[{"x", " ", "@", " ", "y"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6e1c99a5-dcef-9c28-1623-100ed49be772"],
+ " composes them, aligning the subsystems each addresses and carrying the \
+untouched subsystem through. Form the dimensionless interaction ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "-"], 
+   SuperscriptBox[
+    OverscriptBox[
+     StyleBox["a", "TI"], "^"], "\[Dagger]"], "+", 
+   SubscriptBox[
+    OverscriptBox[
+     StyleBox["\[Sigma]", "TI"], "^"], "+"], 
+   OverscriptBox[
+    StyleBox["a", "TI"], "^"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "608e87cc-8fce-afdf-10b5-1e962a78f525"],
+ "; ",
+ Cell[BoxData["SuperDagger"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+ " takes the operator adjoint:"
+}], "Text",
+ CellID->1044562475,ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+
+Cell[BoxData[
+ RowBox[{"h", " ", "=", " ", 
+  RowBox[{
+   RowBox[{"\[Sigma]minus", " ", "@", " ", 
+    RowBox[{"SuperDagger", "[", "a", "]"}]}], " ", "+", " ", 
+   RowBox[{"\[Sigma]plus", " ", "@", " ", "a"}]}]}]], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->1653200050,ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+
+Cell["Confirm that the interaction is Hermitian:", "Text",
+ CellID->1384978530,ExpressionUUID->"5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+
+Cell[BoxData[
+ RowBox[{"h", "[", "\"\<HermitianQ\>\"", "]"}]], "Input",
+ CellLabel->"In[9]:= ",
+ CellID->519689844,ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+
+Cell["Damped Rabi oscillations: exchange under a decaying envelope", "Section",
+ CellID->1609367578,ExpressionUUID->"2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+
+Cell[TextData[{
+ "Start the atom excited with two photons already in the cavity, ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "2"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+ ". The atom is ",
+ Cell[BoxData[
+  RowBox[{"QuantumState", "[", "\"\<0\>\"", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+ " in the excited-first convention, and ",
+ Cell[BoxData[
+  RowBox[{"FockState", "[", "2", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b6211f5-475c-1194-2911-88bf72e963fe"],
+ " is the two-photon field:"
+}], "Text",
+ CellID->1541450781,ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+
+Cell[BoxData[
+ RowBox[{"\[Psi]0", " ", "=", " ", 
+  RowBox[{"QuantumTensorProduct", "[", 
+   RowBox[{
+    RowBox[{"QuantumState", "[", "\"\<0\>\"", "]"}], ",", " ", 
+    RowBox[{"FockState", "[", "2", "]"}]}], "]"}]}]], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->1657269721,ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
+
+Cell["\<\
+Fix the resonant frequencies and a coupling much larger than the losses we \
+will apply, so that many oscillations fit inside the decay time:\
+\>", "Text",
+ CellID->1140508347,ExpressionUUID->"5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"\[Nu]", ",", " ", "\[Omega]", ",", " ", "gc"}], "}"}], " ", "=", 
+  " ", 
+  RowBox[{"{", 
+   RowBox[{"10.", ",", " ", "10.", ",", " ", "15."}], "}"}]}]], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->496109794,ExpressionUUID->"3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+
+Cell["Assemble the full Jaynes-Cummings Hamiltonian:", "Text",
+ CellID->108435171,ExpressionUUID->"6cb5c01f-62f5-68e0-144a-da5916803aca"],
+
+Cell[BoxData[
+ RowBox[{"H", " ", "=", " ", 
+  RowBox[{
+   RowBox[{"\[Nu]", " ", 
+    RowBox[{
+     RowBox[{"SuperDagger", "[", "a", "]"}], " ", "@", " ", "a"}]}], " ", "+",
+    " ", 
+   RowBox[{
+    RowBox[{"1", "/", "2"}], " ", "\[Omega]", " ", 
+    RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}]}], " ", "+", " ", 
+   RowBox[{"gc", " ", "h"}]}]}]], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->829388421,ExpressionUUID->"55f417ec-7166-d78d-038b-8eb60010bdd7"],
+
+Cell[TextData[{
+ "The excited-state probability is the ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     StyleBox["e", "TI"]},
+    "Ket"], 
+   TemplateBox[{
+     StyleBox["e", "TI"]},
+    "Bra"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b6e5dad-9702-0c1f-7916-54f722b75765"],
+ " entry of the atomic reduced density matrix. In QF the listed subsystem is \
+the one discarded, so trace out the field, subsystem 2, and read the first \
+diagonal entry:"
+}], "Text",
+ CellID->203008389,ExpressionUUID->"1d359769-845f-cd94-44ca-0f332deb97fe"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"excitedProbability", "[", "evolved_", "]"}], " ", ":=", " ", 
+  RowBox[{"Re", " ", "@", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"QuantumPartialTrace", "[", 
+      RowBox[{"evolved", ",", " ", 
+       RowBox[{"{", "2", "}"}]}], "]"}], "[", "\"\<DensityMatrix\>\"", "]"}], 
+    "[", 
+    RowBox[{"[", 
+     RowBox[{"1", ",", " ", "1"}], "]"}], "]"}]}]}]], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->1090263105,ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+
+Cell[TextData[{
+ "Choose three dissipation strengths with the atom and cavity losing at equal \
+rates ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Gamma]", "TI"], "=", 
+   StyleBox["\[Kappa]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "64c30c0d-1857-1b13-0cf0-a65799e26679"],
+ ". QF's ",
+ Cell[BoxData["\"\<Hamiltonian\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ " form takes the generator, the jump operators and their rates, and builds \
+the full Lindblad generator; no explicit ",
+ Cell[BoxData[
+  StyleBox["i", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ea251ed-865f-e03c-1652-48b733ebb306"],
+ " is needed, and each jump operator auto-pads with the identity on the \
+subsystem it leaves alone. Evolve the initial state over a fixed window for \
+each rate:"
+}], "Text",
+ CellID->1560876240,ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"trajectories", " ", "=", " ", 
+   RowBox[{"Table", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"QuantumEvolve", "[", 
+      RowBox[{
+       RowBox[{"QuantumOperator", "[", 
+        RowBox[{"\"\<Hamiltonian\>\"", "[", 
+         RowBox[{"H", ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"\[Sigma]minus", ",", " ", "a"}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"rate", ",", " ", "rate"}], "}"}]}], "]"}], "]"}], ",", 
+       " ", "\[Psi]0", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"t", ",", " ", "0", ",", " ", "2"}], "}"}]}], "]"}], ",", 
+     "\n", "    ", 
+     RowBox[{"{", 
+      RowBox[{"rate", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"0.8", ",", " ", "0.4", ",", " ", "0.2"}], "}"}]}], "}"}]}], 
+    "]"}]}], ";"}]], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->176337227,ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
+
+Cell[TextData[{
+ "Each trajectory is a state parametrized by the time ",
+ Cell[BoxData[
+  StyleBox["t", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+ ". Plot the excited-state probability of all three:"
+}], "Text",
+ CellID->807053435,ExpressionUUID->"2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+
+Cell[BoxData[
+ RowBox[{"ListLinePlot", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"Transpose", "[", 
+        RowBox[{"{", 
+         RowBox[{"#", ",", " ", 
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"excitedProbability", "[", "traj", "]"}], " ", "/.", " ", 
+            
+            RowBox[{"t", " ", "->", " ", "#"}]}], ")"}]}], "}"}], "]"}], " ", 
+       "&"}], "[", 
+      RowBox[{"N", "[", 
+       RowBox[{
+        RowBox[{"Range", "[", 
+         RowBox[{"0", ",", " ", "200"}], "]"}], "/", "100"}], "]"}], "]"}], ",",
+      " ", 
+     RowBox[{"{", 
+      RowBox[{"traj", ",", " ", "trajectories"}], "}"}]}], "]"}], ",", "\n", 
+   "    ", 
+   RowBox[{"PlotRange", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", " ", "1"}], "}"}]}], ",", " ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<t\>\"", ",", " ", "\"\<P(e)\>\""}], "}"}]}], ",", "\n", 
+   "    ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<\[Gamma] = \[Kappa] = 0.8\>\"", ",", 
+      " ", "\"\<\[Gamma] = \[Kappa] = 0.4\>\"", ",", 
+      " ", "\"\<\[Gamma] = \[Kappa] = 0.2\>\""}], "}"}]}], ",", "\n", "    ", 
+   
+   RowBox[{"PlotLabel", " ", "->", " ", "\"\<Damped Rabi oscillations\>\""}], 
+   ",", " ", 
+   RowBox[{"ImageSize", " ", "->", " ", "560"}], ",", " ", 
+   RowBox[{"AspectRatio", " ", "->", " ", 
+    RowBox[{"1", "/", "2.4"}]}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[15]:= ",
+ CellID->1633675818,ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+
+Cell[TextData[{
+ "As one can see, the excited-state probability oscillates under an envelope \
+that decays toward zero, and as the rate grows the envelope collapses sooner. \
+The oscillation runs at ",
+ Cell[BoxData[
+  RowBox[{"2", 
+   StyleBox["g", "TI"], 
+   SqrtBox[
+    RowBox[{
+     StyleBox["n", "TI"], "+", "1"}]], "=", "2", 
+   StyleBox["g", "TI"], 
+   SqrtBox["3"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "66c67103-72a1-9427-0efe-696d0755ff0d"],
+ ", the Rabi frequency for the ",
+ Cell[BoxData[
+  RowBox[{
+   TemplateBox[{
+     RowBox[{
+       StyleBox["e", "TI"], ",", "2"}]},
+    "Ket"], "\[LeftRightArrow]", 
+   TemplateBox[{
+     RowBox[{
+       StyleBox["g", "TI"], ",", "3"}]},
+    "Ket"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+ " pair: the oscillation is the coherent exchange, the envelope is the loss. \
+In every case the excitation ends in the joint ground state ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58ee7ecb-1370-1005-0896-7795a605636f"],
+ ", which neither channel can leave. Loss does not change the exchange \
+frequency here, only how long the exchange survives."
+}], "Text",
+ CellID->1828793009,ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+
+Cell["\<\
+One excitation: strong coupling, crossover and the Purcell regime\
+\>", "Section",
+ CellID->1232986364,ExpressionUUID->"7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+
+Cell[TextData[{
+ "Give the system a single quantum of energy, the atom excited and the cavity \
+empty, ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
+ ":"
+}], "Text",
+ CellID->762269937,ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+
+Cell[BoxData[
+ RowBox[{"\[Psi]e0", " ", "=", " ", 
+  RowBox[{"QuantumTensorProduct", "[", 
+   RowBox[{
+    RowBox[{"QuantumState", "[", "\"\<0\>\"", "]"}], ",", " ", 
+    RowBox[{"FockState", "[", "0", "]"}]}], "]"}]}]], "Input",
+ CellLabel->"In[16]:= ",
+ CellID->405213039,ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+
+Cell[TextData[{
+ "With one excitation the problem closes on three states. The coupling \
+connects only ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5e187950-8ca2-2ab2-0638-711a25577898"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", "1"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+ ". Either loss sends the system to ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a9104d-5625-6af3-4356-8a1763d038d9"],
+ ", which is dark: it has no excitation to lose and the coupling cannot lift \
+it back up. Because the excited atom lives only in ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ ", and the recycling term of the master equation feeds population into ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ " but never back into ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "341c54d9-3079-6bba-5c24-4d83410c3980"],
+ ", the excited amplitude follows the non-Hermitian \"no-jump\" evolution \
+alone. Writing the amplitudes of ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["e", "TI"], ",", "0"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+ " and ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["g", "TI"], ",", "1"}]},
+   "Ket"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " as ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["c", "TI"], 
+   StyleBox["e", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+ " and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["c", "TI"], "1"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ ","
+}], "Text",
+ CellID->2118931930,ExpressionUUID->"07359582-e823-44a1-2eca-0cef89d62e8b"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      StyleBox["d", "TI"], 
+      SubscriptBox[
+       StyleBox["c", "TI"], 
+       StyleBox["e", "TI"]]}], 
+     StyleBox[
+      RowBox[{"d", "t"}], "TI"]], "=", "-", 
+    FractionBox[
+     StyleBox["\[Gamma]", "TI"], "2"], 
+    SubscriptBox[
+     StyleBox["c", "TI"], 
+     StyleBox["e", "TI"]], "-", 
+    StyleBox["i", "TI"], 
+    StyleBox["g", "TI"], "\[ThinSpace]", 
+    SubscriptBox[
+     StyleBox["c", "TI"], "1"]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      StyleBox["d", "TI"], 
+      SubscriptBox[
+       StyleBox["c", "TI"], "1"]}], 
+     StyleBox[
+      RowBox[{"d", "t"}], "TI"]], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"-", 
+       FractionBox[
+        StyleBox["\[Kappa]", "TI"], "2"]}], 
+      SubscriptBox[
+       StyleBox["c", "TI"], "1"]}], "-", 
+     RowBox[{
+      StyleBox["i", "TI"], 
+      StyleBox["g", "TI"], "\[ThinSpace]", 
+      SubscriptBox[
+       StyleBox["c", "TI"], 
+       StyleBox["e", "TI"]]}]}]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["P", "TI"], 
+     StyleBox["e", "TI"]], "=", 
+    RowBox[{
+     SuperscriptBox[GridBox[{
+        {
+         SubscriptBox[
+          StyleBox["c", "TI"], 
+          StyleBox["e", "TI"]]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1039057480,ExpressionUUID->"7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+
+Cell[TextData[{
+ "Encode the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+ " generator of these equations:"
+}], "Text",
+ CellID->1411198270,ExpressionUUID->"6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"noJump", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "\[Gamma]"}], "/", "2"}], ",", " ", 
+       RowBox[{
+        RowBox[{"-", "I"}], " ", "g"}]}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "I"}], " ", "g"}], ",", " ", 
+       RowBox[{
+        RowBox[{"-", "\[Kappa]"}], "/", "2"}]}], "}"}]}], "}"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[17]:= ",
+ CellID->1703453532,ExpressionUUID->"4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+
+Cell["Its eigenvalues set the dynamics:", "Text",
+ CellID->1477609488,ExpressionUUID->"19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+
+Cell[BoxData[
+ RowBox[{"Simplify", "[", 
+  RowBox[{"Eigenvalues", "[", "noJump", "]"}], "]"}]], "Input",
+ CellLabel->"In[18]:= ",
+ CellID->1030824397,ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+
+Cell[TextData[{
+ "The two eigenvalues are ",
+ Cell[BoxData[
+  RowBox[{
+   FractionBox["1", "4"], "\[NegativeThinSpace]", "(", 
+   RowBox[{"-", 
+    StyleBox["\[Gamma]", "TI"], "-", 
+    StyleBox["\[Kappa]", "TI"], "\[PlusMinus]", 
+    SqrtBox[
+     RowBox[{
+      SuperscriptBox[
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         StyleBox["\[Gamma]", "TI"], "-", 
+         StyleBox["\[Kappa]", "TI"]}], 
+        StyleBox[")",
+         SpanMaxSize->1]}], "2"], "-", "16", 
+      SuperscriptBox[
+       StyleBox["g", "TI"], "2"]}]]}], ")"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30baa1c8-66ad-75e0-6059-389213585fca"],
+ ". The sign of the discriminant ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox[
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      StyleBox["\[Gamma]", "TI"], "-", 
+      StyleBox["\[Kappa]", "TI"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}], "2"], "-", "16", 
+   SuperscriptBox[
+    StyleBox["g", "TI"], "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
+ " splits the behavior into three regimes:"
+}], "Text",
+ CellID->100031176,ExpressionUUID->"323a4b1c-b138-a791-63da-6359c0b20dfb"],
+
+Cell[TextData[{
+ StyleBox["Strong coupling",
+  FontWeight->"Bold"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["g", "TI"], ">", GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Kappa]", "TI"], "-", 
+       StyleBox["\[Gamma]", "TI"]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7421cf44-a1ac-4319-1dde-e721d0592e63"],
+ ": the square root is imaginary, the eigenvalues are a complex-conjugate \
+pair, and ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["P", "TI"], 
+   StyleBox["e", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "511b3347-8d7d-ab60-0738-ab212409f64a"],
+ " is a vacuum Rabi oscillation under a decaying envelope: the photon is \
+emitted and reabsorbed several times before it escapes."
+}], "Item",
+ CellID->144223354,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+
+Cell[TextData[{
+ StyleBox["Crossover",
+  FontWeight->"Bold"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["g", "TI"], "=", GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Kappa]", "TI"], "-", 
+       StyleBox["\[Gamma]", "TI"]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+ ": the two eigenvalues merge, the oscillation disappears, and the decay is \
+critically damped."
+}], "Item",
+ CellID->1443527617,ExpressionUUID->"519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+
+Cell[TextData[{
+ StyleBox["Purcell regime",
+  FontWeight->"Bold"],
+ ", ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Kappa]", "TI"], "\[GreaterGreater]", 
+   StyleBox["g", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5900aac7-5263-773e-0f3f-43a167165a04"],
+ ": the cavity empties before the photon can be reabsorbed, so the atom \
+simply decays, but at the enhanced rate ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Gamma]", "TI"], "+", "4", 
+   SuperscriptBox[
+    StyleBox["g", "TI"], "2"], "/", 
+   StyleBox["\[Kappa]", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+ " rather than its bare rate ",
+ Cell[BoxData[
+  StyleBox["\[Gamma]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12d95fcb-3316-2212-42e7-569546a37178"],
+ "."
+}], "Item",
+ CellID->311511756,ExpressionUUID->"733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+
+Cell[TextData[{
+ "We check all three against the full master-equation evolution below, where \
+the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+ " picture and QF's open-system solver must agree."
+}], "Text",
+ CellID->1381425643,ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67"],
+
+Cell["\<\
+Set the coupling to one for this comparison, so the loss rates can be read \
+directly against it, and rebuild the Hamiltonian:\
+\>", "Text",
+ CellID->377280352,ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"gc", " ", "=", " ", "1"}], ";"}]], "Input",
+ CellLabel->"In[19]:= ",
+ CellID->1717363484,ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
+
+Cell["Rebuild with the new coupling:", "Text",
+ CellID->1781880651,ExpressionUUID->"78287f93-0f12-7c52-2828-76ddaaa746b8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"H", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"\[Nu]", " ", 
+     RowBox[{
+      RowBox[{"SuperDagger", "[", "a", "]"}], " ", "@", " ", "a"}]}], " ", "+",
+     " ", 
+    RowBox[{
+     RowBox[{"1", "/", "2"}], " ", "\[Omega]", " ", 
+     RowBox[{"QuantumOperator", "[", "\"\<Z\>\"", "]"}]}], " ", "+", " ", 
+    RowBox[{"gc", " ", "h"}]}]}], ";"}]], "Input",
+ CellLabel->"In[20]:= ",
+ CellID->1536527082,ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2"],
+
+Cell[TextData[{
+ "The excited amplitude is the matrix exponential of the generator applied to \
+the excited state ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{"1", ",", "0"}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+ ", and the probability is the squared modulus of its first entry. Build the \
+closed form once per rate pair, with the generator kept exact, so that at the \
+crossover, where the generator is defective, the matrix exponential stays \
+symbolic rather than taking an ill-conditioned numerical route:"
+}], "Text",
+ CellID->1621535814,ExpressionUUID->"187adc3d-3961-76c2-4819-d667b8145c28"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"peExact", "[", 
+    RowBox[{"\[Kappa]v_", ",", " ", "\[Gamma]v_"}], "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"peExact", "[", 
+     RowBox[{"\[Kappa]v", ",", " ", "\[Gamma]v"}], "]"}], " ", "=", " ", 
+    RowBox[{"With", "[", "\n", "    ", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"m", " ", "=", " ", 
+        RowBox[{"noJump", " ", "/.", " ", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"g", " ", "->", " ", "gc"}], ",", " ", 
+           RowBox[{"\[Kappa]", " ", "->", " ", 
+            RowBox[{"Rationalize", "[", "\[Kappa]v", "]"}]}], ",", " ", 
+           RowBox[{"\[Gamma]", " ", "->", " ", 
+            RowBox[{"Rationalize", "[", "\[Gamma]v", "]"}]}]}], "}"}]}]}], 
+       "}"}], ",", "\n", "    ", 
+      RowBox[{"Function", "[", 
+       RowBox[{"\[Tau]", ",", " ", 
+        RowBox[{"Evaluate", "[", 
+         RowBox[{
+          RowBox[{"Abs", "[", 
+           RowBox[{"First", "[", 
+            RowBox[{
+             RowBox[{"MatrixExp", "[", 
+              RowBox[{"m", " ", "\[Tau]"}], "]"}], " ", ".", " ", 
+             RowBox[{"{", 
+              RowBox[{"1", ",", " ", "0"}], "}"}]}], "]"}], "]"}], "^", "2"}],
+          "]"}]}], "]"}]}], "]"}]}]}], ";"}]], "Input",
+ CellLabel->"In[21]:= ",
+ CellID->1193935837,ExpressionUUID->"641c78eb-7f03-7846-0c24-71b57ab64aac"],
+
+Cell[TextData[{
+ "Pick one loss pair in each regime, holding the atomic rate at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Gamma]", "TI"], "=", "0.1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+ " and moving the cavity rate ",
+ Cell[BoxData[
+  StyleBox["\[Kappa]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+ " through ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0.4"}], ",", "4.1", ",", 
+   RowBox[{"20", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6121b9de-dddd-aca8-10de-309bd469f6f2"],
+ ". At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["g", "TI"], "=", "1"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "30209679-023a-ee91-61df-0823b7ccb4fb"],
+ " these sit on the strong, crossover and Purcell sides of ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["g", "TI"], "=", GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Kappa]", "TI"], "-", 
+       StyleBox["\[Gamma]", "TI"]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "29bc1606-c22d-409d-5f43-8863f7d812e7"],
+ ":"
+}], "Text",
+ CellID->105329933,ExpressionUUID->"7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"regimes", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"0.4", ",", " ", "0.1"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"4.1", ",", " ", "0.1"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"20.", ",", " ", "0.1"}], "}"}]}], "}"}]}], ";"}]], "Input",
+ CellLabel->"In[22]:= ",
+ CellID->1234416869,ExpressionUUID->"3119d855-3ffd-7401-6726-d21fb9885f6b"],
+
+Cell[TextData[{
+ "Evolve the one-excitation state under the full Lindblad dynamics for each \
+regime; the rate list pairs ",
+ Cell[BoxData[
+  StyleBox["\[Gamma]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
+ " with ",
+ Cell[BoxData[
+  SubscriptBox[
+   OverscriptBox[
+    StyleBox["\[Sigma]", "TI"], "^"], "-"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
+ " and ",
+ Cell[BoxData[
+  StyleBox["\[Kappa]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "51fce014-dca1-0630-0783-fa51d5546d1a"],
+ " with ",
+ Cell[BoxData[
+  OverscriptBox[
+   StyleBox["a", "TI"], "^"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "657c1c65-980e-511d-1303-964f19bb2067"],
+ ":"
+}], "Text",
+ CellID->240380995,ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"evolutions", " ", "=", " ", 
+   RowBox[{"Table", "[", "\n", "    ", 
+    RowBox[{
+     RowBox[{"QuantumEvolve", "[", 
+      RowBox[{
+       RowBox[{"QuantumOperator", "[", 
+        RowBox[{"\"\<Hamiltonian\>\"", "[", 
+         RowBox[{"H", ",", " ", 
+          RowBox[{"{", 
+           RowBox[{"\[Sigma]minus", ",", " ", "a"}], "}"}], ",", " ", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"\[Gamma]\[Kappa]", "[", 
+             RowBox[{"[", "2", "]"}], "]"}], ",", " ", 
+            RowBox[{"\[Gamma]\[Kappa]", "[", 
+             RowBox[{"[", "1", "]"}], "]"}]}], "}"}]}], "]"}], "]"}], ",", 
+       " ", "\[Psi]e0", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"t", ",", " ", "0", ",", " ", "10"}], "}"}]}], "]"}], ",", 
+     "\n", "    ", 
+     RowBox[{"{", 
+      RowBox[{"\[Gamma]\[Kappa]", ",", " ", "regimes"}], "}"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellLabel->"In[23]:= ",
+ CellID->1771870337,ExpressionUUID->"7e9b7e66-629a-1114-26b9-7040172f607e"],
+
+Cell["\<\
+Confirm that the full open-system evolution reproduces the exact two-state \
+result. Sample both on a grid and report the largest discrepancy across all \
+three regimes:\
+\>", "Text",
+ CellID->305160771,ExpressionUUID->"585a51e6-774f-2dd2-087a-48c002fa7738"],
+
+Cell[BoxData[
+ RowBox[{"Max", " ", "@", " ", 
+  RowBox[{"Table", "[", "\n", "    ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"Abs", "[", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"excitedProbability", "[", 
+           RowBox[{"evolutions", "[", 
+            RowBox[{"[", "k", "]"}], "]"}], "]"}], " ", "/.", " ", 
+          RowBox[{"t", " ", "->", " ", "#"}]}], ")"}], " ", "-", " ", 
+        RowBox[{
+         RowBox[{"peExact", "[", 
+          RowBox[{
+           RowBox[{"regimes", "[", 
+            RowBox[{"[", 
+             RowBox[{"k", ",", " ", "1"}], "]"}], "]"}], ",", " ", 
+           RowBox[{"regimes", "[", 
+            RowBox[{"[", 
+             RowBox[{"k", ",", " ", "2"}], "]"}], "]"}]}], "]"}], "[", "#", 
+         "]"}]}], "]"}], " ", "&"}], " ", "/@", " ", 
+     RowBox[{"N", "[", 
+      RowBox[{
+       RowBox[{"Range", "[", 
+        RowBox[{"0", ",", " ", "100"}], "]"}], "/", "10"}], "]"}]}], ",", 
+    "\n", "    ", 
+    RowBox[{"{", 
+     RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[24]:= ",
+ CellID->1896945989,ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+
+Cell[TextData[{
+ "As expected, the two agree to the accuracy of the time integration: the ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "370294fd-9e49-2d35-5d31-0da71bfc741f"],
+ " no-jump picture captures the full master-equation dynamics of the excited \
+population, as the dark-state argument promised. Plot the three regimes \
+together, the exact result as solid lines and the QF evolution as dots:"
+}], "Text",
+ CellID->653417278,ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001"],
+
+Cell[BoxData[
+ RowBox[{"Show", "[", "\n", "    ", 
+  RowBox[{
+   RowBox[{"Plot", "[", 
+    RowBox[{
+     RowBox[{"Evaluate", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"peExact", "[", 
+          RowBox[{
+           RowBox[{"#", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], ",", " ", 
+           RowBox[{"#", "[", 
+            RowBox[{"[", "2", "]"}], "]"}]}], "]"}], "[", "t", "]"}], " ", 
+        "&"}], " ", "/@", " ", "regimes"}], "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", " ", "0", ",", " ", "10"}], "}"}], ",", "\n", 
+     "        ", 
+     RowBox[{"PlotStyle", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"Blue", ",", " ", 
+        RowBox[{"Darker", "[", "Green", "]"}], ",", " ", "Red"}], "}"}]}], ",",
+      " ", 
+     RowBox[{"PlotRange", " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", " ", "1"}], "}"}]}]}], "]"}], ",", "\n", "    ", 
+   RowBox[{"ListPlot", "[", "\n", "        ", 
+    RowBox[{
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"Transpose", "[", 
+          RowBox[{"{", 
+           RowBox[{"#", ",", " ", 
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"excitedProbability", "[", 
+               RowBox[{"evolutions", "[", 
+                RowBox[{"[", "k", "]"}], "]"}], "]"}], " ", "/.", " ", 
+              RowBox[{"t", " ", "->", " ", "#"}]}], ")"}]}], "}"}], "]"}], 
+         " ", "&"}], "[", 
+        RowBox[{"N", "[", 
+         RowBox[{
+          RowBox[{"Range", "[", 
+           RowBox[{"0", ",", " ", "40"}], "]"}], "/", "4"}], "]"}], "]"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"k", ",", " ", "3"}], "}"}]}], "]"}], ",", "\n", "        ", 
+     RowBox[{"PlotStyle", " ", "->", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Directive", "[", 
+          RowBox[{"#", ",", " ", 
+           RowBox[{"PointSize", "[", "0.012", "]"}]}], "]"}], " ", "&"}], " ",
+         "/@", " ", 
+        RowBox[{"{", 
+         RowBox[{"Blue", ",", " ", 
+          RowBox[{"Darker", "[", "Green", "]"}], ",", " ", "Red"}], "}"}]}], 
+       ")"}]}]}], "]"}], ",", "\n", "    ", 
+   RowBox[{"Plot", "[", 
+    RowBox[{
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{"-", 
+        RowBox[{"(", 
+         RowBox[{"0.1", " ", "+", " ", 
+          RowBox[{"4", " ", 
+           RowBox[{
+            RowBox[{"gc", "^", "2"}], "/", "20."}]}]}], ")"}]}], " ", "t"}], 
+      "]"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", " ", "0", ",", " ", "10"}], "}"}], ",", " ", 
+     RowBox[{"PlotStyle", " ", "->", " ", 
+      RowBox[{"Directive", "[", 
+       RowBox[{"Gray", ",", " ", "Dashed"}], "]"}]}]}], "]"}], ",", "\n", 
+   "    ", 
+   RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
+   RowBox[{"Axes", " ", "->", " ", "False"}], ",", " ", 
+   RowBox[{"FrameLabel", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<t\>\"", ",", " ", "\"\<P(e)\>\""}], "}"}]}], ",", "\n", 
+   "    ", 
+   RowBox[{
+   "PlotLabel", " ", "->", 
+    " ", "\"\<One excitation: strong coupling, crossover, Purcell\>\""}], ",",
+    "\n", "    ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"SwatchLegend", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"Blue", ",", " ", 
+        RowBox[{"Darker", "[", "Green", "]"}], ",", " ", "Red", ",", " ", 
+        "Gray"}], "}"}], ",", " ", 
+      RowBox[{"{", 
+       RowBox[{"\"\<strong: \[Kappa] = 0.4\>\"", ",", 
+        " ", "\"\<crossover: \[Kappa] = 4.1\>\"", ",", 
+        " ", "\"\<Purcell: \[Kappa] = 20\>\"", ",", 
+        " ", "\"\<exp(-(\[Gamma] + 4 g^2/\[Kappa]) t)\>\""}], "}"}]}], 
+     "]"}]}], ",", "\n", "    ", 
+   RowBox[{"ImageSize", " ", "->", " ", "560"}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[25]:= ",
+ CellID->1067269536,ExpressionUUID->"7519012f-e657-215b-2326-988893e273a1"],
+
+Cell[TextData[{
+ "As one can see, in the strong-coupling curve the excitation sloshes between \
+atom and cavity several times before it leaks away: the photon is reabsorbed \
+before it escapes. At crossover the oscillation is just gone, the curve \
+falling monotonically. In the Purcell curve the atom decays as a pure \
+exponential, and the dashed reference ",
+ Cell[BoxData[
+  SuperscriptBox[
+   StyleBox["e", "TI"], 
+   RowBox[{"-", 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["\[Gamma]", "TI"], "+", "4", 
+     SuperscriptBox[
+      StyleBox["g", "TI"], "2"], "/", 
+     StyleBox["\[Kappa]", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1], 
+    StyleBox["t", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "594776df-9e75-d16a-0f7d-6f991b01a3b0"],
+ " sits on top of it: a leaky cavity speeds the atom's decay above its bare \
+rate, the Purcell effect, because the cavity carries the excitation away \
+before the atom can take it back."
+}], "Text",
+ CellID->49659130,ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+
+Cell[TextData[{
+ "The lesson is one dimensionless comparison. When the coupling beats the \
+loss, ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["g", "TI"], ">", GridBox[{
+     {
+      RowBox[{
+       StyleBox["\[Kappa]", "TI"], "-", 
+       StyleBox["\[Gamma]", "TI"]}]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6878c7f8-419e-9db5-1807-dea27028e79f"],
+ ", the excitation is shared coherently and the oscillation survives; when \
+the loss beats the coupling, the excitation leaves before it can return and \
+the oscillation is gone. The same master equation, read in QF through the ",
+ Cell[BoxData["\"\<Hamiltonian\>\""], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "48a3d607-c312-9dd3-7850-c860f6a4e739"],
+ " jump-operator form, produces both the damped exchange of the multi-photon \
+ladder and the three single-excitation regimes, and in the solvable \
+one-excitation case it agrees with the elementary ",
+ Cell[BoxData[
+  RowBox[{"2", "\[Times]", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "539491e8-328f-8d7b-01ab-08b2473bd441"],
+ " calculation."
+}], "Text",
+ CellID->464508221,ExpressionUUID->"7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"]
+},
+FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"023f49e2-a747-9723-33c5-60cfd2f3fa09"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[554, 20, 164, 3, 70, "Title",ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c",
+ CellID->874461601],
+Cell[721, 25, 575, 9, 70, "Text",ExpressionUUID->"289b85cd-827f-9a9c-58b8-1c97370be8e6",
+ CellID->36768919],
+Cell[1299, 36, 799, 12, 70, "Text",ExpressionUUID->"12f3dbee-abc4-6375-4280-d2cbce714e5f",
+ CellID->1699946459],
+Cell[2101, 50, 145, 1, 70, "Section",ExpressionUUID->"7ed5da6f-a344-b859-26ea-dc48d6f60aa3",
+ CellID->1535504786],
+Cell[2249, 53, 2162, 74, 70, "Text",ExpressionUUID->"2cfa2c34-ef50-7d46-5499-c6718ae547ac",
+ CellID->1208482393],
+Cell[4414, 129, 1747, 63, 70, "DisplayFormula",ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65",
+ CellID->28909615],
+Cell[6164, 194, 2171, 65, 70, "Text",ExpressionUUID->"01ed6b92-5a5f-fa78-3792-82dc5febc942",
+ CellID->193832008],
+Cell[8338, 261, 216, 4, 70, "Text",ExpressionUUID->"107fa29c-d013-1000-4004-3bd9e1a6636a",
+ CellID->684317082],
+Cell[8557, 267, 1935, 70, 70, "DisplayFormula",ExpressionUUID->"6798df62-4cc7-e4e1-0da7-d74c6573cecb",
+ CellID->528485616],
+Cell[10495, 339, 2030, 66, 70, "Text",ExpressionUUID->"49f5450b-e8d1-97dd-7f8b-5d548965fd27",
+ CellID->1392207227],
+Cell[12528, 407, 143, 1, 70, "Text",ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd",
+ CellID->705466992],
+Cell[12674, 410, 252, 5, 70, "Input",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c",
+ CellID->1350516518],
+Cell[12929, 417, 113, 1, 70, "Text",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054",
+ CellID->907546795],
+Cell[13045, 420, 189, 3, 70, "Input",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9",
+ CellID->814772321],
+Cell[13237, 425, 460, 11, 70, "Text",ExpressionUUID->"062d91f0-6326-41c0-2fd2-08ba16d3132a",
+ CellID->1054628905],
+Cell[13700, 438, 212, 4, 70, "Input",ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2",
+ CellID->2043779557],
+Cell[13915, 444, 368, 8, 70, "Text",ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0",
+ CellID->17830494],
+Cell[14286, 454, 170, 3, 70, "Input",ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8",
+ CellID->1589986527],
+Cell[14459, 459, 200, 4, 70, "Text",ExpressionUUID->"26dca2d1-2715-746d-4ee3-3b9b52a05eb7",
+ CellID->943101875],
+Cell[14662, 465, 228, 5, 70, "Input",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae",
+ CellID->67888809],
+Cell[14893, 472, 1636, 57, 70, "Text",ExpressionUUID->"6b853673-18d0-d9fa-19ba-a83d996aabc0",
+ CellID->1432876021],
+Cell[16532, 531, 220, 4, 70, "Input",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399",
+ CellID->876231958],
+Cell[16755, 537, 120, 1, 70, "Text",ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802",
+ CellID->1020575516],
+Cell[16878, 540, 220, 4, 70, "Input",ExpressionUUID->"6e85e9ed-427b-8528-16ba-00b7770fec72",
+ CellID->1967685850],
+Cell[17101, 546, 1032, 29, 70, "Text",ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5",
+ CellID->1044562475],
+Cell[18136, 577, 323, 7, 70, "Input",ExpressionUUID->"31f4c073-8ff6-126f-678b-da3d298360b5",
+ CellID->1653200050],
+Cell[18462, 586, 134, 1, 70, "Text",ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a",
+ CellID->1384978530],
+Cell[18599, 589, 170, 3, 70, "Input",ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b",
+ CellID->519689844],
+Cell[18772, 594, 155, 1, 70, "Section",ExpressionUUID->"106b7ad8-6378-599b-4069-7382160d2be1",
+ CellID->1609367578],
+Cell[18930, 597, 790, 21, 70, "Text",ExpressionUUID->"7e6f7c7a-fa8f-2da1-2615-7627ff3a778b",
+ CellID->1541450781],
+Cell[19723, 620, 329, 7, 70, "Input",ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96",
+ CellID->1657269721],
+Cell[20055, 629, 241, 4, 70, "Text",ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c",
+ CellID->1140508347],
+Cell[20299, 635, 314, 8, 70, "Input",ExpressionUUID->"4b5b9263-9199-4e16-7978-144d202c157c",
+ CellID->496109794],
+Cell[20616, 645, 137, 1, 70, "Text",ExpressionUUID->"475d7054-346c-a3cc-6d63-6a1ebd1ef116",
+ CellID->108435171],
+Cell[20756, 648, 463, 12, 70, "Input",ExpressionUUID->"2ef71510-aa09-eca9-568c-8d5dcfbdb6f3",
+ CellID->829388421],
+Cell[21222, 662, 562, 16, 70, "Text",ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66",
+ CellID->203008389],
+Cell[21787, 680, 502, 13, 70, "Input",ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105",
+ CellID->1090263105],
+Cell[22292, 695, 973, 23, 70, "Text",ExpressionUUID->"6af863a9-1098-c609-1a98-7af3a112ad53",
+ CellID->1560876240],
+Cell[23268, 720, 913, 24, 70, "Input",ExpressionUUID->"055bc2ad-6b92-a3be-3378-dbf70e24f184",
+ CellID->176337227],
+Cell[24184, 746, 355, 8, 70, "Text",ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5",
+ CellID->807053435],
+Cell[24542, 756, 1662, 44, 70, "Input",ExpressionUUID->"201a2509-bdd9-2fa1-5039-bd53346c758b",
+ CellID->1633675818],
+Cell[26207, 802, 1392, 39, 70, "Text",ExpressionUUID->"7085d256-6adc-aa08-20ba-d4100f6ef952",
+ CellID->1828793009],
+Cell[27602, 843, 168, 3, 70, "Section",ExpressionUUID->"5f932952-49a5-d34f-05a0-c11c6851a195",
+ CellID->1232986364],
+Cell[27773, 848, 396, 12, 70, "Text",ExpressionUUID->"160f17c4-d31a-fe19-3e34-8ea1e6acc563",
+ CellID->762269937],
+Cell[28172, 862, 329, 7, 70, "Input",ExpressionUUID->"10beb8bd-bdb6-ee93-4045-31e73440b4f9",
+ CellID->405213039],
+Cell[28504, 871, 2564, 83, 70, "Text",ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a",
+ CellID->2118931930],
+Cell[31071, 956, 1722, 61, 70, "DisplayFormula",ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef",
+ CellID->1039057480],
+Cell[32796, 1019, 306, 8, 70, "Text",ExpressionUUID->"0642d375-09f3-9942-2e71-cb3faf87eba8",
+ CellID->1411198270],
+Cell[33105, 1029, 578, 19, 70, "Input",ExpressionUUID->"0651775d-2bad-791b-2e6f-6f074e584861",
+ CellID->1703453532],
+Cell[33686, 1050, 125, 1, 70, "Text",ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64",
+ CellID->1477609488],
+Cell[33814, 1053, 205, 4, 70, "Input",ExpressionUUID->"67c13665-f813-2f11-0dfe-a84ef9a6727b",
+ CellID->1030824397],
+Cell[34022, 1059, 1261, 41, 70, "Text",ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef",
+ CellID->100031176],
+Cell[35286, 1102, 966, 27, 70, "Item",ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef",
+ CellID->144223354],
+Cell[36255, 1131, 653, 19, 70, "Item",ExpressionUUID->"0513e607-0f4c-1e20-3320-f861aaf9650a",
+ CellID->1443527617],
+Cell[36911, 1152, 933, 27, 70, "Item",ExpressionUUID->"0371ff35-cd30-cda2-310e-f77ee4ca9788",
+ CellID->311511756],
+Cell[37847, 1181, 394, 9, 70, "Text",ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012",
+ CellID->1381425643],
+Cell[38244, 1192, 225, 4, 70, "Text",ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f",
+ CellID->377280352],
+Cell[38472, 1198, 179, 4, 70, "Input",ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7",
+ CellID->1717363484],
+Cell[38654, 1204, 122, 1, 70, "Text",ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2",
+ CellID->1781880651],
+Cell[38779, 1207, 491, 13, 70, "Input",ExpressionUUID->"50b12ff8-e606-85f7-004e-c6a593b0efdd",
+ CellID->1536527082],
+Cell[39273, 1222, 742, 17, 70, "Text",ExpressionUUID->"640f47a5-4648-c62d-0c35-5e0f73e2ad77",
+ CellID->1621535814],
+Cell[40018, 1241, 1362, 34, 70, "Input",ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6",
+ CellID->1193935837],
+Cell[41383, 1277, 1381, 40, 70, "Text",ExpressionUUID->"387a9e0d-0234-0e73-6819-1057b7c15559",
+ CellID->105329933],
+Cell[42767, 1319, 439, 12, 70, "Input",ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae",
+ CellID->1234416869],
+Cell[43209, 1333, 909, 27, 70, "Text",ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8",
+ CellID->240380995],
+Cell[44121, 1362, 1015, 26, 70, "Input",ExpressionUUID->"1170384d-2f38-2c50-470f-b2174acd76ba",
+ CellID->1771870337],
+Cell[45139, 1390, 268, 5, 70, "Text",ExpressionUUID->"6ce33075-6d34-44a7-1490-aa3f04c12e8d",
+ CellID->305160771],
+Cell[45410, 1397, 1168, 32, 70, "Input",ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663",
+ CellID->1896945989],
+Cell[46581, 1431, 558, 10, 70, "Text",ExpressionUUID->"6334ac9c-43f1-85c0-12cb-45c67585ef2a",
+ CellID->653417278],
+Cell[47142, 1443, 3869, 104, 70, "Input",ExpressionUUID->"74397683-04f4-1d4d-1dc7-6fedac816797",
+ CellID->1067269536],
+Cell[51014, 1549, 1077, 26, 70, "Text",ExpressionUUID->"735e49d5-32a1-4a48-2166-609f47541892",
+ CellID->49659130],
+Cell[52094, 1577, 1331, 30, 70, "Text",ExpressionUUID->"335d55a2-cf9b-493d-6163-4c0fea2e1807",
+ CellID->464508221]
+}
+]
+*)
+
+(* End of internal cache information *)
