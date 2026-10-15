@@ -58,6 +58,7 @@ QuantumInterferometer::state = "The state must have `1` modes with the same numb
 QuantumInterferometer::truncation = "The state holds up to `1` photons but each mode keeps only `2` levels; at least `3` levels are needed for a faithful result.";
 QuantumInterferometer::compose ="Cannot compose interferometers on `1` and `2` modes.";
 QuantumInterferometer::plot = "\"MatrixPlot\" needs a numeric transfer matrix.";
+QuantumInterferometer::sample = "Sampling needs a numeric transfer matrix.";
 QuantumInterferometer::squeezed = "`1` is not defined for an interferometer with squeezers.";
 QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
 QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing; set \"Cutoff\" -> n.";
@@ -435,7 +436,7 @@ $QuantumInterferometerProperties = {
     "Unitary", "TransferMatrix", "Modes", "Method", "Elements", "Layers",
     "Depth", "BeamSplitterCount", "PhaseShifterCount", "SqueezerCount", "ElementTable",
     "Diagram", "MatrixPlot", "CircuitOperator",
-    "Amplitude", "Probability", "Probabilities", "Dagger"
+    "Amplitude", "Probability", "Probabilities", "Samples", "SampleCounts", "Dagger"
 };
 
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[prop_String, args___] := With[{result = QuantumInterferometerProp[qi, prop, args]},
@@ -496,6 +497,36 @@ QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cuto
         ],
         True, Replace[gaussianAmplitudes[qi, in, OptionValue["Cutoff"]], a_Association :> Abs[a] ^ 2]
     ]
+]
+
+(* Clifford and Clifford, arXiv:1706.01260, Algorithm B: with the input photons in random order, photon k
+   lands on mode i with weight |Perm(A[r ++ {i}, 1..k])|^2, expanded along row i into k minors of A[r, 1..k] *)
+QuantumInterferometerProp[qi_, "Samples", s_, k_Integer ? NonNegative] := With[{in = occupation[s]},
+    Which[
+        ! occupationQ[qi, in], $Failed,
+        ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "Sampling"]; $Failed,
+        ! MatrixQ[N[qi["Unitary"]], NumericQ], Message[QuantumInterferometer::sample]; $Failed,
+        True, With[{w = N[qi["Unitary"]][[All, modeList[in]]], m = qi["Modes"], n = Total[in]},
+            Table[
+                With[{a = w[[All, RandomSample[Range[n]]]]},
+                    QuditName @ Lookup[
+                        Counts @ Fold[
+                            Append[#1, RandomChoice[Abs[a[[All, ;; #2]] . If[#2 == 1, {1}, Table[Permanent[a[[#1, Delete[Range[#2], l]]]], {l, #2}]]] ^ 2 -> Range[m]]] &,
+                            {},
+                            Range[n]
+                        ],
+                        Range[m],
+                        0
+                    ]
+                ],
+                k
+            ]
+        ]
+    ]
+]
+
+QuantumInterferometerProp[qi_, "SampleCounts", s_, k_Integer ? NonNegative] := Replace[qi["Samples", s, k],
+    samples_List :> KeyMap[QuditName, Reverse @ KeySort @ Counts[#["Name"] & /@ samples]]
 ]
 
 inverseElement["BS"[t_, f_] -> modes_] := "BS"[t, normalAngle[f + Pi]] -> modes

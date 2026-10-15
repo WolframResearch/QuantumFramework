@@ -217,6 +217,48 @@ VerificationTest[
     TestID -> "QI-rejects-wrong-pattern-length"
 ]
 
+(* ---- sampling: Clifford-Clifford draws agree with the exact distribution ---- *)
+
+(* total variation distance of 5000 samples from "Probabilities", for one photon per mode and for a
+   doubly occupied input; sampling noise alone is about 0.025 here *)
+VerificationTest[
+    SeedRandom[31];
+    With[{qi = QuantumInterferometer["Random"[4]], k = 5000},
+        Map[
+            Total[Abs[Values[qi["Probabilities", #]] - Lookup[qi["SampleCounts", #, k], Keys[qi["Probabilities", #]], 0] / k]] / 2 < 0.06 &,
+            {{1, 1, 1, 0}, {2, 1, 0, 0}}
+        ]
+    ],
+    {True, True},
+    TestID -> "QI-samples-match-probabilities"
+]
+
+VerificationTest[
+    SeedRandom[32];
+    With[{hom = QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2], qi = QuantumInterferometer["Random"[3]]},
+        {
+            Keys[hom["SampleCounts", {1, 1}, 500]] === {QuditName[{2, 0}], QuditName[{0, 2}]},
+            Union[Total[#["Name"]] & /@ qi["Samples", {2, 0, 1}, 50]],
+            qi["Samples", {0, 0, 0}, 2],
+            qi["Samples", {1, 0, 0}, 0],
+            Total[qi["SampleCounts", {1, 1, 0}, 40]]
+        }
+    ],
+    {True, {3}, {QuditName[{0, 0, 0}], QuditName[{0, 0, 0}]}, {}, 40},
+    TestID -> "QI-samples-HOM-and-edge-cases"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"S"[0.3] -> 1, "BS"[Pi / 4, 0] -> {1, 2}}, 2]["Samples", {1, 0}, 5],
+        QuantumInterferometer[{"BS"[t, 0] -> {1, 2}}, 2]["Samples", {1, 0}, 5],
+        QuantumInterferometer["Random"[2]]["Samples", {1, 0, 0}, 5]
+    },
+    {$Failed, $Failed, $Failed},
+    {QuantumInterferometer::squeezed, QuantumInterferometer::sample, QuantumInterferometer::occ},
+    TestID -> "QI-samples-rejects-squeezers-symbolic-and-bad-patterns"
+]
+
 VerificationTest[
     SeedRandom[16];
     With[{qi1 = QuantumInterferometer["Random"[4]], qi2 = QuantumInterferometer["Random"[4], Method -> "Reck"]},
