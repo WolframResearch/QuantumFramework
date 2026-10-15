@@ -107,15 +107,16 @@ phase labels no physical degree of freedom.
 
 ### 1.5 [BSc] How do I count the real parameters of a pure qubit and a pure qudit in $\mathbb{C}^d$?
 
-A pure state in $\mathbb{C}^d$ has $2d$ real amplitude components; normalization removes one and the
-global phase another, so the naive count is $2d-2$. But that bookkeeping *assumes* each constraint
-removes exactly one independent direction. To **measure** the count instead of assuming it, note what
-"degrees of freedom" means geometrically: the states sweep out a surface, and the number of free real
-parameters is the *dimension* of that surface. The dimension of a parametrized surface is the generic
-**rank of its Jacobian**, the matrix of derivatives $\partial|\psi\rangle/\partial(\text{parameter})$:
-the rank is how many linearly independent directions the state actually moves in as the parameters
-vary, and a redundant parameter (whose motion duplicates another's) does not raise it. That is why the
-Jacobian rank is the rigorous count, and why it exposes the global phase as a genuine redundancy.
+A pure state in $\mathbb{C}^d$ has $2d$ real amplitude components, but the physical state is less than
+the vector: normalization fixes the length, and the global phase labels no observable, so two vectors
+related by those moves describe the same state. Subtracting one real direction for the norm and one for
+the phase gives $2d-2$. That subtraction is sound once you confirm each move removes exactly one
+direction, and the Jacobian is how you confirm it: the states sweep out a surface whose dimension is
+the generic **rank of the Jacobian**, the matrix of derivatives $\partial(\cdot)/\partial(\text{parameter})$
+of whatever object labels the state. The rank counts the independent directions the differentiated
+object moves in, so a parameter that only duplicates another's motion does not raise it. Which
+redundancies the count sees depends on *which* object you differentiate: the state vector still carries
+the global phase, while the density matrix has already dropped it.
 
 **WL** : embed the qubit family (the two Bloch angles plus the global phase $g$) into $\mathbb{R}^4$ as
 real and imaginary parts, and count its independent tangent directions. With the phase kept, the rank
@@ -179,8 +180,10 @@ Table[
 So a qubit has exactly two real parameters, the two Bloch angles: the rank falls from $3$ (the
 normalized vectors, a 3-sphere in $\mathbb{R}^4$) to $2$ (the physical states) precisely when the
 global phase is removed. For any qudit the gauge freedom $z \to \lambda z$ is always two real
-dimensions, one scale and one phase, so the density-matrix rank is $2d-2$ for every $d$. The measured
-$\{2,4,6\}$ confirm it, extending to $\{2,4,6,8,10,\dots\}$ for $d = 2,3,4,5,6,\dots$.
+dimensions, one scale and one phase, so the **Jacobian** of $\rho(z)$ has rank $2d-2$ for every $d$
+(the projector $\rho$ itself is rank $1$; it is the Jacobian, not the matrix, that carries the count).
+The measured $\{2,4,6\}$ illustrate the general argument, extending to $\{2,4,6,8,10,\dots\}$ for
+$d = 2,3,4,5,6,\dots$.
 
 ### 1.6 [BSc] How do I compute an inner product $\langle\phi|\psi\rangle$, its modulus, and the transition probability $|\langle\phi|\psi\rangle|^2$?
 
