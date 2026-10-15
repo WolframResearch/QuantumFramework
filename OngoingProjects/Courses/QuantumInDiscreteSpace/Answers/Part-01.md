@@ -126,8 +126,12 @@ With[{psi = Exp[I g] {Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}},
  MatrixRank[D[Flatten[ReIm[ComplexExpand[psi]]], {{\[Theta], \[Phi], g}}]]]
 ```
 
-Drop the phase $g$ and the rank falls to $2$, the physical state space. The drop of exactly one
-direction is the global phase, a single redundancy.
+Drop the phase $g$ and the rank falls to $2$, the physical state space; the one direction lost is the
+global phase. The angle chart is *assumed* to reach every qubit, and what the rank certifies is only
+that $\theta,\phi$ are generically independent, so the surface is genuinely two-dimensional (they
+degenerate at the poles $\theta=0,\pi$, a coordinate artifact, not a missing dimension). The
+computation that establishes coverage, not just local independence, is the projector below, which
+starts from an arbitrary vector.
 
 ```wl
 With[{psi = {Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}},
@@ -136,10 +140,13 @@ With[{psi = {Cos[\[Theta]/2], Exp[I \[Phi]] Sin[\[Theta]/2]}},
 
 For a general qudit, drop the hand-built chart and differentiate the one object that *already* has
 both redundancies removed: the density matrix $\rho = |\psi\rangle\langle\psi| / \langle\psi|\psi\rangle$.
-Build it from a raw, unnormalized vector $z \in \mathbb{C}^d$ and take the $2d$ real and imaginary
-components of $z$ as the parameters. Because $\rho$ is unchanged by $z \to \lambda z$ for any complex
-$\lambda$, it discards the normalization *and* the global phase at a single stroke, so its Jacobian
-rank is the physical parameter count for any $d$.
+Build it from a raw, nonzero vector $z \in \mathbb{C}^d$ and take the $2d$ real and imaginary
+components of $z$ as the parameters. Two nonzero vectors give the same projector exactly when they lie
+on one complex line, $\rho(z) = \rho(w) \iff w = \lambda z$ for some $\lambda \neq 0$, so each physical
+state is one complex line and the rescaling $z \to \lambda z$ (with $\lambda \neq 0$: one real scale,
+one real phase) is the entire redundancy. Differentiating $\rho$ counts the physical parameters
+directly for any $d$, and unlike the angle chart it assumes no coverage, since every nonzero $z$
+appears.
 
 **WL** : form the projector $z z^\dagger / (z^\dagger z)$ by hand and rank its Jacobian for $d = 2, 3, 4$.
 
