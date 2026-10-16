@@ -634,53 +634,46 @@ wignerd /: MakeBoxes[wignerd[b_, j_, m1_, m2_], form_] := RowBox[{
     SubsuperscriptBox["d", RowBox[{MakeBoxes[m1, form], ",", MakeBoxes[m2, form]}], MakeBoxes[j, form]], "(", MakeBoxes[b, form], ")"
 }]
 
-symbolicAmplitude[elements_, n_, t_] := Module[{counts = n, factors = {}, constraints = {}, ks = {}, k, c, order, eqs, rules, free, iters = {}, fixed = {}},
-    Do[
-        Replace[el, {
-            ("BS"[th_, ph_] -> {p_, q_}) :> (
-                k = Subscript[\[FormalK], Length[ks] + 1];
-                AppendTo[ks, k];
-                c = counts[[{p, q}]];
-                AppendTo[factors, (-1) ^ (c[[1]] - k) E^(I ph (c[[1]] - k)) wignerd[2 th, Total[c] / 2, k - Total[c] / 2, (c[[1]] - c[[2]]) / 2]];
-                counts[[{p, q}]] = {k, Total[c] - k};
-                constraints = Join[constraints, {k, Total[c] - k}]
-            ),
-            ("PS"[al_] -> {p_}) :> AppendTo[factors, E^(I al counts[[p]])]
-        }],
-        {el, elements}
-    ];
-    order = Reverse[ks];
-    eqs = Expand[Most[counts - t]];
-    rules = If[ks === {} || eqs === {}, {},
-        Catenate @ MapThread[
-            With[{col = FirstPosition[#1, x_ /; x != 0, {0}, {1}][[1]]},
-                If[col == 0, {}, {order[[col]] -> Expand[- (#2 . (eqs /. Thread[order -> 0]) + Delete[#1, col] . Delete[order, col])]}]
-            ] &,
-            TakeDrop[#, Length[order]] & /@ RowReduce[Join[Outer[Coefficient, eqs, order], IdentityMatrix[Length[eqs]], 2]] // Transpose
+symbolicCounts[c_, {"BS"[__] -> {p_, q_}, k_}] := ReplacePart[c, {p -> k, q -> c[[p]] + c[[q]] - k}]
+
+symbolicCounts[c_, _] := c
+
+symbolicFactor[c_, {"BS"[th_, ph_] -> {p_, q_}, k_}] :=
+    (-1) ^ (c[[p]] - k) E^(I ph (c[[p]] - k)) wignerd[2 th, (c[[p]] + c[[q]]) / 2, k - (c[[p]] + c[[q]]) / 2, (c[[p]] - c[[q]]) / 2]
+
+symbolicFactor[c_, {"PS"[al_] -> {p_}, _}] := E^(I al c[[p]])
+
+symbolicAmplitude[elements_, n_, t_] := Module[{steps, counts, ks, eqs, rules, free, cs},
+    steps = MapIndexed[{#1, Subscript[\[FormalK], First[#2]]} &, elements];
+    counts = FoldList[symbolicCounts, n, steps];
+    ks = Cases[steps, {"BS"[__] -> _, k_} :> k];
+    eqs = Thread[Most[Last[counts]] == Most[t]];
+    rules = If[ks === {}, {},
+        With[{order = Reverse[ks]},
+            First[Solve[eqs, Cases[RowReduce[Outer[Coefficient, Subtract @@@ eqs, order]], row_ /; AnyTrue[row, # != 0 &] :> order[[FirstPosition[row, x_ /; x != 0][[1]]]]], MaxExtraConditions -> All], {}] /.
+                ConditionalExpression[e_, _] :> e
         ]
     ];
-    free = Select[ks, FreeQ[Keys[rules], #] &];
-    constraints = DeleteCases[Expand[constraints /. rules], _ ? NumericQ];
-    Do[
-        With[{kf = free[[j]], own = Select[constraints, ! FreeQ[#, free[[j]]] && FreeQ[#, Alternatives @@ Append[Drop[free, j], Null]] &]},
-            With[{it = {kf,
-                    Max @@ DeleteDuplicates @ Join[{0}, kf - # & /@ Select[own, Coefficient[#, kf] == 1 &]],
-                    Min @@ DeleteDuplicates[kf + # & /@ Select[own, Coefficient[#, kf] == -1 &]]
-                } /. fixed},
-                If[PossibleZeroQ[it[[2]] - it[[3]]], AppendTo[fixed, kf -> it[[2]]], AppendTo[iters, it]]
-            ]
-        ],
-        {j, Length[free]}
-    ];
-    rules = Join[Expand[rules /. fixed], fixed];
+    free = DeleteCases[ks, Alternatives @@ Keys[rules]];
+    cs = Select[DeleteDuplicates[Expand[Flatten[Rest[counts]] /. rules]], ! NumericQ[#] &];
     With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &]},
-        KroneckerDelta[Total[n], Total[t]] If[iters === {}, Identity, Inactive[Sum][#, Sequence @@ iters] &][
-            Times @@ factors /. rules /. {
-                Power[-1, x_ /; ! NumericQ[x]] :> (-1) ^ With[{v = Variables[x]}, Mod[x /. Thread[v -> 0], 2] + Mod[Coefficient[x, v], 2] . v],
-                Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Chop[Collect[Expand[x / I], angles]]),
-                wignerd[b_, j_, m1_, m2_] :> If[PossibleZeroQ[j], 1, wignerd[b, Together[Expand[j]], Together[Expand[m1]], Together[Expand[m2]]]]
-            }
-        ]
+        KroneckerDelta[Total[n], Total[t]] (Eliminate[eqs, ks] /. {Equal -> KroneckerDelta, And -> Times, True -> 1, False -> 0}) *
+        Inactive[Sum][
+            Times @@ MapThread[symbolicFactor, {Most[counts], steps}] /. rules,
+            Sequence @@ Table[
+                With[{k = free[[j]], c = Select[cs, ! FreeQ[#, free[[j]]] && FreeQ[#, Alternatives @@ Drop[free, j]] &]},
+                    {k, Max[0, Sequence @@ (k - Select[c, Coefficient[#, k] == 1 &])], Min @@ (k + Select[c, Coefficient[#, k] == -1 &])}
+                ],
+                {j, Length[free]}
+            ]
+        ] //. {
+            Inactive[Sum][b_, pre___, {k_, lo_, hi_} /; PossibleZeroQ[lo - hi], post___] :> Inactive[Sum][b /. k -> lo, pre, Sequence @@ ({post} /. k -> lo)],
+            Inactive[Sum][b_] :> b
+        } /. {
+            Power[-1, x_ /; ! NumericQ[x]] :> (-1) ^ With[{v = Variables[x]}, Mod[x /. Thread[v -> 0], 2] + Mod[Coefficient[x, v], 2] . v],
+            Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Chop[Collect[Expand[x / I], angles]]),
+            wignerd[b_, j_, m1_, m2_] :> If[PossibleZeroQ[j], 1, wignerd[b, Together[Expand[j]], Together[Expand[m1]], Together[Expand[m2]]]]
+        }
     ]
 ]
 
