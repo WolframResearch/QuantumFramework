@@ -101,7 +101,16 @@ gateMatrix["BS"[t_, f_] -> {p_, q_}, m_] := ReplacePart[IdentityMatrix[m], Threa
 
 gateMatrix["PS"[a_] -> {p_}, m_] := ReplacePart[IdentityMatrix[m], {p, p} -> Exp[I a]]
 
-elementsUnitary[elements_List, m_Integer] := Fold[gateMatrix[#2, m] . #1 &, IdentityMatrix[m], elements]
+(* Apply one gate as a two-row update of the running matrix: gate . w changes only rows
+   p, q, so this is O(m) per gate instead of the O(m^2) of a full m x m product. The result
+   is repacked once at the end, since the per-step ReplacePart unpacks a packed matrix. *)
+applyGate[w_, "BS"[t_, f_] -> {p_, q_}] := With[{r = bsBlock[t, f] . w[[{p, q}]]},
+    ReplacePart[w, {p -> r[[1]], q -> r[[2]]}]
+]
+
+applyGate[w_, "PS"[a_] -> {p_}] := ReplacePart[w, p -> Exp[I a] w[[p]]]
+
+elementsUnitary[elements_List, m_Integer] := Developer`ToPackedArray[Fold[applyGate, IdentityMatrix[m], elements]]
 
 
 zeroQ[x_, tol_] := If[Precision[x] === Infinity, PossibleZeroQ[x], Abs[x] <= tol]

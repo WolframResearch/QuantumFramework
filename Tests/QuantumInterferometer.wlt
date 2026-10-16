@@ -181,6 +181,20 @@ VerificationTest[
     TestID -> "QI-decomposition-is-repeatable"
 ]
 
+(* Fix 3 (per-gate two-row update in elementsUnitary): building the transfer matrix from an
+   element list reconstructs the unitary and returns a packed array. A regression dropping
+   Developer`ToPackedArray would leave it unpacked; a wrong row convention would miss the unitary. *)
+VerificationTest[
+    SeedRandom[505];
+    With[{w = RandomVariate[CircularUnitaryMatrixDistribution[6]]},
+        With[{u = QuantumInterferometer[QuantumInterferometer[w]["Elements"], 6]["Unitary"]},
+            Developer`PackedArrayQ[u] && Max[Abs[u - w]] < 10^-10
+        ]
+    ],
+    True,
+    TestID -> "QI-elements-unitary-packed-and-correct"
+]
+
 (* Degenerate nulling steps: zeros already in place, or zeros next to the entry. *)
 VerificationTest[
     Table[
