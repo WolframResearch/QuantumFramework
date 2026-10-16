@@ -7,21 +7,34 @@ ContextPath: [Wolfram`QuantumFramework`SecondQuantization`]
 CellContext: Global`
 Paclet: Wolfram/QuantumFramework
 URI: Wolfram/QuantumFramework/tutorial/TransmonGates
-Keywords: [transmon, superconducting qubit, leakage, DRAG, pi pulse, anharmonicity, gate error, pulse length, Lindblad, decoherence, T1, T2, qudit, optimization]
+Keywords: [transmon, superconducting qubit, leakage, DRAG, pi pulse, anharmonicity, transfer error, gate error, pulse length, Lindblad, decoherence, T1, T2, optimization]
 RelatedGuides: [WolframQuantumComputationFramework]
 RelatedTutorials: [TimeEvolution, SecondQuantization]
-Typeset: _SuperDagger -> StandardForm
 ---
 
-A transmon is a superconducting circuit that behaves as a weakly anharmonic oscillator. A qubit is stored in its two lowest levels, and a microwave pulse at the qubit frequency rotates it between them. The anharmonicity is small, a few hundred megahertz against a qubit frequency of several gigahertz, so the transition from |1⟩ to |2⟩ lies close to the qubit transition. A short pulse has a broad spectrum and drives both, carrying population out of the qubit. A long pulse avoids that but is exposed for longer to energy decay and dephasing.
+A transmon is a superconducting circuit that behaves as a weakly anharmonic oscillator. A qubit is stored in its two lowest levels, and a microwave pulse at the qubit frequency rotates it between them. The anharmonicity is small, a few hundred megahertz against a qubit frequency of several gigahertz, so the transition from $|1\rangle$ to $|2\rangle$ lies close to the qubit transition from $|0\rangle$ to $|1\rangle$. A short pulse has a broad spectrum and drives both transitions, carrying population out of the qubit. It must also be strong to complete the rotation in time. A strong drive couples $|1\rangle$ to $|2\rangle$ and pushes the energy of $|1\rangle$, which moves the qubit transition away from the drive frequency, so the rotation misses its target unless the pulse's amplitude and frequency are calibrated. A long pulse avoids both problems but is exposed for longer to energy decay and dephasing.
 
-How long the best pulse is, and how much the derivative correction known as DRAG shortens it, has no closed-form answer. Both follow from the Schrödinger and Lindblad equations solved with the levels the qubit leaks into kept explicitly. For an anharmonicity of −200 MHz and coherence times $T_1$ and $T_2$ of 100 μs, the best π pulse below lasts 17.7 ns with an error of 9.8 × 10⁻⁵ when it uses DRAG, against 2.0 × 10⁻⁴ near 32 ns without it.
+The gate studied here flips the qubit, taking $|0\rangle$ to $|1\rangle$ and $|1\rangle$ to $|0\rangle$. It rotates the qubit by an angle π, so it is called a π pulse. The population a pulse carries out of the qubit, mostly into $|2\rangle$, is called leakage. A correction known as DRAG (derivative removal by adiabatic gate) reduces it by adding a second component to the microwave pulse.
 
-## Five Levels of a Transmon
+For a given pulse shape, how long the best π pulse is, and how much DRAG shortens it, has no exact closed-form answer. Both follow from the Schrödinger and Lindblad equations solved with the levels the qubit leaks into kept explicitly, and with the amplitude, frequency and DRAG coefficient of the pulse calibrated together with its length. For an anharmonicity of −200 MHz and coherence times $T_1$ and $T_2$ of 100 μs, DRAG lets the pulse shrink until energy decay and dephasing dominate its error. Without DRAG the pulse must stay long enough for leakage to die out, and its best error is larger.
 
-In the frame rotating at the qubit frequency, the transmon is the anharmonic oscillator $H_0 = \frac{\alpha}{2} b^\dagger b^\dagger b b$, where $b$ lowers the excitation number by one and $\alpha$ is the anharmonicity. Five levels are kept here; the last section shows that fewer change the answer and more do not.
+## The Driven Transmon
 
-The lowering operator of a five-level oscillator:
+The transmon is well approximated by an anharmonic oscillator. It is driven by a microwave pulse near its qubit frequency, with a DRAG correction added to the pulse:
+
+$$H_{\text{lab}}(t) = \omega_q b^\dagger b + \frac{\alpha}{2} b^\dagger b^\dagger b b + \left[\Omega(t)\cos(\omega_d t) - \frac{\lambda\,\dot\Omega(t)}{\alpha}\sin(\omega_d t)\right]\left(b + b^\dagger\right)$$
+
+The first two terms describe the transmon, and the last term is the drive. Here $b$ lowers the number of excitations by one, $\omega_q$ is the qubit frequency and $\alpha$ is the anharmonicity. For a transmon $\alpha$ is negative: the transition from $|1\rangle$ to $|2\rangle$ lies $|\alpha|$ below the qubit transition.
+
+The drive oscillates at $\omega_d = \omega_q - \delta$, detuned from the qubit by $\delta$, and its envelope $\Omega(t)$ sets its strength. A constant detuning compensates for the shift of the qubit transition that the drive causes. The second term in the bracket is the DRAG correction. It oscillates as $\sin(\omega_d t)$ instead of $\cos(\omega_d t)$, and its strength follows the slope of the envelope, scaled by the DRAG coefficient $\lambda$. Dividing the slope by $\alpha$ gives it the units of $\Omega$, so $\lambda$ is a pure number. For a weak drive and no detuning, $\lambda = 1$ removes the component of the drive at the leakage frequency. At $\lambda = 0$ the correction is off and the pulse is a plain microwave drive. The amplitude of the envelope, $\lambda$ and $\delta$ are the three controls of the pulse.
+
+The drive is simplest to describe in a frame rotating with it, which subtracts $\omega_d$ for every excitation. In the rotating frame, some drive terms vary only with the pulse envelope. Others oscillate at $2\omega_d$, much faster than the envelope and populations change. These fast terms largely average out when $\Omega\ll\omega_q$; dropping them is the rotating-wave approximation. What remains is the Hamiltonian used throughout:
+
+$$H(t) = \frac{\alpha}{2} b^\dagger b^\dagger b b + \delta\, b^\dagger b + \frac{\Omega(t)}{2}\left(b + b^\dagger\right) - \frac{\lambda\,\dot{\Omega}(t)}{2\alpha}\, i\left(b^\dagger - b\right)$$
+
+In this frame the first two terms set the energies of the levels, and the last two couple neighboring levels. To write these terms as matrices, the oscillator is truncated to its five lowest levels, $|0\rangle$ to $|4\rangle$, which hold the qubit and the levels it leaks into; the last section checks how many levels are needed.
+
+Define the lowering operator of a five-level oscillator:
 
 ```wl
 b = AnnihilationOperator[5]
@@ -29,305 +42,304 @@ b = AnnihilationOperator[5]
 
 ---
 
-In the rotating frame the qubit levels |0⟩ and |1⟩ are degenerate, and the higher levels are shifted by $\alpha$, $3\alpha$ and $6\alpha$:
+The drive couples neighboring levels with strengths 1, $\sqrt{2}$, $\sqrt{3}$ and 2, so it drives the transition from $|1\rangle$ to $|2\rangle$ more strongly than the qubit transition:
 
 ```wl
-MatrixForm[Normal[((\[Alpha]/2) (SuperDagger[b] @ SuperDagger[b] @ b @ b))["Matrix"]]]
-```
-
-<!-- => MatrixForm[{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, \[Alpha], 0, 0}, {0, 0, 0, 3*\[Alpha], 0}, {0, 0, 0, 0, 6*\[Alpha]}}] -->
-
----
-
-A drive couples neighboring levels with strengths 1, $\sqrt{2}$, $\sqrt{3}$ and 2, so it drives the transition from |1⟩ to |2⟩ more strongly than the qubit transition:
-
-```wl
-MatrixForm[Normal[(b + SuperDagger[b])["Matrix"]]]
-```
-
-<!-- => MatrixForm[{{0, 1, 0, 0, 0}, {1, 0, Sqrt[2], 0, 0}, {0, Sqrt[2], 0, Sqrt[3], 0}, {0, 0, Sqrt[3], 0, 2}, {0, 0, 0, 2, 0}}] -->
-
-## The Pulse
-
-The drive has the cosine envelope $\Omega(t) = \frac{\pi}{\tau}\left(1 - \cos\frac{2\pi t}{\tau}\right)$, which starts and ends at zero. DRAG (Motzoi, Gambetta, Rebentrost and Wilhelm, 2009) adds an out-of-phase quadrature proportional to the derivative of the envelope, and a detuning $\delta$ moves the drive off the qubit frequency:
-
-$$H(t) = \frac{\alpha}{2} b^\dagger b^\dagger b b + \delta b^\dagger b + \frac{\Omega(t)}{2}\left(b + b^\dagger\right) - \frac{\lambda \dot{\Omega}(t)}{2\alpha} i\left(b^\dagger - b\right)$$
-
-The envelope, with $\tau$ the pulse length:
-
-```wl
-envelope = (Pi/\[Tau]) (1 - Cos[2 Pi t/\[Tau]])
-```
-
-<!-- => (Pi*(1 - Cos[(2*Pi*t)/\[Tau]]))/\[Tau] -->
-
----
-
-Its area is $\pi$ for every length, which makes it a $\pi$ pulse:
-
-```wl
-Integrate[envelope, {t, 0, \[Tau]}]
-```
-
-<!-- => Pi -->
-
----
-
-The whole Hamiltonian as one operator, with the anharmonicity, the DRAG coefficient, the detuning and the pulse length kept as parameters:
-
-```wl
-model = QuantumOperator[
-  (\[Alpha]/2) (SuperDagger[b] @ SuperDagger[b] @ b @ b) + \[Delta] (SuperDagger[b] @ b) +
-    (envelope/2) (b + SuperDagger[b]) - (\[Lambda] D[envelope, t]/(2 \[Alpha])) (I (SuperDagger[b] - b)),
-  "Parameters" -> {\[Alpha], \[Lambda], \[Delta], \[Tau]}]
+MatrixForm[(b + b["Dagger"])["Matrix"]]
 ```
 
 ---
 
-Numbers enter by supplying the parameters in that order. Times are in nanoseconds and frequencies in radians per nanosecond, so an anharmonicity of −200 MHz is:
+The envelope is a raised cosine of length $\tau$ and amplitude $A$. It and its slope vanish at both ends, so the DRAG term also starts and ends at zero, and at $A=1$ its area is $\pi$:
+
+```wl
+envelope = A (Pi/\[Tau]) (1 - Cos[2 Pi t/\[Tau]])
+```
+
+---
+
+Write $H(t)$ for any lowering operator `c`, so that the number of kept levels can be changed later:
+
+```wl
+hamiltonian[c_] := (\[Alpha]/2) (c["Dagger"] @ c["Dagger"] @ c @ c) + \[Delta] (c["Dagger"] @ c) +
+   (envelope/2) (c + c["Dagger"]) - (\[Lambda] D[envelope, t]/(2 \[Alpha])) (I (c["Dagger"] - c));
+```
+
+---
+
+Make $H(t)$ for five levels one operator. Its `"Parameters"` list fixes the order in which numbers are supplied: $\alpha$, $A$, $\lambda$, $\delta$ and $\tau$:
+
+```wl
+model = QuantumOperator[hamiltonian[b], "Parameters" -> {\[Alpha], A, \[Lambda], \[Delta], \[Tau]}]
+```
+
+---
+
+Times are in nanoseconds and frequencies in radians per nanosecond, so an anharmonicity of $\alpha/2\pi=-200$ MHz is:
 
 ```wl
 anharmonicity = -2 Pi 0.2
 ```
 
-<!-- => -1.2566370614359172 -->
-
 ## Leakage
 
-An 8 ns pulse without DRAG or detuning, starting from |0⟩:
+An uncalibrated 8 ns π pulse, with $A=1$, no DRAG and no detuning, starting from $|0\rangle$:
 
 ```wl
-psi = QuantumEvolve[model[anharmonicity, 0, 0, 8], FockState[0, 5], {t, 0, 8}]
+psi = QuantumEvolve[model[anharmonicity, 1, 0, 0, 8], FockState[0, 5], {t, 0, 8}]
 ```
 
 ---
 
-The populations of the three lowest levels during the pulse:
+The populations of the three lowest levels during the pulse, together with the shape of the pulse scaled to a peak of 1:
 
 ```wl
-Plot[Evaluate[psi[t]["ProbabilitiesList"][[;; 3]]], {t, 0, 8},
-  PlotStyle -> {StandardBlue, StandardOrange, StandardRed},
-  PlotLegends -> {"|0\[RightAngleBracket]", "|1\[RightAngleBracket]", "|2\[RightAngleBracket]"},
+Plot[Evaluate[Append[psi[t]["ProbabilitiesList"][[;; 3]], envelope/(envelope /. t -> 4) /. {A -> 1, \[Tau] -> 8}]], {t, 0, 8},
+  PlotStyle -> {Automatic, Automatic, Automatic, Directive[Gray, Dashed]},
+  PlotLegends -> {"|0\[RightAngleBracket]", "|1\[RightAngleBracket]", "|2\[RightAngleBracket]", "pulse shape (scaled)"},
+  PlotLabel -> "population change during a \[Pi] pulse",
   Frame -> True, FrameLabel -> {"t (ns)", "population"}]
 ```
 
----
-
-Population passes through |2⟩ on its way to |1⟩, and part of it stays there. At the end of the pulse 9.6% of the population is in |2⟩:
-
-```wl
-psi[8]["ProbabilitiesList"]
-```
-
-<!-- => {0.06576708469399378, 0.8385151962984492, 0.0956994002347821, 0.000018318582408697576, 1.903662292943524*^-10} -->
+Population reaches $|2\rangle$ through $|1\rangle$, since the drive couples only neighboring levels, and part of it stays there.
 
 ---
 
-Pulses are compared through a function of the three controls. Numeric code here names them `drag`, `detuning` and `length` rather than $\lambda$, $\delta$ and $\tau$: <code>[Table]()</code> and <code>[FindMinimum]()</code> localize their variables dynamically, so iterating over `\[Tau]` would also set it inside `model`. The final populations for a given DRAG coefficient, detuning and length:
+The populations at the end of the pulse:
 
 ```wl
-populations[drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] :=
-  QuantumEvolve[model[anharmonicity, drag, detuning, length], FockState[0, 5], {t, 0, length}][length]["ProbabilitiesList"]
+psi[8]["Probabilities"]
 ```
 
 ---
 
-Leakage into |2⟩ for pulses from 4 to 24 ns:
+Single-qubit gates on current devices last about 35 ns. The same pulse at that length:
 
 ```wl
-leakageTable = Table[{length, populations[0, 0, length][[3]]}, {length, {4, 6, 8, 12, 16, 24}}]
+QuantumEvolve[model[anharmonicity, 1, 0, 0, 35], FockState[0, 5], {t, 0, 35}][35]["Probabilities"]
 ```
 
-<!-- => {{4, 0.5832544342748343}, {6, 0.3099802101994099}, {8, 0.0956994002347821}, {12, 0.0006402597186450065}, {16, 0.00017968211106241127}, {24, 0.000010554578361778353}} -->
+Leakage is now small, but the flip is still incomplete, because the drive shifts the qubit transition.
 
----
+## What DRAG Does
 
-On a logarithmic scale:
-
-```wl
-ListLogPlot[leakageTable, Joined -> True, Mesh -> All, PlotStyle -> StandardRed,
-  Frame -> True, FrameLabel -> {"pulse length (ns)", "leakage"}]
-```
-
-Leakage falls by more than four orders of magnitude between 4 and 24 ns, but even at 24 ns a pulse without DRAG leaves 1.1 × 10⁻⁵ of the population in |2⟩.
-
-## DRAG
-
-To first order in $1/\alpha$, the DRAG quadrature removes the leakage at $\lambda$ = 1. The transfer error counts the population that does not reach |1⟩, leakage included. Leakage and transfer error at 8 ns for $\lambda$ = 0, 1/2 and 1:
+Define the final populations of a transmon truncated to $n$ levels, without decay and dephasing. With strict precision goals the default integration method can stop partway through some pulses, so an explicit Runge-Kutta method is used:
 
 ```wl
-Table[With[{p = populations[drag, 0, 8]}, {drag, p[[3]], 1 - p[[2]]}], {drag, {0, 1/2, 1}}]
-```
-
-<!-- => {{0, 0.0956994002347821, 0.16148480370155083}, {1/2, 0.02629621013523719, 0.029374548754029783}, {1, 0.001160165362067272, 0.08109951084166467}} -->
-
----
-
-$\lambda$ = 1 cuts the leakage by a factor of 80 but leaves 8% of the population short of |1⟩. A scan over $\lambda$ shows the two errors reaching their minima at different values:
-
-```wl
-ListLogPlot[
-  Transpose @ Table[With[{p = populations[drag, 0, 8]}, {{drag, p[[3]]}, {drag, 1 - p[[2]]}}], {drag, 0, 1.5, 0.125}],
-  Joined -> True, Mesh -> All, PlotStyle -> {StandardRed, StandardBlue},
-  PlotLegends -> {"leakage", "transfer error"}, Frame -> True, FrameLabel -> {"\[Lambda]", "error"}]
+finalPopulations[n_, {amplitude_, drag_, detuning_, length_}] := QuantumEvolve[
+   QuantumOperator[hamiltonian[AnnihilationOperator[n]], "Parameters" -> {\[Alpha], A, \[Lambda], \[Delta], \[Tau]}][
+    anharmonicity, amplitude, drag, detuning, length],
+   FockState[0, n], {t, 0, length}, Method -> "ExplicitRungeKutta", PrecisionGoal -> 12, AccuracyGoal -> 14][length]["ProbabilitiesList"]
 ```
 
 ---
 
-The leakage is smallest just above $\lambda$ = 1, and the transfer error near $\lambda$ = 0.6, so no single $\lambda$ serves both. A detuning $\delta$ added to the search resolves this. The transfer error as a function of the three controls:
+At 8 ns, with $A=1$ and no detuning, vary $\lambda$ and compare the leakage, the final population outside the qubit levels, with the transfer error, the population missing from $|1\rangle$:
 
 ```wl
-transferError[drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] := 1 - populations[drag, detuning, length][[2]]
+ListLogPlot[Transpose @ Table[With[{p = finalPopulations[5, {1, drag, 0, 8}]}, {{drag, Total[p[[3 ;;]]]}, {drag, 1 - p[[2]]}}], {drag, 0, 2, 0.1}],
+  Joined -> True, PlotMarkers -> Automatic, PlotLegends -> {"leakage", "transfer error"},
+  PlotLabel -> "8 ns \[Pi] pulse", Frame -> True, FrameLabel -> {"\[Lambda]", "population"}]
 ```
 
----
+The transfer error is the population left in $|0\rangle$ plus the leakage, since the populations sum to one. Leakage is smallest just above the weak-drive value $\lambda=1$, but there almost all of the transfer error is population left in $|0\rangle$, and the transfer error is smallest at a much smaller $\lambda$: DRAG alone does not complete the flip. The amplitude and detuning are therefore calibrated together with $\lambda$.
 
-The best DRAG coefficient and detuning for a 12 ns pulse:
+## The Best Pulse Length
 
-```wl
-optimum = FindMinimum[transferError[drag, detuning, 12], {{drag, 0.75}, {detuning, 0.03}}, Method -> "PrincipalAxis"]
-```
+To find the best length, include energy decay and dephasing and, as on a real device, calibrate the pulse controls with them present.
 
-<!-- => {0.00021363351241587836, {drag -> 0.6958278336084507, detuning -> 0.029704469880998167}} -->
+We describe the state by a density matrix $\rho(t)$ in our truncated five-level model. Keeping the same Hamiltonian $H(t)$, it evolves under the Lindblad master equation:
 
----
+$$\frac{d\rho}{dt} = -i[H(t),\rho] + \sum_{\mu\in\{1,\phi\}}\left(L_\mu\rho L_\mu^\dagger - \frac12 L_\mu^\dagger L_\mu\rho - \frac12\rho L_\mu^\dagger L_\mu\right).$$
 
-The transfer error falls to 2.1 × 10⁻⁴ at $\lambda$ = 0.70 and a detuning of 0.030 rad/ns, 4.7 MHz. Without DRAG, the best detuning at 12 ns leaves ten times the error:
+The two Lindblad operators, with their rates included, are
 
-```wl
-noDRAG = FindMinimum[transferError[0, detuning, 12], {detuning, 0}, Method -> "PrincipalAxis"]
-```
+$$L_1=\frac{b}{\sqrt{T_1}},\qquad L_\phi=\sqrt{\frac{2}{T_\phi}}\,b^\dagger b.$$
 
-<!-- => {0.002054588385573597, {detuning -> -0.07312769855059591}} -->
+The first describes energy decay from $|n\rangle$ to $|n-1\rangle$ at rate $n/T_1$. The second describes pure dephasing: on its own, it damps the off-diagonal entries of $\rho$ while leaving the populations unchanged. The pure dephasing time $T_\phi$ is related to the qubit’s energy decay time $T_1$ and coherence time $T_2$ by
 
-## Decoherence and the Best Pulse Length
+$$\frac{1}{T_\phi}=\frac{1}{T_2}-\frac{1}{2T_1}.$$
 
-Leakage falls with the pulse length, and decay and dephasing grow with it. Energy decay enters as the jump operator $b$ at rate $1/T_1$, which empties level $n$ at rate $n/T_1$. Pure dephasing enters as $b^\dagger b$ at rate $2/T_\phi$, with $1/T_\phi = 1/T_2 - 1/(2T_1)$. Both coherence times, 100 μs, in nanoseconds:
+For this example, take $T_1=T_2=100\,\mu\mathrm{s}$. Express both times in nanoseconds:
 
 ```wl
 T1 = T2 = 100000
 ```
 
-<!-- => 100000 -->
-
 ---
 
-The pure dephasing time:
+Compute the corresponding pure dephasing time $T_\phi$, also in nanoseconds:
 
 ```wl
 dephasingTime = 1/(1/T2 - 1/(2 T1))
 ```
 
-<!-- => 200000 -->
-
 ---
 
-The transfer error with decay and dephasing, from the Lindblad master equation:
+Construct the Lindblad equation once, with the controls and the length as parameters: `"ReturnEquations" -> True` returns it without solving, and <code>[Most]()</code> drops the placeholder time range:
 
 ```wl
-openError[drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] :=
-  1 - QuantumEvolve[model[anharmonicity, drag, detuning, length],
-      {b, SuperDagger[b] @ b} -> {1/T1, 2/dephasingTime}, FockState[0, 5], {t, 0, length}][length]["ProbabilitiesList"][[2]]
+{openEquations, openState} = Most @ QuantumEvolve[model[anharmonicity, A, \[Lambda], \[Delta], \[Tau]],
+   {b, b["Dagger"] @ b} -> {1/T1, 2/dephasingTime}, FockState[0, 5], {t, 0, 1}, "ReturnEquations" -> True];
 ```
 
 ---
 
-At the 12 ns optimum, decoherence adds 6 × 10⁻⁵:
+Write it for the 25 entries of the density matrix, with <code>[Normal]()</code> turning sparse arrays into lists:
 
 ```wl
-openError[drag /. Last[optimum], detuning /. Last[optimum], 12]
-```
-
-<!-- => 0.0002768221344375821 -->
-
----
-
-Across pulse lengths, $\lambda$ is held at its 12 ns optimum: it is dimensionless, and the derivative term scales with the pulse by itself. The detuning compensates a shift that grows with the drive power, which goes as $1/\tau^2$, so it is optimized again at each length, starting from the 12 ns value scaled by $(12/\tau)^2$. The error with decoherence at the best detuning:
-
-```wl
-bestError[drag_?NumericQ, reference_?NumericQ, length_?NumericQ] :=
-  With[{opt = FindMinimum[transferError[drag, detuning, length], {detuning, reference (12/length)^2}, Method -> "PrincipalAxis"]},
-    openError[drag, detuning /. Last[opt], length]]
+densityEntries = Array[\[Rho], {5, 5}];
+densityEquations = Normal[openEquations] /. openState -> Function[s, Evaluate[Map[#[s] &, densityEntries, {2}]]];
 ```
 
 ---
 
-With DRAG:
+Define `openSolution`, which solves these equations with `NDSolveValue` for numerical controls and length and returns the $5\times5$ density matrix as functions of time. The precision and accuracy goals are raised because the errors computed below are small:
 
 ```wl
-withDRAG = Table[{length, bestError[drag /. Last[optimum], detuning /. Last[optimum], length]}, {length, {10, 12, 16, 24, 40}}]
-```
-
-<!-- => {{10, 0.00395190079396146}, {12, 0.00027682220969571514}, {16, 0.00010701705683557883}, {24, 0.0001225838678494684}, {40, 0.00020070192706100887}} -->
-
----
-
-Without DRAG:
-
-```wl
-withoutDRAG = Table[{length, bestError[0, detuning /. Last[noDRAG], length]}, {length, {12, 16, 24, 40, 60}}]
-```
-
-<!-- => {{12, 0.0021181989213668873}, {16, 0.0008053919564293688}, {24, 0.0002497622922331688}, {40, 0.00021702061423867214}, {60, 0.00030339291315584216}} -->
-
----
-
-The error against pulse length, with and without DRAG:
-
-```wl
-ListLogLogPlot[{withDRAG, withoutDRAG}, Joined -> True, Mesh -> All,
-  PlotStyle -> {StandardBlue, StandardOrange}, PlotLegends -> {"DRAG", "no DRAG"},
-  Frame -> True, FrameLabel -> {"pulse length (ns)", "error"}]
+openSolution[amplitude_?NumericQ, drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] :=
+ NDSolveValue[densityEquations /. {A -> amplitude, \[Lambda] -> drag, \[Delta] -> detuning, \[Tau] -> length},
+  densityEntries, {t, 0, length}, PrecisionGoal -> 10, AccuracyGoal -> 12];
 ```
 
 ---
 
-Both curves have a minimum: to its left leakage and the residual shift dominate, to its right decay and dephasing. <code>[FindMinimum]()</code> locates it. With DRAG:
+With the density matrix, the transfer error is one minus the second diagonal entry at the end of the pulse:
 
 ```wl
-FindMinimum[bestError[drag /. Last[optimum], detuning /. Last[optimum], length], {length, 16, 20}]
+openError[amplitude_?NumericQ, drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] :=
+ 1 - Re[openSolution[amplitude, drag, detuning, length][[2, 2]][length]]
 ```
-
-<!-- => {0.00009843280913635066, {length -> 17.73811583486808}} -->
 
 ---
 
-Without DRAG:
+Calibrate a pulse by minimizing its transfer error with <code>[NMinimize]()</code>: over $A$ and $\delta$ without DRAG, and also over $\lambda$ with DRAG. Both searches use the same bounds: $0<A<2$ keeps the pulse near area $\pi$, $0\le\lambda\le3$ is about twice the largest first-order leakage-cancelling value in the detuning range searched, and $|\delta|\le0.5$ rad/ns. The variables, with the ranges the search starts from, and the bounds:
 
 ```wl
-FindMinimum[bestError[0, detuning /. Last[noDRAG], length], {length, 30, 40}]
+controls[True] = {{amplitude, 0, 2}, {drag, 0, 3}, {detuning, -0.5, 0.5}};
+controls[False] = {{amplitude, 0, 2}, {detuning, -0.5, 0.5}};
+bounds = 0 < amplitude < 2 && 0 <= drag <= 3 && -0.5 <= detuning <= 0.5;
 ```
 
-<!-- => {0.00020011547475240477, {length -> 31.713776892897897}} -->
+---
 
-DRAG roughly halves both the pulse length and its error, from 32 ns to 17.7 ns and from 2.0 × 10⁻⁴ to 9.8 × 10⁻⁵. The minimum without DRAG is flat. Started from 35 ns instead, the search stops at another length with almost the same error:
+Define `calibrate`. The search uses differential evolution with 10 trial pulses, starting from a given random seed:
 
 ```wl
-FindMinimum[bestError[0, detuning /. Last[noDRAG], length], {length, 35, 45}]
+calibrate[withDRAG_, length_, seed_] := NMinimize[
+  {openError[amplitude, drag, detuning, length], bounds} /. If[withDRAG, {}, drag -> 0], controls[withDRAG],
+  Method -> {"DifferentialEvolution", "SearchPoints" -> 10, "RandomSeed" -> seed}]
 ```
 
-<!-- => {0.0002028144999299819, {length -> 34.88982838867432}} -->
+---
 
-Its location is soft and its value is not.
+Calibrate pulses from 6 to 40 ns, with and without DRAG. Each calibration runs with two random seeds and keeps the better result, so that a search stopping early does not show up as a false spike. The lengths are calibrated in parallel with <code>[ParallelMap]()</code>. This is the longest computation in the tutorial:
+
+```wl
+lengths = Join[Range[6, 24], Range[26, 40, 2]];
+scan = AssociationMap[Function[withDRAG, ParallelMap[
+     Function[length, First[MinimalBy[calibrate[withDRAG, length, #] & /@ {0, 1}, First]]], lengths,
+     Method -> "FinestGrained"]], {True, False}];
+```
+
+---
+
+The transfer error of the calibrated pulse at each length:
+
+```wl
+ListLogPlot[Transpose[{lengths, First /@ #}] & /@ Values[scan], Joined -> True, PlotMarkers -> Automatic,
+  PlotLegends -> {"with DRAG", "without DRAG"}, PlotLabel -> "transfer error of the calibrated pulse",
+  Frame -> True, FrameLabel -> {"pulse length (ns)", "transfer error"}]
+```
+
+Leakage dominates at short lengths, and decay and dephasing at long ones, where both curves rise together. DRAG removes most of the leakage, so its curve turns up at a much shorter length and reaches a lower minimum. Near 10 ns the DRAG curve also has a dip narrower than the 1 ns spacing of the scan, whose bottom the scan cannot resolve; Da Costa Jesus et al. found such a dip for this pulse shape.
+
+---
+
+The lowest point of each curve:
+
+```wl
+{bestWithDRAG, bestWithoutDRAG} = Function[withDRAG, With[{k = First[Ordering[First /@ scan[withDRAG], 1]]},
+     {scan[withDRAG][[k, 1]], Append[scan[withDRAG][[k, 2]], length -> lengths[[k]]]}]] /@ {True, False};
+```
+
+---
+
+The best pulses found in the scan: their lengths, errors with and without decay and dephasing, and controls:
+
+```wl
+summary[{error_, rules_}] := With[{pulse = {amplitude, drag, detuning, length} /. Append[rules, drag -> 0]},
+   AssociationThread[{"length (ns)", "error", "error without decay\n and dephasing", "amplitude", "DRAG coefficient", "detuning (MHz)"},
+    {pulse[[4]], ScientificForm@error, ScientificForm@(1 - finalPopulations[5, pulse][[2]]), pulse[[1]], pulse[[2]], 1000 pulse[[3]]/(2 Pi)}]];
+Dataset[<|"with DRAG" -> summary[bestWithDRAG], "without DRAG" -> summary[bestWithoutDRAG]|>]
+```
+
+Without decay and dephasing both pulses are far better, so decay and dephasing dominate their errors. The DRAG pulse wins by being shorter.
+
+## The Gate Error
+
+The transfer error follows only $|0\rangle$. The gate error averages, over the six input states $|0\rangle$, $|1\rangle$, $(|0\rangle\pm|1\rangle)/\sqrt2$ and $(|0\rangle\pm i|1\rangle)/\sqrt2$, one minus the overlap of the final density matrix with the X image of the input. The Hamiltonian at time $\tau-t$ is the transpose of the Hamiltonian at time $t$, so without decay and dephasing the pulse flips $|1\rangle$ exactly as it flips $|0\rangle$. With them, the two errors stay close, as the gate errors below show.
+
+Define the final density matrix of a pulse for any initial density matrix `rho0`. The first part of `densityEquations` is the Lindblad equation without its initial condition:
+
+```wl
+finalDensityMatrix[rho0_, {amplitude_, drag_, detuning_, length_}] := Map[#[length] &,
+  NDSolveValue[{densityEquations[[1]], Map[#[0] &, densityEntries, {2}] == rho0} /.
+     {A -> amplitude, \[Lambda] -> drag, \[Delta] -> detuning, \[Tau] -> length},
+   densityEntries, {t, 0, length}, PrecisionGoal -> 10, AccuracyGoal -> 12], {2}];
+```
+
+---
+
+Define the gate error:
+
+```wl
+gateError[amplitude_?NumericQ, drag_?NumericQ, detuning_?NumericQ, length_?NumericQ] := 1 - Mean[Map[
+    With[{in = PadRight[#, 5], out = PadRight[Reverse[#], 5]},
+      Re[Conjugate[out] . finalDensityMatrix[KroneckerProduct[in, Conjugate[in]], {amplitude, drag, detuning, length}] . out]] &,
+    Normalize /@ {{1, 0}, {0, 1}, {1, 1}, {1, -1}, {1, I}, {1, -I}}]];
+```
+
+---
+
+The gate error of the best DRAG pulse:
+
+```wl
+gateError[amplitude, drag, detuning, length] /. Last[bestWithDRAG]
+```
+
+---
+
+The gate error of the best pulse without DRAG:
+
+```wl
+gateError[amplitude, 0, detuning, length] /. Last[bestWithoutDRAG]
+```
 
 ## Five Levels Are Enough
 
-Every result above keeps five levels. The leakage of the 8 ns pulse without DRAG, for a transmon truncated to $d$ levels:
+Every result above keeps five levels. The leakage of the uncalibrated 8 ns pulse for a transmon truncated to three to six levels:
 
 ```wl
-leakageWithLevels[d_] := With[{a = AnnihilationOperator[d]},
-  QuantumEvolve[(anharmonicity/2) (SuperDagger[a] @ SuperDagger[a] @ a @ a) + ((envelope /. \[Tau] -> 8)/2) (a + SuperDagger[a]),
-    FockState[0, d], {t, 0, 8}][8]["ProbabilitiesList"][[3]]]
+Table[{n, Total[finalPopulations[n, {1, 0, 0, 8}][[3 ;;]]]}, {n, 3, 6}]
 ```
 
 ---
 
-From three to six levels:
+The best DRAG pulse has the smallest error without decay and dephasing, so a change from the truncation would show most there. That error with five and with six levels:
 
 ```wl
-Table[{d, leakageWithLevels[d]}, {d, 3, 6}]
+AssociationMap[1 - finalPopulations[#, {amplitude, drag, detuning, length} /. Last[bestWithDRAG]][[2]] &, {5, 6}]
 ```
 
-<!-- => {{3, 0.0513114942431535}, {4, 0.09414255358445456}, {5, 0.0956994002347821}, {6, 0.09571468862246171}} -->
+Three levels underestimate the leakage, while five and six agree for both pulses, so five levels are enough.
 
-Three levels underestimate the leakage by almost half. Five and six agree to within 0.02%.
+## References
+
+- J. Koch et al., "Charge-insensitive qubit design derived from the Cooper pair box," [Phys. Rev. A 76, 042319 (2007)](https://doi.org/10.1103/PhysRevA.76.042319).
+- F. Motzoi, J. M. Gambetta, P. Rebentrost and F. K. Wilhelm, "Simple pulses for elimination of leakage in weakly nonlinear qubits," [Phys. Rev. Lett. 103, 110501 (2009)](https://doi.org/10.1103/PhysRevLett.103.110501).
+- J. M. Gambetta, F. Motzoi, S. T. Merkel and F. K. Wilhelm, "Analytic control methods for high-fidelity unitary operations in a weakly nonlinear oscillator," [Phys. Rev. A 83, 012308 (2011)](https://doi.org/10.1103/PhysRevA.83.012308).
+- P. Krantz et al., "A quantum engineer's guide to superconducting qubits," [Appl. Phys. Rev. 6, 021318 (2019)](https://doi.org/10.1063/1.5089550).
+- E. Rosenfeld, C. Gidney, G. Roberts et al., "Magic state cultivation on a superconducting quantum processor," [arXiv:2512.13908 (2025)](https://arxiv.org/abs/2512.13908).
+- P. Stadler, M. Lodi, A. Khedri, R. Reiner, K. Bark, N. Vogt, M. Marthaler and J. Leppäkangas, "Demonstration of system-bath physics on a gate-based quantum computer," [arXiv:2404.18828 (2024)](https://arxiv.org/abs/2404.18828).
+- J. D. Da Costa Jesus, B. Li, Y. Gao, R. Barends, F. A. Cárdenas-López and F. Motzoi, "Analytical blueprint for 99.999% fidelity X-gates on present superconducting hardware under strong driving," [arXiv:2512.19919 (2025)](https://arxiv.org/abs/2512.19919).
