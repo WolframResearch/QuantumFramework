@@ -77,6 +77,26 @@ cellBlock[t_, f_] := {{Exp[I f] Cos[t], - Sin[t]}, {Exp[I f] Sin[t], Cos[t]}}
 
 cellInverseBlock[t_, f_] := {{Exp[- I f] Cos[t], Exp[- I f] Sin[t]}, {- Sin[t], Cos[t]}}
 
+(* The nulling cells in closed rational form in the entries themselves, equal to
+   cellInverseBlock @@ rightNullAngles[a, b] and cellBlock @@ leftNullAngles[a, b] but
+   without the Cos[ArcTan[..]] / Exp[I Arg[..]] round-trip, which on exact input swells
+   into nested radicals. The zero branches match the angle functions' zeroQ branches. *)
+rightInverseCell[a_, b_, tol_] := Which[
+    zeroQ[a, tol], IdentityMatrix[2],
+    zeroQ[b, tol], {{0, 1}, {- 1, 0}},
+    True, With[{A = Abs[a], B = Abs[b], r = Sqrt[Abs[a] ^ 2 + Abs[b] ^ 2]},
+        {{Conjugate[a] b / (A r), Conjugate[a] b / (B r)}, {- A / r, B / r}}
+    ]
+]
+
+leftCell[a_, b_, tol_] := Which[
+    zeroQ[b, tol], IdentityMatrix[2],
+    zeroQ[a, tol], {{0, - 1}, {1, 0}},
+    True, With[{A = Abs[a], B = Abs[b], r = Sqrt[Abs[a] ^ 2 + Abs[b] ^ 2]},
+        {{- b Conjugate[a] / (B r), - B / r}, {- b Conjugate[a] / (A r), A / r}}
+    ]
+]
+
 gateMatrix["BS"[t_, f_] -> {p_, q_}, m_] := ReplacePart[IdentityMatrix[m], Thread[Tuples[{p, q}, 2] -> Flatten[bsBlock[t, f]]]]
 
 gateMatrix["PS"[a_] -> {p_}, m_] := ReplacePart[IdentityMatrix[m], {p, p} -> Exp[I a]]
@@ -86,18 +106,21 @@ elementsUnitary[elements_List, m_Integer] := Fold[gateMatrix[#2, m] . #1 &, Iden
 
 zeroQ[x_, tol_] := If[Precision[x] === Infinity, PossibleZeroQ[x], Abs[x] <= tol]
 
-identityGateQ["BS"[t_, _] -> _, tol_] := zeroQ[t, tol]
+(* Dropping no-op gates is cosmetic, so its identity test is a numeric tolerance check:
+   message-free on exact high-degree angles that no symbolic zero-test can rigorously
+   decide. The exact zero detection that steers the decomposition stays in zeroQ. *)
+identityGateQ["BS"[t_, _] -> _, tol_] := TrueQ[Abs[N[t]] <= tol]
 
-identityGateQ["PS"[a_] -> _, tol_] := zeroQ[Exp[I a] - 1, tol]
+identityGateQ["PS"[a_] -> _, tol_] := TrueQ[Abs[N[Exp[I a] - 1]] <= tol]
 
-identityGateQ["S"[xi_] -> _, tol_] := zeroQ[xi, tol]
+identityGateQ["S"[xi_] -> _, tol_] := TrueQ[Abs[N[xi]] <= tol]
 
 unitaryQ[w_, tol_] := If[Precision[w] === Infinity,
     AllTrue[Flatten[w . ConjugateTranspose[w] - IdentityMatrix[Length[w]]], PossibleZeroQ],
     UnitaryMatrixQ[w, Tolerance -> tol]
 ]
 
-normalAngle[x_] := If[NumericQ[x], Mod[x, 2 Pi, - Pi], x]
+normalAngle[x_] := If[NumericQ[x] && Precision[x] =!= Infinity, Mod[x, 2 Pi, - Pi], x]
 
 
 passiveQ[QuantumInterferometer[data_]] := data["Unitary"] =!= None
@@ -209,27 +232,32 @@ leftNullAngles[a_, b_, tol_] := Which[
 ]
 
 
-nullStep[u_, {"Right", {r_, c_}}, tol_, simp_] := With[{angles = simp /@ rightNullAngles[u[[r, c]], u[[r, c + 1]], tol]},
-    Sow[Append[angles, c], "Right"];
-    Module[{v = u},
-        v[[All, {c, c + 1}]] = simp[v[[All, {c, c + 1}]] . (cellInverseBlock @@ angles)];
-        v[[r, c]] = 0;
-        v
-    ]
+(* nullStep eliminates one entry of the working matrix v, mutating it in place. The
+   sweep owns v, so after the first assignment v has a single reference and the
+   two-column (Right) or two-row (Left) update writes in place instead of copying the
+   whole m x m matrix each step; HoldFirst keeps v the sweep's own symbol rather than
+   a copy of its value. The eliminated entry is set to 0. v[[r, c]], a zero of the
+   entry's own type, which leaves a machine matrix packed (an exact 0 would unpack a
+   packed array); on the exact path (exact = True) it is set to exact 0. *)
+SetAttributes[nullStep, HoldFirst]
+
+nullStep[v_, {"Right", {r_, c_}}, tol_, simp_, asimp_, exact_] := With[{a = v[[r, c]], b = v[[r, c + 1]]},
+    Sow[Append[asimp /@ rightNullAngles[a, b, tol], c], "Right"];
+    v[[All, {c, c + 1}]] = simp[v[[All, {c, c + 1}]] . rightInverseCell[a, b, tol]];
+    v[[r, c]] = If[exact, 0, 0. v[[r, c]]]
 ]
 
-nullStep[u_, {"Left", {r_, c_}}, tol_, simp_] := With[{angles = simp /@ leftNullAngles[u[[r - 1, c]], u[[r, c]], tol]},
-    Sow[Append[angles, r - 1], "Left"];
-    Module[{v = u},
-        v[[{r - 1, r}]] = simp[(cellBlock @@ angles) . v[[{r - 1, r}]]];
-        v[[r, c]] = 0;
-        v
-    ]
+nullStep[v_, {"Left", {r_, c_}}, tol_, simp_, asimp_, exact_] := With[{a = v[[r - 1, c]], b = v[[r, c]]},
+    Sow[Append[asimp /@ leftNullAngles[a, b, tol], r - 1], "Left"];
+    v[[{r - 1, r}]] = simp[leftCell[a, b, tol] . v[[{r - 1, r}]]];
+    v[[r, c]] = If[exact, 0, 0. v[[r, c]]]
 ]
 
-(* {right cells, diagonal, left cells} with L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D *)
-nullingSweep[w_, steps_, tol_, simp_] := With[{reaped = Reap[Fold[nullStep[#1, #2, tol, simp] &, w, steps], {"Right", "Left"}]},
-    {Catenate[reaped[[2, 1]]], simp /@ Diagonal[reaped[[1]]], Catenate[reaped[[2, 2]]]}
+(* {right cells, diagonal, left cells} with L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D.
+   v is owned here and mutated in place by nullStep across the whole sweep. *)
+nullingSweep[w_, steps_, tol_, simp_, asimp_] := Module[{v = w, exact = Precision[w] === Infinity, reaped},
+    reaped = Reap[Scan[nullStep[v, #, tol, simp, asimp, exact] &, steps], {"Right", "Left"}];
+    {Catenate[reaped[[2, 1]]], simp /@ Diagonal[v], Catenate[reaped[[2, 2]]]}
 ]
 
 (* Reck: the entries below the diagonal, row by row from the bottom, each against
@@ -248,14 +276,14 @@ clementsSteps[m_] := Catenate @ Table[
 
 (* A decomposition gives a time-ordered list of items: {"Cell", t, f, p},
    {"InverseCell", t, f, p}, {"BS", t, f, {p, q}} and {"PS", a, p}. *)
-decompositionItems["Reck", w_, tol_, simp_] := With[{dec = nullingSweep[w, reckSteps[Length[w]], tol, simp]},
-    Join[{"Cell", ##} & @@@ dec[[1]], MapIndexed[{"PS", simp[Arg[#1]], First[#2]} &, dec[[2]]]]
+decompositionItems["Reck", w_, tol_, simp_, asimp_] := With[{dec = nullingSweep[w, reckSteps[Length[w]], tol, simp, asimp]},
+    Join[{"Cell", ##} & @@@ dec[[1]], MapIndexed[{"PS", asimp[Arg[#1]], First[#2]} &, dec[[2]]]]
 ]
 
-decompositionItems["Clements", w_, tol_, simp_] := With[{dec = nullingSweep[w, clementsSteps[Length[w]], tol, simp]},
+decompositionItems["Clements", w_, tol_, simp_, asimp_] := With[{dec = nullingSweep[w, clementsSteps[Length[w]], tol, simp, asimp]},
     Join[
         {"Cell", ##} & @@@ dec[[1]],
-        MapIndexed[{"PS", simp[Arg[#1]], First[#2]} &, dec[[2]]],
+        MapIndexed[{"PS", asimp[Arg[#1]], First[#2]} &, dec[[2]]],
         {"InverseCell", ##} & @@@ Reverse[dec[[3]]]
     ]
 ]
@@ -281,44 +309,54 @@ csItems[u_, k_] := Module[{p = Ceiling[Length[u] / 2], q = Floor[Length[u] / 2],
     ]
 ]
 
-decompositionItems["CosineSine", w_, _, _] := csItems[N[w], 0]
+decompositionItems["CosineSine", w_, _, _, _] := csItems[N[w], 0]
 
 (* BS(t, g) . diag(e^ia, e^ib) = diag(e^ia, e^ib) . BS(t, g + a - b): the phases met
    so far ride along to the output, and each beam splitter takes up their difference.
-   BS(-t, g) = BS(t, g + Pi) keeps every t in [0, Pi/2]. *)
-absorbItem[phases_, {"Cell", t_, f_, p_}, simp_] := With[{new = ReplacePart[phases, p -> phases[[p]] + f]},
-    Sow[{"BS", t, simp @ normalAngle[new[[p]] - new[[p + 1]]], {p, p + 1}}];
-    new
-]
+   BS(-t, g) = BS(t, g + Pi) keeps every t in [0, Pi/2]. meshItems owns the phase
+   vector and absorbStep mutates it in place (HoldFirst), so no length-m vector is
+   rebuilt per item. *)
+SetAttributes[absorbStep, HoldFirst]
 
-absorbItem[phases_, {"InverseCell", t_, f_, p_}, simp_] := (
+absorbStep[phases_, {"Cell", t_, f_, p_}, simp_] := (
+    phases[[p]] += f;
+    Sow[{"BS", t, simp @ normalAngle[phases[[p]] - phases[[p + 1]]], {p, p + 1}}]
+)
+
+absorbStep[phases_, {"InverseCell", t_, f_, p_}, simp_] := (
     Sow[{"BS", t, simp @ normalAngle[phases[[p]] - phases[[p + 1]] + Pi], {p, p + 1}}];
-    ReplacePart[phases, p -> phases[[p]] - f]
+    phases[[p]] -= f
 )
 
-absorbItem[phases_, {"BS", t_, f_, {p_, q_}}, simp_] := (
-    Sow[{"BS", t, simp @ normalAngle[f + phases[[p]] - phases[[q]]], {p, q}}];
-    phases
-)
+absorbStep[phases_, {"BS", t_, f_, {p_, q_}}, simp_] :=
+    Sow[{"BS", t, simp @ normalAngle[f + phases[[p]] - phases[[q]]], {p, q}}]
 
-absorbItem[phases_, {"PS", a_, p_}, _] := ReplacePart[phases, p -> phases[[p]] + a]
+absorbStep[phases_, {"PS", a_, p_}, _] := phases[[p]] += a
 
-meshItems[items_, m_, simp_] := With[{reaped = Reap[Fold[absorbItem[#1, #2, simp] &, ConstantArray[0, m], items]]},
-    Join[Catenate[reaped[[2]]], MapIndexed[{"PS", simp @ normalAngle[#1], First[#2]} &, reaped[[1]]]]
+meshItems[items_, m_, simp_] := Module[{phases = ConstantArray[0, m], reaped},
+    reaped = Reap[Scan[absorbStep[phases, #, simp] &, items]];
+    Join[Catenate[reaped[[2]]], MapIndexed[{"PS", simp @ normalAngle[#1], First[#2]} &, phases]]
 ]
 
 
 
 (* last holds the last occupied position of every mode: a beam splitter takes the
    first column after it on all the modes it spans, a phase the next free
-   half-integer position. *)
-placeItem[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[p, q]]},
+   half-integer position. layoutItems owns last and placeStep mutates it in place
+   (HoldFirst), Sowing each placed element, so no length-m vector is rebuilt per item. *)
+SetAttributes[placeStep, HoldFirst]
+
+placeStep[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[p, q]]},
     With[{k = 1 + Floor[Max[last[[span]]]]},
-        {{{"BS"[t, f] -> {p, q}, k}}, ReplacePart[last, Thread[span -> k]]}
+        last[[span]] = k;
+        Sow[{"BS"[t, f] -> {p, q}, k}]
     ]
 ]
 
-placeItem[last_, {kind : "PS" | "S", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2}, {{{kind[a] -> {p}, x}}, ReplacePart[last, p -> x]}]
+placeStep[last_, {kind : "PS" | "S", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2},
+    last[[p]] = x;
+    Sow[{kind[a] -> {p}, x}]
+]
 
 modeSpan[_[__] -> modes_] := Range @@ MinMax[modes]
 
@@ -339,11 +377,12 @@ alignTrailingPhases[placed_, m_] := With[{
     ]
 ]
 
-layoutItems[items_List, m_Integer, drop_, tol_] := With[{
-    placed = alignTrailingPhases[Catenate @ FoldPairList[placeItem, ConstantArray[0, m], items], m]
-},
-    With[{kept = If[TrueQ[drop], DeleteCases[placed, {gate_, _} /; identityGateQ[gate, tol]], placed]},
-        If[kept === {}, {{}, {}}, Transpose[kept]]
+layoutItems[items_List, m_Integer, drop_, tol_] := Module[{last = ConstantArray[0, m], reaped},
+    reaped = Reap[Scan[placeStep[last, #] &, items]];
+    With[{placed = alignTrailingPhases[If[reaped[[2]] === {}, {}, Catenate[reaped[[2]]]], m]},
+        With[{kept = If[TrueQ[drop], DeleteCases[placed, {gate_, _} /; identityGateQ[gate, tol]], placed]},
+            If[kept === {}, {{}, {}}, Transpose[kept]]
+        ]
     ]
 ]
 
@@ -376,7 +415,7 @@ QuantumInterferometer[w_ ? SquareMatrixQ, opts : OptionsPattern[]] := Module[{
     If[! unitaryQ[w, tol], Message[QuantumInterferometer::nonunitary, tol]; Return[$Failed]];
     makeInterferometer[
         w, m, method,
-        With[{simp = If[Precision[w] === Infinity, Simplify, Identity]}, meshItems[decompositionItems[method, w, tol, simp], m, simp]],
+        With[{simp = If[Precision[w] === Infinity, RootReduce, Identity], asimp = If[Precision[w] === Infinity, Simplify, Identity]}, meshItems[decompositionItems[method, w, tol, simp, asimp], m, asimp]],
         OptionValue["DropIdentities"], tol
     ]
 ]

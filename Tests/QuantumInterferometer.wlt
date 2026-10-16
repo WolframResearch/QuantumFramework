@@ -47,6 +47,38 @@ VerificationTest[
     TestID -> "QI-meshes-rebuild-Haar-unitaries"
 ]
 
+(* The nulling sweep owns its working matrix and mutates it in place; it must leave
+   the caller's input matrix untouched (a regression that dropped the copy-on-first-
+   write and aliased the input would fail this). *)
+VerificationTest[
+    SeedRandom[101];
+    With[{w = RandomVariate[CircularUnitaryMatrixDistribution[12]]},
+        With[{before = w + 0},
+            QuantumInterferometer[w, Method -> "Reck"];
+            QuantumInterferometer[w, Method -> "Clements"];
+            w === before
+        ]
+    ],
+    True,
+    TestID -> "QI-decomposition-does-not-mutate-input"
+]
+
+(* The Reck and Clements meshes rebuild Haar unitaries and stay unitary at larger m,
+   driving hundreds of in-place elimination steps past the sizes above. *)
+VerificationTest[
+    SeedRandom[102];
+    Table[
+        With[{w = RandomVariate[CircularUnitaryMatrixDistribution[m]]},
+            With[{u = rebuild[QuantumInterferometer[w, Method -> method]]},
+                Max[Abs[u - w]] < 10^-10 && Max[Abs[u . ConjugateTranspose[u] - IdentityMatrix[m]]] < 10^-10
+            ]
+        ],
+        {m, {16, 24, 32}}, {method, $exactMethods}
+    ],
+    ConstantArray[True, {3, 2}],
+    TestID -> "QI-rebuilds-and-stays-unitary-at-larger-m"
+]
+
 VerificationTest[
     Table[
         With[{qi = QuantumInterferometer[FourierMatrix[m], Method -> method]},
@@ -56,6 +88,27 @@ VerificationTest[
     ],
     ConstantArray[True, {2, 2}],
     TestID -> "QI-exact-Fourier-decomposition"
+]
+
+(* Fix 2 (closed-form Givens cell + RootReduce on the exact path): the exact decomposition
+   of FourierMatrix at a cyclotomic degree that previously did not terminate now completes
+   and reconstructs the matrix exactly, with exact (Precision Infinity) parameters. The
+   TimeConstrained is a regression guard against the trig-of-arctan swell returning. *)
+VerificationTest[
+    TimeConstrained[
+        Table[
+            With[{qi = QuantumInterferometer[FourierMatrix[m], Method -> method]},
+                Precision[qi["Elements"]] === Infinity &&
+                    Max[Abs[QuantumInterferometer[
+                            qi["Elements"] /. (h_[ps__] -> md_) :> (h[Sequence @@ N[{ps}]] -> md), m
+                        ]["Unitary"] - N[FourierMatrix[m]]]] < 10^-10
+            ],
+            {m, {5, 6}}, {method, $exactMethods}
+        ],
+        120, $TimedOut
+    ],
+    ConstantArray[True, {2, 2}],
+    TestID -> "QI-exact-high-degree-decomposition-terminates"
 ]
 
 (* The identities that move every phase of the mesh to its output, and keep theta in [0, Pi/2]. *)
@@ -100,6 +153,32 @@ VerificationTest[
     ],
     {{15, 9}, {15, 6}},
     TestID -> "QI-mesh-sizes"
+]
+
+(* Fix 5 (in-place single-owner phase-absorption and layout folds): placing a fixed list
+   of beam splitters is deterministic and each one lands one column past the last column
+   used on the modes it spans. A mis-threaded in-place position vector would shift columns. *)
+VerificationTest[
+    QuantumInterferometer[{"BS"[0.5, 0.] -> {1, 2}, "BS"[0.5, 0.] -> {2, 3}, "BS"[0.5, 0.] -> {1, 2}}, 3]["Layers"],
+    {1, 2, 3},
+    TestID -> "QI-layout-columns-are-deterministic"
+]
+
+(* Fix 5: the in-place mutable vectors in meshItems and layoutItems are owned per call, so
+   decomposing the same matrix twice gives identical Elements and Layers; a leaked or aliased
+   accumulator would make a second call differ from the first. *)
+VerificationTest[
+    SeedRandom[404];
+    With[{w = RandomVariate[CircularUnitaryMatrixDistribution[8]]},
+        Table[
+            With[{a = QuantumInterferometer[w, Method -> method], b = QuantumInterferometer[w, Method -> method]},
+                a["Elements"] === b["Elements"] && a["Layers"] === b["Layers"]
+            ],
+            {method, $methods}
+        ]
+    ],
+    {True, True, True},
+    TestID -> "QI-decomposition-is-repeatable"
 ]
 
 (* Degenerate nulling steps: zeros already in place, or zeros next to the entry. *)
