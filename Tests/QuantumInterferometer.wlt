@@ -310,6 +310,15 @@ VerificationTest[
     TestID -> "QI-rejects-wrong-pattern-length"
 ]
 
+(* N leaves the mode numbers and layers exact, so the object stays valid *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}, "PS"[Pi / 3] -> 2}, 2]},
+        {N[qi] === qi, N[qi]["Modes"], N[qi]["Elements"]}
+    ],
+    {True, 2, {"BS"[Pi / 4, 0] -> {1, 2}, "PS"[Pi / 3] -> {2}}},
+    TestID -> "QI-N-keeps-the-object-valid"
+]
+
 (* ---- symbolic photon numbers: nested sums of Wigner d-functions, evaluated back to the permanents ---- *)
 
 (* substitute a concrete pattern into the formula for {n1, ..} -> {t1, ..} and Activate the sums *)
@@ -352,6 +361,20 @@ VerificationTest[
     ],
     {True, 3, 0},
     TestID -> "QI-symbolic-photon-numbers-structure"
+]
+
+(* a mode no beam splitter touches keeps its photons: its equation survives as a KroneckerDelta *)
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"BS"[Pi / 5, Pi / 7] -> {2, 3}, "PS"[Pi / 3] -> 1}, 3], single = QuantumInterferometer[{"PS"[Pi / 3] -> 1}, 1]},
+        With[{f = qi["Amplitude", {n1, n2, n3} -> {t1, t2, t3}]},
+            {
+                Union[FullSimplify[symbolicValue[f, {1, 1, 0}, #] - qi["Amplitude", {1, 1, 0} -> #]] & /@ patterns[3, 2]],
+                FullSimplify[single["Amplitude", {n1} -> {t1}] /. {n1 -> 2, t1 -> 2}] == single["Amplitude", {2} -> {2}]
+            }
+        ]
+    ],
+    {{0}, True},
+    TestID -> "QI-symbolic-photon-numbers-untouched-modes"
 ]
 
 VerificationTest[
@@ -402,7 +425,7 @@ VerificationTest[
         QuantumInterferometer["Random"[2]]["Samples", {1, 0, 0}, 5]
     },
     {$Failed, $Failed, $Failed},
-    {QuantumInterferometer::squeezed, QuantumInterferometer::sample, QuantumInterferometer::occ},
+    {QuantumInterferometer::squeezed, QuantumInterferometer::notnumeric, QuantumInterferometer::occ},
     TestID -> "QI-samples-rejects-squeezers-symbolic-and-bad-patterns"
 ]
 
@@ -466,7 +489,7 @@ VerificationTest[
 VerificationTest[
     QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2]["MatrixPlot"],
     $Failed,
-    {QuantumInterferometer::plot},
+    {QuantumInterferometer::notnumeric},
     TestID -> "QI-matrix-plot-needs-numbers"
 ]
 
