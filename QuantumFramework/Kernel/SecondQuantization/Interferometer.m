@@ -45,7 +45,8 @@ QuantumInterferometer::usage = "QuantumInterferometer[u] decomposes the m\[Times
 QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Reck\" or \"CosineSine\" mesh.
 QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
-Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.";
+Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
+\"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
 QuantumInterferometer::nonunitary = "The matrix is not unitary within the tolerance `1`.";
@@ -482,11 +483,19 @@ QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferome
 fockAmplitude[qi_, s_, t_] := If[passiveQ[qi], permanentAmplitude[qi["Unitary"], s, t], gaussianAmplitude[gaussianKernel[qi], s, t]]
 
 QuantumInterferometerProp[qi_, "Amplitude", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
-    If[occupationQ[qi, in] && occupationQ[qi, out], fockAmplitude[qi, in, out], $Failed]
+    Which[
+        symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
+        occupationQ[qi, in] && occupationQ[qi, out], fockAmplitude[qi, in, out],
+        True, $Failed
+    ]
 ]
 
 QuantumInterferometerProp[qi_, "Probability", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
-    If[occupationQ[qi, in] && occupationQ[qi, out], Abs[fockAmplitude[qi, in, out]] ^ 2, $Failed]
+    Which[
+        symbolicPatternsQ[qi, in, out], Replace[qi["Amplitude", in -> out], a : Except[$Failed] :> Abs[a] ^ 2],
+        occupationQ[qi, in] && occupationQ[qi, out], Abs[fockAmplitude[qi, in, out]] ^ 2,
+        True, $Failed
+    ]
 ]
 
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
@@ -554,6 +563,9 @@ occupationQ[qi_, s_] := If[
     Message[QuantumInterferometer::occ, s, qi["Modes"]]; False
 ]
 
+symbolicPatternsQ[qi_, s_, t_] := VectorQ[s] && VectorQ[t] && Length[s] == Length[t] == qi["Modes"] &&
+    ! VectorQ[Join[s, t], IntegerQ] && VectorQ[Join[s, t], ! NumericQ[#] || IntegerQ[#] && # >= 0 &]
+
 modeList[occupation_] := Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, occupation]
 
 photonPatterns[n_, m_] := ReverseSort @ FrobeniusSolve[ConstantArray[1, m], n]
@@ -572,6 +584,63 @@ photonAmplitudes[w_, s_] := Module[{x},
         Association @ ReverseSortBy[First] @ Map[
             #[[1]] -> #[[2]] Sqrt[Times @@ (#[[1]]!) / Times @@ (s!)] &,
             CoefficientRules[Expand[Times @@ (vars . w[[All, #]] & /@ modeList[s])], vars]
+        ]
+    ]
+]
+
+
+wignerd[b_, j_ ? NumericQ, m1_ ? NumericQ, m2_ ? NumericQ] := If[j < 0 || Abs[m1] > j || Abs[m2] > j, 0, WignerD[{j, m1, m2}, b]]
+
+wignerd /: MakeBoxes[wignerd[b_, j_, m1_, m2_], form_] := RowBox[{
+    SubsuperscriptBox["d", RowBox[{MakeBoxes[m1, form], ",", MakeBoxes[m2, form]}], MakeBoxes[j, form]], "(", MakeBoxes[b, form], ")"
+}]
+
+symbolicAmplitude[elements_, n_, t_] := Module[{counts = n, factors = {}, constraints = {}, ks = {}, k, c, order, eqs, rules, free, iters = {}, fixed = {}},
+    Do[
+        Replace[el, {
+            ("BS"[th_, ph_] -> {p_, q_}) :> (
+                k = Subscript[\[FormalK], Length[ks] + 1];
+                AppendTo[ks, k];
+                c = counts[[{p, q}]];
+                AppendTo[factors, (-1) ^ (c[[1]] - k) E^(I ph (c[[1]] - k)) wignerd[2 th, Total[c] / 2, k - Total[c] / 2, (c[[1]] - c[[2]]) / 2]];
+                counts[[{p, q}]] = {k, Total[c] - k};
+                constraints = Join[constraints, {k, Total[c] - k}]
+            ),
+            ("PS"[al_] -> {p_}) :> AppendTo[factors, E^(I al counts[[p]])]
+        }],
+        {el, elements}
+    ];
+    order = Reverse[ks];
+    eqs = Expand[Most[counts - t]];
+    rules = If[ks === {} || eqs === {}, {},
+        Catenate @ MapThread[
+            With[{col = FirstPosition[#1, x_ /; x != 0, {0}, {1}][[1]]},
+                If[col == 0, {}, {order[[col]] -> Expand[- (#2 . (eqs /. Thread[order -> 0]) + Delete[#1, col] . Delete[order, col])]}]
+            ] &,
+            TakeDrop[#, Length[order]] & /@ RowReduce[Join[Outer[Coefficient, eqs, order], IdentityMatrix[Length[eqs]], 2]] // Transpose
+        ]
+    ];
+    free = Select[ks, FreeQ[Keys[rules], #] &];
+    constraints = DeleteCases[Expand[constraints /. rules], _ ? NumericQ];
+    Do[
+        With[{kf = free[[j]], own = Select[constraints, ! FreeQ[#, free[[j]]] && FreeQ[#, Alternatives @@ Append[Drop[free, j], Null]] &]},
+            With[{it = {kf,
+                    Max @@ DeleteDuplicates @ Join[{0}, kf - # & /@ Select[own, Coefficient[#, kf] == 1 &]],
+                    Min @@ DeleteDuplicates[kf + # & /@ Select[own, Coefficient[#, kf] == -1 &]]
+                } /. fixed},
+                If[PossibleZeroQ[it[[2]] - it[[3]]], AppendTo[fixed, kf -> it[[2]]], AppendTo[iters, it]]
+            ]
+        ],
+        {j, Length[free]}
+    ];
+    rules = Join[Expand[rules /. fixed], fixed];
+    With[{angles = Select[Cases[elements, (("BS"[_, a_] | "PS"[a_]) -> _) :> a], ! NumericQ[#] &]},
+        KroneckerDelta[Total[n], Total[t]] If[iters === {}, Identity, Inactive[Sum][#, Sequence @@ iters] &][
+            Times @@ factors /. rules /. {
+                Power[-1, x_ /; ! NumericQ[x]] :> (-1) ^ With[{v = Variables[x]}, Mod[x /. Thread[v -> 0], 2] + Mod[Coefficient[x, v], 2] . v],
+                Power[E, x_ /; ! NumericQ[x]] :> E ^ (I Chop[Collect[Expand[x / I], angles]]),
+                wignerd[b_, j_, m1_, m2_] :> If[PossibleZeroQ[j], 1, wignerd[b, Together[Expand[j]], Together[Expand[m1]], Together[Expand[m2]]]]
+            }
         ]
     ]
 ]

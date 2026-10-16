@@ -217,6 +217,60 @@ VerificationTest[
     TestID -> "QI-rejects-wrong-pattern-length"
 ]
 
+(* ---- symbolic photon numbers: nested sums of Wigner d-functions, evaluated back to the permanents ---- *)
+
+(* substitute a concrete pattern into the formula for {n1, ..} -> {t1, ..} and Activate the sums *)
+symbolicValue[f_, n_, t_] := Activate[f /. Thread[Array[Symbol["n" <> ToString[#]] &, Length[n]] -> n] /. Thread[Array[Symbol["t" <> ToString[#]] &, Length[t]] -> t]];
+patterns[m_, nT_] := Select[Tuples[Range[0, nT], m], Total[#] == nT &];
+
+VerificationTest[
+    SeedRandom[41];
+    With[{
+        bs = QuantumInterferometer[{"BS"[Pi / 6, Pi / 3] -> {1, 2}}, 2],
+        q3 = QuantumInterferometer["Random"[3]],
+        q4 = QuantumInterferometer["Random"[4]]
+    },
+        With[{
+            f2 = bs["Amplitude", {n1, n2} -> {t1, t2}],
+            f3 = q3["Amplitude", {n1, n2, n3} -> {t1, t2, t3}],
+            f4 = q4["Amplitude", {n1, n2, n3, n4} -> {t1, t2, t3, t4}]
+        },
+            {
+                Union[FullSimplify[symbolicValue[f2, {2, 5}, #] - bs["Amplitude", {2, 5} -> #]] & /@ patterns[2, 7]],
+                Max[Abs[N[symbolicValue[f3, {1, 2, 3}, #]] - q3["Amplitude", {1, 2, 3} -> #]] & /@ patterns[3, 6]] < 10^-12,
+                Max[Abs[N[symbolicValue[f4, {1, 2, 0, 1}, #]] - q4["Amplitude", {1, 2, 0, 1} -> #]] & /@ patterns[4, 4]] < 10^-12,
+                symbolicValue[f4, {1, 2, 0, 1}, {1, 1, 1, 2}]
+            }
+        ]
+    ],
+    {{0}, True, True, 0},
+    TestID -> "QI-symbolic-photon-numbers-match-permanents"
+]
+
+(* a full m-mode mesh leaves (m - 1)(m - 2)/2 free indices; two modes give a single d-function *)
+VerificationTest[
+    SeedRandom[42];
+    With[{bs = QuantumInterferometer[{"BS"[\[Theta], \[Phi]] -> {1, 2}}, 2], q4 = QuantumInterferometer["Random"[4]]},
+        {
+            FreeQ[bs["Amplitude", {nx, 0} -> {nx / 2, nx / 2}], Inactive[Sum]] && ! FreeQ[bs["Amplitude", {nx, 0} -> {nx / 2, nx / 2}], nx],
+            Length[Cases[q4["Amplitude", {n1, n2, n3, n4} -> {t1, t2, t3, t4}], Inactive[Sum][_, iters__] :> {iters}, Infinity][[1]]],
+            Chop[N[symbolicValue[q4["Probability", {n1, n2, n3, n4} -> {t1, t2, t3, t4}], {2, 1, 0, 1}, {0, 1, 2, 1}] - q4["Probability", {2, 1, 0, 1} -> {0, 1, 2, 1}]]]
+        }
+    ],
+    {True, 3, 0},
+    TestID -> "QI-symbolic-photon-numbers-structure"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[{"S"[0.3] -> 1, "BS"[Pi / 4, 0] -> {1, 2}}, 2]["Amplitude", {nx, 0} -> {nx, 0}],
+        QuantumInterferometer[{"BS"[Pi / 4, 0] -> {1, 2}}, 2]["Amplitude", {nx, -1} -> {nx, 0}]
+    },
+    {$Failed, $Failed},
+    {QuantumInterferometer::squeezed, QuantumInterferometer::occ},
+    TestID -> "QI-symbolic-photon-numbers-reject-squeezers-and-negatives"
+]
+
 (* ---- sampling: Clifford-Clifford draws agree with the exact distribution ---- *)
 
 (* total variation distance of 5000 samples from "Probabilities", for one photon per mode and for a
