@@ -78,10 +78,8 @@ cellBlock[t_, f_] := {{Exp[I f] Cos[t], - Sin[t]}, {Exp[I f] Sin[t], Cos[t]}}
 
 cellInverseBlock[t_, f_] := {{Exp[- I f] Cos[t], Exp[- I f] Sin[t]}, {- Sin[t], Cos[t]}}
 
-(* The nulling cells in closed rational form in the entries themselves, equal to
-   cellInverseBlock @@ rightNullAngles[a, b] and cellBlock @@ leftNullAngles[a, b] but
-   without the Cos[ArcTan[..]] / Exp[I Arg[..]] round-trip, which on exact input swells
-   into nested radicals. The zero branches match the angle functions' zeroQ branches. *)
+(* cellInverseBlock @@ rightNullAngles and cellBlock @@ leftNullAngles in closed form, without the
+   Cos[ArcTan[..]] round trip that swells exact input into nested radicals *)
 rightInverseCell[a_, b_, tol_] := Which[
     zeroQ[a, tol], IdentityMatrix[2],
     zeroQ[b, tol], {{0, 1}, {- 1, 0}},
@@ -102,9 +100,7 @@ gateMatrix["BS"[t_, f_] -> {p_, q_}, m_] := ReplacePart[IdentityMatrix[m], Threa
 
 gateMatrix["PS"[a_] -> {p_}, m_] := ReplacePart[IdentityMatrix[m], {p, p} -> Exp[I a]]
 
-(* Apply one gate as a two-row update of the running matrix: gate . w changes only rows
-   p, q, so this is O(m) per gate instead of the O(m^2) of a full m x m product. The result
-   is repacked once at the end, since the per-step ReplacePart unpacks a packed matrix. *)
+(* each gate updates only rows p, q of the running matrix; ReplacePart unpacks, so repack once at the end *)
 applyGate[w_, "BS"[t_, f_] -> {p_, q_}] := With[{r = bsBlock[t, f] . w[[{p, q}]]},
     ReplacePart[w, {p -> r[[1]], q -> r[[2]]}]
 ]
@@ -116,9 +112,7 @@ elementsUnitary[elements_List, m_Integer] := Developer`ToPackedArray[Fold[applyG
 
 zeroQ[x_, tol_] := If[Precision[x] === Infinity, PossibleZeroQ[x], Abs[x] <= tol]
 
-(* Dropping no-op gates is cosmetic, so its identity test is a numeric tolerance check:
-   message-free on exact high-degree angles that no symbolic zero-test can rigorously
-   decide. The exact zero detection that steers the decomposition stays in zeroQ. *)
+(* a numeric tolerance, since no symbolic zero test decides high-degree radical angles *)
 identityGateQ["BS"[t_, _] -> _, tol_] := TrueQ[Abs[N[t]] <= tol]
 
 identityGateQ["PS"[a_] -> _, tol_] := TrueQ[Abs[N[Exp[I a] - 1]] <= tol]
@@ -165,8 +159,21 @@ gaussianKernel[QuantumInterferometer[KeyValuePattern["Bogoliubov" -> {a_, b_, c_
     {ArrayFlatten[{{bv, a + bv . b}, {Transpose[a + bv . b], (Transpose[a] . b + Transpose[b] . a) / 2 + Transpose[b] . bv . b}}], c}
 ]
 
-gaussianAmplitude[{k_, c_}, s_, t_] := c hafnian[k[[#, #]] &[Join[modeList[t], Length[s] + modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
+gaussianAmplitude[{k_, c_}, s_, t_] := c / Sqrt[Times @@ (s!) Times @@ (t!)] With[{r = Join[t, s]},
+    If[ Precision[k] =!= Infinity && Times @@ (r + 1) <= 2 ^ (Total[r] / 2 - 4),
+        N[repeatedHafnian[SetPrecision[k, Precision[k] + Total[r]], r], Precision[k]],
+        hafnian[k[[#, #]] &[Join[modeList[t], Length[s] + modeList[s]]]]
+    ]
+]
 
+
+(* Kan, J. Multivariate Anal. 99, 542 (2008), index j repeated r_j times, h = r/2 - v: Prod (r + 1) terms of
+   Haf = Sum_v (-1)^|v| Prod Binomial[r, v] (h . B . h / 2)^(N/2) / (N/2)!, run N digits above the input since they cancel *)
+repeatedHafnian[b_, r_] := Which[
+    Total[r] == 0, 1,
+    OddQ[Total[r]], 0,
+    True, Total[(-1) ^ Total[#] Times @@ Binomial[r, #] With[{h = r / 2 - #}, (h . b . h / 2) ^ (Total[r] / 2)] & /@ Tuples[Range[0, #] & /@ r]] / (Total[r] / 2)!
+]
 
 hafnian[{}] := 1
 
@@ -240,13 +247,8 @@ leftNullAngles[a_, b_, tol_] := Which[
 ]
 
 
-(* nullStep eliminates one entry of the working matrix v, mutating it in place. The
-   sweep owns v, so after the first assignment v has a single reference and the
-   two-column (Right) or two-row (Left) update writes in place instead of copying the
-   whole m x m matrix each step; HoldFirst keeps v the sweep's own symbol rather than
-   a copy of its value. The eliminated entry is set to 0. v[[r, c]], a zero of the
-   entry's own type, which leaves a machine matrix packed (an exact 0 would unpack a
-   packed array); on the exact path (exact = True) it is set to exact 0. *)
+(* nullStep, absorbStep and placeStep mutate the caller's array in place (HoldFirst) instead of copying it
+   per step; the eliminated entry becomes 0. v[[r, c]], a zero of its own type that keeps a machine matrix packed *)
 SetAttributes[nullStep, HoldFirst]
 
 nullStep[v_, {"Right", {r_, c_}}, tol_, simp_, asimp_, exact_] := With[{a = v[[r, c]], b = v[[r, c + 1]]},
@@ -261,8 +263,7 @@ nullStep[v_, {"Left", {r_, c_}}, tol_, simp_, asimp_, exact_] := With[{a = v[[r 
     v[[r, c]] = If[exact, 0, 0. v[[r, c]]]
 ]
 
-(* {right cells, diagonal, left cells} with L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D.
-   v is owned here and mutated in place by nullStep across the whole sweep. *)
+(* {right cells, diagonal, left cells} with L_k ... L_1 . W . R_1^-1 ... R_n^-1 = D *)
 nullingSweep[w_, steps_, tol_, simp_, asimp_] := Module[{v = w, exact = Precision[w] === Infinity, reaped},
     reaped = Reap[Scan[nullStep[v, #, tol, simp, asimp, exact] &, steps], {"Right", "Left"}];
     {Catenate[reaped[[2, 1]]], simp /@ Diagonal[v], Catenate[reaped[[2, 2]]]}
@@ -321,9 +322,7 @@ decompositionItems["CosineSine", w_, _, _, _] := csItems[N[w], 0]
 
 (* BS(t, g) . diag(e^ia, e^ib) = diag(e^ia, e^ib) . BS(t, g + a - b): the phases met
    so far ride along to the output, and each beam splitter takes up their difference.
-   BS(-t, g) = BS(t, g + Pi) keeps every t in [0, Pi/2]. meshItems owns the phase
-   vector and absorbStep mutates it in place (HoldFirst), so no length-m vector is
-   rebuilt per item. *)
+   BS(-t, g) = BS(t, g + Pi) keeps every t in [0, Pi/2]. *)
 SetAttributes[absorbStep, HoldFirst]
 
 absorbStep[phases_, {"Cell", t_, f_, p_}, simp_] := (
@@ -350,8 +349,7 @@ meshItems[items_, m_, simp_] := Module[{phases = ConstantArray[0, m], reaped},
 
 (* last holds the last occupied position of every mode: a beam splitter takes the
    first column after it on all the modes it spans, a phase the next free
-   half-integer position. layoutItems owns last and placeStep mutates it in place
-   (HoldFirst), Sowing each placed element, so no length-m vector is rebuilt per item. *)
+   half-integer position. *)
 SetAttributes[placeStep, HoldFirst]
 
 placeStep[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[p, q]]},
@@ -615,10 +613,19 @@ modeList[occupation_] := Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, o
 
 photonPatterns[n_, m_] := ReverseSort @ FrobeniusSolve[ConstantArray[1, m], n]
 
-(* <T| U |S> = Perm(W_{T,S}) / Sqrt[Prod s! Prod t!] *)
+(* <T| U |S> = Perm(W_{T,S}) / Sqrt[Prod s! Prod t!]; Ryser over the multiplicities x <= s, Prod (s + 1) terms of
+   Sum_x (-1)^(N - |x|) Prod Binomial[s, x] Prod_j (W_j . x)^t_j, run N digits above the input since they cancel *)
+repeatedPermanent[w_, s_, t_] := With[{rows = Flatten @ Position[t, _ ? Positive]},
+    Total[Times @@ Binomial[s, #] (-1) ^ (Total[s] - Total[#]) Times @@ ((w[[rows]] . #) ^ t[[rows]]) & /@ Tuples[Range[0, #] & /@ s]]
+]
+
 permanentAmplitude[w_, s_, t_] := Which[
     Total[s] != Total[t], 0,
     Total[s] == 0, 1,
+    Precision[w] =!= Infinity && Min[Times @@ (s + 1), Times @@ (t + 1)] < 2 ^ Total[s],
+        With[{v = SetPrecision[w, Precision[w] + Total[s]]},
+            N[If[Times @@ (s + 1) <= Times @@ (t + 1), repeatedPermanent[v, s, t], repeatedPermanent[Transpose[v], t, s]] / Sqrt[Times @@ (s!) Times @@ (t!)], Precision[w]]
+        ],
     True, Permanent[w[[modeList[t], modeList[s]]]] / Sqrt[Times @@ (s!) Times @@ (t!)]
 ]
 
