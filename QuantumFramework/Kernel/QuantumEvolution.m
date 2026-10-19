@@ -14,6 +14,10 @@ QuantumEvolve::error = "Differential Solver failed to find a solution"
 QuantumEvolve::jump = "the jump operators `1` are not QuantumOperators"
 QuantumEvolve::rates = "the rates `1` do not fit the jump operators: give as many rates as there are jump operators, `2`, or a `2` by `2` rate matrix"
 QuantumEvolve::args = "the arguments `1` do not fit QuantumEvolve[hamiltonian, jumps, state, time]: jumps are {L1, ...} or {L1, ...} -> {rate1, ...}, the state is a QuantumState, Automatic or None, and the time is a symbol t or {t, t0, t1} with numeric t0 and t1"
+QuantumEvolve::pulseedges = "the discontinuities of `1` in [`2`, `3`] are not all given as a list of times, so restart times are read only off those that are; if it holds a pulse shorter than the steps NDSolve takes around it, bound them with MaxStepSize"
+QuantumEvolve::pulsetime = "the discontinuities of `1` were not found within `2` seconds, so no restart times are read off them; if it holds a pulse shorter than the steps NDSolve takes around it, bound them with MaxStepSize"
+QuantumEvolve::pulsedata = "`1` is data sampled `2` apart, closer than the steps of up to `3` that NDSolve may take, and no restart times are read off data; set MaxStepSize to `2` or less if it holds a pulse shorter than those steps"
+QuantumEvolve::pulseform = "`1` is not a formula in the time, so no restart times are read off it; if it holds a pulse shorter than the steps NDSolve takes around it, bound them with MaxStepSize"
 
 (* the number of unknowns above which a numeric solve keeps its operators sparse: NDSolve
    integrates the dense equations faster up to about a thousand unknowns and slows sharply
@@ -65,7 +69,7 @@ QuantumEvolve[
     matrix, jumps,
     parameter, parameterSpec,
     numericQ, solution,
-    rhs, init,
+    rhs, init, events = {},
     equations, additional, return, param,
     phaseSpaceQ = False,
     mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
@@ -87,25 +91,39 @@ QuantumEvolve[
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
     matrix = Progress`EvaluateWithProgress[
-        (* TrigToExp helps with some examples *)
-        TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
-            If[ (phaseSpaceQ || state === None && lindblad =!= {}) && ! hamiltonian["MatrixQ"],
-                HamiltonianTransitionRate[hamiltonian, If[phaseSpaceQ, basis, basis["Double"]]],
-                If[ hamiltonian["MatrixQ"] || phaseSpaceQ,
-                    QuantumOperator[hamiltonian["Double"], If[state =!= None && phaseSpaceQ, basis, basis["Double"]]],
-                    QuantumOperator[hamiltonian, basis]
-                ]["Matrix"] / I
-            ]
+        If[ (phaseSpaceQ || state === None && lindblad =!= {}) && ! hamiltonian["MatrixQ"],
+            HamiltonianTransitionRate[hamiltonian, If[phaseSpaceQ, basis, basis["Double"]]],
+            If[ hamiltonian["MatrixQ"] || phaseSpaceQ,
+                QuantumOperator[hamiltonian["Double"], If[state =!= None && phaseSpaceQ, basis, basis["Double"]]],
+                QuantumOperator[hamiltonian, basis]
+            ]["Matrix"] / I
         ],
         <|"Text" -> "Preparing Hamiltonian"|>
     ];
     jumps = Progress`EvaluateWithProgress[
-        TrigToExp @ Confirm @ If[mergeQ, Map[MergeInterpolatingFunctions], Identity][
-            If[ (phaseSpaceQ || state === None) && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
-                PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, If[phaseSpaceQ, basis, basis["Double"]]],
-                PadRight[Sqrt[gammas], Length[lindblad], 1] * (QuantumOperator[#, basis]["Matrix"] & /@ lindblad)
-            ]
+        If[ (phaseSpaceQ || state === None) && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
+            PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, If[phaseSpaceQ, basis, basis["Double"]]],
+            PadRight[Sqrt[gammas], Length[lindblad], 1] * (QuantumOperator[#, basis]["Matrix"] & /@ lindblad)
         ],
+        <|"Text" -> "Preparing Lindblad jumps"|>
+    ];
+    (* A numeric solve reads its restart times off the time dependence as written, before the
+       interpolating functions in it are merged and before TrigToExp *)
+    If[ numericQ,
+        {matrix, jumps} = rangeConditions[{matrix, jumps}, parameter, Rest[parameterSpec]];
+        events = restartEvents[
+            {matrix, jumps}, parameter, Rest[parameterSpec],
+            Min[Replace[OptionValue[MaxStepSize], Except[_ ? NumericQ] -> Infinity], OptionValue[MaxStepFraction] Abs[Subtract @@ Rest[parameterSpec]]],
+            OptionValue[WorkingPrecision]
+        ]
+    ];
+    (* TrigToExp helps with some examples *)
+    matrix = Progress`EvaluateWithProgress[
+        TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][matrix],
+        <|"Text" -> "Preparing Hamiltonian"|>
+    ];
+    jumps = Progress`EvaluateWithProgress[
+        TrigToExp @ Confirm @ If[mergeQ, Map[MergeInterpolatingFunctions], Identity][jumps],
         <|"Text" -> "Preparing Lindblad jumps"|>
     ];
     If[ jumps =!= {},
@@ -129,17 +147,7 @@ QuantumEvolve[
         ]
     ];
     init = If[defaultState === None, IdentityMatrix[Length[matrix], SparseArray], state["State"]];
-    (* restarting the integration at the landmarks of the time dependence keeps step
-       control from stepping over a short pulse *)
-    additional = Join[
-        Flatten[{OptionValue["AdditionalEquations"]}],
-        If[ numericQ,
-            With[{p = parameter}, WhenEvent[p == #, "RestartIntegration"] & /@
-                pulseLandmarks[{matrix, jumps}, parameter, Rest[parameterSpec], OptionValue[WorkingPrecision]]
-            ],
-            {}
-        ]
-    ];
+    additional = Join[Flatten[{OptionValue["AdditionalEquations"]}], events];
     equations = Join[
         {
             \[FormalS]'[parameter] == rhs,
@@ -312,38 +320,125 @@ parameterTerms[sa_SparseArray, parameter_] := KeyValueMap[
     ]
 ]
 
-(* Times at which a numeric solve restarts its integration, so that step control cannot
-   step over a feature of the time dependence much shorter than the steps around it: each
-   discontinuity, and two and four widths either side of the centre of each Gaussian or
-   exponential profile. Each sits a hair before its time in the direction of integration,
-   where NDSolve's own event at a discontinuity would otherwise coincide with it. *)
-pulseLandmarks[expr_, t_, {t0_, t1_}, precision_] := Module[{
-    values, points,
-    delta = Sign[t1 - t0] 10 ^ -9 Max[Abs[{t0, t1}], 1]
+(* The values the arrays hold, the explicit ones of a SparseArray, which ReplaceAll, FreeQ and
+   Cases do not see into *)
+arrayValues[arrays_] := Flatten[{arrays /. sa_SparseArray ? SparseArrayQ :> sa["ExplicitValues"]}]
+
+(* Each condition on the time is refined on the open range of a numeric solve: one that is
+   constant there becomes True or False, and one bounded at an end of the range loses that bound.
+   NDSolve's discontinuity processing stalls on a Boole condition that vanishes where the
+   integration stops (NDSolve::ndsz), and the values at the ends do not enter the solution. *)
+rangeConditions[arrays_, t_, {t0_, t1_}] := With[{
+    rules = DeleteCases[
+        # -> Refine[#, Min[t0, t1] < t < Max[t0, t1]] & /@ DeleteDuplicates @ Cases[arrayValues[arrays],
+            condition : (_Less | _LessEqual | _Greater | _GreaterEqual | _Inequality) /; ! FreeQ[condition, t],
+            {0, Infinity}
+        ],
+        condition_ -> condition_
+    ]
 },
-    values = DeleteDuplicates @ Select[Flatten[{expr /. sa_SparseArray ? SparseArrayQ :> sa["ExplicitValues"]}], ! FreeQ[#, t] &];
-    points = Join[
-        Catenate @ Map[
-            Quiet @ TimeConstrained[t /. Solve[FunctionDiscontinuities[#, t] && Min[t0, t1] < t < Max[t0, t1], t, Reals], 1, {}] &,
-            DeleteDuplicates @ Cases[values,
-                f : (Piecewise | UnitStep | HeavisideTheta | HeavisidePi | UnitBox | Boole | Sign | Floor | Ceiling | Round | Mod)[___] /; ! FreeQ[f, t],
-                {0, Infinity}
-            ]
+    If[ rules === {},
+        arrays,
+        ReplaceAll[arrays /. sa_SparseArray ? SparseArrayQ :> MapSparseArray[ReplaceAll[rules], sa], rules]
+    ]
+]
+
+(* The factors of the time dependence: each term of each value, without its constant factors *)
+timeFactors[arrays_, t_] := DeleteDuplicates @ Cases[
+    Catenate[If[MatchQ[#, _Plus], List @@ #, {#}] & /@ Expand[Select[arrayValues[arrays], ! FreeQ[#, t] &]]],
+    term_ /; ! FreeQ[term, t] :> Times @@ Select[If[MatchQ[term, _Times], List @@ term, {term}], ! FreeQ[#, t] &]
+]
+
+(* The parts of a factor that are no formula in the time: data, as an InterpolatingFunction, and
+   functions that are not System` symbols, which FunctionDiscontinuities knows nothing about *)
+opaqueParts[g_, t_] := DeleteDuplicates @ Cases[g,
+    f : h_[__] /; ! MatchQ[h, _Symbol ? (Context[#] === "System`" &)] && ! FreeQ[f, t],
+    {0, Infinity}
+]
+
+(* No restart times are read off data. It is named when its samples lie closer together than the
+   largest step NDSolve may take, beyond rounding, since a pulse they resolve can then fit inside
+   one step. *)
+opaqueMessage[f : interpolation_InterpolatingFunction[_], {lower_, upper_}, maxStep_] :=
+    With[{spacing = Min[Differences[Select[Union @@ interpolation["Grid"], Between[{lower, upper}]]]]},
+        If[spacing (1 + 10 ^ -9) < maxStep, Message[QuantumEvolve::pulsedata, f, spacing, maxStep]]
+    ]
+
+opaqueMessage[f_, _, _] := Message[QuantumEvolve::pulseform, f]
+
+(* A Piecewise as the sum of its values, each times the Boole of its own condition and of no
+   earlier one: Piecewise holds its arguments, so ComplexExpand does not reach into it, while
+   Boole is real *)
+booleTerms[g_] := g //. HoldPattern[Piecewise[cases_, default_ : 0]] :> With[{conditions = cases[[All, 2]]},
+    Total[MapThread[#1 Boole[#2 && ! Or @@ #3] &, {cases[[All, 1]], conditions, Most[FoldList[Append, {}, conditions]]}]] +
+        default Boole[! Or @@ conditions]
+]
+
+(* The discontinuities of a factor of the time dependence in [lower, upper], exact. Over the reals
+   FunctionDiscontinuities counts the times where a function is not real, so it reads the real and
+   imaginary parts. The factor is rationalized first, so that no approximate zero is left in an
+   imaginary part and Reduce solves an exact system. Reduce describes the whole set: a part of it
+   that is not isolated times, or an analysis that does not finish, gives no restart times and a
+   message. *)
+edgeTimes[g_, t_, {lower_, upper_}] := With[{seconds = 5},
+    With[{set = TimeConstrained[
+        Reduce[
+            FunctionDiscontinuities[ComplexExpand[{Re[#], Im[#]}] & @ booleTerms[Rationalize[g, 0]], {t}, Reals] &&
+                Rationalize[lower, 0] <= t <= Rationalize[upper, 0],
+            t,
+            Reals
         ],
-        Catenate @ Cases[values,
-            Power[E, q_] /; PolynomialQ[q, t] && Exponent[q, t] == 2 && TrueQ[Re[Coefficient[q, t, 2]] < 0] :>
-                With[{a = Re[Coefficient[q, t, 2]], b = Re[Coefficient[q, t, 1]]}, - b / (2 a) + {-4, -2, 0, 2, 4} / Sqrt[- 2 a]],
-            {0, Infinity}
-        ],
-        Catenate @ Cases[values,
-            Power[E, q_] /; PolynomialQ[q, t] && Exponent[q, t] == 1 && TrueQ[Re[Coefficient[q, t, 1]] != 0] :>
-                With[{a = Re[Coefficient[q, t, 1]], b = Re[Coefficient[q, t, 0]]}, - b / a + {-4, -2, 0, 2, 4} / Abs[a]],
-            {0, Infinity}
+        seconds,
+        Message[QuantumEvolve::pulsetime, g, seconds]; False
+    ]},
+        With[{parts = Replace[set, {False -> {}, HoldPattern[Or[p__]] :> {p}, p_ :> {p}}]},
+            If[! MatchQ[parts, {(t == _) ...}], Message[QuantumEvolve::pulseedges, g, lower, upper]];
+            Cases[parts, t == time_ :> time]
         ]
-    ];
-    DeleteDuplicates[
-        Sort @ Select[Cases[N[points - delta, precision], _Real], Min[t0, t1] < # < Max[t0, t1] &],
-        Abs[#1 - #2] < Abs[delta] &
+    ]
+]
+
+(* Times across an exponential profile, which TrigToExp makes of Gaussian, sech and tanh pulses,
+   read off the real parts of the coefficients of its exponent, so that a phase or a detuning
+   does not move them. For a Gaussian, its centre and two and four standard deviations either
+   side, so that no step within four standard deviations of the centre is longer than two; for an
+   exponential, the times where its magnitude is E^0, E^+-2 and E^+-4. *)
+profileTimes[g_, t_] := Catenate @ Cases[TrigToExp[g], Power[E, q_] /; PolynomialQ[q, t] :> exponentTimes[Re @ CoefficientList[q, t]], {0, Infinity}]
+
+exponentTimes[{_, b_, a_}] /; TrueQ[a < 0] := - b / (2 a) + {-4, -2, 0, 2, 4} / Sqrt[- 2 a]
+
+exponentTimes[{b_, a_}] /; TrueQ[a != 0] := - b / a + {-4, -2, 0, 2, 4} / Abs[a]
+
+exponentTimes[_] := {}
+
+(* Restart events of a numeric solve, so that step control cannot step over a feature of the time
+   dependence much shorter than the steps around it. Each discontinuity inside the range is crossed
+   with "CrossDiscontinuity" at its exact time: NDSolve's own processing, which finds an edge by the
+   sign change of a switching function across a step, misses one whose switching function changes
+   sign twice within a step, and when a window is short against its distance from the time origin
+   it carries the solution past an edge on the wrong side of it. A restart halfway between each
+   pair of consecutive discontinuities keeps a grid point inside every window. The profile times
+   of exponentials are restarts too, except on a discontinuity, which is crossed already. *)
+restartEvents[arrays_, t_, {t0_, t1_}, maxStep_, precision_] := With[{
+    lower = Min[t0, t1],
+    upper = Max[t0, t1],
+    tolerance = 10 ^ -9 Abs[t1 - t0],
+    factors = timeFactors[arrays, t]
+},
+    With[{opaque = DeleteDuplicates @ Catenate[opaqueParts[#, t] & /@ factors]},
+        Scan[opaqueMessage[#, {lower, upper}, maxStep] &, opaque];
+        With[{edges = Union @ N[Catenate[edgeTimes[# /. Thread[opaque -> 1], t, {lower, upper}] & /@ factors], precision]},
+            Join[
+                WhenEvent[t == #, "CrossDiscontinuity"] & /@ Select[edges, lower < # < upper &],
+                WhenEvent[t == #, "RestartIntegration"] & /@ First /@ Split[
+                    Sort @ Join[
+                        Mean /@ Partition[edges, 2, 1],
+                        Select[N[Catenate[profileTimes[#, t] & /@ factors], precision], lower < # < upper && Min[Abs[# - edges]] > tolerance &]
+                    ],
+                    Abs[#2 - #1] < tolerance &
+                ]
+            ]
+        ]
     ]
 ]
 
@@ -397,27 +492,30 @@ MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[Spar
 
 
 (* NDSolve repeats a grid time where the integration restarts at a discontinuity of the
-   equations, and the two values there differ: the first is the state before the step
-   that crossed it, the second the state after, and the solution takes the first at the
-   time itself and the second just past it. Each run between repeats is interpolated on
-   its own and the runs are joined, the earlier one up to and including the repeated time.
-   A repeat carrying the same value is no discontinuity and is dropped. The join is built
-   with Apply, so the bound variable is not renamed. *)
-gridInterpolation[pairs_List, order_Integer] := Module[{runs, interpolants},
-    runs = If[ DuplicateFreeQ[pairs[[All, 1]]],
-        {pairs},
-        Split[DeleteDuplicates[pairs], First[#1] =!= First[#2] &]
-    ];
-    interpolants = If[ Length[#] == 1,
-        Function[Evaluate[#[[1, 2]]]],
-        Interpolation[#, InterpolationOrder -> Min[order, Length[#] - 1]]
-    ] & /@ runs;
-    If[ Length[interpolants] == 1,
-        First[interpolants],
-        Function @@ {\[FormalT], Piecewise[
-            MapThread[{#1[\[FormalT]], \[FormalT] <= #2} &, {Most[interpolants], Most[runs][[All, -1, 1, 1]]}],
-            Last[interpolants][\[FormalT]]
-        ]}
+   equations, and where its own discontinuity processing crosses one it may bracket it by two
+   times a rounding apart; the two values there differ: the first is the state before the
+   step that crossed it, the second the state after, and the solution takes the first at the
+   time itself and the second just past it. Each run between such pairs is interpolated on its
+   own, since a polynomial through two values a rounding apart swings far beyond them, and the
+   runs are joined, the earlier one up to and including its last time. A repeat carrying the
+   same value is no discontinuity and is dropped. The join is built with Apply, so the bound
+   variable is not renamed. *)
+gridInterpolation[pairs_List, order_Integer] := With[{
+    separate = Max[Abs[First[#2] - First[#1]]] > 10 ^ -12 Max[Abs[First[#1]]] &
+},
+    With[{runs = If[And @@ separate @@@ Partition[pairs, 2, 1], {pairs}, Split[DeleteDuplicates[pairs], separate]]},
+        With[{interpolants = If[ Length[#] == 1,
+            With[{value = #[[1, 2]]}, value &],
+            Interpolation[#, InterpolationOrder -> Min[order, Length[#] - 1]]
+        ] & /@ runs},
+            If[ Length[interpolants] == 1,
+                First[interpolants],
+                Function @@ {\[FormalT], Piecewise[
+                    MapThread[{#1[\[FormalT]], \[FormalT] <= #2} &, {Most[interpolants], Most[runs][[All, -1, 1, 1]]}],
+                    Last[interpolants][\[FormalT]]
+                ]}
+            ]
+        ]
     ]
 ]
 
