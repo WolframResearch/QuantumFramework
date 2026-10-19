@@ -1,0 +1,14 @@
+$AllowInternet=False;
+PacletDirectoryLoad/@{
+ "/Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__Arrays-1.4.1",
+ "/Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__TensorNetworks-1.2.0",
+ "/Users/mohammadb/Library/Wolfram/Paclets/Repository/IBMQuantumPlatform-0.0.4"
+};
+$Epilog:=Echo[
+ With[{f=ToExpression[First@Names["Wolfram`QuantumFramework`SecondQuantization`*`permanentAmplitude"]]},
+  {FreeQ[DownValues[f],PermanentSelectionAudit`ProposedAmplitude],
+   !FreeQ[DownValues[f],Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`useRepeatedPermanentQ]}],
+ "ACTUAL_KERNEL_DISPATCH"];
+Block[{$ScriptCommandLine={"Tests/RunTests.wls","QuantumInterferometer"}},
+ Get["/Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/Tests/RunTests.wls"]
+];

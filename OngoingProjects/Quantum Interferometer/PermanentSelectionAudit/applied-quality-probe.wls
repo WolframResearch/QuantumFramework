@@ -1,0 +1,25 @@
+Get["/tmp/qi-applied-quality-source.wl"];
+$ProgressReporting = False;
+$qiReviewChecks = <||>;
+$qiReviewChecks["Version"] = $Version;
+$qiReviewChecks["SourceSHA256"] = FileHash["/Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/QuantumFramework/Kernel/SecondQuantization/Interferometer.m", "SHA256", "HexString"];
+$qiReviewChecks["ExactSymbolicPrecision"] = Precision[{{a, b}, {c, d}}];
+$qiReviewChecks["MixedPrecision"] = Precision[ReplacePart[N[FourierMatrix[4], 50], {1, 1} -> 0.5]];
+$qiReviewChecks["SymbolicTwoModeThreePhotonFormula"] = Expand[permanentAmplitude[{{a, b}, {c, d}}, {2, 1}, {1, 2}] - (b c^2 + 2 a c d)] === 0;
+$qiReviewChecks["ExactGuardTrace"] = Trace[useRepeatedPermanentQ[{{a, b}, {c, d}}, {1000000, 0}, {1000000, 0}], HoldPattern[Total[_] | Min[__] | Count[__] | Power[2, _]], TraceInternal -> True];
+$qiReviewChecks["ExactVacuumMismatchHOM"] = {permanentAmplitude[IdentityMatrix[2], {0, 0}, {0, 0}], permanentAmplitude[IdentityMatrix[2], {1, 0}, {0, 0}], permanentAmplitude[{{1, -1}, {1, 1}}/Sqrt[2], {1, 1}, {1, 1}], Abs[permanentAmplitude[{{1, -1}, {1, 1}}/Sqrt[2], {1, 1}, {2, 0}]]^2};
+$qiReviewReferencePlan[w_, s_, t_] := With[{n = Total[s], m = Length[s], ks = Times @@ (s + 1), kt = Times @@ (t + 1), p = Precision[w]}, Which[n != Total[t], "Zero", n == 0, "Vacuum", p === Infinity, "Direct", True, With[{k = Min[ks, kt], r = If[ks <= kt, Count[t, _?Positive], Count[s, _?Positive]], factor = If[p === MachinePrecision, 16, 1/10]}, If[k < 2^n && factor (m^2 + k m (r + 1)) < n 2^n, "Repeated", "Direct"]]]];
+$qiReviewAppliedPlan[w_, s_, t_] := Which[Total[s] != Total[t], "Zero", Total[s] == 0, "Vacuum", useRepeatedPermanentQ[w, s, t], "Repeated", True, "Direct"];
+$qiReviewSelectorCases = Flatten[Table[With[{pats = FrobeniusSolve[ConstantArray[1, m], n]}, Catenate[Table[{m, n, s, t}, {s, pats}, {t, pats}]]], {m, 1, 4}, {n, 0, 5}], 2];
+$qiReviewChecks["SelectorEquivalenceCaseCount"] = Length[$qiReviewSelectorCases] * 3;
+$qiReviewChecks["SelectorEquivalence"] = And @@ (With[{m = #[[1]], s = #[[3]], t = #[[4]]}, And @@ Table[$qiReviewAppliedPlan[w, s, t] === $qiReviewReferencePlan[w, s, t], {w, {FourierMatrix[m], N[FourierMatrix[m]], N[FourierMatrix[m], 35]}}]] & /@ $qiReviewSelectorCases);
+$qiReviewChecks["MachineFullFourPhotonSectorNormError"] = With[{w = N[FourierMatrix[3]], s = {2, 1, 1}, outs = FrobeniusSolve[{1, 1, 1}, 4]}, Abs[Total[Abs[permanentAmplitude[w, s, #]]^2 & /@ outs] - 1]];
+$qiReviewChecks["ArbitraryFullFourPhotonSectorNormError"] = With[{w = N[FourierMatrix[3], 35], s = {2, 1, 1}, outs = FrobeniusSolve[{1, 1, 1}, 4]}, Abs[Total[Abs[permanentAmplitude[w, s, #]]^2 & /@ outs] - 1]];
+$qiReviewChecks["BothDirectionsCollisionError"] = With[{w = N[FourierMatrix[4], 35], s = {3, 1, 0, 0}, t = {1, 1, 1, 1}}, Max[Abs[permanentAmplitude[w, s, t] - N[Permanent[FourierMatrix[4][[modeList[t], modeList[s]]]]/Sqrt[Times @@ (s!) Times @@ (t!)], 35]], Abs[permanentAmplitude[w, t, s] - N[Permanent[FourierMatrix[4][[modeList[s], modeList[t]]]]/Sqrt[Times @@ (s!) Times @@ (t!)], 35]]]];
+$qiReviewChecks["ArbitrarySparsePhaseError"] = With[{w = SparseArray[N[DiagonalMatrix[{Exp[I/3], Exp[I/5], Exp[I/7], Exp[I/11]}], 35]], s = {4, 4, 0, 0}}, {useRepeatedPermanentQ[w, s, s], Abs[permanentAmplitude[w, s, s] - w[[1, 1]]^4 w[[2, 2]]^4]}];
+$qiReviewChecks["InputUnchanged"] = With[{w = N[FourierMatrix[4]], s = {4, 4, 0, 0}}, With[{before = w + 0}, permanentAmplitude[w, s, Reverse[s]]; w === before]];
+$qiReviewChecks["LargeBunchingAbsoluteError"] = With[{w = N[DiagonalMatrix[{Exp[37 I/100], Exp[-I/5]}]], s = {24, 0}}, Abs[permanentAmplitude[w, s, s] - w[[1, 1]]^24]];
+$qiReviewChecks["Messages"] = ToString[$MessageList, InputForm];
+Export["/tmp/qi-applied-quality-live.wl", $qiReviewChecks, "Package"];
+WriteString[$Output, ToString[$qiReviewChecks, InputForm], "\n"];
+$qiReviewChecks

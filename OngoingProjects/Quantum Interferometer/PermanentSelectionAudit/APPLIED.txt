@@ -1,0 +1,60 @@
+APPROVED PERMANENT SELECTION RULE — APPLIED 2026-10-19
+
+Implementation
+  QuantumFramework/Kernel/SecondQuantization/Interferometer.m now uses the
+  calibrated cost rule from RESULTS.txt through useRepeatedPermanentQ.
+  Only the dispatch predicate changed. repeatedPermanent, the built-in
+  Permanent branch, precision promotion, factorial normalization, vacuum and
+  photon-number mismatch behavior retain their original implementations.
+  Exact and symbolic matrices still use built-in Permanent. Their precision
+  guard short-circuits before computing numerical cost features.
+
+Repository tests
+  The 13 supplementary cases are integrated into Tests/QuantumInterferometer.wlt;
+  they exercise the actual production helpers, without a proposal hook.
+  The original 47 tests remain byte-for-byte unchanged. There are 60 unique IDs.
+  Both the implementation run and an independent fresh-kernel run passed 60/60.
+  The 1741 small occupation-pair references are checked at machine and 35-digit
+  precision within one of the 13 supplementary tests, rather than counted as
+  1741 additional VerificationTest records.
+  The standard runner reports RED solely for the same six pre-existing package
+  load messages as the baseline: RegisterFormat::interr, URLFetch::offline,
+  CloudConnect::offline, CloudObject::cloudnf, Lookup::invrl, CloudObject::cloudnf.
+  No test failures or test-time messages were reported. This is a 60/60 test
+  result, not a GREEN package-environment claim.
+
+Additional implementation checks
+  Production decisions match the prototype on all 388 saved occupation/precision
+  cases. Independent traces confirm the exact/symbolic short circuit.
+  Nine bounded old/new comparisons passed against 85-digit references: machine
+  absolute error below 1e-12 and 35-digit absolute error below 1e-28. Changed
+  numerical routes can differ by rounding; the largest old/new absolute
+  difference in those probes was 3.175e-19. Exact symbolic results are preserved.
+  Actual production dispatch and absence of a prototype hook were checked after
+  each full test run. Source hashes and machine-readable results are recorded
+  in applied-metadata.json.
+
+Measured storage limitation
+  The approved rule does not inspect packed-array storage. Independent seven-
+  trial, cache-cleared checks at n=12, m=128, two occupied modes found:
+    packed random unitary: new 1.361ms, old 11.834ms (medians);
+    unpacked Fourier matrix: new 20.446ms, old 11.953ms;
+    explicitly complex-packed Fourier: new 1.332ms, old 12.392ms.
+  These are complete normalized amplitudes, excluding startup and matrix
+  preparation. Plain ToPackedArray left the mixed real/complex Fourier matrix
+  unpacked; the explicit Complex conversion packed both W and its selected block.
+  No packing conversion or additional selection condition was added to the
+  approved rule. It is a local empirical policy, not an always-fastest guarantee.
+
+Evidence
+  applied-tests.wls/log: implementation run of the standard repository runner.
+  applied-independent-suite.wls/log: independent production run.
+  applied-independent-probes.wls/log/json: old/new numerical references and five
+    timing trials per case.
+  applied-independent-storage*.wls/log/json: storage-specific paired diagnosis.
+  applied-independent-report.md and applied-quality-report.md: independent
+    verification and A-G quality reviews, each concluded in one round with zero
+    open issues. The quality probe also checked 17361 selector comparisons.
+  applied-quality-*: independent exact, numerical and invariant probes.
+  Paths to read-only installed dependencies in these scripts are machine-local.
+  Historical calibration files and OriginalHelpers.wl remain preserved.

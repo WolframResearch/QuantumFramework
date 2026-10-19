@@ -606,4 +606,151 @@ VerificationTest[
     TestID -> "QI-passive-ignores-cutoff"
 ]
 
+(* ---- permanent dispatch: calibrated costs, exact results and numerical invariants ---- *)
+
+$qiPermanentAmplitude = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`permanentAmplitude;
+$qiUseRepeatedPermanentQ = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`useRepeatedPermanentQ;
+
+VerificationTest[
+    With[{w = FourierMatrix[3], symbolic = {{a, b}, {c, d}}},
+        {
+            $qiPermanentAmplitude[w, {2, 1, 0}, {1, 2, 0}] === Permanent[w[[{1, 2, 2}, {1, 1, 2}]]] / 2,
+            $qiUseRepeatedPermanentQ[w, {2, 1, 0}, {1, 2, 0}],
+            $qiPermanentAmplitude[symbolic, {1, 1}, {1, 1}] === a d + b c,
+            $qiUseRepeatedPermanentQ[symbolic, {1, 1}, {1, 1}]
+        }
+    ],
+    {True, False, True, False},
+    TestID -> "QI-permanent-dispatch-preserves-exact-and-symbolic-inputs"
+]
+
+VerificationTest[
+    {
+        $qiPermanentAmplitude[IdentityMatrix[2], {0, 0}, {0, 0}],
+        $qiPermanentAmplitude[IdentityMatrix[2], {1, 0}, {0, 0}]
+    },
+    {1, 0},
+    TestID -> "QI-permanent-dispatch-vacuum-and-number-conservation"
+]
+
+VerificationTest[
+    With[{w = {{1, -1}, {1, 1}} / Sqrt[2]},
+        {
+            $qiPermanentAmplitude[w, {1, 1}, {1, 1}],
+            Abs[$qiPermanentAmplitude[w, {1, 1}, {2, 0}]] ^ 2,
+            Abs[$qiPermanentAmplitude[w, {1, 1}, {0, 2}]] ^ 2
+        }
+    ],
+    {0, 1/2, 1/2},
+    TestID -> "QI-permanent-dispatch-exact-HOM"
+]
+
+VerificationTest[
+    With[{s = PadRight[Join[{2}, ConstantArray[1, 10]], 16]},
+        $qiUseRepeatedPermanentQ[N[FourierMatrix[16]], s, Reverse[s]]
+    ],
+    False,
+    TestID -> "QI-permanent-dispatch-avoids-mild-collision-slowdown"
+]
+
+VerificationTest[
+    With[{s = PadRight[{8, 8}, 16]},
+        $qiUseRepeatedPermanentQ[N[FourierMatrix[16]], s, Reverse[s]]
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-retains-strong-collision-route"
+]
+
+VerificationTest[
+    With[{s = PadRight[{6, 6}, 128]},
+        $qiUseRepeatedPermanentQ[N[FourierMatrix[128]], s, Reverse[s]]
+    ],
+    False,
+    TestID -> "QI-permanent-dispatch-accounts-for-mode-conversion-cost"
+]
+
+VerificationTest[
+    With[{s = PadRight[{4, 4}, 16]},
+        {
+            $qiUseRepeatedPermanentQ[N[FourierMatrix[16]], s, Reverse[s]],
+            $qiUseRepeatedPermanentQ[N[FourierMatrix[16], 35], s, Reverse[s]]
+        }
+    ],
+    {False, True},
+    TestID -> "QI-permanent-dispatch-distinguishes-numerical-precisions"
+]
+
+VerificationTest[
+    With[{w = N[DiagonalMatrix[{Exp[37 I / 100], Exp[- I / 5]}]], s = {24, 0}},
+        {
+            $qiUseRepeatedPermanentQ[w, s, s],
+            Abs[$qiPermanentAmplitude[w, s, s] - w[[1, 1]] ^ 24] < 10^-13
+        }
+    ],
+    {True, True},
+    TestID -> "QI-permanent-dispatch-preserves-large-bunching-accuracy"
+]
+
+VerificationTest[
+    With[{m = 16, n = 12},
+        With[{w = N[FourierMatrix[m]], s = PadRight[ConstantArray[1, n], m], t = PadLeft[{n}, m]},
+            Abs[$qiPermanentAmplitude[w, s, t] - Sqrt[n!] Times @@ w[[-1, Range[n]]]] < 10^-12
+        ]
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-output-collision-normalization"
+]
+
+(* Exact four-mode references include every input/output pair with one through four photons:
+   16 + 100 + 400 + 1225 = 1741 pairs, checked at machine and 35-digit precision. *)
+VerificationTest[
+    With[{w = DiagonalMatrix[{1, I, -1, -I}] . FourierMatrix[4] . DiagonalMatrix[{1, -I, -1, I}]},
+        And @@ Flatten @ Table[
+            With[{patterns = FrobeniusSolve[ConstantArray[1, 4], n]},
+                And @@ Flatten @ Table[
+                    With[{
+                        rows = Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, t],
+                        cols = Catenate @ MapIndexed[ConstantArray[First[#2], #1] &, s]
+                    },
+                        With[{a = Permanent[w[[rows, cols]]] / Sqrt[Times @@ (s!) Times @@ (t!)]},
+                            Abs[$qiPermanentAmplitude[N[w], s, t] - N[a]] < 10^-12 &&
+                            Abs[$qiPermanentAmplitude[N[w, 35], s, t] - N[a, 35]] < 10^-28
+                        ]
+                    ],
+                    {s, patterns}, {t, patterns}
+                ]
+            ],
+            {n, 1, 4}
+        ]
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-all-small-occupation-pairs"
+]
+
+VerificationTest[
+    With[{qi = QuantumInterferometer["Fourier"[3]], s = {2, 1, 1}, outs = FrobeniusSolve[{1, 1, 1}, 4]},
+        Abs[Total[Abs[qi["Amplitude", s -> #]] ^ 2 & /@ outs] - 1] < 10^-12
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-scalar-amplitudes-normalize-sector"
+]
+
+VerificationTest[
+    With[{w = SparseArray[N[DiagonalMatrix[{Exp[I / 3], Exp[I / 5], Exp[I / 7], Exp[I / 11]}]]], s = {4, 4, 0, 0}},
+        Abs[$qiPermanentAmplitude[w, s, s] - w[[1, 1]] ^ 4 w[[2, 2]] ^ 4] < 10^-12
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-sparse-unitary"
+]
+
+VerificationTest[
+    With[{exact = FourierMatrix[4]},
+        With[{w = ReplacePart[N[exact, 50], {1, 1} -> N[exact[[1, 1]]]], s = {2, 1, 1, 0}, t = {0, 1, 1, 2}},
+            Abs[$qiPermanentAmplitude[w, s, t] - N[Permanent[exact[[{2, 3, 4, 4}, {1, 1, 2, 3}]]] / 2, 50]] < 10^-12
+        ]
+    ],
+    True,
+    TestID -> "QI-permanent-dispatch-mixed-precision-unitary"
+]
+
 EndTestSection[]

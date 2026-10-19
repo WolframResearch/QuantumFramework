@@ -1,0 +1,90 @@
+PERMANENT SELECTION PROPOSAL — REVIEW BEFORE KERNEL CHANGE
+
+Historical pre-implementation report. The approved rule has since been applied;
+see APPLIED.txt for production test results and implementation limitations.
+At the time of this report, the QI kernel and its existing tests were unchanged.
+Proposal.wl is an isolated prototype with an optional fresh-kernel, in-memory
+integration hook.
+
+Scope and evidence
+  Source revision: b92953cd8b5913fa76db7a1668533fa038a4d0d5.
+  Kernel: Wolfram Language15.0.0, MacOSX-ARM64.
+  Main sweep:388 cases;264 Machine,62 genuine30-digit,62 genuine60-digit.
+  Photons2,4,8,12,16,20; modes16/20,64,128 as compatible with occupation.
+  Occupations: free, one pair, pairs, two balanced occupied modes, single
+  occupied input/output, and random layouts. Both transposition directions.
+  Each timed quantity is a normalized amplitude, with row/column extraction
+  and factorial normalization. The forced repeated branch includes the
+  ORIGINAL whole-transfer-matrix precision promotion. Its helper is unmodified.
+  Main branch timings omit the final route-selection decision. Three batches
+  per method, each starts ClearSystemCache;1–32 evaluations/batch for short
+  calls. Limit1 second/evaluation,256MiB additional allocation.32 direct rows
+  timed out;37 repeated rows timed out and13 hit memory limit. Those records
+  are censored, never counted as successful timings or assigned invented times.
+  All388 measurements were saved. The kernel was stopped during CSV formatting;
+  Python generated CSV from the saved JSON. Future Benchmark.wls delegates CSV
+  generation to Analyze.py. Original log and this limitation are preserved.
+
+Rule
+  n = total photons, m = modes.
+  Ks = Product[s_j+1]; Kt = Product[t_j+1]; K=min(Ks,Kt).
+  r = number of positive output counts in the cheaper orientation:
+      Count[t,_?Positive] when Ks<=Kt; otherwise Count[s,_?Positive].
+  C = m^2 + K*m*(r+1).
+  Choose the existing repeated routine only when
+      K < 2^n AND gamma*C < n*2^n.
+  gamma=16 for MachinePrecision; gamma=0.1 for other approximate inputs.
+  Exact/symbolic matrices continue through built-in Permanent. Vacuum and
+  photon-number mismatch remain1 and0. Both algorithms and normalization are
+  preserved. Only dispatch changes.
+  These are empirical work scores, not assertions about Permanent's internals.
+  m^2 approximates whole-W precision conversion; K*m*(r+1) approximates the
+  current interpreted sum. The much smaller arbitrary-precision coefficient
+  reflects the measured cost of WL's nonmachine Permanent evaluation.
+
+Validation
+  Constants selected from training seed1101 and high-precision seed3303.
+  Machine seed2202 was held out:132 rows. Proposed selected the faster route
+  in all112 cases with both methods completed; it chose direct for all20
+  other rows whose repeated branch hit a limit. No guarantee outside this grid.
+  Complete-selector validation:40 additional cases on unseen n6/10/14/18,
+  modes24/96 and precision35, plus tiny n2/4 free cases. All40 proposed calls
+  completed;4 original calls hit a time/memory limit. On the36 fully timed
+  cases, descriptive summed times were2.190s original versus1.045s proposed.
+  These sums do not represent workload-frequency weighting. Small free cases
+  acquired about5–28microseconds (6–14%) overhead. The rule is not always faster.
+  At arbitrary precision it deliberately misses some small speedups; inspect
+  analysis.json rather than assuming a perfect classifier.
+
+Tests found and run
+  Tests/QuantumInterferometer.wlt is the only test file referring to QI.
+  Existing suite: baseline47/47 successful; candidate47/47 successful.
+  The unchanged repository runner still reports RED for six pre-existing
+  ImageMetadataTools/Memoize offline load messages. This is not a GREEN
+  environment claim. Candidate hook survival was checked after suite execution.
+  Supplementary ProposalTests.wlt:13/13 successful, no messages. Includes
+  1741 exact small-occupation references checked at Machine and35digits,
+  complete scalar-sector normalization, sparse/mixed precision, exact/HOM,
+  output-collision normalization and24-photon bunching accuracy.
+  Additional independent references:48/48 absolute checks on85-digit unitaries
+  plus8/8 relative checks on tiny nonzero amplitudes. Relative checks use exact
+  rationalized subtraction so significance zeros cannot hide rounding errors.
+  Worst relative errors of the latter sample:8.31e-15 Machine,9.44e-36 at35digits.
+
+Reproduce from this directory (use the working installed desktop kernel)
+  '/Applications/Wolfram 15.0.app/Contents/MacOS/WolframKernel' -noinit -script Benchmark.wls
+  python3 Analyze.py
+  '/Applications/Wolfram 15.0.app/Contents/MacOS/WolframKernel' -noinit -script ValidateSelectors.wls
+  '/Applications/Wolfram 15.0.app/Contents/MacOS/WolframKernel' -noinit -script RunProposalTests.wls
+  '/Applications/Wolfram 15.0.app/Contents/MacOS/WolframKernel' -noinit -script RunExistingTests.wls baseline
+  '/Applications/Wolfram 15.0.app/Contents/MacOS/WolframKernel' -noinit -script RunExistingTests.wls candidate
+  Existing-suite wrapper names local read-only installed dependency paths; adapt
+  those paths on another machine. It never installs or updates dependencies.
+
+Recommendation
+  Review this calibrated two-route policy before implementation. Keep
+  repeatedPermanent for profitable bunching and numerical stability. Replace
+  the present term-count-only choice with a cost model which includes modes,
+  occupied rows and arithmetic type. Recalibrate the empirical constants on
+  another WL version/architecture. This artifact proposes a rule; it does not
+  justify universal hardware-independent thresholds or an always-fastest claim.

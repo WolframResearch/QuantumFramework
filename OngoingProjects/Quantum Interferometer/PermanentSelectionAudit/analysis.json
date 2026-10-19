@@ -1,0 +1,307 @@
+{
+  "Coefficients": {
+    "Machine": 16,
+    "OtherApproximate": 0.1
+  },
+  "Formula": "Repeated iff K < 2^n and factor*(m^2+K*m*(r+1)) < n*2^n; exact inputs remain Direct.",
+  "Training": {
+    "Old": {
+      "RepeatedChoices": 221,
+      "SelectedCensoredRoutes": 24,
+      "CompleteCaseSumSeconds": 7.0957341922967245,
+      "WorstCompleteCaseRegret": 575.5107409031127,
+      "CasesOver10PercentSlowerThanFastest": 88
+    },
+    "Proposed": {
+      "RepeatedChoices": 96,
+      "SelectedCensoredRoutes": 10,
+      "CompleteCaseSumSeconds": 2.562496550942251,
+      "WorstCompleteCaseRegret": 2.1873380229544614,
+      "CasesOver10PercentSlowerThanFastest": 13
+    },
+    "Rows": 256,
+    "BothRoutesCompleted": 204,
+    "MaxAbsoluteDifference": 1.1829231391319344e-17,
+    "MaxRelativeDifference": 1.7401151651738178e-11,
+    "ProposedMisclassifications": [
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.00026933333333333334,
+        "RepeatedSeconds": 0.00021923076923076925
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.0002945,
+        "RepeatedSeconds": 0.00015072222222222223
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "SingleToFree",
+        "DirectSeconds": 0.0002954,
+        "RepeatedSeconds": 0.00013505
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "FreeToSingle",
+        "DirectSeconds": 0.000273625,
+        "RepeatedSeconds": 0.00015911764705882353
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.0002065,
+        "RepeatedSeconds": 0.000153
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "SingleToFree",
+        "DirectSeconds": 0.00022635714285714284,
+        "RepeatedSeconds": 0.00013745
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "FreeToSingle",
+        "DirectSeconds": 0.00021878947368421053,
+        "RepeatedSeconds": 0.00015535714285714285
+      },
+      {
+        "Seed": 3303,
+        "Photons": 8,
+        "Modes": 64,
+        "Precision": "30",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.006285,
+        "RepeatedSeconds": 0.00558
+      },
+      {
+        "Seed": 3303,
+        "Photons": 8,
+        "Modes": 64,
+        "Precision": "60",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.006462,
+        "RepeatedSeconds": 0.005499
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.181382,
+        "RepeatedSeconds": 0.153136
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.180651,
+        "RepeatedSeconds": 0.15192
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 64,
+        "Precision": "30",
+        "Layout": "Random",
+        "DirectSeconds": 0.178896,
+        "RepeatedSeconds": 0.10937
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 64,
+        "Precision": "60",
+        "Layout": "Random",
+        "DirectSeconds": 0.177013,
+        "RepeatedSeconds": 0.109479
+      }
+    ]
+  },
+  "IndependentSeedMachineValidation": {
+    "Old": {
+      "RepeatedChoices": 112,
+      "SelectedCensoredRoutes": 14,
+      "CompleteCaseSumSeconds": 3.615498090902398,
+      "WorstCompleteCaseRegret": 577.8333713763981,
+      "CasesOver10PercentSlowerThanFastest": 69
+    },
+    "Proposed": {
+      "RepeatedChoices": 28,
+      "SelectedCensoredRoutes": 0,
+      "CompleteCaseSumSeconds": 0.27867953457147465,
+      "WorstCompleteCaseRegret": 1.0,
+      "CasesOver10PercentSlowerThanFastest": 0
+    },
+    "Rows": 132,
+    "BothRoutesCompleted": 112,
+    "MaxAbsoluteDifference": 4.514208111499278e-17,
+    "MaxRelativeDifference": 1.7401128666428043e-11,
+    "ProposedMisclassifications": []
+  },
+  "All": {
+    "Old": {
+      "RepeatedChoices": 333,
+      "SelectedCensoredRoutes": 38,
+      "CompleteCaseSumSeconds": 10.711232283199122,
+      "WorstCompleteCaseRegret": 577.8333713763981,
+      "CasesOver10PercentSlowerThanFastest": 157
+    },
+    "Proposed": {
+      "RepeatedChoices": 124,
+      "SelectedCensoredRoutes": 10,
+      "CompleteCaseSumSeconds": 2.8411760855137254,
+      "WorstCompleteCaseRegret": 2.1873380229544614,
+      "CasesOver10PercentSlowerThanFastest": 13
+    },
+    "Rows": 388,
+    "BothRoutesCompleted": 316,
+    "MaxAbsoluteDifference": 4.514208111499278e-17,
+    "MaxRelativeDifference": 1.7401151651738178e-11,
+    "ProposedMisclassifications": [
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.00026933333333333334,
+        "RepeatedSeconds": 0.00021923076923076925
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.0002945,
+        "RepeatedSeconds": 0.00015072222222222223
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "SingleToFree",
+        "DirectSeconds": 0.0002954,
+        "RepeatedSeconds": 0.00013505
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "FreeToSingle",
+        "DirectSeconds": 0.000273625,
+        "RepeatedSeconds": 0.00015911764705882353
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.0002065,
+        "RepeatedSeconds": 0.000153
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "SingleToFree",
+        "DirectSeconds": 0.00022635714285714284,
+        "RepeatedSeconds": 0.00013745
+      },
+      {
+        "Seed": 3303,
+        "Photons": 4,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "FreeToSingle",
+        "DirectSeconds": 0.00021878947368421053,
+        "RepeatedSeconds": 0.00015535714285714285
+      },
+      {
+        "Seed": 3303,
+        "Photons": 8,
+        "Modes": 64,
+        "Precision": "30",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.006285,
+        "RepeatedSeconds": 0.00558
+      },
+      {
+        "Seed": 3303,
+        "Photons": 8,
+        "Modes": 64,
+        "Precision": "60",
+        "Layout": "Pairs",
+        "DirectSeconds": 0.006462,
+        "RepeatedSeconds": 0.005499
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 16,
+        "Precision": "30",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.181382,
+        "RepeatedSeconds": 0.153136
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 16,
+        "Precision": "60",
+        "Layout": "OnePair",
+        "DirectSeconds": 0.180651,
+        "RepeatedSeconds": 0.15192
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 64,
+        "Precision": "30",
+        "Layout": "Random",
+        "DirectSeconds": 0.178896,
+        "RepeatedSeconds": 0.10937
+      },
+      {
+        "Seed": 3303,
+        "Photons": 12,
+        "Modes": 64,
+        "Precision": "60",
+        "Layout": "Random",
+        "DirectSeconds": 0.177013,
+        "RepeatedSeconds": 0.109479
+      }
+    ]
+  },
+  "Interpretation": "Times are normalized-amplitude calls including repeated-row/column matrix extraction and normalization and original whole-W precision conversion. Censored rows are not assigned fabricated runtimes. Summed times are only over cases where both routes completed; they are descriptive, not representative workload weights. Constants are empirical for WL15 ARM, not portable guarantees."
+}

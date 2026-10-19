@@ -1,0 +1,14 @@
+(* Created with the Wolfram Language : www.wolfram.com *)
+<|"Version" -> "15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026)", 
+ "SourceSHA256" -> 
+  "cdd11b786204bbfe98ff963e05d34a6998005cbe0c37ae8e52903edd08ccbe6f", 
+ "ExactSymbolicPrecision" -> Infinity, "MixedPrecision" -> MachinePrecision, 
+ "SymbolicTwoModeThreePhotonFormula" -> True, "ExactGuardTrace" -> {}, 
+ "ExactVacuumMismatchHOM" -> {1, 0, 0, 1/2}, 
+ "SelectorEquivalenceCaseCount" -> 17361, "SelectorEquivalence" -> True, 
+ "MachineFullFourPhotonSectorNormError" -> 1.3322676295501878*^-15, 
+ "ArbitraryFullFourPhotonSectorNormError" -> 0``34.82362025148232, 
+ "BothDirectionsCollisionError" -> 0``37.473736691237384, 
+ "ArbitrarySparsePhaseError" -> {True, 0``33.59088569519845}, 
+ "InputUnchanged" -> True, "LargeBunchingAbsoluteError" -> 
+  7.108895957933346*^-16, "Messages" -> "{}"|>

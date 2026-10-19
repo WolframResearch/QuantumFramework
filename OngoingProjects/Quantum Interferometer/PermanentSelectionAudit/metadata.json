@@ -1,0 +1,37 @@
+{
+  "Version": "15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026)",
+  "SystemID": "MacOSX-ARM64",
+  "SourcePath": "/Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/QuantumFramework/Kernel/SecondQuantization/Interferometer.m",
+  "SourceSHA256": "36b04949e20e27743f5bf8d32c7efa0878207a4aaab69cb96d7e1fec103e03c4",
+  "CaseCount": 388,
+  "Seconds": null,
+  "TimeoutPerEvaluation": 1.0,
+  "Trials": 3,
+  "Measure": "Normalized amplitudes including repeated-row/column matrix extraction, normalization, and whole-W precision promotion in repeated route",
+  "Completion": "All 388 measurement rows saved; kernel stopped during CSV export; CSV generated independently from saved JSON.",
+  "TimingProtocol": "Three batches, each preceded by ClearSystemCache; 1\u201332 evaluations per batch to resolve short calls; timeout and allocation limits recorded, never treated as successes.",
+  "PrecisionCaseCounts": {
+    "Machine": 264,
+    "30": 62,
+    "60": 62
+  },
+  "RouteSelectionOverhead": "The 388-case branch comparison does not time SelectionPlan or old permanentAmplitude; separate end-to-end selector validation is required.",
+  "ApproximateZeroEncoding": "A JSON error of zero can be a significance-zero arbitrary-precision difference; it is not a claim of exact equality. Independent reference checks and exact-rationalized relative comparisons are included separately.",
+  "ProposalSHA256": "d901417c49743e03e7a3f56392f16bf780ed85fa0aa130aca010c79967da70b3",
+  "ProposalTestsSHA256": "95e8680d04c20616429f9055dc35817a550d883e5472ecbb07cdd8302ed8de9e",
+  "ExistingSuite": {
+    "File": "Tests/QuantumInterferometer.wlt",
+    "BaselineSucceeded": 47,
+    "CandidateSucceeded": 47,
+    "Total": 47,
+    "RunnerStatus": "RED in both runs, solely six pre-existing load messages",
+    "CandidateRemainedInstalled": true
+  },
+  "SupplementaryTests": {
+    "Succeeded": 13,
+    "Total": 13,
+    "Messages": 0
+  },
+  "IndependentAbsoluteReferenceCasesPassed": 48,
+  "IndependentRelativeReferenceCasesPassed": 8
+}

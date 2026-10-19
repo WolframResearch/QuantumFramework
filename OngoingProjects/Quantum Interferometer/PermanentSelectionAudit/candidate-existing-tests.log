@@ -1,0 +1,96 @@
+
+RegisterFormat::interr: An internal error occurred: ImageMetadataTools could not be installed.
+
+URLFetch::offline: The Wolfram Language is currently configured not to use the Internet. To allow Internet use set $AllowInternet = True or check the "Allow the Wolfram Language to use the Internet" box in the Help ▶ Internet & Mail Settings dialog.
+
+CloudConnect::offline: The Wolfram Language is currently configured not to use the Internet. To allow Internet use set $AllowInternet = True or check the "Allow the Wolfram Language to use the Internet" box in the Help ▶ Internet & Mail Settings dialog.
+
+CloudObject::cloudnf: No CloudObject found at the given address
+
+Lookup::invrl: The argument $Failed is not a valid Association or a list of rules.
+
+CloudObject::cloudnf: No CloudObject found at the given address
+OutputForm[>> ]CANDIDATE_INSTALLEDOutputForm[ ]{15.0.0 for Mac OS X ARM (64-bit) (February 17, 2026), MacOSX-ARM64, 1, True}
+=======================================================================
+  QuantumFramework Test Coverage Report
+=======================================================================
+  Date:       Mon 19 Oct 2026 14:48:42
+  Paclet:     /Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/QuantumFramework
+  Loaded:     /Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/QuantumFramework/Kernel/QuantumFrameworkMain.m
+  Test files: 1 matching "QuantumInterferometer"
+PACLET	/Users/mohammadb/.codex/worktrees/56d8/QuantumFramework/QuantumFramework
+
+  MESSAGES DURING LOAD (this run cannot be considered green):
+    RegisterFormat::interr
+    URLFetch::offline
+    CloudConnect::offline
+    CloudObject::cloudnf
+    Lookup::invrl
+    CloudObject::cloudnf
+
+-----------------------------------------------------------------------
+  QuantumInterferometer.wlt
+-----------------------------------------------------------------------
+TEST	QuantumInterferometer.wlt	"QI-element-blocks-match-Fock-operators"	Success
+TEST	QuantumInterferometer.wlt	"QI-meshes-rebuild-Haar-unitaries"	Success
+TEST	QuantumInterferometer.wlt	"QI-decomposition-does-not-mutate-input"	Success
+TEST	QuantumInterferometer.wlt	"QI-rebuilds-and-stays-unitary-at-larger-m"	Success
+TEST	QuantumInterferometer.wlt	"QI-exact-Fourier-decomposition"	Success
+TEST	QuantumInterferometer.wlt	"QI-exact-high-degree-decomposition-terminates"	Success
+TEST	QuantumInterferometer.wlt	"QI-phase-absorption-identities"	Success
+TEST	QuantumInterferometer.wlt	"QI-mesh-is-beam-splitters-then-phases"	Success
+TEST	QuantumInterferometer.wlt	"QI-mesh-sizes"	Success
+TEST	QuantumInterferometer.wlt	"QI-layout-columns-are-deterministic"	Success
+TEST	QuantumInterferometer.wlt	"QI-decomposition-is-repeatable"	Success
+TEST	QuantumInterferometer.wlt	"QI-elements-unitary-packed-and-correct"	Success
+TEST	QuantumInterferometer.wlt	"QI-degenerate-unitaries"	Success
+TEST	QuantumInterferometer.wlt	"QI-cosine-sine-degenerate-unitaries"	Success
+TEST	QuantumInterferometer.wlt	"QI-identity-has-no-elements"	Success
+TEST	QuantumInterferometer.wlt	"QI-photon-sector-matches-Fock-circuit"	Success
+TEST	QuantumInterferometer.wlt	"QI-applies-to-Fock-states"	Success
+TEST	QuantumInterferometer.wlt	"QI-applies-to-superpositions"	Success
+TEST	QuantumInterferometer.wlt	"QI-Hong-Ou-Mandel"	Success
+TEST	QuantumInterferometer.wlt	"QI-Fourier-tritter-suppression-law"	Success
+TEST	QuantumInterferometer.wlt	"QI-probabilities-normalized"	Success
+TEST	QuantumInterferometer.wlt	"QI-rejects-wrong-pattern-length"	Success
+TEST	QuantumInterferometer.wlt	"QI-N-keeps-the-object-valid"	Success
+TEST	QuantumInterferometer.wlt	"QI-symbolic-photon-numbers-match-permanents"	Success
+TEST	QuantumInterferometer.wlt	"QI-symbolic-photon-numbers-structure"	Success
+TEST	QuantumInterferometer.wlt	"QI-symbolic-photon-numbers-untouched-modes"	Success
+TEST	QuantumInterferometer.wlt	"QI-symbolic-photon-numbers-reject-squeezers-and-negatives"	Success
+TEST	QuantumInterferometer.wlt	"QI-samples-match-probabilities"	Success
+TEST	QuantumInterferometer.wlt	"QI-samples-HOM-and-edge-cases"	Success
+TEST	QuantumInterferometer.wlt	"QI-samples-rejects-squeezers-symbolic-and-bad-patterns"	Success
+TEST	QuantumInterferometer.wlt	"QI-composition-and-dagger"	Success
+TEST	QuantumInterferometer.wlt	"QI-diagram"	Success
+TEST	QuantumInterferometer.wlt	"QI-rejects-nonunitary"	Success
+TEST	QuantumInterferometer.wlt	"QI-rejects-symbolic-matrix"	Success
+TEST	QuantumInterferometer.wlt	"QI-warns-on-short-cutoff"	Success
+TEST	QuantumInterferometer.wlt	"QI-circuit-needs-levels"	Success
+TEST	QuantumInterferometer.wlt	"QI-named-Fourier-is-numeric"	Success
+TEST	QuantumInterferometer.wlt	"QI-matrix-plot-needs-numbers"	Success
+TEST	QuantumInterferometer.wlt	"QI-consecutive-phases-layout"	Success
+TEST	QuantumInterferometer.wlt	"QI-diagram-labels-beam-splitter-parameters"	Success
+TEST	QuantumInterferometer.wlt	"QI-composition-is-compact"	Success
+TEST	QuantumInterferometer.wlt	"QI-hafnian"	Success
+TEST	QuantumInterferometer.wlt	"QI-squeezers-then-mesh-match-Fock-circuit"	Success
+TEST	QuantumInterferometer.wlt	"QI-interleaved-squeezers-match-Fock-circuit"	Success
+TEST	QuantumInterferometer.wlt	"QI-two-mode-squeezed-vacuum"	Success
+TEST	QuantumInterferometer.wlt	"QI-squeezers-dagger-and-auto-cutoff"	Success
+TEST	QuantumInterferometer.wlt	"QI-passive-ignores-cutoff"	Success
+FILE	QuantumInterferometer.wlt	47	47
+  47/47 succeeded
+
+=======================================================================
+  Summary
+=======================================================================
+  PASS QuantumInterferometer.wlt: 47/47
+
+  Total: 47/47 succeeded (100.0%)
+OUTCOME	Success	47
+TOTAL	47	47
+ALERT	LoadMessages	6
+STATUS	RED
+=======================================================================
+OutputForm[>> ]CANDIDATE_PATCHED_AFTER_RUNNEROutputForm[ ]True
+OutputForm[>> ]FINAL_PRIVATE_DEFINITIONOutputForm[ ]{HoldPattern[Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`permanentAmplitude[PermanentSelectionAudit`w_, PermanentSelectionAudit`s_, PermanentSelectionAudit`t_]] :> PermanentSelectionAudit`ProposedAmplitude[PermanentSelectionAudit`w, PermanentSelectionAudit`s, PermanentSelectionAudit`t]}

@@ -1,0 +1,36 @@
+{
+  "Cases": 40,
+  "CompleteOldAndNew": 36,
+  "OriginalCensored": 4,
+  "ProposedCensored": 0,
+  "SummedOriginalSecondsCompleteCases": 2.190320307305195,
+  "SummedProposedSecondsCompleteCases": 1.0452388100490195,
+  "MaximumDifferenceFromOriginal": 4.84869951806108e-19,
+  "TinyFreeCases": [
+    {
+      "Photons": 2,
+      "Modes": 16,
+      "OriginalSeconds": 8.933333333333333e-05,
+      "ProposedSeconds": 9.428125e-05
+    },
+    {
+      "Photons": 2,
+      "Modes": 128,
+      "OriginalSeconds": 0.00021077272727272725,
+      "ProposedSeconds": 0.00023280000000000002
+    },
+    {
+      "Photons": 4,
+      "Modes": 16,
+      "OriginalSeconds": 8.64375e-05,
+      "ProposedSeconds": 9.353125e-05
+    },
+    {
+      "Photons": 4,
+      "Modes": 128,
+      "OriginalSeconds": 0.00020613636363636363,
+      "ProposedSeconds": 0.00023422727272727272
+    }
+  ],
+  "Note": "Complete selectors including branch decision, matrix extraction, normalization and numerical promotion. These are isolated helpers, not public QI dispatcher. Matrices/dimensions/precision35 are held out from coefficient training; three cache-cleared batches. Censored values are not fabricated."
+}
