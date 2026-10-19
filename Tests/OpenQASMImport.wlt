@@ -395,8 +395,157 @@ VerificationTest[
 (* a plain computational (Z) measurement gets no spurious rotation gate: export is unchanged *)
 VerificationTest[
     QuantumQASM[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}, {1, 2}}]],
-    "OPENQASM 3.0;\nqubit[2] q;\nbit[2] c;\nU(1.5707963267948966, 0., 3.141592653589793) q[0];\nctrl(1) @ negctrl(0) @ U(3.141592653589793, 0., 3.141592653589793) q[0] q[1];\nc[0] = measure q[0];\nc[1] = measure q[1];",
+    "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nU(1.5707963267948966, 0., 3.141592653589793) q[0];\ncx q[0], q[1];\nc[0] = measure q[0];\nc[1] = measure q[1];",
     TestID -> "computational-measurement-unchanged"
+]
+
+(* ---- the emitted OpenQASM 3 is valid: standard gates, positive modifier arguments,
+   comma-separated operands ----
+   OpenQASM 3 gives ctrl / negctrl an optional POSITIVE integer argument (a modifier with no
+   qubit to control is left out, never written ctrl(0) or negctrl(0)), separates gate operands
+   with commas, and declares the standard gates (cx, swap, p, ...) in stdgates.inc, so the header
+   includes it. The importer below is lenient about all three, so these tests read the text;
+   Tests/Qiskit.wlt section 6 has qiskit.qasm3.loads parse it. *)
+
+qasmControlledBattery = {
+    QuantumOperator["CNOT"],
+    QuantumOperator["C0NOT"],
+    QuantumOperator["Toffoli"],
+    QuantumOperator["C"[QuantumOperator["RX"[0.7], {3}], {1}, {2}]],
+    QuantumOperator["C"[QuantumOperator["RZ"[0.4], {2}], {1}, {}]],
+    QuantumOperator["C"[QuantumOperator["RZ"[0.4], {3}], {1, 2}, {}]],
+    QuantumOperator["C"[QuantumOperator["RZ"[0.4], {2}], {}, {1}]],
+    QuantumOperator["C"[QuantumOperator["RZ"[0.4], {1}], {3}, {2}]],
+    QuantumOperator["C"[QuantumOperator["U"[0.3, 0.5, -0.7], {2}], {1, 3}, {}]]
+};
+
+VerificationTest[
+    StringStartsQ[QuantumQASM[bell], "OPENQASM 3.0;\ninclude \"stdgates.inc\";\n"],
+    True,
+    TestID -> "emit-header-includes-stdgates"
+]
+
+(* a target gate that is exactly x, y, z, h or p(lambda) emits its stdgates.inc controlled name,
+   on the operator's own wires (control first), and SWAP / Fredkin emit swap / cswap *)
+VerificationTest[
+    #["QASM"] & /@ {
+        QuantumOperator["CNOT"], QuantumOperator["CNOT", {2, 1}], QuantumOperator["CZ"], QuantumOperator["CY"],
+        QuantumOperator["CH"], QuantumOperator["CP"[0.3]], QuantumOperator["Toffoli", {3, 1, 2}],
+        QuantumOperator["Fredkin"], QuantumOperator["SWAP", {1, 3}], QuantumOperator["C0NOT"]
+    },
+    {
+        "cx q[0], q[1];", "cx q[1], q[0];", "cz q[0], q[1];", "cy q[0], q[1];",
+        "ch q[0], q[1];", "cp(0.3) q[0], q[1];", "ccx q[2], q[0], q[1];",
+        "cswap q[0], q[1], q[2];", "swap q[0], q[2];", "negctrl @ x q[0], q[1];"
+    },
+    TestID -> "emit-named-standard-gates"
+]
+
+(* no zero modifier argument and no space-separated operand list, over controls on 1 or 0, on
+   one or two wires, with and without a leftover relative phase *)
+VerificationTest[
+    StringFreeQ[
+        StringRiffle[#["QASM"] & /@ qasmControlledBattery, "\n"],
+        RegularExpression["ctrl\\s*\\(\\s*0\\s*\\)"] | RegularExpression["\\]\\s+q\\["]
+    ],
+    True,
+    TestID -> "emit-positive-modifiers-comma-operands"
+]
+
+(* a target gate with no stdgates name keeps the U form under ctrl / negctrl, and its leftover
+   relative phase becomes a phase gate on a positive control (or a negctrl gphase when every
+   control is negative) *)
+VerificationTest[
+    #["QASM"] & /@ qasmControlledBattery[[{5, 6, 7}]],
+    {
+        "ctrl @ U(0., 0., 0.4) q[0], q[1];\np(-0.2) q[0];",
+        "ctrl(2) @ U(0., 0., 0.4) q[0], q[1], q[2];\nctrl @ p(-0.2) q[0], q[1];",
+        "negctrl @ U(0., 0., 0.4) q[0], q[1];\nnegctrl @ gphase(-0.2) q[0];"
+    },
+    TestID -> "emit-controlled-u-with-relative-phase"
+]
+
+(* every controlled operator round-trips through the importer to the same matrix, phase included:
+   the emitted relative phase is not a global phase once controlled *)
+VerificationTest[
+    exactQ[QuantumQASM[QuantumQASM[QuantumCircuitOperator[{#}]]], QuantumCircuitOperator[{#}]] & /@ qasmControlledBattery,
+    ConstantArray[True, Length[qasmControlledBattery]],
+    TestID -> "emit-controlled-roundtrip-exact"
+]
+
+(* exp(-I theta/2 P(x)P) for P = Z, X, Y has no stdgates.inc gate (no rzz); it is emitted as the
+   exact decomposition CX . (I (x) RZ(theta)) . CX, framed by h (XX) or sdg.h / h.s (YY) *)
+VerificationTest[
+    {QuantumOperator["R"[0.4, "ZZ"], {1, 2}]["QASM"], QuantumOperator["R"[0.7, "XX"], {3, 1}]["QASM"]},
+    {
+        "cx q[0], q[1];\nrz(0.4) q[1];\ncx q[0], q[1];",
+        "h q[0];\nh q[2];\ncx q[0], q[2];\nrz(0.7) q[2];\ncx q[0], q[2];\nh q[0];\nh q[2];"
+    },
+    TestID -> "emit-pauli-pair-rotation-decomposition"
+]
+
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{"H" -> 1, "R"[0.4, "ZZ"] -> {1, 2}, "R"[0.7, "XX"] -> {3, 1}, "R"[-1.1, "YY"] -> {2, 3}}]},
+        exactQ[QuantumQASM[QuantumQASM[qc]], qc]
+    ],
+    True,
+    TestID -> "pauli-pair-rotations-roundtrip-exact"
+]
+
+(* a 1-qubit gate placed on several wires is one gate line per wire: U takes one operand. The
+   gate is read off the matrix, so a rotation (whose label does not rebuild into the gate) keeps
+   its angle *)
+VerificationTest[
+    QuantumOperator["H", {1, 3}]["QASM"],
+    "U(1.5707963267948966, 0., 3.141592653589793) q[0];\nU(1.5707963267948966, 0., 3.141592653589793) q[2];",
+    TestID -> "emit-tensor-power-one-line-per-wire"
+]
+
+(* the uncontrolled U lines drop each gate's global phase, so compare up to a global phase *)
+VerificationTest[
+    With[{qc = QuantumCircuitOperator[{"H" -> 1, QuantumOperator["RZ"[0.4], {1, 2}], QuantumOperator["RX"[0.7], {1, 3}], QuantumOperator["RY"[-0.3], {2, 3}]}]},
+        With[{a = N @ Normal @ QuantumQASM[QuantumQASM[qc]]["Matrix"], b = N @ Normal @ qc["Matrix"]},
+            With[{overlap = Tr[ConjugateTranspose[b] . a]}, TrueQ[Chop[Norm[a - overlap / Abs[overlap] b]] == 0]]
+        ]
+    ],
+    True,
+    TestID -> "emit-tensor-power-rotations-roundtrip"
+]
+
+(* an OpenQASM angle is a number, and a permutation that also relabels wires is not lowered to
+   swaps: both are reported as gates the emitter cannot serialize, not written as WL text or as
+   an empty program *)
+VerificationTest[
+    {
+        QuantumQASM[QuantumCircuitOperator[{QuantumOperator["C"[QuantumOperator["RZ"[\[Theta]], {2}], {1}, {}]]}]]["NonNativeGates"],
+        QuantumQASM[QuantumCircuitOperator[{QuantumOperator["RZ"[\[Theta]], {1, 2}]}]]["NonNativeGates"],
+        QuantumQASM[QuantumCircuitOperator[{QuantumOperator["Permutation"[], {1, 2, 3} -> {3, 1, 2}]}]]["NonNativeGates"],
+        QuantumQASM[QuantumCircuitOperator[{QuantumOperator[{{0, 1}, {1, 0}}, {{2}, {1}}, "Label" -> "relabel"]}]]["NonNativeGates"]
+    },
+    {
+        {"Subscript[C, Subscript[R, Z][\[Theta]]][{1}, {}]"},
+        {"Superscript[Subscript[R, Z][\[Theta]], CircleTimes[2]]"},
+        {"\[Pi][1, 2, 3]"},
+        {"relabel"}
+    },
+    TestID -> "emit-symbolic-and-relabeling-fail-cleanly"
+]
+
+(* the operator-level export reports the same Failure as a circuit holding the operator (the
+   "QASM" property also reports it with QF's failprop message, as for any failed property) *)
+VerificationTest[
+    With[{op = QuantumOperator["C"[QuantumOperator["RZ"[\[Theta]], {2}], {1}, {}]]},
+        {MatchQ[QuantumQASM[op], Failure["QuantumQASM", _Association]], QuantumQASM[op]["NonNativeGates"]}
+    ],
+    {True, {"Subscript[C, Subscript[R, Z][\[Theta]]][{1}, {}]"}},
+    TestID -> "emit-operator-unserializable-is-failure"
+]
+
+(* an unserializable gate on several wires is named once *)
+VerificationTest[
+    QuantumQASM[QuantumOperator["RZ"[\[Theta]], {1, 3}]]["NonNativeGates"],
+    {"Superscript[Subscript[R, Z][\[Theta]], CircleTimes[2]]"},
+    TestID -> "emit-operator-unserializable-tensor-power-named-once"
 ]
 
 EndTestSection[]

@@ -1174,23 +1174,93 @@ QuantumOperatorProp[qo_, "Decompose", gateset : {___String} : {"U", "CX"}] /;
    decimal; "*^" becomes the OpenQASM "e" exponent (the importer parses both). *)
 qasmReal[x_] := StringReplace[ToString[N[x], InputForm], "*^" -> "e"]
 
+(* OpenQASM 3 gate operands are comma-separated: cx q[0], q[1]; *)
+qasmOperands[wires_List] := StringRiffle[Map["q[" <> ToString[# - 1] <> "]" &, wires], ", "]
+
+(* The ctrl / negctrl modifiers take an optional POSITIVE integer (ctrl @ g, ctrl(2) @ g). A
+   modifier with no qubit to control is omitted, never written as ctrl(0) or negctrl(0). *)
+qasmModifier[_String, 0] := ""
+qasmModifier[name_String, 1] := name <> " @ "
+qasmModifier[name_String, n_Integer] := name <> "(" <> ToString[n] <> ") @ "
+
+(* exact (to Chop) equality of a numeric gate matrix with a reference matrix *)
+qasmMatrixQ[m_, ref_] := Dimensions[m] === Dimensions[ref] && TrueQ[Chop[N @ Total[Abs[Flatten[Normal[m] - ref]]]] == 0]
+
+(* the stdgates.inc name of a 1-qubit matrix, if it is exactly one of x, y, z, h or p(lambda) *)
+qasmGateName1[m_] := Which[
+    qasmMatrixQ[m, {{0, 1}, {1, 0}}], "x",
+    qasmMatrixQ[m, {{0, -I}, {I, 0}}], "y",
+    qasmMatrixQ[m, {{1, 0}, {0, -1}}], "z",
+    qasmMatrixQ[m, {{1, 1}, {1, -1}} / Sqrt[2]], "h",
+    qasmMatrixQ[m, {{1, 0}, {0, m[[2, 2]]}}] && TrueQ[Chop[N[Abs[m[[2, 2]]] - 1]] == 0], "p(" <> qasmReal[Arg[m[[2, 2]]]] <> ")",
+    True, Missing["NotNamed"]
+]
+
 (* Decompose a 1-qubit gate as U(angles) up to a global phase. UnitaryAnglesWithPhase, not
    UnitaryAngles: the latter folds Arg[mat[[1,1]]] into the phi/lambda angles, which is a
    diagonal Z-conjugation (mat == D.U(UnitaryAngles).D, D = diag(E^(I a/2), E^(-I a/2))),
    NOT a global phase, so U(UnitaryAngles[mat]) is a different operator whenever mat[[1,1]]
    is complex. The leftover phase here is a true global phase and is dropped (callers are all
-   uncontrolled single-qubit contexts; the controlled path emits it as a controlled gphase). *)
+   uncontrolled single-qubit contexts; the controlled path writes it as a phase gate on a
+   control). *)
 qasmEmitSimple[qo_] /; qo["SquareQ"] && qo["Dimensions"] === {2, 2} := Enclose @ With[{
     angles = qasmReal /@ ConfirmBy[First @ UnitaryAnglesWithPhase[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
 
+(* the marker qasmEmitCircuit turns into a QuantumQASM failure naming the gate *)
+qasmUnimplemented[label_] := StringTemplate["// Unimplemented QASM for operator with label: `` ----"][label]
+
+(* g is the 1-qubit factor of the k-fold tensor power m, up to a global phase *)
+qasmTensorPowerOfQ[m_, g_, k_] := MatrixQ[g, NumericQ] && Dimensions[g] === {2, 2} &&
+    With[{power = Nest[KroneckerProduct[#, N[g]] &, N[g], k - 1]},
+        With[{overlap = Tr[ConjugateTranspose[power] . m]},
+            Abs[overlap] > 10^-12 && qasmMatrixQ[m, overlap / Abs[overlap] power]
+        ]
+    ]
+
+(* The 1-qubit factor g of a tensor power g (x) ... (x) g on k qubits. The gate the label names
+   is used when it rebuilds into the factor (H, X, S, ... keep their exact angles); a label such
+   as R_Z[0.4] does not rebuild into its gate, and then g is read off the matrix: with every other
+   wire held at the same output and input levels a and b, the matrix block is g g[[a, b]]^(k-1),
+   so the largest such block, scaled to unit determinant, is g up to a phase. Either way its k-th
+   tensor power must give back the matrix up to a global phase, or the operator is not a tensor
+   power. *)
+qasmTensorPowerFactor[qo_, label_] := With[{
+    m = N @ Normal @ qo["MatrixRepresentation"],
+    k = Length[qo["InputOrder"]],
+    named = Normal @ QuantumOperator[label]["MatrixRepresentation"]
+},
+    Which[
+        ! MatrixQ[m, NumericQ] || Dimensions[m] =!= {2 ^ k, 2 ^ k},
+            Missing["NotTensorPower"],
+        qasmTensorPowerOfQ[m, named, k],
+            named,
+        True,
+            With[{block = First @ MaximalBy[
+                Catenate @ Table[
+                    ArrayReshape[m, ConstantArray[2, 2 k]][[Sequence @@ Join[{All}, ConstantArray[a, k - 1], {All}, ConstantArray[b, k - 1]]]],
+                    {a, 2}, {b, 2}
+                ],
+                Norm[Flatten[#]] &
+            ]},
+                If[ TrueQ[Chop[Det[block]] == 0],
+                    Missing["NotTensorPower"],
+                    With[{g = block / Sqrt[Det[block]]}, If[qasmTensorPowerOfQ[m, g, k], g, Missing["NotTensorPower"]]]
+                ]
+            ]
+    ]
+]
+
 qasmEmitSimple[qo_] :=
     Replace[qo["Label"], {
         "SWAP" | "\[Pi]"[_, _] :> "swap",
-        Superscript[label_, CircleTimes[_]] :> qasmEmitSimple[QuantumOperator[label]],
-        label_ :> StringTemplate["// Unimplemented QASM for operator with label: `` ----"][label]
+        Superscript[label_, CircleTimes[_]] :> Replace[qasmTensorPowerFactor[qo, label], {
+            g_ ? MatrixQ :> qasmEmitSimple[QuantumOperator[g]],
+            _ :> qasmUnimplemented[qo["Label"]]
+        }],
+        label_ :> qasmUnimplemented[label]
     }]
 
 QuantumOperatorProp[qo_, "SimpleQASM"] := QuantumQASM[qo, "Simple"]
@@ -1214,11 +1284,15 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     ]
 ]
 
+(* the emit rules below write a gate on the wires it reads; an operator whose output order
+   differs from its input order also moves (or relabels) wires, which they do not express *)
+qasmEmitOperator[qo_] /; qo["Dimensions"] =!= {} && qo["OutputOrder"] =!= qo["InputOrder"] := qasmUnimplemented[qo["Label"]]
+
 qasmEmitOperator[qo_] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
     Replace[qo["Label"], {
         Subscript["C", _][control1_, control0_] :>
             With[{n = Length[control1], m = Length[control0]},
-                Module[{proj, mat, angles, phase, ctrlPrefix, ctrlQubits, gateLine, phaseLine},
+                Module[{proj, mat, angles, phase, ctrlPrefix, gateName, gateLine, phaseLine},
                     proj =
                         QuantumTensorProduct[{
                             If[ n > 0,
@@ -1242,19 +1316,40 @@ qasmEmitOperator[qo_] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], 
                         }];
                     mat = proj["MatrixRepresentation"];
                     If[ ! MatchQ[Dimensions[mat], {2, 2}], Return[$Failed, Module]];
+                    (* an OpenQASM angle is a number: a symbolic target has no serialization *)
+                    If[ ! MatrixQ[mat, NumericQ], Return[qasmUnimplemented[qo["Label"]], Module]];
+                    ctrlPrefix = qasmModifier["ctrl", n] <> qasmModifier["negctrl", m];
+                    gateName = qasmGateName1[mat];
+                    If[ StringQ[gateName],
+                        (* a named target gate carries no leftover phase: write the stdgates.inc
+                           controlled gate (cx, cy, cz, ch, cp, ccx) when one exists, otherwise the
+                           named gate under ctrl / negctrl modifiers *)
+                        Return[
+                            Which[
+                                n == 1 && m == 0, "c" <> gateName,
+                                n == 2 && m == 0 && gateName === "x", "ccx",
+                                True, ctrlPrefix <> gateName
+                            ] <> " " <> qasmOperands[Join[control1, control0, qo["TargetOrder"]]] <> ";",
+                            Module
+                        ]
+                    ];
                     (* Split the 1-qubit target into a U(angles) carrying no global phase plus the
                        leftover phase: mat == E^(I phase) . U(angles). A bare U cannot carry that
                        phase (its (1,1) entry is real). Uncontrolled it is unobservable, but under
-                       control it is a physical relative phase, so emit it as a controlled gphase on
-                       the control qubits alongside the controlled U. *)
+                       control it is a physical relative phase on the control-active configuration.
+                       With a positive control it is a phase gate p(phase) on one positive control,
+                       controlled by the others; with negative controls only, a negctrl gphase. *)
                     {angles, phase} = UnitaryAnglesWithPhase[mat];
-                    ctrlPrefix = StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m];
-                    ctrlQubits = StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0] - 1], " "];
                     gateLine = ctrlPrefix <> StringTemplate["U(``, ``, ``)"][Sequence @@ (qasmReal /@ angles)] <>
-                        " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";";
-                    phaseLine = If[ TrueQ[Chop[N[phase]] == 0],
-                        Nothing,
-                        ctrlPrefix <> "gphase(" <> qasmReal[phase] <> ") " <> ctrlQubits <> ";"
+                        " " <> qasmOperands[Join[control1, control0, qo["TargetOrder"]]] <> ";";
+                    phaseLine = Which[
+                        TrueQ[Chop[N[phase]] == 0],
+                            Nothing,
+                        n > 0,
+                            qasmModifier["ctrl", n - 1] <> qasmModifier["negctrl", m] <> "p(" <> qasmReal[phase] <> ") " <>
+                                qasmOperands[Join[Most[control1], control0, {Last[control1]}]] <> ";",
+                        True,
+                            qasmModifier["negctrl", m] <> "gphase(" <> qasmReal[phase] <> ") " <> qasmOperands[control0] <> ";"
                     ];
                     StringRiffle[DeleteCases[{gateLine, phaseLine}, Nothing], "\n"]
                 ]
@@ -1276,13 +1371,80 @@ qasmEmitOperator[qo_] /; MatchQ[qo["Label"], "\[Pi]"[__]] := With[{
     ]
 },
     StringRiffle[
-        ("swap q[" <> ToString[order[[#[[1]]]] - 1] <> "] q[" <> ToString[order[[#[[2]]]] - 1] <> "];") & /@ transpositions,
+        ("swap " <> qasmOperands[order[[#]]] <> ";") & /@ transpositions,
         "\n"
     ]
 ]
 
+(* Fredkin: a SWAP under one positive control is the stdgates.inc cswap *)
+qasmEmitOperator[qo_] /;
+    MatchQ[qo["Label"], Subscript["C", _][{_}, {}]] && Length[qo["TargetOrder"]] == 2 &&
+    qasmMatrixQ[qo["TargetOperator"]["MatrixRepresentation"], {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}] :=
+    "cswap " <> qasmOperands[Join[qo["ControlOrder1"], qo["TargetOrder"]]] <> ";"
+
+(* a tensor power g (x) ... (x) g of a 1-qubit gate acts on each of its wires separately *)
+qasmEmitOperator[qo_] /; MatchQ[qo["Label"], Superscript[_, CircleTimes[_]]] && MatchQ[qo["Dimensions"], {2 ..}] :=
+    With[{gate = qasmEmitSimple[qo]},
+        If[ StringQ[gate] && StringFreeQ[gate, "// Unimplemented"],
+            StringRiffle[(gate <> " " <> qasmOperands[{#}] <> ";") & /@ qo["InputOrder"], "\n"],
+            qasmUnimplemented[qo["Label"]]
+        ]
+    ]
+
+(* exp(-I theta/2 P(x)P) for P = Z, X or Y on wires a < b. stdgates.inc has no two-qubit
+   rotation (no rzz), so emit the exact decomposition CX . (I (x) RZ(theta)) . CX, which is the
+   ZZ rotation because CX conjugates I (x) Z into Z (x) Z. A frame F with F.Z.F^dagger == P turns it
+   into the P(x)P rotation: (F (x) F) . RZZ(theta) . (F (x) F)^dagger. $qasmPauliPairFrames lists F
+   as the 1-qubit gates applied in time order (h for X; h then s for Y, since S.H maps Z to Y);
+   the inverse frame applied before the rotation is the same list reversed with each gate inverted. *)
+$qasmFrameGates = <|"h" -> {{1, 1}, {1, -1}} / Sqrt[2], "s" -> {{1, 0}, {0, I}}, "sdg" -> {{1, 0}, {0, -I}}|>;
+$qasmFrameGateInverse = <|"h" -> "h", "s" -> "sdg", "sdg" -> "s"|>;
+$qasmPauliPairFrames = <|"Z" -> {}, "X" -> {"h"}, "Y" -> {"h", "s"}|>;
+
+qasmPauliPairFrameMatrix[gates_List] := KroneckerProduct[#, #] & [Dot @@ Prepend[Reverse[Lookup[$qasmFrameGates, gates]], IdentityMatrix[2]]]
+
+(* the Pauli and angle {p, theta} with qo == exp(-I theta/2 p(x)p), or Missing *)
+qasmPauliPairRotation[qo_] := With[{m = N @ Normal @ qo["MatrixRepresentation"]},
+    SelectFirst[
+        KeyValueMap[
+            Function[{p, gates}, With[{f = qasmPauliPairFrameMatrix[gates]}, With[{ms = ConjugateTranspose[f] . m . f},
+                With[{theta = 2 Arg[ms[[2, 2]]]},
+                    If[ qasmMatrixQ[ms, DiagonalMatrix[Exp[I theta / 2 {-1, 1, 1, -1}]]], {p, theta}, Nothing]
+                ]
+            ]]],
+            $qasmPauliPairFrames
+        ],
+        ListQ,
+        Missing["NotPauliPairRotation"]
+    ]
+]
+
+qasmEmitOperator[qo_] /; qo["SquareQ"] && qo["Dimensions"] === {2, 2, 2, 2} && MatrixQ[qo["MatrixRepresentation"], NumericQ] :=
+    With[{rot = qasmPauliPairRotation[qo], wires = Sort[qo["InputOrder"]]},
+        With[{
+            frame = $qasmPauliPairFrames[rot[[1]]],
+            onEachWire = Function[gates, Catenate[Function[w, # <> " " <> qasmOperands[{w}] <> ";" & /@ gates] /@ wires]]
+        },
+            StringRiffle[
+                Join[
+                    onEachWire[Lookup[$qasmFrameGateInverse, Reverse[frame]]],
+                    {
+                        "cx " <> qasmOperands[wires] <> ";",
+                        "rz(" <> qasmReal[rot[[2]]] <> ") " <> qasmOperands[{Last[wires]}] <> ";",
+                        "cx " <> qasmOperands[wires] <> ";"
+                    },
+                    onEachWire[frame]
+                ],
+                "\n"
+            ]
+        ] /; ListQ[rot]
+    ]
+
 qasmEmitOperator[qo_] /; MatchQ[qo["Dimensions"], {2 ..}] :=
-    qasmEmitSimple[qo] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
+    Replace[qasmEmitSimple[qo], {
+        gate_String :> gate <> " " <> qasmOperands[qo["InputOrder"]] <> ";",
+        _ :> qasmUnimplemented[qo["Label"]]
+    }]
 
 QuantumOperatorProp[qo_, "QASM"] := QuantumQASM[qo]
 

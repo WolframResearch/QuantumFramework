@@ -447,9 +447,7 @@ qasmStatePrepLines[op_] := Module[{state = op["State"], order = op["OutputOrder"
             Function[sub,
                 If[ qasmStateInjectionQ[sub],
                     qasmStatePrepLines[sub],
-                    (* qasmEmitOperator always returns a string: a gate line, or the
-                       "// Unimplemented" marker that qasmEmitCircuit turns into a failure *)
-                    {sub["QASM"]}
+                    {qasmGateLines[sub]}
                 ]
             ],
             subOps
@@ -480,7 +478,34 @@ qasmRebaseMeasurement[op_ ? QuantumMeasurementOperatorQ] := With[{bm = Normal @ 
 ]
 qasmRebaseMeasurement[op_] := {op}
 
-qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
+(* The gate lines of one circuit element (an operator, or a channel through its operator). An
+   element the emitter cannot serialize is the "// Unimplemented" marker naming it; QuantumQASM
+   of the element alone is a Failure. QuantumQASM is called directly, not through the "QASM"
+   property, whose dispatcher reports a returned Failure with a failprop message. *)
+qasmGateLines[op_] := Replace[
+    QuantumQASM[If[QuantumOperatorQ[op], op, op["QuantumOperator"]]],
+    Failure["QuantumQASM", _] :> qasmUnimplemented[op["Label"]]
+]
+
+(* "// Unimplemented" markers among emitted lines mean the WL emitter cannot serialize those
+   gates: a QuantumQASM Failure naming them rather than invalid OpenQASM, or None when there
+   are none. *)
+qasmUnimplementedFailure[lines_List] := With[{unimpl = DeleteDuplicates @ Flatten @ StringCases[
+        Select[lines, StringContainsQ[#, "// Unimplemented"] &],
+        "label: " ~~ Shortest[l___] ~~ " ----" :> StringTrim[l]
+    ]},
+    If[ unimpl === {},
+        None,
+        Failure["QuantumQASM", <|
+            "MessageTemplate" -> "The Wolfram Language OpenQASM emitter cannot serialize gate(s): " <> StringRiffle[unimpl, ", "] <>
+                ". Pass a native gate set (a second argument, such as {\"x\", \"sx\", \"rz\", \"cz\"}) so the circuit is transpiled through qiskit first.",
+            "NonNativeGates" -> unimpl,
+            "Hint" -> "Pass a native gate set so QuantumQASM transpiles the circuit first."
+        |>]
+    ]
+]
+
+qasmEmitCircuit[qco_] := Enclose @ Module[{lines, failure},
     (* fold over operators threading a global classical-bit counter, so successive
        measurements write c[0], c[1], ... instead of every one writing c[0]. *)
     lines = DeleteCases[""] @ First @ Fold[
@@ -499,30 +524,20 @@ qasmEmitCircuit[qco_] := Enclose @ Module[{lines, unimpl},
                     qasmStateInjectionQ[op],
                     {Join[acc, qasmStatePrepLines[op]], clbit},
                     True,
-                    {Append[acc, ConfirmBy[op["QASM"], StringQ]], clbit}
+                    {Append[acc, ConfirmBy[qasmGateLines[op], StringQ]], clbit}
                 ]
             ]
         ],
         {{}, 0},
         Catenate[qasmRebaseMeasurement /@ qco["Flatten"]["Operators"]]
     ];
-    (* a leftover "// Unimplemented" comment means the WL emitter cannot serialize a gate;
-       surface a clean Failure rather than emitting invalid OpenQASM. *)
-    unimpl = DeleteDuplicates @ Flatten @ StringCases[
-        Select[lines, StringContainsQ[#, "// Unimplemented"] &],
-        "label: " ~~ l___ ~~ " ----" :> StringTrim[l]
-    ];
-    If[ unimpl =!= {},
-        Return @ Failure["QuantumQASM", <|
-            "MessageTemplate" -> "The Wolfram Language OpenQASM emitter cannot serialize gate(s): " <> StringRiffle[unimpl, ", "] <>
-                ". Pass a native gate set (a second argument, such as {\"x\", \"sx\", \"rz\", \"cz\"}) so the circuit is transpiled through qiskit first.",
-            "NonNativeGates" -> unimpl,
-            "Hint" -> "Pass a native gate set so QuantumQASM transpiles the circuit first."
-        |>]
-    ];
+    failure = qasmUnimplementedFailure[lines];
+    If[FailureQ[failure], Return[failure]];
     (* qubit count is the highest wire index ("Max"), not "Arity": a circuit that begins
-       with state preparation has input arity 0 but still acts on all its wires *)
-    StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Max"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
+       with state preparation has input arity 0 but still acts on all its wires. The
+       stdgates.inc include declares the standard gates (cx, cz, swap, p, ...) the lines use;
+       only U and gphase are built into the language. *)
+    StringTemplate["OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[``] q;\nbit[``] c;\n"][qco["Max"], qco["TargetCount"]] <> StringRiffle[lines, "\n"]
 ]
 
 QuantumCircuitOperatorProp[qco_, "QASM"] := QuantumQASM[qco, "WL"]

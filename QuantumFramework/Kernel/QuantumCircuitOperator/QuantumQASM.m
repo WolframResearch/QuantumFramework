@@ -6,6 +6,8 @@ PackageExport["QiskitTarget"]
 PackageScope["qasmEmitCircuit"]
 PackageScope["qasmEmitOperator"]
 PackageScope["qasmEmitSimple"]
+PackageScope["qasmUnimplemented"]
+PackageScope["qasmUnimplementedFailure"]
 PackageScope["qasmQubitsQ"]
 PackageScope["qasmNonQubitFailure"]
 
@@ -339,7 +341,10 @@ QuantumQASM[qco_QuantumCircuitOperator, "WL"] := qasmEmitCircuit[qco]
 
 QuantumQASM[qo_QuantumOperator, "Simple"] := qasmEmitSimple[qo]
 
-QuantumQASM[qo_QuantumOperator] := qasmEmitOperator[qo]
+(* an operator the emitter cannot serialize gives the same Failure as a circuit holding it *)
+QuantumQASM[qo_QuantumOperator] := With[{lines = qasmEmitOperator[qo]},
+    If[StringQ[lines], Replace[qasmUnimplementedFailure[{lines}], None -> lines], lines]
+]
 
 (* supplying any argument (a native gate set, a Target / CouplingMap, an OpenQASM Version,
    or any transpiler option) routes through qiskit: a faithful qiskit dump, or a transpile

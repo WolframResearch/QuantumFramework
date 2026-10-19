@@ -604,6 +604,68 @@ qtest[matEquivQ[QiskitCircuit[QuantumCircuitOperator["Toffoli"]]["Decompose"]["M
 (* ---- 5h: scale / outcome on a larger circuit (8x8 ... 64x64 unitaries) ---- *)
 qtest[decodeCleanQ[QuantumCircuitOperator["Fourier"[6]]], True, "decode-QFT6-scale"]
 
+(* ---- 6: qiskit's own OpenQASM 3 importer reads the NATIVE emitter's output ----
+   The dependency-free WL emitter must write OpenQASM 3 that a spec-following parser accepts:
+   positive ctrl / negctrl arguments, comma-separated operands, the stdgates.inc names. QF's own
+   importer is lenient about all three, so only a strict parser checks them. qiskit.qasm3.loads
+   (backed by the qiskit_qasm3_import package, checked separately) reads each circuit below back,
+   compared with QF's own unitary up to global phase (qiskit orders qubits little-endian, hence
+   reverse_qargs). *)
+
+(* the probe names a Global` context like every pe call here: PythonEvaluate[code] alone runs in
+   Wolfram`QuantumFramework` and drops that context from $ContextPath when it returns *)
+qasm3LoadsOK = qiskitOK && TrueQ @ pe[Context[qiskitOK], "import importlib.util\nimportlib.util.find_spec('qiskit_qasm3_import') is not None"];
+
+SetAttributes[q3test, HoldAll];
+q3test[actual_, expected_, id_] := VerificationTest[If[qasm3LoadsOK, actual, "skip"], If[qasm3LoadsOK, expected, "skip"], TestID -> id];
+
+nativeQASMLoadsEquivQ[qco_] := Block[{
+    qfSrc = QuantumQASM[qco],
+    qfRe = Re @ N @ Normal @ qco["QuantumOperator"]["MatrixRepresentation"],
+    qfIm = Im @ N @ Normal @ qco["QuantumOperator"]["MatrixRepresentation"]
+},
+    pe[Context[qfSrc], "
+import numpy as np
+from qiskit import qasm3
+from qiskit.quantum_info import Operator
+qf = np.array(<* qfRe *>) + 1j * np.array(<* qfIm *>)
+qk = Operator(qasm3.loads(<* qfSrc *>)).reverse_qargs().data
+ov = np.trace(qf.conj().T @ qk)
+bool(qf.shape == qk.shape and abs(ov) > 1e-9 and np.allclose(qk, (ov / abs(ov)) * qf, atol=1e-9))
+"]
+];
+
+q3test[nativeQASMLoadsEquivQ[QuantumCircuitOperator[{"H" -> 1, "CNOT" -> {1, 2}}]], True, "native-qasm-qiskit-loads-bell"]
+
+(* the U line of V = sqrt(X) drops the global phase E^(I Pi/4): equal up to that phase *)
+q3test[nativeQASMLoadsEquivQ[QuantumCircuitOperator[{"V" -> 1, "H" -> 2, "V" -> 2}]], True, "native-qasm-qiskit-loads-global-phase"]
+
+q3test[
+    nativeQASMLoadsEquivQ[QuantumCircuitOperator[{
+        "H" -> 1, "H" -> 2, "CZ" -> {1, 2}, "CY" -> {2, 1}, "CH" -> {1, 2}, "CP"[0.3] -> {2, 1},
+        QuantumOperator["Toffoli", {3, 1, 2}], QuantumOperator["Fredkin", {2, 1, 3}], "SWAP" -> {1, 3},
+        QuantumOperator["H", {1, 3}], QuantumOperator["RZ"[0.4], {1, 2}]
+    }]],
+    True, "native-qasm-qiskit-loads-named-gates"
+]
+
+q3test[
+    nativeQASMLoadsEquivQ[QuantumCircuitOperator[{
+        "H" -> 1, "H" -> 2, "H" -> 3,
+        QuantumOperator["C0NOT", {2, 3}],
+        QuantumOperator["C"[QuantumOperator["RX"[0.7], {3}], {1}, {2}]],
+        QuantumOperator["C"[QuantumOperator["RZ"[0.4], {3}], {1, 2}, {}]],
+        QuantumOperator["C"[QuantumOperator["RZ"[0.4], {2}], {}, {1}]],
+        QuantumOperator["C"[QuantumOperator["U"[0.3, 0.5, -0.7], {2}], {1, 3}, {}]]
+    }]],
+    True, "native-qasm-qiskit-loads-controlled-u-and-phase"
+]
+
+q3test[
+    nativeQASMLoadsEquivQ[QuantumCircuitOperator[{"H" -> 1, "R"[0.4, "ZZ"] -> {1, 2}, "R"[0.7, "XX"] -> {3, 1}, "R"[-1.1, "YY"] -> {2, 3}}]],
+    True, "native-qasm-qiskit-loads-pauli-pair-rotations"
+]
+
 EndTestSection[]
 
 
