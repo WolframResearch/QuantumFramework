@@ -46,6 +46,7 @@ QuantumInterferometer[u, Method -> method] uses the \"Clements\" (default), \"Re
 QuantumInterferometer[{\"BS\"[\[Theta], \[Phi]] -> {p, q}, \"PS\"[\[Alpha]] -> p, \[Ellipsis]}, m] builds an m-mode interferometer from beam splitters and phase shifters.
 QuantumInterferometer[\"Random\"[m]] and QuantumInterferometer[\"Fourier\"[m]] give a Haar-random and a discrete Fourier interferometer.
 Elements \"S\"[\[Xi]] -> p add squeezers; their photon distributions take \"Cutoff\" -> n, the largest total photon number kept.
+interferometer[\"Coherent\"[{\[Alpha]1, \[Ellipsis]}]] gives the output coherent state; \"Coherent\"[{\[Ellipsis]}] or a pattern such as {2, \"Coherent\"[\[Alpha]], 1} also works as the input of \"Amplitude\", \"Probability\" and \"Probabilities\" (with \"Cutoff\"), and \"Coherent\"[{\[Ellipsis]}] as the output of \"Amplitude\" and \"Probability\".
 \"Amplitude\" and \"Probability\" of a passive interferometer accept symbolic photon numbers, as in {n1, n2} -> {t1, t2}, and give nested sums of Wigner d-functions.";
 
 QuantumInterferometer::symbolic = "The matrix has non-numeric entries; only numeric (exact or approximate) unitaries can be decomposed. Build the interferometer from a list of beam splitters and phase shifters instead.";
@@ -61,7 +62,7 @@ QuantumInterferometer::compose ="Cannot compose interferometers on `1` and `2` m
 QuantumInterferometer::notnumeric = "`1` needs a numeric transfer matrix.";
 QuantumInterferometer::squeezed = "`1` needs a passive interferometer, without squeezers.";
 QuantumInterferometer::autocutoff = "Patterns with up to `1` photons hold probability `2`; set \"Cutoff\" -> n to keep more.";
-QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing; set \"Cutoff\" -> n.";
+QuantumInterferometer::symcutoff = "\"Cutoff\" -> Automatic needs numeric squeezing or coherent amplitudes; set \"Cutoff\" -> n.";
 QuantumInterferometer::undefprop = "property `` is undefined for this interferometer";
 
 Options[QuantumInterferometer] = {Method -> Automatic, Tolerance -> 10.^-10, "DropIdentities" -> True};
@@ -533,6 +534,7 @@ QuantumInterferometerProp[qi_, "CircuitOperator"] := (Message[QuantumInterferome
    results are keyed by QuditName, as QuantumState["Probabilities"] is. *)
 QuantumInterferometerProp[qi_, "Amplitude", s_ -> t_] := With[{in = occupation[s], out = occupation[t]},
     Which[
+        ! FreeQ[{in, out}, "Coherent"[_]], Replace[coherentAmplitudes[qi, in, {out}, Identity], {a_} :> a],
         symbolicPatternsQ[qi, in, out], If[passiveQ[qi], symbolicAmplitude[qi["Elements"], in, out], Message[QuantumInterferometer::squeezed, "Symbolic photon numbers"]; $Failed],
         occupationQ[qi, in] && occupationQ[qi, out], If[passiveQ[qi], permanentAmplitude[qi["Unitary"], in, out], gaussianAmplitude[gaussianKernel[qi], in, out]],
         True, $Failed
@@ -543,6 +545,7 @@ QuantumInterferometerProp[qi_, "Probability", s_ -> t_] := Replace[QuantumInterf
 
 QuantumInterferometerProp[qi_, "Probabilities", s_, opts : OptionsPattern[{"Cutoff" -> Automatic}]] := With[{in = occupation[s]},
     Which[
+        ! FreeQ[in, "Coherent"[_]], coherentAmplitudes[qi, in, OptionValue["Cutoff"], Abs[#] ^ 2 &],
         ! occupationQ[qi, in], $Failed,
         passiveQ[qi], With[{amplitudes = photonAmplitudes[qi["Unitary"], in]},
             Association @ Map[QuditName[#] -> Abs[Lookup[amplitudes, Key[#], 0]] ^ 2 &, photonPatterns[Total[in], qi["Modes"]]]
@@ -640,6 +643,47 @@ photonAmplitudes[w_, s_] := Module[{x},
     ]
 ]
 
+(* U D(a) = D(W a) U, so U |n, a> = D(b) U |n> with b = W a: <t| D(b) |s> is a product of single-mode
+   <m| D(b) |n>, and <g| D(b) = Exp[(conj(g) . b - conj(b) . g) / 2] <g - b| with
+   <e| U |n> = Exp[-|e|^2 / 2] Prod_k (Transpose[W] . conj(e))_k^n_k / Sqrt[n_k!] *)
+displacedFock[b_, m_, n_] := Exp[- Abs[b] ^ 2 / 2] If[ m >= n,
+    Sqrt[n! / m!] If[m == n, 1, b ^ (m - n)] LaguerreL[n, m - n, Abs[b] ^ 2],
+    Sqrt[m! / n!] (- Conjugate[b]) ^ (n - m) LaguerreL[m, n - m, Abs[b] ^ 2]
+]
+
+coherentInput["Coherent"[a_List]] := {ConstantArray[0, Length[a]], a}
+
+coherentInput[s_List] := {Replace[s, "Coherent"[_] -> 0, {1}], Replace[s, {"Coherent"[a_] :> a, _ -> 0}, {1}]}
+
+coherentInput[_] := {None, None}
+
+(* outputs: a list of photon patterns, "Coherent"[{g1, ..}], or an integer or Automatic cutoff for every pattern up to it *)
+coherentAmplitudes[qi_, s_, outs_, f_] := Enclose[
+    ConfirmAssert[passiveQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]];
+    With[{m = qi["Modes"], n = coherentInput[s][[1]], a = coherentInput[s][[2]], w = qi["Unitary"]},
+        ConfirmAssert[ListQ[a] && Length[a] == m && occupationQ[qi, n], Message[QuantumInterferometer::occ, s, m]];
+        With[{b = w . a},
+            Replace[outs, {
+                {"Coherent"[g_List]} :> (
+                    ConfirmAssert[Length[g] == m, Message[QuantumInterferometer::occ, "Coherent"[g], m]];
+                    f[Exp[(Conjugate[g] . b - Conjugate[b] . g) / 2 - Total[Abs[g - b] ^ 2] / 2] Times @@ MapThread[If[#2 == 0, 1, #1 ^ #2 / Sqrt[#2!]] &, {Transpose[w] . Conjugate[g - b], n}]]
+                ),
+                cutoff : Automatic | _Integer :> With[{top = Replace[cutoff, Automatic :> (
+                        ConfirmAssert[VectorQ[N[a], NumericQ], Message[QuantumInterferometer::symcutoff]];
+                        Total[n] + If[Norm[N[a]] == 0, 0, InverseCDF[PoissonDistribution[Norm[N[a]] ^ 2], 1 - 10^-4]]
+                    )]},
+                    Association @ Thread[QuditName /@ # -> coherentAmplitudes[qi, s, #, f]] & @ Catenate[photonPatterns[#, m] & /@ Range[Total[n], top]]
+                ],
+                ts_List :> (
+                    ConfirmAssert[AllTrue[ts, occupationQ[qi, #] &]];
+                    With[{amps = photonAmplitudes[w, n]}, Table[f @ Total[KeyValueMap[#2 Times @@ MapThread[displacedFock, {b, t, #1}] &, amps]], {t, ts}]]
+                )
+            }]
+        ]
+    ],
+    $Failed &
+]
+
 
 wignerd[b_, j_ ? NumericQ, m1_ ? NumericQ, m2_ ? NumericQ] := If[j < 0 || Abs[m1] > j || Abs[m2] > j, 0, WignerD[{j, m1, m2}, b]]
 
@@ -721,6 +765,13 @@ autoShells[g_, s_, start_] := With[{
         passiveQ[qi], KeyMap[QuditName, photonAmplitudes[qi["Unitary"], in]],
         True, gaussianAmplitudes[qi, in, OptionValue["Cutoff"]]
     ]
+]
+
+(* a passive network keeps a coherent state coherent: |a> -> |W a> *)
+(qi_QuantumInterferometer ? QuantumInterferometerQ)["Coherent"[a_List]] := Which[
+    ! passiveQ[qi], Message[QuantumInterferometer::squeezed, "Coherent light"]; $Failed,
+    Length[a] != qi["Modes"], Message[QuantumInterferometer::occ, "Coherent"[a], qi["Modes"]]; $Failed,
+    True, "Coherent"[qi["Unitary"] . a]
 ]
 
 
