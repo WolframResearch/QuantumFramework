@@ -53,10 +53,10 @@ VerificationTest[
 VerificationTest[
     SeedRandom[101];
     With[{w = RandomVariate[CircularUnitaryMatrixDistribution[12]]},
-        With[{before = w + 0},
+        With[{before = Hash[w, "SHA256"]},
             QuantumInterferometer[w, Method -> "Reck"];
             QuantumInterferometer[w, Method -> "Clements"];
-            w === before
+            Hash[w, "SHA256"] === before
         ]
     ],
     True,
@@ -92,7 +92,7 @@ VerificationTest[
 
 (* Fix 2 (closed-form Givens cell + RootReduce on the exact path): the exact decomposition
    of FourierMatrix at a cyclotomic degree that previously did not terminate now completes
-   and reconstructs the matrix exactly, with exact (Precision Infinity) parameters. The
+   and gives exact (Precision Infinity) parameters with a numerical reconstruction check. The
    TimeConstrained is a regression guard against the trig-of-arctan swell returning. *)
 VerificationTest[
     TimeConstrained[
@@ -113,15 +113,12 @@ VerificationTest[
 
 (* The identities that move every phase of the mesh to its output, and keep theta in [0, Pi/2]. *)
 VerificationTest[
-    With[{
-        bs = {{Cos[#1], - Exp[- I #2] Sin[#1]}, {Exp[I #2] Sin[#1], Cos[#1]}} &,
-        phases = DiagonalMatrix[{Exp[I #1], Exp[I #2]}] &
-    },
-        FullSimplify[{
-            bs[\[Theta], \[Gamma]] . phases[\[Alpha], \[Beta]] == phases[\[Alpha], \[Beta]] . bs[\[Theta], \[Gamma] + \[Alpha] - \[Beta]],
-            bs[- \[Theta], \[Gamma]] == bs[\[Theta], \[Gamma] + Pi]
-        }]
-    ],
+    FullSimplify[{
+            QuantumInterferometer[{"PS"[\[Alpha]] -> 1, "PS"[\[Beta]] -> 2, "BS"[\[Theta], \[Gamma]] -> {1, 2}}, 2]["Unitary"] ==
+                QuantumInterferometer[{"BS"[\[Theta], \[Gamma] + \[Alpha] - \[Beta]] -> {1, 2}, "PS"[\[Alpha]] -> 1, "PS"[\[Beta]] -> 2}, 2]["Unitary"],
+            QuantumInterferometer[{"BS"[- \[Theta], \[Gamma]] -> {1, 2}}, 2]["Unitary"] ==
+                QuantumInterferometer[{"BS"[\[Theta], \[Gamma] + Pi] -> {1, 2}}, 2]["Unitary"]
+        }, Element[{\[Theta], \[Gamma], \[Alpha], \[Beta]}, Reals]],
     {True, True},
     TestID -> "QI-phase-absorption-identities"
 ]
@@ -395,7 +392,12 @@ VerificationTest[
     SeedRandom[31];
     With[{qi = QuantumInterferometer["Random"[4]], k = 5000},
         Map[
-            Total[Abs[Values[qi["Probabilities", #]] - Lookup[qi["SampleCounts", #, k], Keys[qi["Probabilities", #]], 0] / k]] / 2 < 0.06 &,
+            With[{probs = qi["Probabilities", #], counts = qi["SampleCounts", #, k]},
+                With[{keys = Union[Keys[probs], Keys[counts]]},
+                    Total[counts] === k && Complement[Keys[counts], Keys[probs]] === {} &&
+                        Total[Abs[Lookup[probs, keys, 0] - Lookup[counts, keys, 0] / k]] / 2 < 0.06
+                ]
+            ] &,
             {{1, 1, 1, 0}, {2, 1, 0, 0}}
         ]
     ],
@@ -443,8 +445,16 @@ VerificationTest[
 ]
 
 VerificationTest[
-    Head /@ {QuantumInterferometer["Random"[5]]["Diagram", "ShowParameters" -> True], QuantumInterferometer["Fourier"[3]]["Diagram"]},
-    {Graphics, Graphics},
+    With[{qi = QuantumInterferometer[{"BS"[.4, .2] -> {1, 3}, "PS"[.3] -> 2}, 3]},
+        With[{diagram = qi["Diagram"], unlabelled = qi["Diagram", "ModeLabels" -> False]},
+            Head[diagram] === Graphics && Count[diagram, _Line, Infinity] >= 4 &&
+                Count[diagram, _Rectangle, Infinity] === 1 &&
+                Cases[diagram, Text[Style[p_Integer, 10, ___], _, _] :> p, Infinity] === Range[3] &&
+                Cases[unlabelled, Text[Style[p_Integer, 10, ___], _, _] :> p, Infinity] === {} &&
+                ! FreeQ[diagram, Line[{{{.75, -1}, {1.25, -3}}, {{.75, -3}, {1.25, -1}}}]]
+        ]
+    ],
+    True,
     TestID -> "QI-diagram"
 ]
 
@@ -477,7 +487,7 @@ VerificationTest[
     TestID -> "QI-circuit-needs-levels"
 ]
 
-(* the exact decomposition of FourierMatrix[5] stalls, so the named form is numeric *)
+(* The named Fourier constructor deliberately uses machine numbers, including at larger sizes. *)
 VerificationTest[
     With[{qi = TimeConstrained[QuantumInterferometer["Fourier"[8]], 10]},
         {Precision[qi["Unitary"]], Max[Abs[rebuild[qi] - FourierMatrix[8]]] < 10^-10}
@@ -506,22 +516,37 @@ VerificationTest[
 VerificationTest[
     SeedRandom[19];
     With[{qi = QuantumInterferometer["Random"[4]]},
-        With[{diagram = qi["Diagram", "ShowParameters" -> True]},
+        With[{diagram = qi["Diagram", "ShowParameters" -> True], hidden = qi["Diagram", "ShowParameters" -> False]},
             {
                 Count[diagram, _Rectangle, Infinity] == qi["PhaseShifterCount"],
                 Cases[diagram, Tooltip[_, Row[{"(\[Theta], \[Phi]) = ", tf_, __}]] :> tf, Infinity] ==
-                    Cases[qi["Elements"], ("BS"[t_, f_] -> _) :> {t, f}]
+                    Cases[qi["Elements"], ("BS"[t_, f_] -> _) :> {t, f}],
+                Count[diagram, Text[Style[_Row | _NumberForm, 8], _], Infinity] ===
+                    qi["BeamSplitterCount"] + qi["PhaseShifterCount"],
+                Count[hidden, Text[Style[_Row | _NumberForm, 8], _], Infinity] === 0
             }
         ]
     ],
-    {True, True},
+    {True, True, True, True},
     TestID -> "QI-diagram-labels-beam-splitter-parameters"
 ]
 
 VerificationTest[
     SeedRandom[18];
     With[{qi1 = QuantumInterferometer["Random"[4], Method -> "Reck"], qi2 = QuantumInterferometer["Random"[4]]},
-        qi2[qi1]["Depth"] == qi1["Depth"] + qi2["Depth"]
+        qi2[qi1]["Depth"] == qi1["Depth"] + qi2["Depth"] &&
+            And @@ Map[
+                With[{a = QuantumInterferometer[#[[1]], 4], b = QuantumInterferometer[#[[2]], 4], layers = #[[3]]},
+                    b[a]["Layers"] === layers &&
+                        Max[Abs[b[a]["Unitary"] - b["Unitary"] . a["Unitary"]]] < 10^-12
+                ] &,
+                {
+                    {{"BS"[.4] -> {1, 2}}, {"BS"[.3] -> {3, 4}}, {1, 1}},
+                    {{"BS"[.4] -> {1, 2}}, {"BS"[.3] -> {2, 3}}, {1, 2}},
+                    {{"BS"[.4] -> {1, 4}}, {"BS"[.3] -> {2, 3}}, {1, 2}},
+                    {{"PS"[.2] -> 1}, {"PS"[.3] -> 1}, {1/2, 3/2}}
+                }
+            ]
     ],
     True,
     TestID -> "QI-composition-is-compact"
@@ -575,7 +600,13 @@ VerificationTest[
 VerificationTest[
     With[{qi = QuantumInterferometer[{"S"[0.5] -> 1, "S"[-0.5] -> 2, "BS"[Pi / 4, 0] -> {1, 2}}, 2]},
         {
-            Max @ Abs @ KeyValueMap[#2 - If[Equal @@ #1["Name"], Tanh[0.5] ^ (2 #1["Name"][[1]]) / Cosh[0.5] ^ 2, 0] &, qi["Probabilities", {0, 0}, "Cutoff" -> 6]] < 10^-12,
+            With[{outs = Select[Tuples[Range[0, 6], 2], Total[#] <= 6 && EvenQ[Total[#]] &],
+                  probs = qi["Probabilities", {0, 0}, "Cutoff" -> 6]},
+                AssociationQ[probs] && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+                    Max[Abs[Lookup[probs, QuditName /@ outs] -
+                        (If[Equal @@ #, Tanh[.5] ^ (2 First[#]) / Cosh[.5] ^ 2, 0] & /@ outs)]] < 10^-12 &&
+                    Abs[Total[probs] - (1 - Tanh[.5] ^ 8)] < 10^-12
+            ],
             qi["Unitary"],
             qi["SqueezerCount"]
         }
@@ -589,7 +620,11 @@ VerificationTest[
     With[{qi = QuantumInterferometer[{"S"[0.4 Exp[0.5 I]] -> 1, "BS"[0.7, 0.3] -> {1, 2}, "S"[0.3 Exp[-1.2 I]] -> 2, "PS"[0.9] -> 2}, 2]},
         {
             Max[Abs[Table[qi["Dagger"][qi]["Amplitude", in -> out], {in, {{0, 0}, {1, 0}, {1, 1}}}, {out, {{0, 0}, {1, 0}, {1, 1}}}] - IdentityMatrix[3]]] < 10^-12,
-            Total[qi["Probabilities", {1, 0}]] > 1 - 10^-4
+            With[{probs = qi["Probabilities", {1, 0}]},
+                1 - 10^-4 < Total[probs] <= 1 + 10^-12 &&
+                    AnyTrue[Keys[probs], Total[#["Name"]] > 1 &] &&
+                    Max[Abs[Values[probs] - (qi["Probability", {1, 0} -> #["Name"]] & /@ Keys[probs])]] < 10^-12
+            ]
         }
     ],
     {True, True},
@@ -665,14 +700,14 @@ VerificationTest[
     With[{s = PadRight[{6, 6}, 128]},
         $qiUseRepeatedPermanentQ[N[FourierMatrix[128]], s, Reverse[s]]
     ],
-    False,
+    True,
     TestID -> "QI-permanent-dispatch-accounts-for-mode-conversion-cost"
 ]
 
 VerificationTest[
     With[{s = PadRight[{4, 4}, 16]},
         {
-            $qiUseRepeatedPermanentQ[N[FourierMatrix[16]], s, Reverse[s]],
+            $qiUseRepeatedPermanentQ[Developer`ToPackedArray[N[FourierMatrix[16]], Complex], s, Reverse[s]],
             $qiUseRepeatedPermanentQ[N[FourierMatrix[16], 35], s, Reverse[s]]
         }
     ],
@@ -751,6 +786,506 @@ VerificationTest[
     ],
     True,
     TestID -> "QI-permanent-dispatch-mixed-precision-unitary"
+]
+
+(* ---- occupied-mode reduction: rectangular blocks, precision and invariants ---- *)
+
+$qiRepeatedPermanent = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`repeatedPermanent;
+
+VerificationTest[
+    With[{w = Array[z, {3, 3}]},
+        Expand[$qiRepeatedPermanent[w, {2, 0, 1}, {1, 1, 1}] -
+            $qiRepeatedPermanent[w[[All, {1, 3}]], {2, 1}, {1, 1, 1}]] === 0
+    ],
+    True,
+    TestID -> "QI-occupied-modes-symbolic-rectangular-identity"
+]
+
+VerificationTest[
+    BlockRandom[SeedRandom[4871];
+        With[{w = RandomVariate[CircularUnitaryMatrixDistribution[16]],
+              s = ReplacePart[ConstantArray[0, 16], {2 -> 9, 11 -> 7}],
+              t = ReplacePart[ConstantArray[0, 16], {3 -> 6, 8 -> 4, 14 -> 6}]},
+            With[{ref = Permanent[w[[Join[ConstantArray[3, 6], ConstantArray[8, 4], ConstantArray[14, 6]],
+                    Join[ConstantArray[2, 9], ConstantArray[11, 7]]]]] / Sqrt[9! 7! 6! 4! 6!]},
+                Abs[ref] > 10^-14 &&
+                Abs[$qiPermanentAmplitude[w, s, t] - ref] < 10^-10 Abs[ref] &&
+                Abs[$qiPermanentAmplitude[ConjugateTranspose[w], t, s] - Conjugate[ref]] < 10^-10 Abs[ref]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-noncontiguous-rectangular-both-orientations"
+]
+
+VerificationTest[
+    With[{w = N[FourierMatrix[16]],
+          s = ReplacePart[ConstantArray[0, 16], {2 -> 9, 11 -> 7}],
+          t = ReplacePart[ConstantArray[0, 16], {3 -> 6, 8 -> 4, 14 -> 6}]},
+        Module[{amplitudeProbe, precisionProbe},
+            (* SetPrecision is invisible to Trace; instrument a temporary copy of the live definition. *)
+            precisionProbe[a_, p_] := (Sow[Dimensions[a], "occupied-promotion"]; SetPrecision[a, p]);
+            With[{f = $qiPermanentAmplitude},
+                DownValues[amplitudeProbe] = DownValues[f] /. f -> amplitudeProbe /. SetPrecision -> precisionProbe
+            ];
+            Reap[amplitudeProbe[w, s, t], "occupied-promotion"][[2]] === {{{3, 2}}}
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-promotes-only-occupied-block"
+]
+
+VerificationTest[
+    With[{w = ReplacePart[IdentityMatrix[16], {16, 16} -> N[Exp[I/7]]],
+          s = ReplacePart[ConstantArray[0, 16], {2 -> 8, 6 -> 8}]},
+        With[{a = $qiPermanentAmplitude[w, s, s]},
+            Precision[a] === MachinePrecision && Abs[a - 1] < 10^-12
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-retains-machine-precision-outside-block"
+]
+
+VerificationTest[
+    With[{w = ReplacePart[N[DiagonalMatrix[Exp[I Range[16] / 17]], 60],
+                {16, 16} -> N[Exp[16 I/17], 30]],
+          s = ReplacePart[ConstantArray[0, 16], {2 -> 8, 6 -> 8}]},
+        With[{a = $qiPermanentAmplitude[w, s, s]},
+            Abs[Precision[a] - Precision[w]] < 10^-8 && Abs[a - N[Exp[64 I/17], 80]] < 10^-27
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-retains-lower-arbitrary-precision-outside-block"
+]
+
+VerificationTest[
+    With[{w = SparseArray[N[DiagonalMatrix[Exp[I Range[16] / 17]]]],
+          s = ReplacePart[ConstantArray[0, 16], {2 -> 8, 6 -> 8}],
+          t = ReplacePart[ConstantArray[0, 16], {2 -> 8, 7 -> 8}]},
+        Abs[$qiPermanentAmplitude[w, s, s] - Exp[64 I/17]] < 10^-12 &&
+        Abs[$qiPermanentAmplitude[w, s, t]] < 10^-12
+    ],
+    True,
+    TestID -> "QI-occupied-modes-sparse-complex-unitary-and-zero-amplitude"
+]
+
+VerificationTest[
+    BlockRandom[SeedRandom[4872];
+        With[{v = RandomVariate[CircularUnitaryMatrixDistribution[2]]},
+            With[{w = ReplacePart[IdentityMatrix[32], Thread[Tuples[{2, 17}, 2] -> Flatten[v]]],
+                  s = ReplacePart[ConstantArray[0, 32], {2 -> 8, 17 -> 8}],
+                  t = ReplacePart[ConstantArray[0, 32], {2 -> 6, 17 -> 10}]},
+                Abs[$qiPermanentAmplitude[w, s, t] - $qiPermanentAmplitude[v, {8, 8}, {6, 10}]] < 10^-12
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-vacuum-padding-and-port-embedding"
+]
+
+VerificationTest[
+    BlockRandom[SeedRandom[4873];
+        With[{qi = QuantumInterferometer[RandomVariate[CircularUnitaryMatrixDistribution[3]]],
+              s = {6, 6, 0}, outs = FrobeniusSolve[{1, 1, 1}, 12]},
+            With[{amps = qi["Amplitude", s -> #] & /@ outs, adj = qi["Dagger"]},
+                {
+                    Abs[Total[Abs[amps] ^ 2] - 1] < 10^-11,
+                    Max[Abs[(adj["Amplitude", # -> s] & /@ outs) - Conjugate[amps]]] < 10^-12,
+                    AnyTrue[outs, $qiUseRepeatedPermanentQ[qi["Unitary"], s, #] &]
+                }
+            ]
+        ]
+    ],
+    {True, True, True},
+    TestID -> "QI-occupied-modes-full-sector-normalization-and-adjoint"
+]
+
+VerificationTest[
+    With[{w = FourierMatrix[3]},
+        {
+            $qiPermanentAmplitude[w, {4, 0, 0}, {1, 2, 1}] === Sqrt[12] / 9,
+            $qiUseRepeatedPermanentQ[w, {4, 0, 0}, {1, 2, 1}],
+            Module[{selectorProbe, preprocessingProbe},
+                SetAttributes[preprocessingProbe, HoldAll];
+                preprocessingProbe[op_, args___] := (Sow[HoldForm[op], "exact-preprocessing"]; op[args]);
+                With[{f = $qiUseRepeatedPermanentQ},
+                    DownValues[selectorProbe] = DownValues[f] /. f -> selectorProbe /.
+                        HoldPattern[(h : Count | Position | Developer`PackedArrayQ | Developer`ToPackedArray | SetPrecision)[args___]] :>
+                            preprocessingProbe[h, args]
+                ];
+                Reap[selectorProbe[w, {4, 0, 0}, {1, 2, 1}], "exact-preprocessing"] === {False, {}}
+            ]
+        }
+    ],
+    {True, False, True},
+    TestID -> "QI-occupied-modes-exact-amplitude-and-selector-guard"
+]
+
+VerificationTest[
+    With[{w = N[FourierMatrix[16], 40], u = N[FourierMatrix[16][[{5, 9}, {2, 13}]], 80],
+          s = ReplacePart[ConstantArray[0, 16], {2 -> 8, 13 -> 8}],
+          t = ReplacePart[ConstantArray[0, 16], {5 -> 10, 9 -> 6}]},
+        With[{ref = Sqrt[10! 6! / (8! 8!)] Sum[
+            Binomial[8, k] Binomial[8, 10 - k] u[[1, 1]] ^ k u[[2, 1]] ^ (8 - k)
+                u[[1, 2]] ^ (10 - k) u[[2, 2]] ^ (k - 2), {k, 2, 8}]},
+            Abs[ref] > 10^-20 && Abs[$qiPermanentAmplitude[w, s, t] - ref] < 10^-28 Abs[ref]
+        ]
+    ],
+    True,
+    TestID -> "QI-occupied-modes-arbitrary-precision-independent-coefficient-reference"
+]
+
+VerificationTest[
+    With[{w = N[N[FourierMatrix[16], 80]], s = PadRight[{4, 4}, 16]},
+        With[{packed = Developer`ToPackedArray[w, Complex]},
+            {
+                $qiUseRepeatedPermanentQ[w, s, Reverse[s]],
+                $qiUseRepeatedPermanentQ[packed, s, Reverse[s]],
+                $qiUseRepeatedPermanentQ[Developer`FromPackedArray[packed], s, Reverse[s]],
+                Max[Abs[($qiPermanentAmplitude[#, s, Reverse[s]] & /@ {w, packed, Developer`FromPackedArray[packed]}) -
+                    $qiPermanentAmplitude[packed, s, Reverse[s]]]] < 10^-12
+            }
+        ]
+    ],
+    {True, False, False, True},
+    TestID -> "QI-occupied-modes-dispatch-distinguishes-mixed-and-uniform-storage"
+]
+
+VerificationTest[
+    With[{s = PadRight[Join[{2}, ConstantArray[1, 10]], 16], free = PadRight[ConstantArray[1, 12], 16]},
+        {
+            $qiUseRepeatedPermanentQ[N[FourierMatrix[16], 35], s, Reverse[s]],
+            $qiUseRepeatedPermanentQ[N[FourierMatrix[16], 35], free, Reverse[free]],
+            $qiUseRepeatedPermanentQ[FourierMatrix[16], s, Reverse[s]]
+        }
+    ],
+    {True, False, False},
+    TestID -> "QI-occupied-modes-arbitrary-precision-collision-and-exact-guards"
+]
+
+(* ---- coverage added after the test-meaning audit: independent weights and missing routes ---- *)
+
+$qiRepeatedHafnian = Wolfram`QuantumFramework`SecondQuantization`Interferometer`PackagePrivate`repeatedHafnian;
+
+VerificationTest[
+    With[{qi = QuantumInterferometer[{"S"[.6] -> 1}, 1]},
+        With[{probs = qi["Probabilities", {0}]},
+            AssociationQ[probs] && Length[probs] > 0 && With[{top = Max[First[Flatten[{#["Name"]}]] & /@ Keys[probs]]},
+                With[{outs = List /@ Range[0, top, 2],
+                      ref = Table[Binomial[2 k, k] Tanh[.6] ^ (2 k) / (4 ^ k Cosh[.6]), {k, 0, top / 2}]},
+                    top > 0 && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+                        Max[Abs[Lookup[probs, QuditName /@ outs] - ref]] < 10^-12 &&
+                        0 < 1 - Total[probs] < 10^-4 && Total[Most[ref]] < 1 - 10^-4 &&
+                        Max[Abs[Lookup[qi["Probabilities", {0}, "Cutoff" -> top + 4], QuditName /@ outs] - ref]] < 10^-12
+                ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-auto-squeezed-cutoff-keeps-absolute-weights-and-bounded-tail"
+]
+
+VerificationTest[
+    With[{probs = QuantumInterferometer[{"S"[1.2] -> 1}, 1]["Probabilities", {0}],
+          outs = List /@ Range[0, 16, 2],
+          ref = Table[Binomial[2 k, k] Tanh[1.2] ^ (2 k) / (4 ^ k Cosh[1.2]), {k, 0, 8}]},
+        AssociationQ[probs] && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+            Max[Abs[Lookup[probs, QuditName /@ outs] - ref]] < 10^-12 &&
+            Abs[Total[probs] - Total[ref]] < 10^-12 && 0 < Total[probs] < 1 - 10^-4
+    ],
+    True,
+    {QuantumInterferometer::autocutoff},
+    TestID -> "QI-auto-squeezed-cutoff-cap-warns-without-renormalizing"
+]
+
+VerificationTest[
+    With[{w = {{a, b}, {b, c}}},
+        {
+            $qiRepeatedHafnian[w, {0, 0}],
+            $qiRepeatedHafnian[w, {1, 2}],
+            Expand[$qiRepeatedHafnian[w, {2, 2}] - a c - 2 b ^ 2]
+        }
+    ],
+    {1, 0, 0},
+    TestID -> "QI-repeated-hafnian-symbolic-matchings-vacuum-and-odd-parity"
+]
+
+(* S(xi)|0> and S(xi)|1> give independent factorial coefficients. Total input plus
+   output photon numbers straddle the generic/repeated hafnian boundary. *)
+VerificationTest[
+    And @@ Flatten @ Table[
+        With[{r = If[p === MachinePrecision, N[2/5], N[2/5, p]],
+              phi = If[p === MachinePrecision, N[7/13], N[7/13, p]]},
+            With[{qi = QuantumInterferometer[{"S"[r Exp[I phi]] -> 1}, 1]},
+                Table[
+                    With[{n = 16 + in + 2 j},
+                        With[{ref = Sqrt[n!] (- Exp[I phi] Tanh[r]) ^ ((n - in) / 2) /
+                                (2 ^ ((n - in) / 2) ((n - in) / 2)! Cosh[r] ^ (in + 1/2)),
+                              actual = qi["Amplitude", {in} -> {n}]},
+                            Abs[ref] > 10^-8 && Abs[actual - ref] < If[p === MachinePrecision, 10^-11, 10^-30] Abs[ref]
+                        ]
+                    ],
+                    {in, {0, 1}}, {j, 0, 2}
+                ]
+            ]
+        ],
+        {p, {MachinePrecision, 40}}
+    ],
+    True,
+    TestID -> "QI-high-photon-squeezing-phase-precision-and-nonvacuum-reference"
+]
+
+VerificationTest[
+    With[{w = N[FourierMatrix[16]], s = PadRight[ConstantArray[1, 12], 16], t = PadLeft[{12}, 16]},
+        Module[{amplitudeProbe, repeatedProbe},
+            repeatedProbe[v_, in_, out_] := (Sow[{Dimensions[v], Times @@ (in + 1)}, "permanent-work"];
+                $qiRepeatedPermanent[v, in, out]);
+            With[{f = $qiPermanentAmplitude, r = $qiRepeatedPermanent},
+                DownValues[amplitudeProbe] = DownValues[f] /. f -> amplitudeProbe /. r -> repeatedProbe
+            ];
+            With[{result = Reap[{amplitudeProbe[w, s, t], amplitudeProbe[ConjugateTranspose[w], t, s]}, "permanent-work"],
+                  ref = Sqrt[12!] Times @@ w[[-1, Range[12]]]},
+                result[[2]] === {{{{12, 1}, 13}, {{12, 1}, 13}}} && Abs[ref] > 10^-6 &&
+                    Max[Abs[result[[1]] - {ref, Conjugate[ref]}]] < 10^-12 Abs[ref]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-permanent-amplitude-executes-cheaper-orientation-in-both-directions"
+]
+
+VerificationTest[
+    With[{w = DiagonalMatrix[{1, I}] . {{3/5, -4 Exp[-I Pi/3]/5}, {4 Exp[I Pi/3]/5, 3/5}}},
+        With[{out = QuantumInterferometer[w]["Coherent"[{a, b}]]},
+            MatchQ[out, "Coherent"[_List]] &&
+                FullSimplify[First[out] - {3 a/5 - 4 Exp[-I Pi/3] b/5, 4 I Exp[I Pi/3] a/5 + 3 I b/5}] === {0, 0}
+        ]
+    ],
+    True,
+    TestID -> "QI-coherent-symbolic-transfer-is-phase-sensitive"
+]
+
+VerificationTest[
+    With[{w = N[DiagonalMatrix[{1, I}] . {{3/5, -4 Exp[-I Pi/3]/5}, {4 Exp[I Pi/3]/5, 3/5}}],
+          a = N[{(2 + I)/7, (-1 + 2 I)/6}], outs = Select[Tuples[Range[0, 6], 2], Total[#] <= 6 &]},
+        With[{qi = QuantumInterferometer[w], beta = w . a},
+            With[{probs = qi["Probabilities", "Coherent"[a], "Cutoff" -> 6],
+                  ref = Exp[-Total[Abs[a] ^ 2]/2] (Times @@ (beta ^ # / Sqrt[#!]) & /@ outs)},
+                AssociationQ[probs] && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+                    Max[Abs[(qi["Amplitude", "Coherent"[a] -> #] & /@ outs) - ref]] < 10^-12 &&
+                    Max[Abs[Lookup[probs, QuditName /@ outs] - Abs[ref] ^ 2]] < 10^-12 &&
+                    Abs[Total[probs] - Exp[-Total[Abs[a] ^ 2]] Sum[Total[Abs[a] ^ 2] ^ k / k!, {k, 0, 6}]] < 10^-12
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-coherent-Fock-amplitudes-and-complete-probabilities-match-Poisson"
+]
+
+VerificationTest[
+    With[{w = N[DiagonalMatrix[{1, I}] . {{3/5, -4 Exp[-I Pi/3]/5}, {4 Exp[I Pi/3]/5, 3/5}}],
+          a = N[{(2 + I)/7, (-1 + 2 I)/6}], g = N[{(1 + 2 I)/10, (-2 + I)/10}], alpha = .4 + .2 I},
+        With[{qi = QuantumInterferometer[w]},
+            With[{inputs = {"Coherent"[a], {1, 1}, {2, "Coherent"[alpha]}},
+                  refs = {
+                    Exp[-(Total[Abs[a] ^ 2] + Total[Abs[g] ^ 2])/2 + Conjugate[g] . w . a],
+                    Exp[-Total[Abs[g] ^ 2]/2] Times @@ (Conjugate[g] . w),
+                    Exp[-(Abs[alpha] ^ 2 + Total[Abs[g] ^ 2])/2 + alpha Conjugate[g] . w[[All, 2]]] *
+                        (Conjugate[g] . w[[All, 1]]) ^ 2 / Sqrt[2]
+                  }},
+                Abs[Im[N[First[refs]]]] > 10^-4 &&
+                    Max[Abs[MapThread[qi["Amplitude", #1 -> "Coherent"[g]] - #2 &, {inputs, refs}]]] < 10^-12 &&
+                    Max[Abs[MapThread[qi["Probability", #1 -> "Coherent"[g]] - Abs[#2] ^ 2 &, {inputs, refs}]]] < 10^-12
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-coherent-output-overlaps-for-coherent-Fock-and-mixed-inputs"
+]
+
+(* |2,alpha> maps to (W_1.a^dag)^2 Exp[alpha W_2.a^dag]|0>/Sqrt[2].
+   A degree-four exponential polynomial gives every coefficient through six photons exactly. *)
+VerificationTest[
+    With[{w = N[DiagonalMatrix[{1, I}] . {{3/5, -4 Exp[-I Pi/3]/5}, {4 Exp[I Pi/3]/5, 3/5}}],
+          alpha = .4 + .2 I, outs = Select[Tuples[Range[0, 6], 2], 2 <= Total[#] <= 6 &]},
+        Module[{x, y},
+            With[{qi = QuantumInterferometer[w],
+                  polynomial = Expand[({x, y} . w[[All, 1]]) ^ 2 Sum[(alpha {x, y} . w[[All, 2]]) ^ k/k!, {k, 0, 4}]/Sqrt[2]]},
+                With[{ref = (Exp[-Abs[alpha] ^ 2/2] Sqrt[Times @@ (#!)] Coefficient[Coefficient[polynomial, x, #[[1]]], y, #[[2]]] & /@ outs),
+                      probs = qi["Probabilities", {2, "Coherent"[alpha]}, "Cutoff" -> 6]},
+                    AssociationQ[probs] && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+                        Max[Abs[(qi["Amplitude", {2, "Coherent"[alpha]} -> #] & /@ outs) - ref]] < 10^-12 &&
+                        Max[Abs[Lookup[probs, QuditName /@ outs] - Abs[ref] ^ 2]] < 10^-12 &&
+                        Max[Abs[qi["Amplitude", {2, "Coherent"[alpha]} -> #] & /@ {{0, 0}, {1, 0}, {0, 1}}]] < 10^-12 &&
+                        Abs[Total[probs] - Exp[-Abs[alpha] ^ 2] Sum[Abs[alpha] ^ (2 k)/k!, {k, 0, 4}]] < 10^-12
+                ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-mixed-Fock-coherent-amplitudes-match-independent-polynomial"
+]
+
+VerificationTest[
+    With[{alpha = (3 + 2 I)/5, qi = QuantumInterferometer[{}, 1]},
+        With[{probs = qi["Probabilities", "Coherent"[{alpha}]], lambda = Abs[alpha] ^ 2},
+            AssociationQ[probs] && Length[probs] > 0 && With[{top = Max[First[Flatten[{#["Name"]}]] & /@ Keys[probs]]},
+                With[{outs = List /@ Range[0, top], ref = Table[Exp[-lambda] lambda ^ n/n!, {n, 0, top}]},
+                    top > 0 && Sort[Keys[probs]] === Sort[QuditName /@ outs] &&
+                        Max[Abs[Lookup[probs, QuditName /@ outs] - ref]] < 10^-12 &&
+                        1 - 10^-4 <= Total[probs] < 1 && Total[Most[ref]] < 1 - 10^-4
+                ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-coherent-auto-cutoff-preserves-absolute-Poisson-tail"
+]
+
+VerificationTest[
+    With[{probs = QuantumInterferometer[{}, 1]["Probabilities", "Coherent"[{alpha}], "Cutoff" -> 3]},
+        AssociationQ[probs] && Sort[Keys[probs]] === Sort[QuditName /@ List /@ Range[0, 3]] &&
+            FullSimplify[Values[probs] - Table[Exp[-Abs[alpha] ^ 2] Abs[alpha] ^ (2 n)/n!, {n, 0, 3}]] === ConstantArray[0, 4]
+    ],
+    True,
+    TestID -> "QI-coherent-symbolic-amplitude-accepts-explicit-cutoff"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[.4, .2] -> {1, 2}}, 2]["Coherent"[{.3}]],
+    $Failed,
+    {QuantumInterferometer::occ},
+    TestID -> "QI-coherent-direct-input-rejects-wrong-length"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[.4, .2] -> {1, 2}}, 2]["Amplitude", "Coherent"[{.3}] -> {0, 0}],
+    $Failed,
+    {QuantumInterferometer::occ},
+    TestID -> "QI-coherent-amplitude-rejects-wrong-input-length"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"BS"[.4, .2] -> {1, 2}}, 2]["Amplitude", "Coherent"[{.3, .2}] -> "Coherent"[{.1}]],
+    $Failed,
+    {QuantumInterferometer::occ},
+    TestID -> "QI-coherent-amplitude-rejects-wrong-output-length"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"S"[.3] -> 1}, 1]["Coherent"[{.2}]],
+    $Failed,
+    {QuantumInterferometer::squeezed},
+    TestID -> "QI-coherent-direct-input-rejects-active-network"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"S"[.3] -> 1}, 1]["Amplitude", "Coherent"[{.2}] -> {0}],
+    $Failed,
+    {QuantumInterferometer::squeezed},
+    TestID -> "QI-coherent-amplitude-rejects-active-network"
+]
+
+VerificationTest[
+    QuantumInterferometer[{"S"[.3] -> 1}, 1]["Probabilities", "Coherent"[{.2}], "Cutoff" -> 4],
+    $Failed,
+    {QuantumInterferometer::squeezed},
+    TestID -> "QI-coherent-probabilities-reject-active-network"
+]
+
+VerificationTest[
+    {QuantumInterferometer[{}, 1]["Probabilities", "Coherent"[{alpha}]],
+        QuantumInterferometer[{"S"[r] -> 1}, 1]["Probabilities", {0}]},
+    {$Failed, $Failed},
+    {QuantumInterferometer::symcutoff, QuantumInterferometer::symcutoff},
+    TestID -> "QI-symbolic-coherent-and-squeezed-auto-cutoff-needs-numbers"
+]
+
+VerificationTest[
+    With[{d = 4},
+        With[{v = (FockState[{2, 0}, d] + I FockState[{0, 2}, d])/Sqrt[2], u = FockState[{1, 0}, d]},
+            With[{rho = QuantumState[.7 Normal[v["DensityMatrix"]] + .3 Normal[u["DensityMatrix"]], {d, d}],
+                  qi = QuantumInterferometer[{"BS"[.41, .23] -> {1, 2}, "PS"[.37] -> 2}, 2]},
+                With[{actual = qi[rho], expected = PhaseShiftOperator[.37, d, {2}][
+                        BeamSplitterOperator[{.41, .23}, d, {1, 2}, Method -> "Recurrence"][rho]]},
+                    With[{matrix = Normal[actual["DensityMatrix"]]},
+                        rho["StateType"] === "Matrix" && actual["Dimensions"] === {d, d} &&
+                            Max[Abs[Im[Normal[rho["DensityMatrix"]]]]] > .1 &&
+                            Max[Abs[matrix - Normal[expected["DensityMatrix"]]]] < 10^-12 &&
+                            Max[Abs[matrix - ConjugateTranspose[matrix]]] < 10^-12 &&
+                            Abs[Tr[matrix] - 1] < 10^-12 && Min[Re[Eigenvalues[matrix]]] > -10^-12
+                    ]
+                ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-passive-mixed-state-matches-explicit-Fock-operators"
+]
+
+VerificationTest[
+    With[{d = 8, xi = .25 Exp[.4 I]},
+        With[{state = (FockState[{0, 0}, d] + I FockState[{1, 1}, d])/Sqrt[2],
+              qi = QuantumInterferometer[{"S"[xi] -> 1, "BS"[.37, .29] -> {1, 2}, "PS"[.3] -> 2}, 2]},
+            With[{actual = qi[state], expected = PhaseShiftOperator[.3, d, {2}][
+                    BeamSplitterOperator[{.37, .29}, d, {1, 2}, Method -> "Recurrence"][SqueezeOperator[xi, d, {1}][state]]]},
+                actual["Dimensions"] === {d, d} &&
+                    Max[Abs[Normal[actual["StateVector"]] - Normal[expected["StateVector"]]]] < 10^-12 &&
+                    .999 < actual["Norm"] <= 1 + 10^-12
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-active-superposition-matches-explicit-Fock-operators"
+]
+
+VerificationTest[
+    With[{d = 8, xi = .25 Exp[.4 I]},
+        With[{v = (FockState[{0, 0}, d] + I FockState[{1, 1}, d])/Sqrt[2], u = FockState[{1, 0}, d]},
+            With[{rho = QuantumState[.6 Normal[v["DensityMatrix"]] + .4 Normal[u["DensityMatrix"]], {d, d}],
+                  qi = QuantumInterferometer[{"S"[xi] -> 1, "BS"[.37, .29] -> {1, 2}, "PS"[.3] -> 2}, 2]},
+                With[{actual = qi[rho], expected = PhaseShiftOperator[.3, d, {2}][
+                        BeamSplitterOperator[{.37, .29}, d, {1, 2}, Method -> "Recurrence"][SqueezeOperator[xi, d, {1}][rho]]]},
+                    With[{matrix = Normal[actual["DensityMatrix"]]},
+                        actual["StateType"] === "Matrix" && actual["Dimensions"] === {d, d} &&
+                            Max[Abs[matrix - Normal[expected["DensityMatrix"]]]] < 10^-12 &&
+                            Abs[Tr[matrix] - Tr[Normal[expected["DensityMatrix"]]]] < 10^-12 &&
+                            .999 < Re[Tr[matrix]] <= 1 + 10^-12 && Min[Re[Eigenvalues[matrix]]] > -10^-12
+                    ]
+                ]
+            ]
+        ]
+    ],
+    True,
+    TestID -> "QI-active-mixed-state-preserves-coherences-and-truncated-trace"
+]
+
+VerificationTest[
+    With[{plot = QuantumInterferometer[{{3, -4}, {4, 3}}/5]["MatrixPlot", ImageSize -> 111]},
+        With[{rasters = Cases[plot, Raster[data_, ___] :> data, Infinity],
+              intensity = Map[{1 - .95 #, 1 - .75 #, 1 - .4 #} &, {{16/25, 9/25}, {9/25, 16/25}}, {2}],
+              phase = {{{.95, .285, .285}, {.95, .285, .285}}, {{.95, .285, .285}, {.285, .95, .95}}}},
+            Length[rasters] === 2 && Dimensions[rasters] === {2, 2, 2, 3} &&
+                Max[Abs[rasters - {intensity, phase}]] < 10^-12 &&
+                Cases[plot, g_Graphics :> (ImageSize /. Options[g, ImageSize]), Infinity] === {111, 111}
+        ]
+    ],
+    True,
+    TestID -> "QI-numeric-matrix-plot-renders-intensity-phase-and-options"
+]
+
+VerificationTest[
+    {
+        QuantumInterferometer[IdentityMatrix[2], Method -> "Unknown"],
+        QuantumInterferometer[{"BS"[.4] -> {1, 1}}, 2],
+        QuantumInterferometer[{"PS"[.3] -> 3}, 2],
+        QuantumInterferometer[{}, 2][QuantumInterferometer[{}, 3]],
+        QuantumInterferometer[{}, 2][FockState[{1}, 3]]
+    },
+    ConstantArray[$Failed, 5],
+    {QuantumInterferometer::method, QuantumInterferometer::elem, QuantumInterferometer::modes,
+        QuantumInterferometer::compose, QuantumInterferometer::state},
+    TestID -> "QI-rejects-invalid-method-elements-composition-and-state-dimensions"
 ]
 
 EndTestSection[]
