@@ -360,7 +360,7 @@ opaqueParts[g_, t_] := DeleteDuplicates @ Cases[g,
    largest step NDSolve may take, beyond rounding, since a pulse they resolve can then fit inside
    one step. *)
 opaqueMessage[f : interpolation_InterpolatingFunction[_], {lower_, upper_}, maxStep_] :=
-    With[{spacing = Min[Differences[Select[Union @@ interpolation["Grid"], Between[{lower, upper}]]]]},
+    With[{spacing = Min[Differences[Select[First[interpolation["Coordinates"]], Between[{lower, upper}]]]]},
         If[spacing (1 + 10 ^ -9) < maxStep, Message[QuantumEvolve::pulsedata, f, spacing, maxStep]]
     ]
 
@@ -492,14 +492,15 @@ MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[Spar
 
 
 (* NDSolve repeats a grid time where the integration restarts at a discontinuity of the
-   equations, and where its own discontinuity processing crosses one it may bracket it by two
-   times a rounding apart; the two values there differ: the first is the state before the
-   step that crossed it, the second the state after, and the solution takes the first at the
-   time itself and the second just past it. Each run between such pairs is interpolated on its
-   own, since a polynomial through two values a rounding apart swings far beyond them, and the
-   runs are joined, the earlier one up to and including its last time. A repeat carrying the
-   same value is no discontinuity and is dropped. The join is built with Apply, so the bound
-   variable is not renamed. *)
+   equations, and where it crosses one, by its own discontinuity processing or a
+   "CrossDiscontinuity" event, it may bracket it by grid times about 1e-12 apart; the values on
+   either side differ: the first is the state before the step that crossed it, the second the
+   state after, and the solution takes the first at the time itself and the second just past
+   it. The grid is cut wherever two times lie within 1e-12 of their magnitude, each run is
+   interpolated on its own, since a polynomial through values that close swings far beyond
+   them, and the runs are joined, the earlier one up to and including its last time. A repeat
+   carrying the same value is no discontinuity and is dropped. The join is built with Apply, so
+   the bound variable is not renamed. *)
 gridInterpolation[pairs_List, order_Integer] := With[{
     separate = Max[Abs[First[#2] - First[#1]]] > 10 ^ -12 Max[Abs[First[#1]]] &
 },

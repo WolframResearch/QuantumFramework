@@ -365,13 +365,13 @@ VerificationTest[
 
 (* Through the same pulse, a time tau after its first edge and up to its last, the state is
    {Cos[Omega tau / 2], -I Sin[Omega tau / 2]} with Omega = Pi / 0.01, and the expanded state
-   follows it on both sides of each edge: NDSolve brackets each edge of this pulse by two grid
-   times a rounding apart, and the interpolation runs on either side are kept apart. *)
+   follows it on both sides of each edge: NDSolve brackets each edge of this pulse by grid times
+   about 1e-12 apart, and the interpolation runs on either side are kept apart. *)
 VerificationTest[
     With[{expanded = QuantumEvolve[(Piecewise[{{Pi / 0.01, Abs[\[FormalT] - 50] < 0.005}}, 0] / 2) QuantumOperator["X"], QuantumState["0"], {\[FormalT], 0, 100}, "Expand" -> True]},
         Max @ Abs[Flatten[Table[
-            Normal[expanded[x]["StateVector"]] - With[{tau = Min[x, 50.005] - 49.995}, {Cos[Pi / 0.01 tau / 2], - I Sin[Pi / 0.01 tau / 2]}],
-            {x, {49.9950001, 49.9951, 50.0049, 50.0051}}
+            Normal[expanded[x]["StateVector"]] - With[{tau = Clip[x, {49.995, 50.005}] - 49.995}, {Cos[Pi / 0.01 tau / 2], - I Sin[Pi / 0.01 tau / 2]}],
+            {x, {49.9949, 49.9950001, 49.9951, 50.0049, 50.0051}}
         ]]] < 10 ^ -6
     ],
     True,
