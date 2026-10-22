@@ -441,6 +441,122 @@ VerificationTest[
     TestID -> "Evolve-lazy-read-normalized-far-from-the-time-origin"
 ]
 
+(* With no initial state, the propagator of the #1945 pulse is unitary through both edges, read with
+   the time bound and before it is: its singular values stay 1 to the solver's tolerance, while the
+   propagator NDSolve gives has grid times at each edge and within 2e-11 of it on either
+   side. *)
+VerificationTest[
+    With[{
+        u = QuantumEvolve[(Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"], None, {\[FormalT], 0, 700}],
+        times = Union[Subdivide[0., 700., 267], {99.999, 100.001, 599.999, 600.001}]
+    },
+        With[{lazy = Normal[u["Matrix"]]},
+            Thread[{
+                Max @ Map[Abs[SingularValueList[Normal[u[#]["Matrix"]], Tolerance -> 0] - 1] &, times],
+                Max @ Map[Abs[SingularValueList[lazy /. \[FormalT] -> #, Tolerance -> 0] - 1] &, times]
+            } < 10 ^ -6]
+        ]
+    ],
+    {True, True},
+    TestID -> "Evolve-propagator-unitary-across-pulse-edges"
+]
+
+(* With a weak constant Y added to the same pulse the propagator is no longer symmetric. Read with
+   the time bound and before it is, it is NDSolve's own entry for entry, through both edges. *)
+VerificationTest[
+    With[{
+        args = {(Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"] + 0.003 QuantumOperator["Y"], None, {\[FormalT], 0, 700}},
+        times = Union[Subdivide[0., 700., 267], {99.999, 100.001, 599.999, 600.001}]
+    },
+        With[{u = QuantumEvolve @@ args, solution = QuantumEvolve @@ Append[args, "ReturnSolution" -> True]},
+            With[{lazy = Normal[u["Matrix"]]},
+                Thread[{
+                    Max @ Abs @ Flatten @ Map[Normal[u[#]["Matrix"]] - solution[#] &, times],
+                    Max @ Abs @ Flatten @ Map[(lazy /. \[FormalT] -> #) - solution[#] &, times]
+                } < 10 ^ -12]
+            ]
+        ]
+    ],
+    {True, True},
+    TestID -> "Evolve-propagator-is-the-solution-across-pulse-edges"
+]
+
+(* The propagator of a pi pulse of width 0.01 a million time units from the time origin, where the
+   rounding of a time, about 1e-10, is large against the 1e-12 tolerance of the Hermite check, stays
+   unitary through the pulse, read with the time bound and before it is. *)
+VerificationTest[
+    With[{
+        u = QuantumEvolve[((Pi / 0.01) Boole[Abs[\[FormalT] - (10 ^ 6 + 50)] < 0.005] / 2) QuantumOperator["X"], None, {\[FormalT], 10 ^ 6, 10 ^ 6 + 100}],
+        times = 10 ^ 6 + Union[Subdivide[0., 100., 200], 50 + Subdivide[-0.01, 0.01, 40]]
+    },
+        With[{lazy = Normal[u["Matrix"]]},
+            Thread[{
+                Max @ Map[Abs[SingularValueList[Normal[u[#]["Matrix"]], Tolerance -> 0] - 1] &, times],
+                Max @ Map[Abs[SingularValueList[lazy /. \[FormalT] -> #, Tolerance -> 0] - 1] &, times]
+            } < 10 ^ -6]
+        ]
+    ],
+    {True, True},
+    TestID -> "Evolve-propagator-unitary-far-from-the-time-origin"
+]
+
+(* Under dephasing the propagator is a superoperator, whose entries "Undouble" rearranges. Applied
+   to |0><0| through the same pulse, it gives the density matrix the state's own evolution does. *)
+VerificationTest[
+    With[{
+        h = (Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"],
+        rho = QuantumState[{{1, 0}, {0, 0}}],
+        times = {50., 99.999, 100.001, 350., 599.999, 600.001, 650.}
+    },
+        With[{
+            u = QuantumEvolve[h, {QuantumOperator["Z"]} -> {0.01}, None, {\[FormalT], 0, 700}],
+            mixed = QuantumEvolve[h, {QuantumOperator["Z"]} -> {0.01}, rho, {\[FormalT], 0, 700}]
+        },
+            Max @ Abs @ Flatten @ Map[Normal[u[#][rho]["DensityMatrix"]] - Normal[mixed[#]["DensityMatrix"]] &, times] < 10 ^ -5
+        ]
+    ],
+    True,
+    TestID -> "Evolve-dephased-propagator-matches-state-across-pulse-edges"
+]
+
+(* An event that resets the propagator to the identity at t = 1 repeats that time on the grid. The
+   propagator, read with the time bound and before it is, is NDSolve's own, which takes the value
+   before the reset at t = 1 itself. *)
+VerificationTest[
+    With[{
+        args = {QuantumOperator["X"], None, {\[FormalT], 0, 2}, "AdditionalEquations" -> {WhenEvent[\[FormalT] == 1, \[FormalS][\[FormalT]] -> IdentityMatrix[2]]}},
+        times = Union[Subdivide[0., 2., 40], {0.999999, 1., 1.000001}]
+    },
+        With[{u = QuantumEvolve @@ args, solution = QuantumEvolve @@ Append[args, "ReturnSolution" -> True]},
+            With[{lazy = Normal[u["Matrix"]]},
+                Thread[{
+                    Max @ Abs @ Flatten @ Map[Normal[u[#]["Matrix"]] - solution[#] &, times],
+                    Max @ Abs @ Flatten @ Map[(lazy /. \[FormalT] -> #) - solution[#] &, times]
+                } < 10 ^ -12]
+            ]
+        ]
+    ],
+    {True, True},
+    TestID -> "Evolve-propagator-with-a-reset-is-the-solution"
+]
+
+(* InterpolationOrder -> All gives NDSolve a "Local Taylor series" interpolant. It is told apart by
+   its method, and the propagator is built from it with no derivative of an interpolant taken on the
+   way. *)
+VerificationTest[
+    With[{args = {(Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"], None, {\[FormalT], 0, 700}, InterpolationOrder -> All}},
+        With[{solution = QuantumEvolve @@ Append[args, "ReturnSolution" -> True]},
+            {
+                Head[QuantumEvolve @@ args],
+                hermiteInterpolantQ[solution],
+                Trace[QuantumEvolve @@ args, HoldPattern[Derivative[1][_InterpolatingFunction]]] === {}
+            }
+        ]
+    ],
+    {QuantumOperator, False, True},
+    TestID -> "Evolve-propagator-local-taylor-series-builds"
+]
+
 (* With "MergeInterpolatingFunctions" -> False the initial state sits at the start of the
    time range: a Rabi flop over [-1, 1] leaves cos^2 2 in |0>. *)
 VerificationTest[

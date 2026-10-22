@@ -255,9 +255,12 @@ QuantumEvolve[
     Which[
         state === None && MatchQ[ArrayDimensions[solution], {d_, d_}],
         QuantumOperator[
-            If[ ArrayDimensions[solution] == hamiltonian["MatrixNameDimensions"] ^ 2,
-                QuantumState[ArrayVector @ solution, hamiltonian["Basis"]["Double"]]["Undouble"],
-                QuantumState[ArrayVector @ solution, hamiltonian["Basis"]]
+            rearrangedState[
+                solution,
+                If[ ArrayDimensions[solution] == hamiltonian["MatrixNameDimensions"] ^ 2,
+                    QuantumState[ArrayVector[#], hamiltonian["Basis"]["Double"]]["Undouble"] &,
+                    QuantumState[ArrayVector[#], hamiltonian["Basis"]] &
+                ]
             ],
             hamiltonian["Order"],
             "ParameterSpec" -> DeleteDuplicatesBy[Append[hamiltonian["ParameterSpec"], parameterSpec], First]
@@ -580,6 +583,46 @@ ExpandInterpolatingFunction[f_InterpolatingFunction[parameter_]] := ExpandInterp
 ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[MergeInterpolatingFunctions[array]]
 
 ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
+
+
+(* The state that build makes of the propagator NDSolve returns, where build only moves the entries
+   of the array it is given, as a reshape or a transpose does. Where it moves each entry is read off
+   the array of the entries' own positions, and the values and first derivatives on the grid are
+   moved alike: their cubic Hermite interpolant is the propagator so rearranged, as NDSolve's own
+   interpolant is the cubic Hermite interpolant of its values and derivatives. Given the interpolant
+   itself, a reshape is rebuilt by Arrays from the values alone, which swings far beyond the
+   solution where NDSolve, crossing an edge, puts grid times at the edge and within 2e-11 of
+   it on either side.
+
+   Interpolation refuses a repeated time, which an event that resets the state gives: each entry is
+   then expanded on its own, run by run, before it is moved. An interpolant that is no cubic Hermite
+   interpolant of its values and derivatives is given to build as it is. hermiteInterpolantQ tells
+   one apart by its method before it reads any derivative value, and the values of its derivative
+   are read here only after that: reading those of the "Local Taylor series" interpolant that
+   InterpolationOrder -> All gives NDSolve can end the kernel or abort with General::nomem. *)
+rearrangedState[f_InterpolatingFunction[parameter_], build_] /; hermiteInterpolantQ[f] := With[{
+    times = First[f["Coordinates"]]
+},
+    If[ DuplicateFreeQ[times],
+        With[{positions = build[ArrayReshape[Range[Times @@ f["OutputDimensions"]], f["OutputDimensions"]]]},
+            With[{order = Flatten[Normal[positions["State"]]], shape = Prepend[Dimensions[positions["State"]], Length[times]]},
+                QuantumState[
+                    Interpolation[
+                        Thread[Prepend[
+                            ArrayReshape[ArrayReshape[#, {Length[times], Length[order]}][[All, order]], shape] & /@ {f["ValuesOnGrid"], f'["ValuesOnGrid"]},
+                            List /@ times
+                        ]],
+                        InterpolationOrder -> 3
+                    ][parameter],
+                    positions["Basis"]
+                ]
+            ]
+        ],
+        build[ExpandInterpolatingFunction[f, parameter]]
+    ]
+]
+
+rearrangedState[solution_, build_] := build[solution]
 
 
 HamiltonianTransitionRate[h_QuantumOperator, args___] := Chop[QuantumPhaseSpaceTransform[QuantumOperator["Hamiltonian"[h]], args]["Matrix"] / I]
