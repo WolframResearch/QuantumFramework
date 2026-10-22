@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     39624,        978]
-NotebookOptionsPosition[     31568,        829]
-NotebookOutlinePosition[     31885,        843]
-CellTagsIndexPosition[     31842,        840]
+NotebookDataLength[     99268,       2708]
+NotebookOptionsPosition[     83678,       2431]
+NotebookOutlinePosition[     83995,       2445]
+CellTagsIndexPosition[     83952,       2442]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -22,295 +22,198 @@ Cell["Why Boson Sampling Is Hard", "Title",
  CellID->874461601,ExpressionUUID->"22a1a762-10e3-861e-525e-3f4ca097ed64"],
 
 Cell["\<\
-Identical Photons, Permanents, and the One Sign That Separates Easy from \
-Hard: A Short, Computation-First Argument with the Wolfram Language and \
-QuantumFramework\
+Two-photon interference, normalized permanent amplitudes, classical \
+computation, and the assumptions behind sampling hardness: a \
+computation-first narrative with the Wolfram Language and QuantumFramework\
 \>", "Subtitle",
  CellID->36768919,ExpressionUUID->"4da796ef-9f57-a4bf-7b5c-0fc91ae30e85"],
 
-Cell["Mads Bahrami (last updated: Oct 12, 2026)", "Author",
+Cell["Mads Bahrami (last updated: Oct 22, 2026)", "Author",
  CellID->1699946459,ExpressionUUID->"1b39f900-6440-cee7-4ac6-f16a0dfa94cd"],
 
 Cell["Wolfram Research Inc, USA", "Affiliation",
  CellID->1535504786,ExpressionUUID->"75d93363-5da6-51a4-23e6-ab4d5453238e"],
 
-Cell["Setting the Stage: How This Notebook Flows", "Subsection",
+Cell["Modes, Occupation Lists, and Assumptions", "Section",
  CellID->1208482393,ExpressionUUID->"25a568a6-87a2-527f-535a-810032572145"],
 
 Cell[TextData[{
- "This notebook makes one argument, and only one: when identical photons pass \
-through an optical network, the probability of each detection pattern is a \
-permanent of a matrix, and a permanent is expensive to compute, so a \
-classical computer cannot keep up with the photons. We will send a few \
-photons into a random interferometer, read the distribution of outcomes \
-straight from ",
- Cell[BoxData["QuantumInterferometer"], "InlineFormula",
+ "An ",
+ StyleBox["occupation list",
+  FontWeight->"Bold"],
+ " ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    SubscriptBox[
+     StyleBox["n", "TI"], "1"]}], ",", 
+   SubscriptBox[
+    StyleBox["n", "TI"], "2"], ",", "\[Ellipsis]", ",", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["n", "TI"], 
+     StyleBox["m", "TI"]], "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
   "00d7f70d-8d0e-ae34-30ec-ef5724b8f51e"],
- ", show that each probability is a permanent, time that permanent as photons \
-are added, and finish with the one small difference (a sign) that makes the \
-fermionic cousin of the same problem easy."
-}], "Text",
- CellID->28909615,ExpressionUUID->"2f3e8453-9762-68ea-56c5-1e1d22173a30"],
-
-Cell["\<\
-In other words, I want to earn the claim \"boson sampling is hard\" by \
-computing it, not by repeating it. I strongly believe in a computation-first \
-narrative for learning: in a sense, if I cannot compute it, I cannot claim to \
-understand it. Everything below is run, not asserted.\
-\>", "Text",
- CellID->193832008,ExpressionUUID->"5902d484-617f-9570-0f31-cdee100bfc5a"],
-
-Cell[TextData[{
- "Before we start, a few things. The environment you see is a ",
- ButtonBox["Wolfram (Mathematica) notebook",
-  BaseStyle->"Hyperlink",
-  ButtonData->{
-    URL["https://www.wolfram.com/notebooks/"], None}],
- ". Evaluate the cells from top to bottom; a few later cells use a network \
-and a distribution defined earlier, so order matters. Two cells in the second \
-half time a computation on purpose and take up to about a minute; only their \
-trend matters, not the absolute seconds on your machine."
-}], "Text",
- CellID->684317082,ExpressionUUID->"56e0e12c-de7d-6135-7e9f-f889db08301f"],
-
-Cell["\<\
-The story runs as a continuous sequence, like a movie, with a few headings \
-only as transitions. My suggestion is to read each output and its meaning \
-first, and worry about how the input cell is written afterward. And remember \
-you are not locked into the code: change the number of photons, the number of \
-modes, the seed, and watch the argument bend or hold.\
-\>", "Text",
- CellID->528485616,ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
-
-Cell[TextData[{
- "If you have any suggestions or questions, please reach out to us at ",
- ButtonBox["quantum@wolfram.com",
-  BaseStyle->"Hyperlink",
-  ButtonData->{
-    URL["mailto:quantum@wolfram.com"], None}]
-}], "Text",
- CellID->1392207227,ExpressionUUID->"3b7807e8-9504-b25a-6907-9eb21cb600a0"],
-
-Cell["Prerequisites and How to Read This", "Subsection",
- CellID->705466992,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
-
-Cell[TextData[{
- "You only need to be comfortable with the idea of photons occupying modes: a \
-state ",
+ " records the photon count in each of the ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2f3e8453-9762-68ea-56c5-1e1d22173a30"],
+ " modes, with one entry per mode. Here, each input or output mode \
+corresponds to a port of the optical network. An ",
+ StyleBox["input occupation list",
+  FontWeight->"Bold"],
+ " specifies how many photons enter each input port; an ",
+ StyleBox["output occupation list",
+  FontWeight->"Bold"],
+ " specifies how many photons are detected at each output port. The \
+occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", 
+    SubscriptBox[
+     StyleBox["n", "TI"], "1"]}], ",", 
+   SubscriptBox[
+    StyleBox["n", "TI"], "2"], ",", "\[Ellipsis]", ",", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["n", "TI"], 
+     StyleBox["m", "TI"]], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5902d484-617f-9570-0f31-cdee100bfc5a"],
+ " labels the Fock state ",
  Cell[BoxData[
   TemplateBox[{
     RowBox[{
       SubscriptBox[
        StyleBox["n", "TI"], "1"], ",", 
       SubscriptBox[
-       StyleBox["n", "TI"], "2"], ",", "\[Ellipsis]"}]},
+       StyleBox["n", "TI"], "2"], ",", "\[Ellipsis]", ",", 
+      SubscriptBox[
+       StyleBox["n", "TI"], 
+       StyleBox["m", "TI"]]}]},
    "Ket"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "234f1fb7-07c6-bba9-5174-96f1b27009f3"],
- " says how many photons sit in each mode, and a detector reports one such \
-pattern. Everything optical is handled by ",
- Cell[BoxData["QuantumInterferometer"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
- ", a QuantumFramework tool that builds a passive optical network and hands \
-back its outcome probabilities directly. The combinatorial objects at the \
-end, the permanent and the determinant, are built into the Wolfram Language."
+  "56e0e12c-de7d-6135-7e9f-f889db08301f"],
+ "."
 }], "Text",
- CellID->1350516518,ExpressionUUID->"0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
-
-Cell["Let's start!", "Text",
- CellID->907546795,ExpressionUUID->"6ec9a758-58be-624c-16f6-3f02594b3096"],
-
-Cell["A Boson Sampler: Photons Into a Random Network", "Section",
- CellID->814772321,ExpressionUUID->"23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
-
-Cell[TextData[{
- "A passive optical network is a box of mirrors, beam splitters and phase \
-shifters: it moves photons between modes without creating, destroying or \
-interacting them. A boson sampler feeds ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "6e84829b-9667-6594-16bb-1bc523124ffe"],
- " identical photons into such a box, one per input port, and lets detectors \
-at the output report which modes the photons left in. In other words, the \
-machine's whole output is a list of detection patterns, drawn with whatever \
-probabilities the physics assigns."
-}], "Text",
- CellID->1054628905,ExpressionUUID->"569e173f-6b36-b240-7ea5-8f790ec000aa"],
+ CellID->28909615,ExpressionUUID->"5708d032-2150-04f2-7d37-ca7c50e56ed8"],
 
 Cell["\<\
-Load QuantumFramework together with its second-quantization sub-package, \
-where the optical tools live:\
+We will follow two photons through a beam splitter, derive the normalized \
+permanent amplitude, compare ways of computing it, and examine what this says \
+about classical sampling. Computing one amplitude, collecting every \
+probability, and drawing one sample are different tasks; keeping them \
+separate is essential to the hardness argument.\
 \>", "Text",
- CellID->2043779557,ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+ CellID->193832008,ExpressionUUID->"3b7807e8-9504-b25a-6907-9eb21cb600a0"],
+
+Cell["\<\
+The examples assume a passive lossless network and number-resolving \
+detectors. The photons may enter different ports, but their internal wave \
+packets must match in arrival time, spectrum, polarization, and unresolved \
+spatial structure to interfere fully. Partial distinguishability reduces that \
+interference. Loss changes the detected photon-number sectors, while \
+threshold detectors merge different occupation lists into the same click \
+pattern; neither alone makes the photons distinguishable.\
+\>", "Text",
+ CellID->684317082,ExpressionUUID->"166f8969-5e31-e8e5-3e14-21335bc5bacf"],
+
+Cell["\<\
+Load QuantumFramework and its second-quantization tools, then evaluate the \
+cells in order:\
+\>", "Text",
+ CellID->528485616,ExpressionUUID->"234f1fb7-07c6-bba9-5174-96f1b27009f3"],
 
 Cell[BoxData[{
- RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}], "\n", 
- RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`SecondQuantization`\>\"",
-   "]"}]}], "Input",
+ RowBox[{
+  RowBox[{"Needs", "[", "\"\<Wolfram`QuantumFramework`\>\"", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+  "Needs", "[", "\"\<Wolfram`QuantumFramework`SecondQuantization`\>\"", "]"}],
+   ";"}]}], "Input",
  CellLabel->"In[1]:= ",
- CellID->17830494,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+ CellID->1392207227,ExpressionUUID->"6ee45b93-a0df-d1f6-169c-52dcd16ba3dc"],
+
+Cell["Let's start!", "Text",
+ CellID->705466992,ExpressionUUID->"0a3edd72-e0d3-62fb-3bc5-d53f916630c1"],
+
+Cell["Two-Photon Interference at a Beam Splitter", "Section",
+ CellID->1350516518,ExpressionUUID->"6ec9a758-58be-624c-16f6-3f02594b3096"],
 
 Cell[TextData[{
- "The hardness argument wants a network with no special structure, so we take \
-one at random, a unitary drawn uniformly over all optical networks of its \
-size. ",
+ "Start with the smallest interesting case: two identical photons, one into \
+each port of a single balanced beam splitter. A balanced beam splitter sends \
+each incoming photon out either side with equal probability, so a classical \
+intuition says the two photons land on the same side half the time and on \
+opposite sides half the time. The quantum answer is stranger: the two photons \
+never come out on opposite sides. They always leave together. In other words, \
+the output occupation list ",
  Cell[BoxData[
-  RowBox[{"QuantumInterferometer", "[", 
-   RowBox[{"\"\<Random\>\"", "[", "m", "]"}], "]"}]], "InlineFormula",
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"1", "}"}]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2867ea9b-6e8d-517b-581c-03c50b382041"],
- " builds such an ",
+  "23253b8d-1c99-a6bf-52da-b2d7952d0c85"],
+ ", one photon in each output mode, has probability zero. This is the \
+Hong-Ou-Mandel effect, and it is the whole subject in miniature."
+}], "Text",
+ CellID->907546795,ExpressionUUID->"6e84829b-9667-6594-16bb-1bc523124ffe"],
+
+Cell[TextData[{
+ "Build a two-mode interferometer that is a single balanced beam splitter \
+(the angle ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "\[Pi]", "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "569e173f-6b36-b240-7ea5-8f790ec000aa"],
+ " makes the reflection and transmission amplitudes equal in size):"
+}], "Text",
+ CellID->814772321,ExpressionUUID->"15a3e88e-0b57-fa6e-4350-01e8aee3c8b4"],
+
+Cell[BoxData[
+ RowBox[{"qbs", " ", "=", " ", 
+  RowBox[{"QuantumInterferometer", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<BS\>\"", "[", 
+       RowBox[{
+        RowBox[{"Pi", "/", "4"}], ",", " ", "0"}], "]"}], " ", "->", " ", 
+      RowBox[{"{", 
+       RowBox[{"1", ",", " ", "2"}], "}"}]}], "}"}], ",", " ", "2"}], 
+   "]"}]}]], "Input",
+ CellLabel->"In[2]:= ",
+ CellID->1054628905,ExpressionUUID->"779c57de-bb93-d239-1da4-4e983e27a103"],
+
+Cell["Draw it, so we can see the one element the photons meet:", "Text",
+ CellID->2043779557,ExpressionUUID->"2867ea9b-6e8d-517b-581c-03c50b382041"],
+
+Cell[BoxData[
+ RowBox[{"qbs", "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[3]:= ",
+ CellID->17830494,ExpressionUUID->"76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
+
+Cell[TextData[{
+ "Everything a passive network of ",
  Cell[BoxData[
   StyleBox["m", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "76dfbc62-92ac-7b6e-1ee4-364c275949b4"],
- "-mode network and factors it into beam splitters and phase shifters for \
-us."
-}], "Text",
- CellID->1589986527,ExpressionUUID->"0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
-
-Cell["Build a random five-mode interferometer with a fixed seed:", "Text",
- CellID->943101875,ExpressionUUID->"4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
-
-Cell[BoxData[{
- RowBox[{
-  RowBox[{"SeedRandom", "[", "2026", "]"}], ";"}], "\n", 
- RowBox[{"qi", " ", "=", " ", 
-  RowBox[{"QuantumInterferometer", "[", 
-   RowBox[{"\"\<Random\>\"", "[", "5", "]"}], "]"}]}]}], "Input",
- CellLabel->"In[2]:= ",
- CellID->67888809,ExpressionUUID->"741b091d-feb2-1a39-1c38-a146fb476903"],
-
-Cell["\<\
-Draw the network, so we can see the mesh of beam splitters and phase shifters \
-the photons will meet:\
-\>", "Text",
- CellID->1432876021,ExpressionUUID->"3bf5a20e-c541-e06e-698a-446becf5b2b4"],
-
-Cell[BoxData[
- RowBox[{"qi", "[", "\"\<Diagram\>\"", "]"}]], "Input",
- CellLabel->"In[3]:= ",
- CellID->876231958,ExpressionUUID->"07964fa7-8d1e-ff14-2dae-660124a8c27e"],
-
-Cell[TextData[{
- "Now send three photons in, one into each of the first three ports, and ask \
-for the probability of every detection pattern at the output. ",
- Cell[BoxData["QuantumInterferometer"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
- " returns the whole distribution at once, keyed by the output pattern in \
-Dirac notation."
-}], "Text",
- CellID->1020575516,ExpressionUUID->"1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
-
-Cell[TextData[{
- "Collect the outcome distribution for the input ",
- Cell[BoxData[
-  TemplateBox[{"1,1,1,0,0"},
-   "Ket"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
- ":"
-}], "Text",
- CellID->1967685850,ExpressionUUID->"04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"probs", " ", "=", " ", 
-   RowBox[{"qi", "[", 
-    RowBox[{"\"\<Probabilities\>\"", ",", " ", 
-     RowBox[{"{", 
-      RowBox[{
-      "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
-      "}"}]}], "]"}]}], ";"}]], "Input",
- CellLabel->"In[4]:= ",
- CellID->1044562475,ExpressionUUID->"1cbde497-e826-5557-4442-fdd089d33fbd"],
-
-Cell["Show the five most likely detection patterns:", "Text",
- CellID->1653200050,ExpressionUUID->"6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
-
-Cell[BoxData[
- RowBox[{"TakeLargest", "[", 
-  RowBox[{"probs", ",", " ", "5"}], "]"}]], "Input",
- CellLabel->"In[5]:= ",
- CellID->1384978530,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
-
-Cell[TextData[{
- "The sampler's job is to produce patterns with exactly these probabilities. \
-There is one number for every way to place three photons in five modes, which \
-is ",
- Cell[BoxData[
-  TemplateBox[{
-    RowBox[{
-      StyleBox["n", "TI"], "+", 
-      StyleBox["m", "TI"], "-", "1"}], 
-    StyleBox["n", "TI"]},
-   "Binomial"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
- " patterns."
-}], "Text",
- CellID->519689844,ExpressionUUID->"5dac66ba-272d-3627-0b54-7fe452d99d0d"],
-
-Cell["\<\
-Confirm that the distribution has one probability per pattern:\
-\>", "Text",
- CellID->1609367578,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"Length", "[", "probs", "]"}], " ", "==", " ", 
-  RowBox[{"Binomial", "[", 
-   RowBox[{
-    RowBox[{"3", " ", "+", " ", "5", " ", "-", " ", "1"}], ",", " ", "3"}], 
-   "]"}]}]], "Input",
- CellLabel->"In[6]:= ",
- CellID->1541450781,ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"],
-
-Cell[TextData[{
- "Confirm that it is a genuine probability distribution, summing to one (",
- Cell[BoxData["Chop"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
- " sets the tiny machine-precision residue to zero so the comparison tests \
-the physics, not the rounding):"
-}], "Text",
- CellID->1657269721,ExpressionUUID->"35077f55-9291-6519-633d-771f27244c63"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"Chop", "[", 
-   RowBox[{
-    RowBox[{"Total", "[", "probs", "]"}], " ", "-", " ", "1"}], "]"}], " ", "==",
-   " ", "0"}]], "Input",
- CellLabel->"In[7]:= ",
- CellID->1140508347,ExpressionUUID->"4ebf3687-f906-130d-7644-afe0f8b37e57"],
-
-Cell["\<\
-So far this is just a machine producing a distribution. The real question is \
-where these numbers come from, and that is where the permanent appears.\
-\>", "Text",
- CellID->496109794,ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
-
-Cell["Every Probability Is a Permanent", "Section",
- CellID->108435171,ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
-
-Cell[TextData[{
- "Everything the network does to a single photon is held in one ",
+  "0df4b6a5-173c-e15a-3b8b-2f0fa2ceb3a0"],
+ " modes does to a single photon is held in one ",
  Cell[BoxData[
   RowBox[{
    StyleBox["m", "TI"], "\[Times]", 
    StyleBox["m", "TI"]}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+  "4d620fc7-5cf2-d9d8-7b11-a6a15484ab22"],
  " matrix ",
  Cell[BoxData[
   StyleBox["W", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "02f88238-86c8-66df-3287-2462337d4c25"],
+  "741b091d-feb2-1a39-1c38-a146fb476903"],
  ", its transfer matrix: the entry ",
  Cell[BoxData[
   SubscriptBox[
@@ -318,67 +221,1182 @@ Cell[TextData[{
    StyleBox[
     RowBox[{"j", "k"}], "TI"]]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "034d641c-5834-e412-3173-7e4659c6cf78"],
- " is the amplitude for a photon that enters port ",
+  "3bf5a20e-c541-e06e-698a-446becf5b2b4"],
+ " is the amplitude for a photon entering port ",
  Cell[BoxData[
   StyleBox["k", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+  "07964fa7-8d1e-ff14-2dae-660124a8c27e"],
  " to leave port ",
  Cell[BoxData[
   StyleBox["j", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
+  "3e367b18-9aa8-58f9-67ce-73421f5d2ac3"],
+ ". For the beam splitter ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["m", "TI"], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1dbaaaf7-1388-e538-4b59-43b1a622cc02"],
+ ", and we store its matrix as ",
+ Cell[BoxData["Wbs"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "77d99fdb-a351-2d53-1de6-1684d6e477b9"],
+ "."
+}], "Text",
+ CellID->1589986527,ExpressionUUID->"04646437-faee-7dfc-2c1c-7e70fe9b47c6"],
+
+Cell["Read the transfer matrix:", "Text",
+ CellID->943101875,ExpressionUUID->"1cbde497-e826-5557-4442-fdd089d33fbd"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Wbs", " ", "=", " ", 
+   RowBox[{"qbs", "[", "\"\<TransferMatrix\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{"Wbs", " ", "//", " ", "MatrixForm"}]}], "Input",
+ CellLabel->"In[4]:= ",
+ CellID->67888809,ExpressionUUID->"6ecb37d0-fbcc-3e82-16c8-ae9dfe7e84e8"],
+
+Cell["\<\
+As one can see, the four entries are equal in magnitude but not in sign: one \
+of them carries a minus. That sign is not decoration. It is the seed of the \
+interference, and we are about to watch it cancel an entire outcome.\
+\>", "Text",
+ CellID->1432876021,ExpressionUUID->"4c358d3e-86d3-ec5f-75ca-25783367b6a5"],
+
+Cell[TextData[{
+ "Ask ",
+ Cell[BoxData["QuantumInterferometer"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1f908cf3-3c70-d55a-45af-25bdb50abfa0"],
+ " for the full distribution over output occupation lists when one photon \
+enters each port, giving the input occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"1", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5dac66ba-272d-3627-0b54-7fe452d99d0d"],
+ ":"
+}], "Text",
+ CellID->876231958,ExpressionUUID->"110914de-bbdd-83a1-4736-8d983e69d18b"],
+
+Cell[BoxData[
+ RowBox[{"qbs", "[", 
+  RowBox[{"\"\<Probabilities\>\"", ",", " ", 
+   RowBox[{"{", 
+    RowBox[{"1", ",", " ", "1"}], "}"}]}], "]"}]], "Input",
+ CellLabel->"In[5]:= ",
+ CellID->1020575516,ExpressionUUID->"76d004f9-29e5-6665-1eef-9da34f904d4f"],
+
+Cell[TextData[{
+ "As one can see, the output occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"1", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2c76c797-c249-79ca-540d-ded0f7fc4b10"],
+ " has probability zero, while the two bunched output occupation lists ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "2"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "35077f55-9291-6519-633d-771f27244c63"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "0"}], ",", 
+   RowBox[{"2", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4ebf3687-f906-130d-7644-afe0f8b37e57"],
+ " split the probability between them. The photons leave together, every \
+time. The next question is where that zero comes from, and the cleanest way \
+to see it is to compute the same three numbers for three different kinds of \
+particle and read them side by side."
+}], "Text",
+ CellID->1967685850,ExpressionUUID->"65de4a87-3471-cd9f-13e6-63e1bd0597e5"],
+
+Cell["Occupation Lists and the Permanent Formula", "Subsection",
+ CellID->1044562475,ExpressionUUID->"7bedd9bd-1d84-ddaa-2992-d0e79436a7f0"],
+
+Cell[TextData[{
+ "To compare the three particle types, we need the ",
+ StyleBox["permanent",
+  FontWeight->"Bold"],
+ " of a square matrix. It is defined like the determinant, as a sum over all \
+ways of pairing rows with columns, except that every term is added with a \
+plus sign where the determinant alternates the signs."
+}], "Text",
+ CellID->1653200050,ExpressionUUID->"4c37f35a-e1a6-07fe-75cc-eb0790536dc4"],
+
+Cell["\<\
+The probability helpers below assume valid input and output occupation lists \
+with the same positive total photon count.\
+\>", "Text",
+ CellID->1384978530,ExpressionUUID->"02f88238-86c8-66df-3287-2462337d4c25"],
+
+Cell[TextData[{
+ "Define a helper, ",
+ Cell[BoxData["modeList"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "034d641c-5834-e412-3173-7e4659c6cf78"],
+ ", that converts an input or output occupation list into a ",
+ StyleBox["mode assignment list",
+  FontWeight->"Bold"],
+ ": a list containing the mode label once for each photon in that mode. \
+Replace each count ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["n", "TI"], 
+   StyleBox["j", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52ce4f6a-032d-a48b-02f6-6734b6d90ed1"],
+ " with ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["n", "TI"], 
+   StyleBox["j", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
   "5bfe104a-50de-a555-0985-8a1461680fbf"],
- ". In other words, ",
+ " copies of the mode label ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "134534fb-1061-d656-417a-ada5a115bcbc"],
+ ", then join the groups into one list. For example,"
+}], "Text",
+ CellID->519689844,ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{"{", "2"}], ",", "0", ",", 
+   RowBox[{
+   "1", "}", "\[ThickSpace]", "\[LongRightArrow]", "\[ThickSpace]", "{", "{", 
+    "1"}], ",", 
+   RowBox[{"1", "}"}], ",", 
+   RowBox[{"{", "}"}], ",", 
+   RowBox[{
+   "{", "3", "}", "}", "\[ThickSpace]", "\[LongRightArrow]", "\[ThickSpace]", 
+    "{", "1"}], ",", "1", ",", 
+   RowBox[{"3", "}"}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1609367578,ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772"],
+
+Cell["\<\
+The occupation list has one entry per mode; the mode assignment list has one \
+entry per photon. These entries are bookkeeping for the occupied modes and do \
+not make the photons distinguishable.\
+\>", "Text",
+ CellID->1541450781,ExpressionUUID->"608e87cc-8fce-afdf-10b5-1e962a78f525"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "modeList", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"modeList", "[", "occ_List", "]"}], " ", ":=", " ", 
+  RowBox[{"Catenate", " ", "@", " ", 
+   RowBox[{"MapIndexed", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"ConstantArray", "[", 
+       RowBox[{
+        RowBox[{"First", "[", "#2", "]"}], ",", " ", "#1"}], "]"}], " ", 
+      "&"}], ",", " ", "occ"}], "]"}]}]}]}], "Input",
+ CellLabel->"In[6]:= ",
+ CellID->1657269721,ExpressionUUID->"2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
+
+Cell["Name the three output occupation lists we are comparing:", "Text",
+ CellID->1140508347,ExpressionUUID->"66b4bee0-d247-b105-0e4b-37cde7f3006f"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"outs", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"2", ",", " ", "0"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", " ", "1"}], "}"}], ",", " ", 
+     RowBox[{"{", 
+      RowBox[{"0", ",", " ", "2"}], "}"}]}], "}"}]}], ";"}]], "Input",
+ CellLabel->"In[7]:= ",
+ CellID->496109794,ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+
+Cell[TextData[{
+ "For indistinguishable bosons, let ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["S", "TI"], "=", "{", 
+    SubscriptBox[
+     StyleBox["s", "TI"], "1"]}], ",", "\[Ellipsis]", ",", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["s", "TI"], 
+     StyleBox["m", "TI"]], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["T", "TI"], "=", "{", 
+    SubscriptBox[
+     StyleBox["t", "TI"], "1"]}], ",", "\[Ellipsis]", ",", 
+   RowBox[{
+    SubscriptBox[
+     StyleBox["t", "TI"], 
+     StyleBox["m", "TI"]], "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+ " be the input and output occupation lists, with ",
+ Cell[BoxData[
+  RowBox[{
+   UnderscriptBox["\[Sum]", 
+    StyleBox["k", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["s", "TI"], 
+    StyleBox["k", "TI"]], "=", 
+   UnderscriptBox["\[Sum]", 
+    StyleBox["j", "TI"],
+    LimitsPositioning->False], 
+   SubscriptBox[
+    StyleBox["t", "TI"], 
+    StyleBox["j", "TI"]], "=", 
+   StyleBox["n", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ ", since a passive lossless network neither creates nor destroys photons. \
+Define ",
+ Cell[BoxData["bosonProb"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6801f052-da94-0b6f-183e-ea1fdf2159b5"],
+ " to compute the probability of observing ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+ " given ",
+ Cell[BoxData[
+  StyleBox["S", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7b6211f5-475c-1194-2911-88bf72e963fe"],
+ " and the transfer matrix:"
+}], "Text",
+ CellID->108435171,ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "bosonProb", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"bosonProb", "[", 
+   RowBox[{"w_", ",", " ", "s_", ",", " ", "t_"}], "]"}], " ", ":=", " ", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Abs", "[", 
+     RowBox[{"Permanent", "[", 
+      RowBox[{"w", "[", 
+       RowBox[{"[", 
+        RowBox[{
+         RowBox[{"modeList", "[", "t", "]"}], ",", " ", 
+         RowBox[{"modeList", "[", "s", "]"}]}], "]"}], "]"}], "]"}], "]"}], "^",
+     "2"}], " ", "/", " ", 
+   RowBox[{"Times", " ", "@@", " ", 
+    RowBox[{"Factorial", "[", 
+     RowBox[{"Join", "[", 
+      RowBox[{"s", ",", " ", "t"}], "]"}], "]"}]}]}]}]}], "Input",
+ CellLabel->"In[8]:= ",
+ CellID->829388421,ExpressionUUID->"14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
+
+Cell[TextData[{
+ "To unpack this calculation, start with the device's transfer matrix ",
  Cell[BoxData[
   StyleBox["W", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "134534fb-1061-d656-417a-ada5a115bcbc"],
- " is the network seen by one photon at a time."
+  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
+ ", whose entries are single-photon amplitudes. The input mode assignment \
+list selects columns, and the output mode assignment list selects rows: \
+repeat column ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
+ " ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["s", "TI"], 
+   StyleBox["k", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
+ " times and row ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "55f417ec-7166-d78d-038b-8eb60010bdd7"],
+ " ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["t", "TI"], 
+   StyleBox["j", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b6e5dad-9702-0c1f-7916-54f722b75765"],
+ " times. Call the resulting ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["n", "TI"], "\[Times]", 
+   StyleBox["n", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "1d359769-845f-cd94-44ca-0f332deb97fe"],
+ " matrix ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["M", "TI"], "=", 
+   SubscriptBox[
+    StyleBox["W", "TI"], 
+    RowBox[{
+     StyleBox["T", "TI"], ",", 
+     StyleBox["S", "TI"]}]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+ "."
 }], "Text",
- CellID->829388421,ExpressionUUID->"2cd98fd2-34e7-e188-54e6-269cbc93b3d2"],
+ CellID->203008389,ExpressionUUID->"64c30c0d-1857-1b13-0cf0-a65799e26679"],
 
-Cell["Read the transfer matrix of our network:", "Text",
- CellID->203008389,ExpressionUUID->"6e1c99a5-dcef-9c28-1623-100ed49be772"],
+Cell[TextData[{
+ "Each column of ",
+ Cell[BoxData[
+  StyleBox["M", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
+ " represents an incoming photon, and each row an outgoing detection. A \
+complete connection between them uses every row and column once. Because the \
+photons do not interact, its contribution is the product of the corresponding \
+single-photon amplitudes. For example, one contribution is ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["M", "TI"], "11"], 
+   SubscriptBox[
+    StyleBox["M", "TI"], "22"], "\[CenterEllipsis]", 
+   SubscriptBox[
+    StyleBox["M", "TI"], 
+    StyleBox[
+     RowBox[{"n", "n"}], "TI"]]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6ea251ed-865f-e03c-1652-48b733ebb306"],
+ "."
+}], "Text",
+ CellID->1090263105,ExpressionUUID->"25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
+
+Cell[TextData[{
+ "Identical bosons require us to add these contributions with no extra \
+exchange signs. Summing over all ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["n", "TI"], "!"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "04786d0e-016a-d127-2c07-8568b01ca00d"],
+ " permutations ",
+ Cell[BoxData[
+  StyleBox["\[Sigma]", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
+ " of the columns gives precisely the permanent:"
+}], "Text",
+ CellID->1560876240,ExpressionUUID->"2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["Per",
+     FontSlant->"Plain"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    StyleBox["M", "TI"], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    UnderscriptBox["\[Sum]", 
+     StyleBox["\[Sigma]", "TI"],
+     LimitsPositioning->False], 
+    UnderoverscriptBox["\[Product]", 
+     RowBox[{
+      StyleBox["a", "TI"], "=", "1"}], 
+     StyleBox["n", "TI"],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     StyleBox["M", "TI"], 
+     RowBox[{
+      StyleBox["a", "TI"], ",", 
+      RowBox[{
+       StyleBox["\[Sigma]", "TI"], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       StyleBox["a", "TI"], 
+       StyleBox[")",
+        SpanMaxSize->1]}]}]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->176337227,ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e"],
+
+Cell["\<\
+Normalizing the input and output Fock states then gives the amplitude:\
+\>", "Text",
+ CellID->807053435,ExpressionUUID->"66c67103-72a1-9427-0efe-696d0755ff0d"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["A", "TI"], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      StyleBox["T", "TI"], "\[LeftArrow]", 
+      StyleBox["S", "TI"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    FractionBox[
+     RowBox[{
+      StyleBox["Per",
+       FontSlant->"Plain"], 
+      StyleBox["(",
+       SpanMaxSize->1], 
+      StyleBox["M", "TI"], 
+      StyleBox[")",
+       SpanMaxSize->1]}], 
+     SqrtBox[
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         UnderscriptBox["\[Product]", 
+          StyleBox["k", "TI"],
+          LimitsPositioning->False], 
+         SubscriptBox[
+          StyleBox["s", "TI"], 
+          StyleBox["k", "TI"]]}], "!"}], "\[ThinSpace]", 
+       RowBox[{
+        UnderscriptBox["\[Product]", 
+         StyleBox["j", "TI"],
+         LimitsPositioning->False], 
+        RowBox[{
+         SubscriptBox[
+          StyleBox["t", "TI"], 
+          StyleBox["j", "TI"]], "!"}]}]}]]], "."}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1633675818,ExpressionUUID->"48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
+
+Cell["\<\
+The factorials account for the normalization of states with multiple photons \
+in the same mode. To obtain the probability, take the squared magnitude of \
+the amplitude:\
+\>", "Text",
+ CellID->1828793009,ExpressionUUID->"58ee7ecb-1370-1005-0896-7795a605636f"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["P", "TI"], 
+    RowBox[{
+     StyleBox["(",
+      SpanMaxSize->1], 
+     RowBox[{
+      StyleBox["T", "TI"], "\[VerticalSeparator]", 
+      StyleBox["S", "TI"]}], 
+     StyleBox[")",
+      SpanMaxSize->1]}]}], "=", 
+   RowBox[{
+    SuperscriptBox[GridBox[{
+       {
+        RowBox[{
+         StyleBox["A", "TI"], 
+         StyleBox["(",
+          SpanMaxSize->1], 
+         RowBox[{
+          StyleBox["T", "TI"], "\[LeftArrow]", 
+          StyleBox["S", "TI"]}], 
+         StyleBox[")",
+          SpanMaxSize->1]}]}
+      },
+      GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+      GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], "=", 
+    RowBox[{
+     FractionBox[
+      SuperscriptBox[GridBox[{
+         {
+          RowBox[{
+           StyleBox["Per",
+            FontSlant->"Plain"], 
+           StyleBox["(",
+            SpanMaxSize->1], 
+           StyleBox["M", "TI"], 
+           StyleBox[")",
+            SpanMaxSize->1]}]}
+        },
+        GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+        GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"], 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         UnderscriptBox["\[Product]", 
+          StyleBox["k", "TI"],
+          LimitsPositioning->False], 
+         SubscriptBox[
+          StyleBox["s", "TI"], 
+          StyleBox["k", "TI"]]}], "!"}], "\[ThinSpace]", 
+       RowBox[{
+        UnderscriptBox["\[Product]", 
+         StyleBox["j", "TI"],
+         LimitsPositioning->False], 
+        RowBox[{
+         SubscriptBox[
+          StyleBox["t", "TI"], 
+          StyleBox["j", "TI"]], "!"}]}]}]], "."}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1232986364,ExpressionUUID->"11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
+
+Cell[TextData[{
+ "This is what ",
+ Cell[BoxData["bosonProb"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
+ " evaluates: ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"Abs", "[", "...", "]"}], "^", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
+ " takes the squared magnitude of the permanent, and ",
+ Cell[BoxData[
+  RowBox[{"Times", " ", "@@", " ", 
+   RowBox[{"Factorial", "[", 
+    RowBox[{"Join", "[", 
+     RowBox[{"s", ",", " ", "t"}], "]"}], "]"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
+ " multiplies the factorials of all input and output occupation counts."
+}], "Text",
+ CellID->762269937,ExpressionUUID->"6b45e796-37a7-eecc-197a-fed04253b416"],
+
+Cell["Comparing Particle Statistics", "Subsection",
+ CellID->405213039,ExpressionUUID->"5e187950-8ca2-2ab2-0638-711a25577898"],
+
+Cell[TextData[{
+ "For classical distinguishable particles the amplitudes never interfere. \
+Each photon crosses the network on its own, leaving input mode ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
+ " for output mode ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15a9104d-5625-6af3-4356-8a1763d038d9"],
+ " with probability ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       StyleBox[
+        RowBox[{"j", "k"}], "TI"]]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+ ", so the probability of an output occupation list is the permanent of the \
+block of entrywise squared magnitudes ",
+ Cell[BoxData[
+  SubsuperscriptBox[GridBox[{
+     {
+      StyleBox["W", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], 
+   RowBox[{
+    StyleBox["T", "TI"], ",", 
+    StyleBox["S", "TI"]}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "43821c38-6720-b4f9-71b1-966212da1ec3"],
+ ", selected by the same repeated rows and columns, divided only by the \
+output factorials:"
+}], "Text",
+ CellID->2118931930,ExpressionUUID->"341c54d9-3079-6bba-5c24-4d83410c3980"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["P", "TI"], 
+    StyleBox["dist",
+     FontSlant->"Plain"]], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["T", "TI"], "\[VerticalSeparator]", 
+    StyleBox["S", "TI"]}], 
+   StyleBox[")",
+    SpanMaxSize->1], "=", 
+   FractionBox[
+    RowBox[{
+     StyleBox["Per",
+      FontSlant->"Plain"], 
+     StyleBox["(",
+      FontSize->1.2 Inherited], 
+     SubsuperscriptBox[GridBox[{
+        {
+         StyleBox["W", "TI"]}
+       },
+       GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+       GridBoxSpacings->{"Columns" -> {{0.15}}}], 
+      RowBox[{
+       StyleBox["T", "TI"], ",", 
+       StyleBox["S", "TI"]}], "2"], 
+     StyleBox[")",
+      FontSize->1.2 Inherited]}], 
+    RowBox[{
+     RowBox[{
+      UnderscriptBox["\[Product]", 
+       StyleBox["j", "TI"],
+       LimitsPositioning->False], 
+      SubscriptBox[
+       StyleBox["t", "TI"], 
+       StyleBox["j", "TI"]]}], "!"}]]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1039057480,ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+
+Cell[TextData[{
+ "The permanent counts each assignment of photons to output modes ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    UnderscriptBox["\[Product]", 
+     StyleBox["j", "TI"],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     StyleBox["t", "TI"], 
+     StyleBox["j", "TI"]]}], "!"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+ " times, once for every way of matching the photons in mode ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
+ " to the ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["t", "TI"], 
+   StyleBox["j", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5077c06e-c394-b43c-000c-da4bf6261f06"],
+ " copies of row ",
+ Cell[BoxData[
+  StyleBox["j", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "07359582-e823-44a1-2eca-0cef89d62e8b"],
+ ", and the output factorials remove that overcount. There is no ",
+ Cell[BoxData[
+  RowBox[{
+   SubscriptBox[
+    StyleBox["s", "TI"], 
+    StyleBox["k", "TI"]], "!"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
+ ", because photons that start in the same mode are still different \
+particles. Define that:"
+}], "Text",
+ CellID->1411198270,ExpressionUUID->"68c76573-72ce-0c1a-18fd-7d3d077b5760"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "distProb", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"distProb", "[", 
+   RowBox[{"w_", ",", " ", "s_", ",", " ", "t_"}], "]"}], " ", ":=", " ", 
+  RowBox[{
+   RowBox[{"Permanent", "[", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Abs", "[", "w", "]"}], "^", "2"}], ")"}], "[", 
+     RowBox[{"[", 
+      RowBox[{
+       RowBox[{"modeList", "[", "t", "]"}], ",", " ", 
+       RowBox[{"modeList", "[", "s", "]"}]}], "]"}], "]"}], "]"}], " ", "/", 
+   " ", 
+   RowBox[{"Times", " ", "@@", " ", 
+    RowBox[{"Factorial", "[", "t", "]"}]}]}]}]}], "Input",
+ CellLabel->"In[9]:= ",
+ CellID->1703453532,ExpressionUUID->"6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
+
+Cell[TextData[{
+ "For indistinguishable noninteracting fermions, odd permutations contribute \
+a minus sign, giving a ",
+ StyleBox["determinant",
+  FontWeight->"Bold"],
+ ". A valid input occupation list has only zero-or-one counts; output \
+collisions have probability zero. Define the probability for such inputs:"
+}], "Text",
+ CellID->1477609488,ExpressionUUID->"4fd967ef-5008-0b29-75e7-7ec961bd5673"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "fermionProb", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"fermionProb", "[", 
+   RowBox[{"w_", ",", " ", "s_", ",", " ", "t_"}], "]"}], " ", ":=", " ", 
+  RowBox[{
+   RowBox[{"Abs", "[", 
+    RowBox[{"Det", "[", 
+     RowBox[{"w", "[", 
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"modeList", "[", "t", "]"}], ",", " ", 
+        RowBox[{"modeList", "[", "s", "]"}]}], "]"}], "]"}], "]"}], "]"}], "^",
+    "2"}]}]}], "Input",
+ CellLabel->"In[10]:= ",
+ CellID->1030824397,ExpressionUUID->"19bb1c5e-57ab-6e36-4f58-9618625e351c"],
+
+Cell["\<\
+Put the three particle types in one table, with one row per output occupation \
+list:\
+\>", "Text",
+ CellID->100031176,ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
+
+Cell[BoxData[
+ RowBox[{"Grid", "[", "\n", " ", 
+  RowBox[{
+   RowBox[{"Join", "[", "\n", "  ", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{"#", ",", " ", "Bold"}], "]"}], " ", "&"}], " ", "/@", " ", 
+       RowBox[{"{", 
+        RowBox[{"\"\<output\>\"", ",", " ", "\"\<indistinguishable bosons\>\"",
+          ",", " ", "\"\<distinguishable bosons\>\"", ",", 
+         " ", "\"\<indistinguishable fermions\>\""}], "}"}]}], "}"}], ",", 
+     "\n", "  ", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"Prepend", "[", 
+        RowBox[{
+         RowBox[{"Through", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "bosonProb", ",", " ", "distProb", ",", " ", "fermionProb"}], 
+            "}"}], "[", 
+           RowBox[{"Wbs", ",", " ", 
+            RowBox[{"{", 
+             RowBox[{"1", ",", " ", "1"}], "}"}], ",", " ", "t"}], "]"}], 
+          "]"}], ",", " ", 
+         RowBox[{"Row", "[", 
+          RowBox[{"{", 
+           RowBox[{"\"\<|\>\"", ",", " ", 
+            RowBox[{"Row", "[", 
+             RowBox[{"t", ",", " ", "\"\<,\>\""}], "]"}], ",", 
+            " ", "\"\<\[RightAngleBracket]\>\""}], "}"}], "]"}]}], "]"}], ",",
+        " ", 
+       RowBox[{"{", 
+        RowBox[{"t", ",", " ", "outs"}], "}"}]}], "]"}]}], "]"}], ",", "\n", 
+   " ", 
+   RowBox[{"Frame", " ", "->", " ", "All"}], ",", " ", 
+   RowBox[{"Spacings", " ", "->", " ", 
+    RowBox[{"{", 
+     RowBox[{"2", ",", " ", "1"}], "}"}]}]}], "]"}]], "Input",
+ CellLabel->"In[11]:= ",
+ CellID->144223354,ExpressionUUID->"30baa1c8-66ad-75e0-6059-389213585fca"],
+
+Cell[TextData[{
+ "The distinguishable probabilities are a quarter, a half, a quarter. Bosonic \
+coincidence vanishes because its two contributions are ",
+ Cell[BoxData[
+  RowBox[{"+", 
+   FractionBox["1", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "52535901-cb26-8b9c-0261-516aeed0d9e6"],
+ " and ",
+ Cell[BoxData[
+  RowBox[{"-", 
+   FractionBox["1", "2"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "323a4b1c-b138-a791-63da-6359c0b20dfb"],
+ ": positive exchange coefficients do not prevent destructive interference \
+between signed optical amplitudes. Fermions instead leave one particle in \
+each output mode with certainty. A bunched output repeats a matrix row, \
+making its determinant zero, as required by Pauli exclusion."
+}], "Text",
+ CellID->1443527617,ExpressionUUID->"7421cf44-a1ac-4319-1dde-e721d0592e63"],
+
+Cell["\<\
+Check the coincidence amplitude at a variable beam-splitter angle:\
+\>", "Text",
+ CellID->311511756,ExpressionUUID->"511b3347-8d7d-ab60-0738-ab212409f64a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "theta", "]"}], ";"}], "\n", 
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"splitter", " ", "=", " ", 
+     RowBox[{"QuantumInterferometer", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\"\<BS\>\"", "[", 
+          RowBox[{"theta", ",", " ", "0"}], "]"}], " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "2"}], "}"}]}], "}"}], ",", " ", "2"}], 
+      "]"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"FullSimplify", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"splitter", "[", 
+       RowBox[{"\"\<Amplitude\>\"", ",", " ", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "1"}], "}"}], " ", "->", " ", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", " ", "1"}], "}"}]}]}], "]"}], " ", "==", " ", 
+      RowBox[{"Cos", "[", 
+       RowBox[{"2", " ", "theta"}], "]"}]}], ",", "\n", "  ", 
+     RowBox[{"Element", "[", 
+      RowBox[{"theta", ",", " ", "Reals"}], "]"}]}], "]"}]}], "\n", 
+  "]"}]}], "Input",
+ CellLabel->"In[12]:= ",
+ CellID->1381425643,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+
+Cell[TextData[{
+ "At ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "0"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6815cd54-0cd7-196f-182a-e51ea5626bb5"],
+ " this amplitude is one, restoring the input; at ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["\[Theta]", "TI"], "=", "\[Pi]", "/", "4"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "519775d4-d545-25f2-07ad-6c91dcf18fd8"],
+ " it vanishes. We can now derive the amplitude for an arbitrary passive \
+network."
+}], "Text",
+ CellID->377280352,ExpressionUUID->"5900aac7-5263-773e-0f3f-43a167165a04"],
+
+Cell["Many-Photon Amplitudes as Normalized Permanents", "Section",
+ CellID->1717363484,ExpressionUUID->"06ecfdb3-2197-c9b0-2e93-f4fd50239b9a"],
+
+Cell[TextData[{
+ "The same amplitude formula follows directly from how a passive network acts \
+on the creation operators. Each network sends the operator that creates a \
+photon in input port ",
+ Cell[BoxData[
+  StyleBox["k", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12d95fcb-3316-2212-42e7-569546a37178"],
+ " to a superposition over the outputs,"
+}], "Text",
+ CellID->1781880651,ExpressionUUID->"733995c2-f5bf-78ee-22c6-0caffc4a4a34"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubsuperscriptBox[
+     StyleBox["a", "TI"], 
+     StyleBox["k", "TI"], "\[Dagger]"], "\[ThickSpace]", "\[Function]", 
+    "\[ThickSpace]", 
+    UnderscriptBox["\[Sum]", 
+     StyleBox["j", "TI"],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     StyleBox["W", "TI"], 
+     StyleBox[
+      RowBox[{"j", "k"}], "TI"]], "\[ThinSpace]", 
+    SubsuperscriptBox[
+     StyleBox["a", "TI"], 
+     StyleBox["j", "TI"], "\[Dagger]"]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1536527082,ExpressionUUID->"4f8ab258-7e7f-0723-7589-34027b0a6a09"],
+
+Cell[TextData[{
+ "Replace the commuting creation operators by variables ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["x", "TI"], 
+   StyleBox["j", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b12ee74-9953-131d-1921-003e18e67e67"],
+ ". The transformed input is encoded by"
+}], "Text",
+ CellID->1621535814,ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    SubscriptBox[
+     StyleBox["F", "TI"], 
+     StyleBox["S", "TI"]], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    StyleBox["x", "TI"], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    UnderscriptBox["\[Product]", 
+     StyleBox["k", "TI"],
+     LimitsPositioning->False], 
+    SuperscriptBox[
+     RowBox[{"(", 
+      RowBox[{
+       UnderscriptBox["\[Sum]", 
+        StyleBox["j", "TI"],
+        LimitsPositioning->False], 
+       SubscriptBox[
+        StyleBox["W", "TI"], 
+        StyleBox[
+         RowBox[{"j", "k"}], "TI"]], 
+       SubscriptBox[
+        StyleBox["x", "TI"], 
+        StyleBox["j", "TI"]]}], ")"}], 
+     SubscriptBox[
+      StyleBox["s", "TI"], 
+      StyleBox["k", "TI"]]], "=", 
+    UnderscriptBox["\[Sum]", 
+     StyleBox["T", "TI"],
+     LimitsPositioning->False], 
+    SubscriptBox[
+     StyleBox["c", "TI"], 
+     StyleBox["T", "TI"]], 
+    UnderscriptBox["\[Product]", 
+     StyleBox["j", "TI"],
+     LimitsPositioning->False], 
+    SubsuperscriptBox[
+     StyleBox["x", "TI"], 
+     StyleBox["j", "TI"], 
+     SubscriptBox[
+      StyleBox["t", "TI"], 
+      StyleBox["j", "TI"]]]}], "."}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1193935837,ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa"],
+
+Cell[TextData[{
+ "The coefficient ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["c", "TI"], 
+   StyleBox["T", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "78287f93-0f12-7c52-2828-76ddaaa746b8"],
+ " collects all contributions to ",
+ Cell[BoxData[
+  StyleBox["T", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "08285353-0e0e-39f8-3828-4b1dabb88bc2"],
+ ". Restoring Fock-state normalization gives"
+}], "Text",
+ CellID->105329933,ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   RowBox[{
+    StyleBox["A", "TI"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["T", "TI"], "\[LeftArrow]", 
+     StyleBox["S", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1], "=", 
+    SubscriptBox[
+     StyleBox["c", "TI"], 
+     StyleBox["T", "TI"]], 
+    SqrtBox[
+     FractionBox[
+      RowBox[{
+       RowBox[{
+        UnderscriptBox["\[Product]", 
+         StyleBox["j", "TI"],
+         LimitsPositioning->False], 
+        SubscriptBox[
+         StyleBox["t", "TI"], 
+         StyleBox["j", "TI"]]}], "!"}], 
+      RowBox[{
+       RowBox[{
+        UnderscriptBox["\[Product]", 
+         StyleBox["k", "TI"],
+         LimitsPositioning->False], 
+        SubscriptBox[
+         StyleBox["s", "TI"], 
+         StyleBox["k", "TI"]]}], "!"}]]]}], ",", 
+   "\[NonBreakingSpace]\[NonBreakingSpace]\[NonBreakingSpace]\
+\[NonBreakingSpace]", 
+   RowBox[{
+    RowBox[{
+     StyleBox["Per",
+      FontSlant->"Plain"], 
+     RowBox[{
+      StyleBox["(",
+       SpanMaxSize->1], 
+      SubscriptBox[
+       StyleBox["W", "TI"], 
+       RowBox[{
+        StyleBox["T", "TI"], ",", 
+        StyleBox["S", "TI"]}]], 
+      StyleBox[")",
+       SpanMaxSize->1]}]}], "=", 
+    RowBox[{
+     SubscriptBox[
+      StyleBox["c", "TI"], 
+      StyleBox["T", "TI"]], 
+     RowBox[{
+      UnderscriptBox["\[Product]", 
+       StyleBox["j", "TI"],
+       LimitsPositioning->False], 
+      RowBox[{
+       RowBox[{
+        SubscriptBox[
+         StyleBox["t", "TI"], 
+         StyleBox["j", "TI"]], "!"}], "."}]}]}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->1234416869,ExpressionUUID->"187adc3d-3961-76c2-4819-d667b8145c28"],
+
+Cell["\<\
+Thus coefficient extraction and the permanent formula compute the same \
+complex amplitude.\
+\>", "Text",
+ CellID->240380995,ExpressionUUID->"641c78eb-7f03-7846-0c24-71b57ab64aac"],
+
+Cell[TextData[{
+ "To watch this on a network with no special structure, draw one at random. A \
+random unitary is the natural \"generic\" network, and ",
+ Cell[BoxData[
+  RowBox[{"QuantumInterferometer", "[", 
+   RowBox[{"\"\<Random\>\"", "[", "m", "]"}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5bfcc75d-c21d-6fb0-0983-df06f7a8359a"],
+ " builds an ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "112ae6ec-4b5c-6ad2-4729-ffb66ee93838"],
+ "-mode one and factors it into beam splitters and phase shifters."
+}], "Text",
+ CellID->1771870337,ExpressionUUID->"6121b9de-dddd-aca8-10de-309bd469f6f2"],
+
+Cell["\<\
+Build a random five-mode interferometer with a fixed seed, so the run is \
+reproducible:\
+\>", "Text",
+ CellID->305160771,ExpressionUUID->"30209679-023a-ee91-61df-0823b7ccb4fb"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SeedRandom", "[", "2026", "]"}], ";"}], "\n", 
+ RowBox[{"qi", " ", "=", " ", 
+  RowBox[{"QuantumInterferometer", "[", 
+   RowBox[{"\"\<Random\>\"", "[", "5", "]"}], "]"}]}]}], "Input",
+ CellLabel->"In[13]:= ",
+ CellID->1896945989,ExpressionUUID->"29bc1606-c22d-409d-5f43-8863f7d812e7"],
+
+Cell["Draw the mesh the photons will cross:", "Text",
+ CellID->653417278,ExpressionUUID->"7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91"],
+
+Cell[BoxData[
+ RowBox[{"qi", "[", "\"\<Diagram\>\"", "]"}]], "Input",
+ CellLabel->"In[14]:= ",
+ CellID->1067269536,ExpressionUUID->"3119d855-3ffd-7401-6726-d21fb9885f6b"],
+
+Cell["Read its transfer matrix:", "Text",
+ CellID->49659130,ExpressionUUID->"62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3"],
 
 Cell[BoxData[{
  RowBox[{
   RowBox[{"W", " ", "=", " ", 
    RowBox[{"qi", "[", "\"\<TransferMatrix\>\"", "]"}]}], ";"}], "\n", 
  RowBox[{"W", " ", "//", " ", "MatrixForm"}]}], "Input",
- CellLabel->"In[8]:= ",
- CellID->1090263105,ExpressionUUID->"608e87cc-8fce-afdf-10b5-1e962a78f525"],
+ CellLabel->"In[15]:= ",
+ CellID->464508221,ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df"],
 
 Cell[TextData[{
- "With several identical photons, the amplitude for a detection pattern is \
-not one entry of ",
+ "Now use input occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"1", ",", "1", ",", "0"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "51fce014-dca1-0630-0783-fa51d5546d1a"],
+ ", with one photon entering each of ports 1, 2, and 3, and ask for the \
+amplitude of output occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"0", ",", "1", ",", "1"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "657c1c65-980e-511d-1303-964f19bb2067"],
+ ", with one photon leaving each of ports 1, 3, and 4. The corresponding mode \
+assignment lists select columns ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", "2", ",", 
+   RowBox[{"3", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0f15dbd5-5f35-596c-352a-d29f5ac02bb6"],
+ " and rows ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", "3", ",", 
+   RowBox[{"4", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e9b7e66-629a-1114-26b9-7040172f607e"],
+ " of ",
  Cell[BoxData[
   StyleBox["W", "TI"]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "2aa912c6-4938-1bb7-5a56-8ba068cd699d"],
- " but a combination of many, one for every way of routing the photons to the \
-detected modes. That combination is the permanent. The permanent of a square \
-matrix is defined like the determinant, as a sum over all ways of pairing \
-rows with columns, but with every term added with a plus sign (the \
-determinant alternates the signs). Build the relevant submatrix by taking the \
-rows and columns of ",
+  "585a51e6-774f-2dd2-087a-48c002fa7738"],
+ ". Both occupation lists are collision-free: every count is zero or one. All \
+factorials in the normalization are therefore one, so the amplitude is the \
+permanent of this selected ",
  Cell[BoxData[
-  StyleBox["W", "TI"]], "InlineFormula",
+  RowBox[{"3", "\[Times]", "3"}]], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "66b4bee0-d247-b105-0e4b-37cde7f3006f"],
- " for the occupied output and input modes."
+  "1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0"],
+ " matrix."
 }], "Text",
- CellID->1560876240,ExpressionUUID->"337c2d89-644e-5b5e-6103-c4d30dfb29a4"],
+ CellID->1361313038,ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f"],
 
 Cell[TextData[{
- "Compute, directly from ",
+ "Compute that amplitude directly from ",
  Cell[BoxData["QuantumInterferometer"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "5f7c2741-1c81-ec9b-0503-bf2b9535b6e1"],
- ", the amplitude for all three photons to come out one per port again, in \
-modes 1, 2 and 3:"
+  "2845529c-454d-b13b-587b-4bc66cf90001"],
+ ":"
 }], "Text",
- CellID->176337227,ExpressionUUID->"644cc522-c7c4-9b18-0c73-dc8ff276e662"],
+ CellID->1907680634,ExpressionUUID->"7519012f-e657-215b-2326-988893e273a1"],
 
 Cell[BoxData[
  RowBox[{"qi", "[", 
@@ -390,446 +1408,1030 @@ Cell[BoxData[
      " ", "->", " ", 
     RowBox[{"{", 
      RowBox[{
-     "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+     "1", ",", " ", "0", ",", " ", "1", ",", " ", "1", ",", " ", "0"}], 
      "}"}]}]}], "]"}]], "Input",
- CellLabel->"In[9]:= ",
- CellID->807053435,ExpressionUUID->"2de8c8f9-eaf3-8e90-5b97-e1a28e87d4fa"],
+ CellLabel->"In[16]:= ",
+ CellID->483148123,ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0"],
+
+Cell["\<\
+Confirm it equals the permanent of the matrix selected by the same input and \
+output occupation lists:\
+\>", "Text",
+ CellID->1195452142,ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"in", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+       "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+       "}"}]}], ",", " ", 
+     RowBox[{"out", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+       "1", ",", " ", "0", ",", " ", "1", ",", " ", "1", ",", " ", "0"}], 
+       "}"}]}]}], "}"}], ",", "\n", " ", 
+   RowBox[{
+    RowBox[{"qi", "[", 
+     RowBox[{"\"\<Amplitude\>\"", ",", " ", 
+      RowBox[{"in", " ", "->", " ", "out"}]}], "]"}], " ", "===", "\n", "  ", 
+    
+    RowBox[{"Permanent", "[", 
+     RowBox[{"W", "[", 
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"modeList", "[", "out", "]"}], ",", " ", 
+        RowBox[{"modeList", "[", "in", "]"}]}], "]"}], "]"}], "]"}]}]}], "\n",
+   "]"}]], "Input",
+ CellLabel->"In[17]:= ",
+ CellID->1521685512,ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f"],
 
 Cell[TextData[{
- "That single number is the permanent of the three-by-three block of ",
- Cell[BoxData[
-  StyleBox["W", "TI"]], "InlineFormula",
+ "For this collision-free example, ",
+ Cell[BoxData["\"\<Amplitude\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "6801f052-da94-0b6f-183e-ea1fdf2159b5"],
- " on the occupied modes."
+  "48a3d607-c312-9dd3-7850-c860f6a4e739"],
+ " uses the direct permanent route, so this checks selection rather than \
+independently verifying the formula."
 }], "Text",
- CellID->1633675818,ExpressionUUID->"0daf8e98-7628-e40b-3b54-27c203c2cf51"],
+ CellID->97201263,ExpressionUUID->"539491e8-328f-8d7b-01ab-08b2473bd441"],
 
-Cell["Confirm that the amplitude equals that permanent exactly:", "Text",
- CellID->1828793009,ExpressionUUID->"7b6211f5-475c-1194-2911-88bf72e963fe"],
+Cell[TextData[{
+ "Now put two photons in port 1 and one in port 3: ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["S", "TI"], "=", "{", "2"}], ",", 
+   RowBox[{"0", ",", "1", ",", "0"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7fcf59b5-a5ca-2155-25f5-50fecc7f73bf"],
+ ". Choose ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{
+    StyleBox["T", "TI"], "=", "{", "1"}], ",", 
+   RowBox[{"2", ",", "0", ",", "0"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "023f49e2-a747-9723-33c5-60cfd2f3fa09"],
+ ". The selected columns are ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", "1", ",", 
+   RowBox[{"3", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "21aa1c49-e16c-f406-57a9-9612901edf6c"],
+ " and rows ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", "2", ",", 
+   RowBox[{"2", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "289b85cd-827f-9a9c-58b8-1c97370be8e6"],
+ ", so both input and output collisions enter the normalization: ",
+ Cell[BoxData[
+  RowBox[{
+   SqrtBox[
+    RowBox[{
+     RowBox[{"2", "!"}], "\[ThinSpace]", 
+     RowBox[{"2", "!"}]}]], "=", "2"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "12f3dbee-abc4-6375-4280-d2cbce714e5f"],
+ "."
+}], "Text",
+ CellID->878831761,ExpressionUUID->"7ed5da6f-a344-b859-26ea-dc48d6f60aa3"],
+
+Cell["Check the amplitude against the normalized permanent:", "Text",
+ CellID->1048559713,ExpressionUUID->"2cfa2c34-ef50-7d46-5499-c6718ae547ac"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"in", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+       "2", ",", " ", "0", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+       "}"}]}], ",", " ", 
+     RowBox[{"out", " ", "=", " ", 
+      RowBox[{"{", 
+       RowBox[{
+       "1", ",", " ", "2", ",", " ", "0", ",", " ", "0", ",", " ", "0"}], 
+       "}"}]}]}], "}"}], ",", "\n", " ", 
+   RowBox[{
+    RowBox[{"Abs", "[", 
+     RowBox[{
+      RowBox[{"qi", "[", 
+       RowBox[{"\"\<Amplitude\>\"", ",", " ", 
+        RowBox[{"in", " ", "->", " ", "out"}]}], "]"}], " ", "-", "\n", "   ", 
+      RowBox[{
+       RowBox[{"Permanent", "[", 
+        RowBox[{"W", "[", 
+         RowBox[{"[", 
+          RowBox[{
+           RowBox[{"modeList", "[", "out", "]"}], ",", " ", 
+           RowBox[{"modeList", "[", "in", "]"}]}], "]"}], "]"}], "]"}], "/", 
+       "2"}]}], "]"}], " ", "<", " ", 
+    RowBox[{"10", "^", 
+     RowBox[{"-", "12"}]}]}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[18]:= ",
+ CellID->300048012,ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65"],
+
+Cell[TextData[{
+ "The formula does not prescribe an algorithm. For approximate transfer \
+matrices, ",
+ Cell[BoxData["QuantumInterferometer"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "01ed6b92-5a5f-fa78-3792-82dc5febc942"],
+ " may group repeated occupations, using only occupied rows and columns and \
+choosing the orientation with fewer summands. The grouped sum has"
+}], "Text",
+ CellID->1962937852,ExpressionUUID->"107fa29c-d013-1000-4004-3bd9e1a6636a"],
+
+Cell[BoxData[
+ PaneBox[
+  RowBox[{
+   StyleBox["K", "TI"], "=", 
+   RowBox[{
+    StyleBox["min",
+     FontSlant->"Plain"], "\[ThinSpace]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{
+       UnderscriptBox["\[Product]", 
+        StyleBox["k", "TI"],
+        LimitsPositioning->False], 
+       StyleBox["(",
+        SpanMaxSize->1], 
+       RowBox[{
+        SubscriptBox[
+         StyleBox["s", "TI"], 
+         StyleBox["k", "TI"]], "+", "1"}], 
+       StyleBox[")",
+        SpanMaxSize->1]}], ",", "\[ThickSpace]", 
+      RowBox[{
+       UnderscriptBox["\[Product]", 
+        StyleBox["j", "TI"],
+        LimitsPositioning->False], 
+       RowBox[{
+        StyleBox["(",
+         SpanMaxSize->1], 
+        RowBox[{
+         SubscriptBox[
+          StyleBox["t", "TI"], 
+          StyleBox["j", "TI"]], "+", "1"}], 
+        StyleBox[")",
+         SpanMaxSize->1]}]}]}], "}"}]}]}],
+  Alignment->Center,
+  ImageSize->Full]], "DisplayFormula",
+ CellID->588230824,ExpressionUUID->"6798df62-4cc7-e4e1-0da7-d74c6573cecb"],
+
+Cell[TextData[{
+ "terms: six in this example, versus ",
+ Cell[BoxData[
+  RowBox[{
+   SuperscriptBox["2", "3"], "=", "8"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "49f5450b-e8d1-97dd-7f8b-5d548965fd27"],
+ " for collision-free input and output. Exact transfer matrices retain the \
+direct ",
+ Cell[BoxData["Permanent"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "2570a8a5-7a6f-59e7-530f-410f7f1a2bcd"],
+ " route. These are evaluations of the same quantity; ",
+ Cell[BoxData["bosonProb"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0b990c23-b656-01a6-39a6-a58cc3e3538c"],
+ " remains our simple reference."
+}], "Text",
+ CellID->2099309037,ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054"],
+
+Cell["Computing and Checking the Full Output Distribution", "Section",
+ CellID->512383039,ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9"],
+
+Cell[TextData[{
+ "A physical boson sampler produces output occupation lists. To inspect the \
+probabilities underlying those samples, collect the whole distribution for \
+input occupation list ",
+ Cell[BoxData[
+  RowBox[{
+   RowBox[{"{", "1"}], ",", 
+   RowBox[{"1", ",", "1", ",", "0"}], ",", 
+   RowBox[{"0", "}"}]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "062d91f0-6326-41c0-2fd2-08ba16d3132a"],
+ ":"
+}], "Text",
+ CellID->273308241,ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2"],
+
+Cell[BoxData[
+ RowBox[{"probs", " ", "=", " ", 
+  RowBox[{"qi", "[", 
+   RowBox[{"\"\<Probabilities\>\"", ",", " ", 
+    RowBox[{"{", 
+     RowBox[{
+     "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+     "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[19]:= ",
+ CellID->1809098798,ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0"],
+
+Cell["Show the five most likely output occupation lists:", "Text",
+ CellID->156430199,ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8"],
+
+Cell[BoxData[
+ RowBox[{"TakeLargest", "[", 
+  RowBox[{"probs", ",", " ", "5"}], "]"}]], "Input",
+ CellLabel->"In[20]:= ",
+ CellID->724760089,ExpressionUUID->"26dca2d1-2715-746d-4ee3-3b9b52a05eb7"],
+
+Cell[TextData[{
+ "There is one probability for each output occupation list. For ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "296a77cd-8fa3-dd44-5f6a-6e972a57a7ae"],
+ " photons in ",
+ Cell[BoxData[
+  StyleBox["m", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6b853673-18d0-d9fa-19ba-a83d996aabc0"],
+ " modes there are ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["n", "TI"], "+", 
+      StyleBox["m", "TI"], "-", "1"}], 
+    StyleBox["n", "TI"]},
+   "Binomial"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "25b5b884-ef74-61b3-534a-31e18a013399"],
+ " such lists, counting every way to place the photons in the modes."
+}], "Text",
+ CellID->168408080,ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802"],
+
+Cell["Confirm the distribution has exactly that many entries:", "Text",
+ CellID->811283638,ExpressionUUID->"6e85e9ed-427b-8528-16ba-00b7770fec72"],
 
 Cell[BoxData[
  RowBox[{
-  RowBox[{"qi", "[", 
-   RowBox[{"\"\<Amplitude\>\"", ",", " ", 
-    RowBox[{
-     RowBox[{"{", 
-      RowBox[{
-      "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
-      "}"}], " ", "->", " ", 
-     RowBox[{"{", 
-      RowBox[{
-      "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
-      "}"}]}]}], "]"}], " ", "===", " ", 
-  RowBox[{"Permanent", "[", 
-   RowBox[{"W", "[", 
-    RowBox[{"[", 
-     RowBox[{
-      RowBox[{"{", 
-       RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}], ",", " ", 
-      RowBox[{"{", 
-       RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}]}], "]"}], "]"}], 
+  RowBox[{"Length", "[", "probs", "]"}], " ", "==", " ", 
+  RowBox[{"Binomial", "[", 
+   RowBox[{
+    RowBox[{"3", " ", "+", " ", "5", " ", "-", " ", "1"}], ",", " ", "3"}], 
    "]"}]}]], "Input",
- CellLabel->"In[10]:= ",
- CellID->1232986364,ExpressionUUID->"7c8f7bdf-2493-8d8a-24b5-72994d27d7d0"],
+ CellLabel->"In[21]:= ",
+ CellID->207978548,ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5"],
 
 Cell[TextData[{
- "This is not special to that one pattern. For a general input ",
- Cell[BoxData[
-  StyleBox["S", "TI"]], "InlineFormula",
+ "Confirm it is a genuine probability distribution, summing to one (",
+ Cell[BoxData["Chop"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "14e8dcaf-74c9-37ba-3c97-d5097d7d9d80"],
- " and output ",
- Cell[BoxData[
-  StyleBox["T", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "5d5cbd3a-e88d-ee42-0b63-35678939b4a8"],
- ", the rule is the same: repeat row ",
- Cell[BoxData[
-  StyleBox["j", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3b7fe4cc-5889-7f4e-6904-fd96593c4594"],
- " of ",
- Cell[BoxData[
-  StyleBox["W", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "6cb5c01f-62f5-68e0-144a-da5916803aca"],
- " once for every photon leaving mode ",
- Cell[BoxData[
-  StyleBox["j", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "55f417ec-7166-d78d-038b-8eb60010bdd7"],
- ", repeat column ",
- Cell[BoxData[
-  StyleBox["k", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "4b6e5dad-9702-0c1f-7916-54f722b75765"],
- " once for every photon entering mode ",
- Cell[BoxData[
-  StyleBox["k", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "1d359769-845f-cd94-44ca-0f332deb97fe"],
- ", take the permanent of that matrix, and divide by a normalization that \
-counts photons sharing a mode."
+  "31f4c073-8ff6-126f-678b-da3d298360b5"],
+ " sets the tiny machine-precision residue to zero so the comparison tests \
+the physics, not the rounding; see ",
+ ButtonBox["Chop",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://reference.wolfram.com/language/ref/Chop.html"], None}],
+ "):"
 }], "Text",
- CellID->762269937,ExpressionUUID->"2055bfee-d4b5-7aa2-506a-36cbdd404888"],
+ CellID->437474228,ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a"],
 
-Cell[TextData[{
- "Define the list that repeats mode ",
- Cell[BoxData[
-  StyleBox["j", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "64c30c0d-1857-1b13-0cf0-a65799e26679"],
- " once for every photon in it, so a pattern becomes the rows (or columns) of \
-its matrix:"
-}], "Text",
- CellID->405213039,ExpressionUUID->"46632a09-cc5f-b0ef-6e10-cc52e5eb0235"],
-
-Cell[BoxData[{
- RowBox[{"ClearAll", "[", "modeList", "]"}], "\n", 
+Cell[BoxData[
  RowBox[{
-  RowBox[{"modeList", "[", "occ_List", "]"}], " ", ":=", " ", 
-  RowBox[{"Catenate", " ", "@", " ", 
-   RowBox[{"MapIndexed", "[", 
-    RowBox[{
-     RowBox[{
-      RowBox[{"ConstantArray", "[", 
-       RowBox[{
-        RowBox[{"First", "[", "#2", "]"}], ",", " ", "#1"}], "]"}], " ", 
-      "&"}], ",", " ", "occ"}], "]"}]}]}]}], "Input",
- CellLabel->"In[11]:= ",
- CellID->2118931930,ExpressionUUID->"6ea251ed-865f-e03c-1652-48b733ebb306"],
+  RowBox[{"Chop", "[", 
+   RowBox[{
+    RowBox[{"Total", "[", "probs", "]"}], " ", "-", " ", "1"}], "]"}], " ", "==",
+   " ", "0"}]], "Input",
+ CellLabel->"In[22]:= ",
+ CellID->874582697,ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b"],
 
 Cell[TextData[{
- "Verify that every probability in the distribution we collected is the \
-squared permanent of ",
- Cell[BoxData[
-  StyleBox["W", "TI"]], "InlineFormula",
+ "For passive Fock inputs, ",
+ Cell[BoxData["\"\<Probabilities\>\""], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "25a0bfbe-b1d4-2428-535f-36fbc0668f72"],
- ", divided by that normalization:"
+  "106b7ad8-6378-599b-4069-7382160d2be1"],
+ " obtains all amplitudes by expanding ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["F", "TI"], 
+   StyleBox["S", "TI"]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7e6f7c7a-fa8f-2da1-2615-7627ff3a778b"],
+ " and extracting its coefficients, then squares their magnitudes. ",
+ Cell[BoxData["FrobeniusSolve"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "304452a4-201b-d64c-607c-4b0e51afbc96"],
+ " only enumerates the possible output occupation lists; it does not \
+calculate amplitudes. This is a different algorithm from separately \
+evaluating selected permanents."
 }], "Text",
- CellID->1039057480,ExpressionUUID->"04786d0e-016a-d127-2c07-8568b01ca00d"],
+ CellID->11631581,ExpressionUUID->"6beff1f8-c64a-83a6-1994-e8a5f3fcd18c"],
+
+Cell[TextData[{
+ "First compare the complex amplitudes, so relative-phase errors cannot \
+disappear upon squaring. The call ",
+ Cell[BoxData[
+  RowBox[{"qi", "[", "in", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "4b5b9263-9199-4e16-7978-144d202c157c"],
+ " returns the coefficient-based amplitude association:"
+}], "Text",
+ CellID->1933762060,ExpressionUUID->"475d7054-346c-a3cc-6d63-6a1ebd1ef116"],
+
+Cell[BoxData[
+ RowBox[{"With", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"in", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+      "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+      "}"}]}], "}"}], ",", "\n", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"amps", " ", "=", " ", 
+       RowBox[{"qi", "[", "in", "]"}]}], "}"}], ",", "\n", "  ", 
+     RowBox[{
+      RowBox[{"Max", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Abs", "[", 
+          RowBox[{
+           RowBox[{"Lookup", "[", 
+            RowBox[{"amps", ",", " ", 
+             RowBox[{"QuditName", "[", "#", "]"}], ",", " ", "0"}], "]"}], 
+           " ", "-", "\n", "       ", 
+           RowBox[{
+            RowBox[{"Permanent", "[", 
+             RowBox[{"W", "[", 
+              RowBox[{"[", 
+               RowBox[{
+                RowBox[{"modeList", "[", "#", "]"}], ",", " ", 
+                RowBox[{"modeList", "[", "in", "]"}]}], "]"}], "]"}], "]"}], "/",
+             "\n", "        ", 
+            RowBox[{"Sqrt", "[", 
+             RowBox[{"Times", " ", "@@", " ", 
+              RowBox[{"Factorial", "[", 
+               RowBox[{"Join", "[", 
+                RowBox[{"in", ",", " ", "#"}], "]"}], "]"}]}], "]"}]}]}], 
+          "]"}], " ", "&"}], " ", "/@", "\n", "     ", 
+        RowBox[{"FrobeniusSolve", "[", 
+         RowBox[{
+          RowBox[{"ConstantArray", "[", 
+           RowBox[{"1", ",", " ", "5"}], "]"}], ",", " ", 
+          RowBox[{"Total", "[", "in", "]"}]}], "]"}]}], "]"}], " ", "<", " ", 
+      
+      RowBox[{"10", "^", 
+       RowBox[{"-", "12"}]}]}]}], "\n", " ", "]"}]}], "\n", "]"}]], "Input",
+ CellLabel->"In[23]:= ",
+ CellID->1055776787,ExpressionUUID->"2ef71510-aa09-eca9-568c-8d5dcfbdb6f3"],
+
+Cell["Verify the probabilities independently as well:", "Text",
+ CellID->1859711813,ExpressionUUID->"3343f580-98d5-e31c-6170-ecea1961ce66"],
 
 Cell[BoxData[
  RowBox[{
   RowBox[{"Max", "[", 
-   RowBox[{"Abs", "[", 
+   RowBox[{
     RowBox[{
+     RowBox[{"Abs", "[", 
+      RowBox[{
+       RowBox[{"Lookup", "[", 
+        RowBox[{"probs", ",", " ", 
+         RowBox[{"QuditName", "[", "#", "]"}], ",", " ", "0"}], "]"}], " ", "-",
+        " ", 
+       RowBox[{"bosonProb", "[", 
+        RowBox[{"W", ",", " ", 
+         RowBox[{"{", 
+          RowBox[{
+          "1", ",", " ", "1", ",", " ", "1", ",", " ", "0", ",", " ", "0"}], 
+          "}"}], ",", " ", "#"}], "]"}]}], "]"}], " ", "&"}], " ", "/@", "\n",
+     "   ", 
+    RowBox[{"FrobeniusSolve", "[", 
      RowBox[{
-      RowBox[{"(", 
+      RowBox[{"{", 
        RowBox[{
-        RowBox[{"Lookup", "[", 
-         RowBox[{"probs", ",", " ", 
-          RowBox[{"Ket", "[", "#", "]"}], ",", " ", "0"}], "]"}], " ", "-", 
-        "\n", "      ", 
-        RowBox[{
+       "1", ",", " ", "1", ",", " ", "1", ",", " ", "1", ",", " ", "1"}], 
+       "}"}], ",", " ", "3"}], "]"}]}], "]"}], " ", "<", " ", 
+  RowBox[{"10", "^", 
+   RowBox[{"-", "12"}]}]}]], "Input",
+ CellLabel->"In[24]:= ",
+ CellID->1348896709,ExpressionUUID->"20a7420b-376a-b23f-505d-6455421c0105"],
+
+Cell[TextData[{
+ "Both routes agree within numerical precision. Polynomial expansion shares \
+work across outputs, but it is not automatically a polynomial-time algorithm: \
+a generic expansion has ",
+ Cell[BoxData[
+  TemplateBox[{
+    RowBox[{
+      StyleBox["n", "TI"], "+", 
+      StyleBox["m", "TI"], "-", "1"}], 
+    StyleBox["n", "TI"]},
+   "Binomial"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "6af863a9-1098-c609-1a98-7af3a112ad53"],
+ " coefficients, which can grow exponentially when the photon and mode counts \
+grow together. A separate permanent evaluation for every output is one \
+approach, not a requirement. What does one generic permanent cost?"
+}], "Text",
+ CellID->1427211115,ExpressionUUID->"055bc2ad-6b92-a3be-3378-dbf70e24f184"],
+
+Cell["The Cost of One Amplitude", "Section",
+ CellID->2099805207,ExpressionUUID->"2b0fb60e-2211-365f-5934-286857a59ca5"],
+
+Cell[TextData[{
+ "How does the cost of ",
+ Cell[BoxData[
+  RowBox[{"qi", "[", 
+   RowBox[{"\"\<Amplitude\>\"", ",", " ", 
+    RowBox[{"S", " ", "->", " ", "T"}]}], "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "201a2509-bdd9-2fa1-5039-bd53346c758b"],
+ " grow with photon count? Compare three input and output occupation patterns \
+in random networks with ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["m", "TI"], "=", "2", 
+   StyleBox["n", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "7085d256-6adc-aa08-20ba-d4100f6ef952"],
+ " modes: collision-free, pairs (plus one single photon when ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "5f932952-49a5-d34f-05a0-c11c6851a195"],
+ " is odd), and all photons in one mode. For each ",
+ Cell[BoxData[
+  StyleBox["n", "TI"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "160f17c4-d31a-fe19-3e34-8ea1e6acc563"],
+ ", use the same transfer matrix for all three patterns and move the occupied \
+output modes to the other half of the ports."
+}], "Text",
+ CellID->1402006442,ExpressionUUID->"10beb8bd-bdb6-ee93-4045-31e73440b4f9"],
+
+Cell["\<\
+Define the input occupation lists and display them for six photons:\
+\>", "Text",
+ CellID->1901179466,ExpressionUUID->"3fdc991b-fead-14b0-65e3-1144fb587e9a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"inputOccupation", ",", " ", "patterns"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"inputOccupation", "[", 
+    RowBox[{"n_", ",", " ", "\"\<collision-free\>\""}], "]"}], " ", ":=", " ", 
+   RowBox[{"PadRight", "[", 
+    RowBox[{
+     RowBox[{"ConstantArray", "[", 
+      RowBox[{"1", ",", " ", "n"}], "]"}], ",", " ", 
+     RowBox[{"2", " ", "n"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"inputOccupation", "[", 
+    RowBox[{"n_", ",", " ", "\"\<pairs\>\""}], "]"}], " ", ":=", "\n", " ", 
+   RowBox[{"PadRight", "[", 
+    RowBox[{
+     RowBox[{"Join", "[", 
+      RowBox[{
+       RowBox[{"ConstantArray", "[", 
+        RowBox[{"2", ",", " ", 
+         RowBox[{"Quotient", "[", 
+          RowBox[{"n", ",", " ", "2"}], "]"}]}], "]"}], ",", " ", 
+       RowBox[{"ConstantArray", "[", 
+        RowBox[{"1", ",", " ", 
+         RowBox[{"Mod", "[", 
+          RowBox[{"n", ",", " ", "2"}], "]"}]}], "]"}]}], "]"}], ",", " ", 
+     RowBox[{"2", " ", "n"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"inputOccupation", "[", 
+    RowBox[{"n_", ",", " ", "\"\<bunched\>\""}], "]"}], " ", ":=", " ", 
+   RowBox[{"PadRight", "[", 
+    RowBox[{
+     RowBox[{"{", "n", "}"}], ",", " ", 
+     RowBox[{"2", " ", "n"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"patterns", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<collision-free\>\"", ",", " ", "\"\<pairs\>\"", ",", 
+     " ", "\"\<bunched\>\""}], "}"}]}], ";"}], "\n", 
+ RowBox[{"AssociationMap", "[", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"inputOccupation", "[", 
+     RowBox[{"6", ",", " ", "#"}], "]"}], " ", "&"}], ",", " ", "patterns"}], 
+  "]"}]}], "Input",
+ CellLabel->"In[25]:= ",
+ CellID->210724908,ExpressionUUID->"3657d2c5-05c0-ac85-5e6c-cbafac7af6ef"],
+
+Cell[TextData[{
+ "Each point measures one evaluation after ",
+ Cell[BoxData[
+  RowBox[{"ClearSystemCache", "[", "]"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0642d375-09f3-9942-2e71-cb3faf87eba8"],
+ ", using machine-precision transfer matrices. Construct the network before \
+timing; for the direct reference, also prepare the selected matrix and \
+normalization first. The timer returns ",
+ Cell[BoxData[
+  RowBox[{"{", 
+   RowBox[{"seconds", ",", " ", "amplitude"}], "}"}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0651775d-2bad-791b-2e6f-6f074e584861"],
+ " so we can check the value as well as the cost."
+}], "Text",
+ CellID->1992790374,ExpressionUUID->"63b9e3d6-2298-231e-1146-fa9057128e64"],
+
+Cell["\<\
+Define the timer and the two ways to evaluate one normalized amplitude:\
+\>", "Text",
+ CellID->292747604,ExpressionUUID->"67c13665-f813-2f11-0dfe-a84ef9a6727b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{
+   "singleTiming", ",", " ", "transitionTiming", ",", " ", "amplitudeCost"}], 
+   "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"SetAttributes", "[", 
+   RowBox[{"singleTiming", ",", " ", "HoldAll"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"singleTiming", "[", "expr_", "]"}], " ", ":=", " ", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"ClearSystemCache", "[", "]"}], ";", " ", 
+      RowBox[{"AbsoluteTiming", "[", "expr", "]"}]}], ")"}]}], ";"}], 
+  "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"transitionTiming", "[", 
+    RowBox[{"q_", ",", " ", "s_", ",", " ", "t_", ",", " ", "\"\<QI\>\""}], 
+    "]"}], " ", ":=", " ", 
+   RowBox[{"singleTiming", "[", 
+    RowBox[{"q", "[", 
+     RowBox[{"\"\<Amplitude\>\"", ",", " ", 
+      RowBox[{"s", " ", "->", " ", "t"}]}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"transitionTiming", "[", 
+     RowBox[{
+     "q_", ",", " ", "s_", ",", " ", "t_", ",", " ", "\"\<Permanent\>\""}], 
+     "]"}], " ", ":=", "\n", " ", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"matrix", " ", "=", " ", 
          RowBox[{
-          RowBox[{"Abs", "[", 
-           RowBox[{"Permanent", "[", 
-            RowBox[{"W", "[", 
-             RowBox[{"[", 
-              RowBox[{
-               RowBox[{"modeList", "[", "#", "]"}], ",", " ", 
-               RowBox[{"{", 
-                RowBox[{"1", ",", " ", "2", ",", " ", "3"}], "}"}]}], "]"}], 
-             "]"}], "]"}], "]"}], "^", "2"}], "/", 
-         RowBox[{"(", 
+          RowBox[{"q", "[", "\"\<TransferMatrix\>\"", "]"}], "[", 
+          RowBox[{"[", 
+           RowBox[{
+            RowBox[{"modeList", "[", "t", "]"}], ",", " ", 
+            RowBox[{"modeList", "[", "s", "]"}]}], "]"}], "]"}]}], ",", "\n", 
+        "   ", 
+        RowBox[{"normalization", " ", "=", " ", 
+         RowBox[{"Sqrt", "[", 
           RowBox[{"Times", " ", "@@", " ", 
-           RowBox[{"(", 
-            RowBox[{"#", "!"}], ")"}]}], ")"}]}]}], ")"}], " ", "&"}], " ", "/@",
-      "\n", "    ", 
-     RowBox[{"FrobeniusSolve", "[", 
+           RowBox[{"Factorial", "[", 
+            RowBox[{"Join", "[", 
+             RowBox[{"s", ",", " ", "t"}], "]"}], "]"}]}], "]"}]}]}], "}"}], ",",
+       "\n", "  ", 
+      RowBox[{"singleTiming", "[", 
+       RowBox[{
+        RowBox[{"Permanent", "[", "matrix", "]"}], "/", "normalization"}], 
+       "]"}]}], "\n", " ", "]"}]}], ";"}], "\n"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"amplitudeCost", "[", 
+    RowBox[{"n_", ",", " ", "pattern_", ",", " ", 
+     RowBox[{"method_", ":", " ", "\"\<QI\>\""}]}], "]"}], " ", ":=", " ", 
+   RowBox[{"BlockRandom", "[", "\n", " ", 
+    RowBox[{
+     RowBox[{"SeedRandom", "[", 
+      RowBox[{"1107", " ", "+", " ", 
+       RowBox[{"1000", " ", "n"}]}], "]"}], ";", "\n", " ", 
+     RowBox[{"With", "[", 
       RowBox[{
        RowBox[{"{", 
         RowBox[{
-        "1", ",", " ", "1", ",", " ", "1", ",", " ", "1", ",", " ", "1"}], 
-        "}"}], ",", " ", "3"}], "]"}]}], "]"}], "]"}], " ", "<", " ", 
-  RowBox[{"10", "^", 
-   RowBox[{"-", "12"}]}]}]], "Input",
- CellLabel->"In[12]:= ",
- CellID->1411198270,ExpressionUUID->"2d15b43a-cd49-5244-5b2a-2e67e4fc20ae"],
-
-Cell[TextData[{
- "As one can see, the whole distribution is a table of permanents. ",
- Cell[BoxData["QuantumInterferometer"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "2d1ff276-b82a-c3ca-5b24-f43039dc9110"],
- " computes it exactly this way, straight from the transfer matrix, without \
-ever building and evolving a giant list of every way the photons could be \
-arranged. So to imitate the sampler, a classical computer must evaluate a \
-permanent for every pattern it wants a probability for. The next question is \
-the only one that matters: how expensive is one permanent?"
-}], "Text",
- CellID->1703453532,ExpressionUUID->"14fd1512-f616-8834-3c82-8d5f83a0db1e"],
-
-Cell["The Cost: One Permanent Doubles With Every Photon", "Section",
- CellID->1477609488,ExpressionUUID->"66c67103-72a1-9427-0efe-696d0755ff0d"],
-
-Cell[TextData[{
- "Take the hardest honest case, ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "48c794f4-84f6-2bfc-78fc-0dbe2c8379c6"],
- " photons entering ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "58ee7ecb-1370-1005-0896-7795a605636f"],
- " ports of an ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "11d04a92-cbef-a8a5-47e0-63dfed9bfa8f"],
- "-mode network, so the matrix behind one amplitude is the full ",
- Cell[BoxData[
-  RowBox[{
-   StyleBox["n", "TI"], "\[Times]", 
-   StyleBox["n", "TI"]}]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "7d9821c9-0e61-bc6d-2ba7-b893ab1506b7"],
- " transfer matrix. The permanent has no shortcut like the one the \
-determinant enjoys: the best known exact methods add up a number of terms \
-that grows like ",
- Cell[BoxData[
-  SuperscriptBox["2", 
-   StyleBox["n", "TI"]]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "3181a460-bc62-f1ee-67be-3e4a3514c334"],
- ". In other words, every photon added roughly doubles the work for a single \
-amplitude."
-}], "Text",
- CellID->1030824397,ExpressionUUID->"3937e1d4-04c3-e55a-68cc-f89ead77cfa0"],
-
-Cell[TextData[{
- "Define a function that builds a random ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "6b45e796-37a7-eecc-197a-fed04253b416"],
- "-mode network and times the permanent of its transfer matrix, the matrix \
-behind the amplitude of ",
- Cell[BoxData[
-  StyleBox["n", "TI"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "5e187950-8ca2-2ab2-0638-711a25577898"],
- " photons entering one per port (",
- Cell[BoxData["RepeatedTiming"], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "250a2d7c-9b81-05b0-5309-c5261e346f9a"],
- " evaluates the permanent several times and returns a trimmed mean):"
-}], "Text",
- CellID->100031176,ExpressionUUID->"15a9104d-5625-6af3-4356-8a1763d038d9"],
-
-Cell[BoxData[{
- RowBox[{"ClearAll", "[", "permanentTime", "]"}], "\n", 
- RowBox[{
-  RowBox[{"permanentTime", "[", "n_", "]"}], " ", ":=", " ", 
-  RowBox[{"Block", "[", 
-   RowBox[{
-    RowBox[{"{", "w", "}"}], ",", "\n", "   ", 
-    RowBox[{
-     RowBox[{"SeedRandom", "[", "n", "]"}], ";", "\n", "   ", 
-     RowBox[{"w", " ", "=", " ", 
-      RowBox[{
-       RowBox[{"QuantumInterferometer", "[", 
-        RowBox[{"\"\<Random\>\"", "[", "n", "]"}], "]"}], 
-       "[", "\"\<Unitary\>\"", "]"}]}], ";", "\n", "   ", 
-     RowBox[{"ClearSystemCache", "[", "]"}], ";", "\n", "   ", 
-     RowBox[{"First", " ", "@", " ", 
-      RowBox[{"RepeatedTiming", "[", 
-       RowBox[{"Permanent", "[", 
-        RowBox[{"w", ",", " ", 
-         RowBox[{"Method", " ", "->", " ", "\"\<Glynn\>\""}]}], "]"}], 
-       "]"}]}]}]}], "]"}]}]}], "Input",
- CellLabel->"In[13]:= ",
- CellID->144223354,ExpressionUUID->"58c17d8b-1b7e-6f79-08ff-74d59e0b3243"],
+         RowBox[{"q", " ", "=", " ", 
+          RowBox[{"QuantumInterferometer", "[", 
+           RowBox[{"\"\<Random\>\"", "[", 
+            RowBox[{"2", " ", "n"}], "]"}], "]"}]}], ",", " ", 
+         RowBox[{"s", " ", "=", " ", 
+          RowBox[{"inputOccupation", "[", 
+           RowBox[{"n", ",", " ", "pattern"}], "]"}]}]}], "}"}], ",", "\n", 
+       "  ", 
+       RowBox[{"transitionTiming", "[", 
+        RowBox[{"q", ",", " ", "s", ",", " ", 
+         RowBox[{"RotateRight", "[", 
+          RowBox[{"s", ",", " ", "n"}], "]"}], ",", " ", "method"}], "]"}]}], 
+      "\n", " ", "]"}]}], "\n", "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[26]:= ",
+ CellID->1553818268,ExpressionUUID->"4c440104-ea8a-4285-747b-99618f3f10ef"],
 
 Cell["\<\
-Time it for 10 through 20 photons (this cell takes about a minute):\
+Confirm that the QI and direct-reference amplitudes agree for all three \
+six-photon patterns:\
 \>", "Text",
- CellID->1443527617,ExpressionUUID->"43821c38-6720-b4f9-71b1-966212da1ec3"],
+ CellID->1870754514,ExpressionUUID->"66c9a615-af45-c085-0ef6-385ecaf192ef"],
 
 Cell[BoxData[
- RowBox[{
-  RowBox[{"permanentTimes", " ", "=", " ", 
-   RowBox[{"Table", "[", 
+ RowBox[{"And", " ", "@@", " ", 
+  RowBox[{"Table", "[", "\n", " ", 
+   RowBox[{
     RowBox[{
-     RowBox[{"{", 
-      RowBox[{"n", ",", " ", 
-       RowBox[{"permanentTime", "[", "n", "]"}]}], "}"}], ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"n", ",", " ", "10", ",", " ", "20"}], "}"}]}], "]"}]}], 
-  ";"}]], "Input",
- CellLabel->"In[14]:= ",
- CellID->311511756,ExpressionUUID->"341c54d9-3079-6bba-5c24-4d83410c3980"],
+     RowBox[{"Abs", "[", 
+      RowBox[{
+       RowBox[{"Last", "[", 
+        RowBox[{"amplitudeCost", "[", 
+         RowBox[{"6", ",", " ", "pattern"}], "]"}], "]"}], " ", "-", "\n", 
+       "    ", 
+       RowBox[{"Last", "[", 
+        RowBox[{"amplitudeCost", "[", 
+         RowBox[{"6", ",", " ", "pattern", ",", " ", "\"\<Permanent\>\""}], 
+         "]"}], "]"}]}], "]"}], " ", "<", " ", 
+     RowBox[{"10", "^", 
+      RowBox[{"-", "12"}]}]}], ",", "\n", " ", 
+    RowBox[{"{", 
+     RowBox[{"pattern", ",", " ", "patterns"}], "}"}]}], "]"}]}]], "Input",
+ CellLabel->"In[27]:= ",
+ CellID->1358728755,ExpressionUUID->"0513e607-0f4c-1e20-3320-f861aaf9650a"],
 
-Cell["Plot the timings on a logarithmic scale:", "Text",
- CellID->1381425643,ExpressionUUID->"1dbf9c2b-d84a-d79b-4b44-1674d9fcbde1"],
+Cell[TextData[{
+ "Time the QI amplitudes through 28 photons. This sweep can take several \
+minutes; shorten ",
+ Cell[BoxData["photonCounts"], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "0371ff35-cd30-cda2-310e-f77ee4ca9788"],
+ " for a quicker run:"
+}], "Text",
+ CellID->935019337,ExpressionUUID->"6833ae6a-6ac5-a2c8-19c0-40340f71f012"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"photonCounts", ",", " ", "qiTimings"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"photonCounts", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "2", ",", " ", "6", ",", " ", "10", ",", " ", "14", ",", " ", "18", ",", 
+     " ", "22", ",", " ", "24", ",", " ", "26", ",", " ", "28"}], "}"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"qiTimings", " ", "=", " ", 
+   RowBox[{"AssociationMap", "[", "\n", " ", 
+    RowBox[{
+     RowBox[{"Function", "[", 
+      RowBox[{"pattern", ",", " ", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"n", ",", " ", 
+           RowBox[{"First", "[", 
+            RowBox[{"amplitudeCost", "[", 
+             RowBox[{"n", ",", " ", "pattern"}], "]"}], "]"}]}], "}"}], ",", 
+         " ", 
+         RowBox[{"{", 
+          RowBox[{"n", ",", " ", "photonCounts"}], "}"}]}], "]"}]}], "]"}], ",",
+      "\n", " ", "patterns"}], "]"}]}], ";"}]}], "Input",
+ CellLabel->"In[28]:= ",
+ CellID->642744358,ExpressionUUID->"5f7f2999-1aee-25a5-0504-c0c39e988f8f"],
+
+Cell["Plot the cost of one QI amplitude against photon count:", "Text",
+ CellID->1478372881,ExpressionUUID->"128c7526-c883-085d-42b4-6c83e9365aa7"],
 
 Cell[BoxData[
  RowBox[{"ListLogPlot", "[", 
-  RowBox[{"permanentTimes", ",", " ", 
+  RowBox[{
+   RowBox[{"Values", "[", "qiTimings", "]"}], ",", "\n", " ", 
    RowBox[{"Joined", " ", "->", " ", "True"}], ",", " ", 
-   RowBox[{"PlotMarkers", " ", "->", " ", "Automatic"}], ",", "\n", " ", 
+   RowBox[{"PlotMarkers", " ", "->", " ", "Automatic"}], ",", " ", 
    RowBox[{"Frame", " ", "->", " ", "True"}], ",", " ", 
-   RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", " ", 
+   RowBox[{"GridLines", " ", "->", " ", "Automatic"}], ",", "\n", " ", 
    RowBox[{"AspectRatio", " ", "->", " ", 
     RowBox[{"1", "/", "2"}]}], ",", " ", 
    RowBox[{"ImageSize", " ", "->", " ", "Large"}], ",", "\n", " ", 
    RowBox[{"FrameLabel", " ", "->", " ", 
     RowBox[{"{", 
-     RowBox[{"\"\<photons n\>\"", ",", " ", "\"\<seconds\>\""}], "}"}]}], ",",
-    "\n", " ", 
+     RowBox[{"\"\<photons n (m = 2 n modes)\>\"", ",", 
+      " ", "\"\<seconds per QI amplitude\>\""}], "}"}]}], ",", "\n", " ", 
+   RowBox[{"PlotLegends", " ", "->", " ", 
+    RowBox[{"Keys", "[", "qiTimings", "]"}]}], ",", "\n", " ", 
    RowBox[{
    "PlotLabel", " ", "->", 
-    " ", "\"\<Time to compute one n\[Times]n permanent\>\""}]}], 
-  "]"}]], "Input",
- CellLabel->"In[15]:= ",
- CellID->377280352,ExpressionUUID->"0f449897-1a0e-51e7-357b-11d19fbb23cd"],
+    " ", "\"\<Occupation structure changes the cost of one amplitude\>\""}]}],
+   "]"}]], "Input",
+ CellLabel->"In[29]:= ",
+ CellID->124263719,ExpressionUUID->"3279c00f-c9e2-8758-6206-da68ef94eda2"],
 
-Cell["\<\
-As one can see, the points fall on a straight line, and a straight line on a \
-logarithmic scale means the time grows exponentially with the number of \
-photons.\
-\>", "Text",
- CellID->1717363484,ExpressionUUID->"6d5a63ab-93b9-14f3-1b7a-7af5264c7ed9"],
-
-Cell["\<\
-Compute the average factor by which the time grows with each added photon, as \
-the geometric mean over the range:\
-\>", "Text",
- CellID->1781880651,ExpressionUUID->"5077c06e-c394-b43c-000c-da4bf6261f06"],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{"(", 
+Cell[TextData[{
+ "The collision-free and paired patterns become costly, while QI exploits \
+repeated occupations and occupied modes to keep the fully bunched case cheap. \
+Here every selected entry is ",
+ Cell[BoxData[
+  SubscriptBox[
+   StyleBox["W", "TI"], 
    RowBox[{
-    RowBox[{"permanentTimes", "[", 
-     RowBox[{"[", 
-      RowBox[{
-       RowBox[{"-", "1"}], ",", " ", "2"}], "]"}], "]"}], "/", 
-    RowBox[{"permanentTimes", "[", 
-     RowBox[{"[", 
-      RowBox[{"1", ",", " ", "2"}], "]"}], "]"}]}], ")"}], "^", 
-  RowBox[{"(", 
-   RowBox[{"1", "/", 
-    RowBox[{"(", 
-     RowBox[{
-      RowBox[{"Length", "[", "permanentTimes", "]"}], " ", "-", " ", "1"}], 
-     ")"}]}], ")"}]}]], "Input",
- CellLabel->"In[16]:= ",
- CellID->1536527082,ExpressionUUID->"07359582-e823-44a1-2eca-0cef89d62e8b"],
+    RowBox[{
+     StyleBox["n", "TI"], "+", "1"}], ",", "1"}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "50b12ff8-e606-85f7-004e-c6a593b0efdd"],
+ ", so the normalized amplitude reduces to ",
+ Cell[BoxData[
+  SubsuperscriptBox[
+   StyleBox["W", "TI"], 
+   RowBox[{
+    RowBox[{
+     StyleBox["n", "TI"], "+", "1"}], ",", "1"}], 
+   RowBox[{"\[ThinSpace]", 
+    StyleBox["n", "TI"]}]]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "640f47a5-4648-c62d-0c35-5e0f73e2ad77"],
+ ". This structured case does not represent a generic permanent. \
+Submillisecond single-call timings are noisy; focus on the large separation \
+in cost."
+}], "Text",
+ CellID->1310926461,ExpressionUUID->"63a48922-0fac-666c-115b-208caa594cb6"],
 
 Cell[TextData[{
- "The factor sits near two: each added photon roughly doubles the cost of a \
-single amplitude, exactly as the ",
- Cell[BoxData[
-  SuperscriptBox["2", 
-   StyleBox["n", "TI"]]], "InlineFormula",
+ "Compare QI with the default built-in ",
+ Cell[BoxData["Permanent"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "7c239bd0-3ff5-3b18-25d0-129ab9818662"],
- " growth predicts. At that rate a few dozen photons put one amplitude beyond \
-a laptop, and a hundred beyond any computer, even though the physics is \
-nothing more than photons sliding between modes."
+  "387a9e0d-0234-0e73-6819-1057b7c15559"],
+ " at 22 photons, using the same timer and reusing the QI measurements \
+above:"
 }], "Text",
- CellID->1621535814,ExpressionUUID->"68c76573-72ce-0c1a-18fd-7d3d077b5760"],
-
-Cell["Fermions Are Easy: The Sign Under Exchange", "Section",
- CellID->1193935837,ExpressionUUID->"6184d2f2-049e-728e-17bb-cbbcad2b40d4"],
-
-Cell[TextData[{
- "Here is the sharpest way to see that the permanent is the whole difficulty. \
-Identical fermions, electrons rather than photons, obey the same linear \
-optics, but their histories pick up a minus sign when two are exchanged. That \
-single sign turns the permanent into a determinant. And the determinant, \
-because its alternating signs allow elimination, is cheap: its cost grows \
-like ",
- Cell[BoxData[
-  SuperscriptBox[
-   StyleBox["n", "TI"], "3"]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "4fd967ef-5008-0b29-75e7-7ec961bd5673"],
- ", not ",
- Cell[BoxData[
-  SuperscriptBox["2", 
-   StyleBox["n", "TI"]]], "InlineFormula",
-  FontSize->0.9 Inherited,ExpressionUUID->
-  "19bb1c5e-57ab-6e36-4f58-9618625e351c"],
- "."
-}], "Text",
- CellID->105329933,ExpressionUUID->"5c8dcc56-7aa9-964a-04b2-e6107f5dfc90"],
-
-Cell["\<\
-Time the determinant of a thousand-by-thousand random matrix, the fermionic \
-amplitude for a thousand particles:\
-\>", "Text",
- CellID->1234416869,ExpressionUUID->"30baa1c8-66ad-75e0-6059-389213585fca"],
+ CellID->1124211690,ExpressionUUID->"3f64ca0d-9927-5f44-651b-ec5718d225ae"],
 
 Cell[BoxData[
- RowBox[{"Block", "[", 
+ RowBox[{"Grid", "[", "\n", " ", 
   RowBox[{
-   RowBox[{"{", 
-    RowBox[{"a", " ", "=", " ", 
-     RowBox[{"RandomComplex", "[", 
+   RowBox[{"Prepend", "[", "\n", "  ", 
+    RowBox[{
+     RowBox[{"Table", "[", 
       RowBox[{
        RowBox[{"{", 
-        RowBox[{
+        RowBox[{"pattern", ",", "\n", "    ", 
          RowBox[{
-          RowBox[{"-", "1"}], " ", "-", " ", "I"}], ",", " ", 
-         RowBox[{"1", " ", "+", " ", "I"}]}], "}"}], ",", " ", 
+          RowBox[{"SelectFirst", "[", 
+           RowBox[{
+            RowBox[{"qiTimings", "[", "pattern", "]"}], ",", " ", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"First", "[", "#", "]"}], " ", "==", " ", "22"}], " ", 
+             "&"}]}], "]"}], "[", 
+          RowBox[{"[", "2", "]"}], "]"}], ",", "\n", "    ", 
+         RowBox[{"First", "[", 
+          RowBox[{"amplitudeCost", "[", 
+           RowBox[{"22", ",", " ", "pattern", ",", " ", "\"\<Permanent\>\""}],
+            "]"}], "]"}]}], "}"}], ",", "\n", "   ", 
        RowBox[{"{", 
-        RowBox[{"1000", ",", " ", "1000"}], "}"}]}], "]"}]}], "}"}], ",", 
+        RowBox[{"pattern", ",", " ", "patterns"}], "}"}]}], "]"}], ",", "\n", 
+     "  ", 
+     RowBox[{"{", 
+      RowBox[{"\"\<occupation pattern\>\"", ",", " ", "\"\<QI (seconds)\>\"", 
+       ",", " ", "\"\<direct Permanent (seconds)\>\""}], "}"}]}], "]"}], ",", 
    "\n", " ", 
-   RowBox[{
-    RowBox[{"ClearSystemCache", "[", "]"}], ";", " ", 
-    RowBox[{"First", " ", "@", " ", 
-     RowBox[{"AbsoluteTiming", "[", 
-      RowBox[{"Det", "[", "a", "]"}], "]"}]}]}]}], "]"}]], "Input",
- CellLabel->"In[17]:= ",
- CellID->240380995,ExpressionUUID->"52535901-cb26-8b9c-0261-516aeed0d9e6"],
-
-Cell["\<\
-As one can see, the amplitude of a thousand identical fermions costs less \
-than the permanent of a couple of dozen photons we timed just above. The \
-physics of the two particles is identical up to one sign under exchange, and \
-that sign is the entire distance between a computation that finishes before \
-you lift your hands from the keyboard and one that outlasts the universe.\
-\>", "Text",
- CellID->1771870337,ExpressionUUID->"323a4b1c-b138-a791-63da-6359c0b20dfb"],
-
-Cell["Where This Leaves Us", "Section",
- CellID->305160771,ExpressionUUID->"7421cf44-a1ac-4319-1dde-e721d0592e63"],
+   RowBox[{"Frame", " ", "->", " ", "All"}]}], "]"}]], "Input",
+ CellLabel->"In[30]:= ",
+ CellID->1335749844,ExpressionUUID->"399d1ff3-4632-be92-6fa2-96bd73c404f8"],
 
 Cell[TextData[{
- "The argument closes on itself: a boson sampler produces detection patterns \
-whose probabilities are permanents of its transfer matrix, ",
- Cell[BoxData["QuantumInterferometer"], "InlineFormula",
+ "The collision-free QI timings track the default ",
+ Cell[BoxData["Permanent"], "InlineFormula",
   FontSize->0.9 Inherited,ExpressionUUID->
-  "511b3347-8d7d-ab60-0738-ab212409f64a"],
- " hands us those probabilities directly, each one is a permanent we verified \
-by hand, the cost of a permanent doubles with every photon, and the fermionic \
-version with its one extra sign collapses to an easy determinant. Boson \
-sampling is hard for exactly one reason, and now you have computed it: the \
-permanent has no shortcut, and the identical photons are computing one every \
-time they land."
+  "1170384d-2f38-2c50-470f-b2174acd76ba"],
+ ", which QI calls internally for that case. The bunched comparison shows \
+what exploiting occupation structure saves."
 }], "Text",
- CellID->1896945989,ExpressionUUID->"36c19c85-764d-0b01-5efe-15ef03f8566b"],
+ CellID->793802945,ExpressionUUID->"6ce33075-6d34-44a7-1490-aa3f04c12e8d"],
 
 Cell["\<\
-From here the natural next step is to ask what happens when the photons are \
-not perfectly identical or when some are lost, since a real experiment is \
-never ideal, and whether squeezed light in place of single photons (Gaussian \
-boson sampling, where hafnians replace permanents) changes the story. But the \
-core is already in your hands, and it is a single sentence: the permanent is \
-why it is hard.\
+Using this protocol on the machine used here (Wolfram Language 15.0, macOS \
+ARM), the collision-free call took about 148 seconds at 28 photons and 295 \
+seconds at 29 photons. Thus 28 is a comfortable stopping point for a \
+five-minute-per-call budget here, while 29 leaves little margin. Timings vary \
+with hardware and kernel version.\
 \>", "Text",
- CellID->653417278,ExpressionUUID->"6815cd54-0cd7-196f-182a-e51ea5626bb5"]
+ CellID->631769182,ExpressionUUID->"54e2b6d5-0ba4-5b19-7c91-2f9fae512663"],
+
+Cell["Optionally time the 29-photon collision-free amplitude:", "Text",
+ CellID->1873681340,ExpressionUUID->"6334ac9c-43f1-85c0-12cb-45c67585ef2a"],
+
+Cell[BoxData[
+ RowBox[{"First", "[", 
+  RowBox[{"amplitudeCost", "[", 
+   RowBox[{"29", ",", " ", "\"\<collision-free\>\""}], "]"}], "]"}]], "Input",\
+
+ CellLabel->"In[31]:= ",
+ CellID->1468251080,ExpressionUUID->"74397683-04f4-1d4d-1dc7-6fedac816797"],
+
+Cell[TextData[{
+ "For a general dense complex ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["n", "TI"], "\[Times]", 
+   StyleBox["n", "TI"]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "735e49d5-32a1-4a48-2166-609f47541892"],
+ " matrix, algorithms such as Ryser's and Glynn's take ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["O", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["n", "TI"], 
+    SuperscriptBox["2", 
+     StyleBox["n", "TI"]]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "335d55a2-cf9b-493d-6163-4c0fea2e1807"],
+ " arithmetic operations to evaluate its permanent, while Gaussian \
+elimination evaluates its determinant in ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["O", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   SuperscriptBox[
+    StyleBox["n", "TI"], "3"], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "3bfbbd45-edb8-1b0b-6998-352e844d6651"],
+ ". These timings characterize particular implementations and occupation \
+patterns. Computing a general permanent exactly is #P-hard (Valiant, 1979), a \
+worst-case result that permits easy structured instances."
+}], "Text",
+ CellID->1989234463,ExpressionUUID->"045023ab-c37d-b770-2c6f-baf4f6091a5a"],
+
+Cell["From Amplitude Cost to Sampling Hardness", "Section",
+ CellID->1607696641,ExpressionUUID->"73e8aeff-5b91-f8f4-2197-47b95e25cade"],
+
+Cell["\<\
+A hard probability calculation does not by itself establish hard sampling. A \
+sampler can avoid constructing the full distribution, and even a distribution \
+written using permanents may admit easy samples.\
+\>", "Text",
+ CellID->1817342824,ExpressionUUID->"33e490f1-5bc8-e939-619b-09bb5e62b803"],
+
+Cell[TextData[{
+ "Distinguishable photons supply a counterexample. Their output probabilities \
+involve permanents of entrywise ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      StyleBox["W", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "794a4309-908b-2549-2f4a-5b53213f8f93"],
+ ", yet sampling needs only independent draws from its columns: draw an \
+output for each incoming photon, then count the results."
+}], "Text",
+ CellID->530774412,ExpressionUUID->"167ebcf0-2b32-2a61-3e05-35ba4ec7794b"],
+
+Cell[TextData[{
+ "Confirm that each column of ",
+ Cell[BoxData[
+  SuperscriptBox[GridBox[{
+     {
+      StyleBox["W", "TI"]}
+    },
+    GridBoxDividers->{"Columns" -> {True, True}, "Rows" -> {}},
+    GridBoxSpacings->{"Columns" -> {{0.15}}}], "2"]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "15eb24b6-b946-3a65-43e8-bdf038f0894f"],
+ " is a genuine probability distribution over the output modes, by checking \
+that every column sums to one:"
+}], "Text",
+ CellID->599957810,ExpressionUUID->"27d2a24c-1e84-19ee-4de1-44169b316b34"],
+
+Cell[BoxData[
+ RowBox[{"Chop", "[", 
+  RowBox[{
+   RowBox[{"Total", "[", 
+    RowBox[{
+     RowBox[{"Abs", "[", "W", "]"}], "^", "2"}], "]"}], " ", "-", " ", "1"}], 
+  "]"}]], "Input",
+ CellLabel->"In[32]:= ",
+ CellID->1899946997,ExpressionUUID->"285985c7-a1c8-13eb-5866-1ca0d07d6131"],
+
+Cell["\<\
+This verifies the normalized single-photon distributions used by that \
+sampler, without evaluating any permanent.\
+\>", "Text",
+ CellID->1051619128,ExpressionUUID->"57868ed1-450c-c474-7dbd-279b6cbeaf5e"],
+
+Cell[TextData[{
+ "The missing bridge is a complexity result. Aaronson and Arkhipov showed \
+that a polynomial-time classical algorithm for exact boson sampling would \
+collapse the polynomial hierarchy to its third level, contrary to a standard \
+complexity assumption. Their approximate-sampling argument additionally \
+assumes average-case hardness of Gaussian permanents and permanent \
+anticoncentration (",
+ ButtonBox["Aaronson and Arkhipov, 2010",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://arxiv.org/abs/1011.3245"], None}],
+ "). These assumptions rule out polynomial-time sampling; they do not prove \
+that every classical algorithm takes exponential time."
+}], "Text",
+ CellID->1921351195,ExpressionUUID->"0c5e608e-35dc-f74f-3466-79e8bc6edd95"],
+
+Cell[TextData[{
+ "The original approximate-hardness argument uses a dilute regime with many \
+more modes than photons, connecting optical submatrices to Gaussian random \
+matrices. That is not a universal restriction: later work extends hardness \
+evidence to a linear number of modes, where collisions are common (",
+ ButtonBox["Bouland et al., 2026",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://journals.aps.org/prx/abstract/10.1103/xc7b-sjm5"], None}],
+ ")."
+}], "Text",
+ CellID->1207491739,ExpressionUUID->"1a1e4090-3303-05ed-4a26-59da46b66f37"],
+
+Cell[TextData[{
+ "Classical algorithms also improve on full-distribution enumeration. \
+Clifford and Clifford give exact sampling in ",
+ Cell[BoxData[
+  RowBox[{
+   StyleBox["O", "TI"], 
+   StyleBox["(",
+    SpanMaxSize->1], 
+   RowBox[{
+    StyleBox["n", "TI"], 
+    SuperscriptBox["2", 
+     StyleBox["n", "TI"]], "+", 
+    StyleBox["poly",
+     FontSlant->"Plain"], 
+    StyleBox["(",
+     SpanMaxSize->1], 
+    RowBox[{
+     StyleBox["m", "TI"], ",", 
+     StyleBox["n", "TI"]}], 
+    StyleBox[")",
+     SpanMaxSize->1]}], 
+   StyleBox[")",
+    SpanMaxSize->1]}]], "InlineFormula",
+  FontSize->0.9 Inherited,ExpressionUUID->
+  "10256af3-3972-af7a-41da-83bdb804f240"],
+ " time, with further average-case improvements in denser regimes (",
+ ButtonBox["Clifford and Clifford, 2020",
+  BaseStyle->"Hyperlink",
+  ButtonData->{
+    URL["https://arxiv.org/abs/2005.04214"], None}],
+ "). Algorithmic improvements and conditional hardness coexist: the former \
+exploit structure or share work, while the latter concern suitable growing \
+families of instances."
+}], "Text",
+ CellID->216741342,ExpressionUUID->"457602f1-d86e-ac86-730d-9bbad918f6ec"],
+
+Cell["Summary and Next Questions", "Section",
+ CellID->2096934290,ExpressionUUID->"499f95c1-a958-6c18-7fa4-0caac8ed3762"],
+
+Cell["\<\
+We have connected two-photon interference to normalized permanent amplitudes, \
+checked those amplitudes and probabilities against an independent coefficient \
+calculation, and measured how photon count and occupation structure affect QI \
+amplitude calculations. The computations explain the optical probabilities; \
+the cited complexity results supply the separate, conditional argument about \
+classical sampling.\
+\>", "Text",
+ CellID->1367217003,ExpressionUUID->"0f1e874b-6d22-b8ab-3525-1f1504d40af1"],
+
+Cell["\<\
+The next questions concern partial distinguishability, loss, and detector \
+resolution, each of which changes the experiment differently. Replacing \
+single-photon inputs by squeezed vacuum leads to Gaussian boson sampling, \
+where hafnians take the role played here by permanents.\
+\>", "Text",
+ CellID->1372538143,ExpressionUUID->"0c02104f-9807-e6c4-3431-8a2919b3cc2e"]
 },
 FrontEndVersion->"15.0 for Mac OS X ARM (64-bit) (July 2, 2026)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"519775d4-d545-25f2-07ad-6c91dcf18fd8"
+ExpressionUUID->"6f909018-5ea1-6a32-15af-0a425b543918"
 ]
 (* End of Notebook Content *)
 
@@ -842,144 +2444,272 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[554, 20, 118, 1, 70, "Title",ExpressionUUID->"5900aac7-5263-773e-0f3f-43a167165a04",
+Cell[554, 20, 118, 1, 70, "Title",ExpressionUUID->"2f4595f3-090a-1216-557a-0cbda8bf617c",
  CellID->874461601],
-Cell[675, 23, 267, 5, 70, "Subtitle",ExpressionUUID->"06ecfdb3-2197-c9b0-2e93-f4fd50239b9a",
+Cell[675, 23, 309, 5, 70, "Subtitle",ExpressionUUID->"06385f5e-e9d4-4e6c-2fd8-571b886114b6",
  CellID->36768919],
-Cell[945, 30, 135, 1, 70, "Author",ExpressionUUID->"12d95fcb-3316-2212-42e7-569546a37178",
+Cell[987, 30, 135, 1, 70, "Author",ExpressionUUID->"25d2fb85-296f-82e5-53e1-f2ef481bd0cf",
  CellID->1699946459],
-Cell[1083, 33, 124, 1, 70, "Affiliation",ExpressionUUID->"733995c2-f5bf-78ee-22c6-0caffc4a4a34",
+Cell[1125, 33, 124, 1, 70, "Affiliation",ExpressionUUID->"3b9a140e-d97a-4136-69b9-8e6bd80f101c",
  CellID->1535504786],
-Cell[1210, 36, 140, 1, 70, "Subsection",ExpressionUUID->"4f8ab258-7e7f-0723-7589-34027b0a6a09",
+Cell[1252, 36, 135, 1, 70, "Section",ExpressionUUID->"4f9438da-b80f-a114-75ab-b18439bbf07e",
  CellID->1208482393],
-Cell[1353, 39, 838, 14, 70, "Text",ExpressionUUID->"6b12ee74-9953-131d-1921-003e18e67e67",
+Cell[1390, 39, 1898, 61, 70, "Text",ExpressionUUID->"7281c19b-2602-dcd4-22be-d8c553b4a63e",
  CellID->28909615],
-Cell[2194, 55, 384, 6, 70, "Text",ExpressionUUID->"65262d3c-fccc-1dc6-0cdd-c579f579672c",
+Cell[3291, 102, 444, 7, 70, "Text",ExpressionUUID->"3c8746fc-db76-c487-64bd-5fb9de00aeed",
  CellID->193832008],
-Cell[2581, 63, 603, 11, 70, "Text",ExpressionUUID->"5e157ee2-48da-d240-062b-77cc696ca0aa",
+Cell[3738, 111, 605, 9, 70, "Text",ExpressionUUID->"11f0f87a-e6f0-91cd-478f-f227928ae317",
  CellID->684317082],
-Cell[3187, 76, 464, 7, 70, "Text",ExpressionUUID->"78287f93-0f12-7c52-2828-76ddaaa746b8",
+Cell[4346, 122, 191, 4, 70, "Text",ExpressionUUID->"473164ce-b547-c1f4-6ecf-7da83cf393de",
  CellID->528485616],
-Cell[3654, 85, 298, 7, 70, "Text",ExpressionUUID->"08285353-0e0e-39f8-3828-4b1dabb88bc2",
+Cell[4540, 128, 327, 8, 70, "Input",ExpressionUUID->"12c4fc3b-e00c-2bba-42fb-f66491b97980",
  CellID->1392207227],
-Cell[3955, 94, 131, 1, 70, "Subsection",ExpressionUUID->"1daed7d3-93e8-7698-4b55-ce9d259d5ce2",
+Cell[4870, 138, 103, 1, 70, "Text",ExpressionUUID->"1d7e6892-18cd-6f45-4b05-81dc997835af",
  CellID->705466992],
-Cell[4089, 97, 985, 22, 70, "Text",ExpressionUUID->"187adc3d-3961-76c2-4819-d667b8145c28",
+Cell[4976, 141, 137, 1, 70, "Section",ExpressionUUID->"325c8f47-cd85-89da-6263-2720e431db20",
  CellID->1350516518],
-Cell[5077, 121, 103, 1, 70, "Text",ExpressionUUID->"641c78eb-7f03-7846-0c24-71b57ab64aac",
+Cell[5116, 144, 925, 17, 70, "Text",ExpressionUUID->"43fcea2e-12ab-c026-7183-0388a75f930c",
  CellID->907546795],
-Cell[5183, 124, 140, 1, 70, "Section",ExpressionUUID->"5bfcc75d-c21d-6fb0-0983-df06f7a8359a",
+Cell[6044, 163, 448, 10, 70, "Text",ExpressionUUID->"5b416c07-c3d3-bf4f-097e-8660f6670595",
  CellID->814772321],
-Cell[5326, 127, 708, 13, 70, "Text",ExpressionUUID->"112ae6ec-4b5c-6ad2-4729-ffb66ee93838",
+Cell[6495, 175, 468, 13, 70, "Input",ExpressionUUID->"5add4728-e92e-eff1-0ae3-5f7588d8b5db",
  CellID->1054628905],
-Cell[6037, 142, 204, 4, 70, "Text",ExpressionUUID->"6121b9de-dddd-aca8-10de-309bd469f6f2",
+Cell[6966, 190, 148, 1, 70, "Text",ExpressionUUID->"621761a3-d300-b412-122d-780ce6ba1f78",
  CellID->2043779557],
-Cell[6244, 148, 286, 5, 70, "Input",ExpressionUUID->"30209679-023a-ee91-61df-0823b7ccb4fb",
+Cell[7117, 193, 168, 3, 70, "Input",ExpressionUUID->"5b08d465-1dcc-fb87-0937-ce4f947ec9ed",
  CellID->17830494],
-Cell[6533, 155, 725, 17, 70, "Text",ExpressionUUID->"29bc1606-c22d-409d-5f43-8863f7d812e7",
+Cell[7288, 198, 1637, 48, 70, "Text",ExpressionUUID->"7d3ffb2e-09a8-fc78-24c4-f288a842c742",
  CellID->1589986527],
-Cell[7261, 174, 149, 1, 70, "Text",ExpressionUUID->"7bf1e1bf-5b3e-c64b-298e-f8f95ec8ac91",
+Cell[8928, 248, 116, 1, 70, "Text",ExpressionUUID->"4139b36b-52b1-2977-70c6-2b356744785d",
  CellID->943101875],
-Cell[7413, 177, 318, 7, 70, "Input",ExpressionUUID->"3119d855-3ffd-7401-6726-d21fb9885f6b",
+Cell[9047, 251, 286, 6, 70, "Input",ExpressionUUID->"494d6e39-7750-b6eb-7f72-806302ea1c31",
  CellID->67888809],
-Cell[7734, 186, 202, 4, 70, "Text",ExpressionUUID->"62a6d1b5-4e36-fa69-125d-c8ff6bc0c8b3",
+Cell[9336, 259, 325, 5, 70, "Text",ExpressionUUID->"39b01e29-d171-5c92-6f4f-9072e00426f8",
  CellID->1432876021],
-Cell[7939, 192, 168, 3, 70, "Input",ExpressionUUID->"7c41cdc9-5ab3-1ef5-247e-e4935f4664df",
+Cell[9664, 266, 573, 15, 70, "Text",ExpressionUUID->"4f6d713e-2461-11c8-7513-69784d146312",
  CellID->876231958],
-Cell[8110, 197, 483, 9, 70, "Text",ExpressionUUID->"51fce014-dca1-0630-0783-fa51d5546d1a",
+Cell[10240, 283, 258, 6, 70, "Input",ExpressionUUID->"14ad582f-66ff-93eb-3c53-5189128be131",
  CellID->1020575516],
-Cell[8596, 208, 319, 9, 70, "Text",ExpressionUUID->"657c1c65-980e-511d-1303-964f19bb2067",
+Cell[10501, 291, 1056, 27, 70, "Text",ExpressionUUID->"4f7ea056-2d28-85ec-7505-3a1044c2ef36",
  CellID->1967685850],
-Cell[8918, 219, 378, 10, 70, "Input",ExpressionUUID->"0f15dbd5-5f35-596c-352a-d29f5ac02bb6",
+Cell[11560, 320, 140, 1, 70, "Subsection",ExpressionUUID->"16b00368-b832-202d-3e4f-9b3239c77377",
  CellID->1044562475],
-Cell[9299, 231, 137, 1, 70, "Text",ExpressionUUID->"7e9b7e66-629a-1114-26b9-7040172f607e",
+Cell[11703, 323, 413, 8, 70, "Text",ExpressionUUID->"06d00634-a672-f252-2eef-9871d304c0b8",
  CellID->1653200050],
-Cell[9439, 234, 196, 4, 70, "Input",ExpressionUUID->"585a51e6-774f-2dd2-087a-48c002fa7738",
+Cell[12119, 333, 221, 4, 70, "Text",ExpressionUUID->"05feeeaf-4f58-f7b7-3385-07096ad2dd9d",
  CellID->1384978530],
-Cell[9638, 240, 544, 15, 70, "Text",ExpressionUUID->"1d7c0b5b-c40c-ea6a-4b03-a304edbeb8b0",
+Cell[12343, 339, 1078, 30, 70, "Text",ExpressionUUID->"583a98af-415b-100e-09d9-110970ee6354",
  CellID->519689844],
-Cell[10185, 257, 162, 3, 70, "Text",ExpressionUUID->"370294fd-9e49-2d35-5d31-0da71bfc741f",
+Cell[13424, 371, 528, 15, 70, "DisplayFormula",ExpressionUUID->"07beae85-a317-6bf9-2d45-47eed6a239c3",
  CellID->1609367578],
-Cell[10350, 262, 320, 8, 70, "Input",ExpressionUUID->"2845529c-454d-b13b-587b-4bc66cf90001",
+Cell[13955, 388, 296, 5, 70, "Text",ExpressionUUID->"503c05d1-55e8-8c5e-01c3-9c9b6382d6a4",
  CellID->1541450781],
-Cell[10673, 272, 415, 8, 70, "Text",ExpressionUUID->"7519012f-e657-215b-2326-988893e273a1",
+Cell[14254, 395, 534, 14, 70, "Input",ExpressionUUID->"60049622-f570-0e0e-103b-0f8ffc055554",
  CellID->1657269721],
-Cell[11091, 282, 266, 7, 70, "Input",ExpressionUUID->"594776df-9e75-d16a-0f7d-6f991b01a3b0",
+Cell[14791, 411, 148, 1, 70, "Text",ExpressionUUID->"40ea559d-da93-7842-70ea-4cc6df264aa8",
  CellID->1140508347],
-Cell[11360, 291, 249, 4, 70, "Text",ExpressionUUID->"6405505f-4b92-3bd6-0c3b-4a196e24893c",
+Cell[14942, 414, 422, 12, 70, "Input",ExpressionUUID->"23ccc6ee-92c0-e596-51f3-dfc8277acffc",
  CellID->496109794],
-Cell[11612, 297, 126, 1, 70, "Section",ExpressionUUID->"6878c7f8-419e-9db5-1807-dea27028e79f",
+Cell[15367, 428, 1969, 62, 70, "Text",ExpressionUUID->"114d8d02-b276-9c05-4772-256fc700e76f",
  CellID->108435171],
-Cell[11741, 300, 1331, 38, 70, "Text",ExpressionUUID->"48a3d607-c312-9dd3-7850-c860f6a4e739",
+Cell[17339, 492, 769, 21, 70, "Input",ExpressionUUID->"2dc22b63-32d1-862f-5bf1-c34d4765ed75",
  CellID->829388421],
-Cell[13075, 340, 131, 1, 70, "Text",ExpressionUUID->"539491e8-328f-8d7b-01ab-08b2473bd441",
+Cell[18111, 515, 1692, 52, 70, "Text",ExpressionUUID->"36ea7e2c-072a-2221-5eea-7076b2df710b",
  CellID->203008389],
-Cell[13209, 343, 283, 6, 70, "Input",ExpressionUUID->"7fcf59b5-a5ca-2155-25f5-50fecc7f73bf",
+Cell[19806, 569, 908, 24, 70, "Text",ExpressionUUID->"5b23761c-2477-64e8-0ad1-68464d024e32",
  CellID->1090263105],
-Cell[13495, 351, 936, 19, 70, "Text",ExpressionUUID->"023f49e2-a747-9723-33c5-60cfd2f3fa09",
+Cell[20717, 595, 591, 15, 70, "Text",ExpressionUUID->"73216bcf-7cf1-61ac-22de-82a9748433f6",
  CellID->1560876240],
-Cell[14434, 372, 369, 8, 70, "Text",ExpressionUUID->"21aa1c49-e16c-f406-57a9-9612901edf6c",
+Cell[21311, 612, 867, 32, 70, "DisplayFormula",ExpressionUUID->"69fa63e8-c0ca-4913-1f9a-7ab5f17f1879",
  CellID->176337227],
-Cell[14806, 382, 458, 13, 70, "Input",ExpressionUUID->"289b85cd-827f-9a9c-58b8-1c97370be8e6",
+Cell[22181, 646, 169, 3, 70, "Text",ExpressionUUID->"409bca18-cbd6-e54d-70b8-ec45ee60cf97",
  CellID->807053435],
-Cell[15267, 397, 344, 8, 70, "Text",ExpressionUUID->"12f3dbee-abc4-6375-4280-d2cbce714e5f",
+Cell[22353, 651, 1148, 43, 70, "DisplayFormula",ExpressionUUID->"10b62b5f-1d3f-f012-404d-c31994cbc378",
  CellID->1633675818],
-Cell[15614, 407, 149, 1, 70, "Text",ExpressionUUID->"7ed5da6f-a344-b859-26ea-dc48d6f60aa3",
+Cell[23504, 696, 270, 5, 70, "Text",ExpressionUUID->"79984792-c453-565a-2fb8-5edfede63ca0",
  CellID->1828793009],
-Cell[15766, 410, 781, 23, 70, "Input",ExpressionUUID->"2cfa2c34-ef50-7d46-5499-c6718ae547ac",
+Cell[23777, 703, 1800, 62, 70, "DisplayFormula",ExpressionUUID->"1d45428e-8fa1-6801-4b7b-5be82a543b6b",
  CellID->1232986364],
-Cell[16550, 435, 1440, 39, 70, "Text",ExpressionUUID->"362a4e41-4988-041f-5e2a-602b683d6f65",
+Cell[25580, 767, 838, 21, 70, "Text",ExpressionUUID->"604bb87d-3174-a116-1048-32274006f07c",
  CellID->762269937],
-Cell[17993, 476, 376, 9, 70, "Text",ExpressionUUID->"01ed6b92-5a5f-fa78-3792-82dc5febc942",
+Cell[26421, 790, 126, 1, 70, "Subsection",ExpressionUUID->"763191a2-6f8b-197a-1fce-080c0a3e6840",
  CellID->405213039],
-Cell[18372, 487, 517, 13, 70, "Input",ExpressionUUID->"107fa29c-d013-1000-4004-3bd9e1a6636a",
+Cell[26550, 793, 1544, 42, 70, "Text",ExpressionUUID->"635fdfdb-2856-deda-1164-d68549e0a420",
  CellID->2118931930],
-Cell[18892, 502, 379, 9, 70, "Text",ExpressionUUID->"6798df62-4cc7-e4e1-0da7-d74c6573cecb",
+Cell[28097, 837, 1122, 41, 70, "DisplayFormula",ExpressionUUID->"0f6eb37a-d9e9-6713-3515-2b27df9c4a79",
  CellID->1039057480],
-Cell[19274, 513, 1304, 37, 70, "Input",ExpressionUUID->"49f5450b-e8d1-97dd-7f8b-5d548965fd27",
+Cell[29222, 880, 1423, 41, 70, "Text",ExpressionUUID->"5c8469dd-bfc7-2a7a-04bb-80873a727940",
  CellID->1411198270],
-Cell[20581, 552, 685, 11, 70, "Text",ExpressionUUID->"2570a8a5-7a6f-59e7-530f-410f7f1a2bcd",
+Cell[30648, 923, 721, 20, 70, "Input",ExpressionUUID->"182ee0c1-720e-fc83-49d5-f9ab07b8c6e9",
  CellID->1703453532],
-Cell[21269, 565, 144, 1, 70, "Section",ExpressionUUID->"0b990c23-b656-01a6-39a6-a58cc3e3538c",
+Cell[31372, 945, 403, 8, 70, "Text",ExpressionUUID->"3921e4bb-f5e4-3596-68de-fde483969ffc",
  CellID->1477609488],
-Cell[21416, 568, 1287, 34, 70, "Text",ExpressionUUID->"52243646-2fbd-210e-03db-a8204a487054",
+Cell[31778, 955, 584, 16, 70, "Input",ExpressionUUID->"13db9173-5387-1c16-41f8-093d6632677c",
  CellID->1030824397],
-Cell[22706, 604, 778, 18, 70, "Text",ExpressionUUID->"1acd7f4d-3da3-7753-4af3-7717b4565db9",
+Cell[32365, 973, 184, 4, 70, "Text",ExpressionUUID->"6804c0ab-fd16-b7db-183b-d9f4f4a01d21",
  CellID->100031176],
-Cell[23487, 624, 935, 22, 70, "Input",ExpressionUUID->"062d91f0-6326-41c0-2fd2-08ba16d3132a",
+Cell[32552, 979, 1651, 44, 70, "Input",ExpressionUUID->"77076ae4-09e5-8344-1d3c-83ceaf91d1ae",
  CellID->144223354],
-Cell[24425, 648, 167, 3, 70, "Text",ExpressionUUID->"1ac7f74a-ce09-be58-4afc-ef17ebbd04a2",
+Cell[34206, 1025, 866, 19, 70, "Text",ExpressionUUID->"4289b0c6-8043-1b93-72b6-29a031f669f9",
  CellID->1443527617],
-Cell[24595, 653, 434, 12, 70, "Input",ExpressionUUID->"6f6ad260-8ee1-565a-1569-d44a2a943ca0",
+Cell[35075, 1046, 165, 3, 70, "Text",ExpressionUUID->"070f3e08-556d-9d60-2d34-b0525c19e44a",
  CellID->311511756],
-Cell[25032, 667, 132, 1, 70, "Text",ExpressionUUID->"612fd791-c81e-86f2-10d4-cedae9a8ecd8",
+Cell[35243, 1051, 1161, 32, 70, "Input",ExpressionUUID->"6d593b15-c37a-9c59-1b66-b35ef60ce6a3",
  CellID->1381425643],
-Cell[25167, 670, 870, 19, 70, "Input",ExpressionUUID->"26dca2d1-2715-746d-4ee3-3b9b52a05eb7",
+Cell[36407, 1085, 608, 16, 70, "Text",ExpressionUUID->"4140e475-1e41-1f16-777f-fe3f9bf4627c",
  CellID->377280352],
-Cell[26040, 691, 261, 5, 70, "Text",ExpressionUUID->"296a77cd-8fa3-dd44-5f6a-6e972a57a7ae",
+Cell[37018, 1103, 142, 1, 70, "Section",ExpressionUUID->"67f13035-938c-831a-0d8e-aa7f263eee60",
  CellID->1717363484],
-Cell[26304, 698, 214, 4, 70, "Text",ExpressionUUID->"6b853673-18d0-d9fa-19ba-a83d996aabc0",
+Cell[37163, 1106, 466, 10, 70, "Text",ExpressionUUID->"16b44e14-0404-e868-3e4c-605eadb6bab2",
  CellID->1781880651],
-Cell[26521, 704, 586, 18, 70, "Input",ExpressionUUID->"25b5b884-ef74-61b3-534a-31e18a013399",
+Cell[37632, 1118, 626, 20, 70, "DisplayFormula",ExpressionUUID->"70bc3c38-1a7f-2cd8-2043-b6629f0a7622",
  CellID->1536527082],
-Cell[27110, 724, 588, 12, 70, "Text",ExpressionUUID->"574a2197-51ef-7938-7d49-b8d1679a4802",
+Cell[38261, 1140, 388, 10, 70, "Text",ExpressionUUID->"7e10bd94-ae42-3b4d-262f-34d1cbf48997",
  CellID->1621535814],
-Cell[27701, 738, 137, 1, 70, "Section",ExpressionUUID->"6e85e9ed-427b-8528-16ba-00b7770fec72",
+Cell[38652, 1152, 1310, 48, 70, "DisplayFormula",ExpressionUUID->"5fdf5ac0-01aa-1326-05e5-53aab05f7e0c",
  CellID->1193935837],
-Cell[27841, 741, 845, 20, 70, "Text",ExpressionUUID->"73b76025-96bb-3fff-214d-798f234f85c5",
+Cell[39965, 1202, 532, 15, 70, "Text",ExpressionUUID->"013c2307-fb8b-27c7-30c3-bb60fe3f8d2d",
  CellID->105329933],
-Cell[28689, 763, 213, 4, 70, "Text",ExpressionUUID->"31f4c073-8ff6-126f-678b-da3d298360b5",
+Cell[40500, 1219, 1698, 64, 70, "DisplayFormula",ExpressionUUID->"4b734859-75e7-efa6-7901-62030393b58c",
  CellID->1234416869],
-Cell[28905, 769, 752, 21, 70, "Input",ExpressionUUID->"72ff7667-e560-b2c0-2285-68408c1a002a",
+Cell[42201, 1285, 190, 4, 70, "Text",ExpressionUUID->"4ae31c17-eefa-a706-7a90-96508a8c0a6c",
  CellID->240380995],
-Cell[29660, 792, 481, 7, 70, "Text",ExpressionUUID->"7c9be80e-0554-61c1-24b8-0268ace1332b",
+Cell[42394, 1291, 680, 15, 70, "Text",ExpressionUUID->"00844d77-2817-3ec6-30bc-653149a3842c",
  CellID->1771870337],
-Cell[30144, 801, 114, 1, 70, "Section",ExpressionUUID->"106b7ad8-6378-599b-4069-7382160d2be1",
+Cell[43077, 1308, 187, 4, 70, "Text",ExpressionUUID->"20b97f64-b973-0c8a-5047-774e380656d0",
  CellID->305160771],
-Cell[30261, 804, 794, 13, 70, "Text",ExpressionUUID->"7e6f7c7a-fa8f-2da1-2615-7627ff3a778b",
+Cell[43267, 1314, 321, 7, 70, "Input",ExpressionUUID->"04469009-6b02-dcc3-2c7d-0a530eb4a629",
  CellID->1896945989],
-Cell[31058, 819, 506, 8, 70, "Text",ExpressionUUID->"304452a4-201b-d64c-607c-4b0e51afbc96",
- CellID->653417278]
+Cell[43591, 1323, 128, 1, 70, "Text",ExpressionUUID->"4e35d333-5bd5-ef26-77ca-cb7d5e61b20c",
+ CellID->653417278],
+Cell[43722, 1326, 170, 3, 70, "Input",ExpressionUUID->"5547dfb6-0e84-e145-037c-d6f0ab36b3af",
+ CellID->1067269536],
+Cell[43895, 1331, 115, 1, 70, "Text",ExpressionUUID->"12b61bfc-9cd7-eca9-424d-92a61563b6f3",
+ CellID->49659130],
+Cell[44013, 1334, 283, 6, 70, "Input",ExpressionUUID->"451364b5-819d-fb99-7321-7dff3029c9e3",
+ CellID->464508221],
+Cell[44299, 1342, 1728, 47, 70, "Text",ExpressionUUID->"13b49e24-0fb7-4441-414b-178eaa422eab",
+ CellID->1361313038],
+Cell[46030, 1391, 293, 7, 70, "Text",ExpressionUUID->"445bf28f-7a5a-ecd1-6c78-ebe97fecb63b",
+ CellID->1907680634],
+Cell[46326, 1400, 459, 13, 70, "Input",ExpressionUUID->"089aa42d-ce49-3603-38b9-3e76ebfd9d69",
+ CellID->483148123],
+Cell[46788, 1415, 203, 4, 70, "Text",ExpressionUUID->"48fccab3-b886-a0f7-7883-e3fd3930f2dd",
+ CellID->1195452142],
+Cell[46994, 1421, 953, 28, 70, "Input",ExpressionUUID->"0cdaad60-2181-5e26-34f9-454a5034250c",
+ CellID->1521685512],
+Cell[47950, 1451, 391, 8, 70, "Text",ExpressionUUID->"542cff75-84e0-b601-7dd3-f73f2c9a1d6b",
+ CellID->97201263],
+Cell[48344, 1461, 1433, 44, 70, "Text",ExpressionUUID->"00dd9d4d-f7ec-565f-30e2-151681993ca5",
+ CellID->878831761],
+Cell[49780, 1507, 145, 1, 70, "Text",ExpressionUUID->"0d66b502-775d-ec4c-3b1d-2d6c02e9b696",
+ CellID->1048559713],
+Cell[49928, 1510, 1118, 32, 70, "Input",ExpressionUUID->"3a3bfee8-9a0e-4a4b-6bd8-f7b21fbb1891",
+ CellID->300048012],
+Cell[51049, 1544, 478, 9, 70, "Text",ExpressionUUID->"333832e2-8bec-4128-62c7-abcc2d991072",
+ CellID->1962937852],
+Cell[51530, 1555, 1018, 36, 70, "DisplayFormula",ExpressionUUID->"78cf51d6-d7cd-4672-28f5-4893e2782d58",
+ CellID->588230824],
+Cell[52551, 1593, 754, 18, 70, "Text",ExpressionUUID->"1d9e3d6f-99f1-7c1e-4ba5-b5491f844764",
+ CellID->2099309037],
+Cell[53308, 1613, 145, 1, 70, "Section",ExpressionUUID->"710db4a8-d877-0db2-2732-2df5d9025798",
+ CellID->512383039],
+Cell[53456, 1616, 515, 13, 70, "Text",ExpressionUUID->"71e12f72-3ad4-a92f-279e-c73cbf66f875",
+ CellID->273308241],
+Cell[53974, 1631, 355, 9, 70, "Input",ExpressionUUID->"06ea8612-dd18-b4f0-2ee9-185fd4921eda",
+ CellID->1809098798],
+Cell[54332, 1642, 141, 1, 70, "Text",ExpressionUUID->"0b02f270-2101-5c3d-3931-f43a50b42707",
+ CellID->156430199],
+Cell[54476, 1645, 196, 4, 70, "Input",ExpressionUUID->"2d1868bf-f524-2aaf-5b27-81f8fcd178f5",
+ CellID->724760089],
+Cell[54675, 1651, 825, 23, 70, "Text",ExpressionUUID->"669caa83-24d6-d7e9-0ea3-43ed4d60bd33",
+ CellID->168408080],
+Cell[55503, 1676, 146, 1, 70, "Text",ExpressionUUID->"5ae50fd0-6d1f-8fa4-0a9a-a69a04abd58e",
+ CellID->811283638],
+Cell[55652, 1679, 320, 8, 70, "Input",ExpressionUUID->"66e7a4a8-d710-64fe-0e9c-3df5e2a54ec4",
+ CellID->207978548],
+Cell[55975, 1689, 554, 13, 70, "Text",ExpressionUUID->"3e73fafe-05d0-7203-6600-f3b8ac654169",
+ CellID->437474228],
+Cell[56532, 1704, 266, 7, 70, "Input",ExpressionUUID->"7fb7b09a-ac3b-ef52-254c-29c7c5cfb5b8",
+ CellID->874582697],
+Cell[56801, 1713, 881, 20, 70, "Text",ExpressionUUID->"12c044c4-b778-74e1-42f0-5da1c20d5ecb",
+ CellID->11631581],
+Cell[57685, 1735, 424, 9, 70, "Text",ExpressionUUID->"3d9aa029-60a8-273a-6bb9-3a7311428a00",
+ CellID->1933762060],
+Cell[58112, 1746, 1777, 47, 70, "Input",ExpressionUUID->"64adc082-4122-deff-0c52-d9ec70d4a4c5",
+ CellID->1055776787],
+Cell[59892, 1795, 139, 1, 70, "Text",ExpressionUUID->"7e451771-8a55-ceec-267a-8f3b2fe19436",
+ CellID->1859711813],
+Cell[60034, 1798, 937, 27, 70, "Input",ExpressionUUID->"4670f053-f537-0b3f-6e0f-ea1cfcc25605",
+ CellID->1348896709],
+Cell[60974, 1827, 772, 17, 70, "Text",ExpressionUUID->"330aabc0-bdd5-22a3-6109-42aa34607089",
+ CellID->1427211115],
+Cell[61749, 1846, 120, 1, 70, "Section",ExpressionUUID->"38c8cb12-19a5-fbf9-68f7-e35c9851c9c3",
+ CellID->2099805207],
+Cell[61872, 1849, 1187, 29, 70, "Text",ExpressionUUID->"70d705b8-410a-1477-20ec-9ce270bf7f5d",
+ CellID->1402006442],
+Cell[63062, 1880, 167, 3, 70, "Text",ExpressionUUID->"737c509e-bc52-eefb-2104-49d835e4b4c1",
+ CellID->1901179466],
+Cell[63232, 1885, 1822, 50, 70, "Input",ExpressionUUID->"01a44b6b-c85f-9e0e-375c-6334e9ebe554",
+ CellID->210724908],
+Cell[65057, 1937, 743, 16, 70, "Text",ExpressionUUID->"10bcaec6-cc03-bcfd-4043-47a3e5b706c7",
+ CellID->1992790374],
+Cell[65803, 1955, 170, 3, 70, "Text",ExpressionUUID->"25120901-cfbc-a8e6-5321-a16aea4efacc",
+ CellID->292747604],
+Cell[65976, 1960, 3159, 85, 70, "Input",ExpressionUUID->"3ee7491f-72c3-8814-669d-61590777db7e",
+ CellID->1553818268],
+Cell[69138, 2047, 194, 4, 70, "Text",ExpressionUUID->"67860241-8011-89c8-0dbd-a42b31a5db12",
+ CellID->1870754514],
+Cell[69335, 2053, 769, 20, 70, "Input",ExpressionUUID->"1318f44b-7a0d-b86f-4127-ee157fb90ab5",
+ CellID->1358728755],
+Cell[70107, 2075, 354, 8, 70, "Text",ExpressionUUID->"221ecbfd-1ed7-d323-5225-e2a79b63be09",
+ CellID->935019337],
+Cell[70464, 2085, 1088, 29, 70, "Input",ExpressionUUID->"3f067a83-888f-4db3-653e-73ed293a1799",
+ CellID->642744358],
+Cell[71555, 2116, 147, 1, 70, "Text",ExpressionUUID->"287fc527-5526-9e30-5804-dc815cd0e51a",
+ CellID->1478372881],
+Cell[71705, 2119, 1062, 22, 70, "Input",ExpressionUUID->"2207e002-80f7-0285-523c-fa6c308250ef",
+ CellID->124263719],
+Cell[72770, 2143, 1025, 27, 70, "Text",ExpressionUUID->"440467ae-8db5-79b4-6c3c-7e0824404b9e",
+ CellID->1310926461],
+Cell[73798, 2172, 357, 8, 70, "Text",ExpressionUUID->"141585f4-d1c1-5bbd-3c2a-1cb1e0742987",
+ CellID->1124211690],
+Cell[74158, 2182, 1259, 31, 70, "Input",ExpressionUUID->"3d27d006-86b8-9131-64dc-ca603332e01b",
+ CellID->1335749844],
+Cell[75420, 2215, 407, 8, 70, "Text",ExpressionUUID->"3e44340b-ef5c-51d5-667b-ae548ae9233f",
+ CellID->793802945],
+Cell[75830, 2225, 437, 7, 70, "Text",ExpressionUUID->"321034f4-436e-dcec-622f-adbe7618a636",
+ CellID->631769182],
+Cell[76270, 2234, 147, 1, 70, "Text",ExpressionUUID->"1287d3f9-6500-de4e-42bc-caa30cbaa494",
+ CellID->1873681340],
+Cell[76420, 2237, 252, 6, 70, "Input",ExpressionUUID->"3035d7f6-28ea-dcd5-61ca-ceb0489ca63f",
+ CellID->1468251080],
+Cell[76675, 2245, 1326, 39, 70, "Text",ExpressionUUID->"087f5f2f-6486-1b59-3805-56890d3369a3",
+ CellID->1989234463],
+Cell[78004, 2286, 135, 1, 70, "Section",ExpressionUUID->"7ddf1aac-cdaa-cd7e-2be4-9309e45c9444",
+ CellID->1607696641],
+Cell[78142, 2289, 307, 5, 70, "Text",ExpressionUUID->"2b41c4a9-15e8-1804-597e-ddf3a39d6b6e",
+ CellID->1817342824],
+Cell[78452, 2296, 653, 15, 70, "Text",ExpressionUUID->"13ecd9ee-6506-67bb-4193-d0c80cb34d81",
+ CellID->530774412],
+Cell[79108, 2313, 549, 14, 70, "Text",ExpressionUUID->"6724c974-bdf1-27a5-0edb-e13e3b858d8f",
+ CellID->599957810],
+Cell[79660, 2329, 285, 8, 70, "Input",ExpressionUUID->"2b52875c-0948-9ae8-5961-1f06a8e2e832",
+ CellID->1899946997],
+Cell[79948, 2339, 214, 4, 70, "Text",ExpressionUUID->"53412643-5a68-df00-017e-b82d5f02a26a",
+ CellID->1051619128],
+Cell[80165, 2345, 769, 14, 70, "Text",ExpressionUUID->"696f5b1d-d56b-3a26-1f15-5346dc1f890c",
+ CellID->1921351195],
+Cell[80937, 2361, 564, 11, 70, "Text",ExpressionUUID->"0eb02373-2484-618c-364f-bb3d4d3133d6",
+ CellID->1207491739],
+Cell[81504, 2374, 1143, 34, 70, "Text",ExpressionUUID->"640353f1-ff8e-e9b3-0c31-4abafa38bb99",
+ CellID->216741342],
+Cell[82650, 2410, 121, 1, 70, "Section",ExpressionUUID->"37161f66-4600-a3a8-5d2d-974073baf1f2",
+ CellID->2096934290],
+Cell[82774, 2413, 516, 8, 70, "Text",ExpressionUUID->"2e44757e-c407-f813-567c-6d3bedb3cb79",
+ CellID->1367217003],
+Cell[83293, 2423, 381, 6, 70, "Text",ExpressionUUID->"07a61755-6475-fbf7-2d5d-8f1f0d01c9dd",
+ CellID->1372538143]
 }
 ]
 *)
