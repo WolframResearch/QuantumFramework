@@ -17,6 +17,9 @@ algA[v_]   := algA[v] = NonCommutativeAlgebra[<|"Generators" -> {v, SuperDagger[
 
 algA[vars_List] := algA[vars] = NonCommutativeAlgebra[<|"Generators" -> vars|>];
 
+shiftPolynomialQ[expr_, v_] :=
+    NonCommutativePolynomialQ[expr, algA[v]] && FreeQ[expr, Power[E, _?(! FreeQ[#, _?FormalSymbolQ] &)]];
+
 
 getNCPower[var_, var_] := 1;
 
@@ -76,10 +79,10 @@ rulesNO = {
                 Exp[((alpha Tan[omega]) GeneralizedPower[NonCommutativeMultiply, v, 2])/omega]
         ],
 
-    Exp[alpha_. v_?FormalSymbolQ] ** expr_ /; NonCommutativePolynomialQ[expr, algA[v]] :>
+    Exp[alpha_. v_?FormalSymbolQ] ** expr_ /; shiftPolynomialQ[expr, v] :>
         BosonicNormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] + alpha}, {v, SuperDagger[v]}] ** Exp[alpha v],
 
-    expr_ ** Exp[beta_. SuperDagger[v_?FormalSymbolQ]] /; NonCommutativePolynomialQ[expr, algA[v]] :>
+    expr_ ** Exp[beta_. SuperDagger[v_?FormalSymbolQ]] /; shiftPolynomialQ[expr, v] :>
         Exp[beta SuperDagger[v]] ** BosonicNormalOrder[expr /. {SuperDagger[v]-> SuperDagger[v], v -> v + beta}, {v, SuperDagger[v]}],
 
     Exp[lambda_*(adagL : (SuperDagger[v_?FormalSymbolQ] | GeneralizedPower[NonCommutativeMultiply, SuperDagger[v_?FormalSymbolQ], _])) **
@@ -137,10 +140,10 @@ rulesAN = {
                 Exp[((beta Tan[omega]) GeneralizedPower[NonCommutativeMultiply, SuperDagger[v], 2])/omega]
         ],
 
-    expr_ ** Exp[alpha_. v_?FormalSymbolQ] /; NonCommutativePolynomialQ[expr, algA[v]] :>
+    expr_ ** Exp[alpha_. v_?FormalSymbolQ] /; shiftPolynomialQ[expr, v] :>
         Exp[alpha v] ** BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v] - alpha}, {v, SuperDagger[v]}],
 
-    Exp[beta_. SuperDagger[v_?FormalSymbolQ]] ** expr_ /; NonCommutativePolynomialQ[expr, algA[v]] :>
+    Exp[beta_. SuperDagger[v_?FormalSymbolQ]] ** expr_ /; shiftPolynomialQ[expr, v] :>
         BosonicAntinormalOrder[expr /. {SuperDagger[v] -> SuperDagger[v], v -> v - beta}, {v, SuperDagger[v]}] ** Exp[beta SuperDagger[v]],
 
     Exp[lambda_*(aL : (v_?FormalSymbolQ | GeneralizedPower[NonCommutativeMultiply, v_?FormalSymbolQ, _])) **

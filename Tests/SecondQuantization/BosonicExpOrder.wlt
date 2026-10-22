@@ -690,4 +690,25 @@ VerificationTest[
     TestID -> "TwoModeCrossTermNormalOrder"
 ]
 
+(* An exponential of one mode is not a polynomial in another, so the shift rules must
+   leave it alone; once they treated E^(b^dagger)**E^b as a mode-a scalar and fused it
+   into a single exponential with no Weyl factor.  Checked on the n_a, n_b <= 2 block
+   against exact single-mode products: truncated MatrixExp of a ladder operator is exact
+   there. *)
+VerificationTest[
+    Module[{s = 10, big = 40, am, idx, ord},
+        am = Normal[AnnihilationOperator[big]["Matrix"]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        ord = BosonicExpOrder[Exp[0.2 \[FormalA]]**Exp[0.3 SuperDagger[\[FormalB]]]**
+            Exp[-0.25 \[FormalB]]**Exp[0.15 SuperDagger[\[FormalA]]]];
+        Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -
+            KroneckerProduct[
+                (MatrixExp[0.2 am] . MatrixExp[0.15 ConjugateTranspose[am]])[[;; 3, ;; 3]],
+                (MatrixExp[0.3 ConjugateTranspose[am]] . MatrixExp[-0.25 am])[[;; 3, ;; 3]]
+            ]]] < 10^-12
+    ],
+    True,
+    TestID -> "TwoModeInterleavedExponentialsStayApart"
+]
+
 EndTestSection[]

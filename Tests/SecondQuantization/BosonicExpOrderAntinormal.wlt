@@ -236,4 +236,24 @@ VerificationTest[
     TestID -> "BosonicExpAnti-TwoModeSqueezer"
 ]
 
+(* mirror of TwoModeInterleavedExponentialsStayApart: another mode's exponentials are not
+   a polynomial for the anti-normal shift rules either.  An anti-normal product is not exact
+   on a truncated block (its middle sum runs past the cutoff), so each mode keeps 20 levels:
+   the residue is then 1e-16, against 0.04 for the fused exponential *)
+VerificationTest[
+    Module[{s = 20, big = 40, am, idx, ord},
+        am = Normal[AnnihilationOperator[big]["Matrix"]];
+        idx = Flatten[Table[s i + j + 1, {i, 0, 2}, {j, 0, 2}]];
+        ord = BosonicExpOrder[Exp[0.15 SuperDagger[\[FormalA]]]**Exp[-0.25 \[FormalB]]**
+            Exp[0.3 SuperDagger[\[FormalB]]]**Exp[0.2 \[FormalA]], "Ordering" -> "Antinormal"];
+        Max[Abs[Normal[ToBosonicOperator[ord, {\[FormalA], \[FormalB]}, s]["Matrix"]][[idx, idx]] -
+            KroneckerProduct[
+                (MatrixExp[0.15 ConjugateTranspose[am]] . MatrixExp[0.2 am])[[;; 3, ;; 3]],
+                (MatrixExp[-0.25 am] . MatrixExp[0.3 ConjugateTranspose[am]])[[;; 3, ;; 3]]
+            ]]] < 10^-12
+    ],
+    True,
+    TestID -> "BosonicExpAnti-TwoModeInterleavedExponentialsStayApart"
+]
+
 EndTestSection[]
