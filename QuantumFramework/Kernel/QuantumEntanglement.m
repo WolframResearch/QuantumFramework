@@ -83,38 +83,59 @@ Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
    and (unlike the two-qubit Wootters concurrence) it is basis-dependent: not invariant under local
    unitaries, though it stays below the LU-invariant convex-roof value in every basis.
 
-   Two qubits (one generator pair, d1 d2 == 4) and any symbolic reduction keep the exact operator
-   square-root route. For d1 d2 > 4 on a numeric reduction, rho.rho-tilde is similar to the positive-
-   semidefinite Sqrt[rho].rho-tilde.Sqrt[rho], so its spectrum is real and non-negative: reading it off
-   Eigenvalues sidesteps the eigenvector inverse the operator square root Sqrt[rho] (MatrixPower) takes,
-   which leaks RowReduce::luc on an ill-conditioned machine reduction and blows up into huge unsimplified
-   Root objects on exact input. The eigenvalue route keeps native precision, so machine stays machine and
-   exact stays exact (and tractable, unlike the operator square root). *)
+   An exact or symbolic reduction, in any dimension, reads the Wootters values off the spectrum of
+   rho.rho-tilde, which is similar to the positive-semidefinite Sqrt[rho].rho-tilde.Sqrt[rho] and so real
+   and non-negative. Eigenvalues needs only the characteristic polynomial, where the operator square root
+   Sqrt[rho] (MatrixPower) needs the eigenvectors, which blow up into huge unsimplified Root objects on
+   exact input and stall on symbolic input; exact stays exact. The real part of each eigenvalue is kept;
+   a numeric one is clipped at zero and a symbolic one is left as it is, so that the closed form simplifies
+   under real assumptions and evaluates to a real number at numeric parameter values.
 
-wootterCombination[lambda_] := Max[0, 2 Max[lambda] - Total[lambda]] (* lambda1 - Sum[rest]: largest minus the rest, order-independent (the singular values are not guaranteed sorted for symbolic input) *)
+   On approximate numbers the square roots of computed eigenvalues are not taken: round-off of order eps
+   in a zero eigenvalue becomes order Sqrt[eps] in the value, about 1e-8 on machine numbers, which reads a
+   product state as entangled. With rho = W.W^dagger, the eigenvalues of rho.rho-tilde are the squared
+   singular values of the symmetric W^T.o.W, so the Wootters values are read as those singular values,
+   whose round-off stays of order eps, two qubits included. *)
 
-ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
-	rho = qs["Bipartition", biPartition]["Normalized"]["Operator"], component, d1, d2, y1, y2
-},
+(* lambda1 - Sum[rest]: largest minus the rest, order-independent (the singular values are not guaranteed sorted for
+   symbolic input). An exact value numerically near zero is reduced to one algebraic number first: square roots of Root
+   objects that cancel to exactly zero, as for a separable mixture of three product states, cannot be compared with
+   zero numerically even at $MaxExtraPrecision. *)
+wootterCombination[lambda_] := With[{x = 2 Max[lambda] - Total[lambda]},
+    Max[0, If[NumericQ[x] && Precision[x] === Infinity && Abs[N[x]] < 10^-6, RootReduce[x], x]]
+]
+
+approximateNumericArrayQ[a_] := ArrayQ[a, _, NumericQ] && Precision[a] < Infinity
+
+(* A factor W with rho = W.W^dagger: the orthonormal eigenvectors of rho scaled by the square roots of its
+   eigenvalues. An eigenvalue below n 10^-p of the largest, the eigensolver's own error at precision p, is set to
+   zero: a zero eigenvalue of a rank-deficient rho comes out as round-off of order eps, and its square root, of
+   order Sqrt[eps], would enter the Wootters values linearly. *)
+densityMatrixFactor[mat_] := With[{es = Eigensystem[(mat + ConjugateTranspose[mat]) / 2]},
+	With[{ev = Re @ es[[1]]},
+		Transpose[Sqrt[ev UnitStep[ev - Length[mat] Max[ev] 10 ^ -Max[Precision /@ ev]]] es[[2]]]
+	]
+]
+
+ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := concurrenceVector[qs["Bipartition", biPartition]["Normalized"]["Operator"]]
+
+(* The concurrence vector of a normalized two-qudit operator rho. *)
+concurrenceVector[rho_] := Block[{component, d1, d2, y1, y2},
 	{d1, d2} = rho["OutputDimensions"];
 	y1 = Y[d1];
 	y2 = Y[d2];
-	component = If[ d1 d2 > 4 && MatrixQ[rho["Matrix"], NumericQ],
+	component = If[ approximateNumericArrayQ[rho["Matrix"]],
+		With[{w = densityMatrixFactor[Normal @ rho["Matrix"]]},
+			Function[{ya, yb}, wootterCombination @ SingularValueList[Transpose[w] . KroneckerProduct[ya, yb] . w, Tolerance -> 0]]
+		],
 		With[{mat = Normal @ rho["Matrix"]}, With[{cmat = Conjugate[mat]},
 			Function[{ya, yb}, With[{omat = Normal @ KroneckerProduct[ya, yb]},
-				wootterCombination @ Sqrt @ Clip[Re @ Eigenvalues[mat . omat . cmat . omat], {0, Infinity}]
+				wootterCombination @ Sqrt[If[NumericQ[#], Max[0, #], #] & /@ Re[Eigenvalues[mat . omat . cmat . omat]]]
 			]]
-		]],
-		With[{sr = Sqrt[rho], rc = rho["Conjugate"]},
-			Function[{ya, yb}, With[{o = QuantumTensorProduct[QuantumOperator[ya, d1], QuantumOperator[yb, d2]]},
-				wootterCombination @ SingularValueList[(sr @ Sqrt[o @ rc @ o])["Matrix"]]
-			]]
-		]
+		]]
 	];
 	Catenate @ Table[component[yn, ym], {yn, y1}, {ym, y2}]
 ]
-
-Concurrence[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Norm @ ConcurrenceVector[qs, biPartition]
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "ConcurrenceVector"] :=
     (warnUnphysicalMonotone[qs]; ConcurrenceVector[qs, biPartition])
@@ -123,14 +144,58 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
    normalized before the reduced purity is read, so an input with trace or vector-norm != 1 gives the
    same value as its normalized form. Every monotone in this file shares that contract (the mixed route
    normalizes inside ConcurrenceVector). Without it the reduced purity picks up the scale, and the
-   Max[0, ...] clamp on the now-shifted 2 (1 - Purity) silently returns 0 for a scaled pure state. *)
+   Max[0, ...] clamp on the now-shifted 2 (1 - Purity) silently returns 0 for a scaled pure state.
+
+   Whether the pure-state formula applies is decided on the two-part state, after the split and the partial
+   trace over the qudits outside it, not on the input: tracing qudits out of a pure state leaves the pair
+   mixed in general, as for any two qubits of a GHZ state, and a mixed pair takes the mixed-state route. The
+   pair is pure when its purity Tr[rho^2], read as a sum over the entries with no size limit, is 1: exactly
+   for exact entries, and within n 10^(2 - p) for approximate entries on an n-dimensional pair, p being the
+   precision of the purity itself: an entry the partial trace cancels to zero has precision 0 and would make
+   the precision of the matrix 0. That tolerance cannot tell a pure pair from one mixed by less than it, so an
+   approximate density matrix of up to 64 dimensions always takes the mixed-state route, which is accurate on
+   pure states as well; the purity test serves the larger pairs, where the (d1 d2)^2 / 4 generator pairs of
+   that route are out of reach.
+
+   A pure two-part state given by approximate numbers is read through its Schmidt coefficients s, the
+   singular values of its amplitudes arranged as a d1 x d2 matrix: C = 2 Sqrt[Sum[s_i^2 s_j^2, i < j]], a
+   sum of non-negative terms. 2 (1 - Purity) cancels to round-off of order eps on a product state, and its
+   square root lifts that to order Sqrt[eps]; the Schmidt form keeps it of order eps. A pure pair held as a
+   density matrix rho = psi.psi^dagger gives its amplitudes, up to a global phase, as the column of rho with
+   the largest diagonal entry, divided by the square root of that entry. *)
+schmidtConcurrence[v_, dims_] := With[{p = SingularValueList[ArrayReshape[v, dims], Tolerance -> 0] ^ 2},
+    2 Sqrt[Rest[p] . Most[Accumulate[p]]] / Total[p]
+]
+
+pureDensityMatrixQ[m_] := With[{p = Total[m Transpose[m], 2]},
+    If[ approximateNumericArrayQ[m],
+        Abs[1 - p] <= Length[m] 10 ^ (2 - Precision[p]),
+        TrueQ[Simplify[p] == 1]
+    ]
+]
+
+densityMatrixAmplitudes[m_] := With[{k = First @ Ordering[Re @ Normal @ Diagonal[m], -1]},
+    Normal[m[[All, k]]] / Sqrt[Re @ m[[k, k]]]
+]
+
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] := (
     warnUnphysicalMonotone[qs];
-    If[ qs["VectorQ"],
-        With[{val = 2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition]["Normalized"], {1}] ^ 2)["Norm"])},
-            Sqrt[If[NumericQ[val], Max[0, Re[val]], val]]
-        ],
-        Concurrence[qs, biPartition]
+    Enclose @ With[{bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]},
+        Which[
+            bp["VectorQ"] && approximateNumericArrayQ[bp["StateVector"]],
+            schmidtConcurrence[Normal @ bp["Computational"]["StateVector"], bp["Dimensions"]],
+            bp["MatrixQ"] && approximateNumericArrayQ[bp["DensityMatrix"]],
+            If[ bp["Dimension"] > 64 && pureDensityMatrixQ[bp["DensityMatrix"]],
+                schmidtConcurrence[densityMatrixAmplitudes[bp["Computational"]["DensityMatrix"]], bp["Dimensions"]],
+                Norm @ concurrenceVector[bp["Operator"]]
+            ],
+            bp["VectorQ"] || pureDensityMatrixQ[bp["DensityMatrix"]],
+            With[{val = 2 (1 - (QuantumPartialTrace[bp, {1}] ^ 2)["Norm"])},
+                Sqrt[If[NumericQ[val], Max[0, Re[val]], val]]
+            ],
+            True,
+            Norm @ concurrenceVector[bp["Operator"]]
+        ]
     ]
 )
 

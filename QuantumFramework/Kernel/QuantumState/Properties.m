@@ -713,7 +713,24 @@ QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}]
 QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
     qs["Split", qs["Qudits"]]["Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
 
+(* A change of basis to the computational frame exists when each qudit's basis elements form a square matrix of
+   full rank. The rank of a numeric frame is read numerically, which keeps roots-of-unity frames fast. *)
+invertibleFrameQ[qb_] := AllTrue[
+    Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]],
+    With[{m = Normal @ #["ReducedMatrix"]}, SquareMatrixQ[m] && MatrixRank[If[ArrayQ[m, 2, NumericQ], N[m], m]] == Length[m]] &
+]
+
+(* A mixed state held in an invertible non-computational frame, outside the phase-space picture, is regrouped in the
+   computational frame, two-qudit states included, so every monotone reads the state itself whatever frame holds it:
+   a pair split ends here too, on the two-qudit state its partial trace leaves. Exact or symbolic entries are simplified
+   after the change of basis, which leaves them as long unsimplified sums (of roots of unity in a Fourier frame) on which
+   exact trace norms stall; Simplify acts on the Normal array, a SparseArray being atomic to it. Pure states keep their
+   Schmidt basis, and other two-qudit states are returned as they are. *)
 QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := Which[
+    qs["MatrixQ"] && ! qs["ComputationalQ"] && qs["Picture"] =!= "PhaseSpace" && invertibleFrameQ[qs["Basis"]],
+    With[{c = qs["Computational"]},
+        If[Precision[c["State"]] === Infinity, QuantumState[Simplify[Normal @ c["State"]], c["Basis"]], c]
+    ]["Bipartition", dim],
     qs["Qudits"] == 2,
     qs,
     qs["ComputationalQ"],
