@@ -203,7 +203,20 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
    the parameters whose body is matrixMapAmplitudes, are read as the body at
    the parameters themselves: the closed form in the parameter symbols, where
    ArrayComputable would hand the lazy container back and a reshape would expand
-   it into an array of scalar Functions. *)
+   it into an array of scalar Functions.
+
+   The amplitudes of an array-valued InterpolatingFunction applied to its
+   parameter, the state a numeric QuantumEvolve returns, are expanded by
+   ExpandInterpolatingFunction when the function agrees with the cubic Hermite
+   interpolant of its values and first derivatives on the grid at two points
+   inside every step, as NDSolve's does for a first-order system at its default
+   interpolation order: each amplitude is rebuilt from the same values and
+   derivatives, so binding the parameter gives the solution's own values.
+   ArrayComputable rebuilds each from the values alone. That reproduces an
+   interpolant Interpolation builds from values alone by its default method,
+   but departs from NDSolve's between grid times, and swings far beyond
+   it through the pair of grid times, apart by about 1e-13 of their magnitude
+   or less, by which NDSolve brackets a discontinuity it crosses. *)
 
 (* The closed form of lazy matrix-map amplitudes, cached on the Function, so that
    evaluating it when the operator is built also serves every later read. *)
@@ -215,6 +228,8 @@ computableState[qs_] := With[{state = qs["State"]},
         state,
         lazyMatrixMapAmplitudesQ[state],
         lazyClosedForm[state],
+        MatchQ[state, _InterpolatingFunction[_]] && ArrayLazyQ[state],
+        Once[If[hermiteInterpolantQ[Head[state]], ExpandInterpolatingFunction[state], ArrayComputable[state]]],
         True,
         Once[ArrayComputable[state]]
     ]

@@ -7,6 +7,8 @@ PackageExport[HamiltonianTransitionRate]
 PackageExport[LindbladTransitionRates]
 
 PackageScope[$QuantumEvolveSparseThreshold]
+PackageScope[ExpandInterpolatingFunction]
+PackageScope[hermiteInterpolantQ]
 
 
 
@@ -491,39 +493,86 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
 
 
-(* NDSolve repeats a grid time where the integration restarts at a discontinuity of the
-   equations, and where it crosses one, by its own discontinuity processing or a
-   "CrossDiscontinuity" event, it may bracket it by grid times about 1e-12 apart; the values on
-   either side differ: the first is the state before the step that crossed it, the second the
-   state after, and the solution takes the first at the time itself and the second just past
-   it. The grid is cut wherever two times lie within 1e-12 of their magnitude, each run is
-   interpolated on its own, since a polynomial through values that close swings far beyond
-   them, and the runs are joined, the earlier one up to and including its last time. A repeat
-   carrying the same value is no discontinuity and is dropped. The join is built with Apply, so
-   the bound variable is not renamed. *)
-gridInterpolation[pairs_List, order_Integer] := With[{
-    separate = Max[Abs[First[#2] - First[#1]]] > 10 ^ -12 Max[Abs[First[#1]]] &
+(* For a first-order system, as QuantumEvolve's are, NDSolve's InterpolatingFunction at its
+   default interpolation order is a cubic Hermite interpolant: between two successive grid times
+   it is the cubic through the values and first derivatives at both. Each component is rebuilt
+   from those values and derivatives, so it is that component of the solution. With
+   InterpolationOrder -> All the rebuild is still the cubic through the same values and
+   derivatives, and departs from the solution by that cubic's interpolation error. The cubic on a
+   step reads only the step's two ends: the pair of grid times, apart by about 1e-13 of their
+   magnitude or less, by which NDSolve brackets an edge it crosses stays a step of its own, as it
+   is in the solution. A cubic through values alone reads two more grid times, and through two
+   that close it swings far beyond them.
+
+   Interpolation refuses a repeated time, which NDSolve gives where an event resets the state,
+   with a different value on each side: the grid is split there, each run is interpolated on its
+   own, and the runs are joined, the earlier one up to and including its last time, as the
+   solution takes the value before the reset at the time itself. A repeat carrying the same value
+   and derivative is no reset and is dropped. The join is built with Apply, so the bound variable
+   is not renamed. *)
+gridInterpolation[rows_List] := With[{
+    runs = If[DuplicateFreeQ[rows[[All, 1]]], {rows}, Split[DeleteDuplicates[rows], First[#1] =!= First[#2] &]]
 },
-    With[{runs = If[And @@ separate @@@ Partition[pairs, 2, 1], {pairs}, Split[DeleteDuplicates[pairs], separate]]},
-        With[{interpolants = If[ Length[#] == 1,
-            With[{value = #[[1, 2]]}, value &],
-            Interpolation[#, InterpolationOrder -> Min[order, Length[#] - 1]]
-        ] & /@ runs},
-            If[ Length[interpolants] == 1,
-                First[interpolants],
-                Function @@ {\[FormalT], Piecewise[
-                    MapThread[{#1[\[FormalT]], \[FormalT] <= #2} &, {Most[interpolants], Most[runs][[All, -1, 1, 1]]}],
-                    Last[interpolants][\[FormalT]]
-                ]}
-            ]
+    With[{interpolants = If[ Length[#] == 1,
+        With[{value = #[[1, 2]]}, value &],
+        Interpolation[#, InterpolationOrder -> 3]
+    ] & /@ runs},
+        If[ Length[interpolants] == 1,
+            First[interpolants],
+            Function @@ {\[FormalT], Piecewise[
+                MapThread[{#1[\[FormalT]], \[FormalT] <= #2} &, {Most[interpolants], Most[runs][[All, -1, 1, 1]]}],
+                Last[interpolants][\[FormalT]]
+            ]}
         ]
     ]
 ]
 
-ExpandInterpolatingFunction[f_InterpolatingFunction, parameter_] := Map[
-    gridInterpolation[Thread[{f["Grid"], #}], Replace[f["InterpolationOrder"], {{k_Integer} :> k, k_Integer :> k, _ :> 3}]][parameter] &,
-    Transpose[f["ValuesOnGrid"], InversePermutation[Cycles[{Range[Length[f["OutputDimensions"]] + 1]}]]],
-    {-2}
+(* The values and the first derivatives on the grid, each with the grid index moved last, so
+   that the components of the two pair up level by level. The rebuild reproduces what NDSolve
+   returns for a first-order system, and not an interpolant built from values alone, so
+   computableState asks hermiteInterpolantQ before it calls this. *)
+ExpandInterpolatingFunction[f_InterpolatingFunction, parameter_] := With[{
+    times = List /@ First[f["Coordinates"]],
+    rank = ArrayDepth[f["ValuesOnGrid"]] - 1
+},
+    MapThread[
+        gridInterpolation[Thread[{times, #1, #2}]][parameter] &,
+        Transpose[#, InversePermutation[Cycles[{Range[rank + 1]}]]] & /@ {f["ValuesOnGrid"], f'["ValuesOnGrid"]},
+        rank
+    ]
+]
+
+(* On a step from a to b of width w, at s = (t - a) / w, the cubic Hermite interpolant of the
+   values and first derivatives on the grid takes
+   (2 s^3 - 3 s^2 + 1) f[a] + (s^3 - 2 s^2 + s) w f'[a] + (3 s^2 - 2 s^3) f[b] + (s^3 - s^2) w f'[b],
+   and for a first-order system, as QuantumEvolve's are, NDSolve's InterpolatingFunction at its
+   default interpolation order is that interpolant. It is checked a third and two thirds of the way
+   across every step: a polynomial of degree five or less that keeps the step's end values and
+   slopes departs from the cubic by s^2 (1 - s)^2 (c0 + c1 s), which vanishes at both points only
+   if it vanishes everywhere. Each s is read off its point as rounded, since rounding moves the
+   point off the exact third by more than the tolerance allows, and each value is compared against
+   the size of the four terms that make it, so that the check holds to rounding at any scale of the
+   values. One that Interpolation builds from values alone reports the same "InterpolationMethod"
+   but passes a cubic through four neighbouring values instead, and generally fails the check.
+   Only a function of one time, with no units on the time or the values, is checked; a step of
+   zero length, at a repeated time, has no interior, and values that are not numbers fail. *)
+hermiteInterpolantQ[f_InterpolatingFunction] := Length[f["Domain"]] == 1 && f["QuantityUnits"] === {None, None} && f["InterpolationMethod"] === "Hermite" && With[{
+    times = First[f["Coordinates"]],
+    values = f["ValuesOnGrid"],
+    slopes = f'["ValuesOnGrid"]
+},
+    With[{steps = Flatten @ Position[Sign[Differences[times]], 1]},
+        With[{a = times[[steps]], w = times[[steps + 1]] - times[[steps]]},
+            AllTrue[{1 / 3, 2 / 3}, Function[fraction, With[{points = a + fraction w}, With[{s = (points - a) / w},
+                With[{terms = {
+                    (2 s ^ 3 - 3 s ^ 2 + 1) values[[steps]], (s ^ 3 - 2 s ^ 2 + s) w slopes[[steps]],
+                    (3 s ^ 2 - 2 s ^ 3) values[[steps + 1]], (s ^ 3 - s ^ 2) w slopes[[steps + 1]]
+                }},
+                    TrueQ[Max[Abs[f[points] - Total[terms]] - 10 ^ -12 Total[Abs[terms]]] <= 0]
+                ]
+            ]]]]
+        ]
+    ]
 ]
 
 ExpandInterpolatingFunction[f_InterpolatingFunction[parameter_]] := ExpandInterpolatingFunction[f, parameter]

@@ -378,6 +378,69 @@ VerificationTest[
     TestID -> "Evolve-Expand-inside-a-pulse-matches-closed-form"
 ]
 
+(* Issue #1945: a square pulse of area 2 Pi on [100, 600], read before its time is bound. NDSolve
+   crosses each edge by a pair of grid times, 128 rounding errors apart, that carry slightly
+   different values, and the amplitudes, rebuilt from the solution's values and derivatives,
+   follow the solution through them: the norm stays 1 to the solver's tolerance on both sides of
+   each edge. *)
+VerificationTest[
+    With[{amplitudes = Normal @ QuantumEvolve[(Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"], QuantumState["0"], {\[FormalT], 0, 700}]["StateVector"]},
+        Max @ Abs[Map[Norm[amplitudes /. \[FormalT] -> #] &, Union[Subdivide[0., 700., 267], {99.999, 100.001, 599.999, 600.001}]] - 1] < 10 ^ -6
+    ],
+    True,
+    TestID -> "Evolve-lazy-read-normalized-across-pulse-edges"
+]
+
+(* Through the same pulse, the state vector and, under dephasing, the density matrix read before
+   the time is bound are the solution itself: they agree with the state at each bound time to
+   rounding. *)
+VerificationTest[
+    With[{
+        h = (Piecewise[{{0, \[FormalT] < 100}, {0, \[FormalT] > 600}}, 2 Pi 2*^-3] / 2) QuantumOperator["X"],
+        times = Union[Subdivide[0., 700., 267], {99.999, 100.001, 599.999, 600.001}]
+    },
+        With[{
+            pure = QuantumEvolve[h, QuantumState["0"], {\[FormalT], 0, 700}],
+            mixed = QuantumEvolve[h, {QuantumOperator["Z"]} -> {0.01}, QuantumState["0"], {\[FormalT], 0, 700}]
+        },
+            Thread[{
+                Max @ Abs @ Flatten @ Map[(Normal[pure["StateVector"]] /. \[FormalT] -> #) - Normal[pure[#]["StateVector"]] &, times],
+                Max @ Abs @ Flatten @ Map[(Normal[mixed["DensityMatrix"]] /. \[FormalT] -> #) - Normal[mixed[#]["DensityMatrix"]] &, times]
+            } < 10 ^ -12]
+        ]
+    ],
+    {True, True},
+    TestID -> "Evolve-lazy-read-is-the-solution-across-pulse-edges"
+]
+
+(* An interpolant that Interpolation builds by its default method from 41 values of cos and sin,
+   at unit scale, at 1e-9, and with one component at each, is no cubic Hermite interpolant of its
+   values and derivatives, and a state holding one reads as that interpolant, each component to
+   rounding of its own scale. *)
+VerificationTest[
+    Map[
+        Function[scale, With[{interpolant = Interpolation[{#, scale {Cos[#], I Sin[#]}} & /@ Subdivide[0., 10., 40]]},
+            With[{amplitudes = Normal @ QuantumState[interpolant[\[FormalT]]]["StateVector"]},
+                Max[Map[Abs[(amplitudes /. \[FormalT] -> #) - interpolant[#]] / scale &, Subdivide[0., 10., 997]]] < 10 ^ -12
+            ]
+        ]],
+        {{1, 1}, {10 ^ -9, 10 ^ -9}, {1, 10 ^ -9}}
+    ],
+    {True, True, True},
+    TestID -> "Evolve-lazy-read-keeps-an-interpolant-of-values"
+]
+
+(* A pi pulse of width 0.01 a million time units from the time origin, where the middle of a
+   step, as rounded, lies measurably off its exact middle: read before its time is bound, the
+   state keeps its norm 1 to the solver's tolerance through the pulse. *)
+VerificationTest[
+    With[{amplitudes = Normal @ QuantumEvolve[((Pi / 0.01) Boole[Abs[\[FormalT] - (10 ^ 6 + 50)] < 0.005] / 2) QuantumOperator["X"], QuantumState["0"], {\[FormalT], 10 ^ 6, 10 ^ 6 + 100}]["StateVector"]},
+        Max @ Abs[Map[Norm[amplitudes /. \[FormalT] -> #] &, 10 ^ 6 + Union[Subdivide[0., 100., 200], 50 + Subdivide[-0.01, 0.01, 40]]] - 1] < 10 ^ -6
+    ],
+    True,
+    TestID -> "Evolve-lazy-read-normalized-far-from-the-time-origin"
+]
+
 (* With "MergeInterpolatingFunctions" -> False the initial state sits at the start of the
    time range: a Rabi flop over [-1, 1] leaves cos^2 2 in |0>. *)
 VerificationTest[
