@@ -1,5 +1,11 @@
 # Inverse-square-root phasing: architectural feasibility
 
+Subsequent result: the selected design has a standalone implementation and has
+passed the full 200,540,928-shot official local verifier with its certified
+coefficients unchanged. Actual cost is 1,043,220.210631. See
+[the implementation and full-verification report](../QUADRATIC.md).
+The comparison below preserves the original feasibility evidence and its scope.
+
 This is a comparison before production implementation. Core WL discovers and
 certifies alternative arithmetic; the official kickmix compiler supplies resource
 counts. Exhaustive integer-model checks and small circuit samples are separate

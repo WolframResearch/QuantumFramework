@@ -4,11 +4,13 @@ The subsequent [WL-backed architectural comparison](feasibility/COMPARISON.md)
 compares better Newton seeds, direct polynomial phasing, and phase propagation.
 Its exact certificates, resource counts, full-domain integer models, and
 independent review records are separate from the verified incumbent below.
-The reviewed choice is direct quadratic phasing on 192 intervals, with a predicted
-inverse-square-root improvement of 1.99 times the supplied baseline. Both fresh
-WL reviews passed; full repeated-shot verification of that new design remains.
+The standalone direct quadratic design on 192 intervals has now passed the full
+200,540,928-shot official local verifier with its certified coefficients unchanged.
+Its measured cost is **1,043,220.21**: **1.990734 times** better than the supplied
+baseline and **1.860854 times** better than the initial Newton incumbent.
+See [the fixed quadratic implementation and full verification](QUADRATIC.md).
 
-This experiment searches the precision parameters of the supplied Newton–Raphson
+The initial experiment searches the precision parameters of the supplied Newton–Raphson
 circuit generator. The competition verifier and generator are imported unchanged
 from the downloaded bundle. QF independently checks small arithmetic and
 measurement/uncomputation fragments. The precision search itself uses Python and
@@ -42,6 +44,14 @@ of the competition title.
 - `verify-qf.wls` checks phases, coherence, Kraus normalization, scratch cleanup,
   little-endian arithmetic, symbolic Newton error, and negative controls.
 - `test_experiment.py` checks contract rejection and model/simulator agreement.
+- `quadratic.py` builds the standalone direct quadratic phase circuit. It loads
+  the fixed, checked-in WL coefficient certificate and rejects any change to its
+  document or coefficient-table hashes. Building requires no competition files.
+- `verify_quadratic.py` rebuilds that circuit and runs the unmodified official
+  verifier on all 200,540,928 shots; it records actual costs and comparison ratios.
+- `test_quadratic.py` checks byte identity with the reviewed feasibility circuit,
+  coefficient integrity, independent model agreement, serialization, and a
+  65,536-shot small-domain verifier run.
 
 The bridge supports small fragments (at most eight qubits), not full benchmark
 simulation or general kickmix import. `HMR` takes explicit outcomes and retains
@@ -81,13 +91,31 @@ export QF_INVSQRT_DATA
 WolframKernel -noinit -noprompt -script verify-qf.wls
 ```
 
+To build and fully verify the fixed quadratic design:
+
+```bash
+python3 quadratic.py
+QF_INVSQRT_DATA=/path/to/extracted/competition python3 -m unittest -v test_quadratic.py
+python3 verify_quadratic.py --data /path/to/extracted/competition --workers 4
+```
+
+The standalone generator uses the existing `feasibility/B-quadratic-192.json`:
+192 intervals, degree two, 36-bit coefficients, and all 20 normalized input
+fraction bits. It does not rerun minimax fitting or change coefficients. Its
+binary is `results/quadratic.kmb` (ignored by Git); the build manifest and full
+verifier result are `results/quadratic.build.json` and
+`results/quadratic-verified.json`. The latter has status `RUNNING`, `FAIL`, or
+`PASS`; only `PASS` establishes completion. Full verification uses the same
+declared local salt as the baseline and initial Newton incumbent.
+
 The WL runner registers existing Arrays, TensorNetworks, IBMQuantumPlatform,
 and ImageMetadataTools installations for that kernel. It does not install or
 silently replace missing dependencies. Fresh-kernel failures remain failures.
 
-## Evidence and limits
+## Initial Newton prototype evidence and limits
 
-Both full-size verifier runs passed with zero failures:
+Both initial full-size verifier runs passed with zero failures. These historical
+results are preserved for comparison with the newer quadratic circuit:
 
 | Quantity | Supplied baseline | Candidate |
 |---|---:|---:|
