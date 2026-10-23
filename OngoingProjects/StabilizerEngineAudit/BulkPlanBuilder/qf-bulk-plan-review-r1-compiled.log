@@ -1,0 +1,96 @@
+=======================================================================
+  QuantumFramework Test Coverage Report
+=======================================================================
+  Date:       Thu 22 Oct 2026 18:51:09
+  Paclet:     /Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework
+  Loaded:     /Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/QuantumFrameworkMain.m
+  Test files: 1 matching "CompiledEvolution"
+PACLET	/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework
+
+  NOTE: an installed Wolfram/QuantumFramework paclet is also visible:
+    /Users/mohammadb/Library/Wolfram/Paclets/Repository/Wolfram__QuantumFramework-2.1.3
+    Nothing has been uninstalled.  PacletDirectoryLoad gives the repo
+    copy priority, so this is usually harmless.  To remove it yourself:
+      PacletUninstall /@ PacletFind["Wolfram/QuantumFramework"]
+
+-----------------------------------------------------------------------
+  Stabilizer/CompiledEvolution.wlt
+-----------------------------------------------------------------------
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n1"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n1"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n1"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n2"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n2"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n2"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n5"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n5"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n5"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n31"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n31"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n31"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n32"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n32"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n32"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n61"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n61"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n61"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n62"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n62"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n62"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n63"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n63"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n63"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n124"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n124"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n124"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ExactScalarAndResident-n125"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SplitCircuitExact-n125"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-Symplectic-n125"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-LargeExactScalar-n1024"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ConstructionValidityMarkerAndMutation"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-NewAssociationDoesNotInheritValidity"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-MalformedGeneratorPackedRejected"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-MalformedChunkPackedRejected"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{\"V\", 1}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{\"V\", 2}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{\"V\", 3}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{\"V\", 4}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{SuperDagger[\"V\"], 1}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{SuperDagger[\"V\"], 2}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{SuperDagger[\"V\"], 3}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-V-CliffordDecomposition-{SuperDagger[\"V\"], 4}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"H\" -> 0"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"H\" -> 4"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"S\" -> -1"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"CNOT\" -> {1, 1}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"SWAP\" -> {2, 2}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-BadWire-\"CZ\" -> {2, 5}"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-EmptyIdentityPreservesObject"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-EncodingCacheCollisionChecksOriginalKey"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ValidatedCircuitPlanReuse"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-PlanCacheKeepsMatrixHonesty"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-PlanCacheKeepsWirePlacement"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-PlanCacheKeepsParameterValues"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-SymbolicSignsRetainFallback"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-InversePreservesResidentRepresentation"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ResidentPropertiesAndMeasurement"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-ResidentStateMaterialization"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingZeroBasedRows"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingLegacyAndControlledForms"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingEmptyAndFallback"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingExactIntegerOverflowBoundary"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingRejectsExtremeWire--9223372036854775808"	Success
+TEST	Stabilizer/CompiledEvolution.wlt	"CE-VectorizedEncodingRejectsExtremeWire-9223372036854775808"	Success
+FILE	Stabilizer/CompiledEvolution.wlt	65	65
+  65/65 succeeded
+
+=======================================================================
+  Summary
+=======================================================================
+  PASS Stabilizer/CompiledEvolution.wlt: 65/65
+
+  Total: 65/65 succeeded (100.0%)
+OUTCOME	Success	65
+TOTAL	65	65
+STATUS	GREEN
+=======================================================================

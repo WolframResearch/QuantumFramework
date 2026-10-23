@@ -1,0 +1,34 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+$ProgressReporting=False;
+current=DownValues[stabilizerCircuitSpecs];
+primitiveInitializer=OwnValues[Wolfram`QuantumFramework`GateMatrix`PackagePrivate`$stabilizerPrimitiveDispatch];
+With[{element=Wolfram`QuantumFramework`GateMatrix`PackagePrivate`stabilizerElementSpecs},before={HoldPattern[stabilizerCircuitSpecs[c_QuantumCircuitOperator]]:>Catenate[element /@ c["Operators"]]}];
+makeSpecs[n_,m_]:=Table[With[{a=Mod[23j,n]+1},Switch[Mod[j,8],0,"H"->a,1,"S"->a,2,SuperDagger["S"]->a,3,"CNOT"->{a,Mod[a,n]+1},4,"CZ"->{Mod[a,n]+1,a},5,"Y"->a,6,"V"->a,7,"SWAP"->{a,Mod[a,n]+1}]],{j,m}];
+qc[s_]:=QuantumCircuitOperator[<|"Elements"->(FromCircuitOperatorShorthand /@ s),"Label"->None|>];
+signature[ps_PauliStabilizer]:=Hash[{ps["Tableau"],ps["Signs"]},"SHA256"];
+signature[_]:=$Failed;
+run[regime_]:=If[StringStartsQ[regime,"Direct"],state["ApplyCircuit",flatSpecs],Nest[circuit,state,8]];
+rows={};
+PauliStabilizer[2]["ApplyCircuit",{"H"->1}];
+stabilizerCircuitSpecs[qc[{"H"->1}]];
+Scan[Function[n,
+ specs=makeSpecs[n,800];flatSpecs=Catenate[ConstantArray[specs,8]];state=PauliStabilizer[n];circuit=qc[specs];circuit["FullInputOrder"];
+ Scan[Function[regime,
+  trials=Catenate@Table[Map[Function[mode,
+    DownValues[stabilizerCircuitSpecs]=If[mode==="Before",before,current];
+    stabilizerClearCaches[];
+    If[MemberQ[{"Warm","DirectWarm"},regime],run[regime]];
+    If[regime==="FirstInitialization"&&mode==="After",OwnValues[Wolfram`QuantumFramework`GateMatrix`PackagePrivate`$stabilizerPrimitiveDispatch]=primitiveInitializer];
+    ClearSystemCache[];
+    Block[{$MessageList={}},With[{t=AbsoluteTiming[run[regime]]},<|"Mode"->mode,"Trial"->trial,"Seconds"->First[t],"Signature"->ToString[signature[Last[t]],InputForm],"Messages"->ToString[$MessageList,InputForm]|>]]
+  ],If[OddQ[trial],{"Before","After"},{"After","Before"}]],{trial,If[StringStartsQ[regime,"Direct"],31,5]}];
+  row=<|"N"->n,"Regime"->regime,"Trials"->trials,"BeforeMedian"->Median[Lookup[Select[trials,#Mode==="Before"&],"Seconds"]],"AfterMedian"->Median[Lookup[Select[trials,#Mode==="After"&],"Seconds"]]|>;
+  rows=Append[rows,row];Echo[KeyDrop[row,"Trials"],"IndependentTiming"];
+  Export["/private/tmp/qf-bulk-plan-review-r2-performance.json",<|"Version"->$Version,"GatesPerCircuit"->800,"RepeatedApplications"->8,"Rows"->rows|>,"RawJSON"];
+ ],{"Cold","Warm","FirstInitialization","DirectCold","DirectWarm"}]
+],{128,1024}];
+DownValues[stabilizerCircuitSpecs]=current;
+Echo[<|"SignaturesAgree"->AllTrue[rows,Length[DeleteDuplicates[Lookup[#Trials,"Signature"]]]===1&],"NoUnexpectedMessages"->AllTrue[Catenate[Lookup[rows,"Trials"]],#Messages==="{}"&],"OutsideMessages"->ToString[$MessageList,InputForm]|>,"Controls"];
+Exit[If[AllTrue[rows,Length[DeleteDuplicates[Lookup[#Trials,"Signature"]]]===1&]&&AllTrue[Catenate[Lookup[rows,"Trials"]],#Messages==="{}"&],0,1]];

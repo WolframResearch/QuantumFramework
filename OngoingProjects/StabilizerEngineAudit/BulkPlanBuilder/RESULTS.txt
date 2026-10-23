@@ -1,0 +1,59 @@
+Bulk stabilizer plan builder — final results
+
+Implementation
+Production changes are confined to QuantumFramework/Kernel/Stabilizer/GateMatrix.m on existing main. Nothing is staged or committed. The builder uses PositionIndex on physical local data, an immutable Dispatch of exact reference matrices, batched Part/Thread/Transpose wire remapping, and SortBy/Catenate to restore circuit order. Labels and absolute wires are excluded from group identity; basis, picture and order permutations are retained. Only exact matching canonical local data uses the primitive lookup; other matrices keep the general classifier. Symbolic/composite token recovery and refusals remain per occurrence.
+
+Correctness
+Fresh final suite: 1667/1667 tests across 16 files; no failures or outside messages. BulkPlanBuilder.wlt adds 56 regressions. The first independent round found an active-constructor evaluation defect in a nested LHS pattern; the revised helper uses the existing QF-style typed object boundary and Part extraction. New execution contracts detect unevaluated fingerprints and skipped primitive lookup. The second fresh round independently checks C/WVM, exact/numeric dense adjoint action through 5 qubits, symbolic signs/phases, malformed/refusal regimes, packed boundaries through 1,024 and 12,000 gates. See ReviewRound1.md and ReviewRound2.md for final verdict/evidence.
+
+Benchmark definition
+Seven alternating Before/After trials per row in one Wolfram 15.0.1 ARM64 C-target kernel, after correctness kernels exited. Before reconstructs the exact baseline flat-operator mapper from commit 89051701; all other production source and the compiled fold are identical. Every timed trial starts with ClearSystemCache[]. Cold clears all six stabilizer engine caches. Warm primes the selected plan first. QF property caches and the loaded runtime are already warm. Ordinary rows exclude native compilation and the one-time immutable primitive-table initialization; FirstPlan rows explicitly restore its delayed initializer before the timed After call. Neither row measures fresh process startup.
+The 10,000-gate public workloads are ten applications of a prebuilt 1,000-gate block. Cold means the first application starts with cold engine caches; the following nine reuse its plan. Random cases repeat a fixed-seed random 1,000-gate block. Direct controls evolve 10,000 gate specifications in one call. Circuit construction, wire-metadata preparation and expanded-tableau/sign hashing are outside evolution timing. These measurements do not establish throughput for a single flat 10,000-operator QCO or ten unrelated one-use circuits. Large QCO construction/FullInputOrder preparation was costly in untimed probes and is outside this production change.
+The matrix-backed general classifier is already cached per distinct gate; the gain comes from removing per-occurrence extraction/classification lookup/remapping work and recognizing verified primitives. This is a bulk plan change, not another circuit cache.
+
+Parent paired results — milliseconds, median[min,max]; speedup = Before median / After median
+Workload | Before | After | Ratio
+PublicCold/n=128/g=1000 | 154.000[152.965,450.604] | 58.289[58.007,60.759] | 2.64x
+PublicWarm/n=128/g=1000 | 0.661[0.652,0.666] | 0.545[0.538,0.580] | 1.21x
+TenPublicCold/n=128/g=10000 | 159.364[158.056,164.379] | 64.254[62.689,66.459] | 2.48x
+TenPublicFirstPlan/n=128/g=10000 | 158.381[157.684,162.575] | 83.795[83.515,84.516] | 1.89x
+TenPublicWarm/n=128/g=10000 | 6.306[6.257,6.465] | 5.173[5.128,5.251] | 1.22x
+DirectCold/n=128/g=10000 | 8.914[8.768,9.641] | 8.877[8.782,9.099] | 1.00x
+DirectWarm/n=128/g=10000 | 2.725[2.713,3.362] | 2.732[2.717,3.168] | 1.00x
+RandomPublicCold/n=128/g=1000 | 180.727[179.982,304.623] | 50.410[49.644,51.140] | 3.59x
+RandomPublicWarm/n=128/g=1000 | 0.697[0.691,0.814] | 0.633[0.625,0.732] | 1.10x
+TenRandomPublicCold/n=128/g=10000 | 184.184[183.357,185.343] | 54.848[53.992,55.512] | 3.36x
+TenRandomPublicWarm/n=128/g=10000 | 6.522[6.468,6.663] | 5.924[5.822,6.446] | 1.10x
+PublicCold/n=1024/g=1000 | 143.184[142.161,179.536] | 42.829[42.186,44.219] | 3.34x
+PublicWarm/n=1024/g=1000 | 2.098[1.343,5.015] | 2.424[1.253,4.558] | 0.87x
+TenPublicCold/n=1024/g=10000 | 156.618[156.286,163.566] | 56.414[54.908,58.469] | 2.78x
+TenPublicFirstPlan/n=1024/g=10000 | 158.254[157.560,159.373] | 80.031[79.065,82.191] | 1.98x
+TenPublicWarm/n=1024/g=10000 | 16.982[15.201,25.351] | 15.101[13.749,27.822] | 1.12x
+DirectCold/n=1024/g=10000 | 11.611[10.325,14.859] | 13.008[11.195,16.944] | 0.89x
+DirectWarm/n=1024/g=10000 | 3.817[3.644,5.899] | 4.443[3.821,6.444] | 0.86x
+RandomPublicCold/n=1024/g=1000 | 181.867[180.486,205.644] | 52.461[51.549,53.049] | 3.47x
+RandomPublicWarm/n=1024/g=1000 | 1.837[1.407,4.571] | 2.253[1.253,10.787] | 0.82x
+TenRandomPublicCold/n=1024/g=10000 | 196.821[194.553,199.901] | 70.962[65.748,76.462] | 2.77x
+TenRandomPublicWarm/n=1024/g=10000 | 19.589[18.041,93.801] | 22.215[15.169,24.293] | 0.88x
+
+All 308 timed outputs have matching before/after tableau-and-sign signatures within each workload, correct PauliStabilizer heads, and no messages. Cold-plan improvements are clear. Some 1,024-qubit warm and unchanged direct-control medians are higher with overlapping ranges; there is no universal warm-speedup claim. Independent timing results and variance checks are appended below.
+
+Reproduce
+Run '/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel' -noinit -script <audit-directory>/RunFullSuite.wls with STABILIZER_AUDIT_PHASE=reproduced to rerun all stabilizer tests. Run PairedBulkPlanBenchmark.wls with STABILIZER_BULK_OUTPUT=<desired-json-path>. Run correctness and timing kernels serially for performance work. The baseline GateMatrix snapshot and manifest bind the comparison to source bytes.
+
+Independent performance reproduction
+Different deterministic recipe: 800 gates per block, eight applications (6,400 gates), five alternating trials per public regime; 31 alternating trials per unchanged direct control. All signatures match and messages are empty. Unrelated background Wolfram kernels were observed using CPU; this was not an idle-machine benchmark. Task timing kernels ran serially, with correctness kernels finished. The paired controls and full ranges limit interpretation of small warm differences.
+Register / regime | Before median[min,max] ms | After median[min,max] ms
+128 / Cold | 130.692[130.300,436.507] | 40.596[40.364,40.796]
+128 / Warm | 4.948[4.690,5.123] | 4.644[4.507,4.813]
+128 / FirstInitialization | 129.400[129.071,130.909] | 61.231[61.181,62.751]
+128 / DirectCold | 6.491[6.307,14.711] | 6.475[6.247,9.847]
+128 / DirectWarm | 2.145[2.071,3.166] | 2.129[2.084,2.590]
+1024 / Cold | 137.906[137.530,138.603] | 48.881[46.704,51.361]
+1024 / Warm | 13.399[10.292,17.869] | 12.169[11.711,33.734]
+1024 / FirstInitialization | 226.817[179.410,300.100] | 152.183[90.122,212.413]
+1024 / DirectCold | 10.578[7.825,35.772] | 10.815[7.322,28.835]
+1024 / DirectWarm | 10.104[3.127,29.144] | 11.734[3.273,32.250]
+1024 DirectWarm paired After/Before median ratio: 1.0233; After faster in 15/31 pairs. Unpaired median shifts do not establish a direct-path regression; Compiled.m and PauliStabilizer.m are byte-identical.
+
+The independent cold-plan speedups are 3.22x at 128 qubits and 2.82x at 1,024 for this recipe. Warm public medians improve modestly; no universal warm gain is claimed. Parent recipe plans contain 2,001 baseline encoded instructions versus 1,290 (128 qubits) or 1,286 (1024) after verified primitive recognition, so a real modest public warm benefit is possible without altering the native fold.

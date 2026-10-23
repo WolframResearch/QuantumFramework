@@ -495,7 +495,80 @@ stabilizerOperatorSpecs[op_QuantumOperator] := With[{in = op["InputOrder"], out 
 (* A circuit's specs for the engine: unitary operators by their matrices, nested *)
 (* circuits element by element, and every other element (a measurement, a channel)*)
 (* by its QuantumShortcut token, which the fold refuses.                         *)
-stabilizerCircuitSpecs[qco_QuantumCircuitOperator] := stabilizerElementSpecs[qco]
+stabilizerCircuitSpecs[qco_QuantumCircuitOperator] := With[{operators = qco["Operators"]},
+    If[MatchQ[operators, {___QuantumOperator}],
+        stabilizerBulkOperatorSpecs[operators],
+        Catenate[stabilizerElementSpecs /@ operators]
+    ]
+]
+
+(* Group by physical local data, not by labels or absolute wire numbers. Read
+   an atomic QuantumBasis at its own dispatch boundary, as its getters do. *)
+stabilizerBasisData[QuantumBasis[data_Association]] := Lookup[data, {"Input", "Output", "Picture"}]
+
+stabilizerOperatorData[operator_QuantumOperator] :=
+    {operator[[1, 1]], stabilizerBasisData[operator[[1, 2]]], Ordering /@ operator[[2]]}
+
+(* Exact reference matrices certify the primitive actions independently of any
+   display labels. Other representations, phases and custom gates retain the
+   general matrix classifier. This immutable table is built once, like the
+   integer encoder's Dispatch table. *)
+$stabilizerPrimitiveDispatch := $stabilizerPrimitiveDispatch = With[{matrices = <|
+    "I" -> IdentityMatrix[2], "H" -> {{1, 1}, {1, -1}} / Sqrt[2],
+    "S" -> DiagonalMatrix[{1, I}], SuperDagger["S"] -> DiagonalMatrix[{1, -I}],
+    "X" -> PauliMatrix[1], "Y" -> PauliMatrix[2], "Z" -> PauliMatrix[3],
+    "V" -> {{1 + I, 1 - I}, {1 - I, 1 + I}} / 2,
+    SuperDagger["V"] -> {{1 - I, 1 + I}, {1 + I, 1 - I}} / 2,
+    "CNOT" -> {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}},
+    "CZ" -> DiagonalMatrix[{1, 1, 1, -1}],
+    "SWAP" -> {{1, 0, 0, 0}, {0, 0, 1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1}}
+|>},
+    Dispatch @ Append[
+        KeyValueMap[Function[{gate, matrix},
+            stabilizerOperatorData[QuantumOperator[matrix]] ->
+                If[gate === "I", {}, {gate -> Range[Log2[Length[matrix]]]}]
+        ], matrices],
+        _ :> $Failed
+    ]
+]
+
+(* A local specification's wire columns are gathered for every occurrence in
+   one Part operation. Thread and Transpose restore the per-occurrence blocks. *)
+stabilizerRemapSpecs[{}, wires_List] := ConstantArray[{}, Length[wires]]
+stabilizerRemapSpecs[specs_List, wires_List] :=
+    Transpose[Thread[First[#] -> wires[[All, Last[#]]]] & /@ specs]
+
+stabilizerOperatorGroupClassification[operator_QuantumOperator, data_, orders_List] :=
+    If[AllTrue[orders, Sort[First[#]] === Sort[Last[#]] &],
+        Replace[Replace[data, $stabilizerPrimitiveDispatch], $Failed :>
+            With[{key = stabilizerGateKey[operator]},
+                Lookup[$stabilizerGateMemo, key,
+                    stabilizerRemember[$stabilizerGateMemo, key, stabilizerOperatorClassification[operator]]]
+            ]],
+        $Failed
+    ]
+
+stabilizerOperatorGroupSpecs[operators_List, data_, positions_List] := With[{
+    local = stabilizerOperatorGroupClassification[First[operators], data, operators[[All, 2]]]
+},
+    MapThread[List, {positions,
+        If[ListQ[local],
+            stabilizerRemapSpecs[local, Sort /@ operators[[All, 2, 2]]],
+            (* Symbolic/composite token recovery and refusal details may
+               depend on each occurrence's label and absolute wires. *)
+            stabilizerOperatorSpecs /@ operators
+        ]
+    }]
+]
+
+stabilizerBulkOperatorSpecs[{}] := {}
+stabilizerBulkOperatorSpecs[operators_List] := With[{data = stabilizerOperatorData /@ operators},
+    Catenate[Last /@ SortBy[
+        Catenate[stabilizerOperatorGroupSpecs[operators[[#]], data[[First[#]]], #] & /@
+            Values[PositionIndex[data]]],
+        First
+    ]]
+]
 
 (* Preserve matrix-based classification on the first pass. The complete circuit
    expression, including basis, wires, labels and parameters, verifies a cache hit.
@@ -512,7 +585,7 @@ stabilizerExecutionPlan[qco_QuantumCircuitOperator] := With[{key = Hash[qco]},
     ]
 ]
 
-stabilizerElementSpecs[qco_QuantumCircuitOperator] := Catenate[stabilizerElementSpecs /@ qco["Operators"]]
+stabilizerElementSpecs[qco_QuantumCircuitOperator] := stabilizerCircuitSpecs[qco]
 stabilizerElementSpecs[op_QuantumOperator] := stabilizerOperatorSpecs[op]
 stabilizerElementSpecs[other_] := QuantumShortcut[other]
 

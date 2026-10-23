@@ -1,0 +1,73 @@
+{
+  "BaseCommit": "890517010618b3a2bb018d90758c3d96df3ed4c2",
+  "FinalHead": "890517010618b3a2bb018d90758c3d96df3ed4c2",
+  "Branch": "main",
+  "CommitsCreated": 0,
+  "StagedPaths": [],
+  "ProductionFilesChanged": [
+    "QuantumFramework/Kernel/Stabilizer/GateMatrix.m"
+  ],
+  "NewTestFile": "Tests/Stabilizer/BulkPlanBuilder.wlt",
+  "FinalStabilizerSHA256": {
+    "QuantumFramework/Kernel/Stabilizer/CliffordChannel.m": "77edcd143b1b66b999d6dfe25fee40b8792f909149a8e075babdabcfa2f2a891",
+    "QuantumFramework/Kernel/Stabilizer/Compiled.m": "c5f4e17678b953788e0aa03f195f9642582ea10c8512d4ae80a8ab098144b3da",
+    "QuantumFramework/Kernel/Stabilizer/Compose.m": "d38923ac4f779b7df02a6128799ab0205368c6246a157ef9f11f608bd5cc5038",
+    "QuantumFramework/Kernel/Stabilizer/Constructors.m": "01cc34ab577a757afcf5610e0cfdb7423b46622f1ed2fd3a0d7c461da8a99f18",
+    "QuantumFramework/Kernel/Stabilizer/Conversions.m": "fe9252502ad4462496ce3cdafaaa4b8e0882cd31b272f72d1e779b4022886c87",
+    "QuantumFramework/Kernel/Stabilizer/Entropy.m": "2b108f6bb347c7cd7be0a1e50b5ad462c1be9d76db069da8c59ec24eed4c23a4",
+    "QuantumFramework/Kernel/Stabilizer/Formatting.m": "48afc7a7daa230f167387991570a1e41aea990cc4b7fd01849da7b4e1ed616a6",
+    "QuantumFramework/Kernel/Stabilizer/GateMatrix.m": "e63d64ef3487badac05f03c99838f18d21572ea4e48e318cb8632cd2efc863d2",
+    "QuantumFramework/Kernel/Stabilizer/GateUpdates.m": "ccee1abd250dbcefb86e047bd592aac80efbd099a0804d843e6c0ee339556f6b",
+    "QuantumFramework/Kernel/Stabilizer/GraphState.m": "df4b821c7a28bd5d4a8cef2bc72764071c005d5e9914590cc8fd4cb65258b920",
+    "QuantumFramework/Kernel/Stabilizer/HybridInterop.m": "46544df4a19bc42696ac47f774323f672b1891395d7b49aaeb5537387d8fc804",
+    "QuantumFramework/Kernel/Stabilizer/InnerProduct.m": "00f07d4895923db3ed57e024ff871f0686d7dc20eb26d30b6f3da0e080633be4",
+    "QuantumFramework/Kernel/Stabilizer/Measurement.m": "2cca45459fa00f6ae035ad0c42e064b5913d81d21154b1d23c7c6d4cb7db6b00",
+    "QuantumFramework/Kernel/Stabilizer/NamedCodes.m": "af5e0e478ce0dfe5be2636df2c608d1708687ad6b84a076c95075b77c5a3ac32",
+    "QuantumFramework/Kernel/Stabilizer/Packed.m": "c65e9a219fc5f685c503068481da53ee4402283ca588f0d43dcebedb9157d1dd",
+    "QuantumFramework/Kernel/Stabilizer/PauliMeasure.m": "fc20a10a72ff5b956b2edeabfb0eb12d790e9fd686a3270f7b7cffbc4818ca2e",
+    "QuantumFramework/Kernel/Stabilizer/PauliStabilizer.m": "36e15a279123848412c3e3250785fe6a0a2f9ee2a082079743c97017743dc334",
+    "QuantumFramework/Kernel/Stabilizer/PhasePolynomial.m": "6e0a6c67c37f02d9b9a1b658509600142e84a29fb5a35fa87a9c1960624bbe8a",
+    "QuantumFramework/Kernel/Stabilizer/Properties.m": "e29e373ec76bfd1161af2f9745b11055bd1a67855a3e4febfbb4ffaccac07887",
+    "QuantumFramework/Kernel/Stabilizer/RandomClifford.m": "b2bcb6afe03aa0fae251b004216bac77d4e345235d693bb7f44af4289e84b60c",
+    "QuantumFramework/Kernel/Stabilizer/StabilizerFrame.m": "fd87fc76da52dee37968cf081bf4cd3b6029901bbc7c8fef6f23cac064f7cacd",
+    "QuantumFramework/Kernel/Stabilizer/SymbolicMeasure.m": "440bec3c0fdba05a2509f84c741d94f3869a62ee1e73767eb1ecd12bf4405920"
+  },
+  "NewTestSHA256": "2749a6093f54bf6338c1f20b90ece00c0b2468b1f0c3419a5ff7846491210a4d",
+  "Tests": {
+    "Count": 1667,
+    "Files": 16,
+    "Failures": 0,
+    "OutsideMessages": "{}",
+    "NewTests": 56
+  },
+  "IndependentReviews": [
+    {
+      "Round": 1,
+      "OpenIssues": 1
+    },
+    {
+      "Round": 2,
+      "OpenIssues": 0,
+      "CNewTests": 56,
+      "WVMNewTests": 56,
+      "QualityAxes": "A-G PASS"
+    }
+  ],
+  "ParentBenchmark": {
+    "Rows": 22,
+    "Trials": 308,
+    "Target": "C",
+    "OutsideMessages": "{}"
+  },
+  "IndependentBenchmark": {
+    "Rows": 10,
+    "Trials": 308,
+    "DirectTrialsPerMode": 31
+  },
+  "Limits": [
+    "Public long workloads reuse a prebuilt block; single flat10000-operator circuit construction is not measured.",
+    "Cold engine caches in a warm runtime; separate first primitive-initialization rows.",
+    "Background Wolfram computations were observed; report ranges and paired controls.",
+    "No universal warm-speedup claim."
+  ]
+}
