@@ -183,9 +183,8 @@ hafnian[a_ /; OddQ[Length[a]]] := 0
 hafnian[a_] := Which[
     Length[a] <= 8 || Precision[a] === Infinity, hafnianPairing[a],
     Precision[a] === MachinePrecision, With[{m = Length[a] / 2},
-        With[{e = Round[Subdivide[0, 2 ^ m - 1, Min[2 ^ m - 1, 64]]]},
-            Total[hafnianTraceTerms[N[a[[All, Join[Range[m + 1, 2 m], Range[m]]]]], Most[e] + 1, Rest[e]]]
-        ]
+        {e = Round[Subdivide[0, 2 ^ m - 1, Min[2 ^ m - 1, 64]]]},
+        Total[hafnianTraceTerms[N[a[[All, Join[Range[m + 1, 2 m], Range[m]]]]], Most[e] + 1, Rest[e]]]
     ],
     True, hafnianTrace[a]
 ]
@@ -197,9 +196,8 @@ hafnianPairing[a_] := Sum[a[[1, j]] hafnianPairing[a[[#, #]] &[Complement[Range[
 (* Bjorklund, Gupt and Quesada, arXiv:1805.12498: Haf(A) = Sum_Z (-1)^(n/2 - |Z|) f((A X)_Z), f(C) the
    eta^(n/2) coefficient of Exp[Sum_k Tr[C^k] eta^k / (2 k)] *)
 hafnianTrace[a_] := With[{m = Length[a] / 2},
-    With[{b = a[[All, Join[Range[m + 1, 2 m], Range[m]]]]},
-        Total[(-1) ^ (m - Length[#]) traceCoefficient[b[[Join[#, # + m], Join[#, # + m]]], m] & /@ Subsets[Range[m]]]
-    ]
+    {b = a[[All, Join[Range[m + 1, 2 m], Range[m]]]]},
+    Total[(-1) ^ (m - Length[#]) traceCoefficient[b[[Join[#, # + m], Join[#, # + m]]], m] & /@ Subsets[Range[m]]]
 ]
 
 traceCoefficient[{}, _] := 0
@@ -354,10 +352,9 @@ meshItems[items_, m_, simp_] := Module[{phases = ConstantArray[0, m], reaped},
 SetAttributes[placeStep, HoldFirst]
 
 placeStep[last_, {"BS", t_, f_, {p_, q_}}] := With[{span = Range[Min[p, q], Max[p, q]]},
-    With[{k = 1 + Floor[Max[last[[span]]]]},
-        last[[span]] = k;
-        Sow[{"BS"[t, f] -> {p, q}, k}]
-    ]
+    {k = 1 + Floor[Max[last[[span]]]]},
+    last[[span]] = k;
+    Sow[{"BS"[t, f] -> {p, q}, k}]
 ]
 
 placeStep[last_, {kind : "PS" | "S", a_, p_}] := With[{x = Floor[last[[p]] + 1/2] + 1/2},
@@ -377,19 +374,16 @@ alignTrailingPhases[placed_, m_] := With[{
     ],
     end = Max[0, Cases[placed, {"BS"[__] -> _, x_} :> x]] + 1/2
 },
-    With[{trailing = Cases[MapIndexed[{First[#2], #1} &, placed], {i_, {"PS"[_] -> {p_}, x_}} /; IntegerQ[x - 1/2] && i > lastSplitter[[p]] :> {i, p, x}]},
-        With[{first = GroupBy[trailing, #[[2]] & -> Last, Min]},
-            ReplacePart[placed, {#1, 2} -> end + #3 - first[#2] & @@@ trailing]
-        ]
-    ]
+    {trailing = Cases[MapIndexed[{First[#2], #1} &, placed], {i_, {"PS"[_] -> {p_}, x_}} /; IntegerQ[x - 1/2] && i > lastSplitter[[p]] :> {i, p, x}]},
+    {first = GroupBy[trailing, #[[2]] & -> Last, Min]},
+    ReplacePart[placed, {#1, 2} -> end + #3 - first[#2] & @@@ trailing]
 ]
 
 layoutItems[items_List, m_Integer, drop_, tol_] := Module[{last = ConstantArray[0, m], reaped},
     reaped = Reap[Scan[placeStep[last, #] &, items]];
     With[{placed = alignTrailingPhases[If[reaped[[2]] === {}, {}, Catenate[reaped[[2]]]], m]},
-        With[{kept = If[TrueQ[drop], DeleteCases[placed, {gate_, _} /; identityGateQ[gate, tol]], placed]},
-            If[kept === {}, {{}, {}}, Transpose[kept]]
-        ]
+        {kept = If[TrueQ[drop], DeleteCases[placed, {gate_, _} /; identityGateQ[gate, tol]], placed]},
+        If[kept === {}, {{}, {}}, Transpose[kept]]
     ]
 ]
 
@@ -412,9 +406,8 @@ QuantumInterferometer[w_ ? SquareMatrixQ, opts : OptionsPattern[]] := With[{
         ConfirmAssert[MemberQ[{"Clements", "Reck", "CosineSine"}, method], Message[QuantumInterferometer::method, method]];
         ConfirmAssert[unitaryQ[w, tol], Message[QuantumInterferometer::nonunitary, tol]];
         With[{simp = If[Precision[w] === Infinity, RootReduce, Identity], asimp = If[Precision[w] === Infinity, Simplify, Identity]},
-            With[{layout = layoutItems[meshItems[decompositionItems[method, w, tol, simp, asimp], m, asimp], m, OptionValue["DropIdentities"], tol]},
-                QuantumInterferometer[<|"Unitary" -> w, "Modes" -> m, "Method" -> method, "Elements" -> layout[[1]], "Layers" -> layout[[2]]|>]
-            ]
+            {layout = layoutItems[meshItems[decompositionItems[method, w, tol, simp, asimp], m, asimp], m, OptionValue["DropIdentities"], tol]},
+            QuantumInterferometer[<|"Unitary" -> w, "Modes" -> m, "Method" -> method, "Elements" -> layout[[1]], "Layers" -> layout[[2]]|>]
         ],
         $Failed &
     ]
@@ -433,9 +426,8 @@ normalizeElement[element_] := (Message[QuantumInterferometer::elem, element]; $F
 
 QuantumInterferometer[elements : {___Rule}, m_Integer ? Positive, opts : OptionsPattern[]] := Enclose[
     With[{items = ConfirmBy[normalizeElement /@ elements, FreeQ[$Failed]]},
-        With[{top = Max[0, Flatten[items[[All, -1]]]]},
-            ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]]
-        ];
+        {top = Max[0, Flatten[items[[All, -1]]]]},
+        ConfirmAssert[top <= m, Message[QuantumInterferometer::modes, top, m]];
         elementsInterferometer[##, m, None] & @@ layoutItems[items, m, OptionValue["DropIdentities"], OptionValue[Tolerance]]
     ],
     $Failed &
@@ -620,9 +612,8 @@ photonPatterns[n_, m_] := ReverseSort @ FrobeniusSolve[ConstantArray[1, m], n]
    <T| U |S> = Perm(W_{T,S}) / Sqrt[Prod s! Prod t!]; Ryser over the multiplicities x <= s, Prod (s + 1) terms of
    Sum_x (-1)^(N - |x|) Prod Binomial[s, x] Prod_j (W_j . x)^t_j, run N digits above the input since they cancel *)
 repeatedPermanent[w_, s_, t_] := With[{rows = Flatten @ Position[t, _ ? Positive]},
-    With[{v = w[[rows]], powers = t[[rows]]},
-        Total[Times @@ Binomial[s, #] (-1) ^ (Total[s] - Total[#]) Times @@ ((v . #) ^ powers) & /@ Tuples[Range[0, #] & /@ s]]
-    ]
+    {v = w[[rows]], powers = t[[rows]]},
+    Total[Times @@ Binomial[s, #] (-1) ^ (Total[s] - Total[#]) Times @@ ((v . #) ^ powers) & /@ Tuples[Range[0, #] & /@ s]]
 ]
 
 (* Calibrated on WL 15.0 ARM: K is the smaller grouped term count, and cols/rows are
@@ -634,27 +625,24 @@ repeatedPermanent[w_, s_, t_] := With[{rows = Flatten @ Position[t, _ ? Positive
 repeatedPermanentPlan[w_, s_, t_] := With[{p = Precision[w]},
     If[p === Infinity, False,
         With[{n = Total[s], a = Times @@ (s + 1), b = Times @@ (t + 1)},
-            With[{k = Min[a, b]},
-                If[k < 2 ^ n,
-                    With[{rows = Pick[Range[Length[t]], Unitize[t], 1], cols = Pick[Range[Length[s]], Unitize[s], 1]},
-                        With[{c = If[a <= b, Length[cols], Length[rows]], r = If[a <= b, Length[rows], Length[cols]]},
-                            With[{cost = c r + k c (r + 1), budget = n 2 ^ n},
-                                Module[{block},
-                                    (* The packing probe and evaluator share this lazy extraction. *)
-                                    block := block = w[[rows, cols]];
-                                    If[p =!= MachinePrecision || cost < budget + 256 && (
-                                        48 cost < budget + 4096 ||
-                                        ! Developer`PackedArrayQ[w] && ! Developer`PackedArrayQ[Developer`ToPackedArray[block]]
-                                    ),
-                                        {p, block, s[[cols]], t[[rows]], a <= b},
-                                        False
-                                    ]
-                                ]
-                            ]
+            {k = Min[a, b]},
+            If[k < 2 ^ n,
+                With[{rows = Pick[Range[Length[t]], Unitize[t], 1], cols = Pick[Range[Length[s]], Unitize[s], 1]},
+                    {c = If[a <= b, Length[cols], Length[rows]], r = If[a <= b, Length[rows], Length[cols]]},
+                    {cost = c r + k c (r + 1), budget = n 2 ^ n},
+                    Module[{block},
+                        (* The packing probe and evaluator share this lazy extraction. *)
+                        block := block = w[[rows, cols]];
+                        If[p =!= MachinePrecision || cost < budget + 256 && (
+                            48 cost < budget + 4096 ||
+                            ! Developer`PackedArrayQ[w] && ! Developer`PackedArrayQ[Developer`ToPackedArray[block]]
+                        ),
+                            {p, block, s[[cols]], t[[rows]], a <= b},
+                            False
                         ]
-                    ],
-                    False
-                ]
+                    ]
+                ],
+                False
             ]
         ]
     ]
@@ -798,10 +786,9 @@ autoShells[g_, s_, start_] := With[{
         N[Total[Abs[Values[#[[2]]]] ^ 2]] < 1 - 10^-4 && #[[1]] < 16 &
     ]
 },
-    With[{held = N[Total[Abs[Values[shells[[2]]]] ^ 2]]},
-        If[held < 1 - 10^-4, Message[QuantumInterferometer::autocutoff, shells[[1]], held]];
-        shells[[2]]
-    ]
+    {held = N[Total[Abs[Values[shells[[2]]]] ^ 2]]},
+    If[held < 1 - 10^-4, Message[QuantumInterferometer::autocutoff, shells[[1]], held]];
+    shells[[2]]
 ]
 
 (qi_QuantumInterferometer ? QuantumInterferometerQ)[s : _List | Ket[_List] | _QuditName, opts : OptionsPattern[{"Cutoff" -> Automatic}]] /;
@@ -845,16 +832,15 @@ photonSectorState[w_, components_, d_, m_] := With[{
     Enclose[
         ConfirmAssert[Length[dims] == m && Equal @@ dims, Message[QuantumInterferometer::state, m]];
         With[{d = First[dims], components = If[passiveQ[qi] && qs["StateType"] === "Vector", fockComponents[qs, First[dims], m], None]},
-            With[{photons = If[ components === None,
+            {photons = If[ components === None,
                 Max[0, Total[IntegerDigits[# - 1, d, m]] & /@
                     Flatten @ Position[Normal[qs["ProbabilitiesList"]], p_ /; ! PossibleZeroQ[p], {1}, Heads -> False]],
                 Max[0, Total /@ components[[All, 1]]]
             ]},
-                If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
-                If[ components === None,
-                    qi["CircuitOperator", d][qs],
-                    photonSectorState[qi["Unitary"], components, d, m]
-                ]
+            If[photons >= d, Message[QuantumInterferometer::truncation, photons, d, photons + 1]];
+            If[ components === None,
+                qi["CircuitOperator", d][qs],
+                photonSectorState[qi["Unitary"], components, d, m]
             ]
         ],
         $Failed &
@@ -940,22 +926,21 @@ interferometerDiagram[qi_, opts : OptionsPattern[{interferometerDiagram, Graphic
     m = qi["Modes"], placed = Transpose[{qi["Elements"], qi["Layers"]}],
     labelQ = TrueQ[OptionValue["ShowParameters"]], x0 = 0.25, x1 = Max[0, qi["Layers"]] + 0.75
 },
-    With[{splitters = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :> {x, Min[p, q], Max[p, q], t, f}]},
-        Graphics[
-            {
-                {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, splitters, {x0, x1}]], {p, m}]},
-                beamSplitterPrimitive[#, labelQ] & /@ splitters,
-                phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
-                squeezerPrimitive[#, labelQ] & /@ Cases[placed, {"S"[xi_] -> {p_}, x_} :> {x, p, xi}],
-                If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
-                    Table[Text[Style[p, 10, GrayLevel[0.4]], {x0 - 0.1, - p}, {1, 0}], {p, m}],
-                    Nothing
-                ]
-            },
-            FilterRules[{opts}, Options[Graphics]],
-            PlotRange -> {{x0 - 0.45, x1 + 0.1}, {- m - 0.5, - 0.4}},
-            ImageSize -> Clip[If[labelQ, 75, 40] (x1 - x0 + 0.55), {120, If[labelQ, 1200, 800]}]
-        ]
+    {splitters = Cases[placed, {"BS"[t_, f_] -> {p_, q_}, x_} :> {x, Min[p, q], Max[p, q], t, f}]},
+    Graphics[
+        {
+            {GrayLevel[0.35], AbsoluteThickness[1.5], Table[Line[{{#1, - p}, {#2, - p}} & @@@ wireSegments[p, splitters, {x0, x1}]], {p, m}]},
+            beamSplitterPrimitive[#, labelQ] & /@ splitters,
+            phasePrimitive[#, labelQ] & /@ Cases[placed, {"PS"[a_] -> {p_}, x_} :> {x, p, a}],
+            squeezerPrimitive[#, labelQ] & /@ Cases[placed, {"S"[xi_] -> {p_}, x_} :> {x, p, xi}],
+            If[ Replace[OptionValue["ModeLabels"], Automatic -> m <= 30],
+                Table[Text[Style[p, 10, GrayLevel[0.4]], {x0 - 0.1, - p}, {1, 0}], {p, m}],
+                Nothing
+            ]
+        },
+        FilterRules[{opts}, Options[Graphics]],
+        PlotRange -> {{x0 - 0.45, x1 + 0.1}, {- m - 0.5, - 0.4}},
+        ImageSize -> Clip[If[labelQ, 75, 40] (x1 - x0 + 0.55), {120, If[labelQ, 1200, 800]}]
     ]
 ]
 
