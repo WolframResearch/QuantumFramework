@@ -1,0 +1,143 @@
+# ROUND: 3/3 — independent stabilizer correctness and WL quality review
+
+## VERDICT
+
+PASS for the changed stabilizer implementation and its required QuantumFramework integration boundaries. No unresolved correctness or WL architecture defect was reproduced. The existing Tableau-without-Signs constructor normalizes its input to a coherent canonical object; explicit tests distinguish that normalization from rejection of inconsistent stored objects. The optimized millisecond-scale Clifford performance is preserved, with no claim of a uniform speedup.
+
+Review location: `/Users/mohammadb/Documents/GitHub/QuantumFramework`, existing `main`, HEAD `708dc533489f0b7d7a0f92b412c380ce137ff25d`. No target file, branch, index, commit, or unrelated user change was modified. Reviewer scripts, logs, results, and this report are under `/private/tmp`.
+
+Authority: current implementation and live kernel. The audit anchor in `audit/last-synced.md` is older (`f77a6640`), so old audit line numbers were not used to establish present behavior. Applicable parent/repository locations and source/test subdirectories contained no AGENTS.md. Read the qf, wl-native-style, wl-style-guide, wl-verify, wl-quality skills, error-handling references and full critic mandate. Inspected the complete seven changed modules, original HEAD deltas, the remaining stabilizer executable definitions, and directly required State/Operator/Circuit/Basis/Compose/measurement/frame conventions. This is acceptance of the changed implementation and its integration boundaries, not a certification of every unchanged stabilizer feature.
+
+Source SHA-256 manifest: `/private/tmp/stabilizer-r3-source-sha256.json`.
+
+## REPRODUCED
+
+### Commands, kernel and evidence
+
+Real kernel command, with separate process launches and no Quiet or message suppression:
+
+```
+R3_TARGET=C '/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel' -noinit -script /private/tmp/stabilizer-r3-independent.wls
+R3_TARGET=WVM '/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel' -noinit -script /private/tmp/stabilizer-r3-independent.wls
+'/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel' -noinit -script /private/tmp/stabilizer-r3-supplement.wls
+```
+
+WL `15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)`. `FindFile` resolved the requested main checkout's `QuantumFrameworkMain.m`. Public `PauliStabilizer` and PackageScope `encodeStabilizerGates` resolved to their actual framework contexts. `Options[PauliStabilizerApply]` returned `{"Compress" -> None}`. Both compile targets produced a `CompiledFunction`; a known-safe one-qubit native call returned shape `{3,1}` and encoded V rows were packed integer arrays.
+
+Evidence:
+
+- `/private/tmp/stabilizer-r3-independent-C.log` and `-C.json`.
+- `/private/tmp/stabilizer-r3-independent-WVM.log` and `-WVM.json`.
+- `/private/tmp/stabilizer-r3-supplement.log` and `.json`.
+- `/private/tmp/stabilizer-r3-independent.wls` and `/private/tmp/stabilizer-r3-supplement.wls`.
+
+The temporary driver initially needed a bracket repair before any assertions ran. Its first C `PlanCache` diagnostic also referenced an accidentally created Global cache symbol. That False is not a source finding: explicit private-context injection in the supplemental C run returned True, as did the corrected WVM run and the repository's collision test. These corrections are preserved in the evidence rather than interpreting the first diagnostic as a product defect.
+
+### Claim ledger
+
+1. **Immutable QF-style validity, canonical/chunk/generator storage:** reproduced. Normal accepted objects acquire `HoldValidQ`; modifying signs or metadata removes effective validity. New malformed associations do not inherit the source object's validity. All storage forms agree on Signs, Tableau, Matrix, TableauPhase, Stabilizers, Destabilizers, Qubits/Qudits/GeneratorCount at tested sizes. External mixed storage, missing companions, wrong dimensions/sign lengths, negative/oversized words and excessive final-word bits are rejected before intercepted native entry.
+2. **Optional metadata consistency on stored objects:** reproduced by all three layouts and conflicting Qubits, Qudits, GeneratorCount, with coherent metadata also accepted. The legacy missing-Signs shorthand is a normalization route, separately documented below.
+3. **Scalar and bulk wire contracts:** reproduced by ExecutionContracts and CompiledEvolution: lower and upper bounds, machine-integer extremes, exact-integer overflow boundaries, and distinct two-wire requirements. Invalid inputs were intercepted with tagged Throw/counters when relevant, never passed to native code speculatively. Empty gate list is the identity.
+4. **Exact Clifford forward/inverse signs and images:** independently enumerated all 24 one-qubit Clifford actions using exact dense H/S matrices, keyed by their three conjugated Paulis. All forward and inverse generator images match independent dense conjugation in canonical, chunk and resident layouts. Twelve additional entangling cases (four each at n=2,3,4, 37 gates including an explicit H/CNOT prefix) match exact dense forward/inverse conjugation and exact unitarity.
+5. **V and V-dagger physical action:** reproduced by explicit exact square-root-X matrices, scalar images, compiled expansions, inverse references and live `QuantumOperator["V"]["Matrix"]`. V maps Z to -Y, V-dagger maps Z to Y; no frame is required for Clifford V.
+6. **Symbolic binary signs:** all 64 assignments of six symbolic phase bits on a nontrivial three-qubit tableau reproduce concrete forward evolution and inverse results, for both C/WVM public calls (symbolic objects deliberately use the canonical fallback). The 330 inverse tests additionally include all 16 symbolic assignments on two qubits.
+7. **Measurement and frame fallback:** sampled symbolic outcomes remain concrete valid objects. Supplemental exact calculations verify GHZ Z-measurement branch normalization and projectors, and a symbolic real-angle P/H/V frame has unit norm and the exact expected density matrix. This tests relative phases rather than only the result head.
+8. **Circuit/encoding cache identity, collisions, lifetime:** reproduced against retained full expressions, explicit wrong-bucket injection, 40-key insertion/eviction, clearing, and recomputation. Matrix/label honesty, changed wire placement, and parameter-value changes are covered by live selected tests; a changed non-computational basis is independently refused with the expected message after warming a computational H circuit.
+9. **Exact integer-word arithmetic:** word boundaries n={1,2,30,31,32,61,62,63,123,124,125,1024} agree with scalar execution and all three properties. Repository tests additionally check symplectic invariants and 1,000-gate n=1024 scalar agreement. The arithmetic uses exact binary operations on bounded nonnegative 62-bit words, not approximate physics.
+10. **Performance preservation:** reproduced in serialized fresh kernels against the frozen pre-style optimized source, five ClearSystemCache trials per case, excluding startup, compilation and input/circuit construction. Full output digests match across snapshots and all 50 timed evaluations have empty message lists; details below.
+
+### Established tests
+
+Independently executed TestReport in both C and WVM:
+
+| Test file | C | WVM |
+|---|---:|---:|
+| ExecutionContracts.wlt | 84 success | 84 success |
+| CompiledEvolution.wlt | 65 success | 65 success |
+| InversePhase.wlt | 330 success | 330 success |
+
+No failures; both independent full driver message lists were `{}`. This is 958 successful independent repository test evaluations, plus the separately constructed dense/symbolic/storage/cache probes. The parent separately reported 1611/1611 across all 15 stabilizer files; that wider result is supporting parent evidence, not represented here as my independent execution.
+
+### Serialized performance control
+
+Commands use the same temporary driver with `R3_REPO=/private/tmp/qf-stabilizer-pre-style-review R3_PHASE=prestyle`, then `R3_REPO=/Users/mohammadb/Documents/GitHub/QuantumFramework R3_PHASE=current`. The prior correctness kernels had all exited; no other audit kernel ran during these measurements. Gates and circuit objects, the resident input registers, and native compilation were prepared outside timing. Each trial called `ClearSystemCache[]`. Cold cases included stabilizer cache clearing; warm cases warmed their own callable. Hashing/materializing the returned Tableau occurred after the timed expression.
+
+| Case | Pre-style median ms (range) | Current median ms (range) |
+|---|---:|---:|
+| Cold encoding, 128 qubits, 10,000 gates | 8.862 (8.765–9.145) | 9.185 (8.839–9.925) |
+| Warm direct, 1024 qubits, 10,000 gates | 3.742 (3.580–3.957) | 3.807 (3.453–4.280) |
+| Ten public calls, 1024 qubits, 1,000 gates/call | 15.155 (13.326–18.587) | 15.918 (14.527–17.757) |
+| One V among 10,001 gates, 128 qubits | 2.745 (2.719–3.111) | 3.003 (2.969–3.081) |
+| Cold encoding, 1024 qubits, 10,000 gates | 10.126 (9.668–10.453) | 10.492 (10.157–13.278) |
+
+These measurements support preservation of the optimized millisecond scale. Current medians are modestly higher in this particular run; the claimed preservation should not be rewritten as a uniform speedup. This control compares the optimized pre-style snapshot to the current style revision. The much older pre-optimization snapshot is not needed to establish preservation of that optimized baseline and was not substituted for it.
+
+Every case has a stable identical pre/current SHA-256 of `{Signs, Normal[Tableau]}`; all 50 per-trial message lists and both final message lists are `{}`. Raw times and digests:
+
+- `/private/tmp/stabilizer-r3-benchmark-prestyle.json` and `.log`.
+- `/private/tmp/stabilizer-r3-benchmark-current.json` and `.log`.
+- `/private/tmp/stabilizer-r3-benchmark.wls`.
+
+## FINDINGS
+
+No unresolved findings in the acceptance scope. All A–G axes pass with the evidence below.
+
+### A. Documented symbols / API — PASS
+
+Current QF definitions establish signatures and shapes, rather than stale usage text: PauliStabilizer.m:65–98 establishes validation; Compiled.m:178–236 establishes accepted spec encoding and zero-based rows; Properties.m:9–43 establishes dimensions/tableau/matrix shapes. Live contexts, Options and safe compiled result shape were reproduced above. The private HoldValid/HoldSetValid idiom exactly parallels QuantumState.m:20–31, QuantumOperator.m:48–59 and QuantumCircuitOperator.m:22–32. Runtime integer dimensions and both compile targets were exercised. No unsupported new signature or inferred return shape was found.
+
+### B. Idiomatic functional WL / architecture — PASS
+
+Ownership is coherent: Packed.m:130–185 owns lazy representation views, generator packing, trusted construction and sparse identity-word construction; Compiled.m owns bulk execution/encoding; GateUpdates.m:24–41 owns shared scalar validation/dispatch; PauliStabilizer.m owns object schema and immutable validity; Properties.m owns external properties; GateMatrix.m:503–513 owns circuit planning. Cross-file helpers are explicitly PackageScope; file-private gate helpers stay within their owner file.
+
+The new vectorized encoder uses Replace/Dispatch, Catenate, Transpose and packed arrays. Packed integer construction uses SparseArray followed by Normal/ToPackedArray because native buffers are dense word matrices, not dense Hilbert-space operators. Exact array operations remain the reference/fallback; the packed compiled loop is appropriate for a finite sequential gate state machine. Its Do/Which and Part mutation occur inside Compile (Compiled.m:123–154), where the style guide explicitly permits procedural native code. The pre-existing greedy rank/decomposition sweeps are sequential algorithms rather than list-building loops requiring gratuitous conversion. No new AppendTo/For/While scaffold or per-element external validation in the hot loop was introduced.
+
+The two plan caches need explicit association lifetime control and full-expression collision checks; plain unbounded memoization would lose those requirements. Both use the shared bounded cache writer (GateMatrix.m:436–437), rather than separate ad hoc eviction rules.
+
+### C. Terse physics reasoning — PASS
+
+The code names the actual objects: generator X/Z words, signs/phase, valid word masks, gate controls/targets and inverse matrix. The inverse rule (GateUpdates.m:155–182) obtains the zero-sign binary inverse, composes once to find the residual phase, then uses that residual to cancel the forward phase. The exact dense image probes confirm the interpretation, including Pauli signs. V and V-dagger use the same H/S/H decomposition in scalar and bulk paths, eliminating separate unexplained sign tables. The representation and validation additions are localized to their owning modules rather than introducing a second simulator framework.
+
+### D. Physics invariants — PASS
+
+Exact unitarity and all 2n generator conjugation relations were checked for all 24 one-qubit actions and entangling n=2–4 cases, including inverse conjugation. Repository tests independently check both composition orders, involution, all 64 sign choices for the regression matrix, and mod-2 symplectic identities. Exact GHZ measurement branches have norm one and the expected projectors; the symbolic P/H/V frame has exact unit normalization and density matrix. Tableau dimensions and generator ordering agree in all three storage layouts. No unchecked continuum approximation or Hamiltonian invariant is needed for exact Clifford arithmetic.
+
+### E. Nontrivial examples — PASS
+
+The base case is a single gate on one qubit; acceptance goes substantially beyond it. Entangling n=2,3,4 dense references, GHZ measurement correlations, non-Clifford symbolic phase frames, long random/structured gate strings, and n=1024 packed storage expose noncommutation, entanglement, relative phases, register scaling and integer-word boundaries. One-qubit enumeration is a closed special-case check, not the endpoint.
+
+### F. Symbolic-first derivations — PASS
+
+Native arithmetic is exact finite Boolean/symplectic arithmetic; integers such as the word width 62 specify a machine representation and do not replace a physical parameter. The six-variable phase test exhausts all Boolean assignments, while the P/H/V supplemental calculation retains a real symbolic angle through the exact density/normalization comparison. The independent dense matrices use exact integers, rationals, I, Sqrt[2], and Exp[I angle], rather than machine-number derivations. Existing approximate matrix classification is a deliberate separate input-arithmetic route in GateMatrix.m; it does not approximate the Clifford generator arithmetic.
+
+### G. Regimes and limits — PASS
+
+| Required regime | Executed evidence |
+|---|---|
+| General symbolic/arbitrary-size construction | Symbolic binary phase forward/inverse checks; size-parametric packing and generator masks; sizes through 1024 |
+| Exactly solvable special case | Independent full 24-element one-qubit action, including every sign pattern via conjugation |
+| Large-size/representation limit | Generator-word boundaries 31/32 and qubit-chunk boundaries 61/62/63, 123/124/125; n=1024 agreement and timing |
+| Independent reference | Exact dense conjugation at n=2–4; scalar/bulk agreement; exact symbolic frame/measurement projectors |
+| Failure/edge | Malformed dimensions/words/signs, storage ambiguity, changed metadata, validity mutation, empty circuit, extreme wires, repeated two-wire targets, cache collision/eviction and basis refusal |
+
+A continuous-coupling, classical or hbar limit is physically inapplicable to this finite exact Clifford representation. Register scaling and bounded integer-word transitions are the relevant limit checks and were exercised.
+
+### Safe constructor normalization, separately examined
+
+Constructors.m:185–186 already has a Tableau-only association shorthand that supplies default positive Signs and discards other input keys. That is distinct from leaving conflicting keys on a validated object. Explicit independent reproduction used:
+
+```
+p = PauliStabilizer[2];
+a = <|"Tableau" -> p["Tableau"], "Qubits" -> 99|>;
+ps = PauliStabilizer[a];
+{ps["Qubits"], Keys[First[ps]], Dimensions[ps["Tableau"]], PauliStabilizerQ[ps]}
+(* {2, {"Signs", "Tableau"}, {2, 2, 4}, True} *)
+```
+
+The same normalization occurs for a Signs-free association holding both the original GeneratorX/GeneratorZ and Tableau. In both cases, wire1 reaches the tagged native interception once with no messages; wire50 returns `$Failed`, emits exactly `PauliStabilizer::invalidorder`, and reaches native code zero times. The final stored object has exactly one canonical representation and no inconsistent dimension metadata. Treating this safe existing normalization as a requirement to reject all shorthand inputs would add a new policy beyond the implemented invariant. It is therefore not counted as a defect. Associations whose conflicting keys actually survive construction, as in the explicit Signs forms, were rejected with zero native calls.
+
+## RECOMMENDED FIXES
+
+None required for acceptance. Preserve the raw evidence and phrase the performance result as preservation of millisecond scale. Do not claim a uniform speedup or validation of every unchanged stabilizer feature. No additional WL review round is needed or permitted under the three-round cap.
+
+OPEN ISSUES: 0

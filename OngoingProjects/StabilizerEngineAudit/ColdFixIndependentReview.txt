@@ -1,0 +1,64 @@
+# VERDICT
+
+PASS — the cold-encoding regression is fixed, and no correctness or quantum/WL-quality defect was found in round 1/3. The reviewer made no changes to product or test files.
+
+# REPRODUCED
+
+Target: `/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/Stabilizer/Compiled.m`; compared in full with the frozen previous optimized file at `/private/tmp/qf-stabilizer-pre-coldfix/QuantumFramework/Kernel/Stabilizer/Compiled.m`. Directly required stabilizer dependencies and the complete updated `CompiledEvolution.wlt` were read. The live implementation was used as authority; the older QF audit anchor was not used to infer current behavior.
+
+Kernel: `15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)`. Every run explicitly loaded its selected repository with `PacletDirectoryLoad`, then loaded the package and PackageScope contexts. Kernels used `-noinit -script`; startup and compilation were excluded from benchmark timings. No Quiet or message hiding was used.
+
+- 73 independent correctness checks passed, plus the updated CompiledEvolution suite 65/65.
+- Five separately generated 60-gate, three-qubit Clifford circuits matched independently constructed exact dense conjugation for all six signed Pauli generators. Exact gate unitarity and numeric residual checks passed. The matrix oracle uses explicit Pauli, H, S, V, basis-permutation CNOT/SWAP, and diagonal CZ matrices rather than the engine update formulas.
+- Bell stabilizers are exactly XX and ZZ. Exact scalar/decomposed comparisons and resident packed storage passed at n = 1, 2, 31, 32, 61, 62, 63, 124, 125, 1024. Symplectic invariants passed through n = 125; n = 1024 was compared exactly against the separate per-gate path.
+- Symbolic-sign evolution retains its scalar fallback; sampled substitutions remain valid. Non-Clifford T returns a StabilizerFrame. Empty input preserves the object.
+- 1,337 singleton gate/form/wire cases and ten mixed 1,000-gate lists produced exactly the previous encoder rows. This includes rule/list, scalar/list wire, legacy and controlled forms, V/V-dagger, malformed/unknown/non-Clifford cases, and exact integers through ±2^100.
+- The old and new matrix guards agreed on accepted integer-list matrices and malformed/ragged/wrong-rank/real/symbolic/sparse cases. A temporary in-kernel native-call witness confirmed invalid shapes and out-of-range or duplicate wires never enter the compiled function; a valid integer-list matrix does enter it. Extreme ±2^63 wires are rejected before native indexing.
+- CompiledEvolution also reproduced validation-marker mutation safety, plan reuse and matrix/wire/parameter cache honesty, cache-collision checking, inverse representation, properties, measurement and state materialization.
+
+Independent timings: seven trials per case with ClearSystemCache[] before each timed evaluation; 18 rows each in isolated pre-fix/current kernels, three cold rows in the original-baseline kernel. Values are median milliseconds [minimum, maximum].
+
+| Case | Previous optimized | Current | Original baseline |
+|---|---:|---:|---:|
+| ColdRepeated/n=128 | 13.103 [12.426, 13.858] | 9.179 [9.049, 9.824] | 12.404 [12.062, 12.756] |
+| ColdRandom/n=128 | 13.195 [12.193, 20.003] | 8.956 [8.653, 10.006] | 11.883 [11.566, 12.344] |
+| ColdRepeated/n=1024 | 14.493 [13.591, 17.190] | 11.527 [10.706, 15.675] | 40.208 [37.854, 44.596] |
+| WarmDirect/n=128 | 3.284 [3.172, 3.904] | 2.812 [2.729, 3.433] | — |
+| WarmDirect/n=1024 | 3.903 [3.856, 4.170] | 4.087 [3.599, 4.467] | — |
+| WarmPublicTen/n=1024 | 19.282 [16.549, 21.682] | 14.489 [13.520, 18.333] | — |
+| WarmV/n=128 | 3.512 [3.252, 5.424] | 2.873 [2.731, 3.041] | — |
+
+The key cold improvements reproduce against both prior versions. Warm n=1024 and smaller warm cases vary between isolated kernels: the n=1024 direct medians above have overlapping ranges, so this review does not claim a universal exact speedup per row. The supplied 21-trial alternating warm evidence additionally isolates the guard change and reports improvements across its eight medians. Materialization source is unchanged and its timings fluctuate; no materialization speedup is attributed to this change. All three independent benchmark outputs recorded Messages = {}.
+
+# FINDINGS
+
+No unresolved correctness or quality findings. The production delta is limited to one-based dispatch rows followed by bulk exact wire-column subtraction, extraction of that encoder step into a helper, and an equivalent integer matrix shape guard. The compiled sign/tableau update formulas, cache key verification, resident storage, and public fallback logic remain unchanged from the previous optimized source.
+
+| Quality axis | Grade | Evidence |
+|---|---|---|
+| A. Documented symbols | PASS | Live package source and real-kernel calls confirm signatures and shapes. Compiled.m:183–241, 273–299; GateMatrix.m:445–515. |
+| B. Idiomatic functional WL | PASS | Dispatch + Catenate + packed bulk Transpose/subtraction at Compiled.m:183–222. The retained Do at :129 is a sequential compiled state evolution; the style rubric explicitly permits compiled procedural loops. |
+| C. Terse physics reasoning | PASS | Compiled.m:181–182 states the exact wire-offset operation; :243–244 explains resident storage. No redundant numeric approximation or new scaffolding is introduced. |
+| D. Physics invariants | PASS | Five exact dense-generator conjugation and unitarity checks, Bell signs, exact scalar comparison and symplectic tests in the independent correctness driver. |
+| E. Nontrivial examples | PASS | Entangled three-qubit circuits with noncommuting primitives and V/V-dagger, plus n=1024 and word boundaries. |
+| F. Symbolic-first derivations | PASS | Integer signs/tableau algebra remains exact; ±2^100 encoder arithmetic and symbolic-sign fallback pass. Independent dense matrices are exact before final numeric checks. |
+| G. Regimes and limits | PASS | General arbitrary-size exact integer route and symbolic signs; Bell/V exact cases; word-boundary and n=1024 limit evidence; independent dense reference; malformed/overflow/non-Clifford failures. Continuous weak/strong-parameter limits do not apply to finite Clifford algebra. |
+
+# RECOMMENDED FIXES
+
+None. Report timing distributions and avoid universal exact factors.
+
+Evidence files:
+
+- `/private/tmp/coldfix-independent-correctness.wls`, `.log`, `.json`
+- `/private/tmp/coldfix-independent-encoder.wls`, `.log`, `.json`
+- `/private/tmp/coldfix-old-dispatch.wl` (frozen old dispatch, with only the symbol renamed for isolated comparison)
+- `/private/tmp/coldfix-independent-timing.wls`
+- `/private/tmp/coldfix-independent-timing-{pre,current,original}.log` and `.json`
+
+Commands: the correctness and encoder drivers were run as `/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel -noinit -script <driver>`; timing used the same command with `VERIFY_REPO=<selected checkout>` and `VERIFY_PHASE=pre|current|original`. The timing kernels ran serially during the parent-reserved window.
+
+SHA256 `QuantumFramework/Kernel/Stabilizer/Compiled.m`: `936e8acce001a027888719b5ddb37733297fc1de1df7c0df65ca13801a80b3a2`
+SHA256 `Tests/Stabilizer/CompiledEvolution.wlt`: `2889536572f69bc809a55a28da33e5d8cb72454ede730a5ffa44fbde1acbe18c`
+
+OPEN ISSUES: 0

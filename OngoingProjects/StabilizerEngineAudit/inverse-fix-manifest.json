@@ -1,0 +1,46 @@
+{
+  "Branch": "main",
+  "Head": "708dc533489f0b7d7a0f92b412c380ce137ff25d",
+  "ProductionChanges": [
+    {
+      "File": "QuantumFramework/Kernel/Stabilizer/GateUpdates.m",
+      "BeforeSHA256": "df39acafddd7ff2790324a94cb62fd5f78bee600f099382108be877fabace7b9",
+      "AfterSHA256": "d8fffa90878b64a7ebf4dda7988b21080aadd6aada764b3c8f5b6076b008604d"
+    }
+  ],
+  "Tests": [
+    {
+      "File": "Tests/Stabilizer/CompiledEvolution.wlt",
+      "AfterSHA256": "851f886da4399b6f74dfd963b8566934e118b4aa0f16edb71c8957976cc99b49"
+    },
+    {
+      "File": "Tests/Stabilizer/InversePhase.wlt",
+      "AfterSHA256": "7193b56a02db507469980ce4ce22c773869da68dcae6a6558f5960874d9a6068"
+    }
+  ],
+  "CompiledPathUnchangedSHA256": "936e8acce001a027888719b5ddb37733297fc1de1df7c0df65ca13801a80b3a2",
+  "CommitsCreatedByThisTask": 0,
+  "FinalObservedHead": "708dc533489f0b7d7a0f92b412c380ce137ff25d",
+  "StabilizerDeltaFromPreInverseSnapshot": [
+    "Kernel/Stabilizer/GateUpdates.m"
+  ],
+  "UnrelatedConcurrentKernelChangesPreserved": [
+    "Kernel/QuantumEntanglement.m",
+    "Kernel/QuantumState/Properties.m"
+  ],
+  "Suite": {
+    "Tests": 1527,
+    "Files": 14,
+    "Failures": 0,
+    "Messages": "{}"
+  },
+  "StagedPaths": [],
+  "IndependentReview": {
+    "Round": 1,
+    "OpenIssues": 0,
+    "ReportSHA256": "b0928430cd3b680eff3dbc96f79c2ef12619fa9bf08927e8da4d6121cf41e927",
+    "BenchmarkVersions": 3,
+    "BenchmarkRowsPerVersion": 18,
+    "TrialsPerRow": 5
+  }
+}

@@ -1,0 +1,13 @@
+repo=Replace[Environment["STABILIZER_AUDIT_REPO"],$Failed->"/Users/mohammadb/Documents/GitHub/QuantumFramework"];
+phase=Environment["STABILIZER_AUDIT_PHASE"];
+PacletDirectoryLoad[FileNameJoin[{repo,"QuantumFramework"}]];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+same[a_,b_]:=a["Signs"]===b["Signs"]&&a["Tableau"]===b["Tableau"];
+p=PauliStabilizer[<|"Signs"->{1,1,1,-1,1,1},"Tableau"->{{{1,1,0,1,1,1},{1,1,0,1,1,0},{1,0,0,1,0,1}},{{1,1,1,0,0,0},{0,0,1,1,0,1},{0,0,0,1,1,0}}}|>];
+q=p["Dagger"];id=PauliStabilizer[3];
+r=<|"Phase"->phase,"Version"->$Version,"LoadedFile"->FindFile["Wolfram`QuantumFramework`"],
+"FixtureDoubleInverse"->same[q["Dagger"],p],"LeftIdentity"->same[p[q],id],"RightIdentity"->same[q[p],id],
+"PauliInverses"->AssociationMap[Function[g,With[{a=PauliStabilizer[1]["ApplyCircuit",{g->1}]},same[a["Dagger"],a]]],{"X","Y","Z"}],
+"Messages"->ToString[$MessageList,InputForm]|>;
+Echo[r];Export["/private/tmp/stabilizer-inverse-proof-"<>phase<>".json",r,"RawJSON"];Exit[];

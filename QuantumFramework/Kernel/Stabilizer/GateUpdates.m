@@ -21,13 +21,29 @@ Package["Wolfram`QuantumFramework`"]
 (* the post-gate state: PauliStabilizer[qs[gate]]["State"] === qs[gate].       *)
 (* ============================================================================ *)
 
+(* Scalar gates share the same wire bounds as the bulk engine. Dispatch is
+   restricted to valid objects before a trusted packed constructor is reached. *)
+ps_PauliStabilizer[gate : "H" | "S" | "X" | "Y" | "Z" | "V" | "T" |
+    SuperDagger["S" | "V" | "T"] | "P"[_], j_Integer] /; PauliStabilizerQ[ps] :=
+    pauliStabilizerApplyGate[ps, gate, j]
+
+ps_PauliStabilizer[gate : "CNOT" | "CX" | "CZ" | "SWAP", j_Integer, k_Integer] /; PauliStabilizerQ[ps] :=
+    pauliStabilizerApplyGate[ps, gate, j, k]
+
+pauliStabilizerApplyGate[ps_PauliStabilizer, gate_, order__Integer] := With[{n = ps["Qubits"]},
+    If[stabilizerWireRangeQ[{order}, 1, n] && DuplicateFreeQ[{order}],
+        pauliStabilizerGate[ps, gate, order],
+        Message[PauliStabilizer::invalidorder, n]; $Failed
+    ]
+]
+
 (* Each Clifford-generator rule dispatches through the bit-packed fast path      *)
 (* (Stabilizer/Packed.m) when the tableau and signs are concrete; the canonical  *)
 (* rank-3-array body is the fallback for symbolic-phase / StabilizerFrame states. *)
 (* The two branches are equivalent bit-for-bit (PauliStabilizer.wlt asserts it). *)
 
 (* H_j: swap X[j]<->Z[j]; flip sign on rows where x[j] == z[j] == 1 *)
-ps_PauliStabilizer["H", j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "H", j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateH[psGetPacked[ps], j],
     With[{t = ps["Tableau"]},
         PauliStabilizer[<|
@@ -38,7 +54,7 @@ ps_PauliStabilizer["H", j_Integer] := If[psConcreteFastQ[ps],
 ]
 
 (* S_j: Z[j] := Z[j] XOR X[j]; flip sign on rows where x[j] == z[j] == 1 *)
-ps_PauliStabilizer["S", j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "S", j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateS[psGetPacked[ps], j],
     With[{t = ps["Tableau"]},
         PauliStabilizer[<|
@@ -49,7 +65,7 @@ ps_PauliStabilizer["S", j_Integer] := If[psConcreteFastQ[ps],
 ]
 
 (* S^\[Dagger]_j: same Z-update; sign flip when x[j] == 1 and z[j] == 0 *)
-ps_PauliStabilizer[SuperDagger["S"], j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, SuperDagger["S"], j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateSdg[psGetPacked[ps], j],
     With[{t = ps["Tableau"]},
         PauliStabilizer[<|
@@ -60,7 +76,7 @@ ps_PauliStabilizer[SuperDagger["S"], j_Integer] := If[psConcreteFastQ[ps],
 ]
 
 (* CNOT j -> k: X[k] := X[k] XOR X[j]; Z[j] := Z[j] XOR Z[k]; sign flip when AG conditions met *)
-ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "CNOT" | "CX", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateCNOT[psGetPacked[ps], j, k],
     With[{t = ps["Tableau"]},
         PauliStabilizer[<|
@@ -74,39 +90,39 @@ ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := If[psConcreteFastQ[ps
 ]
 
 (* X_j: phase XOR with Z[j] row -- tableau unchanged *)
-ps_PauliStabilizer["X", j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "X", j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateX[psGetPacked[ps], j],
     PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
 ]
 
 (* Y_j: phase XOR with X[j] XOR Z[j] *)
-ps_PauliStabilizer["Y", j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "Y", j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateY[psGetPacked[ps], j],
     PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
 ]
 
 (* Z_j: phase XOR with X[j] row *)
-ps_PauliStabilizer["Z", j_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "Z", j_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateZ[psGetPacked[ps], j],
     PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]]], "Tableau" -> ps["Tableau"]|>]
 ]
 
 (* CZ = H_k . CNOT(j,k) . H_k *)
-ps_PauliStabilizer["CZ", j_Integer, k_Integer] := ps["H", k]["CNOT", j, k]["H", k]
+pauliStabilizerGate[ps_PauliStabilizer, "CZ", j_Integer, k_Integer] := ps["H", k]["CNOT", j, k]["H", k]
 
 (* SWAP via column permutation *)
-ps_PauliStabilizer["SWAP", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
+pauliStabilizerGate[ps_PauliStabilizer, "SWAP", j_Integer, k_Integer] := If[psConcreteFastQ[ps],
     psFromPacked @ packedGateSWAP[psGetPacked[ps], j, k],
     ps["PermuteQudits", Cycles[{{j, k}}]]
 ]
 
 
 (* ============================================================================ *)
-(* V = sqrt(X) and V^\[Dagger] -- defined via PauliStabilizer string composition *)
+(* V = sqrt(X) and V^\[Dagger] -- the same primitive decomposition as the encoder *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["V", j_Integer] := PauliStabilizer[{"-Y"}, {"X"}]["PadLeft", j] @ ps
-ps_PauliStabilizer[SuperDagger["V"], j_Integer] := PauliStabilizer[{"Y"}, {"X"}]["PadLeft", j] @ ps
+pauliStabilizerGate[ps_PauliStabilizer, "V", j_Integer] := ps["H", j]["S", j]["H", j]
+pauliStabilizerGate[ps_PauliStabilizer, SuperDagger["V"], j_Integer] := ps["H", j][SuperDagger["S"], j]["H", j]
 
 
 (* ============================================================================ *)
@@ -134,12 +150,12 @@ ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
 
 PauliStabilizer::singular = "Cannot compute Dagger: the symplectic tableau matrix is singular mod 2. This arises for a degenerate stabilizer list (linearly dependent or under-determined generators) whose destabilizer half falls back to X<->Z padding rather than a genuine symplectic completion. Supply an independent generating set, explicit destabilizers, or a circuit-built fixture."
 
-(* Notes on Dagger:                                                            *)
-(*   (1) the inner inverse-matrix PS uses all-+1 signs so the composition's   *)
-(*       phase term is well-defined and involutive on the matrix component   *)
-(*       for AG-canonical inputs.                                              *)
-(*   (2) a singular symplectic matrix (Det == 0 mod 2) emits                  *)
-(*       PauliStabilizer::singular with $Failed instead of cascading errors.  *)
+(* The zero-phase tableau for the inverse binary matrix composes with ps to   *)
+(* the identity matrix plus a residual phase. The right operand's phase adds  *)
+(* directly in composition, so using that residual as the inverse's phase     *)
+(* cancels it. Composition already includes ps's phase; XORing it again would *)
+(* incorrectly erase Pauli signs (even the inverse of X would become I).      *)
+(* Singular binary matrices retain the existing message and $Failed contract. *)
 ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat, result},
     n = ps["GeneratorCount"];
     m = ps["Matrix"];
@@ -150,18 +166,16 @@ ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{n, m, det, mat, result},
     ];
     mat = Inverse[m, Modulus -> 2];
     result = PauliStabilizer @ <|
-        "Phase" -> BitXor[
-            ps["Phase"],
-            ps[PauliStabilizer[<|
-                "Matrix" -> mat,
-                "Signs" -> ConstantArray[1, 2 n]
-            |>]]["Phase"]
-        ],
+        "Phase" -> ps[PauliStabilizer[<|
+            "Matrix" -> mat,
+            "Signs" -> ConstantArray[1, 2 n]
+        |>]]["Phase"],
         "Matrix" -> mat
     |>;
     (* Preserve the input's storage form so structural (===) comparisons stay   *)
     (* consistent: packed in -> packed out, canonical in -> canonical out.       *)
-    If[psPackedQ[ps], psFromPacked @ psGetPacked @ result, result]
+    Which[psGeneratorPackedQ[ps], psToGeneratorPacked[result],
+        psPackedQ[ps], psFromPacked @ psGetPacked @ result, True, result]
 ]
 
 
@@ -179,7 +193,7 @@ ps_PauliStabilizer["PadLeft", n_]  := QuantumTensorProduct[PauliStabilizer[Max[n
 (* Clifford updates.                                                            *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase], n = ps["Qubits"]},
+pauliStabilizerGate[ps_PauliStabilizer, "P"[phase_], j_Integer] := With[{c = Exp[I phase], n = ps["Qubits"]},
     StabilizerFrame[<|
         "Components" -> {
             {(1 + c) / 2, ps},
@@ -193,5 +207,5 @@ ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase], n = ps["Qu
     |>]
 ]
 
-ps_PauliStabilizer["T", j_Integer] := ps["P"[Pi / 4], j]
-ps_PauliStabilizer[SuperDagger["T"], j_Integer] := ps["P"[- Pi / 4], j]
+pauliStabilizerGate[ps_PauliStabilizer, "T", j_Integer] := ps["P"[Pi / 4], j]
+pauliStabilizerGate[ps_PauliStabilizer, SuperDagger["T"], j_Integer] := ps["P"[- Pi / 4], j]

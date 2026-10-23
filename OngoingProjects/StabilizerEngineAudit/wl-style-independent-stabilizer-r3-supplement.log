@@ -1,0 +1,13 @@
+
+PauliStabilizer::invalidorder: Gate wires must lie in the register {1, ..., 2}, with distinct wires for a two-qubit gate.
+
+PauliStabilizer::invalidorder: Gate wires must lie in the register {1, ..., 2}, with distinct wires for a two-qubit gate.
+OutputForm[>> ]{NormalizationWireBounds, {{<|Qubits -> 2, Keys -> {Signs, Tableau}, TableauDimensions -> {2, 2, 4}, Valid -> True, Wire -> 1, NativeCalls -> 1, Result -> native intercepted, Messages -> {}|>, <|Qubits -> 2, Keys -> {Signs, Tableau}, TableauDimensions -> {2, 2, 4}, Valid -> True, Wire -> 50, NativeCalls -> 0, Result -> $Failed, Messages -> {HoldForm[PauliStabilizer::invalidorder]}|>}, {<|Qubits -> 2, Keys -> {Signs, Tableau}, TableauDimensions -> {2, 2, 4}, Valid -> True, Wire -> 1, NativeCalls -> 1, Result -> native intercepted, Messages -> {}|>, <|Qubits -> 2, Keys -> {Signs, Tableau}, TableauDimensions -> {2, 2, 4}, Valid -> True, Wire -> 50, NativeCalls -> 0, Result -> $Failed, Messages -> {HoldForm[PauliStabilizer::invalidorder]}|>}}}
+OutputForm[>> ]{CPlanCollision, True}
+OutputForm[>> ]{LiveVMatrix, True}
+OutputForm[>> ]{SymbolicFramePhysicalAction, True}
+OutputForm[>> ]{GHZMeasurementPhysicalBranches, True}
+
+PauliStabilizer::nonclifford: Gate PauliX -> {1} cannot be applied to the stabilizer tableau: it is stored in a basis that is not computational. Use Method -> "TensorNetwork" or "Schrodinger" for operations the stabilizer engine cannot track.
+OutputForm[>> ]{CacheBasisChange, {True, {HoldForm[PauliStabilizer::nonclifford]}}}
+OutputForm[>> ]DONE

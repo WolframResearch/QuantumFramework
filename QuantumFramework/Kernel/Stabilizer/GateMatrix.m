@@ -2,6 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope[stabilizerCliffordRows]
 PackageScope[stabilizerCircuitSpecs]
+PackageScope[stabilizerExecutionPlan]
 PackageScope[stabilizerOperatorSpecs]
 PackageScope[stabilizerShortcutPairs]
 PackageScope[stabilizerLabelsHonestQ]
@@ -9,6 +10,7 @@ PackageScope[stabilizerArrayZeroQ]
 PackageScope[stabilizerRefusalReason]
 PackageScope[stabilizerMatrixRows]
 PackageScope[stabilizerClearCaches]
+PackageScope[stabilizerRemember]
 PackageScope[$stabilizerMatrixMaxQubits]
 
 
@@ -424,14 +426,15 @@ stabilizerProductSpecs[missing_Missing] := missing
 (* the label.                                                                  *)
 (* ============================================================================ *)
 
+$stabilizerCircuitMemo = <||>;
 $stabilizerGateMemo = <||>;
 $stabilizerTokenMemo = <||>;
 $stabilizerHonestMemo = <||>;
 
-stabilizerClearCaches[] := ($stabilizerGateMemo = <||>; $stabilizerTokenMemo = <||>; $stabilizerHonestMemo = <||>; $stabilizerMatrixMemo = <||>;)
+stabilizerClearCaches[] := ($stabilizerCircuitMemo = <||>; $stabilizerEncodeMemo = <||>; $stabilizerGateMemo = <||>; $stabilizerTokenMemo = <||>; $stabilizerHonestMemo = <||>; $stabilizerMatrixMemo = <||>;)
 
 SetAttributes[stabilizerRemember, HoldAll]
-stabilizerRemember[memo_Symbol, key_, value_] := (If[Length[memo] >= 4096, memo = <||>]; memo[key] = value)
+stabilizerRemember[memo_Symbol, key_, value_, limit_ : 4096] := (If[Length[memo] >= limit, memo = <||>]; memo[key] = value)
 
 stabilizerGateKey[op_QuantumOperator] := With[{basis = op[[1, 2]]},
     Hash[{op[[1, 1]], basis["Input"], basis["Output"], basis["Picture"], Ordering[op["InputOrder"]], Ordering[op["OutputOrder"]]}]
@@ -493,6 +496,21 @@ stabilizerOperatorSpecs[op_QuantumOperator] := With[{in = op["InputOrder"], out 
 (* circuits element by element, and every other element (a measurement, a channel)*)
 (* by its QuantumShortcut token, which the fold refuses.                         *)
 stabilizerCircuitSpecs[qco_QuantumCircuitOperator] := stabilizerElementSpecs[qco]
+
+(* Preserve matrix-based classification on the first pass. The complete circuit
+   expression, including basis, wires, labels and parameters, verifies a cache hit.
+   Both plan caches are bounded and cleared by stabilizerClearCaches[]. *)
+stabilizerExecutionPlan[qco_QuantumCircuitOperator] := With[{key = Hash[qco]},
+    With[{cached = Lookup[$stabilizerCircuitMemo, key, None]},
+        If[ListQ[cached] && First[cached] === qco,
+            Last[cached],
+            With[{specs = stabilizerCircuitSpecs[qco]},
+                Last @ stabilizerRemember[$stabilizerCircuitMemo, key,
+                    {qco, <|"Specs" -> specs, "Gates" -> encodeStabilizerGates[specs]|>}, 16]
+            ]
+        ]
+    ]
+]
 
 stabilizerElementSpecs[qco_QuantumCircuitOperator] := Catenate[stabilizerElementSpecs /@ qco["Operators"]]
 stabilizerElementSpecs[op_QuantumOperator] := stabilizerOperatorSpecs[op]

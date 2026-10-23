@@ -1,0 +1,14 @@
+repo=Environment["R3_REPO"];phase=Environment["R3_PHASE"];
+PacletDirectoryLoad[repo<>"/QuantumFramework"];Needs["Wolfram`QuantumFramework`"];Needs["Wolfram`QuantumFramework`PackageScope`"];
+makeSpecs[n_,m_]:=Table[With[{j=Mod[37i,n]+1},Switch[Mod[i,7],0,"H"->j,1,"S"->j,2,"CNOT"->{j,Mod[j,n]+1},3,"CZ"->{j,Mod[j,n]+1},4,"X"->j,5,"SWAP"->{j,Mod[j,n]+1},6,SuperDagger["S"]->j]],{i,m}];
+makeCircuit[s_]:=QuantumCircuitOperator[<|"Elements"->(FromCircuitOperatorShorthand/@s),"Label"->None|>];
+PauliStabilizer[2]["ApplyCircuit",{"H"->1}];
+rows={};
+measure[name_,f_,cold_:False]:=Module[{trials,elapsed,out,msg,row},If[!cold,f[]];trials=Table[ClearSystemCache[];Block[{$MessageList={}}, {elapsed,out}=AbsoluteTiming[If[cold,stabilizerClearCaches[]];f[]];msg=ToString[$MessageList,InputForm]];<|"Seconds"->elapsed,"Digest"->IntegerString[Hash[{out["Signs"],Normal[out["Tableau"]]},"SHA256"],16,64],"Messages"->msg|>,{5}];row=<|"Case"->name,"Trials"->trials,"Median"->Median[Lookup[trials,"Seconds"]],"Range"->MinMax[Lookup[trials,"Seconds"]]|>;Echo[row];rows=Append[rows,row];Export["/private/tmp/stabilizer-r3-benchmark-"<>phase<>".json",<|"Phase"->phase,"Repo"->repo,"Version"->$Version,"LoadedFile"->FindFile["Wolfram`QuantumFramework`"],"Rows"->rows|>,"RawJSON"]];
+p128=PauliStabilizer[128];p1024=PauliStabilizer[1024];s128=Flatten[ConstantArray[makeSpecs[128,1000],10],1];s1024=Flatten[ConstantArray[makeSpecs[1024,1000],10],1];q1024=ConstantArray[makeCircuit[makeSpecs[1024,1000]],10];sV=Insert[s128,"V"->1,5000];
+measure["cold128-10000",Function[p128["ApplyCircuit",s128]],True];
+measure["warm1024-10000",Function[p1024["ApplyCircuit",s1024]]];
+measure["ten-public1024-1000",Function[Fold[#2[#1]&,p1024,q1024]]];
+measure["one-V128-10001",Function[p128["ApplyCircuit",sV]]];
+measure["cold1024-10000",Function[p1024["ApplyCircuit",s1024]],True];
+Echo[{"DONE",phase,ToString[$MessageList,InputForm]}];Exit[];

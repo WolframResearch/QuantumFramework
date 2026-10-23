@@ -1,0 +1,64 @@
+VERDICT
+PASS. Round 1 independently reproduced the inverse repair and retained long-Clifford performance. No unresolved correctness or quantum-quality defect was found within the supplied full-Clifford-tableau contract. No target artifact was edited by this review.
+
+REPRODUCED
+- Real kernel: `/Applications/Wolfram 15.01.app/Contents/MacOS/WolframKernel -noinit -script ...`, Wolfram 15.0.1 ARM64. Every run verified the loaded implementation root. Correctness scripts used exact arithmetic and did not hide messages.
+- Independently reran `InversePhase.wlt`: 330/330 success; `CompiledEvolution.wlt`: 65/65 success. Evidence: `/private/tmp/qf-inverse-focused-tests-r1.wls`, `.log`, `.json`. Outside messages: `{}`.
+- Additional independent oracle: reconstructed exact dense U directly from each signed X/Z generator image, using its joint Z eigenspace and X translates. No QF circuit synthesis/composition was used for the oracle. Verified unitarity, forward U P U-dagger conjugation and inverse U-dagger P U conjugation for all 64 fixture sign assignments, all 24 one-qubit Cliffords, and twelve random 2–4-qubit actions.
+- Verified both identity products, Dagger/Inverse alias equality, structural double inverse and storage preservation for canonical, chunk-major and generator-major objects. Independently compared exact signed inverse generator images with reversed-adjoint circuits at n=31,32,61,62,63,124,125, in all layouts. All 64 binary symbolic-phase substitutions passed. Empty circuits, positive-size identity actions, and both aliases' singular-message/$Failed contract passed.
+- Additional probe evidence: `/private/tmp/qf-inverse-independent-r1-fixed.wls`, `/private/tmp/qf-inverse-independent-r1-fixed.log`, `/private/tmp/qf-inverse-independent-r1.json`. All eight aggregate checks True, outside messages `{}`.
+- Independently reran the frozen-pre/current regression proof. The fixture's double inverse and both identity products, and all X/Y/Z inverse comparisons, were False on frozen pre-fix and True on current code, with no messages. Evidence: `/private/tmp/stabilizer-inverse-proof-independent-review-{pre,post}.json` and matching `.log` files.
+- Observed parent suite output independently: `/Users/mohammadb/Documents/GitHub/QuantumFramework/OngoingProjects/StabilizerEngineAudit/suite-inverse.json` contains 1,527 successes across 14 files, no failures/outside messages. The complete suite was executed by the parent; this review independently reran the 395 directly relevant authored tests.
+
+PERFORMANCE
+After the parent released its reservation, this review executed serialized kernels on the original baseline, optimized pre-inverse source, and current source. Each of the 18 benchmark rows has five ClearSystemCache[] trials; kernel startup and compilation warm-up were excluded. Cold rows clear package caches within the timed evaluation. No timing kernel overlapped another audit kernel. Every trial returned its expected result head without messages.
+
+Medians in milliseconds:
+
+| Case | Original baseline | Pre-inverse optimized | Current | Original/current gain |
+|---|---:|---:|---:|---:|
+| Cold encoding, n=128, 10,000 gates | 12.565 | 9.323 | 9.049 | 1.39x |
+| Direct warm, n=1024, 10,000 gates | 38.055 | 3.513 | 3.476 | 10.95x |
+| Ten public n=1024 calls of 1,000 gates | 11282.627 | 13.727 | 14.072 | 801.78x |
+| V-containing n=128, 10,001 gates | 1224.159 | 2.881 | 2.769 | 442.09x |
+| Cold encoding, n=1024, 10,000 gates | 40.585 | 10.379 | 10.253 | 3.96x |
+
+Every pre/post row's five-trial range overlaps. This supports retained gains without claiming every individual median improves. Materializing a lazy resident tableau still costs more than reading the original already-expanded tableau; that storage tradeoff predates the inverse correction.
+
+Full trials, loaded roots, versions and messages:
+- `/private/tmp/qf-inverse-review-timings-r1/long-original-before.json`
+- `/private/tmp/qf-inverse-review-timings-r1/long-inverse-before.json`
+- `/private/tmp/qf-inverse-review-timings-r1/long-inverse-after.json`
+- Reproduction scripts: `/private/tmp/qf-inverse-review-timings-r1/LongCliffordBenchmark.wls` and `ColdCases.wls`, with per-root `.log` and `-cold.log` files in that directory.
+
+FINDINGS
+No actionable defect. Against `/private/tmp/qf-stabilizer-pre-inversefix`, the only changed Stabilizer production file is `GateUpdates.m`; the phase correction is isolated to lines 137–156. Existing compiler/cache/storage optimizations are preserved. Compiled.m SHA256 remains `936e8acce001a027888719b5ddb37733297fc1de1df7c0df65ca13801a80b3a2`.
+
+The general proof follows the live composition implementation, `Compose.m:49–51`: composing F=(M,p) after G=(N,q) yields binary matrix N M and phase N p + q + c(N,M) over F2. With N=M^-1, the zero-phase inverse probe returns r=N p+c(N,M). Setting q=r cancels that residual. The removed extra XOR with p would leave phase p. This derivation is valid for arbitrary positive n and does not require dense state materialization.
+
+Scalar global phase is outside the signed-Pauli conjugation data and follows the pre-existing convention. Unrelated repository/user changes, including QuantumState/Properties.m changes, were preserved and are outside the review's production-delta claim.
+
+QUALITY AXES A–G
+
+| Axis | Grade | Evidence |
+|---|---|---|
+| A. Documented symbols/signatures | PASS | Read current GateUpdates.m, Compose.m, Properties.m, Constructors.m, Packed.m, Compiled.m and PauliStabilizer.m; aliases, property shapes and conversion helpers were exercised in the loaded live kernel. |
+| B. Idiomatic functional WL | PASS | GateUpdates.m:151–162 keeps the existing algebraic constructor/composition route and dispatches storage with Which. No new imperative/index-driven transformation or redundant numerical implementation was introduced. |
+| C. Terse physics reasoning | PASS | GateUpdates.m:137–142 states the phase-cancellation argument; executable lines 151–157 mirror it directly. |
+| D. Physics invariants | PASS | Independent exact U-dagger U=I, complete signed generator conjugation, both inverse products, symplectic identities in the compiled suite. |
+| E. Nontrivial examples | PASS | All signed three-qubit fixture actions, entangling random 2–4-qubit dense checks, and exact large-register boundary checks. |
+| F. Symbolic-first derivation | PASS | F2 inverse and residual-phase formula remain exact; all 64 symbolic binary assignments passed without premature numerical substitution. |
+| G. Regimes/limits | PASS | Coverage table below; all required finite-Clifford regimes have executable evidence. |
+
+| Regime | Evidence |
+|---|---|
+| General | Arbitrary-n exact composition proof; binary symbolic phases exhaustively substituted for the six fixture generators. |
+| Exactly solvable special | All 24 one-qubit Clifford actions, X/Y/Z, identity and primitive adjoints. |
+| Limiting/boundary | Exact signed full-tableau checks at 31/32, 61/62/63 and 124/125. Continuous weak/strong or classical limits do not apply to this finite exact Clifford operation. |
+| Independent reference | Exact dense unitary reconstruction and adjoint conjugation; exact evidence is stronger than a floating-point residual for these finite matrices. |
+| Failure/edge | Empty gate list, identity actions, dependent/singular generators with the expected diagnostic and $Failed. |
+
+RECOMMENDED FIXES
+None within scope. All independent kernels have exited. GateUpdates.m SHA256 at completion: `d8fffa90878b64a7ebf4dda7988b21080aadd6aada764b3c8f5b6076b008604d`.
+
+OPEN ISSUES: 0

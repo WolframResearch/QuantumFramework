@@ -1,0 +1,59 @@
+VERDICT
+
+Request changes: three issues at the implementation boundaries. Normal Clifford evolution and the inverse correction passed independent verification. No production files were edited.
+
+REPRODUCED
+
+- Full fresh-kernel suite: **1,527/1,527 tests**, 14 files, zero failures, outside messages `{}`.
+- Independently generated all 24 one-qubit Clifford matrices; exact forward and inverse conjugation passed for every generator.
+- Twelve entangling circuits at n=2–4 passed independent exact dense conjugation.
+- Resident/scalar/split evolution agreed through n=1024 and across the 62-bit boundaries. Arbitrary binary Pauli rows and signs also agreed.
+- V/V-dagger and H/S/H alternatives agreed for every assignment of four symbolic binary signs.
+- Actual plan-cache collision checks, capacity bounds, clearing, empty circuits and exact overflow encoding passed.
+- No performance measurements were run. All verification kernels have exited.
+
+FINDINGS
+
+1. **[P2] Fast eligibility can accept structurally invalid canonical input.**  
+   [Packed.m:98](/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/Stabilizer/Packed.m:98) validates packed objects through `PauliStabilizerQ`, but its canonical branch omits that check. For a `{2,1,2}` tableau with only one sign, `{PauliStabilizerQ[bad], psConcreteFastQ[bad]}` returns `{False, True}`. `ApplyCircuit` consequently returns a valid-marked object, silently repairing/discarding malformed data. This contradicts the newly established immutable-validation boundary. Require `PauliStabilizerQ[ps]` for every storage form, retaining the additional full binary-tableau conditions.
+
+2. **[P2] Direct gate methods bypass the new wire contract.**  
+   [GateUpdates.m:30](/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/Stabilizer/GateUpdates.m:30) through the V handlers do not share [Compiled.m:276](/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/Stabilizer/Compiled.m:276)'s checks. On two qubits, direct H at wire 3 silently does nothing; H at wire 0 returns signs containing `Sign[BitAnd[..., List]]`; CNOT on `{1,1}` destroys the symplectic tableau yet remains structurally accepted. All three produce no messages. Use one shared order predicate at the public gate boundaries, including symbolic fallback and composite gates. Avoid a broad catch-all that captures property access.
+
+3. **[P2] Direct V still takes an unnecessary general-composition route.**  
+   [GateUpdates.m:108](/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework/Kernel/Stabilizer/GateUpdates.m:108) constructs a signed-Pauli tableau, pads it and performs general matrix composition. The compiled encoder expresses the same operation as H/S/H. The smallest consistent implementation is:
+   ```wl
+   ps["H", j]["S", j]["H", j]
+   ps["H", j][SuperDagger["S"], j]["H", j]
+   ```
+   Exact physical equivalence passed, including all binary substitutions of symbolic signs. Raw symbolic expression form and storage representation can change; verify semantic properties rather than requiring raw association `SameQ`.
+
+These include pre-existing integration weaknesses; they are not claims that the new resident layout introduced all three defects.
+
+A–G QUALITY
+
+| Axis | Verdict | Evidence |
+|---|---|---|
+| A. APIs and architecture | PASS | Live State/Operator/Circuit/QuditBasis validity conventions checked. Immutable validity and separate bounded caches fit existing QF architecture. |
+| B. Idiomatic WL | FINDING | F3 unnecessarily invokes general composition. The compiled `Do`/`Which`, interpreted `Dispatch`, packed listable operations and index-dependent packing tables are appropriate. |
+| C. Physics reasoning | PASS | X/Z/sign representation and inverse residual-phase argument match independently checked conjugation. |
+| D. Invariants | FINDING | Valid-input conjugation passes; F1/F2 violate validation and symplectic boundary expectations. |
+| E. Nontrivial examples | PASS | Entangling circuits, arbitrary binary rows, symbolic signs and n1024 coverage. |
+| F. Symbolic-first | PASS | Exact finite-field arithmetic retained; symbolic sign assignments verified exhaustively. |
+| G. Regimes | FINDING | General, special and integer-size boundary regimes pass; malformed-input coverage misses F1/F2. Continuous weak/strong limits are inapplicable to finite Clifford arithmetic. |
+
+RECOMMENDED FIXES
+
+Address F1–F3, add the demonstrated boundary regressions, and give the revised sources to a fresh reviewer. No broader functional rewrite is justified.
+
+Evidence:
+
+- `/private/tmp/stabilizer-wl-style-r1-suite.{wls,log}`
+- `/private/tmp/suite-independent-style-r1.json`
+- `/private/tmp/stabilizer-wl-style-r1-probe.{wls,log}`
+- `/private/tmp/stabilizer-wl-style-r1-independent.{wls,log}`
+- `/private/tmp/stabilizer-wl-style-r1-cache-corrected.{wls,log}`
+
+Optional context, excluded from this acceptance count: unchanged CliffordChannel deterministic-Pauli conversion and signed GraphState conversion have separate correctness defects recorded in `/private/tmp/stabilizer-wl-style-r1-more.log`.
+
+OPEN ISSUES: 3

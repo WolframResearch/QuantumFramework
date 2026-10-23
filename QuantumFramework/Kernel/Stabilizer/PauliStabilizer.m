@@ -12,6 +12,8 @@ PackageScope[stabilizerGateSpecSeqQ]
 PackageScope[stabilizerDefaultTarget]
 PackageScope[stabilizerNormalizeSpec]
 PackageScope[stabilizerGateFold]
+PackageScope[stabilizerWireRangeQ]
+PackageScope[psDimensionsQ]
 
 
 
@@ -31,6 +33,8 @@ PauliStabilizer::nophasepoly = "`1`, so \"Compress\" -> \"PhasePolynomial\" cann
 
 PauliStabilizer::wires = "Circuit wires `1` lie below qubit 1, outside the tableau register."
 
+PauliStabilizer::invalidorder = "Gate wires must lie in the register {1, ..., `1`}, with distinct wires for a two-qubit gate."
+
 PauliStabilizer::symbolicsigns = "Symbolic signs have no dense state to hand to Method -> `1`; use Method -> \"Stabilizer\" on this tableau."
 
 
@@ -38,6 +42,13 @@ PauliStabilizer::symbolicsigns = "Symbolic signs have no dense state to hand to 
 (* ============================================================================ *)
 (* Predicates                                                                   *)
 (* ============================================================================ *)
+
+stabilizerWireRangeQ[wires_List, first_Integer, last_Integer] := Min[wires] >= first && Max[wires] <= last
+
+(* Optional dimension metadata must agree with the stored representation. *)
+psDimensionsQ[a_Association, n_Integer, generators_] :=
+    Lookup[a, "Qubits", n] === n && Lookup[a, "Qudits", n] === n &&
+    Lookup[a, "GeneratorCount", generators] === generators
 
 PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[t], {2, n_, m_}]
 
@@ -47,25 +58,34 @@ PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[t], {
    propagates symbols through Clifford gates via BitXor's canonical form. Concrete
    signs are still {-1, 1} integers; symbolic signs look like (1 - 2 s_k) etc. *)
 
-(* Two storage shapes are accepted: the canonical rank-3 "Tableau" + "Signs"    *)
+(* Exactly one storage shape is accepted: canonical rank-3 "Tableau" + "Signs", *)
 (* form, and the bit-packed form (Stabilizer/Packed.m) with "PackedX"/"PackedZ" *)
-(* integer-row lists + "Qubits". A single Which-body inspects which keys are    *)
-(* present so the structural conditions never run against the wrong shape.       *)
-PauliStabilizerQ[PauliStabilizer[a_Association]] := Which[
+(* integer-row lists + "Qubits", or generator-major "GeneratorX"/"GeneratorZ". *)
+(* Dispatch on stored keys before checking dimensions and word bounds.           *)
+pauliStabilizerQ[PauliStabilizer[a_Association]] :=
+    MatchQ[Intersection[Keys[a], {"Tableau", "PackedX", "PackedZ", "GeneratorX", "GeneratorZ"}],
+        {"Tableau"} | {"PackedX", "PackedZ"} | {"GeneratorX", "GeneratorZ"}] && Which[
+    KeyExistsQ[a, "GeneratorX"], psGeneratorPackedDataQ[a],
     KeyExistsQ[a, "PackedX"],
         (* chunk-major: "PackedX"/"PackedZ" are {#chunks} lists of length-2n      *)
         (* machine-int vectors; "Signs" has the 2n entries.                       *)
-        MatchQ[a["PackedX"], {__List}] && MatchQ[a["PackedZ"], {__List}] && MatchQ[a["Signs"], _List] &&
-            IntegerQ[Lookup[a, "Qubits"]] &&
-            Length[a["PackedX"]] == Length[a["PackedZ"]] &&
-            Length[First[a["PackedX"]]] == Length[a["Signs"]],
+        psPackedDataQ[a],
     KeyExistsQ[a, "Tableau"] && KeyExistsQ[a, "Signs"],
-        MatchQ[a["Signs"], _List] && PauliTableauQ[a["Tableau"]] &&
-            Length[a["Signs"]] == Dimensions[a["Tableau"]][[3]],
+        ListQ[a["Signs"]] && PauliTableauQ[a["Tableau"]] &&
+            With[{dims = Dimensions[a["Tableau"]]},
+                Length[a["Signs"]] === dims[[3]] && psDimensionsQ[a, dims[[2]], dims[[3]] / 2]],
     True, False
 ]
 
+pauliStabilizerQ[_] := False
+
+(* The validity bit belongs to this immutable expression, never to a user key.
+   New external data is checked; a changed expression must establish validity again. *)
+PauliStabilizerQ[ps_PauliStabilizer] := System`Private`HoldValidQ[ps] || pauliStabilizerQ[Unevaluated[ps]]
 PauliStabilizerQ[_] := False
+
+ps_PauliStabilizer /; System`Private`HoldNotValidQ[ps] && pauliStabilizerQ[Unevaluated[ps]] :=
+    System`Private`HoldSetValid[ps]
 
 
 (* Strict predicate: signs are concrete (numeric) integers in {-1, 1}.
@@ -232,17 +252,17 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : Automatic | _QuantumState 
         (* is read factor by factor. A composite, and a symbolic gate those steps    *)
         (* cannot read, go through the gates their label names, used only when that *)
         (* reproduces the matrix. Anything else is a Missing that the fold refuses.  *)
-        gateSpecs = stabilizerCircuitSpecs[qco]
+        plan = stabilizerExecutionPlan[qco]
     },
         (* Fast path: a pure-Clifford circuit (every gate in the compiled set)    *)
         (* over a concrete state folds in one compiled kernel call               *)
         (* (Stabilizer/Compiled.m). encodeStabilizerGates returns $Failed for any *)
         (* spec outside the set, so a frame gate or a refused gate falls through  *)
         (* to the per-gate fold.                                                  *)
-        With[{gates = If[PauliStabilizerQ[init] && psConcreteFastQ[init], encodeStabilizerGates[gateSpecs], $Failed]},
+        With[{gates = If[PauliStabilizerQ[init] && psConcreteFastQ[init], plan["Gates"], $Failed]},
             If[ ListQ[gates],
                 applyCompiledFold[init, gates],
-                stabilizerGateFold[init, gateSpecs]
+                stabilizerGateFold[init, plan["Specs"]]
             ]
         ]
     ]

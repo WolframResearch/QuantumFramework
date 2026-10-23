@@ -1,0 +1,77 @@
+VERDICT
+
+Round 1 correctness and source review pass for the scoped production changes. Independent before/after timing reproduction also passes, with the disclosed cold-encoding and materialization tradeoffs. Evidence was written only under /private/tmp. The implementation checkout was /Users/mohammadb/Documents/GitHub/QuantumFramework, not the detached chat checkout; the seven frozen before files exactly match that checkout's HEAD.
+
+REPRODUCED
+
+Installed WolframKernel 15.0.1 for Mac OS X ARM (64-bit), July 2, 2026, launched with -noinit -script. PacletDirectoryLoad and FindFile confirmed the intended source for each kernel. No Quiet or message suppression was used.
+
+Independent executable evidence: /private/tmp/stabilizer-independent-r1.wls and .log; /private/tmp/stabilizer-independent-r1-n1.wls and .log. The first dense-reference harness incorrectly called unary KroneckerProduct at n=1; its n=2–4 checks passed, then a corrected n=1-only harness passed with no messages. This was a test-harness defect, not a package defect.
+
+- Exact independent System matrix conjugation of every signed tableau generator for random 50-gate n=1–4 circuits, including V and V-dagger. The whole dense circuit is unitary, each materialized state has norm 1, and every signed stabilizer fixes that state.
+- V/V-dagger on every wire of a three-qubit nontrivial tableau matches both the existing scalar route and the independently constructed dense sqrt(X) matrices.
+- Full binary tableau and sign equality for scalar versus bulk and split versus single bulk at n=1,2,31,32,61,62,63,124,125,1024. Boundary probes use 70 gates; the independent dense probe supplies the physical reference, beyond agreement between engine paths.
+- Bell special case {XX,ZZ}; symbolic-sign fallback commutes with concrete outcome substitution; Bell symbolic measurements preserve correlated outcomes; random measurement branch keys and post-tableaux match canonical storage.
+- Seven mutations of validated objects (sign length, qubit count, negative/overflow/tail words, missing Z storage, wrong shape, MapAt mutation) are rejected and have no valid marker.
+- Old chunk storage, partial canonical data, empty circuits, state materialization, inverse and double-inverse agree with existing canonical behavior. No unsupported assertion that inverse composition itself is an identity was made.
+- Cached plan behavior preserves matrix classification, misleading display labels, wires and parameter values; Pi/2 gives PauliStabilizer and Pi/4 gives StabilizerFrame.
+- Generator arrays remain packed; n=128 resident bytes are 14,080 versus 527,456 canonical; n=1024 resident bytes are 576,480 versus 33,573,600 canonical. Compiled.m:246–250 bypasses X/Z conversion for resident input, and :277–280 stores the native result directly; only the O(n) signs are repacked/unpacked at the boundary.
+
+The final main-checkout suite-after.json was inspected: 1191/1191 tests across 13 files pass, including 59 new CompiledEvolution tests and 67 GateMatrixForms tests; outside messages are {}. Thus the explicit symplectic invariants, invalid wire/self-wire gates and noncomputational-basis refusal in those tests pass too. The scoped git diff --check is clean.
+
+FINDINGS
+
+Resolved test isolation finding (P1): Tests/Stabilizer/AuditMatrix.wlt:33, Connections.wlt:41 and HybridInterop.wlt:21 assign psValidQ = PauliStabilizerQ. Installing the later broad psValidQ[ps_PauliStabilizer] helper used that OwnValue and replaced the newly broad production predicate rule, rejecting symbolic signs later in the combined suite. The current Tests/Stabilizer/PauliStabilizer.wlt:35–37 explicitly clears the helper before installing its concrete-only definitions. In /private/tmp/stabilizer-fixture-isolation-r1.wls, the original alias definition changed package DownValues and made symbolic validity False; with Clear[psValidQ], package DownValues stay identical and symbolic validity stays True. The updated combined suite passing all 1191 tests closes the revised-test check; no further check for that fix remains.
+
+No unresolved production correctness defect found in the scoped diff.
+
+RECOMMENDED FIXES
+
+Retain the fixture isolation Clear. No further production edit is recommended by this review. Performance claims must preserve the cold raw encoding and explicit materialization tradeoffs documented below.
+
+QUALITY AXES
+
+| Axis | Grade | Evidence and assessment |
+|---|---|---|
+| A Documented symbols | PASS | Current definitions and live kernel were checked. PauliStabilizer.m:72–76 uses the same validity idiom as QuantumState/QuantumState.m:25–30, QuantumOperator/QuantumOperator.m:49–54 and QuantumCircuitOperator/QuantumCircuitOperator.m:26–31. PackedArrayQ and exact return-shape probes pass. |
+| B Idiomatic functional WL | PASS | New cache paths use With, Association, Dispatch and Replace; identity words use SparseArray/Thread directly (Compiled.m:290–301). The pre-existing procedural Do inside Compile (:129) is appropriate for the C kernel; no forced functional rewrite is warranted. |
+| C Terse physics reasoning | PASS | X/Z word arrays, phase bits and gate codes correspond directly to the AG conjugation rules. V is the minimal H/S/H decomposition (:194–195); storage conversion stays at the boundary (:246–280). No unrelated physics machinery was added. |
+| D Physics invariants | PASS | Independent dense exact conjugation, unitarity, state norm 1 and signed stabilizer eigen-relations pass for n=1–4. CompiledEvolution.wlt:21–24 asserts the symplectic Gram invariant at ten dimensions and passes in the combined suite. |
+| E Nontrivial examples | PASS | Random entangling circuits, all generators/signs, Bell correlations, four-qubit dense reference, n1024, 62-bit word boundaries and malformed data go beyond the one-qubit base case. |
+| F Symbolic-first derivations | PASS | Kernel data and Clifford updates remain exact integer bit algebra. Symbolic signs are carried through the fallback; substituting six independent phase bits after evolution agrees with evolving their concrete substitution. No decimal approximation replaces an exact gate identity. |
+| G Regimes and limits | PASS | See regime table. Continuous-parameter asymptotics are inapplicable to this finite exact Clifford engine; arbitrary size and word boundaries are the relevant limit tests. |
+
+| Regime | Evidence |
+|---|---|
+| General | Arbitrary-n integer implementation and independent scalar/split comparison through n1024; general symbolic sign substitution. |
+| Exactly solvable | Bell stabilizers and exact V/V-dagger conjugation. |
+| Large-size/limit | n1024; n31/32,61/62/63,124/125 span the 62-bit generator/qubit boundaries. |
+| Independent reference | Exact small-n dense matrix evolution of all signed generators, stronger than a floating-point-only check. |
+| Failure/edge | Marker mutations, malformed packed data, invalid/self wires, partial data, empty circuit, non-Clifford frame and basis refusal. |
+
+INDEPENDENT PERFORMANCE REPRODUCTION
+
+The isolated before and current kernels ran sequentially after the parent released its timing reservation. Both logs confirm the intended load path and Messages -> {}. Five trials per row each start with ClearSystemCache[]; kernel startup, compile warmup and circuit-object preparation are outside the measurements. Exact results are in /private/tmp/stabilizer-independent-timing-r1-{before,after}.json and the matching logs.
+
+| Workload | Before median | After median | Before/after | Five-trial ranges, before → after |
+|---|---:|---:|---:|---|
+| Direct10000/n128 | 12.504 ms | 3.203 ms | 3.90x | 12.083–13.064 ms → 3.196–3.341 ms |
+| ColdDirect10000/n128 | 12.003 ms | 12.650 ms | 0.95x | 11.812–12.131 ms → 12.520–14.974 ms |
+| Direct10000/n1024 | 41.140 ms | 4.274 ms | 9.63x | 39.504–41.595 ms → 3.986–4.515 ms |
+| ColdDirect10000/n1024 | 39.715 ms | 13.745 ms | 2.89x | 36.601–40.298 ms → 13.399–14.677 ms |
+| Split10/n1024 | 272.748 ms | 10.201 ms | 26.74x | 268.962–273.832 ms → 9.811–11.133 ms |
+| PublicCold1000/n128 | 176.523 ms | 162.148 ms | 1.09x | 172.300–179.961 ms → 161.601–165.503 ms |
+| PublicCold1000/n1024 | 1142.093 ms | 145.116 ms | 7.87x | 1138.766–1150.515 ms → 142.611–146.490 ms |
+| PublicSplit10/n1024 | 11290.423 ms | 15.803 ms | 714.45x | 11210.589–11320.948 ms → 15.023–16.821 ms |
+| OneV10001/n128 | 1220.817 ms | 3.290 ms | 371.07x | 1201.589–1238.540 ms → 3.240–3.754 ms |
+| Materialize/n1024 | 0.003 ms | 15.824 ms | 0.00x | 0.003–0.004 ms → 13.671–16.779 ms |
+
+These measurements independently reproduce the reported trends, not identical speedup constants: warmed bulk and reused public plans improve strongly; cold n1024 improves; adding one V no longer forces the whole circuit through scalar dispatch. Cold raw n128 is about 5.4% slower (the parent measured about 8.7%), so a universal faster-on-every-call claim would be false. Explicit n1024 Tableau materialization now costs about 15.8 ms, whereas canonical storage previously offered a roughly 3 μs lookup; this is the expected lazy-storage tradeoff and is visible in the public behavior's cost.
+
+FINAL EDGE CLOSURE
+
+/private/tmp/stabilizer-final-edges-r1.wls and .log independently check V and V-dagger at wires 31,32,62,63 of a 63-qubit nontrivial tableau: all eight comparisons with the existing scalar route are True. After warming a computational H plan, a noncomputational-basis H circuit is refused twice with the correct nonclifford message. Four invalid/self-wire calls all return $Failed with invalidorder messages. These are intentional negative-test messages; the kernel's automatic General::stop after repeated identical messages is also recorded. No unexpected package message occurred in the final edge checks.
+
+All required claims are now supported by source and executable evidence. The resolved fixture isolation finding requires no remaining check after the final combined-suite pass.
+
+OPEN ISSUES: 0

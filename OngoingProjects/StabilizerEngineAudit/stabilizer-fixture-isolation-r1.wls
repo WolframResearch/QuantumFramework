@@ -1,0 +1,18 @@
+PacletDirectoryLoad["/Users/mohammadb/Documents/GitHub/QuantumFramework/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+saved = DownValues[PauliStabilizerQ];
+symbolic = PauliStabilizer[<|"Signs" -> {1, 1 - 2 s}, "Tableau" -> PauliStabilizer[1]["Tableau"]|>];
+Echo["Before" -> PauliStabilizerQ[symbolic]];
+psValidQ = PauliStabilizerQ;
+psValidQ[ps_PauliStabilizer] := False;
+Echo["AliasDefinitionChangedPackageDownValues" -> (DownValues[PauliStabilizerQ] =!= saved)];
+Echo["AfterAliasDefinition" -> PauliStabilizerQ[symbolic]];
+DownValues[PauliStabilizerQ] = saved;
+psValidQ = PauliStabilizerQ;
+Clear[psValidQ];
+psValidQ[ps_PauliStabilizer] := False;
+Echo["AfterClearPreservesPackageDownValues" -> (DownValues[PauliStabilizerQ] === saved)];
+Echo["AfterClearSymbolicValid" -> PauliStabilizerQ[symbolic]];
+Echo["IndependentHelper" -> psValidQ[symbolic]];
+Exit[];

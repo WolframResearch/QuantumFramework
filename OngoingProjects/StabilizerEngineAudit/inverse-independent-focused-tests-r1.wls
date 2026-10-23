@@ -1,0 +1,9 @@
+repo="/Users/mohammadb/Documents/GitHub/QuantumFramework";
+PacletDirectoryLoad[repo<>"/QuantumFramework"];
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+$ProgressReporting=False;
+Echo[<|"Version"->$Version,"Loaded"->FindFile["Wolfram`QuantumFramework`"],"Process"->$ProcessID|>];
+rows=Map[Function[name,With[{report=TestReport[repo<>"/Tests/Stabilizer/"<>name<>".wlt"]},With[{results=report["Results"]},With[{row=<|"Name"->name,"Count"->Length[results],"Outcomes"->Counts[#["Outcome"]&/@results],"Failures"->Map[Function[r,<|"ID"->r["TestID"],"Actual"->ToString[r["ActualOutput"],InputForm],"Messages"->ToString[r["ActualMessages"],InputForm]|>],Select[results,#["Outcome"]=!="Success"&]]|>},Echo[row];row]]]],{"InversePhase","CompiledEvolution"}];
+Export["/private/tmp/qf-inverse-focused-tests-r1.json",<|"Rows"->rows,"Messages"->ToString[$MessageList,InputForm]|>,"RawJSON"];
+Exit[If[AllTrue[rows,#["Count"]>0&&#["Failures"]==={}&],0,1]];

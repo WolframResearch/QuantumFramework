@@ -297,32 +297,12 @@ PauliStabilizer[stabString : {__String}, destabStrings : {__String}] /; AllTrue[
 
 
 (* ============================================================================ *)
-(* Integer constructor: |0...0> register                                        *)
-(*                                                                              *)
-(* The register tableau is known in closed form (destabilizers X_i in rows      *)
-(* 1..q, stabilizers Z_i in rows q+1..2q, all signs +1), so it is assembled     *)
-(* directly instead of routing the {2, q, 2q} array through the generic rank-3  *)
-(* validating constructor, whose per-element pattern matching is O(q^2) and     *)
-(* dominated circuit-simulation setup at q ~ 10^3.                              *)
-(*                                                                              *)
-(* TargetStructure -> "Dense" is load-bearing: with the default Automatic,      *)
-(* IdentityMatrix returns a structured array above ~10^6 entries (q > 1000),    *)
-(* PadRight on it yields a SparseArray tableau member, and the compiled /       *)
-(* packed fast paths (Stabilizer/Compiled.m, Stabilizer/Packed.m) require      *)
-(* packed dense machine-integer members (Developer`ToPackedArray is a no-op on  *)
-(* SparseArray, so the compiled gate fold would silently run interpreted, at    *)
-(* ~10^2-10^3x the per-gate cost). Every evolved tableau is stored dense the    *)
-(* same way (unpackGenRows / unpackChunks emit dense packed matrices), so the   *)
-(* fresh register just adopts the uniform representation from birth.            *)
+(* Integer constructor: |0...0> register in generator-major packed storage. *)
+(* The public "Tableau" property still reconstructs the canonical packed-dense *)
+(* integer arrays. Clifford evolution does not need to allocate those arrays. *)
 (* ============================================================================ *)
 
-PauliStabilizer[q_Integer ? Positive] := PauliStabilizer[<|
-    "Signs" -> ConstantArray[1, 2 q],
-    "Tableau" -> {
-        PadRight[IdentityMatrix[q, TargetStructure -> "Dense"], {q, 2 q}],
-        Join[ConstantArray[0, {q, q}], IdentityMatrix[q, TargetStructure -> "Dense"], 2]
-    }
-|>]
+PauliStabilizer[q_Integer ? Positive] := psZeroGeneratorPacked[q]
 
 PauliStabilizer[q_Integer ? NonNegative] := PauliStabilizer[{ConstantArray[0, {Max[q, 1], q}], identityMatrix[q]}]
 

@@ -11,6 +11,7 @@ PackageScope[applyCompiledFold]
 PackageScope[packGenRows]
 PackageScope[unpackGenRows]
 PackageScope[stabilizerValidMasks]
+PackageScope[$stabilizerEncodeMemo]
 
 
 
@@ -22,7 +23,7 @@ PackageScope[stabilizerValidMasks]
 (* dispatch. This kernel folds an entire integer-encoded gate list over the      *)
 (* tableau in one compiled (C) call.                                             *)
 (*                                                                              *)
-(* It uses a GENERATOR-MAJOR packing (distinct from Packed.m's qubit-major one): *)
+(* It uses the GENERATOR-MAJOR storage view defined in Packed.m:                 *)
 (* for each qubit a, the X (resp. Z) bits across all 2n generators are packed    *)
 (* into ceil(2n/62) machine words, and the 2n sign bits are one packed word      *)
 (* vector. A single-qubit gate then touches the O(2n/62) words of its qubit's    *)
@@ -46,9 +47,9 @@ $stabilizerGateCodes = <|
 (* Gate-name catalogs for the multi-gate dispatch forms ps[{specs..}] / ps[spec, ..]    *)
 (* (Stabilizer/PauliStabilizer.m). These name what the top-level dispatch RECOGNIZES as  *)
 (* a gate token; they are deliberately distinct from the two sibling gate sets:          *)
-(*   - $stabilizerGateCodes (above): the gates the compiled C kernel encodes. "V"/"T"    *)
-(*     are absent ("V" decomposes to -Y/X strings in GateUpdates.m; "T" is non-Clifford  *)
-(*     and routes to a StabilizerFrame).                                                  *)
+(*   - $stabilizerGateCodes (above): the gates the compiled C kernel encodes. "V" is    *)
+(*     expanded to H/S/H by the encoder; "T" is non-Clifford and routes to a frame.       *)
+(*     The integer kernel itself only needs the primitive gate set.                    *)
 (*   - sfGate1 / sfGate2 (Stabilizer/StabilizerFrame.m): the gates whose Pauli-          *)
 (*     conjugation tables the frame uses, keyed by normalized names ("Sdg", not          *)
 (*     SuperDagger["S"]).                                                                  *)
@@ -172,6 +173,8 @@ compiledCliffordFold := compiledCliffordFold = With[{
 (*   {op, q...}                             legacy list form                      *)
 (* Anything else maps to the $Failed sentinel and the whole encode returns        *)
 (* $Failed, sending the caller to the per-gate fold (non-Clifford etc.).          *)
+(* Match one-based wires and a dummy wire 1; subtract both wire-column offsets
+   after packing, avoiding interpreted arithmetic for every gate. *)
 $stabilizerEncodeDispatch := $stabilizerEncodeDispatch = With[{
     cH = $stabilizerGateCodes["H"], cS = $stabilizerGateCodes["S"],
     cSdg = $stabilizerGateCodes[SuperDagger["S"]], cCNOT = $stabilizerGateCodes["CNOT"],
@@ -179,17 +182,19 @@ $stabilizerEncodeDispatch := $stabilizerEncodeDispatch = With[{
     cY = $stabilizerGateCodes["Y"], cZ = $stabilizerGateCodes["Z"]
 },
     Dispatch @ {
-        ("H" -> {j_Integer} | j_Integer) :> {{cH, j - 1, 0}},
-        ("S" -> {j_Integer} | j_Integer) :> {{cS, j - 1, 0}},
-        ("X" -> {j_Integer} | j_Integer) :> {{cX, j - 1, 0}},
-        ("Y" -> {j_Integer} | j_Integer) :> {{cY, j - 1, 0}},
-        ("Z" -> {j_Integer} | j_Integer) :> {{cZ, j - 1, 0}},
-        (SuperDagger["S"] -> {j_Integer} | j_Integer) :> {{cSdg, j - 1, 0}},
-        (("CNOT" | "CX") -> {j_Integer, k_Integer}) :> {{cCNOT, j - 1, k - 1}},
-        ("SWAP" -> {j_Integer, k_Integer}) :> {{cSWAP, j - 1, k - 1}},
-        ("CZ" -> {j_Integer, k_Integer}) :> {{cH, k - 1, 0}, {cCNOT, j - 1, k - 1}, {cH, k - 1, 0}},
-        "C"[("NOT" | "X") -> {k_Integer}, {j_Integer}, ___] :> {{cCNOT, j - 1, k - 1}},
-        "C"["Z" -> {k_Integer}, {j_Integer}, ___] :> {{cH, k - 1, 0}, {cCNOT, j - 1, k - 1}, {cH, k - 1, 0}},
+        ("H" -> {j_Integer} | j_Integer) :> {{cH, j, 1}},
+        ("S" -> {j_Integer} | j_Integer) :> {{cS, j, 1}},
+        ("X" -> {j_Integer} | j_Integer) :> {{cX, j, 1}},
+        ("Y" -> {j_Integer} | j_Integer) :> {{cY, j, 1}},
+        ("Z" -> {j_Integer} | j_Integer) :> {{cZ, j, 1}},
+        (SuperDagger["S"] -> {j_Integer} | j_Integer) :> {{cSdg, j, 1}},
+        ("V" -> {j_Integer} | j_Integer) :> {{cH, j, 1}, {cS, j, 1}, {cH, j, 1}},
+        (SuperDagger["V"] -> {j_Integer} | j_Integer) :> {{cH, j, 1}, {cSdg, j, 1}, {cH, j, 1}},
+        (("CNOT" | "CX") -> {j_Integer, k_Integer}) :> {{cCNOT, j, k}},
+        ("SWAP" -> {j_Integer, k_Integer}) :> {{cSWAP, j, k}},
+        ("CZ" -> {j_Integer, k_Integer}) :> {{cH, k, 1}, {cCNOT, j, k}, {cH, k, 1}},
+        "C"[("NOT" | "X") -> {k_Integer}, {j_Integer}, ___] :> {{cCNOT, j, k}},
+        "C"["Z" -> {k_Integer}, {j_Integer}, ___] :> {{cH, k, 1}, {cCNOT, j, k}, {cH, k, 1}},
         {op_, qudits__Integer} :> With[{f = Flatten[{qudits}]},
             Replace[op -> If[Length[f] == 1, First[f], f], $stabilizerEncodeDispatch]
         ],
@@ -197,33 +202,61 @@ $stabilizerEncodeDispatch := $stabilizerEncodeDispatch = With[{
     }
 ]
 
-encodeStabilizerGates[gateSpecs_List] := With[{rows = Replace[gateSpecs, $stabilizerEncodeDispatch, {1}]},
-    If[FreeQ[rows, $Failed, {1}], Developer`ToPackedArray[Catenate[rows]], $Failed]
+$stabilizerEncodeMemo = <||>;
+
+stabilizerEncodeRows[gateSpecs_List] := With[{rows = Replace[gateSpecs, $stabilizerEncodeDispatch, {1}]},
+    If[FreeQ[rows, $Failed, {1}],
+        With[{oneBased = Developer`ToPackedArray[Catenate[rows]]},
+            If[oneBased === {}, {},
+                Developer`ToPackedArray[Transpose[Transpose[oneBased] - {0, 1, 1}]]]
+        ],
+        $Failed
+    ]
 ]
+
+(* A hash selects the bucket; equality with the retained specification list
+   checks the key, so a hash collision cannot reuse another circuit's gates. *)
+encodeStabilizerGates[gateSpecs_List] := With[{key = Hash[gateSpecs]},
+    With[{cached = Lookup[$stabilizerEncodeMemo, key, None]},
+        If[ListQ[cached] && First[cached] === gateSpecs,
+            Last[cached],
+            With[{gates = stabilizerEncodeRows[gateSpecs]},
+                If[ListQ[gates],
+                    stabilizerRemember[$stabilizerEncodeMemo, key, {gateSpecs, gates}, 16]];
+                gates
+            ]
+        ]
+    ]
+]
+
 
 
 (* ============================================================================ *)
 (* applyCompiledFold[ps, gates]: pack ps generator-major, run the compiled       *)
-(* kernel once on the encoded gate matrix, unpack to a canonical PauliStabilizer. *)
+(* kernel once on the encoded gate matrix, retain its generator-packed result. *)
 (* Developer`ToPackedArray at every boundary keeps the compiled kernel on its     *)
 (* fast path (an unpacked argument silently falls back to interpreted).           *)
 (* ============================================================================ *)
 
-applyCompiledFold[ps_PauliStabilizer, gates_ /; MatchQ[gates, {{_Integer, _Integer, _Integer} ..}]] :=
-    Module[{n = ps["Qubits"], t = ps["Tableau"], phase, nw, res},
+(* MatrixQ checks packed integer data without per-element pattern matching. *)
+applyCompiledFold[ps_PauliStabilizer, gates_ /; ListQ[gates] &&
+    MatrixQ[gates, IntegerQ] && MatchQ[Dimensions[gates], {_Integer, 3}]] :=
+    Module[{n = ps["Qubits"], phase, nw, xz, res, codes, controls, targets},
+        (* RuntimeOptions -> "Speed" needs a checked boundary before native indexing. *)
+        codes = gates[[All, 1]]; controls = gates[[All, 2]]; targets = gates[[All, 3]];
+        If[! stabilizerWireRangeQ[{controls, targets}, 0, n - 1] ||
+            MemberQ[Pick[controls - targets, Unitize[(codes - $stabilizerGateCodes["CNOT"])
+                (codes - $stabilizerGateCodes["SWAP"])] , 0], 0],
+            Message[PauliStabilizer::invalidorder, n]; Return[$Failed]];
         nw = Ceiling[2 n / $bitsPerWord];
         phase = Developer`ToPackedArray[(1 - ps["Signs"]) / 2];
+        xz = psGetGeneratorPacked[ps];
         res = compiledCliffordFold[
-            packGenRows[t[[1]], nw],
-            packGenRows[t[[2]], nw],
-            First @ packGenRows[{phase}, nw],
-            stabilizerValidMasks[n, nw],
-            Developer`ToPackedArray[gates]
+            xz[[1]], xz[[2]], First @ packGenRows[{phase}, nw],
+            stabilizerValidMasks[n, nw], Developer`ToPackedArray[gates]
         ];
-        PauliStabilizer[<|
-            "Signs" -> 1 - 2 First @ unpackGenRows[{res[[-1]]}, 2 n],
-            "Tableau" -> {unpackGenRows[res[[1 ;; n]], 2 n], unpackGenRows[res[[n + 1 ;; 2 n]], 2 n]}
-        |>]
+        psFromGeneratorPacked[{n, res[[1 ;; n]], res[[n + 1 ;; 2 n]],
+            1 - 2 First @ unpackGenRows[{res[[-1]]}, 2 n]}]
     ]
 
 (* No gates: identity. *)
@@ -243,7 +276,7 @@ applyCompiledFold[ps_PauliStabilizer, {}] := ps
 (* PauliStabilizer::nonclifford.                                                *)
 (* ============================================================================ *)
 
-ps_PauliStabilizer["ApplyCircuit", gateSpecs_List] :=
+ps_PauliStabilizer["ApplyCircuit", gateSpecs_List] /; PauliStabilizerQ[ps] :=
     With[{gates = If[psConcreteFastQ[ps], encodeStabilizerGates[gateSpecs], $Failed]},
         If[ ListQ[gates],
             applyCompiledFold[ps, gates],

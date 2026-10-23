@@ -2,9 +2,16 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope[$chunkWidth]
 PackageScope[psPackedQ]
+PackageScope[psPackedDataQ]
 PackageScope[psConcreteFastQ]
 PackageScope[psGetPacked]
 PackageScope[psFromPacked]
+PackageScope[psGeneratorPackedQ]
+PackageScope[psGeneratorPackedDataQ]
+PackageScope[psGetGeneratorPacked]
+PackageScope[psToGeneratorPacked]
+PackageScope[psZeroGeneratorPacked]
+PackageScope[psFromGeneratorPacked]
 PackageScope[packChunks]
 PackageScope[unpackChunks]
 PackageScope[tableauFromPacked]
@@ -77,6 +84,16 @@ tableauFromPacked[n_, px_, pz_] := {unpackChunks[px, n], unpackChunks[pz, n]}
 
 (* ---- predicates ---- *)
 
+(* Validate all chunk dimensions and word bounds on external packed input. *)
+psPackedDataQ[a_Association] := With[{n = Lookup[a, "Qubits", 0],
+    x = Lookup[a, "PackedX", None], z = Lookup[a, "PackedZ", None], s = Lookup[a, "Signs", None]},
+    IntegerQ[n] && n > 0 && psDimensionsQ[a, n, n] && ListQ[s] && Length[s] === 2 n &&
+    MatrixQ[x, IntegerQ] && MatrixQ[z, IntegerQ] &&
+    Dimensions[x] === {Ceiling[n / $chunkWidth], 2 n} && Dimensions[z] === Dimensions[x] &&
+    Min[x, z] >= 0 && Max[x, z] < 2 ^ $chunkWidth &&
+    Max[Last[x], Last[z]] < 2 ^ (Mod[n - 1, $chunkWidth] + 1)
+]
+
 psPackedQ[ps_PauliStabilizer] := KeyExistsQ[First[ps], "PackedX"]
 psPackedQ[_] := False
 
@@ -84,16 +101,12 @@ psPackedQ[_] := False
 (* packed, or it carries a concrete binary {0,1} tableau with concrete {-1,1}    *)
 (* signs.  Symbolic-phase states (non-Clifford P/T residues, StabilizerFrame     *)
 (* mixtures) fail this test and fall through to the canonical array path.        *)
-psConcreteFastQ[ps_PauliStabilizer] := With[{a = First[ps]},
-    KeyExistsQ[a, "PackedX"] ||
-    (
-        KeyExistsQ[a, "Tableau"] && KeyExistsQ[a, "Signs"] &&
-        MatchQ[a["Signs"], {(-1 | 1) ...}] &&
-        With[{t = a["Tableau"]},
-            ArrayQ[t, 3, IntegerQ] && Min[t] >= 0 && Max[t] <= 1
-        ]
-    )
-]
+psConcreteFastQ[ps_PauliStabilizer] := ConcretePauliStabilizerQ[ps] && (
+    psPackedQ[ps] || psGeneratorPackedQ[ps] ||
+    With[{t = ps["Tableau"]},
+        Dimensions[t][[3]] === 2 Dimensions[t][[2]] && Min[t] >= 0 && Max[t] <= 1
+    ]
+)
 psConcreteFastQ[_] := False
 
 
@@ -102,20 +115,73 @@ psConcreteFastQ[_] := False
 psGetPacked[ps_PauliStabilizer] := With[{a = First[ps]},
     If[ KeyExistsQ[a, "PackedX"],
         {a["Qubits"], a["PackedX"], a["PackedZ"], a["Signs"]},
-        With[{t = a["Tableau"], n = Dimensions[a["Tableau"]][[2]]},
+        With[{t = ps["Tableau"], n = ps["Qubits"]},
             {n, packChunks[t[[1]], n], packChunks[t[[2]], n], a["Signs"]}
         ]
     ]
 ]
 
 psFromPacked[{n_, px_, pz_, s_}] :=
-    PauliStabilizer[<|"PackedX" -> px, "PackedZ" -> pz, "Signs" -> s, "Qubits" -> n|>]
+    System`Private`HoldSetValid[PauliStabilizer[<|"PackedX" -> px, "PackedZ" -> pz, "Signs" -> s, "Qubits" -> n|>]]
 
 
 (* ---- lazy rank-3 reconstruction for packed objects ---- *)
 
 ps_PauliStabilizer["Tableau"] /; KeyExistsQ[First[ps], "PackedX"] := With[{a = First[ps]},
     tableauFromPacked[a["Qubits"], a["PackedX"], a["PackedZ"]]
+]
+
+
+(* ---- persistent generator-major storage for bulk Clifford evolution ---- *)
+
+(* Bulk results retain the generator-major layout. Signs remain a small ordinary
+   vector for compatibility; the quadratic X/Z bit arrays stay packed. *)
+psGeneratorPackedQ[ps_PauliStabilizer] := KeyExistsQ[First[ps], "GeneratorX"]
+psGeneratorPackedQ[_] := False
+
+psGeneratorPackedDataQ[a_Association] := With[{n = Lookup[a, "Qubits", 0],
+    x = Lookup[a, "GeneratorX", None], z = Lookup[a, "GeneratorZ", None], s = Lookup[a, "Signs", None]},
+    IntegerQ[n] && n > 0 && psDimensionsQ[a, n, n] && ListQ[s] && Length[s] === 2 n &&
+    MatrixQ[x, IntegerQ] && MatrixQ[z, IntegerQ] &&
+    Dimensions[x] === {n, Ceiling[2 n / $bitsPerWord]} && Dimensions[z] === Dimensions[x] &&
+    Min[x, z] >= 0 && Max[x, z] < 2 ^ $bitsPerWord &&
+    Max[x[[All, -1]], z[[All, -1]]] < 2 ^ (Mod[2 n - 1, $bitsPerWord] + 1)
+]
+
+ps_PauliStabilizer["Tableau"] /; psGeneratorPackedQ[ps] := With[{a = First[ps]},
+    {unpackGenRows[a["GeneratorX"], 2 a["Qubits"]], unpackGenRows[a["GeneratorZ"], 2 a["Qubits"]]}
+]
+
+psGetGeneratorPacked[ps_PauliStabilizer] := With[{n = ps["Qubits"], a = First[ps]},
+    If[psGeneratorPackedQ[ps],
+        Developer`ToPackedArray /@ {a["GeneratorX"], a["GeneratorZ"]},
+        With[{t = ps["Tableau"], nw = Ceiling[2 n / $bitsPerWord]},
+            {packGenRows[t[[1]], nw], packGenRows[t[[2]], nw]}]
+    ]
+]
+
+
+(* Trusted internal constructor, parallel to psFromPacked. Callers establish
+   the dimensions and bit bounds before creating a resident object. *)
+psFromGeneratorPacked[{n_, x_, z_, signs_}] :=
+    System`Private`HoldSetValid[PauliStabilizer[<|"Signs" -> signs,
+        "GeneratorX" -> x, "GeneratorZ" -> z, "Qubits" -> n|>]]
+
+psToGeneratorPacked[ps_PauliStabilizer] := With[{xz = psGetGeneratorPacked[ps]},
+    psFromGeneratorPacked[{ps["Qubits"], xz[[1]], xz[[2]], ps["Signs"]}]
+]
+
+(* Identity generator images, constructed as sparse word matrices before packing. *)
+psZeroGeneratorPacked[n_Integer ? Positive] := With[{
+    rows = Range[n], nw = Ceiling[2 n / $bitsPerWord]
+},
+    With[{xz = Function[indices,
+        Developer`ToPackedArray @ Normal @ SparseArray[
+            Thread[Transpose[{rows, Quotient[indices, $bitsPerWord] + 1}] ->
+                BitShiftLeft[1, Mod[indices, $bitsPerWord]]], {n, nw}]
+    ] /@ {Range[0, n - 1], Range[n, 2 n - 1]}},
+        psFromGeneratorPacked[{n, xz[[1]], xz[[2]], ConstantArray[1, 2 n]}]
+    ]
 ]
 
 

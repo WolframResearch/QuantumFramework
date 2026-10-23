@@ -1,0 +1,60 @@
+Historical report. The pre-existing inverse phase bug recorded below is now fixed; see InversePhaseFixResults.txt for current correctness and retained-performance evidence.
+
+Historical measurements from the first implementation. The follow-up fix removes the cold128 regression; see ColdEncodingFixResults.txt for current results.
+
+Stabilizer engine implementation results
+
+Scope: three optimizations only; changes uncommitted on the existing main branch.
+1. Cached immutable structural validation and bounded, equality-checked encoded circuit plans.
+2. Persistent generator-major packed tableaux for integer registers and bulk Clifford results.
+3. V and V-dagger compiled through H/S/H and H/S-dagger/H; mixed lists stay in the compiled fold.
+
+BENCHMARKS
+Median of five evaluations; seconds. Each trial clears System caches. Kernel startup, compilation warm-up, circuit/gate construction, and final tableau materialization are outside evolution timings.
+Warm rows reuse a validated execution plan/encoding. Cold-plan rows clear stabilizer caches on every trial. The 10,000-gate circuits repeat one deterministic 1,000-gate block ten times; ten-call rows measure that same evolution in ten calls. Gates mix H, S, S-dagger, CNOT, CZ, X, SWAP. The V workload inserts one V into a separately generated 10,000-gate list.
+
+Workload | Before | After | Speedup | before trial range | after trial range
+Direct/n=128/g=1000 | 0.002427 | 0.000519 | 4.68x | [0.002245, 0.002915] | [0.000507, 0.000577]
+PublicWarm/n=128/g=1000 | 0.121186 | 0.000709 | 171x | [0.119922, 0.122785] | [0.000705, 0.000742]
+PublicColdPlan/n=128/g=1000 | 0.17902 | 0.152856 | 1.17x | [0.175842, 0.182409] | [0.152182, 0.156248]
+Direct/n=128/g=10000 | 0.012644 | 0.003195 | 3.96x | [0.012379, 0.01291] | [0.003195, 0.003463]
+TenDirectCalls/n=128 | 0.018767 | 0.004886 | 3.84x | [0.017603, 0.032083] | [0.004879, 0.004897]
+TenPublicCalls/n=128 | 1.19901 | 0.00694 | 173x | [1.18469, 1.20542] | [0.006895, 0.007007]
+MaterializeTableau/n=128 | 3e-06 | 0.000229 | 0.0131x | [3e-06, 4e-06] | [0.000192, 0.00027]
+Direct/n=1024/g=1000 | 0.030494 | 0.001558 | 19.6x | [0.029209, 0.031019] | [0.001079, 0.001993]
+PublicWarm/n=1024/g=1000 | 1.19399 | 0.001664 | 718x | [1.14658, 1.22806] | [0.001458, 0.00251]
+PublicColdPlan/n=1024/g=1000 | 1.13914 | 0.137743 | 8.27x | [1.13492, 1.15789] | [0.135475, 0.140115]
+Direct/n=1024/g=10000 | 0.039899 | 0.003955 | 10.1x | [0.037481, 0.041466] | [0.003878, 0.004855]
+TenDirectCalls/n=1024 | 0.318245 | 0.010708 | 29.7x | [0.275034, 0.439578] | [0.009569, 0.015119]
+TenPublicCalls/n=1024 | 11.1632 | 0.014026 | 796x | [11.0549, 11.2136] | [0.013426, 0.016169]
+MaterializeTableau/n=1024 | 3e-06 | 0.014425 | 0.000208x | [3e-06, 5e-06] | [0.011909, 0.018056]
+DirectOneV/n=128/g=10001 | 1.21522 | 0.003192 | 381x | [1.21205, 1.22243] | [0.003155, 0.005029]
+DirectColdEncoding/n=128/g=10000 | 0.012232 | 0.013302 | 0.92x | [0.011964, 0.012885] | [0.012997, 0.013974]
+DirectColdEncoding/n=1024/g=10000 | 0.041735 | 0.015373 | 2.71x | [0.038025, 0.053284] | [0.013649, 0.015475]
+Stored evolved object/before/n=128: 527,456 bytes
+Stored evolved object/before/n=1024: 33,573,600 bytes
+Stored evolved object/after/n=128: 14,080 bytes
+Stored evolved object/after/n=1024: 576,480 bytes
+
+CORRECTNESS
+Full stabilizer suite: 1191 tests in 13 files; 0 failures. Includes 59 new regression tests. Outside-test messages: {}.
+New checks compare exact signs and tableau bits against scalar canonical evolution, cover 62-bit boundaries through 1,024 qubits, split vs single execution, symplectic invariants, V/V-dagger, malformed data, invalid wires, empty circuits, cache-key honesty, symbolic signs, measurement and state materialization.
+The existing concrete-only test helper now clears its inherited alias before definition, preventing test-order replacement of the package validator. No production algorithm was changed for this test isolation fix.
+Before/after SHA256 hashes of {ps["Signs"], ps["Tableau"]} match exactly at n128 and n1024 for 10,000 gates and n128 for the 10,001-gate V workload; single and split execution also agree. See signatures-before.json and signatures-after.json.
+
+TRADEOFFS AND LIMITS
+At 128 qubits, cold encoding of 10,000 gates was about 9% slower (12.232 ms to 13.302 ms). At 1,024 qubits, the same cold workload improved 2.71x. Warm-cache results should be interpreted separately.
+Reading the full "Tableau" property now materializes the expanded O(n^2) arrays on demand; the materialization row measures that deferred cost. Scalar gate/measurement paths can still convert to the existing chunk-major layout; persistence is optimized for successive bulk Clifford calls.
+The first use of a circuit still performs matrix-based classification. Plan/encoding caches retain at most 16 entries each, verify the full expression on hits, and are cleared by stabilizerClearCaches[]. Warm repeated-block results do not predict speedup for unrelated one-use circuits.
+An independent probe exposed a pre-existing inverse phase issue: a specific three-qubit canonical tableau fails double inversion on the unchanged source as well. Its reproduction is saved in PreExistingInverseProbe.wls and pre-existing-inverse.log. The inverse algorithm is unchanged; regression tests check that both storage forms return identical existing inverse results.
+
+ENVIRONMENT AND REPRODUCTION
+15.0.1 for Mac OS X ARM (64-bit) (July 2, 2026)
+Baseline is a frozen copy of the unchanged engine at the recorded HEAD; all seven original files and before/after SHA256 hashes are included. No git branches, commits, or staging were used.
+Run RunStabilizerSuite.wls against the main checkout. Run LongCliffordBenchmark.wls with STABILIZER_AUDIT_PHASE=after for current source. For before, copy QuantumFramework/Kernel and PacletInfo.wl into a temporary QuantumFramework paclet and replace the seven changed stabilizer files with before-*.m; set STABILIZER_AUDIT_REPO to its parent and STABILIZER_AUDIT_PHASE=before. Run ColdEncodingBenchmark.wls after the long driver to append cold 10,000-gate encoding measurements. LongCircuitSignatures.wls accepts the same source/phase environment variables. See implementation-manifest.json for source hashes.
+Run the installed WolframKernel -noinit -script <driver>.wls. Timing runs were serialized without concurrent audit kernels. Raw five-trial timings and messages are in long-before.json and long-after.json; suite results are in suite-after.json.
+
+INDEPENDENT VERIFICATION
+One fresh-context verification/quality round completed with OPEN ISSUES: 0. The reviewer independently reproduced exact all-generator dense conjugation, unitarity, state normalization and stabilizer eigen-relations for n1-4; word boundaries and scalar/split evolution through n1024; symbolic signs and measurement correlations; mutations and compatibility; V/V-dagger at boundary wires; matrix, wire, parameter and basis cache semantics. All seven quality axes passed.
+Independent five-trial timing medians reproduce the gains: cold direct10000/n1024 39.715 to 13.745 ms (2.89x), warm direct10000/n1024 41.140 to 4.274 ms (9.63x), reused public split10/n1024 11.290423 s to 15.803 ms (714.45x), and oneV10001/n128 1.220817 s to 3.290 ms (371.07x). The independent cold128 run regressed about 5.4%; full n1024 tableau materialization cost 15.824 ms.
+Full verdict and quality evidence: IndependentReview.txt. Independent timings, logs and executable probes are preserved in this folder. The review report records one corrected n1 reference-harness error and the successful rerun; neither was a production defect.
